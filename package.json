@@ -1,0 +1,30 @@
+{
+  "name": "jetship-nextjs-saas-boilerplate-turborepo",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "turbo dev",
+    "build": "turbo build",
+    "lint": "turbo lint",
+    "lint:fix": "turbo lint -- --fix",
+    "format": "prettier --write \"**/*.{js,jsx,ts,tsx}\"",
+    "type-check": "turbo type-check",
+    "clean": "turbo clean && rm -rf .turbo node_modules",
+    "ui": "pnpm --filter @repo/ui ui"
+  },
+  "devDependencies": {
+    "prettier": "^3.4.1",
+    "prettier-plugin-tailwindcss": "^0.6.9",
+    "turbo": "^2.3.3"
+  },
+  "packageManager": "pnpm@9.13.2",
+  "engines": {
+    "node": "20.x"
+  },
+  "pnpm": {
+    "overrides": {
+      "@typescript-eslint/eslint-plugin": "^7.18.0",
+      "@typescript-eslint/parser": "^7.18.0"
+    }
+  }
+}

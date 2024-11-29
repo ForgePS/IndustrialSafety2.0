@@ -1,0 +1,24 @@
+{
+  "name": "@repo/config-eslint",
+  "version": "1.0.0",
+  "private": true,
+  "exports": {
+    "./nextjs": "./nextjs.js",
+    "./react": "./react.js"
+  },
+  "scripts": {
+    "clean": "rm -rf node_modules"
+  },
+  "devDependencies": {
+    "@vercel/style-guide": "^5.2.0",
+    "@types/eslint": "^8.56.10",
+    "@typescript-eslint/eslint-plugin": "^7.18.0",
+    "@typescript-eslint/parser": "^7.18.0",
+    "eslint": "^8.57.1",
+    "eslint-config-next": "^15.0.3",
+    "eslint-config-prettier": "^9.1.0",
+    "eslint-config-turbo": "^2.3.3",
+    "eslint-plugin-import": "^2.31.0",
+    "typescript": "^5.5.4"
+  }
+}

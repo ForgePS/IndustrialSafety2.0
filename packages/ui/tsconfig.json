@@ -1,0 +1,25 @@
+{
+  "extends": "@repo/config-typescript/react",
+  "compilerOptions": {
+    "baseUrl": "./",
+    "paths": {
+      "@repo/*": [
+        "../../packages/*"
+      ],
+      "@/*": [
+        "./src/*"
+      ]
+    }
+  },
+  "include": [
+    ".eslintrc.js",
+    "postcss.config.mjs",
+    "tailwind.config.ts",
+    "src",
+    "**/*.ts",
+    "**/*.tsx"
+  ],
+  "exclude": [
+    "node_modules"
+  ]
+}
