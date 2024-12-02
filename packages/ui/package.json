@@ -1,22 +1,20 @@
 {
   "name": "@repo/ui",
   "version": "1.0.0",
-  "sideEffects": [
-    "**/*.css"
-  ],
-  "files": [
-    "dist"
-  ],
   "exports": {
     "./globals.css": "./src/globals.css",
     "./postcss.config": "./postcss.config.mjs",
     "./tailwind.config": "./tailwind.config.ts",
+    "./auth/*": "./src/auth/*.tsx",
+    "./blocks/*": "./src/blocks/*.tsx",
+    "./blocks/styles.module.css": "./src/blocks/styles.module.css",
     "./components/*": "./src/components/*.tsx",
+    "./components/search": "./src/components/search/index.tsx",
+    "./hooks/*": "./src/hooks/*.tsx",
+    "./layouts/*": "./src/layouts/*.tsx",
+    "./layouts/utils/*": "./src/layouts/utils/*.ts",
     "./lib/*": "./src/lib/*.ts",
-    "./hooks/*": [
-      "./src/hooks/*.ts",
-      "./src/hooks/*.tsx"
-    ]
+    "./utils/*": "./src/utils/*.ts"
   },
   "scripts": {
     "ui": "pnpm dlx shadcn@latest",
@@ -53,6 +51,7 @@
     "react-hook-form": "^7.53.2",
     "react-icons": "^5.3.0",
     "react-perfect-scrollbar": "^1.5.8",
+    "react-use": "^17.5.1",
     "recharts": "^2.13.3",
     "sonner": "^1.7.0"
   },

@@ -5,6 +5,12 @@
     "paths": {
       "@repo/*": [
         "../../packages/*"
+      ],
+      "@/*": [
+        "./src/*"
+      ],
+      "@components/*": [
+        "./src/components/*"
       ]
     }
   },

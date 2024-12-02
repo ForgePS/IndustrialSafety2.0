@@ -20,7 +20,7 @@ import { Skeleton } from './skeleton'
 import { Tooltip, TooltipContent, TooltipTrigger } from './tooltip'
 
 // Hook Imports
-import { useIsMobile } from '@/hooks/use-mobile'
+import { useIsMobile } from '@repo/ui/hooks/use-mobile'
 
 // Util Imports
 import { cn } from '@repo/ui/lib/utils'

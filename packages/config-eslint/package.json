@@ -10,7 +10,6 @@
     "clean": "rm -rf node_modules"
   },
   "devDependencies": {
-    "@vercel/style-guide": "^5.2.0",
     "@types/eslint": "^8.56.10",
     "@typescript-eslint/eslint-plugin": "^7.18.0",
     "@typescript-eslint/parser": "^7.18.0",
