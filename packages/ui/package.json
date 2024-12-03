@@ -10,10 +10,14 @@
     "./blocks/styles.module.css": "./src/blocks/styles.module.css",
     "./components/*": "./src/components/*.tsx",
     "./components/search": "./src/components/search/index.tsx",
+    "./contexts/*": "./src/contexts/*.tsx",
     "./hooks/*": "./src/hooks/*.tsx",
+    "./hooks/useObjectCookie": "./src/hooks/useObjectCookie.ts",
     "./layouts/*": "./src/layouts/*.tsx",
     "./layouts/utils/*": "./src/layouts/utils/*.ts",
     "./lib/*": "./src/lib/*.ts",
+    "./theme/*": "./src/theme/*.tsx",
+    "./types": "./src/types/index.ts",
     "./utils/*": "./src/utils/*.ts"
   },
   "scripts": {
@@ -47,6 +51,7 @@
     "date-fns": "^3.6.0",
     "framer-motion": "^11.12.0",
     "input-otp": "^1.4.1",
+    "next-themes": "^0.4.3",
     "react": "^18.3.1",
     "react-day-picker": "8.10.1",
     "react-hook-form": "^7.53.2",
@@ -54,11 +59,11 @@
     "react-perfect-scrollbar": "^1.5.8",
     "react-use": "^17.5.1",
     "recharts": "^2.13.3",
+    "server-only": "^0.0.1",
     "sonner": "^1.7.0"
   },
   "peerDependencies": {
-    "next": "^15.0.3",
-    "next-themes": "^0.4.3"
+    "next": "^15.0.3"
   },
   "devDependencies": {
     "@repo/config-eslint": "workspace:*",

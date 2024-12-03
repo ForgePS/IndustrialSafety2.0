@@ -12,7 +12,13 @@ const project = resolve(process.cwd(), 'tsconfig.json')
  */
 
 module.exports = {
-  extends: ['plugin:@typescript-eslint/recommended', 'plugin:import/recommended', 'prettier'],
+  extends: [
+    'plugin:react/recommended',
+    'plugin:react-hooks/recommended',
+    'plugin:@typescript-eslint/recommended',
+    'plugin:import/recommended',
+    'prettier'
+  ],
   parserOptions: {
     project
   },

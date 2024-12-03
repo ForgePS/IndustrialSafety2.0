@@ -1,9 +1,14 @@
 'use client'
 
+// React Imports
+import { useEffect } from 'react'
+
 // Next Imports
 import Link from 'next/link'
 
 // Third-party Imports
+import { useMedia } from 'react-use'
+import { useTheme } from 'next-themes'
 import { TbUser, TbMoodSmile, TbSun, TbMoonStars, TbDeviceDesktop, TbSettings } from 'react-icons/tb'
 import {
   DropdownMenu,
@@ -16,8 +21,32 @@ import {
 } from '@repo/ui/components/ui/dropdown-menu'
 import { Button } from '@repo/ui/components/ui/button'
 import { Avatar, AvatarFallback } from '@repo/ui/components/ui/avatar'
+import { useSettings } from '@repo/ui/hooks/useSettings'
+import type { Mode } from '@repo/ui/types'
 
 const UserDropdown = () => {
+  // Hooks
+  const { setTheme, systemTheme } = useTheme()
+  const { settings, updateSettings } = useSettings()
+  const isDark = useMedia('(prefers-color-scheme: dark)', systemTheme === 'dark')
+
+  const handleClick = (mode: Mode) => {
+    if (settings.mode !== mode) {
+      updateSettings({ mode })
+    }
+  }
+
+  useEffect(() => {
+    if (settings.mode) {
+      if (settings.mode === 'system') {
+        setTheme(isDark ? 'dark' : 'light')
+      } else {
+        setTheme(settings.mode)
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [settings.mode])
+
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
@@ -35,14 +64,14 @@ const UserDropdown = () => {
           </Link>
         </DropdownMenuItem>
         <DropdownMenuSeparator />
-        <DropdownMenuRadioGroup value='light' className='flex justify-between gap-1'>
-          <DropdownMenuRadioItem value='light' className='mbs-0 cursor-pointer'>
+        <DropdownMenuRadioGroup value={settings.mode} className='flex justify-between gap-1'>
+          <DropdownMenuRadioItem value='light' onClick={() => handleClick('light')} className='mbs-0 cursor-pointer'>
             <TbSun className='text-xl' />
           </DropdownMenuRadioItem>
-          <DropdownMenuRadioItem value='dark' className='mbs-0 cursor-pointer'>
+          <DropdownMenuRadioItem value='dark' onClick={() => handleClick('dark')} className='mbs-0 cursor-pointer'>
             <TbMoonStars className='text-xl' />
           </DropdownMenuRadioItem>
-          <DropdownMenuRadioItem value='system' className='mbs-0 cursor-pointer'>
+          <DropdownMenuRadioItem value='system' onClick={() => handleClick('system')} className='mbs-0 cursor-pointer'>
             <TbDeviceDesktop className='text-xl' />
           </DropdownMenuRadioItem>
         </DropdownMenuRadioGroup>

@@ -9,6 +9,7 @@ import { frontLayoutClasses } from '@repo/ui/layouts/utils/layoutClasses'
 // Component Imports
 import Logo from './Logo'
 import FrontMenu from './FrontMenu'
+import ModeDropdown from '@components/layout/ModeDropdown'
 import UserDropdown from './UserDropdown'
 
 const Header = () => {
@@ -32,6 +33,7 @@ const Header = () => {
           <div className='max-xl:hidden'>
             <FrontMenu isBlogEnabled={isBlogEnabled} />
           </div>
+          <ModeDropdown />
           <UserDropdown />
         </div>
       </div>
