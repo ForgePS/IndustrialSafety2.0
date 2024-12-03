@@ -7,7 +7,7 @@
     "./react": "./react.js"
   },
   "scripts": {
-    "clean": "rm -rf node_modules"
+    "clean:node_modules": "rm -rf node_modules"
   },
   "devDependencies": {
     "@types/eslint": "^8.56.10",

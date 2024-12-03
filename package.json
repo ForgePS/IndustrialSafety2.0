@@ -9,7 +9,8 @@
     "lint:fix": "turbo lint -- --fix",
     "format": "prettier --write \"**/*.{js,jsx,ts,tsx}\"",
     "type-check": "turbo type-check",
-    "clean": "turbo clean && rm -rf .turbo node_modules",
+    "clean": "turbo clean && rm -rf .turbo",
+    "clean:node_modules": "turbo clean:node_modules && rm -rf .turbo node_modules",
     "ui": "pnpm --filter @repo/ui ui"
   },
   "devDependencies": {

@@ -30,6 +30,9 @@
     },
     "clean": {
       "cache": false
+    },
+    "clean:node_modules": {
+      "cache": false
     }
   }
 }

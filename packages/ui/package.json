@@ -20,7 +20,8 @@
     "ui": "pnpm dlx shadcn@latest",
     "lint": "eslint src/",
     "lint:fix": "eslint src/ --fix",
-    "clean": "rm -rf .turbo node_modules *.tsbuildinfo",
+    "clean": "rm -rf .turbo *.tsbuildinfo",
+    "clean:node_modules": "rm -rf .turbo node_modules *.tsbuildinfo",
     "type-check": "tsc --noEmit"
   },
   "dependencies": {
