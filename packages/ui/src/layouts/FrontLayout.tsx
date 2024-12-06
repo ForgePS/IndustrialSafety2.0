@@ -22,10 +22,10 @@ const FrontLayout = (props: FrontLayoutProps) => {
 
   return (
     <div className={clsx(frontLayoutClasses.root, 'min-is-0 is-full bs-full flex flex-col')}>
-      {header || null}
+      {header ?? null}
       {/* Content */}
       <Content>{children}</Content>
-      {footer || null}
+      {footer ?? null}
     </div>
   )
 }

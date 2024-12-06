@@ -1,6 +1,13 @@
 {
   "$schema": "https://turbo.build/schema.json",
   "tasks": {
+    "dev": {
+      "cache": false,
+      "persistent": true,
+      "env": [
+        "NODE_ENV"
+      ]
+    },
     "build": {
       "dependsOn": [
         "^build"
@@ -21,18 +28,12 @@
     "lint": {},
     "lint:fix": {},
     "type-check": {},
-    "dev": {
-      "cache": false,
-      "persistent": true,
-      "env": [
-        "NODE_ENV"
-      ]
-    },
     "clean": {
       "cache": false
     },
     "clean:node_modules": {
       "cache": false
-    }
+    },
+    "start": {}
   }
 }

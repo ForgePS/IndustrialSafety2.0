@@ -2,7 +2,7 @@
 import type { CustomInputImageProps } from './types'
 
 // Component Imports
-import { Checkbox } from '../checkbox'
+import { Checkbox } from '@repo/ui/components/ui/checkbox'
 
 // Util Imports
 import { cn } from '@repo/ui/lib/utils'

@@ -140,7 +140,7 @@ export const Ratings = forwardRef<HTMLDivElement, RatingsProps>((props, ref) => 
           'data-star-index': i + fullStars + 1
         })
       )}
-      <input type='hidden' name={props.name || 'ratings'} value={currentRating} />
+      <input type='hidden' name={props.name ?? 'ratings'} value={currentRating} />
     </div>
   )
 })

@@ -4,7 +4,10 @@ import Link from 'next/link'
 // Third-party Imports
 import { clsx } from 'clsx'
 import LayoutHeader from '@repo/ui/layouts/components/front/Header'
+import { Button } from '@repo/ui/components/ui/button'
+import { getAuthUser, getPublicGeneralSettings, getPublicUser, getUserRoles } from '@repo/supabase/serverHelpers'
 import { frontLayoutClasses } from '@repo/ui/layouts/utils/layoutClasses'
+import type { SettingsConfiguration } from '@repo/supabase/settingsConfigurationTypes'
 
 // Component Imports
 import Logo from './Logo'
@@ -12,10 +15,25 @@ import FrontMenu from './FrontMenu'
 import ModeDropdown from '@components/layout/ModeDropdown'
 import UserDropdown from './UserDropdown'
 
-const Header = () => {
+// Util Imports
+import { getAppName } from '@/utils/getAppName'
+
+const Header = async () => {
   // Vars
-  const appName = 'App Name'
-  const isBlogEnabled = true
+  const appName = await getAppName()
+
+  const {
+    data: { user }
+  } = await getAuthUser()
+
+  const { data: userRecord } = await getPublicUser()
+  const { data: userRoles } = await getUserRoles()
+  const { data: settings_configuration } = await getPublicGeneralSettings()
+
+  const roles: string[] | undefined = userRoles?.map(role => role.roles.role)
+
+  const isBlogEnabled = (JSON.parse(settings_configuration?.value) as SettingsConfiguration['general_settings'])
+    .pages_components.blog_enabled
 
   return (
     <LayoutHeader>
@@ -34,7 +52,13 @@ const Header = () => {
             <FrontMenu isBlogEnabled={isBlogEnabled} />
           </div>
           <ModeDropdown />
-          <UserDropdown />
+          {user ? (
+            <UserDropdown user={user} userTableData={userRecord} roles={roles} />
+          ) : (
+            <Button size='sm' asChild>
+              <Link href='/auth/login'>Sign In</Link>
+            </Button>
+          )}
         </div>
       </div>
     </LayoutHeader>

@@ -17,10 +17,10 @@ const alertVariants = cva(
         default: 'bg-neutral text-white',
         outline: 'border-foreground text-foreground border',
         destructive: 'border-destructive text-destructive border',
-        destructiveTonal: 'bg-destructive/20 text-destructive',
         primary: 'border-primary text-primary border',
         success: 'border-success text-success border',
-        successTonal: 'bg-success/20 text-success'
+        tonalDestructive: 'bg-destructive/20 text-destructive',
+        tonalSuccess: 'bg-success/20 text-success'
       }
     },
     defaultVariants: {

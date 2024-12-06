@@ -10,25 +10,34 @@
     "lint:fix": "next lint --fix",
     "clean": "rm -rf .next .turbo *.tsbuildinfo",
     "clean:node_modules": "rm -rf .next .turbo node_modules *.tsbuildinfo",
-    "type-check": "tsc --noEmit"
+    "type-check": "tsc --noEmit",
+    "supabase:start": "supabase status || supabase start",
+    "supabase:stop": "supabase stop",
+    "supabase:reset": "supabase db reset",
+    "supabase:status": "supabase status",
+    "supabase:generate-types": "supabase gen types typescript --local > ../../packages/supabase/src/types.ts"
   },
   "dependencies": {
+    "@repo/supabase": "workspace:*",
     "@repo/ui": "workspace:*",
+    "@hookform/resolvers": "^3.9.1",
+    "@supabase/supabase-js": "^2.46.2",
     "clsx": "^2.1.1",
     "next": "^15.0.3",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "react-icons": "^5.3.0",
     "react-perfect-scrollbar": "^1.5.8",
-    "react-use": "^17.5.1"
+    "react-use": "^17.5.1",
+    "zod": "^3.23.8"
   },
   "devDependencies": {
     "@repo/config-eslint": "workspace:*",
     "@repo/config-typescript": "workspace:*",
     "@next/eslint-plugin-next": "^15.0.3",
     "@types/node": "^22.10.1",
-    "@types/react": "^18.3.12",
-    "@types/react-dom": "^18.3.1",
+    "@types/react": "18.3.12",
+    "@types/react-dom": "18.3.1",
     "autoprefixer": "^10.4.20",
     "postcss": "^8.4.49",
     "tailwindcss": "^3.4.15"

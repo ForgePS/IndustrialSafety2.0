@@ -1,5 +1,5 @@
 // Component Imports
-import { Avatar, AvatarFallback, AvatarImage } from './avatar'
+import { Avatar, AvatarFallback, AvatarImage } from '@repo/ui/components/ui/avatar'
 
 // Util Imports
 import { cn } from '@repo/ui/lib/utils'
@@ -30,14 +30,23 @@ const AvatarGroup = ({ limit, avatarUrls, size = 'xl', className }: AvatarGroupP
     >
       {childrenArray.map((url, index) => {
         return (
-          <Avatar key={index} shape='circle' size={size} className='border-card border-2'>
+          <Avatar
+            key={index}
+            shape='circle'
+            size={size}
+            className='border-card border-2 transition-transform duration-200 hover:z-[1] hover:-translate-y-1 hover:shadow'
+          >
             <AvatarImage src={url} />
             <AvatarFallback className='text-card text-xs'>{index + 1}</AvatarFallback>
           </Avatar>
         )
       })}
       {avatarUrls.length > limit && (
-        <Avatar shape='circle' size={size} className='border-card text-card border-2 text-xs'>
+        <Avatar
+          shape='circle'
+          size={size}
+          className='border-card text-card border-2 text-xs transition-transform duration-200 hover:z-[1] hover:-translate-y-1 hover:shadow'
+        >
           <AvatarFallback>{`+${avatarUrls.length - limit + 1}`}</AvatarFallback>
         </Avatar>
       )}

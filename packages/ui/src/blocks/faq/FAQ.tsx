@@ -1,5 +1,5 @@
 // Type Imports
-import type { Database } from '@/types/databaseTypes'
+import type { Database } from '@repo/supabase/types'
 
 // Component Imports
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@repo/ui/components/ui/accordion'

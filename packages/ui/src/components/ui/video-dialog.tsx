@@ -9,7 +9,7 @@ import { AnimatePresence, motion } from 'framer-motion'
 
 // Component Imports
 import { Avatar, AvatarFallback } from './avatar'
-import Image from '../Image'
+import Image from '@repo/ui/components/Image'
 
 // Util Imports
 import { cn } from '@repo/ui/lib/utils'

@@ -3,14 +3,22 @@
   "version": "1.0.0",
   "private": true,
   "scripts": {
-    "dev": "turbo dev",
-    "build": "turbo build",
+    "dev": "turbo dev --filter !@repo/maizzle-email-builder",
+    "build": "turbo build --filter !@repo/maizzle-email-builder",
     "lint": "turbo lint",
     "lint:fix": "turbo lint -- --fix",
     "format": "prettier --write \"**/*.{js,jsx,ts,tsx}\"",
     "type-check": "turbo type-check",
     "clean": "turbo clean && rm -rf .turbo",
     "clean:node_modules": "turbo clean:node_modules && rm -rf .turbo node_modules",
+    "web:start": "turbo start --filter web",
+    "web:supabase:start": "pnpm --filter web supabase:start",
+    "web:supabase:stop": "pnpm --filter web supabase:stop",
+    "web:supabase:reset": "pnpm --filter web supabase:reset",
+    "web:supabase:status": "pnpm --filter web supabase:status",
+    "web:supabase:generate-types": "pnpm --filter web supabase:generate-types",
+    "maizzle:dev": "pnpm --filter @repo/maizzle-email-builder dev",
+    "maizzle:build": "pnpm --filter @repo/maizzle-email-builder build",
     "ui": "pnpm --filter @repo/ui ui"
   },
   "devDependencies": {
@@ -20,7 +28,7 @@
   },
   "packageManager": "pnpm@9.13.2",
   "engines": {
-    "node": "20.x"
+    "node": "22.x"
   },
   "pnpm": {
     "overrides": {

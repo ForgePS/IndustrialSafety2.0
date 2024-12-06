@@ -5,7 +5,7 @@ import Link from 'next/link'
 import { TbCircleCheckFilled, TbMapPin } from 'react-icons/tb'
 
 // Type Imports
-import type { Database } from '@/types/databaseTypes'
+import type { Database } from '@repo/supabase/types'
 
 // Component Imports
 import { Avatar, AvatarFallback, AvatarImage } from '@repo/ui/components/ui/avatar'
@@ -103,7 +103,7 @@ const Reviews = (props: Props) => {
                   <CardHeader className='pbe-4 flex items-center gap-4'>
                     <div className='is-full flex justify-start gap-3'>
                       <Avatar shape='circle' size='3xl' color='primary'>
-                        <AvatarImage src={review.avatarImage || ''} alt={review.username} />
+                        <AvatarImage src={review.avatarImage ?? ''} alt={review.username} />
                         <AvatarFallback className='text-xl'>
                           {getInitials(review.username).toUpperCase()}
                         </AvatarFallback>

@@ -11,13 +11,14 @@ import { TbCircleCheck, TbInfoCircle, TbAlertTriangle, TbBan } from 'react-icons
 import ThemeProvider from '@repo/ui/theme/Provider'
 import { SettingsProvider } from '@repo/ui/contexts/settingsContext'
 import SetupSystemMode from '@repo/ui/theme/SetupSystemMode'
+import ReactQueryProvider from '@repo/ui/providers/ReactQueryProvider'
 import { TooltipProvider } from '@repo/ui/components/ui/tooltip'
 import { Toaster } from '@repo/ui/components/ui/sonner'
 import { getMode, getSettingsFromCookie, getSystemMode } from '@repo/ui/utils/serverHelpers'
 import 'react-perfect-scrollbar/dist/css/styles.css'
 
 // Config Imports
-import appConfig from '@/configs/appConfig'
+import appConfig from '@configs/appConfig'
 
 // Style Imports
 import './globals.css'
@@ -51,7 +52,9 @@ const RootLayout = async ({ children }: { children: ReactNode }) => {
           <SettingsProvider settingsCookie={settingsCookie} mode={mode} appConfig={appConfig}>
             {/* The following component gracefully handles system mode using `colorPref` cookie */}
             <SetupSystemMode modeFallback={systemMode} />
-            <TooltipProvider>{children}</TooltipProvider>
+            <ReactQueryProvider>
+              <TooltipProvider>{children}</TooltipProvider>
+            </ReactQueryProvider>
             <Toaster
               position='top-right'
               icons={{

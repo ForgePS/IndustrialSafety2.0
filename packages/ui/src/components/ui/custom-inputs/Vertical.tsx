@@ -2,8 +2,8 @@
 import type { CustomInputVerticalProps } from './types'
 
 // Component Imports
-import { Checkbox } from '../checkbox'
-import { RadioGroupItem } from '../radio-group'
+import { Checkbox } from '@repo/ui/components/ui/checkbox'
+import { RadioGroupItem } from '@repo/ui/components/ui/radio-group'
 
 // Util Imports
 import { cn } from '@repo/ui/lib/utils'
@@ -25,7 +25,7 @@ const CustomInputVertical = (props: CustomInputVerticalProps) => {
           className
         )}
       >
-        {asset || null}
+        {asset ?? null}
         {title ? (
           typeof title === 'string' ? (
             <h3 className='text-textPrimary text-base font-medium'>{title}</h3>

@@ -1,0 +1,30 @@
+{
+  "name": "@repo/supabase",
+  "version": "1.0.0",
+  "private": true,
+  "exports": {
+    "./hooks": "./src/hooks/index.ts",
+    "./client": "./src/client.ts",
+    "./server": "./src/server.ts",
+    "./clientHelpers": "./src/clientHelpers.ts",
+    "./serverHelpers": "./src/serverHelpers.ts",
+    "./middleware": "./src/middleware.ts",
+    "./settingsConfigurationTypes": "./src/settingsConfigurationTypes.ts",
+    "./types": "./src/types.ts"
+  },
+  "scripts": {
+    "clean": "rm -rf .turbo *.tsbuildinfo",
+    "clean:node_modules": "rm -rf .turbo node_modules *.tsbuildinfo"
+  },
+  "dependencies": {
+    "@supabase/ssr": "^0.5.2",
+    "@supabase/supabase-js": "^2.46.2",
+    "@tanstack/react-query": "^5.62.2",
+    "next": "^15.0.3"
+  },
+  "devDependencies": {
+    "@repo/config-eslint": "workspace:*",
+    "@repo/config-typescript": "workspace:*",
+    "typescript": "5.5.4"
+  }
+}

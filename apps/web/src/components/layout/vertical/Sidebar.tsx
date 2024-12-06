@@ -124,7 +124,7 @@ const AppSidebar = ({ roles, appName }: { roles?: string[]; appName: string }) =
             'mis-2 mie-0': state === 'collapsed'
           })}
         >
-          <Link href='/admin'>
+          <Link href={roles?.includes('admin') ? '/admin' : '/dashboard'}>
             <Logo appName={appName} />
           </Link>
         </div>

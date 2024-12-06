@@ -2,8 +2,8 @@
 import type { CustomInputHorizontalProps } from './types'
 
 // Component Imports
-import { Checkbox } from '../checkbox'
-import { RadioGroupItem } from '../radio-group'
+import { Checkbox } from '@repo/ui/components/ui/checkbox'
+import { RadioGroupItem } from '@repo/ui/components/ui/radio-group'
 
 // Util Imports
 import { cn } from '@repo/ui/lib/utils'

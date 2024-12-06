@@ -22,9 +22,9 @@ const VerticalLayout = (props: VerticalLayoutProps) => {
 
   return (
     <div className={clsx(verticalLayoutClasses.root, 'flex flex-auto')}>
-      {navigation || null}
+      {navigation ?? null}
       <div className={clsx(verticalLayoutClasses.content, 'min-is-0 is-full flex flex-col')}>
-        {header || null}
+        {header ?? null}
         {/* Content */}
         <Content>{children}</Content>
       </div>

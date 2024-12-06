@@ -1,0 +1,43 @@
+---
+title: 'Welcome to {{ saas_startup_name }}!'
+preheader: "You have been invited to join {{ saas_startup_name }}. Let's get started!"
+bodyClass: bg-slate-50
+---
+
+<x-main>
+  <div class="bg-slate-50 sm:px-4 font-sans">
+    <table align="center">
+      <tr>
+        <td class="w-[600px] max-w-full">
+          <table class="w-full">
+            <x-logo />
+            <tr>
+              <td class="p-12 sm:py-8 sm:px-6 text-left bg-white rounded shadow-sm">
+                <h1 class="m-0 mb-6 text-4xl sm:text-3xl text-black font-semibold">
+                  You're Invited to Join {{ saas_startup_name }}!
+                </h1>
+                <p class="m-0 mb-6 text-lg text-slate-700 leading-6">
+                  You have been invited to join {{ saas_startup_name }}. We're thrilled to have you join our community!
+                  At {{ saas_startup_name }}, we're committed to helping you.
+                </p>
+                <x-spacer height="24px" />
+                <x-button href="@{{ .ConfirmationURL }}"> Get Started &rarr; </x-button>
+                <p class="mt-6 text-lg text-slate-700 leading-6">
+                  or copy and paste this URL into your browser: @{{ .ConfirmationURL }}
+                </p>
+                <x-spacer height="32px" />
+                <p class="m-0 text-slate-500">
+                  If you have any questions, feel free to reach out to our support team at {{ support_email }}.
+                  <br /><br />
+                  Best regards,<br />
+                  The {{ saas_startup_name }} Team
+                </p>
+              </td>
+            </tr>
+            <x-footer />
+          </table>
+        </td>
+      </tr>
+    </table>
+  </div>
+</x-main>

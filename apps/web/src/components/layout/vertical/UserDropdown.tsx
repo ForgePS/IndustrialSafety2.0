@@ -4,12 +4,13 @@
 import { useEffect } from 'react'
 
 // Next Imports
+import Image from 'next/image'
 import Link from 'next/link'
 
 // Third-party Imports
 import { useMedia } from 'react-use'
 import { useTheme } from 'next-themes'
-import { TbUser, TbMoodSmile, TbSun, TbMoonStars, TbDeviceDesktop, TbSettings } from 'react-icons/tb'
+import { TbUser, TbMoodSmile, TbSun, TbMoonStars, TbDeviceDesktop, TbSettings, TbLogout } from 'react-icons/tb'
 import {
   DropdownMenu,
   DropdownMenuTrigger,
@@ -20,15 +21,31 @@ import {
   DropdownMenuSeparator
 } from '@repo/ui/components/ui/dropdown-menu'
 import { Button } from '@repo/ui/components/ui/button'
-import { Avatar, AvatarFallback } from '@repo/ui/components/ui/avatar'
+import { Avatar, AvatarFallback, AvatarImage } from '@repo/ui/components/ui/avatar'
+import { useSignOut } from '@repo/supabase/hooks'
 import { useSettings } from '@repo/ui/hooks/useSettings'
+import { getInitials } from '@repo/ui/utils/getInitials'
+import type { User } from '@supabase/supabase-js'
 import type { Mode } from '@repo/ui/types'
+import type { Database } from '@repo/supabase/types'
 
-const UserDropdown = () => {
+type Props = {
+  user: User | null
+  userTableData: Database['public']['Tables']['users']['Row']
+  roles?: string[]
+}
+
+const UserDropdown = ({ user, userTableData, roles }: Props) => {
   // Hooks
   const { setTheme, systemTheme } = useTheme()
   const { settings, updateSettings } = useSettings()
   const isDark = useMedia('(prefers-color-scheme: dark)', systemTheme === 'dark')
+  const signOutMutation = useSignOut()
+
+  // Vars
+  const userName = userTableData.name || user?.user_metadata.name || user?.email
+  const avatarFallbackText = getInitials(userName).toUpperCase()
+  const avatarSrc = user?.user_metadata.user_avatar || user?.user_metadata.avatar_url
 
   const handleClick = (mode: Mode) => {
     if (settings.mode !== mode) {
@@ -52,13 +69,16 @@ const UserDropdown = () => {
       <DropdownMenuTrigger asChild>
         <Button variant='ghost' size='icon' className='!outline-0'>
           <Avatar size='lg'>
-            <AvatarFallback>JD</AvatarFallback>
+            <AvatarImage asChild src={avatarSrc}>
+              <Image alt={userName} src={avatarSrc} priority quality={100} width={36} height={36} />
+            </AvatarImage>
+            <AvatarFallback>{avatarFallbackText}</AvatarFallback>
           </Avatar>
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align='end' className='max-is-[200px]'>
         <DropdownMenuItem asChild>
-          <Link href='admin' className='flex gap-2'>
+          <Link href={`/${roles?.includes('admin') ? 'admin' : 'dashboard'}/my-profile`} className='flex gap-2'>
             <TbUser className='text-xl' />
             <span className='flex-1 truncate'>My Profile</span>
           </Link>
@@ -76,19 +96,29 @@ const UserDropdown = () => {
           </DropdownMenuRadioItem>
         </DropdownMenuRadioGroup>
         <DropdownMenuSeparator />
-        <DropdownMenuItem asChild>
-          <Link href='/dashboard' className='flex gap-2'>
-            <TbMoodSmile className='text-xl' />
-            <span className='flex-1 truncate'>User Dashboard</span>
-          </Link>
-        </DropdownMenuItem>
-        <DropdownMenuSeparator />
-        <DropdownMenuItem asChild>
-          <Link href='/admin' className='flex gap-2'>
-            <TbSettings className='text-xl' />
-            <span className='flex-1 truncate'>Admin Dashboard</span>
-          </Link>
-        </DropdownMenuItem>
+        {!roles?.includes('admin') ? (
+          <DropdownMenuItem asChild>
+            <Link href='/dashboard' className='flex gap-2'>
+              <TbMoodSmile className='text-xl' />
+              <span className='flex-1 truncate'>User Dashboard</span>
+            </Link>
+          </DropdownMenuItem>
+        ) : (
+          <DropdownMenuItem asChild>
+            <Link href='/admin' className='flex gap-2'>
+              <TbSettings className='text-xl' />
+              <span className='flex-1 truncate'>Admin Dashboard</span>
+            </Link>
+          </DropdownMenuItem>
+        )}
+        <form action={() => signOutMutation.mutateAsync()}>
+          <DropdownMenuItem asChild>
+            <button type='submit' className='is-full flex cursor-pointer gap-2 text-start'>
+              <TbLogout className='text-xl' />
+              <span className='flex-1 truncate'>Sign out</span>
+            </button>
+          </DropdownMenuItem>
+        </form>
       </DropdownMenuContent>
     </DropdownMenu>
   )

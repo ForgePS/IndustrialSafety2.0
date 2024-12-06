@@ -32,7 +32,11 @@ type Props = {
   children: ReactNode
   settingsCookie: Settings | null
   mode?: Mode
-  appConfig: any
+  appConfig: {
+    settingsCookieName: string
+    mode: Mode
+    layout: Layout
+  }
 }
 
 // Initial Settings Context

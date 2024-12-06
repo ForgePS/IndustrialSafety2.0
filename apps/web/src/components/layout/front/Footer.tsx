@@ -3,11 +3,17 @@ import Link from 'next/link'
 
 // Third-party Imports
 import * as Icons from 'react-icons/tb'
+import { Avatar, AvatarFallback } from '@repo/ui/components/ui/avatar'
 import { cn } from '@repo/ui/lib/utils'
+import { getPublicGeneralSettings } from '@repo/supabase/serverHelpers'
 import frontCommonStyles from '@repo/ui/blocks/styles.module.css'
+import type { SettingsConfiguration } from '@repo/supabase/settingsConfigurationTypes'
 
 // Component Imports
 import Logo from './Logo'
+
+// Util Imports
+import { getAppName } from '@/utils/getAppName'
 
 // To render dynamic icons
 type DynamicIconProps = {
@@ -25,8 +31,27 @@ export const DynamicIcon = ({ icon }: DynamicIconProps) => {
 
 const Footer = async () => {
   // Vars
-  const appName = 'App Name'
-  const isBlogEnabled = true
+  const appName = await getAppName()
+
+  const { data: settingsData, error } = await getPublicGeneralSettings()
+
+  if (error) {
+    console.error('Error fetching settings: ', error.message)
+  }
+
+  let socialLinks: { title: string; icon: keyof typeof Icons; url: string }[] = []
+  let isBlogEnabled = null
+
+  if (settingsData) {
+    const settings = JSON.parse(settingsData.value) as SettingsConfiguration['general_settings']
+
+    isBlogEnabled = settings.pages_components.blog_enabled
+
+    socialLinks = settings.social_links.map(link => ({
+      ...link,
+      icon: link.icon as keyof typeof Icons
+    }))
+  }
 
   return (
     <footer className='is-full bg-card'>
@@ -44,6 +69,19 @@ const Footer = async () => {
               ThemeSelection
             </Link>
           </p>
+          {socialLinks.length ? (
+            <div className='flex items-center gap-2'>
+              {socialLinks.map((link, index) => (
+                <Link href={link.url} target='_blank' key={index}>
+                  <Avatar color='secondary' size='md'>
+                    <AvatarFallback>
+                      <DynamicIcon icon={link.icon} />
+                    </AvatarFallback>
+                  </Avatar>
+                </Link>
+              ))}
+            </div>
+          ) : null}
         </div>
         <div>
           <h6 className='text-textPrimary mbe-4 text-lg font-semibold'>About</h6>

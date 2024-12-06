@@ -52,7 +52,9 @@
   "typescript.tsdk": "node_modules/typescript/lib",
   "cSpell.words": [
     "cmdk",
+    "maizzle",
     "shadcn",
-    "sonner"
+    "sonner",
+    "supabase"
   ]
 }
