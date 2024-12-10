@@ -34,7 +34,7 @@ const AvatarGroup = ({ limit, avatarUrls, size = 'xl', className }: AvatarGroupP
             key={index}
             shape='circle'
             size={size}
-            className='border-card border-2 transition-transform duration-200 hover:z-[1] hover:-translate-y-1 hover:shadow'
+            className='border-card border-2 transition-transform duration-200 hover:z-[1] hover:-translate-y-1 hover:cursor-pointer hover:shadow'
           >
             <AvatarImage src={url} />
             <AvatarFallback className='text-card text-xs'>{index + 1}</AvatarFallback>
@@ -45,7 +45,7 @@ const AvatarGroup = ({ limit, avatarUrls, size = 'xl', className }: AvatarGroupP
         <Avatar
           shape='circle'
           size={size}
-          className='border-card text-card border-2 text-xs transition-transform duration-200 hover:z-[1] hover:-translate-y-1 hover:shadow'
+          className='border-card text-card border-2 text-xs transition-transform duration-200 hover:z-[1] hover:-translate-y-1 hover:cursor-pointer hover:shadow'
         >
           <AvatarFallback>{`+${avatarUrls.length - limit + 1}`}</AvatarFallback>
         </Avatar>
