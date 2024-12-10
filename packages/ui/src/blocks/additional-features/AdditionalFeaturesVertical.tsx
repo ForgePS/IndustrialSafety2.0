@@ -26,7 +26,7 @@ const AdditionalFeaturesVertical = (props: Props) => {
           key={index}
           delay={transitionDelay + index * transitionDuration}
           inView
-          className='hover:border-be-[3px] hover:border-primary bg-card hover:pbe-[21px] flex flex-col items-center gap-6 rounded-xl p-6'
+          className='border-be-[3px] hover:border-primary bg-card pli-6 pbs-6 pbe-[21px] flex flex-col items-center gap-6 rounded-xl border-transparent transition-[border-color] duration-300 ease-in-out'
         >
           <Avatar size='2xl' color='primary' className='bg-primary/10'>
             <AvatarFallback>{item.icon}</AvatarFallback>

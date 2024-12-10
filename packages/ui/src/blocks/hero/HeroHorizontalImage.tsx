@@ -76,7 +76,7 @@ const HeroHorizontalImage = () => {
               hidden: { y: 30 },
               show: { transition: { delay: 1.1, duration: 0.4 }, y: 0 }
             }}
-            className='mbs-6 sm:mbs-9 flex gap-4 max-lg:justify-center max-sm:flex-col sm:items-center'
+            className='mbs-6 sm:mbs-9 flex max-lg:justify-center max-sm:flex-col'
           >
             <RainbowButton size='lg' className='!plb-2.5'>
               Get Started Now
@@ -91,11 +91,15 @@ const HeroHorizontalImage = () => {
           viewport={{ once: true }}
           variants={{
             hidden: { opacity: 0 },
-            show: { opacity: 1, transition: { delay: 0.2, duration: 0.4 } }
+            show: { opacity: 1, transition: { duration: 1.5 } }
           }}
           className='mli-auto lg:mli-0 plb-4 md:plb-8 lg:plb-32 bg-cover bg-center bg-no-repeat [background-image:url(/images/blocks/hero/hero-v1-shape.png)] max-xl:!bg-none'
         >
-          <Image srcLight='/images/pages/hero-banner.png' srcDark='/images/pages/hero-banner.png' className='is-full' />
+          <Image
+            srcLight='/images/blocks/hero/hero-banner-v1-light.png'
+            srcDark='/images/blocks/hero/hero-banner-v1-light.png'
+            className='is-full'
+          />
         </MotionElement>
       </div>
     </section>

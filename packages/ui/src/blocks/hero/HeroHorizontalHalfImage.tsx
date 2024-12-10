@@ -1,8 +1,7 @@
 // Third-party Imports
-import { TbArrowRight, TbRocket } from 'react-icons/tb'
+import { TbRocket } from 'react-icons/tb'
 
 // Components Imports
-import { Button } from '@repo/ui/components/ui/button'
 import { Ratings } from '@repo/ui/components/ui/ratings'
 import { MotionElement, MotionFadeElement } from '@repo/ui/components/ui/motion-element'
 import AvatarGroup from '@repo/ui/components/ui/avatar-group'
@@ -93,16 +92,12 @@ const HeroHorizontalHalfImage = () => {
               hidden: { y: 30 },
               show: { transition: { delay: 1.1, duration: 0.4 }, y: 0 }
             }}
-            className='mbs-8 sm:mbs-12 flex gap-4 max-lg:justify-center max-sm:flex-col sm:items-center'
+            className='mbs-8 sm:mbs-12 flex max-lg:justify-center max-sm:flex-col'
           >
             <RainbowButton size='lg' className='!plb-2.5'>
               Get Started Now
               <TbRocket className='text-xl' />
             </RainbowButton>
-            <Button size='lg' variant='tonal'>
-              Live Demo
-              <TbArrowRight className='text-xl' />
-            </Button>
           </MotionFadeElement>
         </div>
         <div className='block-start-1/2 max-2xl:is-2/5 absolute end-0 -translate-y-1/2 transform max-lg:hidden'>

@@ -5,7 +5,7 @@ import type { Database } from '@repo/supabase/types'
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@repo/ui/components/ui/accordion'
 
 // Util Imports
-import { cn } from '@/lib/utils'
+import { cn } from '@repo/ui/lib/utils'
 
 type FAQType = Database['public']['Tables']['faqs']['Row']
 

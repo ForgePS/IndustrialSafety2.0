@@ -26,7 +26,7 @@ const AdditionalFeaturesHorizontal = (props: Props) => {
           key={index}
           delay={transitionDelay + index * transitionDuration}
           inView
-          className='hover:border-is-4 hover:border-primary bg-card pli-6 plb-5 hover:pis-5 flex flex-col items-start gap-3 rounded-xl border-transparent hover:shadow'
+          className='border-is-4 hover:border-primary bg-card pis-5 pie-6 plb-5 flex flex-col items-start gap-3 rounded-xl border-transparent transition-[border-color,box-shadow] duration-300 ease-in-out hover:shadow'
         >
           <div className='flex items-center gap-3 text-center'>
             <Avatar shape='circle' size='3xl' color='primary' className='bg-primary/10'>

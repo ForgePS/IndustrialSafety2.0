@@ -4,11 +4,10 @@
 import { useState, useEffect } from 'react'
 
 // Third-party Imports
-import { TbArrowRight, TbRocket } from 'react-icons/tb'
+import { TbRocket } from 'react-icons/tb'
 import { useMedia } from 'react-use'
 
 // Components Imports
-import { Button } from '@repo/ui/components/ui/button'
 import { Ratings } from '@repo/ui/components/ui/ratings'
 import { MotionElement, MotionFadeElement } from '@repo/ui/components/ui/motion-element'
 import AvatarGroup from '@repo/ui/components/ui/avatar-group'
@@ -121,16 +120,12 @@ const HeroVerticalGradient = () => {
                 hidden: { y: 30 },
                 show: { transition: { delay: 1.1, duration: 0.4 }, y: 0 }
               }}
-              className='mbs-8 sm:mbs-12 flex gap-4 max-sm:flex-col sm:justify-center'
+              className='mbs-8 sm:mbs-12 flex max-sm:flex-col sm:justify-center'
             >
               <RainbowButton size='lg' className='!plb-2.5'>
                 Get Started Now
                 <TbRocket className='text-xl' />
               </RainbowButton>
-              <Button size='lg' variant='tonal'>
-                Live Demo
-                <TbArrowRight className='text-xl' />
-              </Button>
             </MotionFadeElement>
           </div>
           <MotionElement

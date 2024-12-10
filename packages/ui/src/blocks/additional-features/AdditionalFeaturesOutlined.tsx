@@ -77,7 +77,9 @@ const AdditionalFeaturesOutlined = (props: Props) => {
             <Avatar
               size='2xl'
               color={hoveredCard === index ? 'primary' : 'default'}
-              className={cn({ 'bg-neutral/10 text-foreground': hoveredCard !== index })}
+              className={cn('transition-colors duration-300 ease-in-out', {
+                'bg-neutral/10 text-foreground': hoveredCard !== index
+              })}
             >
               <AvatarFallback>{item.icon}</AvatarFallback>
             </Avatar>
