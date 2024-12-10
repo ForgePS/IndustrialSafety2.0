@@ -5,7 +5,7 @@ import type { ReactNode } from 'react'
 import { createContext, useState } from 'react'
 
 // Type Imports
-import type { Mode, Layout } from '@repo/ui/types'
+import type { Mode } from '@repo/ui/types'
 
 // Hook Imports
 import { useObjectCookie } from '@repo/ui/hooks/useObjectCookie'
@@ -13,7 +13,6 @@ import { useObjectCookie } from '@repo/ui/hooks/useObjectCookie'
 // Settings type
 export type Settings = {
   mode?: Mode
-  layout?: Layout
 }
 
 // UpdateSettingsOptions type
@@ -35,7 +34,6 @@ type Props = {
   appConfig: {
     settingsCookieName: string
     mode: Mode
-    layout: Layout
   }
 }
 
@@ -49,8 +47,7 @@ export const SettingsProvider = (props: Props) => {
 
   // Initial Settings
   const initialSettings: Settings = {
-    mode: appConfig.mode,
-    layout: appConfig.layout
+    mode: appConfig.mode
   }
 
   const updatedInitialSettings = {

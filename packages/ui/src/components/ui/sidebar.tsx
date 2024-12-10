@@ -21,6 +21,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from './tooltip'
 
 // Hook Imports
 import { useIsMobile } from '@repo/ui/hooks/use-mobile'
+import { useObjectCookie } from '@repo/ui/hooks/useObjectCookie'
 
 // Util Imports
 import { cn } from '@repo/ui/lib/utils'
@@ -36,8 +37,7 @@ type SidebarContext = {
 }
 
 // Vars
-const SIDEBAR_COOKIE_NAME = 'sidebar:state'
-const SIDEBAR_COOKIE_MAX_AGE = 60 * 60 * 24 * 7
+const SIDEBAR_COOKIE_NAME = 'is-sidebar-open'
 const SIDEBAR_WIDTH = '18.75rem'
 const SIDEBAR_WIDTH_MOBILE = '18.75rem'
 const SIDEBAR_WIDTH_ICON = '4.5625rem'
@@ -58,20 +58,23 @@ const useSidebar = () => {
 const SidebarProvider = forwardRef<
   HTMLDivElement,
   ComponentProps<'div'> & {
-    defaultOpen?: boolean
+    defaultOpen: boolean
     open?: boolean
     onOpenChange?: (open: boolean) => void
   }
->(({ defaultOpen = true, open: openProp, onOpenChange: setOpenProp, className, style, children, ...props }, ref) => {
+>(({ defaultOpen, open: openProp, onOpenChange: setOpenProp, className, style, children, ...props }, ref) => {
   // States
   const [openMobile, setOpenMobile] = useState(false)
+
+  // Cookies
+  const [sidebarCookie, updateSidebarCookie] = useObjectCookie<boolean>(SIDEBAR_COOKIE_NAME, defaultOpen)
 
   // Hooks
   const isMobile = useIsMobile()
 
   // This is the internal state of the sidebar.
   // We use openProp and setOpenProp for control from outside the component.
-  const [_open, _setOpen] = useState(defaultOpen)
+  const [_open, _setOpen] = useState(sidebarCookie)
   const open = openProp ?? _open
 
   const setOpen = useCallback(
@@ -84,9 +87,10 @@ const SidebarProvider = forwardRef<
         _setOpen(openState)
       }
 
-      // This sets the cookie to keep the sidebar state.
-      document.cookie = `${SIDEBAR_COOKIE_NAME}=${openState}; path=/; max-age=${SIDEBAR_COOKIE_MAX_AGE}`
+      // This updates the cookie to keep the sidebar state.
+      updateSidebarCookie(openState)
     },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     [setOpenProp, open]
   )
 
