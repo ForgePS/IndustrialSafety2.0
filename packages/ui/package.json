@@ -20,7 +20,8 @@
     "./providers/*": "./src/providers/*.tsx",
     "./theme/*": "./src/theme/*.tsx",
     "./types": "./src/types/index.ts",
-    "./utils/*": "./src/utils/*.ts"
+    "./utils/*": "./src/utils/*.ts",
+    "./utils/toast": "./src/utils/toast.tsx"
   },
   "scripts": {
     "ui": "pnpm dlx shadcn@latest",

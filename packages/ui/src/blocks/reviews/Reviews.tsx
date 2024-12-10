@@ -53,7 +53,7 @@ const Reviews = (props: Props) => {
   const {
     data,
     columnCount = 4,
-    columnWidth = 330,
+    columnWidth = 300,
     gap = 24,
     className,
     transitionDelay = 0.2,
