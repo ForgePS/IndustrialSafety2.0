@@ -135,7 +135,7 @@ const CreateReview = () => {
     toast('success', 'Review created successfully')
 
     // Reset the form to its default values
-   form.reset()
+    form.reset()
     form.setValue('rating', 5)
     setFile(undefined)
     router.refresh()
@@ -148,7 +148,7 @@ const CreateReview = () => {
   return (
     <div className='flex flex-col gap-y-8'>
       <div>
-        <h1 className='text-3xl font-bold text-textPrimary'>Create Review</h1>
+        <h1 className='text-textPrimary text-3xl font-bold'>Create Review</h1>
       </div>
       <Form {...form}>
         <form>
@@ -157,7 +157,7 @@ const CreateReview = () => {
               <CardHeader className='border-be'>
                 <CardDescription className='font-medium'>Review Details</CardDescription>
               </CardHeader>
-              <CardContent className='grid md:grid-cols-2 gap-6 pbs-6'>
+              <CardContent className='pbs-6 grid gap-6 md:grid-cols-2'>
                 <div className='flex flex-col items-start gap-2'>
                   <FormField
                     control={form.control}
@@ -288,7 +288,7 @@ const CreateReview = () => {
               <CardHeader className='border-be'>
                 <CardDescription className='font-medium'>Reviewer Details</CardDescription>
               </CardHeader>
-              <CardContent className='flex flex-col gap-6 pbs-6'>
+              <CardContent className='pbs-6 flex flex-col gap-6'>
                 <FormField
                   control={form.control}
                   name='username'
@@ -334,7 +334,7 @@ const CreateReview = () => {
                 <ReviewImage onImageUpload={handleImageUpload} file={file} setFile={setFile} />
               </CardContent>
             </Card>
-            <div className='col-span-full flex max-sm:flex-col gap-4'>
+            <div className='col-span-full flex gap-4 max-sm:flex-col'>
               <SubmitButton formAction={form.handleSubmit(onSubmit) as any} pendingText='Creating...'>
                 Create
               </SubmitButton>

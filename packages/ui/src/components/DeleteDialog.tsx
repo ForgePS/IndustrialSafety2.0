@@ -32,13 +32,13 @@ const DeleteDialog = ({
       </DialogTrigger>
       <DialogContent className='is-[380px]'>
         <DialogTitle hidden />
-        <DialogDescription className='flex flex-col gap-y-3 items-center'>
+        <DialogDescription className='flex flex-col items-center gap-y-3'>
           <Avatar shape='circle' size='3xl' className='bg-destructive/20 text-destructive'>
             <AvatarFallback>
               <TbBoxModel className='bs-6 is-6' />
             </AvatarFallback>
           </Avatar>
-          <span className='font-medium text-lg text-textPrimary'>Delete review</span>
+          <span className='text-textPrimary text-lg font-medium'>Delete review</span>
           <span className='text-textSecondary text-center'>Are you sure you would like to do this?</span>
         </DialogDescription>
         <DialogFooter className='sm:justify-center'>

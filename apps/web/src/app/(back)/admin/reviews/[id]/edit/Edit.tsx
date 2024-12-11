@@ -109,8 +109,8 @@ const EditReview = ({ reviewData, id }: { reviewData: Database['public']['Tables
 
   return (
     <div className='flex flex-col gap-y-8'>
-      <div className='flex max-sm:flex-col sm:items-center sm:justify-between gap-y-2'>
-        <h1 className='text-3xl font-bold text-textPrimary'>Edit Review</h1>
+      <div className='flex gap-y-2 max-sm:flex-col sm:items-center sm:justify-between'>
+        <h1 className='text-textPrimary text-3xl font-bold'>Edit Review</h1>
         <DeleteDialog
           handleDelete={async () => {
             await deleteReview(id)
@@ -126,7 +126,7 @@ const EditReview = ({ reviewData, id }: { reviewData: Database['public']['Tables
               <CardHeader className='border-be'>
                 <CardDescription className='font-medium'>Review Details</CardDescription>
               </CardHeader>
-              <CardContent className='grid md:grid-cols-2 gap-6 pbs-6'>
+              <CardContent className='pbs-6 grid gap-6 md:grid-cols-2'>
                 <div className='flex flex-col items-start gap-2'>
                   <FormField
                     control={form.control}
@@ -257,7 +257,7 @@ const EditReview = ({ reviewData, id }: { reviewData: Database['public']['Tables
               <CardHeader className='border-be'>
                 <CardDescription className='font-medium'>Reviewer Details</CardDescription>
               </CardHeader>
-              <CardContent className='flex flex-col gap-6 pbs-6'>
+              <CardContent className='pbs-6 flex flex-col gap-6'>
                 <FormField
                   control={form.control}
                   name='username'
@@ -303,7 +303,7 @@ const EditReview = ({ reviewData, id }: { reviewData: Database['public']['Tables
                 <ReviewImage onImageUpload={handleImageUpload} defaultImage={reviewData.avatarImage || undefined} />
               </CardContent>
             </Card>
-            <div className='col-span-full flex max-sm:flex-col gap-4'>
+            <div className='col-span-full flex gap-4 max-sm:flex-col'>
               <SubmitButton formAction={form.handleSubmit(onSubmit) as any} pendingText='Updating...'>
                 Save
               </SubmitButton>

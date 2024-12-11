@@ -98,7 +98,7 @@ const Reviews = ({ reviewData }: { reviewData: Database['public']['Tables']['rev
       enableHiding: false,
       cell: ({ row }) => (
         <div className='flex items-center gap-4'>
-          <Link href={`/admin/reviews/${row.original.id}/edit`} className='flex items-center gap-1 text-primary'>
+          <Link href={`/admin/reviews/${row.original.id}/edit`} className='text-primary flex items-center gap-1'>
             <TbEdit />
             Edit
           </Link>
@@ -116,8 +116,8 @@ const Reviews = ({ reviewData }: { reviewData: Database['public']['Tables']['rev
 
   return (
     <div className='flex flex-col gap-y-8'>
-      <div className='flex max-sm:flex-col sm:items-center sm:justify-between gap-y-2'>
-        <h1 className='text-3xl font-bold text-textPrimary'>Reviews</h1>
+      <div className='flex gap-y-2 max-sm:flex-col sm:items-center sm:justify-between'>
+        <h1 className='text-textPrimary text-3xl font-bold'>Reviews</h1>
         <Link href='/admin/reviews/create'>
           <Button className='max-sm:is-full'>New review</Button>
         </Link>

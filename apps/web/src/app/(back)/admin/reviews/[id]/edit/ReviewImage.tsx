@@ -55,25 +55,25 @@ const ReviewImage: React.FC<ReviewImageProps> = ({ onImageUpload, defaultImage }
             <img
               key={imageSrc}
               alt={imageSrc}
-              className='single-file-image rounded-full bs-full is-full object-cover'
+              className='single-file-image bs-full is-full rounded-full object-cover'
               src={imageSrc}
             />
             <Button
               variant='destructive'
               size='icon'
-              className='absolute block-end-[76%] inline-end-1 rounded-full !is-6 !bs-6'
+              className='block-end-[76%] inline-end-1 !is-6 !bs-6 absolute rounded-full'
               onClick={e => {
                 e.stopPropagation()
                 setImageSrc('')
                 onImageUpload('')
               }}
             >
-              <TbX className='size-4 ' />
+              <TbX className='size-4' />
             </Button>
           </>
         ) : (
           <>
-            <div className='bs-full flex flex-col items-center justify-center rounded-full text-sm text-center p-3'>
+            <div className='bs-full flex flex-col items-center justify-center rounded-full p-3 text-center text-sm'>
               Drag & Drop your files or <span className='text-primary'>Browse</span>
             </div>
           </>
