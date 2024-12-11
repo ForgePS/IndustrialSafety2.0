@@ -1,0 +1,24 @@
+{
+  "name": "@repo/profile",
+  "version": "1.0.0",
+  "private": true,
+  "exports": {
+    "./*": "./src/*.ts"
+  },
+  "scripts": {
+    "lint": "eslint src/",
+    "lint:fix": "eslint src/ --fix",
+    "clean": "rm -rf .turbo *.tsbuildinfo",
+    "clean:node_modules": "rm -rf .turbo node_modules *.tsbuildinfo",
+    "type-check": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@repo/supabase": "workspace:*",
+    "@supabase/supabase-js": "^2.0.0"
+  },
+  "devDependencies": {
+    "@repo/config-eslint": "workspace:*",
+    "@repo/config-typescript": "workspace:*",
+    "typescript": "^5.0.0"
+  }
+}
