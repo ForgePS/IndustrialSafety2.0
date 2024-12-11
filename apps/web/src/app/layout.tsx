@@ -98,7 +98,7 @@ const RootLayout = async ({ children }: { children: ReactNode }) => {
     >
       <head>
         {/*Google tag manager*/}
-        {gtm && (
+        {gtm !== '' && (
           <Script
             id='gtm-script'
             strategy='afterInteractive'
@@ -115,7 +115,7 @@ const RootLayout = async ({ children }: { children: ReactNode }) => {
         )}
       </head>
       <body className={clsx(inter.className, 'is-full min-bs-full flex flex-auto flex-col')}>
-        {gtm && (
+        {gtm !== '' && (
           <noscript>
             <iframe
               src={`https://www.googletagmanager.com/ns.html?id=${gtm}`}
@@ -143,37 +143,37 @@ const RootLayout = async ({ children }: { children: ReactNode }) => {
             />
           </SettingsProvider>
         </ThemeProvider>
+        {providerScripts.map((script, index) => {
+          // Check if the script is an external script (has src attribute)
+          const srcMatch = script.match(/src="([^"]+)"/)
+
+          if (srcMatch) {
+            // External script
+
+            return (
+              <Script
+                key={`provider-script-${index}`}
+                src={srcMatch[1]} // Extract the src URL from the snippet
+                strategy='afterInteractive'
+              />
+            )
+          } else {
+            // Inline script (strip out the <script> tags)
+            const inlineScript = script.replace(/<\/?script[^>]*>/g, '')
+
+            return (
+              <Script
+                key={`provider-inline-script-${index}`}
+                id={`provider-inline-script-${index}`}
+                strategy='afterInteractive'
+                dangerouslySetInnerHTML={{
+                  __html: inlineScript
+                }}
+              />
+            )
+          }
+        })}
       </body>
-      {providerScripts.map((script, index) => {
-        // Check if the script is an external script (has src attribute)
-        const srcMatch = script.match(/src="([^"]+)"/)
-
-        if (srcMatch) {
-          // External script
-
-          return (
-            <Script
-              key={`provider-script-${index}`}
-              src={srcMatch[1]} // Extract the src URL from the snippet
-              strategy='afterInteractive'
-            />
-          )
-        } else {
-          // Inline script (strip out the <script> tags)
-          const inlineScript = script.replace(/<\/?script[^>]*>/g, '')
-
-          return (
-            <Script
-              key={`provider-inline-script-${index}`}
-              id={`provider-inline-script-${index}`}
-              strategy='afterInteractive'
-              dangerouslySetInnerHTML={{
-                __html: inlineScript
-              }}
-            />
-          )
-        }
-      })}
     </html>
   )
 }
