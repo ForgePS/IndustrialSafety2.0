@@ -22,6 +22,7 @@
     "ui": "pnpm --filter @repo/ui ui"
   },
   "devDependencies": {
+    "@turbo/gen": "^2.3.3",
     "prettier": "^3.4.1",
     "prettier-plugin-tailwindcss": "^0.6.9",
     "turbo": "^2.3.3"

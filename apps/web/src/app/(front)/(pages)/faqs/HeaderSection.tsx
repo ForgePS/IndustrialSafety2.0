@@ -47,8 +47,11 @@ const HeaderSection = () => {
           frontCommonStyles.layoutSpacing
         )}
       >
-        <h1 className='max-is-[657px] relative text-center text-3xl font-bold'>FAQ</h1>
-        <p className='from-foreground/80 max-is-[657px] bg-gradient-to-r to-[hsl(236_18%_64%/0.4)] bg-clip-text text-center text-xl font-medium [-webkit-text-fill-color:transparent] sm:text-xl'>
+        <h1 className='max-is-[657px] relative text-center text-3xl font-bold'>
+          FAQ
+          <span className='bs-0.5 is-full -block-end-0.5 from-primary/40 to-primary/0 absolute start-0 rounded-full bg-gradient-to-r' />
+        </h1>
+        <p className='max-is-[657px] text-textSecondary text-center text-lg sm:text-xl'>
           Here are the most frequently asked questions to assist you in making an informed decision.
         </p>
         <form

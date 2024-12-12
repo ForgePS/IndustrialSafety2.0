@@ -226,9 +226,9 @@ const AppSidebar = ({ roles, appName }: { roles?: string[]; appName: string }) =
                 </SidebarMenuItem>
                 {process.env.NODE_ENV !== 'production' && (
                   <SidebarMenuItem>
-                    <MenuButton href='/keystatic' target='_blank' tooltip='Blog Admin'>
+                    <MenuButton href='/keystatic' target='_blank' tooltip='Blog'>
                       <TbClipboardList />
-                      <span>Blog Admin</span>
+                      <span>Blog</span>
                     </MenuButton>
                     <SidebarMenuAction className='pointer-events-none hover:bg-transparent [&>svg]:size-5'>
                       <TbExternalLink />

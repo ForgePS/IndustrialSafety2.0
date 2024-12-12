@@ -1,0 +1,13 @@
+// Third-party Imports
+import NotFound from '@repo/ui/components/NotFound'
+import KeystaticApp from '@repo/keystatic/keystaticAdmin'
+
+const Layout = () => {
+  if (process.env.NODE_ENV === 'production') {
+    return <NotFound />
+  }
+
+  return <KeystaticApp />
+}
+
+export default Layout

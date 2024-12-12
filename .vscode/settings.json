@@ -51,8 +51,12 @@
   "editor.linkedEditing": true,
   "typescript.tsdk": "node_modules/typescript/lib",
   "cSpell.words": [
+    "chatflow",
     "cmdk",
+    "keystatic",
     "maizzle",
+    "markdoc",
+    "renderable",
     "shadcn",
     "sonner",
     "supabase"

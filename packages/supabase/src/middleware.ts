@@ -5,6 +5,9 @@ import type { NextRequest } from 'next/server'
 // Third-party Imports
 import { createServerClient } from '@supabase/ssr'
 
+// Type Imports
+import type { SettingsConfiguration } from '@repo/supabase/settingsConfigurationTypes'
+
 export async function updateSession(request: NextRequest, isMagicLinkEnabled: boolean) {
   let supabaseResponse = NextResponse.next({
     request
@@ -38,6 +41,22 @@ export async function updateSession(request: NextRequest, isMagicLinkEnabled: bo
   } = await supabase.auth.getUser()
 
   const url = request.nextUrl.clone()
+
+  const { data: settings_configuration } = await supabase
+    .from('settings_configuration')
+    .select('value')
+    .eq('key', 'general_settings')
+    .single()
+
+  const isBlogEnabled = (JSON.parse(settings_configuration?.value) as SettingsConfiguration['general_settings'])
+    .pages_components.blog_enabled
+
+  // Hide `blog` routes if the blog is disabled
+  if (url.pathname.startsWith('/blog') && !isBlogEnabled) {
+    url.pathname = '/page-not-found' // Display 404 page
+
+    return NextResponse.rewrite(url)
+  }
 
   const { data: publicUser } = await supabase.from('users').select(`*`).eq('user_id', user?.id).single()
 

@@ -1,0 +1,22 @@
+{
+  "extends": "@repo/config-typescript/react",
+  "compilerOptions": {
+    "baseUrl": "./",
+    "paths": {
+      "@repo/*": [
+        "../*"
+      ],
+      "@/*": [
+        "./src/*"
+      ]
+    }
+  },
+  "include": [
+    ".eslintrc.js",
+    "src",
+    "**/*.ts"
+  ],
+  "exclude": [
+    "node_modules"
+  ]
+}
