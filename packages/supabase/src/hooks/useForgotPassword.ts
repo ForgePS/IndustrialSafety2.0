@@ -8,13 +8,16 @@ type ParamsType = {
   email: string
 }
 
-export const useForgotPassword = () => {
+/**
+ * @param redirectTo (optional) - The URL to send the user to after they click the password reset link.
+ */
+export const useForgotPassword = (redirectTo?: string) => {
   // Vars
   const supabase = createClient()
 
   const mutationFn = async (params: ParamsType) => {
     const { data, error } = await supabase.auth.resetPasswordForEmail(params.email, {
-      redirectTo: `${process.env.NEXT_PUBLIC_APP_URL}/auth/callback?next=/reset-password`
+      ...(redirectTo && { redirectTo })
     })
 
     if (error) {

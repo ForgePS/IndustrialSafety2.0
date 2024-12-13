@@ -20,9 +20,10 @@
   "dependencies": {
     "@hookform/resolvers": "^3.9.1",
     "@markdoc/markdoc": "^0.4.0",
+    "@repo/auth": "workspace:*",
+    "@repo/keystatic": "workspace:*",
     "@repo/supabase": "workspace:*",
     "@repo/ui": "workspace:*",
-    "@repo/keystatic": "workspace:*",
     "@tanstack/react-query": "^5.62.2",
     "@tanstack/react-table": "^8.20.5",
     "@tiptap/extension-link": "^2.10.3",

@@ -10,7 +10,10 @@ type ParamsType = {
   'confirm-password': string
 }
 
-export const useSignUp = () => {
+/**
+ * @param emailRedirectTo (optional) - The redirect url embedded in the email link.
+ */
+export const useSignUp = (emailRedirectTo?: string) => {
   // Vars
   const supabase = createClient()
 
@@ -18,7 +21,7 @@ export const useSignUp = () => {
     const { data, error } = await supabase.auth.signUp({
       ...params,
       options: {
-        emailRedirectTo: `${process.env.NEXT_PUBLIC_APP_URL}/auth/callback?next=/dashboard`,
+        ...(emailRedirectTo && { emailRedirectTo }),
         data: { name: params.email.split('@')[0] }
       }
     })

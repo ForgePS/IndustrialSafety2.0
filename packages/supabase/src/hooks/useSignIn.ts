@@ -34,7 +34,10 @@ export const useSignInWithPassword = () => {
   })
 }
 
-export const useSignInWithOAuthProvider = () => {
+/**
+ * @param redirectTo (optional) - A URL to send the user to after they are confirmed.
+ */
+export const useSignInWithOAuthProvider = (redirectTo?: string) => {
   // Vars
   const supabase = createClient()
 
@@ -42,7 +45,7 @@ export const useSignInWithOAuthProvider = () => {
     const { error } = await supabase.auth.signInWithOAuth({
       provider,
       options: {
-        redirectTo: `${process.env.NEXT_PUBLIC_APP_URL}/auth/callback?next=/dashboard`
+        ...(redirectTo && { redirectTo })
       }
     })
 
@@ -57,7 +60,10 @@ export const useSignInWithOAuthProvider = () => {
   })
 }
 
-export const useSignInWithMagicLink = () => {
+/**
+ * @param emailRedirectTo (optional) - The redirect url embedded in the email link.
+ */
+export const useSignInWithMagicLink = (emailRedirectTo?: string) => {
   // Vars
   const supabase = createClient()
 
@@ -65,7 +71,7 @@ export const useSignInWithMagicLink = () => {
     const { data, error } = await supabase.auth.signInWithOtp({
       ...params,
       options: {
-        emailRedirectTo: `${process.env.NEXT_PUBLIC_APP_URL}/auth/callback?next=/dashboard`,
+        ...(emailRedirectTo && { emailRedirectTo }),
         data: { name: params.email.split('@')[0] }
       }
     })

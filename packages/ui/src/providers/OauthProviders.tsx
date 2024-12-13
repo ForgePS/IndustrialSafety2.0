@@ -4,8 +4,8 @@
 import type { ReactNode } from 'react'
 
 // Third-party Imports
+import { useOAuthSignIn } from '@repo/auth/sign-in'
 import type { Provider } from '@supabase/supabase-js'
-import { useSignInWithOAuthProvider } from '@repo/supabase/hooks'
 
 // Component Imports
 import SubmitButton from '@repo/ui/components/SubmitButton'
@@ -63,7 +63,7 @@ const getOAuthProviderLogo = (): OAuthProviderLogo => {
 
 const OauthProviders = ({ providers }: { providers: Provider[] }) => {
   // Hooks
-  const signInWithOAuthProviderMutation = useSignInWithOAuthProvider()
+  const { handleSignIn } = useOAuthSignIn()
 
   return (
     <form className='flex flex-col gap-4'>
@@ -71,7 +71,7 @@ const OauthProviders = ({ providers }: { providers: Provider[] }) => {
         return (
           <SubmitButton
             key={provider}
-            formAction={() => signInWithOAuthProviderMutation.mutateAsync(provider)}
+            formAction={() => handleSignIn(provider)}
             variant='ghost'
             className='is-full'
             pendingText={

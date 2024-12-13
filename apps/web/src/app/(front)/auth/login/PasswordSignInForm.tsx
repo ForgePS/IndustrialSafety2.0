@@ -5,13 +5,11 @@ import { useEffect, useState } from 'react'
 import type { ReactNode } from 'react'
 
 // Next Imports
-import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 
 // Third-party Imports
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useForm } from 'react-hook-form'
-import { z } from 'zod'
 import { TbAlertTriangle } from 'react-icons/tb'
 import { Alert, AlertDescription, AlertTitle } from '@repo/ui/components/ui/alert'
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@repo/ui/components/ui/form'
@@ -21,53 +19,34 @@ import PasswordInput from '@repo/ui/components/ui/password-input'
 import { Checkbox } from '@repo/ui/components/ui/checkbox'
 import { Label } from '@repo/ui/components/ui/label'
 import SubmitButton from '@repo/ui/components/SubmitButton'
-import { useSignInWithPassword } from '@repo/supabase/hooks'
+import { passwordSignInFormSchema, usePasswordSignIn } from '@repo/auth/sign-in'
 import type { User } from '@supabase/supabase-js'
-
-const formSchema = z.object({
-  email: z.string().min(1, { message: 'Email address is required.' }).email({
-    message: 'Please enter a valid email address.'
-  }),
-  password: z.string().min(1, { message: 'Password is required.' }).min(8, {
-    message: 'Password must be at least 8 characters.'
-  })
-})
+import type { PasswordSignInFormData } from '@repo/auth/sign-in'
 
 const PasswordSignInForm = ({ appName, users }: { appName: string; users: User[] | null }) => {
   // States
   const [showAlert, setShowAlert] = useState(false)
 
   // Hooks
-  const router = useRouter()
-  const signInWithPasswordMutation = useSignInWithPassword()
-
-  const form = useForm<z.infer<typeof formSchema>>({
-    resolver: zodResolver(formSchema),
+  const form = useForm<PasswordSignInFormData>({
+    resolver: zodResolver(passwordSignInFormSchema),
     defaultValues: {
       email: '',
       password: ''
     }
   })
 
+  const { handleSignIn, error } = usePasswordSignIn(`/auth/verify-email?email=${form.getValues('email')}`)
+
   const handleButtonClick = (value: string) => {
     form.setValue('email', value === 'admin' ? 'admin@jetship.com' : 'user@jetship.com')
     form.setValue('password', value === 'admin' ? 'adminpassword' : 'userpassword')
   }
 
-  const onSubmit = async (formData: z.infer<typeof formSchema>) => {
-    // Check if user already exists with the email address
-    const existingUserData = users?.find(user => user.email === formData.email)
-
-    // If user exists but email is not confirmed, redirect to verify email page
-    if (existingUserData && !existingUserData.email_confirmed_at) {
-      router.push(`/auth/verify-email?email=${formData.email}`)
-
-      return
-    }
-
+  const onSubmit = async (formData: PasswordSignInFormData) => {
     try {
       setShowAlert(false)
-      await signInWithPasswordMutation.mutateAsync(formData).then(() => router.push('/dashboard'))
+      await handleSignIn(formData, users)
     } catch (error) {
       console.error(error)
       setShowAlert(true)
@@ -93,10 +72,9 @@ const PasswordSignInForm = ({ appName, users }: { appName: string; users: User[]
           <TbAlertTriangle className='is-6 bs-6' />
           <AlertTitle>Login Failed</AlertTitle>
           <AlertDescription>
-            {((signInWithPasswordMutation.error as unknown) === 'Invalid login credentials'
+            {((error as unknown) === 'Invalid login credentials'
               ? 'The email address or password you entered is incorrect. Please try again.'
-              : (signInWithPasswordMutation.error as unknown as ReactNode)) ??
-              'An error occurred while logging in. Please try again later.'}
+              : (error as unknown as ReactNode)) ?? 'An error occurred while logging in. Please try again later.'}
           </AlertDescription>
         </Alert>
       )}
