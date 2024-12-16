@@ -13,7 +13,7 @@ export const usePasswordSignIn = (verifyEmailRedirectTo?: string) => {
   const router = useRouter()
   const signInWithPasswordMutation = useSignInWithPassword()
 
-  const handleSignIn = async (formData: PasswordSignInFormData, users: User[] | null) => {
+  const handleSignIn = async (formData: PasswordSignInFormData, users: User[] | null, redirectTo: string = '') => {
     // Check if user already exists with the email address
     const existingUserData = users?.find(user => user.email === formData.email)
 
@@ -29,7 +29,7 @@ export const usePasswordSignIn = (verifyEmailRedirectTo?: string) => {
     }
 
     try {
-      await signInWithPasswordMutation.mutateAsync(formData).then(() => router.push('/dashboard'))
+      await signInWithPasswordMutation.mutateAsync(formData).then(() => router.push(redirectTo ?? '/dashboard'))
     } catch (error) {
       throw error
     }

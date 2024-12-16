@@ -3,8 +3,8 @@ import type { ReactNode } from 'react'
 
 // Next Imports
 import { Inter } from 'next/font/google'
-import type { Metadata } from 'next'
 import Script from 'next/script'
+import type { Metadata } from 'next'
 
 // Third-party Imports
 import { clsx } from 'clsx'
@@ -113,6 +113,7 @@ const RootLayout = async ({ children }: { children: ReactNode }) => {
             }}
           />
         )}
+        <Script src='https://app.lemonsqueezy.com/js/lemon.js' strategy='beforeInteractive' />
       </head>
       <body className={clsx(inter.className, 'is-full min-bs-full flex flex-auto flex-col')}>
         {gtm !== '' && (
@@ -174,6 +175,7 @@ const RootLayout = async ({ children }: { children: ReactNode }) => {
           }
         })}
       </body>
+      <Script src='https://app.lemonsqueezy.com/js/lemon.js' strategy='lazyOnload' />
     </html>
   )
 }

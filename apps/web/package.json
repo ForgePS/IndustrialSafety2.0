@@ -24,6 +24,7 @@
     "@repo/keystatic": "workspace:*",
     "@repo/supabase": "workspace:*",
     "@repo/ui": "workspace:*",
+    "@repo/billing": "workspace:*",
     "@tanstack/react-query": "^5.62.2",
     "@tanstack/react-table": "^8.20.5",
     "@tiptap/extension-link": "^2.10.3",

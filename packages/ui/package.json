@@ -10,6 +10,7 @@
     "./blocks/*": "./src/blocks/*.tsx",
     "./blocks/styles.module.css": "./src/blocks/styles.module.css",
     "./components/*": "./src/components/*.tsx",
+    "./components/custom-inputs/types": "./src/components/custom-inputs/types.ts",
     "./components/search": "./src/components/search/index.tsx",
     "./contexts/*": "./src/contexts/*.tsx",
     "./hooks/*": "./src/hooks/*.tsx",

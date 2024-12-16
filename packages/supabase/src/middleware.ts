@@ -69,6 +69,10 @@ export async function updateSession(request: NextRequest, isMagicLinkEnabled: bo
 
     const { data: userRoles } = await supabase.from('user_roles').select(`*, roles (role)`).eq('user_id', publicUser.id)
 
+    const { data: billingRecords } = await supabase.from('billing').select('status').eq('user_id', user.id)
+
+    const isPaymentSuccessful = billingRecords?.filter(record => record.status === 'success')[0]?.status === 'success'
+
     const roles = userRoles?.map(({ roles }) => roles.role)
 
     // Role-based access control
@@ -85,6 +89,29 @@ export async function updateSession(request: NextRequest, isMagicLinkEnabled: bo
       // If the user is trying to access a user page and is not a user, redirect them
       if (!roles?.includes('user') && !roles?.includes('editor')) {
         url.pathname = '/not-authorized' // Redirect to the 401 page
+
+        return NextResponse.redirect(url)
+      }
+    }
+
+    // User can only access the checkout page after selecting a product
+    if (url.pathname.startsWith('/checkout')) {
+      // If the user is trying to access a checkout page and is not a user, redirect them to the home page
+      if (!roles?.includes('user') || request.cookies.get('checkoutData')?.value === undefined) {
+        url.pathname = '/' // Redirect to the home page
+
+        return NextResponse.redirect(url)
+      }
+    }
+
+    // User can only access the thank you page after a successful payment
+    if (url.pathname.startsWith('/thank-you')) {
+      // delete `checkoutData` cookie if the cookie exists
+      if (request.cookies.has('checkoutData') && isPaymentSuccessful) {
+        request.cookies.delete('checkoutData')
+        supabaseResponse.cookies.delete('checkoutData')
+      } else {
+        url.pathname = '/' // Redirect to the home page
 
         return NextResponse.redirect(url)
       }

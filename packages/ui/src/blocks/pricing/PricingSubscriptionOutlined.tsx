@@ -8,7 +8,7 @@ import type { ReactNode } from 'react'
 import { TbCircleCheck } from 'react-icons/tb'
 
 // Type Imports
-import type { Plan } from '@/types/billingConfigTypes'
+import type { Plan } from '@repo/billing/src/types/billingConfigTypes'
 
 // Component Imports
 import { Badge } from '@repo/ui/components/ui/badge'

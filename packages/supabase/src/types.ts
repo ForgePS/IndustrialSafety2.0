@@ -38,33 +38,42 @@ export type Database = {
         Row: {
           billing_provider: Database["public"]["Enums"]["billing_provider_enum"]
           cost: string | null
+          currency: string | null
           email: string
           id: string
-          order_id: string | null
+          interval: string | null
+          order_id: string
           order_type: string
           payment_email: string | null
+          plan_variant: string
           status: Database["public"]["Enums"]["payment_status_enum"]
           user_id: string
         }
         Insert: {
           billing_provider: Database["public"]["Enums"]["billing_provider_enum"]
           cost?: string | null
+          currency?: string | null
           email?: string
           id?: string
-          order_id?: string | null
+          interval?: string | null
+          order_id: string
           order_type: string
           payment_email?: string | null
+          plan_variant: string
           status: Database["public"]["Enums"]["payment_status_enum"]
           user_id: string
         }
         Update: {
           billing_provider?: Database["public"]["Enums"]["billing_provider_enum"]
           cost?: string | null
+          currency?: string | null
           email?: string
           id?: string
-          order_id?: string | null
+          interval?: string | null
+          order_id?: string
           order_type?: string
           payment_email?: string | null
+          plan_variant?: string
           status?: Database["public"]["Enums"]["payment_status_enum"]
           user_id?: string
         }

@@ -1,5 +1,5 @@
-// Type Imports
-import type { Plan } from '@/types/billingConfigTypes'
+// Third-party Imports
+import type { Plan } from '@repo/billing/src/types/billingConfigTypes'
 
 const data: Plan[] = [
   {

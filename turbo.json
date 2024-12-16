@@ -1,12 +1,17 @@
 {
   "$schema": "https://turbo.build/schema.json",
+  "globalEnv": [
+    "NODE_ENV",
+    "STRIPE_SECRET_KEY",
+    "STRIPE_WEBHOOK_SECRET",
+    "LEMON_SQUEEZY_API_KEY",
+    "LEMON_SQUEEZY_STORE_ID",
+    "LEMON_SQUEEZY_WEBHOOK_SIGNATURE"
+  ],
   "tasks": {
     "dev": {
       "cache": false,
-      "persistent": true,
-      "env": [
-        "NODE_ENV"
-      ]
+      "persistent": true
     },
     "build": {
       "dependsOn": [
@@ -20,9 +25,6 @@
         "dist/**",
         ".next/**",
         "!.next/cache/**"
-      ],
-      "env": [
-        "NODE_ENV"
       ]
     },
     "lint": {},

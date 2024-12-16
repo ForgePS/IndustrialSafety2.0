@@ -1,0 +1,135 @@
+'use client'
+
+// React Imports
+import { useEffect, useState } from 'react'
+
+// Third-party Imports
+import { TbArrowRight } from 'react-icons/tb'
+import { Skeleton } from '@repo/ui/components/ui/skeleton'
+import SubmitButton from '@repo/ui/components/SubmitButton'
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@repo/ui/components/ui/card'
+import { createBillingPortalSession, getSubscribeData } from '@repo/billing/src/actions'
+import type { Database } from '@repo/supabase/types'
+
+// Data Imports
+import plans from '@configs/billingConfig'
+
+type Props = {
+  billingRecord: Database['public']['Tables']['billing']['Row']
+  paymentType: 'recurring' | 'one-off'
+  paymentProvider: Database['public']['Enums']['billing_provider_enum']
+}
+
+const BillingDetails = ({ billingRecord, paymentType, paymentProvider }: Props) => {
+  // States
+  const [loading, setLoading] = useState(true)
+  const [billingCustomer, setBillingCustomer] = useState<any | []>([])
+
+  // Redirect to the billing portal or download the receipt
+  const handleSubmit = async () => {
+    if (paymentProvider === 'lemon_squeezy') {
+      window.open(
+        paymentType === 'recurring'
+          ? billingCustomer.data.attributes.urls.customer_portal
+          : billingCustomer.data.attributes.urls.receipt,
+        '_blank'
+      )
+    } else {
+      // Stripe
+      if (billingCustomer.object === 'charge') {
+        window.open(billingCustomer.receipt_url, '_blank')
+      } else {
+        // Create a billing portal session
+        const data = await createBillingPortalSession(
+          plans,
+          billingCustomer.subscriptions.customer,
+          window.location.origin
+        )
+
+        if (data.url) {
+          window.open(data.url, '_blank') // Open the customer portal link in a new tab
+        } else {
+          alert('Error creating customer portal link')
+        }
+      }
+    }
+  }
+
+  // Fetch the plan details from the billing table which contains the customer's billing details
+  useEffect(() => {
+    const fetchSubscribeData = async () => {
+      const response = await getSubscribeData(billingRecord.order_id, paymentType, billingRecord.billing_provider)
+
+      if (response.status === 200) {
+        setBillingCustomer(response.data)
+      } else {
+        console.error('Failed to fetch subscribe data')
+      }
+
+      setLoading(false) // Set loading to false once data is fetched
+    }
+
+    fetchSubscribeData()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
+  return loading ? (
+    <>
+      <Skeleton className='is-full bs-60' />
+      <Skeleton className='is-full bs-44 mbs-6' />
+    </>
+  ) : (
+    <>
+      <Card>
+        <CardHeader className='border-be'>
+          <CardTitle className='text-xl font-medium'>Your Plan</CardTitle>
+          <CardDescription>
+            Below are the details of your current plan. You can change your plan or cancel your subscription at any
+            time.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className='pbs-4'>
+          <div className='flex flex-col items-start gap-2'>
+            <div className='flex gap-2'>
+              <p className='font-semibold'>Plan Variant: </p>
+              <p>{billingRecord.plan_variant}</p>
+            </div>
+          </div>
+          <div className='mbs-2 flex items-center gap-2'>
+            <p className='font-semibold'>Payment Details:</p>
+            <p>{`${paymentType === 'recurring' ? `Billed ${billingRecord.interval}` : 'Paid'} - ${billingRecord.currency} ${billingRecord.cost}`}</p>
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className='text-xl font-medium'>Manage your Billing Details</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <CardDescription>
+            Visit your Billing Portal to manage your subscription and billing. You can update or cancel your plan, or
+            download your invoices.
+          </CardDescription>
+          <form>
+            <SubmitButton
+              className='mbs-4'
+              formAction={handleSubmit}
+              pendingText={
+                <>
+                  {paymentType === 'recurring' ? 'Opening billing portal...' : 'Redirecting to download receipt...'}
+                  <TbArrowRight className='bs-4 is-4' />
+                </>
+              }
+            >
+              {paymentType === 'recurring' ? 'Visit billing portal' : 'Download receipt'}
+              <TbArrowRight className='bs-4 is-4' />
+            </SubmitButton>
+          </form>
+        </CardContent>
+      </Card>
+    </>
+  )
+}
+
+export default BillingDetails

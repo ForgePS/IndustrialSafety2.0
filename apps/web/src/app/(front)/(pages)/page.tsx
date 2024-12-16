@@ -5,25 +5,29 @@ import { Fragment } from 'react'
 import Link from 'next/link'
 
 // Third-party Imports
+import FAQ from '@repo/ui/blocks/faq/FAQ'
 import { Badge } from '@repo/ui/components/ui/badge'
+import { createClient } from '@repo/supabase/server'
+import Reviews from '@repo/ui/blocks/reviews/Reviews'
+import CTABuyNow from '@repo/ui/blocks/cta/CTABuyNow'
+import CTADiscord from '@repo/ui/blocks/cta/CTADiscord'
+import Separator from '@repo/ui/blocks/others/Separator'
+import SectionHeader from '@repo/ui/blocks/others/SectionHeader'
+import SectionWrapper from '@repo/ui/blocks/others/SectionWrapper'
 import { MotionFadeElement } from '@repo/ui/components/ui/motion-element'
 import HeroHorizontalImage from '@repo/ui/blocks/hero/HeroHorizontalImage'
-import SectionWrapper from '@repo/ui/blocks/others/SectionWrapper'
 import FeaturesImageAccordion from '@repo/ui/blocks/features/FeaturesImageAccordion'
-import Separator from '@repo/ui/blocks/others/Separator'
 import AdditionalFeaturesVertical from '@repo/ui/blocks/additional-features/AdditionalFeaturesVertical'
-import SectionHeader from '@repo/ui/blocks/others/SectionHeader'
-import Reviews from '@repo/ui/blocks/reviews/Reviews'
-import PricingSubscription from '@repo/ui/blocks/pricing/PricingSubscription'
-import CTADiscord from '@repo/ui/blocks/cta/CTADiscord'
-import FAQ from '@repo/ui/blocks/faq/FAQ'
-import CTABuyNow from '@repo/ui/blocks/cta/CTABuyNow'
-import { createClient } from '@repo/supabase/server'
+
+// Component Imports
+import Pricing from './Pricing'
+
+// Config Imports
+import pricingData from '@configs/billingConfig'
 
 // Data Imports
 import additionalFeaturesData from '@/assets/data/additionalFeaturesVerticalData'
 import featuresData from '@/assets/data/featuresLandingPageData'
-import pricingData from '@/assets/data/pricingSubscriptionData'
 import ctaDiscordData from '@/assets/data/ctaDiscordData'
 import ctaBuyNowData from '@/assets/data/ctaBuyNowData'
 
@@ -122,7 +126,7 @@ const LandingPage = async () => {
 
       {/* Pricing Section */}
       <SectionWrapper id='pricing-section' className='plb-16 sm:plb-20 md:plb-[150px] flex flex-col gap-24'>
-        <PricingSubscription
+        <Pricing
           title='Pricing Details'
           description={
             <>

@@ -5,7 +5,7 @@ import type { ReactNode } from 'react'
 import * as Icons from 'react-icons/tb'
 
 // Type Imports
-import type { Plan } from '@/types/billingConfigTypes'
+import type { Plan } from '@repo/billing/src/types/billingConfigTypes'
 
 // Component Imports
 import { Avatar, AvatarFallback } from '@repo/ui/components/ui/avatar'
