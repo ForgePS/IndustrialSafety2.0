@@ -53,6 +53,7 @@ import {
   SidebarSeparator,
   useSidebar
 } from '@repo/ui/components/ui/sidebar'
+import { useAuthContext } from '@repo/auth/AuthProvider'
 import { cn } from '@repo/ui/lib/utils'
 import type { SidebarMenuButtonProps } from '@repo/ui/components/ui/sidebar'
 
@@ -114,10 +115,16 @@ const AppSidebar = ({ roles, appName }: { roles?: string[]; appName: string }) =
   const [activeTeam, setActiveTeam] = useState(teams[0])
 
   // Hooks
+  const { isImpersonating } = useAuthContext()
   const { isMobile, state } = useSidebar()
 
   return (
-    <Sidebar collapsible='icon'>
+    <Sidebar
+      collapsible='icon'
+      className={cn('transition-[inset-block-start,block-size] duration-300 ease-in-out', {
+        'block-start-[54px] !bs-[calc(100%-54px)]': isImpersonating
+      })}
+    >
       <SidebarHeader>
         <div
           className={cn('bs-[2.0625rem] mli-3 flex items-center justify-start overflow-hidden transition-[margin]', {

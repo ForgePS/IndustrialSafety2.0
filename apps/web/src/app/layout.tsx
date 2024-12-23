@@ -15,6 +15,8 @@ import SetupSystemMode from '@repo/ui/theme/SetupSystemMode'
 import ReactQueryProvider from '@repo/ui/providers/ReactQueryProvider'
 import { TooltipProvider } from '@repo/ui/components/ui/tooltip'
 import { Toaster } from '@repo/ui/components/ui/sonner'
+import { AuthProvider } from '@repo/auth/AuthProvider'
+import { ImpersonationBanner } from '@repo/auth/ImpersonationBanner'
 import { getMode, getSettingsFromCookie, getSystemMode } from '@repo/ui/utils/serverHelpers'
 import 'react-perfect-scrollbar/dist/css/styles.css'
 import { getPublicGeneralSettings } from '@repo/supabase/clientHelpers'
@@ -131,7 +133,12 @@ const RootLayout = async ({ children }: { children: ReactNode }) => {
             {/* The following component gracefully handles system mode using `colorPref` cookie */}
             <SetupSystemMode modeFallback={systemMode} />
             <ReactQueryProvider>
-              <TooltipProvider>{children}</TooltipProvider>
+              <TooltipProvider>
+                <AuthProvider>
+                  <ImpersonationBanner />
+                  {children}
+                </AuthProvider>
+              </TooltipProvider>
             </ReactQueryProvider>
             <Toaster
               position='top-right'

@@ -141,7 +141,7 @@ const SidebarProvider = forwardRef<
           } as CSSProperties
         }
         className={cn(
-          'group/sidebar-wrapper min-bs-svh is-full has-[[data-variant=inset]]:bg-background flex',
+          'group/sidebar-wrapper bs-full is-full has-[[data-variant=inset]]:bg-background relative flex',
           className
         )}
         ref={ref}
@@ -184,7 +184,7 @@ const Sidebar = forwardRef<
         <SheetContent
           data-sidebar='sidebar'
           data-mobile='true'
-          className='is-[--sidebar-width] bg-sidebar text-sidebar-foreground p-0 [&>button]:hidden'
+          className={cn('is-[--sidebar-width] bg-sidebar text-sidebar-foreground p-0 [&>button]:hidden', className)}
           style={
             {
               '--sidebar-width': SIDEBAR_WIDTH_MOBILE
@@ -212,7 +212,7 @@ const Sidebar = forwardRef<
       {/* This is what handles the sidebar gap on desktop */}
       <div
         className={cn(
-          'bs-svh is-[--sidebar-width] relative bg-transparent transition-[width] duration-200 ease-linear',
+          'bs-full is-[--sidebar-width] relative bg-transparent transition-[width] duration-200 ease-linear',
           'group-data-[collapsible=offcanvas]:is-0',
           'group-data-[side=right]:rotate-180',
           variant === 'floating' || variant === 'inset'
@@ -222,7 +222,7 @@ const Sidebar = forwardRef<
       />
       <div
         className={cn(
-          'bs-svh is-[--sidebar-width] fixed inset-y-0 z-20 hidden transition-[left,right,width] duration-200 ease-linear md:flex',
+          'bs-full is-[--sidebar-width] fixed inset-y-0 z-20 hidden transition-[left,right,width] duration-200 ease-linear md:flex',
           side === 'left'
             ? 'start-0 group-data-[collapsible=offcanvas]:start-[calc(var(--sidebar-width)*-1)]'
             : 'end-0 group-data-[collapsible=offcanvas]:end-[calc(var(--sidebar-width)*-1)]',

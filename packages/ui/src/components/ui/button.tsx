@@ -80,7 +80,12 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(
       <Comp
         className={cn(buttonVariants({ variant, size, shape, className }), {
           'pli-[18px] plb-[9px]':
-            (variant === 'default' || variant === 'secondary' || variant === 'destructive' || variant === 'ghost') &&
+            (variant === 'default' ||
+              variant === 'secondary' ||
+              variant === 'destructive' ||
+              variant === 'ghost' ||
+              variant === 'ghostPrimary' ||
+              variant === 'ghostDestructive') &&
             size === 'lg',
           'pli-3.5 plb-1.5':
             (variant === 'default' ||
@@ -91,18 +96,45 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(
               variant === 'ghostDestructive') &&
             size === 'default',
           'pli-2.5 plb-[3px]':
-            (variant === 'default' || variant === 'secondary' || variant === 'destructive' || variant === 'ghost') &&
+            (variant === 'default' ||
+              variant === 'secondary' ||
+              variant === 'destructive' ||
+              variant === 'ghost' ||
+              variant === 'ghostPrimary' ||
+              variant === 'ghostDestructive') &&
             size === 'sm',
           'pli-1.5 plb-0':
-            (variant === 'default' || variant === 'secondary' || variant === 'destructive' || variant === 'ghost') &&
+            (variant === 'default' ||
+              variant === 'secondary' ||
+              variant === 'destructive' ||
+              variant === 'ghost' ||
+              variant === 'ghostPrimary' ||
+              variant === 'ghostDestructive') &&
             size === 'xs',
           'pli-5 plb-[11px]':
-            (variant === 'solid' || variant === 'tonal' || variant === 'tonalDefault') && size === 'lg',
+            (variant === 'solid' ||
+              variant === 'solidDestructive' ||
+              variant === 'tonal' ||
+              variant === 'tonalDefault') &&
+            size === 'lg',
           'pli-4 plb-2':
-            (variant === 'solid' || variant === 'tonal' || variant === 'tonalDefault') && size === 'default',
+            (variant === 'solid' ||
+              variant === 'solidDestructive' ||
+              variant === 'tonal' ||
+              variant === 'tonalDefault') &&
+            size === 'default',
           'pli-3 plb-[5px]':
-            (variant === 'solid' || variant === 'tonal' || variant === 'tonalDefault') && size === 'sm',
-          'pli-2 plb-0.5': (variant === 'solid' || variant === 'tonal' || variant === 'tonalDefault') && size === 'xs',
+            (variant === 'solid' ||
+              variant === 'solidDestructive' ||
+              variant === 'tonal' ||
+              variant === 'tonalDefault') &&
+            size === 'sm',
+          'pli-2 plb-0.5':
+            (variant === 'solid' ||
+              variant === 'solidDestructive' ||
+              variant === 'tonal' ||
+              variant === 'tonalDefault') &&
+            size === 'xs',
           'pli-[19px] plb-2.5': variant === 'outline' && size === 'lg',
           'pli-[15px] plb-[7px]': variant === 'outline' && size === 'default',
           'pli-[11px] plb-1': variant === 'outline' && size === 'sm',

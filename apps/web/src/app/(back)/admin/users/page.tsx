@@ -10,7 +10,7 @@ const UserPage = async () => {
   // Vars
   const supabase = createServiceRoleClient()
 
-  const { data: userRecord, error: userError } = await supabase
+  const { data: usersRecord, error: userError } = await supabase
     .from('users')
     .select('*')
     .order('id', { ascending: true, nullsFirst: false })
@@ -28,7 +28,7 @@ const UserPage = async () => {
     )
   }
 
-  return <Users usersRecord={userRecord} rolesData={rolesData} />
+  return <Users usersRecord={usersRecord} rolesData={rolesData} />
 }
 
 export default UserPage

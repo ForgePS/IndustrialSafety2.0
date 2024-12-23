@@ -14,6 +14,7 @@ import { TbClipboardList, TbCrown, TbCurrencyDollar, TbListDetails, TbMenu2 } fr
 import { Sheet, SheetContent, SheetDescription, SheetTitle, SheetTrigger } from '@repo/ui/components/ui/sheet'
 import { Button } from '@repo/ui/components/ui/button'
 import ReactPerfectScrollbar from '@repo/ui/components/ReactPerfectScrollbar'
+import { useAuthContext } from '@repo/auth/AuthProvider'
 import { cn } from '@repo/ui/lib/utils'
 
 type WrapperProps = {
@@ -24,6 +25,9 @@ type WrapperProps = {
 }
 
 const Wrapper = ({ open, setOpen, isBreakpointReached, children }: WrapperProps) => {
+  // Hooks
+  const { isImpersonating } = useAuthContext()
+
   useEffect(() => {
     if (!isBreakpointReached) {
       setOpen(false)
@@ -40,7 +44,12 @@ const Wrapper = ({ open, setOpen, isBreakpointReached, children }: WrapperProps)
               <TbMenu2 className='cursor-pointer text-lg xl:hidden' />
             </Button>
           </SheetTrigger>
-          <SheetContent side='left' className='p-0'>
+          <SheetContent
+            side='left'
+            className={cn('p-0 transition-[inset-block-start,block-size] duration-300 ease-in-out', {
+              'block-start-[54px] !bs-[calc(100%-54px)]': isImpersonating
+            })}
+          >
             <SheetTitle hidden />
             <SheetDescription hidden />
             <ReactPerfectScrollbar options={{ wheelPropagation: false, suppressScrollX: true }}>

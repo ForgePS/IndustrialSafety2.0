@@ -14,6 +14,7 @@ import { Card } from '@repo/ui/components/ui/card'
 import DataTable from '@repo/ui/components/ui/data-table'
 import { Button } from '@repo/ui/components/ui/button'
 import DeleteDialog from '@repo/ui/components/DeleteDialog'
+import { useAuthContext } from '@repo/auth/AuthProvider'
 import type { Database } from '@repo/supabase/types'
 import { toast } from '@repo/ui/utils/toast'
 
@@ -46,6 +47,7 @@ const Users = ({
 
   // States
   const [users, setUsers] = useState<UserWithRole[]>(mergedData)
+  const { startImpersonation } = useAuthContext()
 
   // Hooks
   const router = useRouter()
@@ -94,7 +96,12 @@ const Users = ({
             Edit
           </Link>
           {!row.original.hasAdminRole && (
-            <DeleteDialog variant='ghostDestructive' handleDelete={() => handleDeleteUser({ id: row.original.id })} />
+            <>
+              <Button variant='outline' onClick={() => startImpersonation(usersRecord, row.original.user_id)}>
+                Impersonate
+              </Button>
+              <DeleteDialog variant='ghostDestructive' handleDelete={() => handleDeleteUser({ id: row.original.id })} />
+            </>
           )}
         </div>
       )
