@@ -22,8 +22,14 @@ import 'react-perfect-scrollbar/dist/css/styles.css'
 import { getPublicGeneralSettings } from '@repo/supabase/clientHelpers'
 import type { SettingsConfiguration } from '@repo/supabase/settingsConfigurationTypes'
 
+// Component Imports
+import I18nProviderComponent from '@/lib/i18n/i18nProvider'
+
 // Config Imports
 import appConfig from '@configs/appConfig'
+
+// Util Imports
+import { createI18nServerInstance } from '@/lib/i18n/i18n-server'
 
 // Style Imports
 import './globals.css'
@@ -73,6 +79,7 @@ const RootLayout = async ({ children }: { children: ReactNode }) => {
   // Vars
   const mode = await getMode(appConfig)
   const systemMode = await getSystemMode(appConfig)
+  const { language } = await createI18nServerInstance()
   const settingsCookie = await getSettingsFromCookie(appConfig)
   const { data: settingsData, error } = await getPublicGeneralSettings()
 
@@ -132,14 +139,16 @@ const RootLayout = async ({ children }: { children: ReactNode }) => {
           <SettingsProvider settingsCookie={settingsCookie} mode={mode} appConfig={appConfig}>
             {/* The following component gracefully handles system mode using `colorPref` cookie */}
             <SetupSystemMode modeFallback={systemMode} />
-            <ReactQueryProvider>
-              <TooltipProvider>
-                <AuthProvider>
-                  <ImpersonationBanner />
-                  {children}
-                </AuthProvider>
-              </TooltipProvider>
-            </ReactQueryProvider>
+            <I18nProviderComponent lang={language}>
+              <ReactQueryProvider>
+                <TooltipProvider>
+                  <AuthProvider>
+                    <ImpersonationBanner />
+                    {children}
+                  </AuthProvider>
+                </TooltipProvider>
+              </ReactQueryProvider>
+            </I18nProviderComponent>
             <Toaster
               position='top-right'
               icons={{

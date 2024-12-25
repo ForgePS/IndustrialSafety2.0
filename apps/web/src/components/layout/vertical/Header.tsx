@@ -8,6 +8,7 @@ import { verticalLayoutClasses } from '@repo/ui/layouts/utils/layoutClasses'
 import { getAuthUser, getPublicUser, getUserRoles } from '@repo/supabase/serverHelpers'
 
 // Component Imports
+import LanguageDropdown from '@components/LanguageDropdown'
 import UserDropdown from './UserDropdown'
 
 const Header = async () => {
@@ -28,6 +29,7 @@ const Header = async () => {
           <Separator orientation='vertical' className='!bs-6' />
           <Search data={[]} />
         </div>
+        <LanguageDropdown />
         <div className='flex items-center gap-4'>
           <UserDropdown user={user} userTableData={userRecord} roles={roles} />
         </div>
