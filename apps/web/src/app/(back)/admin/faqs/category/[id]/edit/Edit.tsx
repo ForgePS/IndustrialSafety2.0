@@ -75,6 +75,7 @@ const Edit = ({ categoryData, id }: { categoryData: CategoryTypes; id: number })
             router.push('/admin/faqs/category')
             router.refresh()
           }}
+          itemName='category'
         />
       </div>
       <Form {...form}>

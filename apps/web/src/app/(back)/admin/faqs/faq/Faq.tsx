@@ -52,14 +52,14 @@ const SwitchState = ({ row }: { row: Row<FaqWithCategory> }) => {
   const supabase = createClient()
 
   // States
-  const [isFeatured, setIsFeatured] = useState(row.original.isFeatured)
+  const [isFeatured, setIsFeatured] = useState(row.original.is_featured)
 
   const handleToggle = async (checked: boolean) => {
     // Optimistically update the state
     setIsFeatured(checked)
 
     // Update isFeatured in Supabase
-    const { error } = await supabase.from('faqs').update({ isFeatured: checked }).eq('id', row.original.id)
+    const { error } = await supabase.from('faqs').update({ is_featured: checked }).eq('id', row.original.id)
 
     // Handle update error
     if (error) {
@@ -89,7 +89,7 @@ const Faq = ({ faqData }: { faqData: FaqWithCategory[] }) => {
       cell: ({ row }) => <div className='capitalize'>{row.original.faq_categories?.title || '-'}</div>
     },
     {
-      accessorKey: 'isFeatured',
+      accessorKey: 'is_featured',
       header: 'Is Featured',
       cell: ({ row }) => <SwitchState row={row} />
     },
@@ -109,6 +109,7 @@ const Faq = ({ faqData }: { faqData: FaqWithCategory[] }) => {
               await deleteFaq(row.original.id)
               router.refresh()
             }}
+            itemName='FAQ'
           />
         </div>
       )

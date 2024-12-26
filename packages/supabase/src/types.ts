@@ -114,30 +114,30 @@ export type Database = {
       }
       faqs: {
         Row: {
-          categoryId: number | null
+          category_id: number | null
           description: string
           id: number
-          isFeatured: boolean
+          is_featured: boolean
           title: string
         }
         Insert: {
-          categoryId?: number | null
+          category_id?: number | null
           description: string
           id?: number
-          isFeatured: boolean
+          is_featured: boolean
           title: string
         }
         Update: {
-          categoryId?: number | null
+          category_id?: number | null
           description?: string
           id?: number
-          isFeatured?: boolean
+          is_featured?: boolean
           title?: string
         }
         Relationships: [
           {
             foreignKeyName: "faq_category_id_fkey"
-            columns: ["categoryId"]
+            columns: ["category_id"]
             isOneToOne: false
             referencedRelation: "faq_categories"
             referencedColumns: ["id"]
@@ -161,46 +161,46 @@ export type Database = {
       }
       reviews: {
         Row: {
-          avatarImage: string | null
+          avatar_image: string | null
           content: string
           country: string | null
           designation: string | null
           id: number
-          isFeatured: boolean
+          is_featured: boolean
           link: string
           platform: Database["public"]["Enums"]["reviews_platform_enum"]
           rating: number
           title: string | null
           username: string
-          videoUrl: string | null
+          video_url: string | null
         }
         Insert: {
-          avatarImage?: string | null
+          avatar_image?: string | null
           content: string
           country?: string | null
           designation?: string | null
           id?: number
-          isFeatured: boolean
+          is_featured: boolean
           link: string
           platform: Database["public"]["Enums"]["reviews_platform_enum"]
           rating: number
           title?: string | null
           username: string
-          videoUrl?: string | null
+          video_url?: string | null
         }
         Update: {
-          avatarImage?: string | null
+          avatar_image?: string | null
           content?: string
           country?: string | null
           designation?: string | null
           id?: number
-          isFeatured?: boolean
+          is_featured?: boolean
           link?: string
           platform?: Database["public"]["Enums"]["reviews_platform_enum"]
           rating?: number
           title?: string | null
           username?: string
-          videoUrl?: string | null
+          video_url?: string | null
         }
         Relationships: []
       }

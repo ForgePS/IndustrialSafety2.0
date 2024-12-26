@@ -35,12 +35,12 @@ const reviewSchema = z.object({
 
   // Non-required fields can be optional without validation
   title: z.string().optional(),
-  videoUrl: z.string().optional(),
+  video_url: z.string().optional(),
   rating: z.number().optional(),
-  isFeatured: z.boolean().optional(),
+  is_featured: z.boolean().optional(),
   designation: z.string().optional(),
   country: z.string().optional(),
-  avatarImage: z.string().optional().nullable()
+  avatar_image: z.string().optional().nullable()
 })
 
 const EditReview = ({ reviewData, id }: { reviewData: Database['public']['Tables']['reviews']['Row']; id: number }) => {
@@ -57,14 +57,14 @@ const EditReview = ({ reviewData, id }: { reviewData: Database['public']['Tables
       title: reviewData.title || '',
       platform: reviewData.platform,
       link: reviewData.link,
-      videoUrl: reviewData.videoUrl || '',
+      video_url: reviewData.video_url || '',
       rating: reviewData.rating,
       content: reviewData.content,
-      isFeatured: reviewData.isFeatured,
+      is_featured: reviewData.is_featured,
       username: reviewData.username,
       designation: reviewData.designation || '',
       country: reviewData.country || '',
-      avatarImage: reviewData.avatarImage || ''
+      avatar_image: reviewData.avatar_image || ''
     }
   })
 
@@ -77,14 +77,14 @@ const EditReview = ({ reviewData, id }: { reviewData: Database['public']['Tables
         title: data.title,
         platform: data.platform,
         link: data.link,
-        videoUrl: data.videoUrl,
+        video_url: data.video_url,
         rating: data.rating,
         content: data.content,
-        isFeatured: data.isFeatured,
+        is_featured: data.is_featured,
         username: data.username,
         designation: data.designation,
         country: data.country,
-        avatarImage: data.avatarImage
+        avatar_image: data.avatar_image
       })
       .eq('id', id)
 
@@ -104,7 +104,7 @@ const EditReview = ({ reviewData, id }: { reviewData: Database['public']['Tables
   }
 
   const handleImageUpload = (file: string) => {
-    form.setValue('avatarImage', file)
+    form.setValue('avatar_image', file)
   }
 
   return (
@@ -117,6 +117,7 @@ const EditReview = ({ reviewData, id }: { reviewData: Database['public']['Tables
             router.push('/admin/reviews')
             router.refresh()
           }}
+          itemName='review'
         />
       </div>
       <Form {...form}>
@@ -184,7 +185,7 @@ const EditReview = ({ reviewData, id }: { reviewData: Database['public']['Tables
                   />
                   <FormField
                     control={form.control}
-                    name='videoUrl'
+                    name='video_url'
                     render={({ field }) => (
                       <FormItem className='is-full'>
                         <FormLabel>Review Video URL</FormLabel>
@@ -231,14 +232,14 @@ const EditReview = ({ reviewData, id }: { reviewData: Database['public']['Tables
                   />
                   <FormField
                     control={form.control}
-                    name='isFeatured'
+                    name='is_featured'
                     render={({ field }) => (
                       <FormItem>
                         <FormControl>
                           <div className='flex items-center'>
                             <Switch
                               id='is-featured'
-                              onCheckedChange={checked => form.setValue('isFeatured', checked)}
+                              onCheckedChange={checked => form.setValue('is_featured', checked)}
                               checked={field.value}
                             />
                             <FormLabel className='mis-2 cursor-pointer' htmlFor='is-featured'>
@@ -300,7 +301,7 @@ const EditReview = ({ reviewData, id }: { reviewData: Database['public']['Tables
                     </FormItem>
                   )}
                 />
-                <ReviewImage onImageUpload={handleImageUpload} defaultImage={reviewData.avatarImage || undefined} />
+                <ReviewImage onImageUpload={handleImageUpload} defaultImage={reviewData.avatar_image || undefined} />
               </CardContent>
             </Card>
             <div className='col-span-full flex gap-4 max-sm:flex-col'>

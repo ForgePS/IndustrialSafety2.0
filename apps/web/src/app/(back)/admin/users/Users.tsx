@@ -100,7 +100,11 @@ const Users = ({
               <Button variant='outline' onClick={() => startImpersonation(usersRecord, row.original.user_id)}>
                 Impersonate
               </Button>
-              <DeleteDialog variant='ghostDestructive' handleDelete={() => handleDeleteUser({ id: row.original.id })} />
+              <DeleteDialog
+                variant='ghostDestructive'
+                handleDelete={() => handleDeleteUser({ id: row.original.id })}
+                itemName='user'
+              />
             </>
           )}
         </div>

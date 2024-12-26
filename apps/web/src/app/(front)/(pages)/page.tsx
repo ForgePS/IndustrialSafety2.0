@@ -38,7 +38,7 @@ const LandingPage = async () => {
   const { data: faqsData, error: faqsError } = await supabase
     .from('faqs')
     .select('*')
-    .eq('isFeatured', true)
+    .eq('is_featured', true)
     .order('id', { ascending: true })
 
   if (faqsError) {
@@ -50,7 +50,7 @@ const LandingPage = async () => {
   const { data: reviewsData, error: reviewsError } = await supabase
     .from('reviews')
     .select('*')
-    .eq('isFeatured', true)
+    .eq('is_featured', true)
     .order('id', { ascending: true })
 
   if (reviewsError) {

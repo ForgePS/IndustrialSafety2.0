@@ -44,7 +44,7 @@ export const deleteReview = async (reviewId: number) => {
 // Switch component for toggling isFeatured
 const SwitchState = ({ row }: { row: Row<Database['public']['Tables']['reviews']['Row']> }) => {
   // States
-  const [isFeatured, setIsFeatured] = useState(row.original.isFeatured)
+  const [isFeatured, setIsFeatured] = useState(row.original.is_featured)
 
   // Vars
   const supabase = createClient()
@@ -54,7 +54,7 @@ const SwitchState = ({ row }: { row: Row<Database['public']['Tables']['reviews']
     setIsFeatured(checked)
 
     // Perform the API update
-    const { error } = await supabase.from('reviews').update({ isFeatured: checked }).eq('id', row.original.id)
+    const { error } = await supabase.from('reviews').update({ is_featured: checked }).eq('id', row.original.id)
 
     if (error) {
       console.error('Error updating review: ', error.message)
@@ -88,7 +88,7 @@ const Reviews = ({ reviewData }: { reviewData: Database['public']['Tables']['rev
       cell: ({ row }) => <div className='capitalize'>{row.getValue('platform')}</div>
     },
     {
-      accessorKey: 'isFeatured',
+      accessorKey: 'is_featured',
       header: 'Is Featured',
       cell: ({ row }) => <SwitchState row={row} />
     },
@@ -108,6 +108,7 @@ const Reviews = ({ reviewData }: { reviewData: Database['public']['Tables']['rev
               await deleteReview(row.original.id)
               router.refresh()
             }}
+            itemName='review'
           />
         </div>
       )

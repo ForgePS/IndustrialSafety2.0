@@ -84,6 +84,7 @@ const Categories = ({ categoryData }: { categoryData: CategoryTypes[] }) => {
               await handleDelete(row.original.id)
               router.refresh()
             }}
+            itemName='category'
           />
         </div>
       )

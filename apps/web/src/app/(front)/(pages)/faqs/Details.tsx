@@ -30,7 +30,7 @@ const Details = ({ categoryData, faqData }: { categoryData: CategoryTypes[]; faq
   const filteredFaqData = faqData.filter(faq => faq.title.toLowerCase().includes(search.toLowerCase()))
 
   // Filter FAQs that don't have a category (for "Others" section)
-  const othersFaqData = filteredFaqData.filter(faq => !faq.categoryId)
+  const othersFaqData = filteredFaqData.filter(faq => !faq.category_id)
 
   // Transform a string to a URL-friendly format
   const transformToUrlFriendly = (str: string) => {
@@ -51,7 +51,7 @@ const Details = ({ categoryData, faqData }: { categoryData: CategoryTypes[]; faq
               <h2 className='text-textPrimary text-xl font-semibold'>Enter Your Details</h2>
               <ul className='bg-card flex flex-col gap-y-4 rounded-md border p-6'>
                 {categoryData
-                  .filter(category => filteredFaqData.some(faq => faq.categoryId === category.id))
+                  .filter(category => filteredFaqData.some(faq => faq.category_id === category.id))
                   .map((data: CategoryTypes) => (
                     <li key={data.id} className='text-textSecondary flex items-center gap-2'>
                       {DynamicIcon(data.icon)}
@@ -75,7 +75,7 @@ const Details = ({ categoryData, faqData }: { categoryData: CategoryTypes[]; faq
           <div className='lg:col-span-3'>
             <div className='flex flex-col gap-y-8'>
               {categoryData
-                .filter(category => filteredFaqData.some(faq => faq.categoryId === category.id)) // Only render categories with matching FAQs
+                .filter(category => filteredFaqData.some(faq => faq.category_id === category.id)) // Only render categories with matching FAQs
                 .map((data: CategoryTypes) => (
                   <div
                     key={data.id}
@@ -90,7 +90,7 @@ const Details = ({ categoryData, faqData }: { categoryData: CategoryTypes[]; faq
                     </div>
                     <Accordion type='single' collapsible className='is-full' variant='outline'>
                       {filteredFaqData
-                        .filter(faq => faq.categoryId === data.id)
+                        .filter(faq => faq.category_id === data.id)
                         .map((faq, index) => (
                           <AccordionItem key={faq.id} value={`item-${index}`}>
                             <AccordionTrigger className='capitalize'>{faq.title}</AccordionTrigger>

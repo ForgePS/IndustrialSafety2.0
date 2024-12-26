@@ -35,12 +35,12 @@ const reviewSchema = z.object({
 
   // Non-required fields can be optional without validation
   title: z.string().optional(),
-  videoUrl: z.string().optional(),
+  video_url: z.string().optional(),
   rating: z.number().optional(),
-  isFeatured: z.boolean().optional(),
+  is_featured: z.boolean().optional(),
   designation: z.string().optional(),
   country: z.string().optional(),
-  avatarImage: z.string().optional().nullable()
+  avatar_image: z.string().optional().nullable()
 })
 
 const CreateReview = () => {
@@ -60,14 +60,14 @@ const CreateReview = () => {
       title: '',
       platform: 'g2',
       link: '',
-      videoUrl: '',
+      video_url: '',
       rating: 5,
       content: '',
-      isFeatured: false,
+      is_featured: false,
       username: '',
       designation: '',
       country: '',
-      avatarImage: null
+      avatar_image: null
     }
   })
 
@@ -79,14 +79,14 @@ const CreateReview = () => {
         title: data.title,
         platform: data.platform,
         link: data.link,
-        videoUrl: data.videoUrl,
+        video_url: data.video_url,
         rating: data.rating,
         content: data.content,
-        isFeatured: data.isFeatured,
+        is_featured: data.is_featured,
         username: data.username,
         designation: data.designation,
         country: data.country,
-        avatarImage: data.avatarImage
+        avatar_image: data.avatar_image
       }
     ])
 
@@ -113,14 +113,14 @@ const CreateReview = () => {
         title: data.title,
         platform: data.platform,
         link: data.link,
-        videoUrl: data.videoUrl,
+        video_url: data.video_url,
         rating: data.rating,
         content: data.content,
-        isFeatured: data.isFeatured,
+        is_featured: data.is_featured,
         username: data.username,
         designation: data.designation,
         country: data.country,
-        avatarImage: data.avatarImage
+        avatar_image: data.avatar_image
       }
     ])
 
@@ -142,7 +142,7 @@ const CreateReview = () => {
   }
 
   const handleImageUpload = (file: string) => {
-    form.setValue('avatarImage', file)
+    form.setValue('avatar_image', file)
   }
 
   return (
@@ -215,7 +215,7 @@ const CreateReview = () => {
                   />
                   <FormField
                     control={form.control}
-                    name='videoUrl'
+                    name='video_url'
                     render={({ field }) => (
                       <FormItem className='is-full'>
                         <FormLabel>Review Video URL</FormLabel>
@@ -262,14 +262,14 @@ const CreateReview = () => {
                   />
                   <FormField
                     control={form.control}
-                    name='isFeatured'
+                    name='is_featured'
                     render={({ field }) => (
                       <FormItem>
                         <FormControl>
                           <div className='flex items-center'>
                             <Switch
                               id='is-featured'
-                              onCheckedChange={checked => form.setValue('isFeatured', checked)}
+                              onCheckedChange={checked => form.setValue('is_featured', checked)}
                               checked={field.value}
                             />
                             <FormLabel className='mis-2 cursor-pointer' htmlFor='is-featured'>

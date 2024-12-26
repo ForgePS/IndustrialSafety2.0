@@ -103,7 +103,7 @@ const Reviews = (props: Props) => {
                   <CardHeader className='pbe-4 flex items-center gap-4'>
                     <div className='is-full flex justify-start gap-3'>
                       <Avatar shape='circle' size='3xl' color='primary'>
-                        <AvatarImage src={review.avatarImage ?? ''} alt={review.username} />
+                        <AvatarImage src={review.avatar_image ?? ''} alt={review.username} />
                         <AvatarFallback className='text-xl'>
                           {getInitials(review.username).toUpperCase()}
                         </AvatarFallback>
@@ -147,11 +147,11 @@ const Reviews = (props: Props) => {
                   <CardContent>
                     {review.title && <h1 className='mbe-1 text-lg font-semibold'>{review.title}</h1>}
                     <p className='text-textSecondary text-base'>{review.content}</p>
-                    {review.videoUrl && (
+                    {review.video_url && (
                       <iframe
                         width='100%'
                         className='mbs-4 rounded-lg'
-                        src={review.videoUrl}
+                        src={review.video_url}
                         title='YouTube video player'
                         allow='accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture'
                       />

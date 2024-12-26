@@ -17,10 +17,12 @@ import { Avatar, AvatarFallback } from '@repo/ui/components/ui/avatar'
 
 const DeleteDialog = ({
   handleDelete,
-  variant = 'destructive'
+  variant = 'destructive',
+  itemName
 }: {
   handleDelete: () => void
   variant?: ButtonProps['variant']
+  itemName: string
 }) => {
   return (
     <Dialog>
@@ -38,7 +40,7 @@ const DeleteDialog = ({
               <TbBoxModel className='bs-6 is-6' />
             </AvatarFallback>
           </Avatar>
-          <span className='text-textPrimary text-lg font-medium'>Delete review</span>
+          <span className='text-textPrimary text-lg font-medium'>Delete {itemName}</span>
           <span className='text-textSecondary text-center'>Are you sure you would like to do this?</span>
         </DialogDescription>
         <DialogFooter className='sm:justify-center'>

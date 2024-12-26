@@ -28,8 +28,8 @@ import DescriptionEditor from '../DescriptionEditor'
 const faqSchema = z.object({
   title: z.string().min(3, { message: 'Title must be at least 3 characters.' }),
   description: z.string().min(1, { message: 'Description is required.' }),
-  categoryId: z.number().min(1, { message: 'Category is required.' }),
-  isFeatured: z.boolean().optional()
+  category_id: z.number().min(1, { message: 'Category is required.' }),
+  is_featured: z.boolean().optional()
 })
 
 const Create = ({ categories }: { categories: { id: string; title: string }[] }) => {
@@ -49,8 +49,8 @@ const Create = ({ categories }: { categories: { id: string; title: string }[] })
     defaultValues: {
       title: '',
       description: '',
-      categoryId: undefined,
-      isFeatured: false
+      category_id: undefined,
+      is_featured: false
     }
   })
 
@@ -59,8 +59,8 @@ const Create = ({ categories }: { categories: { id: string; title: string }[] })
       {
         title: data.title,
         description: data.description,
-        categoryId: data.categoryId,
-        isFeatured: data.isFeatured
+        category_id: data.category_id,
+        is_featured: data.is_featured
       }
     ])
 
@@ -82,8 +82,8 @@ const Create = ({ categories }: { categories: { id: string; title: string }[] })
       {
         title: data.title,
         description: data.description,
-        categoryId: data.categoryId,
-        isFeatured: data.isFeatured
+        category_id: data.category_id,
+        is_featured: data.is_featured
       }
     ])
 
@@ -150,7 +150,7 @@ const Create = ({ categories }: { categories: { id: string; title: string }[] })
                 />
                 <FormField
                   control={form.control}
-                  name='categoryId'
+                  name='category_id'
                   render={() => (
                     <FormItem className='is-full'>
                       <FormLabel>
@@ -164,8 +164,8 @@ const Create = ({ categories }: { categories: { id: string; title: string }[] })
 
                             if (category) {
                               setSelectedCategory(category) // Set category title separately
-                              form.setValue('categoryId', Number(category.id)) // Store only categoryId
-                              form.clearErrors('categoryId')
+                              form.setValue('category_id', Number(category.id)) // Store only category_id
+                              form.clearErrors('category_id')
                             }
                           }}
                         >
@@ -187,14 +187,14 @@ const Create = ({ categories }: { categories: { id: string; title: string }[] })
                 />
                 <FormField
                   control={form.control}
-                  name='isFeatured'
+                  name='is_featured'
                   render={({ field }) => (
                     <FormItem className='is-full flex items-center gap-3'>
                       <FormControl>
                         <Switch
                           id='is-featured'
                           checked={field.value}
-                          onCheckedChange={check => form.setValue('isFeatured', check)}
+                          onCheckedChange={check => form.setValue('is_featured', check)}
                         />
                       </FormControl>
                       <FormLabel htmlFor='is-featured'>Is Featured</FormLabel>

@@ -51,7 +51,7 @@ const EditorToolbar = ({ editor }: { editor: Editor | null }) => {
         onClick={() => editor.chain().focus().toggleBold().run()}
         className={cn(editor.isActive('bold') && 'bg-primary/20')}
       >
-        <TbBold className={cn('size-5', `${editor.isActive('bold') ? '' : 'text-textSecondary'}`)} />
+        <TbBold className={cn('size-5', { 'text-textSecondary': !editor.isActive('bold') })} />
       </Button>
       <Button
         type='button'
@@ -61,7 +61,7 @@ const EditorToolbar = ({ editor }: { editor: Editor | null }) => {
         onClick={() => editor.chain().focus().toggleUnderline().run()}
         className={cn(editor.isActive('underline') && 'bg-primary/20')}
       >
-        <TbUnderline className={cn('size-5', `${editor.isActive('underline') ? '' : 'text-textSecondary'}`)} />
+        <TbUnderline className={cn('size-5', { 'text-textSecondary': !editor.isActive('underline') })} />
       </Button>
       <Button
         type='button'
@@ -71,7 +71,7 @@ const EditorToolbar = ({ editor }: { editor: Editor | null }) => {
         onClick={() => editor.chain().focus().toggleItalic().run()}
         className={cn(editor.isActive('italic') && 'bg-primary/20')}
       >
-        <TbItalic className={cn('size-5', `${editor.isActive('italic') ? '' : 'text-textSecondary'}`)} />
+        <TbItalic className={cn('size-5', { 'text-textSecondary': !editor.isActive('italic') })} />
       </Button>
       <Button
         type='button'
@@ -81,7 +81,7 @@ const EditorToolbar = ({ editor }: { editor: Editor | null }) => {
         onClick={() => editor.chain().focus().toggleStrike().run()}
         className={cn(editor.isActive('strike') && 'bg-primary/20')}
       >
-        <TbStrikethrough className={cn('size-5', `${editor.isActive('strike') ? '' : 'text-textSecondary'}`)} />
+        <TbStrikethrough className={cn('size-5', { 'text-textSecondary': !editor.isActive('strike') })} />
       </Button>
       <Button
         type='button'
@@ -91,7 +91,7 @@ const EditorToolbar = ({ editor }: { editor: Editor | null }) => {
         onClick={() => editor.chain().focus().toggleBulletList().run()}
         className={cn(editor.isActive('bulletList') && 'bg-primary/20')}
       >
-        <TbList className={cn('size-5', `${editor.isActive('bulletList') ? '' : 'text-textSecondary'}`)} />
+        <TbList className={cn('size-5', { 'text-textSecondary': !editor.isActive('bulletList') })} />
       </Button>
       <Button
         type='button'
@@ -101,7 +101,7 @@ const EditorToolbar = ({ editor }: { editor: Editor | null }) => {
         onClick={() => editor.chain().focus().toggleOrderedList().run()}
         className={cn(editor.isActive('orderedList') && 'bg-primary/20')}
       >
-        <TbListNumbers className={cn('size-5', `${editor.isActive('orderedList') ? '' : 'text-textSecondary'}`)} />
+        <TbListNumbers className={cn('size-5', { 'text-textSecondary': !editor.isActive('orderedList') })} />
       </Button>
       <Button
         type='button'
@@ -110,7 +110,7 @@ const EditorToolbar = ({ editor }: { editor: Editor | null }) => {
         onClick={setLink}
         className={cn(editor.isActive('link') && 'bg-primary/20')}
       >
-        <TbLink className={cn('size-5', `${editor.isActive('link') ? '' : 'text-textSecondary'}`)} />
+        <TbLink className={cn('size-5', { 'text-textSecondary': !editor.isActive('link') })} />
       </Button>
       <Button
         type='button'

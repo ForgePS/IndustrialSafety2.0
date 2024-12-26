@@ -31,8 +31,8 @@ import type { FaqWithCategory } from '../../Faq'
 const faqSchema = z.object({
   title: z.string().min(3, { message: 'Title must be at least 3 characters.' }),
   description: z.string().min(1, { message: 'Description is required.' }),
-  categoryId: z.number().min(1, { message: 'Category is required.' }),
-  isFeatured: z.boolean().optional()
+  category_id: z.number().min(1, { message: 'Category is required.' }),
+  is_featured: z.boolean().optional()
 })
 
 const Edit = ({
@@ -48,7 +48,7 @@ const Edit = ({
   const [editorContent, setEditorContent] = useState<string>(faqData?.description || '')
 
   const [selectedCategory, setSelectedCategory] = useState<{ id: string; title: string } | null>(
-    faqData?.categoryId ? { id: String(faqData.categoryId), title: faqData.faq_categories?.title || '' } : null
+    faqData?.category_id ? { id: String(faqData.category_id), title: faqData.faq_categories?.title || '' } : null
   )
 
   // Vars
@@ -63,8 +63,8 @@ const Edit = ({
     defaultValues: {
       title: faqData?.title || '',
       description: faqData?.description || '',
-      categoryId: faqData?.categoryId ? Number(faqData.categoryId) : undefined,
-      isFeatured: faqData?.isFeatured || false
+      category_id: faqData?.category_id ? Number(faqData.category_id) : undefined,
+      is_featured: faqData?.is_featured || false
     }
   })
 
@@ -74,8 +74,8 @@ const Edit = ({
       .update({
         title: data.title,
         description: data.description,
-        categoryId: data.categoryId,
-        isFeatured: data.isFeatured
+        category_id: data.category_id,
+        is_featured: data.is_featured
       })
       .eq('id', id)
 
@@ -108,6 +108,7 @@ const Edit = ({
             router.push('/admin/faqs/faq')
             router.refresh()
           }}
+          itemName='FAQ'
         />
       </div>
       <Form {...form}>
@@ -147,7 +148,7 @@ const Edit = ({
                 />
                 <FormField
                   control={form.control}
-                  name='categoryId'
+                  name='category_id'
                   render={() => (
                     <FormItem className='is-full'>
                       <FormLabel>
@@ -161,8 +162,8 @@ const Edit = ({
 
                             if (category) {
                               setSelectedCategory(category) // Set category title separately
-                              form.setValue('categoryId', Number(category.id)) // Store only categoryId
-                              form.clearErrors('categoryId')
+                              form.setValue('category_id', Number(category.id)) // Store only category_id
+                              form.clearErrors('category_id')
                             }
                           }}
                         >
@@ -185,14 +186,14 @@ const Edit = ({
 
                 <FormField
                   control={form.control}
-                  name='isFeatured'
+                  name='is_featured'
                   render={({ field }) => (
                     <FormItem className='is-full flex items-center gap-3'>
                       <FormControl>
                         <Switch
                           id='is-featured'
                           checked={field.value}
-                          onCheckedChange={check => form.setValue('isFeatured', check)}
+                          onCheckedChange={check => form.setValue('is_featured', check)}
                         />
                       </FormControl>
                       <FormLabel htmlFor='is-featured'>Is Featured</FormLabel>

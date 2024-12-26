@@ -138,7 +138,7 @@ const Edit = ({
     <>
       <div className='mbe-6 flex items-center justify-between gap-4'>
         <h2 className='text-2xl font-semibold sm:text-3xl'>Edit User</h2>
-        {!isAdmin && <DeleteDialog handleDelete={handleDelete} />}
+        {!isAdmin && <DeleteDialog handleDelete={handleDelete} itemName='user' />}
       </div>
       <Form {...form}>
         <form>
