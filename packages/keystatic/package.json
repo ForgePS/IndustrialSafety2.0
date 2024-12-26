@@ -3,10 +3,7 @@
   "version": "1.0.0",
   "private": true,
   "exports": {
-    "./createReader": "./src/createReader.ts",
-    "./keystaticAdmin": "./src/keystaticAdmin.ts",
-    "./keystaticRouteHandler": "./src/keystaticRouteHandler.ts",
-    "./configs/*": "./src/configs/*.ts"
+    "./*": "./src/*.ts"
   },
   "scripts": {
     "lint": "eslint src/",

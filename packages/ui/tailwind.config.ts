@@ -135,7 +135,8 @@ const config: Omit<Config, 'content'> = {
         },
         destructive: {
           DEFAULT: 'hsl(var(--destructive))',
-          foreground: 'hsl(var(--destructive-foreground))'
+          foreground: 'hsl(var(--destructive-foreground))',
+          focus: 'hsl(var(--destructive-focus))'
         },
         accent: {
           DEFAULT: 'hsl(var(--accent) / 0.1)',

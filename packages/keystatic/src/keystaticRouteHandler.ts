@@ -2,7 +2,7 @@
 import { makeRouteHandler } from '@keystatic/next/route-handler'
 
 // Config Imports
-import keystaticConfig from '@repo/keystatic/configs/keystaticConfig'
+import keystaticConfig from '@repo/keystatic/keystaticConfig'
 
 const handlers = makeRouteHandler({
   config: keystaticConfig
