@@ -1,12 +1,13 @@
 // Next Imports
 import Link from 'next/link'
 
-// Component Imports
-import Logo from '@components/layout/front/Logo'
-
+// Third-party Imports
 import { Button } from '@repo/ui/components/ui/button'
 import { Card, CardContent } from '@repo/ui/components/ui/card'
 import { InputOTP, InputOTPGroup, InputOTPSlot } from '@repo/ui/components/ui/input-otp'
+
+// Component Imports
+import Logo from '@components/layout/front/Logo'
 
 // Util Imports
 import { getAppName } from '@/utils/getAppName'
