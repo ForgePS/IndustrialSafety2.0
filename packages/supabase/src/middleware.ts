@@ -4,9 +4,23 @@ import type { NextRequest } from 'next/server'
 
 // Third-party Imports
 import { createServerClient } from '@supabase/ssr'
+import { jwtDecode } from 'jwt-decode'
+import { hasPermission } from '@repo/rbac/utils'
+import type { JwtPayload } from 'jwt-decode'
+import type { User } from '@supabase/supabase-js'
 
 // Type Imports
 import type { SettingsConfiguration } from '@repo/supabase/settingsConfigurationTypes'
+
+type JWT = JwtPayload & {
+  roles: string[]
+  permissions: string[]
+}
+
+type ExtendedUser = User & {
+  roles?: string[]
+  permissions?: string[]
+}
 
 export async function updateSession(request: NextRequest, isMagicLinkEnabled: boolean) {
   let supabaseResponse = NextResponse.next({
@@ -40,6 +54,21 @@ export async function updateSession(request: NextRequest, isMagicLinkEnabled: bo
     data: { user }
   } = await supabase.auth.getUser()
 
+  const {
+    data: { session }
+  } = await supabase.auth.refreshSession()
+
+  const currentUser = session?.user as ExtendedUser | null
+
+  if (session) {
+    const jwt: JWT = jwtDecode(session.access_token)
+
+    if (currentUser) {
+      currentUser.roles = jwt.roles
+      currentUser.permissions = jwt.permissions
+    }
+  }
+
   const url = request.nextUrl.clone()
 
   const { data: settings_configuration } = await supabase
@@ -60,38 +89,97 @@ export async function updateSession(request: NextRequest, isMagicLinkEnabled: bo
 
   const { data: publicUser } = await supabase.from('users').select(`*`).eq('user_id', user?.id).single()
 
-  if (user) {
+  if (user && currentUser) {
+    const { roles, permissions } = currentUser
+
     if (!publicUser) {
       console.error('User not found in the public schema')
 
       return
     }
 
-    const { data: userRoles } = await supabase.from('user_roles').select(`*, roles (role)`).eq('user_id', publicUser.id)
-
     const { data: billingRecords } = await supabase.from('billing').select('status').eq('user_id', user.id)
 
     const isPaymentSuccessful = billingRecords?.filter(record => record.status === 'success')[0]?.status === 'success'
 
-    const roles = userRoles?.map(({ roles }) => roles.role)
-
     // Role-based access control
-    if (url.pathname.startsWith('/admin')) {
-      // If the user is trying to access an admin page and is not an admin, redirect them
-      if (!roles?.includes('admin')) {
-        url.pathname = '/not-authorized' // Redirect to the 401 page
+    // Additional permission checks for specific admin routes
+    if (url.pathname === '/admin' && !roles?.includes('admin')) {
+      url.pathname = '/not-authorized'
 
-        return NextResponse.redirect(url)
-      }
+      return NextResponse.redirect(url)
     }
 
-    if (url.pathname.startsWith('/dashboard')) {
-      // If the user is trying to access a user page and is not a user, redirect them
-      if (!roles?.includes('user') && !roles?.includes('editor')) {
-        url.pathname = '/not-authorized' // Redirect to the 401 page
+    if (url.pathname === '/dashboard' && roles?.includes('admin')) {
+      url.pathname = '/not-authorized'
 
-        return NextResponse.redirect(url)
-      }
+      return NextResponse.redirect(url)
+    }
+
+    if (url.pathname.startsWith('/admin/my-profile') && !roles?.includes('admin')) {
+      url.pathname = '/not-authorized'
+
+      return NextResponse.redirect(url)
+    }
+
+    if (url.pathname.startsWith('/dashboard/my-profile') && roles?.includes('admin')) {
+      url.pathname = '/not-authorized'
+
+      return NextResponse.redirect(url)
+    }
+
+    if (url.pathname.startsWith('/dashboard/billing') && roles?.includes('admin')) {
+      url.pathname = '/not-authorized'
+
+      return NextResponse.redirect(url)
+    }
+
+    if (url.pathname.startsWith('/admin/reviews') && !hasPermission(permissions, 'view_reviews')) {
+      url.pathname = '/not-authorized'
+
+      return NextResponse.redirect(url)
+    }
+
+    if (url.pathname.startsWith('/keystatic') && !hasPermission(permissions, 'view_blog_section')) {
+      url.pathname = '/not-authorized'
+
+      return NextResponse.redirect(url)
+    }
+
+    if (url.pathname.startsWith('/admin/settings') && !hasPermission(permissions, 'view_settings')) {
+      url.pathname = '/not-authorized'
+
+      return NextResponse.redirect(url)
+    }
+
+    if (url.pathname.startsWith('/admin/users') && !hasPermission(permissions, 'view_users')) {
+      url.pathname = '/not-authorized'
+
+      return NextResponse.redirect(url)
+    }
+
+    if (url.pathname.startsWith('/admin/users/create') && !hasPermission(permissions, 'create_users')) {
+      url.pathname = '/not-authorized'
+
+      return NextResponse.redirect(url)
+    }
+
+    if (url.pathname.startsWith('/admin/roles') && !hasPermission(permissions, 'view_roles')) {
+      url.pathname = '/not-authorized'
+
+      return NextResponse.redirect(url)
+    }
+
+    if (url.pathname.startsWith('/admin/permissions') && !hasPermission(permissions, 'view_permission')) {
+      url.pathname = '/not-authorized'
+
+      return NextResponse.redirect(url)
+    }
+
+    if (url.pathname.startsWith('/admin/faqs') && !hasPermission(permissions, 'view_faqs')) {
+      url.pathname = '/not-authorized'
+
+      return NextResponse.redirect(url)
     }
 
     // User can only access the checkout page after selecting a product

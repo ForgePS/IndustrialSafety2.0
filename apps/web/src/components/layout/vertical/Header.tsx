@@ -17,9 +17,7 @@ const Header = async () => {
   } = await getAuthUser()
 
   const { data: userRecord } = await getPublicUser()
-  const { data: userRoles } = await getUserRoles()
-
-  const roles: string[] | undefined = userRoles?.map(role => role.roles.role)
+  const userRoles = await getUserRoles()
 
   return (
     <LayoutHeader>
@@ -31,7 +29,7 @@ const Header = async () => {
         </div>
         <LanguageDropdown />
         <div className='flex items-center gap-4'>
-          <UserDropdown user={user} userTableData={userRecord} roles={roles} />
+          <UserDropdown user={user} userTableData={userRecord} roles={userRoles} />
         </div>
       </div>
     </LayoutHeader>

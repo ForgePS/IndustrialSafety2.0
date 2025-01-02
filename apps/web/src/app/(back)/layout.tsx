@@ -7,7 +7,7 @@ import { cookies } from 'next/headers'
 // Third-party Imports
 import { SidebarProvider } from '@repo/ui/components/ui/sidebar'
 import VerticalLayout from '@repo/ui/layouts/VerticalLayout'
-import { getUserRoles } from '@repo/supabase/serverHelpers'
+import { getAuthUser } from '@repo/supabase/serverHelpers'
 
 // Component Imports
 import Sidebar from '@components/layout/vertical/Sidebar'
@@ -20,15 +20,22 @@ import appConfig from '@configs/appConfig'
 const AdminLayout = async ({ children }: { children: ReactNode }) => {
   // Vars
   const appName = await getAppName()
-  const { data: userRoles } = await getUserRoles()
   const cookieStore = await cookies()
   const sidebarCookie = cookieStore.get('is-sidebar-open')
 
-  const roles: string[] | undefined = userRoles?.map(role => role.roles.role)
+  const {
+    data: { user }
+  } = await getAuthUser()
+
+  const roles = user?.user_metadata.roles
+  const permissions = user?.user_metadata.permissions
 
   return (
     <SidebarProvider defaultOpen={sidebarCookie ? JSON.parse(sidebarCookie.value) : appConfig.layout === 'vertical'}>
-      <VerticalLayout navigation={<Sidebar roles={roles} appName={appName} />} header={<Header />}>
+      <VerticalLayout
+        navigation={<Sidebar roles={roles} permissions={permissions} appName={appName} />}
+        header={<Header />}
+      >
         {children}
       </VerticalLayout>
     </SidebarProvider>

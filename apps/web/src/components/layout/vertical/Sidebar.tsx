@@ -54,6 +54,7 @@ import {
   useSidebar
 } from '@repo/ui/components/ui/sidebar'
 import { useAuthContext } from '@repo/auth/AuthProvider'
+import { AnyPermissionGuard, PermissionGuard } from '@repo/rbac/components'
 import { cn } from '@repo/ui/lib/utils'
 import type { SidebarMenuButtonProps } from '@repo/ui/components/ui/sidebar'
 
@@ -110,7 +111,7 @@ const MenuButton = ({ children, href, target = '_self', exactMatch = true, ...pr
   )
 }
 
-const AppSidebar = ({ roles, appName }: { roles?: string[]; appName: string }) => {
+const AppSidebar = ({ roles, permissions, appName }: { roles?: string[]; permissions: string[]; appName: string }) => {
   // States
   const [activeTeam, setActiveTeam] = useState(teams[0])
 
@@ -186,129 +187,129 @@ const AppSidebar = ({ roles, appName }: { roles?: string[]; appName: string }) =
         </SidebarMenu>
       </SidebarHeader>
       <SidebarContent>
-        {!roles?.includes('admin') ? (
-          <SidebarGroup>
-            <SidebarMenu>
-              <SidebarMenuItem>
-                <MenuButton href='/dashboard' tooltip='Dashboard'>
-                  <TbDashboard />
-                  <span>Dashboard</span>
-                </MenuButton>
-              </SidebarMenuItem>
-              <SidebarMenuItem>
-                <MenuButton href='/dashboard/my-profile' tooltip='My Profile'>
-                  <TbUser />
-                  <span>My Profile</span>
-                </MenuButton>
-              </SidebarMenuItem>
+        <SidebarGroup>
+          <SidebarMenu>
+            <SidebarMenuItem>
+              <MenuButton href={roles?.includes('admin') ? '/admin' : '/dashboard'} tooltip='Dashboard'>
+                <TbDashboard />
+                <span>Dashboard</span>
+              </MenuButton>
+            </SidebarMenuItem>
+            <SidebarMenuItem>
+              <MenuButton href={`/${roles?.includes('admin') ? 'admin' : 'dashboard'}/my-profile`} tooltip='My Profile'>
+                <TbUser />
+                <span>My Profile</span>
+              </MenuButton>
+            </SidebarMenuItem>
+            {!roles?.includes('admin') && (
               <SidebarMenuItem>
                 <MenuButton href='/dashboard/billing' tooltip='Billing'>
                   <TbFileText />
                   <span>Billing</span>
                 </MenuButton>
               </SidebarMenuItem>
+            )}
+            <PermissionGuard permissions={permissions} permission='view_reviews'>
+              <SidebarMenuItem>
+                <MenuButton href='/admin/reviews' exactMatch={false} tooltip='Reviews'>
+                  <TbStar />
+                  <span>Reviews</span>
+                </MenuButton>
+              </SidebarMenuItem>
+            </PermissionGuard>
+            {process.env.NODE_ENV !== 'production' && (
+              <PermissionGuard permissions={permissions} permission='view_blog_section'>
+                <SidebarMenuItem>
+                  <MenuButton href='/keystatic' target='_blank' tooltip='Blog'>
+                    <TbClipboardList />
+                    <span>Blog</span>
+                  </MenuButton>
+                  <SidebarMenuAction className='pointer-events-none hover:bg-transparent [&>svg]:size-5'>
+                    <TbExternalLink />
+                  </SidebarMenuAction>
+                </SidebarMenuItem>
+              </PermissionGuard>
+            )}
+          </SidebarMenu>
+        </SidebarGroup>
+        <PermissionGuard permissions={permissions} permission='view_settings'>
+          <SidebarGroup>
+            <SidebarGroupLabel className='text-nowrap'>
+              {state === 'expanded' || isMobile ? 'Settings' : <SidebarSeparator className='!is-8' />}
+            </SidebarGroupLabel>
+            <SidebarMenu>
+              <SidebarMenuItem>
+                <MenuButton href='/admin/settings/general-settings' tooltip='General Settings'>
+                  <TbSettings />
+                  <span>General Settings</span>
+                </MenuButton>
+              </SidebarMenuItem>
+              <SidebarMenuItem>
+                <MenuButton href='/admin/settings/payment-providers' tooltip='Payment Providers'>
+                  <TbWallet />
+                  <span>Payment Providers</span>
+                </MenuButton>
+              </SidebarMenuItem>
             </SidebarMenu>
           </SidebarGroup>
-        ) : (
-          <>
-            <SidebarGroup>
-              <SidebarMenu>
-                <SidebarMenuItem>
-                  <MenuButton href='/admin' tooltip='Dashboard'>
-                    <TbDashboard />
-                    <span>Dashboard</span>
-                  </MenuButton>
-                </SidebarMenuItem>
-                <SidebarMenuItem>
-                  <MenuButton href='/admin/my-profile' tooltip='My Profile'>
-                    <TbUser />
-                    <span>My Profile</span>
-                  </MenuButton>
-                </SidebarMenuItem>
-                <SidebarMenuItem>
-                  <MenuButton href='/admin/reviews' exactMatch={false} tooltip='Reviews'>
-                    <TbStar />
-                    <span>Reviews</span>
-                  </MenuButton>
-                </SidebarMenuItem>
-                {process.env.NODE_ENV !== 'production' && (
-                  <SidebarMenuItem>
-                    <MenuButton href='/keystatic' target='_blank' tooltip='Blog'>
-                      <TbClipboardList />
-                      <span>Blog</span>
-                    </MenuButton>
-                    <SidebarMenuAction className='pointer-events-none hover:bg-transparent [&>svg]:size-5'>
-                      <TbExternalLink />
-                    </SidebarMenuAction>
-                  </SidebarMenuItem>
-                )}
-              </SidebarMenu>
-            </SidebarGroup>
-            <SidebarGroup>
-              <SidebarGroupLabel className='text-nowrap'>
-                {state === 'expanded' || isMobile ? 'Settings' : <SidebarSeparator className='!is-8' />}
-              </SidebarGroupLabel>
-              <SidebarMenu>
-                <SidebarMenuItem>
-                  <MenuButton href='/admin/settings/general-settings' tooltip='General Settings'>
-                    <TbSettings />
-                    <span>General Settings</span>
-                  </MenuButton>
-                </SidebarMenuItem>
-                <SidebarMenuItem>
-                  <MenuButton href='/admin/settings/payment-providers' tooltip='Payment Providers'>
-                    <TbWallet />
-                    <span>Payment Providers</span>
-                  </MenuButton>
-                </SidebarMenuItem>
-              </SidebarMenu>
-            </SidebarGroup>
-            <SidebarGroup>
-              <SidebarGroupLabel className='text-nowrap'>
-                {state === 'expanded' || isMobile ? 'Roles and Permissions' : <SidebarSeparator className='!is-8' />}
-              </SidebarGroupLabel>
-              <SidebarMenu>
+        </PermissionGuard>
+        <AnyPermissionGuard
+          permissions={permissions}
+          requiredPermissions={['view_users', 'view_permission', 'view_roles']}
+        >
+          <SidebarGroup>
+            <SidebarGroupLabel className='text-nowrap'>
+              {state === 'expanded' || isMobile ? 'User Management' : <SidebarSeparator className='!is-8' />}
+            </SidebarGroupLabel>
+            <SidebarMenu>
+              <PermissionGuard permissions={permissions} permission='view_users'>
                 <SidebarMenuItem>
                   <MenuButton href='/admin/users' exactMatch={false} tooltip='Users'>
                     <TbUsers />
                     <span>Users</span>
                   </MenuButton>
                 </SidebarMenuItem>
-                <SidebarMenuItem>
-                  <MenuButton href='/admin/permissions' exactMatch={false} tooltip='Permissions'>
-                    <TbLock />
-                    <span>Permissions</span>
-                  </MenuButton>
-                </SidebarMenuItem>
+              </PermissionGuard>
+              <PermissionGuard permissions={permissions} permission='view_roles'>
                 <SidebarMenuItem>
                   <MenuButton href='/admin/roles' exactMatch={false} tooltip='Roles'>
                     <TbCrown />
                     <span>Roles</span>
                   </MenuButton>
                 </SidebarMenuItem>
-              </SidebarMenu>
-            </SidebarGroup>
-            <SidebarGroup>
-              <SidebarGroupLabel className='text-nowrap'>
-                {state === 'expanded' || isMobile ? 'FAQs' : <SidebarSeparator className='!is-8' />}
-              </SidebarGroupLabel>
-              <SidebarMenu>
+              </PermissionGuard>
+              <PermissionGuard permissions={permissions} permission='view_permission'>
                 <SidebarMenuItem>
-                  <MenuButton href='/admin/faqs/category' exactMatch={false} tooltip='FAQ Category'>
-                    <TbLayoutGridAdd />
-                    <span>Category</span>
+                  <MenuButton href='/admin/permissions' exactMatch={false} tooltip='Permissions'>
+                    <TbLock />
+                    <span>Permissions</span>
                   </MenuButton>
                 </SidebarMenuItem>
-                <SidebarMenuItem>
-                  <MenuButton href='/admin/faqs/faq' exactMatch={false} tooltip='FAQs'>
-                    <TbListDetails />
-                    <span>FAQ</span>
-                  </MenuButton>
-                </SidebarMenuItem>
-              </SidebarMenu>
-            </SidebarGroup>
-          </>
-        )}
+              </PermissionGuard>
+            </SidebarMenu>
+          </SidebarGroup>
+        </AnyPermissionGuard>
+        <PermissionGuard permissions={permissions} permission='view_faqs'>
+          <SidebarGroup>
+            <SidebarGroupLabel className='text-nowrap'>
+              {state === 'expanded' || isMobile ? 'FAQs' : <SidebarSeparator className='!is-8' />}
+            </SidebarGroupLabel>
+            <SidebarMenu>
+              <SidebarMenuItem>
+                <MenuButton href='/admin/faqs/category' exactMatch={false} tooltip='FAQ Category'>
+                  <TbLayoutGridAdd />
+                  <span>Category</span>
+                </MenuButton>
+              </SidebarMenuItem>
+              <SidebarMenuItem>
+                <MenuButton href='/admin/faqs/faq' exactMatch={false} tooltip='FAQs'>
+                  <TbListDetails />
+                  <span>FAQ</span>
+                </MenuButton>
+              </SidebarMenuItem>
+            </SidebarMenu>
+          </SidebarGroup>
+        </PermissionGuard>
       </SidebarContent>
       <SidebarRail />
     </Sidebar>

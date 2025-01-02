@@ -2,7 +2,7 @@
 import { createClient } from '@repo/supabase/client'
 
 export async function getAuthUser() {
-  const supabase = await createClient()
+  const supabase = createClient()
 
   const user = await supabase.auth.getUser()
 
@@ -10,7 +10,7 @@ export async function getAuthUser() {
 }
 
 export const getPublicUser = async (column: string = '*') => {
-  const supabase = await createClient()
+  const supabase = createClient()
 
   const {
     data: { user }
@@ -23,6 +23,41 @@ export const getPublicUser = async (column: string = '*') => {
     .single()
 
   return userRecord
+}
+
+export const getUserPermissions = async (): Promise<string[] | undefined> => {
+  const supabase = createClient()
+
+  const { data: publicUser } = await getPublicUser()
+
+  const { data: userRoles } = await supabase
+    .from('user_roles')
+    .select(
+      `
+      *,
+      roles (
+        role,
+        role_permissions (
+          permissions (
+            permission
+          )
+        )
+      )
+    `
+    )
+    .eq('user_id', publicUser.id)
+
+  const permissions = [
+    ...new Set(
+      userRoles?.flatMap(({ roles }) =>
+        roles.role_permissions.flatMap(
+          ({ permissions }: { permissions: { permission: string } }) => permissions.permission
+        )
+      )
+    )
+  ]
+
+  return permissions
 }
 
 export const getPublicGeneralSettings = async () => {

@@ -96,18 +96,18 @@ const UserDropdown = ({ user, userTableData, roles }: Props) => {
           </DropdownMenuRadioItem>
         </DropdownMenuRadioGroup>
         <DropdownMenuSeparator />
-        {!roles?.includes('admin') ? (
-          <DropdownMenuItem asChild>
-            <Link href='/dashboard' className='flex gap-2'>
-              <TbMoodSmile className='text-xl' />
-              <span className='flex-1 truncate'>User Dashboard</span>
-            </Link>
-          </DropdownMenuItem>
-        ) : (
+        {roles?.includes('admin') ? (
           <DropdownMenuItem asChild>
             <Link href='/admin' className='flex gap-2'>
               <TbSettings className='text-xl' />
               <span className='flex-1 truncate'>Admin Dashboard</span>
+            </Link>
+          </DropdownMenuItem>
+        ) : (
+          <DropdownMenuItem asChild>
+            <Link href='/dashboard' className='flex gap-2'>
+              <TbMoodSmile className='text-xl' />
+              <span className='flex-1 truncate'>User Dashboard</span>
             </Link>
           </DropdownMenuItem>
         )}

@@ -27,10 +27,8 @@ const Header = async () => {
   } = await getAuthUser()
 
   const { data: userRecord } = await getPublicUser()
-  const { data: userRoles } = await getUserRoles()
+  const userRoles = await getUserRoles()
   const { data: settings_configuration } = await getPublicGeneralSettings()
-
-  const roles: string[] | undefined = userRoles?.map(role => role.roles.role)
 
   const isBlogEnabled = (JSON.parse(settings_configuration?.value) as SettingsConfiguration['general_settings'])
     .pages_components.blog_enabled
@@ -53,7 +51,7 @@ const Header = async () => {
           </div>
           <ModeDropdown />
           {user ? (
-            <UserDropdown user={user} userTableData={userRecord} roles={roles} />
+            <UserDropdown user={user} userTableData={userRecord} roles={userRoles} />
           ) : (
             <Button size='sm' asChild>
               <Link href='/auth/login'>Sign In</Link>

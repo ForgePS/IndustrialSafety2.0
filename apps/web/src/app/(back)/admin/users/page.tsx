@@ -2,6 +2,7 @@
 import { TbExclamationCircle } from 'react-icons/tb'
 import { Alert, AlertDescription } from '@repo/ui/components/ui/alert'
 import { createServiceRoleClient } from '@repo/supabase/server'
+import { getAuthUser } from '@repo/supabase/serverHelpers'
 
 // Component Imports
 import Users from './Users'
@@ -9,6 +10,10 @@ import Users from './Users'
 const UserPage = async () => {
   // Vars
   const supabase = createServiceRoleClient()
+
+  const {
+    data: { user }
+  } = await getAuthUser()
 
   const { data: usersRecord, error: userError } = await supabase
     .from('users')
@@ -28,7 +33,7 @@ const UserPage = async () => {
     )
   }
 
-  return <Users usersRecord={usersRecord} rolesData={rolesData} />
+  return <Users usersRecord={usersRecord} rolesData={rolesData} userPermissions={user?.user_metadata.permissions} />
 }
 
 export default UserPage

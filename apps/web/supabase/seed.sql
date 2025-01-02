@@ -210,51 +210,44 @@ VALUES (1, 'create_reviews'),
   (3, 'create_users'),
   (4, 'create_permission'),
   (5, 'create_roles'),
-  (6, 'view_reviews'),
-  (7, 'view_blog_section'),
-  (8, 'view_users'),
-  (9, 'view_permission'),
-  (10, 'view_roles'),
-  (11, 'update_reviews'),
-  (12, 'update_settings'),
-  (13, 'update_blog_section'),
-  (14, 'update_users'),
-  (15, 'update_permission'),
-  (16, 'update_roles'),
-  (17, 'delete_reviews'),
-  (18, 'delete_blog_section'),
-  (19, 'delete_users'),
-  (20, 'delete_permission'),
-  (21, 'delete_roles'),
-  (22, 'impersonate_users');
+  (6, 'create_faqs'),
+  (7, 'view_reviews'),
+  (8, 'view_blog_section'),
+  (9, 'view_settings'),
+  (10, 'view_users'),
+  (11, 'view_permission'),
+  (12, 'view_roles'),
+  (13, 'view_faqs'),
+  (14, 'update_reviews'),
+  (15, 'update_blog_section'),
+  (16, 'update_settings'),
+  (17, 'update_users'),
+  (18, 'update_permission'),
+  (19, 'update_roles'),
+  (20, 'update_faqs'),
+  (21, 'delete_reviews'),
+  (22, 'delete_blog_section'),
+  (23, 'delete_users'),
+  (24, 'delete_permission'),
+  (25, 'delete_roles'),
+  (26, 'delete_faqs'),
+  (27, 'impersonate_users');
 -- Inserting data into the role_permissions table
-INSERT INTO public.role_permissions (id, role_id, permission_id)
-VALUES (1, 1, 1),
-  (2, 1, 2),
-  (3, 1, 3),
-  (4, 1, 4),
-  (5, 1, 5),
-  (6, 1, 6),
-  (7, 1, 7),
-  (8, 1, 8),
-  (9, 1, 9),
-  (10, 1, 10),
-  (11, 1, 11),
-  (12, 1, 12),
-  (13, 1, 13),
-  (14, 1, 14),
-  (15, 1, 15),
-  (16, 1, 16),
-  (17, 1, 17),
-  (18, 1, 18),
-  (19, 1, 19),
-  (20, 1, 20),
-  (21, 1, 21),
-  (22, 1, 22),
-  (23, 3, 1),
-  (24, 3, 6),
-  (25, 3, 11),
-  (26, 3, 17);
+INSERT INTO public.role_permissions (role_id, permission_id)
+SELECT r.id,
+  p.id
+FROM public.roles r
+  CROSS JOIN public.permissions p
+WHERE (r.role = 'admin')
+  OR (
+    r.role = 'editor'
+    AND p.permission IN (
+      'create_reviews',
+      'view_reviews',
+      'update_reviews',
+      'delete_reviews'
+    )
+  ) ON CONFLICT DO NOTHING;
 -- Inserting data into the users table
 INSERT INTO public.users (user_id, name, email)
 VALUES (

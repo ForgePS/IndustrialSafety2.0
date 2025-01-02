@@ -1,10 +1,40 @@
-// Util Imports
-import { createClient } from '@repo/supabase/server'
+// Third-party Imports
+import { jwtDecode } from 'jwt-decode'
+import type { JwtPayload } from 'jwt-decode'
+import type { UserResponse } from '@supabase/supabase-js'
 
-export async function getAuthUser() {
+// Util Imports
+import { createClient, createServiceRoleClient } from '@repo/supabase/server'
+
+type JWT = JwtPayload & {
+  roles: string[]
+  permissions: string[]
+}
+
+export async function getAuthUser(): Promise<UserResponse> {
   const supabase = await createClient()
 
+  const {
+    data: { session }
+  } = await supabase.auth.refreshSession()
+
   const user = await supabase.auth.getUser()
+
+  if (user.data.user && session) {
+    const supabaseServiceRole = createServiceRoleClient()
+
+    const jwt: JWT = jwtDecode(session.access_token)
+
+    const updatedUser = await supabaseServiceRole.auth.admin.updateUserById(user.data.user.id, {
+      user_metadata: {
+        ...user.data.user.user_metadata,
+        roles: jwt.roles,
+        permissions: jwt.permissions
+      }
+    })
+
+    return updatedUser
+  }
 
   return user
 }
@@ -25,14 +55,12 @@ export const getPublicUser = async (column: string = '*') => {
   return userRecord
 }
 
-export const getUserRoles = async () => {
-  const supabase = await createClient()
+export const getUserRoles = async (): Promise<string[] | undefined> => {
+  const {
+    data: { user }
+  } = await getAuthUser()
 
-  const { data: publicUser } = await getPublicUser()
-
-  const roles = await supabase.from('user_roles').select(`*, roles (role)`).eq('user_id', publicUser?.id)
-
-  return roles
+  return user?.user_metadata.roles
 }
 
 export const getPublicGeneralSettings = async () => {

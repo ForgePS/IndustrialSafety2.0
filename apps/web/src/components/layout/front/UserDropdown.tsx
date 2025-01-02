@@ -67,18 +67,18 @@ const UserDropdown = ({ user, userTableData, roles }: Props) => {
           </Link>
         </DropdownMenuItem>
         <DropdownMenuSeparator />
-        {!roles?.includes('admin') ? (
+        {roles?.includes('admin') ? (
+          <DropdownMenuItem asChild>
+            <Link href='/admin' className='flex gap-2'>
+              <TbSettings className='text-xl' />
+              <span>Admin Panel</span>
+            </Link>
+          </DropdownMenuItem>
+        ) : (
           <DropdownMenuItem asChild>
             <Link href='/dashboard' className='flex gap-2'>
               <TbMoodSmile className='text-xl' />
               <span>User Dashboard</span>
-            </Link>
-          </DropdownMenuItem>
-        ) : (
-          <DropdownMenuItem className='flex gap-2' asChild>
-            <Link href='/admin' className='flex gap-2'>
-              <TbSettings className='text-xl' />
-              <span>Admin Panel</span>
             </Link>
           </DropdownMenuItem>
         )}

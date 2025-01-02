@@ -25,7 +25,7 @@ export async function initializeI18nServer(
 
           return callback(null, data)
         } catch (error) {
-          console.log(`Error loading i18n file: locales/${language}/${namespace}.json`, error)
+          console.error(`Error loading i18n file: locales/${language}/${namespace}.json`, error)
 
           return callback(null, {})
         }

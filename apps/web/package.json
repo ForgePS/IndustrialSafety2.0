@@ -22,6 +22,7 @@
     "@markdoc/markdoc": "^0.4.0",
     "@repo/auth": "workspace:*",
     "@repo/keystatic": "workspace:*",
+    "@repo/rbac": "workspace:*",
     "@repo/supabase": "workspace:*",
     "@repo/ui": "workspace:*",
     "@repo/billing": "workspace:*",

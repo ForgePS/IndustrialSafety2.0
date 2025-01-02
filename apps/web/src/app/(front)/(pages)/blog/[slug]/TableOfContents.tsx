@@ -10,7 +10,7 @@ import Link from 'next/link'
 // Third-party Imports
 import { cn } from '@repo/ui/lib/utils'
 
-interface NestedHeading {
+type NestedHeading = {
   id: string
   title: string
   items: NestedHeading[]

@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react'
 
 import { createClient } from '@repo/supabase/client'
-import { getPublicUser } from '@repo/supabase/clientHelpers'
+import { getPublicUser, getUserPermissions } from '@repo/supabase/clientHelpers'
 import type { Database } from '@repo/supabase/types'
 
 type AuthState = {
@@ -59,12 +59,10 @@ export function useAuth() {
   }, [])
 
   const startImpersonation = async (usersRecord: Database['public']['Tables']['users']['Row'][], userId: string) => {
-    const { data: userRecord } = await getPublicUser()
-    const { data: userRoles } = await supabase.from('user_roles').select(`*, roles (role)`).eq('user_id', userRecord.id)
-    const roles = userRoles?.map(({ roles }) => roles.role)
+    const permissions = await getUserPermissions()
 
-    if (!roles?.includes('admin')) {
-      throw new Error('Only admins can impersonate users')
+    if (!permissions?.includes('impersonate_users')) {
+      throw new Error('You do not have permission to impersonate users')
     }
 
     try {

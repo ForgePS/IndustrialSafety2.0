@@ -1,0 +1,27 @@
+{
+  "name": "@repo/rbac",
+  "version": "1.0.0",
+  "private": true,
+  "exports": {
+    "./utils": "./src/utils.ts",
+    "./components": "./src/components.tsx"
+  },
+  "scripts": {
+    "lint": "eslint src/",
+    "lint:fix": "eslint src/ --fix",
+    "clean": "rm -rf .turbo *.tsbuildinfo",
+    "clean:node_modules": "rm -rf .turbo node_modules *.tsbuildinfo",
+    "type-check": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@repo/supabase": "workspace:*",
+    "react": "^18.2.0"
+  },
+  "devDependencies": {
+    "@repo/config-eslint": "workspace:*",
+    "@repo/config-typescript": "workspace:*",
+    "@types/react": "^18.2.0",
+    "eslint": "^8.56.0",
+    "typescript": "^5.3.3"
+  }
+}
