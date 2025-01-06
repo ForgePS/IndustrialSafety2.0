@@ -2,7 +2,7 @@
 
 // Third-party Imports
 import type { Database } from '@repo/supabase/types'
-import { createServiceRoleClient } from '@repo/supabase/server'
+import { createClient, createServiceRoleClient } from '@repo/supabase/server'
 
 type AssignRolesToUserType = {
   supabase: ReturnType<typeof createServiceRoleClient>
@@ -133,7 +133,7 @@ export const createUser = async (data: UsersType) => {
 }
 
 export async function editUser(data: UsersEditType) {
-  const supabase = createServiceRoleClient()
+  const supabase = await createClient()
 
   try {
     const { id, name, email, password, roles, selectedRoles } = data
@@ -142,13 +142,21 @@ export async function editUser(data: UsersEditType) {
     const { data: userData, error: userError } = await supabase.from('users').select('user_id').eq('id', id).single()
 
     if (userError) {
-      return { error: `Error fetching user: ${userError.message}` }
+      return { error: userError.message }
     }
 
     // Get the UUID of the user to update
     const authId = userData?.user_id
 
     // Update User Information
+    const { error: updateError } = await supabase.from('users').update({ name, email }).eq('id', id)
+
+    if (updateError) {
+      // Return the RLS policy error message directly
+      return { error: updateError.message }
+    }
+
+    // Update auth user
     await supabase.auth.admin.updateUserById(authId, {
       email,
       ...(password && { password }),
@@ -174,32 +182,23 @@ export async function editUser(data: UsersEditType) {
 }
 
 export async function deleteUser(id: number) {
-  const supabase = createServiceRoleClient()
+  const supabase = await createClient()
 
   try {
-    // Fetch the UUID of the user to delete
-    const { data: userData, error: userError } = await supabase.from('users').select('user_id').eq('id', id).single()
+    // Delete from public.users - this will trigger our cascade delete
+    const { error } = await supabase.from('users').delete().eq('id', id)
 
-    if (userError) {
-      return { error: `Error fetching user: ${userError.message}` }
-    }
-
-    // Get the UUID of the user to delete
-    const authId = userData?.user_id
-
-    // Delete the user from the 'users' table
-    const { error: deleteUserError } = await supabase.auth.admin.deleteUser(authId)
-
-    if (deleteUserError) {
-      return { error: `Error deleting user: ${deleteUserError.message}` }
+    if (error) {
+      // Return the RLS policy error message directly
+      return { error: error.message }
     }
 
     return { message: 'User deleted successfully' }
   } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred'
+    const errorMessage = error instanceof Error ? error.message : 'An unexpected error occurred'
 
     console.error('Unexpected error:', errorMessage)
 
-    return { error: `Unexpected error: ${errorMessage}` }
+    return { error: errorMessage }
   }
 }

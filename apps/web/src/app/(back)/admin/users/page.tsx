@@ -1,7 +1,7 @@
 // Third-party Imports
 import { TbExclamationCircle } from 'react-icons/tb'
 import { Alert, AlertDescription } from '@repo/ui/components/ui/alert'
-import { createServiceRoleClient } from '@repo/supabase/server'
+import { createClient } from '@repo/supabase/server'
 import { getAuthUser } from '@repo/supabase/serverHelpers'
 
 // Component Imports
@@ -9,7 +9,7 @@ import Users from './Users'
 
 const UserPage = async () => {
   // Vars
-  const supabase = createServiceRoleClient()
+  const supabase = await createClient()
 
   const {
     data: { user }

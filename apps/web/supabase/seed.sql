@@ -198,11 +198,13 @@ update on auth.users for each row
       OR OLD.raw_user_meta_data->>'name' IS DISTINCT
     FROM NEW.raw_user_meta_data->>'name'
   ) execute function handle_update_user();
--- Inserting data into the roles table
-INSERT INTO public.roles (id, role)
-VALUES (1, 'admin'),
-  (2, 'user'),
-  (3, 'editor');
+-- Inserting data into the roles table with hierarchy values
+INSERT INTO public.roles (id, role, hierarchy)
+VALUES (1, 'admin', 1),
+  (2, 'user', 3),
+  (3, 'editor', 2) ON CONFLICT (id) DO
+UPDATE
+SET hierarchy = EXCLUDED.hierarchy;
 -- Inserting data into the permissions table
 INSERT INTO public.permissions (id, permission)
 VALUES (1, 'create_reviews'),

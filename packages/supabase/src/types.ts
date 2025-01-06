@@ -233,14 +233,17 @@ export type Database = {
       }
       roles: {
         Row: {
+          hierarchy: number
           id: number
           role: string
         }
         Insert: {
+          hierarchy?: number
           id?: number
           role: string
         }
         Update: {
+          hierarchy?: number
           id?: number
           role?: string
         }
@@ -320,11 +323,71 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      can_manage_user: {
+        Args: {
+          auth_uid: string
+          target_user_id: string
+        }
+        Returns: boolean
+      }
+      can_perform_user_action: {
+        Args: {
+          auth_uid: string
+          target_user_id: number
+        }
+        Returns: boolean
+      }
+      can_update_user: {
+        Args: {
+          auth_uid: string
+          target_user_id: number
+        }
+        Returns: boolean
+      }
+      can_view_user: {
+        Args: {
+          auth_uid: string
+          target_user_id: number
+        }
+        Returns: boolean
+      }
+      check_role_hierarchy: {
+        Args: {
+          auth_uid: string
+          target_user_id: number
+        }
+        Returns: boolean
+      }
       custom_access_token_hook: {
         Args: {
           event: Json
         }
         Returns: Json
+      }
+      get_user_hierarchy: {
+        Args: {
+          target_user_id: number
+        }
+        Returns: number
+      }
+      get_user_higher_hierarchy: {
+        Args: {
+          user_id: string
+        }
+        Returns: number
+      }
+      get_user_id_from_auth: {
+        Args: {
+          auth_uid: string
+        }
+        Returns: number
+      }
+      has_permission: {
+        Args: {
+          user_id: string
+          required_permission: string
+        }
+        Returns: boolean
       }
     }
     Enums: {

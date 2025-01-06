@@ -57,9 +57,9 @@ const Users = ({ usersRecord, rolesData, userPermissions }: Props) => {
       const result = await deleteUser(id)
 
       if ('error' in result) {
-        toast('error', 'An unexpected error occurred. Please try again.')
+        toast('error', result.error as string)
       } else {
-        toast('success', 'User deleted successfully')
+        toast('success', result.message as string)
         setUsers(users.filter(user => user.id !== id))
         router.push('/admin/users')
       }
