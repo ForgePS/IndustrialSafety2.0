@@ -17,7 +17,7 @@ const data = {
   ),
   button: (
     <>
-      Get Started with ChatFlow AI Now <TbDownload className='text-xl' />
+      Get Started with ChatFlow AI Now <TbDownload className='shrink-0 text-xl' />
     </>
   ),
   image: (

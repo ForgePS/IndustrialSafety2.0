@@ -5,53 +5,46 @@ import {
   TbCode,
   TbHandClick,
   TbLock,
-  TbStack2,
-  TbKey,
-  TbMail,
-  TbLink,
-  TbBrandGoogle
+  TbChartInfographic,
+  TbUserSearch,
+  TbEdit
 } from 'react-icons/tb'
 
 const data = [
   {
     icon: <TbRocket className='text-[40px]' />,
-    title: 'Production-Ready',
-    description: 'JetShip provides all the essential tools and resources needed to launch your project efficiently',
+    title: 'Ready for Instant Deployment',
+    description:
+      'ChatFlow AI provides everything you need to integrate your chatbot swiftly, allowing you to go live in minutes and start engaging with customers instantly.',
     image: {
       srcLight: '/images/pages/features-section-1.png',
       srcDark: '/images/pages/features-section-1.png'
     },
     features: [
       {
-        icon: <TbStack2 className='text-2xl' />,
-        title: 'Solid Tech-Stack',
-        description:
-          'Utilizes Laravel, TailwindCSS, Livewire, AlpineJS, and FilamentPHP for a powerful, scalable & developer-friendly experience.'
-      },
-      {
         icon: <TbPlaneDeparture className='text-2xl' />,
-        title: 'Ready for Production',
+        title: 'Ready for use',
         description:
-          'Login is accessing an existing account, registration is creating a new one by providing necessary information.'
+          'Seamlessly integrate with existing systems and provide immediate support to your users without any downtime.'
       },
       {
         icon: <TbCode className='text-2xl' />,
-        title: 'Clean Code',
+        title: 'Clean Implementation',
         description:
           'Enjoy a clutter-free integration process with optimized code that ensures fast and reliable performance.'
       },
       {
         icon: <TbHandClick className='text-2xl' />,
-        title: '1-Click Deployment',
-        description: "Deploy your SaaS swiftly with Vercel's one-click deployment."
+        title: '1-Click Integration',
+        description: 'Deploy your AI-powered chatbot with a single click—no complex setup or configurations required.'
       }
     ]
   },
   {
     icon: <TbLock className='text-[40px]' />,
-    title: 'Pre-configured Auth Process',
+    title: 'AI-Driven Customer Insights',
     description:
-      'Modern Authentication Offers traditional logins and social logins through Google, GitHub, Twitter, and magic links.',
+      'Leverage the power of AI to understand customer behavior, preferences, and needs in real-time, enabling tailored responses that improve satisfaction and loyalty.',
     image: {
       srcLight: '/images/pages/features-section-2.png',
       srcDark: '/images/pages/features-section-2.png'
@@ -59,25 +52,20 @@ const data = [
     reverse: true,
     features: [
       {
-        icon: <TbBrandGoogle className='text-2xl' />,
-        title: 'Social Sign-in',
+        icon: <TbChartInfographic className='text-2xl' />,
+        title: 'Real-Time Sentiment Analysis',
+        description: 'Analyze customer emotions and moods instantly to provide empathetic and relevant responses.'
+      },
+      {
+        icon: <TbUserSearch className='text-2xl' />,
+        title: 'Behavior Tracking',
+        description: 'Monitor user behavior patterns to anticipate needs and proactively offer solutions.'
+      },
+      {
+        icon: <TbEdit className='text-2xl' />,
+        title: 'Dynamic Personalization',
         description:
-          'Supports social sign-ins via Socialite with Google, GitHub, Twitter, LinkedIn, Facebook, GitLab, Bitbucket, and Slack.'
-      },
-      {
-        icon: <TbLink className='text-2xl' />,
-        title: 'Magic Links',
-        description: 'Enables easy user sign-ins with email link authentication.'
-      },
-      {
-        icon: <TbMail className='text-2xl' />,
-        title: 'Email Authentication',
-        description: 'Allows email and password sign-ins, ensuring email verification.'
-      },
-      {
-        icon: <TbKey className='text-2xl' />,
-        title: 'Password Reset',
-        description: 'Provides a self-service password recovery feature for users.'
+          'Customize conversations based on customer history and preferences for a unique, engaging experience.'
       }
     ]
   }

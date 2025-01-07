@@ -102,7 +102,7 @@ const Footer = async () => {
               </Link>
             </li>
             <li>
-              <Link href='/' className='link-animated text-textPrimary text-base'>
+              <Link href='https://themeselection.com/contact-us' className='link-animated text-textPrimary text-base'>
                 Contact Us
               </Link>
             </li>
@@ -140,7 +140,7 @@ const Footer = async () => {
           <ul className='flex flex-col gap-4'>
             <li>
               <Link href='/' className='link-animated text-textPrimary text-base'>
-                Affiliates (up to $75) per sale
+                Affiliates (up to $89.70) per sale
               </Link>
             </li>
           </ul>
@@ -149,12 +149,12 @@ const Footer = async () => {
           <h6 className='text-textPrimary mbe-4 text-lg font-semibold'>Legal</h6>
           <ul className='flex flex-col gap-4'>
             <li>
-              <Link href='/' className='link-animated text-textPrimary text-base'>
+              <Link href='/terms-of-service' className='link-animated text-textPrimary text-base'>
                 Terms of Service
               </Link>
             </li>
             <li>
-              <Link href='/' className='link-animated text-textPrimary text-base'>
+              <Link href='/privacy-policy' className='link-animated text-textPrimary text-base'>
                 Privacy & Legal
               </Link>
             </li>

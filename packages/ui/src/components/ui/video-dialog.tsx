@@ -80,7 +80,7 @@ const HeroVideoDialog = ({
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.5, opacity: 0 }}
               transition={{ type: 'spring', damping: 30, stiffness: 300 }}
-              className='is-full max-is-4xl mli-6 md:mli-0 relative aspect-video'
+              className='is-full max-is-4xl mli-6 relative aspect-video'
             >
               <Avatar size='lg' shape='circle' className='border-card/60 absolute -top-12 end-0 cursor-pointer border'>
                 <AvatarFallback>

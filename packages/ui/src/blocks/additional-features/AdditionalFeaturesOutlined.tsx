@@ -68,7 +68,6 @@ const AdditionalFeaturesOutlined = (props: Props) => {
         <BlurFade
           key={index}
           delay={transitionDelay + index * transitionDuration}
-          inView
           className='card bg-border [&:hover>.inner]:bg-card/85 relative z-0 flex overflow-hidden rounded-xl p-px [transition:all_300ms_ease-in-out]'
           onMouseEnter={() => setHoveredCard(index)}
           onMouseLeave={() => setHoveredCard(null)}

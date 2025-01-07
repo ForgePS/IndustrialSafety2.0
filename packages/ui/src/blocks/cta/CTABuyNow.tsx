@@ -51,7 +51,7 @@ const CTABuyNow = (props: Props) => {
         show: { transition: { delay: transitionDelay, duration: transitionDuration }, y: 0 }
       }}
       className={cn(
-        'from-primary shadow-primaryLg pli-12 plb-9 relative grid gap-8 overflow-hidden rounded-xl bg-gradient-to-r to-[#5A16EB] lg:grid-cols-2 lg:gap-12',
+        'from-primary shadow-primaryLg sm:pli-12 sm:plb-9 relative grid gap-8 overflow-hidden rounded-xl bg-gradient-to-r to-[#5A16EB] p-6 lg:grid-cols-2 lg:gap-12',
         className
       )}
     >

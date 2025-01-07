@@ -94,7 +94,7 @@ const Reviews = (props: Props) => {
           className={className}
         >
           {data.map((review: ReviewType, index) => (
-            <BlurFade key={index} delay={transitionDelay + index * 0.05} duration={transitionDuration} inView>
+            <BlurFade key={index} delay={transitionDelay + index * 0.05} duration={transitionDuration}>
               <Link href={review.link ? review.link : ''} target='_blank'>
                 <Card
                   style={{ marginBlockEnd: `${gap}px` }}

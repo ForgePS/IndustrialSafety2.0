@@ -34,7 +34,7 @@ const BlurFade = (props: BlurFadeProps) => {
     duration = 0.4,
     delay = 0,
     yOffset = 12,
-    inView = false,
+    inView = true,
     inViewMargin = '-50px',
     blur = '6px',
     onMouseEnter,

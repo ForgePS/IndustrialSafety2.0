@@ -47,7 +47,10 @@ const CTADiscord = (props: Props) => {
         hidden: { y: 30 },
         show: { transition: { delay: transitionDelay, duration: transitionDuration }, y: 0 }
       }}
-      className={cn('bg-card pli-12 plb-9 flex items-center gap-10 rounded-xl border max-lg:flex-col', className)}
+      className={cn(
+        'bg-card sm:pli-12 sm:plb-9 flex items-center gap-10 rounded-xl border p-6 max-lg:flex-col',
+        className
+      )}
     >
       {image &&
         (typeof image === 'object' && 'srcLight' in image && 'srcDark' in image ? (

@@ -25,7 +25,6 @@ const AdditionalFeaturesHorizontal = (props: Props) => {
         <BlurFade
           key={index}
           delay={transitionDelay + index * transitionDuration}
-          inView
           className='border-is-4 hover:border-primary bg-card pis-5 pie-6 plb-5 flex flex-col items-start gap-3 rounded-xl border-transparent transition-[border-color,box-shadow] duration-300 ease-in-out hover:shadow'
         >
           <div className='flex items-center gap-3 text-center'>
