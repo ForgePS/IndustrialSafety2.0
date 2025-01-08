@@ -10,11 +10,9 @@ import Link from 'next/link'
 
 // Third-party Imports
 import {
-  TbClipboardList,
   TbCommand,
   TbCrown,
   TbDashboard,
-  TbExternalLink,
   TbFileText,
   TbLayoutGridAdd,
   TbListDetails,
@@ -46,7 +44,6 @@ import {
   SidebarGroupLabel,
   SidebarHeader,
   SidebarMenu,
-  SidebarMenuAction,
   SidebarMenuButton,
   SidebarMenuItem,
   SidebarRail,
@@ -217,19 +214,6 @@ const AppSidebar = ({ roles, permissions, appName }: { roles?: string[]; permiss
                 </MenuButton>
               </SidebarMenuItem>
             </PermissionGuard>
-            {process.env.NODE_ENV !== 'production' && (
-              <PermissionGuard permissions={permissions} permission='view_blog_section'>
-                <SidebarMenuItem>
-                  <MenuButton href='/keystatic' target='_blank' tooltip='Blog'>
-                    <TbClipboardList />
-                    <span>Blog</span>
-                  </MenuButton>
-                  <SidebarMenuAction className='pointer-events-none hover:bg-transparent [&>svg]:size-5'>
-                    <TbExternalLink />
-                  </SidebarMenuAction>
-                </SidebarMenuItem>
-              </PermissionGuard>
-            )}
           </SidebarMenu>
         </SidebarGroup>
         <PermissionGuard permissions={permissions} permission='view_settings'>

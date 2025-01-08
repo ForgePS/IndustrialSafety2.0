@@ -140,12 +140,6 @@ export async function updateSession(request: NextRequest, isMagicLinkEnabled: bo
       return NextResponse.redirect(url)
     }
 
-    if (url.pathname.startsWith('/keystatic') && !hasPermission(permissions, 'view_blog_section')) {
-      url.pathname = '/not-authorized'
-
-      return NextResponse.redirect(url)
-    }
-
     if (url.pathname.startsWith('/admin/settings') && !hasPermission(permissions, 'view_settings')) {
       url.pathname = '/not-authorized'
 

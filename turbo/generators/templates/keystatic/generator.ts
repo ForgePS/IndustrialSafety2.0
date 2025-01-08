@@ -24,25 +24,65 @@ export function keystaticAdminGenerator(plop: PlopTypes.NodePlopAPI) {
       },
       {
         type: 'modify',
+        path: 'apps/web/src/components/layout/vertical/Sidebar.tsx',
+        async transform(content) {
+          // Add required imports
+          const importsUpdate = content
+            .replace(/(} from 'react-icons\/tb')/, ', TbClipboardList, TbExternalLink $1')
+            .replace(/(  SidebarMenu,\n)/, '$1  SidebarMenuAction,\n')
+
+          // Add the Blog section after Reviews section
+          const updatedContent = importsUpdate.replace(
+            /(<PermissionGuard permissions={permissions} permission='view_reviews'>.*?<\/PermissionGuard>)/s,
+            `$1
+            {process.env.NODE_ENV !== 'production' && (
+              <PermissionGuard permissions={permissions} permission='manage_blog_section'>
+                <SidebarMenuItem>
+                  <MenuButton href='/keystatic' target='_blank' tooltip='Blog'>
+                    <TbClipboardList />
+                    <span>Blog</span>
+                  </MenuButton>
+                  <SidebarMenuAction className='pointer-events-none hover:bg-transparent [&>svg]:size-5'>
+                    <TbExternalLink />
+                  </SidebarMenuAction>
+                </SidebarMenuItem>
+              </PermissionGuard>
+            )}`
+          )
+
+          return updatedContent
+        }
+      },
+      {
+        type: 'modify',
         path: 'packages/supabase/src/middleware.ts',
         async transform(content) {
           const updatedContent = content
             .replace(
-              /if \(url\.pathname\.startsWith\('\/admin'\)\)/g,
-              "if (url.pathname.startsWith('/admin') || url.pathname.startsWith('/keystatic'))"
+              /(request\.nextUrl\.pathname\.startsWith\('\/admin'\) \|\|[\s\n]+request\.nextUrl\.pathname\.startsWith\('\/dashboard'\))/g,
+              "$1 || request.nextUrl.pathname.startsWith('/keystatic')"
             )
             .replace(
-              /request\.nextUrl\.pathname\.startsWith\('\/admin'\) \|\|[\s\n]+request\.nextUrl\.pathname\.startsWith\('\/dashboard'\)/g,
-              "request.nextUrl.pathname.startsWith('/admin') || request.nextUrl.pathname.startsWith('/dashboard') || request.nextUrl.pathname.startsWith('/keystatic')"
+              /(if \(.*?, 'view_reviews'\)\) {.*?})/s,
+              `$1
+
+    if (url.pathname.startsWith('/keystatic') && !hasPermission(permissions, 'manage_blog_section')) {
+      url.pathname = '/not-authorized'
+
+      return NextResponse.redirect(url)
+    }`
             )
 
           return updatedContent
         }
       },
       async () => {
-        execSync('prettier --write packages/supabase/src/middleware.ts', {
-          stdio: 'inherit'
-        })
+        execSync(
+          'prettier --write apps/web/src/components/layout/vertical/Sidebar.tsx packages/supabase/src/middleware.ts',
+          {
+            stdio: 'inherit'
+          }
+        )
 
         return `Keystatic admin generated!`
       }
