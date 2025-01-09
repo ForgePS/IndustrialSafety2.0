@@ -10,7 +10,14 @@ const ReviewPage = async () => {
   // Vars
   const supabase = await createClient()
 
-  const { data, error } = await supabase.from('reviews').select('*').order('id', { ascending: true })
+  const { data, error } = await supabase
+    .from('reviews')
+    .select(
+      `*,
+    review_platforms (platform_name)
+    `
+    )
+    .order('id', { ascending: true })
 
   if (error) {
     console.error('Error fetching reviews: ', error.message)

@@ -20,6 +20,12 @@ import { createClient } from '@repo/supabase/client'
 import { toast } from '@repo/ui/utils/toast'
 import type { Database } from '@repo/supabase/types'
 
+export type ReviewsWithPlatforms = Database['public']['Tables']['reviews']['Row'] & {
+  review_platforms?: {
+    platform_name: string
+  }
+}
+
 // Delete a review
 export const deleteReview = async (reviewId: number) => {
   // Vars
@@ -67,11 +73,11 @@ const SwitchState = ({ row }: { row: Row<Database['public']['Tables']['reviews']
   return <Switch checked={isFeatured} onCheckedChange={handleToggle} />
 }
 
-const Reviews = ({ reviewData }: { reviewData: Database['public']['Tables']['reviews']['Row'][] }) => {
+const Reviews = ({ reviewData }: { reviewData: ReviewsWithPlatforms[] }) => {
   // Hooks
   const router = useRouter()
 
-  const columns: ColumnDef<Database['public']['Tables']['reviews']['Row']>[] = [
+  const columns: ColumnDef<ReviewsWithPlatforms>[] = [
     {
       accessorKey: 'username',
       header: 'User name',
@@ -85,7 +91,7 @@ const Reviews = ({ reviewData }: { reviewData: Database['public']['Tables']['rev
     {
       accessorKey: 'platform',
       header: 'Review platform',
-      cell: ({ row }) => <div className='capitalize'>{row.getValue('platform')}</div>
+      cell: ({ row }) => <div className='capitalize'>{row.original.review_platforms?.platform_name || '-'}</div>
     },
     {
       accessorKey: 'is_featured',
@@ -98,7 +104,7 @@ const Reviews = ({ reviewData }: { reviewData: Database['public']['Tables']['rev
       enableHiding: false,
       cell: ({ row }) => (
         <div className='flex items-center gap-4'>
-          <Link href={`/admin/reviews/${row.original.id}/edit`} className='text-primary flex items-center gap-1'>
+          <Link href={`/admin/reviews/review/${row.original.id}/edit`} className='text-primary flex items-center gap-1'>
             <TbEdit />
             Edit
           </Link>
@@ -119,7 +125,7 @@ const Reviews = ({ reviewData }: { reviewData: Database['public']['Tables']['rev
     <div className='flex flex-col gap-y-8'>
       <div className='flex gap-y-2 max-sm:flex-col sm:items-center sm:justify-between'>
         <h1 className='text-textPrimary text-3xl font-bold'>Reviews</h1>
-        <Link href='/admin/reviews/create'>
+        <Link href='/admin/reviews/review/create'>
           <Button className='max-sm:is-full'>New review</Button>
         </Link>
       </div>

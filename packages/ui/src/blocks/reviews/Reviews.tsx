@@ -20,25 +20,21 @@ import { cn } from '@repo/ui/lib/utils'
 import { getInitials } from '@repo/ui/utils/getInitials'
 
 type ReviewType = Database['public']['Tables']['reviews']['Row']
+type PlatformType = {
+  id: number
+  platform_name: string
+  logo: string | null
+}
 
 type Props = {
   data: ReviewType[]
+  platformData: PlatformType[]
   columnCount?: number
   columnWidth?: number
   gap?: number
   className?: string
   transitionDelay?: number
   transitionDuration?: number
-}
-
-type PlatformLogoType = {
-  [key: string]: string
-}
-
-const platformLogos: PlatformLogoType = {
-  trustpilot: '/images/logos/trustpilot.png',
-  twitter: '/images/logos/twitter.png',
-  g2: '/images/logos/g2.png'
 }
 
 // To get the first name and the first letter of the last name
@@ -48,10 +44,11 @@ const name = (name: string) => {
   return `${firstName} ${lastName ? lastName.charAt(0).toUpperCase() + '.' : ''}`
 }
 
-const Reviews = (props: Props) => {
+const Reviews = async (props: Props) => {
   // Props
   const {
     data,
+    platformData,
     columnCount = 4,
     columnWidth = 300,
     gap = 24,
@@ -93,74 +90,81 @@ const Reviews = (props: Props) => {
           style={{ columnCount: columnCount, columnWidth: `${columnWidth}px`, gap: `${gap}px` }}
           className={className}
         >
-          {data.map((review: ReviewType, index) => (
-            <BlurFade key={index} delay={transitionDelay + index * 0.05} duration={transitionDuration}>
-              <Link href={review.link ? review.link : ''} target='_blank'>
-                <Card
-                  style={{ marginBlockEnd: `${gap}px` }}
-                  className='break-inside-avoid-column border shadow-none transition duration-200 hover:scale-[1.02]'
-                >
-                  <CardHeader className='pbe-4 flex items-center gap-4'>
-                    <div className='is-full flex justify-start gap-3'>
-                      <Avatar shape='circle' size='3xl' color='primary'>
-                        <AvatarImage src={review.avatar_image ?? ''} alt={review.username} />
-                        <AvatarFallback className='text-xl'>
-                          {getInitials(review.username).toUpperCase()}
-                        </AvatarFallback>
-                      </Avatar>
-                      <div className='flex flex-col items-start gap-y-2'>
-                        <div className='flex flex-wrap items-center justify-between gap-1.5'>
-                          <h1 className='max-is-[177px] truncate text-lg font-semibold capitalize'>
-                            {name(review.username)}
-                          </h1>
-                          {review.designation && (
-                            <span className='text-textSecondary text-sm'>({review.designation})</span>
-                          )}
-                        </div>
-                        <div className='flex flex-wrap items-center justify-between gap-1.5'>
-                          <Badge variant='tonalSuccess' size='sm' shape='circle'>
-                            <TbCircleCheckFilled className='text-xl' />
-                            <span>Verified User</span>
-                          </Badge>
-                          {review.country && (
-                            <span className='text-textSecondary text-sm capitalize [display:ruby]'>
-                              <TbMapPin className='text-textSecondary mie-0.5 align-text-top text-base' />
-                              {review.country}
-                            </span>
-                          )}
+          {data.map((review: ReviewType, index) => {
+            // Match platform by ID
+            const platform = platformData?.find(p => p.id === review.platform_id)
+
+            return (
+              <BlurFade key={index} delay={transitionDelay + index * 0.05} duration={transitionDuration}>
+                <Link href={review.link ? review.link : ''} target='_blank'>
+                  <Card
+                    style={{ marginBlockEnd: `${gap}px` }}
+                    className='break-inside-avoid-column border shadow-none transition duration-200 hover:scale-[1.02]'
+                  >
+                    <CardHeader className='pbe-4 flex items-center gap-4'>
+                      <div className='is-full flex justify-start gap-3'>
+                        <Avatar shape='circle' size='3xl' color='primary'>
+                          <AvatarImage src={review.avatar_image ?? ''} alt={review.username} />
+                          <AvatarFallback className='text-xl'>
+                            {getInitials(review.username).toUpperCase()}
+                          </AvatarFallback>
+                        </Avatar>
+                        <div className='flex flex-col items-start gap-y-2'>
+                          <div className='flex flex-wrap items-center justify-between gap-1.5'>
+                            <h1 className='max-is-[177px] truncate text-lg font-semibold capitalize'>
+                              {name(review.username)}
+                            </h1>
+                            {review.designation && (
+                              <span className='text-textSecondary text-sm'>({review.designation})</span>
+                            )}
+                          </div>
+                          <div className='flex flex-wrap items-center justify-between gap-1.5'>
+                            <Badge variant='tonalSuccess' size='sm' shape='circle'>
+                              <TbCircleCheckFilled className='text-xl' />
+                              <span>Verified User</span>
+                            </Badge>
+                            {review.country && (
+                              <span className='text-textSecondary text-sm capitalize [display:ruby]'>
+                                <TbMapPin className='text-textSecondary mie-0.5 align-text-top text-base' />
+                                {review.country}
+                              </span>
+                            )}
+                          </div>
                         </div>
                       </div>
-                    </div>
-                    <div className='is-full flex items-center justify-start'>
-                      <Ratings rating={review.rating} className='[&>svg]:bs-[22px] [&>svg]:is-[22px]' disabled />
-                      <hr className='border-border mlb-0 bs-auto is-4 rotate-90 flex-col' />
-                      <div className='flex items-center gap-1'>
-                        <img
-                          src={platformLogos[review.platform.toLowerCase()]}
-                          alt={review.platform}
-                          className='is-4 bs-auto'
+                      <div className='is-full flex items-center justify-start'>
+                        <Ratings rating={review.rating} className='[&>svg]:bs-[22px] [&>svg]:is-[22px]' disabled />
+                        {platform && (
+                          <>
+                            <hr className='border-border mlb-0 bs-auto is-4 rotate-90 flex-col' />
+                            <div className='flex items-center gap-1'>
+                              <img src={platform.logo || undefined} alt='platform logo' className='is-4 bs-auto' />
+                              <p className='text-textPrimary text-sm font-medium capitalize'>
+                                {platform.platform_name}
+                              </p>
+                            </div>
+                          </>
+                        )}
+                      </div>
+                    </CardHeader>
+                    <CardContent>
+                      {review.title && <h1 className='mbe-1 text-lg font-semibold'>{review.title}</h1>}
+                      <p className='text-textSecondary text-base'>{review.content}</p>
+                      {review.video_url && (
+                        <iframe
+                          width='100%'
+                          className='mbs-4 rounded-lg'
+                          src={review.video_url}
+                          title='YouTube video player'
+                          allow='accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture'
                         />
-                        <p className='text-textPrimary text-sm font-medium capitalize'>{review.platform}</p>
-                      </div>
-                    </div>
-                  </CardHeader>
-                  <CardContent>
-                    {review.title && <h1 className='mbe-1 text-lg font-semibold'>{review.title}</h1>}
-                    <p className='text-textSecondary text-base'>{review.content}</p>
-                    {review.video_url && (
-                      <iframe
-                        width='100%'
-                        className='mbs-4 rounded-lg'
-                        src={review.video_url}
-                        title='YouTube video player'
-                        allow='accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture'
-                      />
-                    )}
-                  </CardContent>
-                </Card>
-              </Link>
-            </BlurFade>
-          ))}
+                      )}
+                    </CardContent>
+                  </Card>
+                </Link>
+              </BlurFade>
+            )
+          })}
         </div>
       )}
     </>

@@ -59,6 +59,17 @@ const LandingPage = async () => {
     return
   }
 
+  const { data: platformData, error: platformError } = await supabase
+    .from('review_platforms')
+    .select('id, logo, platform_name')
+    .order('id', { ascending: true })
+
+  if (platformError) {
+    console.error('Error fetching review platforms: ', platformError.message)
+
+    return
+  }
+
   return (
     <div id='landing-page'>
       {/* Hero Section */}
@@ -117,7 +128,7 @@ const LandingPage = async () => {
             subtitle='See what our customers have to say about their experience with our products.'
           />
         </MotionFadeElement>
-        <Reviews data={reviewsData} transitionDelay={0.5} />
+        <Reviews data={reviewsData} platformData={platformData} transitionDelay={0.5} />
       </SectionWrapper>
 
       <SectionWrapper>

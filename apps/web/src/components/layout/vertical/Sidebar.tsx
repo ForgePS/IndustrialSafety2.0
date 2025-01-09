@@ -22,6 +22,7 @@ import {
   TbSettings,
   TbStack2,
   TbStar,
+  TbTemplate,
   TbUser,
   TbUsers,
   TbWallet,
@@ -206,14 +207,6 @@ const AppSidebar = ({ roles, permissions, appName }: { roles?: string[]; permiss
                 </MenuButton>
               </SidebarMenuItem>
             )}
-            <PermissionGuard permissions={permissions} permission='view_reviews'>
-              <SidebarMenuItem>
-                <MenuButton href='/admin/reviews' exactMatch={false} tooltip='Reviews'>
-                  <TbStar />
-                  <span>Reviews</span>
-                </MenuButton>
-              </SidebarMenuItem>
-            </PermissionGuard>
           </SidebarMenu>
         </SidebarGroup>
         <PermissionGuard permissions={permissions} permission='view_settings'>
@@ -289,6 +282,27 @@ const AppSidebar = ({ roles, permissions, appName }: { roles?: string[]; permiss
                 <MenuButton href='/admin/faqs/faq' exactMatch={false} tooltip='FAQs'>
                   <TbListDetails />
                   <span>FAQ</span>
+                </MenuButton>
+              </SidebarMenuItem>
+            </SidebarMenu>
+          </SidebarGroup>
+        </PermissionGuard>
+        <PermissionGuard permissions={permissions} permission='view_reviews'>
+          <SidebarGroup>
+            <SidebarGroupLabel className='text-nowrap'>
+              {state === 'expanded' || isMobile ? 'Reviews' : <SidebarSeparator className='!is-8' />}
+            </SidebarGroupLabel>
+            <SidebarMenu>
+              <SidebarMenuItem>
+                <MenuButton href='/admin/reviews/platform' exactMatch={false} tooltip='Review Platform'>
+                  <TbTemplate />
+                  <span>Platform</span>
+                </MenuButton>
+              </SidebarMenuItem>
+              <SidebarMenuItem>
+                <MenuButton href='/admin/reviews/review' exactMatch={false} tooltip='Reviews'>
+                  <TbStar />
+                  <span>Review</span>
                 </MenuButton>
               </SidebarMenuItem>
             </SidebarMenu>

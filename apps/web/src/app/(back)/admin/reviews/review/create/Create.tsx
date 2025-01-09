@@ -28,7 +28,7 @@ import ReviewImage from './ReviewImage'
 
 // Define Zod Schema for validation only on required fields
 const reviewSchema = z.object({
-  platform: z.enum(['g2', 'twitter', 'trustpilot'], { required_error: 'Please select a review platform.' }),
+  platform_id: z.number().min(1, { message: 'Please select a review platform.' }),
   link: z.string().url({ message: 'Please enter a valid review link.' }),
   content: z.string().min(1, { message: 'Review text is required.' }),
   username: z.string().min(1, { message: 'Reviewer name is required.' }),
@@ -43,9 +43,16 @@ const reviewSchema = z.object({
   avatar_image: z.string().optional().nullable()
 })
 
-const CreateReview = () => {
+export type PlatformTypes = {
+  id: number
+  platform_name: string
+  slug: string
+}
+
+const CreateReview = ({ platformsData }: { platformsData: PlatformTypes[] }) => {
   // States
   const [file, setFile] = useState<File | undefined>()
+  const [selectedPlatform, setSelectedPlatform] = useState<{ id: number; slug: string } | null>(null)
 
   // Vars
   const supabase = createClient()
@@ -58,7 +65,7 @@ const CreateReview = () => {
     resolver: zodResolver(reviewSchema),
     defaultValues: {
       title: '',
-      platform: 'g2',
+      platform_id: platformsData[0].id || 1,
       link: '',
       video_url: '',
       rating: 5,
@@ -77,7 +84,7 @@ const CreateReview = () => {
     const { error } = await supabase.from('reviews').insert([
       {
         title: data.title,
-        platform: data.platform,
+        platform_id: data.platform_id,
         link: data.link,
         video_url: data.video_url,
         rating: data.rating,
@@ -101,7 +108,7 @@ const CreateReview = () => {
     toast('success', 'Review created successfully')
 
     // Redirect on success
-    router.push('/admin/reviews')
+    router.push('/admin/reviews/review')
     router.refresh()
   }
 
@@ -111,7 +118,7 @@ const CreateReview = () => {
     const { error } = await supabase.from('reviews').insert([
       {
         title: data.title,
-        platform: data.platform,
+        platform_id: data.platform_id,
         link: data.link,
         video_url: data.video_url,
         rating: data.rating,
@@ -174,22 +181,37 @@ const CreateReview = () => {
                   />
                   <FormField
                     control={form.control}
-                    name='platform'
-                    render={({ field }) => (
+                    name='platform_id'
+                    render={() => (
                       <FormItem className='is-full'>
                         <FormLabel>
                           Review Platform
                           <sup className='text-destructive'>*</sup>
                         </FormLabel>
                         <FormControl>
-                          <Select value={field.value} onValueChange={value => form.setValue('platform', value as any)}>
+                          <Select
+                            value={String(selectedPlatform?.id || platformsData[0].id)}
+                            onValueChange={(value: string) => {
+                              const platform = platformsData.find(p => p.id === Number(value))
+
+                              if (platform) {
+                                setSelectedPlatform(platform)
+                                form.setValue('platform_id', Number(value))
+                              }
+                            }}
+                          >
                             <SelectTrigger className='is-full'>
-                              <SelectValue />
+                              <SelectValue>
+                                {' '}
+                                {selectedPlatform ? selectedPlatform.slug : 'Select a platform'}{' '}
+                              </SelectValue>
                             </SelectTrigger>
                             <SelectContent>
-                              <SelectItem value='g2'>g2</SelectItem>
-                              <SelectItem value='twitter'>Twitter</SelectItem>
-                              <SelectItem value='trustpilot'>Trustpilot</SelectItem>
+                              {platformsData.map(platform => (
+                                <SelectItem key={platform.id} value={String(platform.id)}>
+                                  {platform.platform_name}
+                                </SelectItem>
+                              ))}
                             </SelectContent>
                           </Select>
                         </FormControl>
@@ -346,7 +368,7 @@ const CreateReview = () => {
                 Create & create another
               </SubmitButton>
               <Button type='button' variant='tonalDefault' asChild>
-                <Link href='/admin/reviews'>Cancel</Link>
+                <Link href='/admin/reviews/review'>Cancel</Link>
               </Button>
             </div>
           </div>

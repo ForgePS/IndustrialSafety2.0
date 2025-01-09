@@ -153,6 +153,27 @@ export type Database = {
         }
         Relationships: []
       }
+      review_platforms: {
+        Row: {
+          id: number
+          logo: string | null
+          platform_name: string | null
+          slug: string | null
+        }
+        Insert: {
+          id?: number
+          logo?: string | null
+          platform_name?: string | null
+          slug?: string | null
+        }
+        Update: {
+          id?: number
+          logo?: string | null
+          platform_name?: string | null
+          slug?: string | null
+        }
+        Relationships: []
+      }
       reviews: {
         Row: {
           avatar_image: string | null
@@ -162,7 +183,7 @@ export type Database = {
           id: number
           is_featured: boolean
           link: string
-          platform: Database['public']['Enums']['reviews_platform_enum']
+          platform_id: number | null
           rating: number
           title: string | null
           username: string
@@ -176,7 +197,7 @@ export type Database = {
           id?: number
           is_featured: boolean
           link: string
-          platform: Database['public']['Enums']['reviews_platform_enum']
+          platform_id?: number | null
           rating: number
           title?: string | null
           username: string
@@ -190,13 +211,21 @@ export type Database = {
           id?: number
           is_featured?: boolean
           link?: string
-          platform?: Database['public']['Enums']['reviews_platform_enum']
+          platform_id?: number | null
           rating?: number
           title?: string | null
           username?: string
           video_url?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: 'reviews_platform_id_fkey'
+            columns: ['platform_id']
+            isOneToOne: false
+            referencedRelation: 'review_platforms'
+            referencedColumns: ['id']
+          }
+        ]
       }
       role_permissions: {
         Row: {
@@ -393,7 +422,6 @@ export type Database = {
     Enums: {
       billing_provider_enum: 'stripe' | 'lemon_squeezy'
       payment_status_enum: 'pending' | 'success'
-      reviews_platform_enum: 'trustpilot' | 'twitter' | 'g2'
     }
     CompositeTypes: {
       [_ in never]: never

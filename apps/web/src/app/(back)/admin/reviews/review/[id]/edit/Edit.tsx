@@ -25,10 +25,11 @@ import { createClient } from '@repo/supabase/client'
 // Component Imports
 import ReviewImage from './ReviewImage'
 import { deleteReview } from '../../Reviews'
+import type { PlatformTypes } from '../../create/Create'
 
 // Define Zod Schema for validation only on required fields
 const reviewSchema = z.object({
-  platform: z.enum(['g2', 'twitter', 'trustpilot'], { required_error: 'Please select a review platform.' }),
+  platform_id: z.number().min(1, { message: 'Please select a review platform.' }),
   link: z.string().url({ message: 'Please enter a valid review link.' }),
   content: z.string().min(1, { message: 'Review text is required.' }),
   username: z.string().min(1, { message: 'Reviewer name is required.' }),
@@ -43,7 +44,15 @@ const reviewSchema = z.object({
   avatar_image: z.string().optional().nullable()
 })
 
-const EditReview = ({ reviewData, id }: { reviewData: Database['public']['Tables']['reviews']['Row']; id: number }) => {
+const EditReview = ({
+  reviewData,
+  platformsData,
+  id
+}: {
+  reviewData: Database['public']['Tables']['reviews']['Row']
+  platformsData: PlatformTypes[]
+  id: number
+}) => {
   // Vars
   const supabase = createClient()
 
@@ -55,7 +64,7 @@ const EditReview = ({ reviewData, id }: { reviewData: Database['public']['Tables
     resolver: zodResolver(reviewSchema),
     defaultValues: {
       title: reviewData.title || '',
-      platform: reviewData.platform,
+      platform_id: reviewData.platform_id || undefined,
       link: reviewData.link,
       video_url: reviewData.video_url || '',
       rating: reviewData.rating,
@@ -75,7 +84,7 @@ const EditReview = ({ reviewData, id }: { reviewData: Database['public']['Tables
       .from('reviews')
       .update({
         title: data.title,
-        platform: data.platform,
+        platform_id: data.platform_id,
         link: data.link,
         video_url: data.video_url,
         rating: data.rating,
@@ -99,7 +108,7 @@ const EditReview = ({ reviewData, id }: { reviewData: Database['public']['Tables
     toast('success', 'Review updated successfully')
 
     // Redirect on success
-    router.push('/admin/reviews')
+    router.push('/admin/reviews/review')
     router.refresh()
   }
 
@@ -114,7 +123,7 @@ const EditReview = ({ reviewData, id }: { reviewData: Database['public']['Tables
         <DeleteDialog
           handleDelete={async () => {
             await deleteReview(id)
-            router.push('/admin/reviews')
+            router.push('/admin/reviews/review')
             router.refresh()
           }}
           itemName='review'
@@ -144,7 +153,7 @@ const EditReview = ({ reviewData, id }: { reviewData: Database['public']['Tables
                   />
                   <FormField
                     control={form.control}
-                    name='platform'
+                    name='platform_id'
                     render={({ field }) => (
                       <FormItem className='is-full'>
                         <FormLabel>
@@ -152,14 +161,19 @@ const EditReview = ({ reviewData, id }: { reviewData: Database['public']['Tables
                           <sup className='text-destructive'>*</sup>
                         </FormLabel>
                         <FormControl>
-                          <Select value={field.value} onValueChange={value => form.setValue('platform', value as any)}>
+                          <Select
+                            value={field.value ? String(field.value) : ''}
+                            onValueChange={value => field.onChange(Number(value))}
+                          >
                             <SelectTrigger className='is-full'>
-                              <SelectValue />
+                              <SelectValue placeholder='Select a platform' />
                             </SelectTrigger>
                             <SelectContent>
-                              <SelectItem value='g2'>g2</SelectItem>
-                              <SelectItem value='twitter'>Twitter</SelectItem>
-                              <SelectItem value='trustpilot'>Trustpilot</SelectItem>
+                              {platformsData.map(platform => (
+                                <SelectItem key={platform.id} value={String(platform.id)}>
+                                  {platform.platform_name}
+                                </SelectItem>
+                              ))}
                             </SelectContent>
                           </Select>
                         </FormControl>
@@ -309,7 +323,7 @@ const EditReview = ({ reviewData, id }: { reviewData: Database['public']['Tables
                 Save
               </SubmitButton>
               <Button type='button' variant='tonalDefault' asChild>
-                <Link href='/admin/reviews'>Cancel</Link>
+                <Link href='/admin/reviews/review'>Cancel</Link>
               </Button>
             </div>
           </section>
