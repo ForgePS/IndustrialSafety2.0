@@ -8,6 +8,7 @@
     "./forgot-password": "./src/forgot-password/index.ts",
     "./reset-password": "./src/reset-password/index.ts",
     "./hooks/*": "./src/hooks/*.ts",
+    "./action": "./src/actions.ts",
     "./AuthProvider": "./src/AuthProvider.tsx",
     "./ImpersonationBanner": "./src/ImpersonationBanner.tsx"
   },

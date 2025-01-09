@@ -15,7 +15,7 @@ export function ImpersonationBanner() {
   return (
     <div
       className={cn(
-        'bg-foreground pli-6 plb-3 sticky z-[100] flex items-center justify-between text-white transition-[margin,inset-block-start] duration-300 ease-in-out',
+        'bg-foreground pli-6 plb-3 sticky z-[100] flex items-center justify-between gap-6 text-white transition-[margin,inset-block-start] duration-300 ease-in-out',
         {
           '-mbs-[54px] -block-start-[54px]': !isImpersonating,
           'block-start-0': isImpersonating
