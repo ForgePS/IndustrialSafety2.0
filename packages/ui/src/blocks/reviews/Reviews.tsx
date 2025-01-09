@@ -44,7 +44,7 @@ const name = (name: string) => {
   return `${firstName} ${lastName ? lastName.charAt(0).toUpperCase() + '.' : ''}`
 }
 
-const Reviews = async (props: Props) => {
+const Reviews = (props: Props) => {
   // Props
   const {
     data,

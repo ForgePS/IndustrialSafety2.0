@@ -37,7 +37,7 @@ const data = [
       {
         icon: <TbHandClick className='text-2xl' />,
         title: '1-Click Integration',
-        description: 'Deploy your AI-powered chatbot with a single click—no complex setup or configurations required.'
+        description: 'Deploy your AI-powered chatbot with a single click - no complex setup or configurations required.'
       }
     ]
   },

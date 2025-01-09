@@ -1,3 +1,6 @@
+// Next Imports
+import Link from 'next/link'
+
 // Third-party Imports
 import { TbRocket } from 'react-icons/tb'
 
@@ -53,11 +56,11 @@ const HeroHorizontalHalfImage = () => {
               className='text-3xl font-bold sm:text-4xl md:text-5xl md:leading-[1.2]'
             >
               <span className='from-primary to-destructive bg-gradient-to-r bg-clip-text [-webkit-text-fill-color:transparent]'>
-                Effortless SaaS
+                Effortless Support
               </span>{' '}
               🚀
               <br />
-              Launch Like a Pro in Days
+              Exceptional Service 24/7
             </MotionFadeElement>
             <MotionFadeElement
               component='p'
@@ -65,11 +68,16 @@ const HeroHorizontalHalfImage = () => {
                 hidden: { y: 30 },
                 show: { transition: { delay: 0.5, duration: 0.4 }, y: 0 }
               }}
-              className='text-textSecondary is-3/4 text-lg font-semibold sm:text-xl sm:leading-[1.4]'
+              className='text-textSecondary max-sm:is-full max-lg:is-3/4 text-lg font-semibold sm:text-xl sm:leading-[1.4]'
             >
-              Ship Faster and Focus on Growth with the
-              <br />
-              All-In-One <span className='text-primary font-bold'>Tech Stack</span> Boilerplate.
+              Automate Conversations, Resolve Queries Faster, and Boost Customer Satisfaction with the All-in-One{' '}
+              <span className='text-primary relative text-nowrap'>
+                AI Chatbot Solution.
+                <img
+                  src='/images/blocks/hero/underline-wave-background.png'
+                  className='-block-end-1 max-is-[10.875rem] sm:max-is-48 absolute start-0'
+                />
+              </span>
             </MotionFadeElement>
             <MotionFadeElement
               component='div'
@@ -81,7 +89,7 @@ const HeroHorizontalHalfImage = () => {
             >
               <AvatarGroup size='3xl' limit={4} avatarUrls={avatarUrls} />
               <div className='flex flex-col items-start gap-1'>
-                <p className='text-textPrimary text-sm leading-4'>Loved by great clients</p>
+                <p className='text-textPrimary text-sm leading-4'>Loved by 100+ companies</p>
                 <Ratings rating={5} disabled />
               </div>
             </MotionFadeElement>
@@ -94,9 +102,11 @@ const HeroHorizontalHalfImage = () => {
             }}
             className='mbs-8 sm:mbs-12 flex max-lg:justify-center max-sm:flex-col'
           >
-            <RainbowButton size='lg' className='!plb-2.5'>
-              Get Started Now
-              <TbRocket className='text-xl' />
+            <RainbowButton size='lg' className='!plb-2.5' asChild>
+              <Link href='/#pricing-section'>
+                Get Started Now
+                <TbRocket className='text-xl' />
+              </Link>
             </RainbowButton>
           </MotionFadeElement>
         </div>

@@ -148,7 +148,7 @@ const Details = async () => {
                   </li>
                   <li>
                     <span className='font-semibold'>Component Plugin:</span> PIN Input - Show PIN code suggest on iOS
-                    keyboard - [Issue #188 by @hieuhuynh93]
+                    keyboard - [Issue #188 by @someuser93]
                   </li>
                   <li>
                     <span className='font-semibold'>Textarea:</span> Modal example

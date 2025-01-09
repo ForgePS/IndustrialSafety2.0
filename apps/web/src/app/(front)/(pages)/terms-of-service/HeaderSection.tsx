@@ -21,7 +21,7 @@ const HeaderSection = () => {
           <span className='bs-0.5 is-full -block-end-0.5 from-primary/40 to-primary/0 absolute start-0 rounded-full bg-gradient-to-r' />
         </h1>
         <p className='max-is-[657px] text-textSecondary text-center text-lg sm:text-xl'>
-          Review Our Policies or Learn More About Your Rights and Responsibilities
+          Review our policies or learn more about your rights and responsibilities
         </p>
       </div>
     </section>

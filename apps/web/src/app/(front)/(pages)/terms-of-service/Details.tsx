@@ -24,8 +24,8 @@ const Details = async () => {
               <h3 className='mbe-2 text-xl font-semibold'>Introduction</h3>
               <p>
                 Welcome to <Link href='/' className='text-primary'>{`${appName}`}</Link> operated by CleVision
-                Technologies Limited (&quot;us&quot;, &quot;we&quot;, or &quot;our&quot;). By accessing or using our
-                services, including our software products and SaaS boilerplates (&quot;Product&quot;), you agree to
+                Technologies Private Limited (&quot;us&quot;, &quot;we&quot;, or &quot;our&quot;). By accessing or using
+                our services, including our software products and SaaS boilerplates (&quot;Product&quot;), you agree to
                 these Terms of Service (&quot;Terms&quot;). If you do not agree to these Terms, please do not use our
                 services or purchase our Products.
               </p>
@@ -92,7 +92,7 @@ const Details = async () => {
               <h3 className='mbe-2 text-xl font-semibold'>Customization and Support</h3>
               <p>
                 Our Products, including SaaS Boilerplates, are designed using the modern stack of Next.js, Typescript,
-                Shadcn, Tailwind Css, and Supabase. Initial setup documentation is provided, but ongoing support or
+                Shadcn, Tailwind CSS, and Supabase. Initial setup documentation is provided, but ongoing support or
                 extended development services are not included unless explicitly agreed upon. Additional support
                 packages may be offered separately.
               </p>
@@ -141,7 +141,7 @@ const Details = async () => {
               <p>
                 Our products are provided &quot;as is&quot; without warranties of any kind. We do not guarantee
                 uninterrupted, error-free operation or that any defects will be corrected. Your use of the products is
-                ar you own risk.
+                at your own risk.
               </p>
             </div>
             <div>
@@ -170,8 +170,10 @@ const Details = async () => {
             <div>
               <h3 className='mbe-2 text-xl font-semibold'>Contact Us</h3>
               <p>
-                For any questions or concerns regarding these Terms or our Products, you can reach out to us via our
-                contact page.
+                For any questions or concerns regarding these Terms or our Products, you can reach out to us via our{' '}
+                <Link href='https://themeselection.com/contact-us' className='text-primary'>
+                  contact page.
+                </Link>
               </p>
             </div>
             <div>

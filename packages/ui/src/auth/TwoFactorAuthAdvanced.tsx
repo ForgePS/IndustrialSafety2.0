@@ -55,10 +55,10 @@ const ResetPasswordAdvanced = async () => {
               </InputOTPGroup>
             </InputOTP>
             <Button>{`Sign in to ${appName}`}</Button>
-            </div>
           </div>
         </div>
       </div>
+    </div>
   )
 }
 

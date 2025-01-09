@@ -122,7 +122,7 @@ const Footer = async () => {
               </Link>
             </li>
             <li>
-              <Link href='/' className='link-animated text-textPrimary text-base'>
+              <Link href='https://discord.com/invite/kBHkY7DekX' className='link-animated text-textPrimary text-base'>
                 Discord Community
               </Link>
             </li>

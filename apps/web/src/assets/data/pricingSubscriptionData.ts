@@ -3,9 +3,9 @@ import type { Plan } from '@repo/billing/src/types/billingConfigTypes'
 
 const data: Plan[] = [
   {
-    id: 'starter-plan',
+    id: 'starter',
     name: 'Starter',
-    description: 'Basic plan for small businesses',
+    description: 'ChatFlow AI - Starter Plan',
     currency: 'USD',
     icon: 'TbRocket',
     features: [
@@ -19,39 +19,42 @@ const data: Plan[] = [
     variants: [
       {
         id: 'starter-monthly',
-        name: 'Monthly',
+        name: 'Starter Monthly',
+        description: 'ChatFlow AI - Starter monthly Plan',
         paymentType: 'recurring',
         interval: 'monthly',
         lineItems: [
           {
             priceId: 'starter-monthly-49',
-            name: 'Starter Monthly Subscription',
-            cost: 39
+            name: 'Starter Monthly',
+            cost: 49,
+            description: '$49.00 billed every month'
           }
         ]
       },
       {
-        id: 'starter-annually',
-        name: 'Annually',
+        id: 'starter-yearly',
+        name: 'Starter Yearly',
+        description: 'ChatFlow AI - Starter yearly Plan',
         paymentType: 'recurring',
         interval: 'yearly',
         lineItems: [
           {
-            priceId: 'starter-yearly-490',
-            name: 'Starter Yearly Subscription',
+            priceId: 'starter-yearly-399',
+            name: 'Starter Yearly',
             cost: 399,
-            description: 'Billed annually, 2 months free'
+            description: '$399.00 billed every year'
           }
         ]
       }
     ]
   },
   {
-    id: 'professional-plan',
+    id: 'professional',
     name: 'Professional',
-    description: 'Advanced plan for growing businesses',
+    description: 'ChatFlow AI - Professional Plan',
     currency: 'USD',
-    icon: 'TbBriefcase',
+    icon: 'TbUsers',
     badge: 'Most Popular',
     highlighted: true,
     features: [
@@ -65,37 +68,40 @@ const data: Plan[] = [
     variants: [
       {
         id: 'professional-monthly',
-        name: 'Monthly',
+        name: 'Professional Monthly',
+        description: 'ChatFlow AI - Professional monthly Plan',
         paymentType: 'recurring',
         interval: 'monthly',
         lineItems: [
           {
             priceId: 'professional-monthly-99',
-            name: 'Professional Monthly Subscription',
-            cost: 89
+            name: 'Professional Monthly',
+            cost: 99,
+            description: '$99.00 billed every month'
           }
         ]
       },
       {
-        id: 'professional-annually',
-        name: 'Annually',
+        id: 'professional-yearly',
+        name: 'Professional Yearly',
+        description: 'ChatFlow AI - Professional yearly Plan',
         paymentType: 'recurring',
         interval: 'yearly',
         lineItems: [
           {
-            priceId: 'professional-yearly-990',
-            name: 'Professional Yearly Subscription',
-            cost: 999,
-            description: 'Billed annually, 2 months free'
+            priceId: 'professional-yearly-499',
+            name: 'Professional Yearly',
+            cost: 499,
+            description: '$499.00 billed every year'
           }
         ]
       }
     ]
   },
   {
-    id: 'enterprise-plan',
+    id: 'enterprise',
     name: 'Enterprise',
-    description: 'Enterprise-level solution for large businesses',
+    description: 'ChatFlow AI - Enterprise Plan',
     currency: 'USD',
     icon: 'TbCrown',
     features: [
@@ -109,28 +115,31 @@ const data: Plan[] = [
     variants: [
       {
         id: 'enterprise-monthly',
-        name: 'Monthly',
+        name: 'Enterprise Monthly',
+        description: 'ChatFlow AI - Enterprise monthly Plan',
         paymentType: 'recurring',
         interval: 'monthly',
         lineItems: [
           {
             priceId: 'enterprise-monthly-299',
-            name: 'Enterprise Monthly Subscription',
-            cost: 129
+            name: 'Enterprise Monthly',
+            cost: 299,
+            description: '$299.00 billed every month'
           }
         ]
       },
       {
-        id: 'enterprise-annually',
-        name: 'Annually',
+        id: 'enterprise-yearly',
+        name: 'Enterprise Yearly',
+        description: 'ChatFlow AI - Enterprise yearly Plan',
         paymentType: 'recurring',
         interval: 'yearly',
         lineItems: [
           {
-            priceId: 'enterprise-yearly-2990',
-            name: 'Enterprise Yearly Subscription',
-            cost: 1299,
-            description: 'Billed annually, 2 months free'
+            priceId: 'enterprise-yearly-999',
+            name: 'Enterprise Yearly',
+            cost: 999,
+            description: '$999.00 billed every year'
           }
         ]
       }

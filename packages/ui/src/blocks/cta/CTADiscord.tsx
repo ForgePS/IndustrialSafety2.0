@@ -19,7 +19,7 @@ type ImageType = {
 type Props = {
   title: string
   description: string
-  button: ReactNode
+  button: string | ReactNode
   image?: ImageType | ReactNode
   className?: string
   buttonClassName?: string
@@ -67,9 +67,13 @@ const CTADiscord = (props: Props) => {
         <h3 className='text-textPrimary text-2xl font-semibold max-lg:text-center'>{title}</h3>
         <p className='text-textSecondary text-base max-lg:text-center'>{description}</p>
       </div>
-      <Button size='lg' className={buttonClassName}>
-        {button}
-      </Button>
+      {typeof button === 'string' ? (
+        <Button size='lg' className={buttonClassName}>
+          {button}
+        </Button>
+      ) : (
+        button
+      )}
     </MotionFadeElement>
   )
 }

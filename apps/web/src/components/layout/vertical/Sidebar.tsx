@@ -1,7 +1,6 @@
 'use client'
 
 // React Imports
-import { useState } from 'react'
 import type { HTMLAttributeAnchorTarget, ReactNode } from 'react'
 
 // Next Imports
@@ -10,34 +9,19 @@ import Link from 'next/link'
 
 // Third-party Imports
 import {
-  TbCommand,
   TbCrown,
   TbDashboard,
   TbFileText,
   TbLayoutGridAdd,
   TbListDetails,
   TbLock,
-  TbPlus,
-  TbSelector,
   TbSettings,
-  TbStack2,
   TbStar,
   TbTemplate,
   TbUser,
   TbUsers,
-  TbWallet,
-  TbWaveSine
+  TbWallet
 } from 'react-icons/tb'
-import { Avatar, AvatarFallback } from '@repo/ui/components/ui/avatar'
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuShortcut,
-  DropdownMenuTrigger
-} from '@repo/ui/components/ui/dropdown-menu'
 import {
   Sidebar,
   SidebarContent,
@@ -66,25 +50,6 @@ type MenuButtonProps = SidebarMenuButtonProps & {
   target?: HTMLAttributeAnchorTarget
 }
 
-// Vars
-const teams = [
-  {
-    name: 'Acme Inc',
-    logo: TbStack2,
-    plan: 'Enterprise'
-  },
-  {
-    name: 'Acme Corp.',
-    logo: TbWaveSine,
-    plan: 'Startup'
-  },
-  {
-    name: 'Evil Corp.',
-    logo: TbCommand,
-    plan: 'Free'
-  }
-]
-
 // Custom SidebarMenuButton Component
 const MenuButton = ({ children, href, target = '_self', exactMatch = true, ...props }: MenuButtonProps) => {
   // Hooks
@@ -110,9 +75,6 @@ const MenuButton = ({ children, href, target = '_self', exactMatch = true, ...pr
 }
 
 const AppSidebar = ({ roles, permissions, appName }: { roles?: string[]; permissions: string[]; appName: string }) => {
-  // States
-  const [activeTeam, setActiveTeam] = useState(teams[0])
-
   // Hooks
   const { isImpersonating } = useAuthContext()
   const { isMobile, state } = useSidebar()
@@ -134,55 +96,6 @@ const AppSidebar = ({ roles, permissions, appName }: { roles?: string[]; permiss
             <Logo appName={appName} />
           </Link>
         </div>
-        <SidebarSeparator className='!is-auto -mli-3 mlb-3.5' />
-        <SidebarMenu className='mlb-[.3125rem]'>
-          <SidebarMenuItem>
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <SidebarMenuButton
-                  size='lg'
-                  className='transition-[padding] group-data-[collapsible=icon]:!p-1.5'
-                  tooltip='Teams'
-                >
-                  <Avatar size='lg'>
-                    <AvatarFallback>
-                      <activeTeam.logo className='text-xl' />
-                    </AvatarFallback>
-                  </Avatar>
-                  <div className='grid flex-1 text-left text-sm leading-tight'>
-                    <span className='truncate font-semibold'>{activeTeam.name}</span>
-                    <span className='truncate text-xs'>{activeTeam.plan}</span>
-                  </div>
-                  <TbSelector className='mis-auto text-xl' />
-                </SidebarMenuButton>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent
-                className='is-[--radix-dropdown-menu-trigger-width] !min-is-56 rounded-lg'
-                align='start'
-                side={state === 'collapsed' ? 'right' : 'bottom'}
-                sideOffset={4}
-              >
-                <DropdownMenuLabel className='text-xs'>Teams</DropdownMenuLabel>
-                {teams.map((team, index) => (
-                  <DropdownMenuItem key={team.name} onClick={() => setActiveTeam(team)} className='gap-2 p-2'>
-                    <div className='flex size-6 items-center justify-center rounded-sm border'>
-                      <team.logo className='shrink-0 text-xl' />
-                    </div>
-                    {team.name}
-                    <DropdownMenuShortcut>⌘{index + 1}</DropdownMenuShortcut>
-                  </DropdownMenuItem>
-                ))}
-                <DropdownMenuSeparator />
-                <DropdownMenuItem className='gap-2 p-2'>
-                  <div className='bg-background flex size-6 items-center justify-center rounded-md border'>
-                    <TbPlus className='text-xl' />
-                  </div>
-                  <div className='font-medium'>Add team</div>
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </SidebarMenuItem>
-        </SidebarMenu>
       </SidebarHeader>
       <SidebarContent>
         <SidebarGroup>

@@ -55,7 +55,7 @@ const Details = ({ categoryData, faqData }: { categoryData: CategoryTypes[]; faq
                   .map((data: CategoryTypes) => (
                     <li key={data.id} className='text-textSecondary flex items-center gap-2'>
                       {DynamicIcon(data.icon)}
-                      <Link href={`#${transformToUrlFriendly(data.title)}`} className='truncate font-medium capitalize'>
+                      <Link href={`#${transformToUrlFriendly(data.title)}`} className='truncate font-medium'>
                         {data.title}
                       </Link>
                     </li>
@@ -64,7 +64,7 @@ const Details = ({ categoryData, faqData }: { categoryData: CategoryTypes[]; faq
                 {othersFaqData.length > 0 && (
                   <li className='text-textSecondary flex items-center gap-2'>
                     <TbDotsCircleHorizontal className='bs-6 is-6' />
-                    <Link href='#others' className='truncate font-medium capitalize'>
+                    <Link href='#others' className='truncate font-medium'>
                       Others
                     </Link>
                   </li>
@@ -86,14 +86,14 @@ const Details = ({ categoryData, faqData }: { categoryData: CategoryTypes[]; faq
                       <Avatar shape='rounded' color='primary' className='bs-[44px] is-[44px]'>
                         <AvatarFallback>{DynamicIcon(data.icon)}</AvatarFallback>
                       </Avatar>
-                      <h2 className='text-textPrimary text-xl font-semibold capitalize'>{data.title}</h2>
+                      <h2 className='text-textPrimary text-xl font-semibold'>{data.title}</h2>
                     </div>
                     <Accordion type='single' collapsible className='is-full' variant='outline'>
                       {filteredFaqData
                         .filter(faq => faq.category_id === data.id)
                         .map((faq, index) => (
                           <AccordionItem key={faq.id} value={`item-${index}`}>
-                            <AccordionTrigger className='capitalize'>{faq.title}</AccordionTrigger>
+                            <AccordionTrigger>{faq.title}</AccordionTrigger>
                             <AccordionContent>
                               <div
                                 className='[&_a]:text-primary'

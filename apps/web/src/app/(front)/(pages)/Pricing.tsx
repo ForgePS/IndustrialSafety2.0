@@ -181,7 +181,7 @@ const Pricing = (props: Props) => {
                 <ShimmerButton
                   size='lg'
                   className='is-full'
-                  formAction={() =>
+                  onClick={() =>
                     handleSubmit({
                       variant: plan.variants.find(
                         p => p.interval === (isAnnually ? 'yearly' : 'monthly')

@@ -36,7 +36,7 @@ const Header = async () => {
   return (
     <LayoutHeader>
       <div className={clsx(frontLayoutClasses.headerContent, 'is-full flex items-center justify-between gap-4')}>
-        <div className='max-xl:-mis-2.5 max-xl:flex max-xl:items-center max-xl:gap-4 xl:hidden'>
+        <div className='max-xl:-mis-2.5 max-xl:flex max-xl:items-center max-xl:gap-4 max-sm:gap-2 xl:hidden'>
           <FrontMenu isBlogEnabled={isBlogEnabled} />
           <Link href='/'>
             <Logo appName={appName} logoId='FrontMenu-SmallScreen' />
@@ -45,7 +45,7 @@ const Header = async () => {
         <Link href='/' className='max-xl:hidden'>
           <Logo appName={appName} logoId='FrontMenu-LargeScreen' />
         </Link>
-        <div className='flex items-center gap-5'>
+        <div className='flex items-center gap-2 sm:gap-5'>
           <div className='max-xl:hidden'>
             <FrontMenu isBlogEnabled={isBlogEnabled} />
           </div>

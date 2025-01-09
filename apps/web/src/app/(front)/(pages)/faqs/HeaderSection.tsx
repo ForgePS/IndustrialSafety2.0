@@ -62,7 +62,7 @@ const HeaderSection = () => {
           className='max-is-[400px] is-full mbs-4 flex items-center gap-3'
         >
           <Input
-            placeholder='Search for a question'
+            placeholder='Search question'
             className='is-full'
             value={searchValue}
             onChange={e => setSearchValue(e.target.value)}

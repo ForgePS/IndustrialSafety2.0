@@ -20,8 +20,7 @@ type ImageType = {
 type Props = {
   logo?: ReactNode
   content: ReactNode
-  button: ReactNode
-  buttonClassName?: string
+  button: string | ReactNode
   image: ImageType | ReactNode
   imageDirection?: 'left' | 'right'
   className?: string
@@ -35,7 +34,6 @@ const CTABuyNow = (props: Props) => {
     logo,
     content,
     button,
-    buttonClassName,
     image,
     imageDirection = 'right',
     className,
@@ -61,16 +59,17 @@ const CTABuyNow = (props: Props) => {
           {logo}
           {content}
         </div>
-        <Button
-          size='lg'
-          variant='tonal'
-          className={cn(
-            'max-sm:is-full text-wrap bg-[#9880FF] text-white shadow hover:bg-[#8364ff] hover:shadow-md active:bg-[#8364ff]',
-            buttonClassName
-          )}
-        >
-          {button}
-        </Button>
+        {typeof button === 'string' ? (
+          <Button
+            size='lg'
+            variant='tonal'
+            className='max-sm:is-full text-wrap bg-[#9880FF] text-white shadow hover:bg-[#8364ff] hover:shadow-md active:bg-[#8364ff]'
+          >
+            {button}
+          </Button>
+        ) : (
+          button
+        )}
       </div>
       <div
         className={cn('relative z-[2] flex max-lg:justify-center lg:items-center', {

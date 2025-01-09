@@ -1,3 +1,6 @@
+// Next Imports
+import Link from 'next/link'
+
 // Third-party Imports
 import { TbRocket } from 'react-icons/tb'
 
@@ -32,17 +35,18 @@ const HeroVerticalVideo = () => {
                 }}
                 className='relative inline-block'
               >
-                <h1 className='text-textPrimary text-3xl font-bold sm:text-4xl md:text-5xl md:leading-[1.2]'>
+                <h1 className='mbe-3 text-textPrimary text-3xl font-bold sm:text-4xl md:text-5xl md:leading-[1.2]'>
                   <span className='from-primary to-destructive relative bg-gradient-to-r bg-clip-text [-webkit-text-fill-color:transparent]'>
-                    Effortless SaaS
+                    Effortless Support
                     <img
                       src='/images/blocks/hero/underline-background.png'
-                      className='block-end-0 max-is-[4.65rem] sm:max-is-[5.6rem] md:max-is-[7.5rem] absolute end-0'
+                      className='-block-end-2 is-[7.3rem] md:-block-end-3 sm:is-[8.75rem] md:is-[11.65rem] absolute end-0'
                     />
                   </span>{' '}
                   🚀
-                  <br />
-                  Launch Like a Pro in Days
+                </h1>
+                <h1 className='text-textPrimary text-3xl font-bold sm:text-4xl md:text-5xl md:leading-[1.2]'>
+                  Exceptional Service 24/7
                 </h1>
               </MotionFadeElement>
               <MotionFadeElement
@@ -51,16 +55,10 @@ const HeroVerticalVideo = () => {
                   hidden: { y: 30 },
                   show: { transition: { delay: 0.5, duration: 0.4 }, y: 0 }
                 }}
-                className='text-textSecondary sm:is-5/6 md:is-1/2 xl:is-1/3 text-lg font-semibold sm:text-xl sm:leading-[1.4]'
+                className='text-textSecondary sm:is-5/6 md:max-is-3xl text-center text-lg font-semibold sm:text-xl sm:leading-[1.4]'
               >
-                Ship Faster and Focus on Growth with the
-                <br />
-                All-In-One{' '}
-                <span className='text-primary relative'>
-                  Tech Stack
-                  <span className='bs-0.5 is-full -block-end-0.5 from-primary/40 to-primary/0 absolute start-0 rounded-full bg-gradient-to-r font-bold' />
-                </span>{' '}
-                Boilerplate.
+                Automate Conversations, Resolve Queries Faster, and Boost Customer Satisfaction with the All-In-One{' '}
+                <span className='text-primary'>AI Chatbot Solution</span>.
               </MotionFadeElement>
               <MotionFadeElement
                 component='div'
@@ -72,7 +70,7 @@ const HeroVerticalVideo = () => {
               >
                 <AvatarGroup size='3xl' limit={4} avatarUrls={avatarUrls} />
                 <div className='flex flex-col items-start gap-1'>
-                  <p className='text-textPrimary text-sm leading-4'>Loved by great clients</p>
+                  <p className='text-textPrimary text-sm leading-4'>Loved by 100+ companies</p>
                   <Ratings rating={5} disabled />
                 </div>
               </MotionFadeElement>
@@ -85,9 +83,11 @@ const HeroVerticalVideo = () => {
               }}
               className='mbs-8 sm:mbs-12 flex max-sm:flex-col sm:justify-center'
             >
-              <RainbowButton size='lg' className='!plb-2.5'>
-                Get Started Now
-                <TbRocket className='text-xl' />
+              <RainbowButton size='lg' className='!plb-2.5' asChild>
+                <Link href='/#pricing-section'>
+                  Get Started Now
+                  <TbRocket className='text-xl' />
+                </Link>
               </RainbowButton>
             </MotionFadeElement>
           </div>

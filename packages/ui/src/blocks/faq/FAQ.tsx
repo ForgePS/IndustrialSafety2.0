@@ -40,7 +40,7 @@ const FAQ = (props: Props) => {
         >
           {data.map((faq: FAQType, index: number) => (
             <AccordionItem key={faq.id} value={`item-${index}`}>
-              <AccordionTrigger className='text-start capitalize'>{faq.title}</AccordionTrigger>
+              <AccordionTrigger className='text-start'>{faq.title}</AccordionTrigger>
               <AccordionContent>
                 <div className='[&_a]:text-primary' dangerouslySetInnerHTML={{ __html: faq.description }}></div>
               </AccordionContent>
@@ -51,7 +51,7 @@ const FAQ = (props: Props) => {
         <Accordion type='multiple' variant={accordionVariant} className={cn('is-full', className)}>
           {data.map((faq: FAQType, index: number) => (
             <AccordionItem key={faq.id} value={`item-${index}`}>
-              <AccordionTrigger className='text-start capitalize'>{faq.title}</AccordionTrigger>
+              <AccordionTrigger className='text-start'>{faq.title}</AccordionTrigger>
               <AccordionContent>
                 <div className='[&_a]:text-primary' dangerouslySetInnerHTML={{ __html: faq.description }}></div>
               </AccordionContent>

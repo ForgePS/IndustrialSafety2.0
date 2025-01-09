@@ -4,22 +4,24 @@ import { TbRocket, TbLock, TbCreditCard } from 'react-icons/tb'
 const data = [
   {
     icon: <TbRocket className='text-[32px]' />,
-    title: 'Production-Ready',
-    description: 'JetShip provides all the essential tools and resources needed to launch your project efficiently',
-    features: ['Ready for Production', 'Clean Code', '1-Click Deployment', 'Solid Tech-Stack']
+    title: 'Ready for Instant Deployment',
+    description:
+      'ChatFlow AI provides everything you need to integrate your chatbot swiftly, allowing you to go live in minutes and start engaging with customers instantly.',
+    features: ['Ready for use', 'Clean Implementation', '1-Click Integration', 'No Code Required']
   },
   {
     icon: <TbLock className='text-[32px]' />,
-    title: 'Modern Authentication',
+    title: 'AI-Driven Customer Insights',
     description:
-      'Modern Authentication Offers traditional logins and social logins through Google, GitHub, Twitter, and magic links.',
-    features: ['Social Sign-in', 'Magic Links', 'Email Authentication', 'Password Reset']
+      'Leverage the power of AI to understand customer behavior, preferences, and needs in real-time, enabling tailored responses that improve satisfaction and loyalty.',
+    features: ['Real-Time Sentiment Analysis', 'Behavior Tracking', 'Dynamic Personalization', 'Customer Segmentation']
   },
   {
     icon: <TbCreditCard className='text-[32px]' />,
-    title: 'Easy Payments',
-    description: 'Accept payments seamlessly through popular gateways like Stripe or LemonSqueezy.',
-    features: ['Stripe Checkout', 'Lemon Squeezy Support', 'Customer Portal', 'Beautiful Checkout']
+    title: 'Self-Learning and Adaptability',
+    description:
+      'ChatFlow AI gets smarter with every interaction, continuously learning from conversations to enhance accuracy and relevance over time.',
+    features: ['Machine Learning Algorithms', 'Custom Training', 'Feedback Loop', 'Continuous Improvement']
   }
 ]
 

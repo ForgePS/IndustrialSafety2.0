@@ -3,16 +3,16 @@ import type { Plan } from '@repo/billing/src/types/billingConfigTypes'
 
 const data: Plan[] = [
   {
-    id: 'starter-plan',
+    id: 'starter',
     name: 'Starter',
-    description: 'Starter plan with basic features.',
+    description: 'ChatFlow AI - Starter Plan',
     currency: 'USD',
     icon: 'TbRocket',
     variants: [
       {
-        id: 'starter-one-off',
-        name: 'Starter One-off',
-        description: 'One-off payment for the Starter plan',
+        id: 'starter-plan',
+        name: 'Starter Plan',
+        description: 'ChatFlow AI - Starter Plan',
         paymentType: 'one-off',
         features: [
           '10 GB Storage',
@@ -24,28 +24,28 @@ const data: Plan[] = [
         ],
         lineItems: [
           {
-            priceId: 'starter-one-off-price-id',
+            priceId: 'starter-plan-49',
             name: 'Starter Plan',
-            cost: 39,
-            description: 'One-off payment for the Starter plan'
+            cost: 49,
+            description: '$49.00 billed one-time'
           }
         ]
       }
     ]
   },
   {
-    id: 'professional-plan',
+    id: 'professional',
     name: 'Professional',
-    description: 'Professional plan with advanced features.',
+    description: 'ChatFlow AI - Professional Plan',
     currency: 'USD',
-    icon: 'TbBriefcase',
+    icon: 'TbUsers',
     badge: 'Most Popular',
     highlighted: true,
     variants: [
       {
-        id: 'professional-one-off',
-        name: 'Professional One-off',
-        description: 'One-off payment for the Professional plan',
+        id: 'professional-plan',
+        name: 'Professional Plan',
+        description: 'ChatFlow AI - Professional Plan',
         paymentType: 'one-off',
         features: [
           '100 GB Storage',
@@ -57,26 +57,26 @@ const data: Plan[] = [
         ],
         lineItems: [
           {
-            priceId: 'professional-one-off-price-id',
+            priceId: 'professional-plan-99',
             name: 'Professional Plan',
-            cost: 89,
-            description: 'One-off payment for the Professional plan'
+            cost: 99,
+            description: '$99.00 billed one-time'
           }
         ]
       }
     ]
   },
   {
-    id: 'enterprise-plan',
+    id: 'enterprise',
     name: 'Enterprise',
-    description: 'Enterprise plan with premium features.',
+    description: 'ChatFlow AI - Enterprise Plan',
     currency: 'USD',
     icon: 'TbCrown',
     variants: [
       {
-        id: 'enterprise-one-off',
-        name: 'Enterprise One-off',
-        description: 'One-off payment for the Enterprise plan',
+        id: 'enterprise-plan',
+        name: 'Enterprise Plan',
+        description: 'ChatFlow AI - Enterprise Plan',
         paymentType: 'one-off',
         features: [
           'Unlimited Storage',
@@ -88,10 +88,10 @@ const data: Plan[] = [
         ],
         lineItems: [
           {
-            priceId: 'enterprise-one-off-price-id',
+            priceId: 'enterprise-plan-299',
             name: 'Enterprise Plan',
-            cost: 129,
-            description: 'One-off payment for the Enterprise plan'
+            cost: 299,
+            description: '$299.00 billed one-time'
           }
         ]
       }

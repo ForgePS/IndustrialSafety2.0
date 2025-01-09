@@ -25,17 +25,20 @@ const Details = async () => {
               <p>
                 CleVision Technologies Private Limited (&quot;us&quot;, &quot;we&quot;, or &quot;our&quot;) operates{' '}
                 <Link href='/' className='text-primary'>{`${appName}`}</Link>, a SaaS solution built on the modern stack
-                of Next.js, Typescript, Shadcn, Tailwind Css, and Supabase. This Privacy Policy explains how we collect,
+                of Next.js, Typescript, Shadcn, Tailwind CSS, and Supabase. This Privacy Policy explains how we collect,
                 use, share and protect information about you when you use our services, including our SaaS products,
                 websites and related services.
               </p>
             </div>
             <div>
-              <h3 className='mbe-2 text-lg font-semibold'>Information we collect</h3>
+              <h3 className='mbe-2 text-lg font-semibold'>Information We Collect</h3>
               <p className='mb-2'>
                 We collect various types fo information to enhance our services and ensure a seamless user experience.
               </p>
               <h4 className='mb-2 font-semibold'>a. Personal Data:</h4>
+              <p className='mb-2'>
+                When you interact with our services, we may collect personally identifiable information, including:
+              </p>
               <ul className='list-disc space-y-1 pl-6'>
                 <li>Name</li>
                 <li>Email address</li>
@@ -45,6 +48,7 @@ const Details = async () => {
             </div>
             <div>
               <h3 className='mbe-2 font-semibold'>b. Usage Data</h3>
+              <p className='mb-2'>We collect data about how you access and use our services, such as:</p>
               <ul className='list-disc space-y-1 pl-6'>
                 <li>IP address</li>
                 <li>Browser type</li>
@@ -197,7 +201,7 @@ const Details = async () => {
             <div>
               <h3 className='mbe-2 text-lg font-semibold'>Your Rights</h3>
               <p className='mbe-2'>As a user, you have rights regarding your personal data, which include:</p>
-              <ul className='list-disc space-y-1 pl-6'>
+              <ul className='mbe-2 list-disc space-y-1 pl-6'>
                 <li>
                   <span className='font-semibold'>Right to Access:: </span>You can request copies of your personal data
                   we hold.
@@ -220,20 +224,27 @@ const Details = async () => {
                 </li>
                 <li>
                   <span className='font-semibold'>Right to Withdraw Consent: </span>You can withdraw your consent at any
-                  time where consent was the legal basis for processing. To exercise these rights, please contact us at{' '}
-                  <Link href='https://themeselection.com/contact-us/' className='text-primary'>
-                    contact page
-                  </Link>
+                  time where consent was the legal basis for processing.
                 </li>
               </ul>
+              <p className='mbe-2'>
+                To exercise these rights, please contact us at{' '}
+                <Link href='https://themeselection.com/contact-us' className='text-primary'>
+                  contact page
+                </Link>
+                .
+              </p>
             </div>
             <div>
               <h4 className='mb-2 text-lg font-semibold'>Cookies Policy</h4>
               <p>
                 We use cookies to enhance user experience. Cookies help us track your interaction with our services and
-                offer a personalized experience. Managing Cookies: You can control your cookie preferences via your
-                browser settings. However, disabling cookies may impact your ability to use certain features. For more
-                details, please see our{' '}
+                offer a personalized experience.
+                <br />
+                Managing Cookies: You can control your cookie preferences via your browser settings. However, disabling
+                cookies may impact your ability to use certain features.
+                <br />
+                For more details, please see our{' '}
                 <Link href='/terms-of-service' className='text-primary'>
                   Terms of Service
                 </Link>
@@ -248,7 +259,7 @@ const Details = async () => {
               </p>
             </div>
             <div>
-              <h4 className='mb-2 text-lg font-semibold'>Children's Privacy</h4>
+              <h4 className='mb-2 text-lg font-semibold'>Children&apos;s Privacy</h4>
               <p>
                 Our services are not intended for individuals under the age of 13. We do not knowingly collect personal
                 data from children under 13. If we become aware that we have collected such data, we will take immediate
@@ -267,15 +278,15 @@ const Details = async () => {
               <h4 className='mb-2 text-lg font-semibold'>Changes to This Privacy Policy</h4>
               <p>
                 We may update this Privacy Policy periodically to reflect changes in our practices or for other
-                operational, legal, or regulatory reasons. Changes will be posted on this page, and the "effective date"
-                will be updated. We recommend reviewing this page regularly.
+                operational, legal, or regulatory reasons. Changes will be posted on this page, and the &quot;effective
+                date&quot; will be updated. We recommend reviewing this page regularly.
               </p>
             </div>
             <div>
               <h4 className='mb-2 text-lg font-semibold'>Contact Us</h4>
               <p>
                 If you have any questions or concerns about this Privacy Policy, please contact us at{' '}
-                <Link href='https://themeselection.com/contact-us/' className='text-primary'>
+                <Link href='https://themeselection.com/contact-us' className='text-primary'>
                   contact page
                 </Link>
                 .

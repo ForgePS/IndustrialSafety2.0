@@ -28,8 +28,8 @@ import pricingData from '@configs/billingConfig'
 // Data Imports
 import additionalFeaturesData from '@/assets/data/additionalFeaturesVerticalData'
 import featuresData from '@/assets/data/featuresLandingPageData'
-import ctaDiscordData from '@/assets/data/ctaDiscordData'
-import ctaBuyNowData from '@/assets/data/ctaBuyNowData'
+import ctaDiscordData from '@/assets/data/ctaDiscordLandingPageData'
+import ctaBuyNowData from '@/assets/data/ctaBuyNowLandingPageData'
 
 const LandingPage = async () => {
   // Vars
@@ -93,18 +93,14 @@ const LandingPage = async () => {
         ))}
       </SectionWrapper>
 
-      <SectionWrapper>
-        <Separator />
-      </SectionWrapper>
+      <hr />
 
       {/* Additional Features */}
       <SectionWrapper id='additional-features-section' className='plb-16 sm:plb-20 md:plb-[150px]'>
         <AdditionalFeaturesVertical data={additionalFeaturesData} />
       </SectionWrapper>
 
-      <SectionWrapper>
-        <Separator />
-      </SectionWrapper>
+      <hr />
 
       {/* Reviews Section */}
       <SectionWrapper id='reviews-section' className='plb-16 sm:plb-20 md:plb-[150px] flex flex-col gap-10 md:gap-20'>
@@ -131,9 +127,7 @@ const LandingPage = async () => {
         <Reviews data={reviewsData} platformData={platformData} transitionDelay={0.5} />
       </SectionWrapper>
 
-      <SectionWrapper>
-        <Separator />
-      </SectionWrapper>
+      <hr />
 
       {/* Pricing Section */}
       <SectionWrapper id='pricing-section' className='plb-16 sm:plb-20 md:plb-[150px] flex flex-col gap-24'>
@@ -142,7 +136,7 @@ const LandingPage = async () => {
           description={
             <>
               <div className='flex flex-wrap items-center justify-center gap-2'>
-                <Badge className='text-destructive bg-destructive/20'>UP TO $40% OFF</Badge>
+                <Badge className='text-destructive bg-destructive/20'>UP TO 40% OFF</Badge>
                 <p className='text-textPrimary text-lg font-semibold sm:text-xl'>for First 100 Customers.</p>
               </div>
               <p className='text-textSecondary text-center text-base'>All-inclusive pricing. Shop now and save big!</p>

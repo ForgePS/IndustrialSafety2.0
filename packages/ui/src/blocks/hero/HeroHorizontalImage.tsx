@@ -1,3 +1,6 @@
+// Next Imports
+import Link from 'next/link'
+
 // Third-party Imports
 import { TbRocket } from 'react-icons/tb'
 
@@ -44,7 +47,7 @@ const HeroHorizontalImage = () => {
                 hidden: { y: 30 },
                 show: { transition: { delay: 0.5, duration: 0.4 }, y: 0 }
               }}
-              className='text-textSecondary md:is-[68%] text-pretty text-lg font-semibold max-lg:text-center sm:text-xl sm:leading-[1.4]'
+              className='text-textSecondary max-sm:is-full max-lg:max-is-2xl lg:is-11/12 xl:is-[71%] text-pretty text-lg font-semibold max-lg:text-center sm:text-xl sm:leading-[1.4]'
             >
               Automate Conversations, Resolve Queries Faster, and Boost Customer Satisfaction with the All-in-One{' '}
               <span className='text-primary relative text-nowrap'>
@@ -65,7 +68,7 @@ const HeroHorizontalImage = () => {
             >
               <AvatarGroup size='3xl' limit={4} avatarUrls={avatarUrls} />
               <div className='flex flex-col items-start gap-1'>
-                <p className='text-textPrimary text-sm leading-4'>Loved by over 1,000+ companies</p>
+                <p className='text-textPrimary text-sm leading-4'>Loved by 100+ companies</p>
                 <Ratings rating={5} disabled />
               </div>
             </MotionFadeElement>
@@ -78,9 +81,11 @@ const HeroHorizontalImage = () => {
             }}
             className='mbs-6 sm:mbs-9 flex max-lg:justify-center max-sm:flex-col'
           >
-            <RainbowButton size='lg' className='!plb-2.5'>
-              Get Started Now
-              <TbRocket className='text-xl' />
+            <RainbowButton size='lg' className='!plb-2.5' asChild>
+              <Link href='/#pricing-section'>
+                Get Started Now
+                <TbRocket className='text-xl' />
+              </Link>
             </RainbowButton>
           </MotionFadeElement>
         </div>
