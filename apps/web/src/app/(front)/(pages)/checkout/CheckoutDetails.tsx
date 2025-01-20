@@ -144,11 +144,11 @@ const CheckoutDetails = ({ paymentProvider, userRecord, appName, users }: Props)
         </RadioGroup>
         <p className='text-textDisabled text-base'>
           By continuing, you agree to our{' '}
-          <Link href='/' className='text-primary' onClick={e => e.preventDefault()}>
+          <Link href='/terms-of-service' className='text-primary' onClick={e => e.preventDefault()}>
             Terms of Service
           </Link>{' '}
           and{' '}
-          <Link href='/' className='text-primary' onClick={e => e.preventDefault()}>
+          <Link href='/privacy-policy' className='text-primary' onClick={e => e.preventDefault()}>
             Privacy Policy
           </Link>
           .

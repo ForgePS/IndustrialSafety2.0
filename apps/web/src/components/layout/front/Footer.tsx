@@ -61,7 +61,8 @@ const Footer = async () => {
             <Logo appName={appName} />
           </Link>
           <p className='text-textSecondary text-base'>
-            Empowering businesses with intelligent customer support solutions. ©2024 ChatFlow AI. All rights reserved.
+            Empowering businesses with intelligent customer support solutions. ©{new Date().getFullYear()} ChatFlow AI.
+            All rights reserved.
           </p>
           <p className='text-textSecondary text-base'>
             Crafted with ❤️️ by{' '}
@@ -102,7 +103,11 @@ const Footer = async () => {
               </Link>
             </li>
             <li>
-              <Link href='https://themeselection.com/contact-us' className='link-animated text-textPrimary text-base'>
+              <Link
+                href='https://themeselection.com/contact-us'
+                target='_blank'
+                className='link-animated text-textPrimary text-base'
+              >
                 Contact Us
               </Link>
             </li>
@@ -112,7 +117,7 @@ const Footer = async () => {
           <h6 className='text-textPrimary mbe-4 text-lg font-semibold'>Resources</h6>
           <ul className='flex flex-col gap-4'>
             <li>
-              <Link href='/' className='link-animated text-textPrimary text-base'>
+              <Link href='/' target='_blank' className='link-animated text-textPrimary text-base'>
                 Documentation
               </Link>
             </li>
@@ -122,7 +127,11 @@ const Footer = async () => {
               </Link>
             </li>
             <li>
-              <Link href='https://discord.com/invite/kBHkY7DekX' className='link-animated text-textPrimary text-base'>
+              <Link
+                href='https://discord.com/invite/kBHkY7DekX'
+                target='_blank'
+                className='link-animated text-textPrimary text-base'
+              >
                 Discord Community
               </Link>
             </li>
@@ -139,7 +148,7 @@ const Footer = async () => {
           <h6 className='text-textPrimary mbe-4 text-lg font-semibold'>Collaboration</h6>
           <ul className='flex flex-col gap-4'>
             <li>
-              <Link href='/' className='link-animated text-textPrimary text-base'>
+              <Link href='/' target='_blank' className='link-animated text-textPrimary text-base'>
                 Affiliates (up to $89.70) per sale
               </Link>
             </li>

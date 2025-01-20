@@ -33,7 +33,7 @@ const Details = async () => {
             <div>
               <h3 className='mbe-2 text-lg font-semibold'>Information We Collect</h3>
               <p className='mb-2'>
-                We collect various types fo information to enhance our services and ensure a seamless user experience.
+                We collect various types of information to enhance our services and ensure a seamless user experience.
               </p>
               <h4 className='mb-2 font-semibold'>a. Personal Data:</h4>
               <p className='mb-2'>
@@ -53,7 +53,7 @@ const Details = async () => {
                 <li>IP address</li>
                 <li>Browser type</li>
                 <li>Pages visited</li>
-                <li>Time and date access</li>
+                <li>Time and date of access</li>
                 <li>Time spend on pages</li>
                 <li>Unique device identifiers</li>
                 <li>Other diagnostic data</li>
@@ -83,7 +83,7 @@ const Details = async () => {
               </ul>
             </div>
             <div>
-              <h3 className='mbe-2 text-lg font-semibold'>How we use you information</h3>
+              <h3 className='mbe-2 text-lg font-semibold'>How We Use Your Information</h3>
               <p className='mbe-2'>We use the data we collect for the following purposes:</p>
               <ul className='list-disc space-y-1 pl-6'>
                 <li>

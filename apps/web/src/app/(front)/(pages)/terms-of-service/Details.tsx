@@ -85,7 +85,7 @@ const Details = async () => {
               <p>
                 Upon purchasing our SaaS Boilerplate or any other Product, you are granted a non-exclusive,
                 non-transferable license to use and modify the Product. However, you may not resell, redistribute, or
-                sublicense the Product without or explicit written permission.
+                sublicense the Product without our explicit written permission.
               </p>
             </div>
             <div>
@@ -102,21 +102,21 @@ const Details = async () => {
               <p>
                 You are responsible for any content you post or share within the service (such as reviews or feedback).
                 By posting, you grant us a non-exclusive, perpetual license to use, distribute and display your content.
-                We reserve the right to remove any content that violates out Terms or applicable laws.
+                We reserve the right to remove any content that violates our Terms or applicable laws.
               </p>
             </div>
             <div>
               <h3 className='mbe-2 text-xl font-semibold'>Intellectual Property</h3>
               <p>
                 All intellectual property related to our Products, including code, documentation, and branding, remains
-                the property of CleVision Technologies Private Limited. You may not reproduce, distribute, or use of our
-                materials beyond the scope of the license granted without prior written consent.
+                the property of CleVision Technologies Private Limited. You may not reproduce, distribute, or use any of
+                our materials beyond the scope of the license granted without prior written consent.
               </p>
             </div>
             <div>
               <h3 className='mbe-2 text-xl font-semibold'>Third-Party Links</h3>
               <p>
-                Our products may contain links to third-party websites or services. We do not control or endorse
+                Our Products may contain links to third-party websites or services. We do not control or endorse
                 third-party sites and are not responsible for their content or practices. Use these external resources
                 at your own risk.
               </p>
@@ -133,14 +133,14 @@ const Details = async () => {
               <h3 className='mbe-2 text-xl font-semibold'>Limitation of Liability</h3>
               <p>
                 We are not liable for any indirect, incidental, special, or consequential damages, including loss of
-                data, profits, or use, arising from the ue or inability to use our Products or services.
+                data, profits, or use, arising from the use or inability to use our Products or services.
               </p>
             </div>
             <div>
               <h3 className='mbe-2 text-xl font-semibold'>Disclaimer of Warranties</h3>
               <p>
-                Our products are provided &quot;as is&quot; without warranties of any kind. We do not guarantee
-                uninterrupted, error-free operation or that any defects will be corrected. Your use of the products is
+                Our Products are provided &quot;as is&quot; without warranties of any kind. We do not guarantee
+                uninterrupted, error-free operation or that any defects will be corrected. Your use of the Products is
                 at your own risk.
               </p>
             </div>

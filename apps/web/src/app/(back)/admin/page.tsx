@@ -1,5 +1,6 @@
 // Third-party Imports
 import { TbChartBar, TbCurrencyDollar, TbReceipt, TbRefresh, TbShoppingCart, TbUsers } from 'react-icons/tb'
+import { createClient } from '@repo/supabase/server'
 
 // Components Imports
 import CardStats from './CardStats'
@@ -50,7 +51,29 @@ const data = [
   }
 ]
 
-const AdminPage = () => {
+const AdminPage = async () => {
+  // Vars
+  const supabase = await createClient()
+
+  const { data: usersRecord, error: userError } = await supabase
+    .from('users')
+    .select('*')
+    .order('id', { ascending: true, nullsFirst: false })
+
+  if (userError) {
+    console.error('Error fetching users: ', userError.message)
+
+    return
+  }
+
+  const { data: rolesData, error: rolesError } = await supabase.from('user_roles').select(`*, roles (role)`)
+
+  if (rolesError) {
+    console.error('Error fetching roles: ', rolesError.message)
+
+    return
+  }
+
   return (
     <div className='flex flex-col gap-y-8'>
       <header>
@@ -70,7 +93,7 @@ const AdminPage = () => {
         </div>
         <ActiveSubscriptionsChart />
         <SalesByCountries />
-        <UsersTable />
+        <UsersTable usersRecord={usersRecord} rolesData={rolesData} />
         <MRRGrowthChart />
       </section>
     </div>

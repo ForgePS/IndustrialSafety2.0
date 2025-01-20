@@ -65,7 +65,7 @@ const CTADiscord = (props: Props) => {
         ))}
       <div className='flex flex-1 flex-col items-center gap-3.5 lg:items-start'>
         <h3 className='text-textPrimary text-2xl font-semibold max-lg:text-center'>{title}</h3>
-        <p className='text-textSecondary text-base max-lg:text-center'>{description}</p>
+        <p className='text-textSecondary text-balance text-base max-lg:text-center'>{description}</p>
       </div>
       {typeof button === 'string' ? (
         <Button size='lg' className={buttonClassName}>

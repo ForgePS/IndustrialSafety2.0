@@ -1,5 +1,6 @@
 // Third-party Imports
 import { TbDownload } from 'react-icons/tb'
+import { Button } from '@repo/ui/components/ui/button'
 
 // SVG Imports
 import Logo from '@/assets/svg/Logo'
@@ -16,9 +17,13 @@ const data = {
     </>
   ),
   button: (
-    <>
+    <Button
+      size='lg'
+      variant='tonal'
+      className='max-sm:is-full text-wrap bg-[#9880FF] text-white shadow hover:bg-[#8364ff] hover:shadow-md active:bg-[#8364ff]'
+    >
       Get Started with ChatFlow AI Now <TbDownload className='shrink-0 text-xl' />
-    </>
+    </Button>
   ),
   image: (
     <img

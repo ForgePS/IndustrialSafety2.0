@@ -192,7 +192,7 @@ const LandingPage = async () => {
             show: { transition: { delay: 0.5, duration: 0.4 }, y: 0 }
           }}
         >
-          <FAQ accordionVariant='split' data={faqsData.slice(0, 6)} />
+          <FAQ accordionVariant='split' data={faqsData} />
         </MotionFadeElement>
       </SectionWrapper>
 
