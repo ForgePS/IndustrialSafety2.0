@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "private": true,
   "exports": {
+    "./page": "./src/components/MyProfilePage.tsx",
     "./*": "./src/*.ts"
   },
   "scripts": {

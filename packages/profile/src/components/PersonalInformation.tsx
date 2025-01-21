@@ -18,6 +18,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '
 import { Button } from '@repo/ui/components/ui/button'
 import SubmitButton from '@repo/ui/components/SubmitButton'
 import { toast } from '@repo/ui/utils/toast'
+
 import { uploadAvatarToSupabase, removeAvatarFromSupabase, updateUserProfile } from '@repo/profile/client'
 
 // Define Zod Schema for validation
@@ -200,7 +201,9 @@ const PersonalInformation = ({
               </div>
             </CardContent>
             <CardFooter className='sm:justify-end'>
-              <SubmitButton formAction={form.handleSubmit(onSubmit) as any}>Update</SubmitButton>
+              <SubmitButton formAction={form.handleSubmit(onSubmit) as any} pendingText='Updating...'>
+                Update
+              </SubmitButton>
             </CardFooter>
           </form>
         </Form>
