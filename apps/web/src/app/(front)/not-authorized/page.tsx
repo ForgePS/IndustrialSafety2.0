@@ -1,5 +1,12 @@
-const NotAuthorized = () => {
-  return 'Not Authorized'
+// Third-party Imports
+import NotAuthorized from '@repo/ui/components/NotAuthorized'
+
+export const metadata = {
+  title: 'Not Authorized',
 }
 
-export default NotAuthorized
+const NotAuthorizedPage = () => {
+  return <NotAuthorized />
+}
+
+export default NotAuthorizedPage
