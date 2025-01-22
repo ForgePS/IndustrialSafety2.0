@@ -23,7 +23,7 @@ import {
 import { Button } from '@repo/ui/components/ui/button'
 import { Avatar, AvatarFallback, AvatarImage } from '@repo/ui/components/ui/avatar'
 import { useSignOut } from '@repo/supabase/hooks'
-import { deleteImpersonationCookies } from '@repo/auth/action'
+import { deleteImpersonationCookies, deletePaymentCookies } from '@repo/auth/action'
 import { useSettings } from '@repo/ui/hooks/useSettings'
 import { getInitials } from '@repo/ui/utils/getInitials'
 import type { User } from '@supabase/supabase-js'
@@ -112,7 +112,14 @@ const UserDropdown = ({ user, userTableData, roles }: Props) => {
             </Link>
           </DropdownMenuItem>
         )}
-        <form action={() => signOutMutation.mutateAsync().then(() => deleteImpersonationCookies())}>
+        <form
+          action={() =>
+            signOutMutation.mutateAsync().then(() => {
+              deleteImpersonationCookies()
+              deletePaymentCookies()
+            })
+          }
+        >
           <DropdownMenuItem asChild>
             <button type='submit' className='is-full flex cursor-pointer gap-2 text-start'>
               <TbLogout className='text-xl' />

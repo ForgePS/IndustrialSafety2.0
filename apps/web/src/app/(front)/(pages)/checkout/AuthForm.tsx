@@ -100,7 +100,7 @@ const AuthForm = ({ users }: { users: User[] | null }) => {
             </Alert>
           ) : (
             <>
-              <form>
+              <form className='flex flex-col gap-4'>
                 <FormField
                   control={form.control}
                   name='email'

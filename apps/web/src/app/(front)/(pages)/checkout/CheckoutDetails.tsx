@@ -19,6 +19,7 @@ import CustomInputHorizontal from '@repo/ui/components/custom-inputs/Horizontal'
 import { createCheckoutSession, fetchCheckoutData } from '@repo/billing/src/actions'
 import { EmbeddedCheckoutProvider, EmbeddedCheckout } from '@stripe/react-stripe-js'
 import { Dialog, DialogContent, DialogDescription, DialogTitle, DialogTrigger } from '@repo/ui/components/ui/dialog'
+import { createClient } from '@repo/supabase/client'
 import type { CustomInputHorizontalData } from '@repo/ui/components/custom-inputs/types'
 import type { User } from '@supabase/supabase-js'
 import type { Database } from '@repo/supabase/types'
@@ -49,10 +50,28 @@ const CheckoutDetails = ({ paymentProvider, userRecord, appName, users }: Props)
   const [isDialogOpen, setIsDialogOpen] = useState(false)
   const [loading, setLoading] = useState(true)
 
-  // Vars
-  const currency = planDetails?.currency
-
   const onSubmit = async (planId: string) => {
+    const supabase = createClient()
+
+    // Insert billing record into the database with status as pending
+    const { error } = await supabase.from('billing').insert({
+      user_id: userRecord?.id,
+      email: userRecord?.email,
+      billing_provider: paymentProvider,
+      status: 'pending',
+      order_type: variantDetails?.paymentType === 'recurring' ? 'subscription' : 'one-off',
+      plan_variant: variantDetails?.name,
+      interval: variantDetails?.paymentType === 'recurring' ? variantDetails?.interval : null,
+      cost: variantDetails?.lineItems[0].cost,
+      currency: planDetails?.currency
+    })
+
+    if (error) {
+      console.error('Error inserting data:', error)
+
+      return
+    }
+
     // @ts-ignore
     paymentProvider === 'lemon_squeezy' && window.createLemonSqueezy()
 
@@ -61,7 +80,6 @@ const CheckoutDetails = ({ paymentProvider, userRecord, appName, users }: Props)
       planId,
       variantDetails as PlanVariant,
       paymentProvider,
-      currency as string,
       userRecord as User,
       window.location.href
     )
@@ -160,6 +178,7 @@ const CheckoutDetails = ({ paymentProvider, userRecord, appName, users }: Props)
               formAction={() => onSubmit(variantDetails?.lineItems[0].priceId as string)}
               className='bg-primary is-full'
               pendingText='Processing...'
+              disabled={!userRecord}
             >
               Confirm & Pay
             </SubmitButton>
@@ -174,6 +193,7 @@ const CheckoutDetails = ({ paymentProvider, userRecord, appName, users }: Props)
                   formAction={() => onSubmit(variantDetails?.lineItems[0].priceId as string)}
                   className='bg-primary is-full'
                   pendingText='Processing...'
+                  disabled={!userRecord}
                 >
                   Confirm & Pay
                 </SubmitButton>
@@ -203,6 +223,7 @@ const CheckoutDetails = ({ paymentProvider, userRecord, appName, users }: Props)
               <Logo appName={appName} />
               <p className='text-textSecondary text-sm'>{variantDetails?.description}</p>
               <hr />
+              <p className='text-textPrimary text-base font-semibold'>{variantDetails?.name}</p>
               <ul className='space-b-1.5'>
                 {variantDetails?.paymentType === 'recurring'
                   ? planDetails?.features?.map((feature, index) => (

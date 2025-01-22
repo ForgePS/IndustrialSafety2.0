@@ -105,3 +105,9 @@ export async function deleteImpersonationCookies() {
   cookieStore.delete(IMPERSONATOR_SESSION_COOKIE)
   cookieStore.delete(IMPERSONATION_STATE_COOKIE)
 }
+
+export async function deletePaymentCookies() {
+  const cookieStore = await cookies()
+
+  cookieStore.delete('checkoutData')
+}

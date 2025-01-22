@@ -14,8 +14,9 @@ const ThankYouPage = () => {
       <div className='flex flex-col items-center'>
         <h2 className='mbe-4 text-center text-2xl font-semibold'>Thank You for Choosing Us!</h2>
         <p className='md:max-is-4xl text-center'>
-          Your order is currently being processed, and you will receive an email with your order details soon. Please
-          allow a few moments for your subscription to activate.
+          Your order is currently being processed, and you will receive an email with your order details soon.
+          <br />
+          Please allow a few moments for your subscription to activate.
         </p>
       </div>
       <Button asChild>

@@ -5,8 +5,8 @@ import { cookies } from 'next/headers'
 
 // Third-party Imports
 import { jwtVerify } from 'jose'
-import type { Stripe } from 'stripe'
 import type { User } from '@supabase/supabase-js'
+import type { Stripe } from 'stripe'
 
 // Type Imports
 import type { PlanVariant } from './types/billingConfigTypes'
@@ -22,15 +22,12 @@ export async function createCheckoutSession(
   planId: string,
   variantDetails: PlanVariant,
   paymentProvider: string,
-  currency: string,
   userRecord: User,
   requestUrl: string
 ) {
   if (!planId) {
     throw new Error('planId is required')
   }
-
-  const paymentType = variantDetails?.paymentType === 'recurring' ? 'subscription' : 'one-off'
 
   if (paymentProvider === 'stripe') {
     try {
@@ -58,13 +55,11 @@ export async function createCheckoutSession(
         ],
         mode,
         metadata: {
-          user_id: userRecord.id,
-          user_email: userRecord.email,
-          order_type: paymentType,
+          user_id: userRecord?.id,
+          user_email: userRecord?.email,
           plan_variant: variantDetails.name,
           interval: variantDetails.interval,
-          cost: variantDetails.lineItems[0].cost.toString(),
-          currency
+          cost: variantDetails.lineItems[0].cost.toString()
         },
         ...customerCreation,
         return_url: `${origin}/thank-you`
@@ -92,13 +87,10 @@ export async function createCheckoutSession(
             attributes: {
               checkout_data: {
                 custom: {
-                  user_id: userRecord.id,
-                  user_email: userRecord.email,
-                  order_type: paymentType,
+                  user_id: userRecord?.id,
                   plan_variant: variantDetails.name,
                   interval: variantDetails.interval,
-                  cost: variantDetails.lineItems[0].cost.toString(),
-                  currency
+                  cost: variantDetails.lineItems[0].cost.toString()
                 }
               },
               product_options: {
@@ -187,7 +179,7 @@ export async function createBillingPortalSession(plans: any[], customerId: strin
           proration_behavior: 'none'
         }
       },
-      default_return_url: 'http://localhost:3000/thank-you' // Default local URL
+      default_return_url: `${originUrl}/thank-you`
     })
 
     // Create a Stripe Billing Portal Session

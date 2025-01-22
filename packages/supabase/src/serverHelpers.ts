@@ -98,6 +98,7 @@ export const getBillingRecords = async (column: string = '*') => {
     .from('billing')
     .select(column as '*')
     .eq('user_id', user?.id)
+    .order('id', { ascending: true })
 
   return billingRecord
 }

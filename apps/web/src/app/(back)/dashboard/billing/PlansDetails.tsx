@@ -135,7 +135,7 @@ const PlansDetails = ({ planData }: { planData: Plan[] }) => {
                               <div className='flex w-full items-center justify-between'>
                                 <div>
                                   <h3 className='text-textPrimary mb-1 text-base font-medium'>{variant.name}</h3>
-                                  <p className='text-textSecondary text-sm'>{variant.description}</p>
+                                  <p className='text-textSecondary text-sm'>{plan.description}</p>
                                 </div>
                                 <div>
                                   <h3 className='text-textPrimary mb-1 text-base font-medium'>

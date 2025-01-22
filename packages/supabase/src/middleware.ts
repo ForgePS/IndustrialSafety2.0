@@ -179,7 +179,7 @@ export async function updateSession(request: NextRequest, isMagicLinkEnabled: bo
     // User can only access the checkout page after selecting a product
     if (url.pathname.startsWith('/checkout')) {
       // If the user is trying to access a checkout page and is not a user, redirect them to the home page
-      if (!roles?.includes('user') || request.cookies.get('checkoutData')?.value === undefined) {
+      if (roles?.includes('admin') || request.cookies.get('checkoutData')?.value === undefined) {
         url.pathname = '/' // Redirect to the home page
 
         return NextResponse.redirect(url)
