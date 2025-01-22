@@ -5,7 +5,7 @@ const defaultLanguage = 'en'
 
 export const languages: string[] = ['en', 'fr', 'de']
 
-export const defaultI18nNamespaces = ['translation']
+export const defaultI18nNamespaces = []
 
 /**
  * Get the i18n settings for the given language and namespaces.

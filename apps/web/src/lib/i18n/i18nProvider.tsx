@@ -4,7 +4,7 @@
 import type { ReactNode } from 'react'
 
 // Third-party Imports
-import I18nProvider from '@repo/i18n/src/I18nProvider'
+import I18nProvider from '@repo/i18n/I18nProvider'
 
 // Util Imports
 import { i18nResolver } from './i18n-resolver'

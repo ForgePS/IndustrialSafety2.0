@@ -7,7 +7,7 @@ import { cookies } from 'next/headers'
 
 // Third-party Imports
 import type { i18n } from 'i18next'
-import { initializeI18nServer } from '@repo/i18n/src/i18n-server'
+import { initializeI18nServer } from '@repo/i18n/i18n-server'
 
 // Util Imports
 import { getI18nSettings } from './i18n-settings'

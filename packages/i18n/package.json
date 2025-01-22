@@ -2,6 +2,12 @@
   "name": "@repo/i18n",
   "version": "1.0.0",
   "private": true,
+  "exports": {
+    "./i18n-client": "./src/i18n-client.ts",
+    "./i18n-server": "./src/i18n-server.ts",
+    "./I18nProvider": "./src/I18nProvider.tsx",
+    "./Trans": "./src/Trans.tsx"
+  },
   "scripts": {
     "lint": "eslint src/",
     "lint:fix": "eslint src/ --fix",
