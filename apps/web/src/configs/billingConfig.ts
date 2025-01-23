@@ -3,9 +3,9 @@ import type { Plan } from '@repo/billing/src/types/billingConfigTypes'
 
 const plans: Plan[] = [
   {
-    id: 'starter',
+    id: 'prod_QzCPwsSmdroRXQ',
     name: 'Starter',
-    description: 'ChatFlow AI - Starter Plan',
+    description: 'It is a starter plan for ChatFlow AI',
     currency: 'USD',
     icon: 'TbRocket',
     features: [
@@ -19,14 +19,14 @@ const plans: Plan[] = [
     variants: [
       {
         id: 'starter-monthly',
-        name: 'Starter Monthly',
+        name: 'Starter',
+        paymentType: 'recurring',
         description:
           'ChatFlow AI is your all-in-one solution for automating conversations, resolving queries faster, and enhancing customer satisfaction with a powerful AI chatbot. We handle the complex backend operations, allowing you to focus on delivering exceptional customer experiences and growing your business.',
-        paymentType: 'recurring',
         interval: 'monthly',
         lineItems: [
           {
-            priceId: '534238',
+            priceId: 'price_1Q7E0wRqWZ1UaArunROQm7QY',
             name: 'Starter Monthly',
             cost: 49,
             description: '$49.00 billed every month'
@@ -35,14 +35,14 @@ const plans: Plan[] = [
       },
       {
         id: 'starter-yearly',
-        name: 'Starter Yearly',
+        name: 'Starter',
+        paymentType: 'recurring',
         description:
           'ChatFlow AI is your all-in-one solution for automating conversations, resolving queries faster, and enhancing customer satisfaction with a powerful AI chatbot. We handle the complex backend operations, allowing you to focus on delivering exceptional customer experiences and growing your business.',
-        paymentType: 'recurring',
         interval: 'yearly',
         lineItems: [
           {
-            priceId: '534244',
+            priceId: 'price_1Q7E1URqWZ1UaArurLqC5OZi',
             name: 'Starter Yearly',
             cost: 399,
             description: '$399.00 billed every year'
@@ -52,9 +52,9 @@ const plans: Plan[] = [
     ]
   },
   {
-    id: 'professional',
+    id: 'prod_QzAC1i5XKPSDxs',
     name: 'Professional',
-    description: 'ChatFlow AI - Professional Plan',
+    description: 'It is a professional plan for ChatFlow AI',
     currency: 'USD',
     icon: 'TbUsers',
     badge: 'Most Popular',
@@ -70,14 +70,14 @@ const plans: Plan[] = [
     variants: [
       {
         id: 'professional-monthly',
-        name: 'Professional Monthly',
-        description:
-          'ChatFlow AI is your all-in-one solution for automating conversations, resolving queries faster, and enhancing customer satisfaction with a powerful AI chatbot. We handle the complex backend operations, allowing you to focus on delivering exceptional customer experiences and growing your business.',
+        name: 'Professional',
         paymentType: 'recurring',
         interval: 'monthly',
+        description:
+          'ChatFlow AI is your all-in-one solution for automating conversations, resolving queries faster, and enhancing customer satisfaction with a powerful AI chatbot. We handle the complex backend operations, allowing you to focus on delivering exceptional customer experiences and growing your business.',
         lineItems: [
           {
-            priceId: '534241',
+            priceId: 'price_1Q7BskRqWZ1UaAruDHs0qF5H',
             name: 'Professional Monthly',
             cost: 99,
             description: '$99.00 billed every month'
@@ -86,14 +86,14 @@ const plans: Plan[] = [
       },
       {
         id: 'professional-yearly',
-        name: 'Professional Yearly',
-        description:
-          'ChatFlow AI is your all-in-one solution for automating conversations, resolving queries faster, and enhancing customer satisfaction with a powerful AI chatbot. We handle the complex backend operations, allowing you to focus on delivering exceptional customer experiences and growing your business.',
+        name: 'Professional',
         paymentType: 'recurring',
         interval: 'yearly',
+        description:
+          'ChatFlow AI is your all-in-one solution for automating conversations, resolving queries faster, and enhancing customer satisfaction with a powerful AI chatbot. We handle the complex backend operations, allowing you to focus on delivering exceptional customer experiences and growing your business.',
         lineItems: [
           {
-            priceId: '534248',
+            priceId: 'price_1Q7DzURqWZ1UaArup89VzvIN',
             name: 'Professional Yearly',
             cost: 499,
             description: '$499.00 billed every year'
@@ -103,9 +103,9 @@ const plans: Plan[] = [
     ]
   },
   {
-    id: 'enterprise',
+    id: 'prod_QzCRzx3wgs6TED',
     name: 'Enterprise',
-    description: 'ChatFlow AI - Enterprise Plan',
+    description: 'It is a enterprise plan for ChatFlow AI',
     currency: 'USD',
     icon: 'TbCrown',
     features: [
@@ -119,14 +119,14 @@ const plans: Plan[] = [
     variants: [
       {
         id: 'enterprise-monthly',
-        name: 'Enterprise Monthly',
-        description:
-          'ChatFlow AI is your all-in-one solution for automating conversations, resolving queries faster, and enhancing customer satisfaction with a powerful AI chatbot. We handle the complex backend operations, allowing you to focus on delivering exceptional customer experiences and growing your business.',
+        name: 'Enterprise',
         paymentType: 'recurring',
         interval: 'monthly',
+        description:
+          'ChatFlow AI is your all-in-one solution for automating conversations, resolving queries faster, and enhancing customer satisfaction with a powerful AI chatbot. We handle the complex backend operations, allowing you to focus on delivering exceptional customer experiences and growing your business.',
         lineItems: [
           {
-            priceId: '534243',
+            priceId: 'price_1Q7E2fRqWZ1UaAruvsYq46Au',
             name: 'Enterprise Monthly',
             cost: 299,
             description: '$299.00 billed every month'
@@ -135,14 +135,14 @@ const plans: Plan[] = [
       },
       {
         id: 'enterprise-yearly',
-        name: 'Enterprise Yearly',
-        description:
-          'ChatFlow AI is your all-in-one solution for automating conversations, resolving queries faster, and enhancing customer satisfaction with a powerful AI chatbot. We handle the complex backend operations, allowing you to focus on delivering exceptional customer experiences and growing your business.',
+        name: 'Enterprise',
         paymentType: 'recurring',
         interval: 'yearly',
+        description:
+          'ChatFlow AI is your all-in-one solution for automating conversations, resolving queries faster, and enhancing customer satisfaction with a powerful AI chatbot. We handle the complex backend operations, allowing you to focus on delivering exceptional customer experiences and growing your business.',
         lineItems: [
           {
-            priceId: '534249',
+            priceId: 'price_1Q7E39RqWZ1UaAruTMJsMGM1',
             name: 'Enterprise Yearly',
             cost: 999,
             description: '$999.00 billed every year'

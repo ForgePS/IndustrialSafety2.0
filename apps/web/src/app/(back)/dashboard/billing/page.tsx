@@ -1,20 +1,24 @@
 // Third-party Imports
-import { getBillingRecords, getPublicPaymentProvider } from '@repo/supabase/serverHelpers'
+import { getAuthUser, getPublicPaymentProvider } from '@repo/supabase/serverHelpers'
+import { createClient } from '@repo/supabase/server'
 
 // Component Imports
 import Billing from './Billing'
 
 const BillingPage = async () => {
-  // fetch billing record from subscription table
-  const { data: billingRecords } = await getBillingRecords()
-
-  // get the latest billing record
-  const billingRecord = billingRecords?.[billingRecords.length - 1]
+  const supabase = await createClient()
+  const { data: userRecord } = await getAuthUser()
 
   // fetch payment provider from settings
   const { data: paymentProvider } = await getPublicPaymentProvider()
 
-  return <Billing billingRecord={billingRecord} paymentProvider={paymentProvider?.value} />
+  const { data: billingData } = await supabase
+    .from('billing')
+    .select('*')
+    .eq('user_id', userRecord?.user?.id)
+    .order('id', { ascending: true })
+
+  return <Billing billingRecord={billingData || []} paymentProvider={paymentProvider?.value} />
 }
 
 export default BillingPage

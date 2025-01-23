@@ -11,11 +11,15 @@ import BillingDetails from './BillingDetails'
 import planData from '@configs/billingConfig'
 
 type Props = {
-  billingRecord: Database['public']['Tables']['billing']['Row']
+  billingRecord: Database['public']['Tables']['billing']['Row'][]
   paymentProvider: Database['public']['Enums']['billing_provider_enum']
 }
 
 const Billing = ({ billingRecord, paymentProvider }: Props) => {
+  // Find the last successful billing record
+  const successfulBillings = billingRecord?.filter(record => record.status === 'success') || []
+  const lastSuccessfulBilling = successfulBillings[successfulBillings.length - 1]
+
   return (
     <div className='space-b-6'>
       <h1 className='mbe-4 text-3xl font-bold'>Billing</h1>
@@ -24,9 +28,9 @@ const Billing = ({ billingRecord, paymentProvider }: Props) => {
           <TbInfoCircle className='bs-6 is-6' />
           <AlertDescription>No plans found. Please contact admin to update the plan.</AlertDescription>
         </Alert>
-      ) : billingRecord && billingRecord?.status === 'success' ? (
+      ) : lastSuccessfulBilling ? (
         <BillingDetails
-          billingRecord={billingRecord}
+          billingRecord={lastSuccessfulBilling}
           paymentType={planData[0].variants[0].paymentType}
           paymentProvider={paymentProvider}
         />

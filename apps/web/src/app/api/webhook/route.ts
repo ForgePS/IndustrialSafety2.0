@@ -1,6 +1,7 @@
 import crypto from 'crypto'
 
 // Next Imports
+import { headers } from 'next/headers'
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 
@@ -13,15 +14,6 @@ import { getBillingData } from '@repo/billing/src/utils/getBillingData'
 import plans from '@configs/billingConfig'
 
 const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY)
-
-// Helper function to buffer the request
-async function buffer(req: NextRequest) {
-  // Use the .text() method to get the full body as a string
-  const bodyText = await req.text()
-
-  // Convert the body text to a buffer
-  return Buffer.from(bodyText)
-}
 
 export async function POST(req: NextRequest) {
   const supabase = await createClient()
@@ -36,30 +28,31 @@ export async function POST(req: NextRequest) {
 
   try {
     if (paymentProvider?.value === 'lemon_squeezy') {
-      // Get the raw body as a buffer
-      const rawBody = await buffer(req)
+      // Get headers
+      const headersList = await headers()
+      const signature = headersList.get('x-signature')
 
-      // Check signature
-      const secret = process.env.LEMON_SQUEEZY_WEBHOOK_SIGNATURE!
-
-      // Use HMAC-SHA256 since the signature is 32 bytes long
-      const hmac = crypto.createHmac('sha256', secret)
-
-      // Calculate the digest as a buffer directly from the raw body (without cloning or text conversion)
-      const digest = hmac.update(rawBody).digest()
-
-      // Get the signature from the headers and ensure it's in hex format
-      const signature = Buffer.from(req.headers.get('X-Signature') || '', 'hex')
-
-      if (digest.length !== signature.length) {
-        throw new Error('Invalid signature: Length mismatch')
+      if (!signature) {
+        return NextResponse.json({ error: 'No signature found' }, { status: 400 })
       }
 
-      if (!crypto.timingSafeEqual(digest, signature)) {
-        throw new Error('Invalid signature.')
+      // Get raw body as text
+      const rawBody = await req.clone().text()
+
+      if (!rawBody) {
+        return NextResponse.json({ error: 'No body found' }, { status: 400 })
       }
 
-      const payload = JSON.parse(rawBody.toString())
+      // Compute signature
+      const hmac = crypto.createHmac('sha256', process.env.LEMON_SQUEEZY_WEBHOOK_SIGNATURE!)
+      const computedSignature = hmac.update(rawBody).digest('hex')
+
+      // Verify signature
+      if (signature !== computedSignature) {
+        return NextResponse.json({ error: 'Invalid signature' }, { status: 400 })
+      }
+
+      const payload = JSON.parse(rawBody)
       const eventName = payload.meta.event_name
 
       if (eventName === 'order_created' && billingRecord?.order_type === 'one-off') {
