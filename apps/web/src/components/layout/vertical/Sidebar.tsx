@@ -12,6 +12,7 @@ import {
   TbCrown,
   TbDashboard,
   TbFileText,
+  TbHome,
   TbLayoutGridAdd,
   TbListDetails,
   TbLock,
@@ -110,6 +111,12 @@ const AppSidebar = ({ roles, permissions, appName }: { roles?: string[]; permiss
               <MenuButton href={`/${roles?.includes('admin') ? 'admin' : 'dashboard'}/my-profile`} tooltip='My Profile'>
                 <TbUser />
                 <span>My Profile</span>
+              </MenuButton>
+            </SidebarMenuItem>
+            <SidebarMenuItem>
+              <MenuButton href='/' tooltip='Landing Page'>
+                <TbHome />
+                <span>Landing Page</span>
               </MenuButton>
             </SidebarMenuItem>
             {!roles?.includes('admin') && (

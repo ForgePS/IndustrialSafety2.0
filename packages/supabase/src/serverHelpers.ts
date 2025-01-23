@@ -55,6 +55,41 @@ export const getPublicUser = async (column: string = '*') => {
   return userRecord
 }
 
+export const getUserPermissions = async (): Promise<string[] | undefined> => {
+  const supabase = await createClient()
+
+  const { data: publicUser } = await getPublicUser()
+
+  const { data: userRoles } = await supabase
+    .from('user_roles')
+    .select(
+      `
+      *,
+      roles (
+        role,
+        role_permissions (
+          permissions (
+            permission
+          )
+        )
+      )
+    `
+    )
+    .eq('user_id', publicUser.id)
+
+  const permissions = [
+    ...new Set(
+      userRoles?.flatMap(({ roles }) =>
+        roles.role_permissions.flatMap(
+          ({ permissions }: { permissions: { permission: string } }) => permissions.permission
+        )
+      )
+    )
+  ]
+
+  return permissions
+}
+
 export const getUserRoles = async (): Promise<string[] | undefined> => {
   const {
     data: { user }

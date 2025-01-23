@@ -7,7 +7,17 @@ import { useEffect, useState } from 'react'
 import Link from 'next/link'
 
 // Third-party Imports
-import { TbSearch, TbArrowUp, TbArrowDown, TbCornerDownLeft } from 'react-icons/tb'
+import {
+  TbSearch,
+  TbArrowUp,
+  TbArrowDown,
+  TbCornerDownLeft,
+  TbDashboard,
+  TbUser,
+  TbFileText,
+  TbHome
+} from 'react-icons/tb'
+import * as Icons from 'react-icons/tb'
 
 // Component Imports
 import {
@@ -26,13 +36,57 @@ export type SearchDataProps = {
   id: string
   name: string
   url: string
-  icon?: string
+  icon: keyof typeof Icons
+  showFor?: 'all' | 'admin' | 'user'
+  dynamicUrl?: boolean
+  baseUrl?: string
+  permission?: string
 }
 
-const Search = ({ data }: { data: SearchDataProps[] }) => {
+// To render dynamic icons only for search results
+const DynamicIcon = (icon: keyof typeof Icons) => {
+  // eslint-disable-next-line import/namespace
+  const IconComponent = Icons[icon]
+
+  if (!IconComponent) return null
+
+  return <IconComponent className='me-2' />
+}
+
+const Search = ({ data, roles }: { data: SearchDataProps[]; roles: string[] }) => {
   // States
   const [isOpen, setIsOpen] = useState(false)
   const [searchValue, setSearchValue] = useState('')
+  const isAdmin = roles?.includes('admin')
+
+  // Transform search data based on roles and permissions
+  const transformedData = data
+    .map(item => {
+      // Handle dynamic URLs (like Dashboard and My Profile)
+      if (item.dynamicUrl && item.baseUrl !== undefined) {
+        const prefix = isAdmin ? '/admin' : '/dashboard'
+
+        return {
+          ...item,
+          url: `${prefix}${item.baseUrl}`
+        }
+      }
+
+      // For non-dynamic URLs, keep as is
+      return item
+    })
+    .filter(item => {
+      // For items without permissions, show based on route type
+      if (!item.permission) {
+        if (item.url?.startsWith('/admin') && !isAdmin) return false
+        if (item.url?.startsWith('/dashboard') && isAdmin) return false
+
+        return true
+      }
+
+      // For items with permissions, they're already filtered by getSearchData
+      return true
+    })
 
   // To Open the menu when the button is clicked
   const handleOpenChange = (open: boolean) => {
@@ -89,26 +143,69 @@ const Search = ({ data }: { data: SearchDataProps[] }) => {
           {searchValue ? (
             <>
               <CommandGroup heading='Results'>
-                {data.map(item => (
+                {transformedData.map(item => (
                   <CommandItem key={item.id} onSelect={handleClose}>
-                    <Link href={item.url}>{item.name}</Link>
+                    <Link href={item.url} className='is-full flex items-center'>
+                      {item.icon && DynamicIcon(item.icon)}
+                      {item.name}
+                    </Link>
                   </CommandItem>
                 ))}
               </CommandGroup>
               <CommandSeparator />
             </>
           ) : (
-            <CommandGroup heading='Suggestions'>
-              <CommandItem onSelect={handleClose}>
-                <Link href='/admin'>Profile</Link>
-              </CommandItem>
-              <CommandItem onSelect={handleClose}>
-                <Link href='/admin'>Billings</Link>
-              </CommandItem>
-              <CommandItem onSelect={handleClose}>
-                <Link href='/admin'>Settings</Link>
-              </CommandItem>
-            </CommandGroup>
+            <>
+              {isAdmin ? (
+                <CommandGroup heading='Admin Dashboard'>
+                  <CommandItem onSelect={handleClose}>
+                    <Link href='/admin' className='is-full flex items-center'>
+                      <TbDashboard className='me-2' />
+                      Dashboard
+                    </Link>
+                  </CommandItem>
+                  <CommandItem onSelect={handleClose}>
+                    <Link href='/admin/my-profile' className='is-full flex items-center'>
+                      <TbUser className='me-2' />
+                      My Profile
+                    </Link>
+                  </CommandItem>
+                  <CommandItem onSelect={handleClose}>
+                    <Link href='/' className='is-full flex items-center'>
+                      <TbHome className='me-2' />
+                      Landing Page
+                    </Link>
+                  </CommandItem>
+                </CommandGroup>
+              ) : (
+                <CommandGroup heading='User Dashboard'>
+                  <CommandItem onSelect={handleClose}>
+                    <Link href='/dashboard' className='is-full flex items-center'>
+                      <TbDashboard className='me-2' />
+                      Dashboard
+                    </Link>
+                  </CommandItem>
+                  <CommandItem onSelect={handleClose}>
+                    <Link href='/dashboard/my-profile' className='is-full flex items-center'>
+                      <TbUser className='me-2' />
+                      My Profile
+                    </Link>
+                  </CommandItem>
+                  <CommandItem onSelect={handleClose}>
+                    <Link href='/dashboard/billing' className='is-full flex items-center'>
+                      <TbFileText className='me-2' />
+                      Billing
+                    </Link>
+                  </CommandItem>
+                  <CommandItem onSelect={handleClose}>
+                    <Link href='/' className='is-full flex items-center'>
+                      <TbHome className='me-2' />
+                      Landing Page
+                    </Link>
+                  </CommandItem>
+                </CommandGroup>
+              )}
+            </>
           )}
         </CommandList>
         <div className='is-full pli-4 plb-2 border-bs flex justify-end gap-x-10 max-sm:hidden'>
