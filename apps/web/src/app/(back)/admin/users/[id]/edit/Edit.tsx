@@ -20,19 +20,26 @@ import SubmitButton from '@repo/ui/components/SubmitButton'
 import DeleteDialog from '@repo/ui/components/DeleteDialog'
 import type { Database } from '@repo/supabase/types'
 import { toast } from '@repo/ui/utils/toast'
+import Trans from '@repo/i18n/Trans'
+import { useTranslation } from 'react-i18next'
+import type { TFunction } from 'i18next'
 
 // Util Imports
 import { editUser, deleteUser } from '../../actions'
 
 // Define Zod Schema for validation
-const userSchema = z.object({
-  name: z.string().min(1, { message: 'Name is required' }),
-  email: z.string().min(1, { message: 'Email address is required.' }).email({
-    message: 'Please enter a valid email address.'
-  }),
-  password: z.string().optional(),
-  roles: z.array(z.string()).nonempty({ message: 'Please select at least one role' })
-})
+const userSchema = (t: TFunction) =>
+  z.object({
+    name: z.string().min(1, { message: t('admin:nameRequiredError') }),
+    email: z
+      .string()
+      .min(1, { message: t('admin:emailRequiredError') })
+      .email({
+        message: t('admin:invalidEmailError')
+      }),
+    password: z.string().optional(),
+    roles: z.array(z.string()).nonempty({ message: t('admin:selectRoleError') })
+  })
 
 const Edit = ({
   userData,
@@ -51,10 +58,11 @@ const Edit = ({
 
   // Hooks
   const router = useRouter()
+  const { t } = useTranslation()
 
   // react-hook-form integration with Zod schema validation
-  const form = useForm<z.infer<typeof userSchema>>({
-    resolver: zodResolver(userSchema),
+  const form = useForm<z.infer<ReturnType<typeof userSchema>>>({
+    resolver: zodResolver(userSchema(t)),
     defaultValues: {
       name: userData.name ?? '',
       email: userData.email ?? '',
@@ -66,7 +74,7 @@ const Edit = ({
   const { setValue, clearErrors } = form
 
   // Form submission handler
-  const onSubmit = async (data: z.infer<typeof userSchema>) => {
+  const onSubmit = async (data: z.infer<ReturnType<typeof userSchema>>) => {
     try {
       const result = await editUser({
         id,
@@ -78,9 +86,9 @@ const Edit = ({
       })
 
       if ('error' in result) {
-        toast('error', result.error || 'An unexpected error occurred. Please try again.')
+        toast('error', result.error || t('admin:usersCreateEditError'))
       } else {
-        toast('success', result.message || 'User updated successfully')
+        toast('success', result.message || t('admin:usersEditSuccess'))
         router.push('/admin/users')
         router.refresh()
       }
@@ -97,9 +105,9 @@ const Edit = ({
       const result = await deleteUser(id)
 
       if ('error' in result) {
-        toast('error', 'An unexpected error occurred. Please try again.')
+        toast('error', result.error || t('admin:usersCreateEditError'))
       } else {
-        toast('success', result.message || 'User deleted successfully')
+        toast('success', result.message || t('admin:usersDeleteSuccess'))
         router.push('/admin/users')
         router.refresh()
       }
@@ -137,7 +145,9 @@ const Edit = ({
   return (
     <>
       <div className='mbe-6 flex items-center justify-between gap-4'>
-        <h2 className='text-2xl font-semibold sm:text-3xl'>Edit User</h2>
+        <h2 className='text-2xl font-semibold sm:text-3xl'>
+          <Trans i18nKey='admin:usersEditTitle' />
+        </h2>
         {!isAdmin && <DeleteDialog handleDelete={handleDelete} itemName='user' />}
       </div>
       <Form {...form}>
@@ -151,10 +161,11 @@ const Edit = ({
                   render={({ field }) => (
                     <FormItem className='is-full'>
                       <FormLabel>
-                        Name<span className='text-destructive'>*</span>
+                        <Trans i18nKey='admin:nameLabel' />
+                        <span className='text-destructive'>*</span>
                       </FormLabel>
                       <FormControl>
-                        <Input type='text' placeholder='Name' {...field} />
+                        <Input type='text' placeholder={t('admin:namePlaceholder')} {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -166,10 +177,11 @@ const Edit = ({
                   render={({ field }) => (
                     <FormItem className='is-full'>
                       <FormLabel>
-                        Email<span className='text-destructive'>*</span>
+                        <Trans i18nKey='admin:emailLabel' />
+                        <span className='text-destructive'>*</span>
                       </FormLabel>
                       <FormControl>
-                        <Input type='email' {...field} placeholder='Email' />
+                        <Input type='email' placeholder={t('admin:emailPlaceholder')} {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -180,11 +192,15 @@ const Edit = ({
                   name='password'
                   render={({ field }) => (
                     <FormItem className='is-full'>
-                      <FormLabel>Password</FormLabel>
+                      <FormLabel>
+                        <Trans i18nKey='admin:passwordLabel' />
+                      </FormLabel>
                       <FormControl>
                         <Input type='password' placeholder='················' {...field} />
                       </FormControl>
-                      <span className='text-textDisabled text-sm'>Leave blank to keep the same password</span>
+                      <span className='text-textDisabled text-sm'>
+                        <Trans i18nKey='admin:usersEditPasswordHelp' />
+                      </span>
                       <FormMessage />
                     </FormItem>
                   )}
@@ -195,7 +211,8 @@ const Edit = ({
                   render={() => (
                     <FormItem className='is-full'>
                       <FormLabel htmlFor='roles' className='mbe-2 block text-sm font-medium'>
-                        Roles<span className='text-destructive'>*</span>
+                        <Trans i18nKey='admin:rolesLabel' />
+                        <span className='text-destructive'>*</span>
                       </FormLabel>
                       <FormControl>
                         <MultiSelect
@@ -216,11 +233,13 @@ const Edit = ({
             </CardContent>
           </Card>
           <div className='mbs-6 flex justify-start gap-4'>
-            <SubmitButton formAction={form.handleSubmit(onSubmit) as any} pendingText='Saving...'>
-              Save changes
+            <SubmitButton formAction={form.handleSubmit(onSubmit) as any} pendingText={t('admin:savingStatus')}>
+              <Trans i18nKey='admin:saveChangesButton' />
             </SubmitButton>
             <Button type='button' variant='tonalDefault' asChild>
-              <Link href='/admin/users'>Cancel</Link>
+              <Link href='/admin/users'>
+                <Trans i18nKey='admin:cancelButton' />
+              </Link>
             </Button>
           </div>
         </form>

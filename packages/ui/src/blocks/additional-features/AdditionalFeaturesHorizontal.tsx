@@ -9,7 +9,7 @@ import BlurFade from '@repo/ui/components/ui/blur-fade'
 import { cn } from '@repo/ui/lib/utils'
 
 type Props = {
-  data: { icon: ReactNode; title: string; description: string }[]
+  data: { icon: ReactNode; title: ReactNode; description: ReactNode }[]
   className?: string
   transitionDelay?: number
   transitionDuration?: number

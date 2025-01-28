@@ -1,0 +1,10 @@
+{
+  "confirmPasswordMatch": "Confirm password must match with the password.",
+  "confirmPasswordRequired": "Confirm password is required.",
+  "emailInvalid": "Please enter a valid email address.",
+  "emailRequired": "Email address is required.",
+  "exitImpersonation": "Exit Impersonation",
+  "impersonatingUser": "You are currently impersonating",
+  "passwordMinLength": "Password must be at least 8 characters",
+  "passwordRequired": "Password is required."
+}

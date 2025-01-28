@@ -14,6 +14,8 @@ import { Input } from '@repo/ui/components/ui/input'
 import PasswordInput from '@repo/ui/components/ui/password-input'
 import SubmitButton from '@repo/ui/components/SubmitButton'
 import { passwordSignUpFormSchema, usePasswordSignUp } from '@repo/auth/sign-up'
+import Trans from '@repo/i18n/Trans'
+import { useTranslation } from 'react-i18next'
 import type { User } from '@supabase/supabase-js'
 import type { PasswordSignUpFormData } from '@repo/auth/sign-up'
 
@@ -22,8 +24,11 @@ const PasswordSignUpForm = ({ appName, users }: { appName: string; users: User[]
   const [showAlert, setShowAlert] = useState(false)
 
   // Hooks
+  const { t } = useTranslation()
+
+  // Vars
   const form = useForm<PasswordSignUpFormData>({
-    resolver: zodResolver(passwordSignUpFormSchema),
+    resolver: zodResolver(passwordSignUpFormSchema(t)),
     defaultValues: {
       email: '',
       password: '',
@@ -63,20 +68,26 @@ const PasswordSignUpForm = ({ appName, users }: { appName: string; users: User[]
       {showAlert && (
         <Alert variant='tonalDestructive'>
           <TbAlertTriangle className='is-6 bs-6' />
-          <AlertTitle>Sign Up Failed</AlertTitle>
+          <AlertTitle>
+            <Trans i18nKey='auth:registerSignUpError' />
+          </AlertTitle>
           <AlertDescription>
-            {((error as unknown) === 'User already registered'
-              ? 'User already exists with this email address. Please try again with a different email address or sign in with this email address.'
-              : (error as unknown as ReactNode)) ?? 'An error occurred while signing up. Please try again later.'}
+            {((error as unknown) === 'User already registered' ? (
+              <Trans i18nKey='auth:registerSignUpErrorUserExists' />
+            ) : (
+              (error as unknown as ReactNode)
+            )) ?? <Trans i18nKey='auth:registerSignUpErrorDescription' />}
           </AlertDescription>
         </Alert>
       )}
       {isSuccess ? (
         <Alert variant='tonalSuccess'>
           <TbCircleCheck className='is-6 bs-6' />
-          <AlertTitle>Sign Up Successful</AlertTitle>
+          <AlertTitle>
+            <Trans i18nKey='auth:registerSignUpSuccess' />
+          </AlertTitle>
           <AlertDescription>
-            {`You have successfully signed up to ${appName}. Please check and verify your email.`}
+            <Trans i18nKey='auth:registerSignUpSuccessDescription' values={{ appName }} />
           </AlertDescription>
         </Alert>
       ) : (
@@ -88,10 +99,11 @@ const PasswordSignUpForm = ({ appName, users }: { appName: string; users: User[]
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>
-                    Email address<sup className='text-destructive'>*</sup>
+                    <Trans i18nKey='auth:formEmailLabel' />
+                    <sup className='text-destructive'>*</sup>
                   </FormLabel>
                   <FormControl>
-                    <Input type='email' placeholder='Enter your email address' autoFocus {...field} />
+                    <Input type='email' placeholder={t('auth:formEmailPlaceholder')} autoFocus {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -103,7 +115,8 @@ const PasswordSignUpForm = ({ appName, users }: { appName: string; users: User[]
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>
-                    Password<sup className='text-destructive'>*</sup>
+                    <Trans i18nKey='auth:formPasswordLabel' />
+                    <sup className='text-destructive'>*</sup>
                   </FormLabel>
                   <FormControl>
                     <PasswordInput placeholder='················' {...field} />
@@ -118,7 +131,8 @@ const PasswordSignUpForm = ({ appName, users }: { appName: string; users: User[]
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>
-                    Confirm Password<sup className='text-destructive'>*</sup>
+                    <Trans i18nKey='auth:formPasswordConfirmLabel' />
+                    <sup className='text-destructive'>*</sup>
                   </FormLabel>
                   <FormControl>
                     <PasswordInput placeholder='················' {...field} />
@@ -127,8 +141,11 @@ const PasswordSignUpForm = ({ appName, users }: { appName: string; users: User[]
                 </FormItem>
               )}
             />
-            <SubmitButton formAction={form.handleSubmit(onSubmit) as any} pendingText={`Signing Up to ${appName}...`}>
-              {`Sign Up to ${appName}`}
+            <SubmitButton
+              formAction={form.handleSubmit(onSubmit) as any}
+              pendingText={<Trans i18nKey='auth:registerSubmitPendingText' values={{ appName }} />}
+            >
+              <Trans i18nKey='auth:registerSubmitButton' values={{ appName }} />
             </SubmitButton>
           </form>
         </Form>

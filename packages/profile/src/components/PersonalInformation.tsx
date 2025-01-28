@@ -18,17 +18,27 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '
 import { Button } from '@repo/ui/components/ui/button'
 import SubmitButton from '@repo/ui/components/SubmitButton'
 import { toast } from '@repo/ui/utils/toast'
+import Trans from '@repo/i18n/Trans'
+import { useTranslation } from 'react-i18next'
 
+// Type Imports
+import type { TFunction } from 'i18next'
+
+// Util Imports
 import { uploadAvatarToSupabase, removeAvatarFromSupabase, updateUserProfile } from '@repo/profile/client'
 
 // Define Zod Schema for validation
-const userSchema = z.object({
-  name: z.string().optional(),
-  email: z.string().min(1, { message: 'Email address is required.' }).email({
-    message: 'Please enter a valid email address.'
-  }),
-  avatarUrl: z.string().optional()
-})
+const userSchema = (t: TFunction) =>
+  z.object({
+    name: z.string().optional(),
+    email: z
+      .string()
+      .min(1, { message: t('packages-profile:emailRequired') })
+      .email({
+        message: t('packages-profile:emailInvalid')
+      }),
+    avatarUrl: z.string().optional()
+  })
 
 const PersonalInformation = ({
   userData
@@ -45,6 +55,8 @@ const PersonalInformation = ({
   const [currentAvatarUrl, setCurrentAvatarUrl] = useState(userData.user_avatar || '')
 
   // Hooks
+  const { t } = useTranslation()
+
   const { getRootProps, getInputProps } = useDropzone({
     multiple: false,
     accept: {
@@ -62,7 +74,7 @@ const PersonalInformation = ({
 
   // react-hook-form integration with Zod schema validation
   const form = useForm({
-    resolver: zodResolver(userSchema),
+    resolver: zodResolver(userSchema(t)),
     defaultValues: {
       name: userData.name ?? '',
       email: userData.email ?? '',
@@ -70,7 +82,7 @@ const PersonalInformation = ({
     }
   })
 
-  const onSubmit = async (data: z.infer<typeof userSchema>) => {
+  const onSubmit = async (data: z.infer<ReturnType<typeof userSchema>>) => {
     let avatarUrl = previewUrl || ''
 
     // Handle file upload if a new file is selected
@@ -113,21 +125,27 @@ const PersonalInformation = ({
 
     // Update the current avatar URL
     setCurrentAvatarUrl(avatarUrl)
-    toast('success', 'User updated successfully')
+    toast('success', t('packages-profile:updateSuccessMessage'))
   }
 
   return (
     <div className='grid gap-6 md:grid-cols-2'>
       <div className='flex flex-col items-start gap-1'>
-        <h3 className='text-textPrimary text-lg font-medium'>Personal Information</h3>
-        <p className='text-textSecondary text-sm'>Manage your personal information.</p>
+        <h3 className='text-textPrimary text-lg font-medium'>
+          <Trans i18nKey='packages-profile:personalInfoTitle' />
+        </h3>
+        <p className='text-textSecondary text-sm'>
+          <Trans i18nKey='packages-profile:personalInfoDescription' />
+        </p>
       </div>
       <Card>
         <Form {...form}>
           <form>
             <CardContent className='pbs-6 grid gap-6 lg:grid-cols-3'>
               <div className='flex flex-col items-start gap-2'>
-                <span className='font-medium'>Avatar</span>
+                <span className='font-medium'>
+                  <Trans i18nKey='packages-profile:avatarLabel' />
+                </span>
                 <div
                   {...getRootProps({
                     className:
@@ -161,7 +179,10 @@ const PersonalInformation = ({
                     </>
                   ) : (
                     <div className='bs-full flex flex-col items-center justify-center rounded-full p-3 text-center text-sm'>
-                      Drag & Drop your files or <span className='text-primary'>Browse</span>
+                      <Trans i18nKey='packages-profile:avatarDropzoneText' />{' '}
+                      <span className='text-primary'>
+                        <Trans i18nKey='packages-profile:avatarBrowseText' />
+                      </span>
                     </div>
                   )}
                 </div>
@@ -174,7 +195,7 @@ const PersonalInformation = ({
                   render={({ field }) => (
                     <FormItem className='is-full'>
                       <FormLabel htmlFor='name' className='mbe-2 block text-sm font-medium'>
-                        Name
+                        <Trans i18nKey='packages-profile:nameLabel' />
                       </FormLabel>
                       <FormControl>
                         <Input id='name' type='text' {...field} />
@@ -189,7 +210,7 @@ const PersonalInformation = ({
                   render={({ field }) => (
                     <FormItem className='is-full'>
                       <FormLabel htmlFor='email' className='mbe-2 block text-sm font-medium'>
-                        Email
+                        <Trans i18nKey='packages-profile:emailLabel' />
                       </FormLabel>
                       <FormControl>
                         <Input id='email' type='email' {...field} />
@@ -201,8 +222,11 @@ const PersonalInformation = ({
               </div>
             </CardContent>
             <CardFooter className='sm:justify-end'>
-              <SubmitButton formAction={form.handleSubmit(onSubmit) as any} pendingText='Updating...'>
-                Update
+              <SubmitButton
+                formAction={form.handleSubmit(onSubmit) as any}
+                pendingText={<Trans i18nKey='packages-profile:updatingText' />}
+              >
+                <Trans i18nKey='packages-profile:updateButton' />
               </SubmitButton>
             </CardFooter>
           </form>

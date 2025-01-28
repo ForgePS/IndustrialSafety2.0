@@ -13,22 +13,29 @@ import SubmitButton from '@repo/ui/components/SubmitButton'
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@repo/ui/components/ui/form'
 import type { SettingsConfiguration } from '@repo/supabase/settingsConfigurationTypes'
 import { createClient } from '@repo/supabase/client'
+import Trans from '@repo/i18n/Trans'
+import { useTranslation } from 'react-i18next'
+import type { TFunction } from 'i18next'
 
 // Define Zod Schema for validation
-const applicationSchema = z.object({
-  site_name: z.string().min(1, { message: 'Site Name must be at least 1 characters.' }),
-  title: z.string().optional(),
-  support_email: z.string().email({ message: 'Invalid email address' }),
-  description: z.string().optional()
-})
+const applicationSchema = (t: TFunction) =>
+  z.object({
+    site_name: z.string().min(1, { message: t('admin:settingsApplicationSiteNameError') }),
+    title: z.string().optional(),
+    support_email: z.string().email({ message: t('admin:settingsApplicationSupportEmailError') }),
+    description: z.string().optional()
+  })
 
 const Application = ({ settings }: { settings: SettingsConfiguration['general_settings'] }) => {
   // Vars
   const supabase = createClient()
 
+  // Hooks
+  const { t } = useTranslation()
+
   // react-hook-form integration with Zod schema validation
-  const form = useForm<z.infer<typeof applicationSchema>>({
-    resolver: zodResolver(applicationSchema),
+  const form = useForm<z.infer<ReturnType<typeof applicationSchema>>>({
+    resolver: zodResolver(applicationSchema(t)),
     defaultValues: {
       site_name: settings.application.site_name || '',
       title: settings.application.title || '',
@@ -37,7 +44,7 @@ const Application = ({ settings }: { settings: SettingsConfiguration['general_se
     }
   })
 
-  const onSubmit = async (data: z.infer<typeof applicationSchema>) => {
+  const onSubmit = async (data: z.infer<ReturnType<typeof applicationSchema>>) => {
     const { error } = await supabase
       .from('settings_configuration')
       .update({
@@ -60,7 +67,7 @@ const Application = ({ settings }: { settings: SettingsConfiguration['general_se
       return
     }
 
-    toast.success('Settings saved!', {
+    toast.success(<Trans i18nKey='admin:settingsToastSuccess' />, {
       cancel: {
         label: <TbX />,
         onClick: () => {}
@@ -80,10 +87,11 @@ const Application = ({ settings }: { settings: SettingsConfiguration['general_se
               render={({ field }) => (
                 <FormItem className='max-md:col-span-full'>
                   <FormLabel>
-                    Site Name<span className='text-destructive'>*</span>
+                    <Trans i18nKey='admin:settingsApplicationSiteNameLabel' />
+                    <span className='text-destructive'>*</span>
                   </FormLabel>
                   <FormControl>
-                    <Input placeholder='Enter site name' {...field} />
+                    <Input placeholder={t('admin:settingsApplicationSiteNamePlaceholder')} {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -95,10 +103,11 @@ const Application = ({ settings }: { settings: SettingsConfiguration['general_se
               render={({ field }) => (
                 <FormItem className='max-md:col-span-full'>
                   <FormLabel>
-                    Support Email<span className='text-destructive'>*</span>
+                    <Trans i18nKey='admin:settingsApplicationSupportEmailLabel' />
+                    <span className='text-destructive'>*</span>
                   </FormLabel>
                   <FormControl>
-                    <Input placeholder='Enter support email' {...field} />
+                    <Input placeholder={t('admin:settingsApplicationSupportEmailPlaceholder')} {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -109,9 +118,11 @@ const Application = ({ settings }: { settings: SettingsConfiguration['general_se
               name='title'
               render={({ field }) => (
                 <FormItem className='max-md:col-span-full'>
-                  <FormLabel>Title</FormLabel>
+                  <FormLabel>
+                    <Trans i18nKey='admin:titleLabel' />
+                  </FormLabel>
                   <FormControl>
-                    <Input placeholder='Enter title' {...field} />
+                    <Input placeholder={t('admin:settingsApplicationTitlePlaceholder')} {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -122,9 +133,11 @@ const Application = ({ settings }: { settings: SettingsConfiguration['general_se
               name='description'
               render={({ field }) => (
                 <FormItem className='max-md:col-span-full'>
-                  <FormLabel>Description</FormLabel>
+                  <FormLabel>
+                    <Trans i18nKey='admin:descriptionLabel' />
+                  </FormLabel>
                   <FormControl>
-                    <Textarea placeholder='Enter description' {...field} />
+                    <Textarea placeholder={t('admin:settingsApplicationDescriptionPlaceholder')} {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -134,9 +147,9 @@ const Application = ({ settings }: { settings: SettingsConfiguration['general_se
           <SubmitButton
             formAction={form.handleSubmit(onSubmit) as any}
             className='mbs-6 max-sm:is-full'
-            pendingText='Saving Changes...'
+            pendingText={<Trans i18nKey='admin:settingsApplicationSavingChanges' />}
           >
-            Save Changes
+            <Trans i18nKey='admin:settingsSaveChanges' />
           </SubmitButton>
         </form>
       </Form>

@@ -1,11 +1,15 @@
+// React Imports
+import type { ReactNode } from 'react'
+
 // Third-party Imports
 import { TbTrendingDown, TbTrendingUp } from 'react-icons/tb'
 import { Card, CardContent } from '@repo/ui/components/ui/card'
 import { Avatar, AvatarFallback } from '@repo/ui/components/ui/avatar'
+import Trans from '@repo/i18n/Trans'
 import { cn } from '@repo/ui/lib/utils'
 
 type Stats = {
-  title: string
+  title: ReactNode
   stats: string
   percentage: number
   icon: JSX.Element
@@ -43,7 +47,9 @@ const CardStats = ({ data, className }: Props) => {
           >
             {`${data.percentage}%`}
           </span>
-          <span className='text-textDisabled text-xs uppercase'>vs prev. month</span>
+          <span className='text-textDisabled text-xs uppercase'>
+            <Trans i18nKey='admin:versusPreviousMonth' />
+          </span>
         </div>
       </CardContent>
     </Card>

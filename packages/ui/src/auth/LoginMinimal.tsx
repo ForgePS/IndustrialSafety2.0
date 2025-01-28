@@ -1,15 +1,19 @@
 // Next Imports
 import Link from 'next/link'
 
+// Third-party Imports
+import Trans from '@repo/i18n/Trans'
+
 // Component Imports
 import Logo from '@components/layout/front/Logo'
-
 import { Button } from '@repo/ui/components/ui/button'
-import { Input } from '@repo/ui/components/ui/input'
 import PasswordInput from '@repo/ui/components/ui/password-input'
 import { Checkbox } from '@repo/ui/components/ui/checkbox'
 import { Label } from '@repo/ui/components/ui/label'
 import { Card, CardContent } from '@repo/ui/components/ui/card'
+import TranslatedInput from './TranslatedInput'
+
+// SVG Imports
 import Google from '@repo/ui/assets/svg/Google'
 
 // Util Imports
@@ -26,33 +30,41 @@ const LoginMinimal = async () => {
           <CardContent className='flex flex-col gap-6 !p-8'>
             <Logo appName={appName} />
             <div className='flex flex-col gap-y-1.5'>
-              <h1 className='text-textPrimary text-2xl font-semibold'>{`Sign in to ${appName}`}</h1>
-              <p className='text-textSecondary'>Ship Faster and Focus on Growth</p>
+              <h1 className='text-textPrimary text-2xl font-semibold'>
+                <Trans i18nKey='packages-ui:loginTitle' values={{ appName }} />
+              </h1>
+              <p className='text-textSecondary'>
+                <Trans i18nKey='packages-ui:loginRegisterDescription' />
+              </p>
             </div>
             <p className='text-textSecondary flex gap-x-1'>
-              <span>Login with</span>
+              <span>
+                <Trans i18nKey='packages-ui:loginWithText' />
+              </span>
               <Link href='' className='text-primary'>
-                Magic Link
+                <Trans i18nKey='packages-ui:magicLinkTitle' />
               </Link>
             </p>
             <div className='flex gap-6 max-sm:flex-wrap'>
               <Button variant='outline' className='is-full'>
-                Login as User
+                <Trans i18nKey='packages-ui:loginAsUserButton' />
               </Button>
               <Button variant='outline' className='is-full'>
-                Login as Admin
+                <Trans i18nKey='packages-ui:loginAsAdminButton' />
               </Button>
             </div>
             <div className='flex flex-col gap-4'>
               <div>
                 <Label htmlFor='email'>
-                  Email address<sup className='text-destructive'>*</sup>
+                  <Trans i18nKey='packages-ui:emailLabel' />
+                  <sup className='text-destructive'>*</sup>
                 </Label>
-                <Input id='email' type='email' placeholder='Enter your email address' />
+                <TranslatedInput id='email' type='email' translationKey='packages-ui:emailPlaceholder' />
               </div>
               <div>
                 <Label htmlFor='password'>
-                  Password<sup className='text-destructive'>*</sup>
+                  <Trans i18nKey='packages-ui:passwordLabel' />
+                  <sup className='text-destructive'>*</sup>
                 </Label>
                 <PasswordInput id='password' placeholder='················' />
               </div>
@@ -60,28 +72,36 @@ const LoginMinimal = async () => {
                 <div className='flex items-center'>
                   <Checkbox id='remember' />
                   <Label htmlFor='remember' className='mis-3 text-textSecondary text-base'>
-                    Remember Me
+                    <Trans i18nKey='packages-ui:loginRememberMe' />
                   </Label>
                 </div>
                 <Link href='' className='text-primary'>
-                  Forgot Password?
+                  <Trans i18nKey='packages-ui:forgotPasswordTitle' />
                 </Link>
               </div>
-              <Button>{`Sign in to ${appName}`}</Button>
+              <Button>
+                <Trans i18nKey='packages-ui:loginTitle' values={{ appName }} />
+              </Button>
               <p className='flex flex-wrap items-center justify-center gap-1 text-base'>
-                <span className='text-textSecondary'>New on our platform?</span>
+                <span className='text-textSecondary'>
+                  <Trans i18nKey='packages-ui:loginDontHaveAccount' />
+                </span>
                 <Link href='' className='text-primary'>
-                  Create an account
+                  <Trans i18nKey='packages-ui:loginSignUp' />
                 </Link>
               </p>
               <div className='flex items-center gap-4'>
                 <hr className='flex-1' />
-                <span className='text-textPrimary text-base'>or</span>
+                <span className='text-textPrimary text-base'>
+                  <Trans i18nKey='packages-ui:orText' />
+                </span>
                 <hr className='flex-1' />
               </div>
               <Button variant='ghost'>
                 <Google className='text-xl' />
-                <span className='text-textPrimary'>Sign in with Google</span>
+                <span className='text-textPrimary'>
+                  <Trans i18nKey='packages-ui:signInWithGoogleButton' />
+                </span>
               </Button>
             </div>
           </CardContent>

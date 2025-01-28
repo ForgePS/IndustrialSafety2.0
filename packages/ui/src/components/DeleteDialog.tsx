@@ -1,5 +1,6 @@
 // Third-party Imports
 import { TbBoxModel, TbTrash } from 'react-icons/tb'
+import Trans from '@repo/i18n/Trans'
 
 // Component Imports
 import { Button } from '@repo/ui/components/ui/button'
@@ -29,7 +30,7 @@ const DeleteDialog = ({
       <DialogTrigger asChild>
         <Button variant={variant}>
           <TbTrash />
-          Delete
+          <Trans i18nKey='packages-ui:deleteButton' />
         </Button>
       </DialogTrigger>
       <DialogContent className='is-[380px]'>
@@ -40,17 +41,21 @@ const DeleteDialog = ({
               <TbBoxModel className='bs-6 is-6' />
             </AvatarFallback>
           </Avatar>
-          <span className='text-textPrimary text-lg font-medium'>Delete {itemName}</span>
-          <span className='text-textSecondary text-center'>Are you sure you would like to do this?</span>
+          <span className='text-textPrimary text-lg font-medium'>
+            <Trans i18nKey='packages-ui:deleteConfirmationTitle' values={{ itemName }} />
+          </span>
+          <span className='text-textSecondary text-center'>
+            <Trans i18nKey='packages-ui:deleteConfirmationMessage' />
+          </span>
         </DialogDescription>
         <DialogFooter className='sm:justify-center'>
           <DialogClose asChild>
             <Button variant='tonalDefault' className='is-full'>
-              Cancel
+              <Trans i18nKey='packages-ui:cancelButton' />
             </Button>
           </DialogClose>
           <Button variant='destructive' className='is-full' onClick={() => handleDelete()}>
-            Delete
+            <Trans i18nKey='packages-ui:deleteButton' />
           </Button>
         </DialogFooter>
       </DialogContent>

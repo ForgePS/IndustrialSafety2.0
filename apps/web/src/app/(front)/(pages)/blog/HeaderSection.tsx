@@ -1,4 +1,5 @@
 // Third-party Imports
+import Trans from '@repo/i18n/Trans'
 import { cn } from '@repo/ui/lib/utils'
 
 // Styles Imports
@@ -17,11 +18,11 @@ const HeaderSection = () => {
         )}
       >
         <h1 className='max-is-[657px] relative text-center text-3xl font-bold'>
-          Articles & Stories
+          <Trans i18nKey='front-pages:blogArticlesAndStories' />
           <span className='bs-0.5 is-full -block-end-0.5 from-primary/40 to-primary/0 absolute start-0 rounded-full bg-gradient-to-r' />
         </h1>
         <p className='text-textSecondary max-is-[657px] text-center text-lg sm:text-xl'>
-          Sign up now to access our exclusive library of members-only articles and never miss out on important updates.
+          <Trans i18nKey='front-pages:blogSignUpMessage' />
         </p>
       </div>
     </section>

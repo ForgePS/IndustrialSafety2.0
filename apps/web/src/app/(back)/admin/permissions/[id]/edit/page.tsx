@@ -2,6 +2,7 @@
 import { createClient } from '@repo/supabase/server'
 import { Alert, AlertDescription } from '@repo/ui/components/ui/alert'
 import { TbExclamationCircle } from 'react-icons/tb'
+import Trans from '@repo/i18n/Trans'
 
 // Component Imports
 import Edit from './Edit'
@@ -50,7 +51,10 @@ const EditPage = async (props: { params: Promise<{ id: number }> }) => {
       <Alert variant='destructive'>
         <TbExclamationCircle className='bs-5 is-5' />
         <AlertDescription>
-          {`There was an error fetching the data. Error: ${permissionError?.message || rolesError?.message || permissionRolesError?.message}`}
+          <Trans
+            i18nKey='admin:permissionsEditPageFetchError'
+            values={{ message: permissionError?.message || rolesError?.message || permissionRolesError?.message }}
+          />
         </AlertDescription>
       </Alert>
     )

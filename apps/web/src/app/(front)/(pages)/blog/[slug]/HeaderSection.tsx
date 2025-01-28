@@ -3,6 +3,7 @@ import Link from 'next/link'
 
 // Third-party Imports
 import { Badge } from '@repo/ui/components/ui/badge'
+import Trans from '@repo/i18n/Trans'
 import { cn } from '@repo/ui/lib/utils'
 
 // Component Imports
@@ -67,7 +68,7 @@ const HeaderSection = ({ postData }: Props) => {
               })
             }
             • `}
-            <ReadingTime /> read
+            <ReadingTime /> <Trans i18nKey='front-pages:blogRead' />
           </p>
         </div>
         <div className='flex items-center'>

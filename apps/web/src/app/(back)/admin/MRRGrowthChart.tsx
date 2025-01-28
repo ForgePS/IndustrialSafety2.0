@@ -4,6 +4,7 @@
 import { Area, AreaChart, CartesianGrid, XAxis, YAxis } from 'recharts'
 import { Card, CardContent, CardDescription, CardHeader } from '@repo/ui/components/ui/card'
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@repo/ui/components/ui/chart'
+import Trans from '@repo/i18n/Trans'
 import type { ChartConfig } from '@repo/ui/components/ui/chart'
 
 // Vars
@@ -27,7 +28,9 @@ const MRRGrowthChart = () => {
   return (
     <Card className='max-lg:order-1 max-lg:col-span-3 max-md:col-span-full'>
       <CardHeader>
-        <CardDescription className='font-medium'>MRR Growth Chart</CardDescription>
+        <CardDescription className='font-medium'>
+          <Trans i18nKey='admin:mrrGrowthChartTitle' />
+        </CardDescription>
       </CardHeader>
       <CardContent>
         <ChartContainer config={chartConfig} className='bs-[300px] lg:bs-[260px] is-full'>

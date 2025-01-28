@@ -11,6 +11,7 @@ import { Label } from '@repo/ui/components/ui/label'
 import SubmitButton from '@repo/ui/components/SubmitButton'
 import { getPublicGeneralSettings } from '@repo/supabase/clientHelpers'
 import { createClient } from '@repo/supabase/client'
+import Trans from '@repo/i18n/Trans'
 
 const FeatureToggle = ({ settings }: { settings: SettingsConfiguration['general_settings'] }) => {
   // States
@@ -32,7 +33,7 @@ const FeatureToggle = ({ settings }: { settings: SettingsConfiguration['general_
 
     if (!error) {
       setBlogEnabled(isSwitchOn)
-      toast.success('Settings saved!', {
+      toast.success(<Trans i18nKey='admin:settingsToastSuccess' />, {
         cancel: {
           label: <TbX />,
           onClick: () => {}
@@ -68,13 +69,20 @@ const FeatureToggle = ({ settings }: { settings: SettingsConfiguration['general_
               onCheckedChange={value => setBlogEnabled(value)}
             />
             <Label htmlFor='blog-enabled' className='mis-2 font-medium'>
-              Blog Enabled<span className='text-destructive'>*</span>
+              <Trans i18nKey='admin:settingsFeatureToggleBlogLabel' />
+              <span className='text-destructive'>*</span>
             </Label>
           </div>
-          <p className='text-textDisabled text-sm'>If enabled, the blog will be visible to the public.</p>
+          <p className='text-textDisabled text-sm'>
+            <Trans i18nKey='admin:settingsFeatureToggleBlogDescription' />
+          </p>
         </div>
-        <SubmitButton formAction={handleSubmit} className='mbs-6 max-sm:is-full' pendingText='Saving Changes...'>
-          Save Changes
+        <SubmitButton
+          formAction={handleSubmit}
+          className='mbs-6 max-sm:is-full'
+          pendingText={<Trans i18nKey='admin:settingsApplicationSavingChanges' />}
+        >
+          <Trans i18nKey='admin:settingsSaveChanges' />
         </SubmitButton>
       </form>
     </CardContent>

@@ -3,14 +3,16 @@ import Link from 'next/link'
 
 // Third-party Imports
 import { TbMail } from 'react-icons/tb'
+import Trans from '@repo/i18n/Trans'
 
 // Component Imports
 import Logo from '@components/layout/front/Logo'
-
 import { Button } from '@repo/ui/components/ui/button'
-import { Input } from '@repo/ui/components/ui/input'
 import { Label } from '@repo/ui/components/ui/label'
 import LeftSection from '@repo/ui/auth/LeftSection'
+import TranslatedInput from './TranslatedInput'
+
+// SVG Imports
 import Google from '@repo/ui/assets/svg/Google'
 
 // Util Imports
@@ -28,34 +30,47 @@ const MagicLinkAdvanced = async () => {
           <div className='is-10/12 md:is-1/2 lg:is-4/5 mli-auto flex flex-col gap-6'>
             <Logo appName={appName} />
             <div className='flex flex-col gap-y-1.5'>
-              <h1 className='text-textPrimary text-2xl font-semibold'>Magic Link</h1>
-              <p className='text-textSecondary'>Please enter your email for the magic link</p>
+              <h1 className='text-textPrimary text-2xl font-semibold'>
+                <Trans i18nKey='packages-ui:magicLinkTitle' />
+              </h1>
+              <p className='text-textSecondary'>
+                <Trans i18nKey='packages-ui:magicLinkDescription' />
+              </p>
             </div>
             <div className='flex flex-col gap-4'>
               <div>
                 <Label htmlFor='email'>
-                  Email address<sup className='text-destructive'>*</sup>
+                  <Trans i18nKey='packages-ui:emailLabel' />
+                  <sup className='text-destructive'>*</sup>
                 </Label>
-                <Input id='email' type='email' placeholder='Enter your email address' />
+                <TranslatedInput id='email' type='email' translationKey='packages-ui:emailPlaceholder' />
               </div>
               <Button>
                 <TbMail className='is-5 bs-5' />
-                <span>Send a magic link</span>
+                <span>
+                  <Trans i18nKey='packages-ui:sendMagicLinkButton' />
+                </span>
               </Button>
               <p className='flex flex-wrap items-center justify-center gap-1 text-base'>
-                <span className='text-textSecondary'>Access your account with</span>
+                <span className='text-textSecondary'>
+                  <Trans i18nKey='packages-ui:accessAccountWithText' />
+                </span>
                 <Link href='/auth/login-v2' className='text-primary'>
-                  Password
+                  <Trans i18nKey='packages-ui:passwordLabel' />
                 </Link>
               </p>
               <div className='flex items-center gap-4'>
                 <hr className='flex-1' />
-                <span className='text-textPrimary text-base'>or</span>
+                <span className='text-textPrimary text-base'>
+                  <Trans i18nKey='packages-ui:orText' />
+                </span>
                 <hr className='flex-1' />
               </div>
               <Button variant='ghost'>
                 <Google className='text-xl' />
-                <span className='text-textPrimary'>Sign in with Google</span>
+                <span className='text-textPrimary'>
+                  <Trans i18nKey='packages-ui:signInWithGoogleButton' />
+                </span>
               </Button>
             </div>
           </div>

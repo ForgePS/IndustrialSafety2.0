@@ -15,37 +15,44 @@ import { Button } from '@repo/ui/components/ui/button'
 import SubmitButton from '@repo/ui/components/SubmitButton'
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@repo/ui/components/ui/form'
 import { createClient } from '@repo/supabase/client'
+import Trans from '@repo/i18n/Trans'
+import { useTranslation } from 'react-i18next'
+import type { TFunction } from 'i18next'
 
 // Define Zod Schema for validation
-const trackingSchema = z.object({
-  google_tag_manager: z.string().min(1, { message: 'Google Tag Manager ID required' }),
-  providers: z.array(
-    z.object({
-      name: z.string().min(1, { message: 'Provider name required' }),
-      snippet: z
-        .string()
-        .min(1, { message: 'Snippet required' })
-        .refine(
-          value => {
-            const validSnippetRegex = /(<!--.*?-->\s*)?<script.*?>.*?<\/script>/is
+const trackingSchema = (t: TFunction) =>
+  z.object({
+    google_tag_manager: z.string().min(1, { message: t('admin:settingsTrackingGtmError') }),
+    providers: z.array(
+      z.object({
+        name: z.string().min(1, { message: t('admin:settingsTrackingNameError') }),
+        snippet: z
+          .string()
+          .min(1, { message: t('admin:settingsTrackingSnippetRequired') })
+          .refine(
+            value => {
+              const validSnippetRegex = /(<!--.*?-->\s*)?<script.*?>.*?<\/script>/is
 
-            return validSnippetRegex.test(value)
-          },
-          {
-            message: 'Snippet must contain a valid <script> tag, and can include comments'
-          }
-        )
-    })
-  )
-})
+              return validSnippetRegex.test(value)
+            },
+            {
+              message: t('admin:settingsTrackingSnippetError')
+            }
+          )
+      })
+    )
+  })
 
 const Tracking = ({ settings }: { settings: SettingsConfiguration['general_settings'] }) => {
   // Vars
   const supabase = createClient()
 
+  // Hooks
+  const { t } = useTranslation()
+
   // react-hook-form integration with Zod schema validation
-  const form = useForm<z.infer<typeof trackingSchema>>({
-    resolver: zodResolver(trackingSchema),
+  const form = useForm<z.infer<ReturnType<typeof trackingSchema>>>({
+    resolver: zodResolver(trackingSchema(t)),
     defaultValues: {
       google_tag_manager: settings.tracking.google_tag_manager || '',
       providers: settings.tracking.providers || []
@@ -68,7 +75,7 @@ const Tracking = ({ settings }: { settings: SettingsConfiguration['general_setti
     })
   }
 
-  const onSubmit = async (data: z.infer<typeof trackingSchema>) => {
+  const onSubmit = async (data: z.infer<ReturnType<typeof trackingSchema>>) => {
     const updatedTracking = {
       google_tag_manager: data.google_tag_manager,
       providers: data.providers
@@ -86,12 +93,19 @@ const Tracking = ({ settings }: { settings: SettingsConfiguration['general_setti
 
     if (error) {
       console.error('Error updating settings: ', error.message)
-      toast.error('Error updating settings: ' + error.message)
+      toast.error(
+        <Trans
+          i18nKey='admin:settingsTrackingUpdateError'
+          values={{
+            message: error.message
+          }}
+        />
+      )
 
       return
     }
 
-    toast.success('Settings saved!', {
+    toast.success(<Trans i18nKey='admin:settingsToastSuccess' />, {
       cancel: {
         label: <TbX />,
         onClick: () => {}
@@ -119,14 +133,21 @@ const Tracking = ({ settings }: { settings: SettingsConfiguration['general_setti
 
     if (error) {
       console.error('Error deleting provider: ', error.message)
-      toast.error('Error deleting provider: ' + error.message)
+      toast.error(
+        <Trans
+          i18nKey='admin:settingsTrackingDeleteError'
+          values={{
+            message: error.message
+          }}
+        />
+      )
 
       return
     }
 
     remove(index)
 
-    toast.success('Provider deleted successfully', {
+    toast.success(<Trans i18nKey='admin:settingsTrackingDeleteSuccess' />, {
       cancel: {
         label: <TbX />,
         onClick: () => {}
@@ -144,21 +165,29 @@ const Tracking = ({ settings }: { settings: SettingsConfiguration['general_setti
             name='google_tag_manager'
             render={({ field }) => (
               <FormItem className='is-full'>
-                <FormLabel>Google Tag Manager ID</FormLabel>
+                <FormLabel>
+                  <Trans i18nKey='admin:settingsTrackingGtmLabel' />
+                </FormLabel>
                 <FormControl>
-                  <Input placeholder='GTM-XXXXXX' {...field} />
+                  <Input placeholder={t('admin:settingsTrackingGtmPlaceholder')} {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
             )}
           />
-          <h1 className='mbs-6 mbe-2 text-textPrimary text-sm font-medium'>Tracking</h1>
+          <h1 className='mbs-6 mbe-2 text-textPrimary text-sm font-medium'>
+            <Trans i18nKey='admin:trackingSection' />
+          </h1>
           <div className='overflow-x-auto rounded-md border'>
             <Table className='min-is-[700px]'>
               <TableHeader>
                 <TableRow>
-                  <TableHead className='text-left'>Name</TableHead>
-                  <TableHead className='text-left'>Snippet</TableHead>
+                  <TableHead className='text-left'>
+                    <Trans i18nKey='admin:nameLabel' />
+                  </TableHead>
+                  <TableHead className='text-left'>
+                    <Trans i18nKey='admin:settingsTrackingTableSnippetColumn' />
+                  </TableHead>
                   <TableHead className='md:is-[80px]'></TableHead>
                 </TableRow>
               </TableHeader>
@@ -172,7 +201,7 @@ const Tracking = ({ settings }: { settings: SettingsConfiguration['general_setti
                         render={({ field }) => (
                           <FormItem className='is-full'>
                             <FormControl>
-                              <Input placeholder='Enter provider name' {...field} />
+                              <Input placeholder={t('admin:settingsTrackingNamePlaceholder')} {...field} />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
@@ -186,7 +215,7 @@ const Tracking = ({ settings }: { settings: SettingsConfiguration['general_setti
                         render={({ field }) => (
                           <FormItem className='is-full'>
                             <FormControl>
-                              <Textarea placeholder='Enter snippet' {...field} />
+                              <Textarea placeholder={t('admin:settingsTrackingSnippetPlaceholder')} {...field} />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
@@ -211,14 +240,14 @@ const Tracking = ({ settings }: { settings: SettingsConfiguration['general_setti
           </div>
           <div className='is-full mbs-4 flex items-center justify-center gap-4 max-sm:flex-col'>
             <Button type='button' variant='tonalDefault' onClick={addProvider} className='max-sm:is-full'>
-              Add to Tracking
+              <Trans i18nKey='admin:settingsTrackingAddButton' />
             </Button>
             <SubmitButton
               formAction={form.handleSubmit(onSubmit) as any}
               className='max-sm:is-full'
-              pendingText='Saving Changes...'
+              pendingText={<Trans i18nKey='admin:settingsApplicationSavingChanges' />}
             >
-              Save Changes
+              <Trans i18nKey='admin:settingsSaveChanges' />
             </SubmitButton>
           </div>
         </form>

@@ -9,6 +9,7 @@ import { Skeleton } from '@repo/ui/components/ui/skeleton'
 import SubmitButton from '@repo/ui/components/SubmitButton'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@repo/ui/components/ui/card'
 import { createBillingPortalSession, getSubscribeData } from '@repo/billing/src/actions'
+import Trans from '@repo/i18n/Trans'
 import type { Database } from '@repo/supabase/types'
 
 // Data Imports
@@ -82,21 +83,26 @@ const BillingDetails = ({ billingRecord, paymentType, paymentProvider }: Props) 
     <>
       <Card>
         <CardHeader className='border-be'>
-          <CardTitle className='text-xl font-medium'>Your Plan</CardTitle>
+          <CardTitle className='text-xl font-medium'>
+            <Trans i18nKey='dashboard:yourPlanTitle' />
+          </CardTitle>
           <CardDescription>
-            Below are the details of your current plan. You can change your plan or cancel your subscription at any
-            time.
+            <Trans i18nKey='dashboard:yourPlanDescription' />
           </CardDescription>
         </CardHeader>
         <CardContent className='pbs-4'>
           <div className='flex flex-col items-start gap-2'>
             <div className='flex gap-2'>
-              <p className='font-semibold'>Plan Variant: </p>
+              <p className='font-semibold'>
+                <Trans i18nKey='dashboard:planVariantLabel' />:
+              </p>
               <p>{billingRecord.plan_variant}</p>
             </div>
           </div>
           <div className='mbs-2 flex items-center gap-2'>
-            <p className='font-semibold'>Payment Details:</p>
+            <p className='font-semibold'>
+              <Trans i18nKey='dashboard:paymentDetailsLabel' />:
+            </p>
             <p>{`${paymentType === 'recurring' ? `Billed ${billingRecord.interval}` : 'Paid'} - ${billingRecord.currency} ${billingRecord.cost}`}</p>
           </div>
         </CardContent>
@@ -104,12 +110,13 @@ const BillingDetails = ({ billingRecord, paymentType, paymentProvider }: Props) 
 
       <Card>
         <CardHeader>
-          <CardTitle className='text-xl font-medium'>Manage your Billing Details</CardTitle>
+          <CardTitle className='text-xl font-medium'>
+            <Trans i18nKey='dashboard:billingDetailsTitle' />
+          </CardTitle>
         </CardHeader>
         <CardContent>
           <CardDescription>
-            Visit your Billing Portal to manage your subscription and billing. You can update or cancel your plan, or
-            download your invoices.
+            <Trans i18nKey='dashboard:billingDetailsDescription' />
           </CardDescription>
           <form>
             <SubmitButton
@@ -117,12 +124,20 @@ const BillingDetails = ({ billingRecord, paymentType, paymentProvider }: Props) 
               formAction={handleSubmit}
               pendingText={
                 <>
-                  {paymentType === 'recurring' ? 'Opening billing portal...' : 'Redirecting to download receipt...'}
+                  <Trans
+                    i18nKey={
+                      paymentType === 'recurring' ? 'dashboard:openingPortalText' : 'dashboard:downloadingReceiptText'
+                    }
+                  />
                   <TbArrowRight className='bs-4 is-4' />
                 </>
               }
             >
-              {paymentType === 'recurring' ? 'Visit billing portal' : 'Download receipt'}
+              <Trans
+                i18nKey={
+                  paymentType === 'recurring' ? 'dashboard:visitPortalButton' : 'dashboard:downloadReceiptButton'
+                }
+              />
               <TbArrowRight className='bs-4 is-4' />
             </SubmitButton>
           </form>

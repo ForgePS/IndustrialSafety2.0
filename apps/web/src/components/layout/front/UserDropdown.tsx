@@ -18,6 +18,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@repo/ui/components/ui/avat
 import { useSignOut } from '@repo/supabase/hooks'
 import { deleteImpersonationCookies, deletePaymentCookies } from '@repo/auth/action'
 import { getInitials } from '@repo/ui/utils/getInitials'
+import Trans from '@repo/i18n/Trans'
 import type { User } from '@supabase/supabase-js'
 import type { Database } from '@repo/supabase/types'
 
@@ -72,14 +73,18 @@ const UserDropdown = ({ user, userTableData, roles }: Props) => {
           <DropdownMenuItem asChild>
             <Link href='/admin' className='flex gap-2'>
               <TbSettings className='text-xl' />
-              <span>Admin Panel</span>
+              <span>
+                <Trans i18nKey='layout:adminPanel' />
+              </span>
             </Link>
           </DropdownMenuItem>
         ) : (
           <DropdownMenuItem asChild>
             <Link href='/dashboard' className='flex gap-2'>
               <TbMoodSmile className='text-xl' />
-              <span>User Dashboard</span>
+              <span>
+                <Trans i18nKey='layout:userDashboard' />
+              </span>
             </Link>
           </DropdownMenuItem>
         )}
@@ -94,7 +99,9 @@ const UserDropdown = ({ user, userTableData, roles }: Props) => {
           <DropdownMenuItem asChild className='is-full flex cursor-pointer gap-2'>
             <button type='submit'>
               <TbLogout className='text-xl' />
-              <span>Sign out</span>
+              <span>
+                <Trans i18nKey='layout:signOut' />
+              </span>
             </button>
           </DropdownMenuItem>
         </form>

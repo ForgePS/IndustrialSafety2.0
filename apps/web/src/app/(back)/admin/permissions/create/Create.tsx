@@ -15,11 +15,15 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '
 import { createClient } from '@repo/supabase/client'
 import { toast } from '@repo/ui/utils/toast'
 import SubmitButton from '@repo/ui/components/SubmitButton'
+import Trans from '@repo/i18n/Trans'
+import { useTranslation } from 'react-i18next'
+import type { TFunction } from 'i18next'
 
 // Define Zod Schema for validation
-const permissionSchema = z.object({
-  permission: z.string().min(1, { message: 'Permission name is required.' })
-})
+const permissionSchema = (t: TFunction) =>
+  z.object({
+    permission: z.string().min(1, { message: t('admin:permissionNameRequiredError') })
+  })
 
 const Create = () => {
   // Vars
@@ -27,17 +31,18 @@ const Create = () => {
 
   // Hooks
   const router = useRouter()
+  const { t } = useTranslation()
 
   // Form setup
-  const form = useForm<z.infer<typeof permissionSchema>>({
-    resolver: zodResolver(permissionSchema),
+  const form = useForm<z.infer<ReturnType<typeof permissionSchema>>>({
+    resolver: zodResolver(permissionSchema(t)),
     defaultValues: {
       permission: ''
     }
   })
 
   // Form submission handler
-  const onSubmit = async (data: z.infer<typeof permissionSchema>) => {
+  const onSubmit = async (data: z.infer<ReturnType<typeof permissionSchema>>) => {
     try {
       const { error } = await supabase.from('permissions').insert([
         {
@@ -47,7 +52,7 @@ const Create = () => {
 
       if (error) {
         if (error.code === '23505') {
-          toast('error', 'This permission already exists')
+          toast('error', t('admin:permissionExistsError'))
 
           return
         }
@@ -55,16 +60,16 @@ const Create = () => {
         throw error
       }
 
-      toast('success', 'Permission created successfully')
+      toast('success', t('admin:permissionsCreateSuccess'))
       router.push('/admin/permissions')
       router.refresh()
     } catch (error: any) {
-      toast('error', 'Error creating permission: ' + error.message)
+      toast('error', t('admin:permissionsCreateError', { message: error.message }))
     }
   }
 
   // Create and create another handler
-  const createAndCreateAnother = async (data: z.infer<typeof permissionSchema>) => {
+  const createAndCreateAnother = async (data: z.infer<ReturnType<typeof permissionSchema>>) => {
     try {
       const { error } = await supabase.from('permissions').insert([
         {
@@ -74,7 +79,7 @@ const Create = () => {
 
       if (error) {
         if (error.code === '23505') {
-          toast('error', 'This permission already exists')
+          toast('error', t('admin:permissionExistsError'))
 
           return
         }
@@ -82,16 +87,18 @@ const Create = () => {
         throw error
       }
 
-      toast('success', 'Permission created successfully')
+      toast('success', t('admin:permissionsCreateSuccess'))
       form.reset()
     } catch (error: any) {
-      toast('error', 'Error creating permission: ' + error.message)
+      toast('error', t('admin:permissionsCreateError', { message: error.message }))
     }
   }
 
   return (
     <>
-      <h2 className='mbe-6 text-2xl font-semibold sm:text-3xl'>Create Permissions</h2>
+      <h2 className='mbe-6 text-2xl font-semibold sm:text-3xl'>
+        <Trans i18nKey='admin:permissionsCreateTitle' />
+      </h2>
       <Form {...form}>
         <form>
           <Card>
@@ -102,7 +109,8 @@ const Create = () => {
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel className='mbe-2 block text-sm font-medium'>
-                      Name<span className='text-destructive'>*</span>
+                      <Trans i18nKey='admin:nameLabel' />
+                      <span className='text-destructive'>*</span>
                     </FormLabel>
                     <FormControl>
                       <Input type='text' {...field} />
@@ -114,14 +122,22 @@ const Create = () => {
             </CardContent>
           </Card>
           <div className='mbs-6 flex justify-start gap-4'>
-            <SubmitButton formAction={form.handleSubmit(onSubmit) as any} pendingText='Creating...'>
-              Create
+            <SubmitButton
+              formAction={form.handleSubmit(onSubmit) as any}
+              pendingText={<Trans i18nKey='admin:creatingStatus' />}
+            >
+              <Trans i18nKey='admin:createButton' />
             </SubmitButton>
-            <SubmitButton formAction={form.handleSubmit(createAndCreateAnother) as any} pendingText='Creating...'>
-              Create and Create Another
+            <SubmitButton
+              formAction={form.handleSubmit(createAndCreateAnother) as any}
+              pendingText={<Trans i18nKey='admin:creatingStatus' />}
+            >
+              <Trans i18nKey='admin:createAndCreateAnotherButton' />
             </SubmitButton>
             <Button variant='tonalDefault' asChild>
-              <Link href='/admin/permissions'>Cancel</Link>
+              <Link href='/admin/permissions'>
+                <Trans i18nKey='admin:cancelButton' />
+              </Link>
             </Button>
           </div>
         </form>

@@ -15,6 +15,9 @@ import { Button } from '@repo/ui/components/ui/button'
 import DeleteDialog from '@repo/ui/components/DeleteDialog'
 import { createClient } from '@repo/supabase/client'
 import { toast } from '@repo/ui/utils/toast'
+import Trans from '@repo/i18n/Trans'
+import { useTranslation } from 'react-i18next'
+import type { TFunction } from 'i18next'
 import type { Database } from '@repo/supabase/types'
 
 export type CategoryTypes = Omit<Database['public']['Tables']['faq_categories']['Row'], 'icon'> & {
@@ -31,7 +34,7 @@ export const DynamicIcon = (icon: keyof typeof Icons) => {
   return <IconComponent className='bs-6 is-6' />
 }
 
-export const handleDelete = async (categoryId: number) => {
+export const handleDelete = async (categoryId: number, t: TFunction) => {
   // Vars
   const supabase = createClient()
 
@@ -40,28 +43,32 @@ export const handleDelete = async (categoryId: number) => {
 
     if (error) {
       console.error('Error deleting category: ', error.message)
-      toast('error', 'Error deleting category: ' + error.message)
+      toast('error', t('admin:faqCategoriesDeleteError', { message: error.message }))
     } else {
-      toast('success', 'Category deleted successfully')
+      toast('success', t('admin:faqCategoriesDeleteSuccess'))
     }
-  } catch (error) {
+  } catch (error: any) {
     console.error('Error deleting category: ', error)
+    toast('error', t('admin:faqCategoriesDeleteError', { message: error.message }))
   }
 }
 
 const Categories = ({ categoryData }: { categoryData: CategoryTypes[] }) => {
   // Hooks
   const router = useRouter()
+  const { t } = useTranslation()
+
+  // Handle Delete
 
   const columns: ColumnDef<CategoryTypes>[] = [
     {
       accessorKey: 'title',
-      header: 'Category',
+      header: () => <Trans i18nKey='admin:categoryLabel' />,
       cell: ({ row }) => <div className='capitalize'>{row.getValue('title')}</div>
     },
     {
       accessorKey: 'icon',
-      header: 'Icon',
+      header: () => <Trans i18nKey='admin:faqCategoriesIconColumn' />,
       cell: ({ row }) => (
         <Avatar color='primary' shape='rounded' className='bs-[38px] is-[38px]'>
           <AvatarFallback>{row.original.icon ? DynamicIcon(row.original.icon) : null}</AvatarFallback>
@@ -70,18 +77,18 @@ const Categories = ({ categoryData }: { categoryData: CategoryTypes[] }) => {
     },
     {
       id: 'actions',
-      header: 'Actions',
+      header: () => <Trans i18nKey='admin:actionsColumn' />,
       enableHiding: false,
       cell: ({ row }) => (
         <div className='flex items-center gap-4'>
           <Link href={`/admin/faqs/category/${row.original.id}/edit`} className='text-primary flex items-center gap-1'>
             <TbEdit />
-            Edit
+            <Trans i18nKey='admin:editButton' />
           </Link>
           <DeleteDialog
             variant='ghostDestructive'
             handleDelete={async () => {
-              await handleDelete(row.original.id)
+              await handleDelete(row.original.id, t)
               router.refresh()
             }}
             itemName='category'
@@ -94,9 +101,13 @@ const Categories = ({ categoryData }: { categoryData: CategoryTypes[] }) => {
   return (
     <div className='flex flex-col gap-y-8'>
       <div className='flex gap-y-2 max-sm:flex-col sm:items-center sm:justify-between'>
-        <h1 className='text-textPrimary text-3xl font-bold'>FAQs Categories</h1>
+        <h1 className='text-textPrimary text-3xl font-bold'>
+          <Trans i18nKey='admin:faqCategoriesTitle' />
+        </h1>
         <Link href='/admin/faqs/category/create'>
-          <Button className='max-sm:is-full'>Add New Category</Button>
+          <Button className='max-sm:is-full'>
+            <Trans i18nKey='admin:faqCategoriesNewButton' />
+          </Button>
         </Link>
       </div>
       <Card>

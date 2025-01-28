@@ -19,6 +19,7 @@ import NumberTicker from '@repo/ui/components/ui/number-ticker'
 import ShimmerButton from '@repo/ui/components/ui/shimmer-button'
 import { Avatar, AvatarFallback } from '@repo/ui/components/ui/avatar'
 import { MotionFadeElement } from '@repo/ui/components/ui/motion-element'
+import Trans from '@repo/i18n/Trans'
 import type { Plan, PlanVariant } from '@repo/billing/src/types/billingConfigTypes'
 
 type Props = {
@@ -104,11 +105,11 @@ const Pricing = (props: Props) => {
           className='flex items-start gap-3'
         >
           <Label htmlFor='pricing-subscription-1' className='text-textSecondary text-base font-medium'>
-            Monthly
+            <Trans i18nKey='front-pages:pricingMonthly' />
           </Label>
           <Switch id='pricing-subscription-1' checked={isAnnually} onCheckedChange={value => setIsAnnually(value)} />
           <Label htmlFor='pricing-subscription-1' className='text-textSecondary text-base font-medium'>
-            Annually
+            <Trans i18nKey='front-pages:pricingAnnually' />
           </Label>
         </MotionFadeElement>
       </div>
@@ -165,7 +166,14 @@ const Pricing = (props: Props) => {
                   increaseValue={isAnnually}
                   className='text-textPrimary text-4xl font-bold sm:text-5xl'
                 />
-                <span className='text-textSecondary self-end text-base'>{`/${isAnnually ? 'year' : 'month'}`}</span>
+                <span className='text-textSecondary self-end text-base'>
+                  /
+                  {isAnnually ? (
+                    <Trans i18nKey={`pages:pricingPerYear`} />
+                  ) : (
+                    <Trans i18nKey={`pages:pricingPerMonth`} />
+                  )}
+                </span>
               </div>
             </div>
             <div>

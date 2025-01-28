@@ -11,6 +11,7 @@ import {
   TimelineTime
 } from '@repo/ui/components/ui/timeline'
 import { Badge } from '@repo/ui/components/ui/badge'
+import Trans from '@repo/i18n/Trans'
 
 // Component Imports
 import Logo from '@components/layout/front/Logo'
@@ -46,49 +47,78 @@ const Details = async () => {
               <div className='flex flex-col items-start gap-3'>
                 <Badge shape='circle' variant='accent' className='text-textPrimary !plb-1.5 text-base font-semibold'>
                   <TbCirclePlus className='size-[22px]' />
-                  <span>Added</span>
+                  <span>
+                    <Trans i18nKey='front-pages:changelogAddedLabel' />
+                  </span>
                 </Badge>
                 <ul className='text-textSecondary mis-6 flex list-disc flex-col text-base'>
                   <li>
-                    <span className='font-semibold'>Accordion:</span> Tree View Component
+                    <span className='font-semibold'>
+                      <Trans i18nKey='front-pages:changelogAccordionText' />:
+                    </span>{' '}
+                    <Trans i18nKey='front-pages:changelogTreeViewComponent' />
                   </li>
                   <li>
-                    <span className='font-semibold'>Textarea:</span> Default height with autoheight script
+                    <span className='font-semibold'>
+                      <Trans i18nKey='front-pages:changelogTextareaText' />:
+                    </span>{' '}
+                    <Trans i18nKey='front-pages:changelogDefaultHeight' />
                   </li>
                   <li>
-                    <span className='font-semibold'>Copy Markup:</span> Predefined markup
+                    <span className='font-semibold'>
+                      <Trans i18nKey='front-pages:changelogCopyMarkupText' />:
+                    </span>{' '}
+                    <Trans i18nKey='front-pages:changelogPredefinedMarkup' />
                   </li>
                 </ul>
               </div>
               <div className='flex flex-col items-start gap-3'>
                 <Badge shape='circle' variant='accent' className='text-textPrimary !plb-1.5 text-base font-semibold'>
                   <TbCircleCheck className='size-[22px]' />
-                  <span>Fixes and Improvements</span>
+                  <span>
+                    <Trans i18nKey='front-pages:changelogFixesAndImprovementsLabel' />
+                  </span>
                 </Badge>
                 <ul className='text-textSecondary mis-6 flex list-disc flex-col text-base'>
                   <li>
-                    <span className='font-semibold'>Improved:</span> core plugin scripts for Dropdown, ComboBox,
-                    Accordion and others.
+                    <span className='font-semibold'>
+                      <Trans i18nKey='front-pages:changelogImprovedText' />:
+                    </span>{' '}
+                    <Trans i18nKey='front-pages:changelogCorePluginImprovement' />
                   </li>
                   <li>
-                    <span className='font-semibold'>Feature request:</span> Tree View component
+                    <span className='font-semibold'>
+                      <Trans i18nKey='front-pages:changelogFeatureRequestText' />:
+                    </span>{' '}
+                    <Trans i18nKey='front-pages:changelogTreeViewRequest' />
                   </li>
                   <li>
-                    <span className='font-semibold'>Fixed:</span> WYSIWYG editor
+                    <span className='font-semibold'>
+                      <Trans i18nKey='front-pages:changelogFixedText' />:
+                    </span>{' '}
+                    <Trans i18nKey='front-pages:changelogWysiwygFix' />
                   </li>
                   <li>
-                    <span className='font-semibold'>Fixed:</span> Combobox selection of ahref items using keyboard
+                    <span className='font-semibold'>
+                      <Trans i18nKey='front-pages:changelogFixedText' />:
+                    </span>{' '}
+                    <Trans i18nKey='front-pages:changelogComboboxFix' />
                   </li>
                 </ul>
               </div>
               <div className='flex flex-col items-start gap-3'>
                 <Badge shape='circle' variant='accent' className='text-textPrimary !plb-1.5 text-base font-semibold'>
                   <TbRefresh className='size-[22px]' />
-                  <span>Updates</span>
+                  <span>
+                    <Trans i18nKey='front-pages:changelogUpdatesLabel' />
+                  </span>
                 </Badge>
                 <ul className='text-textSecondary mis-6 flex list-disc flex-col text-base'>
                   <li>
-                    <span className='font-semibold'>Updated:</span> Tailwind CSS to v3.4.1
+                    <span className='font-semibold'>
+                      <Trans i18nKey='front-pages:changelogUpdatedText' />:
+                    </span>{' '}
+                    <Trans i18nKey='front-pages:changelogTailwindUpdate' />
                   </li>
                 </ul>
               </div>
@@ -116,48 +146,80 @@ const Details = async () => {
               <div className='flex flex-col items-start gap-3'>
                 <Badge shape='circle' variant='accent' className='text-textPrimary !plb-1.5 text-base font-semibold'>
                   <TbStar className='size-[22px]' />
-                  <span>New Plugins</span>
+                  <span>
+                    <Trans i18nKey='front-pages:changelogNewPluginsLabel' />
+                  </span>
                 </Badge>
                 <ul className='text-textSecondary mis-6 flex list-disc flex-col text-base'>
                   <li>
-                    <span className='font-semibold'>Plugins:</span> ComboBox (Autocomplete)
+                    <span className='font-semibold'>
+                      <Trans i18nKey='front-pages:changelogPluginsText' />:
+                    </span>{' '}
+                    <Trans i18nKey='front-pages:changelogComboboxPlugin' />
                   </li>
                   <li>
-                    <span className='font-semibold'>Plugins:</span> Theme-Switch (Darkmode)
+                    <span className='font-semibold'>
+                      <Trans i18nKey='front-pages:changelogPluginsText' />:
+                    </span>{' '}
+                    <Trans i18nKey='front-pages:changelogThemeSwitchPlugin' />
                   </li>
                   <li>
-                    <span className='font-semibold'>New Feature:</span> Added preventSearchFocus to Advanced Select that
-                    sets autofocus for the search field inside a dropdown list if the value is true.
+                    <span className='font-semibold'>
+                      <Trans i18nKey='front-pages:changelogNewFeatureText' />:
+                    </span>{' '}
+                    <Trans i18nKey='front-pages:changelogAdvancedSelectFeature' />
                   </li>
                 </ul>
               </div>
               <div className='flex flex-col items-start gap-3'>
                 <Badge shape='circle' variant='accent' className='text-textPrimary !plb-1.5 text-base font-semibold'>
                   <TbCirclePlus className='size-[22px]' />
-                  <span>Added</span>
+                  <span>
+                    <Trans i18nKey='front-pages:changelogAddedLabel' />
+                  </span>
                 </Badge>
                 <ul className='text-textSecondary mis-6 flex list-disc flex-col text-base'>
                   <li>
-                    <span className='font-semibold'>Documentation:</span> Preline JavaScript
+                    <span className='font-semibold'>
+                      <Trans i18nKey='front-pages:changelogDocumentationText' />:
+                    </span>{' '}
+                    <Trans i18nKey='front-pages:changelogPrelineJS' />
                   </li>
                   <li>
-                    <span className='font-semibold'>Component Plugin:</span> ComboBox (Autocomplete)
+                    <span className='font-semibold'>
+                      <Trans i18nKey='front-pages:changelogComponentPluginText' />:
+                    </span>{' '}
+                    <Trans i18nKey='front-pages:changelogComboboxPlugin' />
                   </li>
                   <li>
-                    <span className='font-semibold'>Component Plugin:</span> Searchbox
+                    <span className='font-semibold'>
+                      <Trans i18nKey='front-pages:changelogComponentPluginText' />:
+                    </span>{' '}
+                    <Trans i18nKey='front-pages:changelogSearchboxPlugin' />
                   </li>
                   <li>
-                    <span className='font-semibold'>Component Plugin:</span> PIN Input - Show PIN code suggest on iOS
-                    keyboard - [Issue #188 by @someuser93]
+                    <span className='font-semibold'>
+                      <Trans i18nKey='front-pages:changelogComponentPluginText' />:
+                    </span>{' '}
+                    <Trans i18nKey='front-pages:changelogPinInputFeature' />
                   </li>
                   <li>
-                    <span className='font-semibold'>Textarea:</span> Modal example
+                    <span className='font-semibold'>
+                      <Trans i18nKey='front-pages:changelogTextareaText' />:
+                    </span>{' '}
+                    <Trans i18nKey='front-pages:changelogTextareaModal' />
                   </li>
                   <li>
-                    <span className='font-semibold'>Input Number:</span> Step Controls
+                    <span className='font-semibold'>
+                      <Trans i18nKey='front-pages:changelogInputNumberText' />:
+                    </span>{' '}
+                    <Trans i18nKey='front-pages:changelogStepControls' />
                   </li>
                   <li>
-                    <span className='font-semibold'>Input Number:</span> Negative value
+                    <span className='font-semibold'>
+                      <Trans i18nKey='front-pages:changelogInputNumberText' />:
+                    </span>{' '}
+                    <Trans i18nKey='front-pages:changelogNegativeValue' />
                   </li>
                 </ul>
               </div>

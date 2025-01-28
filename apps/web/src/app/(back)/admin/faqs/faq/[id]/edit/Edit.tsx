@@ -21,6 +21,9 @@ import SubmitButton from '@repo/ui/components/SubmitButton'
 import DeleteDialog from '@repo/ui/components/DeleteDialog'
 import { createClient } from '@repo/supabase/client'
 import { toast } from '@repo/ui/utils/toast'
+import Trans from '@repo/i18n/Trans'
+import { useTranslation } from 'react-i18next'
+import type { TFunction } from 'i18next'
 
 // Component Imports
 import DescriptionEditor from '../../DescriptionEditor'
@@ -28,12 +31,13 @@ import { deleteFaq } from '../../Faq'
 import type { FaqWithCategory } from '../../Faq'
 
 // Define Zod Schema for validation
-const faqSchema = z.object({
-  title: z.string().min(3, { message: 'Title must be at least 3 characters.' }),
-  description: z.string().min(1, { message: 'Description is required.' }),
-  category_id: z.number().min(1, { message: 'Category is required.' }),
-  is_featured: z.boolean().optional()
-})
+const faqSchema = (t: TFunction) =>
+  z.object({
+    title: z.string().min(3, { message: t('admin:titleMinLengthError') }),
+    description: z.string().min(1, { message: t('admin:descriptionRequiredError') }),
+    category_id: z.number().min(1, { message: t('admin:categoryRequiredError') }),
+    is_featured: z.boolean().optional()
+  })
 
 const Edit = ({
   faqData,
@@ -56,10 +60,11 @@ const Edit = ({
 
   // Hooks
   const router = useRouter()
+  const { t } = useTranslation()
 
   // react-hook-form integration with Zod schema validation
-  const form = useForm<z.infer<typeof faqSchema>>({
-    resolver: zodResolver(faqSchema),
+  const form = useForm<z.infer<ReturnType<typeof faqSchema>>>({
+    resolver: zodResolver(faqSchema(t)),
     defaultValues: {
       title: faqData?.title || '',
       description: faqData?.description || '',
@@ -68,7 +73,7 @@ const Edit = ({
     }
   })
 
-  const onSubmit = async (data: z.infer<typeof faqSchema>) => {
+  const onSubmit = async (data: z.infer<ReturnType<typeof faqSchema>>) => {
     const { error } = await supabase
       .from('faqs')
       .update({
@@ -81,12 +86,12 @@ const Edit = ({
 
     if (error) {
       console.error('Error updating faq: ', error.message)
-      toast('error', 'Error updating faq: ' + error.message)
+      toast('error', t('admin:faqsEditError', { message: error.message }))
 
       return
     }
 
-    toast('success', 'FAQ updated successfully')
+    toast('success', t('admin:faqsEditSuccess'))
     router.push('/admin/faqs/faq')
     router.refresh()
   }
@@ -101,10 +106,12 @@ const Edit = ({
   return (
     <>
       <div className='flex gap-y-2 max-sm:flex-col sm:items-center sm:justify-between'>
-        <h2 className='mbe-6 text-2xl font-semibold sm:text-3xl'>Edit an FAQ</h2>
+        <h2 className='mbe-6 text-2xl font-semibold sm:text-3xl'>
+          <Trans i18nKey='admin:faqsEditTitle' />
+        </h2>
         <DeleteDialog
           handleDelete={async () => {
-            await deleteFaq(id)
+            await deleteFaq(id, t)
             router.push('/admin/faqs/faq')
             router.refresh()
           }}
@@ -122,10 +129,11 @@ const Edit = ({
                   render={({ field }) => (
                     <FormItem className='is-full'>
                       <FormLabel>
-                        Title<span className='text-destructive'>*</span>
+                        <Trans i18nKey='admin:titleLabel' />
+                        <span className='text-destructive'>*</span>
                       </FormLabel>
                       <FormControl>
-                        <Input placeholder='Enter review title' {...field} />
+                        <Input placeholder={t('admin:faqTitlePlaceholder')} {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -137,7 +145,8 @@ const Edit = ({
                   render={() => (
                     <FormItem className='is-full'>
                       <FormLabel>
-                        Description<span className='text-destructive'>*</span>
+                        <Trans i18nKey='admin:descriptionLabel' />
+                        <span className='text-destructive'>*</span>
                       </FormLabel>
                       <FormControl>
                         <DescriptionEditor editorContent={editorContent} setEditorContent={handleEditorChange} />
@@ -152,7 +161,8 @@ const Edit = ({
                   render={() => (
                     <FormItem className='is-full'>
                       <FormLabel>
-                        Category<span className='text-destructive'>*</span>
+                        <Trans i18nKey='admin:categoryLabel' />
+                        <span className='text-destructive'>*</span>
                       </FormLabel>
                       <FormControl>
                         <Select
@@ -168,7 +178,9 @@ const Edit = ({
                           }}
                         >
                           <SelectTrigger className='is-full'>
-                            <SelectValue>{selectedCategory ? selectedCategory.title : 'Select a category'}</SelectValue>
+                            <SelectValue>
+                              {selectedCategory ? selectedCategory.title : t('admin:selectCategoryPlaceholder')}
+                            </SelectValue>
                           </SelectTrigger>
                           <SelectContent>
                             {categories.map(category => (
@@ -196,7 +208,9 @@ const Edit = ({
                           onCheckedChange={check => form.setValue('is_featured', check)}
                         />
                       </FormControl>
-                      <FormLabel htmlFor='is-featured'>Is Featured</FormLabel>
+                      <FormLabel htmlFor='is-featured'>
+                        <Trans i18nKey='admin:isFeaturedLabel' />
+                      </FormLabel>
                       <FormMessage />
                     </FormItem>
                   )}
@@ -205,11 +219,16 @@ const Edit = ({
             </CardContent>
           </Card>
           <div className='mbs-6 flex justify-start gap-4'>
-            <SubmitButton formAction={form.handleSubmit(onSubmit) as any} pendingText='Saving...'>
-              Save changes
+            <SubmitButton
+              formAction={form.handleSubmit(onSubmit) as any}
+              pendingText={<Trans i18nKey='admin:savingStatus' />}
+            >
+              <Trans i18nKey='admin:saveChangesButton' />
             </SubmitButton>
             <Button type='button' variant='tonalDefault'>
-              <Link href='/admin/faqs/faq'>Cancel</Link>
+              <Link href='/admin/faqs/faq'>
+                <Trans i18nKey='admin:cancelButton' />
+              </Link>
             </Button>
           </div>
         </form>

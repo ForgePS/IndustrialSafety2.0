@@ -27,9 +27,7 @@ export function keystaticAdminGenerator(plop: PlopTypes.NodePlopAPI) {
         path: 'apps/web/src/components/layout/vertical/Sidebar.tsx',
         async transform(content) {
           // Add required imports
-          const importsUpdate = content
-            .replace(/(} from 'react-icons\/tb')/, ', TbClipboardList, TbExternalLink $1')
-            .replace(/(  SidebarMenu,\n)/, '$1  SidebarMenuAction,\n')
+          const importsUpdate = content.replace(/(} from 'react-icons\/tb')/, ', TbClipboardList $1')
 
           // Add the Blog section after Reviews section
           const updatedContent = importsUpdate.replace(
@@ -38,9 +36,11 @@ export function keystaticAdminGenerator(plop: PlopTypes.NodePlopAPI) {
             {process.env.NODE_ENV !== 'production' && (
               <PermissionGuard permissions={permissions} permission='manage_blog_section'>
                 <SidebarMenuItem>
-                  <MenuButton href='/keystatic' target='_blank' tooltip='Blog'>
+                  <MenuButton href='/keystatic' target='_blank' tooltip={t('layout:blog')}>
                     <TbClipboardList />
-                    <span>Blog</span>
+                    <span>
+                      <Trans i18nKey='layout:blog' />
+                    </span>
                   </MenuButton>
                   <SidebarMenuAction className='pointer-events-none hover:bg-transparent [&>svg]:size-5'>
                     <TbExternalLink />

@@ -3,6 +3,7 @@ import Link from 'next/link'
 
 // Third-party Imports
 import { TbAlertTriangleFilled } from 'react-icons/tb'
+import Trans from '@repo/i18n/Trans'
 
 // Component Imports
 import { Button } from '@repo/ui/components/ui/button'
@@ -16,12 +17,18 @@ const NotFound = () => {
             <img src='/images/pages/not-found-illustration.png' className='is-[461px] max-is-full bs-full mbs-5' />
             <div className='text-center'>
               <h3 className='text-textPrimary flex items-center justify-center gap-x-2 text-2xl font-semibold'>
-                <span>Page Not Found</span>
+                <span>
+                  <Trans i18nKey='packages-ui:notFoundTitle' />
+                </span>
                 <TbAlertTriangleFilled className='bs-5 is-5' />
               </h3>
-              <p className='mbs-1.5 mbe-5'>We couldn&apos;t find the page you are looking for</p>
+              <p className='mbs-1.5 mbe-5'>
+                <Trans i18nKey='packages-ui:notFoundDescription' />
+              </p>
               <Button asChild>
-                <Link href='/'>Back to home page</Link>
+                <Link href='/'>
+                  <Trans i18nKey='packages-ui:backToHomeButton' />
+                </Link>
               </Button>
             </div>
           </div>

@@ -12,16 +12,20 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '
 import { Input } from '@repo/ui/components/ui/input'
 import SubmitButton from '@repo/ui/components/SubmitButton'
 import { magicLinkFormSchema, useMagicLinkSignIn } from '@repo/auth/sign-in'
+import Trans from '@repo/i18n/Trans'
+import { useTranslation } from 'react-i18next'
 import type { MagicLinkFormData } from '@repo/auth/sign-in'
 
 const MagicLinkForm = () => {
   // Hooks
+  const { t } = useTranslation()
+
   const { handleSignIn, isError, isSuccess, error } = useMagicLinkSignIn(
     `${process.env.NEXT_PUBLIC_APP_URL}/auth/callback?next=/dashboard`
   )
 
   const form = useForm<MagicLinkFormData>({
-    resolver: zodResolver(magicLinkFormSchema),
+    resolver: zodResolver(magicLinkFormSchema(t)),
     defaultValues: { email: '' }
   })
 
@@ -38,16 +42,20 @@ const MagicLinkForm = () => {
       {isError && (
         <Alert variant='tonalDestructive'>
           <TbAlertTriangle className='is-6 bs-6' />
-          <AlertTitle>Magic Link Not Sent</AlertTitle>
+          <AlertTitle>
+            <Trans i18nKey='auth:magicLinkError' />
+          </AlertTitle>
           <AlertDescription>{error as unknown as ReactNode}</AlertDescription>
         </Alert>
       )}
       {isSuccess ? (
         <Alert variant='tonalSuccess'>
           <TbCircleCheck className='is-6 bs-6' />
-          <AlertTitle>Magic Link Sent</AlertTitle>
+          <AlertTitle>
+            <Trans i18nKey='auth:magicLinkSuccess' />
+          </AlertTitle>
           <AlertDescription>
-            A magic link has been sent to your email address. Please check your inbox to continue the sign-in process.
+            <Trans i18nKey='auth:magicLinkSuccessDescription' />
           </AlertDescription>
         </Alert>
       ) : (
@@ -59,10 +67,11 @@ const MagicLinkForm = () => {
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>
-                    Email address<sup className='text-destructive'>*</sup>
+                    <Trans i18nKey='auth:formEmailLabel' />
+                    <sup className='text-destructive'>*</sup>
                   </FormLabel>
                   <FormControl>
-                    <Input type='email' placeholder='Enter your email address' autoFocus {...field} />
+                    <Input type='email' placeholder={t('auth:formEmailPlaceholder')} autoFocus {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -73,12 +82,16 @@ const MagicLinkForm = () => {
               pendingText={
                 <>
                   <TbMail className='is-5 bs-5' />
-                  <span>Sending a magic link...</span>
+                  <span>
+                    <Trans i18nKey='auth:magicLinkSubmitPendingText' />
+                  </span>
                 </>
               }
             >
               <TbMail className='is-5 bs-5' />
-              <span>Send a magic link</span>
+              <span>
+                <Trans i18nKey='auth:magicLinkSubmitButton' />
+              </span>
             </SubmitButton>
           </form>
         </Form>

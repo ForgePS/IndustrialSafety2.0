@@ -15,6 +15,8 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '
 import { createClient } from '@repo/supabase/client'
 import { toast } from '@repo/ui/utils/toast'
 import SubmitButton from '@repo/ui/components/SubmitButton'
+import Trans from '@repo/i18n/Trans'
+import { useTranslation } from 'react-i18next'
 
 // Define Zod Schema for validation
 const roleSchema = z.object({
@@ -28,6 +30,7 @@ const Create = () => {
 
   // Hooks
   const router = useRouter()
+  const { t } = useTranslation()
 
   // Form setup
   const form = useForm<z.infer<typeof roleSchema>>({
@@ -57,13 +60,13 @@ const Create = () => {
       const { isRoleExists, isHierarchyExists } = await checkDuplicates(data.role, data.hierarchy)
 
       if (isRoleExists) {
-        toast('error', 'This role name already exists')
+        toast('error', t('admin:rolesActionsDuplicateNameError'))
 
         return
       }
 
       if (isHierarchyExists) {
-        toast('error', 'This hierarchy level already exists')
+        toast('error', t('admin:rolesActionsDuplicateHierarchyError'))
 
         return
       }
@@ -79,9 +82,9 @@ const Create = () => {
         if (error.code === '23505') {
           // Check which constraint was violated based on the error detail
           if (error.message.includes('roles_role_key')) {
-            toast('error', 'This role name already exists')
+            toast('error', t('admin:rolesActionsDuplicateNameError'))
           } else if (error.message.includes('roles_hierarchy_key')) {
-            toast('error', 'This hierarchy level already exists')
+            toast('error', t('admin:rolesActionsDuplicateHierarchyError'))
           }
 
           return
@@ -90,11 +93,11 @@ const Create = () => {
         throw error
       }
 
-      toast('success', 'Role created successfully')
+      toast('success', t('admin:rolesActionsCreateSuccess'))
       router.push('/admin/roles')
       router.refresh()
     } catch (error: any) {
-      toast('error', 'Error creating role: ' + error.message)
+      toast('error', t('admin:rolesActionsCreateError', { message: error.message }))
     }
   }
 
@@ -104,13 +107,13 @@ const Create = () => {
       const { isRoleExists, isHierarchyExists } = await checkDuplicates(data.role, data.hierarchy)
 
       if (isRoleExists) {
-        toast('error', 'This role name already exists')
+        toast('error', t('admin:rolesActionsDuplicateNameError'))
 
         return
       }
 
       if (isHierarchyExists) {
-        toast('error', 'This hierarchy level already exists')
+        toast('error', t('admin:rolesActionsDuplicateHierarchyError'))
 
         return
       }
@@ -126,9 +129,9 @@ const Create = () => {
         if (error.code === '23505') {
           // Check which constraint was violated based on the error detail
           if (error.message.includes('roles_role_key')) {
-            toast('error', 'This role name already exists')
+            toast('error', t('admin:rolesActionsDuplicateNameError'))
           } else if (error.message.includes('roles_hierarchy_key')) {
-            toast('error', 'This hierarchy level already exists')
+            toast('error', t('admin:rolesActionsDuplicateHierarchyError'))
           }
 
           return
@@ -137,17 +140,19 @@ const Create = () => {
         throw error
       }
 
-      toast('success', 'Role created successfully')
+      toast('success', t('admin:rolesActionsCreateSuccess'))
       form.reset()
       router.refresh()
     } catch (error: any) {
-      toast('error', 'Error creating role: ' + error.message)
+      toast('error', t('admin:rolesActionsCreateError', { message: error.message }))
     }
   }
 
   return (
     <>
-      <h2 className='mbe-6 text-2xl font-semibold sm:text-3xl'>Create Role</h2>
+      <h2 className='mbe-6 text-2xl font-semibold sm:text-3xl'>
+        <Trans i18nKey='admin:rolesCreateTitle' />
+      </h2>
       <Form {...form}>
         <form>
           <Card>
@@ -159,10 +164,11 @@ const Create = () => {
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel className='mbe-2 block text-sm font-medium'>
-                        Name<span className='text-destructive'>*</span>
+                        <Trans i18nKey='admin:nameLabel' />
+                        <span className='text-destructive'>*</span>
                       </FormLabel>
                       <FormControl>
-                        <Input placeholder='Enter role name' {...field} />
+                        <Input placeholder={t('admin:rolesFormNamePlaceholder')} {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -174,10 +180,16 @@ const Create = () => {
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel className='mbe-2 block text-sm font-medium'>
-                        Hierarchy<span className='text-destructive'>*</span>
+                        <Trans i18nKey='admin:hierarchyLabel' />
+                        <span className='text-destructive'>*</span>
                       </FormLabel>
                       <FormControl>
-                        <Input type='number' min='1' placeholder='Enter unique position (e.g., 1, 2, 3)' {...field} />
+                        <Input
+                          type='number'
+                          min='1'
+                          placeholder={t('admin:rolesFormHierarchyPlaceholder')}
+                          {...field}
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -187,18 +199,23 @@ const Create = () => {
             </CardContent>
           </Card>
           <div className='mbs-6 flex justify-start gap-4'>
-            <SubmitButton formAction={form.handleSubmit(onSubmit) as any} pendingText='Creating...'>
-              Create
+            <SubmitButton
+              formAction={form.handleSubmit(onSubmit) as any}
+              pendingText={<Trans i18nKey='admin:creatingStatus' />}
+            >
+              <Trans i18nKey='admin:createButton' />
             </SubmitButton>
             <SubmitButton
               formAction={form.handleSubmit(createAndCreateRole) as any}
-              pendingText='Creating...'
+              pendingText={<Trans i18nKey='admin:creatingStatus' />}
               variant='tonalDefault'
             >
-              Create and Create Another
+              <Trans i18nKey='admin:createAndCreateAnotherButton' />
             </SubmitButton>
             <Button variant='tonalDefault' asChild>
-              <Link href='/admin/roles'>Cancel</Link>
+              <Link href='/admin/roles'>
+                <Trans i18nKey='admin:cancelButton' />
+              </Link>
             </Button>
           </div>
         </form>

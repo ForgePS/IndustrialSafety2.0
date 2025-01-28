@@ -2,6 +2,7 @@
 import { TbExclamationCircle } from 'react-icons/tb'
 import { createClient } from '@repo/supabase/server'
 import { Alert, AlertDescription } from '@repo/ui/components/ui/alert'
+import Trans from '@repo/i18n/Trans'
 
 // Component Imports
 import EditPlatform from './Edit'
@@ -18,7 +19,10 @@ const EditPage = async (props: { params: Promise<{ id: number }> }) => {
       <Alert variant='destructive'>
         <TbExclamationCircle className='bs-5 is-5' />
         <AlertDescription>
-          {`There was an error fetching the review platforms. Error: ${error?.message || 'Unknown error'}`}
+          <Trans
+            i18nKey='admin:reviewPlatformsEditPageFetchError'
+            values={{ message: error?.message || 'Unknown error' }}
+          />
         </AlertDescription>
       </Alert>
     )

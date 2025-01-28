@@ -3,14 +3,14 @@ import Link from 'next/link'
 
 // Third-party Imports
 import { TbChevronLeft } from 'react-icons/tb'
+import Trans from '@repo/i18n/Trans'
 
 // Component Imports
 import Logo from '@components/layout/front/Logo'
-
 import { Card, CardContent } from '@repo/ui/components/ui/card'
 import { Label } from '@repo/ui/components/ui/label'
-import { Input } from '@repo/ui/components/ui/input'
 import { Button } from '@repo/ui/components/ui/button'
+import TranslatedInput from './TranslatedInput'
 
 // Util Imports
 import { getAppName } from '@/utils/getAppName'
@@ -26,23 +26,30 @@ const ForgotPasswordMinimal = async () => {
           <CardContent className='flex flex-col gap-6 !p-8'>
             <Logo appName={appName} />
             <div className='flex flex-col gap-y-1.5'>
-              <h1 className='text-textPrimary text-2xl font-semibold'>Forgot Password?</h1>
+              <h1 className='text-textPrimary text-2xl font-semibold'>
+                <Trans i18nKey='packages-ui:forgotPasswordTitle' />
+              </h1>
               <p className='text-textSecondary'>
-                Enter your email and we&apos;ll send you instructions to reset your password
+                <Trans i18nKey='packages-ui:forgotPasswordDescription' />
               </p>
             </div>
             <div className='flex flex-col gap-4'>
               <div>
                 <Label htmlFor='email'>
-                  Email address<sup className='text-destructive'>*</sup>
+                  <Trans i18nKey='packages-ui:emailLabel' />
+                  <sup className='text-destructive'>*</sup>
                 </Label>
-                <Input id='email' type='email' placeholder='Enter your email address' />
+                <TranslatedInput id='email' type='email' translationKey='packages-ui:emailPlaceholder' />
               </div>
-              <Button>Send Reset Link</Button>
+              <Button>
+                <Trans i18nKey='packages-ui:sendResetLinkButton' />
+              </Button>
               <Button variant='ghostPrimary' asChild>
                 <Link href='/auth/login-v1' className='flex items-center gap-x-2'>
                   <TbChevronLeft className='is-[22px] bs-[22px]' />
-                  <span>Back to Login</span>
+                  <span>
+                    <Trans i18nKey='packages-ui:backToLoginButton' />
+                  </span>
                 </Link>
               </Button>
             </div>

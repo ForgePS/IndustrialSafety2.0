@@ -3,6 +3,7 @@ import Link from 'next/link'
 
 // Third-party Imports
 import { TbCircleCheckFilled, TbMapPin } from 'react-icons/tb'
+import Trans from '@repo/i18n/Trans'
 
 // Type Imports
 import type { Database } from '@repo/supabase/types'
@@ -69,7 +70,7 @@ const Reviews = (props: Props) => {
             }}
             className='text-textPrimary text-2xl font-medium'
           >
-            No Reviews Available
+            <Trans i18nKey='packages-ui:reviewsNoReviewsTitle' />
           </MotionFadeElement>
           <MotionFadeElement
             component='p'
@@ -82,7 +83,7 @@ const Reviews = (props: Props) => {
             }}
             className='text-textSecondary'
           >
-            There are no reviews for this product yet. Be the first to share your feedback!
+            <Trans i18nKey='packages-ui:reviewsNoReviewsDescription' />
           </MotionFadeElement>
         </div>
       ) : (
@@ -121,7 +122,7 @@ const Reviews = (props: Props) => {
                           <div className='flex flex-wrap items-center justify-between gap-1.5'>
                             <Badge variant='tonalSuccess' size='sm' shape='circle'>
                               <TbCircleCheckFilled className='text-xl' />
-                              <span>Verified User</span>
+                              <Trans i18nKey='packages-ui:reviewsVerifiedUser' />
                             </Badge>
                             {review.country && (
                               <span className='text-textSecondary text-sm capitalize [display:ruby]'>

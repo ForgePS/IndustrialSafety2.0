@@ -1,0 +1,20 @@
+{
+  "myProfileTitle": "My Profile",
+  "myProfileDescription": "Manage your user profile here.",
+  "errorFetchingProfile": "There was an error fetching the profile data. Error: {{message}}",
+  "personalInfoTitle": "Personal Information",
+  "personalInfoDescription": "Manage your personal information.",
+  "changePasswordTitle": "Change Password",
+  "changePasswordDescription": "Click this button to change your password.",
+  "changePasswordButton": "Change Password",
+  "avatarLabel": "Avatar",
+  "avatarDropzoneText": "Drag & Drop your files or",
+  "avatarBrowseText": "Browse",
+  "nameLabel": "Name",
+  "emailLabel": "Email",
+  "emailRequired": "Email address is required.",
+  "emailInvalid": "Please enter a valid email address.",
+  "updateButton": "Update",
+  "updatingText": "Updating...",
+  "updateSuccessMessage": "User updated successfully"
+}

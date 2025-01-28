@@ -1,18 +1,26 @@
 // Third-party Imports
 import { z } from 'zod'
+import type { TFunction } from 'i18next'
 
-export const resetPasswordFormSchema = z
-  .object({
-    password: z.string().min(1, { message: 'Password is required.' }).min(8, {
-      message: 'Password must be at least 8 characters.'
-    }),
-    'confirm-password': z.string().min(1, { message: 'Confirm password is required.' }).min(8, {
-      message: 'Confirm password must be at least 8 characters.'
+export const resetPasswordFormSchema = (t: TFunction) =>
+  z
+    .object({
+      password: z
+        .string()
+        .min(1, { message: t('packages-auth:passwordRequired') })
+        .min(8, {
+          message: t('packages-auth:passwordMinLength')
+        }),
+      'confirm-password': z
+        .string()
+        .min(1, { message: t('packages-auth:confirmPasswordRequired') })
+        .min(8, {
+          message: t('packages-auth:passwordMinLength')
+        })
     })
-  })
-  .refine(data => data.password === data['confirm-password'], {
-    message: 'Confirm password must match with the password.',
-    path: ['confirm-password']
-  })
+    .refine(data => data.password === data['confirm-password'], {
+      message: t('packages-auth:confirmPasswordMatch'),
+      path: ['confirm-password']
+    })
 
-export type ResetPasswordFormData = z.infer<typeof resetPasswordFormSchema>
+export type ResetPasswordFormData = z.infer<ReturnType<typeof resetPasswordFormSchema>>

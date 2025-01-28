@@ -4,6 +4,7 @@ import Link from 'next/link'
 // Third-party Imports
 import { TbConfetti } from 'react-icons/tb'
 import { Button } from '@repo/ui/components/ui/button'
+import Trans from '@repo/i18n/Trans'
 
 const ThankYouPage = () => {
   return (
@@ -12,15 +13,19 @@ const ThankYouPage = () => {
         <TbConfetti className='bs-8 is-8 text-primary' />
       </div>
       <div className='flex flex-col items-center'>
-        <h2 className='mbe-4 text-center text-2xl font-semibold'>Thank You for Choosing Us!</h2>
+        <h2 className='mbe-4 text-center text-2xl font-semibold'>
+          <Trans i18nKey='front-pages:thankYouTitle' />
+        </h2>
         <p className='md:max-is-4xl text-center'>
-          Your order is currently being processed, and you will receive an email with your order details soon.
+          <Trans i18nKey='front-pages:thankYouProcessing' />
           <br />
-          Please allow a few moments for your subscription to activate.
+          <Trans i18nKey='front-pages:thankYouSubscription' />
         </p>
       </div>
       <Button asChild>
-        <Link href='/'>Start your journey</Link>
+        <Link href='/'>
+          <Trans i18nKey='front-pages:startJourney' />
+        </Link>
       </Button>
     </div>
   )

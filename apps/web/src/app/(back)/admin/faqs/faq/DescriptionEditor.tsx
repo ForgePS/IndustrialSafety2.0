@@ -12,6 +12,7 @@ import { Link } from '@tiptap/extension-link'
 import type { Editor } from '@tiptap/core'
 import { TbBold, TbItalic, TbLink, TbList, TbListNumbers, TbStrikethrough, TbUnderline, TbUnlink } from 'react-icons/tb'
 import { Button } from '@repo/ui/components/ui/button'
+import { useTranslation } from 'react-i18next'
 import { cn } from '@repo/ui/lib/utils'
 
 // Styles Imports
@@ -132,6 +133,9 @@ const DescriptionEditor = ({
   editorContent: string
   setEditorContent: (content: string) => void
 }) => {
+  // Hooks
+  const { t } = useTranslation()
+
   const editor = useEditor({
     extensions: [
       StarterKit.configure({
@@ -145,7 +149,7 @@ const DescriptionEditor = ({
         }
       }),
       Placeholder.configure({
-        placeholder: 'Write something here...'
+        placeholder: t('admin:faqsEditorPlaceholder')
       }),
       Link.configure({
         openOnClick: true,

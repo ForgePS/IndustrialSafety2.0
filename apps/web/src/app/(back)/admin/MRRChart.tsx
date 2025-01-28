@@ -4,6 +4,7 @@
 import { Bar, BarChart, CartesianGrid, LabelList, XAxis, YAxis } from 'recharts'
 import { Card, CardContent, CardDescription, CardHeader } from '@repo/ui/components/ui/card'
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@repo/ui/components/ui/chart'
+import Trans from '@repo/i18n/Trans'
 import type { ChartConfig } from '@repo/ui/components/ui/chart'
 
 // Vars
@@ -29,7 +30,9 @@ const MRRChart = () => {
   return (
     <Card className='col-span-full max-lg:order-1 lg:col-span-2'>
       <CardHeader>
-        <CardDescription className='font-medium'>Monthly Recurring Revenue</CardDescription>
+        <CardDescription className='font-medium'>
+          <Trans i18nKey='admin:monthlyRecurringRevenueTitle' />
+        </CardDescription>
       </CardHeader>
       <CardContent>
         <ChartContainer config={chartConfig} className='bs-56 sm:bs-[300px] is-full'>

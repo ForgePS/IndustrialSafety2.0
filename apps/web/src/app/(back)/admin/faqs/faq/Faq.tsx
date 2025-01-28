@@ -17,6 +17,9 @@ import DataTable from '@repo/ui/components/ui/data-table'
 import DeleteDialog from '@repo/ui/components/DeleteDialog'
 import { createClient } from '@repo/supabase/client'
 import { toast } from '@repo/ui/utils/toast'
+import Trans from '@repo/i18n/Trans'
+import { useTranslation } from 'react-i18next'
+import type { TFunction } from 'i18next'
 import type { Database } from '@repo/supabase/types'
 
 export type FaqWithCategory = Database['public']['Tables']['faqs']['Row'] & {
@@ -26,7 +29,7 @@ export type FaqWithCategory = Database['public']['Tables']['faqs']['Row'] & {
 }
 
 // Delete a faq
-export const deleteFaq = async (faqId: number) => {
+export const deleteFaq = async (faqId: number, t: TFunction) => {
   // Vars
   const supabase = createClient()
 
@@ -35,12 +38,13 @@ export const deleteFaq = async (faqId: number) => {
 
     if (error) {
       console.error('Error deleting faq: ', error.message)
-      toast('error', 'Error deleting faq: ' + error.message)
+      toast('error', t('admin:faqsDeleteError', { message: error.message }))
     } else {
-      toast('success', 'Faq deleted successfully')
+      toast('success', t('admin:faqsDeleteSuccess'))
     }
-  } catch (error) {
+  } catch (error: any) {
     console.error('Error deleting faq: ', error)
+    toast('error', t('admin:faqsDeleteError', { message: error.message }))
 
     return false
   }
@@ -54,6 +58,9 @@ const SwitchState = ({ row }: { row: Row<FaqWithCategory> }) => {
   // States
   const [isFeatured, setIsFeatured] = useState(row.original.is_featured)
 
+  // Hooks
+  const { t } = useTranslation()
+
   const handleToggle = async (checked: boolean) => {
     // Optimistically update the state
     setIsFeatured(checked)
@@ -64,7 +71,7 @@ const SwitchState = ({ row }: { row: Row<FaqWithCategory> }) => {
     // Handle update error
     if (error) {
       console.error('Error updating FAQ featured status: ', error.message)
-      toast('error', 'Error updating FAQ featured status: ' + error.message)
+      toast('error', t('admin:faqsUpdateFeaturedError', { message: error.message }))
 
       setIsFeatured(!checked)
     }
@@ -76,37 +83,38 @@ const SwitchState = ({ row }: { row: Row<FaqWithCategory> }) => {
 const Faq = ({ faqData }: { faqData: FaqWithCategory[] }) => {
   // Hooks
   const router = useRouter()
+  const { t } = useTranslation()
 
   const columns: ColumnDef<FaqWithCategory>[] = [
     {
       accessorKey: 'title',
-      header: 'Title',
+      header: () => <Trans i18nKey='admin:titleLabel' />,
       cell: ({ row }) => <div className='capitalize'>{row.getValue('title')}</div>
     },
     {
       accessorKey: 'categories.title',
-      header: 'Category',
+      header: () => <Trans i18nKey='admin:categoryLabel' />,
       cell: ({ row }) => <div className='capitalize'>{row.original.faq_categories?.title || '-'}</div>
     },
     {
       accessorKey: 'is_featured',
-      header: 'Is Featured',
+      header: () => <Trans i18nKey='admin:isFeaturedLabel' />,
       cell: ({ row }) => <SwitchState row={row} />
     },
     {
       id: 'actions',
-      header: 'Actions',
+      header: () => <Trans i18nKey='admin:actionsColumn' />,
       enableHiding: false,
       cell: ({ row }) => (
         <div className='flex items-center gap-4'>
           <Link href={`/admin/faqs/faq/${row.original.id}/edit`} className='text-primary flex items-center gap-1'>
             <TbEdit />
-            Edit
+            <Trans i18nKey='admin:editButton' />
           </Link>
           <DeleteDialog
             variant='ghostDestructive'
             handleDelete={async () => {
-              await deleteFaq(row.original.id)
+              await deleteFaq(row.original.id, t)
               router.refresh()
             }}
             itemName='FAQ'
@@ -119,9 +127,13 @@ const Faq = ({ faqData }: { faqData: FaqWithCategory[] }) => {
   return (
     <div className='flex flex-col gap-y-8'>
       <div className='flex gap-y-2 max-sm:flex-col sm:items-center sm:justify-between'>
-        <h1 className='text-textPrimary text-3xl font-bold'>FAQs</h1>
+        <h1 className='text-textPrimary text-3xl font-bold'>
+          <Trans i18nKey='admin:faqsTitle' />
+        </h1>
         <Link href='/admin/faqs/faq/create'>
-          <Button className='max-sm:is-full'>Add New FAQ</Button>
+          <Button className='max-sm:is-full'>
+            <Trans i18nKey='admin:faqsNewButton' />
+          </Button>
         </Link>
       </div>
       <Card>

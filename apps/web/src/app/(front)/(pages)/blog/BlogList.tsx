@@ -12,6 +12,7 @@ import { TbHourglassEmpty } from 'react-icons/tb'
 import { Card, CardContent } from '@repo/ui/components/ui/card'
 import { Avatar, AvatarFallback } from '@repo/ui/components/ui/avatar'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@repo/ui/components/ui/tabs'
+import Trans from '@repo/i18n/Trans'
 import { cn } from '@repo/ui/lib/utils'
 
 // Styles Imports
@@ -92,7 +93,9 @@ const BlogList = ({ categories, posts, searchParams }: Props) => {
       >
         <div className='overflow-x-auto'>
           <TabsList className='is-fit mli-auto flex justify-center'>
-            <TabsTrigger value='all'>All</TabsTrigger>
+            <TabsTrigger value='all'>
+              <Trans i18nKey='front-pages:blogAllPosts' />
+            </TabsTrigger>
             {featuredCategories.map((category, index) => (
               <TabsTrigger key={index} value={category.slug}>
                 {category.entry.name}
@@ -143,7 +146,9 @@ const BlogList = ({ categories, posts, searchParams }: Props) => {
                   <TbHourglassEmpty className='text-2xl' />
                 </AvatarFallback>
               </Avatar>
-              <p className='text-textPrimary font-medium'>No Post Found</p>
+              <p className='text-textPrimary font-medium'>
+                <Trans i18nKey='front-pages:blogNoPostFound' />
+              </p>
             </div>
           )}
         </TabsContent>
@@ -197,7 +202,9 @@ const BlogList = ({ categories, posts, searchParams }: Props) => {
                     <TbHourglassEmpty className='text-2xl' />
                   </AvatarFallback>
                 </Avatar>
-                <p className='text-textPrimary font-medium'>No Post Found</p>
+                <p className='text-textPrimary font-medium'>
+                  <Trans i18nKey='front-pages:blogNoPostFound' />
+                </p>
               </div>
             )}
           </TabsContent>

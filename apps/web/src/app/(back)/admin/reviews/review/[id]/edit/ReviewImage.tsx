@@ -8,6 +8,7 @@ import { useDropzone } from 'react-dropzone'
 import { TbX } from 'react-icons/tb'
 import { Label } from '@repo/ui/components/ui/label'
 import { Button } from '@repo/ui/components/ui/button'
+import Trans from '@repo/i18n/Trans'
 
 type ReviewImageProps = {
   onImageUpload: (file: string) => void
@@ -15,6 +16,7 @@ type ReviewImageProps = {
 }
 
 const ReviewImage: React.FC<ReviewImageProps> = ({ onImageUpload, defaultImage }) => {
+  // State
   const [imageSrc, setImageSrc] = useState<string | undefined>(defaultImage)
 
   const { getRootProps, getInputProps } = useDropzone({
@@ -43,7 +45,9 @@ const ReviewImage: React.FC<ReviewImageProps> = ({ onImageUpload, defaultImage }
 
   return (
     <div className='flex flex-col items-start gap-2'>
-      <Label htmlFor='reviewer-image'>Reviewer Image</Label>
+      <Label htmlFor='reviewer-image'>
+        <Trans i18nKey='admin:reviewsCreateImageLabel' />
+      </Label>
       <div
         {...getRootProps({
           className: 'dropzone select-none self-center bs-32 is-32 border rounded-full cursor-pointer relative'
@@ -74,7 +78,10 @@ const ReviewImage: React.FC<ReviewImageProps> = ({ onImageUpload, defaultImage }
         ) : (
           <>
             <div className='bs-full flex flex-col items-center justify-center rounded-full p-3 text-center text-sm'>
-              Drag & Drop your files or <span className='text-primary'>Browse</span>
+              <Trans i18nKey='admin:dragDropText' />{' '}
+              <span className='text-primary'>
+                <Trans i18nKey='admin:browseText' />
+              </span>
             </div>
           </>
         )}

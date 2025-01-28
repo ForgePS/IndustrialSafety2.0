@@ -7,6 +7,8 @@ import { useState } from 'react'
 import { toast } from 'sonner'
 import { TbX } from 'react-icons/tb'
 import { Button } from '@repo/ui/components/ui/button'
+import Trans from '@repo/i18n/Trans'
+import { useTranslation } from 'react-i18next'
 import type { User } from '@supabase/supabase-js'
 
 // Server Action Imports
@@ -29,13 +31,16 @@ const ResendVerifyEmailButton = ({ searchParams, users }: { searchParams: Record
   // Vars
   const { email } = searchParams
 
+  // Hooks
+  const { t } = useTranslation()
+
   const handleClick = async () => {
     setIsLoading(true)
 
     try {
       // Check if email is present in the URL
       if (!email) {
-        showToast('error', 'Email not found in the URL. Please go to the login or register page and try again.')
+        showToast('error', t('auth:verifyEmailToastEmailNotFound'))
 
         return
       }
@@ -45,14 +50,14 @@ const ResendVerifyEmailButton = ({ searchParams, users }: { searchParams: Record
 
       // If user not found, show alert that says user doesn't exist
       if (!existingUserData) {
-        showToast('error', `User with email ${email} not found.`)
+        showToast('error', t('auth:verifyEmailToastUserNotFound', { email }))
 
         return
       }
 
       // If user's email is already verified, show alert that says email is already verified
       if (existingUserData.email_confirmed_at) {
-        showToast('error', 'Email is already verified. Please login to continue.')
+        showToast('error', t('auth:verifyEmailToastEmailVerified'))
 
         return
       }
@@ -67,10 +72,10 @@ const ResendVerifyEmailButton = ({ searchParams, users }: { searchParams: Record
         return
       }
 
-      showToast('success', `Verification email sent successfully to ${email}.`)
+      showToast('success', t('auth:verifyEmailToastSendSuccess', { email }))
     } catch (error) {
       console.error(error)
-      showToast('error', 'An unexpected error occurred. Please try again later.')
+      showToast('error', t('auth:verifyEmailToastError'))
     } finally {
       setIsLoading(false)
     }
@@ -78,7 +83,11 @@ const ResendVerifyEmailButton = ({ searchParams, users }: { searchParams: Record
 
   return (
     <Button onClick={handleClick} disabled={isLoading}>
-      {isLoading ? 'Sending...' : 'Resend Verification Email'}
+      {isLoading ? (
+        <Trans i18nKey='auth:verifyEmailResendButtonLoading' />
+      ) : (
+        <Trans i18nKey='auth:verifyEmailResendButton' />
+      )}
     </Button>
   )
 }

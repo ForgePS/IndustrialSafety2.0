@@ -16,6 +16,7 @@ import {
   DropdownMenuRadioItem
 } from '@repo/ui/components/ui/dropdown-menu'
 import { useSettings } from '@repo/ui/hooks/useSettings'
+import Trans from '@repo/i18n/Trans'
 import type { Mode } from '@repo/ui/types'
 
 const ModeDropdown = () => {
@@ -62,15 +63,15 @@ const ModeDropdown = () => {
         <DropdownMenuRadioGroup value={settings.mode}>
           <DropdownMenuRadioItem value='light' onClick={() => handleClick('light')} className='gap-2'>
             <TbSun className='text-xl' />
-            Light
+            <Trans i18nKey='layout:lightMode' />
           </DropdownMenuRadioItem>
           <DropdownMenuRadioItem value='dark' onClick={() => handleClick('dark')} className='gap-2'>
             <TbMoonStars className='text-xl' />
-            Dark
+            <Trans i18nKey='layout:darkMode' />
           </DropdownMenuRadioItem>
           <DropdownMenuRadioItem value='system' onClick={() => handleClick('system')} className='gap-2'>
             <TbDeviceDesktop className='text-xl' />
-            System
+            <Trans i18nKey='layout:systemMode' />
           </DropdownMenuRadioItem>
         </DropdownMenuRadioGroup>
       </DropdownMenuContent>

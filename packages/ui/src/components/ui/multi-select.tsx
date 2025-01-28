@@ -6,6 +6,7 @@ import { useCallback, useRef, useState, type KeyboardEvent } from 'react'
 // Third-party Imports
 import { TbChevronDown, TbX } from 'react-icons/tb'
 import { Command as CommandPrimitive } from 'cmdk'
+import { useTranslation } from 'react-i18next'
 
 // Component Imports
 import { Badge } from './badge'
@@ -26,6 +27,9 @@ export function MultiSelect({ options, selected, setSelected, className }: Multi
   const inputRef = useRef<HTMLInputElement>(null)
   const [open, setOpen] = useState(false)
   const [inputValue, setInputValue] = useState('')
+
+  // Hooks
+  const { t } = useTranslation()
 
   const handleUnselect = useCallback(
     (itemValue: string) => {
@@ -102,7 +106,7 @@ export function MultiSelect({ options, selected, setSelected, className }: Multi
             onValueChange={setInputValue}
             onBlur={() => setOpen(false)}
             onFocus={() => setOpen(true)}
-            placeholder='Select items...'
+            placeholder={t('packages-ui:multiSelectPlaceholder')}
             className='placeholder:text-muted-foreground flex-1 bg-transparent outline-none'
           />
         </div>

@@ -1,3 +1,6 @@
+// Third-party Imports
+import Trans from '@repo/i18n/Trans'
+
 // Type Imports
 import type { Database } from '@repo/supabase/types'
 
@@ -25,9 +28,11 @@ const FAQ = (props: Props) => {
     <>
       {data.length === 0 ? (
         <div className={cn('flex flex-col items-center justify-center gap-y-2 text-center', className)}>
-          <h1 className='text-textPrimary text-2xl font-medium'>No FAQs Available</h1>
+          <h1 className='text-textPrimary text-2xl font-medium'>
+            <Trans i18nKey='packages-ui:faqNoFaqsTitle' />
+          </h1>
           <p className='text-textSecondary'>
-            There are no FAQs available at the moment. Please check back later for more information.
+            <Trans i18nKey='packages-ui:faqNoFaqsDescription' />
           </p>
         </div>
       ) : accordionType === 'single' ? (

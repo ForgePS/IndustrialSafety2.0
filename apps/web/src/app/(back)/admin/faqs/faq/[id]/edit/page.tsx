@@ -2,6 +2,7 @@
 import { TbExclamationCircle } from 'react-icons/tb'
 import { createClient } from '@repo/supabase/server'
 import { Alert, AlertDescription } from '@repo/ui/components/ui/alert'
+import Trans from '@repo/i18n/Trans'
 
 // Component Imports
 import Edit from './Edit'
@@ -37,7 +38,10 @@ const EditPage = async (props: { params: Promise<{ id: number }> }) => {
       <Alert variant='destructive'>
         <TbExclamationCircle className='bs-5 is-5' />
         <AlertDescription>
-          {`There was an error fetching the faq. Error: ${faqError?.message || faqCategoryError?.message || 'Unknown error'}`}
+          <Trans
+            i18nKey='admin:faqsEditFetchError'
+            values={{ message: faqError?.message || faqCategoryError?.message || 'Unknown error' }}
+          />
         </AlertDescription>
       </Alert>
     )

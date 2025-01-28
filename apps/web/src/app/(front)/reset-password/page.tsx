@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { TbChevronLeft } from 'react-icons/tb'
 import { Button } from '@repo/ui/components/ui/button'
 import LeftSection from '@repo/ui/auth/LeftSection'
+import Trans from '@repo/i18n/Trans'
 
 // Component Imports
 import Logo from '@components/layout/front/Logo'
@@ -24,16 +25,20 @@ const ResetPassword = async () => {
         <div className='pbs-8 is-full absolute'>
           <Link href='/' className='is-10/12 md:is-1/2 lg:is-4/5 mli-auto flex items-center gap-2'>
             <TbChevronLeft className='is-[22px] bs-[22px] text-textSecondary' />
-            <span className='text-textSecondary'>Back to the website</span>
+            <span className='text-textSecondary'>
+              <Trans i18nKey='auth:backToWebsite' />
+            </span>
           </Link>
         </div>
         <div className='plb-[11rem] bs-full flex grow flex-col items-center justify-center'>
           <div className='is-10/12 md:is-1/2 lg:is-4/5 mli-auto flex flex-col gap-6'>
             <Logo appName={appName} />
             <div className='flex flex-col gap-y-1.5'>
-              <h1 className='text-textPrimary text-2xl font-semibold'>Reset Password</h1>
+              <h1 className='text-textPrimary text-2xl font-semibold'>
+                <Trans i18nKey='auth:resetPasswordTitle' />
+              </h1>
               <p className='text-textSecondary'>
-                Please enter your current password and choose a new password to update your account security.
+                <Trans i18nKey='auth:resetPasswordDescription' />
               </p>
             </div>
             <div className='flex flex-col gap-4'>
@@ -41,7 +46,9 @@ const ResetPassword = async () => {
               <Button variant='ghostPrimary' asChild>
                 <Link href='/dashboard' className='flex items-center gap-x-2'>
                   <TbChevronLeft className='is-[22px] bs-[22px]' />
-                  <span>Go to Dashboard</span>
+                  <span>
+                    <Trans i18nKey='auth:goToDashboard' />
+                  </span>
                 </Link>
               </Button>
             </div>

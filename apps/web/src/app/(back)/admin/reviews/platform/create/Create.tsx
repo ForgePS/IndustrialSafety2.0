@@ -18,16 +18,20 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '
 import SubmitButton from '@repo/ui/components/SubmitButton'
 import { createClient } from '@repo/supabase/client'
 import { toast } from '@repo/ui/utils/toast'
+import Trans from '@repo/i18n/Trans'
+import { useTranslation } from 'react-i18next'
+import type { TFunction } from 'i18next'
 
 // Component Imports
 import PlatformImage from './PlatformImage'
 
 // Define Zod Schema for validation
-const platformSchema = z.object({
-  platform_name: z.string().min(1, { message: 'Platform name is required.' }),
-  slug: z.string().optional(),
-  logo: z.string().optional().nullable()
-})
+const platformSchema = (t: TFunction) =>
+  z.object({
+    platform_name: z.string().min(1, { message: t('admin:platformNameRequiredError') }),
+    slug: z.string().optional(),
+    logo: z.string().optional().nullable()
+  })
 
 // Helper function to generate a slug from a string
 export const generateSlug = (text: string): string => {
@@ -46,11 +50,14 @@ const CreatePlatform = () => {
 
   // Vars
   const supabase = createClient()
+
+  // Hooks
   const router = useRouter()
+  const { t } = useTranslation()
 
   // Form setup
-  const form = useForm<z.infer<typeof platformSchema>>({
-    resolver: zodResolver(platformSchema),
+  const form = useForm<z.infer<ReturnType<typeof platformSchema>>>({
+    resolver: zodResolver(platformSchema(t)),
     defaultValues: {
       platform_name: '',
       slug: '',
@@ -59,7 +66,7 @@ const CreatePlatform = () => {
   })
 
   // Form submission handler
-  const onSubmit = async (data: z.infer<typeof platformSchema>) => {
+  const onSubmit = async (data: z.infer<ReturnType<typeof platformSchema>>) => {
     const { error } = await supabase.from('review_platforms').insert([
       {
         platform_name: data.platform_name,
@@ -70,34 +77,34 @@ const CreatePlatform = () => {
 
     if (error) {
       console.error('Error creating platform: ', error.message)
-      toast('error', 'Error creating platform: ' + error.message)
+      toast('error', t('admin:reviewPlatformsCreateError', { message: error.message }))
 
       return
     }
 
-    toast('success', 'Platform created successfully')
+    toast('success', t('admin:reviewPlatformsCreateSuccess'))
     router.push('/admin/reviews/platform')
     router.refresh()
   }
 
   // Create and create another handler
-  const createAndCreateAnother = async (data: z.infer<typeof platformSchema>) => {
+  const createAndCreateAnother = async (data: z.infer<ReturnType<typeof platformSchema>>) => {
     const { error } = await supabase.from('review_platforms').insert([
       {
         platform_name: data.platform_name,
-        slug: data.slug || data.platform_name.toLowerCase().replace(/\s+/g, '-'),
+        slug: generateSlug(data.slug?.trim() ? data.slug : data.platform_name),
         logo: data.logo
       }
     ])
 
     if (error) {
       console.error('Error creating platform: ', error.message)
-      toast('error', 'Error creating platform: ' + error.message)
+      toast('error', t('admin:reviewPlatformsCreateError', { message: error.message }))
 
       return
     }
 
-    toast('success', 'Platform created successfully')
+    toast('success', t('admin:reviewPlatformsCreateSuccess'))
     form.reset()
     setFile(undefined)
     router.refresh()
@@ -110,14 +117,18 @@ const CreatePlatform = () => {
   return (
     <div className='flex flex-col gap-y-8'>
       <div>
-        <h1 className='text-textPrimary text-3xl font-bold'>Create Review Platform</h1>
+        <h1 className='text-textPrimary text-3xl font-bold'>
+          <Trans i18nKey='admin:reviewPlatformsCreateTitle' />
+        </h1>
       </div>
       <Form {...form}>
         <form>
           <div className='grid grid-cols-2 gap-6'>
             <Card className='col-span-full lg:col-span-2'>
               <CardHeader className='border-be'>
-                <CardDescription className='font-medium'>Review Details</CardDescription>
+                <CardDescription className='font-medium'>
+                  <Trans i18nKey='admin:reviewDetailsSection' />
+                </CardDescription>
               </CardHeader>
               <CardContent className='pbs-6 flex flex-col gap-6'>
                 <div className='grid gap-6 md:grid-cols-2'>
@@ -127,11 +138,11 @@ const CreatePlatform = () => {
                     render={({ field }) => (
                       <FormItem className='is-full'>
                         <FormLabel>
-                          Platform Name
+                          <Trans i18nKey='admin:platformNameLabel' />
                           <sup className='text-destructive'>*</sup>
                         </FormLabel>
                         <FormControl>
-                          <Input placeholder='Enter platform name' {...field} />
+                          <Input placeholder={t('admin:platformNamePlaceholder')} {...field} />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -142,12 +153,16 @@ const CreatePlatform = () => {
                     name='slug'
                     render={({ field }) => (
                       <FormItem className='is-full'>
-                        <FormLabel>Platform Slug</FormLabel>
+                        <FormLabel>
+                          <Trans i18nKey='admin:platformSlugLabel' />
+                        </FormLabel>
                         <FormControl>
-                          <Input placeholder='Enter platform slug' {...field} />
+                          <Input placeholder={t('admin:platformSlugPlaceholder')} {...field} />
                         </FormControl>
                         <FormMessage />
-                        <small className='text-muted-foreground'>Leave blank to auto-generate from name</small>
+                        <small className='text-muted-foreground'>
+                          <Trans i18nKey='admin:autoGenerateSlugHelp' />
+                        </small>
                       </FormItem>
                     )}
                   />
@@ -158,18 +173,23 @@ const CreatePlatform = () => {
               </CardContent>
             </Card>
             <div className='col-span-full flex gap-4 max-sm:flex-col'>
-              <SubmitButton formAction={form.handleSubmit(onSubmit) as any} pendingText='Creating...'>
-                Create
+              <SubmitButton
+                formAction={form.handleSubmit(onSubmit) as any}
+                pendingText={<Trans i18nKey='admin:creatingStatus' />}
+              >
+                <Trans i18nKey='admin:createButton' />
               </SubmitButton>
               <SubmitButton
                 formAction={form.handleSubmit(createAndCreateAnother) as any}
-                pendingText='Creating...'
+                pendingText={<Trans i18nKey='admin:creatingStatus' />}
                 variant='tonalDefault'
               >
-                Create & create another
+                <Trans i18nKey='admin:createAndCreateAnotherButton' />
               </SubmitButton>
               <Button type='button' variant='tonalDefault' asChild>
-                <Link href='/admin/reviews/platform'>Cancel</Link>
+                <Link href='/admin/reviews/platform'>
+                  <Trans i18nKey='admin:cancelButton' />
+                </Link>
               </Button>
             </div>
           </div>

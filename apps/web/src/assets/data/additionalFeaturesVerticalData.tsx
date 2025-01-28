@@ -13,67 +13,68 @@ import {
   TbBook,
   TbAlignRight
 } from 'react-icons/tb'
+import Trans from '@repo/i18n/Trans'
 
 const data = [
   {
     icon: <TbElevator className='text-[32px]' />,
-    title: 'Easy Navigation',
-    description: 'Simple, intuitive chatbot interface.'
+    title: <Trans i18nKey='data:easyNavigationTitle' />,
+    description: <Trans i18nKey='data:easyNavigationDesc' />
   },
   {
     icon: <TbLayout2 className='text-[32px]' />,
-    title: 'Customizable Layout',
-    description: 'Adjust look and feel to match your brand.'
+    title: <Trans i18nKey='data:customizableLayoutTitle' />,
+    description: <Trans i18nKey='data:customizableLayoutDesc' />
   },
   {
     icon: <TbFileDiff className='text-[32px]' />,
-    title: 'Continuous Updates',
-    description: 'Regular updates to enhance performance.'
+    title: <Trans i18nKey='data:continuousUpdatesTitle' />,
+    description: <Trans i18nKey='data:continuousUpdatesDesc' />
   },
   {
     icon: <TbSearch className='text-[32px]' />,
-    title: 'Smart Search',
-    description: 'AI-driven search for quick and accurate answers.'
+    title: <Trans i18nKey='data:smartSearchTitle' />,
+    description: <Trans i18nKey='data:smartSearchDesc' />
   },
   {
     icon: <TbLayoutGridAdd className='text-[32px]' />,
-    title: 'Easy To Customize',
-    description: 'Modify chatbot settings without coding.'
+    title: <Trans i18nKey='data:easyCustomizeTitle' />,
+    description: <Trans i18nKey='data:easyCustomizeDesc' />
   },
   {
     icon: <TbBrandGithub className='text-[32px]' />,
-    title: 'Direct API Access',
-    description: 'Open API for seamless integrations.'
+    title: <Trans i18nKey='data:directApiTitle' />,
+    description: <Trans i18nKey='data:directApiDesc' />
   },
   {
     icon: <TbChartDonut4 className='text-[32px]' />,
-    title: '24/7 Support',
-    description: 'Dedicated support from our team.'
+    title: <Trans i18nKey='data:supportTitle' />,
+    description: <Trans i18nKey='data:supportDesc' />
   },
   {
     icon: <TbLanguage className='text-[32px]' />,
-    title: 'Multi Language',
-    description: 'Communicate globally with real-time translation.'
+    title: <Trans i18nKey='data:multiLanguageTitle' />,
+    description: <Trans i18nKey='data:multiLanguageDesc' />
   },
   {
     icon: <TbListDetails className='text-[32px]' />,
-    title: 'Quick Start Kit',
-    description: 'Get up and running in minutes.'
+    title: <Trans i18nKey='data:quickStartKitTitle' />,
+    description: <Trans i18nKey='data:quickStartKitDesc' />
   },
   {
     icon: <TbCode className='text-[32px]' />,
-    title: 'Quality Training Data',
-    description: 'Pre-trained AI models for accuracy.'
+    title: <Trans i18nKey='data:qualityTrainingDataTitle' />,
+    description: <Trans i18nKey='data:qualityTrainingDataDesc' />
   },
   {
     icon: <TbBook className='text-[32px]' />,
-    title: 'Detailed Documentation',
-    description: 'Comprehensive guides and tutorials.'
+    title: <Trans i18nKey='data:detailedDocumentationTitle' />,
+    description: <Trans i18nKey='data:detailedDocumentationDesc' />
   },
   {
     icon: <TbAlignRight className='text-[32px]' />,
-    title: 'RTL Support',
-    description: 'Fully supports right-to-left languages.'
+    title: <Trans i18nKey='data:rtlSupportTitle' />,
+    description: <Trans i18nKey='data:rtlSupportDesc' />
   }
 ]
 

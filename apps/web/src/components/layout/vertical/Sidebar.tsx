@@ -11,6 +11,7 @@ import Link from 'next/link'
 import {
   TbCrown,
   TbDashboard,
+  TbExternalLink,
   TbFileText,
   TbHome,
   TbLayoutGridAdd,
@@ -30,6 +31,7 @@ import {
   SidebarGroupLabel,
   SidebarHeader,
   SidebarMenu,
+  SidebarMenuAction,
   SidebarMenuButton,
   SidebarMenuItem,
   SidebarRail,
@@ -38,6 +40,8 @@ import {
 } from '@repo/ui/components/ui/sidebar'
 import { useAuthContext } from '@repo/auth/AuthProvider'
 import { AnyPermissionGuard, PermissionGuard } from '@repo/rbac/components'
+import Trans from '@repo/i18n/Trans'
+import { useTranslation } from 'react-i18next'
 import { cn } from '@repo/ui/lib/utils'
 import type { SidebarMenuButtonProps } from '@repo/ui/components/ui/sidebar'
 
@@ -79,6 +83,7 @@ const AppSidebar = ({ roles, permissions, appName }: { roles?: string[]; permiss
   // Hooks
   const { isImpersonating } = useAuthContext()
   const { isMobile, state } = useSidebar()
+  const { t } = useTranslation()
 
   return (
     <Sidebar
@@ -102,49 +107,71 @@ const AppSidebar = ({ roles, permissions, appName }: { roles?: string[]; permiss
         <SidebarGroup>
           <SidebarMenu>
             <SidebarMenuItem>
-              <MenuButton href={roles?.includes('admin') ? '/admin' : '/dashboard'} tooltip='Dashboard'>
+              <MenuButton href={roles?.includes('admin') ? '/admin' : '/dashboard'} tooltip={t('layout:dashboard')}>
                 <TbDashboard />
-                <span>Dashboard</span>
+                <span>
+                  <Trans i18nKey='layout:dashboard' />
+                </span>
               </MenuButton>
             </SidebarMenuItem>
             <SidebarMenuItem>
-              <MenuButton href={`/${roles?.includes('admin') ? 'admin' : 'dashboard'}/my-profile`} tooltip='My Profile'>
+              <MenuButton
+                href={`/${roles?.includes('admin') ? 'admin' : 'dashboard'}/my-profile`}
+                tooltip={t('layout:myProfile')}
+              >
                 <TbUser />
-                <span>My Profile</span>
-              </MenuButton>
-            </SidebarMenuItem>
-            <SidebarMenuItem>
-              <MenuButton href='/' tooltip='Landing Page'>
-                <TbHome />
-                <span>Landing Page</span>
+                <span>
+                  <Trans i18nKey='layout:myProfile' />
+                </span>
               </MenuButton>
             </SidebarMenuItem>
             {!roles?.includes('admin') && (
               <SidebarMenuItem>
-                <MenuButton href='/dashboard/billing' tooltip='Billing'>
+                <MenuButton href='/dashboard/billing' tooltip={t('layout:billing')}>
                   <TbFileText />
-                  <span>Billing</span>
+                  <span>
+                    <Trans i18nKey='layout:billing' />
+                  </span>
                 </MenuButton>
               </SidebarMenuItem>
             )}
+            <SidebarMenuItem>
+              <MenuButton href='/' tooltip={t('layout:landingPage')}>
+                <TbHome />
+                <span>
+                  <Trans i18nKey='layout:landingPage' />
+                </span>
+              </MenuButton>
+              <SidebarMenuAction className='pointer-events-none hover:bg-transparent [&>svg]:size-5'>
+                <TbExternalLink />
+              </SidebarMenuAction>
+            </SidebarMenuItem>
           </SidebarMenu>
         </SidebarGroup>
         <PermissionGuard permissions={permissions} permission='view_settings'>
           <SidebarGroup>
             <SidebarGroupLabel className='text-nowrap'>
-              {state === 'expanded' || isMobile ? 'Settings' : <SidebarSeparator className='!is-8' />}
+              {state === 'expanded' || isMobile ? (
+                <Trans i18nKey='layout:settings' />
+              ) : (
+                <SidebarSeparator className='!is-8' />
+              )}
             </SidebarGroupLabel>
             <SidebarMenu>
               <SidebarMenuItem>
-                <MenuButton href='/admin/settings/general-settings' tooltip='General Settings'>
+                <MenuButton href='/admin/settings/general-settings' tooltip={t('layout:generalSettings')}>
                   <TbSettings />
-                  <span>General Settings</span>
+                  <span>
+                    <Trans i18nKey='layout:generalSettings' />
+                  </span>
                 </MenuButton>
               </SidebarMenuItem>
               <SidebarMenuItem>
-                <MenuButton href='/admin/settings/payment-providers' tooltip='Payment Providers'>
+                <MenuButton href='/admin/settings/payment-providers' tooltip={t('layout:paymentProviders')}>
                   <TbWallet />
-                  <span>Payment Providers</span>
+                  <span>
+                    <Trans i18nKey='layout:paymentProviders' />
+                  </span>
                 </MenuButton>
               </SidebarMenuItem>
             </SidebarMenu>
@@ -156,30 +183,40 @@ const AppSidebar = ({ roles, permissions, appName }: { roles?: string[]; permiss
         >
           <SidebarGroup>
             <SidebarGroupLabel className='text-nowrap'>
-              {state === 'expanded' || isMobile ? 'User Management' : <SidebarSeparator className='!is-8' />}
+              {state === 'expanded' || isMobile ? (
+                <Trans i18nKey='layout:userManagement' />
+              ) : (
+                <SidebarSeparator className='!is-8' />
+              )}
             </SidebarGroupLabel>
             <SidebarMenu>
               <PermissionGuard permissions={permissions} permission='view_users'>
                 <SidebarMenuItem>
-                  <MenuButton href='/admin/users' exactMatch={false} tooltip='Users'>
+                  <MenuButton href='/admin/users' exactMatch={false} tooltip={t('layout:users')}>
                     <TbUsers />
-                    <span>Users</span>
+                    <span>
+                      <Trans i18nKey='layout:users' />
+                    </span>
                   </MenuButton>
                 </SidebarMenuItem>
               </PermissionGuard>
               <PermissionGuard permissions={permissions} permission='view_roles'>
                 <SidebarMenuItem>
-                  <MenuButton href='/admin/roles' exactMatch={false} tooltip='Roles'>
+                  <MenuButton href='/admin/roles' exactMatch={false} tooltip={t('layout:roles')}>
                     <TbCrown />
-                    <span>Roles</span>
+                    <span>
+                      <Trans i18nKey='layout:roles' />
+                    </span>
                   </MenuButton>
                 </SidebarMenuItem>
               </PermissionGuard>
               <PermissionGuard permissions={permissions} permission='view_permission'>
                 <SidebarMenuItem>
-                  <MenuButton href='/admin/permissions' exactMatch={false} tooltip='Permissions'>
+                  <MenuButton href='/admin/permissions' exactMatch={false} tooltip={t('layout:permissions')}>
                     <TbLock />
-                    <span>Permissions</span>
+                    <span>
+                      <Trans i18nKey='layout:permissions' />
+                    </span>
                   </MenuButton>
                 </SidebarMenuItem>
               </PermissionGuard>
@@ -189,19 +226,27 @@ const AppSidebar = ({ roles, permissions, appName }: { roles?: string[]; permiss
         <PermissionGuard permissions={permissions} permission='view_faqs'>
           <SidebarGroup>
             <SidebarGroupLabel className='text-nowrap'>
-              {state === 'expanded' || isMobile ? 'FAQs' : <SidebarSeparator className='!is-8' />}
+              {state === 'expanded' || isMobile ? (
+                <Trans i18nKey='layout:faqs' />
+              ) : (
+                <SidebarSeparator className='!is-8' />
+              )}
             </SidebarGroupLabel>
             <SidebarMenu>
               <SidebarMenuItem>
-                <MenuButton href='/admin/faqs/category' exactMatch={false} tooltip='FAQ Category'>
+                <MenuButton href='/admin/faqs/category' exactMatch={false} tooltip={t('layout:faqCategory')}>
                   <TbLayoutGridAdd />
-                  <span>Category</span>
+                  <span>
+                    <Trans i18nKey='layout:category' />
+                  </span>
                 </MenuButton>
               </SidebarMenuItem>
               <SidebarMenuItem>
-                <MenuButton href='/admin/faqs/faq' exactMatch={false} tooltip='FAQs'>
+                <MenuButton href='/admin/faqs/faq' exactMatch={false} tooltip={t('layout:faqs')}>
                   <TbListDetails />
-                  <span>FAQ</span>
+                  <span>
+                    <Trans i18nKey='layout:faq' />
+                  </span>
                 </MenuButton>
               </SidebarMenuItem>
             </SidebarMenu>
@@ -210,19 +255,27 @@ const AppSidebar = ({ roles, permissions, appName }: { roles?: string[]; permiss
         <PermissionGuard permissions={permissions} permission='view_reviews'>
           <SidebarGroup>
             <SidebarGroupLabel className='text-nowrap'>
-              {state === 'expanded' || isMobile ? 'Reviews' : <SidebarSeparator className='!is-8' />}
+              {state === 'expanded' || isMobile ? (
+                <Trans i18nKey='layout:reviews' />
+              ) : (
+                <SidebarSeparator className='!is-8' />
+              )}
             </SidebarGroupLabel>
             <SidebarMenu>
               <SidebarMenuItem>
-                <MenuButton href='/admin/reviews/platform' exactMatch={false} tooltip='Review Platform'>
+                <MenuButton href='/admin/reviews/platform' exactMatch={false} tooltip={t('layout:reviewPlatform')}>
                   <TbTemplate />
-                  <span>Platform</span>
+                  <span>
+                    <Trans i18nKey='layout:platform' />
+                  </span>
                 </MenuButton>
               </SidebarMenuItem>
               <SidebarMenuItem>
-                <MenuButton href='/admin/reviews/review' exactMatch={false} tooltip='Reviews'>
+                <MenuButton href='/admin/reviews/review' exactMatch={false} tooltip={t('layout:reviews')}>
                   <TbStar />
-                  <span>Review</span>
+                  <span>
+                    <Trans i18nKey='layout:review' />
+                  </span>
                 </MenuButton>
               </SidebarMenuItem>
             </SidebarMenu>

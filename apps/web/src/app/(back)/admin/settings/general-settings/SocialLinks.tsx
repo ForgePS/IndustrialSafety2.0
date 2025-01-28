@@ -15,25 +15,32 @@ import { Button } from '@repo/ui/components/ui/button'
 import { CardContent } from '@repo/ui/components/ui/card'
 import type { SettingsConfiguration } from '@repo/supabase/settingsConfigurationTypes'
 import { createClient } from '@repo/supabase/client'
+import Trans from '@repo/i18n/Trans'
+import { useTranslation } from 'react-i18next'
+import type { TFunction } from 'i18next'
 
 // Define Zod Schema for validation
-const socialLinksSchema = z.object({
-  social_links: z.array(
-    z.object({
-      title: z.string().min(1, { message: 'Title must be at least 1 characters.' }),
-      icon: z.string().refine(val => val in Icons, { message: 'Invalid icon name.' }),
-      url: z.string().url({ message: 'Invalid URL' })
-    })
-  )
-})
+const socialLinksSchema = (t: TFunction) =>
+  z.object({
+    social_links: z.array(
+      z.object({
+        title: z.string().min(1, { message: t('admin:settingsSocialLinksTitleError') }),
+        icon: z.string().refine(val => val in Icons, { message: t('admin:invalidIconError') }),
+        url: z.string().url({ message: t('admin:settingsSocialLinksUrlError') })
+      })
+    )
+  })
 
 const SocialLinks = ({ settings }: { settings: SettingsConfiguration['general_settings'] }) => {
   // Vars
   const supabase = createClient()
 
+  // Hooks
+  const { t } = useTranslation()
+
   // react-hook-form integration with Zod schema validation
-  const form = useForm<z.infer<typeof socialLinksSchema>>({
-    resolver: zodResolver(socialLinksSchema),
+  const form = useForm<z.infer<ReturnType<typeof socialLinksSchema>>>({
+    resolver: zodResolver(socialLinksSchema(t)),
     defaultValues: {
       social_links: settings.social_links || []
     }
@@ -52,7 +59,7 @@ const SocialLinks = ({ settings }: { settings: SettingsConfiguration['general_se
     append({ title: '', icon: '', url: '' })
   }
 
-  const onSubmit = async (data: z.infer<typeof socialLinksSchema>) => {
+  const onSubmit = async (data: z.infer<ReturnType<typeof socialLinksSchema>>) => {
     const updatedSocialLinks = {
       social_links: data.social_links
     }
@@ -69,12 +76,19 @@ const SocialLinks = ({ settings }: { settings: SettingsConfiguration['general_se
 
     if (error) {
       console.error('Error updating social links: ', error.message)
-      toast.error('Error updating social links: ' + error.message)
+      toast.error(
+        <Trans
+          i18nKey='admin:settingsSocialLinksUpdateError'
+          values={{
+            message: error.message
+          }}
+        />
+      )
 
       return
     }
 
-    toast.success('Settings saved!', {
+    toast.success(<Trans i18nKey='admin:settingsToastSuccess' />, {
       cancel: {
         label: <TbX />,
         onClick: () => {}
@@ -99,14 +113,21 @@ const SocialLinks = ({ settings }: { settings: SettingsConfiguration['general_se
 
     if (error) {
       console.error('Error deleting social link: ', error.message)
-      toast.error('Error deleting social link: ' + error.message)
+      toast.error(
+        <Trans
+          i18nKey='admin:settingsSocialLinksDeleteError'
+          values={{
+            message: error.message
+          }}
+        />
+      )
 
       return
     }
 
     remove(id)
 
-    toast.success('Social Link deleted successfully', {
+    toast.success(<Trans i18nKey='admin:settingsSocialLinksDeleteSuccess' />, {
       dismissible: true,
       icon: <TbTrash className='size-6' />,
       duration: 3000
@@ -115,16 +136,24 @@ const SocialLinks = ({ settings }: { settings: SettingsConfiguration['general_se
 
   return (
     <CardContent className='pbs-6'>
-      <h1 className='mbs-6 mbe-2 text-textPrimary text-sm font-medium'>Social Links</h1>
+      <h1 className='mbs-6 mbe-2 text-textPrimary text-sm font-medium'>
+        <Trans i18nKey='admin:socialLinksSection' />
+      </h1>
       <Form {...form}>
         <form>
           <div className='overflow-x-auto rounded-md border'>
             <Table className='min-is-[800px]'>
               <TableHeader>
                 <TableRow>
-                  <TableHead className='text-left'>Title</TableHead>
-                  <TableHead className='text-left'>Tabler Icon</TableHead>
-                  <TableHead className='text-left'>URL</TableHead>
+                  <TableHead className='text-left'>
+                    <Trans i18nKey='admin:titleLabel' />
+                  </TableHead>
+                  <TableHead className='text-left'>
+                    <Trans i18nKey='admin:settingsSocialLinksTableIconColumn' />
+                  </TableHead>
+                  <TableHead className='text-left'>
+                    <Trans i18nKey='admin:settingsSocialLinksTableUrlColumn' />
+                  </TableHead>
                   <TableHead className='md:is-[80px]'></TableHead>
                 </TableRow>
               </TableHeader>
@@ -139,7 +168,7 @@ const SocialLinks = ({ settings }: { settings: SettingsConfiguration['general_se
                         render={({ field }) => (
                           <FormItem className='is-full'>
                             <FormControl>
-                              <Input placeholder='Enter social link title' {...field} />
+                              <Input placeholder={t('admin:settingsSocialLinksTitlePlaceholder')} {...field} />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
@@ -153,7 +182,7 @@ const SocialLinks = ({ settings }: { settings: SettingsConfiguration['general_se
                         render={({ field }) => (
                           <FormItem className='is-full'>
                             <FormControl>
-                              <Input placeholder='Enter Tabler social Icon' {...field} />
+                              <Input placeholder={t('admin:settingsSocialLinksIconPlaceholder')} {...field} />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
@@ -167,7 +196,7 @@ const SocialLinks = ({ settings }: { settings: SettingsConfiguration['general_se
                         render={({ field }) => (
                           <FormItem className='is-full'>
                             <FormControl>
-                              <Input placeholder='Enter social link URL' {...field} />
+                              <Input placeholder={t('admin:settingsSocialLinksUrlPlaceholder')} {...field} />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
@@ -192,14 +221,14 @@ const SocialLinks = ({ settings }: { settings: SettingsConfiguration['general_se
           </div>
           <div className='is-full mbs-4 flex items-center justify-center gap-4 max-sm:flex-col'>
             <Button type='button' variant='tonalDefault' onClick={addSocialLink} className='max-sm:is-full'>
-              Add to social links
+              <Trans i18nKey='admin:settingsSocialLinksAddButton' />
             </Button>
             <SubmitButton
               formAction={form.handleSubmit(onSubmit) as any}
               className='max-sm:is-full'
-              pendingText='Saving Changes...'
+              pendingText={<Trans i18nKey='admin:settingsApplicationSavingChanges' />}
             >
-              Save Changes
+              <Trans i18nKey='admin:settingsSaveChanges' />
             </SubmitButton>
           </div>
         </form>

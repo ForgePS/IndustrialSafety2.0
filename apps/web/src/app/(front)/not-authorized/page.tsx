@@ -2,7 +2,7 @@
 import NotAuthorized from '@repo/ui/components/NotAuthorized'
 
 export const metadata = {
-  title: 'Not Authorized',
+  title: 'Not Authorized'
 }
 
 const NotAuthorizedPage = () => {

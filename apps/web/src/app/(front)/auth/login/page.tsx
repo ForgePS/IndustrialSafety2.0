@@ -6,6 +6,7 @@ import { TbChevronLeft } from 'react-icons/tb'
 import LeftSection from '@repo/ui/auth/LeftSection'
 import OauthProviders from '@repo/ui/providers/OauthProviders'
 import { createServiceRoleClient } from '@repo/supabase/server'
+import Trans from '@repo/i18n/Trans'
 import { cn } from '@repo/ui/lib/utils'
 
 // Component Imports
@@ -38,21 +39,29 @@ const Login = async () => {
         <div className='pbs-8 is-full absolute'>
           <Link href='/' className='is-10/12 md:is-1/2 lg:is-4/5 mli-auto flex items-center gap-2'>
             <TbChevronLeft className='is-[22px] bs-[22px] text-textSecondary' />
-            <span className='text-textSecondary'>Back to the website</span>
+            <span className='text-textSecondary'>
+              <Trans i18nKey='auth:backToWebsite' />
+            </span>
           </Link>
         </div>
         <div className='plb-[7rem] bs-full flex grow flex-col items-center justify-center'>
           <div className='is-10/12 md:is-1/2 lg:is-4/5 mli-auto flex flex-col gap-6'>
             <Logo appName={appName} />
             <div className='flex flex-col gap-y-1.5'>
-              <h1 className='text-textPrimary text-2xl font-semibold'>{`Sign in to ${appName}`}</h1>
-              <p className='text-textSecondary'>Ship Faster and Focus on Growth</p>
+              <h1 className='text-textPrimary text-2xl font-semibold'>
+                <Trans i18nKey='auth:loginTitle' values={{ appName }} />
+              </h1>
+              <p className='text-textSecondary'>
+                <Trans i18nKey='auth:authHeroDescription' />
+              </p>
             </div>
             {renderMagicLink && (
               <p className='text-textSecondary flex gap-x-1'>
-                <span>Sign in with</span>
+                <span>
+                  <Trans i18nKey='auth:authSignInWithText' />
+                </span>
                 <Link href='/auth/magic-link' className='text-primary'>
-                  Magic Link
+                  <Trans i18nKey='auth:authMagicLinkButton' />
                 </Link>
               </p>
             )}
@@ -64,9 +73,11 @@ const Login = async () => {
                     'justify-start': !renderPassword
                   })}
                 >
-                  <span className='text-textSecondary'>New on our platform?</span>
+                  <span className='text-textSecondary'>
+                    <Trans i18nKey='auth:loginSignUpText' />
+                  </span>
                   <Link href='/auth/register' className='text-primary'>
-                    Create an account
+                    <Trans i18nKey='auth:loginSignUpLink' />
                   </Link>
                 </p>
               )}
@@ -75,7 +86,9 @@ const Login = async () => {
                   {!renderPassword && !renderMagicLink ? null : (
                     <div className='flex items-center gap-4'>
                       <hr className='flex-1' />
-                      <span className='text-textPrimary text-base'>or</span>
+                      <span className='text-textPrimary text-base'>
+                        <Trans i18nKey='auth:dividerText' />
+                      </span>
                       <hr className='flex-1' />
                     </div>
                   )}

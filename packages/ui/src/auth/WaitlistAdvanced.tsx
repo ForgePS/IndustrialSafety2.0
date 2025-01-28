@@ -7,16 +7,16 @@ import {
   TbBrandYoutube,
   TbCheck
 } from 'react-icons/tb'
+import Trans from '@repo/i18n/Trans'
 
 // Component Imports
 import Logo from '@components/layout/front/Logo'
-
 import { Button } from '@repo/ui/components/ui/button'
-import { Input } from '@repo/ui/components/ui/input'
 import { Label } from '@repo/ui/components/ui/label'
 import { Avatar, AvatarFallback } from '@repo/ui/components/ui/avatar'
 import { Dialog, DialogContent, DialogDescription, DialogTitle, DialogTrigger } from '@repo/ui/components/ui/dialog'
 import LeftSection from '@repo/ui/auth/LeftSection'
+import TranslatedInput from './TranslatedInput'
 
 // Util Imports
 import { getAppName } from '@/utils/getAppName'
@@ -33,25 +33,33 @@ const WaitListAdvanced = async () => {
           <div className='is-10/12 md:is-1/2 lg:is-4/5 mli-auto mbs-6 flex flex-col gap-6'>
             <Logo appName={appName} />
             <div className='flex flex-col gap-y-1.5'>
-              <h1 className='text-textPrimary text-2xl font-semibold'>Get early access!</h1>
-              <p className='text-textSecondary'>Join the waitlist for the best SaaS Nextjs Boilerplate</p>
+              <h1 className='text-textPrimary text-2xl font-semibold'>
+                <Trans i18nKey='packages-ui:waitlistTitle' />
+              </h1>
+              <p className='text-textSecondary'>
+                <Trans i18nKey='packages-ui:waitlistDescription' />
+              </p>
             </div>
             <div className='flex flex-col gap-4'>
               <div>
                 <Label htmlFor='name'>
-                  Name<sup className='text-destructive'>*</sup>
+                  <Trans i18nKey='packages-ui:nameLabel' />
+                  <sup className='text-destructive'>*</sup>
                 </Label>
-                <Input id='name' type='text' placeholder='Enter your name' />
+                <TranslatedInput id='name' type='text' translationKey='namePlaceholder' />
               </div>
               <div>
                 <Label htmlFor='email'>
-                  Email address<sup className='text-destructive'>*</sup>
+                  <Trans i18nKey='packages-ui:emailLabel' />
+                  <sup className='text-destructive'>*</sup>
                 </Label>
-                <Input id='email' type='email' placeholder='Enter your email address' />
+                <TranslatedInput id='email' type='email' translationKey='emailPlaceholder' />
               </div>
               <Dialog>
                 <DialogTrigger asChild>
-                  <Button>Join the waitlist</Button>
+                  <Button>
+                    <Trans i18nKey='packages-ui:waitlistJoinButton' />
+                  </Button>
                 </DialogTrigger>
                 <DialogContent className='sm:max-is-[425px]'>
                   <DialogTitle hidden />
@@ -64,22 +72,29 @@ const WaitListAdvanced = async () => {
                     </div>
                     <div>
                       <p className='text-textPrimary text-center text-2xl font-semibold'>
-                        We&apos;ve added you to out waiting list!
+                        <Trans i18nKey='packages-ui:waitlistSuccessTitle' />
                       </p>
                       <p className='text-textSecondary text-center'>
-                        We&apos;ll let you know when <span className='font-medium'>{appName}</span> is ready.
+                        <Trans
+                          i18nKey='packages-ui:waitlistSuccessDescription'
+                          values={{ appName }}
+                          components={{ 1: <span className='font-medium' /> }}
+                        />
                       </p>
                     </div>
                     <p className='text-textSecondary text-center text-sm'>
-                      {`${appName} is coming soon. Designed by`} <span className='underline'>@themeSelection</span> to
-                      give you back your time.
+                      <Trans
+                        i18nKey='packages-ui:waitlistFooterText'
+                        values={{ appName }}
+                        components={{ 1: <span className='font-medium' /> }}
+                      />
                     </p>
                   </div>
                 </DialogContent>
               </Dialog>
             </div>
             <p className='text-textSecondary text-center'>
-              {`This website is fully made using ${appName}. ©${new Date().getFullYear()} ${appName}. All rights reserved.`}
+              <Trans i18nKey='packages-ui:waitlistCopyright' values={{ appName, year: new Date().getFullYear() }} />
             </p>
             <div className='flex items-center justify-center gap-2'>
               <Avatar className='bg-neutral/20 bs-[30px] is-[30px]'>

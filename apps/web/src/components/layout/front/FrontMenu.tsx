@@ -15,6 +15,7 @@ import { Sheet, SheetContent, SheetDescription, SheetTitle, SheetTrigger } from 
 import { Button } from '@repo/ui/components/ui/button'
 import ReactPerfectScrollbar from '@repo/ui/components/ReactPerfectScrollbar'
 import { useAuthContext } from '@repo/auth/AuthProvider'
+import Trans from '@repo/i18n/Trans'
 import { cn } from '@repo/ui/lib/utils'
 
 type WrapperProps = {
@@ -114,7 +115,9 @@ const FrontMenu = ({ isBlogEnabled }: { isBlogEnabled: boolean }) => {
         onClick={() => setOpen(false)}
       >
         <TbCrown className='text-2xl xl:hidden' />
-        <span>Features</span>
+        <span>
+          <Trans i18nKey='layout:features' />
+        </span>
       </Link>
       <Link
         href='/#pricing-section'
@@ -127,7 +130,9 @@ const FrontMenu = ({ isBlogEnabled }: { isBlogEnabled: boolean }) => {
         onClick={() => setOpen(false)}
       >
         <TbCurrencyDollar className='text-2xl xl:hidden' />
-        <span>Pricing & Plans</span>
+        <span>
+          <Trans i18nKey='layout:pricingAndPlans' />
+        </span>
       </Link>
       {isBlogEnabled && (
         <Link
@@ -141,7 +146,9 @@ const FrontMenu = ({ isBlogEnabled }: { isBlogEnabled: boolean }) => {
           onClick={() => setOpen(false)}
         >
           <TbClipboardList className='text-2xl xl:hidden' />
-          <span>Blog</span>
+          <span>
+            <Trans i18nKey='layout:blog' />
+          </span>
         </Link>
       )}
       <Link
@@ -155,7 +162,9 @@ const FrontMenu = ({ isBlogEnabled }: { isBlogEnabled: boolean }) => {
         onClick={() => setOpen(false)}
       >
         <TbListDetails className='text-2xl xl:hidden' />
-        <span>FAQ</span>
+        <span>
+          <Trans i18nKey='layout:faq' />
+        </span>
       </Link>
     </Wrapper>
   )

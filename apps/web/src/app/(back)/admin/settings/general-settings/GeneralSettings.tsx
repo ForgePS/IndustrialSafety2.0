@@ -10,6 +10,7 @@ import { useRouter, useSearchParams } from 'next/navigation'
 import { TbWorld, TbLayout2, TbHeart, TbAdjustments, TbShare } from 'react-icons/tb'
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@repo/ui/components/ui/tabs'
 import { Card, CardHeader } from '@repo/ui/components/ui/card'
+import Trans from '@repo/i18n/Trans'
 import type { SettingsConfiguration } from '@repo/supabase/settingsConfigurationTypes'
 
 // Component Imports
@@ -44,30 +45,32 @@ const GeneralSettings = ({ settings }: { settings: SettingsConfiguration['genera
 
   return (
     <>
-      <h1 className='mbe-6 text-2xl font-semibold sm:text-3xl'>General Settings</h1>
+      <h1 className='mbe-6 text-2xl font-semibold sm:text-3xl'>
+        <Trans i18nKey='admin:settingsGeneralTitle' />
+      </h1>
       <Card>
         <Tabs value={activeTab} onValueChange={handleTabChange}>
           <CardHeader className='border-be'>
             <TabsList className='flex flex-wrap justify-start gap-y-4 bg-transparent'>
               <TabsTrigger value='application' className='flex items-center gap-2'>
                 <TbWorld className='bs-5 is-5' />
-                Application
+                <Trans i18nKey='admin:settingsTabApplication' />
               </TabsTrigger>
               <TabsTrigger value='tracking' className='flex items-center gap-2'>
                 <TbLayout2 className='bs-5 is-5' />
-                Tracking
+                <Trans i18nKey='admin:trackingSection' />
               </TabsTrigger>
               <TabsTrigger value='social-links' className='flex items-center gap-2'>
                 <TbHeart className='bs-5 is-5' />
-                Social Links
+                <Trans i18nKey='admin:socialLinksSection' />
               </TabsTrigger>
               <TabsTrigger value='pages-components' className='flex items-center gap-2'>
                 <TbAdjustments className='bs-5 is-5' />
-                Pages & Components
+                <Trans i18nKey='admin:settingsTabPagesComponents' />
               </TabsTrigger>
               <TabsTrigger value='share' className='flex items-center gap-2'>
                 <TbShare className='bs-5 is-5' />
-                Share This (Blog)
+                <Trans i18nKey='admin:settingsTabShare' />
               </TabsTrigger>
             </TabsList>
           </CardHeader>

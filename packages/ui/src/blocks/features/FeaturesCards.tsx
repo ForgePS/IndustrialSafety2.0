@@ -15,7 +15,7 @@ type CardData = {
   icon: ReactNode
   title: ReactNode
   description?: ReactNode
-  features: string[]
+  features: ReactNode[]
   className?: string
 }
 

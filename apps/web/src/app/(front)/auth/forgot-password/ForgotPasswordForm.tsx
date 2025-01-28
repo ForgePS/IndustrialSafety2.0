@@ -15,6 +15,8 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '
 import { Input } from '@repo/ui/components/ui/input'
 import SubmitButton from '@repo/ui/components/SubmitButton'
 import { forgotPasswordFormSchema, useForgotPassword } from '@repo/auth/forgot-password'
+import Trans from '@repo/i18n/Trans'
+import { useTranslation } from 'react-i18next'
 import type { User } from '@supabase/supabase-js'
 import type { ForgotPasswordFormData } from '@repo/auth/forgot-password'
 
@@ -24,13 +26,15 @@ const ForgotPasswordForm = ({ users }: { users: User[] | null }) => {
 
   // Hooks
   const router = useRouter()
+  const { t } = useTranslation()
 
   const { handleForgotPassword, isSuccess } = useForgotPassword(
     `${process.env.NEXT_PUBLIC_APP_URL}/auth/callback?next=/reset-password`
   )
 
+  // Vars
   const form = useForm<ForgotPasswordFormData>({
-    resolver: zodResolver(forgotPasswordFormSchema),
+    resolver: zodResolver(forgotPasswordFormSchema(t)),
     defaultValues: { email: '' }
   })
 
@@ -42,8 +46,7 @@ const ForgotPasswordForm = ({ users }: { users: User[] | null }) => {
     if (!existingUserData) {
       setShowAlert({
         show: true,
-        message:
-          'The email address you entered does not exist in our records. Please check the email address and try again.'
+        message: t('auth:forgotPasswordErrorUserNotFound')
 
         // 'User not found with the provided email address. Please sign up to create an account or try again with a different email address.'
       })
@@ -84,16 +87,20 @@ const ForgotPasswordForm = ({ users }: { users: User[] | null }) => {
       {showAlert.show && (
         <Alert variant='tonalDestructive'>
           <TbAlertTriangle className='is-6 bs-6' />
-          <AlertTitle>Reset Link Not Sent</AlertTitle>
+          <AlertTitle>
+            <Trans i18nKey='auth:forgotPasswordError' />
+          </AlertTitle>
           <AlertDescription>{showAlert.message}</AlertDescription>
         </Alert>
       )}
       {isSuccess ? (
         <Alert variant='tonalSuccess'>
           <TbCircleCheck className='is-6 bs-6' />
-          <AlertTitle>Reset Link Sent</AlertTitle>
+          <AlertTitle>
+            <Trans i18nKey='auth:forgotPasswordSuccess' />
+          </AlertTitle>
           <AlertDescription>
-            We have sent a reset link to your email address. Please check your inbox to reset your password.
+            <Trans i18nKey='auth:forgotPasswordSuccessDescription' />
           </AlertDescription>
         </Alert>
       ) : (
@@ -105,17 +112,21 @@ const ForgotPasswordForm = ({ users }: { users: User[] | null }) => {
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>
-                    Email address<sup className='text-destructive'>*</sup>
+                    <Trans i18nKey='auth:formEmailLabel' />
+                    <sup className='text-destructive'>*</sup>
                   </FormLabel>
                   <FormControl>
-                    <Input type='email' placeholder='Enter your email address' autoFocus {...field} />
+                    <Input type='email' placeholder={t('auth:formEmailPlaceholder')} autoFocus {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
             />
-            <SubmitButton formAction={form.handleSubmit(onSubmit) as any} pendingText='Sending Reset Link...'>
-              Send Reset Link
+            <SubmitButton
+              formAction={form.handleSubmit(onSubmit) as any}
+              pendingText={<Trans i18nKey='auth:forgotPasswordSubmitPendingText' />}
+            >
+              <Trans i18nKey='auth:forgotPasswordSubmitButton' />
             </SubmitButton>
           </form>
         </Form>

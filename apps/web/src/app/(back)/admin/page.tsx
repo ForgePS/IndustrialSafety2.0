@@ -1,6 +1,7 @@
 // Third-party Imports
 import { TbChartBar, TbCurrencyDollar, TbReceipt, TbRefresh, TbShoppingCart, TbUsers } from 'react-icons/tb'
 import { createClient } from '@repo/supabase/server'
+import Trans from '@repo/i18n/Trans'
 
 // Components Imports
 import CardStats from './CardStats'
@@ -14,37 +15,37 @@ import MRRGrowthChart from './MRRGrowthChart'
 // Vars
 const data = [
   {
-    title: 'Monthly Active Users',
+    title: <Trans i18nKey='admin:monthlyActiveUsers' />,
     stats: '8.25k',
     percentage: 15.4,
     icon: <TbUsers className='text-2xl' />
   },
   {
-    title: 'Customer Churn Rate',
+    title: <Trans i18nKey='admin:customerChurnRate' />,
     stats: '2.8%',
     percentage: -1.2,
     icon: <TbChartBar className='text-2xl' />
   },
   {
-    title: 'Monthly Recurring Revenue (MRR)',
+    title: <Trans i18nKey='admin:monthlyRecurringRevenue' />,
     stats: '$12.5k',
     percentage: 12.7,
     icon: <TbReceipt className='text-2xl' />
   },
   {
-    title: 'Average Revenue Per User (ARPU)',
+    title: <Trans i18nKey='admin:averageRevenuePerUser' />,
     stats: '$45.67',
     percentage: 8.9,
     icon: <TbCurrencyDollar className='text-2xl' />
   },
   {
-    title: 'Average Order value',
+    title: <Trans i18nKey='admin:averageOrderValue' />,
     stats: '$295.00',
     percentage: 5.4,
     icon: <TbShoppingCart className='text-2xl' />
   },
   {
-    title: 'Refunds',
+    title: <Trans i18nKey='admin:refunds' />,
     stats: '12',
     percentage: -6.3,
     icon: <TbRefresh className='text-2xl' />
@@ -77,7 +78,9 @@ const AdminPage = async () => {
   return (
     <div className='flex flex-col gap-y-8'>
       <header>
-        <h1 className='text-3xl font-bold'>Dashboard</h1>
+        <h1 className='text-3xl font-bold'>
+          <Trans i18nKey='admin:dashboardTitle' />
+        </h1>
       </header>
 
       <section className='grid grid-cols-6 gap-6 lg:grid-cols-3'>

@@ -17,6 +17,8 @@ import {
   useReactTable
 } from '@tanstack/react-table'
 import { TbArrowNarrowDown, TbArrowNarrowUp, TbHourglassEmpty } from 'react-icons/tb'
+import Trans from '@repo/i18n/Trans'
+import { useTranslation } from 'react-i18next'
 import type { ColumnDef, PaginationState, SortingState } from '@tanstack/react-table'
 
 // Components Imports
@@ -107,6 +109,7 @@ const DataTable = (props: Props) => {
   const searchParams = useSearchParams()
   const router = useRouter()
   const navigationPending = useRef(false)
+  const { t } = useTranslation()
 
   // Global filter state
   const [globalFilter, setGlobalFilter] = useState(searchParams.get('search') || '')
@@ -227,7 +230,7 @@ const DataTable = (props: Props) => {
             >
               {search.enabled && (
                 <DebouncedInput
-                  placeholder={search.placeholder ?? 'Search...'}
+                  placeholder={search.placeholder ?? t('packages-ui:dataTableSearch')}
                   value={globalFilter ?? ''}
                   onChange={value => handleSearchChange(String(value))}
                   className='sm:is-64'
@@ -237,7 +240,7 @@ const DataTable = (props: Props) => {
             </div>
           ) : search.enabled ? (
             <DebouncedInput
-              placeholder={search.placeholder ?? 'Search...'}
+              placeholder={search.placeholder ?? t('packages-ui:dataTableSearch')}
               value={globalFilter ?? ''}
               onChange={value => handleSearchChange(String(value))}
               className='sm:is-64'
@@ -290,7 +293,9 @@ const DataTable = (props: Props) => {
                       <TbHourglassEmpty className='text-2xl' />
                     </AvatarFallback>
                   </Avatar>
-                  <p className='text-textPrimary font-medium'>Loading...</p>
+                  <p className='text-textPrimary font-medium'>
+                    <Trans i18nKey='packages-ui:dataTableLoading' />
+                  </p>
                 </div>
               </TableCell>
             </TableRow>
@@ -313,7 +318,9 @@ const DataTable = (props: Props) => {
                       <TbHourglassEmpty className='text-2xl' />
                     </AvatarFallback>
                   </Avatar>
-                  <p className='text-textPrimary font-medium'>No Results</p>
+                  <p className='text-textPrimary font-medium'>
+                    <Trans i18nKey='packages-ui:dataTableNoResults' />
+                  </p>
                 </div>
               </TableCell>
             </TableRow>
@@ -323,7 +330,9 @@ const DataTable = (props: Props) => {
       <div className='pli-6 plb-4 flex flex-wrap items-center justify-end gap-4'>
         <div className='flex flex-wrap items-center gap-4'>
           <div className='space-i-2 flex items-center'>
-            <span className='text-muted-foreground text-nowrap text-sm'>Rows per page</span>
+            <span className='text-muted-foreground text-nowrap text-sm'>
+              <Trans i18nKey='packages-ui:dataTableRowsPerPage' />
+            </span>
             <Select value={pageSize.toString()} onValueChange={value => updatePageSize(Number(value))}>
               <SelectTrigger size='sm' className='is-16'>
                 <SelectValue />

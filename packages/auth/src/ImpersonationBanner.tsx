@@ -3,6 +3,7 @@
 // Third-party Imports
 import { TbAlertCircle } from 'react-icons/tb'
 import { Button } from '@repo/ui/components/ui/button'
+import Trans from '@repo/i18n/Trans'
 import { cn } from '@repo/ui/lib/utils'
 
 // Hook Imports
@@ -25,11 +26,12 @@ export function ImpersonationBanner() {
       <div className='flex items-center space-x-3'>
         <TbAlertCircle className='h-5 w-5' />
         <p className='text-sm'>
-          You are currently impersonating <span className='font-medium underline'>{impersonatedUser?.email}</span>
+          <Trans i18nKey='packages-auth:impersonatingUser' />{' '}
+          <span className='font-medium underline'>{impersonatedUser?.email}</span>
         </p>
       </div>
       <Button size='sm' variant='solidDestructive' onClick={() => stopImpersonation()}>
-        Exit Impersonation
+        <Trans i18nKey='packages-auth:exitImpersonation' />
       </Button>
     </div>
   )

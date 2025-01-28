@@ -4,6 +4,7 @@ import Link from 'next/link'
 // Third-party Imports
 import { TbDownload } from 'react-icons/tb'
 import { Button } from '@repo/ui/components/ui/button'
+import Trans from '@repo/i18n/Trans'
 
 // SVG Imports
 import Logo from '@/assets/svg/Logo'
@@ -12,10 +13,14 @@ const data = {
   logo: <Logo className='text-primary text-5xl' />,
   content: (
     <>
-      <div className='text-lg text-white sm:text-xl'>Ready to Elevate Your Customer Support?</div>
-      <h2 className='text-2xl font-semibold text-white sm:text-3xl'>Your Journey with ChatFlow AI Starts Here.</h2>
+      <div className='text-lg text-white sm:text-xl'>
+        <Trans i18nKey='data:readyToElevate' />
+      </div>
+      <h2 className='text-2xl font-semibold text-white sm:text-3xl'>
+        <Trans i18nKey='data:journeyStarts' />
+      </h2>
       <p className='text-base text-white'>
-        Automate, engage, and delight your customers effortlessly. Save time and boost satisfaction with ChatFlow AI.
+        <Trans i18nKey='data:automateDescription' />
       </p>
     </>
   ),
@@ -27,7 +32,7 @@ const data = {
       asChild
     >
       <Link href='/#pricing-section'>
-        Get Started with ChatFlow AI Now <TbDownload className='shrink-0 text-xl' />
+        <Trans i18nKey='data:getStartedButton' /> <TbDownload className='shrink-0 text-xl' />
       </Link>
     </Button>
   ),

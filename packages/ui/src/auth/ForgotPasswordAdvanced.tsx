@@ -3,14 +3,14 @@ import Link from 'next/link'
 
 // Third-party Imports
 import { TbChevronLeft } from 'react-icons/tb'
+import Trans from '@repo/i18n/Trans'
 
 // Component Imports
 import Logo from '@components/layout/front/Logo'
-
 import LeftSection from '@repo/ui/auth/LeftSection'
 import { Label } from '@repo/ui/components/ui/label'
-import { Input } from '@repo/ui/components/ui/input'
 import { Button } from '@repo/ui/components/ui/button'
+import TranslatedInput from './TranslatedInput'
 
 // Util Imports
 import { getAppName } from '@/utils/getAppName'
@@ -26,30 +26,39 @@ const ForgotPasswordAdvanced = async () => {
         <div className='pbs-8 is-full absolute'>
           <Link href='/' className='is-10/12 md:is-1/2 lg:is-4/5 mli-auto flex items-center gap-2'>
             <TbChevronLeft className='is-[22px] bs-[22px] text-textSecondary' />
-            <span className='text-textSecondary'>Back to the website</span>
+            <span className='text-textSecondary'>
+              <Trans i18nKey='packages-ui:backToWebsiteButton' />
+            </span>
           </Link>
         </div>
         <div className='plb-[15rem] bs-full flex grow flex-col items-center justify-center'>
           <div className='is-10/12 md:is-1/2 lg:is-4/5 mli-auto flex flex-col gap-6'>
             <Logo appName={appName} />
             <div className='flex flex-col gap-y-1.5'>
-              <h1 className='text-textPrimary text-2xl font-semibold'>Forgot Password?</h1>
+              <h1 className='text-textPrimary text-2xl font-semibold'>
+                <Trans i18nKey='packages-ui:forgotPasswordTitle' />
+              </h1>
               <p className='text-textSecondary'>
-                Enter your email and we&apos;ll send you instructions to reset your password
+                <Trans i18nKey='packages-ui:forgotPasswordDescription' />
               </p>
             </div>
             <div className='flex flex-col gap-4'>
               <div>
                 <Label htmlFor='email'>
-                  Email address<sup className='text-destructive'>*</sup>
+                  <Trans i18nKey='packages-ui:emailLabel' />
+                  <sup className='text-destructive'>*</sup>
                 </Label>
-                <Input id='email' type='email' placeholder='Enter your email address' />
+                <TranslatedInput id='email' type='email' translationKey='packages-ui:emailPlaceholder' />
               </div>
-              <Button>Send Reset Link</Button>
+              <Button>
+                <Trans i18nKey='packages-ui:sendResetLinkButton' />
+              </Button>
               <Button variant='ghostPrimary' asChild>
                 <Link href='/auth/login-v2' className='flex items-center gap-x-2'>
                   <TbChevronLeft className='is-[22px] bs-[22px]' />
-                  <span>Back to Login</span>
+                  <span>
+                    <Trans i18nKey='packages-ui:backToLoginButton' />
+                  </span>
                 </Link>
               </Button>
             </div>

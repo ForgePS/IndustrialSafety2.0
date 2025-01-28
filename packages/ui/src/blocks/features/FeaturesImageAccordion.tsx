@@ -25,7 +25,7 @@ type FeatureType = {
 
 type Props = {
   icon: ReactNode
-  content: string
+  content: ReactNode
   title: ReactNode
   description: ReactNode
   image: ImageType | ReactNode

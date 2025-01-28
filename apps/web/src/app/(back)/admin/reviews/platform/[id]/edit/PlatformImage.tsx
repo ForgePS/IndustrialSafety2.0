@@ -8,6 +8,8 @@ import { useDropzone } from 'react-dropzone'
 import { TbX } from 'react-icons/tb'
 import { Label } from '@repo/ui/components/ui/label'
 import { Button } from '@repo/ui/components/ui/button'
+import Trans from '@repo/i18n/Trans'
+import { useTranslation } from 'react-i18next'
 
 type PlatformImageProps = {
   onImageUpload: (file: string) => void
@@ -15,6 +17,8 @@ type PlatformImageProps = {
 }
 
 const PlatformImage: React.FC<PlatformImageProps> = ({ onImageUpload, defaultImage }) => {
+  // Hooks
+  const { t } = useTranslation()
   const [imageSrc, setImageSrc] = useState<string | undefined>(defaultImage)
 
   const { getRootProps, getInputProps } = useDropzone({
@@ -43,7 +47,9 @@ const PlatformImage: React.FC<PlatformImageProps> = ({ onImageUpload, defaultIma
 
   return (
     <div className='flex flex-col items-start gap-2'>
-      <Label htmlFor='reviewer-image'>Reviewer Image</Label>
+      <Label htmlFor='reviewer-image'>
+        <Trans i18nKey='admin:platformImageLabel' />
+      </Label>
       <div
         {...getRootProps({
           className: 'dropzone select-none self-center bs-32 is-32 border rounded-full cursor-pointer relative'
@@ -54,7 +60,7 @@ const PlatformImage: React.FC<PlatformImageProps> = ({ onImageUpload, defaultIma
           <>
             <img
               key={imageSrc}
-              alt={imageSrc}
+              alt={t('admin:reviewPlatformsEditImageAlt')}
               className='single-file-image bs-full is-full rounded-full object-cover'
               src={imageSrc}
             />
@@ -74,7 +80,10 @@ const PlatformImage: React.FC<PlatformImageProps> = ({ onImageUpload, defaultIma
         ) : (
           <>
             <div className='bs-full flex flex-col items-center justify-center rounded-full p-3 text-center text-sm'>
-              Drag & Drop your files or <span className='text-primary'>Browse</span>
+              <Trans i18nKey='admin:dragDropText' />{' '}
+              <span className='text-primary'>
+                <Trans i18nKey='admin:browseText' />
+              </span>
             </div>
           </>
         )}

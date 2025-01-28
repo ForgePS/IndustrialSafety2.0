@@ -1,3 +1,5 @@
+'use client'
+
 // React Imports
 import React from 'react'
 
@@ -10,6 +12,8 @@ import { renderers } from '@markdoc/markdoc'
 import { Card, CardContent } from '@repo/ui/components/ui/card'
 import { Button } from '@repo/ui/components/ui/button'
 import { Input } from '@repo/ui/components/ui/input'
+import Trans from '@repo/i18n/Trans'
+import { useTranslation } from 'react-i18next'
 import { cn } from '@repo/ui/lib/utils'
 import type { RenderableTreeNode } from '@markdoc/markdoc'
 
@@ -45,16 +49,21 @@ type Props = {
 }
 
 const BlogDetails = ({ postDetails, latestPosts, shareThisEnabled }: Props) => {
+  // Hooks
+  const { t } = useTranslation()
+
   return (
     <div className={cn('plb-10 sm:plb-20', frontCommonStyles.layoutSpacing)}>
       <div className='grid gap-8 sm:gap-12 lg:grid-cols-12'>
         <div className='flex flex-col gap-8 sm:gap-12 lg:sticky lg:top-20 lg:col-span-3 lg:self-start'>
           <TableOfContents />
           <div className='border-primary bg-primary/10 rounded-xl border p-6'>
-            <p className='text-primary mbe-4 text-xl font-semibold'>Looking for Laravel Starter kit?</p>
+            <p className='text-primary mbe-4 text-xl font-semibold'>
+              <Trans i18nKey='front-pages:blogLaravelStarterKit' />
+            </p>
             <Button className='is-full' asChild>
               <Link href='https://demos.themeselection.com/jetship-laravel-starter-kit' target='_blank'>
-                Grab it now
+                <Trans i18nKey='front-pages:blogGrabItNow' />
               </Link>
             </Button>
           </div>
@@ -68,12 +77,20 @@ const BlogDetails = ({ postDetails, latestPosts, shareThisEnabled }: Props) => {
             </Card>
             <div className='border-primary sm:plb-9 sm:pli-12 flex flex-col items-center gap-7 rounded-xl border bg-cover bg-center bg-no-repeat p-6 [background-image:url(/images/pages/hero-bg.png)]'>
               <div className='flex flex-col gap-1 text-center'>
-                <p className='text-primary text-base'>Stay Up-to-Date</p>
-                <h3 className='text-textPrimary text-3xl font-semibold'>Subscribe To Our Newsletter</h3>
-                <p className='text-textSecondary text-base'>You will never miss our updates, latest news etc.</p>
+                <p className='text-primary text-base'>
+                  <Trans i18nKey='front-pages:blogStayUpToDate' />
+                </p>
+                <h3 className='text-textPrimary text-3xl font-semibold'>
+                  <Trans i18nKey='front-pages:blogSubscribeNewsletter' />
+                </h3>
+                <p className='text-textSecondary text-base'>
+                  <Trans i18nKey='front-pages:blogNeverMissUpdates' />
+                </p>
               </div>
-              <Input size='lg' placeholder='Enter your email address' className='max-is-[400px]' />
-              <Button>Subscribe</Button>
+              <Input size='lg' placeholder={t('front-pages:blogEmailPlaceholder')} className='max-is-[400px]' />
+              <Button>
+                <Trans i18nKey='front-pages:blogSubscribeButton' />
+              </Button>
             </div>
           </div>
           {shareThisEnabled && <ShareLinks />}
@@ -83,7 +100,9 @@ const BlogDetails = ({ postDetails, latestPosts, shareThisEnabled }: Props) => {
       <div className='flex flex-col items-start gap-6'>
         <div className='flex items-center gap-3'>
           <TbFileInvoice className='text-2xl' />
-          <p className='text-textPrimary text-xl font-semibold'>Latest Blogs</p>
+          <p className='text-textPrimary text-xl font-semibold'>
+            <Trans i18nKey='front-pages:blogLatestBlogs' />
+          </p>
         </div>
         <div className='mbs-0 is-full grid gap-x-6 gap-y-12 md:grid-cols-3'>
           {latestPosts

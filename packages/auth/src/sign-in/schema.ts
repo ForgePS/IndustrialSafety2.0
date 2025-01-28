@@ -1,23 +1,35 @@
 // Third-party Imports
 import { z } from 'zod'
+import type { TFunction } from 'i18next'
 
 // Password Form Schema
-export const passwordSignInFormSchema = z.object({
-  email: z.string().min(1, { message: 'Email address is required.' }).email({
-    message: 'Please enter a valid email address.'
-  }),
-  password: z.string().min(1, { message: 'Password is required.' }).min(8, {
-    message: 'Password must be at least 8 characters.'
+export const passwordSignInFormSchema = (t: TFunction) =>
+  z.object({
+    email: z
+      .string()
+      .min(1, { message: t('packages-auth:emailRequired') })
+      .email({
+        message: t('packages-auth:emailInvalid')
+      }),
+    password: z
+      .string()
+      .min(1, { message: t('packages-auth:passwordRequired') })
+      .min(8, {
+        message: t('packages-auth:passwordMinLength')
+      })
   })
-})
 
-export type PasswordSignInFormData = z.infer<typeof passwordSignInFormSchema>
+export type PasswordSignInFormData = z.infer<ReturnType<typeof passwordSignInFormSchema>>
 
 // Magic Link Form Schema
-export const magicLinkFormSchema = z.object({
-  email: z.string().min(1, { message: 'Email address is required.' }).email({
-    message: 'Please enter a valid email address.'
+export const magicLinkFormSchema = (t: TFunction) =>
+  z.object({
+    email: z
+      .string()
+      .min(1, { message: t('packages-auth:emailRequired') })
+      .email({
+        message: t('packages-auth:emailInvalid')
+      })
   })
-})
 
-export type MagicLinkFormData = z.infer<typeof magicLinkFormSchema>
+export type MagicLinkFormData = z.infer<ReturnType<typeof magicLinkFormSchema>>

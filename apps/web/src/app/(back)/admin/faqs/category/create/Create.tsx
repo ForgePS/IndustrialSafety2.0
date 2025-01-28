@@ -16,12 +16,16 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '
 import SubmitButton from '@repo/ui/components/SubmitButton'
 import { createClient } from '@repo/supabase/client'
 import { toast } from '@repo/ui/utils/toast'
+import Trans from '@repo/i18n/Trans'
+import { useTranslation } from 'react-i18next'
+import type { TFunction } from 'i18next'
 
 // Define Zod Schema for validation
-const categorySchema = z.object({
-  title: z.string().min(3, { message: 'Title must be at least 3 characters.' }),
-  icon: z.string().refine(val => val in Icons, { message: 'Invalid icon name.' })
-})
+const categorySchema = (t: TFunction) =>
+  z.object({
+    title: z.string().min(3, { message: t('admin:faqCategoriesCreateNameError') }),
+    icon: z.string().refine(val => val in Icons, { message: t('admin:faqCategoriesCreateIconError') })
+  })
 
 const Create = () => {
   // Vars
@@ -29,10 +33,11 @@ const Create = () => {
 
   // Hooks
   const router = useRouter()
+  const { t } = useTranslation()
 
   // react-hook-form integration with Zod schema validation
-  const form = useForm<z.infer<typeof categorySchema>>({
-    resolver: zodResolver(categorySchema),
+  const form = useForm<z.infer<ReturnType<typeof categorySchema>>>({
+    resolver: zodResolver(categorySchema(t)),
     defaultValues: {
       title: '',
       icon: ''
@@ -40,7 +45,7 @@ const Create = () => {
   })
 
   // Form Submit Handler
-  const onSubmit = async (data: z.infer<typeof categorySchema>) => {
+  const onSubmit = async (data: z.infer<ReturnType<typeof categorySchema>>) => {
     const { error } = await supabase.from('faq_categories').insert([
       {
         title: data.title,
@@ -50,18 +55,18 @@ const Create = () => {
 
     if (error) {
       console.error('Error creating category: ', error.message)
-      toast('error', 'Error creating category: ' + error.message)
+      toast('error', t('admin:faqCategoriesCreateError', { message: error.message }))
 
       return
     }
 
-    toast('success', 'Category created successfully')
+    toast('success', t('admin:faqCategoriesCreateSuccess'))
     router.push('/admin/faqs/category')
     router.refresh()
   }
 
   // Form Submit Handler for Create & Create Another
-  const createAndCreateSubmit = async (data: z.infer<typeof categorySchema>) => {
+  const createAndCreateSubmit = async (data: z.infer<ReturnType<typeof categorySchema>>) => {
     const { error } = await supabase.from('faq_categories').insert([
       {
         title: data.title,
@@ -71,19 +76,21 @@ const Create = () => {
 
     if (error) {
       console.error('Error creating category: ', error.message)
-      toast('error', 'Error creating category: ' + error.message)
+      toast('error', t('admin:faqCategoriesCreateError', { message: error.message }))
 
       return
     }
 
-    toast('success', 'Category created successfully')
+    toast('success', t('admin:faqCategoriesCreateSuccess'))
     form.reset()
     router.refresh()
   }
 
   return (
     <>
-      <h2 className='mbe-6 text-2xl font-semibold sm:text-3xl'>Create FAQ Category</h2>
+      <h2 className='mbe-6 text-2xl font-semibold sm:text-3xl'>
+        <Trans i18nKey='admin:faqCategoriesCreateTitle' />
+      </h2>
       <Form {...form}>
         <form>
           <Card>
@@ -95,10 +102,11 @@ const Create = () => {
                   render={({ field }) => (
                     <FormItem className='is-full'>
                       <FormLabel>
-                        Category<span className='text-destructive'>*</span>
+                        <Trans i18nKey='admin:categoryLabel' />
+                        <span className='text-destructive'>*</span>
                       </FormLabel>
                       <FormControl>
-                        <Input placeholder='Enter faq category' {...field} />
+                        <Input placeholder={t('admin:faqCategoriesCreateNamePlaceholder')} {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -110,10 +118,11 @@ const Create = () => {
                   render={({ field }) => (
                     <FormItem className='is-full'>
                       <FormLabel>
-                        Table Icon Name<span className='text-destructive'>*</span>
+                        <Trans i18nKey='admin:faqCategoriesIconLabel' />
+                        <span className='text-destructive'>*</span>
                       </FormLabel>
                       <FormControl>
-                        <Input placeholder='Enter table icon name' {...field} />
+                        <Input placeholder={t('admin:faqCategoriesCreateIconPlaceholder')} {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -123,14 +132,19 @@ const Create = () => {
             </CardContent>
           </Card>
           <div className='mbs-6 flex justify-start gap-4'>
-            <SubmitButton formAction={form.handleSubmit(onSubmit) as any} pendingText='Creating...'>
-              Create
+            <SubmitButton
+              formAction={form.handleSubmit(onSubmit) as any}
+              pendingText={<Trans i18nKey='admin:creatingStatus' />}
+            >
+              <Trans i18nKey='admin:createButton' />
             </SubmitButton>
             <SubmitButton formAction={form.handleSubmit(createAndCreateSubmit) as any} variant='tonalDefault'>
-              Create & create another
+              <Trans i18nKey='admin:createAndCreateAnotherButton' />
             </SubmitButton>
-            <Button type='button' variant='tonalDefault'>
-              <Link href='/admin/faqs/category'>Cancel</Link>
+            <Button type='button' variant='tonalDefault' asChild>
+              <Link href='/admin/faqs/category'>
+                <Trans i18nKey='admin:cancelButton' />
+              </Link>
             </Button>
           </div>
         </form>

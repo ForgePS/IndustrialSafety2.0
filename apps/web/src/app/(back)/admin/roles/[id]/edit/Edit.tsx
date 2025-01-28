@@ -20,6 +20,8 @@ import { toast } from '@repo/ui/utils/toast'
 import DeleteDialog from '@repo/ui/components/DeleteDialog'
 import SubmitButton from '@repo/ui/components/SubmitButton'
 import { createClient } from '@repo/supabase/client'
+import Trans from '@repo/i18n/Trans'
+import { useTranslation } from 'react-i18next'
 import type { Database } from '@repo/supabase/types'
 
 // Components imports
@@ -59,6 +61,7 @@ const Edit = ({
 
   // Hooks
   const router = useRouter()
+  const { t } = useTranslation()
 
   // Form setup
   const form = useForm<z.infer<typeof roleSchema>>({
@@ -89,13 +92,13 @@ const Edit = ({
       const { isRoleExists, isHierarchyExists } = await checkDuplicates(data.role, data.hierarchy)
 
       if (isRoleExists) {
-        toast('error', 'This role name already exists')
+        toast('error', t('admin:rolesActionsDuplicateNameError'))
 
         return
       }
 
       if (isHierarchyExists) {
-        toast('error', 'This hierarchy level already exists')
+        toast('error', t('admin:rolesActionsDuplicateHierarchyError'))
 
         return
       }
@@ -110,7 +113,7 @@ const Edit = ({
         .eq('id', roleData.id)
 
       if (roleError) {
-        toast('error', `Failed to update the role: ${roleError.message}`)
+        toast('error', t('admin:rolesActionsUpdateRoleError', { message: roleError.message }))
 
         return
       }
@@ -122,7 +125,7 @@ const Edit = ({
         .eq('role_id', roleData.id)
 
       if (permissionsFetchError) {
-        toast('error', `Failed to fetch existing permissions: ${permissionsFetchError.message}`)
+        toast('error', t('admin:rolesActionsFetchPermissionsError', { message: permissionsFetchError.message }))
 
         return
       }
@@ -150,7 +153,7 @@ const Edit = ({
           .insert(permissionsToAdd.map(id => ({ role_id: roleData.id, permission_id: id })))
 
         if (addError) {
-          toast('error', `Failed to add new permissions: ${addError.message}`)
+          toast('error', t('admin:rolesActionsAddPermissionsError', { message: addError.message }))
 
           return
         }
@@ -165,32 +168,36 @@ const Edit = ({
           .in('permission_id', permissionsToRemove)
 
         if (removeError) {
-          toast('error', `Failed to remove old permissions: ${removeError.message}`)
+          toast('error', t('admin:rolesActionsRemovePermissionsError', { message: removeError.message }))
 
           return
         }
       }
 
-      toast('success', 'Role updated successfully')
+      toast('success', t('admin:rolesActionsUpdateSuccess'))
       router.push('/admin/roles')
       router.refresh()
     } catch (error: any) {
-      toast('error', 'Error updating role: ' + error.message)
+      toast('error', t('admin:rolesActionsUpdateError', { message: error.message }))
     }
   }
 
   return (
     <>
       <div className='mbe-6 flex items-center justify-between gap-4'>
-        <h2 className='text-2xl font-semibold sm:text-3xl'>Edit Role</h2>
+        <h2 className='text-2xl font-semibold sm:text-3xl'>
+          <Trans i18nKey='admin:rolesEditTitle' />
+        </h2>
         <div className='flex items-center gap-3'>
           <Button variant='tonalDefault'>
-            <Link href={`/admin/roles/${id}/view`}>View</Link>
+            <Link href={`/admin/roles/${id}/view`}>
+              <Trans i18nKey='admin:viewButton' />
+            </Link>
           </Button>
           <DeleteDialog
             itemName='role'
             handleDelete={() => {
-              handleDelete(id)
+              handleDelete(id, t)
               router.push('/admin/roles')
               router.refresh()
             }}
@@ -207,7 +214,9 @@ const Edit = ({
                   name='role'
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Role Name</FormLabel>
+                      <FormLabel>
+                        <Trans i18nKey='admin:rolesNameLabel' />
+                      </FormLabel>
                       <FormControl>
                         <Input {...field} />
                       </FormControl>
@@ -220,7 +229,9 @@ const Edit = ({
                   name='hierarchy'
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Hierarchy</FormLabel>
+                      <FormLabel>
+                        <Trans i18nKey='admin:hierarchyLabel' />
+                      </FormLabel>
                       <FormControl>
                         <Input type='number' min={1} {...field} />
                       </FormControl>
@@ -233,7 +244,9 @@ const Edit = ({
                   name='permissions'
                   render={() => (
                     <FormItem>
-                      <FormLabel>Permissions</FormLabel>
+                      <FormLabel>
+                        <Trans i18nKey='admin:permissionsLabel' />
+                      </FormLabel>
                       <FormControl>
                         <MultiSelect
                           selected={selected}
@@ -253,11 +266,16 @@ const Edit = ({
             </CardContent>
           </Card>
           <div className='mbs-6 flex justify-start gap-4'>
-            <SubmitButton formAction={form.handleSubmit(onSubmit) as any} pendingText='Updating...'>
-              Save
+            <SubmitButton
+              formAction={form.handleSubmit(onSubmit) as any}
+              pendingText={<Trans i18nKey='admin:rolesFormUpdating' />}
+            >
+              <Trans i18nKey='admin:saveButton' />
             </SubmitButton>
             <Button variant='tonalDefault' asChild>
-              <Link href='/admin/roles'>Cancel</Link>
+              <Link href='/admin/roles'>
+                <Trans i18nKey='admin:cancelButton' />
+              </Link>
             </Button>
           </div>
         </form>

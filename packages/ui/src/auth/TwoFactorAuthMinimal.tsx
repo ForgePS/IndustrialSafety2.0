@@ -2,12 +2,13 @@
 import Link from 'next/link'
 
 // Third-party Imports
-import { Button } from '@repo/ui/components/ui/button'
-import { Card, CardContent } from '@repo/ui/components/ui/card'
-import { InputOTP, InputOTPGroup, InputOTPSlot } from '@repo/ui/components/ui/input-otp'
+import Trans from '@repo/i18n/Trans'
 
 // Component Imports
 import Logo from '@components/layout/front/Logo'
+import { Button } from '@repo/ui/components/ui/button'
+import { Card, CardContent } from '@repo/ui/components/ui/card'
+import { InputOTP, InputOTPGroup, InputOTPSlot } from '@repo/ui/components/ui/input-otp'
 
 // Util Imports
 import { getAppName } from '@/utils/getAppName'
@@ -23,17 +24,20 @@ const TwoFactorAuth = async () => {
           <CardContent className='flex flex-col gap-6 !p-8'>
             <Logo appName={appName} />
             <div className='flex flex-col gap-y-1.5'>
-              <h1 className='text-textPrimary text-2xl font-semibold'>Two Factor Authentication</h1>
+              <h1 className='text-textPrimary text-2xl font-semibold'>
+                <Trans i18nKey='packages-ui:twoFactorAuthTitle' />
+              </h1>
               <p className='text-textSecondary'>
-                Please confirm access to your account by entering the code provided by your authentication application.
+                <Trans i18nKey='packages-ui:twoFactorAuthDescription' />
               </p>
             </div>
             <div className='flex items-center justify-between'>
               <p className='font-medium'>
-                Code<span className='text-destructive'>*</span>
+                <Trans i18nKey='packages-ui:twoFactorAuthCodeLabel' />
+                <span className='text-destructive'>*</span>
               </p>
               <Link href='' className='text-primary font-medium'>
-                Use a recovery code
+                <Trans i18nKey='packages-ui:twoFactorAuthRecoveryCodeLink' />
               </Link>
             </div>
             <InputOTP maxLength={6}>
@@ -46,7 +50,9 @@ const TwoFactorAuth = async () => {
                 <InputOTPSlot index={5} />
               </InputOTPGroup>
             </InputOTP>
-            <Button>{`Sign in to ${appName}`}</Button>
+            <Button>
+              <Trans i18nKey='packages-ui:loginTitle' values={{ appName }} />
+            </Button>
           </CardContent>
         </Card>
       </div>

@@ -3,6 +3,7 @@ import Link from 'next/link'
 
 // Third-party Imports
 import { TbRocket } from 'react-icons/tb'
+import Trans from '@repo/i18n/Trans'
 
 // Components Imports
 import { Ratings } from '@repo/ui/components/ui/ratings'
@@ -37,7 +38,7 @@ const HeroVerticalVideo = () => {
               >
                 <h1 className='mbe-3 text-textPrimary text-3xl font-bold sm:text-4xl md:text-5xl md:leading-[1.2]'>
                   <span className='from-primary to-destructive relative bg-gradient-to-r bg-clip-text [-webkit-text-fill-color:transparent]'>
-                    Effortless Support
+                    <Trans i18nKey='packages-ui:heroHeadlineEffortless' />
                     <img
                       src='/images/blocks/hero/underline-background.png'
                       className='-block-end-2 is-[7.3rem] md:-block-end-3 sm:is-[8.75rem] md:is-[11.65rem] absolute end-0'
@@ -46,7 +47,7 @@ const HeroVerticalVideo = () => {
                   🚀
                 </h1>
                 <h1 className='text-textPrimary text-3xl font-bold sm:text-4xl md:text-5xl md:leading-[1.2]'>
-                  Exceptional Service 24/7
+                  <Trans i18nKey='packages-ui:heroHeadlineService' />
                 </h1>
               </MotionFadeElement>
               <MotionFadeElement
@@ -57,8 +58,11 @@ const HeroVerticalVideo = () => {
                 }}
                 className='text-textSecondary sm:is-5/6 md:max-is-3xl text-center text-lg font-semibold sm:text-xl sm:leading-[1.4]'
               >
-                Automate Conversations, Resolve Queries Faster, and Boost Customer Satisfaction with the All-In-One{' '}
-                <span className='text-primary'>AI Chatbot Solution</span>.
+                <Trans i18nKey='packages-ui:heroSubheadline' />{' '}
+                <span className='text-primary'>
+                  <Trans i18nKey='packages-ui:heroSubheadlineHighlight' />
+                </span>
+                .
               </MotionFadeElement>
               <MotionFadeElement
                 component='div'
@@ -70,7 +74,9 @@ const HeroVerticalVideo = () => {
               >
                 <AvatarGroup size='3xl' limit={4} avatarUrls={avatarUrls} />
                 <div className='flex flex-col items-start gap-1'>
-                  <p className='text-textPrimary text-sm leading-4'>Loved by 100+ companies</p>
+                  <p className='text-textPrimary text-sm leading-4'>
+                    <Trans i18nKey='packages-ui:heroLovedByCompanies' />
+                  </p>
                   <Ratings rating={5} disabled />
                 </div>
               </MotionFadeElement>
@@ -85,7 +91,7 @@ const HeroVerticalVideo = () => {
             >
               <RainbowButton size='lg' className='!plb-2.5' asChild>
                 <Link href='/#pricing-section'>
-                  Get Started Now
+                  <Trans i18nKey='packages-ui:heroGetStartedButton' />
                   <TbRocket className='text-xl' />
                 </Link>
               </RainbowButton>

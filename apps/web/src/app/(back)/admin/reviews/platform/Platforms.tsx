@@ -15,10 +15,13 @@ import DeleteDialog from '@repo/ui/components/DeleteDialog'
 import { createClient } from '@repo/supabase/client'
 import { toast } from '@repo/ui/utils/toast'
 import { getInitials } from '@repo/ui/utils/getInitials'
+import Trans from '@repo/i18n/Trans'
+import { useTranslation } from 'react-i18next'
+import type { TFunction } from 'i18next'
 import type { Database } from '@repo/supabase/types'
 
 // Delete a platform
-export const deletePlatform = async (platformId: number) => {
+export const deletePlatform = async (platformId: number, t: TFunction) => {
   const supabase = createClient()
 
   try {
@@ -26,12 +29,13 @@ export const deletePlatform = async (platformId: number) => {
 
     if (error) {
       console.error('Error deleting platform: ', error.message)
-      toast('error', 'Error deleting platform: ' + error.message)
+      toast('error', t('admin:reviewPlatformsDeleteError', { message: error.message }))
     } else {
-      toast('success', 'Platform deleted successfully')
+      toast('success', t('admin:reviewPlatformsDeleteSuccess'))
     }
-  } catch (error) {
+  } catch (error: any) {
     console.error('Error deleting platform: ', error)
+    toast('error', t('admin:reviewPlatformsDeleteError', { message: error.message }))
 
     return false
   }
@@ -40,11 +44,12 @@ export const deletePlatform = async (platformId: number) => {
 const Platforms = ({ platformData }: { platformData: Database['public']['Tables']['review_platforms']['Row'][] }) => {
   // Hooks
   const router = useRouter()
+  const { t } = useTranslation()
 
   const columns: ColumnDef<Database['public']['Tables']['review_platforms']['Row']>[] = [
     {
       accessorKey: 'logo',
-      header: 'Logo',
+      header: () => <Trans i18nKey='admin:reviewPlatformsLogoColumn' />,
       cell: ({ row }) => {
         const platform_name = row.getValue('platform_name') as string
         const logoSrc = row.getValue('logo') as string
@@ -59,12 +64,12 @@ const Platforms = ({ platformData }: { platformData: Database['public']['Tables'
     },
     {
       accessorKey: 'platform_name',
-      header: 'Platform Name',
+      header: () => <Trans i18nKey='admin:platformNameLabel' />,
       cell: ({ row }) => <div className='capitalize'>{row.getValue('platform_name')}</div>
     },
     {
       accessorKey: 'slug',
-      header: 'Slug',
+      header: () => <Trans i18nKey='admin:reviewPlatformsSlugColumn' />,
       cell: ({ row }) => <div>{row.getValue('slug')}</div>
     },
     {
@@ -76,12 +81,12 @@ const Platforms = ({ platformData }: { platformData: Database['public']['Tables'
             className='text-primary flex items-center gap-1'
           >
             <TbEdit />
-            Edit
+            <Trans i18nKey='admin:editButton' />
           </Link>
           <DeleteDialog
             variant='ghostDestructive'
             handleDelete={async () => {
-              await deletePlatform(row.original.id)
+              await deletePlatform(row.original.id, t)
               router.refresh()
             }}
             itemName='platform'
@@ -94,9 +99,13 @@ const Platforms = ({ platformData }: { platformData: Database['public']['Tables'
   return (
     <div className='flex flex-col gap-y-8'>
       <div className='flex gap-y-2 max-sm:flex-col sm:items-center sm:justify-between'>
-        <h1 className='text-textPrimary text-3xl font-bold'>Review Platforms</h1>
+        <h1 className='text-textPrimary text-3xl font-bold'>
+          <Trans i18nKey='admin:reviewPlatformsTitle' />
+        </h1>
         <Link href='/admin/reviews/platform/create'>
-          <Button className='max-sm:is-full'>New review platform</Button>
+          <Button className='max-sm:is-full'>
+            <Trans i18nKey='admin:reviewPlatformsNewButton' />
+          </Button>
         </Link>
       </div>
       <Card>

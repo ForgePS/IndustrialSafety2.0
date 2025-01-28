@@ -7,6 +7,7 @@ import LayoutHeader from '@repo/ui/layouts/components/front/Header'
 import { Button } from '@repo/ui/components/ui/button'
 import { getAuthUser, getPublicGeneralSettings, getPublicUser, getUserRoles } from '@repo/supabase/serverHelpers'
 import { frontLayoutClasses } from '@repo/ui/layouts/utils/layoutClasses'
+import Trans from '@repo/i18n/Trans'
 import type { SettingsConfiguration } from '@repo/supabase/settingsConfigurationTypes'
 
 // Component Imports
@@ -54,7 +55,9 @@ const Header = async () => {
             <UserDropdown user={user} userTableData={userRecord} roles={userRoles} />
           ) : (
             <Button size='sm' asChild>
-              <Link href='/auth/login'>Sign In</Link>
+              <Link href='/auth/login'>
+                <Trans i18nKey='layout:signIn' />
+              </Link>
             </Button>
           )}
         </div>

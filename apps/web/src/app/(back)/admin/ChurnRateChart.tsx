@@ -4,6 +4,7 @@
 import { CartesianGrid, Line, LineChart, XAxis, YAxis } from 'recharts'
 import { Card, CardContent, CardDescription, CardHeader } from '@repo/ui/components/ui/card'
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@repo/ui/components/ui/chart'
+import Trans from '@repo/i18n/Trans'
 import type { ChartConfig } from '@repo/ui/components/ui/chart'
 
 // Vars
@@ -27,7 +28,9 @@ const ChurnRateChart = () => {
   return (
     <Card className='flex flex-col max-lg:col-span-3 max-md:col-span-full'>
       <CardHeader>
-        <CardDescription className='font-medium'>Churn Rate</CardDescription>
+        <CardDescription className='font-medium'>
+          <Trans i18nKey='admin:churnRateTitle' />
+        </CardDescription>
       </CardHeader>
       <CardContent className='flex flex-1 justify-center'>
         <ChartContainer config={chartConfig} className='bs-full is-full max-md:max-bs-64'>

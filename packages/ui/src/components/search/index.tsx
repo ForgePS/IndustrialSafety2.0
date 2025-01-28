@@ -2,6 +2,7 @@
 
 // React Imports
 import { useEffect, useState } from 'react'
+import type { ReactNode } from 'react'
 
 // Next Imports
 import Link from 'next/link'
@@ -18,6 +19,8 @@ import {
   TbHome
 } from 'react-icons/tb'
 import * as Icons from 'react-icons/tb'
+import Trans from '@repo/i18n/Trans'
+import { useTranslation } from 'react-i18next'
 
 // Component Imports
 import {
@@ -34,7 +37,7 @@ import { Button } from '@repo/ui/components/ui/button'
 
 export type SearchDataProps = {
   id: string
-  name: string
+  name: ReactNode
   url: string
   icon: keyof typeof Icons
   showFor?: 'all' | 'admin' | 'user'
@@ -58,6 +61,9 @@ const Search = ({ data, roles }: { data: SearchDataProps[]; roles: string[] }) =
   const [isOpen, setIsOpen] = useState(false)
   const [searchValue, setSearchValue] = useState('')
   const isAdmin = roles?.includes('admin')
+
+  // Hooks
+  const { t } = useTranslation()
 
   // Transform search data based on roles and permissions
   const transformedData = data
@@ -132,17 +138,25 @@ const Search = ({ data, roles }: { data: SearchDataProps[]; roles: string[] }) =
           <TbSearch className='bs-5 is-5' />
         </Button>
         <p className='text-textDisabled cursor-pointer'>
-          <span>Search</span>
+          <span>
+            <Trans i18nKey='packages-ui:searchButton' />
+          </span>
           <span className='mis-2.5'>⌘K</span>
         </p>
       </div>
       <CommandDialog open={isOpen} onOpenChange={handleOpenChange}>
-        <CommandInput placeholder='Type a command or search...' value={searchValue} onValueChange={setSearchValue} />
+        <CommandInput
+          placeholder={t('packages-ui:searchPlaceholder')}
+          value={searchValue}
+          onValueChange={setSearchValue}
+        />
         <CommandList>
-          <CommandEmpty>No results found.</CommandEmpty>
+          <CommandEmpty>
+            <Trans i18nKey='packages-ui:searchNoResults' />
+          </CommandEmpty>
           {searchValue ? (
             <>
-              <CommandGroup heading='Results'>
+              <CommandGroup heading={<Trans i18nKey='packages-ui:searchResultsHeading' />}>
                 {transformedData.map(item => (
                   <CommandItem key={item.id} onSelect={handleClose}>
                     <Link href={item.url} className='is-full flex items-center'>
@@ -157,50 +171,50 @@ const Search = ({ data, roles }: { data: SearchDataProps[]; roles: string[] }) =
           ) : (
             <>
               {isAdmin ? (
-                <CommandGroup heading='Admin Dashboard'>
+                <CommandGroup heading={<Trans i18nKey='packages-ui:searchAdminDashboard' />}>
                   <CommandItem onSelect={handleClose}>
                     <Link href='/admin' className='is-full flex items-center'>
                       <TbDashboard className='me-2' />
-                      Dashboard
+                      <Trans i18nKey='packages-ui:searchDashboard' />
                     </Link>
                   </CommandItem>
                   <CommandItem onSelect={handleClose}>
                     <Link href='/admin/my-profile' className='is-full flex items-center'>
                       <TbUser className='me-2' />
-                      My Profile
+                      <Trans i18nKey='packages-ui:searchMyProfile' />
                     </Link>
                   </CommandItem>
                   <CommandItem onSelect={handleClose}>
                     <Link href='/' className='is-full flex items-center'>
                       <TbHome className='me-2' />
-                      Landing Page
+                      <Trans i18nKey='packages-ui:searchLandingPage' />
                     </Link>
                   </CommandItem>
                 </CommandGroup>
               ) : (
-                <CommandGroup heading='User Dashboard'>
+                <CommandGroup heading={<Trans i18nKey='packages-ui:searchUserDashboard' />}>
                   <CommandItem onSelect={handleClose}>
                     <Link href='/dashboard' className='is-full flex items-center'>
                       <TbDashboard className='me-2' />
-                      Dashboard
+                      <Trans i18nKey='packages-ui:searchDashboard' />
                     </Link>
                   </CommandItem>
                   <CommandItem onSelect={handleClose}>
                     <Link href='/dashboard/my-profile' className='is-full flex items-center'>
                       <TbUser className='me-2' />
-                      My Profile
+                      <Trans i18nKey='packages-ui:searchMyProfile' />
                     </Link>
                   </CommandItem>
                   <CommandItem onSelect={handleClose}>
                     <Link href='/dashboard/billing' className='is-full flex items-center'>
                       <TbFileText className='me-2' />
-                      Billing
+                      <Trans i18nKey='packages-ui:searchBilling' />
                     </Link>
                   </CommandItem>
                   <CommandItem onSelect={handleClose}>
                     <Link href='/' className='is-full flex items-center'>
                       <TbHome className='me-2' />
-                      Landing Page
+                      <Trans i18nKey='packages-ui:searchLandingPage' />
                     </Link>
                   </CommandItem>
                 </CommandGroup>
@@ -216,19 +230,25 @@ const Search = ({ data, roles }: { data: SearchDataProps[]; roles: string[] }) =
             <kbd className='bg-accent rounded p-0.5'>
               <TbArrowDown className='bs-4 is-4' />
             </kbd>
-            <span className='text-xs'>to navigate</span>
+            <span className='text-xs'>
+              <Trans i18nKey='packages-ui:searchNavigateText' />
+            </span>
           </div>
           <div className='flex items-center gap-1.5'>
             <kbd className='bg-accent rounded p-0.5'>
               <TbCornerDownLeft className='bs-4 is-4' />
             </kbd>
-            <span className='text-xs'>to select</span>
+            <span className='text-xs'>
+              <Trans i18nKey='packages-ui:searchSelectText' />
+            </span>
           </div>
           <div className='flex items-center gap-1.5'>
             <kbd className='bg-accent plb-1 pli-1.5 flex items-center rounded'>
               <span className='text-xs'>Esc</span>
             </kbd>
-            <span className='text-xs'>to close</span>
+            <span className='text-xs'>
+              <Trans i18nKey='packages-ui:searchCloseText' />
+            </span>
           </div>
         </div>
       </CommandDialog>

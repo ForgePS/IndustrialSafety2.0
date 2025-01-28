@@ -7,6 +7,7 @@ import { Avatar, AvatarFallback } from '@repo/ui/components/ui/avatar'
 import { cn } from '@repo/ui/lib/utils'
 import { getPublicGeneralSettings } from '@repo/supabase/serverHelpers'
 import frontCommonStyles from '@repo/ui/blocks/styles.module.css'
+import Trans from '@repo/i18n/Trans'
 import type { SettingsConfiguration } from '@repo/supabase/settingsConfigurationTypes'
 
 // Component Imports
@@ -61,14 +62,15 @@ const Footer = async () => {
             <Logo appName={appName} />
           </Link>
           <p className='text-textSecondary text-base'>
-            Empowering businesses with intelligent customer support solutions. ©{new Date().getFullYear()} ChatFlow AI.
-            All rights reserved.
+            <Trans i18nKey='layout:copyrightText' values={{ year: new Date().getFullYear() }} />
           </p>
           <p className='text-textSecondary text-base'>
-            Crafted with ❤️️ by{' '}
-            <Link href='https://themeselection.com' target='_blank' className='text-primary font-semibold'>
-              ThemeSelection
-            </Link>
+            <Trans
+              i18nKey='layout:craftedWithLove'
+              components={{
+                1: <Link href='https://themeselection.com' target='_blank' className='text-primary font-semibold' />
+              }}
+            />
           </p>
           {socialLinks.length ? (
             <div className='flex items-center gap-2'>
@@ -85,21 +87,23 @@ const Footer = async () => {
           ) : null}
         </div>
         <div>
-          <h6 className='text-textPrimary mbe-4 text-lg font-semibold'>About</h6>
+          <h6 className='text-textPrimary mbe-4 text-lg font-semibold'>
+            <Trans i18nKey='layout:about' />
+          </h6>
           <ul className='flex flex-col gap-4'>
             <li>
               <Link href='/#pricing-section' className='link-animated text-textPrimary text-base'>
-                Pricing
+                <Trans i18nKey='layout:pricingLabel' />
               </Link>
             </li>
             <li>
               <Link href='/faqs' className='link-animated text-textPrimary text-base'>
-                FAQs
+                <Trans i18nKey='layout:faqs' />
               </Link>
             </li>
             <li>
               <Link href='/#reviews-section' className='link-animated text-textPrimary text-base'>
-                Reviews
+                <Trans i18nKey='layout:reviews' />
               </Link>
             </li>
             <li>
@@ -108,22 +112,24 @@ const Footer = async () => {
                 target='_blank'
                 className='link-animated text-textPrimary text-base'
               >
-                Contact Us
+                <Trans i18nKey='layout:contactUs' />
               </Link>
             </li>
           </ul>
         </div>
         <div>
-          <h6 className='text-textPrimary mbe-4 text-lg font-semibold'>Resources</h6>
+          <h6 className='text-textPrimary mbe-4 text-lg font-semibold'>
+            <Trans i18nKey='layout:resources' />
+          </h6>
           <ul className='flex flex-col gap-4'>
             <li>
               <Link href='/' target='_blank' className='link-animated text-textPrimary text-base'>
-                Documentation
+                <Trans i18nKey='layout:documentation' />
               </Link>
             </li>
             <li>
               <Link href='/changelog' className='link-animated text-textPrimary text-base'>
-                Changelog
+                <Trans i18nKey='layout:changelog' />
               </Link>
             </li>
             <li>
@@ -132,39 +138,43 @@ const Footer = async () => {
                 target='_blank'
                 className='link-animated text-textPrimary text-base'
               >
-                Discord Community
+                <Trans i18nKey='layout:discordCommunity' />
               </Link>
             </li>
             {isBlogEnabled && (
               <li>
                 <Link href='/blog' className='link-animated text-textPrimary text-base'>
-                  Blog
+                  <Trans i18nKey='layout:blog' />
                 </Link>
               </li>
             )}
           </ul>
         </div>
         <div>
-          <h6 className='text-textPrimary mbe-4 text-lg font-semibold'>Collaboration</h6>
+          <h6 className='text-textPrimary mbe-4 text-lg font-semibold'>
+            <Trans i18nKey='layout:collaboration' />
+          </h6>
           <ul className='flex flex-col gap-4'>
             <li>
               <Link href='/' target='_blank' className='link-animated text-textPrimary text-base'>
-                Affiliates (up to $89.70) per sale
+                <Trans i18nKey='layout:affiliatesUpToPerSale' />
               </Link>
             </li>
           </ul>
         </div>
         <div>
-          <h6 className='text-textPrimary mbe-4 text-lg font-semibold'>Legal</h6>
+          <h6 className='text-textPrimary mbe-4 text-lg font-semibold'>
+            <Trans i18nKey='layout:legal' />
+          </h6>
           <ul className='flex flex-col gap-4'>
             <li>
               <Link href='/terms-of-service' className='link-animated text-textPrimary text-base'>
-                Terms of Service
+                <Trans i18nKey='layout:termsOfService' />
               </Link>
             </li>
             <li>
               <Link href='/privacy-policy' className='link-animated text-textPrimary text-base'>
-                Privacy & Legal
+                <Trans i18nKey='layout:privacyAndLegal' />
               </Link>
             </li>
           </ul>

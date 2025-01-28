@@ -4,6 +4,7 @@
 import { Card } from '@repo/ui/components/ui/card'
 import { Checkbox } from '@repo/ui/components/ui/checkbox'
 import DataTable from '@repo/ui/components/ui/data-table'
+import Trans from '@repo/i18n/Trans'
 import type { Database } from '@repo/supabase/types'
 
 // Types Imports
@@ -54,22 +55,22 @@ const UsersTable = ({ usersRecord, rolesData }: Props) => {
     },
     {
       accessorKey: 'id',
-      header: 'ID',
+      header: () => <Trans i18nKey='admin:usersTableIdColumn' />,
       cell: ({ row }) => <div>{row.original.id}</div>
     },
     {
       accessorKey: 'name',
-      header: 'User Name',
+      header: () => <Trans i18nKey='admin:usersTableNameColumn' />,
       cell: ({ row }) => <div className='capitalize'>{row.original.name}</div>
     },
     {
       accessorKey: 'email',
-      header: 'Email',
+      header: () => <Trans i18nKey='admin:emailLabel' />,
       cell: ({ row }) => <div className='lowercase'>{row.original.email}</div>
     },
     {
       accessorKey: 'role',
-      header: 'Role',
+      header: () => <Trans i18nKey='admin:roleLabel' />,
       cell: ({ row }) => (
         <div>{row.original.role.map(userRole => userRole.charAt(0).toUpperCase() + userRole.slice(1)).join(', ')}</div>
       )
@@ -81,7 +82,11 @@ const UsersTable = ({ usersRecord, rolesData }: Props) => {
       <DataTable
         data={mergedData}
         columns={columns}
-        title={<p className='font-semibold'>Users</p>}
+        title={
+          <p className='font-semibold'>
+            <Trans i18nKey='admin:usersSection' />
+          </p>
+        }
         search={{ enabled: false }}
       />
     </Card>

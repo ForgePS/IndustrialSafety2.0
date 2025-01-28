@@ -20,6 +20,7 @@ import { createCheckoutSession, fetchCheckoutData } from '@repo/billing/src/acti
 import { EmbeddedCheckoutProvider, EmbeddedCheckout } from '@stripe/react-stripe-js'
 import { Dialog, DialogContent, DialogDescription, DialogTitle, DialogTrigger } from '@repo/ui/components/ui/dialog'
 import { createClient } from '@repo/supabase/client'
+import Trans from '@repo/i18n/Trans'
 import type { CustomInputHorizontalData } from '@repo/ui/components/custom-inputs/types'
 import type { User } from '@supabase/supabase-js'
 import type { Database } from '@repo/supabase/types'
@@ -129,7 +130,11 @@ const CheckoutDetails = ({ paymentProvider, userRecord, appName, users }: Props)
       <div className='is-full'>
         <div className='mbe-1.5 flex items-center gap-4'>
           <h3 className='text-textPrimary text-xl font-semibold'>
-            {paymentProvider === 'stripe' ? 'Stripe' : 'Lemon Squeezy'}
+            {paymentProvider === 'stripe' ? (
+              <Trans i18nKey='front-pages:checkoutPaymentStripe' />
+            ) : (
+              <Trans i18nKey='front-pages:checkoutPaymentLemonSqueezy' />
+            )}
           </h3>
           <img
             src={
@@ -139,7 +144,9 @@ const CheckoutDetails = ({ paymentProvider, userRecord, appName, users }: Props)
             className='is-5'
           />
         </div>
-        <p className='text-textSecondary text-base'>You will be redirected to complete your payment.</p>
+        <p className='text-textSecondary text-base'>
+          <Trans i18nKey='front-pages:checkoutRedirectText' />
+        </p>
       </div>
     ),
     value: paymentProvider,
@@ -150,7 +157,9 @@ const CheckoutDetails = ({ paymentProvider, userRecord, appName, users }: Props)
     <div className={cn('plb-20 grid gap-6 sm:gap-12 md:grid-cols-2', frontCommonStyles.layoutSpacing)}>
       <div className='flex flex-col gap-4'>
         {!userRecord && <AuthForm users={users} />}
-        <h3 className='text-textPrimary self-start text-xl font-semibold'>Pay With</h3>
+        <h3 className='text-textPrimary self-start text-xl font-semibold'>
+          <Trans i18nKey='front-pages:checkoutPayWith' />
+        </h3>
         <RadioGroup onValueChange={handleChange}>
           <CustomInputHorizontal
             type='radio'
@@ -161,13 +170,13 @@ const CheckoutDetails = ({ paymentProvider, userRecord, appName, users }: Props)
           />
         </RadioGroup>
         <p className='text-textDisabled text-base'>
-          By continuing, you agree to our{' '}
+          <Trans i18nKey='front-pages:checkoutTermsText' />{' '}
           <Link href='/terms-of-service' className='text-primary' onClick={e => e.preventDefault()}>
-            Terms of Service
+            <Trans i18nKey='front-pages:checkoutTermsLink' />
           </Link>{' '}
-          and{' '}
+          <Trans i18nKey='front-pages:checkoutAndText' />{' '}
           <Link href='/privacy-policy' className='text-primary' onClick={e => e.preventDefault()}>
-            Privacy Policy
+            <Trans i18nKey='front-pages:checkoutPrivacyLink' />
           </Link>
           .
         </p>
@@ -177,10 +186,10 @@ const CheckoutDetails = ({ paymentProvider, userRecord, appName, users }: Props)
             <SubmitButton
               formAction={() => onSubmit(variantDetails?.lineItems[0].priceId as string)}
               className='bg-primary is-full'
-              pendingText='Processing...'
+              pendingText={<Trans i18nKey='front-pages:checkoutConfirmPending' />}
               disabled={!userRecord}
             >
-              Confirm & Pay
+              <Trans i18nKey='front-pages:checkoutConfirmButton' />
             </SubmitButton>
           </form>
         ) : (
@@ -192,10 +201,10 @@ const CheckoutDetails = ({ paymentProvider, userRecord, appName, users }: Props)
                 <SubmitButton
                   formAction={() => onSubmit(variantDetails?.lineItems[0].priceId as string)}
                   className='bg-primary is-full'
-                  pendingText='Processing...'
+                  pendingText={<Trans i18nKey='front-pages:checkoutConfirmPending' />}
                   disabled={!userRecord}
                 >
-                  Confirm & Pay
+                  <Trans i18nKey='front-pages:checkoutConfirmButton' />
                 </SubmitButton>
               </DialogTrigger>
             </form>
@@ -212,7 +221,9 @@ const CheckoutDetails = ({ paymentProvider, userRecord, appName, users }: Props)
       </div>
 
       <div className='flex flex-col gap-4'>
-        <h3 className='text-textPrimary self-start text-xl font-semibold'>Plan Details</h3>
+        <h3 className='text-textPrimary self-start text-xl font-semibold'>
+          <Trans i18nKey='front-pages:checkoutPlanDetails' />
+        </h3>
         {loading ? (
           <>
             <Skeleton className='is-full bs-96' />
@@ -241,18 +252,24 @@ const CheckoutDetails = ({ paymentProvider, userRecord, appName, users }: Props)
               </ul>
               <hr />
               <div className='flex items-center justify-between gap-4'>
-                <span className='text-textPrimary text-base font-semibold'>Quantity</span>
+                <span className='text-textPrimary text-base font-semibold'>
+                  <Trans i18nKey='front-pages:checkoutQuantityLabel' />
+                </span>
                 <span className='text-textPrimary text-base font-semibold'>1</span>
               </div>
               <hr />
               <div className='flex items-center justify-between gap-4'>
-                <span className='text-textPrimary text-base font-semibold'>Price</span>
+                <span className='text-textPrimary text-base font-semibold'>
+                  <Trans i18nKey='front-pages:checkoutPriceLabel' />
+                </span>
                 <span className='text-textPrimary text-base font-semibold'>{`$${variantDetails?.lineItems[0].cost.toFixed(2)}`}</span>
               </div>
               {/* Add discount related code here : conditionally */}
               <hr />
               <div className='flex items-center justify-between gap-4'>
-                <span className='text-primary text-xl font-semibold'>Pay now</span>
+                <span className='text-primary text-xl font-semibold'>
+                  <Trans i18nKey='front-pages:checkoutPayNowLabel' />
+                </span>
                 <span className='text-primary text-base font-semibold'>{`$${variantDetails?.lineItems[0].cost.toFixed(2)}`}</span>
               </div>
             </CardContent>

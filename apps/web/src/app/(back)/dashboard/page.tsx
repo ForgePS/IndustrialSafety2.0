@@ -6,6 +6,7 @@ import { Card, CardContent } from '@repo/ui/components/ui/card'
 import { Avatar, AvatarFallback, AvatarImage } from '@repo/ui/components/ui/avatar'
 import { getAuthUser, getPublicUser } from '@repo/supabase/serverHelpers'
 import { getInitials } from '@repo/ui/utils/getInitials'
+import Trans from '@repo/i18n/Trans'
 
 // Component Imports
 import SignOutButton from './SignOutButton'
@@ -32,7 +33,9 @@ const DashboardPage = async () => {
             <AvatarFallback>{avatarFallbackText}</AvatarFallback>
           </Avatar>
           <div className='flex flex-col items-start'>
-            <p className='text-base font-semibold'>Welcome</p>
+            <p className='text-base font-semibold'>
+              <Trans i18nKey='dashboard:welcomeText' />
+            </p>
             <p className='text-textDisabled text-sm'>{userName}</p>
           </div>
         </div>

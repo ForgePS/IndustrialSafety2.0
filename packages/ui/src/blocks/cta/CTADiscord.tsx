@@ -17,8 +17,8 @@ type ImageType = {
 }
 
 type Props = {
-  title: string
-  description: string
+  title: ReactNode
+  description: ReactNode
   button: string | ReactNode
   image?: ImageType | ReactNode
   className?: string

@@ -19,21 +19,31 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '
 import SubmitButton from '@repo/ui/components/SubmitButton'
 import type { Database } from '@repo/supabase/types'
 import { toast } from '@repo/ui/utils/toast'
+import Trans from '@repo/i18n/Trans'
+import { useTranslation } from 'react-i18next'
+import type { TFunction } from 'i18next'
 
 // Util Imports
 import { createUser } from '../actions'
 
 // Define Zod Schema for validation
-const userSchema = z.object({
-  name: z.string().min(1, { message: 'Name is required' }),
-  email: z.string().min(1, { message: 'Email address is required.' }).email({
-    message: 'Please enter a valid email address.'
-  }),
-  password: z.string().min(1, { message: 'Password is required.' }).min(8, {
-    message: 'Password must be at least 8 characters.'
-  }),
-  roles: z.array(z.string()).nonempty({ message: 'Please select at least one role' })
-})
+const userSchema = (t: TFunction) =>
+  z.object({
+    name: z.string().min(1, { message: t('admin:nameRequiredError') }),
+    email: z
+      .string()
+      .min(1, { message: t('admin:emailRequiredError') })
+      .email({
+        message: t('admin:invalidEmailError')
+      }),
+    password: z
+      .string()
+      .min(1, { message: t('admin:usersCreatePasswordError') })
+      .min(8, {
+        message: t('admin:usersCreatePasswordLengthError')
+      }),
+    roles: z.array(z.string()).nonempty({ message: t('admin:selectRoleError') })
+  })
 
 const Create = ({ roles }: { roles: Database['public']['Tables']['roles']['Row'][] }) => {
   // States
@@ -41,10 +51,11 @@ const Create = ({ roles }: { roles: Database['public']['Tables']['roles']['Row']
 
   // Hooks
   const router = useRouter()
+  const { t } = useTranslation()
 
   // react-hook-form integration with Zod schema validation
   const form = useForm({
-    resolver: zodResolver(userSchema),
+    resolver: zodResolver(userSchema(t)),
     defaultValues: {
       name: '',
       email: '',
@@ -56,7 +67,7 @@ const Create = ({ roles }: { roles: Database['public']['Tables']['roles']['Row']
   const { setValue, clearErrors } = form
 
   // Form Submit handler
-  const onSubmit = async (data: z.infer<typeof userSchema>) => {
+  const onSubmit = async (data: z.infer<ReturnType<typeof userSchema>>) => {
     try {
       const result = await createUser({
         name: data.name,
@@ -67,9 +78,9 @@ const Create = ({ roles }: { roles: Database['public']['Tables']['roles']['Row']
       })
 
       if ('error' in result) {
-        toast('error', result.error || 'An unexpected error occurred. Please try again.')
+        toast('error', result.error || t('admin:usersCreateEditError'))
       } else {
-        toast('success', result.message || 'User created successfully')
+        toast('success', result.message || t('admin:usersCreateSuccess'))
         router.push('/admin/users')
         router.refresh()
       }
@@ -80,7 +91,7 @@ const Create = ({ roles }: { roles: Database['public']['Tables']['roles']['Row']
     }
   }
 
-  const createAndCreateSubmit = async (data: z.infer<typeof userSchema>) => {
+  const createAndCreateSubmit = async (data: z.infer<ReturnType<typeof userSchema>>) => {
     try {
       const result = await createUser({
         name: data.name,
@@ -91,9 +102,9 @@ const Create = ({ roles }: { roles: Database['public']['Tables']['roles']['Row']
       })
 
       if ('error' in result) {
-        toast('error', result.error || 'An unexpected error occurred. Please try again.')
+        toast('error', result.error || t('admin:usersCreateEditError'))
       } else {
-        toast('success', result.message || 'User created successfully')
+        toast('success', result.message || t('admin:usersCreateSuccess'))
         form.reset()
         router.refresh()
       }
@@ -115,7 +126,9 @@ const Create = ({ roles }: { roles: Database['public']['Tables']['roles']['Row']
 
   return (
     <>
-      <h2 className='mbe-6 text-2xl font-semibold sm:text-3xl'>Create User</h2>
+      <h2 className='mbe-6 text-2xl font-semibold sm:text-3xl'>
+        <Trans i18nKey='admin:usersCreateTitle' />
+      </h2>
       <Form {...form}>
         <form>
           <Card>
@@ -127,10 +140,11 @@ const Create = ({ roles }: { roles: Database['public']['Tables']['roles']['Row']
                   render={({ field }) => (
                     <FormItem className='is-full'>
                       <FormLabel htmlFor='name' className='mbe-2 block text-sm font-medium'>
-                        Name<span className='text-destructive'>*</span>
+                        <Trans i18nKey='admin:nameLabel' />
+                        <span className='text-destructive'>*</span>
                       </FormLabel>
                       <FormControl>
-                        <Input id='name' type='text' {...field} />
+                        <Input id='name' type='text' placeholder={t('admin:namePlaceholder')} {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -142,10 +156,11 @@ const Create = ({ roles }: { roles: Database['public']['Tables']['roles']['Row']
                   render={({ field }) => (
                     <FormItem className='is-full'>
                       <FormLabel htmlFor='email' className='mbe-2 block text-sm font-medium'>
-                        Email<span className='text-destructive'>*</span>
+                        <Trans i18nKey='admin:emailLabel' />
+                        <span className='text-destructive'>*</span>
                       </FormLabel>
                       <FormControl>
-                        <Input id='email' type='email' {...field} />
+                        <Input id='email' type='email' placeholder={t('admin:emailPlaceholder')} {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -157,10 +172,11 @@ const Create = ({ roles }: { roles: Database['public']['Tables']['roles']['Row']
                   render={({ field }) => (
                     <FormItem className='is-full'>
                       <FormLabel htmlFor='password' className='mbe-2 block text-sm font-medium'>
-                        Password<span className='text-destructive'>*</span>
+                        <Trans i18nKey='admin:passwordLabel' />
+                        <span className='text-destructive'>*</span>
                       </FormLabel>
                       <FormControl>
-                        <Input id='password' type='password' {...field} />
+                        <Input id='password' type='password' placeholder='················' {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -172,7 +188,8 @@ const Create = ({ roles }: { roles: Database['public']['Tables']['roles']['Row']
                   render={() => (
                     <FormItem className='is-full'>
                       <FormLabel htmlFor='roles' className='mbe-2 block text-sm font-medium'>
-                        Roles<span className='text-destructive'>*</span>
+                        <Trans i18nKey='admin:rolesLabel' />
+                        <span className='text-destructive'>*</span>
                       </FormLabel>
                       <FormControl>
                         <MultiSelect
@@ -193,14 +210,23 @@ const Create = ({ roles }: { roles: Database['public']['Tables']['roles']['Row']
             </CardContent>
           </Card>
           <div className='mbs-6 flex justify-start gap-4'>
-            <SubmitButton formAction={form.handleSubmit(onSubmit as any) as any} pendingText='Creating...'>
-              Create
+            <SubmitButton
+              formAction={form.handleSubmit(onSubmit as any) as any}
+              pendingText={<Trans i18nKey='admin:creatingStatus' />}
+            >
+              <Trans i18nKey='admin:createButton' />
             </SubmitButton>
-            <SubmitButton formAction={form.handleSubmit(createAndCreateSubmit as any) as any} variant='tonalDefault'>
-              Create & create another
+            <SubmitButton
+              formAction={form.handleSubmit(createAndCreateSubmit as any) as any}
+              variant='tonalDefault'
+              pendingText={<Trans i18nKey='admin:creatingStatus' />}
+            >
+              <Trans i18nKey='admin:createAndCreateAnotherButton' />
             </SubmitButton>
             <Button type='button' variant='tonalDefault'>
-              <Link href='/admin/users'>Cancel</Link>
+              <Link href='/admin/users'>
+                <Trans i18nKey='admin:cancelButton' />
+              </Link>
             </Button>
           </div>
         </form>

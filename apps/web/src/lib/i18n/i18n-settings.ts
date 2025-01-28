@@ -5,7 +5,17 @@ const defaultLanguage = 'en'
 
 export const languages: string[] = ['en', 'fr', 'de']
 
-export const defaultI18nNamespaces = []
+export const defaultI18nNamespaces = [
+  'admin',
+  'auth',
+  'dashboard',
+  'data',
+  'front-pages',
+  'layout',
+  'packages-auth',
+  'packages-profile',
+  'packages-ui'
+]
 
 /**
  * Get the i18n settings for the given language and namespaces.

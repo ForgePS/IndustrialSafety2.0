@@ -2,6 +2,7 @@
 import { Alert, AlertDescription } from '@repo/ui/components/ui/alert'
 import { TbAlertCircle } from 'react-icons/tb'
 import { createClient } from '@repo/supabase/server'
+import Trans from '@repo/i18n/Trans'
 
 // Component Imports
 import View from './View'
@@ -36,7 +37,10 @@ const ViewPage = async (props: { params: Promise<{ id: number }> }) => {
       <Alert variant='destructive'>
         <TbAlertCircle className='bs-5 is-5' />
         <AlertDescription>
-          {`There was an error fetching the data. Error: ${permissionError?.message || rolesError?.message || 'Unknown error'}`}
+          <Trans
+            i18nKey='admin:permissionsViewPageFetchError'
+            values={{ message: permissionError?.message || rolesError?.message || 'Unknown error' }}
+          />
         </AlertDescription>
       </Alert>
     )

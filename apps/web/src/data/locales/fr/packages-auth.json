@@ -1,0 +1,10 @@
+{
+  "confirmPasswordMatch": "Le mot de passe de confirmation doit correspondre au mot de passe.",
+  "confirmPasswordRequired": "Le mot de passe de confirmation est requis.",
+  "emailInvalid": "Veuillez saisir une adresse e-mail valide.",
+  "emailRequired": "L'adresse e-mail est requise.",
+  "exitImpersonation": "Quitter l'usurpation d'identité",
+  "impersonatingUser": "Vous êtes actuellement en train d'usurper l'identité",
+  "passwordMinLength": "Le mot de passe doit comporter au moins 8 caractères",
+  "passwordRequired": "Le mot de passe est requis."
+}

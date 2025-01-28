@@ -19,6 +19,7 @@ import { toast } from '@repo/ui/utils/toast'
 import { PermissionGuard } from '@repo/rbac/components'
 import { hasAnyPermission, hasPermission } from '@repo/rbac/utils'
 import type { Database } from '@repo/supabase/types'
+import Trans from '@repo/i18n/Trans'
 
 // Util Imports
 import { deleteUser } from './actions'
@@ -73,17 +74,17 @@ const Users = ({ usersRecord, rolesData, userPermissions }: Props) => {
   const columns: ColumnDef<UserWithRole>[] = [
     {
       accessorKey: 'name',
-      header: 'Name',
+      header: () => <Trans i18nKey='admin:nameLabel' />,
       cell: ({ row }) => <div className='capitalize'>{row.original.name}</div>
     },
     {
       accessorKey: 'email',
-      header: 'Email',
+      header: () => <Trans i18nKey='admin:emailLabel' />,
       cell: ({ row }) => <div>{row.original.email}</div>
     },
     {
       accessorKey: 'role',
-      header: 'Role',
+      header: () => <Trans i18nKey='admin:roleLabel' />,
       cell: ({ row }) => (
         <div>{row.original.role.map(userRole => userRole.charAt(0).toUpperCase() + userRole.slice(1)).join(', ')}</div>
       )
@@ -98,12 +99,12 @@ const Users = ({ usersRecord, rolesData, userPermissions }: Props) => {
                 {hasPermission(userPermissions, 'update_users') && (
                   <Link href={`/admin/users/${row.original.id}/edit`} className='text-primary flex items-center gap-1'>
                     <TbEdit />
-                    Edit
+                    <Trans i18nKey='admin:editButton' />
                   </Link>
                 )}
                 {hasPermission(userPermissions, 'impersonate_users') && !row.original.role.includes('admin') && (
                   <Button variant='outline' onClick={() => startImpersonation(usersRecord, row.original.user_id)}>
-                    Impersonate
+                    <Trans i18nKey='admin:usersImpersonateButton' />
                   </Button>
                 )}
                 {hasPermission(userPermissions, 'delete_users') && !row.original.role.includes('admin') && (
@@ -123,10 +124,14 @@ const Users = ({ usersRecord, rolesData, userPermissions }: Props) => {
   return (
     <div className='flex flex-col gap-y-8'>
       <div className='flex gap-y-2 max-sm:flex-col sm:items-center sm:justify-between'>
-        <h2 className='text-textPrimary text-2xl font-bold'>Users</h2>
+        <h2 className='text-textPrimary text-2xl font-bold'>
+          <Trans i18nKey='admin:usersSection' />
+        </h2>
         <PermissionGuard permissions={userPermissions} permission={'create_users'}>
           <Link href='/admin/users/create'>
-            <Button className='max-sm:is-full'>New user</Button>
+            <Button className='max-sm:is-full'>
+              <Trans i18nKey='admin:usersNewButton' />
+            </Button>
           </Link>
         </PermissionGuard>
       </div>

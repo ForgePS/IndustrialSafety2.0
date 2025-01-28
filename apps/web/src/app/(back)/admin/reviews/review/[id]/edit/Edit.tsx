@@ -21,6 +21,9 @@ import SubmitButton from '@repo/ui/components/SubmitButton'
 import DeleteDialog from '@repo/ui/components/DeleteDialog'
 import { toast } from '@repo/ui/utils/toast'
 import { createClient } from '@repo/supabase/client'
+import Trans from '@repo/i18n/Trans'
+import { useTranslation } from 'react-i18next'
+import type { TFunction } from 'i18next'
 
 // Component Imports
 import ReviewImage from './ReviewImage'
@@ -28,21 +31,22 @@ import { deleteReview } from '../../Reviews'
 import type { PlatformTypes } from '../../create/Create'
 
 // Define Zod Schema for validation only on required fields
-const reviewSchema = z.object({
-  platform_id: z.number().min(1, { message: 'Please select a review platform.' }),
-  link: z.string().url({ message: 'Please enter a valid review link.' }),
-  content: z.string().min(1, { message: 'Review text is required.' }),
-  username: z.string().min(1, { message: 'Reviewer name is required.' }),
+const reviewSchema = (t: TFunction) =>
+  z.object({
+    platform_id: z.number().min(1, { message: t('admin:reviewsCreatePlatformError') }),
+    link: z.string().url({ message: t('admin:reviewsCreateLinkError') }),
+    content: z.string().min(1, { message: t('admin:reviewsCreateContentError') }),
+    username: z.string().min(1, { message: t('admin:reviewsCreateUsernameError') }),
 
-  // Non-required fields can be optional without validation
-  title: z.string().optional(),
-  video_url: z.string().optional(),
-  rating: z.number().optional(),
-  is_featured: z.boolean().optional(),
-  designation: z.string().optional(),
-  country: z.string().optional(),
-  avatar_image: z.string().optional().nullable()
-})
+    // Non-required fields can be optional without validation
+    title: z.string().optional(),
+    video_url: z.string().optional(),
+    rating: z.number().optional(),
+    is_featured: z.boolean().optional(),
+    designation: z.string().optional(),
+    country: z.string().optional(),
+    avatar_image: z.string().optional().nullable()
+  })
 
 const EditReview = ({
   reviewData,
@@ -58,10 +62,11 @@ const EditReview = ({
 
   // Hooks
   const router = useRouter()
+  const { t } = useTranslation()
 
   // react-hook-form integration with Zod schema validation
-  const form = useForm<z.infer<typeof reviewSchema>>({
-    resolver: zodResolver(reviewSchema),
+  const form = useForm<z.infer<ReturnType<typeof reviewSchema>>>({
+    resolver: zodResolver(reviewSchema(t)),
     defaultValues: {
       title: reviewData.title || '',
       platform_id: reviewData.platform_id || undefined,
@@ -78,7 +83,7 @@ const EditReview = ({
   })
 
   // Form submission handler
-  const onSubmit = async (data: z.infer<typeof reviewSchema>) => {
+  const onSubmit = async (data: z.infer<ReturnType<typeof reviewSchema>>) => {
     // Client-side Supabase insert function
     const { error } = await supabase
       .from('reviews')
@@ -99,13 +104,13 @@ const EditReview = ({
 
     // Handle errors or navigate
     if (error) {
-      console.error('Error creating review: ', error.message)
-      toast('error', 'Error updating review: ' + error.message)
+      console.error('Error updating review: ', error.message)
+      toast('error', t('admin:reviewsEditError', { message: error.message }))
 
       return
     }
 
-    toast('success', 'Review updated successfully')
+    toast('success', t('admin:reviewsEditSuccess'))
 
     // Redirect on success
     router.push('/admin/reviews/review')
@@ -119,10 +124,12 @@ const EditReview = ({
   return (
     <div className='flex flex-col gap-y-8'>
       <div className='flex gap-y-2 max-sm:flex-col sm:items-center sm:justify-between'>
-        <h1 className='text-textPrimary text-3xl font-bold'>Edit Review</h1>
+        <h1 className='text-textPrimary text-3xl font-bold'>
+          <Trans i18nKey='admin:reviewsEditTitle' />
+        </h1>
         <DeleteDialog
           handleDelete={async () => {
-            await deleteReview(id)
+            await deleteReview(id, t)
             router.push('/admin/reviews/review')
             router.refresh()
           }}
@@ -134,7 +141,9 @@ const EditReview = ({
           <section className='grid grid-cols-3 gap-6'>
             <Card className='col-span-full lg:col-span-2'>
               <CardHeader className='border-be'>
-                <CardDescription className='font-medium'>Review Details</CardDescription>
+                <CardDescription className='font-medium'>
+                  <Trans i18nKey='admin:reviewDetailsSection' />
+                </CardDescription>
               </CardHeader>
               <CardContent className='pbs-6 grid gap-6 md:grid-cols-2'>
                 <div className='flex flex-col items-start gap-2'>
@@ -143,9 +152,11 @@ const EditReview = ({
                     name='title'
                     render={({ field }) => (
                       <FormItem className='is-full'>
-                        <FormLabel>Review Title</FormLabel>
+                        <FormLabel>
+                          <Trans i18nKey='admin:reviewsCreateTitleLabel' />
+                        </FormLabel>
                         <FormControl>
-                          <Input placeholder='Enter review title' {...field} />
+                          <Input placeholder={t('admin:reviewsCreateTitlePlaceholder')} {...field} />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -157,7 +168,7 @@ const EditReview = ({
                     render={({ field }) => (
                       <FormItem className='is-full'>
                         <FormLabel>
-                          Review Platform
+                          <Trans i18nKey='admin:reviewsCreatePlatformLabel' />
                           <sup className='text-destructive'>*</sup>
                         </FormLabel>
                         <FormControl>
@@ -166,7 +177,7 @@ const EditReview = ({
                             onValueChange={value => field.onChange(Number(value))}
                           >
                             <SelectTrigger className='is-full'>
-                              <SelectValue placeholder='Select a platform' />
+                              <SelectValue placeholder={t('admin:reviewsCreatePlatformPlaceholder')} />
                             </SelectTrigger>
                             <SelectContent>
                               {platformsData.map(platform => (
@@ -187,11 +198,11 @@ const EditReview = ({
                     render={({ field }) => (
                       <FormItem className='is-full'>
                         <FormLabel>
-                          Review Link
+                          <Trans i18nKey='admin:reviewsCreateLinkLabel' />
                           <sup className='text-destructive'>*</sup>
                         </FormLabel>
                         <FormControl>
-                          <Input placeholder='Enter review link' {...field} />
+                          <Input placeholder={t('admin:reviewsCreateLinkPlaceholder')} {...field} />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -202,9 +213,11 @@ const EditReview = ({
                     name='video_url'
                     render={({ field }) => (
                       <FormItem className='is-full'>
-                        <FormLabel>Review Video URL</FormLabel>
+                        <FormLabel>
+                          <Trans i18nKey='admin:reviewsCreateVideoLabel' />
+                        </FormLabel>
                         <FormControl>
-                          <Input placeholder='Enter video url' {...field} />
+                          <Input placeholder={t('admin:reviewsCreateVideoPlaceholder')} {...field} />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -217,7 +230,9 @@ const EditReview = ({
                     name='rating'
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Ratings</FormLabel>
+                        <FormLabel>
+                          <Trans i18nKey='admin:ratingsLabel' />
+                        </FormLabel>
                         <FormControl>
                           <Ratings
                             rating={field.value || 5}
@@ -234,11 +249,11 @@ const EditReview = ({
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>
-                          Review Text
+                          <Trans i18nKey='admin:reviewsCreateContentLabel' />
                           <sup className='text-destructive'>*</sup>
                         </FormLabel>
                         <FormControl>
-                          <Textarea rows={5} placeholder='Enter review description' {...field} />
+                          <Textarea placeholder={t('admin:reviewsCreateContentPlaceholder')} {...field} />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -257,7 +272,7 @@ const EditReview = ({
                               checked={field.value}
                             />
                             <FormLabel className='mis-2 cursor-pointer' htmlFor='is-featured'>
-                              Is Featured
+                              <Trans i18nKey='admin:isFeaturedLabel' />
                             </FormLabel>
                           </div>
                         </FormControl>
@@ -270,7 +285,9 @@ const EditReview = ({
             </Card>
             <Card>
               <CardHeader className='border-be'>
-                <CardDescription className='font-medium'>Reviewer Details</CardDescription>
+                <CardDescription className='font-medium'>
+                  <Trans i18nKey='admin:reviewsCreateReviewerDetailsTitle' />
+                </CardDescription>
               </CardHeader>
               <CardContent className='pbs-6 flex flex-col gap-6'>
                 <FormField
@@ -279,11 +296,11 @@ const EditReview = ({
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>
-                        Reviewer Name
+                        <Trans i18nKey='admin:reviewsCreateUsernameLabel' />
                         <sup className='text-destructive'>*</sup>
                       </FormLabel>
                       <FormControl>
-                        <Input placeholder='Enter user name' {...field} />
+                        <Input placeholder={t('admin:reviewsCreateUsernamePlaceholder')} {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -294,9 +311,11 @@ const EditReview = ({
                   name='designation'
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Reviewer Designation</FormLabel>
+                      <FormLabel>
+                        <Trans i18nKey='admin:reviewsCreateDesignationLabel' />
+                      </FormLabel>
                       <FormControl>
-                        <Input placeholder='Enter designation' {...field} />
+                        <Input placeholder={t('admin:reviewsCreateDesignationPlaceholder')} {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -307,9 +326,11 @@ const EditReview = ({
                   name='country'
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Reviewer Location (Country Code)</FormLabel>
+                      <FormLabel>
+                        <Trans i18nKey='admin:reviewsCreateCountryLabel' />
+                      </FormLabel>
                       <FormControl>
-                        <Input placeholder='IN, USA, UK, etc.' {...field} />
+                        <Input placeholder={t('admin:reviewsCreateCountryPlaceholder')} {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -319,11 +340,16 @@ const EditReview = ({
               </CardContent>
             </Card>
             <div className='col-span-full flex gap-4 max-sm:flex-col'>
-              <SubmitButton formAction={form.handleSubmit(onSubmit) as any} pendingText='Updating...'>
-                Save
+              <SubmitButton
+                formAction={form.handleSubmit(onSubmit) as any}
+                pendingText={<Trans i18nKey='admin:savingStatus' />}
+              >
+                <Trans i18nKey='admin:saveChangesButton' />
               </SubmitButton>
               <Button type='button' variant='tonalDefault' asChild>
-                <Link href='/admin/reviews/review'>Cancel</Link>
+                <Link href='/admin/reviews/review'>
+                  <Trans i18nKey='admin:cancelButton' />
+                </Link>
               </Button>
             </div>
           </section>

@@ -3,6 +3,7 @@ import Link from 'next/link'
 
 // Third-party Imports
 import { TbRocket } from 'react-icons/tb'
+import Trans from '@repo/i18n/Trans'
 
 // Components Imports
 import { Ratings } from '@repo/ui/components/ui/ratings'
@@ -35,11 +36,11 @@ const HeroHorizontalImage = () => {
               className='text-3xl font-bold max-lg:text-center sm:text-4xl md:text-5xl md:leading-[1.2]'
             >
               <span className='from-primary to-destructive bg-gradient-to-r bg-clip-text [-webkit-text-fill-color:transparent]'>
-                Effortless Support
+                <Trans i18nKey='packages-ui:heroHeadlineEffortless' />
               </span>{' '}
               🚀
               <br />
-              Exceptional Service 24/7
+              <Trans i18nKey='packages-ui:heroHeadlineService' />
             </MotionFadeElement>
             <MotionFadeElement
               component='p'
@@ -49,9 +50,9 @@ const HeroHorizontalImage = () => {
               }}
               className='text-textSecondary max-sm:is-full max-lg:max-is-2xl lg:is-11/12 xl:is-[71%] text-pretty text-lg font-semibold max-lg:text-center sm:text-xl sm:leading-[1.4]'
             >
-              Automate Conversations, Resolve Queries Faster, and Boost Customer Satisfaction with the All-in-One{' '}
+              <Trans i18nKey='packages-ui:heroSubheadline' />{' '}
               <span className='text-primary relative text-nowrap'>
-                AI Chatbot Solution.
+                <Trans i18nKey='packages-ui:heroSubheadlineHighlight' />
                 <img
                   src='/images/blocks/hero/underline-wave-background.png'
                   className='-block-end-1 max-is-[10.875rem] sm:max-is-48 absolute start-0'
@@ -68,7 +69,9 @@ const HeroHorizontalImage = () => {
             >
               <AvatarGroup size='3xl' limit={4} avatarUrls={avatarUrls} />
               <div className='flex flex-col items-start gap-1'>
-                <p className='text-textPrimary text-sm leading-4'>Loved by 100+ companies</p>
+                <p className='text-textPrimary text-sm leading-4'>
+                  <Trans i18nKey='packages-ui:heroLovedByCompanies' />
+                </p>
                 <Ratings rating={5} disabled />
               </div>
             </MotionFadeElement>
@@ -83,7 +86,7 @@ const HeroHorizontalImage = () => {
           >
             <RainbowButton size='lg' className='!plb-2.5' asChild>
               <Link href='/#pricing-section'>
-                Get Started Now
+                <Trans i18nKey='packages-ui:heroGetStartedButton' />
                 <TbRocket className='text-xl' />
               </Link>
             </RainbowButton>

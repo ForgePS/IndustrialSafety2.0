@@ -26,6 +26,7 @@ import { useSignOut } from '@repo/supabase/hooks'
 import { deleteImpersonationCookies, deletePaymentCookies } from '@repo/auth/action'
 import { useSettings } from '@repo/ui/hooks/useSettings'
 import { getInitials } from '@repo/ui/utils/getInitials'
+import Trans from '@repo/i18n/Trans'
 import type { User } from '@supabase/supabase-js'
 import type { Mode } from '@repo/ui/types'
 import type { Database } from '@repo/supabase/types'
@@ -81,7 +82,9 @@ const UserDropdown = ({ user, userTableData, roles }: Props) => {
         <DropdownMenuItem asChild>
           <Link href={`/${roles?.includes('admin') ? 'admin' : 'dashboard'}/my-profile`} className='flex gap-2'>
             <TbUser className='text-xl' />
-            <span className='flex-1 truncate'>My Profile</span>
+            <span className='flex-1 truncate'>
+              <Trans i18nKey='layout:myProfile' />
+            </span>
           </Link>
         </DropdownMenuItem>
         <DropdownMenuSeparator />
@@ -101,14 +104,18 @@ const UserDropdown = ({ user, userTableData, roles }: Props) => {
           <DropdownMenuItem asChild>
             <Link href='/admin' className='flex gap-2'>
               <TbSettings className='text-xl' />
-              <span className='flex-1 truncate'>Admin Dashboard</span>
+              <span className='flex-1 truncate'>
+                <Trans i18nKey='layout:adminDashboard' />
+              </span>
             </Link>
           </DropdownMenuItem>
         ) : (
           <DropdownMenuItem asChild>
             <Link href='/dashboard' className='flex gap-2'>
               <TbMoodSmile className='text-xl' />
-              <span className='flex-1 truncate'>User Dashboard</span>
+              <span className='flex-1 truncate'>
+                <Trans i18nKey='layout:userDashboard' />
+              </span>
             </Link>
           </DropdownMenuItem>
         )}
@@ -123,7 +130,9 @@ const UserDropdown = ({ user, userTableData, roles }: Props) => {
           <DropdownMenuItem asChild>
             <button type='submit' className='is-full flex cursor-pointer gap-2 text-start'>
               <TbLogout className='text-xl' />
-              <span className='flex-1 truncate'>Sign out</span>
+              <span className='flex-1 truncate'>
+                <Trans i18nKey='layout:signOut' />
+              </span>
             </button>
           </DropdownMenuItem>
         </form>

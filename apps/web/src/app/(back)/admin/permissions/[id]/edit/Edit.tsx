@@ -20,6 +20,9 @@ import { toast } from '@repo/ui/utils/toast'
 import SubmitButton from '@repo/ui/components/SubmitButton'
 import DeleteDialog from '@repo/ui/components/DeleteDialog'
 import { MultiSelect } from '@repo/ui/components/ui/multi-select'
+import Trans from '@repo/i18n/Trans'
+import { useTranslation } from 'react-i18next'
+import type { TFunction } from 'i18next'
 import type { Database } from '@repo/supabase/types'
 
 // Component Imports
@@ -33,10 +36,11 @@ type PermissionRole = {
 }
 
 // Define Zod Schema for validation
-const permissionSchema = z.object({
-  permission: z.string().min(1, { message: 'Permission name is required.' }),
-  roles: z.array(z.string())
-})
+const permissionSchema = (t: TFunction) =>
+  z.object({
+    permission: z.string().min(1, { message: t('admin:permissionNameRequiredError') }),
+    roles: z.array(z.string())
+  })
 
 const Edit = ({
   id,
@@ -57,10 +61,11 @@ const Edit = ({
 
   // Hooks
   const router = useRouter()
+  const { t } = useTranslation()
 
   // Form setup
-  const form = useForm<z.infer<typeof permissionSchema>>({
-    resolver: zodResolver(permissionSchema),
+  const form = useForm<z.infer<ReturnType<typeof permissionSchema>>>({
+    resolver: zodResolver(permissionSchema(t)),
     defaultValues: {
       permission: permissionData.permission,
       roles: selected
@@ -68,7 +73,7 @@ const Edit = ({
   })
 
   // Form submission handler
-  const onSubmit = async (data: z.infer<typeof permissionSchema>) => {
+  const onSubmit = async (data: z.infer<ReturnType<typeof permissionSchema>>) => {
     try {
       // Update permission
       const { error: permissionError } = await supabase
@@ -80,12 +85,12 @@ const Edit = ({
 
       if (permissionError) {
         if (permissionError.code === '23505') {
-          toast('error', 'This permission already exists')
+          toast('error', t('admin:permissionExistsError'))
 
           return
         }
 
-        toast('error', 'Error updating permission: ' + permissionError.message)
+        toast('error', t('admin:permissionsEditError', { message: permissionError.message }))
 
         return
       }
@@ -97,7 +102,7 @@ const Edit = ({
         .eq('permission_id', id)
 
       if (rolesFetchError) {
-        toast('error', `Failed to fetch existing roles: ${rolesFetchError.message}`)
+        toast('error', t('admin:permissionsEditRolesFetchError', { message: rolesFetchError.message }))
 
         return
       }
@@ -127,7 +132,7 @@ const Edit = ({
           .in('role_id', rolesToRemove)
 
         if (removeError) {
-          toast('error', 'Error removing roles: ' + removeError.message)
+          toast('error', t('admin:removeRolesError', { message: removeError.message }))
 
           return
         }
@@ -140,32 +145,36 @@ const Edit = ({
           .insert(rolesToAdd.map(roleId => ({ permission_id: id, role_id: roleId })))
 
         if (addError) {
-          toast('error', 'Error adding roles: ' + addError.message)
+          toast('error', t('admin:addRolesError', { message: addError.message }))
 
           return
         }
       }
 
-      toast('success', 'Permission updated successfully')
+      toast('success', t('admin:permissionsEditSuccess'))
       router.push('/admin/permissions')
       router.refresh()
     } catch (error: any) {
-      toast('error', 'Error updating permission: ' + error.message)
+      toast('error', t('admin:permissionsEditError', { message: error.message }))
     }
   }
 
   return (
     <>
       <div className='mbe-6 flex items-center justify-between gap-4'>
-        <h2 className='text-2xl font-semibold sm:text-3xl'>Edit Role</h2>
+        <h2 className='text-2xl font-semibold sm:text-3xl'>
+          <Trans i18nKey='admin:permissionsEditTitle' />
+        </h2>
         <div className='flex items-center gap-3'>
           <Button variant='tonalDefault'>
-            <Link href={`/admin/permissions/${id}/view`}>View</Link>
+            <Link href={`/admin/permissions/${id}/view`}>
+              <Trans i18nKey='admin:viewButton' />
+            </Link>
           </Button>
           <DeleteDialog
             itemName='permission'
             handleDelete={() => {
-              handleDelete(id)
+              handleDelete(id, t)
               router.push('/admin/permissions')
               router.refresh()
             }}
@@ -183,7 +192,8 @@ const Edit = ({
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel className='mbe-2 block text-sm font-medium'>
-                        Name<span className='text-destructive'>*</span>
+                        <Trans i18nKey='admin:nameLabel' />
+                        <span className='text-destructive'>*</span>
                       </FormLabel>
                       <FormControl>
                         <Input type='text' {...field} />
@@ -197,7 +207,9 @@ const Edit = ({
                   name='roles'
                   render={() => (
                     <FormItem>
-                      <FormLabel className='mbe-2 block text-sm font-medium'>Roles</FormLabel>
+                      <FormLabel className='mbe-2 block text-sm font-medium'>
+                        <Trans i18nKey='admin:rolesLabel' />
+                      </FormLabel>
                       <FormControl>
                         <MultiSelect
                           selected={selected}
@@ -216,9 +228,16 @@ const Edit = ({
             </CardContent>
           </Card>
           <div className='mbs-6 flex justify-start gap-4'>
-            <SubmitButton formAction={form.handleSubmit(onSubmit) as any} pendingText='Saving...'>Save</SubmitButton>
+            <SubmitButton
+              formAction={form.handleSubmit(onSubmit) as any}
+              pendingText={<Trans i18nKey='admin:savingStatus' />}
+            >
+              <Trans i18nKey='admin:saveButton' />
+            </SubmitButton>
             <Button variant='tonalDefault' asChild>
-              <Link href='/admin/permissions'>Cancel</Link>
+              <Link href='/admin/permissions'>
+                <Trans i18nKey='admin:cancelButton' />
+              </Link>
             </Button>
           </div>
         </form>

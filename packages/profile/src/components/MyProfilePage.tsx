@@ -1,6 +1,7 @@
 // Third-party Imports
 import { TbExclamationCircle } from 'react-icons/tb'
 import { Alert, AlertDescription } from '@repo/ui/components/ui/alert'
+import Trans from '@repo/i18n/Trans'
 
 import { getUserProfile } from '@repo/profile/server'
 
@@ -23,7 +24,9 @@ const MyProfile = async () => {
     return (
       <Alert variant='destructive'>
         <TbExclamationCircle className='bs-5 is-5' />
-        <AlertDescription>{`There was an error fetching the profile data. Error: ${error.message}`}</AlertDescription>
+        <AlertDescription>
+          <Trans i18nKey='packages-profile:errorFetchingProfile' values={{ message: error.message }} />
+        </AlertDescription>
       </Alert>
     )
   }
@@ -39,8 +42,12 @@ const MyProfile = async () => {
   return (
     <div className='flex flex-col gap-y-8'>
       <header>
-        <h1 className='text-textPrimary text-3xl font-bold'>My Profile</h1>
-        <p className='text-textSecondary mbs-2 text-lg'>Manage your user profile here.</p>
+        <h1 className='text-textPrimary text-3xl font-bold'>
+          <Trans i18nKey='packages-profile:myProfileTitle' />
+        </h1>
+        <p className='text-textSecondary mbs-2 text-lg'>
+          <Trans i18nKey='packages-profile:myProfileDescription' />
+        </p>
       </header>
       <section className='space-b-6 divide-b divide-border'>
         <PersonalInformation userData={userData} />

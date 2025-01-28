@@ -5,6 +5,7 @@ import type { ReactNode } from 'react'
 
 // Third-party Imports
 import { useOAuthSignIn } from '@repo/auth/sign-in'
+import Trans from '@repo/i18n/Trans'
 import type { Provider } from '@supabase/supabase-js'
 
 // Component Imports
@@ -68,6 +69,8 @@ const OauthProviders = ({ providers }: { providers: Provider[] }) => {
   return (
     <form className='flex flex-col gap-4'>
       {providers.map(provider => {
+        const { logo, name } = getOAuthProviderLogo()[provider]
+
         return (
           <SubmitButton
             key={provider}
@@ -76,13 +79,17 @@ const OauthProviders = ({ providers }: { providers: Provider[] }) => {
             className='is-full'
             pendingText={
               <>
-                {getOAuthProviderLogo()[provider].logo}
-                <span className='text-textPrimary'>{`Signing in with ${getOAuthProviderLogo()[provider].name}...`}</span>
+                {logo}
+                <span className='text-textPrimary'>
+                  <Trans i18nKey='packages-ui:oauthSigningInButton' values={{ provider: name }} />
+                </span>
               </>
             }
           >
-            {getOAuthProviderLogo()[provider].logo}
-            <span className='text-textPrimary'>{`Sign in with ${getOAuthProviderLogo()[provider].name}`}</span>
+            {logo}
+            <span className='text-textPrimary'>
+              <Trans i18nKey='packages-ui:oauthSignInButton' values={{ provider: name }} />
+            </span>
           </SubmitButton>
         )
       })}

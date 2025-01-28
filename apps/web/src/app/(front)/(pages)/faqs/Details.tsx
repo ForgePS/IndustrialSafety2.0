@@ -9,6 +9,7 @@ import { TbDotsCircleHorizontal } from 'react-icons/tb'
 import { cn } from '@repo/ui/lib/utils'
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@repo/ui/components/ui/accordion'
 import { Avatar, AvatarFallback } from '@repo/ui/components/ui/avatar'
+import Trans from '@repo/i18n/Trans'
 
 // Type Imports
 import type { FaqWithCategory } from '@/app/(back)/admin/faqs/faq/Faq'
@@ -48,7 +49,9 @@ const Details = ({ categoryData, faqData }: { categoryData: CategoryTypes[]; faq
         >
           <aside className='bs-max block-start-20 lg:sticky'>
             <div className='flex flex-col gap-y-6'>
-              <h2 className='text-textPrimary text-xl font-semibold'>Enter Your Details</h2>
+              <h2 className='text-textPrimary text-xl font-semibold'>
+                <Trans i18nKey='front-pages:faqsEnterDetails' />
+              </h2>
               <ul className='bg-card flex flex-col gap-y-4 rounded-md border p-6'>
                 {categoryData
                   .filter(category => filteredFaqData.some(faq => faq.category_id === category.id))
@@ -65,7 +68,7 @@ const Details = ({ categoryData, faqData }: { categoryData: CategoryTypes[]; faq
                   <li className='text-textSecondary flex items-center gap-2'>
                     <TbDotsCircleHorizontal className='bs-6 is-6' />
                     <Link href='#others' className='truncate font-medium'>
-                      Others
+                      <Trans i18nKey='front-pages:faqsOthersTitle' />
                     </Link>
                   </li>
                 )}
@@ -113,7 +116,9 @@ const Details = ({ categoryData, faqData }: { categoryData: CategoryTypes[]; faq
                         <TbDotsCircleHorizontal className='bs-6 is-6' />
                       </AvatarFallback>
                     </Avatar>
-                    <h2 className='text-textPrimary text-xl font-semibold capitalize'>Others</h2>
+                    <h2 className='text-textPrimary text-xl font-semibold capitalize'>
+                      <Trans i18nKey='front-pages:faqsOthersTitle' />
+                    </h2>
                   </div>
                   <Accordion type='single' collapsible className='is-full' variant='outline'>
                     {othersFaqData.map((faq, index) => (
@@ -135,9 +140,11 @@ const Details = ({ categoryData, faqData }: { categoryData: CategoryTypes[]; faq
         </div>
       ) : (
         <div className='bs-full mlb-10 max-sm:mli-6 flex flex-col items-center justify-center gap-y-2'>
-          <h1 className='text-textPrimary text-2xl font-medium'>No FAQs Available</h1>
+          <h1 className='text-textPrimary text-2xl font-medium'>
+            <Trans i18nKey='front-pages:faqsNoFaqsTitle' />
+          </h1>
           <p className='text-textSecondary text-center'>
-            There are no FAQs available at the moment. Please check back later for more information.
+            <Trans i18nKey='front-pages:faqsNoFaqsDesc' />
           </p>
         </div>
       )}

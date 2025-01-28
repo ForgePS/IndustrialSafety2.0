@@ -8,6 +8,7 @@ import type { MouseEvent } from 'react'
 import Link from 'next/link'
 
 // Third-party Imports
+import Trans from '@repo/i18n/Trans'
 import { cn } from '@repo/ui/lib/utils'
 
 type NestedHeading = {
@@ -148,7 +149,9 @@ const TableOfContents = () => {
 
   return (
     <div className='flex flex-col items-start gap-6'>
-      <p className='text-textPrimary text-lg font-semibold sm:text-xl'>Table of Contents</p>
+      <p className='text-textPrimary text-lg font-semibold sm:text-xl'>
+        <Trans i18nKey='front-pages:blogTableOfContents' />
+      </p>
       {nestedHeadings.length !== 0 && renderNestedHeadings(nestedHeadings)}
     </div>
   )

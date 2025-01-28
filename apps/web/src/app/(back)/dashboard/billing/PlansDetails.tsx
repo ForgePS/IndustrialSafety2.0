@@ -14,6 +14,7 @@ import { saveCheckoutData } from '@repo/billing/src/actions'
 import { RadioGroup } from '@repo/ui/components/ui/radio-group'
 import CustomInputHorizontal from '@repo/ui/components/custom-inputs/Horizontal'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@repo/ui/components/ui/card'
+import Trans from '@repo/i18n/Trans'
 import type { PlanVariant, Plan } from '@repo/billing/src/types/billingConfigTypes'
 
 const PlansDetails = ({ planData }: { planData: Plan[] }) => {
@@ -92,9 +93,11 @@ const PlansDetails = ({ planData }: { planData: Plan[] }) => {
   return (
     <Card>
       <CardHeader>
-        <CardTitle className='text-xl font-medium'>Plans</CardTitle>
+        <CardTitle className='text-xl font-medium'>
+          <Trans i18nKey='dashboard:plansTitle' />
+        </CardTitle>
         <CardDescription>
-          Choose a plan that fits your team&apos;s needs. You can upgrade or downgrade your plan at any time.
+          <Trans i18nKey='dashboard:plansDescription' />
         </CardDescription>
       </CardHeader>
       {planData?.length !== 0 && (
@@ -104,7 +107,9 @@ const PlansDetails = ({ planData }: { planData: Plan[] }) => {
             {selectedPlan?.variants[0].paymentType === 'recurring' ? (
               <>
                 <div className='mb-4 rounded-md border p-4'>
-                  <h6 className='mb-3 text-base font-medium'>Choose your billing interval</h6>
+                  <h6 className='mb-3 text-base font-medium'>
+                    <Trans i18nKey='dashboard:billingIntervalTitle' />
+                  </h6>
                   <RadioGroup onValueChange={handleIntervalChange} className='flex flex-wrap items-center gap-4'>
                     {['monthly', 'yearly'].map((interval, index) => (
                       <CustomInputHorizontal
@@ -121,7 +126,9 @@ const PlansDetails = ({ planData }: { planData: Plan[] }) => {
                     ))}
                   </RadioGroup>
                 </div>
-                <h6 className='mb-3 text-sm font-medium'>Pick your preferred plan</h6>
+                <h6 className='mb-3 text-sm font-medium'>
+                  <Trans i18nKey='dashboard:pickPlanTitle' />
+                </h6>
                 <RadioGroup onValueChange={handlePlanChange}>
                   {planData?.map(plan =>
                     plan.variants
@@ -158,7 +165,9 @@ const PlansDetails = ({ planData }: { planData: Plan[] }) => {
               </>
             ) : (
               <>
-                <h6 className='mb-3 text-sm font-medium'>Pick your preferred plan</h6>
+                <h6 className='mb-3 text-sm font-medium'>
+                  <Trans i18nKey='dashboard:pickPlanTitle' />
+                </h6>
                 <RadioGroup onValueChange={handlePlanChange}>
                   {planData?.map(plan =>
                     plan.variants
@@ -178,7 +187,9 @@ const PlansDetails = ({ planData }: { planData: Plan[] }) => {
                                   <h3 className='text-textPrimary mb-1 text-base font-medium'>
                                     ${variant.lineItems[0].cost}
                                   </h3>
-                                  <p className='text-textSecondary text-sm'>Pay once</p>
+                                  <p className='text-textSecondary text-sm'>
+                                    <Trans i18nKey='dashboard:payOnceText' />
+                                  </p>
                                 </div>
                               </div>
                             ),
@@ -198,18 +209,30 @@ const PlansDetails = ({ planData }: { planData: Plan[] }) => {
           <div>
             <h3 className='text-textPrimary mb-2 text-base font-medium'>
               {selectedVariantDetails?.name} /{' '}
-              {selectedVariantDetails?.paymentType === 'recurring' ? `Billed ${billingInterval}` : 'Pay once'}
+              {selectedVariantDetails?.paymentType === 'recurring' ? (
+                `Billed ${billingInterval}`
+              ) : (
+                <Trans i18nKey='dashboard:payOnceText' />
+              )}
             </h3>
             <p className='text-textSecondary text-sm'>{selectedVariantDetails?.description}</p>
             <hr className='my-4' />
-            <h3 className='text-textPrimary mb-2 text-base font-medium'>Details</h3>
+            <h3 className='text-textPrimary mb-2 text-base font-medium'>
+              <Trans i18nKey='dashboard:detailsTitle' />
+            </h3>
             <p className='text-textSecondary text-sm'>
-              Base Plan (
-              {selectedVariantDetails?.paymentType === 'recurring' ? `Billed ${billingInterval}` : 'Pay once'}) - $
-              {selectedVariantDetails?.lineItems[0].cost}
+              <Trans i18nKey='dashboard:basePlanText' /> (
+              {selectedVariantDetails?.paymentType === 'recurring' ? (
+                `Billed ${billingInterval}`
+              ) : (
+                <Trans i18nKey='dashboard:payOnceText' />
+              )}
+              ) - ${selectedVariantDetails?.lineItems[0].cost}
             </p>
             <hr className='my-4' />
-            <h3 className='text-textPrimary mb-2 text-base font-medium'>Features</h3>
+            <h3 className='text-textPrimary mb-2 text-base font-medium'>
+              <Trans i18nKey='dashboard:featuresTitle' />
+            </h3>
             <ul className='space-y-2'>
               {selectedVariantDetails?.paymentType === 'recurring'
                 ? selectedPlan?.features?.map((feature, index) => (
@@ -229,9 +252,9 @@ const PlansDetails = ({ planData }: { planData: Plan[] }) => {
               <SubmitButton
                 className='mt-6 bg-indigo-600 text-white hover:bg-indigo-700'
                 formAction={handleSubmit}
-                pendingText='Processing...'
+                pendingText={<Trans i18nKey='dashboard:processingText' />}
               >
-                Proceed to Payment
+                <Trans i18nKey='dashboard:proceedToPaymentButton' />
               </SubmitButton>
             </form>
           </div>

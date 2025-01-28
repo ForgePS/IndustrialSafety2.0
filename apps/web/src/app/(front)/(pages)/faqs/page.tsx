@@ -2,6 +2,7 @@
 import { TbExclamationCircle } from 'react-icons/tb'
 import { Alert, AlertDescription } from '@repo/ui/components/ui/alert'
 import { createClient } from '@repo/supabase/server'
+import Trans from '@repo/i18n/Trans'
 
 // Components Imports
 import Details from './Details'
@@ -26,7 +27,10 @@ const FaqPage = async () => {
           <Alert variant='destructive' className='!is-[90%] sm:!is-[80%] md:!is-[70%] lg:!is-2/4 mlb-8'>
             <TbExclamationCircle className='bs-5 is-5' />
             <AlertDescription>
-              {`There was an error fetching the data. Error: ${categoryError?.message || faqError?.message || 'Unknown error'}`}
+              <Trans
+                i18nKey='front-pages:faqsFetchError'
+                values={{ message: categoryError?.message || faqError?.message || 'Unknown error' }}
+              />
             </AlertDescription>
           </Alert>
         </div>

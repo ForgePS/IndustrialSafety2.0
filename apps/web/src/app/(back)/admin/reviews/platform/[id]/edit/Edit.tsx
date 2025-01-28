@@ -17,6 +17,9 @@ import { createClient } from '@repo/supabase/client'
 import { toast } from '@repo/ui/utils/toast'
 import type { Database } from '@repo/supabase/types'
 import DeleteDialog from '@repo/ui/components/DeleteDialog'
+import Trans from '@repo/i18n/Trans'
+import { useTranslation } from 'react-i18next'
+import type { TFunction } from 'i18next'
 
 // Component Imports
 import PlatformImage from './PlatformImage'
@@ -24,11 +27,12 @@ import { deletePlatform } from '../../Platforms'
 import { generateSlug } from '../../create/Create'
 
 // Define Zod Schema for validation
-const platformSchema = z.object({
-  platform_name: z.string().min(1, { message: 'Platform name is required.' }),
-  slug: z.string().optional(),
-  logo: z.string().optional().nullable()
-})
+const platformSchema = (t: TFunction) =>
+  z.object({
+    platform_name: z.string().min(1, { message: t('admin:platformNameRequiredError') }),
+    slug: z.string().optional(),
+    logo: z.string().optional().nullable()
+  })
 
 const EditPlatform = ({
   platformData,
@@ -39,11 +43,14 @@ const EditPlatform = ({
 }) => {
   // Vars
   const supabase = createClient()
+
+  // Hooks
   const router = useRouter()
+  const { t } = useTranslation()
 
   // Form setup
-  const form = useForm<z.infer<typeof platformSchema>>({
-    resolver: zodResolver(platformSchema),
+  const form = useForm<z.infer<ReturnType<typeof platformSchema>>>({
+    resolver: zodResolver(platformSchema(t)),
     defaultValues: {
       platform_name: platformData.platform_name || '',
       slug: platformData.slug || '',
@@ -52,7 +59,7 @@ const EditPlatform = ({
   })
 
   // Form submission handler
-  const onSubmit = async (data: z.infer<typeof platformSchema>) => {
+  const onSubmit = async (data: z.infer<ReturnType<typeof platformSchema>>) => {
     const { error } = await supabase
       .from('review_platforms')
       .update({
@@ -63,13 +70,13 @@ const EditPlatform = ({
       .eq('id', id)
 
     if (error) {
-      console.error('Error creating platform: ', error.message)
-      toast('error', 'Error creating platform: ' + error.message)
+      console.error('Error updating platform: ', error.message)
+      toast('error', t('admin:reviewPlatformsEditError', { message: error.message }))
 
       return
     }
 
-    toast('success', 'Platform created successfully')
+    toast('success', t('admin:reviewPlatformsEditSuccess'))
     router.push('/admin/reviews/platform')
     router.refresh()
   }
@@ -81,10 +88,12 @@ const EditPlatform = ({
   return (
     <div className='flex flex-col gap-y-8'>
       <div className='flex gap-y-2 max-sm:flex-col sm:items-center sm:justify-between'>
-        <h1 className='text-textPrimary text-3xl font-bold'>Create Review Platform</h1>
+        <h1 className='text-textPrimary text-3xl font-bold'>
+          <Trans i18nKey='admin:reviewPlatformsEditTitle' />
+        </h1>
         <DeleteDialog
           handleDelete={async () => {
-            await deletePlatform(id)
+            await deletePlatform(id, t)
             router.push('/admin/reviews/platform')
             router.refresh()
           }}
@@ -96,7 +105,9 @@ const EditPlatform = ({
           <div className='grid grid-cols-2 gap-6'>
             <Card className='col-span-full lg:col-span-2'>
               <CardHeader className='border-be'>
-                <CardDescription className='font-medium'>Review Details</CardDescription>
+                <CardDescription className='font-medium'>
+                  <Trans i18nKey='admin:reviewDetailsSection' />
+                </CardDescription>
               </CardHeader>
               <CardContent className='pbs-6 flex flex-col gap-6'>
                 <div className='grid gap-6 md:grid-cols-2'>
@@ -106,11 +117,11 @@ const EditPlatform = ({
                     render={({ field }) => (
                       <FormItem className='is-full'>
                         <FormLabel>
-                          Platform Name
+                          <Trans i18nKey='admin:platformNameLabel' />
                           <sup className='text-destructive'>*</sup>
                         </FormLabel>
                         <FormControl>
-                          <Input placeholder='Enter platform name' {...field} />
+                          <Input placeholder={t('admin:platformNamePlaceholder')} {...field} />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -121,12 +132,16 @@ const EditPlatform = ({
                     name='slug'
                     render={({ field }) => (
                       <FormItem className='is-full'>
-                        <FormLabel>Platform Slug</FormLabel>
+                        <FormLabel>
+                          <Trans i18nKey='admin:platformSlugLabel' />
+                        </FormLabel>
                         <FormControl>
-                          <Input placeholder='Enter platform slug' {...field} />
+                          <Input placeholder={t('admin:platformSlugPlaceholder')} {...field} />
                         </FormControl>
                         <FormMessage />
-                        <small className='text-muted-foreground'>Leave blank to auto-generate from name</small>
+                        <small className='text-muted-foreground'>
+                          <Trans i18nKey='admin:autoGenerateSlugHelp' />
+                        </small>
                       </FormItem>
                     )}
                   />
@@ -137,11 +152,16 @@ const EditPlatform = ({
               </CardContent>
             </Card>
             <div className='col-span-full flex gap-4 max-sm:flex-col'>
-              <SubmitButton formAction={form.handleSubmit(onSubmit) as any} pendingText='Saving...'>
-                Save
+              <SubmitButton
+                formAction={form.handleSubmit(onSubmit) as any}
+                pendingText={<Trans i18nKey='admin:savingStatus' />}
+              >
+                <Trans i18nKey='admin:saveButton' />
               </SubmitButton>
               <Button type='button' variant='tonalDefault' asChild>
-                <Link href='/admin/reviews/platform'>Cancel</Link>
+                <Link href='/admin/reviews/platform'>
+                  <Trans i18nKey='admin:cancelButton' />
+                </Link>
               </Button>
             </div>
           </div>

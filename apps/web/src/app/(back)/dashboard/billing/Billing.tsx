@@ -1,6 +1,7 @@
 // Third-party Imports
 import { TbInfoCircle } from 'react-icons/tb'
 import { Alert, AlertDescription } from '@repo/ui/components/ui/alert'
+import Trans from '@repo/i18n/Trans'
 import type { Database } from '@repo/supabase/types'
 
 // Component Imports
@@ -22,11 +23,15 @@ const Billing = ({ billingRecord, paymentProvider }: Props) => {
 
   return (
     <div className='space-b-6'>
-      <h1 className='mbe-4 text-3xl font-bold'>Billing</h1>
+      <h1 className='mbe-4 text-3xl font-bold'>
+        <Trans i18nKey='dashboard:billingTitle' />
+      </h1>
       {!planData || planData.length === 0 ? (
         <Alert>
           <TbInfoCircle className='bs-6 is-6' />
-          <AlertDescription>No plans found. Please contact admin to update the plan.</AlertDescription>
+          <AlertDescription>
+            <Trans i18nKey='dashboard:noPlansFoundAlert' />
+          </AlertDescription>
         </Alert>
       ) : lastSuccessfulBilling ? (
         <BillingDetails

@@ -11,6 +11,7 @@ import SubmitButton from '@repo/ui/components/SubmitButton'
 import type { SettingsConfiguration } from '@repo/supabase/settingsConfigurationTypes'
 import { getPublicGeneralSettings } from '@repo/supabase/clientHelpers'
 import { createClient } from '@repo/supabase/client'
+import Trans from '@repo/i18n/Trans'
 
 const ShareBlog = ({ settings }: { settings: SettingsConfiguration['general_settings'] }) => {
   // States
@@ -30,7 +31,7 @@ const ShareBlog = ({ settings }: { settings: SettingsConfiguration['general_sett
 
     if (!error) {
       setShareThisEnabled(isSwitchOn)
-      toast.success('Settings saved!', {
+      toast.success(<Trans i18nKey='admin:settingsToastSuccess' />, {
         cancel: {
           label: <TbX />,
           onClick: () => {}
@@ -65,13 +66,20 @@ const ShareBlog = ({ settings }: { settings: SettingsConfiguration['general_sett
               onCheckedChange={value => setShareThisEnabled(value)}
             />
             <Label htmlFor='share-enabled' className='mis-2 font-medium'>
-              Share This Enabled<span className='text-destructive'>*</span>
+              <Trans i18nKey='admin:settingsShareBlogLabel' />
+              <span className='text-destructive'>*</span>
             </Label>
           </div>
-          <p className='text-textDisabled text-sm'>If enabled, the Share This widget will be visible on the blog.</p>
+          <p className='text-textDisabled text-sm'>
+            <Trans i18nKey='admin:settingsShareBlogDescription' />
+          </p>
         </div>
-        <SubmitButton formAction={handleSubmit} className='mbs-6 max-sm:is-full' pendingText='Saving Changes...'>
-          Save Changes
+        <SubmitButton
+          formAction={handleSubmit}
+          className='mbs-6 max-sm:is-full'
+          pendingText={<Trans i18nKey='admin:settingsApplicationSavingChanges' />}
+        >
+          <Trans i18nKey='admin:settingsSaveChanges' />
         </SubmitButton>
       </form>
     </CardContent>

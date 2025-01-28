@@ -13,6 +13,7 @@ import { Label } from '@repo/ui/components/ui/label'
 import { getPublicPaymentProvider } from '@repo/supabase/clientHelpers'
 import { RadioGroup, RadioGroupItem } from '@repo/ui/components/ui/radio-group'
 import { Card, CardContent, CardHeader, CardTitle } from '@repo/ui/components/ui/card'
+import Trans from '@repo/i18n/Trans'
 
 const PaymentProvidersForm = () => {
   // States
@@ -27,7 +28,7 @@ const PaymentProvidersForm = () => {
     if (formData.get('payment_provider') !== dbProvider) {
       const { error } = await getPublicPaymentProvider()
 
-      toast.success('Settings saved!', {
+      toast.success(<Trans i18nKey='admin:settingsToastSuccess' />, {
         cancel: {
           label: <TbX />,
           onClick: () => {}
@@ -73,7 +74,9 @@ const PaymentProvidersForm = () => {
     <form className='flex flex-col items-start gap-4'>
       <Card className='is-full'>
         <CardHeader>
-          <CardTitle>Payment Providers</CardTitle>
+          <CardTitle>
+            <Trans i18nKey='admin:settingsPaymentProvidersTitle' />
+          </CardTitle>
         </CardHeader>
         <CardContent>
           <RadioGroup
@@ -86,19 +89,21 @@ const PaymentProvidersForm = () => {
               <RadioGroupItem value='stripe' id='stripe' size='sm' />
               <div>
                 <Label htmlFor='stripe' className='font-medium'>
-                  Stripe
+                  <Trans i18nKey='admin:settingsPaymentProvidersStripeLabel' />
                 </Label>
-                <p className='text-muted-foreground text-sm'>If enabled, customers will be able to pay using Stripe.</p>
+                <p className='text-muted-foreground text-sm'>
+                  <Trans i18nKey='admin:settingsPaymentProvidersStripeDescription' />
+                </p>
               </div>
             </div>
             <div className='flex items-center gap-x-2'>
               <RadioGroupItem value='lemon_squeezy' id='lemon_squeezy' size='sm' />
               <div>
                 <Label htmlFor='lemon_squeezy' className='font-medium'>
-                  Lemon Squeezy
+                  <Trans i18nKey='admin:settingsPaymentProvidersLemonSqueezyLabel' />
                 </Label>
                 <p className='text-muted-foreground text-sm'>
-                  If enabled, customers will be able to pay using Lemon Squeezy.
+                  <Trans i18nKey='admin:settingsPaymentProvidersLemonSqueezyDescription' />
                 </p>
               </div>
             </div>
@@ -106,7 +111,7 @@ const PaymentProvidersForm = () => {
         </CardContent>
       </Card>
       <Button type='submit' formAction={e => handleSubmit(e)}>
-        Save Changes
+        <Trans i18nKey='admin:settingsSaveChanges' />
       </Button>
     </form>
   )

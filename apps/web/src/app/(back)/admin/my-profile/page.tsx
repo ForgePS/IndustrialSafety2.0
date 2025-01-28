@@ -1,5 +1,5 @@
 // Third-party Imports
-import MyProfilePage  from '@repo/profile/page'
+import MyProfilePage from '@repo/profile/page'
 
 const ProfilePage = () => {
   return <MyProfilePage />

@@ -1,12 +1,11 @@
 'use client'
 
 // Third-party Imports
-import type { ColumnDef } from '@tanstack/react-table'
-import type { Database } from '@repo/supabase/types'
-
-// Component Imports
 import { Card } from '@repo/ui/components/ui/card'
 import DataTable from '@repo/ui/components/ui/data-table'
+import Trans from '@repo/i18n/Trans'
+import type { ColumnDef } from '@tanstack/react-table'
+import type { Database } from '@repo/supabase/types'
 
 type User = {
   name: string
@@ -25,12 +24,12 @@ const ViewTable = ({ users }: { users: RolesUsers[] }) => {
   const columns: ColumnDef<User>[] = [
     {
       accessorKey: 'name',
-      header: 'Name',
+      header: () => <Trans i18nKey='admin:nameLabel' />,
       cell: ({ row }) => <div className='capitalize'>{row.original.name}</div>
     },
     {
       accessorKey: 'email',
-      header: 'Email',
+      header: () => <Trans i18nKey='admin:emailLabel' />,
       cell: ({ row }) => <div className='capitalize'>{row.original.email}</div>
     }
   ]
@@ -42,7 +41,11 @@ const ViewTable = ({ users }: { users: RolesUsers[] }) => {
           data={allUsers}
           columns={columns}
           search={{ enabled: true }}
-          title={<h2 className='text-lg font-medium'>Users</h2>}
+          title={
+            <h2 className='text-lg font-medium'>
+              <Trans i18nKey='admin:usersSection' />
+            </h2>
+          }
         />
       </Card>
     </div>

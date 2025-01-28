@@ -18,6 +18,7 @@ import { MotionFadeElement } from '@repo/ui/components/ui/motion-element'
 import HeroHorizontalImage from '@repo/ui/blocks/hero/HeroHorizontalImage'
 import FeaturesImageAccordion from '@repo/ui/blocks/features/FeaturesImageAccordion'
 import AdditionalFeaturesVertical from '@repo/ui/blocks/additional-features/AdditionalFeaturesVertical'
+import Trans from '@repo/i18n/Trans'
 
 // Component Imports
 import Pricing from './Pricing'
@@ -114,14 +115,14 @@ const LandingPage = async () => {
           <SectionHeader
             title={
               <>
-                Real{' '}
+                <Trans i18nKey='front-pages:landingReviewsTitle1' />{' '}
                 <span className='relative'>
-                  Customers Reviews
+                  <Trans i18nKey='front-pages:landingReviewsTitle2' />
                   <span className='bs-0.5 is-full -block-end-0.5 from-primary/40 to-primary/0 absolute start-0 rounded-full bg-gradient-to-r' />
                 </span>
               </>
             }
-            subtitle='See what our customers have to say about their experience with our products.'
+            subtitle={<Trans i18nKey='front-pages:landingReviewsSubtitle' />}
           />
         </MotionFadeElement>
         <Reviews data={reviewsData} platformData={platformData} transitionDelay={0.5} />
@@ -132,14 +133,20 @@ const LandingPage = async () => {
       {/* Pricing Section */}
       <SectionWrapper id='pricing-section' className='plb-16 sm:plb-20 md:plb-[150px] flex flex-col gap-24'>
         <Pricing
-          title='Pricing Details'
+          title={<Trans i18nKey='front-pages:landingPricingTitle' />}
           description={
             <>
               <div className='flex flex-wrap items-center justify-center gap-2'>
-                <Badge className='text-destructive bg-destructive/20'>UP TO 40% OFF</Badge>
-                <p className='text-textPrimary text-lg font-semibold sm:text-xl'>for First 100 Customers.</p>
+                <Badge className='text-destructive bg-destructive/20'>
+                  <Trans i18nKey='front-pages:landingPricingBadge' />
+                </Badge>
+                <p className='text-textPrimary text-lg font-semibold sm:text-xl'>
+                  <Trans i18nKey='front-pages:landingPricingOffer' />
+                </p>
               </div>
-              <p className='text-textSecondary text-center text-base'>All-inclusive pricing. Shop now and save big!</p>
+              <p className='text-textSecondary text-center text-base'>
+                <Trans i18nKey='front-pages:landingPricingDesc' />
+              </p>
             </>
           }
           data={pricingData}
@@ -147,7 +154,7 @@ const LandingPage = async () => {
       </SectionWrapper>
 
       {/* CTA Discord Section */}
-      <SectionWrapper id='discord-section'>
+      <SectionWrapper id='discord-section' sectionClassName='overflow-visible'>
         <CTADiscord
           image={ctaDiscordData.image}
           title={ctaDiscordData.title}
@@ -168,9 +175,9 @@ const LandingPage = async () => {
           <SectionHeader
             title={
               <>
-                Frequently asked{' '}
+                <Trans i18nKey='front-pages:landingFaqTitle1' />{' '}
                 <span className='relative'>
-                  questions
+                  <Trans i18nKey='front-pages:landingFaqTitle2' />
                   <span className='bs-0.5 is-full -block-end-0.5 from-primary/40 to-primary/0 absolute start-0 rounded-full bg-gradient-to-r' />
                 </span>
               </>
@@ -178,9 +185,9 @@ const LandingPage = async () => {
             subtitle={
               <>
                 <Link href='/faqs' className='underline'>
-                  Check out the full FAQ
+                  <Trans i18nKey='front-pages:landingFaqLink' />
                 </Link>{' '}
-                for more information about ChatFlow AI.
+                <Trans i18nKey='front-pages:landingFaqSubtitle' />
               </>
             }
           />

@@ -14,8 +14,11 @@ import type { Database } from '@repo/supabase/types'
 import DeleteDialog from '@repo/ui/components/DeleteDialog'
 import { createClient } from '@repo/supabase/client'
 import { toast } from '@repo/ui/utils/toast'
+import Trans from '@repo/i18n/Trans'
+import { useTranslation } from 'react-i18next'
+import type { TFunction } from 'i18next'
 
-export const handleDelete = async (id: number) => {
+export const handleDelete = async (id: number, t: TFunction) => {
   const supabase = createClient()
 
   try {
@@ -23,7 +26,7 @@ export const handleDelete = async (id: number) => {
     const { data: userRoles } = await supabase.from('user_roles').select('user_id').eq('role_id', id)
 
     if (userRoles && userRoles.length > 0) {
-      toast('error', 'Cannot delete role with assigned users'),
+      toast('error', t('admin:rolesActionsDeleteUsersError')),
         {
           duration: 6000
         }
@@ -40,7 +43,7 @@ export const handleDelete = async (id: number) => {
     if (rolePermissionsError) throw rolePermissionsError
 
     if (rolePermissions && rolePermissions.length > 0) {
-      toast('error', 'This role has assigned permissions. Please remove all permissions before deleting the role.'),
+      toast('error', t('admin:rolesActionsDeletePermissionsError')),
         {
           duration: 7000
         }
@@ -52,31 +55,32 @@ export const handleDelete = async (id: number) => {
     const { error } = await supabase.from('roles').delete().eq('id', id)
 
     if (error) {
-      toast('error', 'Error deleting role: ' + error.message)
+      toast('error', t('admin:rolesActionsDeleteError', { message: error.message }))
 
       return
     }
 
-    toast('success', 'Role deleted successfully')
+    toast('success', t('admin:rolesActionsDeleteSuccess'))
   } catch (error: any) {
-    toast('error', 'Error deleting role: ' + error.message)
+    toast('error', t('admin:rolesActionsDeleteError', { message: error.message }))
   }
 }
 
 const Roles = ({ rolesData }: { rolesData: Database['public']['Tables']['roles']['Row'][] }) => {
   // Hooks
   const router = useRouter()
+  const { t } = useTranslation()
 
   // Define Columns
   const columns: ColumnDef<Database['public']['Tables']['roles']['Row']>[] = [
     {
       accessorKey: 'role',
-      header: 'Name',
+      header: () => <Trans i18nKey='admin:nameLabel' />,
       cell: ({ row }) => <div className='capitalize'>{row.getValue('role')}</div>
     },
     {
       accessorKey: 'hierarchy',
-      header: 'Hierarchy',
+      header: () => <Trans i18nKey='admin:hierarchyLabel' />,
       cell: ({ row }) => <div className='capitalize'>{row.getValue('hierarchy')}</div>
     },
     {
@@ -86,17 +90,17 @@ const Roles = ({ rolesData }: { rolesData: Database['public']['Tables']['roles']
         <div className='flex items-center gap-2'>
           <Link href={`/admin/roles/${row.original.id}/edit`} className='text-primary flex items-center gap-1'>
             <TbEdit />
-            Edit
+            <Trans i18nKey='admin:editButton' />
           </Link>
           <Link href={`/admin/roles/${row.original.id}/view`} className='text-primary flex items-center gap-1'>
             <TbEye />
-            View
+            <Trans i18nKey='admin:viewButton' />
           </Link>
           <DeleteDialog
             variant='ghostDestructive'
             itemName='role'
             handleDelete={() => {
-              handleDelete(row.original.id)
+              handleDelete(row.original.id, t)
               router.refresh()
             }}
           />
@@ -108,9 +112,13 @@ const Roles = ({ rolesData }: { rolesData: Database['public']['Tables']['roles']
   return (
     <div className='flex flex-col gap-y-8'>
       <header className='flex gap-y-2 max-sm:flex-col sm:items-center sm:justify-between'>
-        <h1 className='text-textPrimary text-3xl font-bold'>Roles</h1>
+        <h1 className='text-textPrimary text-3xl font-bold'>
+          <Trans i18nKey='admin:rolesLabel' />
+        </h1>
         <Link href='/admin/roles/create'>
-          <Button className='max-sm:is-full'>New Role</Button>
+          <Button className='max-sm:is-full'>
+            <Trans i18nKey='admin:rolesNewRole' />
+          </Button>
         </Link>
       </header>
       <section className='space-b-6 divide-b divide-border'>

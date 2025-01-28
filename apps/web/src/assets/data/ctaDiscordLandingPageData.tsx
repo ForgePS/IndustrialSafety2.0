@@ -3,19 +3,19 @@ import Link from 'next/link'
 
 // Third-party Imports
 import { Button } from '@repo/ui/components/ui/button'
+import Trans from '@repo/i18n/Trans'
 
 const data = {
   image: {
     srcLight: '/images/pages/discord-server-light.png',
     srcDark: '/images/pages/discord-server-dark.png'
   },
-  title: 'Join Our Community of Innovators',
-  description:
-    'Connect with other businesses using ChatFlow AI, share best practices, get tips from experts, and collaborate on enhancing customer support experiences.',
+  title: <Trans i18nKey='data:discordTitle' />,
+  description: <Trans i18nKey='data:discordDescription' />,
   button: (
     <Button size='lg' asChild>
       <Link href='https://discord.com/invite/kBHkY7DekX' target='_blank'>
-        Join Our Community Now
+        <Trans i18nKey='data:discordButton' />
       </Link>
     </Button>
   )

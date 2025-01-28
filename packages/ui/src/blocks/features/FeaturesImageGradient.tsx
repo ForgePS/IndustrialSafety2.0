@@ -21,12 +21,12 @@ type ImageType = {
 
 type Props = {
   icon: ReactNode
-  content: string
+  content: ReactNode
   title: ReactNode
   description: ReactNode
   image: ImageType | ReactNode
   imageDirection?: 'left' | 'right'
-  features: string[]
+  features: ReactNode[]
   className?: string
   transitionDelay?: number
   transitionDuration?: number

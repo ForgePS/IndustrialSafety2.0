@@ -14,6 +14,8 @@ import PasswordInput from '@repo/ui/components/ui/password-input'
 import { Alert, AlertDescription, AlertTitle } from '@repo/ui/components/ui/alert'
 import { passwordSignInFormSchema, usePasswordSignIn } from '@repo/auth/sign-in'
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@repo/ui/components/ui/form'
+import Trans from '@repo/i18n/Trans'
+import { useTranslation } from 'react-i18next'
 import type { PasswordSignInFormData } from '@repo/auth/sign-in'
 import type { PasswordSignUpFormData } from '@repo/auth/sign-up'
 import type { User } from '@supabase/supabase-js'
@@ -26,8 +28,11 @@ const AuthForm = ({ users }: { users: User[] | null }) => {
   const [showAlert, setShowAlert] = useState(false)
 
   // Hooks
+  const { t } = useTranslation()
+
+  // Vars
   const form = useForm<PasswordSignInFormData>({
-    resolver: zodResolver(passwordSignInFormSchema),
+    resolver: zodResolver(passwordSignInFormSchema(t)),
     defaultValues: {
       email: '',
       password: ''
@@ -74,28 +79,36 @@ const AuthForm = ({ users }: { users: User[] | null }) => {
 
   return (
     <Form {...form}>
-      <h3 className='text-textPrimary self-start text-xl font-semibold'>Enter Your Details</h3>
+      <h3 className='text-textPrimary self-start text-xl font-semibold'>
+        <Trans i18nKey='front-pages:checkoutEnterDetails' />
+      </h3>
       <Card>
         <CardContent className='pbs-6 flex flex-col gap-4'>
           {showAlert && (
             <Alert variant='tonalDestructive'>
               <TbAlertTriangle className='is-6 bs-6' />
-              <AlertTitle>Error</AlertTitle>
+              <AlertTitle>
+                <Trans i18nKey='front-pages:checkoutErrorTitle' />
+              </AlertTitle>
               <AlertDescription>
-                {(singInError as unknown) === 'Invalid login credentials'
-                  ? 'The email address or password you entered is incorrect. Please try again.'
-                  : (singUpError as unknown) === 'User already registered'
-                    ? 'User already exists with this email address. Please try again with a different email address or sign in with this email address.'
-                    : 'An error occurred. Please try again later.'}
+                {(singInError as unknown) === 'Invalid login credentials' ? (
+                  <Trans i18nKey='front-pages:checkoutInvalidCredentials' />
+                ) : (singUpError as unknown) === 'User already registered' ? (
+                  <Trans i18nKey='front-pages:checkoutUserExists' />
+                ) : (
+                  <Trans i18nKey='front-pages:checkoutGenericError' />
+                )}
               </AlertDescription>
             </Alert>
           )}
           {isSignUpSuccess ? (
             <Alert variant='tonalSuccess'>
               <TbCircleCheck className='is-6 bs-6' />
-              <AlertTitle>Sign Up Successful</AlertTitle>
+              <AlertTitle>
+                <Trans i18nKey='front-pages:checkoutSignUpSuccessTitle' />
+              </AlertTitle>
               <AlertDescription>
-                {`You have successfully signed up. Please check and verify your email.`}
+                <Trans i18nKey='front-pages:checkoutSignUpSuccessDesc' />
               </AlertDescription>
             </Alert>
           ) : (
@@ -107,10 +120,16 @@ const AuthForm = ({ users }: { users: User[] | null }) => {
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>
-                        Email address<sup className='text-destructive'>*</sup>
+                        <Trans i18nKey='front-pages:checkoutEmailLabel' />
+                        <sup className='text-destructive'>*</sup>
                       </FormLabel>
                       <FormControl>
-                        <Input type='email' placeholder='Enter your email address' autoFocus {...field} />
+                        <Input
+                          type='email'
+                          placeholder={t('front-pages:checkoutEmailPlaceholder')}
+                          autoFocus
+                          {...field}
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -122,7 +141,8 @@ const AuthForm = ({ users }: { users: User[] | null }) => {
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>
-                        Password<sup className='text-destructive'>*</sup>
+                        <Trans i18nKey='front-pages:checkoutPasswordLabel' />
+                        <sup className='text-destructive'>*</sup>
                       </FormLabel>
                       <FormControl>
                         <PasswordInput placeholder='················' {...field} />
@@ -131,13 +151,18 @@ const AuthForm = ({ users }: { users: User[] | null }) => {
                     </FormItem>
                   )}
                 />
-                <SubmitButton formAction={form.handleSubmit(onAuthSubmit) as any} pendingText='Submitting...'>
-                  Submit
+                <SubmitButton
+                  formAction={form.handleSubmit(onAuthSubmit) as any}
+                  pendingText={<Trans i18nKey='front-pages:checkoutSubmitPending' />}
+                >
+                  <Trans i18nKey='front-pages:checkoutSubmitButton' />
                 </SubmitButton>
               </form>
               <div className='flex items-center gap-4'>
                 <hr className='flex-1' />
-                <span className='text-textPrimary text-base'>or</span>
+                <span className='text-textPrimary text-base'>
+                  <Trans i18nKey='front-pages:checkoutOrDivider' />
+                </span>
                 <hr className='flex-1' />
               </div>
               <OauthProviders providers={authConfig.providers.oAuth} />

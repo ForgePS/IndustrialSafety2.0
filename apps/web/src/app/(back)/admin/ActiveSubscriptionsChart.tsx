@@ -10,6 +10,7 @@ import {
   ChartTooltip,
   ChartTooltipContent
 } from '@repo/ui/components/ui/chart'
+import Trans from '@repo/i18n/Trans'
 import type { ChartConfig } from '@repo/ui/components/ui/chart'
 
 type LabelProp = {
@@ -72,7 +73,9 @@ const ActiveSubscriptionsChart = () => {
   return (
     <Card className='max-lg:col-span-3 max-md:col-span-full'>
       <CardHeader className='pbe-0'>
-        <CardDescription className='font-medium'>Active Subscriptions</CardDescription>
+        <CardDescription className='font-medium'>
+          <Trans i18nKey='admin:activeSubscriptionsTitle' />
+        </CardDescription>
       </CardHeader>
       <CardContent className='p-0'>
         <ChartContainer config={chartConfig} className='max-is-96 mli-auto aspect-square'>

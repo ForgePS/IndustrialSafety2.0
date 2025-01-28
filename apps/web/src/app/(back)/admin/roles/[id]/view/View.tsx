@@ -1,6 +1,7 @@
 // Third-party Imports
 import { Card, CardContent } from '@repo/ui/components/ui/card'
 import { Badge } from '@repo/ui/components/ui/badge'
+import Trans from '@repo/i18n/Trans'
 import type { Database } from '@repo/supabase/types'
 
 type Permission = Database['public']['Tables']['permissions']['Row']
@@ -18,17 +19,23 @@ type ViewProps = {
 const View = ({ roleData }: ViewProps) => {
   return (
     <>
-      <h2 className='text-2xl font-semibold sm:text-3xl'>View Role</h2>
+      <h2 className='text-2xl font-semibold sm:text-3xl'>
+        <Trans i18nKey='admin:rolesViewTitle' />
+      </h2>
       <form>
         <Card>
           <CardContent className='pbs-6'>
             <div className='grid grid-cols-1 gap-6 md:grid-cols-2'>
               <div>
-                <h1 className='mbe-2 text-sm font-medium'>Name</h1>
+                <h1 className='mbe-2 text-sm font-medium'>
+                  <Trans i18nKey='admin:nameLabel' />
+                </h1>
                 <p className='text-textPrimary font-medium capitalize'>{roleData.role}</p>
               </div>
               <div>
-                <h1 className='mbe-2 text-sm font-medium'>Permissions</h1>
+                <h1 className='mbe-2 text-sm font-medium'>
+                  <Trans i18nKey='admin:permissionsLabel' />
+                </h1>
                 <div className='flex flex-wrap items-center gap-2'>
                   {roleData.permissions.map(permission => (
                     <Badge key={permission.id} variant='tonalPrimary' className='capitalize'>

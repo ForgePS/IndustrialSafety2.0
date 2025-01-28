@@ -12,14 +12,18 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '
 import PasswordInput from '@repo/ui/components/ui/password-input'
 import SubmitButton from '@repo/ui/components/SubmitButton'
 import { resetPasswordFormSchema, useResetPassword } from '@repo/auth/reset-password'
+import Trans from '@repo/i18n/Trans'
+import { useTranslation } from 'react-i18next'
 import type { ResetPasswordFormData } from '@repo/auth/reset-password'
 
 const ResetPasswordForm = () => {
   // Hooks
   const { handleResetPassword, isError, isSuccess, error } = useResetPassword()
+  const { t } = useTranslation()
 
+  // Vars
   const form = useForm<ResetPasswordFormData>({
-    resolver: zodResolver(resetPasswordFormSchema),
+    resolver: zodResolver(resetPasswordFormSchema(t)),
     defaultValues: {
       password: '',
       'confirm-password': ''
@@ -39,15 +43,21 @@ const ResetPasswordForm = () => {
       {isError && (
         <Alert variant='tonalDestructive'>
           <TbAlertTriangle className='is-6 bs-6' />
-          <AlertTitle>Password Reset Failed</AlertTitle>
+          <AlertTitle>
+            <Trans i18nKey='auth:resetPasswordError' />
+          </AlertTitle>
           <AlertDescription>{error as unknown as ReactNode}</AlertDescription>
         </Alert>
       )}
       {isSuccess ? (
         <Alert variant='tonalSuccess'>
           <TbCircleCheck className='is-6 bs-6' />
-          <AlertTitle>Password Reset Successful</AlertTitle>
-          <AlertDescription>Your password has been successfully updated.</AlertDescription>
+          <AlertTitle>
+            <Trans i18nKey='auth:resetPasswordSuccess' />
+          </AlertTitle>
+          <AlertDescription>
+            <Trans i18nKey='auth:resetPasswordSuccessDescription' />
+          </AlertDescription>
         </Alert>
       ) : (
         <Form {...form}>
@@ -58,7 +68,8 @@ const ResetPasswordForm = () => {
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>
-                    Password<sup className='text-destructive'>*</sup>
+                    <Trans i18nKey='auth:formPasswordLabel' />
+                    <sup className='text-destructive'>*</sup>
                   </FormLabel>
                   <FormControl>
                     <PasswordInput placeholder='················' {...field} />
@@ -73,7 +84,8 @@ const ResetPasswordForm = () => {
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>
-                    Confirm Password<sup className='text-destructive'>*</sup>
+                    <Trans i18nKey='auth:formPasswordConfirmLabel' />
+                    <sup className='text-destructive'>*</sup>
                   </FormLabel>
                   <FormControl>
                     <PasswordInput placeholder='················' {...field} />
@@ -82,8 +94,11 @@ const ResetPasswordForm = () => {
                 </FormItem>
               )}
             />
-            <SubmitButton formAction={form.handleSubmit(onSubmit) as any} pendingText='Setting new password...'>
-              Set new password
+            <SubmitButton
+              formAction={form.handleSubmit(onSubmit) as any}
+              pendingText={<Trans i18nKey='auth:resetPasswordPendingText' />}
+            >
+              <Trans i18nKey='auth:resetPasswordSubmitButton' />
             </SubmitButton>
           </form>
         </Form>
