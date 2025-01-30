@@ -211,8 +211,8 @@ const HeroHorizontalHalfImage = () => {
         </div>
         <div className='md:mbs-12 max-is-xl mli-auto relative lg:hidden'>
           <Image
-            srcLight='/images/blocks/hero/hero-dashboard-v1-light.png'
-            srcDark='/images/blocks/hero/hero-dashboard-v1-dark.png'
+            srcLight='/images/blocks/hero/hero-dashboard-v2-light.png'
+            srcDark='/images/blocks/hero/hero-dashboard-v2-dark.png'
           />
           <MotionElement
             component='div'
