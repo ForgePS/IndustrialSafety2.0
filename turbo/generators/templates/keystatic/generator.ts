@@ -29,11 +29,10 @@ export function keystaticAdminGenerator(plop: PlopTypes.NodePlopAPI) {
           // Add required imports
           const importsUpdate = content.replace(/(} from 'react-icons\/tb')/, ', TbClipboardList $1')
 
-          // Add the Blog section after Reviews section
+          // Add the Blog section before landing page menu item
           const updatedContent = importsUpdate.replace(
-            /(<PermissionGuard permissions={permissions} permission='view_reviews'>.*?<\/PermissionGuard>)/s,
-            `$1
-            {process.env.NODE_ENV !== 'production' && (
+            /(<SidebarMenuItem>\s*<MenuButton\s+href='\/'(?:\s+[^>]+)*>)/s,
+            `{process.env.NODE_ENV !== 'production' && (
               <PermissionGuard permissions={permissions} permission='manage_blog_section'>
                 <SidebarMenuItem>
                   <MenuButton href='/keystatic' target='_blank' tooltip={t('layout:blog')}>
@@ -47,7 +46,8 @@ export function keystaticAdminGenerator(plop: PlopTypes.NodePlopAPI) {
                   </SidebarMenuAction>
                 </SidebarMenuItem>
               </PermissionGuard>
-            )}`
+            )}
+            $1`
           )
 
           return updatedContent
@@ -76,9 +76,32 @@ export function keystaticAdminGenerator(plop: PlopTypes.NodePlopAPI) {
           return updatedContent
         }
       },
+      {
+        type: 'modify',
+        path: 'apps/web/src/assets/data/searchData.tsx',
+        async transform(content) {
+          // Add the Blog search data entry
+          const updatedContent = content.replace(
+            /(export const searchData: SearchDataItem\[\] = \[[\s\S]*?}\s*)\]\s*$/,
+            `$1,
+  {
+    id: '16',
+    name: <Trans i18nKey='data:blog' />,
+    url: '/keystatic',
+    icon: 'TbClipboardList',
+    permission: 'manage_blog_section',
+    openInNewTab: true,
+    adminRoute: true
+  }
+]`
+          )
+
+          return updatedContent
+        }
+      },
       async () => {
         execSync(
-          'prettier --write apps/web/src/components/layout/vertical/Sidebar.tsx packages/supabase/src/middleware.ts',
+          'prettier --write apps/web/src/components/layout/vertical/Sidebar.tsx packages/supabase/src/middleware.ts apps/web/src/assets/data/searchData.tsx',
           {
             stdio: 'inherit'
           }

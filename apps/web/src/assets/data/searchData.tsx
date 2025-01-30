@@ -14,6 +14,7 @@ export interface SearchDataItem {
   icon: keyof typeof Icons
   permission?: string
   adminRoute?: boolean // Indicates if this is an admin route (for URL construction)
+  openInNewTab?: boolean // Indicates if the link should open in a new tab
 }
 
 export const searchData: SearchDataItem[] = [

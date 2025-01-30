@@ -44,6 +44,7 @@ export type SearchDataProps = {
   dynamicUrl?: boolean
   baseUrl?: string
   permission?: string
+  openInNewTab?: boolean
 }
 
 // To render dynamic icons only for search results
@@ -159,7 +160,11 @@ const Search = ({ data, roles }: { data: SearchDataProps[]; roles: string[] }) =
               <CommandGroup heading={<Trans i18nKey='packages-ui:searchResultsHeading' />}>
                 {transformedData.map(item => (
                   <CommandItem key={item.id} onSelect={handleClose}>
-                    <Link href={item.url} className='is-full flex items-center'>
+                    <Link
+                      href={item.url}
+                      {...(item.openInNewTab && { target: '_blank' })}
+                      className='is-full flex items-center'
+                    >
                       {item.icon && DynamicIcon(item.icon)}
                       {item.name}
                     </Link>
