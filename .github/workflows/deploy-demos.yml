@@ -1,0 +1,49 @@
+name: Deploy - Demos
+run-name: ${{ inputs.is_production && '🚀' || '🧪' }} Deploy - Demos
+env:
+  VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+  VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+
+on:
+  workflow_dispatch:
+    inputs:
+      is_production:
+        type: boolean
+        description: Is production deployment
+
+jobs:
+  deployment:
+    runs-on: ubuntu-latest
+    steps:
+      - name: ⚙️ Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      - name: ⬇️ Checkout jetship demo repo
+        uses: actions/checkout@v4
+        with:
+          path: jetship/nextjs
+
+      - name: ⬇️ Checkout automation-scripts repo
+        uses: actions/checkout@v4
+        with:
+          repository: themeselection/automation-scripts
+          token: ${{ secrets.GH_PAT }}
+          path: automation-scripts
+
+      - name: ⬇️ Install packages in automation-scripts dir
+        working-directory: automation-scripts/nextjs
+        run: pnpm i
+
+      - name: ⬇️ Install packages in jetship
+        working-directory: jetship/nextjs
+        run: pnpm i
+
+      - name: 📦 Build
+        working-directory: automation-scripts/nextjs
+        run: pnpm install vercel && pnpm tsx ./src/jetship/generateBuild.ts $([[ "${{ inputs.is_production }}" == "true" ]] && echo --prod) --vercel-token ${{ secrets.VERCEL_TOKEN }}
+
+      - name: 🚀 Deploy to Vercel
+        working-directory: jetship/nextjs
+        run: pnpm install -w vercel && pnpm exec vercel $([[ "${{ inputs.is_production }}" == "true" ]] && echo --prod) --prebuilt --token ${{ secrets.VERCEL_TOKEN }}

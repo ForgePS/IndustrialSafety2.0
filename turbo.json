@@ -2,11 +2,24 @@
   "$schema": "https://turbo.build/schema.json",
   "globalEnv": [
     "NODE_ENV",
+    "BASEPATH",
+    "NEXT_PUBLIC_APP_URL",
+    "NEXT_PUBLIC_APP_DOMAIN",
+    "NEXT_PUBLIC_SUPABASE_URL",
+    "NEXT_PUBLIC_SUPABASE_ANON_KEY",
+    "NEXT_PUBLIC_SUPABASE_SERVICE_ROLE_KEY",
+    "GOOGLE_CLIENT_ID",
+    "GOOGLE_CLIENT_SECRET",
+    "NEXT_PUBLIC_AUTH_PASSWORD",
+    "NEXT_PUBLIC_AUTH_MAGIC_LINK",
+    "NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY",
     "STRIPE_SECRET_KEY",
     "STRIPE_WEBHOOK_SECRET",
     "LEMON_SQUEEZY_API_KEY",
     "LEMON_SQUEEZY_STORE_ID",
-    "LEMON_SQUEEZY_WEBHOOK_SIGNATURE"
+    "LEMON_SQUEEZY_WEBHOOK_SIGNATURE",
+    "SESSION_SECRET",
+    "NEXT_PUBLIC_I18N_COOKIE_NAME"
   ],
   "tasks": {
     "dev": {
@@ -22,7 +35,6 @@
         ".env*"
       ],
       "outputs": [
-        "dist/**",
         ".next/**",
         "!.next/cache/**"
       ]

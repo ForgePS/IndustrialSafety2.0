@@ -1,5 +1,6 @@
 /** @type {import("next").NextConfig} */
 module.exports = {
+  basePath: process.env.BASEPATH,
   reactStrictMode: true,
   transpilePackages: ['@repo/ui'],
   images: {
