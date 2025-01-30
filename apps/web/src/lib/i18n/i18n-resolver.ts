@@ -1,4 +1,5 @@
-export type Resolver = (lang: string, namespace: string) => Promise<Record<string, string>>
+// Third-party Imports
+import type { Resolver } from '@repo/i18n/I18nProvider'
 
 /**
  * Resolves the translation file for a given language and namespace

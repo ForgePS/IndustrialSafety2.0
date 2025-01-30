@@ -7,7 +7,7 @@ import type { InitOptions, i18n } from 'i18next'
 // Util Imports
 import { initializeI18nClient } from './i18n-client'
 
-type Resolver = (lang: string, namespace: string) => Promise<Record<string, string>>
+export type Resolver = (lang: string, namespace: string) => Promise<Record<string, string>>
 
 let i18nInstance: i18n
 
