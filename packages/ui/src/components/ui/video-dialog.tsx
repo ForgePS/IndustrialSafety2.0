@@ -59,9 +59,9 @@ const HeroVideoDialog = ({
           )}
         />
         <div className='absolute inset-0 flex items-center justify-center'>
-          <div className='bg-primary flex size-[58px] items-center justify-center rounded-full backdrop-blur-md transition-all duration-200 ease-out group-hover:scale-[1.2]'>
-            <div className='relative flex size-[52px] items-center justify-center rounded-full bg-[#9471ff] shadow-md'>
-              <TbPlayerPlayFilled className='size-8 fill-white text-white drop-shadow-lg' />
+          <div className='bg-primary flex size-8 items-center justify-center rounded-full backdrop-blur-md transition-all duration-200 ease-out group-hover:scale-[1.2] sm:size-10 md:size-[58px]'>
+            <div className='relative flex size-7 items-center justify-center rounded-full bg-[#9471ff] shadow-md sm:size-9 md:size-[52px]'>
+              <TbPlayerPlayFilled className='size-5 fill-white text-white drop-shadow-lg sm:size-6 md:size-8' />
             </div>
           </div>
         </div>

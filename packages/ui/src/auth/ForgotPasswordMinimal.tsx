@@ -10,7 +10,7 @@ import Logo from '@components/layout/front/Logo'
 import { Card, CardContent } from '@repo/ui/components/ui/card'
 import { Label } from '@repo/ui/components/ui/label'
 import { Button } from '@repo/ui/components/ui/button'
-import TranslatedInput from './TranslatedInput'
+import TranslatedInput from '@repo/ui/components/ui/translated-input'
 
 // Util Imports
 import { getAppName } from '@/utils/getAppName'

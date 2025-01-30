@@ -10,7 +10,7 @@ import Logo from '@components/layout/front/Logo'
 import { Button } from '@repo/ui/components/ui/button'
 import { Label } from '@repo/ui/components/ui/label'
 import { Card, CardContent } from '@repo/ui/components/ui/card'
-import TranslatedInput from './TranslatedInput'
+import TranslatedInput from '@repo/ui/components/ui/translated-input'
 
 // SVG Imports
 import Google from '@repo/ui/assets/svg/Google'

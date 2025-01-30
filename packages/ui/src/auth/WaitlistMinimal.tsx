@@ -16,7 +16,7 @@ import { Label } from '@repo/ui/components/ui/label'
 import { Card, CardContent } from '@repo/ui/components/ui/card'
 import { Avatar, AvatarFallback } from '@repo/ui/components/ui/avatar'
 import { Dialog, DialogContent, DialogDescription, DialogTitle, DialogTrigger } from '@repo/ui/components/ui/dialog'
-import TranslatedInput from './TranslatedInput'
+import TranslatedInput from '@repo/ui/components/ui/translated-input'
 
 // Util Imports
 import { getAppName } from '@/utils/getAppName'

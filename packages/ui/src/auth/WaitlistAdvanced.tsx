@@ -16,7 +16,7 @@ import { Label } from '@repo/ui/components/ui/label'
 import { Avatar, AvatarFallback } from '@repo/ui/components/ui/avatar'
 import { Dialog, DialogContent, DialogDescription, DialogTitle, DialogTrigger } from '@repo/ui/components/ui/dialog'
 import LeftSection from '@repo/ui/auth/LeftSection'
-import TranslatedInput from './TranslatedInput'
+import TranslatedInput from '@repo/ui/components/ui/translated-input'
 
 // Util Imports
 import { getAppName } from '@/utils/getAppName'

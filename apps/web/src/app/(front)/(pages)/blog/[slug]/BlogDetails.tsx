@@ -1,5 +1,3 @@
-'use client'
-
 // React Imports
 import React from 'react'
 
@@ -11,9 +9,8 @@ import { TbFileInvoice } from 'react-icons/tb'
 import { renderers } from '@markdoc/markdoc'
 import { Card, CardContent } from '@repo/ui/components/ui/card'
 import { Button } from '@repo/ui/components/ui/button'
-import { Input } from '@repo/ui/components/ui/input'
+import TranslatedInput from '@repo/ui/components/ui/translated-input'
 import Trans from '@repo/i18n/Trans'
-import { useTranslation } from 'react-i18next'
 import { cn } from '@repo/ui/lib/utils'
 import type { RenderableTreeNode } from '@markdoc/markdoc'
 
@@ -49,9 +46,6 @@ type Props = {
 }
 
 const BlogDetails = ({ postDetails, latestPosts, shareThisEnabled }: Props) => {
-  // Hooks
-  const { t } = useTranslation()
-
   return (
     <div className={cn('plb-10 sm:plb-20', frontCommonStyles.layoutSpacing)}>
       <div className='grid gap-8 sm:gap-12 lg:grid-cols-12'>
@@ -87,7 +81,7 @@ const BlogDetails = ({ postDetails, latestPosts, shareThisEnabled }: Props) => {
                   <Trans i18nKey='front-pages:blogNeverMissUpdates' />
                 </p>
               </div>
-              <Input size='lg' placeholder={t('front-pages:blogEmailPlaceholder')} className='max-is-[400px]' />
+              <TranslatedInput size='lg' translationKey='front-pages:blogEmailPlaceholder' className='max-is-[400px]' />
               <Button>
                 <Trans i18nKey='front-pages:blogSubscribeButton' />
               </Button>

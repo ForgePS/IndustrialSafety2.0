@@ -4,8 +4,8 @@
 import { useTranslation } from 'react-i18next'
 
 // Component Imports
-import { Input } from '@repo/ui/components/ui/input'
-import type { InputProps } from '@repo/ui/components/ui/input'
+import { Input } from './input'
+import type { InputProps } from './input'
 
 interface TranslatedInputProps extends InputProps {
   translationKey: string

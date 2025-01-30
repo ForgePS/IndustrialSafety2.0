@@ -136,7 +136,7 @@ const AppSidebar = ({ roles, permissions, appName }: { roles?: string[]; permiss
               </SidebarMenuItem>
             )}
             <SidebarMenuItem>
-              <MenuButton href='/' tooltip={t('layout:landingPage')}>
+              <MenuButton href='/' target='_blank' tooltip={t('layout:landingPage')}>
                 <TbHome />
                 <span>
                   <Trans i18nKey='layout:landingPage' />

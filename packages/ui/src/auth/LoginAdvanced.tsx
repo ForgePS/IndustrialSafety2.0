@@ -12,7 +12,7 @@ import PasswordInput from '@repo/ui/components/ui/password-input'
 import { Checkbox } from '@repo/ui/components/ui/checkbox'
 import { Label } from '@repo/ui/components/ui/label'
 import LeftSection from '@repo/ui/auth/LeftSection'
-import TranslatedInput from './TranslatedInput'
+import TranslatedInput from '@repo/ui/components/ui/translated-input'
 
 // SVG Imports
 import Google from '@repo/ui/assets/svg/Google'
