@@ -65,6 +65,15 @@ export function useAuth() {
   useEffect(() => {
     const checkImpersonation = async () => {
       try {
+        // First check if we have an active session
+        const {
+          data: { session }
+        } = await supabase.auth.getSession()
+
+        if (!session?.user) {
+          return
+        }
+
         const { data: userRecord } = await getPublicUser()
 
         if (userRecord) {
@@ -79,43 +88,127 @@ export function useAuth() {
     }
 
     checkImpersonation()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   useEffect(() => {
-    const {
-      data: { subscription }
-    } = supabase.auth.onAuthStateChange(async (event, session) => {
+    let mounted = true
+    const broadcastChannel = typeof window !== 'undefined' ? new BroadcastChannel('auth_state_channel') : null
+
+    // Function to update auth state
+    const updateAuthState = async (session: any) => {
+      if (!mounted) return
+
       if (session?.user) {
         try {
           const { data: userRecord, error } = await getPublicUser()
 
-          if (error) throw error
+          if (error) {
+            console.error('Error fetching user data:', error)
 
-          setAuthState(prev => ({
-            ...prev,
-            user: userRecord
-          }))
+            return
+          }
+
+          if (userRecord && mounted) {
+            setAuthState(prev => ({
+              ...prev,
+              user: userRecord
+            }))
+
+            broadcastChannel?.postMessage({
+              type: 'AUTH_STATE_CHANGE',
+              user: userRecord,
+              timestamp: Date.now()
+            })
+          }
         } catch (error) {
           console.error('Error fetching user data:', error)
-
-          // Handle error appropriately
         }
       } else {
-        setAuthState({
-          user: null,
-          ...defaultImpersonationState
-        })
+        if (mounted) {
+          setAuthState({
+            user: null,
+            ...defaultImpersonationState
+          })
 
-        // Only clear cookie if it exists (active impersonation)
-        if (cookieState?.isImpersonating) {
-          setCookieState(defaultImpersonationState)
+          // Only clear cookie if it exists (active impersonation)
+          if (cookieState?.isImpersonating) {
+            setCookieState(defaultImpersonationState)
+          }
+
+          broadcastChannel?.postMessage({
+            type: 'AUTH_STATE_CHANGE',
+            user: null,
+            timestamp: Date.now()
+          })
         }
       }
+    }
+
+    // Initial session check
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      updateAuthState(session)
     })
 
-    return () => {
-      subscription.unsubscribe()
+    // Set up auth state change listener
+    const {
+      data: { subscription }
+    } = supabase.auth.onAuthStateChange((event, session) => {
+      updateAuthState(session)
+    })
+
+    // Listen for auth state changes from other tabs
+    if (broadcastChannel) {
+      let lastProcessedTimestamp = 0
+
+      broadcastChannel.onmessage = event => {
+        // Prevent processing duplicate or old messages
+        if (event.data.timestamp <= lastProcessedTimestamp) return
+        lastProcessedTimestamp = event.data.timestamp
+
+        if (event.data.type === 'AUTH_STATE_CHANGE' && mounted) {
+          setAuthState(prev => ({
+            ...prev,
+            user: event.data.user,
+            ...(event.data.user ? {} : defaultImpersonationState)
+          }))
+        }
+      }
     }
+
+    // Cleanup function
+    return () => {
+      mounted = false
+      subscription?.unsubscribe()
+      broadcastChannel?.close()
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
+  // Separate effect for session recovery
+  useEffect(() => {
+    const recoverSession = async () => {
+      try {
+        const {
+          data: { session }
+        } = await supabase.auth.getSession()
+
+        if (session?.user && !authState.user) {
+          const { data: userRecord } = await getPublicUser()
+
+          if (userRecord) {
+            setAuthState(prev => ({
+              ...prev,
+              user: userRecord
+            }))
+          }
+        }
+      } catch (error) {
+        console.error('Error recovering session:', error)
+      }
+    }
+
+    recoverSession()
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
