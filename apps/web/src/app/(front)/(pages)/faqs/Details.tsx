@@ -50,7 +50,7 @@ const Details = ({ categoryData, faqData }: { categoryData: CategoryTypes[]; faq
           <aside className='bs-max block-start-20 lg:sticky'>
             <div className='flex flex-col gap-y-6'>
               <h2 className='text-textPrimary text-xl font-semibold'>
-                <Trans i18nKey='front-pages:faqsEnterDetails' />
+                <Trans i18nKey='front-pages:enterDetailsText' />
               </h2>
               <ul className='bg-card flex flex-col gap-y-4 rounded-md border p-6'>
                 {categoryData

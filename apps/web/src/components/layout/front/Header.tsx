@@ -15,6 +15,7 @@ import Logo from './Logo'
 import FrontMenu from './FrontMenu'
 import ModeDropdown from '@components/layout/ModeDropdown'
 import UserDropdown from './UserDropdown'
+import LanguageDropdown from '@components/LanguageDropdown'
 
 // Util Imports
 import { getAppName } from '@/utils/getAppName'
@@ -50,7 +51,10 @@ const Header = async () => {
           <div className='max-xl:hidden'>
             <FrontMenu isBlogEnabled={isBlogEnabled} />
           </div>
-          <ModeDropdown />
+          <div className='flex items-center gap-2'>
+            <LanguageDropdown />
+            <ModeDropdown />
+          </div>
           {user ? (
             <UserDropdown user={user} userTableData={userRecord} roles={userRoles} />
           ) : (

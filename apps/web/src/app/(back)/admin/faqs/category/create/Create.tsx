@@ -23,8 +23,8 @@ import type { TFunction } from 'i18next'
 // Define Zod Schema for validation
 const categorySchema = (t: TFunction) =>
   z.object({
-    title: z.string().min(3, { message: t('admin:faqCategoriesCreateNameError') }),
-    icon: z.string().refine(val => val in Icons, { message: t('admin:faqCategoriesCreateIconError') })
+    title: z.string().min(3, { message: t('admin:titleMinLengthError') }),
+    icon: z.string().refine(val => val in Icons, { message: t('admin:invalidIconError') })
   })
 
 const Create = () => {

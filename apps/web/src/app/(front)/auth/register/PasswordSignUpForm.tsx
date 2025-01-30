@@ -145,7 +145,7 @@ const PasswordSignUpForm = ({ appName, users }: { appName: string; users: User[]
               formAction={form.handleSubmit(onSubmit) as any}
               pendingText={<Trans i18nKey='auth:registerSubmitPendingText' values={{ appName }} />}
             >
-              <Trans i18nKey='auth:registerSubmitButton' values={{ appName }} />
+              <Trans i18nKey='auth:registerText' values={{ appName }} />
             </SubmitButton>
           </form>
         </Form>

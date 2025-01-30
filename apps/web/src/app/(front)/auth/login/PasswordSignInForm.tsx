@@ -144,7 +144,7 @@ const PasswordSignInForm = ({ appName, users }: { appName: string; users: User[]
             formAction={form.handleSubmit(onSubmit) as any}
             pendingText={<Trans i18nKey='auth:loginSubmitPendingText' values={{ appName }} />}
           >
-            <Trans i18nKey='auth:loginSubmitButton' values={{ appName }} />
+            <Trans i18nKey='auth:loginText' values={{ appName }} />
           </SubmitButton>
         </form>
       </Form>

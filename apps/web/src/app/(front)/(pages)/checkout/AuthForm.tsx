@@ -80,7 +80,7 @@ const AuthForm = ({ users }: { users: User[] | null }) => {
   return (
     <Form {...form}>
       <h3 className='text-textPrimary self-start text-xl font-semibold'>
-        <Trans i18nKey='front-pages:checkoutEnterDetails' />
+        <Trans i18nKey='front-pages:enterDetailsText' />
       </h3>
       <Card>
         <CardContent className='pbs-6 flex flex-col gap-4'>
@@ -120,16 +120,11 @@ const AuthForm = ({ users }: { users: User[] | null }) => {
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>
-                        <Trans i18nKey='front-pages:checkoutEmailLabel' />
+                        <Trans i18nKey='front-pages:emailAddressLabel' />
                         <sup className='text-destructive'>*</sup>
                       </FormLabel>
                       <FormControl>
-                        <Input
-                          type='email'
-                          placeholder={t('front-pages:checkoutEmailPlaceholder')}
-                          autoFocus
-                          {...field}
-                        />
+                        <Input type='email' placeholder={t('front-pages:emailPlaceholderText')} autoFocus {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>

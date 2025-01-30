@@ -50,7 +50,7 @@ const Register = async () => {
             <Logo appName={appName} />
             <div className='flex flex-col gap-y-1.5'>
               <h1 className='text-textPrimary text-2xl font-semibold'>
-                <Trans i18nKey='auth:registerTitle' values={{ appName: appConfig.appName }} />
+                <Trans i18nKey='auth:registerText' values={{ appName: appConfig.appName }} />
               </h1>
               <p className='text-textSecondary'>
                 <Trans i18nKey='auth:authHeroDescription' />
@@ -62,7 +62,7 @@ const Register = async () => {
                   <Trans i18nKey='auth:authSignUpWithText' />
                 </span>
                 <Link href='/auth/magic-link' className='text-primary'>
-                  <Trans i18nKey='auth:authMagicLinkButton' />
+                  <Trans i18nKey='auth:magicLinkText' />
                 </Link>
               </p>
             )}

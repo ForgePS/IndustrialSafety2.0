@@ -51,7 +51,7 @@ const Details = async () => {
                   <Trans i18nKey='front-pages:privacyPersonalDataList1' />
                 </li>
                 <li>
-                  <Trans i18nKey='front-pages:privacyPersonalDataList2' />
+                  <Trans i18nKey='front-pages:emailAddressLabel' />
                 </li>
                 <li>
                   <Trans i18nKey='front-pages:privacyPersonalDataList3' />

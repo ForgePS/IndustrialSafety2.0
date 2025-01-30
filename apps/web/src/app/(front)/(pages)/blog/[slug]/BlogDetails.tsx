@@ -81,7 +81,7 @@ const BlogDetails = ({ postDetails, latestPosts, shareThisEnabled }: Props) => {
                   <Trans i18nKey='front-pages:blogNeverMissUpdates' />
                 </p>
               </div>
-              <TranslatedInput size='lg' translationKey='front-pages:blogEmailPlaceholder' className='max-is-[400px]' />
+              <TranslatedInput size='lg' translationKey='front-pages:emailPlaceholderText' className='max-is-[400px]' />
               <Button>
                 <Trans i18nKey='front-pages:blogSubscribeButton' />
               </Button>

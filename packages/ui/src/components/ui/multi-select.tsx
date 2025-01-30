@@ -73,7 +73,7 @@ export function MultiSelect({ options, selected, setSelected, className }: Multi
   return (
     <Command onKeyDown={handleKeyDown} className={`overflow-visible bg-transparent ${className}`}>
       <div className='border-input pli-3 plb-2 focus-within:outline-primary group flex justify-between gap-4 rounded-md border text-sm focus-within:outline-none focus-within:-outline-offset-1'>
-        <div className='flex-1 flex flex-wrap gap-1' onClick={() => inputRef.current?.focus()}>
+        <div className='flex flex-1 flex-wrap gap-1' onClick={() => inputRef.current?.focus()}>
           {selected.map(itemValue => {
             const item = options.find(opt => opt.value === itemValue)
 

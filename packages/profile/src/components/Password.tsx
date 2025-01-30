@@ -10,7 +10,7 @@ const Password = () => {
     <div className='pbs-6 grid gap-6 md:grid-cols-2'>
       <div className='flex flex-col items-start gap-1'>
         <h3 className='text-textPrimary text-lg font-medium'>
-          <Trans i18nKey='packages-profile:changePasswordTitle' />
+          <Trans i18nKey='packages-profile:changePasswordText' />
         </h3>
         <p className='text-textSecondary text-sm'>
           <Trans i18nKey='packages-profile:changePasswordDescription' />
@@ -19,7 +19,7 @@ const Password = () => {
       <div>
         <Button asChild>
           <Link href='/reset-password'>
-            <Trans i18nKey='packages-profile:changePasswordButton' />
+            <Trans i18nKey='packages-profile:changePasswordText' />
           </Link>
         </Button>
       </div>

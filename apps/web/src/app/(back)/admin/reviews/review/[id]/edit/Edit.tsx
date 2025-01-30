@@ -188,7 +188,7 @@ const EditReview = ({
                                 ))
                               ) : (
                                 <SelectItem value='none' disabled>
-                                  No platforms available
+                                  <Trans i18nKey='admin:platformNotAvailable' />
                                 </SelectItem>
                               )}
                             </SelectContent>

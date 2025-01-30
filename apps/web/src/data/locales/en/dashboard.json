@@ -1,7 +1,5 @@
 {
   "basePlanText": "Base Plan",
-  "billedMonthly": "Billed monthly",
-  "billedYearly": "Billed yearly",
   "billingDetailsDescription": "Visit your Billing Portal to manage your subscription and billing. You can update or cancel your plan, or download your invoices.",
   "billingDetailsTitle": "Manage your Billing Details",
   "billingIntervalTitle": "Choose your billing interval",

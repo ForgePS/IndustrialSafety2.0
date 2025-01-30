@@ -191,7 +191,7 @@ const Edit = ({
                               ))
                             ) : (
                               <SelectItem value='none' disabled>
-                                No categories found
+                                <Trans i18nKey='admin:faqCategoriesNotFound' />
                               </SelectItem>
                             )}
                           </SelectContent>

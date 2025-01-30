@@ -29,7 +29,7 @@ const MagicLink = async () => {
             <Logo appName={appName} />
             <div className='flex flex-col gap-y-1.5'>
               <h1 className='text-textPrimary text-2xl font-semibold'>
-                <Trans i18nKey='auth:magicLinkTitle' />
+                <Trans i18nKey='auth:magicLinkText' />
               </h1>
               <p className='text-textSecondary'>
                 <Trans i18nKey='auth:magicLinkDescription' />
@@ -42,7 +42,7 @@ const MagicLink = async () => {
                   <Trans i18nKey='auth:magicLinkPasswordText' />
                 </span>
                 <Link href='/auth/login' className='text-primary'>
-                  <Trans i18nKey='auth:magicLinkPasswordButton' />
+                  <Trans i18nKey='auth:formPasswordLabel' />
                 </Link>
               </p>
               {renderOAuth && (

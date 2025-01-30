@@ -193,7 +193,7 @@ const Create = ({ categories }: { categories: { id: string; title: string }[] })
                               ))
                             ) : (
                               <SelectItem value='none' disabled>
-                                No categories found
+                                <Trans i18nKey='admin:faqCategoriesNotFound' />
                               </SelectItem>
                             )}
                           </SelectContent>
