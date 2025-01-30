@@ -256,7 +256,10 @@ const DataTable = (props: Props) => {
             <TableRow key={headerGroup.id}>
               {headerGroup.headers.map(header => {
                 return (
-                  <TableHead key={header.id} className='[&_svg]:hover:visible'>
+                  <TableHead
+                    key={header.id}
+                    className={cn('[&_svg]:hover:visible', { 'is-0': header.id === 'actions' })}
+                  >
                     {header.isPlaceholder ? null : (
                       <>
                         <div
@@ -328,7 +331,7 @@ const DataTable = (props: Props) => {
         </TableBody>
       </Table>
       <div className='pli-6 plb-4 flex flex-wrap items-center justify-end gap-4'>
-        <div className='flex flex-wrap items-center gap-4'>
+        <div className='flex flex-wrap items-center justify-center gap-4'>
           <div className='space-i-2 flex items-center'>
             <span className='text-muted-foreground text-nowrap text-sm'>
               <Trans i18nKey='packages-ui:dataTableRowsPerPage' />

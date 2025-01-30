@@ -58,7 +58,7 @@ const Details = ({ categoryData, faqData }: { categoryData: CategoryTypes[]; faq
                   .map((data: CategoryTypes) => (
                     <li key={data.id} className='text-textSecondary flex items-center gap-2'>
                       {DynamicIcon(data.icon)}
-                      <Link href={`#${transformToUrlFriendly(data.title)}`} className='truncate font-medium'>
+                      <Link href={`#${transformToUrlFriendly(data.title)}`} className='truncate font-semibold'>
                         {data.title}
                       </Link>
                     </li>

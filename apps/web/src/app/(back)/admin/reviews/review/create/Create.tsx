@@ -217,11 +217,17 @@ const CreateReview = ({ platformsData }: { platformsData: PlatformTypes[] }) => 
                               </SelectValue>
                             </SelectTrigger>
                             <SelectContent>
-                              {platformsData.map(platform => (
-                                <SelectItem key={platform.id} value={String(platform.id)}>
-                                  {platform.platform_name}
+                              {platformsData.length > 0 ? (
+                                platformsData.map(platform => (
+                                  <SelectItem key={platform.id} value={String(platform.id)}>
+                                    {platform.platform_name}
+                                  </SelectItem>
+                                ))
+                              ) : (
+                                <SelectItem value='none' disabled>
+                                  No platforms available
                                 </SelectItem>
-                              ))}
+                              )}
                             </SelectContent>
                           </Select>
                         </FormControl>

@@ -75,7 +75,10 @@ const Permissions = ({ permissionsData }: { permissionsData: PermissionType[] })
       header: () => <Trans i18nKey='admin:actionsColumn' />,
       cell: ({ row }) => (
         <div className='flex items-center gap-2'>
-          <Link href={`/admin/permissions/${row.original.id}/edit`} className='text-primary flex items-center gap-1'>
+          <Link
+            href={`/admin/permissions/${row.original.id}/edit`}
+            className='text-primary me-3.5 flex items-center gap-1'
+          >
             <TbEdit />
             <Trans i18nKey='admin:editButton' />
           </Link>
@@ -97,8 +100,8 @@ const Permissions = ({ permissionsData }: { permissionsData: PermissionType[] })
   ]
 
   return (
-    <div className='flex flex-col gap-y-8'>
-      <header className='flex gap-y-2 max-sm:flex-col sm:items-center sm:justify-between'>
+    <div className='grid grid-cols-1 gap-y-8'>
+      <div className='flex flex-wrap items-center justify-between gap-4'>
         <h1 className='text-textPrimary text-3xl font-bold'>
           <Trans i18nKey='admin:permissionsLabel' />
         </h1>
@@ -107,12 +110,10 @@ const Permissions = ({ permissionsData }: { permissionsData: PermissionType[] })
             <Trans i18nKey='admin:permissionsNewButton' />
           </Button>
         </Link>
-      </header>
-      <section className='space-b-6 divide-b divide-border'>
-        <Card>
-          <DataTable data={permissionsData} columns={columns} search={{ enabled: true }} />
-        </Card>
-      </section>
+      </div>
+      <Card>
+        <DataTable data={permissionsData} columns={columns} search={{ enabled: true }} />
+      </Card>
     </div>
   )
 }

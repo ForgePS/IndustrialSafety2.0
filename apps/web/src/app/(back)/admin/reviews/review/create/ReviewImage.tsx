@@ -60,6 +60,7 @@ const ReviewImage: React.FC<ReviewImageProps> = ({ onImageUpload, file, setFile 
             <Button
               variant='destructive'
               size='icon'
+              type='button'
               className='block-end-[76%] inline-end-1 !is-6 !bs-6 absolute rounded-full'
               onClick={e => {
                 e.stopPropagation()

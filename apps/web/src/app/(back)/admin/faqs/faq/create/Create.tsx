@@ -185,11 +185,17 @@ const Create = ({ categories }: { categories: { id: string; title: string }[] })
                             </SelectValue>
                           </SelectTrigger>
                           <SelectContent>
-                            {categories.map(category => (
-                              <SelectItem key={category.id} value={category.id}>
-                                {category.title}
+                            {categories.length > 0 ? (
+                              categories.map(category => (
+                                <SelectItem key={category.id} value={category.id}>
+                                  {category.title}
+                                </SelectItem>
+                              ))
+                            ) : (
+                              <SelectItem value='none' disabled>
+                                No categories found
                               </SelectItem>
-                            ))}
+                            )}
                           </SelectContent>
                         </Select>
                       </FormControl>

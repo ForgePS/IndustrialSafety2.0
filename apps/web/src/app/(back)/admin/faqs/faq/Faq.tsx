@@ -92,7 +92,7 @@ const Faq = ({ faqData }: { faqData: FaqWithCategory[] }) => {
       cell: ({ row }) => <div className='capitalize'>{row.getValue('title')}</div>
     },
     {
-      accessorKey: 'categories.title',
+      id: 'faqCategory',
       header: () => <Trans i18nKey='admin:categoryLabel' />,
       cell: ({ row }) => <div className='capitalize'>{row.original.faq_categories?.title || '-'}</div>
     },
@@ -125,8 +125,8 @@ const Faq = ({ faqData }: { faqData: FaqWithCategory[] }) => {
   ]
 
   return (
-    <div className='flex flex-col gap-y-8'>
-      <div className='flex gap-y-2 max-sm:flex-col sm:items-center sm:justify-between'>
+    <div className='grid grid-cols-1 gap-y-8'>
+      <div className='flex flex-wrap items-center justify-between gap-4'>
         <h1 className='text-textPrimary text-3xl font-bold'>
           <Trans i18nKey='admin:faqsTitle' />
         </h1>

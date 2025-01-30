@@ -126,8 +126,8 @@ const Reviews = ({ reviewData }: { reviewData: ReviewsWithPlatforms[] }) => {
   ]
 
   return (
-    <div className='flex flex-col gap-y-8'>
-      <div className='flex gap-y-2 max-sm:flex-col sm:items-center sm:justify-between'>
+    <div className='grid grid-cols-1 gap-y-8'>
+      <div className='flex flex-wrap items-center justify-between gap-4'>
         <h1 className='text-textPrimary text-3xl font-bold'>
           <Trans i18nKey='admin:reviewsTitle' />
         </h1>
