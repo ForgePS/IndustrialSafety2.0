@@ -131,7 +131,7 @@ const Tracking = ({ settings }: { settings: SettingsConfiguration['general_setti
   }
 
   return (
-    <CardContent className='pbs-6'>
+    <CardContent className='pbs-4'>
       <Form {...form}>
         <form>
           <FormField
@@ -162,7 +162,7 @@ const Tracking = ({ settings }: { settings: SettingsConfiguration['general_setti
                   <TableHead className='text-left'>
                     <Trans i18nKey='admin:settingsTrackingTableSnippetColumn' />
                   </TableHead>
-                  <TableHead className='md:is-[80px]'></TableHead>
+                  <TableHead className='is-0' />
                 </TableRow>
               </TableHeader>
               <TableBody className='[&>tr]:last:border-be-0'>
@@ -204,7 +204,7 @@ const Tracking = ({ settings }: { settings: SettingsConfiguration['general_setti
                         className='text-destructive flex items-center justify-center'
                         onClick={() => handleDeleteProvider(index)}
                       >
-                        <TbTrash />
+                        <TbTrash className='text-[22px]' />
                       </Button>
                     </TableCell>
                   </TableRow>

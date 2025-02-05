@@ -81,7 +81,7 @@ const HeroHorizontalImage = () => {
               hidden: { y: 30 },
               show: { transition: { delay: 1.1, duration: 0.4 }, y: 0 }
             }}
-            className='mbs-6 sm:mbs-9 flex max-lg:justify-center max-sm:flex-col'
+            className='mbs-6 sm:mbs-9 md:mbs-14 flex max-lg:justify-center max-sm:flex-col'
           >
             <RainbowButton size='lg' className='!plb-2.5' asChild>
               <Link href='/#pricing-section'>

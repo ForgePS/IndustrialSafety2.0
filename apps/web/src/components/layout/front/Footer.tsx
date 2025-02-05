@@ -21,7 +21,7 @@ type DynamicIconProps = {
   icon: keyof typeof Icons
 }
 
-export const DynamicIcon = ({ icon }: DynamicIconProps) => {
+const DynamicIcon = ({ icon }: DynamicIconProps) => {
   // eslint-disable-next-line import/namespace
   const IconComponent = Icons[icon]
 
@@ -76,7 +76,7 @@ const Footer = async () => {
             <div className='flex items-center gap-2'>
               {socialLinks.map((link, index) => (
                 <Link href={link.url} target='_blank' key={index}>
-                  <Avatar color='secondary' size='md'>
+                  <Avatar color='secondary' size='md' className='bs-[30px] is-[30px]'>
                     <AvatarFallback>
                       <DynamicIcon icon={link.icon} />
                     </AvatarFallback>

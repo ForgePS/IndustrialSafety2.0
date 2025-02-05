@@ -25,7 +25,7 @@ export type CategoryTypes = Omit<Database['public']['Tables']['faq_categories'][
 }
 
 // To render dynamic icons
-export const DynamicIcon = (icon: keyof typeof Icons) => {
+const DynamicIcon = (icon: keyof typeof Icons) => {
   // eslint-disable-next-line import/namespace
   const IconComponent = Icons[icon]
 

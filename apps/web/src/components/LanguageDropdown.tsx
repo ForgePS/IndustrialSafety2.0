@@ -53,7 +53,7 @@ const LanguageDropdown = () => {
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <Button variant='ghost' size='icon' className='!outline-0' aria-label='language-dropdown'>
-          <TbLanguage className='text-xl' />
+          <TbLanguage className='text-[22px]' />
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align='end'>

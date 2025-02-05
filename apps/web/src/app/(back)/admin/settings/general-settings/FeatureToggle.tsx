@@ -55,7 +55,7 @@ const FeatureToggle = ({ settings }: { settings: SettingsConfiguration['general_
   }, [])
 
   return (
-    <CardContent className='!pbs-4'>
+    <CardContent className='pbs-4'>
       <form>
         <div className='flex flex-col items-start'>
           <div className='mbe-2 flex items-center'>

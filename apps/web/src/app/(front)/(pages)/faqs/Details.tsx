@@ -6,6 +6,7 @@ import Link from 'next/link'
 
 // Third-party Imports
 import { TbDotsCircleHorizontal } from 'react-icons/tb'
+import * as Icons from 'react-icons/tb'
 import { cn } from '@repo/ui/lib/utils'
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@repo/ui/components/ui/accordion'
 import { Avatar, AvatarFallback } from '@repo/ui/components/ui/avatar'
@@ -15,11 +16,23 @@ import Trans from '@repo/i18n/Trans'
 import type { FaqWithCategory } from '@/app/(back)/admin/faqs/faq/Faq'
 import type { CategoryTypes } from '@/app/(back)/admin/faqs/category/Categories'
 
-// Component Imports
-import { DynamicIcon } from '@/app/(back)/admin/faqs/category/Categories'
-
 // Styles Imports
 import frontCommonStyles from '../styles.module.css'
+
+// To render dynamic icons
+type DynamicIconProps = {
+  icon: keyof typeof Icons
+  className?: string
+}
+
+const DynamicIcon = ({ icon, className }: DynamicIconProps) => {
+  // eslint-disable-next-line import/namespace
+  const IconComponent = Icons[icon]
+
+  if (!IconComponent) return null
+
+  return <IconComponent className={className} />
+}
 
 const Details = ({ categoryData, faqData }: { categoryData: CategoryTypes[]; faqData: FaqWithCategory[] }) => {
   // Hooks
@@ -57,7 +70,7 @@ const Details = ({ categoryData, faqData }: { categoryData: CategoryTypes[]; faq
                   .filter(category => filteredFaqData.some(faq => faq.category_id === category.id))
                   .map((data: CategoryTypes) => (
                     <li key={data.id} className='text-textSecondary flex items-center gap-2'>
-                      {DynamicIcon(data.icon)}
+                      <DynamicIcon icon={data.icon} className='text-[1.375rem]' />
                       <Link href={`#${transformToUrlFriendly(data.title)}`} className='truncate font-semibold'>
                         {data.title}
                       </Link>
@@ -87,7 +100,9 @@ const Details = ({ categoryData, faqData }: { categoryData: CategoryTypes[]; faq
                   >
                     <div className='flex items-center gap-3'>
                       <Avatar shape='rounded' color='primary' className='bs-[44px] is-[44px]'>
-                        <AvatarFallback>{DynamicIcon(data.icon)}</AvatarFallback>
+                        <AvatarFallback>
+                          <DynamicIcon icon={data.icon} className='text-[2rem]' />
+                        </AvatarFallback>
                       </Avatar>
                       <h2 className='text-textPrimary text-xl font-semibold'>{data.title}</h2>
                     </div>

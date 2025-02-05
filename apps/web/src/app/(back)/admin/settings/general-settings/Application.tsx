@@ -70,7 +70,7 @@ const Application = ({ settings }: { settings: SettingsConfiguration['general_se
   }
 
   return (
-    <CardContent className='pbs-6'>
+    <CardContent className='pbs-4'>
       <Form {...form}>
         <form>
           <div className='grid grid-cols-2 gap-6'>

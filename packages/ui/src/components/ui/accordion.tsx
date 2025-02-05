@@ -67,7 +67,7 @@ const AccordionTrigger = forwardRef<
       <AccordionPrimitive.Trigger
         ref={ref}
         className={cn(
-          'pli-5 plb-4 focus-visible:ring-textDisabled group flex flex-1 items-center justify-between font-medium transition-transform focus-visible:rounded-md focus-visible:outline-none focus-visible:ring-2 [&[data-state=open]>svg]:rotate-180',
+          'pli-5 plb-4 focus-visible:ring-textDisabled group flex flex-1 items-center justify-between text-left font-medium transition-transform focus-visible:rounded-md focus-visible:outline-none focus-visible:ring-2 [&[data-state=open]>svg]:rotate-180',
           className
         )}
         {...props}

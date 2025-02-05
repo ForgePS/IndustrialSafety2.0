@@ -32,7 +32,7 @@ const data = {
   ),
   image: (
     <img
-      src='/images/pages/cta-banner.png'
+      src='/images/blocks/cta/cta-banner.png'
       alt='CTA Banner'
       className='lg:-block-end-9 max-lg:-mbe-9 lg:absolute lg:end-0'
     />

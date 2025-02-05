@@ -51,8 +51,11 @@ const Header = async () => {
           <div className='max-xl:hidden'>
             <FrontMenu isBlogEnabled={isBlogEnabled} />
           </div>
-          <div className='flex items-center gap-2'>
+          <div className='flex items-center gap-1 max-[432px]:hidden sm:gap-2'>
             <LanguageDropdown />
+            <ModeDropdown />
+          </div>
+          <div className='min-[433px]:hidden'>
             <ModeDropdown />
           </div>
           {user ? (

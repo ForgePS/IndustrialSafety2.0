@@ -33,11 +33,11 @@ const ModeDropdown = () => {
 
   const getModeIcon = () => {
     if (settings.mode === 'system') {
-      return <TbDeviceDesktop className='text-xl' />
+      return <TbDeviceDesktop className='text-[22px]' />
     } else if (settings.mode === 'dark') {
-      return <TbMoonStars className='text-xl' />
+      return <TbMoonStars className='text-[22px]' />
     } else {
-      return <TbSun className='text-xl' />
+      return <TbSun className='text-[22px]' />
     }
   }
 

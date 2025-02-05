@@ -63,7 +63,7 @@ const TableHead = forwardRef<HTMLTableCellElement, ThHTMLAttributes<HTMLTableCel
     <th
       ref={ref}
       className={cn(
-        'pli-6 plb-2 bs-[50px] text-muted-foreground [&:has([role=checkbox])]:pie-0 text-start align-middle text-base font-semibold',
+        'first:pis-6 last:pie-6 pli-3 plb-2 bs-[50px] text-muted-foreground [&:has([role=checkbox])]:pie-0 text-start align-middle text-base font-semibold',
         className
       )}
       {...props}
@@ -77,7 +77,10 @@ const TableCell = forwardRef<HTMLTableCellElement, TdHTMLAttributes<HTMLTableCel
   ({ className, ...props }, ref) => (
     <td
       ref={ref}
-      className={cn('pli-6 plb-2 bs-[52px] [&:has([role=checkbox])]:pie-0 align-middle', className)}
+      className={cn(
+        'first:pis-6 last:pie-6 pli-3 plb-2 bs-[52px] [&:has([role=checkbox])]:pie-0 align-middle',
+        className
+      )}
       {...props}
     />
   )

@@ -116,8 +116,8 @@ const SocialLinks = ({ settings }: { settings: SettingsConfiguration['general_se
   }
 
   return (
-    <CardContent className='pbs-6'>
-      <h1 className='mbs-6 mbe-2 text-textPrimary text-sm font-medium'>
+    <CardContent className='pbs-4'>
+      <h1 className='mbe-2 text-textPrimary text-sm font-medium'>
         <Trans i18nKey='admin:socialLinksSection' />
       </h1>
       <Form {...form}>
@@ -135,7 +135,7 @@ const SocialLinks = ({ settings }: { settings: SettingsConfiguration['general_se
                   <TableHead className='text-left'>
                     <Trans i18nKey='admin:settingsSocialLinksTableUrlColumn' />
                   </TableHead>
-                  <TableHead className='md:is-[80px]'></TableHead>
+                  <TableHead className='is-0' />
                 </TableRow>
               </TableHeader>
 
@@ -192,7 +192,7 @@ const SocialLinks = ({ settings }: { settings: SettingsConfiguration['general_se
                         className='text-destructive flex items-center justify-center'
                         onClick={() => handleDeleteSocialLink(index)}
                       >
-                        <TbTrash />
+                        <TbTrash className='text-[22px]' />
                       </Button>
                     </TableCell>
                   </TableRow>

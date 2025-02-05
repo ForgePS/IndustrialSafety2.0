@@ -72,7 +72,7 @@ const UserDropdown = ({ user, userTableData, roles }: Props) => {
         {roles?.includes('admin') ? (
           <DropdownMenuItem asChild>
             <Link href='/admin' className='flex gap-2'>
-              <TbSettings className='text-xl' />
+              <TbSettings className='shrink-0 text-xl' />
               <span>
                 <Trans i18nKey='layout:adminPanel' />
               </span>
@@ -81,7 +81,7 @@ const UserDropdown = ({ user, userTableData, roles }: Props) => {
         ) : (
           <DropdownMenuItem asChild>
             <Link href='/dashboard' className='flex gap-2'>
-              <TbMoodSmile className='text-xl' />
+              <TbMoodSmile className='shrink-0 text-xl' />
               <span>
                 <Trans i18nKey='layout:userDashboard' />
               </span>
@@ -98,7 +98,7 @@ const UserDropdown = ({ user, userTableData, roles }: Props) => {
         >
           <DropdownMenuItem asChild className='is-full flex cursor-pointer gap-2'>
             <button type='submit'>
-              <TbLogout className='text-xl' />
+              <TbLogout className='shrink-0 text-xl' />
               <span>
                 <Trans i18nKey='layout:signOut' />
               </span>

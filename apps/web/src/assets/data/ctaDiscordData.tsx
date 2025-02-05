@@ -1,4 +1,5 @@
 // Third-party Imports
+import { Button } from '@repo/ui/components/ui/button'
 import Trans from '@repo/i18n/Trans'
 
 const data = {
@@ -8,7 +9,11 @@ const data = {
   },
   title: <Trans i18nKey='data:discordTitle' />,
   description: <Trans i18nKey='data:discordDescription' />,
-  button: <Trans i18nKey='data:discordButton' />
+  button: (
+    <Button size='lg'>
+      <Trans i18nKey='data:discordButton' />
+    </Button>
+  )
 }
 
 export default data

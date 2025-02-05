@@ -31,7 +31,7 @@ const Details = async () => {
             <Badge className='bg-neutral text-card mbs-[5px]' size='md'>
               v1.1.0
             </Badge>
-            <span>May 20, 2024</span>
+            <span className='font-medium'>May 20, 2024</span>
           </TimelineTime>
           <TimelineSeparator>
             <TimelineIcon />
@@ -45,7 +45,11 @@ const Details = async () => {
                 <p className='text-textDisabled text-sm md:hidden'>May 20, 2024</p>
               </div>
               <div className='flex flex-col items-start gap-3'>
-                <Badge shape='circle' variant='accent' className='text-textPrimary !plb-1.5 text-base font-semibold'>
+                <Badge
+                  shape='circle'
+                  variant='accent'
+                  className='text-textPrimary !plb-1.5 gap-2 text-base font-semibold'
+                >
                   <TbCirclePlus className='size-[22px]' />
                   <span>
                     <Trans i18nKey='front-pages:changelogAddedLabel' />
@@ -73,7 +77,11 @@ const Details = async () => {
                 </ul>
               </div>
               <div className='flex flex-col items-start gap-3'>
-                <Badge shape='circle' variant='accent' className='text-textPrimary !plb-1.5 text-base font-semibold'>
+                <Badge
+                  shape='circle'
+                  variant='accent'
+                  className='text-textPrimary !plb-1.5 gap-2 text-base font-semibold'
+                >
                   <TbCircleCheck className='size-[22px]' />
                   <span>
                     <Trans i18nKey='front-pages:changelogFixesAndImprovementsLabel' />
@@ -107,7 +115,11 @@ const Details = async () => {
                 </ul>
               </div>
               <div className='flex flex-col items-start gap-3'>
-                <Badge shape='circle' variant='accent' className='text-textPrimary !plb-1.5 text-base font-semibold'>
+                <Badge
+                  shape='circle'
+                  variant='accent'
+                  className='text-textPrimary !plb-1.5 gap-2 text-base font-semibold'
+                >
                   <TbRefresh className='size-[22px]' />
                   <span>
                     <Trans i18nKey='front-pages:changelogUpdatesLabel' />
@@ -130,7 +142,7 @@ const Details = async () => {
             <Badge className='bg-neutral text-card mbs-[5px]' size='md'>
               v1.0.0
             </Badge>
-            <span>March 25, 2024</span>
+            <span className='font-medium'>March 25, 2024</span>
           </TimelineTime>
           <TimelineSeparator>
             <TimelineIcon />
@@ -144,7 +156,11 @@ const Details = async () => {
                 <p className='text-textDisabled text-sm md:hidden'>March 25, 2024</p>
               </div>
               <div className='flex flex-col items-start gap-3'>
-                <Badge shape='circle' variant='accent' className='text-textPrimary !plb-1.5 text-base font-semibold'>
+                <Badge
+                  shape='circle'
+                  variant='accent'
+                  className='text-textPrimary !plb-1.5 gap-2 text-base font-semibold'
+                >
                   <TbStar className='size-[22px]' />
                   <span>
                     <Trans i18nKey='front-pages:changelogNewPluginsLabel' />
@@ -172,7 +188,11 @@ const Details = async () => {
                 </ul>
               </div>
               <div className='flex flex-col items-start gap-3'>
-                <Badge shape='circle' variant='accent' className='text-textPrimary !plb-1.5 text-base font-semibold'>
+                <Badge
+                  shape='circle'
+                  variant='accent'
+                  className='text-textPrimary !plb-1.5 gap-2 text-base font-semibold'
+                >
                   <TbCirclePlus className='size-[22px]' />
                   <span>
                     <Trans i18nKey='front-pages:changelogAddedLabel' />

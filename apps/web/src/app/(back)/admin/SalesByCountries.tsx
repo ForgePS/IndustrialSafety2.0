@@ -56,7 +56,7 @@ const SalesByCountries = () => {
         <CardDescription className='text-textDisabled'>
           <Trans i18nKey='admin:salesByCountriesDescription' />
         </CardDescription>
-        <TbDotsVertical className='absolute end-6' />
+        <TbDotsVertical className='absolute end-6 cursor-pointer text-2xl' />
       </CardHeader>
       <CardContent className='flex flex-col gap-[19px]'>
         {countries.map((item, index) => (
