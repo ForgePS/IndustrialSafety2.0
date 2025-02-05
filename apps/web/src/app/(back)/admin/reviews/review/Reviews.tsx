@@ -20,6 +20,7 @@ import { createClient } from '@repo/supabase/client'
 import { toast } from '@repo/ui/utils/toast'
 import Trans from '@repo/i18n/Trans'
 import { useTranslation } from 'react-i18next'
+import { hasAnyPermission, hasPermission } from '@repo/rbac/utils'
 import type { TFunction } from 'i18next'
 import type { Database } from '@repo/supabase/types'
 
@@ -76,7 +77,13 @@ const SwitchState = ({ row }: { row: Row<Database['public']['Tables']['reviews']
   return <Switch checked={isFeatured} onCheckedChange={handleToggle} />
 }
 
-const Reviews = ({ reviewData }: { reviewData: ReviewsWithPlatforms[] }) => {
+const Reviews = ({
+  reviewData,
+  userPermissions
+}: {
+  reviewData: ReviewsWithPlatforms[]
+  userPermissions: string[]
+}) => {
   // Hooks
   const router = useRouter()
   const { t } = useTranslation()
@@ -102,27 +109,38 @@ const Reviews = ({ reviewData }: { reviewData: ReviewsWithPlatforms[] }) => {
       header: () => <Trans i18nKey='admin:isFeaturedLabel' />,
       cell: ({ row }) => <SwitchState row={row} />
     },
-    {
-      id: 'actions',
-      header: () => <Trans i18nKey='admin:actionsColumn' />,
-      enableHiding: false,
-      cell: ({ row }) => (
-        <div className='flex items-center gap-4'>
-          <Link href={`/admin/reviews/review/${row.original.id}/edit`} className='text-primary flex items-center gap-1'>
-            <TbEdit />
-            <Trans i18nKey='admin:editButton' />
-          </Link>
-          <DeleteDialog
-            variant='ghostDestructive'
-            handleDelete={async () => {
-              await deleteReview(row.original.id, t)
-              router.refresh()
-            }}
-            itemName='review'
-          />
-        </div>
-      )
-    }
+    ...(hasAnyPermission(userPermissions, ['update_reviews', 'delete_reviews'])
+      ? [
+          {
+            id: 'actions',
+            header: () => <Trans i18nKey='admin:actionsColumn' />,
+            enableHiding: false,
+            cell: ({ row }: { row: Row<Database['public']['Tables']['reviews']['Row']> }) => (
+              <div className='flex items-center gap-4'>
+                {hasPermission(userPermissions, 'update_reviews') && (
+                  <Link
+                    href={`/admin/reviews/review/${row.original.id}/edit`}
+                    className='text-primary flex items-center gap-1'
+                  >
+                    <TbEdit />
+                    <Trans i18nKey='admin:editButton' />
+                  </Link>
+                )}
+                {hasPermission(userPermissions, 'delete_reviews') && (
+                  <DeleteDialog
+                    variant='ghostDestructive'
+                    handleDelete={async () => {
+                      await deleteReview(row.original.id, t)
+                      router.refresh()
+                    }}
+                    itemName='review'
+                  />
+                )}
+              </div>
+            )
+          }
+        ]
+      : [])
   ]
 
   return (
@@ -131,11 +149,13 @@ const Reviews = ({ reviewData }: { reviewData: ReviewsWithPlatforms[] }) => {
         <h1 className='text-textPrimary text-3xl font-bold'>
           <Trans i18nKey='admin:reviewsTitle' />
         </h1>
-        <Link href='/admin/reviews/review/create'>
-          <Button className='max-sm:is-full'>
-            <Trans i18nKey='admin:reviewsNewButton' />
-          </Button>
-        </Link>
+        {hasPermission(userPermissions, 'create_reviews') && (
+          <Link href='/admin/reviews/review/create'>
+            <Button className='max-sm:is-full'>
+              <Trans i18nKey='admin:reviewsNewButton' />
+            </Button>
+          </Link>
+        )}
       </div>
       <Card>
         <DataTable data={reviewData} columns={columns} search={{ enabled: true }} />

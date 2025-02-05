@@ -80,7 +80,7 @@ const Users = ({ usersRecord, rolesData, userPermissions }: Props) => {
     {
       accessorKey: 'email',
       header: () => <Trans i18nKey='admin:emailLabel' />,
-      cell: ({ row }) => <div>{row.original.email}</div>
+      cell: ({ row }) => row.original.email
     },
     {
       accessorKey: 'role',

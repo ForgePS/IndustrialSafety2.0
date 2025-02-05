@@ -2,6 +2,7 @@
 import { createClient } from '@repo/supabase/server'
 import { Alert, AlertDescription } from '@repo/ui/components/ui/alert'
 import { TbExclamationCircle } from 'react-icons/tb'
+import { getAuthUser } from '@repo/supabase/serverHelpers'
 
 // Component Imports
 import Edit from './Edit'
@@ -10,6 +11,10 @@ const EditPage = async (props: { params: Promise<{ id: number }> }) => {
   // Vars
   const params = await props.params
   const supabase = await createClient()
+
+  const {
+    data: { user }
+  } = await getAuthUser()
 
   // Fetch role details
   const { data: role, error: roleError } = await supabase.from('roles').select('*').eq('id', params.id).single()
@@ -58,6 +63,7 @@ const EditPage = async (props: { params: Promise<{ id: number }> }) => {
       id={params.id}
       permissionsData={permissionsData}
       rolePermissionsData={formattedRolePermissions || []}
+      userPermissions={user?.user_metadata.permissions}
     />
   )
 }

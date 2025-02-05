@@ -19,12 +19,14 @@ const ViewPage = async (props: { params: Promise<{ id: number }> }) => {
     .eq('id', params.id)
     .single()
 
-  // Fetch the roles assigned to this permission
-  const { data: rolesData, error: rolesError } = await supabase
+  // Fetch the roles assigned to this permission with proper join
+  const { data: permissionRoles, error: rolesError } = await supabase
     .from('role_permissions')
     .select(
       `
-      roles (
+      permission_id,
+      role_id,
+      roles:roles (
         id,
         role
       )
@@ -46,10 +48,18 @@ const ViewPage = async (props: { params: Promise<{ id: number }> }) => {
     )
   }
 
-  // Transform the data to include roles
+  // Transform the data to include roles with null check
+  const formattedRoles =
+    permissionRoles?.map(pr => ({
+      id: pr.role_id,
+
+      // @ts-ignore
+      role: pr.roles?.role
+    })) || []
+
   const permissionWithRoles = {
     ...permissionData,
-    roles: rolesData?.map(item => item.roles) || []
+    roles: formattedRoles
   }
 
   return (

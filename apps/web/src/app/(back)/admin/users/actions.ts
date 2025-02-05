@@ -134,12 +134,17 @@ export const createUser = async (data: UsersType) => {
 
 export async function editUser(data: UsersEditType) {
   const supabase = await createClient()
+  const serviceRoleClient = createServiceRoleClient()
 
   try {
     const { id, name, email, password, roles, selectedRoles } = data
 
-    // Get the UUID of the user from the public.users table
-    const { data: userData, error: userError } = await supabase.from('users').select('user_id').eq('id', id).single()
+    // Get the UUID and current email of the user from the public.users table
+    const { data: userData, error: userError } = await supabase
+      .from('users')
+      .select('user_id, email')
+      .eq('id', id)
+      .single()
 
     if (userError) {
       return { error: userError.message }
@@ -148,22 +153,28 @@ export async function editUser(data: UsersEditType) {
     // Get the UUID of the user to update
     const authId = userData?.user_id
 
-    // Update User Information
+    // Update User Information in public.users table (uses RLS)
     const { error: updateError } = await supabase.from('users').update({ name, email }).eq('id', id)
 
     if (updateError) {
-      // Return the RLS policy error message directly
       return { error: updateError.message }
     }
 
-    // Update auth user
-    await supabase.auth.admin.updateUserById(authId, {
-      email,
-      ...(password && { password }),
-      user_metadata: { email, name }
-    })
+    // Update auth user with service role client (bypasses RLS for auth operations)
+    // Only update auth if password is changed or email is different
+    if (password || (userData?.email && email !== userData.email)) {
+      const { error: authUpdateError } = await serviceRoleClient.auth.admin.updateUserById(authId, {
+        email,
+        ...(password && { password }),
+        user_metadata: { email, name }
+      })
 
-    // Assign roles to the user
+      if (authUpdateError) {
+        return { error: authUpdateError.message }
+      }
+    }
+
+    // Assign roles to the user using regular client (uses RLS)
     await assignRolesToUser({
       supabase,
       userId: id,

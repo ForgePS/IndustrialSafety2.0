@@ -22,6 +22,7 @@ import DeleteDialog from '@repo/ui/components/DeleteDialog'
 import { MultiSelect } from '@repo/ui/components/ui/multi-select'
 import Trans from '@repo/i18n/Trans'
 import { useTranslation } from 'react-i18next'
+import { hasPermission } from '@repo/rbac/utils'
 import type { TFunction } from 'i18next'
 import type { Database } from '@repo/supabase/types'
 
@@ -42,17 +43,15 @@ const permissionSchema = (t: TFunction) =>
     roles: z.array(z.string())
   })
 
-const Edit = ({
-  id,
-  permissionData,
-  rolesData,
-  permissionRolesData
-}: {
+type EditProps = {
   id: number
   permissionData: Permission
   rolesData: Role[]
   permissionRolesData: PermissionRole[]
-}) => {
+  userPermissions: string[]
+}
+
+const Edit = ({ id, permissionData, rolesData, permissionRolesData, userPermissions }: EditProps) => {
   // States
   const [selected, setSelected] = useState<string[]>(permissionRolesData.map(pr => pr.role))
 
@@ -171,14 +170,16 @@ const Edit = ({
               <Trans i18nKey='admin:viewButton' />
             </Link>
           </Button>
-          <DeleteDialog
-            itemName='permission'
-            handleDelete={() => {
-              handleDelete(id, t)
-              router.push('/admin/permissions')
-              router.refresh()
-            }}
-          />
+          {hasPermission(userPermissions, 'delete_permission') && (
+            <DeleteDialog
+              itemName='permission'
+              handleDelete={() => {
+                handleDelete(id, t)
+                router.push('/admin/permissions')
+                router.refresh()
+              }}
+            />
+          )}
         </div>
       </div>
       <Form {...form}>

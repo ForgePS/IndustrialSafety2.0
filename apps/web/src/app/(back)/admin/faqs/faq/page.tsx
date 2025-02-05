@@ -2,6 +2,7 @@
 import { TbExclamationCircle } from 'react-icons/tb'
 import { createClient } from '@repo/supabase/server'
 import { Alert, AlertDescription } from '@repo/ui/components/ui/alert'
+import { getAuthUser } from '@repo/supabase/serverHelpers'
 
 // Component Imports
 import Faq from './Faq'
@@ -9,6 +10,10 @@ import Faq from './Faq'
 const FaqPage = async () => {
   // Vars
   const supabase = await createClient()
+
+  const {
+    data: { user }
+  } = await getAuthUser()
 
   const { data, error } = await supabase
     .from('faqs')
@@ -31,7 +36,7 @@ const FaqPage = async () => {
     )
   }
 
-  return <Faq faqData={data} />
+  return <Faq faqData={data} userPermissions={user?.user_metadata.permissions} />
 }
 
 export default FaqPage

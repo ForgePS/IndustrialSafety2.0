@@ -4,15 +4,14 @@
 import { useEffect, useState } from 'react'
 
 // Third-party Imports
-import { TbX } from 'react-icons/tb'
-import { toast } from 'sonner'
-
-// Third-party Imports
 import { Button } from '@repo/ui/components/ui/button'
 import { Label } from '@repo/ui/components/ui/label'
+import { createClient } from '@repo/supabase/client'
+import { toast } from '@repo/ui/utils/toast'
 import { getPublicPaymentProvider } from '@repo/supabase/clientHelpers'
 import { RadioGroup, RadioGroupItem } from '@repo/ui/components/ui/radio-group'
 import { Card, CardContent, CardHeader, CardTitle } from '@repo/ui/components/ui/card'
+import { useTranslation } from 'react-i18next'
 import Trans from '@repo/i18n/Trans'
 
 const PaymentProvidersForm = () => {
@@ -20,24 +19,35 @@ const PaymentProvidersForm = () => {
   const [selectedProvider, setSelectedProvider] = useState('')
   const [dbProvider, setDbProvider] = useState('')
 
+  // Hooks
+  const { t } = useTranslation()
+  const supabase = createClient()
+
   // Functions which set the selected provider and update the database
   const handleSubmit = async (formData: FormData) => {
-    setDbProvider(formData?.get('payment_provider') as string)
-    setSelectedProvider(formData?.get('payment_provider') as string)
+    const newProvider = formData?.get('payment_provider') as string
 
-    if (formData.get('payment_provider') !== dbProvider) {
-      const { error } = await getPublicPaymentProvider()
+    if (newProvider !== dbProvider) {
+      try {
+        // Update the payment provider
+        const { error } = await supabase
+          .from('settings_configuration')
+          .update({ value: newProvider })
+          .eq('key', 'payment_provider')
 
-      toast.success(<Trans i18nKey='admin:settingsToastSuccess' />, {
-        cancel: {
-          label: <TbX />,
-          onClick: () => {}
-        },
-        duration: 2000
-      })
+        if (error) {
+          console.error('Error updating payment provider:', error)
+          toast('error', 'Error updating data: ' + error.message)
 
-      if (error) {
-        console.error('Error updating data:', error)
+          return
+        }
+
+        setDbProvider(newProvider)
+        setSelectedProvider(newProvider)
+        toast('success', t('admin:settingsToastSuccess'))
+      } catch (error) {
+        console.error('Error updating payment provider:', error)
+        toast('error', 'Error updating data: ' + error)
       }
     }
   }
@@ -51,18 +61,23 @@ const PaymentProvidersForm = () => {
         setDbProvider(data.value)
         setSelectedProvider(data.value)
       } else {
-        const { error } = await getPublicPaymentProvider()
-
-        setDbProvider('stripe') // Set the default value to stripe
-        setSelectedProvider('stripe') // Set the default value to stripe
+        // If no payment provider exists, create one with stripe as default
+        const { error } = await supabase
+          .from('settings_configuration')
+          .insert({ key: 'payment_provider', value: 'stripe' })
 
         if (error) {
-          console.error('Error updating data:', error)
+          console.error('Error setting default payment provider:', error)
+
+          return
         }
+
+        setDbProvider('stripe')
+        setSelectedProvider('stripe')
       }
 
       if (error) {
-        console.error('Error fetching data:', error)
+        console.error('Error fetching payment provider:', error)
       }
     }
 

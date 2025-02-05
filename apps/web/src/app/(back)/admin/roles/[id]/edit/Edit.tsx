@@ -22,6 +22,7 @@ import SubmitButton from '@repo/ui/components/SubmitButton'
 import { createClient } from '@repo/supabase/client'
 import Trans from '@repo/i18n/Trans'
 import { useTranslation } from 'react-i18next'
+import { hasPermission } from '@repo/rbac/utils'
 import type { Database } from '@repo/supabase/types'
 
 // Components imports
@@ -42,17 +43,15 @@ const roleSchema = z.object({
   permissions: z.array(z.string())
 })
 
-const Edit = ({
-  roleData,
-  id,
-  permissionsData,
-  rolePermissionsData
-}: {
+type EditProps = {
   roleData: Role
   id: number
   permissionsData: Permission[]
   rolePermissionsData: RolePermission[]
-}) => {
+  userPermissions: string[]
+}
+
+const Edit = ({ roleData, id, permissionsData, rolePermissionsData, userPermissions }: EditProps) => {
   // States
   const [selected, setSelected] = useState<string[]>(rolePermissionsData.map(rp => rp.permissions))
 
@@ -194,14 +193,16 @@ const Edit = ({
               <Trans i18nKey='admin:viewButton' />
             </Link>
           </Button>
-          <DeleteDialog
-            itemName='role'
-            handleDelete={() => {
-              handleDelete(id, t)
-              router.push('/admin/roles')
-              router.refresh()
-            }}
-          />
+          {hasPermission(userPermissions, 'delete_roles') && (
+            <DeleteDialog
+              itemName='role'
+              handleDelete={() => {
+                handleDelete(id, t)
+                router.push('/admin/roles')
+                router.refresh()
+              }}
+            />
+          )}
         </div>
       </div>
       <Form {...form}>

@@ -2,6 +2,7 @@
 import { TbExclamationCircle } from 'react-icons/tb'
 import { Alert, AlertDescription } from '@repo/ui/components/ui/alert'
 import { createClient } from '@repo/supabase/server'
+import { getAuthUser } from '@repo/supabase/serverHelpers'
 
 // Component Imports
 import Reviews from './Reviews'
@@ -9,6 +10,10 @@ import Reviews from './Reviews'
 const ReviewPage = async () => {
   // Vars
   const supabase = await createClient()
+
+  const {
+    data: { user }
+  } = await getAuthUser()
 
   const { data, error } = await supabase
     .from('reviews')
@@ -30,7 +35,7 @@ const ReviewPage = async () => {
     )
   }
 
-  return <Reviews reviewData={data} />
+  return <Reviews reviewData={data} userPermissions={user?.user_metadata.permissions} />
 }
 
 export default ReviewPage

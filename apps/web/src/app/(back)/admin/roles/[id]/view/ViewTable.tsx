@@ -30,7 +30,7 @@ const ViewTable = ({ users }: { users: RolesUsers[] }) => {
     {
       accessorKey: 'email',
       header: () => <Trans i18nKey='admin:emailLabel' />,
-      cell: ({ row }) => <div className='capitalize'>{row.original.email}</div>
+      cell: ({ row }) => row.original.email
     }
   ]
 

@@ -2,6 +2,7 @@
 import { TbExclamationCircle } from 'react-icons/tb'
 import { Alert, AlertDescription } from '@repo/ui/components/ui/alert'
 import { createClient } from '@repo/supabase/server'
+import { getAuthUser } from '@repo/supabase/serverHelpers'
 
 // Component Imports
 import Categories from './Categories'
@@ -9,6 +10,10 @@ import Categories from './Categories'
 const FaqCategoriesPage = async () => {
   // Vars
   const supabase = await createClient()
+
+  const {
+    data: { user }
+  } = await getAuthUser()
 
   const { data, error } = await supabase.from('faq_categories').select('*').order('id', { ascending: true })
 
@@ -23,7 +28,7 @@ const FaqCategoriesPage = async () => {
     )
   }
 
-  return <Categories categoryData={data} />
+  return <Categories categoryData={data} userPermissions={user?.user_metadata.permissions} />
 }
 
 export default FaqCategoriesPage

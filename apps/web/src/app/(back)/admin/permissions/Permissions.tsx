@@ -15,6 +15,7 @@ import { toast } from '@repo/ui/utils/toast'
 import DeleteDialog from '@repo/ui/components/DeleteDialog'
 import Trans from '@repo/i18n/Trans'
 import { useTranslation } from 'react-i18next'
+import { hasPermission } from '@repo/rbac/utils'
 import type { TFunction } from 'i18next'
 import type { Database } from '@repo/supabase/types'
 
@@ -57,7 +58,13 @@ export const handleDelete = async (id: number, t: TFunction) => {
   }
 }
 
-const Permissions = ({ permissionsData }: { permissionsData: PermissionType[] }) => {
+const Permissions = ({
+  permissionsData,
+  userPermissions
+}: {
+  permissionsData: PermissionType[]
+  userPermissions: string[]
+}) => {
   // Hooks
   const router = useRouter()
   const { t } = useTranslation()
@@ -67,7 +74,7 @@ const Permissions = ({ permissionsData }: { permissionsData: PermissionType[] })
     {
       accessorKey: 'permission',
       header: () => <Trans i18nKey='admin:permissionsNameColumn' />,
-      cell: ({ row }) => <div className='capitalize'>{row.getValue('permission')}</div>
+      cell: ({ row }) => row.getValue('permission')
     },
     {
       accessorKey: 'Actions',
@@ -75,25 +82,29 @@ const Permissions = ({ permissionsData }: { permissionsData: PermissionType[] })
       header: () => <Trans i18nKey='admin:actionsColumn' />,
       cell: ({ row }) => (
         <div className='flex items-center gap-2'>
-          <Link
-            href={`/admin/permissions/${row.original.id}/edit`}
-            className='text-primary me-3.5 flex items-center gap-1'
-          >
-            <TbEdit />
-            <Trans i18nKey='admin:editButton' />
-          </Link>
+          {hasPermission(userPermissions, 'update_permission') && (
+            <Link
+              href={`/admin/permissions/${row.original.id}/edit`}
+              className='text-primary me-3.5 flex items-center gap-1'
+            >
+              <TbEdit />
+              <Trans i18nKey='admin:editButton' />
+            </Link>
+          )}
           <Link href={`/admin/permissions/${row.original.id}/view`} className='text-primary flex items-center gap-1'>
             <TbEye />
             <Trans i18nKey='admin:viewButton' />
           </Link>
-          <DeleteDialog
-            variant='ghostDestructive'
-            itemName='permission'
-            handleDelete={() => {
-              handleDelete(row.original.id, t)
-              router.refresh()
-            }}
-          />
+          {hasPermission(userPermissions, 'delete_permission') && (
+            <DeleteDialog
+              variant='ghostDestructive'
+              itemName='permission'
+              handleDelete={() => {
+                handleDelete(row.original.id, t)
+                router.refresh()
+              }}
+            />
+          )}
         </div>
       )
     }
@@ -105,11 +116,13 @@ const Permissions = ({ permissionsData }: { permissionsData: PermissionType[] })
         <h1 className='text-textPrimary text-3xl font-bold'>
           <Trans i18nKey='admin:permissionsLabel' />
         </h1>
-        <Link href='/admin/permissions/create'>
-          <Button className='max-sm:is-full'>
-            <Trans i18nKey='admin:permissionsNewButton' />
-          </Button>
-        </Link>
+        {hasPermission(userPermissions, 'create_permission') && (
+          <Link href='/admin/permissions/create'>
+            <Button className='max-sm:is-full'>
+              <Trans i18nKey='admin:permissionsNewButton' />
+            </Button>
+          </Link>
+        )}
       </div>
       <Card>
         <DataTable data={permissionsData} columns={columns} search={{ enabled: true }} />

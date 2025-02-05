@@ -18,6 +18,7 @@ import DeleteDialog from '@repo/ui/components/DeleteDialog'
 import { createClient } from '@repo/supabase/client'
 import { toast } from '@repo/ui/utils/toast'
 import Trans from '@repo/i18n/Trans'
+import { hasAnyPermission, hasPermission } from '@repo/rbac/utils'
 import { useTranslation } from 'react-i18next'
 import type { TFunction } from 'i18next'
 import type { Database } from '@repo/supabase/types'
@@ -80,7 +81,7 @@ const SwitchState = ({ row }: { row: Row<FaqWithCategory> }) => {
   return <Switch size='sm' checked={isFeatured} onCheckedChange={handleToggle} />
 }
 
-const Faq = ({ faqData }: { faqData: FaqWithCategory[] }) => {
+const Faq = ({ faqData, userPermissions }: { faqData: FaqWithCategory[]; userPermissions: string[] }) => {
   // Hooks
   const router = useRouter()
   const { t } = useTranslation()
@@ -101,27 +102,38 @@ const Faq = ({ faqData }: { faqData: FaqWithCategory[] }) => {
       header: () => <Trans i18nKey='admin:isFeaturedLabel' />,
       cell: ({ row }) => <SwitchState row={row} />
     },
-    {
-      id: 'actions',
-      header: () => <Trans i18nKey='admin:actionsColumn' />,
-      enableHiding: false,
-      cell: ({ row }) => (
-        <div className='flex items-center gap-4'>
-          <Link href={`/admin/faqs/faq/${row.original.id}/edit`} className='text-primary flex items-center gap-1'>
-            <TbEdit />
-            <Trans i18nKey='admin:editButton' />
-          </Link>
-          <DeleteDialog
-            variant='ghostDestructive'
-            handleDelete={async () => {
-              await deleteFaq(row.original.id, t)
-              router.refresh()
-            }}
-            itemName='FAQ'
-          />
-        </div>
-      )
-    }
+    ...(hasAnyPermission(userPermissions, ['update_faqs', 'delete_faqs'])
+      ? [
+          {
+            id: 'actions',
+            header: () => <Trans i18nKey='admin:actionsColumn' />,
+            enableHiding: false,
+            cell: ({ row }: { row: Row<FaqWithCategory> }) => (
+              <div className='flex items-center gap-4'>
+                {hasPermission(userPermissions, 'update_faqs') && (
+                  <Link
+                    href={`/admin/faqs/faq/${row.original.id}/edit`}
+                    className='text-primary flex items-center gap-1'
+                  >
+                    <TbEdit />
+                    <Trans i18nKey='admin:editButton' />
+                  </Link>
+                )}
+                {hasPermission(userPermissions, 'delete_faqs') && (
+                  <DeleteDialog
+                    variant='ghostDestructive'
+                    handleDelete={async () => {
+                      await deleteFaq(row.original.id, t)
+                      router.refresh()
+                    }}
+                    itemName='FAQ'
+                  />
+                )}
+              </div>
+            )
+          }
+        ]
+      : [])
   ]
 
   return (
@@ -130,11 +142,13 @@ const Faq = ({ faqData }: { faqData: FaqWithCategory[] }) => {
         <h1 className='text-textPrimary text-3xl font-bold'>
           <Trans i18nKey='admin:faqsTitle' />
         </h1>
-        <Link href='/admin/faqs/faq/create'>
-          <Button className='max-sm:is-full'>
-            <Trans i18nKey='admin:faqsNewButton' />
-          </Button>
-        </Link>
+        {hasPermission(userPermissions, 'create_faqs') && (
+          <Link href='/admin/faqs/faq/create'>
+            <Button className='max-sm:is-full'>
+              <Trans i18nKey='admin:faqsNewButton' />
+            </Button>
+          </Link>
+        )}
       </div>
       <Card>
         <DataTable data={faqData} columns={columns} search={{ enabled: true }} />

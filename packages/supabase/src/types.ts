@@ -34,9 +34,9 @@ export type Database = {
           cost: string | null
           currency: string | null
           email: string
-          id: string
+          id: number
           interval: string | null
-          order_id: string
+          order_id: string | null
           order_type: string
           payment_email: string | null
           plan_variant: string
@@ -48,9 +48,9 @@ export type Database = {
           cost?: string | null
           currency?: string | null
           email?: string
-          id?: string
+          id?: number
           interval?: string | null
-          order_id: string
+          order_id?: string | null
           order_type: string
           payment_email?: string | null
           plan_variant: string
@@ -62,9 +62,9 @@ export type Database = {
           cost?: string | null
           currency?: string | null
           email?: string
-          id?: string
+          id?: number
           interval?: string | null
-          order_id?: string
+          order_id?: string | null
           order_type?: string
           payment_email?: string | null
           plan_variant?: string
@@ -352,6 +352,14 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      can_manage_role: {
+        Args: {
+          auth_uid: string
+          target_role_id: number
+          action: string
+        }
+        Returns: boolean
+      }
       can_manage_user: {
         Args: {
           auth_uid: string
@@ -359,6 +367,22 @@ export type Database = {
         }
         Returns: boolean
       }
+      can_perform_role_action:
+        | {
+            Args: {
+              auth_uid: string
+              target_role_hierarchy: number
+            }
+            Returns: boolean
+          }
+        | {
+            Args: {
+              auth_uid: string
+              target_role_id: number
+              action: string
+            }
+            Returns: boolean
+          }
       can_perform_user_action: {
         Args: {
           auth_uid: string
@@ -373,6 +397,21 @@ export type Database = {
         }
         Returns: boolean
       }
+      can_view_role:
+        | {
+            Args: {
+              auth_uid: string
+              target_role_hierarchy: number
+            }
+            Returns: boolean
+          }
+        | {
+            Args: {
+              auth_uid: string
+              target_role_id: number
+            }
+            Returns: boolean
+          }
       can_view_user: {
         Args: {
           auth_uid: string

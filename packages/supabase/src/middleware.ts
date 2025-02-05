@@ -158,10 +158,40 @@ export async function updateSession(request: NextRequest, isMagicLinkEnabled: bo
       return NextResponse.redirect(url)
     }
 
+    // Check permissions for user edit routes
+    if (url.pathname.match(/^\/admin\/users\/\d+\/edit$/)) {
+      if (!hasPermission(permissions, 'update_users')) {
+        url.pathname = '/not-authorized'
+
+        return NextResponse.redirect(url)
+      }
+    }
+
     if (url.pathname.startsWith('/admin/roles') && !hasPermission(permissions, 'view_roles')) {
       url.pathname = '/not-authorized'
 
       return NextResponse.redirect(url)
+    }
+
+    if (url.pathname.startsWith('/admin/roles/create') && !hasPermission(permissions, 'create_roles')) {
+      url.pathname = '/not-authorized'
+
+      return NextResponse.redirect(url)
+    }
+
+    if (url.pathname.startsWith('/admin/permissions/create') && !hasPermission(permissions, 'create_permission')) {
+      url.pathname = '/not-authorized'
+
+      return NextResponse.redirect(url)
+    }
+
+    // Check permissions for role edit routes
+    if (url.pathname.match(/^\/admin\/roles\/\d+\/edit$/)) {
+      if (!hasPermission(permissions, 'update_roles')) {
+        url.pathname = '/not-authorized'
+
+        return NextResponse.redirect(url)
+      }
     }
 
     if (url.pathname.startsWith('/admin/permissions') && !hasPermission(permissions, 'view_permission')) {
@@ -170,10 +200,56 @@ export async function updateSession(request: NextRequest, isMagicLinkEnabled: bo
       return NextResponse.redirect(url)
     }
 
-    if (url.pathname.startsWith('/admin/faqs') && !hasPermission(permissions, 'view_faqs')) {
-      url.pathname = '/not-authorized'
+    if (url.pathname.startsWith('/admin/faqs') || url.pathname.startsWith('/admin/faqs')) {
+      if (!hasPermission(permissions, 'view_faqs')) {
+        url.pathname = '/not-authorized'
 
-      return NextResponse.redirect(url)
+        return NextResponse.redirect(url)
+      }
+    }
+
+    // Check permissions for FAQ create routes
+    if (url.pathname.startsWith('/admin/faqs/faq/create') || url.pathname.startsWith('/admin/faqs/category/create')) {
+      if (!hasPermission(permissions, 'create_faqs')) {
+        url.pathname = '/not-authorized'
+
+        return NextResponse.redirect(url)
+      }
+    }
+
+    // Check permissions for FAQ edit routes
+    if (
+      url.pathname.match(/^\/admin\/faqs\/faq\/\d+\/edit$/) ||
+      url.pathname.match(/^\/admin\/faqs\/category\/\d+\/edit$/)
+    ) {
+      if (!hasPermission(permissions, 'update_faqs')) {
+        url.pathname = '/not-authorized'
+
+        return NextResponse.redirect(url)
+      }
+    }
+
+    // Check permissions for Reviews Platforms routes
+    if (
+      url.pathname.startsWith('/admin/reviews/platform/create') ||
+      url.pathname.startsWith('/admin/reviews/review/create')
+    ) {
+      if (!hasPermission(permissions, 'create_reviews')) {
+        url.pathname = '/not-authorized'
+
+        return NextResponse.redirect(url)
+      }
+    }
+
+    if (
+      url.pathname.match(/^\/admin\/reviews\/platform\/\d+\/edit$/) ||
+      url.pathname.match(/^\/admin\/reviews\/review\/\d+\/edit$/)
+    ) {
+      if (!hasPermission(permissions, 'update_reviews')) {
+        url.pathname = '/not-authorized'
+
+        return NextResponse.redirect(url)
+      }
     }
 
     // User can only access the checkout page after selecting a product

@@ -2,6 +2,7 @@
 import { createClient } from '@repo/supabase/server'
 import { Alert, AlertDescription } from '@repo/ui/components/ui/alert'
 import { TbExclamationCircle } from 'react-icons/tb'
+import { getAuthUser } from '@repo/supabase/serverHelpers'
 import Trans from '@repo/i18n/Trans'
 
 // Component Imports
@@ -11,6 +12,10 @@ const EditPage = async (props: { params: Promise<{ id: number }> }) => {
   // Vars
   const params = await props.params
   const supabase = await createClient()
+
+  const {
+    data: { user }
+  } = await getAuthUser()
 
   // Fetch permission details
   const { data: permission, error: permissionError } = await supabase
@@ -22,12 +27,14 @@ const EditPage = async (props: { params: Promise<{ id: number }> }) => {
   // Fetch all roles
   const { data: rolesData, error: rolesError } = await supabase.from('roles').select('*')
 
-  // Fetch permission roles
+  // Fetch permission roles with proper join
   const { data: permissionRoles, error: permissionRolesError } = await supabase
     .from('role_permissions')
     .select(
       `
-      roles (
+      permission_id,
+      role_id,
+      roles:roles (
         id,
         role
       )
@@ -37,8 +44,8 @@ const EditPage = async (props: { params: Promise<{ id: number }> }) => {
 
   // Format permission roles as the Edit component expects
   const formattedPermissionRoles = permissionRoles?.map((pr: any) => ({
-    id: pr.roles.id,
-    role: pr.roles.role
+    id: pr.role_id,
+    role: pr.roles?.role
   }))
 
   if (permissionError || rolesError || permissionRolesError) {
@@ -66,6 +73,7 @@ const EditPage = async (props: { params: Promise<{ id: number }> }) => {
       permissionData={permission}
       rolesData={rolesData}
       permissionRolesData={formattedPermissionRoles || []}
+      userPermissions={user?.user_metadata.permissions}
     />
   )
 }

@@ -7,7 +7,6 @@ import { useRouter } from 'next/navigation'
 // Third-party Imports
 import { TbEdit } from 'react-icons/tb'
 import * as Icons from 'react-icons/tb'
-import type { ColumnDef } from '@tanstack/react-table'
 import DataTable from '@repo/ui/components/ui/data-table'
 import { Avatar, AvatarFallback } from '@repo/ui/components/ui/avatar'
 import { Card } from '@repo/ui/components/ui/card'
@@ -16,8 +15,10 @@ import DeleteDialog from '@repo/ui/components/DeleteDialog'
 import { createClient } from '@repo/supabase/client'
 import { toast } from '@repo/ui/utils/toast'
 import Trans from '@repo/i18n/Trans'
+import { hasAnyPermission } from '@repo/rbac/utils'
 import { useTranslation } from 'react-i18next'
 import type { TFunction } from 'i18next'
+import type { ColumnDef, Row } from '@tanstack/react-table'
 import type { Database } from '@repo/supabase/types'
 
 export type CategoryTypes = Omit<Database['public']['Tables']['faq_categories']['Row'], 'icon'> & {
@@ -53,7 +54,13 @@ export const handleDelete = async (categoryId: number, t: TFunction) => {
   }
 }
 
-const Categories = ({ categoryData }: { categoryData: CategoryTypes[] }) => {
+const Categories = ({
+  categoryData,
+  userPermissions
+}: {
+  categoryData: CategoryTypes[]
+  userPermissions: string[]
+}) => {
   // Hooks
   const router = useRouter()
   const { t } = useTranslation()
@@ -75,27 +82,38 @@ const Categories = ({ categoryData }: { categoryData: CategoryTypes[] }) => {
         </Avatar>
       )
     },
-    {
-      id: 'actions',
-      header: () => <Trans i18nKey='admin:actionsColumn' />,
-      enableHiding: false,
-      cell: ({ row }) => (
-        <div className='flex items-center gap-4'>
-          <Link href={`/admin/faqs/category/${row.original.id}/edit`} className='text-primary flex items-center gap-1'>
-            <TbEdit />
-            <Trans i18nKey='admin:editButton' />
-          </Link>
-          <DeleteDialog
-            variant='ghostDestructive'
-            handleDelete={async () => {
-              await handleDelete(row.original.id, t)
-              router.refresh()
-            }}
-            itemName='category'
-          />
-        </div>
-      )
-    }
+    ...(hasAnyPermission(userPermissions, ['update_faqs', 'delete_faqs'])
+      ? [
+          {
+            id: 'actions',
+            header: () => <Trans i18nKey='admin:actionsColumn' />,
+            enableHiding: false,
+            cell: ({ row }: { row: Row<CategoryTypes> }) => (
+              <div className='flex items-center gap-4'>
+                {hasAnyPermission(userPermissions, ['update_faqs']) && (
+                  <Link
+                    href={`/admin/faqs/category/${row.original.id}/edit`}
+                    className='text-primary flex items-center gap-1'
+                  >
+                    <TbEdit />
+                    <Trans i18nKey='admin:editButton' />
+                  </Link>
+                )}
+                {hasAnyPermission(userPermissions, ['delete_faqs']) && (
+                  <DeleteDialog
+                    variant='ghostDestructive'
+                    handleDelete={async () => {
+                      await handleDelete(row.original.id, t)
+                      router.refresh()
+                    }}
+                    itemName='category'
+                  />
+                )}
+              </div>
+            )
+          }
+        ]
+      : [])
   ]
 
   return (
@@ -104,11 +122,13 @@ const Categories = ({ categoryData }: { categoryData: CategoryTypes[] }) => {
         <h1 className='text-textPrimary text-3xl font-bold'>
           <Trans i18nKey='admin:faqCategoriesTitle' />
         </h1>
-        <Link href='/admin/faqs/category/create'>
-          <Button className='max-sm:is-full'>
-            <Trans i18nKey='admin:faqCategoriesNewButton' />
-          </Button>
-        </Link>
+        {hasAnyPermission(userPermissions, ['create_faqs']) && (
+          <Link href='/admin/faqs/category/create'>
+            <Button className='max-sm:is-full'>
+              <Trans i18nKey='admin:faqCategoriesNewButton' />
+            </Button>
+          </Link>
+        )}
       </div>
       <Card>
         <DataTable data={categoryData} columns={columns} search={{ enabled: true }} />

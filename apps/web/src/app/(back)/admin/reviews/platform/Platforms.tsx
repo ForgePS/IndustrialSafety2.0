@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation'
 
 // Third-party Imports
 import { TbEdit } from 'react-icons/tb'
-import type { ColumnDef } from '@tanstack/react-table'
+import type { ColumnDef, Row } from '@tanstack/react-table'
 import { Card } from '@repo/ui/components/ui/card'
 import { Avatar, AvatarImage, AvatarFallback } from '@repo/ui/components/ui/avatar'
 import { Button } from '@repo/ui/components/ui/button'
@@ -17,6 +17,7 @@ import { toast } from '@repo/ui/utils/toast'
 import { getInitials } from '@repo/ui/utils/getInitials'
 import Trans from '@repo/i18n/Trans'
 import { useTranslation } from 'react-i18next'
+import { hasAnyPermission, hasPermission } from '@repo/rbac/utils'
 import type { TFunction } from 'i18next'
 import type { Database } from '@repo/supabase/types'
 
@@ -41,7 +42,13 @@ export const deletePlatform = async (platformId: number, t: TFunction) => {
   }
 }
 
-const Platforms = ({ platformData }: { platformData: Database['public']['Tables']['review_platforms']['Row'][] }) => {
+const Platforms = ({
+  platformData,
+  userPermissions
+}: {
+  platformData: Database['public']['Tables']['review_platforms']['Row'][]
+  userPermissions: string[]
+}) => {
   // Hooks
   const router = useRouter()
   const { t } = useTranslation()
@@ -72,28 +79,36 @@ const Platforms = ({ platformData }: { platformData: Database['public']['Tables'
       header: () => <Trans i18nKey='admin:reviewPlatformsSlugColumn' />,
       cell: ({ row }) => <div>{row.getValue('slug')}</div>
     },
-    {
-      id: 'actions',
-      cell: ({ row }) => (
-        <div className='flex items-center gap-4'>
-          <Link
-            href={`/admin/reviews/platform/${row.original.id}/edit`}
-            className='text-primary flex items-center gap-1'
-          >
-            <TbEdit />
-            <Trans i18nKey='admin:editButton' />
-          </Link>
-          <DeleteDialog
-            variant='ghostDestructive'
-            handleDelete={async () => {
-              await deletePlatform(row.original.id, t)
-              router.refresh()
-            }}
-            itemName='platform'
-          />
-        </div>
-      )
-    }
+    ...(hasAnyPermission(userPermissions, ['update_reviews', 'delete_reviews'])
+      ? [
+          {
+            id: 'actions',
+            cell: ({ row }: { row: Row<Database['public']['Tables']['review_platforms']['Row']> }) => (
+              <div className='flex items-center gap-4'>
+                {hasPermission(userPermissions, 'update_reviews') && (
+                  <Link
+                    href={`/admin/reviews/platform/${row.original.id}/edit`}
+                    className='text-primary flex items-center gap-1'
+                  >
+                    <TbEdit />
+                    <Trans i18nKey='admin:editButton' />
+                  </Link>
+                )}
+                {hasPermission(userPermissions, 'delete_reviews') && (
+                  <DeleteDialog
+                    variant='ghostDestructive'
+                    handleDelete={async () => {
+                      await deletePlatform(row.original.id, t)
+                      router.refresh()
+                    }}
+                    itemName='platform'
+                  />
+                )}
+              </div>
+            )
+          }
+        ]
+      : [])
   ]
 
   return (
@@ -102,11 +117,13 @@ const Platforms = ({ platformData }: { platformData: Database['public']['Tables'
         <h1 className='text-textPrimary text-3xl font-bold'>
           <Trans i18nKey='admin:reviewPlatformsTitle' />
         </h1>
-        <Link href='/admin/reviews/platform/create'>
-          <Button className='max-sm:is-full'>
-            <Trans i18nKey='admin:reviewPlatformsNewButton' />
-          </Button>
-        </Link>
+        {hasPermission(userPermissions, 'create_reviews') && (
+          <Link href='/admin/reviews/platform/create'>
+            <Button className='max-sm:is-full'>
+              <Trans i18nKey='admin:reviewPlatformsNewButton' />
+            </Button>
+          </Link>
+        )}
       </div>
       <Card>
         <DataTable data={platformData} columns={columns} search={{ enabled: true }} />
