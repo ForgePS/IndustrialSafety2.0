@@ -1,8 +1,7 @@
 'use client'
 
 // Third-party Imports
-import { toast } from 'sonner'
-import { TbTrash, TbX } from 'react-icons/tb'
+import { TbTrash } from 'react-icons/tb'
 import * as Icons from 'react-icons/tb'
 import { z } from 'zod'
 import { zodResolver } from '@hookform/resolvers/zod'
@@ -18,6 +17,7 @@ import { createClient } from '@repo/supabase/client'
 import Trans from '@repo/i18n/Trans'
 import { useTranslation } from 'react-i18next'
 import type { TFunction } from 'i18next'
+import { toast } from '@repo/ui/utils/toast'
 
 // Define Zod Schema for validation
 const socialLinksSchema = (t: TFunction) =>
@@ -76,25 +76,17 @@ const SocialLinks = ({ settings }: { settings: SettingsConfiguration['general_se
 
     if (error) {
       console.error('Error updating social links: ', error.message)
-      toast.error(
-        <Trans
-          i18nKey='admin:settingsSocialLinksUpdateError'
-          values={{
-            message: error.message
-          }}
-        />
+      toast(
+        'error',
+        t('admin:settingsSocialLinksUpdateError', {
+          message: error.message
+        })
       )
 
       return
     }
 
-    toast.success(<Trans i18nKey='admin:settingsToastSuccess' />, {
-      cancel: {
-        label: <TbX />,
-        onClick: () => {}
-      },
-      duration: 2000
-    })
+    toast('success', t('admin:settingsToastSuccess'))
   }
 
   // Handle Delete Social Link
@@ -113,25 +105,14 @@ const SocialLinks = ({ settings }: { settings: SettingsConfiguration['general_se
 
     if (error) {
       console.error('Error deleting social link: ', error.message)
-      toast.error(
-        <Trans
-          i18nKey='admin:settingsSocialLinksDeleteError'
-          values={{
-            message: error.message
-          }}
-        />
-      )
+      toast('error', t('admin:settingsSocialLinksDeleteError', { message: error.message }))
 
       return
     }
 
     remove(id)
 
-    toast.success(<Trans i18nKey='admin:settingsSocialLinksDeleteSuccess' />, {
-      dismissible: true,
-      icon: <TbTrash className='size-6' />,
-      duration: 3000
-    })
+    toast('success', t('admin:settingsSocialLinksDeleteSuccess'))
   }
 
   return (

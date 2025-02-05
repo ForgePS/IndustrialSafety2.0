@@ -4,25 +4,14 @@
 import { useState } from 'react'
 
 // Third-party Imports
-import { toast } from 'sonner'
-import { TbX } from 'react-icons/tb'
 import { Button } from '@repo/ui/components/ui/button'
 import Trans from '@repo/i18n/Trans'
 import { useTranslation } from 'react-i18next'
 import type { User } from '@supabase/supabase-js'
+import { toast } from '@repo/ui/utils/toast'
 
 // Server Action Imports
 import { verifyEmail } from '../actions'
-
-const showToast = (type: 'success' | 'error', message: string) => {
-  toast[type](message, {
-    cancel: {
-      label: <TbX />,
-      onClick: () => {}
-    },
-    duration: 3000
-  })
-}
 
 const ResendVerifyEmailButton = ({ searchParams, users }: { searchParams: Record<string, string>; users: User[] }) => {
   // States
@@ -40,7 +29,7 @@ const ResendVerifyEmailButton = ({ searchParams, users }: { searchParams: Record
     try {
       // Check if email is present in the URL
       if (!email) {
-        showToast('error', t('auth:verifyEmailToastEmailNotFound'))
+        toast('error', t('auth:verifyEmailToastEmailNotFound'))
 
         return
       }
@@ -50,14 +39,14 @@ const ResendVerifyEmailButton = ({ searchParams, users }: { searchParams: Record
 
       // If user not found, show alert that says user doesn't exist
       if (!existingUserData) {
-        showToast('error', t('auth:verifyEmailToastUserNotFound', { email }))
+        toast('error', t('auth:verifyEmailToastUserNotFound', { email }))
 
         return
       }
 
       // If user's email is already verified, show alert that says email is already verified
       if (existingUserData.email_confirmed_at) {
-        showToast('error', t('auth:verifyEmailToastEmailVerified'))
+        toast('error', t('auth:verifyEmailToastEmailVerified'))
 
         return
       }
@@ -67,15 +56,15 @@ const ResendVerifyEmailButton = ({ searchParams, users }: { searchParams: Record
 
       if (error) {
         console.error(error)
-        showToast('error', error.message)
+        toast('error', error.message)
 
         return
       }
 
-      showToast('success', t('auth:verifyEmailToastSendSuccess', { email }))
+      toast('success', t('auth:verifyEmailToastSendSuccess', { email }))
     } catch (error) {
       console.error(error)
-      showToast('error', t('auth:verifyEmailToastError'))
+      toast('error', t('auth:verifyEmailToastError'))
     } finally {
       setIsLoading(false)
     }

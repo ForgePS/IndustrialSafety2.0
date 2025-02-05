@@ -2,8 +2,6 @@
 import { useEffect, useState } from 'react'
 
 // Third-party Imports
-import { toast } from 'sonner'
-import { TbX } from 'react-icons/tb'
 import type { SettingsConfiguration } from '@repo/supabase/settingsConfigurationTypes'
 import { CardContent } from '@repo/ui/components/ui/card'
 import { Switch } from '@repo/ui/components/ui/switch'
@@ -12,6 +10,8 @@ import SubmitButton from '@repo/ui/components/SubmitButton'
 import { getPublicGeneralSettings } from '@repo/supabase/clientHelpers'
 import { createClient } from '@repo/supabase/client'
 import Trans from '@repo/i18n/Trans'
+import { useTranslation } from 'react-i18next'
+import { toast } from '@repo/ui/utils/toast'
 
 const FeatureToggle = ({ settings }: { settings: SettingsConfiguration['general_settings'] }) => {
   // States
@@ -19,6 +19,9 @@ const FeatureToggle = ({ settings }: { settings: SettingsConfiguration['general_
 
   // Vars
   const supabase = createClient()
+
+  // Hooks
+  const { t } = useTranslation()
 
   // Save Changes Handler
   const handleSubmit = async (formData: FormData) => {
@@ -33,13 +36,7 @@ const FeatureToggle = ({ settings }: { settings: SettingsConfiguration['general_
 
     if (!error) {
       setBlogEnabled(isSwitchOn)
-      toast.success(<Trans i18nKey='admin:settingsToastSuccess' />, {
-        cancel: {
-          label: <TbX />,
-          onClick: () => {}
-        },
-        duration: 2000
-      })
+      toast('success', t('admin:settingsToastSuccess'))
     }
   }
 

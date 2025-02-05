@@ -1,8 +1,7 @@
 'use client'
 
 // Third-party Imports
-import { toast } from 'sonner'
-import { TbTrash, TbX } from 'react-icons/tb'
+import { TbTrash } from 'react-icons/tb'
 import { z } from 'zod'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useFieldArray, useForm } from 'react-hook-form'
@@ -18,6 +17,7 @@ import { createClient } from '@repo/supabase/client'
 import Trans from '@repo/i18n/Trans'
 import { useTranslation } from 'react-i18next'
 import type { TFunction } from 'i18next'
+import { toast } from '@repo/ui/utils/toast'
 
 // Define Zod Schema for validation
 const trackingSchema = (t: TFunction) =>
@@ -93,25 +93,12 @@ const Tracking = ({ settings }: { settings: SettingsConfiguration['general_setti
 
     if (error) {
       console.error('Error updating settings: ', error.message)
-      toast.error(
-        <Trans
-          i18nKey='admin:settingsTrackingUpdateError'
-          values={{
-            message: error.message
-          }}
-        />
-      )
+      toast('error', t('admin:settingsTrackingUpdateError', { message: error.message }))
 
       return
     }
 
-    toast.success(<Trans i18nKey='admin:settingsToastSuccess' />, {
-      cancel: {
-        label: <TbX />,
-        onClick: () => {}
-      },
-      duration: 2000
-    })
+    toast('success', t('admin:settingsToastSuccess'))
   }
 
   // Handle Delete Provider
@@ -133,27 +120,14 @@ const Tracking = ({ settings }: { settings: SettingsConfiguration['general_setti
 
     if (error) {
       console.error('Error deleting provider: ', error.message)
-      toast.error(
-        <Trans
-          i18nKey='admin:settingsTrackingDeleteError'
-          values={{
-            message: error.message
-          }}
-        />
-      )
+      toast('error', t('admin:settingsTrackingDeleteError', { message: error.message }))
 
       return
     }
 
     remove(index)
 
-    toast.success(<Trans i18nKey='admin:settingsTrackingDeleteSuccess' />, {
-      cancel: {
-        label: <TbX />,
-        onClick: () => {}
-      },
-      duration: 2000
-    })
+    toast('success', t('admin:settingsTrackingDeleteSuccess'))
   }
 
   return (

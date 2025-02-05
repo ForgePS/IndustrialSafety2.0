@@ -219,6 +219,7 @@
   "settingsTabApplication": "Anwendung",
   "settingsTabPagesComponents": "Seiten & Komponenten",
   "settingsTabShare": "Share This (Blog)",
+  "settingsToastError": "Fehler beim Speichern der Einstellungen: {{message}}",
   "settingsToastSuccess": "Einstellungen gespeichert!",
   "settingsTrackingAddButton": "Zu Tracking hinzufügen",
   "settingsTrackingDeleteError": "Fehler beim Löschen des Anbieters: {{message}}",

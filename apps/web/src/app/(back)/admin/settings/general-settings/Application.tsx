@@ -1,8 +1,6 @@
 'use client'
 
 // Third-party Imports
-import { toast } from 'sonner'
-import { TbX } from 'react-icons/tb'
 import { z } from 'zod'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useForm } from 'react-hook-form'
@@ -16,6 +14,7 @@ import { createClient } from '@repo/supabase/client'
 import Trans from '@repo/i18n/Trans'
 import { useTranslation } from 'react-i18next'
 import type { TFunction } from 'i18next'
+import { toast } from '@repo/ui/utils/toast'
 
 // Define Zod Schema for validation
 const applicationSchema = (t: TFunction) =>
@@ -62,18 +61,12 @@ const Application = ({ settings }: { settings: SettingsConfiguration['general_se
 
     if (error) {
       console.error('Error saving settings: ', error.message)
-      toast.error('Error saving settings: ' + error.message)
+      toast('error', t('admin:settingsToastError', { message: error.message }))
 
       return
     }
 
-    toast.success(<Trans i18nKey='admin:settingsToastSuccess' />, {
-      cancel: {
-        label: <TbX />,
-        onClick: () => {}
-      },
-      duration: 2000
-    })
+    toast('success', t('admin:settingsToastSuccess'))
   }
 
   return (

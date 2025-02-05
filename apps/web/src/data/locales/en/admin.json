@@ -219,6 +219,7 @@
   "settingsTabApplication": "Application",
   "settingsTabPagesComponents": "Pages & Components",
   "settingsTabShare": "Share This (Blog)",
+  "settingsToastError": "Error saving settings: {{message}}",
   "settingsToastSuccess": "Settings saved!",
   "settingsTrackingAddButton": "Add to Tracking",
   "settingsTrackingDeleteError": "Error deleting provider: {{message}}",

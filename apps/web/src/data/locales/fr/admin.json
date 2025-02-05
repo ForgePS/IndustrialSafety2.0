@@ -219,6 +219,7 @@
   "settingsTabApplication": "Application",
   "settingsTabPagesComponents": "Pages et composants",
   "settingsTabShare": "Share This (Blog)",
+  "settingsToastError": "Erreur lors de l'enregistrement des paramètres: {{message}}",
   "settingsToastSuccess": "Paramètres enregistrés !",
   "settingsTrackingAddButton": "Ajouter au suivi",
   "settingsTrackingDeleteError": "Erreur lors de la suppression du fournisseur : {{message}}",
