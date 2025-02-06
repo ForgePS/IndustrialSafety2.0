@@ -93,7 +93,7 @@ CREATE UNIQUE INDEX permissions_permission_key ON public.permissions USING btree
 CREATE UNIQUE INDEX permissions_pkey ON public.permissions USING btree (id);
 CREATE UNIQUE INDEX review_platforms_pkey ON public.review_platforms USING btree (id);
 CREATE UNIQUE INDEX reviews_pkey ON public.reviews USING btree (id);
-CREATE UNIQUE INDEX role_permissions_pkey ON public.role_permissions USING btree (id);
+CREATE UNIQUE INDEX role_permissions_pkey ON public.role_permissions USING btree (permission_id, role_id);
 CREATE UNIQUE INDEX roles_hierarchy_key ON public.roles USING btree (hierarchy);
 CREATE UNIQUE INDEX roles_pkey ON public.roles USING btree (id);
 CREATE UNIQUE INDEX roles_role_key ON public.roles USING btree (role);

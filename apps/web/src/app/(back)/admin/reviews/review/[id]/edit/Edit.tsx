@@ -23,6 +23,7 @@ import { toast } from '@repo/ui/utils/toast'
 import { createClient } from '@repo/supabase/client'
 import Trans from '@repo/i18n/Trans'
 import { useTranslation } from 'react-i18next'
+import { hasPermission } from '@repo/rbac/utils'
 import type { TFunction } from 'i18next'
 
 // Component Imports
@@ -48,15 +49,14 @@ const reviewSchema = (t: TFunction) =>
     avatar_image: z.string().optional().nullable()
   })
 
-const EditReview = ({
-  reviewData,
-  platformsData,
-  id
-}: {
+type EditReviewProps = {
   reviewData: Database['public']['Tables']['reviews']['Row']
   platformsData: PlatformTypes[]
   id: number
-}) => {
+  userPermissions: string[]
+}
+
+const EditReview = ({ reviewData, platformsData, id, userPermissions }: EditReviewProps) => {
   // Vars
   const supabase = createClient()
 
@@ -127,14 +127,16 @@ const EditReview = ({
         <h1 className='text-textPrimary text-3xl font-bold'>
           <Trans i18nKey='admin:reviewsEditTitle' />
         </h1>
-        <DeleteDialog
-          handleDelete={async () => {
-            await deleteReview(id, t)
-            router.push('/admin/reviews/review')
-            router.refresh()
-          }}
-          itemName='review'
-        />
+        {hasPermission(userPermissions, 'delete_reviews') && (
+          <DeleteDialog
+            handleDelete={async () => {
+              await deleteReview(id, t)
+              router.push('/admin/reviews/review')
+              router.refresh()
+            }}
+            itemName='review'
+          />
+        )}
       </div>
       <Form {...form}>
         <form>

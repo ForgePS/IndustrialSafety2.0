@@ -19,6 +19,7 @@ import { createClient } from '@repo/supabase/client'
 import { toast } from '@repo/ui/utils/toast'
 import Trans from '@repo/i18n/Trans'
 import { useTranslation } from 'react-i18next'
+import { hasPermission } from '@repo/rbac/utils'
 import type { TFunction } from 'i18next'
 
 // Component Imports
@@ -32,7 +33,15 @@ const categorySchema = (t: TFunction) =>
     icon: z.string().refine(val => val in Icons, { message: t('admin:invalidIconError') })
   })
 
-const Edit = ({ categoryData, id }: { categoryData: CategoryTypes; id: number }) => {
+const Edit = ({
+  categoryData,
+  id,
+  userPermissions
+}: {
+  categoryData: CategoryTypes
+  id: number
+  userPermissions: string[]
+}) => {
   // Vars
   const supabase = createClient()
 
@@ -76,14 +85,16 @@ const Edit = ({ categoryData, id }: { categoryData: CategoryTypes; id: number })
         <h2 className='mbe-6 text-2xl font-semibold sm:text-3xl'>
           <Trans i18nKey='admin:faqCategoriesEditTitle' />
         </h2>
-        <DeleteDialog
-          handleDelete={async () => {
-            await handleDelete(id, t)
-            router.push('/admin/faqs/category')
-            router.refresh()
-          }}
-          itemName='category'
-        />
+        {hasPermission(userPermissions, 'delete_faqs') && (
+          <DeleteDialog
+            handleDelete={async () => {
+              await handleDelete(id, t)
+              router.push('/admin/faqs/category')
+              router.refresh()
+            }}
+            itemName='category'
+          />
+        )}
       </div>
       <Form {...form}>
         <form>

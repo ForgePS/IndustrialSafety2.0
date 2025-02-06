@@ -15,10 +15,11 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '
 import SubmitButton from '@repo/ui/components/SubmitButton'
 import { createClient } from '@repo/supabase/client'
 import { toast } from '@repo/ui/utils/toast'
-import type { Database } from '@repo/supabase/types'
 import DeleteDialog from '@repo/ui/components/DeleteDialog'
 import Trans from '@repo/i18n/Trans'
 import { useTranslation } from 'react-i18next'
+import { hasPermission } from '@repo/rbac/utils'
+import type { Database } from '@repo/supabase/types'
 import type { TFunction } from 'i18next'
 
 // Component Imports
@@ -36,10 +37,12 @@ const platformSchema = (t: TFunction) =>
 
 const EditPlatform = ({
   platformData,
-  id
+  id,
+  userPermissions
 }: {
   platformData: Database['public']['Tables']['review_platforms']['Row']
   id: number
+  userPermissions: string[]
 }) => {
   // Vars
   const supabase = createClient()
@@ -91,14 +94,16 @@ const EditPlatform = ({
         <h1 className='text-textPrimary text-3xl font-bold'>
           <Trans i18nKey='admin:reviewPlatformsEditTitle' />
         </h1>
-        <DeleteDialog
-          handleDelete={async () => {
-            await deletePlatform(id, t)
-            router.push('/admin/reviews/platform')
-            router.refresh()
-          }}
-          itemName='review-platform'
-        />
+        {hasPermission(userPermissions, 'delete_reviews') && (
+          <DeleteDialog
+            handleDelete={async () => {
+              await deletePlatform(id, t)
+              router.push('/admin/reviews/platform')
+              router.refresh()
+            }}
+            itemName='review-platform'
+          />
+        )}
       </div>
       <Form {...form}>
         <form>

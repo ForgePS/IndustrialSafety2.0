@@ -3,6 +3,7 @@ import { TbExclamationCircle } from 'react-icons/tb'
 import { createClient } from '@repo/supabase/server'
 import { Alert, AlertDescription } from '@repo/ui/components/ui/alert'
 import Trans from '@repo/i18n/Trans'
+import { getAuthUser } from '@repo/supabase/serverHelpers'
 
 // Component Imports
 import EditReview from './Edit'
@@ -11,6 +12,10 @@ const EditReviewPage = async (props: { params: Promise<{ id: number }> }) => {
   // Vars
   const params = await props.params
   const supabase = await createClient()
+
+  const {
+    data: { user }
+  } = await getAuthUser()
 
   const { data: reviewData, error: reviewError } = await supabase
     .from('reviews')
@@ -40,7 +45,14 @@ const EditReviewPage = async (props: { params: Promise<{ id: number }> }) => {
     )
   }
 
-  return <EditReview reviewData={reviewData} platformsData={platformsData} id={params.id} />
+  return (
+    <EditReview
+      reviewData={reviewData}
+      platformsData={platformsData}
+      id={params.id}
+      userPermissions={user?.user_metadata.permissions}
+    />
+  )
 }
 
 export default EditReviewPage

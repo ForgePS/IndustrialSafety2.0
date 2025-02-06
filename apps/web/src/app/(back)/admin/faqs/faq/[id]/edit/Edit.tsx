@@ -23,6 +23,7 @@ import { createClient } from '@repo/supabase/client'
 import { toast } from '@repo/ui/utils/toast'
 import Trans from '@repo/i18n/Trans'
 import { useTranslation } from 'react-i18next'
+import { hasPermission } from '@repo/rbac/utils'
 import type { TFunction } from 'i18next'
 
 // Component Imports
@@ -39,15 +40,14 @@ const faqSchema = (t: TFunction) =>
     is_featured: z.boolean().optional()
   })
 
-const Edit = ({
-  faqData,
-  id,
-  categories
-}: {
+type EditProps = {
   faqData: FaqWithCategory
   id: number
   categories: { id: string; title: string }[]
-}) => {
+  userPermissions: string[]
+}
+
+const Edit = ({ faqData, id, categories, userPermissions }: EditProps) => {
   // States
   const [editorContent, setEditorContent] = useState<string>(faqData?.description || '')
 
@@ -109,14 +109,16 @@ const Edit = ({
         <h2 className='mbe-6 text-2xl font-semibold sm:text-3xl'>
           <Trans i18nKey='admin:faqsEditTitle' />
         </h2>
-        <DeleteDialog
-          handleDelete={async () => {
-            await deleteFaq(id, t)
-            router.push('/admin/faqs/faq')
-            router.refresh()
-          }}
-          itemName='FAQ'
-        />
+        {hasPermission(userPermissions, 'delete_faqs') && (
+          <DeleteDialog
+            handleDelete={async () => {
+              await deleteFaq(id, t)
+              router.push('/admin/faqs/faq')
+              router.refresh()
+            }}
+            itemName='FAQ'
+          />
+        )}
       </div>
       <Form {...form}>
         <form>
