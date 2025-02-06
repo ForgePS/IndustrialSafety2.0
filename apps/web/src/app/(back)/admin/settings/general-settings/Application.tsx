@@ -1,5 +1,8 @@
 'use client'
 
+// React Imports
+import { useTransition } from 'react'
+
 // Third-party Imports
 import { z } from 'zod'
 import { zodResolver } from '@hookform/resolvers/zod'
@@ -7,7 +10,7 @@ import { useForm } from 'react-hook-form'
 import { CardContent } from '@repo/ui/components/ui/card'
 import { Input } from '@repo/ui/components/ui/input'
 import { Textarea } from '@repo/ui/components/ui/textarea'
-import SubmitButton from '@repo/ui/components/SubmitButton'
+import { Button } from '@repo/ui/components/ui/button'
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@repo/ui/components/ui/form'
 import type { SettingsConfiguration } from '@repo/supabase/settingsConfigurationTypes'
 import { createClient } from '@repo/supabase/client'
@@ -26,6 +29,9 @@ const applicationSchema = (t: TFunction) =>
   })
 
 const Application = ({ settings }: { settings: SettingsConfiguration['general_settings'] }) => {
+  // States
+  const [pending, startTransition] = useTransition()
+
   // Vars
   const supabase = createClient()
 
@@ -43,36 +49,38 @@ const Application = ({ settings }: { settings: SettingsConfiguration['general_se
     }
   })
 
-  const onSubmit = async (data: z.infer<ReturnType<typeof applicationSchema>>) => {
-    const { error } = await supabase
-      .from('settings_configuration')
-      .update({
-        value: JSON.stringify({
-          ...settings,
-          application: {
-            site_name: data.site_name,
-            title: data.title,
-            support_email: data.support_email,
-            description: data.description
-          }
+  const onSubmit = (data: z.infer<ReturnType<typeof applicationSchema>>) => {
+    startTransition(async () => {
+      const { error } = await supabase
+        .from('settings_configuration')
+        .update({
+          value: JSON.stringify({
+            ...settings,
+            application: {
+              site_name: data.site_name,
+              title: data.title,
+              support_email: data.support_email,
+              description: data.description
+            }
+          })
         })
-      })
-      .eq('key', 'general_settings')
+        .eq('key', 'general_settings')
 
-    if (error) {
-      console.error('Error saving settings: ', error.message)
-      toast('error', t('admin:settingsToastError', { message: error.message }))
+      if (error) {
+        console.error('Error saving settings: ', error.message)
+        toast('error', t('admin:settingsToastError', { message: error.message }))
 
-      return
-    }
+        return
+      }
 
-    toast('success', t('admin:settingsToastSuccess'))
+      toast('success', t('admin:settingsToastSuccess'))
+    })
   }
 
   return (
     <CardContent className='pbs-4'>
       <Form {...form}>
-        <form>
+        <form onSubmit={form.handleSubmit(onSubmit)}>
           <div className='grid grid-cols-2 gap-6'>
             <FormField
               control={form.control}
@@ -137,13 +145,13 @@ const Application = ({ settings }: { settings: SettingsConfiguration['general_se
               )}
             />
           </div>
-          <SubmitButton
-            formAction={form.handleSubmit(onSubmit) as any}
-            className='mbs-6 max-sm:is-full'
-            pendingText={<Trans i18nKey='admin:settingsApplicationSavingChanges' />}
-          >
-            <Trans i18nKey='admin:settingsSaveChanges' />
-          </SubmitButton>
+          <Button type='submit' disabled={pending} className='mbs-6 max-sm:is-full'>
+            {pending ? (
+              <Trans i18nKey='admin:settingsApplicationSavingChanges' />
+            ) : (
+              <Trans i18nKey='admin:settingsSaveChanges' />
+            )}
+          </Button>
         </form>
       </Form>
     </CardContent>

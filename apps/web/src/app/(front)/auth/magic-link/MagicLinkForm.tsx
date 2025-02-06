@@ -1,6 +1,7 @@
 'use client'
 
 // React Imports
+import { useTransition } from 'react'
 import type { ReactNode } from 'react'
 
 // Third-party Imports
@@ -10,13 +11,16 @@ import { TbAlertTriangle, TbCircleCheck, TbMail } from 'react-icons/tb'
 import { Alert, AlertDescription, AlertTitle } from '@repo/ui/components/ui/alert'
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@repo/ui/components/ui/form'
 import { Input } from '@repo/ui/components/ui/input'
-import SubmitButton from '@repo/ui/components/SubmitButton'
+import { Button } from '@repo/ui/components/ui/button'
 import { magicLinkFormSchema, useMagicLinkSignIn } from '@repo/auth/sign-in'
 import Trans from '@repo/i18n/Trans'
 import { useTranslation } from 'react-i18next'
 import type { MagicLinkFormData } from '@repo/auth/sign-in'
 
 const MagicLinkForm = () => {
+  // States
+  const [pending, startTransition] = useTransition()
+
   // Hooks
   const { t } = useTranslation()
 
@@ -29,12 +33,14 @@ const MagicLinkForm = () => {
     defaultValues: { email: '' }
   })
 
-  const onSubmit = async (formData: MagicLinkFormData) => {
-    try {
-      await handleSignIn(formData)
-    } catch (error) {
-      console.error(error)
-    }
+  const onSubmit = (formData: MagicLinkFormData) => {
+    startTransition(async () => {
+      try {
+        await handleSignIn(formData)
+      } catch (error) {
+        console.error(error)
+      }
+    })
   }
 
   return (
@@ -60,7 +66,7 @@ const MagicLinkForm = () => {
         </Alert>
       ) : (
         <Form {...form}>
-          <form className='flex flex-col gap-4'>
+          <form onSubmit={form.handleSubmit(onSubmit)} className='flex flex-col gap-4'>
             <FormField
               control={form.control}
               name='email'
@@ -77,22 +83,16 @@ const MagicLinkForm = () => {
                 </FormItem>
               )}
             />
-            <SubmitButton
-              formAction={form.handleSubmit(onSubmit) as any}
-              pendingText={
-                <>
-                  <TbMail className='is-5 bs-5' />
-                  <span>
-                    <Trans i18nKey='auth:magicLinkSubmitPendingText' />
-                  </span>
-                </>
-              }
-            >
+            <Button type='submit' disabled={pending}>
               <TbMail className='is-5 bs-5' />
               <span>
-                <Trans i18nKey='auth:magicLinkSubmitButton' />
+                {pending ? (
+                  <Trans i18nKey='auth:magicLinkSubmitPendingText' />
+                ) : (
+                  <Trans i18nKey='auth:magicLinkSubmitButton' />
+                )}
               </span>
-            </SubmitButton>
+            </Button>
           </form>
         </Form>
       )}

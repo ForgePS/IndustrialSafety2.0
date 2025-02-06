@@ -1,5 +1,8 @@
 'use client'
 
+// React Imports
+import { useTransition } from 'react'
+
 // Next Imports
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
@@ -13,7 +16,6 @@ import { Card, CardContent } from '@repo/ui/components/ui/card'
 import { Input } from '@repo/ui/components/ui/input'
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@repo/ui/components/ui/form'
 import { Button } from '@repo/ui/components/ui/button'
-import SubmitButton from '@repo/ui/components/SubmitButton'
 import DeleteDialog from '@repo/ui/components/DeleteDialog'
 import { createClient } from '@repo/supabase/client'
 import { toast } from '@repo/ui/utils/toast'
@@ -42,6 +44,9 @@ const Edit = ({
   id: number
   userPermissions: string[]
 }) => {
+  // States
+  const [pending, startTransition] = useTransition()
+
   // Vars
   const supabase = createClient()
 
@@ -58,25 +63,27 @@ const Edit = ({
     }
   })
 
-  const onSubmit = async (data: z.infer<ReturnType<typeof categorySchema>>) => {
-    const { error } = await supabase
-      .from('faq_categories')
-      .update({
-        title: data.title,
-        icon: data.icon
-      })
-      .eq('id', id)
+  const onSubmit = (data: z.infer<ReturnType<typeof categorySchema>>) => {
+    startTransition(async () => {
+      const { error } = await supabase
+        .from('faq_categories')
+        .update({
+          title: data.title,
+          icon: data.icon
+        })
+        .eq('id', id)
 
-    if (error) {
-      console.error('Error updating category: ', error.message)
-      toast('error', t('admin:faqCategoriesEditError', { message: error.message }))
+      if (error) {
+        console.error('Error updating category: ', error.message)
+        toast('error', t('admin:faqCategoriesEditError', { message: error.message }))
 
-      return
-    }
+        return
+      }
 
-    toast('success', t('admin:faqCategoriesEditSuccess'))
-    router.push('/admin/faqs/category')
-    router.refresh()
+      toast('success', t('admin:faqCategoriesEditSuccess'))
+      router.push('/admin/faqs/category')
+      router.refresh()
+    })
   }
 
   return (
@@ -97,7 +104,7 @@ const Edit = ({
         )}
       </div>
       <Form {...form}>
-        <form>
+        <form onSubmit={form.handleSubmit(onSubmit)}>
           <Card>
             <CardContent className='pbs-6'>
               <div className='grid grid-cols-1 gap-6 md:grid-cols-2'>
@@ -137,12 +144,9 @@ const Edit = ({
             </CardContent>
           </Card>
           <div className='mbs-6 flex justify-start gap-4'>
-            <SubmitButton
-              formAction={form.handleSubmit(onSubmit) as any}
-              pendingText={<Trans i18nKey='admin:savingStatus' />}
-            >
-              <Trans i18nKey='admin:saveChangesButton' />
-            </SubmitButton>
+            <Button type='submit' disabled={pending}>
+              {pending ? <Trans i18nKey='admin:savingStatus' /> : <Trans i18nKey='admin:saveChangesButton' />}
+            </Button>
             <Button type='button' variant='tonalDefault'>
               <Link href='/admin/faqs/category'>
                 <Trans i18nKey='admin:cancelButton' />

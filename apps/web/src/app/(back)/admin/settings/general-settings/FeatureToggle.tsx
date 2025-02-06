@@ -1,12 +1,12 @@
 // React Imports
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useTransition } from 'react'
 
 // Third-party Imports
 import type { SettingsConfiguration } from '@repo/supabase/settingsConfigurationTypes'
 import { CardContent } from '@repo/ui/components/ui/card'
 import { Switch } from '@repo/ui/components/ui/switch'
 import { Label } from '@repo/ui/components/ui/label'
-import SubmitButton from '@repo/ui/components/SubmitButton'
+import { Button } from '@repo/ui/components/ui/button'
 import { getPublicGeneralSettings } from '@repo/supabase/clientHelpers'
 import { createClient } from '@repo/supabase/client'
 import Trans from '@repo/i18n/Trans'
@@ -16,6 +16,7 @@ import { toast } from '@repo/ui/utils/toast'
 const FeatureToggle = ({ settings }: { settings: SettingsConfiguration['general_settings'] }) => {
   // States
   const [blogEnabled, setBlogEnabled] = useState<boolean>(settings.pages_components.blog_enabled)
+  const [pending, startTransition] = useTransition()
 
   // Vars
   const supabase = createClient()
@@ -24,20 +25,22 @@ const FeatureToggle = ({ settings }: { settings: SettingsConfiguration['general_
   const { t } = useTranslation()
 
   // Save Changes Handler
-  const handleSubmit = async (formData: FormData) => {
-    const isSwitchOn = (formData.get('blog-enabled') as string) === 'on'
+  const handleSubmit = (formData: FormData) => {
+    startTransition(async () => {
+      const isSwitchOn = (formData.get('blog-enabled') as string) === 'on'
 
-    const { error } = await supabase
-      .from('settings_configuration')
-      .update({
-        value: JSON.stringify({ ...settings, pages_components: { blog_enabled: isSwitchOn } })
-      })
-      .eq('key', 'general_settings')
+      const { error } = await supabase
+        .from('settings_configuration')
+        .update({
+          value: JSON.stringify({ ...settings, pages_components: { blog_enabled: isSwitchOn } })
+        })
+        .eq('key', 'general_settings')
 
-    if (!error) {
-      setBlogEnabled(isSwitchOn)
-      toast('success', t('admin:settingsToastSuccess'))
-    }
+      if (!error) {
+        setBlogEnabled(isSwitchOn)
+        toast('success', t('admin:settingsToastSuccess'))
+      }
+    })
   }
 
   useEffect(() => {
@@ -56,7 +59,7 @@ const FeatureToggle = ({ settings }: { settings: SettingsConfiguration['general_
 
   return (
     <CardContent className='pbs-4'>
-      <form>
+      <form action={handleSubmit}>
         <div className='flex flex-col items-start'>
           <div className='mbe-2 flex items-center'>
             <Switch
@@ -74,13 +77,13 @@ const FeatureToggle = ({ settings }: { settings: SettingsConfiguration['general_
             <Trans i18nKey='admin:settingsFeatureToggleBlogDescription' />
           </p>
         </div>
-        <SubmitButton
-          formAction={handleSubmit}
-          className='mbs-6 max-sm:is-full'
-          pendingText={<Trans i18nKey='admin:settingsApplicationSavingChanges' />}
-        >
-          <Trans i18nKey='admin:settingsSaveChanges' />
-        </SubmitButton>
+        <Button type='submit' disabled={pending} className='mbs-6 max-sm:is-full'>
+          {pending ? (
+            <Trans i18nKey='admin:settingsApplicationSavingChanges' />
+          ) : (
+            <Trans i18nKey='admin:settingsSaveChanges' />
+          )}
+        </Button>
       </form>
     </CardContent>
   )

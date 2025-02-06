@@ -1,7 +1,8 @@
 'use client'
 
 // React Imports
-import { useState } from 'react'
+import { useState, useTransition } from 'react'
+import type { BaseSyntheticEvent } from 'react'
 
 // Next Imports
 import Link from 'next/link'
@@ -15,7 +16,6 @@ import { Card, CardContent, CardDescription, CardHeader } from '@repo/ui/compone
 import { Button } from '@repo/ui/components/ui/button'
 import { Input } from '@repo/ui/components/ui/input'
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@repo/ui/components/ui/form'
-import SubmitButton from '@repo/ui/components/SubmitButton'
 import { createClient } from '@repo/supabase/client'
 import { toast } from '@repo/ui/utils/toast'
 import Trans from '@repo/i18n/Trans'
@@ -47,6 +47,7 @@ export const generateSlug = (text: string): string => {
 const CreatePlatform = () => {
   // States
   const [file, setFile] = useState<File | undefined>()
+  const [pending, startTransition] = useTransition()
 
   // Vars
   const supabase = createClient()
@@ -66,48 +67,35 @@ const CreatePlatform = () => {
   })
 
   // Form submission handler
-  const onSubmit = async (data: z.infer<ReturnType<typeof platformSchema>>) => {
-    const { error } = await supabase.from('review_platforms').insert([
-      {
-        platform_name: data.platform_name,
-        slug: generateSlug(data.slug?.trim() ? data.slug : data.platform_name),
-        logo: data.logo
+  const onSubmit = (data: z.infer<ReturnType<typeof platformSchema>>, event?: BaseSyntheticEvent) => {
+    startTransition(async () => {
+      const submitAction = ((event?.nativeEvent as SubmitEvent).submitter as HTMLButtonElement).value
+
+      const { error } = await supabase.from('review_platforms').insert([
+        {
+          platform_name: data.platform_name,
+          slug: generateSlug(data.slug?.trim() ? data.slug : data.platform_name),
+          logo: data.logo
+        }
+      ])
+
+      if (error) {
+        console.error('Error creating platform: ', error.message)
+        toast('error', t('admin:reviewPlatformsCreateError', { message: error.message }))
+
+        return
       }
-    ])
 
-    if (error) {
-      console.error('Error creating platform: ', error.message)
-      toast('error', t('admin:reviewPlatformsCreateError', { message: error.message }))
+      toast('success', t('admin:reviewPlatformsCreateSuccess'))
 
-      return
-    }
-
-    toast('success', t('admin:reviewPlatformsCreateSuccess'))
-    router.push('/admin/reviews/platform')
-    router.refresh()
-  }
-
-  // Create and create another handler
-  const createAndCreateAnother = async (data: z.infer<ReturnType<typeof platformSchema>>) => {
-    const { error } = await supabase.from('review_platforms').insert([
-      {
-        platform_name: data.platform_name,
-        slug: generateSlug(data.slug?.trim() ? data.slug : data.platform_name),
-        logo: data.logo
+      if (submitAction === 'createAndCreateAnother') {
+        form.reset()
+        setFile(undefined)
+      } else {
+        router.push('/admin/reviews/platform')
+        router.refresh()
       }
-    ])
-
-    if (error) {
-      console.error('Error creating platform: ', error.message)
-      toast('error', t('admin:reviewPlatformsCreateError', { message: error.message }))
-
-      return
-    }
-
-    toast('success', t('admin:reviewPlatformsCreateSuccess'))
-    form.reset()
-    setFile(undefined)
-    router.refresh()
+    })
   }
 
   const handleImageUpload = (file: string) => {
@@ -122,7 +110,7 @@ const CreatePlatform = () => {
         </h1>
       </div>
       <Form {...form}>
-        <form>
+        <form onSubmit={form.handleSubmit(onSubmit)}>
           <div className='grid grid-cols-2 gap-6'>
             <Card className='col-span-full lg:col-span-2'>
               <CardHeader className='border-be'>
@@ -173,19 +161,22 @@ const CreatePlatform = () => {
               </CardContent>
             </Card>
             <div className='col-span-full flex gap-4 max-sm:flex-col'>
-              <SubmitButton
-                formAction={form.handleSubmit(onSubmit) as any}
-                pendingText={<Trans i18nKey='admin:creatingStatus' />}
-              >
-                <Trans i18nKey='admin:createButton' />
-              </SubmitButton>
-              <SubmitButton
-                formAction={form.handleSubmit(createAndCreateAnother) as any}
-                pendingText={<Trans i18nKey='admin:creatingStatus' />}
+              <Button type='submit' name='submitAction' value='create' disabled={pending}>
+                {pending ? <Trans i18nKey='admin:creatingStatus' /> : <Trans i18nKey='admin:createButton' />}
+              </Button>
+              <Button
+                type='submit'
+                name='submitAction'
                 variant='tonalDefault'
+                value='createAndCreateAnother'
+                disabled={pending}
               >
-                <Trans i18nKey='admin:createAndCreateAnotherButton' />
-              </SubmitButton>
+                {pending ? (
+                  <Trans i18nKey='admin:creatingStatus' />
+                ) : (
+                  <Trans i18nKey='admin:createAndCreateAnotherButton' />
+                )}
+              </Button>
               <Button type='button' variant='tonalDefault' asChild>
                 <Link href='/admin/reviews/platform'>
                   <Trans i18nKey='admin:cancelButton' />

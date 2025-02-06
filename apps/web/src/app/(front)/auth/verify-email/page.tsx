@@ -59,7 +59,7 @@ const VerifyEmail = async (props: { searchParams: Promise<Record<string, string>
               </p>
               <ResendVerifyEmailButton searchParams={searchParams} users={users} />
               <Button variant='ghostPrimary' asChild>
-                <Link href='/auth/login-v2' className='flex items-center gap-x-2'>
+                <Link href='/auth/login' className='flex items-center gap-x-2'>
                   <TbChevronLeft className='is-[22px] bs-[22px]' />
                   <span>
                     <Trans i18nKey='auth:backToLoginButton' />

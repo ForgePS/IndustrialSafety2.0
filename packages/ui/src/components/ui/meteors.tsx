@@ -2,12 +2,13 @@
 
 // React Imports
 import { useEffect, useState } from 'react'
+import type { CSSProperties } from 'react'
 
 // Util Imports
 import { cn } from '@repo/ui/lib/utils'
 
 const Meteors = ({ number = 20 }: { number?: number }) => {
-  const [meteorStyles, setMeteorStyles] = useState<Array<React.CSSProperties>>([])
+  const [meteorStyles, setMeteorStyles] = useState<Array<CSSProperties>>([])
 
   useEffect(() => {
     const styles = [...new Array(number)].map(() => ({

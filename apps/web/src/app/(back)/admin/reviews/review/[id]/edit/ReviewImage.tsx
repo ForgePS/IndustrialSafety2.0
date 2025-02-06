@@ -2,6 +2,7 @@
 
 // React Imports
 import { useState } from 'react'
+import type { FC } from 'react'
 
 // Third-party Imports
 import { useDropzone } from 'react-dropzone'
@@ -15,7 +16,7 @@ type ReviewImageProps = {
   defaultImage?: string
 }
 
-const ReviewImage: React.FC<ReviewImageProps> = ({ onImageUpload, defaultImage }) => {
+const ReviewImage: FC<ReviewImageProps> = ({ onImageUpload, defaultImage }) => {
   // State
   const [imageSrc, setImageSrc] = useState<string | undefined>(defaultImage)
 

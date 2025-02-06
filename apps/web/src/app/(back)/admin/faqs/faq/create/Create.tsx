@@ -1,7 +1,8 @@
 'use client'
 
 // React Imports
-import { useState } from 'react'
+import { useState, useTransition } from 'react'
+import type { BaseSyntheticEvent } from 'react'
 
 // Next Imports
 import Link from 'next/link'
@@ -17,7 +18,6 @@ import { Button } from '@repo/ui/components/ui/button'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@repo/ui/components/ui/select'
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@repo/ui/components/ui/form'
 import { Switch } from '@repo/ui/components/ui/switch'
-import SubmitButton from '@repo/ui/components/SubmitButton'
 import { createClient } from '@repo/supabase/client'
 import { toast } from '@repo/ui/utils/toast'
 import Trans from '@repo/i18n/Trans'
@@ -40,6 +40,7 @@ const Create = ({ categories }: { categories: { id: string; title: string }[] })
   // States
   const [editorContent, setEditorContent] = useState<string>('')
   const [selectedCategory, setSelectedCategory] = useState<{ id: string; title: string } | null>(null)
+  const [pending, startTransition] = useTransition()
 
   // Vars
   const supabase = createClient()
@@ -59,52 +60,37 @@ const Create = ({ categories }: { categories: { id: string; title: string }[] })
     }
   })
 
-  const onSubmit = async (data: z.infer<ReturnType<typeof faqSchema>>) => {
-    const { error } = await supabase.from('faqs').insert([
-      {
-        title: data.title,
-        description: data.description,
-        category_id: data.category_id,
-        is_featured: data.is_featured
+  const onSubmit = (data: z.infer<ReturnType<typeof faqSchema>>, event?: BaseSyntheticEvent) => {
+    startTransition(async () => {
+      const submitAction = ((event?.nativeEvent as SubmitEvent).submitter as HTMLButtonElement).value
+
+      const { error } = await supabase.from('faqs').insert([
+        {
+          title: data.title,
+          description: data.description,
+          category_id: data.category_id,
+          is_featured: data.is_featured
+        }
+      ])
+
+      if (error) {
+        console.error('Error creating faq: ', error.message)
+        toast('error', t('admin:faqsCreateError', { message: error.message }))
+
+        return
       }
-    ])
 
-    if (error) {
-      console.error('Error creating faq: ', error.message)
-      toast('error', t('admin:faqsCreateError', { message: error.message }))
+      toast('success', t('admin:faqsCreateSuccess'))
 
-      return
-    }
-
-    toast('success', t('admin:faqsCreateSuccess'))
-    router.push('/admin/faqs/faq')
-    router.refresh()
-  }
-
-  // Form Submit Handler for Create & Create Another
-  const createAndCreateSubmit = async (data: z.infer<ReturnType<typeof faqSchema>>) => {
-    const { error } = await supabase.from('faqs').insert([
-      {
-        title: data.title,
-        description: data.description,
-        category_id: data.category_id,
-        is_featured: data.is_featured
+      if (submitAction === 'createAndCreateAnother') {
+        form.reset()
+        setEditorContent('')
+        setSelectedCategory(null)
+      } else {
+        router.push('/admin/faqs/faq')
+        router.refresh()
       }
-    ])
-
-    if (error) {
-      console.error('Error creating faq: ', error.message)
-      toast('error', t('admin:faqsCreateError', { message: error.message }))
-
-      return
-    }
-
-    toast('success', t('admin:faqsCreateSuccess'))
-
-    form.reset()
-    setEditorContent('')
-    setSelectedCategory(null)
-    router.refresh()
+    })
   }
 
   // Editor Change Handler to set Editor Content and clear errors
@@ -121,7 +107,7 @@ const Create = ({ categories }: { categories: { id: string; title: string }[] })
         <Trans i18nKey='admin:faqsCreateTitle' />
       </h2>
       <Form {...form}>
-        <form>
+        <form onSubmit={form.handleSubmit(onSubmit)}>
           <Card>
             <CardContent className='pbs-6'>
               <div className='grid gap-6'>
@@ -226,19 +212,22 @@ const Create = ({ categories }: { categories: { id: string; title: string }[] })
             </CardContent>
           </Card>
           <div className='mbs-6 flex justify-start gap-4'>
-            <SubmitButton
-              formAction={form.handleSubmit(onSubmit) as any}
-              pendingText={<Trans i18nKey='admin:creatingStatus' />}
-            >
-              <Trans i18nKey='admin:createButton' />
-            </SubmitButton>
-            <SubmitButton
+            <Button type='submit' name='submitAction' value='create' disabled={pending}>
+              {pending ? <Trans i18nKey='admin:creatingStatus' /> : <Trans i18nKey='admin:createButton' />}
+            </Button>
+            <Button
+              type='submit'
+              name='submitAction'
               variant='tonalDefault'
-              formAction={form.handleSubmit(createAndCreateSubmit) as any}
-              pendingText={<Trans i18nKey='admin:creatingStatus' />}
+              value='createAndCreateAnother'
+              disabled={pending}
             >
-              <Trans i18nKey='admin:createAndCreateAnotherButton' />
-            </SubmitButton>
+              {pending ? (
+                <Trans i18nKey='admin:creatingStatus' />
+              ) : (
+                <Trans i18nKey='admin:createAndCreateAnotherButton' />
+              )}
+            </Button>
             <Button type='button' variant='tonalDefault'>
               <Link href='/admin/faqs/faq'>
                 <Trans i18nKey='admin:cancelButton' />

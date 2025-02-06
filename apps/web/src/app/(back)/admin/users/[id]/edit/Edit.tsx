@@ -1,7 +1,7 @@
 'use client'
 
 // React Imports
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useTransition } from 'react'
 
 // Next Imports
 import { useRouter } from 'next/navigation'
@@ -16,7 +16,6 @@ import { Input } from '@repo/ui/components/ui/input'
 import { Button } from '@repo/ui/components/ui/button'
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@repo/ui/components/ui/form'
 import { MultiSelect } from '@repo/ui/components/ui/multi-select'
-import SubmitButton from '@repo/ui/components/SubmitButton'
 import DeleteDialog from '@repo/ui/components/DeleteDialog'
 import type { Database } from '@repo/supabase/types'
 import { toast } from '@repo/ui/utils/toast'
@@ -55,6 +54,7 @@ const Edit = ({
   // States
   const [selected, setSelected] = useState<string[]>([userRolesData.map(role => role.roles.role)[0]])
   const [isAdmin, setIsAdmin] = useState(false)
+  const [pending, startTransition] = useTransition()
 
   // Hooks
   const router = useRouter()
@@ -74,29 +74,29 @@ const Edit = ({
   const { setValue, clearErrors } = form
 
   // Form submission handler
-  const onSubmit = async (data: z.infer<ReturnType<typeof userSchema>>) => {
-    try {
-      const result = await editUser({
-        id,
-        name: data.name,
-        email: data.email,
-        password: data.password,
-        roles,
-        selectedRoles: selected
-      })
+  const onSubmit = (data: z.infer<ReturnType<typeof userSchema>>) => {
+    startTransition(async () => {
+      try {
+        const result = await editUser({
+          id,
+          name: data.name,
+          email: data.email,
+          password: data.password,
+          roles,
+          selectedRoles: selected
+        })
 
-      if ('error' in result) {
-        toast('error', result.error || t('admin:usersCreateEditError'))
-      } else {
-        toast('success', result.message || t('admin:usersEditSuccess'))
-        router.push('/admin/users')
-        router.refresh()
+        if ('error' in result) {
+          toast('error', result.error || t('admin:usersCreateEditError'))
+        } else {
+          toast('success', result.message || t('admin:usersEditSuccess'))
+          router.push('/admin/users')
+          router.refresh()
+        }
+      } catch (error) {
+        console.error('Error updating user:', error)
       }
-    } catch (error) {
-      console.error('Error updating user:', error)
-
-      return false
-    }
+    })
   }
 
   // Handle Delete User
@@ -151,7 +151,7 @@ const Edit = ({
         {!isAdmin && <DeleteDialog handleDelete={handleDelete} itemName='user' />}
       </div>
       <Form {...form}>
-        <form>
+        <form onSubmit={form.handleSubmit(onSubmit)}>
           <Card>
             <CardContent className='pbs-6'>
               <div className='grid grid-cols-1 gap-6 md:grid-cols-2'>
@@ -233,9 +233,9 @@ const Edit = ({
             </CardContent>
           </Card>
           <div className='mbs-6 flex justify-start gap-4'>
-            <SubmitButton formAction={form.handleSubmit(onSubmit) as any} pendingText={t('admin:savingStatus')}>
-              <Trans i18nKey='admin:saveChangesButton' />
-            </SubmitButton>
+            <Button type='submit' disabled={pending}>
+              {pending ? <Trans i18nKey='admin:savingStatus' /> : <Trans i18nKey='admin:saveChangesButton' />}
+            </Button>
             <Button type='button' variant='tonalDefault' asChild>
               <Link href='/admin/users'>
                 <Trans i18nKey='admin:cancelButton' />

@@ -1,7 +1,7 @@
 'use client'
 
 // React Imports
-import { useState } from 'react'
+import { useState, useTransition } from 'react'
 
 // Next Imports
 import Image from 'next/image'
@@ -16,7 +16,6 @@ import { Card, CardContent, CardFooter } from '@repo/ui/components/ui/card'
 import { Input } from '@repo/ui/components/ui/input'
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@repo/ui/components/ui/form'
 import { Button } from '@repo/ui/components/ui/button'
-import SubmitButton from '@repo/ui/components/SubmitButton'
 import { toast } from '@repo/ui/utils/toast'
 import Trans from '@repo/i18n/Trans'
 import { useTranslation } from 'react-i18next'
@@ -47,6 +46,7 @@ const PersonalInformation = ({
 }) => {
   // States
   const [file, setFiles] = useState<File | null>(null)
+  const [pending, startTransition] = useTransition()
 
   const [previewUrl, setPreviewUrl] = useState<string | null>(
     userData.user_avatar ? userData.user_avatar : (userData.avatarUrl ?? '')
@@ -82,50 +82,52 @@ const PersonalInformation = ({
     }
   })
 
-  const onSubmit = async (data: z.infer<ReturnType<typeof userSchema>>) => {
-    let avatarUrl = previewUrl || ''
+  const onSubmit = (data: z.infer<ReturnType<typeof userSchema>>) => {
+    startTransition(async () => {
+      let avatarUrl = previewUrl || ''
 
-    // Handle file upload if a new file is selected
-    if (file) {
-      const uploadedUrl = await uploadAvatarToSupabase(file)
+      // Handle file upload if a new file is selected
+      if (file) {
+        const uploadedUrl = await uploadAvatarToSupabase(file)
 
-      if (uploadedUrl) {
-        avatarUrl = uploadedUrl
+        if (uploadedUrl) {
+          avatarUrl = uploadedUrl
 
-        // If there's an old avatar, remove it
-        if (currentAvatarUrl) await removeAvatarFromSupabase(currentAvatarUrl)
-      } else {
-        console.error('Avatar upload failed.')
+          // If there's an old avatar, remove it
+          if (currentAvatarUrl) await removeAvatarFromSupabase(currentAvatarUrl)
+        } else {
+          console.error('Avatar upload failed.')
+
+          return
+        }
+      }
+
+      // If the avatar is removed from the UI
+      if (!previewUrl && currentAvatarUrl) {
+        await removeAvatarFromSupabase(currentAvatarUrl)
+        avatarUrl = ''
+      }
+
+      const { error } = await updateUserProfile({
+        email: data.email,
+        data: {
+          name: data.name,
+          full_name: data.name,
+          email: data.email,
+          user_avatar: avatarUrl
+        }
+      })
+
+      if (error) {
+        console.error('Error updating user:', error)
 
         return
       }
-    }
 
-    // If the avatar is removed from the UI
-    if (!previewUrl && currentAvatarUrl) {
-      await removeAvatarFromSupabase(currentAvatarUrl)
-      avatarUrl = ''
-    }
-
-    const { error } = await updateUserProfile({
-      email: data.email,
-      data: {
-        name: data.name,
-        full_name: data.name,
-        email: data.email,
-        user_avatar: avatarUrl
-      }
+      // Update the current avatar URL
+      setCurrentAvatarUrl(avatarUrl)
+      toast('success', t('packages-profile:updateSuccessMessage'))
     })
-
-    if (error) {
-      console.error('Error updating user:', error)
-
-      return
-    }
-
-    // Update the current avatar URL
-    setCurrentAvatarUrl(avatarUrl)
-    toast('success', t('packages-profile:updateSuccessMessage'))
   }
 
   return (
@@ -140,7 +142,7 @@ const PersonalInformation = ({
       </div>
       <Card>
         <Form {...form}>
-          <form>
+          <form onSubmit={form.handleSubmit(onSubmit)}>
             <CardContent className='pbs-6 grid gap-6 lg:grid-cols-3'>
               <div className='flex flex-col items-start gap-2'>
                 <span className='font-medium'>
@@ -223,12 +225,13 @@ const PersonalInformation = ({
               </div>
             </CardContent>
             <CardFooter className='sm:justify-end'>
-              <SubmitButton
-                formAction={form.handleSubmit(onSubmit) as any}
-                pendingText={<Trans i18nKey='packages-profile:updatingText' />}
-              >
-                <Trans i18nKey='packages-profile:updateButton' />
-              </SubmitButton>
+              <Button type='submit' disabled={pending}>
+                {pending ? (
+                  <Trans i18nKey='packages-profile:updatingText' />
+                ) : (
+                  <Trans i18nKey='packages-profile:updateButton' />
+                )}
+              </Button>
             </CardFooter>
           </form>
         </Form>

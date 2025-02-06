@@ -43,7 +43,6 @@
   "notFoundDescription": "Nous n'avons pas trouvé la page que vous recherchez",
   "notFoundTitle": "Page non trouvée",
   "oauthSignInButton": "Se connecter avec {{provider}}",
-  "oauthSigningInButton": "Connexion avec {{provider}} en cours...",
   "orText": "ou",
   "passwordLabel": "Mot de passe",
   "registerAlreadyHaveAccount": "Vous avez déjà un compte ?",

@@ -1,7 +1,8 @@
 'use client'
 
 // React Imports
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useTransition } from 'react'
+import type { BaseSyntheticEvent } from 'react'
 
 // Next Imports
 import { useRouter } from 'next/navigation'
@@ -16,7 +17,6 @@ import { Input } from '@repo/ui/components/ui/input'
 import { Button } from '@repo/ui/components/ui/button'
 import { MultiSelect } from '@repo/ui/components/ui/multi-select'
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@repo/ui/components/ui/form'
-import SubmitButton from '@repo/ui/components/SubmitButton'
 import type { Database } from '@repo/supabase/types'
 import { toast } from '@repo/ui/utils/toast'
 import Trans from '@repo/i18n/Trans'
@@ -39,15 +39,14 @@ const userSchema = (t: TFunction) =>
     password: z
       .string()
       .min(1, { message: t('admin:usersCreatePasswordError') })
-      .min(8, {
-        message: t('admin:usersCreatePasswordLengthError')
-      }),
-    roles: z.array(z.string()).nonempty({ message: t('admin:selectRoleError') })
+      .min(8, { message: t('admin:usersCreatePasswordLengthError') }),
+    roles: z.array(z.string()).min(1, { message: t('admin:selectRoleError') })
   })
 
 const Create = ({ roles }: { roles: Database['public']['Tables']['roles']['Row'][] }) => {
   // States
   const [selected, setSelected] = useState<string[]>(['user'])
+  const [pending, startTransition] = useTransition()
 
   // Hooks
   const router = useRouter()
@@ -67,52 +66,35 @@ const Create = ({ roles }: { roles: Database['public']['Tables']['roles']['Row']
   const { setValue, clearErrors } = form
 
   // Form Submit handler
-  const onSubmit = async (data: z.infer<ReturnType<typeof userSchema>>) => {
-    try {
-      const result = await createUser({
-        name: data.name,
-        email: data.email,
-        password: data.password,
-        roles: roles,
-        selectedRoles: selected
-      })
+  const onSubmit = (data: z.infer<ReturnType<typeof userSchema>>, event?: BaseSyntheticEvent) => {
+    startTransition(async () => {
+      try {
+        const submitAction = ((event?.nativeEvent as SubmitEvent).submitter as HTMLButtonElement).value
 
-      if ('error' in result) {
-        toast('error', result.error || t('admin:usersCreateEditError'))
-      } else {
-        toast('success', result.message || t('admin:usersCreateSuccess'))
-        router.push('/admin/users')
-        router.refresh()
+        const result = await createUser({
+          name: data.name,
+          email: data.email,
+          password: data.password,
+          roles: roles,
+          selectedRoles: selected
+        })
+
+        if ('error' in result) {
+          toast('error', result.error || t('admin:usersCreateEditError'))
+        } else {
+          toast('success', result.message || t('admin:usersCreateSuccess'))
+
+          if (submitAction === 'createAndCreateAnother') {
+            form.reset()
+          } else {
+            router.push('/admin/users')
+            router.refresh()
+          }
+        }
+      } catch (error) {
+        console.error('Error creating user:', error)
       }
-    } catch (error) {
-      console.error('Error creating user:', error)
-
-      return false
-    }
-  }
-
-  const createAndCreateSubmit = async (data: z.infer<ReturnType<typeof userSchema>>) => {
-    try {
-      const result = await createUser({
-        name: data.name,
-        email: data.email,
-        password: data.password,
-        roles: roles,
-        selectedRoles: selected
-      })
-
-      if ('error' in result) {
-        toast('error', result.error || t('admin:usersCreateEditError'))
-      } else {
-        toast('success', result.message || t('admin:usersCreateSuccess'))
-        form.reset()
-        router.refresh()
-      }
-    } catch (error) {
-      console.error('Error creating user:', error)
-
-      return false
-    }
+    })
   }
 
   // Update form value and clear errors when selected changes
@@ -130,7 +112,7 @@ const Create = ({ roles }: { roles: Database['public']['Tables']['roles']['Row']
         <Trans i18nKey='admin:usersCreateTitle' />
       </h2>
       <Form {...form}>
-        <form>
+        <form onSubmit={form.handleSubmit(onSubmit)}>
           <Card>
             <CardContent className='pbs-6'>
               <div className='grid grid-cols-1 gap-6 md:grid-cols-2'>
@@ -210,19 +192,22 @@ const Create = ({ roles }: { roles: Database['public']['Tables']['roles']['Row']
             </CardContent>
           </Card>
           <div className='mbs-6 flex justify-start gap-4'>
-            <SubmitButton
-              formAction={form.handleSubmit(onSubmit as any) as any}
-              pendingText={<Trans i18nKey='admin:creatingStatus' />}
-            >
-              <Trans i18nKey='admin:createButton' />
-            </SubmitButton>
-            <SubmitButton
-              formAction={form.handleSubmit(createAndCreateSubmit as any) as any}
+            <Button type='submit' name='submitAction' value='create' disabled={pending}>
+              {pending ? <Trans i18nKey='admin:creatingStatus' /> : <Trans i18nKey='admin:createButton' />}
+            </Button>
+            <Button
+              type='submit'
+              name='submitAction'
               variant='tonalDefault'
-              pendingText={<Trans i18nKey='admin:creatingStatus' />}
+              value='createAndCreateAnother'
+              disabled={pending}
             >
-              <Trans i18nKey='admin:createAndCreateAnotherButton' />
-            </SubmitButton>
+              {pending ? (
+                <Trans i18nKey='admin:creatingStatus' />
+              ) : (
+                <Trans i18nKey='admin:createAndCreateAnotherButton' />
+              )}
+            </Button>
             <Button type='button' variant='tonalDefault'>
               <Link href='/admin/users'>
                 <Trans i18nKey='admin:cancelButton' />

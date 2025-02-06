@@ -1,12 +1,12 @@
 'use client'
 
 // React Imports
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useTransition } from 'react'
 
 // Third-party Imports
 import { TbArrowRight } from 'react-icons/tb'
 import { Skeleton } from '@repo/ui/components/ui/skeleton'
-import SubmitButton from '@repo/ui/components/SubmitButton'
+import { Button } from '@repo/ui/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@repo/ui/components/ui/card'
 import { createBillingPortalSession, getSubscribeData } from '@repo/billing/src/actions'
 import Trans from '@repo/i18n/Trans'
@@ -25,35 +25,38 @@ const BillingDetails = ({ billingRecord, paymentType, paymentProvider }: Props) 
   // States
   const [loading, setLoading] = useState(true)
   const [billingCustomer, setBillingCustomer] = useState<any | []>([])
+  const [pending, startTransition] = useTransition()
 
   // Redirect to the billing portal or download the receipt
-  const handleSubmit = async () => {
-    if (paymentProvider === 'lemon_squeezy') {
-      window.open(
-        paymentType === 'recurring'
-          ? billingCustomer.data.attributes.urls.customer_portal
-          : billingCustomer.data.attributes.urls.receipt,
-        '_blank'
-      )
-    } else {
-      // Stripe
-      if (billingCustomer.object === 'charge') {
-        window.open(billingCustomer.receipt_url, '_blank')
-      } else {
-        // Create a billing portal session
-        const data = await createBillingPortalSession(
-          plans,
-          billingCustomer.subscriptions.customer,
-          window.location.origin
+  const handleSubmit = () => {
+    startTransition(async () => {
+      if (paymentProvider === 'lemon_squeezy') {
+        window.open(
+          paymentType === 'recurring'
+            ? billingCustomer.data.attributes.urls.customer_portal
+            : billingCustomer.data.attributes.urls.receipt,
+          '_blank'
         )
-
-        if (data.url) {
-          window.open(data.url, '_blank') // Open the customer portal link in a new tab
+      } else {
+        // Stripe
+        if (billingCustomer.object === 'charge') {
+          window.open(billingCustomer.receipt_url, '_blank')
         } else {
-          alert('Error creating customer portal link')
+          // Create a billing portal session
+          const data = await createBillingPortalSession(
+            plans,
+            billingCustomer.subscriptions.customer,
+            window.location.origin
+          )
+
+          if (data.url) {
+            window.open(data.url, '_blank') // Open the customer portal link in a new tab
+          } else {
+            alert('Error creating customer portal link')
+          }
         }
       }
-    }
+    })
   }
 
   // Fetch the plan details from the billing table which contains the customer's billing details
@@ -118,11 +121,9 @@ const BillingDetails = ({ billingRecord, paymentType, paymentProvider }: Props) 
           <CardDescription>
             <Trans i18nKey='dashboard:billingDetailsDescription' />
           </CardDescription>
-          <form>
-            <SubmitButton
-              className='mbs-4'
-              formAction={handleSubmit}
-              pendingText={
+          <form action={handleSubmit}>
+            <Button type='submit' disabled={pending} className='mbs-4'>
+              {pending ? (
                 <>
                   <Trans
                     i18nKey={
@@ -131,15 +132,14 @@ const BillingDetails = ({ billingRecord, paymentType, paymentProvider }: Props) 
                   />
                   <TbArrowRight className='bs-4 is-4' />
                 </>
-              }
-            >
-              <Trans
-                i18nKey={
-                  paymentType === 'recurring' ? 'dashboard:visitPortalButton' : 'dashboard:downloadReceiptButton'
-                }
-              />
-              <TbArrowRight className='bs-4 is-4' />
-            </SubmitButton>
+              ) : (
+                <Trans
+                  i18nKey={
+                    paymentType === 'recurring' ? 'dashboard:visitPortalButton' : 'dashboard:downloadReceiptButton'
+                  }
+                />
+              )}
+            </Button>
           </form>
         </CardContent>
       </Card>

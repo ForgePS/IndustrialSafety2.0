@@ -9,7 +9,7 @@ import Trans from '@repo/i18n/Trans'
 import type { Provider } from '@supabase/supabase-js'
 
 // Component Imports
-import SubmitButton from '@repo/ui/components/SubmitButton'
+import { Button } from '@repo/ui/components/ui/button'
 
 // SVG Imports
 import Apple from '@repo/ui/assets/svg/Apple'
@@ -72,25 +72,18 @@ const OauthProviders = ({ providers }: { providers: Provider[] }) => {
         const { logo, name } = getOAuthProviderLogo()[provider]
 
         return (
-          <SubmitButton
+          <Button
+            type='submit'
             key={provider}
             formAction={() => handleSignIn(provider)}
             variant='ghost'
             className='is-full'
-            pendingText={
-              <>
-                {logo}
-                <span className='text-textPrimary'>
-                  <Trans i18nKey='packages-ui:oauthSigningInButton' values={{ provider: name }} />
-                </span>
-              </>
-            }
           >
             {logo}
             <span className='text-textPrimary'>
               <Trans i18nKey='packages-ui:oauthSignInButton' values={{ provider: name }} />
             </span>
-          </SubmitButton>
+          </Button>
         )
       })}
     </form>

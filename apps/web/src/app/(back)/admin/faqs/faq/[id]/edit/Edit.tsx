@@ -1,7 +1,7 @@
 'use client'
 
 // React Imports
-import { useState } from 'react'
+import { useState, useTransition } from 'react'
 
 // Next Imports
 import { useRouter } from 'next/navigation'
@@ -17,7 +17,6 @@ import { Button } from '@repo/ui/components/ui/button'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@repo/ui/components/ui/select'
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@repo/ui/components/ui/form'
 import { Switch } from '@repo/ui/components/ui/switch'
-import SubmitButton from '@repo/ui/components/SubmitButton'
 import DeleteDialog from '@repo/ui/components/DeleteDialog'
 import { createClient } from '@repo/supabase/client'
 import { toast } from '@repo/ui/utils/toast'
@@ -50,6 +49,7 @@ type EditProps = {
 const Edit = ({ faqData, id, categories, userPermissions }: EditProps) => {
   // States
   const [editorContent, setEditorContent] = useState<string>(faqData?.description || '')
+  const [pending, startTransition] = useTransition()
 
   const [selectedCategory, setSelectedCategory] = useState<{ id: string; title: string } | null>(
     faqData?.category_id ? { id: String(faqData.category_id), title: faqData.faq_categories?.title || '' } : null
@@ -73,27 +73,29 @@ const Edit = ({ faqData, id, categories, userPermissions }: EditProps) => {
     }
   })
 
-  const onSubmit = async (data: z.infer<ReturnType<typeof faqSchema>>) => {
-    const { error } = await supabase
-      .from('faqs')
-      .update({
-        title: data.title,
-        description: data.description,
-        category_id: data.category_id,
-        is_featured: data.is_featured
-      })
-      .eq('id', id)
+  const onSubmit = (data: z.infer<ReturnType<typeof faqSchema>>) => {
+    startTransition(async () => {
+      const { error } = await supabase
+        .from('faqs')
+        .update({
+          title: data.title,
+          description: data.description,
+          category_id: data.category_id,
+          is_featured: data.is_featured
+        })
+        .eq('id', id)
 
-    if (error) {
-      console.error('Error updating faq: ', error.message)
-      toast('error', t('admin:faqsEditError', { message: error.message }))
+      if (error) {
+        console.error('Error updating faq: ', error.message)
+        toast('error', t('admin:faqsEditError', { message: error.message }))
 
-      return
-    }
+        return
+      }
 
-    toast('success', t('admin:faqsEditSuccess'))
-    router.push('/admin/faqs/faq')
-    router.refresh()
+      toast('success', t('admin:faqsEditSuccess'))
+      router.push('/admin/faqs/faq')
+      router.refresh()
+    })
   }
 
   // Editor Change Handler to set Editor Content and clear errors
@@ -121,7 +123,7 @@ const Edit = ({ faqData, id, categories, userPermissions }: EditProps) => {
         )}
       </div>
       <Form {...form}>
-        <form>
+        <form onSubmit={form.handleSubmit(onSubmit)}>
           <Card>
             <CardContent className='pbs-6'>
               <div className='grid gap-6'>
@@ -227,12 +229,9 @@ const Edit = ({ faqData, id, categories, userPermissions }: EditProps) => {
             </CardContent>
           </Card>
           <div className='mbs-6 flex justify-start gap-4'>
-            <SubmitButton
-              formAction={form.handleSubmit(onSubmit) as any}
-              pendingText={<Trans i18nKey='admin:savingStatus' />}
-            >
-              <Trans i18nKey='admin:saveChangesButton' />
-            </SubmitButton>
+            <Button type='submit' disabled={pending}>
+              {pending ? <Trans i18nKey='admin:savingStatus' /> : <Trans i18nKey='admin:saveChangesButton' />}
+            </Button>
             <Button type='button' variant='tonalDefault'>
               <Link href='/admin/faqs/faq'>
                 <Trans i18nKey='admin:cancelButton' />

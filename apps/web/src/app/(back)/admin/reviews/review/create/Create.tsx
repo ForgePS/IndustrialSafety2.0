@@ -1,7 +1,8 @@
 'use client'
 
 // React Imports
-import { useState } from 'react'
+import { useState, useTransition } from 'react'
+import type { BaseSyntheticEvent } from 'react'
 
 // Next Imports
 import Link from 'next/link'
@@ -19,7 +20,6 @@ import { Switch } from '@repo/ui/components/ui/switch'
 import { Textarea } from '@repo/ui/components/ui/textarea'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@repo/ui/components/ui/select'
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@repo/ui/components/ui/form'
-import SubmitButton from '@repo/ui/components/SubmitButton'
 import { createClient } from '@repo/supabase/client'
 import { toast } from '@repo/ui/utils/toast'
 import Trans from '@repo/i18n/Trans'
@@ -57,6 +57,7 @@ const CreateReview = ({ platformsData }: { platformsData: PlatformTypes[] }) => 
   // States
   const [file, setFile] = useState<File | undefined>()
   const [selectedPlatform, setSelectedPlatform] = useState<{ id: number; slug: string } | null>(null)
+  const [pending, startTransition] = useTransition()
 
   // Vars
   const supabase = createClient()
@@ -84,73 +85,46 @@ const CreateReview = ({ platformsData }: { platformsData: PlatformTypes[] }) => 
   })
 
   // Form submission handler
-  const onSubmit = async (data: z.infer<ReturnType<typeof reviewSchema>>) => {
-    // Client-side Supabase insert function
-    const { error } = await supabase.from('reviews').insert([
-      {
-        title: data.title,
-        platform_id: data.platform_id,
-        link: data.link,
-        video_url: data.video_url,
-        rating: data.rating,
-        content: data.content,
-        is_featured: data.is_featured,
-        username: data.username,
-        designation: data.designation,
-        country: data.country,
-        avatar_image: data.avatar_image
+  const onSubmit = (data: z.infer<ReturnType<typeof reviewSchema>>, event?: BaseSyntheticEvent) => {
+    startTransition(async () => {
+      const submitAction = ((event?.nativeEvent as SubmitEvent).submitter as HTMLButtonElement).value
+
+      // Client-side Supabase insert function
+      const { error } = await supabase.from('reviews').insert([
+        {
+          title: data.title,
+          platform_id: data.platform_id,
+          link: data.link,
+          video_url: data.video_url,
+          rating: data.rating,
+          content: data.content,
+          is_featured: data.is_featured,
+          username: data.username,
+          designation: data.designation,
+          country: data.country,
+          avatar_image: data.avatar_image
+        }
+      ])
+
+      // Handle errors or navigate
+      if (error) {
+        console.error('Error creating review: ', error.message)
+        toast('error', t('admin:reviewsCreateError', { message: error.message }))
+
+        return
       }
-    ])
 
-    // Handle errors or navigate
-    if (error) {
-      console.error('Error creating review: ', error.message)
-      toast('error', t('admin:reviewsCreateError', { message: error.message }))
+      toast('success', t('admin:reviewsCreateSuccess'))
 
-      return
-    }
-
-    toast('success', t('admin:reviewsCreateSuccess'))
-
-    // Redirect on success
-    router.push('/admin/reviews/review')
-    router.refresh()
-  }
-
-  // Create and create another review
-  const createAndCreateReview = async (data: z.infer<ReturnType<typeof reviewSchema>>) => {
-    // Client-side Supabase insert function
-    const { error } = await supabase.from('reviews').insert([
-      {
-        title: data.title,
-        platform_id: data.platform_id,
-        link: data.link,
-        video_url: data.video_url,
-        rating: data.rating,
-        content: data.content,
-        is_featured: data.is_featured,
-        username: data.username,
-        designation: data.designation,
-        country: data.country,
-        avatar_image: data.avatar_image
+      if (submitAction === 'createAndCreateAnother') {
+        form.reset()
+        form.setValue('rating', 5)
+        setFile(undefined)
+      } else {
+        router.push('/admin/reviews/review')
+        router.refresh()
       }
-    ])
-
-    // Handle errors or navigate
-    if (error) {
-      console.error('Error creating review: ', error.message)
-      toast('error', t('admin:reviewsCreateError', { message: error.message }))
-
-      return
-    }
-
-    toast('success', t('admin:reviewsCreateSuccess'))
-
-    // Reset the form to its default values
-    form.reset()
-    form.setValue('rating', 5)
-    setFile(undefined)
-    router.refresh()
+    })
   }
 
   const handleImageUpload = (file: string) => {
@@ -165,7 +139,7 @@ const CreateReview = ({ platformsData }: { platformsData: PlatformTypes[] }) => 
         </h1>
       </div>
       <Form {...form}>
-        <form>
+        <form onSubmit={form.handleSubmit(onSubmit)}>
           <div className='grid grid-cols-3 gap-6'>
             <Card className='col-span-full lg:col-span-2'>
               <CardHeader className='border-be'>
@@ -383,19 +357,22 @@ const CreateReview = ({ platformsData }: { platformsData: PlatformTypes[] }) => 
               </CardContent>
             </Card>
             <div className='col-span-full flex gap-4 max-sm:flex-col'>
-              <SubmitButton
-                formAction={form.handleSubmit(onSubmit) as any}
-                pendingText={<Trans i18nKey='admin:creatingStatus' />}
-              >
-                <Trans i18nKey='admin:createButton' />
-              </SubmitButton>
-              <SubmitButton
-                formAction={form.handleSubmit(createAndCreateReview) as any}
-                pendingText={<Trans i18nKey='admin:creatingStatus' />}
+              <Button type='submit' name='submitAction' value='create' disabled={pending}>
+                {pending ? <Trans i18nKey='admin:creatingStatus' /> : <Trans i18nKey='admin:createButton' />}
+              </Button>
+              <Button
+                type='submit'
+                name='submitAction'
                 variant='tonalDefault'
+                value='createAndCreateAnother'
+                disabled={pending}
               >
-                <Trans i18nKey='admin:createAndCreateAnotherButton' />
-              </SubmitButton>
+                {pending ? (
+                  <Trans i18nKey='admin:creatingStatus' />
+                ) : (
+                  <Trans i18nKey='admin:createAndCreateAnotherButton' />
+                )}
+              </Button>
               <Button type='button' variant='tonalDefault' asChild>
                 <Link href='/admin/reviews/review'>
                   <Trans i18nKey='admin:cancelButton' />

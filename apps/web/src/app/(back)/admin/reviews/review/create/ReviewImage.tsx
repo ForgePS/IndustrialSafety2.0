@@ -1,5 +1,8 @@
 'use client'
 
+// React Imports
+import type { FC } from 'react'
+
 // Third-party Imports
 import { useDropzone } from 'react-dropzone'
 import { TbX } from 'react-icons/tb'
@@ -13,7 +16,7 @@ type ReviewImageProps = {
   setFile: (File: File | undefined) => void
 }
 
-const ReviewImage: React.FC<ReviewImageProps> = ({ onImageUpload, file, setFile }) => {
+const ReviewImage: FC<ReviewImageProps> = ({ onImageUpload, file, setFile }) => {
   const { getRootProps, getInputProps } = useDropzone({
     multiple: false,
     accept: {

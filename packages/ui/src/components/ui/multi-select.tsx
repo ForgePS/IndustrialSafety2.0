@@ -1,7 +1,8 @@
 'use client'
 
 // React Imports
-import { useCallback, useRef, useState, type KeyboardEvent } from 'react'
+import { useCallback, useRef, useState } from 'react'
+import type { Dispatch, SetStateAction, KeyboardEvent } from 'react'
 
 // Third-party Imports
 import { TbChevronDown, TbX } from 'react-icons/tb'
@@ -19,7 +20,7 @@ type ItemType = Record<'value' | 'label', string>
 interface MultiSelectProps {
   options: ItemType[]
   selected: string[]
-  setSelected: React.Dispatch<React.SetStateAction<string[]>>
+  setSelected: Dispatch<SetStateAction<string[]>>
   className?: string
 }
 

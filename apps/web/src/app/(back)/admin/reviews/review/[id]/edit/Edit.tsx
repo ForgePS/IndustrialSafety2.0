@@ -1,5 +1,8 @@
 'use client'
 
+// React Imports
+import { useTransition } from 'react'
+
 // Next Imports
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
@@ -17,7 +20,6 @@ import { Switch } from '@repo/ui/components/ui/switch'
 import { Textarea } from '@repo/ui/components/ui/textarea'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@repo/ui/components/ui/select'
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@repo/ui/components/ui/form'
-import SubmitButton from '@repo/ui/components/SubmitButton'
 import DeleteDialog from '@repo/ui/components/DeleteDialog'
 import { toast } from '@repo/ui/utils/toast'
 import { createClient } from '@repo/supabase/client'
@@ -57,6 +59,9 @@ type EditReviewProps = {
 }
 
 const EditReview = ({ reviewData, platformsData, id, userPermissions }: EditReviewProps) => {
+  // States
+  const [pending, startTransition] = useTransition()
+
   // Vars
   const supabase = createClient()
 
@@ -83,38 +88,40 @@ const EditReview = ({ reviewData, platformsData, id, userPermissions }: EditRevi
   })
 
   // Form submission handler
-  const onSubmit = async (data: z.infer<ReturnType<typeof reviewSchema>>) => {
-    // Client-side Supabase insert function
-    const { error } = await supabase
-      .from('reviews')
-      .update({
-        title: data.title,
-        platform_id: data.platform_id,
-        link: data.link,
-        video_url: data.video_url,
-        rating: data.rating,
-        content: data.content,
-        is_featured: data.is_featured,
-        username: data.username,
-        designation: data.designation,
-        country: data.country,
-        avatar_image: data.avatar_image
-      })
-      .eq('id', id)
+  const onSubmit = (data: z.infer<ReturnType<typeof reviewSchema>>) => {
+    startTransition(async () => {
+      // Client-side Supabase insert function
+      const { error } = await supabase
+        .from('reviews')
+        .update({
+          title: data.title,
+          platform_id: data.platform_id,
+          link: data.link,
+          video_url: data.video_url,
+          rating: data.rating,
+          content: data.content,
+          is_featured: data.is_featured,
+          username: data.username,
+          designation: data.designation,
+          country: data.country,
+          avatar_image: data.avatar_image
+        })
+        .eq('id', id)
 
-    // Handle errors or navigate
-    if (error) {
-      console.error('Error updating review: ', error.message)
-      toast('error', t('admin:reviewsEditError', { message: error.message }))
+      // Handle errors or navigate
+      if (error) {
+        console.error('Error updating review: ', error.message)
+        toast('error', t('admin:reviewsEditError', { message: error.message }))
 
-      return
-    }
+        return
+      }
 
-    toast('success', t('admin:reviewsEditSuccess'))
+      toast('success', t('admin:reviewsEditSuccess'))
 
-    // Redirect on success
-    router.push('/admin/reviews/review')
-    router.refresh()
+      // Redirect on success
+      router.push('/admin/reviews/review')
+      router.refresh()
+    })
   }
 
   const handleImageUpload = (file: string) => {
@@ -139,7 +146,7 @@ const EditReview = ({ reviewData, platformsData, id, userPermissions }: EditRevi
         )}
       </div>
       <Form {...form}>
-        <form>
+        <form onSubmit={form.handleSubmit(onSubmit)}>
           <section className='grid grid-cols-3 gap-6'>
             <Card className='col-span-full lg:col-span-2'>
               <CardHeader className='border-be'>
@@ -348,12 +355,9 @@ const EditReview = ({ reviewData, platformsData, id, userPermissions }: EditRevi
               </CardContent>
             </Card>
             <div className='col-span-full flex gap-4 max-sm:flex-col'>
-              <SubmitButton
-                formAction={form.handleSubmit(onSubmit) as any}
-                pendingText={<Trans i18nKey='admin:savingStatus' />}
-              >
-                <Trans i18nKey='admin:saveChangesButton' />
-              </SubmitButton>
+              <Button type='submit' disabled={pending}>
+                {pending ? <Trans i18nKey='admin:savingStatus' /> : <Trans i18nKey='admin:saveChangesButton' />}
+              </Button>
               <Button type='button' variant='tonalDefault' asChild>
                 <Link href='/admin/reviews/review'>
                   <Trans i18nKey='admin:cancelButton' />

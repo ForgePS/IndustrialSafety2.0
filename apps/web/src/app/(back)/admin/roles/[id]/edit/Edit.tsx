@@ -1,7 +1,7 @@
 'use client'
 
 // React Imports
-import { useState } from 'react'
+import { useState, useTransition } from 'react'
 
 // Next Imports
 import Link from 'next/link'
@@ -18,7 +18,6 @@ import { MultiSelect } from '@repo/ui/components/ui/multi-select'
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@repo/ui/components/ui/form'
 import { toast } from '@repo/ui/utils/toast'
 import DeleteDialog from '@repo/ui/components/DeleteDialog'
-import SubmitButton from '@repo/ui/components/SubmitButton'
 import { createClient } from '@repo/supabase/client'
 import Trans from '@repo/i18n/Trans'
 import { useTranslation } from 'react-i18next'
@@ -54,6 +53,7 @@ type EditProps = {
 const Edit = ({ roleData, id, permissionsData, rolePermissionsData, userPermissions }: EditProps) => {
   // States
   const [selected, setSelected] = useState<string[]>(rolePermissionsData.map(rp => rp.permissions))
+  const [pending, startTransition] = useTransition()
 
   // Vars
   const supabase = createClient()
@@ -86,99 +86,101 @@ const Edit = ({ roleData, id, permissionsData, rolePermissionsData, userPermissi
     return { isRoleExists, isHierarchyExists }
   }
 
-  const onSubmit = async (data: z.infer<typeof roleSchema>) => {
-    try {
-      const { isRoleExists, isHierarchyExists } = await checkDuplicates(data.role, data.hierarchy)
+  const onSubmit = (data: z.infer<typeof roleSchema>) => {
+    startTransition(async () => {
+      try {
+        const { isRoleExists, isHierarchyExists } = await checkDuplicates(data.role, data.hierarchy)
 
-      if (isRoleExists) {
-        toast('error', t('admin:rolesActionsDuplicateNameError'))
-
-        return
-      }
-
-      if (isHierarchyExists) {
-        toast('error', t('admin:rolesActionsDuplicateHierarchyError'))
-
-        return
-      }
-
-      // Update role
-      const { error: roleError } = await supabase
-        .from('roles')
-        .update({
-          role: data.role,
-          hierarchy: data.hierarchy
-        })
-        .eq('id', roleData.id)
-
-      if (roleError) {
-        toast('error', t('admin:rolesActionsUpdateRoleError', { message: roleError.message }))
-
-        return
-      }
-
-      // Get existing permissions
-      const { data: existingPermissions, error: permissionsFetchError } = await supabase
-        .from('role_permissions')
-        .select('permission_id')
-        .eq('role_id', roleData.id)
-
-      if (permissionsFetchError) {
-        toast('error', t('admin:rolesActionsFetchPermissionsError', { message: permissionsFetchError.message }))
-
-        return
-      }
-
-      // Extract existing permissions IDs
-      const existingPermissionIds = existingPermissions?.map(p => p.permission_id) || []
-
-      // Map selected permissions to IDs
-      const newPermissionIds = selected
-        .map(permission => {
-          const foundPermission = permissionsData.find(p => p.permission === permission) // Match 'permission' in permissionsData
-
-          return foundPermission?.id
-        })
-        .filter((id): id is number => id !== undefined)
-
-      // Calculate permissions to add and remove
-      const permissionsToAdd = newPermissionIds.filter(id => !existingPermissionIds.includes(id))
-      const permissionsToRemove = existingPermissionIds.filter(id => !newPermissionIds.includes(id))
-
-      // Add new permissions
-      if (permissionsToAdd.length > 0) {
-        const { error: addError } = await supabase
-          .from('role_permissions')
-          .insert(permissionsToAdd.map(id => ({ role_id: roleData.id, permission_id: id })))
-
-        if (addError) {
-          toast('error', t('admin:rolesActionsAddPermissionsError', { message: addError.message }))
+        if (isRoleExists) {
+          toast('error', t('admin:rolesActionsDuplicateNameError'))
 
           return
         }
-      }
 
-      // Remove permissions
-      if (permissionsToRemove.length > 0) {
-        const { error: removeError } = await supabase
+        if (isHierarchyExists) {
+          toast('error', t('admin:rolesActionsDuplicateHierarchyError'))
+
+          return
+        }
+
+        // Update role
+        const { error: roleError } = await supabase
+          .from('roles')
+          .update({
+            role: data.role,
+            hierarchy: data.hierarchy
+          })
+          .eq('id', roleData.id)
+
+        if (roleError) {
+          toast('error', t('admin:rolesActionsUpdateRoleError', { message: roleError.message }))
+
+          return
+        }
+
+        // Get existing permissions
+        const { data: existingPermissions, error: permissionsFetchError } = await supabase
           .from('role_permissions')
-          .delete()
+          .select('permission_id')
           .eq('role_id', roleData.id)
-          .in('permission_id', permissionsToRemove)
 
-        if (removeError) {
-          toast('error', t('admin:rolesActionsRemovePermissionsError', { message: removeError.message }))
+        if (permissionsFetchError) {
+          toast('error', t('admin:rolesActionsFetchPermissionsError', { message: permissionsFetchError.message }))
 
           return
         }
-      }
 
-      toast('success', t('admin:rolesActionsUpdateSuccess'))
-      router.push('/admin/roles')
-      router.refresh()
-    } catch (error: any) {
-      toast('error', t('admin:rolesActionsUpdateError', { message: error.message }))
-    }
+        // Extract existing permissions IDs
+        const existingPermissionIds = existingPermissions?.map(p => p.permission_id) || []
+
+        // Map selected permissions to IDs
+        const newPermissionIds = selected
+          .map(permission => {
+            const foundPermission = permissionsData.find(p => p.permission === permission) // Match 'permission' in permissionsData
+
+            return foundPermission?.id
+          })
+          .filter((id): id is number => id !== undefined)
+
+        // Calculate permissions to add and remove
+        const permissionsToAdd = newPermissionIds.filter(id => !existingPermissionIds.includes(id))
+        const permissionsToRemove = existingPermissionIds.filter(id => !newPermissionIds.includes(id))
+
+        // Add new permissions
+        if (permissionsToAdd.length > 0) {
+          const { error: addError } = await supabase
+            .from('role_permissions')
+            .insert(permissionsToAdd.map(id => ({ role_id: roleData.id, permission_id: id })))
+
+          if (addError) {
+            toast('error', t('admin:rolesActionsAddPermissionsError', { message: addError.message }))
+
+            return
+          }
+        }
+
+        // Remove permissions
+        if (permissionsToRemove.length > 0) {
+          const { error: removeError } = await supabase
+            .from('role_permissions')
+            .delete()
+            .eq('role_id', roleData.id)
+            .in('permission_id', permissionsToRemove)
+
+          if (removeError) {
+            toast('error', t('admin:rolesActionsRemovePermissionsError', { message: removeError.message }))
+
+            return
+          }
+        }
+
+        toast('success', t('admin:rolesActionsUpdateSuccess'))
+        router.push('/admin/roles')
+        router.refresh()
+      } catch (error: any) {
+        toast('error', t('admin:rolesActionsUpdateError', { message: error.message }))
+      }
+    })
   }
 
   return (
@@ -206,7 +208,7 @@ const Edit = ({ roleData, id, permissionsData, rolePermissionsData, userPermissi
         </div>
       </div>
       <Form {...form}>
-        <form>
+        <form onSubmit={form.handleSubmit(onSubmit)}>
           <Card>
             <CardContent className='pbs-6'>
               <div className='grid grid-cols-1 gap-6 md:grid-cols-2'>
@@ -267,12 +269,9 @@ const Edit = ({ roleData, id, permissionsData, rolePermissionsData, userPermissi
             </CardContent>
           </Card>
           <div className='mbs-6 flex justify-start gap-4'>
-            <SubmitButton
-              formAction={form.handleSubmit(onSubmit) as any}
-              pendingText={<Trans i18nKey='admin:rolesFormUpdating' />}
-            >
-              <Trans i18nKey='admin:saveButton' />
-            </SubmitButton>
+            <Button type='submit' disabled={pending}>
+              {pending ? <Trans i18nKey='admin:rolesFormUpdating' /> : <Trans i18nKey='admin:saveButton' />}
+            </Button>
             <Button variant='tonalDefault' asChild>
               <Link href='/admin/roles'>
                 <Trans i18nKey='admin:cancelButton' />

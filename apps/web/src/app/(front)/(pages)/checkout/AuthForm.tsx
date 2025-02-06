@@ -1,12 +1,12 @@
 // React Imports
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useTransition } from 'react'
 
 // Third-party Imports
 import { useForm } from 'react-hook-form'
 import { Input } from '@repo/ui/components/ui/input'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { usePasswordSignUp } from '@repo/auth/sign-up'
-import SubmitButton from '@repo/ui/components/SubmitButton'
+import { Button } from '@repo/ui/components/ui/button'
 import OauthProviders from '@repo/ui/providers/OauthProviders'
 import { TbAlertTriangle, TbCircleCheck } from 'react-icons/tb'
 import { Card, CardContent } from '@repo/ui/components/ui/card'
@@ -26,6 +26,7 @@ import authConfig from '@configs/authConfig'
 const AuthForm = ({ users }: { users: User[] | null }) => {
   // States
   const [showAlert, setShowAlert] = useState(false)
+  const [pending, startTransition] = useTransition()
 
   // Hooks
   const { t } = useTranslation()
@@ -50,19 +51,21 @@ const AuthForm = ({ users }: { users: User[] | null }) => {
     verifyEmailRedirectTo: `/auth/verify-email?email=${form.getValues('email')}`
   })
 
-  const onAuthSubmit = async (formData: PasswordSignInFormData | PasswordSignUpFormData) => {
-    try {
-      setShowAlert(false)
+  const onAuthSubmit = (formData: PasswordSignInFormData | PasswordSignUpFormData) => {
+    startTransition(async () => {
+      try {
+        setShowAlert(false)
 
-      if (formData.email === users?.find(user => user.email === formData.email)?.email) {
-        await handleSignIn(formData, users, '')
-      } else {
-        await handleSignUp(formData as PasswordSignUpFormData, users)
+        if (formData.email === users?.find(user => user.email === formData.email)?.email) {
+          await handleSignIn(formData, users, '')
+        } else {
+          await handleSignUp(formData as PasswordSignUpFormData, users)
+        }
+      } catch (error) {
+        console.error(error)
+        setShowAlert(true)
       }
-    } catch (error) {
-      console.error(error)
-      setShowAlert(true)
-    }
+    })
   }
 
   // Reset alert when user starts typing in the form
@@ -113,7 +116,7 @@ const AuthForm = ({ users }: { users: User[] | null }) => {
             </Alert>
           ) : (
             <>
-              <form className='flex flex-col gap-4'>
+              <form onSubmit={form.handleSubmit(onAuthSubmit)} className='flex flex-col gap-4'>
                 <FormField
                   control={form.control}
                   name='email'
@@ -146,12 +149,13 @@ const AuthForm = ({ users }: { users: User[] | null }) => {
                     </FormItem>
                   )}
                 />
-                <SubmitButton
-                  formAction={form.handleSubmit(onAuthSubmit) as any}
-                  pendingText={<Trans i18nKey='front-pages:checkoutSubmitPending' />}
-                >
-                  <Trans i18nKey='front-pages:checkoutSubmitButton' />
-                </SubmitButton>
+                <Button type='submit' disabled={pending}>
+                  {pending ? (
+                    <Trans i18nKey='front-pages:checkoutSubmitPending' />
+                  ) : (
+                    <Trans i18nKey='front-pages:checkoutSubmitButton' />
+                  )}
+                </Button>
               </form>
               <div className='flex items-center gap-4'>
                 <hr className='flex-1' />

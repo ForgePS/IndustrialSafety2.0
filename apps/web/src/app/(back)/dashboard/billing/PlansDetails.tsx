@@ -1,7 +1,7 @@
 'use client'
 
 // React Imports
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useTransition } from 'react'
 import type { ChangeEvent } from 'react'
 
 // Next Imports
@@ -9,7 +9,7 @@ import { useRouter } from 'next/navigation'
 
 // Third-party Imports
 import { TbCircleCheck } from 'react-icons/tb'
-import SubmitButton from '@repo/ui/components/SubmitButton'
+import { Button } from '@repo/ui/components/ui/button'
 import { saveCheckoutData } from '@repo/billing/src/actions'
 import { RadioGroup } from '@repo/ui/components/ui/radio-group'
 import CustomInputHorizontal from '@repo/ui/components/custom-inputs/Horizontal'
@@ -23,6 +23,7 @@ const PlansDetails = ({ planData }: { planData: Plan[] }) => {
   const [selectedVariant, setSelectedVariant] = useState<string>('')
   const [selectedPlan, setSelectedPlan] = useState<Plan | null>(null)
   const [selectedVariantDetails, setSelectedVariantDetails] = useState<PlanVariant | null>(null)
+  const [pending, startTransition] = useTransition()
 
   // Hooks
   const router = useRouter()
@@ -63,15 +64,17 @@ const PlansDetails = ({ planData }: { planData: Plan[] }) => {
   }
 
   // Submit the selected plan and variant data
-  const handleSubmit = async () => {
-    // Send data to the API route
-    const response = await saveCheckoutData({ selectedVariantDetails, selectedPlan })
+  const handleSubmit = () => {
+    startTransition(async () => {
+      // Send data to the API route
+      const response = await saveCheckoutData({ selectedVariantDetails, selectedPlan })
 
-    if (response.status === 200) {
-      router.push('/checkout')
-    } else {
-      console.error('Failed to save data')
-    }
+      if (response.status === 200) {
+        router.push('/checkout')
+      } else {
+        console.error('Failed to save data')
+      }
+    })
   }
 
   // Set the initial selected plan & variant
@@ -248,14 +251,14 @@ const PlansDetails = ({ planData }: { planData: Plan[] }) => {
                     </li>
                   ))}
             </ul>
-            <form>
-              <SubmitButton
-                className='mt-6 bg-indigo-600 text-white hover:bg-indigo-700'
-                formAction={handleSubmit}
-                pendingText={<Trans i18nKey='dashboard:processingText' />}
-              >
-                <Trans i18nKey='dashboard:proceedToPaymentButton' />
-              </SubmitButton>
+            <form action={handleSubmit}>
+              <Button type='submit' disabled={pending} className='mt-6 bg-indigo-600 text-white hover:bg-indigo-700'>
+                {pending ? (
+                  <Trans i18nKey='dashboard:processingText' />
+                ) : (
+                  <Trans i18nKey='dashboard:proceedToPaymentButton' />
+                )}
+              </Button>
             </form>
           </div>
         </CardContent>

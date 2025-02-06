@@ -1,7 +1,7 @@
 'use client'
 
 // React Imports
-import { useState } from 'react'
+import { useState, useTransition } from 'react'
 
 // Next Imports
 import Link from 'next/link'
@@ -17,7 +17,6 @@ import { Button } from '@repo/ui/components/ui/button'
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@repo/ui/components/ui/form'
 import { createClient } from '@repo/supabase/client'
 import { toast } from '@repo/ui/utils/toast'
-import SubmitButton from '@repo/ui/components/SubmitButton'
 import DeleteDialog from '@repo/ui/components/DeleteDialog'
 import { MultiSelect } from '@repo/ui/components/ui/multi-select'
 import Trans from '@repo/i18n/Trans'
@@ -54,6 +53,7 @@ type EditProps = {
 const Edit = ({ id, permissionData, rolesData, permissionRolesData, userPermissions }: EditProps) => {
   // States
   const [selected, setSelected] = useState<string[]>(permissionRolesData.map(pr => pr.role))
+  const [pending, startTransition] = useTransition()
 
   // Vars
   const supabase = createClient()
@@ -72,90 +72,92 @@ const Edit = ({ id, permissionData, rolesData, permissionRolesData, userPermissi
   })
 
   // Form submission handler
-  const onSubmit = async (data: z.infer<ReturnType<typeof permissionSchema>>) => {
-    try {
-      // Update permission
-      const { error: permissionError } = await supabase
-        .from('permissions')
-        .update({
-          permission: data.permission
-        })
-        .eq('id', id)
+  const onSubmit = (data: z.infer<ReturnType<typeof permissionSchema>>) => {
+    startTransition(async () => {
+      try {
+        // Update permission
+        const { error: permissionError } = await supabase
+          .from('permissions')
+          .update({
+            permission: data.permission
+          })
+          .eq('id', id)
 
-      if (permissionError) {
-        if (permissionError.code === '23505') {
-          toast('error', t('admin:permissionExistsError'))
+        if (permissionError) {
+          if (permissionError.code === '23505') {
+            toast('error', t('admin:permissionExistsError'))
+
+            return
+          }
+
+          toast('error', t('admin:permissionsEditError', { message: permissionError.message }))
 
           return
         }
 
-        toast('error', t('admin:permissionsEditError', { message: permissionError.message }))
-
-        return
-      }
-
-      // Get existing roles
-      const { data: existingRoles, error: rolesFetchError } = await supabase
-        .from('role_permissions')
-        .select('role_id')
-        .eq('permission_id', id)
-
-      if (rolesFetchError) {
-        toast('error', t('admin:permissionsEditRolesFetchError', { message: rolesFetchError.message }))
-
-        return
-      }
-
-      // Extract existing role IDs
-      const existingRoleIds = existingRoles?.map(r => r.role_id) || []
-
-      // Map selected roles to IDs
-      const newRoleIds = selected
-        .map(role => {
-          const foundRole = rolesData.find(r => r.role === role)
-
-          return foundRole?.id
-        })
-        .filter((id): id is number => id !== undefined)
-
-      // Calculate roles to add and remove
-      const rolesToAdd = newRoleIds.filter(id => !existingRoleIds.includes(id))
-      const rolesToRemove = existingRoleIds.filter(id => !newRoleIds.includes(id))
-
-      // Remove roles
-      if (rolesToRemove.length > 0) {
-        const { error: removeError } = await supabase
+        // Get existing roles
+        const { data: existingRoles, error: rolesFetchError } = await supabase
           .from('role_permissions')
-          .delete()
+          .select('role_id')
           .eq('permission_id', id)
-          .in('role_id', rolesToRemove)
 
-        if (removeError) {
-          toast('error', t('admin:removeRolesError', { message: removeError.message }))
-
-          return
-        }
-      }
-
-      // Add new roles
-      if (rolesToAdd.length > 0) {
-        const { error: addError } = await supabase
-          .from('role_permissions')
-          .insert(rolesToAdd.map(roleId => ({ permission_id: id, role_id: roleId })))
-
-        if (addError) {
-          toast('error', t('admin:addRolesError', { message: addError.message }))
+        if (rolesFetchError) {
+          toast('error', t('admin:permissionsEditRolesFetchError', { message: rolesFetchError.message }))
 
           return
         }
-      }
 
-      toast('success', t('admin:permissionsEditSuccess'))
-      router.push('/admin/permissions')
-      router.refresh()
-    } catch (error: any) {
-      toast('error', t('admin:permissionsEditError', { message: error.message }))
-    }
+        // Extract existing role IDs
+        const existingRoleIds = existingRoles?.map(r => r.role_id) || []
+
+        // Map selected roles to IDs
+        const newRoleIds = selected
+          .map(role => {
+            const foundRole = rolesData.find(r => r.role === role)
+
+            return foundRole?.id
+          })
+          .filter((id): id is number => id !== undefined)
+
+        // Calculate roles to add and remove
+        const rolesToAdd = newRoleIds.filter(id => !existingRoleIds.includes(id))
+        const rolesToRemove = existingRoleIds.filter(id => !newRoleIds.includes(id))
+
+        // Remove roles
+        if (rolesToRemove.length > 0) {
+          const { error: removeError } = await supabase
+            .from('role_permissions')
+            .delete()
+            .eq('permission_id', id)
+            .in('role_id', rolesToRemove)
+
+          if (removeError) {
+            toast('error', t('admin:removeRolesError', { message: removeError.message }))
+
+            return
+          }
+        }
+
+        // Add new roles
+        if (rolesToAdd.length > 0) {
+          const { error: addError } = await supabase
+            .from('role_permissions')
+            .insert(rolesToAdd.map(roleId => ({ permission_id: id, role_id: roleId })))
+
+          if (addError) {
+            toast('error', t('admin:addRolesError', { message: addError.message }))
+
+            return
+          }
+        }
+
+        toast('success', t('admin:permissionsEditSuccess'))
+        router.push('/admin/permissions')
+        router.refresh()
+      } catch (error: any) {
+        toast('error', t('admin:permissionsEditError', { message: error.message }))
+      }
+    })
   }
 
   return (
@@ -183,7 +185,7 @@ const Edit = ({ id, permissionData, rolesData, permissionRolesData, userPermissi
         </div>
       </div>
       <Form {...form}>
-        <form>
+        <form onSubmit={form.handleSubmit(onSubmit)}>
           <Card>
             <CardContent className='pbs-6'>
               <div className='grid grid-cols-1 gap-6 md:grid-cols-2'>
@@ -229,12 +231,9 @@ const Edit = ({ id, permissionData, rolesData, permissionRolesData, userPermissi
             </CardContent>
           </Card>
           <div className='mbs-6 flex justify-start gap-4'>
-            <SubmitButton
-              formAction={form.handleSubmit(onSubmit) as any}
-              pendingText={<Trans i18nKey='admin:savingStatus' />}
-            >
-              <Trans i18nKey='admin:saveButton' />
-            </SubmitButton>
+            <Button type='submit' disabled={pending}>
+              {pending ? <Trans i18nKey='admin:savingStatus' /> : <Trans i18nKey='admin:saveButton' />}
+            </Button>
             <Button variant='tonalDefault' asChild>
               <Link href='/admin/permissions'>
                 <Trans i18nKey='admin:cancelButton' />

@@ -1,5 +1,8 @@
 'use client'
 
+// React Imports
+import { useTransition } from 'react'
+
 // Third-party Imports
 import { TbTrash } from 'react-icons/tb'
 import { z } from 'zod'
@@ -11,7 +14,6 @@ import { Input } from '@repo/ui/components/ui/input'
 import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from '@repo/ui/components/ui/table'
 import { Textarea } from '@repo/ui/components/ui/textarea'
 import { Button } from '@repo/ui/components/ui/button'
-import SubmitButton from '@repo/ui/components/SubmitButton'
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@repo/ui/components/ui/form'
 import { createClient } from '@repo/supabase/client'
 import Trans from '@repo/i18n/Trans'
@@ -44,6 +46,9 @@ const trackingSchema = (t: TFunction) =>
   })
 
 const Tracking = ({ settings }: { settings: SettingsConfiguration['general_settings'] }) => {
+  // States
+  const [pending, startTransition] = useTransition()
+
   // Vars
   const supabase = createClient()
 
@@ -75,30 +80,32 @@ const Tracking = ({ settings }: { settings: SettingsConfiguration['general_setti
     })
   }
 
-  const onSubmit = async (data: z.infer<ReturnType<typeof trackingSchema>>) => {
-    const updatedTracking = {
-      google_tag_manager: data.google_tag_manager,
-      providers: data.providers
-    }
+  const onSubmit = (data: z.infer<ReturnType<typeof trackingSchema>>) => {
+    startTransition(async () => {
+      const updatedTracking = {
+        google_tag_manager: data.google_tag_manager,
+        providers: data.providers
+      }
 
-    const { error } = await supabase
-      .from('settings_configuration')
-      .update({
-        value: JSON.stringify({
-          ...settings,
-          tracking: updatedTracking
+      const { error } = await supabase
+        .from('settings_configuration')
+        .update({
+          value: JSON.stringify({
+            ...settings,
+            tracking: updatedTracking
+          })
         })
-      })
-      .eq('key', 'general_settings')
+        .eq('key', 'general_settings')
 
-    if (error) {
-      console.error('Error updating settings: ', error.message)
-      toast('error', t('admin:settingsTrackingUpdateError', { message: error.message }))
+      if (error) {
+        console.error('Error updating settings: ', error.message)
+        toast('error', t('admin:settingsTrackingUpdateError', { message: error.message }))
 
-      return
-    }
+        return
+      }
 
-    toast('success', t('admin:settingsToastSuccess'))
+      toast('success', t('admin:settingsToastSuccess'))
+    })
   }
 
   // Handle Delete Provider
@@ -133,7 +140,7 @@ const Tracking = ({ settings }: { settings: SettingsConfiguration['general_setti
   return (
     <CardContent className='pbs-4'>
       <Form {...form}>
-        <form>
+        <form onSubmit={form.handleSubmit(onSubmit)}>
           <FormField
             control={form.control}
             name='google_tag_manager'
@@ -216,13 +223,13 @@ const Tracking = ({ settings }: { settings: SettingsConfiguration['general_setti
             <Button type='button' variant='tonalDefault' onClick={addProvider} className='max-sm:is-full'>
               <Trans i18nKey='admin:settingsTrackingAddButton' />
             </Button>
-            <SubmitButton
-              formAction={form.handleSubmit(onSubmit) as any}
-              className='max-sm:is-full'
-              pendingText={<Trans i18nKey='admin:settingsApplicationSavingChanges' />}
-            >
-              <Trans i18nKey='admin:settingsSaveChanges' />
-            </SubmitButton>
+            <Button type='submit' disabled={pending} className='max-sm:is-full'>
+              {pending ? (
+                <Trans i18nKey='admin:settingsApplicationSavingChanges' />
+              ) : (
+                <Trans i18nKey='admin:settingsSaveChanges' />
+              )}
+            </Button>
           </div>
         </form>
       </Form>

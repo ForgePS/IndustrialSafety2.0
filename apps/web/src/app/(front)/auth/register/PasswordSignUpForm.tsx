@@ -1,7 +1,7 @@
 'use client'
 
 // React Imports
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useTransition } from 'react'
 import type { ReactNode } from 'react'
 
 // Third-party Imports
@@ -12,7 +12,7 @@ import { Alert, AlertDescription, AlertTitle } from '@repo/ui/components/ui/aler
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@repo/ui/components/ui/form'
 import { Input } from '@repo/ui/components/ui/input'
 import PasswordInput from '@repo/ui/components/ui/password-input'
-import SubmitButton from '@repo/ui/components/SubmitButton'
+import { Button } from '@repo/ui/components/ui/button'
 import { passwordSignUpFormSchema, usePasswordSignUp } from '@repo/auth/sign-up'
 import Trans from '@repo/i18n/Trans'
 import { useTranslation } from 'react-i18next'
@@ -22,6 +22,7 @@ import type { PasswordSignUpFormData } from '@repo/auth/sign-up'
 const PasswordSignUpForm = ({ appName, users }: { appName: string; users: User[] | null }) => {
   // States
   const [showAlert, setShowAlert] = useState(false)
+  const [pending, startTransition] = useTransition()
 
   // Hooks
   const { t } = useTranslation()
@@ -41,14 +42,16 @@ const PasswordSignUpForm = ({ appName, users }: { appName: string; users: User[]
     verifyEmailRedirectTo: `/auth/verify-email?email=${form.getValues('email')}`
   })
 
-  const onSubmit = async (formData: PasswordSignUpFormData) => {
-    try {
-      setShowAlert(false)
-      await handleSignUp(formData, users)
-    } catch (error) {
-      console.error(error)
-      setShowAlert(true)
-    }
+  const onSubmit = (formData: PasswordSignUpFormData) => {
+    startTransition(async () => {
+      try {
+        setShowAlert(false)
+        await handleSignUp(formData, users)
+      } catch (error) {
+        console.error(error)
+        setShowAlert(true)
+      }
+    })
   }
 
   // Reset alert when user starts typing in the form
@@ -92,7 +95,7 @@ const PasswordSignUpForm = ({ appName, users }: { appName: string; users: User[]
         </Alert>
       ) : (
         <Form {...form}>
-          <form className='flex flex-col gap-4'>
+          <form onSubmit={form.handleSubmit(onSubmit)} className='flex flex-col gap-4'>
             <FormField
               control={form.control}
               name='email'
@@ -141,12 +144,13 @@ const PasswordSignUpForm = ({ appName, users }: { appName: string; users: User[]
                 </FormItem>
               )}
             />
-            <SubmitButton
-              formAction={form.handleSubmit(onSubmit) as any}
-              pendingText={<Trans i18nKey='auth:registerSubmitPendingText' values={{ appName }} />}
-            >
-              <Trans i18nKey='auth:registerText' values={{ appName }} />
-            </SubmitButton>
+            <Button type='submit' disabled={pending}>
+              {pending ? (
+                <Trans i18nKey='auth:registerSubmitPendingText' values={{ appName }} />
+              ) : (
+                <Trans i18nKey='auth:registerText' values={{ appName }} />
+              )}
+            </Button>
           </form>
         </Form>
       )}

@@ -1,11 +1,11 @@
 // React Imports
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useTransition } from 'react'
 
 // Third-party Imports
 import { CardContent } from '@repo/ui/components/ui/card'
 import { Switch } from '@repo/ui/components/ui/switch'
 import { Label } from '@repo/ui/components/ui/label'
-import SubmitButton from '@repo/ui/components/SubmitButton'
+import { Button } from '@repo/ui/components/ui/button'
 import type { SettingsConfiguration } from '@repo/supabase/settingsConfigurationTypes'
 import { getPublicGeneralSettings } from '@repo/supabase/clientHelpers'
 import { createClient } from '@repo/supabase/client'
@@ -16,6 +16,7 @@ import { toast } from '@repo/ui/utils/toast'
 const ShareBlog = ({ settings }: { settings: SettingsConfiguration['general_settings'] }) => {
   // States
   const [shareThisEnabled, setShareThisEnabled] = useState<boolean>(settings.share_this_enabled)
+  const [pending, startTransition] = useTransition()
 
   // Vars
   const supabase = createClient()
@@ -24,18 +25,20 @@ const ShareBlog = ({ settings }: { settings: SettingsConfiguration['general_sett
   const { t } = useTranslation()
 
   // Save Changes Handler
-  const handleSubmit = async (formData: FormData) => {
-    const isSwitchOn = (formData.get('share-enabled') as string) === 'on'
+  const handleSubmit = (formData: FormData) => {
+    startTransition(async () => {
+      const isSwitchOn = (formData.get('share-enabled') as string) === 'on'
 
-    const { error } = await supabase
-      .from('settings_configuration')
-      .update({ value: JSON.stringify({ ...settings, share_this_enabled: isSwitchOn }) })
-      .eq('key', 'general_settings')
+      const { error } = await supabase
+        .from('settings_configuration')
+        .update({ value: JSON.stringify({ ...settings, share_this_enabled: isSwitchOn }) })
+        .eq('key', 'general_settings')
 
-    if (!error) {
-      setShareThisEnabled(isSwitchOn)
-      toast('success', t('admin:settingsToastSuccess'))
-    }
+      if (!error) {
+        setShareThisEnabled(isSwitchOn)
+        toast('success', t('admin:settingsToastSuccess'))
+      }
+    })
   }
 
   useEffect(() => {
@@ -53,7 +56,7 @@ const ShareBlog = ({ settings }: { settings: SettingsConfiguration['general_sett
 
   return (
     <CardContent className='pbs-4'>
-      <form>
+      <form action={handleSubmit}>
         <div className='flex flex-col items-start'>
           <div className='mbe-2 flex items-center'>
             <Switch
@@ -71,13 +74,13 @@ const ShareBlog = ({ settings }: { settings: SettingsConfiguration['general_sett
             <Trans i18nKey='admin:settingsShareBlogDescription' />
           </p>
         </div>
-        <SubmitButton
-          formAction={handleSubmit}
-          className='mbs-6 max-sm:is-full'
-          pendingText={<Trans i18nKey='admin:settingsApplicationSavingChanges' />}
-        >
-          <Trans i18nKey='admin:settingsSaveChanges' />
-        </SubmitButton>
+        <Button type='submit' disabled={pending} className='mbs-6 max-sm:is-full'>
+          {pending ? (
+            <Trans i18nKey='admin:settingsApplicationSavingChanges' />
+          ) : (
+            <Trans i18nKey='admin:settingsSaveChanges' />
+          )}
+        </Button>
       </form>
     </CardContent>
   )

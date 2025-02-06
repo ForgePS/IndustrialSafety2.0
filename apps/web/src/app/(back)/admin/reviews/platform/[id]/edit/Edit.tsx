@@ -1,5 +1,8 @@
 'use client'
 
+// React Imports
+import { useTransition } from 'react'
+
 // Next Imports
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
@@ -12,7 +15,6 @@ import { Card, CardContent, CardDescription, CardHeader } from '@repo/ui/compone
 import { Button } from '@repo/ui/components/ui/button'
 import { Input } from '@repo/ui/components/ui/input'
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@repo/ui/components/ui/form'
-import SubmitButton from '@repo/ui/components/SubmitButton'
 import { createClient } from '@repo/supabase/client'
 import { toast } from '@repo/ui/utils/toast'
 import DeleteDialog from '@repo/ui/components/DeleteDialog'
@@ -44,6 +46,9 @@ const EditPlatform = ({
   id: number
   userPermissions: string[]
 }) => {
+  // States
+  const [pending, startTransition] = useTransition()
+
   // Vars
   const supabase = createClient()
 
@@ -62,26 +67,28 @@ const EditPlatform = ({
   })
 
   // Form submission handler
-  const onSubmit = async (data: z.infer<ReturnType<typeof platformSchema>>) => {
-    const { error } = await supabase
-      .from('review_platforms')
-      .update({
-        platform_name: data.platform_name,
-        slug: generateSlug(data.slug?.trim() ? data.slug : data.platform_name),
-        logo: data.logo
-      })
-      .eq('id', id)
+  const onSubmit = (data: z.infer<ReturnType<typeof platformSchema>>) => {
+    startTransition(async () => {
+      const { error } = await supabase
+        .from('review_platforms')
+        .update({
+          platform_name: data.platform_name,
+          slug: generateSlug(data.slug?.trim() ? data.slug : data.platform_name),
+          logo: data.logo
+        })
+        .eq('id', id)
 
-    if (error) {
-      console.error('Error updating platform: ', error.message)
-      toast('error', t('admin:reviewPlatformsEditError', { message: error.message }))
+      if (error) {
+        console.error('Error updating platform: ', error.message)
+        toast('error', t('admin:reviewPlatformsEditError', { message: error.message }))
 
-      return
-    }
+        return
+      }
 
-    toast('success', t('admin:reviewPlatformsEditSuccess'))
-    router.push('/admin/reviews/platform')
-    router.refresh()
+      toast('success', t('admin:reviewPlatformsEditSuccess'))
+      router.push('/admin/reviews/platform')
+      router.refresh()
+    })
   }
 
   const handleImageUpload = (file: string) => {
@@ -106,7 +113,7 @@ const EditPlatform = ({
         )}
       </div>
       <Form {...form}>
-        <form>
+        <form onSubmit={form.handleSubmit(onSubmit)}>
           <div className='grid grid-cols-2 gap-6'>
             <Card className='col-span-full lg:col-span-2'>
               <CardHeader className='border-be'>
@@ -157,12 +164,9 @@ const EditPlatform = ({
               </CardContent>
             </Card>
             <div className='col-span-full flex gap-4 max-sm:flex-col'>
-              <SubmitButton
-                formAction={form.handleSubmit(onSubmit) as any}
-                pendingText={<Trans i18nKey='admin:savingStatus' />}
-              >
-                <Trans i18nKey='admin:saveButton' />
-              </SubmitButton>
+              <Button type='submit' disabled={pending}>
+                {pending ? <Trans i18nKey='admin:savingStatus' /> : <Trans i18nKey='admin:saveButton' />}
+              </Button>
               <Button type='button' variant='tonalDefault' asChild>
                 <Link href='/admin/reviews/platform'>
                   <Trans i18nKey='admin:cancelButton' />

@@ -2,6 +2,7 @@
 
 // React Imports
 import { useState } from 'react'
+import type { FC } from 'react'
 
 // Third-party Imports
 import { useDropzone } from 'react-dropzone'
@@ -16,7 +17,7 @@ type PlatformImageProps = {
   defaultImage?: string
 }
 
-const PlatformImage: React.FC<PlatformImageProps> = ({ onImageUpload, defaultImage }) => {
+const PlatformImage: FC<PlatformImageProps> = ({ onImageUpload, defaultImage }) => {
   // Hooks
   const { t } = useTranslation()
   const [imageSrc, setImageSrc] = useState<string | undefined>(defaultImage)

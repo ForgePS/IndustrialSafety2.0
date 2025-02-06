@@ -1,7 +1,7 @@
 'use client'
 
 // React Imports
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useTransition } from 'react'
 
 // Next Imports
 import { useRouter } from 'next/navigation'
@@ -13,7 +13,7 @@ import { TbAlertTriangle, TbCircleCheck } from 'react-icons/tb'
 import { Alert, AlertDescription, AlertTitle } from '@repo/ui/components/ui/alert'
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@repo/ui/components/ui/form'
 import { Input } from '@repo/ui/components/ui/input'
-import SubmitButton from '@repo/ui/components/SubmitButton'
+import { Button } from '@repo/ui/components/ui/button'
 import { forgotPasswordFormSchema, useForgotPassword } from '@repo/auth/forgot-password'
 import Trans from '@repo/i18n/Trans'
 import { useTranslation } from 'react-i18next'
@@ -23,6 +23,7 @@ import type { ForgotPasswordFormData } from '@repo/auth/forgot-password'
 const ForgotPasswordForm = ({ users }: { users: User[] | null }) => {
   // States
   const [showAlert, setShowAlert] = useState({ show: false, message: '' })
+  const [pending, startTransition] = useTransition()
 
   // Hooks
   const router = useRouter()
@@ -38,36 +39,38 @@ const ForgotPasswordForm = ({ users }: { users: User[] | null }) => {
     defaultValues: { email: '' }
   })
 
-  const onSubmit = async (formData: ForgotPasswordFormData) => {
-    // Check if user already exists with the email address
-    const existingUserData = users?.find(user => user.email === formData.email)
+  const onSubmit = (formData: ForgotPasswordFormData) => {
+    startTransition(async () => {
+      // Check if user already exists with the email address
+      const existingUserData = users?.find(user => user.email === formData.email)
 
-    // If user doesn't exist, show alert that says user doesn't exist
-    if (!existingUserData) {
-      setShowAlert({
-        show: true,
-        message: t('auth:forgotPasswordErrorUserNotFound')
+      // If user doesn't exist, show alert that says user doesn't exist
+      if (!existingUserData) {
+        setShowAlert({
+          show: true,
+          message: t('auth:forgotPasswordErrorUserNotFound')
 
-        // 'User not found with the provided email address. Please sign up to create an account or try again with a different email address.'
-      })
+          // 'User not found with the provided email address. Please sign up to create an account or try again with a different email address.'
+        })
 
-      return
-    }
+        return
+      }
 
-    // If user exists but email is not confirmed, redirect to verify email page
-    if (!existingUserData.email_confirmed_at) {
-      router.push(`/auth/verify-email?email=${formData.email}`)
+      // If user exists but email is not confirmed, redirect to verify email page
+      if (!existingUserData.email_confirmed_at) {
+        router.push(`/auth/verify-email?email=${formData.email}`)
 
-      return
-    }
+        return
+      }
 
-    try {
-      setShowAlert({ show: false, message: '' })
-      await handleForgotPassword(formData)
-    } catch (error) {
-      console.error(error)
-      setShowAlert({ show: true, message: error as string })
-    }
+      try {
+        setShowAlert({ show: false, message: '' })
+        await handleForgotPassword(formData)
+      } catch (error) {
+        console.error(error)
+        setShowAlert({ show: true, message: error as string })
+      }
+    })
   }
 
   // Reset alert when user starts typing in the form
@@ -105,7 +108,7 @@ const ForgotPasswordForm = ({ users }: { users: User[] | null }) => {
         </Alert>
       ) : (
         <Form {...form}>
-          <form className='flex flex-col gap-4'>
+          <form onSubmit={form.handleSubmit(onSubmit)} className='flex flex-col gap-4'>
             <FormField
               control={form.control}
               name='email'
@@ -122,12 +125,13 @@ const ForgotPasswordForm = ({ users }: { users: User[] | null }) => {
                 </FormItem>
               )}
             />
-            <SubmitButton
-              formAction={form.handleSubmit(onSubmit) as any}
-              pendingText={<Trans i18nKey='auth:forgotPasswordSubmitPendingText' />}
-            >
-              <Trans i18nKey='auth:forgotPasswordSubmitButton' />
-            </SubmitButton>
+            <Button type='submit' disabled={pending}>
+              {pending ? (
+                <Trans i18nKey='auth:forgotPasswordSubmitPendingText' />
+              ) : (
+                <Trans i18nKey='auth:forgotPasswordSubmitButton' />
+              )}
+            </Button>
           </form>
         </Form>
       )}

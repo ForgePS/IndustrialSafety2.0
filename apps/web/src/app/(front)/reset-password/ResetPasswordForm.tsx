@@ -1,6 +1,7 @@
 'use client'
 
 // React Imports
+import { useTransition } from 'react'
 import type { ReactNode } from 'react'
 
 // Third-party Imports
@@ -10,13 +11,16 @@ import { TbAlertTriangle, TbCircleCheck } from 'react-icons/tb'
 import { Alert, AlertDescription, AlertTitle } from '@repo/ui/components/ui/alert'
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@repo/ui/components/ui/form'
 import PasswordInput from '@repo/ui/components/ui/password-input'
-import SubmitButton from '@repo/ui/components/SubmitButton'
+import { Button } from '@repo/ui/components/ui/button'
 import { resetPasswordFormSchema, useResetPassword } from '@repo/auth/reset-password'
 import Trans from '@repo/i18n/Trans'
 import { useTranslation } from 'react-i18next'
 import type { ResetPasswordFormData } from '@repo/auth/reset-password'
 
 const ResetPasswordForm = () => {
+  // States
+  const [pending, startTransition] = useTransition()
+
   // Hooks
   const { handleResetPassword, isError, isSuccess, error } = useResetPassword()
   const { t } = useTranslation()
@@ -30,12 +34,14 @@ const ResetPasswordForm = () => {
     }
   })
 
-  const onSubmit = async (formData: ResetPasswordFormData) => {
-    try {
-      await handleResetPassword(formData)
-    } catch (error) {
-      console.error(error)
-    }
+  const onSubmit = (formData: ResetPasswordFormData) => {
+    startTransition(async () => {
+      try {
+        await handleResetPassword(formData)
+      } catch (error) {
+        console.error(error)
+      }
+    })
   }
 
   return (
@@ -61,7 +67,7 @@ const ResetPasswordForm = () => {
         </Alert>
       ) : (
         <Form {...form}>
-          <form className='flex flex-col gap-4'>
+          <form onSubmit={form.handleSubmit(onSubmit)} className='flex flex-col gap-4'>
             <FormField
               control={form.control}
               name='password'
@@ -94,12 +100,13 @@ const ResetPasswordForm = () => {
                 </FormItem>
               )}
             />
-            <SubmitButton
-              formAction={form.handleSubmit(onSubmit) as any}
-              pendingText={<Trans i18nKey='auth:resetPasswordPendingText' />}
-            >
-              <Trans i18nKey='auth:resetPasswordSubmitButton' />
-            </SubmitButton>
+            <Button type='submit' disabled={pending}>
+              {pending ? (
+                <Trans i18nKey='auth:resetPasswordPendingText' />
+              ) : (
+                <Trans i18nKey='auth:resetPasswordSubmitButton' />
+              )}
+            </Button>
           </form>
         </Form>
       )}

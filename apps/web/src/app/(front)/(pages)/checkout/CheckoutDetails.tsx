@@ -1,7 +1,7 @@
 'use client'
 
 // React Imports
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useTransition } from 'react'
 import type { ChangeEvent } from 'react'
 
 // Next Imports
@@ -12,7 +12,7 @@ import { cn } from '@repo/ui/lib/utils'
 import { TbCircleCheck } from 'react-icons/tb'
 import { loadStripe } from '@stripe/stripe-js'
 import { Skeleton } from '@repo/ui/components/ui/skeleton'
-import SubmitButton from '@repo/ui/components/SubmitButton'
+import { Button } from '@repo/ui/components/ui/button'
 import { RadioGroup } from '@repo/ui/components/ui/radio-group'
 import { Card, CardContent } from '@repo/ui/components/ui/card'
 import CustomInputHorizontal from '@repo/ui/components/custom-inputs/Horizontal'
@@ -50,53 +50,56 @@ const CheckoutDetails = ({ paymentProvider, userRecord, appName, users }: Props)
   const [stripeClientSecret, setStripeClientSecret] = useState('') // For stripe client secret
   const [isDialogOpen, setIsDialogOpen] = useState(false)
   const [loading, setLoading] = useState(true)
+  const [pending, startTransition] = useTransition()
 
-  const onSubmit = async (planId: string) => {
-    const supabase = createClient()
+  const onSubmit = (planId: string) => {
+    startTransition(async () => {
+      const supabase = createClient()
 
-    // Insert billing record into the database with status as pending
-    const { error } = await supabase.from('billing').insert({
-      user_id: userRecord?.id,
-      email: userRecord?.email,
-      billing_provider: paymentProvider,
-      status: 'pending',
-      order_type: variantDetails?.paymentType === 'recurring' ? 'subscription' : 'one-off',
-      plan_variant: variantDetails?.name,
-      interval: variantDetails?.paymentType === 'recurring' ? variantDetails?.interval : null,
-      cost: variantDetails?.lineItems[0].cost,
-      currency: planDetails?.currency
+      // Insert billing record into the database with status as pending
+      const { error } = await supabase.from('billing').insert({
+        user_id: userRecord?.id,
+        email: userRecord?.email,
+        billing_provider: paymentProvider,
+        status: 'pending',
+        order_type: variantDetails?.paymentType === 'recurring' ? 'subscription' : 'one-off',
+        plan_variant: variantDetails?.name,
+        interval: variantDetails?.paymentType === 'recurring' ? variantDetails?.interval : null,
+        cost: variantDetails?.lineItems[0].cost,
+        currency: planDetails?.currency
+      })
+
+      if (error) {
+        console.error('Error inserting data:', error)
+
+        return
+      }
+
+      // @ts-ignore
+      paymentProvider === 'lemon_squeezy' && window.createLemonSqueezy()
+
+      // Create a checkout session
+      const response = await createCheckoutSession(
+        planId,
+        variantDetails as PlanVariant,
+        paymentProvider,
+        userRecord as User,
+        window.location.href
+      )
+
+      if (paymentProvider === 'lemon_squeezy') {
+        if (response.checkoutUrl) {
+          // @ts-ignore
+          window.LemonSqueezy.Url.Open(response.checkoutUrl) // Open the checkout window
+        }
+      } else if (paymentProvider === 'stripe') {
+        if (response.clientSecret) {
+          setStripeClientSecret(response.clientSecret) // Use the client secret for Stripe
+        }
+      } else {
+        throw new Error('Failed to create checkout session')
+      }
     })
-
-    if (error) {
-      console.error('Error inserting data:', error)
-
-      return
-    }
-
-    // @ts-ignore
-    paymentProvider === 'lemon_squeezy' && window.createLemonSqueezy()
-
-    // Create a checkout session
-    const response = await createCheckoutSession(
-      planId,
-      variantDetails as PlanVariant,
-      paymentProvider,
-      userRecord as User,
-      window.location.href
-    )
-
-    if (paymentProvider === 'lemon_squeezy') {
-      if (response.checkoutUrl) {
-        // @ts-ignore
-        window.LemonSqueezy.Url.Open(response.checkoutUrl) // Open the checkout window
-      }
-    } else if (paymentProvider === 'stripe') {
-      if (response.clientSecret) {
-        setStripeClientSecret(response.clientSecret) // Use the client secret for Stripe
-      }
-    } else {
-      throw new Error('Failed to create checkout session')
-    }
   }
 
   // Function to handle radio button change
@@ -182,30 +185,28 @@ const CheckoutDetails = ({ paymentProvider, userRecord, appName, users }: Props)
         </p>
 
         {paymentProvider === 'lemon_squeezy' ? (
-          <form>
-            <SubmitButton
-              formAction={() => onSubmit(variantDetails?.lineItems[0].priceId as string)}
-              className='bg-primary is-full'
-              pendingText={<Trans i18nKey='front-pages:checkoutConfirmPending' />}
-              disabled={!userRecord}
-            >
-              <Trans i18nKey='front-pages:checkoutConfirmButton' />
-            </SubmitButton>
+          <form action={() => onSubmit(variantDetails?.lineItems[0].priceId as string)}>
+            <Button type='submit' disabled={!userRecord || pending} className='bg-primary is-full'>
+              {pending ? (
+                <Trans i18nKey='front-pages:checkoutConfirmPending' />
+              ) : (
+                <Trans i18nKey='front-pages:checkoutConfirmButton' />
+              )}
+            </Button>
           </form>
         ) : (
           <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
             <DialogTitle hidden />
             <DialogDescription hidden />
-            <form>
+            <form action={() => onSubmit(variantDetails?.lineItems[0].priceId as string)}>
               <DialogTrigger asChild>
-                <SubmitButton
-                  formAction={() => onSubmit(variantDetails?.lineItems[0].priceId as string)}
-                  className='bg-primary is-full'
-                  pendingText={<Trans i18nKey='front-pages:checkoutConfirmPending' />}
-                  disabled={!userRecord}
-                >
-                  <Trans i18nKey='front-pages:checkoutConfirmButton' />
-                </SubmitButton>
+                <Button type='submit' disabled={!userRecord || pending} className='bg-primary is-full'>
+                  {pending ? (
+                    <Trans i18nKey='front-pages:checkoutConfirmPending' />
+                  ) : (
+                    <Trans i18nKey='front-pages:checkoutConfirmButton' />
+                  )}
+                </Button>
               </DialogTrigger>
             </form>
             {/* Stripe Checkout Dialog Content */}

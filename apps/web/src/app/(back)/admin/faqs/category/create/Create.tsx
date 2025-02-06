@@ -1,5 +1,9 @@
 'use client'
 
+// React Imports
+import { useTransition } from 'react'
+import type { BaseSyntheticEvent } from 'react'
+
 // Next Imports
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
@@ -13,7 +17,6 @@ import { Card, CardContent } from '@repo/ui/components/ui/card'
 import { Input } from '@repo/ui/components/ui/input'
 import { Button } from '@repo/ui/components/ui/button'
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@repo/ui/components/ui/form'
-import SubmitButton from '@repo/ui/components/SubmitButton'
 import { createClient } from '@repo/supabase/client'
 import { toast } from '@repo/ui/utils/toast'
 import Trans from '@repo/i18n/Trans'
@@ -28,6 +31,9 @@ const categorySchema = (t: TFunction) =>
   })
 
 const Create = () => {
+  // States
+  const [pending, startTransition] = useTransition()
+
   // Vars
   const supabase = createClient()
 
@@ -44,46 +50,34 @@ const Create = () => {
     }
   })
 
-  // Form Submit Handler
-  const onSubmit = async (data: z.infer<ReturnType<typeof categorySchema>>) => {
-    const { error } = await supabase.from('faq_categories').insert([
-      {
-        title: data.title,
-        icon: data.icon
+  const onSubmit = (data: z.infer<ReturnType<typeof categorySchema>>, event?: BaseSyntheticEvent) => {
+    startTransition(async () => {
+      const submitAction = ((event?.nativeEvent as SubmitEvent).submitter as HTMLButtonElement).value
+
+      const { error } = await supabase.from('faq_categories').insert([
+        {
+          title: data.title,
+          icon: data.icon
+        }
+      ])
+
+      if (error) {
+        console.error('Error creating category: ', error.message)
+        toast('error', t('admin:faqCategoriesCreateError', { message: error.message }))
+
+        return
       }
-    ])
 
-    if (error) {
-      console.error('Error creating category: ', error.message)
-      toast('error', t('admin:faqCategoriesCreateError', { message: error.message }))
+      toast('success', t('admin:faqCategoriesCreateSuccess'))
 
-      return
-    }
-
-    toast('success', t('admin:faqCategoriesCreateSuccess'))
-    router.push('/admin/faqs/category')
-    router.refresh()
-  }
-
-  // Form Submit Handler for Create & Create Another
-  const createAndCreateSubmit = async (data: z.infer<ReturnType<typeof categorySchema>>) => {
-    const { error } = await supabase.from('faq_categories').insert([
-      {
-        title: data.title,
-        icon: data.icon
+      if (submitAction === 'createAndCreateAnother') {
+        form.reset()
+      } else {
+        router.push('/admin/faqs/category')
       }
-    ])
 
-    if (error) {
-      console.error('Error creating category: ', error.message)
-      toast('error', t('admin:faqCategoriesCreateError', { message: error.message }))
-
-      return
-    }
-
-    toast('success', t('admin:faqCategoriesCreateSuccess'))
-    form.reset()
-    router.refresh()
+      router.refresh()
+    })
   }
 
   return (
@@ -92,7 +86,7 @@ const Create = () => {
         <Trans i18nKey='admin:faqCategoriesCreateTitle' />
       </h2>
       <Form {...form}>
-        <form>
+        <form onSubmit={form.handleSubmit(onSubmit)}>
           <Card>
             <CardContent className='pbs-6'>
               <div className='grid grid-cols-1 gap-6 md:grid-cols-2'>
@@ -132,15 +126,22 @@ const Create = () => {
             </CardContent>
           </Card>
           <div className='mbs-6 flex justify-start gap-4'>
-            <SubmitButton
-              formAction={form.handleSubmit(onSubmit) as any}
-              pendingText={<Trans i18nKey='admin:creatingStatus' />}
+            <Button type='submit' name='submitAction' value='create' disabled={pending}>
+              {pending ? <Trans i18nKey='admin:creatingStatus' /> : <Trans i18nKey='admin:createButton' />}
+            </Button>
+            <Button
+              type='submit'
+              name='submitAction'
+              variant='tonalDefault'
+              value='createAndCreateAnother'
+              disabled={pending}
             >
-              <Trans i18nKey='admin:createButton' />
-            </SubmitButton>
-            <SubmitButton formAction={form.handleSubmit(createAndCreateSubmit) as any} variant='tonalDefault'>
-              <Trans i18nKey='admin:createAndCreateAnotherButton' />
-            </SubmitButton>
+              {pending ? (
+                <Trans i18nKey='admin:creatingStatus' />
+              ) : (
+                <Trans i18nKey='admin:createAndCreateAnotherButton' />
+              )}
+            </Button>
             <Button type='button' variant='tonalDefault' asChild>
               <Link href='/admin/faqs/category'>
                 <Trans i18nKey='admin:cancelButton' />

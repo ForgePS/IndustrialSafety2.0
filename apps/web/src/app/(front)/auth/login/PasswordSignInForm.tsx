@@ -1,7 +1,7 @@
 'use client'
 
 // React Imports
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useTransition } from 'react'
 import type { ReactNode } from 'react'
 
 // Next Imports
@@ -18,7 +18,6 @@ import { Input } from '@repo/ui/components/ui/input'
 import PasswordInput from '@repo/ui/components/ui/password-input'
 import { Checkbox } from '@repo/ui/components/ui/checkbox'
 import { Label } from '@repo/ui/components/ui/label'
-import SubmitButton from '@repo/ui/components/SubmitButton'
 import { passwordSignInFormSchema, usePasswordSignIn } from '@repo/auth/sign-in'
 import Trans from '@repo/i18n/Trans'
 import { useTranslation } from 'react-i18next'
@@ -28,6 +27,7 @@ import type { PasswordSignInFormData } from '@repo/auth/sign-in'
 const PasswordSignInForm = ({ appName, users }: { appName: string; users: User[] | null }) => {
   // States
   const [showAlert, setShowAlert] = useState(false)
+  const [pending, startTransition] = useTransition()
 
   // Hooks
   const { t } = useTranslation()
@@ -48,14 +48,16 @@ const PasswordSignInForm = ({ appName, users }: { appName: string; users: User[]
     form.setValue('password', value === 'admin' ? 'adminpassword' : 'userpassword')
   }
 
-  const onSubmit = async (formData: PasswordSignInFormData) => {
-    try {
-      setShowAlert(false)
-      await handleSignIn(formData, users)
-    } catch (error) {
-      console.error(error)
-      setShowAlert(true)
-    }
+  const onSubmit = (formData: PasswordSignInFormData) => {
+    startTransition(async () => {
+      try {
+        setShowAlert(false)
+        await handleSignIn(formData, users)
+      } catch (error) {
+        console.error(error)
+        setShowAlert(true)
+      }
+    })
   }
 
   // Reset alert when user starts typing in the form
@@ -88,7 +90,7 @@ const PasswordSignInForm = ({ appName, users }: { appName: string; users: User[]
         </Alert>
       )}
       <Form {...form}>
-        <form className='flex flex-col gap-4'>
+        <form onSubmit={form.handleSubmit(onSubmit)} className='flex flex-col gap-4'>
           <div className='mbe-2 flex flex-wrap gap-6 sm:flex-nowrap lg:flex-wrap xl:flex-nowrap'>
             <Button type='button' variant='outline' className='is-full' onClick={() => handleButtonClick('user')}>
               <Trans i18nKey='auth:loginTestUserButton' />
@@ -140,12 +142,13 @@ const PasswordSignInForm = ({ appName, users }: { appName: string; users: User[]
               <Trans i18nKey='auth:authForgotPasswordText' />?
             </Link>
           </div>
-          <SubmitButton
-            formAction={form.handleSubmit(onSubmit) as any}
-            pendingText={<Trans i18nKey='auth:loginSubmitPendingText' values={{ appName }} />}
-          >
-            <Trans i18nKey='auth:loginText' values={{ appName }} />
-          </SubmitButton>
+          <Button type='submit' disabled={pending}>
+            {pending ? (
+              <Trans i18nKey='auth:loginSubmitPendingText' values={{ appName }} />
+            ) : (
+              <Trans i18nKey='auth:loginText' values={{ appName }} />
+            )}
+          </Button>
         </form>
       </Form>
     </>

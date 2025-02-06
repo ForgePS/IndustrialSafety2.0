@@ -1,5 +1,9 @@
 'use client'
 
+// React Imports
+import { useTransition } from 'react'
+import type { BaseSyntheticEvent } from 'react'
+
 // Next Imports
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
@@ -14,7 +18,6 @@ import { Button } from '@repo/ui/components/ui/button'
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@repo/ui/components/ui/form'
 import { createClient } from '@repo/supabase/client'
 import { toast } from '@repo/ui/utils/toast'
-import SubmitButton from '@repo/ui/components/SubmitButton'
 import Trans from '@repo/i18n/Trans'
 import { useTranslation } from 'react-i18next'
 
@@ -25,6 +28,9 @@ const roleSchema = z.object({
 })
 
 const Create = () => {
+  // States
+  const [pending, startTransition] = useTransition()
+
   // Vars
   const supabase = createClient()
 
@@ -55,97 +61,59 @@ const Create = () => {
   }
 
   // Form submission handler
-  const onSubmit = async (data: z.infer<typeof roleSchema>) => {
-    try {
-      const { isRoleExists, isHierarchyExists } = await checkDuplicates(data.role, data.hierarchy)
+  const onSubmit = (data: z.infer<typeof roleSchema>, event?: BaseSyntheticEvent) => {
+    startTransition(async () => {
+      try {
+        const submitAction = ((event?.nativeEvent as SubmitEvent).submitter as HTMLButtonElement).value
 
-      if (isRoleExists) {
-        toast('error', t('admin:rolesActionsDuplicateNameError'))
+        const { isRoleExists, isHierarchyExists } = await checkDuplicates(data.role, data.hierarchy)
 
-        return
-      }
-
-      if (isHierarchyExists) {
-        toast('error', t('admin:rolesActionsDuplicateHierarchyError'))
-
-        return
-      }
-
-      const { error } = await supabase.from('roles').insert([
-        {
-          role: data.role,
-          hierarchy: data.hierarchy
-        }
-      ])
-
-      if (error) {
-        if (error.code === '23505') {
-          // Check which constraint was violated based on the error detail
-          if (error.message.includes('roles_role_key')) {
-            toast('error', t('admin:rolesActionsDuplicateNameError'))
-          } else if (error.message.includes('roles_hierarchy_key')) {
-            toast('error', t('admin:rolesActionsDuplicateHierarchyError'))
-          }
+        if (isRoleExists) {
+          toast('error', t('admin:rolesActionsDuplicateNameError'))
 
           return
         }
 
-        throw error
-      }
-
-      toast('success', t('admin:rolesActionsCreateSuccess'))
-      router.push('/admin/roles')
-      router.refresh()
-    } catch (error: any) {
-      toast('error', t('admin:rolesActionsCreateError', { message: error.message }))
-    }
-  }
-
-  // Create and create another
-  const createAndCreateRole = async (data: z.infer<typeof roleSchema>) => {
-    try {
-      const { isRoleExists, isHierarchyExists } = await checkDuplicates(data.role, data.hierarchy)
-
-      if (isRoleExists) {
-        toast('error', t('admin:rolesActionsDuplicateNameError'))
-
-        return
-      }
-
-      if (isHierarchyExists) {
-        toast('error', t('admin:rolesActionsDuplicateHierarchyError'))
-
-        return
-      }
-
-      const { error } = await supabase.from('roles').insert([
-        {
-          role: data.role,
-          hierarchy: data.hierarchy
-        }
-      ])
-
-      if (error) {
-        if (error.code === '23505') {
-          // Check which constraint was violated based on the error detail
-          if (error.message.includes('roles_role_key')) {
-            toast('error', t('admin:rolesActionsDuplicateNameError'))
-          } else if (error.message.includes('roles_hierarchy_key')) {
-            toast('error', t('admin:rolesActionsDuplicateHierarchyError'))
-          }
+        if (isHierarchyExists) {
+          toast('error', t('admin:rolesActionsDuplicateHierarchyError'))
 
           return
         }
 
-        throw error
-      }
+        const { error } = await supabase.from('roles').insert([
+          {
+            role: data.role,
+            hierarchy: data.hierarchy
+          }
+        ])
 
-      toast('success', t('admin:rolesActionsCreateSuccess'))
-      form.reset()
-      router.refresh()
-    } catch (error: any) {
-      toast('error', t('admin:rolesActionsCreateError', { message: error.message }))
-    }
+        if (error) {
+          if (error.code === '23505') {
+            // Check which constraint was violated based on the error detail
+            if (error.message.includes('roles_role_key')) {
+              toast('error', t('admin:rolesActionsDuplicateNameError'))
+            } else if (error.message.includes('roles_hierarchy_key')) {
+              toast('error', t('admin:rolesActionsDuplicateHierarchyError'))
+            }
+
+            return
+          }
+
+          throw error
+        }
+
+        toast('success', t('admin:rolesActionsCreateSuccess'))
+
+        if (submitAction === 'createAndCreateAnother') {
+          form.reset()
+        } else {
+          router.push('/admin/roles')
+          router.refresh()
+        }
+      } catch (error: any) {
+        toast('error', t('admin:rolesActionsCreateError', { message: error.message }))
+      }
+    })
   }
 
   return (
@@ -154,7 +122,7 @@ const Create = () => {
         <Trans i18nKey='admin:rolesCreateTitle' />
       </h2>
       <Form {...form}>
-        <form>
+        <form onSubmit={form.handleSubmit(onSubmit)}>
           <Card>
             <CardContent className='pbs-6'>
               <div className='grid grid-cols-1 gap-6 md:grid-cols-2'>
@@ -199,19 +167,22 @@ const Create = () => {
             </CardContent>
           </Card>
           <div className='mbs-6 flex justify-start gap-4'>
-            <SubmitButton
-              formAction={form.handleSubmit(onSubmit) as any}
-              pendingText={<Trans i18nKey='admin:creatingStatus' />}
-            >
-              <Trans i18nKey='admin:createButton' />
-            </SubmitButton>
-            <SubmitButton
-              formAction={form.handleSubmit(createAndCreateRole) as any}
-              pendingText={<Trans i18nKey='admin:creatingStatus' />}
+            <Button type='submit' name='submitAction' value='create' disabled={pending}>
+              {pending ? <Trans i18nKey='admin:creatingStatus' /> : <Trans i18nKey='admin:createButton' />}
+            </Button>
+            <Button
+              type='submit'
+              name='submitAction'
               variant='tonalDefault'
+              value='createAndCreateAnother'
+              disabled={pending}
             >
-              <Trans i18nKey='admin:createAndCreateAnotherButton' />
-            </SubmitButton>
+              {pending ? (
+                <Trans i18nKey='admin:creatingStatus' />
+              ) : (
+                <Trans i18nKey='admin:createAndCreateAnotherButton' />
+              )}
+            </Button>
             <Button variant='tonalDefault' asChild>
               <Link href='/admin/roles'>
                 <Trans i18nKey='admin:cancelButton' />

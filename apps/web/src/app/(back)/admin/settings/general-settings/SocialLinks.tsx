@@ -1,5 +1,8 @@
 'use client'
 
+// React Imports
+import { useTransition } from 'react'
+
 // Third-party Imports
 import { TbTrash } from 'react-icons/tb'
 import * as Icons from 'react-icons/tb'
@@ -9,7 +12,6 @@ import { useFieldArray, useForm } from 'react-hook-form'
 import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from '@repo/ui/components/ui/table'
 import { Input } from '@repo/ui/components/ui/input'
 import { Form, FormControl, FormField, FormItem, FormMessage } from '@repo/ui/components/ui/form'
-import SubmitButton from '@repo/ui/components/SubmitButton'
 import { Button } from '@repo/ui/components/ui/button'
 import { CardContent } from '@repo/ui/components/ui/card'
 import type { SettingsConfiguration } from '@repo/supabase/settingsConfigurationTypes'
@@ -32,6 +34,9 @@ const socialLinksSchema = (t: TFunction) =>
   })
 
 const SocialLinks = ({ settings }: { settings: SettingsConfiguration['general_settings'] }) => {
+  // States
+  const [pending, startTransition] = useTransition()
+
   // Vars
   const supabase = createClient()
 
@@ -59,34 +64,36 @@ const SocialLinks = ({ settings }: { settings: SettingsConfiguration['general_se
     append({ title: '', icon: '', url: '' })
   }
 
-  const onSubmit = async (data: z.infer<ReturnType<typeof socialLinksSchema>>) => {
-    const updatedSocialLinks = {
-      social_links: data.social_links
-    }
+  const onSubmit = (data: z.infer<ReturnType<typeof socialLinksSchema>>) => {
+    startTransition(async () => {
+      const updatedSocialLinks = {
+        social_links: data.social_links
+      }
 
-    const { error } = await supabase
-      .from('settings_configuration')
-      .update({
-        value: JSON.stringify({
-          ...settings,
-          ...updatedSocialLinks
+      const { error } = await supabase
+        .from('settings_configuration')
+        .update({
+          value: JSON.stringify({
+            ...settings,
+            ...updatedSocialLinks
+          })
         })
-      })
-      .eq('key', 'general_settings')
+        .eq('key', 'general_settings')
 
-    if (error) {
-      console.error('Error updating social links: ', error.message)
-      toast(
-        'error',
-        t('admin:settingsSocialLinksUpdateError', {
-          message: error.message
-        })
-      )
+      if (error) {
+        console.error('Error updating social links: ', error.message)
+        toast(
+          'error',
+          t('admin:settingsSocialLinksUpdateError', {
+            message: error.message
+          })
+        )
 
-      return
-    }
+        return
+      }
 
-    toast('success', t('admin:settingsToastSuccess'))
+      toast('success', t('admin:settingsToastSuccess'))
+    })
   }
 
   // Handle Delete Social Link
@@ -121,7 +128,7 @@ const SocialLinks = ({ settings }: { settings: SettingsConfiguration['general_se
         <Trans i18nKey='admin:socialLinksSection' />
       </h1>
       <Form {...form}>
-        <form>
+        <form onSubmit={form.handleSubmit(onSubmit)}>
           <div className='overflow-x-auto rounded-md border'>
             <Table className='min-is-[800px]'>
               <TableHeader>
@@ -204,13 +211,13 @@ const SocialLinks = ({ settings }: { settings: SettingsConfiguration['general_se
             <Button type='button' variant='tonalDefault' onClick={addSocialLink} className='max-sm:is-full'>
               <Trans i18nKey='admin:settingsSocialLinksAddButton' />
             </Button>
-            <SubmitButton
-              formAction={form.handleSubmit(onSubmit) as any}
-              className='max-sm:is-full'
-              pendingText={<Trans i18nKey='admin:settingsApplicationSavingChanges' />}
-            >
-              <Trans i18nKey='admin:settingsSaveChanges' />
-            </SubmitButton>
+            <Button type='submit' disabled={pending} className='max-sm:is-full'>
+              {pending ? (
+                <Trans i18nKey='admin:settingsApplicationSavingChanges' />
+              ) : (
+                <Trans i18nKey='admin:settingsSaveChanges' />
+              )}
+            </Button>
           </div>
         </form>
       </Form>
