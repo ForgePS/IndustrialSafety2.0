@@ -54,7 +54,10 @@ const MagicLink = async () => {
                     </span>
                     <hr className='flex-1' />
                   </div>
-                  <OauthProviders providers={authConfig.providers.oAuth} />
+                  <OauthProviders
+                    providers={authConfig.providers.oAuth}
+                    redirectTo={`${process.env.NEXT_PUBLIC_APP_URL}`}
+                  />
                 </>
               )}
             </div>

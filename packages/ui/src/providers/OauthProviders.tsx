@@ -62,9 +62,9 @@ const getOAuthProviderLogo = (): OAuthProviderLogo => {
   }
 }
 
-const OauthProviders = ({ providers }: { providers: Provider[] }) => {
+const OauthProviders = ({ providers, redirectTo }: { providers: Provider[]; redirectTo?: string }) => {
   // Hooks
-  const { handleSignIn } = useOAuthSignIn()
+  const { handleSignIn } = useOAuthSignIn(redirectTo)
 
   return (
     <form className='flex flex-col gap-4'>
