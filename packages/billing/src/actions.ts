@@ -22,8 +22,7 @@ export async function createCheckoutSession(
   planId: string,
   variantDetails: PlanVariant,
   paymentProvider: string,
-  userRecord: User,
-  requestUrl: string
+  userRecord: User
 ) {
   if (!planId) {
     throw new Error('planId is required')
@@ -31,9 +30,6 @@ export async function createCheckoutSession(
 
   if (paymentProvider === 'stripe') {
     try {
-      // Parse the request origin
-      const { origin } = new URL(requestUrl)
-
       // Retrieve the price object from Stripe
       const price = await stripe.prices.retrieve(planId)
 
@@ -62,7 +58,7 @@ export async function createCheckoutSession(
           cost: variantDetails.lineItems[0].cost.toString()
         },
         ...customerCreation,
-        return_url: `${origin}/thank-you`
+        return_url: `${process.env.NEXT_PUBLIC_APP_URL}/thank-you`
       })
 
       return { clientSecret: session.client_secret }
@@ -95,7 +91,7 @@ export async function createCheckoutSession(
               },
               product_options: {
                 enabled_variants: [planId.toString()], // Only enable this variant
-                redirect_url: 'http://localhost:3000/thank-you'
+                redirect_url: `${process.env.NEXT_PUBLIC_APP_URL}/thank-you`
               }
             },
             relationships: {
@@ -179,7 +175,7 @@ export async function createBillingPortalSession(plans: any[], customerId: strin
           proration_behavior: 'none'
         }
       },
-      default_return_url: `${originUrl}/thank-you`
+      default_return_url: `${process.env.NEXT_PUBLIC_APP_URL}/thank-you`
     })
 
     // Create a Stripe Billing Portal Session

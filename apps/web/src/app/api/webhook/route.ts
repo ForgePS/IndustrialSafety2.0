@@ -6,8 +6,7 @@ import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 
 // Third-party Imports
-import { createClient } from '@repo/supabase/server'
-import { getPublicPaymentProvider } from '@repo/supabase/serverHelpers'
+import { createServiceRoleClient } from '@repo/supabase/server'
 import { getBillingData } from '@repo/billing/src/utils/getBillingData'
 
 // Config Imports
@@ -16,9 +15,13 @@ import plans from '@configs/billingConfig'
 const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY)
 
 export async function POST(req: NextRequest) {
-  const supabase = await createClient()
+  const supabase = createServiceRoleClient()
 
-  const { data: paymentProvider } = await getPublicPaymentProvider()
+  const { data: paymentProvider } = await supabase
+    .from('settings_configuration')
+    .select('value')
+    .eq('key', 'payment_provider')
+    .single()
 
   // Get all the billing records
   const { data: billingRecords } = await supabase.from('billing').select('order_type')
@@ -222,11 +225,19 @@ export async function POST(req: NextRequest) {
           break
 
         case 'customer.subscription.updated':
+          const subscription = event.data.object
+
+          // Check if the subscription's ITEMS (plan) changed
+          const isPlanChange = !!event.data.previous_attributes?.items
+
+          // If no plan change, skip inserting a new row
+          if (!isPlanChange) break
+
           // Get the latest billing record for this subscription
           const { data: lastBilling } = await supabase
             .from('billing')
             .select('user_id, email, currency, payment_email')
-            .eq('order_id', event.data.object.id)
+            .eq('order_id', subscription.id)
             .order('id', { ascending: false })
             .limit(1)
             .single()
@@ -234,15 +245,15 @@ export async function POST(req: NextRequest) {
           const { error: subscriptionUpdateError } = await supabase.from('billing').insert({
             user_id: lastBilling?.user_id,
             email: lastBilling?.email,
-            order_id: event.data.object.id,
+            order_id: subscription.id,
             billing_provider: 'stripe',
             order_type: 'subscription',
             status: 'success',
             payment_email: lastBilling?.payment_email,
-            plan_variant: event.data.object.items.data[0].plan.nickname,
-            interval: event.data.object.items.data[0].plan.interval,
-            cost: event.data.object.plan.amount / 100,
-            currency: event.data.object.currency
+            plan_variant: subscription.items.data[0].plan.nickname,
+            interval: subscription.items.data[0].plan.interval,
+            cost: subscription.plan.amount / 100,
+            currency: subscription.currency
           })
 
           if (subscriptionUpdateError) {

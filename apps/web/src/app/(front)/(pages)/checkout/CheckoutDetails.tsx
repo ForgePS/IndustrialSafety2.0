@@ -83,8 +83,7 @@ const CheckoutDetails = ({ paymentProvider, userRecord, appName, users }: Props)
         planId,
         variantDetails as PlanVariant,
         paymentProvider,
-        userRecord as User,
-        window.location.href
+        userRecord as User
       )
 
       if (paymentProvider === 'lemon_squeezy') {
