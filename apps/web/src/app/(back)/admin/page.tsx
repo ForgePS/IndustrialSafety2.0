@@ -1,3 +1,6 @@
+// Next Imports
+import type { Metadata } from 'next'
+
 // Third-party Imports
 import { TbChartBar, TbCurrencyDollar, TbReceipt, TbRefresh, TbShoppingCart, TbUsers } from 'react-icons/tb'
 import { createClient } from '@repo/supabase/server'
@@ -52,6 +55,10 @@ const data = [
   }
 ]
 
+export const metadata: Metadata = {
+  title: 'Dashboard'
+}
+
 const AdminPage = async () => {
   // Vars
   const supabase = await createClient()
@@ -77,11 +84,9 @@ const AdminPage = async () => {
 
   return (
     <div className='flex flex-col gap-y-8'>
-      <header>
-        <h1 className='text-3xl font-bold'>
-          <Trans i18nKey='admin:dashboardTitle' />
-        </h1>
-      </header>
+      <h1 className='text-textPrimary text-2xl font-bold sm:text-3xl'>
+        <Trans i18nKey='admin:dashboardTitle' />
+      </h1>
 
       <section className='grid grid-cols-6 gap-6 lg:grid-cols-3'>
         {data.slice(0, 3).map((item, index) => {

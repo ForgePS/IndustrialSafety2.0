@@ -122,11 +122,11 @@ const Users = ({ usersRecord, rolesData, userPermissions }: Props) => {
   ]
 
   return (
-    <div className='grid grid-cols-1 gap-y-8'>
-      <div className='flex flex-wrap items-center justify-between gap-4'>
-        <h2 className='text-textPrimary text-2xl font-bold'>
+    <div className='grid grid-cols-1 gap-8'>
+      <div className='flex flex-wrap gap-4 max-sm:flex-col sm:items-center sm:justify-between'>
+        <h1 className='text-textPrimary text-2xl font-bold sm:text-3xl'>
           <Trans i18nKey='admin:usersSection' />
-        </h2>
+        </h1>
         <PermissionGuard permissions={userPermissions} permission={'create_users'}>
           <Link href='/admin/users/create'>
             <Button className='max-sm:is-full'>

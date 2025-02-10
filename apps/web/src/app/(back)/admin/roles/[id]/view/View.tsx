@@ -18,37 +18,32 @@ type ViewProps = {
 
 const View = ({ roleData }: ViewProps) => {
   return (
-    <>
-      <h2 className='text-2xl font-semibold sm:text-3xl'>
-        <Trans i18nKey='admin:rolesViewTitle' />
-      </h2>
-      <form>
-        <Card>
-          <CardContent className='pbs-6'>
-            <div className='grid grid-cols-1 gap-6 md:grid-cols-2'>
-              <div>
-                <h1 className='mbe-2 text-sm font-medium'>
-                  <Trans i18nKey='admin:nameLabel' />
-                </h1>
-                <p className='text-textPrimary font-medium capitalize'>{roleData.role}</p>
-              </div>
-              <div>
-                <h1 className='mbe-2 text-sm font-medium'>
-                  <Trans i18nKey='admin:permissionsLabel' />
-                </h1>
-                <div className='flex flex-wrap items-center gap-2'>
-                  {roleData.permissions.map(permission => (
-                    <Badge key={permission.id} variant='tonalPrimary' className='capitalize'>
-                      {permission.permission}
-                    </Badge>
-                  ))}
-                </div>
+    <form>
+      <Card>
+        <CardContent className='pbs-6'>
+          <div className='grid grid-cols-1 gap-6 md:grid-cols-2'>
+            <div>
+              <h2 className='mbe-2 text-sm font-medium'>
+                <Trans i18nKey='admin:nameLabel' />
+              </h2>
+              <p className='text-textPrimary font-medium capitalize'>{roleData.role}</p>
+            </div>
+            <div>
+              <h2 className='mbe-2 text-sm font-medium'>
+                <Trans i18nKey='admin:permissionsLabel' />
+              </h2>
+              <div className='flex flex-wrap items-center gap-2'>
+                {roleData.permissions.map(permission => (
+                  <Badge key={permission.id} variant='tonalPrimary' className='capitalize'>
+                    {permission.permission}
+                  </Badge>
+                ))}
               </div>
             </div>
-          </CardContent>
-        </Card>
-      </form>
-    </>
+          </div>
+        </CardContent>
+      </Card>
+    </form>
   )
 }
 

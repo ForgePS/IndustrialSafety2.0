@@ -26,12 +26,17 @@ export async function generateMetadata(props: Props, parent: ResolvingMetadata):
   const previousImages = (await parent).openGraph?.images ?? []
 
   return {
-    title: post?.title,
+    title: {
+      absolute: post?.title ? `Blog - ${post?.title}` : 'Blog'
+    },
     description: post?.description,
     openGraph: {
       images: [post?.featuredImage ?? '', ...previousImages]
     },
-    metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL!)
+    metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL!),
+    alternates: {
+      canonical: `https://demos.themeselection.com/jetship-nextjs-starter-kit-demo/blog/${params.slug}`
+    }
   }
 }
 

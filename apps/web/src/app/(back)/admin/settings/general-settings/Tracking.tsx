@@ -145,8 +145,8 @@ const Tracking = ({ settings }: { settings: SettingsConfiguration['general_setti
             control={form.control}
             name='google_tag_manager'
             render={({ field }) => (
-              <FormItem className='is-full'>
-                <FormLabel>
+              <FormItem className='is-full mbe-6'>
+                <FormLabel className='font-medium'>
                   <Trans i18nKey='admin:settingsTrackingGtmLabel' />
                 </FormLabel>
                 <FormControl>
@@ -156,9 +156,9 @@ const Tracking = ({ settings }: { settings: SettingsConfiguration['general_setti
               </FormItem>
             )}
           />
-          <h1 className='mbs-6 mbe-2 text-textPrimary text-sm font-medium'>
+          <p className='mbe-2 text-textPrimary text-sm font-medium'>
             <Trans i18nKey='admin:trackingSection' />
-          </h1>
+          </p>
           <div className='overflow-x-auto rounded-md border'>
             <Table className='min-is-[700px]'>
               <TableHeader>

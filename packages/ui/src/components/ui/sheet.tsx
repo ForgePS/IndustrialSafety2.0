@@ -76,13 +76,13 @@ const SheetContent = forwardRef<ElementRef<typeof SheetPrimitive.Content>, Sheet
 SheetContent.displayName = SheetPrimitive.Content.displayName
 
 const SheetHeader = ({ className, ...props }: HTMLAttributes<HTMLDivElement>) => (
-  <div className={cn('flex flex-col space-y-2 text-center sm:text-left', className)} {...props} />
+  <div className={cn('space-b-2 flex flex-col text-center sm:text-left', className)} {...props} />
 )
 
 SheetHeader.displayName = 'SheetHeader'
 
 const SheetFooter = ({ className, ...props }: HTMLAttributes<HTMLDivElement>) => (
-  <div className={cn('flex flex-col-reverse sm:flex-row sm:justify-end sm:space-x-2', className)} {...props} />
+  <div className={cn('sm:space-i-2 flex flex-col-reverse sm:flex-row sm:justify-end', className)} {...props} />
 )
 
 SheetFooter.displayName = 'SheetFooter'

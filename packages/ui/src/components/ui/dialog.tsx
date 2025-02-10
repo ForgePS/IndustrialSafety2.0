@@ -61,13 +61,13 @@ const DialogContent = forwardRef<
 DialogContent.displayName = DialogPrimitive.Content.displayName
 
 const DialogHeader = ({ className, ...props }: HTMLAttributes<HTMLDivElement>) => (
-  <div className={cn('flex flex-col space-y-1.5 text-center sm:text-start', className)} {...props} />
+  <div className={cn('space-b-1.5 flex flex-col text-center sm:text-start', className)} {...props} />
 )
 
 DialogHeader.displayName = 'DialogHeader'
 
 const DialogFooter = ({ className, ...props }: HTMLAttributes<HTMLDivElement>) => (
-  <div className={cn('flex flex-col-reverse gap-y-2 sm:flex-row sm:justify-end sm:space-x-3', className)} {...props} />
+  <div className={cn('sm:space-i-3 flex flex-col-reverse gap-y-2 sm:flex-row sm:justify-end', className)} {...props} />
 )
 
 DialogFooter.displayName = 'DialogFooter'

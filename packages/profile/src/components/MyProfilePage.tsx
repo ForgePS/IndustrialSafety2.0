@@ -41,14 +41,14 @@ const MyProfile = async () => {
 
   return (
     <div className='flex flex-col gap-y-8'>
-      <header>
-        <h1 className='text-textPrimary text-3xl font-bold'>
+      <div>
+        <h1 className='mbe-2 text-textPrimary text-2xl font-bold sm:text-3xl'>
           <Trans i18nKey='packages-profile:myProfileTitle' />
         </h1>
-        <p className='text-textSecondary mbs-2 text-lg'>
+        <p className='text-textSecondary text-lg'>
           <Trans i18nKey='packages-profile:myProfileDescription' />
         </p>
-      </header>
+      </div>
       <section className='space-b-6 divide-b divide-border'>
         <PersonalInformation userData={userData} />
         <Password />

@@ -81,10 +81,10 @@ const Create = () => {
   }
 
   return (
-    <>
-      <h2 className='mbe-6 text-2xl font-semibold sm:text-3xl'>
+    <div className='flex flex-col gap-y-8'>
+      <h1 className='text-textPrimary text-2xl font-bold sm:text-3xl'>
         <Trans i18nKey='admin:faqCategoriesCreateTitle' />
-      </h2>
+      </h1>
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)}>
           <Card>
@@ -125,7 +125,7 @@ const Create = () => {
               </div>
             </CardContent>
           </Card>
-          <div className='mbs-6 flex justify-start gap-4'>
+          <div className='mbs-6 flex gap-4 max-sm:flex-col'>
             <Button type='submit' name='submitAction' value='create' disabled={pending}>
               {pending ? <Trans i18nKey='admin:creatingStatus' /> : <Trans i18nKey='admin:createButton' />}
             </Button>
@@ -150,7 +150,7 @@ const Create = () => {
           </div>
         </form>
       </Form>
-    </>
+    </div>
   )
 }
 

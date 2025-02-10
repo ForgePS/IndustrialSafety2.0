@@ -1,3 +1,6 @@
+// Next Imports
+import type { Metadata } from 'next'
+
 // Third-party Imports
 import { TbExclamationCircle } from 'react-icons/tb'
 import { createClient } from '@repo/supabase/server'
@@ -7,6 +10,10 @@ import { getAuthUser } from '@repo/supabase/serverHelpers'
 
 // Component Imports
 import EditReview from './Edit'
+
+export const metadata: Metadata = {
+  title: 'Edit Review'
+}
 
 const EditReviewPage = async (props: { params: Promise<{ id: number }> }) => {
   // Vars

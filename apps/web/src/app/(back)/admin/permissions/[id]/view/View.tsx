@@ -17,24 +17,24 @@ type ViewProps = {
 
 const View = ({ permissionData }: ViewProps) => {
   return (
-    <div className='flex flex-col gap-6'>
-      <h2 className='mbe-6 text-2xl font-semibold sm:text-3xl'>
+    <div className='flex flex-col gap-y-8'>
+      <h1 className='text-textPrimary text-2xl font-bold sm:text-3xl'>
         <Trans i18nKey='admin:permissionsViewTitle' />
-      </h2>
+      </h1>
       <form>
         <Card>
           <CardContent className='pbs-6'>
             <div className='grid grid-cols-1 gap-6 md:grid-cols-2'>
               <div>
-                <h1 className='mbe-2 text-sm font-medium'>
+                <h2 className='mbe-2 text-sm font-medium'>
                   <Trans i18nKey='admin:permissionsViewNameLabel' />
-                </h1>
+                </h2>
                 <p className='text-textPrimary font-medium capitalize'>{permissionData.permission}</p>
               </div>
               <div>
-                <h1 className='mbe-2 text-sm font-medium'>
+                <h2 className='mbe-2 text-sm font-medium'>
                   <Trans i18nKey='admin:permissionsViewRolesLabel' />
-                </h1>
+                </h2>
                 <div className='flex flex-wrap items-center gap-2'>
                   {permissionData.roles && permissionData.roles.length > 0 ? (
                     permissionData.roles.map(role => (

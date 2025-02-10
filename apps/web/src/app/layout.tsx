@@ -36,42 +36,18 @@ import './globals.css'
 
 const inter = Inter({ subsets: ['latin'] })
 
-export async function generateMetadata(): Promise<Metadata> {
-  const { data: settingsData, error } = await getPublicGeneralSettings()
-
-  if (error) {
-    console.error(error)
-  }
-
-  let appName
-  let title
-  let description
-
-  if (settingsData) {
-    const settings = JSON.parse(settingsData.value) as SettingsConfiguration['general_settings']
-
-    appName = settings.application?.site_name
-    title = settings.application?.title
-    description = settings.application?.description
-  }
-
-  return {
-    title: title
-      ? title.includes('%s')
-        ? { template: title, default: title.replace('%s | ', '').replace('%s ', '') }
-        : title
-      : appName
-        ? {
-            template: `Demo: %s | ${appName} - NextJS Boilerplate PRO`,
-            default: `Demo: ${appName} - NextJS Boilerplate PRO`
-          }
-        : {
-            template: 'Demo: %s | ChatFlow AI - NextJS Boilerplate PRO',
-            default: 'Demo: ChatFlow AI - NextJS Boilerplate PRO'
-          },
-    description: description
-      ? description
-      : 'Automate customer support with ChatFlow AI. Boost satisfaction, resolve queries 24/7, and deliver seamless service using an all-in-one AI chatbot solution.'
+export const metadata: Metadata = {
+  icons: {
+    icon: [
+      { url: '/favicon-16x16.png', sizes: '16x16', type: 'image/png' },
+      { url: '/favicon-32x32.png', sizes: '32x32', type: 'image/png' },
+      { url: '/favicon.ico', sizes: 'any', type: 'image/x-icon' }
+    ],
+    apple: [{ url: '/apple-touch-icon.png', sizes: '180x180', type: 'image/png' }],
+    other: [
+      { rel: 'icon', url: '/android-chrome-192x192.png', sizes: '192x192', type: 'image/png' },
+      { rel: 'icon', url: '/android-chrome-512x512.png', sizes: '512x512', type: 'image/png' }
+    ]
   }
 }
 

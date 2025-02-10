@@ -64,7 +64,7 @@ const Details = async () => {
               <p className='mb-2'>
                 <Trans i18nKey='front-pages:termsUseOfServiceText' />:
               </p>
-              <ul className='list-disc space-y-1 pl-6'>
+              <ul className='space-b-1 list-disc pl-6'>
                 <li>
                   <Trans i18nKey='front-pages:termsUseOfServiceList1' />
                 </li>
@@ -207,7 +207,7 @@ const Details = async () => {
               <h4 className='mb-2 font-semibold'>
                 2. <Trans i18nKey='front-pages:termsCookieTypesTitle' />
               </h4>
-              <ul className='list-disc space-y-1 pl-6'>
+              <ul className='space-b-1 list-disc pl-6'>
                 <li>
                   <span className='font-semibold'>
                     <Trans i18nKey='front-pages:termsCookieEssential' />:

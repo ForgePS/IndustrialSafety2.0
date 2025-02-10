@@ -3,6 +3,7 @@ import { Fragment } from 'react'
 
 // Next Imports
 import Link from 'next/link'
+import type { Metadata } from 'next'
 
 // Third-party Imports
 import FAQ from '@repo/ui/blocks/faq/FAQ'
@@ -31,6 +32,12 @@ import additionalFeaturesData from '@/assets/data/additionalFeaturesVerticalData
 import featuresData from '@/assets/data/featuresLandingPageData'
 import ctaDiscordData from '@/assets/data/ctaDiscordLandingPageData'
 import ctaBuyNowData from '@/assets/data/ctaBuyNowLandingPageData'
+
+export const metadata: Metadata = {
+  alternates: {
+    canonical: 'https://demos.themeselection.com/jetship-nextjs-starter-kit-demo'
+  }
+}
 
 const LandingPage = async () => {
   // Vars

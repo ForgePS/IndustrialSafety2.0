@@ -106,11 +106,11 @@ const Edit = ({ faqData, id, categories, userPermissions }: EditProps) => {
   }
 
   return (
-    <>
-      <div className='flex gap-y-2 max-sm:flex-col sm:items-center sm:justify-between'>
-        <h2 className='mbe-6 text-2xl font-semibold sm:text-3xl'>
+    <div className='flex flex-col gap-y-8'>
+      <div className='flex flex-wrap gap-4 max-sm:flex-col sm:items-center sm:justify-between'>
+        <h1 className='text-textPrimary text-2xl font-bold sm:text-3xl'>
           <Trans i18nKey='admin:faqsEditTitle' />
-        </h2>
+        </h1>
         {hasPermission(userPermissions, 'delete_faqs') && (
           <DeleteDialog
             handleDelete={async () => {
@@ -228,7 +228,7 @@ const Edit = ({ faqData, id, categories, userPermissions }: EditProps) => {
               </div>
             </CardContent>
           </Card>
-          <div className='mbs-6 flex justify-start gap-4'>
+          <div className='mbs-6 flex gap-4 max-sm:flex-col'>
             <Button type='submit' disabled={pending}>
               {pending ? <Trans i18nKey='admin:savingStatus' /> : <Trans i18nKey='admin:saveChangesButton' />}
             </Button>
@@ -240,7 +240,7 @@ const Edit = ({ faqData, id, categories, userPermissions }: EditProps) => {
           </div>
         </form>
       </Form>
-    </>
+    </div>
   )
 }
 

@@ -1,3 +1,6 @@
+// Next Imports
+import type { Metadata } from 'next'
+
 // Third-Party Imports
 import { TbExclamationCircle } from 'react-icons/tb'
 import { Alert, AlertDescription } from '@repo/ui/components/ui/alert'
@@ -7,6 +10,13 @@ import Trans from '@repo/i18n/Trans'
 // Components Imports
 import Details from './Details'
 import HeaderSection from './HeaderSection'
+
+export const metadata: Metadata = {
+  title: 'FAQs',
+  alternates: {
+    canonical: 'https://demos.themeselection.com/jetship-nextjs-starter-kit-demo/faqs'
+  }
+}
 
 const FaqPage = async () => {
   // Vars

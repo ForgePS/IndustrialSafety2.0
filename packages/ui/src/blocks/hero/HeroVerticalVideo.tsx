@@ -46,9 +46,9 @@ const HeroVerticalVideo = () => {
                   </span>{' '}
                   🚀
                 </h1>
-                <h1 className='text-textPrimary text-3xl font-bold sm:text-4xl md:text-5xl md:leading-[1.2]'>
+                <h2 className='text-textPrimary text-3xl font-bold sm:text-4xl md:text-5xl md:leading-[1.2]'>
                   <Trans i18nKey='packages-ui:heroHeadlineService' />
-                </h1>
+                </h2>
               </MotionFadeElement>
               <MotionFadeElement
                 component='p'

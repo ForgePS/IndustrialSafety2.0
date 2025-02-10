@@ -44,8 +44,8 @@ const GeneralSettings = ({ settings }: { settings: SettingsConfiguration['genera
   }, [initialTab])
 
   return (
-    <>
-      <h1 className='mbe-6 text-2xl font-semibold sm:text-3xl'>
+    <div className='grid grid-cols-1 gap-8'>
+      <h1 className='text-textPrimary text-2xl font-bold sm:text-3xl'>
         <Trans i18nKey='admin:settingsGeneralTitle' />
       </h1>
       <Card>
@@ -91,7 +91,7 @@ const GeneralSettings = ({ settings }: { settings: SettingsConfiguration['genera
           </TabsContent>
         </Tabs>
       </Card>
-    </>
+    </div>
   )
 }
 

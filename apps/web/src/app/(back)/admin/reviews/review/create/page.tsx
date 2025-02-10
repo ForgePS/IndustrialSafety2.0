@@ -1,3 +1,6 @@
+// Next Imports
+import type { Metadata } from 'next'
+
 // Third-party Imports
 import { TbExclamationCircle } from 'react-icons/tb'
 import { Alert, AlertDescription } from '@repo/ui/components/ui/alert'
@@ -5,6 +8,10 @@ import { createClient } from '@repo/supabase/server'
 
 // Component Imports
 import CreateReview from './Create'
+
+export const metadata: Metadata = {
+  title: 'Create Review'
+}
 
 const CreateReviewPage = async () => {
   // Vars

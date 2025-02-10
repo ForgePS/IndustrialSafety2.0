@@ -112,8 +112,8 @@ const Permissions = ({
 
   return (
     <div className='grid grid-cols-1 gap-y-8'>
-      <div className='flex flex-wrap items-center justify-between gap-4'>
-        <h1 className='text-textPrimary text-3xl font-bold'>
+      <div className='flex flex-wrap gap-4 max-sm:flex-col sm:items-center sm:justify-between'>
+        <h1 className='text-textPrimary text-2xl font-bold sm:text-3xl'>
           <Trans i18nKey='admin:permissionsLabel' />
         </h1>
         {hasPermission(userPermissions, 'create_permission') && (

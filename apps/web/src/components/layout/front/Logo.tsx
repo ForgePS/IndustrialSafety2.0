@@ -5,7 +5,7 @@ const Logo = ({ appName, logoId }: { appName: string; logoId?: string }) => {
   return (
     <div className='flex items-center'>
       <AppLogo className='text-primary text-[2rem]' linearGradientId={logoId} />
-      <span className='text-foreground mis-2 text-nowrap text-xl font-extrabold'>{appName}</span>
+      <span className='text-textPrimary hover:text-foreground mis-2 text-nowrap text-xl font-extrabold'>{appName}</span>
     </div>
   )
 }

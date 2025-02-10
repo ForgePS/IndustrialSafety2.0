@@ -1,9 +1,19 @@
+// Next Imports
+import type { Metadata } from 'next'
+
 // Third-party Imports
 import { createKeystaticReader } from '@repo/keystatic/createReader'
 
 // Component Imports
 import HeaderSection from './HeaderSection'
 import BlogList from './BlogList'
+
+export const metadata: Metadata = {
+  title: 'Blog',
+  alternates: {
+    canonical: 'https://demos.themeselection.com/jetship-nextjs-starter-kit-demo/blog'
+  }
+}
 
 const BlogPage = async (props: { searchParams: Promise<Record<string, string | string[] | undefined>> }) => {
   // Vars

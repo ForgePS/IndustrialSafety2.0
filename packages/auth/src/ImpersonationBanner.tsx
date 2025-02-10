@@ -23,7 +23,7 @@ export function ImpersonationBanner() {
         }
       )}
     >
-      <div className='flex items-center space-x-3'>
+      <div className='space-i-3 flex items-center'>
         <TbAlertCircle className='h-5 w-5' />
         <p className='text-sm'>
           <Trans i18nKey='packages-auth:impersonatingUser' />{' '}

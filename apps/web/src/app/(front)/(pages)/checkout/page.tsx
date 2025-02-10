@@ -1,3 +1,6 @@
+// Next Imports
+import type { Metadata } from 'next'
+
 // Third-party Imports
 import { createServiceRoleClient } from '@repo/supabase/server'
 import { getAuthUser, getPublicPaymentProvider } from '@repo/supabase/serverHelpers'
@@ -8,6 +11,13 @@ import CheckoutDetails from './CheckoutDetails'
 
 // Util Imports
 import { getAppName } from '@/utils/getAppName'
+
+export const metadata: Metadata = {
+  title: 'Checkout',
+  alternates: {
+    canonical: 'https://demos.themeselection.com/jetship-nextjs-starter-kit-demo/checkout'
+  }
+}
 
 const CheckoutPage = async () => {
   const supabase = createServiceRoleClient()

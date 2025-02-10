@@ -133,11 +133,9 @@ const CreateReview = ({ platformsData }: { platformsData: PlatformTypes[] }) => 
 
   return (
     <div className='flex flex-col gap-y-8'>
-      <div>
-        <h1 className='text-textPrimary text-3xl font-bold'>
-          <Trans i18nKey='admin:reviewsCreateTitle' />
-        </h1>
-      </div>
+      <h1 className='text-textPrimary text-2xl font-bold sm:text-3xl'>
+        <Trans i18nKey='admin:reviewsCreateTitle' />
+      </h1>
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)}>
           <div className='grid grid-cols-3 gap-6'>
@@ -300,7 +298,7 @@ const CreateReview = ({ platformsData }: { platformsData: PlatformTypes[] }) => 
                 </div>
               </CardContent>
             </Card>
-            <Card>
+            <Card className='max-lg:col-span-full'>
               <CardHeader className='border-be'>
                 <CardDescription className='font-medium'>
                   <Trans i18nKey='admin:reviewsCreateReviewerDetailsTitle' />

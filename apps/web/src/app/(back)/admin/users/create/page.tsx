@@ -1,8 +1,15 @@
+// Next Imports
+import type { Metadata } from 'next'
+
 // Third-party Imports
 import { createClient } from '@repo/supabase/server'
 
 // Component Imports
 import Create from './Create'
+
+export const metadata: Metadata = {
+  title: 'Create User'
+}
 
 const CreatePage = async () => {
   // Vars

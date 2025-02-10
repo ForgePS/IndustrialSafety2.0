@@ -97,8 +97,8 @@ const EditPlatform = ({
 
   return (
     <div className='flex flex-col gap-y-8'>
-      <div className='flex gap-y-2 max-sm:flex-col sm:items-center sm:justify-between'>
-        <h1 className='text-textPrimary text-3xl font-bold'>
+      <div className='flex flex-wrap gap-4 max-sm:flex-col sm:items-center sm:justify-between'>
+        <h1 className='text-textPrimary text-2xl font-bold sm:text-3xl'>
           <Trans i18nKey='admin:reviewPlatformsEditTitle' />
         </h1>
         {hasPermission(userPermissions, 'delete_reviews') && (

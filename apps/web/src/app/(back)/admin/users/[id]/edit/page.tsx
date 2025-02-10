@@ -1,3 +1,6 @@
+// Next Imports
+import type { Metadata } from 'next'
+
 // Third-party Imports
 import { TbExclamationCircle } from 'react-icons/tb'
 import { Alert, AlertDescription } from '@repo/ui/components/ui/alert'
@@ -6,6 +9,10 @@ import Trans from '@repo/i18n/Trans'
 
 // Component Imports
 import Edit from './Edit'
+
+export const metadata: Metadata = {
+  title: 'Edit User'
+}
 
 const EditPage = async (props: { params: Promise<{ id: number }> }) => {
   // Vars

@@ -1,5 +1,6 @@
 // Next Imports
 import Link from 'next/link'
+import type { Metadata } from 'next'
 
 // Third-party Imports
 import LeftSection from '@repo/ui/auth/LeftSection'
@@ -15,6 +16,13 @@ import authConfig from '@configs/authConfig'
 
 // Util Imports
 import { getAppName } from '@/utils/getAppName'
+
+export const metadata: Metadata = {
+  title: { absolute: 'Magic Link' },
+  alternates: {
+    canonical: 'https://demos.themeselection.com/jetship-nextjs-starter-kit-demo'
+  }
+}
 
 const MagicLink = async () => {
   const appName = await getAppName()

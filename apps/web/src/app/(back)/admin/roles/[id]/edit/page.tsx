@@ -1,3 +1,6 @@
+// Next Imports
+import type { Metadata } from 'next'
+
 // Third-party imports
 import { createClient } from '@repo/supabase/server'
 import { Alert, AlertDescription } from '@repo/ui/components/ui/alert'
@@ -6,6 +9,10 @@ import { getAuthUser } from '@repo/supabase/serverHelpers'
 
 // Component Imports
 import Edit from './Edit'
+
+export const metadata: Metadata = {
+  title: 'Edit Role'
+}
 
 const EditPage = async (props: { params: Promise<{ id: number }> }) => {
   // Vars

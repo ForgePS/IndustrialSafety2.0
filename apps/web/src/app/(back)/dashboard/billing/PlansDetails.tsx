@@ -236,7 +236,7 @@ const PlansDetails = ({ planData }: { planData: Plan[] }) => {
             <h3 className='text-textPrimary mb-2 text-base font-medium'>
               <Trans i18nKey='dashboard:featuresTitle' />
             </h3>
-            <ul className='space-y-2'>
+            <ul className='space-b-2'>
               {selectedVariantDetails?.paymentType === 'recurring'
                 ? selectedPlan?.features?.map((feature, index) => (
                     <li key={index} className='flex items-center gap-2'>

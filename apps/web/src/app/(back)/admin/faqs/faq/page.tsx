@@ -1,3 +1,6 @@
+// Next Imports
+import type { Metadata } from 'next'
+
 // Third-party Imports
 import { TbExclamationCircle } from 'react-icons/tb'
 import { createClient } from '@repo/supabase/server'
@@ -6,6 +9,10 @@ import { getAuthUser } from '@repo/supabase/serverHelpers'
 
 // Component Imports
 import Faq from './Faq'
+
+export const metadata: Metadata = {
+  title: 'FAQs'
+}
 
 const FaqPage = async () => {
   // Vars

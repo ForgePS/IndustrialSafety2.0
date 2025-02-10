@@ -55,13 +55,13 @@ const AlertDialogContent = forwardRef<
 AlertDialogContent.displayName = AlertDialogPrimitive.Content.displayName
 
 const AlertDialogHeader = ({ className, ...props }: HTMLAttributes<HTMLDivElement>) => (
-  <div className={cn('flex flex-col space-y-6 text-center sm:text-start', className)} {...props} />
+  <div className={cn('space-b-6 flex flex-col text-center sm:text-start', className)} {...props} />
 )
 
 AlertDialogHeader.displayName = 'AlertDialogHeader'
 
 const AlertDialogFooter = ({ className, ...props }: HTMLAttributes<HTMLDivElement>) => (
-  <div className={cn('flex flex-col-reverse gap-y-2 sm:flex-row sm:justify-end sm:space-x-3', className)} {...props} />
+  <div className={cn('sm:space-i-3 flex flex-col-reverse gap-y-2 sm:flex-row sm:justify-end', className)} {...props} />
 )
 
 AlertDialogFooter.displayName = 'AlertDialogFooter'

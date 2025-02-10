@@ -1,10 +1,18 @@
 // Next Imports
 import Link from 'next/link'
+import type { Metadata } from 'next'
 
 // Third-party Imports
 import { TbConfetti } from 'react-icons/tb'
 import { Button } from '@repo/ui/components/ui/button'
 import Trans from '@repo/i18n/Trans'
+
+export const metadata: Metadata = {
+  title: 'Thank You',
+  alternates: {
+    canonical: 'https://demos.themeselection.com/jetship-nextjs-starter-kit-demo/thank-you'
+  }
+}
 
 const ThankYouPage = () => {
   return (
@@ -13,9 +21,9 @@ const ThankYouPage = () => {
         <TbConfetti className='bs-8 is-8 text-primary' />
       </div>
       <div className='flex flex-col items-center'>
-        <h2 className='mbe-4 text-center text-2xl font-semibold'>
+        <h1 className='mbe-4 text-center text-2xl font-semibold'>
           <Trans i18nKey='front-pages:thankYouTitle' />
-        </h2>
+        </h1>
         <p className='md:max-is-4xl text-center'>
           <Trans i18nKey='front-pages:thankYouProcessing' />
           <br />

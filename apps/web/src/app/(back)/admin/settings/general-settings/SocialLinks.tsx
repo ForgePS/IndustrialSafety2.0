@@ -124,9 +124,9 @@ const SocialLinks = ({ settings }: { settings: SettingsConfiguration['general_se
 
   return (
     <CardContent className='pbs-4'>
-      <h1 className='mbe-2 text-textPrimary text-sm font-medium'>
+      <p className='mbe-2 text-textPrimary text-sm font-medium'>
         <Trans i18nKey='admin:socialLinksSection' />
-      </h1>
+      </p>
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)}>
           <div className='overflow-x-auto rounded-md border'>

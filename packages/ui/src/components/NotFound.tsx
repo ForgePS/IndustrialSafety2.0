@@ -16,12 +16,12 @@ const NotFound = () => {
           <div className='min-bs-screen pli-4 flex flex-col items-center justify-center gap-y-5'>
             <img src='/images/pages/not-found-illustration.png' className='is-[461px] max-is-full bs-full mbs-5' />
             <div className='text-center'>
-              <h3 className='text-textPrimary flex items-center justify-center gap-x-2 text-2xl font-semibold'>
+              <h1 className='text-textPrimary flex items-center justify-center gap-x-2 text-2xl font-semibold'>
                 <span>
                   <Trans i18nKey='packages-ui:notFoundTitle' />
                 </span>
                 <TbAlertTriangleFilled className='bs-5 is-5' />
-              </h3>
+              </h1>
               <p className='mbs-1.5 mbe-5'>
                 <Trans i18nKey='packages-ui:notFoundDescription' />
               </p>

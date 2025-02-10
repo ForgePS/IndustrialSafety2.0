@@ -239,13 +239,13 @@ const CheckoutDetails = ({ paymentProvider, userRecord, appName, users }: Props)
                 {variantDetails?.paymentType === 'recurring'
                   ? planDetails?.features?.map((feature, index) => (
                       <li key={index} className='flex gap-4'>
-                        <TbCircleCheck className='text-primary min-is-fit text-xl' />
+                        <TbCircleCheck className='text-primary min-is-fit text-2xl' />
                         <span className='text-textPrimary text-sm'>{feature}</span>
                       </li>
                     ))
                   : variantDetails?.features?.map((feature, index) => (
                       <li key={index} className='flex gap-4'>
-                        <TbCircleCheck className='text-primary min-is-fit text-xl' />
+                        <TbCircleCheck className='text-primary min-is-fit text-2xl' />
                         <span className='text-textPrimary text-sm'>{feature}</span>
                       </li>
                     ))}

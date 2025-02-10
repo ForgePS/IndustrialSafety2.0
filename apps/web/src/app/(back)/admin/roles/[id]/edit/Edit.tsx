@@ -184,12 +184,12 @@ const Edit = ({ roleData, id, permissionsData, rolePermissionsData, userPermissi
   }
 
   return (
-    <>
-      <div className='mbe-6 flex items-center justify-between gap-4'>
-        <h2 className='text-2xl font-semibold sm:text-3xl'>
+    <div className='flex flex-col gap-y-8'>
+      <div className='flex flex-wrap gap-4 max-sm:flex-col sm:items-center sm:justify-between'>
+        <h1 className='text-textPrimary text-2xl font-bold sm:text-3xl'>
           <Trans i18nKey='admin:rolesEditTitle' />
-        </h2>
-        <div className='flex items-center gap-3'>
+        </h1>
+        <div className='flex gap-4 max-sm:flex-col sm:items-center'>
           <Button variant='tonalDefault'>
             <Link href={`/admin/roles/${id}/view`}>
               <Trans i18nKey='admin:viewButton' />
@@ -268,7 +268,7 @@ const Edit = ({ roleData, id, permissionsData, rolePermissionsData, userPermissi
               </div>
             </CardContent>
           </Card>
-          <div className='mbs-6 flex justify-start gap-4'>
+          <div className='mbs-6 flex gap-4 max-sm:flex-col'>
             <Button type='submit' disabled={pending}>
               {pending ? <Trans i18nKey='admin:rolesFormUpdating' /> : <Trans i18nKey='admin:saveButton' />}
             </Button>
@@ -280,7 +280,7 @@ const Edit = ({ roleData, id, permissionsData, rolePermissionsData, userPermissi
           </div>
         </form>
       </Form>
-    </>
+    </div>
   )
 }
 

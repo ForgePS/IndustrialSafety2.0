@@ -1,3 +1,6 @@
+// Next Imports
+import type { Metadata } from 'next'
+
 // Third-party Imports
 import { Alert, AlertDescription } from '@repo/ui/components/ui/alert'
 import { TbAlertCircle } from 'react-icons/tb'
@@ -6,6 +9,10 @@ import Trans from '@repo/i18n/Trans'
 
 // Component Imports
 import View from './View'
+
+export const metadata: Metadata = {
+  title: 'View Permission'
+}
 
 const ViewPage = async (props: { params: Promise<{ id: number }> }) => {
   // Vars

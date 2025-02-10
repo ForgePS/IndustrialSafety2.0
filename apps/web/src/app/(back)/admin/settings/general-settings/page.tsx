@@ -1,3 +1,6 @@
+// Next Imports
+import type { Metadata } from 'next'
+
 // Third-party Imports
 import type { SettingsConfiguration } from '@repo/supabase/settingsConfigurationTypes'
 import { getPublicGeneralSettings } from '@repo/supabase/serverHelpers'
@@ -5,7 +8,7 @@ import { getPublicGeneralSettings } from '@repo/supabase/serverHelpers'
 // Component Imports
 import GeneralSettings from './GeneralSettings'
 
-export const metadata = {
+export const metadata: Metadata = {
   title: 'General Settings'
 }
 

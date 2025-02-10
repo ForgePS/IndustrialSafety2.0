@@ -13,7 +13,7 @@ const Logo = ({ appName, logoId }: { appName: string; logoId?: string }) => {
     <div className='flex items-center'>
       <AppLogo className='text-primary text-[2rem]' linearGradientId={logoId} />
       <span
-        className={cn('text-foreground mis-2 text-nowrap text-xl font-extrabold', {
+        className={cn('text-textPrimary hover:text-foreground mis-2 text-nowrap text-xl font-extrabold', {
           hidden: !isMobile && state === 'collapsed'
         })}
       >

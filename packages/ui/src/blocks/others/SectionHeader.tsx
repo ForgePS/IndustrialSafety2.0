@@ -18,7 +18,7 @@ const SectionHeader = (props: Props) => {
 
   return (
     <div className={cn('flex flex-col items-center gap-3 text-center', className)}>
-      <h1 className={cn('text-2xl font-semibold sm:text-3xl', titleClassName)}>{title}</h1>
+      <h2 className={cn('text-2xl font-semibold sm:text-3xl', titleClassName)}>{title}</h2>
       {subtitle && <p className={cn('text-textDisabled text-lg sm:text-xl', subtitleClassName)}>{subtitle}</p>}
     </div>
   )

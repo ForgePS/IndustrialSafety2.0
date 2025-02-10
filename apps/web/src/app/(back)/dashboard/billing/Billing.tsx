@@ -22,8 +22,8 @@ const Billing = ({ billingRecord, paymentProvider }: Props) => {
   const lastSuccessfulBilling = successfulBillings[successfulBillings.length - 1]
 
   return (
-    <div className='space-b-6'>
-      <h1 className='mbe-4 text-3xl font-bold'>
+    <div className='flex flex-col gap-y-8'>
+      <h1 className='text-textPrimary text-2xl font-bold sm:text-3xl'>
         <Trans i18nKey='dashboard:billingTitle' />
       </h1>
       {!planData || planData.length === 0 ? (

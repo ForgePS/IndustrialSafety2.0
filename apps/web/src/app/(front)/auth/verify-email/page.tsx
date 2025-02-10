@@ -1,5 +1,6 @@
 // Next Imports
 import Link from 'next/link'
+import type { Metadata } from 'next'
 
 // Third-party Imports
 import { TbChevronLeft } from 'react-icons/tb'
@@ -14,6 +15,13 @@ import ResendVerifyEmailButton from './ResendVerifyEmailButton'
 
 // Util Imports
 import { getAppName } from '@/utils/getAppName'
+
+export const metadata: Metadata = {
+  title: { absolute: 'Verify Email' },
+  alternates: {
+    canonical: 'https://demos.themeselection.com/jetship-nextjs-starter-kit-demo'
+  }
+}
 
 const VerifyEmail = async (props: { searchParams: Promise<Record<string, string>> }) => {
   // Vars

@@ -104,11 +104,9 @@ const CreatePlatform = () => {
 
   return (
     <div className='flex flex-col gap-y-8'>
-      <div>
-        <h1 className='text-textPrimary text-3xl font-bold'>
-          <Trans i18nKey='admin:reviewPlatformsCreateTitle' />
-        </h1>
-      </div>
+      <h1 className='text-textPrimary text-2xl font-bold sm:text-3xl'>
+        <Trans i18nKey='admin:reviewPlatformsCreateTitle' />
+      </h1>
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)}>
           <div className='grid grid-cols-2 gap-6'>

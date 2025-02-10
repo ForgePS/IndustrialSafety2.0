@@ -1,3 +1,6 @@
+// Next Imports
+import type { Metadata } from 'next'
+
 // Third-party Imports
 import { TbExclamationCircle } from 'react-icons/tb'
 import { Alert, AlertDescription } from '@repo/ui/components/ui/alert'
@@ -6,6 +9,10 @@ import { getAuthUser } from '@repo/supabase/serverHelpers'
 
 // Component Imports
 import Users from './Users'
+
+export const metadata: Metadata = {
+  title: 'Users'
+}
 
 const UserPage = async () => {
   // Vars

@@ -26,8 +26,8 @@ const CardStats = ({ data, className }: Props) => {
       <CardContent className='bs-full pbs-6 flex flex-col justify-between'>
         <div className='flex justify-between gap-4'>
           <div className='flex flex-col gap-2'>
-            <h2 className='font-medium'>{data.title}</h2>
-            <h1 className='text-3xl font-semibold'>{data.stats}</h1>
+            <h3 className='font-medium'>{data.title}</h3>
+            <h2 className='text-3xl font-semibold'>{data.stats}</h2>
           </div>
           <Avatar size='3xl' color='primary'>
             <AvatarFallback>{data.icon}</AvatarFallback>

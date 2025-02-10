@@ -1,5 +1,6 @@
 // Next Imports
 import Link from 'next/link'
+import type { Metadata } from 'next'
 
 // Third-party Imports
 import { TbChevronLeft } from 'react-icons/tb'
@@ -19,6 +20,13 @@ import authConfig from '@configs/authConfig'
 
 // Util Imports
 import { getAppName } from '@/utils/getAppName'
+
+export const metadata: Metadata = {
+  title: { absolute: 'Register' },
+  alternates: {
+    canonical: 'https://demos.themeselection.com/jetship-nextjs-starter-kit-demo'
+  }
+}
 
 const Register = async () => {
   // Vars

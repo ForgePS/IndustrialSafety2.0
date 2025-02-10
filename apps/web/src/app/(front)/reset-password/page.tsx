@@ -1,5 +1,6 @@
 // Next Imports
 import Link from 'next/link'
+import type { Metadata } from 'next'
 
 // Third-party Imports
 import { TbChevronLeft } from 'react-icons/tb'
@@ -13,6 +14,13 @@ import ResetPasswordForm from './ResetPasswordForm'
 
 // Util Imports
 import { getAppName } from '@/utils/getAppName'
+
+export const metadata: Metadata = {
+  title: { absolute: 'Reset Password' },
+  alternates: {
+    canonical: 'https://demos.themeselection.com/jetship-nextjs-starter-kit-demo'
+  }
+}
 
 const ResetPassword = async () => {
   // Vars

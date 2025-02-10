@@ -46,7 +46,7 @@ const Details = async () => {
               <p className='mb-2'>
                 <Trans i18nKey='front-pages:privacyPersonalDataText' />:
               </p>
-              <ul className='list-disc space-y-1 pl-6'>
+              <ul className='space-b-1 list-disc pl-6'>
                 <li>
                   <Trans i18nKey='front-pages:privacyPersonalDataList1' />
                 </li>
@@ -68,7 +68,7 @@ const Details = async () => {
               <p className='mb-2'>
                 <Trans i18nKey='front-pages:privacyUsageDataText' />:
               </p>
-              <ul className='list-disc space-y-1 pl-6'>
+              <ul className='space-b-1 list-disc pl-6'>
                 <li>
                   <Trans i18nKey='front-pages:privacyUsageDataList1' />
                 </li>
@@ -102,7 +102,7 @@ const Details = async () => {
               <h4 className='font-semibold'>
                 <Trans i18nKey='front-pages:privacyCookieTypesTitle' />:
               </h4>
-              <ul className='list-disc space-y-1 pl-6'>
+              <ul className='space-b-1 list-disc pl-6'>
                 <li>
                   <span className='font-semibold'>
                     <Trans i18nKey='front-pages:privacyCookieEssential' />
@@ -136,7 +136,7 @@ const Details = async () => {
               <p className='mbe-2'>
                 <Trans i18nKey='front-pages:privacyUseText' />:
               </p>
-              <ul className='list-disc space-y-1 pl-6'>
+              <ul className='space-b-1 list-disc pl-6'>
                 <li>
                   <span className='font-semibold'>
                     <Trans i18nKey='front-pages:privacyUseList1Title' />
@@ -182,7 +182,7 @@ const Details = async () => {
               <p className='mbe-2'>
                 <Trans i18nKey='front-pages:privacyLegalBasisText' />:
               </p>
-              <ul className='list-disc space-y-1 pl-6'>
+              <ul className='space-b-1 list-disc pl-6'>
                 <li>
                   <span className='font-semibold'>
                     <Trans i18nKey='front-pages:privacyLegalBasisList1Title' />
@@ -216,7 +216,7 @@ const Details = async () => {
               <p className='mbe-2'>
                 <Trans i18nKey='front-pages:privacyRetentionText' />:
               </p>
-              <ul className='list-disc space-y-1 pl-6'>
+              <ul className='space-b-1 list-disc pl-6'>
                 <li>
                   <span className='font-semibold'>
                     <Trans i18nKey='front-pages:privacyRetentionList1Title' />
@@ -238,7 +238,7 @@ const Details = async () => {
               <p className='mbe-2'>
                 <Trans i18nKey='front-pages:privacySharingText' />:
               </p>
-              <ul className='list-disc space-y-1 pl-6'>
+              <ul className='space-b-1 list-disc pl-6'>
                 <li>
                   <span className='font-semibold'>
                     <Trans i18nKey='front-pages:privacySharingList1Title' />
@@ -266,7 +266,7 @@ const Details = async () => {
               <p className='mbe-2'>
                 <Trans i18nKey='front-pages:privacyTransferText' />:
               </p>
-              <ul className='list-disc space-y-1 pl-6'>
+              <ul className='space-b-1 list-disc pl-6'>
                 <li>
                   <Trans i18nKey='front-pages:privacyTransferList1' />
                 </li>
@@ -279,7 +279,7 @@ const Details = async () => {
               <p className='mbe-2'>
                 <Trans i18nKey='front-pages:privacySecurityText' />:
               </p>
-              <ul className='list-disc space-y-1 pl-6'>
+              <ul className='space-b-1 list-disc pl-6'>
                 <li>
                   <Trans i18nKey='front-pages:privacySecurityList1' />
                 </li>
@@ -298,7 +298,7 @@ const Details = async () => {
               <p className='mbe-2'>
                 <Trans i18nKey='front-pages:privacyRightsText' />:
               </p>
-              <ul className='mbe-2 list-disc space-y-1 pl-6'>
+              <ul className='mbe-2 space-b-1 list-disc pl-6'>
                 <li>
                   <span className='font-semibold'>
                     <Trans i18nKey='front-pages:privacyRightsList1Title' />

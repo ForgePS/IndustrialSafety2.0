@@ -130,8 +130,8 @@ const EditReview = ({ reviewData, platformsData, id, userPermissions }: EditRevi
 
   return (
     <div className='flex flex-col gap-y-8'>
-      <div className='flex gap-y-2 max-sm:flex-col sm:items-center sm:justify-between'>
-        <h1 className='text-textPrimary text-3xl font-bold'>
+      <div className='flex flex-wrap gap-4 max-sm:flex-col sm:items-center sm:justify-between'>
+        <h1 className='text-textPrimary text-2xl font-bold sm:text-3xl'>
           <Trans i18nKey='admin:reviewsEditTitle' />
         </h1>
         {hasPermission(userPermissions, 'delete_reviews') && (
@@ -268,7 +268,7 @@ const EditReview = ({ reviewData, platformsData, id, userPermissions }: EditRevi
                           <sup className='text-destructive'>*</sup>
                         </FormLabel>
                         <FormControl>
-                          <Textarea placeholder={t('admin:reviewsCreateContentPlaceholder')} {...field} />
+                          <Textarea rows={5} placeholder={t('admin:reviewsCreateContentPlaceholder')} {...field} />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -298,7 +298,7 @@ const EditReview = ({ reviewData, platformsData, id, userPermissions }: EditRevi
                 </div>
               </CardContent>
             </Card>
-            <Card>
+            <Card className='max-lg:col-span-full'>
               <CardHeader className='border-be'>
                 <CardDescription className='font-medium'>
                   <Trans i18nKey='admin:reviewsCreateReviewerDetailsTitle' />

@@ -10,7 +10,7 @@ import { createClient } from '@repo/supabase/client'
 import { toast } from '@repo/ui/utils/toast'
 import { getPublicPaymentProvider } from '@repo/supabase/clientHelpers'
 import { RadioGroup, RadioGroupItem } from '@repo/ui/components/ui/radio-group'
-import { Card, CardContent, CardHeader, CardTitle } from '@repo/ui/components/ui/card'
+import { Card, CardContent } from '@repo/ui/components/ui/card'
 import { useTranslation } from 'react-i18next'
 import Trans from '@repo/i18n/Trans'
 
@@ -86,49 +86,49 @@ const PaymentProvidersForm = () => {
   }, [])
 
   return (
-    <form className='flex flex-col items-start gap-4'>
-      <Card className='is-full'>
-        <CardHeader>
-          <CardTitle>
-            <Trans i18nKey='admin:settingsPaymentProvidersTitle' />
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <RadioGroup
-            value={selectedProvider}
-            name='payment_provider'
-            onValueChange={setSelectedProvider}
-            className='gap-y-4'
-          >
-            <div className='flex items-center gap-x-2'>
-              <RadioGroupItem value='stripe' id='stripe' size='sm' />
-              <div>
-                <Label htmlFor='stripe' className='font-medium'>
-                  <Trans i18nKey='admin:settingsPaymentProvidersStripeLabel' />
-                </Label>
-                <p className='text-muted-foreground text-sm'>
-                  <Trans i18nKey='admin:settingsPaymentProvidersStripeDescription' />
-                </p>
+    <div className='flex flex-col gap-y-8'>
+      <h1 className='text-textPrimary text-2xl font-bold sm:text-3xl'>
+        <Trans i18nKey='admin:settingsPaymentProvidersTitle' />
+      </h1>
+      <form className='flex flex-col items-start gap-6'>
+        <Card className='is-full'>
+          <CardContent className='pbs-6'>
+            <RadioGroup
+              value={selectedProvider}
+              name='payment_provider'
+              onValueChange={setSelectedProvider}
+              className='gap-y-4'
+            >
+              <div className='flex items-center gap-x-2'>
+                <RadioGroupItem value='stripe' id='stripe' size='sm' />
+                <div>
+                  <Label htmlFor='stripe' className='font-medium'>
+                    <Trans i18nKey='admin:settingsPaymentProvidersStripeLabel' />
+                  </Label>
+                  <p className='text-muted-foreground text-sm'>
+                    <Trans i18nKey='admin:settingsPaymentProvidersStripeDescription' />
+                  </p>
+                </div>
               </div>
-            </div>
-            <div className='flex items-center gap-x-2'>
-              <RadioGroupItem value='lemon_squeezy' id='lemon_squeezy' size='sm' />
-              <div>
-                <Label htmlFor='lemon_squeezy' className='font-medium'>
-                  <Trans i18nKey='admin:settingsPaymentProvidersLemonSqueezyLabel' />
-                </Label>
-                <p className='text-muted-foreground text-sm'>
-                  <Trans i18nKey='admin:settingsPaymentProvidersLemonSqueezyDescription' />
-                </p>
+              <div className='flex items-center gap-x-2'>
+                <RadioGroupItem value='lemon_squeezy' id='lemon_squeezy' size='sm' />
+                <div>
+                  <Label htmlFor='lemon_squeezy' className='font-medium'>
+                    <Trans i18nKey='admin:settingsPaymentProvidersLemonSqueezyLabel' />
+                  </Label>
+                  <p className='text-muted-foreground text-sm'>
+                    <Trans i18nKey='admin:settingsPaymentProvidersLemonSqueezyDescription' />
+                  </p>
+                </div>
               </div>
-            </div>
-          </RadioGroup>
-        </CardContent>
-      </Card>
-      <Button type='submit' formAction={e => handleSubmit(e)}>
-        <Trans i18nKey='admin:settingsSaveChanges' />
-      </Button>
-    </form>
+            </RadioGroup>
+          </CardContent>
+        </Card>
+        <Button type='submit' formAction={e => handleSubmit(e)}>
+          <Trans i18nKey='admin:settingsSaveChanges' />
+        </Button>
+      </form>
+    </div>
   )
 }
 

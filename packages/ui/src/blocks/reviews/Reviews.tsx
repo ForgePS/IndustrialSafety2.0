@@ -63,7 +63,7 @@ const Reviews = (props: Props) => {
       {data.length === 0 ? (
         <div className={cn('flex flex-col items-center justify-center gap-y-2 text-center', className)}>
           <MotionFadeElement
-            component='h1'
+            component='h2'
             variants={{
               hidden: { y: 30 },
               show: { transition: { delay: transitionDelay, duration: transitionDuration }, y: 0 }
@@ -112,9 +112,9 @@ const Reviews = (props: Props) => {
                         </Avatar>
                         <div className='flex flex-col items-start gap-y-2'>
                           <div className='flex flex-wrap items-center justify-between gap-1.5'>
-                            <h1 className='max-is-[177px] truncate text-lg font-semibold capitalize'>
+                            <h2 className='max-is-[177px] truncate text-lg font-semibold capitalize'>
                               {name(review.username)}
-                            </h1>
+                            </h2>
                             {review.designation && (
                               <span className='text-textSecondary text-sm'>({review.designation})</span>
                             )}
@@ -149,7 +149,7 @@ const Reviews = (props: Props) => {
                       </div>
                     </CardHeader>
                     <CardContent>
-                      {review.title && <h1 className='mbe-1 text-lg font-semibold'>{review.title}</h1>}
+                      {review.title && <h2 className='mbe-1 text-lg font-semibold'>{review.title}</h2>}
                       <p className='text-textSecondary text-base'>{review.content}</p>
                       {review.video_url && (
                         <iframe
