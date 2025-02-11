@@ -138,7 +138,7 @@ const Application = ({ settings }: { settings: SettingsConfiguration['general_se
                     <Trans i18nKey='admin:descriptionLabel' />
                   </FormLabel>
                   <FormControl>
-                    <Textarea placeholder={t('admin:settingsApplicationDescriptionPlaceholder')} {...field} />
+                    <Textarea rows={3} placeholder={t('admin:settingsApplicationDescriptionPlaceholder')} {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>

@@ -37,7 +37,7 @@ const PaymentProvidersForm = () => {
 
         if (error) {
           console.error('Error updating payment provider:', error)
-          toast('error', 'Error updating data: ' + error.message)
+          toast('error', t('admin:settingsToastError', { message: error.message }))
 
           return
         }
@@ -47,7 +47,7 @@ const PaymentProvidersForm = () => {
         toast('success', t('admin:settingsToastSuccess'))
       } catch (error) {
         console.error('Error updating payment provider:', error)
-        toast('error', 'Error updating data: ' + error)
+        toast('error', t('admin:settingsToastError', { message: error }))
       }
     }
   }

@@ -165,6 +165,7 @@
   "rolesActionsDuplicateHierarchyError": "Ce niveau de hiérarchie existe déjà",
   "rolesActionsDuplicateNameError": "Ce nom de rôle existe déjà",
   "rolesActionsFetchPermissionsError": "Échec de la récupération des autorisations existantes : {{message}}",
+  "rolesActionsNotFoundError": "Rôle non trouvé",
   "rolesActionsRemovePermissionsError": "Échec de la suppression des anciennes autorisations : {{message}}",
   "rolesActionsUpdateError": "Erreur lors de la mise à jour du rôle : {{message}}",
   "rolesActionsUpdateRoleError": "Échec de la mise à jour du rôle : {{message}}",

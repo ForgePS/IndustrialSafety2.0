@@ -27,7 +27,7 @@ export const handleDelete = async (id: number, t: TFunction) => {
     const { data: roleToDelete } = await supabase.from('roles').select('hierarchy').eq('id', id).single()
 
     if (!roleToDelete) {
-      toast('error', 'Role not found')
+      toast('error', t('admin:rolesActionsNotFoundError'))
 
       return
     }

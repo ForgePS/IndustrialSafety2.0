@@ -165,6 +165,7 @@
   "rolesActionsDuplicateHierarchyError": "This hierarchy level already exists",
   "rolesActionsDuplicateNameError": "This role name already exists",
   "rolesActionsFetchPermissionsError": "Failed to fetch existing permissions: {{message}}",
+  "rolesActionsNotFoundError": "Role not found",
   "rolesActionsRemovePermissionsError": "Failed to remove old permissions: {{message}}",
   "rolesActionsUpdateError": "Error updating role: {{message}}",
   "rolesActionsUpdateRoleError": "Failed to update the role: {{message}}",

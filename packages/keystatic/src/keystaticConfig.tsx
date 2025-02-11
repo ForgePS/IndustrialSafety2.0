@@ -1,6 +1,3 @@
-// React Imports
-import { createElement } from 'react'
-
 // Third-party Imports
 import { config, fields, collection } from '@keystatic/core'
 
@@ -89,7 +86,7 @@ export default config({
   ui: {
     brand: {
       name: 'ChatFlow AI',
-      mark: () => createElement('img', { src: '/images/logos/chatflow-ai.png', alt: 'ChatFlow AI Logo', width: 24 })
+      mark: () => <img src='/images/logos/chatflow-ai.png' alt='ChatFlow AI Logo' width={24} />
     },
     navigation: {
       Blog: ['categories', 'posts']
