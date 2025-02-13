@@ -13,9 +13,6 @@ import Trans from '@repo/i18n/Trans'
 import Logo from '@components/layout/front/Logo'
 import ResendVerifyEmailButton from './ResendVerifyEmailButton'
 
-// Util Imports
-import { getAppName } from '@/utils/getAppName'
-
 export const metadata: Metadata = {
   title: { absolute: 'Verify Email' },
   alternates: {
@@ -26,7 +23,6 @@ export const metadata: Metadata = {
 const VerifyEmail = async (props: { searchParams: Promise<Record<string, string>> }) => {
   // Vars
   const searchParams = await props.searchParams
-  const appName = await getAppName()
   const supabase = createServiceRoleClient()
 
   const {
@@ -52,7 +48,7 @@ const VerifyEmail = async (props: { searchParams: Promise<Record<string, string>
         </div>
         <div className='plb-[20rem] bs-full flex grow flex-col items-center justify-center'>
           <div className='is-10/12 md:is-1/2 lg:is-4/5 mli-auto flex flex-col gap-6'>
-            <Logo appName={appName} />
+            <Logo />
             <div className='flex flex-col gap-y-1.5'>
               <h1 className='text-textPrimary text-2xl font-semibold'>
                 <Trans i18nKey='auth:verifyEmailTitle' />

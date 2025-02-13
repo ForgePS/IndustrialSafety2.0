@@ -36,13 +36,12 @@ import frontCommonStyles from '../styles.module.css'
 type Props = {
   paymentProvider: Database['public']['Enums']['billing_provider_enum']
   userRecord: User | null
-  appName: string
   users: User[] | null
 }
 
 const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!)
 
-const CheckoutDetails = ({ paymentProvider, userRecord, appName, users }: Props) => {
+const CheckoutDetails = ({ paymentProvider, userRecord, users }: Props) => {
   // States
   const [selected, setSelected] = useState<string>(paymentProvider) // Default selected value is the payment provider (Stripe or Lemon Squeezy)
   const [variantDetails, setVariantDetails] = useState<PlanVariant | null>(null) // For selected variant details (plan variant)
@@ -231,7 +230,7 @@ const CheckoutDetails = ({ paymentProvider, userRecord, appName, users }: Props)
         ) : (
           <Card>
             <CardContent className='pbs-6 flex flex-col gap-4'>
-              <Logo appName={appName} />
+              <Logo />
               <p className='text-textSecondary text-sm'>{variantDetails?.description}</p>
               <hr />
               <p className='text-textPrimary text-base font-semibold'>{variantDetails?.name}</p>

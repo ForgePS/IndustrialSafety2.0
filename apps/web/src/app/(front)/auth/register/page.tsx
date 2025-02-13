@@ -18,9 +18,6 @@ import PasswordSignUpForm from './PasswordSignUpForm'
 import appConfig from '@configs/appConfig'
 import authConfig from '@configs/authConfig'
 
-// Util Imports
-import { getAppName } from '@/utils/getAppName'
-
 export const metadata: Metadata = {
   title: { absolute: 'Register' },
   alternates: {
@@ -30,7 +27,6 @@ export const metadata: Metadata = {
 
 const Register = async () => {
   // Vars
-  const appName = await getAppName()
   const renderMagicLink = authConfig.providers.magicLink
   const renderPassword = authConfig.providers.password
   const renderOAuth = authConfig.providers.oAuth.length > 0
@@ -55,7 +51,7 @@ const Register = async () => {
         </div>
         <div className='plb-[7rem] bs-full flex grow flex-col items-center justify-center'>
           <div className='is-10/12 md:is-1/2 lg:is-4/5 mli-auto flex flex-col gap-6'>
-            <Logo appName={appName} />
+            <Logo />
             <div className='flex flex-col gap-y-1.5'>
               <h1 className='text-textPrimary text-2xl font-semibold'>
                 <Trans i18nKey='auth:registerText' values={{ appName: appConfig.appName }} />
@@ -75,7 +71,7 @@ const Register = async () => {
               </p>
             )}
             <div className='flex flex-col gap-4'>
-              {renderPassword && <PasswordSignUpForm appName={appName} users={users} />}
+              {renderPassword && <PasswordSignUpForm users={users} />}
               {!renderPassword && !renderMagicLink ? null : (
                 <p
                   className={cn('flex flex-wrap items-center justify-center gap-1 text-base', {

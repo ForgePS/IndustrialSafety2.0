@@ -16,13 +16,7 @@ import Trans from '@repo/i18n/Trans'
 // Component Imports
 import Logo from '@components/layout/front/Logo'
 
-// Util Imports
-import { getAppName } from '@/utils/getAppName'
-
 const Details = async () => {
-  // Vars
-  const appName = await getAppName()
-
   return (
     <div className='plb-20 pli-6 max-is-[848px] mli-auto'>
       <Timeline>
@@ -41,7 +35,7 @@ const Details = async () => {
             <TimelineDescription>
               <div className='bg-primary/10 border-primary/10 flex flex-col items-center gap-6 rounded-xl border p-6'>
                 <Badge size='xl'>v1.1.0</Badge>
-                <Logo appName={appName} />
+                <Logo />
                 <p className='text-textDisabled text-sm md:hidden'>May 20, 2024</p>
               </div>
               <div className='flex flex-col items-start gap-3'>
@@ -152,7 +146,7 @@ const Details = async () => {
             <TimelineDescription>
               <div className='bg-primary/10 border-primary/10 flex flex-col items-center gap-6 rounded-xl border p-6'>
                 <Badge size='xl'>v1.0.0</Badge>
-                <Logo appName={appName} />
+                <Logo />
                 <p className='text-textDisabled text-sm md:hidden'>March 25, 2024</p>
               </div>
               <div className='flex flex-col items-start gap-3'>

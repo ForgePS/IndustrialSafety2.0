@@ -79,7 +79,7 @@ const MenuButton = ({ children, href, target = '_self', exactMatch = true, ...pr
   )
 }
 
-const AppSidebar = ({ roles, permissions, appName }: { roles?: string[]; permissions: string[]; appName: string }) => {
+const AppSidebar = ({ roles, permissions }: { roles?: string[]; permissions: string[] }) => {
   // Hooks
   const { isImpersonating } = useAuthContext()
   const { isMobile, state } = useSidebar()
@@ -99,7 +99,7 @@ const AppSidebar = ({ roles, permissions, appName }: { roles?: string[]; permiss
           })}
         >
           <Link href={roles?.includes('admin') ? '/admin' : '/dashboard'}>
-            <Logo appName={appName} />
+            <Logo />
           </Link>
         </div>
       </SidebarHeader>

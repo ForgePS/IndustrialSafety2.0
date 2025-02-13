@@ -5,7 +5,10 @@ import { cn } from '@repo/ui/lib/utils'
 // SVG Imports
 import AppLogo from '@/assets/svg/Logo'
 
-const Logo = ({ appName, logoId }: { appName: string; logoId?: string }) => {
+// Config Imports
+import appConfig from '@configs/appConfig'
+
+const Logo = ({ logoId }: { logoId?: string }) => {
   // Hooks
   const { isMobile, state } = useSidebar()
 
@@ -17,7 +20,7 @@ const Logo = ({ appName, logoId }: { appName: string; logoId?: string }) => {
           hidden: !isMobile && state === 'collapsed'
         })}
       >
-        {appName}
+        {appConfig.appName}
       </span>
     </div>
   )

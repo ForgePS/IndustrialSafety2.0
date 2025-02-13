@@ -14,9 +14,6 @@ import MagicLinkForm from './MagicLinkForm'
 // Config Imports
 import authConfig from '@configs/authConfig'
 
-// Util Imports
-import { getAppName } from '@/utils/getAppName'
-
 export const metadata: Metadata = {
   title: { absolute: 'Magic Link' },
   alternates: {
@@ -25,7 +22,6 @@ export const metadata: Metadata = {
 }
 
 const MagicLink = async () => {
-  const appName = await getAppName()
   const renderOAuth = authConfig.providers.oAuth.length > 0
 
   return (
@@ -34,7 +30,7 @@ const MagicLink = async () => {
       <div className='bg-card min-bs-screen basis-full lg:basis-2/5 xl:basis-1/3'>
         <div className='plb-[12rem] bs-full flex grow flex-col items-center justify-center'>
           <div className='is-10/12 md:is-1/2 lg:is-4/5 mli-auto flex flex-col gap-6'>
-            <Logo appName={appName} />
+            <Logo />
             <div className='flex flex-col gap-y-1.5'>
               <h1 className='text-textPrimary text-2xl font-semibold'>
                 <Trans i18nKey='auth:magicLinkText' />

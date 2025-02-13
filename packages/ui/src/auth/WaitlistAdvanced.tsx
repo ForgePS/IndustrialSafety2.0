@@ -18,20 +18,17 @@ import { Dialog, DialogContent, DialogDescription, DialogTitle, DialogTrigger } 
 import LeftSection from '@repo/ui/auth/LeftSection'
 import TranslatedInput from '@repo/ui/components/ui/translated-input'
 
-// Util Imports
-import { getAppName } from '@/utils/getAppName'
+// Config Imports
+import appConfig from '@configs/appConfig'
 
 const WaitListAdvanced = async () => {
-  // Vars
-  const appName = await getAppName()
-
   return (
     <div className='min-bs-screen flex'>
       <LeftSection />
       <div className='bg-card min-bs-screen basis-full lg:basis-2/5 xl:basis-1/3'>
         <div className='plb-[12rem] bs-full flex grow flex-col items-center justify-center'>
           <div className='is-10/12 md:is-1/2 lg:is-4/5 mli-auto mbs-6 flex flex-col gap-6'>
-            <Logo appName={appName} />
+            <Logo />
             <div className='flex flex-col gap-y-1.5'>
               <h1 className='text-textPrimary text-2xl font-semibold'>
                 <Trans i18nKey='packages-ui:waitlistTitle' />
@@ -77,7 +74,7 @@ const WaitListAdvanced = async () => {
                       <p className='text-textSecondary text-center'>
                         <Trans
                           i18nKey='packages-ui:waitlistSuccessDescription'
-                          values={{ appName }}
+                          values={{ appName: appConfig.appName }}
                           components={{ 1: <span className='font-medium' /> }}
                         />
                       </p>
@@ -85,7 +82,7 @@ const WaitListAdvanced = async () => {
                     <p className='text-textSecondary text-center text-sm'>
                       <Trans
                         i18nKey='packages-ui:waitlistFooterText'
-                        values={{ appName }}
+                        values={{ appName: appConfig.appName }}
                         components={{ 1: <span className='font-medium' /> }}
                       />
                     </p>
@@ -94,7 +91,10 @@ const WaitListAdvanced = async () => {
               </Dialog>
             </div>
             <p className='text-textSecondary text-center'>
-              <Trans i18nKey='packages-ui:waitlistCopyright' values={{ appName, year: new Date().getFullYear() }} />
+              <Trans
+                i18nKey='packages-ui:waitlistCopyright'
+                values={{ appName: appConfig.appName, year: new Date().getFullYear() }}
+              />
             </p>
             <div className='flex items-center justify-center gap-2'>
               <Avatar className='bg-neutral/20 bs-[30px] is-[30px]'>

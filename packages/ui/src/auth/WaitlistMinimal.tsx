@@ -18,19 +18,16 @@ import { Avatar, AvatarFallback } from '@repo/ui/components/ui/avatar'
 import { Dialog, DialogContent, DialogDescription, DialogTitle, DialogTrigger } from '@repo/ui/components/ui/dialog'
 import TranslatedInput from '@repo/ui/components/ui/translated-input'
 
-// Util Imports
-import { getAppName } from '@/utils/getAppName'
+// Config Imports
+import appConfig from '@configs/appConfig'
 
 const WaitListMinimal = async () => {
-  // Vars
-  const appName = await getAppName()
-
   return (
     <div className="min-bs-screen bs-full flex flex-col items-center justify-center bg-[url('/images/pages/background-v1.png')] bg-cover bg-center bg-no-repeat">
       <div className="bs-full is-full flex flex-col items-center justify-center bg-[url('/svg/auth-bg-shape.svg')] bg-center bg-no-repeat max-md:bg-none">
         <Card className='mli-6 mlb-24 md:is-[430px] rounded-xl shadow-md'>
           <CardContent className='flex flex-col gap-6 !p-8'>
-            <Logo appName={appName} />
+            <Logo />
             <div className='flex flex-col gap-y-1.5'>
               <h1 className='text-textPrimary text-2xl font-semibold'>
                 <Trans i18nKey='packages-ui:waitlistTitle' />
@@ -76,7 +73,7 @@ const WaitListMinimal = async () => {
                       <p className='text-textSecondary text-center'>
                         <Trans
                           i18nKey='packages-ui:waitlistSuccessDescription'
-                          values={{ appName }}
+                          values={{ appName: appConfig.appName }}
                           components={{ 1: <span className='font-medium' /> }}
                         />
                       </p>
@@ -84,7 +81,7 @@ const WaitListMinimal = async () => {
                     <p className='text-textSecondary text-center text-sm'>
                       <Trans
                         i18nKey='packages-ui:waitlistFooterText'
-                        values={{ appName }}
+                        values={{ appName: appConfig.appName }}
                         components={{ 1: <span className='font-medium' /> }}
                       />
                     </p>
@@ -97,7 +94,10 @@ const WaitListMinimal = async () => {
       </div>
       <div className='mbe-8 mli-6 flex flex-col justify-end gap-4'>
         <p className='text-textSecondary text-center'>
-          <Trans i18nKey='packages-ui:waitlistCopyright' values={{ appName, year: new Date().getFullYear() }} />
+          <Trans
+            i18nKey='packages-ui:waitlistCopyright'
+            values={{ appName: appConfig.appName, year: new Date().getFullYear() }}
+          />
         </p>
         <div className='flex items-center justify-center gap-2'>
           <Avatar className='bg-neutral/20 bs-[30px] is-[30px]'>

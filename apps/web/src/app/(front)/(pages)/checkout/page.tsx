@@ -9,9 +9,6 @@ import { getAuthUser, getPublicPaymentProvider } from '@repo/supabase/serverHelp
 import HeaderSection from './HeaderSection'
 import CheckoutDetails from './CheckoutDetails'
 
-// Util Imports
-import { getAppName } from '@/utils/getAppName'
-
 export const metadata: Metadata = {
   title: 'Checkout',
   alternates: {
@@ -22,7 +19,6 @@ export const metadata: Metadata = {
 const CheckoutPage = async () => {
   const supabase = createServiceRoleClient()
 
-  const appName = await getAppName()
   const { data: paymentProvider } = await getPublicPaymentProvider()
 
   const { data: userRecord } = await getAuthUser()
@@ -34,12 +30,7 @@ const CheckoutPage = async () => {
   return (
     <>
       <HeaderSection />
-      <CheckoutDetails
-        paymentProvider={paymentProvider?.value}
-        userRecord={userRecord?.user}
-        appName={appName}
-        users={users}
-      />
+      <CheckoutDetails paymentProvider={paymentProvider?.value} userRecord={userRecord?.user} users={users} />
     </>
   )
 }

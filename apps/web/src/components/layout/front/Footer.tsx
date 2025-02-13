@@ -13,9 +13,6 @@ import type { SettingsConfiguration } from '@repo/supabase/settingsConfiguration
 // Component Imports
 import Logo from './Logo'
 
-// Util Imports
-import { getAppName } from '@/utils/getAppName'
-
 // To render dynamic icons
 type DynamicIconProps = {
   icon: keyof typeof Icons
@@ -32,8 +29,6 @@ const DynamicIcon = ({ icon }: DynamicIconProps) => {
 
 const Footer = async () => {
   // Vars
-  const appName = await getAppName()
-
   const { data: settingsData, error } = await getPublicGeneralSettings()
 
   if (error) {
@@ -59,7 +54,7 @@ const Footer = async () => {
       <div className={cn('plb-8 md:plb-[60px] grid grid-cols-2 gap-8 md:grid-cols-6', frontCommonStyles.layoutSpacing)}>
         <div className='col-span-2 flex flex-col gap-6'>
           <Link href='/'>
-            <Logo appName={appName} />
+            <Logo />
           </Link>
           <p className='text-textSecondary text-base'>
             <Trans i18nKey='layout:copyrightText' values={{ year: new Date().getFullYear() }} />

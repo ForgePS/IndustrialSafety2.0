@@ -17,13 +17,8 @@ import ModeDropdown from '@components/layout/ModeDropdown'
 import UserDropdown from './UserDropdown'
 import LanguageDropdown from '@components/LanguageDropdown'
 
-// Util Imports
-import { getAppName } from '@/utils/getAppName'
-
 const Header = async () => {
   // Vars
-  const appName = await getAppName()
-
   const {
     data: { user }
   } = await getAuthUser()
@@ -41,11 +36,11 @@ const Header = async () => {
         <div className='max-xl:-mis-2.5 max-xl:flex max-xl:items-center max-xl:gap-4 max-sm:gap-2 xl:hidden'>
           <FrontMenu isBlogEnabled={isBlogEnabled} />
           <Link href='/'>
-            <Logo appName={appName} logoId='FrontMenu-SmallScreen' />
+            <Logo logoId='FrontMenu-SmallScreen' />
           </Link>
         </div>
         <Link href='/' className='max-xl:hidden'>
-          <Logo appName={appName} logoId='FrontMenu-LargeScreen' />
+          <Logo logoId='FrontMenu-LargeScreen' />
         </Link>
         <div className='flex items-center gap-2 sm:gap-5'>
           <div className='max-xl:hidden'>

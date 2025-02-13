@@ -24,7 +24,10 @@ import { useTranslation } from 'react-i18next'
 import type { User } from '@supabase/supabase-js'
 import type { PasswordSignInFormData } from '@repo/auth/sign-in'
 
-const PasswordSignInForm = ({ appName, users }: { appName: string; users: User[] | null }) => {
+// Config Imports
+import appConfig from '@configs/appConfig'
+
+const PasswordSignInForm = ({ users }: { users: User[] | null }) => {
   // States
   const [showAlert, setShowAlert] = useState(false)
   const [pending, startTransition] = useTransition()
@@ -144,9 +147,9 @@ const PasswordSignInForm = ({ appName, users }: { appName: string; users: User[]
           </div>
           <Button type='submit' disabled={pending}>
             {pending ? (
-              <Trans i18nKey='auth:loginSubmitPendingText' values={{ appName }} />
+              <Trans i18nKey='auth:loginSubmitPendingText' values={{ appName: appConfig.appName }} />
             ) : (
-              <Trans i18nKey='auth:loginText' values={{ appName }} />
+              <Trans i18nKey='auth:loginText' values={{ appName: appConfig.appName }} />
             )}
           </Button>
         </form>

@@ -14,11 +14,9 @@ import { cn } from '@repo/ui/lib/utils'
 import Logo from '@components/layout/front/Logo'
 import PasswordSignInForm from './PasswordSignInForm'
 
-// Util Imports
-import { getAppName } from '@/utils/getAppName'
-
 // Config Imports
 import authConfig from '@configs/authConfig'
+import appConfig from '@configs/appConfig'
 
 export const metadata: Metadata = {
   title: { absolute: 'Login' },
@@ -29,7 +27,6 @@ export const metadata: Metadata = {
 
 const Login = async () => {
   // Vars
-  const appName = await getAppName()
   const renderMagicLink = authConfig.providers.magicLink
   const renderPassword = authConfig.providers.password
   const renderOAuth = authConfig.providers.oAuth.length > 0
@@ -54,10 +51,10 @@ const Login = async () => {
         </div>
         <div className='plb-[7rem] bs-full flex grow flex-col items-center justify-center'>
           <div className='is-10/12 md:is-1/2 lg:is-4/5 mli-auto flex flex-col gap-6'>
-            <Logo appName={appName} />
+            <Logo />
             <div className='flex flex-col gap-y-1.5'>
               <h1 className='text-textPrimary text-2xl font-semibold'>
-                <Trans i18nKey='auth:loginText' values={{ appName }} />
+                <Trans i18nKey='auth:loginText' values={{ appName: appConfig.appName }} />
               </h1>
               <p className='text-textSecondary'>
                 <Trans i18nKey='auth:authHeroDescription' />
@@ -74,7 +71,7 @@ const Login = async () => {
               </p>
             )}
             <div className='flex flex-col gap-4'>
-              {renderPassword && <PasswordSignInForm appName={appName} users={users} />}
+              {renderPassword && <PasswordSignInForm users={users} />}
               {!renderPassword && !renderMagicLink ? null : (
                 <p
                   className={cn('flex flex-wrap items-center justify-center gap-1 text-base', {

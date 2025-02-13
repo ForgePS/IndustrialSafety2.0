@@ -10,19 +10,16 @@ import { Button } from '@repo/ui/components/ui/button'
 import { Card, CardContent } from '@repo/ui/components/ui/card'
 import { InputOTP, InputOTPGroup, InputOTPSlot } from '@repo/ui/components/ui/input-otp'
 
-// Util Imports
-import { getAppName } from '@/utils/getAppName'
+// Config Imports
+import appConfig from '@configs/appConfig'
 
 const TwoFactorAuth = async () => {
-  // Vars
-  const appName = await getAppName()
-
   return (
     <div className="bg-[url('/images/pages/background-v1.png')] bg-cover bg-center bg-no-repeat">
       <div className="min-bs-screen flex flex-col items-center justify-center bg-[url('/svg/auth-bg-shape.svg')] bg-center bg-no-repeat max-md:bg-none">
         <Card className='md:is-[430px] m-6 rounded-xl shadow-md'>
           <CardContent className='flex flex-col gap-6 !p-8'>
-            <Logo appName={appName} />
+            <Logo />
             <div className='flex flex-col gap-y-1.5'>
               <h1 className='text-textPrimary text-2xl font-semibold'>
                 <Trans i18nKey='packages-ui:twoFactorAuthTitle' />
@@ -51,7 +48,7 @@ const TwoFactorAuth = async () => {
               </InputOTPGroup>
             </InputOTP>
             <Button>
-              <Trans i18nKey='packages-ui:loginTitle' values={{ appName }} />
+              <Trans i18nKey='packages-ui:loginTitle' values={{ appName: appConfig.appName }} />
             </Button>
           </CardContent>
         </Card>

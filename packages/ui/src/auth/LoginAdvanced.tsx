@@ -17,13 +17,10 @@ import TranslatedInput from '@repo/ui/components/ui/translated-input'
 // SVG Imports
 import Google from '@repo/ui/assets/svg/Google'
 
-// Util Imports
-import { getAppName } from '@/utils/getAppName'
+// Config Imports
+import appConfig from '@configs/appConfig'
 
 const LoginAdvanced = async () => {
-  // Vars
-  const appName = await getAppName()
-
   return (
     <div className='min-bs-screen flex'>
       <LeftSection />
@@ -38,10 +35,10 @@ const LoginAdvanced = async () => {
         </div>
         <div className='plb-[7rem] bs-full flex grow flex-col items-center justify-center'>
           <div className='is-10/12 md:is-1/2 lg:is-4/5 mli-auto flex flex-col gap-6'>
-            <Logo appName={appName} />
+            <Logo />
             <div className='flex flex-col gap-y-1.5'>
               <h1 className='text-textPrimary text-2xl font-semibold'>
-                <Trans i18nKey='packages-ui:loginTitle' values={{ appName }} />
+                <Trans i18nKey='packages-ui:loginTitle' values={{ appName: appConfig.appName }} />
               </h1>
               <p className='text-textSecondary'>
                 <Trans i18nKey='packages-ui:loginRegisterDescription' />
@@ -90,7 +87,7 @@ const LoginAdvanced = async () => {
                 </Link>
               </div>
               <Button>
-                <Trans i18nKey='packages-ui:loginTitle' values={{ appName }} />
+                <Trans i18nKey='packages-ui:loginTitle' values={{ appName: appConfig.appName }} />
               </Button>
               <p className='flex flex-wrap items-center justify-center gap-1 text-base'>
                 <span className='text-textSecondary'>

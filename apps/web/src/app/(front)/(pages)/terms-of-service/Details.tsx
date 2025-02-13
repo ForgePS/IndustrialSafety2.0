@@ -6,16 +6,13 @@ import { cn } from '@repo/ui/lib/utils'
 import { Card, CardContent } from '@repo/ui/components/ui/card'
 import Trans from '@repo/i18n/Trans'
 
-// Util Imports
-import { getAppName } from '@/utils/getAppName'
-
 // Styles Imports
 import frontCommonStyles from '../styles.module.css'
 
-const Details = async () => {
-  // Vars
-  const appName = await getAppName()
+// Config Imports
+import appConfig from '@configs/appConfig'
 
+const Details = async () => {
   return (
     <div className={cn('bs-full plb-10 sm:plb-20', frontCommonStyles.layoutSpacing)}>
       <Card>
@@ -28,7 +25,7 @@ const Details = async () => {
               <p>
                 <Trans
                   i18nKey='front-pages:termsIntroText'
-                  values={{ appName }}
+                  values={{ appName: appConfig.appName }}
                   components={{ 1: <Link href='/' className='text-primary' /> }}
                 />
               </p>

@@ -12,9 +12,6 @@ import Trans from '@repo/i18n/Trans'
 import Logo from '@components/layout/front/Logo'
 import ResetPasswordForm from './ResetPasswordForm'
 
-// Util Imports
-import { getAppName } from '@/utils/getAppName'
-
 export const metadata: Metadata = {
   title: { absolute: 'Reset Password' },
   alternates: {
@@ -23,9 +20,6 @@ export const metadata: Metadata = {
 }
 
 const ResetPassword = async () => {
-  // Vars
-  const appName = await getAppName()
-
   return (
     <div className='min-bs-screen flex'>
       <LeftSection />
@@ -40,7 +34,7 @@ const ResetPassword = async () => {
         </div>
         <div className='plb-[11rem] bs-full flex grow flex-col items-center justify-center'>
           <div className='is-10/12 md:is-1/2 lg:is-4/5 mli-auto flex flex-col gap-6'>
-            <Logo appName={appName} />
+            <Logo />
             <div className='flex flex-col gap-y-1.5'>
               <h1 className='text-textPrimary text-2xl font-semibold'>
                 <Trans i18nKey='auth:resetPasswordTitle' />

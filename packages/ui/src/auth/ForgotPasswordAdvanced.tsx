@@ -12,13 +12,7 @@ import { Label } from '@repo/ui/components/ui/label'
 import { Button } from '@repo/ui/components/ui/button'
 import TranslatedInput from '@repo/ui/components/ui/translated-input'
 
-// Util Imports
-import { getAppName } from '@/utils/getAppName'
-
 const ForgotPasswordAdvanced = async () => {
-  // Vars
-  const appName = await getAppName()
-
   return (
     <div className='min-bs-screen flex'>
       <LeftSection />
@@ -33,7 +27,7 @@ const ForgotPasswordAdvanced = async () => {
         </div>
         <div className='plb-[15rem] bs-full flex grow flex-col items-center justify-center'>
           <div className='is-10/12 md:is-1/2 lg:is-4/5 mli-auto flex flex-col gap-6'>
-            <Logo appName={appName} />
+            <Logo />
             <div className='flex flex-col gap-y-1.5'>
               <h1 className='text-textPrimary text-2xl font-semibold'>
                 <Trans i18nKey='packages-ui:forgotPasswordTitle' />
