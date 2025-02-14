@@ -1,3 +1,6 @@
+// React Imports
+import { Suspense } from 'react'
+
 // Next Imports
 import type { Metadata } from 'next'
 
@@ -5,6 +8,7 @@ import type { Metadata } from 'next'
 import { TbExclamationCircle } from 'react-icons/tb'
 import { Alert, AlertDescription } from '@repo/ui/components/ui/alert'
 import { createClient } from '@repo/supabase/server'
+import Loader from '@repo/ui/components/Loader'
 
 // Component Imports
 import Create from './Create'
@@ -13,7 +17,7 @@ export const metadata: Metadata = {
   title: 'Create FAQ'
 }
 
-const CreatePage = async () => {
+const CreateSection = async () => {
   // Vars
   const supabase = await createClient()
 
@@ -31,6 +35,14 @@ const CreatePage = async () => {
   }
 
   return <Create categories={data} />
+}
+
+const CreatePage = () => {
+  return (
+    <Suspense fallback={<Loader />}>
+      <CreateSection />
+    </Suspense>
+  )
 }
 
 export default CreatePage

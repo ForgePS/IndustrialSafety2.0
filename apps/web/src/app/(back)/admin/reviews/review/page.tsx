@@ -1,11 +1,14 @@
+// React Imports
+import { Suspense } from 'react'
+
 // Next Imports
 import type { Metadata } from 'next'
 
 // Third-party Imports
 import { TbExclamationCircle } from 'react-icons/tb'
 import { Alert, AlertDescription } from '@repo/ui/components/ui/alert'
-import { createClient } from '@repo/supabase/server'
-import { getAuthUser } from '@repo/supabase/serverHelpers'
+import { getAuthUser, getReviews } from '@repo/supabase/serverHelpers'
+import Loader from '@repo/ui/components/Loader'
 
 // Component Imports
 import Reviews from './Reviews'
@@ -14,22 +17,14 @@ export const metadata: Metadata = {
   title: 'Reviews'
 }
 
-const ReviewPage = async () => {
+const ReviewsSection = async () => {
   // Vars
-  const supabase = await createClient()
-
-  const {
-    data: { user }
-  } = await getAuthUser()
-
-  const { data, error } = await supabase
-    .from('reviews')
-    .select(
-      `*,
-    review_platforms (platform_name)
-    `
-    )
-    .order('id', { ascending: true })
+  const [
+    {
+      data: { user }
+    },
+    { data, error }
+  ] = await Promise.all([getAuthUser(), getReviews('*, review_platforms (platform_name)')])
 
   if (error) {
     console.error('Error fetching reviews: ', error.message)
@@ -45,4 +40,12 @@ const ReviewPage = async () => {
   return <Reviews reviewData={data} userPermissions={user?.user_metadata.permissions} />
 }
 
-export default ReviewPage
+const ReviewsPage = () => {
+  return (
+    <Suspense fallback={<Loader />}>
+      <ReviewsSection />
+    </Suspense>
+  )
+}
+
+export default ReviewsPage

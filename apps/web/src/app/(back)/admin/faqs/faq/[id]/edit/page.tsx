@@ -1,12 +1,15 @@
+// React Imports
+import { Suspense } from 'react'
+
 // Next Imports
 import type { Metadata } from 'next'
 
 // Third-party Imports
 import { TbExclamationCircle } from 'react-icons/tb'
-import { createClient } from '@repo/supabase/server'
 import { Alert, AlertDescription } from '@repo/ui/components/ui/alert'
+import Loader from '@repo/ui/components/Loader'
 import Trans from '@repo/i18n/Trans'
-import { getAuthUser } from '@repo/supabase/serverHelpers'
+import { getAuthUser, getFaq, getFaqCategories } from '@repo/supabase/serverHelpers'
 
 // Component Imports
 import Edit from './Edit'
@@ -16,34 +19,14 @@ export const metadata: Metadata = {
   title: 'Edit FAQ'
 }
 
-const EditPage = async (props: { params: Promise<{ id: number }> }) => {
-  // Vars
-  const params = await props.params
-  const supabase = await createClient()
-
-  const {
-    data: { user }
-  } = await getAuthUser()
-
-  const faqId = Number(params.id)
-
-  // Fetch faq data
-  const { data: faqData, error: faqError } = await supabase
-    .from('faqs')
-    .select(
-      `
-    *,
-    faq_categories (title)
-  `
-    )
-    .eq('id', faqId)
-    .single()
-
-  // Fetch faq categories
-  const { data: faqCategory, error: faqCategoryError } = await supabase
-    .from('faq_categories')
-    .select('id, title')
-    .order('id', { ascending: true })
+const EditFaqSection = async ({ faqId }: { faqId: number }) => {
+  const [
+    {
+      data: { user }
+    },
+    { data: faqData, error: faqError },
+    { data: faqCategory, error: faqCategoryError }
+  ] = await Promise.all([getAuthUser(), getFaq(faqId, '*, faq_categories (title)'), getFaqCategories('id, title')])
 
   if (!faqData || faqError || !faqCategory || faqCategoryError) {
     return (
@@ -69,4 +52,16 @@ const EditPage = async (props: { params: Promise<{ id: number }> }) => {
   )
 }
 
-export default EditPage
+const EditFaqPage = async (props: { params: Promise<{ id: number }> }) => {
+  // Vars
+  const params = await props.params
+  const faqId = Number(params.id)
+
+  return (
+    <Suspense fallback={<Loader />}>
+      <EditFaqSection faqId={faqId} />
+    </Suspense>
+  )
+}
+
+export default EditFaqPage

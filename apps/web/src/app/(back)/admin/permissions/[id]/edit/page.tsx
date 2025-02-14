@@ -1,11 +1,14 @@
+// React Imports
+import { Suspense } from 'react'
+
 // Next Imports
 import type { Metadata } from 'next'
 
 // Third-party imports
-import { createClient } from '@repo/supabase/server'
 import { Alert, AlertDescription } from '@repo/ui/components/ui/alert'
 import { TbExclamationCircle } from 'react-icons/tb'
-import { getAuthUser } from '@repo/supabase/serverHelpers'
+import { getAuthUser, getPermission, getRolePermissionsByPermissionId, getRoles } from '@repo/supabase/serverHelpers'
+import Loader from '@repo/ui/components/Loader'
 import Trans from '@repo/i18n/Trans'
 
 // Component Imports
@@ -15,39 +18,31 @@ export const metadata: Metadata = {
   title: 'Edit Permission'
 }
 
-const EditPage = async (props: { params: Promise<{ id: number }> }) => {
+const EditPermissionSection = async ({ permissionId }: { permissionId: number }) => {
   // Vars
-  const params = await props.params
-  const supabase = await createClient()
-
-  const {
-    data: { user }
-  } = await getAuthUser()
-
-  // Fetch permission details
-  const { data: permission, error: permissionError } = await supabase
-    .from('permissions')
-    .select('*')
-    .eq('id', params.id)
-    .single()
-
-  // Fetch all roles
-  const { data: rolesData, error: rolesError } = await supabase.from('roles').select('*')
-
-  // Fetch permission roles with proper join
-  const { data: permissionRoles, error: permissionRolesError } = await supabase
-    .from('role_permissions')
-    .select(
+  const [
+    {
+      data: { user }
+    },
+    { data: permission, error: permissionError },
+    { data: rolesData, error: rolesError },
+    { data: permissionRoles, error: permissionRolesError }
+  ] = await Promise.all([
+    getAuthUser(),
+    getPermission(permissionId),
+    getRoles(),
+    getRolePermissionsByPermissionId(
+      permissionId,
       `
-      permission_id,
-      role_id,
-      roles:roles (
-        id,
-        role
-      )
-    `
+        permission_id,
+        role_id,
+        roles:roles (
+          id,
+          role
+        )
+      `
     )
-    .eq('permission_id', params.id)
+  ])
 
   // Format permission roles as the Edit component expects
   const formattedPermissionRoles = permissionRoles?.map((pr: any) => ({
@@ -76,12 +71,24 @@ const EditPage = async (props: { params: Promise<{ id: number }> }) => {
 
   return (
     <Edit
-      id={params.id}
+      id={permissionId}
       permissionData={permission}
       rolesData={rolesData}
       permissionRolesData={formattedPermissionRoles || []}
       userPermissions={user?.user_metadata.permissions}
     />
+  )
+}
+
+const EditPage = async (props: { params: Promise<{ id: number }> }) => {
+  // Vars
+  const params = await props.params
+  const permissionId = Number(params.id)
+
+  return (
+    <Suspense fallback={<Loader />}>
+      <EditPermissionSection permissionId={permissionId} />
+    </Suspense>
   )
 }
 

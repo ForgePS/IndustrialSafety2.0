@@ -1,12 +1,15 @@
+// React Imports
+import { Suspense } from 'react'
+
 // Next Imports
 import type { Metadata } from 'next'
 
 // Third-party Imports
 import { TbExclamationCircle } from 'react-icons/tb'
-import { createClient } from '@repo/supabase/server'
+import { getAuthUser, getReview, getReviewPlatforms } from '@repo/supabase/serverHelpers'
 import { Alert, AlertDescription } from '@repo/ui/components/ui/alert'
+import Loader from '@repo/ui/components/Loader'
 import Trans from '@repo/i18n/Trans'
-import { getAuthUser } from '@repo/supabase/serverHelpers'
 
 // Component Imports
 import EditReview from './Edit'
@@ -15,28 +18,19 @@ export const metadata: Metadata = {
   title: 'Edit Review'
 }
 
-const EditReviewPage = async (props: { params: Promise<{ id: number }> }) => {
+const EditReviewSection = async ({ reviewId }: { reviewId: number }) => {
   // Vars
-  const params = await props.params
-  const supabase = await createClient()
-
-  const {
-    data: { user }
-  } = await getAuthUser()
-
-  const { data: reviewData, error: reviewError } = await supabase
-    .from('reviews')
-    .select(
-      `*,
-    review_platforms (platform_name)`
-    )
-    .eq('id', params.id)
-    .single()
-
-  const { data: platformsData, error: platformsError } = await supabase
-    .from('review_platforms')
-    .select('id, platform_name, slug')
-    .order('id', { ascending: true })
+  const [
+    {
+      data: { user }
+    },
+    { data: reviewData, error: reviewError },
+    { data: platformsData, error: platformsError }
+  ] = await Promise.all([
+    getAuthUser(),
+    getReview(reviewId, '*, review_platforms (platform_name)'),
+    getReviewPlatforms('id, platform_name, slug')
+  ])
 
   if (!reviewData || reviewError || !platformsData || platformsError) {
     return (
@@ -56,9 +50,20 @@ const EditReviewPage = async (props: { params: Promise<{ id: number }> }) => {
     <EditReview
       reviewData={reviewData}
       platformsData={platformsData}
-      id={params.id}
+      id={reviewId}
       userPermissions={user?.user_metadata.permissions}
     />
+  )
+}
+
+const EditReviewPage = async (props: { params: Promise<{ id: number }> }) => {
+  const params = await props.params
+  const reviewId = Number(params.id)
+
+  return (
+    <Suspense fallback={<Loader />}>
+      <EditReviewSection reviewId={reviewId} />
+    </Suspense>
   )
 }
 

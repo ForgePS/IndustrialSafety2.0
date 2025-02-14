@@ -1,11 +1,14 @@
+// React Imports
+import { Suspense } from 'react'
+
 // Next Imports
 import type { Metadata } from 'next'
 
 // Third-party imports
-import { createClient } from '@repo/supabase/server'
+import { getAuthUser, getPermissions, getRole, getRolePermissionsByRoleId } from '@repo/supabase/serverHelpers'
 import { Alert, AlertDescription } from '@repo/ui/components/ui/alert'
 import { TbExclamationCircle } from 'react-icons/tb'
-import { getAuthUser } from '@repo/supabase/serverHelpers'
+import Loader from '@repo/ui/components/Loader'
 
 // Component Imports
 import Edit from './Edit'
@@ -14,39 +17,35 @@ export const metadata: Metadata = {
   title: 'Edit Role'
 }
 
-const EditPage = async (props: { params: Promise<{ id: number }> }) => {
+const EditRolesSection = async ({ roleId }: { roleId: number }) => {
   // Vars
-  const params = await props.params
-  const supabase = await createClient()
-
-  const {
-    data: { user }
-  } = await getAuthUser()
-
-  // Fetch role details
-  const { data: role, error: roleError } = await supabase.from('roles').select('*').eq('id', params.id).single()
-
-  // Fetch role permissions
-  const { data: rolePermissions, error: rolePermissionsError } = await supabase
-    .from('role_permissions')
-    .select(
+  const [
+    {
+      data: { user }
+    },
+    { data: role, error: roleError },
+    { data: permissionsData, error: permissionsDataError },
+    { data: rolePermissions, error: rolePermissionsError }
+  ] = await Promise.all([
+    getAuthUser(),
+    getRole(roleId),
+    getPermissions(),
+    getRolePermissionsByRoleId(
+      roleId,
       `
-      permissions (
-        id,
-        permission
-      )
-    `
+        permissions (
+          id,
+          permission
+        )
+      `
     )
-    .eq('role_id', params.id)
+  ])
 
   // Format role permissions as the Edit component expects an array of RolePermission objects
   const formattedRolePermissions = rolePermissions?.map((rp: any) => ({
     id: rp.permissions.id,
     permissions: rp.permissions.permission
   }))
-
-  // Fetch all permissions
-  const { data: permissionsData, error: permissionsDataError } = await supabase.from('permissions').select('*')
 
   if (roleError || rolePermissionsError || permissionsDataError) {
     console.error(
@@ -67,7 +66,7 @@ const EditPage = async (props: { params: Promise<{ id: number }> }) => {
   return (
     <Edit
       roleData={role}
-      id={params.id}
+      id={roleId}
       permissionsData={permissionsData}
       rolePermissionsData={formattedRolePermissions || []}
       userPermissions={user?.user_metadata.permissions}
@@ -75,4 +74,15 @@ const EditPage = async (props: { params: Promise<{ id: number }> }) => {
   )
 }
 
-export default EditPage
+const EditRolesPage = async (props: { params: Promise<{ id: number }> }) => {
+  const params = await props.params
+  const roleId = Number(params.id)
+
+  return (
+    <Suspense fallback={<Loader />}>
+      <EditRolesSection roleId={roleId} />
+    </Suspense>
+  )
+}
+
+export default EditRolesPage

@@ -1,11 +1,14 @@
+// React Imports
+import { Suspense } from 'react'
+
 // Next Imports
 import type { Metadata } from 'next'
 
 // Third-party Imports
 import { TbExclamationCircle } from 'react-icons/tb'
 import { Alert, AlertDescription } from '@repo/ui/components/ui/alert'
-import { createClient } from '@repo/supabase/server'
-import { getAuthUser } from '@repo/supabase/serverHelpers'
+import { getAuthUser, getPermissions } from '@repo/supabase/serverHelpers'
+import Loader from '@repo/ui/components/Loader'
 
 // Component Imports
 import Permissions from './Permissions'
@@ -14,18 +17,17 @@ export const metadata: Metadata = {
   title: 'Permissions'
 }
 
-const PermissionPage = async () => {
+const PermissionSection = async () => {
   // Vars
-  const supabase = await createClient()
-
-  const {
-    data: { user }
-  } = await getAuthUser()
-
-  const { data, error } = await supabase.from('permissions').select('*').order('id', { ascending: true })
+  const [
+    {
+      data: { user }
+    },
+    { data, error }
+  ] = await Promise.all([getAuthUser(), getPermissions()])
 
   if (error) {
-    console.error('Error fetching roles: ', error.message)
+    console.error('Error fetching permissions: ', error.message)
 
     return (
       <Alert variant='destructive'>
@@ -36,6 +38,14 @@ const PermissionPage = async () => {
   }
 
   return <Permissions permissionsData={data} userPermissions={user?.user_metadata.permissions} />
+}
+
+const PermissionPage = () => {
+  return (
+    <Suspense fallback={<Loader />}>
+      <PermissionSection />
+    </Suspense>
+  )
 }
 
 export default PermissionPage

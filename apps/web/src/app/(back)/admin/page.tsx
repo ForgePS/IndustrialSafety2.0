@@ -1,9 +1,13 @@
+// React Imports
+import { Suspense } from 'react'
+
 // Next Imports
 import type { Metadata } from 'next'
 
 // Third-party Imports
 import { TbChartBar, TbCurrencyDollar, TbReceipt, TbRefresh, TbShoppingCart, TbUsers } from 'react-icons/tb'
-import { createClient } from '@repo/supabase/server'
+import { getAllUserRoles, getUsers } from '@repo/supabase/serverHelpers'
+import Loader from '@repo/ui/components/Loader'
 import Trans from '@repo/i18n/Trans'
 
 // Components Imports
@@ -59,25 +63,15 @@ export const metadata: Metadata = {
   title: 'Dashboard'
 }
 
-const AdminPage = async () => {
+const AdminDashboardSection = async () => {
   // Vars
-  const supabase = await createClient()
+  const [{ data: usersRecord, error: userError }, { data: rolesData, error: rolesError }] = await Promise.all([
+    getUsers(),
+    getAllUserRoles('*, roles (role)')
+  ])
 
-  const { data: usersRecord, error: userError } = await supabase
-    .from('users')
-    .select('*')
-    .order('id', { ascending: true, nullsFirst: false })
-
-  if (userError) {
-    console.error('Error fetching users: ', userError.message)
-
-    return
-  }
-
-  const { data: rolesData, error: rolesError } = await supabase.from('user_roles').select(`*, roles (role)`)
-
-  if (rolesError) {
-    console.error('Error fetching roles: ', rolesError.message)
+  if (userError || rolesError) {
+    console.error('Error fetching users or roles: ', userError?.message || rolesError?.message)
 
     return
   }
@@ -105,6 +99,14 @@ const AdminPage = async () => {
         <MRRGrowthChart />
       </section>
     </div>
+  )
+}
+
+const AdminPage = () => {
+  return (
+    <Suspense fallback={<Loader />}>
+      <AdminDashboardSection />
+    </Suspense>
   )
 }
 

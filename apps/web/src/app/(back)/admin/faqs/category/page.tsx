@@ -1,11 +1,14 @@
+// React Imports
+import { Suspense } from 'react'
+
 // Next Imports
 import type { Metadata } from 'next'
 
 // Third-party Imports
 import { TbExclamationCircle } from 'react-icons/tb'
 import { Alert, AlertDescription } from '@repo/ui/components/ui/alert'
-import { createClient } from '@repo/supabase/server'
-import { getAuthUser } from '@repo/supabase/serverHelpers'
+import { getAuthUser, getFaqCategories } from '@repo/supabase/serverHelpers'
+import Loader from '@repo/ui/components/Loader'
 
 // Component Imports
 import Categories from './Categories'
@@ -14,15 +17,13 @@ export const metadata: Metadata = {
   title: 'FAQ Categories'
 }
 
-const FaqCategoriesPage = async () => {
-  // Vars
-  const supabase = await createClient()
-
-  const {
-    data: { user }
-  } = await getAuthUser()
-
-  const { data, error } = await supabase.from('faq_categories').select('*').order('id', { ascending: true })
+const FaqCategoriesSection = async () => {
+  const [
+    {
+      data: { user }
+    },
+    { data, error }
+  ] = await Promise.all([getAuthUser(), getFaqCategories()])
 
   if (error) {
     console.error('Error fetching categories: ', error.message)
@@ -36,6 +37,14 @@ const FaqCategoriesPage = async () => {
   }
 
   return <Categories categoryData={data} userPermissions={user?.user_metadata.permissions} />
+}
+
+const FaqCategoriesPage = () => {
+  return (
+    <Suspense fallback={<Loader />}>
+      <FaqCategoriesSection />
+    </Suspense>
+  )
 }
 
 export default FaqCategoriesPage

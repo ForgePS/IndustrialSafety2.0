@@ -1,12 +1,15 @@
+// React Imports
+import { Suspense } from 'react'
+
 // Next Imports
 import type { Metadata } from 'next'
 
 // Third-Party Imports
 import { TbExclamationCircle } from 'react-icons/tb'
 import { Alert, AlertDescription } from '@repo/ui/components/ui/alert'
-import { createClient } from '@repo/supabase/server'
+import Loader from '@repo/ui/components/Loader'
 import Trans from '@repo/i18n/Trans'
-import { getAuthUser } from '@repo/supabase/serverHelpers'
+import { getAuthUser, getFaqCategory } from '@repo/supabase/serverHelpers'
 
 // Component Imports
 import Edit from './Edit'
@@ -15,18 +18,14 @@ export const metadata: Metadata = {
   title: 'Edit FAQ Category'
 }
 
-const EditPage = async (props: { params: Promise<{ id: number }> }) => {
+const EditCategorySection = async ({ categoryId }: { categoryId: number }) => {
   // Vars
-  const params = await props.params
-  const supabase = await createClient()
-
-  const {
-    data: { user }
-  } = await getAuthUser()
-
-  const categoryId = Number(params.id)
-
-  const { data, error } = await supabase.from('faq_categories').select().eq('id', categoryId).single()
+  const [
+    {
+      data: { user }
+    },
+    { data, error }
+  ] = await Promise.all([getAuthUser(), getFaqCategory(categoryId)])
 
   if (!data || error) {
     return (
@@ -42,4 +41,16 @@ const EditPage = async (props: { params: Promise<{ id: number }> }) => {
   return <Edit categoryData={data} id={categoryId} userPermissions={user?.user_metadata.permissions} />
 }
 
-export default EditPage
+const EditCategoryPage = async (props: { params: Promise<{ id: number }> }) => {
+  // Vars
+  const params = await props.params
+  const categoryId = Number(params.id)
+
+  return (
+    <Suspense fallback={<Loader />}>
+      <EditCategorySection categoryId={categoryId} />
+    </Suspense>
+  )
+}
+
+export default EditCategoryPage

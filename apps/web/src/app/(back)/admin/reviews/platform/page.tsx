@@ -1,11 +1,14 @@
+// React Imports
+import { Suspense } from 'react'
+
 // Next Imports
 import type { Metadata } from 'next'
 
 // Third-party Imports
 import { TbExclamationCircle } from 'react-icons/tb'
 import { Alert, AlertDescription } from '@repo/ui/components/ui/alert'
-import { createClient } from '@repo/supabase/server'
-import { getAuthUser } from '@repo/supabase/serverHelpers'
+import { getAuthUser, getReviewPlatforms } from '@repo/supabase/serverHelpers'
+import Loader from '@repo/ui/components/Loader'
 
 // Component Imports
 import Platforms from './Platforms'
@@ -14,15 +17,14 @@ export const metadata: Metadata = {
   title: 'Review Platforms'
 }
 
-const ReviewPlatformsPage = async () => {
+const ReviewPlatformsSection = async () => {
   // Vars
-  const supabase = await createClient()
-
-  const {
-    data: { user }
-  } = await getAuthUser()
-
-  const { data, error } = await supabase.from('review_platforms').select('*').order('id', { ascending: true })
+  const [
+    {
+      data: { user }
+    },
+    { data, error }
+  ] = await Promise.all([getAuthUser(), getReviewPlatforms()])
 
   if (error) {
     console.error('Error fetching review platforms: ', error.message)
@@ -36,6 +38,14 @@ const ReviewPlatformsPage = async () => {
   }
 
   return <Platforms platformData={data} userPermissions={user?.user_metadata.permissions} />
+}
+
+const ReviewPlatformsPage = () => {
+  return (
+    <Suspense fallback={<Loader />}>
+      <ReviewPlatformsSection />
+    </Suspense>
+  )
 }
 
 export default ReviewPlatformsPage

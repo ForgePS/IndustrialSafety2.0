@@ -1,12 +1,15 @@
+// React Imports
+import { Suspense } from 'react'
+
 // Next Imports
 import type { Metadata } from 'next'
 
 // Third-party Imports
 import { TbExclamationCircle } from 'react-icons/tb'
-import { getAuthUser } from '@repo/supabase/serverHelpers'
+import { getAuthUser, getReviewPlatform } from '@repo/supabase/serverHelpers'
 import { Alert, AlertDescription } from '@repo/ui/components/ui/alert'
+import Loader from '@repo/ui/components/Loader'
 import Trans from '@repo/i18n/Trans'
-import { createClient } from '@repo/supabase/server'
 
 // Component Imports
 import EditPlatform from './Edit'
@@ -15,16 +18,14 @@ export const metadata: Metadata = {
   title: 'Edit Review Platform'
 }
 
-const EditPage = async (props: { params: Promise<{ id: number }> }) => {
+const EditPlatformSection = async ({ platformId }: { platformId: number }) => {
   // Vars
-  const params = await props.params
-  const supabase = await createClient()
-
-  const {
-    data: { user }
-  } = await getAuthUser()
-
-  const { data, error } = await supabase.from('review_platforms').select().eq('id', params.id).single()
+  const [
+    {
+      data: { user }
+    },
+    { data, error }
+  ] = await Promise.all([getAuthUser(), getReviewPlatform(platformId)])
 
   if (!data || error) {
     return (
@@ -40,7 +41,19 @@ const EditPage = async (props: { params: Promise<{ id: number }> }) => {
     )
   }
 
-  return <EditPlatform platformData={data} id={params.id} userPermissions={user?.user_metadata.permissions} />
+  return <EditPlatform platformData={data} id={platformId} userPermissions={user?.user_metadata.permissions} />
 }
 
-export default EditPage
+const EditPlatformPage = async (props: { params: Promise<{ id: number }> }) => {
+  // Vars
+  const params = await props.params
+  const platformId = Number(params.id)
+
+  return (
+    <Suspense fallback={<Loader />}>
+      <EditPlatformSection platformId={platformId} />
+    </Suspense>
+  )
+}
+
+export default EditPlatformPage

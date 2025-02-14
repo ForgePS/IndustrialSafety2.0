@@ -1,13 +1,18 @@
+// React Imports
+import { Suspense } from 'react'
+
 // Next Imports
 import type { Metadata } from 'next'
 
 // Third-party Imports
 import { TbExclamationCircle } from 'react-icons/tb'
 import { Alert, AlertDescription } from '@repo/ui/components/ui/alert'
-import { createClient } from '@repo/supabase/server'
+import Loader from '@repo/ui/components/Loader'
 import Trans from '@repo/i18n/Trans'
 
 // Component Imports
+import { getRole, getRolePermissionsByRoleId, getRoleWithUsers } from '@repo/supabase/serverHelpers'
+
 import View from './View'
 import ViewTable from './ViewTable'
 
@@ -15,40 +20,34 @@ export const metadata: Metadata = {
   title: 'View Role'
 }
 
-const RoleViewPage = async (props: { params: Promise<{ id: number }> }) => {
+const RoleViewSection = async ({ roleId }: { roleId: number }) => {
   // Vars
-  const params = await props.params
-  const supabase = await createClient()
-
-  // Fetch role details
-  const { data: role, error: roleError } = await supabase.from('roles').select('*').eq('id', params.id).single()
-
-  // Fetch role permissions
-  const { data: permissions, error: permissionsError } = await supabase
-    .from('role_permissions')
-    .select(
+  const [
+    { data: role, error: roleError },
+    { data: roleWithAssignedUsers, error: roleWithAssignedUsersError },
+    { data: permissions, error: permissionsError }
+  ] = await Promise.all([
+    getRole(roleId),
+    getRoleWithUsers(
+      roleId,
       `
-      permissions (
-        id,
-        permission
-      )
-    `
-    )
-    .eq('role_id', params.id)
-
-  // Fetch role with users
-  const { data: roleWithAssignedUsers, error: roleWithAssignedUsersError } = await supabase
-    .from('roles')
-    .select(
+        *,
+        users (
+        name,
+          email
+        )
       `
-      *,
-      users (
-       name,
-        email
-      )
-    `
+    ),
+    getRolePermissionsByRoleId(
+      roleId,
+      `
+        permissions (
+          id,
+          permission
+        )
+      `
     )
-    .eq('id', params.id)
+  ])
 
   if (permissionsError || roleError || roleWithAssignedUsersError) {
     console.error(
@@ -81,6 +80,17 @@ const RoleViewPage = async (props: { params: Promise<{ id: number }> }) => {
         <ViewTable users={roleWithAssignedUsers} />
       </div>
     </div>
+  )
+}
+
+const RoleViewPage = async (props: { params: Promise<{ id: number }> }) => {
+  const params = await props.params
+  const roleId = Number(params.id)
+
+  return (
+    <Suspense fallback={<Loader />}>
+      <RoleViewSection roleId={roleId} />
+    </Suspense>
   )
 }
 

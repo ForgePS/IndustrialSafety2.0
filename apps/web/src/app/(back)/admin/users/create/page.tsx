@@ -1,8 +1,12 @@
+// React Imports
+import { Suspense } from 'react'
+
 // Next Imports
 import type { Metadata } from 'next'
 
 // Third-party Imports
-import { createClient } from '@repo/supabase/server'
+import { getRoles } from '@repo/supabase/serverHelpers'
+import Loader from '@repo/ui/components/Loader'
 
 // Component Imports
 import Create from './Create'
@@ -11,12 +15,9 @@ export const metadata: Metadata = {
   title: 'Create User'
 }
 
-const CreatePage = async () => {
+const CreateUserSection = async () => {
   // Vars
-  const supabase = await createClient()
-
-  // Fetch roles data
-  const { data: rolesData, error: rolesError } = await supabase.from('roles').select('*')
+  const { data: rolesData, error: rolesError } = await getRoles()
 
   if (rolesError) {
     console.error('Error fetching roles data:', rolesError.message)
@@ -27,4 +28,12 @@ const CreatePage = async () => {
   return <Create roles={rolesData} />
 }
 
-export default CreatePage
+const CreateUserPage = () => {
+  return (
+    <Suspense fallback={<Loader />}>
+      <CreateUserSection />
+    </Suspense>
+  )
+}
+
+export default CreateUserPage

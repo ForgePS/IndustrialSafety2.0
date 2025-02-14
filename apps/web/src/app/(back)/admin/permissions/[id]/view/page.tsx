@@ -1,45 +1,41 @@
+// React Imports
+import { Suspense } from 'react'
+
 // Next Imports
 import type { Metadata } from 'next'
 
 // Third-party Imports
 import { Alert, AlertDescription } from '@repo/ui/components/ui/alert'
 import { TbAlertCircle } from 'react-icons/tb'
-import { createClient } from '@repo/supabase/server'
+import { getPermission, getRolePermissionsByPermissionId } from '@repo/supabase/serverHelpers'
+import Loader from '@repo/ui/components/Loader'
 import Trans from '@repo/i18n/Trans'
 
 // Component Imports
+
 import View from './View'
 
 export const metadata: Metadata = {
   title: 'View Permission'
 }
 
-const ViewPage = async (props: { params: Promise<{ id: number }> }) => {
+const ViewPermissionSection = async ({ permissionId }: { permissionId: number }) => {
   // Vars
-  const params = await props.params
-  const supabase = await createClient()
-
-  // Fetch the permission
-  const { data: permissionData, error: permissionError } = await supabase
-    .from('permissions')
-    .select('*')
-    .eq('id', params.id)
-    .single()
-
-  // Fetch the roles assigned to this permission with proper join
-  const { data: permissionRoles, error: rolesError } = await supabase
-    .from('role_permissions')
-    .select(
-      `
-      permission_id,
-      role_id,
-      roles:roles (
-        id,
-        role
+  const [{ data: permissionData, error: permissionError }, { data: permissionRoles, error: rolesError }] =
+    await Promise.all([
+      getPermission(permissionId),
+      getRolePermissionsByPermissionId(
+        permissionId,
+        `
+          permission_id,
+          role_id,
+          roles:roles (
+            id,
+            role
+          )
+        `
       )
-    `
-    )
-    .eq('permission_id', params.id)
+    ])
 
   if (permissionError || rolesError) {
     return (
@@ -76,4 +72,15 @@ const ViewPage = async (props: { params: Promise<{ id: number }> }) => {
   )
 }
 
-export default ViewPage
+const ViewPermissionPage = async (props: { params: Promise<{ id: number }> }) => {
+  const params = await props.params
+  const permissionId = Number(params.id)
+
+  return (
+    <Suspense fallback={<Loader />}>
+      <ViewPermissionSection permissionId={permissionId} />
+    </Suspense>
+  )
+}
+
+export default ViewPermissionPage

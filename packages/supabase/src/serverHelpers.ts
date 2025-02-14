@@ -137,3 +137,213 @@ export const getBillingRecords = async (column: string = '*') => {
 
   return billingRecord
 }
+
+export const getFaqCategories = async (column: string = '*') => {
+  const supabase = await createClient()
+
+  const categoriesRecord = await supabase
+    .from('faq_categories')
+    .select(column as '*')
+    .order('id', { ascending: true })
+
+  return categoriesRecord
+}
+
+export const getFaqCategory = async (id: number, column: string = '*') => {
+  const supabase = await createClient()
+
+  const categoryRecord = await supabase
+    .from('faq_categories')
+    .select(column as '*')
+    .eq('id', id)
+    .single()
+
+  return categoryRecord
+}
+
+export const getFaqs = async (column: string = '*') => {
+  const supabase = await createClient()
+
+  const faqsRecord = await supabase
+    .from('faqs')
+    .select(column as '*')
+    .order('id', { ascending: true })
+
+  return faqsRecord
+}
+
+export const getFaq = async (id: number, column: string = '*') => {
+  const supabase = await createClient()
+
+  const faqRecord = await supabase
+    .from('faqs')
+    .select(column as '*')
+    .eq('id', id)
+    .single()
+
+  return faqRecord
+}
+
+export const getReviewPlatforms = async (column: string = '*') => {
+  const supabase = await createClient()
+
+  const reviewPlatformsRecord = await supabase
+    .from('review_platforms')
+    .select(column as '*')
+    .order('id', { ascending: true })
+
+  return reviewPlatformsRecord
+}
+
+export const getReviewPlatform = async (id: number, column: string = '*') => {
+  const supabase = await createClient()
+
+  const reviewPlatformRecord = await supabase
+    .from('review_platforms')
+    .select(column as '*')
+    .eq('id', id)
+    .single()
+
+  return reviewPlatformRecord
+}
+
+export const getReviews = async (column: string = '*') => {
+  const supabase = await createClient()
+
+  const reviewsRecord = await supabase
+    .from('reviews')
+    .select(column as '*')
+    .order('id', { ascending: true })
+
+  return reviewsRecord
+}
+
+export const getReview = async (id: number, column: string = '*') => {
+  const supabase = await createClient()
+
+  const reviewRecord = await supabase
+    .from('reviews')
+    .select(column as '*')
+    .eq('id', id)
+    .single()
+
+  return reviewRecord
+}
+
+export const getUsers = async (column: string = '*') => {
+  const supabase = await createClient()
+
+  const usersRecord = await supabase
+    .from('users')
+    .select(column as '*')
+    .order('id', { ascending: true, nullsFirst: false })
+
+  return usersRecord
+}
+
+export const getRoles = async (column: string = '*') => {
+  const supabase = await createClient()
+
+  const rolesRecord = await supabase.from('roles').select(column as '*')
+
+  return rolesRecord
+}
+
+export const getRole = async (id: number, column: string = '*') => {
+  const supabase = await createClient()
+
+  const roleRecord = await supabase
+    .from('roles')
+    .select(column as '*')
+    .eq('id', id)
+    .single()
+
+  return roleRecord
+}
+
+export const getRoleWithUsers = async (id: number, column: string = '*') => {
+  const supabase = await createClient()
+
+  const roleWithUsersRecord = await supabase
+    .from('roles')
+    .select(column as '*')
+    .eq('id', id)
+
+  return roleWithUsersRecord
+}
+
+export const getPermissions = async (column: string = '*') => {
+  const supabase = await createClient()
+
+  const permissionsRecord = await supabase
+    .from('permissions')
+    .select(column as '*')
+    .order('id', { ascending: true })
+
+  return permissionsRecord
+}
+
+export const getPermission = async (id: number, column: string = '*') => {
+  const supabase = await createClient()
+
+  const permissionRecord = await supabase
+    .from('permissions')
+    .select(column as '*')
+    .eq('id', id)
+    .single()
+
+  return permissionRecord
+}
+
+export const getRolePermissionsByPermissionId = async (id: number, column: string = '*') => {
+  const supabase = await createClient()
+
+  const rolePermissionsRecord = await supabase
+    .from('role_permissions')
+    .select(column as '*')
+    .eq('permission_id', id)
+
+  return rolePermissionsRecord
+}
+
+export const getRolePermissionsByRoleId = async (id: number, column: string = '*') => {
+  const supabase = await createClient()
+
+  const rolePermissionsRecord = await supabase
+    .from('role_permissions')
+    .select(column as '*')
+    .eq('role_id', id)
+
+  return rolePermissionsRecord
+}
+
+export const getAllUserRoles = async (column: string = '*') => {
+  const supabase = await createClient()
+
+  const rolesRecord = await supabase.from('user_roles').select(column as '*')
+
+  return rolesRecord
+}
+
+export const getServiceUser = async (id: number, column: string = '*') => {
+  const supabase = createServiceRoleClient()
+
+  const usersRecord = await supabase
+    .from('users')
+    .select(column as '*')
+    .eq('id', id)
+    .single()
+
+  return usersRecord
+}
+
+export const getServiceUserRoles = async (id: number, column: string = '*') => {
+  const supabase = createServiceRoleClient()
+
+  const rolesRecord = await supabase
+    .from('user_roles')
+    .select(column as '*')
+    .eq('user_id', id)
+
+  return rolesRecord
+}

@@ -1,11 +1,14 @@
+// React Imports
+import { Suspense } from 'react'
+
 // Next Imports
 import type { Metadata } from 'next'
 
 // Third-party Imports
 import { TbExclamationCircle } from 'react-icons/tb'
-import { createClient } from '@repo/supabase/server'
+import { getAuthUser, getFaqs } from '@repo/supabase/serverHelpers'
 import { Alert, AlertDescription } from '@repo/ui/components/ui/alert'
-import { getAuthUser } from '@repo/supabase/serverHelpers'
+import Loader from '@repo/ui/components/Loader'
 
 // Component Imports
 import Faq from './Faq'
@@ -14,23 +17,13 @@ export const metadata: Metadata = {
   title: 'FAQs'
 }
 
-const FaqPage = async () => {
-  // Vars
-  const supabase = await createClient()
-
-  const {
-    data: { user }
-  } = await getAuthUser()
-
-  const { data, error } = await supabase
-    .from('faqs')
-    .select(
-      `
-    *,
-    faq_categories (title)
-  `
-    )
-    .order('id', { ascending: true })
+const FaqSection = async () => {
+  const [
+    {
+      data: { user }
+    },
+    { data, error }
+  ] = await Promise.all([getAuthUser(), getFaqs('*, faq_categories (title)')])
 
   if (error) {
     console.error('Error fetching faqs: ', error.message)
@@ -44,6 +37,14 @@ const FaqPage = async () => {
   }
 
   return <Faq faqData={data} userPermissions={user?.user_metadata.permissions} />
+}
+
+const FaqPage = () => {
+  return (
+    <Suspense fallback={<Loader />}>
+      <FaqSection />
+    </Suspense>
+  )
 }
 
 export default FaqPage
