@@ -10,11 +10,15 @@ import { useRouter } from 'next/navigation'
 
 // Third-party Imports
 import { zodResolver } from '@hookform/resolvers/zod'
+import { useDropzone } from 'react-dropzone'
 import { useForm } from 'react-hook-form'
 import { z } from 'zod'
+import { TbX } from 'react-icons/tb'
+import { removeImageFromSupabase, uploadImageToSupabase } from '@repo/supabase/clientHelpers'
 import { Card, CardContent, CardDescription, CardHeader } from '@repo/ui/components/ui/card'
 import { Button } from '@repo/ui/components/ui/button'
 import { Input } from '@repo/ui/components/ui/input'
+import { Label } from '@repo/ui/components/ui/label'
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@repo/ui/components/ui/form'
 import { createClient } from '@repo/supabase/client'
 import { toast } from '@repo/ui/utils/toast'
@@ -22,15 +26,12 @@ import Trans from '@repo/i18n/Trans'
 import { useTranslation } from 'react-i18next'
 import type { TFunction } from 'i18next'
 
-// Component Imports
-import PlatformImage from './PlatformImage'
-
 // Define Zod Schema for validation
 const platformSchema = (t: TFunction) =>
   z.object({
     platform_name: z.string().min(1, { message: t('admin:platformNameRequiredError') }),
     slug: z.string().optional(),
-    logo: z.string().optional().nullable()
+    logo_url: z.string().optional()
   })
 
 // Helper function to generate a slug from a string
@@ -46,7 +47,9 @@ export const generateSlug = (text: string): string => {
 
 const CreatePlatform = () => {
   // States
-  const [file, setFile] = useState<File | undefined>()
+  const [file, setFile] = useState<File | null>(null)
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null)
+  const [currentImageUrl, setCurrentImageUrl] = useState<string>('')
   const [pending, startTransition] = useTransition()
 
   // Vars
@@ -56,13 +59,28 @@ const CreatePlatform = () => {
   const router = useRouter()
   const { t } = useTranslation()
 
+  const { getRootProps, getInputProps } = useDropzone({
+    multiple: false,
+    accept: {
+      'image/*': ['.png', '.jpg', '.jpeg', '.gif']
+    },
+    onDrop: async (acceptedFiles: File[]) => {
+      const selectedFile = acceptedFiles[0]
+
+      if (selectedFile) {
+        setFile(selectedFile)
+        setPreviewUrl(URL.createObjectURL(selectedFile))
+      }
+    }
+  })
+
   // Form setup
   const form = useForm<z.infer<ReturnType<typeof platformSchema>>>({
     resolver: zodResolver(platformSchema(t)),
     defaultValues: {
       platform_name: '',
       slug: '',
-      logo: null
+      logo_url: ''
     }
   })
 
@@ -71,11 +89,34 @@ const CreatePlatform = () => {
     startTransition(async () => {
       const submitAction = ((event?.nativeEvent as SubmitEvent).submitter as HTMLButtonElement).value
 
+      let imageUrl = previewUrl || ''
+
+      if (file) {
+        const uploadedUrl = await uploadImageToSupabase(file)
+
+        if (uploadedUrl) {
+          imageUrl = uploadedUrl
+
+          // If there's an old image, remove it
+          if (currentImageUrl) await removeImageFromSupabase(currentImageUrl)
+        } else {
+          console.error('Image upload failed.')
+
+          return
+        }
+      }
+
+      // If the avatar is removed from the UI
+      if (!previewUrl && currentImageUrl) {
+        await removeImageFromSupabase(currentImageUrl)
+        imageUrl = ''
+      }
+
       const { error } = await supabase.from('review_platforms').insert([
         {
           platform_name: data.platform_name,
           slug: generateSlug(data.slug?.trim() ? data.slug : data.platform_name),
-          logo: data.logo
+          logo_url: imageUrl
         }
       ])
 
@@ -86,20 +127,20 @@ const CreatePlatform = () => {
         return
       }
 
+      // Update the current image URL
+      setCurrentImageUrl(imageUrl)
+
       toast('success', t('admin:reviewPlatformsCreateSuccess'))
 
       if (submitAction === 'createAndCreateAnother') {
         form.reset()
-        setFile(undefined)
+        setFile(null)
+        setPreviewUrl(null)
       } else {
         router.push('/admin/reviews/platform')
         router.refresh()
       }
     })
-  }
-
-  const handleImageUpload = (file: string) => {
-    form.setValue('logo', file)
   }
 
   return (
@@ -153,7 +194,50 @@ const CreatePlatform = () => {
                     )}
                   />
                   <div className='flex items-start max-sm:justify-center'>
-                    <PlatformImage onImageUpload={handleImageUpload} file={file} setFile={setFile} />
+                    <div className='flex flex-col items-start gap-2'>
+                      <Label htmlFor='reviewer-image'>
+                        <Trans i18nKey='admin:platformImageLabel' />
+                      </Label>
+                      <div
+                        {...getRootProps({
+                          className:
+                            'dropzone select-none self-center bs-32 is-32 border rounded-full cursor-pointer relative'
+                        })}
+                      >
+                        <input {...getInputProps()} id='imageUrl' name='imageUrl' />
+                        {previewUrl ? (
+                          <>
+                            <img
+                              alt='Platform Logo'
+                              className='single-file-image bs-full is-full rounded-full object-cover'
+                              src={previewUrl}
+                              width={126}
+                              height={126}
+                            />
+                            <Button
+                              variant='destructive'
+                              size='icon'
+                              type='button'
+                              className='block-end-[76%] inline-end-1 !is-6 !bs-6 absolute rounded-full'
+                              onClick={e => {
+                                e.stopPropagation()
+                                setFile(null)
+                                setPreviewUrl(null)
+                              }}
+                            >
+                              <TbX className='size-4' />
+                            </Button>
+                          </>
+                        ) : (
+                          <div className='bs-full flex flex-col items-center justify-center rounded-full p-3 text-center text-sm'>
+                            <Trans i18nKey='admin:dragDropText' />{' '}
+                            <span className='text-primary'>
+                              <Trans i18nKey='admin:browseText' />
+                            </span>
+                          </div>
+                        )}
+                      </div>
+                    </div>
                   </div>
                 </div>
               </CardContent>

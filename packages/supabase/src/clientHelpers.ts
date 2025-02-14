@@ -83,3 +83,40 @@ export const getPublicPaymentProvider = async () => {
 
   return paymentProviderRecord
 }
+
+export const uploadImageToSupabase = async (file: File) => {
+  const supabase = await createClient()
+
+  if (!file || !file.name) {
+    console.error('Invalid file object:', file)
+
+    return null
+  }
+
+  const fileExtension = file.name.split('.').pop() || ''
+  const fileName = `${Date.now()}.${fileExtension}`
+
+  const { data, error } = await supabase.storage.from('review_images').upload(fileName, file)
+
+  if (error) {
+    console.error('Error uploading file:', error)
+
+    return null
+  }
+
+  return supabase.storage.from('review_images').getPublicUrl(data.path).data.publicUrl
+}
+
+export const removeImageFromSupabase = async (imageUrl: string) => {
+  const supabase = createClient()
+  const fileName = imageUrl.split('/').pop()
+
+  if (!fileName) return
+  const { error } = await supabase.storage.from('review_images').remove([fileName])
+
+  if (error) {
+    console.error('Error deleting old avatar:', error)
+
+    return
+  }
+}

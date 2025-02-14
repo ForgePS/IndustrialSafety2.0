@@ -2,7 +2,6 @@
 import { Suspense } from 'react'
 
 // Next Imports
-import Image from 'next/image'
 import type { Metadata } from 'next'
 
 // Third-party Imports
@@ -41,7 +40,7 @@ const DashboardPage = async () => {
             <div className='flex items-center gap-x-3'>
               <Avatar shape='circle'>
                 <AvatarImage asChild src={avatarSrc}>
-                  <Image alt={userName} src={avatarSrc} priority quality={100} height={36} width={36} />
+                  <img alt={userName} src={avatarSrc} height={36} width={36} />
                 </AvatarImage>
                 <AvatarFallback>{avatarFallbackText}</AvatarFallback>
               </Avatar>

@@ -49,6 +49,9 @@ port = 54324
 [storage.buckets.user_avatars]
 public = true
 
+[storage.buckets.review_images]
+public = true
+
 [storage.image_transformation]
 enabled = true
 

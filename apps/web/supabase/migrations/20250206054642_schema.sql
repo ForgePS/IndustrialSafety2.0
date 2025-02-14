@@ -996,3 +996,9 @@ AFTER
 INSERT ON public.users FOR EACH ROW EXECUTE FUNCTION handle_new_user_role();
 CREATE TRIGGER tr_delete_auth_user
 AFTER DELETE ON public.users FOR EACH ROW EXECUTE FUNCTION handle_auth_user_deletion();
+ALTER TABLE "public"."review_platforms" DROP COLUMN "logo";
+ALTER TABLE "public"."review_platforms"
+ADD COLUMN "logo_url" character varying;
+ALTER TABLE "public"."reviews" DROP COLUMN "avatar_image";
+ALTER TABLE "public"."reviews"
+ADD COLUMN "review_url" character varying;

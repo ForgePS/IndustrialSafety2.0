@@ -4,7 +4,6 @@
 import { useEffect } from 'react'
 
 // Next Imports
-import Image from 'next/image'
 import Link from 'next/link'
 
 // Third-party Imports
@@ -71,9 +70,7 @@ const UserDropdown = ({ user, userTableData, roles }: Props) => {
       <DropdownMenuTrigger asChild>
         <Button variant='ghost' size='icon' className='!outline-0'>
           <Avatar size='lg'>
-            <AvatarImage asChild src={avatarSrc}>
-              <Image alt={userName} src={avatarSrc} priority quality={100} width={36} height={36} />
-            </AvatarImage>
+            <AvatarImage alt={userName} src={avatarSrc} />
             <AvatarFallback>{avatarFallbackText}</AvatarFallback>
           </Avatar>
         </Button>

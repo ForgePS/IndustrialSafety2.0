@@ -156,19 +156,19 @@ export type Database = {
       review_platforms: {
         Row: {
           id: number
-          logo: string | null
+          logo_url: string | null
           platform_name: string | null
           slug: string | null
         }
         Insert: {
           id?: number
-          logo?: string | null
+          logo_url?: string | null
           platform_name?: string | null
           slug?: string | null
         }
         Update: {
           id?: number
-          logo?: string | null
+          logo_url?: string | null
           platform_name?: string | null
           slug?: string | null
         }
@@ -176,7 +176,6 @@ export type Database = {
       }
       reviews: {
         Row: {
-          avatar_image: string | null
           content: string
           country: string | null
           designation: string | null
@@ -185,12 +184,12 @@ export type Database = {
           link: string
           platform_id: number | null
           rating: number
+          review_url: string | null
           title: string | null
           username: string
           video_url: string | null
         }
         Insert: {
-          avatar_image?: string | null
           content: string
           country?: string | null
           designation?: string | null
@@ -199,12 +198,12 @@ export type Database = {
           link: string
           platform_id?: number | null
           rating: number
+          review_url?: string | null
           title?: string | null
           username: string
           video_url?: string | null
         }
         Update: {
-          avatar_image?: string | null
           content?: string
           country?: string | null
           designation?: string | null
@@ -213,6 +212,7 @@ export type Database = {
           link?: string
           platform_id?: number | null
           rating?: number
+          review_url?: string | null
           title?: string | null
           username?: string
           video_url?: string | null
@@ -352,11 +352,13 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      admin_only: {
+        Args: Record<PropertyKey, never>
+        Returns: boolean
+      }
       can_manage_role: {
         Args: {
-          auth_uid: string
-          target_role_id: number
-          action: string
+          role_hierarchy: number
         }
         Returns: boolean
       }
@@ -367,26 +369,16 @@ export type Database = {
         }
         Returns: boolean
       }
-      can_perform_role_action:
-        | {
-            Args: {
-              auth_uid: string
-              target_role_hierarchy: number
-            }
-            Returns: boolean
-          }
-        | {
-            Args: {
-              auth_uid: string
-              target_role_id: number
-              action: string
-            }
-            Returns: boolean
-          }
       can_perform_user_action: {
         Args: {
           auth_uid: string
           target_user_id: number
+        }
+        Returns: boolean
+      }
+      can_update_permission: {
+        Args: {
+          p_id: number
         }
         Returns: boolean
       }
@@ -397,21 +389,6 @@ export type Database = {
         }
         Returns: boolean
       }
-      can_view_role:
-        | {
-            Args: {
-              auth_uid: string
-              target_role_hierarchy: number
-            }
-            Returns: boolean
-          }
-        | {
-            Args: {
-              auth_uid: string
-              target_role_id: number
-            }
-            Returns: boolean
-          }
       can_view_user: {
         Args: {
           auth_uid: string

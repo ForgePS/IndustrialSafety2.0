@@ -24,7 +24,7 @@ type ReviewType = Database['public']['Tables']['reviews']['Row']
 type PlatformType = {
   id: number
   platform_name: string
-  logo: string | null
+  logo_url: string | null
 }
 
 type Props = {
@@ -105,7 +105,7 @@ const Reviews = (props: Props) => {
                     <CardHeader className='pbe-4 flex items-center gap-4'>
                       <div className='is-full flex justify-start gap-3'>
                         <Avatar shape='circle' size='3xl' color='primary'>
-                          <AvatarImage src={review.avatar_image ?? ''} alt={review.username} />
+                          <AvatarImage src={review.review_url ?? ''} alt={review.username} />
                           <AvatarFallback className='text-xl'>
                             {getInitials(review.username).toUpperCase()}
                           </AvatarFallback>
@@ -139,7 +139,9 @@ const Reviews = (props: Props) => {
                           <>
                             <hr className='border-border mlb-0 bs-auto is-4 rotate-90 flex-col' />
                             <div className='flex items-center gap-1'>
-                              <img src={platform.logo || undefined} alt='platform logo' className='is-4 bs-auto' />
+                              {platform.logo_url && (
+                                <img src={platform.logo_url} alt='platform logo' className='is-4 bs-auto' />
+                              )}
                               <p className='text-textPrimary text-sm font-medium capitalize'>
                                 {platform.platform_name}
                               </p>

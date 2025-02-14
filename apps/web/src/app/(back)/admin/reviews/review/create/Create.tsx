@@ -10,10 +10,14 @@ import { useRouter } from 'next/navigation'
 
 // Third-party Imports
 import { zodResolver } from '@hookform/resolvers/zod'
+import { useDropzone } from 'react-dropzone'
 import { useForm } from 'react-hook-form'
 import { z } from 'zod'
+import { TbX } from 'react-icons/tb'
+import { removeImageFromSupabase, uploadImageToSupabase } from '@repo/supabase/clientHelpers'
 import { Card, CardContent, CardDescription, CardHeader } from '@repo/ui/components/ui/card'
 import { Button } from '@repo/ui/components/ui/button'
+import { Label } from '@repo/ui/components/ui/label'
 import { Input } from '@repo/ui/components/ui/input'
 import { Ratings } from '@repo/ui/components/ui/ratings'
 import { Switch } from '@repo/ui/components/ui/switch'
@@ -25,9 +29,6 @@ import { toast } from '@repo/ui/utils/toast'
 import Trans from '@repo/i18n/Trans'
 import { useTranslation } from 'react-i18next'
 import type { TFunction } from 'i18next'
-
-// Component Imports
-import ReviewImage from './ReviewImage'
 
 // Define Zod Schema for validation only on required fields
 const reviewSchema = (t: TFunction) =>
@@ -44,7 +45,7 @@ const reviewSchema = (t: TFunction) =>
     is_featured: z.boolean().optional(),
     designation: z.string().optional(),
     country: z.string().optional(),
-    avatar_image: z.string().optional().nullable()
+    review_url: z.string().optional()
   })
 
 export type PlatformTypes = {
@@ -55,7 +56,9 @@ export type PlatformTypes = {
 
 const CreateReview = ({ platformsData }: { platformsData: PlatformTypes[] }) => {
   // States
-  const [file, setFile] = useState<File | undefined>()
+  const [file, setFile] = useState<File | null>(null)
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null)
+  const [currentImageUrl, setCurrentImageUrl] = useState<string>('')
   const [selectedPlatform, setSelectedPlatform] = useState<{ id: number; slug: string } | null>(null)
   const [pending, startTransition] = useTransition()
 
@@ -65,6 +68,21 @@ const CreateReview = ({ platformsData }: { platformsData: PlatformTypes[] }) => 
   // Hooks
   const router = useRouter()
   const { t } = useTranslation()
+
+  const { getRootProps, getInputProps } = useDropzone({
+    multiple: false,
+    accept: {
+      'image/*': ['.png', '.jpg', '.jpeg', '.gif']
+    },
+    onDrop: async (acceptedFiles: File[]) => {
+      const selectedFile = acceptedFiles[0]
+
+      if (selectedFile) {
+        setFile(selectedFile)
+        setPreviewUrl(URL.createObjectURL(selectedFile))
+      }
+    }
+  })
 
   // react-hook-form integration with Zod schema validation
   const form = useForm<z.infer<ReturnType<typeof reviewSchema>>>({
@@ -80,7 +98,7 @@ const CreateReview = ({ platformsData }: { platformsData: PlatformTypes[] }) => 
       username: '',
       designation: '',
       country: '',
-      avatar_image: null
+      review_url: ''
     }
   })
 
@@ -88,6 +106,29 @@ const CreateReview = ({ platformsData }: { platformsData: PlatformTypes[] }) => 
   const onSubmit = (data: z.infer<ReturnType<typeof reviewSchema>>, event?: BaseSyntheticEvent) => {
     startTransition(async () => {
       const submitAction = ((event?.nativeEvent as SubmitEvent).submitter as HTMLButtonElement).value
+
+      let imageUrl = previewUrl || ''
+
+      if (file) {
+        const uploadedUrl = await uploadImageToSupabase(file)
+
+        if (uploadedUrl) {
+          imageUrl = uploadedUrl
+
+          // If there's an old image, remove it
+          if (currentImageUrl) await removeImageFromSupabase(currentImageUrl)
+        } else {
+          console.error('Image upload failed.')
+
+          return
+        }
+      }
+
+      // If the avatar is removed from the UI
+      if (!previewUrl && currentImageUrl) {
+        await removeImageFromSupabase(currentImageUrl)
+        imageUrl = ''
+      }
 
       // Client-side Supabase insert function
       const { error } = await supabase.from('reviews').insert([
@@ -102,7 +143,7 @@ const CreateReview = ({ platformsData }: { platformsData: PlatformTypes[] }) => 
           username: data.username,
           designation: data.designation,
           country: data.country,
-          avatar_image: data.avatar_image
+          review_url: imageUrl
         }
       ])
 
@@ -114,21 +155,21 @@ const CreateReview = ({ platformsData }: { platformsData: PlatformTypes[] }) => 
         return
       }
 
+      // Update the current image URL
+      setCurrentImageUrl(imageUrl)
+
       toast('success', t('admin:reviewsCreateSuccess'))
 
       if (submitAction === 'createAndCreateAnother') {
         form.reset()
         form.setValue('rating', 5)
-        setFile(undefined)
+        setFile(null)
+        setPreviewUrl(null)
       } else {
         router.push('/admin/reviews/review')
         router.refresh()
       }
     })
-  }
-
-  const handleImageUpload = (file: string) => {
-    form.setValue('avatar_image', file)
   }
 
   return (
@@ -351,7 +392,50 @@ const CreateReview = ({ platformsData }: { platformsData: PlatformTypes[] }) => 
                     </FormItem>
                   )}
                 />
-                <ReviewImage onImageUpload={handleImageUpload} file={file} setFile={setFile} />
+                <div className='flex flex-col items-start gap-2'>
+                  <Label htmlFor='reviewer-image'>
+                    <Trans i18nKey='admin:reviewsCreateImageLabel' />
+                  </Label>
+                  <div
+                    {...getRootProps({
+                      className:
+                        'dropzone select-none self-center bs-32 is-32 border rounded-full cursor-pointer relative'
+                    })}
+                  >
+                    <input {...getInputProps()} id='reviewer-image' name='reviewer-image' />
+                    {previewUrl ? (
+                      <>
+                        <img
+                          alt='Reviewer Image'
+                          className='single-file-image bs-full is-full rounded-full object-cover'
+                          src={previewUrl}
+                          width={126}
+                          height={126}
+                        />
+                        <Button
+                          variant='destructive'
+                          size='icon'
+                          type='button'
+                          className='block-end-[76%] inline-end-1 !is-6 !bs-6 absolute rounded-full'
+                          onClick={e => {
+                            e.stopPropagation()
+                            setFile(null)
+                            setPreviewUrl(null)
+                          }}
+                        >
+                          <TbX className='size-4' />
+                        </Button>
+                      </>
+                    ) : (
+                      <div className='bs-full flex flex-col items-center justify-center rounded-full p-3 text-center text-sm'>
+                        <Trans i18nKey='admin:dragDropText' />{' '}
+                        <span className='text-primary'>
+                          <Trans i18nKey='admin:browseText' />
+                        </span>
+                      </div>
+                    )}
+                  </div>
+                </div>
               </CardContent>
             </Card>
             <div className='col-span-full flex gap-4 max-sm:flex-col'>

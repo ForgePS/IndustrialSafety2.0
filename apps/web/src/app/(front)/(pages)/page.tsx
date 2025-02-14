@@ -69,7 +69,7 @@ const LandingPage = async () => {
 
   const { data: platformData, error: platformError } = await supabase
     .from('review_platforms')
-    .select('id, logo, platform_name')
+    .select('id, logo_url, platform_name')
     .order('id', { ascending: true })
 
   if (platformError) {

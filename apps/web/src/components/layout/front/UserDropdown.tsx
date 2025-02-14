@@ -1,7 +1,6 @@
 'use client'
 
 // Next Imports
-import Image from 'next/image'
 import Link from 'next/link'
 
 // Third-party Imports
@@ -43,7 +42,7 @@ const UserDropdown = ({ user, userTableData, roles }: Props) => {
         <Button variant='ghost' size='icon' className='!outline-0'>
           <Avatar size='lg'>
             <AvatarImage asChild src={avatarSrc}>
-              <Image alt={userName} src={avatarSrc} priority quality={100} height={36} width={36} />
+              <img alt={userName} src={avatarSrc} height={36} width={36} />
             </AvatarImage>
             <AvatarFallback>{avatarFallbackText}</AvatarFallback>
           </Avatar>
@@ -54,7 +53,7 @@ const UserDropdown = ({ user, userTableData, roles }: Props) => {
           <Link href='/admin/my-profile'>
             <Avatar size='lg'>
               <AvatarImage asChild src={avatarSrc}>
-                <Image alt={userName} src={avatarSrc} priority quality={100} height={36} width={36} />
+                <img alt={userName} src={avatarSrc} height={36} width={36} />
               </AvatarImage>
               <AvatarFallback>{avatarFallbackText}</AvatarFallback>
             </Avatar>

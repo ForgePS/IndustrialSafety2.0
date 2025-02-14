@@ -9,6 +9,7 @@ import { useRouter } from 'next/navigation'
 
 // Third-party Imports
 import { TbEdit } from 'react-icons/tb'
+import { removeImageFromSupabase } from '@repo/supabase/clientHelpers'
 import type { Row, ColumnDef } from '@tanstack/react-table'
 import { Card } from '@repo/ui/components/ui/card'
 import { Button } from '@repo/ui/components/ui/button'
@@ -31,12 +32,16 @@ export type ReviewsWithPlatforms = Database['public']['Tables']['reviews']['Row'
 }
 
 // Delete a review
-export const deleteReview = async (reviewId: number, t: TFunction) => {
+export const deleteReview = async (reviewId: number, reviewUrl: string | null, t: TFunction) => {
   // Vars
   const supabase = createClient()
 
   try {
     const { error } = await supabase.from('reviews').delete().eq('id', reviewId)
+
+    if (reviewUrl) {
+      await removeImageFromSupabase(reviewUrl)
+    }
 
     if (error) {
       console.error('Error deleting review: ', error.message)
@@ -130,7 +135,7 @@ const Reviews = ({
                   <DeleteDialog
                     variant='ghostDestructive'
                     handleDelete={async () => {
-                      await deleteReview(row.original.id, t)
+                      await deleteReview(row.original.id, row.original.review_url, t)
                       router.refresh()
                     }}
                     itemName='review'

@@ -3,9 +3,6 @@
 // React Imports
 import { useState, useTransition } from 'react'
 
-// Next Imports
-import Image from 'next/image'
-
 // Third-party Imports
 import { TbX } from 'react-icons/tb'
 import { useDropzone } from 'react-dropzone'
@@ -157,14 +154,12 @@ const PersonalInformation = ({
                   <input {...getInputProps()} id='avatarUrl' name='avatarUrl' />
                   {previewUrl ? (
                     <>
-                      <Image
+                      <img
                         alt='Avatar'
                         className='single-file-image bs-full is-full rounded-full object-cover'
                         src={previewUrl}
                         width={126}
                         height={126}
-                        priority
-                        quality={100}
                       />
                       <Button
                         variant='destructive'

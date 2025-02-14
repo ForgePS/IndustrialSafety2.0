@@ -7,6 +7,7 @@ import { useRouter } from 'next/navigation'
 // Third-party Imports
 import { TbEdit } from 'react-icons/tb'
 import type { ColumnDef, Row } from '@tanstack/react-table'
+import { removeImageFromSupabase } from '@repo/supabase/clientHelpers'
 import { Card } from '@repo/ui/components/ui/card'
 import { Avatar, AvatarImage, AvatarFallback } from '@repo/ui/components/ui/avatar'
 import { Button } from '@repo/ui/components/ui/button'
@@ -22,11 +23,15 @@ import type { TFunction } from 'i18next'
 import type { Database } from '@repo/supabase/types'
 
 // Delete a platform
-export const deletePlatform = async (platformId: number, t: TFunction) => {
+export const deletePlatform = async (platformId: number, logoUrl: string | null, t: TFunction) => {
   const supabase = createClient()
 
   try {
     const { error } = await supabase.from('review_platforms').delete().eq('id', platformId)
+
+    if (logoUrl) {
+      await removeImageFromSupabase(logoUrl)
+    }
 
     if (error) {
       console.error('Error deleting platform: ', error.message)
@@ -55,15 +60,15 @@ const Platforms = ({
 
   const columns: ColumnDef<Database['public']['Tables']['review_platforms']['Row']>[] = [
     {
-      accessorKey: 'logo',
+      accessorKey: 'logo_url',
       header: () => <Trans i18nKey='admin:reviewPlatformsLogoColumn' />,
       cell: ({ row }) => {
         const platform_name = row.getValue('platform_name') as string
-        const logoSrc = row.getValue('logo') as string
+        const logoSrc = row.getValue('logo_url') as string
 
         return (
           <Avatar shape='circle' size='lg' className={`${logoSrc ? 'bg-transparent' : ''}`}>
-            <AvatarImage src={row.getValue('logo') as string} alt={`${platform_name} logo`} />
+            <AvatarImage src={row.getValue('logo_url') as string} alt={`${platform_name} logo`} />
             <AvatarFallback>{getInitials(platform_name)}</AvatarFallback>
           </Avatar>
         )
@@ -98,7 +103,7 @@ const Platforms = ({
                   <DeleteDialog
                     variant='ghostDestructive'
                     handleDelete={async () => {
-                      await deletePlatform(row.original.id, t)
+                      await deletePlatform(row.original.id, row.original.logo_url, t)
                       router.refresh()
                     }}
                     itemName='platform'
