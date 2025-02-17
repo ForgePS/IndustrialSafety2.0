@@ -161,6 +161,18 @@ export const getFaqCategory = async (id: number, column: string = '*') => {
   return categoryRecord
 }
 
+export const getFeaturedFaqs = async (column: string = '*') => {
+  const supabase = await createClient()
+
+  const faqsRecord = await supabase
+    .from('faqs')
+    .select(column as '*')
+    .eq('is_featured', true)
+    .order('id', { ascending: true })
+
+  return faqsRecord
+}
+
 export const getFaqs = async (column: string = '*') => {
   const supabase = await createClient()
 
@@ -205,6 +217,18 @@ export const getReviewPlatform = async (id: number, column: string = '*') => {
     .single()
 
   return reviewPlatformRecord
+}
+
+export const getFeaturedReviews = async (column: string = '*') => {
+  const supabase = await createClient()
+
+  const reviewsRecord = await supabase
+    .from('reviews')
+    .select(column as '*')
+    .eq('is_featured', true)
+    .order('id', { ascending: true })
+
+  return reviewsRecord
 }
 
 export const getReviews = async (column: string = '*') => {

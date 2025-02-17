@@ -8,7 +8,7 @@ import type { Metadata } from 'next'
 // Third-party Imports
 import FAQ from '@repo/ui/blocks/faq/FAQ'
 import { Badge } from '@repo/ui/components/ui/badge'
-import { createClient } from '@repo/supabase/server'
+import { getFeaturedFaqs, getFeaturedReviews, getReviewPlatforms } from '@repo/supabase/serverHelpers'
 import Reviews from '@repo/ui/blocks/reviews/Reviews'
 import CTABuyNow from '@repo/ui/blocks/cta/CTABuyNow'
 import CTADiscord from '@repo/ui/blocks/cta/CTADiscord'
@@ -39,15 +39,25 @@ export const metadata: Metadata = {
   }
 }
 
-const LandingPage = async () => {
+const ReviewsSection = async () => {
   // Vars
-  const supabase = await createClient()
+  const [{ data: reviewsData, error: reviewsError }, { data: platformData, error: platformError }] = await Promise.all([
+    getFeaturedReviews(),
+    getReviewPlatforms('id, logo_url, platform_name')
+  ])
 
-  const { data: faqsData, error: faqsError } = await supabase
-    .from('faqs')
-    .select('*')
-    .eq('is_featured', true)
-    .order('id', { ascending: true })
+  if (reviewsError || platformError) {
+    console.error('Error fetching reviews Data: ', reviewsError?.message || platformError?.message)
+
+    return
+  }
+
+  return <Reviews data={reviewsData} platformData={platformData} transitionDelay={0.5} />
+}
+
+const FAQSection = async () => {
+  // Vars
+  const { data: faqsData, error: faqsError } = await getFeaturedFaqs()
 
   if (faqsError) {
     console.error('Error fetching faqs: ', faqsError.message)
@@ -55,29 +65,10 @@ const LandingPage = async () => {
     return
   }
 
-  const { data: reviewsData, error: reviewsError } = await supabase
-    .from('reviews')
-    .select('*')
-    .eq('is_featured', true)
-    .order('id', { ascending: true })
+  return <FAQ accordionVariant='split' data={faqsData} />
+}
 
-  if (reviewsError) {
-    console.error('Error fetching reviews: ', reviewsError.message)
-
-    return
-  }
-
-  const { data: platformData, error: platformError } = await supabase
-    .from('review_platforms')
-    .select('id, logo_url, platform_name')
-    .order('id', { ascending: true })
-
-  if (platformError) {
-    console.error('Error fetching review platforms: ', platformError.message)
-
-    return
-  }
-
+const LandingPage = () => {
   return (
     <div id='landing-page'>
       {/* Hero Section */}
@@ -132,7 +123,7 @@ const LandingPage = async () => {
             subtitle={<Trans i18nKey='front-pages:landingReviewsSubtitle' />}
           />
         </MotionFadeElement>
-        <Reviews data={reviewsData} platformData={platformData} transitionDelay={0.5} />
+        <ReviewsSection />
       </SectionWrapper>
 
       <hr />
@@ -206,7 +197,7 @@ const LandingPage = async () => {
             show: { transition: { delay: 0.5, duration: 0.4 }, y: 0 }
           }}
         >
-          <FAQ accordionVariant='split' data={faqsData} />
+          <FAQSection />
         </MotionFadeElement>
       </SectionWrapper>
 

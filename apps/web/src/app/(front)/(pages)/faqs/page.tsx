@@ -4,7 +4,7 @@ import type { Metadata } from 'next'
 // Third-Party Imports
 import { TbExclamationCircle } from 'react-icons/tb'
 import { Alert, AlertDescription } from '@repo/ui/components/ui/alert'
-import { createClient } from '@repo/supabase/server'
+import { getFaqCategories, getFaqs } from '@repo/supabase/serverHelpers'
 import Trans from '@repo/i18n/Trans'
 
 // Components Imports
@@ -20,14 +20,10 @@ export const metadata: Metadata = {
 
 const FaqPage = async () => {
   // Vars
-  const supabase = await createClient()
-
-  const { data: categoryData, error: categoryError } = await supabase
-    .from('faq_categories')
-    .select('*')
-    .order('id', { ascending: true })
-
-  const { data: faqData, error: faqError } = await supabase.from('faqs').select('*').order('id', { ascending: true })
+  const [{ data: categoryData, error: categoryError }, { data: faqData, error: faqError }] = await Promise.all([
+    getFaqCategories(),
+    getFaqs()
+  ])
 
   return (
     <>
