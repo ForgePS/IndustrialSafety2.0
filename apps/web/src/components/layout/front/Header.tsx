@@ -5,7 +5,7 @@ import Link from 'next/link'
 import { clsx } from 'clsx'
 import LayoutHeader from '@repo/ui/layouts/components/front/Header'
 import { Button } from '@repo/ui/components/ui/button'
-import { getAuthUser, getPublicGeneralSettings, getPublicUser, getUserRoles } from '@repo/supabase/serverHelpers'
+import { getAuthUser, getPublicGeneralSettings } from '@repo/supabase/serverHelpers'
 import { frontLayoutClasses } from '@repo/ui/layouts/utils/layoutClasses'
 import Trans from '@repo/i18n/Trans'
 import type { SettingsConfiguration } from '@repo/supabase/settingsConfigurationTypes'
@@ -23,8 +23,7 @@ const Header = async () => {
     data: { user }
   } = await getAuthUser()
 
-  const { data: userRecord } = await getPublicUser()
-  const userRoles = await getUserRoles()
+  const userRoles = user?.user_metadata.roles
   const { data: settings_configuration } = await getPublicGeneralSettings()
 
   const isBlogEnabled = (JSON.parse(settings_configuration?.value) as SettingsConfiguration['general_settings'])
@@ -54,7 +53,7 @@ const Header = async () => {
             <ModeDropdown />
           </div>
           {user ? (
-            <UserDropdown user={user} userTableData={userRecord} roles={userRoles} />
+            <UserDropdown user={user} roles={userRoles} />
           ) : (
             <Button size='sm' asChild>
               <Link href='/auth/login'>

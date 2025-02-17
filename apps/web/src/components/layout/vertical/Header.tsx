@@ -4,7 +4,7 @@ import LayoutHeader from '@repo/ui/layouts/components/vertical/Header'
 import { Separator } from '@repo/ui/components/ui/separator'
 import { SidebarTrigger } from '@repo/ui/components/ui/sidebar'
 import { verticalLayoutClasses } from '@repo/ui/layouts/utils/layoutClasses'
-import { getAuthUser, getPublicUser, getUserRoles, getUserPermissions } from '@repo/supabase/serverHelpers'
+import { getAuthUser } from '@repo/supabase/serverHelpers'
 import type { SearchDataProps } from '@repo/ui/components/search'
 import { hasPermission } from '@repo/rbac/utils'
 import Search from '@repo/ui/components/search'
@@ -40,9 +40,8 @@ const Header = async () => {
     data: { user }
   } = await getAuthUser()
 
-  const { data: userRecord } = await getPublicUser()
-  const userRoles = await getUserRoles()
-  const permissions = await getUserPermissions()
+  const userRoles = user?.user_metadata.roles
+  const permissions = user?.user_metadata.permissions
   const roles = user?.user_metadata.roles
 
   // Filter search data based on permissions
@@ -64,7 +63,7 @@ const Header = async () => {
         </div>
         <div className='flex items-center gap-5'>
           <LanguageDropdown />
-          <UserDropdown user={user} userTableData={userRecord} roles={userRoles} />
+          <UserDropdown user={user} roles={userRoles} />
         </div>
       </div>
     </LayoutHeader>

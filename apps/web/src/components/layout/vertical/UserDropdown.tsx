@@ -28,15 +28,13 @@ import { getInitials } from '@repo/ui/utils/getInitials'
 import Trans from '@repo/i18n/Trans'
 import type { User } from '@supabase/supabase-js'
 import type { Mode } from '@repo/ui/types'
-import type { Database } from '@repo/supabase/types'
 
 type Props = {
   user: User | null
-  userTableData: Database['public']['Tables']['users']['Row']
   roles?: string[]
 }
 
-const UserDropdown = ({ user, userTableData, roles }: Props) => {
+const UserDropdown = ({ user, roles }: Props) => {
   // Hooks
   const { setTheme, systemTheme } = useTheme()
   const { settings, updateSettings } = useSettings()
@@ -44,7 +42,7 @@ const UserDropdown = ({ user, userTableData, roles }: Props) => {
   const signOutMutation = useSignOut()
 
   // Vars
-  const userName = userTableData.name || user?.user_metadata.name || user?.email
+  const userName = user?.user_metadata.name || user?.email
   const avatarFallbackText = getInitials(userName).toUpperCase()
   const avatarSrc = user?.user_metadata.user_avatar || user?.user_metadata.avatar_url
 

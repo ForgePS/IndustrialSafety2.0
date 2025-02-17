@@ -19,20 +19,18 @@ import { deleteImpersonationCookies, deletePaymentCookies } from '@repo/auth/act
 import { getInitials } from '@repo/ui/utils/getInitials'
 import Trans from '@repo/i18n/Trans'
 import type { User } from '@supabase/supabase-js'
-import type { Database } from '@repo/supabase/types'
 
 type Props = {
   user: User
-  userTableData: Database['public']['Tables']['users']['Row']
   roles?: string[]
 }
 
-const UserDropdown = ({ user, userTableData, roles }: Props) => {
+const UserDropdown = ({ user, roles }: Props) => {
   // Hooks
   const signOutMutation = useSignOut()
 
   // Vars
-  const userName = userTableData.name || user.user_metadata.name || user.email
+  const userName = user.user_metadata.name || user.email
   const avatarFallbackText = getInitials(userName).toUpperCase()
   const avatarSrc = user?.user_metadata.user_avatar || user?.user_metadata.avatar_url
 
@@ -57,9 +55,9 @@ const UserDropdown = ({ user, userTableData, roles }: Props) => {
               </AvatarImage>
               <AvatarFallback>{avatarFallbackText}</AvatarFallback>
             </Avatar>
-            {userTableData.name || user.user_metadata.name ? (
+            {user.user_metadata.name ? (
               <div className='flex flex-col items-start overflow-hidden'>
-                <h6 className='is-full truncate font-semibold'>{userTableData.name || user.user_metadata.name}</h6>
+                <h6 className='is-full truncate font-semibold'>{user.user_metadata.name}</h6>
                 <small className='is-full truncate'>{user.email}</small>
               </div>
             ) : (
