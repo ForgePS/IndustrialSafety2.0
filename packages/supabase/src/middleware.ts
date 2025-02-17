@@ -5,7 +5,7 @@ import type { NextRequest } from 'next/server'
 // Third-party Imports
 import { createServerClient } from '@supabase/ssr'
 import { jwtDecode } from 'jwt-decode'
-import { hasPermission } from '@repo/rbac/utils'
+import { checkRoutePermissions } from '@repo/rbac/utils'
 import type { JwtPayload } from 'jwt-decode'
 import type { User } from '@supabase/supabase-js'
 
@@ -15,17 +15,21 @@ import type { SettingsConfiguration } from '@repo/supabase/settingsConfiguration
 type JWT = JwtPayload & {
   roles: string[]
   permissions: string[]
+  user_metadata?: {
+    email?: string
+    name?: string
+    [key: string]: any
+  }
 }
 
 type ExtendedUser = User & {
   roles?: string[]
   permissions?: string[]
+  publicData?: JWT['user_metadata']
 }
 
 export async function updateSession(request: NextRequest, isMagicLinkEnabled: boolean) {
-  let supabaseResponse = NextResponse.next({
-    request
-  })
+  let supabaseResponse = NextResponse.next({ request })
 
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -37,9 +41,7 @@ export async function updateSession(request: NextRequest, isMagicLinkEnabled: bo
         },
         setAll(cookiesToSet) {
           cookiesToSet.forEach(({ name, value }) => request.cookies.set(name, value))
-          supabaseResponse = NextResponse.next({
-            request
-          })
+          supabaseResponse = NextResponse.next({ request })
           cookiesToSet.forEach(({ name, value, options }) => supabaseResponse.cookies.set(name, value, options))
         }
       }
@@ -50,206 +52,76 @@ export async function updateSession(request: NextRequest, isMagicLinkEnabled: bo
   // supabase.auth.getUser(). A simple mistake could make it very hard to debug
   // issues with users being randomly logged out.
 
-  const {
-    data: { user }
-  } = await supabase.auth.getUser()
+  const [
+    {
+      data: { user }
+    },
+    {
+      data: { session }
+    }
+  ] = await Promise.all([supabase.auth.getUser(), supabase.auth.getSession()])
 
-  const {
-    data: { session }
-  } = await supabase.auth.refreshSession()
+  // Use the verified user data instead of session.user
+  const currentUser = user as ExtendedUser | null
 
-  const currentUser = session?.user as ExtendedUser | null
-
-  if (session) {
+  if (session && user) {
     const jwt: JWT = jwtDecode(session.access_token)
 
     if (currentUser) {
       currentUser.roles = jwt.roles
       currentUser.permissions = jwt.permissions
+      currentUser.publicData = jwt.user_metadata
+
+      if (!currentUser.publicData || !currentUser.publicData.email) {
+        console.error('Public user data missing in JWT')
+
+        return NextResponse.redirect(new URL('/auth/login', request.url))
+      }
     }
   }
 
   const url = request.nextUrl.clone()
 
-  const { data: settings_configuration } = await supabase
-    .from('settings_configuration')
-    .select('value')
-    .eq('key', 'general_settings')
-    .single()
-
-  const isBlogEnabled = (JSON.parse(settings_configuration?.value) as SettingsConfiguration['general_settings'])
-    .pages_components.blog_enabled
-
   // Hide `blog` routes if the blog is disabled
-  if (url.pathname.startsWith('/blog') && !isBlogEnabled) {
-    url.pathname = '/page-not-found' // Display 404 page
+  if (url.pathname.startsWith('/blog')) {
+    const { data: settings_configuration } = await supabase
+      .from('settings_configuration')
+      .select('value')
+      .eq('key', 'general_settings')
+      .single()
 
-    return NextResponse.rewrite(url)
+    const isBlogEnabled = (JSON.parse(settings_configuration?.value) as SettingsConfiguration['general_settings'])
+      .pages_components.blog_enabled
+
+    if (!isBlogEnabled) {
+      url.pathname = '/page-not-found' // Display 404 page
+
+      return NextResponse.rewrite(url)
+    }
   }
-
-  const { data: publicUser } = await supabase.from('users').select(`*`).eq('user_id', user?.id).single()
 
   if (user && currentUser) {
     const { roles, permissions } = currentUser
 
-    if (!publicUser) {
-      console.error('User not found in the public schema')
-
-      return
-    }
-
-    const { data: billingRecords } = await supabase.from('billing').select('status').eq('user_id', user.id)
-
-    const isPaymentSuccessful = billingRecords?.filter(record => record.status === 'success')[0]?.status === 'success'
-
     // Role-based access control
     // Additional permission checks for specific admin routes
-    if (url.pathname === '/admin' && !roles?.includes('admin')) {
+    if ((url.pathname === '/admin' || url.pathname.startsWith('/admin/my-profile')) && !roles?.includes('admin')) {
       url.pathname = '/not-authorized'
 
       return NextResponse.redirect(url)
     }
 
-    if (url.pathname === '/dashboard' && roles?.includes('admin')) {
+    if (url.pathname.startsWith('/dashboard') && roles?.includes('admin')) {
       url.pathname = '/not-authorized'
 
       return NextResponse.redirect(url)
     }
 
-    if (url.pathname.startsWith('/admin/my-profile') && !roles?.includes('admin')) {
+    // Check permissions based on the route
+    if (!checkRoutePermissions(url.pathname, permissions || [])) {
       url.pathname = '/not-authorized'
 
       return NextResponse.redirect(url)
-    }
-
-    if (url.pathname.startsWith('/dashboard/my-profile') && roles?.includes('admin')) {
-      url.pathname = '/not-authorized'
-
-      return NextResponse.redirect(url)
-    }
-
-    if (url.pathname.startsWith('/dashboard/billing') && roles?.includes('admin')) {
-      url.pathname = '/not-authorized'
-
-      return NextResponse.redirect(url)
-    }
-
-    if (url.pathname.startsWith('/admin/reviews') && !hasPermission(permissions, 'view_reviews')) {
-      url.pathname = '/not-authorized'
-
-      return NextResponse.redirect(url)
-    }
-
-    if (url.pathname.startsWith('/admin/settings') && !hasPermission(permissions, 'view_settings')) {
-      url.pathname = '/not-authorized'
-
-      return NextResponse.redirect(url)
-    }
-
-    if (url.pathname.startsWith('/admin/users') && !hasPermission(permissions, 'view_users')) {
-      url.pathname = '/not-authorized'
-
-      return NextResponse.redirect(url)
-    }
-
-    if (url.pathname.startsWith('/admin/users/create') && !hasPermission(permissions, 'create_users')) {
-      url.pathname = '/not-authorized'
-
-      return NextResponse.redirect(url)
-    }
-
-    // Check permissions for user edit routes
-    if (url.pathname.match(/^\/admin\/users\/\d+\/edit$/)) {
-      if (!hasPermission(permissions, 'update_users')) {
-        url.pathname = '/not-authorized'
-
-        return NextResponse.redirect(url)
-      }
-    }
-
-    if (url.pathname.startsWith('/admin/roles') && !hasPermission(permissions, 'view_roles')) {
-      url.pathname = '/not-authorized'
-
-      return NextResponse.redirect(url)
-    }
-
-    if (url.pathname.startsWith('/admin/roles/create') && !hasPermission(permissions, 'create_roles')) {
-      url.pathname = '/not-authorized'
-
-      return NextResponse.redirect(url)
-    }
-
-    if (url.pathname.startsWith('/admin/permissions/create') && !hasPermission(permissions, 'create_permission')) {
-      url.pathname = '/not-authorized'
-
-      return NextResponse.redirect(url)
-    }
-
-    // Check permissions for role edit routes
-    if (url.pathname.match(/^\/admin\/roles\/\d+\/edit$/)) {
-      if (!hasPermission(permissions, 'update_roles')) {
-        url.pathname = '/not-authorized'
-
-        return NextResponse.redirect(url)
-      }
-    }
-
-    if (url.pathname.startsWith('/admin/permissions') && !hasPermission(permissions, 'view_permission')) {
-      url.pathname = '/not-authorized'
-
-      return NextResponse.redirect(url)
-    }
-
-    if (url.pathname.startsWith('/admin/faqs') || url.pathname.startsWith('/admin/faqs')) {
-      if (!hasPermission(permissions, 'view_faqs')) {
-        url.pathname = '/not-authorized'
-
-        return NextResponse.redirect(url)
-      }
-    }
-
-    // Check permissions for FAQ create routes
-    if (url.pathname.startsWith('/admin/faqs/faq/create') || url.pathname.startsWith('/admin/faqs/category/create')) {
-      if (!hasPermission(permissions, 'create_faqs')) {
-        url.pathname = '/not-authorized'
-
-        return NextResponse.redirect(url)
-      }
-    }
-
-    // Check permissions for FAQ edit routes
-    if (
-      url.pathname.match(/^\/admin\/faqs\/faq\/\d+\/edit$/) ||
-      url.pathname.match(/^\/admin\/faqs\/category\/\d+\/edit$/)
-    ) {
-      if (!hasPermission(permissions, 'update_faqs')) {
-        url.pathname = '/not-authorized'
-
-        return NextResponse.redirect(url)
-      }
-    }
-
-    // Check permissions for Reviews Platforms routes
-    if (
-      url.pathname.startsWith('/admin/reviews/platform/create') ||
-      url.pathname.startsWith('/admin/reviews/review/create')
-    ) {
-      if (!hasPermission(permissions, 'create_reviews')) {
-        url.pathname = '/not-authorized'
-
-        return NextResponse.redirect(url)
-      }
-    }
-
-    if (
-      url.pathname.match(/^\/admin\/reviews\/platform\/\d+\/edit$/) ||
-      url.pathname.match(/^\/admin\/reviews\/review\/\d+\/edit$/)
-    ) {
-      if (!hasPermission(permissions, 'update_reviews')) {
-        url.pathname = '/not-authorized'
-
-        return NextResponse.redirect(url)
-      }
     }
 
     // User can only access the checkout page after selecting a product
@@ -264,6 +136,10 @@ export async function updateSession(request: NextRequest, isMagicLinkEnabled: bo
 
     // User can only access the thank you page after a successful payment
     if (url.pathname.startsWith('/thank-you')) {
+      const { data: billingRecords } = await supabase.from('billing').select('status').eq('user_id', user.id)
+
+      const isPaymentSuccessful = billingRecords?.filter(record => record.status === 'success')[0]?.status === 'success'
+
       // delete `checkoutData` cookie if the cookie exists
       if (request.cookies.has('checkoutData') && isPaymentSuccessful) {
         request.cookies.delete('checkoutData')

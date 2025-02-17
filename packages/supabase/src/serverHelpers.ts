@@ -11,32 +11,50 @@ type JWT = JwtPayload & {
   permissions: string[]
 }
 
-export async function getAuthUser(): Promise<UserResponse> {
+export const getAuthUser = async (): Promise<UserResponse> => {
   const supabase = await createClient()
 
+  // Get authenticated user data first
+  const { data: userData, error: userError } = await supabase.auth.getUser()
+
+  // If no user or error, return early
+  if (userError || !userData.user) {
+    return { data: { user: null }, error: userError } as UserResponse
+  }
+
+  // Get session to verify and get roles/permissions
   const {
     data: { session }
-  } = await supabase.auth.refreshSession()
+  } = await supabase.auth.getSession()
 
-  const user = await supabase.auth.getUser()
+  if (!session?.access_token) {
+    return { data: { user: null }, error: new Error('No valid session') } as UserResponse
+  }
 
-  if (user.data.user && session) {
+  // Get roles and permissions from JWT
+  const jwt: JWT = jwtDecode(session.access_token)
+  const currentMetadata = userData.user.user_metadata || {}
+
+  // Only update if metadata is missing or different
+  const needsUpdate =
+    !currentMetadata.roles?.length ||
+    !currentMetadata.permissions?.length ||
+    currentMetadata.roles.join(',') !== jwt.roles.join(',') ||
+    currentMetadata.permissions.join(',') !== jwt.permissions.join(',')
+
+  if (needsUpdate) {
     const supabaseServiceRole = createServiceRoleClient()
 
-    const jwt: JWT = jwtDecode(session.access_token)
-
-    const updatedUser = await supabaseServiceRole.auth.admin.updateUserById(user.data.user.id, {
+    return supabaseServiceRole.auth.admin.updateUserById(userData.user.id, {
       user_metadata: {
-        ...user.data.user.user_metadata,
+        ...currentMetadata,
         roles: jwt.roles,
         permissions: jwt.permissions
       }
     })
-
-    return updatedUser
   }
 
-  return user
+  return { data: userData, error: null } as UserResponse
 }
 
 export const getPublicUser = async (column: string = '*') => {
