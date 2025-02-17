@@ -16,16 +16,16 @@ export function ImpersonationBanner() {
   return (
     <div
       className={cn(
-        'bg-foreground pli-6 plb-3 sticky z-[100] flex items-center justify-between gap-6 text-white transition-[margin,inset-block-start] duration-300 ease-in-out',
+        'bg-foreground pli-6 plb-3 sticky z-[100] flex items-center justify-between gap-x-6 gap-y-2 text-white transition-[margin,inset-block-start] duration-300 ease-in-out',
         {
           '-mbs-[54px] -block-start-[54px]': !isImpersonating,
           'block-start-0': isImpersonating
         }
       )}
     >
-      <div className='space-i-3 flex items-center'>
-        <TbAlertCircle className='h-5 w-5' />
-        <p className='text-sm'>
+      <div className='flex items-center gap-3 max-sm:justify-center'>
+        <TbAlertCircle className='h-5 w-5 shrink-0' />
+        <p className='text-sm max-sm:line-clamp-1'>
           <Trans i18nKey='packages-auth:impersonatingUser' />{' '}
           <span className='font-medium underline'>{impersonatedUser?.email}</span>
         </p>

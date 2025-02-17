@@ -4,7 +4,7 @@
   "emailInvalid": "Please enter a valid email address.",
   "emailRequired": "Email address is required.",
   "exitImpersonation": "Exit Impersonation",
-  "impersonatingUser": "You are currently impersonating",
+  "impersonatingUser": "Impersonating",
   "passwordMinLength": "Password must be at least 8 characters",
   "passwordRequired": "Password is required."
 }

@@ -4,7 +4,7 @@
   "emailInvalid": "Veuillez saisir une adresse e-mail valide.",
   "emailRequired": "L'adresse e-mail est requise.",
   "exitImpersonation": "Quitter l'usurpation d'identité",
-  "impersonatingUser": "Vous êtes actuellement en train d'usurper l'identité",
+  "impersonatingUser": "Usurpation d'identité",
   "passwordMinLength": "Le mot de passe doit comporter au moins 8 caractères",
   "passwordRequired": "Le mot de passe est requis."
 }
