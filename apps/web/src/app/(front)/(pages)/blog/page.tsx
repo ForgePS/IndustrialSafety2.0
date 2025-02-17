@@ -18,7 +18,7 @@ export const metadata: Metadata = {
 const BlogPage = async (props: { searchParams: Promise<Record<string, string | string[] | undefined>> }) => {
   // Vars
   const searchParams = await props.searchParams
-  const reader = createKeystaticReader()
+  const reader = await createKeystaticReader()
 
   const categories = await reader.collections.categories.all()
   const posts = await reader.collections.posts.all()
@@ -28,7 +28,9 @@ const BlogPage = async (props: { searchParams: Promise<Record<string, string | s
     entry: {
       title: post.entry.title,
       description: post.entry.description,
-      featuredImage: post.entry.featuredImage,
+      featuredImage: post.entry.featuredImage.startsWith('http')
+        ? post.entry.featuredImage
+        : `${process.env.BASEPATH}${post.entry.featuredImage}`,
       categories: post.entry.categories,
       publishedAt: post.entry.publishedAt
     }

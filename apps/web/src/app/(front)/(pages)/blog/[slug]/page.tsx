@@ -19,7 +19,7 @@ type Props = {
 export async function generateMetadata(props: Props, parent: ResolvingMetadata): Promise<Metadata> {
   // vars
   const params = await props.params
-  const reader = createKeystaticReader()
+  const reader = await createKeystaticReader()
 
   const post = await reader.collections.posts.read(params.slug)
 
@@ -31,7 +31,12 @@ export async function generateMetadata(props: Props, parent: ResolvingMetadata):
     },
     description: post?.description,
     openGraph: {
-      images: [post?.featuredImage ?? '', ...previousImages]
+      images: [
+        (post?.featuredImage.startsWith('http')
+          ? post?.featuredImage
+          : `${process.env.BASEPATH}${post?.featuredImage}`) ?? '',
+        ...previousImages
+      ]
     },
     metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL!),
     alternates: {
@@ -43,7 +48,7 @@ export async function generateMetadata(props: Props, parent: ResolvingMetadata):
 const PostPage = async (props: Props) => {
   // Vars
   const params = await props.params
-  const reader = createKeystaticReader()
+  const reader = await createKeystaticReader()
   const { data: settings_configuration } = await getPublicGeneralSettings()
 
   const post = await reader.collections.posts.read(params.slug)
@@ -64,7 +69,9 @@ const PostPage = async (props: Props) => {
         entry: {
           title: post.entry.title,
           description: post.entry.description,
-          featuredImage: post.entry.featuredImage,
+          featuredImage: post.entry.featuredImage.startsWith('http')
+            ? post.entry.featuredImage
+            : `${process.env.BASEPATH}${post.entry.featuredImage}`,
           categories: post.entry.categories,
           publishedAt: post.entry.publishedAt
         }
@@ -81,7 +88,9 @@ const PostPage = async (props: Props) => {
   const postData = {
     title: post?.title,
     description: post?.description,
-    featuredImage: post?.featuredImage,
+    featuredImage: post?.featuredImage.startsWith('http')
+      ? post?.featuredImage
+      : `${process.env.BASEPATH}${post?.featuredImage}`,
     categories: filteredCategories,
     publishedAt: post?.publishedAt
   }

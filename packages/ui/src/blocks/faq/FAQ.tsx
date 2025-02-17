@@ -28,9 +28,9 @@ const FAQ = (props: Props) => {
     <>
       {data.length === 0 ? (
         <div className={cn('flex flex-col items-center justify-center gap-y-2 text-center', className)}>
-          <h1 className='text-textPrimary text-2xl font-medium'>
+          <h2 className='text-textPrimary text-2xl font-medium'>
             <Trans i18nKey='packages-ui:faqNoFaqsTitle' />
-          </h1>
+          </h2>
           <p className='text-textSecondary'>
             <Trans i18nKey='packages-ui:faqNoFaqsDescription' />
           </p>

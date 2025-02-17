@@ -57,21 +57,10 @@ export function keystaticAdminGenerator(plop: PlopTypes.NodePlopAPI) {
         type: 'modify',
         path: 'packages/supabase/src/middleware.ts',
         async transform(content) {
-          const updatedContent = content
-            .replace(
-              /(request\.nextUrl\.pathname\.startsWith\('\/admin'\) \|\|[\s\n]+request\.nextUrl\.pathname\.startsWith\('\/dashboard'\))/g,
-              "$1 || request.nextUrl.pathname.startsWith('/keystatic')"
-            )
-            .replace(
-              /(if \(.*?, 'view_reviews'\)\) {.*?})/s,
-              `$1
-
-    if (url.pathname.startsWith('/keystatic') && !hasPermission(permissions, 'manage_blog_section')) {
-      url.pathname = '/not-authorized'
-
-      return NextResponse.redirect(url)
-    }`
-            )
+          const updatedContent = content.replace(
+            /(request\.nextUrl\.pathname\.startsWith\('\/admin'\) \|\|[\s\n]+request\.nextUrl\.pathname\.startsWith\('\/dashboard'\))/g,
+            "$1 || request.nextUrl.pathname.startsWith('/keystatic')"
+          )
 
           return updatedContent
         }

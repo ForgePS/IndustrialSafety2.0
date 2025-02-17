@@ -155,9 +155,9 @@ const Details = ({ categoryData, faqData }: { categoryData: CategoryTypes[]; faq
         </div>
       ) : (
         <div className='bs-full mlb-10 max-sm:mli-6 flex flex-col items-center justify-center gap-y-2'>
-          <h1 className='text-textPrimary text-2xl font-medium'>
+          <h2 className='text-textPrimary text-2xl font-medium'>
             <Trans i18nKey='front-pages:faqsNoFaqsTitle' />
-          </h1>
+          </h2>
           <p className='text-textSecondary text-center'>
             <Trans i18nKey='front-pages:faqsNoFaqsDesc' />
           </p>
