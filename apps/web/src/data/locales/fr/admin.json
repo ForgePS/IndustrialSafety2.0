@@ -217,7 +217,6 @@
   "settingsSocialLinksUpdateError": "Erreur lors de la mise à jour des liens sociaux : {{message}}",
   "settingsSocialLinksUrlError": "URL invalide",
   "settingsSocialLinksUrlPlaceholder": "Entrez l'URL du lien social",
-  "settingsTabApplication": "Application",
   "settingsTabPagesComponents": "Pages et composants",
   "settingsTabShare": "Share This (Blog)",
   "settingsToastError": "Erreur lors de l'enregistrement des paramètres: {{message}}",

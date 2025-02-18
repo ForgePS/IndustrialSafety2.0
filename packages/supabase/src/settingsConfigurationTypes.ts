@@ -1,11 +1,5 @@
 export type SettingsConfiguration = {
   general_settings: {
-    application: {
-      site_name: string
-      title?: string
-      support_email: string
-      description?: string
-    }
     tracking: {
       google_tag_manager: string
       providers: [

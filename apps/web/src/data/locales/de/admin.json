@@ -217,7 +217,6 @@
   "settingsSocialLinksUpdateError": "Fehler beim Aktualisieren der sozialen Links: {{message}}",
   "settingsSocialLinksUrlError": "Ungültige URL",
   "settingsSocialLinksUrlPlaceholder": "URL des sozialen Links eingeben",
-  "settingsTabApplication": "Anwendung",
   "settingsTabPagesComponents": "Seiten & Komponenten",
   "settingsTabShare": "Share This (Blog)",
   "settingsToastError": "Fehler beim Speichern der Einstellungen: {{message}}",

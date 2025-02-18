@@ -1,3 +1,6 @@
+// React Imports
+import { Suspense } from 'react'
+
 // Next Imports
 import type { Metadata } from 'next'
 
@@ -5,6 +8,7 @@ import type { Metadata } from 'next'
 import { TbExclamationCircle } from 'react-icons/tb'
 import { Alert, AlertDescription } from '@repo/ui/components/ui/alert'
 import { getAuthUser, getRoles } from '@repo/supabase/serverHelpers'
+import Loader from '@repo/ui/components/Loader'
 
 // Component Imports
 import Roles from './Roles'
@@ -13,7 +17,7 @@ export const metadata: Metadata = {
   title: 'Roles'
 }
 
-const RolesPage = async () => {
+const RolesSection = async () => {
   // Vars
   const [
     {
@@ -34,6 +38,14 @@ const RolesPage = async () => {
   }
 
   return <Roles rolesData={data} userPermissions={user?.user_metadata.permissions} />
+}
+
+const RolesPage = () => {
+  return (
+    <Suspense fallback={<Loader />}>
+      <RolesSection />
+    </Suspense>
+  )
 }
 
 export default RolesPage

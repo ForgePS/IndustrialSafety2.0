@@ -7,14 +7,13 @@ import { useState, useEffect } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 
 // Third-party Imports
-import { TbWorld, TbLayout2, TbHeart, TbAdjustments, TbShare } from 'react-icons/tb'
+import { TbLayout2, TbHeart, TbAdjustments, TbShare } from 'react-icons/tb'
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@repo/ui/components/ui/tabs'
 import { Card, CardHeader } from '@repo/ui/components/ui/card'
 import Trans from '@repo/i18n/Trans'
 import type { SettingsConfiguration } from '@repo/supabase/settingsConfigurationTypes'
 
 // Component Imports
-import Application from './Application'
 import Tracking from './Tracking'
 import SocialLinks from './SocialLinks'
 import FeatureToggle from './FeatureToggle'
@@ -25,7 +24,7 @@ const GeneralSettings = ({ settings }: { settings: SettingsConfiguration['genera
   const router = useRouter()
   const searchParams = useSearchParams()
 
-  const initialTab = searchParams.get('settings-tab') || 'application'
+  const initialTab = searchParams.get('settings-tab') || 'tracking'
 
   // State
   const [activeTab, setActiveTab] = useState(initialTab)
@@ -51,32 +50,28 @@ const GeneralSettings = ({ settings }: { settings: SettingsConfiguration['genera
       <Card>
         <Tabs value={activeTab} onValueChange={handleTabChange}>
           <CardHeader className='border-be'>
-            <TabsList className='flex flex-wrap justify-start gap-y-4 bg-transparent'>
-              <TabsTrigger value='application' className='flex items-center gap-2'>
-                <TbWorld className='bs-5 is-5' />
-                <Trans i18nKey='admin:settingsTabApplication' />
-              </TabsTrigger>
-              <TabsTrigger value='tracking' className='flex items-center gap-2'>
+            <TabsList className='flex flex-wrap justify-start gap-y-4 bg-transparent max-sm:flex-col'>
+              <TabsTrigger value='tracking' className='max-sm:is-full flex items-center gap-2 max-sm:justify-start'>
                 <TbLayout2 className='bs-5 is-5' />
                 <Trans i18nKey='admin:trackingSection' />
               </TabsTrigger>
-              <TabsTrigger value='social-links' className='flex items-center gap-2'>
+              <TabsTrigger value='social-links' className='max-sm:is-full flex items-center gap-2 max-sm:justify-start'>
                 <TbHeart className='bs-5 is-5' />
                 <Trans i18nKey='admin:socialLinksSection' />
               </TabsTrigger>
-              <TabsTrigger value='pages-components' className='flex items-center gap-2'>
+              <TabsTrigger
+                value='pages-components'
+                className='max-sm:is-full flex items-center gap-2 max-sm:justify-start'
+              >
                 <TbAdjustments className='bs-5 is-5' />
                 <Trans i18nKey='admin:settingsTabPagesComponents' />
               </TabsTrigger>
-              <TabsTrigger value='share' className='flex items-center gap-2'>
+              <TabsTrigger value='share' className='max-sm:is-full flex items-center gap-2 max-sm:justify-start'>
                 <TbShare className='bs-5 is-5' />
                 <Trans i18nKey='admin:settingsTabShare' />
               </TabsTrigger>
             </TabsList>
           </CardHeader>
-          <TabsContent value='application'>
-            <Application settings={settings} />
-          </TabsContent>
           <TabsContent value='tracking'>
             <Tracking settings={settings} />
           </TabsContent>

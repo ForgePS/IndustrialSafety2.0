@@ -217,7 +217,6 @@
   "settingsSocialLinksUpdateError": "Error updating social links: {{message}}",
   "settingsSocialLinksUrlError": "Invalid URL",
   "settingsSocialLinksUrlPlaceholder": "Enter social link URL",
-  "settingsTabApplication": "Application",
   "settingsTabPagesComponents": "Pages & Components",
   "settingsTabShare": "Share This (Blog)",
   "settingsToastError": "Error saving settings: {{message}}",

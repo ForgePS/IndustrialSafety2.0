@@ -275,7 +275,7 @@ VALUES (1, 1),
 INSERT INTO public.settings_configuration (key, value)
 VALUES (
     'general_settings',
-    '{"application":{"site_name":"ChatFlow AI","title":"%s | ChatFlow AI - Next.js Boilerplate PRO - Tailwind CSS + Shadcn","support_email":"hello.themeselection@gmail.com","description":"Automate customer support with ChatFlow AI. Resolve queries 24/7, and deliver seamless service using an all-in-one AI chatbot solution."},"tracking":{"google_tag_manager":"","providers":[{"name":"Google Analytics","snippet":""},{"name":"Post Hog","snippet":""},{"name":"Chatbot","snippet":""}]},"social_links":[{"title":"facebook","icon":"TbBrandFacebook","url":"https://www.facebook.com/ThemeSelections"},{"title":"x","icon":"TbBrandX","url":"https://x.com/Theme_Selection"},{"title":"linkedin","icon":"TbBrandLinkedin","url":"https://www.linkedin.com/company/themeselection"},{"title":"instagram","icon":"TbBrandInstagram","url":"https://www.instagram.com/themeselection"},{"title":"youtube","icon":"TbBrandYoutube","url":"https://www.youtube.com/channel/UCuryo5s0CW4aP83itLjIdZg"},{"title":"github","icon":"TbBrandGithub","url":"https://github.com/themeselection"}],"pages_components":{"blog_enabled":true},"share_this_enabled":true}'
+    '{"tracking":{"google_tag_manager":"","providers":[{"name":"Google Analytics","snippet":""},{"name":"Post Hog","snippet":""},{"name":"Chatbot","snippet":""}]},"social_links":[{"title":"facebook","icon":"TbBrandFacebook","url":"https://www.facebook.com/ThemeSelections"},{"title":"x","icon":"TbBrandX","url":"https://x.com/Theme_Selection"},{"title":"linkedin","icon":"TbBrandLinkedin","url":"https://www.linkedin.com/company/themeselection"},{"title":"instagram","icon":"TbBrandInstagram","url":"https://www.instagram.com/themeselection"},{"title":"youtube","icon":"TbBrandYoutube","url":"https://www.youtube.com/channel/UCuryo5s0CW4aP83itLjIdZg"},{"title":"github","icon":"TbBrandGithub","url":"https://github.com/themeselection"}],"pages_components":{"blog_enabled":true},"share_this_enabled":true}'
   ),
   ('payment_provider', 'stripe');
 -- Inserting data into the review_platforms table
@@ -305,7 +305,7 @@ VALUES (
     'UK',
     NULL,
     '#',
-    '',
+    'https://cdn.themeselection.com/ts-assets/jetship/jetship-nextjs-starter-kit/avatar/avatar-8.png',
     true,
     NULL,
     NULL
@@ -318,7 +318,7 @@ VALUES (
     'US',
     NULL,
     '#',
-    '',
+    'https://cdn.themeselection.com/ts-assets/jetship/jetship-nextjs-starter-kit/avatar/avatar-7.png',
     true,
     NULL,
     NULL
@@ -331,7 +331,7 @@ VALUES (
     'US',
     NULL,
     '#',
-    '',
+    'https://cdn.themeselection.com/ts-assets/jetship/jetship-nextjs-starter-kit/avatar/avatar-1.png',
     true,
     NULL,
     NULL
@@ -344,7 +344,7 @@ VALUES (
     'BR',
     NULL,
     '#',
-    '',
+    'https://cdn.themeselection.com/ts-assets/jetship/jetship-nextjs-starter-kit/avatar/avatar-6.png',
     true,
     NULL,
     NULL
@@ -357,7 +357,7 @@ VALUES (
     'IN',
     NULL,
     '#',
-    '',
+    'https://cdn.themeselection.com/ts-assets/jetship/jetship-nextjs-starter-kit/avatar/avatar-2.png',
     true,
     NULL,
     NULL
@@ -370,7 +370,7 @@ VALUES (
     'IN',
     NULL,
     '#',
-    '',
+    'https://cdn.themeselection.com/ts-assets/jetship/jetship-nextjs-starter-kit/avatar/avatar-5.png',
     true,
     NULL,
     NULL
@@ -383,7 +383,7 @@ VALUES (
     'DE',
     NULL,
     '#',
-    '',
+    'https://cdn.themeselection.com/ts-assets/jetship/jetship-nextjs-starter-kit/avatar/avatar-3.png',
     true,
     NULL,
     NULL
@@ -396,7 +396,7 @@ VALUES (
     'UK',
     NULL,
     '#',
-    '',
+    'https://cdn.themeselection.com/ts-assets/jetship/jetship-nextjs-starter-kit/avatar/avatar-4.png',
     true,
     NULL,
     NULL
