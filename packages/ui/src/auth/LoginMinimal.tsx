@@ -68,7 +68,7 @@ const LoginMinimal = async () => {
               <div className='flex flex-wrap items-center justify-between gap-2'>
                 <div className='flex items-center'>
                   <Checkbox id='remember' />
-                  <Label htmlFor='remember' className='mis-3 text-textSecondary text-base'>
+                  <Label htmlFor='remember' className='mis-2 text-textSecondary text-base'>
                     <Trans i18nKey='packages-ui:loginRememberMe' />
                   </Label>
                 </div>

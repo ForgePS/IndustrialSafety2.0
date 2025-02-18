@@ -58,7 +58,7 @@ const WaitListAdvanced = async () => {
                     <Trans i18nKey='packages-ui:waitlistJoinButton' />
                   </Button>
                 </DialogTrigger>
-                <DialogContent className='sm:max-is-[425px]'>
+                <DialogContent className='sm:max-is-[425px] p-8'>
                   <DialogTitle hidden />
                   <DialogDescription hidden />
                   <div className='flex flex-col items-center justify-center gap-y-6'>
@@ -79,7 +79,7 @@ const WaitListAdvanced = async () => {
                         />
                       </p>
                     </div>
-                    <p className='text-textSecondary text-center text-sm'>
+                    <p className='text-textSecondary text-center text-xs'>
                       <Trans
                         i18nKey='packages-ui:waitlistFooterText'
                         values={{ appName: appConfig.appName }}

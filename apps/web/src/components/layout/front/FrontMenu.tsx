@@ -106,7 +106,7 @@ const FrontMenu = ({ isBlogEnabled }: { isBlogEnabled: boolean }) => {
     <Wrapper open={open} setOpen={setOpen} isBreakpointReached={isBreakpointReached}>
       <Link
         href='/#features-section'
-        className={cn({
+        className={cn('font-medium', {
           'pli-3 plb-[9px] flex items-center gap-1.5 rounded-md': isBreakpointReached,
           'bg-primary/10': isBreakpointReached && active === 'features-section',
           'link-animated': !isBreakpointReached,
@@ -121,7 +121,7 @@ const FrontMenu = ({ isBlogEnabled }: { isBlogEnabled: boolean }) => {
       </Link>
       <Link
         href='/#pricing-section'
-        className={cn({
+        className={cn('font-medium', {
           'pli-3 plb-[9px] flex items-center gap-1.5 rounded-md': isBreakpointReached,
           'bg-primary/10': isBreakpointReached && active === 'pricing-section',
           'link-animated': !isBreakpointReached,
@@ -137,7 +137,7 @@ const FrontMenu = ({ isBlogEnabled }: { isBlogEnabled: boolean }) => {
       {isBlogEnabled && (
         <Link
           href='/blog'
-          className={cn({
+          className={cn('font-medium', {
             'pli-3 plb-[9px] flex items-center gap-1.5 rounded-md': isBreakpointReached,
             'bg-primary/10': isBreakpointReached && pathname.includes('/blog'),
             'link-animated': !isBreakpointReached,
@@ -153,7 +153,7 @@ const FrontMenu = ({ isBlogEnabled }: { isBlogEnabled: boolean }) => {
       )}
       <Link
         href='/faqs'
-        className={cn({
+        className={cn('font-medium', {
           'pli-3 plb-[9px] flex items-center gap-1.5 rounded-md': isBreakpointReached,
           'bg-primary/10': isBreakpointReached && pathname === '/faqs',
           'link-animated': !isBreakpointReached,
