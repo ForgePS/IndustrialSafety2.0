@@ -16,7 +16,7 @@ import ResendVerifyEmailButton from './ResendVerifyEmailButton'
 export const metadata: Metadata = {
   title: { absolute: 'Verify Email' },
   alternates: {
-    canonical: 'https://demos.themeselection.com/jetship-nextjs-starter-kit-demo'
+    canonical: 'https://jetship-nextjs-saas-boilerplate-demo.vercel.app/auth/verify-email'
   }
 }
 

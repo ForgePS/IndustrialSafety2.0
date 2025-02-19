@@ -33,7 +33,7 @@ export async function generateMetadata(): Promise<Metadata> {
     openGraph: {
       title: appName,
       description: description,
-      url: 'https://demos.themeselection.com/jetship-nextjs-starter-kit-demo'
+      url: 'https://jetship-nextjs-saas-boilerplate-demo.vercel.app'
     },
     twitter: {
       card: 'summary_large_image',

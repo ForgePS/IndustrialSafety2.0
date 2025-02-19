@@ -133,11 +133,11 @@ const Roles = ({
           <Trans i18nKey='admin:rolesLabel' />
         </h1>
         {hasPermission(userPermissions, 'create_roles') && (
-          <Link href='/admin/roles/create'>
-            <Button className='max-sm:is-full'>
+          <Button className='max-sm:is-full' asChild>
+            <Link href='/admin/roles/create'>
               <Trans i18nKey='admin:rolesNewRole' />
-            </Button>
-          </Link>
+            </Link>
+          </Button>
         )}
       </div>
       <section className='space-b-6 divide-b divide-border'>

@@ -123,11 +123,11 @@ const Categories = ({
           <Trans i18nKey='admin:faqCategoriesTitle' />
         </h1>
         {hasAnyPermission(userPermissions, ['create_faqs']) && (
-          <Link href='/admin/faqs/category/create'>
-            <Button className='max-sm:is-full'>
+          <Button className='max-sm:is-full' asChild>
+            <Link href='/admin/faqs/category/create'>
               <Trans i18nKey='admin:faqCategoriesNewButton' />
-            </Button>
-          </Link>
+            </Link>
+          </Button>
         )}
       </div>
       <Card>

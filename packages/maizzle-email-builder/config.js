@@ -28,7 +28,7 @@ module.exports = {
     app_url: 'http://localhost:3000',
     support_center_url: 'https://discord.com/invite/kBHkY7DekX',
     support_email: 'hello@themeselection.com',
-    docs_url: 'https://demos.themeselection.com/jetship-nextjs-boilerplate/documentation',
+    docs_url: 'https://demos.themeselection.com/jetship-nextjs-starter-kit-documentation',
     github_url: 'https://github.com/themeselection',
     twitter_url: 'https://x.com/Theme_Selection'
   }

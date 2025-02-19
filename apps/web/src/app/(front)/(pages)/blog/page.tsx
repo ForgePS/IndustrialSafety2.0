@@ -11,7 +11,7 @@ import BlogList from './BlogList'
 export const metadata: Metadata = {
   title: 'Blog',
   alternates: {
-    canonical: 'https://demos.themeselection.com/jetship-nextjs-starter-kit-demo/blog'
+    canonical: 'https://jetship-nextjs-saas-boilerplate-demo.vercel.app/blog'
   }
 }
 

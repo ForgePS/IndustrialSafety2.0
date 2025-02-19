@@ -10,7 +10,7 @@ import Trans from '@repo/i18n/Trans'
 export const metadata: Metadata = {
   title: 'Thank You',
   alternates: {
-    canonical: 'https://demos.themeselection.com/jetship-nextjs-starter-kit-demo/thank-you'
+    canonical: 'https://jetship-nextjs-saas-boilerplate-demo.vercel.app/thank-you'
   }
 }
 

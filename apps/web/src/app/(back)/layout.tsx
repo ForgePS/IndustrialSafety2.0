@@ -24,7 +24,7 @@ export async function generateMetadata(): Promise<Metadata> {
       default: `${appConfig.appName} - Next.js Boilerplate PRO`
     },
     alternates: {
-      canonical: 'https://demos.themeselection.com/jetship-nextjs-starter-kit-demo'
+      canonical: 'https://jetship-nextjs-saas-boilerplate-demo.vercel.app'
     }
   }
 }

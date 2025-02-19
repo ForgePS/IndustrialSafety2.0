@@ -208,7 +208,7 @@ const Create = ({ roles }: { roles: Database['public']['Tables']['roles']['Row']
                 <Trans i18nKey='admin:createAndCreateAnotherButton' />
               )}
             </Button>
-            <Button type='button' variant='tonalDefault'>
+            <Button type='button' variant='tonalDefault' asChild>
               <Link href='/admin/users'>
                 <Trans i18nKey='admin:cancelButton' />
               </Link>

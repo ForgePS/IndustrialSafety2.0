@@ -40,6 +40,7 @@ const HeroVerticalVideo = () => {
                   <span className='from-primary to-destructive relative bg-gradient-to-r bg-clip-text [-webkit-text-fill-color:transparent]'>
                     <Trans i18nKey='packages-ui:heroHeadlineEffortless' />
                     <img
+                      alt='underline background'
                       src='/images/blocks/hero/underline-background.png'
                       className='-block-end-2 is-[7.3rem] md:-block-end-3 sm:is-[8.75rem] md:is-[11.65rem] absolute end-0'
                     />

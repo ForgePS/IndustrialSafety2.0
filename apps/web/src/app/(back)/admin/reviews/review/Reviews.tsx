@@ -155,11 +155,11 @@ const Reviews = ({
           <Trans i18nKey='admin:reviewsTitle' />
         </h1>
         {hasPermission(userPermissions, 'create_reviews') && (
-          <Link href='/admin/reviews/review/create'>
-            <Button className='max-sm:is-full'>
+          <Button className='max-sm:is-full' asChild>
+            <Link href='/admin/reviews/review/create'>
               <Trans i18nKey='admin:reviewsNewButton' />
-            </Button>
-          </Link>
+            </Link>
+          </Button>
         )}
       </div>
       <Card>

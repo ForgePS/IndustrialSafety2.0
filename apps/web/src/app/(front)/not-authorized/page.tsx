@@ -7,7 +7,7 @@ import NotAuthorized from '@repo/ui/components/NotAuthorized'
 export const metadata: Metadata = {
   title: { absolute: 'Not Authorized' },
   alternates: {
-    canonical: 'https://demos.themeselection.com/jetship-nextjs-starter-kit-demo'
+    canonical: 'https://jetship-nextjs-saas-boilerplate-demo.vercel.app/not-authorized'
   }
 }
 

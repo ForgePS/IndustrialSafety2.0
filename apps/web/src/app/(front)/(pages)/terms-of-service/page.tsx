@@ -8,7 +8,7 @@ import Details from './Details'
 export const metadata: Metadata = {
   title: 'Terms of Service',
   alternates: {
-    canonical: 'https://demos.themeselection.com/jetship-nextjs-starter-kit-demo/terms-of-service'
+    canonical: 'https://jetship-nextjs-saas-boilerplate-demo.vercel.app/terms-of-service'
   }
 }
 

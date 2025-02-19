@@ -117,11 +117,11 @@ const Permissions = ({
           <Trans i18nKey='admin:permissionsLabel' />
         </h1>
         {hasPermission(userPermissions, 'create_permission') && (
-          <Link href='/admin/permissions/create'>
-            <Button className='max-sm:is-full'>
+          <Button className='max-sm:is-full' asChild>
+            <Link href='/admin/permissions/create'>
               <Trans i18nKey='admin:permissionsNewButton' />
-            </Button>
-          </Link>
+            </Link>
+          </Button>
         )}
       </div>
       <Card>

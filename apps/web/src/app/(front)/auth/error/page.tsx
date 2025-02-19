@@ -4,7 +4,7 @@ import type { Metadata } from 'next'
 export const metadata: Metadata = {
   title: { absolute: 'Error' },
   alternates: {
-    canonical: 'https://demos.themeselection.com/jetship-nextjs-starter-kit-demo'
+    canonical: 'https://jetship-nextjs-saas-boilerplate-demo.vercel.app/auth/error'
   }
 }
 

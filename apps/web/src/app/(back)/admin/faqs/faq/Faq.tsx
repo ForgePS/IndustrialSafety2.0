@@ -143,11 +143,11 @@ const Faq = ({ faqData, userPermissions }: { faqData: FaqWithCategory[]; userPer
           <Trans i18nKey='admin:faqsTitle' />
         </h1>
         {hasPermission(userPermissions, 'create_faqs') && (
-          <Link href='/admin/faqs/faq/create'>
-            <Button className='max-sm:is-full'>
+          <Button className='max-sm:is-full' asChild>
+            <Link href='/admin/faqs/faq/create'>
               <Trans i18nKey='admin:faqsNewButton' />
-            </Button>
-          </Link>
+            </Link>
+          </Button>
         )}
       </div>
       <Card>

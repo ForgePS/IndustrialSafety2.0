@@ -75,6 +75,7 @@ const HeroHorizontalHalfImage = () => {
               <span className='text-primary relative text-nowrap'>
                 <Trans i18nKey='packages-ui:heroSubheadlineHighlight' />
                 <img
+                  alt='underline wave background'
                   src='/images/blocks/hero/underline-wave-background.png'
                   className='-block-end-1 max-is-[10.875rem] sm:max-is-48 absolute start-0'
                 />
@@ -126,6 +127,7 @@ const HeroHorizontalHalfImage = () => {
             className='relative'
           >
             <Image
+              alt='hero dashboard'
               srcLight='/images/blocks/hero/hero-dashboard-v4-light.png'
               srcDark='/images/blocks/hero/hero-dashboard-v4-dark.png'
             />
@@ -211,6 +213,7 @@ const HeroHorizontalHalfImage = () => {
         </div>
         <div className='md:mbs-12 max-is-xl mli-auto relative lg:hidden'>
           <Image
+            alt='hero dashboard'
             srcLight='/images/blocks/hero/hero-dashboard-v2-light.png'
             srcDark='/images/blocks/hero/hero-dashboard-v2-dark.png'
           />

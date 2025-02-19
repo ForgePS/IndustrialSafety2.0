@@ -15,7 +15,7 @@ import ResetPasswordForm from './ResetPasswordForm'
 export const metadata: Metadata = {
   title: { absolute: 'Reset Password' },
   alternates: {
-    canonical: 'https://demos.themeselection.com/jetship-nextjs-starter-kit-demo'
+    canonical: 'https://jetship-nextjs-saas-boilerplate-demo.vercel.app/reset-password'
   }
 }
 

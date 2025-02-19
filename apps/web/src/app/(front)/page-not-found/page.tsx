@@ -7,7 +7,7 @@ import NotFound from '@repo/ui/components/NotFound'
 export const metadata: Metadata = {
   title: { absolute: 'Page Not Found' },
   alternates: {
-    canonical: 'https://demos.themeselection.com/jetship-nextjs-starter-kit-demo'
+    canonical: 'https://jetship-nextjs-saas-boilerplate-demo.vercel.app/page-not-found'
   }
 }
 

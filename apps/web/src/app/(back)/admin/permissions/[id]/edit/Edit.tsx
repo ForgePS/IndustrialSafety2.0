@@ -167,7 +167,7 @@ const Edit = ({ id, permissionData, rolesData, permissionRolesData, userPermissi
           <Trans i18nKey='admin:permissionsEditTitle' />
         </h1>
         <div className='flex gap-4 max-sm:flex-col sm:items-center'>
-          <Button variant='tonalDefault'>
+          <Button variant='tonalDefault' asChild>
             <Link href={`/admin/permissions/${id}/view`}>
               <Trans i18nKey='admin:viewButton' />
             </Link>

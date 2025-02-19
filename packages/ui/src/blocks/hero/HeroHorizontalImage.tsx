@@ -53,6 +53,7 @@ const HeroHorizontalImage = () => {
               <span className='text-primary relative text-nowrap'>
                 <Trans i18nKey='packages-ui:heroSubheadlineHighlight' />
                 <img
+                  alt='underline wave background'
                   src='/images/blocks/hero/underline-wave-background.png'
                   className='-block-end-1 max-is-[10.875rem] sm:max-is-48 absolute start-0'
                 />
@@ -102,7 +103,7 @@ const HeroHorizontalImage = () => {
           }}
           className='mli-auto lg:mli-0 plb-4 md:plb-8 lg:plb-32 bg-cover bg-center bg-no-repeat [background-image:url(/images/blocks/hero/hero-v1-shape.png)] max-xl:!bg-none'
         >
-          <img src='/images/blocks/hero/hero-dashboard-v1.png' className='is-full' />
+          <img src='/images/blocks/hero/hero-dashboard-v1.png' alt='hero dashboard' className='is-full' />
         </MotionElement>
       </div>
     </section>

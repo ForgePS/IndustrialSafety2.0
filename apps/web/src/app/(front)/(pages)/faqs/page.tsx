@@ -14,7 +14,7 @@ import HeaderSection from './HeaderSection'
 export const metadata: Metadata = {
   title: 'FAQs',
   alternates: {
-    canonical: 'https://demos.themeselection.com/jetship-nextjs-starter-kit-demo/faqs'
+    canonical: 'https://jetship-nextjs-saas-boilerplate-demo.vercel.app/faqs'
   }
 }
 

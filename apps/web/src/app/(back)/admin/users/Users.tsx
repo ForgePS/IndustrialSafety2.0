@@ -128,11 +128,11 @@ const Users = ({ usersRecord, rolesData, userPermissions }: Props) => {
           <Trans i18nKey='admin:usersSection' />
         </h1>
         <PermissionGuard permissions={userPermissions} permission={'create_users'}>
-          <Link href='/admin/users/create'>
-            <Button className='max-sm:is-full'>
+          <Button className='max-sm:is-full' asChild>
+            <Link href='/admin/users/create'>
               <Trans i18nKey='admin:usersNewButton' />
-            </Button>
-          </Link>
+            </Link>
+          </Button>
         </PermissionGuard>
       </div>
       <Card>

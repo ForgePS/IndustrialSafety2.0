@@ -21,7 +21,7 @@ import authConfig from '@configs/authConfig'
 export const metadata: Metadata = {
   title: { absolute: 'Register' },
   alternates: {
-    canonical: 'https://demos.themeselection.com/jetship-nextjs-starter-kit-demo'
+    canonical: 'https://jetship-nextjs-saas-boilerplate-demo.vercel.app/auth/register'
   }
 }
 

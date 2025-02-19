@@ -147,7 +147,7 @@ const Edit = ({
             <Button type='submit' disabled={pending}>
               {pending ? <Trans i18nKey='admin:savingStatus' /> : <Trans i18nKey='admin:saveChangesButton' />}
             </Button>
-            <Button type='button' variant='tonalDefault'>
+            <Button type='button' variant='tonalDefault' asChild>
               <Link href='/admin/faqs/category'>
                 <Trans i18nKey='admin:cancelButton' />
               </Link>

@@ -148,12 +148,14 @@ const HeroVerticalGradient = () => {
             className='plb-9 sm:plb-16 md:plb-20 lg:plb-24 xl:plb-28 relative'
           >
             <Image
+              alt='hero dashboard'
               srcLight='/images/blocks/hero/hero-dashboard-v2-light.png'
               srcDark='/images/blocks/hero/hero-dashboard-v2-dark.png'
               className='mli-auto is-[80%] sm:is-[75%] lg:is-[85%] xl:is-auto'
             />
             <div className='absolute inset-0'>
               <Image
+                alt='hero dashboard icons'
                 srcLight='/images/blocks/hero/hero-dashboard-icons-v2-light.png'
                 srcDark='/images/blocks/hero/hero-dashboard-icons-v2-dark.png'
                 style={{

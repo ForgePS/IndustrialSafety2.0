@@ -40,7 +40,7 @@ export async function generateMetadata(props: Props, parent: ResolvingMetadata):
     },
     metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL!),
     alternates: {
-      canonical: `https://demos.themeselection.com/jetship-nextjs-starter-kit-demo/blog/${params.slug}`
+      canonical: `https://jetship-nextjs-saas-boilerplate-demo.vercel.app/blog/${params.slug}`
     }
   }
 }

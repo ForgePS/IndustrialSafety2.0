@@ -12,7 +12,7 @@ import CheckoutDetails from './CheckoutDetails'
 export const metadata: Metadata = {
   title: 'Checkout',
   alternates: {
-    canonical: 'https://demos.themeselection.com/jetship-nextjs-starter-kit-demo/checkout'
+    canonical: 'https://jetship-nextjs-saas-boilerplate-demo.vercel.app/checkout'
   }
 }
 

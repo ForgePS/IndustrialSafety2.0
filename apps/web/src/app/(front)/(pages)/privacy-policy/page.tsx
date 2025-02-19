@@ -8,7 +8,7 @@ import Details from './Details'
 export const metadata: Metadata = {
   title: 'Privacy Policy',
   alternates: {
-    canonical: 'https://demos.themeselection.com/jetship-nextjs-starter-kit-demo/privacy-policy'
+    canonical: 'https://jetship-nextjs-saas-boilerplate-demo.vercel.app/privacy-policy'
   }
 }
 

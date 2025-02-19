@@ -14,7 +14,11 @@ const NotFound = () => {
       <div className="bg-[url('/images/pages/background-v2.png')] bg-cover bg-center bg-no-repeat">
         <div className='min-bs-screen bg-center bg-no-repeat'>
           <div className='min-bs-screen pli-4 flex flex-col items-center justify-center gap-y-5'>
-            <img src='/images/pages/not-found-illustration.png' className='is-[461px] max-is-full bs-full mbs-5' />
+            <img
+              src='/images/pages/not-found-illustration.png'
+              alt='not found illustration'
+              className='is-[461px] max-is-full bs-full mbs-5'
+            />
             <div className='text-center'>
               <h1 className='text-textPrimary flex items-center justify-center gap-x-2 text-2xl font-semibold'>
                 <span>
