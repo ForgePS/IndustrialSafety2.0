@@ -113,7 +113,7 @@ const EditPlatform = ({
         imageUrl = ''
       }
 
-      const { data: urlData, error } = await supabase
+      const { error } = await supabase
         .from('review_platforms')
         .update({
           platform_name: data.platform_name,
@@ -122,8 +122,6 @@ const EditPlatform = ({
         })
         .eq('id', id)
         .select()
-
-      console.log('urlData', urlData)
 
       if (error) {
         console.error('Error updating platform: ', error.message)
