@@ -16,8 +16,6 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '
 import { Button } from '@repo/ui/components/ui/button'
 import { Input } from '@repo/ui/components/ui/input'
 import PasswordInput from '@repo/ui/components/ui/password-input'
-import { Checkbox } from '@repo/ui/components/ui/checkbox'
-import { Label } from '@repo/ui/components/ui/label'
 import { passwordSignInFormSchema, usePasswordSignIn } from '@repo/auth/sign-in'
 import Trans from '@repo/i18n/Trans'
 import { useTranslation } from 'react-i18next'
@@ -135,12 +133,6 @@ const PasswordSignInForm = ({ users }: { users: User[] | null }) => {
             )}
           />
           <div className='flex flex-wrap items-center justify-between gap-2'>
-            <div className='flex items-center'>
-              <Checkbox id='remember' />
-              <Label htmlFor='remember' className='mis-3 text-textSecondary text-base'>
-                <Trans i18nKey='auth:loginRememberMe' />
-              </Label>
-            </div>
             <Link href='/auth/forgot-password' className='text-primary'>
               <Trans i18nKey='auth:authForgotPasswordText' />?
             </Link>
