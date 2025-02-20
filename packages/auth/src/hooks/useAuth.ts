@@ -242,6 +242,11 @@ export function useAuth() {
 
       await impersonateUser(userId)
     } catch (error) {
+      // Ignore NEXT_REDIRECT error as it's expected behavior
+      if (error instanceof Error && error.message === 'NEXT_REDIRECT') {
+        return
+      }
+
       console.error('Impersonation error:', error)
       throw error
     }
@@ -263,6 +268,11 @@ export function useAuth() {
 
       await stopImpersonatingUser()
     } catch (error) {
+      // Ignore NEXT_REDIRECT error as it's expected behavior
+      if (error instanceof Error && error.message === 'NEXT_REDIRECT') {
+        return
+      }
+
       console.error('Error stopping impersonation:', error)
       throw error
     }

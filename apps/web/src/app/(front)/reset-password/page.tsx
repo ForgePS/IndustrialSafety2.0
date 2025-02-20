@@ -7,6 +7,7 @@ import { TbChevronLeft } from 'react-icons/tb'
 import { Button } from '@repo/ui/components/ui/button'
 import LeftSection from '@repo/ui/auth/LeftSection'
 import Trans from '@repo/i18n/Trans'
+import { getAuthUser } from '@repo/supabase/serverHelpers'
 
 // Component Imports
 import Logo from '@components/layout/front/Logo'
@@ -20,6 +21,13 @@ export const metadata: Metadata = {
 }
 
 const ResetPassword = async () => {
+  // Vars
+  const {
+    data: { user }
+  } = await getAuthUser()
+
+  const roles = user?.user_metadata.roles
+
   return (
     <div className='min-bs-screen flex'>
       <LeftSection />
@@ -46,7 +54,7 @@ const ResetPassword = async () => {
             <div className='flex flex-col gap-4'>
               <ResetPasswordForm />
               <Button variant='ghostPrimary' asChild>
-                <Link href='/dashboard' className='flex items-center gap-x-2'>
+                <Link href={roles?.includes('admin') ? '/admin' : '/dashboard'} className='flex items-center gap-x-2'>
                   <TbChevronLeft className='is-[22px] bs-[22px]' />
                   <span>
                     <Trans i18nKey='auth:goToDashboard' />

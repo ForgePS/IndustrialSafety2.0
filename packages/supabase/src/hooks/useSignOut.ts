@@ -1,5 +1,5 @@
 // Next Imports
-import { useRouter } from 'next/navigation'
+import { useRouter, usePathname } from 'next/navigation'
 
 // Third-party Imports
 import { useCookie } from 'react-use'
@@ -12,6 +12,7 @@ export const useSignOut = () => {
   // Hooks
   const [cookieValue, deleteCookie] = useCookie('checkoutData')
   const router = useRouter()
+  const pathname = usePathname()
 
   // Vars
   const supabase = createClient()
@@ -24,7 +25,7 @@ export const useSignOut = () => {
     }
 
     cookieValue && deleteCookie('checkoutData')
-    router.push('/auth/login')
+    router.push(pathname.includes('/admin') || pathname.includes('/dashboard') ? '/' : pathname)
   }
 
   return useMutation({

@@ -1,6 +1,3 @@
-// Next Imports
-import Link from 'next/link'
-
 // Third-party Imports
 import { TbCircleCheckFilled, TbMapPin } from 'react-icons/tb'
 import Trans from '@repo/i18n/Trans'
@@ -14,6 +11,7 @@ import { Badge } from '@repo/ui/components/ui/badge'
 import { Card, CardContent, CardHeader } from '@repo/ui/components/ui/card'
 import { Ratings } from '@repo/ui/components/ui/ratings'
 import { MotionFadeElement } from '@repo/ui/components/ui/motion-element'
+import Link from '@repo/ui/components/Link'
 import BlurFade from '@repo/ui/components/ui/blur-fade'
 
 // Util Imports
@@ -97,7 +95,7 @@ const Reviews = (props: Props) => {
 
             return (
               <BlurFade key={index} delay={transitionDelay + index * 0.05} duration={transitionDuration}>
-                <Link href={review.link ? review.link : ''} target='_blank'>
+                <Link {...(review.link && { href: review.link })} target='_blank'>
                   <Card
                     style={{ marginBlockEnd: `${gap}px` }}
                     className='break-inside-avoid-column border shadow-none transition duration-200 hover:scale-[1.02]'

@@ -118,7 +118,11 @@ const Footer = async () => {
           </h6>
           <ul className='flex flex-col gap-4'>
             <li>
-              <Link href='/' target='_blank' className='link-animated text-textPrimary text-base'>
+              <Link
+                href='https://demos.themeselection.com/jetship-nextjs-starter-kit-documentation'
+                target='_blank'
+                className='link-animated text-textPrimary text-base'
+              >
                 <Trans i18nKey='layout:documentation' />
               </Link>
             </li>
@@ -151,7 +155,11 @@ const Footer = async () => {
           </h6>
           <ul className='flex flex-col gap-4'>
             <li>
-              <Link href='/' target='_blank' className='link-animated text-textPrimary text-base'>
+              <Link
+                href='https://jetship-boilerplate.lemonsqueezy.com/affiliates'
+                target='_blank'
+                className='link-animated text-textPrimary text-base'
+              >
                 <Trans i18nKey='layout:affiliatesUpToPerSale' />
               </Link>
             </li>

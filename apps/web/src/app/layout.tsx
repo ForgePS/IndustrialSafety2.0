@@ -45,8 +45,8 @@ export const metadata: Metadata = {
     ],
     apple: [{ url: '/apple-touch-icon.png', sizes: '180x180', type: 'image/png' }],
     other: [
-      { rel: 'icon', url: '/android-chrome-192x192.png', sizes: '192x192', type: 'image/png' },
-      { rel: 'icon', url: '/android-chrome-512x512.png', sizes: '512x512', type: 'image/png' }
+      { url: '/android-chrome-192x192.png', rel: 'icon', sizes: '192x192', type: 'image/png' },
+      { url: '/android-chrome-512x512.png', rel: 'icon', sizes: '512x512', type: 'image/png' }
     ]
   }
 }
