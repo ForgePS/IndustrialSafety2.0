@@ -1,13 +1,21 @@
 // Next Imports
+import Link from 'next/link'
+import { cookies } from 'next/headers'
 import type { Metadata } from 'next'
 
 // Third-party Imports
 import { createServiceRoleClient } from '@repo/supabase/server'
 import { getAuthUser, getPublicPaymentProvider } from '@repo/supabase/serverHelpers'
+import { Alert, AlertDescription, AlertTitle } from '@repo/ui/components/ui/alert'
+import { TbAlertTriangle } from 'react-icons/tb'
+import { cn } from '@repo/ui/lib/utils'
 
 // Component Imports
 import HeaderSection from './HeaderSection'
 import CheckoutDetails from './CheckoutDetails'
+
+// Styles Imports
+import frontCommonStyles from '../styles.module.css'
 
 export const metadata: Metadata = {
   title: 'Checkout',
@@ -18,6 +26,7 @@ export const metadata: Metadata = {
 
 const CheckoutPage = async () => {
   const supabase = createServiceRoleClient()
+  const cookieStore = await cookies()
 
   const { data: paymentProvider } = await getPublicPaymentProvider()
 
@@ -27,10 +36,28 @@ const CheckoutPage = async () => {
     data: { users }
   } = await supabase.auth.admin.listUsers()
 
+  const isCheckoutCookieSet = cookieStore.has('checkoutData')
+
   return (
     <>
       <HeaderSection />
-      <CheckoutDetails paymentProvider={paymentProvider?.value} userRecord={userRecord?.user} users={users} />
+      {isCheckoutCookieSet ? (
+        <CheckoutDetails paymentProvider={paymentProvider?.value} userRecord={userRecord?.user} users={users} />
+      ) : (
+        <div className={cn('plb-20', frontCommonStyles.layoutSpacing)}>
+          <Alert variant='tonalWarning'>
+            <TbAlertTriangle className='bs-6 is-6' />
+            <AlertTitle>Plan not found</AlertTitle>
+            <AlertDescription>
+              Please select a plan to continue. You can select a plan from{' '}
+              <Link href='/#pricing-section' className='underline'>
+                here
+              </Link>
+              .
+            </AlertDescription>
+          </Alert>
+        </div>
+      )}
     </>
   )
 }

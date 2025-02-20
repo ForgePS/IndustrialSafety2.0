@@ -211,7 +211,7 @@ const Search = ({ data, roles }: { data: SearchDataProps[]; roles: string[] }) =
                     </Link>
                   </CommandItem>
                   <CommandItem onSelect={handleClose}>
-                    <Link href='/dashboard/billing' className='is-full flex items-center'>
+                    <Link href='/billing' className='is-full flex items-center'>
                       <TbFileText className='me-2' />
                       <Trans i18nKey='packages-ui:searchBilling' />
                     </Link>

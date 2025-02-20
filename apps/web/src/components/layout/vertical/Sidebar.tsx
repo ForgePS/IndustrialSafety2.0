@@ -125,16 +125,14 @@ const AppSidebar = ({ roles, permissions }: { roles?: string[]; permissions: str
                 </span>
               </MenuButton>
             </SidebarMenuItem>
-            {!roles?.includes('admin') && (
-              <SidebarMenuItem>
-                <MenuButton href='/dashboard/billing' tooltip={t('layout:billing')}>
-                  <TbFileText />
-                  <span>
-                    <Trans i18nKey='layout:billing' />
-                  </span>
-                </MenuButton>
-              </SidebarMenuItem>
-            )}
+            <SidebarMenuItem>
+              <MenuButton href='/billing' tooltip={t('layout:billing')}>
+                <TbFileText />
+                <span>
+                  <Trans i18nKey='layout:billing' />
+                </span>
+              </MenuButton>
+            </SidebarMenuItem>
             <SidebarMenuItem>
               <MenuButton href='/' target='_blank' tooltip={t('layout:landingPage')}>
                 <TbHome />

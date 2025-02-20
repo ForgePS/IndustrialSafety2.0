@@ -107,7 +107,7 @@ export const searchData: SearchDataItem[] = [
   {
     id: '14',
     name: <Trans i18nKey='data:searchBilling' />,
-    url: '/dashboard/billing',
+    url: '/billing',
     icon: 'TbWallet'
   },
   {

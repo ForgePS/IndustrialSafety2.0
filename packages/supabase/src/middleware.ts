@@ -100,6 +100,13 @@ export async function updateSession(request: NextRequest, isMagicLinkEnabled: bo
     }
   }
 
+  // Cannot visit thank-you page if they are not logged in
+  if (url.pathname.startsWith('/thank-you') && !user) {
+    url.pathname = '/'
+
+    return NextResponse.redirect(url)
+  }
+
   if (user && currentUser) {
     const { roles, permissions } = currentUser
 
@@ -124,17 +131,7 @@ export async function updateSession(request: NextRequest, isMagicLinkEnabled: bo
       return NextResponse.redirect(url)
     }
 
-    // User can only access the checkout page after selecting a product
-    if (url.pathname.startsWith('/checkout')) {
-      // If the user is trying to access a checkout page and is not a user, redirect them to the home page
-      if (roles?.includes('admin') || request.cookies.get('checkoutData')?.value === undefined) {
-        url.pathname = '/' // Redirect to the home page
-
-        return NextResponse.redirect(url)
-      }
-    }
-
-    // User can only access the thank you page after a successful payment
+    // User can only access the thank you page if they are logged in and have a successful payment
     if (url.pathname.startsWith('/thank-you')) {
       const { data: billingRecords } = await supabase.from('billing').select('status').eq('user_id', user.id)
 
@@ -160,6 +157,7 @@ export async function updateSession(request: NextRequest, isMagicLinkEnabled: bo
     if (
       request.nextUrl.pathname.startsWith('/admin') ||
       request.nextUrl.pathname.startsWith('/dashboard') ||
+      request.nextUrl.pathname.startsWith('/billing') ||
       request.nextUrl.pathname.startsWith('/reset-password') ||
       (request.nextUrl.pathname.startsWith('/auth/magic-link') && !isMagicLinkEnabled)
     ) {

@@ -20,7 +20,8 @@ const alertVariants = cva(
         primary: 'border-primary text-primary border',
         success: 'border-success text-success border',
         tonalDestructive: 'bg-destructive/20 text-destructive',
-        tonalSuccess: 'bg-success/20 text-success'
+        tonalSuccess: 'bg-success/20 text-success',
+        tonalWarning: 'bg-warning/20 text-warning'
       }
     },
     defaultVariants: {
