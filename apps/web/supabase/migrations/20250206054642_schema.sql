@@ -637,7 +637,7 @@ create policy "billing_delete_policy" on "public"."billing" as permissive for de
 create policy "billing_insert_policy" on "public"."billing" as permissive for
 insert to authenticated with check ((user_id = auth.uid()));
 create policy "billing_select_policy" on "public"."billing" as permissive for
-select to authenticated using ((user_id = auth.uid()));
+select to authenticated using (true);
 create policy "billing_update_policy" on "public"."billing" as permissive for
 update to authenticated using ((user_id = auth.uid())) with check ((user_id = auth.uid()));
 create policy "faq_categories_delete_policy" on "public"."faq_categories" as permissive for delete to authenticated using (has_permission(auth.uid(), 'delete_faqs'::text));

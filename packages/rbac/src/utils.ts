@@ -24,7 +24,7 @@ export const ROUTE_PERMISSIONS = [
   { pattern: /^\/admin\/roles/, permissions: ['view_roles'] },
 
   // --- Permissions Routes ---
-  { pattern: /^\/admin\/permissions\/create/, permissions: ['view_permissions', 'create_permissions'] },
+  { pattern: /^\/admin\/permissions\/create/, permissions: ['view_permission', 'create_permission'] },
   { pattern: /^\/admin\/permissions/, permissions: ['view_permission'] },
 
   // --- FAQs Routes ---

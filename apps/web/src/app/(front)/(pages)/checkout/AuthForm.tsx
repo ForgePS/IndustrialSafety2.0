@@ -1,6 +1,9 @@
 // React Imports
 import { useEffect, useState, useTransition } from 'react'
 
+// Next Imports
+import { useRouter } from 'next/navigation'
+
 // Third-party Imports
 import { useForm } from 'react-hook-form'
 import { Input } from '@repo/ui/components/ui/input'
@@ -30,6 +33,7 @@ const AuthForm = ({ users }: { users: User[] | null }) => {
 
   // Hooks
   const { t } = useTranslation()
+  const router = useRouter()
 
   // Vars
   const form = useForm<PasswordSignInFormData>({
@@ -57,9 +61,9 @@ const AuthForm = ({ users }: { users: User[] | null }) => {
         setShowAlert(false)
 
         if (formData.email === users?.find(user => user.email === formData.email)?.email) {
-          await handleSignIn(formData, users, '')
+          await handleSignIn(formData, users, '').then(() => router.refresh())
         } else {
-          await handleSignUp(formData as PasswordSignUpFormData, users)
+          await handleSignUp(formData as PasswordSignUpFormData, users).then(() => router.refresh())
         }
       } catch (error) {
         console.error(error)
@@ -166,7 +170,7 @@ const AuthForm = ({ users }: { users: User[] | null }) => {
               </div>
               <OauthProviders
                 providers={authConfig.providers.oAuth}
-                redirectTo={`${process.env.NEXT_PUBLIC_APP_URL}`}
+                redirectTo={`${process.env.NEXT_PUBLIC_APP_URL}/checkout`}
               />
             </>
           )}
