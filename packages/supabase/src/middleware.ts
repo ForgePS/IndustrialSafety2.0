@@ -111,13 +111,6 @@ export async function updateSession(request: NextRequest, isMagicLinkEnabled: bo
     const { roles, permissions } = currentUser
 
     // Role-based access control
-    // Additional permission checks for specific admin routes
-    if ((url.pathname === '/admin' || url.pathname.startsWith('/admin/my-profile')) && !roles?.includes('admin')) {
-      url.pathname = '/not-authorized'
-
-      return NextResponse.redirect(url)
-    }
-
     if (url.pathname.startsWith('/dashboard') && roles?.includes('admin')) {
       url.pathname = '/not-authorized'
 
@@ -158,6 +151,7 @@ export async function updateSession(request: NextRequest, isMagicLinkEnabled: bo
       request.nextUrl.pathname.startsWith('/admin') ||
       request.nextUrl.pathname.startsWith('/dashboard') ||
       request.nextUrl.pathname.startsWith('/billing') ||
+      request.nextUrl.pathname.startsWith('/my-profile') ||
       request.nextUrl.pathname.startsWith('/reset-password') ||
       (request.nextUrl.pathname.startsWith('/auth/magic-link') && !isMagicLinkEnabled)
     ) {

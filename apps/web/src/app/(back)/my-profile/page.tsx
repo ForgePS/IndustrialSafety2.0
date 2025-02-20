@@ -5,8 +5,10 @@ import { Suspense } from 'react'
 import type { Metadata } from 'next'
 
 // Third-party Imports
-import MyProfilePage from '@repo/profile/page'
 import Loader from '@repo/ui/components/Loader'
+
+// Component Imports
+import MyProfilePage from './MyProfilePage'
 
 export const metadata: Metadata = {
   title: 'My Profile'

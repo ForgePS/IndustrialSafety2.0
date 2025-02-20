@@ -3,6 +3,9 @@
 // React Imports
 import { useState, useTransition } from 'react'
 
+// Next Imports
+import { useRouter } from 'next/navigation'
+
 // Third-party Imports
 import { TbX } from 'react-icons/tb'
 import { useDropzone } from 'react-dropzone'
@@ -21,7 +24,7 @@ import { useTranslation } from 'react-i18next'
 import type { TFunction } from 'i18next'
 
 // Util Imports
-import { uploadAvatarToSupabase, removeAvatarFromSupabase, updateUserProfile } from '@repo/profile/client'
+import { uploadAvatarToSupabase, removeAvatarFromSupabase, updateUserProfile } from './client'
 
 // Define Zod Schema for validation
 const userSchema = (t: TFunction) =>
@@ -53,6 +56,7 @@ const PersonalInformation = ({
 
   // Hooks
   const { t } = useTranslation()
+  const router = useRouter()
 
   const { getRootProps, getInputProps } = useDropzone({
     multiple: false,
@@ -120,6 +124,8 @@ const PersonalInformation = ({
 
         return
       }
+
+      router.refresh()
 
       // Update the current avatar URL
       setCurrentAvatarUrl(avatarUrl)

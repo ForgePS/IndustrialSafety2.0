@@ -184,9 +184,15 @@ const Search = ({ data, roles }: { data: SearchDataProps[]; roles: string[] }) =
                     </Link>
                   </CommandItem>
                   <CommandItem onSelect={handleClose}>
-                    <Link href='/admin/my-profile' className='is-full flex items-center'>
+                    <Link href='/my-profile' className='is-full flex items-center'>
                       <TbUser className='me-2' />
                       <Trans i18nKey='packages-ui:searchMyProfile' />
+                    </Link>
+                  </CommandItem>
+                  <CommandItem onSelect={handleClose}>
+                    <Link href='/billing' className='is-full flex items-center'>
+                      <TbFileText className='me-2' />
+                      <Trans i18nKey='packages-ui:searchBilling' />
                     </Link>
                   </CommandItem>
                   <CommandItem onSelect={handleClose}>
@@ -205,7 +211,7 @@ const Search = ({ data, roles }: { data: SearchDataProps[]; roles: string[] }) =
                     </Link>
                   </CommandItem>
                   <CommandItem onSelect={handleClose}>
-                    <Link href='/dashboard/my-profile' className='is-full flex items-center'>
+                    <Link href='/my-profile' className='is-full flex items-center'>
                       <TbUser className='me-2' />
                       <Trans i18nKey='packages-ui:searchMyProfile' />
                     </Link>

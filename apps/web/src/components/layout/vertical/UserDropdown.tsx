@@ -75,7 +75,7 @@ const UserDropdown = ({ user, roles }: Props) => {
       </DropdownMenuTrigger>
       <DropdownMenuContent align='end' className='max-is-[200px]'>
         <DropdownMenuItem asChild>
-          <Link href={`/${roles?.includes('admin') ? 'admin' : 'dashboard'}/my-profile`} className='flex gap-2'>
+          <Link href='/my-profile' className='flex gap-2'>
             <TbUser className='text-xl' />
             <span className='flex-1 truncate'>
               <Trans i18nKey='layout:myProfile' />

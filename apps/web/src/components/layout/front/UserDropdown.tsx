@@ -48,7 +48,7 @@ const UserDropdown = ({ user, roles }: Props) => {
       </DropdownMenuTrigger>
       <DropdownMenuContent align='end' className='max-is-[200px]'>
         <DropdownMenuItem asChild>
-          <Link href={`/${roles?.includes('admin') ? 'admin' : 'dashboard'}/my-profile`}>
+          <Link href='/my-profile'>
             <Avatar size='lg'>
               <AvatarImage asChild src={avatarSrc}>
                 <img alt={userName} src={avatarSrc} height={36} width={36} />

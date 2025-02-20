@@ -115,10 +115,7 @@ const AppSidebar = ({ roles, permissions }: { roles?: string[]; permissions: str
               </MenuButton>
             </SidebarMenuItem>
             <SidebarMenuItem>
-              <MenuButton
-                href={`/${roles?.includes('admin') ? 'admin' : 'dashboard'}/my-profile`}
-                tooltip={t('layout:myProfile')}
-              >
+              <MenuButton href='/my-profile' tooltip={t('layout:myProfile')}>
                 <TbUser />
                 <span>
                   <Trans i18nKey='layout:myProfile' />

@@ -3,9 +3,8 @@ import { TbExclamationCircle } from 'react-icons/tb'
 import { Alert, AlertDescription } from '@repo/ui/components/ui/alert'
 import Trans from '@repo/i18n/Trans'
 
-import { getUserProfile } from '@repo/profile/server'
-
 // Component Imports
+import { getUserProfile } from './server'
 import PersonalInformation from './PersonalInformation'
 import Password from './Password'
 

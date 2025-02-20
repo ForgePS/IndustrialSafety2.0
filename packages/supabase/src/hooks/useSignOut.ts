@@ -25,7 +25,15 @@ export const useSignOut = () => {
     }
 
     cookieValue && deleteCookie('checkoutData')
-    router.push(pathname.includes('/admin') || pathname.includes('/dashboard') ? '/' : pathname)
+    router.push(
+      pathname.includes('/admin') ||
+        pathname.includes('/dashboard') ||
+        pathname.includes('/my-profile') ||
+        pathname.includes('/billing') ||
+        pathname.includes('/reset-password')
+        ? '/auth/login'
+        : pathname
+    )
   }
 
   return useMutation({
