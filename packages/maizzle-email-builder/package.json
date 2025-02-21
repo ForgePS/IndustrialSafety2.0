@@ -8,7 +8,7 @@
     "clean:node_modules": "rm -rf .turbo build_local node_modules"
   },
   "dependencies": {
-    "@maizzle/framework": "latest",
+    "@maizzle/framework": "4.8.9",
     "tailwindcss-preset-email": "^1.4.0"
   }
 }

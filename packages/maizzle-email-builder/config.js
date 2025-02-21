@@ -25,8 +25,10 @@ module.exports = {
   },
   locals: {
     saas_startup_name: 'JetShip',
-    app_url: 'http://localhost:3000',
+    app_url: 'https://jetship-nextjs-saas-boilerplate-demo.vercel.app',
     support_center_url: 'https://discord.com/invite/kBHkY7DekX',
+    support_docs_url:
+      'https://demos.themeselection.com/jetship-nextjs-starter-kit-documentation/docs/guide/overview/getting-support',
     support_email: 'hello@themeselection.com',
     docs_url: 'https://demos.themeselection.com/jetship-nextjs-starter-kit-documentation',
     github_url: 'https://github.com/themeselection',
