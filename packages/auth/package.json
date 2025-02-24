@@ -22,16 +22,16 @@
   "dependencies": {
     "@repo/supabase": "workspace:*",
     "@supabase/supabase-js": "^2.48.1",
-    "next": "^15.1.6",
+    "next": "^15.1.7",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
-    "react-icons": "^5.4.0",
-    "zod": "^3.24.1"
+    "react-icons": "^5.5.0",
+    "zod": "^3.24.2"
   },
   "devDependencies": {
     "@repo/config-eslint": "workspace:*",
     "@repo/config-typescript": "workspace:*",
-    "@types/node": "^22.12.0",
+    "@types/node": "^22.13.5",
     "@types/react": "18.3.12",
     "@types/react-dom": "18.3.1",
     "typescript": "5.7.3"
