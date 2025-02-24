@@ -75,7 +75,7 @@ export function keystaticAdminGenerator(plop: PlopTypes.NodePlopAPI) {
             `$1,
   {
     id: '16',
-    name: <Trans i18nKey='data:blog' />,
+    name:'data:blog',
     url: '/keystatic',
     icon: 'TbClipboardList',
     permission: 'manage_blog_section',

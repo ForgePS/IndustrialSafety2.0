@@ -1,13 +1,9 @@
-// React Imports
-import type { ReactNode } from 'react'
-
 // Third-party Imports
-import Trans from '@repo/i18n/Trans'
 import type * as Icons from 'react-icons/tb'
 
-export interface SearchDataItem {
+export type SearchDataItem = {
   id: string
-  name: ReactNode
+  name: string // name should be a i18n key from the data.json file
   url?: string
   dynamicUrl?: boolean // Flag to indicate if URL should be constructed based on role
   baseUrl?: string // Base URL path without /admin or /dashboard prefix
@@ -20,21 +16,21 @@ export interface SearchDataItem {
 export const searchData: SearchDataItem[] = [
   {
     id: '1',
-    name: <Trans i18nKey='data:searchDashboard' />,
+    name: 'data:searchDashboard',
     baseUrl: '',
     dynamicUrl: true,
     icon: 'TbDashboard'
   },
   {
     id: '2',
-    name: <Trans i18nKey='data:searchMyProfile' />,
+    name: 'data:searchMyProfile',
     baseUrl: '/my-profile',
     dynamicUrl: true,
     icon: 'TbUser'
   },
   {
     id: '3',
-    name: <Trans i18nKey='data:searchGeneralSettings' />,
+    name: 'data:searchGeneralSettings',
     url: '/admin/settings/general-settings',
     icon: 'TbSettings',
     permission: 'view_settings',
@@ -42,7 +38,7 @@ export const searchData: SearchDataItem[] = [
   },
   {
     id: '4',
-    name: <Trans i18nKey='data:searchPaymentProviders' />,
+    name: 'data:searchPaymentProviders',
     url: '/admin/settings/payment-providers',
     icon: 'TbWallet',
     permission: 'view_settings',
@@ -50,7 +46,7 @@ export const searchData: SearchDataItem[] = [
   },
   {
     id: '5',
-    name: <Trans i18nKey='data:searchUsers' />,
+    name: 'data:searchUsers',
     url: '/admin/users',
     icon: 'TbUsers',
     permission: 'view_users',
@@ -58,7 +54,7 @@ export const searchData: SearchDataItem[] = [
   },
   {
     id: '6',
-    name: <Trans i18nKey='data:searchRoles' />,
+    name: 'data:searchRoles',
     url: '/admin/roles',
     icon: 'TbCrown',
     permission: 'view_roles',
@@ -66,7 +62,7 @@ export const searchData: SearchDataItem[] = [
   },
   {
     id: '7',
-    name: <Trans i18nKey='data:searchPermissions' />,
+    name: 'data:searchPermissions',
     url: '/admin/permissions',
     icon: 'TbLock',
     permission: 'view_permission',
@@ -74,7 +70,7 @@ export const searchData: SearchDataItem[] = [
   },
   {
     id: '8',
-    name: <Trans i18nKey='data:searchFaqCategories' />,
+    name: 'data:searchFaqCategories',
     url: '/admin/faqs/category',
     icon: 'TbLayoutGridAdd',
     permission: 'view_faqs',
@@ -82,7 +78,7 @@ export const searchData: SearchDataItem[] = [
   },
   {
     id: '9',
-    name: <Trans i18nKey='data:searchFaqs' />,
+    name: 'data:searchFaqs',
     url: '/admin/faqs/faq',
     icon: 'TbListDetails',
     permission: 'view_faqs',
@@ -90,7 +86,7 @@ export const searchData: SearchDataItem[] = [
   },
   {
     id: '10',
-    name: <Trans i18nKey='data:searchPlatformReviews' />,
+    name: 'data:searchPlatformReviews',
     url: '/admin/reviews/platform',
     icon: 'TbTemplate',
     permission: 'view_reviews',
@@ -98,7 +94,7 @@ export const searchData: SearchDataItem[] = [
   },
   {
     id: '11',
-    name: <Trans i18nKey='data:searchReviews' />,
+    name: 'data:searchReviews',
     url: '/admin/reviews/review',
     icon: 'TbStar',
     permission: 'view_reviews',
@@ -106,13 +102,13 @@ export const searchData: SearchDataItem[] = [
   },
   {
     id: '14',
-    name: <Trans i18nKey='data:searchBilling' />,
+    name: 'data:searchBilling',
     url: '/billing',
     icon: 'TbWallet'
   },
   {
     id: '15',
-    name: <Trans i18nKey='data:searchLandingPage' />,
+    name: 'data:searchLandingPage',
     url: '/',
     icon: 'TbHome'
   }

@@ -16,8 +16,8 @@ import type { SearchDataItem } from '@/assets/data/searchData'
 import LanguageDropdown from '@components/LanguageDropdown'
 import UserDropdown from './UserDropdown'
 
-// Util Imports
-import { getSearchData } from '@/utils/searchData'
+// Data
+import { searchData } from '@/assets/data/searchData'
 
 // Utility function to transform search data
 const transformSearchData = (data: SearchDataItem[]): SearchDataProps[] => {
@@ -44,10 +44,7 @@ const Header = async () => {
   const permissions = user?.user_metadata.permissions
   const roles = user?.user_metadata.roles
 
-  // Filter search data based on permissions
-  const searchResults = getSearchData(permissions)
-
-  const permissionFilteredData = searchResults.filter(item => {
+  const permissionFilteredData = searchData.filter(item => {
     if (!item.permission) return true
 
     return hasPermission(permissions, item.permission)

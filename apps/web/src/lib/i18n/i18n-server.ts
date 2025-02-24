@@ -13,7 +13,7 @@ import { initializeI18nServer } from '@repo/i18n/i18n-server'
 import { getI18nSettings } from './i18n-settings'
 import { i18nResolver } from './i18n-resolver'
 
-interface I18nServerInstance {
+type I18nServerInstance = {
   i18nInstance: i18n
   language: string | undefined
 }

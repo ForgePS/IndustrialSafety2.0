@@ -2,7 +2,6 @@
 
 // React Imports
 import { useEffect, useState } from 'react'
-import type { ReactNode } from 'react'
 
 // Next Imports
 import Link from 'next/link'
@@ -37,7 +36,7 @@ import { Button } from '@repo/ui/components/ui/button'
 
 export type SearchDataProps = {
   id: string
-  name: ReactNode
+  name: string
   url: string
   icon: keyof typeof Icons
   showFor?: 'all' | 'admin' | 'user'
@@ -166,7 +165,7 @@ const Search = ({ data, roles }: { data: SearchDataProps[]; roles: string[] }) =
                       className='is-full flex items-center'
                     >
                       {item.icon && DynamicIcon(item.icon)}
-                      {item.name}
+                      {t(item.name)}
                     </Link>
                   </CommandItem>
                 ))}
