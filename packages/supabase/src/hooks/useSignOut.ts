@@ -18,22 +18,26 @@ export const useSignOut = () => {
   const supabase = createClient()
 
   const mutationFn = async () => {
-    const { error } = await supabase.auth.signOut()
+    try {
+      const { error } = await supabase.auth.signOut()
 
-    if (error) {
-      throw error.message
+      if (error) {
+        throw error.message
+      }
+
+      // Clean up cookies
+      cookieValue && deleteCookie('checkoutData')
+
+      // Redirect based on current path
+      const shouldRedirectToLogin = ['/admin', '/dashboard', '/my-profile', '/billing', '/reset-password'].some(path =>
+        pathname.includes(path)
+      )
+
+      router.push(shouldRedirectToLogin ? '/auth/login' : pathname)
+    } catch (error) {
+      console.error('Sign-out error:', error)
+      throw error
     }
-
-    cookieValue && deleteCookie('checkoutData')
-    router.push(
-      pathname.includes('/admin') ||
-        pathname.includes('/dashboard') ||
-        pathname.includes('/my-profile') ||
-        pathname.includes('/billing') ||
-        pathname.includes('/reset-password')
-        ? '/auth/login'
-        : pathname
-    )
   }
 
   return useMutation({

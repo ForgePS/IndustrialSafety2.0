@@ -63,24 +63,89 @@ export function useAuth() {
 
   // Check for active impersonation on initial load
   useEffect(() => {
+    let mounted = true
+
     const checkImpersonation = async () => {
       try {
-        // First check if we have an active session
+        // Check initial session first
         const {
           data: { session }
         } = await supabase.auth.getSession()
 
+        if (session?.user?.id && mounted) {
+          const { data: userRecord, error } = await getPublicUser()
+
+          if (!error && userRecord) {
+            setAuthState(prev => ({
+              ...prev,
+              user: userRecord
+            }))
+          }
+        }
+
+        // Set up auth state change listener
+        const {
+          data: { subscription }
+        } = supabase.auth.onAuthStateChange(async (event, currentSession) => {
+          if (!mounted) return
+
+          if (event === 'SIGNED_IN') {
+            if (currentSession?.user?.id) {
+              const { data: userRecord, error } = await getPublicUser()
+
+              if (error) {
+                console.error('Error fetching user data:', error)
+
+                return
+              }
+
+              if (userRecord && mounted) {
+                setAuthState(prev => ({
+                  ...prev,
+                  user: userRecord
+                }))
+              }
+            }
+          } else if (event === 'SIGNED_OUT') {
+            setAuthState(prev => ({
+              ...prev,
+              user: null,
+              ...defaultImpersonationState
+            }))
+          }
+        })
+
         if (!session?.user) {
+          if (mounted) {
+            setAuthState(prev => ({
+              ...prev,
+              user: null
+            }))
+          }
+
           return
         }
 
-        const { data: userRecord } = await getPublicUser()
+        // Initial user data fetch if we have a session
+        if (session.user?.id) {
+          const { data: userRecord, error } = await getPublicUser()
 
-        if (userRecord) {
-          setAuthState(prev => ({
-            ...prev,
-            user: userRecord
-          }))
+          if (error) {
+            console.error('Error fetching user data:', error)
+
+            return
+          }
+
+          if (userRecord && mounted) {
+            setAuthState(prev => ({
+              ...prev,
+              user: userRecord
+            }))
+          }
+        }
+
+        return () => {
+          subscription.unsubscribe()
         }
       } catch (error) {
         console.error('Error checking impersonation:', error)
@@ -88,6 +153,10 @@ export function useAuth() {
     }
 
     checkImpersonation()
+
+    return () => {
+      mounted = false
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
@@ -99,7 +168,7 @@ export function useAuth() {
     const updateAuthState = async (session: any) => {
       if (!mounted) return
 
-      if (session?.user) {
+      if (session?.user?.id) {
         try {
           const { data: userRecord, error } = await getPublicUser()
 

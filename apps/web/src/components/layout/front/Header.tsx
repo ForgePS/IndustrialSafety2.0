@@ -16,6 +16,7 @@ import FrontMenu from './FrontMenu'
 import ModeDropdown from '@components/layout/ModeDropdown'
 import UserDropdown from './UserDropdown'
 import LanguageDropdown from '@components/LanguageDropdown'
+import HeaderAuthWrapper from './HeaderAuthWrapper'
 
 const Header = async () => {
   // Vars
@@ -30,40 +31,42 @@ const Header = async () => {
     .pages_components.blog_enabled
 
   return (
-    <LayoutHeader>
-      <div className={clsx(frontLayoutClasses.headerContent, 'is-full flex items-center justify-between gap-4')}>
-        <div className='max-xl:-mis-2.5 max-xl:flex max-xl:items-center max-xl:gap-4 max-sm:gap-2 xl:hidden'>
-          <FrontMenu isBlogEnabled={isBlogEnabled} />
-          <Link href='/'>
-            <Logo logoId='FrontMenu-SmallScreen' />
-          </Link>
-        </div>
-        <Link href='/' className='max-xl:hidden'>
-          <Logo logoId='FrontMenu-LargeScreen' />
-        </Link>
-        <div className='flex items-center gap-2 sm:gap-5'>
-          <div className='max-xl:hidden'>
+    <HeaderAuthWrapper>
+      <LayoutHeader>
+        <div className={clsx(frontLayoutClasses.headerContent, 'is-full flex items-center justify-between gap-4')}>
+          <div className='max-xl:-mis-2.5 max-xl:flex max-xl:items-center max-xl:gap-4 max-sm:gap-2 xl:hidden'>
             <FrontMenu isBlogEnabled={isBlogEnabled} />
+            <Link href='/'>
+              <Logo logoId='FrontMenu-SmallScreen' />
+            </Link>
           </div>
-          <div className='flex items-center gap-1 max-[432px]:hidden sm:gap-2'>
-            <LanguageDropdown />
-            <ModeDropdown />
+          <Link href='/' className='max-xl:hidden'>
+            <Logo logoId='FrontMenu-LargeScreen' />
+          </Link>
+          <div className='flex items-center gap-2 sm:gap-5'>
+            <div className='max-xl:hidden'>
+              <FrontMenu isBlogEnabled={isBlogEnabled} />
+            </div>
+            <div className='flex items-center gap-1 max-[432px]:hidden sm:gap-2'>
+              <LanguageDropdown />
+              <ModeDropdown />
+            </div>
+            <div className='min-[433px]:hidden'>
+              <ModeDropdown />
+            </div>
+            {user ? (
+              <UserDropdown user={user} roles={userRoles} />
+            ) : (
+              <Button size='sm' asChild>
+                <Link href='/auth/login'>
+                  <Trans i18nKey='layout:signIn' />
+                </Link>
+              </Button>
+            )}
           </div>
-          <div className='min-[433px]:hidden'>
-            <ModeDropdown />
-          </div>
-          {user ? (
-            <UserDropdown user={user} roles={userRoles} />
-          ) : (
-            <Button size='sm' asChild>
-              <Link href='/auth/login'>
-                <Trans i18nKey='layout:signIn' />
-              </Link>
-            </Button>
-          )}
         </div>
-      </div>
-    </LayoutHeader>
+      </LayoutHeader>
+    </HeaderAuthWrapper>
   )
 }
 
