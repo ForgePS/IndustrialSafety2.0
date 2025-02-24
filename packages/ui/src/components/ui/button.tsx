@@ -16,13 +16,13 @@ const buttonVariants = cva(
     variants: {
       variant: {
         default:
-          'text-primary-foreground shadow-primaryDefault border-primary from-primary to-primary hover:shadow-primaryMd border-2 bg-gradient-to-r via-[hsl(259,84%,50%)] bg-[200%_auto] hover:bg-[right_center] focus-visible:border-transparent focus-visible:bg-[right_center] focus-visible:outline-none focus-visible:outline-offset-0 focus-visible:outline-[#BAAEFF] active:bg-[right_center]',
+          'text-primary-foreground shadow-primaryDefault border-primary from-primary to-primary hover:shadow-primaryMd border-2 bg-gradient-to-r via-[hsl(259,84%,50%)] bg-[200%_auto] hover:bg-[99%_center] focus-visible:border-transparent focus-visible:bg-[99%_center] focus-visible:outline-none focus-visible:outline-offset-0 focus-visible:outline-[#BAAEFF] active:bg-[99%_center]',
 
         secondary:
-          'text-secondary-foreground shadow-secondaryDefault border-secondary from-secondary to-secondary hover:shadow-secondaryMd border-2 bg-gradient-to-r via-[hsl(258,6%,32%)] bg-[200%_auto] hover:bg-[right_center] focus-visible:border-transparent focus-visible:bg-[right_center] focus-visible:outline-none focus-visible:outline-offset-0 focus-visible:outline-[#BBB8C1] active:bg-[right_center]',
+          'text-secondary-foreground shadow-secondaryDefault border-secondary from-secondary to-secondary hover:shadow-secondaryMd border-2 bg-gradient-to-r via-[hsl(258,6%,32%)] bg-[200%_auto] hover:bg-[99%_center] focus-visible:border-transparent focus-visible:bg-[99%_center] focus-visible:outline-none focus-visible:outline-offset-0 focus-visible:outline-[#BBB8C1] active:bg-[99%_center]',
 
         destructive:
-          'text-destructive-foreground shadow-destructiveDefault border-destructive from-destructive to-destructive hover:shadow-destructiveMd border-2 bg-gradient-to-r via-[hsl(0,68%,43%)] bg-[200%_auto] hover:bg-[right_center] focus-visible:border-transparent focus-visible:bg-[right_center] focus-visible:outline-none focus-visible:outline-offset-0 focus-visible:outline-[#FCC7B1] active:bg-[right_center]',
+          'text-destructive-foreground shadow-destructiveDefault border-destructive from-destructive to-destructive hover:shadow-destructiveMd border-2 bg-gradient-to-r via-[hsl(0,68%,43%)] bg-[200%_auto] hover:bg-[99%_center] focus-visible:border-transparent focus-visible:bg-[99%_center] focus-visible:outline-none focus-visible:outline-offset-0 focus-visible:outline-[#FCC7B1] active:bg-[99%_center]',
 
         solid:
           'bg-primary text-primary-foreground shadow-primaryDefault hover:shadow-primaryMd hover:bg-primary-focus active:bg-primary-focus focus-visible:bg-primary-focus focus-visible:outline-none focus-visible:outline-offset-0 focus-visible:outline-[#BAAEFF]',
