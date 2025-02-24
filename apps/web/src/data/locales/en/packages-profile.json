@@ -15,5 +15,6 @@
   "personalInfoTitle": "Personal Information",
   "updateButton": "Update",
   "updateSuccessMessage": "User updated successfully",
+  "updateSuccessMessageEmailChanged": "Email has been sent to the new address, please verify it.",
   "updatingText": "Updating..."
 }

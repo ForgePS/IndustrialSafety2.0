@@ -129,7 +129,14 @@ const PersonalInformation = ({
 
       // Update the current avatar URL
       setCurrentAvatarUrl(avatarUrl)
-      toast('success', t('packages-profile:updateSuccessMessage'))
+      toast(
+        'success',
+        t(
+          userData.email === data.email
+            ? 'packages-profile:updateSuccessMessage'
+            : 'packages-profile:updateSuccessMessageEmailChanged'
+        )
+      )
     })
   }
 

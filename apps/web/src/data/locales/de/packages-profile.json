@@ -15,5 +15,6 @@
   "personalInfoTitle": "Persönliche Informationen",
   "updateButton": "Aktualisieren",
   "updateSuccessMessage": "Benutzer erfolgreich aktualisiert",
+  "updateSuccessMessageEmailChanged": "Email wurde an die neue Adresse gesendet, bitte bestätigen Sie es.",
   "updatingText": "Aktualisierung..."
 }
