@@ -221,7 +221,6 @@ const EditReview = ({ reviewData, platformsData, id, userPermissions }: EditRevi
                       <FormItem className='is-full'>
                         <FormLabel>
                           <Trans i18nKey='admin:reviewsCreatePlatformLabel' />
-                          <sup className='text-destructive'>*</sup>
                         </FormLabel>
                         <FormControl>
                           <Select

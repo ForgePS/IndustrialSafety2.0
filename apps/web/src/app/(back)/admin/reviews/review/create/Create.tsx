@@ -210,7 +210,6 @@ const CreateReview = ({ platformsData }: { platformsData: PlatformTypes[] }) => 
                       <FormItem className='is-full'>
                         <FormLabel>
                           <Trans i18nKey='admin:reviewsCreatePlatformLabel' />
-                          <sup className='text-destructive'>*</sup>
                         </FormLabel>
                         <FormControl>
                           <Select
