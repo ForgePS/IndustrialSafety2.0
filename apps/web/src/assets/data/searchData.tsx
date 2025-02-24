@@ -110,6 +110,7 @@ export const searchData: SearchDataItem[] = [
     id: '15',
     name: 'data:searchLandingPage',
     url: '/',
-    icon: 'TbHome'
+    icon: 'TbHome',
+    openInNewTab: true
   }
 ]

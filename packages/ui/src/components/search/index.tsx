@@ -4,7 +4,7 @@
 import { useEffect, useState } from 'react'
 
 // Next Imports
-import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 
 // Third-party Imports
 import {
@@ -64,6 +64,7 @@ const Search = ({ data, roles }: { data: SearchDataProps[]; roles: string[] }) =
 
   // Hooks
   const { t } = useTranslation()
+  const router = useRouter()
 
   // Transform search data based on roles and permissions
   const transformedData = data
@@ -99,9 +100,10 @@ const Search = ({ data, roles }: { data: SearchDataProps[]; roles: string[] }) =
     setIsOpen(open)
   }
 
-  // To Close on select
-  const handleClose = () => {
+  // To handle the selection of the search item
+  const handleSelect = (url: string, openInNewTab?: boolean) => {
     setIsOpen(false)
+    openInNewTab ? window.open(url, '_blank') : router.push(url)
   }
 
   // Toggle the menu when ⌘K is pressed
@@ -158,15 +160,9 @@ const Search = ({ data, roles }: { data: SearchDataProps[]; roles: string[] }) =
             <>
               <CommandGroup heading={<Trans i18nKey='packages-ui:searchResultsHeading' />}>
                 {transformedData.map(item => (
-                  <CommandItem key={item.id} onSelect={handleClose}>
-                    <Link
-                      href={item.url}
-                      {...(item.openInNewTab && { target: '_blank' })}
-                      className='is-full flex items-center'
-                    >
-                      {item.icon && DynamicIcon(item.icon)}
-                      {t(item.name)}
-                    </Link>
+                  <CommandItem key={item.id} onSelect={() => handleSelect(item.url, item.openInNewTab)}>
+                    {item.icon && DynamicIcon(item.icon)}
+                    {t(item.name)}
                   </CommandItem>
                 ))}
               </CommandGroup>
@@ -176,56 +172,40 @@ const Search = ({ data, roles }: { data: SearchDataProps[]; roles: string[] }) =
             <>
               {isAdmin ? (
                 <CommandGroup heading={<Trans i18nKey='packages-ui:searchAdminDashboard' />}>
-                  <CommandItem onSelect={handleClose}>
-                    <Link href='/admin' className='is-full flex items-center'>
-                      <TbDashboard className='me-2' />
-                      <Trans i18nKey='packages-ui:searchDashboard' />
-                    </Link>
+                  <CommandItem onSelect={() => handleSelect('/admin')}>
+                    <TbDashboard className='me-2' />
+                    <Trans i18nKey='packages-ui:searchDashboard' />
                   </CommandItem>
-                  <CommandItem onSelect={handleClose}>
-                    <Link href='/my-profile' className='is-full flex items-center'>
-                      <TbUser className='me-2' />
-                      <Trans i18nKey='packages-ui:searchMyProfile' />
-                    </Link>
+                  <CommandItem onSelect={() => handleSelect('/my-profile')}>
+                    <TbUser className='me-2' />
+                    <Trans i18nKey='packages-ui:searchMyProfile' />
                   </CommandItem>
-                  <CommandItem onSelect={handleClose}>
-                    <Link href='/billing' className='is-full flex items-center'>
-                      <TbFileText className='me-2' />
-                      <Trans i18nKey='packages-ui:searchBilling' />
-                    </Link>
+                  <CommandItem onSelect={() => handleSelect('/billing')}>
+                    <TbFileText className='me-2' />
+                    <Trans i18nKey='packages-ui:searchBilling' />
                   </CommandItem>
-                  <CommandItem onSelect={handleClose}>
-                    <Link href='/' className='is-full flex items-center'>
-                      <TbHome className='me-2' />
-                      <Trans i18nKey='packages-ui:searchLandingPage' />
-                    </Link>
+                  <CommandItem onSelect={() => handleSelect('/', true)}>
+                    <TbHome className='me-2' />
+                    <Trans i18nKey='packages-ui:searchLandingPage' />
                   </CommandItem>
                 </CommandGroup>
               ) : (
                 <CommandGroup heading={<Trans i18nKey='packages-ui:searchUserDashboard' />}>
-                  <CommandItem onSelect={handleClose}>
-                    <Link href='/dashboard' className='is-full flex items-center'>
-                      <TbDashboard className='me-2' />
-                      <Trans i18nKey='packages-ui:searchDashboard' />
-                    </Link>
+                  <CommandItem onSelect={() => handleSelect('/dashboard')}>
+                    <TbDashboard className='me-2' />
+                    <Trans i18nKey='packages-ui:searchDashboard' />
                   </CommandItem>
-                  <CommandItem onSelect={handleClose}>
-                    <Link href='/my-profile' className='is-full flex items-center'>
-                      <TbUser className='me-2' />
-                      <Trans i18nKey='packages-ui:searchMyProfile' />
-                    </Link>
+                  <CommandItem onSelect={() => handleSelect('/my-profile')}>
+                    <TbUser className='me-2' />
+                    <Trans i18nKey='packages-ui:searchMyProfile' />
                   </CommandItem>
-                  <CommandItem onSelect={handleClose}>
-                    <Link href='/billing' className='is-full flex items-center'>
-                      <TbFileText className='me-2' />
-                      <Trans i18nKey='packages-ui:searchBilling' />
-                    </Link>
+                  <CommandItem onSelect={() => handleSelect('/billing')}>
+                    <TbFileText className='me-2' />
+                    <Trans i18nKey='packages-ui:searchBilling' />
                   </CommandItem>
-                  <CommandItem onSelect={handleClose}>
-                    <Link href='/' className='is-full flex items-center'>
-                      <TbHome className='me-2' />
-                      <Trans i18nKey='packages-ui:searchLandingPage' />
-                    </Link>
+                  <CommandItem onSelect={() => handleSelect('/', true)}>
+                    <TbHome className='me-2' />
+                    <Trans i18nKey='packages-ui:searchLandingPage' />
                   </CommandItem>
                 </CommandGroup>
               )}
