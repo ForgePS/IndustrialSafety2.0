@@ -1,6 +1,3 @@
-// Next Imports
-import Link from 'next/link'
-
 // Third-party Imports
 import { TbChevronLeft } from 'react-icons/tb'
 import Trans from '@repo/i18n/Trans'
@@ -9,6 +6,7 @@ import Trans from '@repo/i18n/Trans'
 import Logo from '@components/layout/front/Logo'
 import LeftSection from '@repo/ui/auth/LeftSection'
 import { Button } from '@repo/ui/components/ui/button'
+import Link from '@repo/ui/components/Link'
 
 const VerifyEmailAdvanced = async () => {
   return (
@@ -42,7 +40,7 @@ const VerifyEmailAdvanced = async () => {
                 <Trans i18nKey='packages-ui:verifyEmailResendButton' />
               </Button>
               <Button variant='ghostPrimary' asChild>
-                <Link href='/auth/login-v2' className='flex items-center gap-x-2'>
+                <Link className='flex items-center gap-x-2'>
                   <TbChevronLeft className='is-[22px] bs-[22px]' />
                   <span>
                     <Trans i18nKey='packages-ui:backToLoginButton' />

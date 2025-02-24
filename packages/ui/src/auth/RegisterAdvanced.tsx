@@ -1,6 +1,3 @@
-// Next Imports
-import Link from 'next/link'
-
 // Third-party Imports
 import { TbChevronLeft } from 'react-icons/tb'
 import Trans from '@repo/i18n/Trans'
@@ -12,6 +9,7 @@ import PasswordInput from '@repo/ui/components/ui/password-input'
 import { Label } from '@repo/ui/components/ui/label'
 import LeftSection from '@repo/ui/auth/LeftSection'
 import TranslatedInput from '@repo/ui/components/ui/translated-input'
+import Link from '@repo/ui/components/Link'
 
 // SVG Imports
 import Google from '@repo/ui/assets/svg/Google'
@@ -72,7 +70,7 @@ const RegisterAdvanced = async () => {
                 <span className='text-textSecondary'>
                   <Trans i18nKey='packages-ui:registerAlreadyHaveAccount' />
                 </span>
-                <Link href='/auth/login-v2' className='text-primary'>
+                <Link className='text-primary'>
                   <Trans i18nKey='packages-ui:registerSignIn' />
                 </Link>
               </p>

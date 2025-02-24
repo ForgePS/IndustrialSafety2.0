@@ -1,6 +1,3 @@
-// Next Imports
-import Link from 'next/link'
-
 // Third-party Imports
 import { TbChevronLeft } from 'react-icons/tb'
 import Trans from '@repo/i18n/Trans'
@@ -11,6 +8,7 @@ import { Button } from '@repo/ui/components/ui/button'
 import PasswordInput from '@repo/ui/components/ui/password-input'
 import { Label } from '@repo/ui/components/ui/label'
 import { Card, CardContent } from '@repo/ui/components/ui/card'
+import Link from '@repo/ui/components/Link'
 
 const ResetPasswordMinimal = async () => {
   return (
@@ -46,7 +44,7 @@ const ResetPasswordMinimal = async () => {
                 <Trans i18nKey='packages-ui:resetPasswordButton' />
               </Button>
               <Button variant='ghostPrimary' asChild>
-                <Link href='/auth/login-v1' className='flex items-center gap-x-2'>
+                <Link className='flex items-center gap-x-2'>
                   <TbChevronLeft className='is-[22px] bs-[22px]' />
                   <span>
                     <Trans i18nKey='packages-ui:goToDashboardButton' />

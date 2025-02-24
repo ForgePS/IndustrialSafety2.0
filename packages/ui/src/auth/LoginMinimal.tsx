@@ -1,6 +1,3 @@
-// Next Imports
-import Link from 'next/link'
-
 // Third-party Imports
 import Trans from '@repo/i18n/Trans'
 
@@ -12,6 +9,7 @@ import { Checkbox } from '@repo/ui/components/ui/checkbox'
 import { Label } from '@repo/ui/components/ui/label'
 import { Card, CardContent } from '@repo/ui/components/ui/card'
 import TranslatedInput from '@repo/ui/components/ui/translated-input'
+import Link from '@repo/ui/components/Link'
 
 // SVG Imports
 import Google from '@repo/ui/assets/svg/Google'
@@ -38,18 +36,10 @@ const LoginMinimal = async () => {
               <span>
                 <Trans i18nKey='packages-ui:loginWithText' />
               </span>
-              <Link href='' className='text-primary'>
+              <Link className='text-primary'>
                 <Trans i18nKey='packages-ui:magicLinkTitle' />
               </Link>
             </p>
-            <div className='flex gap-6 max-sm:flex-wrap'>
-              <Button variant='outline' className='is-full'>
-                <Trans i18nKey='packages-ui:loginAsUserButton' />
-              </Button>
-              <Button variant='outline' className='is-full'>
-                <Trans i18nKey='packages-ui:loginAsAdminButton' />
-              </Button>
-            </div>
             <div className='flex flex-col gap-4'>
               <div>
                 <Label htmlFor='email'>
@@ -72,7 +62,7 @@ const LoginMinimal = async () => {
                     <Trans i18nKey='packages-ui:loginRememberMe' />
                   </Label>
                 </div>
-                <Link href='' className='text-primary'>
+                <Link className='text-primary'>
                   <Trans i18nKey='packages-ui:forgotPasswordTitle' />
                 </Link>
               </div>
@@ -83,7 +73,7 @@ const LoginMinimal = async () => {
                 <span className='text-textSecondary'>
                   <Trans i18nKey='packages-ui:loginDontHaveAccount' />
                 </span>
-                <Link href='' className='text-primary'>
+                <Link className='text-primary'>
                   <Trans i18nKey='packages-ui:loginSignUp' />
                 </Link>
               </p>

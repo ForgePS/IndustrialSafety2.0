@@ -1,6 +1,3 @@
-// Next Imports
-import Link from 'next/link'
-
 // Third-party Imports
 import { TbChevronLeft } from 'react-icons/tb'
 import Trans from '@repo/i18n/Trans'
@@ -10,6 +7,7 @@ import Logo from '@components/layout/front/Logo'
 import { Button } from '@repo/ui/components/ui/button'
 import LeftSection from '@repo/ui/auth/LeftSection'
 import { InputOTP, InputOTPGroup, InputOTPSlot } from '@repo/ui/components/ui/input-otp'
+import Link from '@repo/ui/components/Link'
 
 // Config Imports
 import appConfig from '@configs/appConfig'
@@ -43,7 +41,7 @@ const TwoFactorAuthAdvanced = async () => {
                 <Trans i18nKey='packages-ui:twoFactorAuthCodeLabel' />
                 <span className='text-destructive'>*</span>
               </p>
-              <Link href='' className='text-primary font-medium'>
+              <Link className='text-primary font-medium'>
                 <Trans i18nKey='packages-ui:twoFactorAuthRecoveryCodeLink' />
               </Link>
             </div>

@@ -25,7 +25,7 @@ const InputOTP = forwardRef<ElementRef<typeof OTPInput>, ComponentPropsWithoutRe
 InputOTP.displayName = 'InputOTP'
 
 const InputOTPGroup = forwardRef<ElementRef<'div'>, ComponentPropsWithoutRef<'div'>>(({ className, ...props }, ref) => (
-  <div ref={ref} className={cn('flex items-center justify-between gap-4', className)} {...props} />
+  <div ref={ref} className={cn('is-full flex items-center justify-between gap-4', className)} {...props} />
 ))
 
 InputOTPGroup.displayName = 'InputOTPGroup'

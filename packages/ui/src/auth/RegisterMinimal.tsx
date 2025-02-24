@@ -1,6 +1,3 @@
-// Next Imports
-import Link from 'next/link'
-
 // Third-party Imports
 import Trans from '@repo/i18n/Trans'
 
@@ -11,6 +8,7 @@ import PasswordInput from '@repo/ui/components/ui/password-input'
 import { Label } from '@repo/ui/components/ui/label'
 import { Card, CardContent } from '@repo/ui/components/ui/card'
 import TranslatedInput from '@repo/ui/components/ui/translated-input'
+import Link from '@repo/ui/components/Link'
 
 // SVG Imports
 import Google from '@repo/ui/assets/svg/Google'
@@ -62,7 +60,7 @@ const RegisterMinimal = async () => {
                 <span className='text-textSecondary'>
                   <Trans i18nKey='packages-ui:registerAlreadyHaveAccount' />
                 </span>
-                <Link href='/auth/login-v1' className='text-primary'>
+                <Link className='text-primary'>
                   <Trans i18nKey='packages-ui:registerSignIn' />
                 </Link>
               </p>

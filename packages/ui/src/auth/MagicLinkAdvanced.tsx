@@ -1,6 +1,3 @@
-// Next Imports
-import Link from 'next/link'
-
 // Third-party Imports
 import { TbMail } from 'react-icons/tb'
 import Trans from '@repo/i18n/Trans'
@@ -11,6 +8,7 @@ import { Button } from '@repo/ui/components/ui/button'
 import { Label } from '@repo/ui/components/ui/label'
 import LeftSection from '@repo/ui/auth/LeftSection'
 import TranslatedInput from '@repo/ui/components/ui/translated-input'
+import Link from '@repo/ui/components/Link'
 
 // SVG Imports
 import Google from '@repo/ui/assets/svg/Google'
@@ -49,7 +47,7 @@ const MagicLinkAdvanced = async () => {
                 <span className='text-textSecondary'>
                   <Trans i18nKey='packages-ui:accessAccountWithText' />
                 </span>
-                <Link href='/auth/login-v2' className='text-primary'>
+                <Link className='text-primary'>
                   <Trans i18nKey='packages-ui:passwordLabel' />
                 </Link>
               </p>

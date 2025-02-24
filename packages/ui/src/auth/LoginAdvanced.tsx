@@ -1,6 +1,3 @@
-// Next Imports
-import Link from 'next/link'
-
 // Third-party Imports
 import { TbChevronLeft } from 'react-icons/tb'
 import Trans from '@repo/i18n/Trans'
@@ -13,6 +10,7 @@ import { Checkbox } from '@repo/ui/components/ui/checkbox'
 import { Label } from '@repo/ui/components/ui/label'
 import LeftSection from '@repo/ui/auth/LeftSection'
 import TranslatedInput from '@repo/ui/components/ui/translated-input'
+import Link from '@repo/ui/components/Link'
 
 // SVG Imports
 import Google from '@repo/ui/assets/svg/Google'
@@ -48,18 +46,10 @@ const LoginAdvanced = async () => {
               <span>
                 <Trans i18nKey='packages-ui:loginWithText' />
               </span>
-              <Link href='/auth/magic-link-v2' className='text-primary'>
+              <Link className='text-primary'>
                 <Trans i18nKey='packages-ui:magicLinkTitle' />
               </Link>
             </p>
-            <div className='flex flex-wrap gap-6 sm:flex-nowrap lg:flex-wrap xl:flex-nowrap'>
-              <Button variant='outline' className='is-full'>
-                <Trans i18nKey='packages-ui:loginAsUserButton' />
-              </Button>
-              <Button variant='outline' className='is-full'>
-                <Trans i18nKey='packages-ui:loginAsAdminButton' />
-              </Button>
-            </div>
             <div className='flex flex-col gap-4'>
               <div>
                 <Label htmlFor='email'>
@@ -82,7 +72,7 @@ const LoginAdvanced = async () => {
                     <Trans i18nKey='packages-ui:loginRememberMe' />
                   </Label>
                 </div>
-                <Link href='/auth/forgot-password-v2' className='text-primary'>
+                <Link className='text-primary'>
                   <Trans i18nKey='packages-ui:forgotPasswordTitle' />
                 </Link>
               </div>
@@ -93,7 +83,7 @@ const LoginAdvanced = async () => {
                 <span className='text-textSecondary'>
                   <Trans i18nKey='packages-ui:loginDontHaveAccount' />
                 </span>
-                <Link href='/auth/register-v2' className='text-primary'>
+                <Link className='text-primary'>
                   <Trans i18nKey='packages-ui:loginSignUp' />
                 </Link>
               </p>

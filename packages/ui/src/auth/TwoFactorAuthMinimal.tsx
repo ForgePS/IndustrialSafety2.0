@@ -1,6 +1,3 @@
-// Next Imports
-import Link from 'next/link'
-
 // Third-party Imports
 import Trans from '@repo/i18n/Trans'
 
@@ -9,6 +6,7 @@ import Logo from '@components/layout/front/Logo'
 import { Button } from '@repo/ui/components/ui/button'
 import { Card, CardContent } from '@repo/ui/components/ui/card'
 import { InputOTP, InputOTPGroup, InputOTPSlot } from '@repo/ui/components/ui/input-otp'
+import Link from '@repo/ui/components/Link'
 
 // Config Imports
 import appConfig from '@configs/appConfig'
@@ -33,7 +31,7 @@ const TwoFactorAuth = async () => {
                 <Trans i18nKey='packages-ui:twoFactorAuthCodeLabel' />
                 <span className='text-destructive'>*</span>
               </p>
-              <Link href='' className='text-primary font-medium'>
+              <Link className='text-primary font-medium'>
                 <Trans i18nKey='packages-ui:twoFactorAuthRecoveryCodeLink' />
               </Link>
             </div>
