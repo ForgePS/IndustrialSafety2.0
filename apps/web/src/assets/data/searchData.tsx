@@ -24,8 +24,7 @@ export const searchData: SearchDataItem[] = [
   {
     id: '2',
     name: 'data:searchMyProfile',
-    baseUrl: '/my-profile',
-    dynamicUrl: true,
+    url: '/my-profile',
     icon: 'TbUser'
   },
   {

@@ -103,7 +103,7 @@ const Search = ({ data, roles }: { data: SearchDataProps[]; roles: string[] }) =
   // To handle the selection of the search item
   const handleSelect = (url: string, openInNewTab?: boolean) => {
     setIsOpen(false)
-    openInNewTab ? window.open(url, '_blank') : router.push(url)
+    openInNewTab ? window.open(`${process.env.BASEPATH ?? ''}${url}`, '_blank') : router.push(url)
   }
 
   // Toggle the menu when ⌘K is pressed
