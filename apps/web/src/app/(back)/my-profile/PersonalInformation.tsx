@@ -39,11 +39,16 @@ const userSchema = (t: TFunction) =>
     avatarUrl: z.string().optional()
   })
 
-const PersonalInformation = ({
-  userData
-}: {
-  userData: { id: string; email: string; name: string; avatarUrl: string; user_avatar: string }
-}) => {
+type UserData = {
+  id: string
+  email: string
+  name: string
+  avatarUrl: string
+  user_avatar: string
+  provider: string
+}
+
+const PersonalInformation = ({ userData }: { userData: UserData }) => {
   // States
   const [file, setFiles] = useState<File | null>(null)
   const [pending, startTransition] = useTransition()
@@ -120,7 +125,9 @@ const PersonalInformation = ({
       })
 
       if (error) {
-        console.error('Error updating user:', error)
+        error.message === 'Error updating user' && userData.provider === 'google' && userData.email !== data.email
+          ? toast('error', 'Cannot change email address as it is connected to Google')
+          : toast('error', error.message)
 
         return
       }

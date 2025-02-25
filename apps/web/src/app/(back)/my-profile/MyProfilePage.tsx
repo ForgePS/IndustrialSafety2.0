@@ -14,6 +14,7 @@ type UserData = {
   name: string
   avatarUrl: string
   user_avatar: string
+  provider: string
 }
 
 const MyProfile = async () => {
@@ -35,7 +36,8 @@ const MyProfile = async () => {
     email: data?.user?.email || '',
     name: data?.user?.user_metadata?.name || '',
     avatarUrl: data?.user?.user_metadata?.avatar_url || '',
-    user_avatar: data?.user?.user_metadata?.user_avatar || ''
+    user_avatar: data?.user?.user_metadata?.user_avatar || '',
+    provider: data?.user?.app_metadata?.provider || ''
   }
 
   return (
