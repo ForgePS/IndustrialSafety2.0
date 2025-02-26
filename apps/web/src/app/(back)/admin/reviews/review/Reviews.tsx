@@ -61,6 +61,9 @@ const SwitchState = ({ row }: { row: Row<Database['public']['Tables']['reviews']
   // States
   const [isFeatured, setIsFeatured] = useState(row.original.is_featured)
 
+  // Hooks
+  const { t } = useTranslation()
+
   // Vars
   const supabase = createClient()
 
@@ -72,7 +75,7 @@ const SwitchState = ({ row }: { row: Row<Database['public']['Tables']['reviews']
     const { error } = await supabase.from('reviews').update({ is_featured: checked }).eq('id', row.original.id)
 
     if (error) {
-      console.error('Error updating review: ', error.message)
+      toast('error', t('admin:reviewsEditError', { message: error.message }))
 
       // Revert back the state
       setIsFeatured(!checked)
