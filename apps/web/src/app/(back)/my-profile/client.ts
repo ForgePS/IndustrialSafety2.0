@@ -1,5 +1,6 @@
 // Third-party Imports
 import { createClient } from '@repo/supabase/client'
+import type { UserAttributes } from '@supabase/supabase-js'
 
 export const uploadAvatarToSupabase = async (file: File) => {
   const supabase = await createClient()
@@ -38,10 +39,12 @@ export const removeAvatarFromSupabase = async (avatarUrl: string) => {
   }
 }
 
-export const updateUserProfile = async (data: any) => {
+export const updateUserProfile = async (data: UserAttributes, emailRedirectTo: string) => {
   const supabase = await createClient()
 
-  const { error } = await supabase.auth.updateUser(data)
+  const { error } = await supabase.auth.updateUser(data, {
+    emailRedirectTo
+  })
 
   return { error }
 }

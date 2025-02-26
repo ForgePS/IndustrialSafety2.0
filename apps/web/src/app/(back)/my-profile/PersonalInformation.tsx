@@ -114,15 +114,18 @@ const PersonalInformation = ({ userData }: { userData: UserData }) => {
         avatarUrl = ''
       }
 
-      const { error } = await updateUserProfile({
-        email: data.email,
-        data: {
-          name: data.name,
-          full_name: data.name,
+      const { error } = await updateUserProfile(
+        {
           email: data.email,
-          user_avatar: avatarUrl
-        }
-      })
+          data: {
+            name: data.name,
+            full_name: data.name,
+            email: data.email,
+            user_avatar: avatarUrl
+          }
+        },
+        `${process.env.NEXT_PUBLIC_APP_URL}/auth/callback?next=/dashboard`
+      )
 
       if (error) {
         error.message === 'Error updating user' && userData.provider === 'google' && userData.email !== data.email
