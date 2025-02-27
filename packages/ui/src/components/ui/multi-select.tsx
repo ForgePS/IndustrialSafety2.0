@@ -111,13 +111,15 @@ export function MultiSelect({ options, selected, setSelected, className }: Multi
             className='placeholder:text-muted-foreground flex-1 bg-transparent outline-none'
           />
         </div>
-        <div className='flex items-center gap-2'>
+        <div className='flex items-center gap-1'>
           {selected.length > 0 && (
-            <Button variant='ghost' size='icon' onClick={handleClearAll}>
-              <TbX className='bs-3 is-3 text-muted-foreground hover:text-foreground' />
+            <Button variant='ghost' size='icon' className='!is-7 !bs-7' onClick={handleClearAll}>
+              <TbX className='bs-4 is-4 text-muted-foreground hover:text-foreground' />
             </Button>
           )}
-          <TbChevronDown className='bs-5 is-5 text-textSecondary shrink-0' />
+          <Button type='button' variant='ghost' size='icon' className='!is-7 !bs-7' onClick={() => setOpen(!open)}>
+            <TbChevronDown className='bs-5 is-5 text-textSecondary shrink-0' />
+          </Button>
         </div>
       </div>
       <div className='mbs-2 relative'>
