@@ -51,7 +51,7 @@ const ResendVerifyEmailButton = ({ searchParams, users }: { searchParams: Record
         }
 
         // Send verification email
-        const { error } = await verifyEmail(email, `${process.env.NEXT_PUBLIC_APP_URL}/auth/callback?next=/dashboard`)
+        const { error } = await verifyEmail(email, `${process.env.NEXT_PUBLIC_APP_URL}/auth/callback`)
 
         if (error) {
           console.error(error)

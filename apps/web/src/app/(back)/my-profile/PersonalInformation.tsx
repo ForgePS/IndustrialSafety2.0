@@ -124,7 +124,7 @@ const PersonalInformation = ({ userData }: { userData: UserData }) => {
             user_avatar: avatarUrl
           }
         },
-        `${process.env.NEXT_PUBLIC_APP_URL}/auth/callback?next=/dashboard`
+        `${process.env.NEXT_PUBLIC_APP_URL}/auth/callback`
       )
 
       if (error) {

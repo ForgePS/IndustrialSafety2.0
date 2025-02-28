@@ -25,7 +25,7 @@ const MagicLinkForm = () => {
   const { t } = useTranslation()
 
   const { handleSignIn, isError, isSuccess, error } = useMagicLinkSignIn(
-    `${process.env.NEXT_PUBLIC_APP_URL}/auth/callback?next=/dashboard`
+    `${process.env.NEXT_PUBLIC_APP_URL}/auth/callback`
   )
 
   const form = useForm<MagicLinkFormData>({

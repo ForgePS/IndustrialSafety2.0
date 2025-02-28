@@ -29,9 +29,7 @@ const ForgotPasswordForm = ({ users }: { users: User[] | null }) => {
   const router = useRouter()
   const { t } = useTranslation()
 
-  const { handleForgotPassword, isSuccess } = useForgotPassword(
-    `${process.env.NEXT_PUBLIC_APP_URL}/auth/callback?next=/reset-password`
-  )
+  const { handleForgotPassword, isSuccess } = useForgotPassword(`${process.env.NEXT_PUBLIC_APP_URL}/reset-password`)
 
   // Vars
   const form = useForm<ForgotPasswordFormData>({

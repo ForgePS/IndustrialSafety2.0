@@ -22,7 +22,11 @@ bodyClass: bg-slate-50
                   Thank you for signing up for {{ saas_startup_name }}. To complete your signup and start using our
                   services, please confirm your email address by clicking the button below:
                 </p>
-                <x-button href="@{{ .ConfirmationURL }}"> Confirm Email &rarr; </x-button>
+                <x-button
+                  href="@{{ .SiteURL }}/auth/confirm?token_hash=@{{ .TokenHash }}&type=signup&redirect_to=@{{ .RedirectTo }}"
+                >
+                  Confirm Email &rarr;
+                </x-button>
                 <x-spacer height="32px" />
                 <p class="m-0 text-slate-500">
                   If you didn't sign up for {{ saas_startup_name }}, you can safely ignore this email.

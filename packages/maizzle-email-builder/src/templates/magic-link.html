@@ -19,7 +19,11 @@ bodyClass: bg-slate-50
                   <br /><br />
                   Click the button below to securely log in to your account:
                 </p>
-                <x-button href="@{{ .ConfirmationURL }}"> Log In &rarr; </x-button>
+                <x-button
+                  href="@{{ .SiteURL }}/auth/confirm?token_hash=@{{ .TokenHash }}&type=magiclink&redirect_to=@{{ .RedirectTo }}"
+                >
+                  Log In &rarr;
+                </x-button>
                 <x-spacer height="32px" />
                 <p class="m-0 text-slate-500">
                   If you did not initiate this login request, please ignore this email or reach out to our support team

@@ -25,6 +25,8 @@ export async function GET(request: NextRequest) {
     if (!error) {
       // redirect user to specified redirect URL or root of app
       redirect(redirect_to)
+    } else {
+      redirect(`/auth/error?message=${error?.message}`)
     }
   }
 

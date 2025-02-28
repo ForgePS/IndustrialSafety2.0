@@ -21,7 +21,11 @@ bodyClass: bg-slate-50
                   change, please confirm the update of your email from @{{ .Email }} to @{{ .NewEmail }} by clicking the
                   button below:
                 </p>
-                <x-button href="@{{ .ConfirmationURL }}"> Confirm Email Change &rarr; </x-button>
+                <x-button
+                  href="@{{ .SiteURL }}/auth/confirm?token_hash=@{{ .TokenHash }}&type=email_change&redirect_to=@{{ .RedirectTo }}"
+                >
+                  Confirm Email Change &rarr;
+                </x-button>
                 <x-spacer height="32px" />
                 <p class="m-0 text-slate-500">
                   If you didn't request to change your email address, you can safely ignore this email.

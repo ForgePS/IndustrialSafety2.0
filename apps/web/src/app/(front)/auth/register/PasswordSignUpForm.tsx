@@ -41,7 +41,7 @@ const PasswordSignUpForm = ({ users }: { users: User[] | null }) => {
   })
 
   const { handleSignUp, error, isSuccess } = usePasswordSignUp({
-    emailRedirectTo: `${process.env.NEXT_PUBLIC_APP_URL}/auth/callback?next=/dashboard`,
+    emailRedirectTo: `${process.env.NEXT_PUBLIC_APP_URL}/auth/callback`,
     verifyEmailRedirectTo: `/auth/verify-email?email=${form.getValues('email')}`
   })
 

@@ -51,7 +51,7 @@ const AuthForm = ({ users }: { users: User[] | null }) => {
     error: singUpError,
     isSuccess: isSignUpSuccess
   } = usePasswordSignUp({
-    emailRedirectTo: `${process.env.NEXT_PUBLIC_APP_URL}/auth/callback?next=/checkout`,
+    emailRedirectTo: `${process.env.NEXT_PUBLIC_APP_URL}/checkout`,
     verifyEmailRedirectTo: `/auth/verify-email?email=${form.getValues('email')}`
   })
 

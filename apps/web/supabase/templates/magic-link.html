@@ -58,11 +58,13 @@
                     Click the button below to securely log in to your account:
                   </p>
                   <div>
-                    <a href="{{ .ConfirmationURL }}" style="color: #e9e5ff; background-color: #794dff; display: inline-block; border-radius: 4px; padding: 16px 24px; font-size: 16px; line-height: 1; font-weight: 600; text-decoration: none">
+                    <a href="{{ .SiteURL }}/auth/confirm?token_hash={{ .TokenHash }}&amp;type=magiclink&amp;redirect_to={{ .RedirectTo }}" style="color: #e9e5ff; background-color: #794dff; display: inline-block; border-radius: 4px; padding: 16px 24px; font-size: 16px; line-height: 1; font-weight: 600; text-decoration: none">
                       <!--[if mso]>
       <i style="mso-font-width: 150%; mso-text-raise: 30px" hidden>&emsp;</i>
     <![endif]-->
-                      <span style="mso-text-raise: 16px"> Log In &rarr; </span>
+                      <span style="mso-text-raise: 16px">
+                  Log In &rarr;
+                </span>
                       <!--[if mso]>
       <i hidden style="mso-font-width: 150%;">&emsp;&#8203;</i>
     <![endif]-->
