@@ -14,6 +14,7 @@ import { useForm } from 'react-hook-form'
 import { z } from 'zod'
 import { Card, CardContent } from '@repo/ui/components/ui/card'
 import { Input } from '@repo/ui/components/ui/input'
+import PasswordInput from '@repo/ui/components/ui/password-input'
 import { Button } from '@repo/ui/components/ui/button'
 import { MultiSelect } from '@repo/ui/components/ui/multi-select'
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@repo/ui/components/ui/form'
@@ -158,7 +159,7 @@ const Create = ({ roles }: { roles: Database['public']['Tables']['roles']['Row']
                         <span className='text-destructive'>*</span>
                       </FormLabel>
                       <FormControl>
-                        <Input id='password' type='password' placeholder='················' {...field} />
+                        <PasswordInput id='password' placeholder='················' {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
