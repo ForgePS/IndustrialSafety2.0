@@ -78,7 +78,7 @@ const ResetPasswordForm = () => {
                     <sup className='text-destructive'>*</sup>
                   </FormLabel>
                   <FormControl>
-                    <PasswordInput placeholder='················' {...field} />
+                    <PasswordInput placeholder='················' autoFocus {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>

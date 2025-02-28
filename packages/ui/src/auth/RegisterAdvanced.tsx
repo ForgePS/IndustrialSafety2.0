@@ -47,7 +47,7 @@ const RegisterAdvanced = async () => {
                   <Trans i18nKey='packages-ui:emailLabel' />
                   <sup className='text-destructive'>*</sup>
                 </Label>
-                <TranslatedInput id='email' type='email' translationKey='packages-ui:emailPlaceholder' autoFocus />
+                <TranslatedInput id='email' type='email' translationKey='packages-ui:emailPlaceholder' />
               </div>
               <div>
                 <Label htmlFor='password'>
