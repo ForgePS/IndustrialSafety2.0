@@ -78,8 +78,8 @@ Contributions are always welcome and recommended! Here is how:
 ## Useful Links 🎁
 
 - [Vue CheatSheet](https://vue-cheatsheet.themeselection.com/)
-- [Freebies](https://themeselection.com/item/category/free-admin-templates/)
-- [Download Free Admin Templates](https://themeselection.com/item/category/free-admin-templates/)
+- [Freebies](https://themeselection.com/item/category/freebies/)
+- [Free Admin Templates](https://themeselection.com/item/category/free-admin-templates/)
 - [Bootstrap 5 CheatSheet](https://bootstrap-cheatsheet.themeselection.com/)
 
 ## Social Media :earth_africa:
