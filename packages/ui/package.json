@@ -1,6 +1,7 @@
 {
   "name": "@repo/ui",
   "version": "1.0.0",
+  "private": true,
   "exports": {
     "./globals.css": "./src/globals.css",
     "./postcss.config": "./postcss.config.mjs",
