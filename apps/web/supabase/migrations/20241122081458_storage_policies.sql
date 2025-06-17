@@ -1,5 +1,3 @@
--- Enable row-level security
-ALTER TABLE storage.objects ENABLE ROW LEVEL SECURITY;
 -- Policy for SELECT operations (only for 'user_avatars' bucket)
 CREATE POLICY objects_select_policy ON storage.objects FOR
 SELECT USING (
