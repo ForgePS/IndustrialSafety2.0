@@ -5,8 +5,8 @@ import { useRef } from 'react'
 import type { MouseEventHandler, ReactNode } from 'react'
 
 // Third-party Imports
-import { AnimatePresence, motion, useInView } from 'framer-motion'
-import type { UseInViewOptions, Variants } from 'framer-motion'
+import { AnimatePresence, motion, useInView } from 'motion/react'
+import type { UseInViewOptions, Variants } from 'motion/react'
 
 type BlurFadeProps = {
   children: ReactNode

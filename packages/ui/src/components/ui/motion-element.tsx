@@ -4,8 +4,8 @@
 import type { ElementType } from 'react'
 
 // Third-party Imports
-import { motion } from 'framer-motion'
-import type { MotionProps } from 'framer-motion'
+import { motion } from 'motion/react'
+import type { MotionProps } from 'motion/react'
 
 type Props = {
   component: keyof typeof motion

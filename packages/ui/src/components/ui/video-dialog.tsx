@@ -5,7 +5,7 @@ import { useState } from 'react'
 
 // Third-party Imports
 import { TbPlayerPlayFilled, TbX } from 'react-icons/tb'
-import { AnimatePresence, motion } from 'framer-motion'
+import { AnimatePresence, motion } from 'motion/react'
 
 // Component Imports
 import { Avatar, AvatarFallback } from './avatar'

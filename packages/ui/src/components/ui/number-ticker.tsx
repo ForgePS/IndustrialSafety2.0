@@ -4,7 +4,7 @@
 import { useEffect, useRef } from 'react'
 
 // Third-party Imports
-import { useInView, useMotionValue, useSpring } from 'framer-motion'
+import { useInView, useMotionValue, useSpring } from 'motion/react'
 
 type NumberTickerProps = {
   startValue: number

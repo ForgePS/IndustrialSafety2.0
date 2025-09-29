@@ -89,6 +89,9 @@ export async function createCheckoutSession(
                   cost: variantDetails.lineItems[0].cost.toString()
                 }
               },
+              checkout_options: {
+                embed: true
+              },
               product_options: {
                 enabled_variants: [planId.toString()], // Only enable this variant
                 redirect_url: `${process.env.NEXT_PUBLIC_APP_URL}/thank-you`
