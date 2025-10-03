@@ -39,14 +39,42 @@ const inter = Inter({ subsets: ['latin'] })
 export const metadata: Metadata = {
   icons: {
     icon: [
-      { url: '/favicon-16x16.png', sizes: '16x16', type: 'image/png' },
-      { url: '/favicon-32x32.png', sizes: '32x32', type: 'image/png' },
-      { url: '/favicon.ico', sizes: '48x48', type: 'image/x-icon' }
+      {
+        url: `${process.env.NEXT_PUBLIC_APP_URL}/favicon-16x16.png`,
+        sizes: '16x16',
+        type: 'image/png'
+      },
+      {
+        url: `${process.env.NEXT_PUBLIC_APP_URL}/favicon-32x32.png`,
+        sizes: '32x32',
+        type: 'image/png'
+      },
+      {
+        url: `${process.env.NEXT_PUBLIC_APP_URL}/favicon.ico`,
+        sizes: '48x48',
+        type: 'image/x-icon'
+      }
     ],
-    apple: [{ url: '/apple-touch-icon.png', sizes: '180x180', type: 'image/png' }],
+    apple: [
+      {
+        url: `${process.env.NEXT_PUBLIC_APP_URL}/apple-touch-icon.png`,
+        sizes: '180x180',
+        type: 'image/png'
+      }
+    ],
     other: [
-      { url: '/android-chrome-192x192.png', rel: 'icon', sizes: '192x192', type: 'image/png' },
-      { url: '/android-chrome-512x512.png', rel: 'icon', sizes: '512x512', type: 'image/png' }
+      {
+        url: `${process.env.NEXT_PUBLIC_APP_URL}/android-chrome-192x192.png`,
+        rel: 'icon',
+        sizes: '192x192',
+        type: 'image/png'
+      },
+      {
+        url: `${process.env.NEXT_PUBLIC_APP_URL}/android-chrome-512x512.png`,
+        rel: 'icon',
+        sizes: '512x512',
+        type: 'image/png'
+      }
     ]
   }
 }
