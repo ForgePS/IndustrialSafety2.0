@@ -4,6 +4,12 @@
 
 All notable changes will be documented in this file.
 
+## v1.0.2 (2025-10-03)
+
+### Fixed
+
+- Fixed favicon URLs to use full app URLs instead of relative paths
+
 ## v1.0.1 (2025-09-29)
 
 ### Updated
