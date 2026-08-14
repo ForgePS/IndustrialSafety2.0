@@ -43,6 +43,8 @@ export interface ComputeStackProps extends cdk.StackProps {
   cognitoClientIds: string;
   cognitoDomain: string;
   browserOrigins: string[];
+  /** Host suffixes for per-tenant vanity https origins (e.g. .forgepublicsafety.com). */
+  browserOriginSuffixes?: string[];
   publicRmsUrl: string;
   publicCreatorUrl: string;
 }
@@ -108,6 +110,7 @@ export class ComputeStack extends cdk.Stack {
       cognitoClientIds: props.cognitoClientIds,
       cognitoDomain: props.cognitoDomain,
       browserOrigins: props.browserOrigins,
+      browserOriginSuffixes: props.browserOriginSuffixes,
       publicRmsUrl: props.publicRmsUrl,
       publicCreatorUrl: props.publicCreatorUrl,
     });

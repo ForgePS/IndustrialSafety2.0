@@ -12,6 +12,11 @@ export interface ForgeApiCloudFrontProps {
   alb: elbv2.IApplicationLoadBalancer;
   /** Browser origins allowed by CORS (RMS / Console CloudFront HTTPS URLs). */
   allowedBrowserOrigins: string[];
+  /**
+   * Host suffixes whose https://{host} origins are also trusted.
+   * Converted to CloudFront leftmost-subdomain wildcards (*.example.com).
+   */
+  allowedBrowserOriginSuffixes?: string[];
 }
 
 /**
@@ -27,6 +32,17 @@ export class ForgeApiCloudFront extends Construct {
   constructor(scope: Construct, id: string, props: ForgeApiCloudFrontProps) {
     super(scope, id);
     const { config, alb, allowedBrowserOrigins } = props;
+    const suffixes = (props.allowedBrowserOriginSuffixes ?? [])
+      .map((suffix) => suffix.trim().toLowerCase())
+      .filter(Boolean)
+      .map((suffix) => (suffix.startsWith(".") ? suffix.slice(1) : suffix));
+    // CloudFront CORS allows a leftmost subdomain wildcard (*.example.com) so
+    // per-tenant vanity hosts under our first-party zone do not each need a redeploy.
+    const wildcardOrigins = suffixes.map((zone) => `https://*.${zone}`);
+    const corsAllowOrigins =
+      allowedBrowserOrigins.length > 0 || wildcardOrigins.length > 0
+        ? [...allowedBrowserOrigins, ...wildcardOrigins]
+        : ["https://localhost"];
 
     const origin = new origins.LoadBalancerV2Origin(alb, {
       protocolPolicy: cloudfront.OriginProtocolPolicy.HTTP_ONLY,
@@ -34,11 +50,6 @@ export class ForgeApiCloudFront extends Construct {
       readTimeout: cdk.Duration.seconds(60),
       keepaliveTimeout: cdk.Duration.seconds(60),
     });
-
-    const corsOrigins =
-      allowedBrowserOrigins.length > 0
-        ? allowedBrowserOrigins.join(" ")
-        : "https://localhost";
 
     const responseHeaders = new cloudfront.ResponseHeadersPolicy(this, "SecureHeaders", {
       responseHeadersPolicyName: resourceName(config, "cfrhp", "api"),
@@ -75,7 +86,7 @@ export class ForgeApiCloudFront extends Construct {
           "X-Tenant-Id",
         ],
         accessControlAllowMethods: ["GET", "HEAD", "OPTIONS", "PUT", "POST", "PATCH", "DELETE"],
-        accessControlAllowOrigins: allowedBrowserOrigins.length > 0 ? allowedBrowserOrigins : ["https://localhost"],
+        accessControlAllowOrigins: corsAllowOrigins,
         accessControlExposeHeaders: ["ETag", "X-Correlation-Id", "X-Request-Id"],
         accessControlMaxAge: cdk.Duration.hours(1),
         originOverride: true,
@@ -95,7 +106,6 @@ export class ForgeApiCloudFront extends Construct {
         ],
       },
     });
-    void corsOrigins;
 
     const apiDomain = config.domains?.api;
     const certificateArn = config.edge.certificateArn;

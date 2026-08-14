@@ -77,6 +77,11 @@ const baseSchema = z.object({
   PUBLIC_API_URL: z.string().url(),
   FEATURE_FLAG_PROVIDER: z.string().min(1),
   CORS_ORIGINS: z.string().optional().default(""),
+  /**
+   * Comma-separated host suffixes trusted as browser origins over https, so
+   * per-tenant vanity hosts do not each need an exact CORS entry and redeploy.
+   */
+  CORS_ORIGIN_SUFFIXES: z.string().optional().default(""),
   BODY_SIZE_LIMIT: z.string().optional().default("1mb"),
   REQUEST_TIMEOUT_MS: z.coerce.number().int().positive().optional().default(30000),
 });

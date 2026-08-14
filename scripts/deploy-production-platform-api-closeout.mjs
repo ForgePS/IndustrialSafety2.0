@@ -87,6 +87,19 @@ function register(path) {
 
 const apiTd = describe(API_SERVICE);
 apiTd.containerDefinitions[0].image = `${API_ECR}:${tag}`;
+const apiEnv = apiTd.containerDefinitions[0].environment ?? [];
+const vanityOrigin = "https://producers-rice-mill.forgepublicsafety.com";
+const corsOrigins = apiEnv.find((e) => e.name === "CORS_ORIGINS");
+if (corsOrigins && !String(corsOrigins.value).includes(vanityOrigin)) {
+  corsOrigins.value = `${corsOrigins.value},${vanityOrigin}`;
+}
+const corsSuffixes = apiEnv.find((e) => e.name === "CORS_ORIGIN_SUFFIXES");
+if (corsSuffixes) {
+  corsSuffixes.value = ".forgepublicsafety.com";
+} else {
+  apiEnv.push({ name: "CORS_ORIGIN_SUFFIXES", value: ".forgepublicsafety.com" });
+}
+apiTd.containerDefinitions[0].environment = apiEnv;
 const apiPath = `.forge-td-prod-api-closeout.json`;
 fs.writeFileSync(apiPath, JSON.stringify(slim(apiTd), null, 2));
 const apiReg = register(apiPath);

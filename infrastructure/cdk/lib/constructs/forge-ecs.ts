@@ -68,6 +68,11 @@ export interface ForgeEcsProps {
   cognitoClientIds: string;
   cognitoDomain: string;
   browserOrigins: string[];
+  /**
+   * Host suffixes trusted as https browser origins (leading-dot form optional).
+   * Used so per-tenant vanity hosts do not each require an exact CORS redeploy.
+   */
+  browserOriginSuffixes?: string[];
   publicRmsUrl: string;
   publicCreatorUrl: string;
   /** Optional override; when omitted, set from ApiHttps CloudFront domain. */
@@ -151,6 +156,7 @@ export class ForgeEcs extends Construct {
       config,
       alb: this.alb,
       allowedBrowserOrigins: props.browserOrigins,
+      allowedBrowserOriginSuffixes: props.browserOriginSuffixes ?? [],
     });
     const publicApiUrl = props.publicApiUrl ?? `https://${this.apiHttps.distribution.distributionDomainName}`;
 
@@ -379,6 +385,7 @@ export class ForgeEcs extends Construct {
         COGNITO_CLIENT_ID: props.cognitoClientIds,
         COGNITO_DOMAIN: props.cognitoDomain,
         CORS_ORIGINS: props.browserOrigins.join(","),
+        CORS_ORIGIN_SUFFIXES: (props.browserOriginSuffixes ?? []).join(","),
         PUBLIC_RMS_URL: props.publicRmsUrl,
         PUBLIC_CREATOR_URL: props.publicCreatorUrl,
         PUBLIC_ACADEMY_URL: props.publicRmsUrl,

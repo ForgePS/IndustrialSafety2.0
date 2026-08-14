@@ -20,4 +20,13 @@ describe("production pre-cutover SPA origins", () => {
       expect(origin.includes("localhost")).toBe(false);
     }
   });
+
+  it("documents that first-party vanity hosts use a zone suffix, not this exact list", () => {
+    // Exact CloudFront defaults stay here. Tenant vanity hosts under
+    // forgepublicsafety.com are covered by CORS_ORIGIN_SUFFIXES /
+    // CloudFront https://*.forgepublicsafety.com (see forge-api-cloudfront).
+    expect(
+      PRODUCTION_PRE_CUTOVER_SPA_ORIGINS.some((o) => o.includes("producers-rice-mill")),
+    ).toBe(false);
+  });
 });

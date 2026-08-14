@@ -3,6 +3,7 @@ import { NestFactory } from "@nestjs/core";
 import { LOCAL_PLACEHOLDER_ENV, loadEnvironmentAsync } from "@forge/environment";
 import { createLogger } from "@forge/observability";
 import { AppModule } from "./app.module.js";
+import { isOriginAllowed, parseCorsOriginRules } from "./common/cors-origin.js";
 import { CorrelationIdMiddleware } from "./correlation.middleware.js";
 
 async function bootstrap(): Promise<void> {
@@ -23,12 +24,12 @@ async function bootstrap(): Promise<void> {
     max: 120,
   });
   app.use(rateLimit.use.bind(rateLimit));
+  const corsRules = parseCorsOriginRules(env.CORS_ORIGINS, env.CORS_ORIGIN_SUFFIXES);
   app.enableCors({
-    origin: env.CORS_ORIGINS
-      ? env.CORS_ORIGINS.split(",")
-          .map((value) => value.trim())
-          .filter(Boolean)
-      : false,
+    origin: (origin: string | undefined, callback: (err: Error | null, allow: boolean) => void) => {
+      // Server-to-server callers send no Origin and are not subject to CORS.
+      callback(null, origin ? isOriginAllowed(origin, corsRules) : true);
+    },
     credentials: true,
     allowedHeaders: [
       "Authorization",
