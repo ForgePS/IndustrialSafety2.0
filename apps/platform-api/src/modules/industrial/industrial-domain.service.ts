@@ -73,6 +73,8 @@ type TitledTable =
   | typeof industrialOshaCases
   | typeof industrialCorrectiveActions;
 
+const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
 const MODULE_TABLES: Record<string, TitledTable> = {
   incidents: industrialIncidents,
   inspections: industrialInspections,
@@ -150,6 +152,19 @@ export class IndustrialDomainService {
     return table;
   }
 
+  /**
+   * Record ids are uuid columns, so a non-uuid path segment would reach Postgres
+   * as a cast error and surface as a 500. The flat `:module/:id` routes are
+   * catch-alls, so any unknown sub-path (e.g. /training/records) lands here and
+   * must read as "no such record" rather than crashing the caller's UI.
+   */
+  private assertRecordId(id: string): string {
+    if (!UUID_PATTERN.test(id.trim())) {
+      throw new ForgeError("NOT_FOUND", "Record not found");
+    }
+    return id.trim();
+  }
+
   async listModule(principal: ForgePrincipal, moduleKey: string, query: ListQuery) {
     const table = this.tableFor(moduleKey);
     const { page, pageSize, offset } = this.page(query);
@@ -191,11 +206,12 @@ export class IndustrialDomainService {
 
   async getModule(principal: ForgePrincipal, moduleKey: string, id: string) {
     const table = this.tableFor(moduleKey);
+    const recordId = this.assertRecordId(id);
     return withTenantTransaction(this.db, principal.tenantId, async (tx) => {
       const [row] = await tx
         .select()
         .from(table)
-        .where(and(eq(table.id, id), eq(table.tenantId, principal.tenantId)))
+        .where(and(eq(table.id, recordId), eq(table.tenantId, principal.tenantId)))
         .limit(1);
       if (!row) throw new ForgeError("NOT_FOUND", "Record not found");
       return this.mapListItem({
@@ -263,12 +279,13 @@ export class IndustrialDomainService {
 
   async archiveModule(principal: ForgePrincipal, moduleKey: string, id: string) {
     const table = this.tableFor(moduleKey);
+    const recordId = this.assertRecordId(id);
     return withTenantTransaction(this.db, principal.tenantId, async (tx) => {
       const now = new Date();
       const [row] = await tx
         .update(table)
         .set({ archivedAt: now, status: "ARCHIVED", updatedAt: now } as never)
-        .where(and(eq(table.id, id), eq(table.tenantId, principal.tenantId)))
+        .where(and(eq(table.id, recordId), eq(table.tenantId, principal.tenantId)))
         .returning();
       if (!row) throw new ForgeError("NOT_FOUND", "Record not found");
       return this.mapListItem({
@@ -303,12 +320,13 @@ export class IndustrialDomainService {
     }
     if (action === "archive") return this.archiveModule(principal, moduleKey, id);
     const table = this.tableFor(moduleKey);
+    const recordId = this.assertRecordId(id);
     return withTenantTransaction(this.db, principal.tenantId, async (tx) => {
       const now = new Date();
       const [row] = await tx
         .update(table)
         .set({ status: next, updatedAt: now } as never)
-        .where(and(eq(table.id, id), eq(table.tenantId, principal.tenantId)))
+        .where(and(eq(table.id, recordId), eq(table.tenantId, principal.tenantId)))
         .returning();
       if (!row) throw new ForgeError("NOT_FOUND", "Record not found");
       return this.mapListItem({
@@ -406,12 +424,16 @@ export class IndustrialDomainService {
   }
 
   async getPersonnel(principal: ForgePrincipal, id: string) {
+    const recordId = this.assertRecordId(id);
     return withTenantTransaction(this.db, principal.tenantId, async (tx) => {
       const [row] = await tx
         .select()
         .from(industrialPersonnel)
         .where(
-          and(eq(industrialPersonnel.id, id), eq(industrialPersonnel.tenantId, principal.tenantId)),
+          and(
+            eq(industrialPersonnel.id, recordId),
+            eq(industrialPersonnel.tenantId, principal.tenantId),
+          ),
         )
         .limit(1);
       if (!row) throw new ForgeError("NOT_FOUND", "Personnel not found");
@@ -509,12 +531,16 @@ export class IndustrialDomainService {
   }
 
   async updatePersonnel(principal: ForgePrincipal, id: string, body: Record<string, unknown>) {
+    const recordId = this.assertRecordId(id);
     return withTenantTransaction(this.db, principal.tenantId, async (tx) => {
       const [existing] = await tx
         .select()
         .from(industrialPersonnel)
         .where(
-          and(eq(industrialPersonnel.id, id), eq(industrialPersonnel.tenantId, principal.tenantId)),
+          and(
+            eq(industrialPersonnel.id, recordId),
+            eq(industrialPersonnel.tenantId, principal.tenantId),
+          ),
         )
         .limit(1);
       if (!existing) throw new ForgeError("NOT_FOUND", "Personnel not found");
@@ -547,7 +573,7 @@ export class IndustrialDomainService {
               ? existing.archivedAt ?? now
               : existing.archivedAt,
         })
-        .where(eq(industrialPersonnel.id, id))
+        .where(eq(industrialPersonnel.id, recordId))
         .returning();
       return this.mapListItem({
         id: row!.id,
@@ -669,13 +695,17 @@ export class IndustrialDomainService {
   }
 
   async archiveEquipment(principal: ForgePrincipal, id: string) {
+    const recordId = this.assertRecordId(id);
     return withTenantTransaction(this.db, principal.tenantId, async (tx) => {
       const now = new Date();
       const [row] = await tx
         .update(industrialEquipment)
         .set({ archivedAt: now, status: "ARCHIVED", updatedAt: now })
         .where(
-          and(eq(industrialEquipment.id, id), eq(industrialEquipment.tenantId, principal.tenantId)),
+          and(
+            eq(industrialEquipment.id, recordId),
+            eq(industrialEquipment.tenantId, principal.tenantId),
+          ),
         )
         .returning();
       if (!row) throw new ForgeError("NOT_FOUND", "Equipment not found");
@@ -691,13 +721,14 @@ export class IndustrialDomainService {
   }
 
   async getLotoDetail(principal: ForgePrincipal, id: string) {
+    const recordId = this.assertRecordId(id);
     return withTenantTransaction(this.db, principal.tenantId, async (tx) => {
       const [proc] = await tx
         .select()
         .from(industrialLotoProcedures)
         .where(
           and(
-            eq(industrialLotoProcedures.id, id),
+            eq(industrialLotoProcedures.id, recordId),
             eq(industrialLotoProcedures.tenantId, principal.tenantId),
           ),
         )
@@ -884,13 +915,14 @@ export class IndustrialDomainService {
       principal.permissions.has("industrial.workers_comp.medical.view") ||
       principal.permissions.has("industrial.workers_comp.medical.manage") ||
       principal.permissions.has("industrial.admin");
+    const recordId = this.assertRecordId(id);
     return withTenantTransaction(this.db, principal.tenantId, async (tx) => {
       const [row] = await tx
         .select()
         .from(industrialWorkersCompCases)
         .where(
           and(
-            eq(industrialWorkersCompCases.id, id),
+            eq(industrialWorkersCompCases.id, recordId),
             eq(industrialWorkersCompCases.tenantId, principal.tenantId),
           ),
         )
