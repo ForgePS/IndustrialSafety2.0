@@ -295,6 +295,13 @@
       "when": 1754960000000,
       "tag": "0041_onboarding_org_lookups_s1",
       "breakpoints": true
+    },
+    {
+      "idx": 42,
+      "version": "7",
+      "when": 1754970000000,
+      "tag": "0042_industrial_training_quiz_s1",
+      "breakpoints": true
     }
   ]
 }

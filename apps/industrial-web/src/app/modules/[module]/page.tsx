@@ -7,6 +7,7 @@ import { LotoWorkspace } from "@/components/loto-workspace";
 import { ModuleUnavailable } from "@/components/module-unavailable";
 import { OpsModuleWorkspace } from "@/components/ops-module-workspace";
 import { PersonnelWorkspace } from "@/components/personnel-workspace";
+import { TrainingWorkspace } from "@/components/training-workspace";
 import { isInd6ComplianceModule } from "@/lib/compliance-modules";
 import { isInd5HighRiskModule } from "@/lib/high-risk-modules";
 import { isInd3OpsModule } from "@/lib/ops-modules";
@@ -52,6 +53,9 @@ export default async function ModulePage({
   }
   if (module === "personnel") {
     return <PersonnelWorkspace moduleName={name} />;
+  }
+  if (module === "training") {
+    return <TrainingWorkspace moduleName={name} />;
   }
   if (module === "qr-links") {
     return <QrLinksWorkspace moduleName={name} />;

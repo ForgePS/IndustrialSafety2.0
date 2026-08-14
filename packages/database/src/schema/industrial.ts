@@ -471,6 +471,166 @@ export const industrialJsas = pgTable("industrial_jsas", {
   archivedAt: timestamp("archived_at", { withTimezone: true }),
 });
 
+/** Quiz LMS: published safety sources (Forge-authored content). */
+export const industrialTrainingSources = pgTable(
+  "industrial_training_sources",
+  {
+    id: uuid("id").primaryKey(),
+    tenantId: uuid("tenant_id")
+      .notNull()
+      .references(() => tenants.id),
+    title: varchar("title", { length: 500 }).notNull(),
+    edition: varchar("edition", { length: 120 }),
+    description: text("description"),
+    status: varchar("status", { length: 64 }).notNull().default("DRAFT"),
+    chapterCount: integer("chapter_count").notNull().default(0),
+    questionCount: integer("question_count").notNull().default(0),
+    createdByUserId: uuid("created_by_user_id"),
+    publishedAt: timestamp("published_at", { withTimezone: true }),
+    createdAt: createdAtColumn,
+    updatedAt: updatedAtColumn,
+    archivedAt: timestamp("archived_at", { withTimezone: true }),
+  },
+  (t) => [index("industrial_training_sources_tenant_status_idx").on(t.tenantId, t.status)],
+);
+
+export const industrialTrainingChapters = pgTable(
+  "industrial_training_chapters",
+  {
+    id: uuid("id").primaryKey(),
+    tenantId: uuid("tenant_id")
+      .notNull()
+      .references(() => tenants.id),
+    sourceId: uuid("source_id")
+      .notNull()
+      .references(() => industrialTrainingSources.id, { onDelete: "cascade" }),
+    title: varchar("title", { length: 500 }).notNull(),
+    sortOrder: integer("sort_order").notNull().default(0),
+    pageRange: varchar("page_range", { length: 120 }),
+    status: varchar("status", { length: 64 }).notNull().default("ACTIVE"),
+    createdAt: createdAtColumn,
+    updatedAt: updatedAtColumn,
+    archivedAt: timestamp("archived_at", { withTimezone: true }),
+  },
+  (t) => [index("industrial_training_chapters_source_idx").on(t.tenantId, t.sourceId, t.sortOrder)],
+);
+
+export const industrialTrainingQuestions = pgTable(
+  "industrial_training_questions",
+  {
+    id: uuid("id").primaryKey(),
+    tenantId: uuid("tenant_id")
+      .notNull()
+      .references(() => tenants.id),
+    sourceId: uuid("source_id")
+      .notNull()
+      .references(() => industrialTrainingSources.id, { onDelete: "cascade" }),
+    chapterId: uuid("chapter_id")
+      .notNull()
+      .references(() => industrialTrainingChapters.id, { onDelete: "cascade" }),
+    stem: text("stem").notNull(),
+    choices: jsonb("choices").notNull().default([]),
+    correctIndex: integer("correct_index").notNull().default(0),
+    explanation: text("explanation"),
+    pageRef: varchar("page_ref", { length: 120 }),
+    difficulty: varchar("difficulty", { length: 32 }).default("MEDIUM"),
+    status: varchar("status", { length: 64 }).notNull().default("DRAFT"),
+    createdAt: createdAtColumn,
+    updatedAt: updatedAtColumn,
+    archivedAt: timestamp("archived_at", { withTimezone: true }),
+  },
+  (t) => [
+    index("industrial_training_questions_chapter_idx").on(t.tenantId, t.chapterId, t.status),
+    index("industrial_training_questions_source_idx").on(t.tenantId, t.sourceId),
+  ],
+);
+
+export const industrialTrainingQuizzes = pgTable(
+  "industrial_training_quizzes",
+  {
+    id: uuid("id").primaryKey(),
+    tenantId: uuid("tenant_id")
+      .notNull()
+      .references(() => tenants.id),
+    sourceId: uuid("source_id")
+      .notNull()
+      .references(() => industrialTrainingSources.id),
+    createdByUserId: uuid("created_by_user_id"),
+    mode: varchar("mode", { length: 32 }).notNull().default("STANDARD"),
+    optionCount: integer("option_count").notNull().default(4),
+    feedbackEnabled: boolean("feedback_enabled").notNull().default(true),
+    timerSeconds: integer("timer_seconds"),
+    chapterIds: jsonb("chapter_ids").notNull().default([]),
+    settings: jsonb("settings").notNull().default({}),
+    status: varchar("status", { length: 64 }).notNull().default("ACTIVE"),
+    createdAt: createdAtColumn,
+    updatedAt: updatedAtColumn,
+    archivedAt: timestamp("archived_at", { withTimezone: true }),
+  },
+  (t) => [index("industrial_training_quizzes_tenant_idx").on(t.tenantId, t.createdAt)],
+);
+
+export const industrialTrainingAttempts = pgTable(
+  "industrial_training_attempts",
+  {
+    id: uuid("id").primaryKey(),
+    tenantId: uuid("tenant_id")
+      .notNull()
+      .references(() => tenants.id),
+    quizId: uuid("quiz_id")
+      .notNull()
+      .references(() => industrialTrainingQuizzes.id),
+    userId: uuid("user_id").notNull(),
+    sourceId: uuid("source_id")
+      .notNull()
+      .references(() => industrialTrainingSources.id),
+    status: varchar("status", { length: 64 }).notNull().default("IN_PROGRESS"),
+    questionIds: jsonb("question_ids").notNull().default([]),
+    answers: jsonb("answers").notNull().default([]),
+    bookmarks: jsonb("bookmarks").notNull().default([]),
+    currentIndex: integer("current_index").notNull().default(0),
+    scoreCorrect: integer("score_correct").notNull().default(0),
+    scoreTotal: integer("score_total").notNull().default(0),
+    masteryState: jsonb("mastery_state").notNull().default({}),
+    startedAt: timestamp("started_at", { withTimezone: true }).notNull().defaultNow(),
+    resumedAt: timestamp("resumed_at", { withTimezone: true }),
+    completedAt: timestamp("completed_at", { withTimezone: true }),
+    createdAt: createdAtColumn,
+    updatedAt: updatedAtColumn,
+    archivedAt: timestamp("archived_at", { withTimezone: true }),
+  },
+  (t) => [
+    index("industrial_training_attempts_user_idx").on(t.tenantId, t.userId, t.status),
+    index("industrial_training_attempts_quiz_idx").on(t.tenantId, t.quizId),
+  ],
+);
+
+export const industrialTrainingUserStats = pgTable(
+  "industrial_training_user_stats",
+  {
+    id: uuid("id").primaryKey(),
+    tenantId: uuid("tenant_id")
+      .notNull()
+      .references(() => tenants.id),
+    userId: uuid("user_id").notNull(),
+    sourceId: uuid("source_id")
+      .notNull()
+      .references(() => industrialTrainingSources.id, { onDelete: "cascade" }),
+    chapterId: uuid("chapter_id").references(() => industrialTrainingChapters.id, {
+      onDelete: "cascade",
+    }),
+    seenCount: integer("seen_count").notNull().default(0),
+    correctCount: integer("correct_count").notNull().default(0),
+    masteredCount: integer("mastered_count").notNull().default(0),
+    attemptCount: integer("attempt_count").notNull().default(0),
+    avgScore: varchar("avg_score", { length: 16 }),
+    lastAttemptAt: timestamp("last_attempt_at", { withTimezone: true }),
+    createdAt: createdAtColumn,
+    updatedAt: updatedAtColumn,
+  },
+  (t) => [index("industrial_training_user_stats_user_idx").on(t.tenantId, t.userId)],
+);
+
 /** Company documents uploaded during onboarding / Setup Center (tenant-scoped). */
 export const platformCompanyDocuments = pgTable(
   "platform_company_documents",
