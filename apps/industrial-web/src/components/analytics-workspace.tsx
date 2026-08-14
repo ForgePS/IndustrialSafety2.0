@@ -57,7 +57,7 @@ export function AnalyticsWorkspace({ moduleName }: { moduleName: string }) {
     return (
       <section className="ind-unavailable" role="alert">
         <h1>{moduleName}</h1>
-        <p>You don't have permission to view analytics.</p>
+        <p>You do not have permission to view analytics.</p>
       </section>
     );
   }
