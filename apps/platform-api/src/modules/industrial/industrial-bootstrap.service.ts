@@ -9,7 +9,7 @@ import { FeatureFlagsService } from "../feature-flags/feature-flags.service.js";
 
 /**
  * Bootstrap / readiness for flat industrial-web contract.
- * Forward-ported from diverged branch onto master Model A (no ops_records).
+ * Forward-ported from diverged branch onto master Model A.
  */
 @Injectable()
 export class IndustrialBootstrapService {

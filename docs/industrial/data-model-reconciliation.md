@@ -16,8 +16,8 @@
 |--------|-------|
 | Primary migration | `0040_industrial_domain_s1.sql` + `0041_onboarding_org_lookups_s1.sql` |
 | `industrial_*` table count | **56** (+ QR/doc/EHS/platform companions) |
-| Nest prefix implemented | `api/v1/tenants/:tenantId/industrial` (thin: sites, depts, positions, employment-types, personnel list, LOTO list, fleet, CA) |
-| industrial-web expected prefix | `/api/v1/industrial/*` (flat) — **broader than Nest tip** |
+| Nest prefix implemented | `api/v1/tenants/:tenantId/industrial` (org/fleet) **plus** flat `api/v1/industrial/*` (Model A completion S1) |
+| industrial-web expected prefix | `/api/v1/industrial/*` (flat) — **contract closed in MODEL-A-APPLICATION-COMPLETION-S1** |
 | `industrial_ops_records` | **Absent** from schema/API (docs-only mention as unused other-branch thin ops) |
 
 Core domains (tables): sites, departments, positions, employment_types, personnel, equipment, LOTO libraries/procedures/energy/isolation/steps/revisions/records, corrective_actions, incidents, inspections, observations, jsas, form_definitions/submissions, training_records, certificate_templates, tasks, emergency/chemical/confined/hot-work/contractor/cranes/electrical/environmental/forklift/machine/manufacturing/process/warehouse/heights/dot records, osha_cases, fleet vehicles/drivers/settings, workers_comp cases/carriers/work_status/restrictions/medical, qr_links/versions, scan_*, platform_documents/versions, equipment_document_links, attachments, ehs audit templates, migration_id_map, history_records.

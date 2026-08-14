@@ -170,8 +170,7 @@ export function OpsModuleWorkspace({
       <header className="ind-ops-header">
         <h1 id="ops-module-title">{moduleName}</h1>
         <p className="ind-muted">
-          AWS candidate module · Production data authority remains Firebase · Flag{" "}
-          {cfg.flagKey}
+          Normalized Model A module · Flag {cfg.flagKey}
         </p>
       </header>
 
@@ -263,12 +262,91 @@ export function OpsModuleWorkspace({
         <p className="ind-muted">Create/edit requires {cfg.managePerm}.</p>
       )}
 
-      {(module === "training" || module === "forms") && (
+      {module === "training" && canManage ? (
+        <form
+          className="ind-ops-create"
+          aria-label="Bulk training completion"
+          onSubmit={(e) => {
+            e.preventDefault();
+            void (async () => {
+              setCreating(true);
+              setError(null);
+              try {
+                const personnelIds = String(form.personnelIds ?? "")
+                  .split(/[,\s]+/)
+                  .map((s) => s.trim())
+                  .filter(Boolean);
+                await apiSend("/api/v1/industrial/training/bulk", "POST", {
+                  title: form.title || form.courseCode,
+                  courseName: form.title || form.courseCode,
+                  instructorName: form.instructorName,
+                  location: form.location,
+                  completedAt: form.completedAt || undefined,
+                  personnelIds,
+                });
+                setForm({});
+                await loadList();
+              } catch (err) {
+                setError(err instanceof ApiError ? err.message : "Bulk training failed");
+              } finally {
+                setCreating(false);
+              }
+            })();
+          }}
+        >
+          <h2>Bulk training completion</h2>
+          <label>
+            Course / training title
+            <input
+              required
+              value={form.title ?? ""}
+              onChange={(ev) => setForm((prev) => ({ ...prev, title: ev.target.value }))}
+            />
+          </label>
+          <label>
+            Completion date
+            <input
+              type="date"
+              value={form.completedAt ?? ""}
+              onChange={(ev) => setForm((prev) => ({ ...prev, completedAt: ev.target.value }))}
+            />
+          </label>
+          <label>
+            Instructor
+            <input
+              value={form.instructorName ?? ""}
+              onChange={(ev) =>
+                setForm((prev) => ({ ...prev, instructorName: ev.target.value }))
+              }
+            />
+          </label>
+          <label>
+            Location
+            <input
+              value={form.location ?? ""}
+              onChange={(ev) => setForm((prev) => ({ ...prev, location: ev.target.value }))}
+            />
+          </label>
+          <label>
+            Employee IDs (comma-separated)
+            <input
+              required
+              value={form.personnelIds ?? ""}
+              onChange={(ev) => setForm((prev) => ({ ...prev, personnelIds: ev.target.value }))}
+              placeholder="Paste multiple personnel IDs"
+            />
+          </label>
+          <button type="submit" disabled={creating}>
+            {creating ? "Saving…" : "Record for all selected employees"}
+          </button>
+        </form>
+      ) : null}
+
+      {module === "forms" ? (
         <p className="ind-muted" role="note">
-          Certification panels and advanced form-builder tooling remain deferred until dependent
-          platforms are ready. Historical form submissions preserve definition snapshots.
+          Form definitions are stored in Model A. Advanced builder tooling continues to improve.
         </p>
-      )}
+      ) : null}
     </section>
   );
 }

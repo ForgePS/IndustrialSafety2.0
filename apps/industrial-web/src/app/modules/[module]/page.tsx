@@ -1,4 +1,5 @@
 import { INDUSTRIAL_MODULE_REGISTRY } from "@forge/contracts";
+import { AnalyticsWorkspace } from "@/components/analytics-workspace";
 import { ComplianceWorkspace } from "@/components/compliance-workspace";
 import { EquipmentWorkspace } from "@/components/equipment-workspace";
 import { HighRiskWorkspace } from "@/components/high-risk-workspace";
@@ -20,7 +21,7 @@ import { IndustrialImportWorkspace } from "@/components/industrial-import-worksp
 
 /** Static export params for SPA deep links (directory-index rewrite only). */
 export function generateStaticParams() {
-  const slugs = new Set<string>(["placeholder", "equipment", "loto", "personnel"]);
+  const slugs = new Set<string>(["placeholder", "equipment", "loto", "personnel", "analytics"]);
   for (const m of INDUSTRIAL_MODULE_REGISTRY) {
     if (m.route.startsWith("/modules/")) {
       slugs.add(m.route.replace("/modules/", ""));
@@ -40,6 +41,9 @@ export default async function ModulePage({
   );
   const name = entry?.name ?? module;
 
+  if (module === "analytics") {
+    return <AnalyticsWorkspace moduleName={name} />;
+  }
   if (module === "equipment") {
     return <EquipmentWorkspace moduleName={name} />;
   }

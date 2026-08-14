@@ -112,7 +112,7 @@ function entry(
  */
 export const INDUSTRIAL_MODULE_REGISTRY: readonly IndustrialModuleRegistryEntry[] = [
   entry("CORE", "Industrial Core", "Dashboard", "AVAILABLE", "/"),
-  entry("ANALYTICS", "Analytics", "Dashboard", "LEGACY_ONLY"),
+  entry("ANALYTICS", "Analytics", "Dashboard", "AVAILABLE"),
   entry("PERSONNEL", "Personnel", "People & Training", "AVAILABLE"),
   entry("TRAINING", "Training", "People & Training", "AVAILABLE"),
   entry("JSAS", "JSAs", "People & Training", "AVAILABLE"),

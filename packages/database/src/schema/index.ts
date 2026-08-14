@@ -25,3 +25,4 @@ export * from "./configuration-studio.js";
 export * from "./imports.js";
 export * from "./platform-jobs.js";
 export * from "./industrial.js";
+export * from "./industrial-module-tables.js";

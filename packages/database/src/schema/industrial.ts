@@ -19,7 +19,7 @@ import {
 import { createdAtColumn, updatedAtColumn } from "./common.js";
 import { tenants } from "./tenants.js";
 
-const sourceCols = {
+export const sourceCols = {
   sourceSystem: varchar("source_system", { length: 64 }).notNull().default("FIREBASE"),
   sourceProject: varchar("source_project", { length: 128 }),
   sourceCollection: varchar("source_collection", { length: 128 }),
