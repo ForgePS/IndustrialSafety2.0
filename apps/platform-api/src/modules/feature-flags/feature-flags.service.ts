@@ -71,7 +71,11 @@ export class FeatureFlagsService {
           tenant: tenantOv?.valueJson as unknown,
           defaultValue: def.defaultValueJson as unknown,
         });
-        return { key: def.key, name: def.name, value, valueType: def.valueType };
+        // overridden = an explicit tenant/org/user override exists (vs. definition default).
+        // Consumers that treat entitlements as the control plane use this to avoid
+        // hiding entitled surfaces just because a definition default is off.
+        const overridden = Boolean(userOv || orgOv || tenantOv);
+        return { key: def.key, name: def.name, value, valueType: def.valueType, overridden };
       });
     }, principal.userId);
   }

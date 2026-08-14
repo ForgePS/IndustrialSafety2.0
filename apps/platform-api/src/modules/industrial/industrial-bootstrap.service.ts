@@ -43,12 +43,33 @@ export class IndustrialBootstrapService {
     }
 
     const effective = await this.flags.effective(principal.tenantId, principal);
-    const flagMap = Object.fromEntries(effective.map((f) => [f.key, Boolean(f.value)]));
-    const industrialEnabled = Boolean(flagMap["industrial.enabled"]);
+    // Feature flags are Advanced deployment overrides, not the commercial control
+    // plane. Creator entitlements (tenant/membership module access) govern access.
+    // A flag only DISABLES an AVAILABLE surface when an explicit override sets it
+    // off; an unset/default-off definition must NOT hide an entitled module, or
+    // navigation flickers (modules appear then vanish once bootstrap resolves).
+    const flagState = new Map(
+      effective.map((f) => [
+        f.key,
+        { value: Boolean(f.value), overridden: Boolean(f.overridden) },
+      ]),
+    );
+    const deploymentEnabled = (key: string): boolean => {
+      const rec = flagState.get(key);
+      // Default ON unless an explicit override turns the surface off.
+      if (!rec) return true;
+      return rec.overridden ? rec.value : true;
+    };
+
+    const industrialEnabled = deploymentEnabled("industrial.enabled");
 
     const modules = INDUSTRIAL_MODULE_REGISTRY.map((entry) => {
       const featureFlagKey = this.featureFlagKeyForModule(entry.code);
-      const flagOn = Boolean(flagMap[featureFlagKey]);
+      // Non-AVAILABLE (preview/legacy) surfaces still require an explicit flag ON.
+      const flagOn =
+        entry.implementationStatus === "AVAILABLE"
+          ? deploymentEnabled(featureFlagKey)
+          : Boolean(flagState.get(featureFlagKey)?.value);
       const awsEnabled = entry.code === "CORE" ? industrialEnabled : flagOn;
       return {
         code: entry.code,
@@ -66,7 +87,7 @@ export class IndustrialBootstrapService {
       industrialEnabled,
       entitled: this.isProductEntitled(principal) || principal.isPlatformAdmin,
       modules,
-      flags: flagMap,
+      flags: Object.fromEntries([...flagState].map(([key, rec]) => [key, rec.value])),
     };
   }
 

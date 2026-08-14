@@ -38,4 +38,35 @@ describe("IndustrialBootstrapService", () => {
     expect(loto?.featureFlagKey).toBe("industrial.module.loto.enabled");
     expect(loto?.awsEnabled).toBe(true);
   });
+
+  it("enables AVAILABLE modules by default when no flag overrides exist (entitlements govern)", async () => {
+    // Production regression: tenant with zero industrial feature overrides.
+    flags.effective.mockResolvedValue([]);
+    const result = await service.bootstrap(principal());
+    expect(result.industrialEnabled).toBe(true);
+    expect(result.modules.every((m) => m.awsEnabled)).toBe(true);
+  });
+
+  it("keeps AVAILABLE module ON when definition default is off but no explicit override", async () => {
+    flags.effective.mockResolvedValue([
+      { key: "industrial.enabled", value: false, overridden: false },
+      { key: "industrial.module.loto.enabled", value: false, overridden: false },
+    ]);
+    const result = await service.bootstrap(principal());
+    const loto = result.modules.find((m) => m.code === "LOCKOUT_TAGOUT");
+    expect(result.industrialEnabled).toBe(true);
+    expect(loto?.awsEnabled).toBe(true);
+  });
+
+  it("disables an AVAILABLE module only when an explicit override turns it off", async () => {
+    flags.effective.mockResolvedValue([
+      { key: "industrial.module.loto.enabled", value: false, overridden: true },
+      { key: "industrial.module.personnel.enabled", value: true, overridden: true },
+    ]);
+    const result = await service.bootstrap(principal());
+    const loto = result.modules.find((m) => m.code === "LOCKOUT_TAGOUT");
+    const personnel = result.modules.find((m) => m.code === "PERSONNEL");
+    expect(loto?.awsEnabled).toBe(false);
+    expect(personnel?.awsEnabled).toBe(true);
+  });
 });

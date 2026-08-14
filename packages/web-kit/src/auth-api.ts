@@ -56,6 +56,8 @@ export type EffectiveFeature = {
   name: string;
   value: unknown;
   valueType: string;
+  /** True when a tenant/org/user override set the value (vs. the definition default). */
+  overridden?: boolean;
 };
 
 export function listEffectiveFeatures(tenantId: string): Promise<EffectiveFeature[]> {
