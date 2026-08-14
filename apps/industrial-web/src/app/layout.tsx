@@ -7,7 +7,7 @@ import "./globals.css";
 
 export const metadata: Metadata = {
   title: "Forge Industrial Safety",
-  description: "Forge Industrial Safety AWS application (Sneat Free theme)",
+  description: "Forge Industrial Safety",
   icons: { icon: "/sneat/img/favicon.ico" },
 };
 

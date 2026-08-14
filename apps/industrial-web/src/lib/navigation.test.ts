@@ -1,3 +1,4 @@
+import { INDUSTRIAL_MODULE_REGISTRY } from "@forge/contracts";
 import { describe, expect, it } from "vitest";
 import {
   buildIndustrialNavigation,
@@ -42,18 +43,22 @@ describe("industrial navigation foundation", () => {
     expect(personnel?.available).toBe(true);
   });
 
-  it("blocks LEGACY_ONLY modules even when listed in entitlements", () => {
+  it("never marks a module available unless it is AVAILABLE, whatever the entitlements", () => {
     const nav = buildIndustrialNavigation({
       entitled: true,
       permissions: ["industrial.access"],
-      flags: { "industrial.module.analytics.enabled": true },
-      enabledModules: ["ANALYTICS"],
+      flags: {},
+      enabledModules: INDUSTRIAL_MODULE_REGISTRY.map((m) => m.code),
       strictEntitlements: true,
       includeUnavailable: true,
     });
-    const analytics = nav.find((n) => n.code === "ANALYTICS");
-    expect(analytics?.implementationStatus).toBe("LEGACY_ONLY");
-    expect(analytics?.available).toBe(false);
+    // Guards against this becoming vacuous if the registry is ever emptied.
+    expect(nav.length).toBeGreaterThan(0);
+    for (const item of nav) {
+      if (item.implementationStatus !== "AVAILABLE") {
+        expect(item.available, `${item.code} must not be available`).toBe(false);
+      }
+    }
   });
 
   it("does not treat feature flags as authorization bypass", () => {
@@ -109,6 +114,10 @@ describe("industrial navigation foundation", () => {
   });
 
   it("uses explicit unavailable messaging", () => {
-    expect(moduleUnavailableMessage("Personnel")).toContain("not available in Forge AWS");
+    expect(moduleUnavailableMessage("Personnel")).toContain("not available for your organization");
+  });
+
+  it("keeps hosting/infrastructure names out of customer-facing copy", () => {
+    expect(moduleUnavailableMessage("Personnel")).not.toMatch(/AWS/i);
   });
 });

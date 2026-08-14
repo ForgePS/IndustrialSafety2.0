@@ -48,7 +48,10 @@ export default async function ModulePage({
   if (module === "equipment") {
     return <EquipmentWorkspace moduleName={name} />;
   }
-  if (module === "loto") {
+  // The registry route for LOCKOUT_TAGOUT is /modules/lockout-tagout, so accept
+  // that alongside the shorter legacy slug or the workspace is unreachable and
+  // renders as unavailable.
+  if (module === "loto" || module === "lockout-tagout") {
     return <LotoWorkspace moduleName={name} />;
   }
   if (module === "personnel") {

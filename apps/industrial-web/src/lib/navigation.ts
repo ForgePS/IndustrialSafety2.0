@@ -151,7 +151,10 @@ export function buildIndustrialNavigation(input: {
 }
 
 export function moduleUnavailableMessage(moduleName: string): string {
-  return `${moduleName} is not available in Forge AWS for this customer yet.`;
+  // Customer-facing copy: never name hosting/infrastructure. The adjacent
+  // availability label carries the distinction between "not enabled for you"
+  // and "not built yet".
+  return `${moduleName} is not available for your organization yet.`;
 }
 
 export function moduleAvailabilityCaption(

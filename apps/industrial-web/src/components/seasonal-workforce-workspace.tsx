@@ -682,7 +682,7 @@ export function SeasonalWorkforceWorkspace({
     return (
       <section className="ind-unavailable" role="alert">
         <h1>Seasonal Workforce</h1>
-        <p>Personnel module is not enabled for this tenant on AWS.</p>
+        <p>The Personnel module is not enabled for your organization.</p>
       </section>
     );
   }
