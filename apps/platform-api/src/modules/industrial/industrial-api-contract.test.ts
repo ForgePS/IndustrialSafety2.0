@@ -75,6 +75,29 @@ describe("Industrial Model A API contract", () => {
     expect(service).toContain("bulkTraining");
   });
 
+  it("registers the training controller before the flat catch-all controller", () => {
+    // IndustrialFlatController owns `:module/:id`, which would otherwise swallow
+    // GET /industrial/training/records (module=training, id=records) and 404 as
+    // "Record not found". Nest registers routes in controller-array order, so the
+    // training controller must come first for its LMS routes to win.
+    const module = readFileSync(
+      path.join(ROOT, "apps/platform-api/src/modules/industrial/industrial.module.ts"),
+      "utf8",
+    );
+    const trainingIdx = module.indexOf("IndustrialTrainingController");
+    const flatIdx = module.indexOf("IndustrialFlatController");
+    expect(trainingIdx).toBeGreaterThanOrEqual(0);
+    expect(flatIdx).toBeGreaterThanOrEqual(0);
+    // Compare positions within the `controllers: [...]` registration array.
+    const controllersArray = module.slice(
+      module.indexOf("controllers:"),
+      module.indexOf("providers:"),
+    );
+    expect(controllersArray.indexOf("IndustrialTrainingController")).toBeLessThan(
+      controllersArray.indexOf("IndustrialFlatController"),
+    );
+  });
+
   it("analytics module is AVAILABLE (not LEGACY_ONLY)", () => {
     const analytics = INDUSTRIAL_MODULE_REGISTRY.find((m) => m.code === "ANALYTICS");
     expect(analytics?.implementationStatus).toBe("AVAILABLE");

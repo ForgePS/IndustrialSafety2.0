@@ -10,7 +10,11 @@ import { IndustrialTrainingService } from "./industrial-training.service.js";
 
 @Module({
   imports: [FeatureFlagsModule],
-  controllers: [IndustrialController, IndustrialFlatController, IndustrialTrainingController],
+  // IndustrialTrainingController must precede IndustrialFlatController: the flat
+  // controller owns the catch-all `:module/:id` routes, so if it registered
+  // first, GET /industrial/training/records would match module=training,
+  // id=records and 404 as "Record not found" instead of reaching the LMS.
+  controllers: [IndustrialController, IndustrialTrainingController, IndustrialFlatController],
   providers: [
     IndustrialService,
     IndustrialBootstrapService,
