@@ -104,12 +104,102 @@ const MODULE_TABLES: Record<string, TitledTable> = {
 };
 
 /**
+ * Add Person template columns (migration 0043). Kept in one place so create,
+ * update and read stay in sync: a field missing from any one of them silently
+ * degrades to a sourcePayload-only value that cannot be filtered or reported on.
+ */
+const PERSONNEL_TEXT_FIELDS = [
+  "middleName",
+  "suffix",
+  "preferredName",
+  "jobTitle",
+  "departmentName",
+  "companyName",
+  "divisionName",
+  "fileBase",
+  "userAuthId",
+  "digitalSource",
+  "phone",
+  "supervisorName",
+  "hireDate",
+  "notes",
+  "signatureUrl",
+] as const;
+
+type PersonnelTextField = (typeof PERSONNEL_TEXT_FIELDS)[number];
+
+/** The pre-0043 form posted `department`; keep accepting it as `departmentName`. */
+const PERSONNEL_FIELD_ALIASES: Partial<Record<PersonnelTextField, string>> = {
+  departmentName: "department",
+};
+
+function readPersonnelText(body: Record<string, unknown>, field: PersonnelTextField): unknown {
+  const alias = PERSONNEL_FIELD_ALIASES[field];
+  const raw = body[field] ?? (alias ? body[alias] : undefined);
+  return raw;
+}
+
+function toBoolean(value: unknown): boolean {
+  return value === true || value === "true" || value === "on" || value === 1;
+}
+
+/**
  * Flat `/api/v1/industrial/*` domain operations against Model A (normalized tables).
  * Replaces the diverged branch ops-record approach with first-class tables.
  */
 @Injectable()
 export class IndustrialDomainService {
   constructor(@Inject(DATABASE) private readonly db: Database) {}
+
+  /** Non-empty template values for an insert; omitted keys stay null. */
+  private personnelInsertValues(body: Record<string, unknown>): Record<string, unknown> {
+    const values: Record<string, unknown> = {};
+    for (const field of PERSONNEL_TEXT_FIELDS) {
+      const raw = readPersonnelText(body, field);
+      if (raw == null) continue;
+      const text = String(raw).trim();
+      if (text) values[field] = text;
+    }
+    if (body.isCompanyDriver !== undefined) {
+      values.isCompanyDriver = toBoolean(body.isCompanyDriver);
+    }
+    return values;
+  }
+
+  /**
+   * Patch semantics: only keys present in the body change. An explicit empty
+   * string clears the column so a user can remove a value.
+   */
+  private personnelUpdateValues(
+    body: Record<string, unknown>,
+    existing: Record<string, unknown>,
+  ): Record<string, unknown> {
+    const values: Record<string, unknown> = {};
+    for (const field of PERSONNEL_TEXT_FIELDS) {
+      const raw = readPersonnelText(body, field);
+      if (raw === undefined) {
+        values[field] = existing[field] ?? null;
+        continue;
+      }
+      const text = raw == null ? "" : String(raw).trim();
+      values[field] = text === "" ? null : text;
+    }
+    values.isCompanyDriver =
+      body.isCompanyDriver === undefined
+        ? Boolean(existing.isCompanyDriver)
+        : toBoolean(body.isCompanyDriver);
+    return values;
+  }
+
+  /** Template columns echoed back on read so the detail form can round-trip. */
+  private personnelReadValues(row: Record<string, unknown>): Record<string, unknown> {
+    const values: Record<string, unknown> = {};
+    for (const field of PERSONNEL_TEXT_FIELDS) {
+      values[field] = row[field] ?? null;
+    }
+    values.isCompanyDriver = Boolean(row.isCompanyDriver);
+    return values;
+  }
 
   private page(query: ListQuery) {
     const page = Math.max(1, Number(query.page ?? 1) || 1);
@@ -416,6 +506,7 @@ export class IndustrialDomainService {
               siteId: r.siteId,
               departmentId: r.departmentId,
               positionId: r.positionId,
+              ...this.personnelReadValues(r as unknown as Record<string, unknown>),
             },
           }),
         ),
@@ -468,6 +559,8 @@ export class IndustrialDomainService {
             departmentId: row.departmentId,
             positionId: row.positionId,
           },
+          // Columns win over the legacy sourcePayload copy of the same keys.
+          extra: this.personnelReadValues(row as unknown as Record<string, unknown>),
         }),
         training: training.map((t) =>
           this.mapListItem({
@@ -512,12 +605,13 @@ export class IndustrialDomainService {
           siteId: body.siteId ? String(body.siteId) : null,
           departmentId: body.departmentId ? String(body.departmentId) : null,
           positionId: body.positionId ? String(body.positionId) : null,
+          ...this.personnelInsertValues(body),
           status,
           sourceSystem: "FORGE",
           sourcePayload: body,
           createdAt: now,
           updatedAt: now,
-        })
+        } as never)
         .returning();
       return this.mapListItem({
         id: row!.id,
@@ -526,6 +620,7 @@ export class IndustrialDomainService {
         createdAt: row!.createdAt,
         updatedAt: row!.updatedAt,
         sourcePayload: row!.sourcePayload,
+        extra: this.personnelReadValues(row as unknown as Record<string, unknown>),
       });
     });
   }
@@ -565,6 +660,7 @@ export class IndustrialDomainService {
           departmentId:
             body.departmentId != null ? String(body.departmentId) : existing.departmentId,
           positionId: body.positionId != null ? String(body.positionId) : existing.positionId,
+          ...this.personnelUpdateValues(body, existing as unknown as Record<string, unknown>),
           sourcePayload: { ...(existing.sourcePayload as object), ...body },
           updatedAt: now,
           archivedAt:

@@ -15,6 +15,34 @@ export function isInd3OpsModule(module: string): module is Ind3OpsModule {
   return (IND3_OPS_MODULES as readonly string[]).includes(module);
 }
 
+export type OpsCreateFieldType = "text" | "email" | "tel" | "date" | "textarea" | "checkbox";
+
+export type OpsCreateField = {
+  name: string;
+  label: string;
+  required?: boolean;
+  type?: OpsCreateFieldType;
+  /** Renders the field inside a labelled fieldset; ungrouped fields come first. */
+  group?: string;
+};
+
+/** Create-form groups in render order, preserving first appearance. */
+export function groupCreateFields(
+  fields: readonly OpsCreateField[],
+): Array<{ group: string | null; fields: OpsCreateField[] }> {
+  const order: Array<string | null> = [];
+  const byGroup = new Map<string | null, OpsCreateField[]>();
+  for (const field of fields) {
+    const key = field.group ?? null;
+    if (!byGroup.has(key)) {
+      byGroup.set(key, []);
+      order.push(key);
+    }
+    byGroup.get(key)!.push(field);
+  }
+  return order.map((group) => ({ group, fields: byGroup.get(group)! }));
+}
+
 export const OPS_MODULE_CONFIG: Record<
   Ind3OpsModule,
   {
@@ -25,7 +53,7 @@ export const OPS_MODULE_CONFIG: Record<
     listPath: string;
     createPath: string;
     titleField: string;
-    createFields: Array<{ name: string; label: string; required?: boolean; type?: string }>;
+    createFields: OpsCreateField[];
   }
 > = {
   personnel: {
@@ -36,13 +64,38 @@ export const OPS_MODULE_CONFIG: Record<
     listPath: "/api/v1/industrial/personnel",
     createPath: "/api/v1/industrial/personnel",
     titleField: "displayName",
+    // Add Person template parity with the legacy personnel record (migration 0043).
     createFields: [
-      { name: "firstName", label: "First name", required: true },
-      { name: "lastName", label: "Last name", required: true },
-      { name: "employeeNumber", label: "Employee number" },
-      { name: "email", label: "Email", type: "email" },
-      { name: "jobTitle", label: "Job title" },
-      { name: "department", label: "Department" },
+      { name: "employeeNumber", label: "Employee number", group: "Identity" },
+      { name: "firstName", label: "First name", required: true, group: "Identity" },
+      { name: "middleName", label: "Middle name", group: "Identity" },
+      { name: "lastName", label: "Last name", required: true, group: "Identity" },
+      { name: "suffix", label: "Suffix", group: "Identity" },
+      { name: "preferredName", label: "Preferred name", group: "Identity" },
+
+      { name: "email", label: "Email", type: "email", group: "Contact" },
+      { name: "phone", label: "Phone", type: "tel", group: "Contact" },
+
+      { name: "jobTitle", label: "Job title", group: "Assignment" },
+      { name: "departmentName", label: "Department", group: "Assignment" },
+      { name: "companyName", label: "Company", group: "Assignment" },
+      { name: "divisionName", label: "Division", group: "Assignment" },
+      { name: "supervisorName", label: "Supervisor", group: "Assignment" },
+      { name: "hireDate", label: "Hire date", type: "date", group: "Assignment" },
+
+      { name: "fileBase", label: "File base", group: "Records" },
+      { name: "userAuthId", label: "User auth ID", group: "Records" },
+      { name: "digitalSource", label: "Digital source", group: "Records" },
+      { name: "signatureUrl", label: "Signature URL", group: "Records" },
+
+      {
+        name: "isCompanyDriver",
+        label: "Company or contract driver",
+        type: "checkbox",
+        group: "Driver",
+      },
+
+      { name: "notes", label: "Notes", type: "textarea", group: "Notes" },
     ],
   },
   training: {

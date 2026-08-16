@@ -1,10 +1,64 @@
 "use client";
 
-import { useEffect, useState, type FormEvent } from "react";
+import { useEffect, useState, type Dispatch, type FormEvent, type SetStateAction } from "react";
 import { ApiError, apiGet, apiSend, useAuth } from "@forge/web-kit";
 import { FilterPanel } from "@/components/filter-panel";
 import { ModuleUnavailable } from "@/components/module-unavailable";
-import { OPS_MODULE_CONFIG, type Ind3OpsModule } from "@/lib/ops-modules";
+import {
+  OPS_MODULE_CONFIG,
+  groupCreateFields,
+  type Ind3OpsModule,
+  type OpsCreateField,
+} from "@/lib/ops-modules";
+
+type FormState = Record<string, string>;
+
+function renderCreateField(
+  field: OpsCreateField,
+  form: FormState,
+  setForm: Dispatch<SetStateAction<FormState>>,
+) {
+  const set = (value: string) => setForm((prev) => ({ ...prev, [field.name]: value }));
+
+  if (field.type === "checkbox") {
+    return (
+      <label key={field.name} className="ind-ops-checkbox">
+        <input
+          type="checkbox"
+          checked={form[field.name] === "true"}
+          onChange={(ev) => set(ev.target.checked ? "true" : "")}
+        />
+        {field.label}
+      </label>
+    );
+  }
+
+  if (field.type === "textarea") {
+    return (
+      <label key={field.name}>
+        {field.label}
+        <textarea
+          rows={4}
+          required={field.required}
+          value={form[field.name] ?? ""}
+          onChange={(ev) => set(ev.target.value)}
+        />
+      </label>
+    );
+  }
+
+  return (
+    <label key={field.name}>
+      {field.label}
+      <input
+        type={field.type ?? "text"}
+        required={field.required}
+        value={form[field.name] ?? ""}
+        onChange={(ev) => set(ev.target.value)}
+      />
+    </label>
+  );
+}
 
 type ListResponse = {
   items: Array<Record<string, unknown>>;
@@ -152,6 +206,11 @@ export function OpsModuleWorkspace({
     try {
       const payload: Record<string, unknown> = {};
       for (const field of cfg.createFields) {
+        if (field.type === "checkbox") {
+          // Only send when ticked; the column already defaults to false.
+          if (form[field.name] === "true") payload[field.name] = true;
+          continue;
+        }
         const v = form[field.name]?.trim();
         if (v) payload[field.name] = v;
       }
@@ -241,19 +300,16 @@ export function OpsModuleWorkspace({
       {canManage ? (
         <form className="ind-ops-create" onSubmit={(e) => void onCreate(e)} aria-label="Create record">
           <h2>Create</h2>
-          {cfg.createFields.map((field) => (
-            <label key={field.name}>
-              {field.label}
-              <input
-                type={field.type ?? "text"}
-                required={field.required}
-                value={form[field.name] ?? ""}
-                onChange={(ev) =>
-                  setForm((prev) => ({ ...prev, [field.name]: ev.target.value }))
-                }
-              />
-            </label>
-          ))}
+          {groupCreateFields(cfg.createFields).map(({ group, fields }) => {
+            const rendered = fields.map((field) => renderCreateField(field, form, setForm));
+            if (!group) return rendered;
+            return (
+              <fieldset key={group} className="ind-ops-fieldset">
+                <legend>{group}</legend>
+                {rendered}
+              </fieldset>
+            );
+          })}
           <button type="submit" disabled={creating}>
             {creating ? "Saving…" : "Create"}
           </button>

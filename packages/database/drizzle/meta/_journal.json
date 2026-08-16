@@ -302,6 +302,13 @@
       "when": 1754970000000,
       "tag": "0042_industrial_training_quiz_s1",
       "breakpoints": true
+    },
+    {
+      "idx": 43,
+      "version": "7",
+      "when": 1754980000000,
+      "tag": "0043_industrial_personnel_add_person_template_s1",
+      "breakpoints": true
     }
   ]
 }

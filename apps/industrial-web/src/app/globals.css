@@ -308,6 +308,51 @@ html.layout-menu-fixed .layout-menu .menu-inner {
   width: 100%;
 }
 
+/* Grouped create-form sections (e.g. the personnel Add Person template). */
+.ind-ops-fieldset {
+  flex: 1 1 100%;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem 1rem;
+  align-items: flex-end;
+  margin: 0;
+  padding: 0.85rem 1rem 1rem;
+  border: 1px solid var(--ind-border);
+  border-radius: var(--ind-radius);
+  background: #fff;
+}
+
+.ind-ops-fieldset legend {
+  padding: 0 0.35rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--ind-muted, #6b7280);
+}
+
+/* Checkbox rows read as one line rather than the default stacked label. */
+.ind-ops-create .ind-ops-checkbox,
+.ind-ops-fieldset .ind-ops-checkbox {
+  flex: 1 1 100%;
+  flex-direction: row;
+  align-items: center;
+  gap: 0.5rem;
+  font-weight: 500;
+}
+
+.ind-ops-create .ind-ops-checkbox input[type="checkbox"],
+.ind-ops-fieldset .ind-ops-checkbox input[type="checkbox"] {
+  width: auto;
+  min-width: 0;
+  flex: 0 0 auto;
+  margin: 0;
+}
+
+.ind-ops-fieldset textarea {
+  flex: 1 1 100%;
+}
+
 .ind-ops-filters button,
 .ind-toolbar button,
 .ind-form button,
