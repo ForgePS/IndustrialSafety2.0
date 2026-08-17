@@ -33,10 +33,11 @@
 
 .panel {
   margin: 0 0 1.5rem;
-  padding: 1rem 1.1rem;
+  padding: 1.25rem 1.25rem;
   border: 1px solid var(--forge-color-border);
   border-radius: var(--forge-radius-lg);
   background: var(--forge-color-surface);
+  box-shadow: var(--forge-shadow-sm);
 }
 
 .panel h2 {
@@ -83,8 +84,10 @@
   background: var(--forge-color-primary);
   color: #fff;
   border-radius: var(--forge-radius-md);
-  padding: 0.45rem 0.85rem;
+  min-height: 2.5rem;
+  padding: 0.5rem 1.125rem;
   font: inherit;
+  font-weight: 500;
   cursor: pointer;
 }
 

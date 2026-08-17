@@ -14,6 +14,8 @@ import {
   industrialEquipment,
   industrialForkliftRecords,
   industrialFormDefinitions,
+  industrialFormSubmissions,
+  industrialFleetDrivers,
   industrialHotWorkRecords,
   industrialIncidents,
   industrialInspections,
@@ -35,12 +37,13 @@ import {
   industrialWorkersCompCases,
   industrialWorkersCompMedicalEncounters,
   industrialWorkingAtHeightsRecords,
+  tenantSettings,
   type Database,
   withTenantTransaction,
 } from "@forge/database";
 import { ForgeError } from "@forge/errors";
 import type { ForgePrincipal } from "@forge/tenant-context";
-import { and, desc, eq, ilike, inArray, isNull, or, sql } from "drizzle-orm";
+import { and, desc, eq, gte, ilike, inArray, isNotNull, isNull, or, sql } from "drizzle-orm";
 import { DATABASE } from "../../tokens.js";
 
 type ListQuery = Record<string, string | undefined>;
@@ -120,10 +123,20 @@ const PERSONNEL_TEXT_FIELDS = [
   "userAuthId",
   "digitalSource",
   "phone",
+  "companyPhone",
+  "companyEmail",
   "supervisorName",
   "hireDate",
   "notes",
   "signatureUrl",
+  "allergies",
+  "medicalHistory",
+  "emergencyContact1Name",
+  "emergencyContact1Phone",
+  "emergencyContact1Relationship",
+  "emergencyContact2Name",
+  "emergencyContact2Phone",
+  "emergencyContact2Relationship",
 ] as const;
 
 type PersonnelTextField = (typeof PERSONNEL_TEXT_FIELDS)[number];
@@ -201,6 +214,141 @@ export class IndustrialDomainService {
     return values;
   }
 
+  /**
+   * Import left some tenants (notably producers-rice-mill) with source_payload
+   * stored as a JSON *string* inside jsonb. Without unwrapping, the personnel
+   * file only sees typed columns — which for that import are mostly blank —
+   * and job title / hire date / suffix vanish.
+   */
+  private unwrapSourcePayload(raw: unknown): Record<string, unknown> {
+    let current: unknown = raw;
+    for (let depth = 0; depth < 3; depth += 1) {
+      if (typeof current === "string") {
+        const trimmed = current.trim();
+        if (trimmed === "") return {};
+        try {
+          current = JSON.parse(trimmed);
+          continue;
+        } catch {
+          return {};
+        }
+      }
+      if (current && typeof current === "object" && !Array.isArray(current)) {
+        return current as Record<string, unknown>;
+      }
+      return {};
+    }
+    return {};
+  }
+
+  /**
+   * Firebase roster keys → Model A column names so the personnel file and
+   * directory can read one shape. Only fills a target when it is still blank.
+   */
+  private normalizePersonnelPayload(payload: Record<string, unknown>): Record<string, unknown> {
+    const out: Record<string, unknown> = { ...payload };
+    const blank = (value: unknown) =>
+      value == null || (typeof value === "string" && value.trim() === "");
+
+    const aliases: Array<[string, string]> = [
+      ["goesBy", "preferredName"],
+      ["hire_date", "hireDate"],
+      ["job_title", "jobTitle"],
+      ["employee_number", "employeeNumber"],
+      ["first_name", "firstName"],
+      ["last_name", "lastName"],
+      ["middle_name", "middleName"],
+      ["department", "departmentName"],
+      ["company", "companyName"],
+      ["division", "divisionName"],
+      ["supervisor", "supervisorName"],
+    ];
+    for (const [from, to] of aliases) {
+      if (blank(out[to]) && !blank(out[from])) out[to] = out[from];
+    }
+
+    // Roster imports often only stored the combined display name.
+    if (blank(out.firstName) && blank(out.lastName) && typeof out.displayName === "string") {
+      const parsed = this.splitDisplayName(out.displayName);
+      if (parsed.firstName) out.firstName = parsed.firstName;
+      if (parsed.lastName) out.lastName = parsed.lastName;
+      if (blank(out.suffix) && parsed.suffix) out.suffix = parsed.suffix;
+      if (blank(out.middleName) && parsed.middleName) out.middleName = parsed.middleName;
+    }
+
+    return out;
+  }
+
+  private splitDisplayName(displayName: string): {
+    firstName?: string;
+    middleName?: string;
+    lastName?: string;
+    suffix?: string;
+  } {
+    const suffixes = new Set(["JR", "JR.", "SR", "SR.", "II", "III", "IV", "V"]);
+    const parts = displayName
+      .trim()
+      .split(/\s+/)
+      .map((p) => p.replace(/,/g, ""))
+      .filter((p) => p !== "");
+    if (parts.length === 0) return {};
+    let suffix: string | undefined;
+    if (parts.length > 1 && suffixes.has(parts[parts.length - 1]!.toUpperCase())) {
+      suffix = parts.pop();
+    }
+    if (parts.length === 1) {
+      return {
+        ...(parts[0] ? { firstName: parts[0] } : {}),
+        ...(suffix ? { suffix } : {}),
+      };
+    }
+    const firstName = parts[0];
+    const lastName = parts[parts.length - 1];
+    const middleName = parts.length > 2 ? parts.slice(1, -1).join(" ") : undefined;
+    return {
+      ...(firstName ? { firstName } : {}),
+      ...(middleName ? { middleName } : {}),
+      ...(lastName ? { lastName } : {}),
+      ...(suffix ? { suffix } : {}),
+    };
+  }
+
+  /** Empty strings and nulls from typed columns must not blank out payload values. */
+  private preferFilled(
+    columns: Record<string, unknown>,
+    payload: Record<string, unknown>,
+  ): Record<string, unknown> {
+    const merged: Record<string, unknown> = { ...payload };
+    for (const [key, value] of Object.entries(columns)) {
+      if (value == null) continue;
+      if (typeof value === "string" && value.trim() === "") continue;
+      merged[key] = value;
+    }
+    return merged;
+  }
+
+  /** Imported upload history entries (MVR pulls, signed releases, license photos). */
+  private uploadList(raw: unknown): Record<string, unknown>[] {
+    if (!Array.isArray(raw)) return [];
+    return raw.filter(
+      (entry): entry is Record<string, unknown> =>
+        !!entry && typeof entry === "object" && !Array.isArray(entry),
+    );
+  }
+
+  private hasUpload(raw: unknown): boolean {
+    return !!raw && typeof raw === "object" && !Array.isArray(raw);
+  }
+
+  private latestUploadAt(uploads: Record<string, unknown>[]): string {
+    let latest = "";
+    for (const upload of uploads) {
+      const at = String(upload.uploadedAt ?? "").trim();
+      if (at > latest) latest = at;
+    }
+    return latest;
+  }
+
   private page(query: ListQuery) {
     const page = Math.max(1, Number(query.page ?? 1) || 1);
     const pageSize = Math.min(100, Math.max(1, Number(query.pageSize ?? 50) || 50));
@@ -219,18 +367,15 @@ export class IndustrialDomainService {
     extra?: Record<string, unknown>;
   }) {
     const title = row.title ?? row.displayName ?? row.name ?? row.id;
-    const payload =
-      row.sourcePayload && typeof row.sourcePayload === "object" && !Array.isArray(row.sourcePayload)
-        ? (row.sourcePayload as Record<string, unknown>)
-        : {};
+    const payload = this.unwrapSourcePayload(row.sourcePayload);
+    const filled = this.preferFilled(row.extra ?? {}, payload);
     return {
       id: row.id,
       title,
       displayName: title,
       name: title,
       status: row.status,
-      ...payload,
-      ...(row.extra ?? {}),
+      ...filled,
       createdAt: row.createdAt.toISOString(),
       updatedAt: row.updatedAt.toISOString(),
     };
@@ -432,7 +577,7 @@ export class IndustrialDomainService {
 
   // ---- Convenience wrappers used by existing controller methods ----
   listIncidents(p: ForgePrincipal, q: ListQuery) {
-    return this.listModule(p, "incidents", q);
+    return this.listIncidentsDetailed(p, q);
   }
   listInspections(p: ForgePrincipal, q: ListQuery) {
     return this.listModule(p, "inspections", q);
@@ -447,8 +592,247 @@ export class IndustrialDomainService {
     return this.listModule(p, "loto", q);
   }
   createIncident(p: ForgePrincipal, b: Record<string, unknown>) {
-    return this.createModule(p, "incidents", { ...b, status: b.status ?? "OPEN" });
+    const category = String(b.category ?? b.incidentCategory ?? "").trim();
+    return this.createModule(p, "incidents", {
+      ...b,
+      status: b.status ?? "open",
+      ...(category ? { category } : {}),
+    });
   }
+
+  /**
+   * Patch an incident: merge workflow / evaluation / RCA into source_payload
+   * and optionally update status / title fields.
+   */
+  async updateIncident(principal: ForgePrincipal, id: string, body: Record<string, unknown>) {
+    const recordId = this.assertRecordId(id);
+    return withTenantTransaction(this.db, principal.tenantId, async (tx) => {
+      const [existing] = await tx
+        .select()
+        .from(industrialIncidents)
+        .where(
+          and(
+            eq(industrialIncidents.id, recordId),
+            eq(industrialIncidents.tenantId, principal.tenantId),
+            isNull(industrialIncidents.archivedAt),
+          ),
+        )
+        .limit(1);
+      if (!existing) throw new ForgeError("NOT_FOUND", "Record not found");
+
+      const payload = this.unwrapSourcePayload(existing.sourcePayload);
+      const nextPayload: Record<string, unknown> = { ...payload };
+
+      if (body.lifecycle !== undefined) nextPayload.lifecycle = body.lifecycle;
+      if (body.evaluationChecklist !== undefined) {
+        nextPayload.evaluationChecklist = body.evaluationChecklist;
+      }
+      if (body.rootCauseAnalysis !== undefined) {
+        nextPayload.rootCauseAnalysis = body.rootCauseAnalysis;
+      }
+      if (body.bodyLocations !== undefined) {
+        nextPayload.bodyLocations = Array.isArray(body.bodyLocations)
+          ? body.bodyLocations.filter((value): value is string => typeof value === "string")
+          : [];
+      }
+
+      for (const key of [
+        "category",
+        "severity",
+        "location",
+        "description",
+        "reportedBy",
+        "dateOccurred",
+      ] as const) {
+        if (body[key] !== undefined) nextPayload[key] = body[key];
+      }
+
+      const now = new Date();
+      const patch: Record<string, unknown> = {
+        sourcePayload: nextPayload,
+        updatedAt: now,
+      };
+      if (typeof body.title === "string" && body.title.trim()) {
+        patch.title = body.title.trim();
+      }
+      if (typeof body.status === "string" && body.status.trim()) {
+        patch.status = body.status.trim();
+      } else if (body.lifecycle && typeof body.lifecycle === "object") {
+        const lifecycle = body.lifecycle as {
+          currentStage?: string;
+          steps?: Array<{ status?: string }>;
+        };
+        const steps = Array.isArray(lifecycle.steps) ? lifecycle.steps : [];
+        const allComplete =
+          steps.length > 0 && steps.every((s) => String(s.status ?? "").toLowerCase() === "complete");
+        if (allComplete || lifecycle.currentStage === "closure") {
+          patch.status = "closed";
+        } else if (steps.some((s) => String(s.status ?? "").toLowerCase() === "in-progress")) {
+          patch.status = "in-workflow";
+        }
+      }
+
+      const [row] = await tx
+        .update(industrialIncidents)
+        .set(patch as never)
+        .where(
+          and(
+            eq(industrialIncidents.id, recordId),
+            eq(industrialIncidents.tenantId, principal.tenantId),
+          ),
+        )
+        .returning();
+      if (!row) throw new ForgeError("NOT_FOUND", "Record not found");
+      return this.mapListItem({
+        id: row.id,
+        title: row.title,
+        status: row.status,
+        createdAt: row.createdAt,
+        updatedAt: row.updatedAt,
+        sourcePayload: row.sourcePayload,
+      });
+    });
+  }
+
+  /**
+   * Incident roster with optional category filter (injuries, near-misses, …).
+   * Category lives in source_payload from the Firebase import / create form.
+   */
+  async listIncidentsDetailed(principal: ForgePrincipal, query: ListQuery) {
+    const { page, pageSize, offset } = this.page(query);
+    const q = (query.q ?? "").trim();
+    const status = (query.status ?? "").trim();
+    const category = (query.category ?? "").trim().toLowerCase();
+    const siteId = (query.siteId ?? query.facilityId ?? "").trim();
+    return withTenantTransaction(this.db, principal.tenantId, async (tx) => {
+      const conditions = [
+        eq(industrialIncidents.tenantId, principal.tenantId),
+        isNull(industrialIncidents.archivedAt),
+      ];
+      if (status) {
+        conditions.push(sql`lower(${industrialIncidents.status}) = ${status.toLowerCase()}`);
+      }
+      if (siteId) conditions.push(eq(industrialIncidents.siteId, siteId));
+      if (category) {
+        conditions.push(
+          sql`lower(coalesce(${industrialIncidents.sourcePayload}->>'category', ${industrialIncidents.sourcePayload}->>'incidentCategory', '')) = ${category}`,
+        );
+      }
+      if (q) {
+        conditions.push(
+          or(
+            ilike(industrialIncidents.title, `%${q}%`),
+            sql`coalesce(${industrialIncidents.sourcePayload}->>'description', '') ilike ${`%${q}%`}`,
+          )!,
+        );
+      }
+      const items = await tx
+        .select()
+        .from(industrialIncidents)
+        .where(and(...conditions))
+        .orderBy(desc(industrialIncidents.updatedAt))
+        .limit(pageSize)
+        .offset(offset);
+      const [totals] = await tx
+        .select({ c: sql<number>`count(*)::int` })
+        .from(industrialIncidents)
+        .where(and(...conditions));
+      return {
+        page,
+        pageSize,
+        total: totals?.c ?? items.length,
+        items: items.map((r) =>
+          this.mapListItem({
+            id: r.id,
+            title: r.title,
+            status: r.status,
+            createdAt: r.createdAt,
+            updatedAt: r.updatedAt,
+            sourcePayload: this.unwrapSourcePayload(r.sourcePayload),
+            extra: { siteId: r.siteId },
+          }),
+        ),
+      };
+    });
+  }
+
+  /** Summary tiles for the Incidents module header. */
+  async incidentsSummary(principal: ForgePrincipal) {
+    return withTenantTransaction(this.db, principal.tenantId, async (tx) => {
+      const rows = await tx
+        .select({
+          status: industrialIncidents.status,
+          sourcePayload: industrialIncidents.sourcePayload,
+        })
+        .from(industrialIncidents)
+        .where(
+          and(
+            eq(industrialIncidents.tenantId, principal.tenantId),
+            isNull(industrialIncidents.archivedAt),
+          ),
+        );
+
+      const summary = {
+        injuries: 0,
+        nearMisses: 0,
+        medicalRefusals: 0,
+        propertyDamage: 0,
+        automotive: 0,
+        open: 0,
+        inWorkflow: 0,
+        evaluations: 0,
+        rcas: 0,
+        total: rows.length,
+      };
+
+      for (const row of rows) {
+        const payload = this.unwrapSourcePayload(row.sourcePayload);
+        const category = String(payload.category ?? payload.incidentCategory ?? "")
+          .trim()
+          .toLowerCase();
+        if (category === "injuries" || category === "injury") summary.injuries += 1;
+        else if (category === "near-misses" || category === "near_miss" || category === "nearmiss")
+          summary.nearMisses += 1;
+        else if (category === "medical-refusals" || category === "medical_refusals")
+          summary.medicalRefusals += 1;
+        else if (category === "property-damage" || category === "property_damage")
+          summary.propertyDamage += 1;
+        else if (category === "automotive" || category === "vehicle") summary.automotive += 1;
+
+        const status = String(row.status ?? "").trim().toLowerCase();
+        if (status === "open" || status === "active") summary.open += 1;
+        let inWorkflow = false;
+        if (
+          status === "under-review" ||
+          status === "in-workflow" ||
+          status === "in_workflow" ||
+          status === "investigating"
+        ) {
+          inWorkflow = true;
+        }
+        const lifecycle = payload.lifecycle;
+        if (lifecycle && typeof lifecycle === "object") {
+          const lc = lifecycle as { currentStage?: string; steps?: Array<{ status?: string }> };
+          const steps = Array.isArray(lc.steps) ? lc.steps : [];
+          if (steps.some((s) => String(s.status ?? "").toLowerCase() === "in-progress")) {
+            inWorkflow = true;
+          } else if (
+            lc.currentStage &&
+            lc.currentStage !== "closure" &&
+            steps.some((s) => String(s.status ?? "").toLowerCase() !== "complete")
+          ) {
+            inWorkflow = true;
+          }
+        }
+        if (inWorkflow) summary.inWorkflow += 1;
+        if (payload.evaluationChecklist) summary.evaluations += 1;
+        if (payload.rootCauseAnalysis) summary.rcas += 1;
+      }
+
+      return summary;
+    });
+  }
+
   createInspection(p: ForgePrincipal, b: Record<string, unknown>) {
     return this.createModule(p, "inspections", { ...b, status: b.status ?? "OPEN" });
   }
@@ -459,16 +843,46 @@ export class IndustrialDomainService {
     return this.getModule(p, "inspections", id);
   }
 
+  /**
+   * Roster ordering for the personnel directory. Imported rows sometimes only
+   * carry display_name, so each key falls back to the matching word of it
+   * rather than sorting those people into one blank clump. Ordering is
+   * case-insensitive, and id breaks ties so paging cannot repeat or skip a
+   * person. Callers that pass no sort keep the recently-updated-first default.
+   */
+  private personnelOrderBy(sort: string) {
+    if (sort === "firstName" || sort === "lastName") {
+      const first = sql`lower(coalesce(nullif(btrim(${industrialPersonnel.firstName}), ''), split_part(btrim(${industrialPersonnel.displayName}), ' ', 1)))`;
+      const last = sql`lower(coalesce(nullif(btrim(${industrialPersonnel.lastName}), ''), regexp_replace(btrim(${industrialPersonnel.displayName}), '^.*\\s+', '')))`;
+      return sort === "firstName"
+        ? [first, last, industrialPersonnel.id]
+        : [last, first, industrialPersonnel.id];
+    }
+    return [desc(industrialPersonnel.updatedAt), industrialPersonnel.id];
+  }
+
   async listPersonnel(principal: ForgePrincipal, query: ListQuery) {
     const { page, pageSize, offset } = this.page(query);
+    const sort = (query.sort ?? "").trim();
     const q = (query.q ?? "").trim();
     const status = (query.status ?? "").trim();
     const siteId = (query.siteId ?? query.facilityId ?? "").trim();
+    const archivedOnly =
+      query.archived === "true" || query.archived === "1" || query.scope === "archived";
+    const companyDriversOnly =
+      query.isCompanyDriver === "true" ||
+      query.isCompanyDriver === "1" ||
+      query.scope === "company-drivers";
     return withTenantTransaction(this.db, principal.tenantId, async (tx) => {
       const conditions = [
         eq(industrialPersonnel.tenantId, principal.tenantId),
-        isNull(industrialPersonnel.archivedAt),
+        archivedOnly
+          ? isNotNull(industrialPersonnel.archivedAt)
+          : isNull(industrialPersonnel.archivedAt),
       ];
+      if (companyDriversOnly) {
+        conditions.push(eq(industrialPersonnel.isCompanyDriver, true));
+      }
       if (status) conditions.push(eq(industrialPersonnel.status, status));
       if (siteId) conditions.push(eq(industrialPersonnel.siteId, siteId));
       if (q) {
@@ -484,12 +898,19 @@ export class IndustrialDomainService {
         .select()
         .from(industrialPersonnel)
         .where(and(...conditions))
-        .orderBy(desc(industrialPersonnel.updatedAt))
+        .orderBy(...this.personnelOrderBy(sort))
         .limit(pageSize)
         .offset(offset);
+      // Roster size for the same filters, so the directory can page to the end
+      // instead of guessing from the length of the page it just received.
+      const [totals] = await tx
+        .select({ c: sql<number>`count(*)::int` })
+        .from(industrialPersonnel)
+        .where(and(...conditions));
       return {
         page,
         pageSize,
+        total: totals?.c ?? items.length,
         items: items.map((r) =>
           this.mapListItem({
             id: r.id,
@@ -497,7 +918,9 @@ export class IndustrialDomainService {
             status: r.status,
             createdAt: r.createdAt,
             updatedAt: r.updatedAt,
-            sourcePayload: r.sourcePayload,
+            sourcePayload: this.normalizePersonnelPayload(
+              this.unwrapSourcePayload(r.sourcePayload),
+            ),
             extra: {
               firstName: r.firstName,
               lastName: r.lastName,
@@ -547,10 +970,10 @@ export class IndustrialDomainService {
           status: row.status,
           createdAt: row.createdAt,
           updatedAt: row.updatedAt,
-          sourcePayload: {
-            ...(typeof row.sourcePayload === "object" && row.sourcePayload
-              ? (row.sourcePayload as object)
-              : {}),
+          sourcePayload: this.normalizePersonnelPayload(
+            this.unwrapSourcePayload(row.sourcePayload),
+          ),
+          extra: {
             firstName: row.firstName,
             lastName: row.lastName,
             email: row.email,
@@ -558,9 +981,10 @@ export class IndustrialDomainService {
             siteId: row.siteId,
             departmentId: row.departmentId,
             positionId: row.positionId,
+            // Columns win over the legacy sourcePayload copy of the same keys
+            // when they are actually filled; blanks no longer wipe payload.
+            ...this.personnelReadValues(row as unknown as Record<string, unknown>),
           },
-          // Columns win over the legacy sourcePayload copy of the same keys.
-          extra: this.personnelReadValues(row as unknown as Record<string, unknown>),
         }),
         training: training.map((t) =>
           this.mapListItem({
@@ -577,6 +1001,451 @@ export class IndustrialDomainService {
             },
           }),
         ),
+      };
+    });
+  }
+
+  /**
+   * Safety profile for one person: counts + linked records so the personnel
+   * file can open Incidents / Training / Forms the same way the legacy roster
+   * profile did. Matching uses personnel_id when present, otherwise the
+   * employee number / display name inside source_payload (roster imports).
+   */
+  async personnelAnalytics(principal: ForgePrincipal, id: string) {
+    const recordId = this.assertRecordId(id);
+    return withTenantTransaction(this.db, principal.tenantId, async (tx) => {
+      const [person] = await tx
+        .select()
+        .from(industrialPersonnel)
+        .where(
+          and(
+            eq(industrialPersonnel.id, recordId),
+            eq(industrialPersonnel.tenantId, principal.tenantId),
+          ),
+        )
+        .limit(1);
+      if (!person) throw new ForgeError("NOT_FOUND", "Personnel not found");
+
+      const displayName = (person.displayName ?? "").trim();
+      const employeeNumber = (person.employeeNumber ?? "").trim();
+      const searchHint = employeeNumber || displayName;
+
+      // source_payload exists on every industrial record table we query here;
+      // drizzle column brands differ per table so we accept the column loosely.
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const payloadMatchSql = (sourcePayload: any) => {
+        const textBits = [
+          sql`${sourcePayload}::text ilike ${`%${recordId}%`}`,
+          ...(employeeNumber
+            ? [sql`${sourcePayload}::text ilike ${`%${employeeNumber}%`}`]
+            : []),
+          ...(displayName.length >= 3
+            ? [sql`${sourcePayload}::text ilike ${`%${displayName}%`}`]
+            : []),
+        ];
+        return or(...textBits)!;
+      };
+
+      const toItem = (
+        row: {
+          id: string;
+          title?: string | null;
+          status: string;
+          updatedAt: Date;
+          createdAt?: Date;
+          date?: string | null;
+        },
+        module: string,
+        labelFallback: string,
+      ) => ({
+        id: row.id,
+        module,
+        label: (row.title && row.title.trim()) || labelFallback,
+        date: row.date || row.updatedAt.toISOString(),
+        status: row.status,
+        href: `/modules/${module}/?q=${encodeURIComponent(searchHint || row.id)}`,
+      });
+
+      const isOpen = (status: string) => {
+        const s = status.toLowerCase();
+        return s.includes("open") || s === "active" || s === "in_progress" || s === "in progress";
+      };
+      const isPast = (iso: string | null | undefined) => {
+        if (!iso) return false;
+        const t = new Date(iso).getTime();
+        return !Number.isNaN(t) && t < Date.now();
+      };
+      const expiringSoon = (iso: string | null | undefined) => {
+        if (!iso) return false;
+        const t = new Date(iso).getTime();
+        if (Number.isNaN(t)) return false;
+        const now = Date.now();
+        return t >= now && t <= now + 30 * 24 * 60 * 60 * 1000;
+      };
+      const latest = (dates: Array<string | null | undefined>) => {
+        const sorted = dates
+          .map((d) => (typeof d === "string" ? d.trim() : ""))
+          .filter((d) => d !== "")
+          .sort((a, b) => b.localeCompare(a));
+        return sorted[0] ?? null;
+      };
+
+      const [incidents, observations, training, submissions, templates, workersComp, fleetDrivers, dot, forklifts, confined] =
+        await Promise.all([
+          tx
+            .select()
+            .from(industrialIncidents)
+            .where(
+              and(
+                eq(industrialIncidents.tenantId, principal.tenantId),
+                isNull(industrialIncidents.archivedAt),
+                payloadMatchSql(industrialIncidents.sourcePayload),
+              ),
+            )
+            .orderBy(desc(industrialIncidents.updatedAt))
+            .limit(50),
+          tx
+            .select()
+            .from(industrialObservations)
+            .where(
+              and(
+                eq(industrialObservations.tenantId, principal.tenantId),
+                isNull(industrialObservations.archivedAt),
+                payloadMatchSql(industrialObservations.sourcePayload),
+              ),
+            )
+            .orderBy(desc(industrialObservations.updatedAt))
+            .limit(50),
+          tx
+            .select()
+            .from(industrialTrainingRecords)
+            .where(
+              and(
+                eq(industrialTrainingRecords.tenantId, principal.tenantId),
+                isNull(industrialTrainingRecords.archivedAt),
+                or(
+                  eq(industrialTrainingRecords.personnelId, recordId),
+                  payloadMatchSql(industrialTrainingRecords.sourcePayload),
+                )!,
+              ),
+            )
+            .orderBy(desc(industrialTrainingRecords.updatedAt))
+            .limit(50),
+          tx
+            .select()
+            .from(industrialFormSubmissions)
+            .where(
+              and(
+                eq(industrialFormSubmissions.tenantId, principal.tenantId),
+                isNull(industrialFormSubmissions.archivedAt),
+                payloadMatchSql(industrialFormSubmissions.sourcePayload),
+              ),
+            )
+            .orderBy(desc(industrialFormSubmissions.updatedAt))
+            .limit(50),
+          tx
+            .select()
+            .from(industrialFormDefinitions)
+            .where(
+              and(
+                eq(industrialFormDefinitions.tenantId, principal.tenantId),
+                isNull(industrialFormDefinitions.archivedAt),
+              ),
+            )
+            .orderBy(desc(industrialFormDefinitions.updatedAt))
+            .limit(50),
+          tx
+            .select()
+            .from(industrialWorkersCompCases)
+            .where(
+              and(
+                eq(industrialWorkersCompCases.tenantId, principal.tenantId),
+                isNull(industrialWorkersCompCases.archivedAt),
+                or(
+                  eq(industrialWorkersCompCases.personnelId, recordId),
+                  payloadMatchSql(industrialWorkersCompCases.sourcePayload),
+                )!,
+              ),
+            )
+            .limit(50),
+          tx
+            .select()
+            .from(industrialFleetDrivers)
+            .where(
+              and(
+                eq(industrialFleetDrivers.tenantId, principal.tenantId),
+                isNull(industrialFleetDrivers.archivedAt),
+                or(
+                  eq(industrialFleetDrivers.personnelId, recordId),
+                  payloadMatchSql(industrialFleetDrivers.sourcePayload),
+                )!,
+              ),
+            )
+            .limit(25),
+          tx
+            .select()
+            .from(industrialDotComplianceRecords)
+            .where(
+              and(
+                eq(industrialDotComplianceRecords.tenantId, principal.tenantId),
+                isNull(industrialDotComplianceRecords.archivedAt),
+                or(
+                  eq(industrialDotComplianceRecords.personnelId, recordId),
+                  payloadMatchSql(industrialDotComplianceRecords.sourcePayload),
+                )!,
+              ),
+            )
+            .limit(50),
+          tx
+            .select()
+            .from(industrialForkliftRecords)
+            .where(
+              and(
+                eq(industrialForkliftRecords.tenantId, principal.tenantId),
+                isNull(industrialForkliftRecords.archivedAt),
+                or(
+                  eq(industrialForkliftRecords.personnelId, recordId),
+                  payloadMatchSql(industrialForkliftRecords.sourcePayload),
+                )!,
+              ),
+            )
+            .limit(50),
+          tx
+            .select()
+            .from(industrialConfinedSpaceRecords)
+            .where(
+              and(
+                eq(industrialConfinedSpaceRecords.tenantId, principal.tenantId),
+                isNull(industrialConfinedSpaceRecords.archivedAt),
+                or(
+                  eq(industrialConfinedSpaceRecords.personnelId, recordId),
+                  payloadMatchSql(industrialConfinedSpaceRecords.sourcePayload),
+                )!,
+              ),
+            )
+            .limit(50),
+        ]);
+
+      const incidentItems = incidents.map((r) => {
+        const payload =
+          r.sourcePayload && typeof r.sourcePayload === "object" && !Array.isArray(r.sourcePayload)
+            ? (r.sourcePayload as Record<string, unknown>)
+            : {};
+        const role =
+          typeof payload.reportedBy === "string" &&
+          displayName &&
+          String(payload.reportedBy).toLowerCase().includes(displayName.toLowerCase())
+            ? "reporter"
+            : "subject";
+        return {
+          ...toItem(
+            {
+              id: r.id,
+              title: r.title,
+              status: r.status,
+              updatedAt: r.updatedAt,
+              date:
+                typeof payload.dateOccurred === "string"
+                  ? payload.dateOccurred
+                  : r.updatedAt.toISOString(),
+            },
+            "incidents",
+            "Incident",
+          ),
+          role,
+          recordable: Boolean(payload.oshaRecordable || payload.recordable),
+        };
+      });
+
+      const observationItems = observations.map((r) =>
+        toItem(
+          { id: r.id, title: r.title, status: r.status, updatedAt: r.updatedAt },
+          "observations",
+          "Observation",
+        ),
+      );
+
+      const trainingItems = training.map((r) =>
+        toItem(
+          {
+            id: r.id,
+            title: r.title ?? r.courseName,
+            status: r.status,
+            updatedAt: r.updatedAt,
+            date: r.completedAt?.toISOString() ?? r.updatedAt.toISOString(),
+          },
+          "training",
+          "Training record",
+        ),
+      );
+
+      const submissionItems = submissions.map((r) =>
+        toItem(
+          {
+            id: r.id,
+            title: r.title,
+            status: r.status,
+            updatedAt: r.updatedAt,
+            date: r.submittedAt?.toISOString() ?? r.updatedAt.toISOString(),
+          },
+          "forms",
+          "Form submission",
+        ),
+      );
+
+      const templateItems = templates.map((r) =>
+        toItem(
+          { id: r.id, title: r.title, status: r.status, updatedAt: r.updatedAt },
+          "forms",
+          "Form template",
+        ),
+      );
+
+      const qualificationItems = [
+        ...dot.map((r) =>
+          toItem(
+            { id: r.id, title: r.title, status: r.status, updatedAt: r.updatedAt },
+            "dot-compliance",
+            "DOT qualification",
+          ),
+        ),
+        ...forklifts.map((r) =>
+          toItem(
+            { id: r.id, title: r.title, status: r.status, updatedAt: r.updatedAt },
+            "forklifts",
+            "Forklift qualification",
+          ),
+        ),
+        ...confined.map((r) =>
+          toItem(
+            { id: r.id, title: r.title, status: r.status, updatedAt: r.updatedAt },
+            "confined-space",
+            "Confined space authorization",
+          ),
+        ),
+        ...workersComp.map((r) =>
+          toItem(
+            {
+              id: r.id,
+              title: r.caseNumber ?? "Workers' comp case",
+              status: r.status,
+              updatedAt: r.updatedAt,
+            },
+            "workers-comp",
+            "Workers' comp case",
+          ),
+        ),
+        ...fleetDrivers.map((r) =>
+          toItem(
+            {
+              id: r.id,
+              title: r.personnelName ?? "Company driver",
+              status: r.status,
+              updatedAt: r.updatedAt,
+            },
+            "fleet",
+            "Company driver",
+          ),
+        ),
+      ];
+
+      const completedTraining = training.filter((t) => {
+        const s = t.status.toLowerCase();
+        return s.includes("complete") || Boolean(t.completedAt);
+      });
+      const inProgressTraining = training.filter((t) => {
+        const s = t.status.toLowerCase();
+        return s.includes("progress") || s === "active" || s === "enrolled";
+      });
+      const overdueTraining = training.filter(
+        (t) =>
+          inProgressTraining.some((p) => p.id === t.id) &&
+          isPast(t.expiresAt?.toISOString() ?? null),
+      );
+      const certificates = training.filter((t) => Boolean(t.completedAt) || Boolean(t.expiresAt));
+      const expiringCertificates = certificates.filter((t) =>
+        expiringSoon(t.expiresAt?.toISOString() ?? null),
+      );
+
+      const recentActivity = [
+        ...incidentItems,
+        ...observationItems,
+        ...submissionItems,
+        ...trainingItems,
+        ...qualificationItems.slice(0, 6),
+      ]
+        .sort((a, b) => b.date.localeCompare(a.date))
+        .slice(0, 12);
+
+      const body = {
+        incidents: {
+          total: incidentItems.length,
+          open: incidentItems.filter((i) => isOpen(i.status)).length,
+          recordable: incidentItems.filter((i) => i.recordable).length,
+          asSubject: incidentItems.filter((i) => i.role === "subject").length,
+          asReporter: incidentItems.filter((i) => i.role === "reporter").length,
+          lastDate: latest(incidentItems.map((i) => i.date)),
+          items: incidentItems.map(({ role: _role, recordable: _r, ...item }) => item),
+        },
+        observations: {
+          total: observationItems.length,
+          open: observationItems.filter((i) => isOpen(i.status)).length,
+          lastDate: latest(observationItems.map((i) => i.date)),
+          items: observationItems,
+        },
+        forms: {
+          total: submissionItems.length,
+          submitted: submissionItems.filter((i) => {
+            const s = i.status.toLowerCase();
+            return s.includes("submit") || s === "complete" || s === "completed";
+          }).length,
+          drafts: submissionItems.filter((i) => i.status.toLowerCase().includes("draft")).length,
+          lastDate: latest(submissionItems.map((i) => i.date)),
+          templates: templateItems,
+          submissions: submissionItems,
+        },
+        training: {
+          enrollments: trainingItems.length,
+          completed: completedTraining.length,
+          inProgress: inProgressTraining.length,
+          overdue: overdueTraining.length,
+          certificates: certificates.length,
+          expiringCertificates: expiringCertificates.length,
+          lastActivityDate: latest(trainingItems.map((i) => i.date)),
+          items: trainingItems,
+        },
+        qualifications: {
+          total: qualificationItems.length,
+          active: qualificationItems.filter((i) => !i.status.toLowerCase().includes("expir")).length,
+          expiringSoon: qualificationItems.filter((i) =>
+            i.status.toLowerCase().includes("expir"),
+          ).length,
+          expired: qualificationItems.filter((i) => i.status.toLowerCase() === "expired").length,
+          items: qualificationItems,
+        },
+        scanActivity: {
+          completions: 0,
+          lastDate: null as string | null,
+          items: [] as typeof trainingItems,
+        },
+        recentActivity,
+      };
+
+      let safetyScore = 100;
+      safetyScore -= body.incidents.open * 12;
+      safetyScore -= body.incidents.recordable * 8;
+      safetyScore -= body.training.overdue * 6;
+      safetyScore -= body.qualifications.expired * 5;
+      safetyScore -= body.qualifications.expiringSoon * 2;
+      safetyScore += Math.min(body.training.completed * 2, 10);
+      safetyScore += Math.min(body.observations.total, 5);
+      safetyScore = Math.max(0, Math.min(100, Math.round(safetyScore)));
+
+      return {
+        personId: recordId,
+        safetyScore,
+        searchHint,
+        ...body,
       };
     });
   }
@@ -679,6 +1548,209 @@ export class IndustrialDomainService {
         updatedAt: row!.updatedAt,
         sourcePayload: row!.sourcePayload,
       });
+    });
+  }
+
+  /**
+   * Company vehicle / insurance driver roster (Firebase companyVehicleDrivers).
+   * Status values stay as imported: on_insurance, pending_mvr, suspended, removed.
+   */
+  async listCompanyVehicleDrivers(principal: ForgePrincipal, query: ListQuery) {
+    const { page, pageSize, offset } = this.page(query);
+    const q = (query.q ?? "").trim().toLowerCase();
+    const status = (query.status ?? "").trim().toLowerCase();
+    return withTenantTransaction(this.db, principal.tenantId, async (tx) => {
+      const rows = await tx
+        .select()
+        .from(industrialFleetDrivers)
+        .where(
+          and(
+            eq(industrialFleetDrivers.tenantId, principal.tenantId),
+            isNull(industrialFleetDrivers.archivedAt),
+          ),
+        )
+        .orderBy(desc(industrialFleetDrivers.updatedAt));
+
+      const mapped = rows.map((row) => {
+        const payload = this.unwrapSourcePayload(row.sourcePayload);
+        const licenseExpiryDate = String(
+          payload.licenseExpiryDate ?? payload.licenseExpiry ?? payload.license_expiry_date ?? "",
+        ).trim();
+        const personnelName = String(
+          row.personnelName ?? payload.personnelName ?? "",
+        ).trim();
+        const employeeNumber = String(payload.employeeNumber ?? "").trim();
+        const driverStatus = String(payload.status ?? row.status ?? "").trim();
+        const mvrUploads = this.uploadList(payload.mvrUploads);
+        const mvrReleaseUploads = this.uploadList(payload.mvrReleaseUploads);
+        const sampleYear = Number(payload.sampleYear);
+        return {
+          id: row.id,
+          personnelId: row.personnelId ?? (typeof payload.personnelId === "string" ? payload.personnelId : null),
+          personnelName,
+          employeeNumber,
+          dateOfBirth: String(payload.dateOfBirth ?? "").trim(),
+          licenseNumber: String(row.licenseNumber ?? payload.licenseNumber ?? "").trim(),
+          licenseState: String(row.licenseState ?? payload.licenseState ?? "").trim(),
+          licenseExpiryDate,
+          hasLicenseFront: this.hasUpload(payload.licenseFrontUpload),
+          hasLicenseBack: this.hasUpload(payload.licenseBackUpload),
+          status: driverStatus,
+          initialMvrDate: String(payload.initialMvrDate ?? "").trim(),
+          lastMvrDate: String(payload.lastMvrDate ?? "").trim(),
+          nextMvrDueDate: String(payload.nextMvrDueDate ?? "").trim(),
+          mvrReleaseDate: String(payload.mvrReleaseDate ?? "").trim(),
+          mvrReleaseUploadCount: mvrReleaseUploads.length,
+          mvrUploadCount: mvrUploads.length,
+          lastMvrUploadAt: this.latestUploadAt(mvrUploads),
+          sampleYear: Number.isFinite(sampleYear) && sampleYear > 0 ? sampleYear : null,
+          sampleSelectedAt: String(payload.sampleSelectedAt ?? "").trim(),
+          sampleCompletedAt: String(payload.sampleCompletedAt ?? "").trim(),
+          insuranceEffectiveDate: String(payload.insuranceEffectiveDate ?? "").trim(),
+          insuranceRemovedDate: String(payload.insuranceRemovedDate ?? "").trim(),
+          notes: String(payload.notes ?? "").trim(),
+          createdAt: row.createdAt.toISOString(),
+          updatedAt: row.updatedAt.toISOString(),
+        };
+      });
+
+      const filtered = mapped.filter((item) => {
+        if (status && item.status.toLowerCase() !== status) return false;
+        if (!q) return true;
+        const hay = `${item.personnelName} ${item.employeeNumber} ${item.licenseNumber}`.toLowerCase();
+        return hay.includes(q);
+      });
+
+      const notRemoved = mapped.filter((item) => item.status.toLowerCase() !== "removed");
+      const today = new Date().toISOString().slice(0, 10);
+      const soon = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
+      const sampleYears = mapped
+        .map((item) => item.sampleYear)
+        .filter((year): year is number => typeof year === "number");
+      const summary = {
+        total: mapped.length,
+        onInsurance: mapped.filter((item) => item.status.toLowerCase() === "on_insurance").length,
+        pendingMvr: mapped.filter((item) => item.status.toLowerCase() === "pending_mvr").length,
+        suspended: mapped.filter((item) => item.status.toLowerCase() === "suspended").length,
+        removed: mapped.filter((item) => item.status.toLowerCase() === "removed").length,
+        missingLicenseExpiry: notRemoved.filter((item) => item.licenseExpiryDate === "").length,
+        licenseExpired: notRemoved.filter(
+          (item) => item.licenseExpiryDate !== "" && item.licenseExpiryDate < today,
+        ).length,
+        licenseExpiringSoon: notRemoved.filter(
+          (item) =>
+            item.licenseExpiryDate !== "" &&
+            item.licenseExpiryDate >= today &&
+            item.licenseExpiryDate <= soon,
+        ).length,
+        mvrOnFile: mapped.filter((item) => item.mvrUploadCount > 0).length,
+        mvrReleaseOnFile: mapped.filter(
+          (item) => item.mvrReleaseDate !== "" || item.mvrReleaseUploadCount > 0,
+        ).length,
+        sampleYear: sampleYears.length > 0 ? Math.max(...sampleYears) : null,
+        sampleSelected: 0,
+        sampleCompleted: 0,
+      };
+      if (summary.sampleYear !== null) {
+        const inSample = mapped.filter((item) => item.sampleYear === summary.sampleYear);
+        summary.sampleSelected = inSample.length;
+        summary.sampleCompleted = inSample.filter((item) => item.sampleCompletedAt !== "").length;
+      }
+
+      return {
+        page,
+        pageSize,
+        total: filtered.length,
+        items: filtered.slice(offset, offset + pageSize),
+        summary,
+      };
+    });
+  }
+
+  /**
+   * Distinct division names and supervisor frequency keyed by
+   * Division + Location + Department. Used by Add Person to populate the
+   * division dropdown and auto-fill supervisor.
+   *
+   * Division options = tenant catalog (tenant_settings industrial /
+   * personnel.divisions) union distinct division_name values already on the
+   * roster. Catalog covers the empty-roster case; roster values keep imported
+   * or newly typed divisions available.
+   */
+  async personnelAssignmentOptions(principal: ForgePrincipal) {
+    return withTenantTransaction(this.db, principal.tenantId, async (tx) => {
+      const [rows, catalogRow] = await Promise.all([
+        tx
+          .select({
+            divisionName: industrialPersonnel.divisionName,
+            siteId: industrialPersonnel.siteId,
+            departmentId: industrialPersonnel.departmentId,
+            supervisorName: industrialPersonnel.supervisorName,
+          })
+          .from(industrialPersonnel)
+          .where(
+            and(
+              eq(industrialPersonnel.tenantId, principal.tenantId),
+              isNull(industrialPersonnel.archivedAt),
+            ),
+          ),
+        tx.query.tenantSettings.findFirst({
+          where: and(
+            eq(tenantSettings.tenantId, principal.tenantId),
+            eq(tenantSettings.namespace, "industrial"),
+            eq(tenantSettings.settingKey, "personnel.divisions"),
+          ),
+        }),
+      ]);
+
+      const divisions = new Set<string>();
+      const catalog = catalogRow?.valueJson;
+      if (Array.isArray(catalog)) {
+        for (const entry of catalog) {
+          if (typeof entry === "string" && entry.trim() !== "") {
+            divisions.add(entry.trim());
+          }
+        }
+      }
+
+      const counts = new Map<
+        string,
+        {
+          divisionName: string;
+          siteId: string;
+          departmentId: string;
+          supervisorName: string;
+          count: number;
+        }
+      >();
+
+      for (const row of rows) {
+        const divisionName = row.divisionName?.trim() ?? "";
+        if (divisionName !== "") divisions.add(divisionName);
+
+        const supervisorName = row.supervisorName?.trim() ?? "";
+        const siteId = row.siteId?.trim() ?? "";
+        const departmentId = row.departmentId?.trim() ?? "";
+        if (!divisionName || !supervisorName || !siteId || !departmentId) continue;
+
+        const key = `${divisionName.toLowerCase()}|${siteId}|${departmentId}|${supervisorName.toLowerCase()}`;
+        const existing = counts.get(key);
+        if (existing) existing.count += 1;
+        else {
+          counts.set(key, {
+            divisionName,
+            siteId,
+            departmentId,
+            supervisorName,
+            count: 1,
+          });
+        }
+      }
+
+      return {
+        divisions: [...divisions].sort((a, b) => a.localeCompare(b)),
+        supervisors: [...counts.values()],
+      };
     });
   }
 
@@ -1346,51 +2418,398 @@ export class IndustrialDomainService {
     });
   }
 
+  /**
+   * Safety Intelligence Center overview. Counts and trends from Model A tables
+   * for the selected rolling window, plus the three fixed period cards.
+   */
   async analyticsOverview(principal: ForgePrincipal, query: ListQuery) {
     const siteId = (query.siteId ?? query.facilityId ?? "").trim();
+    const preset = (query.preset ?? "6m").trim().toLowerCase();
+    const rangeDays = preset === "3m" ? 90 : preset === "1y" || preset === "12m" ? 365 : 180;
+    const end = new Date();
+    const start = new Date(end.getTime() - rangeDays * 24 * 60 * 60 * 1000);
+    const periodLabel =
+      rangeDays === 90 ? "Last 3 months" : rangeDays === 365 ? "Last 12 months" : "Last 6 months";
+
+    const enterpriseKeys = [
+      "forklifts",
+      "loto",
+      "confined-space",
+      "hot-work",
+      "working-at-heights",
+      "electrical-safety",
+      "cranes-rigging",
+      "machine-safety",
+      "chemical-safety",
+      "warehouse-safety",
+      "manufacturing-safety",
+      "contractor-safety",
+      "process-safety",
+      "environmental-safety",
+    ] as const;
+
     return withTenantTransaction(this.db, principal.tenantId, async (tx) => {
-      async function countAny(table: TitledTable | typeof industrialPersonnel): Promise<number> {
-        const conditions = [eq(table.tenantId, principal.tenantId), isNull(table.archivedAt)];
-        if (siteId && "siteId" in table) {
-          conditions.push(eq((table as typeof industrialIncidents).siteId, siteId));
-        }
+      const siteClause = (table: { siteId?: unknown }) =>
+        siteId && "siteId" in table
+          ? eq((table as typeof industrialIncidents).siteId, siteId)
+          : undefined;
+
+      const countInRange = async (
+        table: TitledTable | typeof industrialPersonnel | typeof industrialFormSubmissions,
+        since: Date,
+      ): Promise<number> => {
+        const conditions = [
+          eq(table.tenantId, principal.tenantId),
+          isNull(table.archivedAt),
+          gte(table.createdAt, since),
+        ];
+        const site = siteClause(table as { siteId?: unknown });
+        if (site) conditions.push(site);
         const [row] = await tx
           .select({ c: sql<number>`count(*)::int` })
           .from(table)
           .where(and(...conditions));
         return row?.c ?? 0;
-      }
-      const modules = {
-        personnel: await countAny(industrialPersonnel),
-        incidents: await countAny(industrialIncidents),
-        inspections: await countAny(industrialInspections),
-        observations: await countAny(industrialObservations),
-        jsas: await countAny(industrialJsas),
-        loto: await countAny(industrialLotoProcedures),
-        training: await countAny(industrialTrainingRecords),
-        forms: await countAny(industrialFormDefinitions),
-        correctiveActions: await countAny(industrialCorrectiveActions),
-        workersComp: await countAny(industrialWorkersCompCases as unknown as TitledTable),
-        dot: await countAny(industrialDotComplianceRecords),
       };
+
+      const countOpen = async (table: TitledTable, since: Date): Promise<number> => {
+        const conditions = [
+          eq(table.tenantId, principal.tenantId),
+          isNull(table.archivedAt),
+          gte(table.createdAt, since),
+          sql`lower(${table.status}) not like '%closed%'`,
+          sql`lower(${table.status}) not like '%resolv%'`,
+          sql`lower(${table.status}) not like '%archiv%'`,
+          sql`lower(${table.status}) not like '%complet%'`,
+        ];
+        const site = siteClause(table as { siteId?: unknown });
+        if (site) conditions.push(site);
+        const [row] = await tx
+          .select({ c: sql<number>`count(*)::int` })
+          .from(table)
+          .where(and(...conditions));
+        return row?.c ?? 0;
+      };
+
+      const monthlyTrend = async (table: TitledTable, since: Date) => {
+        const conditions = [
+          eq(table.tenantId, principal.tenantId),
+          isNull(table.archivedAt),
+          gte(table.createdAt, since),
+        ];
+        const site = siteClause(table as { siteId?: unknown });
+        if (site) conditions.push(site);
+        const rows = await tx
+          .select({
+            month: sql<string>`to_char(date_trunc('month', ${table.createdAt}), 'YYYY-MM')`,
+            count: sql<number>`count(*)::int`,
+          })
+          .from(table)
+          .where(and(...conditions))
+          .groupBy(sql`date_trunc('month', ${table.createdAt})`)
+          .orderBy(sql`date_trunc('month', ${table.createdAt})`);
+        return rows.map((r) => ({ month: r.month, count: r.count }));
+      };
+
+      const statusBreakdown = async (table: TitledTable, since: Date) => {
+        const conditions = [
+          eq(table.tenantId, principal.tenantId),
+          isNull(table.archivedAt),
+          gte(table.createdAt, since),
+        ];
+        const site = siteClause(table as { siteId?: unknown });
+        if (site) conditions.push(site);
+        const rows = await tx
+          .select({
+            label: sql<string>`coalesce(nullif(btrim(${table.status}), ''), 'Unknown')`,
+            count: sql<number>`count(*)::int`,
+          })
+          .from(table)
+          .where(and(...conditions))
+          .groupBy(sql`coalesce(nullif(btrim(${table.status}), ''), 'Unknown')`)
+          .orderBy(sql`count(*) desc`)
+          .limit(8);
+        return rows.map((r) => ({ label: r.label, count: r.count }));
+      };
+
+      const buildWindow = async (days: number, id: "threeMonth" | "sixMonth" | "oneYear", label: string) => {
+        const since = new Date(end.getTime() - days * 24 * 60 * 60 * 1000);
+        const [
+          incidents,
+          inspections,
+          observations,
+          formSubmissions,
+          training,
+          jsas,
+          openIncidents,
+          ...enterpriseCounts
+        ] = await Promise.all([
+          countInRange(industrialIncidents, since),
+          countInRange(industrialInspections, since),
+          countInRange(industrialObservations, since),
+          countInRange(industrialFormSubmissions, since),
+          countInRange(industrialTrainingRecords, since),
+          countInRange(industrialJsas, since),
+          countOpen(industrialIncidents, since),
+          ...enterpriseKeys.map((key) => countInRange(MODULE_TABLES[key]!, since)),
+        ]);
+        const enterpriseActivity = enterpriseCounts.reduce((sum, n) => sum + n, 0);
+        const totalActivity =
+          incidents +
+          inspections +
+          observations +
+          formSubmissions +
+          training +
+          jsas +
+          enterpriseActivity;
+        const safetyScore = this.computeSafetyIndex({
+          openIncidents,
+          totalIncidents: incidents,
+          inspectionCount: inspections,
+          trainingCount: training,
+          enterpriseOpenHint: 0,
+        });
+        return {
+          id,
+          label,
+          dateRange: { start: since.toISOString().slice(0, 10), end: end.toISOString().slice(0, 10) },
+          incidents,
+          inspections,
+          observations,
+          formSubmissions,
+          trainingCompletions: training,
+          scanCompletions: 0,
+          enterpriseActivity,
+          jsas,
+          totalActivity,
+          avgInspectionScore: null as number | null,
+          safetyScore,
+          safetyGrade: this.safetyGrade(safetyScore),
+          openIncidents,
+        };
+      };
+
+      const [threeMonth, sixMonth, oneYear] = await Promise.all([
+        buildWindow(90, "threeMonth", "Last 3 Months"),
+        buildWindow(180, "sixMonth", "Last 6 Months"),
+        buildWindow(365, "oneYear", "Last 12 Months"),
+      ]);
+
+      const active =
+        rangeDays === 90 ? threeMonth : rangeDays === 365 ? oneYear : sixMonth;
+
+      const [
+        incidentTrend,
+        observationsTrend,
+        inspectionsTrend,
+        incidentsByStatus,
+        observationsByStatus,
+        dotTotal,
+        dotOpen,
+        formDefs,
+      ] = await Promise.all([
+        monthlyTrend(industrialIncidents, start),
+        monthlyTrend(industrialObservations, start),
+        monthlyTrend(industrialInspections, start),
+        statusBreakdown(industrialIncidents, start),
+        statusBreakdown(industrialObservations, start),
+        countInRange(industrialDotComplianceRecords, start),
+        countOpen(industrialDotComplianceRecords, start),
+        countInRange(industrialFormDefinitions, start),
+      ]);
+
+      const enterpriseByModule = await Promise.all(
+        enterpriseKeys.map(async (key) => ({
+          label: key
+            .split("-")
+            .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+            .join(" "),
+          key,
+          count: await countInRange(MODULE_TABLES[key]!, start),
+          href: `/modules/${key}/`,
+        })),
+      );
+
+      const activityByModule = [
+        { label: "Incidents", key: "incidents", count: active.incidents, href: "/modules/incidents/" },
+        { label: "Inspections", key: "inspections", count: active.inspections, href: "/modules/inspections/" },
+        { label: "Observations", key: "observations", count: active.observations, href: "/modules/observations/" },
+        { label: "Forms", key: "forms", count: active.formSubmissions, href: "/modules/forms/" },
+        { label: "Training", key: "training", count: active.trainingCompletions, href: "/modules/training/" },
+        { label: "JSAs", key: "jsas", count: active.jsas, href: "/modules/jsas/" },
+        {
+          label: "Enterprise",
+          key: "enterprise",
+          count: active.enterpriseActivity,
+          href: "/modules/lockout-tagout/",
+        },
+        { label: "DOT", key: "dot", count: dotTotal, href: "/modules/dot-compliance/" },
+      ].sort((a, b) => b.count - a.count);
+
+      const mostActive = activityByModule[0];
+      const trainingRate =
+        active.trainingCompletions > 0
+          ? Math.round((active.trainingCompletions / Math.max(active.trainingCompletions, 1)) * 100)
+          : 0;
+      const dotCompliance =
+        dotTotal === 0 ? 100 : Math.round(((dotTotal - dotOpen) / Math.max(dotTotal, 1)) * 100);
+
+      const insights: string[] = [];
+      if (active.openIncidents === 0) insights.push("No open incidents in this period.");
+      else insights.push(`${active.openIncidents} open incident${active.openIncidents === 1 ? "" : "s"} need attention.`);
+      if (active.enterpriseActivity > 0) {
+        insights.push(`${active.enterpriseActivity} enterprise program records across ${enterpriseKeys.length} modules.`);
+      }
+      if (mostActive && mostActive.count > 0) {
+        insights.push(`Most active module: ${mostActive.label} (${mostActive.count}).`);
+      }
+      if (active.observations === 0) insights.push("No observations recorded in this period.");
+      if (dotTotal > 0) insights.push(`DOT compliance score ${dotCompliance}% (${dotOpen} open items).`);
+
+      const kpis = [
+        {
+          id: "safety-score",
+          label: "Safety Score",
+          value: active.safetyScore,
+          sub: `Grade ${active.safetyGrade}`,
+          href: "/modules/analytics/?tab=overview",
+        },
+        {
+          id: "open-incidents",
+          label: "Open Incidents",
+          value: active.openIncidents,
+          sub: `${active.incidents} total in range`,
+          href: "/modules/incidents/?status=open",
+        },
+        {
+          id: "inspections",
+          label: "Inspections",
+          value: active.inspections,
+          href: "/modules/inspections/",
+        },
+        {
+          id: "observations",
+          label: "Observations",
+          value: active.observations,
+          href: "/modules/observations/",
+        },
+        {
+          id: "inspection-score",
+          label: "Inspection Score",
+          value: "—",
+          sub: "Avg. score not scored yet",
+          href: "/modules/inspections/",
+        },
+        {
+          id: "forms",
+          label: "Form Submissions",
+          value: active.formSubmissions,
+          sub: formDefs > 0 ? `${formDefs} templates touched` : undefined,
+          href: "/modules/forms/",
+        },
+        {
+          id: "training",
+          label: "Training Completion",
+          value: active.trainingCompletions,
+          sub: `${trainingRate}% completion rate`,
+          href: "/modules/training/",
+        },
+        {
+          id: "scan",
+          label: "Scan Completions",
+          value: 0,
+          sub: "Scan module activity",
+          href: "/modules/scan/",
+        },
+        {
+          id: "jsas",
+          label: "JSAs in Range",
+          value: active.jsas,
+          sub: "0 open items",
+          href: "/modules/jsas/",
+        },
+        {
+          id: "enterprise",
+          label: "Enterprise Programs",
+          value: active.enterpriseActivity,
+          sub: `0 open · ${enterpriseKeys.length} modules`,
+          href: "/modules/lockout-tagout/",
+        },
+        {
+          id: "dot",
+          label: "DOT Compliance",
+          value: `${dotCompliance}%`,
+          sub: `${dotOpen} open items`,
+          href: "/modules/dot-compliance/",
+        },
+      ];
+
       return {
         model: "MODEL_A",
         generatedAt: new Date().toISOString(),
         facilityId: siteId || null,
-        kpis: modules,
-        drilldowns: Object.entries(modules).map(([key, count]) => ({
-          key,
-          count,
-          href: `/modules/${
-            key === "correctiveActions"
-              ? "corrective-actions"
-              : key === "workersComp"
-                ? "workers-comp"
-                : key
-          }`,
+        periodLabel,
+        preset: rangeDays === 90 ? "3m" : rangeDays === 365 ? "1y" : "6m",
+        dateRange: active.dateRange,
+        safetyScore: active.safetyScore,
+        safetyGrade: active.safetyGrade,
+        insights,
+        periodSummaries: [threeMonth, sixMonth, oneYear],
+        kpis,
+        incidentTrend,
+        observationsTrend,
+        inspectionsTrend,
+        incidentsByStatus,
+        observationsByStatus,
+        activityByModule,
+        enterpriseByModule,
+        dot: {
+          totalRecords: dotTotal,
+          openItems: dotOpen,
+          complianceScore: dotCompliance,
+        },
+        // Backward-compatible fields for the prior simple workspace.
+        kpisLegacy: undefined,
+        drilldowns: activityByModule.map((m) => ({
+          key: m.key,
+          count: m.count,
+          href: m.href,
         })),
       };
     });
+  }
+
+  private safetyGrade(score: number): "A" | "B" | "C" | "D" | "F" {
+    if (score >= 90) return "A";
+    if (score >= 80) return "B";
+    if (score >= 70) return "C";
+    if (score >= 60) return "D";
+    return "F";
+  }
+
+  private computeSafetyIndex(input: {
+    openIncidents: number;
+    totalIncidents: number;
+    inspectionCount: number;
+    trainingCount: number;
+    enterpriseOpenHint: number;
+  }): number {
+    let score = 100;
+    score -= Math.min(input.openIncidents * 4, 24);
+    if (input.totalIncidents > 0) {
+      const closedRatio = 1 - input.openIncidents / input.totalIncidents;
+      score = score * 0.6 + closedRatio * 100 * 0.4;
+    }
+    if (input.inspectionCount > 0) {
+      score = score * 0.85 + 100 * 0.15;
+    }
+    if (input.trainingCount > 0) {
+      score = score * 0.92 + 100 * 0.08;
+    }
+    if (input.enterpriseOpenHint > 0) {
+      score -= Math.min(input.enterpriseOpenHint * 2, 12);
+    }
+    return Math.round(Math.min(Math.max(score, 0), 100));
   }
 
   /** Risk register has no dedicated table — project from observations + corrective actions. */

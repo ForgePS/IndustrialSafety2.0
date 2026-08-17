@@ -1,4 +1,5 @@
 import { INDUSTRIAL_MODULE_REGISTRY } from "@forge/contracts";
+import { Suspense } from "react";
 import { AnalyticsWorkspace } from "@/components/analytics-workspace";
 import { ComplianceWorkspace } from "@/components/compliance-workspace";
 import { EquipmentWorkspace } from "@/components/equipment-workspace";
@@ -19,6 +20,7 @@ import { QrLinksWorkspace } from "@/components/qr-links-workspace";
 import { DocumentsWorkspace } from "@/components/documents-workspace";
 import { ReportingWorkspace } from "@/components/reporting-workspace";
 import { IndustrialImportWorkspace } from "@/components/industrial-import-workspace";
+import { IncidentsWorkspace } from "@/components/incidents-workspace";
 
 /** Static export params for SPA deep links (directory-index rewrite only). */
 export function generateStaticParams() {
@@ -56,6 +58,13 @@ export default async function ModulePage({
   }
   if (module === "personnel") {
     return <PersonnelWorkspace moduleName={name} />;
+  }
+  if (module === "incidents") {
+    return (
+      <Suspense fallback={<p className="text-muted mb-0">Loading incidents…</p>}>
+        <IncidentsWorkspace moduleName={name} />
+      </Suspense>
+    );
   }
   if (module === "training") {
     return <TrainingWorkspace moduleName={name} />;

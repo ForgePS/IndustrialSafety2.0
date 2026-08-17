@@ -237,7 +237,9 @@ function TenantDetailInner() {
     return (
       <section className={styles.page}>
         <h1>Customer detail</h1>
-        <p className={styles.error}>Missing tenantId query parameter.</p>
+        <div className="alert alert-danger" role="alert">
+          Missing tenantId query parameter.
+        </div>
         <Link href="/customers/">← Customers</Link>
       </section>
     );
@@ -257,20 +259,20 @@ function TenantDetailInner() {
         actions={
           <>
             <Link
-              className="forge-btn"
+              className="btn btn-primary"
               href={`/customer-modules/?tenantId=${encodeURIComponent(tenantId)}`}
             >
               Manage Modules
             </Link>
-            <Link className="forge-btn forge-btn--outline" href="/customers/">
+            <Link className="btn btn-outline-secondary" href="/customers/">
               All customers
             </Link>
           </>
         }
       />
 
-      {error ? <p className={styles.error}>{error}</p> : null}
-      {loading ? <p className={styles.muted}>Loading…</p> : null}
+      {error ? <div className="alert alert-danger" role="alert">{error}</div> : null}
+      {loading ? <p className="text-muted">Loading…</p> : null}
 
       {tenant ? (
         <>
@@ -284,8 +286,11 @@ function TenantDetailInner() {
 
           {tab === "overview" ? (
             <>
-          <div className={styles.panel} id="summary">
-            <h2>Summary</h2>
+          <div className="card mb-4" id="summary">
+            <div className="card-header">
+              <h5 className="card-title mb-0">Summary</h5>
+            </div>
+            <div className="card-body">
             <dl className={styles.dl}>
               <dt>ID</dt>
               <dd className={styles.mono}>{tenant.id}</dd>
@@ -315,31 +320,38 @@ function TenantDetailInner() {
               <Link href={`/onboarding/`}>Onboarding</Link>
               <Link href={`/imports/?tenantId=${encodeURIComponent(tenantId)}`}>Data import</Link>
             </nav>
+            </div>
           </div>
 
-          <div className={styles.panel} id="status">
-            <h2>Status</h2>
+          <div className="card mb-4" id="status">
+            <div className="card-header">
+              <h5 className="card-title mb-0">Status</h5>
+            </div>
+            <div className="card-body">
             <p>
               Current status: <strong>{tenant.status}</strong>
             </p>
-            <div className={styles.actions} style={{ marginTop: "1rem" }}>
-              <button className={styles.button} type="button" disabled={busy} onClick={() => void activate()}>
+            <div className="d-flex flex-wrap gap-2" style={{ marginTop: "1rem" }}>
+              <button className="btn btn-primary" type="button" disabled={busy} onClick={() => void activate()}>
                 Activate
               </button>
             </div>
-            <div className={styles.form} style={{ marginTop: "1rem" }}>
-              <div className={styles.formRow}>
-                <label htmlFor="suspendReason">Suspend reason</label>
+            <div className="mt-3">
+              <div className="mb-3">
+                <label className="form-label" htmlFor="suspendReason">
+                  Suspend reason
+                </label>
                 <input
                   id="suspendReason"
+                  className="form-control"
                   value={suspendReason}
                   onChange={(e) => setSuspendReason(e.target.value)}
                   placeholder="Required to suspend"
                 />
               </div>
-              <div className={styles.actions}>
+              <div className="d-flex flex-wrap gap-2">
                 <button
-                  className={styles.buttonDanger}
+                  className="btn btn-danger"
                   type="button"
                   disabled={busy}
                   onClick={() => void suspend()}
@@ -348,11 +360,15 @@ function TenantDetailInner() {
                 </button>
               </div>
             </div>
+            </div>
           </div>
 
-          <div className={styles.panel} id="contacts">
-            <h2>Contacts</h2>
-            {sectionErrors.billing ? <p className={styles.error}>{sectionErrors.billing}</p> : null}
+          <div className="card mb-4" id="contacts">
+            <div className="card-header">
+              <h5 className="card-title mb-0">Contacts</h5>
+            </div>
+            <div className="card-body">
+            {sectionErrors.billing ? <div className="alert alert-danger" role="alert">{sectionErrors.billing}</div> : null}
             <dl className={styles.dl}>
               <dt>Billing email</dt>
               <dd>{billing?.customer?.billingEmail ?? "—"}</dd>
@@ -365,15 +381,19 @@ function TenantDetailInner() {
               <Link href={`/persons${q}`}>Persons</Link>
               <Link href={`/billing${q}`}>Billing contact</Link>
             </nav>
+            </div>
           </div>
 
-          <div className={styles.panel} id="feature-flags">
-            <h2>Feature flags</h2>
-            {sectionErrors.features ? <p className={styles.error}>{sectionErrors.features}</p> : null}
+          <div className="card mb-4" id="feature-flags">
+            <div className="card-header">
+              <h5 className="card-title mb-0">Feature flags</h5>
+            </div>
+            <div className="card-body">
+            {sectionErrors.features ? <div className="alert alert-danger" role="alert">{sectionErrors.features}</div> : null}
             {features.length === 0 ? (
-              <p className={styles.muted}>No effective features.</p>
+              <p className="text-muted">No effective features.</p>
             ) : (
-              <table className={styles.table}>
+              <table className="table table-hover">
                 <thead>
                   <tr>
                     <th>Key</th>
@@ -395,20 +415,24 @@ function TenantDetailInner() {
             <nav className={styles.linkRow}>
               <Link href={`/features${q}`}>Feature Flags</Link>
             </nav>
+            </div>
           </div>
             </>
           ) : null}
 
           {tab === "facilities" ? (
-          <div className={styles.panel} id="facilities">
-            <h2>Facilities</h2>
+          <div className="card mb-4" id="facilities">
+            <div className="card-header">
+              <h5 className="card-title mb-0">Facilities</h5>
+            </div>
+            <div className="card-body">
             {sectionErrors.facilities ? (
-              <p className={styles.error}>{sectionErrors.facilities}</p>
+              <div className="alert alert-danger" role="alert">{sectionErrors.facilities}</div>
             ) : null}
             {facilities.length === 0 ? (
-              <p className={styles.muted}>No facilities (or unavailable).</p>
+              <p className="text-muted">No facilities (or unavailable).</p>
             ) : (
-              <table className={styles.table}>
+              <table className="table table-hover">
                 <thead>
                   <tr>
                     <th>Key</th>
@@ -432,17 +456,21 @@ function TenantDetailInner() {
             <nav className={styles.linkRow}>
               <Link href={`/studio/facilities${q}`}>Studio · Facilities</Link>
             </nav>
+            </div>
           </div>
           ) : null}
 
           {tab === "users" ? (
-          <div className={styles.panel} id="members">
-            <h2>Users</h2>
-            {sectionErrors.members ? <p className={styles.error}>{sectionErrors.members}</p> : null}
+          <div className="card mb-4" id="members">
+            <div className="card-header">
+              <h5 className="card-title mb-0">Users</h5>
+            </div>
+            <div className="card-body">
+            {sectionErrors.members ? <div className="alert alert-danger" role="alert">{sectionErrors.members}</div> : null}
             {members.length === 0 ? (
-              <p className={styles.muted}>No memberships (or unavailable).</p>
+              <p className="text-muted">No memberships (or unavailable).</p>
             ) : (
-              <table className={styles.table}>
+              <table className="table table-hover">
                 <thead>
                   <tr>
                     <th>Email</th>
@@ -465,16 +493,20 @@ function TenantDetailInner() {
               <Link href={`/memberships${q}`}>Memberships</Link>
               <Link href={`/users${q}`}>Users</Link>
             </nav>
+            </div>
           </div>
           ) : null}
 
           {tab === "products" ? (
-          <div className={styles.panel} id="products">
-            <h2>Products</h2>
+          <div className="card mb-4" id="products">
+            <div className="card-header">
+              <h5 className="card-title mb-0">Products</h5>
+            </div>
+            <div className="card-body">
             {sectionErrors.entitlements ? (
-              <p className={styles.error}>{sectionErrors.entitlements}</p>
+              <div className="alert alert-danger" role="alert">{sectionErrors.entitlements}</div>
             ) : null}
-            <table className={styles.table}>
+            <table className="table table-hover">
               <thead>
                 <tr>
                   <th>Product</th>
@@ -508,7 +540,7 @@ function TenantDetailInner() {
                       <td>
                         {catalog.code === "FORGE_INDUSTRIAL" && active ? (
                           <a
-                            className="forge-btn forge-btn--outline"
+                            className="btn btn-outline-secondary"
                             href={`${industrialUrl}/?tenantId=${encodeURIComponent(tenantId)}`}
                             target="_blank"
                             rel="noreferrer"
@@ -518,11 +550,11 @@ function TenantDetailInner() {
                         ) : null}
                         {catalog.code === "FORGE_INDUSTRIAL" && !active ? (
                           <>
-                            <Link className="forge-btn forge-btn--outline" href={`/entitlements${q}`}>
+                            <Link className="btn btn-outline-secondary" href={`/entitlements${q}`}>
                               Configure Product
                             </Link>{" "}
                             <a
-                              className="forge-btn forge-btn--secondary"
+                              className="btn btn-outline-secondary"
                               href={`${industrialUrl}/?tenantId=${encodeURIComponent(tenantId)}`}
                               target="_blank"
                               rel="noreferrer"
@@ -542,24 +574,28 @@ function TenantDetailInner() {
               </tbody>
             </table>
             {(entitlements?.products?.length ?? 0) === 0 ? (
-              <p className={styles.muted}>No product entitlements returned from API (shown as NOT PURCHASED).</p>
+              <p className="text-muted">No product entitlements returned from API (shown as NOT PURCHASED).</p>
             ) : null}
             <nav className={styles.linkRow}>
               <Link href={`/entitlements${q}`}>Entitlements</Link>
               <Link href="/products">Catalog</Link>
             </nav>
+            </div>
           </div>
           ) : null}
 
           {tab === "modules" ? (
-          <div className={styles.panel} id="modules">
-            <h2>Modules</h2>
-            <p className={styles.muted}>
+          <div className="card mb-4" id="modules">
+            <div className="card-header">
+              <h5 className="card-title mb-0">Modules</h5>
+            </div>
+            <div className="card-body">
+            <p className="text-muted">
               Manage Forge Industrial Safety module access with Ready / On / Off controls. Migration
               constants stay in technical details.
             </p>
             {(entitlements?.modules?.length ?? 0) === 0 ? (
-              <p className={styles.muted}>No module entitlements assigned yet.</p>
+              <p className="text-muted">No module entitlements assigned yet.</p>
             ) : (
               <ul>
                 {entitlements!.modules.map((row) => (
@@ -570,18 +606,22 @@ function TenantDetailInner() {
               </ul>
             )}
             <nav className={styles.linkRow}>
-              <Link className="forge-btn" href={`/customer-modules/?tenantId=${encodeURIComponent(tenantId)}`}>
+              <Link className="btn btn-primary" href={`/customer-modules/?tenantId=${encodeURIComponent(tenantId)}`}>
                 Manage Modules
               </Link>
               <Link href="/modules">Module catalog</Link>
             </nav>
+            </div>
           </div>
           ) : null}
 
           {tab === "branding" ? (
-          <div className={styles.panel} id="branding">
-            <h2>Branding</h2>
-            {sectionErrors.branding ? <p className={styles.error}>{sectionErrors.branding}</p> : null}
+          <div className="card mb-4" id="branding">
+            <div className="card-header">
+              <h5 className="card-title mb-0">Branding</h5>
+            </div>
+            <div className="card-body">
+            {sectionErrors.branding ? <div className="alert alert-danger" role="alert">{sectionErrors.branding}</div> : null}
             <dl className={styles.dl}>
               <dt>Primary</dt>
               <dd className={styles.mono}>{branding?.primaryColor ?? "—"}</dd>
@@ -592,6 +632,7 @@ function TenantDetailInner() {
               <Link href={`/branding${q}`}>Branding editor</Link>
               <Link href={`/studio/branding${q}`}>Studio · Branding</Link>
             </nav>
+            </div>
           </div>
           ) : null}
 
@@ -599,9 +640,12 @@ function TenantDetailInner() {
 
           {tab === "billing" ? (
           <>
-          <div className={styles.panel} id="subscription">
-            <h2>Subscription</h2>
-            {sectionErrors.billing ? <p className={styles.error}>{sectionErrors.billing}</p> : null}
+          <div className="card mb-4" id="subscription">
+            <div className="card-header">
+              <h5 className="card-title mb-0">Subscription</h5>
+            </div>
+            <div className="card-body">
+            {sectionErrors.billing ? <div className="alert alert-danger" role="alert">{sectionErrors.billing}</div> : null}
             <dl className={styles.dl}>
               <dt>Status</dt>
               <dd>{billing?.subscription?.status ?? "None"}</dd>
@@ -617,14 +661,18 @@ function TenantDetailInner() {
               <Link href={`/subscriptions${q}`}>Subscriptions</Link>
               <Link href="/plans">Plans</Link>
             </nav>
+            </div>
           </div>
 
-          <div className={styles.panel} id="contract">
-            <h2>Contract</h2>
+          <div className="card mb-4" id="contract">
+            <div className="card-header">
+              <h5 className="card-title mb-0">Contract</h5>
+            </div>
+            <div className="card-body">
             {(billing?.contracts?.length ?? 0) === 0 ? (
-              <p className={styles.muted}>No contracts.</p>
+              <p className="text-muted">No contracts.</p>
             ) : (
-              <table className={styles.table}>
+              <table className="table table-hover">
                 <thead>
                   <tr>
                     <th>Name</th>
@@ -651,11 +699,15 @@ function TenantDetailInner() {
               <Link href={`/contracts${q}`}>Contracts</Link>
               <Link href={`/billing${q}`}>Billing</Link>
             </nav>
+            </div>
           </div>
 
-          <div className={styles.panel} id="usage">
-            <h2>Usage</h2>
-            <p className={styles.muted}>
+          <div className="card mb-4" id="usage">
+            <div className="card-header">
+              <h5 className="card-title mb-0">Usage</h5>
+            </div>
+            <div className="card-body">
+            <p className="text-muted">
               Invoice count: {billing?.invoices?.length ?? 0}. Open billing for amounts and
               payment portal status.
             </p>
@@ -663,14 +715,18 @@ function TenantDetailInner() {
               <Link href={`/billing${q}`}>Billing overview</Link>
               <Link href={`/ai/usage${q}`}>AI usage</Link>
             </nav>
+            </div>
           </div>
           </>
           ) : null}
 
           {tab === "migration" ? (
-            <div className={styles.panel}>
-              <h2>Migration</h2>
-              <p className={styles.muted}>
+            <div className="card mb-4">
+            <div className="card-header">
+              <h5 className="card-title mb-0">Migration</h5>
+            </div>
+            <div className="card-body">
+            <p className="text-muted">
                 Open Migration Center for staged progress. Cutover is never single-click.
               </p>
               <nav className={styles.linkRow}>
@@ -678,14 +734,18 @@ function TenantDetailInner() {
               </nav>
               <ComingLater>Per-customer migration stepper wiring — Coming later when live adapter exists</ComingLater>
             </div>
+          </div>
           ) : null}
 
           {tab === "audit" ? (
           <>
-          <div className={styles.panel} id="activity">
-            <h2>Activity</h2>
+          <div className="card mb-4" id="activity">
+            <div className="card-header">
+              <h5 className="card-title mb-0">Activity</h5>
+            </div>
+            <div className="card-body">
             {audit.length === 0 ? (
-              <p className={styles.muted}>No recent activity.</p>
+              <p className="text-muted">No recent activity.</p>
             ) : (
               <ul>
                 {audit.slice(0, 5).map((row) => (
@@ -696,15 +756,19 @@ function TenantDetailInner() {
                 ))}
               </ul>
             )}
+            </div>
           </div>
 
-          <div className={styles.panel} id="audit">
-            <h2>Audit</h2>
-            {sectionErrors.audit ? <p className={styles.error}>{sectionErrors.audit}</p> : null}
+          <div className="card mb-4" id="audit">
+            <div className="card-header">
+              <h5 className="card-title mb-0">Audit</h5>
+            </div>
+            <div className="card-body">
+            {sectionErrors.audit ? <div className="alert alert-danger" role="alert">{sectionErrors.audit}</div> : null}
             {audit.length === 0 ? (
-              <p className={styles.muted}>No audit events.</p>
+              <p className="text-muted">No audit events.</p>
             ) : (
-              <table className={styles.table}>
+              <table className="table table-hover">
                 <thead>
                   <tr>
                     <th>Occurred</th>
@@ -728,6 +792,7 @@ function TenantDetailInner() {
             <nav className={styles.linkRow}>
               <Link href={`/audit${q}`}>Full audit</Link>
             </nav>
+            </div>
           </div>
           </>
           ) : null}
@@ -740,7 +805,7 @@ function TenantDetailInner() {
 export default function TenantDetailPage() {
   return (
     <PlatformPageGate title="Customer detail" permission="platform.tenant.read">
-      <Suspense fallback={<p className={styles.muted}>Loading…</p>}>
+      <Suspense fallback={<p className="text-muted">Loading…</p>}>
         <TenantDetailInner />
       </Suspense>
     </PlatformPageGate>

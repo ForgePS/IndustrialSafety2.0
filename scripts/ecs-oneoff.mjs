@@ -57,7 +57,12 @@ export function runPlatformApiOneOff(command, label, options = {}) {
   const serviceObj = desc.services?.[0];
   if (!serviceObj) throw new Error("platform-api service not found");
 
-  const taskDef = serviceObj.taskDefinition;
+  // A migration that ships in a new image must run before the service switches
+  // traffic to that image. Allow callers to run against a newly registered task
+  // definition while retaining the live service's network configuration.
+  const taskDef =
+    (typeof options.taskDefinition === "string" && options.taskDefinition.trim()) ||
+    serviceObj.taskDefinition;
   const subnets = serviceObj.networkConfiguration.awsvpcConfiguration.subnets;
   const securityGroups = serviceObj.networkConfiguration.awsvpcConfiguration.securityGroups;
 

@@ -6,6 +6,7 @@
  * Usage:
  *   node scripts/deploy-production-platform-api-closeout.mjs
  *   node scripts/deploy-production-platform-api-closeout.mjs --with-worker
+ *   node scripts/deploy-production-platform-api-closeout.mjs --register-only
  */
 import { execSync } from "node:child_process";
 import fs from "node:fs";
@@ -19,6 +20,7 @@ const API_ECR = `${ACCOUNT}.dkr.ecr.${REGION}.amazonaws.com/forge-production-ecr
 const WORKER_ECR = `${ACCOUNT}.dkr.ecr.${REGION}.amazonaws.com/forge-production-ecr-workerservice`;
 
 const withWorker = process.argv.includes("--with-worker");
+const registerOnly = process.argv.includes("--register-only");
 const stamp = new Date().toISOString().replace(/[-:TZ.]/g, "").slice(0, 14);
 const tag = `onboarding-closeout-${stamp}`;
 
@@ -104,9 +106,11 @@ const apiPath = `.forge-td-prod-api-closeout.json`;
 fs.writeFileSync(apiPath, JSON.stringify(slim(apiTd), null, 2));
 const apiReg = register(apiPath);
 
-sh(
-  `aws ecs update-service --cluster ${CLUSTER} --service ${API_SERVICE} --task-definition ${apiReg.taskDefinitionArn} --force-new-deployment --output json`,
-);
+if (!registerOnly) {
+  sh(
+    `aws ecs update-service --cluster ${CLUSTER} --service ${API_SERVICE} --task-definition ${apiReg.taskDefinitionArn} --force-new-deployment --output json`,
+  );
+}
 
 let workerReg = null;
 if (withWorker) {
@@ -126,6 +130,7 @@ console.log(
       tag,
       apiImage: `${API_ECR}:${tag}`,
       apiTaskDefinition: apiReg.taskDefinitionArn,
+      registerOnly,
       workerImage: withWorker ? `${WORKER_ECR}:${tag}` : null,
       workerTaskDefinition: workerReg?.taskDefinitionArn ?? null,
       next: [

@@ -16,6 +16,7 @@
     "@forge/contracts": "workspace:*",
     "@forge/design-system": "workspace:*",
     "@forge/import-center": "workspace:*",
+    "@forge/sneat": "workspace:*",
     "@forge/ui": "workspace:*",
     "@forge/web-kit": "workspace:*",
     "next": "^15.3.4",

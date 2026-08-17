@@ -299,15 +299,29 @@
     {
       "idx": 42,
       "version": "7",
-      "when": 1754970000000,
+      "when": 1786892532611,
       "tag": "0042_industrial_training_quiz_s1",
       "breakpoints": true
     },
     {
       "idx": 43,
       "version": "7",
-      "when": 1754980000000,
+      "when": 1786892532612,
       "tag": "0043_industrial_personnel_add_person_template_s1",
+      "breakpoints": true
+    },
+    {
+      "idx": 44,
+      "version": "7",
+      "when": 1786897510068,
+      "tag": "0044_industrial_personnel_company_contact_s1",
+      "breakpoints": true
+    },
+    {
+      "idx": 45,
+      "version": "7",
+      "when": 1786898626489,
+      "tag": "0045_industrial_personnel_medical_emergency_s1",
       "breakpoints": true
     }
   ]

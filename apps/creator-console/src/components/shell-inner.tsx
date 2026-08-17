@@ -6,7 +6,6 @@ import { useEffect, useMemo, useState } from "react";
 import type { ForgeBreadcrumbItem, ForgeLinkRender } from "@forge/ui";
 import {
   EnvironmentBanner,
-  ForgeAppShell,
   ForgeBreadcrumbs,
   ForgeFacilitySelector,
   ForgePage,
@@ -18,6 +17,7 @@ import {
   ToastProvider,
   UserAvatar,
 } from "@forge/ui";
+import { SneatLayout, SneatThemeToggle, type SneatLinkRender } from "@forge/sneat";
 import { filterNavigationForSession, useAuth } from "@forge/web-kit";
 import { ConnectedCommandPalette } from "@/components/connected-command-palette";
 import { ConnectedNotificationMenu } from "@/components/connected-notification-menu";
@@ -94,7 +94,14 @@ export function ShellInner({ children }: { children: React.ReactNode }) {
         healthResult.status === "fulfilled"
           ? String(healthResult.value.status ?? "").toLowerCase()
           : "unknown";
-      setHealthOk(readyOkLocal && (status === "ok" || status === "healthy" || status === "up" || status === "unknown" || healthOkLocal));
+      setHealthOk(
+        readyOkLocal &&
+          (status === "ok" ||
+            status === "healthy" ||
+            status === "up" ||
+            status === "unknown" ||
+            healthOkLocal),
+      );
     })();
     return () => {
       cancelled = true;
@@ -119,7 +126,13 @@ export function ShellInner({ children }: { children: React.ReactNode }) {
 
   const userLabel = me ? displayNameFromMe(me) : "Signed in";
 
-  const renderLink: ForgeLinkRender = ({ href, className, children: linkChildren, "aria-current": ariaCurrent, onClick }) => {
+  const renderLink: ForgeLinkRender = ({
+    href,
+    className,
+    children: linkChildren,
+    "aria-current": ariaCurrent,
+    onClick,
+  }) => {
     const props: {
       href: string;
       className?: string;
@@ -133,70 +146,75 @@ export function ShellInner({ children }: { children: React.ReactNode }) {
     return <Link {...props} />;
   };
 
+  const sneatRenderLink: SneatLinkRender = (props) => renderLink(props);
+
   const crumbs = breadcrumbsForPath(pathname);
 
   return (
     <ToastProvider>
-      <ForgeAppShell
+      <SneatLayout
         brand="Forge Creator"
-        brandMark="FC"
-        productLabel="Creator Console"
+        brandMark={
+          <span className="avatar avatar-sm">
+            <span className="avatar-initial rounded bg-primary">FC</span>
+          </span>
+        }
         groups={groups}
         activePath={pathname}
+        renderLink={sneatRenderLink}
+        storageKey="forge-creator-nav-open-groups-v1"
         envBanner={<EnvironmentBanner environment={appEnv} />}
-        renderLink={renderLink}
+        footer={<>© {new Date().getFullYear()} Forge Creator Platform</>}
         session={
           loading ? (
             <ForgeShellState state="loading" title="Loading session…" />
           ) : me ? (
-            <>
-              <div style={{ display: "flex", alignItems: "center", gap: "0.65rem" }}>
-                <UserAvatar name={userLabel} size="md" />
-                <div style={{ minWidth: 0 }}>
-                  <p style={{ margin: 0, fontWeight: 600, overflow: "hidden", textOverflow: "ellipsis" }}>
-                    {userLabel}
-                  </p>
-                  <p style={{ margin: "0.15rem 0 0", color: "var(--forge-color-muted)", fontSize: "var(--forge-text-xs)" }}>
-                    {me.isPlatformAdmin ? "Platform admin" : "Operator"} · {activeTenantLabel}
-                  </p>
+            <div className="d-flex align-items-center gap-2">
+              <UserAvatar name={userLabel} size="md" />
+              <div className="min-w-0">
+                <div className="fw-semibold text-truncate">{userLabel}</div>
+                <div className="small text-muted text-truncate">
+                  {me.isPlatformAdmin ? "Platform admin" : "Operator"} · {activeTenantLabel}
                 </div>
               </div>
-            </>
+            </div>
           ) : error ? (
-            <div style={{ display: "grid", gap: "0.35rem" }}>
+            <div className="d-grid gap-2">
               <p className={styles.authError}>{error}</p>
-              <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap" }}>
-                <button type="button" className={styles.signOut} onClick={() => void refresh()}>
+              <div className="d-flex gap-2 flex-wrap">
+                <button type="button" className="btn btn-sm btn-outline-secondary" onClick={() => void refresh()}>
                   Retry
                 </button>
-                <button type="button" className={styles.signOut} onClick={() => void loginWithCognito()}>
+                <button
+                  type="button"
+                  className="btn btn-sm btn-primary"
+                  onClick={() => void loginWithCognito()}
+                >
                   Sign in
                 </button>
               </div>
             </div>
           ) : (
-            <div style={{ display: "grid", gap: "0.35rem" }}>
+            <div className="d-grid gap-2">
               <ForgeShellState state="empty" title="Not signed in" description="Sign in to manage customers." />
-              <button type="button" className={styles.signOut} onClick={() => void loginWithCognito()}>
+              <button type="button" className="btn btn-sm btn-primary" onClick={() => void loginWithCognito()}>
                 Sign in
               </button>
             </div>
           )
         }
-        topbarCenter={
-          <span className="forge-topbar__meta" style={{ display: "inline-flex", alignItems: "center", gap: "0.65rem", flexWrap: "wrap" }}>
+        navbarCenter={
+          <span className="d-inline-flex align-items-center gap-2 flex-wrap">
             <span className={isProduction ? "forge-env-pill forge-env-pill--production" : "forge-env-pill"}>
               {isProduction ? "Production" : appEnv}
             </span>
-            <StatusBadge
-              tone={healthOk === null ? "neutral" : healthOk ? "success" : "danger"}
-            >
+            <StatusBadge tone={healthOk === null ? "neutral" : healthOk ? "success" : "danger"}>
               {healthOk === null ? "Health…" : healthOk ? "API healthy" : "API issue"}
             </StatusBadge>
-            <span>Creator · {activeTenantLabel}</span>
+            <span className="text-muted small">Creator · {activeTenantLabel}</span>
           </span>
         }
-        topbarRight={
+        navbarRight={
           <>
             <ConnectedCommandPalette />
             {me ? (
@@ -206,7 +224,6 @@ export function ShellInner({ children }: { children: React.ReactNode }) {
                 state={products.length === 0 ? "empty" : "ready"}
               />
             ) : null}
-            {/* Creator Console is tenant-scoped; facilities are optional and must not block the shell. */}
             {loading ? (
               <ForgeFacilitySelector facilities={[]} state="loading" />
             ) : me ? (
@@ -222,6 +239,7 @@ export function ShellInner({ children }: { children: React.ReactNode }) {
               />
             ) : null}
             <ConnectedNotificationMenu viewAllHref="/notifications/" renderLink={renderLink} />
+            <SneatThemeToggle />
             {me ? (
               <ForgeUserMenu
                 label={userLabel}
@@ -237,12 +255,12 @@ export function ShellInner({ children }: { children: React.ReactNode }) {
         }
       >
         {pathname !== "/login" && pathname !== "/select-tenant" ? (
-          <div style={{ marginBottom: "1rem" }}>
+          <div className="mb-3">
             <ForgeBreadcrumbs items={crumbs} renderLink={renderLink} />
           </div>
         ) : null}
         <ForgePage>{children}</ForgePage>
-      </ForgeAppShell>
+      </SneatLayout>
     </ToastProvider>
   );
 }

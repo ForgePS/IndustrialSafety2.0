@@ -278,24 +278,24 @@ function DashboardInner() {
         actions={
           <ForgePageActions>
             {canTenants ? (
-              <Link className="forge-btn" href="/onboarding/new/">
+              <Link className="btn btn-primary" href="/onboarding/new/">
                 + Add Company
               </Link>
             ) : null}
-            <Link className="forge-btn forge-btn--outline" href="/migrations/">
+            <Link className="btn btn-outline-secondary" href="/migrations/">
               Start Migration
             </Link>
           </ForgePageActions>
         }
       />
 
-      {authError ? <p className={styles.error}>{authError}</p> : null}
+      {authError ? <div className="alert alert-danger" role="alert">{authError}</div> : null}
       {error ? (
         <ErrorState
           title="We couldn't load your dashboard"
           description={error}
           action={
-            <button type="button" className="forge-btn" onClick={() => void load()}>
+            <button type="button" className="btn btn-primary" onClick={() => void load()}>
               Try again
             </button>
           }
@@ -311,26 +311,32 @@ function DashboardInner() {
         </ForgeMetricGrid>
       ) : null}
 
-      <div className={styles.panel}>
-        <h2>Needs your attention</h2>
-        {loading ? (
-          <p className={styles.muted}>Checking…</p>
-        ) : attention.length === 0 ? (
-          <EmptyState title="You're all caught up" description="No urgent items right now." />
-        ) : (
-          <ul className={styles.attentionList}>
-            {attention.map((item) => (
-              <li key={item.id}>
-                <Link href={item.href} className={styles.attentionLink}>
-                  <StatusBadge tone={item.tone === "danger" ? "danger" : item.tone === "warning" ? "warning" : "info"}>
-                    Attention
-                  </StatusBadge>
-                  <span>{item.title}</span>
-                </Link>
-              </li>
-            ))}
-          </ul>
-        )}
+      <div className="card mb-4">
+        <div className="card-header">
+          <h5 className="card-title mb-0">Needs your attention</h5>
+        </div>
+        <div className="card-body">
+          {loading ? (
+            <p className="text-muted mb-0">Checking…</p>
+          ) : attention.length === 0 ? (
+            <EmptyState title="You're all caught up" description="No urgent items right now." />
+          ) : (
+            <ul className="list-unstyled mb-0 d-grid gap-2">
+              {attention.map((item) => (
+                <li key={item.id}>
+                  <Link href={item.href} className="d-flex align-items-center gap-2 text-body">
+                    <span
+                      className={`badge bg-label-${item.tone === "danger" ? "danger" : item.tone === "warning" ? "warning" : "info"}`}
+                    >
+                      Attention
+                    </span>
+                    <span>{item.title}</span>
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
       </div>
 
       <ForgeMetricGrid>
@@ -374,193 +380,221 @@ function DashboardInner() {
         />
       </ForgeMetricGrid>
 
-      <div className={styles.panel}>
-        <h2>Quick actions</h2>
-        <div className={styles.actions}>
-          {canTenants ? (
-            <Link className="forge-btn" href="/onboarding/new/">
-              Add Company
-            </Link>
-          ) : null}
-          {canInvites ? (
-            <Link className="forge-btn forge-btn--outline" href="/invitations/">
-              Invite User
-            </Link>
-          ) : null}
-          <Link className="forge-btn forge-btn--outline" href="/migrations/">
-            Start Migration
-          </Link>
-          {hasPermission("platform.entitlement.manage") || me?.isPlatformAdmin ? (
-            <Link className="forge-btn forge-btn--outline" href="/products/">
-              Add Product
-            </Link>
-          ) : null}
-          {canBilling ? (
-            <Link className="forge-btn forge-btn--secondary" href="/billing/">
-              View Billing
-            </Link>
-          ) : null}
-          <Link className="forge-btn forge-btn--secondary" href="/operations/health/">
-            View Health
-          </Link>
-          <Link className="forge-btn forge-btn--secondary" href="/support/">
-            Customer Support
-          </Link>
+      <div className="card mb-4">
+        <div className="card-header">
+          <h5 className="card-title mb-0">Quick actions</h5>
         </div>
-      </div>
-
-      <div className={styles.panel}>
-        <h2>Customer overview</h2>
-        {tenants === null && !loading ? (
-          <p className={styles.muted}>Customer list unavailable.</p>
-        ) : recentCustomers.length === 0 ? (
-          <EmptyState
-            title="No companies yet"
-            description="Add a company to begin guided onboarding."
-            action={
-              <Link className="forge-btn" href="/onboarding/new/">
+        <div className="card-body">
+          <div className="d-flex flex-wrap gap-2">
+            {canTenants ? (
+              <Link className="btn btn-primary" href="/onboarding/new/">
                 Add Company
               </Link>
-            }
-          />
-        ) : (
-          <div style={{ overflowX: "auto" }}>
-            <table className={styles.table}>
-              <thead>
-                <tr>
-                  <th>Customer</th>
-                  <th>Status</th>
-                  <th>Last activity</th>
-                  <th>Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {recentCustomers.map((row) => (
-                  <tr key={row.id}>
-                    <td>
-                      <Link href={tenantDetailHref(row.id)}>{row.displayName}</Link>
-                    </td>
-                    <td>
-                      <StatusBadge tone={customerStatusTone(row.status)}>
-                        {humanCustomerStatus(row.status)}
-                      </StatusBadge>
-                    </td>
-                    <td>
-                      {row.updatedAt ? new Date(row.updatedAt).toLocaleString() : unavailableLabel()}
-                    </td>
-                    <td className={styles.actions}>
-                      <Link href={tenantDetailHref(row.id)}>Open</Link>
-                      <Link href={`${tenantDetailHref(row.id)}&tab=products`}>Manage</Link>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+            ) : null}
+            {canInvites ? (
+              <Link className="btn btn-outline-secondary" href="/invitations/">
+                Invite User
+              </Link>
+            ) : null}
+            <Link className="btn btn-outline-secondary" href="/migrations/">
+              Start Migration
+            </Link>
+            {hasPermission("platform.entitlement.manage") || me?.isPlatformAdmin ? (
+              <Link className="btn btn-outline-secondary" href="/products/">
+                Add Product
+              </Link>
+            ) : null}
+            {canBilling ? (
+              <Link className="btn btn-outline-secondary" href="/billing/">
+                View Billing
+              </Link>
+            ) : null}
+            <Link className="btn btn-outline-secondary" href="/operations/health/">
+              View Health
+            </Link>
+            <Link className="btn btn-outline-secondary" href="/support/">
+              Customer Support
+            </Link>
           </div>
-        )}
-        <p className={styles.linkRow}>
-          <Link href="/customers/">All customers</Link>
-        </p>
+        </div>
       </div>
 
-      <div className={styles.twoCol}>
-        <div className={styles.panel}>
-          <h2>System health</h2>
-          <ForgeMetricGrid>
-            <ForgeStatusCard
-              title="Forge Platform"
-              status={apiHealthy ? "Healthy" : health ? "Needs attention" : "Unavailable"}
-            />
-            <ForgeStatusCard
-              title="Sign in"
-              status={apiHealthy ? "Healthy" : "Unavailable"}
-              detail="Application authentication"
-            />
-            <ForgeStatusCard
-              title="Database"
-              status={dbHealthy ? "Healthy" : ready ? "Needs attention" : "Unavailable"}
-            />
-            <ForgeStatusCard
-              title="Email"
-              status="Unavailable"
-              detail="Email service status is not wired yet — open Email"
-            />
-          </ForgeMetricGrid>
-          <p className={styles.linkRow}>
-            <Link href="/operations/health/">View details</Link>
-          </p>
+      <div className="card mb-4">
+        <div className="card-header">
+          <h5 className="card-title mb-0">Customer overview</h5>
         </div>
-
-        <div className={styles.panel}>
-          <h2>Recent migrations</h2>
-          {migrations === null ? (
-            <p className={styles.muted}>Migration status unavailable.</p>
-          ) : migrations.length === 0 ? (
+        <div className="card-body">
+          {tenants === null && !loading ? (
+            <p className="text-muted mb-0">Customer list unavailable.</p>
+          ) : recentCustomers.length === 0 ? (
             <EmptyState
-              title="No migrations"
-              description="Start a migration when moving an existing customer into Forge."
+              title="No companies yet"
+              description="Add a company to begin guided onboarding."
               action={
-                <Link className="forge-btn" href="/migrations/">
-                  Start Migration
+                <Link className="btn btn-primary" href="/onboarding/new/">
+                  Add Company
                 </Link>
               }
             />
           ) : (
-            <table className={styles.table}>
-              <thead>
-                <tr>
-                  <th>Customer</th>
-                  <th>Status</th>
-                  <th>Progress</th>
-                </tr>
-              </thead>
-              <tbody>
-                {migrations.slice(0, 5).map((row) => (
-                  <tr key={row.id}>
-                    <td>
-                      <Link href={`/migrations/detail/?id=${encodeURIComponent(row.id)}`}>
-                        {row.tenantDisplayName}
-                      </Link>
-                    </td>
-                    <td>
-                      <StatusBadge
-                        tone={
-                          row.status === "FAILED"
-                            ? "danger"
-                            : row.status === "COMPLETE"
-                              ? "success"
-                              : "info"
-                        }
-                      >
-                        {humanMigrationStatus(row.status)}
-                      </StatusBadge>
-                    </td>
-                    <td>
-                      {row.progressPercent == null ? unavailableLabel() : `${row.progressPercent}%`}
-                    </td>
+            <div className="table-responsive">
+              <table className="table table-hover">
+                <thead>
+                  <tr>
+                    <th>Customer</th>
+                    <th>Status</th>
+                    <th>Last activity</th>
+                    <th>Actions</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody>
+                  {recentCustomers.map((row) => (
+                    <tr key={row.id}>
+                      <td>
+                        <Link href={tenantDetailHref(row.id)}>{row.displayName}</Link>
+                      </td>
+                      <td>
+                        <StatusBadge tone={customerStatusTone(row.status)}>
+                          {humanCustomerStatus(row.status)}
+                        </StatusBadge>
+                      </td>
+                      <td>
+                        {row.updatedAt ? new Date(row.updatedAt).toLocaleString() : unavailableLabel()}
+                      </td>
+                      <td>
+                        <div className="d-flex flex-wrap gap-2">
+                          <Link href={tenantDetailHref(row.id)}>Open</Link>
+                          <Link href={`${tenantDetailHref(row.id)}&tab=products`}>Manage</Link>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           )}
+          <p className="mt-3 mb-0">
+            <Link href="/customers/">All customers</Link>
+          </p>
         </div>
       </div>
 
-      <div className={styles.panel}>
-        <h2>Activity</h2>
-        {overviewUnavailable || !overview ? (
-          <p className={styles.muted}>
-            {canAnalytics
-              ? "Activity feed unavailable right now."
-              : "You need permission to view platform activity."}
+      <div className="row">
+        <div className="col-md-6 mb-4">
+          <div className="card h-100">
+            <div className="card-header">
+              <h5 className="card-title mb-0">System health</h5>
+            </div>
+            <div className="card-body">
+              <ForgeMetricGrid>
+                <ForgeStatusCard
+                  title="Forge Platform"
+                  status={apiHealthy ? "Healthy" : health ? "Needs attention" : "Unavailable"}
+                />
+                <ForgeStatusCard
+                  title="Sign in"
+                  status={apiHealthy ? "Healthy" : "Unavailable"}
+                  detail="Application authentication"
+                />
+                <ForgeStatusCard
+                  title="Database"
+                  status={dbHealthy ? "Healthy" : ready ? "Needs attention" : "Unavailable"}
+                />
+                <ForgeStatusCard
+                  title="Email"
+                  status="Unavailable"
+                  detail="Email service status is not wired yet — open Email"
+                />
+              </ForgeMetricGrid>
+              <p className="mt-3 mb-0">
+                <Link href="/operations/health/">View details</Link>
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <div className="col-md-6 mb-4">
+          <div className="card h-100">
+            <div className="card-header">
+              <h5 className="card-title mb-0">Recent migrations</h5>
+            </div>
+            <div className="card-body">
+              {migrations === null ? (
+                <p className="text-muted mb-0">Migration status unavailable.</p>
+              ) : migrations.length === 0 ? (
+                <EmptyState
+                  title="No migrations"
+                  description="Start a migration when moving an existing customer into Forge."
+                  action={
+                    <Link className="btn btn-primary" href="/migrations/">
+                      Start Migration
+                    </Link>
+                  }
+                />
+              ) : (
+                <div className="table-responsive">
+                  <table className="table table-hover">
+                    <thead>
+                      <tr>
+                        <th>Customer</th>
+                        <th>Status</th>
+                        <th>Progress</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {migrations.slice(0, 5).map((row) => (
+                        <tr key={row.id}>
+                          <td>
+                            <Link href={`/migrations/detail/?id=${encodeURIComponent(row.id)}`}>
+                              {row.tenantDisplayName}
+                            </Link>
+                          </td>
+                          <td>
+                            <StatusBadge
+                              tone={
+                                row.status === "FAILED"
+                                  ? "danger"
+                                  : row.status === "COMPLETE"
+                                    ? "success"
+                                    : "info"
+                              }
+                            >
+                              {humanMigrationStatus(row.status)}
+                            </StatusBadge>
+                          </td>
+                          <td>
+                            {row.progressPercent == null ? unavailableLabel() : `${row.progressPercent}%`}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div className="card mb-4">
+        <div className="card-header">
+          <h5 className="card-title mb-0">Activity</h5>
+        </div>
+        <div className="card-body">
+          {overviewUnavailable || !overview ? (
+            <p className="text-muted mb-0">
+              {canAnalytics
+                ? "Activity feed unavailable right now."
+                : "You need permission to view platform activity."}
+            </p>
+          ) : (
+            <ActivityTimeline items={activityItems} emptyLabel="No recent activity." />
+          )}
+          <p className="mt-3 mb-0 d-flex flex-wrap gap-3">
+            <Link href="/activity/">Full activity</Link>
+            <Link href="/audit/">Audit log</Link>
           </p>
-        ) : (
-          <ActivityTimeline items={activityItems} emptyLabel="No recent activity." />
-        )}
-        <p className={styles.linkRow}>
-          <Link href="/activity/">Full activity</Link>
-          <Link href="/audit/">Audit log</Link>
-        </p>
+        </div>
       </div>
     </section>
   );
@@ -569,7 +603,7 @@ function DashboardInner() {
 export default function HomePage() {
   return (
     <PlatformPageGate title="Dashboard" anyOf={["platform.tenant.read", "platform.analytics.read"]}>
-      <Suspense fallback={<p className={styles.muted}>Loading…</p>}>
+      <Suspense fallback={<p className="text-muted">Loading…</p>}>
         <DashboardInner />
       </Suspense>
     </PlatformPageGate>

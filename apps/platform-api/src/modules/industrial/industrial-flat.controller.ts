@@ -96,14 +96,19 @@ export class IndustrialFlatController {
     private readonly domain: IndustrialDomainService,
   ) {}
 
+  /**
+   * `total` is the row count for the whole filter when the domain service
+   * provides one; otherwise it falls back to the page length. Clients page
+   * until they have `total`, so a page-length fallback stops them early.
+   */
   private listOk(
-    data: { items: unknown[]; page: number; pageSize: number },
+    data: { items: unknown[]; page: number; pageSize: number; total?: number },
     req: RequestWithIds,
   ) {
     return ok(data, getRequestIds(req), {
       page: data.page,
       pageSize: data.pageSize,
-      total: data.items.length,
+      total: data.total ?? data.items.length,
     });
   }
 
@@ -161,6 +166,34 @@ export class IndustrialFlatController {
     return this.listOk(await this.domain.listPersonnel(principal, query), req);
   }
 
+  /**
+   * Company vehicle drivers (insurance / MVR roster). Readable with personnel
+   * or fleet view so the Personnel → Company Drivers tab works without a
+   * separate fleet entitlement.
+   */
+  @Get("fleet/drivers")
+  @RequireAnyPermission(
+    [
+      "industrial.personnel.view",
+      "industrial.fleet.view",
+      "industrial.admin",
+      "industrial.access",
+    ],
+    { requiresEntitlement: ENTITLEMENT },
+  )
+  async listCompanyVehicleDrivers(
+    @Principal() principal: ForgePrincipal,
+    @Query() query: ListQuery,
+    @Req() req: RequestWithIds,
+  ) {
+    const data = await this.domain.listCompanyVehicleDrivers(principal, query);
+    return ok(
+      { items: data.items, summary: data.summary },
+      getRequestIds(req),
+      { page: data.page, pageSize: data.pageSize, total: data.total },
+    );
+  }
+
   @Post("personnel")
   @RequireAnyPermission(["industrial.personnel.manage", "industrial.admin"], {
     requiresEntitlement: ENTITLEMENT,
@@ -184,6 +217,22 @@ export class IndustrialFlatController {
     @Req() req: RequestWithIds,
   ) {
     return this.listOk(await this.domain.personnelSearch(principal, query), req);
+  }
+
+  /**
+   * Distinct divisions and supervisor frequency by Division + Location +
+   * Department. Powers the Add Person assignment dropdowns. Must stay above
+   * personnel/:id or "assignment-options" is parsed as an id.
+   */
+  @Get("personnel/assignment-options")
+  @RequireAnyPermission(["industrial.personnel.view", "industrial.admin", "industrial.access"], {
+    requiresEntitlement: ENTITLEMENT,
+  })
+  async personnelAssignmentOptions(
+    @Principal() principal: ForgePrincipal,
+    @Req() req: RequestWithIds,
+  ) {
+    return ok(await this.domain.personnelAssignmentOptions(principal), getRequestIds(req));
   }
 
   @Get("personnel/seasons")
@@ -247,6 +296,18 @@ export class IndustrialFlatController {
     @Req() req: RequestWithIds,
   ) {
     return ok(await this.domain.getPersonnel(principal, id), getRequestIds(req));
+  }
+
+  @Get("personnel/:id/analytics")
+  @RequireAnyPermission(["industrial.personnel.view", "industrial.admin", "industrial.access"], {
+    requiresEntitlement: ENTITLEMENT,
+  })
+  async personnelAnalytics(
+    @Principal() principal: ForgePrincipal,
+    @Param("id") id: string,
+    @Req() req: RequestWithIds,
+  ) {
+    return ok(await this.domain.personnelAnalytics(principal, id), getRequestIds(req));
   }
 
   @Patch("personnel/:id")
@@ -601,6 +662,58 @@ export class IndustrialFlatController {
     return ok(await this.domain.taskAction(principal, id, action), getRequestIds(req));
   }
 
+  /**
+   * Incidents summary tiles (category + status counts). Must stay above the
+   * generic :module/:id catch-all so "summary" is not parsed as an id.
+   */
+  @Get("incidents/summary")
+  @RequireAnyPermission(
+    ["industrial.incidents.view", "industrial.admin", "industrial.access"],
+    { requiresEntitlement: ENTITLEMENT },
+  )
+  async incidentsSummary(@Principal() principal: ForgePrincipal, @Req() req: RequestWithIds) {
+    return ok(await this.domain.incidentsSummary(principal), getRequestIds(req));
+  }
+
+  @Get("incidents")
+  @RequireAnyPermission(
+    ["industrial.incidents.view", "industrial.admin", "industrial.access"],
+    { requiresEntitlement: ENTITLEMENT },
+  )
+  async listIncidents(
+    @Principal() principal: ForgePrincipal,
+    @Query() query: ListQuery,
+    @Req() req: RequestWithIds,
+  ) {
+    return this.listOk(await this.domain.listIncidentsDetailed(principal, query), req);
+  }
+
+  @Post("incidents")
+  @RequireAnyPermission(["industrial.incidents.manage", "industrial.admin"], {
+    requiresEntitlement: ENTITLEMENT,
+  })
+  @Idempotent({ resourceType: "industrial_incidents" })
+  async createIncident(
+    @Principal() principal: ForgePrincipal,
+    @Body() body: Record<string, unknown>,
+    @Req() req: RequestWithIds,
+  ) {
+    return ok(await this.domain.createIncident(principal, body), getRequestIds(req));
+  }
+
+  @Patch("incidents/:id")
+  @RequireAnyPermission(["industrial.incidents.manage", "industrial.admin"], {
+    requiresEntitlement: ENTITLEMENT,
+  })
+  async patchIncident(
+    @Principal() principal: ForgePrincipal,
+    @Param("id") id: string,
+    @Body() body: Record<string, unknown>,
+    @Req() req: RequestWithIds,
+  ) {
+    return ok(await this.domain.updateIncident(principal, id, body ?? {}), getRequestIds(req));
+  }
+
   // Generic module routes (ops + high-risk + compliance packs)
   @Get(":module")
   @RequireAnyPermission(["industrial.access", "industrial.admin"], {
@@ -612,6 +725,9 @@ export class IndustrialFlatController {
     @Query() query: ListQuery,
     @Req() req: RequestWithIds,
   ) {
+    if (moduleKey === "incidents") {
+      return this.listOk(await this.domain.listIncidentsDetailed(principal, query), req);
+    }
     if (!(moduleKey in MODULE_VIEW)) {
       return this.listOk({ items: [], page: 1, pageSize: 25 }, req);
     }

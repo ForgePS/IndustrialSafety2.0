@@ -5,21 +5,38 @@ import { describe, expect, it } from "vitest";
 import { OPS_MODULE_CONFIG, groupCreateFields } from "./ops-modules";
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
-const MIGRATION = path.resolve(
-  HERE,
-  "../../../../packages/database/drizzle/0043_industrial_personnel_add_person_template_s1.sql",
-);
+const MIGRATIONS = [
+  path.resolve(
+    HERE,
+    "../../../../packages/database/drizzle/0043_industrial_personnel_add_person_template_s1.sql",
+  ),
+  path.resolve(
+    HERE,
+    "../../../../packages/database/drizzle/0044_industrial_personnel_company_contact_s1.sql",
+  ),
+  path.resolve(
+    HERE,
+    "../../../../packages/database/drizzle/0045_industrial_personnel_medical_emergency_s1.sql",
+  ),
+];
 
 /**
  * The Add Person template only works end to end if the column exists, the API
- * maps it, and the form posts it under the same name. The migration is the
- * source of truth for the column list, so assert the form against it: a column
+ * maps it, and the form posts it under the same name. The migrations are the
+ * source of truth for the column list, so assert the form against them: a column
  * with no field is invisible, and a field with no column silently degrades to a
  * sourcePayload-only value that cannot be filtered or reported on.
  */
 function migrationColumns(): string[] {
-  const sql = readFileSync(MIGRATION, "utf8");
-  return [...sql.matchAll(/ADD COLUMN IF NOT EXISTS "([a-z_]+)"/g)].map((m) => m[1]!);
+  const columns: string[] = [];
+  for (const file of MIGRATIONS) {
+    const sql = readFileSync(file, "utf8");
+    for (const m of sql.matchAll(/ADD COLUMN IF NOT EXISTS "([a-z_]+)"/g)) {
+      columns.push(m[1]!);
+    }
+  }
+  // company_name remains a column for imports, but Assignment no longer collects it.
+  return columns.filter((c) => c !== "company_name");
 }
 
 function toCamelCase(snake: string): string {
@@ -42,6 +59,12 @@ describe("personnel Add Person template", () => {
       .filter((f) => f.required)
       .map((f) => f.name);
     expect(required).toEqual(["firstName", "lastName"]);
+  });
+
+  it("exposes status in Identity and keeps fileBase under Records", () => {
+    const byName = new Map(OPS_MODULE_CONFIG.personnel.createFields.map((f) => [f.name, f]));
+    expect(byName.get("status")?.group).toBe("Identity");
+    expect(byName.get("fileBase")?.group).toBe("Records");
   });
 
   it("uses a checkbox for the driver flag and a textarea for notes", () => {

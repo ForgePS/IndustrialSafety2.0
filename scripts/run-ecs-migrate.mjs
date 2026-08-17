@@ -8,6 +8,7 @@
  * production migrate attempts to hit the wrong database.
  *
  * Usage: node scripts/run-ecs-migrate.mjs --env <development|production>
+ *        [--task-definition <arn>]
  */
 import { spawnSync } from "node:child_process";
 import { awsText, runPlatformApiOneOff } from "./ecs-oneoff.mjs";
@@ -15,6 +16,9 @@ import { awsText, runPlatformApiOneOff } from "./ecs-oneoff.mjs";
 const args = process.argv.slice(2);
 const envIndex = args.indexOf("--env");
 const forgeEnvironment = envIndex === -1 ? null : args[envIndex + 1];
+const taskDefinitionIndex = args.indexOf("--task-definition");
+const taskDefinition =
+  taskDefinitionIndex === -1 ? null : args[taskDefinitionIndex + 1];
 
 if (!forgeEnvironment) {
   console.error("Usage: node scripts/run-ecs-migrate.mjs --env <development|production>");
@@ -49,7 +53,11 @@ console.log(`Migrating ${forgeEnvironment} using ${adminSecretName}`);
 const { cluster, taskArn } = runPlatformApiOneOff(
   ["node", "/app/packages/database/dist/migrate-ecs.js"],
   `migrate-${forgeEnvironment}`,
-  { forgeEnvironment, environment: { DATABASE_SECRET_ARN: adminSecretArn } },
+  {
+    forgeEnvironment,
+    taskDefinition,
+    environment: { DATABASE_SECRET_ARN: adminSecretArn },
+  },
 );
 
 spawnSync("aws", ["ecs", "wait", "tasks-stopped", "--cluster", cluster, "--tasks", taskArn], {

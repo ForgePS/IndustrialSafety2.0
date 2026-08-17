@@ -240,188 +240,243 @@ export function ConfigStudioWorkspace({
   return (
     <section className={styles.page}>
       <h1>{title ?? NAMESPACE_LABELS[namespace] ?? namespace}</h1>
-      <p className={styles.lead}>
+      <p className="text-muted">
         Namespace <span className={styles.mono}>{namespace}</span> · Tenant{" "}
         <span className={styles.mono}>{tenantId}</span> ·{" "}
         <Link href={`/studio${tenantQuery(tenantId)}`}>Studio home</Link>
       </p>
-      <p className={styles.muted}>
+      <p className="text-muted">
         Draft → Scheduled/Published → Superseded/Archived. Rollback clones an older version into a
         new published revision.
       </p>
 
-      {!canUpdate ? <p className={styles.error}>Missing configuration update permission</p> : null}
-      {error ? (
-        <p role="alert" className={styles.error}>
-          {error}
-        </p>
+      {!canUpdate ? (
+        <div className="alert alert-danger" role="alert">
+          Missing configuration update permission
+        </div>
       ) : null}
-      {message ? <p className={styles.success}>{message}</p> : null}
-      {loading ? <p className={styles.muted}>Loading…</p> : null}
+      {error ? (
+        <div role="alert" className="alert alert-danger">
+          {error}
+        </div>
+      ) : null}
+      {message ? (
+        <div className="alert alert-success" role="status">
+          {message}
+        </div>
+      ) : null}
+      {loading ? <p className="text-muted">Loading…</p> : null}
 
-      <div className={styles.panel}>
-        <h2>Version history</h2>
-        {versions.length === 0 ? (
-          <p className={styles.muted}>No versions yet.</p>
-        ) : (
-          <table className={styles.table}>
-            <thead>
-              <tr>
-                <th>Ver</th>
-                <th>State</th>
-                <th>Summary</th>
-                <th>Created</th>
-                <th />
-              </tr>
-            </thead>
-            <tbody>
-              {versions.map((row) => (
-                <tr key={row.id}>
-                  <td>v{row.version}</td>
-                  <td>{row.state}</td>
-                  <td>{row.changeSummary ?? "—"}</td>
-                  <td>{new Date(row.createdAt).toLocaleString()}</td>
-                  <td>
-                    <button
-                      type="button"
-                      className={styles.buttonSecondary}
-                      onClick={() => setSelectedId(row.id)}
-                    >
-                      Select
-                    </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        )}
+      <div className="card mb-4">
+        <div className="card-header">
+          <h5 className="card-title mb-0">Version history</h5>
+        </div>
+        <div className="card-body">
+          {versions.length === 0 ? (
+            <p className="text-muted mb-0">No versions yet.</p>
+          ) : (
+            <div className="table-responsive">
+              <table className="table table-hover">
+                <thead>
+                  <tr>
+                    <th>Ver</th>
+                    <th>State</th>
+                    <th>Summary</th>
+                    <th>Created</th>
+                    <th />
+                  </tr>
+                </thead>
+                <tbody>
+                  {versions.map((row) => (
+                    <tr key={row.id}>
+                      <td>v{row.version}</td>
+                      <td>
+                        <span className="badge bg-label-secondary">{row.state}</span>
+                      </td>
+                      <td>{row.changeSummary ?? "—"}</td>
+                      <td>{new Date(row.createdAt).toLocaleString()}</td>
+                      <td>
+                        <button
+                          type="button"
+                          className="btn btn-sm btn-outline-secondary"
+                          onClick={() => setSelectedId(row.id)}
+                        >
+                          Select
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
       </div>
 
-      <div className={styles.panel}>
-        <h2>Editor {selected ? `(v${selected.version} · ${selected.state})` : ""}</h2>
-        <div className={styles.formRow}>
-          <label htmlFor="change-summary">Change summary</label>
-          <input
-            id="change-summary"
-            value={changeSummary}
-            onChange={(event) => setChangeSummary(event.target.value)}
-            placeholder="Why this change?"
-          />
+      <div className="card mb-4">
+        <div className="card-header">
+          <h5 className="card-title mb-0">
+            Editor {selected ? `(v${selected.version} · ${selected.state})` : ""}
+          </h5>
         </div>
-        <div className={styles.formRow}>
-          <label htmlFor="payload-json">Payload JSON</label>
-          <textarea
-            id="payload-json"
-            rows={18}
-            value={payloadText}
-            onChange={(event) => setPayloadText(event.target.value)}
-            spellCheck={false}
-            style={{ fontFamily: "ui-monospace, monospace", minHeight: "16rem" }}
-          />
-        </div>
-        <div className={styles.actions}>
-          {canUpdate ? (
-            <>
-              <button type="button" className={styles.button} disabled={busy} onClick={() => void createDraft()}>
-                New draft
-              </button>
-              <button
-                type="button"
-                className={styles.buttonSecondary}
-                disabled={busy || selected?.state !== "DRAFT"}
-                onClick={() => void saveDraft()}
-              >
-                Save draft
-              </button>
-            </>
-          ) : null}
+        <div className="card-body">
+          <div className="mb-3">
+            <label className="form-label" htmlFor="change-summary">
+              Change summary
+            </label>
+            <input
+              id="change-summary"
+              className="form-control"
+              value={changeSummary}
+              onChange={(event) => setChangeSummary(event.target.value)}
+              placeholder="Why this change?"
+            />
+          </div>
+          <div className="mb-3">
+            <label className="form-label" htmlFor="payload-json">
+              Payload JSON
+            </label>
+            <textarea
+              id="payload-json"
+              className="form-control font-monospace"
+              rows={18}
+              value={payloadText}
+              onChange={(event) => setPayloadText(event.target.value)}
+              spellCheck={false}
+              style={{ minHeight: "16rem" }}
+            />
+          </div>
+          <div className="d-flex flex-wrap gap-2">
+            {canUpdate ? (
+              <>
+                <button
+                  type="button"
+                  className="btn btn-primary"
+                  disabled={busy}
+                  onClick={() => void createDraft()}
+                >
+                  New draft
+                </button>
+                <button
+                  type="button"
+                  className="btn btn-outline-secondary"
+                  disabled={busy || selected?.state !== "DRAFT"}
+                  onClick={() => void saveDraft()}
+                >
+                  Save draft
+                </button>
+              </>
+            ) : null}
+            {canPublish ? (
+              <>
+                <button
+                  type="button"
+                  className="btn btn-primary"
+                  disabled={busy || !selectedId}
+                  onClick={() => void runAction("publish")}
+                >
+                  Publish
+                </button>
+                <button
+                  type="button"
+                  className="btn btn-outline-secondary"
+                  disabled={busy || !selectedId}
+                  onClick={() => void runAction("archive")}
+                >
+                  Archive
+                </button>
+                <button
+                  type="button"
+                  className="btn btn-outline-secondary"
+                  disabled={busy || !selectedId}
+                  onClick={() => void runAction("rollback")}
+                >
+                  Rollback (clone+publish)
+                </button>
+              </>
+            ) : null}
+          </div>
           {canPublish ? (
-            <>
+            <div className="mt-3">
+              <div className="mb-3">
+                <label className="form-label" htmlFor="schedule-at">
+                  Schedule publish (local)
+                </label>
+                <input
+                  id="schedule-at"
+                  className="form-control"
+                  type="datetime-local"
+                  value={scheduleAt}
+                  onChange={(event) => setScheduleAt(event.target.value)}
+                />
+              </div>
               <button
                 type="button"
-                className={styles.button}
+                className="btn btn-outline-secondary"
                 disabled={busy || !selectedId}
-                onClick={() => void runAction("publish")}
+                onClick={() => void runAction("schedule")}
               >
-                Publish
+                Schedule
               </button>
-              <button
-                type="button"
-                className={styles.buttonSecondary}
-                disabled={busy || !selectedId}
-                onClick={() => void runAction("archive")}
-              >
-                Archive
-              </button>
-              <button
-                type="button"
-                className={styles.buttonSecondary}
-                disabled={busy || !selectedId}
-                onClick={() => void runAction("rollback")}
-              >
-                Rollback (clone+publish)
-              </button>
-            </>
+            </div>
           ) : null}
         </div>
-        {canPublish ? (
-          <div className={styles.form} style={{ marginTop: "1rem" }}>
-            <div className={styles.formRow}>
-              <label htmlFor="schedule-at">Schedule publish (local)</label>
-              <input
-                id="schedule-at"
-                type="datetime-local"
-                value={scheduleAt}
-                onChange={(event) => setScheduleAt(event.target.value)}
-              />
-            </div>
+      </div>
+
+      <div className="card mb-4">
+        <div className="card-header">
+          <h5 className="card-title mb-0">Compare versions</h5>
+        </div>
+        <div className="card-body">
+          <div className="d-flex flex-wrap gap-2 mb-3">
+            <select
+              className="form-select w-auto"
+              value={compareFrom}
+              onChange={(e) => setCompareFrom(e.target.value)}
+              aria-label="Compare from"
+            >
+              <option value="">From…</option>
+              {versions.map((v) => (
+                <option key={v.id} value={v.id}>
+                  v{v.version} ({v.state})
+                </option>
+              ))}
+            </select>
+            <select
+              className="form-select w-auto"
+              value={compareTo}
+              onChange={(e) => setCompareTo(e.target.value)}
+              aria-label="Compare to"
+            >
+              <option value="">To…</option>
+              {versions.map((v) => (
+                <option key={v.id} value={v.id}>
+                  v{v.version} ({v.state})
+                </option>
+              ))}
+            </select>
             <button
               type="button"
-              className={styles.buttonSecondary}
-              disabled={busy || !selectedId}
-              onClick={() => void runAction("schedule")}
+              className="btn btn-outline-secondary"
+              disabled={busy}
+              onClick={() => void runCompare()}
             >
-              Schedule
+              Compare
             </button>
           </div>
-        ) : null}
-      </div>
-
-      <div className={styles.panel}>
-        <h2>Compare versions</h2>
-        <div className={styles.actions}>
-          <select value={compareFrom} onChange={(e) => setCompareFrom(e.target.value)} aria-label="Compare from">
-            <option value="">From…</option>
-            {versions.map((v) => (
-              <option key={v.id} value={v.id}>
-                v{v.version} ({v.state})
-              </option>
-            ))}
-          </select>
-          <select value={compareTo} onChange={(e) => setCompareTo(e.target.value)} aria-label="Compare to">
-            <option value="">To…</option>
-            {versions.map((v) => (
-              <option key={v.id} value={v.id}>
-                v{v.version} ({v.state})
-              </option>
-            ))}
-          </select>
-          <button type="button" className={styles.buttonSecondary} disabled={busy} onClick={() => void runCompare()}>
-            Compare
-          </button>
+          {diffs.length === 0 ? (
+            <p className="text-muted mb-0">No diffs loaded.</p>
+          ) : (
+            <ul className="mb-0">
+              {diffs.map((diff) => (
+                <li key={diff.path}>
+                  <span className={styles.mono}>{diff.path}</span>: {JSON.stringify(diff.left)} →{" "}
+                  {JSON.stringify(diff.right)}
+                </li>
+              ))}
+            </ul>
+          )}
         </div>
-        {diffs.length === 0 ? (
-          <p className={styles.muted}>No diffs loaded.</p>
-        ) : (
-          <ul>
-            {diffs.map((diff) => (
-              <li key={diff.path}>
-                <span className={styles.mono}>{diff.path}</span>: {JSON.stringify(diff.left)} →{" "}
-                {JSON.stringify(diff.right)}
-              </li>
-            ))}
-          </ul>
-        )}
       </div>
     </section>
   );
@@ -438,7 +493,7 @@ export function ConfigStudioPage({
     <Suspense
       fallback={
         <main className={styles.page}>
-          <p className={styles.muted}>Loading…</p>
+          <p className="text-muted">Loading…</p>
         </main>
       }
     >

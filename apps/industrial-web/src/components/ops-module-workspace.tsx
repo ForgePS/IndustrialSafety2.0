@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useState, type Dispatch, type FormEvent, type SetStateAction } from "react";
 import { ApiError, apiGet, apiSend, useAuth } from "@forge/web-kit";
 import { FilterPanel } from "@/components/filter-panel";
@@ -297,7 +298,14 @@ export function OpsModuleWorkspace({
         </div>
       )}
 
-      {canManage ? (
+      {canManage && cfg.createHref ? (
+        <section className="ind-ops-create-link">
+          <h2>Create</h2>
+          <Link className="ind-button" href={cfg.createHref}>
+            Add {moduleName.replace(/s$/, "").toLowerCase()}
+          </Link>
+        </section>
+      ) : canManage ? (
         <form className="ind-ops-create" onSubmit={(e) => void onCreate(e)} aria-label="Create record">
           <h2>Create</h2>
           {groupCreateFields(cfg.createFields).map(({ group, fields }) => {

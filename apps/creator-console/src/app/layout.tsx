@@ -1,8 +1,11 @@
 import type { ReactNode } from "react";
-import "@forge/design-system/styles.css";
+import "@forge/sneat/core.css";
+import "@forge/sneat/demo.css";
+import "@forge/sneat/icons.css";
+import "@forge/sneat/page-auth.css";
+import "./sneat-compat.css";
 import { AppShell } from "@/components/app-shell";
 import { ApiBootstrap } from "@/components/api-bootstrap";
-import styles from "./shell.module.css";
 
 export const metadata = {
   title: "Forge Creator Console",
@@ -11,8 +14,13 @@ export const metadata = {
 
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
-    <html lang="en" className="forge-theme-light">
-      <body className={styles.body}>
+    <html
+      lang="en"
+      className="layout-menu-fixed"
+      data-bs-theme="light"
+      data-template="vertical-menu-template-free"
+    >
+      <body>
         <ApiBootstrap>
           <AppShell>{children}</AppShell>
         </ApiBootstrap>

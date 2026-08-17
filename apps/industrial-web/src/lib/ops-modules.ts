@@ -54,6 +54,12 @@ export const OPS_MODULE_CONFIG: Record<
     createPath: string;
     titleField: string;
     createFields: OpsCreateField[];
+    /**
+     * When set, the workspace links here instead of rendering the inline create
+     * form. Modules whose intake needs lookups, sections or signature capture
+     * get a dedicated page rather than a second, diverging copy of the fields.
+     */
+    createHref?: string;
   }
 > = {
   personnel: {
@@ -64,7 +70,10 @@ export const OPS_MODULE_CONFIG: Record<
     listPath: "/api/v1/industrial/personnel",
     createPath: "/api/v1/industrial/personnel",
     titleField: "displayName",
+    createHref: "/modules/personnel/new/",
     // Add Person template parity with the legacy personnel record (migration 0043).
+    // createHref above means these are not rendered today; they remain the
+    // fallback inline form and are covered by personnel-template.test.ts.
     createFields: [
       { name: "employeeNumber", label: "Employee number", group: "Identity" },
       { name: "firstName", label: "First name", required: true, group: "Identity" },
@@ -72,13 +81,48 @@ export const OPS_MODULE_CONFIG: Record<
       { name: "lastName", label: "Last name", required: true, group: "Identity" },
       { name: "suffix", label: "Suffix", group: "Identity" },
       { name: "preferredName", label: "Preferred name", group: "Identity" },
+      { name: "status", label: "Status", group: "Identity" },
 
       { name: "email", label: "Email", type: "email", group: "Contact" },
       { name: "phone", label: "Phone", type: "tel", group: "Contact" },
+      { name: "companyEmail", label: "Company email", type: "email", group: "Contact" },
+      { name: "companyPhone", label: "Company phone", type: "tel", group: "Contact" },
+
+      { name: "allergies", label: "Allergies", type: "textarea", group: "Medical" },
+      {
+        name: "medicalHistory",
+        label: "Pertinent medical history",
+        type: "textarea",
+        group: "Medical",
+      },
+
+      { name: "emergencyContact1Name", label: "Contact 1 — Name", group: "Emergency contact" },
+      {
+        name: "emergencyContact1Phone",
+        label: "Contact 1 — Phone",
+        type: "tel",
+        group: "Emergency contact",
+      },
+      {
+        name: "emergencyContact1Relationship",
+        label: "Contact 1 — Relationship",
+        group: "Emergency contact",
+      },
+      { name: "emergencyContact2Name", label: "Contact 2 — Name", group: "Emergency contact" },
+      {
+        name: "emergencyContact2Phone",
+        label: "Contact 2 — Phone",
+        type: "tel",
+        group: "Emergency contact",
+      },
+      {
+        name: "emergencyContact2Relationship",
+        label: "Contact 2 — Relationship",
+        group: "Emergency contact",
+      },
 
       { name: "jobTitle", label: "Job title", group: "Assignment" },
       { name: "departmentName", label: "Department", group: "Assignment" },
-      { name: "companyName", label: "Company", group: "Assignment" },
       { name: "divisionName", label: "Division", group: "Assignment" },
       { name: "supervisorName", label: "Supervisor", group: "Assignment" },
       { name: "hireDate", label: "Hire date", type: "date", group: "Assignment" },

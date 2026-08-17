@@ -5,7 +5,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { AuthProvider, apiGet, useAuth } from "@forge/web-kit";
 import { EnvironmentBanner } from "@forge/ui";
-import { INDUSTRIAL_MODULE_REGISTRY, INDUSTRIAL_PRODUCT_CODE } from "@forge/contracts";
+import { INDUSTRIAL_PRODUCT_CODE } from "@forge/contracts";
 import { buildIndustrialNavigation, featureFlagForModule } from "@/lib/navigation";
 import { clearAllOfflineData } from "@/lib/offline/cache";
 import { NetworkStatusBanner } from "@/lib/offline/network-status";
@@ -649,6 +649,18 @@ function ShellBody({ children }: { children: ReactNode }) {
                 <div>Dashboard</div>
               </Link>
             </li>
+            <li
+              className={
+                pathname === "/modules/analytics" || pathname === "/modules/analytics/"
+                  ? "menu-item active"
+                  : "menu-item"
+              }
+            >
+              <Link href="/modules/analytics/" className="menu-link" onClick={() => setMenuOpen(false)}>
+                <i className="menu-icon tf-icons bx bx-bar-chart-alt-2" />
+                <div>Analytics</div>
+              </Link>
+            </li>
             <li className={pathname === "/profile" || pathname === "/profile/" ? "menu-item active" : "menu-item"}>
               <Link href="/profile/" className="menu-link" onClick={() => setMenuOpen(false)}>
                 <i className="menu-icon tf-icons bx bx-user" />
@@ -822,8 +834,8 @@ function ShellBody({ children }: { children: ReactNode }) {
             <footer className="content-footer footer bg-footer-theme">
               <div className="container-xxl d-flex flex-wrap justify-content-between py-2 flex-md-row flex-column">
                 <div className="mb-2 mb-md-0 small text-muted">
-                  © {new Date().getFullYear()} {productDisplayName} · {INDUSTRIAL_MODULE_REGISTRY.length}{" "}
-                  modules
+                  © {new Date().getFullYear()} Forge Industrial Safety, a division of Forge Public
+                  Safety
                 </div>
               </div>
             </footer>

@@ -1,9 +1,13 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import { apiGet, useAuth } from "@forge/web-kit";
-import { OpsModuleWorkspace } from "@/components/ops-module-workspace";
+import { PersonnelDirectory } from "@/components/personnel-directory";
+import { CompanyDriversDirectory } from "@/components/company-drivers-directory";
+import { PersonnelQuickNav } from "@/components/personnel-quick-nav";
 import { SeasonalWorkforceWorkspace } from "@/components/seasonal-workforce-workspace";
+import { parsePersonnelQuickView, type PersonnelQuickView } from "@/lib/personnel-quick-nav";
 import { isSeasonalLifecycleEnabled } from "@/lib/personnel-seasonal";
 
 type Bootstrap = {
@@ -12,16 +16,19 @@ type Bootstrap = {
   modules: Array<{ code: string; awsEnabled: boolean }>;
 };
 
-type PersonnelView = "roster" | "seasonal";
+type PersonnelMode = "roster" | "seasonal";
 
-export function PersonnelWorkspace({ moduleName }: { moduleName: string }) {
+function PersonnelWorkspaceInner({ moduleName }: { moduleName: string }) {
+  const searchParams = useSearchParams();
+  const quickView: PersonnelQuickView = parsePersonnelQuickView(searchParams.get("view"));
+
   const { me } = useAuth();
   const permissions = new Set(me?.permissions ?? []);
   const canView =
     permissions.has("industrial.personnel.view") || permissions.has("industrial.admin");
 
   const [bootstrap, setBootstrap] = useState<Bootstrap | null>(null);
-  const [view, setView] = useState<PersonnelView>("roster");
+  const [mode, setMode] = useState<PersonnelMode>("roster");
 
   useEffect(() => {
     let cancelled = false;
@@ -38,35 +45,38 @@ export function PersonnelWorkspace({ moduleName }: { moduleName: string }) {
     };
   }, []);
 
-  // Prefer showing the Seasonal tab once flags are known (on or off) so a disabled
-  // state can still surface with a link back to the standard roster.
+  // Filtered roster URLs should land on the directory, not the seasonal tab.
+  useEffect(() => {
+    if (quickView !== "dashboard") setMode("roster");
+  }, [quickView]);
+
   const flagsKnown = bootstrap !== null;
   const seasonalOn = isSeasonalLifecycleEnabled(bootstrap?.flags);
   const showSwitcher = Boolean(canView && flagsKnown);
 
   return (
     <div className="ind-personnel">
+      {canView ? <PersonnelQuickNav current={quickView} /> : null}
+
       {showSwitcher ? (
         <div className="ind-personnel-switcher" role="tablist" aria-label="Personnel views">
           <button
             type="button"
             role="tab"
-            aria-selected={view === "roster"}
-            className={view === "roster" ? "is-active" : undefined}
-            onClick={() => setView("roster")}
+            aria-selected={mode === "roster"}
+            className={mode === "roster" ? "is-active" : undefined}
+            onClick={() => setMode("roster")}
           >
             Roster
           </button>
           <button
             type="button"
             role="tab"
-            aria-selected={view === "seasonal"}
-            className={view === "seasonal" ? "is-active" : undefined}
-            onClick={() => setView("seasonal")}
+            aria-selected={mode === "seasonal"}
+            className={mode === "seasonal" ? "is-active" : undefined}
+            onClick={() => setMode("seasonal")}
             title={
-              seasonalOn
-                ? undefined
-                : "Seasonal lifecycle flag is off for this tenant"
+              seasonalOn ? undefined : "Seasonal lifecycle flag is off for this tenant"
             }
           >
             Seasonal Workforce
@@ -74,11 +84,29 @@ export function PersonnelWorkspace({ moduleName }: { moduleName: string }) {
         </div>
       ) : null}
 
-      {view === "seasonal" ? (
-        <SeasonalWorkforceWorkspace onGoToRoster={() => setView("roster")} />
+      {mode === "seasonal" ? (
+        <SeasonalWorkforceWorkspace onGoToRoster={() => setMode("roster")} />
+      ) : quickView === "company-drivers" ? (
+        <CompanyDriversDirectory />
       ) : (
-        <OpsModuleWorkspace module="personnel" moduleName={moduleName} />
+        <PersonnelDirectory moduleName={moduleName} view={quickView} />
       )}
     </div>
+  );
+}
+
+export function PersonnelWorkspace({ moduleName }: { moduleName: string }) {
+  return (
+    <Suspense
+      fallback={
+        <div className="ind-personnel">
+          <p className="text-muted" role="status">
+            Loading personnel…
+          </p>
+        </div>
+      }
+    >
+      <PersonnelWorkspaceInner moduleName={moduleName} />
+    </Suspense>
   );
 }

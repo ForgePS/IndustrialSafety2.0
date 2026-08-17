@@ -529,25 +529,36 @@ export function OnboardingWizard({
           title="Company activated"
           subtitle={`${displayName || "Company"} is ready to use Forge.`}
         />
-        <Alert tone="success">
-          Administrators can sign in with their invitation email. Continue setup anytime from the company page.
-        </Alert>
-        <div className={styles.actions} style={{ marginTop: "1rem" }}>
-          <Link className={styles.button} href={tenantDetailHref(activatedTenantId)}>
-            Open company
-          </Link>
-          <Link className={styles.buttonSecondary} href={`/setup-center/?tenantId=${activatedTenantId}`}>
-            Setup Center
-          </Link>
-          <Link className={styles.buttonSecondary} href={`/imports/?tenantId=${activatedTenantId}`}>
-            Import data
-          </Link>
-          <Link className={styles.buttonSecondary} href="/onboarding/new/">
-            Add another company
-          </Link>
-          <Link className={styles.buttonSecondary} href="/">
-            Return to dashboard
-          </Link>
+        <div className="card mb-4">
+          <div className="card-body">
+            <Alert tone="success">
+              Administrators can sign in with their invitation email. Continue setup anytime from the
+              company page.
+            </Alert>
+            <div className="d-flex flex-wrap gap-2 mt-3">
+              <Link className="btn btn-primary" href={tenantDetailHref(activatedTenantId)}>
+                Open company
+              </Link>
+              <Link
+                className="btn btn-outline-secondary"
+                href={`/setup-center/?tenantId=${activatedTenantId}`}
+              >
+                Setup Center
+              </Link>
+              <Link
+                className="btn btn-outline-secondary"
+                href={`/imports/?tenantId=${activatedTenantId}`}
+              >
+                Import data
+              </Link>
+              <Link className="btn btn-outline-secondary" href="/onboarding/new/">
+                Add another company
+              </Link>
+              <Link className="btn btn-outline-secondary" href="/">
+                Return to dashboard
+              </Link>
+            </div>
+          </div>
         </div>
       </section>
     );
@@ -560,51 +571,56 @@ export function OnboardingWizard({
           title="Add company"
           subtitle="Create a draft company and walk through setup. Your progress saves automatically after each step."
         />
-        {error ? <p className={styles.error}>{error}</p> : null}
-        <form
-          className={styles.form}
-          onSubmit={(event) => {
-            event.preventDefault();
-            void startCompany();
-          }}
-        >
-          <FormSection title="Company profile">
-            <FormField label="Company name" htmlFor="displayName">
-              <input
-                id="displayName"
-                className={styles.input}
-                required
-                value={displayName}
-                onChange={(e) => setDisplayName(e.target.value)}
-              />
-            </FormField>
-            <FormField label="Legal name" htmlFor="legalName">
-              <input
-                id="legalName"
-                className={styles.input}
-                required
-                value={legalName}
-                onChange={(e) => setLegalName(e.target.value)}
-              />
-            </FormField>
-            <FormField label="Company type" htmlFor="customerType">
-              <select
-                id="customerType"
-                className={styles.input}
-                value={customerType}
-                onChange={(e) => setCustomerType(e.target.value as typeof customerType)}
-              >
-                {COMPANY_TYPES.map((type) => (
-                  <option key={type.value} value={type.value}>
-                    {type.label}
-                  </option>
-                ))}
-              </select>
-            </FormField>
+        {error ? (
+          <div className="alert alert-danger" role="alert">
+            {error}
+          </div>
+        ) : null}
+        <div className="card mb-4">
+          <div className="card-body">
+            <form
+              onSubmit={(event) => {
+                event.preventDefault();
+                void startCompany();
+              }}
+            >
+              <FormSection title="Company profile">
+                <FormField label="Company name" htmlFor="displayName">
+                  <input
+                    id="displayName"
+                    className="form-control"
+                    required
+                    value={displayName}
+                    onChange={(e) => setDisplayName(e.target.value)}
+                  />
+                </FormField>
+                <FormField label="Legal name" htmlFor="legalName">
+                  <input
+                    id="legalName"
+                    className="form-control"
+                    required
+                    value={legalName}
+                    onChange={(e) => setLegalName(e.target.value)}
+                  />
+                </FormField>
+                <FormField label="Company type" htmlFor="customerType">
+                  <select
+                    id="customerType"
+                    className="form-select"
+                    value={customerType}
+                    onChange={(e) => setCustomerType(e.target.value as typeof customerType)}
+                  >
+                    {COMPANY_TYPES.map((type) => (
+                      <option key={type.value} value={type.value}>
+                        {type.label}
+                      </option>
+                    ))}
+                  </select>
+                </FormField>
             <FormField label="Time zone" htmlFor="timezone">
               <select
                 id="timezone"
-                className={styles.input}
+                className="form-select"
                 value={timezone}
                 onChange={(e) => setTimezone(e.target.value)}
               >
@@ -618,7 +634,7 @@ export function OnboardingWizard({
             <FormField label="Web address" htmlFor="slug" hint="Used for the customer portal address. Forge fills this in for you.">
               <input
                 id="slug"
-                className={styles.input}
+                className="form-control"
                 value={slug}
                 onChange={(e) => {
                   setSlugTouched(true);
@@ -627,15 +643,17 @@ export function OnboardingWizard({
               />
             </FormField>
           </FormSection>
-          <div className={styles.actions}>
-            <button className={styles.button} type="submit" disabled={busy || !displayName.trim()}>
+          <div className="d-flex flex-wrap gap-2">
+            <button className="btn btn-primary" type="submit" disabled={busy || !displayName.trim()}>
               {busy ? "Saving…" : "Start setup"}
             </button>
-            <Link className={styles.buttonSecondary} href="/onboarding/">
+            <Link className="btn btn-outline-secondary" href="/onboarding/">
               Cancel
             </Link>
           </div>
-        </form>
+            </form>
+          </div>
+        </div>
       </section>
     );
   }
@@ -667,22 +685,26 @@ export function OnboardingWizard({
         steps={wizardSteps.map((s) => ({ id: s.id, label: s.label }))}
         activeIndex={stepIndex}
       />
-      {error ? <p className={styles.error}>{error}</p> : null}
+      {error ? (
+        <div className="alert alert-danger" role="alert">
+          {error}
+        </div>
+      ) : null}
 
       {activeStepKey === "CREATE_PRIMARY_ORGANIZATION" ? (
         <FormSection title="Organization">
-          <p className={styles.muted}>This is the main organization under the company (usually the same name).</p>
+          <p className="text-muted">This is the main organization under the company (usually the same name).</p>
           <FormField label="Organization name" htmlFor="orgDisplay">
-            <input id="orgDisplay" className={styles.input} value={orgDisplayName} onChange={(e) => setOrgDisplayName(e.target.value)} />
+            <input id="orgDisplay" className="form-control" value={orgDisplayName} onChange={(e) => setOrgDisplayName(e.target.value)} />
           </FormField>
           <FormField label="Legal name" htmlFor="orgLegal">
-            <input id="orgLegal" className={styles.input} value={orgLegalName} onChange={(e) => setOrgLegalName(e.target.value)} />
+            <input id="orgLegal" className="form-control" value={orgLegalName} onChange={(e) => setOrgLegalName(e.target.value)} />
           </FormField>
           <FormField label="Short code" htmlFor="orgSlug">
-            <input id="orgSlug" className={styles.input} value={orgSlug} onChange={(e) => setOrgSlug(normalizeSlug(e.target.value))} />
+            <input id="orgSlug" className="form-control" value={orgSlug} onChange={(e) => setOrgSlug(normalizeSlug(e.target.value))} />
           </FormField>
           <button
-            className={styles.button}
+            className="btn btn-primary"
             type="button"
             disabled={busy}
             onClick={() =>
@@ -727,7 +749,7 @@ export function OnboardingWizard({
                     }
                   />{" "}
                   <strong>{product.name}</strong>
-                  <p className={styles.muted} style={{ margin: "0.35rem 0 0" }}>
+                  <p className="text-muted" style={{ margin: "0.35rem 0 0" }}>
                     {product.description}
                   </p>
                 </label>
@@ -735,7 +757,7 @@ export function OnboardingWizard({
             })}
           </div>
           <button
-            className={styles.button}
+            className="btn btn-primary"
             type="button"
             disabled={busy || selectedProducts.length === 0}
             onClick={() => void completeCurrent({ productCodes: selectedProducts })}
@@ -748,7 +770,7 @@ export function OnboardingWizard({
 
       {activeStepKey === "SELECT_MODULES" ? (
         <FormSection title="Modules">
-          <p className={styles.muted}>Turn modules on or off. Included package modules start enabled.</p>
+          <p className="text-muted">Turn modules on or off. Included package modules start enabled.</p>
           <div style={{ display: "grid", gap: "0.5rem", maxHeight: 360, overflow: "auto" }}>
             {moduleOptions.map((mod) => {
               const checked = selectedModules.includes(mod.code);
@@ -776,7 +798,7 @@ export function OnboardingWizard({
             })}
           </div>
           <button
-            className={styles.button}
+            className="btn btn-primary"
             type="button"
             disabled={busy || selectedModules.length === 0}
             onClick={() => void completeCurrent({ moduleCodes: selectedModules })}
@@ -798,7 +820,7 @@ export function OnboardingWizard({
             Start without billing for now (trial / implementation)
           </label>
           <button
-            className={styles.button}
+            className="btn btn-primary"
             type="button"
             disabled={busy}
             onClick={() => void completeCurrent({ waiveSubscription: true, status: "TRIAL", periodDays: 30 })}
@@ -816,7 +838,7 @@ export function OnboardingWizard({
               <FormField label="Location name" htmlFor={`loc-name-${index}`}>
                 <input
                   id={`loc-name-${index}`}
-                  className={styles.input}
+                  className="form-control"
                   value={loc.name}
                   onChange={(e) =>
                     setLocations((prev) =>
@@ -828,7 +850,7 @@ export function OnboardingWizard({
               <FormField label="Street" htmlFor={`loc-street-${index}`}>
                 <input
                   id={`loc-street-${index}`}
-                  className={styles.input}
+                  className="form-control"
                   value={loc.addressLine1}
                   onChange={(e) =>
                     setLocations((prev) =>
@@ -841,7 +863,7 @@ export function OnboardingWizard({
                 <FormField label="City" htmlFor={`loc-city-${index}`}>
                   <input
                     id={`loc-city-${index}`}
-                    className={styles.input}
+                    className="form-control"
                     value={loc.city}
                     onChange={(e) =>
                       setLocations((prev) =>
@@ -853,7 +875,7 @@ export function OnboardingWizard({
                 <FormField label="State" htmlFor={`loc-state-${index}`}>
                   <input
                     id={`loc-state-${index}`}
-                    className={styles.input}
+                    className="form-control"
                     value={loc.stateProvince}
                     onChange={(e) =>
                       setLocations((prev) =>
@@ -865,7 +887,7 @@ export function OnboardingWizard({
                 <FormField label="ZIP" htmlFor={`loc-zip-${index}`}>
                   <input
                     id={`loc-zip-${index}`}
-                    className={styles.input}
+                    className="form-control"
                     value={loc.postalCode}
                     onChange={(e) =>
                       setLocations((prev) =>
@@ -877,9 +899,9 @@ export function OnboardingWizard({
               </div>
             </div>
           ))}
-          <div className={styles.actions} style={{ marginTop: "1rem" }}>
+          <div className="d-flex flex-wrap gap-2" style={{ marginTop: "1rem" }}>
             <button
-              className={styles.buttonSecondary}
+              className="btn btn-outline-secondary"
               type="button"
               onClick={() =>
                 setLocations((prev) => [
@@ -899,7 +921,7 @@ export function OnboardingWizard({
               + Add location
             </button>
             <button
-              className={styles.button}
+              className="btn btn-primary"
               type="button"
               disabled={busy}
               onClick={() =>
@@ -927,7 +949,7 @@ export function OnboardingWizard({
 
       {activeStepKey === "CONFIGURE_ORG_LOOKUPS" ? (
         <FormSection title="Organization">
-          <p className={styles.muted}>
+          <p className="text-muted">
             Add departments, positions, and employment types. You can refine these later from Setup Center.
           </p>
 
@@ -943,7 +965,7 @@ export function OnboardingWizard({
                   </span>
                   <button
                     type="button"
-                    className={styles.buttonSecondary}
+                    className="btn btn-outline-secondary"
                     onClick={() => setDepartments((prev) => prev.filter((_, i) => i !== index))}
                   >
                     Remove
@@ -955,7 +977,7 @@ export function OnboardingWizard({
               <FormField label="Department name" htmlFor="dept-name">
                 <input
                   id="dept-name"
-                  className={styles.input}
+                  className="form-control"
                   value={deptDraft.name}
                   onChange={(e) => setDeptDraft((d) => ({ ...d, name: e.target.value }))}
                 />
@@ -963,7 +985,7 @@ export function OnboardingWizard({
               <FormField label="Description (optional)" htmlFor="dept-desc">
                 <input
                   id="dept-desc"
-                  className={styles.input}
+                  className="form-control"
                   value={deptDraft.description ?? ""}
                   onChange={(e) => setDeptDraft((d) => ({ ...d, description: e.target.value }))}
                 />
@@ -978,7 +1000,7 @@ export function OnboardingWizard({
               </label>
               <button
                 type="button"
-                className={styles.buttonSecondary}
+                className="btn btn-outline-secondary"
                 onClick={() => {
                   if (!deptDraft.name.trim()) return;
                   setDepartments((prev) => [
@@ -1012,7 +1034,7 @@ export function OnboardingWizard({
                   </span>
                   <button
                     type="button"
-                    className={styles.buttonSecondary}
+                    className="btn btn-outline-secondary"
                     onClick={() => setPositions((prev) => prev.filter((_, i) => i !== index))}
                   >
                     Remove
@@ -1024,7 +1046,7 @@ export function OnboardingWizard({
               <FormField label="Position name" htmlFor="pos-name">
                 <input
                   id="pos-name"
-                  className={styles.input}
+                  className="form-control"
                   value={posDraft.name}
                   onChange={(e) => setPosDraft((d) => ({ ...d, name: e.target.value }))}
                 />
@@ -1032,7 +1054,7 @@ export function OnboardingWizard({
               <FormField label="Description (optional)" htmlFor="pos-desc">
                 <input
                   id="pos-desc"
-                  className={styles.input}
+                  className="form-control"
                   value={posDraft.description ?? ""}
                   onChange={(e) => setPosDraft((d) => ({ ...d, description: e.target.value }))}
                 />
@@ -1040,7 +1062,7 @@ export function OnboardingWizard({
               <FormField label="Department (optional)" htmlFor="pos-dept">
                 <select
                   id="pos-dept"
-                  className={styles.input}
+                  className="form-select"
                   value={posDraft.departmentName ?? ""}
                   onChange={(e) =>
                     setPosDraft((d) => ({ ...d, departmentName: e.target.value || undefined }))
@@ -1064,7 +1086,7 @@ export function OnboardingWizard({
               </label>
               <button
                 type="button"
-                className={styles.buttonSecondary}
+                className="btn btn-outline-secondary"
                 onClick={() => {
                   if (!posDraft.name.trim()) return;
                   setPositions((prev) => [
@@ -1098,7 +1120,7 @@ export function OnboardingWizard({
                   </span>
                   <button
                     type="button"
-                    className={styles.buttonSecondary}
+                    className="btn btn-outline-secondary"
                     onClick={() => setEmploymentTypes((prev) => prev.filter((_, i) => i !== index))}
                   >
                     Remove
@@ -1110,7 +1132,7 @@ export function OnboardingWizard({
               <FormField label="Employment type name" htmlFor="emp-name">
                 <input
                   id="emp-name"
-                  className={styles.input}
+                  className="form-control"
                   value={empDraft.name}
                   onChange={(e) => setEmpDraft((d) => ({ ...d, name: e.target.value }))}
                 />
@@ -1118,7 +1140,7 @@ export function OnboardingWizard({
               <FormField label="Description (optional)" htmlFor="emp-desc">
                 <input
                   id="emp-desc"
-                  className={styles.input}
+                  className="form-control"
                   value={empDraft.description ?? ""}
                   onChange={(e) => setEmpDraft((d) => ({ ...d, description: e.target.value }))}
                 />
@@ -1133,7 +1155,7 @@ export function OnboardingWizard({
               </label>
               <button
                 type="button"
-                className={styles.buttonSecondary}
+                className="btn btn-outline-secondary"
                 onClick={() => {
                   if (!empDraft.name.trim()) return;
                   setEmploymentTypes((prev) => [
@@ -1155,7 +1177,7 @@ export function OnboardingWizard({
           </div>
 
           <button
-            className={styles.button}
+            className="btn btn-primary"
             type="button"
             disabled={busy}
             style={{ marginTop: "1.25rem" }}
@@ -1190,7 +1212,7 @@ export function OnboardingWizard({
 
       {activeStepKey === "CONFIGURE_DATA_IMPORT" ? (
         <FormSection title="Data import">
-          <p className={styles.muted}>
+          <p className="text-muted">
             Import Personnel (XLSX/CSV) and Fleet without leaving onboarding. You can skip and finish imports later
             from Setup Center.
           </p>
@@ -1209,9 +1231,9 @@ export function OnboardingWizard({
               />
             </div>
           ) : null}
-          <div className={styles.actions}>
+          <div className="d-flex flex-wrap gap-2">
             <button
-              className={styles.button}
+              className="btn btn-primary"
               type="button"
               disabled={busy}
               onClick={() =>
@@ -1221,7 +1243,7 @@ export function OnboardingWizard({
               Continue — imports done
             </button>
             <button
-              className={styles.buttonSecondary}
+              className="btn btn-outline-secondary"
               type="button"
               disabled={busy}
               onClick={() => void completeCurrent({ skipped: true })}
@@ -1234,7 +1256,7 @@ export function OnboardingWizard({
 
       {activeStepKey === "CONFIGURE_DOCUMENTS" ? (
         <FormSection title="Company documents">
-          <p className={styles.muted}>Upload PDF, Word, Excel, or image files for company policies and handbooks.</p>
+          <p className="text-muted">Upload PDF, Word, Excel, or image files for company policies and handbooks.</p>
           <ForgeAssetUploader
             id="company-documents"
             label="COMPANY DOCUMENTS"
@@ -1253,7 +1275,7 @@ export function OnboardingWizard({
                   </span>
                   <button
                     type="button"
-                    className={styles.buttonSecondary}
+                    className="btn btn-outline-secondary"
                     onClick={() => setCompanyDocs((prev) => prev.filter((d) => d.id !== doc.id))}
                   >
                     Remove
@@ -1262,12 +1284,12 @@ export function OnboardingWizard({
               ))}
             </ul>
           ) : (
-            <p className={styles.muted} style={{ marginTop: "0.75rem" }}>
+            <p className="text-muted" style={{ marginTop: "0.75rem" }}>
               No documents uploaded yet.
             </p>
           )}
           <button
-            className={styles.button}
+            className="btn btn-primary"
             type="button"
             disabled={busy}
             style={{ marginTop: "1rem" }}
@@ -1309,14 +1331,14 @@ export function OnboardingWizard({
           <FormField label="Support email" htmlFor="supportEmail">
             <input
               id="supportEmail"
-              className={styles.input}
+              className="form-control"
               type="email"
               value={supportEmail}
               onChange={(e) => setSupportEmail(e.target.value)}
             />
           </FormField>
           <button
-            className={styles.button}
+            className="btn btn-primary"
             type="button"
             disabled={busy}
             onClick={() =>
@@ -1340,7 +1362,7 @@ export function OnboardingWizard({
           <FormField label="Time zone" htmlFor="biz-tz">
             <select
               id="biz-tz"
-              className={styles.input}
+              className="form-select"
               value={businessSettings.timezone}
               onChange={(e) => setBusinessSettings((s) => ({ ...s, timezone: e.target.value }))}
             >
@@ -1354,7 +1376,7 @@ export function OnboardingWizard({
           <FormField label="Date format" htmlFor="biz-date">
             <select
               id="biz-date"
-              className={styles.input}
+              className="form-select"
               value={businessSettings.dateFormat}
               onChange={(e) => setBusinessSettings((s) => ({ ...s, dateFormat: e.target.value }))}
             >
@@ -1366,7 +1388,7 @@ export function OnboardingWizard({
           <FormField label="Employee ID format" htmlFor="biz-emp-id" hint="Example: EMP-####">
             <input
               id="biz-emp-id"
-              className={styles.input}
+              className="form-control"
               value={businessSettings.employeeIdFormat}
               onChange={(e) => setBusinessSettings((s) => ({ ...s, employeeIdFormat: e.target.value }))}
             />
@@ -1400,7 +1422,7 @@ export function OnboardingWizard({
               <FormField label="Incident numbering prefix" htmlFor="biz-inc">
                 <input
                   id="biz-inc"
-                  className={styles.input}
+                  className="form-control"
                   value={businessSettings.incidentNumbering}
                   onChange={(e) => setBusinessSettings((s) => ({ ...s, incidentNumbering: e.target.value }))}
                 />
@@ -1408,7 +1430,7 @@ export function OnboardingWizard({
               <FormField label="Inspection numbering prefix" htmlFor="biz-insp">
                 <input
                   id="biz-insp"
-                  className={styles.input}
+                  className="form-control"
                   value={businessSettings.inspectionNumbering}
                   onChange={(e) => setBusinessSettings((s) => ({ ...s, inspectionNumbering: e.target.value }))}
                 />
@@ -1416,7 +1438,7 @@ export function OnboardingWizard({
               <FormField label="Fleet numbering prefix" htmlFor="biz-fleet">
                 <input
                   id="biz-fleet"
-                  className={styles.input}
+                  className="form-control"
                   value={businessSettings.fleetNumbering}
                   onChange={(e) => setBusinessSettings((s) => ({ ...s, fleetNumbering: e.target.value }))}
                 />
@@ -1424,7 +1446,7 @@ export function OnboardingWizard({
             </div>
           ) : null}
           <button
-            className={styles.button}
+            className="btn btn-primary"
             type="button"
             disabled={busy}
             style={{ marginTop: "1rem" }}
@@ -1454,18 +1476,18 @@ export function OnboardingWizard({
       {activeStepKey === "CREATE_PRIMARY_ADMINISTRATOR" ? (
         <FormSection title="Primary administrator">
           <FormField label="First name" htmlFor="adminFirst">
-            <input id="adminFirst" className={styles.input} value={adminFirst} onChange={(e) => setAdminFirst(e.target.value)} />
+            <input id="adminFirst" className="form-control" value={adminFirst} onChange={(e) => setAdminFirst(e.target.value)} />
           </FormField>
           <FormField label="Last name" htmlFor="adminLast">
-            <input id="adminLast" className={styles.input} value={adminLast} onChange={(e) => setAdminLast(e.target.value)} />
+            <input id="adminLast" className="form-control" value={adminLast} onChange={(e) => setAdminLast(e.target.value)} />
           </FormField>
           <FormField label="Email" htmlFor="adminEmail">
-            <input id="adminEmail" className={styles.input} type="email" value={adminEmail} onChange={(e) => setAdminEmail(e.target.value)} />
+            <input id="adminEmail" className="form-control" type="email" value={adminEmail} onChange={(e) => setAdminEmail(e.target.value)} />
           </FormField>
           <FormField label="Role" htmlFor="adminRole">
             <select
               id="adminRole"
-              className={styles.input}
+              className="form-select"
               value={adminRoleCode}
               onChange={(e) => setAdminRoleCode(e.target.value)}
             >
@@ -1477,7 +1499,7 @@ export function OnboardingWizard({
             </select>
           </FormField>
           <button
-            className={styles.button}
+            className="btn btn-primary"
             type="button"
             disabled={busy || !adminEmail || !adminFirst || !adminLast}
             onClick={() =>
@@ -1500,11 +1522,11 @@ export function OnboardingWizard({
             <input type="checkbox" checked={sendInviteNow} onChange={(e) => setSendInviteNow(e.target.checked)} />
             Send invitation now
           </label>
-          <p className={styles.muted}>
+          <p className="text-muted">
             If unchecked, Forge still creates the invitation and you can send it when the company is activated.
           </p>
           <button
-            className={styles.button}
+            className="btn btn-primary"
             type="button"
             disabled={busy}
             onClick={() => void completeCurrent({ send: sendInviteNow, expiresInHours: 168 })}
@@ -1531,12 +1553,12 @@ export function OnboardingWizard({
             Activation prepares the company, turns on selected products and modules, invites the administrator, and
             creates default settings. You can import spreadsheets afterward from Data Import.
           </Alert>
-          <div className={styles.actions} style={{ marginTop: "1rem" }}>
-            <button className={styles.button} type="button" disabled={busy} onClick={() => void activateCompany()}>
+          <div className="d-flex flex-wrap gap-2" style={{ marginTop: "1rem" }}>
+            <button className="btn btn-primary" type="button" disabled={busy} onClick={() => void activateCompany()}>
               {busy ? "Activating…" : "Activate company"}
             </button>
             {view ? (
-              <Link className={styles.buttonSecondary} href={`/setup-center/?tenantId=${view.session.tenantId}`}>
+              <Link className="btn btn-outline-secondary" href={`/setup-center/?tenantId=${view.session.tenantId}`}>
                 Open Setup Center
               </Link>
             ) : null}

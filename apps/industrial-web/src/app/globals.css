@@ -389,6 +389,83 @@ html.layout-menu-fixed .layout-menu .menu-inner {
   cursor: not-allowed;
 }
 
+/* Link styled as a button, for navigation that stands in for a submit action. */
+.ind-button {
+  display: inline-block;
+  border: 1px solid var(--ind-primary);
+  border-radius: 0.375rem;
+  padding: 0.45rem 0.85rem;
+  background: var(--ind-primary);
+  color: #fff;
+  font: inherit;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.ind-button:hover {
+  color: #fff;
+  filter: brightness(0.95);
+}
+
+.ind-button.is-quiet {
+  border-color: var(--ind-border);
+  background: #fff;
+  color: var(--ind-heading);
+}
+
+/* Roster panel that replaces the inline create form with a link to a full page. */
+.ind-ops-create-link {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem 1rem;
+  align-items: center;
+  padding: 1rem;
+  background: var(--ind-surface);
+  border: 1px solid var(--ind-border);
+  border-radius: var(--ind-radius);
+  box-shadow: var(--ind-shadow);
+}
+
+.ind-ops-create-link h2 {
+  margin: 0;
+  flex: 1 1 auto;
+  font-size: 1rem;
+  color: var(--ind-heading);
+}
+
+/* Add Person page — Sneat cards and Bootstrap form controls do the styling.
+   Only the sticky summary and signature canvas need bespoke rules. */
+.ind-addperson-summary {
+  position: sticky;
+  top: 1.5rem;
+}
+
+.ind-addperson .card-header .min-w-0 {
+  min-width: 0;
+}
+
+.ind-addperson .card-body dl > div + div {
+  border-top: 1px solid var(--bs-border-color, #d9dee3);
+}
+
+/* Signature capture */
+.ind-signature-canvas {
+  display: block;
+  width: 100%;
+  height: 10rem;
+  border: 1px dashed var(--bs-border-color, #d9dee3);
+  border-radius: var(--bs-border-radius, 0.375rem);
+  background: var(--bs-body-bg, #fff);
+  touch-action: none;
+  cursor: crosshair;
+}
+
+@media (max-width: 991.98px) {
+  .ind-addperson-summary {
+    position: static;
+  }
+}
+
 .ind-ops-table,
 .ind-table {
   min-width: 36rem;
@@ -536,6 +613,134 @@ html.layout-menu-fixed .layout-menu .menu-inner {
   color: var(--ind-heading);
   box-shadow: 0 0.125rem 0.25rem rgba(161, 172, 184, 0.4);
   font-weight: 600;
+}
+
+/* Quick links: full card on Dashboard; two off-page tabs elsewhere. */
+.ind-personnel-quick-card {
+  border: 1px solid var(--ind-border);
+  box-shadow: var(--ind-shadow);
+}
+
+.ind-personnel-quick-link {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  width: 100%;
+  min-height: 4.25rem;
+  padding: 0.75rem 0.85rem;
+  border: 1px solid var(--ind-border);
+  border-radius: var(--ind-radius);
+  background: #fff;
+  color: var(--ind-heading);
+  text-decoration: none;
+  transition:
+    border-color 0.15s ease,
+    box-shadow 0.15s ease,
+    background 0.15s ease;
+}
+
+.ind-personnel-quick-link:hover,
+.ind-personnel-quick-link:focus-visible {
+  border-color: var(--ind-primary);
+  box-shadow: 0 0.125rem 0.5rem rgba(105, 108, 255, 0.18);
+  color: var(--ind-heading);
+}
+
+.ind-personnel-quick-link.is-current {
+  border-color: var(--ind-primary);
+  background: rgba(105, 108, 255, 0.06);
+}
+
+.ind-personnel-quick-link__icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.25rem;
+  height: 2.25rem;
+  border-radius: 0.5rem;
+  background: rgba(105, 108, 255, 0.1);
+  color: var(--ind-primary);
+  font-size: 1.25rem;
+  flex-shrink: 0;
+}
+
+.ind-personnel-quick-link__copy {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+  min-width: 0;
+  flex: 1 1 auto;
+}
+
+.ind-personnel-quick-link__copy strong {
+  font-size: 0.9375rem;
+  line-height: 1.2;
+}
+
+.ind-personnel-quick-link__copy small {
+  color: var(--ind-muted);
+  line-height: 1.25;
+}
+
+.ind-personnel-quick-link__chevron {
+  color: var(--ind-muted);
+  font-size: 1.25rem;
+  flex-shrink: 0;
+}
+
+.ind-personnel-offpage-tabs a.ind-personnel-offpage-tab {
+  display: inline-flex;
+  align-items: center;
+  border: 0;
+  background: transparent;
+  border-radius: 0.375rem;
+  padding: 0.45rem 0.85rem;
+  color: var(--ind-text);
+  font: inherit;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.ind-personnel-offpage-tabs a.ind-personnel-offpage-tab:hover,
+.ind-personnel-offpage-tabs a.ind-personnel-offpage-tab:focus-visible {
+  background: #fff;
+  color: var(--ind-heading);
+  box-shadow: 0 0.125rem 0.25rem rgba(161, 172, 184, 0.4);
+}
+
+/* Personnel directory cards — the whole card is the link into a personnel file. */
+.ind-person-card {
+  transition:
+    box-shadow 0.15s ease-in-out,
+    border-color 0.15s ease-in-out,
+    transform 0.15s ease-in-out;
+}
+
+.ind-person-card:hover,
+.ind-person-card:focus-visible {
+  border-color: var(--ind-primary);
+  box-shadow: 0 0.25rem 0.75rem rgba(161, 172, 184, 0.45);
+  transform: translateY(-2px);
+}
+
+/* Bootstrap ships no min-width utility, and flex children need it to truncate. */
+.min-w-0 {
+  min-width: 0;
+}
+
+/* Personnel profile — Sneat cards do the styling; only the hover affordance
+   for the clickable analytics tiles is bespoke. */
+.ind-profile-metric {
+  cursor: pointer;
+  transition:
+    border-color 0.15s ease-in-out,
+    box-shadow 0.15s ease-in-out;
+}
+
+.ind-profile-metric:hover,
+.ind-profile-metric:focus-visible {
+  border-color: var(--ind-primary) !important;
+  box-shadow: 0 0.25rem 0.75rem rgba(161, 172, 184, 0.35);
 }
 
 /* Seasonal workforce */
@@ -966,4 +1171,207 @@ body {
     border: 1px solid #ccc !important;
   }
 }
+
+/* Incident body map — Tim on transparent art, FRONT/BACK always side by side. */
+.ind-bodymap {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: nowrap;
+  gap: 1rem 1.5rem;
+  justify-content: center;
+  align-items: flex-start;
+  width: 100%;
+  background: transparent;
+}
+
+.ind-bodymap__view {
+  margin: 0;
+  flex: 1 1 0;
+  min-width: 0;
+  width: auto;
+  max-width: 16rem;
+  background: transparent;
+}
+
+.ind-bodymap__caption {
+  margin: 0 0 0.65rem;
+  text-align: center;
+  font-size: 0.9375rem;
+  font-weight: 700;
+  color: #2f4f8f;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.ind-bodymap__stage {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 288 / 433;
+  overflow: hidden;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+}
+
+.ind-bodymap__img {
+  position: absolute;
+  top: 0;
+  left: 0;
+  display: block;
+  height: 100%;
+  width: 200%;
+  max-width: none;
+  object-fit: fill;
+  pointer-events: none;
+  user-select: none;
+  background: transparent;
+}
+
+.ind-bodymap__img--back {
+  left: -100%;
+}
+
+.ind-bodymap__region {
+  position: absolute;
+  z-index: 1;
+  margin: 0;
+  padding: 0;
+  border: 1px dashed transparent;
+  border-radius: 0.5rem;
+  background: transparent;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+button.ind-bodymap__region {
+  cursor: pointer;
+  transition:
+    background 0.15s ease,
+    border-color 0.15s ease;
+}
+
+button.ind-bodymap__region:hover,
+button.ind-bodymap__region:focus-visible {
+  border-color: var(--ind-primary);
+  background: rgba(105, 108, 255, 0.15);
+  outline: none;
+}
+
+button.ind-bodymap__region.is-active {
+  border-color: var(--ind-danger);
+  background: rgba(234, 84, 85, 0.22);
+}
+
+.ind-bodymap__marker {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.5rem;
+  height: 1.5rem;
+  border-radius: 50%;
+  background: var(--ind-danger);
+  color: #fff;
+  font-size: 1rem;
+  box-shadow: 0 0.125rem 0.375rem rgba(234, 84, 85, 0.5);
+}
+
+.ind-bodymap__region--heat {
+  border-style: solid;
+  border-color: rgba(0, 0, 0, 0.08);
+  opacity: 0.85;
+}
+
+.ind-bodymap__count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 1.5rem;
+  height: 1.5rem;
+  padding: 0 0.35rem;
+  border-radius: 0.75rem;
+  background: rgba(255, 255, 255, 0.85);
+  color: var(--ind-heading);
+  font-size: 0.8125rem;
+  font-weight: 700;
+}
+
+.ind-bodymap-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem 1.25rem;
+  align-items: center;
+  justify-content: center;
+}
+
+.ind-bodymap-legend__item {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.8125rem;
+  color: var(--ind-text);
+}
+
+.ind-bodymap-legend__swatch {
+  width: 0.9rem;
+  height: 0.9rem;
+  border-radius: 0.25rem;
+}
+
+/* Dashboard insight cards — Incident Trend / Task Scheduler / Inspections by Site */
+.ind-dash-trend {
+  display: flex;
+  align-items: flex-end;
+  gap: 0.5rem;
+  min-height: 9rem;
+  padding-top: 0.5rem;
+}
+
+.ind-dash-trend__col {
+  flex: 1 1 0;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.ind-dash-trend__value {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--ind-heading);
+  line-height: 1;
+}
+
+.ind-dash-trend__track {
+  width: 100%;
+  height: 5.5rem;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+}
+
+.ind-dash-trend__bar {
+  width: 100%;
+  max-width: 2.25rem;
+  border-radius: 0.35rem 0.35rem 0.15rem 0.15rem;
+  background: #71dd37;
+  min-height: 0.35rem;
+}
+
+.ind-dash-trend__label {
+  font-size: 0.6875rem;
+  color: var(--ind-muted);
+  text-align: center;
+  white-space: nowrap;
+}
+
+.ind-dash-empty {
+  background: #f5f5f9;
+}
+
+.ind-dash-sites__row + .ind-dash-sites__row {
+  margin-top: 0.85rem;
+}
+
 

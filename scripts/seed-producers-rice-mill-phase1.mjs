@@ -148,11 +148,15 @@ async function ensureRole(sql, tenantId) {
     role = await sql`select id::text as id from roles where id = ${id}::uuid`;
   }
   const roleId = role[0].id;
+  const missingFromCatalog = [];
   for (const code of ADMIN_PERMS) {
     const perm = await sql`
       select id::text as id from permissions where code = ${code} limit 1
     `;
-    if (!perm[0]) continue;
+    if (!perm[0]) {
+      missingFromCatalog.push(code);
+      continue;
+    }
     const existing = await sql`
       select 1 from role_permissions
       where role_id = ${roleId}::uuid and permission_id = ${perm[0].id}::uuid
@@ -164,6 +168,17 @@ async function ensureRole(sql, tenantId) {
         values (${roleId}::uuid, ${perm[0].id}::uuid, 'ALLOW', now())
       `;
     }
+  }
+
+  // Skipping an absent catalog row in silence produced a role named ADMIN that
+  // held manage on only three modules, which hid every Create/edit form in
+  // industrial-web with no error anywhere. Fail loudly: the platform permission
+  // seed (packages/database/src/seed.ts, ALL_PERMISSIONS) needs to run first.
+  if (missingFromCatalog.length > 0) {
+    throw new Error(
+      `Permission catalog is missing ${missingFromCatalog.length} code(s) required by ${ROLE_CODE}: ` +
+        `${missingFromCatalog.join(", ")}. Run the platform permission seed before this script.`,
+    );
   }
   return roleId;
 }
