@@ -167,7 +167,6 @@ export function dotRecordCategory(row: Record<string, unknown>): DotCategory {
   }
 
   if (isDotCompanyDriverSource(row)) {
-    if (hay.includes("vehicle")) return "vehicles";
     return "other";
   }
 

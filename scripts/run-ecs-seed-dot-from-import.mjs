@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Seed DOT compliance records from imported fleet drivers/vehicles
+ * Seed DOT compliance records from imported vehicles (not company drivers)
  * for producers-rice-mill in production.
  *
  * Dry-run:
