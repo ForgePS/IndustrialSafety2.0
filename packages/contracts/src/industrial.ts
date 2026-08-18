@@ -230,3 +230,154 @@ export function industrialModulesByImplementation(
 ): IndustrialModuleRegistryEntry[] {
   return INDUSTRIAL_MODULE_REGISTRY.filter((m) => m.implementationStatus === status);
 }
+
+/** Fleet asset classification (spreadsheet sheet defaults + custom). */
+export const FLEET_ASSET_TYPES = [
+  "PASSENGER_VEHICLE",
+  "FLEET_VEHICLE",
+  "BOB_TRUCK",
+  "TRASH_TRUCK",
+  "TRACTOR_TRUCK",
+  "DUMP_TRUCK",
+  "CONSTRUCTION_EQUIPMENT",
+  "TRAILER",
+  "OTHER",
+] as const;
+export type FleetAssetType = (typeof FLEET_ASSET_TYPES)[number];
+
+export const FLEET_ASSET_STATUSES = [
+  "ACTIVE",
+  "INACTIVE",
+  "OUT_OF_SERVICE",
+  "REMOVED",
+  "SOLD",
+  "DISPOSED",
+  "ARCHIVED",
+] as const;
+export type FleetAssetStatus = (typeof FLEET_ASSET_STATUSES)[number];
+
+export const FLEET_ASSESSMENT_STATUSES = [
+  "UNKNOWN",
+  "ASSESSED",
+  "NOT_ASSESSED",
+  "EXEMPT",
+  "PENDING",
+] as const;
+export type FleetAssessmentStatus = (typeof FLEET_ASSESSMENT_STATUSES)[number];
+
+export const FLEET_INSURANCE_STATUSES = [
+  "UNKNOWN",
+  "INSURED",
+  "NOT_INSURED",
+  "PENDING",
+  "LAPSED",
+] as const;
+export type FleetInsuranceStatus = (typeof FLEET_INSURANCE_STATUSES)[number];
+
+export const FLEET_COMMUTE_STATUSES = [
+  "UNKNOWN",
+  "YES",
+  "NO",
+  "OCCASIONAL",
+] as const;
+export type FleetCommuteStatus = (typeof FLEET_COMMUTE_STATUSES)[number];
+
+export const FLEET_COMPLIANCE_STATUSES = [
+  "UNKNOWN",
+  "REQUIRED",
+  "FILED",
+  "NOT_REQUIRED",
+  "OVERDUE",
+] as const;
+export type FleetComplianceStatus = (typeof FLEET_COMPLIANCE_STATUSES)[number];
+
+export type FleetAsset = {
+  id: string;
+  tenantId?: string;
+  siteId: string | null;
+  assetNumber: string | null;
+  assetType: FleetAssetType | string;
+  customAssetTypeLabel: string | null;
+  year: number | null;
+  make: string | null;
+  model: string | null;
+  trim: string | null;
+  color: string | null;
+  vin: string | null;
+  serialNumber: string | null;
+  licensePlate: string | null;
+  licenseState: string | null;
+  renewalDate: string | null;
+  registrationRenewalMonth: number | null;
+  locationName: string | null;
+  assignedDriverId: string | null;
+  assignedDriverPersonnelId: string | null;
+  assignedDriverName: string | null;
+  countyAssessed: string | null;
+  countyAssessmentStatus: string | null;
+  countyAssessmentNotes: string | null;
+  insured: boolean | null;
+  insuranceStatus: string | null;
+  mileage: number | null;
+  mileageUpdatedAt: string | null;
+  engineHours: number | null;
+  engineHoursUpdatedAt: string | null;
+  notes: string | null;
+  vehicleFringe: boolean | null;
+  notOnVehicleFringeSs: boolean | null;
+  commuteUseStatus: string | null;
+  commuteUseNotes: string | null;
+  form2290Status: string | null;
+  form2290Notes: string | null;
+  irpStatus: string | null;
+  irpNotes: string | null;
+  dispositionStatus: string | null;
+  dispositionDate: string | null;
+  dispositionNotes: string | null;
+  outOfService: boolean;
+  outOfServiceReason: string | null;
+  status: FleetAssetStatus | string;
+  createdAt: string;
+  updatedAt: string;
+};
+
+export type FleetAssetCreateInput = Partial<
+  Omit<FleetAsset, "id" | "createdAt" | "updatedAt" | "tenantId">
+> & {
+  year?: number | null;
+  make?: string | null;
+  model?: string | null;
+  vin?: string | null;
+};
+
+export type FleetAssetPatchInput = Partial<FleetAssetCreateInput>;
+
+export type FleetDriver = {
+  id: string;
+  siteId: string | null;
+  personnelId: string | null;
+  personnelName: string | null;
+  employeeNumber: string | null;
+  licenseNumber: string | null;
+  licenseState: string | null;
+  licenseExpiryDate: string | null;
+  dateOfBirth: string | null;
+  status: string;
+  initialMvrDate: string | null;
+  lastMvrDate: string | null;
+  nextMvrDueDate: string | null;
+  insuranceEffectiveDate: string | null;
+  insuranceRemovedDate: string | null;
+  notes: string | null;
+  createdAt: string;
+  updatedAt: string;
+};
+
+export type FleetRenewalBucket =
+  | "OVERDUE"
+  | "DUE_30"
+  | "DUE_60"
+  | "DUE_90"
+  | "LATER"
+  | "UNKNOWN";
+

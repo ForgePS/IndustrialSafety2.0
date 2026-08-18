@@ -14,6 +14,7 @@ import { ForgeIndustrialMark } from "@/components/forge-industrial-mark";
 import { FieldQuickBar } from "@/components/field-quick-bar";
 import { useLoginBranding } from "@/hooks/use-login-branding";
 import { useTenantBranding } from "@/hooks/use-tenant-branding";
+import { navLogoForTenant } from "@/lib/tenant-nav-logo";
 
 const appEnv = process.env.NEXT_PUBLIC_APP_ENV ?? process.env.APP_ENV ?? "local";
 const NAV_GROUPS_STORAGE_KEY = "forge-ind-nav-open-groups-v2";
@@ -61,6 +62,10 @@ function BrandLockup({
 }) {
   const [logoFailed, setLogoFailed] = useState(false);
   const showFullLogo = Boolean(logoUrl?.trim()) && !logoFailed;
+
+  useEffect(() => {
+    setLogoFailed(false);
+  }, [logoUrl]);
 
   const inner = showFullLogo ? (
     <span className="app-brand-logo app-brand-full-logo">
@@ -599,10 +604,15 @@ function ShellBody({ children }: { children: ReactNode }) {
   }
 
   const selectableTenants = me.tenants.filter((t) => t.selectable);
-  const tenantLabel =
-    selectableTenants.find((t) => t.tenantId === me.tenantId)?.displayName ??
-    me.tenants.find((t) => t.tenantId === me.tenantId)?.displayName ??
-    me.tenantId;
+  const activeTenant =
+    selectableTenants.find((t) => t.tenantId === me.tenantId) ??
+    me.tenants.find((t) => t.tenantId === me.tenantId);
+  const tenantLabel = activeTenant?.displayName ?? me.tenantId;
+  const navLogo = navLogoForTenant({
+    slug: activeTenant?.slug,
+    displayName: activeTenant?.displayName ?? tenantLabel,
+    brandingLogoUrl: logoUrl,
+  });
 
   const onTenantChange = async (nextTenantId: string) => {
     if (!nextTenantId || nextTenantId === me.tenantId || tenantSwitching) return;
@@ -623,10 +633,10 @@ function ShellBody({ children }: { children: ReactNode }) {
           <div className="app-brand">
             <BrandLockup
               href="/"
-              label={appShortName}
+              label={navLogo?.label || appShortName}
               primaryColor={primaryColor || "#696cff"}
               onClick={() => setMenuOpen(false)}
-              {...(logoUrl ? { logoUrl } : {})}
+              {...(navLogo?.src ? { logoUrl: navLogo.src } : logoUrl ? { logoUrl } : {})}
             />
             <button
               type="button"

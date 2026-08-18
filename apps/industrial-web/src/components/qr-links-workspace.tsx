@@ -2,6 +2,7 @@
 
 import { useEffect, useState, type FormEvent } from "react";
 import { ApiError, apiGet, apiSend, useAuth } from "@forge/web-kit";
+import { ModuleWorkspaceHeader } from "@/components/module-workspace-header";
 
 type QrLink = {
   id: string;
@@ -107,43 +108,91 @@ export function QrLinksWorkspace({ moduleName }: { moduleName: string }) {
   }
 
   return (
-    <section className="ind-ops">
-      <header className="ind-ops-header">
-        <h1>{moduleName}</h1>
-        <p>Industrial QR links use one-time public tokens. Save the generated image before leaving.</p>
-      </header>
-      {error && <p role="alert" className="ind-error">{error}</p>}
-      {oneTimeToken && (
-        <div className="ind-toolbar" role="status">
-          <span>Token ending {oneTimeToken.token.slice(-4)} is available only in this session.</span>
-          <button type="button" onClick={() => void downloadSvg()}>Download SVG</button>
-          <button type="button" onClick={() => setOneTimeToken(null)}>Dismiss token</button>
+    <section aria-labelledby="qr-links-title">
+      <ModuleWorkspaceHeader
+        id="qr-links-title"
+        eyebrow="Coordination"
+        title={moduleName}
+        description="Industrial QR links use one-time public tokens. Save the generated image before leaving."
+        onRefresh={() => void load()}
+      />
+
+      {error ? (
+        <div className="alert alert-danger" role="alert">
+          {error}
         </div>
-      )}
-      {permissions.has("qr.create") && (
-        <form className="ind-form" onSubmit={(event) => void create(event)}>
-          <label>
-            Link name
-            <input required value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} />
-          </label>
-          <label>
-            Target type
-            <select
-              value={form.targetType}
-              onChange={(e) => setForm({ ...form, targetType: e.target.value as typeof form.targetType })}
-            >
-              {TARGET_TYPES.map((targetType) => <option key={targetType}>{targetType}</option>)}
-            </select>
-          </label>
-          <label>
-            Target ID
-            <input required value={form.targetId} onChange={(e) => setForm({ ...form, targetId: e.target.value })} />
-          </label>
-          <button type="submit">Create QR link</button>
-        </form>
-      )}
-      <div className="ind-table-wrap">
-        <table>
+      ) : null}
+      {oneTimeToken ? (
+        <div className="alert alert-info d-flex flex-wrap align-items-center gap-2" role="status">
+          <span className="flex-grow-1">
+            Token ending {oneTimeToken.token.slice(-4)} is available only in this session.
+          </span>
+          <button type="button" className="btn btn-sm btn-primary" onClick={() => void downloadSvg()}>
+            Download SVG
+          </button>
+          <button type="button" className="btn btn-sm btn-outline-secondary" onClick={() => setOneTimeToken(null)}>
+            Dismiss token
+          </button>
+        </div>
+      ) : null}
+      {permissions.has("qr.create") ? (
+        <div className="card border shadow-none mb-4">
+          <div className="card-header">
+            <h6 className="card-title mb-0">Create QR link</h6>
+          </div>
+          <div className="card-body">
+            <form className="row g-3 align-items-end" onSubmit={(event) => void create(event)}>
+              <div className="col-md-4">
+                <label className="form-label" htmlFor="qr-name">
+                  Link name
+                </label>
+                <input
+                  id="qr-name"
+                  className="form-control form-control-sm"
+                  required
+                  value={form.name}
+                  onChange={(e) => setForm({ ...form, name: e.target.value })}
+                />
+              </div>
+              <div className="col-md-4">
+                <label className="form-label" htmlFor="qr-target-type">
+                  Target type
+                </label>
+                <select
+                  id="qr-target-type"
+                  className="form-select form-select-sm"
+                  value={form.targetType}
+                  onChange={(e) => setForm({ ...form, targetType: e.target.value as typeof form.targetType })}
+                >
+                  {TARGET_TYPES.map((targetType) => (
+                    <option key={targetType}>{targetType}</option>
+                  ))}
+                </select>
+              </div>
+              <div className="col-md-4">
+                <label className="form-label" htmlFor="qr-target-id">
+                  Target ID
+                </label>
+                <input
+                  id="qr-target-id"
+                  className="form-control form-control-sm"
+                  required
+                  value={form.targetId}
+                  onChange={(e) => setForm({ ...form, targetId: e.target.value })}
+                />
+              </div>
+              <div className="col-12">
+                <button type="submit" className="btn btn-primary btn-sm">
+                  Create QR link
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      ) : null}
+      <div className="card border shadow-none">
+        <div className="table-responsive">
+          <table className="table table-hover mb-0">
           <thead><tr><th>Name</th><th>Type</th><th>Token hint</th><th>Status</th><th>Actions</th></tr></thead>
           <tbody>
             {items.map((link) => (
@@ -153,17 +202,30 @@ export function QrLinksWorkspace({ moduleName }: { moduleName: string }) {
                 <td>{link.publicTokenHint ? `…${link.publicTokenHint}` : "—"}</td>
                 <td>{link.status}</td>
                 <td>
-                  {link.status !== "ACTIVE" && permissions.has("qr.activate") && (
-                    <button type="button" onClick={() => void transition(link.id, "ACTIVE")}>Activate</button>
-                  )}
-                  {link.status !== "REVOKED" && permissions.has("qr.revoke") && (
-                    <button type="button" onClick={() => void transition(link.id, "REVOKED")}>Revoke</button>
-                  )}
+                  {link.status !== "ACTIVE" && permissions.has("qr.activate") ? (
+                    <button
+                      type="button"
+                      className="btn btn-sm btn-outline-success me-1"
+                      onClick={() => void transition(link.id, "ACTIVE")}
+                    >
+                      Activate
+                    </button>
+                  ) : null}
+                  {link.status !== "REVOKED" && permissions.has("qr.revoke") ? (
+                    <button
+                      type="button"
+                      className="btn btn-sm btn-outline-danger"
+                      onClick={() => void transition(link.id, "REVOKED")}
+                    >
+                      Revoke
+                    </button>
+                  ) : null}
                 </td>
               </tr>
             ))}
           </tbody>
         </table>
+        </div>
       </div>
     </section>
   );

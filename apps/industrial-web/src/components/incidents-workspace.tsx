@@ -81,6 +81,19 @@ export function IncidentsWorkspace({ moduleName }: { moduleName: string }) {
     setTab(parseIncidentWorkspaceTab(searchParams.get("tab")));
   }, [searchParams]);
 
+  useEffect(() => {
+    const incidentId = searchParams.get("incident");
+    if (!incidentId) return;
+    setSelectedBodyMapId(incidentId);
+  }, [searchParams]);
+
+  useEffect(() => {
+    const incidentId = searchParams.get("incident");
+    if (!incidentId || loading) return;
+    const row = document.getElementById(`incident-row-${incidentId}`);
+    row?.scrollIntoView({ behavior: "smooth", block: "center" });
+  }, [searchParams, loading, records]);
+
   const isCategoryTab = isIncidentCategoryTab(tab);
   const isProcessTab = isIncidentProcessTab(tab);
 
@@ -491,6 +504,7 @@ export function IncidentsWorkspace({ moduleName }: { moduleName: string }) {
               ) : tab === "body-map" ? (
                 <IncidentsBodyMapPanel
                   incidents={records}
+                  initialRegionId={searchParams.get("region")}
                   selectedId={selectedBodyMapId}
                   onSelectedIdChange={setSelectedBodyMapId}
                   canManage={canManage}
@@ -532,13 +546,13 @@ export function IncidentsWorkspace({ moduleName }: { moduleName: string }) {
                             <th scope="col">Severity</th>
                             <th scope="col">Body</th>
                             <th scope="col">Location</th>
-                            <th scope="col">Updated</th>
                           </tr>
                         </thead>
                         <tbody className="table-border-bottom-0">
                           {records.map((record) => (
                             <tr
                               key={record.id}
+                              id={`incident-row-${record.id}`}
                               className={selectedBodyMapId === record.id ? "table-active" : undefined}
                               role="button"
                               tabIndex={0}
@@ -574,9 +588,6 @@ export function IncidentsWorkspace({ moduleName }: { moduleName: string }) {
                                 {bodyLocationSummaryLabel(record.bodyLocations) || "—"}
                               </td>
                               <td className="text-muted">{record.location || "—"}</td>
-                              <td className="text-muted small">
-                                {record.updatedAt ? record.updatedAt.slice(0, 10) : "—"}
-                              </td>
                             </tr>
                           ))}
                         </tbody>
@@ -621,12 +632,15 @@ export function IncidentsWorkspace({ moduleName }: { moduleName: string }) {
                         <th scope="col">Status</th>
                         <th scope="col">Severity</th>
                         <th scope="col">Location</th>
-                        <th scope="col">Updated</th>
                       </tr>
                     </thead>
                     <tbody className="table-border-bottom-0">
                       {records.map((record) => (
-                        <tr key={record.id}>
+                        <tr
+                          key={record.id}
+                          id={`incident-row-${record.id}`}
+                          className={selectedBodyMapId === record.id ? "table-active" : undefined}
+                        >
                           <td>
                             <span className="fw-semibold d-block">{record.title}</span>
                             {record.description ? (
@@ -640,9 +654,6 @@ export function IncidentsWorkspace({ moduleName }: { moduleName: string }) {
                           </td>
                           <td className="text-muted">{record.severity || "—"}</td>
                           <td className="text-muted">{record.location || "—"}</td>
-                          <td className="text-muted small">
-                            {record.updatedAt ? record.updatedAt.slice(0, 10) : "—"}
-                          </td>
                         </tr>
                       ))}
                     </tbody>

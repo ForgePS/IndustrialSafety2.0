@@ -3,24 +3,29 @@
 import {
   BODY_MAP_IMAGE,
   BODY_VIEWS,
+  bodyMapArrowPlacement,
   heatTone,
   regionsForView,
   type BodyRegion,
 } from "@/lib/incident-body-map";
 
 type BodyMapProps = {
-  /** "select" lets the user toggle regions; "display" shows a read-only heatmap. */
+  /** "select" lets the user toggle regions; "display" shows severity arrows. */
   mode: "select" | "display";
   /** Region ids currently marked (select mode). */
   selected?: readonly string[];
-  /** Region id → incident count (display mode heatmap). */
+  /** Region id → incident count (display mode). */
   counts?: Map<string, number>;
-  /** Highest region count, used to scale heatmap shading. */
+  /** Highest region count, used to scale severity tones. */
   maxCount?: number;
+  /** Currently focused injury area (display mode). */
+  activeRegionId?: string | null;
   onToggle?: (id: string) => void;
+  /** Display mode: open injuries for this body area. */
+  onRegionActivate?: (id: string) => void;
 };
 
-function regionStyle(region: BodyRegion): React.CSSProperties {
+function regionHitStyle(region: BodyRegion): React.CSSProperties {
   return {
     top: `${region.top}%`,
     left: `${region.left}%`,
@@ -30,15 +35,18 @@ function regionStyle(region: BodyRegion): React.CSSProperties {
 }
 
 /**
- * Safety Tim — front and back on transparent art, FRONT/BACK labels above,
- * no panel chrome around the figure.
+ * Safety Tim — front and back on transparent art, FRONT/BACK labels above.
+ * Display mode uses severity-colored arrows so Tim stays visible; arrows are
+ * clickable to drill into injuries for that area.
  */
 export function IncidentBodyMap({
   mode,
   selected = [],
   counts,
   maxCount = 0,
+  activeRegionId = null,
   onToggle,
+  onRegionActivate,
 }: BodyMapProps) {
   const selectedSet = new Set(selected);
 
@@ -64,7 +72,7 @@ export function IncidentBodyMap({
                     key={region.id}
                     type="button"
                     className={`ind-bodymap__region${isActive ? " is-active" : ""}`}
-                    style={regionStyle(region)}
+                    style={regionHitStyle(region)}
                     aria-pressed={isActive}
                     aria-label={region.part}
                     title={region.part}
@@ -82,19 +90,35 @@ export function IncidentBodyMap({
               const count = counts?.get(region.id) ?? 0;
               const tone = heatTone(count, maxCount);
               if (!tone) return null;
+              const place = bodyMapArrowPlacement(region);
+              const isFocused = activeRegionId === region.id;
+              const vars = {
+                "--tip-x": `${place.tipX}%`,
+                "--tip-y": `${place.tipY}%`,
+                "--badge-x": `${place.badgeX}%`,
+                "--badge-y": `${place.badgeY}%`,
+                "--arrow-angle": `${place.angleDeg}deg`,
+              } as React.CSSProperties;
+
               return (
                 <span
                   key={region.id}
-                  className={`ind-bodymap__region ind-bodymap__region--heat bg-label-${tone}`}
-                  style={regionStyle(region)}
-                  title={`${region.part}: ${count}`}
+                  className={`ind-bodymap__callout ind-bodymap__callout--${tone}${isFocused ? " is-active" : ""}`}
+                  style={vars}
                 >
-                  <span className="ind-bodymap__count" aria-hidden="true">
-                    {count}
-                  </span>
-                  <span className="visually-hidden">
-                    {region.part}: {count}
-                  </span>
+                  <span className="ind-bodymap__callout-line" aria-hidden="true" />
+                  <span className="ind-bodymap__callout-tip" aria-hidden="true" />
+                  <button
+                    type="button"
+                    className={`ind-bodymap__callout-hit bg-label-${tone}`}
+                    style={{ left: `${place.badgeX}%`, top: `${place.badgeY}%` }}
+                    title={`View ${count} ${region.part} injur${count === 1 ? "y" : "ies"}`}
+                    aria-label={`View ${count} ${region.part} injuries`}
+                    aria-pressed={isFocused}
+                    onClick={() => onRegionActivate?.(region.id)}
+                  >
+                    <span className="ind-bodymap__callout-total">{count}</span>
+                  </button>
                 </span>
               );
             })}

@@ -5,6 +5,7 @@ import { useEffect, useState, type Dispatch, type FormEvent, type SetStateAction
 import { ApiError, apiGet, apiSend, useAuth } from "@forge/web-kit";
 import { FilterPanel } from "@/components/filter-panel";
 import { ModuleUnavailable } from "@/components/module-unavailable";
+import { ModuleWorkspaceHeader } from "@/components/module-workspace-header";
 import {
   OPS_MODULE_CONFIG,
   groupCreateFields,
@@ -20,44 +21,59 @@ function renderCreateField(
   setForm: Dispatch<SetStateAction<FormState>>,
 ) {
   const set = (value: string) => setForm((prev) => ({ ...prev, [field.name]: value }));
+  const inputId = `ops-create-${field.name}`;
 
   if (field.type === "checkbox") {
     return (
-      <label key={field.name} className="ind-ops-checkbox">
-        <input
-          type="checkbox"
-          checked={form[field.name] === "true"}
-          onChange={(ev) => set(ev.target.checked ? "true" : "")}
-        />
-        {field.label}
-      </label>
+      <div className="col-12" key={field.name}>
+        <div className="form-check">
+          <input
+            id={inputId}
+            className="form-check-input"
+            type="checkbox"
+            checked={form[field.name] === "true"}
+            onChange={(ev) => set(ev.target.checked ? "true" : "")}
+          />
+          <label className="form-check-label" htmlFor={inputId}>
+            {field.label}
+          </label>
+        </div>
+      </div>
     );
   }
 
   if (field.type === "textarea") {
     return (
-      <label key={field.name}>
-        {field.label}
+      <div className="col-md-6" key={field.name}>
+        <label className="form-label" htmlFor={inputId}>
+          {field.label}
+        </label>
         <textarea
+          id={inputId}
+          className="form-control form-control-sm"
           rows={4}
           required={field.required}
           value={form[field.name] ?? ""}
           onChange={(ev) => set(ev.target.value)}
         />
-      </label>
+      </div>
     );
   }
 
   return (
-    <label key={field.name}>
-      {field.label}
+    <div className="col-md-4" key={field.name}>
+      <label className="form-label" htmlFor={inputId}>
+        {field.label}
+      </label>
       <input
+        id={inputId}
+        className="form-control form-control-sm"
         type={field.type ?? "text"}
         required={field.required}
         value={form[field.name] ?? ""}
         onChange={(ev) => set(ev.target.value)}
       />
-    </label>
+    </div>
   );
 }
 
@@ -173,11 +189,12 @@ export function OpsModuleWorkspace({
 
   if (!canView) {
     return (
-      <section className="ind-unavailable" role="alert">
-        <h1>{moduleName}</h1>
-        <p>You do not have permission to view this module.</p>
-        <p className="ind-muted">Missing {cfg.viewPerm}</p>
-      </section>
+      <div className="alert alert-warning" role="alert">
+        <h4 className="alert-heading">{moduleName}</h4>
+        <p className="mb-0">
+          You do not have permission to view this module. Missing {cfg.viewPerm}.
+        </p>
+      </div>
     );
   }
 
@@ -192,9 +209,8 @@ export function OpsModuleWorkspace({
 
   if (!bootstrap) {
     return (
-      <section className="ind-state" role="status" aria-live="polite">
-        <h1>{moduleName}</h1>
-        <p>Checking module availability…</p>
+      <section role="status" aria-live="polite">
+        <ModuleWorkspaceHeader title={moduleName} description="Checking module availability…" />
       </section>
     );
   }
@@ -208,7 +224,6 @@ export function OpsModuleWorkspace({
       const payload: Record<string, unknown> = {};
       for (const field of cfg.createFields) {
         if (field.type === "checkbox") {
-          // Only send when ticked; the column already defaults to false.
           if (form[field.name] === "true") payload[field.name] = true;
           continue;
         }
@@ -226,13 +241,15 @@ export function OpsModuleWorkspace({
   }
 
   return (
-    <section className="ind-ops" aria-labelledby="ops-module-title">
-      <header className="ind-ops-header">
-        <h1 id="ops-module-title">{moduleName}</h1>
-        <p className="ind-muted">
-          Normalized Model A module · Flag {cfg.flagKey}
-        </p>
-      </header>
+    <section aria-labelledby="ops-module-title">
+      <ModuleWorkspaceHeader
+        id="ops-module-title"
+        eyebrow="Operations"
+        title={moduleName}
+        description={`Normalized Model A module · Flag ${cfg.flagKey}`}
+        onRefresh={() => void loadList()}
+        refreshing={loading}
+      />
 
       <FilterPanel
         searchId={`ops-search-${module}`}
@@ -256,161 +273,219 @@ export function OpsModuleWorkspace({
       />
 
       {error ? (
-        <p className="ind-error" role="alert">
-          {error}
-        </p>
+        <div className="alert alert-danger d-flex flex-wrap align-items-center gap-3" role="alert">
+          <span className="flex-grow-1">{error}</span>
+          <button
+            type="button"
+            className="btn btn-sm btn-outline-danger"
+            onClick={() => void loadList()}
+          >
+            Retry
+          </button>
+        </div>
       ) : null}
 
       {loading ? (
-        <p role="status" aria-live="polite">
+        <p className="text-muted" role="status" aria-live="polite">
           Loading…
         </p>
       ) : items.length === 0 ? (
-        <p className="ind-muted">No records yet for this tenant.</p>
+        <div className="card border shadow-none">
+          <div className="card-body">
+            <p className="text-muted mb-0">No records yet for this tenant.</p>
+          </div>
+        </div>
       ) : (
-        <div className="ind-ops-table-wrap" role="region" aria-label={`${moduleName} list`}>
-          <table className="ind-ops-table">
-            <thead>
-              <tr>
-                <th scope="col">Record</th>
-                <th scope="col">Status</th>
-                <th scope="col">Updated</th>
-              </tr>
-            </thead>
-            <tbody>
-              {items.map((row) => {
-                const title =
-                  String(row[cfg.titleField] ?? row.title ?? row.name ?? row.id ?? "—");
-                return (
-                  <tr key={String(row.id)}>
-                    <td>{title}</td>
-                    <td>{String(row.status ?? "—")}</td>
-                    <td>
-                      {row.updatedAt
-                        ? new Date(String(row.updatedAt)).toLocaleString()
-                        : "—"}
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
+        <div className="card border shadow-none" role="region" aria-label={`${moduleName} list`}>
+          <div className="table-responsive">
+            <table className="table table-hover mb-0">
+              <thead>
+                <tr>
+                  <th scope="col">Record</th>
+                  <th scope="col">Status</th>
+                  <th scope="col">Updated</th>
+                </tr>
+              </thead>
+              <tbody>
+                {items.map((row) => {
+                  const title = String(
+                    row[cfg.titleField] ?? row.title ?? row.name ?? row.id ?? "—",
+                  );
+                  return (
+                    <tr key={String(row.id)}>
+                      <td>{title}</td>
+                      <td>
+                        <span className="badge bg-label-secondary">{String(row.status ?? "—")}</span>
+                      </td>
+                      <td className="text-muted">
+                        {row.updatedAt
+                          ? new Date(String(row.updatedAt)).toLocaleString()
+                          : "—"}
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
         </div>
       )}
 
       {canManage && cfg.createHref ? (
-        <section className="ind-ops-create-link">
-          <h2>Create</h2>
-          <Link className="ind-button" href={cfg.createHref}>
-            Add {moduleName.replace(/s$/, "").toLowerCase()}
-          </Link>
-        </section>
+        <div className="card border shadow-none mt-4">
+          <div className="card-body d-flex flex-wrap justify-content-between align-items-center gap-3">
+            <div>
+              <h6 className="mb-1">Create</h6>
+              <p className="text-muted small mb-0">Add a new record using the full create flow.</p>
+            </div>
+            <Link className="btn btn-primary btn-sm" href={cfg.createHref}>
+              <i className="bx bx-plus me-1" />
+              Add {moduleName.replace(/s$/, "").toLowerCase()}
+            </Link>
+          </div>
+        </div>
       ) : canManage ? (
-        <form className="ind-ops-create" onSubmit={(e) => void onCreate(e)} aria-label="Create record">
-          <h2>Create</h2>
-          {groupCreateFields(cfg.createFields).map(({ group, fields }) => {
-            const rendered = fields.map((field) => renderCreateField(field, form, setForm));
-            if (!group) return rendered;
-            return (
-              <fieldset key={group} className="ind-ops-fieldset">
-                <legend>{group}</legend>
-                {rendered}
-              </fieldset>
-            );
-          })}
-          <button type="submit" disabled={creating}>
-            {creating ? "Saving…" : "Create"}
-          </button>
-        </form>
+        <div className="card border shadow-none mt-4">
+          <div className="card-header">
+            <h6 className="card-title mb-0">Create</h6>
+          </div>
+          <div className="card-body">
+            <form onSubmit={(e) => void onCreate(e)} aria-label="Create record">
+              {groupCreateFields(cfg.createFields).map(({ group, fields }) => {
+                const rendered = fields.map((field) => renderCreateField(field, form, setForm));
+                if (!group) {
+                  return (
+                    <div className="row g-3" key="ungrouped">
+                      {rendered}
+                    </div>
+                  );
+                }
+                return (
+                  <fieldset key={group} className="border rounded p-3 mb-3">
+                    <legend className="float-none w-auto px-2 fs-6 text-muted">{group}</legend>
+                    <div className="row g-3">{rendered}</div>
+                  </fieldset>
+                );
+              })}
+              <button type="submit" className="btn btn-primary btn-sm mt-2" disabled={creating}>
+                {creating ? "Saving…" : "Create"}
+              </button>
+            </form>
+          </div>
+        </div>
       ) : (
-        <p className="ind-muted">Create/edit requires {cfg.managePerm}.</p>
+        <p className="text-muted mt-3 mb-0">Create/edit requires {cfg.managePerm}.</p>
       )}
 
       {module === "training" && canManage ? (
-        <form
-          className="ind-ops-create"
-          aria-label="Bulk training completion"
-          onSubmit={(e) => {
-            e.preventDefault();
-            void (async () => {
-              setCreating(true);
-              setError(null);
-              try {
-                const personnelIds = String(form.personnelIds ?? "")
-                  .split(/[,\s]+/)
-                  .map((s) => s.trim())
-                  .filter(Boolean);
-                await apiSend("/api/v1/industrial/training/bulk", "POST", {
-                  title: form.title || form.courseCode,
-                  courseName: form.title || form.courseCode,
-                  instructorName: form.instructorName,
-                  location: form.location,
-                  completedAt: form.completedAt || undefined,
-                  personnelIds,
-                });
-                setForm({});
-                await loadList();
-              } catch (err) {
-                setError(err instanceof ApiError ? err.message : "Bulk training failed");
-              } finally {
-                setCreating(false);
-              }
-            })();
-          }}
-        >
-          <h2>Bulk training completion</h2>
-          <label>
-            Course / training title
-            <input
-              required
-              value={form.title ?? ""}
-              onChange={(ev) => setForm((prev) => ({ ...prev, title: ev.target.value }))}
-            />
-          </label>
-          <label>
-            Completion date
-            <input
-              type="date"
-              value={form.completedAt ?? ""}
-              onChange={(ev) => setForm((prev) => ({ ...prev, completedAt: ev.target.value }))}
-            />
-          </label>
-          <label>
-            Instructor
-            <input
-              value={form.instructorName ?? ""}
-              onChange={(ev) =>
-                setForm((prev) => ({ ...prev, instructorName: ev.target.value }))
-              }
-            />
-          </label>
-          <label>
-            Location
-            <input
-              value={form.location ?? ""}
-              onChange={(ev) => setForm((prev) => ({ ...prev, location: ev.target.value }))}
-            />
-          </label>
-          <label>
-            Employee IDs (comma-separated)
-            <input
-              required
-              value={form.personnelIds ?? ""}
-              onChange={(ev) => setForm((prev) => ({ ...prev, personnelIds: ev.target.value }))}
-              placeholder="Paste multiple personnel IDs"
-            />
-          </label>
-          <button type="submit" disabled={creating}>
-            {creating ? "Saving…" : "Record for all selected employees"}
-          </button>
-        </form>
+        <div className="card border shadow-none mt-4">
+          <div className="card-header">
+            <h6 className="card-title mb-0">Bulk training completion</h6>
+          </div>
+          <div className="card-body">
+            <form
+              aria-label="Bulk training completion"
+              onSubmit={(e) => {
+                e.preventDefault();
+                void (async () => {
+                  setCreating(true);
+                  setError(null);
+                  try {
+                    const personnelIds = String(form.personnelIds ?? "")
+                      .split(/[,\s]+/)
+                      .map((s) => s.trim())
+                      .filter(Boolean);
+                    await apiSend("/api/v1/industrial/training/bulk", "POST", {
+                      title: form.title || form.courseCode,
+                      courseName: form.title || form.courseCode,
+                      instructorName: form.instructorName,
+                      location: form.location,
+                      completedAt: form.completedAt || undefined,
+                      personnelIds,
+                    });
+                    setForm({});
+                    await loadList();
+                  } catch (err) {
+                    setError(err instanceof ApiError ? err.message : "Bulk training failed");
+                  } finally {
+                    setCreating(false);
+                  }
+                })();
+              }}
+            >
+              <div className="row g-3">
+                <div className="col-md-6">
+                  <label className="form-label" htmlFor="bulk-training-title">
+                    Course / training title
+                  </label>
+                  <input
+                    id="bulk-training-title"
+                    className="form-control form-control-sm"
+                    required
+                    value={form.title ?? ""}
+                    onChange={(ev) => setForm((prev) => ({ ...prev, title: ev.target.value }))}
+                  />
+                </div>
+                <div className="col-md-3">
+                  <label className="form-label" htmlFor="bulk-training-date">
+                    Completion date
+                  </label>
+                  <input
+                    id="bulk-training-date"
+                    className="form-control form-control-sm"
+                    type="date"
+                    value={form.completedAt ?? ""}
+                    onChange={(ev) => setForm((prev) => ({ ...prev, completedAt: ev.target.value }))}
+                  />
+                </div>
+                <div className="col-md-3">
+                  <label className="form-label" htmlFor="bulk-training-instructor">
+                    Instructor
+                  </label>
+                  <input
+                    id="bulk-training-instructor"
+                    className="form-control form-control-sm"
+                    value={form.instructorName ?? ""}
+                    onChange={(ev) =>
+                      setForm((prev) => ({ ...prev, instructorName: ev.target.value }))
+                    }
+                  />
+                </div>
+                <div className="col-md-4">
+                  <label className="form-label" htmlFor="bulk-training-location">
+                    Location
+                  </label>
+                  <input
+                    id="bulk-training-location"
+                    className="form-control form-control-sm"
+                    value={form.location ?? ""}
+                    onChange={(ev) => setForm((prev) => ({ ...prev, location: ev.target.value }))}
+                  />
+                </div>
+                <div className="col-md-8">
+                  <label className="form-label" htmlFor="bulk-training-ids">
+                    Employee IDs (comma-separated)
+                  </label>
+                  <input
+                    id="bulk-training-ids"
+                    className="form-control form-control-sm"
+                    required
+                    value={form.personnelIds ?? ""}
+                    onChange={(ev) => setForm((prev) => ({ ...prev, personnelIds: ev.target.value }))}
+                    placeholder="Paste multiple personnel IDs"
+                  />
+                </div>
+                <div className="col-12">
+                  <button type="submit" className="btn btn-primary btn-sm" disabled={creating}>
+                    {creating ? "Saving…" : "Record for all selected employees"}
+                  </button>
+                </div>
+              </div>
+            </form>
+          </div>
+        </div>
       ) : null}
 
-      {module === "forms" ? (
-        <p className="ind-muted" role="note">
-          Form definitions are stored in Model A. Advanced builder tooling continues to improve.
-        </p>
-      ) : null}
     </section>
   );
 }

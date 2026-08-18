@@ -548,6 +548,20 @@ export function parseIncidentWorkspaceTab(raw: string | null | undefined): Incid
   return "injuries";
 }
 
+/** Deep link into the Incidents module for a specific report. */
+export function incidentReportHref(incident: {
+  id: string;
+  category?: string | null;
+}): string {
+  const parsed = parseIncidentWorkspaceTab(incident.category ?? null);
+  const tab = isIncidentCategoryTab(parsed) ? parsed : "injuries";
+  const params = new URLSearchParams({
+    tab,
+    incident: incident.id,
+  });
+  return `/modules/incidents/?${params.toString()}`;
+}
+
 export function incidentTabLabel(tab: IncidentWorkspaceTab): string {
   return INCIDENT_WORKSPACE_TABS.find((t) => t.id === tab)?.label ?? tab;
 }
@@ -760,6 +774,5 @@ export function ensureRootCauseAnalysis(incident: IncidentRecord): RootCauseAnal
 
 export function incidentOptionLabel(incident: IncidentRecord): string {
   const cat = incident.category ? ` · ${incident.category}` : "";
-  const when = incident.createdAt ? ` · ${incident.createdAt.slice(0, 10)}` : "";
-  return `${incident.title}${cat}${when}`;
+  return `${incident.title}${cat}`;
 }

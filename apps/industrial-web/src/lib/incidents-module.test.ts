@@ -8,6 +8,7 @@ import {
   incidentTabLabel,
   parseIncidentTab,
   parseIncidentWorkspaceTab,
+  incidentReportHref,
   toIncidentRecord,
   toIncidentSummary,
 } from "./incidents-module";
@@ -44,6 +45,15 @@ describe("incidents module helpers", () => {
     expect(parseIncidentWorkspaceTab("root-cause-analysis")).toBe("root-cause-analysis");
     expect(incidentTabLabel("medical-refusals")).toBe("Medical Refusals");
     expect(incidentTabLabel("incident-workflow")).toBe("Incident Workflow");
+    expect(incidentReportHref({ id: "abc-123", category: "injuries" })).toBe(
+      "/modules/incidents/?tab=injuries&incident=abc-123",
+    );
+    expect(incidentReportHref({ id: "abc-123", category: "near-misses" })).toBe(
+      "/modules/incidents/?tab=near-misses&incident=abc-123",
+    );
+    expect(incidentReportHref({ id: "abc-123" })).toBe(
+      "/modules/incidents/?tab=injuries&incident=abc-123",
+    );
   });
 
   it("normalizes list rows and create payloads", () => {

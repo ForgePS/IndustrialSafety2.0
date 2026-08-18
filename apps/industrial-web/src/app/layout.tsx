@@ -18,9 +18,15 @@ export default function RootLayout({ children }: { children: ReactNode }) {
       className="light-style layout-menu-fixed"
       data-theme="theme-default"
       data-assets-path="/sneat/"
-      data-template="vertical-menu-template-free"
+      data-template="vertical-menu-template"
+      suppressHydrationWarning
     >
       <head>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `(function(){try{var m=localStorage.getItem("forge-ind-theme-mode");if(m!=="dark"&&m!=="light")m="light";var r=document.documentElement;r.setAttribute("data-bs-theme",m);r.classList.toggle("dark-style",m==="dark");r.classList.toggle("light-style",m==="light");r.style.colorScheme=m;}catch(e){}})();`,
+          }}
+        />
         <SneatHeadAssets />
       </head>
       <body>

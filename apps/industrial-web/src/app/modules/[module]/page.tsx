@@ -21,6 +21,9 @@ import { DocumentsWorkspace } from "@/components/documents-workspace";
 import { ReportingWorkspace } from "@/components/reporting-workspace";
 import { IndustrialImportWorkspace } from "@/components/industrial-import-workspace";
 import { IncidentsWorkspace } from "@/components/incidents-workspace";
+import { FleetWorkspace } from "@/components/fleet-workspace";
+import { DotComplianceWorkspace } from "@/components/dot-compliance-workspace";
+import { FormsWorkspace } from "@/components/forms-workspace";
 
 /** Static export params for SPA deep links (directory-index rewrite only). */
 export function generateStaticParams() {
@@ -63,6 +66,27 @@ export default async function ModulePage({
     return (
       <Suspense fallback={<p className="text-muted mb-0">Loading incidents…</p>}>
         <IncidentsWorkspace moduleName={name} />
+      </Suspense>
+    );
+  }
+  if (module === "fleet") {
+    return (
+      <Suspense fallback={<p className="text-muted mb-0">Loading fleet…</p>}>
+        <FleetWorkspace moduleName={name} />
+      </Suspense>
+    );
+  }
+  if (module === "dot-compliance") {
+    return (
+      <Suspense fallback={<p className="text-muted mb-0">Loading DOT compliance…</p>}>
+        <DotComplianceWorkspace moduleName={name} />
+      </Suspense>
+    );
+  }
+  if (module === "forms") {
+    return (
+      <Suspense fallback={<p className="text-muted mb-0">Loading forms…</p>}>
+        <FormsWorkspace moduleName={name} />
       </Suspense>
     );
   }

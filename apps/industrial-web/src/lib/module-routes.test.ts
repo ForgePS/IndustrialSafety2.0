@@ -18,7 +18,7 @@ const MODULE_PAGE = path.resolve(HERE, "../app/modules/[module]/page.tsx");
  * what happened to LOCKOUT_TAGOUT: the registry routes to /modules/lockout-tagout
  * while the page only matched the shorter "loto" slug.
  */
-const KNOWN_WITHOUT_WORKSPACE = new Set(["SCAN", "CORRECTIVE_ACTIONS", "FLEET"]);
+const KNOWN_WITHOUT_WORKSPACE = new Set(["SCAN", "CORRECTIVE_ACTIONS"]);
 
 /** Slugs the module page dispatches on directly, read from the source. */
 function explicitSlugs(): Set<string> {

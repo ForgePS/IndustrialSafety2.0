@@ -1,6 +1,8 @@
 "use client";
 import { useEffect, useState } from "react";
 import { ApiError, apiGet, apiSend } from "@forge/web-kit";
+import { FilterPanel } from "@/components/filter-panel";
+import { ModuleWorkspaceHeader } from "@/components/module-workspace-header";
 
 type Task = {
   id: string;
@@ -15,24 +17,27 @@ type Task = {
 export function TasksWorkspace({ moduleName }: { moduleName: string }) {
   const [items, setItems] = useState<Task[]>([]);
   const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
   const [title, setTitle] = useState("");
   const [priority, setPriority] = useState("Medium");
   const [deadlineDate, setDeadlineDate] = useState("");
   const [filter, setFilter] = useState("");
 
   async function load() {
+    setLoading(true);
     try {
       const q = filter ? `?q=${encodeURIComponent(filter)}` : "";
       setItems((await apiGet<{ items: Task[] }>(`/api/v1/industrial/tasks${q}`)).items);
       setError("");
     } catch (e) {
       setError(e instanceof ApiError ? e.message : "Unable to load tasks");
+    } finally {
+      setLoading(false);
     }
   }
 
   useEffect(() => {
     void load();
-    // initial mount load only; filter applied via explicit refresh/actions
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -65,100 +70,144 @@ export function TasksWorkspace({ moduleName }: { moduleName: string }) {
   }
 
   return (
-    <section className="ind-ops">
-      <header className="ind-ops-header">
-        <h1>{moduleName}</h1>
-        <p>Assigned work, acknowledgements, and completion tracking.</p>
-      </header>
-      {error && (
-        <p role="alert" className="ind-error">
+    <section aria-labelledby="tasks-title">
+      <ModuleWorkspaceHeader
+        id="tasks-title"
+        eyebrow="Coordination"
+        title={moduleName}
+        description="Assigned work, acknowledgements, and completion tracking."
+        onRefresh={() => void load()}
+        refreshing={loading}
+      />
+
+      {error ? (
+        <div className="alert alert-danger" role="alert">
           {error}
-        </p>
-      )}
-      <form className="ind-form" onSubmit={(e) => void createTask(e)}>
-        <label>
-          Title
-          <input
-            name="title"
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-            required
-            autoComplete="off"
-          />
-        </label>
-        <label>
-          Priority
-          <select
-            name="priority"
-            value={priority}
-            onChange={(e) => setPriority(e.target.value)}
-            aria-label="Task priority"
-          >
-            {["Low", "Medium", "High", "Urgent"].map((p) => (
-              <option key={p} value={p}>
-                {p}
-              </option>
-            ))}
-          </select>
-        </label>
-        <label>
-          Due date
-          <input
-            type="date"
-            name="deadlineDate"
-            value={deadlineDate}
-            onChange={(e) => setDeadlineDate(e.target.value)}
-          />
-        </label>
-        <button type="submit">Create task</button>
-      </form>
-      <div className="ind-toolbar">
-        <label>
-          Search
-          <input
-            value={filter}
-            onChange={(e) => setFilter(e.target.value)}
-            aria-label="Search tasks"
-          />
-        </label>
-        <button type="button" onClick={() => void load()}>
-          Apply
-        </button>
+        </div>
+      ) : null}
+
+      <div className="card border shadow-none mb-4">
+        <div className="card-header">
+          <h6 className="card-title mb-0">Create task</h6>
+        </div>
+        <div className="card-body">
+          <form onSubmit={(e) => void createTask(e)}>
+            <div className="row g-3 align-items-end">
+              <div className="col-md-5">
+                <label className="form-label" htmlFor="task-title">
+                  Title
+                </label>
+                <input
+                  id="task-title"
+                  className="form-control form-control-sm"
+                  name="title"
+                  value={title}
+                  onChange={(e) => setTitle(e.target.value)}
+                  required
+                  autoComplete="off"
+                />
+              </div>
+              <div className="col-md-3">
+                <label className="form-label" htmlFor="task-priority">
+                  Priority
+                </label>
+                <select
+                  id="task-priority"
+                  className="form-select form-select-sm"
+                  name="priority"
+                  value={priority}
+                  onChange={(e) => setPriority(e.target.value)}
+                  aria-label="Task priority"
+                >
+                  {["Low", "Medium", "High", "Urgent"].map((p) => (
+                    <option key={p} value={p}>
+                      {p}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div className="col-md-2">
+                <label className="form-label" htmlFor="task-deadline">
+                  Due date
+                </label>
+                <input
+                  id="task-deadline"
+                  className="form-control form-control-sm"
+                  type="date"
+                  name="deadlineDate"
+                  value={deadlineDate}
+                  onChange={(e) => setDeadlineDate(e.target.value)}
+                />
+              </div>
+              <div className="col-md-2">
+                <button type="submit" className="btn btn-primary btn-sm w-100">
+                  Create task
+                </button>
+              </div>
+            </div>
+          </form>
+        </div>
       </div>
-      <div className="ind-table-wrap">
-        <table>
-          <thead>
-            <tr>
-              <th scope="col">Task</th>
-              <th scope="col">Priority</th>
-              <th scope="col">Due</th>
-              <th scope="col">Status</th>
-              <th scope="col">Assignee</th>
-              <th scope="col">Action</th>
-            </tr>
-          </thead>
-          <tbody>
-            {items.map((task) => (
-              <tr key={task.id}>
-                <td>
-                  {task.title}
-                  {task.overdue ? " (Overdue)" : ""}
-                </td>
-                <td>{task.priority}</td>
-                <td>{task.deadlineDate ?? "—"}</td>
-                <td>{task.status}</td>
-                <td>{task.assigneeName ?? "Unassigned"}</td>
-                <td>
-                  {!["completed", "cancelled"].includes(task.status) && (
-                    <button type="button" onClick={() => void transition(task)}>
-                      Advance
-                    </button>
-                  )}
-                </td>
+
+      <FilterPanel
+        searchId="tasks-search"
+        searchValue={filter}
+        onSearchChange={setFilter}
+        searchPlaceholder="Search tasks…"
+        chips={filter ? [{ id: "q", label: `Search: ${filter}`, onRemove: () => setFilter("") }] : []}
+        onClearAll={() => {
+          setFilter("");
+          void load();
+        }}
+        onSubmit={() => void load()}
+      />
+
+      <div className="card border shadow-none">
+        <div className="table-responsive">
+          <table className="table table-hover mb-0">
+            <thead>
+              <tr>
+                <th scope="col">Task</th>
+                <th scope="col">Priority</th>
+                <th scope="col">Due</th>
+                <th scope="col">Status</th>
+                <th scope="col">Assignee</th>
+                <th scope="col" className="text-end">
+                  Action
+                </th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {items.map((task) => (
+                <tr key={task.id}>
+                  <td>
+                    {task.title}
+                    {task.overdue ? (
+                      <span className="badge bg-label-danger ms-2">Overdue</span>
+                    ) : null}
+                  </td>
+                  <td>{task.priority}</td>
+                  <td className="text-muted">{task.deadlineDate ?? "—"}</td>
+                  <td>
+                    <span className="badge bg-label-secondary">{task.status}</span>
+                  </td>
+                  <td>{task.assigneeName ?? "Unassigned"}</td>
+                  <td className="text-end">
+                    {!["completed", "cancelled"].includes(task.status) ? (
+                      <button
+                        type="button"
+                        className="btn btn-sm btn-outline-primary"
+                        onClick={() => void transition(task)}
+                      >
+                        Advance
+                      </button>
+                    ) : null}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       </div>
     </section>
   );

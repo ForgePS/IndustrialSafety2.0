@@ -52,3 +52,10 @@ export const validators = {
   femaSidPlaceholder: femaSidPlaceholderSchema,
   ssnLastFour: ssnLastFourSchema,
 } as const;
+
+export {
+  isValidVin,
+  normalizeVin,
+  validateVin,
+  type VinValidationResult,
+} from "./vin.js";

@@ -51,6 +51,7 @@ const MODULE_CODES = [
   "DOCUMENTS",
   "REPORTING",
   "IMPORT",
+  "FLEET",
 ];
 
 const FLAG_KEYS = [
@@ -70,6 +71,7 @@ const FLAG_KEYS = [
   "industrial.module.emergency_response.enabled",
   "industrial.module.documents.enabled",
   "industrial.module.reporting.enabled",
+  "industrial.module.fleet.enabled",
 ];
 
 const ADMIN_PERMS = [
@@ -86,6 +88,8 @@ const ADMIN_PERMS = [
   "industrial.incidents.manage",
   "industrial.equipment.view",
   "industrial.equipment.manage",
+  "industrial.fleet.view",
+  "industrial.fleet.manage",
   "industrial.loto.view",
   "industrial.loto.manage",
   "industrial.loto.approve",

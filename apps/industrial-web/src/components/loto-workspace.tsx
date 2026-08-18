@@ -2,7 +2,9 @@
 
 import { useEffect, useState, type FormEvent } from "react";
 import { ApiError, apiGet, apiSend, useAuth } from "@forge/web-kit";
+import { FilterPanel } from "@/components/filter-panel";
 import { ModuleUnavailable } from "@/components/module-unavailable";
+import { ModuleWorkspaceHeader } from "@/components/module-workspace-header";
 
 type ListResponse = { items: Array<Record<string, unknown>>; page: number; pageSize: number };
 type Bootstrap = {
@@ -182,30 +184,41 @@ export function LotoWorkspace({ moduleName }: { moduleName: string }) {
   const detailSteps = (detail?.steps as Array<Record<string, unknown>>) ?? [];
 
   return (
-    <section className="ops-workspace loto-workspace">
-      <header className="ops-workspace__header">
-        <h1>{moduleName}</h1>
-        <p>
-          Structured LOTO procedures with ordered energy/isolation/verification steps, restoration,
-          approvals, and revision history. QR runtime not enabled (adapter boundary only).
-        </p>
-      </header>
+    <section aria-labelledby="loto-title" className="loto-workspace">
+      <ModuleWorkspaceHeader
+        id="loto-title"
+        eyebrow="Operations"
+        title={moduleName}
+        description="Structured LOTO procedures with ordered energy/isolation/verification steps, restoration, approvals, and revision history. QR runtime not enabled (adapter boundary only)."
+        onRefresh={() => void loadList()}
+        refreshing={loading}
+      />
 
-      {error ? <p role="alert">{error}</p> : null}
+      {error ? (
+        <div className="alert alert-danger" role="alert">
+          {error}
+        </div>
+      ) : null}
 
-      <div className="ops-workspace__toolbar">
-        <label>
-          Search
-          <input value={q} onChange={(ev) => setQ(ev.target.value)} placeholder="Procedure #…" />
-        </label>
-        <button type="button" onClick={() => void loadList()} disabled={loading}>
-          Refresh
-        </button>
-      </div>
+      <FilterPanel
+        searchId="loto-search"
+        searchValue={q}
+        onSearchChange={setQ}
+        searchPlaceholder="Procedure #…"
+        chips={q ? [{ id: "q", label: `Search: ${q}`, onRemove: () => setQ("") }] : []}
+        onClearAll={() => {
+          setQ("");
+          void loadList();
+        }}
+        onSubmit={() => void loadList()}
+      />
 
       {canEdit ? (
-        <form className="ops-workspace__create loto-builder" onSubmit={(e) => void onCreate(e)}>
-          <h2>Create procedure</h2>
+        <form className="card border shadow-none mb-4 loto-builder" onSubmit={(e) => void onCreate(e)}>
+          <div className="card-header">
+            <h6 className="card-title mb-0">Create procedure</h6>
+          </div>
+          <div className="card-body">
           <label>
             Title
             <input value={title} onChange={(ev) => setTitle(ev.target.value)} />
@@ -346,31 +359,40 @@ export function LotoWorkspace({ moduleName }: { moduleName: string }) {
               onChange={(ev) => setRestorationLabel(ev.target.value)}
             />
           </label>
-          <button type="submit">Create draft</button>
+          <button type="submit" className="btn btn-primary btn-sm">Create draft</button>
+          </div>
         </form>
       ) : null}
 
-      {loading ? <p>Loading…</p> : null}
-      <ul className="ops-workspace__list">
+      {loading ? <p className="text-muted">Loading…</p> : null}
+      <div className="card border shadow-none mb-4">
+        <div className="list-group list-group-flush">
         {items.map((item) => (
-          <li key={String(item.id)}>
-            <button type="button" onClick={() => void openDetail(String(item.id))}>
-              <strong>{String(item.procedureNumber)}</strong> · {String(item.equipmentName)} ·{" "}
-              {String(item.status)}
-            </button>
-          </li>
+          <button
+            key={String(item.id)}
+            type="button"
+            className="list-group-item list-group-item-action"
+            onClick={() => void openDetail(String(item.id))}
+          >
+            <strong>{String(item.procedureNumber)}</strong> · {String(item.equipmentName)} ·{" "}
+            <span className="badge bg-label-secondary">{String(item.status)}</span>
+          </button>
         ))}
-      </ul>
+        </div>
+      </div>
 
       {procedure ? (
-        <article className="loto-detail">
-          <h2>
-            {String(procedure.procedureNumber)} — {String(procedure.status)}
-          </h2>
-          <p>
-            Rev {String(revision?.revisionNumber)} · Equipment {String(procedure.equipmentName)}
-          </p>
-          <ol>
+        <article className="card border shadow-none loto-detail">
+          <div className="card-header">
+            <h6 className="card-title mb-0">
+              {String(procedure.procedureNumber)} — {String(procedure.status)}
+            </h6>
+          </div>
+          <div className="card-body">
+            <p className="text-muted">
+              Rev {String(revision?.revisionNumber)} · Equipment {String(procedure.equipmentName)}
+            </p>
+            <ol>
             {detailSteps.map((s) => (
               <li key={String(s.id)}>
                 {String(s.stepNumber)}. {String(s.energySourceName)} @{" "}
@@ -378,40 +400,41 @@ export function LotoWorkspace({ moduleName }: { moduleName: string }) {
               </li>
             ))}
           </ol>
-          <div className="loto-actions">
+          <div className="d-flex flex-wrap gap-2 loto-actions">
             {canEdit ? (
-              <button type="button" onClick={() => void transition("submit-review")}>
+              <button type="button" className="btn btn-sm btn-outline-primary" onClick={() => void transition("submit-review")}>
                 Submit review
               </button>
             ) : null}
             {canEdit ? (
-              <button type="button" onClick={() => void transition("submit-approval")}>
+              <button type="button" className="btn btn-sm btn-outline-primary" onClick={() => void transition("submit-approval")}>
                 Submit approval
               </button>
             ) : null}
             {canApprove ? (
-              <button type="button" onClick={() => void transition("approve")}>
+              <button type="button" className="btn btn-sm btn-primary" onClick={() => void transition("approve")}>
                 Approve
               </button>
             ) : null}
             {canApprove ? (
-              <button type="button" onClick={() => void transition("activate")}>
+              <button type="button" className="btn btn-sm btn-success" onClick={() => void transition("activate")}>
                 Activate
               </button>
             ) : null}
             {canPrint ? (
-              <button type="button" onClick={() => void loadPrint()}>
+              <button type="button" className="btn btn-sm btn-outline-secondary" onClick={() => void loadPrint()}>
                 Printable
               </button>
             ) : null}
           </div>
           {printHtml ? (
-            <iframe title="LOTO printable" srcDoc={printHtml} className="loto-print-frame" />
+            <iframe title="LOTO printable" srcDoc={printHtml} className="loto-print-frame mt-3" />
           ) : null}
-          <p className="loto-qr-note">
+          <p className="text-muted small mt-3 mb-0 loto-qr-note">
             Future QR targets: industrial.loto.procedure / industrial.loto.revision (runtime not
             authorized).
           </p>
+          </div>
         </article>
       ) : null}
     </section>

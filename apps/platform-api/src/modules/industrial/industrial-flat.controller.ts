@@ -19,9 +19,13 @@ import {
 } from "../auth-context/require-permission.decorator.js";
 import { IndustrialBootstrapService } from "./industrial-bootstrap.service.js";
 import { IndustrialDomainService } from "./industrial-domain.service.js";
+import { IndustrialFleetService } from "./industrial-fleet.service.js";
 
 const ENTITLEMENT = { productCode: "FORGE_INDUSTRIAL" as const };
 type ListQuery = Record<string, string | undefined>;
+
+const FLEET_VIEW = ["industrial.fleet.view", "industrial.admin", "industrial.access"] as const;
+const FLEET_MANAGE = ["industrial.fleet.manage", "industrial.admin"] as const;
 
 const MODULE_VIEW = {
   training: ["industrial.training.view", "industrial.admin", "industrial.access"],
@@ -94,6 +98,7 @@ export class IndustrialFlatController {
   constructor(
     private readonly bootstrapService: IndustrialBootstrapService,
     private readonly domain: IndustrialDomainService,
+    private readonly fleet: IndustrialFleetService,
   ) {}
 
   /**
@@ -192,6 +197,266 @@ export class IndustrialFlatController {
       getRequestIds(req),
       { page: data.page, pageSize: data.pageSize, total: data.total },
     );
+  }
+
+  @Get("fleet/dashboard")
+  @RequireAnyPermission([...FLEET_VIEW], { requiresEntitlement: ENTITLEMENT })
+  async fleetDashboard(@Principal() principal: ForgePrincipal, @Req() req: RequestWithIds) {
+    return ok(await this.fleet.dashboard(principal), getRequestIds(req));
+  }
+
+  @Get("fleet/renewals")
+  @RequireAnyPermission([...FLEET_VIEW], { requiresEntitlement: ENTITLEMENT })
+  async fleetRenewals(
+    @Principal() principal: ForgePrincipal,
+    @Query() query: ListQuery,
+    @Req() req: RequestWithIds,
+  ) {
+    return ok(await this.fleet.renewals(principal, query), getRequestIds(req));
+  }
+
+  @Get("fleet/settings")
+  @RequireAnyPermission([...FLEET_VIEW], { requiresEntitlement: ENTITLEMENT })
+  async fleetSettings(@Principal() principal: ForgePrincipal, @Req() req: RequestWithIds) {
+    return ok(await this.fleet.getSettings(principal), getRequestIds(req));
+  }
+
+  @Patch("fleet/settings")
+  @RequireAnyPermission([...FLEET_MANAGE], { requiresEntitlement: ENTITLEMENT })
+  async patchFleetSettings(
+    @Principal() principal: ForgePrincipal,
+    @Body() body: Record<string, unknown>,
+    @Req() req: RequestWithIds,
+  ) {
+    return ok(await this.fleet.patchSettings(principal, body), getRequestIds(req));
+  }
+
+  @Get("fleet/reports/:report")
+  @RequireAnyPermission([...FLEET_VIEW], { requiresEntitlement: ENTITLEMENT })
+  async fleetReport(
+    @Principal() principal: ForgePrincipal,
+    @Param("report") report: string,
+    @Req() req: RequestWithIds,
+  ) {
+    return ok(await this.fleet.reportCsv(principal, report), getRequestIds(req));
+  }
+
+  @Post("fleet/vin/validate")
+  @RequireAnyPermission([...FLEET_VIEW], { requiresEntitlement: ENTITLEMENT })
+  async validateVin(@Body() body: Record<string, unknown>, @Req() req: RequestWithIds) {
+    return ok(this.fleet.validateVinHelper(String(body.vin ?? "")), getRequestIds(req));
+  }
+
+  @Get("fleet/vehicles")
+  @RequireAnyPermission([...FLEET_VIEW], { requiresEntitlement: ENTITLEMENT })
+  async listFleetVehiclesFlat(
+    @Principal() principal: ForgePrincipal,
+    @Query() query: ListQuery,
+    @Req() req: RequestWithIds,
+  ) {
+    return this.listOk(await this.fleet.listVehicles(principal, query), req);
+  }
+
+  @Get("fleet/vehicles/:id")
+  @RequireAnyPermission([...FLEET_VIEW], { requiresEntitlement: ENTITLEMENT })
+  async getFleetVehicle(
+    @Principal() principal: ForgePrincipal,
+    @Param("id") id: string,
+    @Req() req: RequestWithIds,
+  ) {
+    return ok(await this.fleet.getVehicle(principal, id), getRequestIds(req));
+  }
+
+  @Post("fleet/vehicles")
+  @RequireAnyPermission([...FLEET_MANAGE], { requiresEntitlement: ENTITLEMENT })
+  @Idempotent({ resourceType: "industrial_fleet_vehicle" })
+  async createFleetVehicleFlat(
+    @Principal() principal: ForgePrincipal,
+    @Body() body: Record<string, unknown>,
+    @Req() req: RequestWithIds,
+  ) {
+    return ok(await this.fleet.createVehicle(principal, body), getRequestIds(req));
+  }
+
+  @Patch("fleet/vehicles/:id")
+  @RequireAnyPermission([...FLEET_MANAGE], { requiresEntitlement: ENTITLEMENT })
+  async patchFleetVehicle(
+    @Principal() principal: ForgePrincipal,
+    @Param("id") id: string,
+    @Body() body: Record<string, unknown>,
+    @Req() req: RequestWithIds,
+  ) {
+    return ok(await this.fleet.patchVehicle(principal, id, body), getRequestIds(req));
+  }
+
+  @Post("fleet/vehicles/:id/archive")
+  @RequireAnyPermission([...FLEET_MANAGE], { requiresEntitlement: ENTITLEMENT })
+  async archiveFleetVehicle(
+    @Principal() principal: ForgePrincipal,
+    @Param("id") id: string,
+    @Req() req: RequestWithIds,
+  ) {
+    return ok(await this.fleet.archiveVehicle(principal, id), getRequestIds(req));
+  }
+
+  @Post("fleet/vehicles/:id/dispose")
+  @RequireAnyPermission([...FLEET_MANAGE], { requiresEntitlement: ENTITLEMENT })
+  async disposeFleetVehicle(
+    @Principal() principal: ForgePrincipal,
+    @Param("id") id: string,
+    @Body() body: Record<string, unknown>,
+    @Req() req: RequestWithIds,
+  ) {
+    return ok(await this.fleet.disposeVehicle(principal, id, body ?? {}), getRequestIds(req));
+  }
+
+  @Post("fleet/vehicles/:id/assign")
+  @RequireAnyPermission([...FLEET_MANAGE], { requiresEntitlement: ENTITLEMENT })
+  async assignFleetDriver(
+    @Principal() principal: ForgePrincipal,
+    @Param("id") id: string,
+    @Body() body: Record<string, unknown>,
+    @Req() req: RequestWithIds,
+  ) {
+    return ok(await this.fleet.assignDriver(principal, id, body ?? {}), getRequestIds(req));
+  }
+
+  @Post("fleet/vehicles/:id/mileage")
+  @RequireAnyPermission([...FLEET_MANAGE], { requiresEntitlement: ENTITLEMENT })
+  async updateFleetMileage(
+    @Principal() principal: ForgePrincipal,
+    @Param("id") id: string,
+    @Body() body: Record<string, unknown>,
+    @Req() req: RequestWithIds,
+  ) {
+    return ok(await this.fleet.updateMileage(principal, id, body ?? {}), getRequestIds(req));
+  }
+
+  @Post("fleet/vehicles/:id/engine-hours")
+  @RequireAnyPermission([...FLEET_MANAGE], { requiresEntitlement: ENTITLEMENT })
+  async updateFleetEngineHours(
+    @Principal() principal: ForgePrincipal,
+    @Param("id") id: string,
+    @Body() body: Record<string, unknown>,
+    @Req() req: RequestWithIds,
+  ) {
+    return ok(await this.fleet.updateEngineHours(principal, id, body ?? {}), getRequestIds(req));
+  }
+
+  @Post("fleet/vehicles/:id/out-of-service")
+  @RequireAnyPermission([...FLEET_MANAGE], { requiresEntitlement: ENTITLEMENT })
+  async fleetOutOfService(
+    @Principal() principal: ForgePrincipal,
+    @Param("id") id: string,
+    @Body() body: Record<string, unknown>,
+    @Req() req: RequestWithIds,
+  ) {
+    return ok(await this.fleet.setOutOfService(principal, id, body ?? {}), getRequestIds(req));
+  }
+
+  @Get("fleet/vehicles/:id/history")
+  @RequireAnyPermission([...FLEET_VIEW], { requiresEntitlement: ENTITLEMENT })
+  async fleetVehicleHistory(
+    @Principal() principal: ForgePrincipal,
+    @Param("id") id: string,
+    @Req() req: RequestWithIds,
+  ) {
+    return ok(await this.fleet.vehicleHistory(principal, id), getRequestIds(req));
+  }
+
+  @Post("fleet/drivers")
+  @RequireAnyPermission([...FLEET_MANAGE], { requiresEntitlement: ENTITLEMENT })
+  @Idempotent({ resourceType: "industrial_fleet_driver" })
+  async createFleetDriver(
+    @Principal() principal: ForgePrincipal,
+    @Body() body: Record<string, unknown>,
+    @Req() req: RequestWithIds,
+  ) {
+    return ok(await this.fleet.createDriver(principal, body), getRequestIds(req));
+  }
+
+  @Patch("fleet/drivers/:id")
+  @RequireAnyPermission([...FLEET_MANAGE], { requiresEntitlement: ENTITLEMENT })
+  async patchFleetDriver(
+    @Principal() principal: ForgePrincipal,
+    @Param("id") id: string,
+    @Body() body: Record<string, unknown>,
+    @Req() req: RequestWithIds,
+  ) {
+    return ok(await this.fleet.patchDriver(principal, id, body), getRequestIds(req));
+  }
+
+  @Get("fleet/maintenance")
+  @RequireAnyPermission([...FLEET_VIEW], { requiresEntitlement: ENTITLEMENT })
+  async listFleetMaintenance(
+    @Principal() principal: ForgePrincipal,
+    @Query() query: ListQuery,
+    @Req() req: RequestWithIds,
+  ) {
+    return this.listOk(await this.fleet.listMaintenance(principal, query), req);
+  }
+
+  @Post("fleet/maintenance")
+  @RequireAnyPermission([...FLEET_MANAGE], { requiresEntitlement: ENTITLEMENT })
+  @Idempotent({ resourceType: "industrial_fleet_maintenance" })
+  async createFleetMaintenance(
+    @Principal() principal: ForgePrincipal,
+    @Body() body: Record<string, unknown>,
+    @Req() req: RequestWithIds,
+  ) {
+    return ok(await this.fleet.createMaintenance(principal, body), getRequestIds(req));
+  }
+
+  @Post("fleet/maintenance/:id/complete")
+  @RequireAnyPermission([...FLEET_MANAGE], { requiresEntitlement: ENTITLEMENT })
+  async completeFleetMaintenance(
+    @Principal() principal: ForgePrincipal,
+    @Param("id") id: string,
+    @Req() req: RequestWithIds,
+  ) {
+    return ok(await this.fleet.completeMaintenance(principal, id), getRequestIds(req));
+  }
+
+  @Get("fleet/inspections")
+  @RequireAnyPermission([...FLEET_VIEW], { requiresEntitlement: ENTITLEMENT })
+  async listFleetInspections(
+    @Principal() principal: ForgePrincipal,
+    @Query() query: ListQuery,
+    @Req() req: RequestWithIds,
+  ) {
+    return this.listOk(await this.fleet.listFleetInspections(principal, query), req);
+  }
+
+  @Post("fleet/inspections")
+  @RequireAnyPermission([...FLEET_MANAGE], { requiresEntitlement: ENTITLEMENT })
+  @Idempotent({ resourceType: "industrial_fleet_inspection" })
+  async createFleetInspection(
+    @Principal() principal: ForgePrincipal,
+    @Body() body: Record<string, unknown>,
+    @Req() req: RequestWithIds,
+  ) {
+    return ok(await this.fleet.createFleetInspection(principal, body), getRequestIds(req));
+  }
+
+  @Get("fleet/documents")
+  @RequireAnyPermission([...FLEET_VIEW], { requiresEntitlement: ENTITLEMENT })
+  async listFleetDocuments(
+    @Principal() principal: ForgePrincipal,
+    @Query() query: ListQuery,
+    @Req() req: RequestWithIds,
+  ) {
+    return this.listOk(await this.fleet.listDocuments(principal, query), req);
+  }
+
+  @Post("fleet/documents")
+  @RequireAnyPermission([...FLEET_MANAGE], { requiresEntitlement: ENTITLEMENT })
+  @Idempotent({ resourceType: "industrial_fleet_document" })
+  async createFleetDocument(
+    @Principal() principal: ForgePrincipal,
+    @Body() body: Record<string, unknown>,
+    @Req() req: RequestWithIds,
+  ) {
+    return ok(await this.fleet.createDocument(principal, body), getRequestIds(req));
   }
 
   @Post("personnel")
@@ -712,6 +977,37 @@ export class IndustrialFlatController {
     @Req() req: RequestWithIds,
   ) {
     return ok(await this.domain.updateIncident(principal, id, body ?? {}), getRequestIds(req));
+  }
+
+  @Get("form-submissions")
+  @RequireAnyPermission([...MODULE_VIEW.forms], { requiresEntitlement: ENTITLEMENT })
+  async listFormSubmissions(
+    @Principal() principal: ForgePrincipal,
+    @Query() query: ListQuery,
+    @Req() req: RequestWithIds,
+  ) {
+    return this.listOk(await this.domain.listFormSubmissions(principal, query), req);
+  }
+
+  @Post("form-submissions")
+  @RequireAnyPermission([...MODULE_MANAGE.forms], { requiresEntitlement: ENTITLEMENT })
+  @Idempotent({ resourceType: "industrial_form_submissions" })
+  async createFormSubmission(
+    @Principal() principal: ForgePrincipal,
+    @Body() body: Record<string, unknown>,
+    @Req() req: RequestWithIds,
+  ) {
+    return ok(await this.domain.createFormSubmission(principal, body ?? {}), getRequestIds(req));
+  }
+
+  @Get("form-submissions/:id")
+  @RequireAnyPermission([...MODULE_VIEW.forms], { requiresEntitlement: ENTITLEMENT })
+  async getFormSubmission(
+    @Principal() principal: ForgePrincipal,
+    @Param("id") id: string,
+    @Req() req: RequestWithIds,
+  ) {
+    return ok(await this.domain.getFormSubmission(principal, id), getRequestIds(req));
   }
 
   // Generic module routes (ops + high-risk + compliance packs)

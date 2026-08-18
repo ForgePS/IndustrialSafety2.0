@@ -22,6 +22,7 @@ const REQUIRED_FLAT_ROUTES = [
   "loto",
   "training",
   "forms",
+  "form-submissions",
   "tasks",
   "workers-comp",
   "dot",
@@ -37,6 +38,8 @@ const REQUIRED_FLAT_ROUTES = [
   "chemical-safety",
   "corrective-actions",
   "training/bulk",
+  "fleet/vehicles",
+  "fleet/dashboard",
 ];
 
 describe("Industrial Model A API contract", () => {

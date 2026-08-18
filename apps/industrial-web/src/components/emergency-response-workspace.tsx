@@ -1,6 +1,8 @@
 "use client";
 import { useEffect, useState } from "react";
 import { ApiError, apiGet, apiSend } from "@forge/web-kit";
+import { ModuleWorkspaceHeader } from "@/components/module-workspace-header";
+import { ModuleWorkspaceTabs } from "@/components/module-workspace-tabs";
 
 const categories = ["eap", "scenarios", "drills", "responseTeams", "jsas"] as const;
 type RecordRow = {
@@ -12,15 +14,19 @@ type RecordRow = {
   eventDate?: string | null;
 };
 
+const CATEGORY_TABS = categories.map((c) => ({ id: c, label: c }));
+
 export function EmergencyResponseWorkspace({ moduleName }: { moduleName: string }) {
   const [category, setCategory] = useState<(typeof categories)[number]>("eap");
   const [items, setItems] = useState<RecordRow[]>([]);
   const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
   const [title, setTitle] = useState("");
   const [planId, setPlanId] = useState("");
   const [eventDate, setEventDate] = useState("");
 
   async function load() {
+    setLoading(true);
     try {
       setItems(
         (await apiGet<{ items: RecordRow[] }>(`/api/v1/industrial/emergency-response/${category}`))
@@ -31,12 +37,13 @@ export function EmergencyResponseWorkspace({ moduleName }: { moduleName: string 
       setError(
         e instanceof ApiError ? e.message : "Unable to load emergency response records",
       );
+    } finally {
+      setLoading(false);
     }
   }
 
   useEffect(() => {
     void load();
-    // load closes over category; re-fetch when category changes
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [category]);
 
@@ -59,85 +66,111 @@ export function EmergencyResponseWorkspace({ moduleName }: { moduleName: string 
   }
 
   return (
-    <section className="ind-ops">
-      <header className="ind-ops-header">
-        <h1>{moduleName}</h1>
-        <p>
-          Compliance plans, scenarios, drills, response teams, and JSAs. This is not a CAD or 911
-          dispatch surface.
-        </p>
-      </header>
-      <label>
-        Category
-        <select
-          value={category}
-          onChange={(e) => setCategory(e.target.value as typeof category)}
-          aria-label="Emergency response category"
-        >
-          {categories.map((c) => (
-            <option key={c} value={c}>
-              {c}
-            </option>
-          ))}
-        </select>
-      </label>
-      {error && (
-        <p role="alert" className="ind-error">
+    <section aria-labelledby="emergency-title">
+      <ModuleWorkspaceHeader
+        id="emergency-title"
+        eyebrow="Coordination"
+        title={moduleName}
+        description="Compliance plans, scenarios, drills, response teams, and JSAs. This is not a CAD or 911 dispatch surface."
+        onRefresh={() => void load()}
+        refreshing={loading}
+      />
+
+      <ModuleWorkspaceTabs
+        tabs={CATEGORY_TABS}
+        active={category}
+        onChange={setCategory}
+        ariaLabel="Emergency response categories"
+      />
+
+      {error ? (
+        <div className="alert alert-danger" role="alert">
           {error}
-        </p>
-      )}
-      <form className="ind-form" onSubmit={(e) => void createRecord(e)}>
-        <label>
-          Title
-          <input
-            name="title"
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-            required
-            autoComplete="off"
-          />
-        </label>
-        <label>
-          Plan ID
-          <input
-            name="planId"
-            value={planId}
-            onChange={(e) => setPlanId(e.target.value)}
-            autoComplete="off"
-          />
-        </label>
-        <label>
-          Event date
-          <input
-            type="date"
-            name="eventDate"
-            value={eventDate}
-            onChange={(e) => setEventDate(e.target.value)}
-          />
-        </label>
-        <button type="submit">Create record</button>
-      </form>
-      <div className="ind-table-wrap">
-        <table>
-          <thead>
-            <tr>
-              <th scope="col">Record</th>
-              <th scope="col">Status</th>
-              <th scope="col">Plan</th>
-              <th scope="col">Event date</th>
-            </tr>
-          </thead>
-          <tbody>
-            {items.map((item) => (
-              <tr key={item.id}>
-                <td>{item.title}</td>
-                <td>{item.status}</td>
-                <td>{item.planId ?? "—"}</td>
-                <td>{item.eventDate ?? "—"}</td>
+        </div>
+      ) : null}
+
+      <div className="card border shadow-none mb-4">
+        <div className="card-header">
+          <h6 className="card-title mb-0">Create record</h6>
+        </div>
+        <div className="card-body">
+          <form onSubmit={(e) => void createRecord(e)}>
+            <div className="row g-3 align-items-end">
+              <div className="col-md-5">
+                <label className="form-label" htmlFor="er-title">
+                  Title
+                </label>
+                <input
+                  id="er-title"
+                  className="form-control form-control-sm"
+                  name="title"
+                  value={title}
+                  onChange={(e) => setTitle(e.target.value)}
+                  required
+                  autoComplete="off"
+                />
+              </div>
+              <div className="col-md-3">
+                <label className="form-label" htmlFor="er-plan-id">
+                  Plan ID
+                </label>
+                <input
+                  id="er-plan-id"
+                  className="form-control form-control-sm"
+                  name="planId"
+                  value={planId}
+                  onChange={(e) => setPlanId(e.target.value)}
+                  autoComplete="off"
+                />
+              </div>
+              <div className="col-md-2">
+                <label className="form-label" htmlFor="er-event-date">
+                  Event date
+                </label>
+                <input
+                  id="er-event-date"
+                  className="form-control form-control-sm"
+                  type="date"
+                  name="eventDate"
+                  value={eventDate}
+                  onChange={(e) => setEventDate(e.target.value)}
+                />
+              </div>
+              <div className="col-md-2">
+                <button type="submit" className="btn btn-primary btn-sm w-100">
+                  Create
+                </button>
+              </div>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <div className="card border shadow-none">
+        <div className="table-responsive">
+          <table className="table table-hover mb-0">
+            <thead>
+              <tr>
+                <th scope="col">Record</th>
+                <th scope="col">Status</th>
+                <th scope="col">Plan</th>
+                <th scope="col">Event date</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {items.map((item) => (
+                <tr key={item.id}>
+                  <td>{item.title}</td>
+                  <td>
+                    <span className="badge bg-label-secondary">{item.status}</span>
+                  </td>
+                  <td className="text-muted">{item.planId ?? "—"}</td>
+                  <td className="text-muted">{item.eventDate ?? "—"}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       </div>
     </section>
   );

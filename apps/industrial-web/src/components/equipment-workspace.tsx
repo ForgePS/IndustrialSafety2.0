@@ -2,7 +2,9 @@
 
 import { useEffect, useState, type FormEvent } from "react";
 import { ApiError, apiGet, apiSend, useAuth } from "@forge/web-kit";
+import { FilterPanel } from "@/components/filter-panel";
 import { ModuleUnavailable } from "@/components/module-unavailable";
+import { ModuleWorkspaceHeader } from "@/components/module-workspace-header";
 
 type ListResponse = { items: Array<Record<string, unknown>>; page: number; pageSize: number };
 type Bootstrap = {
@@ -128,111 +130,192 @@ export function EquipmentWorkspace({ moduleName }: { moduleName: string }) {
   }
 
   return (
-    <section className="ops-workspace equipment-workspace">
-      <header className="ops-workspace__header">
-        <h1>{moduleName}</h1>
-        <p>Site / area hierarchy, equipment identity, and LOTO association indicators.</p>
-      </header>
+    <section aria-labelledby="equipment-title" className="equipment-workspace">
+      <ModuleWorkspaceHeader
+        id="equipment-title"
+        eyebrow="Operations"
+        title={moduleName}
+        description="Site / area hierarchy, equipment identity, and LOTO association indicators."
+        onRefresh={() => void load()}
+        refreshing={loading}
+      />
 
-      {error ? <p role="alert">{error}</p> : null}
+      <FilterPanel
+        searchId="equipment-search"
+        searchValue={q}
+        onSearchChange={setQ}
+        searchPlaceholder="Name, tag, serial…"
+        chips={q ? [{ id: "q", label: `Search: ${q}`, onRemove: () => setQ("") }] : []}
+        onClearAll={() => {
+          setQ("");
+          void load();
+        }}
+        onSubmit={() => void load()}
+      />
 
-      <div className="ops-workspace__toolbar">
-        <label>
-          Search
-          <input
-            value={q}
-            onChange={(ev) => setQ(ev.target.value)}
-            placeholder="Name, tag, serial…"
-          />
-        </label>
-        <button type="button" onClick={() => void load()} disabled={loading}>
-          Refresh
-        </button>
-      </div>
-
-      {canManage ? (
-        <form className="ops-workspace__create" onSubmit={(e) => void onCreate(e)}>
-          <h2>Create equipment</h2>
-          <label>
-            Name *
-            <input
-              required
-              value={form.equipmentName}
-              onChange={(ev) => setForm((f) => ({ ...f, equipmentName: ev.target.value }))}
-            />
-          </label>
-          <label>
-            External ID
-            <input
-              value={form.externalEquipmentId}
-              onChange={(ev) => setForm((f) => ({ ...f, externalEquipmentId: ev.target.value }))}
-            />
-          </label>
-          <label>
-            Site
-            <select
-              value={form.siteId}
-              onChange={(ev) => setForm((f) => ({ ...f, siteId: ev.target.value }))}
-            >
-              <option value="">—</option>
-              {sites.map((s) => (
-                <option key={String(s.id)} value={String(s.id)}>
-                  {String(s.name)}
-                </option>
-              ))}
-            </select>
-          </label>
-          <label>
-            Manufacturer
-            <input
-              value={form.manufacturer}
-              onChange={(ev) => setForm((f) => ({ ...f, manufacturer: ev.target.value }))}
-            />
-          </label>
-          <label>
-            Model
-            <input
-              value={form.model}
-              onChange={(ev) => setForm((f) => ({ ...f, model: ev.target.value }))}
-            />
-          </label>
-          <label>
-            Serial
-            <input
-              value={form.serialNumber}
-              onChange={(ev) => setForm((f) => ({ ...f, serialNumber: ev.target.value }))}
-            />
-          </label>
-          <label>
-            Location detail
-            <input
-              value={form.locationDetail}
-              onChange={(ev) => setForm((f) => ({ ...f, locationDetail: ev.target.value }))}
-            />
-          </label>
-          <button type="submit" disabled={creating}>
-            {creating ? "Saving…" : "Create"}
-          </button>
-        </form>
+      {error ? (
+        <div className="alert alert-danger" role="alert">
+          {error}
+        </div>
       ) : null}
 
-      {loading ? <p>Loading…</p> : null}
-      {!loading && items.length === 0 ? <p>No equipment records.</p> : null}
+      {canManage ? (
+        <div className="card border shadow-none mb-4">
+          <div className="card-header">
+            <h6 className="card-title mb-0">Create equipment</h6>
+          </div>
+          <div className="card-body">
+            <form onSubmit={(e) => void onCreate(e)}>
+              <div className="row g-3">
+                <div className="col-md-4">
+                  <label className="form-label" htmlFor="equip-name">
+                    Name *
+                  </label>
+                  <input
+                    id="equip-name"
+                    className="form-control form-control-sm"
+                    required
+                    value={form.equipmentName}
+                    onChange={(ev) => setForm((f) => ({ ...f, equipmentName: ev.target.value }))}
+                  />
+                </div>
+                <div className="col-md-4">
+                  <label className="form-label" htmlFor="equip-external-id">
+                    External ID
+                  </label>
+                  <input
+                    id="equip-external-id"
+                    className="form-control form-control-sm"
+                    value={form.externalEquipmentId}
+                    onChange={(ev) => setForm((f) => ({ ...f, externalEquipmentId: ev.target.value }))}
+                  />
+                </div>
+                <div className="col-md-4">
+                  <label className="form-label" htmlFor="equip-site">
+                    Site
+                  </label>
+                  <select
+                    id="equip-site"
+                    className="form-select form-select-sm"
+                    value={form.siteId}
+                    onChange={(ev) => setForm((f) => ({ ...f, siteId: ev.target.value }))}
+                  >
+                    <option value="">—</option>
+                    {sites.map((s) => (
+                      <option key={String(s.id)} value={String(s.id)}>
+                        {String(s.name)}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div className="col-md-3">
+                  <label className="form-label" htmlFor="equip-manufacturer">
+                    Manufacturer
+                  </label>
+                  <input
+                    id="equip-manufacturer"
+                    className="form-control form-control-sm"
+                    value={form.manufacturer}
+                    onChange={(ev) => setForm((f) => ({ ...f, manufacturer: ev.target.value }))}
+                  />
+                </div>
+                <div className="col-md-3">
+                  <label className="form-label" htmlFor="equip-model">
+                    Model
+                  </label>
+                  <input
+                    id="equip-model"
+                    className="form-control form-control-sm"
+                    value={form.model}
+                    onChange={(ev) => setForm((f) => ({ ...f, model: ev.target.value }))}
+                  />
+                </div>
+                <div className="col-md-3">
+                  <label className="form-label" htmlFor="equip-serial">
+                    Serial
+                  </label>
+                  <input
+                    id="equip-serial"
+                    className="form-control form-control-sm"
+                    value={form.serialNumber}
+                    onChange={(ev) => setForm((f) => ({ ...f, serialNumber: ev.target.value }))}
+                  />
+                </div>
+                <div className="col-md-3">
+                  <label className="form-label" htmlFor="equip-location">
+                    Location detail
+                  </label>
+                  <input
+                    id="equip-location"
+                    className="form-control form-control-sm"
+                    value={form.locationDetail}
+                    onChange={(ev) => setForm((f) => ({ ...f, locationDetail: ev.target.value }))}
+                  />
+                </div>
+                <div className="col-12">
+                  <button type="submit" className="btn btn-primary btn-sm" disabled={creating}>
+                    {creating ? "Saving…" : "Create equipment"}
+                  </button>
+                </div>
+              </div>
+            </form>
+          </div>
+        </div>
+      ) : null}
 
-      <ul className="ops-workspace__list">
-        {items.map((item) => (
-          <li key={String(item.id)}>
-            <strong>{String(item.equipmentName)}</strong>
-            <span> · {String(item.externalEquipmentId || item.assetTag || "no ID")}</span>
-            <span> · {String(item.status)}</span>
-            {canManage ? (
-              <button type="button" onClick={() => void archive(String(item.id))}>
-                Archive
-              </button>
-            ) : null}
-          </li>
-        ))}
-      </ul>
+      {loading ? (
+        <p className="text-muted" role="status" aria-live="polite">
+          Loading…
+        </p>
+      ) : null}
+      {!loading && items.length === 0 ? (
+        <div className="card border shadow-none">
+          <div className="card-body">
+            <p className="text-muted mb-0">No equipment records.</p>
+          </div>
+        </div>
+      ) : null}
+
+      {!loading && items.length > 0 ? (
+        <div className="card border shadow-none">
+          <div className="table-responsive">
+            <table className="table table-hover mb-0">
+              <thead>
+                <tr>
+                  <th scope="col">Equipment</th>
+                  <th scope="col">ID</th>
+                  <th scope="col">Status</th>
+                  {canManage ? <th scope="col" className="text-end">Actions</th> : null}
+                </tr>
+              </thead>
+              <tbody>
+                {items.map((item) => (
+                  <tr key={String(item.id)}>
+                    <td>{String(item.equipmentName)}</td>
+                    <td className="text-muted">
+                      {String(item.externalEquipmentId || item.assetTag || "no ID")}
+                    </td>
+                    <td>
+                      <span className="badge bg-label-secondary">{String(item.status)}</span>
+                    </td>
+                    {canManage ? (
+                      <td className="text-end">
+                        <button
+                          type="button"
+                          className="btn btn-sm btn-outline-warning"
+                          onClick={() => void archive(String(item.id))}
+                        >
+                          Archive
+                        </button>
+                      </td>
+                    ) : null}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      ) : null}
     </section>
   );
 }

@@ -136,6 +136,11 @@ export const IMPORT_TEMPLATES: readonly ImportTemplateMeta[] = [
       { fieldKey: "mileage", displayName: "Mileage", dataType: "number", required: false, sensitive: false },
       { fieldKey: "notes", displayName: "Notes", dataType: "string", required: false, sensitive: false },
       { fieldKey: "vehicle_fringe", displayName: "Not on Vehicle Fringe SS", dataType: "boolean", required: false, sensitive: false },
+      { fieldKey: "asset_type", displayName: "Asset Type", dataType: "string", required: false, sensitive: false },
+      { fieldKey: "form_2290", displayName: "Form 2290", dataType: "string", required: false, sensitive: false },
+      { fieldKey: "irp", displayName: "IRP", dataType: "string", required: false, sensitive: false },
+      { fieldKey: "commute_use", displayName: "Commute Use", dataType: "string", required: false, sensitive: false },
+      { fieldKey: "registration_renewal_month", displayName: "Registration Renewal Month", dataType: "string", required: false, sensitive: false },
     ],
   },
 ] as const;

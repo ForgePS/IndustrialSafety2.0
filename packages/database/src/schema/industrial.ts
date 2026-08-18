@@ -271,26 +271,60 @@ export const industrialFleetVehicles = pgTable(
       .notNull()
       .references(() => tenants.id),
     siteId: uuid("site_id").references(() => industrialSites.id),
+    assetNumber: varchar("asset_number", { length: 64 }),
+    assetType: varchar("asset_type", { length: 64 }).notNull().default("FLEET_VEHICLE"),
+    customAssetTypeLabel: varchar("custom_asset_type_label", { length: 120 }),
     year: integer("year"),
     make: varchar("make", { length: 120 }),
     model: varchar("model", { length: 120 }),
+    trim: varchar("trim", { length: 120 }),
     color: varchar("color", { length: 64 }),
     vin: varchar("vin", { length: 32 }),
+    serialNumber: varchar("serial_number", { length: 120 }),
     licensePlate: varchar("license_plate", { length: 64 }),
+    licenseState: varchar("license_state", { length: 32 }),
     renewalDate: date("renewal_date"),
+    registrationRenewalMonth: integer("registration_renewal_month"),
     locationName: varchar("location_name", { length: 300 }),
+    assignedDriverId: uuid("assigned_driver_id"),
+    assignedDriverPersonnelId: uuid("assigned_driver_personnel_id").references(
+      () => industrialPersonnel.id,
+    ),
+    assignedDriverName: varchar("assigned_driver_name", { length: 300 }),
     countyAssessed: varchar("county_assessed", { length: 120 }),
+    countyAssessmentStatus: varchar("county_assessment_status", { length: 64 }),
+    countyAssessmentNotes: text("county_assessment_notes"),
     insured: boolean("insured"),
+    insuranceStatus: varchar("insurance_status", { length: 64 }),
     mileage: integer("mileage"),
+    mileageUpdatedAt: timestamp("mileage_updated_at", { withTimezone: true }),
+    engineHours: integer("engine_hours"),
+    engineHoursUpdatedAt: timestamp("engine_hours_updated_at", { withTimezone: true }),
     notes: text("notes"),
     vehicleFringe: boolean("vehicle_fringe"),
+    notOnVehicleFringeSs: boolean("not_on_vehicle_fringe_ss"),
+    commuteUseStatus: varchar("commute_use_status", { length: 64 }),
+    commuteUseNotes: text("commute_use_notes"),
+    form2290Status: varchar("form_2290_status", { length: 64 }),
+    form2290Notes: text("form_2290_notes"),
+    irpStatus: varchar("irp_status", { length: 64 }),
+    irpNotes: text("irp_notes"),
+    dispositionStatus: varchar("disposition_status", { length: 64 }),
+    dispositionDate: date("disposition_date"),
+    dispositionNotes: text("disposition_notes"),
+    outOfService: boolean("out_of_service").notNull().default(false),
+    outOfServiceReason: text("out_of_service_reason"),
     status: varchar("status", { length: 64 }).notNull().default("ACTIVE"),
     ...sourceCols,
     createdAt: createdAtColumn,
     updatedAt: updatedAtColumn,
     archivedAt: timestamp("archived_at", { withTimezone: true }),
   },
-  (t) => [uniqueIndex("industrial_fleet_vehicles_tenant_vin_uidx").on(t.tenantId, t.vin)],
+  (t) => [
+    uniqueIndex("industrial_fleet_vehicles_tenant_vin_uidx").on(t.tenantId, t.vin),
+    index("industrial_fleet_vehicles_tenant_type_idx").on(t.tenantId, t.assetType),
+    index("industrial_fleet_vehicles_tenant_renewal_idx").on(t.tenantId, t.renewalDate),
+  ],
 );
 
 export const industrialFleetDrivers = pgTable("industrial_fleet_drivers", {
@@ -298,16 +332,168 @@ export const industrialFleetDrivers = pgTable("industrial_fleet_drivers", {
   tenantId: uuid("tenant_id")
     .notNull()
     .references(() => tenants.id),
+  siteId: uuid("site_id").references(() => industrialSites.id),
   personnelId: uuid("personnel_id").references(() => industrialPersonnel.id),
   personnelName: varchar("personnel_name", { length: 300 }),
+  employeeNumber: varchar("employee_number", { length: 120 }),
   licenseNumber: varchar("license_number", { length: 120 }),
   licenseState: varchar("license_state", { length: 32 }),
+  licenseExpiryDate: date("license_expiry_date"),
+  dateOfBirth: date("date_of_birth"),
   status: varchar("status", { length: 64 }).notNull().default("ACTIVE"),
+  initialMvrDate: date("initial_mvr_date"),
+  lastMvrDate: date("last_mvr_date"),
+  nextMvrDueDate: date("next_mvr_due_date"),
+  insuranceEffectiveDate: date("insurance_effective_date"),
+  insuranceRemovedDate: date("insurance_removed_date"),
+  notes: text("notes"),
   ...sourceCols,
   createdAt: createdAtColumn,
   updatedAt: updatedAtColumn,
   archivedAt: timestamp("archived_at", { withTimezone: true }),
 });
+
+export const industrialFleetDriverSettings = pgTable("industrial_fleet_driver_settings", {
+  id: uuid("id").primaryKey(),
+  tenantId: uuid("tenant_id")
+    .notNull()
+    .references(() => tenants.id),
+  insurerName: varchar("insurer_name", { length: 300 }),
+  insurerEmail: text("insurer_email"),
+  annualSampleDate: varchar("annual_sample_date", { length: 16 }),
+  lastSampleYear: integer("last_sample_year"),
+  emailOnRemoval: boolean("email_on_removal").notNull().default(false),
+  settings: jsonb("settings").notNull().default({}),
+  ...sourceCols,
+  createdAt: createdAtColumn,
+  updatedAt: updatedAtColumn,
+  archivedAt: timestamp("archived_at", { withTimezone: true }),
+});
+
+export const industrialFleetAssignmentHistory = pgTable(
+  "industrial_fleet_assignment_history",
+  {
+    id: uuid("id").primaryKey(),
+    tenantId: uuid("tenant_id")
+      .notNull()
+      .references(() => tenants.id),
+    vehicleId: uuid("vehicle_id")
+      .notNull()
+      .references(() => industrialFleetVehicles.id),
+    personnelId: uuid("personnel_id").references(() => industrialPersonnel.id),
+    driverId: uuid("driver_id").references(() => industrialFleetDrivers.id),
+    driverName: varchar("driver_name", { length: 300 }),
+    action: varchar("action", { length: 64 }).notNull(),
+    effectiveAt: timestamp("effective_at", { withTimezone: true }).notNull().defaultNow(),
+    notes: text("notes"),
+    createdAt: createdAtColumn,
+  },
+  (t) => [
+    index("industrial_fleet_assignment_history_vehicle_idx").on(
+      t.tenantId,
+      t.vehicleId,
+      t.effectiveAt,
+    ),
+  ],
+);
+
+export const industrialFleetMileageHistory = pgTable(
+  "industrial_fleet_mileage_history",
+  {
+    id: uuid("id").primaryKey(),
+    tenantId: uuid("tenant_id")
+      .notNull()
+      .references(() => tenants.id),
+    vehicleId: uuid("vehicle_id")
+      .notNull()
+      .references(() => industrialFleetVehicles.id),
+    mileage: integer("mileage").notNull(),
+    recordedAt: timestamp("recorded_at", { withTimezone: true }).notNull().defaultNow(),
+    notes: text("notes"),
+    createdAt: createdAtColumn,
+  },
+  (t) => [
+    index("industrial_fleet_mileage_history_vehicle_idx").on(
+      t.tenantId,
+      t.vehicleId,
+      t.recordedAt,
+    ),
+  ],
+);
+
+export const industrialFleetEngineHoursHistory = pgTable(
+  "industrial_fleet_engine_hours_history",
+  {
+    id: uuid("id").primaryKey(),
+    tenantId: uuid("tenant_id")
+      .notNull()
+      .references(() => tenants.id),
+    vehicleId: uuid("vehicle_id")
+      .notNull()
+      .references(() => industrialFleetVehicles.id),
+    engineHours: integer("engine_hours").notNull(),
+    recordedAt: timestamp("recorded_at", { withTimezone: true }).notNull().defaultNow(),
+    notes: text("notes"),
+    createdAt: createdAtColumn,
+  },
+  (t) => [
+    index("industrial_fleet_engine_hours_history_vehicle_idx").on(
+      t.tenantId,
+      t.vehicleId,
+      t.recordedAt,
+    ),
+  ],
+);
+
+export const industrialFleetMaintenance = pgTable(
+  "industrial_fleet_maintenance",
+  {
+    id: uuid("id").primaryKey(),
+    tenantId: uuid("tenant_id")
+      .notNull()
+      .references(() => tenants.id),
+    vehicleId: uuid("vehicle_id")
+      .notNull()
+      .references(() => industrialFleetVehicles.id),
+    title: varchar("title", { length: 500 }).notNull(),
+    maintenanceType: varchar("maintenance_type", { length: 64 }).notNull().default("REPAIR"),
+    status: varchar("status", { length: 64 }).notNull().default("OPEN"),
+    dueDate: date("due_date"),
+    completedAt: timestamp("completed_at", { withTimezone: true }),
+    costCents: integer("cost_cents"),
+    notes: text("notes"),
+    ...sourceCols,
+    createdAt: createdAtColumn,
+    updatedAt: updatedAtColumn,
+    archivedAt: timestamp("archived_at", { withTimezone: true }),
+  },
+  (t) => [
+    index("industrial_fleet_maintenance_vehicle_idx").on(t.tenantId, t.vehicleId, t.status),
+  ],
+);
+
+export const industrialFleetDocuments = pgTable(
+  "industrial_fleet_documents",
+  {
+    id: uuid("id").primaryKey(),
+    tenantId: uuid("tenant_id")
+      .notNull()
+      .references(() => tenants.id),
+    vehicleId: uuid("vehicle_id")
+      .notNull()
+      .references(() => industrialFleetVehicles.id),
+    title: varchar("title", { length: 500 }).notNull(),
+    documentType: varchar("document_type", { length: 64 }).notNull().default("OTHER"),
+    storageKey: varchar("storage_key", { length: 512 }),
+    contentType: varchar("content_type", { length: 120 }),
+    notes: text("notes"),
+    ...sourceCols,
+    createdAt: createdAtColumn,
+    updatedAt: updatedAtColumn,
+    archivedAt: timestamp("archived_at", { withTimezone: true }),
+  },
+  (t) => [index("industrial_fleet_documents_vehicle_idx").on(t.tenantId, t.vehicleId)],
+);
 
 export const industrialWorkersCompCases = pgTable("industrial_workers_comp_cases", {
   id: uuid("id").primaryKey(),

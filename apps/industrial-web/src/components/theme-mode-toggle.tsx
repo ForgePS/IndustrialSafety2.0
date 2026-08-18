@@ -44,7 +44,7 @@ export function useIndustrialThemeMode(): IndustrialThemeMode {
 }
 
 /**
- * Navbar control: switches Sneat Free light/dark via data-bs-theme.
+ * Navbar control: switches Sneat light/dark via data-bs-theme (Pro logistics palette).
  * Preference persists in localStorage across reloads.
  */
 export function ThemeModeToggle() {

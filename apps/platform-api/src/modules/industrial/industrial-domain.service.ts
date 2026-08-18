@@ -425,16 +425,32 @@ export class IndustrialDomainService {
       return {
         page,
         pageSize,
-        items: items.map((r) =>
-          this.mapListItem({
+        items: items.map((r) => {
+          const base = {
             id: r.id,
             title: "title" in r ? (r as { title?: string | null }).title : null,
             status: r.status,
             createdAt: r.createdAt,
             updatedAt: r.updatedAt,
             sourcePayload: r.sourcePayload,
-          }),
-        ),
+          };
+          if ("siteId" in r || "schemaJson" in r) {
+            return this.mapListItem({
+              ...base,
+              extra: {
+                siteId: "siteId" in r ? ((r as { siteId?: string | null }).siteId ?? null) : undefined,
+                ...("schemaJson" in r
+                  ? {
+                      schemaJson: (r as { schemaJson?: unknown }).schemaJson ?? {},
+                      formKey: (r as { formKey?: string | null }).formKey ?? null,
+                      version: (r as { version?: string | null }).version ?? null,
+                    }
+                  : {}),
+              },
+            });
+          }
+          return this.mapListItem(base);
+        }),
       };
     });
   }
@@ -449,6 +465,21 @@ export class IndustrialDomainService {
         .where(and(eq(table.id, recordId), eq(table.tenantId, principal.tenantId)))
         .limit(1);
       if (!row) throw new ForgeError("NOT_FOUND", "Record not found");
+      if ("schemaJson" in row) {
+        return this.mapListItem({
+          id: row.id,
+          title: "title" in row ? (row as { title?: string | null }).title : null,
+          status: row.status,
+          createdAt: row.createdAt,
+          updatedAt: row.updatedAt,
+          sourcePayload: row.sourcePayload,
+          extra: {
+            schemaJson: (row as { schemaJson?: unknown }).schemaJson ?? {},
+            formKey: (row as { formKey?: string | null }).formKey ?? null,
+            version: (row as { version?: string | null }).version ?? null,
+          },
+        });
+      }
       return this.mapListItem({
         id: row.id,
         title: "title" in row ? (row as { title?: string | null }).title : null,
@@ -497,10 +528,37 @@ export class IndustrialDomainService {
         if (body.priority) values.priority = String(body.priority);
         if (body.dueDate) values.dueDate = String(body.dueDate);
       }
+      if (moduleKey === "forms") {
+        values.formKey = String(body.formKey ?? body.category ?? title)
+          .trim()
+          .slice(0, 120);
+        values.version = String(body.version ?? "1").trim() || "1";
+        values.schemaJson =
+          body.schemaJson && typeof body.schemaJson === "object"
+            ? body.schemaJson
+            : body.schema && typeof body.schema === "object"
+              ? body.schema
+              : { fields: Array.isArray(body.fields) ? body.fields : [] };
+      }
       const [row] = await tx
         .insert(table)
         .values(values as never)
         .returning();
+      if (moduleKey === "forms") {
+        return this.mapListItem({
+          id: row!.id,
+          title: "title" in row! ? (row as { title?: string | null }).title : title,
+          status: row!.status,
+          createdAt: row!.createdAt,
+          updatedAt: row!.updatedAt,
+          sourcePayload: row!.sourcePayload,
+          extra: {
+            schemaJson: values.schemaJson,
+            formKey: values.formKey,
+            version: values.version,
+          },
+        });
+      }
       return this.mapListItem({
         id: row!.id,
         title: "title" in row! ? (row as { title?: string | null }).title : title,
@@ -531,6 +589,126 @@ export class IndustrialDomainService {
         updatedAt: row.updatedAt,
         sourcePayload: row.sourcePayload,
       });
+    });
+  }
+
+  private mapFormSubmission(row: {
+    id: string;
+    title?: string | null;
+    status: string;
+    formDefinitionId?: string | null;
+    submittedAt?: Date | null;
+    answers?: unknown;
+    createdAt: Date;
+    updatedAt: Date;
+    sourcePayload: unknown;
+  }) {
+    return this.mapListItem({
+      id: row.id,
+      title: row.title ?? null,
+      status: row.status,
+      createdAt: row.createdAt,
+      updatedAt: row.updatedAt,
+      sourcePayload: row.sourcePayload,
+      extra: {
+        formDefinitionId: row.formDefinitionId ?? null,
+        submittedAt: row.submittedAt ?? null,
+        answers: row.answers ?? {},
+      },
+    });
+  }
+
+  async listFormSubmissions(principal: ForgePrincipal, query: ListQuery) {
+    const { page, pageSize, offset } = this.page(query);
+    const q = (query.q ?? "").trim();
+    const status = (query.status ?? "").trim();
+    const formDefinitionId = (query.formDefinitionId ?? query.formId ?? "").trim();
+    return withTenantTransaction(this.db, principal.tenantId, async (tx) => {
+      const conditions = [
+        eq(industrialFormSubmissions.tenantId, principal.tenantId),
+        isNull(industrialFormSubmissions.archivedAt),
+      ];
+      if (status) conditions.push(eq(industrialFormSubmissions.status, status));
+      if (formDefinitionId) {
+        conditions.push(eq(industrialFormSubmissions.formDefinitionId, formDefinitionId));
+      }
+      if (q) {
+        conditions.push(ilike(industrialFormSubmissions.title, `%${q}%`));
+      }
+      const items = await tx
+        .select()
+        .from(industrialFormSubmissions)
+        .where(and(...conditions))
+        .orderBy(desc(industrialFormSubmissions.updatedAt))
+        .limit(pageSize)
+        .offset(offset);
+      return { page, pageSize, items: items.map((row) => this.mapFormSubmission(row)) };
+    });
+  }
+
+  async getFormSubmission(principal: ForgePrincipal, id: string) {
+    const recordId = this.assertRecordId(id);
+    return withTenantTransaction(this.db, principal.tenantId, async (tx) => {
+      const [row] = await tx
+        .select()
+        .from(industrialFormSubmissions)
+        .where(
+          and(
+            eq(industrialFormSubmissions.id, recordId),
+            eq(industrialFormSubmissions.tenantId, principal.tenantId),
+          ),
+        )
+        .limit(1);
+      if (!row) throw new ForgeError("NOT_FOUND", "Form submission not found");
+      return this.mapFormSubmission(row);
+    });
+  }
+
+  async createFormSubmission(principal: ForgePrincipal, body: Record<string, unknown>) {
+    const formDefinitionId = String(body.formDefinitionId ?? body.formId ?? "").trim();
+    if (!formDefinitionId) {
+      throw new ForgeError("VALIDATION_FAILED", "Please choose a form to submit.");
+    }
+    const answers =
+      body.answers && typeof body.answers === "object" && !Array.isArray(body.answers)
+        ? (body.answers as Record<string, unknown>)
+        : {};
+    const title = String(body.title ?? "").trim();
+    return withTenantTransaction(this.db, principal.tenantId, async (tx) => {
+      const [definition] = await tx
+        .select()
+        .from(industrialFormDefinitions)
+        .where(
+          and(
+            eq(industrialFormDefinitions.id, formDefinitionId),
+            eq(industrialFormDefinitions.tenantId, principal.tenantId),
+          ),
+        )
+        .limit(1);
+      if (!definition) throw new ForgeError("NOT_FOUND", "Form not found");
+      const now = new Date();
+      const [row] = await tx
+        .insert(industrialFormSubmissions)
+        .values({
+          id: createId(),
+          tenantId: principal.tenantId,
+          siteId: definition.siteId,
+          title: title || definition.title || "Form submission",
+          status: String(body.status ?? "SUBMITTED").trim() || "SUBMITTED",
+          formDefinitionId: definition.id,
+          submittedAt: now,
+          answers,
+          sourceSystem: "FORGE",
+          sourcePayload: {
+            formDefinitionId: definition.id,
+            formTitle: definition.title,
+            answers,
+          },
+          createdAt: now,
+          updatedAt: now,
+        })
+        .returning();
+      return this.mapFormSubmission(row!);
     });
   }
 

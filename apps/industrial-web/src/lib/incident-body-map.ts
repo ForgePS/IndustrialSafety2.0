@@ -118,6 +118,9 @@ export function extractBodyLocationsFromPayload(payload: Record<string, unknown>
     "injuryLocation",
     "body_part",
     "body_parts",
+    // Safety Incidents Detail report columns
+    "InjuriesFront",
+    "InjuriesBack",
   ] as const;
   const merged: string[] = [];
   const seen = new Set<string>();
@@ -274,4 +277,129 @@ export function heatTone(count: number, max: number): "info" | "warning" | "dang
   if (ratio >= 0.66) return "danger";
   if (ratio >= 0.33) return "warning";
   return "info";
+}
+
+/** Injury Map year scope: current year-to-date, or a full prior/current calendar year. */
+export type BodyMapYearScope = "ytd" | number;
+
+export type BodyMapYearOption = { value: string; label: string };
+
+function incidentYear(iso: string): number | null {
+  if (!iso) return null;
+  const match = /^(\d{4})/.exec(iso.trim());
+  if (match) return Number(match[1]);
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return null;
+  return d.getUTCFullYear();
+}
+
+/** Parse a year-dropdown value into a typed scope (defaults to YTD). */
+export function parseBodyMapYearScope(raw: string | null | undefined): BodyMapYearScope {
+  if (!raw || raw === "ytd") return "ytd";
+  const year = Number(raw);
+  if (Number.isInteger(year) && year >= 2000 && year <= 2100) return year;
+  return "ytd";
+}
+
+/**
+ * Build year dropdown options. Always includes current-year YTD first, then
+ * distinct years present on the incident list (newest first).
+ */
+export function bodyMapYearOptions(
+  incidents: ReadonlyArray<{ createdAt: string }>,
+  now: Date = new Date(),
+): BodyMapYearOption[] {
+  const current = now.getFullYear();
+  const years = new Set<number>([current]);
+  for (const incident of incidents) {
+    const year = incidentYear(incident.createdAt);
+    if (year != null) years.add(year);
+  }
+  const sorted = [...years].sort((a, b) => b - a);
+  const options: BodyMapYearOption[] = [{ value: "ytd", label: `${current} YTD` }];
+  for (const year of sorted) {
+    if (year === current) {
+      options.push({ value: String(year), label: `${year} (full year)` });
+    } else {
+      options.push({ value: String(year), label: String(year) });
+    }
+  }
+  return options;
+}
+
+/** Keep incidents whose createdAt falls in the selected year scope. */
+export function filterIncidentsByYearScope<T extends { createdAt: string }>(
+  incidents: readonly T[],
+  scope: BodyMapYearScope,
+  now: Date = new Date(),
+): T[] {
+  const current = now.getFullYear();
+  if (scope === "ytd") {
+    const start = Date.UTC(current, 0, 1);
+    const end = now.getTime();
+    return incidents.filter((incident) => {
+      const d = new Date(incident.createdAt);
+      if (Number.isNaN(d.getTime())) return false;
+      const t = d.getTime();
+      return d.getUTCFullYear() === current && t >= start && t <= end;
+    });
+  }
+  return incidents.filter((incident) => incidentYear(incident.createdAt) === scope);
+}
+
+/**
+ * Place a callout so the arrow tip sits on the region center and the badge
+ * sits outward from Tim's torso (keeps the figure readable).
+ */
+export function bodyMapArrowPlacement(region: BodyRegion): {
+  tipX: number;
+  tipY: number;
+  badgeX: number;
+  badgeY: number;
+  angleDeg: number;
+} {
+  const tipX = region.left + region.width / 2;
+  const tipY = region.top + region.height / 2;
+  const dx = tipX - 50;
+  const dy = tipY - 42;
+  const len = Math.hypot(dx, dy) || 1;
+  const ux = dx / len;
+  const uy = dy / len;
+  const offset = 9;
+  return {
+    tipX,
+    tipY,
+    badgeX: Math.min(96, Math.max(4, tipX + ux * offset)),
+    badgeY: Math.min(96, Math.max(4, tipY + uy * offset)),
+    // Line starts at the tip and extends outward toward the badge (0deg = right).
+    angleDeg: (Math.atan2(uy, ux) * 180) / Math.PI,
+  };
+}
+
+/** Incidents that mark this exact region (or the same part label on the other view). */
+export function filterIncidentsByBodyRegion<
+  T extends { bodyLocations?: readonly string[] },
+>(incidents: readonly T[], regionId: string): T[] {
+  const target = REGION_BY_ID.get(regionId);
+  if (!target) return [];
+  return incidents.filter((incident) => {
+    const ids = parseBodyLocations(incident.bodyLocations ? [...incident.bodyLocations] : []);
+    return ids.some((id) => {
+      if (id === regionId) return true;
+      const region = REGION_BY_ID.get(id);
+      return Boolean(region && region.part === target.part);
+    });
+  });
+}
+
+/** Incidents that mark any region in the given OSHA body-part group. */
+export function filterIncidentsByOshaPart<
+  T extends { bodyLocations?: readonly string[] },
+>(incidents: readonly T[], oshaPart: string): T[] {
+  const target = oshaPart.trim().toLowerCase();
+  if (!target) return [];
+  return incidents.filter((incident) => {
+    const ids = parseBodyLocations(incident.bodyLocations ? [...incident.bodyLocations] : []);
+    return ids.some((id) => REGION_BY_ID.get(id)?.oshaPart.toLowerCase() === target);
+  });
 }

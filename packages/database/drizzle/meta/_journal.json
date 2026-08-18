@@ -323,6 +323,13 @@
       "when": 1786898626489,
       "tag": "0045_industrial_personnel_medical_emergency_s1",
       "breakpoints": true
+    },
+    {
+      "idx": 46,
+      "version": "7",
+      "when": 1786980000000,
+      "tag": "0046_industrial_fleet_module_s1",
+      "breakpoints": true
     }
   ]
 }
