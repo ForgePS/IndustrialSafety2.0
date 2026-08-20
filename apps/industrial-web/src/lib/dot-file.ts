@@ -36,8 +36,7 @@ const LICENSE_FIELDS: ReadonlyArray<{ key: string; label: string }> = [
   { key: "licenseClass", label: "License class" },
   { key: "cdlClass", label: "CDL class" },
   { key: "endorsements", label: "Endorsements" },
-  { key: "hasLicenseFront", label: "License front on file" },
-  { key: "hasLicenseBack", label: "License back on file" },
+  // Front/back copies render as images via LicenseCopiesCard, not Yes/No text.
 ];
 
 const MEDICAL_FIELDS: ReadonlyArray<{ key: string; label: string }> = [
@@ -114,6 +113,15 @@ const HIDDEN_KEYS = new Set([
   "fleetVehicleId",
   "dqf",
   "details",
+  "licenseFrontUrl",
+  "licenseBackUrl",
+  "licenseFrontUpload",
+  "licenseBackUpload",
+  "driversLicenseFront",
+  "driversLicenseBack",
+  "driversLicenseCopy",
+  "hasLicenseFront",
+  "hasLicenseBack",
 ]);
 
 function str(value: unknown): string {

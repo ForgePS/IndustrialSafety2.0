@@ -3,6 +3,7 @@
  */
 
 import { matchesSearchTokens } from "@/lib/search-text";
+import { parseMvrAuditHistory } from "@/lib/mvr-sample";
 
 export type CompanyVehicleDriverStatus =
   | "pending_mvr"
@@ -33,6 +34,13 @@ export type CompanyVehicleDriver = {
   sampleYear: number | null;
   sampleSelectedAt: string;
   sampleCompletedAt: string;
+  mvrAuditHistory: Array<{
+    year: number;
+    auditedAt: string;
+    auditedByName: string;
+    driverId: string;
+    notes: string;
+  }>;
   insuranceEffectiveDate: string;
   insuranceRemovedDate: string;
   notes: string;
@@ -131,6 +139,7 @@ export function toCompanyVehicleDriver(row: unknown): CompanyVehicleDriver | nul
       typeof r.sampleYear === "number" && Number.isFinite(r.sampleYear) ? r.sampleYear : null,
     sampleSelectedAt: text("sampleSelectedAt"),
     sampleCompletedAt: text("sampleCompletedAt"),
+    mvrAuditHistory: parseMvrAuditHistory(r.mvrAuditHistory),
     insuranceEffectiveDate: text("insuranceEffectiveDate"),
     insuranceRemovedDate: text("insuranceRemovedDate"),
     notes: text("notes"),
@@ -159,11 +168,40 @@ export function mvrReleaseLabel(driver: CompanyVehicleDriver): string {
 /** Annual 10% sample column, scoped to the most recent sample year. */
 export function sampleLabel(driver: CompanyVehicleDriver, sampleYear: number | null): string {
   if (sampleYear === null || driver.sampleYear !== sampleYear) return "";
-  if (driver.sampleCompletedAt) return `Done ${driver.sampleCompletedAt.slice(0, 10)}`;
+  if (driver.sampleCompletedAt) return `Audited ${driver.sampleCompletedAt.slice(0, 10)}`;
   return `Selected ${driver.sampleYear}`;
 }
 
+/** Drivers selected for a given annual MVR sample year. */
+export function driversInMvrSample(
+  drivers: readonly CompanyVehicleDriver[],
+  sampleYear: number | null,
+): CompanyVehicleDriver[] {
+  if (sampleYear == null) return [];
+  return [...drivers]
+    .filter((driver) => driver.sampleYear === sampleYear)
+    .sort((a, b) => {
+      const aDone = a.sampleCompletedAt ? 1 : 0;
+      const bDone = b.sampleCompletedAt ? 1 : 0;
+      return (
+        aDone - bDone ||
+        a.personnelName.localeCompare(b.personnelName, undefined, {
+          sensitivity: "base",
+          numeric: true,
+        })
+      );
+    });
+}
+
 export type LicenseExpiryState = "none" | "ok" | "expiring" | "expired";
+
+export type LicenseIssueKind = "missing" | "expired" | "expiring";
+
+export type LicenseIssueItem = {
+  driver: CompanyVehicleDriver;
+  kind: LicenseIssueKind;
+  reason: string;
+};
 
 export function licenseExpiryState(
   driver: CompanyVehicleDriver,
@@ -175,6 +213,45 @@ export function licenseExpiryState(
   const soon = new Date(`${today}T00:00:00Z`);
   soon.setUTCDate(soon.getUTCDate() + 30);
   return driver.licenseExpiryDate <= soon.toISOString().slice(0, 10) ? "expiring" : "ok";
+}
+
+/** Active drivers missing, expired, or soon-to-expire license dates (removed excluded). */
+export function driversWithLicenseIssues(
+  drivers: readonly CompanyVehicleDriver[],
+  today = new Date().toISOString().slice(0, 10),
+  kinds?: ReadonlyArray<LicenseIssueKind>,
+): LicenseIssueItem[] {
+  const allow = kinds ? new Set(kinds) : null;
+  const out: LicenseIssueItem[] = [];
+  for (const driver of drivers) {
+    if (driver.status.toLowerCase() === "removed") continue;
+    const state = licenseExpiryState(driver, today);
+    let kind: LicenseIssueKind | null = null;
+    let reason = "";
+    if (!driver.licenseExpiryDate) {
+      kind = "missing";
+      reason = "Missing license expiration";
+    } else if (state === "expired") {
+      kind = "expired";
+      reason = `Expired ${driver.licenseExpiryDate}`;
+    } else if (state === "expiring") {
+      kind = "expiring";
+      reason = `Expires ${driver.licenseExpiryDate}`;
+    }
+    if (!kind) continue;
+    if (allow && !allow.has(kind)) continue;
+    out.push({ driver, kind, reason });
+  }
+  return out.sort((a, b) => {
+    const rank = { expired: 0, missing: 1, expiring: 2 } as const;
+    return (
+      rank[a.kind] - rank[b.kind] ||
+      a.driver.personnelName.localeCompare(b.driver.personnelName, undefined, {
+        sensitivity: "base",
+        numeric: true,
+      })
+    );
+  });
 }
 
 export function toCompanyVehicleDrivers(rows: unknown[]): CompanyVehicleDriver[] {

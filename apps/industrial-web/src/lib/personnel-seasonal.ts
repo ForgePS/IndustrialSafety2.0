@@ -32,3 +32,17 @@ export function seasonalLifecycleBadge(row: {
   }
   return { label: employmentType || personStatus || "Unknown", kind: "other" };
 }
+
+/** Sneat label badge class for lifecycle state. */
+export function seasonalLifecycleBadgeClass(kind: SeasonalLifecycleBadgeKind): string {
+  switch (kind) {
+    case "pre-hire":
+      return "bg-label-warning";
+    case "active-seasonal":
+      return "bg-label-success";
+    case "full-time":
+      return "bg-label-primary";
+    default:
+      return "bg-label-secondary";
+  }
+}

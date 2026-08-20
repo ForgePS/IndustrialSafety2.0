@@ -1,14 +1,16 @@
 "use client";
 
 import Link from "next/link";
-import { Fragment, useEffect, useMemo, useState, type FormEvent } from "react";
-import { ApiError, apiGetResult, useAuth } from "@forge/web-kit";
+import { Fragment, useCallback, useEffect, useMemo, useState, type FormEvent } from "react";
+import { ApiError, apiGetResult, apiSend, useAuth } from "@forge/web-kit";
 import { personFileHref } from "@/lib/personnel-directory";
 import {
   COMPANY_DRIVER_SORT_OPTIONS,
   companyVehicleDriverStatusBadge,
   companyVehicleDriverStatusLabel,
   DEFAULT_COMPANY_DRIVER_SORT,
+  driversInMvrSample,
+  driversWithLicenseIssues,
   EMPTY_DRIVER_SUMMARY,
   fileCountLabel,
   licenseCopyLabel,
@@ -22,6 +24,7 @@ import {
   type CompanyDriverSort,
   type CompanyVehicleDriver,
   type CompanyVehicleDriverSummary,
+  type LicenseIssueKind,
 } from "@/lib/company-vehicle-drivers";
 
 type ListResponse = {
@@ -45,6 +48,10 @@ export function CompanyDriversDirectory() {
     permissions.has("industrial.fleet.view") ||
     permissions.has("industrial.admin") ||
     permissions.has("industrial.access");
+  const canManage =
+    permissions.has("industrial.personnel.manage") ||
+    permissions.has("industrial.fleet.manage") ||
+    permissions.has("industrial.admin");
 
   const [drivers, setDrivers] = useState<CompanyVehicleDriver[]>([]);
   const [summary, setSummary] = useState<CompanyVehicleDriverSummary>(EMPTY_DRIVER_SUMMARY);
@@ -54,8 +61,28 @@ export function CompanyDriversDirectory() {
     "all" | "on_insurance" | "pending_mvr" | "suspended" | "removed"
   >("all");
   const [expanded, setExpanded] = useState<string | null>(null);
+  const [licenseIssuesOpen, setLicenseIssuesOpen] = useState(false);
+  const [licenseIssueFilter, setLicenseIssueFilter] = useState<LicenseIssueKind[] | null>(null);
+  const [sampleOpen, setSampleOpen] = useState(false);
+  const [sampleBusy, setSampleBusy] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  const refreshDrivers = useCallback(async () => {
+    const all: unknown[] = [];
+    let rawSummary: unknown = null;
+    for (let page = 1; page <= MAX_PAGES; page += 1) {
+      const result = await apiGetResult<ListResponse>("/api/v1/industrial/fleet/drivers", {
+        query: { page: String(page), pageSize: String(PAGE_SIZE) },
+      });
+      const items = Array.isArray(result.data.items) ? result.data.items : [];
+      all.push(...items);
+      if (page === 1) rawSummary = result.data.summary;
+      if (items.length < PAGE_SIZE) break;
+    }
+    setDrivers(toCompanyVehicleDrivers(all));
+    setSummary(toCompanyVehicleDriverSummary(rawSummary));
+  }, []);
 
   useEffect(() => {
     if (!canView) {
@@ -67,20 +94,7 @@ export function CompanyDriversDirectory() {
     setError(null);
     void (async () => {
       try {
-        const all: unknown[] = [];
-        let rawSummary: unknown = null;
-        for (let page = 1; page <= MAX_PAGES; page += 1) {
-          const result = await apiGetResult<ListResponse>("/api/v1/industrial/fleet/drivers", {
-            query: { page: String(page), pageSize: String(PAGE_SIZE) },
-          });
-          const items = Array.isArray(result.data.items) ? result.data.items : [];
-          all.push(...items);
-          if (page === 1) rawSummary = result.data.summary;
-          if (items.length < PAGE_SIZE) break;
-        }
-        if (cancelled) return;
-        setDrivers(toCompanyVehicleDrivers(all));
-        setSummary(toCompanyVehicleDriverSummary(rawSummary));
+        await refreshDrivers();
       } catch (e) {
         if (!cancelled) {
           setError(e instanceof ApiError ? e.message : "Failed to load company drivers");
@@ -94,7 +108,7 @@ export function CompanyDriversDirectory() {
     return () => {
       cancelled = true;
     };
-  }, [canView]);
+  }, [canView, refreshDrivers]);
 
   const visible = useMemo(() => {
     const filtered = drivers.filter((driver) => {
@@ -103,6 +117,61 @@ export function CompanyDriversDirectory() {
     });
     return sortCompanyVehicleDrivers(filtered, sort);
   }, [drivers, query, statusFilter, sort]);
+
+  const licenseIssues = useMemo(
+    () => driversWithLicenseIssues(drivers, undefined, licenseIssueFilter ?? undefined),
+    [drivers, licenseIssueFilter],
+  );
+
+  const calendarYear = new Date().getUTCFullYear();
+  const sampleDrivers = useMemo(
+    () => driversInMvrSample(drivers, summary.sampleYear),
+    [drivers, summary.sampleYear],
+  );
+
+  const licenseIssueCount =
+    summary.missingLicenseExpiry + summary.licenseExpired + summary.licenseExpiringSoon;
+
+  function openLicenseIssues(kinds?: LicenseIssueKind[]) {
+    setLicenseIssueFilter(kinds ?? null);
+    setLicenseIssuesOpen(true);
+  }
+
+  async function startMvrSample(forceRedraw = false) {
+    if (!canManage) return;
+    setSampleBusy(true);
+    setError(null);
+    try {
+      await apiSend("/api/v1/industrial/fleet/drivers/mvr-sample/start", "POST", {
+        year: calendarYear,
+        forceRedraw,
+      });
+      await refreshDrivers();
+      setSampleOpen(true);
+    } catch (e) {
+      setError(e instanceof ApiError ? e.message : "Failed to start MVR sample");
+    } finally {
+      setSampleBusy(false);
+    }
+  }
+
+  async function completeMvrSample(driverId: string) {
+    if (!canManage) return;
+    setSampleBusy(true);
+    setError(null);
+    try {
+      await apiSend(
+        `/api/v1/industrial/fleet/drivers/${encodeURIComponent(driverId)}/mvr-sample/complete`,
+        "POST",
+        { auditedByName: "Auditor" },
+      );
+      await refreshDrivers();
+    } catch (e) {
+      setError(e instanceof ApiError ? e.message : "Failed to mark MVR audit complete");
+    } finally {
+      setSampleBusy(false);
+    }
+  }
 
   function onSubmit(event: FormEvent) {
     event.preventDefault();
@@ -140,17 +209,31 @@ export function CompanyDriversDirectory() {
           <span className="badge bg-label-success">On insurance: {summary.onInsurance}</span>
           <span className="badge bg-label-warning">Pending MVR: {summary.pendingMvr}</span>
           {summary.missingLicenseExpiry > 0 ? (
-            <span className="badge bg-label-info">
+            <button
+              type="button"
+              className="badge bg-label-info border-0"
+              onClick={() => openLicenseIssues(["missing"])}
+            >
               Missing license expiration: {summary.missingLicenseExpiry}
-            </span>
+            </button>
           ) : null}
           {summary.licenseExpired > 0 ? (
-            <span className="badge bg-label-danger">License expired: {summary.licenseExpired}</span>
+            <button
+              type="button"
+              className="badge bg-label-danger border-0"
+              onClick={() => openLicenseIssues(["expired"])}
+            >
+              License expired: {summary.licenseExpired}
+            </button>
           ) : null}
           {summary.licenseExpiringSoon > 0 ? (
-            <span className="badge bg-label-warning">
+            <button
+              type="button"
+              className="badge bg-label-warning border-0"
+              onClick={() => openLicenseIssues(["expiring"])}
+            >
               License expiring (30d): {summary.licenseExpiringSoon}
-            </span>
+            </button>
           ) : null}
           {summary.suspended > 0 ? (
             <span className="badge bg-label-danger">Suspended: {summary.suspended}</span>
@@ -166,12 +249,40 @@ export function CompanyDriversDirectory() {
         <div className="col-lg-6">
           <div className="card h-100">
             <div className="card-body">
-              <h6 className="mb-1">Driver&apos;s license &amp; expiration</h6>
-              <p className="text-muted mb-2 small">
-                Keep the license number, state, and expiration on every driver. Drivers with a
-                missing or expired expiration date are counted above so they can be chased down.
-              </p>
-              <div className="d-flex flex-wrap gap-2">
+              <button
+                type="button"
+                className="btn btn-link text-start text-body text-decoration-none p-0 w-100"
+                onClick={() => {
+                  if (licenseIssuesOpen && licenseIssueFilter === null) {
+                    setLicenseIssuesOpen(false);
+                  } else {
+                    openLicenseIssues();
+                  }
+                }}
+                aria-expanded={licenseIssuesOpen}
+                aria-controls="license-issues-panel"
+              >
+                <div className="d-flex align-items-start justify-content-between gap-2">
+                  <div>
+                    <h6 className="mb-1">
+                      Driver&apos;s license &amp; expiration
+                      {licenseIssueCount > 0 ? (
+                        <span className="badge bg-label-danger ms-2">{licenseIssueCount}</span>
+                      ) : null}
+                    </h6>
+                    <p className="text-muted mb-0 small">
+                      {licenseIssueCount > 0
+                        ? "Click to review missing, expired, and soon-to-expire licenses. Open a name to jump to that personnel file."
+                        : "Keep the license number, state, and expiration on every driver. No follow-ups right now."}
+                    </p>
+                  </div>
+                  <i
+                    className={`bx fs-4 flex-shrink-0 ${licenseIssuesOpen ? "bx-chevron-up" : "bx-chevron-right"}`}
+                    aria-hidden="true"
+                  />
+                </div>
+              </button>
+              <div className="d-flex flex-wrap gap-2 mt-2">
                 <span className="badge bg-label-secondary">
                   MVR on file: {summary.mvrOnFile}
                 </span>
@@ -179,33 +290,205 @@ export function CompanyDriversDirectory() {
                   Signed MVR release: {summary.mvrReleaseOnFile}
                 </span>
               </div>
+              {licenseIssuesOpen ? (
+                <div
+                  id="license-issues-panel"
+                  className="mt-3 border-top pt-3"
+                  role="region"
+                  aria-label="License follow-ups"
+                >
+                  {licenseIssues.length === 0 ? (
+                    <p className="text-muted small mb-0">No drivers match this license filter.</p>
+                  ) : (
+                    <ul className="list-unstyled mb-0 d-flex flex-column gap-2">
+                      {licenseIssues.map(({ driver, kind, reason }) => {
+                        const name = driver.personnelName || "Unnamed";
+                        const badge =
+                          kind === "expired"
+                            ? "bg-label-danger"
+                            : kind === "expiring"
+                              ? "bg-label-warning"
+                              : "bg-label-info";
+                        const body = (
+                          <>
+                            <span className="fw-medium">{name}</span>
+                            {driver.employeeNumber ? (
+                              <span className="text-muted small ms-2">{driver.employeeNumber}</span>
+                            ) : null}
+                            <span className={`badge ${badge} ms-2`}>{reason}</span>
+                          </>
+                        );
+                        return (
+                          <li key={driver.id}>
+                            {driver.personnelId ? (
+                              <Link
+                                className="d-inline-flex flex-wrap align-items-center text-decoration-none"
+                                href={personFileHref(driver.personnelId)}
+                              >
+                                {body}
+                              </Link>
+                            ) : (
+                              <span className="d-inline-flex flex-wrap align-items-center text-muted">
+                                {body}
+                                <span className="small ms-2">(no personnel file)</span>
+                              </span>
+                            )}
+                          </li>
+                        );
+                      })}
+                    </ul>
+                  )}
+                </div>
+              ) : null}
             </div>
           </div>
         </div>
         <div className="col-lg-6">
           <div className="card h-100">
             <div className="card-body">
-              <h6 className="mb-1">Annual 10% MVR sample</h6>
-              {summary.sampleYear === null ? (
-                <p className="text-muted mb-0 small">No annual sample has been drawn yet.</p>
-              ) : (
-                <>
-                  <p className="text-muted mb-2 small">
-                    Most recent sample year: {summary.sampleYear}.
+              <div className="d-flex align-items-start justify-content-between gap-2 mb-2">
+                <button
+                  type="button"
+                  className="btn btn-link text-start text-body text-decoration-none p-0"
+                  onClick={() => setSampleOpen((open) => !open)}
+                  aria-expanded={sampleOpen}
+                  aria-controls="mvr-sample-panel"
+                >
+                  <h6 className="mb-1">
+                    Annual 10% MVR sample
+                    {summary.sampleSelected > 0 ? (
+                      <span className="badge bg-label-primary ms-2">{summary.sampleSelected}</span>
+                    ) : null}
+                  </h6>
+                  <p className="text-muted mb-0 small">
+                    Scheduled each year. Start anytime to draw ~10% of active drivers for audit.
                   </p>
-                  <div className="d-flex flex-wrap gap-2">
-                    <span className="badge bg-label-primary">
-                      Selected: {summary.sampleSelected}
-                    </span>
-                    <span className="badge bg-label-success">
-                      MVR completed: {summary.sampleCompleted}
-                    </span>
-                    <span className="badge bg-label-warning">
-                      Outstanding: {summary.sampleSelected - summary.sampleCompleted}
-                    </span>
-                  </div>
-                </>
+                </button>
+                <i
+                  className={`bx fs-4 flex-shrink-0 ${sampleOpen ? "bx-chevron-up" : "bx-chevron-right"}`}
+                  aria-hidden="true"
+                />
+              </div>
+              {summary.sampleYear === null ? (
+                <p className="text-muted mb-2 small">No annual sample has been drawn yet.</p>
+              ) : (
+                <div className="d-flex flex-wrap gap-2 mb-2">
+                  <span className="badge bg-label-secondary">Year {summary.sampleYear}</span>
+                  <span className="badge bg-label-primary">
+                    Selected: {summary.sampleSelected}
+                  </span>
+                  <span className="badge bg-label-success">
+                    Audited: {summary.sampleCompleted}
+                  </span>
+                  <span className="badge bg-label-warning">
+                    Outstanding: {Math.max(0, summary.sampleSelected - summary.sampleCompleted)}
+                  </span>
+                </div>
               )}
+              {canManage ? (
+                <div className="d-flex flex-wrap gap-2 mb-2">
+                  <button
+                    type="button"
+                    className="btn btn-sm btn-primary"
+                    disabled={sampleBusy}
+                    onClick={() => void startMvrSample(false)}
+                  >
+                    {summary.sampleYear === calendarYear
+                      ? `Open ${calendarYear} sample`
+                      : `Start ${calendarYear} sample`}
+                  </button>
+                  {summary.sampleYear === calendarYear ? (
+                    <button
+                      type="button"
+                      className="btn btn-sm btn-outline-secondary"
+                      disabled={sampleBusy}
+                      onClick={() => {
+                        if (
+                          window.confirm(
+                            `Redraw the ${calendarYear} 10% sample? Completed audits for this year stay on personnel files.`,
+                          )
+                        ) {
+                          void startMvrSample(true);
+                        }
+                      }}
+                    >
+                      Redraw sample
+                    </button>
+                  ) : null}
+                </div>
+              ) : null}
+              {sampleOpen ? (
+                <div
+                  id="mvr-sample-panel"
+                  className="border-top pt-3 mt-2"
+                  role="region"
+                  aria-label="Annual MVR sample list"
+                >
+                  {sampleDrivers.length === 0 ? (
+                    <p className="text-muted small mb-0">
+                      {canManage
+                        ? "Start the annual sample to select about 10% of drivers for audit."
+                        : "No sample has been started yet."}
+                    </p>
+                  ) : (
+                    <ul className="list-unstyled mb-0 d-flex flex-column gap-2">
+                      {sampleDrivers.map((driver) => {
+                        const audited = Boolean(driver.sampleCompletedAt);
+                        const name = driver.personnelName || "Unnamed";
+                        return (
+                          <li
+                            key={driver.id}
+                            className="d-flex flex-wrap align-items-center justify-content-between gap-2"
+                          >
+                            <div className="min-w-0">
+                              {driver.personnelId ? (
+                                <Link
+                                  className="fw-medium text-decoration-none"
+                                  href={personFileHref(driver.personnelId)}
+                                >
+                                  {name}
+                                </Link>
+                              ) : (
+                                <span className="fw-medium">{name}</span>
+                              )}
+                              {driver.employeeNumber ? (
+                                <span className="text-muted small ms-2">{driver.employeeNumber}</span>
+                              ) : null}
+                              <span
+                                className={`badge ms-2 ${audited ? "bg-label-success" : "bg-label-warning"}`}
+                              >
+                                {audited
+                                  ? `Audited ${driver.sampleCompletedAt.slice(0, 10)}`
+                                  : "Needs audit"}
+                              </span>
+                            </div>
+                            <div className="d-flex flex-wrap gap-2">
+                              {driver.personnelId ? (
+                                <Link
+                                  className="btn btn-sm btn-outline-primary"
+                                  href={personFileHref(driver.personnelId)}
+                                >
+                                  Open file
+                                </Link>
+                              ) : null}
+                              {canManage && !audited ? (
+                                <button
+                                  type="button"
+                                  className="btn btn-sm btn-outline-success"
+                                  disabled={sampleBusy}
+                                  onClick={() => void completeMvrSample(driver.id)}
+                                >
+                                  Mark audited
+                                </button>
+                              ) : null}
+                            </div>
+                          </li>
+                        );
+                      })}
+                    </ul>
+                  )}
+                </div>
+              ) : null}
             </div>
           </div>
         </div>

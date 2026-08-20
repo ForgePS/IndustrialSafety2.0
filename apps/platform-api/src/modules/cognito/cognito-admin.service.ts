@@ -5,6 +5,7 @@ import {
   AdminDeleteUserCommand,
   AdminDisableUserCommand,
   AdminGetUserCommand,
+  AdminResetUserPasswordCommand,
   AdminUserGlobalSignOutCommand,
   CognitoIdentityProviderClient,
   MessageActionType,
@@ -21,6 +22,28 @@ export interface ProvisionedCognitoUser {
   /** Present only when Cognito issued a new temporary password. */
   temporaryPassword?: string;
   created: boolean;
+}
+
+export type PasswordResetDelivery = "reset" | "resend" | "simulated";
+
+/** Confirmed users get ForgotPassword mail; invited users need a resent temp password. */
+export function passwordResetMethodForStatus(
+  status: string | undefined,
+  enabled = true,
+): Exclude<PasswordResetDelivery, "simulated"> {
+  if (!enabled) {
+    throw new ForgeError("CONFLICT", "Cannot reset password for a disabled Cognito user");
+  }
+  if (status === "FORCE_CHANGE_PASSWORD" || status === "UNCONFIRMED") {
+    return "resend";
+  }
+  if (status === "CONFIRMED" || status === "RESET_REQUIRED") {
+    return "reset";
+  }
+  throw new ForgeError(
+    "CONFLICT",
+    "This account cannot receive a password reset in its current state",
+  );
 }
 
 /** Real user pool ids look like `us-east-1_AbCdEf123`. */
@@ -127,6 +150,59 @@ export class CognitoAdminService {
         return null;
       }
       throw wrapCognitoError(error, "Failed to read the Cognito user");
+    }
+  }
+
+  /**
+   * Emails a password reset (confirmed users) or resends the invitation
+   * (FORCE_CHANGE_PASSWORD / UNCONFIRMED). Never returns the temporary password.
+   */
+  async resetPassword(username: string): Promise<{ method: PasswordResetDelivery }> {
+    if (!this.client) {
+      return { method: "simulated" };
+    }
+
+    let status: string | undefined;
+    let enabled = true;
+    try {
+      const response = await this.client.send(
+        new AdminGetUserCommand({
+          UserPoolId: this.env.COGNITO_USER_POOL_ID,
+          Username: username,
+        }),
+      );
+      status = response.UserStatus;
+      enabled = response.Enabled !== false;
+    } catch (error) {
+      if (error instanceof UserNotFoundException) {
+        throw new ForgeError("NOT_FOUND", "No Cognito account exists for this user");
+      }
+      throw wrapCognitoError(error, "Failed to read the Cognito user");
+    }
+
+    const method = passwordResetMethodForStatus(status, enabled);
+    if (method === "resend") {
+      await this.resendInvitation(username);
+      return { method };
+    }
+
+    try {
+      await this.client.send(
+        new AdminResetUserPasswordCommand({
+          UserPoolId: this.env.COGNITO_USER_POOL_ID,
+          Username: username,
+        }),
+      );
+      return { method };
+    } catch (error) {
+      const name = error instanceof Error ? error.name : "";
+      if (name === "LimitExceededException" || name === "TooManyRequestsException") {
+        throw new ForgeError(
+          "RATE_LIMITED",
+          "Too many password reset attempts. Try again in a few minutes.",
+        );
+      }
+      throw wrapCognitoError(error, "Failed to send the Cognito password reset");
     }
   }
 

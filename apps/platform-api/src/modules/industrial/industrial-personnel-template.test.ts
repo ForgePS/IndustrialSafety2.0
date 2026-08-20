@@ -64,6 +64,29 @@ describe("personnel template insert mapping", () => {
       isCompanyDriver: expected,
     });
   });
+
+  it.each([
+    [true, true],
+    ["true", true],
+    [false, false],
+  ])("coerces prescription glasses flag %s to %s", (input, expected) => {
+    expect(
+      mapper().personnelInsertValues({ tracksPrescriptionSafetyGlasses: input }),
+    ).toMatchObject({
+      tracksPrescriptionSafetyGlasses: expected,
+    });
+  });
+
+  it.each([
+    [true, true],
+    [false, false],
+  ])("coerces extra pair approval flags %s to %s", (input, expected) => {
+    expect(
+      mapper().personnelInsertValues({ prescriptionSafetyGlassesExtraPairApproved: input }),
+    ).toMatchObject({
+      prescriptionSafetyGlassesExtraPairApproved: expected,
+    });
+  });
 });
 
 describe("personnel template update mapping", () => {
@@ -75,6 +98,24 @@ describe("personnel template update mapping", () => {
   it("clears a column when an empty string is sent explicitly", () => {
     const values = mapper().personnelUpdateValues({ jobTitle: "" }, { jobTitle: "Millwright" });
     expect(values.jobTitle).toBeNull();
+  });
+
+  it("normalizes hire and PPE dates and clears invalid ones", () => {
+    const values = mapper().personnelUpdateValues(
+      {
+        hireDate: "2025-06-02T12:00:00.000Z",
+        prescriptionSafetyGlassesIssuedDate: "not-a-date",
+        prescriptionSafetyGlassesExpiresDate: "",
+      },
+      {
+        hireDate: new Date("2024-01-01T00:00:00.000Z"),
+        prescriptionSafetyGlassesIssuedDate: "2024-01-01",
+        prescriptionSafetyGlassesExpiresDate: "2025-01-01",
+      },
+    );
+    expect(values.hireDate).toBe("2025-06-02");
+    expect(values.prescriptionSafetyGlassesIssuedDate).toBeNull();
+    expect(values.prescriptionSafetyGlassesExpiresDate).toBeNull();
   });
 
   it("overwrites when a new value is sent", () => {
@@ -103,9 +144,14 @@ describe("personnel template read mapping", () => {
     expect(values.notes).toBeNull();
   });
 
-  it("always returns a boolean driver flag", () => {
+  it("always returns boolean allowance flags", () => {
     expect(mapper().personnelReadValues({}).isCompanyDriver).toBe(false);
+    expect(mapper().personnelReadValues({}).tracksPrescriptionSafetyGlasses).toBe(false);
     expect(mapper().personnelReadValues({ isCompanyDriver: true }).isCompanyDriver).toBe(true);
+    expect(
+      mapper().personnelReadValues({ tracksPrescriptionSafetyGlasses: true })
+        .tracksPrescriptionSafetyGlasses,
+    ).toBe(true);
   });
 
   it("round-trips every field an insert accepts", () => {
@@ -136,6 +182,8 @@ describe("personnel template read mapping", () => {
       notes: "Night shift",
       signatureUrl: "https://example.com/sig.png",
       isCompanyDriver: true,
+      safetyFootwearClass: "CLASS_1",
+      tracksPrescriptionSafetyGlasses: true,
     });
     const read = mapper().personnelReadValues(inserted);
     for (const [key, value] of Object.entries(inserted)) {

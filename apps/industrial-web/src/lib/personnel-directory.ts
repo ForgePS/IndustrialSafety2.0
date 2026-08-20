@@ -7,6 +7,8 @@
  * unit-tested rather than eyeballed in the grid.
  */
 
+import { resolvePersonnelLocationLabel } from "@/lib/personnel-file";
+import { personHasPpeExpiryAlert } from "@/lib/personnel-ppe";
 import { matchesSearchTokens, matchesSearchTokensAnywhere } from "@/lib/search-text";
 
 export type RosterPerson = {
@@ -23,6 +25,7 @@ export type RosterPerson = {
   siteLabel: string;
   status: string;
   isCompanyDriver: boolean;
+  hasPpeExpiryAlert: boolean;
 };
 
 function str(value: unknown): string {
@@ -55,9 +58,10 @@ export function toRosterPerson(row: Record<string, unknown>): RosterPerson | nul
     employeeNumber: str(row.employeeNumber),
     email: str(row.email),
     siteId: str(row.siteId),
-    siteLabel: str(row.site) || str(row.siteName),
+    siteLabel: resolvePersonnelLocationLabel(row),
     status: str(row.status),
     isCompanyDriver: row.isCompanyDriver === true,
+    hasPpeExpiryAlert: personHasPpeExpiryAlert(row),
   };
 }
 

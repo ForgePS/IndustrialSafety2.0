@@ -49,6 +49,7 @@ export type AnalyticsPeriodSummary = {
   safetyScore: number;
   safetyGrade: "A" | "B" | "C" | "D" | "F";
   openIncidents: number;
+  dot?: { totalRecords: number; openItems: number; complianceScore: number };
 };
 
 export type SafetyIntelligenceReport = {

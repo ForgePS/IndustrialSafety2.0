@@ -9,6 +9,7 @@ import { IncidentsBodyMapPanel } from "@/components/incidents-body-map-panel";
 import { IncidentsEvaluationPanel } from "@/components/incidents-evaluation-panel";
 import { IncidentsRcaPanel } from "@/components/incidents-rca-panel";
 import { IncidentsWorkflowPanel } from "@/components/incidents-workflow-panel";
+import { useIndustrialFacility } from "@/hooks/use-industrial-facility";
 import {
   bodyLocationSummaryLabel,
   toggleBodyLocation,
@@ -46,6 +47,7 @@ const MAX_PAGES = 20;
  */
 export function IncidentsWorkspace({ moduleName }: { moduleName: string }) {
   const { me } = useAuth();
+  const { query: facilityQuery } = useIndustrialFacility();
   const searchParams = useSearchParams();
   const permissions = new Set(me?.permissions ?? []);
   const canView =
@@ -116,6 +118,7 @@ export function IncidentsWorkspace({ moduleName }: { moduleName: string }) {
           ...(category ? { category } : {}),
           page: String(page),
           pageSize: String(FETCH_SIZE),
+          ...facilityQuery,
         },
       });
       const items = Array.isArray(result.data.items) ? result.data.items : [];
@@ -123,7 +126,7 @@ export function IncidentsWorkspace({ moduleName }: { moduleName: string }) {
       if (items.length < FETCH_SIZE) break;
     }
     setRecords(toIncidentRecords(all));
-  }, []);
+  }, [facilityQuery]);
 
   const reload = useCallback(async () => {
     setLoading(true);

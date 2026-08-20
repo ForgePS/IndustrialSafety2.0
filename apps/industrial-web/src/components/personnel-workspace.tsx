@@ -5,6 +5,7 @@ import { useSearchParams } from "next/navigation";
 import { apiGet, useAuth } from "@forge/web-kit";
 import { PersonnelDirectory } from "@/components/personnel-directory";
 import { CompanyDriversDirectory } from "@/components/company-drivers-directory";
+import { PersonnelPpeDirectory } from "@/components/personnel-ppe-directory";
 import { PersonnelQuickNav } from "@/components/personnel-quick-nav";
 import { SeasonalWorkforceWorkspace } from "@/components/seasonal-workforce-workspace";
 import { parsePersonnelQuickView, type PersonnelQuickView } from "@/lib/personnel-quick-nav";
@@ -59,28 +60,34 @@ function PersonnelWorkspaceInner({ moduleName }: { moduleName: string }) {
       {canView ? <PersonnelQuickNav current={quickView} /> : null}
 
       {showSwitcher ? (
-        <div className="ind-personnel-switcher" role="tablist" aria-label="Personnel views">
-          <button
-            type="button"
-            role="tab"
-            aria-selected={mode === "roster"}
-            className={mode === "roster" ? "is-active" : undefined}
-            onClick={() => setMode("roster")}
-          >
-            Roster
-          </button>
-          <button
-            type="button"
-            role="tab"
-            aria-selected={mode === "seasonal"}
-            className={mode === "seasonal" ? "is-active" : undefined}
-            onClick={() => setMode("seasonal")}
-            title={
-              seasonalOn ? undefined : "Seasonal lifecycle flag is off for this tenant"
-            }
-          >
-            Seasonal Workforce
-          </button>
+        <div className="nav-align-top">
+          <ul className="nav nav-tabs flex-wrap" role="tablist" aria-label="Personnel views">
+            <li className="nav-item">
+              <button
+                type="button"
+                role="tab"
+                aria-selected={mode === "roster"}
+                className={`nav-link${mode === "roster" ? " active" : ""}`}
+                onClick={() => setMode("roster")}
+              >
+                Roster
+              </button>
+            </li>
+            <li className="nav-item">
+              <button
+                type="button"
+                role="tab"
+                aria-selected={mode === "seasonal"}
+                className={`nav-link${mode === "seasonal" ? " active" : ""}`}
+                onClick={() => setMode("seasonal")}
+                title={
+                  seasonalOn ? undefined : "Seasonal lifecycle flag is off for this tenant"
+                }
+              >
+                Seasonal Workforce
+              </button>
+            </li>
+          </ul>
         </div>
       ) : null}
 
@@ -88,6 +95,8 @@ function PersonnelWorkspaceInner({ moduleName }: { moduleName: string }) {
         <SeasonalWorkforceWorkspace onGoToRoster={() => setMode("roster")} />
       ) : quickView === "company-drivers" ? (
         <CompanyDriversDirectory />
+      ) : quickView === "ppe-allowance" ? (
+        <PersonnelPpeDirectory />
       ) : (
         <PersonnelDirectory moduleName={moduleName} view={quickView} />
       )}

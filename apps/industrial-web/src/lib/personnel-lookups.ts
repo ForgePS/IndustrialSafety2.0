@@ -9,6 +9,7 @@
 import type { PersonnelLookupSource } from "./personnel-form";
 import type { AssignmentOptions } from "./personnel-assignment";
 import { EMPTY_ASSIGNMENT_OPTIONS } from "./personnel-assignment";
+import { loadIndustrialSiteCatalog } from "./industrial-facility";
 
 export type LookupOption = { id: string; label: string; siteId?: string | null };
 
@@ -46,7 +47,9 @@ export function normalizeLookupRows(payload: unknown): LookupOption[] {
     if (typeof r.status === "string" && r.status !== "" && r.status !== "ACTIVE") continue;
 
     const label =
-      [r.name, r.title, r.displayName].find((v) => typeof v === "string" && v.trim() !== "") ?? id;
+      [r.name, r.title, r.displayName, r.facilityKey, r.siteKey].find(
+        (v) => typeof v === "string" && v.trim() !== "",
+      ) ?? id;
     const siteId = typeof r.siteId === "string" && r.siteId !== "" ? r.siteId : null;
     options.push({ id, label: String(label).trim(), siteId });
   }
@@ -54,8 +57,8 @@ export function normalizeLookupRows(payload: unknown): LookupOption[] {
   return options.sort((a, b) => a.label.localeCompare(b.label));
 }
 
-async function loadOne(
-  source: PersonnelLookupSource,
+async function loadCatalogLookups(
+  source: Exclude<PersonnelLookupSource, "sites">,
   tenantId: string | null | undefined,
 ): Promise<LookupOption[]> {
   const path = lookupPath(source, tenantId);
@@ -73,13 +76,18 @@ async function loadOne(
   }
 }
 
+async function loadSiteLookups(tenantId: string | null | undefined): Promise<LookupOption[]> {
+  const options = await loadIndustrialSiteCatalog(tenantId);
+  return options.map((option) => ({ id: option.id, label: option.name, siteId: null }));
+}
+
 export async function loadPersonnelLookups(
   tenantId: string | null | undefined,
 ): Promise<LookupState> {
   const [sites, departments, positions] = await Promise.all([
-    loadOne("sites", tenantId),
-    loadOne("departments", tenantId),
-    loadOne("positions", tenantId),
+    loadSiteLookups(tenantId),
+    loadCatalogLookups("departments", tenantId),
+    loadCatalogLookups("positions", tenantId),
   ]);
   return { sites, departments, positions };
 }

@@ -60,6 +60,9 @@ export const industrialDepartments = pgTable(
     siteId: uuid("site_id").references(() => industrialSites.id),
     name: varchar("name", { length: 300 }).notNull(),
     status: varchar("status", { length: 64 }).notNull().default("ACTIVE"),
+    contactPersonnelId: uuid("contact_personnel_id"),
+    contactName: varchar("contact_name", { length: 300 }),
+    contactEmail: varchar("contact_email", { length: 320 }),
     ...sourceCols,
     createdAt: createdAtColumn,
     updatedAt: updatedAtColumn,
@@ -143,6 +146,35 @@ export const industrialPersonnel = pgTable(
     userAuthId: varchar("user_auth_id", { length: 320 }),
     digitalSource: varchar("digital_source", { length: 200 }),
     isCompanyDriver: boolean("is_company_driver").notNull().default(false),
+    tracksPrescriptionSafetyGlasses: boolean("tracks_prescription_safety_glasses")
+      .notNull()
+      .default(false),
+    prescriptionSafetyGlassesIssuedDate: date("prescription_safety_glasses_issued_date"),
+    prescriptionSafetyGlassesExpiresDate: date("prescription_safety_glasses_expires_date"),
+    prescriptionSafetyGlassesExtraPairApproved: boolean(
+      "prescription_safety_glasses_extra_pair_approved",
+    )
+      .notNull()
+      .default(false),
+    prescriptionSafetyGlassesExtraPairApprovedBy: varchar(
+      "prescription_safety_glasses_extra_pair_approved_by",
+      { length: 300 },
+    ),
+    prescriptionSafetyGlassesExtraPairApprovedDate: date(
+      "prescription_safety_glasses_extra_pair_approved_date",
+    ),
+    prescriptionSafetyGlassesExtraPairReason: text("prescription_safety_glasses_extra_pair_reason"),
+    safetyFootwearClass: varchar("safety_footwear_class", { length: 32 }),
+    safetyFootwearIssuedDate: date("safety_footwear_issued_date"),
+    safetyFootwearExpiresDate: date("safety_footwear_expires_date"),
+    safetyFootwearExtraPairApproved: boolean("safety_footwear_extra_pair_approved")
+      .notNull()
+      .default(false),
+    safetyFootwearExtraPairApprovedBy: varchar("safety_footwear_extra_pair_approved_by", {
+      length: 300,
+    }),
+    safetyFootwearExtraPairApprovedDate: date("safety_footwear_extra_pair_approved_date"),
+    safetyFootwearExtraPairReason: text("safety_footwear_extra_pair_reason"),
     notes: text("notes"),
     signatureUrl: text("signature_url"),
     // Medical + dual emergency contacts (migration 0045).
@@ -247,11 +279,18 @@ export const industrialCorrectiveActions = pgTable(
     parentEntityId: uuid("parent_entity_id"),
     title: varchar("title", { length: 500 }).notNull(),
     description: text("description"),
+    finding: text("finding"),
+    requiredAction: text("required_action"),
     priority: varchar("priority", { length: 32 }),
     status: varchar("status", { length: 64 }).notNull().default("OPEN"),
     assignedPersonnelId: uuid("assigned_personnel_id").references(() => industrialPersonnel.id),
+    ownerName: varchar("owner_name", { length: 300 }),
     dueDate: date("due_date"),
     completedAt: timestamp("completed_at", { withTimezone: true }),
+    evidenceNotes: text("evidence_notes"),
+    closeoutTokenHash: varchar("closeout_token_hash", { length: 128 }),
+    closeoutTokenExpiresAt: timestamp("closeout_token_expires_at", { withTimezone: true }),
+    closeoutCompletedByName: varchar("closeout_completed_by_name", { length: 300 }),
     ...sourceCols,
     createdAt: createdAtColumn,
     updatedAt: updatedAtColumn,
@@ -260,6 +299,7 @@ export const industrialCorrectiveActions = pgTable(
   (t) => [
     index("industrial_corrective_actions_tenant_status_idx").on(t.tenantId, t.status),
     index("industrial_corrective_actions_due_idx").on(t.tenantId, t.dueDate),
+    uniqueIndex("industrial_corrective_actions_closeout_token_uidx").on(t.closeoutTokenHash),
   ],
 );
 
@@ -648,8 +688,26 @@ export const industrialInspections = pgTable("industrial_inspections", {
     .notNull()
     .references(() => tenants.id),
   siteId: uuid("site_id").references(() => industrialSites.id),
+  departmentId: uuid("department_id").references(() => industrialDepartments.id),
   title: varchar("title", { length: 500 }),
   status: varchar("status", { length: 64 }).notNull().default("ACTIVE"),
+  templateId: uuid("template_id"),
+  inspectionType: varchar("inspection_type", { length: 120 }),
+  completedAt: timestamp("completed_at", { withTimezone: true }),
+  ...sourceCols,
+  createdAt: createdAtColumn,
+  updatedAt: updatedAtColumn,
+  archivedAt: timestamp("archived_at", { withTimezone: true }),
+});
+
+/** Platform / tenant EHS audit templates used as inspection checklists. */
+export const platformEhsAuditTemplates = pgTable("platform_ehs_audit_templates", {
+  id: uuid("id").primaryKey(),
+  tenantId: uuid("tenant_id"),
+  ownershipScope: varchar("ownership_scope", { length: 32 }).notNull().default("PLATFORM_GLOBAL"),
+  name: varchar("name", { length: 300 }).notNull(),
+  status: varchar("status", { length: 64 }).notNull().default("ACTIVE"),
+  templateJson: jsonb("template_json").notNull().default({}),
   ...sourceCols,
   createdAt: createdAtColumn,
   updatedAt: updatedAtColumn,

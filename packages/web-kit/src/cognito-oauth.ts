@@ -245,3 +245,85 @@ export async function redirectToCognitoLogin(): Promise<void> {
   requireBrowser();
   window.location.assign(await buildAuthorizeUrl());
 }
+
+type CognitoIdpPayload = { __type?: string; message?: string };
+
+async function postCognitoIdp(target: string, body: Record<string, string>): Promise<void> {
+  requireBrowser();
+  const config = getCognitoOAuthConfig();
+  const region = config.userPoolId.split("_")[0];
+  if (!region) {
+    throw new CognitoOAuthError("Invalid Cognito user pool id");
+  }
+
+  const response = await fetch(`https://cognito-idp.${region}.amazonaws.com/`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/x-amz-json-1.1",
+      "X-Amz-Target": target,
+    },
+    body: JSON.stringify({ ClientId: config.clientId, ...body }),
+  });
+
+  let payload: CognitoIdpPayload = {};
+  try {
+    payload = (await response.json()) as CognitoIdpPayload;
+  } catch {
+    payload = {};
+  }
+
+  if (response.ok) {
+    return;
+  }
+
+  const type = payload.__type?.split("#").pop() ?? "";
+  throw new CognitoOAuthError(cognitoIdpErrorMessage(type, payload.message, response.status));
+}
+
+function cognitoIdpErrorMessage(type: string, message: string | undefined, status: number): string {
+  if (type === "UserNotFoundException") {
+    return "No Cognito account exists for this user";
+  }
+  if (type === "CodeMismatchException") {
+    return "That verification code is not valid. Use the newest email, and do not start Forgot password on the Cognito sign-in page.";
+  }
+  if (type === "ExpiredCodeException") {
+    return "That verification code has expired. Ask an admin to send a new reset email.";
+  }
+  if (type === "InvalidPasswordException" || type === "InvalidParameterException") {
+    return message?.includes("password")
+      ? "Password must be at least 12 characters and include upper, lower, a number, and a symbol."
+      : (message ?? "This account cannot complete a password reset in its current state.");
+  }
+  if (type === "NotAuthorizedException") {
+    return "This account cannot use a self-service reset. Resend their invitation instead.";
+  }
+  if (type === "LimitExceededException" || type === "TooManyRequestsException") {
+    return "Too many password reset attempts. Try again in a few minutes.";
+  }
+  return message ?? `Password reset failed (${status})`;
+}
+
+/**
+ * Public Cognito ForgotPassword for a confirmed user. Used as a fallback when
+ * the platform-api admin reset endpoint is not deployed yet. Does not work for
+ * FORCE_CHANGE_PASSWORD invitation users.
+ */
+export async function requestCognitoPasswordReset(username: string): Promise<void> {
+  await postCognitoIdp("AWSCognitoIdentityProviderService.ForgotPassword", {
+    Username: username,
+  });
+}
+
+/** Completes AdminResetUserPassword / ForgotPassword using the emailed code. */
+export async function confirmCognitoPasswordReset(input: {
+  username: string;
+  code: string;
+  newPassword: string;
+}): Promise<void> {
+  await postCognitoIdp("AWSCognitoIdentityProviderService.ConfirmForgotPassword", {
+    Username: input.username,
+    ConfirmationCode: input.code,
+    Password: input.newPassword,
+  });
+}

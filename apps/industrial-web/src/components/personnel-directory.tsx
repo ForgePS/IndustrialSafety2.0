@@ -4,6 +4,8 @@ import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState, type FormEvent } from "react";
 import { ApiError, apiGet, apiGetResult, useAuth } from "@forge/web-kit";
 import { ModuleUnavailable } from "@/components/module-unavailable";
+import { useIndustrialFacility } from "@/hooks/use-industrial-facility";
+import { matchesFacilitySelection } from "@/lib/industrial-facility";
 import { OPS_MODULE_CONFIG } from "@/lib/ops-modules";
 import { normalizeLookupRows, type LookupOption } from "@/lib/personnel-lookups";
 import {
@@ -54,6 +56,7 @@ export function PersonnelDirectory({
 }) {
   const cfg = OPS_MODULE_CONFIG.personnel;
   const { me } = useAuth();
+  const { facilityId, facilities, query: facilityQuery } = useIndustrialFacility();
   const permissions = new Set(me?.permissions ?? []);
   const canView = permissions.has(cfg.viewPerm) || permissions.has("industrial.admin");
   const canManage = permissions.has(cfg.managePerm) || permissions.has("industrial.admin");
@@ -128,6 +131,7 @@ export function PersonnelDirectory({
             page: String(page),
             pageSize: String(FETCH_SIZE),
             ...personnelListQueryForView(view),
+            ...facilityQuery,
           },
         });
         const items = Array.isArray(result.data.items) ? result.data.items : [];
@@ -139,7 +143,7 @@ export function PersonnelDirectory({
       }
       return { people: toRosterPeople(rows), total };
     },
-    [cfg.listPath, view],
+    [cfg.listPath, facilityQuery, view],
   );
 
   useEffect(() => {
@@ -185,13 +189,14 @@ export function PersonnelDirectory({
    * BRANDON. Only when that finds nobody do we widen to matches inside words.
    */
   const { visible, widened } = useMemo(() => {
-    const strict = people.filter((p) => matchesRosterQuery(p, query, siteNames.get(p.siteId)));
+    const scoped = people.filter((p) => matchesFacilitySelection(p, facilityId, facilities));
+    const strict = scoped.filter((p) => matchesRosterQuery(p, query, siteNames.get(p.siteId)));
     if (strict.length > 0 || query.trim() === "") {
       return { visible: sortRosterPeople(strict, sort), widened: false };
     }
-    const loose = people.filter((p) => matchesRosterQuery(p, query, siteNames.get(p.siteId), true));
+    const loose = scoped.filter((p) => matchesRosterQuery(p, query, siteNames.get(p.siteId), true));
     return { visible: sortRosterPeople(loose, sort), widened: loose.length > 0 };
-  }, [people, query, siteNames, sort]);
+  }, [facilities, facilityId, people, query, siteNames, sort]);
 
   const shown = useMemo(() => visible.slice(0, renderLimit), [visible, renderLimit]);
 
@@ -391,6 +396,9 @@ export function PersonnelDirectory({
                         ) : null}
                         {person.isCompanyDriver ? (
                           <span className="badge bg-label-info">Company driver</span>
+                        ) : null}
+                        {person.hasPpeExpiryAlert ? (
+                          <span className="badge bg-warning text-dark">PPE renewal</span>
                         ) : null}
                       </div>
                       <span className="small text-primary text-nowrap">

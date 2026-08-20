@@ -116,13 +116,10 @@ describe("Add Person form model", () => {
     }
   });
 
-  it("routes department and position lookups to their name columns", () => {
+  it("routes site, department and position lookups to their name columns", () => {
+    expect(personnelFieldByName("siteId")?.nameField).toBe("siteName");
     expect(personnelFieldByName("departmentId")?.nameField).toBe("departmentName");
     expect(personnelFieldByName("positionId")?.nameField).toBe("jobTitle");
-  });
-
-  it("does not give the site lookup a name column, since personnel has none", () => {
-    expect(personnelFieldByName("siteId")?.nameField).toBeUndefined();
   });
 
   it("gives every lookup with a name column a fallback label to type under", () => {
@@ -154,6 +151,22 @@ describe("Add Person form model", () => {
     expect(medical?.fields?.map((f) => f.name)).toEqual(["allergies", "medicalHistory"]);
     expect(personnelFieldByName("allergies")?.type).toBe("textarea");
     expect(personnelFieldByName("medicalHistory")?.label).toBe("Pertinent medical history");
+  });
+
+  it("defines PPE allowance tracking for glasses and footwear classes", () => {
+    const ppe = PERSONNEL_FORM_SECTIONS.find((s) => s.id === "ppe");
+    expect(ppe?.columns?.map((c) => c.id)).toEqual(["glasses", "footwear"]);
+    expect(personnelFieldByName("tracksPrescriptionSafetyGlasses")?.type).toBe("checkbox");
+    expect(personnelFieldByName("prescriptionSafetyGlassesIssuedDate")?.type).toBe("date");
+    expect(personnelFieldByName("safetyFootwearExpiresDate")?.type).toBe("date");
+    expect(personnelFieldByName("safetyFootwearClass")?.options).toEqual([
+      { value: "CLASS_1", label: "Class 1 ($175.00)" },
+      { value: "CLASS_2", label: "Class 2 ($75.00)" },
+    ]);
+    expect(personnelFieldByName("prescriptionSafetyGlassesExtraPairApproved")?.type).toBe(
+      "checkbox",
+    );
+    expect(PERSONNEL_FORM_SECTIONS.some((s) => s.id === "ppe-extra-approval")).toBe(false);
   });
 
   it("places Medical directly under Contact", () => {
@@ -190,8 +203,10 @@ describe("Add Person form model", () => {
     ]);
   });
 
-  it("uses a checkbox for the driver flag and a textarea for notes", () => {
+  it("uses a checkbox for the driver flag and image fields for license copies", () => {
     expect(personnelFieldByName("isCompanyDriver")?.type).toBe("checkbox");
+    expect(personnelFieldByName("licenseFrontUrl")?.type).toBe("image");
+    expect(personnelFieldByName("licenseBackUrl")?.type).toBe("image");
     expect(personnelFieldByName("notes")?.type).toBe("textarea");
   });
 });
@@ -242,6 +257,20 @@ describe("personnelFormFromRecord", () => {
     });
   });
 
+  it("hydrates imported roster location from the legacy site key", () => {
+    const values = personnelFormFromRecord({ site: "GREENVILLE" });
+    expect(values.siteName).toBe("GREENVILLE");
+  });
+
+  it("hydrates license image fields from company-driver upload objects", () => {
+    const values = personnelFormFromRecord({
+      licenseFrontUpload: { url: "https://cdn.example/front.jpg" },
+      licenseBackUpload: { dataUrl: "data:image/jpeg;base64,BACK" },
+    });
+    expect(values.licenseFrontUrl).toBe("https://cdn.example/front.jpg");
+    expect(values.licenseBackUrl).toBe("data:image/jpeg;base64,BACK");
+  });
+
   it("defaults missing status to Active", () => {
     expect(normalizePersonnelStatus("")).toBe("Active");
     expect(personnelFormFromRecord({}).status).toBe("Active");
@@ -249,6 +278,27 @@ describe("personnelFormFromRecord", () => {
 });
 
 describe("buildPersonnelPayload", () => {
+  it("includes PPE allowance fields in create and update payloads", () => {
+    expect(
+      buildPersonnelPayload({
+        tracksPrescriptionSafetyGlasses: true,
+        safetyFootwearClass: "CLASS_1",
+      }),
+    ).toMatchObject({
+      tracksPrescriptionSafetyGlasses: true,
+      safetyFootwearClass: "CLASS_1",
+    });
+    expect(
+      buildPersonnelUpdatePayload({
+        tracksPrescriptionSafetyGlasses: false,
+        safetyFootwearClass: "CLASS_2",
+      }),
+    ).toMatchObject({
+      tracksPrescriptionSafetyGlasses: false,
+      safetyFootwearClass: "CLASS_2",
+    });
+  });
+
   it("includes status when selected", () => {
     expect(buildPersonnelPayload({ status: "Inactive" }).status).toBe("Inactive");
   });
@@ -295,10 +345,9 @@ describe("buildPersonnelPayload", () => {
     expect(payload).not.toHaveProperty("departmentName");
   });
 
-  it("sends the site id with no companion name", () => {
+  it("maps the site lookup onto siteName", () => {
     const payload = buildPersonnelPayload({ siteId: "site-1" }, () => "Stuttgart");
-    expect(payload.siteId).toBe("site-1");
-    expect(payload).not.toHaveProperty("siteName");
+    expect(payload).toMatchObject({ siteId: "site-1", siteName: "Stuttgart" });
   });
 
   // The positions catalog is empty for some tenants, so the paired name column
@@ -307,6 +356,12 @@ describe("buildPersonnelPayload", () => {
     const payload = buildPersonnelPayload({ jobTitle: "Millwright" });
     expect(payload.jobTitle).toBe("Millwright");
     expect(payload).not.toHaveProperty("positionId");
+  });
+
+  it("accepts a typed location when no site is selected", () => {
+    const payload = buildPersonnelPayload({ siteName: "Greenville" });
+    expect(payload.siteName).toBe("Greenville");
+    expect(payload).not.toHaveProperty("siteId");
   });
 
   it("accepts a typed department name when no department is selected", () => {
@@ -334,6 +389,34 @@ describe("buildPersonnelUpdatePayload", () => {
     expect(buildPersonnelUpdatePayload({ isCompanyDriver: true }).isCompanyDriver).toBe(true);
   });
 
+  it("persists license front/back as URL fields and upload objects", () => {
+    const payload = buildPersonnelUpdatePayload({
+      licenseFrontUrl: "data:image/jpeg;base64,FRONT",
+      licenseBackUrl: "https://cdn.example/back.jpg",
+    });
+    expect(payload.licenseFrontUrl).toBe("data:image/jpeg;base64,FRONT");
+    expect(payload.licenseBackUrl).toBe("https://cdn.example/back.jpg");
+    expect(payload.licenseFrontUpload).toMatchObject({
+      dataUrl: "data:image/jpeg;base64,FRONT",
+      fileName: "drivers-license-front.jpg",
+    });
+    expect(payload.licenseBackUpload).toMatchObject({
+      url: "https://cdn.example/back.jpg",
+      fileName: "drivers-license-back.jpg",
+    });
+  });
+
+  it("clears license copies when the edit form blanks them", () => {
+    const payload = buildPersonnelUpdatePayload({
+      licenseFrontUrl: "",
+      licenseBackUrl: "",
+    });
+    expect(payload.licenseFrontUrl).toBe("");
+    expect(payload.licenseBackUrl).toBe("");
+    expect(payload.licenseFrontUpload).toBeNull();
+    expect(payload.licenseBackUpload).toBeNull();
+  });
+
   it("sends blank strings so cleared fields can null out on PATCH", () => {
     const payload = buildPersonnelUpdatePayload({
       firstName: "Ada",
@@ -345,6 +428,16 @@ describe("buildPersonnelUpdatePayload", () => {
     expect(payload.lastName).toBe("");
     expect(payload.phone).toBe("");
     expect(payload.status).toBe("Active");
+  });
+
+  it("omits an oversized stored signature so other fields can still save", () => {
+    const huge = `data:image/png;base64,${"A".repeat(MAX_SIGNATURE_DATA_URL_LENGTH)}`;
+    const payload = buildPersonnelUpdatePayload({
+      firstName: "Ada",
+      signatureUrl: huge,
+    });
+    expect(payload.firstName).toBe("Ada");
+    expect(payload).not.toHaveProperty("signatureUrl");
   });
 });
 
@@ -369,8 +462,13 @@ describe("isAcceptableSignature", () => {
     expect(isAcceptableSignature("data:image/png;base64,iVBORw0KGgo=")).toBe(true);
   });
 
-  it("rejects anything that is not an image data URL", () => {
-    expect(isAcceptableSignature("https://example.com/sig.png")).toBe(false);
+  it("accepts an empty or unsigned field", () => {
+    expect(isAcceptableSignature("")).toBe(true);
+    expect(isAcceptableSignature("   ")).toBe(true);
+  });
+
+  it("accepts a stored http(s) signature URL from import", () => {
+    expect(isAcceptableSignature("https://example.com/sig.png")).toBe(true);
   });
 
   it("rejects an oversized capture", () => {

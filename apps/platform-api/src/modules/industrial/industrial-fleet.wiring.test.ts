@@ -28,6 +28,8 @@ describe("Industrial fleet module wiring", () => {
     expect(controller).toContain('@Post("fleet/vehicles/:id/assign")');
     expect(service).toContain("withTenantTransaction");
     expect(service).toContain("industrialFleetVehicles");
+    expect(service).toContain("ensureCompanyDriverFromAssignment");
+    expect(service).toContain("isCompanyDriver");
   });
 
   it("keeps fleet migration and discovery artifacts", () => {

@@ -2,8 +2,9 @@
 
 import { useEffect, useRef, useState, type CSSProperties, type ReactNode } from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { AuthProvider, apiGet, useAuth } from "@forge/web-kit";
+import { UnsavedChangesProvider, useUnsavedChanges } from "@/components/unsaved-changes-guard";
 import { EnvironmentBanner } from "@forge/ui";
 import { INDUSTRIAL_PRODUCT_CODE } from "@forge/contracts";
 import { buildIndustrialNavigation, featureFlagForModule } from "@/lib/navigation";
@@ -14,11 +15,16 @@ import { ForgeIndustrialMark } from "@/components/forge-industrial-mark";
 import { FieldQuickBar } from "@/components/field-quick-bar";
 import { useLoginBranding } from "@/hooks/use-login-branding";
 import { useTenantBranding } from "@/hooks/use-tenant-branding";
+import {
+  IndustrialFacilityProvider,
+  useIndustrialFacilityState,
+} from "@/hooks/use-industrial-facility";
+import { ALL_FACILITIES_ID } from "@/lib/industrial-facility";
 import { navLogoForTenant } from "@/lib/tenant-nav-logo";
+import { profileWelcomeName } from "@/lib/my-profile";
 
 const appEnv = process.env.NEXT_PUBLIC_APP_ENV ?? process.env.APP_ENV ?? "local";
 const NAV_GROUPS_STORAGE_KEY = "forge-ind-nav-open-groups-v2";
-const FACILITY_STORAGE_KEY = "forge-ind-active-facility-id";
 
 function normalizeAppPath(path: string | null | undefined): string {
   if (!path) return "/";
@@ -126,6 +132,7 @@ function GateCard({
   brandLabel = "Industrial",
   logoUrl,
   primaryColor,
+  centerText = false,
 }: {
   title: string;
   body: string;
@@ -134,10 +141,12 @@ function GateCard({
   brandLabel?: string;
   logoUrl?: string;
   primaryColor?: string;
+  centerText?: boolean;
 }) {
   const primaryStyle = primaryColor
     ? ({ ["--bs-primary"]: primaryColor } as CSSProperties)
     : undefined;
+  const textAlign = centerText ? "text-center" : "";
   return (
     <div className="container-xxl" style={primaryStyle}>
       <div className="authentication-wrapper authentication-basic container-p-y">
@@ -152,9 +161,9 @@ function GateCard({
                   {...(primaryColor ? { primaryColor } : {})}
                 />
               </div>
-              <h4 className="mb-2">{title}</h4>
-              <p className="mb-4">{body}</p>
-              {muted ? <p className="text-muted mb-4">{muted}</p> : null}
+              <h4 className={`mb-2 ${textAlign}`.trim()}>{title}</h4>
+              <p className={`mb-4 ${textAlign}`.trim()}>{body}</p>
+              {muted ? <p className={`text-muted mb-4 ${textAlign}`.trim()}>{muted}</p> : null}
               {children}
             </div>
           </div>
@@ -165,7 +174,9 @@ function GateCard({
 }
 
 function ShellBody({ children }: { children: ReactNode }) {
+  const { confirmLeave } = useUnsavedChanges();
   const pathname = usePathname();
+  const router = useRouter();
   const { me, loading, error, logout, loginWithCognito, chooseTenant, hasPermission, hasProduct } =
     useAuth();
   const {
@@ -189,8 +200,6 @@ function ShellBody({ children }: { children: ReactNode }) {
   const [hostTenantSettled, setHostTenantSettled] = useState(false);
   const [welcomeFirstName, setWelcomeFirstName] = useState<string | null>(null);
   const [openGroups, setOpenGroups] = useState<Record<string, boolean>>({});
-  const [facilities, setFacilities] = useState<Array<{ id: string; name: string }>>([]);
-  const [activeFacilityId, setActiveFacilityId] = useState<string>("");
   const navGroupsHydrated = useRef(false);
   const lastAutoOpenPath = useRef<string | null>(null);
 
@@ -211,7 +220,12 @@ function ShellBody({ children }: { children: ReactNode }) {
   };
 
   const isPublicAuthRoute =
-    Boolean(pathname?.startsWith("/auth/callback")) || Boolean(pathname?.startsWith("/health"));
+    Boolean(pathname?.startsWith("/auth/callback")) ||
+    Boolean(pathname?.startsWith("/auth/forgot-password")) ||
+    Boolean(pathname?.startsWith("/auth/reset-password")) ||
+    Boolean(pathname?.startsWith("/health")) ||
+    Boolean(pathname?.startsWith("/closeout"));
+  const isLegalGateRoute = Boolean(pathname?.startsWith("/legal/"));
 
   const tenantId = me?.tenantId ?? null;
   const userId = me?.userId ?? null;
@@ -232,6 +246,13 @@ function ShellBody({ children }: { children: ReactNode }) {
       tenantId &&
       (adminSupport ? hasIndustrialAccess : entitled && hasIndustrialAccess),
   );
+
+  useEffect(() => {
+    if (!me || !hasAccess || isPublicAuthRoute || isLegalGateRoute) return;
+    if (me.legalAcknowledgments?.status === "REQUIRED") {
+      router.replace(me.legalAcknowledgments.gatePath || "/legal/acknowledge/");
+    }
+  }, [me, hasAccess, isPublicAuthRoute, isLegalGateRoute, router]);
 
   // Vanity hosts (e.g. producers-rice-mill) map to a tenant via login-branding.
   // Prefer that tenant once after sign-in so a leftover Creator localStorage
@@ -271,19 +292,20 @@ function ShellBody({ children }: { children: ReactNode }) {
   }, [loading, loadingHost, me, hostTenantId, hostTenantSettled, chooseTenant]);
 
   useEffect(() => {
-    if (!me?.tenantId || !me.personId) {
+    if (!me?.userId) {
       setWelcomeFirstName(null);
       return;
     }
     let cancelled = false;
     void (async () => {
       try {
-        const person = await apiGet<{ firstName?: string | null; preferredName?: string | null }>(
-          `/api/v1/tenants/${me.tenantId}/persons/${me.personId}`,
-        );
+        const profile = await apiGet<{
+          firstName?: string | null;
+          preferredName?: string | null;
+          displayName?: string | null;
+        }>("/api/v1/auth/profile");
         if (cancelled) return;
-        const first = person.firstName?.trim() || person.preferredName?.trim() || "";
-        setWelcomeFirstName(first || null);
+        setWelcomeFirstName(profileWelcomeName(profile));
       } catch {
         if (!cancelled) setWelcomeFirstName(null);
       }
@@ -291,47 +313,9 @@ function ShellBody({ children }: { children: ReactNode }) {
     return () => {
       cancelled = true;
     };
-  }, [me?.tenantId, me?.personId]);
+  }, [me?.userId, me?.tenantId]);
 
-  useEffect(() => {
-    if (!hasAccess || !tenantId) {
-      setFacilities([]);
-      setActiveFacilityId("");
-      return;
-    }
-    let cancelled = false;
-    void (async () => {
-      try {
-        const rows = await apiGet<
-          Array<{ id: string; name?: string | null; facilityKey?: string | null }>
-        >(`/api/v1/tenants/${tenantId}/facilities`);
-        if (cancelled) return;
-        const list = (rows ?? [])
-          .map((row) => ({
-            id: row.id,
-            name: (row.name?.trim() || row.facilityKey?.trim() || row.id).trim(),
-          }))
-          .filter((row) => Boolean(row.id));
-        setFacilities(list);
-        const stored =
-          typeof window !== "undefined" ? window.localStorage.getItem(FACILITY_STORAGE_KEY) : null;
-        const next =
-          (stored && list.some((f) => f.id === stored) ? stored : null) ?? list[0]?.id ?? "";
-        setActiveFacilityId(next);
-        if (next && typeof window !== "undefined") {
-          window.localStorage.setItem(FACILITY_STORAGE_KEY, next);
-        }
-      } catch {
-        if (!cancelled) {
-          setFacilities([]);
-          setActiveFacilityId("");
-        }
-      }
-    })();
-    return () => {
-      cancelled = true;
-    };
-  }, [hasAccess, tenantId]);
+  const facility = useIndustrialFacilityState(tenantId, hasAccess);
 
   useEffect(() => {
     if (!hasAccess || !tenantId) {
@@ -485,7 +469,8 @@ function ShellBody({ children }: { children: ReactNode }) {
       <GateCard
         title={login.headline}
         body={login.body}
-        muted={error ? error : login.statusText}
+        {...(error ? { muted: error } : {})}
+        centerText
         {...gateBrand}
       >
         <button
@@ -503,6 +488,11 @@ function ShellBody({ children }: { children: ReactNode }) {
         >
           {login.buttonLabel}
         </button>
+        <p className="text-center mt-3 mb-0">
+          <Link href="/auth/forgot-password/">Forgot password?</Link>
+          {" · "}
+          <Link href="/auth/reset-password/">Have a reset code?</Link>
+        </p>
       </GateCard>
     );
   }
@@ -558,7 +548,7 @@ function ShellBody({ children }: { children: ReactNode }) {
             ))}
           </div>
         ) : null}
-        <button type="button" className="btn btn-outline-secondary d-grid w-100" onClick={() => void signOut()}>
+        <button type="button" className="btn btn-outline-secondary d-grid w-100" onClick={() => confirmLeave(() => void signOut())}>
           Sign out
         </button>
       </GateCard>
@@ -603,6 +593,17 @@ function ShellBody({ children }: { children: ReactNode }) {
     );
   }
 
+  if (isLegalGateRoute) {
+    return (
+      <div className="layout-wrapper">
+        <EnvironmentBanner environment={appEnv} />
+        <div className="content-wrapper">
+          <div className="container-xxl flex-grow-1 container-p-y">{children}</div>
+        </div>
+      </div>
+    );
+  }
+
   const selectableTenants = me.tenants.filter((t) => t.selectable);
   const activeTenant =
     selectableTenants.find((t) => t.tenantId === me.tenantId) ??
@@ -624,9 +625,10 @@ function ShellBody({ children }: { children: ReactNode }) {
     }
   };
 
-  const welcomeLabel = welcomeFirstName ? `Welcome ${welcomeFirstName}` : "My profile";
+  const welcomeLabel = welcomeFirstName ? `Welcome, ${welcomeFirstName}` : "My profile";
 
   return (
+    <IndustrialFacilityProvider value={facility}>
     <div className="layout-wrapper layout-content-navbar" style={brandStyle}>
       <div className="layout-container">
         <aside id="layout-menu" className="layout-menu menu-vertical menu bg-menu-theme">
@@ -671,13 +673,6 @@ function ShellBody({ children }: { children: ReactNode }) {
                 <div>Analytics</div>
               </Link>
             </li>
-            <li className={pathname === "/profile" || pathname === "/profile/" ? "menu-item active" : "menu-item"}>
-              <Link href="/profile/" className="menu-link" onClick={() => setMenuOpen(false)}>
-                <i className="menu-icon tf-icons bx bx-user" />
-                <div>My profile</div>
-              </Link>
-            </li>
-
             {groups
               .filter((group) => group !== "Dashboard")
               .map((group) => {
@@ -725,6 +720,19 @@ function ShellBody({ children }: { children: ReactNode }) {
                 </li>
               );
             })}
+            <li
+              className={`${routeIsActive(pathname, "/profile/") ? "menu-item active" : "menu-item"} menu-item-pinned`}
+            >
+              <Link
+                href="/profile/"
+                className="menu-link"
+                aria-current={routeIsActive(pathname, "/profile/") ? "page" : undefined}
+                onClick={() => setMenuOpen(false)}
+              >
+                <i className="menu-icon tf-icons bx bx-user" />
+                <div>My profile</div>
+              </Link>
+            </li>
           </ul>
         </aside>
 
@@ -766,7 +774,10 @@ function ShellBody({ children }: { children: ReactNode }) {
                       aria-label="Switch tenant"
                       value={me.tenantId ?? ""}
                       disabled={tenantSwitching}
-                      onChange={(event) => void onTenantChange(event.target.value)}
+                      onChange={(event) => {
+                        const nextTenantId = event.target.value;
+                        confirmLeave(() => void onTenantChange(nextTenantId));
+                      }}
                     >
                       {selectableTenants.map((t) => (
                         <option key={t.tenantId} value={t.tenantId}>
@@ -785,25 +796,22 @@ function ShellBody({ children }: { children: ReactNode }) {
                     </span>
                   ) : null}
                 </label>
-                {facilities.length > 0 ? (
+                {facility.facilities.length > 0 ? (
                   <label className="nav-item ind-tenant-switcher mb-0">
                     <i className="bx bx-map flex-shrink-0" aria-hidden="true" />
                     <span className="ind-tenant-switcher__label">Facility</span>
                     <select
                       className="form-select form-select-sm"
                       aria-label="Active facility"
-                      value={activeFacilityId}
-                      onChange={(event) => {
-                        const next = event.target.value;
-                        setActiveFacilityId(next);
-                        if (typeof window !== "undefined") {
-                          window.localStorage.setItem(FACILITY_STORAGE_KEY, next);
-                        }
-                      }}
+                      value={facility.facilityId}
+                      onChange={(event) => facility.setFacilityId(event.target.value)}
                     >
-                      {facilities.map((facility) => (
-                        <option key={facility.id} value={facility.id}>
-                          {facility.name}
+                      {facility.facilities.length > 1 ? (
+                        <option value={ALL_FACILITIES_ID}>All locations</option>
+                      ) : null}
+                      {facility.facilities.map((row) => (
+                        <option key={row.id} value={row.id}>
+                          {row.name}
                         </option>
                       ))}
                     </select>
@@ -824,11 +832,11 @@ function ShellBody({ children }: { children: ReactNode }) {
                     href="/profile/"
                     className="nav-link px-0 text-body fw-semibold text-decoration-none"
                     aria-label={welcomeLabel === "My profile" ? "Open my profile" : welcomeLabel}
-                    title="My profile"
+                    title={welcomeLabel}
                   >
                     {welcomeLabel}
                   </Link>
-                  <button type="button" className="btn btn-sm btn-outline-secondary" onClick={() => void signOut()}>
+                  <button type="button" className="btn btn-sm btn-outline-secondary" onClick={() => confirmLeave(() => void signOut())}>
                     Sign out
                   </button>
                 </li>
@@ -865,6 +873,7 @@ function ShellBody({ children }: { children: ReactNode }) {
         <div className="layout-overlay layout-menu-toggle" aria-hidden="true" />
       )}
     </div>
+    </IndustrialFacilityProvider>
   );
 }
 
@@ -872,7 +881,9 @@ export function IndustrialShell({ children }: { children: ReactNode }) {
   return (
     <AuthProvider>
       <EnvironmentBanner environment={appEnv} />
-      <ShellBody>{children}</ShellBody>
+      <UnsavedChangesProvider>
+        <ShellBody>{children}</ShellBody>
+      </UnsavedChangesProvider>
     </AuthProvider>
   );
 }

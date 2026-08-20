@@ -7,13 +7,19 @@ import { FilterPanel } from "@/components/filter-panel";
 import { ModuleUnavailable } from "@/components/module-unavailable";
 import { ModuleWorkspaceHeader } from "@/components/module-workspace-header";
 import { ModuleWorkspaceTabs } from "@/components/module-workspace-tabs";
+import { SignaturePad } from "@/components/signature-pad";
+import { YearSelectDateInput } from "@/components/year-select-date-input";
+import { useProfileSignature } from "@/hooks/use-profile-signature";
+import { isBirthDateField } from "@/lib/date-field";
 import {
   FORMS_API,
   FORM_SUBMISSIONS_API,
   FORM_TABS,
   FORM_TAB_META,
+  buildFormAnswersPayload,
   extractFormFields,
   formStatusBadgeClass,
+  hydrateFormAnswers,
   parseFormFieldsInput,
   parseFormTab,
   type FormField,
@@ -39,21 +45,53 @@ function FormsEmptyState({ icon, message }: { icon: string; message: string }) {
   );
 }
 
-function formatAnswer(value: unknown): string {
-  if (value == null || value === "") return "—";
-  if (typeof value === "boolean") return value ? "Yes" : "No";
-  if (Array.isArray(value)) return value.map(String).join(", ") || "—";
-  return String(value);
-}
-
 function renderFillField(
   field: FormField,
   answers: Record<string, string>,
   setAnswers: (next: Record<string, string>) => void,
+  profileSignature?: string | null,
 ) {
   const set = (value: string) => setAnswers({ ...answers, [field.id]: value });
   const inputId = `form-fill-${field.id}`;
   const value = answers[field.id] ?? "";
+
+  if (field.type === "content") {
+    const paragraphs = String(field.content ?? "")
+      .split(/\n\s*\n/)
+      .map((part) => part.trim())
+      .filter(Boolean);
+    return (
+      <div className="col-12" key={field.id}>
+        <div className="card border shadow-none bg-label-secondary">
+          <div className="card-body">
+            <h6 className="card-title mb-3">{field.label}</h6>
+            {paragraphs.length > 0 ? (
+              paragraphs.map((paragraph) => (
+                <p key={paragraph.slice(0, 48)} className="mb-2" style={{ whiteSpace: "pre-wrap" }}>
+                  {paragraph}
+                </p>
+              ))
+            ) : (
+              <p className="text-muted mb-0">Policy text unavailable.</p>
+            )}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (field.type === "signature") {
+    return (
+      <div className="col-12" key={field.id}>
+        <SignaturePad
+          label={field.label}
+          value={value}
+          onChange={set}
+          profileSignature={profileSignature ?? null}
+        />
+      </div>
+    );
+  }
 
   if (field.type === "checkbox") {
     return (
@@ -116,6 +154,23 @@ function renderFillField(
     );
   }
 
+  if (field.type === "date" && isBirthDateField(field)) {
+    return (
+      <div className="col-md-6" key={field.id}>
+        <label className="form-label" id={inputId}>
+          {field.label}
+        </label>
+        <YearSelectDateInput
+          id={inputId}
+          value={value}
+          onChange={set}
+          required={field.required === true}
+          mode="birth"
+        />
+      </div>
+    );
+  }
+
   return (
     <div className="col-md-6" key={field.id}>
       <label className="form-label" htmlFor={inputId}>
@@ -143,6 +198,7 @@ export function FormsWorkspace({ moduleName }: { moduleName: string }) {
     permissions.has("industrial.access");
   const canManage =
     permissions.has("industrial.forms.manage") || permissions.has("industrial.admin");
+  const { signatureUrl: profileSignature } = useProfileSignature(canView);
 
   const [bootstrap, setBootstrap] = useState<Bootstrap | null>(null);
   const [tab, setTab] = useState<FormTabId>(() => parseFormTab(searchParams.get("tab")));
@@ -160,6 +216,9 @@ export function FormsWorkspace({ moduleName }: { moduleName: string }) {
   const [error, setError] = useState<string | null>(null);
   const [creating, setCreating] = useState(false);
   const [answers, setAnswers] = useState<Record<string, string>>({});
+  const [editingSubmissionId, setEditingSubmissionId] = useState<string | null>(
+    () => searchParams.get("submission") || null,
+  );
   const [createForm, setCreateForm] = useState({
     title: "",
     category: "",
@@ -178,9 +237,12 @@ export function FormsWorkspace({ moduleName }: { moduleName: string }) {
     () => (selectedForm ? extractFormFields(selectedForm) : []),
     [selectedForm],
   );
-  const selectedSubmission = useMemo(
-    () => submissions.find((row) => String(row.id) === selectedSubmissionId) ?? null,
-    [submissions, selectedSubmissionId],
+  const editingSubmission = useMemo(
+    () =>
+      editingSubmissionId
+        ? (submissions.find((row) => String(row.id) === editingSubmissionId) ?? null)
+        : null,
+    [editingSubmissionId, submissions],
   );
 
   const filteredDefinitions = useMemo(() => {
@@ -267,18 +329,145 @@ export function FormsWorkspace({ moduleName }: { moduleName: string }) {
     void loadAll();
   }, [awsReady, loadAll]);
 
+  // Deep-link / refresh: hydrate the submission into the fill form once data is loaded.
+  useEffect(() => {
+    if (!editingSubmissionId || loading) return;
+    const row = submissions.find((item) => String(item.id) === editingSubmissionId);
+    if (!row) return;
+    const formId = String(row.formDefinitionId ?? "");
+    const form = definitions.find((def) => String(def.id) === formId);
+    if (!form) return;
+    if (selectedFormId !== formId) setSelectedFormId(formId);
+    setAnswers((prev) =>
+      Object.keys(prev).length > 0 ? prev : hydrateFormAnswers(row.answers, extractFormFields(form)),
+    );
+  }, [definitions, editingSubmissionId, loading, selectedFormId, submissions]);
+
   function openForm(id: string, nextTab: FormTabId = "fill") {
     setSelectedFormId(id);
     setSelectedSubmissionId(null);
+    setEditingSubmissionId(null);
     setAnswers({});
     setTab(nextTab);
     syncUrl({ tab: nextTab, form: id, submission: null });
   }
 
   function openSubmission(id: string) {
+    const row = submissions.find((item) => String(item.id) === id);
+    const formId = row ? String(row.formDefinitionId ?? "") : "";
+    const form = formId
+      ? (definitions.find((def) => String(def.id) === formId) ?? null)
+      : null;
     setSelectedSubmissionId(id);
-    setTab("submissions");
-    syncUrl({ tab: "submissions", submission: id });
+    setEditingSubmissionId(id);
+    if (formId) setSelectedFormId(formId);
+    if (row && form) {
+      setAnswers(hydrateFormAnswers(row.answers, extractFormFields(form)));
+    } else if (row) {
+      setAnswers(hydrateFormAnswers(row.answers, []));
+    } else {
+      setAnswers({});
+    }
+    setTab("fill");
+    syncUrl({
+      tab: "fill",
+      form: formId || selectedFormId,
+      submission: id,
+    });
+  }
+
+  function startNewSubmission() {
+    if (!selectedFormId) return;
+    setEditingSubmissionId(null);
+    setSelectedSubmissionId(null);
+    setAnswers({});
+    setTab("fill");
+    syncUrl({ tab: "fill", form: selectedFormId, submission: null });
+  }
+
+  async function loadPrintableHtml(): Promise<string | null> {
+    if (!editingSubmissionId) return null;
+    setError(null);
+    try {
+      const data = await apiGet<{ html: string; title?: string }>(
+        `${FORM_SUBMISSIONS_API}/${encodeURIComponent(editingSubmissionId)}/printable`,
+      );
+      return data.html;
+    } catch (err) {
+      setError(err instanceof ApiError ? err.message : "Could not load printable form");
+      return null;
+    }
+  }
+
+  function openPrintablePopup(html: string, autoPrint: boolean) {
+    const blob = new Blob([html], { type: "text/html;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const popup = window.open(
+      url,
+      "forge-form-printable",
+      "popup=yes,width=960,height=720,scrollbars=yes,resizable=yes",
+    );
+    if (!popup) {
+      URL.revokeObjectURL(url);
+      setError("Pop-up blocked — allow pop-ups to preview or print this form.");
+      return;
+    }
+    const cleanup = () => {
+      try {
+        URL.revokeObjectURL(url);
+      } catch {
+        // ignore
+      }
+    };
+    const watch = window.setInterval(() => {
+      if (popup.closed) {
+        window.clearInterval(watch);
+        cleanup();
+      }
+    }, 800);
+    if (autoPrint) {
+      window.setTimeout(() => {
+        try {
+          popup.focus();
+          popup.print();
+        } catch {
+          // User can still print from the popup toolbar.
+        }
+      }, 500);
+    } else {
+      popup.focus();
+    }
+  }
+
+  async function previewSubmission() {
+    const html = await loadPrintableHtml();
+    if (!html) return;
+    openPrintablePopup(html, false);
+  }
+
+  async function printSubmission() {
+    const html = await loadPrintableHtml();
+    if (!html) return;
+    openPrintablePopup(html, true);
+  }
+
+  async function downloadSubmission() {
+    const html = await loadPrintableHtml();
+    if (!html) return;
+    const blob = new Blob([html], { type: "text/html;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const anchor = document.createElement("a");
+    const title = String(
+      editingSubmission?.title ?? selectedForm?.title ?? selectedForm?.name ?? "form-submission",
+    )
+      .trim()
+      .replace(/[^\w-]+/g, "-")
+      .replace(/-+/g, "-")
+      .toLowerCase();
+    anchor.href = url;
+    anchor.download = `${title || "form-submission"}.html`;
+    anchor.click();
+    URL.revokeObjectURL(url);
   }
 
   async function onCreateDefinition(e: FormEvent) {
@@ -316,31 +505,54 @@ export function FormsWorkspace({ moduleName }: { moduleName: string }) {
     setCreating(true);
     setError(null);
     try {
-      const payload: Record<string, unknown> = {};
-      for (const field of fillFields) {
-        const value = answers[field.id];
-        if (field.type === "checkbox") {
-          payload[field.id] = value === "true";
-          continue;
-        }
-        if (value?.trim()) payload[field.id] = value.trim();
+      const payload = buildFormAnswersPayload(answers, fillFields);
+      if (editingSubmissionId) {
+        await apiSend<Record<string, unknown>>(
+          `${FORM_SUBMISSIONS_API}/${encodeURIComponent(editingSubmissionId)}`,
+          "PATCH",
+          {
+            title: String(
+              editingSubmission?.title ??
+                selectedForm?.title ??
+                selectedForm?.name ??
+                "Form submission",
+            ),
+            answers: payload,
+          },
+        );
+        await loadAll();
+        setTab("submissions");
+        setSelectedSubmissionId(editingSubmissionId);
+        syncUrl({
+          tab: "submissions",
+          form: selectedFormId,
+          submission: editingSubmissionId,
+        });
+      } else {
+        const created = await apiSend<Record<string, unknown>>(FORM_SUBMISSIONS_API, "POST", {
+          formDefinitionId: selectedFormId,
+          title: String(selectedForm?.title ?? selectedForm?.name ?? "Form submission"),
+          answers: payload,
+        });
+        setAnswers({});
+        setEditingSubmissionId(null);
+        await loadAll();
+        setTab("submissions");
+        setSelectedSubmissionId(created.id ? String(created.id) : null);
+        syncUrl({
+          tab: "submissions",
+          form: selectedFormId,
+          submission: created.id ? String(created.id) : null,
+        });
       }
-      const created = await apiSend<Record<string, unknown>>(FORM_SUBMISSIONS_API, "POST", {
-        formDefinitionId: selectedFormId,
-        title: String(selectedForm?.title ?? selectedForm?.name ?? "Form submission"),
-        answers: payload,
-      });
-      setAnswers({});
-      await loadAll();
-      setTab("submissions");
-      setSelectedSubmissionId(created.id ? String(created.id) : null);
-      syncUrl({
-        tab: "submissions",
-        form: selectedFormId,
-        submission: created.id ? String(created.id) : null,
-      });
     } catch (err) {
-      setError(err instanceof ApiError ? err.message : "Could not submit form");
+      setError(
+        err instanceof ApiError
+          ? err.message
+          : editingSubmissionId
+            ? "Could not save form changes"
+            : "Could not submit form",
+      );
     } finally {
       setCreating(false);
     }
@@ -563,7 +775,7 @@ export function FormsWorkspace({ moduleName }: { moduleName: string }) {
                       </div>
                       <div className="col-12">
                         <label className="form-label" htmlFor="form-fields">
-                          Fields (one per line: Label|type|option)
+                          Fields (one per line: Label|type|option — use signature for sign pads)
                         </label>
                         <textarea
                           id="form-fields"
@@ -590,16 +802,64 @@ export function FormsWorkspace({ moduleName }: { moduleName: string }) {
         {tab === "fill" ? (
           selectedForm ? (
             <form onSubmit={(e) => void onSubmitForm(e)} aria-label="Fill form">
-              <div className="mb-3">
-                <h6 className="mb-1">{String(selectedForm.title ?? selectedForm.name)}</h6>
-                <p className="text-muted small mb-0">
-                  Complete the fields and submit to save this record.
-                </p>
+              <div className="mb-3 d-flex flex-wrap align-items-start justify-content-between gap-2">
+                <div>
+                  <h6 className="mb-1">{String(selectedForm.title ?? selectedForm.name)}</h6>
+                  <p className="text-muted small mb-0">
+                    {editingSubmissionId
+                      ? "Edit any field, including signatures, then save your changes."
+                      : "Complete the fields and submit to save this record."}
+                  </p>
+                </div>
+                <div className="d-flex flex-wrap gap-2">
+                  {editingSubmissionId ? (
+                    <>
+                      <button
+                        type="button"
+                        className="btn btn-sm btn-outline-secondary"
+                        onClick={() => void previewSubmission()}
+                      >
+                        Preview
+                      </button>
+                      <button
+                        type="button"
+                        className="btn btn-sm btn-outline-secondary"
+                        onClick={() => void printSubmission()}
+                      >
+                        Print
+                      </button>
+                      <button
+                        type="button"
+                        className="btn btn-sm btn-outline-secondary"
+                        onClick={() => void downloadSubmission()}
+                      >
+                        Download
+                      </button>
+                      <button
+                        type="button"
+                        className="btn btn-sm btn-outline-secondary"
+                        onClick={startNewSubmission}
+                      >
+                        Start new submission
+                      </button>
+                    </>
+                  ) : null}
+                </div>
               </div>
-              <div className="row g-3">{fillFields.map((field) => renderFillField(field, answers, setAnswers))}</div>
+              <div className="row g-3">
+                {fillFields.map((field) =>
+                  renderFillField(field, answers, setAnswers, profileSignature),
+                )}
+              </div>
               {canManage ? (
                 <button type="submit" className="btn btn-primary mt-3" disabled={creating}>
-                  {creating ? "Submitting…" : "Submit form"}
+                  {creating
+                    ? editingSubmissionId
+                      ? "Saving…"
+                      : "Submitting…"
+                    : editingSubmissionId
+                      ? "Save changes"
+                      : "Submit form"}
                 </button>
               ) : (
                 <p className="text-muted mt-3 mb-0">Submitting requires industrial.forms.manage.</p>
@@ -611,111 +871,69 @@ export function FormsWorkspace({ moduleName }: { moduleName: string }) {
         ) : null}
 
         {tab === "submissions" ? (
-          <div className="row g-4">
-            <div className={selectedSubmission ? "col-lg-7" : "col-12"}>
-              {loading ? (
-                <p className="text-muted" role="status">
-                  Loading submissions…
-                </p>
-              ) : filteredSubmissions.length === 0 ? (
-                <FormsEmptyState icon="bx-check-square" message="No submissions yet." />
-              ) : (
-                <div className="table-responsive">
-                  <table className="table table-hover mb-0">
-                    <thead>
-                      <tr>
-                        <th scope="col">Submission</th>
-                        <th scope="col">Form</th>
-                        <th scope="col">Status</th>
-                        <th scope="col">Submitted</th>
+          loading ? (
+            <p className="text-muted" role="status">
+              Loading submissions…
+            </p>
+          ) : filteredSubmissions.length === 0 ? (
+            <FormsEmptyState icon="bx-check-square" message="No submissions yet." />
+          ) : (
+            <div className="table-responsive">
+              <table className="table table-hover mb-0">
+                <thead>
+                  <tr>
+                    <th scope="col">Submission</th>
+                    <th scope="col">Form</th>
+                    <th scope="col">Status</th>
+                    <th scope="col">Submitted</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {filteredSubmissions.map((row) => {
+                    const id = String(row.id);
+                    const form = definitions.find(
+                      (def) => String(def.id) === String(row.formDefinitionId ?? ""),
+                    );
+                    return (
+                      <tr
+                        key={id}
+                        className={id === selectedSubmissionId ? "table-active" : undefined}
+                        role="button"
+                        tabIndex={0}
+                        onClick={() => openSubmission(id)}
+                        onKeyDown={(ev) => {
+                          if (ev.key === "Enter" || ev.key === " ") {
+                            ev.preventDefault();
+                            openSubmission(id);
+                          }
+                        }}
+                      >
+                        <td>{String(row.title ?? row.name ?? "Submission")}</td>
+                        <td className="text-muted">
+                          {String(form?.title ?? form?.name ?? "—")}
+                        </td>
+                        <td>
+                          <span className={`badge ${formStatusBadgeClass(String(row.status ?? "SUBMITTED"))}`}>
+                            {String(row.status ?? "SUBMITTED")}
+                          </span>
+                        </td>
+                        <td className="text-muted">
+                          {row.submittedAt
+                            ? new Date(String(row.submittedAt)).toLocaleString()
+                            : row.updatedAt
+                              ? new Date(String(row.updatedAt)).toLocaleString()
+                              : "—"}
+                        </td>
                       </tr>
-                    </thead>
-                    <tbody>
-                      {filteredSubmissions.map((row) => {
-                        const id = String(row.id);
-                        const form = definitions.find(
-                          (def) => String(def.id) === String(row.formDefinitionId ?? ""),
-                        );
-                        return (
-                          <tr
-                            key={id}
-                            className={id === selectedSubmissionId ? "table-active" : undefined}
-                            role="button"
-                            tabIndex={0}
-                            onClick={() => openSubmission(id)}
-                            onKeyDown={(ev) => {
-                              if (ev.key === "Enter" || ev.key === " ") {
-                                ev.preventDefault();
-                                openSubmission(id);
-                              }
-                            }}
-                          >
-                            <td>{String(row.title ?? row.name ?? "Submission")}</td>
-                            <td className="text-muted">
-                              {String(form?.title ?? form?.name ?? "—")}
-                            </td>
-                            <td>
-                              <span className={`badge ${formStatusBadgeClass(String(row.status ?? "SUBMITTED"))}`}>
-                                {String(row.status ?? "SUBMITTED")}
-                              </span>
-                            </td>
-                            <td className="text-muted">
-                              {row.submittedAt
-                                ? new Date(String(row.submittedAt)).toLocaleString()
-                                : row.updatedAt
-                                  ? new Date(String(row.updatedAt)).toLocaleString()
-                                  : "—"}
-                            </td>
-                          </tr>
-                        );
-                      })}
-                    </tbody>
-                  </table>
-                </div>
-              )}
+                    );
+                  })}
+                </tbody>
+              </table>
+              <p className="text-muted small mt-2 mb-0">
+                Select a submission to open it for editing.
+              </p>
             </div>
-            {selectedSubmission ? (
-              <div className="col-lg-5">
-                <div className="card border shadow-none">
-                  <div className="card-header">
-                    <h6 className="card-title mb-0">
-                      {String(selectedSubmission.title ?? "Submission")}
-                    </h6>
-                  </div>
-                  <div className="card-body">
-                    {(() => {
-                      const answers =
-                        selectedSubmission.answers &&
-                        typeof selectedSubmission.answers === "object" &&
-                        !Array.isArray(selectedSubmission.answers)
-                          ? (selectedSubmission.answers as Record<string, unknown>)
-                          : {};
-                      const form = definitions.find(
-                        (def) => String(def.id) === String(selectedSubmission.formDefinitionId ?? ""),
-                      );
-                      const labels = new Map(
-                        (form ? extractFormFields(form) : []).map((field) => [field.id, field.label]),
-                      );
-                      const entries = Object.entries(answers);
-                      if (entries.length === 0) {
-                        return <p className="text-muted mb-0">No answers recorded.</p>;
-                      }
-                      return (
-                        <dl className="row mb-0">
-                          {entries.map(([key, value]) => (
-                            <div className="col-12 mb-2" key={key}>
-                              <dt className="small text-muted">{labels.get(key) ?? key}</dt>
-                              <dd className="mb-0">{formatAnswer(value)}</dd>
-                            </div>
-                          ))}
-                        </dl>
-                      );
-                    })()}
-                  </div>
-                </div>
-              </div>
-            ) : null}
-          </div>
+          )
         ) : null}
       </ModuleWorkspaceTabs>
     </section>

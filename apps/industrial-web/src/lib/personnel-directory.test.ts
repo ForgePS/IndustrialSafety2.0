@@ -26,6 +26,7 @@ const base = {
   siteLabel: "",
   status: "Active",
   isCompanyDriver: false,
+  hasPpeExpiryAlert: false,
 };
 
 describe("toRosterPerson", () => {
@@ -62,6 +63,7 @@ describe("toRosterPerson", () => {
       siteLabel: "",
       status: "",
       isCompanyDriver: false,
+      hasPpeExpiryAlert: false,
     });
   });
 

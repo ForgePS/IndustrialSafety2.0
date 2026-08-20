@@ -111,6 +111,14 @@ function handler(event) {
       return request;
     }
   }
+  var closeoutMatch = uri.match(/^\\/closeout\\/([^/]+)\\/?$/);
+  if (closeoutMatch) {
+    var closeoutSegment = closeoutMatch[1];
+    if (closeoutSegment !== 'placeholder') {
+      request.uri = '/closeout/placeholder/index.html';
+      return request;
+    }
+  }
   if (uri.endsWith('/')) {
     request.uri = uri + 'index.html';
   } else if (uri.length > 1 && uri.indexOf('.') === -1) {

@@ -4,6 +4,7 @@ import {
   comparePayloads,
   hashConfigPayload,
   resolveEffectiveVersion,
+  resolveLoginBranding,
   validateConfigPayload,
 } from "./index.js";
 
@@ -28,6 +29,10 @@ describe("@forge/configuration", () => {
   it("compares payloads", () => {
     const diffs = comparePayloads({ a: 1, b: 2 }, { a: 1, b: 3 });
     expect(diffs).toEqual([{ path: "b", left: 2, right: 3 }]);
+  });
+
+  it("preserves explicit empty login statusText", () => {
+    expect(resolveLoginBranding({ login: { statusText: "" } }).statusText).toBe("");
   });
 
   it("resolves effective published version", () => {

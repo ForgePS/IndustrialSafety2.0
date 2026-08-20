@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
+import { useRegisterUnsavedChanges } from "@/components/unsaved-changes-guard";
 import { IncidentBodyMap } from "@/components/incident-body-map";
 import {
   aggregateBodyLocations,
@@ -145,6 +146,7 @@ export function IncidentsBodyMapPanel({
     editing &&
     (draftLocations.length !== (selected?.bodyLocations.length ?? 0) ||
       draftLocations.some((id, index) => id !== selected?.bodyLocations[index]));
+  useRegisterUnsavedChanges(dirty);
 
   function closePopup() {
     setPopup(null);

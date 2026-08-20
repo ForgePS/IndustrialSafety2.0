@@ -117,6 +117,7 @@ export function FilterPanel({
           className="row g-3 align-items-end"
           onSubmit={handleSubmit}
           aria-label={title}
+          data-unsaved-ignore
         >
           <div className={statusId && onStatusChange ? "col-md-5" : "col-md-8"}>
             <label className="form-label" htmlFor={searchId}>

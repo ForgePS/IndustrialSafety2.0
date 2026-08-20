@@ -72,6 +72,12 @@ export class ForgeCloudFrontWaf extends Construct {
             managedRuleGroupStatement: {
               vendorName: "AWS",
               name: "AWSManagedRulesCommonRuleSet",
+              // Signatures and other JSON bodies exceed the managed 8 KB body
+              // inspection window; blocking those POSTs returns a raw 403.
+              ruleActionOverrides: [
+                { name: "SizeRestrictions_BODY", actionToUse: { count: {} } },
+                { name: "CrossSiteScripting_BODY", actionToUse: { count: {} } },
+              ],
             },
           },
           visibilityConfig: {

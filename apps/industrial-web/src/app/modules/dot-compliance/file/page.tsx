@@ -24,6 +24,8 @@ import {
   type DotFileGroup,
 } from "@/lib/dot-file";
 import { personFileHref, rosterInitials } from "@/lib/personnel-directory";
+import { personnelLicenseCopies } from "@/lib/license-copies";
+import { LicenseCopiesCard } from "@/components/license-copies-card";
 
 type ListResponse = {
   items: Array<Record<string, unknown>>;
@@ -140,6 +142,8 @@ function DotFileInner() {
   const sensitiveJson = record?.sensitiveJson as Record<string, unknown> | undefined;
   const sensitiveRedacted = Boolean(sensitiveJson && sensitiveJson.redacted === true);
   const listHref = dotListHref(category);
+  const licenseCopies = record ? personnelLicenseCopies(record) : { front: null, back: null };
+  const needsLicenseCopies = category === "drivers";
 
   if (!canView) {
     return (
@@ -267,6 +271,12 @@ function DotFileInner() {
               ) : null}
             </div>
           </section>
+
+          <LicenseCopiesCard
+            copies={licenseCopies}
+            personName={heading}
+            required={needsLicenseCopies}
+          />
 
           {groups.length === 0 ? (
             <div className="card mb-4">

@@ -6,7 +6,10 @@ import { requireIfMatch, setETag } from "../../common/concurrency.js";
 import { Idempotent } from "../../common/idempotent.decorator.js";
 import { getRequestIds, type RequestWithIds } from "../../common/request-ids.js";
 import { Principal } from "../auth-context/principal.decorator.js";
-import { RequirePermission } from "../auth-context/require-permission.decorator.js";
+import {
+  RequireAnyPermission,
+  RequirePermission,
+} from "../auth-context/require-permission.decorator.js";
 import { UsersService } from "./users.service.js";
 
 @Controller()
@@ -59,6 +62,21 @@ export class UsersController {
     const data = await this.users.patch(tenantId, userId, body, principal, expected);
     setETag(res, data.recordVersion);
     return ok(data, getRequestIds(req));
+  }
+
+  @Post("api/v1/tenants/:tenantId/users/:userId/reset-password")
+  @RequireAnyPermission([
+    "platform.user.invite",
+    "platform.invitation.manage",
+    "platform.membership.manage",
+  ])
+  async resetPassword(
+    @Param("tenantId") tenantId: string,
+    @Param("userId") userId: string,
+    @Principal() principal: ForgePrincipal,
+    @Req() req: RequestWithIds,
+  ) {
+    return ok(await this.users.sendPasswordReset(tenantId, userId, principal), getRequestIds(req));
   }
 
   @Post("api/v1/tenants/:tenantId/users/:userId/disable")

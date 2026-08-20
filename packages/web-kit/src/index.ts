@@ -68,6 +68,8 @@ export {
   getCognitoOAuthConfig,
   redirectToCognitoLogin,
   refreshAccessToken,
+  requestCognitoPasswordReset,
+  confirmCognitoPasswordReset,
   validateOAuthState,
   type CognitoOAuthConfig,
   type CognitoTokenResponse,

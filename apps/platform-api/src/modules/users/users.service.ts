@@ -16,6 +16,7 @@ import { z } from "zod";
 import { concurrencyConflict } from "../../common/concurrency.js";
 import { DATABASE } from "../../tokens.js";
 import { AuditService } from "../audit/audit.service.js";
+import { CognitoAdminService } from "../cognito/cognito-admin.service.js";
 import { InvitationsService } from "../invitations/invitations.service.js";
 import { OutboxService } from "../outbox/outbox.service.js";
 
@@ -52,6 +53,7 @@ export class UsersService {
     private readonly outbox: OutboxService,
     private readonly audit: AuditService,
     private readonly invitations: InvitationsService,
+    private readonly cognito: CognitoAdminService,
   ) {}
 
   /**
@@ -320,6 +322,61 @@ export class UsersService {
       });
       return updated;
     }, principal.userId);
+  }
+
+  /**
+   * Sends a Cognito password-reset email (or resends the invitation if the
+   * user has not completed first-time password setup). Does not return a
+   * temporary password to the caller.
+   */
+  async sendPasswordReset(tenantId: string, userId: string, principal: ForgePrincipal) {
+    const user = await this.get(tenantId, userId);
+    if (user.status === "DISABLED") {
+      throw new ForgeError("CONFLICT", "Cannot reset password for a disabled account");
+    }
+    const email = user.primaryEmail?.trim();
+    if (!email) {
+      throw new ForgeError("BAD_REQUEST", "This user has no email address to send a reset to");
+    }
+
+    const cognitoUsername = await withTenantTransaction(this.db, tenantId, async (tx) => {
+      const invitation = await tx.query.userInvitations.findFirst({
+        where: and(eq(userInvitations.tenantId, tenantId), eq(userInvitations.email, email)),
+        orderBy: (t, { desc }) => [desc(t.createdAt)],
+      });
+      return invitation?.cognitoUsername ?? email;
+    });
+
+    const result = await this.cognito.resetPassword(cognitoUsername);
+
+    await withTenantTransaction(
+      this.db,
+      tenantId,
+      async (tx) => {
+        await this.audit.writeInTransaction(tx, {
+          tenantId,
+          actorUserId: principal.userId,
+          actorPersonId: principal.personId,
+          actorType: "USER",
+          action: "user.password_reset.requested",
+          resourceType: "user",
+          resourceId: userId,
+          result: "SUCCESS",
+          riskLevel: "MEDIUM",
+          correlationId: principal.correlationId,
+          requestId: principal.requestId,
+          after: { method: result.method, email },
+        });
+      },
+      principal.userId,
+    );
+
+    return {
+      userId,
+      email,
+      method: result.method,
+      delivered: result.method !== "simulated",
+    };
   }
 
   async enable(

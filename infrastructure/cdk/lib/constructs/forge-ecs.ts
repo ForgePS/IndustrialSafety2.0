@@ -195,6 +195,10 @@ export class ForgeEcs extends Construct {
               managedRuleGroupStatement: {
                 vendorName: "AWS",
                 name: "AWSManagedRulesCommonRuleSet",
+                ruleActionOverrides: [
+                  { name: "SizeRestrictions_BODY", actionToUse: { count: {} } },
+                  { name: "CrossSiteScripting_BODY", actionToUse: { count: {} } },
+                ],
               },
             },
             visibilityConfig: {
@@ -290,6 +294,28 @@ export class ForgeEcs extends Construct {
             resource: "secret",
             resourceName: `forge-${config.environmentName}-cad-*`,
             arnFormat: cdk.ArnFormat.COLON_RESOURCE_NAME,
+          }),
+        ],
+      }),
+    );
+    apiTaskRole.addToPolicy(
+      new iam.PolicyStatement({
+        sid: "CognitoUserAdmin",
+        actions: [
+          "cognito-idp:AdminCreateUser",
+          "cognito-idp:AdminGetUser",
+          "cognito-idp:AdminResetUserPassword",
+          "cognito-idp:AdminDisableUser",
+          "cognito-idp:AdminEnableUser",
+          "cognito-idp:AdminDeleteUser",
+          "cognito-idp:AdminUserGlobalSignOut",
+        ],
+        resources: [
+          cdk.Stack.of(this).formatArn({
+            service: "cognito-idp",
+            resource: "userpool",
+            resourceName: props.cognitoUserPoolId,
+            arnFormat: cdk.ArnFormat.SLASH_RESOURCE_NAME,
           }),
         ],
       }),

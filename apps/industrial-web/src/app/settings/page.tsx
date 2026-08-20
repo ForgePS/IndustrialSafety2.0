@@ -1,6 +1,8 @@
 "use client";
 
 import Link from "next/link";
+import { RolesPermissionsSettingsCard } from "@/components/roles-permissions-workspace";
+import { UserManagementSettingsCard } from "@/components/user-management-workspace";
 
 /**
  * Settings hub — links only to live Forge surfaces.
@@ -15,6 +17,8 @@ export default function IndustrialSettingsPage() {
         shared settings APIs are available.
       </p>
       <div className="row g-3">
+        <UserManagementSettingsCard />
+        <RolesPermissionsSettingsCard />
         <div className="col-12 col-sm-6 col-md-4">
           <div className="card h-100">
             <div className="card-body">
@@ -22,6 +26,17 @@ export default function IndustrialSettingsPage() {
               <p className="small text-muted">Name, contact, and account preferences.</p>
               <Link href="/profile/" className="btn btn-sm btn-primary">
                 Open profile
+              </Link>
+            </div>
+          </div>
+        </div>
+        <div className="col-12 col-sm-6 col-md-4">
+          <div className="card h-100">
+            <div className="card-body">
+              <h2 className="h6">Compliance</h2>
+              <p className="small text-muted">User acknowledgments and legal evidence.</p>
+              <Link href="/settings/compliance/" className="btn btn-sm btn-outline-primary">
+                Open compliance
               </Link>
             </div>
           </div>

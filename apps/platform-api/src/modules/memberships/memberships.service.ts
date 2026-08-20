@@ -16,6 +16,7 @@ import {
   membershipProductAccess,
   membershipRoleAssignments,
   permissions,
+  persons,
   platformModules,
   platformProducts,
   rolePermissions,
@@ -32,7 +33,7 @@ import {
 import { ForgeError } from "@forge/errors";
 import { DOMAIN_EVENT_TYPES } from "@forge/events";
 import type { ForgePrincipal } from "@forge/tenant-context";
-import { and, eq, ilike, inArray, isNull } from "drizzle-orm";
+import { and, eq, ilike, inArray, isNull, or } from "drizzle-orm";
 import { concurrencyConflict } from "../../common/concurrency.js";
 import { DATABASE } from "../../tokens.js";
 import { AuditService } from "../audit/audit.service.js";
@@ -80,9 +81,16 @@ export class MembershipsService {
       }
       const q = filters.q?.trim();
       if (q) {
-        conditions.push(ilike(users.primaryEmail, `%${q}%`));
+        const search = or(
+          ilike(users.primaryEmail, `%${q}%`),
+          ilike(users.username, `%${q}%`),
+          ilike(persons.displayName, `%${q}%`),
+          ilike(persons.firstName, `%${q}%`),
+          ilike(persons.lastName, `%${q}%`),
+        );
+        if (search) conditions.push(search);
       }
-      return tx
+      const rows = await tx
         .select({
           id: userTenantMemberships.id,
           tenantId: userTenantMemberships.tenantId,
@@ -99,11 +107,49 @@ export class MembershipsService {
           updatedAt: userTenantMemberships.updatedAt,
           email: users.primaryEmail,
           userStatus: users.status,
+          username: users.username,
+          personId: users.personId,
+          lastLoginAt: users.lastLoginAt,
+          displayName: persons.displayName,
+          firstName: persons.firstName,
+          lastName: persons.lastName,
         })
         .from(userTenantMemberships)
         .innerJoin(users, eq(users.id, userTenantMemberships.userId))
+        .leftJoin(persons, eq(persons.id, users.personId))
         .where(and(...conditions))
         .orderBy(users.primaryEmail);
+
+      const membershipIds = rows.map((row) => row.id);
+      const rolesByMembership = new Map<string, Array<{ roleCode: string; roleName: string }>>();
+      if (membershipIds.length > 0) {
+        const roleRows = await tx
+          .select({
+            membershipId: membershipRoleAssignments.membershipId,
+            roleCode: roles.code,
+            roleName: roles.name,
+          })
+          .from(membershipRoleAssignments)
+          .innerJoin(roles, eq(roles.id, membershipRoleAssignments.roleId))
+          .where(
+            and(
+              eq(membershipRoleAssignments.tenantId, tenantId),
+              inArray(membershipRoleAssignments.membershipId, membershipIds),
+              inArray(membershipRoleAssignments.status, ["ACTIVE", "PENDING"]),
+            ),
+          )
+          .orderBy(roles.code);
+        for (const role of roleRows) {
+          const list = rolesByMembership.get(role.membershipId) ?? [];
+          list.push({ roleCode: role.roleCode, roleName: role.roleName });
+          rolesByMembership.set(role.membershipId, list);
+        }
+      }
+
+      return rows.map((row) => ({
+        ...row,
+        roles: rolesByMembership.get(row.id) ?? [],
+      }));
     });
   }
 
@@ -1159,6 +1205,9 @@ export class MembershipsService {
   private async loadDetail(tx: DatabaseTransaction, tenantId: string, membershipId: string) {
     const membership = await this.requireMembership(tx, tenantId, membershipId);
     const user = await tx.query.users.findFirst({ where: eq(users.id, membership.userId) });
+    const person = user?.personId
+      ? await tx.query.persons.findFirst({ where: eq(persons.id, user.personId) })
+      : undefined;
     const [roleRows, access] = await Promise.all([
       this.loadRoles(tx, membershipId),
       this.loadProducts(tx, membershipId),
@@ -1167,6 +1216,12 @@ export class MembershipsService {
       ...membership,
       email: user?.primaryEmail ?? null,
       userStatus: user?.status ?? null,
+      username: user?.username ?? null,
+      personId: user?.personId ?? null,
+      lastLoginAt: user?.lastLoginAt ?? null,
+      displayName: person?.displayName ?? null,
+      firstName: person?.firstName ?? null,
+      lastName: person?.lastName ?? null,
       roles: roleRows,
       products: access.products,
       modules: access.modules,

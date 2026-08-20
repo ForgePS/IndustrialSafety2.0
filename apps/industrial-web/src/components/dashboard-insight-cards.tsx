@@ -2,8 +2,14 @@
 
 import Link from "next/link";
 import { useCallback, useId, useMemo, useState, type PointerEvent } from "react";
-import type { AnalyticsTrendPoint } from "@/lib/safety-intelligence";
-import type { SiteCount } from "@/lib/dashboard-insights";
+import type { AnalyticsTrendPoint, SafetyIntelligenceReport } from "@/lib/safety-intelligence";
+import {
+  formatInsightDateRange,
+  safetyIndexStrokeClass,
+  safetyIndexView,
+  type SafetyIndexPeriod,
+  type SiteCount,
+} from "@/lib/dashboard-insights";
 
 export type { SiteCount } from "@/lib/dashboard-insights";
 export type DashboardTask = {
@@ -16,16 +22,7 @@ export type DashboardTask = {
 };
 
 function formatRangeLabel(start: string, end: string): string {
-  const fmt = (iso: string) => {
-    if (!iso) return "";
-    const d = new Date(`${iso.slice(0, 10)}T12:00:00`);
-    if (Number.isNaN(d.getTime())) return iso.slice(0, 10);
-    return d.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
-  };
-  const a = fmt(start);
-  const b = fmt(end);
-  if (a && b) return `${a} – ${b}`;
-  return a || b || "Last 6 months";
+  return formatInsightDateRange(start, end);
 }
 
 function monthAxisLabel(month: string): string {
@@ -242,6 +239,109 @@ export function IncidentTrendCard({
         ) : (
           <IncidentTrendChart points={points} />
         )}
+      </div>
+    </div>
+  );
+}
+
+function SafetyIndexRing({ score, grade }: { score: number; grade: string }) {
+  const radius = 58;
+  const circumference = 2 * Math.PI * radius;
+  const clamped = Math.min(100, Math.max(0, score));
+  const offset = circumference - (clamped / 100) * circumference;
+  return (
+    <div
+      className="ind-safety-index__ring"
+      role="img"
+      aria-label={`Safety Index ${clamped}, grade ${grade}`}
+    >
+      <svg width="168" height="168" viewBox="0 0 168 168" aria-hidden>
+        <circle className="ind-safety-index__track" cx="84" cy="84" r={radius} />
+        <circle
+          className={`ind-safety-index__arc ${safetyIndexStrokeClass(grade)}`}
+          cx="84"
+          cy="84"
+          r={radius}
+          strokeDasharray={circumference}
+          strokeDashoffset={offset}
+          transform="rotate(-90 84 84)"
+        />
+      </svg>
+      <div className="ind-safety-index__value">
+        <span className="ind-safety-index__score">{clamped}</span>
+        <span className="ind-safety-index__grade">Grade {grade}</span>
+      </div>
+    </div>
+  );
+}
+
+/**
+ * Company Safety Index for the dashboard — 6 / 12 month toggle and score ring.
+ */
+export function SafetyIndexCard({ report }: { report: SafetyIntelligenceReport | null }) {
+  const [period, setPeriod] = useState<SafetyIndexPeriod>("6m");
+  const view = safetyIndexView(report, period);
+
+  return (
+    <div className="card border shadow-none h-100 ind-safety-index">
+      <div className="card-body p-4 d-flex flex-column h-100">
+        <div className="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+          <div className="btn-group btn-group-sm" role="group" aria-label="Safety Index period">
+            <button
+              type="button"
+              className={`btn ${period === "6m" ? "btn-success" : "btn-outline-secondary"}`}
+              aria-pressed={period === "6m"}
+              onClick={() => setPeriod("6m")}
+            >
+              6 mo
+            </button>
+            <button
+              type="button"
+              className={`btn ${period === "1y" ? "btn-success" : "btn-outline-secondary"}`}
+              aria-pressed={period === "1y"}
+              onClick={() => setPeriod("1y")}
+            >
+              12 mo
+            </button>
+          </div>
+          <Link
+            className="small text-primary fw-semibold text-decoration-none"
+            href="/modules/analytics/?tab=overview"
+          >
+            Analytics →
+          </Link>
+        </div>
+
+        <div className="flex-grow-1 d-flex flex-column align-items-center justify-content-center py-2 gap-3">
+          {view ? (
+            <>
+              <SafetyIndexRing score={view.score} grade={view.grade} />
+              <Link
+                href="/modules/dot-compliance/"
+                className="ind-safety-index__dot text-decoration-none"
+                title={
+                  view.dotOpenItems === 1
+                    ? "1 open DOT item"
+                    : `${view.dotOpenItems} open DOT items`
+                }
+              >
+                <span className="ind-safety-index__dot-label">DOT Score</span>
+                <span className="ind-safety-index__dot-value">{view.dotScore}%</span>
+              </Link>
+            </>
+          ) : (
+            <p className="text-muted mb-0">No score available yet.</p>
+          )}
+        </div>
+
+        <div className="mt-3">
+          <h5 className="mb-1">Safety Index</h5>
+          <p className="text-muted small mb-0">
+            {view
+              ? formatInsightDateRange(view.dateStart, view.dateEnd, view.periodLabel)
+              : "Company safety score"}
+          </p>
+        </div>
       </div>
     </div>
   );

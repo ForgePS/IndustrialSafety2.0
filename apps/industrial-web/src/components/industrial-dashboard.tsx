@@ -7,10 +7,12 @@ import { ApiError, apiGet, apiGetResult, useAuth } from "@forge/web-kit";
 import {
   IncidentTrendCard,
   InspectionsBySiteCard,
+  SafetyIndexCard,
   TaskSchedulerCard,
   type DashboardTask,
 } from "@/components/dashboard-insight-cards";
 import { IncidentsBodyMapPanel } from "@/components/incidents-body-map-panel";
+import { useIndustrialFacility } from "@/hooks/use-industrial-facility";
 import { aggregateInspectionsBySite } from "@/lib/dashboard-insights";
 import { toIncidentRecords, type IncidentRecord } from "@/lib/incidents-module";
 import { buildIndustrialNavigation, moduleAvailabilityCaption } from "@/lib/navigation";
@@ -92,6 +94,7 @@ function toDashboardTasks(items: unknown[]): DashboardTask[] {
  */
 export function IndustrialDashboard() {
   const { me, hasPermission } = useAuth();
+  const { query: facilityQuery } = useIndustrialFacility();
   const entitled =
     Boolean(me?.isPlatformAdmin) || Boolean(me?.activeProducts?.includes(INDUSTRIAL_PRODUCT_CODE));
   const nav = buildIndustrialNavigation({
@@ -131,7 +134,9 @@ export function IndustrialDashboard() {
     let cancelled = false;
     void (async () => {
       try {
-        const data = await apiGet<DashboardPayload>("/api/v1/industrial/dashboard");
+        const data = await apiGet<DashboardPayload>("/api/v1/industrial/dashboard", {
+          query: facilityQuery,
+        });
         if (!cancelled) {
           setDash(data);
           setDashError(null);
@@ -145,7 +150,7 @@ export function IndustrialDashboard() {
     return () => {
       cancelled = true;
     };
-  }, [canAccess]);
+  }, [canAccess, facilityQuery]);
 
   useEffect(() => {
     if (!showIncidents) return;
@@ -153,7 +158,7 @@ export function IndustrialDashboard() {
     void (async () => {
       try {
         const result = await apiGetResult<ListResponse>("/api/v1/industrial/incidents", {
-          query: { category: "injuries", page: "1", pageSize: "100" },
+          query: { category: "injuries", page: "1", pageSize: "100", ...facilityQuery },
         });
         if (!cancelled) {
           setInjuries(toIncidentRecords(Array.isArray(result.data.items) ? result.data.items : []));
@@ -165,7 +170,7 @@ export function IndustrialDashboard() {
     return () => {
       cancelled = true;
     };
-  }, [showIncidents]);
+  }, [facilityQuery, showIncidents]);
 
   useEffect(() => {
     if (!showAnalytics) return;
@@ -173,7 +178,7 @@ export function IndustrialDashboard() {
     void (async () => {
       try {
         const raw = await apiGet<unknown>("/api/v1/industrial/analytics/overview", {
-          query: { preset: "6m" },
+          query: { preset: "6m", ...facilityQuery },
         });
         if (!cancelled) setAnalytics(toSafetyIntelligenceReport(raw));
       } catch {
@@ -183,14 +188,16 @@ export function IndustrialDashboard() {
     return () => {
       cancelled = true;
     };
-  }, [showAnalytics]);
+  }, [facilityQuery, showAnalytics]);
 
   useEffect(() => {
     if (!showTasks) return;
     let cancelled = false;
     void (async () => {
       try {
-        const data = await apiGet<ListResponse>("/api/v1/industrial/tasks");
+        const data = await apiGet<ListResponse>("/api/v1/industrial/tasks", {
+          query: facilityQuery,
+        });
         if (!cancelled) setTasks(toDashboardTasks(Array.isArray(data.items) ? data.items : []));
       } catch {
         if (!cancelled) setTasks([]);
@@ -199,7 +206,7 @@ export function IndustrialDashboard() {
     return () => {
       cancelled = true;
     };
-  }, [showTasks]);
+  }, [facilityQuery, showTasks]);
 
   useEffect(() => {
     if (!showInspections) return;
@@ -208,7 +215,7 @@ export function IndustrialDashboard() {
       try {
         const [inspections, sites] = await Promise.all([
           apiGet<ListResponse>("/api/v1/industrial/inspections", {
-            query: { page: "1", pageSize: "200" },
+            query: { page: "1", pageSize: "200", ...facilityQuery },
           }),
           apiGet<ListResponse>("/api/v1/industrial/sites", {
             query: { page: "1", pageSize: "200" },
@@ -236,7 +243,7 @@ export function IndustrialDashboard() {
     return () => {
       cancelled = true;
     };
-  }, [showInspections]);
+  }, [facilityQuery, showInspections]);
 
   const attention = (dash?.attention ?? []).filter((a) => a.count > 0);
   const showInsightCards = showAnalytics || showTasks || showInspections;
@@ -359,12 +366,15 @@ export function IndustrialDashboard() {
           <div className="d-flex flex-column gap-3">
             {showAnalytics ? (
               <div className="row g-3">
-                <div className="col-12 col-lg-6">
+                <div className="col-12 col-lg-8">
                   <IncidentTrendCard
                     points={incidentTrend}
                     dateStart={dateStart}
                     dateEnd={dateEnd}
                   />
+                </div>
+                <div className="col-12 col-lg-4">
+                  <SafetyIndexCard report={analytics} />
                 </div>
               </div>
             ) : null}

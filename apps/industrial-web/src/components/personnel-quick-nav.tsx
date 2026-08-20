@@ -8,8 +8,8 @@ import {
 } from "@/lib/personnel-quick-nav";
 
 /**
- * Dashboard shows a quick card with all three destinations. On Company Drivers
- * or Archived, only the other two surfaces appear as link tabs.
+ * Dashboard shows a quick card with every destination. Off the current page,
+ * the remaining surfaces appear as link tabs.
  */
 export function PersonnelQuickNav({ current }: { current: PersonnelQuickView }) {
   if (current === "dashboard") {
@@ -24,7 +24,7 @@ export function PersonnelQuickNav({ current }: { current: PersonnelQuickView }) 
           </div>
           <div className="row g-2">
             {PERSONNEL_QUICK_LINKS.map((link) => (
-              <div className="col-md-4" key={link.id}>
+              <div className="col-sm-6 col-xl-3" key={link.id}>
                 <Link
                   href={link.href}
                   className={`ind-personnel-quick-link${

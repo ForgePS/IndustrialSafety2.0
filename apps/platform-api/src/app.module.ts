@@ -36,6 +36,9 @@ import { OnboardingModule } from "./modules/onboarding/onboarding.module.js";
 import { OrganizationsModule } from "./modules/organizations/organizations.module.js";
 import { FacilitiesModule } from "./modules/facilities/facilities.module.js";
 import { IndustrialModule } from "./modules/industrial/industrial.module.js";
+import { LegalModule } from "./modules/legal/legal.module.js";
+import { LegalAcknowledgmentGuard } from "./modules/legal/legal-acknowledgment.guard.js";
+import { AcknowledgmentService } from "./modules/legal/acknowledgment.service.js";
 import { OutboxModule } from "./modules/outbox/outbox.module.js";
 import { PersonsModule } from "./modules/persons/persons.module.js";
 import { RmsMasterDataModule } from "./modules/rms/rms-master-data.module.js";
@@ -66,6 +69,7 @@ export class AppModule {
         OrganizationsModule,
         FacilitiesModule,
         IndustrialModule,
+        LegalModule,
         PersonsModule,
         UsersModule,
         MembershipsModule,
@@ -119,6 +123,11 @@ export class AppModule {
             decisions: AuthorizationDecisionService,
           ) => new PermissionGuard(reflector, auth, decisions),
           inject: [Reflector, AuthContextService, AuthorizationDecisionService],
+        },
+        {
+          provide: APP_GUARD,
+          useFactory: (acks: AcknowledgmentService) => new LegalAcknowledgmentGuard(acks),
+          inject: [AcknowledgmentService],
         },
         {
           provide: APP_INTERCEPTOR,

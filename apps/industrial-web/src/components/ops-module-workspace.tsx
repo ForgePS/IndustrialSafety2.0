@@ -6,6 +6,9 @@ import { ApiError, apiGet, apiSend, useAuth } from "@forge/web-kit";
 import { FilterPanel } from "@/components/filter-panel";
 import { ModuleUnavailable } from "@/components/module-unavailable";
 import { ModuleWorkspaceHeader } from "@/components/module-workspace-header";
+import { SignaturePad } from "@/components/signature-pad";
+import { useIndustrialFacility } from "@/hooks/use-industrial-facility";
+import { useProfileSignature } from "@/hooks/use-profile-signature";
 import {
   OPS_MODULE_CONFIG,
   groupCreateFields,
@@ -19,9 +22,23 @@ function renderCreateField(
   field: OpsCreateField,
   form: FormState,
   setForm: Dispatch<SetStateAction<FormState>>,
+  profileSignature?: string | null,
 ) {
   const set = (value: string) => setForm((prev) => ({ ...prev, [field.name]: value }));
   const inputId = `ops-create-${field.name}`;
+
+  if (field.type === "signature" || /\bsignature\b/i.test(field.label)) {
+    return (
+      <div className="col-12" key={field.name}>
+        <SignaturePad
+          label={field.label}
+          value={form[field.name] ?? ""}
+          onChange={set}
+          profileSignature={profileSignature ?? null}
+        />
+      </div>
+    );
+  }
 
   if (field.type === "checkbox") {
     return (
@@ -104,9 +121,11 @@ export function OpsModuleWorkspace({
 }) {
   const cfg = OPS_MODULE_CONFIG[module];
   const { me } = useAuth();
+  const { query: facilityQuery } = useIndustrialFacility();
   const permissions = new Set(me?.permissions ?? []);
   const canView = permissions.has(cfg.viewPerm) || permissions.has("industrial.admin");
   const canManage = permissions.has(cfg.managePerm) || permissions.has("industrial.admin");
+  const { signatureUrl: profileSignature } = useProfileSignature(canView);
 
   const [bootstrap, setBootstrap] = useState<Bootstrap | null>(null);
   const [items, setItems] = useState<Array<Record<string, unknown>>>([]);
@@ -148,6 +167,7 @@ export function OpsModuleWorkspace({
           status: st || undefined,
           page: "1",
           pageSize: "25",
+          ...facilityQuery,
         },
       });
       setItems(data.items ?? []);
@@ -170,7 +190,7 @@ export function OpsModuleWorkspace({
     void (async () => {
       try {
         const data = await apiGet<ListResponse>(cfg.listPath, {
-          query: { page: "1", pageSize: "25" },
+          query: { page: "1", pageSize: "25", ...facilityQuery },
         });
         if (!cancelled) setItems(data.items ?? []);
       } catch (e) {
@@ -185,7 +205,7 @@ export function OpsModuleWorkspace({
     return () => {
       cancelled = true;
     };
-  }, [awsReady, module, cfg.listPath]);
+  }, [awsReady, facilityQuery, module, cfg.listPath]);
 
   if (!canView) {
     return (
@@ -352,7 +372,9 @@ export function OpsModuleWorkspace({
           <div className="card-body">
             <form onSubmit={(e) => void onCreate(e)} aria-label="Create record">
               {groupCreateFields(cfg.createFields).map(({ group, fields }) => {
-                const rendered = fields.map((field) => renderCreateField(field, form, setForm));
+                const rendered = fields.map((field) =>
+                  renderCreateField(field, form, setForm, profileSignature),
+                );
                 if (!group) {
                   return (
                     <div className="row g-3" key="ungrouped">

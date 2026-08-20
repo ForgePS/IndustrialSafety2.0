@@ -119,10 +119,37 @@ export class AuthorizationService {
 
   async listRoles(tenantId: string) {
     return withTenantTransaction(this.db, tenantId, async (tx) => {
-      return tx.query.roles.findMany({
+      const roleRows = await tx.query.roles.findMany({
         where: eq(roles.tenantId, tenantId),
         orderBy: (t, { asc }) => [asc(t.code)],
       });
+      if (roleRows.length === 0) return [];
+      const permRows = await tx
+        .select({
+          roleId: rolePermissions.roleId,
+          code: permissions.code,
+          name: permissions.name,
+          effect: rolePermissions.effect,
+        })
+        .from(rolePermissions)
+        .innerJoin(permissions, eq(permissions.id, rolePermissions.permissionId))
+        .where(
+          inArray(
+            rolePermissions.roleId,
+            roleRows.map((row) => row.id),
+          ),
+        )
+        .orderBy(permissions.code);
+      const byRole = new Map<string, Array<{ code: string; name: string; effect: string }>>();
+      for (const perm of permRows) {
+        const list = byRole.get(perm.roleId) ?? [];
+        list.push({ code: perm.code, name: perm.name, effect: perm.effect });
+        byRole.set(perm.roleId, list);
+      }
+      return roleRows.map((row) => ({
+        ...row,
+        permissions: byRole.get(row.id) ?? [],
+      }));
     });
   }
 

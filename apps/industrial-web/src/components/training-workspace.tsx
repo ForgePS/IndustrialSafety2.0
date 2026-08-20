@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useState, type FormEvent } from "react";
 import { ApiError, apiGet, useAuth } from "@forge/web-kit";
 import { ModuleUnavailable } from "@/components/module-unavailable";
+import { TransactionAttestationPanel } from "@/components/transaction-attestation-panel";
 import { trainingApi } from "@/features/training/api";
 import type {
   TrainingChapter,
@@ -609,6 +610,17 @@ export function TrainingWorkspace({ moduleName }: { moduleName: string }) {
                   Score: {results.scoreCorrect}/{results.scoreTotal} ({results.percent}%) — Grade{" "}
                   <strong>{results.letterGrade}</strong>
                 </p>
+                {attemptId ? (
+                  <div className="mb-3">
+                    <TransactionAttestationPanel
+                      templateKey="TRAINING_COMPLETION"
+                      module="training"
+                      recordType="industrial_training_attempt"
+                      recordId={attemptId}
+                      action="QUIZ_COMPLETED"
+                    />
+                  </div>
+                ) : null}
                 <h6 className="mt-3">Chapter breakdown</h6>
                 <ul>
                   {results.chapterBreakdown.map((b) => {

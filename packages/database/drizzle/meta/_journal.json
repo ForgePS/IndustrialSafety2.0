@@ -330,6 +330,41 @@
       "when": 1786980000000,
       "tag": "0046_industrial_fleet_module_s1",
       "breakpoints": true
+    },
+    {
+      "idx": 47,
+      "version": "7",
+      "when": 1786983600000,
+      "tag": "0048_industrial_personnel_ppe_allowance_s1",
+      "breakpoints": true
+    },
+    {
+      "idx": 48,
+      "version": "7",
+      "when": 1786987200000,
+      "tag": "0049_industrial_personnel_ppe_dates_s1",
+      "breakpoints": true
+    },
+    {
+      "idx": 49,
+      "version": "7",
+      "when": 1786990800000,
+      "tag": "0050_industrial_inspections_workflow_s1",
+      "breakpoints": true
+    },
+    {
+      "idx": 50,
+      "version": "7",
+      "when": 1786994400000,
+      "tag": "0051_industrial_closeout_token_lookup",
+      "breakpoints": true
+    },
+    {
+      "idx": 51,
+      "version": "7",
+      "when": 1786998000000,
+      "tag": "0052_legal_acknowledgments_s1",
+      "breakpoints": true
     }
   ]
 }

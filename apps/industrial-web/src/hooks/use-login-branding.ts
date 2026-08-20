@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useAuth } from "@forge/web-kit";
+import { vanityLoginBrandingForHost } from "@/lib/vanity-login-branding";
 import { useTenantBranding, type TenantBranding } from "./use-tenant-branding";
 
 export type ResolvedLoginBranding = {
@@ -68,6 +69,7 @@ export function useLoginBranding() {
     if (typeof window === "undefined") return;
     let cancelled = false;
     const host = window.location.hostname;
+    const bundled = vanityLoginBrandingForHost(host);
     void (async () => {
       setLoadingHost(true);
       try {
@@ -77,9 +79,15 @@ export function useLoginBranding() {
         );
         if (!res.ok) {
           if (!cancelled) {
-            setHostLogin(null);
-            setHostTenantId(null);
-            setHostPrimaryColor("");
+            if (bundled) {
+              setHostLogin(bundled.login);
+              setHostTenantId(bundled.tenantId);
+              setHostPrimaryColor("");
+            } else {
+              setHostLogin(null);
+              setHostTenantId(null);
+              setHostPrimaryColor("");
+            }
           }
           return;
         }
@@ -90,8 +98,14 @@ export function useLoginBranding() {
         setHostPrimaryColor(json.data.primaryColor?.trim() || "");
       } catch {
         if (!cancelled) {
-          setHostLogin(null);
-          setHostTenantId(null);
+          if (bundled) {
+            setHostLogin(bundled.login);
+            setHostTenantId(bundled.tenantId);
+            setHostPrimaryColor("");
+          } else {
+            setHostLogin(null);
+            setHostTenantId(null);
+          }
         }
       } finally {
         if (!cancelled) setLoadingHost(false);

@@ -12,6 +12,7 @@ import {
   industrialInspections,
   industrialPersonnel,
   type Database,
+  type DatabaseTransaction,
   withTenantTransaction,
 } from "@forge/database";
 import { ForgeError } from "@forge/errors";
@@ -24,6 +25,163 @@ type ListQuery = Record<string, string | undefined>;
 
 const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const REMOVED_STATUSES = new Set(["REMOVED", "SOLD", "DISPOSED"]);
+
+function assignmentHasDriver(assignment: {
+  personnelId?: string | null;
+  driverId?: string | null;
+  driverName?: string | null;
+}): boolean {
+  return Boolean(
+    String(assignment.personnelId ?? "").trim() ||
+      String(assignment.driverId ?? "").trim() ||
+      String(assignment.driverName ?? "").trim(),
+  );
+}
+
+function normalizeDriverName(value: unknown): string {
+  return String(value ?? "")
+    .toUpperCase()
+    .replace(/[^A-Z0-9]+/g, " ")
+    .replace(/\b(JR|SR|II|III|IV)\b/g, "")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+/** Anyone assigned to a company vehicle belongs on the Company Drivers roster. */
+async function ensureCompanyDriverFromAssignment(
+  tx: DatabaseTransaction,
+  tenantId: string,
+  assignment: {
+    personnelId?: string | null;
+    driverId?: string | null;
+    driverName?: string | null;
+    siteId?: string | null;
+  },
+): Promise<string | null> {
+  const personnelId = String(assignment.personnelId ?? "").trim() || null;
+  const driverId = String(assignment.driverId ?? "").trim() || null;
+  const driverName = String(assignment.driverName ?? "").trim() || null;
+  if (!personnelId && !driverId && !driverName) return null;
+
+  const now = new Date();
+  if (personnelId) {
+    await tx
+      .update(industrialPersonnel)
+      .set({ isCompanyDriver: true, updatedAt: now })
+      .where(
+        and(eq(industrialPersonnel.id, personnelId), eq(industrialPersonnel.tenantId, tenantId)),
+      );
+  }
+
+  const revive = async (id: string) => {
+    await tx
+      .update(industrialFleetDrivers)
+      .set({
+        archivedAt: null,
+        status: "on_insurance",
+        ...(personnelId ? { personnelId } : {}),
+        ...(driverName ? { personnelName: driverName } : {}),
+        updatedAt: now,
+      })
+      .where(and(eq(industrialFleetDrivers.id, id), eq(industrialFleetDrivers.tenantId, tenantId)));
+  };
+
+  if (driverId) {
+    const [existing] = await tx
+      .select({
+        id: industrialFleetDrivers.id,
+        status: industrialFleetDrivers.status,
+        archivedAt: industrialFleetDrivers.archivedAt,
+      })
+      .from(industrialFleetDrivers)
+      .where(
+        and(eq(industrialFleetDrivers.id, driverId), eq(industrialFleetDrivers.tenantId, tenantId)),
+      )
+      .limit(1);
+    if (existing) {
+      if (existing.archivedAt || String(existing.status ?? "").toLowerCase() === "removed") {
+        await revive(existing.id);
+      } else if (personnelId) {
+        await tx
+          .update(industrialFleetDrivers)
+          .set({ personnelId, updatedAt: now })
+          .where(eq(industrialFleetDrivers.id, existing.id));
+      }
+      return existing.id;
+    }
+  }
+
+  if (personnelId) {
+    const [byPerson] = await tx
+      .select({
+        id: industrialFleetDrivers.id,
+        status: industrialFleetDrivers.status,
+        archivedAt: industrialFleetDrivers.archivedAt,
+      })
+      .from(industrialFleetDrivers)
+      .where(
+        and(
+          eq(industrialFleetDrivers.tenantId, tenantId),
+          eq(industrialFleetDrivers.personnelId, personnelId),
+        ),
+      )
+      .limit(1);
+    if (byPerson) {
+      if (byPerson.archivedAt || String(byPerson.status ?? "").toLowerCase() === "removed") {
+        await revive(byPerson.id);
+      }
+      return byPerson.id;
+    }
+  }
+
+  if (driverName) {
+    const wanted = normalizeDriverName(driverName);
+    const named = await tx
+      .select({
+        id: industrialFleetDrivers.id,
+        personnelName: industrialFleetDrivers.personnelName,
+        status: industrialFleetDrivers.status,
+        archivedAt: industrialFleetDrivers.archivedAt,
+      })
+      .from(industrialFleetDrivers)
+      .where(eq(industrialFleetDrivers.tenantId, tenantId));
+    const match = named.find((row) => normalizeDriverName(row.personnelName) === wanted);
+    if (match) {
+      if (match.archivedAt || String(match.status ?? "").toLowerCase() === "removed") {
+        await revive(match.id);
+      } else if (personnelId) {
+        await tx
+          .update(industrialFleetDrivers)
+          .set({ personnelId, updatedAt: now })
+          .where(eq(industrialFleetDrivers.id, match.id));
+      }
+      return match.id;
+    }
+  }
+
+  const [inserted] = await tx
+    .insert(industrialFleetDrivers)
+    .values({
+      id: createId(),
+      tenantId,
+      siteId: assignment.siteId ? String(assignment.siteId) : null,
+      personnelId,
+      personnelName: driverName,
+      status: "on_insurance",
+      sourceSystem: "FORGE",
+      sourceCollection: "fleetAssignedDrivers",
+      sourceDocumentId: personnelId || `name:${normalizeDriverName(driverName)}`,
+      sourcePayload: {
+        status: "on_insurance",
+        seededFrom: "fleet_vehicle_assignment",
+        personnelName: driverName,
+      },
+      createdAt: now,
+      updatedAt: now,
+    })
+    .returning({ id: industrialFleetDrivers.id });
+  return inserted?.id ?? null;
+}
 
 function page(query: ListQuery) {
   const pageNum = Math.max(1, Number(query.page ?? 1) || 1);
@@ -373,6 +531,28 @@ export class IndustrialFleetService {
           ...patch,
         } as typeof industrialFleetVehicles.$inferInsert)
         .returning();
+      if (
+        assignmentHasDriver({
+          personnelId: row!.assignedDriverPersonnelId,
+          driverId: row!.assignedDriverId,
+          driverName: row!.assignedDriverName,
+        })
+      ) {
+        const ensuredId = await ensureCompanyDriverFromAssignment(tx, principal.tenantId, {
+          personnelId: row!.assignedDriverPersonnelId,
+          driverId: row!.assignedDriverId,
+          driverName: row!.assignedDriverName,
+          siteId: row!.siteId,
+        });
+        if (ensuredId && !row!.assignedDriverId) {
+          const [linked] = await tx
+            .update(industrialFleetVehicles)
+            .set({ assignedDriverId: ensuredId, updatedAt: now })
+            .where(eq(industrialFleetVehicles.id, row!.id))
+            .returning();
+          return mapVehicle(linked ?? row!);
+        }
+      }
       return mapVehicle(row!);
     });
   }
@@ -393,6 +573,28 @@ export class IndustrialFleetService {
         )
         .returning();
       if (!row) throw new ForgeError("NOT_FOUND", "Fleet asset not found");
+      if (
+        assignmentHasDriver({
+          personnelId: row.assignedDriverPersonnelId,
+          driverId: row.assignedDriverId,
+          driverName: row.assignedDriverName,
+        })
+      ) {
+        const ensuredId = await ensureCompanyDriverFromAssignment(tx, principal.tenantId, {
+          personnelId: row.assignedDriverPersonnelId,
+          driverId: row.assignedDriverId,
+          driverName: row.assignedDriverName,
+          siteId: row.siteId,
+        });
+        if (ensuredId && !row.assignedDriverId) {
+          const [linked] = await tx
+            .update(industrialFleetVehicles)
+            .set({ assignedDriverId: ensuredId, updatedAt: now })
+            .where(eq(industrialFleetVehicles.id, recordId))
+            .returning();
+          return mapVehicle(linked ?? row);
+        }
+      }
       return mapVehicle(row);
     });
   }
@@ -470,11 +672,22 @@ export class IndustrialFleetService {
       }
 
       const now = new Date();
+      const assigning = assignmentHasDriver({ personnelId, driverId, driverName });
+      const ensuredId = assigning
+        ? await ensureCompanyDriverFromAssignment(tx, principal.tenantId, {
+            personnelId,
+            driverId,
+            driverName,
+            siteId: body.siteId ? String(body.siteId) : null,
+          })
+        : null;
+      const resolvedDriverId = driverId || ensuredId;
+
       const [row] = await tx
         .update(industrialFleetVehicles)
         .set({
           assignedDriverPersonnelId: personnelId,
-          assignedDriverId: driverId,
+          assignedDriverId: assigning ? resolvedDriverId : null,
           assignedDriverName: driverName,
           siteId: body.siteId ? String(body.siteId) : undefined,
           locationName:
@@ -499,9 +712,9 @@ export class IndustrialFleetService {
         tenantId: principal.tenantId,
         vehicleId: recordId,
         personnelId,
-        driverId,
+        driverId: assigning ? resolvedDriverId : null,
         driverName,
-        action: personnelId || driverId || driverName ? "ASSIGN" : "UNASSIGN",
+        action: assigning ? "ASSIGN" : "UNASSIGN",
         effectiveAt: now,
         notes: body.notes ? String(body.notes) : null,
         createdAt: now,
@@ -1018,6 +1231,17 @@ export class IndustrialFleetService {
           updatedAt: now,
         })
         .returning();
+      if (row?.personnelId) {
+        await tx
+          .update(industrialPersonnel)
+          .set({ isCompanyDriver: true, updatedAt: now })
+          .where(
+            and(
+              eq(industrialPersonnel.id, row.personnelId),
+              eq(industrialPersonnel.tenantId, principal.tenantId),
+            ),
+          );
+      }
       return mapDriver(row!);
     });
   }

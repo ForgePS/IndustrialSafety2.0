@@ -3,6 +3,9 @@
 import Link from "next/link";
 import { useEffect, useMemo, useRef, useState, type FormEvent, type ReactNode } from "react";
 import { SignaturePad } from "@/components/signature-pad";
+import { YearSelectDateInput } from "@/components/year-select-date-input";
+import { LicenseImageField } from "@/components/license-image-field";
+import { isBirthDateField } from "@/lib/date-field";
 import {
   EMPTY_ASSIGNMENT_OPTIONS,
   filterDepartmentsForSite,
@@ -12,6 +15,7 @@ import {
 import {
   PERSONNEL_FORM_SECTIONS,
   isAcceptableSignature,
+  isOversizedSignature,
   personnelDisplayName,
   validatePersonnelForm,
   type PersonnelField,
@@ -25,6 +29,9 @@ import {
   resolveLookupLabel,
   type LookupState,
 } from "@/lib/personnel-lookups";
+import { resolvePersonnelLocationLabel } from "@/lib/personnel-file";
+import { matchSiteIdByLabel } from "@/lib/industrial-facility";
+import { nextPpeExpiresDate } from "@/lib/personnel-ppe";
 
 const ROSTER_HREF = "/modules/personnel/";
 
@@ -94,12 +101,26 @@ export function PersonnelPersonForm({
   }, [tenantId]);
 
   const siteId = typeof values.siteId === "string" ? values.siteId : "";
+  const siteName = typeof values.siteName === "string" ? values.siteName : "";
   const departmentId = typeof values.departmentId === "string" ? values.departmentId : "";
   const divisionName = typeof values.divisionName === "string" ? values.divisionName : "";
 
+  const effectiveSiteId = useMemo(() => {
+    if (siteId) return siteId;
+    if (lookups.sites.length === 0) return "";
+    return matchSiteIdByLabel(lookups.sites, siteName) ?? "";
+  }, [lookups.sites, siteId, siteName]);
+
+  useEffect(() => {
+    if (siteId || lookups.sites.length === 0) return;
+    const matched = matchSiteIdByLabel(lookups.sites, siteName);
+    if (!matched) return;
+    setValues((prev) => ({ ...prev, siteId: matched }));
+  }, [lookups.sites, siteId, siteName]);
+
   const departmentsForSite = useMemo(
-    () => filterDepartmentsForSite(lookups.departments, siteId || undefined),
-    [lookups.departments, siteId],
+    () => filterDepartmentsForSite(lookups.departments, effectiveSiteId || undefined),
+    [lookups.departments, effectiveSiteId],
   );
 
   useEffect(() => {
@@ -112,13 +133,13 @@ export function PersonnelPersonForm({
 
   useEffect(() => {
     if (!assignmentTouched.current) return;
-    const next = suggestSupervisor(assignment.supervisors, divisionName, siteId, departmentId);
+    const next = suggestSupervisor(assignment.supervisors, divisionName, effectiveSiteId, departmentId);
     setValues((prev) => {
       const current = typeof prev.supervisorName === "string" ? prev.supervisorName : "";
       if ((next ?? "") === current) return prev;
       return { ...prev, supervisorName: next ?? "" };
     });
-  }, [assignment.supervisors, divisionName, siteId, departmentId]);
+  }, [assignment.supervisors, divisionName, effectiveSiteId, departmentId]);
 
   const displayName = personnelDisplayName(values);
 
@@ -131,7 +152,20 @@ export function PersonnelPersonForm({
     if (name === "siteId" || name === "departmentId" || name === "divisionName") {
       assignmentTouched.current = true;
     }
-    setValues((prev) => ({ ...prev, [name]: value }));
+    setValues((prev) => {
+      const next: PersonnelFormValues = { ...prev, [name]: value };
+      if (
+        typeof value === "string" &&
+        name.endsWith("IssuedDate") &&
+        value.trim() !== ""
+      ) {
+        const expiresKey = name.replace(/IssuedDate$/, "ExpiresDate");
+        const currentExpires =
+          typeof prev[expiresKey] === "string" ? (prev[expiresKey] as string).trim() : "";
+        next[expiresKey] = nextPpeExpiresDate(value, currentExpires);
+      }
+      return next;
+    });
   }
 
   async function handleSubmit(ev: FormEvent) {
@@ -145,8 +179,14 @@ export function PersonnelPersonForm({
     }
 
     const signature = typeof values.signatureUrl === "string" ? values.signatureUrl : "";
-    if (signature !== "" && !isAcceptableSignature(signature)) {
-      setError("Signature is too large to save. Clear it and sign again more simply.");
+    const initialSignature =
+      typeof initialValues.signatureUrl === "string" ? initialValues.signatureUrl : "";
+    if (signature.trim() !== initialSignature.trim() && !isAcceptableSignature(signature)) {
+      setError(
+        isOversizedSignature(signature.trim())
+          ? "Signature is too large to save. Clear it and sign again more simply."
+          : "Signature could not be saved. Clear it and sign again.",
+      );
       return;
     }
 
@@ -220,6 +260,21 @@ export function PersonnelPersonForm({
       );
     }
 
+    if (field.type === "image") {
+      return (
+        <div className={colClass} key={field.name}>
+          <LicenseImageField
+            id={field.name}
+            label={field.label}
+            value={stringValue}
+            {...(field.help ? { help: field.help } : {})}
+            disabled={saving}
+            onChange={(dataUrl) => set(field.name, dataUrl)}
+          />
+        </div>
+      );
+    }
+
     if (field.type === "select" || field.name === "divisionName") {
       const options = field.name === "divisionName" ? divisionOptions : (field.options ?? []);
       const empty = field.name === "divisionName" && options.length === 0;
@@ -237,6 +292,9 @@ export function PersonnelPersonForm({
           >
             {field.name === "divisionName" ? (
               <option value="">{empty ? "None available" : "Select division"}</option>
+            ) : null}
+            {field.name === "safetyFootwearClass" ? (
+              <option value="">Not tracked</option>
             ) : null}
             {options.map((o) => (
               <option key={o.value} value={o.value}>
@@ -277,7 +335,8 @@ export function PersonnelPersonForm({
         );
       }
 
-      const waitingOnSite = field.source === "departments" && !siteId;
+      const waitingOnSite =
+        field.source === "departments" && lookups.sites.length > 0 && !effectiveSiteId;
       return (
         <div className={colClass} key={field.name}>
           {label(field.name)}
@@ -324,6 +383,25 @@ export function PersonnelPersonForm({
       );
     }
 
+    if (field.type === "date" && isBirthDateField({ name: field.name, label: field.label })) {
+      return (
+        <div className={colClass} key={field.name}>
+          {label(field.name)}
+          {merged(
+            <YearSelectDateInput
+              id={field.name}
+              value={stringValue}
+              onChange={(next) => set(field.name, next)}
+              required={field.required === true}
+              disabled={field.readOnly === true}
+              mode="birth"
+            />,
+          )}
+          {help}
+        </div>
+      );
+    }
+
     return (
       <div className={colClass} key={field.name}>
         {label(field.name)}
@@ -347,7 +425,7 @@ export function PersonnelPersonForm({
   const summaryRows: Array<{ label: string; value: string }> = [
     { label: "Name", value: displayName || "—" },
     { label: "Status", value: (typeof values.status === "string" && values.status) || "—" },
-    { label: "Location", value: (siteId && resolveLookupLabel(lookups, "sites", siteId)) || "—" },
+    { label: "Location", value: resolvePersonnelLocationLabel(values, (id) => resolveLookupLabel(lookups, "sites", id)) || "—" },
     { label: "Division", value: divisionName || "—" },
     {
       label: "Department",

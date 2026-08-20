@@ -8,6 +8,13 @@ type Mapper = {
     columns: Record<string, unknown>,
     payload: Record<string, unknown>,
   ): Record<string, unknown>;
+  uploadImageSrc(raw: unknown): string | null;
+  projectLicenseCopies(args: {
+    personnelPayload: Record<string, unknown>;
+    driverPayload?: Record<string, unknown> | null;
+    dotPayload?: Record<string, unknown> | null;
+    isCompanyDriver: boolean;
+  }): Record<string, unknown>;
   splitDisplayName(displayName: string): {
     firstName?: string;
     middleName?: string;
@@ -87,6 +94,18 @@ describe("personnel source_payload connection", () => {
     });
   });
 
+  it("maps roster site keys onto siteName for the personnel file", () => {
+    expect(
+      mapper().normalizePersonnelPayload({
+        site: "GREENVILLE",
+        location: "ignored when site is set",
+      }),
+    ).toMatchObject({ siteName: "GREENVILLE" });
+    expect(mapper().normalizePersonnelPayload({ location: "Stuttgart AR" })).toMatchObject({
+      siteName: "Stuttgart AR",
+    });
+  });
+
   it("surfaces job title on the personnel file shape used by the UI", () => {
     const now = new Date("2026-01-01T00:00:00.000Z");
     const item = mapper().mapListItem({
@@ -126,5 +145,40 @@ describe("personnel source_payload connection", () => {
       lastName: "ROBY",
       suffix: "III",
     });
+  });
+
+  it("projects driver license front/back onto the personnel file payload", () => {
+    const projected = mapper().projectLicenseCopies({
+      personnelPayload: { isCompanyDriver: true },
+      driverPayload: {
+        licenseFrontUpload: { url: "https://cdn.example/front.jpg" },
+        licenseBackUpload: { dataUrl: "data:image/jpeg;base64,BACK" },
+      },
+      dotPayload: null,
+      isCompanyDriver: true,
+    });
+    expect(projected).toMatchObject({
+      requiresLicenseCopies: true,
+      hasLicenseFront: true,
+      hasLicenseBack: true,
+      licenseFrontUrl: "https://cdn.example/front.jpg",
+      licenseBackUrl: "data:image/jpeg;base64,BACK",
+    });
+  });
+
+  it("prefers personnel license URLs over linked driver uploads", () => {
+    const projected = mapper().projectLicenseCopies({
+      personnelPayload: {
+        licenseFrontUrl: "https://personnel/front.jpg",
+        licenseBackUpload: { url: "https://personnel/back.jpg" },
+      },
+      driverPayload: {
+        licenseFrontUpload: { url: "https://driver/front.jpg" },
+        licenseBackUpload: { url: "https://driver/back.jpg" },
+      },
+      isCompanyDriver: false,
+    });
+    expect(projected.licenseFrontUrl).toBe("https://personnel/front.jpg");
+    expect(projected.licenseBackUrl).toBe("https://personnel/back.jpg");
   });
 });

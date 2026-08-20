@@ -1,12 +1,12 @@
 /**
- * Personnel module shortcuts: Dashboard (active roster), Company Drivers, and
- * Archived Personnel. The quick card lists all three; off the current page we
- * only surface the other two as link tabs.
+ * Personnel module shortcuts: Dashboard, Company Drivers, PPE Allowance, and
+ * Archived Personnel. The quick card lists every destination; off the current
+ * page the remaining surfaces appear as link tabs.
  */
 
 export const PERSONNEL_DASHBOARD_HREF = "/modules/personnel/";
 
-export type PersonnelQuickView = "dashboard" | "company-drivers" | "archived";
+export type PersonnelQuickView = "dashboard" | "company-drivers" | "ppe-allowance" | "archived";
 
 export type PersonnelQuickLink = {
   id: PersonnelQuickView;
@@ -32,6 +32,13 @@ export const PERSONNEL_QUICK_LINKS: readonly PersonnelQuickLink[] = [
     icon: "bx-car",
   },
   {
+    id: "ppe-allowance",
+    label: "PPE Allowance",
+    href: `${PERSONNEL_DASHBOARD_HREF}?view=ppe-allowance`,
+    description: "Glasses, safety boots, and extra-pair approvals",
+    icon: "bx-glasses",
+  },
+  {
     id: "archived",
     label: "Archived Personnel",
     href: `${PERSONNEL_DASHBOARD_HREF}?view=archived`,
@@ -42,11 +49,12 @@ export const PERSONNEL_QUICK_LINKS: readonly PersonnelQuickLink[] = [
 
 export function parsePersonnelQuickView(raw: string | null | undefined): PersonnelQuickView {
   if (raw === "company-drivers" || raw === "drivers") return "company-drivers";
+  if (raw === "ppe-allowance" || raw === "ppe") return "ppe-allowance";
   if (raw === "archived") return "archived";
   return "dashboard";
 }
 
-/** The two destinations that are not the page you are on. */
+/** Destinations that are not the page you are on. */
 export function personnelOffPageLinks(
   current: PersonnelQuickView,
 ): readonly PersonnelQuickLink[] {
@@ -62,12 +70,14 @@ export function personnelListQueryForView(
   view: PersonnelQuickView,
 ): Record<string, string | undefined> {
   if (view === "company-drivers") return { isCompanyDriver: "true" };
+  if (view === "ppe-allowance") return { ppeTracked: "true" };
   if (view === "archived") return { archived: "true" };
   return {};
 }
 
 export function personnelDirectoryTitle(view: PersonnelQuickView): string {
   if (view === "company-drivers") return "Company Drivers";
+  if (view === "ppe-allowance") return "PPE Allowance";
   if (view === "archived") return "Archived Personnel";
   return "Personnel Directory";
 }

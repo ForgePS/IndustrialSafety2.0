@@ -41,6 +41,17 @@ export const INDUSTRIAL_PERMISSIONS = [
   "industrial.scan.manage",
   "industrial.qr_links.view",
   "industrial.qr_links.manage",
+  "industrial.legal.documents.read",
+  "industrial.legal.documents.manage",
+  "industrial.legal.documents.publish",
+  "industrial.legal.acknowledgments.read_self",
+  "industrial.legal.acknowledgments.read_tenant",
+  "industrial.legal.acknowledgments.export",
+  "industrial.legal.tenantPolicies.read",
+  "industrial.legal.tenantPolicies.manage",
+  "industrial.legal.tenantPolicies.publish",
+  "industrial.legal.attestations.read_self",
+  "industrial.legal.attestations.read_tenant",
 ] as const;
 
 export type IndustrialPermission = (typeof INDUSTRIAL_PERMISSIONS)[number];
@@ -154,6 +165,10 @@ export const INDUSTRIAL_MODULE_REGISTRY: readonly IndustrialModuleRegistryEntry[
 /** Feature-flag keys used by industrial-web navigation + Nest bootstrap. */
 export const INDUSTRIAL_FEATURE_FLAGS = [
   "industrial.enabled",
+  "industrial.legalAcknowledgments.enabled",
+  "industrial.legalAcknowledgments.loginGate.enabled",
+  "industrial.legalAcknowledgments.transactionAttestations.enabled",
+  "industrial.legalAcknowledgments.adminReporting.enabled",
   "industrial.module.analytics.enabled",
   "industrial.module.personnel.enabled",
   "industrial.module.incidents.enabled",

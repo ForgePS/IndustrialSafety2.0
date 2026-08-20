@@ -99,6 +99,9 @@ function normalize(payload) {
     ["company", "companyName"],
     ["division", "divisionName"],
     ["supervisor", "supervisorName"],
+    ["site", "siteName"],
+    ["location", "siteName"],
+    ["locationName", "siteName"],
   ];
   for (const [from, to] of aliases) {
     if (blank(out[to]) && filled(out[from])) out[to] = out[from];

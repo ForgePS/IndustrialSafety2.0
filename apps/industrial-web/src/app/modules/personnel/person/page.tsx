@@ -5,14 +5,18 @@ import { useSearchParams } from "next/navigation";
 import { Suspense, useCallback, useEffect, useState } from "react";
 import { ApiError, apiGet, useAuth } from "@forge/web-kit";
 import { PersonnelProfilePanels } from "@/components/personnel-profile-panels";
+import { LicenseCopiesCard } from "@/components/license-copies-card";
 import {
   buildPersonnelFile,
+  personnelLicenseCopies,
   personnelSignature,
+  resolvePersonnelLocationLabel,
   type PersonnelFileGroup,
 } from "@/lib/personnel-file";
 import { personEditHref, toRosterPerson, type RosterPerson } from "@/lib/personnel-directory";
 import { loadPersonnelLookups, resolveLookupLabel, EMPTY_LOOKUPS } from "@/lib/personnel-lookups";
 import type { LookupState } from "@/lib/personnel-lookups";
+import { parseMvrAuditHistory } from "@/lib/mvr-sample";
 
 const ROSTER_HREF = "/modules/personnel/";
 
@@ -128,9 +132,13 @@ function PersonnelFileInner() {
       )
     : [];
   const signature = record ? personnelSignature(record) : null;
-  const siteName = person?.siteId
-    ? resolveLookupLabel(lookups, "sites", person.siteId)
+  const siteName = record
+    ? resolvePersonnelLocationLabel(record, (siteId) => resolveLookupLabel(lookups, "sites", siteId))
     : undefined;
+  const mvrAudits = record ? parseMvrAuditHistory(record.mvrAuditHistory) : [];
+  const licenseCopies = record ? personnelLicenseCopies(record) : { front: null, back: null };
+  const needsLicenseCopies =
+    person?.isCompanyDriver === true || record?.requiresLicenseCopies === true;
 
   return (
     <div>
@@ -181,6 +189,42 @@ function PersonnelFileInner() {
             {...(siteName ? { siteLabel: siteName } : {})}
             canManage={canManage}
           />
+
+          <LicenseCopiesCard
+            copies={licenseCopies}
+            personName={person.displayName}
+            required={needsLicenseCopies}
+          />
+
+          {mvrAudits.length > 0 ? (
+            <div className="card mb-4 mt-4">
+              <div className="card-header">
+                <h6 className="card-title mb-0">MVR audit history</h6>
+              </div>
+              <div className="table-responsive">
+                <table className="table mb-0">
+                  <thead>
+                    <tr>
+                      <th scope="col">Year</th>
+                      <th scope="col">Audited</th>
+                      <th scope="col">By</th>
+                      <th scope="col">Notes</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {mvrAudits.map((entry) => (
+                      <tr key={`${entry.year}-${entry.auditedAt}-${entry.driverId}`}>
+                        <td>{entry.year}</td>
+                        <td>{entry.auditedAt.slice(0, 10)}</td>
+                        <td>{entry.auditedByName || "—"}</td>
+                        <td>{entry.notes || "—"}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          ) : null}
 
           <div className="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-3 mt-4">
             <h6 className="text-muted text-uppercase mb-0">Full personnel record</h6>

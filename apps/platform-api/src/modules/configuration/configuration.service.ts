@@ -869,22 +869,35 @@ export class ConfigurationService {
     if (!principal.userId) {
       throw new ForgeError("UNAUTHORIZED", "Authentication required");
     }
+    return this.effectivePublished(tenantId, ns, objectKey, atIso);
+  }
+
+  /**
+   * Load published effective config for a known tenant without a principal
+   * (public host → tenant resolution, system jobs).
+   */
+  async effectivePublished(
+    tenantId: string,
+    namespace: ConfigNamespace,
+    objectKey: string,
+    atIso?: string,
+  ) {
     const at = atIso ? new Date(atIso) : new Date();
     return withTenantTransaction(this.db, tenantId, async (tx) => {
       const object = await tx.query.configObjects.findFirst({
         where: and(
           eq(configObjects.tenantId, tenantId),
-          eq(configObjects.namespace, ns),
+          eq(configObjects.namespace, namespace),
           eq(configObjects.objectKey, objectKey),
         ),
       });
       if (!object) {
         return {
-          namespace: ns,
+          namespace,
           objectKey,
-          payload: DEFAULT_PAYLOADS[ns],
+          payload: DEFAULT_PAYLOADS[namespace],
           version: null,
-          source: "default",
+          source: "default" as const,
         };
       }
       const versions = await tx.query.configVersions.findMany({
@@ -893,12 +906,12 @@ export class ConfigurationService {
       const effective = resolveEffectiveVersion(versions, at);
       if (!effective) {
         return {
-          namespace: ns,
+          namespace,
           objectKey,
           object,
-          payload: DEFAULT_PAYLOADS[ns],
+          payload: DEFAULT_PAYLOADS[namespace],
           version: null,
-          source: "default",
+          source: "default" as const,
         };
       }
       // Promote due scheduled versions at read time.
@@ -920,12 +933,12 @@ export class ConfigurationService {
           .where(eq(configObjects.id, object.id));
       }
       return {
-        namespace: ns,
+        namespace,
         objectKey,
         object,
         payload: effective.payloadJson,
         version: effective,
-        source: "published",
+        source: "published" as const,
       };
     });
   }

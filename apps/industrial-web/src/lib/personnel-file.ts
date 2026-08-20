@@ -10,7 +10,11 @@ import {
   type PersonnelField,
   type PersonnelLookupSource,
 } from "./personnel-form";
+import { formatPpeDateValue } from "./personnel-ppe";
+import { personnelLicenseCopies, type LicenseCopies } from "./license-copies";
 
+export type { LicenseCopies };
+export { personnelLicenseCopies };
 export type PersonnelFileRow = {
   label: string;
   value: string;
@@ -32,6 +36,23 @@ export type LookupLabelResolver = (
 
 function str(value: unknown): string {
   return typeof value === "string" ? value.trim() : "";
+}
+
+/** Resolve a personnel location label from FK, stored name, or roster import keys. */
+export function resolvePersonnelLocationLabel(
+  record: Record<string, unknown>,
+  resolveSite?: (siteId: string) => string | undefined,
+): string {
+  const siteId = str(record.siteId);
+  const fromLookup = siteId && resolveSite ? resolveSite(siteId) : "";
+  return (
+    fromLookup ||
+    str(record.siteName) ||
+    str(record.site) ||
+    str(record.location) ||
+    str(record.locationName) ||
+    ""
+  );
 }
 
 /** Hire dates arrive as either a plain date or a timestamp; show the date part. */
@@ -63,6 +84,13 @@ function valueFor(
     return record[field.name] === true ? "Yes" : "";
   }
 
+  if (field.type === "select") {
+    const raw = str(record[field.name]);
+    if (raw === "") return "";
+    const match = field.options?.find((option) => option.value === raw);
+    return match?.label ?? raw;
+  }
+
   if (field.type === "lookup") {
     const id = str(record[field.name]);
     const named = field.nameField ? str(record[field.nameField]) : "";
@@ -72,7 +100,9 @@ function valueFor(
     if (named || resolved) return named || resolved;
     // Roster imports often stored a free-text site/department name without an FK.
     if (field.source === "sites") {
-      return str(record.site) || str(record.siteName);
+      return resolvePersonnelLocationLabel(record, (siteId) =>
+        field.source ? resolve?.(field.source, siteId) : undefined,
+      );
     }
     if (field.source === "departments") {
       return str(record.department) || str(record.departmentName);
@@ -82,6 +112,10 @@ function valueFor(
 
   const raw = str(record[field.name]);
   if (raw === "") return "";
+  if (field.name.endsWith("ExpiresDate")) {
+    const issuedKey = field.name.replace(/ExpiresDate$/, "IssuedDate");
+    return formatPpeDateValue(raw, new Date(), record[issuedKey]).label;
+  }
   if (field.name === "notes") return stripImportNotes(raw);
   return field.type === "date" ? formatFileDate(raw) : raw;
 }
@@ -94,8 +128,8 @@ function rowsFor(
 ): PersonnelFileRow[] {
   const rows: PersonnelFileRow[] = [];
   for (const field of fields) {
-    // The signature renders as an image next to the sections, not as text.
-    if (field.type === "signature") continue;
+    // Signature and license photos render as images, not text rows.
+    if (field.type === "signature" || field.type === "image") continue;
     const value = valueFor(field, record, resolve);
     if (value === "") continue;
     rows.push({

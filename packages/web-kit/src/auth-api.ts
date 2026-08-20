@@ -24,6 +24,13 @@ export type AuthMe = {
   /** MEMBER for ordinary tenants; PLATFORM_ADMIN_SUPPORT for platform admin context. */
   accessMode?: "MEMBER" | "PLATFORM_ADMIN_SUPPORT";
   tenants: AuthTenant[];
+  legalAcknowledgments?: {
+    status: "REQUIRED" | "ACTION_REQUIRED" | "CURRENT" | "NOT_REQUIRED";
+    pendingCount: number;
+    gatePath: string;
+    enabled: boolean;
+    loginGateEnabled?: boolean;
+  };
 };
 
 export function authMe(options?: ApiRequestOptions): Promise<AuthMe> {

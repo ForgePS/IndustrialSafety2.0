@@ -15,7 +15,14 @@ export function isInd3OpsModule(module: string): module is Ind3OpsModule {
   return (IND3_OPS_MODULES as readonly string[]).includes(module);
 }
 
-export type OpsCreateFieldType = "text" | "email" | "tel" | "date" | "textarea" | "checkbox";
+export type OpsCreateFieldType =
+  | "text"
+  | "email"
+  | "tel"
+  | "date"
+  | "textarea"
+  | "checkbox"
+  | "signature";
 
 export type OpsCreateField = {
   name: string;
@@ -130,7 +137,7 @@ export const OPS_MODULE_CONFIG: Record<
       { name: "fileBase", label: "File base", group: "Records" },
       { name: "userAuthId", label: "User auth ID", group: "Records" },
       { name: "digitalSource", label: "Digital source", group: "Records" },
-      { name: "signatureUrl", label: "Signature URL", group: "Records" },
+      { name: "signatureUrl", label: "Signature", type: "signature", group: "Records" },
 
       {
         name: "isCompanyDriver",

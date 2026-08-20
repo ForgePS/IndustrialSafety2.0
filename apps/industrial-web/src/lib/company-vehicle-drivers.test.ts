@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   companyVehicleDriverStatusLabel,
   driverNameParts,
+  driversWithLicenseIssues,
   fileCountLabel,
   licenseCopyLabel,
   licenseExpiryState,
@@ -77,7 +78,7 @@ describe("company vehicle drivers helpers", () => {
     expect(mvrReleaseLabel(driver)).toBe("2026-01-04");
     expect(fileCountLabel(driver.mvrUploadCount)).toBe("3 files");
     expect(fileCountLabel(0)).toBe("");
-    expect(sampleLabel(driver, 2026)).toBe("Done 2026-03-15");
+    expect(sampleLabel(driver, 2026)).toBe("Audited 2026-03-15");
     expect(sampleLabel(driver, 2025)).toBe("");
   });
 
@@ -101,6 +102,52 @@ describe("company vehicle drivers helpers", () => {
     expect(licenseExpiryState(at("2027-09-01"), "2026-08-16")).toBe("ok");
     expect(licenseExpiryState(at(""), "2026-08-16")).toBe("none");
     expect(licenseExpiryState(at("2026-01-01", "removed"), "2026-08-16")).toBe("none");
+  });
+
+  it("lists missing, expired, and expiring licenses for follow-up", () => {
+    const today = "2026-08-16";
+    const roster = [
+      toCompanyVehicleDriver({
+        id: "ok",
+        personnelId: "p-ok",
+        personnelName: "Zoe Ok",
+        status: "on_insurance",
+        licenseExpiryDate: "2027-01-01",
+      })!,
+      toCompanyVehicleDriver({
+        id: "expired",
+        personnelId: "p-ex",
+        personnelName: "Aaron Expired",
+        status: "on_insurance",
+        licenseExpiryDate: "2025-01-01",
+      })!,
+      toCompanyVehicleDriver({
+        id: "missing",
+        personnelId: "p-miss",
+        personnelName: "Ned Missing",
+        status: "on_insurance",
+        licenseExpiryDate: "",
+      })!,
+      toCompanyVehicleDriver({
+        id: "expiring",
+        personnelId: "p-soon",
+        personnelName: "Mia Soon",
+        status: "pending_mvr",
+        licenseExpiryDate: "2026-09-01",
+      })!,
+      toCompanyVehicleDriver({
+        id: "removed",
+        personnelName: "Gone",
+        status: "removed",
+        licenseExpiryDate: "",
+      })!,
+    ];
+    const all = driversWithLicenseIssues(roster, today);
+    expect(all.map((row) => row.driver.id)).toEqual(["expired", "missing", "expiring"]);
+    expect(all[0]?.reason).toBe("Expired 2025-01-01");
+    expect(driversWithLicenseIssues(roster, today, ["missing"]).map((row) => row.driver.id)).toEqual([
+      "missing",
+    ]);
   });
 
   it("labels statuses the way the legacy panel did", () => {

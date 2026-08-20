@@ -16,12 +16,17 @@ import {
   type ProfileSectionId,
 } from "@/lib/personnel-profile-analytics";
 import {
+  formatPpeDateValue,
+  ppeExpiryBadgeClass,
+  ppeExpiryLabel,
+} from "@/lib/personnel-ppe";
+import {
   rosterInitials,
   statusBadgeClass,
   personEditHref,
   type RosterPerson,
 } from "@/lib/personnel-directory";
-import { formatFileDate, stripImportNotes } from "@/lib/personnel-file";
+import { formatFileDate, resolvePersonnelLocationLabel, stripImportNotes } from "@/lib/personnel-file";
 
 type Props = {
   person: RosterPerson;
@@ -106,6 +111,33 @@ function DetailRow({ label, value }: { label: string; value: string }) {
   );
 }
 
+function PpeDateRow({
+  label,
+  expiresDate,
+  issuedDate,
+}: {
+  label: string;
+  expiresDate: unknown;
+  issuedDate?: unknown;
+}) {
+  const formatted = formatPpeDateValue(expiresDate, new Date(), issuedDate);
+  if (formatted.date === "") {
+    return <DetailRow label={label} value="Not set" />;
+  }
+  const status = formatted.status;
+  return (
+    <div>
+      <small className="text-muted text-uppercase d-block">{label}</small>
+      <span className="fw-medium">{formatted.date}</span>
+      {status !== "none" && status !== "ok" ? (
+        <span className={`badge ms-2 ${ppeExpiryBadgeClass(status)}`}>
+          {ppeExpiryLabel(status)}
+        </span>
+      ) : null}
+    </div>
+  );
+}
+
 /**
  * Legacy-style personnel safety profile: navy header, safety score, analytics
  * grid, involvement panels, activity, and forms — every section opens related
@@ -150,8 +182,7 @@ export function PersonnelProfilePanels({ person, record, siteLabel, canManage }:
   const completedForms = completedPersonnelForms(analytics);
   const place =
     siteLabel ||
-    (typeof record.site === "string" ? record.site : "") ||
-    person.siteLabel ||
+    resolvePersonnelLocationLabel({ ...person, ...record }) ||
     person.departmentName ||
     "No org unit assigned";
 
@@ -242,6 +273,20 @@ export function PersonnelProfilePanels({ person, record, siteLabel, canManage }:
               <DetailRow
                 label="Company driver"
                 value={person.isCompanyDriver ? "Yes — on roster" : "No"}
+              />
+            </div>
+            <div className="col-6 col-md-4 col-lg">
+              <PpeDateRow
+                label="Glasses expires"
+                expiresDate={record.prescriptionSafetyGlassesExpiresDate}
+                issuedDate={record.prescriptionSafetyGlassesIssuedDate}
+              />
+            </div>
+            <div className="col-6 col-md-4 col-lg">
+              <PpeDateRow
+                label="Footwear expires"
+                expiresDate={record.safetyFootwearExpiresDate}
+                issuedDate={record.safetyFootwearIssuedDate}
               />
             </div>
             <div className="col-6 col-md-4 col-lg">

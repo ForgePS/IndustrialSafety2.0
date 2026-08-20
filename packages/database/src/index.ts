@@ -9,6 +9,7 @@ import * as schema from "./schema.js";
 export * from "./schema.js";
 export { createId } from "./ids.js";
 export * from "./identity-lookup.js";
+export { hashLegalContent, seedLegalAcknowledgments } from "./seed-legal-acknowledgments.js";
 export {
   alterRolePassword,
   ensureAppLoginRole,

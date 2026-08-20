@@ -16,6 +16,7 @@ import { fileURLToPath, pathToFileURL } from "node:url";
 import postgres from "postgres";
 import { createId } from "./ids.js";
 import * as schema from "./schema.js";
+import { seedLegalAcknowledgments } from "./seed-legal-acknowledgments.js";
 import {
   featureDefinitions,
   organizationTypes,
@@ -422,6 +423,48 @@ const FEATURES = [
     defaultValueJson: false as const,
   },
   {
+    key: "industrial.legalAcknowledgments.enabled",
+    name: "Industrial legal acknowledgments",
+    description: "Enable legal acknowledgment subsystem for Forge Industrial Safety.",
+    valueType: "BOOLEAN",
+    defaultValueJson: true as const,
+  },
+  {
+    key: "industrial.legalAcknowledgments.loginGate.enabled",
+    name: "Industrial legal acknowledgment login gate",
+    description: "Require outstanding legal acknowledgments before Industrial app access.",
+    valueType: "BOOLEAN",
+    defaultValueJson: true as const,
+  },
+  {
+    key: "industrial.legalAcknowledgments.transactionAttestations.enabled",
+    name: "Industrial transaction attestations",
+    description: "Enable transaction-specific electronic attestations.",
+    valueType: "BOOLEAN",
+    defaultValueJson: true as const,
+  },
+  {
+    key: "industrial.legalAcknowledgments.adminReporting.enabled",
+    name: "Industrial legal acknowledgment admin reporting",
+    description: "Enable admin compliance reporting and CSV export for acknowledgments.",
+    valueType: "BOOLEAN",
+    defaultValueJson: true as const,
+  },
+  {
+    key: "rms.legalAcknowledgments.enabled",
+    name: "RMS legal acknowledgments",
+    description: "Enable legal acknowledgments for Forge RMS. Default false.",
+    valueType: "BOOLEAN",
+    defaultValueJson: false as const,
+  },
+  {
+    key: "academy.legalAcknowledgments.enabled",
+    name: "Academy legal acknowledgments",
+    description: "Enable legal acknowledgments for Forge Academy. Default false.",
+    valueType: "BOOLEAN",
+    defaultValueJson: false as const,
+  },
+  {
     key: "ai.narrative.academy.enabled",
     name: "AI Narrative for Forge Academy",
     description: "Enable AI narratives for Academy records. Default false.",
@@ -801,6 +844,8 @@ export async function seedPlatformData(db: SeedDatabase): Promise<void> {
         .where(eq(featureDefinitions.id, existing[0]!.id));
     }
   }
+
+  await seedLegalAcknowledgments(db);
 }
 
 async function main(): Promise<void> {

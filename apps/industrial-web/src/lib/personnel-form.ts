@@ -6,6 +6,11 @@
  * signature pad that the generic ops workspace has no concept of. Column names
  * still match migration 0043 so both paths POST the same payload shape.
  */
+import {
+  isOversizedLicenseImage,
+  toLicenseUpload,
+  uploadImageSrc,
+} from "./license-copies";
 
 export type PersonnelFieldType =
   | "text"
@@ -17,7 +22,8 @@ export type PersonnelFieldType =
   | "lookup"
   | "suggest"
   | "select"
-  | "signature";
+  | "signature"
+  | "image";
 
 /** Catalogs the page can populate a <select> from. */
 export type PersonnelLookupSource = "sites" | "departments" | "positions";
@@ -34,6 +40,12 @@ export const PERSONNEL_STATUS_OPTIONS: readonly PersonnelSelectOption[] = [
   { value: "Inactive", label: "Inactive" },
   { value: "Terminated", label: "Terminated" },
   { value: "Leave", label: "Leave" },
+];
+
+/** Safety footwear allowance classes for Producers Rice Mill PPE tracking. */
+export const SAFETY_FOOTWEAR_CLASS_OPTIONS: readonly PersonnelSelectOption[] = [
+  { value: "CLASS_1", label: "Class 1 ($175.00)" },
+  { value: "CLASS_2", label: "Class 2 ($75.00)" },
 ];
 
 export const DEFAULT_PERSONNEL_STATUS = "Active";
@@ -168,7 +180,14 @@ export const PERSONNEL_FORM_SECTIONS: readonly PersonnelSection[] = [
     description: "Where this person works and who they report to.",
     icon: "bx-buildings",
     fields: [
-      { name: "siteId", label: "Location", type: "lookup", source: "sites" },
+      {
+        name: "siteId",
+        label: "Location",
+        type: "lookup",
+        source: "sites",
+        nameField: "siteName",
+        fallbackLabel: "Location",
+      },
       {
         name: "divisionName",
         label: "Division",
@@ -214,6 +233,8 @@ export const PERSONNEL_FORM_SECTIONS: readonly PersonnelSection[] = [
     id: "driver",
     title: "Driver",
     icon: "bx-car",
+    description:
+      "Company drivers and DOT (DQF) files require front and back copies of the driver's license on this personnel record.",
     fields: [
       {
         name: "isCompanyDriver",
@@ -221,6 +242,123 @@ export const PERSONNEL_FORM_SECTIONS: readonly PersonnelSection[] = [
         type: "checkbox",
         help: "Enables DOT and fleet requirements for this person.",
         wide: true,
+      },
+      {
+        name: "licenseFrontUrl",
+        label: "Driver's license (front)",
+        type: "image",
+        help: "Required for company drivers and DOT (DQF) personnel files.",
+        wide: true,
+      },
+      {
+        name: "licenseBackUrl",
+        label: "Driver's license (back)",
+        type: "image",
+        help: "Required for company drivers and DOT (DQF) personnel files.",
+        wide: true,
+      },
+    ],
+  },
+  {
+    id: "ppe",
+    title: "PPE allowance",
+    description:
+      "Track prescription safety glasses and safety footwear, including manager approval for an additional pair before the annual allowance renews. Expiration alerts appear 30 days prior.",
+    icon: "bx-glasses",
+    columns: [
+      {
+        id: "glasses",
+        title: "Prescription safety glasses",
+        fields: [
+          {
+            name: "tracksPrescriptionSafetyGlasses",
+            label: "Track prescription safety glasses",
+            type: "checkbox",
+            wide: true,
+          },
+          {
+            name: "prescriptionSafetyGlassesIssuedDate",
+            label: "Issued date",
+            type: "date",
+            help: "Date this pair was or will be issued. Future (post-dated) dates are allowed.",
+          },
+          {
+            name: "prescriptionSafetyGlassesExpiresDate",
+            label: "Expires date",
+            type: "date",
+            help: "Annual allowance expiration. May be after the issued date, including post-dated issue dates.",
+          },
+          {
+            name: "prescriptionSafetyGlassesExtraPairApproved",
+            label: "Manager approved additional pair",
+            type: "checkbox",
+            wide: true,
+            help: "Check when a supervisor approved an extra pair before renewal.",
+          },
+          {
+            name: "prescriptionSafetyGlassesExtraPairApprovedBy",
+            label: "Approved by",
+            help: "Supervisor or manager name.",
+          },
+          {
+            name: "prescriptionSafetyGlassesExtraPairApprovedDate",
+            label: "Approval date",
+            type: "date",
+          },
+          {
+            name: "prescriptionSafetyGlassesExtraPairReason",
+            label: "Approval reason",
+            type: "textarea",
+            wide: true,
+          },
+        ],
+      },
+      {
+        id: "footwear",
+        title: "Safety footwear",
+        fields: [
+          {
+            name: "safetyFootwearClass",
+            label: "Footwear class",
+            type: "select",
+            help: "Allowance class for safety footwear.",
+            options: SAFETY_FOOTWEAR_CLASS_OPTIONS,
+          },
+          {
+            name: "safetyFootwearIssuedDate",
+            label: "Issued date",
+            type: "date",
+            help: "Date this pair was or will be issued. Future (post-dated) dates are allowed.",
+          },
+          {
+            name: "safetyFootwearExpiresDate",
+            label: "Expires date",
+            type: "date",
+            help: "Annual allowance expiration. May be after the issued date, including post-dated issue dates.",
+          },
+          {
+            name: "safetyFootwearExtraPairApproved",
+            label: "Manager approved additional pair",
+            type: "checkbox",
+            wide: true,
+            help: "Check when a supervisor approved an extra pair before renewal.",
+          },
+          {
+            name: "safetyFootwearExtraPairApprovedBy",
+            label: "Approved by",
+          },
+          {
+            name: "safetyFootwearExtraPairApprovedDate",
+            label: "Approval date",
+            type: "date",
+          },
+          {
+            name: "safetyFootwearExtraPairReason",
+            label: "Approval reason",
+            type: "textarea",
+            wide: true,
+          },
+        ],
       },
     ],
   },
@@ -252,6 +390,13 @@ function asFormString(value: unknown): string {
   return "";
 }
 
+/** Human label for a stored safety footwear class code. */
+export function safetyFootwearClassLabel(value: unknown): string {
+  const raw = asFormString(value);
+  if (raw === "") return "";
+  return SAFETY_FOOTWEAR_CLASS_OPTIONS.find((option) => option.value === raw)?.label ?? raw;
+}
+
 /** Map a status from the API onto one of PERSONNEL_STATUS_OPTIONS. */
 export function normalizePersonnelStatus(raw: unknown): string {
   const value = asFormString(raw);
@@ -281,6 +426,23 @@ export function personnelFormFromRecord(record: Record<string, unknown>): Person
       continue;
     }
 
+    if (field.type === "image") {
+      const fromUrl = uploadImageSrc(record[field.name]);
+      if (fromUrl) {
+        values[field.name] = fromUrl;
+        continue;
+      }
+      // Company-driver / DQF imports store an upload object instead of a URL field.
+      if (field.name === "licenseFrontUrl") {
+        const front = uploadImageSrc(record.licenseFrontUpload);
+        if (front) values.licenseFrontUrl = front;
+      } else if (field.name === "licenseBackUrl") {
+        const back = uploadImageSrc(record.licenseBackUpload);
+        if (back) values.licenseBackUrl = back;
+      }
+      continue;
+    }
+
     let text = asFormString(record[field.name]);
     if (field.type === "date" && text !== "") {
       const match = /^(\d{4}-\d{2}-\d{2})/.exec(text);
@@ -294,7 +456,39 @@ export function personnelFormFromRecord(record: Record<string, unknown>): Person
     }
   }
 
+  if (!asFormString(values.siteName)) {
+    const importedSite =
+      asFormString(record.site) ||
+      asFormString(record.location) ||
+      asFormString(record.locationName);
+    if (importedSite !== "") values.siteName = importedSite;
+  }
+
   return values;
+}
+
+/** Persist URL fields plus the company-driver upload object shape. */
+function applyLicenseCopyFields(
+  payload: Record<string, unknown>,
+  values: PersonnelFormValues,
+  mode: "create" | "update",
+) {
+  for (const side of [
+    { urlKey: "licenseFrontUrl", uploadKey: "licenseFrontUpload", side: "front" as const },
+    { urlKey: "licenseBackUrl", uploadKey: "licenseBackUpload", side: "back" as const },
+  ]) {
+    const value = asString(values[side.urlKey]);
+    if (value === "") {
+      if (mode === "update") {
+        payload[side.urlKey] = "";
+        payload[side.uploadKey] = null;
+      }
+      continue;
+    }
+    if (isOversizedLicenseImage(value)) continue;
+    payload[side.urlKey] = value;
+    payload[side.uploadKey] = toLicenseUpload(value, side.side);
+  }
 }
 
 /** Every field across all sections, in render order. */
@@ -361,6 +555,8 @@ export function buildPersonnelPayload(
       continue;
     }
 
+    if (field.type === "image") continue;
+
     if (field.type === "lookup" && field.nameField) {
       const id = asString(values[field.name]);
       if (id !== "") {
@@ -383,6 +579,7 @@ export function buildPersonnelPayload(
     payload[field.name] = value;
   }
 
+  applyLicenseCopyFields(payload, values, "create");
   return payload;
 }
 
@@ -421,19 +618,44 @@ export function buildPersonnelUpdatePayload(
       continue;
     }
 
+    if (field.type === "image") continue;
+
+    if (field.name === "signatureUrl") {
+      const signature = asString(values[field.name]);
+      // Do not resend an oversized stored capture — it blocks the rest of the
+      // PATCH. Leave the column unchanged unless the user drew or cleared it.
+      if (isOversizedSignature(signature)) continue;
+      payload[field.name] = signature;
+      continue;
+    }
+
     payload[field.name] = asString(values[field.name]);
   }
 
+  applyLicenseCopyFields(payload, values, "update");
   return payload;
 }
 
 /** Rough cap so a stray high-resolution capture cannot bloat the row. */
 export const MAX_SIGNATURE_DATA_URL_LENGTH = 200_000;
 
+export function isBlankSignature(value: unknown): boolean {
+  return typeof value !== "string" || value.trim() === "";
+}
+
+export function isOversizedSignature(value: string): boolean {
+  return value.startsWith("data:image/") && value.length > MAX_SIGNATURE_DATA_URL_LENGTH;
+}
+
+/**
+ * Empty is fine (unsigned). Legacy http(s) URLs from imports are kept as-is.
+ * New pad captures must be image data URLs under the size cap.
+ */
 export function isAcceptableSignature(dataUrl: string): boolean {
-  return (
-    dataUrl.startsWith("data:image/") && dataUrl.length <= MAX_SIGNATURE_DATA_URL_LENGTH
-  );
+  const value = dataUrl.trim();
+  if (value === "") return true;
+  if (/^https?:\/\//i.test(value)) return true;
+  return value.startsWith("data:image/") && value.length <= MAX_SIGNATURE_DATA_URL_LENGTH;
 }
 
 /**

@@ -188,6 +188,12 @@ export const CREATOR_NAV_GROUPS: ForgeNavigationGroup[] = [
         permission: "platform.permission.read",
       },
       { id: "audit", label: "Audit Log", route: "/audit", permission: "platform.audit.read" },
+      {
+        id: "legal-compliance",
+        label: "Legal & Compliance",
+        route: "/legal",
+        anyOfPermissions: ["platform.audit.read", "platform.feature.manage", "platform.tenant.read"],
+      },
     ],
   },
   {

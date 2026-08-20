@@ -199,6 +199,46 @@ export class IndustrialFlatController {
     );
   }
 
+  @Post("fleet/drivers/mvr-sample/start")
+  @RequireAnyPermission(
+    [
+      "industrial.personnel.manage",
+      "industrial.fleet.manage",
+      "industrial.admin",
+    ],
+    { requiresEntitlement: ENTITLEMENT },
+  )
+  @Idempotent({ resourceType: "industrial_fleet_mvr_sample" })
+  async startCompanyDriverMvrSample(
+    @Principal() principal: ForgePrincipal,
+    @Body() body: Record<string, unknown>,
+    @Req() req: RequestWithIds,
+  ) {
+    return ok(await this.domain.startCompanyDriverMvrSample(principal, body ?? {}), getRequestIds(req));
+  }
+
+  @Post("fleet/drivers/:id/mvr-sample/complete")
+  @RequireAnyPermission(
+    [
+      "industrial.personnel.manage",
+      "industrial.fleet.manage",
+      "industrial.admin",
+    ],
+    { requiresEntitlement: ENTITLEMENT },
+  )
+  @Idempotent({ resourceType: "industrial_fleet_mvr_sample_complete" })
+  async completeCompanyDriverMvrSample(
+    @Principal() principal: ForgePrincipal,
+    @Param("id") id: string,
+    @Body() body: Record<string, unknown>,
+    @Req() req: RequestWithIds,
+  ) {
+    return ok(
+      await this.domain.completeCompanyDriverMvrSample(principal, id, body ?? {}),
+      getRequestIds(req),
+    );
+  }
+
   @Get("fleet/dashboard")
   @RequireAnyPermission([...FLEET_VIEW], { requiresEntitlement: ENTITLEMENT })
   async fleetDashboard(@Principal() principal: ForgePrincipal, @Req() req: RequestWithIds) {
@@ -498,6 +538,14 @@ export class IndustrialFlatController {
     @Req() req: RequestWithIds,
   ) {
     return ok(await this.domain.personnelAssignmentOptions(principal), getRequestIds(req));
+  }
+
+  @Get("personnel/ppe-summary")
+  @RequireAnyPermission(["industrial.personnel.view", "industrial.admin", "industrial.access"], {
+    requiresEntitlement: ENTITLEMENT,
+  })
+  async personnelPpeSummary(@Principal() principal: ForgePrincipal, @Req() req: RequestWithIds) {
+    return ok(await this.domain.personnelPpeSummary(principal), getRequestIds(req));
   }
 
   @Get("personnel/seasons")
@@ -834,6 +882,36 @@ export class IndustrialFlatController {
     );
   }
 
+  @Get("loto-records")
+  @RequireAnyPermission(["industrial.loto.view", "industrial.admin", "industrial.access"], {
+    requiresEntitlement: ENTITLEMENT,
+  })
+  async listLotoRecords(
+    @Principal() principal: ForgePrincipal,
+    @Query() query: ListQuery,
+    @Req() req: RequestWithIds,
+  ) {
+    const data = await this.domain.listLotoLockouts(principal, query);
+    return this.listOk(data, req);
+  }
+
+  @Post("loto-records/:id/:action")
+  @RequireAnyPermission(["industrial.loto.manage", "industrial.admin"], {
+    requiresEntitlement: ENTITLEMENT,
+  })
+  async lotoRecordAction(
+    @Principal() principal: ForgePrincipal,
+    @Param("id") id: string,
+    @Param("action") action: string,
+    @Body() body: Record<string, unknown>,
+    @Req() req: RequestWithIds,
+  ) {
+    return ok(
+      await this.domain.transitionLotoLockout(principal, id, action, body ?? {}),
+      getRequestIds(req),
+    );
+  }
+
   @Get("loto/:id/printable")
   @RequireAnyPermission(["industrial.loto.view", "industrial.admin", "industrial.access"], {
     requiresEntitlement: ENTITLEMENT,
@@ -883,6 +961,9 @@ export class IndustrialFlatController {
     @Body() body: Record<string, unknown>,
     @Req() req: RequestWithIds,
   ) {
+    if (action === "issue") {
+      return ok(await this.domain.issueLotoLockout(principal, id, body ?? {}), getRequestIds(req));
+    }
     return ok(
       await this.domain.transitionModule(principal, "loto", id, action, body),
       getRequestIds(req),
@@ -1010,6 +1091,125 @@ export class IndustrialFlatController {
     return ok(await this.domain.getFormSubmission(principal, id), getRequestIds(req));
   }
 
+  @Patch("form-submissions/:id")
+  @RequireAnyPermission([...MODULE_MANAGE.forms], { requiresEntitlement: ENTITLEMENT })
+  async patchFormSubmission(
+    @Principal() principal: ForgePrincipal,
+    @Param("id") id: string,
+    @Body() body: Record<string, unknown>,
+    @Req() req: RequestWithIds,
+  ) {
+    return ok(
+      await this.domain.updateFormSubmission(principal, id, body ?? {}),
+      getRequestIds(req),
+    );
+  }
+
+  @Get("form-submissions/:id/printable")
+  @RequireAnyPermission([...MODULE_VIEW.forms], { requiresEntitlement: ENTITLEMENT })
+  async formSubmissionPrintable(
+    @Principal() principal: ForgePrincipal,
+    @Param("id") id: string,
+    @Req() req: RequestWithIds,
+  ) {
+    return ok(await this.domain.formSubmissionPrintable(principal, id), getRequestIds(req));
+  }
+
+  @Get("inspection-templates")
+  @RequireAnyPermission([...MODULE_VIEW.inspections], { requiresEntitlement: ENTITLEMENT })
+  async listInspectionTemplates(
+    @Principal() principal: ForgePrincipal,
+    @Query() query: ListQuery,
+    @Req() req: RequestWithIds,
+  ) {
+    return ok(await this.domain.listInspectionTemplates(principal, query), getRequestIds(req));
+  }
+
+  @Get("departments")
+  @RequireAnyPermission(
+    ["industrial.personnel.view", "industrial.inspections.view", "industrial.admin", "industrial.access"],
+    { requiresEntitlement: ENTITLEMENT },
+  )
+  async listDepartments(@Principal() principal: ForgePrincipal, @Req() req: RequestWithIds) {
+    return ok(await this.domain.listDepartments(principal), getRequestIds(req));
+  }
+
+  @Post("inspections")
+  @RequireAnyPermission([...MODULE_MANAGE.inspections], { requiresEntitlement: ENTITLEMENT })
+  @Idempotent({ resourceType: "industrial_inspections" })
+  async createInspection(
+    @Principal() principal: ForgePrincipal,
+    @Body() body: Record<string, unknown>,
+    @Req() req: RequestWithIds,
+  ) {
+    return ok(await this.domain.createInspection(principal, body ?? {}), getRequestIds(req));
+  }
+
+  @Patch("inspections/:id")
+  @RequireAnyPermission([...MODULE_MANAGE.inspections], { requiresEntitlement: ENTITLEMENT })
+  async patchInspection(
+    @Principal() principal: ForgePrincipal,
+    @Param("id") id: string,
+    @Body() body: Record<string, unknown>,
+    @Req() req: RequestWithIds,
+  ) {
+    return ok(await this.domain.updateInspection(principal, id, body ?? {}), getRequestIds(req));
+  }
+
+  @Post("inspections/:id/complete")
+  @RequireAnyPermission([...MODULE_MANAGE.inspections], { requiresEntitlement: ENTITLEMENT })
+  @Idempotent({ resourceType: "industrial_inspections_complete" })
+  async completeInspection(
+    @Principal() principal: ForgePrincipal,
+    @Param("id") id: string,
+    @Body() body: Record<string, unknown>,
+    @Req() req: RequestWithIds,
+  ) {
+    return ok(await this.domain.completeInspection(principal, id, body ?? {}), getRequestIds(req));
+  }
+
+  @Post("inspection-attachments")
+  @RequireAnyPermission([...MODULE_MANAGE.inspections], { requiresEntitlement: ENTITLEMENT })
+  @Idempotent({ resourceType: "industrial_attachments" })
+  async createInspectionAttachment(
+    @Principal() principal: ForgePrincipal,
+    @Body() body: Record<string, unknown>,
+    @Req() req: RequestWithIds,
+  ) {
+    return ok(await this.domain.createInspectionAttachment(principal, body ?? {}), getRequestIds(req));
+  }
+
+  @Patch("departments/:id/contact")
+  @RequireAnyPermission(
+    ["industrial.personnel.manage", "industrial.inspections.manage", "industrial.admin"],
+    { requiresEntitlement: ENTITLEMENT },
+  )
+  async patchDepartmentContact(
+    @Principal() principal: ForgePrincipal,
+    @Param("id") id: string,
+    @Body() body: Record<string, unknown>,
+    @Req() req: RequestWithIds,
+  ) {
+    return ok(await this.domain.updateDepartmentContact(principal, id, body ?? {}), getRequestIds(req));
+  }
+
+  @Post("corrective-actions/:id/complete")
+  @RequireAnyPermission([...MODULE_MANAGE["corrective-actions"]], {
+    requiresEntitlement: ENTITLEMENT,
+  })
+  @Idempotent({ resourceType: "industrial_corrective_actions_complete" })
+  async completeCorrectiveAction(
+    @Principal() principal: ForgePrincipal,
+    @Param("id") id: string,
+    @Body() body: Record<string, unknown>,
+    @Req() req: RequestWithIds,
+  ) {
+    return ok(
+      await this.domain.completeCorrectiveAction(principal, id, body ?? {}),
+      getRequestIds(req),
+    );
+  }
+
   // Generic module routes (ops + high-risk + compliance packs)
   @Get(":module")
   @RequireAnyPermission(["industrial.access", "industrial.admin"], {
@@ -1023,6 +1223,9 @@ export class IndustrialFlatController {
   ) {
     if (moduleKey === "incidents") {
       return this.listOk(await this.domain.listIncidentsDetailed(principal, query), req);
+    }
+    if (moduleKey === "loto") {
+      return this.listOk(await this.domain.listLoto(principal, query), req);
     }
     if (!(moduleKey in MODULE_VIEW)) {
       return this.listOk({ items: [], page: 1, pageSize: 25 }, req);
@@ -1043,6 +1246,12 @@ export class IndustrialFlatController {
   ) {
     if (!(moduleKey in MODULE_MANAGE)) {
       return ok({ items: [] }, getRequestIds(req));
+    }
+    if (moduleKey === "loto") {
+      return ok(await this.domain.createLoto(principal, body), getRequestIds(req));
+    }
+    if (moduleKey === "inspections") {
+      return ok(await this.domain.createInspection(principal, body), getRequestIds(req));
     }
     return ok(await this.domain.createModule(principal, moduleKey, body), getRequestIds(req));
   }
