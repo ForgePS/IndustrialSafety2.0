@@ -14,6 +14,8 @@ import { isInd5HighRiskModule } from "@/lib/high-risk-modules";
 import { isInd3OpsModule } from "@/lib/ops-modules";
 import { isInd7CoordinationModule } from "@/lib/coordination-modules";
 import { TasksWorkspace } from "@/components/tasks-workspace";
+import { CalendarWorkspace } from "@/components/calendar-workspace";
+import { RemindersWorkspace } from "@/components/reminders-workspace";
 import { MessagingWorkspace } from "@/components/messaging-workspace";
 import { EmergencyResponseWorkspace } from "@/components/emergency-response-workspace";
 import { QrLinksWorkspace } from "@/components/qr-links-workspace";
@@ -123,7 +125,27 @@ export default async function ModulePage({
   }
 
   if (isInd7CoordinationModule(module)) {
-    if (module === "tasks") return <TasksWorkspace moduleName={name} />;
+    if (module === "tasks") {
+      return (
+        <Suspense fallback={<p className="text-muted mb-0">Loading tasks…</p>}>
+          <TasksWorkspace moduleName={name} />
+        </Suspense>
+      );
+    }
+    if (module === "calendar") {
+      return (
+        <Suspense fallback={<p className="text-muted mb-0">Loading calendar…</p>}>
+          <CalendarWorkspace moduleName={name} />
+        </Suspense>
+      );
+    }
+    if (module === "reminders") {
+      return (
+        <Suspense fallback={<p className="text-muted mb-0">Loading reminders…</p>}>
+          <RemindersWorkspace moduleName={name} />
+        </Suspense>
+      );
+    }
     if (module === "messaging") return <MessagingWorkspace moduleName={name} />;
     return <EmergencyResponseWorkspace moduleName={name} />;
   }

@@ -53,6 +53,8 @@ const FLAG_BY_CODE: Record<string, string> = {
   PROCESS_SAFETY: "industrial.module.process_safety.enabled",
   ENVIRONMENTAL_SAFETY: "industrial.module.environmental_safety.enabled",
   TASKS: "industrial.module.tasks.enabled",
+  CALENDAR: "industrial.module.calendar.enabled",
+  REMINDERS: "industrial.module.reminders.enabled",
   MESSAGING: "industrial.module.messaging.enabled",
   EMERGENCY_RESPONSE: "industrial.module.emergency_response.enabled",
 };

@@ -16,6 +16,7 @@ import { useIndustrialFacility } from "@/hooks/use-industrial-facility";
 import { aggregateInspectionsBySite } from "@/lib/dashboard-insights";
 import { toIncidentRecords, type IncidentRecord } from "@/lib/incidents-module";
 import { buildIndustrialNavigation, moduleAvailabilityCaption } from "@/lib/navigation";
+import { MyWorkspace } from "@/components/workspace/my-workspace";
 import {
   toSafetyIntelligenceReport,
   type SafetyIntelligenceReport,
@@ -30,7 +31,12 @@ type AttentionItem = {
 
 type DashboardPayload = {
   attention: AttentionItem[];
-  quickActions: Array<{ label: string; href: string }>;
+};
+
+type UpcomingPayload = {
+  events: Array<{ id: string; title: string; startsAt: string | null; category?: { color: string } | null }>;
+  tasks: Array<{ id: string; title: string; dueDate: string | null; href: string }>;
+  reminders: Array<{ id: string; title: string | null; remindAt: string | null }>;
 };
 
 type ListResponse = { items?: unknown[] };
@@ -46,6 +52,7 @@ const ATTENTION_META: Record<string, { icon: string; tone: SneatTone }> = {
   lotoReviews: { icon: "bx-lock-alt", tone: "danger" },
   workersComp: { icon: "bx-plus-medical", tone: "danger" },
   tasks: { icon: "bx-task", tone: "secondary" },
+  missingMvrConsent: { icon: "bx-file", tone: "warning" },
 };
 
 function attentionMeta(key: string): { icon: string; tone: SneatTone } {
@@ -65,6 +72,8 @@ function moduleIcon(code: string): string {
   if (c.includes("qr")) return "bx-qr";
   if (c.includes("message")) return "bx-message";
   if (c.includes("task")) return "bx-task";
+  if (c.includes("calendar")) return "bx-calendar";
+  if (c.includes("remind")) return "bx-bell";
   if (c.includes("form")) return "bx-edit";
   if (c.includes("jsa")) return "bx-list-check";
   if (c.includes("observ")) return "bx-show";
@@ -116,6 +125,8 @@ export function IndustrialDashboard() {
       hasPermission("industrial.admin"));
   const showIncidents = available.some((m) => m.code === "INCIDENTS") && canViewIncidents;
   const showTasks = available.some((m) => m.code === "TASKS");
+  const showCalendar = available.some((m) => m.code === "CALENDAR");
+  const showReminders = available.some((m) => m.code === "REMINDERS");
   const showInspections = available.some((m) => m.code === "INSPECTIONS");
   const showAnalytics =
     available.some((m) => m.code === "ANALYTICS" || m.code === "REPORTING") || canAccess;
@@ -125,6 +136,7 @@ export function IndustrialDashboard() {
   const [injuries, setInjuries] = useState<IncidentRecord[]>([]);
   const [analytics, setAnalytics] = useState<SafetyIntelligenceReport | null>(null);
   const [tasks, setTasks] = useState<DashboardTask[]>([]);
+  const [upcoming, setUpcoming] = useState<UpcomingPayload | null>(null);
   const [inspectionSites, setInspectionSites] = useState<
     ReturnType<typeof aggregateInspectionsBySite>
   >([]);
@@ -209,6 +221,24 @@ export function IndustrialDashboard() {
   }, [facilityQuery, showTasks]);
 
   useEffect(() => {
+    if (!canAccess || (!showCalendar && !showReminders && !showTasks)) return;
+    let cancelled = false;
+    void (async () => {
+      try {
+        const data = await apiGet<UpcomingPayload>("/api/v1/industrial/calendar/upcoming", {
+          query: { days: "7" },
+        });
+        if (!cancelled) setUpcoming(data);
+      } catch {
+        if (!cancelled) setUpcoming(null);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [canAccess, showCalendar, showReminders, showTasks]);
+
+  useEffect(() => {
     if (!showInspections) return;
     let cancelled = false;
     void (async () => {
@@ -255,8 +285,7 @@ export function IndustrialDashboard() {
     <div className="ind-content ind-dashboard">
       <div className="d-flex flex-wrap justify-content-between align-items-start gap-3 mb-4">
         <div className="min-w-0 flex-grow-1">
-          <h4 className="mb-1">Industrial dashboard</h4>
-          <p className="text-muted mb-0">What needs your attention — live Model A data.</p>
+          <h4 className="mb-1">Industrial Dashboard</h4>
         </div>
         <div className="ind-dashboard-actions d-flex flex-wrap gap-2">
           {available.some((m) => m.code === "PERSONNEL") ? (
@@ -267,6 +296,11 @@ export function IndustrialDashboard() {
           {available.some((m) => m.code === "INCIDENTS") ? (
             <Link className="btn btn-sm btn-outline-primary" href="/modules/incidents">
               Incidents
+            </Link>
+          ) : null}
+          {showCalendar ? (
+            <Link className="btn btn-sm btn-outline-primary" href="/modules/calendar">
+              Calendar
             </Link>
           ) : null}
           <Link className="btn btn-sm btn-outline-secondary" href="/settings">
@@ -284,7 +318,7 @@ export function IndustrialDashboard() {
       {attention.length > 0 ? (
         <section className="mb-4" aria-labelledby="dash-attention-title">
           <h5 className="mb-3" id="dash-attention-title">
-            Needs attention
+            What Needs Your Attention
           </h5>
           <div className="row row-cols-2 row-cols-sm-3 row-cols-md-4 row-cols-xl-6 g-2">
             {attention.map((item) => {
@@ -315,48 +349,92 @@ export function IndustrialDashboard() {
         <p className="text-muted mb-4">No open attention items right now.</p>
       ) : null}
 
-      <section className="mb-3" aria-labelledby="dash-modules-title">
-        <h5 className="mb-2 visually-hidden" id="dash-modules-title">
-          Module launcher
-        </h5>
-        {available.length === 0 ? (
-          <div className="card border shadow-none">
-            <div className="card-body p-2">
-              <p className="mb-1 small">No modules are enabled for this customer yet.</p>
-              <p className="text-muted small mb-0">
-                A platform administrator can enable Ready modules in Creator Console under the
-                customer&apos;s Products &amp; Modules screen.
-              </p>
-            </div>
-          </div>
-        ) : (
-          <div className="ind-module-launcher" role="navigation" aria-label="Module launcher">
-            {available.map((mod) => (
-              <Link
-                key={mod.code}
-                href={mod.route}
-                className="ind-module-launcher__item"
-                title={`${mod.name} — ${moduleAvailabilityCaption(mod)}`}
-              >
-                <span className="ind-module-launcher__icon" aria-hidden="true">
-                  <i className={`bx ${moduleIcon(mod.code)}`} />
-                </span>
-                <span className="ind-module-launcher__label">{mod.name}</span>
+      {upcoming &&
+      (upcoming.events.length > 0 || upcoming.tasks.length > 0 || upcoming.reminders.length > 0) ? (
+        <section className="mb-4" aria-labelledby="dash-upcoming-title">
+          <div className="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+            <h5 className="mb-0" id="dash-upcoming-title">
+              Upcoming
+            </h5>
+            {showCalendar ? (
+              <Link className="btn btn-sm btn-outline-primary" href="/modules/calendar/">
+                Open calendar
               </Link>
-            ))}
+            ) : null}
           </div>
-        )}
-      </section>
-
-      {dash?.quickActions?.length ? (
-        <div className="mb-4 d-flex flex-wrap gap-2">
-          {dash.quickActions.map((a) => (
-            <Link key={a.href} className="btn btn-sm btn-outline-primary" href={a.href}>
-              {a.label}
-            </Link>
-          ))}
-        </div>
+          <div className="row g-3">
+            {upcoming.events.length > 0 ? (
+              <div className="col-md-4">
+                <div className="card h-100">
+                  <div className="card-header py-2">
+                    <h6 className="mb-0">Events</h6>
+                  </div>
+                  <ul className="list-group list-group-flush">
+                    {upcoming.events.slice(0, 5).map((ev) => (
+                      <li key={ev.id} className="list-group-item small">
+                        <div className="fw-semibold">{ev.title}</div>
+                        <div className="text-muted">
+                          {ev.startsAt ? new Date(ev.startsAt).toLocaleString() : "—"}
+                        </div>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              </div>
+            ) : null}
+            {upcoming.tasks.length > 0 ? (
+              <div className="col-md-4">
+                <div className="card h-100">
+                  <div className="card-header py-2">
+                    <h6 className="mb-0">Tasks due</h6>
+                  </div>
+                  <ul className="list-group list-group-flush">
+                    {upcoming.tasks.slice(0, 5).map((t) => (
+                      <li key={t.id} className="list-group-item small">
+                        <Link href={t.href}>{t.title}</Link>
+                        <div className="text-muted">Due {t.dueDate ?? "—"}</div>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              </div>
+            ) : null}
+            {upcoming.reminders.length > 0 ? (
+              <div className="col-md-4">
+                <div className="card h-100">
+                  <div className="card-header py-2">
+                    <h6 className="mb-0">Reminders</h6>
+                  </div>
+                  <ul className="list-group list-group-flush">
+                    {upcoming.reminders.slice(0, 5).map((r) => (
+                      <li key={r.id} className="list-group-item small">
+                        <Link href="/modules/reminders/">{r.title || "Reminder"}</Link>
+                        <div className="text-muted">
+                          {r.remindAt ? new Date(r.remindAt).toLocaleString() : "—"}
+                        </div>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              </div>
+            ) : null}
+          </div>
+        </section>
       ) : null}
+
+      <section className="mb-4">
+        {me?.tenantId && me?.userId ? (
+          <MyWorkspace
+            modules={available}
+            tenantId={me.tenantId}
+            userId={me.userId}
+            iconForCode={moduleIcon}
+            captionForModule={moduleAvailabilityCaption}
+            permissions={me.permissions ?? []}
+            isPlatformAdmin={Boolean(me.isPlatformAdmin)}
+          />
+        ) : null}
+      </section>
 
       {showInsightCards ? (
         <section className="mb-4" aria-labelledby="dash-insights-title">

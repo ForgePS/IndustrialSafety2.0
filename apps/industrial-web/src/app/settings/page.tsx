@@ -22,6 +22,19 @@ export default function IndustrialSettingsPage() {
         <div className="col-12 col-sm-6 col-md-4">
           <div className="card h-100">
             <div className="card-body">
+              <h2 className="h6">Workspace defaults</h2>
+              <p className="small text-muted">
+                Initial My Workspace layout, required modules, and role presets.
+              </p>
+              <Link href="/settings/workspace/" className="btn btn-sm btn-outline-primary">
+                Manage workspace
+              </Link>
+            </div>
+          </div>
+        </div>
+        <div className="col-12 col-sm-6 col-md-4">
+          <div className="card h-100">
+            <div className="card-body">
               <h2 className="h6">My profile</h2>
               <p className="small text-muted">Name, contact, and account preferences.</p>
               <Link href="/profile/" className="btn btn-sm btn-primary">

@@ -1,0 +1,188 @@
+/* My Workspace — variable-size module grid + live widgets */
+
+.forge-ws-grid {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 0.75rem;
+  align-items: stretch;
+}
+
+.forge-ws-cell {
+  min-width: 0;
+}
+
+.forge-ws-span-1 {
+  grid-column: span 1;
+}
+.forge-ws-span-2 {
+  grid-column: span 2;
+}
+.forge-ws-span-3 {
+  grid-column: span 3;
+}
+.forge-ws-span-6 {
+  grid-column: span 6;
+}
+
+.forge-ws-card {
+  min-width: 0;
+}
+
+.forge-ws-card-actions .btn-icon {
+  width: 1.75rem;
+  height: 1.75rem;
+  padding: 0;
+}
+
+.forge-ws-drag {
+  cursor: grab;
+  line-height: 1;
+}
+
+.forge-ws-card[draggable="true"] {
+  cursor: grab;
+}
+
+.forge-ws-card[draggable="true"]:active {
+  cursor: grabbing;
+  opacity: 0.92;
+}
+
+.forge-ws-widget-body {
+  min-height: 0;
+}
+
+/* Calendar live widget */
+.forge-ws-cal-scroll {
+  max-height: 22rem;
+}
+
+.forge-ws-card--large .forge-ws-cal-scroll,
+.forge-ws-card--full .forge-ws-cal-scroll {
+  max-height: 28rem;
+}
+
+.forge-ws-cal-event:hover .text-heading {
+  text-decoration: underline;
+}
+
+.forge-ws-cal-month {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 0.15rem;
+}
+
+.forge-ws-cal-month-head {
+  font-size: 0.7rem;
+  padding: 0.15rem 0;
+}
+
+.forge-ws-cal-month-cell {
+  position: relative;
+  min-height: 1.75rem;
+  padding: 0.15rem;
+  line-height: 1.2;
+  font-size: 0.75rem;
+}
+
+.forge-ws-cal-dot {
+  display: block;
+  width: 0.28rem;
+  height: 0.28rem;
+  margin: 0.1rem auto 0;
+  border-radius: 50%;
+  background: currentColor;
+  opacity: 0.7;
+}
+
+.forge-ws-cal-week {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(5.5rem, 1fr));
+  gap: 0.5rem;
+}
+
+/* Tasks live widget */
+.forge-ws-tasks-scroll {
+  max-height: 22rem;
+}
+
+.forge-ws-card--large .forge-ws-tasks-scroll,
+.forge-ws-card--full .forge-ws-tasks-scroll {
+  max-height: 28rem;
+}
+
+.forge-ws-task-row .form-check-input {
+  cursor: pointer;
+}
+
+/* Reminders live widget */
+.forge-ws-reminders-scroll {
+  max-height: 22rem;
+}
+
+.forge-ws-card--large .forge-ws-reminders-scroll,
+.forge-ws-card--full .forge-ws-reminders-scroll {
+  max-height: 28rem;
+}
+
+.forge-ws-reminder-row:last-child {
+  border-bottom: 0 !important;
+}
+
+/* Shared summary widgets (Phase 6) */
+.forge-ws-summary-scroll {
+  max-height: 22rem;
+}
+
+.forge-ws-card--large .forge-ws-summary-scroll,
+.forge-ws-card--full .forge-ws-summary-scroll {
+  max-height: 28rem;
+}
+
+.forge-ws-summary-row:last-child {
+  border-bottom: 0 !important;
+}
+
+.forge-ws-summary-row:hover .text-heading {
+  text-decoration: underline;
+}
+
+@media (max-width: 1199.98px) {
+  .forge-ws-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+
+  .forge-ws-span-3,
+  .forge-ws-span-6 {
+    grid-column: span 4;
+  }
+
+  .forge-ws-span-2 {
+    grid-column: span 2;
+  }
+}
+
+@media (max-width: 767.98px) {
+  .forge-ws-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .forge-ws-span-2,
+  .forge-ws-span-3,
+  .forge-ws-span-6 {
+    grid-column: span 2;
+  }
+}
+
+@media (max-width: 575.98px) {
+  .forge-ws-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .forge-ws-span-1,
+  .forge-ws-span-2,
+  .forge-ws-span-3,
+  .forge-ws-span-6 {
+    grid-column: auto;
+  }
+}
