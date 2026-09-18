@@ -84,8 +84,8 @@ export class AuthSessionService {
     homeTenantId: string;
     refreshToken: string;
     accessToken: string;
-    expiresIn?: number;
-    rotatedFromSessionId?: string | null;
+    expiresIn?: number | undefined;
+    rotatedFromSessionId?: string | null | undefined;
   }): Promise<AuthSessionTokens> {
     const rawSessionToken = randomBytes(32).toString("base64url");
     const csrfToken = randomBytes(32).toString("base64url");
@@ -321,14 +321,16 @@ export class AuthSessionService {
 
   private async mapCognitoAuthResult(
     result: {
-      ChallengeName?: string;
-      Session?: string;
-      ChallengeParameters?: Record<string, string>;
-      AuthenticationResult?: {
-        AccessToken?: string;
-        RefreshToken?: string;
-        ExpiresIn?: number;
-      };
+      ChallengeName?: string | undefined;
+      Session?: string | undefined;
+      ChallengeParameters?: Record<string, string> | undefined;
+      AuthenticationResult?:
+        | {
+            AccessToken?: string | undefined;
+            RefreshToken?: string | undefined;
+            ExpiresIn?: number | undefined;
+          }
+        | undefined;
     },
     username: string,
   ): Promise<PasswordChallengeResult> {
