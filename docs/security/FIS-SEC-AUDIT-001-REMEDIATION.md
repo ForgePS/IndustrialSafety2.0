@@ -120,7 +120,11 @@ Built by `buildSpaContentSecurityPolicy`:
 | Tenant switch | `clearCachedAuthMe` before bind (`tenant-switch.ts`) |
 | Server session | `POST /api/v1/auth/session/logout` revokes row + clears cookie |
 | Cognito | existing `logoutAll` / `globalSignOut` path retained |
-| IndexedDB / Cache Storage / SW | Forge-owned wipe remains presentation/RG-09 follow-up where not already covered by app logout hooks |
+| IndexedDB / Cache Storage / SW | Field: `purgeFieldForgeBrowserState` deletes `forge-field-offline`, `forge-field-shell*` caches, unregisters `/sw.js` on logout; Industrial has no IDB/SW |
+| Tenant switch | `AuthProvider.chooseTenant` → `runForgeBrowserCleanup("tenant-switch")` before select-tenant |
+| Logout (all paths) | `AuthProvider.logout` → `runForgeBrowserCleanup("logout")` then session clear (covers legal gate `logout()`) |
+| Theme / nav prefs | Intentionally retained (not tenant operational data) |
+| IndexedDB / Cache Storage / SW (prior gap) | Addressed for Field; Industrial remains LS-only by design |
 
 ## Changed files by finding
 
@@ -159,7 +163,8 @@ Built by `buildSpaContentSecurityPolicy`:
 
 ### verify-forge-industrial-security.sh
 
-**BLOCKED / not found** under `C:\Users\jerem\Downloads` at discovery (`*verify*forge*`, `*INDUSTRIAL*SEC*`). No package script located in-repo. Treat as external remediation-package gap; behavioral tests above substitute pending script delivery.
+In-repo substitute: `node scripts/verify-forge-industrial-security.mjs`  
+Latest run: **10 PASS, 0 FAIL, 1 REVIEW** (live Producers matrix). External `.sh` package still not found under Downloads.
 
 ## Release gates RG-01 … RG-10
 
@@ -173,7 +178,7 @@ Built by `buildSpaContentSecurityPolicy`:
 | RG-06 Object-level authorization | **PARTIAL** | Cross-tenant NOT_FOUND fixture; broader IDOR suite still open |
 | RG-07 Production secret exposure | **REVIEW** | No secret rotation/deploy in this task; dependency audit not re-run as clearance |
 | RG-08 Deployment security (CSP) | **PASS (code)** | CSP unit tests: no script `unsafe-inline`; connect-src not bare `https:` |
-| RG-09 Logout/offline data | **PARTIAL** | clearAuthStorage + tenant cache + session logout tested; full browser IndexedDB/SW matrix not automated |
+| RG-09 Logout/offline data | **PASS (code)** | Cleanup registry + industrial/field purge; web-kit + app unit tests; verify script PASS. Full browser Playwright matrix still optional follow-up |
 | RG-10 Presentation containment | **PARTIAL** | demo-tenant + SMS_DRY_RUN unit hooks; full presentation profile walkthrough not run |
 
 ## Remaining limitations
@@ -184,7 +189,7 @@ Built by `buildSpaContentSecurityPolicy`:
 4. `FORGE_AUTH_SESSION_ENCRYPTION_KEY` must be set outside local/testing.
 5. CloudFront `/api` proxy + legacy alias association require Frontend stack deploy (**NOT EXECUTED**).
 6. `style-src 'unsafe-inline'` retained intentionally.
-7. Full offline IndexedDB/Cache Storage inventory for RG-09 remains incomplete.
+7. Full offline IndexedDB/Cache Storage inventory for RG-09 remains incomplete for non-Field apps only; Field wipe is implemented. Optional Playwright RG-09 browser matrix still open.
 
 ## Development rollback
 

@@ -28,6 +28,19 @@ export {
 export { tryRefreshSession, type TryRefreshSessionOptions } from "./session-refresh.js";
 
 export {
+  registerForgeBrowserCleanup,
+  runForgeBrowserCleanup,
+  resetForgeBrowserCleanupHandlersForTests,
+  removeStorageKeysByPrefix,
+  deleteIndexedDatabases,
+  deleteCacheNamesByPrefix,
+  unregisterServiceWorkersByScriptMatch,
+  type ForgeBrowserCleanupHandler,
+  type ForgeBrowserCleanupReason,
+  type StorageLike,
+} from "./forge-browser-cleanup.js";
+
+export {
   getDevPrincipal,
   setDevPrincipal,
   clearDevPrincipal,

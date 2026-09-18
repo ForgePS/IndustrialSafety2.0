@@ -44,6 +44,7 @@ import {
 import { tryRefreshSession } from "./session-refresh.js";
 import { switchActiveTenant } from "./tenant-switch.js";
 import { syncTenantIdInUrl } from "./tenant-scoped.js";
+import { runForgeBrowserCleanup } from "./forge-browser-cleanup.js";
 import {
   applyRolePreviewToMe,
   clearRolePreview,
@@ -625,6 +626,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const logout = useCallback(async () => {
     setError(null);
     try {
+      await runForgeBrowserCleanup("logout");
       await logoutAll();
     } catch {
       // Clear local session even when API logout fails.
@@ -643,6 +645,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const chooseTenant = useCallback(async (tenantId: string) => {
     setError(null);
     try {
+      await runForgeBrowserCleanup("tenant-switch");
       clearRolePreview();
       setRolePreview(null);
       const updated = await switchActiveTenant({
