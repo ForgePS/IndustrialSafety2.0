@@ -14,8 +14,8 @@
 | Branch at start | `industrial/training-employee-portal` (user task branch; dirty worktree preserved) |
 | Remediation branch | `security/industrial-fis-sec-audit-001` |
 | Baseline commit SHA | `54a4742b3736f9bccdb052ba308811b5547301d8` |
-| Final commit SHA | _(documentation commit tip on this branch)_ |
-| Remediation commits | `1033169` discovery → `9ece0a2` FIS-H01 → `581fd50` authz matrix → `9194748` CSP/branding/legacy → docs tip |
+| Final commit SHA | `23fdd94a226602280f9220273e84ce4deb12f65d` |
+| Remediation commits | `1033169` discovery → `9ece0a2` FIS-H01 → `581fd50` authz matrix → `9194748` CSP/branding/legacy → `23fdd94` evidence |
 | Package manager | `pnpm@10.12.1` |
 | Workspaces | `apps/*`, `packages/*`, `infrastructure/*`, `tools/data-migration/*` |
 | Node | `>=20` |
