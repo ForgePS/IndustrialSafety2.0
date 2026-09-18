@@ -54,10 +54,12 @@ function createService(overrides?: {
   userStatus?: string;
   sessionsRevokedAt?: Date | null;
   tenantStatus?: string;
+  appEnv?: string;
 }) {
   const userStatus = overrides?.userStatus ?? "ACTIVE";
   const sessionsRevokedAt = overrides?.sessionsRevokedAt ?? null;
   const tenantStatus = overrides?.tenantStatus ?? "ACTIVE";
+  const appEnv = overrides?.appEnv ?? "production";
 
   txMock = {
     select: vi.fn(() => ({
@@ -124,7 +126,7 @@ function createService(overrides?: {
   };
 
   const env = {
-    APP_ENV: "production",
+    APP_ENV: appEnv,
     AWS_REGION: "us-east-1",
     COGNITO_USER_POOL_ID: "us-east-1_example",
     COGNITO_CLIENT_ID: "client-a",
@@ -171,6 +173,44 @@ describe("AuthContextService session security", () => {
     await expect(service.resolvePrincipal(request({}))).rejects.toMatchObject({
       code: "UNAUTHORIZED",
     });
+  });
+
+  it("rejects missing bearer in hosted development without FORGE_ALLOW_DEV_PRINCIPAL", async () => {
+    const prev = process.env.FORGE_ALLOW_DEV_PRINCIPAL;
+    delete process.env.FORGE_ALLOW_DEV_PRINCIPAL;
+    try {
+      const service = createService({ appEnv: "development" });
+      // Forged / present x-forge-dev-principal must not authenticate on hosted development.
+      await expect(
+        service.resolvePrincipal(
+          request({
+            "x-forge-dev-principal": JSON.stringify({ userId: USER_ID, tenantId: TENANT_ID }),
+          }),
+        ),
+      ).rejects.toMatchObject({
+        code: "UNAUTHORIZED",
+        message: "Authorization Bearer token required",
+      });
+      // Missing bearer with no headers fail-closes the same way (RG-03 / RG-04).
+      await expect(service.resolvePrincipal(request({}))).rejects.toMatchObject({
+        code: "UNAUTHORIZED",
+        message: "Authorization Bearer token required",
+      });
+    } finally {
+      if (prev === undefined) delete process.env.FORGE_ALLOW_DEV_PRINCIPAL;
+      else process.env.FORGE_ALLOW_DEV_PRINCIPAL = prev;
+    }
+  });
+
+  it("accepts x-forge-dev-principal in local APP_ENV", async () => {
+    const service = createService({ appEnv: "local" });
+    const principal = await service.resolvePrincipal(
+      request({
+        "x-forge-dev-principal": JSON.stringify({ userId: USER_ID, tenantId: TENANT_ID }),
+      }),
+    );
+    expect(principal.userId).toBe(USER_ID);
+    expect(principal.tenantId).toBe(TENANT_ID);
   });
 
   it("rejects invalid or expired access tokens", async () => {

@@ -1,4 +1,5 @@
 import type { AuthMe } from "./auth-api.js";
+import { clearCachedAuthMe } from "./auth-storage.js";
 
 /**
  * Server-verified tenant switch with local persistence rollback on failure.
@@ -17,6 +18,8 @@ export async function switchActiveTenant(input: {
   productCode?: string;
   reason?: string;
 }): Promise<AuthMe> {
+  // Drop prior-tenant /auth/me cache before binding the new tenant id.
+  clearCachedAuthMe();
   input.setActiveTenantId(input.tenantId);
   try {
     return await input.selectTenant(input.tenantId, {

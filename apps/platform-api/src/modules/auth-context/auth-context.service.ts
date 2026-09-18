@@ -45,6 +45,25 @@ import { CognitoAdminService } from "../cognito/cognito-admin.service.js";
 
 const PLATFORM_SUPER_ADMIN = "PLATFORM_SUPER_ADMIN";
 
+/** Consider a user online when they have API activity within this window. */
+export const PRESENCE_ONLINE_MS = 3 * 60 * 1000;
+/** Do not write last_activity_at more often than this. */
+const PRESENCE_TOUCH_THROTTLE_MS = 60 * 1000;
+
+/** True when last API activity falls within the online window. */
+export function isOnlineFromActivity(
+  lastActivityAt: Date | string | null | undefined,
+  nowMs = Date.now(),
+): boolean {
+  if (!lastActivityAt) return false;
+  const t =
+    lastActivityAt instanceof Date
+      ? lastActivityAt.getTime()
+      : new Date(lastActivityAt).getTime();
+  if (Number.isNaN(t)) return false;
+  return nowMs - t < PRESENCE_ONLINE_MS;
+}
+
 export type AuthAccessMode = "MEMBER" | "PLATFORM_ADMIN_SUPPORT";
 
 @Injectable()
@@ -98,11 +117,7 @@ export class AuthContextService {
       userId = identity.userId;
       tenantHint = identity.tenantId;
       tokenIssuedAtMs = typeof claims.iat === "number" ? claims.iat * 1000 : null;
-    } else if (
-      this.env.APP_ENV === "local" ||
-      this.env.APP_ENV === "development" ||
-      this.env.APP_ENV === "testing"
-    ) {
+    } else if (this.allowsDevPrincipalHeader()) {
       const raw =
         req.header("x-forge-dev-principal") ??
         req.header("x-forge-dev-user") ??
@@ -144,6 +159,13 @@ export class AuthContextService {
       throw new ForgeError("UNAUTHORIZED", "Session has been revoked");
     }
 
+    // Fire-and-forget presence + login touch — never block auth on these writes.
+    void this.touchPresence(user.tenantId, user.id, {
+      previousActivityAt: user.lastActivityAt ?? null,
+      previousLoginAt: user.lastLoginAt ?? null,
+      tokenIssuedAtMs,
+    });
+
     const routeTenantId =
       (req.params?.tenantId as string | undefined) ??
       req.header("x-tenant-id")?.trim() ??
@@ -155,7 +177,9 @@ export class AuthContextService {
 
     const access = await this.resolveTenantAccess(userId!, routeTenantId);
 
-    const homeTenantId = access?.tenantId ?? user.tenantId;
+    // Always evaluate platform-admin authority from the user's home tenant.
+    // Membership in a customer tenant must not replace home PLATFORM_SUPER_ADMIN.
+    const homeTenantId = user.tenantId;
     const permissionBundle = await this.loadPermissions(homeTenantId, userId!);
     const isSuper =
       permissionBundle.roleCodes.has(PLATFORM_SUPER_ADMIN) ||
@@ -402,6 +426,7 @@ export class AuthContextService {
           .set({
             sessionsRevokedAt: now,
             sessionVersion: current.sessionVersion + 1,
+            lastActivityAt: null,
             updatedAt: now,
           })
           .where(eq(users.id, principal.userId))
@@ -666,6 +691,76 @@ export class AuthContextService {
 
       return { products, modules };
     });
+  }
+
+  /**
+   * Throttled presence write so messaging can show who is currently in the Platform.
+   * Also records lastLoginAt when a new Cognito access token is seen (or first activity).
+   * Failures are ignored — auth must not depend on presence.
+   */
+  private async touchPresence(
+    homeTenantId: string,
+    userId: string,
+    opts: {
+      previousActivityAt: Date | null;
+      previousLoginAt: Date | null;
+      tokenIssuedAtMs: number | null;
+    },
+  ): Promise<void> {
+    const now = Date.now();
+    const activityStale =
+      !opts.previousActivityAt ||
+      now - opts.previousActivityAt.getTime() >= PRESENCE_TOUCH_THROTTLE_MS;
+    const loginNeedsUpdate =
+      opts.tokenIssuedAtMs != null
+        ? !opts.previousLoginAt || opts.previousLoginAt.getTime() < opts.tokenIssuedAtMs
+        : !opts.previousLoginAt && activityStale;
+    if (!activityStale && !loginNeedsUpdate) {
+      return;
+    }
+    try {
+      await withTenantTransaction(
+        this.db,
+        homeTenantId,
+        async (tx) => {
+          const patch: {
+            lastActivityAt?: Date;
+            lastLoginAt?: Date;
+            updatedAt: Date;
+          } = { updatedAt: new Date(now) };
+          if (activityStale) {
+            patch.lastActivityAt = new Date(now);
+          }
+          if (loginNeedsUpdate) {
+            patch.lastLoginAt = new Date(
+              opts.tokenIssuedAtMs != null ? opts.tokenIssuedAtMs : now,
+            );
+          }
+          await tx.update(users).set(patch).where(eq(users.id, userId));
+        },
+        userId,
+      );
+    } catch {
+      // Presence is best-effort.
+    }
+  }
+
+  /**
+   * Dev principal headers are for local CI and explicit break-glass only.
+   * Hosted `APP_ENV=development` (e.g. api-dev) must NOT accept them unless
+   * `FORGE_ALLOW_DEV_PRINCIPAL=true` is set deliberately.
+   */
+  private allowsDevPrincipalHeader(): boolean {
+    if (this.env.APP_ENV === "local" || this.env.APP_ENV === "testing") {
+      return true;
+    }
+    if (
+      (this.env.APP_ENV === "development" || this.env.APP_ENV === "govcloud-development") &&
+      process.env.FORGE_ALLOW_DEV_PRINCIPAL === "true"
+    ) {
+      return true;
+    }
+    return false;
   }
 
   /**
