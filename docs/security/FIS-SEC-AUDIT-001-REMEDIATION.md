@@ -157,14 +157,15 @@ Built by `buildSpaContentSecurityPolicy`:
 
 | Command | Result |
 |---------|--------|
-| `pnpm --filter @forge/web-kit test` | **50/50 passed** |
-| platform-api auth-session + security + matrix + branding + demo | **51/51 passed** |
+| `pnpm --filter @forge/web-kit test` | **58/58 passed** |
+| platform-api auth-session + security + matrix + branding + demo + presentation | **see vitest slices** |
 | `vitest run test/forge-static-hosting-csp.test.ts` | **3/3 passed** |
+| `node scripts/verify-forge-industrial-security.mjs` | **12 PASS / 0 FAIL / 1 REVIEW** |
 
 ### verify-forge-industrial-security.sh
 
 In-repo substitute: `node scripts/verify-forge-industrial-security.mjs`  
-Latest run: **10 PASS, 0 FAIL, 1 REVIEW** (live Producers matrix). External `.sh` package still not found under Downloads.
+Latest run: **12 PASS, 0 FAIL, 1 REVIEW** (live Producers matrix). External `.sh` package still not found under Downloads.
 
 ## Release gates RG-01 … RG-10
 
@@ -178,8 +179,8 @@ Latest run: **10 PASS, 0 FAIL, 1 REVIEW** (live Producers matrix). External `.sh
 | RG-06 Object-level authorization | **PARTIAL** | Cross-tenant NOT_FOUND fixture; broader IDOR suite still open |
 | RG-07 Production secret exposure | **REVIEW** | No secret rotation/deploy in this task; dependency audit not re-run as clearance |
 | RG-08 Deployment security (CSP) | **PASS (code)** | CSP unit tests: no script `unsafe-inline`; connect-src not bare `https:` |
-| RG-09 Logout/offline data | **PASS (code)** | Cleanup registry + industrial/field purge; web-kit + app unit tests; verify script PASS. Full browser Playwright matrix still optional follow-up |
-| RG-10 Presentation containment | **PARTIAL** | demo-tenant + SMS_DRY_RUN unit hooks; full presentation profile walkthrough not run |
+| RG-09 Logout/offline data | **PASS (code)** | Cleanup registry + industrial/field purge + `rg09-browser-cleanup.matrix.test.ts` (logout/tenant-switch/XSS scan); verify script PASS |
+| RG-10 Presentation containment | **PASS (code)** | `presentation-containment.test.ts` (demo safety flags, Reset Demo gate, SMS dry-run, walkthrough perms, MP4 tenant scope); live presentation walkthrough still optional |
 
 ## Remaining limitations
 

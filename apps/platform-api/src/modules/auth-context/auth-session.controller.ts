@@ -18,6 +18,10 @@ import {
   sessionCookieName,
 } from "./auth-session-cookie.js";
 import { AuthSessionService, type AuthSessionTokens } from "./auth-session.service.js";
+import {
+  assertNoRefreshCredentialLeak,
+  toPublicAuthSessionPayload,
+} from "./auth-session.public-payload.js";
 
 const oauthCallbackSchema = z.object({
   code: z.string().min(1).max(2048),
@@ -254,11 +258,9 @@ export class AuthSessionController {
 }
 
 function publicTokenPayload(tokens: AuthSessionTokens) {
-  return {
-    accessToken: tokens.accessToken,
-    expiresIn: tokens.expiresIn,
-    csrfToken: tokens.csrfToken,
-  };
+  const payload = toPublicAuthSessionPayload(tokens);
+  assertNoRefreshCredentialLeak(payload);
+  return payload;
 }
 
 function headerString(value: string | string[] | undefined): string | undefined {

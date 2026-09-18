@@ -103,6 +103,22 @@ check(
   "Forge browser cleanup registry + industrial/field purge modules present",
 );
 
+const rg09Matrix = read("packages/web-kit/src/rg09-browser-cleanup.matrix.test.ts");
+check(
+  "RG-09-browser-matrix",
+  Boolean(rg09Matrix?.includes("XSS scan") && rg09Matrix.includes("tenant-switch")),
+  "RG-09 browser cleanup matrix test present",
+);
+
+const presentation = read(
+  "apps/platform-api/src/modules/industrial/presentation-containment.test.ts",
+);
+check(
+  "RG-10-presentation-containment",
+  Boolean(presentation?.includes("DEMO_TENANT_BLOCKED") && presentation.includes("Reset Demo")),
+  "Presentation containment contract tests present",
+);
+
 const remDoc = read("docs/security/FIS-SEC-AUDIT-001-REMEDIATION.md");
 check(
   "evidence-doc",

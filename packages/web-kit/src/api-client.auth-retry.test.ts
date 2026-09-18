@@ -68,4 +68,24 @@ describe("api client 401 refresh retry", () => {
     await expect(apiGet("/api/v1/auth/me")).rejects.toBeInstanceOf(ApiError);
     expect(onUnauthorized).toHaveBeenCalledTimes(1);
   });
+
+  it("allows empty baseUrl for same-origin /api proxy", async () => {
+    configureApiClient({
+      baseUrl: "",
+      onUnauthorized,
+      tryRefreshSession,
+    });
+    setBearerToken(jwtWithExp(3600));
+    fetchMock.mockResolvedValueOnce(
+      new Response(
+        JSON.stringify({
+          data: { ok: true },
+          meta: { requestId: "r", correlationId: "c" },
+        }),
+        { status: 200 },
+      ),
+    );
+    await apiGet("/api/v1/auth/me");
+    expect(String(fetchMock.mock.calls[0]?.[0])).toBe("/api/v1/auth/me");
+  });
 });

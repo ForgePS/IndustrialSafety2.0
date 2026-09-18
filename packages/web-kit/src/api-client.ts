@@ -48,13 +48,13 @@ export function getApiClientConfig(): ApiClientConfig {
 }
 
 export function getApiBaseUrl(): string {
-  const base = clientConfig.baseUrl?.trim();
-  if (!base) {
+  // Empty string is valid: same-origin relative `/api/...` (CloudFront / Next proxy).
+  if (clientConfig.baseUrl === undefined) {
     throw new Error(
       "API client baseUrl is not configured. Call configureApiClient({ baseUrl }) before requests.",
     );
   }
-  return base;
+  return clientConfig.baseUrl.trim().replace(/\/$/, "");
 }
 
 export class ApiError extends Error {
