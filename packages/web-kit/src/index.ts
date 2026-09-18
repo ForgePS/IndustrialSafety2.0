@@ -20,7 +20,12 @@ export {
 export {
   assertAccessTokenShape,
   InvalidAccessTokenError,
+  isAccessTokenExpiredOrNearExpiry,
+  getAccessTokenExpiresAtMs,
+  msUntilAccessTokenNearExpiry,
 } from "./access-token.js";
+
+export { tryRefreshSession, type TryRefreshSessionOptions } from "./session-refresh.js";
 
 export {
   getDevPrincipal,
@@ -32,9 +37,16 @@ export {
   getRefreshToken,
   setRefreshToken,
   clearRefreshToken,
+  getCsrfToken,
+  setCsrfToken,
+  clearCsrfToken,
+  purgeLegacyAuthKeys,
   getActiveTenantId,
   setActiveTenantId,
   clearActiveTenantId,
+  getCachedAuthMe,
+  setCachedAuthMe,
+  clearCachedAuthMe,
   clearAuthStorage,
   parseDevPrincipal,
   type DevPrincipal,
@@ -66,6 +78,7 @@ export {
   generateCodeChallenge,
   generateCodeVerifier,
   getCognitoOAuthConfig,
+  isCognitoOAuthConfigured,
   redirectToCognitoLogin,
   refreshAccessToken,
   requestCognitoPasswordReset,
@@ -73,12 +86,22 @@ export {
   validateOAuthState,
   type CognitoOAuthConfig,
   type CognitoTokenResponse,
+  type SessionAuthResponse,
 } from "./cognito-oauth.js";
+
+export {
+  authenticateWithPassword,
+  completeNewPasswordChallenge,
+  completeMfaChallenge,
+  CognitoPasswordChallengeError,
+  type CognitoPasswordChallenge,
+} from "./cognito-password-auth.js";
 
 export {
   AuthProvider,
   AUTH_BOOTSTRAP_TIMEOUT_MS,
   resolveSession,
+  establishSession,
   useAuth,
   usePermission,
   useAnyPermission,
@@ -87,6 +110,16 @@ export {
   useModuleEnabled,
   type AuthContextValue,
 } from "./auth-provider.js";
+
+export {
+  ROLE_PREVIEW_STORAGE_KEY,
+  applyRolePreviewToMe,
+  clearRolePreview,
+  permissionCodesFromRolePermissions,
+  readRolePreview,
+  writeRolePreview,
+  type RolePreviewState,
+} from "./role-preview.js";
 
 export {
   sessionProductEnabled,

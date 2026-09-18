@@ -1,11 +1,16 @@
+import { getApiBaseUrl } from "./api-client.js";
 import {
-  getRefreshToken,
+  getCsrfToken,
   setBearerToken,
-  setRefreshToken,
+  setCsrfToken,
 } from "./auth-storage.js";
+
+export { getCsrfToken, setCsrfToken, clearCsrfToken } from "./auth-storage.js";
 
 const PKCE_VERIFIER_KEY = "forge-oauth-pkce-verifier";
 const OAUTH_STATE_KEY = "forge-oauth-state";
+
+const FORGE_CSRF_HEADER = "x-forge-csrf";
 
 export type CognitoOAuthConfig = {
   domain: string;
@@ -20,6 +25,12 @@ export type CognitoTokenResponse = {
   id_token?: string;
   token_type?: string;
   expires_in?: number;
+};
+
+export type SessionAuthResponse = {
+  accessToken: string;
+  expiresIn: number;
+  csrfToken: string;
 };
 
 export class CognitoOAuthError extends Error {
@@ -59,6 +70,12 @@ function readPublicEnv(): {
   };
 }
 
+/** True when Cognito public env is present (app URL can come from window.origin). */
+export function isCognitoOAuthConfigured(): boolean {
+  const { domain, clientId, userPoolId } = readPublicEnv();
+  return Boolean(domain && clientId && userPoolId);
+}
+
 export function getCognitoOAuthConfig(): CognitoOAuthConfig {
   const { domain, clientId, userPoolId, appUrl } = readPublicEnv();
 
@@ -96,16 +113,59 @@ export async function generateCodeChallenge(verifier: string): Promise<string> {
   return base64UrlEncode(new Uint8Array(digest));
 }
 
-function tokenEndpoint(domain: string): string {
-  return `https://${domain}/oauth2/token`;
-}
-
 function authorizeEndpoint(domain: string): string {
   return `https://${domain}/oauth2/authorize`;
 }
 
 function logoutEndpoint(domain: string): string {
   return `https://${domain}/logout`;
+}
+
+function sessionApiUrl(path: string): string {
+  try {
+    return `${getApiBaseUrl()}${path}`;
+  } catch {
+    return path;
+  }
+}
+
+function storeSessionAuth(payload: SessionAuthResponse): CognitoTokenResponse {
+  setBearerToken(payload.accessToken);
+  setCsrfToken(payload.csrfToken);
+  return {
+    access_token: payload.accessToken,
+    expires_in: payload.expiresIn,
+  };
+}
+
+async function parseSessionAuthResponse(res: Response): Promise<SessionAuthResponse> {
+  let body: {
+    data?: Partial<SessionAuthResponse> & { refreshToken?: string; refresh_token?: string };
+    error?: { message?: string };
+  };
+  try {
+    body = (await res.json()) as typeof body;
+  } catch {
+    throw new CognitoOAuthError(`Session request failed (${res.status})`);
+  }
+
+  if (
+    body.data &&
+    ("refreshToken" in body.data || "refresh_token" in body.data)
+  ) {
+    throw new CognitoOAuthError("Session response must not include a refresh token");
+  }
+
+  if (!res.ok || !body.data?.accessToken || !body.data.csrfToken) {
+    const detail = body.error?.message ?? `HTTP ${res.status}`;
+    throw new CognitoOAuthError(`Session request failed: ${detail}`);
+  }
+
+  return {
+    accessToken: body.data.accessToken,
+    expiresIn: typeof body.data.expiresIn === "number" ? body.data.expiresIn : 3600,
+    csrfToken: body.data.csrfToken,
+  };
 }
 
 export async function buildAuthorizeUrl(): Promise<string> {
@@ -138,6 +198,10 @@ export function validateOAuthState(state: string | null): boolean {
   return Boolean(state && expected && state === expected);
 }
 
+/**
+ * Exchange an authorization code via the platform-api session BFF.
+ * Access + CSRF stay in memory; refresh stays HttpOnly server-side.
+ */
 export async function exchangeCodeForTokens(code: string): Promise<CognitoTokenResponse> {
   requireBrowser();
   const config = getCognitoOAuthConfig();
@@ -146,89 +210,57 @@ export async function exchangeCodeForTokens(code: string): Promise<CognitoTokenR
     throw new CognitoOAuthError("Missing PKCE code verifier — restart sign-in");
   }
 
-  const body = new URLSearchParams({
-    grant_type: "authorization_code",
-    client_id: config.clientId,
-    code,
-    redirect_uri: callbackRedirectUri(config.appUrl),
-    code_verifier: verifier,
-  });
-
-  const res = await fetch(tokenEndpoint(config.domain), {
+  const res = await fetch(sessionApiUrl("/api/v1/auth/session/oauth/callback"), {
     method: "POST",
-    headers: { "Content-Type": "application/x-www-form-urlencoded" },
-    body,
+    credentials: "include",
+    headers: {
+      Accept: "application/json",
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      code,
+      codeVerifier: verifier,
+      redirectUri: callbackRedirectUri(config.appUrl),
+    }),
   });
 
   sessionStorage.removeItem(PKCE_VERIFIER_KEY);
 
-  let payload: CognitoTokenResponse & { error?: string; error_description?: string };
-  try {
-    payload = (await res.json()) as CognitoTokenResponse & {
-      error?: string;
-      error_description?: string;
-    };
-  } catch {
-    throw new CognitoOAuthError(`Token exchange failed (${res.status})`);
-  }
-
-  if (!res.ok || !payload.access_token) {
-    const detail = payload.error_description ?? payload.error ?? `HTTP ${res.status}`;
-    throw new CognitoOAuthError(`Token exchange failed: ${detail}`);
-  }
-
-  setBearerToken(payload.access_token);
-  if (payload.refresh_token) {
-    setRefreshToken(payload.refresh_token);
-  }
-
-  return payload;
+  const payload = await parseSessionAuthResponse(res);
+  return storeSessionAuth(payload);
 }
 
+/**
+ * Refresh via HttpOnly session cookie + CSRF header. Never reads a JS refresh token.
+ */
 export async function refreshAccessToken(
   options?: { signal?: AbortSignal },
 ): Promise<CognitoTokenResponse | null> {
   requireBrowser();
-  const refreshToken = getRefreshToken();
-  if (!refreshToken) {
-    return null;
+
+  const csrf = getCsrfToken();
+  const headers: Record<string, string> = {
+    Accept: "application/json",
+    "Content-Type": "application/json",
+  };
+  if (csrf) {
+    headers[FORGE_CSRF_HEADER] = csrf;
   }
 
-  const config = getCognitoOAuthConfig();
-  const body = new URLSearchParams({
-    grant_type: "refresh_token",
-    client_id: config.clientId,
-    refresh_token: refreshToken,
-  });
-
-  const res = await fetch(tokenEndpoint(config.domain), {
+  const res = await fetch(sessionApiUrl("/api/v1/auth/session/refresh"), {
     method: "POST",
-    headers: { "Content-Type": "application/x-www-form-urlencoded" },
-    body,
+    credentials: "include",
+    headers,
+    body: "{}",
     ...(options?.signal ? { signal: options.signal } : {}),
   });
 
-  let payload: CognitoTokenResponse & { error?: string; error_description?: string };
-  try {
-    payload = (await res.json()) as CognitoTokenResponse & {
-      error?: string;
-      error_description?: string;
-    };
-  } catch {
-    throw new CognitoOAuthError(`Token refresh failed (${res.status})`);
+  if (res.status === 401) {
+    return null;
   }
 
-  if (!res.ok || !payload.access_token) {
-    const detail = payload.error_description ?? payload.error ?? `HTTP ${res.status}`;
-    throw new CognitoOAuthError(`Token refresh failed: ${detail}`);
-  }
-
-  setBearerToken(payload.access_token);
-  if (payload.refresh_token) {
-    setRefreshToken(payload.refresh_token);
-  }
-
-  return payload;
+  const payload = await parseSessionAuthResponse(res);
+  return storeSessionAuth(payload);
 }
 
 export function buildLogoutUrl(): string {
@@ -327,3 +359,4 @@ export async function confirmCognitoPasswordReset(input: {
     Password: input.newPassword,
   });
 }
+

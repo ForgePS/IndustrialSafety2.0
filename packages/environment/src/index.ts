@@ -63,6 +63,9 @@ const baseSchema = z.object({
   SQS_CAD_APPLICATION_QUEUE_URL: z.string().url().optional(),
   SQS_CAD_POLLING_QUEUE_URL: z.string().url().optional(),
   SQS_CAD_RETENTION_QUEUE_URL: z.string().url().optional(),
+  SQS_REPORTING_SCHEDULES_QUEUE_URL: z.string().url().optional(),
+  /** Shared secret for worker → API reporting schedule run-due sweep. */
+  FORGE_REPORTING_SWEEP_TOKEN: z.string().optional().default(""),
   /** Comma-separated tenant UUIDs eligible for scheduled CAD polling (synthetic only). */
   CAD_POLLING_TENANT_IDS: z.string().optional().default(""),
   /** Comma-separated tenant UUIDs eligible for scheduled CAD retention. */
@@ -70,7 +73,27 @@ const baseSchema = z.object({
   /** Local/dev map of connectionPublicId -> webhook secret. Never use in production. */
   CAD_WEBHOOK_SECRET_OVERRIDES_JSON: z.string().optional().default(""),
   CAD_WEBHOOK_MAX_BODY_BYTES: z.coerce.number().int().positive().optional().default(262144),
+  /**
+   * Optional platform defaults for Emergency Alerts AWS End User Messaging SMS.
+   * Tenant settings can override. IAM authenticates sends — these are not API keys.
+   */
+  SMS_DEFAULT_PROVIDER: z.string().optional().default(""),
+  SMS_ORIGINATION_IDENTITY: z.string().optional().default(""),
+  SMS_CONFIGURATION_SET_NAME: z.string().optional().default(""),
+  SMS_REGION: z.string().optional().default(""),
+  SMS_DRY_RUN: z.string().optional().default(""),
+  SMS_MAX_PRICE: z.string().optional().default(""),
+  SMS_PROTECT_CONFIGURATION_ID: z.string().optional().default(""),
+  /**
+   * Outbound mail provider: noop (default local), ses, or resend.
+   * Production Compute currently sets resend + Secrets Manager RESEND_API_KEY.
+   */
+  FORGE_EMAIL_PROVIDER: z.string().optional().default("noop"),
   SES_FROM_ADDRESS: z.string().min(3),
+  /** Resend.com API key (ECS injects from Secrets Manager; never log). */
+  RESEND_API_KEY: z.string().optional().default(""),
+  /** Verified Resend from address; falls back to SES_FROM_ADDRESS when empty. */
+  RESEND_FROM_ADDRESS: z.string().optional().default(""),
   PUBLIC_ACADEMY_URL: z.string().url(),
   PUBLIC_RMS_URL: z.string().url(),
   PUBLIC_CREATOR_URL: z.string().url(),
@@ -84,6 +107,21 @@ const baseSchema = z.object({
   CORS_ORIGIN_SUFFIXES: z.string().optional().default(""),
   BODY_SIZE_LIMIT: z.string().optional().default("1mb"),
   REQUEST_TIMEOUT_MS: z.coerce.number().int().positive().optional().default(30000),
+  /**
+   * Import malware scanner provider key.
+   * Use `reference-malware` locally; production-like requires
+   * `aws-guardduty-malware-protection` (or another approved non-reference key).
+   */
+  IMPORT_MALWARE_PROVIDER_KEY: z.string().min(1).optional().default("reference-malware"),
+  /**
+   * Base64-encoded 32-byte AES-256-GCM key for encrypting Cognito refresh tokens
+   * in auth_browser_sessions. Required outside local/testing (see crypto helper).
+   */
+  FORGE_AUTH_SESSION_ENCRYPTION_KEY: z.string().optional().default(""),
+  /** Idle session lifetime in seconds (default 12h). */
+  FORGE_AUTH_SESSION_IDLE_SECONDS: z.coerce.number().int().positive().optional().default(43_200),
+  /** Absolute session lifetime in seconds (default 24h). */
+  FORGE_AUTH_SESSION_ABSOLUTE_SECONDS: z.coerce.number().int().positive().optional().default(86_400),
 });
 
 export type ForgeEnvironment = z.infer<typeof baseSchema>;
@@ -215,17 +253,33 @@ export const LOCAL_PLACEHOLDER_ENV: Record<string, string> = {
     "https://sqs.us-east-1.amazonaws.com/000000000000/forge-local-cad-polling",
   SQS_CAD_RETENTION_QUEUE_URL:
     "https://sqs.us-east-1.amazonaws.com/000000000000/forge-local-cad-retention",
+  SQS_REPORTING_SCHEDULES_QUEUE_URL:
+    "https://sqs.us-east-1.amazonaws.com/000000000000/forge-local-reporting-schedules",
+  FORGE_REPORTING_SWEEP_TOKEN: "local-reporting-sweep-token",
   CAD_POLLING_TENANT_IDS: "",
   CAD_RETENTION_TENANT_IDS: "",
+  SMS_DEFAULT_PROVIDER: "",
+  SMS_ORIGINATION_IDENTITY: "",
+  SMS_CONFIGURATION_SET_NAME: "",
+  SMS_REGION: "",
+  SMS_DRY_RUN: "",
+  SMS_MAX_PRICE: "",
+  SMS_PROTECT_CONFIGURATION_ID: "",
   INTEGRATION_QUEUE_URL:
     "https://sqs.us-east-1.amazonaws.com/000000000000/forge-local-integration-events",
   SQS_INTEGRATION_QUEUE_URL:
     "https://sqs.us-east-1.amazonaws.com/000000000000/forge-local-integration-events",
   EVENT_BUS_NAME: "forge-platform",
+  FORGE_EMAIL_PROVIDER: "noop",
   SES_FROM_ADDRESS: "noreply@localhost.local",
+  RESEND_API_KEY: "",
+  RESEND_FROM_ADDRESS: "",
   PUBLIC_ACADEMY_URL: "http://localhost:3001",
   PUBLIC_RMS_URL: "http://localhost:3002",
   PUBLIC_CREATOR_URL: "http://localhost:3003",
   PUBLIC_API_URL: "http://localhost:4000",
+  CORS_ORIGINS:
+    "http://localhost:3000,http://localhost:3001,http://localhost:3002,http://localhost:3003,http://localhost:3004,http://localhost:3005",
   FEATURE_FLAG_PROVIDER: "local",
+  IMPORT_MALWARE_PROVIDER_KEY: "reference-malware",
 };

@@ -365,6 +365,377 @@
       "when": 1786998000000,
       "tag": "0052_legal_acknowledgments_s1",
       "breakpoints": true
+    },
+    {
+      "idx": 52,
+      "version": "7",
+      "when": 1787001600000,
+      "tag": "0053_industrial_personnel_first_aid_s1",
+      "breakpoints": true
+    },
+    {
+      "idx": 53,
+      "version": "7",
+      "when": 1787005200000,
+      "tag": "0054_industrial_fleet_dvir_public_token",
+      "breakpoints": true
+    },
+    {
+      "idx": 54,
+      "version": "7",
+      "when": 1787008800000,
+      "tag": "0055_industrial_training_materials_s1",
+      "breakpoints": true
+    },
+    {
+      "idx": 55,
+      "version": "7",
+      "when": 1787012400000,
+      "tag": "0056_industrial_training_assignments_s1",
+      "breakpoints": true
+    },
+    {
+      "idx": 56,
+      "version": "7",
+      "when": 1787016000000,
+      "tag": "0057_industrial_training_personnel_link_s1",
+      "breakpoints": true
+    },
+    {
+      "idx": 57,
+      "version": "7",
+      "when": 1787019600000,
+      "tag": "0058_industrial_training_employee_number_s1",
+      "breakpoints": true
+    },
+    {
+      "idx": 58,
+      "version": "7",
+      "when": 1787023200000,
+      "tag": "0059_industrial_training_assignment_qr_s1",
+      "breakpoints": true
+    },
+    {
+      "idx": 59,
+      "version": "7",
+      "when": 1787026800000,
+      "tag": "0060_industrial_training_source_folders_s1",
+      "breakpoints": true
+    },
+    {
+      "idx": 60,
+      "version": "7",
+      "when": 1787030400000,
+      "tag": "0061_industrial_training_drop_chapters_s1",
+      "breakpoints": true
+    },
+    {
+      "idx": 61,
+      "version": "7",
+      "when": 1787034000000,
+      "tag": "0062_industrial_training_portal_sessions_s1",
+      "breakpoints": true
+    },
+    {
+      "idx": 62,
+      "version": "7",
+      "when": 1787037600000,
+      "tag": "0063_industrial_training_lms_portal_s1",
+      "breakpoints": true
+    },
+    {
+      "idx": 63,
+      "version": "7",
+      "when": 1787041200000,
+      "tag": "0064_industrial_personnel_status_normalize",
+      "breakpoints": true
+    },
+    {
+      "idx": 64,
+      "version": "7",
+      "when": 1787044800000,
+      "tag": "0065_industrial_qr_scan_s1",
+      "breakpoints": true
+    },
+    {
+      "idx": 65,
+      "version": "7",
+      "when": 1787048400000,
+      "tag": "0066_industrial_fleet_dot_regulated",
+      "breakpoints": true
+    },
+    {
+      "idx": 66,
+      "version": "7",
+      "when": 1787052000000,
+      "tag": "0067_industrial_messaging_s1",
+      "breakpoints": true
+    },
+    {
+      "idx": 67,
+      "version": "7",
+      "when": 1787055600000,
+      "tag": "0068_industrial_personnel_is_dot_driver_s1",
+      "breakpoints": true
+    },
+    {
+      "idx": 68,
+      "version": "7",
+      "when": 1787929200000,
+      "tag": "0069_industrial_personnel_dot_driver_from_dqf",
+      "breakpoints": true
+    },
+    {
+      "idx": 70,
+      "version": "7",
+      "when": 1787936400000,
+      "tag": "0071_industrial_departments_division_name",
+      "breakpoints": true
+    },
+    {
+      "idx": 71,
+      "version": "7",
+      "when": 1787940000000,
+      "tag": "0072_industrial_safety_supplies_s0",
+      "breakpoints": true
+    },
+    {
+      "idx": 72,
+      "version": "7",
+      "when": 1787943600000,
+      "tag": "0073_industrial_safety_supplies_s1_s11",
+      "breakpoints": true
+    },
+    {
+      "idx": 73,
+      "version": "7",
+      "when": 1788116400000,
+      "tag": "0074_industrial_training_source_groups_s1",
+      "breakpoints": true
+    },
+    {
+      "idx": 74,
+      "version": "7",
+      "when": 1788537600000,
+      "tag": "0075_users_last_activity_at",
+      "breakpoints": true
+    },
+    {
+      "idx": 75,
+      "version": "7",
+      "when": 1788624000000,
+      "tag": "0076_industrial_reporting_s0",
+      "breakpoints": true
+    },
+    {
+      "idx": 76,
+      "version": "7",
+      "when": 1788710400000,
+      "tag": "0077_industrial_emergency_alerts_s0",
+      "breakpoints": true
+    },
+    {
+      "idx": 77,
+      "version": "7",
+      "when": 1788796800000,
+      "tag": "0078_industrial_emergency_alerts_targeting_s1",
+      "breakpoints": true
+    },
+    {
+      "idx": 78,
+      "version": "7",
+      "when": 1788883200000,
+      "tag": "0079_industrial_reporting_exports_s1",
+      "breakpoints": true
+    },
+    {
+      "idx": 79,
+      "version": "7",
+      "when": 1788970000000,
+      "tag": "0080_industrial_wc_note_authors_s1",
+      "breakpoints": true
+    },
+    {
+      "idx": 80,
+      "version": "7",
+      "when": 1789056400000,
+      "tag": "0081_industrial_personnel_sms_authorization_s1",
+      "breakpoints": true
+    },
+    {
+      "idx": 81,
+      "version": "7",
+      "when": 1789142800000,
+      "tag": "0082_industrial_supply_request_qr_s1",
+      "breakpoints": true
+    },
+    {
+      "idx": 82,
+      "version": "7",
+      "when": 1789229200000,
+      "tag": "0083_reporting_schedules_bypass_rls",
+      "breakpoints": true
+    },
+    {
+      "idx": 83,
+      "version": "7",
+      "when": 1789315600000,
+      "tag": "0084_industrial_calendar_reminders_s1",
+      "breakpoints": true
+    },
+    {
+      "idx": 84,
+      "version": "7",
+      "when": 1789402000000,
+      "tag": "0085_industrial_calendar_wave2_s1",
+      "breakpoints": true
+    },
+    {
+      "idx": 85,
+      "version": "7",
+      "when": 1789488400000,
+      "tag": "0086_industrial_tasks_wave3_s1",
+      "breakpoints": true
+    },
+    {
+      "idx": 86,
+      "version": "7",
+      "when": 1789574800000,
+      "tag": "0087_industrial_document_control_qms_s1",
+      "breakpoints": true
+    },
+    {
+      "idx": 87,
+      "version": "7",
+      "when": 1789661200000,
+      "tag": "0088_industrial_executive_walkthrough_s1",
+      "breakpoints": true
+    },
+    {
+      "idx": 88,
+      "version": "7",
+      "when": 1789747600000,
+      "tag": "0089_industrial_supply_recipient_ack",
+      "breakpoints": true
+    },
+    {
+      "idx": 89,
+      "version": "7",
+      "when": 1789834000000,
+      "tag": "0090_industrial_personnel_date_of_birth_s1",
+      "breakpoints": true
+    },
+    {
+      "idx": 90,
+      "version": "7",
+      "when": 1789920400000,
+      "tag": "0091_industrial_sanitation_s1",
+      "breakpoints": true
+    },
+    {
+      "idx": 91,
+      "version": "7",
+      "when": 1790006800000,
+      "tag": "0092_industrial_printer_bridge_s1",
+      "breakpoints": true
+    },
+    {
+      "idx": 92,
+      "version": "7",
+      "when": 1790093200000,
+      "tag": "0093_industrial_printer_bridge_tenant_lookup",
+      "breakpoints": true
+    },
+    {
+      "idx": 93,
+      "version": "7",
+      "when": 1790179600000,
+      "tag": "0094_user_push_subscriptions_s1",
+      "breakpoints": true
+    },
+    {
+      "idx": 94,
+      "version": "7",
+      "when": 1790266000000,
+      "tag": "0095_tenant_branding_theme_logos_s1",
+      "breakpoints": true
+    },
+    {
+      "idx": 95,
+      "version": "7",
+      "when": 1790352400000,
+      "tag": "0096_industrial_printer_bridge_s3",
+      "breakpoints": true
+    },
+    {
+      "idx": 96,
+      "version": "7",
+      "when": 1790438800000,
+      "tag": "0097_industrial_print_routing_s1",
+      "breakpoints": true
+    },
+    {
+      "idx": 97,
+      "version": "7",
+      "when": 1790525200000,
+      "tag": "0098_industrial_print_supplies_s1",
+      "breakpoints": true
+    },
+    {
+      "idx": 98,
+      "version": "7",
+      "when": 1790611600000,
+      "tag": "0099_industrial_personnel_address_sex_s1",
+      "breakpoints": true
+    },
+    {
+      "idx": 99,
+      "version": "7",
+      "when": 1790698000000,
+      "tag": "0100_industrial_sanitation_ui_settings_s1",
+      "breakpoints": true
+    },
+    {
+      "idx": 100,
+      "version": "7",
+      "when": 1790784400000,
+      "tag": "0101_industrial_module_page_permissions_s1",
+      "breakpoints": true
+    },
+    {
+      "idx": 101,
+      "version": "7",
+      "when": 1790870800000,
+      "tag": "0102_industrial_wc_weekly_updates_s1",
+      "breakpoints": true
+    },
+    {
+      "idx": 102,
+      "version": "7",
+      "when": 1790957200000,
+      "tag": "0103_forge_photo_markup_s1",
+      "breakpoints": true
+    },
+    {
+      "idx": 103,
+      "version": "7",
+      "when": 1791043600000,
+      "tag": "0104_walkthrough_studio_s1",
+      "breakpoints": true
+    },
+    {
+      "idx": 104,
+      "version": "7",
+      "when": 1791130000000,
+      "tag": "0105_auth_browser_sessions_s1",
+      "breakpoints": true
+    },
+    {
+      "idx": 105,
+      "version": "7",
+      "when": 1791216400000,
+      "tag": "0106_forge_photo_markup_permissions_s1",
+      "breakpoints": true
     }
   ]
 }
