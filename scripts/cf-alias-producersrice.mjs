@@ -1,6 +1,11 @@
 /**
  * Add producersrice.forgepublicsafety.com alias to Industrial CloudFront distribution.
  * Uses existing *.forgepublicsafety.com ACM cert. Does not create DNS records.
+ *
+ * FIS-L02: Keep this alias. Legacy producers-rice-mill is 301'd to producersrice via
+ * CloudFront Function (ForgeIndustrialHosting legacyRedirects). Do not delete either
+ * alias — CDK domainNames may only list the primary industrial host; re-run this
+ * script after Frontend deploys if aliases were dropped.
  */
 import { spawnSync } from "node:child_process";
 import fs from "node:fs";

@@ -4,14 +4,13 @@ import { lookupTenantByDomain, type Database } from "@forge/database";
 import { ForgeError } from "@forge/errors";
 import { DATABASE } from "../../tokens.js";
 import { ConfigurationService } from "../configuration/configuration.service.js";
+import {
+  publicLoginBrandingSchema,
+  type PublicLoginBrandingDto,
+} from "./login-branding.public-schema.js";
 
-export type PublicLoginBranding = {
-  tenantId: string;
-  host: string;
-  logoUrl?: string;
-  primaryColor?: string;
-  login: ReturnType<typeof resolveLoginBranding>;
-};
+/** @deprecated Prefer PublicLoginBrandingDto — kept as alias for call sites. */
+export type PublicLoginBranding = PublicLoginBrandingDto;
 
 const PRODUCERS_LOGO_PATH = "/branding/producers-rice-mill.png";
 const PRODUCERS_BRAND_LABEL = "Producers Rice Mill";
@@ -34,8 +33,10 @@ function normalizeHost(raw: string): string {
 }
 
 function isProducersHost(host: string): boolean {
-  return host === "producersrice.forgepublicsafety.com" ||
-    host === "producers-rice-mill.forgepublicsafety.com";
+  return (
+    host === "producersrice.forgepublicsafety.com" ||
+    host === "producers-rice-mill.forgepublicsafety.com"
+  );
 }
 
 function applyProducersBundled(
@@ -79,15 +80,16 @@ export class LoginBrandingService {
     private readonly configuration: ConfigurationService,
   ) {}
 
-  async byHost(rawHost: string | undefined): Promise<PublicLoginBranding> {
+  async byHost(rawHost: string | undefined): Promise<PublicLoginBrandingDto> {
     const host = rawHost ? normalizeHost(rawHost) : "";
     if (!host) {
       throw new ForgeError("VALIDATION_FAILED", "host query parameter is required");
     }
 
+    // Tenant UUID stays server-side — never returned on this unauthenticated path (FIS-L01).
     const resolved = await lookupTenantByDomain(this.db, host);
     if (!resolved) {
-      throw new ForgeError("NOT_FOUND", `No verified tenant domain for host ${host}`);
+      throw new ForgeError("NOT_FOUND", "No verified tenant domain for host");
     }
 
     const effective = await this.configuration.effectivePublished(
@@ -114,12 +116,15 @@ export class LoginBrandingService {
     login = bundled.login;
     logoUrl = bundled.logoUrl;
 
-    return {
-      tenantId: resolved.tenantId,
+    const dto = {
       host,
+      displayName: login.brandLabel,
+      brandLabel: login.brandLabel,
       ...(logoUrl ? { logoUrl } : {}),
       ...(primaryColor ? { primaryColor } : {}),
       login,
     };
+
+    return publicLoginBrandingSchema.parse(dto);
   }
 }

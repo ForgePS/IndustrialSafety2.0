@@ -2,6 +2,10 @@
  * Add producers-rice-mill.forgepublicsafety.com alias to Industrial CF (dark).
  * Uses existing *.forgepublicsafety.com ACM cert. Does not create DNS records
  * (no Route53 hosted zone in this account).
+ *
+ * FIS-L02: Keep this legacy alias so existing bookmarks/links resolve. Industrial
+ * CloudFront Function 301s this host to producersrice.forgepublicsafety.com and
+ * strips OAuth/session query params. Do not delete the alias.
  */
 import { spawnSync } from "node:child_process";
 import fs from "node:fs";
