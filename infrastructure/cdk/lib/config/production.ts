@@ -37,6 +37,12 @@ function productionHttpsHost(role: string): string {
   return `https://${role}.${PRODUCTION_ROOT_DOMAIN}`;
 }
 
+const PRODUCERS_VANITY_HTTPS = [
+  "https://producersrice.forgeindustrialsafety.com",
+  "https://producersrice.forgepublicsafety.com",
+  "https://producers-rice-mill.forgepublicsafety.com",
+] as const;
+
 /**
  * Production commercial baseline — Production cost profile (sized by workload).
  * Domains are HTTPS-ready Cognito/callback targets; DNS cutover is NOT performed in PROD-S0R.
@@ -98,6 +104,7 @@ export function createProductionConfig(
         `${creator}/auth/callback/`,
         `${admin}/auth/callback/`,
         `${industrial}/auth/callback/`,
+        ...PRODUCERS_VANITY_HTTPS.map((origin) => `${origin}/auth/callback/`),
         ...PRODUCTION_PRE_CUTOVER_SPA_ORIGINS.map((origin) => `${origin}/auth/callback/`),
       ],
       logoutUrls: [
@@ -107,6 +114,7 @@ export function createProductionConfig(
         `${admin}/`,
         `${industrial}/`,
         `${api}/`,
+        ...PRODUCERS_VANITY_HTTPS.map((origin) => `${origin}/`),
         ...PRODUCTION_PRE_CUTOVER_SPA_ORIGINS.map((origin) => `${origin}/`),
       ],
       selfSignUpEnabled: false,

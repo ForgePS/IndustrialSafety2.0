@@ -33,7 +33,17 @@ function browserUploadCorsOrigins(config: ForgeEnvironmentConfig): string[] {
   ];
 
   if (config.environmentName.includes("production")) {
-    return [...new Set([...fromDomains, ...PRODUCTION_PRE_CUTOVER_SPA_ORIGINS])];
+    return [
+      ...new Set([
+        ...fromDomains,
+        ...PRODUCTION_PRE_CUTOVER_SPA_ORIGINS,
+        // Tenant vanity hosts (e.g. producers-rice-mill.forgepublicsafety.com) upload
+        // via presigned PUT from the browser — S3 CORS must allow the zone, not only
+        // the canonical industrial.* hostname.
+        "https://*.forgepublicsafety.com",
+        "https://*.forgeindustrialsafety.com",
+      ]),
+    ];
   }
   return [...new Set([...fromDomains, ...local])];
 }

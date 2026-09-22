@@ -39,6 +39,7 @@ type PublicLoginBrandingResponse = {
 
 /** Client-bundled vanity host → tenant (mirrors industrial vanity map). */
 const BUNDLED_HOST_TENANT: Readonly<Record<string, string>> = {
+  "producersrice.forgeindustrialsafety.com": "019ff7d0-c20f-7659-81e4-c0cd68e23262",
   "producersrice.forgepublicsafety.com": "019ff7d0-c20f-7659-81e4-c0cd68e23262",
   "producers-rice-mill.forgepublicsafety.com": "019ff7d0-c20f-7659-81e4-c0cd68e23262",
 };

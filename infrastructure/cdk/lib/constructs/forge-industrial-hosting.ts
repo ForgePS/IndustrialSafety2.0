@@ -10,9 +10,13 @@ export interface ForgeIndustrialHostingProps {
 /**
  * Industrial Web static hosting (IND-WEB-D1 development gate).
  *
- * Legacy vanity: producers-rice-mill → producersrice (FIS-L02). DNS/CF aliases for
- * both hosts remain managed by scripts/cf-alias-producersrice.mjs and
- * scripts/ind11b-p2-cf-alias-producers-dark.mjs — do not delete those aliases.
+ * Vanity dual-serve: producersrice.forgepublicsafety.com remains live while
+ * producersrice.forgeindustrialsafety.com is added (FIS industrial zone move).
+ * Permanent 301s to the industrialsafety host are a later flip — do not enable
+ * them in legacyRedirects until cutover. DNS/CF aliases remain managed by
+ * scripts/cf-alias-producersrice.mjs — do not delete those aliases.
+ *
+ * Legacy vanity: producers-rice-mill → producersrice (FIS-L02).
  */
 export class ForgeIndustrialHosting extends ForgeStaticHosting {
   constructor(scope: Construct, id: string, props: ForgeIndustrialHostingProps) {
