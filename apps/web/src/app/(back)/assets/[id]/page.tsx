@@ -88,8 +88,9 @@ const AssetDetailPage = async ({ params }: { params: Promise<{ id: string }> }) 
         })
       : false
 
-  const [canEdit, canMaintain, canMeter, canRetire, personnel] = await Promise.all([
+  const [canEdit, canAssign, canMaintain, canMeter, canRetire, personnel] = await Promise.all([
     within(editPermission),
+    within(assignPermission),
     within(maintenancePermission),
     within(meterPermission),
     within(retirePermission),
@@ -173,6 +174,7 @@ const AssetDetailPage = async ({ params }: { params: Promise<{ id: string }> }) 
         assetId={asset.id}
         initialValues={values}
         readOnly={!canEdit || Boolean(asset.retired_at)}
+        canAssign={Boolean(canAssign)}
         locations={(locations || []).map((item: any) => ({
           id: item.id,
           label: item.code ? item.name + ' (' + item.code + ')' : item.name
