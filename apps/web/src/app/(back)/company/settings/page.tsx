@@ -28,10 +28,20 @@ const CompanySettingsPage = async () => {
 
   const overrideByElement = new Map((overrides || []).map((item: any) => [item.element_id, item]))
 
-  const items = (elements || []).map((element: any) => ({
-    ...element,
-    override: overrideByElement.get(element.id) || null
-  }))
+  const items = (elements || []).map((element: any) => {
+    const override = overrideByElement.get(element.id) || null
+
+    return {
+      ...element,
+      tenant_edit_mode: override?.tenant_edit_mode_override ?? element.tenant_edit_mode,
+      location_edit_mode: override?.location_edit_mode_override ?? element.location_edit_mode,
+      user_edit_mode: override?.user_edit_mode_override ?? element.user_edit_mode,
+      can_hide: override?.can_hide_override ?? element.can_hide,
+      can_rename: override?.can_rename_override ?? element.can_rename,
+      can_reorder: override?.can_reorder_override ?? element.can_reorder,
+      override
+    }
+  })
 
   const canManage = context.access.effective.some(
     item => item.permissionKey === 'tenant.settings.manage' && item.allowed
