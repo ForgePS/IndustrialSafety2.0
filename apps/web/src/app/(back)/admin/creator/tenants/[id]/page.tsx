@@ -52,6 +52,7 @@ const TenantDetailPage = async ({ params }: { params: Promise<{ id: string }> })
         <div className='flex gap-3'>
           <Button variant='outline' asChild><Link href='/admin/creator/tenants'>All Tenants</Link></Button>
           <Button variant='outline' asChild><Link href={`/admin/creator/tenants/${tenant.id}/experience`}>Experience Builder</Link></Button>
+          <Button variant='outline' asChild><Link href={`/admin/creator/tenants/${tenant.id}/lookups`}>Dropdowns & Lookups</Link></Button>
           <Button variant='outline' asChild><Link href={`/admin/creator/tenants/${tenant.id}/features`}>Features & Entitlements</Link></Button>
           <Button variant='outline' asChild><Link href={`/admin/creator/tenants/${tenant.id}/access`}>Roles & Permissions</Link></Button>
           <Button asChild><Link href={`/admin/creator/tenants/${tenant.id}/edit`}>Edit Tenant</Link></Button>
