@@ -79,7 +79,7 @@ export const getScopedQrCodes = async ({
 
   let query = supabase
     .from('forge_qr_codes')
-    .select('*, forge_assets!forge_qr_codes_target_asset_fkey(id, asset_number, name, status, location_id, division_id)')
+    .select('*')
     .eq('organization_id', organizationId)
     .neq('status', 'archived')
     .order('name')
@@ -91,7 +91,32 @@ export const getScopedQrCodes = async ({
   const { data, error } = await query
   if (error) throw new Error('Unable to load managed QR codes: ' + error.message)
 
-  return data || []
+  const rows = data || []
+  const assetIds = Array.from(
+    new Set(
+      rows
+        .filter((row: any) => row.target_type === 'asset')
+        .map((row: any) => row.target_id)
+    )
+  )
+
+  const assetById = new Map<string, any>()
+
+  if (assetIds.length) {
+    const { data: assets, error: assetsError } = await supabase
+      .from('forge_assets')
+      .select('id, asset_number, name, status, location_id, division_id')
+      .eq('organization_id', organizationId)
+      .in('id', assetIds)
+
+    if (assetsError) throw new Error('Unable to load QR asset targets: ' + assetsError.message)
+    for (const asset of assets || []) assetById.set(asset.id, asset)
+  }
+
+  return rows.map((row: any) => ({
+    ...row,
+    targetAsset: row.target_type === 'asset' ? assetById.get(row.target_id) || null : null
+  }))
 }
 
 export const getQrScanHistory = async ({
