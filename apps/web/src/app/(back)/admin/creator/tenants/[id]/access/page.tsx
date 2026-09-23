@@ -53,9 +53,14 @@ const TenantAccessPage = async ({ params }: { params: Promise<{ id: string }> })
             Configure exactly what each tenant role can do, including per-permission scope.
           </p>
         </div>
-        <Button variant='outline' asChild>
-          <Link href={`/admin/creator/tenants/${tenant.id}`}>Back to Tenant</Link>
-        </Button>
+        <div className='flex gap-2'>
+          <Button asChild>
+            <Link href={`/admin/creator/tenants/${tenant.id}/access/users`}>Personnel Access</Link>
+          </Button>
+          <Button variant='outline' asChild>
+            <Link href={`/admin/creator/tenants/${tenant.id}`}>Back to Tenant</Link>
+          </Button>
+        </div>
       </div>
 
       <RolePermissionEditor
