@@ -59,7 +59,7 @@ const provisionDefaultRoles = async (supabase: any, organizationId: string) => {
     ['read-only', 'Read Only', 'Read-only access to explicitly permitted modules.', 60]
   ]
 
-  const { error } = await supabase.from('forge_tenant_roles').insert(
+  const { data: createdRoles, error } = await supabase.from('forge_tenant_roles').insert(
     roles.map(([roleKey, name, description, sortOrder]) => ({
       organization_id: organizationId,
       role_key: roleKey,
@@ -69,9 +69,45 @@ const provisionDefaultRoles = async (supabase: any, organizationId: string) => {
       is_system_role: true,
       is_active: true
     }))
-  )
+  ).select('id, role_key')
 
   if (error) throw new Error(error.message)
+
+  const templateMap: Record<string, string> = {
+    'company-owner': 'company-admin',
+    'company-administrator': 'company-admin',
+    'location-administrator': 'supervisor',
+    supervisor: 'supervisor',
+    employee: 'standard-user',
+    'read-only': 'read-only'
+  }
+
+  const { data: templates } = await supabase
+    .from('forge_role_templates')
+    .select('id, template_key, forge_role_template_permissions(permission_id, allowed, scope, constraints)')
+    .in('template_key', Array.from(new Set(Object.values(templateMap))))
+
+  const templateByKey = new Map((templates || []).map((template: any) => [template.template_key, template]))
+
+  const grants = (createdRoles || []).flatMap((role: any) => {
+    const template = templateByKey.get(templateMap[role.role_key])
+    if (!template) return []
+
+    return (template.forge_role_template_permissions || [])
+      .filter((permission: any) => permission.allowed)
+      .map((permission: any) => ({
+        role_id: role.id,
+        permission_id: permission.permission_id,
+        allowed: true,
+        scope: permission.scope || 'organization',
+        constraints: permission.constraints || {}
+      }))
+  })
+
+  if (grants.length) {
+    const { error: grantError } = await supabase.from('forge_tenant_role_permissions').insert(grants)
+    if (grantError) throw new Error(grantError.message)
+  }
 }
 
 export const createTenant = async (input: TenantInput) => {
