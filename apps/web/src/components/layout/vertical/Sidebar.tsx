@@ -80,7 +80,15 @@ const MenuButton = ({ children, href, target = '_self', exactMatch = true, ...pr
   )
 }
 
-const AppSidebar = ({\n  roles,\n  permissions,\n  forgePlatformRole\n}: {\n  roles?: string[]\n  permissions: string[]\n  forgePlatformRole?: string | null\n}) => {
+const AppSidebar = ({
+  roles,
+  permissions,
+  forgePlatformRole
+}: {
+  roles?: string[]
+  permissions: string[]
+  forgePlatformRole?: string | null
+}) => {
   // Hooks
   const { isImpersonating } = useAuthContext()
   const { isMobile, state } = useSidebar()
