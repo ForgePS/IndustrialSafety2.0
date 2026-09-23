@@ -19,6 +19,7 @@ import {
   TbLock,
   TbSettings,
   TbSettingsAutomation,
+  TbAdjustments,
   TbStar,
   TbTemplate,
   TbUser,
@@ -162,6 +163,12 @@ const AppSidebar = ({
                 <MenuButton href='/admin/creator' exactMatch={false} tooltip='Forge Creator 2.0'>
                   <TbSettingsAutomation />
                   <span>Forge Creator 2.0</span>
+                </MenuButton>
+              </SidebarMenuItem>
+              <SidebarMenuItem>
+                <MenuButton href='/admin/creator/experience' exactMatch={false} tooltip='Experience Builder'>
+                  <TbAdjustments />
+                  <span>Experience Builder</span>
                 </MenuButton>
               </SidebarMenuItem>
             </SidebarMenu>
