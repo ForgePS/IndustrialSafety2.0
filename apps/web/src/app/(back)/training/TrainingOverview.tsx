@@ -43,6 +43,10 @@ const TrainingOverview = ({
   courses,
   assignments,
   completions,
+  categoryLabels,
+  deliveryLabels,
+  statusLabels,
+  resultLabels,
   canCreateCourse,
   canAssign,
   canRecordCompletion,
@@ -51,6 +55,10 @@ const TrainingOverview = ({
   courses: Course[]
   assignments: Assignment[]
   completions: Completion[]
+  categoryLabels: Record<string, string>
+  deliveryLabels: Record<string, string>
+  statusLabels: Record<string, string>
+  resultLabels: Record<string, string>
   canCreateCourse: boolean
   canAssign: boolean
   canRecordCompletion: boolean
@@ -66,27 +74,30 @@ const TrainingOverview = ({
       !q ||
       course.title.toLowerCase().includes(q) ||
       course.course_code?.toLowerCase().includes(q) ||
-      course.category_key?.toLowerCase().includes(q)
+      course.category_key?.toLowerCase().includes(q) ||
+      (course.category_key ? categoryLabels[course.category_key]?.toLowerCase().includes(q) : false)
     ),
-    [courses, q]
+    [categoryLabels, courses, q]
   )
 
   const filteredAssignments = useMemo(
     () => assignments.filter(item => {
-      const personnel = item.forge_personnel ? `${item.forge_personnel.first_name} ${item.forge_personnel.last_name}` : ''
+      const personnel = item.forge_personnel ? String(item.forge_personnel.first_name) + ' ' + String(item.forge_personnel.last_name) : ''
       const course = item.forge_training_courses?.title || ''
-      return !q || personnel.toLowerCase().includes(q) || course.toLowerCase().includes(q) || item.status.toLowerCase().includes(q)
+      const status = statusLabels[item.status] || item.status
+      return !q || personnel.toLowerCase().includes(q) || course.toLowerCase().includes(q) || status.toLowerCase().includes(q)
     }),
-    [assignments, q]
+    [assignments, q, statusLabels]
   )
 
   const filteredCompletions = useMemo(
     () => completions.filter(item => {
-      const personnel = item.forge_personnel ? `${item.forge_personnel.first_name} ${item.forge_personnel.last_name}` : ''
+      const personnel = item.forge_personnel ? String(item.forge_personnel.first_name) + ' ' + String(item.forge_personnel.last_name) : ''
       const course = item.forge_training_courses?.title || ''
-      return !q || personnel.toLowerCase().includes(q) || course.toLowerCase().includes(q) || item.result.toLowerCase().includes(q)
+      const result = resultLabels[item.result] || item.result
+      return !q || personnel.toLowerCase().includes(q) || course.toLowerCase().includes(q) || result.toLowerCase().includes(q)
     }),
-    [completions, q]
+    [completions, q, resultLabels]
   )
 
   const approve = (completionId: string) => {
@@ -140,10 +151,10 @@ const TrainingOverview = ({
             {filteredCourses.length ? filteredCourses.map(course => (
               <TableRow key={course.id}>
                 <TableCell><div className='font-semibold'>{course.title}</div><div className='text-textSecondary text-xs'>{course.course_code || 'No code'}</div></TableCell>
-                <TableCell>{course.category_key || '—'}</TableCell>
-                <TableCell>{course.delivery_method || '—'}</TableCell>
-                <TableCell>{course.duration_minutes ? `${course.duration_minutes} min` : '—'}</TableCell>
-                <TableCell className='text-right'><Button size='sm' variant='outline' asChild><Link href={`/training/courses/${course.id}`}>Open</Link></Button></TableCell>
+                <TableCell>{course.category_key ? categoryLabels[course.category_key] || course.category_key : '—'}</TableCell>
+                <TableCell>{course.delivery_method ? deliveryLabels[course.delivery_method] || course.delivery_method : '—'}</TableCell>
+                <TableCell>{course.duration_minutes ? String(course.duration_minutes) + ' min' : '—'}</TableCell>
+                <TableCell className='text-right'><Button size='sm' variant='outline' asChild><Link href={'/training/courses/' + course.id}>Open</Link></Button></TableCell>
               </TableRow>
             )) : <TableRow><TableCell colSpan={5} className='py-8 text-center'>No courses match the search.</TableCell></TableRow>}
           </TableBody>
@@ -157,9 +168,9 @@ const TrainingOverview = ({
           <TableBody>
             {filteredAssignments.length ? filteredAssignments.map(item => (
               <TableRow key={item.id}>
-                <TableCell>{item.forge_personnel ? `${item.forge_personnel.first_name} ${item.forge_personnel.last_name}` : 'Unknown'}</TableCell>
+                <TableCell>{item.forge_personnel ? String(item.forge_personnel.first_name) + ' ' + String(item.forge_personnel.last_name) : 'Unknown'}</TableCell>
                 <TableCell>{item.forge_training_courses?.title || 'Unknown course'}</TableCell>
-                <TableCell><Badge size='sm' variant={item.status === 'completed' ? 'tonalSuccess' : 'secondary'}>{item.status}</Badge></TableCell>
+                <TableCell><Badge size='sm' variant={item.status === 'completed' ? 'tonalSuccess' : 'secondary'}>{statusLabels[item.status] || item.status}</Badge></TableCell>
                 <TableCell>{item.due_date || '—'}</TableCell>
               </TableRow>
             )) : <TableRow><TableCell colSpan={4} className='py-8 text-center'>No assignments match the search.</TableCell></TableRow>}
@@ -174,10 +185,10 @@ const TrainingOverview = ({
           <TableBody>
             {filteredCompletions.length ? filteredCompletions.map(item => (
               <TableRow key={item.id}>
-                <TableCell>{item.forge_personnel ? `${item.forge_personnel.first_name} ${item.forge_personnel.last_name}` : 'Unknown'}</TableCell>
+                <TableCell>{item.forge_personnel ? String(item.forge_personnel.first_name) + ' ' + String(item.forge_personnel.last_name) : 'Unknown'}</TableCell>
                 <TableCell>{item.forge_training_courses?.title || 'Unknown course'}</TableCell>
                 <TableCell>{new Date(item.completed_at).toLocaleString()}</TableCell>
-                <TableCell>{item.result}</TableCell>
+                <TableCell>{resultLabels[item.result] || item.result}</TableCell>
                 <TableCell><Badge size='sm' variant={item.approval_status === 'approved' ? 'tonalSuccess' : 'secondary'}>{item.approval_status}</Badge></TableCell>
                 <TableCell className='text-right'>
                   {canApprove && item.approval_status === 'pending' ? (
