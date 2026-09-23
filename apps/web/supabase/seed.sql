@@ -706,3 +706,132 @@ set
   certificate_number=excluded.certificate_number,
   expires_at=excluded.expires_at,
   updated_at=now();
+
+
+-- Local Incident data for end-to-end Incident workflow testing.
+insert into public.forge_incidents (
+  id,
+  organization_id,
+  incident_number,
+  status,
+  incident_type,
+  severity,
+  occurred_at,
+  reported_at,
+  location_id,
+  division_id,
+  reported_by_user_id,
+  reported_by_personnel_id,
+  summary,
+  description,
+  immediate_actions,
+  involves_injury,
+  involves_vehicle,
+  property_damage,
+  submitted_at,
+  submitted_by,
+  approved_at,
+  approved_by,
+  created_by,
+  updated_by
+)
+values (
+  '20000000-0000-4000-8000-000000000801',
+  '20000000-0000-4000-8000-000000000100',
+  'DEMO-INC-000001',
+  'approved',
+  'near_miss',
+  'moderate',
+  now() - interval '7 days',
+  now() - interval '7 days',
+  '20000000-0000-4000-8000-000000000300',
+  '20000000-0000-4000-8000-000000000200',
+  '20000000-0000-4000-8000-000000000002',
+  '20000000-0000-4000-8000-000000000600',
+  'Forklift near miss at the Demo Location',
+  'A forklift and pedestrian entered the same travel path. No contact or injury occurred.',
+  'Work was paused and the travel path was reviewed before operations resumed.',
+  false,
+  true,
+  false,
+  now() - interval '6 days',
+  '20000000-0000-4000-8000-000000000002',
+  now() - interval '5 days',
+  '20000000-0000-4000-8000-000000000001',
+  '20000000-0000-4000-8000-000000000002',
+  '20000000-0000-4000-8000-000000000001'
+)
+on conflict (id) do update
+set
+  status=excluded.status,
+  incident_type=excluded.incident_type,
+  severity=excluded.severity,
+  summary=excluded.summary,
+  description=excluded.description,
+  immediate_actions=excluded.immediate_actions,
+  updated_at=now();
+
+insert into public.forge_incident_people (
+  organization_id,
+  incident_id,
+  personnel_id,
+  role,
+  notes,
+  created_by
+)
+select
+  '20000000-0000-4000-8000-000000000100',
+  '20000000-0000-4000-8000-000000000801',
+  '20000000-0000-4000-8000-000000000600',
+  'reporter',
+  'Demo reporter relationship.',
+  '20000000-0000-4000-8000-000000000001'
+where not exists (
+  select 1
+  from public.forge_incident_people
+  where incident_id='20000000-0000-4000-8000-000000000801'
+    and personnel_id='20000000-0000-4000-8000-000000000600'
+    and role='reporter'
+);
+
+insert into public.forge_incident_activity (
+  organization_id,
+  incident_id,
+  activity_type,
+  message,
+  actor_user_id,
+  created_at
+)
+select *
+from (
+  values
+    (
+      '20000000-0000-4000-8000-000000000100'::uuid,
+      '20000000-0000-4000-8000-000000000801'::uuid,
+      'created'::text,
+      'Demo incident created.'::text,
+      '20000000-0000-4000-8000-000000000002'::uuid,
+      now() - interval '7 days'
+    ),
+    (
+      '20000000-0000-4000-8000-000000000100'::uuid,
+      '20000000-0000-4000-8000-000000000801'::uuid,
+      'submitted'::text,
+      'Demo incident submitted for review.'::text,
+      '20000000-0000-4000-8000-000000000002'::uuid,
+      now() - interval '6 days'
+    ),
+    (
+      '20000000-0000-4000-8000-000000000100'::uuid,
+      '20000000-0000-4000-8000-000000000801'::uuid,
+      'approved'::text,
+      'Demo incident approved.'::text,
+      '20000000-0000-4000-8000-000000000001'::uuid,
+      now() - interval '5 days'
+    )
+) as v(organization_id, incident_id, activity_type, message, actor_user_id, created_at)
+where not exists (
+  select 1
+  from public.forge_incident_activity a
+  where a.incident_id='20000000-0000-4000-8000-000000000801'
+);
