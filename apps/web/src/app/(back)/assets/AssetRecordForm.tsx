@@ -55,7 +55,8 @@ const AssetRecordForm = ({
   locations,
   divisions,
   personnel,
-  readOnly = false
+  readOnly = false,
+  canAssign = true
 }: {
   form: FormDefinition
   initialValues?: AssetFormValues
@@ -64,6 +65,7 @@ const AssetRecordForm = ({
   divisions: ResourceOption[]
   personnel: ResourceOption[]
   readOnly?: boolean
+  canAssign?: boolean
 }) => {
   const router = useRouter()
   const [pending, startTransition] = useTransition()
@@ -89,7 +91,8 @@ const AssetRecordForm = ({
   }
 
   const renderField = (field: Field) => {
-    const disabled = readOnly || pending || field.readOnly
+    const assignmentField = ['location_id','division_id','custodian_personnel_id'].includes(field.key)
+    const disabled = readOnly || pending || field.readOnly || (Boolean(assetId) && assignmentField && !canAssign)
     const value = values[field.key]
 
     if (field.fieldType === 'textarea') {
