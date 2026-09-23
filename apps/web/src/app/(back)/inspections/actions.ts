@@ -3,6 +3,7 @@
 import { revalidatePath } from 'next/cache'
 import { createServiceRoleClient } from '@repo/supabase/server'
 import { getEffectiveForm } from '@/lib/forgeForms'
+import { getEffectiveLookup } from '@/lib/forgeLookups'
 import { inspectionWithinScope } from '@/lib/forgeInspections'
 import { personnelRecordWithinScope } from '@/lib/forgeScope'
 import { requireTenantPermission } from '@/lib/forgeTenantAuth'
@@ -477,8 +478,14 @@ export const createInspectionFinding = async ({
 
   if (!title.trim()) return { error: 'Finding title is required.' }
 
-  const severityLookup = ['low','moderate','high','critical']
-  if (!severityLookup.includes(severity)) return { error: 'Invalid finding severity.' }
+  const severityLookup = await getEffectiveLookup({
+    organizationId,
+    lookupKey: 'inspections.finding_severity'
+  })
+
+  if (!severityLookup.options.some(option => option.key === severity)) {
+    return { error: 'Invalid finding severity.' }
+  }
 
   if (itemId) {
     const { data: item } = await supabase.from('forge_inspection_items').select('id').eq('organization_id', organizationId).eq('inspection_id', inspectionId).eq('id', itemId).maybeSingle()
@@ -817,17 +824,70 @@ export const submitInspection = async (inspectionId: string) => {
   return { message: 'Inspection submitted for review.' }
 }
 
-export const approveInspection = async (inspectionId: string) =>
-  transitionInspection({
-    permissionKey: 'inspections.approve',
-    inspectionId,
-    requiredStatus: 'submitted',
-    nextStatus: 'approved',
-    activityType: 'approved',
-    action: 'inspection.approved',
-    message: 'Inspection approved.',
-    extra: { approved_at: new Date().toISOString() }
+export const approveInspection = async (inspectionId: string) => {
+  const context = await requireTenantPermission('inspections.approve')
+  const organizationId = context.activeOrganization.id
+  const supabase = createServiceRoleClient() as any
+
+  const { data: before } = await supabase
+    .from('forge_inspections')
+    .select('*')
+    .eq('organization_id', organizationId)
+    .eq('id', inspectionId)
+    .maybeSingle()
+
+  if (!before) return { error: 'Inspection not found.' }
+  if (before.status !== 'submitted') return { error: 'Only Submitted inspections can be approved.' }
+
+  const allowed = await inspectionWithinScope({
+    organizationId,
+    userId: context.user.id,
+    scope: context.permission.scope,
+    inspection: before
   })
+
+  if (!allowed) return { error: 'This inspection is outside your approval scope.' }
+
+  const now = new Date().toISOString()
+  const { data: after, error } = await supabase
+    .from('forge_inspections')
+    .update({
+      status: 'approved',
+      approved_at: now,
+      approved_by: context.user.id,
+      updated_by: context.user.id,
+      updated_at: now
+    })
+    .eq('id', inspectionId)
+    .select('*')
+    .single()
+
+  if (error || !after) return { error: error?.message ?? 'Unable to approve inspection.' }
+
+  await writeActivity({
+    supabase,
+    organizationId,
+    inspectionId,
+    actorUserId: context.user.id,
+    activityType: 'approved',
+    message: 'Inspection approved.'
+  })
+
+  await writeAudit({
+    supabase,
+    actorUserId: context.user.id,
+    organizationId,
+    action: 'inspection.approved',
+    entityType: 'inspection',
+    entityId: inspectionId,
+    before,
+    after
+  })
+
+  revalidatePath('/inspections')
+  revalidatePath('/inspections/' + inspectionId)
+  return { message: 'Inspection approved.' }
+}
 
 export const returnInspection = async ({
   inspectionId,
