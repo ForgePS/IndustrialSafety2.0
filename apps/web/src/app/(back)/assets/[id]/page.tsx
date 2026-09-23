@@ -77,6 +77,7 @@ const AssetDetailPage = async ({ params }: { params: Promise<{ id: string }> }) 
   const maintenancePermission = permissions.get('assets_equipment.maintenance')
   const meterPermission = permissions.get('assets_equipment.meter')
   const retirePermission = permissions.get('assets_equipment.retire')
+  const qrCreatePermission = permissions.get('qr_management.create')
 
   const within = async (permission: any) =>
     permission
@@ -88,12 +89,13 @@ const AssetDetailPage = async ({ params }: { params: Promise<{ id: string }> }) 
         })
       : false
 
-  const [canEdit, canAssign, canMaintain, canMeter, canRetire, personnel] = await Promise.all([
+  const [canEdit, canAssign, canMaintain, canMeter, canRetire, canCreateQr, personnel] = await Promise.all([
     within(editPermission),
     within(assignPermission),
     within(maintenancePermission),
     within(meterPermission),
     within(retirePermission),
+    within(qrCreatePermission),
     assignPermission || editPermission
       ? getScopedPersonnel({
           organizationId,
@@ -147,6 +149,7 @@ const AssetDetailPage = async ({ params }: { params: Promise<{ id: string }> }) 
           <p className='text-textSecondary mt-2'>{asset.asset_number}{asset.serial_number ? ' · Serial ' + asset.serial_number : ''}</p>
         </div>
         <div className='flex flex-wrap gap-2'>
+          {canCreateQr && !asset.retired_at ? <Button variant='outline' asChild><Link href={'/qr/create?asset=' + asset.id}>Create QR</Link></Button> : null}
           {canMaintain && !asset.retired_at ? <Button variant='outline' asChild><Link href={'/assets/' + asset.id + '/maintenance/create'}>Add Maintenance</Link></Button> : null}
           {canMeter && !asset.retired_at ? <Button variant='outline' asChild><Link href={'/assets/' + asset.id + '/meter-readings/create'}>Add Meter Reading</Link></Button> : null}
         </div>
