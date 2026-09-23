@@ -15,6 +15,7 @@ import type { SearchDataItem } from '@/assets/data/searchData'
 // Component Imports
 import LanguageDropdown from '@components/LanguageDropdown'
 import UserDropdown from './UserDropdown'
+import TenantSwitcher from './TenantSwitcher'
 
 // Data
 import { searchData } from '@/assets/data/searchData'
@@ -30,12 +31,18 @@ const transformSearchData = (data: SearchDataItem[]): SearchDataProps[] => {
 
     return {
       ...item,
-      url: url || '/' // Fallback to root URL if no URL is available
+      url: url || '/'
     }
   })
 }
 
-const Header = async () => {
+const Header = async ({
+  organizations = [],
+  activeOrganizationId
+}: {
+  organizations?: Array<{ id: string; name: string; slug: string; membershipRole: string }>
+  activeOrganizationId?: string | null
+}) => {
   const {
     data: { user }
   } = await getAuthUser()
@@ -53,9 +60,10 @@ const Header = async () => {
   return (
     <LayoutHeader>
       <div className={clsx(verticalLayoutClasses.headerContent, 'is-full flex items-center justify-between gap-4')}>
-        <div className='flex items-center gap-2.5'>
+        <div className='flex min-w-0 items-center gap-2.5'>
           <SidebarTrigger className='-mis-2.5 shrink-0' />
           <Separator orientation='vertical' className='!bs-6' />
+          <TenantSwitcher organizations={organizations} activeOrganizationId={activeOrganizationId} />
           <Search data={transformSearchData(permissionFilteredData)} roles={roles} />
         </div>
         <div className='flex items-center gap-5'>
