@@ -5,7 +5,7 @@ project_id = "forge-industrial-safety-2-0"
 [api]
 enabled = true
 # Port to use for the API URL.
-port = 55321
+port = 35421
 # Schemas to expose in your API. Tables, views and stored procedures in this schema will get API
 # endpoints. `public` is always included.
 schemas = ["public", "graphql_public"]
@@ -20,9 +20,9 @@ enabled = false
 
 [db]
 # Port to use for the local database URL.
-port = 55322
+port = 35422
 # Port used by db diff command to initialize the shadow database.
-shadow_port = 55320
+shadow_port = 35420
 # The database major version to use. This has to be the same as your remote database's. Run `SHOW
 # server_version;` on the remote database to check.
 major_version = 15
@@ -30,7 +30,7 @@ major_version = 15
 [studio]
 enabled = true
 # Port to use for Supabase Studio.
-port = 55323
+port = 35423
 # External URL of the API server that frontend connects to.
 api_url = "http://127.0.0.1"
 # OpenAI API Key to use for Supabase AI in the Supabase Studio.
@@ -41,7 +41,7 @@ openai_api_key = "env(OPENAI_API_KEY)"
 [local_smtp]
 enabled = true
 # Port to use for the email testing server web interface.
-port = 55324
+port = 35424
 # Uncomment to expose additional ports for testing user applications that send emails.
 # smtp_port = 54325
 # pop3_port = 54326
@@ -127,7 +127,7 @@ verify_enabled = true
 enabled = true
 client_id = "env(GOOGLE_CLIENT_ID)"
 secret = "env(GOOGLE_CLIENT_SECRET)"
-redirect_uri = "http://127.0.0.1:55321/auth/v1/callback"
+redirect_uri = "http://127.0.0.1:35421/auth/v1/callback"
 
 [auth.hook.custom_access_token]
 enabled = true
@@ -142,7 +142,7 @@ inspector_port = 8083
 
 [analytics]
 enabled = true
-port = 55327
+port = 35427
 # Configure one of the supported backends: `postgres`, `bigquery`.
 backend = "postgres"
 
