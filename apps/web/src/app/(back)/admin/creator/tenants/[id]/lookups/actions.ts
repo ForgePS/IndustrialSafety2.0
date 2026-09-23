@@ -140,12 +140,14 @@ export const saveCreatorTenantLookupOption = async (input: z.infer<typeof option
     updated_at: new Date().toISOString()
   }
 
-  const { error } = await supabase.from('forge_tenant_lookup_options').upsert(
-    payload,
-    data.baseOptionId
-      ? { onConflict: 'organization_id,lookup_id,base_option_id' }
-      : { onConflict: 'organization_id,lookup_id,custom_option_key' }
-  )
+  const { error } = before?.id
+    ? await supabase
+        .from('forge_tenant_lookup_options')
+        .update(payload)
+        .eq('id', before.id)
+    : await supabase
+        .from('forge_tenant_lookup_options')
+        .insert(payload)
 
   if (error) return { error: error.message }
 
