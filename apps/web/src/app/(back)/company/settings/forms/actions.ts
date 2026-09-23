@@ -117,26 +117,37 @@ export const saveCompanyFormField = async (input: z.infer<typeof fieldSchema>) =
 
   if (!field) return { error: 'Field not found.' }
 
-  if (!field.can_rename && data.label !== field.label) return { error: 'Forge Creator has locked this field label.' }
-  if (!field.can_change_help && data.helpText !== (field.help_text || '')) return { error: 'Forge Creator has locked help text.' }
-  if (!field.can_change_placeholder && data.placeholder !== (field.placeholder || '')) return { error: 'Forge Creator has locked the placeholder.' }
-  if ((!policy.canHideFields || !field.can_hide) && data.isVisible !== field.is_visible) return { error: 'Forge Creator has locked field visibility.' }
-  if ((!policy.canReorderFields || !field.can_reorder) && data.sortOrder !== field.sort_order) return { error: 'Forge Creator has locked field ordering.' }
-  if ((!policy.canChangeRequired || !field.can_change_required) && data.isRequired !== field.is_required) return { error: 'Forge Creator has locked the required setting.' }
-  if ((!policy.canChangeInputType || !field.can_change_input_type) && data.fieldType !== field.field_type) return { error: 'Forge Creator has locked the input type.' }
-  if ((!policy.canChangeLookup || !field.can_change_lookup) && data.lookupId !== field.lookup_id) return { error: 'Forge Creator has locked the dropdown source.' }
-
-  if (data.lookupId) {
-    const { data: lookup } = await supabase.from('forge_lookup_definitions').select('id').eq('id', data.lookupId).eq('is_active', true).maybeSingle()
-    if (!lookup) return { error: 'Selected dropdown source is not available.' }
-  }
-
   const { data: before } = await supabase
     .from('forge_tenant_form_field_overrides')
     .select('*')
     .eq('organization_id', organizationId)
     .eq('field_id', data.fieldId)
     .maybeSingle()
+
+  const current = {
+    label: before?.label ?? field.label,
+    helpText: before?.help_text ?? field.help_text ?? '',
+    placeholder: before?.placeholder ?? field.placeholder ?? '',
+    isVisible: before?.is_visible ?? field.is_visible,
+    sortOrder: before?.sort_order ?? field.sort_order,
+    isRequired: before?.is_required ?? field.is_required,
+    fieldType: before?.field_type ?? field.field_type,
+    lookupId: before?.lookup_id ?? field.lookup_id ?? null
+  }
+
+  if (!field.can_rename && data.label !== current.label) return { error: 'Forge Creator has locked this field label.' }
+  if (!field.can_change_help && data.helpText !== current.helpText) return { error: 'Forge Creator has locked help text.' }
+  if (!field.can_change_placeholder && data.placeholder !== current.placeholder) return { error: 'Forge Creator has locked the placeholder.' }
+  if ((!policy.canHideFields || !field.can_hide) && data.isVisible !== current.isVisible) return { error: 'Forge Creator has locked field visibility.' }
+  if ((!policy.canReorderFields || !field.can_reorder) && data.sortOrder !== current.sortOrder) return { error: 'Forge Creator has locked field ordering.' }
+  if ((!policy.canChangeRequired || !field.can_change_required) && data.isRequired !== current.isRequired) return { error: 'Forge Creator has locked the required setting.' }
+  if ((!policy.canChangeInputType || !field.can_change_input_type) && data.fieldType !== current.fieldType) return { error: 'Forge Creator has locked the input type.' }
+  if ((!policy.canChangeLookup || !field.can_change_lookup) && data.lookupId !== current.lookupId) return { error: 'Forge Creator has locked the dropdown source.' }
+
+  if (data.lookupId) {
+    const { data: lookup } = await supabase.from('forge_lookup_definitions').select('id').eq('id', data.lookupId).eq('is_active', true).maybeSingle()
+    if (!lookup) return { error: 'Selected dropdown source is not available.' }
+  }
 
   const payload = {
     organization_id: organizationId,
