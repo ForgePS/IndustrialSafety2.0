@@ -113,25 +113,43 @@ export const getEffectiveExperience = async ({
         if (!allowedFeatureKeys.has(feature.feature_key)) return null
       }
 
-      const tenantMayHide = element.tenant_edit_mode !== 'none' && element.can_hide
-      const userMayHide = element.user_edit_mode !== 'none'
+      const effectiveTenantEditMode =
+        tenantOverride?.tenant_edit_mode_override ?? element.tenant_edit_mode
+
+      const effectiveLocationEditMode =
+        tenantOverride?.location_edit_mode_override ?? element.location_edit_mode
+
+      const effectiveUserEditMode =
+        tenantOverride?.user_edit_mode_override ?? element.user_edit_mode
+
+      const effectiveCanHide =
+        tenantOverride?.can_hide_override ?? element.can_hide
+
+      const effectiveCanRename =
+        tenantOverride?.can_rename_override ?? element.can_rename
+
+      const effectiveCanReorder =
+        tenantOverride?.can_reorder_override ?? element.can_reorder
+
+      const tenantMayHide = effectiveTenantEditMode !== 'none' && effectiveCanHide
+      const userMayHide = effectiveUserEditMode !== 'none'
       const hidden =
         (tenantMayHide && tenantOverride?.hidden === true) ||
         (userMayHide && userPreference?.hidden === true)
 
-      const tenantMayRename = element.tenant_edit_mode !== 'none' && element.can_rename
+      const tenantMayRename = effectiveTenantEditMode !== 'none' && effectiveCanRename
       const label =
         (tenantMayRename ? tenantOverride?.label : null) ||
         element.default_label ||
         element.name
 
       const description =
-        (element.tenant_edit_mode !== 'none' ? tenantOverride?.description : null) ||
+        (effectiveTenantEditMode !== 'none' ? tenantOverride?.description : null) ||
         element.default_description ||
         null
 
-      const tenantMayReorder = element.tenant_edit_mode !== 'none' && element.can_reorder
-      const userMayReorder = element.user_edit_mode !== 'none'
+      const tenantMayReorder = effectiveTenantEditMode !== 'none' && effectiveCanReorder
+      const userMayReorder = effectiveUserEditMode !== 'none'
       const sortOrder =
         (userMayReorder && userPreference?.sort_order != null ? userPreference.sort_order : null) ??
         (tenantMayReorder && tenantOverride?.sort_order != null ? tenantOverride.sort_order : null) ??
