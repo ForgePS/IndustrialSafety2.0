@@ -1,6 +1,6 @@
 # A string used to distinguish different Supabase projects on the same host. Defaults to the
 # working directory name when running `supabase init`.
-project_id = "jetship-nextjs-saas-boilerplate"
+project_id = "forge-industrial-safety"
 
 [api]
 enabled = true
