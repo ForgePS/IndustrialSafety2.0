@@ -1185,3 +1185,236 @@ where not exists (
   from public.forge_inspection_activity a
   where a.inspection_id='20000000-0000-4000-8000-000000000950'
 );
+
+
+-- Local Assets & Equipment data for runtime, maintenance, meter and future QR/LOTO testing.
+insert into public.forge_assets (
+  id,
+  organization_id,
+  asset_number,
+  asset_type,
+  name,
+  description,
+  status,
+  condition,
+  criticality,
+  manufacturer,
+  model,
+  serial_number,
+  barcode,
+  location_id,
+  division_id,
+  custodian_personnel_id,
+  custodian_user_id,
+  purchase_date,
+  in_service_date,
+  warranty_expires_on,
+  purchase_cost,
+  replacement_cost,
+  created_by,
+  updated_by
+)
+values (
+  '20000000-0000-4000-8000-000000001001',
+  '20000000-0000-4000-8000-000000000100',
+  'DEMO-AST-000001',
+  'equipment',
+  'Demo Forklift',
+  'Demo powered industrial equipment record used to validate Forge asset history and future QR/LOTO integration.',
+  'active',
+  'good',
+  'critical',
+  'Forge Demo Manufacturing',
+  'FD-5000',
+  'DEMO-SN-5000',
+  'DEMO-ASSET-0001',
+  '20000000-0000-4000-8000-000000000300',
+  '20000000-0000-4000-8000-000000000200',
+  '20000000-0000-4000-8000-000000000600',
+  '20000000-0000-4000-8000-000000000002',
+  current_date - 720,
+  current_date - 700,
+  current_date + 10,
+  28500.00,
+  34000.00,
+  '20000000-0000-4000-8000-000000000001',
+  '20000000-0000-4000-8000-000000000001'
+)
+on conflict (id) do update
+set
+  name=excluded.name,
+  description=excluded.description,
+  status=excluded.status,
+  condition=excluded.condition,
+  criticality=excluded.criticality,
+  location_id=excluded.location_id,
+  division_id=excluded.division_id,
+  custodian_personnel_id=excluded.custodian_personnel_id,
+  custodian_user_id=excluded.custodian_user_id,
+  updated_at=now();
+
+insert into public.forge_asset_assignments (
+  id,
+  organization_id,
+  asset_id,
+  personnel_id,
+  user_id,
+  location_id,
+  division_id,
+  assignment_type,
+  assigned_at,
+  notes,
+  assigned_by
+)
+values (
+  '20000000-0000-4000-8000-000000001011',
+  '20000000-0000-4000-8000-000000000100',
+  '20000000-0000-4000-8000-000000001001',
+  '20000000-0000-4000-8000-000000000600',
+  '20000000-0000-4000-8000-000000000002',
+  '20000000-0000-4000-8000-000000000300',
+  '20000000-0000-4000-8000-000000000200',
+  'custody',
+  now() - interval '180 days',
+  'Demo current custody assignment.',
+  '20000000-0000-4000-8000-000000000001'
+)
+on conflict (id) do update
+set
+  personnel_id=excluded.personnel_id,
+  user_id=excluded.user_id,
+  location_id=excluded.location_id,
+  division_id=excluded.division_id,
+  returned_at=null,
+  returned_by=null;
+
+insert into public.forge_asset_maintenance (
+  id,
+  organization_id,
+  asset_id,
+  maintenance_type,
+  status,
+  performed_on,
+  vendor,
+  technician,
+  work_order_number,
+  description,
+  findings,
+  corrective_action,
+  labor_cost,
+  parts_cost,
+  total_cost,
+  next_due_date,
+  created_by,
+  updated_by
+)
+values (
+  '20000000-0000-4000-8000-000000001021',
+  '20000000-0000-4000-8000-000000000100',
+  '20000000-0000-4000-8000-000000001001',
+  'preventive',
+  'completed',
+  current_date - 30,
+  'Demo Equipment Service',
+  'Demo Technician',
+  'WO-DEMO-1001',
+  'Preventive service and operational inspection.',
+  'Normal wear noted. No safety-critical defects identified.',
+  'Routine service completed and unit returned to operation.',
+  185.00,
+  96.25,
+  281.25,
+  current_date + 60,
+  '20000000-0000-4000-8000-000000000001',
+  '20000000-0000-4000-8000-000000000001'
+)
+on conflict (id) do update
+set
+  status=excluded.status,
+  performed_on=excluded.performed_on,
+  description=excluded.description,
+  total_cost=excluded.total_cost,
+  next_due_date=excluded.next_due_date,
+  updated_at=now();
+
+insert into public.forge_asset_meter_readings (
+  id,
+  organization_id,
+  asset_id,
+  meter_type,
+  reading,
+  unit,
+  recorded_at,
+  notes,
+  recorded_by
+)
+values
+  (
+    '20000000-0000-4000-8000-000000001031',
+    '20000000-0000-4000-8000-000000000100',
+    '20000000-0000-4000-8000-000000001001',
+    'hours',
+    1238.4,
+    'hours',
+    now() - interval '30 days',
+    'Reading captured during preventive service.',
+    '20000000-0000-4000-8000-000000000001'
+  ),
+  (
+    '20000000-0000-4000-8000-000000001032',
+    '20000000-0000-4000-8000-000000000100',
+    '20000000-0000-4000-8000-000000001001',
+    'hours',
+    1291.7,
+    'hours',
+    now() - interval '2 days',
+    'Current demo reading.',
+    '20000000-0000-4000-8000-000000000002'
+  )
+on conflict (id) do update
+set
+  reading=excluded.reading,
+  recorded_at=excluded.recorded_at,
+  notes=excluded.notes;
+
+insert into public.forge_asset_activity (
+  organization_id,
+  asset_id,
+  activity_type,
+  message,
+  actor_user_id,
+  created_at
+)
+select *
+from (
+  values
+    (
+      '20000000-0000-4000-8000-000000000100'::uuid,
+      '20000000-0000-4000-8000-000000001001'::uuid,
+      'created'::text,
+      'Demo asset created.'::text,
+      '20000000-0000-4000-8000-000000000001'::uuid,
+      now() - interval '700 days'
+    ),
+    (
+      '20000000-0000-4000-8000-000000000100'::uuid,
+      '20000000-0000-4000-8000-000000001001'::uuid,
+      'maintenance_recorded'::text,
+      'Preventive service and operational inspection recorded.'::text,
+      '20000000-0000-4000-8000-000000000001'::uuid,
+      now() - interval '30 days'
+    ),
+    (
+      '20000000-0000-4000-8000-000000000100'::uuid,
+      '20000000-0000-4000-8000-000000001001'::uuid,
+      'meter_reading'::text,
+      'Operating-hours reading updated.'::text,
+      '20000000-0000-4000-8000-000000000002'::uuid,
+      now() - interval '2 days'
+    )
+) as v(organization_id, asset_id, activity_type, message, actor_user_id, created_at)
+where not exists (
+  select 1
+  from public.forge_asset_activity a
+  where a.asset_id='20000000-0000-4000-8000-000000001001'
+);
