@@ -1418,3 +1418,86 @@ where not exists (
   from public.forge_asset_activity a
   where a.asset_id='20000000-0000-4000-8000-000000001001'
 );
+
+
+-- Local managed QR code linked to the Demo Forklift.
+insert into public.forge_qr_codes (
+  id,
+  organization_id,
+  qr_number,
+  token,
+  name,
+  description,
+  status,
+  target_type,
+  target_id,
+  default_action,
+  scan_count,
+  last_scanned_at,
+  created_by,
+  updated_by
+)
+values (
+  '20000000-0000-4000-8000-000000001101',
+  '20000000-0000-4000-8000-000000000100',
+  'DEMO-QR-000001',
+  '111111111111111111111111111111111111111111111111',
+  'Demo Forklift QR',
+  'Managed QR used to validate asset access, scan history, maintenance routing, and future LOTO workflows.',
+  'active',
+  'asset',
+  '20000000-0000-4000-8000-000000001001',
+  'asset_record',
+  2,
+  now() - interval '1 day',
+  '20000000-0000-4000-8000-000000000001',
+  '20000000-0000-4000-8000-000000000001'
+)
+on conflict (id) do update
+set
+  name=excluded.name,
+  description=excluded.description,
+  status='active',
+  target_type=excluded.target_type,
+  target_id=excluded.target_id,
+  default_action=excluded.default_action,
+  scan_count=excluded.scan_count,
+  last_scanned_at=excluded.last_scanned_at,
+  updated_at=now();
+
+insert into public.forge_qr_scans (
+  organization_id,
+  qr_code_id,
+  auth_user_id,
+  destination_path,
+  user_agent,
+  referrer,
+  scanned_at
+)
+select *
+from (
+  values
+    (
+      '20000000-0000-4000-8000-000000000100'::uuid,
+      '20000000-0000-4000-8000-000000001101'::uuid,
+      '20000000-0000-4000-8000-000000000002'::uuid,
+      '/assets/20000000-0000-4000-8000-000000001001'::text,
+      'Forge Demo Scanner / Authenticated'::text,
+      null::text,
+      now() - interval '2 days'
+    ),
+    (
+      '20000000-0000-4000-8000-000000000100'::uuid,
+      '20000000-0000-4000-8000-000000001101'::uuid,
+      null::uuid,
+      '/assets/20000000-0000-4000-8000-000000001001'::text,
+      'Forge Demo Scanner / Not Signed In'::text,
+      null::text,
+      now() - interval '1 day'
+    )
+) as v(organization_id, qr_code_id, auth_user_id, destination_path, user_agent, referrer, scanned_at)
+where not exists (
+  select 1
+  from public.forge_qr_scans s
+  where s.qr_code_id='20000000-0000-4000-8000-000000001101'
+);
