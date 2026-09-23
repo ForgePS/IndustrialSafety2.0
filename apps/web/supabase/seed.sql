@@ -835,3 +835,353 @@ where not exists (
   from public.forge_incident_activity a
   where a.incident_id='20000000-0000-4000-8000-000000000801'
 );
+
+
+-- Local Inspection template and record for end-to-end Inspections testing.
+insert into public.forge_inspection_templates (
+  id,
+  organization_id,
+  template_key,
+  name,
+  description,
+  inspection_type,
+  version,
+  is_active,
+  created_by,
+  updated_by
+)
+values (
+  '20000000-0000-4000-8000-000000000901',
+  '20000000-0000-4000-8000-000000000100',
+  'general_safety_demo',
+  'General Safety Inspection',
+  'Demo checklist used to validate inspection templates, findings, corrective actions and workflow.',
+  'general',
+  1,
+  true,
+  '20000000-0000-4000-8000-000000000001',
+  '20000000-0000-4000-8000-000000000001'
+)
+on conflict (id) do update
+set
+  name=excluded.name,
+  description=excluded.description,
+  inspection_type=excluded.inspection_type,
+  is_active=true,
+  updated_at=now();
+
+insert into public.forge_inspection_template_items (
+  id,
+  organization_id,
+  template_id,
+  item_key,
+  section_key,
+  section_label,
+  prompt,
+  guidance,
+  response_type,
+  sort_order,
+  is_required,
+  finding_on
+)
+values
+  (
+    '20000000-0000-4000-8000-000000000911',
+    '20000000-0000-4000-8000-000000000100',
+    '20000000-0000-4000-8000-000000000901',
+    'exits_clear',
+    'life_safety',
+    'Life Safety',
+    'Emergency exits and exit access are clear and unobstructed.',
+    'Verify travel paths, exit doors, and marked exit access are not blocked.',
+    'pass_fail_na',
+    10,
+    true,
+    array['fail']::text[]
+  ),
+  (
+    '20000000-0000-4000-8000-000000000912',
+    '20000000-0000-4000-8000-000000000100',
+    '20000000-0000-4000-8000-000000000901',
+    'extinguishers_accessible',
+    'life_safety',
+    'Life Safety',
+    'Portable fire extinguishers are accessible and appear ready for use.',
+    'Check access, obvious damage, and inspection status.',
+    'pass_fail_na',
+    20,
+    true,
+    array['fail']::text[]
+  ),
+  (
+    '20000000-0000-4000-8000-000000000913',
+    '20000000-0000-4000-8000-000000000100',
+    '20000000-0000-4000-8000-000000000901',
+    'walkways_clear',
+    'housekeeping',
+    'Housekeeping',
+    'Walking and working surfaces are clear of obvious trip hazards.',
+    'Check aisles, cords, stored materials, spills, and temporary obstructions.',
+    'pass_fail_na',
+    30,
+    true,
+    array['fail']::text[]
+  ),
+  (
+    '20000000-0000-4000-8000-000000000914',
+    '20000000-0000-4000-8000-000000000100',
+    '20000000-0000-4000-8000-000000000901',
+    'ppe_available',
+    'operations',
+    'Operations',
+    'Required PPE is available for the work being performed.',
+    'Verify required PPE is present, accessible, and serviceable.',
+    'yes_no_na',
+    40,
+    true,
+    array['no']::text[]
+  )
+on conflict (id) do update
+set
+  prompt=excluded.prompt,
+  guidance=excluded.guidance,
+  response_type=excluded.response_type,
+  sort_order=excluded.sort_order,
+  is_required=excluded.is_required,
+  finding_on=excluded.finding_on,
+  updated_at=now();
+
+insert into public.forge_inspections (
+  id,
+  organization_id,
+  inspection_number,
+  template_id,
+  template_name_snapshot,
+  template_version_snapshot,
+  status,
+  inspection_date,
+  location_id,
+  division_id,
+  inspector_user_id,
+  inspector_personnel_id,
+  result,
+  notes,
+  started_at,
+  completed_at,
+  submitted_at,
+  submitted_by,
+  approved_at,
+  approved_by,
+  created_by,
+  updated_by
+)
+values (
+  '20000000-0000-4000-8000-000000000950',
+  '20000000-0000-4000-8000-000000000100',
+  'DEMO-INSP-000001',
+  '20000000-0000-4000-8000-000000000901',
+  'General Safety Inspection',
+  1,
+  'approved',
+  current_date - 3,
+  '20000000-0000-4000-8000-000000000300',
+  '20000000-0000-4000-8000-000000000200',
+  '20000000-0000-4000-8000-000000000002',
+  '20000000-0000-4000-8000-000000000600',
+  'needs_attention',
+  'Demo inspection with one open corrective-action finding.',
+  now() - interval '3 days',
+  now() - interval '3 days',
+  now() - interval '2 days',
+  '20000000-0000-4000-8000-000000000002',
+  now() - interval '1 day',
+  '20000000-0000-4000-8000-000000000001',
+  '20000000-0000-4000-8000-000000000002',
+  '20000000-0000-4000-8000-000000000001'
+)
+on conflict (id) do update
+set
+  status=excluded.status,
+  result=excluded.result,
+  notes=excluded.notes,
+  updated_at=now();
+
+insert into public.forge_inspection_items (
+  id,
+  organization_id,
+  inspection_id,
+  template_item_id,
+  item_key,
+  section_key,
+  section_label,
+  prompt,
+  guidance,
+  response_type,
+  sort_order,
+  is_required,
+  finding_on,
+  response_value,
+  notes,
+  responded_by,
+  responded_at
+)
+values
+  (
+    '20000000-0000-4000-8000-000000000951',
+    '20000000-0000-4000-8000-000000000100',
+    '20000000-0000-4000-8000-000000000950',
+    '20000000-0000-4000-8000-000000000911',
+    'exits_clear',
+    'life_safety',
+    'Life Safety',
+    'Emergency exits and exit access are clear and unobstructed.',
+    'Verify travel paths, exit doors, and marked exit access are not blocked.',
+    'pass_fail_na',
+    10,
+    true,
+    array['fail']::text[],
+    'pass',
+    null,
+    '20000000-0000-4000-8000-000000000002',
+    now() - interval '3 days'
+  ),
+  (
+    '20000000-0000-4000-8000-000000000952',
+    '20000000-0000-4000-8000-000000000100',
+    '20000000-0000-4000-8000-000000000950',
+    '20000000-0000-4000-8000-000000000912',
+    'extinguishers_accessible',
+    'life_safety',
+    'Life Safety',
+    'Portable fire extinguishers are accessible and appear ready for use.',
+    'Check access, obvious damage, and inspection status.',
+    'pass_fail_na',
+    20,
+    true,
+    array['fail']::text[],
+    'pass',
+    null,
+    '20000000-0000-4000-8000-000000000002',
+    now() - interval '3 days'
+  ),
+  (
+    '20000000-0000-4000-8000-000000000953',
+    '20000000-0000-4000-8000-000000000100',
+    '20000000-0000-4000-8000-000000000950',
+    '20000000-0000-4000-8000-000000000913',
+    'walkways_clear',
+    'housekeeping',
+    'Housekeeping',
+    'Walking and working surfaces are clear of obvious trip hazards.',
+    'Check aisles, cords, stored materials, spills, and temporary obstructions.',
+    'pass_fail_na',
+    30,
+    true,
+    array['fail']::text[],
+    'fail',
+    'Stored material narrowed an aisle near the demo work area.',
+    '20000000-0000-4000-8000-000000000002',
+    now() - interval '3 days'
+  ),
+  (
+    '20000000-0000-4000-8000-000000000954',
+    '20000000-0000-4000-8000-000000000100',
+    '20000000-0000-4000-8000-000000000950',
+    '20000000-0000-4000-8000-000000000914',
+    'ppe_available',
+    'operations',
+    'Operations',
+    'Required PPE is available for the work being performed.',
+    'Verify required PPE is present, accessible, and serviceable.',
+    'yes_no_na',
+    40,
+    true,
+    array['no']::text[],
+    'yes',
+    null,
+    '20000000-0000-4000-8000-000000000002',
+    now() - interval '3 days'
+  )
+on conflict (id) do update
+set
+  response_value=excluded.response_value,
+  notes=excluded.notes,
+  responded_at=excluded.responded_at;
+
+insert into public.forge_inspection_findings (
+  id,
+  organization_id,
+  inspection_id,
+  inspection_item_id,
+  title,
+  description,
+  severity,
+  status,
+  due_date,
+  corrective_action,
+  created_by,
+  updated_by
+)
+values (
+  '20000000-0000-4000-8000-000000000960',
+  '20000000-0000-4000-8000-000000000100',
+  '20000000-0000-4000-8000-000000000950',
+  '20000000-0000-4000-8000-000000000953',
+  'Clear stored material from aisle',
+  'Stored material narrowed a walking path and should be relocated.',
+  'moderate',
+  'in_progress',
+  current_date + 7,
+  'Relocate the material and restore the full aisle width.',
+  '20000000-0000-4000-8000-000000000002',
+  '20000000-0000-4000-8000-000000000002'
+)
+on conflict (id) do update
+set
+  severity=excluded.severity,
+  status=excluded.status,
+  due_date=excluded.due_date,
+  corrective_action=excluded.corrective_action,
+  updated_at=now();
+
+insert into public.forge_inspection_activity (
+  organization_id,
+  inspection_id,
+  activity_type,
+  message,
+  actor_user_id,
+  created_at
+)
+select *
+from (
+  values
+    (
+      '20000000-0000-4000-8000-000000000100'::uuid,
+      '20000000-0000-4000-8000-000000000950'::uuid,
+      'created'::text,
+      'Demo inspection created from General Safety Inspection.'::text,
+      '20000000-0000-4000-8000-000000000002'::uuid,
+      now() - interval '3 days'
+    ),
+    (
+      '20000000-0000-4000-8000-000000000100'::uuid,
+      '20000000-0000-4000-8000-000000000950'::uuid,
+      'finding_created'::text,
+      'Finding created: Clear stored material from aisle.'::text,
+      '20000000-0000-4000-8000-000000000002'::uuid,
+      now() - interval '3 days'
+    ),
+    (
+      '20000000-0000-4000-8000-000000000100'::uuid,
+      '20000000-0000-4000-8000-000000000950'::uuid,
+      'approved'::text,
+      'Demo inspection approved with corrective action still open.'::text,
+      '20000000-0000-4000-8000-000000000001'::uuid,
+      now() - interval '1 day'
+    )
+) as v(organization_id, inspection_id, activity_type, message, actor_user_id, created_at)
+where not exists (
+  select 1
+  from public.forge_inspection_activity a
+  where a.inspection_id='20000000-0000-4000-8000-000000000950'
+);
