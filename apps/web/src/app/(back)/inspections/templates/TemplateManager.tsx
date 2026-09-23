@@ -373,7 +373,13 @@ const TemplateManager = ({
                       <span className='font-medium'>Required</span>
                     </label>
                     <label className='flex items-center gap-3 rounded-lg border p-4'>
-                      <Switch checked={newItemDraft.findingOn.includes('fail')} onCheckedChange={value => setNewItemDraft(current => ({ ...current, findingOn: value ? ['fail'] : [] }))} />
+                      <Switch
+  checked={newItemDraft.findingOn.includes(newItemDraft.responseType === 'yes_no_na' ? 'no' : 'fail')}
+  onCheckedChange={value => setNewItemDraft(current => ({
+    ...current,
+    findingOn: value ? [current.responseType === 'yes_no_na' ? 'no' : 'fail'] : []
+  }))}
+/>
                       <span className='font-medium'>Flag Finding on Fail</span>
                     </label>
                   </div>
@@ -423,7 +429,16 @@ const TemplateManager = ({
                         <span className='font-medium'>Required</span>
                       </label>
                       <label className='flex items-center gap-3 rounded-lg border p-4'>
-                        <Switch checked={draft.findingOn.includes('fail')} onCheckedChange={value => setItemDrafts(current => ({ ...current, [item.id]: { ...current[item.id], findingOn: value ? ['fail'] : [] } }))} />
+                        <Switch
+  checked={draft.findingOn.includes(draft.responseType === 'yes_no_na' ? 'no' : 'fail')}
+  onCheckedChange={value => setItemDrafts(current => ({
+    ...current,
+    [item.id]: {
+      ...current[item.id],
+      findingOn: value ? [current[item.id].responseType === 'yes_no_na' ? 'no' : 'fail'] : []
+    }
+  }))}
+/>
                         <span className='font-medium'>Flag Finding on Fail</span>
                       </label>
                     </div>
