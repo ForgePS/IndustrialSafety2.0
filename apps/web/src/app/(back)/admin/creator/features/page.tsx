@@ -1,32 +1,43 @@
-// Next Imports
 import type { Metadata } from 'next'
+import { createServiceRoleClient } from '@repo/supabase/server'
+import FeatureManager from './FeatureManager'
+import { requireForgePlatformRole } from '@/lib/forgeCreatorAuth'
 
-// Third-party Imports
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@repo/ui/components/ui/card'
+export const metadata: Metadata = { title: 'Features & Entitlements | Forge Creator 2.0' }
 
-export const metadata: Metadata = { title: 'Features & Entitlements' }
+const FeaturesPage = async () => {
+  await requireForgePlatformRole()
+  const supabase = createServiceRoleClient() as any
 
-const Page = () => {
+  const [
+    { data: features, error: featureError },
+    { data: plans },
+    { data: entitlements }
+  ] = await Promise.all([
+    supabase.from('forge_feature_registry').select('*').order('sort_order').order('name'),
+    supabase.from('forge_plans').select('id, name, plan_key, status').eq('status', 'active').order('name'),
+    supabase.from('forge_plan_entitlements').select('plan_id, feature_id, enabled')
+  ])
+
+  if (featureError) throw new Error(`Unable to load feature registry: ${featureError.message}`)
+
   return (
     <div className='flex flex-col gap-6'>
       <div>
         <p className='text-primary text-sm font-semibold uppercase tracking-wide'>Forge Creator 2.0</p>
         <h1 className='text-textPrimary mt-1 text-3xl font-bold'>Features & Entitlements</h1>
-        <p className='text-textSecondary mt-2 max-w-3xl'>Control platform features, plan entitlements, tenant overrides and release states.</p>
+        <p className='text-textSecondary mt-2 max-w-4xl'>
+          Control platform availability, plan inclusion, and which configuration layers tenants are allowed to use.
+        </p>
       </div>
-      <Card>
-        <CardHeader>
-          <CardTitle>Foundation active</CardTitle>
-          <CardDescription>This section is now part of the Creator control-plane build.</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <p className='text-textSecondary text-sm'>
-            Database structures for this area are being introduced first so the UI can be built against stable multi-tenant rules rather than hard-coded demo data.
-          </p>
-        </CardContent>
-      </Card>
+
+      <FeatureManager
+        features={features || []}
+        plans={plans || []}
+        entitlements={entitlements || []}
+      />
     </div>
   )
 }
 
-export default Page
+export default FeaturesPage
