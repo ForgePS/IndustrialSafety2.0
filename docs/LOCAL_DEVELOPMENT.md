@@ -24,7 +24,7 @@ pnpm web:supabase:start
 pnpm web:supabase:status
 ```
 
-Use the values shown by `supabase status` in `apps/web/.env.local`. Forge Industrial Safety 2.0 uses its own 5532x port range so it can coexist with the original local application.
+Use the values shown by `supabase status` in `apps/web/.env.local`. Forge Industrial Safety 2.0 uses its own 3542x port range so it can coexist with the original local application.
 
 At minimum, configure:
 
@@ -34,7 +34,7 @@ NEXT_PUBLIC_APP_DOMAIN=localhost
 NEXT_PUBLIC_APP_NAME=Forge Industrial Safety 2.0
 NEXT_PUBLIC_APP_TITLE=%s | Forge Industrial Safety 2.0
 NEXT_PUBLIC_APP_DESCRIPTION=Forge Industrial Safety 2.0 local development
-NEXT_PUBLIC_SUPABASE_URL=http://127.0.0.1:55321
+NEXT_PUBLIC_SUPABASE_URL=http://127.0.0.1:35421
 NEXT_PUBLIC_SUPABASE_ANON_KEY=YOUR_LOCAL_ANON_KEY
 SUPABASE_SERVICE_ROLE_KEY=YOUR_LOCAL_SERVICE_ROLE_KEY
 SESSION_SECRET=USE_A_LONG_RANDOM_LOCAL_VALUE
@@ -91,7 +91,7 @@ pnpm web:supabase:status
 Use the Studio URL reported by the Supabase CLI. The Forge Industrial Safety 2.0 local Studio address is:
 
 ```text
-http://127.0.0.1:55323
+http://127.0.0.1:35423
 ```
 
 ## Current 2.0 foundation
