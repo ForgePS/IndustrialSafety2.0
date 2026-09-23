@@ -18,6 +18,7 @@ import {
   TbListDetails,
   TbLock,
   TbSettings,
+  TbSettingsAutomation,
   TbStar,
   TbTemplate,
   TbUser,
@@ -143,6 +144,21 @@ const AppSidebar = ({ roles, permissions }: { roles?: string[]; permissions: str
             </SidebarMenuItem>
           </SidebarMenu>
         </SidebarGroup>
+        {roles?.includes('admin') && (
+          <SidebarGroup>
+            <SidebarGroupLabel className='text-nowrap'>
+              {state === 'expanded' || isMobile ? 'Forge Platform' : <SidebarSeparator className='!is-8' />}
+            </SidebarGroupLabel>
+            <SidebarMenu>
+              <SidebarMenuItem>
+                <MenuButton href='/admin/creator' exactMatch={false} tooltip='Forge Creator 2.0'>
+                  <TbSettingsAutomation />
+                  <span>Forge Creator 2.0</span>
+                </MenuButton>
+              </SidebarMenuItem>
+            </SidebarMenu>
+          </SidebarGroup>
+        )}
         <PermissionGuard permissions={permissions} permission='view_settings'>
           <SidebarGroup>
             <SidebarGroupLabel className='text-nowrap'>
