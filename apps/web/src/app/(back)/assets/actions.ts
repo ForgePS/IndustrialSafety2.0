@@ -205,6 +205,7 @@ export const createAsset = async (values: AssetFormValues) => {
 
   const payload = buildAssetPayload(values)
   if (!payload.name) return { error: 'Asset Name is required.' }
+  if (payload.status === 'retired') return { error: 'Use the Retire Asset action to retire an asset.' }
 
   const supabase = createServiceRoleClient() as any
 
@@ -324,6 +325,7 @@ export const updateAsset = async ({
 
   const payload = buildAssetPayload(values)
   if (!payload.name) return { error: 'Asset Name is required.' }
+  if (payload.status === 'retired') return { error: 'Use the Retire Asset action to retire an asset.' }
 
   const assignmentChanged =
     payload.location_id !== before.location_id ||
@@ -638,6 +640,11 @@ export const createAssetMeterReading = async ({
     return { error: 'Meter Type, Reading, and Recorded Date & Time are required.' }
   }
 
+  const recordedDate = new Date(recordedAt)
+  if (Number.isNaN(recordedDate.getTime())) {
+    return { error: 'Recorded Date & Time is invalid.' }
+  }
+
   const { data: latest } = await supabase
     .from('forge_asset_meter_readings')
     .select('reading')
@@ -660,7 +667,7 @@ export const createAssetMeterReading = async ({
       meter_type: meterType,
       reading,
       unit: cleanText(values.unit),
-      recorded_at: new Date(recordedAt).toISOString(),
+      recorded_at: recordedDate.toISOString(),
       notes: cleanText(values.notes),
       recorded_by: context.user.id
     })
