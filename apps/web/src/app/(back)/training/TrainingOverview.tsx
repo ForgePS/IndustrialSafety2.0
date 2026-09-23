@@ -47,6 +47,7 @@ const TrainingOverview = ({
   deliveryLabels,
   statusLabels,
   resultLabels,
+  approvalLabels,
   canCreateCourse,
   canAssign,
   canRecordCompletion,
@@ -59,6 +60,7 @@ const TrainingOverview = ({
   deliveryLabels: Record<string, string>
   statusLabels: Record<string, string>
   resultLabels: Record<string, string>
+  approvalLabels: Record<string, string>
   canCreateCourse: boolean
   canAssign: boolean
   canRecordCompletion: boolean
@@ -189,7 +191,7 @@ const TrainingOverview = ({
                 <TableCell>{item.forge_training_courses?.title || 'Unknown course'}</TableCell>
                 <TableCell>{new Date(item.completed_at).toLocaleString()}</TableCell>
                 <TableCell>{resultLabels[item.result] || item.result}</TableCell>
-                <TableCell><Badge size='sm' variant={item.approval_status === 'approved' ? 'tonalSuccess' : 'secondary'}>{item.approval_status}</Badge></TableCell>
+                <TableCell><Badge size='sm' variant={item.approval_status === 'approved' ? 'tonalSuccess' : 'secondary'}>{approvalLabels[item.approval_status] || item.approval_status}</Badge></TableCell>
                 <TableCell className='text-right'>
                   {canApprove && item.approval_status === 'pending' ? (
                     <Button size='sm' onClick={() => approve(item.id)} disabled={pending}>Approve</Button>
