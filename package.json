@@ -1,6 +1,6 @@
 {
-  "name": "forge-industrial-safety",
-  "version": "1.0.2",
+  "name": "forge-industrial-safety-2.0",
+  "version": "2.0.0",
   "private": true,
   "scripts": {
     "dev": "turbo dev --filter !@repo/maizzle-email-builder",
