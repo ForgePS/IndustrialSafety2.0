@@ -197,6 +197,66 @@ values (
 on conflict (key) do update
 set value = excluded.value;
 
+-- Forge Creator 2.0 local platform-owner access.
+insert into public.forge_platform_users (user_id, platform_role, is_active)
+values ('20000000-0000-4000-8000-000000000001', 'forge_owner', true)
+on conflict (user_id) do update
+set
+  platform_role = excluded.platform_role,
+  is_active = excluded.is_active,
+  updated_at = now();
+
+-- Local plans used to exercise Creator subscription behavior.
+insert into public.forge_plans (
+  id, plan_key, name, description, status, billing_interval, base_price_cents,
+  currency, included_storage_gb, included_emails_monthly, included_sms_segments_monthly
+)
+values
+  (
+    '20000000-0000-4000-8000-000000000401',
+    'internal-demo',
+    'Internal Demo',
+    'Local-development plan with all current Forge modules enabled.',
+    'active',
+    'annual',
+    0,
+    'USD',
+    100,
+    10000,
+    5000
+  ),
+  (
+    '20000000-0000-4000-8000-000000000402',
+    'enterprise',
+    'Enterprise',
+    'Enterprise subscription template for full Forge Industrial Safety deployments.',
+    'active',
+    'annual',
+    3000000,
+    'USD',
+    100,
+    10000,
+    5000
+  )
+on conflict (id) do update
+set
+  name = excluded.name,
+  description = excluded.description,
+  status = excluded.status,
+  billing_interval = excluded.billing_interval,
+  base_price_cents = excluded.base_price_cents,
+  included_storage_gb = excluded.included_storage_gb,
+  included_emails_monthly = excluded.included_emails_monthly,
+  included_sms_segments_monthly = excluded.included_sms_segments_monthly,
+  updated_at = now();
+
+insert into public.forge_plan_entitlements (plan_id, feature_id, enabled)
+select '20000000-0000-4000-8000-000000000401', id, true
+from public.forge_feature_registry
+where requires_entitlement = true
+on conflict (plan_id, feature_id) do update
+set enabled = excluded.enabled;
+
 -- Local-only tenant seed for the 2.0 codebase.
 insert into public.organizations (
   id,
@@ -263,4 +323,24 @@ set
   code = excluded.code,
   city = excluded.city,
   state_region = excluded.state_region,
+  updated_at = now();
+
+insert into public.forge_subscriptions (
+  id, organization_id, plan_id, status, starts_at, usage_limits, overage_rules
+)
+values (
+  '20000000-0000-4000-8000-000000000500',
+  '20000000-0000-4000-8000-000000000100',
+  '20000000-0000-4000-8000-000000000401',
+  'active',
+  now(),
+  '{"storage_gb":100,"emails_monthly":10000,"sms_segments_monthly":5000}'::jsonb,
+  '{"storage_per_gb_usd":0.25,"email_markup_percent":15,"sms_markup_percent":15}'::jsonb
+)
+on conflict (id) do update
+set
+  plan_id = excluded.plan_id,
+  status = excluded.status,
+  usage_limits = excluded.usage_limits,
+  overage_rules = excluded.overage_rules,
   updated_at = now();
