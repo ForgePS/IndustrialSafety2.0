@@ -477,6 +477,35 @@ values
 on conflict (organization_id, role_key) do update
 set name = excluded.name, description = excluded.description, is_active = true, updated_at = now();
 
+-- Apply reusable permission templates after seeded tenant roles exist.
+with role_template_map(role_key, template_key) as (
+  values
+    ('company-owner','company-admin'),
+    ('company-administrator','company-admin'),
+    ('location-administrator','supervisor'),
+    ('supervisor','supervisor'),
+    ('employee','standard-user'),
+    ('read-only','read-only')
+)
+insert into public.forge_tenant_role_permissions (role_id, permission_id, allowed, scope, constraints)
+select
+  r.id,
+  tp.permission_id,
+  tp.allowed,
+  coalesce(tp.scope, 'organization'),
+  coalesce(tp.constraints, '{}'::jsonb)
+from public.forge_tenant_roles r
+join role_template_map m on m.role_key = r.role_key
+join public.forge_role_templates rt on rt.template_key = m.template_key
+join public.forge_role_template_permissions tp on tp.template_id = rt.id
+where r.organization_id = '20000000-0000-4000-8000-000000000100'
+  and tp.allowed = true
+on conflict (role_id, permission_id) do update
+set
+  allowed = excluded.allowed,
+  scope = excluded.scope,
+  constraints = excluded.constraints;
+
 insert into public.forge_tenant_user_roles (organization_id, user_id, role_id)
 select
   '20000000-0000-4000-8000-000000000100',
