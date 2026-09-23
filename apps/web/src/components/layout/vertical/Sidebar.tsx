@@ -80,7 +80,7 @@ const MenuButton = ({ children, href, target = '_self', exactMatch = true, ...pr
   )
 }
 
-const AppSidebar = ({ roles, permissions }: { roles?: string[]; permissions: string[] }) => {
+const AppSidebar = ({\n  roles,\n  permissions,\n  forgePlatformRole\n}: {\n  roles?: string[]\n  permissions: string[]\n  forgePlatformRole?: string | null\n}) => {
   // Hooks
   const { isImpersonating } = useAuthContext()
   const { isMobile, state } = useSidebar()
@@ -144,7 +144,7 @@ const AppSidebar = ({ roles, permissions }: { roles?: string[]; permissions: str
             </SidebarMenuItem>
           </SidebarMenu>
         </SidebarGroup>
-        {roles?.includes('admin') && (
+        {forgePlatformRole && (
           <SidebarGroup>
             <SidebarGroupLabel className='text-nowrap'>
               {state === 'expanded' || isMobile ? 'Forge Platform' : <SidebarSeparator className='!is-8' />}
