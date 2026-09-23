@@ -17,20 +17,19 @@ import Header from '@components/layout/vertical/Header'
 // Config Imports
 import appConfig from '@configs/appConfig'
 
+// Lib Imports
+import { getForgePlatformRole } from '@/lib/forgeCreatorAuth'
+
 export async function generateMetadata(): Promise<Metadata> {
   return {
     title: {
-      template: `%s | ${appConfig.appName} - Next.js Boilerplate PRO`,
-      default: `${appConfig.appName} - Next.js Boilerplate PRO`
-    },
-    alternates: {
-      canonical: 'https://jetship-nextjs-saas-boilerplate-demo.vercel.app'
+      template: `%s | ${appConfig.appName}`,
+      default: appConfig.appName
     }
   }
 }
 
 const AdminLayout = async ({ children }: { children: ReactNode }) => {
-  // Vars
   const cookieStore = await cookies()
   const sidebarCookie = cookieStore.get('is-sidebar-open')
 
@@ -40,10 +39,14 @@ const AdminLayout = async ({ children }: { children: ReactNode }) => {
 
   const roles = user?.user_metadata.roles
   const permissions = user?.user_metadata.permissions
+  const forgePlatformRole = await getForgePlatformRole(user?.id)
 
   return (
     <SidebarProvider defaultOpen={sidebarCookie ? JSON.parse(sidebarCookie.value) : appConfig.layout === 'vertical'}>
-      <VerticalLayout navigation={<Sidebar roles={roles} permissions={permissions} />} header={<Header />}>
+      <VerticalLayout
+        navigation={<Sidebar roles={roles} permissions={permissions} forgePlatformRole={forgePlatformRole} />}
+        header={<Header />}
+      >
         {children}
       </VerticalLayout>
     </SidebarProvider>
