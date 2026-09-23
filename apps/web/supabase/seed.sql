@@ -571,3 +571,138 @@ set
   location_id = excluded.location_id,
   division_id = excluded.division_id,
   updated_at = now();
+
+
+-- Local Training data for end-to-end Training and My Training testing.
+insert into public.forge_training_courses (
+  id,
+  organization_id,
+  course_code,
+  title,
+  description,
+  category_key,
+  delivery_method,
+  duration_minutes,
+  validity_months,
+  is_active,
+  created_by,
+  updated_by
+)
+values
+  (
+    '20000000-0000-4000-8000-000000000701',
+    '20000000-0000-4000-8000-000000000100',
+    'SAFE-101',
+    'Safety Orientation',
+    'Local demo course used to validate assignment and My Training workflows.',
+    'safety',
+    'classroom',
+    60,
+    12,
+    true,
+    '20000000-0000-4000-8000-000000000001',
+    '20000000-0000-4000-8000-000000000001'
+  ),
+  (
+    '20000000-0000-4000-8000-000000000702',
+    '20000000-0000-4000-8000-000000000100',
+    'COMP-201',
+    'Annual Compliance Refresher',
+    'Local demo completion used to validate transcript and approval display.',
+    'compliance',
+    'online',
+    45,
+    12,
+    true,
+    '20000000-0000-4000-8000-000000000001',
+    '20000000-0000-4000-8000-000000000001'
+  )
+on conflict (id) do update
+set
+  course_code=excluded.course_code,
+  title=excluded.title,
+  description=excluded.description,
+  category_key=excluded.category_key,
+  delivery_method=excluded.delivery_method,
+  duration_minutes=excluded.duration_minutes,
+  validity_months=excluded.validity_months,
+  is_active=true,
+  updated_at=now();
+
+insert into public.forge_training_assignments (
+  id,
+  organization_id,
+  course_id,
+  personnel_id,
+  status,
+  assigned_at,
+  due_date,
+  assigned_by,
+  notes
+)
+values (
+  '20000000-0000-4000-8000-000000000711',
+  '20000000-0000-4000-8000-000000000100',
+  '20000000-0000-4000-8000-000000000701',
+  '20000000-0000-4000-8000-000000000600',
+  'assigned',
+  now(),
+  current_date + 30,
+  '20000000-0000-4000-8000-000000000001',
+  'Demo assignment for My Training.'
+)
+on conflict (id) do update
+set
+  status='assigned',
+  due_date=current_date + 30,
+  notes=excluded.notes,
+  updated_at=now();
+
+insert into public.forge_training_completions (
+  id,
+  organization_id,
+  course_id,
+  personnel_id,
+  completed_at,
+  hours,
+  score,
+  instructor,
+  result,
+  approval_status,
+  approved_by,
+  approved_at,
+  certificate_number,
+  expires_at,
+  notes,
+  created_by,
+  updated_by
+)
+values (
+  '20000000-0000-4000-8000-000000000721',
+  '20000000-0000-4000-8000-000000000100',
+  '20000000-0000-4000-8000-000000000702',
+  '20000000-0000-4000-8000-000000000600',
+  now() - interval '14 days',
+  0.75,
+  100,
+  'Forge Demo Instructor',
+  'passed',
+  'approved',
+  '20000000-0000-4000-8000-000000000001',
+  now() - interval '14 days',
+  'DEMO-CERT-0001',
+  current_date + 351,
+  'Demo approved completion.',
+  '20000000-0000-4000-8000-000000000001',
+  '20000000-0000-4000-8000-000000000001'
+)
+on conflict (id) do update
+set
+  hours=excluded.hours,
+  score=excluded.score,
+  instructor=excluded.instructor,
+  result=excluded.result,
+  approval_status=excluded.approval_status,
+  certificate_number=excluded.certificate_number,
+  expires_at=excluded.expires_at,
+  updated_at=now();
