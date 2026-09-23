@@ -4,7 +4,6 @@ import type { HTMLAttributeAnchorTarget, ReactNode } from 'react'
 import { usePathname } from 'next/navigation'
 import Link from 'next/link'
 import {
-  TbAdjustments,
   TbCircle,
   TbDashboard,
   TbSettingsAutomation,
@@ -145,12 +144,6 @@ const AppSidebar = ({
                 <MenuButton href='/admin/creator' exactMatch={false} tooltip='Forge Creator 2.0'>
                   <TbSettingsAutomation />
                   <span>Forge Creator 2.0</span>
-                </MenuButton>
-              </SidebarMenuItem>
-              <SidebarMenuItem>
-                <MenuButton href='/admin/creator/experience' exactMatch={false} tooltip='Experience Builder'>
-                  <TbAdjustments />
-                  <span>Experience Builder</span>
                 </MenuButton>
               </SidebarMenuItem>
             </SidebarMenu>
