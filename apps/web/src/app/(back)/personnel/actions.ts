@@ -25,25 +25,25 @@ const validateFormValues = async ({
   values: PersonnelFormValues
 }) => {
   const form = await getEffectiveForm({ organizationId, formKey: 'personnel.profile' })
-  if (!form) return { error: 'Personnel Profile form is not configured.' as const }
+  if (!form) return { error: 'Personnel Profile form is not configured.' }
 
   for (const field of form.fields) {
     const value = values[field.key]
 
     if (field.required && (value == null || value === '')) {
-      return { error: `${field.label} is required.` as const }
+      return { error: `${field.label} is required.` }
     }
 
     if (field.fieldType === 'select' && value && field.lookupOptions.length) {
       if (!field.lookupOptions.some(option => option.key === value)) {
-        return { error: `${field.label} contains an invalid option.` as const }
+        return { error: `${field.label} contains an invalid option.` }
       }
     }
   }
 
   const email = values.email ?? null
   const emailResult = emailSchema.safeParse(email)
-  if (!emailResult.success) return { error: 'Enter a valid email address.' as const }
+  if (!emailResult.success) return { error: 'Enter a valid email address.' }
 
   return { form }
 }
