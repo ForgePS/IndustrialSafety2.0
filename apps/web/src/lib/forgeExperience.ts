@@ -86,11 +86,20 @@ export const getEffectiveExperience = async ({
       .map(item => item.featureKey as string)
   )
 
+  const allowedPermissionKeys = new Set(
+    access.effective
+      .filter(item => item.allowed)
+      .map(item => item.permissionKey)
+  )
+
   return (elements || [])
     .map((element: any): EffectiveExperienceElement | null => {
       const feature = element.forge_feature_registry
       const tenantOverride = tenantOverrideByElement.get(element.id)
       const userPreference = userPreferenceByElement.get(element.id)
+      const requiredPermission = element.settings?.required_permission as string | undefined
+
+      if (requiredPermission && !allowedPermissionKeys.has(requiredPermission)) return null
 
       if (feature) {
         if (['disabled', 'maintenance', 'deprecated'].includes(feature.platform_state)) return null
