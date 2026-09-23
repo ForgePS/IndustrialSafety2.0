@@ -10,7 +10,6 @@ import {
   TbListDetails,
   TbRoute,
   TbSettingsAutomation,
-  TbAdjustments,
   TbShieldLock,
   TbToggleRight,
   TbUsersGroup,
@@ -59,12 +58,6 @@ const creatorAreas = [
     description: 'Manage every dropdown, option key and tenant customization rule.',
     href: '/admin/creator/lookups',
     icon: TbListDetails
-  },
-  {
-    title: 'Experience Builder',
-    description: 'Edit labels, help text, visibility, presentation and who may customize each experience element.',
-    href: '/admin/creator/experience',
-    icon: TbAdjustments
   },
   {
     title: 'Navigation Builder',
