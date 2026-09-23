@@ -19,6 +19,8 @@ import appConfig from '@configs/appConfig'
 
 // Lib Imports
 import { getForgePlatformRole } from '@/lib/forgeCreatorAuth'
+import { getTenantContext } from '@/lib/forgeTenantContext'
+import { getEffectiveExperience } from '@/lib/forgeExperience'
 
 export async function generateMetadata(): Promise<Metadata> {
   return {
@@ -40,12 +42,35 @@ const AdminLayout = async ({ children }: { children: ReactNode }) => {
   const roles = user?.user_metadata.roles
   const permissions = user?.user_metadata.permissions
   const forgePlatformRole = await getForgePlatformRole(user?.id)
+  const tenantContext = await getTenantContext()
+
+  const tenantNavigation =
+    tenantContext.user && tenantContext.activeOrganization
+      ? await getEffectiveExperience({
+          organizationId: tenantContext.activeOrganization.id,
+          userId: tenantContext.user.id,
+          types: ['menu']
+        })
+      : []
 
   return (
     <SidebarProvider defaultOpen={sidebarCookie ? JSON.parse(sidebarCookie.value) : appConfig.layout === 'vertical'}>
       <VerticalLayout
-        navigation={<Sidebar roles={roles} permissions={permissions} forgePlatformRole={forgePlatformRole} />}
-        header={<Header />}
+        navigation={
+          <Sidebar
+            roles={roles}
+            permissions={permissions}
+            forgePlatformRole={forgePlatformRole}
+            tenantNavigation={tenantNavigation.filter(item => item.routeLive)}
+            activeOrganizationName={tenantContext.activeOrganization?.name || null}
+          />
+        }
+        header={
+          <Header
+            organizations={tenantContext.organizations}
+            activeOrganizationId={tenantContext.activeOrganization?.id || null}
+          />
+        }
       >
         {children}
       </VerticalLayout>
