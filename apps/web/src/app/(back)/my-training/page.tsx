@@ -9,17 +9,21 @@ import { getEffectiveLookup } from '@/lib/forgeLookups'
 export const metadata: Metadata = { title: 'My Training' }
 
 const MyTrainingPage = async () => {
-  const context = await requireTenantPermission('training.view')
+  const context = await requireTenantPermission('my_training.view')
   const organizationId = context.activeOrganization.id
 
-  const [data, statusLookup, resultLookup] = await Promise.all([
+  const [data, statusLookup, resultLookup, approvalLookup, deliveryLookup] = await Promise.all([
     getMyTraining({ organizationId, userId: context.user.id }),
     getEffectiveLookup({ organizationId, lookupKey: 'training.status' }),
-    getEffectiveLookup({ organizationId, lookupKey: 'training.result' })
+    getEffectiveLookup({ organizationId, lookupKey: 'training.result' }),
+    getEffectiveLookup({ organizationId, lookupKey: 'training.approval_status' }),
+    getEffectiveLookup({ organizationId, lookupKey: 'training.delivery_method' })
   ])
 
   const statusLabels = Object.fromEntries(statusLookup.options.map(option => [option.key, option.label]))
   const resultLabels = Object.fromEntries(resultLookup.options.map(option => [option.key, option.label]))
+  const approvalLabels = Object.fromEntries(approvalLookup.options.map(option => [option.key, option.label]))
+  const deliveryLabels = Object.fromEntries(deliveryLookup.options.map(option => [option.key, option.label]))
 
   if (!data.personnel) {
     return (
@@ -80,7 +84,7 @@ const MyTrainingPage = async () => {
                     </Badge>
                   </TableCell>
                   <TableCell>{item.due_date || '—'}</TableCell>
-                  <TableCell>{item.forge_training_courses?.delivery_method || '—'}</TableCell>
+                  <TableCell>{item.forge_training_courses?.delivery_method ? deliveryLabels[item.forge_training_courses.delivery_method] || item.forge_training_courses.delivery_method : '—'}</TableCell>
                   <TableCell>{item.forge_training_courses?.duration_minutes ? String(item.forge_training_courses.duration_minutes) + ' min' : '—'}</TableCell>
                 </TableRow>
               )
@@ -117,7 +121,7 @@ const MyTrainingPage = async () => {
                 <TableCell>{new Date(item.completed_at).toLocaleDateString()}</TableCell>
                 <TableCell>{resultLabels[item.result] || item.result}</TableCell>
                 <TableCell>{item.hours ?? '—'}</TableCell>
-                <TableCell><Badge size='sm' variant={item.approval_status === 'approved' ? 'tonalSuccess' : 'secondary'}>{item.approval_status}</Badge></TableCell>
+                <TableCell><Badge size='sm' variant={item.approval_status === 'approved' ? 'tonalSuccess' : 'secondary'}>{approvalLabels[item.approval_status] || item.approval_status}</Badge></TableCell>
                 <TableCell>{item.expires_at || 'Does not expire'}</TableCell>
               </TableRow>
             )) : (
