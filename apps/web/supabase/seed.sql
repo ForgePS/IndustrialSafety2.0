@@ -344,3 +344,153 @@ set
   usage_limits = excluded.usage_limits,
   overage_rules = excluded.overage_rules,
   updated_at = now();
+
+
+-- Local tenant user for permission and effective-access testing.
+insert into auth.users (
+  instance_id,
+  id,
+  aud,
+  role,
+  email,
+  encrypted_password,
+  email_confirmed_at,
+  invited_at,
+  confirmation_token,
+  confirmation_sent_at,
+  recovery_token,
+  recovery_sent_at,
+  email_change_token_new,
+  email_change,
+  email_change_sent_at,
+  last_sign_in_at,
+  raw_app_meta_data,
+  raw_user_meta_data,
+  is_super_admin,
+  created_at,
+  updated_at,
+  phone,
+  phone_confirmed_at,
+  phone_change,
+  phone_change_token,
+  phone_change_sent_at,
+  email_change_token_current,
+  email_change_confirm_status,
+  banned_until,
+  reauthentication_token,
+  reauthentication_sent_at,
+  is_sso_user,
+  deleted_at,
+  is_anonymous
+)
+values (
+  '00000000-0000-0000-0000-000000000000',
+  '20000000-0000-4000-8000-000000000002',
+  'authenticated',
+  'authenticated',
+  'user@forge2.local',
+  '$2a$10$8l.Yibl7sKa1KFSBlZgP/OrPNaF/7IYB8Xb0ZUfvV9pwkGZD6yDEW',
+  now(),
+  null,
+  '',
+  now(),
+  '',
+  null,
+  '',
+  '',
+  null,
+  null,
+  '{"provider":"email","providers":["email"]}',
+  '{"sub":"20000000-0000-4000-8000-000000000002","name":"Forge 2.0 Demo User","email":"user@forge2.local","email_verified":true,"phone_verified":false}',
+  null,
+  now(),
+  now(),
+  null,
+  null,
+  '',
+  '',
+  null,
+  '',
+  0,
+  null,
+  '',
+  null,
+  false,
+  null,
+  false
+)
+on conflict (id) do nothing;
+
+insert into auth.identities (
+  provider_id,
+  user_id,
+  identity_data,
+  provider,
+  last_sign_in_at,
+  created_at,
+  updated_at,
+  id
+)
+values (
+  '20000000-0000-4000-8000-000000000002',
+  '20000000-0000-4000-8000-000000000002',
+  '{"sub":"20000000-0000-4000-8000-000000000002","name":"Forge 2.0 Demo User","email":"user@forge2.local","email_verified":true,"phone_verified":false}',
+  'email',
+  now(),
+  now(),
+  now(),
+  '20000000-0000-4000-8000-000000000012'
+)
+on conflict (id) do nothing;
+
+insert into public.organization_memberships (
+  organization_id,
+  user_id,
+  role,
+  is_active
+)
+values (
+  '20000000-0000-4000-8000-000000000100',
+  '20000000-0000-4000-8000-000000000002',
+  'member',
+  true
+)
+on conflict (organization_id, user_id) do update
+set is_active = true, role = excluded.role, updated_at = now();
+
+insert into public.forge_tenant_roles (
+  organization_id,
+  role_key,
+  name,
+  description,
+  is_system_role,
+  is_active,
+  sort_order
+)
+values
+  ('20000000-0000-4000-8000-000000000100','company-owner','Company Owner','Full tenant ownership and company administration.',true,true,10),
+  ('20000000-0000-4000-8000-000000000100','company-administrator','Company Administrator','Company-wide administration within Forge Creator policy.',true,true,20),
+  ('20000000-0000-4000-8000-000000000100','location-administrator','Location Administrator','Administration limited to assigned Locations.',true,true,30),
+  ('20000000-0000-4000-8000-000000000100','supervisor','Supervisor','Operational supervisor with assigned personnel scope.',true,true,40),
+  ('20000000-0000-4000-8000-000000000100','employee','Employee','Standard employee access.',true,true,50),
+  ('20000000-0000-4000-8000-000000000100','read-only','Read Only','Read-only access to explicitly permitted modules.',true,true,60)
+on conflict (organization_id, role_key) do update
+set name = excluded.name, description = excluded.description, is_active = true, updated_at = now();
+
+insert into public.forge_tenant_user_roles (organization_id, user_id, role_id)
+select
+  '20000000-0000-4000-8000-000000000100',
+  '20000000-0000-4000-8000-000000000002',
+  r.id
+from public.forge_tenant_roles r
+where r.organization_id = '20000000-0000-4000-8000-000000000100'
+  and r.role_key = 'employee'
+on conflict do nothing;
+
+insert into public.forge_tenant_user_location_access (organization_id, user_id, location_id)
+values (
+  '20000000-0000-4000-8000-000000000100',
+  '20000000-0000-4000-8000-000000000002',
+  '20000000-0000-4000-8000-000000000300'
+)
+on conflict do nothing;
