@@ -1,32 +1,55 @@
+import Link from 'next/link'
 import type { Metadata } from 'next'
+import { TbBuildingCommunity, TbChevronRight } from 'react-icons/tb'
+import { Button } from '@repo/ui/components/ui/button'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@repo/ui/components/ui/card'
 import { createServiceRoleClient } from '@repo/supabase/server'
-import ExperienceManager from './ExperienceManager'
 import { requireForgePlatformRole } from '@/lib/forgeCreatorAuth'
 
-export const metadata: Metadata = { title: 'Experience Builder | Forge Creator 2.0' }
+export const metadata: Metadata = { title: 'Tenant Experience Builders | Forge Creator 2.0' }
 
 const ExperiencePage = async () => {
   await requireForgePlatformRole()
   const supabase = createServiceRoleClient() as any
-  const { data: elements, error } = await supabase
-    .from('forge_experience_elements')
-    .select('*')
-    .order('category')
-    .order('sort_order')
+  const { data: tenants, error } = await supabase
+    .from('organizations')
+    .select('id, name, slug, status')
+    .neq('status', 'archived')
+    .order('name')
 
-  if (error) throw new Error(`Unable to load Creator experience registry: ${error.message}`)
+  if (error) throw new Error(`Unable to load tenants: ${error.message}`)
 
   return (
     <div className='flex flex-col gap-6'>
       <div>
         <p className='text-primary text-sm font-semibold uppercase tracking-wide'>Forge Creator 2.0</p>
-        <h1 className='text-textPrimary mt-1 text-3xl font-bold'>Experience Builder</h1>
+        <h1 className='text-textPrimary mt-1 text-3xl font-bold'>Tenant Experience Builders</h1>
         <p className='text-textSecondary mt-2 max-w-4xl'>
-          Control how Forge looks, reads, behaves, and what customers are allowed to customize without changing protected system keys.
+          Experience Builder is tenant-specific. Select a tenant to customize exactly what that company sees and what its administrators may edit.
         </p>
       </div>
 
-      <ExperienceManager elements={elements || []} />
+      <div className='grid gap-5 md:grid-cols-2 xl:grid-cols-3'>
+        {(tenants || []).map((tenant: any) => (
+          <Card key={tenant.id}>
+            <CardHeader>
+              <div className='bg-primary/10 text-primary mb-3 flex size-11 items-center justify-center rounded-lg'>
+                <TbBuildingCommunity className='text-2xl' />
+              </div>
+              <CardTitle>{tenant.name}</CardTitle>
+              <CardDescription>{tenant.slug}</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Button asChild className='w-full'>
+                <Link href={`/admin/creator/tenants/${tenant.id}/experience`}>
+                  Open Experience Builder
+                  <TbChevronRight />
+                </Link>
+              </Button>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
     </div>
   )
 }
