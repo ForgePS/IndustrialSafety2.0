@@ -1,6 +1,6 @@
 # A string used to distinguish different Supabase projects on the same host. Defaults to the
 # working directory name when running `supabase init`.
-project_id = "forge-industrial-safety"
+project_id = "forge-industrial-safety-2-0"
 
 [api]
 enabled = true
