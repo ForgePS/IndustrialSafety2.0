@@ -494,3 +494,51 @@ values (
   '20000000-0000-4000-8000-000000000300'
 )
 on conflict do nothing;
+
+
+-- Local Personnel record used to prove Creator -> Form -> Lookup -> Permission -> Runtime behavior.
+insert into public.forge_personnel (
+  id,
+  organization_id,
+  auth_user_id,
+  first_name,
+  last_name,
+  employee_number,
+  employment_status,
+  job_title,
+  email,
+  phone,
+  hire_date,
+  location_id,
+  division_id,
+  created_by,
+  updated_by
+)
+values (
+  '20000000-0000-4000-8000-000000000600',
+  '20000000-0000-4000-8000-000000000100',
+  '20000000-0000-4000-8000-000000000002',
+  'Forge',
+  'Demo User',
+  'EMP-0001',
+  'active',
+  'Demo Employee',
+  'user@forge2.local',
+  null,
+  current_date,
+  '20000000-0000-4000-8000-000000000300',
+  '20000000-0000-4000-8000-000000000200',
+  '20000000-0000-4000-8000-000000000002',
+  '20000000-0000-4000-8000-000000000002'
+)
+on conflict (id) do update
+set
+  first_name = excluded.first_name,
+  last_name = excluded.last_name,
+  employee_number = excluded.employee_number,
+  employment_status = excluded.employment_status,
+  job_title = excluded.job_title,
+  email = excluded.email,
+  location_id = excluded.location_id,
+  division_id = excluded.division_id,
+  updated_at = now();
