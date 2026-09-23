@@ -5,6 +5,9 @@ import { z } from 'zod'
 import { createServiceRoleClient } from '@repo/supabase/server'
 import { requireTenantPermission } from '@/lib/forgeTenantAuth'
 
+const slugKey = (value: string) =>
+  value.toLowerCase().trim().replace(/[^a-z0-9]+/g, '_').replace(/^_+|_+$/g, '')
+
 const templateSchema = z.object({
   templateId: z.string().uuid().nullable().optional(),
   name: z.string().trim().min(1),
@@ -27,8 +30,35 @@ const itemSchema = z.object({
   findingOn: z.array(z.string())
 })
 
-const slugKey = (value: string) =>
-  value.toLowerCase().trim().replace(/[^a-z0-9]+/g, '_').replace(/^_+|_+$/g, '')
+const audit = async ({
+  supabase,
+  actorUserId,
+  organizationId,
+  action,
+  entityType,
+  entityId,
+  before,
+  after
+}: {
+  supabase: any
+  actorUserId: string
+  organizationId: string
+  action: string
+  entityType: string
+  entityId: string
+  before?: unknown
+  after?: unknown
+}) => {
+  await supabase.from('forge_creator_audit_log').insert({
+    actor_user_id: actorUserId,
+    organization_id: organizationId,
+    action,
+    entity_type: entityType,
+    entity_id: entityId,
+    before_value: before ?? null,
+    after_value: after ?? null
+  })
+}
 
 export const saveInspectionTemplate = async (input: z.infer<typeof templateSchema>) => {
   const context = await requireTenantPermission('inspections.manage_templates')
@@ -82,14 +112,15 @@ export const saveInspectionTemplate = async (input: z.infer<typeof templateSchem
 
   if (error || !saved) return { error: error?.message ?? 'Unable to save inspection template.' }
 
-  await supabase.from('forge_creator_audit_log').insert({
-    actor_user_id: context.user.id,
-    organization_id: organizationId,
+  await audit({
+    supabase,
+    actorUserId: context.user.id,
+    organizationId,
     action: data.templateId ? 'inspection.template_updated' : 'inspection.template_created',
-    entity_type: 'inspection_template',
-    entity_id: saved.id,
-    before_value: before,
-    after_value: saved
+    entityType: 'inspection_template',
+    entityId: saved.id,
+    before,
+    after: saved
   })
 
   revalidatePath('/inspections/templates')
@@ -108,7 +139,7 @@ export const saveInspectionTemplateItem = async (input: z.infer<typeof itemSchem
 
   const { data: template } = await supabase
     .from('forge_inspection_templates')
-    .select('id')
+    .select('id, version')
     .eq('organization_id', organizationId)
     .eq('id', data.templateId)
     .maybeSingle()
@@ -124,6 +155,7 @@ export const saveInspectionTemplateItem = async (input: z.infer<typeof itemSchem
       .eq('template_id', data.templateId)
       .eq('id', data.itemId)
       .maybeSingle()
+
     if (!current) return { error: 'Checklist item not found.' }
     before = current
   }
@@ -144,28 +176,38 @@ export const saveInspectionTemplateItem = async (input: z.infer<typeof itemSchem
   }
 
   const { data: saved, error } = data.itemId
-    ? await supabase.from('forge_inspection_template_items').update(payload).eq('id', data.itemId).select('*').single()
-    : await supabase.from('forge_inspection_template_items').insert(payload).select('*').single()
+    ? await supabase
+        .from('forge_inspection_template_items')
+        .update(payload)
+        .eq('id', data.itemId)
+        .select('*')
+        .single()
+    : await supabase
+        .from('forge_inspection_template_items')
+        .insert(payload)
+        .select('*')
+        .single()
 
   if (error || !saved) return { error: error?.message ?? 'Unable to save checklist item.' }
 
   await supabase
     .from('forge_inspection_templates')
     .update({
-      version: data.itemId ? undefined : undefined,
+      version: Number(template.version || 1) + 1,
       updated_by: context.user.id,
       updated_at: new Date().toISOString()
     })
     .eq('id', data.templateId)
 
-  await supabase.from('forge_creator_audit_log').insert({
-    actor_user_id: context.user.id,
-    organization_id: organizationId,
+  await audit({
+    supabase,
+    actorUserId: context.user.id,
+    organizationId,
     action: data.itemId ? 'inspection.template_item_updated' : 'inspection.template_item_created',
-    entity_type: 'inspection_template_item',
-    entity_id: saved.id,
-    before_value: before,
-    after_value: saved
+    entityType: 'inspection_template_item',
+    entityId: saved.id,
+    before,
+    after: saved
   })
 
   revalidatePath('/inspections/templates')
@@ -183,27 +225,49 @@ export const deleteInspectionTemplateItem = async ({
   const organizationId = context.activeOrganization.id
   const supabase = createServiceRoleClient() as any
 
-  const { data: before } = await supabase
+  const [{ data: before }, { data: template }] = await Promise.all([
+    supabase
+      .from('forge_inspection_template_items')
+      .select('*')
+      .eq('organization_id', organizationId)
+      .eq('template_id', templateId)
+      .eq('id', itemId)
+      .maybeSingle(),
+    supabase
+      .from('forge_inspection_templates')
+      .select('id, version')
+      .eq('organization_id', organizationId)
+      .eq('id', templateId)
+      .maybeSingle()
+  ])
+
+  if (!before || !template) return { error: 'Checklist item not found.' }
+
+  const { error } = await supabase
     .from('forge_inspection_template_items')
-    .select('*')
-    .eq('organization_id', organizationId)
-    .eq('template_id', templateId)
+    .delete()
     .eq('id', itemId)
-    .maybeSingle()
 
-  if (!before) return { error: 'Checklist item not found.' }
-
-  const { error } = await supabase.from('forge_inspection_template_items').delete().eq('id', itemId)
   if (error) return { error: error.message }
 
-  await supabase.from('forge_creator_audit_log').insert({
-    actor_user_id: context.user.id,
-    organization_id: organizationId,
+  await supabase
+    .from('forge_inspection_templates')
+    .update({
+      version: Number(template.version || 1) + 1,
+      updated_by: context.user.id,
+      updated_at: new Date().toISOString()
+    })
+    .eq('id', templateId)
+
+  await audit({
+    supabase,
+    actorUserId: context.user.id,
+    organizationId,
     action: 'inspection.template_item_deleted',
-    entity_type: 'inspection_template_item',
-    entity_id: itemId,
-    before_value: before,
-    after_value: null
+    entityType: 'inspection_template_item',
+    entityId: itemId,
+    before,
+    after: null
   })
 
   revalidatePath('/inspections/templates')
