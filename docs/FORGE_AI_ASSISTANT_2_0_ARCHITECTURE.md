@@ -496,15 +496,23 @@ Implemented on forge-creator-2.0:
 - monthly token budget;
 - server-only API key;
 - user identifier hashing before provider calls;
-- demo tenant AI enablement.
+- demo tenant AI enablement;
+- tenant-admin AI settings;
+- knowledge ingestion and semantic retrieval;
+- contextual Ask Forge record buttons for Incidents, Inspections and Assets;
+- human-approved AI action queue with first Inspection and Asset actions;
+- Forge AI usage/activity dashboard;
+- Forge AI Watch rule templates and alert ledger;
+- scoped Watch alert visibility through normal module permissions;
+- manual Watch evaluation;
+- secured scheduled Watch endpoint.
 
 Next implementation priority:
 1. compile/migration validation;
-2. tenant-admin AI settings;
-3. knowledge ingestion/retrieval;
-4. contextual module side panels;
-5. action approval UI and first write actions;
-6. reporting/analytics tool;
-7. proactive watchers;
-8. image/document workflows;
-9. eval and security regression suite.
+2. natural-language reporting and analytics;
+3. expand contextual AI to Training, Personnel, QR and later modules;
+4. expand approved action registry;
+5. scheduled Watch integration with AWS EventBridge in production;
+6. image/document workflows;
+7. AI-generated but human-reviewed summaries and drafts;
+8. evaluation and security regression suite.
