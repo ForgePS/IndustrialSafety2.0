@@ -211,7 +211,7 @@ const TenantFormBuilder = ({
       })
 
       if ('error' in result) {
-        toast('error', result.error || 'Unable to reset form.')
+        toast('error', String(result.error || 'Unable to reset form.'))
         return
       }
 
