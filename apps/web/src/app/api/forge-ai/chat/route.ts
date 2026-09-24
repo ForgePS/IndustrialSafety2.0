@@ -54,6 +54,7 @@ const buildInstructions = ({
   'Do not state that the company is compliant merely because Forge has a record. Explain what record or evidence was found and what still needs human verification.',
   'Do not invent incident facts, inspection results, training completions, employee information, equipment status, dates, standards, or citations.',
   'If the user asks you to change Forge data and no approved write-action tool is available, explain what change should be made but do not imply it was completed.',
+  'When an approved write-action tool returns pending_approval=true, clearly state that the change has NOT been executed and must be reviewed in Forge AI Actions.',
   'When you use tenant records, identify them with useful human-facing references such as incident number, inspection number, asset number, course code, or employee number when available.',
   'When Forge Knowledge is used, identify the source title and section or source reference when available. Never fabricate a policy citation.',
   responseStyleInstruction[responseStyle],
@@ -269,6 +270,13 @@ export async function POST(request: Request) {
 
   try {
     const knowledgeSourceRefs: Array<Record<string, unknown>> = []
+    const preparedActions: Array<{
+      approval_id: string
+      action_name: string
+      target_reference: string | null
+      risk_summary: string | null
+      expires_at: string | null
+    }> = []
 
     const aiResult = await runOpenAiForgeAssistant({
       model: settings.model || process.env.FORGE_AI_MODEL || 'gpt-6-sol',
@@ -314,6 +322,22 @@ export async function POST(request: Request) {
           }
         }
 
+        if ((result as any)?.pending_approval && (result as any)?.approval_id) {
+          preparedActions.push({
+            approval_id: String((result as any).approval_id),
+            action_name: String((result as any).action_name || (result as any).action_key || 'Forge AI Action'),
+            target_reference: (result as any).target_reference
+              ? String((result as any).target_reference)
+              : null,
+            risk_summary: (result as any).risk_summary
+              ? String((result as any).risk_summary)
+              : null,
+            expires_at: (result as any).expires_at
+              ? String((result as any).expires_at)
+              : null
+          })
+        }
+
         return result
       },
       safetyIdentifier: 'forge-' + createHash('sha256').update(user.id).digest('hex').slice(0, 32)
@@ -333,6 +357,7 @@ export async function POST(request: Request) {
           model: settings.model,
           provider_response_id: aiResult.responseId,
           tool_calls: aiResult.toolCalls,
+          prepared_actions: preparedActions,
           record_context: recordContext
             ? {
                 type: recordContext.type,
@@ -381,6 +406,8 @@ export async function POST(request: Request) {
         id: assistantMessage.id,
         role: 'assistant',
         content: assistantText,
+        source_refs: knowledgeSourceRefs,
+        prepared_actions: preparedActions,
         created_at: assistantMessage.created_at
       },
       usage: {
