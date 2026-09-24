@@ -24,7 +24,7 @@ const CompanyLookupsPage = async () => {
 
   const coreByLookup = new Map<string, any[]>()
   const tenantByLookup = new Map<string, any[]>()
-  const overrideByLookup = new Map((overrides || []).map((item: any) => [item.lookup_id, item]))
+  const overrideByLookup = new Map<string, any>((overrides || []).map((item: any) => [item.lookup_id, item]))
 
   for (const option of coreOptions || []) {
     if (!coreByLookup.has(option.lookup_id)) coreByLookup.set(option.lookup_id, [])
@@ -39,7 +39,7 @@ const CompanyLookupsPage = async () => {
   const hydrated = (definitions || []).map((definition: any) => {
     const override = overrideByLookup.get(definition.id) || null
     const rows = tenantByLookup.get(definition.id) || []
-    const byBase = new Map(rows.filter((row: any) => row.base_option_id).map((row: any) => [row.base_option_id, row]))
+    const byBase = new Map<string, any>(rows.filter((row: any) => row.base_option_id).map((row: any) => [row.base_option_id, row]))
 
     const options = (coreByLookup.get(definition.id) || []).map((base: any) => {
       const tenant = byBase.get(base.id)
