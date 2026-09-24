@@ -5,6 +5,7 @@ import TrainingRecordForm from '../../TrainingRecordForm'
 import type { TrainingFormValues } from '../../actions'
 import { getEffectiveForm } from '@/lib/forgeForms'
 import { requireTenantPermission } from '@/lib/forgeTenantAuth'
+import ForgeAiContextButton from '@/components/forge-ai/ForgeAiContextButton'
 
 export const metadata: Metadata = { title: 'Training Course' }
 
@@ -29,6 +30,9 @@ const TrainingCoursePage = async ({ params }: { params: Promise<{ id: string }> 
   const canEdit = context.access.effective.some(
     item => item.permissionKey === 'training.create_course' && item.allowed
   )
+  const canUseAi = context.access.effective.some(
+    item => item.permissionKey === 'forge_ai.use' && item.allowed
+  )
 
   const values: TrainingFormValues = {
     course_code: course.course_code || '',
@@ -42,10 +46,19 @@ const TrainingCoursePage = async ({ params }: { params: Promise<{ id: string }> 
 
   return (
     <div className='flex flex-col gap-6'>
-      <div>
-        <p className='text-primary text-sm font-semibold uppercase tracking-wide'>{context.activeOrganization.name} / Training Course</p>
-        <h1 className='text-textPrimary mt-1 text-3xl font-bold'>{course.title}</h1>
-        <p className='text-textSecondary mt-2'>{canEdit ? 'Edit the course using the tenant-configured Training form.' : 'Your role has view-only access to this course.'}</p>
+      <div className='flex flex-wrap items-end justify-between gap-4'>
+        <div>
+          <p className='text-primary text-sm font-semibold uppercase tracking-wide'>{context.activeOrganization.name} / Training Course</p>
+          <h1 className='text-textPrimary mt-1 text-3xl font-bold'>{course.title}</h1>
+          <p className='text-textSecondary mt-2'>{canEdit ? 'Edit the course using the tenant-configured Training form.' : 'Your role has view-only access to this course.'}</p>
+        </div>
+        {canUseAi ? (
+          <ForgeAiContextButton
+            contextType='training_course'
+            recordId={course.id}
+            recordLabel={course.course_code || course.title}
+          />
+        ) : null}
       </div>
 
       {canEdit ? (
