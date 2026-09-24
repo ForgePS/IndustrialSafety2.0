@@ -11,6 +11,7 @@ import { getEffectiveLookup } from '@/lib/forgeLookups'
 import { getIncidentActivity, incidentWithinScope } from '@/lib/forgeIncidents'
 import { getScopedPersonnel } from '@/lib/forgePersonnel'
 import { requireTenantPermission } from '@/lib/forgeTenantAuth'
+import ForgeAiContextButton from '@/components/forge-ai/ForgeAiContextButton'
 
 export const metadata: Metadata = { title: 'Incident' }
 
@@ -66,6 +67,7 @@ const IncidentDetailPage = async ({ params }: { params: Promise<{ id: string }> 
   const submitPermission = permissionByKey.get('incidents.submit')
   const approvePermission = permissionByKey.get('incidents.approve')
   const closePermission = permissionByKey.get('incidents.close')
+  const canUseAi = Boolean(permissionByKey.get('forge_ai.use'))
 
   const canWithin = async (permission: any) =>
     permission
@@ -129,6 +131,13 @@ const IncidentDetailPage = async ({ params }: { params: Promise<{ id: string }> 
           </div>
           <p className='text-textSecondary mt-2'>{incident.summary}</p>
         </div>
+        {canUseAi ? (
+          <ForgeAiContextButton
+            contextType='incident'
+            recordId={incident.id}
+            recordLabel={incident.incident_number}
+          />
+        ) : null}
       </div>
 
       <div className='grid gap-4 md:grid-cols-2 xl:grid-cols-4'>
