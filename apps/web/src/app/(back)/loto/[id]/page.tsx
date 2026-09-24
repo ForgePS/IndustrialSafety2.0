@@ -17,6 +17,7 @@ import {
 } from '@/lib/forgeLoto'
 import { getEffectiveLookup } from '@/lib/forgeLookups'
 import { requireTenantPermission } from '@/lib/forgeTenantAuth'
+import ForgeAiContextButton from '@/components/forge-ai/ForgeAiContextButton'
 
 export const metadata: Metadata = { title: 'LOTO Procedure' }
 
@@ -81,6 +82,7 @@ const LotoProcedurePage = async ({
   const reviewPermission = permissions.get('loto.review')
   const executePermission = permissions.get('loto.execute')
   const retirePermission = permissions.get('loto.retire')
+  const canUseAi = Boolean(permissions.get('forge_ai.use'))
 
   const within = async (permission: any) =>
     permission
@@ -166,6 +168,13 @@ const LotoProcedurePage = async ({
             {procedure.forge_assets ? ' · ' + procedure.forge_assets.asset_number + ' · ' + procedure.forge_assets.name : ''}
           </p>
         </div>
+        {canUseAi ? (
+          <ForgeAiContextButton
+            contextType='loto'
+            recordId={procedure.id}
+            recordLabel={procedure.procedure_number}
+          />
+        ) : null}
       </div>
 
       <div className='grid gap-4 md:grid-cols-2 xl:grid-cols-4'>
