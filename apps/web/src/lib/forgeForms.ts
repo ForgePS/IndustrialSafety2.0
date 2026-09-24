@@ -54,7 +54,7 @@ export const getEffectiveForm = async ({
       .eq('form_id', form.id)
   ])
 
-  const overrideByField = new Map((fieldOverrides || []).map((item: any) => [item.field_id, item]))
+  const overrideByField = new Map<string, any>((fieldOverrides || []).map((item: any) => [item.field_id, item]))
 
   const fields: EffectiveFormField[] = []
 
