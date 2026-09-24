@@ -8,6 +8,8 @@ import { getForgePlatformRole } from '@/lib/forgeCreatorAuth'
 const allowedTypes=new Set(['image/png','image/jpeg','image/webp','application/pdf','text/plain','text/csv'])
 const staffRoles=['forge_owner','forge_creator','forge_support']
 export async function POST(request:Request,{params}:{params:Promise<{id:string}>}){
+ const origin=request.headers.get('origin')
+ if(!origin||origin!==new URL(request.url).origin) return NextResponse.json({error:'Invalid request origin.'},{status:403})
  const {data:{user}}=await getAuthUser()
  if(!user) return NextResponse.json({error:'Sign in required.'},{status:401})
  if(Number(request.headers.get('content-length')||0)>11500000) return NextResponse.json({error:'File is too large.'},{status:413})
