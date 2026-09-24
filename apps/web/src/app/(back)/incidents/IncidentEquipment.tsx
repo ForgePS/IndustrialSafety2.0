@@ -36,7 +36,7 @@ const IncidentEquipment = ({
     const result = await linkIncidentAsset({ incidentId, assetNumber })
     if ('error' in result) return toast('error', result.error || 'Unable to update equipment links.')
     setAssetNumber('')
-    toast('success', result.message)
+    toast('success', result.message || 'Equipment updated.')
     router.refresh()
   })
 
@@ -44,7 +44,7 @@ const IncidentEquipment = ({
     if (!window.confirm('Remove ' + number + ' from this incident? The activity history will remain.')) return
     const result = await unlinkIncidentAsset({ incidentId, linkId })
     if ('error' in result) return toast('error', result.error)
-    toast('success', result.message)
+    toast('success', result.message || 'Equipment updated.')
     router.refresh()
   })
 
