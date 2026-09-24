@@ -8,6 +8,14 @@ import { getScopedAssets } from '@/lib/forgeAssets'
 import { getScopedQrCodes } from '@/lib/forgeQr'
 import { searchForgeAiKnowledge } from '@/lib/forgeAiKnowledge'
 import {
+  getForgeAiAssetAnalytics,
+  getForgeAiExecutiveAnalytics,
+  getForgeAiIncidentAnalytics,
+  getForgeAiInspectionAnalytics,
+  getForgeAiTrainingAnalytics,
+  resolveForgeAiAnalyticsRange
+} from '@/lib/forgeAiAnalytics'
+import {
   prepareForgeAiAction,
   type ForgeAiAvailableAction,
   type ForgeAiBoundRecordContext
@@ -228,6 +236,86 @@ const definitions: Record<string, any> = {
         limit: { type: 'integer', minimum: 1, maximum: 50 }
       },
       required: ['query'],
+      additionalProperties: false
+    }
+  },
+  analytics_executive_summary: {
+    type: 'function',
+    name: 'analytics_executive_summary',
+    description: 'Build a permission-aware cross-module safety analysis across Incidents, Training, Inspections, and Assets & Equipment. Use this for executive summaries, overall safety health, cross-module questions, and broad trends.',
+    strict: true,
+    parameters: {
+      type: 'object',
+      properties: {
+        days: { type: 'integer', minimum: 1, maximum: 3650, description: 'Default rolling period when explicit dates are not supplied.' },
+        date_from: { type: ['string','null'], description: 'Optional YYYY-MM-DD start date.' },
+        date_to: { type: ['string','null'], description: 'Optional YYYY-MM-DD end date.' }
+      },
+      required: ['days','date_from','date_to'],
+      additionalProperties: false
+    }
+  },
+  analytics_incidents: {
+    type: 'function',
+    name: 'analytics_incidents',
+    description: 'Analyze incident volume, period-over-period change, severity, type, status, Location, Division, and monthly trends within the user scope.',
+    strict: true,
+    parameters: {
+      type: 'object',
+      properties: {
+        days: { type: 'integer', minimum: 1, maximum: 3650 },
+        date_from: { type: ['string','null'] },
+        date_to: { type: ['string','null'] }
+      },
+      required: ['days','date_from','date_to'],
+      additionalProperties: false
+    }
+  },
+  analytics_training: {
+    type: 'function',
+    name: 'analytics_training',
+    description: 'Analyze training workload, overdue rate, overdue courses, Location/Division training gaps, completion results, and monthly completions within scope.',
+    strict: true,
+    parameters: {
+      type: 'object',
+      properties: {
+        days: { type: 'integer', minimum: 1, maximum: 3650 },
+        date_from: { type: ['string','null'] },
+        date_to: { type: ['string','null'] }
+      },
+      required: ['days','date_from','date_to'],
+      additionalProperties: false
+    }
+  },
+  analytics_inspections: {
+    type: 'function',
+    name: 'analytics_inspections',
+    description: 'Analyze inspections, results, open and overdue findings, critical findings, repeat finding titles, Location patterns, and monthly trends within scope.',
+    strict: true,
+    parameters: {
+      type: 'object',
+      properties: {
+        days: { type: 'integer', minimum: 1, maximum: 3650 },
+        date_from: { type: ['string','null'] },
+        date_to: { type: ['string','null'] }
+      },
+      required: ['days','date_from','date_to'],
+      additionalProperties: false
+    }
+  },
+  analytics_assets: {
+    type: 'function',
+    name: 'analytics_assets',
+    description: 'Analyze asset status, condition, criticality, maintenance activity, due maintenance, maintenance costs, top-cost assets, and Location patterns within scope.',
+    strict: true,
+    parameters: {
+      type: 'object',
+      properties: {
+        days: { type: 'integer', minimum: 1, maximum: 3650 },
+        date_from: { type: ['string','null'] },
+        date_to: { type: ['string','null'] }
+      },
+      required: ['days','date_from','date_to'],
       additionalProperties: false
     }
   },
@@ -617,6 +705,91 @@ const executeToolValue = async ({
           scan_count: Number(item.scan_count || 0),
           last_scanned_at: item.last_scanned_at
         }))
+    }
+
+    case 'analytics_executive_summary': {
+      if (!permission) return { denied: true, reason: 'AI Analytics permission is not available.' }
+      const range = resolveForgeAiAnalyticsRange({
+        days: args.days,
+        dateFrom: args.date_from,
+        dateTo: args.date_to
+      })
+
+      return getForgeAiExecutiveAnalytics({
+        organizationId,
+        userId,
+        analyticsPermission: permission,
+        permissionByKey: context.permissionByKey,
+        range
+      })
+    }
+
+    case 'analytics_incidents': {
+      if (!permission) return { denied: true, reason: 'AI Analytics permission is not available.' }
+      const range = resolveForgeAiAnalyticsRange({
+        days: args.days,
+        dateFrom: args.date_from,
+        dateTo: args.date_to
+      })
+
+      return getForgeAiIncidentAnalytics({
+        organizationId,
+        userId,
+        analyticsPermission: permission,
+        permissionByKey: context.permissionByKey,
+        range
+      })
+    }
+
+    case 'analytics_training': {
+      if (!permission) return { denied: true, reason: 'AI Analytics permission is not available.' }
+      const range = resolveForgeAiAnalyticsRange({
+        days: args.days,
+        dateFrom: args.date_from,
+        dateTo: args.date_to
+      })
+
+      return getForgeAiTrainingAnalytics({
+        organizationId,
+        userId,
+        analyticsPermission: permission,
+        permissionByKey: context.permissionByKey,
+        range
+      })
+    }
+
+    case 'analytics_inspections': {
+      if (!permission) return { denied: true, reason: 'AI Analytics permission is not available.' }
+      const range = resolveForgeAiAnalyticsRange({
+        days: args.days,
+        dateFrom: args.date_from,
+        dateTo: args.date_to
+      })
+
+      return getForgeAiInspectionAnalytics({
+        organizationId,
+        userId,
+        analyticsPermission: permission,
+        permissionByKey: context.permissionByKey,
+        range
+      })
+    }
+
+    case 'analytics_assets': {
+      if (!permission) return { denied: true, reason: 'AI Analytics permission is not available.' }
+      const range = resolveForgeAiAnalyticsRange({
+        days: args.days,
+        dateFrom: args.date_from,
+        dateTo: args.date_to
+      })
+
+      return getForgeAiAssetAnalytics({
+        organizationId,
+        userId,
+        analyticsPermission: permission,
+        permissionByKey: context.permissionByKey,
+        range
+      })
     }
 
     case 'knowledge_search': {
