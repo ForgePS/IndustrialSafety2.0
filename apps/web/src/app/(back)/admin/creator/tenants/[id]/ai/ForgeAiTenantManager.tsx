@@ -10,7 +10,11 @@ import { Label } from '@repo/ui/components/ui/label'
 import { Switch } from '@repo/ui/components/ui/switch'
 import { Textarea } from '@repo/ui/components/ui/textarea'
 import { toast } from '@repo/ui/utils/toast'
-import { saveCreatorForgeAiCapability, saveCreatorForgeAiSettings } from './actions'
+import {
+  saveCreatorForgeAiAction,
+  saveCreatorForgeAiCapability,
+  saveCreatorForgeAiSettings
+} from './actions'
 
 type Settings = {
   enabled: boolean
@@ -45,14 +49,32 @@ type Capability = {
   tenantCanConfigure: boolean
 }
 
+type AiAction = {
+  id: string
+  action_key: string
+  name: string
+  description: string | null
+  category: string
+  target_type: string
+  required_permission_key: string
+  risk_level: string
+  platform_enabled: boolean
+  requires_approval: boolean
+  allow_self_approval: boolean
+  enabled: boolean
+  tenantCanConfigure: boolean
+}
+
 const ForgeAiTenantManager = ({
   organizationId,
   settings,
-  capabilities
+  capabilities,
+  actions
 }: {
   organizationId: string
   settings: Settings
   capabilities: Capability[]
+  actions: AiAction[]
 }) => {
   const [pending, startTransition] = useTransition()
   const [search, setSearch] = useState('')
@@ -75,6 +97,15 @@ const ForgeAiTenantManager = ({
   })
   const [capabilityDrafts, setCapabilityDrafts] = useState<Record<string, { enabled: boolean; tenantCanConfigure: boolean }>>(
     Object.fromEntries(capabilities.map(item => [
+      item.id,
+      {
+        enabled: item.enabled,
+        tenantCanConfigure: item.tenantCanConfigure
+      }
+    ]))
+  )
+  const [actionDrafts, setActionDrafts] = useState<Record<string, { enabled: boolean; tenantCanConfigure: boolean }>>(
+    Object.fromEntries(actions.map(item => [
       item.id,
       {
         enabled: item.enabled,
@@ -137,6 +168,26 @@ const ForgeAiTenantManager = ({
 
       if ('error' in result) {
         toast('error', result.error || 'Unable to save AI capability.')
+        return
+      }
+
+      toast('success', result.message)
+    })
+  }
+
+  const saveAction = (action: AiAction) => {
+    const state = actionDrafts[action.id]
+
+    startTransition(async () => {
+      const result = await saveCreatorForgeAiAction({
+        organizationId,
+        actionId: action.id,
+        enabled: state.enabled,
+        tenantCanConfigure: state.tenantCanConfigure
+      })
+
+      if ('error' in result) {
+        toast('error', result.error || 'Unable to save AI action.')
         return
       }
 
@@ -341,6 +392,69 @@ const ForgeAiTenantManager = ({
               )
             })}
           </div>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Approved AI Actions</CardTitle>
+          <CardDescription>
+            Control which write actions Forge AI may prepare for this tenant. Every enabled action still requires the user's underlying Forge permission, record scope, and human approval before execution.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className='flex flex-col gap-3'>
+          {actions.length ? actions.map(action => {
+            const state = actionDrafts[action.id]
+
+            return (
+              <div key={action.id} className='rounded-xl border p-4'>
+                <div className='flex flex-wrap items-start justify-between gap-4'>
+                  <div className='max-w-3xl'>
+                    <div className='flex flex-wrap items-center gap-2'>
+                      <div className='font-semibold'>{action.name}</div>
+                      <Badge size='sm' variant='outline'>{action.category}</Badge>
+                      <Badge size='sm' variant={action.risk_level === 'critical' ? 'destructive' : 'secondary'}>{action.risk_level} risk</Badge>
+                      {action.requires_approval ? <Badge size='sm' variant='outline'>Human Approval</Badge> : null}
+                      {!action.platform_enabled ? <Badge size='sm' variant='destructive'>Platform Disabled</Badge> : null}
+                    </div>
+                    <p className='text-textSecondary mt-2 text-sm'>{action.description}</p>
+                    <div className='text-textSecondary mt-2 text-xs'>
+                      {action.action_key} · Requires {action.required_permission_key} · Target {action.target_type}
+                    </div>
+                  </div>
+
+                  <Button size='sm' onClick={() => saveAction(action)} disabled={pending}>Save</Button>
+                </div>
+
+                <div className='mt-4 grid gap-3 md:grid-cols-2'>
+                  <label className='flex items-center gap-3 rounded-lg border p-3'>
+                    <Switch
+                      checked={state.enabled}
+                      disabled={!action.platform_enabled}
+                      onCheckedChange={value => setActionDrafts(current => ({
+                        ...current,
+                        [action.id]: { ...current[action.id], enabled: value }
+                      }))}
+                    />
+                    <span className='text-sm font-medium'>Enabled for Tenant</span>
+                  </label>
+
+                  <label className='flex items-center gap-3 rounded-lg border p-3'>
+                    <Switch
+                      checked={state.tenantCanConfigure}
+                      onCheckedChange={value => setActionDrafts(current => ({
+                        ...current,
+                        [action.id]: { ...current[action.id], tenantCanConfigure: value }
+                      }))}
+                    />
+                    <span className='text-sm font-medium'>Tenant Admin May Toggle</span>
+                  </label>
+                </div>
+              </div>
+            )
+          }) : (
+            <div className='text-textSecondary py-8 text-center text-sm'>No AI actions are registered.</div>
+          )}
         </CardContent>
       </Card>
     </div>
