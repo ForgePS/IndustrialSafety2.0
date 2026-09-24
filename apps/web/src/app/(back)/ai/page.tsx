@@ -48,11 +48,30 @@ const ForgeAiPage = async ({
 
     if (conversation) {
       activeConversationId = conversation.id
-      initialMessages = await getForgeAiConversationMessages({
-        organizationId,
-        conversationId: conversation.id,
-        limit: 60
-      })
+
+      const [messages, { data: feedback }] = await Promise.all([
+        getForgeAiConversationMessages({
+          organizationId,
+          conversationId: conversation.id,
+          limit: 60
+        }),
+        supabase
+          .from('forge_ai_feedback')
+          .select('message_id, rating')
+          .eq('organization_id', organizationId)
+          .eq('conversation_id', conversation.id)
+          .eq('user_id', userId)
+      ])
+
+      const feedbackByMessage = new Map(
+        (feedback || []).map((item: any) => [Number(item.message_id), Number(item.rating)])
+      )
+
+      initialMessages = messages.map((message: any) => ({
+        ...message,
+        prepared_actions: message.metadata?.prepared_actions || [],
+        rating: feedbackByMessage.get(Number(message.id)) || 0
+      }))
     }
   }
 
