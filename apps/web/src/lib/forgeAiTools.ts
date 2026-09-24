@@ -64,6 +64,7 @@ const searchMatch = (values: unknown[], query: string) => {
 }
 
 const limitValue = (value: unknown, fallback = 15) => {
+  if (value == null) return fallback
   const parsed = Number(value)
   if (!Number.isFinite(parsed)) return fallback
   return Math.min(Math.max(Math.trunc(parsed), 1), 50)
@@ -155,9 +156,9 @@ const definitions: Record<string, any> = {
       type: 'object',
       properties: {
         query: { type: 'string', description: 'Name, employee number, Location or Division search text.' },
-        limit: { type: 'integer', minimum: 1, maximum: 50 }
+        limit: { type: ['integer','null'], minimum: 1, maximum: 50, description: 'Maximum records to return, or null for the default.' }
       },
-      required: ['query'],
+      required: ['query','limit'],
       additionalProperties: false
     }
   },
@@ -171,9 +172,9 @@ const definitions: Record<string, any> = {
       properties: {
         query: { type: 'string', description: 'Course, employee, code, status or result search text.' },
         overdue_only: { type: 'boolean' },
-        limit: { type: 'integer', minimum: 1, maximum: 50 }
+        limit: { type: ['integer','null'], minimum: 1, maximum: 50, description: 'Maximum records to return, or null for the default.' }
       },
-      required: ['query','overdue_only'],
+      required: ['query','overdue_only','limit'],
       additionalProperties: false
     }
   },
@@ -187,9 +188,9 @@ const definitions: Record<string, any> = {
       properties: {
         query: { type: 'string', description: 'Incident number, summary, type, severity, status or Location.' },
         status: { type: ['string','null'] },
-        limit: { type: 'integer', minimum: 1, maximum: 50 }
+        limit: { type: ['integer','null'], minimum: 1, maximum: 50, description: 'Maximum records to return, or null for the default.' }
       },
-      required: ['query','status'],
+      required: ['query','status','limit'],
       additionalProperties: false
     }
   },
@@ -203,9 +204,9 @@ const definitions: Record<string, any> = {
       properties: {
         query: { type: 'string' },
         status: { type: ['string','null'] },
-        limit: { type: 'integer', minimum: 1, maximum: 50 }
+        limit: { type: ['integer','null'], minimum: 1, maximum: 50, description: 'Maximum records to return, or null for the default.' }
       },
-      required: ['query','status'],
+      required: ['query','status','limit'],
       additionalProperties: false
     }
   },
@@ -220,9 +221,9 @@ const definitions: Record<string, any> = {
         query: { type: 'string' },
         status: { type: ['string','null'] },
         include_retired: { type: 'boolean' },
-        limit: { type: 'integer', minimum: 1, maximum: 50 }
+        limit: { type: ['integer','null'], minimum: 1, maximum: 50, description: 'Maximum records to return, or null for the default.' }
       },
-      required: ['query','status','include_retired'],
+      required: ['query','status','include_retired','limit'],
       additionalProperties: false
     }
   },
@@ -235,9 +236,9 @@ const definitions: Record<string, any> = {
       type: 'object',
       properties: {
         query: { type: 'string' },
-        limit: { type: 'integer', minimum: 1, maximum: 50 }
+        limit: { type: ['integer','null'], minimum: 1, maximum: 50, description: 'Maximum records to return, or null for the default.' }
       },
-      required: ['query'],
+      required: ['query','limit'],
       additionalProperties: false
     }
   },
@@ -252,9 +253,9 @@ const definitions: Record<string, any> = {
         query: { type: 'string' },
         status: { type: ['string','null'] },
         review_due_only: { type: 'boolean' },
-        limit: { type: 'integer', minimum: 1, maximum: 50 }
+        limit: { type: ['integer','null'], minimum: 1, maximum: 50, description: 'Maximum records to return, or null for the default.' }
       },
-      required: ['query','status','review_due_only'],
+      required: ['query','status','review_due_only','limit'],
       additionalProperties: false
     }
   },
@@ -270,9 +271,9 @@ const definitions: Record<string, any> = {
         status: { type: ['string','null'] },
         overdue_only: { type: 'boolean' },
         corrective_actions_only: { type: 'boolean' },
-        limit: { type: 'integer', minimum: 1, maximum: 50 }
+        limit: { type: ['integer','null'], minimum: 1, maximum: 50, description: 'Maximum records to return, or null for the default.' }
       },
-      required: ['query','status','overdue_only','corrective_actions_only'],
+      required: ['query','status','overdue_only','corrective_actions_only','limit'],
       additionalProperties: false
     }
   },
@@ -365,9 +366,9 @@ const definitions: Record<string, any> = {
       type: 'object',
       properties: {
         query: { type: 'string', description: 'Natural-language question or search phrase.' },
-        limit: { type: 'integer', minimum: 1, maximum: 12 }
+        limit: { type: ['integer','null'], minimum: 1, maximum: 12, description: 'Maximum sources to return, or null for the default.' }
       },
-      required: ['query'],
+      required: ['query','limit'],
       additionalProperties: false
     }
   },
@@ -387,6 +388,24 @@ const definitions: Record<string, any> = {
   }
 }
 
+const assertStrictToolSchema = (tool: any) => {
+  const visit = (schema: any, path: string) => {
+    if (!schema || typeof schema !== 'object') return
+    if (schema.type === 'object' || (Array.isArray(schema.type) && schema.type.includes('object'))) {
+      const properties = schema.properties || {}
+      const required = schema.required
+      if (schema.additionalProperties !== false || !Array.isArray(required) ||
+          Object.keys(properties).some(key => !required.includes(key))) {
+        throw new Error('Invalid strict Forge AI tool schema: ' + path)
+      }
+      Object.entries(properties).forEach(([key, property]) => visit(property, path + '.' + key))
+    }
+    if (schema.items) visit(schema.items, path + '[]')
+  }
+  visit(tool.parameters, tool.name)
+  return tool
+}
+
 export const getForgeAiToolDefinitions = (
   capabilities: Capability[],
   availableActions: ForgeAiAvailableAction[] = []
@@ -404,7 +423,7 @@ export const getForgeAiToolDefinitions = (
     tools.push(buildPrepareActionDefinition(availableActions))
   }
 
-  return tools
+  return tools.map(assertStrictToolSchema)
 }
 
 const getPermission = (
