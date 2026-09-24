@@ -243,21 +243,6 @@ grant all on public.forge_ai_watch_runs to service_role;
 grant all on public.forge_ai_watch_alerts to service_role;
 grant usage, select on sequence public.forge_ai_watch_runs_id_seq to service_role;
 
-insert into public.forge_ai_watch_rules
-(organization_id, template_id, enabled, config, notification_mode)
-select
-  '20000000-0000-4000-8000-000000000100',
-  t.id,
-  true,
-  t.default_config,
-  'in_app'
-from public.forge_ai_watch_rule_templates t
-where t.platform_enabled=true
-on conflict (organization_id, template_id) do update
-set enabled=true,
-    config=excluded.config,
-    updated_at=now();
-
 insert into public.forge_experience_elements
 (element_key, feature_id, element_type, name, default_label, default_description, route, component_key, category, sort_order, platform_enabled, protection_level, tenant_edit_mode, location_edit_mode, user_edit_mode, can_hide, can_rename, can_reorder, can_duplicate, can_delete, settings)
 select
