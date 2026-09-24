@@ -106,6 +106,9 @@ const ForgeAiPage = async ({
           ['forge_ai.run_actions','forge_ai.approve_actions'].includes(permission.permissionKey) &&
           permission.allowed
       )}
+      canViewWatch={runtime.access.effective.some(
+        permission => permission.permissionKey === 'forge_ai.view_alerts' && permission.allowed
+      )}
     />
   )
 }
