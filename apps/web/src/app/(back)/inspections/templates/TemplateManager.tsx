@@ -273,7 +273,7 @@ const TemplateManager = ({
                 key={template.id}
                 type='button'
                 onClick={() => setSelectedId(template.id)}
-                className={\`rounded-lg border p-3 text-left \${selected?.id === template.id ? 'border-primary bg-primary/5' : 'hover:bg-neutral/5'}\`}
+                className={`rounded-lg border p-3 text-left ${selected?.id === template.id ? 'border-primary bg-primary/5' : 'hover:bg-neutral/5'}`}
               >
                 <div className='flex items-center justify-between gap-2'>
                   <span className='font-semibold'>{template.name}</span>
