@@ -121,7 +121,7 @@ const TaskRecordForm = ({
     }
 
     if (field.fieldType === 'select') {
-      const options = field.key === 'status'
+      const options = field.key === 'status' && !readOnly
         ? field.lookupOptions.filter(option => option.key !== 'completed')
         : field.lookupOptions
 
