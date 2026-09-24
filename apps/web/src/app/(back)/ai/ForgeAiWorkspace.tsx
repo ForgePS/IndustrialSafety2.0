@@ -1,19 +1,33 @@
 'use client'
 
-import { FormEvent, useMemo, useRef, useState } from 'react'
+import { FormEvent, useMemo, useRef, useState, useTransition } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import {
+  TbArchive,
   TbArrowUp,
+  TbBook2,
   TbBrain,
   TbMessageCirclePlus,
+  TbPin,
+  TbPinned,
   TbShieldCheck,
-  TbSparkles
+  TbSparkles,
+  TbThumbDown,
+  TbThumbUp,
+  TbTrash
 } from 'react-icons/tb'
 import { Badge } from '@repo/ui/components/ui/badge'
 import { Button } from '@repo/ui/components/ui/button'
 import { Card, CardContent } from '@repo/ui/components/ui/card'
 import { Textarea } from '@repo/ui/components/ui/textarea'
+import { toast } from '@repo/ui/utils/toast'
+import {
+  archiveForgeAiConversation,
+  deleteForgeAiConversation,
+  saveForgeAiFeedback,
+  setForgeAiConversationPinned
+} from './conversationActions'
 
 type Conversation = {
   id: string
@@ -22,11 +36,30 @@ type Conversation = {
   pinned: boolean
 }
 
+type SourceRef = {
+  source_title?: string | null
+  source_type?: string | null
+  source_reference?: string | null
+  section_title?: string | null
+  page_number?: number | null
+}
+
+type PreparedAction = {
+  approval_id: string
+  action_name: string
+  target_reference?: string | null
+  risk_summary?: string | null
+  expires_at?: string | null
+}
+
 type Message = {
   id: string | number
   role: 'user' | 'assistant'
   content: string
   created_at: string
+  source_refs?: SourceRef[]
+  prepared_actions?: PreparedAction[]
+  rating?: -1 | 0 | 1
 }
 
 const ForgeAiWorkspace = ({
@@ -53,6 +86,7 @@ const ForgeAiWorkspace = ({
   canUseActions: boolean
 }) => {
   const router = useRouter()
+  const [transitionPending, startTransition] = useTransition()
   const [conversationId, setConversationId] = useState<string | null>(activeConversationId)
   const [messages, setMessages] = useState<Message[]>(initialMessages)
   const [input, setInput] = useState('')
@@ -63,9 +97,16 @@ const ForgeAiWorkspace = ({
   const hasConversation = messages.length > 0
 
   const orderedConversations = useMemo(
-    () => [...conversations].sort((a, b) => +new Date(b.last_message_at) - +new Date(a.last_message_at)),
+    () => [...conversations].sort((a, b) => {
+      if (a.pinned !== b.pinned) return a.pinned ? -1 : 1
+      return +new Date(b.last_message_at) - +new Date(a.last_message_at)
+    }),
     [conversations]
   )
+
+  const activeConversation = conversationId
+    ? conversations.find(item => item.id === conversationId) || null
+    : null
 
   const send = async (messageOverride?: string) => {
     const text = (messageOverride ?? input).trim()
@@ -111,6 +152,9 @@ const ForgeAiWorkspace = ({
           id: payload.message.id,
           role: 'assistant',
           content: payload.message.content,
+          source_refs: payload.message.source_refs || [],
+          prepared_actions: payload.message.prepared_actions || [],
+          rating: 0,
           created_at: payload.message.created_at
         }
       ])
@@ -128,6 +172,96 @@ const ForgeAiWorkspace = ({
     void send()
   }
 
+  const rateMessage = (message: Message, rating: -1 | 1) => {
+    if (!conversationId || typeof message.id !== 'number') return
+
+    const nextRating = message.rating === rating ? 0 : rating
+
+    startTransition(async () => {
+      const result = await saveForgeAiFeedback({
+        conversationId,
+        messageId: message.id as number,
+        rating: nextRating
+      })
+
+      if ('error' in result) {
+        toast('error', result.error || 'Unable to save AI feedback.')
+        return
+      }
+
+      setMessages(current =>
+        current.map(item =>
+          item.id === message.id
+            ? { ...item, rating: nextRating as -1 | 0 | 1 }
+            : item
+        )
+      )
+    })
+  }
+
+  const togglePin = () => {
+    if (!conversationId) return
+    const nextPinned = !activeConversation?.pinned
+
+    startTransition(async () => {
+      const result = await setForgeAiConversationPinned({
+        conversationId,
+        pinned: nextPinned
+      })
+
+      if ('error' in result) {
+        toast('error', result.error || 'Unable to update conversation.')
+        return
+      }
+
+      toast('success', result.message)
+      router.refresh()
+    })
+  }
+
+  const archiveConversation = () => {
+    if (!conversationId || !window.confirm('Archive this Forge AI conversation?')) return
+
+    startTransition(async () => {
+      const result = await archiveForgeAiConversation({ conversationId })
+
+      if ('error' in result) {
+        toast('error', result.error || 'Unable to archive conversation.')
+        return
+      }
+
+      toast('success', result.message)
+      setConversationId(null)
+      setMessages([])
+      router.push('/ai')
+      router.refresh()
+    })
+  }
+
+  const deleteConversation = () => {
+    if (
+      !conversationId ||
+      !window.confirm(
+        'Permanently delete this Forge AI conversation and its message history? This cannot be undone.'
+      )
+    ) return
+
+    startTransition(async () => {
+      const result = await deleteForgeAiConversation({ conversationId })
+
+      if ('error' in result) {
+        toast('error', result.error || 'Unable to delete conversation.')
+        return
+      }
+
+      toast('success', result.message)
+      setConversationId(null)
+      setMessages([])
+      router.push('/ai')
+      router.refresh()
+    })
+  }
+
   return (
     <div className='grid min-h-[calc(100vh-9rem)] gap-4 xl:grid-cols-[280px_minmax(0,1fr)]'>
       <Card className='overflow-hidden'>
@@ -139,24 +273,28 @@ const ForgeAiWorkspace = ({
                 New Conversation
               </Link>
             </Button>
+
             {canManageKnowledge ? (
               <Button className='mt-2 w-full' variant='outline' asChild>
                 <Link href='/ai/knowledge'>
-                  <TbBrain />
+                  <TbBook2 />
                   Manage Knowledge
                 </Link>
               </Button>
             ) : null}
+
             {canManageAi ? (
               <Button className='mt-2 w-full' variant='outline' asChild>
                 <Link href='/ai/settings'>AI Settings</Link>
               </Button>
             ) : null}
+
             {canUseActions ? (
               <Button className='mt-2 w-full' variant='outline' asChild>
                 <Link href='/ai/actions'>AI Actions</Link>
               </Button>
             ) : null}
+
             {canViewUsage ? (
               <Button className='mt-2 w-full' variant='outline' asChild>
                 <Link href='/ai/usage'>Usage & Activity</Link>
@@ -173,11 +311,18 @@ const ForgeAiWorkspace = ({
                   href={'/ai?conversation=' + conversation.id}
                   className={
                     'rounded-lg px-3 py-3 text-sm transition ' +
-                    (conversation.id === conversationId ? 'bg-primary/10 text-primary' : 'hover:bg-neutral/5')
+                    (conversation.id === conversationId
+                      ? 'bg-primary/10 text-primary'
+                      : 'hover:bg-neutral/5')
                   }
                 >
-                  <div className='truncate font-medium'>{conversation.title}</div>
-                  <div className='text-textSecondary mt-1 text-xs'>{new Date(conversation.last_message_at).toLocaleString()}</div>
+                  <div className='flex items-center gap-2'>
+                    {conversation.pinned ? <TbPinned className='shrink-0' /> : null}
+                    <div className='truncate font-medium'>{conversation.title}</div>
+                  </div>
+                  <div className='text-textSecondary mt-1 text-xs'>
+                    {new Date(conversation.last_message_at).toLocaleString()}
+                  </div>
                 </Link>
               )) : (
                 <div className='text-textSecondary px-3 py-6 text-center text-sm'>No conversations yet.</div>
@@ -199,7 +344,42 @@ const ForgeAiWorkspace = ({
                 <div className='text-textSecondary text-xs'>{organizationName}</div>
               </div>
             </div>
-            <Badge variant='outline' size='sm'><TbShieldCheck />Permission-aware</Badge>
+
+            <div className='flex flex-wrap items-center gap-2'>
+              <Badge variant='outline' size='sm'><TbShieldCheck />Permission-aware</Badge>
+
+              {conversationId ? (
+                <>
+                  <Button
+                    size='sm'
+                    variant='outline'
+                    onClick={togglePin}
+                    disabled={transitionPending}
+                    title={activeConversation?.pinned ? 'Unpin conversation' : 'Pin conversation'}
+                  >
+                    {activeConversation?.pinned ? <TbPinned /> : <TbPin />}
+                  </Button>
+                  <Button
+                    size='sm'
+                    variant='outline'
+                    onClick={archiveConversation}
+                    disabled={transitionPending}
+                    title='Archive conversation'
+                  >
+                    <TbArchive />
+                  </Button>
+                  <Button
+                    size='sm'
+                    variant='outline'
+                    onClick={deleteConversation}
+                    disabled={transitionPending}
+                    title='Delete conversation'
+                  >
+                    <TbTrash />
+                  </Button>
+                </>
+              ) : null}
+            </div>
           </div>
 
           <div className='flex-1 overflow-y-auto px-5 py-6'>
@@ -210,7 +390,7 @@ const ForgeAiWorkspace = ({
                 </div>
                 <h1 className='text-textPrimary mt-5 text-3xl font-bold'>{assistantName}</h1>
                 <p className='text-textSecondary mt-3 max-w-2xl'>
-                  Ask about Forge records, trends, overdue work, incidents, inspections, training, assets, or your access. The assistant can only retrieve data your current account is authorized to see.
+                  Ask about Forge records, trends, overdue work, incidents, inspections, training, assets, company knowledge, or your access. The assistant can only retrieve data your current account is authorized to see.
                 </p>
 
                 <div className='mt-8 grid w-full gap-3 md:grid-cols-2'>
@@ -242,8 +422,77 @@ const ForgeAiWorkspace = ({
                       }
                     >
                       <div className='whitespace-pre-wrap text-sm leading-6'>{message.content}</div>
-                      <div className={'mt-2 text-[11px] ' + (message.role === 'user' ? 'opacity-70' : 'text-textSecondary')}>
-                        {message.role === 'user' ? 'You' : assistantName} · {new Date(message.created_at).toLocaleTimeString()}
+
+                      {message.role === 'assistant' && message.source_refs?.length ? (
+                        <div className='mt-4 border-t pt-3'>
+                          <div className='text-textSecondary flex items-center gap-2 text-xs font-semibold uppercase tracking-wide'>
+                            <TbBook2 />
+                            Forge Knowledge Sources
+                          </div>
+                          <div className='mt-2 flex flex-col gap-2'>
+                            {message.source_refs.map((source, index) => (
+                              <div key={index} className='rounded-lg border px-3 py-2 text-xs'>
+                                <div className='font-semibold'>{source.source_title || 'Forge Knowledge'}</div>
+                                <div className='text-textSecondary mt-1'>
+                                  {[
+                                    source.section_title,
+                                    source.page_number ? 'Page ' + String(source.page_number) : null,
+                                    source.source_reference
+                                  ].filter(Boolean).join(' · ') || source.source_type || 'Tenant source'}
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      ) : null}
+
+                      {message.role === 'assistant' && message.prepared_actions?.length ? (
+                        <div className='mt-4 border-t pt-3'>
+                          {message.prepared_actions.map(action => (
+                            <div key={action.approval_id} className='rounded-lg border border-primary/30 bg-primary/5 p-3'>
+                              <div className='font-semibold'>Action prepared — approval required</div>
+                              <div className='text-textSecondary mt-1 text-xs'>
+                                {action.action_name}
+                                {action.target_reference ? ' · ' + action.target_reference : ''}
+                              </div>
+                              {action.risk_summary ? (
+                                <div className='text-textSecondary mt-2 text-xs'>{action.risk_summary}</div>
+                              ) : null}
+                              <Button className='mt-3' size='sm' variant='outline' asChild>
+                                <Link href='/ai/actions'>Review AI Action</Link>
+                              </Button>
+                            </div>
+                          ))}
+                        </div>
+                      ) : null}
+
+                      <div className='mt-2 flex flex-wrap items-center justify-between gap-2'>
+                        <div className={'text-[11px] ' + (message.role === 'user' ? 'opacity-70' : 'text-textSecondary')}>
+                          {message.role === 'user' ? 'You' : assistantName} · {new Date(message.created_at).toLocaleTimeString()}
+                        </div>
+
+                        {message.role === 'assistant' && typeof message.id === 'number' ? (
+                          <div className='flex items-center gap-1'>
+                            <Button
+                              size='sm'
+                              variant={message.rating === 1 ? 'default' : 'ghost'}
+                              onClick={() => rateMessage(message, 1)}
+                              disabled={transitionPending}
+                              title='Helpful'
+                            >
+                              <TbThumbUp />
+                            </Button>
+                            <Button
+                              size='sm'
+                              variant={message.rating === -1 ? 'destructive' : 'ghost'}
+                              onClick={() => rateMessage(message, -1)}
+                              disabled={transitionPending}
+                              title='Not helpful'
+                            >
+                              <TbThumbDown />
+                            </Button>
+                          </div>
+                        ) : null}
                       </div>
                     </div>
                   </div>
