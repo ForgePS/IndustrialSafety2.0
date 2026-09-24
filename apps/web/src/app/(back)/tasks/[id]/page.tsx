@@ -12,6 +12,7 @@ import { getScopedPersonnel } from '@/lib/forgePersonnel'
 import { getTenantScopeAssignments } from '@/lib/forgeScope'
 import { getTaskDetail, taskWithinScope } from '@/lib/forgeTasks'
 import { requireTenantPermission } from '@/lib/forgeTenantAuth'
+import ForgeAiContextButton from '@/components/forge-ai/ForgeAiContextButton'
 
 export const metadata: Metadata = { title: 'Task' }
 
@@ -53,6 +54,7 @@ const TaskDetailPage = async ({ params }: { params: Promise<{ id: string }> }) =
   const assignPermission = permissions.get('tasks.assign')
   const completePermission = permissions.get('tasks.complete')
   const archivePermission = permissions.get('tasks.archive')
+  const canUseAi = Boolean(permissions.get('forge_ai.use'))
 
   const within = async (permission: any) =>
     permission
@@ -141,6 +143,13 @@ const TaskDetailPage = async ({ params }: { params: Promise<{ id: string }> }) =
             {task.source_reference ? ' · Source ' + task.source_reference : ''}
           </p>
         </div>
+        {canUseAi ? (
+          <ForgeAiContextButton
+            contextType='task'
+            recordId={task.id}
+            recordLabel={task.task_number}
+          />
+        ) : null}
       </div>
 
       <div className='grid gap-4 md:grid-cols-2 xl:grid-cols-4'>
