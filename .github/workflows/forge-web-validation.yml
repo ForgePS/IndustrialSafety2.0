@@ -4,7 +4,6 @@ on:
   push:
     branches:
       - forge-creator-2.0
-      - codex/incident-equipment-links
   pull_request:
     branches:
       - forge-creator-2.0
@@ -35,7 +34,7 @@ jobs:
       - uses: actions/checkout@v7
       - uses: supabase/setup-cli@v2
         with:
-          version: 2.84.2
+          version: 2.108.0
       - name: Apply migrations to a fresh local database
         working-directory: apps/web
         run: supabase db start
