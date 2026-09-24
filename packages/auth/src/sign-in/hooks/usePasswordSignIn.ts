@@ -29,7 +29,10 @@ export const usePasswordSignIn = (verifyEmailRedirectTo?: string) => {
     }
 
     try {
-      await signInWithPasswordMutation.mutateAsync(formData).then(() => router.push(redirectTo ?? '/'))
+      await signInWithPasswordMutation.mutateAsync(formData).then(() => {
+        router.push(redirectTo || '/')
+        router.refresh()
+      })
     } catch (error) {
       throw error
     }
