@@ -35,7 +35,8 @@ const ForgeAiWorkspace = ({
   conversations,
   activeConversationId,
   initialMessages,
-  quickPrompts
+  quickPrompts,
+  canManageKnowledge
 }: {
   assistantName: string
   organizationName: string
@@ -43,6 +44,7 @@ const ForgeAiWorkspace = ({
   activeConversationId: string | null
   initialMessages: Message[]
   quickPrompts: string[]
+  canManageKnowledge: boolean
 }) => {
   const router = useRouter()
   const [conversationId, setConversationId] = useState<string | null>(activeConversationId)
@@ -131,6 +133,14 @@ const ForgeAiWorkspace = ({
                 New Conversation
               </Link>
             </Button>
+            {canManageKnowledge ? (
+              <Button className='mt-2 w-full' variant='outline' asChild>
+                <Link href='/ai/knowledge'>
+                  <TbBrain />
+                  Manage Knowledge
+                </Link>
+              </Button>
+            ) : null}
           </div>
 
           <div className='flex-1 overflow-y-auto p-3'>
