@@ -43,7 +43,7 @@ const IncidentEquipment = ({
   const remove = (linkId: string, number: string) => startTransition(async () => {
     if (!window.confirm('Remove ' + number + ' from this incident? The activity history will remain.')) return
     const result = await unlinkIncidentAsset({ incidentId, linkId })
-    if ('error' in result) return toast('error', result.error)
+    if ('error' in result) return toast('error', result.error || 'Unable to update equipment links.')
     toast('success', result.message || 'Equipment updated.')
     router.refresh()
   })
