@@ -318,6 +318,61 @@ const evaluateIncidentsAwaitingReview = async (
   })
 }
 
+
+const evaluateLotoReviewDue = async (
+  supabase: any,
+  organizationId: string,
+  config: Record<string, unknown>
+): Promise<WatchCandidate[]> => {
+  const daysAhead = integerConfig(config, 'days_ahead', 30, 0, 365)
+  const today = new Date().toISOString().slice(0, 10)
+  const through = new Date(Date.now() + daysAhead * 86_400_000).toISOString().slice(0, 10)
+
+  const { data, error } = await supabase
+    .from('forge_loto_procedures')
+    .select('id, procedure_number, title, status, next_review_date, asset_id, forge_assets(asset_number, name, location_id, division_id)')
+    .eq('organization_id', organizationId)
+    .eq('status', 'approved')
+    .not('next_review_date', 'is', null)
+    .lte('next_review_date', through)
+    .order('next_review_date')
+
+  if (error) throw new Error('LOTO periodic-review watch failed: ' + error.message)
+
+  return (data || []).map((row: any) => {
+    const overdue = row.next_review_date < today
+    const asset = row.forge_assets
+
+    return {
+      ruleKey: 'loto.review_due',
+      targetType: 'loto_procedure',
+      targetId: row.id,
+      targetReference: row.procedure_number,
+      title: (overdue ? 'LOTO review overdue: ' : 'LOTO review due: ') + row.title,
+      summary:
+        row.procedure_number +
+        ' for ' +
+        (asset?.asset_number || asset?.name || 'linked equipment') +
+        ' has a periodic review ' +
+        (overdue
+          ? String(daysBetween(row.next_review_date)) + ' day(s) overdue.'
+          : 'due by ' + row.next_review_date + '.'),
+      locationId: asset?.location_id || null,
+      divisionId: asset?.division_id || null,
+      data: {
+        procedure_number: row.procedure_number,
+        title: row.title,
+        next_review_date: row.next_review_date,
+        overdue,
+        asset_id: row.asset_id,
+        asset_number: asset?.asset_number || null,
+        asset_name: asset?.name || null,
+        path: '/loto/' + row.id
+      }
+    }
+  })
+}
+
 const evaluateRule = async (
   supabase: any,
   organizationId: string,
@@ -343,6 +398,9 @@ const evaluateRule = async (
   }
   if (ruleKey === 'incident.awaiting_review') {
     return evaluateIncidentsAwaitingReview(supabase, organizationId, config)
+  }
+  if (ruleKey === 'loto.review_due') {
+    return evaluateLotoReviewDue(supabase, organizationId, config)
   }
 
   return []
