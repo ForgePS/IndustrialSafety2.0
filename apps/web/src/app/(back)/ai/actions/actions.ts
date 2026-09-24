@@ -71,7 +71,7 @@ export const cancelForgeAiAction = async (approvalId: string) => {
   if (approval.status !== 'pending') return { error: 'Only pending AI actions can be canceled.' }
 
   const now = new Date().toISOString()
-  const { error } = await supabase
+  const { data: canceledApproval, error } = await supabase
     .from('forge_ai_action_approvals')
     .update({
       status: 'canceled',
@@ -79,8 +79,13 @@ export const cancelForgeAiAction = async (approvalId: string) => {
     })
     .eq('id', approvalId)
     .eq('status', 'pending')
+    .select('id')
+    .maybeSingle()
 
   if (error) return { error: error.message }
+  if (!canceledApproval) {
+    return { error: 'This AI action was already reviewed or is currently being processed.' }
+  }
 
   await supabase.from('forge_creator_audit_log').insert({
     actor_user_id: context.user.id,
