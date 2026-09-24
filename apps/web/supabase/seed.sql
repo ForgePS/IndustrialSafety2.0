@@ -1606,3 +1606,38 @@ set enabled=true,
     response_style=excluded.response_style,
     tenant_can_configure=true,
     updated_at=now();
+
+
+-- Local Forge AI approved-action enablement for the demo tenant.
+insert into public.forge_ai_tenant_actions
+(organization_id, action_id, enabled, tenant_can_configure, settings)
+select
+  '20000000-0000-4000-8000-000000000100',
+  a.id,
+  true,
+  false,
+  '{"local_demo":true}'::jsonb
+from public.forge_ai_action_registry a
+where a.action_key in ('inspection.create_finding','asset.add_maintenance')
+on conflict (organization_id, action_id) do update
+set enabled=true,
+    tenant_can_configure=false,
+    settings=excluded.settings,
+    updated_at=now();
+
+-- Local Forge AI Watch rules for the demo tenant.
+insert into public.forge_ai_watch_rules
+(organization_id, template_id, enabled, config, notification_mode)
+select
+  '20000000-0000-4000-8000-000000000100',
+  t.id,
+  true,
+  t.default_config,
+  'in_app'
+from public.forge_ai_watch_rule_templates t
+where t.platform_enabled=true
+on conflict (organization_id, template_id) do update
+set enabled=true,
+    config=excluded.config,
+    notification_mode=excluded.notification_mode,
+    updated_at=now();
