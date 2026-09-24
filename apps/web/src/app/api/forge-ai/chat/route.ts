@@ -11,6 +11,7 @@ import {
 import { runOpenAiForgeAssistant } from '@/lib/forgeAiProvider'
 import { executeForgeAiTool, getForgeAiToolDefinitions } from '@/lib/forgeAiTools'
 import { getForgeAiRecordContext } from '@/lib/forgeAiContext'
+import { getAvailableForgeAiActions } from '@/lib/forgeAiActions'
 
 export const dynamic = 'force-dynamic'
 
@@ -119,6 +120,13 @@ export async function POST(request: Request) {
       { status: 404 }
     )
   }
+
+  const availableActions = await getAvailableForgeAiActions({
+    organizationId: activeOrganization.id,
+    userId: user.id,
+    recordContext,
+    permissionByKey
+  })
 
   const oneMinuteAgo = new Date(Date.now() - 60_000).toISOString()
   const { count: recentRequests } = await supabase
@@ -250,7 +258,7 @@ export async function POST(request: Request) {
     }
   }
 
-  const tools = getForgeAiToolDefinitions(capabilities)
+  const tools = getForgeAiToolDefinitions(capabilities, availableActions)
   const instructions = buildInstructions({
     assistantName: settings.assistant_name,
     organizationName: activeOrganization.name,
@@ -280,7 +288,9 @@ export async function POST(request: Request) {
             permissionByKey,
             settings: {
               allow_sensitive_data: settings.allow_sensitive_data
-            }
+            },
+            recordContext,
+            availableActions
           },
           conversationId: conversation.id,
           call
