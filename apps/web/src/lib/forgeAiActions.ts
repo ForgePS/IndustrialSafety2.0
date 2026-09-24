@@ -638,7 +638,7 @@ export const approveAndExecuteForgeAiAction = async ({
 
   const now = new Date().toISOString()
 
-  const { error: lockError } = await supabase
+  const { data: lockedApproval, error: lockError } = await supabase
     .from('forge_ai_action_approvals')
     .update({
       status: 'executing',
@@ -648,8 +648,13 @@ export const approveAndExecuteForgeAiAction = async ({
     })
     .eq('id', approval.id)
     .eq('status', 'pending')
+    .select('id')
+    .maybeSingle()
 
   if (lockError) return { error: lockError.message }
+  if (!lockedApproval) {
+    return { error: 'This AI action was already reviewed or is currently being processed.' }
+  }
 
   try {
     let result: any
