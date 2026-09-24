@@ -754,7 +754,7 @@ export const rejectForgeAiAction = async ({
 
   const now = new Date().toISOString()
 
-  const { error } = await supabase
+  const { data: rejectedApproval, error } = await supabase
     .from('forge_ai_action_approvals')
     .update({
       status: 'rejected',
@@ -765,8 +765,13 @@ export const rejectForgeAiAction = async ({
     })
     .eq('id', approvalId)
     .eq('status', 'pending')
+    .select('id')
+    .maybeSingle()
 
   if (error) return { error: error.message }
+  if (!rejectedApproval) {
+    return { error: 'This AI action was already reviewed or is currently being processed.' }
+  }
 
   await supabase.from('forge_creator_audit_log').insert({
     actor_user_id: approverUserId,
