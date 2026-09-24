@@ -45,8 +45,8 @@ const PasswordSignInForm = ({ users }: { users: User[] | null }) => {
   const { handleSignIn, error } = usePasswordSignIn(`/auth/verify-email?email=${form.getValues('email')}`)
 
   const handleButtonClick = (value: string) => {
-    form.setValue('email', value === 'admin' ? 'admin@jetship.com' : 'user@jetship.com')
-    form.setValue('password', value === 'admin' ? 'adminpassword' : 'userpassword')
+    form.setValue('email', value === 'admin' ? 'admin@forge2.local' : 'user@forge2.local')
+    form.setValue('password', 'ForgeDev2!')
   }
 
   const onSubmit = (formData: PasswordSignInFormData) => {
@@ -92,14 +92,16 @@ const PasswordSignInForm = ({ users }: { users: User[] | null }) => {
       )}
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className='flex flex-col gap-4'>
-          <div className='mbe-2 flex flex-wrap gap-6 sm:flex-nowrap lg:flex-wrap xl:flex-nowrap'>
-            <Button type='button' variant='outline' className='is-full' onClick={() => handleButtonClick('user')}>
-              <Trans i18nKey='auth:loginTestUserButton' />
-            </Button>
-            <Button type='button' variant='outline' className='is-full' onClick={() => handleButtonClick('admin')}>
-              <Trans i18nKey='auth:loginTestAdminButton' />
-            </Button>
-          </div>
+          {process.env.NODE_ENV !== 'production' ? (
+            <div className='mbe-2 flex flex-wrap gap-6 sm:flex-nowrap lg:flex-wrap xl:flex-nowrap'>
+              <Button type='button' variant='outline' className='is-full' onClick={() => handleButtonClick('user')}>
+                Local Demo User
+              </Button>
+              <Button type='button' variant='outline' className='is-full' onClick={() => handleButtonClick('admin')}>
+                Local Forge Admin
+              </Button>
+            </div>
+          ) : null}
           <FormField
             control={form.control}
             name='email'
