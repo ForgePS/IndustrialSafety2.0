@@ -39,7 +39,7 @@ const PersonnelAccessPage = async ({ params }: { params: Promise<{ id: string }>
     ? await supabase.from('users').select('user_id, name, email').in('user_id', userIds)
     : { data: [] }
 
-  const profileById = new Map((profiles || []).map((profile: any) => [profile.user_id, profile]))
+  const profileById = new Map<string, any>((profiles || []).map((profile: any) => [profile.user_id, profile]))
   const rolesByUser = new Map<string, string[]>()
   const overrideCounts = new Map<string, number>()
 
