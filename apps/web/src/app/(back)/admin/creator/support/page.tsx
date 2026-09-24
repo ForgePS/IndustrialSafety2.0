@@ -4,7 +4,7 @@ import { requireForgePlatformRole } from '@/lib/forgeCreatorAuth'
 import SupportDesk from '@/app/(back)/support/SupportDesk'
 export const metadata:Metadata={title:'Forge Support Queue'}
 export default async function ForgeSupportPage(){
- await requireForgePlatformRole(['forge_owner','forge_creator','forge_support'])
+ const {platformRole}=await requireForgePlatformRole(['forge_owner','forge_creator','forge_support'])
  const db=createServiceRoleClient() as any
  const {data,error}=await db.from('forge_support_tickets')
   .select('id,organization_id,ticket_number,subject,category,priority,status,requester_user_id,created_at,updated_at,first_response_due_at,resolution_due_at')
@@ -13,5 +13,5 @@ export default async function ForgeSupportPage(){
  const ids=[...new Set((data||[]).map((t:any)=>t.organization_id))]
  const {data:orgs}=ids.length?await db.from('organizations').select('id,name').in('id',ids):{data:[]}
  const names=new Map((orgs||[]).map((o:any)=>[o.id,o.name]))
- return <SupportDesk staff tickets={(data||[]).map((t:any)=>({...t,organizationName:names.get(t.organization_id)||'Company'}))} />
+ return <SupportDesk staff canSettings={platformRole!=='forge_support'} tickets={(data||[]).map((t:any)=>({...t,organizationName:names.get(t.organization_id)||'Company'}))} />
 }
