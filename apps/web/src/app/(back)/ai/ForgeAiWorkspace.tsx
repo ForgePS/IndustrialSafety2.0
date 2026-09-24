@@ -38,7 +38,8 @@ const ForgeAiWorkspace = ({
   quickPrompts,
   canManageKnowledge,
   canManageAi,
-  canViewUsage
+  canViewUsage,
+  canUseActions
 }: {
   assistantName: string
   organizationName: string
@@ -49,6 +50,7 @@ const ForgeAiWorkspace = ({
   canManageKnowledge: boolean
   canManageAi: boolean
   canViewUsage: boolean
+  canUseActions: boolean
 }) => {
   const router = useRouter()
   const [conversationId, setConversationId] = useState<string | null>(activeConversationId)
@@ -148,6 +150,11 @@ const ForgeAiWorkspace = ({
             {canManageAi ? (
               <Button className='mt-2 w-full' variant='outline' asChild>
                 <Link href='/ai/settings'>AI Settings</Link>
+              </Button>
+            ) : null}
+            {canUseActions ? (
+              <Button className='mt-2 w-full' variant='outline' asChild>
+                <Link href='/ai/actions'>AI Actions</Link>
               </Button>
             ) : null}
             {canViewUsage ? (
