@@ -14,7 +14,7 @@ import {
 } from '@repo/ui/components/ui/sheet'
 import { Textarea } from '@repo/ui/components/ui/textarea'
 
-type ContextType = 'incident' | 'inspection' | 'asset'
+type ContextType = 'incident' | 'inspection' | 'asset' | 'personnel' | 'training_course' | 'qr'
 
 type SourceRef = {
   source_title?: string | null
@@ -57,6 +57,24 @@ const promptsByType: Record<ContextType, string[]> = {
     'What maintenance or reliability issues stand out in this record?',
     'What follow-up should I consider based on this asset history?',
     'Search our Forge Knowledge for procedures or manuals relevant to this equipment.'
+  ],
+  personnel: [
+    'Summarize this personnel profile using only information I am allowed to view.',
+    'What training or qualification follow-up should I consider for this person?',
+    'What current Forge records about this person need attention?',
+    'Explain this person\'s visible status, Location, and Division context.'
+  ],
+  training_course: [
+    'Summarize this training course and its current usage.',
+    'What should be improved or clarified in this course description?',
+    'What company policies or SOPs are relevant to this training course?',
+    'Help me build a practical refresher outline for this course.'
+  ],
+  qr: [
+    'Summarize this managed QR code and what it currently opens.',
+    'Does anything about this QR configuration need attention?',
+    'Explain the linked asset context for this QR code.',
+    'Help me plan how this QR should be used in the field.'
   ]
 }
 
