@@ -86,7 +86,7 @@ export async function replyToSupportTicket(ticketId:string, body:string) {
   const ticket=await getTicket(ticketId,actor.organizationId)
   if(!ticket) return {error:'Request not found.'}
   if(ticket.requester_user_id!==actor.user.id && !permitted(actor.access,'customer_support.company_reply')) return {error:'Access denied.'}
-  if(ticket.status==='closed') return {error:'Reopen this request before replying.'}
+  if(['resolved','closed'].includes(ticket.status)) return {error:'Reopen this request before replying.'}
   const text=clean(body,10000)
   if(!text) return {error:'Enter a message.'}
   const db=createServiceRoleClient() as any
@@ -112,7 +112,7 @@ export async function staffReplyToSupportTicket(ticketId:string,body:string,inte
   if(!actor) return {error:'Access denied.'}
   const ticket=await getTicket(ticketId)
   if(!ticket) return {error:'Request not found.'}
-  if(ticket.status==='closed') return {error:'Reopen the request before replying.'}
+  if(['resolved','closed'].includes(ticket.status)) return {error:'Reopen the request before replying.'}
   const text=clean(body,10000)
   if(!text) return {error:'Enter a message.'}
   const db=createServiceRoleClient() as any
