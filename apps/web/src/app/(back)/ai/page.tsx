@@ -13,7 +13,7 @@ export const metadata: Metadata = { title: 'Forge AI' }
 const ForgeAiPage = async ({
   searchParams
 }: {
-  searchParams: Promise<{ conversation?: string }>
+  searchParams: Promise<{ conversation?: string; prompt?: string }>
 }) => {
   const runtime = await getForgeAiRuntimeContext()
 
@@ -92,6 +92,7 @@ const ForgeAiPage = async ({
       activeConversationId={activeConversationId}
       initialMessages={initialMessages.filter(message => message.role === 'user' || message.role === 'assistant')}
       quickPrompts={quickPrompts}
+      initialPrompt={String(query.prompt || '').slice(0, 6000)}
       canManageKnowledge={runtime.access.effective.some(
         permission => permission.permissionKey === 'forge_ai.manage_knowledge' && permission.allowed
       )}
@@ -108,6 +109,9 @@ const ForgeAiPage = async ({
       )}
       canViewWatch={runtime.access.effective.some(
         permission => permission.permissionKey === 'forge_ai.view_alerts' && permission.allowed
+      )}
+      canViewAnalytics={runtime.access.effective.some(
+        permission => permission.permissionKey === 'forge_ai.view_analytics' && permission.allowed
       )}
     />
   )
