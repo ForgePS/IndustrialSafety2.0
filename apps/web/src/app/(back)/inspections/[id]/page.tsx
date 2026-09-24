@@ -13,6 +13,7 @@ import { getEffectiveLookup } from '@/lib/forgeLookups'
 import { getInspectionDetailData, inspectionWithinScope } from '@/lib/forgeInspections'
 import { getScopedPersonnel } from '@/lib/forgePersonnel'
 import { requireTenantPermission } from '@/lib/forgeTenantAuth'
+import ForgeAiContextButton from '@/components/forge-ai/ForgeAiContextButton'
 
 export const metadata: Metadata = { title: 'Inspection' }
 
@@ -73,6 +74,7 @@ const InspectionDetailPage = async ({ params }: { params: Promise<{ id: string }
   const approvePermission = permissionByKey.get('inspections.approve')
   const closePermission = permissionByKey.get('inspections.close')
   const closeFindingsPermission = permissionByKey.get('inspections.close_findings')
+  const canUseAi = Boolean(permissionByKey.get('forge_ai.use'))
 
   const canWithin = async (permission: any) =>
     permission
@@ -134,6 +136,13 @@ const InspectionDetailPage = async ({ params }: { params: Promise<{ id: string }
           </div>
           <p className='text-textSecondary mt-2'>{inspection.template_name_snapshot || inspection.forge_inspection_templates?.name || 'Inspection'}</p>
         </div>
+        {canUseAi ? (
+          <ForgeAiContextButton
+            contextType='inspection'
+            recordId={inspection.id}
+            recordLabel={inspection.inspection_number}
+          />
+        ) : null}
       </div>
 
       {inspection.status === 'returned' && inspection.return_reason ? (
