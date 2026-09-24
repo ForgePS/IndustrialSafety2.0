@@ -187,7 +187,7 @@ const PersonnelRecordForm = ({
         return
       }
 
-      toast('success', result.message || 'Personnel record saved.')
+      toast('success', 'message' in result ? String(result.message) : 'Personnel record saved.')
 
       if (!personnelId && 'id' in result && result.id) {
         router.push(`/personnel/${result.id}`)
@@ -208,7 +208,7 @@ const PersonnelRecordForm = ({
         return
       }
 
-      toast('success', result.message)
+      toast('success', 'message' in result ? String(result.message) : 'Saved.')
       router.push('/personnel')
       router.refresh()
     })
