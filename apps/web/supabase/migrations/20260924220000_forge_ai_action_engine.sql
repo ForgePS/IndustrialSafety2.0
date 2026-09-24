@@ -98,17 +98,3 @@ set
   updated_at = now()
 where capability_key = 'prepare_action';
 
-insert into public.forge_ai_tenant_actions
-(organization_id, action_id, enabled, tenant_can_configure, settings)
-select
-  '20000000-0000-4000-8000-000000000100',
-  a.id,
-  true,
-  false,
-  '{"local_demo":true}'::jsonb
-from public.forge_ai_action_registry a
-where a.action_key in ('inspection.create_finding','asset.add_maintenance')
-on conflict (organization_id, action_id) do update
-set enabled=true,
-    settings=excluded.settings,
-    updated_at=now();
