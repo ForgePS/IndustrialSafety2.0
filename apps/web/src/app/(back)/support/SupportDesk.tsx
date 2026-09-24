@@ -16,7 +16,7 @@ export type SupportItem = {
  organizationName?:string; requesterName?:string
 }
 const labels:Record<string,string>={new:'New',triaged:'Triaged',in_progress:'In progress',waiting_on_customer:'Waiting on customer',waiting_on_forge:'Waiting on Forge',resolved:'Resolved',closed:'Closed',feature_request:'Feature request'}
-export default function SupportDesk({tickets,canCreate=false,staff=false}:{tickets:SupportItem[];canCreate?:boolean;staff?:boolean}) {
+export default function SupportDesk({tickets,canCreate=false,staff=false,canSettings=false}:{tickets:SupportItem[];canCreate?:boolean;staff?:boolean;canSettings?:boolean}) {
  const router=useRouter()
  const [search,setSearch]=useState('')
  const [filter,setFilter]=useState('active')
@@ -34,7 +34,7 @@ export default function SupportDesk({tickets,canCreate=false,staff=false}:{ticke
   <div className='flex flex-wrap items-start justify-between gap-4'>
    <div><h1 className='flex items-center gap-3 text-3xl font-bold'><TbHeadset />{staff?'Forge Support Queue':'Customer Support'}</h1>
     <p className='text-textSecondary mt-2'>{staff?'Requests across Forge Industrial Safety tenants.':'Contact Forge, follow replies, and track resolution.'}</p></div>
-   {canCreate?<Button onClick={()=>setShowForm(!showForm)}><TbPlus />New request</Button>:null}
+   <div className='flex gap-2'>{canSettings?<Button variant='outline' asChild><Link href='/admin/creator/support/settings'>Response targets</Link></Button>:null}{canCreate?<Button onClick={()=>setShowForm(!showForm)}><TbPlus />New request</Button>:null}</div>
   </div>
   <div className='grid gap-3 sm:grid-cols-3'>
    <Card><CardContent className='p-4'><div className='text-textSecondary text-sm'>Active</div><div className='text-2xl font-bold'>{tickets.filter(t=>!['resolved','closed'].includes(t.status)).length}</div></CardContent></Card>
