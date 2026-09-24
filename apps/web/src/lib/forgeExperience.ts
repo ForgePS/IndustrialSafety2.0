@@ -23,7 +23,7 @@ export const getEffectiveExperience = async ({
   organizationId: string
   userId: string
   types?: string[]
-}) => {
+}): Promise<EffectiveExperienceElement[]> => {
   const supabase = createServiceRoleClient() as any
 
   let query = supabase
