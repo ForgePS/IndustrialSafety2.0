@@ -505,14 +505,20 @@ Implemented on forge-creator-2.0:
 - Forge AI Watch rule templates and alert ledger;
 - scoped Watch alert visibility through normal module permissions;
 - manual Watch evaluation;
-- secured scheduled Watch endpoint.
+- secured scheduled Watch endpoint;
+- scope-aware natural-language analytics engine;
+- Executive, Incident, Training, Inspection and Asset analytics capabilities;
+- AI Analytics dashboard;
+- reusable saved AI report definitions;
+- prefilled analysis prompts into Forge AI;
+- contextual Ask Forge support for Personnel, Training Courses and QR Management in addition to Incidents, Inspections and Assets.
 
 Next implementation priority:
 1. compile/migration validation;
-2. natural-language reporting and analytics;
-3. expand contextual AI to Training, Personnel, QR and later modules;
-4. expand approved action registry;
-5. scheduled Watch integration with AWS EventBridge in production;
-6. image/document workflows;
-7. AI-generated but human-reviewed summaries and drafts;
+2. expand approved action registry;
+3. add AI Draft Studio for narratives, toolbox talks, training outlines, inspection checklists and LOTO drafts;
+4. scheduled Watch integration with AWS EventBridge in production;
+5. image/document workflows;
+6. expand contextual AI as additional Forge modules are built;
+7. richer report visualization/export and scheduled reports;
 8. evaluation and security regression suite.
