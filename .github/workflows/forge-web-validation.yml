@@ -27,3 +27,18 @@ jobs:
       - run: pnpm install --frozen-lockfile
       - run: pnpm --filter forge-industrial-safety-2.0-web type-check
       - run: pnpm --filter forge-industrial-safety-2.0-web build
+
+  database:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v7
+      - uses: supabase/setup-cli@v2
+        with:
+          version: 2.84.2
+      - name: Apply migrations to a fresh local database
+        working-directory: apps/web
+        run: supabase db start
+      - name: Run local seed
+        working-directory: apps/web
+        run: supabase db reset
