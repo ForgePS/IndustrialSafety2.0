@@ -1,7 +1,8 @@
 'use client'
 
 import { FormEvent, useMemo, useState } from 'react'
-import { TbArrowUp, TbSparkles } from 'react-icons/tb'
+import Link from 'next/link'
+import { TbArrowUp, TbBook2, TbSparkles } from 'react-icons/tb'
 import { Button } from '@repo/ui/components/ui/button'
 import {
   Sheet,
@@ -15,10 +16,27 @@ import { Textarea } from '@repo/ui/components/ui/textarea'
 
 type ContextType = 'incident' | 'inspection' | 'asset'
 
+type SourceRef = {
+  source_title?: string | null
+  source_reference?: string | null
+  section_title?: string | null
+  page_number?: number | null
+}
+
+type PreparedAction = {
+  approval_id: string
+  action_name: string
+  target_reference?: string | null
+  risk_summary?: string | null
+  expires_at?: string | null
+}
+
 type Message = {
   id: string | number
   role: 'user' | 'assistant'
   content: string
+  source_refs?: SourceRef[]
+  prepared_actions?: PreparedAction[]
 }
 
 const promptsByType: Record<ContextType, string[]> = {
@@ -99,7 +117,9 @@ const ForgeAiContextButton = ({
         {
           id: payload.message.id,
           role: 'assistant',
-          content: payload.message.content
+          content: payload.message.content,
+          source_refs: payload.message.source_refs || [],
+          prepared_actions: payload.message.prepared_actions || []
         }
       ])
     } catch (requestError) {
@@ -173,6 +193,49 @@ const ForgeAiContextButton = ({
                       }
                     >
                       <div className='whitespace-pre-wrap'>{message.content}</div>
+
+                      {message.role === 'assistant' && message.source_refs?.length ? (
+                        <div className='mt-3 border-t pt-3'>
+                          <div className='text-textSecondary flex items-center gap-2 text-xs font-semibold uppercase tracking-wide'>
+                            <TbBook2 />
+                            Forge Knowledge Sources
+                          </div>
+                          <div className='mt-2 flex flex-col gap-2'>
+                            {message.source_refs.map((source, index) => (
+                              <div key={index} className='rounded-lg border px-3 py-2 text-xs'>
+                                <div className='font-semibold'>{source.source_title || 'Forge Knowledge'}</div>
+                                <div className='text-textSecondary mt-1'>
+                                  {[
+                                    source.section_title,
+                                    source.page_number ? 'Page ' + String(source.page_number) : null,
+                                    source.source_reference
+                                  ].filter(Boolean).join(' · ') || 'Tenant knowledge source'}
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      ) : null}
+
+                      {message.role === 'assistant' && message.prepared_actions?.length ? (
+                        <div className='mt-3 border-t pt-3'>
+                          {message.prepared_actions.map(action => (
+                            <div key={action.approval_id} className='rounded-lg border border-primary/30 bg-primary/5 p-3'>
+                              <div className='font-semibold'>Action prepared — approval required</div>
+                              <div className='text-textSecondary mt-1 text-xs'>
+                                {action.action_name}
+                                {action.target_reference ? ' · ' + action.target_reference : ''}
+                              </div>
+                              {action.risk_summary ? (
+                                <div className='text-textSecondary mt-2 text-xs'>{action.risk_summary}</div>
+                              ) : null}
+                              <Button className='mt-3' size='sm' variant='outline' asChild>
+                                <Link href='/ai/actions'>Review AI Action</Link>
+                              </Button>
+                            </div>
+                          ))}
+                        </div>
+                      ) : null}
                     </div>
                   </div>
                 ))}
