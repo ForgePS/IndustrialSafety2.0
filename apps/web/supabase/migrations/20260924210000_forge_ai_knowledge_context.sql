@@ -1,5 +1,6 @@
 -- Forge AI Knowledge semantic retrieval and contextual assistant foundation.
 
+create schema if not exists extensions;
 create extension if not exists vector with schema extensions;
 
 alter table public.forge_ai_knowledge_sources
