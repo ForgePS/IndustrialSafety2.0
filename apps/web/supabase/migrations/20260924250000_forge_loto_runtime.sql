@@ -157,6 +157,10 @@ create index if not exists forge_loto_applications_procedure_idx
 create index if not exists forge_loto_applications_asset_idx
   on public.forge_loto_applications(organization_id, asset_id, started_at desc);
 
+create unique index if not exists forge_loto_applications_one_active_idx
+  on public.forge_loto_applications(organization_id, procedure_id)
+  where status='in_progress';
+
 create table if not exists public.forge_loto_procedure_versions (
   id uuid primary key default gen_random_uuid(),
   organization_id uuid not null references public.organizations(id) on delete cascade,
