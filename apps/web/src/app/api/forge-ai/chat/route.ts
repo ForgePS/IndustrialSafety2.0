@@ -1,3 +1,4 @@
+import { createHash } from 'crypto'
 import { NextResponse } from 'next/server'
 import { z } from 'zod'
 import { createServiceRoleClient } from '@repo/supabase/server'
@@ -211,7 +212,7 @@ export async function POST(request: Request) {
           conversationId: conversation.id,
           call
         }),
-      safetyIdentifier: 'forge-user-' + user.id
+      safetyIdentifier: 'forge-' + createHash('sha256').update(user.id).digest('hex').slice(0, 32)
     })
 
     const assistantText = aiResult.text || 'I completed the Forge data checks, but no text response was returned.'
