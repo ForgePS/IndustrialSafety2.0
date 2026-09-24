@@ -11,9 +11,12 @@ import { replyToSupportTicket,staffReplyToSupportTicket,updateSupportTicket,reop
 type Ticket={id:string;ticket_number:string;subject:string;description:string;category:string;priority:string;status:string;product_area:string|null;page_url:string|null;environment:string|null;first_response_due_at:string|null;resolution_due_at:string|null;first_responded_at:string|null;resolution_summary:string|null;assigned_to:string|null;created_at:string}
 type Message={id:string;author_kind:string;visibility:string;body:string;created_at:string}
 type Event={id:number;event_type:string;from_value:string|null;to_value:string|null;detail:string|null;created_at:string}
-export default function SupportConversation({ticket,messages,events,staff=false,canReply=true,staffUsers=[]}:{ticket:Ticket;messages:Message[];events:Event[];staff?:boolean;canReply?:boolean;staffUsers?:{user_id:string;label:string}[]}){
+type Attachment={id:string;file_name:string;visibility:string;byte_size:number;created_at:string}
+export default function SupportConversation({ticket,messages,events,attachments=[],staff=false,canReply=true,staffUsers=[]}:{ticket:Ticket;messages:Message[];events:Event[];attachments?:Attachment[];staff?:boolean;canReply?:boolean;staffUsers?:{user_id:string;label:string}[]}){
  const router=useRouter()
  const [body,setBody]=useState('')
+ const [file,setFile]=useState<File|null>(null)
+ const [privateFile,setPrivateFile]=useState(false)
  const [internal,setInternal]=useState(false)
  const [status,setStatus]=useState(ticket.status)
  const [priority,setPriority]=useState(ticket.priority)
@@ -59,6 +62,20 @@ export default function SupportConversation({ticket,messages,events,staff=false,
    {!canReply?<p className='text-textSecondary text-sm'>You can view this request, but only its requester or an authorized company administrator can reply.</p>:null}
    {staff&&terminal?<p className='text-textSecondary text-sm'>Reopen this request through Manage request to reply.</p>:null}
    {error?<p role='alert' className='text-destructive text-sm'>{error}</p>:null}{success?<p role='status' className='text-sm'>{success}</p>:null}
+  </CardContent></Card>
+  <Card><CardHeader><CardTitle>Attachments</CardTitle><CardDescription>PNG, JPG, WebP, PDF, TXT, or CSV up to 10 MB. Files are private to this request.</CardDescription></CardHeader><CardContent className='grid gap-3'>
+   {attachments.length?attachments.map(a=><a key={a.id} href={'/api/support/attachments/'+a.id} className='text-primary break-all underline'>{a.file_name} · {(a.byte_size/1024).toFixed(0)} KB{a.visibility==='internal'?' · Internal':''}</a>):<p className='text-textSecondary text-sm'>No attachments yet.</p>}
+   {canReply&&!terminal?<form className='flex flex-wrap items-end gap-3 pt-2' onSubmit={e=>{e.preventDefault();if(!file)return;setError('');setSuccess('');start(async()=>{try{
+    const form=new FormData();form.set('file',file);if(privateFile)form.set('visibility','internal')
+    const response=await fetch('/api/support/'+ticket.id+'/attachments',{method:'POST',body:form})
+    const result=await response.json()
+    if(!response.ok)setError(result.error||'Upload failed.')
+    else{setFile(null);setSuccess('Attachment uploaded.');router.refresh()}
+   }catch{setError('Upload failed. Try again.')}})}}>
+    <label className='grid gap-1 text-sm'>Add file<input type='file' accept='.png,.jpg,.jpeg,.webp,.pdf,.txt,.csv' onChange={e=>setFile(e.target.files?.[0]||null)} /></label>
+    {staff?<label className='flex items-center gap-2 text-sm'><input type='checkbox' checked={privateFile} onChange={e=>setPrivateFile(e.target.checked)} />Internal only</label>:null}
+    <Button type='submit' variant='outline' disabled={pending||!file}>Upload</Button>
+   </form>:null}
   </CardContent></Card>
   <Card><CardHeader><CardTitle>Activity</CardTitle></CardHeader><CardContent className='grid gap-2'>
    {events.length?events.map(ev=><div key={ev.id} className='flex flex-wrap justify-between gap-2 border-b py-2 text-sm'><span>{ev.event_type.replaceAll('_',' ')}{ev.to_value?' → '+ev.to_value.replaceAll('_',' '):''}</span><time className='text-textSecondary'>{new Date(ev.created_at).toLocaleString()}</time></div>):<p className='text-textSecondary text-sm'>No activity yet.</p>}
