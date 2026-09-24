@@ -125,7 +125,7 @@ const LotoSubrecordForm = ({
         return
       }
 
-      toast('success', result.message || 'LOTO record saved.')
+      toast('success', 'message' in result ? String(result.message) : 'LOTO record saved.')
       window.location.reload()
     })
   }
