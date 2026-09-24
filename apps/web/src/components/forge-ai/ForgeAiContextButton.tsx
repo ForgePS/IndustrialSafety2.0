@@ -14,7 +14,7 @@ import {
 } from '@repo/ui/components/ui/sheet'
 import { Textarea } from '@repo/ui/components/ui/textarea'
 
-type ContextType = 'incident' | 'inspection' | 'asset' | 'personnel' | 'training_course' | 'qr'
+type ContextType = 'incident' | 'inspection' | 'asset' | 'personnel' | 'training_course' | 'qr' | 'loto'
 
 type SourceRef = {
   source_title?: string | null
@@ -75,6 +75,12 @@ const promptsByType: Record<ContextType, string[]> = {
     'Does anything about this QR configuration need attention?',
     'Explain the linked asset context for this QR code.',
     'Help me plan how this QR should be used in the field.'
+  ],
+  loto: [
+    'Summarize this LOTO procedure, hazardous energy sources, and current approval status.',
+    'Review this procedure for missing or unclear energy-control information that a qualified reviewer should verify.',
+    'What parts of this procedure deserve the most attention during periodic review?',
+    'Search our Forge Knowledge for policies, SOPs, or equipment guidance relevant to this LOTO procedure.'
   ]
 }
 
