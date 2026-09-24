@@ -131,13 +131,13 @@ const TenantLookupManager = ({
       const result = await saveCreatorTenantLookupOption({
         organizationId,
         lookupId: lookup.id,
-        baseOptionId: option.isCustom ? null : option.base_option_id || option.id,
-        customOptionKey: option.isCustom ? option.custom_option_key || option.option_key : null,
+        baseOptionId: option.is_custom ? null : option.base_option_id || option.id,
+        customOptionKey: option.is_custom ? option.custom_option_key || option.option_key : null,
         label: option.label,
         description: option.description || '',
         sortOrder: option.sort_order,
         isActive: option.is_active,
-        isCustom: option.isCustom,
+        isCustom: option.is_custom,
         color: option.color || '',
         icon: option.icon || ''
       })
@@ -290,13 +290,13 @@ const TenantLookupManager = ({
               <CardDescription>Control the tenant administrator experience for this dropdown.</CardDescription>
             </CardHeader>
             <CardContent className='grid gap-4 md:grid-cols-2 xl:grid-cols-5'>
-              {[
+              {([
                 ['canRenameOverride','Rename',selected.tenant_can_rename],
                 ['canReorderOverride','Reorder',selected.tenant_can_reorder],
                 ['canAddOptionsOverride','Add Options',selected.tenant_can_add_options],
                 ['canHideCoreOptionsOverride','Hide Core Options',selected.tenant_can_hide_core_options],
                 ['canDeleteCoreOptionsOverride','Delete Core Options',selected.tenant_can_delete_core_options]
-              ].map(([key,label,platformAllowed]) => {
+              ] as const).map(([key,label,platformAllowed]) => {
                 const value = lookupDrafts[selected.id][key] as boolean | null
                 return (
                   <div key={String(key)} className='rounded-lg border p-4'>
@@ -341,7 +341,7 @@ const TenantLookupManager = ({
                 <div key={option.id} className='grid gap-4 py-4 lg:grid-cols-[170px_minmax(0,1fr)_120px_110px_auto] lg:items-end'>
                   <div>
                     <Label>System Key</Label>
-                    <Input className='mt-2' value={option.custom_option_key || option.option_key || ''} disabled={!option.isCustom} />
+                    <Input className='mt-2' value={option.custom_option_key || option.option_key || ''} disabled={!option.is_custom} />
                   </div>
                   <div>
                     <Label>Visible Label</Label>
@@ -378,7 +378,7 @@ const TenantLookupManager = ({
                   </label>
                   <div className='flex gap-2'>
                     <Button size='sm' variant='outline' onClick={() => saveOption(selected, option)} disabled={pending}>Save</Button>
-                    {option.isCustom ? (
+                    {option.is_custom ? (
                       <Button size='sm' variant='destructive' onClick={() => removeCustomOption(selected, option)} disabled={pending}>
                         <TbTrash />
                       </Button>
