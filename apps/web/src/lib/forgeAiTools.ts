@@ -7,6 +7,11 @@ import { getScopedInspections } from '@/lib/forgeInspections'
 import { getScopedAssets } from '@/lib/forgeAssets'
 import { getScopedQrCodes } from '@/lib/forgeQr'
 import { searchForgeAiKnowledge } from '@/lib/forgeAiKnowledge'
+import {
+  prepareForgeAiAction,
+  type ForgeAiAvailableAction,
+  type ForgeAiBoundRecordContext
+} from '@/lib/forgeAiActions'
 
 type Capability = {
   id: string
@@ -35,6 +40,8 @@ type RuntimeContext = {
   settings: {
     allow_sensitive_data: boolean
   }
+  recordContext?: ForgeAiBoundRecordContext | null
+  availableActions?: ForgeAiAvailableAction[]
 }
 
 const searchMatch = (values: unknown[], query: string) => {
@@ -60,6 +67,61 @@ const parseArguments = (value: string) => {
     return {}
   }
 }
+
+
+const buildPrepareActionDefinition = (actions: ForgeAiAvailableAction[]) => ({
+  type: 'function',
+  name: 'prepare_action',
+  description:
+    'Prepare a Forge write action for explicit human approval. This NEVER executes the change immediately. ' +
+    'Only use an action_key listed in the enum and only when the user clearly asks for a change.',
+  strict: true,
+  parameters: {
+    type: 'object',
+    properties: {
+      action_key: {
+        type: 'string',
+        enum: actions.map(action => action.action_key)
+      },
+      payload: {
+        type: 'object',
+        properties: {
+          title: { type: ['string','null'] },
+          description: { type: ['string','null'] },
+          severity: { type: ['string','null'] },
+          due_date: { type: ['string','null'] },
+          maintenance_type: { type: ['string','null'] },
+          status: { type: ['string','null'] },
+          scheduled_for: { type: ['string','null'] },
+          performed_on: { type: ['string','null'] },
+          vendor: { type: ['string','null'] },
+          technician: { type: ['string','null'] },
+          findings: { type: ['string','null'] },
+          corrective_action: { type: ['string','null'] },
+          next_due_date: { type: ['string','null'] }
+        },
+        required: [
+          'title',
+          'description',
+          'severity',
+          'due_date',
+          'maintenance_type',
+          'status',
+          'scheduled_for',
+          'performed_on',
+          'vendor',
+          'technician',
+          'findings',
+          'corrective_action',
+          'next_due_date'
+        ],
+        additionalProperties: false
+      }
+    },
+    required: ['action_key','payload'],
+    additionalProperties: false
+  }
+})
 
 const definitions: Record<string, any> = {
   company_snapshot: {
@@ -200,11 +262,25 @@ const definitions: Record<string, any> = {
   }
 }
 
-export const getForgeAiToolDefinitions = (capabilities: Capability[]) =>
-  capabilities
+export const getForgeAiToolDefinitions = (
+  capabilities: Capability[],
+  availableActions: ForgeAiAvailableAction[] = []
+) => {
+  const tools = capabilities
     .filter(capability => capability.capability_type !== 'action')
     .map(capability => definitions[capability.capability_key])
     .filter(Boolean)
+
+  const canPrepareActions = capabilities.some(
+    capability => capability.capability_key === 'prepare_action'
+  )
+
+  if (canPrepareActions && availableActions.length) {
+    tools.push(buildPrepareActionDefinition(availableActions))
+  }
+
+  return tools
+}
 
 const getPermission = (
   context: RuntimeContext,
@@ -636,6 +712,43 @@ export const executeForgeAiTool = async ({
   const started = Date.now()
 
   try {
+    if (capability.capability_key === 'prepare_action') {
+      const prepared = await prepareForgeAiAction({
+        organizationId: context.activeOrganization.id,
+        userId: context.user.id,
+        conversationId,
+        toolRunId: toolRun?.id || null,
+        recordContext: context.recordContext || null,
+        permissionByKey: context.permissionByKey,
+        actionKey: String(args.action_key || ''),
+        rawPayload: args.payload && typeof args.payload === 'object' ? args.payload : {}
+      })
+
+      if (toolRun?.id) {
+        await supabase
+          .from('forge_ai_tool_runs')
+          .update({
+            status: (prepared as any).pending_approval
+              ? 'pending_approval'
+              : (prepared as any).error
+                ? 'denied'
+                : 'completed',
+            result_summary: (prepared as any).pending_approval
+              ? 'AI action prepared and awaiting human approval.'
+              : String((prepared as any).error || 'Action preparation completed.'),
+            result_metadata: {
+              approval_id: (prepared as any).approval_id || null,
+              action_key: (prepared as any).action_key || args.action_key || null,
+              duration_ms: Date.now() - started
+            },
+            completed_at: new Date().toISOString()
+          })
+          .eq('id', toolRun.id)
+      }
+
+      return prepared
+    }
+
     const value = await executeToolValue({ context, capability, args })
     const count = Array.isArray(value)
       ? value.length
