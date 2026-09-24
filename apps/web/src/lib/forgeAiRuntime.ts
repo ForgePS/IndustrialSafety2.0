@@ -83,7 +83,7 @@ export const getForgeAiRuntimeContext = async () => {
       .eq('organization_id', context.activeOrganization.id)
   ])
 
-  const capabilityOverrideById = new Map(
+  const capabilityOverrideById = new Map<string, any>(
     (capabilityOverrides || []).map((item: any) => [item.capability_id, item])
   )
 
