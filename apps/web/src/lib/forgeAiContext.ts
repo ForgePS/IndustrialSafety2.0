@@ -3,14 +3,16 @@ import type { EffectivePermission } from '@/lib/forgeEffectiveAccess'
 import { incidentWithinScope } from '@/lib/forgeIncidents'
 import { inspectionWithinScope, getInspectionDetailData } from '@/lib/forgeInspections'
 import { assetWithinScope, getAssetDetailData } from '@/lib/forgeAssets'
+import { personnelRecordWithinScope } from '@/lib/forgeScope'
+import { qrCodeWithinScope } from '@/lib/forgeQr'
 
 export type ForgeAiRecordContextRequest = {
-  type: 'incident' | 'inspection' | 'asset'
+  type: 'incident' | 'inspection' | 'asset' | 'personnel' | 'training_course' | 'qr'
   id: string
 }
 
 type ContextBase = {
-  type: 'incident' | 'inspection' | 'asset'
+  type: 'incident' | 'inspection' | 'asset' | 'personnel' | 'training_course' | 'qr'
   id: string
   humanReference: string
   title: string
@@ -215,6 +217,149 @@ export const getForgeAiRecordContext = async ({
           unit: item.unit,
           recorded_at: item.recorded_at
         }))
+      }
+    }
+  }
+
+
+  if (request.type === 'personnel') {
+    const permission = permissionFor(permissionByKey, 'personnel.view')
+    if (!permission) return null
+
+    const { data: record } = await supabase
+      .from('forge_personnel')
+      .select('*, locations(name, code), divisions(name, code)')
+      .eq('organization_id', organizationId)
+      .eq('id', request.id)
+      .maybeSingle()
+
+    if (!record) return null
+
+    const allowed = await personnelRecordWithinScope({
+      organizationId,
+      userId,
+      scope: permission.scope,
+      record
+    })
+
+    if (!allowed) return null
+
+    return {
+      type: 'personnel',
+      id: record.id,
+      humanReference: record.employee_number || [record.first_name, record.last_name].filter(Boolean).join(' '),
+      title: [record.first_name, record.last_name].filter(Boolean).join(' '),
+      data: {
+        employee_number: record.employee_number,
+        name: [record.first_name, record.last_name].filter(Boolean).join(' '),
+        employment_status: record.employment_status,
+        job_title: record.job_title,
+        hire_date: record.hire_date,
+        location: record.locations?.name || null,
+        division: record.divisions?.name || null,
+        archived: Boolean(record.archived_at)
+      }
+    }
+  }
+
+  if (request.type === 'training_course') {
+    const permission = permissionFor(permissionByKey, 'training.view')
+    if (!permission) return null
+
+    const { data: course } = await supabase
+      .from('forge_training_courses')
+      .select('*')
+      .eq('organization_id', organizationId)
+      .eq('id', request.id)
+      .maybeSingle()
+
+    if (!course) return null
+
+    const [{ count: assignmentCount }, { count: completionCount }] = await Promise.all([
+      supabase
+        .from('forge_training_assignments')
+        .select('id', { count: 'exact', head: true })
+        .eq('organization_id', organizationId)
+        .eq('course_id', course.id),
+      supabase
+        .from('forge_training_completions')
+        .select('id', { count: 'exact', head: true })
+        .eq('organization_id', organizationId)
+        .eq('course_id', course.id)
+    ])
+
+    return {
+      type: 'training_course',
+      id: course.id,
+      humanReference: course.course_code || course.title,
+      title: course.title,
+      data: {
+        course_code: course.course_code,
+        title: course.title,
+        description: course.description,
+        category: course.category_key,
+        delivery_method: course.delivery_method,
+        duration_minutes: course.duration_minutes,
+        validity_months: course.validity_months,
+        is_active: course.is_active,
+        assignment_count: Number(assignmentCount || 0),
+        completion_count: Number(completionCount || 0)
+      }
+    }
+  }
+
+  if (request.type === 'qr') {
+    const permission = permissionFor(permissionByKey, 'qr_management.view')
+    if (!permission) return null
+
+    const { data: qrCode } = await supabase
+      .from('forge_qr_codes')
+      .select('*')
+      .eq('organization_id', organizationId)
+      .eq('id', request.id)
+      .maybeSingle()
+
+    if (!qrCode) return null
+
+    const allowed = await qrCodeWithinScope({
+      organizationId,
+      userId,
+      scope: permission.scope,
+      qrCode
+    })
+
+    if (!allowed) return null
+
+    const { data: asset } = await supabase
+      .from('forge_assets')
+      .select('asset_number, name, status, condition')
+      .eq('organization_id', organizationId)
+      .eq('id', qrCode.target_id)
+      .maybeSingle()
+
+    return {
+      type: 'qr',
+      id: qrCode.id,
+      humanReference: qrCode.qr_number,
+      title: qrCode.name,
+      data: {
+        qr_number: qrCode.qr_number,
+        name: qrCode.name,
+        description: qrCode.description,
+        status: qrCode.status,
+        target_type: qrCode.target_type,
+        default_action: qrCode.default_action,
+        expires_at: qrCode.expires_at,
+        scan_count: Number(qrCode.scan_count || 0),
+        last_scanned_at: qrCode.last_scanned_at,
+        linked_asset: asset
+          ? {
+              asset_number: asset.asset_number,
+              name: asset.name,
+              status: asset.status,
+              condition: asset.condition
+            }
+          : null
       }
     }
   }
