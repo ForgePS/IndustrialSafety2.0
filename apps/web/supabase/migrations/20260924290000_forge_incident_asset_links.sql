@@ -1,11 +1,25 @@
 -- Connect an incident to one or more equipment records without copying or rewriting asset history.
 -- Composite foreign keys make cross-tenant links impossible even through service-role writes.
 
-alter table public.forge_incidents
-  add constraint forge_incidents_org_id_unique unique (organization_id, id);
-
-alter table public.forge_assets
-  add constraint forge_assets_org_id_unique unique (organization_id, id);
+do $$
+begin
+  if not exists (
+    select 1 from pg_constraint
+    where conrelid = 'public.forge_incidents'::regclass and conname = 'forge_incidents_org_id_unique'
+  ) then
+    alter table public.forge_incidents
+      add constraint forge_incidents_org_id_unique unique (organization_id, id);
+  end if;
+  -- The QR hardening migration already creates this on forge_assets.
+  if not exists (
+    select 1 from pg_constraint
+    where conrelid = 'public.forge_assets'::regclass and conname = 'forge_assets_org_id_unique'
+  ) then
+    alter table public.forge_assets
+      add constraint forge_assets_org_id_unique unique (organization_id, id);
+  end if;
+end;
+$$;
 
 create table public.forge_incident_assets (
   id uuid primary key default gen_random_uuid(),
