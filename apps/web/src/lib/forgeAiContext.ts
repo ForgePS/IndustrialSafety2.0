@@ -1,0 +1,223 @@
+import { createServiceRoleClient } from '@repo/supabase/server'
+import type { EffectivePermission } from '@/lib/forgeEffectiveAccess'
+import { incidentWithinScope } from '@/lib/forgeIncidents'
+import { inspectionWithinScope, getInspectionDetailData } from '@/lib/forgeInspections'
+import { assetWithinScope, getAssetDetailData } from '@/lib/forgeAssets'
+
+export type ForgeAiRecordContextRequest = {
+  type: 'incident' | 'inspection' | 'asset'
+  id: string
+}
+
+type ContextBase = {
+  type: 'incident' | 'inspection' | 'asset'
+  id: string
+  humanReference: string
+  title: string
+  data: Record<string, unknown>
+}
+
+const permissionFor = (
+  permissionByKey: Map<string, EffectivePermission>,
+  key: string
+) => {
+  const permission = permissionByKey.get(key)
+  return permission?.allowed ? permission : null
+}
+
+export const getForgeAiRecordContext = async ({
+  organizationId,
+  userId,
+  request,
+  permissionByKey
+}: {
+  organizationId: string
+  userId: string
+  request: ForgeAiRecordContextRequest
+  permissionByKey: Map<string, EffectivePermission>
+}): Promise<ContextBase | null> => {
+  const supabase = createServiceRoleClient() as any
+
+  if (request.type === 'incident') {
+    const permission = permissionFor(permissionByKey, 'incidents.view')
+    if (!permission) return null
+
+    const { data: incident } = await supabase
+      .from('forge_incidents')
+      .select('*, locations(name, code), divisions(name, code)')
+      .eq('organization_id', organizationId)
+      .eq('id', request.id)
+      .maybeSingle()
+
+    if (!incident) return null
+
+    const allowed = await incidentWithinScope({
+      organizationId,
+      userId,
+      scope: permission.scope,
+      incident
+    })
+
+    if (!allowed) return null
+
+    return {
+      type: 'incident',
+      id: incident.id,
+      humanReference: incident.incident_number,
+      title: incident.summary || incident.incident_number,
+      data: {
+        incident_number: incident.incident_number,
+        status: incident.status,
+        incident_type: incident.incident_type,
+        severity: incident.severity,
+        occurred_at: incident.occurred_at,
+        location: incident.locations?.name || null,
+        division: incident.divisions?.name || null,
+        summary: incident.summary,
+        description: incident.description,
+        immediate_actions: incident.immediate_actions,
+        involves_injury: incident.involves_injury,
+        involves_vehicle: incident.involves_vehicle,
+        property_damage: incident.property_damage,
+        submitted_at: incident.submitted_at,
+        approved_at: incident.approved_at,
+        closed_at: incident.closed_at
+      }
+    }
+  }
+
+  if (request.type === 'inspection') {
+    const permission = permissionFor(permissionByKey, 'inspections.view')
+    if (!permission) return null
+
+    const { data: inspection } = await supabase
+      .from('forge_inspections')
+      .select('*, locations(name, code), divisions(name, code), forge_inspection_templates(name, inspection_type, version)')
+      .eq('organization_id', organizationId)
+      .eq('id', request.id)
+      .maybeSingle()
+
+    if (!inspection) return null
+
+    const allowed = await inspectionWithinScope({
+      organizationId,
+      userId,
+      scope: permission.scope,
+      inspection
+    })
+
+    if (!allowed) return null
+
+    const detail = await getInspectionDetailData({
+      organizationId,
+      inspectionId: inspection.id
+    })
+
+    return {
+      type: 'inspection',
+      id: inspection.id,
+      humanReference: inspection.inspection_number,
+      title: inspection.template_name_snapshot || inspection.forge_inspection_templates?.name || inspection.inspection_number,
+      data: {
+        inspection_number: inspection.inspection_number,
+        status: inspection.status,
+        result: inspection.result,
+        inspection_date: inspection.inspection_date,
+        template: inspection.template_name_snapshot || inspection.forge_inspection_templates?.name || null,
+        inspection_type: inspection.forge_inspection_templates?.inspection_type || null,
+        location: inspection.locations?.name || null,
+        division: inspection.divisions?.name || null,
+        notes: inspection.notes,
+        return_reason: inspection.return_reason,
+        checklist: detail.items.slice(0, 100).map((item: any) => ({
+          section: item.section_label,
+          prompt: item.prompt,
+          response: item.response_value,
+          notes: item.notes
+        })),
+        findings: detail.findings.slice(0, 50).map((finding: any) => ({
+          title: finding.title,
+          description: finding.description,
+          severity: finding.severity,
+          status: finding.status,
+          due_date: finding.due_date,
+          corrective_action: finding.corrective_action,
+          verification_notes: finding.verification_notes
+        }))
+      }
+    }
+  }
+
+  if (request.type === 'asset') {
+    const permission = permissionFor(permissionByKey, 'assets_equipment.view')
+    if (!permission) return null
+
+    const { data: asset } = await supabase
+      .from('forge_assets')
+      .select('*, locations(name, code), divisions(name, code), forge_personnel!forge_assets_custodian_personnel_id_fkey(first_name, last_name, employee_number)')
+      .eq('organization_id', organizationId)
+      .eq('id', request.id)
+      .maybeSingle()
+
+    if (!asset) return null
+
+    const allowed = await assetWithinScope({
+      organizationId,
+      userId,
+      scope: permission.scope,
+      asset
+    })
+
+    if (!allowed) return null
+
+    const detail = await getAssetDetailData({
+      organizationId,
+      assetId: asset.id
+    })
+
+    return {
+      type: 'asset',
+      id: asset.id,
+      humanReference: asset.asset_number,
+      title: asset.name,
+      data: {
+        asset_number: asset.asset_number,
+        name: asset.name,
+        type: asset.asset_type,
+        status: asset.status,
+        condition: asset.condition,
+        criticality: asset.criticality,
+        manufacturer: asset.manufacturer,
+        model: asset.model,
+        serial_number: asset.serial_number,
+        location: asset.locations?.name || null,
+        division: asset.divisions?.name || null,
+        custodian: asset.forge_personnel
+          ? [asset.forge_personnel.first_name, asset.forge_personnel.last_name].filter(Boolean).join(' ')
+          : null,
+        in_service_date: asset.in_service_date,
+        warranty_expires_on: asset.warranty_expires_on,
+        retired_at: asset.retired_at,
+        retirement_reason: asset.retirement_reason,
+        maintenance: detail.maintenance.slice(0, 30).map((item: any) => ({
+          maintenance_type: item.maintenance_type,
+          status: item.status,
+          performed_on: item.performed_on,
+          scheduled_for: item.scheduled_for,
+          description: item.description,
+          findings: item.findings,
+          corrective_action: item.corrective_action,
+          next_due_date: item.next_due_date
+        })),
+        latest_meter_readings: detail.meterReadings.slice(0, 20).map((item: any) => ({
+          meter_type: item.meter_type,
+          reading: item.reading,
+          unit: item.unit,
+          recorded_at: item.recorded_at
+        }))
+      }
+    }
+  }
+
+  return null
+}
