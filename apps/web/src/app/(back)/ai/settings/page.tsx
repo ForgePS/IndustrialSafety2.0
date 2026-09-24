@@ -12,10 +12,18 @@ const ForgeAiSettingsPage = async () => {
   const organizationId = context.activeOrganization.id
   const supabase = createServiceRoleClient() as any
 
-  const [{ data: settings }, { data: capabilities }, { data: overrides }] = await Promise.all([
+  const [
+    { data: settings },
+    { data: capabilities },
+    { data: overrides },
+    { data: actions },
+    { data: actionOverrides }
+  ] = await Promise.all([
     supabase.from('forge_ai_tenant_settings').select('*').eq('organization_id', organizationId).maybeSingle(),
     supabase.from('forge_ai_capabilities').select('*').eq('platform_enabled', true).order('sort_order'),
-    supabase.from('forge_ai_tenant_capabilities').select('*').eq('organization_id', organizationId)
+    supabase.from('forge_ai_tenant_capabilities').select('*').eq('organization_id', organizationId),
+    supabase.from('forge_ai_action_registry').select('*').eq('platform_enabled', true).order('sort_order'),
+    supabase.from('forge_ai_tenant_actions').select('*').eq('organization_id', organizationId)
   ])
 
   if (!settings) {
@@ -40,6 +48,24 @@ const ForgeAiSettingsPage = async () => {
     }
   })
 
+  const actionOverrideById = new Map(
+    (actionOverrides || []).map((item: any) => [item.action_id, item])
+  )
+
+  const hydratedActions = (actions || []).map((action: any) => {
+    const override = actionOverrideById.get(action.id)
+
+    return {
+      id: action.id,
+      name: action.name,
+      description: action.description,
+      category: action.category,
+      risk_level: action.risk_level,
+      enabled: override?.enabled ?? false,
+      tenantCanConfigure: override?.tenant_can_configure ?? false
+    }
+  })
+
   return (
     <div className='flex flex-col gap-6'>
       <div className='flex flex-wrap items-end justify-between gap-4'>
@@ -57,6 +83,7 @@ const ForgeAiSettingsPage = async () => {
         systemInstructions={settings.system_instructions}
         tenantCanConfigure={settings.tenant_can_configure}
         capabilities={hydrated}
+        actions={hydratedActions}
       />
     </div>
   )
