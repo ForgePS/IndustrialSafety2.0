@@ -65,8 +65,10 @@ export async function createSupportTicket(form:FormData) {
   const {data:number,error:numberError}=await db.rpc('next_forge_support_number',{p_organization_id:actor.organizationId})
   if(numberError || !number) return {error:numberError?.message||'Unable to number request.'}
   const now=Date.now()
-  const responseHours=priority==='urgent'?4:priority==='high'?8:priority==='normal'?24:48
-  const resolutionHours=priority==='urgent'?24:priority==='high'?72:priority==='normal'?120:240
+  const {data:policy,error:policyError}=await db.from('forge_support_sla_policies').select('first_response_hours,resolution_hours').eq('priority',priority).single()
+  if(policyError||!policy) return {error:'Support response targets are not configured.'}
+  const responseHours=policy.first_response_hours
+  const resolutionHours=policy.resolution_hours
   const {data:ticket,error}=await db.from('forge_support_tickets').insert({
     organization_id:actor.organizationId,ticket_number:number,subject,description,category,priority,
     product_area:clean(form.get('product_area'),100)||null,page_url:clean(form.get('page_url'),500)||null,
