@@ -71,11 +71,21 @@ export const getForgeAiRuntimeContext = async () => {
     return { error: 'disabled' as const }
   }
 
-  const { data: capabilityRows } = await supabase
-    .from('forge_ai_capabilities')
-    .select('*, forge_ai_tenant_capabilities!left(enabled, tenant_can_configure, settings)')
-    .eq('platform_enabled', true)
-    .order('sort_order')
+  const [{ data: capabilityRows }, { data: capabilityOverrides }] = await Promise.all([
+    supabase
+      .from('forge_ai_capabilities')
+      .select('*')
+      .eq('platform_enabled', true)
+      .order('sort_order'),
+    supabase
+      .from('forge_ai_tenant_capabilities')
+      .select('*')
+      .eq('organization_id', context.activeOrganization.id)
+  ])
+
+  const capabilityOverrideById = new Map(
+    (capabilityOverrides || []).map((item: any) => [item.capability_id, item])
+  )
 
   const permissionByKey = new Map(
     access.effective.map(permission => [permission.permissionKey, permission])
@@ -83,12 +93,7 @@ export const getForgeAiRuntimeContext = async () => {
 
   const capabilities = (capabilityRows || [])
     .map((capability: any) => {
-      const tenantOverride = Array.isArray(capability.forge_ai_tenant_capabilities)
-        ? capability.forge_ai_tenant_capabilities.find(
-            (item: any) => item && item.organization_id === context.activeOrganization?.id
-          )
-        : capability.forge_ai_tenant_capabilities
-
+      const tenantOverride = capabilityOverrideById.get(capability.id)
       const enabled = tenantOverride?.enabled ?? true
       const requiredPermission = capability.required_permission_key
         ? permissionByKey.get(capability.required_permission_key)
