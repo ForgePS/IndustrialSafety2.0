@@ -12,7 +12,7 @@ import { createSupportTicket } from './actions'
 
 export type SupportItem = {
  id:string; ticket_number:string; subject:string; category:string; priority:string; status:string;
- created_at:string; updated_at:string; first_response_due_at:string|null; resolution_due_at:string|null;
+ created_at:string; updated_at:string; first_response_due_at:string|null; first_responded_at:string|null; resolution_due_at:string|null;
  organizationName?:string; requesterName?:string
 }
 const labels:Record<string,string>={new:'New',triaged:'Triaged',in_progress:'In progress',waiting_on_customer:'Waiting on customer',waiting_on_forge:'Waiting on Forge',resolved:'Resolved',closed:'Closed',feature_request:'Feature request'}
@@ -29,7 +29,7 @@ export default function SupportDesk({tickets,canCreate=false,staff=false,canSett
      (filter==='all'||(filter==='active'?!['resolved','closed'].includes(ticket.status):ticket.status===filter))
  }),[tickets,search,filter])
  const base=staff?'/admin/creator/support':'/support'
- const overdue=tickets.filter(t=>!['resolved','closed'].includes(t.status)&&t.first_response_due_at&&new Date(t.first_response_due_at)<new Date()).length
+ const overdue=tickets.filter(t=>!t.first_responded_at&&t.first_response_due_at&&new Date(t.first_response_due_at)<new Date()).length
  return <div className='flex flex-col gap-6'>
   <div className='flex flex-wrap items-start justify-between gap-4'>
    <div><h1 className='flex items-center gap-3 text-3xl font-bold'><TbHeadset />{staff?'Forge Support Queue':'Customer Support'}</h1>
