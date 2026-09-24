@@ -14,6 +14,7 @@ import { getEffectiveLookup } from '@/lib/forgeLookups'
 import { generateForgeQrSvg } from '@/lib/forgeQrSvg'
 import { getForgeQrScanUrl, getQrScanHistory, qrCodeWithinScope } from '@/lib/forgeQr'
 import { requireTenantPermission } from '@/lib/forgeTenantAuth'
+import ForgeAiContextButton from '@/components/forge-ai/ForgeAiContextButton'
 
 export const metadata: Metadata = { title: 'Managed QR Code' }
 
@@ -68,6 +69,7 @@ const QrCodeDetailPage = async ({ params }: { params: Promise<{ id: string }> })
   const rotatePermission = permissions.get('qr_management.rotate_token')
   const deletePermission = permissions.get('qr_management.delete')
   const scanPermission = permissions.get('qr_management.view_scans')
+  const canUseAi = Boolean(permissions.get('forge_ai.use'))
 
   const within = async (permission: any) =>
     permission
@@ -130,6 +132,13 @@ const QrCodeDetailPage = async ({ params }: { params: Promise<{ id: string }> })
           </div>
           <p className='text-textSecondary mt-2'>{qrCode.qr_number} · {targetAsset ? targetAsset.asset_number + ' · ' + targetAsset.name : 'Missing target asset'}</p>
         </div>
+        {canUseAi ? (
+          <ForgeAiContextButton
+            contextType='qr'
+            recordId={qrCode.id}
+            recordLabel={qrCode.qr_number}
+          />
+        ) : null}
       </div>
 
       <div className='grid gap-4 md:grid-cols-3'>
