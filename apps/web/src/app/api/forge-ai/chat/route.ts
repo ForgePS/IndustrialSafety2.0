@@ -19,7 +19,7 @@ const requestSchema = z.object({
   conversationId: z.string().uuid().nullable().optional(),
   message: z.string().trim().min(1),
   context: z.object({
-    type: z.enum(['incident','inspection','asset']),
+    type: z.enum(['incident','inspection','asset','personnel','training_course','qr']),
     id: z.string().uuid()
   }).nullable().optional()
 })
