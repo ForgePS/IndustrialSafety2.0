@@ -1,0 +1,39 @@
+name: Customer support validation
+
+on:
+  pull_request:
+    branches:
+      - forge-creator-2.0
+
+permissions:
+  contents: read
+
+jobs:
+  database:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v7
+      - uses: supabase/setup-cli@v2
+        with:
+          version: 2.108.0
+      - name: Apply migrations to a fresh local database
+        working-directory: apps/web
+        run: supabase db start
+      - name: Run local seed
+        working-directory: apps/web
+        run: supabase db reset
+
+  web:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '22'
+      - uses: pnpm/action-setup@v6
+        with:
+          version: 9.13.2
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm --filter forge-industrial-safety-2.0-web type-check
