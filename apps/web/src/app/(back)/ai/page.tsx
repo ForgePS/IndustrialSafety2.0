@@ -73,6 +73,9 @@ const ForgeAiPage = async ({
       activeConversationId={activeConversationId}
       initialMessages={initialMessages.filter(message => message.role === 'user' || message.role === 'assistant')}
       quickPrompts={quickPrompts}
+      canManageKnowledge={runtime.access.effective.some(
+        permission => permission.permissionKey === 'forge_ai.manage_knowledge' && permission.allowed
+      )}
     />
   )
 }
