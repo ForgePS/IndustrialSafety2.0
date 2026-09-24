@@ -82,6 +82,11 @@ const ForgeAiPage = async ({
       canViewUsage={runtime.access.effective.some(
         permission => permission.permissionKey === 'forge_ai.view_usage' && permission.allowed
       )}
+      canUseActions={runtime.access.effective.some(
+        permission =>
+          ['forge_ai.run_actions','forge_ai.approve_actions'].includes(permission.permissionKey) &&
+          permission.allowed
+      )}
     />
   )
 }
