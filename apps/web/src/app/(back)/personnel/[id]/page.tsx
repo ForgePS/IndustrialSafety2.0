@@ -7,6 +7,7 @@ import type { PersonnelFormValues } from '../actions'
 import { getEffectiveForm } from '@/lib/forgeForms'
 import { personnelRecordWithinScope } from '@/lib/forgeScope'
 import { requireTenantPermission } from '@/lib/forgeTenantAuth'
+import ForgeAiContextButton from '@/components/forge-ai/ForgeAiContextButton'
 
 export const metadata: Metadata = { title: 'Personnel Profile' }
 
@@ -41,6 +42,7 @@ const PersonnelDetailPage = async ({ params }: { params: Promise<{ id: string }>
 
   const editPermission = context.access.effective.find(item => item.permissionKey === 'personnel.edit' && item.allowed)
   const archivePermission = context.access.effective.find(item => item.permissionKey === 'personnel.archive' && item.allowed)
+  const canUseAi = context.access.effective.some(item => item.permissionKey === 'forge_ai.use' && item.allowed)
 
   const canEdit = editPermission
     ? await personnelRecordWithinScope({
@@ -86,6 +88,13 @@ const PersonnelDetailPage = async ({ params }: { params: Promise<{ id: string }>
             {canEdit ? 'Edit fields allowed by the tenant Form Builder.' : 'Read-only based on your current access.'}
           </p>
         </div>
+        {canUseAi ? (
+          <ForgeAiContextButton
+            contextType='personnel'
+            recordId={record.id}
+            recordLabel={record.employee_number || record.first_name + ' ' + record.last_name}
+          />
+        ) : null}
       </div>
 
       <PersonnelRecordForm
