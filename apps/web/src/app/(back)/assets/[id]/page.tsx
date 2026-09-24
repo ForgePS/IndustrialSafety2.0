@@ -14,6 +14,7 @@ import { getEffectiveForm } from '@/lib/forgeForms'
 import { getEffectiveLookup } from '@/lib/forgeLookups'
 import { getScopedPersonnel } from '@/lib/forgePersonnel'
 import { requireTenantPermission } from '@/lib/forgeTenantAuth'
+import ForgeAiContextButton from '@/components/forge-ai/ForgeAiContextButton'
 
 export const metadata: Metadata = { title: 'Asset & Equipment' }
 
@@ -78,6 +79,7 @@ const AssetDetailPage = async ({ params }: { params: Promise<{ id: string }> }) 
   const meterPermission = permissions.get('assets_equipment.meter')
   const retirePermission = permissions.get('assets_equipment.retire')
   const qrCreatePermission = permissions.get('qr_management.create')
+  const canUseAi = Boolean(permissions.get('forge_ai.use'))
 
   const within = async (permission: any) =>
     permission
@@ -149,6 +151,7 @@ const AssetDetailPage = async ({ params }: { params: Promise<{ id: string }> }) 
           <p className='text-textSecondary mt-2'>{asset.asset_number}{asset.serial_number ? ' · Serial ' + asset.serial_number : ''}</p>
         </div>
         <div className='flex flex-wrap gap-2'>
+          {canUseAi ? <ForgeAiContextButton contextType='asset' recordId={asset.id} recordLabel={asset.asset_number} /> : null}
           {canCreateQr && !asset.retired_at ? <Button variant='outline' asChild><Link href={'/qr/create?asset=' + asset.id}>Create QR</Link></Button> : null}
           {canMaintain && !asset.retired_at ? <Button variant='outline' asChild><Link href={'/assets/' + asset.id + '/maintenance/create'}>Add Maintenance</Link></Button> : null}
           {canMeter && !asset.retired_at ? <Button variant='outline' asChild><Link href={'/assets/' + asset.id + '/meter-readings/create'}>Add Meter Reading</Link></Button> : null}
