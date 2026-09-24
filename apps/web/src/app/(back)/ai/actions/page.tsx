@@ -42,9 +42,9 @@ const ForgeAiActionsPage = async () => {
     supabase.from('forge_assets').select('id, asset_number, name').eq('organization_id', organizationId)
   ])
 
-  const actionByKey = new Map((registry || []).map((item: any) => [item.action_key, item]))
-  const inspectionById = new Map((inspections || []).map((item: any) => [item.id, item]))
-  const assetById = new Map((assets || []).map((item: any) => [item.id, item]))
+  const actionByKey = new Map<string, any>((registry || []).map((item: any) => [item.action_key, item]))
+  const inspectionById = new Map<string, any>((inspections || []).map((item: any) => [item.id, item]))
+  const assetById = new Map<string, any>((assets || []).map((item: any) => [item.id, item]))
 
   const hydrated = (approvals || []).map((approval: any) => {
     const action = actionByKey.get(approval.action_key)
