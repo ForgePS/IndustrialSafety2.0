@@ -6,6 +6,7 @@ import { getScopedIncidents } from '@/lib/forgeIncidents'
 import { getScopedInspections } from '@/lib/forgeInspections'
 import { getScopedAssets } from '@/lib/forgeAssets'
 import { getScopedLotoProcedures } from '@/lib/forgeLoto'
+import { getScopedTasks } from '@/lib/forgeTasks'
 
 type AccessContext = {
   organizationId: string
@@ -60,8 +61,9 @@ export const getScopedForgeAiWatchAlerts = async ({
   const inspectionPermission = permissionFor(permissionByKey, 'inspections.view')
   const assetPermission = permissionFor(permissionByKey, 'assets_equipment.view')
   const lotoPermission = permissionFor(permissionByKey, 'loto.view')
+  const taskPermission = permissionFor(permissionByKey, 'tasks.view')
 
-  const [training, incidents, inspections, assets, lotoProcedures] = await Promise.all([
+  const [training, incidents, inspections, assets, lotoProcedures, tasks] = await Promise.all([
     trainingPermission
       ? getTrainingOverview({ organizationId, userId, permission: trainingPermission })
       : Promise.resolve({ assignments: [], courses: [], completions: [] }),
@@ -76,6 +78,9 @@ export const getScopedForgeAiWatchAlerts = async ({
       : Promise.resolve([]),
     lotoPermission
       ? getScopedLotoProcedures({ organizationId, userId, permission: lotoPermission, includeRetired: true })
+      : Promise.resolve([]),
+    taskPermission
+      ? getScopedTasks({ organizationId, userId, permission: taskPermission, includeArchived: true })
       : Promise.resolve([])
   ])
 
@@ -84,6 +89,7 @@ export const getScopedForgeAiWatchAlerts = async ({
   const allowedInspectionIds = new Set((inspections || []).map((item: any) => item.id))
   const allowedAssetIds = new Set((assets || []).map((item: any) => item.id))
   const allowedLotoProcedureIds = new Set((lotoProcedures || []).map((item: any) => item.id))
+  const allowedTaskIds = new Set((tasks || []).map((item: any) => item.id))
 
   return scopeFiltered.filter((alert: any) => {
     const requiredPermission = alert.forge_ai_watch_rules?.forge_ai_watch_rule_templates?.required_permission_key
@@ -111,6 +117,10 @@ export const getScopedForgeAiWatchAlerts = async ({
 
     if (alert.target_type === 'loto_procedure') {
       return allowedLotoProcedureIds.has(alert.target_id)
+    }
+
+    if (alert.target_type === 'task') {
+      return allowedTaskIds.has(alert.target_id)
     }
 
     return false
