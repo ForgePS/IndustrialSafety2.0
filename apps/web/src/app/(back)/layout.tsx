@@ -3,6 +3,7 @@ import type { ReactNode } from 'react'
 
 // Next Imports
 import { cookies } from 'next/headers'
+import { redirect } from 'next/navigation'
 import type { Metadata } from 'next'
 
 // Third-party Imports
@@ -39,9 +40,11 @@ const AdminLayout = async ({ children }: { children: ReactNode }) => {
     data: { user }
   } = await getAuthUser()
 
-  const roles = user?.user_metadata.roles
-  const permissions = user?.user_metadata.permissions
-  const forgePlatformRole = await getForgePlatformRole(user?.id)
+  if (!user) redirect('/auth/login')
+
+  const roles = user.user_metadata?.roles
+  const permissions = user.user_metadata?.permissions
+  const forgePlatformRole = await getForgePlatformRole(user.id)
   const tenantContext = await getTenantContext()
 
   const tenantNavigation =
