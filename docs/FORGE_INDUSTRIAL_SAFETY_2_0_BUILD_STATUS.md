@@ -1,0 +1,110 @@
+# Forge Industrial Safety 2.0 — Build Status
+
+Branch: \`forge-creator-2.0\`
+
+This document is the working implementation ledger for Forge Industrial Safety 2.0. A module is not considered production-ready until migrations, build, runtime behavior, authorization, and security regression tests pass in the target environment.
+
+## Platform foundation
+
+| Area | Status | Notes |
+| --- | --- | --- |
+| Multi-tenant organization core | Built | Organizations, memberships, Locations, Divisions, tenant isolation foundation |
+| Forge Creator 2.0 | Built foundation | Tenant provisioning, features, entitlements, access, experience, forms, lookups, AI controls |
+| Roles & Permissions | Built foundation | Role templates, tenant roles, individual overrides, effective scopes |
+| Feature Entitlements | Built foundation | Plan + tenant overrides + runtime feature availability |
+| Experience Builder | Built foundation | Creator ceiling + tenant presentation controls |
+| Dropdown / Lookup Manager | Built | Creator and tenant configuration |
+| Forms & Fields | Built foundation | Creator-driven forms and tenant-safe overrides |
+| Audit | Built foundation | Creator/domain action audit events |
+| Local Supabase | Built foundation | Local development ports/configuration and seed environment |
+| AWS production | Not deployed | Intentionally deferred while local development continues |
+
+## Runtime modules
+
+| Module | Status | Major implemented capability |
+| --- | --- | --- |
+| Personnel | Built foundation | Scoped personnel records, profile, assignment metadata |
+| Training | Built foundation | Courses, assignments, completions, approvals |
+| My Training | Built | User-specific assignment/transcript view |
+| Incidents | Built foundation | Incident workflow, scope, activity |
+| Inspections | Built foundation | Templates, inspections, checklist records, findings |
+| Assets & Equipment | Built foundation | Asset identity, assignment, maintenance, meters, retirement |
+| QR Management | Built foundation | Managed QR tokens, scan resolver/history, asset destinations |
+| Lockout / Tagout | Built foundation | Equipment procedures, energy sources, ordered steps, approvals, revisions, reviews, field-use history |
+| Tasks | Built foundation | Tasks/corrective actions, assignment, due dates, completion, comments, activity |
+| OSHA | Not built | Feature registry exists; runtime required |
+| Workers Compensation | Not built | Feature registry exists; restricted runtime required |
+| DOT Compliance | Not built | Feature registry exists; runtime required |
+| Fleet | Not built | Feature registry exists; runtime required |
+| Emergency Management | Not built | Feature registry exists; runtime required |
+| Calendar | Not built | Navigation placeholder exists; runtime/feature registry required |
+| Reminders | Not built | Navigation placeholder exists; runtime/feature registry required |
+| Messaging | Not built | Navigation placeholder exists; runtime/feature registry required |
+| Reporting | Partial | Forge AI Analytics exists; native reporting/report builder still required |
+| Safety Supplies | Not built | Runtime and feature registry required |
+| Food Safety | Not built | Runtime and feature registry required |
+| Grain Sanitation | Not built | Runtime and feature registry required |
+| Print Manager | Not built | Runtime and feature registry required |
+| Photo Markup | Not built | Runtime and feature registry required |
+
+## Forge AI
+
+| AI capability | Status |
+| --- | --- |
+| Tenant AI entitlement and Creator controls | Built foundation |
+| Chat workspace and conversation history | Built foundation |
+| Permission-aware runtime tools | Built |
+| Personnel search/context | Built |
+| Training search/context | Built |
+| Incident search/context | Built |
+| Inspection search/context | Built |
+| Assets search/context | Built |
+| QR search/context | Built |
+| LOTO search/context | Built |
+| Tasks search/context | Built |
+| Forge Knowledge | Built foundation |
+| Human-approved AI action queue | Built foundation |
+| Initial approved actions | Inspection finding, Asset maintenance |
+| AI Watch | Built foundation |
+| Watch rules | Training, Inspection, Assets, Incidents, LOTO, Tasks |
+| AI Analytics | Built foundation |
+| Analytics domains | Executive, Incidents, Training, Inspections, Assets |
+| Saved AI reports | Built foundation |
+| AI Draft Studio | Not built |
+| Image/document multimodal workflows | Not built |
+| Voice workflows | Not built |
+| AI evaluation/security suite | Not built |
+
+## Current validation state
+
+Latest LOTO and Tasks work has been committed but has not yet been validated on the local Windows/Supabase environment.
+
+Required checkpoint:
+
+1. Pull \`forge-creator-2.0\`.
+2. Confirm Docker Desktop is running.
+3. Run \`pnpm web:supabase:reset\`.
+4. Confirm every migration and \`seed.sql\` complete successfully.
+5. Run \`pnpm dev\`.
+6. Validate login and tenant selection.
+7. Validate core module routes.
+8. Run TypeScript/build checks after runtime smoke testing.
+
+Do not mark a module Production Ready solely because its code has been committed.
+
+## Recommended implementation order from here
+
+1. Validate the current full migration chain and application build.
+2. Calendar + Reminders shared scheduling foundation.
+3. Emergency Management and Emergency Alerts.
+4. Fleet + DOT shared vehicle/driver compliance foundation.
+5. OSHA recordkeeping.
+6. Workers Compensation restricted case management.
+7. Reporting / dashboard builder and exports.
+8. Safety Supplies.
+9. Messaging.
+10. Food Safety + Grain Sanitation.
+11. Print Manager + Photo Markup.
+12. Forge AI Draft Studio and additional approved actions.
+13. Storage/document security, notifications, integrations, test automation, and production hardening.
+14. AWS production deployment and migration runbook.
