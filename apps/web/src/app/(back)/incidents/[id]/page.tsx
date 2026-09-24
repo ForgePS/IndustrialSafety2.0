@@ -1,10 +1,12 @@
 import { notFound } from 'next/navigation'
+import { assetWithinScope } from '@/lib/forgeAssets'
 import type { Metadata } from 'next'
 import { Badge } from '@repo/ui/components/ui/badge'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@repo/ui/components/ui/card'
 import { createServiceRoleClient } from '@repo/supabase/server'
 import IncidentRecordForm from '../IncidentRecordForm'
 import IncidentWorkflowActions from '../IncidentWorkflowActions'
+import IncidentEquipment from '../IncidentEquipment'
 import type { IncidentFormValues } from '../actions'
 import { getEffectiveForm } from '@/lib/forgeForms'
 import { getEffectiveLookup } from '@/lib/forgeLookups'
@@ -68,6 +70,7 @@ const IncidentDetailPage = async ({ params }: { params: Promise<{ id: string }> 
   const approvePermission = permissionByKey.get('incidents.approve')
   const closePermission = permissionByKey.get('incidents.close')
   const canUseAi = Boolean(permissionByKey.get('forge_ai.use'))
+  const assetViewPermission = permissionByKey.get('assets_equipment.view')
 
   const canWithin = async (permission: any) =>
     permission
@@ -94,6 +97,40 @@ const IncidentDetailPage = async ({ params }: { params: Promise<{ id: string }> 
   ])
 
   const canEdit = Boolean(mayEditByScope) && ['draft','returned'].includes(incident.status)
+
+  // A link never grants asset access. Apply the asset's current scope before displaying it.
+  let linkedEquipment: Array<{
+    linkId: string; assetId: string; assetNumber: string; name: string; status: string; condition: string
+  }> = []
+  if (assetViewPermission) {
+    const { data: links, error: linkError } = await supabase.from('forge_incident_assets')
+      .select('id, asset_id')
+      .eq('organization_id', organizationId)
+      .eq('incident_id', id)
+      .order('linked_at', { ascending: true })
+    if (linkError) throw new Error('Unable to load related equipment: ' + linkError.message)
+    if (links?.length) {
+      const { data: linkedAssets, error: assetsError } = await supabase.from('forge_assets')
+        .select('id, organization_id, asset_number, name, status, condition, custodian_user_id, location_id, division_id')
+        .eq('organization_id', organizationId)
+        .in('id', links.map((link: any) => link.asset_id))
+      if (assetsError) throw new Error('Unable to load related assets: ' + assetsError.message)
+      const visible = await Promise.all((linkedAssets || []).map(async (asset: any) => ({
+        asset,
+        allowed: await assetWithinScope({
+          organizationId, userId: context.user.id, scope: assetViewPermission.scope, asset
+        })
+      })))
+      const byId = new Map(visible.filter(item => item.allowed).map(item => [item.asset.id, item.asset]))
+      linkedEquipment = links.flatMap((link: any) => {
+        const asset = byId.get(link.asset_id) as any
+        return asset ? [{
+          linkId: link.id, assetId: asset.id, assetNumber: asset.asset_number,
+          name: asset.name, status: asset.status, condition: asset.condition
+        }] : []
+      })
+    }
+  }
 
   const statusLabels = Object.fromEntries(statusLookup.options.map(option => [option.key, option.label]))
   const typeLabels = Object.fromEntries(typeLookup.options.map(option => [option.key, option.label]))
@@ -207,6 +244,8 @@ const IncidentDetailPage = async ({ params }: { params: Promise<{ id: string }> 
           </CardContent>
         </Card>
       )}
+
+      {assetViewPermission ? <IncidentEquipment incidentId={incident.id} equipment={linkedEquipment} canEdit={canEdit} /> : null}
 
       <IncidentWorkflowActions
         incidentId={incident.id}
