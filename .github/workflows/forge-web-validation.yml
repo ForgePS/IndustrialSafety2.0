@@ -24,6 +24,7 @@ jobs:
         with:
           version: 9.13.2
       - run: pnpm install --frozen-lockfile
+      - run: node scripts/check-forge-ai-schemas.cjs
       - run: pnpm --filter forge-industrial-safety-2.0-web type-check
       - run: pnpm --filter forge-industrial-safety-2.0-web build
 
