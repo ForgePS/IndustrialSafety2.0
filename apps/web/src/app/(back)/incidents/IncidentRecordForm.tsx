@@ -185,7 +185,7 @@ const IncidentRecordForm = ({
         return
       }
 
-      toast('success', result.message || 'Incident saved.')
+      toast('success', 'message' in result ? String(result.message) : 'Incident saved.')
 
       if (!incidentId && 'id' in result && result.id) {
         router.push('/incidents/' + result.id)
