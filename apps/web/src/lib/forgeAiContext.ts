@@ -6,14 +6,15 @@ import { assetWithinScope, getAssetDetailData } from '@/lib/forgeAssets'
 import { personnelRecordWithinScope } from '@/lib/forgeScope'
 import { qrCodeWithinScope } from '@/lib/forgeQr'
 import { getTrainingOverview } from '@/lib/forgeTraining'
+import { getLotoProcedureDetail, lotoProcedureWithinScope } from '@/lib/forgeLoto'
 
 export type ForgeAiRecordContextRequest = {
-  type: 'incident' | 'inspection' | 'asset' | 'personnel' | 'training_course' | 'qr'
+  type: 'incident' | 'inspection' | 'asset' | 'personnel' | 'training_course' | 'qr' | 'loto'
   id: string
 }
 
 type ContextBase = {
-  type: 'incident' | 'inspection' | 'asset' | 'personnel' | 'training_course' | 'qr'
+  type: 'incident' | 'inspection' | 'asset' | 'personnel' | 'training_course' | 'qr' | 'loto'
   id: string
   humanReference: string
   title: string
@@ -367,6 +368,100 @@ export const getForgeAiRecordContext = async ({
               condition: asset.condition
             }
           : null
+      }
+    }
+  }
+
+
+  if (request.type === 'loto') {
+    const permission = permissionFor(permissionByKey, 'loto.view')
+    if (!permission) return null
+
+    const { data: procedure } = await supabase
+      .from('forge_loto_procedures')
+      .select('*, forge_assets(asset_number, name, status, condition, criticality, locations(name, code), divisions(name, code))')
+      .eq('organization_id', organizationId)
+      .eq('id', request.id)
+      .maybeSingle()
+
+    if (!procedure) return null
+
+    const allowed = await lotoProcedureWithinScope({
+      organizationId,
+      userId,
+      scope: permission.scope,
+      procedure
+    })
+
+    if (!allowed) return null
+
+    const detail = await getLotoProcedureDetail({
+      organizationId,
+      procedureId: procedure.id
+    })
+
+    return {
+      type: 'loto',
+      id: procedure.id,
+      humanReference: procedure.procedure_number,
+      title: procedure.title,
+      data: {
+        procedure_number: procedure.procedure_number,
+        title: procedure.title,
+        description: procedure.description,
+        purpose: procedure.purpose,
+        scope: procedure.scope_text,
+        status: procedure.status,
+        revision_number: procedure.revision_number,
+        effective_date: procedure.effective_date,
+        next_review_date: procedure.next_review_date,
+        required_ppe: procedure.required_ppe,
+        special_precautions: procedure.special_precautions,
+        authorized_employee_notes: procedure.authorized_employee_notes,
+        affected_employee_notes: procedure.affected_employee_notes,
+        shutdown_notes: procedure.shutdown_notes,
+        restoration_notes: procedure.restoration_notes,
+        equipment: procedure.forge_assets
+          ? {
+              asset_number: procedure.forge_assets.asset_number,
+              name: procedure.forge_assets.name,
+              status: procedure.forge_assets.status,
+              condition: procedure.forge_assets.condition,
+              criticality: procedure.forge_assets.criticality,
+              location: procedure.forge_assets.locations?.name || null,
+              division: procedure.forge_assets.divisions?.name || null
+            }
+          : null,
+        energy_sources: detail.energySources.slice(0, 50).map((source: any) => ({
+          energy_type: source.energy_type,
+          source_name: source.source_name,
+          magnitude: source.magnitude,
+          isolation_location: source.isolation_location,
+          isolation_device: source.isolation_device,
+          lockout_device: source.lockout_device,
+          stored_energy_method: source.stored_energy_method,
+          verification_method: source.verification_method,
+          notes: source.notes
+        })),
+        steps: detail.steps.slice(0, 100).map((step: any, index: number) => ({
+          step_number: index + 1,
+          step_type: step.step_type,
+          title: step.title,
+          instructions: step.instructions,
+          warning_text: step.warning_text,
+          verification_required: step.verification_required,
+          verification_instructions: step.verification_instructions
+        })),
+        recent_reviews: detail.reviews.slice(0, 10).map((review: any) => ({
+          reviewed_at: review.reviewed_at,
+          review_result: review.review_result,
+          employee_observed: review.employee_observed,
+          deviations_found: review.deviations_found,
+          corrective_actions: review.corrective_actions,
+          notes: review.notes,
+          next_review_date: review.next_review_date
+        })),
+        active_field_use: detail.applications.some((application: any) => application.status === 'in_progress')
       }
     }
   }
