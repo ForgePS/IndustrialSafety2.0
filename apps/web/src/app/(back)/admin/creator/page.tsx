@@ -5,6 +5,7 @@ import type { Metadata } from 'next'
 // Third-party Imports
 import {
   TbBuildingCommunity,
+  TbHeadset,
   TbCreditCard,
   TbKey,
   TbListDetails,
@@ -23,6 +24,12 @@ export const metadata: Metadata = {
 }
 
 const creatorAreas = [
+  {
+    title: 'Customer Support',
+    description: 'Triage tenant requests, reply, assign work, and track resolution.',
+    href: '/admin/creator/support',
+    icon: TbHeadset
+  },
   {
     title: 'Tenants',
     description: 'Provision, suspend, archive and manage every Forge tenant.',
