@@ -6,7 +6,7 @@ import { assetWithinScope } from '@/lib/forgeAssets'
 import { getEffectiveLookup } from '@/lib/forgeLookups'
 
 export type ForgeAiBoundRecordContext = {
-  type: 'incident' | 'inspection' | 'asset'
+  type: 'incident' | 'inspection' | 'asset' | 'personnel' | 'training_course' | 'qr'
   id: string
   humanReference: string
   title: string
