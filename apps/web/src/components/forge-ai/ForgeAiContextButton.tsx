@@ -14,7 +14,7 @@ import {
 } from '@repo/ui/components/ui/sheet'
 import { Textarea } from '@repo/ui/components/ui/textarea'
 
-type ContextType = 'incident' | 'inspection' | 'asset' | 'personnel' | 'training_course' | 'qr' | 'loto'
+type ContextType = 'incident' | 'inspection' | 'asset' | 'personnel' | 'training_course' | 'qr' | 'loto' | 'task'
 
 type SourceRef = {
   source_title?: string | null
@@ -81,6 +81,12 @@ const promptsByType: Record<ContextType, string[]> = {
     'Review this procedure for missing or unclear energy-control information that a qualified reviewer should verify.',
     'What parts of this procedure deserve the most attention during periodic review?',
     'Search our Forge Knowledge for policies, SOPs, or equipment guidance relevant to this LOTO procedure.'
+  ],
+  task: [
+    'Summarize this Task, current status, due date, and recent activity.',
+    'What information or follow-up appears necessary before this Task can be closed?',
+    'Is this Task overdue or blocked, and what should I review next?',
+    'Search our Forge Knowledge for policies or procedures relevant to this Task.'
   ]
 }
 
