@@ -9,7 +9,11 @@ import { Label } from '@repo/ui/components/ui/label'
 import { Switch } from '@repo/ui/components/ui/switch'
 import { Textarea } from '@repo/ui/components/ui/textarea'
 import { toast } from '@repo/ui/utils/toast'
-import { saveTenantForgeAiCapability, saveTenantForgeAiSettings } from './actions'
+import {
+  saveTenantForgeAiAction,
+  saveTenantForgeAiCapability,
+  saveTenantForgeAiSettings
+} from './actions'
 
 type Capability = {
   id: string
@@ -21,17 +25,29 @@ type Capability = {
   tenantCanConfigure: boolean
 }
 
+type AiAction = {
+  id: string
+  name: string
+  description: string | null
+  category: string
+  risk_level: string
+  enabled: boolean
+  tenantCanConfigure: boolean
+}
+
 const TenantForgeAiSettings = ({
   assistantName,
   responseStyle,
   systemInstructions,
   capabilities,
+  actions,
   tenantCanConfigure
 }: {
   assistantName: string
   responseStyle: 'concise' | 'professional' | 'detailed'
   systemInstructions: string | null
   capabilities: Capability[]
+  actions: AiAction[]
   tenantCanConfigure: boolean
 }) => {
   const [pending, startTransition] = useTransition()
@@ -42,6 +58,9 @@ const TenantForgeAiSettings = ({
   })
   const [capabilityDrafts, setCapabilityDrafts] = useState<Record<string, boolean>>(
     Object.fromEntries(capabilities.map(item => [item.id, item.enabled]))
+  )
+  const [actionDrafts, setActionDrafts] = useState<Record<string, boolean>>(
+    Object.fromEntries(actions.map(item => [item.id, item.enabled]))
   )
 
   const saveSettings = () => {
@@ -70,6 +89,22 @@ const TenantForgeAiSettings = ({
 
       if ('error' in result) {
         toast('error', result.error || 'Unable to update AI capability.')
+        return
+      }
+
+      toast('success', result.message)
+    })
+  }
+
+  const saveAction = (action: AiAction) => {
+    startTransition(async () => {
+      const result = await saveTenantForgeAiAction({
+        actionId: action.id,
+        enabled: actionDrafts[action.id]
+      })
+
+      if ('error' in result) {
+        toast('error', result.error || 'Unable to update AI action.')
         return
       }
 
@@ -167,6 +202,44 @@ const TenantForgeAiSettings = ({
             </div>
           )) : (
             <div className='text-textSecondary py-8 text-center text-sm'>No AI capabilities are available.</div>
+          )}
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>AI Actions</CardTitle>
+          <CardDescription>Only write actions delegated by Forge Creator can be toggled here. Every action still requires normal Forge permissions and human approval.</CardDescription>
+        </CardHeader>
+        <CardContent className='flex flex-col gap-3'>
+          {actions.length ? actions.map(action => (
+            <div key={action.id} className='rounded-lg border p-4'>
+              <div className='flex flex-wrap items-start justify-between gap-4'>
+                <div className='max-w-3xl'>
+                  <div className='flex flex-wrap items-center gap-2'>
+                    <div className='font-semibold'>{action.name}</div>
+                    <Badge size='sm' variant='outline'>{action.category}</Badge>
+                    <Badge size='sm' variant={action.risk_level === 'critical' ? 'destructive' : 'secondary'}>{action.risk_level} risk</Badge>
+                  </div>
+                  <p className='text-textSecondary mt-2 text-sm'>{action.description}</p>
+                </div>
+
+                <div className='flex items-center gap-3'>
+                  <Switch
+                    checked={actionDrafts[action.id]}
+                    disabled={!tenantCanConfigure || !action.tenantCanConfigure || pending}
+                    onCheckedChange={value => setActionDrafts(current => ({ ...current, [action.id]: value }))}
+                  />
+                  {tenantCanConfigure && action.tenantCanConfigure ? (
+                    <Button size='sm' variant='outline' disabled={pending} onClick={() => saveAction(action)}>Save</Button>
+                  ) : (
+                    <Badge size='sm' variant='outline'>Creator Locked</Badge>
+                  )}
+                </div>
+              </div>
+            </div>
+          )) : (
+            <div className='text-textSecondary py-8 text-center text-sm'>No approved AI write actions are available.</div>
           )}
         </CardContent>
       </Card>
