@@ -7,14 +7,15 @@ import { personnelRecordWithinScope } from '@/lib/forgeScope'
 import { qrCodeWithinScope } from '@/lib/forgeQr'
 import { getTrainingOverview } from '@/lib/forgeTraining'
 import { getLotoProcedureDetail, lotoProcedureWithinScope } from '@/lib/forgeLoto'
+import { getTaskDetail, taskWithinScope } from '@/lib/forgeTasks'
 
 export type ForgeAiRecordContextRequest = {
-  type: 'incident' | 'inspection' | 'asset' | 'personnel' | 'training_course' | 'qr' | 'loto'
+  type: 'incident' | 'inspection' | 'asset' | 'personnel' | 'training_course' | 'qr' | 'loto' | 'task'
   id: string
 }
 
 type ContextBase = {
-  type: 'incident' | 'inspection' | 'asset' | 'personnel' | 'training_course' | 'qr' | 'loto'
+  type: 'incident' | 'inspection' | 'asset' | 'personnel' | 'training_course' | 'qr' | 'loto' | 'task'
   id: string
   humanReference: string
   title: string
@@ -462,6 +463,74 @@ export const getForgeAiRecordContext = async ({
           next_review_date: review.next_review_date
         })),
         active_field_use: detail.applications.some((application: any) => application.status === 'in_progress')
+      }
+    }
+  }
+
+
+  if (request.type === 'task') {
+    const permission = permissionFor(permissionByKey, 'tasks.view')
+    if (!permission) return null
+
+    const { data: task } = await supabase
+      .from('forge_tasks')
+      .select('*, forge_personnel!forge_tasks_assigned_personnel_id_fkey(first_name, last_name, employee_number), locations(name, code), divisions(name, code)')
+      .eq('organization_id', organizationId)
+      .eq('id', request.id)
+      .maybeSingle()
+
+    if (!task) return null
+
+    const allowed = await taskWithinScope({
+      organizationId,
+      userId,
+      scope: permission.scope,
+      task
+    })
+
+    if (!allowed) return null
+
+    const detail = await getTaskDetail({
+      organizationId,
+      taskId: task.id
+    })
+
+    return {
+      type: 'task',
+      id: task.id,
+      humanReference: task.task_number,
+      title: task.title,
+      data: {
+        task_number: task.task_number,
+        title: task.title,
+        description: task.description,
+        status: task.status,
+        priority: task.priority,
+        corrective_action: task.corrective_action,
+        verification_required: task.verification_required,
+        verification_notes: task.verification_notes,
+        start_at: task.start_at,
+        due_at: task.due_at,
+        completed_at: task.completed_at,
+        source_type: task.source_type,
+        source_reference: task.source_reference,
+        assignee: task.forge_personnel
+          ? {
+              name: [task.forge_personnel.first_name, task.forge_personnel.last_name].filter(Boolean).join(' '),
+              employee_number: task.forge_personnel.employee_number
+            }
+          : null,
+        location: task.locations?.name || null,
+        division: task.divisions?.name || null,
+        recent_comments: detail.comments.slice(-20).map((comment: any) => ({
+          comment: comment.comment,
+          created_at: comment.created_at
+        })),
+        recent_activity: detail.activity.slice(0, 30).map((item: any) => ({
+          activity_type: item.activity_type,
+          message: item.message,
+          created_at: item.created_at
+        }))
       }
     }
   }
