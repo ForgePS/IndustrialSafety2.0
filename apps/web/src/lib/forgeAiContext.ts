@@ -5,6 +5,7 @@ import { inspectionWithinScope, getInspectionDetailData } from '@/lib/forgeInspe
 import { assetWithinScope, getAssetDetailData } from '@/lib/forgeAssets'
 import { personnelRecordWithinScope } from '@/lib/forgeScope'
 import { qrCodeWithinScope } from '@/lib/forgeQr'
+import { getTrainingOverview } from '@/lib/forgeTraining'
 
 export type ForgeAiRecordContextRequest = {
   type: 'incident' | 'inspection' | 'asset' | 'personnel' | 'training_course' | 'qr'
@@ -275,18 +276,18 @@ export const getForgeAiRecordContext = async ({
 
     if (!course) return null
 
-    const [{ count: assignmentCount }, { count: completionCount }] = await Promise.all([
-      supabase
-        .from('forge_training_assignments')
-        .select('id', { count: 'exact', head: true })
-        .eq('organization_id', organizationId)
-        .eq('course_id', course.id),
-      supabase
-        .from('forge_training_completions')
-        .select('id', { count: 'exact', head: true })
-        .eq('organization_id', organizationId)
-        .eq('course_id', course.id)
-    ])
+    const training = await getTrainingOverview({
+      organizationId,
+      userId,
+      permission
+    })
+
+    const visibleAssignments = training.assignments.filter(
+      (item: any) => item.course_id === course.id
+    )
+    const visibleCompletions = training.completions.filter(
+      (item: any) => item.course_id === course.id
+    )
 
     return {
       type: 'training_course',
@@ -302,8 +303,14 @@ export const getForgeAiRecordContext = async ({
         duration_minutes: course.duration_minutes,
         validity_months: course.validity_months,
         is_active: course.is_active,
-        assignment_count: Number(assignmentCount || 0),
-        completion_count: Number(completionCount || 0)
+        visible_assignment_count: visibleAssignments.length,
+        visible_completion_count: visibleCompletions.length,
+        visible_overdue_assignments: visibleAssignments.filter(
+          (item: any) =>
+            item.due_date &&
+            item.due_date < new Date().toISOString().slice(0, 10) &&
+            !['completed','canceled'].includes(String(item.status))
+        ).length
       }
     }
   }
