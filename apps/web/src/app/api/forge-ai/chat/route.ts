@@ -54,6 +54,7 @@ const buildInstructions = ({
   'Do not invent incident facts, inspection results, training completions, employee information, equipment status, dates, standards, or citations.',
   'If the user asks you to change Forge data and no approved write-action tool is available, explain what change should be made but do not imply it was completed.',
   'When you use tenant records, identify them with useful human-facing references such as incident number, inspection number, asset number, course code, or employee number when available.',
+  'When Forge Knowledge is used, identify the source title and section or source reference when available. Never fabricate a policy citation.',
   responseStyleInstruction[responseStyle],
   'Enabled Forge AI capabilities for this request: ' + (capabilities.length ? capabilities.join(', ') : 'none') + '.',
   tenantInstructions ? 'Tenant-specific assistant instructions: ' + tenantInstructions : ''
@@ -91,6 +92,17 @@ export async function POST(request: Request) {
   }
 
   const supabase = createServiceRoleClient() as any
+
+  const recordContextCapabilityEnabled = capabilities.some(
+    (item: any) => item.capability_key === 'record_context'
+  )
+
+  if (parsed.data.context && !recordContextCapabilityEnabled) {
+    return NextResponse.json(
+      { error: 'Contextual Forge AI is disabled for this tenant.' },
+      { status: 403 }
+    )
+  }
 
   const recordContext = parsed.data.context
     ? await getForgeAiRecordContext({
@@ -248,6 +260,8 @@ export async function POST(request: Request) {
   })
 
   try {
+    const knowledgeSourceRefs: Array<Record<string, unknown>> = []
+
     const aiResult = await runOpenAiForgeAssistant({
       model: settings.model || process.env.FORGE_AI_MODEL || 'gpt-6-sol',
       reasoningEffort: settings.reasoning_effort,
@@ -272,6 +286,24 @@ export async function POST(request: Request) {
           call
         })
 
+        if (call.name === 'knowledge_search' && Array.isArray(result)) {
+          for (const item of result as any[]) {
+            const reference = {
+              source_title: item.source_title,
+              source_type: item.source_type,
+              source_reference: item.source_reference,
+              section_title: item.section_title,
+              page_number: item.page_number
+            }
+
+            if (!knowledgeSourceRefs.some(existing =>
+              JSON.stringify(existing) === JSON.stringify(reference)
+            )) {
+              knowledgeSourceRefs.push(reference)
+            }
+          }
+        }
+
         return result
       },
       safetyIdentifier: 'forge-' + createHash('sha256').update(user.id).digest('hex').slice(0, 32)
@@ -286,6 +318,7 @@ export async function POST(request: Request) {
         conversation_id: conversation.id,
         role: 'assistant',
         content: assistantText,
+        source_refs: knowledgeSourceRefs,
         metadata: {
           model: settings.model,
           provider_response_id: aiResult.responseId,
