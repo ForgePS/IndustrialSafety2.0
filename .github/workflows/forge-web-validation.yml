@@ -1,0 +1,29 @@
+name: Forge web validation
+
+on:
+  push:
+    branches:
+      - forge-creator-2.0
+      - codex/incident-equipment-links
+  pull_request:
+    branches:
+      - forge-creator-2.0
+
+permissions:
+  contents: read
+
+jobs:
+  web:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '22'
+      - uses: pnpm/action-setup@v6
+        with:
+          version: 9.13.2
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm --filter forge-industrial-safety-2.0-web type-check
+      - run: pnpm --filter forge-industrial-safety-2.0-web build
