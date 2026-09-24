@@ -32,8 +32,8 @@ const TenantFeaturesPage = async ({ params }: { params: Promise<{ id: string }> 
     ? await supabase.from('forge_plan_entitlements').select('feature_id, enabled').eq('plan_id', subscription.plan_id)
     : { data: [] }
 
-  const planByFeature = new Map((planEntitlements || []).map((item: any) => [item.feature_id, item.enabled]))
-  const overrideByFeature = new Map((overrides || []).map((item: any) => [item.feature_id, item]))
+  const planByFeature = new Map<string, boolean>((planEntitlements || []).map((item: any) => [item.feature_id, item.enabled]))
+  const overrideByFeature = new Map<string, any>((overrides || []).map((item: any) => [item.feature_id, item]))
 
   const hydrated = (features || []).map((feature: any) => {
     const override = overrideByFeature.get(feature.id)
