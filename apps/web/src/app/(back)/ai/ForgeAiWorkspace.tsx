@@ -11,6 +11,7 @@ import {
   TbMessageCirclePlus,
   TbPin,
   TbPinned,
+  TbRadar,
   TbShieldCheck,
   TbSparkles,
   TbThumbDown,
@@ -72,7 +73,8 @@ const ForgeAiWorkspace = ({
   canManageKnowledge,
   canManageAi,
   canViewUsage,
-  canUseActions
+  canUseActions,
+  canViewWatch
 }: {
   assistantName: string
   organizationName: string
@@ -84,6 +86,7 @@ const ForgeAiWorkspace = ({
   canManageAi: boolean
   canViewUsage: boolean
   canUseActions: boolean
+  canViewWatch: boolean
 }) => {
   const router = useRouter()
   const [transitionPending, startTransition] = useTransition()
@@ -292,6 +295,15 @@ const ForgeAiWorkspace = ({
             {canUseActions ? (
               <Button className='mt-2 w-full' variant='outline' asChild>
                 <Link href='/ai/actions'>AI Actions</Link>
+              </Button>
+            ) : null}
+
+            {canViewWatch ? (
+              <Button className='mt-2 w-full' variant='outline' asChild>
+                <Link href='/ai/watch'>
+                  <TbRadar />
+                  AI Watch
+                </Link>
               </Button>
             ) : null}
 
