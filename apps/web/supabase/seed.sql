@@ -1501,3 +1501,73 @@ where not exists (
   from public.forge_qr_scans s
   where s.qr_code_id='20000000-0000-4000-8000-000000001101'
 );
+
+
+-- Local Forge AI Assistant enablement for the demo tenant.
+insert into public.forge_tenant_entitlement_overrides (
+  organization_id,
+  feature_id,
+  enabled,
+  tenant_can_configure,
+  config,
+  reason
+)
+select
+  '20000000-0000-4000-8000-000000000100',
+  f.id,
+  true,
+  true,
+  '{"local_demo":true}'::jsonb,
+  'Local Forge AI development and validation'
+from public.forge_feature_registry f
+where f.feature_key='forge_ai'
+on conflict (organization_id, feature_id) do update
+set enabled=true,
+    tenant_can_configure=true,
+    config=excluded.config,
+    reason=excluded.reason;
+
+insert into public.forge_ai_tenant_settings (
+  organization_id,
+  enabled,
+  assistant_name,
+  provider,
+  model,
+  reasoning_effort,
+  response_style,
+  allow_sensitive_data,
+  action_mode,
+  tenant_can_configure,
+  monthly_token_budget,
+  max_input_chars,
+  max_output_tokens,
+  max_tool_calls,
+  requests_per_minute,
+  data_retention_days
+)
+values (
+  '20000000-0000-4000-8000-000000000100',
+  true,
+  'Forge AI',
+  'openai',
+  'gpt-6-sol',
+  'medium',
+  'professional',
+  false,
+  'approval_required',
+  true,
+  2000000,
+  12000,
+  3000,
+  8,
+  12,
+  365
+)
+on conflict (organization_id) do update
+set enabled=true,
+    assistant_name=excluded.assistant_name,
+    model=excluded.model,
+    reasoning_effort=excluded.reasoning_effort,
+    response_style=excluded.response_style,
+    tenant_can_configure=true,
+    updated_at=now();
