@@ -12,6 +12,7 @@ import {
   TbPin,
   TbPinned,
   TbRadar,
+  TbReportAnalytics,
   TbShieldCheck,
   TbSparkles,
   TbThumbDown,
@@ -70,11 +71,13 @@ const ForgeAiWorkspace = ({
   activeConversationId,
   initialMessages,
   quickPrompts,
+  initialPrompt,
   canManageKnowledge,
   canManageAi,
   canViewUsage,
   canUseActions,
-  canViewWatch
+  canViewWatch,
+  canViewAnalytics
 }: {
   assistantName: string
   organizationName: string
@@ -82,17 +85,19 @@ const ForgeAiWorkspace = ({
   activeConversationId: string | null
   initialMessages: Message[]
   quickPrompts: string[]
+  initialPrompt: string
   canManageKnowledge: boolean
   canManageAi: boolean
   canViewUsage: boolean
   canUseActions: boolean
   canViewWatch: boolean
+  canViewAnalytics: boolean
 }) => {
   const router = useRouter()
   const [transitionPending, startTransition] = useTransition()
   const [conversationId, setConversationId] = useState<string | null>(activeConversationId)
   const [messages, setMessages] = useState<Message[]>(initialMessages)
-  const [input, setInput] = useState('')
+  const [input, setInput] = useState(initialPrompt)
   const [pending, setPending] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const requestIdRef = useRef(0)
@@ -303,6 +308,15 @@ const ForgeAiWorkspace = ({
                 <Link href='/ai/watch'>
                   <TbRadar />
                   AI Watch
+                </Link>
+              </Button>
+            ) : null}
+
+            {canViewAnalytics ? (
+              <Button className='mt-2 w-full' variant='outline' asChild>
+                <Link href='/ai/analytics'>
+                  <TbReportAnalytics />
+                  AI Analytics
                 </Link>
               </Button>
             ) : null}
