@@ -704,7 +704,9 @@ export const approveAndExecuteForgeAiAction = async ({
 
     return {
       message: result.message,
-      result
+      result,
+      target_type: approval.target_type,
+      target_id: approval.target_id
     }
   } catch (error) {
     const message = error instanceof Error ? error.message : 'AI action execution failed.'
