@@ -26,7 +26,7 @@ const CompanySettingsPage = async () => {
       .eq('organization_id', context.activeOrganization.id)
   ])
 
-  const overrideByElement = new Map((overrides || []).map((item: any) => [item.element_id, item]))
+  const overrideByElement = new Map<string, any>((overrides || []).map((item: any) => [item.element_id, item]))
 
   const items = (elements || []).map((element: any) => {
     const override = overrideByElement.get(element.id) || null
