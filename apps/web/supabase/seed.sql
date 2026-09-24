@@ -1969,3 +1969,84 @@ set
   review_result=excluded.review_result,
   notes=excluded.notes,
   next_review_date=excluded.next_review_date;
+
+
+-- Local demo Task / corrective action.
+insert into public.forge_tasks (
+  id,
+  organization_id,
+  task_number,
+  title,
+  description,
+  status,
+  priority,
+  assigned_personnel_id,
+  assigned_user_id,
+  location_id,
+  division_id,
+  start_at,
+  due_at,
+  source_type,
+  source_id,
+  source_reference,
+  corrective_action,
+  verification_required,
+  created_by,
+  updated_by
+)
+values (
+  '20000000-0000-4000-8000-000000001301',
+  '20000000-0000-4000-8000-000000000100',
+  'DEMO-TASK-000001',
+  'Verify Demo Forklift corrective action',
+  'Review the demo equipment record and document closure of the example corrective action.',
+  'in_progress',
+  'high',
+  '20000000-0000-4000-8000-000000000600',
+  '20000000-0000-4000-8000-000000000002',
+  '20000000-0000-4000-8000-000000000300',
+  '20000000-0000-4000-8000-000000000200',
+  now() - interval '7 days',
+  now() - interval '2 days',
+  'asset',
+  '20000000-0000-4000-8000-000000001001',
+  'DEMO-AST-000001',
+  true,
+  true,
+  '20000000-0000-4000-8000-000000000001',
+  '20000000-0000-4000-8000-000000000001'
+)
+on conflict (id) do update
+set
+  title=excluded.title,
+  description=excluded.description,
+  status=excluded.status,
+  priority=excluded.priority,
+  assigned_personnel_id=excluded.assigned_personnel_id,
+  assigned_user_id=excluded.assigned_user_id,
+  location_id=excluded.location_id,
+  division_id=excluded.division_id,
+  due_at=excluded.due_at,
+  corrective_action=true,
+  verification_required=true,
+  updated_at=now();
+
+insert into public.forge_task_activity (
+  organization_id,
+  task_id,
+  activity_type,
+  message,
+  actor_user_id,
+  created_at
+)
+select
+  '20000000-0000-4000-8000-000000000100',
+  '20000000-0000-4000-8000-000000001301',
+  'created',
+  'Demo corrective-action Task created.',
+  '20000000-0000-4000-8000-000000000001',
+  now() - interval '7 days'
+where not exists (
+  select 1 from public.forge_task_activity
+  where task_id='20000000-0000-4000-8000-000000001301'
+);
