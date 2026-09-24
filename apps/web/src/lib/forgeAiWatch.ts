@@ -57,7 +57,7 @@ const evaluateTrainingOverdue = async (
     .select('id, status, due_date, forge_training_courses(title, course_code), forge_personnel(id, first_name, last_name, employee_number, location_id, division_id)')
     .eq('organization_id', organizationId)
     .lt('due_date', cutoff)
-    .not('status', 'in', '("completed","canceled")')
+    .not('status', 'in', '(completed,canceled)')
     .order('due_date')
 
   if (error) throw new Error('Overdue training watch failed: ' + error.message)
@@ -105,7 +105,7 @@ const evaluateCriticalInspectionFindings = async (
     .select('id, title, description, severity, status, due_date, inspection_id, forge_inspections(inspection_number, location_id, division_id)')
     .eq('organization_id', organizationId)
     .eq('severity', 'critical')
-    .not('status', 'in', '("closed","canceled")')
+    .not('status', 'in', '(closed,canceled)')
     .order('created_at')
 
   if (error) throw new Error('Critical inspection finding watch failed: ' + error.message)
@@ -146,7 +146,7 @@ const evaluateOverdueInspectionFindings = async (
     .select('id, title, description, severity, status, due_date, inspection_id, forge_inspections(inspection_number, location_id, division_id)')
     .eq('organization_id', organizationId)
     .lt('due_date', cutoff)
-    .not('status', 'in', '("closed","canceled")')
+    .not('status', 'in', '(closed,canceled)')
     .order('due_date')
 
   if (error) throw new Error('Overdue inspection finding watch failed: ' + error.message)
