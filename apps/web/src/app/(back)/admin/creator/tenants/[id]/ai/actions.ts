@@ -31,6 +31,13 @@ const capabilitySchema = z.object({
   tenantCanConfigure: z.boolean()
 })
 
+const actionSchema = z.object({
+  organizationId: z.string().uuid(),
+  actionId: z.string().uuid(),
+  enabled: z.boolean(),
+  tenantCanConfigure: z.boolean()
+})
+
 export const saveCreatorForgeAiSettings = async (
   input: z.infer<typeof settingsSchema>
 ) => {
@@ -145,4 +152,59 @@ export const saveCreatorForgeAiCapability = async (
 
   revalidatePath('/admin/creator/tenants/' + data.organizationId + '/ai')
   return { message: capability.name + ' updated.' }
+}
+
+
+export const saveCreatorForgeAiAction = async (
+  input: z.infer<typeof actionSchema>
+) => {
+  const { user } = await requireForgePlatformRole(['forge_owner','forge_creator'])
+  const parsed = actionSchema.safeParse(input)
+
+  if (!parsed.success) {
+    return { error: parsed.error.issues[0]?.message || 'Invalid AI action configuration.' }
+  }
+
+  const data = parsed.data
+  const supabase = createServiceRoleClient() as any
+
+  const [{ data: action }, { data: before }] = await Promise.all([
+    supabase.from('forge_ai_action_registry').select('*').eq('id', data.actionId).maybeSingle(),
+    supabase
+      .from('forge_ai_tenant_actions')
+      .select('*')
+      .eq('organization_id', data.organizationId)
+      .eq('action_id', data.actionId)
+      .maybeSingle()
+  ])
+
+  if (!action) return { error: 'AI action not found.' }
+
+  const payload = {
+    organization_id: data.organizationId,
+    action_id: data.actionId,
+    enabled: data.enabled,
+    tenant_can_configure: data.tenantCanConfigure,
+    updated_by: user.id,
+    updated_at: new Date().toISOString()
+  }
+
+  const { error } = await supabase
+    .from('forge_ai_tenant_actions')
+    .upsert(payload, { onConflict: 'organization_id,action_id' })
+
+  if (error) return { error: error.message }
+
+  await supabase.from('forge_creator_audit_log').insert({
+    actor_user_id: user.id,
+    organization_id: data.organizationId,
+    action: 'creator.forge_ai_action_updated',
+    entity_type: 'forge_ai_action',
+    entity_id: data.actionId,
+    before_value: before,
+    after_value: payload
+  })
+
+  revalidatePath('/admin/creator/tenants/' + data.organizationId + '/ai')
+  return { message: action.name + ' updated.' }
 }
