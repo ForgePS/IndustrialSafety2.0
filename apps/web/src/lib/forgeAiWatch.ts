@@ -373,6 +373,54 @@ const evaluateLotoReviewDue = async (
   })
 }
 
+
+const evaluateTasksOverdue = async (
+  supabase: any,
+  organizationId: string,
+  config: Record<string, unknown>
+): Promise<WatchCandidate[]> => {
+  const minimumDays = integerConfig(config, 'days_overdue', 1, 0, 3650)
+  const cutoff = new Date(Date.now() - minimumDays * 86_400_000).toISOString()
+
+  const { data, error } = await supabase
+    .from('forge_tasks')
+    .select('id, task_number, title, status, priority, due_at, corrective_action, location_id, division_id, source_reference')
+    .eq('organization_id', organizationId)
+    .is('archived_at', null)
+    .lt('due_at', cutoff)
+    .not('status', 'in', '(completed,canceled)')
+    .order('due_at')
+
+  if (error) throw new Error('Overdue Task watch failed: ' + error.message)
+
+  return (data || []).map((row: any) => ({
+    ruleKey: 'tasks.overdue',
+    targetType: 'task',
+    targetId: row.id,
+    targetReference: row.task_number,
+    title: (row.corrective_action ? 'Overdue corrective action: ' : 'Overdue Task: ') + row.title,
+    summary:
+      row.task_number +
+      ' is approximately ' +
+      String(Math.max(0, Math.floor((Date.now() - new Date(row.due_at).getTime()) / 86_400_000))) +
+      ' day(s) overdue and remains ' +
+      String(row.status).replaceAll('_', ' ') +
+      '.',
+    locationId: row.location_id,
+    divisionId: row.division_id,
+    data: {
+      task_number: row.task_number,
+      title: row.title,
+      status: row.status,
+      priority: row.priority,
+      due_at: row.due_at,
+      corrective_action: row.corrective_action,
+      source_reference: row.source_reference,
+      path: '/tasks/' + row.id
+    }
+  }))
+}
+
 const evaluateRule = async (
   supabase: any,
   organizationId: string,
@@ -401,6 +449,9 @@ const evaluateRule = async (
   }
   if (ruleKey === 'loto.review_due') {
     return evaluateLotoReviewDue(supabase, organizationId, config)
+  }
+  if (ruleKey === 'tasks.overdue') {
+    return evaluateTasksOverdue(supabase, organizationId, config)
   }
 
   return []
