@@ -516,6 +516,41 @@ where r.organization_id = '20000000-0000-4000-8000-000000000100'
   and r.role_key = 'employee'
 on conflict do nothing;
 
+
+-- Local Forge Admin is also the Company Owner of the demo tenant so Creator and tenant runtime can be tested from one account.
+insert into public.organization_memberships (
+  organization_id,
+  user_id,
+  role,
+  is_active
+)
+values (
+  '20000000-0000-4000-8000-000000000100',
+  '20000000-0000-4000-8000-000000000001',
+  'owner',
+  true
+)
+on conflict (organization_id, user_id) do update
+set is_active=true, role='owner', updated_at=now();
+
+insert into public.forge_tenant_user_roles (organization_id, user_id, role_id)
+select
+  '20000000-0000-4000-8000-000000000100',
+  '20000000-0000-4000-8000-000000000001',
+  r.id
+from public.forge_tenant_roles r
+where r.organization_id='20000000-0000-4000-8000-000000000100'
+  and r.role_key='company-owner'
+on conflict do nothing;
+
+insert into public.forge_tenant_user_location_access (organization_id, user_id, location_id)
+values (
+  '20000000-0000-4000-8000-000000000100',
+  '20000000-0000-4000-8000-000000000001',
+  '20000000-0000-4000-8000-000000000300'
+)
+on conflict do nothing;
+
 insert into public.forge_tenant_user_location_access (organization_id, user_id, location_id)
 values (
   '20000000-0000-4000-8000-000000000100',
