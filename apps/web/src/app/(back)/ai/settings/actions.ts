@@ -16,6 +16,11 @@ const capabilitySchema = z.object({
   enabled: z.boolean()
 })
 
+const actionSchema = z.object({
+  actionId: z.string().uuid(),
+  enabled: z.boolean()
+})
+
 export const saveTenantForgeAiSettings = async (
   input: z.infer<typeof settingsSchema>
 ) => {
@@ -145,4 +150,75 @@ export const saveTenantForgeAiCapability = async (
 
   revalidatePath('/ai/settings')
   return { message: capability.name + ' updated.' }
+}
+
+
+export const saveTenantForgeAiAction = async (
+  input: z.infer<typeof actionSchema>
+) => {
+  const context = await requireTenantPermission('forge_ai.manage')
+  const parsed = actionSchema.safeParse(input)
+
+  if (!parsed.success) {
+    return { error: parsed.error.issues[0]?.message || 'Invalid AI action.' }
+  }
+
+  const organizationId = context.activeOrganization.id
+  const supabase = createServiceRoleClient() as any
+
+  const [{ data: settings }, { data: action }, { data: override }] = await Promise.all([
+    supabase
+      .from('forge_ai_tenant_settings')
+      .select('tenant_can_configure')
+      .eq('organization_id', organizationId)
+      .maybeSingle(),
+    supabase
+      .from('forge_ai_action_registry')
+      .select('id, name, platform_enabled')
+      .eq('id', parsed.data.actionId)
+      .maybeSingle(),
+    supabase
+      .from('forge_ai_tenant_actions')
+      .select('*')
+      .eq('organization_id', organizationId)
+      .eq('action_id', parsed.data.actionId)
+      .maybeSingle()
+  ])
+
+  if (!settings?.tenant_can_configure) {
+    return { error: 'Forge Creator has locked tenant AI configuration.' }
+  }
+
+  if (!action?.platform_enabled) {
+    return { error: 'This AI action is disabled at the Forge platform level.' }
+  }
+
+  if (!override?.tenant_can_configure) {
+    return { error: 'Forge Creator has not allowed the tenant to change this AI action.' }
+  }
+
+  const { error } = await supabase
+    .from('forge_ai_tenant_actions')
+    .update({
+      enabled: parsed.data.enabled,
+      updated_by: context.user.id,
+      updated_at: new Date().toISOString()
+    })
+    .eq('organization_id', organizationId)
+    .eq('action_id', parsed.data.actionId)
+
+  if (error) return { error: error.message }
+
+  await supabase.from('forge_creator_audit_log').insert({
+    actor_user_id: context.user.id,
+    organization_id: organizationId,
+    action: 'tenant.forge_ai_action_updated',
+    entity_type: 'forge_ai_action',
+    entity_id: parsed.data.actionId,
+    before_value: { enabled: override.enabled },
+    after_value: { enabled: parsed.data.enabled }
+  })
+
+  revalidatePath('/ai/settings')
+  return { message: action.name + ' updated.' }
 }
