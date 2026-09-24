@@ -6,6 +6,7 @@ import { getScopedIncidents } from '@/lib/forgeIncidents'
 import { getScopedInspections } from '@/lib/forgeInspections'
 import { getScopedAssets } from '@/lib/forgeAssets'
 import { getScopedQrCodes } from '@/lib/forgeQr'
+import { getScopedLotoProcedures } from '@/lib/forgeLoto'
 import { searchForgeAiKnowledge } from '@/lib/forgeAiKnowledge'
 import {
   getForgeAiAssetAnalytics,
@@ -239,6 +240,23 @@ const definitions: Record<string, any> = {
       additionalProperties: false
     }
   },
+  search_loto: {
+    type: 'function',
+    name: 'search_loto',
+    description: 'Search Lockout / Tagout procedures within the user permission scope by procedure number, title, status, equipment, Location, or Division.',
+    strict: true,
+    parameters: {
+      type: 'object',
+      properties: {
+        query: { type: 'string' },
+        status: { type: ['string','null'] },
+        review_due_only: { type: 'boolean' },
+        limit: { type: 'integer', minimum: 1, maximum: 50 }
+      },
+      required: ['query','status','review_due_only'],
+      additionalProperties: false
+    }
+  },
   analytics_executive_summary: {
     type: 'function',
     name: 'analytics_executive_summary',
@@ -436,6 +454,28 @@ const executeCompanySnapshot = async (context: RuntimeContext) => {
       out_of_service: assets.filter((item: any) => item.status === 'out_of_service').length,
       maintenance: assets.filter((item: any) => item.status === 'maintenance').length,
       poor_or_unserviceable: assets.filter((item: any) => ['poor','unserviceable'].includes(item.condition)).length
+    }
+  }
+
+  const lotoPermission = getPermission(context, 'loto.view')
+  if (lotoPermission) {
+    const procedures = await getScopedLotoProcedures({
+      organizationId,
+      userId,
+      permission: lotoPermission
+    })
+    const today = new Date().toISOString().slice(0, 10)
+
+    result.loto = {
+      visible_count: procedures.length,
+      approved: procedures.filter((item: any) => item.status === 'approved').length,
+      awaiting_review: procedures.filter((item: any) => item.status === 'review').length,
+      review_overdue: procedures.filter(
+        (item: any) =>
+          item.status === 'approved' &&
+          item.next_review_date &&
+          item.next_review_date < today
+      ).length
     }
   }
 
@@ -704,6 +744,62 @@ const executeToolValue = async ({
           target_asset_name: item.targetAsset?.name || null,
           scan_count: Number(item.scan_count || 0),
           last_scanned_at: item.last_scanned_at
+        }))
+    }
+
+    case 'search_loto': {
+      if (!permission) return { denied: true, reason: 'Lockout / Tagout permission is not available.' }
+      const rows = await getScopedLotoProcedures({
+        organizationId,
+        userId,
+        permission,
+        includeRetired: true
+      })
+      const limit = limitValue(args.limit)
+      const today = new Date().toISOString().slice(0, 10)
+
+      return rows
+        .filter((item: any) => {
+          if (args.status && item.status !== args.status) return false
+
+          const reviewDue = Boolean(
+            item.status === 'approved' &&
+            item.next_review_date &&
+            item.next_review_date <= today
+          )
+
+          if (args.review_due_only && !reviewDue) return false
+
+          return searchMatch([
+            item.procedure_number,
+            item.title,
+            item.description,
+            item.status,
+            item.forge_assets?.asset_number,
+            item.forge_assets?.name,
+            item.forge_assets?.locations?.name,
+            item.forge_assets?.divisions?.name
+          ], args.query || '')
+        })
+        .slice(0, limit)
+        .map((item: any) => ({
+          record_type: 'loto_procedure',
+          id: item.id,
+          procedure_number: item.procedure_number,
+          title: item.title,
+          status: item.status,
+          revision_number: item.revision_number,
+          effective_date: item.effective_date,
+          next_review_date: item.next_review_date,
+          review_overdue: Boolean(
+            item.status === 'approved' &&
+            item.next_review_date &&
+            item.next_review_date < today
+          ),
+          asset_number: item.forge_assets?.asset_number || null,
+          asset_name: item.forge_assets?.name || null,
+          location: item.forge_assets?.locations?.name || null,
+          division: item.forge_assets?.divisions?.name || null
         }))
     }
 
