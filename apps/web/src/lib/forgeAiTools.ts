@@ -7,6 +7,7 @@ import { getScopedInspections } from '@/lib/forgeInspections'
 import { getScopedAssets } from '@/lib/forgeAssets'
 import { getScopedQrCodes } from '@/lib/forgeQr'
 import { getScopedLotoProcedures } from '@/lib/forgeLoto'
+import { getScopedTasks } from '@/lib/forgeTasks'
 import { searchForgeAiKnowledge } from '@/lib/forgeAiKnowledge'
 import {
   getForgeAiAssetAnalytics,
@@ -257,6 +258,24 @@ const definitions: Record<string, any> = {
       additionalProperties: false
     }
   },
+  search_tasks: {
+    type: 'function',
+    name: 'search_tasks',
+    description: 'Search operational Tasks and corrective actions within the user permission scope by Task number, title, status, priority, assignee, Location, source, or due date.',
+    strict: true,
+    parameters: {
+      type: 'object',
+      properties: {
+        query: { type: 'string' },
+        status: { type: ['string','null'] },
+        overdue_only: { type: 'boolean' },
+        corrective_actions_only: { type: 'boolean' },
+        limit: { type: 'integer', minimum: 1, maximum: 50 }
+      },
+      required: ['query','status','overdue_only','corrective_actions_only'],
+      additionalProperties: false
+    }
+  },
   analytics_executive_summary: {
     type: 'function',
     name: 'analytics_executive_summary',
@@ -475,6 +494,37 @@ const executeCompanySnapshot = async (context: RuntimeContext) => {
           item.status === 'approved' &&
           item.next_review_date &&
           item.next_review_date < today
+      ).length
+    }
+  }
+
+  const taskPermission = getPermission(context, 'tasks.view')
+  if (taskPermission) {
+    const tasks = await getScopedTasks({
+      organizationId,
+      userId,
+      permission: taskPermission
+    })
+    const now = Date.now()
+
+    result.tasks = {
+      visible_count: tasks.length,
+      active: tasks.filter((item: any) => !['completed','canceled'].includes(String(item.status))).length,
+      overdue: tasks.filter(
+        (item: any) =>
+          item.due_at &&
+          new Date(item.due_at).getTime() < now &&
+          !['completed','canceled'].includes(String(item.status))
+      ).length,
+      critical: tasks.filter(
+        (item: any) =>
+          item.priority === 'critical' &&
+          !['completed','canceled'].includes(String(item.status))
+      ).length,
+      corrective_actions_open: tasks.filter(
+        (item: any) =>
+          item.corrective_action &&
+          !['completed','canceled'].includes(String(item.status))
       ).length
     }
   }
@@ -800,6 +850,69 @@ const executeToolValue = async ({
           asset_name: item.forge_assets?.name || null,
           location: item.forge_assets?.locations?.name || null,
           division: item.forge_assets?.divisions?.name || null
+        }))
+    }
+
+    case 'search_tasks': {
+      if (!permission) return { denied: true, reason: 'Tasks permission is not available.' }
+      const rows = await getScopedTasks({
+        organizationId,
+        userId,
+        permission,
+        includeArchived: false
+      })
+      const limit = limitValue(args.limit)
+      const now = Date.now()
+
+      return rows
+        .filter((item: any) => {
+          if (args.status && item.status !== args.status) return false
+
+          const overdue = Boolean(
+            item.due_at &&
+            new Date(item.due_at).getTime() < now &&
+            !['completed','canceled'].includes(String(item.status))
+          )
+
+          if (args.overdue_only && !overdue) return false
+          if (args.corrective_actions_only && !item.corrective_action) return false
+
+          return searchMatch([
+            item.task_number,
+            item.title,
+            item.description,
+            item.status,
+            item.priority,
+            item.forge_personnel?.first_name,
+            item.forge_personnel?.last_name,
+            item.forge_personnel?.employee_number,
+            item.locations?.name,
+            item.divisions?.name,
+            item.source_reference
+          ], args.query || '')
+        })
+        .slice(0, limit)
+        .map((item: any) => ({
+          record_type: 'task',
+          id: item.id,
+          task_number: item.task_number,
+          title: item.title,
+          status: item.status,
+          priority: item.priority,
+          corrective_action: Boolean(item.corrective_action),
+          due_at: item.due_at,
+          overdue: Boolean(
+            item.due_at &&
+            new Date(item.due_at).getTime() < now &&
+            !['completed','canceled'].includes(String(item.status))
+          ),
+          assignee: item.forge_personnel
+            ? [item.forge_personnel.first_name, item.forge_personnel.last_name].filter(Boolean).join(' ')
+            : null,
+          employee_number: item.forge_personnel?.employee_number || null,
+          location: item.locations?.name || null,
+          division: item.divisions?.name || null,
+          source_reference: item.source_reference
         }))
     }
 
