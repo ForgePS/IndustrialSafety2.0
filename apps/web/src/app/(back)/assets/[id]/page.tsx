@@ -79,6 +79,7 @@ const AssetDetailPage = async ({ params }: { params: Promise<{ id: string }> }) 
   const meterPermission = permissions.get('assets_equipment.meter')
   const retirePermission = permissions.get('assets_equipment.retire')
   const qrCreatePermission = permissions.get('qr_management.create')
+  const lotoCreatePermission = permissions.get('loto.create')
   const canUseAi = Boolean(permissions.get('forge_ai.use'))
 
   const within = async (permission: any) =>
@@ -91,13 +92,14 @@ const AssetDetailPage = async ({ params }: { params: Promise<{ id: string }> }) 
         })
       : false
 
-  const [canEdit, canAssign, canMaintain, canMeter, canRetire, canCreateQr, personnel] = await Promise.all([
+  const [canEdit, canAssign, canMaintain, canMeter, canRetire, canCreateQr, canCreateLoto, personnel] = await Promise.all([
     within(editPermission),
     within(assignPermission),
     within(maintenancePermission),
     within(meterPermission),
     within(retirePermission),
     within(qrCreatePermission),
+    within(lotoCreatePermission),
     assignPermission || editPermission
       ? getScopedPersonnel({
           organizationId,
@@ -152,6 +154,7 @@ const AssetDetailPage = async ({ params }: { params: Promise<{ id: string }> }) 
         </div>
         <div className='flex flex-wrap gap-2'>
           {canUseAi ? <ForgeAiContextButton contextType='asset' recordId={asset.id} recordLabel={asset.asset_number} /> : null}
+          {canCreateLoto && !asset.retired_at ? <Button variant='outline' asChild><Link href={'/loto/create?asset=' + asset.id}>Create LOTO</Link></Button> : null}
           {canCreateQr && !asset.retired_at ? <Button variant='outline' asChild><Link href={'/qr/create?asset=' + asset.id}>Create QR</Link></Button> : null}
           {canMaintain && !asset.retired_at ? <Button variant='outline' asChild><Link href={'/assets/' + asset.id + '/maintenance/create'}>Add Maintenance</Link></Button> : null}
           {canMeter && !asset.retired_at ? <Button variant='outline' asChild><Link href={'/assets/' + asset.id + '/meter-readings/create'}>Add Meter Reading</Link></Button> : null}
