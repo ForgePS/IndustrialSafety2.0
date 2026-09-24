@@ -76,6 +76,12 @@ const ForgeAiPage = async ({
       canManageKnowledge={runtime.access.effective.some(
         permission => permission.permissionKey === 'forge_ai.manage_knowledge' && permission.allowed
       )}
+      canManageAi={runtime.access.effective.some(
+        permission => permission.permissionKey === 'forge_ai.manage' && permission.allowed
+      )}
+      canViewUsage={runtime.access.effective.some(
+        permission => permission.permissionKey === 'forge_ai.view_usage' && permission.allowed
+      )}
     />
   )
 }
