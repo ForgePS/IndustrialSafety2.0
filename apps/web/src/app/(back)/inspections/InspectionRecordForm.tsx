@@ -182,7 +182,7 @@ const InspectionRecordForm = ({
         return
       }
 
-      toast('success', result.message || 'Inspection saved.')
+      toast('success', 'message' in result ? String(result.message) : 'Inspection saved.')
 
       if (!inspectionId && 'id' in result && result.id) {
         router.push('/inspections/' + result.id)
