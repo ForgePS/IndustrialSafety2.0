@@ -189,7 +189,7 @@ const TrainingRecordForm = ({
         return
       }
 
-      toast('success', result.message || 'Training record saved.')
+      toast('success', 'message' in result ? String(result.message) : 'Training record saved.')
 
       if (mode === 'course' && !courseId && 'id' in result && result.id) {
         router.push(`/training/courses/${result.id}`)
