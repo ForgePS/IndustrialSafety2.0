@@ -2,7 +2,7 @@
 
 import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
-import { TbArchive, TbCheck, TbMessagePlus, TbShieldCheck } from 'react-icons/tb'
+import { TbArchive, TbCheck, TbMessagePlus, TbShieldCheck, TbX } from 'react-icons/tb'
 import { Button } from '@repo/ui/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@repo/ui/components/ui/card'
 import { Label } from '@repo/ui/components/ui/label'
@@ -11,6 +11,7 @@ import { toast } from '@repo/ui/utils/toast'
 import {
   addCorrectiveActionComment,
   archiveCorrectiveAction,
+  cancelCorrectiveAction,
   closeCorrectiveAction,
   submitCorrectiveActionForVerification,
   verifyCorrectiveAction
@@ -40,8 +41,10 @@ const CorrectiveActionControls = ({
     useState<'effective' | 'ineffective' | 'follow_up_required'>('effective')
   const [verificationNotes, setVerificationNotes] = useState('')
   const [closureNotes, setClosureNotes] = useState('')
+  const [cancellationNotes, setCancellationNotes] = useState('')
   const [verifyOpen, setVerifyOpen] = useState(false)
   const [closeOpen, setCloseOpen] = useState(false)
+  const [cancelOpen, setCancelOpen] = useState(false)
 
   const runSubmit = () => {
     if (!window.confirm('Submit this Corrective Action for independent verification?')) return
@@ -94,6 +97,25 @@ const CorrectiveActionControls = ({
       toast('success', result.message)
       setCloseOpen(false)
       setClosureNotes('')
+      router.refresh()
+    })
+  }
+
+  const runCancel = () => {
+    startTransition(async () => {
+      const result = await cancelCorrectiveAction({
+        correctiveActionId,
+        cancellationNotes
+      })
+
+      if ('error' in result) {
+        toast('error', result.error || 'Unable to cancel Corrective Action.')
+        return
+      }
+
+      toast('success', result.message)
+      setCancelOpen(false)
+      setCancellationNotes('')
       router.refresh()
     })
   }
@@ -162,6 +184,21 @@ const CorrectiveActionControls = ({
                 <Button onClick={() => setCloseOpen(value => !value)} disabled={pending}>
                   <TbCheck />
                   Close Corrective Action
+                </Button>
+              ) : null}
+
+              {canClose && ['open', 'in_progress', 'pending_verification'].includes(status) ? (
+                <Button
+                  variant='outline'
+                  onClick={() => {
+                    setCancelOpen(value => !value)
+                    setCloseOpen(false)
+                    setVerifyOpen(false)
+                  }}
+                  disabled={pending}
+                >
+                  <TbX />
+                  Cancel Corrective Action
                 </Button>
               ) : null}
 
@@ -243,6 +280,37 @@ const CorrectiveActionControls = ({
                     disabled={pending}
                   >
                     Cancel
+                  </Button>
+                </div>
+              </div>
+            ) : null}
+
+            {cancelOpen ? (
+              <div className='rounded-lg border p-4'>
+                <Label htmlFor='capa-cancellation-notes'>Cancellation Notes</Label>
+                <Textarea
+                  id='capa-cancellation-notes'
+                  className='mt-2'
+                  rows={4}
+                  value={cancellationNotes}
+                  onChange={event => setCancellationNotes(event.target.value)}
+                  placeholder='Document why this Corrective Action is being canceled...'
+                  disabled={pending}
+                />
+                <div className='mt-3 flex gap-2'>
+                  <Button
+                    variant='destructive'
+                    onClick={runCancel}
+                    disabled={pending || !cancellationNotes.trim()}
+                  >
+                    Confirm Cancellation
+                  </Button>
+                  <Button
+                    variant='outline'
+                    onClick={() => setCancelOpen(false)}
+                    disabled={pending}
+                  >
+                    Back
                   </Button>
                 </div>
               </div>

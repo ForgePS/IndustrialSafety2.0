@@ -910,6 +910,103 @@ export const closeCorrectiveAction = async ({
   return { message: 'Corrective Action closed.' }
 }
 
+export const cancelCorrectiveAction = async ({
+  correctiveActionId,
+  cancellationNotes
+}: {
+  correctiveActionId: string
+  cancellationNotes: string
+}) => {
+  const context = await requireTenantPermission('corrective_actions.close')
+  const organizationId = context.activeOrganization.id
+  const supabase = createServiceRoleClient() as any
+  const before = await loadCorrectiveAction({ supabase, organizationId, correctiveActionId })
+
+  if (!before) return { error: 'Corrective Action not found.' }
+  if (before.archived_at) return { error: 'Archived Corrective Actions cannot be canceled.' }
+  if (['closed', 'canceled'].includes(before.status)) {
+    return { error: 'This Corrective Action is already closed or canceled.' }
+  }
+
+  const allowed = await correctiveActionWithinScope({
+    organizationId,
+    userId: context.user.id,
+    scope: context.permission.scope,
+    action: before
+  })
+  if (!allowed) return { error: 'This Corrective Action is outside your cancel scope.' }
+
+  const notes = cancellationNotes.trim()
+  if (!notes) return { error: 'Cancellation notes are required.' }
+
+  const now = new Date().toISOString()
+  const { data: after, error } = await supabase
+    .from('forge_corrective_actions')
+    .update({
+      status: 'canceled',
+      closure_notes: notes,
+      closed_at: now,
+      closed_by: context.user.id,
+      updated_by: context.user.id,
+      updated_at: now
+    })
+    .eq('id', correctiveActionId)
+    .eq('organization_id', organizationId)
+    .select('*')
+    .single()
+
+  if (error || !after) return { error: error?.message || 'Unable to cancel Corrective Action.' }
+
+  if (after.linked_task_id) {
+    await supabase
+      .from('forge_tasks')
+      .update({
+        status: 'canceled',
+        completed_at: null,
+        completed_by: null,
+        updated_by: context.user.id,
+        updated_at: now
+      })
+      .eq('organization_id', organizationId)
+      .eq('id', after.linked_task_id)
+
+    await taskActivity({
+      supabase,
+      organizationId,
+      taskId: after.linked_task_id,
+      userId: context.user.id,
+      type: 'canceled_from_capa',
+      message: 'Task canceled because the linked Corrective Action was canceled.'
+    })
+  }
+
+  await activity({
+    supabase,
+    organizationId,
+    correctiveActionId,
+    userId: context.user.id,
+    type: 'canceled',
+    message: 'Corrective Action canceled.'
+  })
+
+  await audit({
+    supabase,
+    actorUserId: context.user.id,
+    organizationId,
+    action: 'corrective_action.canceled',
+    entityId: correctiveActionId,
+    before,
+    after
+  })
+
+  revalidatePath('/corrective-actions')
+  revalidatePath('/corrective-actions/' + correctiveActionId)
+  revalidatePath('/tasks')
+  if (after.linked_task_id) revalidatePath('/tasks/' + after.linked_task_id)
+
+  return { message: 'Corrective Action canceled.' }
+}
+
 export const archiveCorrectiveAction = async (correctiveActionId: string) => {
   const context = await requireTenantPermission('corrective_actions.archive')
   const organizationId = context.activeOrganization.id
