@@ -11,7 +11,24 @@ import { correctiveActionWithinScope } from '@/lib/forgeCorrectiveActions'
 import { getEffectiveForm } from '@/lib/forgeForms'
 import { requireTenantPermission } from '@/lib/forgeTenantAuth'
 
-export type CorrectiveActionFormValues = Record<string, string | boolean | null>
+export type CorrectiveActionFormValues = Record<string, string | boolean | number | null>
+
+export type CorrectiveActionUpdateResult =
+  | {
+      ok: true
+      success?: true
+      id: string
+      message: string
+      duplicate?: boolean
+      rowVersion: number
+      status: string
+    }
+  | {
+      ok?: false
+      success?: false
+      error: string
+      conflict?: boolean
+    }
 
 const cleanText = (value: unknown) => {
   if (typeof value !== 'string') return null
@@ -449,39 +466,47 @@ export const updateCorrectiveAction = async ({
   expectedRowVersion: number
   expectedStatus: string
   requestId: string
-}) => {
+}): Promise<CorrectiveActionUpdateResult> => {
   const context = await requireTenantPermission('corrective_actions.edit')
   const organizationId = context.activeOrganization.id
   const validation = await validateCorrectiveActionForm({ organizationId, values })
 
-  if ('error' in validation) return validation
+  if ('error' in validation && validation.error) {
+    return { ok: false as const, error: validation.error }
+  }
 
   if (!requestId || !String(requestId).trim()) {
-    return { error: 'Missing request identity. Refresh and try again.' }
+    return { ok: false as const, error: 'Missing request identity. Refresh and try again.' }
   }
 
   if (!Number.isFinite(expectedRowVersion) || expectedRowVersion < 1) {
-    return { error: 'Missing record version. Refresh and try again.' }
+    return { ok: false as const, error: 'Missing record version. Refresh and try again.' }
   }
 
   const supabase = createServiceRoleClient() as any
   const before = await loadCorrectiveAction({ supabase, organizationId, correctiveActionId })
 
-  if (!before) return { error: 'Corrective Action not found.' }
-  if (before.archived_at) return { error: 'Archived Corrective Actions are read-only.' }
+  if (!before) return { ok: false as const, error: 'Corrective Action not found.' }
+  if (before.archived_at) {
+    return { ok: false as const, error: 'Archived Corrective Actions are read-only.' }
+  }
 
   if (
     before.row_version !== expectedRowVersion ||
     before.status !== expectedStatus
   ) {
     return {
-      error: 'This Corrective Action changed. Refresh and try again.',
-      conflict: true
+      ok: false as const,
+      error: 'This record changed after you opened it. Refresh the record before saving your changes.',
+      conflict: true as const
     }
   }
 
   if (!['open', 'in_progress'].includes(before.status)) {
-    return { error: 'This Corrective Action is read-only in its current workflow status.' }
+    return {
+      ok: false as const,
+      error: 'This Corrective Action is read-only in its current workflow status.'
+    }
   }
 
   const mayEdit = await correctiveActionWithinScope({
@@ -490,11 +515,13 @@ export const updateCorrectiveAction = async ({
     scope: context.permission.scope,
     action: before
   })
-  if (!mayEdit) return { error: 'This Corrective Action is outside your edit scope.' }
+  if (!mayEdit) {
+    return { ok: false as const, error: 'This Corrective Action is outside your edit scope.' }
+  }
 
   const payload = buildPayload(values)
   if (!payload.title || !payload.description) {
-    return { error: 'Title and Issue / Nonconformance are required.' }
+    return { ok: false as const, error: 'Title and Issue / Nonconformance are required.' }
   }
 
   const assignmentError = await validateOrgAssignment({
@@ -503,14 +530,16 @@ export const updateCorrectiveAction = async ({
     locationId: payload.location_id,
     divisionId: payload.division_id
   })
-  if (assignmentError) return { error: assignmentError }
+  if (assignmentError) return { ok: false as const, error: assignmentError }
 
   const assignee = await resolveAssignee({
     supabase,
     organizationId,
     personnelId: payload.assigned_personnel_id
   })
-  if ('error' in assignee) return assignee
+  if ('error' in assignee && assignee.error) {
+    return { ok: false as const, error: assignee.error }
+  }
 
   const assignmentChanged =
     payload.assigned_personnel_id !== before.assigned_personnel_id ||
@@ -523,7 +552,10 @@ export const updateCorrectiveAction = async ({
     )
 
     if (!assignPermission) {
-      return { error: 'You do not have permission to change Corrective Action assignment.' }
+      return {
+        ok: false as const,
+        error: 'You do not have permission to change Corrective Action assignment.'
+      }
     }
 
     const assignmentAllowed = await correctiveActionWithinScope({
@@ -540,7 +572,10 @@ export const updateCorrectiveAction = async ({
     })
 
     if (!assignmentAllowed) {
-      return { error: 'The new Corrective Action assignment is outside your assignment scope.' }
+      return {
+        ok: false as const,
+        error: 'The new Corrective Action assignment is outside your assignment scope.'
+      }
     }
   }
 
@@ -592,13 +627,20 @@ export const updateCorrectiveAction = async ({
 
   if (updated.conflict) {
     return {
-      error: updated.error || 'This Corrective Action changed. Refresh and try again.',
-      conflict: true
+      ok: false as const,
+      error: 'This record changed after you opened it. Refresh the record before saving your changes.',
+      conflict: true as const
     }
   }
 
   if (updated.error || !updated.result?.ok) {
-    return { error: updated.error || 'Unable to update Corrective Action.' }
+    return { ok: false as const, error: updated.error || 'Unable to update Corrective Action.' }
+  }
+
+  const nextRowVersion = Number(updated.result.row_version)
+  const nextStatus = String(updated.result.capa_status || '')
+  if (!Number.isFinite(nextRowVersion) || nextRowVersion < 1 || !nextStatus) {
+    return { ok: false as const, error: 'Update succeeded but concurrency tokens were missing.' }
   }
 
   revalidatePath('/corrective-actions')
@@ -607,12 +649,15 @@ export const updateCorrectiveAction = async ({
   if (before.linked_task_id) revalidatePath('/tasks/' + before.linked_task_id)
 
   return {
+    ok: true as const,
+    success: true as const,
+    id: correctiveActionId,
     message: updated.result.duplicate
       ? 'Corrective Action update already applied.'
       : 'Corrective Action updated.',
     duplicate: Boolean(updated.result.duplicate),
-    rowVersion: updated.result.row_version,
-    status: updated.result.capa_status
+    rowVersion: nextRowVersion,
+    status: nextStatus
   }
 }
 

@@ -1,6 +1,6 @@
 'use client'
 
-import { useMemo, useRef, useState, useTransition } from 'react'
+import { useEffect, useMemo, useRef, useState, useTransition } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { Button } from '@repo/ui/components/ui/button'
@@ -11,6 +11,9 @@ import { Textarea } from '@repo/ui/components/ui/textarea'
 import { toast } from '@repo/ui/utils/toast'
 import { createCorrectiveAction, updateCorrectiveAction } from './actions'
 import type { CorrectiveActionFormValues } from './actions'
+
+const CONFLICT_MESSAGE =
+  'This record changed after you opened it. Refresh the record before saving your changes.'
 
 type Field = {
   id: string
@@ -91,8 +94,29 @@ const CorrectiveActionRecordForm = ({
     return next
   })
 
-  const expectedRowVersion = Number(initialValues.row_version || 1)
-  const expectedStatus = String(initialValues.status || 'open')
+  // Authoritative client concurrency tokens — adopt server returns; never guess.
+  // Refs are the source of truth for the next save (sync); state drives UI attrs.
+  const currentRowVersionRef = useRef(Number(initialValues.row_version || 1))
+  const currentStatusRef = useRef(String(initialValues.status || 'open'))
+  const [currentRowVersion, setCurrentRowVersion] = useState(
+    () => currentRowVersionRef.current
+  )
+  const [currentStatus, setCurrentStatus] = useState(() => currentStatusRef.current)
+
+  // Adopt newer tokens from SSR refresh without moving version backwards.
+  useEffect(() => {
+    const incomingVersion = Number(initialValues.row_version || 0)
+    if (!Number.isFinite(incomingVersion) || incomingVersion < 1) return
+    if (incomingVersion > currentRowVersionRef.current) {
+      currentRowVersionRef.current = incomingVersion
+      setCurrentRowVersion(incomingVersion)
+      if (initialValues.status) {
+        const nextStatus = String(initialValues.status)
+        currentStatusRef.current = nextStatus
+        setCurrentStatus(nextStatus)
+      }
+    }
+  }, [initialValues.row_version, initialValues.status])
 
   const sections = useMemo(() => {
     const map = new Map<string, { label: string; fields: Field[] }>()
@@ -236,21 +260,37 @@ const CorrectiveActionRecordForm = ({
         ? await updateCorrectiveAction({
             correctiveActionId,
             values,
-            expectedRowVersion,
-            expectedStatus,
+            expectedRowVersion: currentRowVersionRef.current,
+            expectedStatus: currentStatusRef.current,
             requestId: submissionRequestIdRef.current || ''
           })
         : await createCorrectiveAction(values)
 
       if ('error' in result) {
         if ('conflict' in result && result.conflict) {
+          // New logical attempt after conflict — rotate request id; keep dirty field values.
           submissionRequestIdRef.current = null
-          toast('error', result.error || 'This Corrective Action changed. Refresh and try again.')
+          toast('error', CONFLICT_MESSAGE)
           router.refresh()
           return
         }
+        // Validation/transient errors keep the same request id for retry of this submission.
         toast('error', result.error || 'Unable to save Corrective Action.')
         return
+      }
+
+      // Adopt authoritative server tokens BEFORE clearing request id / allowing next save.
+      if (
+        correctiveActionId &&
+        'rowVersion' in result &&
+        typeof result.rowVersion === 'number' &&
+        'status' in result &&
+        typeof result.status === 'string'
+      ) {
+        currentRowVersionRef.current = result.rowVersion
+        currentStatusRef.current = result.status
+        setCurrentRowVersion(result.rowVersion)
+        setCurrentStatus(result.status)
       }
 
       submissionRequestIdRef.current = null
@@ -269,7 +309,11 @@ const CorrectiveActionRecordForm = ({
   }
 
   return (
-    <div className='flex flex-col gap-6'>
+    <div
+      className='flex flex-col gap-6'
+      data-capa-row-version={currentRowVersion}
+      data-capa-status={currentStatus}
+    >
       {sections.map(([sectionKey, section]) => (
         <Card key={sectionKey}>
           <CardHeader>
@@ -297,7 +341,7 @@ const CorrectiveActionRecordForm = ({
 
       <div className='flex flex-wrap gap-3'>
         {!readOnly ? (
-          <Button onClick={save} disabled={pending}>
+          <Button onClick={save} disabled={pending} data-testid='capa-save'>
             {pending ? 'Saving...' : form.submitLabel}
           </Button>
         ) : null}

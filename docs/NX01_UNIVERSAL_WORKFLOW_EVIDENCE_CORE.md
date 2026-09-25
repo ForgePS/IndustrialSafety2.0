@@ -1,6 +1,6 @@
 # NX-01 — Universal Workflow + Shared Evidence Core
 
-**Status:** NX-01 + NX-01H + NX-01R + NX-01R2 on `codex/nx01-universal-workflow-evidence-core`  
+**Status:** NX-01 + NX-01H + NX-01R + NX-01R2 + NX-01R3 on `codex/nx01-universal-workflow-evidence-core`  
 **Baseline:** `forge-creator-2.0` @ `19ec04e`  
 **Migrations:**
 - `20260924330000_forge_universal_workflow_core.sql`
@@ -101,6 +101,8 @@ Feature `workflow_core` entitled on `internal-demo` / `enterprise`. Permissions 
 | NX-01H hardening | `node apps/web/tests/nx01h-hardening-db.cjs` |
 | NX-01R remediation | `node apps/web/tests/nx01r-remediation-db.cjs` |
 | NX-01R2 CAPA transactional | `node apps/web/tests/nx01r2-capa-transaction-db.cjs` |
+| NX-01R3 client concurrency | `node apps/web/tests/nx01r3-capa-client-concurrency-db.cjs` |
+| NX-01R3 Playwright | `pnpm exec playwright test apps/web/tests/nx01r3-capa-client-concurrency.spec.cjs` |
 | Playwright NX-01 | `pnpm exec playwright test apps/web/tests/workflow-core-smoke.spec.cjs --workers=1` |
 | Playwright Creator workflows | `pnpm exec playwright test apps/web/tests/creator-workflows-smoke.spec.cjs --workers=1` |
 | Regressions | support / corrective-actions / incident-equipment smokes |
@@ -164,11 +166,44 @@ Field-only edits still write CAPA fields + row_version + module/shared activity 
 **Required invariant for form saves:** when `linked_task_id` is set, task field/status sync and task activity are included in `forge_update_capa_transactionally`. Lifecycle-only button transitions continue to sync tasks after the lifecycle RPC (adjacent) and emit outbox for later reconciliation if needed. Async outbox consumer remains deferred for non-form paths.
 
 ### Stale-write / conflict UX
-Stale forms receive a conflict error (“This Corrective Action changed. Refresh and try again.”) without applying fields or reverting lifecycle status. UI clears the submission request id and refreshes.
+Stale forms receive a conflict error (“This record changed after you opened it. Refresh the record before saving your changes.”) without applying fields or reverting lifecycle status. UI clears the submission request id and refreshes. Dirty field values are retained until the user refreshes.
 
 ### Bugbot findings remediated
 - Form save can revert CAPA status — fixed (status omitted from field updates; row_version guards)
 - Failed start-work skips field audit — fixed (single transactional command)
+
+## NX-01R3 Client Concurrency Synchronization
+
+### Server-authoritative concurrency tokens
+Successful `updateCorrectiveAction` returns a typed contract:
+
+```ts
+{ ok: true, id, message, rowVersion: number, status: string }
+```
+
+or `{ ok: false, error, conflict?: true }`. Tokens are post-transaction values from `forge_update_capa_transactionally` (`row_version` / `capa_status`), never pre-transaction guesses.
+
+### Local row version / status state
+`CorrectiveActionRecordForm` keeps `currentRowVersion` / `currentStatus` (UI) and matching refs as the save-time source of truth. Initialized from the loaded record. Every save sends `expectedRowVersion = currentRowVersionRef.current` and `expectedStatus = currentStatusRef.current`. The client never increments version locally and never infers `in_progress` from field content.
+
+### Sequential-save behavior
+After success, the form adopts `result.rowVersion` / `result.status` **before** clearing the submission request id. A same-browser Edit → Save → Edit → Save flow therefore uses N, then N+1, then N+2 without false conflicts. `router.refresh()` may refresh SSR props but is not required for concurrency correctness.
+
+### Prop refresh synchronization
+If SSR later provides a newer `initialValues.row_version`, local tokens advance only when the incoming version is greater than the current local version (never backwards).
+
+### True stale-browser behavior
+Two sessions at version N: Browser A saves → local N+1; Browser B still at N → save CONFLICT. Browser B must not overwrite A. Conflict UX shows the refresh message, retains dirty local fields, and does not auto-resubmit stale values against the newer version.
+
+### Request ID lifecycle
+- Before submission: mint UUID if none.
+- Retries of the same unresolved attempt: reuse the same id.
+- After successful token adoption: clear the id.
+- On conflict: clear/rotate so the next user save is a new logical request.
+
+### Tests
+- `apps/web/tests/nx01r3-capa-client-concurrency.spec.cjs` — sequential field saves, lifecycle-then-field, two-browser stale conflict
+- `apps/web/tests/nx01r3-capa-client-concurrency-db.cjs` — returned rowVersion/status contract + client source audit
 
 ## Known remaining limitations
 
