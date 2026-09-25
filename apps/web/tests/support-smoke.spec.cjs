@@ -134,7 +134,7 @@ test('customer support end-to-end smoke test', async ({ browser }) => {
   await admin.getByRole('button', { name: 'Save changes' }).click()
   await expect(admin.getByText('Request updated.')).toBeVisible()
   await admin.reload()
-  await expect(admin.getByText('resolved', { exact: true })).toBeVisible()
+  await expect(admin.getByLabel('Status')).toHaveValue('resolved')
 
   // Customer can see public support content, but never internal staff content.
   await customer.goto(ticketUrl)
