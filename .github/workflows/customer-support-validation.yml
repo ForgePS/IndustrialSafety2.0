@@ -38,3 +38,141 @@ jobs:
       - run: pnpm install --frozen-lockfile
       - run: pnpm --filter forge-industrial-safety-2.0-web type-check
       - run: pnpm --filter forge-industrial-safety-2.0-web build
+
+  support-smoke:
+    needs:
+      - database
+      - web
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: supabase/setup-cli@v2
+        with:
+          version: 2.108.0
+
+      - name: Start clean local Supabase
+        working-directory: apps/web
+        run: |
+          supabase start
+          supabase db reset
+
+      - name: Export local Supabase environment
+        working-directory: apps/web
+        shell: bash
+        run: |
+          eval "$(supabase status -o env)"
+          echo "NEXT_PUBLIC_SUPABASE_URL=${API_URL}" >> "$GITHUB_ENV"
+          echo "NEXT_PUBLIC_SUPABASE_ANON_KEY=${ANON_KEY}" >> "$GITHUB_ENV"
+          echo "SUPABASE_SERVICE_ROLE_KEY=${SERVICE_ROLE_KEY}" >> "$GITHUB_ENV"
+          echo "SMOKE_SERVICE_ROLE_KEY=${SERVICE_ROLE_KEY}" >> "$GITHUB_ENV"
+          echo "SMOKE_SUPABASE_URL=${API_URL}" >> "$GITHUB_ENV"
+          echo "NEXT_PUBLIC_APP_URL=http://127.0.0.1:3000" >> "$GITHUB_ENV"
+          echo "NEXT_PUBLIC_APP_DOMAIN=127.0.0.1" >> "$GITHUB_ENV"
+          echo "NEXT_PUBLIC_AUTH_PASSWORD=true" >> "$GITHUB_ENV"
+          echo "NEXT_PUBLIC_AUTH_MAGIC_LINK=false" >> "$GITHUB_ENV"
+          echo "NEXT_PUBLIC_APP_NAME=Forge Industrial Safety 2.0" >> "$GITHUB_ENV"
+          echo "NEXT_PUBLIC_APP_TITLE=%s | Forge Industrial Safety 2.0" >> "$GITHUB_ENV"
+          echo "NEXT_PUBLIC_APP_DESCRIPTION=Forge Industrial Safety 2.0 support smoke test" >> "$GITHUB_ENV"
+          echo "SESSION_SECRET=forge-ci-support-smoke-secret" >> "$GITHUB_ENV"
+          echo "SMOKE_APP_URL=http://127.0.0.1:3000" >> "$GITHUB_ENV"
+
+      - name: Seed support isolation fixtures
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          api="${SMOKE_SUPABASE_URL}/rest/v1"
+          auth_header="Authorization: Bearer ${SMOKE_SERVICE_ROLE_KEY}"
+          key_header="apikey: ${SMOKE_SERVICE_ROLE_KEY}"
+
+          curl --fail-with-body --silent --show-error \
+            -X POST "${api}/organizations" \
+            -H "${auth_header}" \
+            -H "${key_header}" \
+            -H "Content-Type: application/json" \
+            -H "Prefer: resolution=merge-duplicates,return=minimal" \
+            -d '{
+              "id":"30000000-0000-4000-8000-000000000100",
+              "name":"Smoke Test Other Tenant",
+              "slug":"smoke-test-other-tenant",
+              "status":"active",
+              "created_by":"20000000-0000-4000-8000-000000000001"
+            }'
+
+          curl --fail-with-body --silent --show-error \
+            -X POST "${api}/forge_support_tickets" \
+            -H "${auth_header}" \
+            -H "${key_header}" \
+            -H "Content-Type: application/json" \
+            -H "Prefer: resolution=merge-duplicates,return=minimal" \
+            -d '{
+              "id":"30000000-0000-4000-8000-000000000201",
+              "organization_id":"20000000-0000-4000-8000-000000000100",
+              "ticket_number":"SUP-SMOKE-ADMIN",
+              "subject":"Admin-only support ticket",
+              "description":"Support smoke fixture owned by the local Forge admin account.",
+              "category":"general",
+              "priority":"normal",
+              "status":"new",
+              "requester_user_id":"20000000-0000-4000-8000-000000000001"
+            }'
+
+          curl --fail-with-body --silent --show-error \
+            -X POST "${api}/forge_support_tickets" \
+            -H "${auth_header}" \
+            -H "${key_header}" \
+            -H "Content-Type: application/json" \
+            -H "Prefer: resolution=merge-duplicates,return=minimal" \
+            -d '{
+              "id":"30000000-0000-4000-8000-000000000202",
+              "organization_id":"30000000-0000-4000-8000-000000000100",
+              "ticket_number":"SUP-SMOKE-FOREIGN",
+              "subject":"Foreign tenant support ticket",
+              "description":"Support smoke fixture used to verify direct cross-tenant access is denied.",
+              "category":"general",
+              "priority":"normal",
+              "status":"new",
+              "requester_user_id":"20000000-0000-4000-8000-000000000001"
+            }'
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '22'
+
+      - uses: pnpm/action-setup@v6
+        with:
+          version: 9.13.2
+
+      - run: pnpm install --frozen-lockfile
+
+      - name: Install browser smoke runner
+        working-directory: apps/web
+        run: |
+          pnpm add --save-dev @playwright/test@1.55.0 --lockfile=false
+          pnpm exec playwright install --with-deps chromium
+
+      - name: Start Forge web app
+        shell: bash
+        run: |
+          pnpm --filter forge-industrial-safety-2.0-web dev > /tmp/forge-web.log 2>&1 &
+          echo $! > /tmp/forge-web.pid
+
+          for attempt in $(seq 1 60); do
+            if curl --silent --fail http://127.0.0.1:3000/auth/login >/dev/null; then
+              exit 0
+            fi
+            sleep 2
+          done
+
+          cat /tmp/forge-web.log
+          exit 1
+
+      - name: Run customer support browser smoke test
+        working-directory: apps/web
+        run: pnpm exec playwright test tests/support-smoke.spec.ts --browser=chromium --reporter=line
+
+      - name: Show Forge server log on failure
+        if: failure()
+        run: cat /tmp/forge-web.log || true
