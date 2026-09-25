@@ -175,8 +175,9 @@ const CorrectiveActionControls = ({
 
             {verifyOpen ? (
               <div className='rounded-lg border p-4'>
-                <Label>Verification Result</Label>
+                <Label htmlFor='capa-verification-result'>Verification Result</Label>
                 <select
+                  id='capa-verification-result'
                   className='border-input bg-card text-textSecondary mt-2 h-[38px] w-full rounded-md border px-3'
                   value={verificationResult}
                   onChange={event =>
@@ -191,8 +192,9 @@ const CorrectiveActionControls = ({
                   <option value='follow_up_required'>Follow-up Required</option>
                 </select>
 
-                <Label className='mt-4 block'>Verification Notes</Label>
+                <Label htmlFor='capa-verification-notes' className='mt-4 block'>Verification Notes</Label>
                 <Textarea
+                  id='capa-verification-notes'
                   className='mt-2'
                   rows={4}
                   value={verificationNotes}
@@ -221,8 +223,9 @@ const CorrectiveActionControls = ({
 
             {closeOpen ? (
               <div className='rounded-lg border p-4'>
-                <Label>Closure Notes</Label>
+                <Label htmlFor='capa-closure-notes'>Closure Notes</Label>
                 <Textarea
+                  id='capa-closure-notes'
                   className='mt-2'
                   rows={4}
                   value={closureNotes}
@@ -257,6 +260,8 @@ const CorrectiveActionControls = ({
         </CardHeader>
         <CardContent>
           <Textarea
+            id='capa-comment'
+            aria-label='Corrective Action comment'
             rows={4}
             value={comment}
             onChange={event => setComment(event.target.value)}
