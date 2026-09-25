@@ -10,7 +10,7 @@ async function signIn(page, email) {
   await page.goto(appUrl + '/auth/login')
   await page.locator('input[type="email"]').fill(email)
   await page.locator('input[type="password"]').fill('ForgeDev2!')
-  await page.locator('button[type="submit"]').click()
+  await page.getByRole('button', { name: /Sign in to Forge Industrial Safety 2\.0/i }).click()
   await page.waitForURL(url => !url.pathname.includes('/auth/login'), { timeout: 20_000 })
 }
 
