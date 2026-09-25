@@ -16,7 +16,7 @@ jobs:
       - uses: actions/checkout@v7
       - uses: supabase/setup-cli@v2
         with:
-          version: 2.117.0
+          version: 2.108.0
       - name: Apply migrations to a fresh local database
         working-directory: apps/web
         run: supabase db start
@@ -41,148 +41,70 @@ jobs:
 
   support-smoke:
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 35
     steps:
       - uses: actions/checkout@v7
-
       - uses: supabase/setup-cli@v2
         with:
-          version: 2.117.0
-
-      - name: Start clean local Supabase
-        working-directory: apps/web
-        shell: bash
-        run: |
-          set -euo pipefail
-          supabase start
-
-          # A reset can occasionally finish the migration/seed work but receive a
-          # transient 502 while local containers restart. Retry once after the
-          # services settle instead of treating that transport error as a test failure.
-          if ! supabase db reset; then
-            echo "Initial reset returned non-zero; waiting for local Supabase to settle before retrying."
-            sleep 12
-            supabase status || true
-            supabase db reset
-          fi
-
-      - name: Export local Supabase environment
-        working-directory: apps/web
-        shell: bash
-        run: |
-          eval "$(supabase status -o env)"
-          echo "NEXT_PUBLIC_SUPABASE_URL=${API_URL}" >> "$GITHUB_ENV"
-          echo "NEXT_PUBLIC_SUPABASE_ANON_KEY=${ANON_KEY}" >> "$GITHUB_ENV"
-          echo "SUPABASE_SERVICE_ROLE_KEY=${SERVICE_ROLE_KEY}" >> "$GITHUB_ENV"
-          echo "SMOKE_SERVICE_ROLE_KEY=${SERVICE_ROLE_KEY}" >> "$GITHUB_ENV"
-          echo "SMOKE_SUPABASE_URL=${API_URL}" >> "$GITHUB_ENV"
-          echo "NEXT_PUBLIC_APP_URL=http://127.0.0.1:3000" >> "$GITHUB_ENV"
-          echo "NEXT_PUBLIC_APP_DOMAIN=127.0.0.1" >> "$GITHUB_ENV"
-          echo "NEXT_PUBLIC_AUTH_PASSWORD=true" >> "$GITHUB_ENV"
-          echo "NEXT_PUBLIC_AUTH_MAGIC_LINK=false" >> "$GITHUB_ENV"
-          echo "NEXT_PUBLIC_I18N_COOKIE_NAME=lang" >> "$GITHUB_ENV"
-          echo "NEXT_PUBLIC_APP_NAME=Forge Industrial Safety 2.0" >> "$GITHUB_ENV"
-          echo "NEXT_PUBLIC_APP_TITLE=%s | Forge Industrial Safety 2.0" >> "$GITHUB_ENV"
-          echo "NEXT_PUBLIC_APP_DESCRIPTION=Forge Industrial Safety 2.0 support smoke test" >> "$GITHUB_ENV"
-          echo "SESSION_SECRET=forge-ci-support-smoke-secret" >> "$GITHUB_ENV"
-          echo "SMOKE_APP_URL=http://127.0.0.1:3000" >> "$GITHUB_ENV"
-
-      - name: Seed support isolation fixtures
-        shell: bash
-        run: |
-          set -euo pipefail
-
-          api="${SMOKE_SUPABASE_URL}/rest/v1"
-          auth_header="Authorization: Bearer ${SMOKE_SERVICE_ROLE_KEY}"
-          key_header="apikey: ${SMOKE_SERVICE_ROLE_KEY}"
-
-          curl --fail-with-body --silent --show-error \
-            -X POST "${api}/organizations" \
-            -H "${auth_header}" \
-            -H "${key_header}" \
-            -H "Content-Type: application/json" \
-            -H "Prefer: resolution=merge-duplicates,return=minimal" \
-            -d '{
-              "id":"30000000-0000-4000-8000-000000000100",
-              "name":"Smoke Test Other Tenant",
-              "slug":"smoke-test-other-tenant",
-              "status":"active",
-              "created_by":"20000000-0000-4000-8000-000000000001"
-            }'
-
-          curl --fail-with-body --silent --show-error \
-            -X POST "${api}/forge_support_tickets" \
-            -H "${auth_header}" \
-            -H "${key_header}" \
-            -H "Content-Type: application/json" \
-            -H "Prefer: resolution=merge-duplicates,return=minimal" \
-            -d '{
-              "id":"30000000-0000-4000-8000-000000000201",
-              "organization_id":"20000000-0000-4000-8000-000000000100",
-              "ticket_number":"SUP-SMOKE-ADMIN",
-              "subject":"Admin-only support ticket",
-              "description":"Support smoke fixture owned by the local Forge admin account.",
-              "category":"general",
-              "priority":"normal",
-              "status":"new",
-              "requester_user_id":"20000000-0000-4000-8000-000000000001"
-            }'
-
-          curl --fail-with-body --silent --show-error \
-            -X POST "${api}/forge_support_tickets" \
-            -H "${auth_header}" \
-            -H "${key_header}" \
-            -H "Content-Type: application/json" \
-            -H "Prefer: resolution=merge-duplicates,return=minimal" \
-            -d '{
-              "id":"30000000-0000-4000-8000-000000000202",
-              "organization_id":"30000000-0000-4000-8000-000000000100",
-              "ticket_number":"SUP-SMOKE-FOREIGN",
-              "subject":"Foreign tenant support ticket",
-              "description":"Support smoke fixture used to verify direct cross-tenant access is denied.",
-              "category":"general",
-              "priority":"normal",
-              "status":"new",
-              "requester_user_id":"20000000-0000-4000-8000-000000000001"
-            }'
-
+          version: 2.108.0
       - uses: actions/setup-node@v7
         with:
           node-version: '22'
-
       - uses: pnpm/action-setup@v6
         with:
           version: 9.13.2
 
       - run: pnpm install --frozen-lockfile
 
-      - name: Install browser smoke runner
+      - name: Start and seed local Supabase
         working-directory: apps/web
         run: |
-          pnpm add --save-dev @playwright/test@1.55.0 --lockfile=false
-          pnpm exec playwright install --with-deps chromium
+          supabase db start
+          supabase db reset
 
-      - name: Start Forge web app
+      - name: Export local application environment
+        working-directory: apps/web
         shell: bash
         run: |
-          pnpm --filter forge-industrial-safety-2.0-web dev > /tmp/forge-web.log 2>&1 &
-          echo $! > /tmp/forge-web.pid
+          eval "$(supabase status -o env)"
+          {
+            echo "NEXT_PUBLIC_SUPABASE_URL=$API_URL"
+            echo "NEXT_PUBLIC_SUPABASE_ANON_KEY=$ANON_KEY"
+            echo "SUPABASE_SERVICE_ROLE_KEY=$SERVICE_ROLE_KEY"
+            echo "NEXT_PUBLIC_APP_URL=http://127.0.0.1:3000"
+            echo "NEXT_PUBLIC_APP_DOMAIN=127.0.0.1"
+            echo "NEXT_PUBLIC_AUTH_PASSWORD=true"
+            echo "NEXT_PUBLIC_AUTH_MAGIC_LINK=false"
+            echo "NEXT_PUBLIC_APP_NAME=Forge Industrial Safety 2.0"
+            echo "NEXT_PUBLIC_APP_TITLE=%s | Forge Industrial Safety 2.0"
+            echo "NEXT_PUBLIC_APP_DESCRIPTION=Forge Industrial Safety 2.0"
+            echo "SESSION_SECRET=forge-support-smoke-session-secret"
+            echo "BASE_URL=http://127.0.0.1:3000"
+          } >> "$GITHUB_ENV"
 
-          for attempt in $(seq 1 60); do
-            if curl --silent --fail http://127.0.0.1:3000/auth/login >/dev/null; then
+      - name: Install browser smoke-test runtime
+        run: |
+          pnpm --filter forge-industrial-safety-2.0-web add -D @playwright/test@1.55.0 --lockfile=false
+          pnpm --filter forge-industrial-safety-2.0-web exec playwright install --with-deps chromium
+
+      - name: Start Forge web application
+        shell: bash
+        run: |
+          nohup pnpm --filter forge-industrial-safety-2.0-web dev > /tmp/forge-web.log 2>&1 &
+          echo $! > /tmp/forge-web.pid
+          for attempt in {1..90}; do
+            if curl --fail --silent http://127.0.0.1:3000/auth/login >/dev/null; then
               exit 0
             fi
             sleep 2
           done
-
           cat /tmp/forge-web.log
           exit 1
 
       - name: Run customer support browser smoke test
         working-directory: apps/web
-        run: pnpm exec playwright test tests/support-smoke.spec.js --browser=chromium --reporter=line
+        run: pnpm exec playwright test e2e/support-smoke.spec.cjs --reporter=line
 
-      - name: Show Forge server log on failure
+      - name: Show Forge web log on failure
         if: failure()
-        run: cat /tmp/forge-web.log || true
-
+        run: cat /tmp/forge-web.log
