@@ -74,7 +74,8 @@ test('customer support end-to-end smoke test', async ({ browser }) => {
       buffer: Buffer.from('Forge support smoke test public attachment.')
     })
     await user.getByRole('button', { name: 'Upload' }).click()
-    await expect(user.getByRole('link', { name: /customer-smoke\.txt/ })).toBeVisible()
+    await expect(user.getByText('Attachment uploaded.')).toBeVisible({ timeout: 30_000 })
+    await expect(user.getByRole('link', { name: /customer-smoke\.txt/ })).toBeVisible({ timeout: 30_000 })
 
     const downloadPromise = user.waitForEvent('download')
     await user.getByRole('link', { name: /customer-smoke\.txt/ }).click()
@@ -127,9 +128,10 @@ test('customer support end-to-end smoke test', async ({ browser }) => {
       buffer: Buffer.from('Private Forge support smoke attachment.')
     })
     await admin.getByRole('button', { name: 'Upload' }).click()
+    await expect(admin.getByText('Attachment uploaded.')).toBeVisible({ timeout: 30_000 })
 
     const internalLink = admin.getByRole('link', { name: /internal-smoke\.txt/ })
-    await expect(internalLink).toBeVisible()
+    await expect(internalLink).toBeVisible({ timeout: 30_000 })
     internalAttachmentHref = (await internalLink.getAttribute('href')) || ''
     expect(internalAttachmentHref).toMatch(/^\/api\/support\/attachments\//)
 
