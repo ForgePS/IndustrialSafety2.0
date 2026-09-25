@@ -7,7 +7,7 @@ async function login(page, email) {
   await page.goto(baseURL + '/auth/login')
   await page.locator('input[name="email"]').fill(email)
   await page.locator('input[name="password"]').fill(password)
-  await page.locator('button[type="submit"]').click()
+  await page.getByRole('button', { name: /Sign in to Forge Industrial Safety 2\.0/i }).click()
   await page.waitForURL(url => !url.pathname.startsWith('/auth/login'), { timeout: 20000 })
 }
 
