@@ -72,6 +72,7 @@ jobs:
           echo "NEXT_PUBLIC_APP_DOMAIN=127.0.0.1" >> "$GITHUB_ENV"
           echo "NEXT_PUBLIC_AUTH_PASSWORD=true" >> "$GITHUB_ENV"
           echo "NEXT_PUBLIC_AUTH_MAGIC_LINK=false" >> "$GITHUB_ENV"
+          echo "NEXT_PUBLIC_I18N_COOKIE_NAME=lang" >> "$GITHUB_ENV"
           echo "NEXT_PUBLIC_APP_NAME=Forge Industrial Safety 2.0" >> "$GITHUB_ENV"
           echo "NEXT_PUBLIC_APP_TITLE=%s | Forge Industrial Safety 2.0" >> "$GITHUB_ENV"
           echo "NEXT_PUBLIC_APP_DESCRIPTION=Forge Industrial Safety 2.0 support smoke test" >> "$GITHUB_ENV"
