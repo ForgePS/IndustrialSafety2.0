@@ -123,7 +123,10 @@ test('customer support end-to-end smoke test', async ({ browser }) => {
   const internalUploadResponse = await internalUploadResponsePromise
   expect(internalUploadResponse.status()).toBe(200)
   await admin.reload()
-  await expect(admin.getByRole('link', { name: new RegExp(internalAttachmentName) })).toBeVisible()
+  const internalAttachment = admin.getByRole('link', { name: new RegExp(internalAttachmentName) })
+  await expect(internalAttachment).toBeVisible()
+  const internalDownloadHref = await internalAttachment.getAttribute('href')
+  expect(internalDownloadHref).toBeTruthy()
 
   await admin.getByLabel('Status').selectOption('resolved')
   await admin.getByLabel('Priority').selectOption('urgent')
@@ -138,6 +141,12 @@ test('customer support end-to-end smoke test', async ({ browser }) => {
   await expect(customer.getByText('Public Forge Support smoke-test reply.')).toBeVisible()
   await expect(customer.getByText('INTERNAL-SMOKE-NOTE-DO-NOT-EXPOSE')).toHaveCount(0)
   await expect(customer.getByText(new RegExp(internalAttachmentName))).toHaveCount(0)
+
+  // UI hiding is not enough: the customer must also be denied if they call the
+  // internal attachment download endpoint directly.
+  const internalDownloadResponse = await customerContext.request.get(baseURL + internalDownloadHref)
+  expect([403, 404]).toContain(internalDownloadResponse.status())
+
   await expect(customer.getByText('Resolved successfully by automated smoke test.')).toBeVisible()
   await expect(customer.getByRole('button', { name: 'Reopen request' })).toBeVisible()
 
@@ -157,8 +166,18 @@ test('customer support end-to-end smoke test', async ({ browser }) => {
     path: '/'
   }])
   const isolated = await isolationContext.newPage()
+
+  // The ticket must disappear from the other tenant's support list.
+  await isolated.goto(baseURL + '/support')
+  await expect(isolated.getByText('Support smoke test ticket')).toHaveCount(0)
+
+  // Direct record navigation must fail in the other tenant.
   await isolated.goto(ticketUrl)
   await expect(isolated.getByText(/404|not found|could not be found/i)).toBeVisible()
+
+  // Direct attachment download must also fail after changing only tenant scope.
+  const isolatedDownloadResponse = await isolationContext.request.get(baseURL + downloadHref)
+  expect([403, 404]).toContain(isolatedDownloadResponse.status())
 
   await isolationContext.close()
   await adminContext.close()
