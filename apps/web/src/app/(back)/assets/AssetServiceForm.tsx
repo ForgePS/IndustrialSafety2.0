@@ -142,7 +142,7 @@ const AssetServiceForm = ({
         return
       }
 
-      toast('success', result.message || 'Record saved.')
+      toast('success', 'message' in result ? String(result.message) : 'Record saved.')
       router.push('/assets/' + assetId)
       router.refresh()
     })

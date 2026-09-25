@@ -62,7 +62,7 @@ export const getEffectiveLookup = async ({
       .maybeSingle()
   ])
 
-  const tenantByBaseId = new Map(
+  const tenantByBaseId = new Map<string, any>(
     (tenantOptions || [])
       .filter((item: any) => item.base_option_id)
       .map((item: any) => [item.base_option_id, item])
@@ -99,8 +99,8 @@ export const getEffectiveLookup = async ({
           icon: item.icon ?? null
         }))
     )
-    .filter(item => item.active)
-    .sort((a, b) => a.sortOrder - b.sortOrder || a.label.localeCompare(b.label))
+    .filter((item: EffectiveLookupOption) => item.active)
+    .sort((a: EffectiveLookupOption, b: EffectiveLookupOption) => a.sortOrder - b.sortOrder || a.label.localeCompare(b.label))
 
   return {
     definition,

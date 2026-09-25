@@ -1032,7 +1032,7 @@ const executeToolValue = async ({
         includeRestricted
       })
 
-      return results.map(item => ({
+      return results.map((item: any) => ({
         record_type: 'forge_knowledge',
         source_title: item.source_title,
         source_type: item.source_type,
@@ -1154,7 +1154,7 @@ export const executeForgeAiTool = async ({
     const count = Array.isArray(value)
       ? value.length
       : value && typeof value === 'object'
-        ? Object.values(value as Record<string, unknown>).reduce(
+        ? Object.values(value as Record<string, unknown>).reduce<number>(
             (sum, item) => sum + (Array.isArray(item) ? item.length : 0),
             0
           )

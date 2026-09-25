@@ -74,7 +74,7 @@ export const getScopedQrCodes = async ({
     })
 
     allowedAssetIds = assets.map((asset: any) => asset.id)
-    if (!allowedAssetIds.length) return []
+    if (allowedAssetIds?.length === 0) return []
   }
 
   let query = supabase

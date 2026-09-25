@@ -31,7 +31,16 @@ type Source = {
   updated_at: string
 }
 
-const blankDraft = {
+type KnowledgeDraft = {
+  title: string
+  description: string
+  sourceType: Source['source_type']
+  sensitivity: Source['sensitivity']
+  sourceReference: string
+  contentText: string
+}
+
+const blankDraft: KnowledgeDraft = {
   title: '',
   description: '',
   sourceType: 'policy' as const,
@@ -46,7 +55,7 @@ const KnowledgeManager = ({ sources }: { sources: Source[] }) => {
   const [selectedId, setSelectedId] = useState<string | null>(sources[0]?.id || null)
   const [creating, setCreating] = useState(sources.length === 0)
   const [newDraft, setNewDraft] = useState(blankDraft)
-  const [drafts, setDrafts] = useState<Record<string, typeof blankDraft>>(
+  const [drafts, setDrafts] = useState<Record<string, KnowledgeDraft>>(
     Object.fromEntries(
       sources.map(source => [
         source.id,

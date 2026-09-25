@@ -23,7 +23,7 @@ export const getEffectiveExperience = async ({
   organizationId: string
   userId: string
   types?: string[]
-}) => {
+}): Promise<EffectiveExperienceElement[]> => {
   const supabase = createServiceRoleClient() as any
 
   let query = supabase
@@ -75,10 +75,10 @@ export const getEffectiveExperience = async ({
         .eq('plan_id', subscription.plan_id)
     : { data: [] }
 
-  const tenantOverrideByElement = new Map((tenantOverrides || []).map((item: any) => [item.element_id, item]))
-  const userPreferenceByElement = new Map((userPreferences || []).map((item: any) => [item.element_id, item]))
-  const planEntitlementByFeature = new Map((planEntitlements || []).map((item: any) => [item.feature_id, item.enabled]))
-  const tenantEntitlementByFeature = new Map((entitlementOverrides || []).map((item: any) => [item.feature_id, item.enabled]))
+  const tenantOverrideByElement = new Map<string, any>((tenantOverrides || []).map((item: any) => [item.element_id, item]))
+  const userPreferenceByElement = new Map<string, any>((userPreferences || []).map((item: any) => [item.element_id, item]))
+  const planEntitlementByFeature = new Map<string, boolean | null>((planEntitlements || []).map((item: any) => [item.feature_id, item.enabled]))
+  const tenantEntitlementByFeature = new Map<string, boolean | null>((entitlementOverrides || []).map((item: any) => [item.feature_id, item.enabled]))
 
   const allowedFeatureKeys = new Set(
     access.effective

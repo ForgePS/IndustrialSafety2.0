@@ -119,7 +119,7 @@ export const getAvailableForgeAiActions = async ({
       .eq('organization_id', organizationId)
   ])
 
-  const overrideByAction = new Map(
+  const overrideByAction = new Map<string, any>(
     (overrides || []).map((item: any) => [item.action_id, item])
   )
 

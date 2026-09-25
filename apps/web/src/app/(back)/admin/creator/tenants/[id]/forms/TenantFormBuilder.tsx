@@ -211,11 +211,11 @@ const TenantFormBuilder = ({
       })
 
       if ('error' in result) {
-        toast('error', result.error || 'Unable to reset form.')
+        toast('error', String(result.error || 'Unable to reset form.'))
         return
       }
 
-      toast('success', result.message)
+      toast('success', String(result.message || 'Form reset.'))
       window.location.reload()
     })
   }
@@ -332,13 +332,13 @@ const TenantFormBuilder = ({
                 <Input className='mt-2' value={formDrafts[selectedForm.id].cancelLabel} onChange={e => setFormDrafts(c => ({...c,[selectedForm.id]:{...c[selectedForm.id],cancelLabel:e.target.value}}))} />
               </div>
 
-              {[
+              {([
                 ['tenantCanHideFieldsOverride','Hide Fields',selectedForm.tenant_can_hide_fields],
                 ['tenantCanReorderFieldsOverride','Reorder Fields',selectedForm.tenant_can_reorder_fields],
                 ['tenantCanChangeRequiredOverride','Change Required',selectedForm.tenant_can_change_required],
                 ['tenantCanChangeInputTypeOverride','Change Input Type',selectedForm.tenant_can_change_input_type],
                 ['tenantCanChangeLookupOverride','Change Dropdown Source',selectedForm.tenant_can_change_lookup]
-              ].map(([key,label,base]) => {
+              ] as const).map(([key,label,base]) => {
                 const val = formDrafts[selectedForm.id][key] as boolean | null
                 return (
                   <div key={String(key)} className='rounded-lg border p-3'>

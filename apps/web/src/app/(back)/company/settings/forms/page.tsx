@@ -24,8 +24,8 @@ const CompanyFormsPage = async () => {
     supabase.from('forge_lookup_definitions').select('id, name').eq('is_active', true).order('name')
   ])
 
-  const formOverrideById = new Map((formOverrides || []).map((item: any) => [item.form_id, item]))
-  const fieldOverrideById = new Map((fieldOverrides || []).map((item: any) => [item.field_id, item]))
+  const formOverrideById = new Map<string, any>((formOverrides || []).map((item: any) => [item.form_id, item]))
+  const fieldOverrideById = new Map<string, any>((fieldOverrides || []).map((item: any) => [item.field_id, item]))
   const fieldsByForm = new Map<string, any[]>()
 
   for (const field of fields || []) {

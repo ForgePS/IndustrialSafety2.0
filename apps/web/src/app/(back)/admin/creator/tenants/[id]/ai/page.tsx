@@ -49,7 +49,7 @@ const TenantForgeAiPage = async ({ params }: { params: Promise<{ id: string }> }
 
   if (!tenant) notFound()
 
-  const overrideByCapability = new Map(
+  const overrideByCapability = new Map<string, any>(
     (overrides || []).map((item: any) => [item.capability_id, item])
   )
 
@@ -63,7 +63,7 @@ const TenantForgeAiPage = async ({ params }: { params: Promise<{ id: string }> }
     }
   })
 
-  const actionOverrideById = new Map(
+  const actionOverrideById = new Map<string, any>(
     (actionOverrides || []).map((item: any) => [item.action_id, item])
   )
 

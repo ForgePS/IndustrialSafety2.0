@@ -159,7 +159,7 @@ const LotoRecordForm = ({
         return
       }
 
-      toast('success', result.message || 'LOTO procedure saved.')
+      toast('success', 'message' in result ? String(result.message) : 'LOTO procedure saved.')
 
       if (!procedureId && 'id' in result && result.id) {
         router.push('/loto/' + result.id)

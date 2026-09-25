@@ -108,7 +108,7 @@ const UserAccessEditor = ({
         overrides: effective.map(permission => ({
           permissionId: permission.permissionId,
           state: overrides[permission.permissionId]?.state || 'inherit',
-          scope: overrides[permission.permissionId]?.scope || null
+          scope: (overrides[permission.permissionId]?.scope || null) as 'own' | 'assigned' | 'location' | 'division' | 'organization' | null
         }))
       })
 

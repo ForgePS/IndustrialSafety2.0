@@ -87,7 +87,7 @@ const provisionDefaultRoles = async (supabase: any, organizationId: string) => {
     .select('id, template_key, forge_role_template_permissions(permission_id, allowed, scope, constraints)')
     .in('template_key', Array.from(new Set(Object.values(templateMap))))
 
-  const templateByKey = new Map((templates || []).map((template: any) => [template.template_key, template]))
+  const templateByKey = new Map<string, any>((templates || []).map((template: any) => [template.template_key, template]))
 
   const grants = (createdRoles || []).flatMap((role: any) => {
     const template = templateByKey.get(templateMap[role.role_key])

@@ -83,10 +83,10 @@ export const getEffectiveTenantAccess = async ({
       : Promise.resolve({ data: [] })
   ])
 
-  const featureByKey = new Map((features || []).map((feature: any) => [feature.feature_key, feature]))
-  const planEntitlementByFeature = new Map((planEntitlements || []).map((item: any) => [item.feature_id, item.enabled]))
-  const tenantOverrideByFeature = new Map((entitlementOverrides || []).map((item: any) => [item.feature_id, item.enabled]))
-  const overrideByPermission = new Map((overrides || []).map((item: any) => [item.permission_id, item]))
+  const featureByKey = new Map<string, any>((features || []).map((feature: any) => [feature.feature_key, feature]))
+  const planEntitlementByFeature = new Map<string, boolean | null>((planEntitlements || []).map((item: any) => [item.feature_id, item.enabled]))
+  const tenantOverrideByFeature = new Map<string, boolean | null>((entitlementOverrides || []).map((item: any) => [item.feature_id, item.enabled]))
+  const overrideByPermission = new Map<string, any>((overrides || []).map((item: any) => [item.permission_id, item]))
 
   const rolePermissionMap = new Map<string, { scope: string | null; roles: string[] }>()
 

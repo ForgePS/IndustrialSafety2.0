@@ -34,7 +34,7 @@ const LotoComponentDeleteButton = ({
         return
       }
 
-      toast('success', result.message)
+      toast('success', 'message' in result ? String(result.message) : 'Saved.')
       window.location.reload()
     })
   }

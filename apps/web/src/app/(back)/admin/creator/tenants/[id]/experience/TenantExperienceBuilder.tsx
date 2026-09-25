@@ -374,11 +374,11 @@ const TenantExperienceBuilder = ({
               <CardDescription>Choose whether this tenant can rename, hide, or reorder this element.</CardDescription>
             </CardHeader>
             <CardContent className='grid gap-4 md:grid-cols-3'>
-              {[
+              {([
                 ['canRenameOverride','Rename',selected.can_rename],
                 ['canHideOverride','Hide / Show',selected.can_hide],
                 ['canReorderOverride','Reorder',selected.can_reorder]
-              ].map(([key,label,platformAllowed]) => {
+              ] as const).map(([key,label,platformAllowed]) => {
                 const value = draft[key as keyof Draft] as boolean | null
                 return (
                   <div key={String(key)} className='rounded-lg border p-4'>

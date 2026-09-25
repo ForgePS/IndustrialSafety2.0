@@ -190,7 +190,7 @@ const TaskRecordForm = ({
         return
       }
 
-      toast('success', result.message || 'Task saved.')
+      toast('success', 'message' in result ? String(result.message) : 'Task saved.')
 
       if (!taskId && 'id' in result && result.id) {
         router.push('/tasks/' + result.id)

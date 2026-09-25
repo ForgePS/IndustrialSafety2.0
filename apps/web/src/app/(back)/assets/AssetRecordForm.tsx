@@ -173,7 +173,7 @@ const AssetRecordForm = ({
         return
       }
 
-      toast('success', result.message || 'Asset saved.')
+      toast('success', 'message' in result ? String(result.message) : 'Asset saved.')
 
       if (!assetId && 'id' in result && result.id) {
         router.push('/assets/' + result.id)

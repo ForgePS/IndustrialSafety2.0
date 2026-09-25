@@ -30,7 +30,7 @@ const ForgeAiSettingsPage = async () => {
     return <div className='rounded-lg border p-6'>Forge AI has not been provisioned for this tenant.</div>
   }
 
-  const overrideByCapability = new Map(
+  const overrideByCapability = new Map<string, any>(
     (overrides || []).map((item: any) => [item.capability_id, item])
   )
 
@@ -48,7 +48,7 @@ const ForgeAiSettingsPage = async () => {
     }
   })
 
-  const actionOverrideById = new Map(
+  const actionOverrideById = new Map<string, any>(
     (actionOverrides || []).map((item: any) => [item.action_id, item])
   )
 

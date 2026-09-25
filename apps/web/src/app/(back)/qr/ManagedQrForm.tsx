@@ -173,7 +173,7 @@ const ManagedQrForm = ({
         return
       }
 
-      toast('success', result.message || 'Managed QR code saved.')
+      toast('success', 'message' in result ? String(result.message) : 'Managed QR code saved.')
 
       if (!qrCodeId && 'id' in result && result.id) {
         router.push('/qr/' + result.id)
