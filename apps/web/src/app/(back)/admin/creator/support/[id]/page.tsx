@@ -11,11 +11,11 @@ export default async function ForgeSupportDetail({params}:{params:Promise<{id:st
  const {data:ticket}=await db.from('forge_support_tickets').select('*').eq('id',id).maybeSingle()
  if(!ticket) notFound()
  const [{data:messages,error:messageError},{data:events,error:eventError},{data:attachments,error:attachmentError},{data:staff,error:staffError}]=await Promise.all([
-  db.from('forge_support_messages').select('id,author_kind,visibility,body,created_at').eq('organization_id',ticket.organization_id).eq('ticket_id',id).order('created_at',{ascending:true}).limit(500),
+  db.from('forge_support_messages').select('id,author_kind,visibility,body,created_at').eq('organization_id',ticket.organization_id).eq('ticket_id',id).order('created_at',{ascending:false}).limit(500),
   db.from('forge_support_events').select('id,event_type,from_value,to_value,detail,created_at').eq('organization_id',ticket.organization_id).eq('ticket_id',id).order('created_at',{ascending:true}).limit(500),
-  db.from('forge_support_attachments').select('id,file_name,visibility,byte_size,created_at').eq('organization_id',ticket.organization_id).eq('ticket_id',id).order('created_at',{ascending:true}).limit(100),
+  db.from('forge_support_attachments').select('id,file_name,visibility,byte_size,created_at').eq('organization_id',ticket.organization_id).eq('ticket_id',id).order('created_at',{ascending:false}).limit(100),
   db.from('forge_platform_users').select('user_id,platform_role').eq('is_active',true).in('platform_role',['forge_owner','forge_creator','forge_support'])
  ])
  if(messageError||eventError||attachmentError||staffError) throw new Error('Unable to load support record.')
- return <SupportConversation staff ticket={ticket} messages={messages||[]} events={events||[]} attachments={attachments||[]} staffUsers={(staff||[]).map((s:any)=>({user_id:s.user_id,label:s.platform_role.replaceAll('_',' ')+' · '+s.user_id.slice(0,8)}))} />
+ return <SupportConversation staff ticket={ticket} messages={[...(messages||[])].reverse()} events={[...(events||[])].reverse()} attachments={[...(attachments||[])].reverse()} staffUsers={(staff||[]).map((s:any)=>({user_id:s.user_id,label:s.platform_role.replaceAll('_',' ')+' · '+s.user_id.slice(0,8)}))} basePath={process.env.BASEPATH||''} />
 }
