@@ -67,7 +67,7 @@ test('customer support end-to-end smoke test', async ({ browser }) => {
   expect(downloadHref).toBeTruthy()
   const downloadResponse = await customerContext.request.get(baseURL + downloadHref)
   expect(downloadResponse.ok()).toBeTruthy()
-  expect(await downloadResponse.body()).toContain(Buffer.from('customer support smoke attachment'))
+  expect((await downloadResponse.body()).toString('utf8')).toContain('customer support smoke attachment')
 
   // Company-wide tenant access: seeded local admin is Company Owner in the same tenant.
   const adminContext = await browser.newContext()
