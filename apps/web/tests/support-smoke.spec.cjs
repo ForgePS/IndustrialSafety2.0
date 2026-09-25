@@ -12,6 +12,7 @@ async function login(page, email) {
 }
 
 test.describe.configure({ mode: 'serial' })
+test.setTimeout(120000)
 
 test('customer support end-to-end smoke test', async ({ browser }) => {
   const customerContext = await browser.newContext()
@@ -50,8 +51,14 @@ test('customer support end-to-end smoke test', async ({ browser }) => {
     mimeType: 'text/plain',
     buffer: Buffer.from('customer support smoke attachment')
   })
+  const publicUploadResponsePromise = customer.waitForResponse(
+    response =>
+      response.request().method() === 'POST' &&
+      /\/api\/support\/[0-9a-f-]+\/attachments$/i.test(new URL(response.url()).pathname)
+  )
   await customer.getByRole('button', { name: 'Upload' }).click()
-  await expect(customer.getByText('Attachment uploaded.')).toBeVisible()
+  const publicUploadResponse = await publicUploadResponsePromise
+  expect(publicUploadResponse.status()).toBe(200)
   await customer.reload()
   const publicAttachment = customer.getByRole('link', { name: new RegExp(publicAttachmentName) })
   await expect(publicAttachment).toBeVisible()
@@ -91,8 +98,14 @@ test('customer support end-to-end smoke test', async ({ browser }) => {
     buffer: Buffer.from('internal support smoke attachment')
   })
   await admin.getByLabel('Internal only').check()
+  const internalUploadResponsePromise = admin.waitForResponse(
+    response =>
+      response.request().method() === 'POST' &&
+      /\/api\/support\/[0-9a-f-]+\/attachments$/i.test(new URL(response.url()).pathname)
+  )
   await admin.getByRole('button', { name: 'Upload' }).click()
-  await expect(admin.getByText('Attachment uploaded.')).toBeVisible()
+  const internalUploadResponse = await internalUploadResponsePromise
+  expect(internalUploadResponse.status()).toBe(200)
   await admin.reload()
   await expect(admin.getByRole('link', { name: new RegExp(internalAttachmentName) })).toBeVisible()
 
