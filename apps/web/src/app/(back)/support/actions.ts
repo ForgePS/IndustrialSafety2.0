@@ -124,10 +124,13 @@ export async function staffReplyToSupportTicket(ticketId:string,body:string,inte
   })
   if(error) return {error:error.message}
   if(!internal) {
-    await db.from('forge_support_tickets').update({
-      first_responded_at:ticket.first_responded_at||new Date().toISOString(),
-      status:'waiting_on_customer',updated_at:new Date().toISOString()
-    }).eq('id',ticketId).eq('organization_id',ticket.organization_id)
+    const now=new Date().toISOString()
+    if(!ticket.first_responded_at) {
+      await db.from('forge_support_tickets').update({first_responded_at:now})
+        .eq('id',ticketId).eq('organization_id',ticket.organization_id).is('first_responded_at',null)
+    }
+    await db.from('forge_support_tickets').update({status:'waiting_on_customer',updated_at:now})
+      .eq('id',ticketId).eq('organization_id',ticket.organization_id)
   } else {
     await db.from('forge_support_tickets').update({updated_at:new Date().toISOString()})
       .eq('id',ticketId).eq('organization_id',ticket.organization_id)
