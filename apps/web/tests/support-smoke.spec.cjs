@@ -117,14 +117,21 @@ test('customer support end-to-end smoke test', async ({ browser }) => {
   await customer.reload()
   await expect(customer.getByText('waiting on forge', { exact: true })).toBeVisible()
 
-  // A user who belongs only to another tenant must not be able to open tenant-one ticket URLs.
-  const outsiderContext = await browser.newContext()
-  const outsider = await outsiderContext.newPage()
-  await login(outsider, 'outsider@forge2.local')
-  await outsider.goto(ticketUrl)
-  await expect(outsider.getByText(/404|not found|could not be found/i)).toBeVisible()
+  // Tenant isolation: use the same authenticated user, switch only the active tenant,
+  // then prove the tenant-one ticket URL resolves as not found.
+  const customerState = await customerContext.storageState()
+  const isolationContext = await browser.newContext({ storageState: customerState })
+  await isolationContext.addCookies([{
+    name: 'forge-active-organization',
+    value: '30000000-0000-4000-8000-000000000100',
+    domain: '127.0.0.1',
+    path: '/'
+  }])
+  const isolated = await isolationContext.newPage()
+  await isolated.goto(ticketUrl)
+  await expect(isolated.getByText(/404|not found|could not be found/i)).toBeVisible()
 
-  await outsiderContext.close()
+  await isolationContext.close()
   await adminContext.close()
   await customerContext.close()
 })
