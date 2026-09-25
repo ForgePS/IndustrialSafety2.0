@@ -16,7 +16,7 @@ jobs:
       - uses: actions/checkout@v7
       - uses: supabase/setup-cli@v2
         with:
-          version: 2.108.0
+          version: 2.117.0
       - name: Apply migrations to a fresh local database
         working-directory: apps/web
         run: supabase db start
@@ -50,13 +50,24 @@ jobs:
 
       - uses: supabase/setup-cli@v2
         with:
-          version: 2.108.0
+          version: 2.117.0
 
       - name: Start clean local Supabase
         working-directory: apps/web
+        shell: bash
         run: |
+          set -euo pipefail
           supabase start
-          supabase db reset
+
+          # A reset can occasionally finish the migration/seed work but receive a
+          # transient 502 while local containers restart. Retry once after the
+          # services settle instead of treating that transport error as a test failure.
+          if ! supabase db reset; then
+            echo "Initial reset returned non-zero; waiting for local Supabase to settle before retrying."
+            sleep 12
+            supabase status || true
+            supabase db reset
+          fi
 
       - name: Export local Supabase environment
         working-directory: apps/web
