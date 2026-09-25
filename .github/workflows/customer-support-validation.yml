@@ -36,6 +36,7 @@ jobs:
         with:
           version: 9.13.2
       - run: pnpm install --frozen-lockfile
+      - run: node scripts/check-forge-ai-schemas.cjs
       - run: pnpm --filter forge-industrial-safety-2.0-web type-check
       - run: pnpm --filter forge-industrial-safety-2.0-web build
 
@@ -122,6 +123,11 @@ jobs:
         env:
           SMOKE_BASE_URL: http://127.0.0.1:3000
         run: pnpm exec playwright test apps/web/tests/corrective-actions-smoke.spec.cjs --reporter=line --workers=1
+
+      - name: Run incident equipment browser smoke test
+        env:
+          SMOKE_BASE_URL: http://127.0.0.1:3000
+        run: pnpm exec playwright test apps/web/tests/incident-equipment-smoke.spec.cjs --reporter=line --workers=1
 
       - name: Print web log on failure
         if: failure()

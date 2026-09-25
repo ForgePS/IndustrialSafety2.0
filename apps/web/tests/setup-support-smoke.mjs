@@ -97,7 +97,7 @@ if (!roleId) {
 if (!roleId) throw new Error('Unable to prepare smoke-test tenant role.')
 
 const permissions = await request(
-  '/rest/v1/forge_permission_registry?select=id,permission_key&permission_key=in.(customer_support.view,customer_support.create,corrective_actions.view,tasks.view)',
+  '/rest/v1/forge_permission_registry?select=id,permission_key&permission_key=in.(customer_support.view,customer_support.create,corrective_actions.view,tasks.view,incidents.view,assets_equipment.view)',
   { method: 'GET' }
 )
 
@@ -109,7 +109,9 @@ const requiredKeys = [
   'customer_support.view',
   'customer_support.create',
   'corrective_actions.view',
-  'tasks.view'
+  'tasks.view',
+  'incidents.view',
+  'assets_equipment.view'
 ]
 const missing = requiredKeys.filter(
   key => !permissions.some(permission => permission.permission_key === key)

@@ -99,6 +99,7 @@ const IncidentRecordForm = ({
     if (field.fieldType === 'textarea') {
       return (
         <Textarea
+          id={field.key}
           value={String(value ?? '')}
           placeholder={field.placeholder || undefined}
           disabled={disabled}
@@ -111,6 +112,7 @@ const IncidentRecordForm = ({
     if (field.fieldType === 'select') {
       return (
         <select
+          id={field.key}
           value={String(value ?? '')}
           disabled={disabled}
           onChange={event => setValue(field.key, event.target.value)}
@@ -132,6 +134,7 @@ const IncidentRecordForm = ({
 
       return (
         <select
+          id={field.key}
           value={String(value ?? '')}
           disabled={disabled}
           onChange={event => setValue(field.key, event.target.value)}
@@ -147,6 +150,7 @@ const IncidentRecordForm = ({
       return (
         <div className='flex h-[38px] items-center gap-3'>
           <Switch
+            id={field.key}
             checked={Boolean(value)}
             disabled={disabled}
             onCheckedChange={checked => setValue(field.key, checked)}
@@ -165,6 +169,7 @@ const IncidentRecordForm = ({
 
     return (
       <Input
+        id={field.key}
         type={inputType}
         value={String(value ?? '')}
         placeholder={field.placeholder || undefined}
