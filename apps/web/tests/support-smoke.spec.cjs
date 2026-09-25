@@ -89,6 +89,8 @@ test('customer support end-to-end smoke test', async ({ browser }) => {
   await admin.getByLabel('Internal note').check()
   await admin.getByLabel('Reply').fill('INTERNAL-SMOKE-NOTE-DO-NOT-EXPOSE')
   await admin.getByRole('button', { name: 'Save internal note' }).click()
+  await expect(admin.getByRole('status')).toContainText('Internal note saved.')
+  await admin.reload()
   await expect(admin.getByText('INTERNAL-SMOKE-NOTE-DO-NOT-EXPOSE')).toBeVisible()
 
   const internalAttachmentName = 'internal-smoke.txt'
