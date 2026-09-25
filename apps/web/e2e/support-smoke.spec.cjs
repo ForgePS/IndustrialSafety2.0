@@ -48,20 +48,42 @@ async function createSecondTenantUser() {
       created_by: user.id
     })
   })
-  await rest('organization_memberships', {
-    method: 'POST',
-    headers: { Prefer: 'return=minimal' },
-    body: JSON.stringify({ organization_id: organizationId, user_id: user.id, role: 'member', is_active: true })
-  })
+  const memberships = await rest(
+    'organization_memberships?organization_id=eq.' +
+      organizationId +
+      '&user_id=eq.' +
+      user.id +
+      '&select=organization_id,user_id'
+  )
+
+  if (!memberships?.length) {
+    await rest('organization_memberships', {
+      method: 'POST',
+      headers: { Prefer: 'return=minimal' },
+      body: JSON.stringify({ organization_id: organizationId, user_id: user.id, role: 'member', is_active: true })
+    })
+  }
 
   const roles = await rest('forge_tenant_roles?organization_id=eq.' + organizationId + '&role_key=eq.employee&select=id')
   if (!roles?.length) throw new Error('Second tenant employee role was not provisioned.')
 
-  await rest('forge_tenant_user_roles', {
-    method: 'POST',
-    headers: { Prefer: 'return=minimal' },
-    body: JSON.stringify({ organization_id: organizationId, user_id: user.id, role_id: roles[0].id })
-  })
+  const roleAssignments = await rest(
+    'forge_tenant_user_roles?organization_id=eq.' +
+      organizationId +
+      '&user_id=eq.' +
+      user.id +
+      '&role_id=eq.' +
+      roles[0].id +
+      '&select=role_id'
+  )
+
+  if (!roleAssignments?.length) {
+    await rest('forge_tenant_user_roles', {
+      method: 'POST',
+      headers: { Prefer: 'return=minimal' },
+      body: JSON.stringify({ organization_id: organizationId, user_id: user.id, role_id: roles[0].id })
+    })
+  }
 
   return { email, password }
 }
