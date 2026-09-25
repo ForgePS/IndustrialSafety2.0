@@ -1,6 +1,6 @@
 # NX-01 — Universal Workflow + Shared Evidence Core
 
-**Status:** NX-01 + NX-01H complete on `codex/nx01-universal-workflow-evidence-core`  
+**Status:** NX-01 + NX-01H + NX-01R (PR #7 remediation) on `codex/nx01-universal-workflow-evidence-core`  
 **Baseline:** `forge-creator-2.0` @ `19ec04e`  
 **Migrations:**
 - `20260924330000_forge_universal_workflow_core.sql`
@@ -99,7 +99,9 @@ Feature `workflow_core` entitled on `internal-demo` / `enterprise`. Permissions 
 | --- | --- |
 | DB/RPC | `node apps/web/tests/workflow-core-db.cjs` |
 | NX-01H hardening | `node apps/web/tests/nx01h-hardening-db.cjs` |
+| NX-01R remediation | `node apps/web/tests/nx01r-remediation-db.cjs` |
 | Playwright NX-01 | `pnpm exec playwright test apps/web/tests/workflow-core-smoke.spec.cjs --workers=1` |
+| Playwright Creator workflows | `pnpm exec playwright test apps/web/tests/creator-workflows-smoke.spec.cjs --workers=1` |
 | Regressions | support / corrective-actions / incident-equipment smokes |
 
 ## NX-01H Hardening
@@ -121,11 +123,34 @@ Domain table `forge_incident_assets` remains authoritative for incident UI. Trig
 ### Evidence / comments / approvals / acknowledgments / activity / workflow history
 Shared services authorize parent resources through the registry before read/write. Evidence download re-checks access; storage paths are service-role only.
 
+## PR #7 Review Remediation (NX-01R)
+
+### Evidence permission-specific scope
+`requireForgePermissionForResource` evaluates a named permission’s own effective scope (org / location / division / own / assigned / custom) against a resolved Forge resource. Parent module manage access no longer overrides narrower shared permissions.
+
+Evidence upload requires **both**:
+1. parent record manage authorization; and
+2. `records.evidence.upload` scoped to that record.
+
+The same pattern applies to `records.evidence.view|manage`, `records.comments.*`, `records.links.*`, `records.acknowledgements.*`, `workflow.transition`, and `workflow.approve`.
+
+### Atomic form-driven CAPA lifecycle
+`updateCorrectiveAction` never writes lifecycle status directly. Non-lifecycle fields update with status unchanged; `open`→`in_progress` (first action plan) goes through `forge_perform_capa_lifecycle_transition` with stable idempotency key `capa-form-start_work-{capaId}`.
+
+`syncWorkflowState` is retained only for migration/repair/diagnostics — not used by CAPA lifecycle commands.
+
+### Creator platform loader separation
+`listWorkflowDefinitions` remains tenant-secured (`activeOrganization` + `workflow.view`).
+`/admin/creator/workflows` uses `listPlatformWorkflowDefinitions` (platform role via `getForgePlatformAccess`) so Forge Owner/Creator/Read-only can inspect core definitions without an active tenant entitlement.
+
+### Added regression tests
+- `apps/web/tests/nx01r-remediation-db.cjs` — evidence scope contract, form-path failure/success/idempotency, concurrent transition conflict, reconciliation, platform loader contract
+- `apps/web/tests/creator-workflows-smoke.spec.cjs` — platform owner sees definitions; tenant user denied Creator route
+
 ## Known remaining limitations
 
 - Polymorphic `resource_id` has no cross-table FK (app + registry validated).
-- Linked-task side effects after CAPA atomic transition remain adjacent (not in the CAPA/workflow RPC).
-- Form-driven CAPA field updates that flip `open`→`in_progress` still write SoR then workflow-only sync.
+- Linked-task side effects after CAPA atomic transition remain adjacent (best-effort after RPC; outbox supports later reconciliation).
 - No drag-and-drop workflow designer.
 - Outbox rows are written; async consumer processing is optional for later waves.
 

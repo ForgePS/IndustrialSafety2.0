@@ -2,7 +2,7 @@ import { createServiceRoleClient } from '@repo/supabase/server'
 import { writeForgeAudit } from './forgeAudit'
 import { writeRecordActivity } from './forgeRecordActivity'
 import {
-  hasEffectivePermission,
+  requireForgePermissionForResource,
   requireForgeResourceView
 } from './forgeResourceRegistry'
 
@@ -27,9 +27,15 @@ export const createAcknowledgement = async ({
 }) => {
   const auth = await requireForgeResourceView({ resourceType, resourceId })
   if (!auth.ok) return { error: 'Not found.' }
-  if (!hasEffectivePermission(auth.access, 'records.acknowledgements.create')) {
-    return { error: 'Not found.' }
-  }
+
+  const ackPerm = await requireForgePermissionForResource({
+    permissionKey: 'records.acknowledgements.create',
+    resource: auth.resource,
+    access: auth.access,
+    organizationId: auth.context.activeOrganization.id,
+    userId: auth.context.user.id
+  })
+  if (!ackPerm.ok) return { error: 'Not found.' }
 
   const organizationId = auth.resource.organizationId
   // Actor is always the current authenticated user — never trust client personnel_id.
@@ -90,7 +96,15 @@ export const listAcknowledgements = async ({
   if (!auth.ok || auth.resource.organizationId !== organizationId) {
     return []
   }
-  if (!hasEffectivePermission(auth.access, 'records.acknowledgements.view')) {
+
+  const ackPerm = await requireForgePermissionForResource({
+    permissionKey: 'records.acknowledgements.view',
+    resource: auth.resource,
+    access: auth.access,
+    organizationId: auth.context.activeOrganization.id,
+    userId: auth.context.user.id
+  })
+  if (!ackPerm.ok) {
     return []
   }
 

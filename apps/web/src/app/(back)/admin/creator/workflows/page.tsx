@@ -5,7 +5,7 @@ import { requireForgePlatformRole } from '@/lib/forgeCreatorAuth'
 import {
   getWorkflowStates,
   getWorkflowTransitions,
-  listWorkflowDefinitions
+  listPlatformWorkflowDefinitions
 } from '@/lib/forgeWorkflow'
 
 export const metadata: Metadata = { title: 'Workflows' }
@@ -13,7 +13,7 @@ export const metadata: Metadata = { title: 'Workflows' }
 const CreatorWorkflowsPage = async () => {
   await requireForgePlatformRole(['forge_owner', 'forge_creator', 'forge_read_only'])
 
-  const definitions = await listWorkflowDefinitions()
+  const definitions = await listPlatformWorkflowDefinitions()
 
   const enriched = await Promise.all(
     definitions.map(async definition => {

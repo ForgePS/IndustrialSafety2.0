@@ -1,5 +1,4 @@
 import { createServiceRoleClient } from '@repo/supabase/server'
-import { getEffectiveTenantAccess } from './forgeEffectiveAccess'
 import { writeForgeAudit } from './forgeAudit'
 import { writeRecordActivity } from './forgeRecordActivity'
 import {
@@ -7,10 +6,10 @@ import {
   isAllowedRelationship
 } from './forgeRelationshipRegistry'
 import {
-  hasEffectivePermission,
   isForgeResourceType,
   loadOrgResource,
   requireCompatibleForgeResources,
+  requireForgePermissionForResource,
   requireForgeResourceManage,
   requireForgeResourceView,
   type ForgeResourceType
@@ -85,15 +84,24 @@ export const createRecordLink = async ({
     return { error: 'Not found.' }
   }
 
-  if (!hasEffectivePermission(compatible.access, 'records.links.manage')) {
-    return { error: 'Not found.' }
-  }
+  const linksPerm = await requireForgePermissionForResource({
+    permissionKey: 'records.links.manage',
+    resource: compatible.source,
+    access: compatible.access,
+    organizationId: compatible.context.activeOrganization.id,
+    userId: compatible.context.user.id
+  })
+  if (!linksPerm.ok) return { error: 'Not found.' }
 
-  if (
-    definition.requiredManagePermission &&
-    !hasEffectivePermission(compatible.access, definition.requiredManagePermission)
-  ) {
-    return { error: 'Not found.' }
+  if (definition.requiredManagePermission) {
+    const relPerm = await requireForgePermissionForResource({
+      permissionKey: definition.requiredManagePermission,
+      resource: compatible.source,
+      access: compatible.access,
+      organizationId: compatible.context.activeOrganization.id,
+      userId: compatible.context.user.id
+    })
+    if (!relPerm.ok) return { error: 'Not found.' }
   }
 
   const organizationId = compatible.context.activeOrganization.id
@@ -160,14 +168,6 @@ export const archiveRecordLink = async ({ linkId }: { linkId: string }) => {
   if (!context.user || !context.activeOrganization) return { error: 'Not found.' }
 
   const organizationId = context.activeOrganization.id
-  const access = await getEffectiveTenantAccess({
-    organizationId,
-    userId: context.user.id
-  })
-  if (!hasEffectivePermission(access, 'records.links.manage')) {
-    return { error: 'Not found.' }
-  }
-
   const supabase = createServiceRoleClient() as any
 
   const { data: before } = await supabase
@@ -189,6 +189,26 @@ export const archiveRecordLink = async ({ linkId }: { linkId: string }) => {
     resourceId: linkBefore.source_resource_id
   })
   if (!sourceAuth.ok) return { error: 'Not found.' }
+
+  const linksPerm = await requireForgePermissionForResource({
+    permissionKey: 'records.links.manage',
+    resource: sourceAuth.resource,
+    access: sourceAuth.access,
+    organizationId: sourceAuth.context.activeOrganization.id,
+    userId: sourceAuth.context.user.id
+  })
+  if (!linksPerm.ok) return { error: 'Not found.' }
+
+  if (definition.requiredManagePermission) {
+    const relPerm = await requireForgePermissionForResource({
+      permissionKey: definition.requiredManagePermission,
+      resource: sourceAuth.resource,
+      access: sourceAuth.access,
+      organizationId: sourceAuth.context.activeOrganization.id,
+      userId: sourceAuth.context.user.id
+    })
+    if (!relPerm.ok) return { error: 'Not found.' }
+  }
 
   const now = new Date().toISOString()
   const { data, error } = await supabase
@@ -239,7 +259,15 @@ export const getRecordLinks = async ({
   if (!auth.ok || auth.resource.organizationId !== organizationId) {
     return { outbound: [] as RecordLink[], inbound: [] as RecordLink[], error: 'Not found.' as const }
   }
-  if (!hasEffectivePermission(auth.access, 'records.links.view')) {
+
+  const linksPerm = await requireForgePermissionForResource({
+    permissionKey: 'records.links.view',
+    resource: auth.resource,
+    access: auth.access,
+    organizationId: auth.context.activeOrganization.id,
+    userId: auth.context.user.id
+  })
+  if (!linksPerm.ok) {
     return { outbound: [] as RecordLink[], inbound: [] as RecordLink[], error: 'Not found.' as const }
   }
 

@@ -2,12 +2,11 @@ import { createServiceRoleClient } from '@repo/supabase/server'
 import { writeForgeAudit } from './forgeAudit'
 import { writeRecordActivity } from './forgeRecordActivity'
 import {
-  hasEffectivePermission,
+  requireForgePermissionForResource,
   requireForgeResourceManage,
   requireForgeResourceView
 } from './forgeResourceRegistry'
 import { getTenantContext } from './forgeTenantContext'
-import { getEffectiveTenantAccess } from './forgeEffectiveAccess'
 
 export const addRecordComment = async ({
   resourceType,
@@ -23,9 +22,15 @@ export const addRecordComment = async ({
 
   const auth = await requireForgeResourceView({ resourceType, resourceId })
   if (!auth.ok) return { error: 'Not found.' }
-  if (!hasEffectivePermission(auth.access, 'records.comments.create')) {
-    return { error: 'Not found.' }
-  }
+
+  const commentPerm = await requireForgePermissionForResource({
+    permissionKey: 'records.comments.create',
+    resource: auth.resource,
+    access: auth.access,
+    organizationId: auth.context.activeOrganization.id,
+    userId: auth.context.user.id
+  })
+  if (!commentPerm.ok) return { error: 'Not found.' }
 
   const organizationId = auth.resource.organizationId
   const supabase = createServiceRoleClient() as any
@@ -78,7 +83,15 @@ export const listRecordComments = async ({
   if (!auth.ok || auth.resource.organizationId !== organizationId) {
     return []
   }
-  if (!hasEffectivePermission(auth.access, 'records.comments.view')) {
+
+  const commentPerm = await requireForgePermissionForResource({
+    permissionKey: 'records.comments.view',
+    resource: auth.resource,
+    access: auth.access,
+    organizationId: auth.context.activeOrganization.id,
+    userId: auth.context.user.id
+  })
+  if (!commentPerm.ok) {
     return []
   }
 
@@ -107,14 +120,6 @@ export const archiveRecordComment = async ({ commentId }: { commentId: string })
   if (!context.user || !context.activeOrganization) return { error: 'Not found.' }
 
   const organizationId = context.activeOrganization.id
-  const access = await getEffectiveTenantAccess({
-    organizationId,
-    userId: context.user.id
-  })
-  if (!hasEffectivePermission(access, 'records.comments.manage')) {
-    return { error: 'Not found.' }
-  }
-
   const supabase = createServiceRoleClient() as any
   const now = new Date().toISOString()
 
@@ -133,6 +138,15 @@ export const archiveRecordComment = async ({ commentId }: { commentId: string })
     resourceId: before.resource_id
   })
   if (!parentAuth.ok) return { error: 'Not found.' }
+
+  const commentPerm = await requireForgePermissionForResource({
+    permissionKey: 'records.comments.manage',
+    resource: parentAuth.resource,
+    access: parentAuth.access,
+    organizationId: parentAuth.context.activeOrganization.id,
+    userId: parentAuth.context.user.id
+  })
+  if (!commentPerm.ok) return { error: 'Not found.' }
 
   const { data, error } = await supabase
     .from('forge_record_comments')

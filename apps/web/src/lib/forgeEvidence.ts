@@ -1,10 +1,9 @@
 import { createServiceRoleClient } from '@repo/supabase/server'
-import { getEffectiveTenantAccess } from './forgeEffectiveAccess'
 import { writeForgeAudit } from './forgeAudit'
 import { writeRecordActivity } from './forgeRecordActivity'
 import {
-  hasEffectivePermission,
   isForgeResourceType,
+  requireForgePermissionForResource,
   requireForgeResourceManage,
   requireForgeResourceView,
   resolveForgeResource,
@@ -62,7 +61,15 @@ export const listRecordEvidence = async ({
   if (!auth.ok || auth.resource.organizationId !== organizationId) {
     return [] as Omit<RecordEvidence, 'storage_path'>[]
   }
-  if (!hasEffectivePermission(auth.access, 'records.evidence.view')) {
+
+  const evidencePerm = await requireForgePermissionForResource({
+    permissionKey: 'records.evidence.view',
+    resource: auth.resource,
+    access: auth.access,
+    organizationId: auth.context.activeOrganization.id,
+    userId: auth.context.user.id
+  })
+  if (!evidencePerm.ok) {
     return [] as Omit<RecordEvidence, 'storage_path'>[]
   }
 
@@ -121,6 +128,16 @@ export const createEvidenceMetadata = async ({
     const auth = await requireForgeResourceManage({ resourceType, resourceId })
     if (!auth.ok) return { error: 'Not found.' }
     if (auth.resource.organizationId !== organizationId) return { error: 'Not found.' }
+
+    const evidencePerm = await requireForgePermissionForResource({
+      permissionKey: 'records.evidence.upload',
+      resource: auth.resource,
+      access: auth.access,
+      organizationId: auth.context.activeOrganization.id,
+      userId: auth.context.user.id
+    })
+    if (!evidencePerm.ok) return { error: 'Not found.' }
+
     resource = auth.resource
   } else {
     if (resource.organizationId !== organizationId) return { error: 'Not found.' }
@@ -181,14 +198,6 @@ export const archiveRecordEvidence = async ({ evidenceId }: { evidenceId: string
   if (!context.user || !context.activeOrganization) return { error: 'Not found.' }
 
   const organizationId = context.activeOrganization.id
-  const access = await getEffectiveTenantAccess({
-    organizationId,
-    userId: context.user.id
-  })
-  if (!hasEffectivePermission(access, 'records.evidence.manage')) {
-    return { error: 'Not found.' }
-  }
-
   const supabase = createServiceRoleClient() as any
 
   const { data: before } = await supabase
@@ -206,6 +215,15 @@ export const archiveRecordEvidence = async ({ evidenceId }: { evidenceId: string
     resourceId: before.resource_id
   })
   if (!parentAuth.ok) return { error: 'Not found.' }
+
+  const evidencePerm = await requireForgePermissionForResource({
+    permissionKey: 'records.evidence.manage',
+    resource: parentAuth.resource,
+    access: parentAuth.access,
+    organizationId: parentAuth.context.activeOrganization.id,
+    userId: parentAuth.context.user.id
+  })
+  if (!evidencePerm.ok) return { error: 'Not found.' }
 
   const now = new Date().toISOString()
   const { data, error } = await supabase
@@ -270,7 +288,15 @@ export const getEvidenceDownloadUrl = async ({
   if (!auth.ok || auth.resource.organizationId !== organizationId) {
     return { error: 'Not found.' }
   }
-  if (!hasEffectivePermission(auth.access, 'records.evidence.view')) {
+
+  const evidencePerm = await requireForgePermissionForResource({
+    permissionKey: 'records.evidence.view',
+    resource: auth.resource,
+    access: auth.access,
+    organizationId: auth.context.activeOrganization.id,
+    userId: auth.context.user.id
+  })
+  if (!evidencePerm.ok) {
     return { error: 'Not found.' }
   }
 

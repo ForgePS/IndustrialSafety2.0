@@ -766,3 +766,130 @@ export const hasEffectivePermission = (
   access: Awaited<ReturnType<typeof getEffectiveTenantAccess>>,
   permissionKey: string
 ) => access.effective.some(item => item.permissionKey === permissionKey && item.allowed)
+
+type EffectiveTenantAccess = Awaited<ReturnType<typeof getEffectiveTenantAccess>>
+
+const isResolvedForgeResource = (
+  value: ResolvedForgeResource | { resourceType: string; resourceId: string }
+): value is ResolvedForgeResource =>
+  'organizationId' in value && typeof (value as ResolvedForgeResource).organizationId === 'string'
+
+/**
+ * Authoritative check that a specific permission is allowed AND its own scope
+ * covers the target resource. Prefer this over hasEffectivePermission whenever
+ * the permission gates a resource-scoped operation.
+ */
+export const requireForgePermissionForResource = async ({
+  permissionKey,
+  resource,
+  access: preloadedAccess,
+  organizationId: organizationIdInput,
+  userId: userIdInput
+}: {
+  permissionKey: string
+  resource: ResolvedForgeResource | { resourceType: string; resourceId: string }
+  access?: EffectiveTenantAccess
+  organizationId?: string
+  userId?: string
+}): Promise<
+  | {
+      ok: true
+      permission: EffectivePermission
+      access: EffectiveTenantAccess
+      resource: ResolvedForgeResource
+      organizationId: string
+      userId: string
+    }
+  | ForgeResourceAccessDenied
+> => {
+  let organizationId = organizationIdInput
+  let userId = userIdInput
+
+  if (!organizationId || !userId) {
+    const context = await getTenantContext()
+    if (!context.user || !context.activeOrganization) {
+      return { ok: false, error: 'Not found.' }
+    }
+    organizationId = organizationId || context.activeOrganization.id
+    userId = userId || context.user.id
+  }
+
+  let resolved: ResolvedForgeResource
+  if (isResolvedForgeResource(resource)) {
+    resolved = resource
+  } else {
+    if (!isForgeResourceType(resource.resourceType)) {
+      return { ok: false, error: 'Not found.' }
+    }
+    const loaded = await resolveForgeResource({
+      organizationId,
+      resourceType: resource.resourceType,
+      resourceId: resource.resourceId
+    })
+    if (loaded.error || !loaded.resource) {
+      return { ok: false, error: 'Not found.' }
+    }
+    resolved = loaded.resource
+  }
+
+  if (resolved.organizationId !== organizationId) {
+    return { ok: false, error: 'Not found.' }
+  }
+
+  const access =
+    preloadedAccess ||
+    (await getEffectiveTenantAccess({
+      organizationId,
+      userId
+    }))
+
+  const permission = access.effective.find(
+    item => item.permissionKey === permissionKey && item.allowed
+  )
+  if (!permission) {
+    return { ok: false, error: 'Not found.' }
+  }
+
+  const inScope = await resourceWithinEffectiveScope({
+    organizationId,
+    userId,
+    scope: permission.scope,
+    resource: resolved
+  })
+  if (!inScope) {
+    return { ok: false, error: 'Not found.' }
+  }
+
+  return {
+    ok: true,
+    permission,
+    access,
+    resource: resolved,
+    organizationId,
+    userId
+  }
+}
+
+/** Boolean helper for permission + that permission's resource scope. */
+export const permissionAllowsResource = async ({
+  access,
+  permissionKey,
+  organizationId,
+  userId,
+  resource
+}: {
+  access?: EffectiveTenantAccess
+  permissionKey: string
+  organizationId?: string
+  userId?: string
+  resource: ResolvedForgeResource | { resourceType: string; resourceId: string }
+}): Promise<boolean> => {
+  const result = await requireForgePermissionForResource({
+    permissionKey,
+    resource,
+    access,
+    organizationId,
+    userId
+  })
+  return result.ok
+}

@@ -2,9 +2,11 @@ import { createServiceRoleClient } from '@repo/supabase/server'
 import { CAPA_WORKFLOW_KEY } from './forgeCapaWorkflowMap'
 import { writeForgeAudit } from './forgeAudit'
 import { writeRecordActivity } from './forgeRecordActivity'
+import { getForgePlatformAccess } from './forgeCreatorAuth'
 import {
   hasEffectivePermission,
   isForgeResourceType,
+  requireForgePermissionForResource,
   requireForgeResourceView,
   resolveForgeResource,
   type ForgeResourceType
@@ -323,6 +325,11 @@ export const getWorkflowHistory = async ({
   return (data || []) as Array<Record<string, unknown>>
 }
 
+/**
+ * Migration / repair / diagnostics only — do NOT use for normal CAPA lifecycle
+ * commands. Prefer performAtomicCapaLifecycleTransition (or domain-specific atomic
+ * RPCs) so status + workflow stay consistent in one transaction.
+ */
 export const syncWorkflowState = async ({
   organizationId,
   resourceType,
@@ -424,9 +431,15 @@ export const performTransition = async ({
 
   const auth = await requireForgeResourceView({ resourceType, resourceId })
   if (!auth.ok) return { error: 'Not found.' }
-  if (!hasEffectivePermission(auth.access, 'workflow.transition')) {
-    return { error: 'Not found.' }
-  }
+
+  const transitionPerm = await requireForgePermissionForResource({
+    permissionKey: 'workflow.transition',
+    resource: auth.resource,
+    access: auth.access,
+    organizationId: auth.context.activeOrganization.id,
+    userId: auth.context.user.id
+  })
+  if (!transitionPerm.ok) return { error: 'Not found.' }
 
   const organizationId = auth.resource.organizationId
   const instance = await getWorkflowInstance({ organizationId, resourceType, resourceId })
@@ -439,9 +452,14 @@ export const performTransition = async ({
   if (!transition) return { error: 'Transition is not available from the current state.' }
 
   if (transition.required_permission) {
-    if (!hasEffectivePermission(auth.access, transition.required_permission)) {
-      return { error: 'Not found.' }
-    }
+    const requiredPerm = await requireForgePermissionForResource({
+      permissionKey: transition.required_permission,
+      resource: auth.resource,
+      access: auth.access,
+      organizationId: auth.context.activeOrganization.id,
+      userId: auth.context.user.id
+    })
+    if (!requiredPerm.ok) return { error: 'Not found.' }
   }
 
   if (transition.requires_comment && !cleanComment(comment)) {
@@ -526,6 +544,33 @@ export const listWorkflowDefinitions = async () => {
     userId: context.user.id
   })
   if (!hasEffectivePermission(access, 'workflow.view')) return []
+
+  const supabase = createServiceRoleClient() as any
+  const { data, error } = await supabase
+    .from('forge_workflow_definitions')
+    .select('*')
+    .order('workflow_key')
+    .order('version', { ascending: false })
+  if (error) throw new Error(error.message)
+  return (data || []) as WorkflowDefinition[]
+}
+
+const PLATFORM_WORKFLOW_VIEW_ROLES = [
+  'forge_owner',
+  'forge_creator',
+  'forge_read_only'
+] as const
+
+/** Platform Creator diagnostic loader — no tenant context or workflow.view required. */
+export const listPlatformWorkflowDefinitions = async () => {
+  const { user, platformRole } = await getForgePlatformAccess()
+  if (
+    !user ||
+    !platformRole ||
+    !(PLATFORM_WORKFLOW_VIEW_ROLES as readonly string[]).includes(platformRole)
+  ) {
+    return [] as WorkflowDefinition[]
+  }
 
   const supabase = createServiceRoleClient() as any
   const { data, error } = await supabase

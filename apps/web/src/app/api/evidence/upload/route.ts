@@ -7,7 +7,7 @@ import {
   type EvidenceType
 } from '@/lib/forgeEvidence'
 import {
-  hasEffectivePermission,
+  requireForgePermissionForResource,
   requireForgeResourceManage
 } from '@/lib/forgeResourceRegistry'
 import { NextResponse } from 'next/server'
@@ -52,7 +52,15 @@ export async function POST(request: Request) {
   if (!auth.ok) {
     return NextResponse.json({ error: 'Not found.' }, { status: 404 })
   }
-  if (!hasEffectivePermission(auth.access, 'records.evidence.upload')) {
+
+  const evidencePerm = await requireForgePermissionForResource({
+    permissionKey: 'records.evidence.upload',
+    resource: auth.resource,
+    access: auth.access,
+    organizationId: auth.context.activeOrganization.id,
+    userId: auth.context.user.id
+  })
+  if (!evidencePerm.ok) {
     return NextResponse.json({ error: 'Not found.' }, { status: 404 })
   }
 

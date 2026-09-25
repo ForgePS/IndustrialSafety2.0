@@ -2,12 +2,11 @@ import { createServiceRoleClient } from '@repo/supabase/server'
 import { writeForgeAudit } from './forgeAudit'
 import { writeRecordActivity } from './forgeRecordActivity'
 import {
-  hasEffectivePermission,
+  requireForgePermissionForResource,
   requireForgeResourceManage,
   requireForgeResourceView
 } from './forgeResourceRegistry'
 import { getTenantContext } from './forgeTenantContext'
-import { getEffectiveTenantAccess } from './forgeEffectiveAccess'
 
 export const requestApproval = async ({
   resourceType,
@@ -26,9 +25,15 @@ export const requestApproval = async ({
 }) => {
   const auth = await requireForgeResourceManage({ resourceType, resourceId })
   if (!auth.ok) return { error: 'Not found.' }
-  if (!hasEffectivePermission(auth.access, 'workflow.approve')) {
-    return { error: 'Not found.' }
-  }
+
+  const approvePerm = await requireForgePermissionForResource({
+    permissionKey: 'workflow.approve',
+    resource: auth.resource,
+    access: auth.access,
+    organizationId: auth.context.activeOrganization.id,
+    userId: auth.context.user.id
+  })
+  if (!approvePerm.ok) return { error: 'Not found.' }
 
   const organizationId = auth.resource.organizationId
   const supabase = createServiceRoleClient() as any
@@ -102,14 +107,6 @@ export const decideApprovalStep = async ({
   if (!context.user || !context.activeOrganization) return { error: 'Not found.' }
 
   const organizationId = context.activeOrganization.id
-  const access = await getEffectiveTenantAccess({
-    organizationId,
-    userId: context.user.id
-  })
-  if (!hasEffectivePermission(access, 'workflow.approve')) {
-    return { error: 'Not found.' }
-  }
-
   const supabase = createServiceRoleClient() as any
 
   const { data: step } = await supabase
@@ -141,6 +138,15 @@ export const decideApprovalStep = async ({
     resourceId: request.resource_id
   })
   if (!parentAuth.ok) return { error: 'Not found.' }
+
+  const approvePerm = await requireForgePermissionForResource({
+    permissionKey: 'workflow.approve',
+    resource: parentAuth.resource,
+    access: parentAuth.access,
+    organizationId: parentAuth.context.activeOrganization.id,
+    userId: parentAuth.context.user.id
+  })
+  if (!approvePerm.ok) return { error: 'Not found.' }
 
   const now = new Date().toISOString()
   const { data: updatedStep, error } = await supabase
