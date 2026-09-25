@@ -40,79 +40,6 @@ jobs:
       - run: pnpm --filter forge-industrial-safety-2.0-web build
 
   support-smoke:
-    runs-on: ubuntu-latest
-    timeout-minutes: 35
-    steps:
-      - uses: actions/checkout@v7
-      - uses: supabase/setup-cli@v2
-        with:
-          version: 2.108.0
-      - uses: actions/setup-node@v7
-        with:
-          node-version: '22'
-      - uses: pnpm/action-setup@v6
-        with:
-          version: 9.13.2
-
-      - run: pnpm install --frozen-lockfile
-
-      - name: Start and seed local Supabase
-        working-directory: apps/web
-        run: |
-          supabase db start
-          supabase db reset
-          supabase start
-          supabase status
-
-      - name: Export local application environment
-        working-directory: apps/web
-        shell: bash
-        run: |
-          eval "$(supabase status -o env)"
-          {
-            echo "NEXT_PUBLIC_SUPABASE_URL=$API_URL"
-            echo "NEXT_PUBLIC_SUPABASE_ANON_KEY=$ANON_KEY"
-            echo "SUPABASE_SERVICE_ROLE_KEY=$SERVICE_ROLE_KEY"
-            echo "NEXT_PUBLIC_APP_URL=http://127.0.0.1:3000"
-            echo "NEXT_PUBLIC_APP_DOMAIN=127.0.0.1"
-            echo "NEXT_PUBLIC_AUTH_PASSWORD=true"
-            echo "NEXT_PUBLIC_AUTH_MAGIC_LINK=false"
-            echo "NEXT_PUBLIC_APP_NAME=Forge Industrial Safety 2.0"
-            echo "NEXT_PUBLIC_APP_TITLE=%s | Forge Industrial Safety 2.0"
-            echo "NEXT_PUBLIC_APP_DESCRIPTION=Forge Industrial Safety 2.0"
-            echo "SESSION_SECRET=forge-support-smoke-session-secret"
-            echo "BASE_URL=http://127.0.0.1:3000"
-          } >> "$GITHUB_ENV"
-
-      - name: Install browser smoke-test runtime
-        run: |
-          pnpm --filter forge-industrial-safety-2.0-web add -D @playwright/test@1.55.0 --lockfile=false
-          pnpm --filter forge-industrial-safety-2.0-web exec playwright install --with-deps chromium
-
-      - name: Start Forge web application
-        shell: bash
-        run: |
-          nohup pnpm --filter forge-industrial-safety-2.0-web dev > /tmp/forge-web.log 2>&1 &
-          echo $! > /tmp/forge-web.pid
-          for attempt in {1..90}; do
-            if curl --fail --silent http://127.0.0.1:3000/auth/login >/dev/null; then
-              exit 0
-            fi
-            sleep 2
-          done
-          cat /tmp/forge-web.log
-          exit 1
-
-      - name: Run customer support browser smoke test
-        working-directory: apps/web
-        run: pnpm exec playwright test e2e/support-smoke.spec.cjs --reporter=line
-
-      - name: Show Forge web log on failure
-        if: failure()
-        run: cat /tmp/forge-web.log
-
-
-  smoke:
     needs:
       - database
       - web
@@ -153,6 +80,8 @@ jobs:
           NEXT_PUBLIC_APP_URL=http://127.0.0.1:3000
           NEXT_PUBLIC_APP_DOMAIN=127.0.0.1
           NEXT_PUBLIC_APP_NAME=Forge Industrial Safety 2.0
+          NEXT_PUBLIC_APP_TITLE=%s | Forge Industrial Safety 2.0
+          NEXT_PUBLIC_APP_DESCRIPTION=Forge Industrial Safety 2.0
           NEXT_PUBLIC_SUPABASE_URL=$API_URL
           NEXT_PUBLIC_SUPABASE_ANON_KEY=$ANON_KEY
           SUPABASE_SERVICE_ROLE_KEY=$SERVICE_ROLE_KEY
