@@ -1067,12 +1067,12 @@ export const archiveCorrectiveAction = async (correctiveActionId: string) => {
 }
 
 export const submitCorrectiveActionForVerificationForm = async (formData: FormData) => {
-  return submitCorrectiveActionForVerification(String(formData.get('correctiveActionId') || ''))
+  await submitCorrectiveActionForVerification(String(formData.get('correctiveActionId') || ''))
 }
 
 export const verifyCorrectiveActionForm = async (formData: FormData) => {
   const result = String(formData.get('verification_result') || 'effective')
-  return verifyCorrectiveAction({
+  await verifyCorrectiveAction({
     correctiveActionId: String(formData.get('correctiveActionId') || ''),
     result:
       result === 'ineffective' || result === 'follow_up_required' ? result : 'effective',
@@ -1081,25 +1081,25 @@ export const verifyCorrectiveActionForm = async (formData: FormData) => {
 }
 
 export const closeCorrectiveActionForm = async (formData: FormData) => {
-  return closeCorrectiveAction({
+  await closeCorrectiveAction({
     correctiveActionId: String(formData.get('correctiveActionId') || ''),
     closureNotes: String(formData.get('closure_notes') || '')
   })
 }
 
 export const cancelCorrectiveActionForm = async (formData: FormData) => {
-  return cancelCorrectiveAction({
+  await cancelCorrectiveAction({
     correctiveActionId: String(formData.get('correctiveActionId') || ''),
     cancellationNotes: String(formData.get('cancellation_notes') || '')
   })
 }
 
 export const archiveCorrectiveActionForm = async (formData: FormData) => {
-  return archiveCorrectiveAction(String(formData.get('correctiveActionId') || ''))
+  await archiveCorrectiveAction(String(formData.get('correctiveActionId') || ''))
 }
 
 export const addCorrectiveActionCommentForm = async (formData: FormData) => {
-  return addCorrectiveActionComment({
+  await addCorrectiveActionComment({
     correctiveActionId: String(formData.get('correctiveActionId') || ''),
     comment: String(formData.get('comment') || '')
   })
