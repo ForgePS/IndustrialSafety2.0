@@ -25,7 +25,7 @@ export default function SupportConversation({ticket,messages,events,attachments=
  const [error,setError]=useState('')
  const [success,setSuccess]=useState('')
  const [pending,start]=useTransition()
- const normalizedBasePath=basePath?'/'+basePath.replace(/^\\/+|\\/+$/g,''):''
+ const normalizedBasePath=basePath?'/'+basePath.replace(/^\/+|\/+$/g,''):''
  useEffect(()=>{
   setStatus(ticket.status)
   setPriority(ticket.priority)
