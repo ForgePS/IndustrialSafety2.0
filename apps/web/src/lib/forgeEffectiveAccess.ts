@@ -53,7 +53,7 @@ export const getEffectiveTenantAccess = async ({
       .order('sort_order'),
     supabase
       .from('forge_tenant_user_roles')
-      .select('role_id, forge_tenant_roles(id, name, is_active, forge_tenant_role_permissions(permission_id, allowed, scope))')
+      .select('role_id, forge_tenant_roles(id, name, is_active)')
       .eq('organization_id', organizationId)
       .eq('user_id', userId),
     supabase
@@ -76,10 +76,24 @@ export const getEffectiveTenantAccess = async ({
   const subscription = subscriptionRows?.[0] || null
   const planId = subscription?.plan_id || null
 
-  const [{ data: features }, { data: planEntitlements }] = await Promise.all([
+  const activeRoles = (assignedUserRoles || [])
+    .map((assignment: any) => assignment.forge_tenant_roles)
+    .filter((role: any) => role?.is_active && role?.id)
+
+  const activeRoleIds = activeRoles.map((role: any) => role.id)
+  const roleNameById = new Map<string, string>(activeRoles.map((role: any) => [role.id, role.name]))
+
+  const [{ data: features }, { data: planEntitlements }, { data: rolePermissionRows }] = await Promise.all([
     supabase.from('forge_feature_registry').select('id, feature_key, platform_state, requires_entitlement'),
     planId
       ? supabase.from('forge_plan_entitlements').select('feature_id, enabled').eq('plan_id', planId)
+      : Promise.resolve({ data: [] }),
+    activeRoleIds.length
+      ? supabase
+          .from('forge_tenant_role_permissions')
+          .select('role_id, permission_id, allowed, scope')
+          .in('role_id', activeRoleIds)
+          .eq('allowed', true)
       : Promise.resolve({ data: [] })
   ])
 
@@ -90,18 +104,14 @@ export const getEffectiveTenantAccess = async ({
 
   const rolePermissionMap = new Map<string, { scope: string | null; roles: string[] }>()
 
-  for (const assignment of assignedUserRoles || []) {
-    const role = assignment.forge_tenant_roles
-    if (!role?.is_active) continue
-
-    for (const grant of role.forge_tenant_role_permissions || []) {
-      if (!grant.allowed) continue
-      const current = rolePermissionMap.get(grant.permission_id)
-      rolePermissionMap.set(grant.permission_id, {
-        scope: current ? widerScope(current.scope, grant.scope) : grant.scope || 'organization',
-        roles: [...new Set([...(current?.roles || []), role.name])]
-      })
-    }
+  for (const grant of rolePermissionRows || []) {
+    if (!grant.allowed) continue
+    const current = rolePermissionMap.get(grant.permission_id)
+    const roleName = roleNameById.get(grant.role_id)
+    rolePermissionMap.set(grant.permission_id, {
+      scope: current ? widerScope(current.scope, grant.scope) : grant.scope || 'organization',
+      roles: [...new Set([...(current?.roles || []), ...(roleName ? [roleName] : [])])]
+    })
   }
 
   const effective: EffectivePermission[] = (permissions || []).map((permission: any) => {

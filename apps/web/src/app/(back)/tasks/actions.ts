@@ -334,6 +334,9 @@ export const updateTask = async ({
   const before = await loadTask({ supabase, organizationId, taskId })
   if (!before) return { error: 'Task not found.' }
   if (before.archived_at) return { error: 'Archived Tasks are read-only.' }
+  if (before.source_type === 'corrective_action') {
+    return { error: 'This Task is managed by its linked Corrective Action. Update the CAPA record instead.' }
+  }
 
   const allowed = await taskWithinScope({
     organizationId,
@@ -453,6 +456,9 @@ export const completeTask = async ({
 
   if (!before) return { error: 'Task not found.' }
   if (before.archived_at) return { error: 'Archived Tasks cannot be completed.' }
+  if (before.source_type === 'corrective_action') {
+    return { error: 'This Task is managed by its linked Corrective Action. Submit the CAPA for verification instead.' }
+  }
 
   const allowed = await taskWithinScope({
     organizationId,
@@ -569,6 +575,9 @@ export const archiveTask = async (taskId: string) => {
 
   if (!before) return { error: 'Task not found.' }
   if (before.archived_at) return { error: 'Task is already archived.' }
+  if (before.source_type === 'corrective_action') {
+    return { error: 'This Task is managed by its linked Corrective Action and cannot be archived independently.' }
+  }
 
   const allowed = await taskWithinScope({
     organizationId,

@@ -1,4 +1,4 @@
-name: Customer support validation
+name: Forge module validation
 
 on:
   pull_request:
@@ -39,12 +39,12 @@ jobs:
       - run: pnpm --filter forge-industrial-safety-2.0-web type-check
       - run: pnpm --filter forge-industrial-safety-2.0-web build
 
-  support-smoke:
+  browser-smoke:
     needs:
       - database
       - web
     runs-on: ubuntu-latest
-    timeout-minutes: 35
+    timeout-minutes: 45
     steps:
       - uses: actions/checkout@v7
       - uses: actions/setup-node@v7
@@ -87,7 +87,7 @@ jobs:
           SUPABASE_SERVICE_ROLE_KEY=$SERVICE_ROLE_KEY
           NEXT_PUBLIC_AUTH_PASSWORD=true
           NEXT_PUBLIC_AUTH_MAGIC_LINK=false
-          SESSION_SECRET=customer-support-smoke-test-session-secret
+          SESSION_SECRET=forge-module-smoke-test-session-secret
           EOF
 
       - name: Prepare second tenant for isolation test
@@ -118,6 +118,11 @@ jobs:
           SMOKE_BASE_URL: http://127.0.0.1:3000
         run: pnpm exec playwright test apps/web/tests/support-smoke.spec.cjs --reporter=line --workers=1
 
+      - name: Run Corrective Actions browser smoke test
+        env:
+          SMOKE_BASE_URL: http://127.0.0.1:3000
+        run: pnpm exec playwright test apps/web/tests/corrective-actions-smoke.spec.cjs --reporter=line --workers=1
+
       - name: Print web log on failure
         if: failure()
         run: cat /tmp/forge-smoke.log || true
@@ -126,7 +131,7 @@ jobs:
         if: failure()
         uses: actions/upload-artifact@v4
         with:
-          name: customer-support-smoke-artifacts
+          name: forge-module-smoke-artifacts
           path: |
             test-results
             playwright-report
