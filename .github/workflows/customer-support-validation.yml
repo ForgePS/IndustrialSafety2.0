@@ -188,3 +188,81 @@ jobs:
       - name: Show Forge server log on failure
         if: failure()
         run: cat /tmp/forge-web.log || true
+
+
+  smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '22'
+      - uses: pnpm/action-setup@v6
+        with:
+          version: 9.13.2
+      - uses: supabase/setup-cli@v2
+        with:
+          version: 2.108.0
+      - run: pnpm install --frozen-lockfile
+
+      - name: Start and seed local Supabase
+        working-directory: apps/web
+        run: |
+          supabase start
+          supabase db reset
+
+      - name: Configure local app environment
+        shell: bash
+        run: |
+          cd apps/web
+          eval "$(supabase status -o env)"
+          cat > .env.local <<EOF
+          NEXT_PUBLIC_APP_URL=http://127.0.0.1:3000
+          NEXT_PUBLIC_APP_DOMAIN=127.0.0.1
+          NEXT_PUBLIC_APP_NAME=Forge Industrial Safety 2.0
+          NEXT_PUBLIC_APP_TITLE=%s | Forge Industrial Safety 2.0
+          NEXT_PUBLIC_APP_DESCRIPTION=Forge Industrial Safety 2.0 smoke test
+          NEXT_PUBLIC_SUPABASE_URL=$API_URL
+          NEXT_PUBLIC_SUPABASE_ANON_KEY=$ANON_KEY
+          SUPABASE_SERVICE_ROLE_KEY=$SERVICE_ROLE_KEY
+          NEXT_PUBLIC_AUTH_PASSWORD=true
+          NEXT_PUBLIC_AUTH_MAGIC_LINK=false
+          SESSION_SECRET=forge-support-smoke-ci-only
+          NEXT_PUBLIC_I18N_COOKIE_NAME=lang
+          EOF
+
+      - name: Install Playwright test runner
+        run: |
+          pnpm add -Dw @playwright/test@1.55.0 --lockfile=false
+          pnpm exec playwright install --with-deps chromium
+
+      - name: Start Forge web app
+        shell: bash
+        run: |
+          nohup pnpm --filter forge-industrial-safety-2.0-web dev --hostname 127.0.0.1 > /tmp/forge-web.log 2>&1 &
+          echo $! > /tmp/forge-web.pid
+          for i in {1..90}; do
+            if curl --fail --silent http://127.0.0.1:3000/auth/login > /dev/null; then
+              exit 0
+            fi
+            sleep 2
+          done
+          cat /tmp/forge-web.log
+          exit 1
+
+      - name: Run customer support browser smoke test
+        env:
+          SMOKE_BASE_URL: http://127.0.0.1:3000
+        run: pnpm exec playwright test -c playwright.support.config.cjs
+
+      - name: Upload smoke diagnostics
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: customer-support-smoke-\${{ github.run_id }}
+          if-no-files-found: ignore
+          path: |
+            playwright-report
+            test-results
+            /tmp/forge-web.log
