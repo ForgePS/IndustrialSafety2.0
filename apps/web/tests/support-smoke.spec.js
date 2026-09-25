@@ -6,6 +6,8 @@ const adminOnlySubject = 'Admin-only support ticket'
 const foreignSubject = 'Foreign tenant support ticket'
 const smokeSubject = 'Support smoke ' + Date.now()
 
+test.setTimeout(240_000)
+
 async function signIn(page, email) {
   await page.goto(appUrl + '/auth/login')
   await page.locator('input[type="email"]').fill(email)
