@@ -8,12 +8,28 @@ import { createServiceRoleClient } from '@repo/supabase/server'
 import CorrectiveActionControls from '../CorrectiveActionControls'
 import CorrectiveActionRecordForm from '../CorrectiveActionRecordForm'
 import type { CorrectiveActionFormValues } from '../actions'
+import RecordActivityTimeline from '@/components/workflow/RecordActivityTimeline'
+import RecordAcknowledgementPanel from '@/components/workflow/RecordAcknowledgementPanel'
+import RecordCommentsPanel from '@/components/workflow/RecordCommentsPanel'
+import RecordEvidencePanel from '@/components/workflow/RecordEvidencePanel'
+import RecordLinksPanel from '@/components/workflow/RecordLinksPanel'
+import WorkflowApprovalPanel from '@/components/workflow/WorkflowApprovalPanel'
+import WorkflowStatusBadge from '@/components/workflow/WorkflowStatusBadge'
+import WorkflowTimeline from '@/components/workflow/WorkflowTimeline'
+import { listAcknowledgements } from '@/lib/forgeAcknowledgements'
+import { listApprovalsForResource } from '@/lib/forgeApprovals'
+import { ensureCapaWorkflowInstance } from '@/lib/forgeCapaWorkflowSync'
+import { listRecordComments } from '@/lib/forgeComments'
 import { correctiveActionWithinScope, getCorrectiveActionDetail } from '@/lib/forgeCorrectiveActions'
+import { listRecordEvidence } from '@/lib/forgeEvidence'
 import { getEffectiveForm } from '@/lib/forgeForms'
 import { getEffectiveLookup } from '@/lib/forgeLookups'
 import { getScopedPersonnel } from '@/lib/forgePersonnel'
+import { listRecordActivity } from '@/lib/forgeRecordActivity'
+import { getRecordLinks } from '@/lib/forgeRecordLinks'
 import { getTenantScopeAssignments } from '@/lib/forgeScope'
 import { requireTenantPermission } from '@/lib/forgeTenantAuth'
+import { getWorkflowHistory, getWorkflowInstance } from '@/lib/forgeWorkflow'
 
 export const metadata: Metadata = { title: 'Corrective Action' }
 
@@ -224,6 +240,80 @@ const CorrectiveActionDetailPage = async ({
 
   const linkedTask = linkedTaskResult?.data || null
 
+  const resourceType = 'corrective_action'
+  let workflowInstance = await getWorkflowInstance({
+    organizationId,
+    resourceType,
+    resourceId: record.id
+  })
+  if (!workflowInstance) {
+    workflowInstance = await ensureCapaWorkflowInstance({
+      organizationId,
+      capaId: record.id,
+      status: record.status,
+      actorUserId: context.user.id
+    })
+  }
+
+  const [
+    workflowHistory,
+    sharedComments,
+    recordLinks,
+    evidence,
+    sharedActivity,
+    approvals,
+    acknowledgements
+  ] = await Promise.all([
+    getWorkflowHistory({
+      organizationId,
+      resourceType,
+      resourceId: record.id
+    }),
+    listRecordComments({
+      organizationId,
+      resourceType,
+      resourceId: record.id
+    }),
+    getRecordLinks({
+      organizationId,
+      resourceType,
+      resourceId: record.id
+    }),
+    listRecordEvidence({
+      organizationId,
+      resourceType,
+      resourceId: record.id
+    }),
+    listRecordActivity({
+      organizationId,
+      resourceType,
+      resourceId: record.id
+    }),
+    listApprovalsForResource({
+      organizationId,
+      resourceType,
+      resourceId: record.id
+    }),
+    listAcknowledgements({
+      organizationId,
+      resourceType,
+      resourceId: record.id
+    })
+  ])
+
+  const canManageLinks = context.access.effective.some(
+    item => item.permissionKey === 'records.links.manage' && item.allowed
+  )
+  const canComment = context.access.effective.some(
+    item => item.permissionKey === 'records.comments.create' && item.allowed
+  )
+  const canUploadEvidence = context.access.effective.some(
+    item => item.permissionKey === 'records.evidence.upload' && item.allowed
+  )
+  const canAcknowledge = context.access.effective.some(
+    item => item.permissionKey === 'records.acknowledgements.create' && item.allowed
+  )
+
   return (
     <div className='flex flex-col gap-6'>
       <div className='flex flex-wrap items-end justify-between gap-4'>
@@ -376,6 +466,68 @@ const CorrectiveActionDetailPage = async ({
         canArchive={Boolean(canArchive)}
         archived={Boolean(record.archived_at)}
       />
+
+      <div className='flex flex-col gap-4'>
+        <div className='flex flex-wrap items-center gap-3'>
+          <span className='text-textSecondary text-sm font-semibold uppercase tracking-wide'>
+            Shared workflow
+          </span>
+          <WorkflowStatusBadge
+            stateKey={workflowInstance.current_state_key}
+            label={
+              'Workflow · ' +
+              String(workflowInstance.current_state_key)
+                .split('_')
+                .map((part: string) => part.charAt(0).toUpperCase() + part.slice(1))
+                .join(' ')
+            }
+          />
+        </div>
+
+        <WorkflowTimeline
+          events={(workflowHistory || []).map((event: any) => ({
+            id: event.id,
+            transition_key: event.transition_key,
+            from_state_key: event.from_state_key,
+            to_state_key: event.to_state_key,
+            comment: event.comment,
+            occurred_at: event.occurred_at
+          }))}
+        />
+
+        <RecordCommentsPanel
+          resourceType={resourceType}
+          resourceId={record.id}
+          comments={sharedComments}
+          canComment={canComment}
+        />
+
+        <RecordLinksPanel
+          resourceType={resourceType}
+          resourceId={record.id}
+          outbound={recordLinks.outbound}
+          inbound={recordLinks.inbound}
+          canManage={canManageLinks}
+        />
+
+        <RecordEvidencePanel
+          resourceType={resourceType}
+          resourceId={record.id}
+          evidence={evidence}
+          canUpload={canUploadEvidence}
+        />
+
+        <WorkflowApprovalPanel approvals={approvals} />
+
+        <RecordAcknowledgementPanel
+          resourceType={resourceType}
+          resourceId={record.id}
+          acknowledgements={acknowledgements}
+          canAcknowledge={canAcknowledge}
+        />
+
+        <RecordActivityTimeline activity={sharedActivity} />
+      </div>
 
       <CorrectiveActionRecordForm
         form={form}

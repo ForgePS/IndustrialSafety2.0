@@ -7,6 +7,7 @@ import {
   TbBuildingCommunity,
   TbHeadset,
   TbCreditCard,
+  TbGitBranch,
   TbKey,
   TbListDetails,
   TbRoute,
@@ -89,6 +90,12 @@ const creatorAreas = [
     description: 'Track platform changes, sensitive actions and Creator activity.',
     href: '/admin/creator/audit',
     icon: TbKey
+  },
+  {
+    title: 'Workflows',
+    description: 'Inspect core and tenant workflow definitions, states, and transitions.',
+    href: '/admin/creator/workflows',
+    icon: TbGitBranch
   }
 ]
 

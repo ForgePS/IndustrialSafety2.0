@@ -33,7 +33,8 @@ This document is the working implementation ledger for Forge Industrial Safety 2
 | Lockout / Tagout | Built foundation | Equipment procedures, energy sources, ordered steps, approvals, revisions, reviews, field-use history |
 | Tasks | Built foundation | Tasks/corrective actions, assignment, due dates, completion, comments, activity |
 | Customer Support | Built foundation | Tenant tickets, Forge triage, internal notes/attachments, SLA settings, smoke + CI (merged PR #4) |
-| Corrective Actions / CAPA | Built foundation | First-class CAPA lifecycle linked to Tasks; cancel/reopen/verify; cross-tenant 404 smoke + CI (merged PR #6) |
+| Corrective Actions / CAPA | Built foundation | First-class CAPA lifecycle linked to Tasks; cancel/reopen/verify; cross-tenant 404 smoke + CI (merged PR #6); NX-01 workflow adapter sync |
+| Universal Workflow + Evidence Core | Built (NX-01 + NX-01H) | Shared workflow engine, resource registry + scope, relationship registry, record links, approvals, acknowledgments, comments, evidence, activity; CAPA atomic lifecycle; Incident↔Asset universal sync; Creator diagnostic UI |
 | OSHA | Not built | Feature registry exists; runtime required |
 | Workers Compensation | Not built | Feature registry exists; restricted runtime required |
 | DOT Compliance | Not built | Feature registry exists; runtime required |
@@ -81,28 +82,26 @@ This document is the working implementation ledger for Forge Industrial Safety 2
 
 **NX-00 baseline locked** on \`forge-creator-2.0\` — see \`docs/NX00_INTEGRATION_BASELINE_LOCK.md\`.
 
-Integrated and gate-validated: Customer Support (PR #4), CAPA (PR #6), parity matrix (PR #5), Incident ↔ Equipment (PR #3).
+**NX-01 + NX-01H complete** on \`codex/nx01-universal-workflow-evidence-core\` — see \`docs/NX01_UNIVERSAL_WORKFLOW_EVIDENCE_CORE.md\`.
 
-Local + smoke gates for support, CAPA, and incident-equipment are green, including cross-tenant denial.
-
-Do not start NX-01 until this baseline remains green.
+Shared workflow / record-links / approvals / acknowledgments / comments / evidence / activity foundation is in place with authoritative resource registry, generalized Location/Division scope, atomic CAPA lifecycle, and Incident↔Asset universal link sync.
 
 Required ongoing checkpoint for later modules:
 
-1. Pull \`forge-creator-2.0\`.
+1. Pull \`forge-creator-2.0\` (or current integration branch).
 2. Confirm Docker Desktop is running.
 3. Run \`pnpm web:supabase:reset\` (or \`pnpm --filter forge-industrial-safety-2.0-web supabase:reset\`).
 4. Confirm every migration and \`seed.sql\` complete successfully.
-5. Run \`node scripts/check-forge-ai-schemas.cjs\`, type-check, and build.
-6. Run support + CAPA + incident-equipment Playwright smokes after \`setup-support-smoke.mjs\`.
+5. Run \`node scripts/check-forge-ai-schemas.cjs\`, web type-check, and build.
+6. Run workflow-core + support + CAPA + incident-equipment Playwright smokes.
 
 Do not mark a module Production Ready solely because its code has been committed.
 
 ## Recommended implementation order from here
 
-Governed by `docs/FORGE_NEXT_LEVEL_FUNCTIONALITY_MASTER_DIRECTIVE.md` and the NX sprint pack (start at **NX-01** only after NX-00 remains locked).
+Governed by `docs/FORGE_NEXT_LEVEL_FUNCTIONALITY_MASTER_DIRECTIVE.md` and the NX sprint pack (start **NX-02** only after NX-01 gates are green on the integration branch).
 
-1. NX-01 — Universal workflow + shared evidence core.
+1. NX-01 — Universal workflow + shared evidence core *(complete including NX-01H)*.
 2. NX-02 — Observations + Risk Register + JSA/JHA.
 3. NX-03 — Permit-to-Work engine.
 4. Continue NX-04…NX-21 per the next-level sprint pack.
