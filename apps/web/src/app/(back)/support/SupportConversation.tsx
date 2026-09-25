@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useTransition } from 'react'
+import { useEffect, useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { Badge } from '@repo/ui/components/ui/badge'
@@ -12,7 +12,7 @@ type Ticket={id:string;ticket_number:string;subject:string;description:string;ca
 type Message={id:string;author_kind:string;visibility:string;body:string;created_at:string}
 type Event={id:number;event_type:string;from_value:string|null;to_value:string|null;detail:string|null;created_at:string}
 type Attachment={id:string;file_name:string;visibility:string;byte_size:number;created_at:string}
-export default function SupportConversation({ticket,messages,events,attachments=[],staff=false,canReply=true,staffUsers=[]}:{ticket:Ticket;messages:Message[];events:Event[];attachments?:Attachment[];staff?:boolean;canReply?:boolean;staffUsers?:{user_id:string;label:string}[]}){
+export default function SupportConversation({ticket,messages,events,attachments=[],staff=false,canReply=true,staffUsers=[],basePath=''}:{ticket:Ticket;messages:Message[];events:Event[];attachments?:Attachment[];staff?:boolean;canReply?:boolean;staffUsers?:{user_id:string;label:string}[];basePath?:string}){
  const router=useRouter()
  const [body,setBody]=useState('')
  const [file,setFile]=useState<File|null>(null)
@@ -25,6 +25,13 @@ export default function SupportConversation({ticket,messages,events,attachments=
  const [error,setError]=useState('')
  const [success,setSuccess]=useState('')
  const [pending,start]=useTransition()
+ const normalizedBasePath=basePath?'/'+basePath.replace(/^\\/+|\\/+$/g,''):''
+ useEffect(()=>{
+  setStatus(ticket.status)
+  setPriority(ticket.priority)
+  setAssignee(ticket.assigned_to||'')
+  setSummary(ticket.resolution_summary||'')
+ },[ticket.id,ticket.status,ticket.priority,ticket.assigned_to,ticket.resolution_summary])
  const act=(fn:()=>Promise<{error?:string;message?:string}>)=>{setError('');setSuccess('');start(async()=>{try{const result=await fn();if(result.error)setError(result.error);else {setSuccess(result.message||'Saved.');router.refresh()}}catch{setError('Unable to save. Try again.')}})}
  const terminal=['resolved','closed'].includes(ticket.status)
  return <div className='flex flex-col gap-6'>
@@ -64,10 +71,10 @@ export default function SupportConversation({ticket,messages,events,attachments=
    {error?<p role='alert' className='text-destructive text-sm'>{error}</p>:null}{success?<p role='status' className='text-sm'>{success}</p>:null}
   </CardContent></Card>
   <Card><CardHeader><CardTitle>Attachments</CardTitle><CardDescription>PNG, JPG, WebP, PDF, TXT, or CSV up to 10 MB. Files are private to this request.</CardDescription></CardHeader><CardContent className='grid gap-3'>
-   {attachments.length?attachments.map(a=><a key={a.id} href={'/api/support/attachments/'+a.id} className='text-primary break-all underline'>{a.file_name} · {(a.byte_size/1024).toFixed(0)} KB{a.visibility==='internal'?' · Internal':''}</a>):<p className='text-textSecondary text-sm'>No attachments yet.</p>}
+   {attachments.length?attachments.map(a=><a key={a.id} href={normalizedBasePath+'/api/support/attachments/'+a.id} className='text-primary break-all underline'>{a.file_name} · {(a.byte_size/1024).toFixed(0)} KB{a.visibility==='internal'?' · Internal':''}</a>):<p className='text-textSecondary text-sm'>No attachments yet.</p>}
    {canReply&&!terminal?<form className='flex flex-wrap items-end gap-3 pt-2' onSubmit={e=>{e.preventDefault();if(!file)return;setError('');setSuccess('');start(async()=>{try{
     const form=new FormData();form.set('file',file);if(privateFile)form.set('visibility','internal')
-    const response=await fetch('/api/support/'+ticket.id+'/attachments',{method:'POST',body:form})
+    const response=await fetch(normalizedBasePath+'/api/support/'+ticket.id+'/attachments',{method:'POST',body:form})
     const result=await response.json()
     if(!response.ok)setError(result.error||'Upload failed.')
     else{setFile(null);setSuccess('Attachment uploaded.');router.refresh()}
