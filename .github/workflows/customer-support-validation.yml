@@ -40,9 +40,6 @@ jobs:
       - run: pnpm --filter forge-industrial-safety-2.0-web build
 
   support-smoke:
-    needs:
-      - database
-      - web
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
