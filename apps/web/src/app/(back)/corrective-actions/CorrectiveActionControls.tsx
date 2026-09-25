@@ -1,20 +1,18 @@
 'use client'
 
-import { useState, useTransition } from 'react'
-import { useRouter } from 'next/navigation'
-import { TbArchive, TbCheck, TbMessagePlus, TbShieldCheck, TbX } from 'react-icons/tb'
+import { useState } from 'react'
+import { TbArchive, TbMessagePlus, TbX } from 'react-icons/tb'
 import { Button } from '@repo/ui/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@repo/ui/components/ui/card'
 import { Label } from '@repo/ui/components/ui/label'
 import { Textarea } from '@repo/ui/components/ui/textarea'
-import { toast } from '@repo/ui/utils/toast'
 import {
-  addCorrectiveActionComment,
-  archiveCorrectiveAction,
-  cancelCorrectiveAction,
-  closeCorrectiveAction,
-  submitCorrectiveActionForVerification,
-  verifyCorrectiveAction
+  addCorrectiveActionCommentForm,
+  archiveCorrectiveActionForm,
+  cancelCorrectiveActionForm,
+  closeCorrectiveActionForm,
+  submitCorrectiveActionForVerificationForm,
+  verifyCorrectiveActionForm
 } from './actions'
 
 const CorrectiveActionControls = ({
@@ -34,125 +32,8 @@ const CorrectiveActionControls = ({
   canArchive: boolean
   archived: boolean
 }) => {
-  const router = useRouter()
-  const [pending, startTransition] = useTransition()
-  const [comment, setComment] = useState('')
-  const [verificationResult, setVerificationResult] =
-    useState<'effective' | 'ineffective' | 'follow_up_required'>('effective')
-  const [verificationNotes, setVerificationNotes] = useState('')
-  const [closureNotes, setClosureNotes] = useState('')
-  const [cancellationNotes, setCancellationNotes] = useState('')
-  const [verifyOpen, setVerifyOpen] = useState(false)
-  const [closeOpen, setCloseOpen] = useState(false)
   const [cancelOpen, setCancelOpen] = useState(false)
-
-  const runSubmit = () => {
-    if (!window.confirm('Submit this Corrective Action for independent verification?')) return
-
-    startTransition(async () => {
-      const result = await submitCorrectiveActionForVerification(correctiveActionId)
-
-      if ('error' in result) {
-        toast('error', result.error || 'Unable to submit Corrective Action.')
-        return
-      }
-
-      toast('success', result.message)
-      router.refresh()
-    })
-  }
-
-  const runVerification = () => {
-    startTransition(async () => {
-      const result = await verifyCorrectiveAction({
-        correctiveActionId,
-        result: verificationResult,
-        notes: verificationNotes
-      })
-
-      if ('error' in result) {
-        toast('error', result.error || 'Unable to verify Corrective Action.')
-        return
-      }
-
-      toast('success', result.message)
-      setVerifyOpen(false)
-      setVerificationNotes('')
-      router.refresh()
-    })
-  }
-
-  const runClose = () => {
-    startTransition(async () => {
-      const result = await closeCorrectiveAction({
-        correctiveActionId,
-        closureNotes
-      })
-
-      if ('error' in result) {
-        toast('error', result.error || 'Unable to close Corrective Action.')
-        return
-      }
-
-      toast('success', result.message)
-      setCloseOpen(false)
-      setClosureNotes('')
-      router.refresh()
-    })
-  }
-
-  const runCancel = () => {
-    startTransition(async () => {
-      const result = await cancelCorrectiveAction({
-        correctiveActionId,
-        cancellationNotes
-      })
-
-      if ('error' in result) {
-        toast('error', result.error || 'Unable to cancel Corrective Action.')
-        return
-      }
-
-      toast('success', result.message)
-      setCancelOpen(false)
-      setCancellationNotes('')
-      router.refresh()
-    })
-  }
-
-  const runArchive = () => {
-    if (!window.confirm('Archive this Corrective Action? The full record and audit history will be preserved.')) return
-
-    startTransition(async () => {
-      const result = await archiveCorrectiveAction(correctiveActionId)
-
-      if ('error' in result) {
-        toast('error', result.error || 'Unable to archive Corrective Action.')
-        return
-      }
-
-      toast('success', result.message)
-      router.refresh()
-    })
-  }
-
-  const addComment = () => {
-    startTransition(async () => {
-      const result = await addCorrectiveActionComment({
-        correctiveActionId,
-        comment
-      })
-
-      if ('error' in result) {
-        toast('error', result.error || 'Unable to add comment.')
-        return
-      }
-
-      toast('success', result.message)
-      setComment('')
-      router.refresh()
-    })
-  }
+  const [archiveOpen, setArchiveOpen] = useState(false)
 
   return (
     <div className='grid gap-4 xl:grid-cols-2'>
@@ -166,154 +47,129 @@ const CorrectiveActionControls = ({
           </CardHeader>
           <CardContent className='flex flex-col gap-4'>
             <div className='flex flex-wrap gap-2'>
-              {canSubmit && ['open','in_progress'].includes(status) ? (
-                <Button onClick={runSubmit} disabled={pending}>
-                  <TbCheck />
-                  Submit for Verification
-                </Button>
-              ) : null}
-
-              {canVerify && status === 'pending_verification' ? (
-                <Button onClick={() => setVerifyOpen(value => !value)} disabled={pending}>
-                  <TbShieldCheck />
-                  Verify Effectiveness
-                </Button>
-              ) : null}
-
-              {canClose && status === 'verified' ? (
-                <Button onClick={() => setCloseOpen(value => !value)} disabled={pending}>
-                  <TbCheck />
-                  Close Corrective Action
-                </Button>
+              {canSubmit && ['open', 'in_progress'].includes(status) ? (
+                <form action={submitCorrectiveActionForVerificationForm}>
+                  <input type='hidden' name='correctiveActionId' value={correctiveActionId} />
+                  <Button type='submit'>Submit for Verification</Button>
+                </form>
               ) : null}
 
               {canClose && ['open', 'in_progress', 'pending_verification'].includes(status) ? (
                 <Button
+                  type='button'
                   variant='outline'
                   onClick={() => {
-                    setCancelOpen(value => !value)
-                    setCloseOpen(false)
-                    setVerifyOpen(false)
+                    setCancelOpen(true)
+                    setArchiveOpen(false)
                   }}
-                  disabled={pending}
                 >
                   <TbX />
                   Cancel Corrective Action
                 </Button>
               ) : null}
 
-              {canArchive && ['closed','canceled'].includes(status) ? (
-                <Button variant='outline' onClick={runArchive} disabled={pending}>
+              {canArchive && ['closed', 'canceled'].includes(status) ? (
+                <Button
+                  type='button'
+                  variant='outline'
+                  onClick={() => {
+                    setArchiveOpen(true)
+                    setCancelOpen(false)
+                  }}
+                >
                   <TbArchive />
                   Archive
                 </Button>
               ) : null}
             </div>
 
-            {verifyOpen ? (
-              <div className='rounded-lg border p-4'>
+            {canVerify && status === 'pending_verification' ? (
+              <form action={verifyCorrectiveActionForm} className='rounded-lg border p-4'>
+                <input type='hidden' name='correctiveActionId' value={correctiveActionId} />
                 <Label htmlFor='capa-verification-result'>Verification Result</Label>
                 <select
                   id='capa-verification-result'
+                  name='verification_result'
                   className='border-input bg-card text-textSecondary mt-2 h-[38px] w-full rounded-md border px-3'
-                  value={verificationResult}
-                  onChange={event =>
-                    setVerificationResult(
-                      event.target.value as 'effective' | 'ineffective' | 'follow_up_required'
-                    )
-                  }
-                  disabled={pending}
+                  defaultValue='effective'
                 >
                   <option value='effective'>Effective</option>
                   <option value='ineffective'>Ineffective</option>
                   <option value='follow_up_required'>Follow-up Required</option>
                 </select>
 
-                <Label htmlFor='capa-verification-notes' className='mt-4 block'>Verification Notes</Label>
+                <Label htmlFor='capa-verification-notes' className='mt-4 block'>
+                  Verification Notes
+                </Label>
                 <Textarea
                   id='capa-verification-notes'
+                  name='verification_notes'
                   className='mt-2'
                   rows={4}
-                  value={verificationNotes}
-                  onChange={event => setVerificationNotes(event.target.value)}
+                  required
                   placeholder='Document evidence reviewed, field verification, and effectiveness...'
-                  disabled={pending}
                 />
 
                 <div className='mt-3 flex gap-2'>
-                  <Button
-                    onClick={runVerification}
-                    disabled={pending || !verificationNotes.trim()}
-                  >
-                    Record Verification
-                  </Button>
-                  <Button
-                    variant='outline'
-                    onClick={() => setVerifyOpen(false)}
-                    disabled={pending}
-                  >
-                    Cancel
-                  </Button>
+                  <Button type='submit'>Record Verification</Button>
                 </div>
-              </div>
+              </form>
             ) : null}
 
-            {closeOpen ? (
-              <div className='rounded-lg border p-4'>
+            {canClose && status === 'verified' ? (
+              <form action={closeCorrectiveActionForm} className='rounded-lg border p-4'>
+                <input type='hidden' name='correctiveActionId' value={correctiveActionId} />
                 <Label htmlFor='capa-closure-notes'>Closure Notes</Label>
                 <Textarea
                   id='capa-closure-notes'
+                  name='closure_notes'
                   className='mt-2'
                   rows={4}
-                  value={closureNotes}
-                  onChange={event => setClosureNotes(event.target.value)}
+                  required
                   placeholder='Document final closure decision and supporting evidence...'
-                  disabled={pending}
                 />
                 <div className='mt-3 flex gap-2'>
-                  <Button onClick={runClose} disabled={pending || !closureNotes.trim()}>
-                    Confirm Closure
-                  </Button>
-                  <Button
-                    variant='outline'
-                    onClick={() => setCloseOpen(false)}
-                    disabled={pending}
-                  >
-                    Cancel
-                  </Button>
+                  <Button type='submit'>Confirm Closure</Button>
                 </div>
-              </div>
+              </form>
             ) : null}
 
             {cancelOpen ? (
-              <div className='rounded-lg border p-4'>
+              <form action={cancelCorrectiveActionForm} className='rounded-lg border p-4'>
+                <input type='hidden' name='correctiveActionId' value={correctiveActionId} />
                 <Label htmlFor='capa-cancellation-notes'>Cancellation Notes</Label>
                 <Textarea
                   id='capa-cancellation-notes'
+                  name='cancellation_notes'
                   className='mt-2'
                   rows={4}
-                  value={cancellationNotes}
-                  onChange={event => setCancellationNotes(event.target.value)}
+                  required
                   placeholder='Document why this Corrective Action is being canceled...'
-                  disabled={pending}
                 />
                 <div className='mt-3 flex gap-2'>
-                  <Button
-                    variant='destructive'
-                    onClick={runCancel}
-                    disabled={pending || !cancellationNotes.trim()}
-                  >
+                  <Button type='submit' variant='destructive'>
                     Confirm Cancellation
                   </Button>
-                  <Button
-                    variant='outline'
-                    onClick={() => setCancelOpen(false)}
-                    disabled={pending}
-                  >
+                  <Button type='button' variant='outline' onClick={() => setCancelOpen(false)}>
                     Back
                   </Button>
                 </div>
-              </div>
+              </form>
+            ) : null}
+
+            {archiveOpen ? (
+              <form action={archiveCorrectiveActionForm} className='rounded-lg border p-4'>
+                <input type='hidden' name='correctiveActionId' value={correctiveActionId} />
+                <p className='text-textSecondary text-sm'>
+                  Archive this Corrective Action? The full record and audit history will be preserved.
+                </p>
+                <div className='mt-3 flex gap-2'>
+                  <Button type='submit'>Confirm Archive</Button>
+                  <Button type='button' variant='outline' onClick={() => setArchiveOpen(false)}>
+                    Back
+                  </Button>
+                </div>
+              </form>
             ) : null}
           </CardContent>
         </Card>
@@ -327,24 +183,22 @@ const CorrectiveActionControls = ({
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <Textarea
-            id='capa-comment'
-            aria-label='Corrective Action comment'
-            rows={4}
-            value={comment}
-            onChange={event => setComment(event.target.value)}
-            placeholder='Add a CAPA update or comment...'
-            disabled={pending || archived}
-          />
-          <Button
-            className='mt-3'
-            variant='outline'
-            onClick={addComment}
-            disabled={pending || archived || !comment.trim()}
-          >
-            <TbMessagePlus />
-            Add Comment
-          </Button>
+          <form action={addCorrectiveActionCommentForm}>
+            <input type='hidden' name='correctiveActionId' value={correctiveActionId} />
+            <Textarea
+              id='capa-comment'
+              aria-label='Corrective Action comment'
+              name='comment'
+              rows={4}
+              required
+              disabled={archived}
+              placeholder='Add a CAPA update or comment...'
+            />
+            <Button type='submit' className='mt-3' variant='outline' disabled={archived}>
+              <TbMessagePlus />
+              Add Comment
+            </Button>
+          </form>
         </CardContent>
       </Card>
     </div>
