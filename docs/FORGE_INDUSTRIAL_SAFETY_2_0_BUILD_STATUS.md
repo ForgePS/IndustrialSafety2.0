@@ -32,6 +32,8 @@ This document is the working implementation ledger for Forge Industrial Safety 2
 | QR Management | Built foundation | Managed QR tokens, scan resolver/history, asset destinations |
 | Lockout / Tagout | Built foundation | Equipment procedures, energy sources, ordered steps, approvals, revisions, reviews, field-use history |
 | Tasks | Built foundation | Tasks/corrective actions, assignment, due dates, completion, comments, activity |
+| Customer Support | Built foundation | Tenant tickets, Forge triage, internal notes/attachments, SLA settings, smoke + CI (merged PR #4) |
+| Corrective Actions / CAPA | In progress | Open PR #6 — first-class CAPA lifecycle linked to Tasks; validate under master directive before merge |
 | OSHA | Not built | Feature registry exists; runtime required |
 | Workers Compensation | Not built | Feature registry exists; restricted runtime required |
 | DOT Compliance | Not built | Feature registry exists; runtime required |
@@ -94,17 +96,22 @@ Do not mark a module Production Ready solely because its code has been committed
 
 ## Recommended implementation order from here
 
-1. Validate the current full migration chain and application build.
-2. Calendar + Reminders shared scheduling foundation.
-3. Emergency Management and Emergency Alerts.
-4. Fleet + DOT shared vehicle/driver compliance foundation.
-5. OSHA recordkeeping.
-6. Workers Compensation restricted case management.
-7. Reporting / dashboard builder and exports.
-8. Safety Supplies.
-9. Messaging.
-10. Food Safety + Grain Sanitation.
-11. Print Manager + Photo Markup.
-12. Forge AI Draft Studio and additional approved actions.
-13. Storage/document security, notifications, integrations, test automation, and production hardening.
-14. AWS production deployment and migration runbook.
+Governed by `docs/FORGE_NEXT_LEVEL_FUNCTIONALITY_MASTER_DIRECTIVE.md` (no shells; full-path completion only).
+
+1. Incorporate and validate Corrective Actions / CAPA (PR #6) against the master directive gate.
+2. Lock Industrial Safety 1.0 → 2.0 parity matrix (PR #5) as the release gate.
+3. Incident ↔ Equipment link hardening (PR #3) if still required after CAPA.
+4. Calendar + Reminders shared scheduling foundation.
+5. Emergency Management and Emergency Alerts.
+6. Fleet + DOT shared vehicle/driver compliance foundation.
+7. OSHA recordkeeping.
+8. Workers Compensation restricted case management.
+9. Reporting / dashboard builder and exports.
+10. Safety Supplies.
+11. Messaging.
+12. Food Safety + Grain Sanitation.
+13. Print Manager + Photo Markup.
+14. Forge Guardian signal foundation (not a chatbot).
+15. Forge AI Draft Studio and additional approved actions.
+16. Storage/document security, notifications, integrations, test automation, and production hardening.
+17. AWS production deployment and migration runbook.
