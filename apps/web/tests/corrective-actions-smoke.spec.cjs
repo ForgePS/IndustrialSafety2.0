@@ -32,8 +32,8 @@ test('corrective action CAPA lifecycle and linked task smoke test', async ({ bro
   await employee.getByLabel('Action Type').selectOption('corrective')
   await employee.getByLabel('Severity').selectOption('high')
   await employee.getByLabel('Source').selectOption('manual')
-  await employee.getByLabel('Assigned Owner').selectOption({ label: /Forge Demo User/ })
-  await employee.getByLabel('Location').selectOption({ label: /Demo Location/ })
+  await employee.getByLabel('Assigned Owner').selectOption({ label: 'Forge Demo User (EMP-0001)' })
+  await employee.getByLabel('Location').selectOption({ label: 'Demo Location (DEMO)' })
   await employee.getByLabel('Due Date & Time').fill('2026-10-15T12:00')
   await employee.getByLabel('Immediate Containment').fill(
     'Machine removed from service and access restricted pending permanent correction.'
