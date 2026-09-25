@@ -83,12 +83,26 @@ test('customer support end-to-end smoke test', async ({ browser }) => {
   await expect(admin.getByRole('heading', { name: 'Support smoke test ticket' })).toBeVisible()
 
   await admin.getByLabel('Reply').fill('Public Forge Support smoke-test reply.')
+  const publicReplyPost = admin.waitForResponse(
+    response =>
+      response.request().method() === 'POST' &&
+      new URL(response.url()).pathname === '/admin/creator/support/' + ticketId
+  )
   await admin.getByRole('button', { name: 'Send reply' }).click()
+  expect((await publicReplyPost).ok()).toBeTruthy()
+  await expect(admin.getByRole('status')).toContainText('Reply sent.')
+  await admin.reload()
   await expect(admin.getByText('Public Forge Support smoke-test reply.')).toBeVisible()
 
   await admin.getByLabel('Internal note').check()
   await admin.getByLabel('Reply').fill('INTERNAL-SMOKE-NOTE-DO-NOT-EXPOSE')
+  const internalNotePost = admin.waitForResponse(
+    response =>
+      response.request().method() === 'POST' &&
+      new URL(response.url()).pathname === '/admin/creator/support/' + ticketId
+  )
   await admin.getByRole('button', { name: 'Save internal note' }).click()
+  expect((await internalNotePost).ok()).toBeTruthy()
   await expect(admin.getByRole('status')).toContainText('Internal note saved.')
   await admin.reload()
   await expect(admin.getByText('INTERNAL-SMOKE-NOTE-DO-NOT-EXPOSE')).toBeVisible()
