@@ -15,10 +15,10 @@ export default async function SupportDetail({params}:{params:Promise<{id:string}
  const companyReply=context.access.effective.some(p=>p.permissionKey==='customer_support.company_reply'&&p.allowed)
  if(ticket.requester_user_id!==context.user.id&&!companyView) notFound()
  const [{data:messages,error:messageError},{data:events,error:eventError},{data:attachments,error:attachmentError}]=await Promise.all([
-  db.from('forge_support_messages').select('id,author_kind,visibility,body,created_at').eq('organization_id',organizationId).eq('ticket_id',id).eq('visibility','public').order('created_at',{ascending:true}).limit(200),
-  db.from('forge_support_events').select('id,event_type,from_value,to_value,detail,created_at').eq('organization_id',organizationId).eq('ticket_id',id).not('event_type','in','(internal_note,internal_attachment,assignment_changed)').order('created_at',{ascending:true}).limit(200),
-  db.from('forge_support_attachments').select('id,file_name,visibility,byte_size,created_at').eq('organization_id',organizationId).eq('ticket_id',id).eq('visibility','public').order('created_at',{ascending:true}).limit(100)
+  db.from('forge_support_messages').select('id,author_kind,visibility,body,created_at').eq('organization_id',organizationId).eq('ticket_id',id).eq('visibility','public').order('created_at',{ascending:false}).limit(200),
+  db.from('forge_support_events').select('id,event_type,from_value,to_value,detail,created_at').eq('organization_id',organizationId).eq('ticket_id',id).not('event_type','in','(internal_note,internal_attachment,assignment_changed)').order('created_at',{ascending:false}).limit(200),
+  db.from('forge_support_attachments').select('id,file_name,visibility,byte_size,created_at').eq('organization_id',organizationId).eq('ticket_id',id).eq('visibility','public').order('created_at',{ascending:false}).limit(100)
  ])
  if(messageError||eventError||attachmentError) throw new Error('Unable to load support conversation.')
- return <SupportConversation ticket={ticket} messages={messages||[]} events={events||[]} attachments={attachments||[]} canReply={ticket.requester_user_id===context.user.id||companyReply} />
+ return <SupportConversation ticket={ticket} messages={[...(messages||[])].reverse()} events={[...(events||[])].reverse()} attachments={[...(attachments||[])].reverse()} canReply={ticket.requester_user_id===context.user.id||companyReply} basePath={process.env.BASEPATH||''} />
 }
