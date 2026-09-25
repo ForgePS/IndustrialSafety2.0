@@ -1,3 +1,4 @@
+import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import type { Metadata } from 'next'
 import { Badge } from '@repo/ui/components/ui/badge'
@@ -117,9 +118,12 @@ const TaskDetailPage = async ({ params }: { params: Promise<{ id: string }> }) =
     verification_notes: task.verification_notes || ''
   }
 
+  const capaManaged = task.source_type === 'corrective_action'
+
   const readOnly =
     Boolean(task.archived_at) ||
     task.status === 'completed' ||
+    capaManaged ||
     !canEdit
 
   return (
@@ -168,11 +172,27 @@ const TaskDetailPage = async ({ params }: { params: Promise<{ id: string }> }) =
         </Card>
       ) : null}
 
+      {capaManaged && task.source_id ? (
+        <Card>
+          <CardHeader>
+            <CardTitle>Managed by Corrective Action</CardTitle>
+            <CardDescription>
+              Assignment, completion, verification, and closure are controlled by the linked CAPA workflow.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Button variant='outline' asChild>
+              <Link href={'/corrective-actions/' + task.source_id}>Open {task.source_reference || 'Corrective Action'}</Link>
+            </Button>
+          </CardContent>
+        </Card>
+      ) : null}
+
       <TaskControls
         taskId={task.id}
         status={task.status}
-        canComplete={Boolean(canComplete)}
-        canArchive={Boolean(canArchive)}
+        canComplete={Boolean(canComplete) && !capaManaged}
+        canArchive={Boolean(canArchive) && !capaManaged}
         archived={Boolean(task.archived_at)}
       />
 
