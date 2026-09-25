@@ -2,8 +2,7 @@ import { createServiceRoleClient } from '@repo/supabase/server'
 import {
   CAPA_WORKFLOW_KEY,
   capaStatusToWorkflowState,
-  isCapaLifecycleStatus,
-  type CapaLifecycleStatus
+  isCapaLifecycleStatus
 } from './forgeCapaWorkflowMap'
 import { ensureWorkflowInstance } from './forgeWorkflow'
 
@@ -12,6 +11,9 @@ import { ensureWorkflowInstance } from './forgeWorkflow'
  * Lifecycle transitions that change status MUST go through
  * forge_perform_capa_lifecycle_transition so CAPA + workflow + event +
  * idempotency + audit stay atomic.
+ *
+ * Form field saves (with optional open→in_progress) MUST go through
+ * forge_update_capa_transactionally — never write status from generic updates.
  */
 
 const TRANSITION_MAP: Record<string, string> = {
@@ -56,11 +58,26 @@ export type CapaLifecycleTransitionResult = {
   ok?: boolean
   error?: string
   duplicate?: boolean
+  conflict?: boolean
   event_id?: string
   capa_status?: string
   workflow_state?: string
   instance_id?: string
   audit_id?: number
+  row_version?: number
+}
+
+export type CapaTransactionalUpdateResult = {
+  ok?: boolean
+  error?: string
+  duplicate?: boolean
+  conflict?: boolean
+  capa_status?: string
+  row_version?: number
+  event_id?: string | null
+  activity_id?: number
+  audit_id?: number
+  transitioned?: boolean
 }
 
 /**
@@ -89,7 +106,7 @@ export const performAtomicCapaLifecycleTransition = async ({
   metadata?: Record<string, unknown>
   idempotencyKey?: string | null
   failAfterCapaUpdate?: boolean
-}): Promise<{ error?: string; result?: CapaLifecycleTransitionResult }> => {
+}): Promise<{ error?: string; conflict?: boolean; result?: CapaLifecycleTransitionResult }> => {
   if (!isCapaLifecycleStatus(fromStatus) || !isCapaLifecycleStatus(toStatus)) {
     return { error: 'Invalid CAPA lifecycle status.' }
   }
@@ -117,13 +134,80 @@ export const performAtomicCapaLifecycleTransition = async ({
   })
 
   if (error) {
-    // Forced failure path raises NX01H_FORCED_FAILURE — surface as error with rollback
     return { error: error.message }
   }
 
   const result = data as CapaLifecycleTransitionResult
   if (!result?.ok) {
-    return { error: result?.error || 'CAPA lifecycle transition failed.', result }
+    return {
+      error: result?.error || 'CAPA lifecycle transition failed.',
+      conflict: Boolean(result?.conflict),
+      result
+    }
+  }
+
+  return { result }
+}
+
+/**
+ * Atomic CAPA form save: whitelisted field patch + optional open→in_progress.
+ * Never accepts status inside fields. Linked task sync is included when present.
+ */
+export const performTransactionalCapaUpdate = async ({
+  organizationId,
+  capaId,
+  expectedRowVersion,
+  expectedStatus,
+  actorUserId,
+  fields,
+  toStatus = null,
+  transitionKey = null,
+  assignmentChanged = false,
+  idempotencyKey,
+  failAfterFields = false
+}: {
+  organizationId: string
+  capaId: string
+  expectedRowVersion: number
+  expectedStatus: string
+  actorUserId: string
+  fields: Record<string, unknown>
+  toStatus?: string | null
+  transitionKey?: string | null
+  assignmentChanged?: boolean
+  idempotencyKey: string
+  failAfterFields?: boolean
+}): Promise<{ error?: string; conflict?: boolean; result?: CapaTransactionalUpdateResult }> => {
+  if ('status' in fields || 'row_version' in fields) {
+    return { error: 'Lifecycle status cannot be updated through field patch.' }
+  }
+
+  const supabase = createServiceRoleClient() as any
+  const { data, error } = await supabase.rpc('forge_update_capa_transactionally', {
+    p_organization_id: organizationId,
+    p_capa_id: capaId,
+    p_expected_row_version: expectedRowVersion,
+    p_expected_status: expectedStatus,
+    p_actor_user_id: actorUserId,
+    p_fields: fields,
+    p_to_status: toStatus,
+    p_transition_key: transitionKey,
+    p_assignment_changed: assignmentChanged,
+    p_idempotency_key: idempotencyKey,
+    p_fail_after_fields: failAfterFields
+  })
+
+  if (error) {
+    return { error: error.message }
+  }
+
+  const result = data as CapaTransactionalUpdateResult
+  if (!result?.ok) {
+    return {
+      error: result?.error || 'Unable to update Corrective Action.',
+      conflict: Boolean(result?.conflict),
+      result
+    }
   }
 
   return { result }

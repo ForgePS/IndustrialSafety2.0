@@ -230,7 +230,9 @@ const CorrectiveActionDetailPage = async ({
     effectiveness_review_due_at: record.effectiveness_review_due_at
       ? new Date(record.effectiveness_review_due_at).toISOString().slice(0, 16)
       : '',
-    effectiveness_notes: record.effectiveness_notes || ''
+    effectiveness_notes: record.effectiveness_notes || '',
+    status: record.status,
+    row_version: record.row_version ?? 1
   }
 
   const readOnly =

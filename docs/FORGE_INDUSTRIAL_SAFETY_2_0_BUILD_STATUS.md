@@ -34,7 +34,7 @@ This document is the working implementation ledger for Forge Industrial Safety 2
 | Tasks | Built foundation | Tasks/corrective actions, assignment, due dates, completion, comments, activity |
 | Customer Support | Built foundation | Tenant tickets, Forge triage, internal notes/attachments, SLA settings, smoke + CI (merged PR #4) |
 | Corrective Actions / CAPA | Built foundation | First-class CAPA lifecycle linked to Tasks; cancel/reopen/verify; cross-tenant 404 smoke + CI (merged PR #6); NX-01 workflow adapter sync |
-| Universal Workflow + Evidence Core | Built (NX-01 + NX-01H + NX-01R) | Shared workflow engine, resource registry + permission-specific scope, relationship registry, record links, approvals, acknowledgments, comments, evidence, activity; CAPA atomic lifecycle incl. form open→in_progress; Incident↔Asset universal sync; Creator platform diagnostic loader |
+| Universal Workflow + Evidence Core | Built (NX-01 + NX-01H + NX-01R + NX-01R2) | Shared workflow engine, resource registry + permission-specific scope, relationship registry, record links, approvals, acknowledgments, comments, evidence, activity; CAPA transactional form saves + row_version concurrency; Incident↔Asset universal sync; Creator platform diagnostic loader |
 | OSHA | Not built | Feature registry exists; runtime required |
 | Workers Compensation | Not built | Feature registry exists; restricted runtime required |
 | DOT Compliance | Not built | Feature registry exists; runtime required |
@@ -82,9 +82,9 @@ This document is the working implementation ledger for Forge Industrial Safety 2
 
 **NX-00 baseline locked** on \`forge-creator-2.0\` — see \`docs/NX00_INTEGRATION_BASELINE_LOCK.md\`.
 
-**NX-01 + NX-01H + NX-01R complete** on \`codex/nx01-universal-workflow-evidence-core\` (PR #7) — see \`docs/NX01_UNIVERSAL_WORKFLOW_EVIDENCE_CORE.md\`.
+**NX-01 + NX-01H + NX-01R + NX-01R2 complete** on \`codex/nx01-universal-workflow-evidence-core\` (PR #7) — see \`docs/NX01_UNIVERSAL_WORKFLOW_EVIDENCE_CORE.md\`.
 
-Shared workflow / record-links / approvals / acknowledgments / comments / evidence / activity foundation is in place with authoritative resource registry, permission-specific Location/Division scope, atomic CAPA lifecycle (including form-driven open→in_progress), Creator platform diagnostic loader, and Incident↔Asset universal link sync.
+Shared workflow / record-links / approvals / acknowledgments / comments / evidence / activity foundation is in place with authoritative resource registry, permission-specific Location/Division scope, transactional CAPA form saves (row_version + atomic field/lifecycle), Creator platform diagnostic loader, and Incident↔Asset universal link sync.
 
 Required ongoing checkpoint for later modules:
 

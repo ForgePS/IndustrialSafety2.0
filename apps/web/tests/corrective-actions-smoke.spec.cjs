@@ -270,3 +270,53 @@ test('corrective action CAPA lifecycle, reopen, cancel, and tenant isolation smo
   await adminContext.close()
   await employeeContext.close()
 })
+
+test('CAPA form save is transactional and rejects stale edits', async ({ browser }) => {
+  const context = await browser.newContext()
+  const page = await context.newPage()
+  await login(page, 'user@forge2.local')
+
+  const title = 'CAPA R2 form save ' + Date.now()
+  await createCapa(page, title)
+  const capaUrl = page.url()
+
+  await expect(page.getByText('In Progress', { exact: true })).toBeVisible({ timeout: 20000 })
+
+  // Field edit while in_progress (no lifecycle flip)
+  await page.locator('textarea[name="preventive_action"]').fill(
+    'R2 updated preventive action after create.'
+  )
+  const savePost = waitForCapaPost(page)
+  await page.getByRole('button', { name: 'Save Corrective Action' }).click()
+  expect((await savePost).ok()).toBeTruthy()
+  await page.reload({ waitUntil: 'load' })
+  await expect(page.locator('textarea[name="preventive_action"]')).toHaveValue(
+    'R2 updated preventive action after create.'
+  )
+  await expect(page.getByText('In Progress', { exact: true })).toBeVisible()
+
+  // Stale form conflict: second context still has old row_version while first advances lifecycle
+  const staleContext = await browser.newContext()
+  const stale = await staleContext.newPage()
+  await login(stale, 'user@forge2.local')
+  await stale.goto(capaUrl)
+  await expect(stale.locator('input[name="title"]')).toBeVisible({ timeout: 20000 })
+
+  await submitForVerification(page)
+  await expect(page.getByText('Pending Verification', { exact: true })).toBeVisible({
+    timeout: 20000
+  })
+
+  await stale.locator('input[name="title"]').fill('STALE TITLE MUST NOT APPLY')
+  const staleSave = waitForCapaPost(stale)
+  await stale.getByRole('button', { name: 'Save Corrective Action' }).click()
+  await staleSave
+  await expect(stale.getByText(/changed|Refresh/i)).toBeVisible({ timeout: 15000 })
+  await stale.reload({ waitUntil: 'load' })
+  await expect(stale.getByRole('heading', { name: title })).toBeVisible()
+  await expect(stale.getByText('Pending Verification', { exact: true })).toBeVisible()
+  await expect(stale.locator('input[name="title"]')).not.toHaveValue('STALE TITLE MUST NOT APPLY')
+
+  await staleContext.close()
+  await context.close()
+})

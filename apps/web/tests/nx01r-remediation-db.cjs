@@ -285,9 +285,17 @@ async function main() {
     'CAPA actions must not use syncWorkflowState for lifecycle'
   )
   assert(
-    actionsSrc.includes('performAtomicCapaLifecycleTransition') &&
-      actionsSrc.includes('capa-form-start_work-'),
-    'Form path must use atomic transition with stable idempotency key'
+    actionsSrc.includes('performTransactionalCapaUpdate') ||
+      actionsSrc.includes('performAtomicCapaLifecycleTransition'),
+    'Form path must use atomic/transactional CAPA update'
+  )
+  assert(
+    !actionsSrc.includes('syncWorkflowState'),
+    'CAPA actions must not use syncWorkflowState for lifecycle'
+  )
+  assert(
+    !/status:\s*before\.status/.test(actionsSrc),
+    'Generic form update must not write status: before.status'
   )
 
   // --- Concurrent CAPA transition conflict ---

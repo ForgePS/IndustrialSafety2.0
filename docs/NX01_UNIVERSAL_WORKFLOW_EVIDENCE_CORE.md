@@ -1,6 +1,6 @@
 # NX-01 — Universal Workflow + Shared Evidence Core
 
-**Status:** NX-01 + NX-01H + NX-01R (PR #7 remediation) on `codex/nx01-universal-workflow-evidence-core`  
+**Status:** NX-01 + NX-01H + NX-01R + NX-01R2 on `codex/nx01-universal-workflow-evidence-core`  
 **Baseline:** `forge-creator-2.0` @ `19ec04e`  
 **Migrations:**
 - `20260924330000_forge_universal_workflow_core.sql`
@@ -100,6 +100,7 @@ Feature `workflow_core` entitled on `internal-demo` / `enterprise`. Permissions 
 | DB/RPC | `node apps/web/tests/workflow-core-db.cjs` |
 | NX-01H hardening | `node apps/web/tests/nx01h-hardening-db.cjs` |
 | NX-01R remediation | `node apps/web/tests/nx01r-remediation-db.cjs` |
+| NX-01R2 CAPA transactional | `node apps/web/tests/nx01r2-capa-transaction-db.cjs` |
 | Playwright NX-01 | `pnpm exec playwright test apps/web/tests/workflow-core-smoke.spec.cjs --workers=1` |
 | Playwright Creator workflows | `pnpm exec playwright test apps/web/tests/creator-workflows-smoke.spec.cjs --workers=1` |
 | Regressions | support / corrective-actions / incident-equipment smokes |
@@ -135,9 +136,7 @@ Evidence upload requires **both**:
 The same pattern applies to `records.evidence.view|manage`, `records.comments.*`, `records.links.*`, `records.acknowledgements.*`, `workflow.transition`, and `workflow.approve`.
 
 ### Atomic form-driven CAPA lifecycle
-`updateCorrectiveAction` never writes lifecycle status directly. Non-lifecycle fields update with status unchanged; `open`→`in_progress` (first action plan) goes through `forge_perform_capa_lifecycle_transition` with stable idempotency key `capa-form-start_work-{capaId}`.
-
-`syncWorkflowState` is retained only for migration/repair/diagnostics — not used by CAPA lifecycle commands.
+Superseded by NX-01R2 transactional form saves (below).
 
 ### Creator platform loader separation
 `listWorkflowDefinitions` remains tenant-secured (`activeOrganization` + `workflow.view`).
@@ -147,10 +146,34 @@ The same pattern applies to `records.evidence.view|manage`, `records.comments.*`
 - `apps/web/tests/nx01r-remediation-db.cjs` — evidence scope contract, form-path failure/success/idempotency, concurrent transition conflict, reconciliation, platform loader contract
 - `apps/web/tests/creator-workflows-smoke.spec.cjs` — platform owner sees definitions; tenant user denied Creator route
 
+## NX-01R2 Transactional CAPA Form Saves
+
+### Row version / concurrency
+`forge_corrective_actions.row_version` (bigint, default 1) increments on every controlled mutation. Form saves and lifecycle RPCs require matching expected version/status or return `conflict: true`.
+
+### Transactional field + lifecycle command
+`forge_update_capa_transactionally` applies a **whitelisted** field patch (never `status`) and optionally performs `open→in_progress` (`start_work`) in one transaction with workflow event, activity, audit, idempotency, and linked-task sync.
+
+### Idempotency identity
+Form commands use `capa:{id}:update:{expectedRowVersion}:{requestId}`. Retries of the same submission reuse the request UUID; new user saves mint a new UUID and must use the current row version.
+
+### Field-only audit transaction
+Field-only edits still write CAPA fields + row_version + module/shared activity + creator audit in the same DB transaction. Failure injection rolls everything back.
+
+### Linked Task decision
+**Required invariant for form saves:** when `linked_task_id` is set, task field/status sync and task activity are included in `forge_update_capa_transactionally`. Lifecycle-only button transitions continue to sync tasks after the lifecycle RPC (adjacent) and emit outbox for later reconciliation if needed. Async outbox consumer remains deferred for non-form paths.
+
+### Stale-write / conflict UX
+Stale forms receive a conflict error (“This Corrective Action changed. Refresh and try again.”) without applying fields or reverting lifecycle status. UI clears the submission request id and refreshes.
+
+### Bugbot findings remediated
+- Form save can revert CAPA status — fixed (status omitted from field updates; row_version guards)
+- Failed start-work skips field audit — fixed (single transactional command)
+
 ## Known remaining limitations
 
 - Polymorphic `resource_id` has no cross-table FK (app + registry validated).
-- Linked-task side effects after CAPA atomic transition remain adjacent (best-effort after RPC; outbox supports later reconciliation).
+- Lifecycle button paths sync linked tasks adjacent to the lifecycle RPC (form path is transactional).
 - No drag-and-drop workflow designer.
 - Outbox rows are written; async consumer processing is optional for later waves.
 

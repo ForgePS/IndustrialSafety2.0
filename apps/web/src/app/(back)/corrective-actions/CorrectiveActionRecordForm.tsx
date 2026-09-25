@@ -1,6 +1,6 @@
 'use client'
 
-import { useMemo, useState, useTransition } from 'react'
+import { useMemo, useRef, useState, useTransition } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { Button } from '@repo/ui/components/ui/button'
@@ -69,6 +69,7 @@ const CorrectiveActionRecordForm = ({
 }) => {
   const router = useRouter()
   const [pending, startTransition] = useTransition()
+  const submissionRequestIdRef = useRef<string | null>(null)
   const [values, setValues] = useState<CorrectiveActionFormValues>(() => {
     const next: CorrectiveActionFormValues = { ...initialValues }
 
@@ -89,6 +90,9 @@ const CorrectiveActionRecordForm = ({
 
     return next
   })
+
+  const expectedRowVersion = Number(initialValues.row_version || 1)
+  const expectedStatus = String(initialValues.status || 'open')
 
   const sections = useMemo(() => {
     const map = new Map<string, { label: string; fields: Field[] }>()
@@ -221,14 +225,35 @@ const CorrectiveActionRecordForm = ({
     if (readOnly) return
 
     startTransition(async () => {
+      if (correctiveActionId && !submissionRequestIdRef.current) {
+        submissionRequestIdRef.current =
+          typeof crypto !== 'undefined' && crypto.randomUUID
+            ? crypto.randomUUID()
+            : 'capa-req-' + Date.now() + '-' + Math.random().toString(16).slice(2)
+      }
+
       const result = correctiveActionId
-        ? await updateCorrectiveAction({ correctiveActionId, values })
+        ? await updateCorrectiveAction({
+            correctiveActionId,
+            values,
+            expectedRowVersion,
+            expectedStatus,
+            requestId: submissionRequestIdRef.current || ''
+          })
         : await createCorrectiveAction(values)
 
       if ('error' in result) {
+        if ('conflict' in result && result.conflict) {
+          submissionRequestIdRef.current = null
+          toast('error', result.error || 'This Corrective Action changed. Refresh and try again.')
+          router.refresh()
+          return
+        }
         toast('error', result.error || 'Unable to save Corrective Action.')
         return
       }
+
+      submissionRequestIdRef.current = null
 
       toast(
         'success',
