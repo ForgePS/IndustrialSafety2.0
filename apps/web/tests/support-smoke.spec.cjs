@@ -90,7 +90,7 @@ test('customer support end-to-end smoke test', async ({ browser }) => {
   )
   await admin.getByRole('button', { name: 'Send reply' }).click()
   expect((await publicReplyPost).ok()).toBeTruthy()
-  await expect(admin.getByRole('status')).toContainText('Reply sent.')
+  await expect(admin.getByText('Reply sent.', { exact: true })).toBeVisible()
   await admin.reload()
   await expect(admin.getByText('Public Forge Support smoke-test reply.')).toBeVisible()
 
@@ -103,7 +103,7 @@ test('customer support end-to-end smoke test', async ({ browser }) => {
   )
   await admin.getByRole('button', { name: 'Save internal note' }).click()
   expect((await internalNotePost).ok()).toBeTruthy()
-  await expect(admin.getByRole('status')).toContainText('Internal note saved.')
+  await expect(admin.getByText('Internal note saved.', { exact: true })).toBeVisible()
   await admin.reload()
   await expect(admin.getByText('INTERNAL-SMOKE-NOTE-DO-NOT-EXPOSE')).toBeVisible()
 
