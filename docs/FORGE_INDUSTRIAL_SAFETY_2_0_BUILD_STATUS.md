@@ -26,9 +26,9 @@ This document is the working implementation ledger for Forge Industrial Safety 2
 | Personnel | Built foundation | Scoped personnel records, profile, assignment metadata |
 | Training | Built foundation | Courses, assignments, completions, approvals |
 | My Training | Built | User-specific assignment/transcript view |
-| Incidents | Built foundation | Incident workflow, scope, activity |
+| Incidents | Built foundation | Incident workflow, scope, activity, **scoped equipment links** (merged PR #3) |
 | Inspections | Built foundation | Templates, inspections, checklist records, findings |
-| Assets & Equipment | Built foundation | Asset identity, assignment, maintenance, meters, retirement |
+| Assets & Equipment | Built foundation | Asset identity, assignment, maintenance, meters, retirement, related incident history |
 | QR Management | Built foundation | Managed QR tokens, scan resolver/history, asset destinations |
 | Lockout / Tagout | Built foundation | Equipment procedures, energy sources, ordered steps, approvals, revisions, reviews, field-use history |
 | Tasks | Built foundation | Tasks/corrective actions, assignment, due dates, completion, comments, activity |
@@ -79,7 +79,13 @@ This document is the working implementation ledger for Forge Industrial Safety 2
 
 ## Current validation state
 
-Customer Support (PR #4) and Corrective Actions / CAPA (PR #6) are merged into \`forge-creator-2.0\` with local + CI Playwright smokes green (including cross-tenant denial).
+**NX-00 baseline locked** on \`forge-creator-2.0\` — see \`docs/NX00_INTEGRATION_BASELINE_LOCK.md\`.
+
+Integrated and gate-validated: Customer Support (PR #4), CAPA (PR #6), parity matrix (PR #5), Incident ↔ Equipment (PR #3).
+
+Local + smoke gates for support, CAPA, and incident-equipment are green, including cross-tenant denial.
+
+Do not start NX-01 until this baseline remains green.
 
 Required ongoing checkpoint for later modules:
 
@@ -87,29 +93,19 @@ Required ongoing checkpoint for later modules:
 2. Confirm Docker Desktop is running.
 3. Run \`pnpm web:supabase:reset\` (or \`pnpm --filter forge-industrial-safety-2.0-web supabase:reset\`).
 4. Confirm every migration and \`seed.sql\` complete successfully.
-5. Run \`pnpm --filter forge-industrial-safety-2.0-web type-check\` and \`build\`.
-6. Run support + CAPA Playwright smokes after \`setup-support-smoke.mjs\`.
+5. Run \`node scripts/check-forge-ai-schemas.cjs\`, type-check, and build.
+6. Run support + CAPA + incident-equipment Playwright smokes after \`setup-support-smoke.mjs\`.
 
 Do not mark a module Production Ready solely because its code has been committed.
 
 ## Recommended implementation order from here
 
-Governed by `docs/FORGE_NEXT_LEVEL_FUNCTIONALITY_MASTER_DIRECTIVE.md` (no shells; full-path completion only).
+Governed by `docs/FORGE_NEXT_LEVEL_FUNCTIONALITY_MASTER_DIRECTIVE.md` and the NX sprint pack (start at **NX-01** only after NX-00 remains locked).
 
-1. Lock Industrial Safety 1.0 → 2.0 parity matrix (PR #5) as the release gate.
-2. CAPA deep-module launchers (Incident/Inspection/LOTO create-from) + evidence attachments.
-3. Incident ↔ Equipment link hardening (PR #3) if still required after CAPA.
-4. Calendar + Reminders shared scheduling foundation.
-5. Emergency Management and Emergency Alerts.
-6. Fleet + DOT shared vehicle/driver compliance foundation.
-7. OSHA recordkeeping.
-8. Workers Compensation restricted case management.
-9. Reporting / dashboard builder and exports.
-10. Safety Supplies.
-11. Messaging.
-12. Food Safety + Grain Sanitation.
-13. Print Manager + Photo Markup.
-14. Forge Guardian signal foundation (not a chatbot).
-15. Forge AI Draft Studio and additional approved actions (incl. CAPA tools).
-16. Storage/document security, notifications, integrations, test automation, and production hardening.
-17. AWS production deployment and migration runbook.
+1. NX-01 — Universal workflow + shared evidence core.
+2. NX-02 — Observations + Risk Register + JSA/JHA.
+3. NX-03 — Permit-to-Work engine.
+4. Continue NX-04…NX-21 per the next-level sprint pack.
+5. Reporting / dashboard builder and exports (as scheduled in waves).
+6. Forge Guardian / Risk Pulse / Command Center after workflow + risk backbone.
+7. AWS production deployment and migration runbook (final hardening).
