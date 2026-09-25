@@ -171,7 +171,7 @@ jobs:
 
       - name: Run customer support browser smoke test
         working-directory: apps/web
-        run: pnpm exec playwright test tests/support-smoke.spec.ts --browser=chromium --reporter=line
+        run: pnpm exec playwright test tests/support-smoke.spec.js --browser=chromium --reporter=line
 
       - name: Show Forge server log on failure
         if: failure()
