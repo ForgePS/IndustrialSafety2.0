@@ -108,6 +108,7 @@ const CorrectiveActionRecordForm = ({
   }
 
   const renderField = (field: Field) => {
+    const fieldId = 'capa-' + field.key
     const assignmentField = ['assigned_personnel_id','location_id','division_id'].includes(field.key)
     const disabled =
       readOnly ||
@@ -120,6 +121,8 @@ const CorrectiveActionRecordForm = ({
     if (field.fieldType === 'textarea') {
       return (
         <Textarea
+          id={fieldId}
+          name={field.key}
           rows={4}
           value={String(value ?? '')}
           placeholder={field.placeholder || undefined}
@@ -133,6 +136,8 @@ const CorrectiveActionRecordForm = ({
       return (
         <label className='flex min-h-[38px] items-center gap-3 rounded-md border px-3'>
           <input
+            id={fieldId}
+            name={field.key}
             type='checkbox'
             checked={Boolean(value)}
             disabled={disabled}
@@ -146,6 +151,8 @@ const CorrectiveActionRecordForm = ({
     if (field.fieldType === 'select') {
       return (
         <select
+          id={fieldId}
+          name={field.key}
           value={String(value ?? '')}
           disabled={disabled}
           onChange={event => setValue(field.key, event.target.value)}
@@ -171,6 +178,8 @@ const CorrectiveActionRecordForm = ({
 
       return (
         <select
+          id={fieldId}
+          name={field.key}
           value={String(value ?? '')}
           disabled={disabled}
           onChange={event => setValue(field.key, event.target.value)}
@@ -197,6 +206,8 @@ const CorrectiveActionRecordForm = ({
 
     return (
       <Input
+        id={fieldId}
+        name={field.key}
         type={type}
         value={String(value ?? '')}
         placeholder={field.placeholder || undefined}
@@ -245,7 +256,7 @@ const CorrectiveActionRecordForm = ({
           <CardContent className='grid grid-cols-1 gap-5 md:grid-cols-12'>
             {section.fields.map(field => (
               <div key={field.id} className={widthClass[field.width] || 'md:col-span-12'}>
-                <Label>
+                <Label htmlFor={'capa-' + field.key}>
                   {field.label}
                   {field.required ? <span className='text-destructive'> *</span> : null}
                 </Label>
