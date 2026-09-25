@@ -2,11 +2,33 @@
 
 import { revalidatePath } from 'next/cache'
 import { createServiceRoleClient } from '@repo/supabase/server'
+import {
+  ensureCapaWorkflowInstance,
+  performAtomicCapaLifecycleTransition,
+  performTransactionalCapaUpdate
+} from '@/lib/forgeCapaWorkflowSync'
 import { correctiveActionWithinScope } from '@/lib/forgeCorrectiveActions'
 import { getEffectiveForm } from '@/lib/forgeForms'
 import { requireTenantPermission } from '@/lib/forgeTenantAuth'
 
-export type CorrectiveActionFormValues = Record<string, string | boolean | null>
+export type CorrectiveActionFormValues = Record<string, string | boolean | number | null>
+
+export type CorrectiveActionUpdateResult =
+  | {
+      ok: true
+      success?: true
+      id: string
+      message: string
+      duplicate?: boolean
+      rowVersion: number
+      status: string
+    }
+  | {
+      ok?: false
+      success?: false
+      error: string
+      conflict?: boolean
+    }
 
 const cleanText = (value: unknown) => {
   if (typeof value !== 'string') return null
@@ -419,6 +441,14 @@ export const createCorrectiveAction = async (values: CorrectiveActionFormValues)
     after: after || correctiveAction
   })
 
+  const created = after || correctiveAction
+  await ensureCapaWorkflowInstance({
+    organizationId,
+    capaId: created.id,
+    status: created.status,
+    actorUserId: context.user.id
+  })
+
   revalidatePath('/corrective-actions')
   revalidatePath('/tasks')
   return { id: correctiveAction.id, message: 'Corrective Action created.' }
@@ -426,24 +456,57 @@ export const createCorrectiveAction = async (values: CorrectiveActionFormValues)
 
 export const updateCorrectiveAction = async ({
   correctiveActionId,
-  values
+  values,
+  expectedRowVersion,
+  expectedStatus,
+  requestId
 }: {
   correctiveActionId: string
   values: CorrectiveActionFormValues
-}) => {
+  expectedRowVersion: number
+  expectedStatus: string
+  requestId: string
+}): Promise<CorrectiveActionUpdateResult> => {
   const context = await requireTenantPermission('corrective_actions.edit')
   const organizationId = context.activeOrganization.id
   const validation = await validateCorrectiveActionForm({ organizationId, values })
 
-  if ('error' in validation) return validation
+  if ('error' in validation && validation.error) {
+    return { ok: false as const, error: validation.error }
+  }
+
+  if (!requestId || !String(requestId).trim()) {
+    return { ok: false as const, error: 'Missing request identity. Refresh and try again.' }
+  }
+
+  if (!Number.isFinite(expectedRowVersion) || expectedRowVersion < 1) {
+    return { ok: false as const, error: 'Missing record version. Refresh and try again.' }
+  }
 
   const supabase = createServiceRoleClient() as any
   const before = await loadCorrectiveAction({ supabase, organizationId, correctiveActionId })
 
-  if (!before) return { error: 'Corrective Action not found.' }
-  if (before.archived_at) return { error: 'Archived Corrective Actions are read-only.' }
+  if (!before) return { ok: false as const, error: 'Corrective Action not found.' }
+  if (before.archived_at) {
+    return { ok: false as const, error: 'Archived Corrective Actions are read-only.' }
+  }
+
+  if (
+    before.row_version !== expectedRowVersion ||
+    before.status !== expectedStatus
+  ) {
+    return {
+      ok: false as const,
+      error: 'This record changed after you opened it. Refresh the record before saving your changes.',
+      conflict: true as const
+    }
+  }
+
   if (!['open', 'in_progress'].includes(before.status)) {
-    return { error: 'This Corrective Action is read-only in its current workflow status.' }
+    return {
+      ok: false as const,
+      error: 'This Corrective Action is read-only in its current workflow status.'
+    }
   }
 
   const mayEdit = await correctiveActionWithinScope({
@@ -452,11 +515,13 @@ export const updateCorrectiveAction = async ({
     scope: context.permission.scope,
     action: before
   })
-  if (!mayEdit) return { error: 'This Corrective Action is outside your edit scope.' }
+  if (!mayEdit) {
+    return { ok: false as const, error: 'This Corrective Action is outside your edit scope.' }
+  }
 
   const payload = buildPayload(values)
   if (!payload.title || !payload.description) {
-    return { error: 'Title and Issue / Nonconformance are required.' }
+    return { ok: false as const, error: 'Title and Issue / Nonconformance are required.' }
   }
 
   const assignmentError = await validateOrgAssignment({
@@ -465,14 +530,16 @@ export const updateCorrectiveAction = async ({
     locationId: payload.location_id,
     divisionId: payload.division_id
   })
-  if (assignmentError) return { error: assignmentError }
+  if (assignmentError) return { ok: false as const, error: assignmentError }
 
   const assignee = await resolveAssignee({
     supabase,
     organizationId,
     personnelId: payload.assigned_personnel_id
   })
-  if ('error' in assignee) return assignee
+  if ('error' in assignee && assignee.error) {
+    return { ok: false as const, error: assignee.error }
+  }
 
   const assignmentChanged =
     payload.assigned_personnel_id !== before.assigned_personnel_id ||
@@ -485,7 +552,10 @@ export const updateCorrectiveAction = async ({
     )
 
     if (!assignPermission) {
-      return { error: 'You do not have permission to change Corrective Action assignment.' }
+      return {
+        ok: false as const,
+        error: 'You do not have permission to change Corrective Action assignment.'
+      }
     }
 
     const assignmentAllowed = await correctiveActionWithinScope({
@@ -502,86 +572,93 @@ export const updateCorrectiveAction = async ({
     })
 
     if (!assignmentAllowed) {
-      return { error: 'The new Corrective Action assignment is outside your assignment scope.' }
+      return {
+        ok: false as const,
+        error: 'The new Corrective Action assignment is outside your assignment scope.'
+      }
     }
   }
 
-  const nextStatus = before.status === 'open' && payload.action_plan ? 'in_progress' : before.status
+  const shouldStartWork = before.status === 'open' && Boolean(payload.action_plan)
 
-  const { data: after, error } = await supabase
-    .from('forge_corrective_actions')
-    .update({
-      ...payload,
-      assigned_personnel_id: assignee.personnelId,
-      assigned_user_id: assignee.userId,
-      status: nextStatus,
-      updated_by: context.user.id,
-      updated_at: new Date().toISOString()
-    })
-    .eq('id', correctiveActionId)
-    .select('*')
-    .single()
-
-  if (error || !after) {
-    return { error: error?.message || 'Unable to update Corrective Action.' }
+  // Never include status — lifecycle is an explicit transition parameter only.
+  const fields = {
+    title: payload.title,
+    description: payload.description,
+    action_type: payload.action_type,
+    severity: payload.severity,
+    source_type: payload.source_type,
+    source_reference: payload.source_reference,
+    assigned_personnel_id: assignee.personnelId,
+    assigned_user_id: assignee.userId,
+    location_id: payload.location_id,
+    division_id: payload.division_id,
+    due_at: payload.due_at,
+    immediate_containment: payload.immediate_containment,
+    root_cause_required: payload.root_cause_required,
+    root_cause: payload.root_cause,
+    action_plan: payload.action_plan,
+    preventive_action: payload.preventive_action,
+    verification_due_at: payload.verification_due_at,
+    effectiveness_review_due_at: payload.effectiveness_review_due_at,
+    effectiveness_notes: payload.effectiveness_notes
   }
 
-  if (after.linked_task_id) {
-    await supabase
-      .from('forge_tasks')
-      .update({
-        title: after.title,
-        description: after.action_plan || after.description,
-        status: nextStatus === 'in_progress' ? 'in_progress' : 'open',
-        priority: priorityForSeverity(after.severity),
-        assigned_personnel_id: after.assigned_personnel_id,
-        assigned_user_id: after.assigned_user_id,
-        location_id: after.location_id,
-        division_id: after.division_id,
-        due_at: after.due_at,
-        updated_by: context.user.id,
-        updated_at: new Date().toISOString()
-      })
-      .eq('organization_id', organizationId)
-      .eq('id', after.linked_task_id)
+  const idempotencyKey =
+    'capa:' +
+    correctiveActionId +
+    ':update:' +
+    expectedRowVersion +
+    ':' +
+    String(requestId).trim()
 
-    await taskActivity({
-      supabase,
-      organizationId,
-      taskId: after.linked_task_id,
-      userId: context.user.id,
-      type: 'synced_from_corrective_action',
-      message: 'Task synchronized from Corrective Action ' + after.action_number + '.'
-    })
-  }
-
-  await activity({
-    supabase,
+  const updated = await performTransactionalCapaUpdate({
     organizationId,
-    correctiveActionId,
-    userId: context.user.id,
-    type: assignmentChanged ? 'assignment_changed' : 'updated',
-    message: assignmentChanged
-      ? 'Corrective Action details and assignment updated.'
-      : 'Corrective Action details updated.'
-  })
-
-  await audit({
-    supabase,
+    capaId: correctiveActionId,
+    expectedRowVersion,
+    expectedStatus: before.status,
     actorUserId: context.user.id,
-    organizationId,
-    action: 'corrective_action.updated',
-    entityId: correctiveActionId,
-    before,
-    after
+    fields,
+    toStatus: shouldStartWork ? 'in_progress' : null,
+    transitionKey: shouldStartWork ? 'start_work' : null,
+    assignmentChanged,
+    idempotencyKey
   })
+
+  if (updated.conflict) {
+    return {
+      ok: false as const,
+      error: 'This record changed after you opened it. Refresh the record before saving your changes.',
+      conflict: true as const
+    }
+  }
+
+  if (updated.error || !updated.result?.ok) {
+    return { ok: false as const, error: updated.error || 'Unable to update Corrective Action.' }
+  }
+
+  const nextRowVersion = Number(updated.result.row_version)
+  const nextStatus = String(updated.result.capa_status || '')
+  if (!Number.isFinite(nextRowVersion) || nextRowVersion < 1 || !nextStatus) {
+    return { ok: false as const, error: 'Update succeeded but concurrency tokens were missing.' }
+  }
 
   revalidatePath('/corrective-actions')
   revalidatePath('/corrective-actions/' + correctiveActionId)
   revalidatePath('/tasks')
-  if (after.linked_task_id) revalidatePath('/tasks/' + after.linked_task_id)
+  if (before.linked_task_id) revalidatePath('/tasks/' + before.linked_task_id)
 
-  return { message: 'Corrective Action updated.' }
+  return {
+    ok: true as const,
+    success: true as const,
+    id: correctiveActionId,
+    message: updated.result.duplicate
+      ? 'Corrective Action update already applied.'
+      : 'Corrective Action updated.',
+    duplicate: Boolean(updated.result.duplicate),
+    rowVersion: nextRowVersion,
+    status: nextStatus
+  }
 }
 
 export const addCorrectiveActionComment = async ({
@@ -658,20 +735,26 @@ export const submitCorrectiveActionForVerification = async (correctiveActionId: 
   }
 
   const now = new Date().toISOString()
-  const { data: after, error } = await supabase
-    .from('forge_corrective_actions')
-    .update({
-      status: 'pending_verification',
+  const transition = await performAtomicCapaLifecycleTransition({
+    organizationId,
+    capaId: correctiveActionId,
+    fromStatus: before.status,
+    toStatus: 'pending_verification',
+    actorUserId: context.user.id,
+    capaPatch: {
       completed_at: now,
-      completed_by: context.user.id,
-      updated_by: context.user.id,
-      updated_at: now
-    })
-    .eq('id', correctiveActionId)
-    .select('*')
-    .single()
+      completed_by: context.user.id
+    },
+    metadata: { source: 'capa_submit' },
+    idempotencyKey: 'capa-submit-' + correctiveActionId + '-' + now
+  })
 
-  if (error || !after) return { error: error?.message || 'Unable to submit Corrective Action.' }
+  if (transition.error || !transition.result?.ok) {
+    return { error: transition.error || 'Unable to submit Corrective Action.' }
+  }
+
+  const after = await loadCorrectiveAction({ supabase, organizationId, correctiveActionId })
+  if (!after) return { error: 'Unable to load Corrective Action after transition.' }
 
   if (after.linked_task_id) {
     await supabase
@@ -696,25 +779,6 @@ export const submitCorrectiveActionForVerification = async (correctiveActionId: 
       message: 'Corrective work submitted for CAPA verification.'
     })
   }
-
-  await activity({
-    supabase,
-    organizationId,
-    correctiveActionId,
-    userId: context.user.id,
-    type: 'submitted_for_verification',
-    message: 'Corrective work submitted for independent verification.'
-  })
-
-  await audit({
-    supabase,
-    actorUserId: context.user.id,
-    organizationId,
-    action: 'corrective_action.submitted_for_verification',
-    entityId: correctiveActionId,
-    before,
-    after
-  })
 
   revalidatePath('/corrective-actions')
   revalidatePath('/corrective-actions/' + correctiveActionId)
@@ -760,25 +824,33 @@ export const verifyCorrectiveAction = async ({
 
   const now = new Date().toISOString()
   const effective = result === 'effective'
+  const toStatus = effective ? 'verified' : 'in_progress'
 
-  const { data: after, error } = await supabase
-    .from('forge_corrective_actions')
-    .update({
-      status: effective ? 'verified' : 'in_progress',
+  const transition = await performAtomicCapaLifecycleTransition({
+    organizationId,
+    capaId: correctiveActionId,
+    fromStatus: before.status,
+    toStatus,
+    actorUserId: context.user.id,
+    comment: verificationNotes,
+    capaPatch: {
       verification_result: result,
       verification_notes: verificationNotes,
       verified_at: effective ? now : null,
-      verified_by: effective ? context.user.id : null,
+      verified_by: effective ? context.user.id : '',
       completed_at: effective ? before.completed_at : null,
-      completed_by: effective ? before.completed_by : null,
-      updated_by: context.user.id,
-      updated_at: now
-    })
-    .eq('id', correctiveActionId)
-    .select('*')
-    .single()
+      completed_by: effective ? before.completed_by : ''
+    },
+    metadata: { source: 'capa_verify', verification_result: result },
+    idempotencyKey: 'capa-verify-' + correctiveActionId + '-' + result + '-' + now
+  })
 
-  if (error || !after) return { error: error?.message || 'Unable to verify Corrective Action.' }
+  if (transition.error || !transition.result?.ok) {
+    return { error: transition.error || 'Unable to verify Corrective Action.' }
+  }
+
+  const after = await loadCorrectiveAction({ supabase, organizationId, correctiveActionId })
+  if (!after) return { error: 'Unable to load Corrective Action after transition.' }
 
   if (after.linked_task_id && !effective) {
     await supabase
@@ -803,30 +875,6 @@ export const verifyCorrectiveAction = async ({
       message: 'Task reopened because CAPA verification requires follow-up.'
     })
   }
-
-  await activity({
-    supabase,
-    organizationId,
-    correctiveActionId,
-    userId: context.user.id,
-    type: effective ? 'verified' : 'verification_returned',
-    message: effective
-      ? 'Corrective Action verified as effective.'
-      : 'Verification requires additional corrective work.',
-    metadata: { verification_result: result }
-  })
-
-  await audit({
-    supabase,
-    actorUserId: context.user.id,
-    organizationId,
-    action: effective
-      ? 'corrective_action.verified'
-      : 'corrective_action.verification_returned',
-    entityId: correctiveActionId,
-    before,
-    after
-  })
 
   revalidatePath('/corrective-actions')
   revalidatePath('/corrective-actions/' + correctiveActionId)
@@ -869,40 +917,25 @@ export const closeCorrectiveAction = async ({
   if (!notes) return { error: 'Closure notes are required.' }
 
   const now = new Date().toISOString()
-  const { data: after, error } = await supabase
-    .from('forge_corrective_actions')
-    .update({
-      status: 'closed',
+  const transition = await performAtomicCapaLifecycleTransition({
+    organizationId,
+    capaId: correctiveActionId,
+    fromStatus: before.status,
+    toStatus: 'closed',
+    actorUserId: context.user.id,
+    comment: notes,
+    capaPatch: {
       closure_notes: notes,
       closed_at: now,
-      closed_by: context.user.id,
-      updated_by: context.user.id,
-      updated_at: now
-    })
-    .eq('id', correctiveActionId)
-    .select('*')
-    .single()
-
-  if (error || !after) return { error: error?.message || 'Unable to close Corrective Action.' }
-
-  await activity({
-    supabase,
-    organizationId,
-    correctiveActionId,
-    userId: context.user.id,
-    type: 'closed',
-    message: 'Corrective Action closed.'
+      closed_by: context.user.id
+    },
+    metadata: { source: 'capa_close' },
+    idempotencyKey: 'capa-close-' + correctiveActionId + '-' + now
   })
 
-  await audit({
-    supabase,
-    actorUserId: context.user.id,
-    organizationId,
-    action: 'corrective_action.closed',
-    entityId: correctiveActionId,
-    before,
-    after
-  })
+  if (transition.error || !transition.result?.ok) {
+    return { error: transition.error || 'Unable to close Corrective Action.' }
+  }
 
   revalidatePath('/corrective-actions')
   revalidatePath('/corrective-actions/' + correctiveActionId)
@@ -940,22 +973,28 @@ export const cancelCorrectiveAction = async ({
   if (!notes) return { error: 'Cancellation notes are required.' }
 
   const now = new Date().toISOString()
-  const { data: after, error } = await supabase
-    .from('forge_corrective_actions')
-    .update({
-      status: 'canceled',
+  const transition = await performAtomicCapaLifecycleTransition({
+    organizationId,
+    capaId: correctiveActionId,
+    fromStatus: before.status,
+    toStatus: 'canceled',
+    actorUserId: context.user.id,
+    comment: notes,
+    capaPatch: {
       closure_notes: notes,
       closed_at: now,
-      closed_by: context.user.id,
-      updated_by: context.user.id,
-      updated_at: now
-    })
-    .eq('id', correctiveActionId)
-    .eq('organization_id', organizationId)
-    .select('*')
-    .single()
+      closed_by: context.user.id
+    },
+    metadata: { source: 'capa_cancel' },
+    idempotencyKey: 'capa-cancel-' + correctiveActionId + '-' + now
+  })
 
-  if (error || !after) return { error: error?.message || 'Unable to cancel Corrective Action.' }
+  if (transition.error || !transition.result?.ok) {
+    return { error: transition.error || 'Unable to cancel Corrective Action.' }
+  }
+
+  const after = await loadCorrectiveAction({ supabase, organizationId, correctiveActionId })
+  if (!after) return { error: 'Unable to load Corrective Action after transition.' }
 
   if (after.linked_task_id) {
     await supabase
@@ -979,25 +1018,6 @@ export const cancelCorrectiveAction = async ({
       message: 'Task canceled because the linked Corrective Action was canceled.'
     })
   }
-
-  await activity({
-    supabase,
-    organizationId,
-    correctiveActionId,
-    userId: context.user.id,
-    type: 'canceled',
-    message: 'Corrective Action canceled.'
-  })
-
-  await audit({
-    supabase,
-    actorUserId: context.user.id,
-    organizationId,
-    action: 'corrective_action.canceled',
-    entityId: correctiveActionId,
-    before,
-    after
-  })
 
   revalidatePath('/corrective-actions')
   revalidatePath('/corrective-actions/' + correctiveActionId)
