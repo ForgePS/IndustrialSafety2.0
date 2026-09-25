@@ -59,8 +59,10 @@ jobs:
       - name: Start and seed local Supabase
         working-directory: apps/web
         run: |
-          supabase start
+          supabase db start
           supabase db reset
+          supabase start
+          supabase status
 
       - name: Export local application environment
         working-directory: apps/web
