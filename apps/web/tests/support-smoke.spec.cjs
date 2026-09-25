@@ -172,8 +172,8 @@ test('customer support end-to-end smoke test', async ({ browser }) => {
   await expect(isolated.getByText('Support smoke test ticket')).toHaveCount(0)
 
   // Direct record navigation must fail in the other tenant.
-  await isolated.goto(ticketUrl)
-  await expect(isolated.getByText(/404|not found|could not be found/i)).toBeVisible()
+  const isolatedTicketResponse = await isolated.goto(ticketUrl)
+  expect(isolatedTicketResponse?.status()).toBe(404)
 
   // Direct attachment download must also fail after changing only tenant scope.
   const isolatedDownloadResponse = await isolationContext.request.get(baseURL + downloadHref)
