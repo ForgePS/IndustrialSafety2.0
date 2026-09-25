@@ -33,7 +33,7 @@ This document is the working implementation ledger for Forge Industrial Safety 2
 | Lockout / Tagout | Built foundation | Equipment procedures, energy sources, ordered steps, approvals, revisions, reviews, field-use history |
 | Tasks | Built foundation | Tasks/corrective actions, assignment, due dates, completion, comments, activity |
 | Customer Support | Built foundation | Tenant tickets, Forge triage, internal notes/attachments, SLA settings, smoke + CI (merged PR #4) |
-| Corrective Actions / CAPA | In progress | Open PR #6 — first-class CAPA lifecycle linked to Tasks; validate under master directive before merge |
+| Corrective Actions / CAPA | Built foundation | First-class CAPA lifecycle linked to Tasks; cancel/reopen/verify; cross-tenant 404 smoke + CI (merged PR #6) |
 | OSHA | Not built | Feature registry exists; runtime required |
 | Workers Compensation | Not built | Feature registry exists; restricted runtime required |
 | DOT Compliance | Not built | Feature registry exists; runtime required |
@@ -79,18 +79,16 @@ This document is the working implementation ledger for Forge Industrial Safety 2
 
 ## Current validation state
 
-Latest LOTO and Tasks work has been committed but has not yet been validated on the local Windows/Supabase environment.
+Customer Support (PR #4) and Corrective Actions / CAPA (PR #6) are merged into \`forge-creator-2.0\` with local + CI Playwright smokes green (including cross-tenant denial).
 
-Required checkpoint:
+Required ongoing checkpoint for later modules:
 
 1. Pull \`forge-creator-2.0\`.
 2. Confirm Docker Desktop is running.
-3. Run \`pnpm web:supabase:reset\`.
+3. Run \`pnpm web:supabase:reset\` (or \`pnpm --filter forge-industrial-safety-2.0-web supabase:reset\`).
 4. Confirm every migration and \`seed.sql\` complete successfully.
-5. Run \`pnpm dev\`.
-6. Validate login and tenant selection.
-7. Validate core module routes.
-8. Run TypeScript/build checks after runtime smoke testing.
+5. Run \`pnpm --filter forge-industrial-safety-2.0-web type-check\` and \`build\`.
+6. Run support + CAPA Playwright smokes after \`setup-support-smoke.mjs\`.
 
 Do not mark a module Production Ready solely because its code has been committed.
 
@@ -98,8 +96,8 @@ Do not mark a module Production Ready solely because its code has been committed
 
 Governed by `docs/FORGE_NEXT_LEVEL_FUNCTIONALITY_MASTER_DIRECTIVE.md` (no shells; full-path completion only).
 
-1. Incorporate and validate Corrective Actions / CAPA (PR #6) against the master directive gate.
-2. Lock Industrial Safety 1.0 → 2.0 parity matrix (PR #5) as the release gate.
+1. Lock Industrial Safety 1.0 → 2.0 parity matrix (PR #5) as the release gate.
+2. CAPA deep-module launchers (Incident/Inspection/LOTO create-from) + evidence attachments.
 3. Incident ↔ Equipment link hardening (PR #3) if still required after CAPA.
 4. Calendar + Reminders shared scheduling foundation.
 5. Emergency Management and Emergency Alerts.
@@ -112,6 +110,6 @@ Governed by `docs/FORGE_NEXT_LEVEL_FUNCTIONALITY_MASTER_DIRECTIVE.md` (no shells
 12. Food Safety + Grain Sanitation.
 13. Print Manager + Photo Markup.
 14. Forge Guardian signal foundation (not a chatbot).
-15. Forge AI Draft Studio and additional approved actions.
+15. Forge AI Draft Studio and additional approved actions (incl. CAPA tools).
 16. Storage/document security, notifications, integrations, test automation, and production hardening.
 17. AWS production deployment and migration runbook.
