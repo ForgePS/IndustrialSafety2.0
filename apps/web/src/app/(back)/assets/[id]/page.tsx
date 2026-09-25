@@ -10,6 +10,7 @@ import AssetRecordForm from '../AssetRecordForm'
 import AssetRetireCard from '../AssetRetireCard'
 import type { AssetFormValues } from '../actions'
 import { assetWithinScope, getAssetDetailData } from '@/lib/forgeAssets'
+import { incidentWithinScope } from '@/lib/forgeIncidents'
 import { getEffectiveForm } from '@/lib/forgeForms'
 import { getEffectiveLookup } from '@/lib/forgeLookups'
 import { getScopedPersonnel } from '@/lib/forgePersonnel'
@@ -81,6 +82,7 @@ const AssetDetailPage = async ({ params }: { params: Promise<{ id: string }> }) 
   const qrCreatePermission = permissions.get('qr_management.create')
   const lotoCreatePermission = permissions.get('loto.create')
   const canUseAi = Boolean(permissions.get('forge_ai.use'))
+  const incidentViewPermission = permissions.get('incidents.view')
 
   const within = async (permission: any) =>
     permission
@@ -108,6 +110,37 @@ const AssetDetailPage = async ({ params }: { params: Promise<{ id: string }> }) 
         })
       : Promise.resolve([])
   ])
+
+  let relatedIncidents: Array<{ id: string; number: string; summary: string; status: string }> = []
+  if (incidentViewPermission) {
+    const { data: links, error: linkError } = await supabase.from('forge_incident_assets')
+      .select('incident_id')
+      .eq('organization_id', organizationId)
+      .eq('asset_id', id)
+      .order('linked_at', { ascending: false })
+    if (linkError) throw new Error('Unable to load related incidents: ' + linkError.message)
+    if (links?.length) {
+      const { data: incidents, error: incidentError } = await supabase.from('forge_incidents')
+        .select('id, organization_id, incident_number, summary, status, reported_by_user_id, assigned_to_user_id, location_id, division_id')
+        .eq('organization_id', organizationId)
+        .in('id', links.map((link: any) => link.incident_id))
+      if (incidentError) throw new Error('Unable to load related incidents: ' + incidentError.message)
+      const visible = await Promise.all((incidents || []).map(async (incident: any) => ({
+        incident,
+        allowed: await incidentWithinScope({
+          organizationId, userId: context.user.id, scope: incidentViewPermission.scope, incident
+        })
+      })))
+      const byId = new Map(visible.filter(item => item.allowed).map(item => [item.incident.id, item.incident]))
+      relatedIncidents = links.flatMap((link: any) => {
+        const incident = byId.get(link.incident_id) as any
+        return incident ? [{
+          id: incident.id, number: incident.incident_number,
+          summary: incident.summary, status: incident.status
+        }] : []
+      })
+    }
+  }
 
   const typeLabels = Object.fromEntries(typeLookup.options.map(option => [option.key, option.label]))
   const statusLabels = Object.fromEntries(statusLookup.options.map(option => [option.key, option.label]))
@@ -199,6 +232,25 @@ const AssetDetailPage = async ({ params }: { params: Promise<{ id: string }> }) 
             : person.first_name + ' ' + person.last_name
         }))}
       />
+
+      {incidentViewPermission ? (
+        <Card>
+          <CardHeader>
+            <CardTitle>Related Incidents</CardTitle>
+            <CardDescription>Incidents linked to this equipment that you are authorized to view.</CardDescription>
+          </CardHeader>
+          <CardContent className='flex flex-col gap-3'>
+            {relatedIncidents.length ? relatedIncidents.map(incident => (
+              <div key={incident.id} className='rounded-lg border p-3'>
+                <Link className='text-primary font-semibold hover:underline' href={'/incidents/' + incident.id}>
+                  {incident.number}
+                </Link>
+                <div className='text-textSecondary mt-1 text-sm'>{incident.summary} · {incident.status.replaceAll('_', ' ')}</div>
+              </div>
+            )) : <p className='text-textSecondary text-sm'>No related incidents in your access scope.</p>}
+          </CardContent>
+        </Card>
+      ) : null}
 
       <Card>
         <CardHeader>
