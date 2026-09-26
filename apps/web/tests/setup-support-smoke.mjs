@@ -97,7 +97,7 @@ if (!roleId) {
 if (!roleId) throw new Error('Unable to prepare smoke-test tenant role.')
 
 const permissions = await request(
-  '/rest/v1/forge_permission_registry?select=id,permission_key&permission_key=in.(customer_support.view,customer_support.create,corrective_actions.view,tasks.view,incidents.view,assets_equipment.view)',
+  '/rest/v1/forge_permission_registry?select=id,permission_key&permission_key=in.(customer_support.view,customer_support.create,corrective_actions.view,tasks.view,incidents.view,assets_equipment.view,observations.view,risk_register.view,jsa_jha.view)',
   { method: 'GET' }
 )
 
@@ -111,7 +111,10 @@ const requiredKeys = [
   'corrective_actions.view',
   'tasks.view',
   'incidents.view',
-  'assets_equipment.view'
+  'assets_equipment.view',
+  'observations.view',
+  'risk_register.view',
+  'jsa_jha.view'
 ]
 const missing = requiredKeys.filter(
   key => !permissions.some(permission => permission.permission_key === key)
@@ -145,14 +148,21 @@ await request('/rest/v1/forge_tenant_user_roles', {
 })
 
 // Outside tenant needs an active plan so entitlement-gated modules (CAPA/Tasks) resolve.
-await request('/rest/v1/forge_subscriptions', {
-  method: 'POST',
-  headers: { Prefer: 'resolution=merge-duplicates,return=minimal' },
-  body: JSON.stringify({
-    organization_id: organizationId,
-    plan_id: '20000000-0000-4000-8000-000000000401',
-    status: 'active'
+try {
+  await request('/rest/v1/forge_subscriptions', {
+    method: 'POST',
+    headers: { Prefer: 'resolution=merge-duplicates,return=minimal' },
+    body: JSON.stringify({
+      organization_id: organizationId,
+      plan_id: '20000000-0000-4000-8000-000000000401',
+      status: 'active'
+    })
   })
-})
+} catch (error) {
+  const message = String(error.message || error)
+  if (!message.includes('23505') && !message.includes('409')) {
+    throw error
+  }
+}
 
 console.log('Second tenant prepared for support smoke test.')

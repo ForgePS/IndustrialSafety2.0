@@ -3,6 +3,7 @@ import { getEffectiveTenantAccess } from '@/lib/forgeEffectiveAccess'
 import type { EffectivePermission } from '@/lib/forgeEffectiveAccess'
 import { inspectionWithinScope } from '@/lib/forgeInspections'
 import { assetWithinScope } from '@/lib/forgeAssets'
+import { createJsa } from '@/lib/forgeJsa'
 import { getEffectiveLookup } from '@/lib/forgeLookups'
 
 export type ForgeAiBoundRecordContext = {
@@ -360,6 +361,117 @@ export const prepareForgeAiAction = async ({
   }
 }
 
+const validateDraftJsaPayload = (payload: Record<string, unknown>) => {
+  const title = cleanText(payload.title)
+  if (!title) return { error: 'JSA title is required.' }
+
+  return {
+    payload: {
+      title,
+      description: cleanText(payload.description),
+      job_title: cleanText(payload.job_title),
+      task_name: cleanText(payload.task_name),
+      work_area: cleanText(payload.work_area),
+      location_id: cleanText(payload.location_id),
+      division_id: cleanText(payload.division_id),
+      status: 'draft'
+    }
+  }
+}
+
+/**
+ * Queue DRAFT-only JSA creation through the approved-action pipeline.
+ * Never writes forge_jsas until a human approves the request.
+ */
+export const prepareDraftJsaAction = async ({
+  organizationId,
+  userId,
+  conversationId,
+  toolRunId,
+  permissionByKey,
+  rawPayload
+}: {
+  organizationId: string
+  userId: string
+  conversationId: string
+  toolRunId: number | null
+  permissionByKey: Map<string, EffectivePermission>
+  rawPayload: Record<string, unknown>
+}) => {
+  const permission = permissionFor(permissionByKey, 'jsa_jha.create')
+  if (!permission) {
+    return { denied: true, reason: 'JSA create permission is not available.' }
+  }
+
+  const supabase = createServiceRoleClient() as any
+  const { data: action } = await supabase
+    .from('forge_ai_action_registry')
+    .select('*')
+    .eq('action_key', 'jsa.create_draft')
+    .eq('platform_enabled', true)
+    .maybeSingle()
+
+  if (!action) {
+    return { error: 'JSA draft AI action is not registered.' }
+  }
+
+  const validated = validateDraftJsaPayload(rawPayload)
+  if ('error' in validated) return validated
+
+  const expiresAt = new Date(Date.now() + 60 * 60 * 1000).toISOString()
+  const riskSummary =
+    'This will create a DRAFT JSA only after human approval. It will not approve, activate, accept risk, or acknowledge workers.'
+
+  const { data: approval, error } = await supabase
+    .from('forge_ai_action_approvals')
+    .insert({
+      organization_id: organizationId,
+      conversation_id: conversationId,
+      tool_run_id: toolRunId,
+      requested_by: userId,
+      action_key: action.action_key,
+      target_type: 'organization',
+      target_id: organizationId,
+      request_payload: validated.payload,
+      risk_summary: riskSummary,
+      status: 'pending',
+      approval_expires_at: expiresAt
+    })
+    .select('*')
+    .single()
+
+  if (error || !approval) {
+    return { error: error?.message || 'Unable to create draft JSA approval request.' }
+  }
+
+  await supabase.from('forge_creator_audit_log').insert({
+    actor_user_id: userId,
+    organization_id: organizationId,
+    action: 'forge_ai.action_requested',
+    entity_type: 'forge_ai_action_approval',
+    entity_id: approval.id,
+    after_value: {
+      action_key: action.action_key,
+      action_name: action.name,
+      target_type: 'organization',
+      request_payload: validated.payload,
+      approval_expires_at: expiresAt
+    }
+  })
+
+  return {
+    pending_approval: true,
+    approval_id: approval.id,
+    action_key: action.action_key,
+    action_name: action.name,
+    proposed_changes: validated.payload,
+    risk_summary: riskSummary,
+    expires_at: expiresAt,
+    instruction:
+      'Tell the user the DRAFT JSA has been prepared but NOT created. They must review and approve it in Forge AI Actions. It will remain DRAFT after execution.'
+  }
+}
+
 const loadTargetForScope = async ({
   supabase,
   organizationId,
@@ -389,6 +501,11 @@ const loadTargetForScope = async ({
       .maybeSingle()
 
     return data
+  }
+
+  if (approval.target_type === 'organization') {
+    if (approval.target_id !== organizationId) return null
+    return { id: organizationId }
   }
 
   return null
@@ -428,6 +545,10 @@ const validatePermissionAtExecution = async ({
       scope: permission.scope,
       asset: target
     })
+  }
+
+  if (action.target_type === 'organization') {
+    return target?.id === organizationId
   }
 
   return false
@@ -557,6 +678,50 @@ const executeAssetMaintenance = async ({
   }
 }
 
+const executeDraftJsa = async ({
+  organizationId,
+  approval,
+  actorUserId
+}: {
+  organizationId: string
+  approval: any
+  actorUserId: string
+}) => {
+  const validated = validateDraftJsaPayload(approval.request_payload || {})
+  if ('error' in validated) throw new Error(validated.error)
+
+  const created = await createJsa({
+    organizationId,
+    userId: actorUserId,
+    input: {
+      title: String(validated.payload.title),
+      description: validated.payload.description || undefined,
+      jobTitle: validated.payload.job_title || undefined,
+      taskName: validated.payload.task_name || undefined,
+      workArea: validated.payload.work_area || undefined,
+      locationId: validated.payload.location_id || undefined,
+      divisionId: validated.payload.division_id || undefined,
+      status: 'draft'
+    }
+  })
+
+  if (!created.ok || !created.jsa) {
+    throw new Error(created.error || 'Unable to create draft JSA.')
+  }
+
+  if (created.jsa.status !== 'draft') {
+    throw new Error('AI draft JSA executor refused non-draft status.')
+  }
+
+  return {
+    entity_type: 'jsa',
+    entity_id: created.jsa.id,
+    jsa_number: created.jsa.jsa_number,
+    status: created.jsa.status,
+    message: 'Draft JSA created. It remains DRAFT and was not approved or activated.'
+  }
+}
+
 export const approveAndExecuteForgeAiAction = async ({
   organizationId,
   approverUserId,
@@ -669,6 +834,12 @@ export const approveAndExecuteForgeAiAction = async ({
     } else if (approval.action_key === 'asset.add_maintenance') {
       result = await executeAssetMaintenance({
         supabase,
+        organizationId,
+        approval,
+        actorUserId: approverUserId
+      })
+    } else if (approval.action_key === 'jsa.create_draft') {
+      result = await executeDraftJsa({
         organizationId,
         approval,
         actorUserId: approverUserId

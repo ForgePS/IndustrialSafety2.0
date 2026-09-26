@@ -8,6 +8,9 @@ import { getScopedAssets } from '@/lib/forgeAssets'
 import { getScopedQrCodes } from '@/lib/forgeQr'
 import { getScopedLotoProcedures } from '@/lib/forgeLoto'
 import { getScopedTasks } from '@/lib/forgeTasks'
+import { listObservations } from '@/lib/forgeObservations'
+import { listRisks, loadRisk } from '@/lib/forgeRiskRegister'
+import { listJsas } from '@/lib/forgeJsa'
 import { searchForgeAiKnowledge } from '@/lib/forgeAiKnowledge'
 import {
   getForgeAiAssetAnalytics,
@@ -19,6 +22,7 @@ import {
 } from '@/lib/forgeAiAnalytics'
 import {
   prepareForgeAiAction,
+  prepareDraftJsaAction,
   type ForgeAiAvailableAction,
   type ForgeAiBoundRecordContext
 } from '@/lib/forgeAiActions'
@@ -277,6 +281,105 @@ const definitions: Record<string, any> = {
       additionalProperties: false
     }
   },
+  search_observations: {
+    type: 'function',
+    name: 'search_observations',
+    description: 'Search safety observations within the user permission scope. Never returns anonymous reporter identity.',
+    strict: true,
+    parameters: {
+      type: 'object',
+      properties: {
+        query: { type: 'string' },
+        status: { type: ['string','null'] },
+        limit: { type: ['integer','null'], minimum: 1, maximum: 50, description: 'Maximum records to return, or null for the default.' }
+      },
+      required: ['query','status','limit'],
+      additionalProperties: false
+    }
+  },
+  analyze_observations: {
+    type: 'function',
+    name: 'analyze_observations',
+    description: 'Analyze observation counts by status, type, severity and Location within the user permission scope. Source-grounded aggregates only.',
+    strict: true,
+    parameters: {
+      type: 'object',
+      properties: {
+        days: { type: 'integer', minimum: 1, maximum: 3650, description: 'Rolling lookback window in days.' },
+        status: { type: ['string','null'] },
+        observation_type: { type: ['string','null'] }
+      },
+      required: ['days','status','observation_type'],
+      additionalProperties: false
+    }
+  },
+  search_risks: {
+    type: 'function',
+    name: 'search_risks',
+    description: 'Search Risk Register entries within the user permission scope by number, title, status, category, owner or Location.',
+    strict: true,
+    parameters: {
+      type: 'object',
+      properties: {
+        query: { type: 'string' },
+        status: { type: ['string','null'] },
+        limit: { type: ['integer','null'], minimum: 1, maximum: 50, description: 'Maximum records to return, or null for the default.' }
+      },
+      required: ['query','status','limit'],
+      additionalProperties: false
+    }
+  },
+  explain_risk: {
+    type: 'function',
+    name: 'explain_risk',
+    description: 'Explain one Risk Register entry using server-authoritative inherent/residual scores, bands, controls and review cadence. Scope and permission enforced.',
+    strict: true,
+    parameters: {
+      type: 'object',
+      properties: {
+        risk_id: { type: 'string', description: 'Risk UUID within the current tenant.' }
+      },
+      required: ['risk_id'],
+      additionalProperties: false
+    }
+  },
+  search_jsas: {
+    type: 'function',
+    name: 'search_jsas',
+    description: 'Search job safety analyses within the user permission scope by number, title, status, task, Location or Division.',
+    strict: true,
+    parameters: {
+      type: 'object',
+      properties: {
+        query: { type: 'string' },
+        status: { type: ['string','null'] },
+        limit: { type: ['integer','null'], minimum: 1, maximum: 50, description: 'Maximum records to return, or null for the default.' }
+      },
+      required: ['query','status','limit'],
+      additionalProperties: false
+    }
+  },
+  draft_jsa: {
+    type: 'function',
+    name: 'draft_jsa',
+    description: 'Prepare a DRAFT-only JSA for human approval. Never approves, activates, accepts risk, or acknowledges workers. Persistence requires approved-action confirmation.',
+    strict: true,
+    parameters: {
+      type: 'object',
+      properties: {
+        title: { type: 'string' },
+        description: { type: ['string','null'] },
+        job_title: { type: ['string','null'] },
+        task_name: { type: ['string','null'] },
+        work_area: { type: ['string','null'] },
+        location_id: { type: ['string','null'] },
+        division_id: { type: ['string','null'] },
+        persist_requested: { type: 'boolean', description: 'When true, queue an approved-action request to create a DRAFT JSA. Never writes immediately.' }
+      },
+      required: ['title','description','job_title','task_name','work_area','location_id','division_id','persist_requested'],
+      additionalProperties: false
+    }
+  },
   analytics_executive_summary: {
     type: 'function',
     name: 'analytics_executive_summary',
@@ -492,6 +595,48 @@ const executeCompanySnapshot = async (context: RuntimeContext) => {
       out_of_service: assets.filter((item: any) => item.status === 'out_of_service').length,
       maintenance: assets.filter((item: any) => item.status === 'maintenance').length,
       poor_or_unserviceable: assets.filter((item: any) => ['poor','unserviceable'].includes(item.condition)).length
+    }
+  }
+
+  const observationPermission = getPermission(context, 'observations.view')
+  if (observationPermission) {
+    const observations = await listObservations({
+      organizationId,
+      userId,
+      permission: observationPermission
+    })
+    result.observations = {
+      visible_count: observations.length,
+      open_count: observations.filter((item: any) => !['closed', 'no_action'].includes(item.status)).length,
+      action_required: observations.filter((item: any) => item.status === 'action_required').length
+    }
+  }
+
+  const riskPermission = getPermission(context, 'risk_register.view')
+  if (riskPermission) {
+    const risks = await listRisks({
+      organizationId,
+      userId,
+      permission: riskPermission
+    })
+    result.risks = {
+      visible_count: risks.length,
+      active_count: risks.filter((item: any) => ['active', 'monitoring', 'in_treatment', 'under_assessment', 'assessment', 'review'].includes(item.status)).length,
+      closed_count: risks.filter((item: any) => item.status === 'closed').length
+    }
+  }
+
+  const jsaPermission = getPermission(context, 'jsa_jha.view')
+  if (jsaPermission) {
+    const jsas = await listJsas({
+      organizationId,
+      userId,
+      permission: jsaPermission
+    })
+    result.jsas = {
+      visible_count: jsas.length,
+      active_count: jsas.filter((item: any) => item.status === 'active').length,
+      draft_count: jsas.filter((item: any) => item.status === 'draft').length
     }
   }
 
@@ -935,6 +1080,246 @@ const executeToolValue = async ({
         }))
     }
 
+    case 'search_observations': {
+      if (!permission) return { denied: true, reason: 'Observations permission is not available.' }
+      const rows = await listObservations({ organizationId, userId, permission })
+      const limit = limitValue(args.limit)
+
+      return rows
+        .filter((item: any) => {
+          if (args.status && item.status !== args.status) return false
+          return searchMatch([
+            item.observation_number,
+            item.title,
+            item.description,
+            item.observation_type,
+            item.category,
+            item.severity,
+            item.status,
+            item.locations?.name,
+            item.divisions?.name
+          ], args.query || '')
+        })
+        .slice(0, limit)
+        .map((item: any) => ({
+          record_type: 'observation',
+          id: item.id,
+          observation_number: item.observation_number,
+          title: item.title || null,
+          status: item.status,
+          observation_type: item.observation_type,
+          category: item.category || null,
+          severity: item.severity || null,
+          occurred_at: item.occurred_at,
+          location: item.locations?.name || null,
+          division: item.divisions?.name || null,
+          is_anonymous: Boolean(item.is_anonymous),
+          reporter: item.is_anonymous ? 'Anonymous' : null
+        }))
+    }
+
+    case 'analyze_observations': {
+      if (!permission) return { denied: true, reason: 'Observations permission is not available.' }
+      const rows = await listObservations({ organizationId, userId, permission })
+      const days = Math.min(Math.max(Number(args.days) || 90, 1), 3650)
+      const cutoff = Date.now() - days * 24 * 60 * 60 * 1000
+
+      const scoped = rows.filter((item: any) => {
+        if (args.status && item.status !== args.status) return false
+        if (args.observation_type && item.observation_type !== args.observation_type) return false
+        const occurred = item.occurred_at ? new Date(item.occurred_at).getTime() : new Date(item.created_at).getTime()
+        return Number.isFinite(occurred) && occurred >= cutoff
+      })
+
+      const tally = (keyFn: (item: any) => string) => {
+        const counts: Record<string, number> = {}
+        for (const item of scoped) {
+          const key = keyFn(item) || 'unknown'
+          counts[key] = (counts[key] || 0) + 1
+        }
+        return counts
+      }
+
+      return {
+        record_type: 'observation_analysis',
+        lookback_days: days,
+        total: scoped.length,
+        by_status: tally(item => String(item.status || 'unknown')),
+        by_type: tally(item => String(item.observation_type || 'unknown')),
+        by_severity: tally(item => String(item.severity || 'unset')),
+        by_location: tally(item => String(item.locations?.name || 'unspecified')),
+        source: 'forge_observations',
+        note: 'Aggregates are scoped to the caller permission and never include anonymous reporter identity.'
+      }
+    }
+
+    case 'search_risks': {
+      if (!permission) return { denied: true, reason: 'Risk Register permission is not available.' }
+      const rows = await listRisks({ organizationId, userId, permission })
+      const limit = limitValue(args.limit)
+
+      return rows
+        .filter((item: any) => {
+          if (args.status && item.status !== args.status) return false
+          return searchMatch([
+            item.risk_number,
+            item.title,
+            item.description,
+            item.category,
+            item.status,
+            item.inherent_band_key,
+            item.residual_band_key,
+            item.locations?.name,
+            item.divisions?.name,
+            item.forge_personnel?.first_name,
+            item.forge_personnel?.last_name
+          ], args.query || '')
+        })
+        .slice(0, limit)
+        .map((item: any) => ({
+          record_type: 'risk',
+          id: item.id,
+          risk_number: item.risk_number,
+          title: item.title,
+          status: item.status,
+          category: item.category || null,
+          inherent_score: item.inherent_score ?? null,
+          inherent_band: item.inherent_band_key || null,
+          residual_score: item.residual_score ?? null,
+          residual_band: item.residual_band_key || null,
+          next_review_at: item.next_review_at || item.review_due_at || null,
+          location: item.locations?.name || null,
+          division: item.divisions?.name || null,
+          owner: item.forge_personnel
+            ? [item.forge_personnel.first_name, item.forge_personnel.last_name].filter(Boolean).join(' ')
+            : null
+        }))
+    }
+
+    case 'explain_risk': {
+      if (!permission) return { denied: true, reason: 'Risk Register permission is not available.' }
+      const riskId = String(args.risk_id || '').trim()
+      if (!riskId) return { denied: true, reason: 'risk_id is required.' }
+
+      const loaded = await loadRisk({
+        organizationId,
+        userId,
+        permission,
+        riskId
+      })
+
+      if (!loaded?.risk) {
+        return { denied: true, reason: 'Risk not found within the current tenant and permission scope.' }
+      }
+
+      const risk = loaded.risk as any
+      const controls = (loaded.controls || []) as any[]
+
+      return {
+        record_type: 'risk_explanation',
+        id: risk.id,
+        risk_number: risk.risk_number,
+        title: risk.title,
+        status: risk.status,
+        category: risk.category || null,
+        matrix: {
+          risk_matrix_id: risk.risk_matrix_id,
+          risk_matrix_version: risk.risk_matrix_version
+        },
+        inherent: {
+          likelihood: risk.inherent_likelihood_key,
+          severity: risk.inherent_severity_key,
+          score: risk.inherent_score,
+          band: risk.inherent_band_key
+        },
+        residual: {
+          likelihood: risk.residual_likelihood_key,
+          severity: risk.residual_severity_key,
+          score: risk.residual_score,
+          band: risk.residual_band_key
+        },
+        controls: controls.map(control => ({
+          id: control.id,
+          title: control.title || control.name || null,
+          control_type: control.control_type || null,
+          status: control.status || null
+        })),
+        next_review_at: risk.next_review_at || risk.review_due_at || null,
+        location: risk.locations?.name || null,
+        division: risk.divisions?.name || null,
+        source: 'forge_risks',
+        note: 'Scores and bands are server-authoritative from the referenced risk matrix version.'
+      }
+    }
+
+    case 'search_jsas': {
+      if (!permission) return { denied: true, reason: 'JSA permission is not available.' }
+      const rows = await listJsas({ organizationId, userId, permission })
+      const limit = limitValue(args.limit)
+
+      return rows
+        .filter((item: any) => {
+          if (args.status && item.status !== args.status) return false
+          return searchMatch([
+            item.jsa_number,
+            item.title,
+            item.description,
+            item.job_title,
+            item.task_name,
+            item.work_area,
+            item.status,
+            item.locations?.name,
+            item.divisions?.name
+          ], args.query || '')
+        })
+        .slice(0, limit)
+        .map((item: any) => ({
+          record_type: 'jsa',
+          id: item.id,
+          jsa_number: item.jsa_number,
+          title: item.title,
+          status: item.status,
+          version: item.version,
+          job_title: item.job_title || null,
+          task_name: item.task_name || null,
+          work_area: item.work_area || null,
+          location: item.locations?.name || null,
+          division: item.divisions?.name || null,
+          is_template: Boolean(item.is_template)
+        }))
+    }
+
+    case 'draft_jsa': {
+      if (!permission) return { denied: true, reason: 'JSA create permission is not available.' }
+      const title = String(args.title || '').trim()
+      if (!title) return { denied: true, reason: 'JSA title is required.' }
+
+      const proposal = {
+        title,
+        description: args.description ? String(args.description).trim() : null,
+        job_title: args.job_title ? String(args.job_title).trim() : null,
+        task_name: args.task_name ? String(args.task_name).trim() : null,
+        work_area: args.work_area ? String(args.work_area).trim() : null,
+        location_id: args.location_id ? String(args.location_id).trim() : null,
+        division_id: args.division_id ? String(args.division_id).trim() : null,
+        status: 'draft' as const
+      }
+
+      if (!args.persist_requested) {
+        return {
+          draft_only: true,
+          persisted: false,
+          proposal,
+          instruction: 'Draft proposal only. Set persist_requested=true to queue human approval for DRAFT creation. Never auto-approves or activates.'
+        }
+      }
+
+      return {
+        requires_conversation: true,
+        proposal
+      }
+    }
+
     case 'analytics_executive_summary': {
       if (!permission) return { denied: true, reason: 'AI Analytics permission is not available.' }
       const range = resolveForgeAiAnalyticsRange({
@@ -1148,6 +1533,61 @@ export const executeForgeAiTool = async ({
       }
 
       return prepared
+    }
+
+    if (capability.capability_key === 'draft_jsa') {
+      const draftResult = await executeToolValue({ context, capability, args })
+
+      if ((draftResult as any)?.requires_conversation) {
+        const prepared = await prepareDraftJsaAction({
+          organizationId: context.activeOrganization.id,
+          userId: context.user.id,
+          conversationId,
+          toolRunId: toolRun?.id || null,
+          permissionByKey: context.permissionByKey,
+          rawPayload: (draftResult as any).proposal || {}
+        })
+
+        if (toolRun?.id) {
+          await supabase
+            .from('forge_ai_tool_runs')
+            .update({
+              status: (prepared as any).pending_approval
+                ? 'pending_approval'
+                : (prepared as any).error || (prepared as any).denied
+                  ? 'denied'
+                  : 'completed',
+              result_summary: (prepared as any).pending_approval
+                ? 'Draft JSA prepared and awaiting human approval.'
+                : String((prepared as any).error || (prepared as any).reason || 'Draft JSA preparation completed.'),
+              result_metadata: {
+                approval_id: (prepared as any).approval_id || null,
+                action_key: 'jsa.create_draft',
+                duration_ms: Date.now() - started
+              },
+              completed_at: new Date().toISOString()
+            })
+            .eq('id', toolRun.id)
+        }
+
+        return prepared
+      }
+
+      if (toolRun?.id) {
+        await supabase
+          .from('forge_ai_tool_runs')
+          .update({
+            status: (draftResult as any)?.denied ? 'denied' : 'completed',
+            result_summary: (draftResult as any)?.denied
+              ? String((draftResult as any).reason || 'Denied')
+              : 'Returned draft JSA proposal without persistence.',
+            result_metadata: { duration_ms: Date.now() - started },
+            completed_at: new Date().toISOString()
+          })
+          .eq('id', toolRun.id)
+      }
+
+      return draftResult
     }
 
     const value = await executeToolValue({ context, capability, args })

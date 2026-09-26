@@ -6,6 +6,9 @@ import { getTenantContext, type TenantContextOrganization } from './forgeTenantC
 type TenantUser = NonNullable<Awaited<ReturnType<typeof getTenantContext>>['user']>
 
 export type ForgeResourceType =
+  | 'observation'
+  | 'risk_register'
+  | 'jsa'
   | 'corrective_action'
   | 'task'
   | 'incident'
@@ -54,6 +57,9 @@ export type ResolvedForgeResource = {
 }
 
 export const FORGE_RESOURCE_TYPES: ForgeResourceType[] = [
+  'observation',
+  'risk_register',
+  'jsa',
   'corrective_action',
   'task',
   'incident',
@@ -69,6 +75,42 @@ export const FORGE_RESOURCE_TYPES: ForgeResourceType[] = [
 ]
 
 const RESOURCE_DESCRIPTORS: Record<ForgeResourceType, ForgeResourceDescriptor> = {
+  observation: {
+    resourceType: 'observation',
+    table: 'forge_observations',
+    featureKey: 'observations',
+    defaultViewPermission: 'observations.view',
+    defaultManagePermission: 'observations.edit',
+    scopeMode: 'LOCATION_DIVISION',
+    numberColumn: 'observation_number',
+    titleColumn: 'title',
+    statusColumn: 'status',
+    archivedColumn: 'archived_at'
+  },
+  risk_register: {
+    resourceType: 'risk_register',
+    table: 'forge_risks',
+    featureKey: 'risk_register',
+    defaultViewPermission: 'risk_register.view',
+    defaultManagePermission: 'risk_register.edit',
+    scopeMode: 'LOCATION_DIVISION',
+    numberColumn: 'risk_number',
+    titleColumn: 'title',
+    statusColumn: 'status',
+    archivedColumn: 'archived_at'
+  },
+  jsa: {
+    resourceType: 'jsa',
+    table: 'forge_jsas',
+    featureKey: 'jsa_jha',
+    defaultViewPermission: 'jsa_jha.view',
+    defaultManagePermission: 'jsa_jha.edit',
+    scopeMode: 'LOCATION_DIVISION',
+    numberColumn: 'jsa_number',
+    titleColumn: 'title',
+    statusColumn: 'status',
+    archivedColumn: 'archived_at'
+  },
   corrective_action: {
     resourceType: 'corrective_action',
     table: 'forge_corrective_actions',

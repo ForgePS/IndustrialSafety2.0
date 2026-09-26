@@ -102,7 +102,7 @@ Do not mark a module Production Ready solely because its code has been committed
 Governed by `docs/FORGE_NEXT_LEVEL_FUNCTIONALITY_MASTER_DIRECTIVE.md` and the NX sprint pack (start **NX-02** only after NX-01 gates are green on the integration branch).
 
 1. NX-01 — Universal workflow + shared evidence core *(complete including NX-01H)*.
-2. NX-02 — Observations + Risk Register + JSA/JHA.
+2. NX-02 — Observations + Risk Register + JSA/JHA *(NX-02H atomic lifecycle RPCs, matrix immutability, risk approval/acceptance/reviews, JSA residual hazard UI + activation/crew/stop-work, Forge AI tools, DB + Playwright lifecycle packs green on `codex/nx02-risk-prevention-backbone`; PR against `forge-creator-2.0` pending review)*.
 3. NX-03 — Permit-to-Work engine.
 4. Continue NX-04…NX-21 per the next-level sprint pack.
 5. Reporting / dashboard builder and exports (as scheduled in waves).
