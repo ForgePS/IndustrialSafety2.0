@@ -8,7 +8,7 @@ import { createServiceRoleClient } from '@repo/supabase/server'
 import JsaControls from '../JsaControls'
 import JsaCrossModuleActions from '../JsaCrossModuleActions'
 import JsaRecordForm from '../JsaRecordForm'
-import { JsaActionsPanel, JsaStepsHazardsPanel } from '../JsaDetailPanels'
+import { JsaActionsPanel, JsaRequirementsPanel, JsaStepsHazardsPanel, CreateJsaFromTemplateButton } from '../JsaDetailPanels'
 import type { JsaFormValues } from '../actions'
 import RecordActivityTimeline from '@/components/workflow/RecordActivityTimeline'
 import RecordCommentsPanel from '@/components/workflow/RecordCommentsPanel'
@@ -106,6 +106,8 @@ const JsaDetailPage = async ({
   const canCreateRisk = Boolean(permissions.get('risk_register.create'))
   const canLinkAsset = Boolean(permissions.get('jsa_jha.edit'))
 
+  const canCreate = Boolean(permissions.get('jsa_jha.create'))
+
   const canEdit = editPermission
     ? await jsaWithinScope({
         organizationId,
@@ -124,16 +126,20 @@ const JsaDetailPage = async ({
       })
     : false
 
-  const canExecute = executePermission
-    ? await jsaWithinScope({
-        organizationId,
-        userId: context.user.id,
-        scope: executePermission.scope,
-        jsa: record
-      })
-    : false
+  const canExecute =
+    record.status === 'active' &&
+    Boolean(
+      executePermission
+        ? await jsaWithinScope({
+            organizationId,
+            userId: context.user.id,
+            scope: executePermission.scope,
+            jsa: record
+          })
+        : false
+    )
 
-  const [personnel, { data: allLocations }, { data: allDivisions }, assignments] =
+  const [personnel, { data: allLocations }, { data: allDivisions }, assignments, { data: trainingCourseRows }] =
     await Promise.all([
       assignPermission || editPermission || executePermission
         ? getScopedPersonnel({
@@ -157,7 +163,14 @@ const JsaDetailPage = async ({
       getTenantScopeAssignments({
         organizationId,
         userId: context.user.id
-      })
+      }),
+      supabase
+        .from('forge_training_courses')
+        .select('id, title, course_code')
+        .eq('organization_id', organizationId)
+        .eq('is_active', true)
+        .order('title')
+        .limit(100)
     ])
 
   const scope = (assignPermission || editPermission || context.permission).scope
@@ -182,6 +195,7 @@ const JsaDetailPage = async ({
     prepared_by_personnel_id: record.prepared_by_personnel_id || '',
     effective_at: toDatetimeLocal(record.effective_at),
     review_due_at: toDatetimeLocal(record.review_due_at),
+    is_template: Boolean(record.is_template),
     row_version: record.row_version
   }
 
@@ -297,7 +311,9 @@ const JsaDetailPage = async ({
           <h1 className='text-textPrimary mt-1 text-3xl font-bold'>{record.title}</h1>
           <div className='text-textSecondary mt-2 flex flex-wrap items-center gap-2 text-sm'>
             <span>{record.jsa_number}</span>
-            <Badge variant='outline'>{statusLabel}</Badge>
+            <Badge variant='outline' data-testid='jsa-status'>
+              {statusLabel}
+            </Badge>
             <Badge variant='secondary'>v{record.version}</Badge>
             {record.parent_jsa_id ? (
               <Link
@@ -310,6 +326,11 @@ const JsaDetailPage = async ({
           </div>
         </div>
         <div className='flex flex-wrap items-center gap-2'>
+          <CreateJsaFromTemplateButton
+            jsaId={record.id}
+            isTemplate={Boolean(record.is_template)}
+            canCreate={canCreate}
+          />
           <JsaCrossModuleActions
             jsaId={record.id}
             canCreateCapa={canCreateCapa}
@@ -434,6 +455,28 @@ const JsaDetailPage = async ({
         }))}
         likelihoodOptions={likelihoodOptions}
         severityOptions={severityOptions}
+      />
+
+      <JsaRequirementsPanel
+        jsaId={record.id}
+        canEdit={canEdit}
+        ppeItems={(detail.ppeItems || []).map((item: any) => ({
+          id: item.id,
+          label: item.label,
+          required: Boolean(item.required)
+        }))}
+        trainingRequirements={(detail.trainingRequirements || []).map((item: any) => ({
+          id: item.id,
+          training_course_id: item.training_course_id,
+          required: Boolean(item.required),
+          courseTitle:
+            (item.forge_training_courses as { title?: string } | null)?.title ||
+            item.training_course_id
+        }))}
+        trainingCourses={(trainingCourseRows || []).map((row: any) => ({
+          id: row.id,
+          label: row.title + (row.course_code ? ' (' + row.course_code + ')' : '')
+        }))}
       />
 
       <JsaActionsPanel

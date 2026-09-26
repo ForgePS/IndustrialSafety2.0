@@ -11,8 +11,7 @@ const {
   clickWorkflowButton,
   confirmCommentedTransition,
   assertNoHorizontalOverflow,
-  readObsRowVersion,
-  switchToOutsideOrgIfAvailable
+  readObsRowVersion
 } = require('./nx02h-playwright-helpers.cjs')
 
 test.describe.configure({ mode: 'serial', timeout: 180000 })
@@ -197,24 +196,19 @@ test.describe('NX-02H observation lifecycle', () => {
     }
   })
 
-  test('cross-tenant denial with outside org when fixture exists', async () => {
-    const switched = await switchToOutsideOrgIfAvailable(page)
-    if (!switched) {
-      console.log('SOFT CHECK: Outside org unavailable; cross-tenant UI denial deferred.')
-      return
-    }
-
-    const isolatedResponse = await page.goto(baseURL + '/observations/' + observationId)
-    const status = isolatedResponse?.status()
-    if (status !== 404 && status !== 403) {
-      console.log(
-        'SOFT CHECK: Expected 404/403 after outside-org switch; got ' +
-          status +
-          ' (membership/fixture may still share visibility).'
-      )
-      return
-    }
-    expect([404, 403]).toContain(status)
+  test('cross-tenant denial via Tenant B direct login', async ({ browser }) => {
+    const context = await browser.newContext()
+    const pageB = await context.newPage()
+    pageB.setDefaultTimeout(60000)
+    const {
+      login: loginHelper,
+      TENANT_B_EMAIL,
+      assertSafeDenial,
+      baseURL: burl
+    } = require('./nx02h-playwright-helpers.cjs')
+    await loginHelper(pageB, TENANT_B_EMAIL)
+    await assertSafeDenial(pageB, burl + '/observations/' + observationId)
+    await context.close()
   })
 })
 

@@ -5,6 +5,8 @@ import { createServiceRoleClient } from '@repo/supabase/server'
 import { getEffectiveForm } from '@/lib/forgeForms'
 import { getEffectiveLookup } from '@/lib/forgeLookups'
 import { inspectionWithinScope } from '@/lib/forgeInspections'
+import { createRecordLink } from '@/lib/forgeRecordLinks'
+import { createRisk } from '@/lib/forgeRiskRegister'
 import { personnelRecordWithinScope } from '@/lib/forgeScope'
 import { requireTenantPermission } from '@/lib/forgeTenantAuth'
 
@@ -665,6 +667,149 @@ export const closeInspectionFinding = async ({
 
   revalidatePath('/inspections/' + after.inspection_id)
   return { message: 'Finding verified and closed.' }
+}
+
+export type CrossModuleActionResult =
+  | { ok: true; id: string; message: string }
+  | { ok?: false; error: string }
+
+export const createRiskFromFinding = async (
+  findingId: string
+): Promise<CrossModuleActionResult> => {
+  const context = await requireTenantPermission('inspections.view')
+  const createContext = await requireTenantPermission('risk_register.create')
+
+  const organizationId = context.activeOrganization.id
+  const supabase = createServiceRoleClient() as any
+
+  const { data: finding } = await supabase
+    .from('forge_inspection_findings')
+    .select('*, forge_inspections(*)')
+    .eq('organization_id', organizationId)
+    .eq('id', findingId)
+    .maybeSingle()
+
+  if (!finding || !finding.forge_inspections) return { error: 'Finding not found.' }
+
+  const inspection = finding.forge_inspections
+  const mayView = await inspectionWithinScope({
+    organizationId,
+    userId: context.user.id,
+    scope: context.permission.scope,
+    inspection
+  })
+  if (!mayView) return { error: 'Finding not found.' }
+
+  const locationDivisionError = await validateLocationDivision({
+    supabase,
+    organizationId,
+    locationId: inspection.location_id || null,
+    divisionId: inspection.division_id || null
+  })
+  if (locationDivisionError) return { error: locationDivisionError }
+
+  const hazardDescription =
+    finding.description ||
+    finding.corrective_action ||
+    finding.title ||
+    null
+
+  const result = await createRisk({
+    organizationId,
+    userId: createContext.user.id,
+    input: {
+      title: finding.title,
+      description: finding.description || finding.title,
+      hazardDescription,
+      workArea: null,
+      locationId: inspection.location_id || null,
+      divisionId: inspection.division_id || null,
+      sourceType: 'inspection',
+      sourceReference: inspection.inspection_number,
+      status: 'draft'
+    }
+  })
+
+  if (!result.ok) return { error: result.error }
+
+  const linkResult = await createRecordLink({
+    sourceResourceType: 'inspection_finding',
+    sourceResourceId: finding.id,
+    targetResourceType: 'risk_register',
+    targetResourceId: result.risk.id,
+    relationshipType: 'identified_risk'
+  })
+
+  // Prefill Asset links when the finding or parent inspection already involves equipment.
+  const [{ data: findingAssetLinks }, { data: inspectionAssetLinks }] = await Promise.all([
+    supabase
+      .from('forge_record_links')
+      .select('target_resource_id')
+      .eq('organization_id', organizationId)
+      .eq('source_resource_type', 'inspection_finding')
+      .eq('source_resource_id', finding.id)
+      .eq('target_resource_type', 'asset')
+      .in('relationship_type', ['involves_asset', 'equipment'])
+      .is('archived_at', null),
+    supabase
+      .from('forge_record_links')
+      .select('target_resource_id')
+      .eq('organization_id', organizationId)
+      .eq('source_resource_type', 'inspection')
+      .eq('source_resource_id', inspection.id)
+      .eq('target_resource_type', 'asset')
+      .in('relationship_type', ['involves_asset', 'equipment'])
+      .is('archived_at', null)
+  ])
+
+  const assetIds = Array.from(
+    new Set(
+      [...(findingAssetLinks || []), ...(inspectionAssetLinks || [])]
+        .map((row: { target_resource_id?: string }) => row.target_resource_id)
+        .filter(Boolean)
+    )
+  ) as string[]
+
+  const assetLinkErrors: string[] = []
+  for (const assetId of assetIds) {
+    const assetLink = await createRecordLink({
+      sourceResourceType: 'risk_register',
+      sourceResourceId: result.risk.id,
+      targetResourceType: 'asset',
+      targetResourceId: assetId,
+      relationshipType: 'involves_asset'
+    })
+    if ('error' in assetLink && assetLink.error) {
+      assetLinkErrors.push(String(assetLink.error))
+    }
+  }
+
+  revalidatePath('/inspections/' + inspection.id)
+  revalidatePath('/risk-register/' + result.risk.id)
+
+  const warnings: string[] = []
+  if ('error' in linkResult && linkResult.error) {
+    warnings.push('Source relationship was not created: ' + String(linkResult.error))
+  }
+  if (assetLinkErrors.length) {
+    warnings.push(
+      'Asset link(s) were not created: ' + assetLinkErrors.slice(0, 3).join('; ')
+    )
+  }
+
+  if (warnings.length) {
+    return {
+      ok: true,
+      id: result.risk.id,
+      message: 'Risk created. ' + warnings.join(' ')
+    }
+  }
+
+  return {
+    ok: true,
+    id: result.risk.id,
+    message: 'Risk created from inspection finding.'
+  }
 }
 
 const transitionInspection = async ({

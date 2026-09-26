@@ -75,6 +75,7 @@ const InspectionDetailPage = async ({ params }: { params: Promise<{ id: string }
   const closePermission = permissionByKey.get('inspections.close')
   const closeFindingsPermission = permissionByKey.get('inspections.close_findings')
   const canUseAi = Boolean(permissionByKey.get('forge_ai.use'))
+  const canCreateRisk = Boolean(permissionByKey.get('risk_register.create'))
 
   const canWithin = async (permission: any) =>
     permission
@@ -198,6 +199,7 @@ const InspectionDetailPage = async ({ params }: { params: Promise<{ id: string }
         findings={detail.findings}
         editable={Boolean(mayEditByScope)}
         canClose={Boolean(canCloseFindings)}
+        canCreateRisk={canCreateRisk}
         severityLabels={severityLabels}
         statusLabels={findingStatusLabels}
       />

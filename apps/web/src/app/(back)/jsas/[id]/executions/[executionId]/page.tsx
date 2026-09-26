@@ -76,6 +76,25 @@ const JsaExecutionPage = async ({
     .order('last_name', { ascending: true })
     .limit(200)
 
+  // Execution timeline from the authoritative JSA activity log (stop-work reasons persist here even
+  // after the execution is resumed and the current stop fields are cleared).
+  const { data: timelineRows } = await supabase
+    .from('forge_jsa_activity')
+    .select('id, activity_type, message, metadata, created_at')
+    .eq('organization_id', organizationId)
+    .eq('jsa_id', detail.jsa.id)
+    .contains('metadata', { execution_id: executionId })
+    .order('created_at', { ascending: true })
+    .limit(100)
+
+  const timeline = (timelineRows || []) as Array<{
+    id: string
+    activity_type: string
+    message: string | null
+    metadata: Record<string, unknown> | null
+    created_at: string
+  }>
+
   const personnel = (personnelRows || []).map((row: any) => ({
     id: row.id as string,
     label:
@@ -194,6 +213,7 @@ const JsaExecutionPage = async ({
                 id: participant.id,
                 role: participant.role,
                 acknowledged_at: participant.acknowledged_at,
+                personnel_id: participant.personnel_id,
                 name: person
                   ? [person.first_name, person.last_name].filter(Boolean).join(' ')
                   : 'Unknown'
@@ -223,6 +243,40 @@ const JsaExecutionPage = async ({
           </CardContent>
         </Card>
       ) : null}
+
+      <Card data-testid='jsa-execution-timeline'>
+        <CardHeader>
+          <CardTitle>Execution timeline</CardTitle>
+          <CardDescription>Lifecycle transitions and stop-work events for this execution.</CardDescription>
+        </CardHeader>
+        <CardContent>
+          {timeline.length ? (
+            <ul className='grid gap-2 text-sm'>
+              {timeline.map(event => {
+                const stopReason =
+                  event.activity_type === 'execution_stopped' && event.metadata?.stop_reason
+                    ? String(event.metadata.stop_reason)
+                    : null
+                return (
+                  <li key={event.id} className='flex flex-col'>
+                    <span>
+                      <span className='text-textSecondary'>
+                        {new Date(event.created_at).toLocaleString()}
+                      </span>{' '}
+                      — {event.message || event.activity_type}
+                    </span>
+                    {stopReason ? (
+                      <span className='text-textSecondary'>Stop reason: {stopReason}</span>
+                    ) : null}
+                  </li>
+                )
+              })}
+            </ul>
+          ) : (
+            <p className='text-textSecondary text-sm'>No lifecycle events recorded yet.</p>
+          )}
+        </CardContent>
+      </Card>
 
       {canManage ? (
         <Card>

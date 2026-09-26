@@ -22,6 +22,7 @@ import {
   removeExecutionParticipant,
   updateJsa
 } from '@/lib/forgeJsa'
+import { resolveAndAuthorizeJsaAssignment } from '@/lib/forgeJsaAssignment'
 import { createAcknowledgement } from '@/lib/forgeAcknowledgements'
 import { createRisk } from '@/lib/forgeRiskRegister'
 import {
@@ -227,40 +228,15 @@ export const createJsaAction = async (values: JsaFormValues): Promise<JsaActionR
 
   if (!title) return { error: 'Title is required.' }
 
-  const supabase = createServiceRoleClient() as any
-
-  const assignmentError = await validateOrgAssignment({
-    supabase,
-    organizationId,
-    locationId,
-    divisionId
-  })
-  if (assignmentError) return { error: assignmentError }
-
-  const preparer = await resolvePersonnel({
-    supabase,
-    organizationId,
-    personnelId: preparedByPersonnelId
-  })
-  if ('error' in preparer && preparer.error) return { error: preparer.error }
-
-  const candidate = {
-    organization_id: organizationId,
-    created_by: context.user.id,
-    prepared_by_personnel_id: preparer.personnelId,
-    location_id: locationId,
-    division_id: divisionId
-  }
-
-  const allowed = await jsaWithinScope({
+  const assignment = await resolveAndAuthorizeJsaAssignment({
     organizationId,
     userId: context.user.id,
     scope: context.permission.scope,
-    jsa: candidate
+    locationId,
+    divisionId,
+    preparedByPersonnelId
   })
-  if (!allowed) {
-    return { error: 'The selected JSA assignment is outside your permission scope.' }
-  }
+  if (!assignment.ok) return { error: assignment.error }
 
   const result = await createJsa({
     organizationId,
@@ -271,16 +247,25 @@ export const createJsaAction = async (values: JsaFormValues): Promise<JsaActionR
       jobTitle: cleanText(values.job_title),
       taskName: cleanText(values.task_name),
       workArea: cleanText(values.work_area),
-      locationId,
-      divisionId,
-      preparedByPersonnelId: preparer.personnelId,
+      locationId: assignment.locationId,
+      divisionId: assignment.divisionId,
+      preparedByPersonnelId: assignment.preparedByPersonnelId,
       effectiveAt: toIso(values.effective_at),
       reviewDueAt: toIso(values.review_due_at),
-      status: cleanText(values.status) || 'draft'
+      isTemplate:
+        values.is_template === true ||
+        values.is_template === 'true' ||
+        values.is_template === 1
     }
   })
 
   if (!result.ok) return { error: result.error }
+
+  if (result.jsa.status !== 'draft') {
+    return { error: 'JSA create refused non-draft status.' }
+  }
+
+  const supabase = createServiceRoleClient() as any
 
   await audit({
     supabase,
@@ -621,6 +606,27 @@ export const createJsaFromTemplateAction = async (
   const context = await requireTenantPermission('jsa_jha.create')
   const organizationId = context.activeOrganization.id
 
+  const supabase = createServiceRoleClient() as any
+  const { data: template } = await supabase
+    .from('forge_jsas')
+    .select('id, location_id, division_id, prepared_by_personnel_id, is_template')
+    .eq('organization_id', organizationId)
+    .eq('id', templateJsaId)
+    .eq('is_template', true)
+    .maybeSingle()
+
+  if (!template) return { error: 'JSA template not found.' }
+
+  const assignment = await resolveAndAuthorizeJsaAssignment({
+    organizationId,
+    userId: context.user.id,
+    scope: context.permission.scope,
+    locationId: template.location_id,
+    divisionId: template.division_id,
+    preparedByPersonnelId: template.prepared_by_personnel_id
+  })
+  if (!assignment.ok) return { error: assignment.error }
+
   const result = await createJsaFromTemplate({
     organizationId,
     userId: context.user.id,
@@ -642,10 +648,12 @@ export const createJsaFromTemplateAction = async (
 
 export const createRevisionAction = async ({
   jsaId,
-  changeSummary
+  changeSummary,
+  idempotencyKey
 }: {
   jsaId: string
   changeSummary?: string | null
+  idempotencyKey?: string | null
 }): Promise<JsaActionResult> => {
   const context = await requireTenantPermission('jsa_jha.edit')
   const organizationId = context.activeOrganization.id
@@ -662,7 +670,8 @@ export const createRevisionAction = async ({
     organizationId,
     userId: context.user.id,
     jsaId,
-    changeSummary: cleanText(changeSummary)
+    changeSummary: cleanText(changeSummary),
+    idempotencyKey: cleanText(idempotencyKey)
   })
 
   if (!result.ok) return { error: result.error }
@@ -715,6 +724,15 @@ export const createExecutionAction = async ({
     scope: context.permission.scope
   })
   if ('error' in scoped && scoped.error) return { error: scoped.error }
+
+  if (scoped.existing.status !== 'active') {
+    return {
+      error:
+        'Only an ACTIVE JSA revision may be executed. Current status: ' +
+        scoped.existing.status +
+        '.'
+    }
+  }
 
   const cleanedLocation = cleanText(locationId)
   const assignmentError = await validateOrgAssignment({
@@ -907,21 +925,39 @@ export const transitionExecutionAction = async ({
 
 export const acknowledgeParticipantAction = async ({
   jsaId,
-  executionId
+  executionId,
+  personnelId
 }: {
   jsaId: string
   executionId: string
+  /** When set, execute managers may record ack for crew without a linked auth user. */
+  personnelId?: string | null
 }): Promise<JsaActionResult> => {
-  const context = await requireTenantPermission('jsa_jha.acknowledge')
+  const permissionKey = personnelId ? 'jsa_jha.execute' : 'jsa_jha.acknowledge'
+  const context = await requireTenantPermission(permissionKey)
   const organizationId = context.activeOrganization.id
+
+  if (personnelId) {
+    const scoped = await loadScopedJsa({
+      organizationId,
+      jsaId,
+      userId: context.user.id,
+      scope: context.permission.scope
+    })
+    if ('error' in scoped && scoped.error) return { error: scoped.error }
+  }
 
   const ackResult = await createAcknowledgement({
     resourceType: 'jsa',
     resourceId: jsaId,
     acknowledgementType: 'execution_briefing',
-    resourceVersion: executionId,
+    // Unique per participant when manager records on-behalf acknowledgments.
+    resourceVersion: personnelId ? executionId + ':' + personnelId : executionId,
     signatureMethod: 'click_confirm',
-    signatureMetadata: { execution_id: executionId }
+    signatureMetadata: {
+      execution_id: executionId,
+      on_behalf_personnel_id: personnelId || null
+    }
   })
 
   if ('error' in ackResult && ackResult.error) {
@@ -937,6 +973,7 @@ export const acknowledgeParticipantAction = async ({
     organizationId,
     userId: context.user.id,
     executionId,
+    personnelId: personnelId || null,
     acknowledgmentId
   })
 
@@ -1254,11 +1291,17 @@ export const transitionJsaForm = async (formData: FormData) => {
   const transitionKey = String(formData.get('transitionKey') || '')
   const comment = cleanText(formData.get('comment'))
 
-  if (!jsaId || !transitionKey) return
+  if (!jsaId || !transitionKey) {
+    throw new Error('JSA transition requires jsaId and transitionKey.')
+  }
 
-  await transitionJsa({
+  const result = await transitionJsa({
     jsaId,
     transitionKey,
     comment
   })
+
+  if (!result.ok) {
+    throw new Error(result.error || 'JSA transition failed.')
+  }
 }

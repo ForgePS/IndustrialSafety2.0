@@ -246,6 +246,8 @@ const JsaRecordForm = ({
     })
   }
 
+  const isTemplate = Boolean(values.is_template)
+
   return (
     <div className='flex flex-col gap-6' data-jsa-row-version={currentRowVersion}>
       {sections.map(([sectionKey, section]) => (
@@ -257,7 +259,13 @@ const JsaRecordForm = ({
             </CardDescription>
           </CardHeader>
           <CardContent className='grid grid-cols-1 gap-5 md:grid-cols-12'>
-            {section.fields.map(field => (
+            {section.fields.map(field => {
+              // Lifecycle status is controlled by workflow UI — never on create/edit forms.
+              if (field.key === 'status') return null
+              // Template flag is always rendered below (not Creator-config dependent).
+              if (field.key === 'is_template') return null
+
+              return (
               <div key={field.id} className={widthClass[field.width] || 'md:col-span-12'}>
                 <Label htmlFor={'jsa-' + field.key}>
                   {field.label}
@@ -268,10 +276,40 @@ const JsaRecordForm = ({
                   <p className='text-textSecondary mt-1 text-xs'>{field.helpText}</p>
                 ) : null}
               </div>
-            ))}
+              )
+            })}
           </CardContent>
         </Card>
       ))}
+
+      {!readOnly ? (
+        <Card>
+          <CardHeader>
+            <CardTitle>Template</CardTitle>
+            <CardDescription>
+              Templates are reusable drafts. Operational JSAs are created from a template copy.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <label className='flex items-center gap-2 text-sm' htmlFor='jsa-is_template'>
+              <input
+                id='jsa-is_template'
+                name='is_template'
+                type='checkbox'
+                className='border-input size-4 rounded'
+                checked={isTemplate}
+                disabled={pending}
+                onChange={event => setValue('is_template', event.target.checked)}
+              />
+              Save as JSA template
+            </label>
+          </CardContent>
+        </Card>
+      ) : isTemplate ? (
+        <p className='text-textSecondary text-sm' data-testid='jsa-template-badge'>
+          This record is a JSA template.
+        </p>
+      ) : null}
 
       <div className='flex flex-wrap gap-3'>
         {!readOnly ? (

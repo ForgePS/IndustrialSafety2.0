@@ -1,5 +1,6 @@
 import { createServiceRoleClient } from '@repo/supabase/server'
 import type { EffectivePermission } from '@/lib/forgeEffectiveAccess'
+import { assertJsaIsExecutableActive } from '@/lib/forgeJsaAssignment'
 import {
   calculateRisk,
   ensureTenantDefaultRiskMatrix,
@@ -173,7 +174,8 @@ export type JsaCreateInput = {
   preparedByPersonnelId?: string | null
   effectiveAt?: string | null
   reviewDueAt?: string | null
-  status?: string
+  /** Templates only — operational creates ignore this and always start DRAFT. */
+  isTemplate?: boolean
 }
 
 export type JsaUpdateInput = {
@@ -446,8 +448,10 @@ export const createJsa = async ({
       prepared_by_personnel_id: input.preparedByPersonnelId || null,
       effective_at: input.effectiveAt || null,
       review_due_at: input.reviewDueAt || null,
-      status: input.status || 'draft',
+      // Absolute invariant: operational creates always start DRAFT. Status is never client-supplied.
+      status: 'draft',
       version: 1,
+      is_template: Boolean(input.isTemplate),
       risk_matrix_id: riskMatrixId,
       risk_matrix_version: riskMatrixVersion,
       created_by: userId,
@@ -993,12 +997,14 @@ export const createRevision = async ({
   organizationId,
   userId,
   jsaId,
-  changeSummary
+  changeSummary,
+  idempotencyKey
 }: {
   organizationId: string
   userId: string
   jsaId: string
   changeSummary?: string | null
+  idempotencyKey?: string | null
 }) => {
   const supabase = createServiceRoleClient() as any
 
@@ -1012,171 +1018,48 @@ export const createRevision = async ({
 
   if (!source) return { ok: false as const, error: 'JSA not found.' }
 
-  const rootId = await resolveRootJsaId({ organizationId, jsaId })
-  const nextVersion = Number(source.jsa.version) + 1
-
-  const { data: jsaNumber, error: numberError } = await supabase.rpc('next_forge_jsa_number', {
-    p_organization_id: organizationId
+  const { data, error } = await supabase.rpc('forge_create_jsa_revision', {
+    p_organization_id: organizationId,
+    p_source_jsa_id: jsaId,
+    p_actor_user_id: userId,
+    p_change_summary: changeSummary || null,
+    p_idempotency_key: idempotencyKey || null,
+    p_fail_after: null
   })
 
-  if (numberError || !jsaNumber) {
-    return { ok: false as const, error: numberError?.message || 'Unable to generate JSA number.' }
+  if (error) {
+    return { ok: false as const, error: error.message || 'Unable to create revision.' }
   }
 
-  const { data: revisionJsa, error } = await supabase
+  const result = data as {
+    ok?: boolean
+    error?: string
+    jsa_id?: string
+    version?: number
+    status?: string
+    duplicate?: boolean
+  }
+
+  if (!result?.ok || !result.jsa_id) {
+    return { ok: false as const, error: result?.error || 'Unable to create revision.' }
+  }
+
+  const { data: revisionJsa } = await supabase
     .from('forge_jsas')
-    .insert({
-      organization_id: organizationId,
-      jsa_number: jsaNumber,
-      title: source.jsa.title,
-      description: source.jsa.description,
-      job_title: source.jsa.job_title,
-      task_name: source.jsa.task_name,
-      work_area: source.jsa.work_area,
-      location_id: source.jsa.location_id,
-      division_id: source.jsa.division_id,
-      prepared_by_personnel_id: source.jsa.prepared_by_personnel_id,
-      effective_at: null,
-      review_due_at: source.jsa.review_due_at,
-      status: 'draft',
-      version: nextVersion,
-      parent_jsa_id: rootId,
-      is_template: false,
-      risk_matrix_id: source.jsa.risk_matrix_id,
-      risk_matrix_version: source.jsa.risk_matrix_version,
-      created_by: userId,
-      updated_by: userId
-    })
     .select('*')
-    .single()
+    .eq('organization_id', organizationId)
+    .eq('id', result.jsa_id)
+    .maybeSingle()
 
-  if (error || !revisionJsa) {
-    return { ok: false as const, error: error?.message || 'Unable to create revision.' }
+  if (!revisionJsa) {
+    return { ok: false as const, error: 'Revision created but could not be reloaded.' }
   }
 
-  const stepIdMap = new Map<string, string>()
-  const hazardIdMap = new Map<string, string>()
-
-  for (const step of source.steps) {
-    const { data: clonedStep, error: stepError } = await supabase
-      .from('forge_jsa_steps')
-      .insert({
-        organization_id: organizationId,
-        jsa_id: revisionJsa.id,
-        step_number: step.step_number,
-        title: step.title,
-        description: step.description,
-        sort_order: step.sort_order,
-        created_by: userId
-      })
-      .select('id')
-      .single()
-
-    if (stepError || !clonedStep) {
-      return { ok: false as const, error: stepError?.message || 'Unable to clone step.' }
-    }
-    stepIdMap.set(step.id, clonedStep.id)
+  return {
+    ok: true as const,
+    jsa: revisionJsa as JsaRow,
+    duplicate: Boolean(result.duplicate)
   }
-
-  for (const hazard of source.hazards) {
-    const newStepId = stepIdMap.get(hazard.step_id)
-    if (!newStepId) continue
-
-    const { data: clonedHazard, error: hazardError } = await supabase
-      .from('forge_jsa_hazards')
-      .insert({
-        organization_id: organizationId,
-        jsa_id: revisionJsa.id,
-        step_id: newStepId,
-        hazard_description: hazard.hazard_description,
-        category_key: hazard.category_key,
-        likelihood_key: hazard.likelihood_key,
-        severity_key: hazard.severity_key,
-        risk_score: hazard.risk_score,
-        risk_band_key: hazard.risk_band_key,
-        residual_likelihood_key: hazard.residual_likelihood_key,
-        residual_severity_key: hazard.residual_severity_key,
-        residual_score: hazard.residual_score,
-        residual_band_key: hazard.residual_band_key,
-        sort_order: hazard.sort_order,
-        created_by: userId
-      })
-      .select('id')
-      .single()
-
-    if (hazardError || !clonedHazard) {
-      return { ok: false as const, error: hazardError?.message || 'Unable to clone hazard.' }
-    }
-    hazardIdMap.set(hazard.id, clonedHazard.id)
-  }
-
-  for (const control of source.controls) {
-    const newHazardId = hazardIdMap.get(control.hazard_id)
-    if (!newHazardId) continue
-
-    const { error: controlError } = await supabase.from('forge_jsa_controls').insert({
-      organization_id: organizationId,
-      jsa_id: revisionJsa.id,
-      hazard_id: newHazardId,
-      control_type: control.control_type,
-      title: control.title,
-      description: control.description,
-      sort_order: control.sort_order,
-      created_by: userId
-    })
-
-    if (controlError) {
-      return { ok: false as const, error: controlError.message }
-    }
-  }
-
-  for (const ppe of source.ppeItems) {
-    const { error: ppeError } = await supabase.from('forge_jsa_ppe_items').insert({
-      organization_id: organizationId,
-      jsa_id: revisionJsa.id,
-      label: ppe.label,
-      required: ppe.required,
-      sort_order: ppe.sort_order,
-      created_by: userId
-    })
-    if (ppeError) return { ok: false as const, error: ppeError.message }
-  }
-
-  for (const req of source.trainingRequirements) {
-    const { error: trainError } = await supabase.from('forge_jsa_training_requirements').insert({
-      organization_id: organizationId,
-      jsa_id: revisionJsa.id,
-      training_course_id: req.training_course_id,
-      required: req.required,
-      created_by: userId
-    })
-    if (trainError) return { ok: false as const, error: trainError.message }
-  }
-
-  await supabase.from('forge_jsa_revisions').insert({
-    organization_id: organizationId,
-    jsa_id: rootId,
-    version_jsa_id: revisionJsa.id,
-    version: nextVersion,
-    change_summary: changeSummary || null,
-    created_by: userId
-  })
-
-  await supabase.from('forge_jsa_activity').insert({
-    organization_id: organizationId,
-    jsa_id: revisionJsa.id,
-    activity_type: 'revision_created',
-    message: 'Revision v' + nextVersion + ' created as draft from ' + source.jsa.jsa_number + '.',
-    actor_user_id: userId,
-    metadata: {
-      source_jsa_id: jsaId,
-      root_jsa_id: rootId,
-      version: nextVersion,
-      change_summary: changeSummary || null
-    }
-  })
-
-  return { ok: true as const, jsa: revisionJsa as JsaRow }
 }
 
 export const createExecution = async ({
@@ -1198,9 +1081,12 @@ export const createExecution = async ({
 }) => {
   const supabase = createServiceRoleClient() as any
 
+  const executable = await assertJsaIsExecutableActive({ organizationId, jsaId })
+  if (!executable.ok) return { ok: false as const, error: executable.error }
+
   const { data: jsa } = await supabase
     .from('forge_jsas')
-    .select('id, status, location_id')
+    .select('id, status, location_id, parent_jsa_id')
     .eq('organization_id', organizationId)
     .eq('id', jsaId)
     .maybeSingle()

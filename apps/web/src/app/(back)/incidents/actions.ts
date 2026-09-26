@@ -4,6 +4,8 @@ import { revalidatePath } from 'next/cache'
 import { createServiceRoleClient } from '@repo/supabase/server'
 import { getEffectiveForm } from '@/lib/forgeForms'
 import { incidentWithinScope } from '@/lib/forgeIncidents'
+import { createRecordLink } from '@/lib/forgeRecordLinks'
+import { createRisk } from '@/lib/forgeRiskRegister'
 import { personnelRecordWithinScope } from '@/lib/forgeScope'
 import { requireTenantPermission } from '@/lib/forgeTenantAuth'
 
@@ -673,4 +675,119 @@ export const closeIncident = async (incidentId: string) => {
   revalidatePath('/incidents')
   revalidatePath('/incidents/' + incidentId)
   return { message: 'Incident closed.' }
+}
+
+export type CrossModuleActionResult =
+  | { ok: true; id: string; message: string }
+  | { ok?: false; error: string }
+
+export const createRiskFromIncident = async (
+  incidentId: string
+): Promise<CrossModuleActionResult> => {
+  const context = await requireTenantPermission('incidents.view')
+  const createContext = await requireTenantPermission('risk_register.create')
+
+  const organizationId = context.activeOrganization.id
+  const supabase = createServiceRoleClient() as any
+
+  const { data: incident } = await supabase
+    .from('forge_incidents')
+    .select('*')
+    .eq('organization_id', organizationId)
+    .eq('id', incidentId)
+    .maybeSingle()
+
+  if (!incident) return { error: 'Incident not found.' }
+
+  const mayView = await incidentWithinScope({
+    organizationId,
+    userId: context.user.id,
+    scope: context.permission.scope,
+    incident
+  })
+  if (!mayView) return { error: 'Incident not found.' }
+
+  const locationDivisionError = await validateLocationDivision({
+    supabase,
+    organizationId,
+    locationId: incident.location_id || null,
+    divisionId: incident.division_id || null
+  })
+  if (locationDivisionError) return { error: locationDivisionError }
+
+  const result = await createRisk({
+    organizationId,
+    userId: createContext.user.id,
+    input: {
+      title: incident.summary,
+      description: incident.description || incident.summary,
+      hazardDescription: incident.description || incident.summary || null,
+      workArea: null,
+      locationId: incident.location_id || null,
+      divisionId: incident.division_id || null,
+      sourceType: 'incident',
+      sourceReference: incident.incident_number,
+      status: 'draft'
+    }
+  })
+
+  if (!result.ok) return { error: result.error }
+
+  const linkResult = await createRecordLink({
+    sourceResourceType: 'incident',
+    sourceResourceId: incident.id,
+    targetResourceType: 'risk_register',
+    targetResourceId: result.risk.id,
+    relationshipType: 'identified_risk'
+  })
+
+  // Prefill Asset links from forge_incident_assets when present.
+  const { data: incidentAssets } = await supabase
+    .from('forge_incident_assets')
+    .select('asset_id')
+    .eq('organization_id', organizationId)
+    .eq('incident_id', incident.id)
+
+  const assetLinkErrors: string[] = []
+  for (const row of incidentAssets || []) {
+    const assetId = row?.asset_id
+    if (!assetId) continue
+    const assetLink = await createRecordLink({
+      sourceResourceType: 'risk_register',
+      sourceResourceId: result.risk.id,
+      targetResourceType: 'asset',
+      targetResourceId: assetId,
+      relationshipType: 'involves_asset'
+    })
+    if ('error' in assetLink && assetLink.error) {
+      assetLinkErrors.push(String(assetLink.error))
+    }
+  }
+
+  revalidatePath('/incidents/' + incidentId)
+  revalidatePath('/risk-register/' + result.risk.id)
+
+  const warnings: string[] = []
+  if ('error' in linkResult && linkResult.error) {
+    warnings.push('Source relationship was not created: ' + String(linkResult.error))
+  }
+  if (assetLinkErrors.length) {
+    warnings.push(
+      'Asset link(s) were not created: ' + assetLinkErrors.slice(0, 3).join('; ')
+    )
+  }
+
+  if (warnings.length) {
+    return {
+      ok: true,
+      id: result.risk.id,
+      message: 'Risk created. ' + warnings.join(' ')
+    }
+  }
+
+  return {
+    ok: true,
+    id: result.risk.id,
+    message: 'Risk created from incident.'
+  }
 }

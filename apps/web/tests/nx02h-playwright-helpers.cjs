@@ -64,12 +64,35 @@ async function selectFirstNonEmptyOption(selectLocator) {
 
 async function selectByLabelHint(selectLocator, labelHint) {
   if (!(await selectLocator.isVisible().catch(() => false))) return false
-  try {
-    await selectLocator.selectOption({ label: labelHint })
+  const options = await selectLocator.locator('option').evaluateAll(nodes =>
+    nodes
+      .map(node => ({ value: node.value, label: (node.textContent || '').trim() }))
+      .filter(item => item.value)
+  )
+  const matcher =
+    labelHint instanceof RegExp ? item => labelHint.test(item.label) : item => item.label === labelHint
+  const match = options.find(matcher)
+  if (match) {
+    await selectLocator.selectOption(match.value)
     return true
-  } catch {
-    return selectFirstNonEmptyOption(selectLocator)
   }
+  return selectFirstNonEmptyOption(selectLocator)
+}
+
+/** Strict variant: fails when no option label matches. */
+async function selectByLabelStrict(selectLocator, labelHint) {
+  await expect(selectLocator).toBeVisible({ timeout: 20000 })
+  const options = await selectLocator.locator('option').evaluateAll(nodes =>
+    nodes
+      .map(node => ({ value: node.value, label: (node.textContent || '').trim() }))
+      .filter(item => item.value)
+  )
+  const matcher =
+    labelHint instanceof RegExp ? item => labelHint.test(item.label) : item => item.label === labelHint
+  const match = options.find(matcher)
+  expect(match, 'Expected option matching ' + String(labelHint)).toBeTruthy()
+  await selectLocator.selectOption(match.value)
+  return true
 }
 
 async function createObservation(page, title) {
@@ -154,7 +177,7 @@ async function createRisk(page, title) {
   await page.waitForURL(/\/risk-register\/[0-9a-f-]+$/i, { timeout: 60000 })
 }
 
-async function createJsa(page, title) {
+async function createJsa(page, title, options = {}) {
   await page.goto(baseURL + '/jsas/create', { waitUntil: 'networkidle', timeout: 90000 })
   await page.waitForTimeout(400)
 
@@ -168,20 +191,29 @@ async function createJsa(page, title) {
   if (await jobTitle.isVisible().catch(() => false)) {
     await jobTitle.click()
     await jobTitle.fill('')
-    await jobTitle.pressSequentially('NX-02H job', { delay: 10 })
+    await jobTitle.pressSequentially('NX-02R job', { delay: 10 })
   }
   const taskName = page.locator('input[name="task_name"], #jsa-task_name').first()
   if (await taskName.isVisible().catch(() => false)) {
     await taskName.click()
     await taskName.fill('')
-    await taskName.pressSequentially('NX-02H task', { delay: 10 })
+    await taskName.pressSequentially('NX-02R task', { delay: 10 })
   }
   const description = page.locator('textarea[name="description"], #jsa-description').first()
   if (await description.isVisible().catch(() => false)) {
-    await description.fill('NX-02H JSA header for lifecycle, steps, and execution coverage.')
+    await description.fill('NX-02R JSA header for lifecycle, steps, and execution coverage.')
   }
-  await selectByLabelHint(page.locator('select[name="location_id"], #jsa-location_id').first(), /Demo Location/i)
+
+  const locationSelect = page.locator('select[name="location_id"], #jsa-location_id').first()
+  if (options.locationLabel) await selectByLabelStrict(locationSelect, options.locationLabel)
+  else await selectByLabelHint(locationSelect, /Demo Location/i)
   await selectFirstNonEmptyOption(page.locator('select[name="prepared_by_personnel_id"], #jsa-prepared_by_personnel_id').first())
+
+  if (options.isTemplate) {
+    const templateCheckbox = page.locator('#jsa-is_template, input[name="is_template"]').first()
+    await expect(templateCheckbox).toBeVisible({ timeout: 10000 })
+    await templateCheckbox.check()
+  }
 
   const saveBtn = page.getByTestId('jsa-save').or(page.getByRole('button', { name: /Save JSA/i }))
   await expect(saveBtn).toBeEnabled({ timeout: 10000 })
@@ -191,42 +223,203 @@ async function createJsa(page, title) {
 
 /**
  * Click a simple (non-comment) ObservationControls / RiskControls / JsaControls button.
- * Returns false when the control is missing so callers can soft-skip.
+ * Returns false when the control is missing or the POST fails.
  */
 async function clickWorkflowButton(page, buttonName, pathPattern) {
-  const button = page.getByRole('button', { name: buttonName }).first()
-  if (!(await button.isVisible().catch(() => false))) return false
-  if (!(await button.isEnabled().catch(() => false))) return false
+  // Prefer JSA workflow control testids when present.
+  const key =
+    /submit/i.test(String(buttonName)) && !/review/i.test(String(buttonName))
+      ? 'submit'
+      : /approve/i.test(String(buttonName))
+        ? 'approve'
+        : /activate/i.test(String(buttonName))
+          ? 'activate'
+          : null
 
-  const postPromise = waitForPost(page, pathPattern, 45000).catch(() => null)
-  await button.click()
-  const post = await postPromise
-  if (!post) {
-    // Server actions may navigate without a matching POST pathname — accept URL/status settle.
-    await page.waitForTimeout(800)
-    await page.reload({ waitUntil: 'load' })
-    return true
+  // Clicks that land before client hydration are silently dropped; the server-action POST is the
+  // signal that the click registered. Retry (after reload + networkidle) until the POST is observed.
+  for (let attempt = 0; attempt < 4; attempt++) {
+    await page.waitForLoadState('networkidle', { timeout: 30000 }).catch(() => null)
+    await page.waitForTimeout(300)
+    const testIdButton = key
+      ? page.getByTestId('jsa-workflow-controls').getByTestId('jsa-transition-' + key)
+      : null
+    const button =
+      testIdButton && (await testIdButton.isVisible().catch(() => false))
+        ? testIdButton
+        : page.getByRole('button', { name: buttonName }).first()
+
+    const visible = await button
+      .waitFor({ state: 'visible', timeout: attempt === 0 ? 10000 : 5000 })
+      .then(() => true)
+      .catch(() => false)
+    if (!visible) return false
+    if (!(await button.isEnabled().catch(() => false))) return false
+
+    const postPromise = waitForPost(page, pathPattern, 15000).catch(() => null)
+    await button.click()
+    const response = await postPromise
+    if (response) {
+      if (!response.ok()) return false
+      // Wait for client transition + router.refresh — do not reload mid-flight.
+      await page.waitForTimeout(1000)
+      await page.waitForLoadState('networkidle', { timeout: 30000 }).catch(() => null)
+      await page.reload({ waitUntil: 'networkidle', timeout: 60000 }).catch(() => null)
+      return true
+    }
+    await page.reload({ waitUntil: 'networkidle', timeout: 60000 }).catch(() => null)
   }
-  if (!post.ok()) {
-    console.log('SOFT CHECK: Workflow POST not ok for ' + buttonName + ' status=' + post.status())
-    await page.reload({ waitUntil: 'load' })
-    return false
-  }
-  await page.waitForTimeout(400)
-  await page.reload({ waitUntil: 'load' })
-  return true
+  return false
 }
 
 /**
- * Open a commented transition panel, fill the comment, and confirm.
- * ObservationControls: Confirm {Label}; Risk/JSA form actions: Confirm {Label}.
+ * Click a client-side action button and wait for its server-action POST. Clicks that land before
+ * hydration are dropped, so retry (after networkidle) until the POST is observed. Throws otherwise.
  */
+async function clickUntilPost(page, locator, pathPattern, attempts = 4) {
+  for (let attempt = 0; attempt < attempts; attempt++) {
+    await page.waitForLoadState('networkidle', { timeout: 30000 }).catch(() => null)
+    await page.waitForTimeout(300)
+    await expect(locator).toBeVisible({ timeout: 20000 })
+    await expect(locator).toBeEnabled({ timeout: 20000 })
+    const post = waitForPost(page, pathPattern, 15000).catch(() => null)
+    await locator.click()
+    const response = await post
+    if (response) return response
+  }
+  throw new Error('Server action POST never observed for ' + String(pathPattern))
+}
+
+/** Hard variant — throws when the workflow control is missing or fails. */
+async function clickWorkflowButtonHard(page, buttonName, pathPattern) {
+  const ok = await clickWorkflowButton(page, buttonName, pathPattern)
+  expect(ok, 'Workflow control must succeed: ' + String(buttonName)).toBeTruthy()
+}
+
+async function expectJsaStatus(page, statusRegex) {
+  await expect(page.getByTestId('jsa-status')).toHaveText(statusRegex, { timeout: 20000 })
+}
+
+async function clickJsaTransitionUntil(page, key, labelRegex, expectedStatus) {
+  for (let attempt = 0; attempt < 4; attempt++) {
+    await page.waitForLoadState('networkidle', { timeout: 30000 }).catch(() => null)
+    const btn = page
+      .getByTestId('jsa-transition-' + key)
+      .or(page.getByTestId('jsa-workflow-controls').getByRole('button', { name: labelRegex }))
+      .first()
+    await expect(btn).toBeVisible({ timeout: 20000 })
+    await expect(btn).toBeEnabled({ timeout: 20000 })
+    await btn.click()
+    const changed = await expect(page.getByTestId('jsa-status'))
+      .toHaveText(expectedStatus, { timeout: 15000 })
+      .then(() => true)
+      .catch(() => false)
+    if (changed) return
+    // Click may have landed before hydration — reload and retry.
+    await page.reload({ waitUntil: 'networkidle', timeout: 60000 }).catch(() => null)
+    const already = await expect(page.getByTestId('jsa-status'))
+      .toHaveText(expectedStatus, { timeout: 3000 })
+      .then(() => true)
+      .catch(() => false)
+    if (already) return
+  }
+  await expect(page.getByTestId('jsa-status')).toHaveText(expectedStatus, { timeout: 5000 })
+}
+
+async function activateJsaViaWorkflow(page) {
+  await clickJsaTransitionUntil(page, 'submit', /^Submit$/i, /In Review|Review/i)
+  await clickJsaTransitionUntil(page, 'approve', /^Approve$/i, /Approved/i)
+  await clickJsaTransitionUntil(page, 'activate', /^Activate$/i, /^Active$/i)
+}
+
+async function addJsaStepHazardControl(page, {
+  stepTitle = 'Isolate energy sources',
+  hazardText = 'Unexpected stored energy release',
+  controlTitle = 'Apply lock and tag'
+} = {}) {
+  const stepField = page.locator('#step-title')
+  await expect(stepField).toBeVisible({ timeout: 20000 })
+  await expect(stepField).toBeEnabled()
+  await stepField.fill(stepTitle)
+  const stepDescription = page.locator('#step-description')
+  if (await stepDescription.isVisible().catch(() => false)) {
+    await stepDescription.fill('Verify LOTO before work begins.')
+  }
+  const addStep = page.getByRole('button', { name: /^Add step$/i })
+  await expect(addStep).toBeEnabled()
+  await clickUntilPost(page, addStep, /\/jsas(\/|$)/i)
+  await page.waitForTimeout(400)
+  await page.reload({ waitUntil: 'networkidle' })
+  await page.waitForTimeout(300)
+  await expect(page.getByText(stepTitle).first()).toBeVisible({ timeout: 20000 })
+
+  await selectFirstNonEmptyOption(page.locator('#hazard-step'))
+  await page.locator('#hazard-description').fill(hazardText)
+  await selectFirstNonEmptyOption(page.locator('#hazard-category'))
+  await selectFirstNonEmptyOption(page.locator('#hazard-likelihood'))
+  await selectFirstNonEmptyOption(page.locator('#hazard-severity'))
+  await selectFirstNonEmptyOption(page.locator('#hazard-residual-likelihood'))
+  await selectFirstNonEmptyOption(page.locator('#hazard-residual-severity'))
+  const addHazard = page.getByRole('button', { name: /^Add hazard$/i })
+  await expect(addHazard).toBeEnabled()
+  await clickUntilPost(page, addHazard, /\/jsas(\/|$)/i)
+  await page.waitForTimeout(400)
+  await page.reload({ waitUntil: 'networkidle' })
+  await page.waitForTimeout(300)
+  await expect(page.getByText(hazardText).first()).toBeVisible({ timeout: 20000 })
+
+  await selectFirstNonEmptyOption(page.locator('#control-hazard'))
+  await selectFirstNonEmptyOption(page.locator('#control-type'))
+  await page.locator('#control-title').fill(controlTitle)
+  const controlDescription = page.locator('#control-description')
+  if (await controlDescription.isVisible().catch(() => false)) {
+    await controlDescription.fill('Personal lock on energy isolation point.')
+  }
+  const addControl = page.getByRole('button', { name: /^Add control$/i })
+  await expect(addControl).toBeEnabled()
+  await clickUntilPost(page, addControl, /\/jsas(\/|$)/i)
+  await page.waitForTimeout(400)
+  await page.reload({ waitUntil: 'networkidle' })
+  await page.waitForTimeout(300)
+  await expect(page.getByText(controlTitle).first()).toBeVisible({ timeout: 20000 })
+}
+
+async function addJsaPpeAndTraining(page, ppeLabel = 'Hard hat / safety glasses') {
+  await page.locator('#ppe-label').fill(ppeLabel)
+  const addPpe = page.getByRole('button', { name: /^Add PPE$/i })
+  await expect(addPpe).toBeEnabled()
+  await clickUntilPost(page, addPpe, /\/jsas(\/|$)/i)
+  await page.waitForTimeout(400)
+  await page.reload({ waitUntil: 'networkidle' })
+  await page.waitForTimeout(300)
+  await expect(page.getByText(ppeLabel).first()).toBeVisible({ timeout: 20000 })
+
+  const courseSelect = page.locator('#training-course')
+  await expect(courseSelect).toBeVisible({ timeout: 20000 })
+  await selectFirstNonEmptyOption(courseSelect)
+  const addTraining = page.getByRole('button', { name: /^Add training$/i })
+  await expect(addTraining).toBeEnabled()
+  await clickUntilPost(page, addTraining, /\/jsas(\/|$)/i)
+  await page.waitForTimeout(400)
+  await page.reload({ waitUntil: 'networkidle' })
+  await page.waitForTimeout(300)
+}
+
+async function assertSafeDenial(page, url) {
+  const response = await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 60000 })
+  const status = response?.status()
+  const bodyText = await page.locator('body').innerText().catch(() => '')
+  const denied =
+    status === 404 ||
+    status === 403 ||
+    /not found|forbidden|you do not have access|unauthorized/i.test(bodyText)
+  expect(denied, 'Expected safe denial for ' + url + ' (status=' + status + ')').toBeTruthy()
+}
+
 async function confirmCommentedTransition(page, openButtonName, pathPattern, comment, textareaIdPrefix) {
   const openButton = page.getByRole('button', { name: openButtonName }).first()
+  await page.waitForLoadState('networkidle', { timeout: 30000 }).catch(() => null)
   if (!(await openButton.isVisible().catch(() => false))) return false
-
-  await openButton.click()
-  await page.waitForTimeout(300)
 
   const openLabel = ((await openButton.textContent()) || 'Close').trim()
 
@@ -234,7 +427,19 @@ async function confirmCommentedTransition(page, openButtonName, pathPattern, com
     ? page.locator('textarea[id^="' + textareaIdPrefix + '"]').first()
     : page.locator('textarea[id*="transition-comment"], form.rounded-lg textarea, .rounded-lg.border textarea').first()
 
-  if (!(await textarea.isVisible().catch(() => false))) {
+  // Opening the comment panel is client-only state; a click before hydration is dropped. Retry.
+  let opened = false
+  for (let attempt = 0; attempt < 4 && !opened; attempt++) {
+    await page.waitForTimeout(300)
+    await openButton.click()
+    opened = await textarea
+      .waitFor({ state: 'visible', timeout: 4000 })
+      .then(() => true)
+      .catch(() => false)
+    if (!opened) await page.waitForLoadState('networkidle', { timeout: 30000 }).catch(() => null)
+  }
+
+  if (!opened) {
     console.log('SOFT CHECK: Comment panel did not open for ' + openLabel)
     return false
   }
@@ -242,7 +447,9 @@ async function confirmCommentedTransition(page, openButtonName, pathPattern, com
   await textarea.fill(comment)
 
   const confirm = page
-    .getByRole('button', { name: new RegExp('Confirm\\s+' + openLabel.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i') })
+    .getByRole('button', {
+      name: new RegExp('Confirm\\s+' + openLabel.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i')
+    })
     .or(page.getByRole('button', { name: /^Confirm /i }))
     .first()
 
@@ -262,15 +469,27 @@ async function assertNoHorizontalOverflow(page) {
     const root = document.documentElement
     const body = document.body
     const main = document.querySelector('main') || document.querySelector('[role="main"]')
-    const scrollWidth = Math.max(root.scrollWidth, body ? body.scrollWidth : 0, main ? main.scrollWidth : 0)
-    const clientWidth = Math.max(root.clientWidth, body ? body.clientWidth : 0, main ? main.clientWidth : 0)
+    const scrollWidth = Math.max(
+      root.scrollWidth,
+      body ? body.scrollWidth : 0,
+      main ? main.scrollWidth : 0
+    )
+    const clientWidth = Math.max(
+      root.clientWidth,
+      body ? body.clientWidth : 0,
+      main ? main.clientWidth : 0
+    )
     return scrollWidth > clientWidth + 2
   })
   expect(overflowed, 'Expected no horizontal overflow on main workflow viewport').toBeFalsy()
 }
 
 async function readObsRowVersion(page) {
-  const formVersion = await page.locator('[data-obs-row-version]').first().getAttribute('data-obs-row-version').catch(() => null)
+  const formVersion = await page
+    .locator('[data-obs-row-version]')
+    .first()
+    .getAttribute('data-obs-row-version')
+    .catch(() => null)
   const controlsVersion = await page
     .locator('[data-obs-controls-row-version]')
     .first()
@@ -312,16 +531,33 @@ module.exports = {
   baseURL,
   password,
   OUTSIDE_ORG,
+  LOC_A1: '20000000-0000-4000-8000-000000000300',
+  LOC_A2: '20000000-0000-4000-8000-000000000301',
+  CREW_IDS: [
+    '20000000-0000-4000-8000-000000000610',
+    '20000000-0000-4000-8000-000000000611',
+    '20000000-0000-4000-8000-000000000612'
+  ],
+  TENANT_B_EMAIL: 'tenantb@forge2.local',
+  SCOPED_EMAIL: 'scoped@forge2.local',
   login,
   waitForPost,
   selectFirstNonEmptyOption,
   selectByLabelHint,
+  selectByLabelStrict,
   createObservation,
   createRisk,
   createJsa,
   clickWorkflowButton,
+  clickWorkflowButtonHard,
+  clickUntilPost,
   confirmCommentedTransition,
   assertNoHorizontalOverflow,
   readObsRowVersion,
-  switchToOutsideOrgIfAvailable
+  switchToOutsideOrgIfAvailable,
+  addJsaStepHazardControl,
+  addJsaPpeAndTraining,
+  activateJsaViaWorkflow,
+  expectJsaStatus,
+  assertSafeDenial
 }

@@ -64,6 +64,7 @@ export const ExecutionCrewPanel = ({
     role: string
     acknowledged_at: string | null
     name: string
+    personnel_id: string
   }>
 }) => {
   const router = useRouter()
@@ -148,6 +149,32 @@ export const ExecutionCrewPanel = ({
               <span className='text-textSecondary text-xs'>
                 {participant.acknowledged_at ? 'Acknowledged' : 'Pending ack'}
               </span>
+              {!participant.acknowledged_at &&
+              (status === 'planned' || status === 'briefing' || status === 'stopped') ? (
+                <Button
+                  variant='outline'
+                  size='sm'
+                  disabled={pending}
+                  data-testid={'ack-participant-' + participant.personnel_id}
+                  onClick={() => {
+                    startTransition(async () => {
+                      const result = await acknowledgeParticipantAction({
+                        jsaId,
+                        executionId,
+                        personnelId: participant.personnel_id
+                      })
+                      if (!result.ok) {
+                        toast('error', result.error || 'Unable to acknowledge.')
+                        return
+                      }
+                      toast('success', result.message)
+                      router.refresh()
+                    })
+                  }}
+                >
+                  Record acknowledgment
+                </Button>
+              ) : null}
               {canEditCrew ? (
                 <Button
                   variant='outline'

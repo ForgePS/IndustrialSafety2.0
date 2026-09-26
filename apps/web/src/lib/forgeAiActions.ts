@@ -4,6 +4,10 @@ import type { EffectivePermission } from '@/lib/forgeEffectiveAccess'
 import { inspectionWithinScope } from '@/lib/forgeInspections'
 import { assetWithinScope } from '@/lib/forgeAssets'
 import { createJsa } from '@/lib/forgeJsa'
+import {
+  resolveAndAuthorizeJsaAssignment,
+  resolveRequesterJsaCreateScope
+} from '@/lib/forgeJsaAssignment'
 import { getEffectiveLookup } from '@/lib/forgeLookups'
 
 export type ForgeAiBoundRecordContext = {
@@ -418,6 +422,19 @@ export const prepareDraftJsaAction = async ({
   const validated = validateDraftJsaPayload(rawPayload)
   if ('error' in validated) return validated
 
+  // Validate assignment against requester scope before queuing approval.
+  const assignment = await resolveAndAuthorizeJsaAssignment({
+    organizationId,
+    userId,
+    scope: permission.scope,
+    locationId: validated.payload.location_id,
+    divisionId: validated.payload.division_id
+  })
+  if (!assignment.ok) return { error: assignment.error }
+
+  validated.payload.location_id = assignment.locationId
+  validated.payload.division_id = assignment.divisionId
+
   const expiresAt = new Date(Date.now() + 60 * 60 * 1000).toISOString()
   const riskSummary =
     'This will create a DRAFT JSA only after human approval. It will not approve, activate, accept risk, or acknowledge workers.'
@@ -690,18 +707,36 @@ const executeDraftJsa = async ({
   const validated = validateDraftJsaPayload(approval.request_payload || {})
   if ('error' in validated) throw new Error(validated.error)
 
+  // Re-authorize as the original requester — admin approval must not expand requester scope.
+  const requesterId = String(approval.requested_by || '')
+  if (!requesterId) throw new Error('AI draft JSA is missing requested_by.')
+
+  const requesterScope = await resolveRequesterJsaCreateScope({
+    organizationId,
+    requesterUserId: requesterId
+  })
+  if (!requesterScope.ok) throw new Error(requesterScope.error)
+
+  const assignment = await resolveAndAuthorizeJsaAssignment({
+    organizationId,
+    userId: requesterId,
+    scope: requesterScope.scope,
+    locationId: validated.payload.location_id,
+    divisionId: validated.payload.division_id
+  })
+  if (!assignment.ok) throw new Error(assignment.error)
+
   const created = await createJsa({
     organizationId,
-    userId: actorUserId,
+    userId: requesterId,
     input: {
       title: String(validated.payload.title),
       description: validated.payload.description || undefined,
       jobTitle: validated.payload.job_title || undefined,
       taskName: validated.payload.task_name || undefined,
       workArea: validated.payload.work_area || undefined,
-      locationId: validated.payload.location_id || undefined,
-      divisionId: validated.payload.division_id || undefined,
-      status: 'draft'
+      locationId: assignment.locationId || undefined,
+      divisionId: assignment.divisionId || undefined
     }
   })
 
@@ -718,7 +753,9 @@ const executeDraftJsa = async ({
     entity_id: created.jsa.id,
     jsa_number: created.jsa.jsa_number,
     status: created.jsa.status,
-    message: 'Draft JSA created. It remains DRAFT and was not approved or activated.'
+    message: 'Draft JSA created. It remains DRAFT and was not approved or activated.',
+    authorized_by: actorUserId,
+    requested_by: requesterId
   }
 }
 

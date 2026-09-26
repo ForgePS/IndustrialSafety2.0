@@ -47,7 +47,7 @@ const RELATIONSHIP_DEFINITIONS: ForgeRelationshipDefinition[] = [
   },
   {
     relationshipType: 'identified_risk',
-    sourceTypes: ['observation', 'jsa'],
+    sourceTypes: ['incident', 'inspection_finding', 'observation', 'jsa'],
     targetTypes: ['risk_register'],
     reciprocalDisplay: true,
     allowDuplicate: false,

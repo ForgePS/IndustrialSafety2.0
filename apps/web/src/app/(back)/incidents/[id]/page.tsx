@@ -7,6 +7,7 @@ import { createServiceRoleClient } from '@repo/supabase/server'
 import IncidentRecordForm from '../IncidentRecordForm'
 import IncidentWorkflowActions from '../IncidentWorkflowActions'
 import IncidentEquipment from '../IncidentEquipment'
+import IncidentCrossModuleActions from '../IncidentCrossModuleActions'
 import type { IncidentFormValues } from '../actions'
 import { getEffectiveForm } from '@/lib/forgeForms'
 import { getEffectiveLookup } from '@/lib/forgeLookups'
@@ -71,6 +72,7 @@ const IncidentDetailPage = async ({ params }: { params: Promise<{ id: string }> 
   const closePermission = permissionByKey.get('incidents.close')
   const canUseAi = Boolean(permissionByKey.get('forge_ai.use'))
   const assetViewPermission = permissionByKey.get('assets_equipment.view')
+  const canCreateRisk = Boolean(permissionByKey.get('risk_register.create'))
 
   const canWithin = async (permission: any) =>
     permission
@@ -168,13 +170,19 @@ const IncidentDetailPage = async ({ params }: { params: Promise<{ id: string }> 
           </div>
           <p className='text-textSecondary mt-2'>{incident.summary}</p>
         </div>
-        {canUseAi ? (
-          <ForgeAiContextButton
-            contextType='incident'
-            recordId={incident.id}
-            recordLabel={incident.incident_number}
+        <div className='flex flex-wrap items-center gap-2'>
+          <IncidentCrossModuleActions
+            incidentId={incident.id}
+            canCreateRisk={canCreateRisk}
           />
-        ) : null}
+          {canUseAi ? (
+            <ForgeAiContextButton
+              contextType='incident'
+              recordId={incident.id}
+              recordLabel={incident.incident_number}
+            />
+          ) : null}
+        </div>
       </div>
 
       <div className='grid gap-4 md:grid-cols-2 xl:grid-cols-4'>

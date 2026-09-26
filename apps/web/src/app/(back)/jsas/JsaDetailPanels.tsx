@@ -13,8 +13,11 @@ import { toast } from '@repo/ui/utils/toast'
 import {
   addControlAction,
   addHazardAction,
+  addPpeItemAction,
   addStepAction,
+  addTrainingRequirementAction,
   createExecutionAction,
+  createJsaFromTemplateAction,
   createRevisionAction
 } from './actions'
 
@@ -54,6 +57,21 @@ type Execution = {
   started_at: string | null
   leadName: string | null
 }
+
+type PpeItem = {
+  id: string
+  label: string
+  required: boolean
+}
+
+type TrainingRequirement = {
+  id: string
+  training_course_id: string
+  required: boolean
+  courseTitle: string | null
+}
+
+type CourseOption = { id: string; label: string }
 
 export const JsaStepsHazardsPanel = ({
   jsaId,
@@ -465,6 +483,175 @@ export const JsaStepsHazardsPanel = ({
   )
 }
 
+export const JsaRequirementsPanel = ({
+  jsaId,
+  canEdit,
+  ppeItems,
+  trainingRequirements,
+  trainingCourses
+}: {
+  jsaId: string
+  canEdit: boolean
+  ppeItems: PpeItem[]
+  trainingRequirements: TrainingRequirement[]
+  trainingCourses: CourseOption[]
+}) => {
+  const router = useRouter()
+  const [pending, startTransition] = useTransition()
+  const [ppeLabel, setPpeLabel] = useState('')
+  const [courseId, setCourseId] = useState(trainingCourses[0]?.id || '')
+
+  const addPpe = () => {
+    startTransition(async () => {
+      const result = await addPpeItemAction({ jsaId, label: ppeLabel, required: true })
+      if (!result.ok) {
+        toast('error', result.error || 'Unable to add PPE.')
+        return
+      }
+      toast('success', result.message)
+      setPpeLabel('')
+      router.refresh()
+    })
+  }
+
+  const addTraining = () => {
+    startTransition(async () => {
+      const result = await addTrainingRequirementAction({
+        jsaId,
+        trainingCourseId: courseId,
+        required: true
+      })
+      if (!result.ok) {
+        toast('error', result.error || 'Unable to add training requirement.')
+        return
+      }
+      toast('success', result.message)
+      router.refresh()
+    })
+  }
+
+  return (
+    <div className='grid gap-4 lg:grid-cols-2'>
+      <Card>
+        <CardHeader>
+          <CardTitle>PPE</CardTitle>
+          <CardDescription>Required personal protective equipment for this JSA.</CardDescription>
+        </CardHeader>
+        <CardContent className='grid gap-3'>
+          {ppeItems.length ? (
+            <ul className='grid gap-2 text-sm'>
+              {ppeItems.map(item => (
+                <li key={item.id} className='flex items-center justify-between gap-2'>
+                  <span>{item.label}</span>
+                  {item.required ? <Badge variant='outline'>Required</Badge> : null}
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <p className='text-textSecondary text-sm'>No PPE items yet.</p>
+          )}
+          {canEdit ? (
+            <div className='grid gap-2 border-t pt-3'>
+              <Label htmlFor='ppe-label'>PPE item</Label>
+              <Input
+                id='ppe-label'
+                value={ppeLabel}
+                disabled={pending}
+                onChange={event => setPpeLabel(event.target.value)}
+                placeholder='Hard hat'
+              />
+              <Button onClick={addPpe} disabled={pending || !ppeLabel.trim()}>
+                {pending ? 'Adding...' : 'Add PPE'}
+              </Button>
+            </div>
+          ) : null}
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Training requirements</CardTitle>
+          <CardDescription>
+            Required courses. Missing completions show as advisory warnings on executions.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className='grid gap-3'>
+          {trainingRequirements.length ? (
+            <ul className='grid gap-2 text-sm'>
+              {trainingRequirements.map(item => (
+                <li key={item.id} className='flex items-center justify-between gap-2'>
+                  <span>{item.courseTitle || item.training_course_id}</span>
+                  {item.required ? <Badge variant='outline'>Required</Badge> : null}
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <p className='text-textSecondary text-sm'>No training requirements yet.</p>
+          )}
+          {canEdit ? (
+            <div className='grid gap-2 border-t pt-3'>
+              <Label htmlFor='training-course'>Training course</Label>
+              <select
+                id='training-course'
+                value={courseId}
+                disabled={pending || !trainingCourses.length}
+                onChange={event => setCourseId(event.target.value)}
+                className='border-input bg-card text-textSecondary h-[38px] w-full rounded-md border px-3'
+              >
+                <option value=''>Select...</option>
+                {trainingCourses.map(course => (
+                  <option key={course.id} value={course.id}>
+                    {course.label}
+                  </option>
+                ))}
+              </select>
+              <Button onClick={addTraining} disabled={pending || !courseId}>
+                {pending ? 'Adding...' : 'Add training'}
+              </Button>
+            </div>
+          ) : null}
+        </CardContent>
+      </Card>
+    </div>
+  )
+}
+
+export const CreateJsaFromTemplateButton = ({
+  jsaId,
+  isTemplate,
+  canCreate
+}: {
+  jsaId: string
+  isTemplate: boolean
+  canCreate: boolean
+}) => {
+  const router = useRouter()
+  const [pending, startTransition] = useTransition()
+
+  if (!isTemplate || !canCreate) return null
+
+  return (
+    <Button
+      type='button'
+      disabled={pending}
+      onClick={() => {
+        startTransition(async () => {
+          const result = await createJsaFromTemplateAction(jsaId)
+          if (!result.ok) {
+            toast('error', result.error || 'Unable to create JSA from template.')
+            return
+          }
+          toast('success', result.message)
+          if (result.id) router.push('/jsas/' + result.id)
+          else router.refresh()
+        })
+      }}
+    >
+      {pending ? 'Creating...' : 'Create JSA from template'}
+    </Button>
+  )
+}
+
 export const JsaActionsPanel = ({
   jsaId,
   canEdit,
@@ -488,8 +675,17 @@ export const JsaActionsPanel = ({
   const [notes, setNotes] = useState('')
 
   const createRevision = () => {
+    if (pending) return
+    const key =
+      typeof crypto !== 'undefined' && crypto.randomUUID
+        ? crypto.randomUUID()
+        : 'rev-' + jsaId + '-' + Date.now()
     startTransition(async () => {
-      const result = await createRevisionAction({ jsaId, changeSummary })
+      const result = await createRevisionAction({
+        jsaId,
+        changeSummary,
+        idempotencyKey: key
+      })
       if (!result.ok) {
         toast('error', result.error || 'Unable to create revision.')
         return

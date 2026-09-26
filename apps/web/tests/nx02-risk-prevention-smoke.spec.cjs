@@ -26,9 +26,43 @@ async function waitForPost(page, pathPattern, timeout = 30000) {
   )
 }
 
+/**
+ * Click a client-side action button and wait for its server-action POST. Clicks that land before
+ * hydration are dropped, so retry after reload + networkidle until the POST is observed.
+ */
+async function clickUntilPost(page, button, pathPattern) {
+  for (let attempt = 0; attempt < 4; attempt++) {
+    await page.waitForLoadState('networkidle', { timeout: 30000 }).catch(() => null)
+    await page.waitForTimeout(300)
+    await expect(button).toBeVisible({ timeout: 20000 })
+    const post = waitForPost(page, pathPattern, 15000).catch(() => null)
+    await button.click()
+    const response = await post
+    if (response) return response
+    await page.reload({ waitUntil: 'networkidle', timeout: 60000 }).catch(() => null)
+  }
+  throw new Error('Server action POST never observed for ' + String(pathPattern))
+}
+
+async function selectOptionByLabelRegex(select, regex) {
+  const value = await select
+    .locator('option')
+    .evaluateAll(
+      (nodes, source) => {
+        const re = new RegExp(source, 'i')
+        const hit = nodes.find(node => node.value && re.test((node.textContent || '').trim()))
+        return hit ? hit.value : null
+      },
+      regex.source
+    )
+  if (value) await select.selectOption(value)
+  return Boolean(value)
+}
+
 async function createObservation(page, title) {
-  await page.goto(baseURL + '/observations/create')
+  await page.goto(baseURL + '/observations/create', { waitUntil: 'networkidle', timeout: 90000 })
   await expect(page.locator('input[name="title"]')).toBeVisible({ timeout: 20000 })
+  await page.waitForTimeout(400)
 
   await page.locator('input[name="title"]').fill(title)
   await page.locator('textarea[name="description"]').fill(
@@ -57,13 +91,14 @@ async function createObservation(page, title) {
 
   const location = page.locator('select[name="location_id"]')
   if (await location.isVisible().catch(() => false)) {
-    await location.selectOption({ label: /Demo Location/i }).catch(() => {})
+    await selectOptionByLabelRegex(location, /Demo Location/i)
   }
 
   const createPost = waitForPost(page, /\/observations(\/|$)/i)
   await page.getByRole('button', { name: /Save Observation/i }).click()
   expect((await createPost).ok()).toBeTruthy()
-  await page.waitForURL(/\/observations\/[0-9a-f-]+$/i, { timeout: 20000 })
+  // Dev-mode first compile of the detail route can exceed 20s on a cold server.
+  await page.waitForURL(/\/observations\/[0-9a-f-]+$/i, { timeout: 90000 })
 }
 
 test.describe.configure({ mode: 'serial' })
@@ -87,12 +122,13 @@ test('NX-02 risk prevention observation, risk, JSA, and tenant isolation smoke',
   const observationUrl = page.url()
   const observationId = observationUrl.split('/').pop()
 
+  await page.waitForLoadState('networkidle', { timeout: 30000 }).catch(() => null)
   const submitButton = page.getByRole('button', { name: /^Submit$/i })
   if (await submitButton.isVisible().catch(() => false)) {
-    const submitPost = waitForPost(page, /\/observations(\/|$)/i)
-    await submitButton.click()
-    expect((await submitPost).ok()).toBeTruthy()
-    await page.reload({ waitUntil: 'load' })
+    const submitResponse = await clickUntilPost(page, submitButton, /\/observations(\/|$)/i)
+    expect(submitResponse.ok()).toBeTruthy()
+    await page.waitForTimeout(1000)
+    await page.reload({ waitUntil: 'networkidle' })
     await expect(page.getByText(/Submitted/i).first()).toBeVisible({ timeout: 20000 })
   } else {
     // Fallback: edit status path if domain control is not visible for this user.
@@ -109,9 +145,7 @@ test('NX-02 risk prevention observation, risk, JSA, and tenant isolation smoke',
   const createRiskButton = page.getByRole('button', { name: /Create Risk/i })
   let createdRiskId = null
   if (await createRiskButton.isVisible().catch(() => false)) {
-    const riskPost = waitForPost(page, /\/observations(\/|$)/i)
-    await createRiskButton.click()
-    const riskResponse = await riskPost
+    const riskResponse = await clickUntilPost(page, createRiskButton, /\/observations(\/|$)/i)
     expect(riskResponse.ok()).toBeTruthy()
     await page.waitForURL(/\/risk-register\/[0-9a-f-]+$/i, { timeout: 20000 }).catch(() => {})
     if (/\/risk-register\/[0-9a-f-]+$/i.test(page.url())) {
@@ -152,20 +186,21 @@ test('NX-02 risk prevention observation, risk, JSA, and tenant isolation smoke',
   }
   const jsaLocation = page.locator('select[name="location_id"]')
   if (await jsaLocation.isVisible().catch(() => false)) {
-    await jsaLocation.selectOption({ label: /Demo Location/i }).catch(() => {})
+    await selectOptionByLabelRegex(jsaLocation, /Demo Location/i)
   }
 
   const jsaPost = waitForPost(page, /\/jsas(\/|$)/i)
   await page.getByRole('button', { name: /Save JSA/i }).click()
   expect((await jsaPost).ok()).toBeTruthy()
-  await page.waitForURL(/\/jsas\/[0-9a-f-]+$/i, { timeout: 20000 })
+  await page.waitForURL(/\/jsas\/[0-9a-f-]+$/i, { timeout: 60000 })
   await expect(page.getByRole('heading', { name: jsaTitle })).toBeVisible({ timeout: 20000 })
   await expect(
     page.getByRole('button', { name: /Create Corrective Action/i })
   ).toBeVisible({ timeout: 20000 })
 
   // Cross-tenant: switch to outside org seeded by setup-support-smoke.mjs
-  await page.goto(baseURL + '/dashboard')
+  await page.goto(baseURL + '/dashboard', { waitUntil: 'networkidle', timeout: 90000 })
+  await page.waitForTimeout(500)
   const orgSwitchPost = page.waitForResponse(
     response =>
       response.request().method() === 'POST' &&
