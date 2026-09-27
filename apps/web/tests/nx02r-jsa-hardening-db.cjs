@@ -140,23 +140,56 @@ async function main() {
 
   // 2) createExecution against non-active statuses
   const draft = await createDraft('NX-02R exec draft ' + Date.now())
+  // For every non-active parent status, a planned execution must not be able to enter briefing
+  // (DB-level gate in forge_perform_jsa_execution_transition). The TS create gate for the same
+  // statuses is exercised end-to-end in nx02r-jsa-execution.spec.cjs (replayed server action).
   for (const status of ['draft', 'in_review', 'approved', 'superseded', 'retired']) {
-    // Force status via update (allowed) for fixture — set session not needed for UPDATE
     await request(
       'PATCH',
       '/rest/v1/forge_jsas?id=eq.' + draft.id + '&organization_id=eq.' + ORG_A,
       { status }
     )
-    // Simulate createExecution gate via SQL check mirroring TS: status must be active
     const { data: row } = await request(
       'GET',
       '/rest/v1/forge_jsas?id=eq.' + draft.id + '&select=status'
     )
     const current = Array.isArray(row) ? row[0]?.status : row?.status
-    assert(current === status, 'fixture status not set')
-    assert(current !== 'active', 'expected non-active for deny case')
+    assert(current === status, 'fixture status not set: ' + status)
+
+    const planned = await request('POST', '/rest/v1/forge_jsa_executions', {
+      organization_id: ORG_A,
+      jsa_id: draft.id,
+      execution_number: 'EXE-NX02R-DENY-' + status + '-' + Date.now(),
+      status: 'planned',
+      location_id: LOC_A,
+      lead_personnel_id: PERSON_A,
+      created_by: USER_A
+    })
+    assert(planned.ok, 'planned fixture insert failed for ' + status + ' ' + JSON.stringify(planned.data))
+    const plannedRow = Array.isArray(planned.data) ? planned.data[0] : planned.data
+
+    const deny = await rpc('forge_perform_jsa_execution_transition', {
+      p_organization_id: ORG_A,
+      p_execution_id: plannedRow.id,
+      p_expected_status: 'planned',
+      p_to_status: 'briefing',
+      p_actor_user_id: USER_A,
+      p_idempotency_key: 'nx02r-exec-status-deny-' + status + '-' + plannedRow.id
+    })
+    assert(
+      deny.data?.ok === false || !deny.ok,
+      'briefing on ' + status + ' parent must DENY: ' + JSON.stringify(deny.data)
+    )
+    const { data: after } = await request(
+      'GET',
+      '/rest/v1/forge_jsa_executions?id=eq.' + plannedRow.id + '&select=status'
+    )
+    const afterStatus = Array.isArray(after) ? after[0]?.status : after?.status
+    assert(afterStatus === 'planned', 'execution must remain planned for ' + status)
+    const denyText = JSON.stringify(deny.data || '')
+    assert(/active/i.test(denyText), 'deny must cite the ACTIVE-parent rule: ' + denyText)
+    console.log('  execution briefing on ' + status + ' parent DENY: ' + denyText.slice(0, 120))
   }
-  console.log('  non-active statuses prepared for execution deny cases')
 
   // Put back to approved then activate via RPC for positive path
   await request(

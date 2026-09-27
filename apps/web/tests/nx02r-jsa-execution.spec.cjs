@@ -17,6 +17,37 @@ const {
 
 const JSA_POST = /\/jsas(\/|$)/i
 
+// Service-role REST is used only to force fixture statuses and to read back results; the code under
+// test (server action + authorization gate) is exercised through the real UI request.
+const envPath = path.join(__dirname, '..', '.env.local')
+const env = {}
+for (const line of fs.readFileSync(envPath, 'utf8').split(/\r?\n/)) {
+  const m = line.match(/^([A-Z0-9_]+)=(.*)$/)
+  if (m) env[m[1]] = m[2]
+}
+
+async function rest(method, urlPath, body) {
+  const key = env.SUPABASE_SERVICE_ROLE_KEY
+  const res = await fetch(env.NEXT_PUBLIC_SUPABASE_URL + urlPath, {
+    method,
+    headers: {
+      apikey: key,
+      Authorization: 'Bearer ' + key,
+      'Content-Type': 'application/json',
+      Prefer: 'return=representation'
+    },
+    body: body ? JSON.stringify(body) : undefined
+  })
+  const text = await res.text()
+  let data = null
+  try {
+    data = text ? JSON.parse(text) : null
+  } catch {
+    data = text
+  }
+  return { ok: res.ok, status: res.status, data }
+}
+
 test.describe.configure({ mode: 'serial' })
 test.setTimeout(420000)
 
@@ -94,6 +125,60 @@ test.describe('NX-02R JSA execution', () => {
     await expect(page.getByText(/NX Crew Three/i).first()).toBeVisible()
     await expect(page.getByText(/Training warnings/i).first()).toBeVisible({ timeout: 20000 })
     await expect(page.getByText(/may be missing required training/i).first()).toBeVisible()
+  })
+
+  test('server rejects execution create for every non-active parent status (replayed action)', async () => {
+    // Replay the real Start-execution server action captured on the ACTIVE JSA, but retarget it at
+    // a non-active JSA. The server gate must reject each status and no execution row may exist.
+    const targetId = draftUrl.match(/\/jsas\/([0-9a-f-]+)/i)?.[1]
+    expect(targetId).toBeTruthy()
+    expect(jsaId).toBeTruthy()
+
+    for (const status of ['draft', 'in_review', 'approved', 'superseded', 'retired']) {
+      const patched = await rest('PATCH', '/rest/v1/forge_jsas?id=eq.' + targetId, { status })
+      expect(patched.ok, 'fixture status patch ' + status).toBeTruthy()
+
+      await page.goto(jsaUrl, { waitUntil: 'networkidle' })
+      await page.waitForTimeout(400)
+      await selectByLabelHint(page.locator('#execution-lead'), /NX Crew Lead/i)
+      await selectByLabelHint(page.locator('#execution-location'), /Demo Location/i)
+
+      let retargeted = 0
+      await page.route(
+        url => url.pathname === '/jsas/' + jsaId,
+        async route => {
+          const request = route.request()
+          const body = request.postData()
+          if (request.method() === 'POST' && body && body.includes(jsaId)) {
+            retargeted++
+            await route.continue({ postData: body.split(jsaId).join(targetId) })
+            return
+          }
+          await route.continue()
+        }
+      )
+      const response = await clickUntilPost(
+        page,
+        page.getByRole('button', { name: /Start execution/i }),
+        JSA_POST
+      )
+      await page.unrouteAll({ behavior: 'ignoreErrors' })
+
+      expect(response.ok()).toBeTruthy()
+      expect(retargeted, 'action payload must be retargeted for ' + status).toBeGreaterThanOrEqual(1)
+      await expect(page.getByText(/Only an ACTIVE JSA revision may be executed/i).first()).toBeVisible({
+        timeout: 20000
+      })
+      expect(page.url()).not.toMatch(/\/executions\//)
+
+      const rows = await rest(
+        'GET',
+        '/rest/v1/forge_jsa_executions?jsa_id=eq.' + targetId + '&select=id'
+      )
+      expect(Array.isArray(rows.data) ? rows.data.length : -1, 'no execution for ' + status).toBe(0)
+    }
+
+    await rest('PATCH', '/rest/v1/forge_jsas?id=eq.' + targetId, { status: 'draft' })
   })
 
   test('activation blocked before acks; all ack; activate; stop; resume; complete; persist', async () => {
