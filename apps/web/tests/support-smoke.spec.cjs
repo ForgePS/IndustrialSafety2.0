@@ -12,7 +12,8 @@ async function login(page, email) {
 }
 
 test.describe.configure({ mode: 'serial' })
-test.setTimeout(120000)
+// CI runs against a cold `next dev` server; first-hit route compiles alone consume ~60s.
+test.setTimeout(300000)
 
 test('customer support end-to-end smoke test', async ({ browser }) => {
   const customerContext = await browser.newContext()
