@@ -13,6 +13,20 @@ async function login(page, email) {
   await page.waitForURL(url => !url.pathname.startsWith('/auth/login'), { timeout: 20000 })
 }
 
+// Next.js streamed notFound responses can carry HTTP 200 after headers flush.
+// Require an explicit framework not-found signal and absence of protected data.
+async function expectRecordDenied(response, protectedTexts) {
+  const body = await response.text()
+  expect([200, 404]).toContain(response.status())
+  if (response.status() === 200) {
+    expect(/NEXT_HTTP_ERROR_FALLBACK;404|NEXT_NOT_FOUND/.test(body), 'Streamed denial must include the not-found signal').toBeTruthy()
+    expect(body.includes('noindex'), 'Streamed denial must prohibit indexing').toBeTruthy()
+  }
+  for (const text of protectedTexts) {
+    expect(body.includes(text), 'Cross-tenant response must not contain protected record content').toBeFalsy()
+  }
+}
+
 async function createDraftIncident(page, summary) {
   await page.goto(baseURL + '/incidents/create')
   await expect(page.getByRole('button', { name: 'Save Incident' })).toBeVisible({ timeout: 20000 })
@@ -105,10 +119,10 @@ test('incident equipment link, asset history, and tenant isolation smoke test', 
   await expect(employee.getByText(summary)).toHaveCount(0)
 
   const isolatedIncident = await employeeContext.request.get(incidentUrl, { maxRedirects: 0 })
-  expect(isolatedIncident.status()).toBe(404)
+  await expectRecordDenied(isolatedIncident, [summary, 'DEMO-AST-000001'])
 
   const isolatedAsset = await employeeContext.request.get(baseURL + assetHref, { maxRedirects: 0 })
-  expect(isolatedAsset.status()).toBe(404)
+  await expectRecordDenied(isolatedAsset, [summary, 'DEMO-AST-000001'])
 
   await employeeContext.close()
   await adminContext.close()
