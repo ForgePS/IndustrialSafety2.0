@@ -212,11 +212,17 @@ test('customer support end-to-end smoke test', async ({ browser }) => {
     body: JSON.stringify({ p_start: '2020-01-01T00:00:00Z', p_end: '2040-01-01T00:00:00Z' })
   })
   expect([401, 403]).toContain(directReport.status)
-  await customer.goto(baseURL + '/admin/creator/support/reports')
-  await expect(customer.getByRole('heading', { name: 'Support reports' })).toHaveCount(0)
-  await customer.goto(ticketUrl)
+  const deniedReportPage = await customerContext.request.get(baseURL + '/admin/creator/support/reports', { maxRedirects: 0 })
+  expect([303, 307]).toContain(deniedReportPage.status())
+  expect(deniedReportPage.headers().location).toContain('/admin')
 
+  // Keep the customer on the already hydrated ticket while testing staff access
+  // through an HTTP request. Then wait for the reopen action itself to complete.
+  const reopenPost = customer.waitForResponse(response =>
+    response.request().method() === 'POST' && new URL(response.url()).pathname === '/support/' + ticketId
+  )
   await customer.getByRole('button', { name: 'Reopen request' }).click()
+  expect((await reopenPost).ok()).toBeTruthy()
   await expect(customer.getByText('Request reopened.')).toBeVisible()
   await customer.reload()
   await expect(customer.getByText('waiting on forge', { exact: true })).toBeVisible()
