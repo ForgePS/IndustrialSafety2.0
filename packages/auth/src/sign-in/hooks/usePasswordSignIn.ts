@@ -26,8 +26,19 @@ export const usePasswordSignIn = (verifyEmailRedirectTo?: string) => {
 
     // A fresh document loads server components with the newly established session,
     // avoiding a race between client navigation, auth updates, and router refresh.
+    const loginSuffix = /\/auth\/login\/?$/
+    const basePath = loginSuffix.test(window.location.pathname)
+      ? window.location.pathname.replace(loginSuffix, '')
+      : ''
     const target = new URL(redirectTo || '/', window.location.origin)
-    window.location.assign(target.origin === window.location.origin ? target.href : '/')
+    if (target.origin !== window.location.origin) {
+      window.location.assign(basePath + '/')
+      return
+    }
+    const pathname = basePath && target.pathname !== basePath && !target.pathname.startsWith(basePath + '/')
+      ? basePath + target.pathname
+      : target.pathname
+    window.location.assign(pathname + target.search + target.hash)
   }
 
   return { handleSignIn, ...signInWithPasswordMutation }
