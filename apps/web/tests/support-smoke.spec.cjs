@@ -136,6 +136,14 @@ test('customer support end-to-end smoke test', async ({ browser }) => {
   await admin.reload()
   await expect(admin.getByLabel('Status')).toHaveValue('resolved')
 
+  // Customers receive public updates without any internal note content.
+  await customer.goto(baseURL + '/support')
+  const inbox = customer.getByRole('region', { name: 'Support inbox' })
+  await expect(inbox.getByText('Forge Support replied · Unread', { exact: true })).toBeVisible()
+  await expect(inbox.getByText('INTERNAL-SMOKE-NOTE-DO-NOT-EXPOSE')).toHaveCount(0)
+  await inbox.getByRole('button', { name: 'Mark shown notifications read' }).click()
+  await expect(inbox.getByText(/^0 unread in the latest/)).toBeVisible()
+
   // Customer can see public support content, but never internal staff content.
   await customer.goto(ticketUrl)
   await expect(customer.getByText('Public Forge Support smoke-test reply.')).toBeVisible()
@@ -149,6 +157,63 @@ test('customer support end-to-end smoke test', async ({ browser }) => {
 
   await expect(customer.getByText('Resolved successfully by automated smoke test.')).toBeVisible()
   await expect(customer.getByRole('button', { name: 'Reopen request' })).toBeVisible()
+
+  // Only the original requester may rate the resolved ticket.
+  await admin.goto(baseURL + '/support/' + ticketId)
+  await expect(admin.getByLabel('Support rating')).toHaveCount(0)
+  await expect(customer.getByLabel('Support rating')).toBeVisible()
+  await customer.getByLabel('Support rating').selectOption('5')
+  await customer.getByLabel('Feedback comments').fill('Support was clear and helpful.')
+  await customer.getByRole('button', { name: 'Submit feedback' }).click()
+  await expect(customer.getByText('Rating: 5 / 5', { exact: true })).toBeVisible()
+  await expect(customer.getByRole('button', { name: 'Submit feedback' })).toHaveCount(0)
+
+  await admin.goto(baseURL + '/admin/creator/support/' + ticketId)
+  await expect(admin.getByText('Support was clear and helpful.')).toBeVisible()
+  await admin.goto(baseURL + '/admin/creator/support/reports')
+  await expect(admin.getByRole('heading', { name: 'Support reports' })).toBeVisible()
+  await expect(admin.getByTestId('support-feedback-count')).toHaveText('1')
+
+  // Exercise database guards as well as UI controls. Credentials remain in the
+  // Node test process and are never injected into browser pages.
+  const api = process.env.API_URL
+  const serviceKey = process.env.SERVICE_ROLE_KEY
+  const anonKey = process.env.ANON_KEY
+  expect(Boolean(api && serviceKey && anonKey)).toBeTruthy()
+  const serviceHeaders = { apikey: serviceKey, Authorization: 'Bearer ' + serviceKey, 'Content-Type': 'application/json' }
+  const ticketResponse = await fetch(api + '/rest/v1/forge_support_tickets?id=eq.' + ticketId + '&select=organization_id,requester_user_id', { headers: serviceHeaders })
+  expect(ticketResponse.ok).toBeTruthy()
+  const [ticketRecord] = await ticketResponse.json()
+  const feedbackInput = {
+    p_org: ticketRecord.organization_id, p_ticket: ticketId,
+    p_actor: ticketRecord.requester_user_id, p_rating: 5, p_comment: 'Duplicate attempt'
+  }
+  const duplicate = await fetch(api + '/rest/v1/rpc/submit_forge_support_feedback', {
+    method: 'POST', headers: serviceHeaders, body: JSON.stringify(feedbackInput)
+  })
+  expect(duplicate.status).toBe(409)
+  const otherRequester = await fetch(api + '/rest/v1/rpc/submit_forge_support_feedback', {
+    method: 'POST', headers: serviceHeaders,
+    body: JSON.stringify({ ...feedbackInput, p_actor: '00000000-0000-4000-8000-000000000001' })
+  })
+  expect(otherRequester.ok).toBeFalsy()
+  const otherTenant = await fetch(api + '/rest/v1/rpc/submit_forge_support_feedback', {
+    method: 'POST', headers: serviceHeaders,
+    body: JSON.stringify({ ...feedbackInput, p_org: '30000000-0000-4000-8000-000000000100' })
+  })
+  expect(otherTenant.ok).toBeFalsy()
+  const noticesResponse = await fetch(api + '/rest/v1/forge_support_notifications?ticket_id=eq.' + ticketId + '&audience=eq.customer&kind=eq.forge_reply&select=id', { headers: serviceHeaders })
+  expect(noticesResponse.ok).toBeTruthy()
+  expect((await noticesResponse.json()).length).toBe(1)
+  const directReport = await fetch(api + '/rest/v1/rpc/forge_support_report', {
+    method: 'POST',
+    headers: { apikey: anonKey, Authorization: 'Bearer ' + anonKey, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ p_start: '2020-01-01T00:00:00Z', p_end: '2040-01-01T00:00:00Z' })
+  })
+  expect([401, 403]).toContain(directReport.status)
+  await customer.goto(baseURL + '/admin/creator/support/reports')
+  await expect(customer.getByRole('heading', { name: 'Support reports' })).toHaveCount(0)
+  await customer.goto(ticketUrl)
 
   await customer.getByRole('button', { name: 'Reopen request' }).click()
   await expect(customer.getByText('Request reopened.')).toBeVisible()
@@ -170,6 +235,7 @@ test('customer support end-to-end smoke test', async ({ browser }) => {
   // The ticket must disappear from the other tenant's support list.
   await isolated.goto(baseURL + '/support')
   await expect(isolated.getByText('Support smoke test ticket')).toHaveCount(0)
+  await expect(isolated.getByRole('region', { name: 'Support inbox' }).getByText(/Support smoke test ticket/)).toHaveCount(0)
 
   // Direct record navigation must fail in the other tenant.
   const isolatedTicketResponse = await isolated.goto(ticketUrl)
