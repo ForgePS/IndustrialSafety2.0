@@ -3,6 +3,7 @@ import type { Metadata } from 'next'
 import { createServiceRoleClient } from '@repo/supabase/server'
 import { requireForgePlatformRole } from '@/lib/forgeCreatorAuth'
 import SupportConversation from '@/app/(back)/support/SupportConversation'
+import SupportFeedback from '@/app/(back)/support/SupportFeedback'
 export const metadata:Metadata={title:'Forge Support Request'}
 export default async function ForgeSupportDetail({params}:{params:Promise<{id:string}>}){
  await requireForgePlatformRole(['forge_owner','forge_creator','forge_support'])
@@ -17,5 +18,7 @@ export default async function ForgeSupportDetail({params}:{params:Promise<{id:st
   db.from('forge_platform_users').select('user_id,platform_role').eq('is_active',true).in('platform_role',['forge_owner','forge_creator','forge_support'])
  ])
  if(messageError||eventError||attachmentError||staffError) throw new Error('Unable to load support record.')
- return <SupportConversation staff ticket={ticket} messages={[...(messages||[])].reverse()} events={[...(events||[])].reverse()} attachments={[...(attachments||[])].reverse()} staffUsers={(staff||[]).map((s:any)=>({user_id:s.user_id,label:s.platform_role.replaceAll('_',' ')+' · '+s.user_id.slice(0,8)}))} basePath={process.env.BASEPATH||''} />
+ const {data:feedback,error:feedbackError}=await db.from('forge_support_feedback').select('rating,comment,created_at').eq('organization_id',ticket.organization_id).eq('ticket_id',id).maybeSingle()
+ if(feedbackError) throw new Error('Unable to load support feedback.')
+ return <><SupportConversation staff ticket={ticket} messages={[...(messages||[])].reverse()} events={[...(events||[])].reverse()} attachments={[...(attachments||[])].reverse()} staffUsers={(staff||[]).map((s:any)=>({user_id:s.user_id,label:s.platform_role.replaceAll('_',' ')+' · '+s.user_id.slice(0,8)}))} basePath={process.env.BASEPATH||''} /><SupportFeedback ticketId={id} feedback={feedback} /></>
 }

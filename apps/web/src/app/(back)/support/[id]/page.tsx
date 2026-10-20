@@ -3,6 +3,7 @@ import type { Metadata } from 'next'
 import { createServiceRoleClient } from '@repo/supabase/server'
 import { requireTenantPermission } from '@/lib/forgeTenantAuth'
 import SupportConversation from '../SupportConversation'
+import SupportFeedback from '../SupportFeedback'
 export const metadata:Metadata={title:'Support Request'}
 export default async function SupportDetail({params}:{params:Promise<{id:string}>}){
  const context=await requireTenantPermission('customer_support.view')
@@ -20,5 +21,7 @@ export default async function SupportDetail({params}:{params:Promise<{id:string}
   db.from('forge_support_attachments').select('id,file_name,visibility,byte_size,created_at').eq('organization_id',organizationId).eq('ticket_id',id).eq('visibility','public').order('created_at',{ascending:false}).limit(100)
  ])
  if(messageError||eventError||attachmentError) throw new Error('Unable to load support conversation.')
- return <SupportConversation ticket={ticket} messages={[...(messages||[])].reverse()} events={[...(events||[])].reverse()} attachments={[...(attachments||[])].reverse()} canReply={ticket.requester_user_id===context.user.id||companyReply} basePath={process.env.BASEPATH||''} />
+ const {data:feedback,error:feedbackError}=ticket.requester_user_id===context.user.id ? await db.from('forge_support_feedback').select('rating,comment,created_at').eq('organization_id',organizationId).eq('ticket_id',id).maybeSingle() : {data:null,error:null}
+ if(feedbackError) throw new Error('Unable to load support feedback.')
+ return <><SupportConversation ticket={ticket} messages={[...(messages||[])].reverse()} events={[...(events||[])].reverse()} attachments={[...(attachments||[])].reverse()} canReply={ticket.requester_user_id===context.user.id||companyReply} basePath={process.env.BASEPATH||''} /><SupportFeedback ticketId={id} feedback={feedback} canSubmit={ticket.requester_user_id===context.user.id&&['resolved','closed'].includes(ticket.status)} /></>
 }

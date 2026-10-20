@@ -1,7 +1,10 @@
+import Link from 'next/link'
 import type { Metadata } from 'next'
 import { createServiceRoleClient } from '@repo/supabase/server'
 import { requireForgePlatformRole } from '@/lib/forgeCreatorAuth'
 import SupportDesk from '@/app/(back)/support/SupportDesk'
+import SupportInbox from '@/app/(back)/support/SupportInbox'
+import { getSupportInbox } from '@/lib/forgeSupportOperations'
 export const metadata:Metadata={title:'Forge Support Queue'}
 export default async function ForgeSupportPage(){
  const {platformRole}=await requireForgePlatformRole(['forge_owner','forge_creator','forge_support'])
@@ -17,5 +20,6 @@ export default async function ForgeSupportPage(){
  const ids=[...new Set(data.map((t:any)=>t.organization_id))]
  const {data:orgs}=ids.length?await db.from('organizations').select('id,name').in('id',ids):{data:[]}
  const names=new Map((orgs||[]).map((o:any)=>[o.id,o.name]))
- return <SupportDesk staff canSettings={platformRole!=='forge_support'} tickets={(data||[]).map((t:any)=>({...t,organizationName:names.get(t.organization_id)||'Company'}))} />
+ const notices=await getSupportInbox('staff')
+ return <><div className='mb-4'><Link href='/admin/creator/support/reports' className='text-primary font-medium underline'>Support reports</Link></div><SupportInbox staff notices={notices} /><SupportDesk staff canSettings={platformRole!=='forge_support'} tickets={(data||[]).map((t:any)=>({...t,organizationName:names.get(t.organization_id)||'Company'}))} /></>
 }
