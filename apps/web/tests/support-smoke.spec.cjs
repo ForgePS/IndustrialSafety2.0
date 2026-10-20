@@ -12,7 +12,8 @@ async function login(page, email) {
 }
 
 test.describe.configure({ mode: 'serial' })
-test.setTimeout(120000)
+// Includes additional notification, feedback, reporting, and access-denial flows.
+test.setTimeout(240000)
 
 test('customer support end-to-end smoke test', async ({ browser }) => {
   const customerContext = await browser.newContext()
