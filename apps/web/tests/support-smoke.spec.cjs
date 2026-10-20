@@ -5,6 +5,7 @@ const password = 'ForgeDev2!'
 
 async function login(page, email) {
   await page.goto(baseURL + '/auth/login')
+  await expect(page.getByRole('button', { name: /Sign in to Forge Industrial Safety 2\.0/i })).toBeEnabled({ timeout: 20000 })
   await page.locator('input[name="email"]').fill(email)
   await page.locator('input[name="password"]').fill(password)
   await page.getByRole('button', { name: /Sign in to Forge Industrial Safety 2\.0/i }).click()
@@ -14,6 +15,18 @@ async function login(page, email) {
 test.describe.configure({ mode: 'serial' })
 // Includes additional notification, feedback, reporting, and access-denial flows.
 test.setTimeout(240000)
+
+test('production login rejects bad credentials and omits the user directory', async ({ page }) => {
+  await page.goto(baseURL + '/auth/login')
+  const submit = page.getByRole('button', { name: /Sign in to Forge Industrial Safety 2\.0/i })
+  await expect(submit).toBeEnabled({ timeout: 20000 })
+  expect(await page.content()).not.toContain('admin@forge2.local')
+  await page.locator('input[name="email"]').fill('user@forge2.local')
+  await page.locator('input[name="password"]').fill('DefinitelyWrongPassword!2')
+  await submit.click()
+  await expect(page.getByRole('alert')).toBeVisible({ timeout: 10000 })
+  await expect(page).toHaveURL(/\/auth\/login/)
+})
 
 test('customer support end-to-end smoke test', async ({ browser }) => {
   const customerContext = await browser.newContext()
