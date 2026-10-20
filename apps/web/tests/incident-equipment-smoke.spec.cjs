@@ -99,14 +99,15 @@ test('incident equipment link, asset history, and tenant isolation smoke test', 
     outsideOrgId
   )
 
-  await employee.goto(baseURL + '/incidents')
+  await employee.goto(baseURL + '/incidents', { waitUntil: 'domcontentloaded' })
+  await expect(employee.getByRole('heading', { name: 'Incidents', exact: true })).toBeVisible({ timeout: 20000 })
   await expect(employee.getByText(summary)).toHaveCount(0)
 
-  const isolatedIncident = await employee.goto(incidentUrl)
-  expect(isolatedIncident?.status()).toBe(404)
+  const isolatedIncident = await employeeContext.request.get(incidentUrl, { maxRedirects: 0 })
+  expect(isolatedIncident.status()).toBe(404)
 
-  const isolatedAsset = await employee.goto(baseURL + assetHref)
-  expect(isolatedAsset?.status()).toBe(404)
+  const isolatedAsset = await employeeContext.request.get(baseURL + assetHref, { maxRedirects: 0 })
+  expect(isolatedAsset.status()).toBe(404)
 
   await employeeContext.close()
   await adminContext.close()

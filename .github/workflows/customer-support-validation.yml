@@ -40,10 +40,8 @@ jobs:
       - run: pnpm --filter forge-industrial-safety-2.0-web type-check
       - run: pnpm --filter forge-industrial-safety-2.0-web build
 
+  # This job provisions its own database and build, so it can run independently.
   browser-smoke:
-    needs:
-      - database
-      - web
     runs-on: ubuntu-latest
     timeout-minutes: 45
     steps:
@@ -99,9 +97,12 @@ jobs:
           pnpm add -Dw @playwright/test@1.55.0 --lockfile=false
           pnpm exec playwright install --with-deps chromium
 
+      - name: Build production app for browser checks
+        run: pnpm --filter forge-industrial-safety-2.0-web build
+
       - name: Start Forge web app
         run: |
-          pnpm --filter forge-industrial-safety-2.0-web dev --hostname 127.0.0.1 > /tmp/forge-smoke.log 2>&1 &
+          pnpm --filter forge-industrial-safety-2.0-web start --hostname 127.0.0.1 > /tmp/forge-smoke.log 2>&1 &
           echo $! > /tmp/forge-smoke.pid
 
           for i in $(seq 1 90); do
