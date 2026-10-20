@@ -149,7 +149,9 @@ jobs:
 
       - name: Print web log on failure
         if: failure()
-        run: cat /tmp/forge-smoke.log || true
+        run: |
+          cat /tmp/forge-smoke.log || true
+          find test-results -name error-context.md -type f -exec cat {} + || true
 
       - name: Upload Playwright failure artifacts
         if: failure()

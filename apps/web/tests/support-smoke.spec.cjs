@@ -7,6 +7,7 @@ const OUTSIDE_ORG = '30000000-0000-4000-8000-000000000100'
 
 async function login(page, email) {
   await page.goto(baseURL + '/auth/login')
+  await expect(page.getByRole('button', { name: /Sign in to Forge Industrial Safety 2\.0/i })).toBeEnabled({ timeout: 20000 })
   await page.locator('input[name="email"]').fill(email)
   await page.locator('input[name="password"]').fill(password)
   await page.getByRole('button', { name: /Sign in to Forge Industrial Safety 2\.0/i }).click()

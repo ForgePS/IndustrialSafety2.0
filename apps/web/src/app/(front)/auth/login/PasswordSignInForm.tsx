@@ -19,15 +19,17 @@ import PasswordInput from '@repo/ui/components/ui/password-input'
 import { passwordSignInFormSchema, usePasswordSignIn } from '@repo/auth/sign-in'
 import Trans from '@repo/i18n/Trans'
 import { useTranslation } from 'react-i18next'
-import type { User } from '@supabase/supabase-js'
 import type { PasswordSignInFormData } from '@repo/auth/sign-in'
 
 // Config Imports
 import appConfig from '@configs/appConfig'
 
-const PasswordSignInForm = ({ users }: { users: User[] | null }) => {
+const PasswordSignInForm = () => {
   // States
   const [showAlert, setShowAlert] = useState(false)
+  const [ready, setReady] = useState(false)
+
+  useEffect(() => { setReady(true) }, [])
   const [pending, startTransition] = useTransition()
 
   // Hooks
@@ -42,7 +44,7 @@ const PasswordSignInForm = ({ users }: { users: User[] | null }) => {
     }
   })
 
-  const { handleSignIn, error } = usePasswordSignIn(`/auth/verify-email?email=${form.getValues('email')}`)
+  const { handleSignIn, error } = usePasswordSignIn('/auth/verify-email')
 
   const handleButtonClick = (value: string) => {
     form.setValue('email', value === 'admin' ? 'admin@forge2.local' : 'user@forge2.local')
@@ -53,7 +55,7 @@ const PasswordSignInForm = ({ users }: { users: User[] | null }) => {
     startTransition(async () => {
       try {
         setShowAlert(false)
-        await handleSignIn(formData, users)
+        await handleSignIn(formData)
       } catch (error) {
         console.error(error)
         setShowAlert(true)
@@ -112,7 +114,7 @@ const PasswordSignInForm = ({ users }: { users: User[] | null }) => {
                   <sup className='text-destructive'>*</sup>
                 </FormLabel>
                 <FormControl>
-                  <Input type='email' placeholder={t('auth:formEmailPlaceholder')} autoFocus {...field} />
+                  <Input type='email' placeholder={t('auth:formEmailPlaceholder')} autoFocus {...field} disabled={!ready} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -128,7 +130,7 @@ const PasswordSignInForm = ({ users }: { users: User[] | null }) => {
                   <sup className='text-destructive'>*</sup>
                 </FormLabel>
                 <FormControl>
-                  <PasswordInput placeholder='················' {...field} />
+                  <PasswordInput placeholder='················' {...field} disabled={!ready} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -139,7 +141,7 @@ const PasswordSignInForm = ({ users }: { users: User[] | null }) => {
               <Trans i18nKey='auth:authForgotPasswordText' />?
             </Link>
           </div>
-          <Button type='submit' disabled={pending}>
+          <Button type='submit' disabled={!ready || pending}>
             {pending ? (
               <Trans i18nKey='auth:loginSubmitPendingText' values={{ appName: appConfig.appName }} />
             ) : (
