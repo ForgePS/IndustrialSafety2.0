@@ -1,16 +1,16 @@
 /**
- * Field sign-out: clear offline caches before Cognito/session logout.
- * Prefer AuthProvider.logout after ApiBootstrap registers purgeFieldForgeBrowserState;
- * this helper remains for call sites that need an explicit pre-clear.
+ * Field sign-out: AuthProvider.logout already runs RG-09 purge via ApiBootstrap.
+ * Do not await a second IndexedDB/SW purge here — Android Chrome can hang on
+ * deleteDatabase/unregister and never reach the Cognito logout redirect.
  */
-import { purgeFieldForgeBrowserState } from "./forge-browser-purge";
-
 export function clearFieldOfflineOnSignOut(): void {
-  void purgeFieldForgeBrowserState("logout");
+  // Fire-and-forget; logout path owns timed cleanup.
+  void import("./forge-browser-purge").then(({ purgeFieldForgeBrowserState }) => {
+    void purgeFieldForgeBrowserState("logout");
+  });
 }
 
 /** Use when calling AuthProvider.logout from Field UI. */
 export async function fieldSignOut(logout: () => Promise<void> | void): Promise<void> {
-  await purgeFieldForgeBrowserState("logout");
   await logout();
 }

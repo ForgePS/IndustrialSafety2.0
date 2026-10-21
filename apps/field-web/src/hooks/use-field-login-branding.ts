@@ -45,7 +45,11 @@ const BUNDLED_HOST_TENANT: Readonly<Record<string, string>> = {
 };
 
 function apiBase(): string {
-  return (process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:4000").replace(/\/$/, "");
+  // Empty NEXT_PUBLIC_API_URL → same-origin `/api` (CloudFront proxy).
+  return (process.env.NEXT_PUBLIC_API_URL !== undefined
+    ? process.env.NEXT_PUBLIC_API_URL
+    : "http://localhost:4000"
+  ).replace(/\/$/, "");
 }
 
 /**
@@ -61,15 +65,33 @@ export function useFieldLoginBranding() {
     let cancelled = false;
     const host = window.location.hostname.toLowerCase();
     const bundledTenantId = BUNDLED_HOST_TENANT[host] ?? null;
+
+    // CloudFront / localhost hosts never have vanity tenant branding — skip the
+    // public API call (it can hang on DB lookup) and fail open immediately.
+    const skipRemote =
+      host.endsWith(".cloudfront.net") ||
+      host === "localhost" ||
+      host === "127.0.0.1" ||
+      host.endsWith(".local");
+    if (skipRemote) {
+      if (bundledTenantId) {
+        setBranding((prev) => ({ ...prev, hostTenantId: bundledTenantId }));
+      }
+      setLoading(false);
+      return;
+    }
+
+    const controller = new AbortController();
     const timeout = window.setTimeout(() => {
+      controller.abort();
       if (!cancelled) setLoading(false);
-    }, 8000);
+    }, 2500);
     void (async () => {
       setLoading(true);
       try {
         const res = await fetch(
           `${apiBase()}/api/v1/public/login-branding?host=${encodeURIComponent(host)}`,
-          { credentials: "omit" },
+          { credentials: "omit", signal: controller.signal },
         );
         if (!res.ok) {
           if (!cancelled && bundledTenantId) {
@@ -107,6 +129,7 @@ export function useFieldLoginBranding() {
     })();
     return () => {
       cancelled = true;
+      controller.abort();
       window.clearTimeout(timeout);
     };
   }, []);

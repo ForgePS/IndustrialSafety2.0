@@ -17,7 +17,9 @@ configureApiClient({
 });
 
 // RG-09: wipe Forge-owned field offline/IDB/cache state on logout and tenant switch.
-registerForgeBrowserCleanup((reason) => purgeFieldForgeBrowserState(reason));
+registerForgeBrowserCleanup((reason) => {
+  void purgeFieldForgeBrowserState(reason);
+});
 
 export function ApiBootstrap({ children }: { children: React.ReactNode }) {
   return <>{children}</>;
