@@ -1,4 +1,5 @@
 import { createServiceRoleClient } from '@repo/supabase/server'
+
 import type { EffectivePermission } from '@/lib/forgeEffectiveAccess'
 import { getTenantScopeAssignments } from '@/lib/forgeScope'
 
@@ -17,7 +18,7 @@ export const getScopedPersonnel = async ({
 
   let query = supabase
     .from('forge_personnel')
-    .select('*, locations(name, code), divisions(name, code)')
+    .select('*, locations(name, code), divisions(name, code), department:forge_departments!forge_personnel_department_id_fkey(name, code), position:forge_positions!forge_personnel_position_id_fkey(name)')
     .eq('organization_id', organizationId)
     .order('last_name')
     .order('first_name')
@@ -38,6 +39,7 @@ export const getScopedPersonnel = async ({
 
     case 'location': {
       const { locationIds } = await getTenantScopeAssignments({ organizationId, userId })
+
       if (!locationIds.length) return []
       query = query.in('location_id', locationIds)
       break
@@ -45,6 +47,7 @@ export const getScopedPersonnel = async ({
 
     case 'division': {
       const { divisionIds } = await getTenantScopeAssignments({ organizationId, userId })
+
       if (!divisionIds.length) return []
       query = query.in('division_id', divisionIds)
       break
@@ -55,6 +58,7 @@ export const getScopedPersonnel = async ({
   }
 
   const { data, error } = await query
+
   if (error) throw new Error(`Unable to load personnel: ${error.message}`)
 
   return data || []
