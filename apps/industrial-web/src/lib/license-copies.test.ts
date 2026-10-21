@@ -30,6 +30,12 @@ describe("uploadImageSrc", () => {
       "https://cdn.example/back.jpg",
     );
   });
+
+  it("does not recurse infinitely on circular upload objects", () => {
+    const nested: Record<string, unknown> = { url: {} };
+    (nested.url as Record<string, unknown>).url = nested;
+    expect(uploadImageSrc(nested)).toBeNull();
+  });
 });
 
 describe("personnelLicenseCopies", () => {

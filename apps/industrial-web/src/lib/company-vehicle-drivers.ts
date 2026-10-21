@@ -4,6 +4,7 @@
 
 import { matchesSearchTokens } from "@/lib/search-text";
 import { parseMvrAuditHistory } from "@/lib/mvr-sample";
+import { personNameDisplay } from "@/lib/person-name-display";
 
 export type CompanyVehicleDriverStatus =
   | "pending_mvr"
@@ -57,6 +58,7 @@ export type CompanyVehicleDriverSummary = {
   licenseExpiringSoon: number;
   mvrOnFile: number;
   mvrReleaseOnFile: number;
+  missingMvrConsent: number;
   sampleYear: number | null;
   sampleSelected: number;
   sampleCompleted: number;
@@ -73,6 +75,7 @@ export const EMPTY_DRIVER_SUMMARY: CompanyVehicleDriverSummary = {
   licenseExpiringSoon: 0,
   mvrOnFile: 0,
   mvrReleaseOnFile: 0,
+  missingMvrConsent: 0,
   sampleYear: null,
   sampleSelected: 0,
   sampleCompleted: 0,
@@ -93,12 +96,15 @@ export function companyVehicleDriverStatusLabel(status: string): string {
   }
 }
 
-export function companyVehicleDriverStatusBadge(status: string): string {
+export function companyVehicleDriverStatusBadge(
+  status: string,
+  options?: { producersRiceMill?: boolean },
+): string {
   switch (status.trim().toLowerCase()) {
     case "on_insurance":
       return "bg-label-success";
     case "pending_mvr":
-      return "bg-label-warning";
+      return options?.producersRiceMill ? "bg-label-pink" : "bg-label-warning";
     case "suspended":
       return "bg-label-danger";
     case "removed":
@@ -106,6 +112,17 @@ export function companyVehicleDriverStatusBadge(status: string): string {
     default:
       return "bg-label-primary";
   }
+}
+
+/** Row highlight for Producers Rice Mill pending MVR drivers. */
+export function companyVehicleDriverRowClass(
+  status: string,
+  options?: { producersRiceMill?: boolean },
+): string | undefined {
+  if (options?.producersRiceMill && status.trim().toLowerCase() === "pending_mvr") {
+    return "table-row-pending-mvr-prm";
+  }
+  return undefined;
 }
 
 export function toCompanyVehicleDriver(row: unknown): CompanyVehicleDriver | null {
@@ -119,7 +136,7 @@ export function toCompanyVehicleDriver(row: unknown): CompanyVehicleDriver | nul
   return {
     id,
     personnelId: typeof r.personnelId === "string" && r.personnelId ? r.personnelId : null,
-    personnelName: text("personnelName"),
+    personnelName: personNameDisplay(text("personnelName")),
     employeeNumber: text("employeeNumber"),
     dateOfBirth: text("dateOfBirth"),
     licenseNumber: text("licenseNumber"),
@@ -274,6 +291,7 @@ export function toCompanyVehicleDriverSummary(raw: unknown): CompanyVehicleDrive
     licenseExpiringSoon: num("licenseExpiringSoon"),
     mvrOnFile: num("mvrOnFile"),
     mvrReleaseOnFile: num("mvrReleaseOnFile"),
+    missingMvrConsent: num("missingMvrConsent"),
     sampleYear:
       typeof r.sampleYear === "number" && Number.isFinite(r.sampleYear) ? r.sampleYear : null,
     sampleSelected: num("sampleSelected"),

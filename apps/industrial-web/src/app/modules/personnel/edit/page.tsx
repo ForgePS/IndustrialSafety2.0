@@ -11,6 +11,7 @@ import {
   personnelFormFromRecord,
   type PersonnelFormValues,
 } from "@/lib/personnel-form";
+import { parseCompanyDriverMvrSnapshot } from "@/lib/company-driver-mvr-requirements";
 import { stripImportNotes } from "@/lib/personnel-file";
 import { resolveLookupLabel, type LookupState } from "@/lib/personnel-lookups";
 
@@ -24,9 +25,16 @@ function EditPersonInner() {
   const permissions = new Set(me?.permissions ?? []);
   const canManage =
     permissions.has("industrial.personnel.manage") || permissions.has("industrial.admin");
+  const canFillForms =
+    permissions.has("industrial.forms.fill") ||
+    permissions.has("industrial.forms.manage") ||
+    permissions.has("industrial.admin");
 
   const [initialValues, setInitialValues] = useState<PersonnelFormValues | null>(null);
   const [displayLabel, setDisplayLabel] = useState("Person");
+  const [companyDriverMvr, setCompanyDriverMvr] = useState<ReturnType<
+    typeof parseCompanyDriverMvrSnapshot
+  >>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -49,6 +57,7 @@ function EditPersonInner() {
         form.notes = stripImportNotes(form.notes);
       }
       setInitialValues(form);
+      setCompanyDriverMvr(parseCompanyDriverMvrSnapshot(record.companyDriverMvr));
       const name =
         (typeof record.displayName === "string" && record.displayName.trim()) ||
         [record.firstName, record.lastName]
@@ -59,6 +68,7 @@ function EditPersonInner() {
     } catch (e) {
       setError(e instanceof ApiError ? e.message : "Failed to load this personnel record");
       setInitialValues(null);
+      setCompanyDriverMvr(null);
     } finally {
       setLoading(false);
     }
@@ -134,6 +144,11 @@ function EditPersonInner() {
       subtitle="Update this personnel record. Changes appear on the profile after you save."
       submitLabel="Save changes"
       breadcrumbCurrent="Edit"
+      personnelId={id}
+      companyDriverMvr={companyDriverMvr}
+      onCompanyDriverMvrChange={setCompanyDriverMvr}
+      canFillForms={canFillForms}
+      canUploadPaper={canManage}
       {...(me?.tenantId ? { tenantId: me.tenantId } : {})}
     />
   );

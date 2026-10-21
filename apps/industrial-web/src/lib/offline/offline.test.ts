@@ -40,6 +40,17 @@ describe("offline data classification", () => {
     expect(policy.offlineClass).toBe("OFFLINE_REQUIRED");
     expect(policy.queueMutations).toBe(false);
   });
+  it("allows offline sanitation inspection capture with queued mutations", () => {
+    const policy = classifyDomain("industrial.sanitation");
+    expect(policy.offlineClass).toBe("USEFUL");
+    expect(policy.queueMutations).toBe(true);
+  });
+
+  it("caches sanitation templates read-only offline", () => {
+    const policy = classifyDomain("industrial.sanitation.templates");
+    expect(policy.offlineClass).toBe("OFFLINE_REQUIRED");
+    expect(policy.queueMutations).toBe(false);
+  });
 });
 
 describe("offline cache", () => {

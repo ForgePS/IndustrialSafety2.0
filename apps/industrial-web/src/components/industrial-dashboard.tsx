@@ -1,8 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useMemo, useState } from "react";
-import { INDUSTRIAL_PRODUCT_CODE } from "@forge/contracts";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { INDUSTRIAL_PRODUCT_CODE, filterIndustrialDashboardAttentionItems } from "@forge/contracts";
 import { ApiError, apiGet, apiGetResult, useAuth } from "@forge/web-kit";
 import {
   IncidentTrendCard,
@@ -11,12 +11,32 @@ import {
   TaskSchedulerCard,
   type DashboardTask,
 } from "@/components/dashboard-insight-cards";
+import { DashboardBlockFrame } from "@/components/dashboard-block-frame";
 import { IncidentsBodyMapPanel } from "@/components/incidents-body-map-panel";
 import { useIndustrialFacility } from "@/hooks/use-industrial-facility";
 import { aggregateInspectionsBySite } from "@/lib/dashboard-insights";
+import {
+  clearDashboardLayout,
+  CUSTOMIZE_DASHBOARD_EVENT,
+  CUSTOMIZE_DASHBOARD_FLAG,
+  defaultDashboardLayout,
+  getDashboardBlock,
+  loadDashboardLayout,
+  moveDashboardItem,
+  reorderDashboardItems,
+  updateDashboardItem,
+  visibleDashboardItems,
+  writeDashboardLayout,
+  type DashboardBlockId,
+  type DashboardLayoutState,
+} from "@/lib/dashboard-layout";
 import { toIncidentRecords, type IncidentRecord } from "@/lib/incidents-module";
 import { buildIndustrialNavigation, moduleAvailabilityCaption } from "@/lib/navigation";
+import type { WorkspaceWidgetSize } from "@/lib/workspace/types";
 import { MyWorkspace } from "@/components/workspace/my-workspace";
+import "@/components/workspace/workspace.css";
+import { useOptionalWalkthroughController } from "@/features/executive-walkthrough/WalkthroughController";
+import { WalkthroughDemoDashboard } from "@/features/executive-walkthrough/WalkthroughDemoDashboard";
 import {
   toSafetyIntelligenceReport,
   type SafetyIntelligenceReport,
@@ -51,6 +71,7 @@ const ATTENTION_META: Record<string, { icon: string; tone: SneatTone }> = {
   observations: { icon: "bx-show", tone: "primary" },
   lotoReviews: { icon: "bx-lock-alt", tone: "danger" },
   workersComp: { icon: "bx-plus-medical", tone: "danger" },
+  workersCompWeeklyUpdates: { icon: "bx-calendar-check", tone: "warning" },
   tasks: { icon: "bx-task", tone: "secondary" },
   missingMvrConsent: { icon: "bx-file", tone: "warning" },
 };
@@ -99,10 +120,11 @@ function toDashboardTasks(items: unknown[]): DashboardTask[] {
 
 /**
  * Tenant-facing Industrial dashboard with Model A attention metrics, insight
- * cards (trend / tasks / inspections by site), and the Safety Tim body map.
+ * cards (trend / tasks / inspections by site), and the injury body map.
  */
 export function IndustrialDashboard() {
   const { me, hasPermission } = useAuth();
+  const walkthrough = useOptionalWalkthroughController();
   const { query: facilityQuery } = useIndustrialFacility();
   const entitled =
     Boolean(me?.isPlatformAdmin) || Boolean(me?.activeProducts?.includes(INDUSTRIAL_PRODUCT_CODE));
@@ -117,19 +139,25 @@ export function IndustrialDashboard() {
   });
 
   const available = nav.filter((n) => n.available && n.code !== "CORE");
+  const availableCodes = useMemo(() => new Set(available.map((m) => m.code)), [available]);
   const canAccess = entitled && (hasPermission("industrial.access") || Boolean(me?.isPlatformAdmin));
   const canViewIncidents =
     entitled &&
-    (canAccess ||
-      hasPermission("industrial.incidents.view") ||
-      hasPermission("industrial.admin"));
-  const showIncidents = available.some((m) => m.code === "INCIDENTS") && canViewIncidents;
-  const showTasks = available.some((m) => m.code === "TASKS");
-  const showCalendar = available.some((m) => m.code === "CALENDAR");
-  const showReminders = available.some((m) => m.code === "REMINDERS");
-  const showInspections = available.some((m) => m.code === "INSPECTIONS");
-  const showAnalytics =
-    available.some((m) => m.code === "ANALYTICS" || m.code === "REPORTING") || canAccess;
+    (Boolean(me?.isPlatformAdmin) ||
+      hasPermission("industrial.admin") ||
+      hasPermission("industrial.incidents.view"));
+  const showIncidents = availableCodes.has("INCIDENTS") && canViewIncidents;
+  const showTasks = availableCodes.has("TASKS");
+  const showCalendar = availableCodes.has("CALENDAR");
+  const showReminders = availableCodes.has("REMINDERS");
+  const showInspections = availableCodes.has("INSPECTIONS");
+  /** Incident trend is incidents/analytics work — not granted by industrial.access alone. */
+  const showIncidentTrend =
+    availableCodes.has("ANALYTICS") ||
+    (availableCodes.has("INCIDENTS") && canViewIncidents);
+  /** Safety Index lives under Analytics; do not show for every industrial user. */
+  const showSafetyIndex = availableCodes.has("ANALYTICS") || availableCodes.has("REPORTING");
+  const showDotScore = availableCodes.has("DOT_COMPLIANCE");
 
   const [dash, setDash] = useState<DashboardPayload | null>(null);
   const [dashError, setDashError] = useState<string | null>(null);
@@ -185,7 +213,10 @@ export function IndustrialDashboard() {
   }, [facilityQuery, showIncidents]);
 
   useEffect(() => {
-    if (!showAnalytics) return;
+    if (!showIncidentTrend && !showSafetyIndex) {
+      setAnalytics(null);
+      return;
+    }
     let cancelled = false;
     void (async () => {
       try {
@@ -200,7 +231,7 @@ export function IndustrialDashboard() {
     return () => {
       cancelled = true;
     };
-  }, [facilityQuery, showAnalytics]);
+  }, [facilityQuery, showIncidentTrend, showSafetyIndex]);
 
   useEffect(() => {
     if (!showTasks) return;
@@ -275,37 +306,311 @@ export function IndustrialDashboard() {
     };
   }, [facilityQuery, showInspections]);
 
-  const attention = (dash?.attention ?? []).filter((a) => a.count > 0);
-  const showInsightCards = showAnalytics || showTasks || showInspections;
+  const attention = useMemo(() => {
+    const items = (dash?.attention ?? []).filter((a) => a.count > 0);
+    return filterIndustrialDashboardAttentionItems(items, {
+      permissions: me?.permissions ?? [],
+      activeModules: me?.activeModules ?? [],
+      isPlatformAdmin: Boolean(me?.isPlatformAdmin),
+      availableModuleCodes: available.map((m) => m.code),
+    });
+  }, [available, dash?.attention, me?.activeModules, me?.isPlatformAdmin, me?.permissions]);
+  const hasUpcomingEvents = Boolean(upcoming?.events.length) && showCalendar;
+  const hasUpcomingTasks = Boolean(upcoming?.tasks.length) && showTasks;
+  const hasUpcomingReminders = Boolean(upcoming?.reminders.length) && showReminders;
+
+  const availableBlocks = useMemo(() => {
+    const ids = new Set<DashboardBlockId>();
+    if (attention.length > 0 || dash) ids.add("attention");
+    if (hasUpcomingEvents) ids.add("upcoming-events");
+    if (hasUpcomingTasks) ids.add("upcoming-tasks");
+    if (hasUpcomingReminders) ids.add("upcoming-reminders");
+    if (me?.tenantId && me?.userId && available.length > 0) ids.add("workspace");
+    if (showIncidentTrend) ids.add("insight-trend");
+    if (showSafetyIndex) ids.add("insight-safety");
+    if (showTasks) ids.add("insight-tasks");
+    if (showInspections) ids.add("insight-inspections");
+    if (showIncidents) ids.add("body-map");
+    return ids;
+  }, [
+    attention.length,
+    available.length,
+    dash,
+    hasUpcomingEvents,
+    hasUpcomingReminders,
+    hasUpcomingTasks,
+    me?.tenantId,
+    me?.userId,
+    showIncidentTrend,
+    showIncidents,
+    showInspections,
+    showSafetyIndex,
+    showTasks,
+  ]);
+
+  const [dashLayout, setDashLayout] = useState<DashboardLayoutState>(() =>
+    defaultDashboardLayout(availableBlocks),
+  );
+  const [editingDash, setEditingDash] = useState(false);
+  const [confirmDashReset, setConfirmDashReset] = useState(false);
+  const dragBlockRef = useRef<DashboardBlockId | null>(null);
+  const dragOverBlockRef = useRef<DashboardBlockId | null>(null);
+
+  useEffect(() => {
+    if (!me?.tenantId || !me?.userId) {
+      setDashLayout(defaultDashboardLayout(availableBlocks));
+      return;
+    }
+    setDashLayout(loadDashboardLayout(me.tenantId, me.userId, availableBlocks));
+  }, [availableBlocks, me?.tenantId, me?.userId]);
+
+  useEffect(() => {
+    const enterEdit = () => {
+      setEditingDash(true);
+      setConfirmDashReset(false);
+    };
+    window.addEventListener(CUSTOMIZE_DASHBOARD_EVENT, enterEdit);
+    try {
+      if (sessionStorage.getItem(CUSTOMIZE_DASHBOARD_FLAG) === "1") {
+        sessionStorage.removeItem(CUSTOMIZE_DASHBOARD_FLAG);
+        enterEdit();
+      }
+    } catch {
+      /* ignore */
+    }
+    return () => window.removeEventListener(CUSTOMIZE_DASHBOARD_EVENT, enterEdit);
+  }, []);
+
+  const persistDash = useCallback(
+    (next: DashboardLayoutState | ((prev: DashboardLayoutState) => DashboardLayoutState)) => {
+      setDashLayout((prev) => {
+        const resolved = typeof next === "function" ? next(prev) : next;
+        if (me?.tenantId && me?.userId) {
+          writeDashboardLayout(me.tenantId, me.userId, resolved);
+        }
+        return resolved;
+      });
+    },
+    [me?.tenantId, me?.userId],
+  );
+
+  const visibleBlocks = useMemo(() => visibleDashboardItems(dashLayout), [dashLayout]);
+  const hiddenBlocks = useMemo(
+    () =>
+      dashLayout.items
+        .filter((item) => !item.isVisible && availableBlocks.has(item.id))
+        .map((item) => getDashboardBlock(item.id))
+        .filter((b): b is NonNullable<typeof b> => Boolean(b)),
+    [availableBlocks, dashLayout.items],
+  );
+
   const dateStart = analytics?.dateRange.start ?? "";
   const dateEnd = analytics?.dateRange.end ?? "";
   const incidentTrend = useMemo(() => analytics?.incidentTrend ?? [], [analytics]);
 
+  function renderBlockBody(id: DashboardBlockId) {
+    switch (id) {
+      case "attention":
+        if (attention.length === 0) {
+          return dash ? (
+            <section aria-labelledby="dash-attention-title">
+              <h5 className="mb-3" id="dash-attention-title">
+                What Needs Your Attention
+              </h5>
+              <p className="text-muted mb-0">No open attention items right now.</p>
+            </section>
+          ) : null;
+        }
+        return (
+          <section aria-labelledby="dash-attention-title">
+            <h5 className="mb-3" id="dash-attention-title">
+              What Needs Your Attention
+            </h5>
+            <div className="row row-cols-2 row-cols-sm-3 row-cols-md-4 row-cols-xl-6 g-2">
+              {attention.map((item) => {
+                const meta = attentionMeta(item.key);
+                return (
+                  <div className="col" key={item.key}>
+                    <Link href={item.href} className="card h-100 text-decoration-none">
+                      <div className="card-body p-3">
+                        <div className="d-flex align-items-start justify-content-between gap-2 mb-2">
+                          <div className="avatar avatar-sm">
+                            <span className={`avatar-initial rounded bg-label-${meta.tone}`}>
+                              <i className={`bx ${meta.icon}`} aria-hidden="true" />
+                            </span>
+                          </div>
+                          <h5 className="mb-0">{item.count}</h5>
+                        </div>
+                        <span className="d-block text-muted small text-truncate" title={item.label}>
+                          {item.label}
+                        </span>
+                      </div>
+                    </Link>
+                  </div>
+                );
+              })}
+            </div>
+          </section>
+        );
+      case "upcoming-events":
+        return (
+          <div className="card h-100">
+            <div className="card-header py-2 d-flex justify-content-between align-items-center">
+              <h6 className="mb-0">Events</h6>
+              {showCalendar ? (
+                <Link className="small" href="/modules/calendar/">
+                  Open
+                </Link>
+              ) : null}
+            </div>
+            <ul className="list-group list-group-flush">
+              {(upcoming?.events ?? []).slice(0, 5).map((ev) => (
+                <li key={ev.id} className="list-group-item small">
+                  <div className="fw-semibold">{ev.title}</div>
+                  <div className="text-muted">
+                    {ev.startsAt ? new Date(ev.startsAt).toLocaleString() : "—"}
+                  </div>
+                </li>
+              ))}
+            </ul>
+          </div>
+        );
+      case "upcoming-tasks":
+        return (
+          <div className="card h-100">
+            <div className="card-header py-2">
+              <h6 className="mb-0">Tasks due</h6>
+            </div>
+            <ul className="list-group list-group-flush">
+              {(upcoming?.tasks ?? []).slice(0, 5).map((t) => (
+                <li key={t.id} className="list-group-item small">
+                  <Link href={t.href}>{t.title}</Link>
+                  <div className="text-muted">Due {t.dueDate ?? "—"}</div>
+                </li>
+              ))}
+            </ul>
+          </div>
+        );
+      case "upcoming-reminders":
+        return (
+          <div className="card h-100">
+            <div className="card-header py-2">
+              <h6 className="mb-0">Reminders</h6>
+            </div>
+            <ul className="list-group list-group-flush">
+              {(upcoming?.reminders ?? []).slice(0, 5).map((r) => (
+                <li key={r.id} className="list-group-item small">
+                  <Link href="/modules/reminders/">{r.title || "Reminder"}</Link>
+                  <div className="text-muted">
+                    {r.remindAt ? new Date(r.remindAt).toLocaleString() : "—"}
+                  </div>
+                </li>
+              ))}
+            </ul>
+          </div>
+        );
+      case "workspace":
+        return me?.tenantId && me?.userId ? (
+          <MyWorkspace
+            modules={available}
+            tenantId={me.tenantId}
+            userId={me.userId}
+            iconForCode={moduleIcon}
+            captionForModule={moduleAvailabilityCaption}
+            permissions={me.permissions ?? []}
+            isPlatformAdmin={Boolean(me.isPlatformAdmin)}
+            editing={editingDash}
+            embedded
+          />
+        ) : null;
+      case "insight-trend":
+        return (
+          <IncidentTrendCard points={incidentTrend} dateStart={dateStart} dateEnd={dateEnd} />
+        );
+      case "insight-safety":
+        return <SafetyIndexCard report={analytics} showDotScore={showDotScore} />;
+      case "insight-tasks":
+        return <TaskSchedulerCard tasks={tasks} />;
+      case "insight-inspections":
+        return (
+          <InspectionsBySiteCard
+            sites={inspectionSites}
+            dateStart={dateStart}
+            dateEnd={dateEnd}
+          />
+        );
+      case "body-map":
+        return (
+          <IncidentsBodyMapPanel
+            compact
+            incidents={injuries}
+            title="Injury body map"
+            mapHref="/modules/incidents/?tab=body-map"
+          />
+        );
+      default:
+        return null;
+    }
+  }
+
+  if (walkthrough?.session?.active) {
+    return <WalkthroughDemoDashboard />;
+  }
+
   return (
-    <div className="ind-content ind-dashboard">
+    <div className="ind-content ind-dashboard" data-walkthrough="executive-dashboard">
       <div className="d-flex flex-wrap justify-content-between align-items-start gap-3 mb-4">
         <div className="min-w-0 flex-grow-1">
           <h4 className="mb-1">Industrial Dashboard</h4>
+          {editingDash ? (
+            <p className="text-muted small mb-0 forge-ws-customize-hint">
+              Drag any block by the ≡ handle to reorder. Resize or hide blocks, then tap Done.
+            </p>
+          ) : null}
         </div>
         <div className="ind-dashboard-actions d-flex flex-wrap gap-2">
-          {available.some((m) => m.code === "PERSONNEL") ? (
-            <Link className="btn btn-sm btn-outline-primary" href="/modules/personnel">
-              Personnel
-            </Link>
+          {editingDash ? (
+            <>
+              {hiddenBlocks.length > 0 ? (
+                <select
+                  className="form-select form-select-sm"
+                  style={{ width: "auto", minWidth: "10rem" }}
+                  aria-label="Add dashboard block"
+                  defaultValue=""
+                  onChange={(event) => {
+                    const id = event.target.value as DashboardBlockId;
+                    if (!id) return;
+                    persistDash((prev) => updateDashboardItem(prev, id, { isVisible: true }));
+                    event.target.value = "";
+                  }}
+                >
+                  <option value="">Add block…</option>
+                  {hiddenBlocks.map((block) => (
+                    <option key={block.id} value={block.id}>
+                      {block.label}
+                    </option>
+                  ))}
+                </select>
+              ) : null}
+              <button
+                type="button"
+                className="btn btn-sm btn-outline-danger"
+                onClick={() => setConfirmDashReset(true)}
+              >
+                Reset layout
+              </button>
+              <button
+                type="button"
+                className="btn btn-sm btn-primary"
+                onClick={() => {
+                  setEditingDash(false);
+                  setConfirmDashReset(false);
+                }}
+              >
+                Done
+              </button>
+            </>
           ) : null}
-          {available.some((m) => m.code === "INCIDENTS") ? (
-            <Link className="btn btn-sm btn-outline-primary" href="/modules/incidents">
-              Incidents
-            </Link>
-          ) : null}
-          {showCalendar ? (
-            <Link className="btn btn-sm btn-outline-primary" href="/modules/calendar">
-              Calendar
-            </Link>
-          ) : null}
-          <Link className="btn btn-sm btn-outline-secondary" href="/settings">
-            Settings
-          </Link>
         </div>
       </div>
 
@@ -315,167 +620,93 @@ export function IndustrialDashboard() {
         </div>
       ) : null}
 
-      {attention.length > 0 ? (
-        <section className="mb-4" aria-labelledby="dash-attention-title">
-          <h5 className="mb-3" id="dash-attention-title">
-            What Needs Your Attention
-          </h5>
-          <div className="row row-cols-2 row-cols-sm-3 row-cols-md-4 row-cols-xl-6 g-2">
-            {attention.map((item) => {
-              const meta = attentionMeta(item.key);
-              return (
-                <div className="col" key={item.key}>
-                  <Link href={item.href} className="card h-100 text-decoration-none">
-                    <div className="card-body p-3">
-                      <div className="d-flex align-items-start justify-content-between gap-2 mb-2">
-                        <div className="avatar avatar-sm">
-                          <span className={`avatar-initial rounded bg-label-${meta.tone}`}>
-                            <i className={`bx ${meta.icon}`} aria-hidden="true" />
-                          </span>
-                        </div>
-                        <h5 className="mb-0">{item.count}</h5>
-                      </div>
-                      <span className="d-block text-muted small text-truncate" title={item.label}>
-                        {item.label}
-                      </span>
-                    </div>
-                  </Link>
-                </div>
-              );
-            })}
+      {confirmDashReset ? (
+        <div
+          className="alert alert-warning d-flex flex-wrap align-items-center justify-content-between gap-2 mb-3"
+          role="status"
+        >
+          <span className="small mb-0">
+            Reset the dashboard layout to defaults? This clears your block order, sizes, and
+            hidden blocks (My Workspace module layout is separate).
+          </span>
+          <div className="d-flex gap-2">
+            <button
+              type="button"
+              className="btn btn-sm btn-outline-secondary"
+              onClick={() => setConfirmDashReset(false)}
+            >
+              Cancel
+            </button>
+            <button
+              type="button"
+              className="btn btn-sm btn-danger"
+              onClick={() => {
+                if (me?.tenantId && me?.userId) clearDashboardLayout(me.tenantId, me.userId);
+                persistDash(defaultDashboardLayout(availableBlocks));
+                setConfirmDashReset(false);
+              }}
+            >
+              Reset
+            </button>
           </div>
-        </section>
-      ) : dash ? (
-        <p className="text-muted mb-4">No open attention items right now.</p>
+        </div>
       ) : null}
 
-      {upcoming &&
-      (upcoming.events.length > 0 || upcoming.tasks.length > 0 || upcoming.reminders.length > 0) ? (
-        <section className="mb-4" aria-labelledby="dash-upcoming-title">
-          <div className="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
-            <h5 className="mb-0" id="dash-upcoming-title">
-              Upcoming
-            </h5>
-            {showCalendar ? (
-              <Link className="btn btn-sm btn-outline-primary" href="/modules/calendar/">
-                Open calendar
-              </Link>
-            ) : null}
-          </div>
-          <div className="row g-3">
-            {upcoming.events.length > 0 ? (
-              <div className="col-md-4">
-                <div className="card h-100">
-                  <div className="card-header py-2">
-                    <h6 className="mb-0">Events</h6>
-                  </div>
-                  <ul className="list-group list-group-flush">
-                    {upcoming.events.slice(0, 5).map((ev) => (
-                      <li key={ev.id} className="list-group-item small">
-                        <div className="fw-semibold">{ev.title}</div>
-                        <div className="text-muted">
-                          {ev.startsAt ? new Date(ev.startsAt).toLocaleString() : "—"}
-                        </div>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              </div>
-            ) : null}
-            {upcoming.tasks.length > 0 ? (
-              <div className="col-md-4">
-                <div className="card h-100">
-                  <div className="card-header py-2">
-                    <h6 className="mb-0">Tasks due</h6>
-                  </div>
-                  <ul className="list-group list-group-flush">
-                    {upcoming.tasks.slice(0, 5).map((t) => (
-                      <li key={t.id} className="list-group-item small">
-                        <Link href={t.href}>{t.title}</Link>
-                        <div className="text-muted">Due {t.dueDate ?? "—"}</div>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              </div>
-            ) : null}
-            {upcoming.reminders.length > 0 ? (
-              <div className="col-md-4">
-                <div className="card h-100">
-                  <div className="card-header py-2">
-                    <h6 className="mb-0">Reminders</h6>
-                  </div>
-                  <ul className="list-group list-group-flush">
-                    {upcoming.reminders.slice(0, 5).map((r) => (
-                      <li key={r.id} className="list-group-item small">
-                        <Link href="/modules/reminders/">{r.title || "Reminder"}</Link>
-                        <div className="text-muted">
-                          {r.remindAt ? new Date(r.remindAt).toLocaleString() : "—"}
-                        </div>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              </div>
-            ) : null}
-          </div>
-        </section>
-      ) : null}
-
-      <section className="mb-4">
-        {me?.tenantId && me?.userId ? (
-          <MyWorkspace
-            modules={available}
-            tenantId={me.tenantId}
-            userId={me.userId}
-            iconForCode={moduleIcon}
-            captionForModule={moduleAvailabilityCaption}
-            permissions={me.permissions ?? []}
-            isPlatformAdmin={Boolean(me.isPlatformAdmin)}
-          />
-        ) : null}
-      </section>
-
-      {showInsightCards ? (
-        <section className="mb-4" aria-labelledby="dash-insights-title">
-          <h5 className="mb-3" id="dash-insights-title">
-            Operations snapshot
-          </h5>
-          <div className="d-flex flex-column gap-3">
-            {showAnalytics ? (
-              <div className="row g-3">
-                <div className="col-12 col-lg-8">
-                  <IncidentTrendCard
-                    points={incidentTrend}
-                    dateStart={dateStart}
-                    dateEnd={dateEnd}
-                  />
-                </div>
-                <div className="col-12 col-lg-4">
-                  <SafetyIndexCard report={analytics} />
-                </div>
-              </div>
-            ) : null}
-            {showTasks ? <TaskSchedulerCard tasks={tasks} /> : null}
-            {showInspections ? (
-              <InspectionsBySiteCard
-                sites={inspectionSites}
-                dateStart={dateStart}
-                dateEnd={dateEnd}
-              />
-            ) : null}
-          </div>
-        </section>
-      ) : null}
-
-      {showIncidents ? (
-        <IncidentsBodyMapPanel
-          compact
-          incidents={injuries}
-          title="Injury body map"
-          mapHref="/modules/incidents/?tab=body-map"
-        />
-      ) : null}
+      {visibleBlocks.length === 0 ? (
+        <p className="text-muted">
+          No dashboard blocks visible. Open <strong>Customize</strong> (desktop icon) and choose{" "}
+          <strong>Customize dashboard</strong> to add some.
+        </p>
+      ) : (
+        <div className="forge-ws-grid" aria-label="Dashboard">
+          {visibleBlocks.map((item) => (
+            <DashboardBlockFrame
+              key={item.id}
+              item={item}
+              editing={editingDash}
+              available={availableBlocks.has(item.id)}
+              onSizeChange={(size: WorkspaceWidgetSize) =>
+                persistDash((prev) => updateDashboardItem(prev, item.id, { size }))
+              }
+              onHide={() =>
+                persistDash((prev) => updateDashboardItem(prev, item.id, { isVisible: false }))
+              }
+              onMove={(direction) =>
+                persistDash((prev) => moveDashboardItem(prev, item.id, direction))
+              }
+              onDragStart={(id) => {
+                dragBlockRef.current = id;
+                dragOverBlockRef.current = null;
+              }}
+              onDragOver={(overId) => {
+                const fromId = dragBlockRef.current;
+                if (!fromId || fromId === overId || dragOverBlockRef.current === overId) return;
+                dragOverBlockRef.current = overId;
+                persistDash((prev) => {
+                  const keys = visibleDashboardItems(prev).map((v) => v.id);
+                  const fromIndex = keys.indexOf(fromId);
+                  const toIndex = keys.indexOf(overId);
+                  if (fromIndex < 0 || toIndex < 0) return prev;
+                  const nextKeys = [...keys];
+                  nextKeys.splice(fromIndex, 1);
+                  nextKeys.splice(toIndex, 0, fromId);
+                  const hidden = prev.items
+                    .filter((row) => !row.isVisible)
+                    .sort((a, b) => a.sortOrder - b.sortOrder)
+                    .map((row) => row.id);
+                  return reorderDashboardItems(prev, [...nextKeys, ...hidden]);
+                });
+              }}
+              onDragEnd={() => {
+                dragBlockRef.current = null;
+                dragOverBlockRef.current = null;
+              }}
+            >
+              {renderBlockBody(item.id)}
+            </DashboardBlockFrame>
+          ))}
+        </div>
+      )}
     </div>
   );
 }

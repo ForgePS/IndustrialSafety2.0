@@ -58,8 +58,53 @@ describe("safety intelligence helpers", () => {
     });
     expect(report?.safetyScore).toBe(100);
     expect(report?.kpis).toHaveLength(1);
+    expect(report?.departmentScores).toEqual([]);
     expect(trendPolyline(report!.incidentTrend)).toContain(",");
     expect(buildAnalyticsExportRows(report!)[0]).toEqual(["Safety Intelligence Center"]);
+  });
+
+  it("maps department safety scores", () => {
+    const report = toSafetyIntelligenceReport({
+      safetyScore: 88,
+      safetyGrade: "B",
+      periodSummaries: [
+        {
+          id: "sixMonth",
+          label: "Last 6 Months",
+          dateRange: { start: "2026-02-17", end: "2026-08-17" },
+          incidents: 1,
+          inspections: 2,
+          observations: 0,
+          formSubmissions: 0,
+          trainingCompletions: 1,
+          scanCompletions: 0,
+          enterpriseActivity: 0,
+          jsas: 0,
+          totalActivity: 4,
+          avgInspectionScore: null,
+          safetyScore: 88,
+          safetyGrade: "B",
+          openIncidents: 1,
+        },
+      ],
+      kpis: [{ id: "safety-score", label: "Safety Score", value: 88, href: "/modules/analytics/" }],
+      departmentScores: [
+        {
+          departmentId: "dept-1",
+          departmentName: "Warehouse",
+          safetyScore: 76,
+          safetyGrade: "C",
+          openIncidents: 1,
+          totalIncidents: 1,
+          inspections: 0,
+          trainingCompletions: 0,
+          personnelCount: 12,
+        },
+      ],
+    });
+    expect(report?.departmentScores).toHaveLength(1);
+    expect(report?.departmentScores[0]?.departmentName).toBe("Warehouse");
+    expect(buildAnalyticsExportRows(report!).some((row) => row[0] === "Warehouse")).toBe(true);
   });
 
   it("lifts legacy drilldowns into KPI tiles", () => {

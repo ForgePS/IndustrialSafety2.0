@@ -14,44 +14,38 @@ describe("parsePersonnelQuickView", () => {
     expect(parsePersonnelQuickView("nope")).toBe("dashboard");
   });
 
-  it("accepts company-drivers, ppe-allowance, and archived aliases", () => {
+  it("accepts company-drivers, ppe-allowance, first-aid, and archived aliases", () => {
     expect(parsePersonnelQuickView("company-drivers")).toBe("company-drivers");
     expect(parsePersonnelQuickView("drivers")).toBe("company-drivers");
     expect(parsePersonnelQuickView("ppe-allowance")).toBe("ppe-allowance");
     expect(parsePersonnelQuickView("ppe")).toBe("ppe-allowance");
+    expect(parsePersonnelQuickView("first-aid")).toBe("first-aid");
+    expect(parsePersonnelQuickView("cpr")).toBe("first-aid");
     expect(parsePersonnelQuickView("archived")).toBe("archived");
   });
 });
 
 describe("personnelOffPageLinks", () => {
-  it("returns destinations that are not current, with PPE next to company drivers", () => {
+  it("returns destinations that are not current", () => {
     expect(personnelOffPageLinks("dashboard").map((l) => l.id)).toEqual([
       "company-drivers",
       "ppe-allowance",
+      "first-aid",
       "archived",
     ]);
-    expect(personnelOffPageLinks("company-drivers").map((l) => l.id)).toEqual([
-      "dashboard",
-      "ppe-allowance",
-      "archived",
-    ]);
-    expect(personnelOffPageLinks("ppe-allowance").map((l) => l.id)).toEqual([
-      "dashboard",
-      "company-drivers",
-      "archived",
-    ]);
-    expect(personnelOffPageLinks("archived").map((l) => l.id)).toEqual([
+    expect(personnelOffPageLinks("first-aid").map((l) => l.id)).toEqual([
       "dashboard",
       "company-drivers",
       "ppe-allowance",
+      "archived",
     ]);
   });
 
   it("covers every quick link exactly once across off-page sets", () => {
-    expect(PERSONNEL_QUICK_LINKS).toHaveLength(4);
+    expect(PERSONNEL_QUICK_LINKS).toHaveLength(5);
     for (const link of PERSONNEL_QUICK_LINKS) {
       const others = personnelOffPageLinks(link.id);
-      expect(others).toHaveLength(3);
+      expect(others).toHaveLength(4);
       expect(others.some((o) => o.id === link.id)).toBe(false);
     }
   });
@@ -64,6 +58,7 @@ describe("personnelListQueryForView", () => {
       isCompanyDriver: "true",
     });
     expect(personnelListQueryForView("ppe-allowance")).toEqual({ ppeTracked: "true" });
+    expect(personnelListQueryForView("first-aid")).toEqual({ firstAidTracked: "true" });
     expect(personnelListQueryForView("archived")).toEqual({ archived: "true" });
   });
 });
@@ -71,8 +66,9 @@ describe("personnelListQueryForView", () => {
 describe("personnelDirectoryTitle", () => {
   it("labels each view", () => {
     expect(personnelDirectoryTitle("dashboard")).toBe("Personnel Directory");
-    expect(personnelDirectoryTitle("company-drivers")).toBe("Company Drivers");
+    expect(personnelDirectoryTitle("company-drivers")).toBe("Company DRIVERS");
     expect(personnelDirectoryTitle("ppe-allowance")).toBe("PPE Allowance");
+    expect(personnelDirectoryTitle("first-aid")).toBe("First Aid");
     expect(personnelDirectoryTitle("archived")).toBe("Archived Personnel");
   });
 });

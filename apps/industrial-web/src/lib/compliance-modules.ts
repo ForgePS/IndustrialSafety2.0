@@ -57,7 +57,7 @@ export const COMPLIANCE_MODULE_CONFIG: Record<
     flagKey: "industrial.module.workers_comp.enabled",
     viewPerm: "industrial.workers_comp.view",
     managePerm: "industrial.workers_comp.manage",
-    sensitivePerm: "industrial.workers_comp.view_sensitive",
+    sensitivePerm: "industrial.workers_comp.medical.view",
     listPath: "/api/v1/industrial/workers-comp",
     createPath: "/api/v1/industrial/workers-comp",
     defaultCategory: "cases",

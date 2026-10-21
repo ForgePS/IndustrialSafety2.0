@@ -22,12 +22,12 @@ export function PersonnelQuickNav({ current }: { current: PersonnelQuickView }) 
               <small className="text-muted">Jump to common personnel views</small>
             </div>
           </div>
-          <div className="row g-2">
+          <div className="row g-2 align-items-stretch">
             {PERSONNEL_QUICK_LINKS.map((link) => (
-              <div className="col-sm-6 col-xl-3" key={link.id}>
+              <div className="col-sm-6 col-xl" key={link.id}>
                 <Link
                   href={link.href}
-                  className={`ind-personnel-quick-link${
+                  className={`ind-personnel-quick-link h-100${
                     link.id === current ? " is-current" : ""
                   }`}
                   aria-current={link.id === current ? "page" : undefined}

@@ -2,16 +2,20 @@
 
 import {
   BODY_MAP_IMAGE,
+  BODY_REGIONS,
   BODY_VIEWS,
   bodyMapArrowPlacement,
   heatTone,
   regionsForView,
   type BodyRegion,
 } from "@/lib/incident-body-map";
+import { useBodyRegionsOptional } from "@/hooks/use-body-regions";
 
 type BodyMapProps = {
   /** "select" lets the user toggle regions; "display" shows severity arrows. */
   mode: "select" | "display";
+  /** Optional override; defaults to tenant body map config. */
+  regions?: readonly BodyRegion[];
   /** Region ids currently marked (select mode). */
   selected?: readonly string[];
   /** Region id → incident count (display mode). */
@@ -35,12 +39,13 @@ function regionHitStyle(region: BodyRegion): React.CSSProperties {
 }
 
 /**
- * Safety Tim — front and back on transparent art, FRONT/BACK labels above.
- * Display mode uses severity-colored arrows so Tim stays visible; arrows are
- * clickable to drill into injuries for that area.
+ * Body map — front and back on transparent art, FRONT/BACK labels above.
+ * Display mode uses severity-colored arrows so the figure stays readable;
+ * arrows are clickable to drill into injuries for that area.
  */
 export function IncidentBodyMap({
   mode,
+  regions: regionsProp,
   selected = [],
   counts,
   maxCount = 0,
@@ -48,6 +53,8 @@ export function IncidentBodyMap({
   onToggle,
   onRegionActivate,
 }: BodyMapProps) {
+  const tenantRegions = useBodyRegionsOptional();
+  const regions = regionsProp ?? tenantRegions?.regions ?? BODY_REGIONS;
   const selectedSet = new Set(selected);
 
   return (
@@ -64,7 +71,7 @@ export function IncidentBodyMap({
               height={433}
               draggable={false}
             />
-            {regionsForView(view.id).map((region) => {
+            {regionsForView(view.id, regions).map((region) => {
               if (mode === "select") {
                 const isActive = selectedSet.has(region.id);
                 return (

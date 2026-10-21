@@ -54,9 +54,12 @@ describe("buildPersonnelFile", () => {
     expect(rows).toBeUndefined();
   });
 
-  it("shows the driver flag only when set", () => {
+  it("shows driver flags only when set", () => {
+    expect(groupById({ isDotDriver: true }, "driver")?.rows).toEqual([
+      { label: "DOT Driver", value: "Yes", wide: false },
+    ]);
     expect(groupById({ isCompanyDriver: true }, "driver")?.rows).toEqual([
-      { label: "Company or contract driver", value: "Yes", wide: false },
+      { label: "Company Driver", value: "Yes", wide: false },
     ]);
     expect(groupById({ isCompanyDriver: false }, "driver")).toBeUndefined();
   });
@@ -65,13 +68,13 @@ describe("buildPersonnelFile", () => {
     expect(
       groupById(
         {
-          isCompanyDriver: true,
+          isDotDriver: true,
           licenseFrontUrl: "data:image/jpeg;base64,FRONT",
           licenseBackUrl: "https://cdn.example/back.jpg",
         },
         "driver",
       )?.rows,
-    ).toEqual([{ label: "Company or contract driver", value: "Yes", wide: false }]);
+    ).toEqual([{ label: "DOT Driver", value: "Yes", wide: false }]);
   });
 
   it("projects license copy URLs for the personnel file card", () => {
@@ -125,6 +128,9 @@ describe("buildPersonnelFile", () => {
   it("keeps the date part of a hire date", () => {
     expect(groupById({ hireDate: "2024-03-04T00:00:00.000Z" }, "assignment")?.rows).toEqual([
       { label: "Hire date", value: "2024-03-04", wide: false },
+    ]);
+    expect(groupById({ dateOfBirth: "1991-07-15T00:00:00.000Z" }, "assignment")?.rows).toEqual([
+      { label: "Date of birth", value: "1991-07-15", wide: false },
     ]);
     expect(formatFileDate("not a date")).toBe("not a date");
   });

@@ -64,15 +64,15 @@ export default function ComplianceAcknowledgmentsPage() {
 
   if (!canRead) {
     return (
-      <div className="ind-content">
+      <>
         <h1 className="h4">User Acknowledgments</h1>
         <p className="text-muted">You do not have permission to view tenant acknowledgment reports.</p>
-      </div>
+      </>
     );
   }
 
   return (
-    <div className="ind-content">
+    <>
       <div className="d-flex flex-wrap justify-content-between align-items-start gap-2 mb-3">
         <div>
           <h1 className="h4 mb-1">User Acknowledgments</h1>
@@ -322,6 +322,6 @@ export default function ComplianceAcknowledgmentsPage() {
           </div>
         </form>
       </section>
-    </div>
+    </>
   );
 }

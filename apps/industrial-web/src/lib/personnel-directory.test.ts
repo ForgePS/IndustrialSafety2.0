@@ -15,23 +15,44 @@ import {
 
 const base = {
   id: "p1",
-  displayName: "Aaliyah Z Shelton",
-  firstName: "Aaliyah",
-  lastName: "Shelton",
+  displayName: "AALIYAH Z SHELTON",
+  firstName: "AALIYAH",
+  lastName: "SHELTON",
   jobTitle: "Quality Tech",
   departmentName: "Quality",
+  divisionName: "Milling",
+  departmentId: "",
   employeeNumber: "EMP-23344",
   email: "az@example.com",
   siteId: "site-1",
   siteLabel: "",
   status: "Active",
+  isDotDriver: false,
   isCompanyDriver: false,
   hasPpeExpiryAlert: false,
 };
 
 describe("toRosterPerson", () => {
   it("normalizes a flat list row", () => {
-    expect(toRosterPerson({ ...base })).toEqual(base);
+    expect(
+      toRosterPerson({
+        id: "p1",
+        displayName: "Aaliyah Z Shelton",
+        firstName: "Aaliyah",
+        lastName: "Shelton",
+        jobTitle: "Quality Tech",
+        departmentName: "Quality",
+        divisionName: "Milling",
+        employeeNumber: "EMP-23344",
+        email: "az@example.com",
+        siteId: "site-1",
+        siteLabel: "",
+        status: "Active",
+        isDotDriver: false,
+        isCompanyDriver: false,
+        hasPpeExpiryAlert: false,
+      }),
+    ).toEqual(base);
   });
 
   it("drops rows without an id", () => {
@@ -45,7 +66,9 @@ describe("toRosterPerson", () => {
       firstName: "Salvador",
       lastName: "Ruiz",
     });
-    expect(person?.displayName).toBe("Sal Ruiz");
+    expect(person?.displayName).toBe("SAL RUIZ");
+    expect(person?.firstName).toBe("SALVADOR");
+    expect(person?.lastName).toBe("RUIZ");
   });
 
   it("treats missing fields as empty strings and driver as boolean", () => {
@@ -57,11 +80,14 @@ describe("toRosterPerson", () => {
       lastName: "",
       jobTitle: "",
       departmentName: "",
+      divisionName: "",
+      departmentId: "",
       employeeNumber: "",
       email: "",
       siteId: "",
       siteLabel: "",
       status: "",
+      isDotDriver: false,
       isCompanyDriver: false,
       hasPpeExpiryAlert: false,
     });
@@ -83,7 +109,7 @@ describe("card labels", () => {
   it("prefers job title, then department", () => {
     expect(rosterSubtitle({ ...base })).toBe("Quality Tech");
     expect(rosterSubtitle({ ...base, jobTitle: "" })).toBe("Quality");
-    expect(rosterSubtitle({ ...base, jobTitle: "", departmentName: "" })).toBe("Team member");
+    expect(rosterSubtitle({ ...base, jobTitle: "", departmentName: "" })).toBe("Team MEMBER");
   });
 
   it("joins employee number with site, falling back to department", () => {

@@ -2,14 +2,25 @@
 
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState, type FormEvent } from "react";
+import { useSearchParams } from "next/navigation";
 import { ApiError, apiGet, apiSend, useAuth } from "@forge/web-kit";
 import { ModuleUnavailable } from "@/components/module-unavailable";
 import { ModuleWorkspaceHeader } from "@/components/module-workspace-header";
 import { ModuleWorkspaceTabs } from "@/components/module-workspace-tabs";
+import { ensureActiveModuleTab, filterModulePages } from "@/lib/module-page-permissions";
+import { canDeleteInspections } from "@/lib/form-signatory";
+import { OrgLocationCascade } from "@/components/org-location-cascade";
+import { useOrgLocationLookups } from "@/hooks/use-org-location-lookups";
+import { useIndustrialModuleGate } from "@/hooks/use-industrial-module-gate";
 import {
   canCompleteInspection,
+  dedupeInspectionTemplates,
   defaultInspectionTitle,
   FALLBACK_INSPECTION_TEMPLATE,
+  groupInspectionItemsBySection,
+  importInspectionTemplateFile,
+  renameInspectionTemplate,
+  inspectionTypeLabel,
   itemsFromTemplate,
   noFindingItems,
   parseInspectionRun,
@@ -19,15 +30,15 @@ import {
   type InspectionRunItem,
   type InspectionTemplate,
 } from "@/lib/inspections-module";
-
-type Bootstrap = {
-  industrialEnabled: boolean;
-  modules: Array<{ code: string; awsEnabled: boolean; migrationStatus: string }>;
-};
+import { compressImageToDataUrl, DEFAULT_MAX_DATA_URL_LENGTH } from "@/lib/compress-image";
+import { ForgePrintButton } from "@/components/forge-print-button";
+import { inspectionPrintFieldValues } from "@/lib/module-print-fields";
 
 type Department = {
   id: string;
   name: string;
+  siteId?: string | null;
+  divisionName?: string | null;
   contactPersonnelId?: string | null;
   contactName?: string | null;
   contactEmail?: string | null;
@@ -39,10 +50,14 @@ type InspectionRow = Record<string, unknown> & {
   id: string;
   title?: string | null;
   status?: string;
+  inspectionType?: string | null;
+  templateName?: string | null;
+  closeoutUrl?: string | null;
 };
 
 const TABS = [
   { id: "list" as const, label: "Inspections" },
+  { id: "templates" as const, label: "Templates" },
   { id: "start" as const, label: "Start" },
   { id: "run" as const, label: "Checklist" },
   { id: "report" as const, label: "Report" },
@@ -67,19 +82,8 @@ function fileToDataUrl(file: File): Promise<InspectionPhoto> {
   });
 }
 
-async function compressImageFile(file: File, maxDim = 1280, quality = 0.72): Promise<InspectionPhoto> {
-  if (!file.type.startsWith("image/")) return fileToDataUrl(file);
-  const bitmap = await createImageBitmap(file);
-  const scale = Math.min(1, maxDim / Math.max(bitmap.width, bitmap.height));
-  const width = Math.max(1, Math.round(bitmap.width * scale));
-  const height = Math.max(1, Math.round(bitmap.height * scale));
-  const canvas = document.createElement("canvas");
-  canvas.width = width;
-  canvas.height = height;
-  const ctx = canvas.getContext("2d");
-  if (!ctx) return fileToDataUrl(file);
-  ctx.drawImage(bitmap, 0, 0, width, height);
-  const dataUrl = canvas.toDataURL("image/jpeg", quality);
+async function compressImageFile(file: File): Promise<InspectionPhoto> {
+  const dataUrl = await compressImageToDataUrl(file, DEFAULT_MAX_DATA_URL_LENGTH);
   return {
     id: `p-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
     fileName: file.name.replace(/\.\w+$/, "") + ".jpg",
@@ -89,6 +93,7 @@ async function compressImageFile(file: File, maxDim = 1280, quality = 0.72): Pro
 }
 
 export function InspectionsWorkspace({ moduleName }: { moduleName: string }) {
+  const searchParams = useSearchParams();
   const { me } = useAuth();
   const permissions = new Set(me?.permissions ?? []);
   const canView =
@@ -97,11 +102,33 @@ export function InspectionsWorkspace({ moduleName }: { moduleName: string }) {
     permissions.has("industrial.access");
   const canManage =
     permissions.has("industrial.inspections.manage") || permissions.has("industrial.admin");
+  const canDelete = canDeleteInspections({
+    isPlatformAdmin: me?.isPlatformAdmin,
+    activeProducts: me?.activeProducts,
+    permissions: me?.permissions,
+  });
+  const org = useOrgLocationLookups(me?.tenantId);
+  const { modEntry, explicitlyDisabled, awsReady } = useIndustrialModuleGate({
+    moduleCode: "INSPECTIONS",
+    canView,
+  });
 
-  const [bootstrap, setBootstrap] = useState<Bootstrap | null>(null);
   const [tab, setTab] = useState<(typeof TABS)[number]["id"]>("list");
+  const visibleTabs = useMemo(
+    () =>
+      filterModulePages({
+        tabs: TABS,
+        moduleCode: "INSPECTIONS",
+        permissions: me?.permissions ?? [],
+      }),
+    [me?.permissions],
+  );
+  useEffect(() => {
+    setTab((current) => ensureActiveModuleTab(current, visibleTabs.map((t) => t.id), "list"));
+  }, [visibleTabs]);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
 
   const [rows, setRows] = useState<InspectionRow[]>([]);
   const [departments, setDepartments] = useState<Department[]>([]);
@@ -111,21 +138,45 @@ export function InspectionsWorkspace({ moduleName }: { moduleName: string }) {
 
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [title, setTitle] = useState("");
+  const [siteId, setSiteId] = useState("");
+  const [divisionName, setDivisionName] = useState("");
   const [departmentId, setDepartmentId] = useState("");
   const [templateId, setTemplateId] = useState(FALLBACK_INSPECTION_TEMPLATE.id);
   const [responsiblePersonnelId, setResponsiblePersonnelId] = useState("");
   const [responsibleName, setResponsibleName] = useState("");
   const [items, setItems] = useState<InspectionRunItem[]>([]);
-  const [expandedNoId, setExpandedNoId] = useState<string | null>(null);
+  const [notesModalItemId, setNotesModalItemId] = useState<string | null>(null);
+  const [notesModalError, setNotesModalError] = useState<string | null>(null);
+  const [responsibleTouched, setResponsibleTouched] = useState(false);
   const [titleTouched, setTitleTouched] = useState(false);
-
-  const modEntry = bootstrap?.modules.find((m) => m.code === "INSPECTIONS");
-  const awsReady =
-    Boolean(bootstrap?.industrialEnabled) && Boolean(modEntry?.awsEnabled) && canView;
+  const [qrTargetType, setQrTargetType] = useState("");
+  const [qrTargetId, setQrTargetId] = useState("");
+  const [qrLinkId, setQrLinkId] = useState("");
+  const [inspectionFrequency, setInspectionFrequency] = useState("");
+  const [templateUploadTitle, setTemplateUploadTitle] = useState("");
+  const [templateUploadNotice, setTemplateUploadNotice] = useState<string | null>(null);
+  const [templateUploadPreview, setTemplateUploadPreview] = useState<InspectionTemplate | null>(
+    null,
+  );
+  const [editingTemplateId, setEditingTemplateId] = useState<string | null>(null);
+  const [editingTemplateName, setEditingTemplateName] = useState("");
+  const [renamingTemplateId, setRenamingTemplateId] = useState<string | null>(null);
+  /** Open category headings on the Checklist tab (section name → open). */
+  const [openSections, setOpenSections] = useState<Set<string>>(() => new Set());
 
   const selectedDept = departments.find((d) => d.id === departmentId);
   const selectedTemplate =
     templates.find((t) => t.id === templateId) ?? FALLBACK_INSPECTION_TEMPLATE;
+  const checklistSections = useMemo(() => groupInspectionItemsBySection(items), [items]);
+
+  useEffect(() => {
+    if (!selectedId || checklistSections.length === 0) {
+      setOpenSections(new Set());
+      return;
+    }
+    // Open the first category by default so large templates stay manageable.
+    setOpenSections(new Set([checklistSections[0]!.section]));
+  }, [selectedId]); // eslint-disable-line react-hooks/exhaustive-deps -- reset only when inspection changes
 
   const refreshList = useCallback(async () => {
     const data = await apiGet<{ items?: InspectionRow[] }>("/api/v1/industrial/inspections", {
@@ -150,7 +201,14 @@ export function InspectionsWorkspace({ moduleName }: { moduleName: string }) {
     ]);
     const depts = Array.isArray(deptData) ? deptData : (deptData.items ?? []);
     setDepartments(depts);
-    setTemplates(Array.isArray(tplData) && tplData.length ? tplData : [FALLBACK_INSPECTION_TEMPLATE]);
+    const nextTemplates =
+      Array.isArray(tplData) && tplData.length
+        ? dedupeInspectionTemplates(tplData)
+        : [FALLBACK_INSPECTION_TEMPLATE];
+    setTemplates(nextTemplates);
+    setTemplateId((current) =>
+      nextTemplates.some((t) => t.id === current) ? current : (nextTemplates[0]?.id ?? current),
+    );
     setPersonnel(
       (peopleData.items ?? [])
         .map((p) => ({
@@ -166,24 +224,6 @@ export function InspectionsWorkspace({ moduleName }: { moduleName: string }) {
           String(row.status ?? "").toUpperCase() !== "COMPLETED",
       ),
     );
-  }, []);
-
-  useEffect(() => {
-    let cancelled = false;
-    void (async () => {
-      try {
-        const boot = await apiGet<Bootstrap>("/api/v1/industrial/bootstrap");
-        if (!cancelled) setBootstrap(boot);
-      } catch (e) {
-        if (!cancelled) {
-          setError(e instanceof ApiError ? e.message : "Failed to load bootstrap");
-          setBootstrap({ industrialEnabled: false, modules: [] });
-        }
-      }
-    })();
-    return () => {
-      cancelled = true;
-    };
   }, []);
 
   useEffect(() => {
@@ -206,16 +246,62 @@ export function InspectionsWorkspace({ moduleName }: { moduleName: string }) {
   }, [awsReady, refreshList, refreshLookups]);
 
   useEffect(() => {
+    const tabParam = searchParams.get("tab");
+    const targetType = searchParams.get("targetType")?.trim().toUpperCase() ?? "";
+    const targetId = searchParams.get("targetId")?.trim() ?? "";
+    const frequency = searchParams.get("frequency")?.trim().toUpperCase() ?? "";
+    const linkId = searchParams.get("qrLinkId")?.trim() ?? "";
+    const templateFromUrl = searchParams.get("templateId")?.trim() ?? "";
+
+    if (tabParam === "start") setTab("start");
+    if (targetType) setQrTargetType(targetType);
+    if (targetId) setQrTargetId(targetId);
+    if (linkId) setQrLinkId(linkId);
+    if (frequency) setInspectionFrequency(frequency);
+    if (templateFromUrl) setTemplateId(templateFromUrl);
+
+    if (targetType && targetId && frequency) {
+      const freqLabel =
+        frequency === "DAILY"
+          ? "Daily inspection"
+          : frequency === "WEEKLY"
+            ? "Weekly inspection"
+            : frequency === "MONTHLY"
+              ? "Monthly inspection"
+              : "Inspection";
+      if (!titleTouched) {
+        setTitle(`${freqLabel} — ${targetType}`);
+      }
+    }
+  }, [searchParams, titleTouched]);
+
+  useEffect(() => {
     if (titleTouched) return;
-    setTitle(defaultInspectionTitle(selectedDept?.name || selectedTemplate.name));
-  }, [selectedDept?.name, selectedTemplate.name, titleTouched]);
+    setTitle(
+      defaultInspectionTitle({
+        divisionName,
+        departmentName: selectedDept?.name || "",
+      }),
+    );
+  }, [divisionName, selectedDept?.name, titleTouched]);
 
   useEffect(() => {
     if (!departmentId) return;
     const dept = departments.find((d) => d.id === departmentId);
     if (!dept) return;
-    if (dept.contactPersonnelId) setResponsiblePersonnelId(dept.contactPersonnelId);
-    if (dept.contactName) setResponsibleName(dept.contactName);
+    if (!responsibleTouched) {
+      if (dept.contactPersonnelId) {
+        setResponsiblePersonnelId(dept.contactPersonnelId);
+        const contactName =
+          dept.contactName?.trim() ||
+          personnel.find((p) => p.id === dept.contactPersonnelId)?.displayName ||
+          "";
+        setResponsibleName(contactName);
+      } else {
+        setResponsiblePersonnelId("");
+        setResponsibleName("");
+      }
+    }
     const preferred = templates.find(
       (t) =>
         t.departmentHint &&
@@ -223,7 +309,20 @@ export function InspectionsWorkspace({ moduleName }: { moduleName: string }) {
         t.departmentHint.toLowerCase().includes(dept.name.toLowerCase()),
     );
     if (preferred) setTemplateId(preferred.id);
-  }, [departmentId, departments, templates]);
+  }, [departmentId, departments, templates, personnel, responsibleTouched]);
+
+  const notesModalItem = useMemo(
+    () => items.find((item) => item.id === notesModalItemId) ?? null,
+    [items, notesModalItemId],
+  );
+
+  useEffect(() => {
+    if (!notesModalItemId) return;
+    const timer = window.setTimeout(() => {
+      document.getElementById(`notes-modal-${notesModalItemId}`)?.focus();
+    }, 50);
+    return () => window.clearTimeout(timer);
+  }, [notesModalItemId]);
 
   async function openInspection(id: string) {
     setBusy(true);
@@ -233,6 +332,14 @@ export function InspectionsWorkspace({ moduleName }: { moduleName: string }) {
       const run = parseInspectionRun(row as Record<string, unknown>);
       setSelectedId(id);
       setTitle(String(row.title ?? run.templateName ?? ""));
+      const sourcePayload =
+        (row.sourcePayload as Record<string, unknown> | undefined) ??
+        (row.source_payload as Record<string, unknown> | undefined) ??
+        {};
+      const rawSiteId = row.siteId ?? sourcePayload.siteId;
+      const rawDivision = sourcePayload.divisionName ?? row.divisionName;
+      setSiteId(typeof rawSiteId === "string" ? rawSiteId : "");
+      setDivisionName(typeof rawDivision === "string" ? rawDivision : "");
       setDepartmentId(run.departmentId || "");
       setTemplateId(run.templateId || FALLBACK_INSPECTION_TEMPLATE.id);
       setResponsiblePersonnelId(run.responsiblePersonnelId || "");
@@ -241,7 +348,7 @@ export function InspectionsWorkspace({ moduleName }: { moduleName: string }) {
       setTitleTouched(true);
       setTab(String(row.status ?? "").toUpperCase() === "COMPLETED" ? "report" : "run");
       const firstNo = run.items.find((i) => i.answer === "NO" && !(i.notes ?? "").trim());
-      setExpandedNoId(firstNo?.id ?? null);
+      if (firstNo) setNotesModalItemId(firstNo.id);
     } catch (e) {
       setError(e instanceof ApiError ? e.message : "Failed to open inspection");
     } finally {
@@ -255,16 +362,36 @@ export function InspectionsWorkspace({ moduleName }: { moduleName: string }) {
     setBusy(true);
     setError(null);
     try {
+      const deptContactId = selectedDept?.contactPersonnelId || "";
+      const deptContactName =
+        selectedDept?.contactName?.trim() ||
+        personnel.find((p) => p.id === deptContactId)?.displayName ||
+        "";
+      const resolvedResponsibleId = responsiblePersonnelId || deptContactId || null;
+      const resolvedResponsibleName =
+        responsibleName ||
+        deptContactName ||
+        personnel.find((p) => p.id === resolvedResponsibleId)?.displayName ||
+        "";
       const created = await apiSend<InspectionRow>("/api/v1/industrial/inspections", "POST", {
-        title: title.trim() || defaultInspectionTitle(selectedDept?.name || "Inspection"),
+        title:
+          title.trim() ||
+          defaultInspectionTitle({
+            divisionName,
+            departmentName: selectedDept?.name || "",
+          }),
+        siteId: siteId || selectedDept?.siteId || null,
+        divisionName: divisionName || null,
         departmentId: departmentId || null,
         departmentName: selectedDept?.name || "",
         templateId,
-        responsiblePersonnelId: responsiblePersonnelId || null,
-        responsibleName:
-          responsibleName ||
-          personnel.find((p) => p.id === responsiblePersonnelId)?.displayName ||
-          "",
+        responsiblePersonnelId: resolvedResponsibleId,
+        responsibleName: resolvedResponsibleName,
+        targetType: qrTargetType || null,
+        targetId: qrTargetId || null,
+        qrLinkId: qrLinkId || null,
+        inspectionFrequency: inspectionFrequency || null,
+        qrScanSource: Boolean(qrLinkId || qrTargetId),
         appBaseUrl: typeof window !== "undefined" ? window.location.origin : undefined,
       });
       await refreshList();
@@ -276,12 +403,95 @@ export function InspectionsWorkspace({ moduleName }: { moduleName: string }) {
     }
   }
 
+  async function onTemplateFileSelected(file: File | null) {
+    if (!file || !canManage) return;
+    const lower = file.name.toLowerCase();
+    if (
+      !lower.endsWith(".xlsx") &&
+      !lower.endsWith(".xls") &&
+      !lower.endsWith(".csv") &&
+      !lower.endsWith(".pdf")
+    ) {
+      setError("Upload an Excel (.xlsx), CSV, or PDF checklist.");
+      return;
+    }
+    setBusy(true);
+    setError(null);
+    setTemplateUploadNotice(null);
+    setTemplateUploadPreview(null);
+    try {
+      const result = await importInspectionTemplateFile(file, {
+        ...(templateUploadTitle.trim() ? { title: templateUploadTitle.trim() } : {}),
+      });
+      setTemplateUploadPreview(result.template);
+      setTemplateUploadNotice(
+        result.updated
+          ? `Updated digital template “${result.template.name}” (${result.itemCount} items).`
+          : `Created digital template “${result.template.name}” (${result.itemCount} items).`,
+      );
+      setTemplateId(result.template.id);
+      await refreshLookups();
+    } catch (e) {
+      setError(
+        e instanceof ApiError
+          ? e.message
+          : e instanceof Error
+            ? e.message
+            : "Could not import inspection template",
+      );
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  function beginRenameTemplate(template: InspectionTemplate) {
+    if (!canManage || template.source === "builtin") return;
+    setEditingTemplateId(template.id);
+    setEditingTemplateName(template.name);
+    setError(null);
+  }
+
+  function cancelRenameTemplate() {
+    setEditingTemplateId(null);
+    setEditingTemplateName("");
+  }
+
+  async function saveRenameTemplate(templateId: string) {
+    if (!canManage) return;
+    const name = editingTemplateName.trim();
+    if (!name) {
+      setError("Template name is required");
+      return;
+    }
+    setRenamingTemplateId(templateId);
+    setError(null);
+    try {
+      const updated = await renameInspectionTemplate(templateId, name);
+      setTemplates((prev) =>
+        dedupeInspectionTemplates(prev.map((t) => (t.id === templateId ? { ...t, name: updated.name } : t))),
+      );
+      setTemplateUploadPreview((prev) =>
+        prev?.id === templateId ? { ...prev, name: updated.name } : prev,
+      );
+      setEditingTemplateId(null);
+      setEditingTemplateName("");
+      setTemplateUploadNotice(`Renamed template to “${updated.name}”.`);
+      await refreshLookups();
+    } catch (e) {
+      setError(e instanceof ApiError ? e.message : "Could not rename template");
+    } finally {
+      setRenamingTemplateId(null);
+    }
+  }
+
   async function persistItems(nextItems: InspectionRunItem[]) {
     if (!selectedId || !canManage) return;
     setItems(nextItems);
     try {
       await apiSend(`/api/v1/industrial/inspections/${encodeURIComponent(selectedId)}`, "PATCH", {
         title,
+        siteId: siteId || selectedDept?.siteId || null,
+        divisionName: divisionName || null,
         departmentId: departmentId || null,
         departmentName: selectedDept?.name || "",
         templateId,
@@ -296,7 +506,43 @@ export function InspectionsWorkspace({ moduleName }: { moduleName: string }) {
 
   function setAnswer(itemId: string, answer: InspectionAnswer) {
     const next = items.map((item) => (item.id === itemId ? { ...item, answer } : item));
-    if (answer === "NO") setExpandedNoId(itemId);
+    if (answer === "NO") {
+      setNotesModalError(null);
+      setNotesModalItemId(itemId);
+    } else if (notesModalItemId === itemId) {
+      setNotesModalItemId(null);
+      setNotesModalError(null);
+    }
+    void persistItems(next);
+  }
+
+  function openFindingNotes(itemId: string) {
+    setNotesModalError(null);
+    setNotesModalItemId(itemId);
+  }
+
+  function closeFindingNotes() {
+    if (!notesModalItem) {
+      setNotesModalItemId(null);
+      return;
+    }
+    if (notesModalItem.answer === "NO" && !(notesModalItem.notes ?? "").trim()) {
+      setNotesModalError("Notes are required before you can continue.");
+      document.getElementById(`notes-modal-${notesModalItem.id}`)?.focus();
+      return;
+    }
+    setNotesModalError(null);
+    setNotesModalItemId(null);
+  }
+
+  function cancelNoFinding() {
+    if (!notesModalItem) return;
+    const itemId = notesModalItem.id;
+    setNotesModalError(null);
+    setNotesModalItemId(null);
+    const next: InspectionRunItem[] = items.map((item) =>
+      item.id === itemId ? { ...item, answer: null as InspectionAnswer } : item,
+    );
     void persistItems(next);
   }
 
@@ -321,8 +567,30 @@ export function InspectionsWorkspace({ moduleName }: { moduleName: string }) {
           }
         : item,
     );
-    setExpandedNoId(itemId);
+    setNotesModalItemId(itemId);
     await persistItems(next);
+  }
+
+  async function deleteInspection(id: string, inspectionTitle: string) {
+    if (!canDelete || deletingId) return;
+    const confirmed = window.confirm(
+      `Delete "${inspectionTitle}"?\n\nThis removes the inspection from the list. The deletion is recorded in the audit log.`,
+    );
+    if (!confirmed) return;
+    setDeletingId(id);
+    setError(null);
+    try {
+      await apiSend(`/api/v1/industrial/inspections/${encodeURIComponent(id)}/delete`, "POST", {});
+      setRows((prev) => prev.filter((row) => row.id !== id));
+      if (selectedId === id) {
+        setSelectedId(null);
+        setItems([]);
+      }
+    } catch (err) {
+      setError(err instanceof ApiError ? err.message : "Could not delete inspection");
+    } finally {
+      setDeletingId(null);
+    }
   }
 
   async function completeInspection() {
@@ -331,7 +599,10 @@ export function InspectionsWorkspace({ moduleName }: { moduleName: string }) {
     if (!check.ok) {
       setError(check.reason ?? "Cannot complete");
       const missing = items.find((i) => i.answer === "NO" && !(i.notes ?? "").trim());
-      if (missing) setExpandedNoId(missing.id);
+      if (missing) {
+        setNotesModalError("Notes are required for each No finding.");
+        setNotesModalItemId(missing.id);
+      }
       return;
     }
     setBusy(true);
@@ -402,7 +673,7 @@ export function InspectionsWorkspace({ moduleName }: { moduleName: string }) {
     );
   }
 
-  if (bootstrap && !awsReady) {
+  if (explicitlyDisabled) {
     return (
       <ModuleUnavailable
         moduleName={moduleName}
@@ -412,7 +683,7 @@ export function InspectionsWorkspace({ moduleName }: { moduleName: string }) {
   }
 
   return (
-    <section aria-labelledby="inspections-title">
+    <section aria-labelledby="inspections-title" data-walkthrough="safety-inspections">
       <ModuleWorkspaceHeader
         id="inspections-title"
         title={moduleName}
@@ -427,7 +698,7 @@ export function InspectionsWorkspace({ moduleName }: { moduleName: string }) {
         </div>
       ) : null}
 
-      <ModuleWorkspaceTabs tabs={TABS} active={tab} onChange={setTab} ariaLabel="Inspections sections">
+      <ModuleWorkspaceTabs tabs={visibleTabs} active={tab} onChange={setTab} ariaLabel="Inspections sections">
         {tab === "list" ? (
           <div className="card">
             <div className="card-header d-flex justify-content-between align-items-center">
@@ -443,8 +714,8 @@ export function InspectionsWorkspace({ moduleName }: { moduleName: string }) {
                 <thead>
                   <tr>
                     <th>Title</th>
+                    <th>Inspection type</th>
                     <th>Status</th>
-                    <th>Department</th>
                     <th />
                   </tr>
                 </thead>
@@ -462,19 +733,54 @@ export function InspectionsWorkspace({ moduleName }: { moduleName: string }) {
                         <tr key={row.id}>
                           <td>{row.title || "—"}</td>
                           <td>
+                            {inspectionTypeLabel({
+                              inspectionType: row.inspectionType ?? null,
+                              templateName: run.templateName || row.templateName || null,
+                              sourcePayload: row.sourcePayload,
+                            })}
+                          </td>
+                          <td>
                             <span className={`badge ${statusBadgeClass(String(row.status ?? ""))}`}>
                               {String(row.status ?? "—")}
                             </span>
                           </td>
-                          <td>{run.departmentName || "—"}</td>
                           <td className="text-end">
-                            <button
-                              type="button"
-                              className="btn btn-sm btn-outline-primary"
-                              onClick={() => void openInspection(row.id)}
-                            >
-                              Open
-                            </button>
+                            <div className="d-inline-flex flex-wrap gap-1 justify-content-end">
+                              <ForgePrintButton
+                                module="INSPECTIONS"
+                                recordType="inspection"
+                                recordId={row.id}
+                                fieldValues={(() => {
+                                  const closeout = row.closeoutUrl;
+                                  return inspectionPrintFieldValues(
+                                    row,
+                                    typeof closeout === "string" ? { closeoutUrl: closeout } : undefined,
+                                  );
+                                })()}
+                              />
+                              <button
+                                type="button"
+                                className="btn btn-sm btn-outline-primary"
+                                onClick={() => void openInspection(row.id)}
+                              >
+                                Open
+                              </button>
+                              {canDelete ? (
+                                <button
+                                  type="button"
+                                  className="btn btn-sm btn-outline-danger"
+                                  disabled={deletingId === row.id}
+                                  onClick={() =>
+                                    void deleteInspection(
+                                      row.id,
+                                      String(row.title ?? "Inspection"),
+                                    )
+                                  }
+                                >
+                                  {deletingId === row.id ? "Deleting…" : "Delete"}
+                                </button>
+                              ) : null}
+                            </div>
                           </td>
                         </tr>
                       );
@@ -486,6 +792,214 @@ export function InspectionsWorkspace({ moduleName }: { moduleName: string }) {
           </div>
         ) : null}
 
+        {tab === "templates" ? (
+          <div className="row g-3">
+            <div className="col-lg-5">
+              <div className="card h-100">
+                <div className="card-header">
+                  <h5 className="card-title mb-0">Upload template</h5>
+                </div>
+                <div className="card-body">
+                  <p className="text-muted small">
+                    Upload an Excel, CSV, or PDF checklist. Forge turns each question into a Yes / No /
+                    N/A digital inspection you can run from Start.
+                  </p>
+                  <div className="mb-3">
+                    <label className="form-label" htmlFor="insp-template-title">
+                      Template name (optional)
+                    </label>
+                    <input
+                      id="insp-template-title"
+                      className="form-control"
+                      value={templateUploadTitle}
+                      onChange={(ev) => setTemplateUploadTitle(ev.target.value)}
+                      placeholder="Defaults to file name / form title"
+                      disabled={!canManage || busy}
+                    />
+                  </div>
+                  <div className="mb-3">
+                    <label className="form-label" htmlFor="insp-template-file">
+                      Checklist file
+                    </label>
+                    <input
+                      id="insp-template-file"
+                      type="file"
+                      className="form-control"
+                      accept=".xlsx,.xls,.csv,.pdf,application/pdf,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,text/csv"
+                      disabled={!canManage || busy}
+                      onChange={(ev) => {
+                        const file = ev.target.files?.[0] ?? null;
+                        void onTemplateFileSelected(file);
+                        ev.target.value = "";
+                      }}
+                    />
+                    <div className="form-text">
+                      Tip: section headings in column A, questions in column B — or use Question /
+                      Section headers.
+                    </div>
+                  </div>
+                  {!canManage ? (
+                    <p className="text-muted small mb-0">You need manage permission to upload templates.</p>
+                  ) : null}
+                  {templateUploadNotice ? (
+                    <div className="alert alert-success py-2 mb-0" role="status">
+                      {templateUploadNotice}
+                    </div>
+                  ) : null}
+                </div>
+              </div>
+            </div>
+            <div className="col-lg-7">
+              <div className="card h-100">
+                <div className="card-header d-flex justify-content-between align-items-center gap-2">
+                  <h5 className="card-title mb-0">Digital templates</h5>
+                  {canManage && templateUploadPreview ? (
+                    <button
+                      type="button"
+                      className="btn btn-sm btn-primary"
+                      onClick={() => {
+                        setTemplateId(templateUploadPreview.id);
+                        setTab("start");
+                      }}
+                    >
+                      Use on Start
+                    </button>
+                  ) : null}
+                </div>
+                <div className="table-responsive">
+                  <table className="table table-hover mb-0">
+                    <thead>
+                      <tr>
+                        <th>Name</th>
+                        <th>Source</th>
+                        <th>Items</th>
+                        <th />
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {templates.length === 0 ? (
+                        <tr>
+                          <td colSpan={4} className="text-muted">
+                            No templates yet. Upload a checklist to create one.
+                          </td>
+                        </tr>
+                      ) : (
+                        templates.map((t) => (
+                          <tr key={t.id}>
+                            <td>
+                              {editingTemplateId === t.id ? (
+                                <div className="d-flex flex-wrap gap-2 align-items-center">
+                                  <input
+                                    className="form-control form-control-sm"
+                                    value={editingTemplateName}
+                                    onChange={(ev) => setEditingTemplateName(ev.target.value)}
+                                    onKeyDown={(ev) => {
+                                      if (ev.key === "Enter") {
+                                        ev.preventDefault();
+                                        void saveRenameTemplate(t.id);
+                                      }
+                                      if (ev.key === "Escape") cancelRenameTemplate();
+                                    }}
+                                    disabled={renamingTemplateId === t.id}
+                                    autoFocus
+                                    aria-label="Template name"
+                                  />
+                                  <button
+                                    type="button"
+                                    className="btn btn-sm btn-primary"
+                                    disabled={renamingTemplateId === t.id || !editingTemplateName.trim()}
+                                    onClick={() => void saveRenameTemplate(t.id)}
+                                  >
+                                    {renamingTemplateId === t.id ? "Saving…" : "Save"}
+                                  </button>
+                                  <button
+                                    type="button"
+                                    className="btn btn-sm btn-outline-secondary"
+                                    disabled={renamingTemplateId === t.id}
+                                    onClick={cancelRenameTemplate}
+                                  >
+                                    Cancel
+                                  </button>
+                                </div>
+                              ) : (
+                                t.name
+                              )}
+                            </td>
+                            <td className="text-muted text-capitalize">{t.source}</td>
+                            <td>{t.items.length}</td>
+                            <td className="text-end">
+                              {canManage ? (
+                                <div className="d-inline-flex flex-wrap gap-1 justify-content-end">
+                                  {t.source !== "builtin" && editingTemplateId !== t.id ? (
+                                    <button
+                                      type="button"
+                                      className="btn btn-sm btn-outline-secondary"
+                                      disabled={busy || renamingTemplateId != null}
+                                      onClick={() => beginRenameTemplate(t)}
+                                    >
+                                      Rename
+                                    </button>
+                                  ) : null}
+                                  {editingTemplateId !== t.id ? (
+                                    <button
+                                      type="button"
+                                      className="btn btn-sm btn-outline-primary"
+                                      onClick={() => {
+                                        setTemplateId(t.id);
+                                        setTab("start");
+                                      }}
+                                    >
+                                      Start with this
+                                    </button>
+                                  ) : null}
+                                </div>
+                              ) : null}
+                            </td>
+                          </tr>
+                        ))
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+                {templateUploadPreview ? (
+                  <div className="card-body border-top">
+                    <h6 className="mb-2">Preview: {templateUploadPreview.name}</h6>
+                    <div className="accordion accordion-flush" id="insp-template-preview">
+                      {groupInspectionItemsBySection(templateUploadPreview.items)
+                        .slice(0, 8)
+                        .map((group, groupIndex) => (
+                          <details
+                            key={group.section}
+                            className="border-bottom py-2"
+                            open={groupIndex === 0}
+                          >
+                            <summary className="fw-bold" style={{ cursor: "pointer" }}>
+                              {group.section}{" "}
+                              <span className="text-muted fw-normal">({group.items.length})</span>
+                            </summary>
+                            <ul className="small mb-0 mt-2 ps-3">
+                              {group.items.slice(0, 6).map((item) => (
+                                <li key={item.id}>{item.label}</li>
+                              ))}
+                              {group.items.length > 6 ? (
+                                <li className="text-muted">…and {group.items.length - 6} more</li>
+                              ) : null}
+                            </ul>
+                          </details>
+                        ))}
+                    </div>
+                    {groupInspectionItemsBySection(templateUploadPreview.items).length > 8 ? (
+                      <p className="small text-muted mb-0 mt-2">
+                        …and more categories on the Checklist after you start.
+                      </p>
+                    ) : null}
+                  </div>
+                ) : null}
+              </div>
+            </div>
+          </div>
+        ) : null}
+
         {tab === "start" ? (
           <form className="card" onSubmit={(ev) => void startInspection(ev)}>
             <div className="card-header">
@@ -493,27 +1007,37 @@ export function InspectionsWorkspace({ moduleName }: { moduleName: string }) {
             </div>
             <div className="card-body">
               <div className="row g-3">
-                <div className="col-md-6">
-                  <label className="form-label" htmlFor="insp-dept">
-                    Department
-                  </label>
-                  <select
-                    id="insp-dept"
-                    className="form-select"
-                    value={departmentId}
-                    onChange={(ev) => {
-                      setDepartmentId(ev.target.value);
-                      setTitleTouched(false);
-                    }}
-                  >
-                    <option value="">Select department</option>
-                    {departments.map((d) => (
-                      <option key={d.id} value={d.id}>
-                        {d.name}
-                      </option>
-                    ))}
-                  </select>
-                </div>
+                <OrgLocationCascade
+                  idPrefix="insp"
+                  required
+                  loading={org.loading}
+                  sites={org.sites}
+                  departments={
+                    departments.length > 0
+                      ? departments.map((d) => ({
+                          id: d.id,
+                          label: d.name,
+                          siteId: d.siteId ?? null,
+                          divisionName: d.divisionName ?? null,
+                        }))
+                      : org.departments
+                  }
+                  divisionEntries={org.divisionEntries}
+                  value={{
+                    siteId,
+                    siteName: org.sites.find((s) => s.id === siteId)?.label ?? "",
+                    divisionName,
+                    departmentId,
+                    departmentName: selectedDept?.name ?? "",
+                  }}
+                  onChange={(next) => {
+                    setSiteId(next.siteId);
+                    setDivisionName(next.divisionName);
+                    setDepartmentId(next.departmentId);
+                    setTitleTouched(false);
+                    setResponsibleTouched(false);
+                  }}
+                />
                 <div className="col-md-6">
                   <label className="form-label" htmlFor="insp-template">
                     Template
@@ -527,7 +1051,6 @@ export function InspectionsWorkspace({ moduleName }: { moduleName: string }) {
                     {templates.map((t) => (
                       <option key={t.id} value={t.id}>
                         {t.name}
-                        {t.source !== "builtin" ? ` (${t.source})` : ""}
                       </option>
                     ))}
                   </select>
@@ -545,7 +1068,7 @@ export function InspectionsWorkspace({ moduleName }: { moduleName: string }) {
                       setTitle(ev.target.value);
                     }}
                   />
-                  <div className="form-text">Defaults to yy-mm-dd Department.</div>
+                  <div className="form-text">Defaults to yy-mm-dd Division, Department.</div>
                 </div>
                 <div className="col-md-6">
                   <label className="form-label" htmlFor="insp-resp">
@@ -556,19 +1079,28 @@ export function InspectionsWorkspace({ moduleName }: { moduleName: string }) {
                     className="form-select"
                     value={responsiblePersonnelId}
                     onChange={(ev) => {
+                      setResponsibleTouched(true);
                       setResponsiblePersonnelId(ev.target.value);
                       const person = personnel.find((p) => p.id === ev.target.value);
                       setResponsibleName(person?.displayName || "");
                     }}
                   >
-                    <option value="">Select contact</option>
+                    <option value="">
+                      {selectedDept?.contactPersonnelId
+                        ? "Select contact"
+                        : "No department contact set"}
+                    </option>
                     {personnel.map((p) => (
                       <option key={p.id} value={p.id}>
                         {p.displayName}
+                        {selectedDept?.contactPersonnelId === p.id ? " (department contact)" : ""}
                       </option>
                     ))}
                   </select>
-                  <div className="form-text">Defaults to the department contact when set.</div>
+                  <div className="form-text">
+                    Defaults to the department contact. Set contacts under the Department contacts
+                    tab.
+                  </div>
                 </div>
               </div>
               <button type="submit" className="btn btn-primary mt-3" disabled={!canManage || busy}>
@@ -592,89 +1124,144 @@ export function InspectionsWorkspace({ moduleName }: { moduleName: string }) {
                       {responsibleName || "No responsible party"}
                     </small>
                   </div>
-                  {canManage ? (
-                    <button
-                      type="button"
-                      className="btn btn-primary"
-                      disabled={busy}
-                      onClick={() => void completeInspection()}
-                    >
-                      Complete inspection
-                    </button>
-                  ) : null}
+                  <div className="d-flex flex-wrap gap-2">
+                    {checklistSections.length > 1 ? (
+                      <>
+                        <button
+                          type="button"
+                          className="btn btn-sm btn-outline-secondary"
+                          onClick={() =>
+                            setOpenSections(new Set(checklistSections.map((g) => g.section)))
+                          }
+                        >
+                          Expand all
+                        </button>
+                        <button
+                          type="button"
+                          className="btn btn-sm btn-outline-secondary"
+                          onClick={() => setOpenSections(new Set())}
+                        >
+                          Collapse all
+                        </button>
+                      </>
+                    ) : null}
+                    {canManage ? (
+                      <button
+                        type="button"
+                        className="btn btn-primary"
+                        disabled={busy}
+                        onClick={() => void completeInspection()}
+                      >
+                        Complete inspection
+                      </button>
+                    ) : null}
+                  </div>
                 </div>
-                <div className="d-flex flex-column gap-3">
-                  {items.map((item) => {
-                    const showNotes = item.answer === "NO" || expandedNoId === item.id;
+                <div className="accordion" id="inspection-checklist-categories">
+                  {checklistSections.map((group, groupIndex) => {
+                    const sectionId = `insp-section-${groupIndex}`;
+                    const open = openSections.has(group.section);
+                    const answered = group.items.filter((i) => i.answer != null).length;
+                    const nos = group.items.filter((i) => i.answer === "NO").length;
                     return (
-                      <div className="card" key={item.id}>
-                        <div className="card-body">
-                          {item.section ? (
-                            <small className="text-muted text-uppercase d-block mb-1">{item.section}</small>
-                          ) : null}
-                          <div className="fw-medium mb-2">{item.label}</div>
-                          <div className="btn-group" role="group" aria-label={`Answer ${item.label}`}>
-                            {(["YES", "NO", "NA"] as const).map((answer) => (
-                              <button
-                                key={answer}
-                                type="button"
-                                className={`btn btn-sm ${
-                                  item.answer === answer
-                                    ? answer === "NO"
-                                      ? "btn-danger"
-                                      : answer === "YES"
-                                        ? "btn-success"
-                                        : "btn-secondary"
-                                    : "btn-outline-secondary"
-                                }`}
-                                disabled={!canManage}
-                                onClick={() => setAnswer(item.id, answer)}
-                              >
-                                {answer === "YES" ? "Yes" : answer === "NO" ? "No" : "N/A"}
-                              </button>
-                            ))}
-                          </div>
-                          {showNotes ? (
-                            <div className="mt-3 border rounded p-3 bg-label-danger bg-opacity-10">
-                              <label className="form-label" htmlFor={`notes-${item.id}`}>
-                                Notes (required for No)
-                              </label>
-                              <textarea
-                                id={`notes-${item.id}`}
-                                className="form-control mb-2"
-                                rows={3}
-                                value={item.notes ?? ""}
-                                disabled={!canManage}
-                                onChange={(ev) => setNotes(item.id, ev.target.value)}
-                              />
-                              <label className="form-label" htmlFor={`photo-${item.id}`}>
-                                Photos
-                              </label>
-                              <input
-                                id={`photo-${item.id}`}
-                                type="file"
-                                className="form-control"
-                                accept="image/*"
-                                capture="environment"
-                                multiple
-                                disabled={!canManage}
-                                onChange={(ev) => void addPhotos(item.id, ev.target.files)}
-                              />
-                              {(item.photos ?? []).length > 0 ? (
-                                <div className="d-flex flex-wrap gap-2 mt-2">
-                                  {(item.photos ?? []).map((photo) => (
-                                    <img
-                                      key={photo.id}
-                                      src={photo.dataUrl}
-                                      alt={photo.fileName}
-                                      className="rounded border"
-                                      style={{ width: 96, height: 96, objectFit: "cover" }}
-                                    />
-                                  ))}
+                      <div className="accordion-item" key={group.section}>
+                        <h2 className="accordion-header" id={`${sectionId}-heading`}>
+                          <button
+                            type="button"
+                            className={`accordion-button${open ? "" : " collapsed"} fw-bold`}
+                            aria-expanded={open}
+                            aria-controls={sectionId}
+                            onClick={() => {
+                              setOpenSections((prev) => {
+                                const next = new Set(prev);
+                                if (next.has(group.section)) next.delete(group.section);
+                                else next.add(group.section);
+                                return next;
+                              });
+                            }}
+                          >
+                            <span className="me-auto">{group.section}</span>
+                            <span className="badge bg-label-secondary ms-2 me-2">
+                              {answered}/{group.items.length}
+                            </span>
+                            {nos > 0 ? (
+                              <span className="badge bg-label-danger me-2">{nos} No</span>
+                            ) : null}
+                          </button>
+                        </h2>
+                        <div
+                          id={sectionId}
+                          className={`accordion-collapse collapse${open ? " show" : ""}`}
+                          aria-labelledby={`${sectionId}-heading`}
+                        >
+                          <div className="accordion-body d-flex flex-column gap-2">
+                            {group.items.map((item) => {
+                              const notesMissing =
+                                item.answer === "NO" && !(item.notes ?? "").trim();
+                              return (
+                                <div className="card" key={item.id}>
+                                  <div className="card-body py-3">
+                                    <div className="d-flex flex-wrap align-items-start justify-content-between gap-3">
+                                      <div className="fw-medium flex-grow-1 pe-lg-3" style={{ minWidth: 0 }}>
+                                        {item.label}
+                                        {item.answer === "NO" ? (
+                                          <div className="mt-2">
+                                            {notesMissing ? (
+                                              <button
+                                                type="button"
+                                                className="btn btn-sm btn-danger"
+                                                disabled={!canManage}
+                                                onClick={() => openFindingNotes(item.id)}
+                                              >
+                                                Add required notes
+                                              </button>
+                                            ) : (
+                                              <button
+                                                type="button"
+                                                className="btn btn-link btn-sm text-start p-0"
+                                                disabled={!canManage}
+                                                onClick={() => openFindingNotes(item.id)}
+                                              >
+                                                <span className="text-danger fw-semibold">No</span>
+                                                <span className="text-muted"> — {(item.notes ?? "").slice(0, 120)}
+                                                  {(item.notes ?? "").length > 120 ? "…" : ""}
+                                                </span>
+                                              </button>
+                                            )}
+                                          </div>
+                                        ) : null}
+                                      </div>
+                                      <div
+                                        className="btn-group flex-shrink-0 ms-auto"
+                                        role="group"
+                                        aria-label={`Answer ${item.label}`}
+                                      >
+                                        {(["YES", "NO", "NA"] as const).map((answer) => (
+                                          <button
+                                            key={answer}
+                                            type="button"
+                                            className={`btn btn-sm ${
+                                              item.answer === answer
+                                                ? answer === "NO"
+                                                  ? "btn-danger"
+                                                  : answer === "YES"
+                                                    ? "btn-success"
+                                                    : "btn-secondary"
+                                                : "btn-outline-secondary"
+                                            }`}
+                                            disabled={!canManage}
+                                            onClick={() => setAnswer(item.id, answer)}
+                                          >
+                                            {answer === "YES" ? "Yes" : answer === "NO" ? "No" : "N/A"}
+                                          </button>
+                                        ))}
+                                      </div>
+                                    </div>
+                                  </div>
                                 </div>
-                              ) : null}
-                            </div>
-                          ) : null}
+                              );
+                            })}
+                          </div>
                         </div>
                       </div>
                     );
@@ -799,6 +1386,7 @@ export function InspectionsWorkspace({ moduleName }: { moduleName: string }) {
                 <thead>
                   <tr>
                     <th>Department</th>
+                    <th>Division</th>
                     <th>Current contact</th>
                     <th>Assign</th>
                   </tr>
@@ -807,6 +1395,7 @@ export function InspectionsWorkspace({ moduleName }: { moduleName: string }) {
                   {departments.map((dept) => (
                     <tr key={dept.id}>
                       <td>{dept.name}</td>
+                      <td>{dept.divisionName || "—"}</td>
                       <td>{dept.contactName || "—"}</td>
                       <td>
                         <select
@@ -831,6 +1420,131 @@ export function InspectionsWorkspace({ moduleName }: { moduleName: string }) {
           </div>
         ) : null}
       </ModuleWorkspaceTabs>
+
+      {notesModalItem && canManage ? (
+        // eslint-disable-next-line jsx-a11y/no-noninteractive-element-interactions, jsx-a11y/click-events-have-key-events
+        <div
+          className="modal fade show d-block"
+          tabIndex={-1}
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="insp-finding-notes-title"
+          style={{ background: "rgba(0,0,0,0.45)" }}
+          onClick={() => {
+            // Keep open until notes are filled (or Cancel clears the No).
+            if ((notesModalItem.notes ?? "").trim()) closeFindingNotes();
+            else setNotesModalError("Notes are required for a No finding.");
+          }}
+          onKeyDown={(ev) => {
+            if (ev.key === "Escape") {
+              if ((notesModalItem.notes ?? "").trim()) closeFindingNotes();
+              else setNotesModalError("Notes are required for a No finding.");
+            }
+          }}
+        >
+          {/* eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-noninteractive-element-interactions */}
+          <div
+            className="modal-dialog modal-dialog-centered modal-lg"
+            role="document"
+            onClick={(ev) => ev.stopPropagation()}
+          >
+            <div className="modal-content">
+              <div className="modal-header">
+                <div className="min-w-0">
+                  <h5 className="modal-title mb-0" id="insp-finding-notes-title">
+                    Finding notes required
+                  </h5>
+                  <p className="text-muted small mb-0 text-truncate">{notesModalItem.label}</p>
+                </div>
+              </div>
+              <div className="modal-body">
+                <p className="small text-danger mb-3">
+                  Selecting <strong>No</strong> requires notes before you continue. Add a photo when
+                  possible.
+                </p>
+                {notesModalError ? (
+                  <div className="alert alert-danger py-2" role="alert">
+                    {notesModalError}
+                  </div>
+                ) : null}
+                <label className="form-label" htmlFor={`notes-modal-${notesModalItem.id}`}>
+                  Notes <span className="text-danger">*</span>
+                </label>
+                <textarea
+                  id={`notes-modal-${notesModalItem.id}`}
+                  className={`form-control mb-3${notesModalError ? " is-invalid" : ""}`}
+                  rows={4}
+                  required
+                  value={notesModalItem.notes ?? ""}
+                  onChange={(ev) => {
+                    setNotesModalError(null);
+                    setNotes(notesModalItem.id, ev.target.value);
+                  }}
+                  placeholder="Describe the issue and what was observed…"
+                />
+                <div className="d-flex flex-wrap gap-2 mb-3">
+                  <label className="btn btn-outline-primary mb-0">
+                    <i className="bx bx-camera me-1" aria-hidden="true" />
+                    Take photo
+                    <input
+                      type="file"
+                      className="d-none"
+                      accept="image/*"
+                      capture="environment"
+                      onChange={(ev) => {
+                        void addPhotos(notesModalItem.id, ev.target.files);
+                        ev.target.value = "";
+                      }}
+                    />
+                  </label>
+                  <label className="btn btn-outline-secondary mb-0">
+                    <i className="bx bx-image-add me-1" aria-hidden="true" />
+                    Upload photo
+                    <input
+                      type="file"
+                      className="d-none"
+                      accept="image/*"
+                      multiple
+                      onChange={(ev) => {
+                        void addPhotos(notesModalItem.id, ev.target.files);
+                        ev.target.value = "";
+                      }}
+                    />
+                  </label>
+                </div>
+                {(notesModalItem.photos ?? []).length > 0 ? (
+                  <div className="d-flex flex-wrap gap-2">
+                    {(notesModalItem.photos ?? []).map((photo) => (
+                      <img
+                        key={photo.id}
+                        src={photo.dataUrl}
+                        alt={photo.fileName}
+                        className="rounded border"
+                        style={{ width: 112, height: 112, objectFit: "cover" }}
+                      />
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-muted small mb-0">No photos attached yet.</p>
+                )}
+              </div>
+              <div className="modal-footer">
+                <button type="button" className="btn btn-outline-secondary" onClick={cancelNoFinding}>
+                  Cancel (clear No)
+                </button>
+                <button
+                  type="button"
+                  className="btn btn-primary"
+                  disabled={!(notesModalItem.notes ?? "").trim()}
+                  onClick={closeFindingNotes}
+                >
+                  Save notes
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      ) : null}
     </section>
   );
 }

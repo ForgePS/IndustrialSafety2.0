@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   appendMvrAuditEntry,
+  mergeMvrAuditHistories,
   isEligibleForMvrSample,
   mvrSampleSize,
   parseMvrAuditHistory,
@@ -49,5 +50,17 @@ describe("mvr-sample", () => {
     );
     expect(history[0]?.year).toBe(2026);
     expect(parseMvrAuditHistory(history)).toHaveLength(2);
+  });
+
+  it("merges personnel and driver histories without duplicates", () => {
+    const shared = {
+      year: 2026,
+      auditedAt: "2026-08-20T12:00:00.000Z",
+      auditedByName: "Auditor",
+      driverId: "d1",
+      notes: "",
+    };
+    const merged = mergeMvrAuditHistories([shared], [shared]);
+    expect(merged).toHaveLength(1);
   });
 });

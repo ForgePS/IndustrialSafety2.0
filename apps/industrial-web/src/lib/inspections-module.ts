@@ -3,6 +3,8 @@
  * and run/report payloads.
  */
 
+import { apiSend } from "@forge/web-kit";
+
 export type InspectionAnswer = "YES" | "NO" | "NA" | null;
 
 export type InspectionTemplateItem = {
@@ -76,6 +78,14 @@ function textOf(value: unknown): string {
   return "";
 }
 
+/** Drop trailing source labels that got baked into imported template titles. */
+export function cleanInspectionTemplateName(name: string): string {
+  return name
+    .replace(/\s*\((?:imported|ehs|builtin)\)\s*$/i, "")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
 function slugId(prefix: string, label: string, index: number): string {
   const base = label
     .toLowerCase()
@@ -93,9 +103,44 @@ export function formatInspectionTitleDate(date: Date = new Date()): string {
   return `${yy}-${mm}-${dd}`;
 }
 
-export function defaultInspectionTitle(departmentName: string, date: Date = new Date()): string {
-  const dept = departmentName.trim() || "Inspection";
-  return `${formatInspectionTitleDate(date)} ${dept}`;
+/**
+ * Default inspection name: `yy-mm-dd Division, Department`.
+ * A bare string is treated as department-only (legacy callers).
+ */
+export function defaultInspectionTitle(
+  input: string | { divisionName?: string | null; departmentName?: string | null },
+  date: Date = new Date(),
+): string {
+  const datePart = formatInspectionTitleDate(date);
+  if (typeof input === "string") {
+    const dept = input.trim() || "Inspection";
+    return `${datePart} ${dept}`;
+  }
+  const division = String(input.divisionName ?? "").trim();
+  const department = String(input.departmentName ?? "").trim();
+  if (division && department) return `${datePart} ${division}, ${department}`;
+  if (division) return `${datePart} ${division}`;
+  if (department) return `${datePart} ${department}`;
+  return `${datePart} Inspection`;
+}
+
+/** Human label for list/report inspection type (template preferred). */
+export function inspectionTypeLabel(row: {
+  inspectionType?: string | null;
+  templateName?: string | null;
+  sourcePayload?: unknown;
+}): string {
+  const payload =
+    row.sourcePayload && typeof row.sourcePayload === "object" && !Array.isArray(row.sourcePayload)
+      ? (row.sourcePayload as Record<string, unknown>)
+      : {};
+  const template =
+    String(row.templateName ?? "").trim() ||
+    String(payload.templateName ?? "").trim();
+  if (template) return template;
+  const type = String(row.inspectionType ?? payload.inspectionType ?? "").trim();
+  if (!type) return "—";
+  return type.replaceAll("_", " ");
 }
 
 function pushItem(
@@ -230,12 +275,13 @@ export function templateFromLegacyRow(row: {
       payload,
   );
   if (items.length === 0) return null;
-  const name =
+  const name = cleanInspectionTemplateName(
     textOf(row.name) ||
-    textOf(row.title) ||
-    textOf(payload.name) ||
-    textOf(payload.title) ||
-    "Imported template";
+      textOf(row.title) ||
+      textOf(payload.name) ||
+      textOf(payload.title) ||
+      "Imported template",
+  );
   const departmentHint =
     row.departmentHint ||
     textOf(payload.departmentName) ||
@@ -251,6 +297,54 @@ export function templateFromLegacyRow(row: {
   };
 }
 
+const SOURCE_RANK: Record<InspectionTemplate["source"], number> = {
+  ehs: 0,
+  imported: 1,
+  builtin: 2,
+};
+
+function templateNameKey(name: string): string {
+  return cleanInspectionTemplateName(name).toLowerCase().replace(/\s+/g, " ");
+}
+
+function preferInspectionTemplate(
+  current: InspectionTemplate,
+  candidate: InspectionTemplate,
+): InspectionTemplate {
+  if (candidate.items.length !== current.items.length) {
+    return candidate.items.length > current.items.length ? candidate : current;
+  }
+  return SOURCE_RANK[candidate.source] < SOURCE_RANK[current.source] ? candidate : current;
+}
+
+/** Collapse duplicate templates that share an id or the same display name. */
+export function dedupeInspectionTemplates(
+  templates: readonly InspectionTemplate[],
+): InspectionTemplate[] {
+  const byId = new Map<string, InspectionTemplate>();
+  for (const template of templates) {
+    const cleaned: InspectionTemplate = {
+      ...template,
+      name: cleanInspectionTemplateName(template.name) || template.name,
+    };
+    const existing = byId.get(cleaned.id);
+    byId.set(cleaned.id, existing ? preferInspectionTemplate(existing, cleaned) : cleaned);
+  }
+
+  const byName = new Map<string, InspectionTemplate>();
+  for (const template of byId.values()) {
+    const key = templateNameKey(template.name);
+    const existing = byName.get(key);
+    byName.set(key, existing ? preferInspectionTemplate(existing, template) : template);
+  }
+
+  return [...byName.values()].sort((a, b) => {
+    const sourceCmp = SOURCE_RANK[a.source] - SOURCE_RANK[b.source];
+    if (sourceCmp !== 0) return sourceCmp;
+    return a.name.localeCompare(b.name, undefined, { sensitivity: "base", numeric: true });
+  });
+}
+
 export function itemsFromTemplate(template: InspectionTemplate): InspectionRunItem[] {
   return template.items.map((item) => ({
     ...item,
@@ -262,6 +356,25 @@ export function itemsFromTemplate(template: InspectionTemplate): InspectionRunIt
 
 export function noFindingItems(items: readonly InspectionRunItem[]): InspectionRunItem[] {
   return items.filter((item) => item.answer === "NO");
+}
+
+/** Group checklist items by category/section heading (preserves first-seen order). */
+export function groupInspectionItemsBySection<T extends { section?: string }>(
+  items: readonly T[],
+): Array<{ section: string; items: T[] }> {
+  const groups: Array<{ section: string; items: T[] }> = [];
+  const indexBySection = new Map<string, number>();
+  for (const item of items) {
+    const section = (item.section ?? "").trim() || "General";
+    let idx = indexBySection.get(section);
+    if (idx === undefined) {
+      idx = groups.length;
+      indexBySection.set(section, idx);
+      groups.push({ section, items: [] });
+    }
+    groups[idx]!.items.push(item);
+  }
+  return groups;
 }
 
 export function inspectionNeedsNotes(item: InspectionRunItem): boolean {
@@ -352,4 +465,61 @@ export function statusBadgeClass(status: string): string {
   if (s === "IN_PROGRESS" || s === "OPEN" || s === "ACTIVE") return "bg-label-primary";
   if (s === "DRAFT") return "bg-label-secondary";
   return "bg-label-warning";
+}
+
+export type InspectionTemplateImportResult = {
+  template: InspectionTemplate;
+  created: boolean;
+  updated: boolean;
+  itemCount: number;
+};
+
+async function readFileAsBase64(file: File): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => {
+      const result = reader.result;
+      if (typeof result !== "string") {
+        reject(new Error("Could not read file"));
+        return;
+      }
+      const comma = result.indexOf(",");
+      resolve(comma >= 0 ? result.slice(comma + 1) : result);
+    };
+    reader.onerror = () => reject(reader.error ?? new Error("Could not read file"));
+    reader.readAsDataURL(file);
+  });
+}
+
+/** Upload Excel/CSV/PDF and create a digital inspection template. */
+export async function importInspectionTemplateFile(
+  file: File,
+  overrides?: { title?: string; departmentHint?: string; preview?: boolean },
+): Promise<InspectionTemplateImportResult> {
+  const contentBase64 = await readFileAsBase64(file);
+  return apiSend<InspectionTemplateImportResult>(
+    "/api/v1/industrial/inspection-templates/import-file",
+    "POST",
+    {
+      filename: file.name,
+      contentBase64,
+      ...(overrides?.title?.trim() ? { title: overrides.title.trim() } : {}),
+      ...(overrides?.departmentHint?.trim()
+        ? { departmentHint: overrides.departmentHint.trim() }
+        : {}),
+      ...(overrides?.preview ? { preview: true } : {}),
+    },
+  );
+}
+
+/** Rename a digital inspection template. */
+export async function renameInspectionTemplate(
+  templateId: string,
+  name: string,
+): Promise<InspectionTemplate> {
+  return apiSend<InspectionTemplate>(
+    `/api/v1/industrial/inspection-templates/${encodeURIComponent(templateId)}`,
+    "PATCH",
+    { name },
+  );
 }

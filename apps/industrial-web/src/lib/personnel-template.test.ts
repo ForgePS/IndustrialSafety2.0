@@ -67,8 +67,9 @@ describe("personnel Add Person template", () => {
     expect(byName.get("fileBase")?.group).toBe("Records");
   });
 
-  it("uses a checkbox for the driver flag and a textarea for notes", () => {
+  it("uses checkboxes for driver flags and a textarea for notes", () => {
     const byName = new Map(OPS_MODULE_CONFIG.personnel.createFields.map((f) => [f.name, f]));
+    expect(byName.get("isDotDriver")?.type).toBe("checkbox");
     expect(byName.get("isCompanyDriver")?.type).toBe("checkbox");
     expect(byName.get("notes")?.type).toBe("textarea");
   });

@@ -12,12 +12,20 @@
  */
 
 export function normalizeSearchText(value: string): string {
-  return value
-    .normalize("NFKD")
+  const normalized = safeUnicodeNormalize(value);
+  return normalized
     .replace(/[\u0300-\u036f]/g, "")
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, " ")
     .trim();
+}
+
+function safeUnicodeNormalize(value: string): string {
+  try {
+    return value.normalize("NFKD");
+  } catch {
+    return value.replace(/[\uD800-\uDFFF]/g, "");
+  }
 }
 
 export function searchTokens(query: string): string[] {

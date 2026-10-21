@@ -10,6 +10,16 @@ import { PersonnelQuickNav } from "@/components/personnel-quick-nav";
 import { SeasonalWorkforceWorkspace } from "@/components/seasonal-workforce-workspace";
 import { parsePersonnelQuickView, type PersonnelQuickView } from "@/lib/personnel-quick-nav";
 import { isSeasonalLifecycleEnabled } from "@/lib/personnel-seasonal";
+import dynamic from "next/dynamic";
+
+const FirstAidDirectory = dynamic(
+  () =>
+    import("@/components/first-aid-directory").then((mod) => mod.FirstAidDirectory),
+  {
+    ssr: false,
+    loading: () => <p className="text-muted mb-0">Loading First Aid…</p>,
+  },
+);
 
 type Bootstrap = {
   industrialEnabled: boolean;
@@ -56,7 +66,7 @@ function PersonnelWorkspaceInner({ moduleName }: { moduleName: string }) {
   const showSwitcher = Boolean(canView && flagsKnown);
 
   return (
-    <div className="ind-personnel">
+    <div className="ind-personnel" data-walkthrough="personnel-overview">
       {canView ? <PersonnelQuickNav current={quickView} /> : null}
 
       {showSwitcher ? (
@@ -97,6 +107,8 @@ function PersonnelWorkspaceInner({ moduleName }: { moduleName: string }) {
         <CompanyDriversDirectory />
       ) : quickView === "ppe-allowance" ? (
         <PersonnelPpeDirectory />
+      ) : quickView === "first-aid" ? (
+        <FirstAidDirectory moduleName="First Aid" />
       ) : (
         <PersonnelDirectory moduleName={moduleName} view={quickView} />
       )}

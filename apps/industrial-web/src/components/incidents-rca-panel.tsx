@@ -1,9 +1,12 @@
 "use client";
 
 import { useEffect, useState, type FormEvent } from "react";
+import { ApiError, apiSend } from "@forge/web-kit";
+import { openPrintableHtmlPopup } from "@/lib/dvir";
 import {
   emptyCorrectiveAction,
   ensureRootCauseAnalysis,
+  fiveWhySeedQuestion,
   incidentOptionLabel,
   type CorrectiveAction,
   type IncidentRecord,
@@ -23,6 +26,7 @@ export function IncidentsRcaPanel({ incidents, canManage, onSave }: Props) {
   const [contributingFactors, setContributingFactors] = useState<string[]>([""]);
   const [rootCause, setRootCause] = useState("");
   const [fiveWhys, setFiveWhys] = useState<string[]>(["", "", "", "", ""]);
+  const [fiveWhyQuestions, setFiveWhyQuestions] = useState<string[]>(["", "", "", "", ""]);
   const [correctiveActions, setCorrectiveActions] = useState<CorrectiveAction[]>([
     emptyCorrectiveAction(),
   ]);
@@ -30,6 +34,7 @@ export function IncidentsRcaPanel({ incidents, canManage, onSave }: Props) {
   const [participants, setParticipants] = useState<string[]>([""]);
   const [eventDate, setEventDate] = useState("");
   const [saving, setSaving] = useState(false);
+  const [printing, setPrinting] = useState(false);
   const [saved, setSaved] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -42,6 +47,7 @@ export function IncidentsRcaPanel({ incidents, canManage, onSave }: Props) {
       setContributingFactors([""]);
       setRootCause("");
       setFiveWhys(["", "", "", "", ""]);
+      setFiveWhyQuestions(["", "", "", "", ""]);
       setCorrectiveActions([emptyCorrectiveAction()]);
       setConductedBy("");
       setParticipants([""]);
@@ -55,6 +61,7 @@ export function IncidentsRcaPanel({ incidents, canManage, onSave }: Props) {
     setContributingFactors(next.contributingFactors);
     setRootCause(next.rootCause);
     setFiveWhys(next.fiveWhys);
+    setFiveWhyQuestions(next.fiveWhyQuestions);
     setCorrectiveActions(next.correctiveActions);
     setConductedBy(next.conductedBy);
     setParticipants(next.participantsInvolved);
@@ -67,6 +74,43 @@ export function IncidentsRcaPanel({ incidents, canManage, onSave }: Props) {
     setSaved(false);
   }
 
+  function currentRca(conductedAt: string): RootCauseAnalysis {
+    return {
+      incidentSummary: summary.trim(),
+      immediateActions: immediateActions.trim(),
+      contributingFactors: contributingFactors.map((f) => f.trim()).filter(Boolean),
+      rootCause: rootCause.trim(),
+      fiveWhys: fiveWhys.map((w) => w.trim()),
+      fiveWhyQuestions: fiveWhyQuestions.map((q) => q.trim()),
+      correctiveActions: correctiveActions.filter((a) => a.action.trim()),
+      conductedBy: conductedBy.trim(),
+      conductedAt,
+      participantsInvolved: participants.map((p) => p.trim()).filter(Boolean),
+      eventDate,
+    };
+  }
+
+  async function printReport() {
+    if (!selected) return;
+    setPrinting(true);
+    setError(null);
+    try {
+      const saved = selected.rootCauseAnalysis?.conductedAt;
+      const data = await apiSend<{ html?: string }>(
+        `/api/v1/industrial/incidents/${encodeURIComponent(selected.id)}/rca/printable`,
+        "POST",
+        { rootCauseAnalysis: currentRca(saved || new Date().toISOString()) },
+      );
+      if (!data?.html) throw new Error("The report came back empty.");
+      const blocked = openPrintableHtmlPopup(data.html, true);
+      if (blocked) setError(blocked);
+    } catch (e) {
+      setError(e instanceof ApiError ? e.message : e instanceof Error ? e.message : "Could not build the report");
+    } finally {
+      setPrinting(false);
+    }
+  }
+
   async function onSubmit(event: FormEvent) {
     event.preventDefault();
     if (!selected || !canManage) return;
@@ -77,18 +121,7 @@ export function IncidentsRcaPanel({ incidents, canManage, onSave }: Props) {
     setSaving(true);
     setError(null);
     try {
-      await onSave(selected.id, {
-        incidentSummary: summary.trim(),
-        immediateActions: immediateActions.trim(),
-        contributingFactors: contributingFactors.map((f) => f.trim()).filter(Boolean),
-        rootCause: rootCause.trim(),
-        fiveWhys,
-        correctiveActions: correctiveActions.filter((a) => a.action.trim()),
-        conductedBy: conductedBy.trim(),
-        conductedAt: new Date().toISOString(),
-        participantsInvolved: participants.map((p) => p.trim()).filter(Boolean),
-        eventDate,
-      });
+      await onSave(selected.id, currentRca(new Date().toISOString()));
       setSaved(true);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Failed to save root cause analysis");
@@ -150,6 +183,17 @@ export function IncidentsRcaPanel({ incidents, canManage, onSave }: Props) {
         </div>
       ) : (
         <>
+          <div className="d-flex justify-content-end mb-n2">
+            <button
+              type="button"
+              className="btn btn-sm btn-outline-secondary"
+              disabled={printing}
+              onClick={() => void printReport()}
+            >
+              <i className="bx bx-printer me-1" />
+              {printing ? "Building report…" : "Print RCA report"}
+            </button>
+          </div>
           <div className="card border shadow-none">
             <div className="card-header">
               <h6 className="card-title mb-0">Analysis team</h6>
@@ -287,28 +331,64 @@ export function IncidentsRcaPanel({ incidents, canManage, onSave }: Props) {
               <h6 className="card-title mb-0">5 Why analysis</h6>
             </div>
             <div className="card-body">
-              {fiveWhys.map((why, index) => (
-                <div className="mb-3" key={`why-${index}`}>
-                  <label className="form-label" htmlFor={`rca-why-${index}`}>
-                    Why {index + 1}
-                  </label>
-                  <input
-                    id={`rca-why-${index}`}
-                    className="form-control"
-                    disabled={!canManage}
-                    placeholder={
-                      index === 0
-                        ? "Why did the incident occur?"
-                        : "Why did the previous answer happen?"
-                    }
-                    value={why}
-                    onChange={(ev) => {
-                      setFiveWhys((prev) => prev.map((w, i) => (i === index ? ev.target.value : w)));
-                      touch();
-                    }}
-                  />
-                </div>
-              ))}
+              {fiveWhys.map((answer, index) => {
+                const questionPlaceholder = fiveWhySeedQuestion(index, {
+                  incidentTitle: selected?.title,
+                  previousAnswer: index > 0 ? fiveWhys[index - 1] : "",
+                });
+                return (
+                  <div className="border rounded p-3 mb-3" key={`why-${index}`}>
+                    <h6 className="mb-2">Why {index + 1}</h6>
+                    <div className="mb-2">
+                      <label className="form-label" htmlFor={`rca-why-q-${index}`}>
+                        Question
+                      </label>
+                      <input
+                        id={`rca-why-q-${index}`}
+                        className="form-control"
+                        disabled={!canManage}
+                        placeholder={questionPlaceholder}
+                        value={fiveWhyQuestions[index] ?? ""}
+                        onChange={(ev) => {
+                          setFiveWhyQuestions((prev) =>
+                            prev.map((q, i) => (i === index ? ev.target.value : q)),
+                          );
+                          touch();
+                        }}
+                      />
+                    </div>
+                    <div>
+                      <label className="form-label" htmlFor={`rca-why-a-${index}`}>
+                        Answer
+                      </label>
+                      <textarea
+                        id={`rca-why-a-${index}`}
+                        className="form-control"
+                        rows={2}
+                        disabled={!canManage}
+                        placeholder="Because…"
+                        value={answer}
+                        onChange={(ev) => {
+                          const nextAnswer = ev.target.value;
+                          if (index < fiveWhys.length - 1) {
+                            const oldSeed = fiveWhySeedQuestion(index + 1, { previousAnswer: answer });
+                            const newSeed = fiveWhySeedQuestion(index + 1, { previousAnswer: nextAnswer });
+                            setFiveWhyQuestions((prev) =>
+                              prev.map((q, i) =>
+                                i === index + 1 && (!q.trim() || q === oldSeed) ? newSeed : q,
+                              ),
+                            );
+                          }
+                          setFiveWhys((prev) =>
+                            prev.map((w, i) => (i === index ? nextAnswer : w)),
+                          );
+                          touch();
+                        }}
+                      />
+                    </div>
+                  </div>
+                );
+              })}
               <div className="mb-0">
                 <label className="form-label" htmlFor="rca-root">
                   Root Cause <span className="text-danger">*</span>
@@ -441,13 +521,22 @@ export function IncidentsRcaPanel({ incidents, canManage, onSave }: Props) {
             </div>
           ) : null}
 
-          {canManage ? (
-            <div>
+          <div className="d-flex flex-wrap gap-2">
+            {canManage ? (
               <button type="submit" className="btn btn-primary" disabled={saving}>
                 {saving ? "Saving…" : "Save root cause analysis"}
               </button>
-            </div>
-          ) : null}
+            ) : null}
+            <button
+              type="button"
+              className="btn btn-outline-secondary"
+              disabled={printing}
+              onClick={() => void printReport()}
+            >
+              <i className="bx bx-printer me-1" />
+              {printing ? "Building report…" : "Print report"}
+            </button>
+          </div>
         </>
       )}
     </form>

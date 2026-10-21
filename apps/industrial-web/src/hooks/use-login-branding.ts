@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { pickThemeLogoUrl } from "@forge/contracts";
 import { useAuth } from "@forge/web-kit";
 import { useIndustrialThemeMode } from "@/components/theme-mode-toggle";
+import { sameOriginBrandingLogoUrl } from "@/lib/branding-logo-url";
 import { vanityLoginBrandingForHost } from "@/lib/vanity-login-branding";
 import { useTenantBranding, type TenantBranding } from "./use-tenant-branding";
 
@@ -35,10 +36,15 @@ function resolveLoginBranding(
   const logoUrl = pickThemeLogoUrl({
     theme,
     ...(login?.logoUrl || branding?.logoUrl
-      ? { logoLightUrl: login?.logoUrl || branding?.logoUrl || null }
+      ? {
+          logoLightUrl: sameOriginBrandingLogoUrl(login?.logoUrl || branding?.logoUrl) || null,
+        }
       : {}),
     ...(login?.logoDarkUrl || branding?.logoDarkUrl
-      ? { logoDarkUrl: login?.logoDarkUrl || branding?.logoDarkUrl || null }
+      ? {
+          logoDarkUrl:
+            sameOriginBrandingLogoUrl(login?.logoDarkUrl || branding?.logoDarkUrl) || null,
+        }
       : {}),
     fallbackUrl: DEFAULT_LOGIN.logoUrl,
   });
@@ -95,12 +101,34 @@ export function useLoginBranding() {
     if (bundled?.tenantId) {
       setHostTenantId(bundled.tenantId);
     }
+
+    const lower = host.toLowerCase();
+    const skipRemote =
+      lower.endsWith(".cloudfront.net") ||
+      lower === "localhost" ||
+      lower === "127.0.0.1" ||
+      lower.endsWith(".local");
+    if (skipRemote) {
+      if (bundled) {
+        setHostLogin(bundled.login);
+        setHostPrimaryColor("");
+      }
+      setLoadingHost(false);
+      return;
+    }
+
+    const controller = new AbortController();
+    const timeout = window.setTimeout(() => {
+      controller.abort();
+      if (!cancelled) setLoadingHost(false);
+    }, 2500);
+
     void (async () => {
       setLoadingHost(true);
       try {
         const res = await fetch(
           `${apiBase()}/api/v1/public/login-branding?host=${encodeURIComponent(host)}`,
-          { credentials: "omit" },
+          { credentials: "omit", signal: controller.signal },
         );
         if (!res.ok) {
           if (!cancelled) {
@@ -117,10 +145,20 @@ export function useLoginBranding() {
         }
         const json = (await res.json()) as ApiEnvelope<PublicLoginBrandingResponse>;
         if (cancelled) return;
-        setHostLogin({
+        const nextLogin: ResolvedLoginBranding & { logoDarkUrl?: string } = {
           ...json.data.login,
-          ...(json.data.logoDarkUrl ? { logoDarkUrl: json.data.logoDarkUrl } : {}),
-        });
+          logoUrl:
+            sameOriginBrandingLogoUrl(json.data.login.logoUrl) ||
+            bundled?.login.logoUrl ||
+            json.data.login.logoUrl,
+        };
+        const darkRaw = json.data.logoDarkUrl || json.data.login.logoDarkUrl;
+        const darkUrl =
+          (darkRaw ? sameOriginBrandingLogoUrl(darkRaw) : "") ||
+          bundled?.login.logoDarkUrl ||
+          "";
+        if (darkUrl) nextLogin.logoDarkUrl = darkUrl;
+        setHostLogin(nextLogin);
         setHostPrimaryColor(json.data.primaryColor?.trim() || "");
         if (!bundled?.tenantId) {
           setHostTenantId(null);
@@ -136,11 +174,14 @@ export function useLoginBranding() {
           }
         }
       } finally {
+        window.clearTimeout(timeout);
         if (!cancelled) setLoadingHost(false);
       }
     })();
     return () => {
       cancelled = true;
+      controller.abort();
+      window.clearTimeout(timeout);
     };
   }, []);
 

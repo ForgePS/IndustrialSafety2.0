@@ -3,6 +3,7 @@
 import { useEffect, useState, type FormEvent } from "react";
 import { ApiError, apiGet, apiSend, useAuth } from "@forge/web-kit";
 import { ModuleUnavailable } from "@/components/module-unavailable";
+import { useIndustrialModuleGate } from "@/hooks/use-industrial-module-gate";
 import {
   COMPLIANCE_MODULE_CONFIG,
   type Ind6ComplianceModule,
@@ -12,18 +13,6 @@ type ListResponse = {
   items: Array<Record<string, unknown>>;
   page: number;
   pageSize: number;
-};
-
-type BootstrapModule = {
-  code: string;
-  awsEnabled: boolean;
-  available: boolean;
-  migrationStatus: string;
-};
-
-type Bootstrap = {
-  industrialEnabled: boolean;
-  modules: BootstrapModule[];
 };
 
 export function ComplianceWorkspace({
@@ -42,8 +31,11 @@ export function ComplianceWorkspace({
     !cfg.sensitivePerm ||
     permissions.has(cfg.sensitivePerm) ||
     permissions.has("industrial.admin");
+  const { modEntry, explicitlyDisabled, awsReady } = useIndustrialModuleGate({
+    moduleCode: cfg.code,
+    canView,
+  });
 
-  const [bootstrap, setBootstrap] = useState<Bootstrap | null>(null);
   const [items, setItems] = useState<Array<Record<string, unknown>>>([]);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [detail, setDetail] = useState<Record<string, unknown> | null>(null);
@@ -57,27 +49,6 @@ export function ComplianceWorkspace({
   const [locationText, setLocationText] = useState("");
   const [workerName, setWorkerName] = useState("");
   const [incidentId, setIncidentId] = useState("");
-
-  const modEntry = bootstrap?.modules.find((m) => m.code === cfg.code);
-  const awsReady =
-    Boolean(bootstrap?.industrialEnabled) && Boolean(modEntry?.awsEnabled) && canView;
-
-  useEffect(() => {
-    let cancelled = false;
-    (async () => {
-      try {
-        const boot = await apiGet<Bootstrap>("/api/v1/industrial/bootstrap");
-        if (!cancelled) setBootstrap(boot);
-      } catch (e) {
-        if (!cancelled) {
-          setError(e instanceof ApiError ? e.message : "Failed to load module bootstrap");
-        }
-      }
-    })();
-    return () => {
-      cancelled = true;
-    };
-  }, []);
 
   async function loadList(search = q, st = status, cat = category) {
     setLoading(true);
@@ -132,21 +103,12 @@ export function ComplianceWorkspace({
     );
   }
 
-  if (bootstrap && !awsReady) {
+  if (explicitlyDisabled) {
     return (
       <ModuleUnavailable
         moduleName={moduleName}
         status={modEntry?.migrationStatus ?? "MIGRATION_IN_PROGRESS"}
       />
-    );
-  }
-
-  if (!bootstrap) {
-    return (
-      <section className="ind-state" role="status" aria-live="polite">
-        <h1>{moduleName}</h1>
-        <p>Checking module availability…</p>
-      </section>
     );
   }
 

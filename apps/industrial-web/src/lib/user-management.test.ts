@@ -31,12 +31,12 @@ describe("canAccessUserManagement", () => {
     ).toBe(true);
   });
 
-  it("hides the section from managers and unsigned-in users", () => {
+  it("hides the section from unsigned-in users and viewers without invite rights", () => {
     expect(canAccessUserManagement(null)).toBe(false);
     expect(
       canAccessUserManagement({
         isPlatformAdmin: false,
-        permissions: ["platform.membership.read", "platform.user.invite"],
+        permissions: ["platform.membership.read"],
       }),
     ).toBe(false);
     expect(
@@ -45,6 +45,15 @@ describe("canAccessUserManagement", () => {
         permissions: ["industrial.access", "industrial.personnel.view"],
       }),
     ).toBe(false);
+  });
+
+  it("allows Safety Directors who can invite users", () => {
+    expect(
+      canAccessUserManagement({
+        isPlatformAdmin: false,
+        permissions: ["platform.membership.read", "platform.user.invite"],
+      }),
+    ).toBe(true);
   });
 
   it("allows industrial tenant admins who hold several module manage grants", () => {
@@ -67,6 +76,15 @@ describe("canManageUserManagement / canInviteUsers", () => {
     const me = { isPlatformAdmin: true, permissions: [] };
     expect(canManageUserManagement(me)).toBe(true);
     expect(canInviteUsers(me)).toBe(true);
+  });
+
+  it("lets industrial admins edit membership roles and modules", () => {
+    expect(
+      canManageUserManagement({
+        isPlatformAdmin: false,
+        permissions: ["industrial.admin"],
+      }),
+    ).toBe(true);
   });
 
   it("requires invitation permissions to add users", () => {
@@ -114,16 +132,16 @@ describe("toDirectoryUsers", () => {
     );
 
     expect(users).toHaveLength(2);
-    expect(users[0]?.displayName).toBe("Ada Rice");
+    expect(users[0]?.displayName).toBe("ADA RICE");
     expect(users[0]?.verified).toBe(true);
     expect(users[0]?.roles[0]?.roleCode).toBe("INDUSTRIAL_TENANT_ADMIN");
-    expect(users[1]?.displayName).toBe("guest.user");
+    expect(users[1]?.displayName).toBe("GUEST.USER");
     expect(users[1]?.pending).toBe(true);
     expect(users[1]?.username).toBe("guest.user");
   });
 
   it("falls back to the email local part when no name is stored", () => {
-    expect(userDisplayName({ email: "john.doe@mill.test" })).toBe("john doe");
+    expect(userDisplayName({ email: "john.doe@mill.test" })).toBe("JOHN DOE");
   });
 });
 
@@ -165,7 +183,7 @@ describe("stats, search, pagination, export", () => {
   });
 
   it("filters by name or email", () => {
-    expect(filterDirectoryUsers(users, "john").map((row) => row.displayName)).toEqual(["John Doe"]);
+    expect(filterDirectoryUsers(users, "john").map((row) => row.displayName)).toEqual(["JOHN DOE"]);
   });
 
   it("pages the filtered list", () => {
@@ -179,17 +197,17 @@ describe("stats, search, pagination, export", () => {
   it("exports a CSV with a header row", () => {
     const csv = directoryUsersCsv(users);
     expect(csv.split("\n")[0]).toContain("Email");
-    expect(csv).toContain("Test Name");
+    expect(csv).toContain("TEST NAME");
   });
 });
 
 describe("preferredInviteRole", () => {
-  it("prefers industrial tenant admin when present", () => {
+  it("prefers least-privilege employee when present", () => {
     expect(
       preferredInviteRole([
         { code: "INDUSTRIAL_EMPLOYEE", name: "Employee" },
         { code: "INDUSTRIAL_TENANT_ADMIN", name: "Tenant Admin" },
       ]),
-    ).toBe("INDUSTRIAL_TENANT_ADMIN");
+    ).toBe("INDUSTRIAL_EMPLOYEE");
   });
 });

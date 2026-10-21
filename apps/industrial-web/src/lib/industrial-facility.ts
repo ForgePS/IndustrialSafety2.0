@@ -1,6 +1,15 @@
 /** Company-wide view in the header Facility selector. */
 export const ALL_FACILITIES_ID = "all";
 
+/** All departments at the selected location (or tenant-wide when no location is selected). */
+export const ALL_DEPARTMENTS_ID = "all";
+
+export type IndustrialDepartmentOption = {
+  id: string;
+  name: string;
+  siteId?: string | null;
+};
+
 export type IndustrialFacilityOption = {
   id: string;
   name: string;
@@ -8,6 +17,10 @@ export type IndustrialFacilityOption = {
 
 export function facilityStorageKey(tenantId: string): string {
   return `forge-ind-active-facility-id:${tenantId}`;
+}
+
+export function departmentStorageKey(tenantId: string, facilityId: string): string {
+  return `forge-ind-active-department-id:${tenantId}:${facilityId}`;
 }
 
 function asRecord(value: unknown): Record<string, unknown> | null {
@@ -47,22 +60,87 @@ export function normalizeFacilityOptions(payload: unknown): IndustrialFacilityOp
   return options.sort((a, b) => a.name.localeCompare(b.name));
 }
 
+/** Prefer company-wide view unless the user explicitly chose a facility. */
 export function pickActiveFacilityId(
   options: IndustrialFacilityOption[],
   stored: string | null | undefined,
 ): string {
-  if (stored === ALL_FACILITIES_ID && options.length > 1) return ALL_FACILITIES_ID;
+  if (stored === ALL_FACILITIES_ID) return ALL_FACILITIES_ID;
   if (stored && options.some((option) => option.id === stored)) return stored;
-  if (options.length === 1) return options[0]!.id;
   return ALL_FACILITIES_ID;
 }
 
 /** Query extras for industrial list/dashboard endpoints. */
 export function facilityListQuery(
   facilityId: string | null | undefined,
+  facilityName?: string | null,
 ): Record<string, string | undefined> {
   if (!facilityId || facilityId === ALL_FACILITIES_ID) return {};
-  return { siteId: facilityId, facilityId };
+  const siteName = facilityName?.trim();
+  return {
+    siteId: facilityId,
+    facilityId,
+    ...(siteName ? { siteName } : {}),
+  };
+}
+
+/** Normalize industrial department catalog rows for header selectors. */
+export function normalizeDepartmentOptions(payload: unknown): IndustrialDepartmentOption[] {
+  const options: IndustrialDepartmentOption[] = [];
+  const seen = new Set<string>();
+  for (const row of rowsFromPayload(payload)) {
+    const rec = asRecord(row);
+    if (!rec) continue;
+    if (rec.archivedAt) continue;
+    if (typeof rec.status === "string" && rec.status !== "" && rec.status.toUpperCase() !== "ACTIVE") {
+      continue;
+    }
+    const id = typeof rec.id === "string" ? rec.id.trim() : "";
+    if (!id || seen.has(id)) continue;
+    const name = [rec.name, rec.label, rec.title].find(
+      (value) => typeof value === "string" && value.trim() !== "",
+    );
+    let siteId: string | null = null;
+    if (typeof rec.siteId === "string" && rec.siteId.trim() !== "") {
+      siteId = rec.siteId.trim();
+    }
+    seen.add(id);
+    options.push({ id, name: String(name ?? id).trim(), siteId });
+  }
+  return options.sort((a, b) => a.name.localeCompare(b.name));
+}
+
+export function pickActiveDepartmentId(
+  options: IndustrialDepartmentOption[],
+  stored: string | null | undefined,
+): string {
+  if (stored === ALL_DEPARTMENTS_ID) return ALL_DEPARTMENTS_ID;
+  if (stored && options.some((option) => option.id === stored)) return stored;
+  return ALL_DEPARTMENTS_ID;
+}
+
+export function departmentListQuery(
+  departmentId: string | null | undefined,
+  departmentName?: string | null,
+): Record<string, string | undefined> {
+  if (!departmentId || departmentId === ALL_DEPARTMENTS_ID) return {};
+  const name = departmentName?.trim();
+  return {
+    departmentId,
+    ...(name ? { departmentName: name } : {}),
+  };
+}
+
+export function scopeListQuery(
+  facilityId: string | null | undefined,
+  facilityName?: string | null,
+  departmentId?: string | null,
+  departmentName?: string | null,
+): Record<string, string | undefined> {
+  return {
+    ...facilityListQuery(facilityId, facilityName),
+    ...departmentListQuery(departmentId, departmentName),
+  };
 }
 
 export function matchesFacilitySelection(
@@ -72,7 +150,7 @@ export function matchesFacilitySelection(
 ): boolean {
   if (!facilityId || facilityId === ALL_FACILITIES_ID) return true;
   if (row.siteId && row.siteId === facilityId) return true;
-  const name = options.find((option) => option.id === facilityId)?.name.trim().toLowerCase();
+  const name = options.find((option) => option.id === facilityId)?.name?.trim().toLowerCase();
   if (!name) return false;
   const label = String(row.siteLabel ?? "").trim().toLowerCase();
   return label === name || (label !== "" && label.includes(name));

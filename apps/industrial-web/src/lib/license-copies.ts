@@ -4,15 +4,25 @@
  * on the personnel record; both resolve to a viewable image src.
  */
 
+import { licenseDocumentIdFromUpload } from "./personnel-license-upload";
+
 export type LicenseCopies = {
   front: string | null;
   back: string | null;
 };
 
-/** Rough cap so a high-res phone photo cannot bloat the personnel row. */
-export const MAX_LICENSE_DATA_URL_LENGTH = 1_500_000;
+/**
+ * Cap for inlined license JPEG data URLs. Matches the industrial API
+ * document/dataUrl guard (3.5M) so phone photos can survive compression.
+ */
+export const MAX_LICENSE_DATA_URL_LENGTH = 3_500_000;
 
-export function uploadImageSrc(raw: unknown): string | null {
+export function uploadImageSrc(
+  raw: unknown,
+  seen?: Set<object>,
+  depth = 0,
+): string | null {
+  if (depth > 12) return null;
   if (typeof raw === "string") {
     const value = raw.trim();
     if (value === "") return null;
@@ -20,9 +30,12 @@ export function uploadImageSrc(raw: unknown): string | null {
     return null;
   }
   if (!raw || typeof raw !== "object" || Array.isArray(raw)) return null;
+  const visited = seen ?? new Set<object>();
+  if (visited.has(raw)) return null;
+  visited.add(raw);
   const entry = raw as Record<string, unknown>;
   for (const key of ["dataUrl", "url", "downloadURL", "downloadUrl", "src", "href"]) {
-    const nested = uploadImageSrc(entry[key]);
+    const nested = uploadImageSrc(entry[key], visited, depth + 1);
     if (nested) return nested;
   }
   return null;
@@ -64,19 +77,27 @@ export function toLicenseUpload(
  * Also accepts a single `driversLicenseCopy` document when it is image-like.
  */
 export function personnelLicenseCopies(record: Record<string, unknown>): LicenseCopies {
-  const front =
-    uploadImageSrc(record.licenseFrontUrl) ??
-    uploadImageSrc(record.licenseFrontUpload) ??
-    uploadImageSrc(record.driversLicenseFront) ??
-    null;
-  const back =
-    uploadImageSrc(record.licenseBackUrl) ??
-    uploadImageSrc(record.licenseBackUpload) ??
-    uploadImageSrc(record.driversLicenseBack) ??
-    null;
+  const frontUrl = uploadImageSrc(record.licenseFrontUrl);
+  const backUrl = uploadImageSrc(record.licenseBackUrl);
+  const frontUpload = uploadImageSrc(record.licenseFrontUpload);
+  const backUpload = uploadImageSrc(record.licenseBackUpload);
+
+  const frontDoc = licenseDocumentIdFromUpload(record.licenseFrontUpload);
+  const backDoc = licenseDocumentIdFromUpload(record.licenseBackUpload);
+  const dotFrontDoc = licenseDocumentIdFromUpload(record.driversLicenseCopy);
+  const dotBackDoc = licenseDocumentIdFromUpload(record.driversLicenseBack);
+
+  const front = frontUrl ?? frontUpload ?? uploadImageSrc(record.driversLicenseFront) ?? null;
+  const back = backUrl ?? backUpload ?? uploadImageSrc(record.driversLicenseBack) ?? null;
   if (front || back) return { front, back };
 
-  // Some DQF imports only stored one combined "copy" document.
+  if (frontDoc || backDoc || dotFrontDoc || dotBackDoc) {
+    return {
+      front: frontDoc ?? dotFrontDoc,
+      back: backDoc ?? dotBackDoc,
+    };
+  }
+
   const copy =
     uploadImageSrc(record.driversLicenseCopy) ??
     uploadImageSrc(

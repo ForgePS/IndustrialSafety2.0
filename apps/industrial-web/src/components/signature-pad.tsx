@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useId, useRef, useState } from "react";
 import {
   notifyUnsavedChange,
   shouldTrackUnsavedField,
@@ -57,6 +57,9 @@ export function SignaturePad({
   disabled,
   label = "Signature",
   profileSignature,
+  signatureDate,
+  onSignatureDateChange,
+  dateLabel = "Date",
 }: {
   value: string;
   onChange: (dataUrl: string) => void;
@@ -64,7 +67,12 @@ export function SignaturePad({
   label?: string;
   /** Optional signature from the user's profile / personnel file. */
   profileSignature?: string | null;
+  /** When set with `onSignatureDateChange`, shows a date picker beside the signature. */
+  signatureDate?: string;
+  onSignatureDateChange?: (value: string) => void;
+  dateLabel?: string;
 }) {
+  const dateId = useId();
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const drawing = useRef(false);
   const hasInk = useRef(false);
@@ -252,9 +260,25 @@ export function SignaturePad({
 
   return (
     <div className="ind-signature">
-      <div className="d-flex align-items-center justify-content-between gap-2 mb-1 flex-wrap">
+      <div className="d-flex align-items-end justify-content-between gap-2 mb-1 flex-wrap">
         <span className="form-label mb-0">{label}</span>
-        <div className="d-flex flex-wrap gap-2">
+        <div className="d-flex flex-wrap align-items-end gap-2">
+          {onSignatureDateChange ? (
+            <div style={{ minWidth: "9.5rem" }}>
+              <label className="form-label small mb-0" htmlFor={dateId}>
+                {dateLabel} *
+              </label>
+              <input
+                id={dateId}
+                type="date"
+                className="form-control form-control-sm"
+                required
+                disabled={disabled}
+                value={signatureDate ?? ""}
+                onChange={(ev) => onSignatureDateChange(ev.target.value)}
+              />
+            </div>
+          ) : null}
           {canImportProfile ? (
             <button
               type="button"

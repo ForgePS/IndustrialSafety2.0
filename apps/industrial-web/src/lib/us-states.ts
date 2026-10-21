@@ -77,3 +77,14 @@ export function normalizeUsStateSelectValue(raw: string): string {
   }
   return text;
 }
+
+/** Resolve free-text / legacy values to a 2-letter postal code when possible. */
+export function normalizeUsStateCode(raw: string): string {
+  const text = raw.trim();
+  if (!text) return "";
+  const option = normalizeUsStateSelectValue(text);
+  const match = US_STATES.find((state) => `${state.code} — ${state.name}` === option);
+  if (match) return match.code;
+  if (/^[A-Za-z]{2}$/.test(text)) return text.toUpperCase();
+  return text.toUpperCase().slice(0, 2);
+}

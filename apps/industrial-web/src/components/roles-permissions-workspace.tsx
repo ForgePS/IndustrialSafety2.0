@@ -1,10 +1,22 @@
 "use client";
 
-import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState, type FormEvent } from "react";
-import { ApiError, apiGet, apiGetResult, apiSend, toIfMatch, useAuth } from "@forge/web-kit";
+import { useRouter } from "next/navigation";
+import {
+  ApiError,
+  apiGet,
+  apiGetResult,
+  apiSend,
+  apiSendResult,
+  permissionCodesFromRolePermissions,
+  toIfMatch,
+  useAuth,
+} from "@forge/web-kit";
+import { AdminSectionCard } from "@/components/admin-action-dropdown";
+import { AdminSearchMultiSelect } from "@/components/admin-search-multi-select";
 import { ModuleWorkspaceHeader } from "@/components/module-workspace-header";
 import { ModuleWorkspaceTabs } from "@/components/module-workspace-tabs";
+import { adminLabelToneClass } from "@/lib/admin-ui";
 import {
   assignablePermissionCodes,
   canAccessRolesAndPermissions,
@@ -12,6 +24,9 @@ import {
   DEFAULT_ROLES_PAGE_SIZE,
   filterPermissionDirectory,
   formatPermissionDate,
+  industrialModulesWithRoleAccess,
+  mergePermissionCodesWithModules,
+  moduleCodesFromPermissionCodes,
   paginateRows,
   permissionDisplayName,
   roleChipTone,
@@ -23,6 +38,13 @@ import {
   type PermissionDirectoryRow,
   type TenantRole,
 } from "@/lib/roles-permissions";
+import { industrialModuleRoleAccess, isIndustrialModulePagePermission } from "@forge/contracts";
+import {
+  catalogsForSelectedModules,
+  enabledPageIdsFromPermissionCodes,
+  filterModulePages,
+  mergePermissionCodesWithModulePages,
+} from "@/lib/module-page-permissions";
 
 const TABS = [
   { id: "roles", label: "Roles" },
@@ -36,10 +58,12 @@ function roleIfMatch(etag: string | undefined, recordVersion: number | undefined
 }
 
 export function RolesPermissionsWorkspace() {
-  const { me, loading: authLoading } = useAuth();
+  const router = useRouter();
+  const { me, loading: authLoading, startRolePreview, rolePreview } = useAuth();
   const tenantId = me?.tenantId ?? "";
   const canAccess = canAccessRolesAndPermissions(me);
   const canAssign = canAssignRoles(me);
+  const canViewAsRole = Boolean(me?.isPlatformAdmin) && !rolePreview;
 
   const [tab, setTab] = useState<TabId>("roles");
   const [roles, setRoles] = useState<TenantRole[]>([]);
@@ -56,10 +80,13 @@ export function RolesPermissionsWorkspace() {
   const [roleDescription, setRoleDescription] = useState("");
 
   const [editingRole, setEditingRole] = useState<TenantRole | null>(null);
+  const [editRoleName, setEditRoleName] = useState("");
+  const [editRoleDescription, setEditRoleDescription] = useState("");
+  const [editModules, setEditModules] = useState<string[]>([]);
   const [editPerms, setEditPerms] = useState<string[]>([]);
 
   const [showAddPermission, setShowAddPermission] = useState(false);
-  const [addPermCode, setAddPermCode] = useState("");
+  const [addPermCodes, setAddPermCodes] = useState<string[]>([]);
   const [addPermRoles, setAddPermRoles] = useState<string[]>([]);
   const [editingPermission, setEditingPermission] = useState<PermissionDirectoryRow | null>(null);
   const [editPermRoleIds, setEditPermRoleIds] = useState<string[]>([]);
@@ -123,6 +150,13 @@ export function RolesPermissionsWorkspace() {
   }, [query, pageSize, tab]);
 
   const assignable = useMemo(() => assignablePermissionCodes(catalog, me), [catalog, me]);
+  const catalogCodes = useMemo(() => new Set(assignable.map((row) => row.code)), [assignable]);
+  const moduleOptions = useMemo(() => {
+    return industrialModulesWithRoleAccess().filter((mod) => {
+      const access = industrialModuleRoleAccess(mod.code);
+      return (access?.defaultGrantPermissions ?? []).some((code) => catalogCodes.has(code));
+    });
+  }, [catalogCodes]);
   const permissionRows = useMemo(
     () => toPermissionDirectory(roles, catalog),
     [roles, catalog],
@@ -177,17 +211,104 @@ export function RolesPermissionsWorkspace() {
     }
   }
 
-  async function onSaveRolePerms(event: FormEvent) {
+  function openRoleEditor(role: TenantRole) {
+    setEditingRole(role);
+    setEditRoleName(role.name);
+    setEditRoleDescription(role.description ?? "");
+    const codes = (role.permissions ?? []).map((perm) => perm.code);
+    setEditPerms(codes);
+    setEditModules(moduleCodesFromPermissionCodes(codes));
+  }
+
+  function closeRoleEditor() {
+    setEditingRole(null);
+    setEditRoleName("");
+    setEditRoleDescription("");
+    setEditModules([]);
+    setEditPerms([]);
+  }
+
+  function onEditModulesChange(nextModules: string[]) {
+    setEditModules(nextModules);
+    setEditPerms(
+      mergePermissionCodesWithModules({
+        currentPermissionCodes: editPerms,
+        selectedModuleCodes: nextModules,
+        catalogPermissionCodes: catalogCodes,
+      }),
+    );
+  }
+
+  function onEditModulePagesChange(moduleCode: string, enabledPageIds: string[]) {
+    setEditPerms(
+      mergePermissionCodesWithModulePages({
+        currentPermissionCodes: editPerms,
+        moduleCode,
+        enabledPageIds,
+        catalogPermissionCodes: catalogCodes,
+      }),
+    );
+  }
+
+  function onEditPermsChange(nextPerms: string[]) {
+    setEditPerms(nextPerms);
+    setEditModules(moduleCodesFromPermissionCodes(nextPerms));
+  }
+
+  const editPageCatalogs = useMemo(
+    () => catalogsForSelectedModules(editModules),
+    [editModules],
+  );
+
+  const assignableWithoutPages = useMemo(
+    () => assignable.filter((perm) => !isIndustrialModulePagePermission(perm.code)),
+    [assignable],
+  );
+
+  async function onSaveRole(event: FormEvent) {
     event.preventDefault();
     if (!editingRole || !canAssign) return;
     setBusyId(editingRole.id);
     setError(null);
     try {
-      await saveRolePermissions(editingRole, editPerms);
-      setEditingRole(null);
+      const fresh = await apiGetResult<TenantRole>(
+        `/api/v1/tenants/${tenantId}/roles/${editingRole.id}`,
+      );
+      let ifMatch = roleIfMatch(fresh.etag, fresh.data.recordVersion);
+
+      if (!editingRole.isSystemManaged) {
+        const nextName = editRoleName.trim();
+        const nextDescription = editRoleDescription.trim();
+        const nameChanged = nextName !== editingRole.name;
+        const descriptionChanged = nextDescription !== (editingRole.description ?? "");
+        if (nameChanged || descriptionChanged) {
+          if (!nextName) {
+            throw new Error("Role name is required");
+          }
+          const updated = await apiSendResult<TenantRole>(
+            `/api/v1/tenants/${tenantId}/roles/${editingRole.id}`,
+            "PATCH",
+            {
+              name: nextName,
+              description: nextDescription === "" ? null : nextDescription,
+            },
+            { ifMatch },
+          );
+          ifMatch = roleIfMatch(updated.etag, updated.data.recordVersion);
+        }
+
+        await apiSend(
+          `/api/v1/tenants/${tenantId}/roles/${editingRole.id}/permissions`,
+          "PUT",
+          { permissionCodes: editPerms },
+          { ifMatch },
+        );
+      }
+
+      closeRoleEditor();
       await load();
     } catch (err) {
-      setError(err instanceof ApiError ? err.message : "Failed to update role permissions");
+      setError(err instanceof ApiError ? err.message : "Failed to update role");
     } finally {
       setBusyId(null);
     }
@@ -206,15 +327,21 @@ export function RolesPermissionsWorkspace() {
     }
   }
 
+  async function applyPermissionsToRoles(codes: string[], roleIds: string[]) {
+    for (const code of codes) {
+      await applyPermissionToRoles(code, roleIds);
+    }
+  }
+
   async function onAddPermission(event: FormEvent) {
     event.preventDefault();
-    if (!canAssign || addPermCode === "") return;
+    if (!canAssign || addPermCodes.length === 0) return;
     setBusyId("permission");
     setError(null);
     try {
-      await applyPermissionToRoles(addPermCode, addPermRoles);
+      await applyPermissionsToRoles(addPermCodes, addPermRoles);
       setShowAddPermission(false);
-      setAddPermCode("");
+      setAddPermCodes([]);
       setAddPermRoles([]);
       await load();
     } catch (err) {
@@ -260,6 +387,32 @@ export function RolesPermissionsWorkspace() {
     }
   }
 
+  async function onViewAsRole(role: TenantRole) {
+    if (!canViewAsRole || !tenantId) return;
+    setBusyId(`view-${role.id}`);
+    setError(null);
+    try {
+      let detail = role;
+      if (!(role.permissions && role.permissions.length > 0)) {
+        detail = await apiGet<TenantRole>(`/api/v1/tenants/${tenantId}/roles/${role.id}`);
+      }
+      const permissionCodes = permissionCodesFromRolePermissions(detail.permissions);
+      startRolePreview({
+        tenantId,
+        roleId: role.id,
+        roleCode: role.code,
+        roleName: role.name,
+        permissionCodes,
+        startedAt: new Date().toISOString(),
+      });
+      router.push("/");
+    } catch (err) {
+      setError(err instanceof ApiError ? err.message : "Failed to start role preview");
+    } finally {
+      setBusyId(null);
+    }
+  }
+
   if (authLoading) {
     return (
       <p className="text-muted mb-0" role="status">
@@ -283,13 +436,20 @@ export function RolesPermissionsWorkspace() {
     <section aria-labelledby="roles-perms-title">
       <ModuleWorkspaceHeader
         id="roles-perms-title"
-        eyebrow="Settings"
-        title="Roles and permissions"
-        description="Tenant roles and the platform permissions they grant. System-managed roles stay read-only."
+        eyebrow="Platform admin"
+        title="Roles & permissions"
+        description="Create roles, choose which modules each role can access, and refine permissions for Admins and Creators."
         onRefresh={() => void load()}
         refreshing={loading}
       />
 
+      {canViewAsRole ? (
+        <div className="alert alert-info mb-4" role="status">
+          <strong>View as role</strong> applies that role&apos;s permissions to navigation and screens
+          for this browser tab. API authorization still uses your Creator session — use Exit in the
+          header when finished.
+        </div>
+      ) : null}
       {error ? (
         <div className="alert alert-danger d-flex flex-wrap align-items-center gap-3 mb-4" role="alert">
           <span className="flex-grow-1">{error}</span>
@@ -362,34 +522,143 @@ export function RolesPermissionsWorkspace() {
             ) : null}
 
             {editingRole && canAssign ? (
-              <form className="card mb-4" onSubmit={(event) => void onSaveRolePerms(event)}>
+              <form className="card mb-4" onSubmit={(event) => void onSaveRole(event)}>
                 <div className="card-header d-flex justify-content-between align-items-center">
-                  <h6 className="mb-0">Permissions for {editingRole.name}</h6>
-                  <button type="button" className="btn-close" onClick={() => setEditingRole(null)} />
+                  <h6 className="mb-0">Edit role</h6>
+                  <button type="button" className="btn-close" onClick={closeRoleEditor} />
                 </div>
-                <div className="card-body">
-                  {editingRole.isSystemManaged ? (
-                    <p className="text-muted mb-0">System-managed roles cannot be modified.</p>
-                  ) : (
-                    <select
-                      className="form-select"
-                      multiple
-                      value={editPerms}
-                      onChange={(e) =>
-                        setEditPerms(Array.from(e.target.selectedOptions).map((option) => option.value))
-                      }
-                      size={Math.min(12, Math.max(6, assignable.length))}
-                    >
-                      {assignable.map((perm) => (
-                        <option key={perm.code} value={perm.code}>
-                          {permissionDisplayName(perm)}
-                        </option>
-                      ))}
-                    </select>
-                  )}
+                <div className="card-body row g-3">
+                  <div className="col-md-6">
+                    <label className="form-label" htmlFor="edit-role-name">
+                      Display name
+                    </label>
+                    <input
+                      id="edit-role-name"
+                      required
+                      className="form-control"
+                      value={editRoleName}
+                      disabled={editingRole.isSystemManaged}
+                      onChange={(event) => setEditRoleName(event.target.value)}
+                    />
+                    <div className="form-text font-monospace">{editingRole.code}</div>
+                  </div>
+                  <div className="col-md-6">
+                    <label className="form-label" htmlFor="edit-role-desc">
+                      Description
+                    </label>
+                    <input
+                      id="edit-role-desc"
+                      className="form-control"
+                      value={editRoleDescription}
+                      disabled={editingRole.isSystemManaged}
+                      onChange={(event) => setEditRoleDescription(event.target.value)}
+                      placeholder="What this role is for"
+                    />
+                  </div>
+                  <div className="col-12">
+                    {editingRole.isSystemManaged ? (
+                      <p className="text-muted mb-0">
+                        System-managed roles cannot be renamed or have permissions changed.
+                      </p>
+                    ) : (
+                      <>
+                        <AdminSearchMultiSelect
+                          id="edit-role-modules"
+                          label="Modules"
+                          value={editModules}
+                          onChange={onEditModulesChange}
+                          options={moduleOptions.map((mod) => ({
+                            value: mod.code,
+                            label: mod.name,
+                            hint: mod.group,
+                          }))}
+                          placeholder="Search modules…"
+                          emptyMessage="No module permissions are available in the catalog yet."
+                        />
+                        <div className="form-text mb-3">
+                          Choose which Industrial modules this role can open. Each module grants view
+                          access; refine pages below, then manage and specialty permissions.
+                        </div>
+                        {editPageCatalogs.length > 0 ? (
+                          <div className="mb-3">
+                            <div className="fw-semibold mb-1">Pages</div>
+                            <p className="form-text mt-0 mb-2">
+                              Choose which pages this role can open inside each module.
+                            </p>
+                            <div className="d-flex flex-column gap-3">
+                              {editPageCatalogs.map((modCatalog) => {
+                                const enabledIds = new Set(
+                                  enabledPageIdsFromPermissionCodes(modCatalog.moduleCode, editPerms),
+                                );
+                                const moduleName =
+                                  moduleOptions.find((mod) => mod.code === modCatalog.moduleCode)
+                                    ?.name ?? modCatalog.moduleCode;
+                                return (
+                                  <div key={modCatalog.moduleCode} className="border rounded p-3">
+                                    <div className="fw-semibold mb-2">{moduleName}</div>
+                                    <div className="row g-2">
+                                      {modCatalog.pages.map((page) => {
+                                        const inputId = `role-page-${modCatalog.moduleCode}-${page.id}`;
+                                        const checked = enabledIds.has(page.id);
+                                        return (
+                                          <div
+                                            key={page.id}
+                                            className="col-md-6 col-xl-4 d-flex align-items-center gap-2"
+                                          >
+                                            <div className="form-check form-switch m-0">
+                                              <input
+                                                id={inputId}
+                                                className="form-check-input"
+                                                type="checkbox"
+                                                role="switch"
+                                                checked={checked}
+                                                onChange={() => {
+                                                  const next = checked
+                                                    ? [...enabledIds].filter((id) => id !== page.id)
+                                                    : [...enabledIds, page.id];
+                                                  onEditModulePagesChange(
+                                                    modCatalog.moduleCode,
+                                                    next,
+                                                  );
+                                                }}
+                                              />
+                                              <label className="form-check-label" htmlFor={inputId}>
+                                                {page.label}
+                                              </label>
+                                            </div>
+                                          </div>
+                                        );
+                                      })}
+                                    </div>
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          </div>
+                        ) : null}
+                        <AdminSearchMultiSelect
+                          id="edit-role-permissions"
+                          label="Permissions"
+                          value={editPerms.filter((code) => !isIndustrialModulePagePermission(code))}
+                          onChange={(next) => {
+                            const pages = editPerms.filter((code) =>
+                              isIndustrialModulePagePermission(code),
+                            );
+                            onEditPermsChange([...new Set([...next, ...pages])]);
+                          }}
+                          options={assignableWithoutPages.map((perm) => ({
+                            value: perm.code,
+                            label: permissionDisplayName(perm),
+                            hint: perm.code,
+                          }))}
+                          placeholder="Search permissions…"
+                        />
+                      </>
+                    )}
+                  </div>
                 </div>
                 <div className="card-footer d-flex justify-content-end gap-2">
-                  <button type="button" className="btn btn-outline-secondary" onClick={() => setEditingRole(null)}>
+                  <button type="button" className="btn btn-outline-secondary" onClick={closeRoleEditor}>
                     Cancel
                   </button>
                   <button
@@ -397,7 +666,7 @@ export function RolesPermissionsWorkspace() {
                     className="btn btn-primary"
                     disabled={Boolean(editingRole.isSystemManaged) || busyId === editingRole.id}
                   >
-                    Save permissions
+                    Save role
                   </button>
                 </div>
               </form>
@@ -414,7 +683,7 @@ export function RolesPermissionsWorkspace() {
                         <div className="d-flex justify-content-between align-items-start gap-2">
                           <div>
                             <h6 className="mb-1">{role.name}</h6>
-                            <span className={`badge bg-label-${roleChipTone(role.code, role.name)}`}>
+                            <span className={`badge ${adminLabelToneClass(roleChipTone(role.code, role.name))}`}>
                               {role.code}
                             </span>
                           </div>
@@ -423,34 +692,57 @@ export function RolesPermissionsWorkspace() {
                           </span>
                         </div>
                         <p className="text-muted small mt-3 mb-0">
-                          {(role.permissions ?? []).length} permissions
+                          {role.description?.trim() || "No description yet."}
+                        </p>
+                        <p className="text-muted small mb-0">
+                          {moduleCodesFromPermissionCodes(
+                            (role.permissions ?? []).map((perm) => perm.code),
+                          ).length}{" "}
+                          modules · {(role.permissions ?? []).length} permissions
                           {role.isSystemManaged ? " · system" : ""}
                         </p>
                       </div>
-                      {canAssign ? (
-                        <div className="card-footer d-flex gap-2">
-                          <button
-                            type="button"
-                            className="btn btn-sm btn-outline-secondary"
-                            disabled={busyId === role.id}
-                            onClick={() => {
-                              setEditingRole(role);
-                              setEditPerms((role.permissions ?? []).map((perm) => perm.code));
-                            }}
-                          >
-                            <i className="bx bx-edit-alt me-1" />
-                            Edit
-                          </button>
-                          {role.isSystemManaged ? null : (
+                      {canAssign || canViewAsRole ? (
+                        <div className="card-footer d-flex flex-wrap gap-2">
+                          {canViewAsRole ? (
                             <button
                               type="button"
-                              className="btn btn-sm btn-outline-warning"
-                              disabled={busyId === role.id}
-                              onClick={() => void deactivateRole(role)}
+                              className="btn btn-sm btn-outline-primary"
+                              disabled={busyId === `view-${role.id}` || role.status === "INACTIVE"}
+                              onClick={() => void onViewAsRole(role)}
+                              title={
+                                role.status === "INACTIVE"
+                                  ? "Activate this role before previewing"
+                                  : "Preview navigation and screens as this role"
+                              }
                             >
-                              {role.status === "INACTIVE" ? "Activate" : "Deactivate"}
+                              <i className="bx bx-show me-1" />
+                              View as role
                             </button>
-                          )}
+                          ) : null}
+                          {canAssign ? (
+                            <>
+                              <button
+                                type="button"
+                                className="btn btn-sm btn-outline-secondary"
+                                disabled={busyId === role.id}
+                                onClick={() => openRoleEditor(role)}
+                              >
+                                <i className="bx bx-edit-alt me-1" />
+                                Edit role
+                              </button>
+                              {role.isSystemManaged ? null : (
+                                <button
+                                  type="button"
+                                  className="btn btn-sm btn-outline-warning"
+                                  disabled={busyId === role.id}
+                                  onClick={() => void deactivateRole(role)}
+                                >
+                                  {role.status === "INACTIVE" ? "Activate" : "Deactivate"}
+                                </button>
+                              )}
+                            </>
+                          ) : null}
                         </div>
                       ) : null}
                     </div>
@@ -465,65 +757,70 @@ export function RolesPermissionsWorkspace() {
               <form className="card mb-4" onSubmit={(event) => void onAddPermission(event)}>
                 <div className="card-header d-flex justify-content-between align-items-center">
                   <h6 className="mb-0">Add permission</h6>
-                  <button type="button" className="btn-close" onClick={() => setShowAddPermission(false)} />
+                  <button
+                    type="button"
+                    className="btn-close"
+                    onClick={() => {
+                      setShowAddPermission(false);
+                      setAddPermCodes([]);
+                      setAddPermRoles([]);
+                    }}
+                  />
                 </div>
                 <div className="card-body row g-3">
                   <div className="col-md-6">
-                    <label className="form-label" htmlFor="add-perm">
-                      Permission
-                    </label>
-                    <select
+                    <AdminSearchMultiSelect
                       id="add-perm"
-                      required
-                      className="form-select"
-                      value={addPermCode}
-                      onChange={(e) => setAddPermCode(e.target.value)}
-                    >
-                      <option value="">Select a permission</option>
-                      {unassignedCatalog.map((perm) => (
-                        <option key={perm.code} value={perm.code}>
-                          {permissionDisplayName(perm)}
-                        </option>
-                      ))}
-                    </select>
+                      label="Permissions"
+                      value={addPermCodes}
+                      onChange={setAddPermCodes}
+                      options={unassignedCatalog.map((perm) => ({
+                        value: perm.code,
+                        label: permissionDisplayName(perm),
+                        hint: perm.code,
+                      }))}
+                      placeholder="Search permissions…"
+                      emptyMessage="No unassigned catalog permissions left."
+                    />
                     <div className="form-text">
                       Catalog permissions only — new platform codes are created by Creator.
                     </div>
                   </div>
                   <div className="col-md-6">
-                    <label className="form-label" htmlFor="add-perm-roles">
-                      Assigned to
-                    </label>
-                    <select
+                    <AdminSearchMultiSelect
                       id="add-perm-roles"
-                      className="form-select"
-                      multiple
+                      label="Assigned to"
                       value={addPermRoles}
-                      onChange={(e) =>
-                        setAddPermRoles(Array.from(e.target.selectedOptions).map((option) => option.value))
-                      }
-                      size={Math.min(8, Math.max(3, roles.length))}
-                    >
-                      {roles
+                      onChange={setAddPermRoles}
+                      options={roles
                         .filter((role) => !role.isSystemManaged)
-                        .map((role) => (
-                          <option key={role.id} value={role.id}>
-                            {role.name}
-                          </option>
-                        ))}
-                    </select>
+                        .map((role) => ({
+                          value: role.id,
+                          label: role.name,
+                          hint: role.code,
+                        }))}
+                      placeholder="Search roles…"
+                    />
                   </div>
                 </div>
                 <div className="card-footer d-flex justify-content-end gap-2">
                   <button
                     type="button"
                     className="btn btn-outline-secondary"
-                    onClick={() => setShowAddPermission(false)}
+                    onClick={() => {
+                      setShowAddPermission(false);
+                      setAddPermCodes([]);
+                      setAddPermRoles([]);
+                    }}
                   >
                     Cancel
                   </button>
-                  <button type="submit" className="btn btn-primary" disabled={busyId === "permission"}>
-                    Assign permission
+                  <button
+                    type="submit"
+                    className="btn btn-primary"
+                    disabled={busyId === "permission" || addPermCodes.length === 0}
+                  >
+                    {addPermCodes.length > 1 ? "Assign permissions" : "Assign permission"}
                   </button>
                 </div>
               </form>
@@ -537,23 +834,19 @@ export function RolesPermissionsWorkspace() {
                 </div>
                 <div className="card-body">
                   <p className="text-muted small">{editingPermission.code}</p>
-                  <select
-                    className="form-select"
-                    multiple
+                  <AdminSearchMultiSelect
+                    label="Roles with this permission"
                     value={editPermRoleIds}
-                    onChange={(e) =>
-                      setEditPermRoleIds(Array.from(e.target.selectedOptions).map((option) => option.value))
-                    }
-                    size={Math.min(8, Math.max(3, roles.length))}
-                  >
-                    {roles
+                    onChange={setEditPermRoleIds}
+                    options={roles
                       .filter((role) => !role.isSystemManaged)
-                      .map((role) => (
-                        <option key={role.id} value={role.id}>
-                          {role.name}
-                        </option>
-                      ))}
-                  </select>
+                      .map((role) => ({
+                        value: role.id,
+                        label: role.name,
+                        hint: role.code,
+                      }))}
+                    placeholder="Search roles…"
+                  />
                 </div>
                 <div className="card-footer d-flex justify-content-end gap-2">
                   <button
@@ -644,7 +937,7 @@ export function RolesPermissionsWorkspace() {
                             ) : (
                               <div className="d-flex flex-wrap gap-1">
                                 {row.assignedRoles.map((role) => (
-                                  <span key={role.id} className={`badge bg-label-${role.tone}`}>
+                                  <span key={role.id} className={`badge ${adminLabelToneClass(role.tone)}`}>
                                     {role.name}
                                   </span>
                                 ))}
@@ -712,16 +1005,13 @@ export function RolesPermissionsSettingsCard() {
   const { me } = useAuth();
   if (!canAccessRolesAndPermissions(me)) return null;
   return (
-    <div className="col-12 col-sm-6 col-md-4">
-      <div className="card h-100">
-        <div className="card-body">
-          <h2 className="h6">Roles and permissions</h2>
-          <p className="small text-muted">See which roles grant each permission and adjust assignments.</p>
-          <Link href="/settings/roles/" className="btn btn-sm btn-primary">
-            Open roles
-          </Link>
-        </div>
-      </div>
-    </div>
+    <AdminSectionCard
+      title="Roles & permissions"
+      description="Control who can view and manage each part of the platform."
+      icon="bx-shield-quarter"
+      tone="success"
+      href="/settings/roles/"
+      actionLabel="Manage roles"
+    />
   );
 }

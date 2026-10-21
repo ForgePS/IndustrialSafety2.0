@@ -79,7 +79,7 @@ function formFromProfile(profile: AuthProfile): ProfileForm {
 function roleLabel(profile: AuthProfile): string {
   if (profile.isPlatformAdmin) return "Super Admin";
   const names = profile.roles.map((role) => role.roleName || role.roleCode).filter(Boolean);
-  return names.length > 0 ? names.join(", ") : "Tenant member";
+  return names.length > 0 ? names.join(", ") : "Tenant MEMBER";
 }
 
 /**
@@ -244,7 +244,7 @@ export default function IndustrialProfilePage() {
             {canEdit
               ? "Update your name and contact details. Changes save to your account on this tenant."
               : profile && !profile.accountEmail
-                ? "This session is not a member of the active tenant, so contact details cannot be edited here."
+                ? "This session is not a MEMBER of the active tenant, so contact details cannot be edited here."
                 : "You can view this profile. Ask an administrator if you need changes."}
           </p>
           <p className="mt-2 mb-0">
@@ -281,7 +281,7 @@ export default function IndustrialProfilePage() {
             </div>
             <div>
               <dt>Role</dt>
-              <dd>{profile ? roleLabel(profile) : me.isPlatformAdmin ? "Platform admin" : "Tenant member"}</dd>
+              <dd>{profile ? roleLabel(profile) : me.isPlatformAdmin ? "Platform admin" : "Tenant MEMBER"}</dd>
             </div>
             <div>
               <dt>Status</dt>

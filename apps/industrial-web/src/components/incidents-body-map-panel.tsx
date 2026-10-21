@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useRegisterUnsavedChanges } from "@/components/unsaved-changes-guard";
 import { IncidentBodyMap } from "@/components/incident-body-map";
+import { useBodyRegions } from "@/hooks/use-body-regions";
 import {
   aggregateBodyLocations,
   aggregateByOshaPart,
@@ -45,7 +46,7 @@ type Props = {
   mapHref?: string;
   /** Prefill focused region from ?region= (Injury Map deep link). */
   initialRegionId?: string | null;
-  /** Selected injury for editing body locations on Tim. */
+  /** Selected injury for editing body locations on the map. */
   selectedId?: string | null;
   onSelectedIdChange?: (id: string | null) => void;
   canManage?: boolean;
@@ -53,7 +54,7 @@ type Props = {
 };
 
 /**
- * Safety Tim panel — year-scoped severity arrows for injury locations, or
+ * Body map panel — year-scoped severity arrows for injury locations, or
  * interactive marking when an incident is selected. Click a count to open
  * matching injuries in a popup.
  */
@@ -68,6 +69,7 @@ export function IncidentsBodyMapPanel({
   canManage = false,
   onSaveLocations,
 }: Props) {
+  const { regions } = useBodyRegions();
   const yearOptions = useMemo(() => bodyMapYearOptions(incidents), [incidents]);
   const [yearScope, setYearScope] = useState<BodyMapYearScope>("ytd");
   const [focusedRegionId, setFocusedRegionId] = useState<string | null>(null);
@@ -100,9 +102,9 @@ export function IncidentsBodyMapPanel({
     [incidents, selectedId],
   );
 
-  const counts = useMemo(() => aggregateBodyLocations(scopedIncidents), [scopedIncidents]);
+  const counts = useMemo(() => aggregateBodyLocations(scopedIncidents, regions), [scopedIncidents, regions]);
   const maxCount = useMemo(() => maxRegionCount(counts), [counts]);
-  const partRanking = useMemo(() => aggregateByOshaPart(scopedIncidents), [scopedIncidents]);
+  const partRanking = useMemo(() => aggregateByOshaPart(scopedIncidents, regions), [scopedIncidents, regions]);
   const mappedIncidents = useMemo(
     () => scopedIncidents.filter((incident) => incident.bodyLocations.length > 0).length,
     [scopedIncidents],
@@ -110,7 +112,7 @@ export function IncidentsBodyMapPanel({
 
   const popupTitle =
     popup?.type === "region"
-      ? (regionById(popup.regionId)?.part ?? "Body area")
+      ? (regionById(popup.regionId, regions)?.part ?? "Body area")
       : popup?.type === "osha"
         ? popup.oshaPart
         : "";
@@ -118,10 +120,10 @@ export function IncidentsBodyMapPanel({
   const popupIncidents = useMemo(() => {
     if (!popup) return [];
     if (popup.type === "region") {
-      return filterIncidentsByBodyRegion(scopedIncidents, popup.regionId);
+      return filterIncidentsByBodyRegion(scopedIncidents, popup.regionId, regions);
     }
-    return filterIncidentsByOshaPart(scopedIncidents, popup.oshaPart);
-  }, [popup, scopedIncidents]);
+    return filterIncidentsByOshaPart(scopedIncidents, popup.oshaPart, regions);
+  }, [popup, scopedIncidents, regions]);
 
   const [draftLocations, setDraftLocations] = useState<string[]>([]);
   const [saving, setSaving] = useState(false);
@@ -220,7 +222,7 @@ export function IncidentsBodyMapPanel({
         mode="select"
         selected={draftLocations}
         onToggle={(id) => {
-          setDraftLocations((prev) => toggleBodyLocation(prev, id));
+          setDraftLocations((prev) => toggleBodyLocation(prev, id, regions));
           setSaved(false);
         }}
       />
@@ -228,10 +230,10 @@ export function IncidentsBodyMapPanel({
         {draftLocations.length > 0 ? (
           <>
             <span className="fw-semibold text-body">Marked:</span>{" "}
-            {bodyLocationSummaryLabel(draftLocations)}
+            {bodyLocationSummaryLabel(draftLocations, regions)}
           </>
         ) : (
-          "Click Tim to mark where this injury occurred."
+          "Click a body region to mark where this injury occurred."
         )}
       </p>
     </>
@@ -256,8 +258,8 @@ export function IncidentsBodyMapPanel({
         </div>
       ) : (
         <p className="text-muted small text-center mt-3 mb-0">
-          No injury locations recorded for this period. Select an injury below Tim&apos;s map (or
-          create a new report) and mark the body part.
+          No injury locations recorded for this period. Select an injury below the map (or create a
+          new report) and mark the body part.
         </p>
       )}
     </>
@@ -285,7 +287,7 @@ export function IncidentsBodyMapPanel({
               <option key={incident.id} value={incident.id}>
                 {incidentOptionLabel(incident)}
                 {incident.bodyLocations.length
-                  ? ` · ${bodyLocationSummaryLabel(incident.bodyLocations)}`
+                  ? ` · ${bodyLocationSummaryLabel(incident.bodyLocations, regions)}`
                   : ""}
               </option>
             ))}
@@ -442,7 +444,7 @@ export function IncidentsBodyMapPanel({
                   ? `Editing: ${selected?.title ?? "injury"}`
                   : mappedIncidents > 0
                     ? `${mappedIncidents} incident${mappedIncidents === 1 ? "" : "s"} with a location · ${periodLabel}`
-                    : `Where injuries have happened · ${periodLabel}`}
+                    : `No mapped injury locations · ${periodLabel}`}
               </p>
             </div>
             {mapHref ? (
@@ -471,10 +473,10 @@ export function IncidentsBodyMapPanel({
             <h6 className="mb-1">{title}</h6>
             <p className="text-muted small mb-3">
               {editing
-                ? "Click body regions on Tim, then save to attach them to this injury."
+                ? "Click body regions on the map, then save to attach them to this injury."
                 : mappedIncidents > 0
                   ? `${mappedIncidents} incident${mappedIncidents === 1 ? "" : "s"} with a recorded location · ${periodLabel}. Click a number to open injuries for that area.`
-                  : `Select an injury to mark locations on Tim, or create a new injury report · ${periodLabel}.`}
+                  : `No mapped injury locations for ${periodLabel}. Select an injury to mark body parts, or create a new injury report.`}
             </p>
             {picker}
             {status}

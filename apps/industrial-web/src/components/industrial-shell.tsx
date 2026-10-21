@@ -40,6 +40,11 @@ import { WalkthroughOverlayHost } from "@/features/executive-walkthrough/Walkthr
 
 const appEnv = process.env.NEXT_PUBLIC_APP_ENV ?? process.env.APP_ENV ?? "local";
 const NAV_GROUPS_STORAGE_KEY = "forge-ind-nav-open-groups-v2";
+const HELPDESK_CUSTOMER_NAV_PERMISSIONS = [
+  "helpdesk.ticket.create",
+  "helpdesk.ticket.view_own",
+  "helpdesk.ticket.view_tenant",
+] as const;
 
 function normalizeAppPath(path: string | null | undefined): string {
   if (!path) return "/";
@@ -54,6 +59,16 @@ function routeIsActive(pathname: string | null | undefined, route: string): bool
   // Nested centers (e.g. /reporting/library, /modules/fleet/asset)
   if (target !== "/" && path.startsWith(`${target}/`)) return true;
   return false;
+}
+
+/** Like routeIsActive, but yields to a more specific nav route (e.g. /help-desk/support under /help-desk). */
+function navItemIsActive(pathname: string | null | undefined, route: string, routes: string[]): boolean {
+  if (!routeIsActive(pathname, route)) return false;
+  const target = normalizeAppPath(route);
+  return !routes.some((other) => {
+    const o = normalizeAppPath(other);
+    return o.length > target.length && o.startsWith(`${target}/`) && routeIsActive(pathname, other);
+  });
 }
 
 function isLotoScopeRoute(pathname: string | null | undefined): boolean {
@@ -144,6 +159,8 @@ function iconForModule(code: string, group: string): string {
   if (c.includes("task")) return "bx-task";
   if (c.includes("form")) return "bx-edit";
   if (c.includes("setting")) return "bx-cog";
+  if (c === "help_desk_support") return "bx-headphone";
+  if (c.includes("help_desk")) return "bx-support";
   if (c.includes("jsa")) return "bx-list-check";
   if (c.includes("observ")) return "bx-show";
   if (group.toLowerCase().includes("high")) return "bx-error-circle";
@@ -346,6 +363,10 @@ function ShellBody({ children }: { children: ReactNode }) {
   // Vanity hosts map to a tenant via bundled vanity-login-branding (not public API).
   // Prefer that tenant once after sign-in so a leftover Creator localStorage
   // selection does not land users on "Product not entitled".
+  // Also: on the shared industrial host, a sticky demo tenant (forge-platform)
+  // looks like "Producers Rice showing demo data" — hop to the first selectable
+  // customer tenant unless the user is in a walkthrough/presentation path or
+  // explicitly keeps demo via ?demo=1.
   useEffect(() => {
     if (!me) {
       setHostTenantSettled(false);
@@ -353,15 +374,39 @@ function ShellBody({ children }: { children: ReactNode }) {
     }
     if (loading || loadingHost || hostTenantSettled) return;
 
-    if (!hostTenantId) {
+    const keepDemo =
+      typeof window !== "undefined" &&
+      (new URLSearchParams(window.location.search).get("demo") === "1" ||
+        window.location.pathname.includes("/presentation/") ||
+        window.location.pathname.includes("/walkthrough/"));
+
+    let preferredTenantId = hostTenantId;
+    if (!preferredTenantId && me.isDemoTenant && !keepDemo) {
+      const isCustomerTenant = (t: { slug: string; isDemoTenant?: boolean }) =>
+        !t.isDemoTenant &&
+        t.slug !== "forge-platform" &&
+        t.slug !== "forge-industrial-demo";
+      // Prefer an explicit Producers match; otherwise first non-demo selectable.
+      preferredTenantId =
+        me.tenants.find(
+          (t) =>
+            t.selectable &&
+            isCustomerTenant(t) &&
+            (t.slug === "producers-rice-mill" || /producers\s*rice/i.test(t.displayName)),
+        )?.tenantId ??
+        me.tenants.find((t) => t.selectable && isCustomerTenant(t))?.tenantId ??
+        null;
+    }
+
+    if (!preferredTenantId) {
       setHostTenantSettled(true);
       return;
     }
-    if (me.tenantId === hostTenantId) {
+    if (me.tenantId === preferredTenantId) {
       setHostTenantSettled(true);
       return;
     }
-    const selectable = me.tenants.some((t) => t.tenantId === hostTenantId && t.selectable);
+    const selectable = me.tenants.some((t) => t.tenantId === preferredTenantId && t.selectable);
     if (!selectable) {
       setHostTenantSettled(true);
       return;
@@ -370,7 +415,9 @@ function ShellBody({ children }: { children: ReactNode }) {
     let cancelled = false;
     void (async () => {
       try {
-        await chooseTenant(hostTenantId);
+        await chooseTenant(preferredTenantId);
+      } catch {
+        // AuthProvider.error surfaces the failure; still settle so the shell can render.
       } finally {
         if (!cancelled) setHostTenantSettled(true);
       }
@@ -404,10 +451,13 @@ function ShellBody({ children }: { children: ReactNode }) {
     };
   }, [me?.userId, me?.tenantId]);
 
-  const facility = useIndustrialFacilityState(tenantId, hasAccess);
+  const facility = useIndustrialFacilityState(
+    tenantId,
+    Boolean(hasAccess && (!hostTenantId || tenantId === hostTenantId)),
+  );
 
   useEffect(() => {
-    if (!hasAccess || !tenantId) {
+    if (!hasAccess || !tenantId || (hostTenantId && tenantId !== hostTenantId)) {
       setFlags({});
       return;
     }
@@ -434,7 +484,7 @@ function ShellBody({ children }: { children: ReactNode }) {
     return () => {
       cancelled = true;
     };
-  }, [hasAccess, tenantId, userId]);
+  }, [hasAccess, tenantId, userId, hostTenantId]);
 
   useEffect(() => {
     document.documentElement.classList.toggle("layout-menu-expanded", menuOpen);
@@ -524,9 +574,42 @@ function ShellBody({ children }: { children: ReactNode }) {
           available: true,
           requiredPermissions: ["industrial.access"],
         },
+        ...(HELPDESK_CUSTOMER_NAV_PERMISSIONS.some((p) => hasPermission(p))
+          ? [
+              {
+                code: "HELP_DESK",
+                name: "Help Desk",
+                group: "System Tools",
+                route: "/help-desk/",
+                migrationStatus: "LIVE",
+                implementationStatus: "AVAILABLE" as const,
+                awsEnabled: true,
+                customerEnabled: true,
+                available: true,
+                requiredPermissions: [...HELPDESK_CUSTOMER_NAV_PERMISSIONS],
+              },
+            ]
+          : []),
+        ...(hasPermission("helpdesk.support.view")
+          ? [
+              {
+                code: "HELP_DESK_SUPPORT",
+                name: "Support Console",
+                group: "System Tools",
+                route: "/help-desk/support/",
+                migrationStatus: "LIVE",
+                implementationStatus: "AVAILABLE" as const,
+                awsEnabled: true,
+                customerEnabled: true,
+                available: true,
+                requiredPermissions: ["helpdesk.support.view"],
+              },
+            ]
+          : []),
       ]
     : [];
   const groups = [...new Set(nav.map((n) => n.group))];
+  const navRoutes = nav.map((n) => n.route);
   const navGroupKey = groups.join("|");
 
   useEffect(() => {
@@ -654,6 +737,68 @@ function ShellBody({ children }: { children: ReactNode }) {
     );
   }
 
+  // Vanity hosts (e.g. producersrice.*) bind to a customer tenant. Do not render
+  // demo/forge-platform chrome or data while the session is still on another tenant —
+  // that looks like "demo data crossed into Producers."
+  const hostCustomerMismatch =
+    Boolean(hostTenantId) && me.tenantId !== hostTenantId && !loadingHost;
+  if (hostCustomerMismatch && !hostTenantSettled) {
+    return (
+      <GateCard
+        title={login.brandLabel || productDisplayName}
+        body="Opening your company workspace…"
+        muted="Switching tenant"
+        {...gateBrand}
+      />
+    );
+  }
+  if (hostCustomerMismatch && hostTenantSettled) {
+    const hostOption = me.tenants.find((t) => t.tenantId === hostTenantId && t.selectable);
+    const customerOptions = me.tenants.filter(
+      (t) =>
+        t.selectable &&
+        !t.isDemoTenant &&
+        t.slug !== "forge-platform" &&
+        t.slug !== "forge-industrial-demo",
+    );
+    return (
+      <GateCard
+        title={login.brandLabel || productDisplayName}
+        body={
+          hostOption
+            ? "This site belongs to your company account. Switch tenants to continue."
+            : "This site is bound to a company account you cannot select. Sign in with a company user, or open the shared industrial host for demo."
+        }
+        muted="Tenant mismatch"
+        {...gateBrand}
+      >
+        <div className="d-grid gap-2">
+          {hostOption ? (
+            <button
+              type="button"
+              className="btn btn-primary"
+              onClick={() => void chooseTenant(hostOption.tenantId)}
+            >
+              Continue as {hostOption.displayName}
+            </button>
+          ) : null}
+          {!hostOption
+            ? customerOptions.map((t) => (
+                <button
+                  key={t.tenantId}
+                  type="button"
+                  className="btn btn-outline-primary"
+                  onClick={() => void chooseTenant(t.tenantId)}
+                >
+                  {t.displayName}
+                </button>
+              ))
+            : null}
+        </div>
+      </GateCard>
+    );
+  }
+
   if (!entitled && !adminSupport) {
     const alternates = me.tenants.filter(
       (t) => t.selectable && t.tenantId !== me.tenantId,
@@ -776,6 +921,8 @@ function ShellBody({ children }: { children: ReactNode }) {
     setTenantSwitching(true);
     try {
       await chooseTenant(nextTenantId);
+    } catch {
+      // AuthProvider.error holds the message; keep the prior tenant selected.
     } finally {
       setTenantSwitching(false);
     }
@@ -830,7 +977,7 @@ function ShellBody({ children }: { children: ReactNode }) {
               {groupOpen ? (
                 <ul className="menu-sub">
                   {items.map((item) => {
-                    const active = routeIsActive(pathname, item.route);
+                    const active = navItemIsActive(pathname, item.route, navRoutes);
                     const comingSoon = isComingSoonModule(item.code);
                     return (
                       <li key={item.code} className={active ? "menu-item active" : "menu-item"}>
@@ -1034,6 +1181,11 @@ function ShellBody({ children }: { children: ReactNode }) {
                     </span>
                   ) : null}
                 </label>
+                {error && me ? (
+                  <div className="alert alert-warning py-1 px-2 mb-0 small" role="alert">
+                    {error}
+                  </div>
+                ) : null}
                 {facility.facilities.length > 0 ? (
                   <label className="nav-item ind-tenant-switcher mb-0">
                     <i className="bx bx-map flex-shrink-0" aria-hidden="true" />
@@ -1076,7 +1228,7 @@ function ShellBody({ children }: { children: ReactNode }) {
                 ) : null}
               </div>
               <ul className="navbar-nav ind-navbar-toolbar__end flex-row align-items-center ms-auto flex-nowrap gap-1 min-w-0">
-                {me?.isDemoTenant ? (
+                {me?.isDemoTenant && !hostTenantId ? (
                   <li className="nav-item d-flex align-items-center">
                     <span className="forge-demo-env-badge forge-demo-env-badge--navbar">
                       DEMO ENVIRONMENT
@@ -1161,7 +1313,7 @@ function ShellBody({ children }: { children: ReactNode }) {
                           </button>
                           <ul className="ind-horizontal-nav__submenu" role="menu">
                             {items.map((item) => {
-                              const active = routeIsActive(pathname, item.route);
+                              const active = navItemIsActive(pathname, item.route, navRoutes);
                               const comingSoon = isComingSoonModule(item.code);
                               return (
                                 <li key={item.code} role="none">
@@ -1241,9 +1393,11 @@ function ShellBody({ children }: { children: ReactNode }) {
   );
 }
 
+const INDUSTRIAL_IDLE_TIMEOUT_MS = 60 * 60_000;
+
 export function IndustrialShell({ children }: { children: ReactNode }) {
   return (
-    <AuthProvider>
+    <AuthProvider idleTimeoutMs={INDUSTRIAL_IDLE_TIMEOUT_MS}>
       <EnvironmentBanner environment={appEnv} />
       <UnsavedChangesProvider>
         <BodyRegionsProvider>

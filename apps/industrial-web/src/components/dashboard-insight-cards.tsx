@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useCallback, useId, useMemo, useState, type PointerEvent } from "react";
 import type { AnalyticsTrendPoint, SafetyIntelligenceReport } from "@/lib/safety-intelligence";
+import { gradeBadgeClass } from "@/lib/safety-intelligence";
 import {
   formatInsightDateRange,
   safetyIndexStrokeClass,
@@ -235,7 +236,7 @@ export function IncidentTrendCard({
           </Link>
         </div>
         {points.length === 0 ? (
-          <p className="text-muted mb-0">No data recorded yet.</p>
+          <p className="text-muted mb-0">No incidents recorded in this date range.</p>
         ) : (
           <IncidentTrendChart points={points} />
         )}
@@ -278,9 +279,19 @@ function SafetyIndexRing({ score, grade }: { score: number; grade: string }) {
 /**
  * Company Safety Index for the dashboard — 6 / 12 month toggle and score ring.
  */
-export function SafetyIndexCard({ report }: { report: SafetyIntelligenceReport | null }) {
+export function SafetyIndexCard({
+  report,
+  showDotScore = true,
+}: {
+  report: SafetyIntelligenceReport | null;
+  /** Hide DOT score when the user cannot open DOT Compliance. */
+  showDotScore?: boolean;
+}) {
   const [period, setPeriod] = useState<SafetyIndexPeriod>("6m");
   const view = safetyIndexView(report, period);
+  const departmentScores =
+    report && period === report.preset ? report.departmentScores : [];
+  const topDepartments = departmentScores.slice(0, 5);
 
   return (
     <div className="card border shadow-none h-100 ind-safety-index">
@@ -316,23 +327,52 @@ export function SafetyIndexCard({ report }: { report: SafetyIntelligenceReport |
           {view ? (
             <>
               <SafetyIndexRing score={view.score} grade={view.grade} />
-              <Link
-                href="/modules/dot-compliance/"
-                className="ind-safety-index__dot text-decoration-none"
-                title={
-                  view.dotOpenItems === 1
-                    ? "1 open DOT item"
-                    : `${view.dotOpenItems} open DOT items`
-                }
-              >
-                <span className="ind-safety-index__dot-label">DOT Score</span>
-                <span className="ind-safety-index__dot-value">{view.dotScore}%</span>
-              </Link>
+              {showDotScore ? (
+                <Link
+                  href="/modules/dot-compliance/"
+                  className="ind-safety-index__dot text-decoration-none"
+                  title={
+                    view.dotOpenItems === 1
+                      ? "1 open DOT item"
+                      : `${view.dotOpenItems} open DOT items`
+                  }
+                >
+                  <span className="ind-safety-index__dot-label">DOT Score</span>
+                  <span className="ind-safety-index__dot-value">{view.dotScore}%</span>
+                </Link>
+              ) : null}
             </>
           ) : (
             <p className="text-muted mb-0">No score available yet.</p>
           )}
         </div>
+
+        {topDepartments.length > 0 ? (
+          <div className="mt-3">
+            <div className="d-flex justify-content-between align-items-center mb-2">
+              <h6 className="mb-0 small text-uppercase text-muted">By department</h6>
+              <Link
+                href="/modules/analytics/?tab=overview"
+                className="small text-decoration-none"
+              >
+                View all
+              </Link>
+            </div>
+            <ul className="list-unstyled mb-0">
+              {topDepartments.map((dept) => (
+                <li
+                  key={dept.departmentId ?? `unassigned-${dept.departmentName}`}
+                  className="d-flex justify-content-between align-items-center gap-2 py-1 border-top"
+                >
+                  <span className="small text-truncate">{dept.departmentName}</span>
+                  <span className={`badge ${gradeBadgeClass(dept.safetyGrade)}`}>
+                    {dept.safetyScore}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        ) : null}
 
         <div className="mt-3">
           <h5 className="mb-1">Safety Index</h5>
@@ -421,7 +461,7 @@ export function InspectionsBySiteCard({
       <div className="card-body p-4">
         <div className="d-flex flex-wrap justify-content-between align-items-start gap-2 mb-3">
           <div>
-            <h5 className="mb-1">Inspections by Site</h5>
+            <h5 className="mb-1">Inspections by Location</h5>
             <p className="text-muted small mb-0">{formatRangeLabel(dateStart, dateEnd)}</p>
           </div>
           <Link
@@ -432,7 +472,7 @@ export function InspectionsBySiteCard({
           </Link>
         </div>
         {sites.length === 0 ? (
-          <p className="text-muted mb-0">No data recorded yet.</p>
+          <p className="text-muted mb-0">No inspections recorded for this period.</p>
         ) : (
           <ul className="list-unstyled mb-0 ind-dash-sites">
             {sites.map((site) => (

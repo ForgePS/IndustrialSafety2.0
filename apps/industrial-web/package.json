@@ -13,14 +13,23 @@
     "clean": "rimraf .next out"
   },
   "dependencies": {
+    "@bradycorporation/brady-web-sdk": "3.3.0",
     "@forge/contracts": "workspace:*",
+    "@forge/import-center": "workspace:*",
+    "@forge/photo-markup": "workspace:*",
+    "@forge/sneat": "workspace:*",
     "@forge/ui": "workspace:*",
     "@forge/web-kit": "workspace:*",
+    "jszip": "^3.10.1",
     "next": "^15.3.4",
+    "pdf-lib": "1.17.1",
+    "pptx-preview": "^1.0.7",
     "react": "^19.1.0",
-    "react-dom": "^19.1.0"
+    "react-dom": "^19.1.0",
+    "xlsx": "^0.18.5"
   },
   "devDependencies": {
+    "@types/jszip": "^3.4.1",
     "@types/react": "^19.1.8",
     "@types/react-dom": "^19.1.6",
     "jsdom": "^26.1.0",

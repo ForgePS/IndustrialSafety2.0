@@ -1,10 +1,16 @@
 import { describe, expect, it } from "vitest";
 import {
   buildFormAnswersPayload,
+  collectFormTypeOptions,
   extractFormFields,
+  formTypeLabel,
+  groupRowsByFormType,
   hydrateFormAnswers,
   isSignatureLabel,
   parseFormFieldsInput,
+  resolveFormSubjectPersonnelId,
+  sortFormDefinitions,
+  sortFormSubmissions,
 } from "./forms-module";
 
 describe("forms-module", () => {
@@ -51,7 +57,7 @@ describe("forms-module", () => {
     const fields = extractFormFields({
       schemaJson: {
         fields: [
-          { id: "empSig", label: "Employee Signature", type: "text" },
+          { id: "empSig", label: "EMPLOYEE Signature", type: "text" },
           { id: "sig", label: "Signature", type: "signature" },
           { id: "sigDate", label: "Signature date", type: "date" },
         ],
@@ -79,12 +85,12 @@ describe("forms-module", () => {
       title: "Acknowledgement for Driving Company Vehicles (MVR Consent)",
       sourceDocumentId: "z8DdbRny93Oi7TkWNQ3M",
       schemaJson: {
-        fields: [{ id: "policy-text", label: "Policy & Employee Agreement", type: "content" }],
+        fields: [{ id: "policy-text", label: "Policy & EMPLOYEE Agreement", type: "content" }],
       },
     });
     expect(fields[0]?.type).toBe("content");
     expect(fields[0]?.content).toContain("Motor Vehicle Record (MVR)");
-    expect(fields[0]?.content).toContain("Employee Agreement:");
+    expect(fields[0]?.content).toContain("EMPLOYEE Agreement:");
   });
 
   it("turns Issuing State into a 50-state dropdown", () => {
@@ -147,15 +153,78 @@ describe("hydrateFormAnswers / buildFormAnswersPayload", () => {
       sig: "data:image/png;base64,AAA",
     });
   });
+
+  it("maps employee number field type and links subject keys in answers payload", () => {
+    const fields = extractFormFields({
+      schemaJson: {
+        fields: [{ id: "employeeNumber", label: "Employee #", type: "employeeNumber", required: true }],
+      },
+    });
+    expect(fields[0]?.type).toBe("employeeNumber");
+    const payload = buildFormAnswersPayload({ employeeNumber: "42" }, fields);
+    expect(payload.employeeNumber).toBe("EMP-42");
+    expect(
+      resolveFormSubjectPersonnelId({
+        answers: { employeeNumber: "EMP-42" },
+        fields,
+        resolvedByFieldId: { employeeNumber: "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee" },
+      }),
+    ).toBe("aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee");
+  });
 });
 
 describe("isSignatureLabel", () => {
   it("matches signature labels but not signature dates", () => {
     expect(isSignatureLabel("Signature")).toBe(true);
-    expect(isSignatureLabel("Employee signature")).toBe(true);
+    expect(isSignatureLabel("EMPLOYEE signature")).toBe(true);
     expect(isSignatureLabel("Sign here")).toBe(true);
     expect(isSignatureLabel("Signature date")).toBe(false);
     expect(isSignatureLabel("Date of signature")).toBe(false);
     expect(isSignatureLabel("Notes")).toBe(false);
+  });
+});
+
+describe("forms sort and type grouping", () => {
+  it("sorts definitions by type then name", () => {
+    const sorted = sortFormDefinitions(
+      [
+        { id: "1", title: "Zebra", category: "Safety" },
+        { id: "2", title: "Alpha", category: "HR" },
+        { id: "3", title: "Beta", category: "Safety" },
+      ],
+      "type",
+    );
+    expect(sorted.map((row) => row.id)).toEqual(["2", "3", "1"]);
+  });
+
+  it("groups submissions under their form type", () => {
+    const definitions = new Map<string, Record<string, unknown>>([
+      ["f1", { id: "f1", title: "MVR", category: "DRIVER" }],
+      ["f2", { id: "f2", title: "PPE", category: "Safety" }],
+    ]);
+    const sorted = sortFormSubmissions(
+      [
+        { id: "s1", title: "One", formDefinitionId: "f2", submittedAt: "2026-01-02" },
+        { id: "s2", title: "Two", formDefinitionId: "f1", submittedAt: "2026-01-03" },
+      ],
+      definitions,
+      "type",
+    );
+    const groups = groupRowsByFormType(sorted, (row) =>
+      formTypeLabel(definitions.get(String(row.formDefinitionId ?? ""))),
+    );
+    expect(groups.map((g) => g.type)).toEqual(["DRIVER", "Safety"]);
+    expect(groups[0]?.items.map((i) => i.id)).toEqual(["s2"]);
+  });
+
+  it("lists unique type options for the filter", () => {
+    expect(
+      collectFormTypeOptions([
+        { category: "Safety" },
+        { formKey: "HR" },
+        { category: "Safety" },
+        { title: "No type" },
+      ]),
+    ).toEqual(["HR", "Safety"]);
   });
 });

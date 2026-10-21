@@ -31,7 +31,19 @@ describe("industrial navigation foundation", () => {
     expect(personnel?.customerEnabled).toBe(false);
   });
 
-  it("enables IND-3 module when entitled and access granted", () => {
+  it("enables IND-3 module when entitled and module view permission granted", () => {
+    const nav = buildIndustrialNavigation({
+      entitled: true,
+      permissions: ["industrial.access", "industrial.personnel.view"],
+      flags: {},
+      enabledModules: ["PERSONNEL"],
+      strictEntitlements: true,
+    });
+    const personnel = nav.find((n) => n.code === "PERSONNEL");
+    expect(personnel?.available).toBe(true);
+  });
+
+  it("hides entitled module when role lacks module view permission", () => {
     const nav = buildIndustrialNavigation({
       entitled: true,
       permissions: ["industrial.access"],
@@ -39,8 +51,7 @@ describe("industrial navigation foundation", () => {
       enabledModules: ["PERSONNEL"],
       strictEntitlements: true,
     });
-    const personnel = nav.find((n) => n.code === "PERSONNEL");
-    expect(personnel?.available).toBe(true);
+    expect(nav.find((n) => n.code === "PERSONNEL")).toBeUndefined();
   });
 
   it("never marks a module available unless it is AVAILABLE, whatever the entitlements", () => {
@@ -119,5 +130,33 @@ describe("industrial navigation foundation", () => {
 
   it("keeps hosting/infrastructure names out of customer-facing copy", () => {
     expect(moduleUnavailableMessage("Personnel")).not.toMatch(/AWS/i);
+  });
+
+  it("exposes Print Manager and hides legacy queue/history when hub is available", () => {
+    expect(featureFlagForModule("PRINT_MANAGER")).toBe("industrial.module.print_manager.enabled");
+    expect(INDUSTRIAL_MODULE_REGISTRY.some((m) => m.code === "PRINT_MANAGER")).toBe(true);
+
+    const nav = buildIndustrialNavigation({
+      entitled: true,
+      permissions: ["industrial.access", "industrial.printer.view"],
+      flags: {},
+      enabledModules: ["PRINT_QUEUE"],
+      strictEntitlements: true,
+    });
+    expect(nav.some((n) => n.code === "PRINT_MANAGER")).toBe(true);
+    expect(nav.some((n) => n.code === "PRINT_QUEUE")).toBe(false);
+    expect(nav.some((n) => n.code === "PRINT_HISTORY")).toBe(false);
+  });
+
+  it("keeps Print Queue when Print Manager is not entitled", () => {
+    const nav = buildIndustrialNavigation({
+      entitled: true,
+      permissions: ["industrial.access", "industrial.printer.view"],
+      flags: { "industrial.module.print_manager.enabled": false },
+      enabledModules: ["PRINT_QUEUE"],
+      strictEntitlements: true,
+    });
+    expect(nav.some((n) => n.code === "PRINT_MANAGER")).toBe(false);
+    expect(nav.some((n) => n.code === "PRINT_QUEUE")).toBe(true);
   });
 });

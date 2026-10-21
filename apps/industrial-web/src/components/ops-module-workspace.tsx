@@ -8,13 +8,20 @@ import { ModuleUnavailable } from "@/components/module-unavailable";
 import { ModuleWorkspaceHeader } from "@/components/module-workspace-header";
 import { SignaturePad } from "@/components/signature-pad";
 import { useIndustrialFacility } from "@/hooks/use-industrial-facility";
+import { useIndustrialModuleGate } from "@/hooks/use-industrial-module-gate";
 import { useProfileSignature } from "@/hooks/use-profile-signature";
 import {
   OPS_MODULE_CONFIG,
   groupCreateFields,
   type Ind3OpsModule,
   type OpsCreateField,
+  type OpsListColumn,
 } from "@/lib/ops-modules";
+import {
+  EMPLOYEE_NUMBER_PREFIX,
+  formatEmployeeNumberFromDigits,
+  sanitizeEmployeeNumberDigitsInput,
+} from "@/lib/employee-number";
 
 type FormState = Record<string, string>;
 
@@ -55,6 +62,7 @@ function renderCreateField(
             {field.label}
           </label>
         </div>
+        {field.help ? <div className="form-text">{field.help}</div> : null}
       </div>
     );
   }
@@ -73,6 +81,29 @@ function renderCreateField(
           value={form[field.name] ?? ""}
           onChange={(ev) => set(ev.target.value)}
         />
+      </div>
+    );
+  }
+
+  if (field.name === "employeeNumber") {
+    return (
+      <div className="col-md-4" key={field.name}>
+        <label className="form-label" htmlFor={inputId}>
+          {field.label}
+        </label>
+        <div className="input-group input-group-sm">
+          <span className="input-group-text">{EMPLOYEE_NUMBER_PREFIX}</span>
+          <input
+            id={inputId}
+            className="form-control"
+            type="text"
+            inputMode="numeric"
+            required={field.required}
+            value={form[field.name] ?? ""}
+            onChange={(ev) => set(sanitizeEmployeeNumberDigitsInput(ev.target.value))}
+          />
+        </div>
+        <div className="form-text">Enter numbers only.</div>
       </div>
     );
   }
@@ -100,17 +131,15 @@ type ListResponse = {
   pageSize: number;
 };
 
-type BootstrapModule = {
-  code: string;
-  awsEnabled: boolean;
-  available: boolean;
-  migrationStatus: string;
-};
-
-type Bootstrap = {
-  industrialEnabled: boolean;
-  modules: BootstrapModule[];
-};
+function formatColumnValue(value: unknown, type?: OpsListColumn["type"]): string {
+  if (value === null || value === undefined || value === "") return "—";
+  const text = String(value);
+  if (type === "date") {
+    const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(text);
+    return m ? `${m[2]}/${m[3]}/${m[1]}` : text;
+  }
+  return text;
+}
 
 export function OpsModuleWorkspace({
   module,
@@ -126,8 +155,11 @@ export function OpsModuleWorkspace({
   const canView = permissions.has(cfg.viewPerm) || permissions.has("industrial.admin");
   const canManage = permissions.has(cfg.managePerm) || permissions.has("industrial.admin");
   const { signatureUrl: profileSignature } = useProfileSignature(canView);
+  const { modEntry, explicitlyDisabled, awsReady } = useIndustrialModuleGate({
+    moduleCode: cfg.code,
+    canView,
+  });
 
-  const [bootstrap, setBootstrap] = useState<Bootstrap | null>(null);
   const [items, setItems] = useState<Array<Record<string, unknown>>>([]);
   const [q, setQ] = useState("");
   const [status, setStatus] = useState("");
@@ -135,27 +167,9 @@ export function OpsModuleWorkspace({
   const [error, setError] = useState<string | null>(null);
   const [creating, setCreating] = useState(false);
   const [form, setForm] = useState<Record<string, string>>({});
-
-  const modEntry = bootstrap?.modules.find((m) => m.code === cfg.code);
-  const awsReady =
-    Boolean(bootstrap?.industrialEnabled) && Boolean(modEntry?.awsEnabled) && canView;
-
-  useEffect(() => {
-    let cancelled = false;
-    (async () => {
-      try {
-        const boot = await apiGet<Bootstrap>("/api/v1/industrial/bootstrap");
-        if (!cancelled) setBootstrap(boot);
-      } catch (e) {
-        if (!cancelled) {
-          setError(e instanceof ApiError ? e.message : "Failed to load module bootstrap");
-        }
-      }
-    })();
-    return () => {
-      cancelled = true;
-    };
-  }, []);
+  const [completingId, setCompletingId] = useState<string | null>(null);
+  const columns = cfg.columns ?? [];
+  const closedStatuses = new Set(cfg.closedStatuses ?? []);
 
   async function loadList(search = q, st = status) {
     setLoading(true);
@@ -218,20 +232,12 @@ export function OpsModuleWorkspace({
     );
   }
 
-  if (bootstrap && !awsReady) {
+  if (explicitlyDisabled) {
     return (
       <ModuleUnavailable
         moduleName={moduleName}
         status={modEntry?.migrationStatus ?? "MIGRATION_IN_PROGRESS"}
       />
-    );
-  }
-
-  if (!bootstrap) {
-    return (
-      <section role="status" aria-live="polite">
-        <ModuleWorkspaceHeader title={moduleName} description="Checking module availability…" />
-      </section>
     );
   }
 
@@ -248,7 +254,12 @@ export function OpsModuleWorkspace({
           continue;
         }
         const v = form[field.name]?.trim();
-        if (v) payload[field.name] = v;
+        if (!v) continue;
+        if (field.name === "employeeNumber") {
+          payload.employeeNumber = formatEmployeeNumberFromDigits(v);
+          continue;
+        }
+        payload[field.name] = v;
       }
       await apiSend(cfg.createPath, "POST", payload);
       setForm({});
@@ -260,8 +271,27 @@ export function OpsModuleWorkspace({
     }
   }
 
+  async function onComplete(id: string) {
+    if (!cfg.completePath) return;
+    setCompletingId(id);
+    setError(null);
+    try {
+      await apiSend(
+        cfg.completePath.replace("{id}", encodeURIComponent(id)),
+        "POST",
+        {},
+        { idempotencyKey: crypto.randomUUID() },
+      );
+      await loadList();
+    } catch (err) {
+      setError(err instanceof ApiError ? err.message : "Could not mark complete");
+    } finally {
+      setCompletingId(null);
+    }
+  }
+
   return (
-    <section aria-labelledby="ops-module-title">
+    <section aria-labelledby="ops-module-title" data-walkthrough="safety-observations">
       <ModuleWorkspaceHeader
         id="ops-module-title"
         eyebrow="Operations"
@@ -322,8 +352,18 @@ export function OpsModuleWorkspace({
               <thead>
                 <tr>
                   <th scope="col">Record</th>
+                  {columns.map((col) => (
+                    <th scope="col" key={col.key}>
+                      {col.label}
+                    </th>
+                  ))}
                   <th scope="col">Status</th>
                   <th scope="col">Updated</th>
+                  {cfg.completePath ? (
+                    <th scope="col">
+                      <span className="visually-hidden">Actions</span>
+                    </th>
+                  ) : null}
                 </tr>
               </thead>
               <tbody>
@@ -331,9 +371,14 @@ export function OpsModuleWorkspace({
                   const title = String(
                     row[cfg.titleField] ?? row.title ?? row.name ?? row.id ?? "—",
                   );
+                  const rowId = String(row.id);
+                  const rowStatus = String(row.status ?? "").toUpperCase();
                   return (
-                    <tr key={String(row.id)}>
+                    <tr key={rowId}>
                       <td>{title}</td>
+                      {columns.map((col) => (
+                        <td key={col.key}>{formatColumnValue(row[col.key], col.type)}</td>
+                      ))}
                       <td>
                         <span className="badge bg-label-secondary">{String(row.status ?? "—")}</span>
                       </td>
@@ -342,6 +387,20 @@ export function OpsModuleWorkspace({
                           ? new Date(String(row.updatedAt)).toLocaleString()
                           : "—"}
                       </td>
+                      {cfg.completePath ? (
+                        <td className="text-end">
+                          {closedStatuses.has(rowStatus) ? null : (
+                            <button
+                              type="button"
+                              className="btn btn-sm btn-outline-success"
+                              disabled={completingId !== null}
+                              onClick={() => void onComplete(rowId)}
+                            >
+                              {completingId === rowId ? "Saving…" : "Mark complete"}
+                            </button>
+                          )}
+                        </td>
+                      ) : null}
                     </tr>
                   );
                 })}
@@ -486,7 +545,7 @@ export function OpsModuleWorkspace({
                 </div>
                 <div className="col-md-8">
                   <label className="form-label" htmlFor="bulk-training-ids">
-                    Employee IDs (comma-separated)
+                    EMPLOYEE IDs (comma-separated)
                   </label>
                   <input
                     id="bulk-training-ids"
@@ -499,7 +558,7 @@ export function OpsModuleWorkspace({
                 </div>
                 <div className="col-12">
                   <button type="submit" className="btn btn-primary btn-sm" disabled={creating}>
-                    {creating ? "Saving…" : "Record for all selected employees"}
+                    {creating ? "Saving…" : "Record for all selected EMPLOYEES"}
                   </button>
                 </div>
               </div>

@@ -411,10 +411,10 @@ export function TasksWorkspace({ moduleName }: { moduleName: string }) {
   ];
 
   return (
-    <section aria-labelledby="tasks-title">
+    <section aria-labelledby="tasks-title" data-walkthrough="tasks-overview">
       <ModuleWorkspaceHeader
         id="tasks-title"
-        eyebrow="Coordination"
+        eyebrow="System Tools"
         title={moduleName}
         description="Assign work, track subtasks and checklists, and set reminders."
         onRefresh={() => void load()}
@@ -752,7 +752,13 @@ export function TasksWorkspace({ moduleName }: { moduleName: string }) {
               {displayedItems.length === 0 ? (
                 <tr>
                   <td colSpan={6} className="text-muted text-center py-4">
-                    {loading ? "Loading…" : "No tasks match this view."}
+                    {loading
+                      ? "Loading…"
+                      : filter
+                        ? "No tasks match your search."
+                        : view === "all"
+                          ? "No tasks yet. Create one above."
+                          : `No tasks in this view.`}
                   </td>
                 </tr>
               ) : null}

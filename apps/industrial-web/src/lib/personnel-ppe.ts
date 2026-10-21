@@ -2,6 +2,8 @@
  * PPE allowance tracking: expiration windows, roster summaries, and display helpers.
  */
 
+import { personNameDisplay } from "@/lib/person-name-display";
+
 export const PPE_ALLOWANCE_TERM_YEARS = 1;
 export const PPE_EXPIRY_WARNING_DAYS = 30;
 
@@ -323,11 +325,11 @@ export type PpeAllowanceFilter = "all" | "glasses" | "footwear" | "expiring" | "
 
 function ppeDisplayName(row: Record<string, unknown>): string {
   const display = asText(row.displayName);
-  if (display) return display;
+  if (display) return personNameDisplay(display);
   const given = asText(row.preferredName) || asText(row.firstName);
   const last = asText(row.lastName);
-  if (given && last) return `${given} ${last}`;
-  return given || last || asText(row.id);
+  if (given && last) return personNameDisplay(`${given} ${last}`);
+  return personNameDisplay(given || last || asText(row.id));
 }
 
 export function personTracksPpeAllowance(row: Record<string, unknown>): boolean {

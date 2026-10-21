@@ -32,6 +32,25 @@ export type ModuleSummaryLoader = (view: string) => Promise<ModuleSummaryPayload
 
 type ListWrap<T> = { items?: T[] };
 
+function summaryRow(partial: {
+  id: string;
+  title: string;
+  href: string;
+  meta?: string | undefined;
+  badge?: string | undefined;
+  tone?: "danger" | "warning" | "muted" | undefined;
+}): ModuleSummaryRow {
+  const row: ModuleSummaryRow = {
+    id: partial.id,
+    title: partial.title,
+    href: partial.href,
+  };
+  if (partial.meta !== undefined && partial.meta !== "") row.meta = partial.meta;
+  if (partial.badge !== undefined && partial.badge !== "") row.badge = partial.badge;
+  if (partial.tone !== undefined) row.tone = partial.tone;
+  return row;
+}
+
 function statusOpen(status: string): boolean {
   const s = status.toUpperCase();
   return (
@@ -83,14 +102,16 @@ export async function loadInspectionsSummary(view: string): Promise<ModuleSummar
       { label: "Open", value: open.length },
       { label: "Due", value: due.length, tone: due.length ? "warning" : "muted" },
     ],
-    rows: list.slice(0, 20).map((row) => ({
-      id: String(row.id),
-      title: String(row.title ?? row.name ?? "Inspection"),
-      meta: String(row.status ?? ""),
-      href: `/modules/inspections`,
-      badge: String(row.status ?? ""),
-      tone: String(row.status ?? "").toUpperCase() === "DUE" ? "warning" : undefined,
-    })),
+    rows: list.slice(0, 20).map((row) =>
+      summaryRow({
+        id: String(row.id),
+        title: String(row.title ?? row.name ?? "Inspection"),
+        meta: String(row.status ?? ""),
+        href: `/modules/inspections`,
+        badge: String(row.status ?? "") || undefined,
+        tone: String(row.status ?? "").toUpperCase() === "DUE" ? "warning" : undefined,
+      }),
+    ),
     emptyLabel: "No inspections in this view.",
   };
 }
@@ -137,14 +158,16 @@ export async function loadTrainingSummary(view: string): Promise<ModuleSummaryPa
       { label: "Due soon", value: dueSoon.length, tone: dueSoon.length ? "warning" : "muted" },
       { label: "Overdue", value: overdue.length, tone: overdue.length ? "danger" : "muted" },
     ],
-    rows: list.slice(0, 20).map((row) => ({
-      id: row.id,
-      title: row.title || "Training assignment",
-      meta: row.dueAt ? `Due ${new Date(row.dueAt).toLocaleDateString()}` : String(row.status ?? ""),
-      href: "/modules/training",
-      badge: isOverdueDate(row.dueAt) ? "Overdue" : isDueSoon(row.dueAt) ? "Due soon" : undefined,
-      tone: isOverdueDate(row.dueAt) ? "danger" : isDueSoon(row.dueAt) ? "warning" : undefined,
-    })),
+    rows: list.slice(0, 20).map((row) =>
+      summaryRow({
+        id: row.id,
+        title: row.title || "Training assignment",
+        meta: row.dueAt ? `Due ${new Date(row.dueAt).toLocaleDateString()}` : String(row.status ?? ""),
+        href: "/modules/training",
+        badge: isOverdueDate(row.dueAt) ? "Overdue" : isDueSoon(row.dueAt) ? "Due soon" : undefined,
+        tone: isOverdueDate(row.dueAt) ? "danger" : isDueSoon(row.dueAt) ? "warning" : undefined,
+      }),
+    ),
     emptyLabel: "No training assignments in this view.",
   };
 }
@@ -244,14 +267,16 @@ export async function loadEmergencyAlertsSummary(view: string): Promise<ModuleSu
         tone: dash.acknowledgmentsPending ? "warning" : "muted",
       },
     ],
-    rows: list.slice(0, 20).map((row) => ({
-      id: row.id,
-      title: row.headline || "Emergency alert",
-      meta: [row.severity, row.isDrill ? "Drill" : null].filter(Boolean).join(" · "),
-      href: "/modules/emergency-alerts",
-      badge: row.status,
-      tone: String(row.severity ?? "").toUpperCase() === "CRITICAL" ? "danger" : "warning",
-    })),
+    rows: list.slice(0, 20).map((row) =>
+      summaryRow({
+        id: row.id,
+        title: row.headline || "Emergency alert",
+        meta: [row.severity, row.isDrill ? "Drill" : null].filter(Boolean).join(" · "),
+        href: "/modules/emergency-alerts",
+        badge: row.status,
+        tone: String(row.severity ?? "").toUpperCase() === "CRITICAL" ? "danger" : "warning",
+      }),
+    ),
     emptyLabel: "No alerts to show.",
   };
 }
@@ -277,14 +302,16 @@ export async function loadMessagingSummary(view: string): Promise<ModuleSummaryP
       { label: "Unread", value: unreadTotal, tone: unreadTotal ? "warning" : "muted" },
       { label: "Threads", value: threads.length },
     ],
-    rows: list.slice(0, 20).map((row) => ({
-      id: row.id,
-      title: row.title || "Thread",
-      meta: row.lastMessagePreview || (row.lastMessageAt ? new Date(row.lastMessageAt).toLocaleString() : ""),
-      href: "/modules/messaging",
-      badge: (row.unreadCount ?? 0) > 0 ? `${row.unreadCount} new` : undefined,
-      tone: (row.unreadCount ?? 0) > 0 ? "warning" : undefined,
-    })),
+    rows: list.slice(0, 20).map((row) =>
+      summaryRow({
+        id: row.id,
+        title: row.title || "Thread",
+        meta: row.lastMessagePreview || (row.lastMessageAt ? new Date(row.lastMessageAt).toLocaleString() : ""),
+        href: "/modules/messaging",
+        badge: (row.unreadCount ?? 0) > 0 ? `${row.unreadCount} new` : undefined,
+        tone: (row.unreadCount ?? 0) > 0 ? "warning" : undefined,
+      }),
+    ),
     emptyLabel: "No messages yet.",
   };
 }
@@ -323,23 +350,27 @@ export async function loadSafetySuppliesSummary(view: string): Promise<ModuleSum
 
   const rows: ModuleSummaryRow[] =
     view === "requests"
-      ? requestItems.slice(0, 20).map((row) => ({
-          id: String(row.id),
-          title: String(row.requestNumber || "Supply request"),
-          meta: [row.priority, row.status].filter(Boolean).join(" · "),
-          href: "/modules/safety-supplies",
-        }))
-      : reorderItems.slice(0, 20).map((row) => ({
-          id: `${row.itemId}:${row.locationId}`,
-          title: String(row.itemName || "Supply item"),
-          meta:
-            row.quantityAvailable != null
-              ? `${row.quantityAvailable} on hand` +
-                (row.reorderPoint != null ? ` · reorder at ${row.reorderPoint}` : "")
-              : undefined,
-          href: "/modules/safety-supplies",
-          tone: "warning" as const,
-        }));
+      ? requestItems.slice(0, 20).map((row) =>
+          summaryRow({
+            id: String(row.id),
+            title: String(row.requestNumber || "Supply request"),
+            meta: [row.priority, row.status].filter(Boolean).join(" · "),
+            href: "/modules/safety-supplies",
+          }),
+        )
+      : reorderItems.slice(0, 20).map((row) =>
+          summaryRow({
+            id: `${row.itemId}:${row.locationId}`,
+            title: String(row.itemName || "Supply item"),
+            meta:
+              row.quantityAvailable != null
+                ? `${row.quantityAvailable} on hand` +
+                  (row.reorderPoint != null ? ` · reorder at ${row.reorderPoint}` : "")
+                : undefined,
+            href: "/modules/safety-supplies",
+            tone: "warning",
+          }),
+        );
 
   return {
     caption:
@@ -387,17 +418,104 @@ export async function loadCorrectiveActionsSummary(view: string): Promise<Module
       { label: "Open", value: open.length },
       { label: "Overdue", value: overdue.length, tone: overdue.length ? "danger" : "muted" },
     ],
-    rows: list.slice(0, 20).map((row) => ({
-      id: row.id,
-      title: row.title || "Corrective action",
-      meta: [row.priority, row.dueDate ? `Due ${new Date(row.dueDate).toLocaleDateString()}` : null]
-        .filter(Boolean)
-        .join(" · "),
-      href: "/modules/inspections",
-      badge: isOverdueDate(row.dueDate) ? "Overdue" : row.status,
-      tone: isOverdueDate(row.dueDate) ? "danger" : undefined,
-    })),
+    rows: list.slice(0, 20).map((row) =>
+      summaryRow({
+        id: row.id,
+        title: row.title || "Corrective action",
+        meta: [row.priority, row.dueDate ? `Due ${new Date(row.dueDate).toLocaleDateString()}` : null]
+          .filter(Boolean)
+          .join(" · "),
+        href: "/modules/inspections",
+        badge: isOverdueDate(row.dueDate) ? "Overdue" : row.status,
+        tone: isOverdueDate(row.dueDate) ? "danger" : undefined,
+      }),
+    ),
     emptyLabel: "No corrective actions in this view.",
+  };
+}
+
+async function loadSanitationSummary(view: string): Promise<ModuleSummaryPayload> {
+  const data = await apiGet<{
+    sanitationCompliancePercent?: number | null;
+    openCriticalFindings?: number;
+    overdueCleaningTasks?: number;
+    dustHousekeepingAlerts?: number;
+    openFindings?: Array<{
+      id: string;
+      title?: string | null;
+      severity?: string | null;
+      status?: string | null;
+    }>;
+    todayCleaningSchedule?: Array<{
+      id: string;
+      title?: string | null;
+      status?: string | null;
+      dueAt?: string | null;
+    }>;
+  }>("/api/v1/industrial/sanitation/dashboard");
+
+  const critical = data.openCriticalFindings ?? 0;
+  const overdueClean = data.overdueCleaningTasks ?? 0;
+  const dust = data.dustHousekeepingAlerts ?? 0;
+  const compliance = data.sanitationCompliancePercent;
+
+  if (view === "cleaning") {
+    const rows = (data.todayCleaningSchedule ?? []).slice(0, 20);
+    return {
+      caption:
+        overdueClean > 0
+          ? `${overdueClean} overdue cleaning tasks`
+          : rows.length
+            ? `${rows.length} cleaning tasks today`
+            : "No cleaning tasks due",
+      stats: [
+        { label: "Today", value: rows.length },
+        { label: "Overdue", value: overdueClean, tone: overdueClean ? "danger" : "muted" },
+      ],
+      rows: rows.map((row) =>
+        summaryRow({
+          id: row.id,
+          title: row.title || "Cleaning task",
+          meta: row.dueAt ? `Due ${new Date(row.dueAt).toLocaleString()}` : undefined,
+          href: "/modules/sanitation",
+          badge: row.status ?? undefined,
+        }),
+      ),
+      emptyLabel: "No cleaning tasks in this view.",
+    };
+  }
+
+  const findings = (data.openFindings ?? []).filter((f) =>
+    view === "critical" ? String(f.severity ?? "").toUpperCase() === "CRITICAL" : true,
+  );
+
+  return {
+    caption:
+      critical > 0
+        ? `${critical} critical findings · ${dust} dust alerts`
+        : compliance != null
+          ? `${compliance.toFixed(1)}% sanitation compliance`
+          : "Sanitation overview",
+    stats: [
+      {
+        label: "Compliance",
+        value: compliance != null ? Math.round(compliance) : 0,
+        tone: compliance != null && compliance < 90 ? "warning" : "muted",
+      },
+      { label: "Critical", value: critical, tone: critical ? "danger" : "muted" },
+      { label: "Dust alerts", value: dust, tone: dust ? "danger" : "muted" },
+    ],
+    rows: findings.slice(0, 20).map((row) =>
+      summaryRow({
+        id: row.id,
+        title: row.title || "Sanitation finding",
+        meta: row.severity ?? undefined,
+        href: "/modules/sanitation",
+        badge: row.status ?? undefined,
+        tone: String(row.severity ?? "").toUpperCase() === "CRITICAL" ? "danger" : "warning",
+      }),
+    ),
+    emptyLabel: "No open sanitation findings.",
   };
 }
 
@@ -409,6 +527,7 @@ const LOADERS: Record<string, ModuleSummaryLoader> = {
   MESSAGING: loadMessagingSummary,
   SAFETY_SUPPLIES: loadSafetySuppliesSummary,
   CORRECTIVE_ACTIONS: loadCorrectiveActionsSummary,
+  SANITATION: loadSanitationSummary,
 };
 
 const DEFAULT_VIEWS: Record<string, string> = {
@@ -419,6 +538,7 @@ const DEFAULT_VIEWS: Record<string, string> = {
   MESSAGING: "unread",
   SAFETY_SUPPLIES: "low-stock",
   CORRECTIVE_ACTIONS: "open",
+  SANITATION: "dashboard",
 };
 
 export function getModuleSummaryLoader(moduleKey: string): ModuleSummaryLoader | undefined {

@@ -1,9 +1,13 @@
 "use client";
 
-import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState, type FormEvent } from "react";
+import { AdminActionDropdown, AdminSectionCard } from "@/components/admin-action-dropdown";
+import { AdminSearchMultiSelect, AdminToneIcon } from "@/components/admin-search-multi-select";
 import { ApiError, apiGet, apiGetResult, apiSend, requestCognitoPasswordReset, toIfMatch, useAuth } from "@forge/web-kit";
+import { InvitationsPanel } from "@/components/invitations-panel";
 import { ModuleWorkspaceHeader } from "@/components/module-workspace-header";
+import { ModuleWorkspaceTabs } from "@/components/module-workspace-tabs";
+import { canReadInvitations } from "@/lib/platform-admin";
 import {
   canAccessUserManagement,
   canInviteUsers,
@@ -20,6 +24,46 @@ import {
   type DirectoryUser,
   type TenantRoleOption,
 } from "@/lib/user-management";
+import { industrialModulesWithRoleAccess } from "@/lib/roles-permissions";
+import { INDUSTRIAL_PRODUCT_CODE } from "@forge/contracts";
+
+type MembershipAccessPayload = {
+  products?: Array<{ code?: string | null; status?: string | null }>;
+  modules?: Array<{ code?: string | null; status?: string | null }>;
+};
+
+type UserProfilePayload = {
+  firstName?: string | null;
+  middleName?: string | null;
+  lastName?: string | null;
+  preferredName?: string | null;
+  phone?: string | null;
+  email?: string | null;
+  username?: string | null;
+  recordVersion?: number;
+};
+
+type EditProfileForm = {
+  firstName: string;
+  middleName: string;
+  lastName: string;
+  preferredName: string;
+  phone: string;
+  email: string;
+  username: string;
+};
+
+function emptyProfileForm(): EditProfileForm {
+  return {
+    firstName: "",
+    middleName: "",
+    lastName: "",
+    preferredName: "",
+    phone: "",
+    email: "",
+    username: "",
+  };
+}
 
 type InviteForm = {
   firstName: string;
@@ -27,6 +71,13 @@ type InviteForm = {
   email: string;
   roleCode: string;
 };
+
+const USER_TABS = [
+  { id: "directory", label: "User directory" },
+  { id: "invitations", label: "Pending invitations" },
+] as const;
+
+type UserTabId = (typeof USER_TABS)[number]["id"];
 
 function emptyInvite(): InviteForm {
   return { firstName: "", lastName: "", email: "", roleCode: "" };
@@ -58,7 +109,9 @@ export function UserManagementWorkspace() {
   const canManage = canManageUserManagement(me);
   const canInvite = canInviteUsers(me);
   const canReset = canSendPasswordReset(me);
+  const canViewInvites = canReadInvitations(me);
 
+  const [tab, setTab] = useState<UserTabId>("directory");
   const [users, setUsers] = useState<DirectoryUser[]>([]);
   const [roles, setRoles] = useState<TenantRoleOption[]>([]);
   const [loading, setLoading] = useState(true);
@@ -72,7 +125,14 @@ export function UserManagementWorkspace() {
   const [invite, setInvite] = useState<InviteForm>(emptyInvite);
   const [editing, setEditing] = useState<DirectoryUser | null>(null);
   const [editRoles, setEditRoles] = useState<string[]>([]);
+  const [editModules, setEditModules] = useState<string[]>([]);
+  const [editProductCodes, setEditProductCodes] = useState<string[]>([INDUSTRIAL_PRODUCT_CODE]);
+  const [editProfile, setEditProfile] = useState<EditProfileForm>(emptyProfileForm);
+  const [editProfileEtag, setEditProfileEtag] = useState<string | null>(null);
+  const [editAccessLoading, setEditAccessLoading] = useState(false);
   const [reason, setReason] = useState("");
+
+  const moduleOptions = useMemo(() => industrialModulesWithRoleAccess(), []);
 
   const load = useCallback(async () => {
     if (!tenantId || !canAccess) return;
@@ -186,25 +246,114 @@ export function UserManagementWorkspace() {
     }
   }
 
-  async function onSaveRoles(event: FormEvent) {
+  async function openEditAccess(user: DirectoryUser) {
+    setEditing(user);
+    setEditRoles(user.roles.map((role) => role.roleCode));
+    setEditModules([]);
+    setEditProductCodes([INDUSTRIAL_PRODUCT_CODE]);
+    setEditProfile({
+      firstName: user.firstName,
+      middleName: "",
+      lastName: user.lastName,
+      preferredName: "",
+      phone: "",
+      email: user.email,
+      username: user.username,
+    });
+    setEditProfileEtag(null);
+    setEditAccessLoading(true);
+    setError(null);
+    try {
+      const [access, profileResult] = await Promise.all([
+        apiGet<MembershipAccessPayload>(
+          `/api/v1/tenants/${tenantId}/memberships/${user.membershipId}/products`,
+        ),
+        apiGetResult<UserProfilePayload>("/api/v1/auth/profile", {
+          query: { userId: user.userId },
+        }).catch(() => null),
+      ]);
+      const products = (access.products ?? [])
+        .map((row) => String(row.code ?? "").trim())
+        .filter(Boolean);
+      const modules = (access.modules ?? [])
+        .map((row) => String(row.code ?? "").trim())
+        .filter(Boolean);
+      setEditProductCodes(products.length > 0 ? products : [INDUSTRIAL_PRODUCT_CODE]);
+      setEditModules(modules);
+      if (profileResult?.data) {
+        const profile = profileResult.data;
+        setEditProfile({
+          firstName: String(profile.firstName ?? user.firstName ?? "").trim(),
+          middleName: String(profile.middleName ?? "").trim(),
+          lastName: String(profile.lastName ?? user.lastName ?? "").trim(),
+          preferredName: String(profile.preferredName ?? "").trim(),
+          phone: String(profile.phone ?? "").trim(),
+          email: String(profile.email ?? user.email ?? "").trim(),
+          username: String(profile.username ?? user.username ?? "").trim(),
+        });
+        setEditProfileEtag(
+          profileResult.etag ??
+            (typeof profile.recordVersion === "number" ? toIfMatch(profile.recordVersion) : null),
+        );
+      }
+    } catch (err) {
+      setError(err instanceof ApiError ? err.message : "Failed to load user access");
+    } finally {
+      setEditAccessLoading(false);
+    }
+  }
+
+  async function onSaveAccess(event: FormEvent) {
     event.preventDefault();
     if (!editing || !canManage) return;
+    if (!editProfile.firstName.trim() || !editProfile.lastName.trim()) {
+      setError("First name and last name are required");
+      return;
+    }
     setBusyId(editing.membershipId);
     setError(null);
     try {
-      const ifMatch = await membershipIfMatch(editing.membershipId);
+      await apiSend(
+        "/api/v1/auth/profile",
+        "PATCH",
+        {
+          firstName: editProfile.firstName.trim(),
+          lastName: editProfile.lastName.trim(),
+          middleName: editProfile.middleName.trim() || null,
+          preferredName: editProfile.preferredName.trim() || null,
+          phone: editProfile.phone.trim() || null,
+          email: editProfile.email.trim() || null,
+          username: editProfile.username.trim() || null,
+        },
+        {
+          query: { userId: editing.userId },
+          ...(editProfileEtag ? { ifMatch: editProfileEtag } : {}),
+        },
+      );
+      const ifMatchRoles = await membershipIfMatch(editing.membershipId);
       await apiSend(
         `/api/v1/tenants/${tenantId}/memberships/${editing.membershipId}/roles`,
         "PUT",
         {
           roles: editRoles.map((roleCode) => ({ roleCode, organizationId: null })),
         },
-        { ifMatch },
+        { ifMatch: ifMatchRoles },
+      );
+      const ifMatchProducts = await membershipIfMatch(editing.membershipId);
+      await apiSend(
+        `/api/v1/tenants/${tenantId}/memberships/${editing.membershipId}/products`,
+        "PUT",
+        {
+          productCodes:
+            editProductCodes.length > 0 ? editProductCodes : [INDUSTRIAL_PRODUCT_CODE],
+          moduleCodes: editModules,
+        },
+        { ifMatch: ifMatchProducts },
       );
       setEditing(null);
       await load();
     } catch (err) {
-      setError(err instanceof ApiError ? err.message : "Failed to update roles");
+      setError(err instanceof ApiError ? err.message : "Failed to update user access");
     } finally {
       setBusyId(null);
     }
@@ -339,9 +488,9 @@ export function UserManagementWorkspace() {
     <section aria-labelledby="user-mgmt-title">
       <ModuleWorkspaceHeader
         id="user-mgmt-title"
-        eyebrow="Settings"
-        title="User management"
-        description="Platform users for this tenant. Invite, verify, and assign roles without leaving Industrial."
+        eyebrow="Platform admin"
+        title="Users & access"
+        description="Invite teammates, assign roles and modules, reset passwords, and manage membership for your company."
         onRefresh={() => void load()}
         refreshing={loading}
       />
@@ -362,45 +511,52 @@ export function UserManagementWorkspace() {
         </div>
       ) : null}
 
+      <ModuleWorkspaceTabs
+        tabs={USER_TABS.filter((item) => item.id !== "invitations" || canViewInvites)}
+        active={tab}
+        onChange={setTab}
+        ariaLabel="User management sections"
+        tabPanelLabel={tab === "directory" ? "User directory" : "Pending invitations"}
+      >
+        {tab === "invitations" ? (
+          <InvitationsPanel onChanged={() => void load()} />
+        ) : (
+          <>
       <div className="row g-3 mb-4">
         {[
-          { label: "Users", value: `${stats.total}`, hint: "Total users", icon: "bx-user", tone: "primary" },
+          { label: "Users", value: `${stats.total}`, hint: "Total users", icon: "bx-user", tone: "primary" as const },
           {
             label: "Verified users",
             value: String(stats.verified),
             hint: stats.total === 0 ? "0%" : `${Math.round((stats.verified / stats.total) * 100)}%`,
-            icon: "bx-user-plus",
-            tone: "danger",
+            icon: "bx-badge-check",
+            tone: "success" as const,
           },
           {
             label: "Duplicate users",
             value: String(stats.duplicates),
             hint: "Same email on more than one row",
-            icon: "bx-user-check",
-            tone: "success",
+            icon: "bx-copy-alt",
+            tone: "warning" as const,
           },
           {
             label: "Verification pending",
             value: String(stats.pending),
             hint: "Invited or not yet active",
-            icon: "bx-user-voice",
-            tone: "warning",
+            icon: "bx-time-five",
+            tone: "info" as const,
           },
         ].map((card) => (
           <div className="col-sm-6 col-xl-3" key={card.label}>
-            <div className="card h-100">
+            <div className="card h-100 border-0 shadow-none bg-body-secondary bg-opacity-25">
               <div className="card-body">
-                <div className="d-flex align-items-start justify-content-between">
+                <div className="d-flex align-items-start justify-content-between gap-3">
                   <div>
                     <span className="d-block text-muted small">{card.label}</span>
                     <h4 className="mb-0">{card.value}</h4>
                     <small className="text-muted">{card.hint}</small>
                   </div>
-                  <div className="avatar">
-                    <span className={`avatar-initial rounded bg-label-${card.tone}`}>
-                      <i className={`bx ${card.icon}`} />
-                    </span>
-                  </div>
+                  <AdminToneIcon icon={card.icon} tone={card.tone} />
                 </div>
               </div>
             </div>
@@ -483,39 +639,155 @@ export function UserManagementWorkspace() {
       ) : null}
 
       {editing && canManage ? (
-        <form className="card mb-4" onSubmit={(event) => void onSaveRoles(event)}>
+        <form className="card mb-4" onSubmit={(event) => void onSaveAccess(event)}>
           <div className="card-header d-flex justify-content-between align-items-center">
-            <h6 className="mb-0">Edit {editing.displayName}</h6>
+            <h6 className="mb-0">Edit user · {editing.displayName}</h6>
             <button type="button" className="btn-close" onClick={() => setEditing(null)} />
           </div>
-          <div className="card-body">
-            <p className="text-muted small">{editing.email}</p>
-            <label className="form-label" htmlFor="edit-roles">
-              Roles
-            </label>
-            <select
-              id="edit-roles"
-              className="form-select"
-              multiple
-              value={editRoles}
-              onChange={(e) =>
-                setEditRoles(Array.from(e.target.selectedOptions).map((option) => option.value))
-              }
-              size={Math.min(8, Math.max(3, roles.length))}
-            >
-              {roles.map((role) => (
-                <option key={role.code} value={role.code}>
-                  {role.name}
-                </option>
-              ))}
-            </select>
+          <div className="card-body row g-3">
+            <div className="col-12">
+              <p className="text-muted small mb-0">{editing.email}</p>
+            </div>
+            {editAccessLoading ? (
+              <div className="col-12">
+                <p className="text-muted mb-0" role="status">
+                  Loading user details…
+                </p>
+              </div>
+            ) : (
+              <>
+                <div className="col-12">
+                  <h6 className="text-uppercase small text-muted mb-2">Other info</h6>
+                </div>
+                <div className="col-md-4">
+                  <label className="form-label" htmlFor="edit-first-name">
+                    First name
+                  </label>
+                  <input
+                    id="edit-first-name"
+                    className="form-control"
+                    required
+                    value={editProfile.firstName}
+                    onChange={(e) => setEditProfile((prev) => ({ ...prev, firstName: e.target.value }))}
+                  />
+                </div>
+                <div className="col-md-4">
+                  <label className="form-label" htmlFor="edit-last-name">
+                    Last name
+                  </label>
+                  <input
+                    id="edit-last-name"
+                    className="form-control"
+                    required
+                    value={editProfile.lastName}
+                    onChange={(e) => setEditProfile((prev) => ({ ...prev, lastName: e.target.value }))}
+                  />
+                </div>
+                <div className="col-md-4">
+                  <label className="form-label" htmlFor="edit-middle-name">
+                    Middle name
+                  </label>
+                  <input
+                    id="edit-middle-name"
+                    className="form-control"
+                    value={editProfile.middleName}
+                    onChange={(e) => setEditProfile((prev) => ({ ...prev, middleName: e.target.value }))}
+                  />
+                </div>
+                <div className="col-md-4">
+                  <label className="form-label" htmlFor="edit-preferred-name">
+                    Preferred name
+                  </label>
+                  <input
+                    id="edit-preferred-name"
+                    className="form-control"
+                    value={editProfile.preferredName}
+                    onChange={(e) =>
+                      setEditProfile((prev) => ({ ...prev, preferredName: e.target.value }))
+                    }
+                  />
+                </div>
+                <div className="col-md-4">
+                  <label className="form-label" htmlFor="edit-username">
+                    Username
+                  </label>
+                  <input
+                    id="edit-username"
+                    className="form-control"
+                    value={editProfile.username}
+                    onChange={(e) => setEditProfile((prev) => ({ ...prev, username: e.target.value }))}
+                  />
+                </div>
+                <div className="col-md-4">
+                  <label className="form-label" htmlFor="edit-phone">
+                    Phone
+                  </label>
+                  <input
+                    id="edit-phone"
+                    type="tel"
+                    className="form-control"
+                    value={editProfile.phone}
+                    onChange={(e) => setEditProfile((prev) => ({ ...prev, phone: e.target.value }))}
+                  />
+                </div>
+                <div className="col-md-6">
+                  <label className="form-label" htmlFor="edit-contact-email">
+                    Contact email
+                  </label>
+                  <input
+                    id="edit-contact-email"
+                    type="email"
+                    className="form-control"
+                    value={editProfile.email}
+                    onChange={(e) => setEditProfile((prev) => ({ ...prev, email: e.target.value }))}
+                  />
+                  <div className="form-text">Does not change their Cognito sign-in email.</div>
+                </div>
+                <div className="col-12">
+                  <AdminSearchMultiSelect
+                    id="edit-roles"
+                    label="Roles"
+                    value={editRoles}
+                    onChange={setEditRoles}
+                    options={roles.map((role) => ({
+                      value: role.code,
+                      label: role.name,
+                      hint: role.code,
+                    }))}
+                    placeholder="Search roles…"
+                  />
+                </div>
+                <div className="col-12">
+                  <AdminSearchMultiSelect
+                    id="edit-modules"
+                    label="Modules"
+                    value={editModules}
+                    onChange={setEditModules}
+                    options={moduleOptions.map((mod) => ({
+                      value: mod.code,
+                      label: mod.name,
+                      hint: mod.group,
+                    }))}
+                    placeholder="Search modules…"
+                  />
+                  <div className="form-text">
+                    Limits which company-enabled modules this user can open. Roles still control
+                    permissions inside each module.
+                  </div>
+                </div>
+              </>
+            )}
           </div>
           <div className="card-footer d-flex justify-content-end gap-2">
             <button type="button" className="btn btn-outline-secondary" onClick={() => setEditing(null)}>
               Cancel
             </button>
-            <button type="submit" className="btn btn-primary" disabled={busyId === editing.membershipId}>
-              Save roles
+            <button
+              type="submit"
+              className="btn btn-primary"
+              disabled={busyId === editing.membershipId || editAccessLoading}
+            >
+              Save user
             </button>
           </div>
         </form>
@@ -620,60 +892,67 @@ export function UserManagementWorkspace() {
                     </td>
                     <td>
                       {canManage || canReset ? (
-                        <div className="d-flex flex-wrap gap-1">
-                          {canReset ? (
-                            <button
-                              type="button"
-                              className="btn btn-sm btn-outline-primary"
-                              title="Send password reset email"
-                              disabled={busyId === user.membershipId || user.email === ""}
-                              onClick={() => void onResetPassword(user)}
-                            >
-                              Reset password
-                            </button>
-                          ) : null}
-                          {canManage ? (
-                            <>
-                              <button
-                                type="button"
-                                className="btn btn-icon btn-sm btn-outline-secondary"
-                                title="Edit roles"
-                                disabled={busyId === user.membershipId}
-                                onClick={() => {
-                                  setEditing(user);
-                                  setEditRoles(user.roles.map((role) => role.roleCode));
-                                }}
-                              >
-                                <i className="bx bx-edit-alt" />
-                              </button>
-                              <button
-                                type="button"
-                                className="btn btn-icon btn-sm btn-outline-danger"
-                                title="Disable account"
-                                disabled={busyId === user.membershipId}
-                                onClick={() => void runUserAction(user, "disable")}
-                              >
-                                <i className="bx bx-trash" />
-                              </button>
-                              <button
-                                type="button"
-                                className="btn btn-sm btn-outline-secondary"
-                                disabled={busyId === user.membershipId}
-                                onClick={() => void runMembershipAction(user, "activate")}
-                              >
-                                Activate
-                              </button>
-                              <button
-                                type="button"
-                                className="btn btn-sm btn-outline-warning"
-                                disabled={busyId === user.membershipId}
-                                onClick={() => void runMembershipAction(user, "suspend")}
-                              >
-                                Suspend
-                              </button>
-                            </>
-                          ) : null}
-                        </div>
+                        <AdminActionDropdown
+                          busy={busyId === user.membershipId}
+                          items={[
+                            {
+                              id: "reset",
+                              label: "Send password reset",
+                              icon: "bx-key",
+                              tone: "primary",
+                              hidden: !canReset,
+                              disabled: user.email === "",
+                              onClick: () => void onResetPassword(user),
+                            },
+                            {
+                              id: "roles",
+                              label: "Edit user",
+                              icon: "bx-user",
+                              hidden: !canManage,
+                              onClick: () => void openEditAccess(user),
+                            },
+                            {
+                              id: "activate",
+                              label: "Activate membership",
+                              icon: "bx-user-check",
+                              hidden: !canManage || user.membershipStatus.toUpperCase() === "ACTIVE",
+                              onClick: () => void runMembershipAction(user, "activate"),
+                            },
+                            {
+                              id: "suspend",
+                              label: "Suspend membership",
+                              icon: "bx-pause",
+                              tone: "warning",
+                              hidden: !canManage,
+                              onClick: () => void runMembershipAction(user, "suspend"),
+                            },
+                            {
+                              id: "revoke",
+                              label: "Revoke access",
+                              icon: "bx-block",
+                              tone: "danger",
+                              hidden: !canManage,
+                              onClick: () => void runMembershipAction(user, "revoke"),
+                            },
+                            {
+                              id: "enable",
+                              label: "Enable sign-in",
+                              icon: "bx-log-in-circle",
+                              hidden:
+                                !canManage || user.userStatus.toUpperCase() !== "DISABLED",
+                              onClick: () => void runUserAction(user, "enable"),
+                            },
+                            {
+                              id: "disable",
+                              label: "Disable sign-in",
+                              icon: "bx-log-out-circle",
+                              tone: "danger",
+                              hidden:
+                                !canManage || user.userStatus.toUpperCase() === "DISABLED",
+                              onClick: () => void runUserAction(user, "disable"),
+                            },
+                          ]}
+                        />
                       ) : (
                         "—"
                       )}
@@ -726,6 +1005,9 @@ export function UserManagementWorkspace() {
           </div>
         </div>
       </div>
+          </>
+        )}
+      </ModuleWorkspaceTabs>
     </section>
   );
 }
@@ -734,16 +1016,13 @@ export function UserManagementSettingsCard() {
   const { me } = useAuth();
   if (!canAccessUserManagement(me)) return null;
   return (
-    <div className="col-12 col-sm-6 col-md-4">
-      <div className="card h-100">
-        <div className="card-body">
-          <h2 className="h6">User management</h2>
-          <p className="small text-muted">Invite, verify, and assign roles for this tenant.</p>
-          <Link href="/settings/users/" className="btn btn-sm btn-primary">
-            Open users
-          </Link>
-        </div>
-      </div>
-    </div>
+    <AdminSectionCard
+      title="Users & access"
+      description="Invite teammates, reset passwords, and manage roles."
+      icon="bx-user"
+      tone="primary"
+      href="/settings/users/"
+      actionLabel="Manage users"
+    />
   );
 }

@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState, type FormEvent } from "react";
-import { ApiError, apiGet, apiGetResult, useAuth } from "@forge/web-kit";
+import { ApiError, apiGet, useAuth } from "@forge/web-kit";
 import { ModuleUnavailable } from "@/components/module-unavailable";
 import { useIndustrialFacility } from "@/hooks/use-industrial-facility";
 import { matchesFacilitySelection } from "@/lib/industrial-facility";
@@ -18,24 +18,22 @@ import {
   rosterSubtitle,
   sortRosterPeople,
   statusBadgeClass,
-  toRosterPeople,
   type RosterPerson,
   type RosterSort,
 } from "@/lib/personnel-directory";
+import { fetchAllPersonnelRows } from "@/lib/personnel-roster-fetch";
 import {
   personnelDirectoryTitle,
   personnelListQueryForView,
   type PersonnelQuickView,
 } from "@/lib/personnel-quick-nav";
 
-/** Rows per API request. The list endpoint caps page size at 100. */
-const FETCH_SIZE = 100;
-/** Safety net so a runaway total can never spin the browser. */
-const MAX_FETCH_PAGES = 40;
+/** Rows per API request (personnel endpoint allows up to 2000). */
+const FETCH_SIZE = 1000;
+/** Safety net (1000 x 50 = 50k people). */
+const MAX_FETCH_PAGES = 50;
 /** Cards rendered before "Load more"; the whole roster is already in memory. */
 const RENDER_STEP = 48;
-
-type ListResponse = { items?: unknown[]; page?: number; pageSize?: number };
 
 type Bootstrap = {
   industrialEnabled: boolean;
@@ -75,26 +73,29 @@ export function PersonnelDirectory({
   const [error, setError] = useState<string | null>(null);
 
   const modEntry = bootstrap?.modules.find((m) => m.code === cfg.code);
-  const awsReady =
-    Boolean(bootstrap?.industrialEnabled) && Boolean(modEntry?.awsEnabled) && canView;
+  // Permissions are enough to open the roster. Bootstrap is only an Advanced
+  // kill-switch and must never crash or block a migrated Personnel tenant.
+  const explicitlyDisabled =
+    bootstrap != null &&
+    (bootstrap.industrialEnabled === false || modEntry?.awsEnabled === false);
+  const awsReady = Boolean(canView && !explicitlyDisabled);
 
   useEffect(() => {
+    if (!me?.tenantId) return;
     let cancelled = false;
     void (async () => {
       try {
         const boot = await apiGet<Bootstrap>("/api/v1/industrial/bootstrap");
         if (!cancelled) setBootstrap(boot);
-      } catch (e) {
-        if (!cancelled) {
-          setError(e instanceof ApiError ? e.message : "Failed to load module bootstrap");
-          setBootstrap({ industrialEnabled: false, modules: [] });
-        }
+      } catch {
+        // Optional kill-switch probe — roster still loads from entitlements.
+        if (!cancelled) setBootstrap(null);
       }
     })();
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [me?.tenantId, me?.userId]);
 
   useEffect(() => {
     if (!awsReady) return;
@@ -120,35 +121,31 @@ export function PersonnelDirectory({
    * people under "A" and undercount the directory.
    */
   const fetchRoster = useCallback(
-    async (q: string, order: RosterSort): Promise<{ people: RosterPerson[]; total: number }> => {
-      const rows: unknown[] = [];
-      let total = 0;
-      for (let page = 1; page <= MAX_FETCH_PAGES; page += 1) {
-        const result = await apiGetResult<ListResponse>(cfg.listPath, {
-          query: {
-            q: q || undefined,
-            sort: order,
-            page: String(page),
-            pageSize: String(FETCH_SIZE),
-            ...personnelListQueryForView(view),
-            ...facilityQuery,
-          },
-        });
-        const items = Array.isArray(result.data.items) ? result.data.items : [];
-        rows.push(...items);
-        total = Math.max(result.meta?.pagination?.total ?? 0, rows.length);
-        // A short page is the only reliable end-of-roster signal: an API that
-        // reports total as the page length would otherwise stop us at page one.
-        if (items.length < FETCH_SIZE) break;
-      }
-      return { people: toRosterPeople(rows), total };
+    async (
+      q: string,
+      order: RosterSort,
+      onPage?: (partial: { people: RosterPerson[]; total: number; done: boolean }) => void,
+    ): Promise<{ people: RosterPerson[]; total: number }> => {
+      const roster = await fetchAllPersonnelRows({
+        listPath: cfg.listPath,
+        pageSize: FETCH_SIZE,
+        maxPages: MAX_FETCH_PAGES,
+        query: {
+          q: q || undefined,
+          sort: order,
+          ...personnelListQueryForView(view),
+          ...facilityQuery,
+        },
+        ...(onPage ? { onPage } : {}),
+      });
+      return roster;
     },
     [cfg.listPath, facilityQuery, view],
   );
 
   useEffect(() => {
     if (!awsReady) {
-      if (bootstrap) setLoading(false);
+      setLoading(false);
       return;
     }
     let cancelled = false;
@@ -156,7 +153,13 @@ export function PersonnelDirectory({
     setError(null);
     void (async () => {
       try {
-        const roster = await fetchRoster(search, sort);
+        const roster = await fetchRoster(search, sort, (partial) => {
+          if (cancelled) return;
+          setPeople(partial.people);
+          setRosterTotal(partial.total);
+          if (partial.people.length > 0) setLoading(false);
+          if (partial.done && partial.total > partial.people.length) setServerSearch(true);
+        });
         if (!cancelled) {
           setPeople(roster.people);
           setRosterTotal(roster.total);
@@ -176,7 +179,7 @@ export function PersonnelDirectory({
     return () => {
       cancelled = true;
     };
-  }, [awsReady, bootstrap, fetchRoster, search, sort]);
+  }, [awsReady, fetchRoster, search, sort]);
 
   const siteNames = useMemo(() => {
     const map = new Map<string, string>();
@@ -222,19 +225,19 @@ export function PersonnelDirectory({
         <div>
           <h5 className="alert-heading mb-1">{moduleName}</h5>
           <p className="mb-0">
-            You do not have permission to view this module. Missing{" "}
-            <code>{cfg.viewPerm}</code>.
+            You do not have permission to view this module. Contact your administrator if you need
+            access.
           </p>
         </div>
       </div>
     );
   }
 
-  if (bootstrap && !awsReady) {
+  if (explicitlyDisabled) {
     return (
       <ModuleUnavailable
         moduleName={moduleName}
-        status={modEntry?.migrationStatus ?? "MIGRATION_IN_PROGRESS"}
+        status={modEntry?.migrationStatus ?? "DISABLED"}
       />
     );
   }
@@ -258,9 +261,14 @@ export function PersonnelDirectory({
               No names start with &ldquo;{query.trim()}&rdquo; — showing partial matches.
             </p>
           ) : null}
+          {!loading && rosterTotal > visible.length && people.length >= rosterTotal ? (
+            <p className="text-muted small mb-0">
+              {rosterTotal - visible.length} hidden by facility or search filters.
+            </p>
+          ) : null}
           {!loading && rosterTotal > people.length ? (
             <p className="text-muted small mb-0">
-              Roster capped at {people.length} of {rosterTotal} records for this view.
+              Loaded {people.length} of {rosterTotal} records — refresh or contact support if this persists.
             </p>
           ) : null}
         </div>
@@ -284,7 +292,7 @@ export function PersonnelDirectory({
                   id="personnel-directory-search"
                   type="search"
                   className="form-control"
-                  placeholder="Search by name, employee number, title, department, or email"
+                  placeholder="Search by name, EMPLOYEE number, title, department, or email"
                   aria-label="Search personnel"
                   autoComplete="off"
                   value={query}
@@ -394,8 +402,11 @@ export function PersonnelDirectory({
                             {person.status}
                           </span>
                         ) : null}
+                        {person.isDotDriver ? (
+                          <span className="badge bg-label-primary">DOT Driver</span>
+                        ) : null}
                         {person.isCompanyDriver ? (
-                          <span className="badge bg-label-info">Company driver</span>
+                          <span className="badge bg-label-info">Company Driver</span>
                         ) : null}
                         {person.hasPpeExpiryAlert ? (
                           <span className="badge bg-warning text-dark">PPE renewal</span>

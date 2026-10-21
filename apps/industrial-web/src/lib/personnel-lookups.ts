@@ -7,11 +7,19 @@
  * error: the page still works with free-text assignment fields.
  */
 import type { PersonnelLookupSource } from "./personnel-form";
-import type { AssignmentOptions } from "./personnel-assignment";
+import type { AssignmentOptions, DivisionOption } from "./personnel-assignment";
 import { EMPTY_ASSIGNMENT_OPTIONS } from "./personnel-assignment";
 import { loadIndustrialSiteCatalog } from "./industrial-facility";
 
-export type LookupOption = { id: string; label: string; siteId?: string | null };
+export type LookupOption = {
+  id: string;
+  label: string;
+  siteId?: string | null;
+  divisionName?: string | null;
+  contactPersonnelId?: string | null;
+  contactName?: string | null;
+  contactEmail?: string | null;
+};
 
 export type LookupState = Record<PersonnelLookupSource, LookupOption[]>;
 
@@ -51,7 +59,45 @@ export function normalizeLookupRows(payload: unknown): LookupOption[] {
         (v) => typeof v === "string" && v.trim() !== "",
       ) ?? id;
     const siteId = typeof r.siteId === "string" && r.siteId !== "" ? r.siteId : null;
-    options.push({ id, label: String(label).trim(), siteId });
+    const payload =
+      r.sourcePayload && typeof r.sourcePayload === "object" && !Array.isArray(r.sourcePayload)
+        ? (r.sourcePayload as Record<string, unknown>)
+        : r.source_payload &&
+            typeof r.source_payload === "object" &&
+            !Array.isArray(r.source_payload)
+          ? (r.source_payload as Record<string, unknown>)
+          : null;
+    const divisionFromPayload =
+      payload && typeof payload.division === "string"
+        ? payload.division.trim()
+        : payload && typeof payload.divisionName === "string"
+          ? payload.divisionName.trim()
+          : "";
+    const divisionName =
+      typeof r.divisionName === "string" && r.divisionName.trim() !== ""
+        ? r.divisionName.trim()
+        : divisionFromPayload || null;
+    const contactName =
+      typeof r.contactName === "string" && r.contactName.trim() !== ""
+        ? r.contactName.trim()
+        : null;
+    const contactEmail =
+      typeof r.contactEmail === "string" && r.contactEmail.trim() !== ""
+        ? r.contactEmail.trim()
+        : null;
+    const contactPersonnelId =
+      typeof r.contactPersonnelId === "string" && r.contactPersonnelId !== ""
+        ? r.contactPersonnelId
+        : null;
+    options.push({
+      id,
+      label: String(label).trim(),
+      siteId,
+      divisionName,
+      contactPersonnelId,
+      contactName,
+      contactEmail,
+    });
   }
 
   return options.sort((a, b) => a.label.localeCompare(b.label));
@@ -95,14 +141,82 @@ export async function loadPersonnelLookups(
 export async function loadAssignmentOptions(): Promise<AssignmentOptions> {
   try {
     const { apiGet } = await import("@forge/web-kit");
-    const data = await apiGet<AssignmentOptions>("/api/v1/industrial/personnel/assignment-options");
+    const data = await apiGet<{
+      divisions?: string[];
+      divisionEntries?: Array<{ name: string; siteId?: string | null }>;
+      supervisors?: AssignmentOptions["supervisors"];
+    }>("/api/v1/industrial/personnel/assignment-options");
+    const divisionEntries = Array.isArray(data?.divisionEntries)
+      ? data.divisionEntries.map((entry) => ({
+          name: String(entry.name ?? "").trim(),
+          siteId:
+            typeof entry.siteId === "string" && entry.siteId.trim() !== ""
+              ? entry.siteId.trim()
+              : null,
+        })).filter((entry) => entry.name !== "")
+      : Array.isArray(data?.divisions)
+        ? data.divisions
+            .map((name) => String(name).trim())
+            .filter(Boolean)
+            .map((name) => ({ name, siteId: null as string | null }))
+        : [];
+    const divisions = Array.from(new Set(divisionEntries.map((entry) => entry.name))).sort((a, b) =>
+      a.localeCompare(b),
+    );
     return {
-      divisions: Array.isArray(data?.divisions) ? data.divisions : [],
+      divisions,
+      divisionEntries,
       supervisors: Array.isArray(data?.supervisors) ? data.supervisors : [],
     };
   } catch {
     return EMPTY_ASSIGNMENT_OPTIONS;
   }
+}
+
+export type OrgFilterCatalogs = {
+  sites: LookupOption[];
+  departments: LookupOption[];
+  divisions: string[];
+  divisionEntries: DivisionOption[];
+};
+
+export const EMPTY_ORG_FILTER_CATALOGS: OrgFilterCatalogs = {
+  sites: [],
+  departments: [],
+  divisions: [],
+  divisionEntries: [],
+};
+
+/**
+ * Locations / departments / divisions for filter dropdowns.
+ * Always sourced from admin Settings → Dropdown lists catalogs (not roster distincts).
+ */
+export async function loadOrgFilterCatalogs(
+  tenantId?: string | null,
+): Promise<OrgFilterCatalogs> {
+  const { apiGet } = await import("@forge/web-kit");
+
+  const [sites, departments, assignment] = await Promise.all([
+    loadSiteLookups(tenantId),
+    (async () => {
+      try {
+        const data = await apiGet<unknown>("/api/v1/industrial/departments", {
+          query: { page: "1", pageSize: "200" },
+        });
+        return normalizeLookupRows(data);
+      } catch {
+        return loadCatalogLookups("departments", tenantId);
+      }
+    })(),
+    loadAssignmentOptions(),
+  ]);
+
+  return {
+    sites,
+    departments,
+    divisions: assignment.divisions,
+    divisionEntries: assignment.divisionEntries,
+  };
 }
 
 export function resolveLookupLabel(
@@ -111,4 +225,27 @@ export function resolveLookupLabel(
   id: string,
 ): string | undefined {
   return lookups[source].find((o) => o.id === id)?.label;
+}
+
+export type PersonnelOrgLookupKind = "division" | "department" | "position";
+
+export type CreatedOrgLookupRow = { id?: string; name?: string };
+
+/** Creates a division catalog entry or department/position row via the tenant org API. */
+export async function createPersonnelOrgLookup(
+  tenantId: string,
+  kind: PersonnelOrgLookupKind,
+  name: string,
+  extras?: { siteId?: string; departmentId?: string },
+): Promise<CreatedOrgLookupRow> {
+  const { apiSend } = await import("@forge/web-kit");
+  const body: Record<string, string> = { kind, name };
+  if (extras?.siteId) body.siteId = extras.siteId;
+  if (extras?.departmentId) body.departmentId = extras.departmentId;
+  const data = await apiSend<CreatedOrgLookupRow>(
+    `/api/v1/tenants/${encodeURIComponent(tenantId)}/industrial/org-lookups/create-missing`,
+    "POST",
+    body,
+  );
+  return data ?? {};
 }

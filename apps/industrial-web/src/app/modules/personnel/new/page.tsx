@@ -20,6 +20,10 @@ export default function AddPersonPage() {
   const permissions = new Set(me?.permissions ?? []);
   const canManage =
     permissions.has("industrial.personnel.manage") || permissions.has("industrial.admin");
+  const canFillForms =
+    permissions.has("industrial.forms.fill") ||
+    permissions.has("industrial.forms.manage") ||
+    permissions.has("industrial.admin");
 
   const [savedName, setSavedName] = useState<string | null>(null);
   const [formKey, setFormKey] = useState(0);
@@ -115,6 +119,7 @@ export default function AddPersonPage() {
       subtitle="Creates a personnel record for this organization. Only status and name are required."
       submitLabel="Save person"
       breadcrumbCurrent="Add Person"
+      canFillForms={canFillForms}
       {...(me?.tenantId ? { tenantId: me.tenantId } : {})}
     />
   );

@@ -5,6 +5,7 @@ import { useEffect, useMemo, useState, type FormEvent } from "react";
 import { ApiError, apiGetResult, useAuth } from "@forge/web-kit";
 import { PersonnelPpeSummaryCard } from "@/components/personnel-ppe-summary-card";
 import { personEditHref, personFileHref } from "@/lib/personnel-directory";
+import { personNameDisplay } from "@/lib/person-name-display";
 import { safetyFootwearClassLabel } from "@/lib/personnel-form";
 import {
   filterPpeAllowancePeople,
@@ -150,7 +151,10 @@ export function PersonnelPpeDirectory() {
   }
 
   return (
-    <>
+    <section aria-labelledby="ppe-allowance-title" data-walkthrough="ppe-allowance">
+      <h4 className="mb-3" id="ppe-allowance-title">
+        PPE Allowance
+      </h4>
       <PersonnelPpeSummaryCard enabled={canView} />
 
       <form className="row g-2 mb-3" onSubmit={onSubmit}>
@@ -162,7 +166,7 @@ export function PersonnelPpeDirectory() {
             <input
               type="search"
               className="form-control"
-              placeholder="Search name, employee #, approver…"
+              placeholder="Search name, EMPLOYEE #, approver…"
               value={query}
               onChange={(ev) => setQuery(ev.target.value)}
               aria-label="Search PPE allowances"
@@ -219,7 +223,7 @@ export function PersonnelPpeDirectory() {
               <thead>
                 <tr>
                   <th scope="col">Name</th>
-                  <th scope="col">Emp #</th>
+                  <th scope="col">EMPLOYEE #</th>
                   <th scope="col">Prescription safety glasses</th>
                   <th scope="col">Glasses extra pair</th>
                   <th scope="col">Safety boots</th>
@@ -231,7 +235,9 @@ export function PersonnelPpeDirectory() {
                 {visible.map((person) => (
                   <tr key={person.id}>
                     <td>
-                      <Link href={personFileHref(person.id)}>{person.displayName || "Unnamed"}</Link>
+                      <Link href={personFileHref(person.id)}>
+                        {personNameDisplay(person.displayName, "Unnamed")}
+                      </Link>
                     </td>
                     <td>{person.employeeNumber || DASH}</td>
                     <td>
@@ -287,6 +293,6 @@ export function PersonnelPpeDirectory() {
           </div>
         </div>
       )}
-    </>
+    </section>
   );
 }

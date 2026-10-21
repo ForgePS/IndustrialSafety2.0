@@ -3,12 +3,15 @@
 import Link from "next/link";
 import { useEffect, useMemo, useRef, useState, type FormEvent, type ReactNode } from "react";
 import { SignaturePad } from "@/components/signature-pad";
+import { PersonnelCatalogAddInline } from "@/components/personnel-catalog-add-inline";
 import { YearSelectDateInput } from "@/components/year-select-date-input";
 import { LicenseImageField } from "@/components/license-image-field";
+import { PersonnelCertUploadField } from "@/components/personnel-cert-upload-field";
+import { CompanyDriverMvrPanel } from "@/components/company-driver-mvr-panel";
 import { isBirthDateField } from "@/lib/date-field";
+import { OrgLocationCascade } from "@/components/org-location-cascade";
 import {
   EMPTY_ASSIGNMENT_OPTIONS,
-  filterDepartmentsForSite,
   suggestSupervisor,
   type AssignmentOptions,
 } from "@/lib/personnel-assignment";
@@ -20,10 +23,11 @@ import {
   validatePersonnelForm,
   type PersonnelField,
   type PersonnelFormValues,
-  type PersonnelSelectOption,
 } from "@/lib/personnel-form";
+import { isOversizedLicenseImage } from "@/lib/license-copies";
 import {
   EMPTY_LOOKUPS,
+  createPersonnelOrgLookup,
   loadAssignmentOptions,
   loadPersonnelLookups,
   resolveLookupLabel,
@@ -31,7 +35,12 @@ import {
 } from "@/lib/personnel-lookups";
 import { resolvePersonnelLocationLabel } from "@/lib/personnel-file";
 import { matchSiteIdByLabel } from "@/lib/industrial-facility";
+import {
+  EMPLOYEE_NUMBER_PREFIX,
+  sanitizeEmployeeNumberDigitsInput,
+} from "@/lib/employee-number";
 import { nextPpeExpiresDate } from "@/lib/personnel-ppe";
+import { type CompanyDriverMvrSnapshot } from "@/lib/company-driver-mvr-requirements";
 
 const ROSTER_HREF = "/modules/personnel/";
 
@@ -54,6 +63,11 @@ export type PersonnelPersonFormProps = {
   submitLabel: string;
   breadcrumbCurrent: string;
   tenantId?: string;
+  personnelId?: string;
+  companyDriverMvr?: CompanyDriverMvrSnapshot | null;
+  onCompanyDriverMvrChange?: (next: CompanyDriverMvrSnapshot) => void;
+  canFillForms?: boolean;
+  canUploadPaper?: boolean;
 };
 
 /**
@@ -71,6 +85,11 @@ export function PersonnelPersonForm({
   submitLabel,
   breadcrumbCurrent,
   tenantId,
+  personnelId,
+  companyDriverMvr,
+  onCompanyDriverMvrChange,
+  canFillForms = false,
+  canUploadPaper = false,
 }: PersonnelPersonFormProps) {
   const [values, setValues] = useState<PersonnelFormValues>(initialValues);
   const [lookups, setLookups] = useState<LookupState>(EMPTY_LOOKUPS);
@@ -119,17 +138,9 @@ export function PersonnelPersonForm({
   }, [lookups.sites, siteId, siteName]);
 
   const departmentsForSite = useMemo(
-    () => filterDepartmentsForSite(lookups.departments, effectiveSiteId || undefined),
-    [lookups.departments, effectiveSiteId],
+    () => lookups.departments,
+    [lookups.departments],
   );
-
-  useEffect(() => {
-    if (!departmentId) return;
-    const stillValid = departmentsForSite.some((d) => d.id === departmentId);
-    if (!stillValid) {
-      setValues((prev) => ({ ...prev, departmentId: "", departmentName: "" }));
-    }
-  }, [departmentsForSite, departmentId]);
 
   useEffect(() => {
     if (!assignmentTouched.current) return;
@@ -142,11 +153,6 @@ export function PersonnelPersonForm({
   }, [assignment.supervisors, divisionName, effectiveSiteId, departmentId]);
 
   const displayName = personnelDisplayName(values);
-
-  const divisionOptions: PersonnelSelectOption[] = useMemo(
-    () => assignment.divisions.map((d) => ({ value: d, label: d })),
-    [assignment.divisions],
-  );
 
   function set(name: string, value: string | boolean) {
     if (name === "siteId" || name === "departmentId" || name === "divisionName") {
@@ -168,6 +174,62 @@ export function PersonnelPersonForm({
     });
   }
 
+  /** Lookup selects write both the FK and the denormalized label used on the profile. */
+  function setLookup(
+    idField: string,
+    nameField: string | undefined,
+    id: string,
+    options: ReadonlyArray<{ id: string; label: string }>,
+  ) {
+    if (idField === "siteId" || idField === "departmentId") {
+      assignmentTouched.current = true;
+    }
+    const label = options.find((o) => o.id === id)?.label ?? "";
+    setValues((prev) => {
+      const next: PersonnelFormValues = { ...prev, [idField]: id };
+      if (nameField) next[nameField] = label;
+      return next;
+    });
+  }
+
+  async function handleAddDivision(name: string) {
+    if (!tenantId) throw new Error("Tenant is required to add a division.");
+    if (!effectiveSiteId) throw new Error("Select a location before adding a division.");
+    const result = await createPersonnelOrgLookup(tenantId, "division", name, {
+      siteId: effectiveSiteId,
+    });
+    const nextAssignment = await loadAssignmentOptions();
+    setAssignment(nextAssignment);
+    const addedName = result.name?.trim() || name;
+    set("divisionName", addedName);
+  }
+
+  async function handleAddDepartment(name: string) {
+    if (!tenantId) throw new Error("Tenant is required to add a department.");
+    if (!effectiveSiteId) throw new Error("Select a location before adding a department.");
+    const extras = { siteId: effectiveSiteId };
+    const result = await createPersonnelOrgLookup(tenantId, "department", name, extras);
+    const nextLookups = await loadPersonnelLookups(tenantId);
+    setLookups(nextLookups);
+    if (result.id) {
+      setLookup("departmentId", "departmentName", result.id, nextLookups.departments);
+    }
+  }
+
+  async function handleAddPosition(name: string) {
+    if (!tenantId) throw new Error("Tenant is required to add a position.");
+    const extras = departmentId ? { departmentId } : undefined;
+    const result = await createPersonnelOrgLookup(tenantId, "position", name, extras);
+    const nextLookups = await loadPersonnelLookups(tenantId);
+    setLookups(nextLookups);
+    if (result.id) {
+      setLookup("positionId", "jobTitle", result.id, nextLookups.positions);
+    }
+  }
+
+  const departmentWaitingOnSite =
+    lookups.sites.length > 0 && !effectiveSiteId;
+
   async function handleSubmit(ev: FormEvent) {
     ev.preventDefault();
     if (saving) return;
@@ -188,6 +250,20 @@ export function PersonnelPersonForm({
           : "Signature could not be saved. Clear it and sign again.",
       );
       return;
+    }
+
+    for (const side of [
+      { key: "licenseFrontUrl", label: "License front" },
+      { key: "licenseBackUrl", label: "License back" },
+    ] as const) {
+      const value = typeof values[side.key] === "string" ? String(values[side.key]).trim() : "";
+      // Document UUID refs are fine; only reject oversized inline data URLs.
+      if (value.startsWith("data:") && isOversizedLicenseImage(value)) {
+        setError(
+          `${side.label} photo is still too large. Clear it and upload again — photos now use secure storage like DQF.`,
+        );
+        return;
+      }
     }
 
     setSaving(true);
@@ -261,22 +337,51 @@ export function PersonnelPersonForm({
     }
 
     if (field.type === "image") {
+      const side = field.name === "licenseBackUrl" ? "back" : "front";
       return (
         <div className={colClass} key={field.name}>
           <LicenseImageField
             id={field.name}
             label={field.label}
+            side={side}
             value={stringValue}
+            {...(personnelId ? { personnelId } : {})}
             {...(field.help ? { help: field.help } : {})}
             disabled={saving}
-            onChange={(dataUrl) => set(field.name, dataUrl)}
+            onChange={(next) => set(field.name, next)}
+          />
+        </div>
+      );
+    }
+
+    if (field.type === "file" && field.fileKind) {
+      const filenameKey = field.filenameField ?? `${field.name}Filename`;
+      const filename =
+        typeof values[filenameKey] === "string" ? String(values[filenameKey]) : "";
+      return (
+        <div className={colClass} key={field.name}>
+          <PersonnelCertUploadField
+            id={field.name}
+            label={field.label}
+            kind={field.fileKind}
+            documentId={stringValue}
+            filename={filename}
+            {...(field.help ? { help: field.help } : {})}
+            disabled={saving}
+            onChange={(next) => {
+              set(field.name, next.documentId);
+              set(filenameKey, next.filename);
+            }}
           />
         </div>
       );
     }
 
     if (field.type === "select" || field.name === "divisionName") {
-      const options = field.name === "divisionName" ? divisionOptions : (field.options ?? []);
+      const options =
+        field.name === "divisionName"
+          ? assignment.divisionEntries.map((d) => ({ value: d.name, label: d.name }))
+          : (field.options ?? []);
       const empty = field.name === "divisionName" && options.length === 0;
 
       return (
@@ -302,21 +407,37 @@ export function PersonnelPersonForm({
               </option>
             ))}
           </select>
+          {field.name === "divisionName" ? (
+            <PersonnelCatalogAddInline
+              label="division"
+              disabled={!tenantId}
+              busy={saving}
+              onAdd={handleAddDivision}
+            />
+          ) : null}
           {help}
         </div>
       );
     }
 
     if (field.type === "lookup") {
+      const isDepartment = field.source === "departments";
+      const waitingOnSite = isDepartment && departmentWaitingOnSite;
       const options =
-        field.source === "departments"
+        isDepartment
           ? departmentsForSite
           : field.source
             ? lookups[field.source]
             : [];
 
-      if (options.length === 0 && field.nameField) {
-        const nameKey = field.nameField;
+      const useDepartmentFreeText =
+        isDepartment && !waitingOnSite && departmentsForSite.length === 0;
+      const useFreeText =
+        field.nameField &&
+        (useDepartmentFreeText || (!isDepartment && options.length === 0));
+
+      if (useFreeText) {
+        const nameKey = field.nameField!;
         const typed = typeof values[nameKey] === "string" ? (values[nameKey] as string) : "";
         return (
           <div className={colClass} key={field.name}>
@@ -329,14 +450,30 @@ export function PersonnelPersonForm({
               onChange={(ev) => set(nameKey, ev.target.value)}
             />
             <div className="form-text">
-              No {field.label.toLowerCase()} catalog yet, so this is free text.
+              {useDepartmentFreeText && lookups.departments.length > 0
+                ? "No departments for this location yet. Type a name or add one below."
+                : `No ${field.label.toLowerCase()} catalog yet, so this is free text.`}
             </div>
+            {isDepartment ? (
+              <PersonnelCatalogAddInline
+                label="department"
+                disabled={!tenantId}
+                busy={saving}
+                onAdd={handleAddDepartment}
+              />
+            ) : null}
+            {field.source === "positions" ? (
+              <PersonnelCatalogAddInline
+                label="position"
+                disabled={!tenantId}
+                busy={saving}
+                onAdd={handleAddPosition}
+              />
+            ) : null}
           </div>
         );
       }
 
-      const waitingOnSite =
-        field.source === "departments" && lookups.sites.length > 0 && !effectiveSiteId;
       return (
         <div className={colClass} key={field.name}>
           {label(field.name)}
@@ -344,8 +481,8 @@ export function PersonnelPersonForm({
             id={field.name}
             className="form-select"
             value={stringValue}
-            disabled={options.length === 0 || waitingOnSite}
-            onChange={(ev) => set(field.name, ev.target.value)}
+            disabled={waitingOnSite}
+            onChange={(ev) => setLookup(field.name, field.nameField, ev.target.value, options)}
           >
             <option value="">
               {waitingOnSite
@@ -360,6 +497,25 @@ export function PersonnelPersonForm({
               </option>
             ))}
           </select>
+          {isDepartment && waitingOnSite ? (
+            <div className="form-text">Choose a location above to pick or add a department.</div>
+          ) : null}
+          {isDepartment ? (
+            <PersonnelCatalogAddInline
+              label="department"
+              disabled={!tenantId || waitingOnSite}
+              busy={saving}
+              onAdd={handleAddDepartment}
+            />
+          ) : null}
+          {field.source === "positions" ? (
+            <PersonnelCatalogAddInline
+              label="position"
+              disabled={!tenantId}
+              busy={saving}
+              onAdd={handleAddPosition}
+            />
+          ) : null}
           {help}
         </div>
       );
@@ -402,6 +558,28 @@ export function PersonnelPersonForm({
       );
     }
 
+    if (field.name === "employeeNumber") {
+      return (
+        <div className={colClass} key={field.name}>
+          {label(field.name)}
+          <div className="input-group">
+            <span className="input-group-text">{EMPLOYEE_NUMBER_PREFIX}</span>
+            <input
+              id={field.name}
+              type="text"
+              inputMode="numeric"
+              className="form-control"
+              value={stringValue}
+              readOnly={field.readOnly}
+              {...(field.placeholder ? { placeholder: field.placeholder } : {})}
+              onChange={(ev) => set(field.name, sanitizeEmployeeNumberDigitsInput(ev.target.value))}
+            />
+          </div>
+          {help}
+        </div>
+      );
+    }
+
     return (
       <div className={colClass} key={field.name}>
         {label(field.name)}
@@ -438,7 +616,8 @@ export function PersonnelPersonForm({
       label: "Supervisor",
       value: (typeof values.supervisorName === "string" && values.supervisorName) || "—",
     },
-    { label: "Driver", value: values.isCompanyDriver === true ? "Yes" : "No" },
+    { label: "DOT Driver", value: values.isDotDriver === true ? "Yes" : "No" },
+    { label: "Company Driver", value: values.isCompanyDriver === true ? "Yes" : "No" },
   ];
 
   return (
@@ -505,11 +684,81 @@ export function PersonnelPersonForm({
                         </div>
                       ))}
                     </div>
+                  ) : section.id === "assignment" ? (
+                    <div className="row g-3">
+                      <OrgLocationCascade
+                        idPrefix="personnel"
+                        required
+                        disabled={saving}
+                        sites={lookups.sites}
+                        departments={lookups.departments}
+                        divisionEntries={assignment.divisionEntries}
+                        value={{
+                          siteId: effectiveSiteId,
+                          siteName:
+                            (typeof values.siteName === "string" && values.siteName) ||
+                            resolveLookupLabel(lookups, "sites", effectiveSiteId) ||
+                            "",
+                          divisionName,
+                          departmentId,
+                          departmentName:
+                            (typeof values.departmentName === "string" && values.departmentName) ||
+                            resolveLookupLabel(lookups, "departments", departmentId) ||
+                            "",
+                        }}
+                        onChange={(next) => {
+                          assignmentTouched.current = true;
+                          setValues((prev) => ({
+                            ...prev,
+                            siteId: next.siteId,
+                            siteName: next.siteName ?? "",
+                            divisionName: next.divisionName,
+                            departmentId: next.departmentId,
+                            departmentName: next.departmentName ?? "",
+                          }));
+                        }}
+                      />
+                      <div className="col-12 d-flex flex-wrap gap-3">
+                        <PersonnelCatalogAddInline
+                          label="division"
+                          disabled={!tenantId || !effectiveSiteId || saving}
+                          busy={saving}
+                          onAdd={handleAddDivision}
+                        />
+                        <PersonnelCatalogAddInline
+                          label="department"
+                          disabled={!tenantId || !effectiveSiteId || saving}
+                          busy={saving}
+                          onAdd={handleAddDepartment}
+                        />
+                      </div>
+                      {(section.fields ?? [])
+                        .filter(
+                          (field) =>
+                            field.name !== "siteId" &&
+                            field.name !== "divisionName" &&
+                            field.name !== "departmentId",
+                        )
+                        .map((field) => renderField(field))}
+                    </div>
                   ) : (
                     <div className="row g-3">
                       {(section.fields ?? []).map((field) => renderField(field))}
                     </div>
                   )}
+                  {section.id === "driver" && values.isCompanyDriver === true ? (
+                    <div className="mt-3">
+                      <CompanyDriverMvrPanel
+                        {...(personnelId ? { personnelId } : {})}
+                        snapshot={companyDriverMvr ?? null}
+                        canFillForms={canFillForms}
+                        canUploadPaper={canUploadPaper && Boolean(personnelId)}
+                        {...(onCompanyDriverMvrChange
+                          ? { onSnapshotChange: onCompanyDriverMvrChange }
+                          : {})}
+                      />
+                    </div>
+                  ) : null}
                 </div>
               </div>
             ))}

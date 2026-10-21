@@ -1,12 +1,16 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import {
   MONTHS,
   buildIsoDate,
   daysInMonth,
+  mergeDateParts,
   parseIsoDateParts,
+  shouldSyncDatePartsFromValue,
   yearOptionsForMode,
   type DateFieldMode,
+  type DateParts,
 } from "@/lib/date-field";
 
 type Props = {
@@ -28,7 +32,15 @@ export function YearSelectDateInput({
   mode = "default",
   className = "form-control",
 }: Props) {
-  const parts = parseIsoDateParts(value);
+  const [parts, setParts] = useState<DateParts>(() => parseIsoDateParts(value));
+
+  useEffect(() => {
+    setParts((current) => {
+      if (!shouldSyncDatePartsFromValue(value, current)) return current;
+      return parseIsoDateParts(value);
+    });
+  }, [value]);
+
   const baseYears = yearOptionsForMode(mode);
   const selectedYear = parts.year ? Number(parts.year) : NaN;
   const years =
@@ -40,15 +52,10 @@ export function YearSelectDateInput({
   const maxDay = daysInMonth(yearNum || new Date().getFullYear(), monthNum || 1);
   const dayChoices = Array.from({ length: maxDay }, (_, i) => String(i + 1).padStart(2, "0"));
 
-  function emit(next: { year?: string; month?: string; day?: string }) {
-    const year = next.year ?? parts.year;
-    const month = next.month ?? parts.month;
-    let day = next.day ?? parts.day;
-    if (year && month && day) {
-      const capped = Math.min(Number(day), daysInMonth(Number(year), Number(month)));
-      day = String(capped).padStart(2, "0");
-    }
-    onChange(buildIsoDate(year, month, day));
+  function emit(next: Partial<DateParts>) {
+    const merged = mergeDateParts(parts, next);
+    setParts(merged);
+    onChange(buildIsoDate(merged.year, merged.month, merged.day));
   }
 
   const selectClass = className.includes("form-select") ? className : "form-select";

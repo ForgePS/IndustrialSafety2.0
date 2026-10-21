@@ -1,10 +1,12 @@
 /**
- * Read-only projection of a DOT record for the DOT file page.
+ * Projection and edit helpers for the DOT file page.
  * Known DQF / vehicle fields render in labeled sections; leftover scalars
  * land in Details so imported payloads still surface without a second map.
  */
 import { formatFileDate } from "./personnel-file";
 import { dotDisplayName, dotRecordCategory, type DotCategory } from "./dot-compliance-module";
+import { FLEET_ASSET_TYPE_OPTIONS } from "./fleet";
+import { isDvirRecord, dvirDefectSummary, dvirDriverName, dvirInspectionDate } from "./dvir";
 
 export type DotFileRow = {
   label: string;
@@ -20,7 +22,7 @@ export type DotFileGroup = {
 };
 
 const IDENTITY_FIELDS: ReadonlyArray<{ key: string; label: string }> = [
-  { key: "employeeNumber", label: "Employee #" },
+  { key: "employeeNumber", label: "EMPLOYEE #" },
   { key: "firstName", label: "First name" },
   { key: "lastName", label: "Last name" },
   { key: "dateOfBirth", label: "Date of birth" },
@@ -122,7 +124,45 @@ const HIDDEN_KEYS = new Set([
   "driversLicenseCopy",
   "hasLicenseFront",
   "hasLicenseBack",
+  "driverSignatureDataUrl",
+  "mechanicSignatureDataUrl",
+  "driverReviewSignatureDataUrl",
+  "truckDefects",
+  "trailerDefects",
+  "items",
+  "vehicleId",
+  "submittedVia",
 ]);
+
+function dvirSummaryRows(record: Record<string, unknown>): DotFileRow[] {
+  const defects = dvirDefectSummary(record);
+  const rows: DotFileRow[] = [
+    { label: "Inspection date", value: dvirInspectionDate(record) },
+    { label: "DRIVER", value: dvirDriverName(record) },
+    { label: "Defects", value: defects.yesNo },
+  ];
+  if (defects.hasDefects) {
+    rows.push({ label: "Defect summary", value: defects.text, wide: true });
+  }
+  return rows;
+}
+
+function dvirSignatureRows(record: Record<string, unknown>): DotFileRow[] {
+  const rows: DotFileRow[] = [];
+  if (record.driverSignedAt) {
+    rows.push({ label: "DRIVER signed", value: formatDotFileValue(record.driverSignedAt) });
+  }
+  if (record.mechanicSignedAt) {
+    rows.push({ label: "Mechanic signed", value: formatDotFileValue(record.mechanicSignedAt) });
+  }
+  if (record.driverReviewSignedAt) {
+    rows.push({
+      label: "DRIVER review signed",
+      value: formatDotFileValue(record.driverReviewSignedAt),
+    });
+  }
+  return rows;
+}
 
 function str(value: unknown): string {
   if (typeof value === "boolean") return value ? "Yes" : "No";
@@ -191,7 +231,7 @@ export function dotFileSubtitle(record: Record<string, unknown>): string {
 export function categoryLabel(category: DotCategory): string {
   switch (category) {
     case "drivers":
-      return "Drivers (DQF)";
+      return "DRIVERS (DQF)";
     case "drug-alcohol":
       return "Drug & Alcohol";
     case "dvirs":
@@ -202,6 +242,24 @@ export function categoryLabel(category: DotCategory): string {
 }
 
 export function buildDotFile(record: Record<string, unknown>): DotFileGroup[] {
+  if (isDvirRecord(record)) {
+    const groups: DotFileGroup[] = [
+      {
+        id: "dvir-summary",
+        title: "Inspection summary",
+        icon: "bx-clipboard",
+        rows: dvirSummaryRows(record),
+      },
+      {
+        id: "dvir-signatures",
+        title: "Signatures",
+        icon: "bx-pen",
+        rows: dvirSignatureRows(record),
+      },
+    ];
+    return groups.filter((group) => group.rows.length > 0);
+  }
+
   const groups: Array<{ id: string; title: string; icon: string; fields?: DotFileRow[] }> = [
     { id: "identity", title: "Identity", icon: "bx-id-card", fields: rowsFor(record, IDENTITY_FIELDS) },
     { id: "license", title: "License", icon: "bx-credit-card", fields: rowsFor(record, LICENSE_FIELDS) },
@@ -224,4 +282,129 @@ export function buildDotFile(record: Record<string, unknown>): DotFileGroup[] {
 
 export function dotFileHeading(record: Record<string, unknown>): string {
   return dotDisplayName(record) || "DOT file";
+}
+
+export type DotFileFieldInput = "text" | "date" | "textarea" | "select";
+
+export type DotFileFieldDef = {
+  key: string;
+  label: string;
+  input?: DotFileFieldInput;
+  wide?: boolean;
+  options?: readonly string[];
+};
+
+export type DotFileEditSection = {
+  id: string;
+  title: string;
+  fields: DotFileFieldDef[];
+};
+
+const EDIT_IDENTITY: DotFileFieldDef[] = IDENTITY_FIELDS.map((f) => ({
+  ...f,
+  input: f.key === "dateOfBirth" ? "date" : "text",
+}));
+const EDIT_LICENSE: DotFileFieldDef[] = LICENSE_FIELDS.map((f) => ({
+  ...f,
+  input: f.key === "licenseExpiryDate" ? "date" : "text",
+}));
+const EDIT_MEDICAL: DotFileFieldDef[] = MEDICAL_FIELDS.map((f) => ({
+  ...f,
+  input: f.key === "medicalCardExpiry" ? "date" : "text",
+}));
+const EDIT_MVR: DotFileFieldDef[] = MVR_FIELDS.map((f) => ({
+  ...f,
+  input: f.key.includes("Date") ? "date" : "text",
+}));
+const EDIT_VEHICLE: DotFileFieldDef[] = VEHICLE_FIELDS.map((f) => {
+  if (f.key === "assetType") {
+    return {
+      ...f,
+      input: "select",
+      options: FLEET_ASSET_TYPE_OPTIONS,
+    };
+  }
+  return { ...f, input: "text" };
+});
+const EDIT_RECORD: DotFileFieldDef[] = [
+  { key: "title", label: "Record title", input: "text", wide: true },
+  { key: "workerName", label: "Worker / DRIVER name", input: "text" },
+  ...RECORD_FIELDS.map((f) => ({
+    ...f,
+    input: (f.key === "recordDate" ? "date" : "text") as DotFileFieldInput,
+  })),
+  { key: "notes", label: "Notes", input: "textarea", wide: true },
+];
+
+export function dotFileEditSections(record: Record<string, unknown>): DotFileEditSection[] {
+  if (isDvirRecord(record)) {
+    return [];
+  }
+  return [
+    { id: "record", title: "Record", fields: EDIT_RECORD },
+    { id: "identity", title: "Identity", fields: EDIT_IDENTITY },
+    { id: "license", title: "License", fields: EDIT_LICENSE },
+    { id: "medical", title: "Medical", fields: EDIT_MEDICAL },
+    { id: "mvr", title: "MVR", fields: EDIT_MVR },
+    { id: "vehicle", title: "Vehicle", fields: EDIT_VEHICLE },
+  ];
+}
+
+export function dotFileDraftFromRecord(
+  record: Record<string, unknown>,
+  sections: DotFileEditSection[],
+): Record<string, string> {
+  const draft: Record<string, string> = {};
+  for (const section of sections) {
+    for (const field of section.fields) {
+      const raw = record[field.key];
+      if (raw == null || raw === "") {
+        draft[field.key] = "";
+        continue;
+      }
+      if (typeof raw === "boolean") {
+        draft[field.key] = raw ? "true" : "false";
+        continue;
+      }
+      const text = String(raw).trim();
+      draft[field.key] =
+        field.input === "date" && /^\d{4}-\d{2}-\d{2}/.test(text) ? text.slice(0, 10) : text;
+    }
+  }
+  return draft;
+}
+
+export function dotFilePatchFromDraft(
+  draft: Record<string, string>,
+  sections: DotFileEditSection[],
+): Record<string, unknown> {
+  const patch: Record<string, unknown> = {};
+  for (const section of sections) {
+    for (const field of section.fields) {
+      const value = draft[field.key];
+      if (value === undefined) continue;
+      const trimmed = value.trim();
+      if (trimmed === "") {
+        patch[field.key] = null;
+        continue;
+      }
+      if (field.key === "conditionSatisfactory") {
+        patch[field.key] = trimmed === "true";
+        continue;
+      }
+      patch[field.key] = trimmed;
+    }
+  }
+  const worker = String(patch.workerName ?? "").trim();
+  const first = String(patch.firstName ?? "").trim();
+  const last = String(patch.lastName ?? "").trim();
+  const title = String(patch.title ?? "").trim();
+  if (!title) {
+    patch.title = worker || [first, last].filter(Boolean).join(" ") || undefined;
+  }
+  if (worker) {
+    patch.driverName = worker;
+    patch.personnelName = worker;
+  }
+  return patch;
 }

@@ -4,8 +4,11 @@ import {
   aggregateByOshaPart,
   bodyLocationSummaryLabel,
   BODY_REGIONS,
+  bodyLocationsToLegacyFields,
   bodyMapArrowPlacement,
   bodyMapYearOptions,
+  bodyRegionSelectOptions,
+  clampBodyRegion,
   extractBodyLocationsFromPayload,
   filterIncidentsByBodyRegion,
   filterIncidentsByOshaPart,
@@ -14,6 +17,7 @@ import {
   maxRegionCount,
   parseBodyLocations,
   parseBodyMapYearScope,
+  primaryBodyRegionId,
   regionById,
   regionsForView,
   resolveBodyLocationToken,
@@ -44,6 +48,18 @@ describe("incident-body-map regions", () => {
   it("looks up a region by id", () => {
     expect(regionById("head-front")?.part).toBe("Head");
     expect(regionById("nope")).toBeUndefined();
+  });
+});
+
+describe("clampBodyRegion", () => {
+  it("keeps rectangles inside the view container", () => {
+    const region = regionById("head-front")!;
+    expect(clampBodyRegion({ ...region, top: -5, left: 95, width: 20, height: 20 })).toMatchObject({
+      top: 0,
+      left: 80,
+      width: 20,
+      height: 20,
+    });
   });
 });
 
@@ -104,6 +120,35 @@ describe("bodyLocationSummaryLabel", () => {
 
   it("is empty for no locations", () => {
     expect(bodyLocationSummaryLabel([])).toBe("");
+  });
+});
+
+describe("bodyRegionSelectOptions", () => {
+  it("lists every body map region for the dropdown", () => {
+    const options = bodyRegionSelectOptions();
+    expect(options.length).toBe(BODY_REGIONS.length);
+    expect(options.some((opt) => opt.value === "lower-back" && opt.view === "back")).toBe(true);
+  });
+});
+
+describe("bodyLocationsToLegacyFields", () => {
+  it("maps region ids to front/back legacy labels", () => {
+    expect(
+      bodyLocationsToLegacyFields(["head-front", "lower-back", "right-arm-front"]),
+    ).toMatchObject({
+      injuriesFront: "Head, Right arm",
+      injuriesBack: "Lower back",
+      InjuriesFront: "Head, Right arm",
+      InjuriesBack: "Lower back",
+      bodyParts: "Head, Lower back, Right arm",
+    });
+  });
+});
+
+describe("primaryBodyRegionId", () => {
+  it("returns the first parsed region id", () => {
+    expect(primaryBodyRegionId(["lower-back", "head-front"])).toBe("lower-back");
+    expect(primaryBodyRegionId([])).toBe("");
   });
 });
 

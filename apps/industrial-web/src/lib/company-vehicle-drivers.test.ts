@@ -1,5 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
+  companyVehicleDriverRowClass,
+  companyVehicleDriverStatusBadge,
   companyVehicleDriverStatusLabel,
   driverNameParts,
   driversWithLicenseIssues,
@@ -29,6 +31,8 @@ describe("company vehicle drivers helpers", () => {
       { bad: true },
     ]);
     expect(drivers).toHaveLength(2);
+    expect(drivers[0]?.personnelName).toBe("ADA BYRON");
+    expect(drivers[1]?.personnelName).toBe("TIM");
     expect(toCompanyVehicleDriver({ id: "x" })?.personnelId).toBeNull();
     expect(
       toCompanyVehicleDriverSummary({
@@ -48,6 +52,7 @@ describe("company vehicle drivers helpers", () => {
       licenseExpiringSoon: 0,
       mvrOnFile: 0,
       mvrReleaseOnFile: 0,
+      missingMvrConsent: 0,
       sampleYear: null,
       sampleSelected: 0,
       sampleCompleted: 0,
@@ -153,6 +158,14 @@ describe("company vehicle drivers helpers", () => {
   it("labels statuses the way the legacy panel did", () => {
     expect(companyVehicleDriverStatusLabel("on_insurance")).toBe("On insurance");
     expect(companyVehicleDriverStatusLabel("pending_mvr")).toBe("Pending MVR");
+    expect(companyVehicleDriverStatusBadge("pending_mvr")).toBe("bg-label-warning");
+    expect(companyVehicleDriverStatusBadge("pending_mvr", { producersRiceMill: true })).toBe(
+      "bg-label-pink",
+    );
+    expect(companyVehicleDriverRowClass("pending_mvr", { producersRiceMill: true })).toBe(
+      "table-row-pending-mvr-prm",
+    );
+    expect(companyVehicleDriverRowClass("on_insurance", { producersRiceMill: true })).toBeUndefined();
   });
 
   it("filters by name or employee number", () => {

@@ -9,6 +9,7 @@
 
 import { resolvePersonnelLocationLabel } from "@/lib/personnel-file";
 import { personHasPpeExpiryAlert } from "@/lib/personnel-ppe";
+import { personNameDisplay } from "@/lib/person-name-display";
 import { matchesSearchTokens, matchesSearchTokensAnywhere } from "@/lib/search-text";
 
 export type RosterPerson = {
@@ -18,12 +19,15 @@ export type RosterPerson = {
   lastName: string;
   jobTitle: string;
   departmentName: string;
+  divisionName: string;
+  departmentId: string;
   employeeNumber: string;
   email: string;
   siteId: string;
   /** Free-text site from roster imports when siteId was never linked. */
   siteLabel: string;
   status: string;
+  isDotDriver: boolean;
   isCompanyDriver: boolean;
   hasPpeExpiryAlert: boolean;
 };
@@ -46,20 +50,25 @@ export function toRosterPerson(row: Record<string, unknown>): RosterPerson | nul
   if (id === "") return null;
 
   const first = str(row.preferredName) || str(row.firstName);
-  const displayName = str(row.displayName) || [first, str(row.lastName)].filter(Boolean).join(" ");
+  const displayName =
+    personNameDisplay(str(row.displayName) || [first, str(row.lastName)].filter(Boolean).join(" ")) ||
+    id;
 
   return {
     id,
-    displayName: displayName || id,
-    firstName: str(row.firstName),
-    lastName: str(row.lastName),
+    displayName,
+    firstName: personNameDisplay(str(row.firstName)),
+    lastName: personNameDisplay(str(row.lastName)),
     jobTitle: str(row.jobTitle),
     departmentName: str(row.departmentName),
+    divisionName: str(row.divisionName),
+    departmentId: str(row.departmentId),
     employeeNumber: str(row.employeeNumber),
     email: str(row.email),
     siteId: str(row.siteId),
     siteLabel: resolvePersonnelLocationLabel(row),
     status: str(row.status),
+    isDotDriver: row.isDotDriver === true,
     isCompanyDriver: row.isCompanyDriver === true,
     hasPpeExpiryAlert: personHasPpeExpiryAlert(row),
   };
@@ -138,7 +147,13 @@ export function rosterInitials(displayName: string): string {
 
 /** Second line of the card: role, falling back the way the legacy roster did. */
 export function rosterSubtitle(person: RosterPerson): string {
-  return person.jobTitle || person.departmentName || "Team member";
+  return person.jobTitle || person.departmentName || "Team MEMBER";
+}
+
+/** Location label for roster filters (site name, import label, or fallback). */
+export function rosterLocationLabel(person: RosterPerson, siteName?: string): string {
+  const place = siteName?.trim() || person.siteLabel.trim();
+  return place || "Unassigned location";
 }
 
 /** Third line: employee number and where they work. */
@@ -163,6 +178,7 @@ function rosterHaystack(person: RosterPerson, siteName?: string): string[] {
     person.lastName,
     person.jobTitle,
     person.departmentName,
+    person.divisionName,
     person.employeeNumber,
     person.email,
     person.siteLabel,

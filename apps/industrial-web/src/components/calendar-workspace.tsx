@@ -323,8 +323,10 @@ export function CalendarWorkspace({ moduleName }: { moduleName: string }) {
   }
 
   return (
-    <div className="container-xxl flex-grow-1 container-p-y">
+    <div className="container-xxl flex-grow-1 container-p-y" data-walkthrough="calendar-overview">
       <ModuleWorkspaceHeader
+        id="calendar-title"
+        eyebrow="System Tools"
         title={moduleName}
         description="Schedule events with categories, recurrence, and linked tasks. Reminders fire before start."
         onRefresh={() => void load()}

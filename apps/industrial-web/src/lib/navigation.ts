@@ -1,6 +1,8 @@
 import {
   INDUSTRIAL_MODULE_REGISTRY,
   industrialAvailabilityLabel,
+  industrialModuleNavPermissionOk,
+  industrialModuleRoleAccess,
   type IndustrialImplementationStatus,
 } from "@forge/contracts";
 
@@ -22,8 +24,10 @@ const FLAG_BY_CODE: Record<string, string> = {
   CORE: "industrial.enabled",
   ANALYTICS: "industrial.module.analytics.enabled",
   PERSONNEL: "industrial.module.personnel.enabled",
+  FIRST_AID: "industrial.module.first_aid.enabled",
   INCIDENTS: "industrial.module.incidents.enabled",
   INSPECTIONS: "industrial.module.inspections.enabled",
+  SANITATION: "industrial.module.sanitation.enabled",
   TRAINING: "industrial.module.training.enabled",
   JSAS: "industrial.module.jsa.enabled",
   OBSERVATIONS: "industrial.module.observations.enabled",
@@ -33,8 +37,13 @@ const FLAG_BY_CODE: Record<string, string> = {
   DOCUMENTS: "industrial.module.documents.enabled",
   REPORTING: "industrial.module.reporting.enabled",
   IMPORT: "industrial.enabled",
+  PRINT_MANAGER: "industrial.module.print_manager.enabled",
+  PRINT_QUEUE: "industrial.module.print_queue.enabled",
+  PRINT_HISTORY: "industrial.module.print_history.enabled",
   LOCKOUT_TAGOUT: "industrial.module.loto.enabled",
   EQUIPMENT: "industrial.module.equipment.enabled",
+  FLEET: "industrial.module.fleet.enabled",
+  SAFETY_SUPPLIES: "industrial.module.safety_supplies.enabled",
   FORKLIFTS: "industrial.module.forklifts.enabled",
   CONFINED_SPACE: "industrial.module.confined_space.enabled",
   HOT_WORK: "industrial.module.hot_work.enabled",
@@ -57,6 +66,7 @@ const FLAG_BY_CODE: Record<string, string> = {
   REMINDERS: "industrial.module.reminders.enabled",
   MESSAGING: "industrial.module.messaging.enabled",
   EMERGENCY_RESPONSE: "industrial.module.emergency_response.enabled",
+  EMERGENCY_ALERTS: "industrial.module.emergency_alerts.enabled",
 };
 
 export function featureFlagForModule(code: string): string {
@@ -114,23 +124,40 @@ export function buildIndustrialNavigation(input: {
 
   const items = INDUSTRIAL_MODULE_REGISTRY.map((entry) => {
     const flagKey = featureFlagForModule(entry.code);
-    const requiredPermissions = ["industrial.access"];
-    const hasPerms = requiredPermissions.every((p) => perms.has(p));
+    const moduleAccess = industrialModuleRoleAccess(entry.code);
+    const requiredPermissions =
+      entry.code === "CORE"
+        ? ["industrial.access"]
+        : moduleAccess
+          ? ["industrial.access", ...moduleAccess.accessPermissions]
+          : ["industrial.access"];
+    const hasPerms =
+      perms.has("industrial.access") && industrialModuleNavPermissionOk(entry.code, perms);
     const implementationStatus = entry.implementationStatus;
     const deploymentOk = deploymentAllows(implementationStatus, flagKey, input.flags);
     const customerEnabled =
       entry.code === "CORE"
         ? true
-        : strict || enabledModules.size > 0
-          ? enabledModules.has(entry.code)
-          : deploymentOk;
+        : entry.code === "PRINT_MANAGER" && (strict || enabledModules.size > 0)
+          ? enabledModules.has("PRINT_MANAGER") ||
+            enabledModules.has("PRINT_QUEUE") ||
+            enabledModules.has("PRINT_HISTORY")
+          : strict || enabledModules.size > 0
+            ? enabledModules.has(entry.code)
+            : deploymentOk;
 
-    const awsEnabled = deploymentOk;
+    // Print Manager also requires forge.printing.enabled / print_manager when set.
+    const printingOk =
+      entry.code !== "PRINT_MANAGER" ||
+      (deploymentAllows("AVAILABLE", "forge.printing.enabled", input.flags) &&
+        deploymentAllows("AVAILABLE", "forge.printing.print_manager.enabled", input.flags));
+
+    const awsEnabled = deploymentOk && printingOk;
     const available =
       hasPerms &&
       implementationStatus === "AVAILABLE" &&
       customerEnabled &&
-      deploymentOk;
+      awsEnabled;
 
     return {
       code: entry.code,
@@ -149,7 +176,14 @@ export function buildIndustrialNavigation(input: {
   if (input.includeUnavailable) {
     return items;
   }
-  return items.filter((item) => item.available);
+  const available = items.filter((item) => item.available);
+  // When Print Manager is on, prefer the hub and hide legacy System Tools duplicates.
+  if (available.some((item) => item.code === "PRINT_MANAGER")) {
+    return available.filter(
+      (item) => item.code !== "PRINT_QUEUE" && item.code !== "PRINT_HISTORY",
+    );
+  }
+  return available;
 }
 
 export function moduleUnavailableMessage(moduleName: string): string {
@@ -168,4 +202,26 @@ export function moduleAvailabilityCaption(
   }
   if (!item.customerEnabled) return "Not enabled";
   return "Unavailable";
+}
+
+/** Modules shown in nav with a Coming soon affordance (not yet product-ready). */
+export const COMING_SOON_MODULE_CODES = new Set([
+  "JSAS",
+  "OBSERVATIONS",
+  "RISK",
+  "CORRECTIVE_ACTIONS",
+  "FORKLIFTS",
+  "CRANES_RIGGING",
+  "MACHINE_SAFETY",
+  "ELECTRICAL_SAFETY",
+  "CONFINED_SPACE",
+  "HOT_WORK",
+  "WORKING_AT_HEIGHTS",
+  "CHEMICAL_SAFETY",
+  "WAREHOUSE_SAFETY",
+  "MANUFACTURING_SAFETY",
+]);
+
+export function isComingSoonModule(code: string): boolean {
+  return COMING_SOON_MODULE_CODES.has(code);
 }

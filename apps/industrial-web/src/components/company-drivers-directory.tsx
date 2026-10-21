@@ -1,11 +1,8 @@
 "use client";
 
-import Link from "next/link";
-import { Fragment, useCallback, useEffect, useMemo, useState, type FormEvent } from "react";
-import { ApiError, apiGetResult, apiSend, useAuth } from "@forge/web-kit";
-import { personFileHref } from "@/lib/personnel-directory";
 import {
   COMPANY_DRIVER_SORT_OPTIONS,
+  companyVehicleDriverRowClass,
   companyVehicleDriverStatusBadge,
   companyVehicleDriverStatusLabel,
   DEFAULT_COMPANY_DRIVER_SORT,
@@ -26,14 +23,32 @@ import {
   type CompanyVehicleDriverSummary,
   type LicenseIssueKind,
 } from "@/lib/company-vehicle-drivers";
+import Link from "next/link";
+import { Fragment, useCallback, useEffect, useMemo, useState, type FormEvent } from "react";
+import { ApiError, apiGet, apiGetResult, apiSend, useAuth } from "@forge/web-kit";
+import { CompanyDriverMergePanel } from "@/components/company-driver-merge-panel";
+import { personFileHref } from "@/lib/personnel-directory";
+import { personNameDisplay } from "@/lib/person-name-display";
+import { FORMS_API } from "@/lib/forms-module";
+import {
+  findProducersMvrConsentForm,
+  isProducersRiceMillTenant,
+  producersMvrConsentFormFillHref,
+  producersMvrConsentFormTitle,
+} from "@/lib/producers-mvr-policy";
+import { companyDriverMvrConsentOnFile } from "@/lib/company-driver-mvr-requirements";
 
 type ListResponse = {
   items?: unknown[];
   summary?: unknown;
 };
 
-const PAGE_SIZE = 100;
-const MAX_PAGES = 20;
+type FormListResponse = {
+  items?: Array<Record<string, unknown>>;
+};
+
+const PAGE_SIZE = 500;
+const MAX_PAGES = 10;
 const DASH = "—";
 
 /**
@@ -52,14 +67,23 @@ export function CompanyDriversDirectory() {
     permissions.has("industrial.personnel.manage") ||
     permissions.has("industrial.fleet.manage") ||
     permissions.has("industrial.admin");
+  const canFillForms =
+    permissions.has("industrial.forms.view") ||
+    permissions.has("industrial.forms.manage") ||
+    permissions.has("industrial.admin") ||
+    permissions.has("industrial.access");
 
   const [drivers, setDrivers] = useState<CompanyVehicleDriver[]>([]);
   const [summary, setSummary] = useState<CompanyVehicleDriverSummary>(EMPTY_DRIVER_SUMMARY);
+  const [mvrFormId, setMvrFormId] = useState<string | null>(null);
+  const [mvrFormTitle, setMvrFormTitle] = useState("MVR consent form");
   const [query, setQuery] = useState("");
   const [sort, setSort] = useState<CompanyDriverSort>(DEFAULT_COMPANY_DRIVER_SORT);
   const [statusFilter, setStatusFilter] = useState<
     "all" | "on_insurance" | "pending_mvr" | "suspended" | "removed"
   >("all");
+  const [unlinkedOnly, setUnlinkedOnly] = useState(false);
+  const [missingConsentOnly, setMissingConsentOnly] = useState(false);
   const [expanded, setExpanded] = useState<string | null>(null);
   const [licenseIssuesOpen, setLicenseIssuesOpen] = useState(false);
   const [licenseIssueFilter, setLicenseIssueFilter] = useState<LicenseIssueKind[] | null>(null);
@@ -67,6 +91,17 @@ export function CompanyDriversDirectory() {
   const [sampleBusy, setSampleBusy] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  const isProducersRiceMill = useMemo(() => {
+    const activeTenant =
+      me?.tenants?.find((tenant) => tenant.tenantId === me.tenantId) ?? me?.tenants?.[0];
+    return isProducersRiceMillTenant(activeTenant?.slug, activeTenant?.displayName);
+  }, [me?.tenantId, me?.tenants]);
+
+  const driverStyleOptions = useMemo(
+    () => ({ producersRiceMill: isProducersRiceMill }),
+    [isProducersRiceMill],
+  );
 
   const refreshDrivers = useCallback(async () => {
     const all: unknown[] = [];
@@ -77,7 +112,15 @@ export function CompanyDriversDirectory() {
       });
       const items = Array.isArray(result.data.items) ? result.data.items : [];
       all.push(...items);
-      if (page === 1) rawSummary = result.data.summary;
+      if (page === 1) {
+        rawSummary = result.data.summary;
+        // Paint the first page immediately so the roster isn't blocked on full crawl.
+        setDrivers(toCompanyVehicleDrivers(all));
+        setSummary(toCompanyVehicleDriverSummary(rawSummary));
+        setLoading(false);
+      } else {
+        setDrivers(toCompanyVehicleDrivers(all));
+      }
       if (items.length < PAGE_SIZE) break;
     }
     setDrivers(toCompanyVehicleDrivers(all));
@@ -97,7 +140,7 @@ export function CompanyDriversDirectory() {
         await refreshDrivers();
       } catch (e) {
         if (!cancelled) {
-          setError(e instanceof ApiError ? e.message : "Failed to load company drivers");
+          setError(e instanceof ApiError ? e.message : "Failed to load company DRIVERS");
           setDrivers([]);
           setSummary(EMPTY_DRIVER_SUMMARY);
         }
@@ -110,13 +153,61 @@ export function CompanyDriversDirectory() {
     };
   }, [canView, refreshDrivers]);
 
+  useEffect(() => {
+    if (!canView || !canFillForms) {
+      setMvrFormId(null);
+      return;
+    }
+    let cancelled = false;
+    void (async () => {
+      try {
+        const result = await apiGet<FormListResponse>(FORMS_API, {
+          query: { page: "1", pageSize: "100" },
+        });
+        if (cancelled) return;
+        const definition = findProducersMvrConsentForm(result.items ?? []);
+        const id = definition ? String(definition.id ?? "").trim() : "";
+        setMvrFormId(id || null);
+        setMvrFormTitle(producersMvrConsentFormTitle(definition));
+      } catch {
+        if (!cancelled) {
+          setMvrFormId(null);
+          setMvrFormTitle("MVR consent form");
+        }
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [canFillForms, canView]);
+
+  const unlinkedCount = useMemo(
+    () => drivers.filter((driver) => !driver.personnelId).length,
+    [drivers],
+  );
+  const missingConsentCount = useMemo(
+    () =>
+      drivers.filter(
+        (driver) =>
+          driver.status.toLowerCase() !== "removed" && !companyDriverMvrConsentOnFile(driver),
+      ).length,
+    [drivers],
+  );
+
   const visible = useMemo(() => {
     const filtered = drivers.filter((driver) => {
+      if (unlinkedOnly && driver.personnelId) return false;
+      if (
+        missingConsentOnly &&
+        (driver.status.toLowerCase() === "removed" || companyDriverMvrConsentOnFile(driver))
+      ) {
+        return false;
+      }
       if (statusFilter !== "all" && driver.status.toLowerCase() !== statusFilter) return false;
       return matchesCompanyDriverQuery(driver, query);
     });
     return sortCompanyVehicleDrivers(filtered, sort);
-  }, [drivers, query, statusFilter, sort]);
+  }, [drivers, query, statusFilter, sort, unlinkedOnly, missingConsentOnly]);
 
   const licenseIssues = useMemo(
     () => driversWithLicenseIssues(drivers, undefined, licenseIssueFilter ?? undefined),
@@ -182,19 +273,19 @@ export function CompanyDriversDirectory() {
       <div className="alert alert-warning d-flex align-items-start gap-2" role="alert">
         <i className="bx bx-lock-alt fs-4" aria-hidden="true" />
         <div>
-          <h5 className="alert-heading mb-1">Company Drivers</h5>
-          <p className="mb-0">You do not have permission to view company vehicle drivers.</p>
+          <h5 className="alert-heading mb-1">Company DRIVERS</h5>
+          <p className="mb-0">You do not have permission to view company vehicle DRIVERS.</p>
         </div>
       </div>
     );
   }
 
   return (
-    <section aria-labelledby="company-drivers-title">
+    <section aria-labelledby="company-drivers-title" data-walkthrough="company-drivers">
       <div className="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-3">
         <div>
           <h4 className="mb-1" id="company-drivers-title">
-            Company Drivers
+            Company DRIVERS
           </h4>
           <p className="text-muted mb-0">
             Everyone approved to drive company vehicles for insurance. Each entry links to a
@@ -202,12 +293,34 @@ export function CompanyDriversDirectory() {
             expiration current, and pull about 10% each year for recurring MVR checks.
           </p>
         </div>
+        {mvrFormId && canFillForms ? (
+          <Link
+            className="btn btn-primary"
+            href={producersMvrConsentFormFillHref(mvrFormId)}
+          >
+            <i className="bx bx-edit-alt me-1" aria-hidden="true" />
+            {mvrFormTitle}
+          </Link>
+        ) : null}
       </div>
 
       <div className="card mb-3">
         <div className="card-body d-flex flex-wrap gap-2">
           <span className="badge bg-label-success">On insurance: {summary.onInsurance}</span>
-          <span className="badge bg-label-warning">Pending MVR: {summary.pendingMvr}</span>
+          <span
+            className={`badge ${isProducersRiceMill ? "bg-label-pink" : "bg-label-warning"}`}
+          >
+            Pending MVR: {summary.pendingMvr}
+          </span>
+          {missingConsentCount > 0 ? (
+            <button
+              type="button"
+              className={`badge border-0 ${missingConsentOnly ? "bg-warning" : "bg-label-warning"}`}
+              onClick={() => setMissingConsentOnly((value) => !value)}
+            >
+              MVR Consent required: {missingConsentCount}
+            </button>
+          ) : null}
           {summary.missingLicenseExpiry > 0 ? (
             <button
               type="button"
@@ -241,12 +354,21 @@ export function CompanyDriversDirectory() {
           {summary.removed > 0 ? (
             <span className="badge bg-label-secondary">Removed: {summary.removed}</span>
           ) : null}
+          {unlinkedCount > 0 ? (
+            <button
+              type="button"
+              className={`badge border-0 ${unlinkedOnly ? "bg-danger" : "bg-label-danger"}`}
+              onClick={() => setUnlinkedOnly((value) => !value)}
+            >
+              No personnel file: {unlinkedCount}
+            </button>
+          ) : null}
           <span className="badge bg-label-secondary">Total: {summary.total}</span>
         </div>
       </div>
 
       <div className="row g-3 mb-3">
-        <div className="col-lg-6">
+        <div className="col-lg-6 col-xl-4">
           <div className="card h-100">
             <div className="card-body">
               <button
@@ -265,7 +387,7 @@ export function CompanyDriversDirectory() {
                 <div className="d-flex align-items-start justify-content-between gap-2">
                   <div>
                     <h6 className="mb-1">
-                      Driver&apos;s license &amp; expiration
+                      DRIVER&apos;S license &amp; expiration
                       {licenseIssueCount > 0 ? (
                         <span className="badge bg-label-danger ms-2">{licenseIssueCount}</span>
                       ) : null}
@@ -273,7 +395,7 @@ export function CompanyDriversDirectory() {
                     <p className="text-muted mb-0 small">
                       {licenseIssueCount > 0
                         ? "Click to review missing, expired, and soon-to-expire licenses. Open a name to jump to that personnel file."
-                        : "Keep the license number, state, and expiration on every driver. No follow-ups right now."}
+                        : "Keep the license number, state, and expiration on every DRIVER. No follow-ups right now."}
                     </p>
                   </div>
                   <i
@@ -302,7 +424,7 @@ export function CompanyDriversDirectory() {
                   ) : (
                     <ul className="list-unstyled mb-0 d-flex flex-column gap-2">
                       {licenseIssues.map(({ driver, kind, reason }) => {
-                        const name = driver.personnelName || "Unnamed";
+                        const name = personNameDisplay(driver.personnelName, "Unnamed");
                         const badge =
                           kind === "expired"
                             ? "bg-label-danger"
@@ -343,7 +465,26 @@ export function CompanyDriversDirectory() {
             </div>
           </div>
         </div>
-        <div className="col-lg-6">
+        {mvrFormId && canFillForms ? (
+          <div className="col-lg-6 col-xl-4">
+            <div className="card h-100">
+              <div className="card-body d-flex flex-column">
+                <h6 className="mb-1">{mvrFormTitle}</h6>
+                <p className="text-muted small mb-3 flex-grow-1">
+                  Signed acknowledgement authorizing motor vehicle record review before insurance
+                  approval. Fill one per DRIVER and attach the submission to their personnel file.
+                </p>
+                <Link
+                  className="btn btn-sm btn-outline-primary align-self-start"
+                  href={producersMvrConsentFormFillHref(mvrFormId)}
+                >
+                  Fill MVR form
+                </Link>
+              </div>
+            </div>
+          </div>
+        ) : null}
+        <div className="col-lg-6 col-xl-4">
           <div className="card h-100">
             <div className="card-body">
               <div className="d-flex align-items-start justify-content-between gap-2 mb-2">
@@ -361,7 +502,7 @@ export function CompanyDriversDirectory() {
                     ) : null}
                   </h6>
                   <p className="text-muted mb-0 small">
-                    Scheduled each year. Start anytime to draw ~10% of active drivers for audit.
+                    Scheduled each year. Start anytime to draw ~10% of active DRIVERS for audit.
                   </p>
                 </button>
                 <i
@@ -427,14 +568,14 @@ export function CompanyDriversDirectory() {
                   {sampleDrivers.length === 0 ? (
                     <p className="text-muted small mb-0">
                       {canManage
-                        ? "Start the annual sample to select about 10% of drivers for audit."
+                        ? "Start the annual sample to select about 10% of DRIVERS for audit."
                         : "No sample has been started yet."}
                     </p>
                   ) : (
                     <ul className="list-unstyled mb-0 d-flex flex-column gap-2">
                       {sampleDrivers.map((driver) => {
                         const audited = Boolean(driver.sampleCompletedAt);
-                        const name = driver.personnelName || "Unnamed";
+                        const name = personNameDisplay(driver.personnelName, "Unnamed");
                         return (
                           <li
                             key={driver.id}
@@ -503,10 +644,10 @@ export function CompanyDriversDirectory() {
             <input
               type="search"
               className="form-control"
-              placeholder="Search name, employee #, license…"
+              placeholder="Search name, EMPLOYEE #, license…"
               value={query}
               onChange={(ev) => setQuery(ev.target.value)}
-              aria-label="Search company drivers"
+              aria-label="Search company DRIVERS"
               autoComplete="off"
             />
             {query ? (
@@ -531,7 +672,7 @@ export function CompanyDriversDirectory() {
               className="form-select"
               value={sort}
               onChange={(ev) => setSort(ev.target.value as CompanyDriverSort)}
-              aria-label="Sort company drivers"
+              aria-label="Sort company DRIVERS"
             >
               {COMPANY_DRIVER_SORT_OPTIONS.map((option) => (
                 <option key={option.value} value={option.value}>
@@ -555,9 +696,20 @@ export function CompanyDriversDirectory() {
             <option value="removed">Removed</option>
           </select>
         </div>
+        <div className="col-md-4 col-lg-2 d-flex align-items-center gap-2">
+          <label className="form-check-label small text-muted">
+            <input
+              type="checkbox"
+              className="form-check-input me-1"
+              checked={unlinkedOnly}
+              onChange={(ev) => setUnlinkedOnly(ev.target.checked)}
+            />
+            Unlinked only
+          </label>
+        </div>
         <div className="col-md-4 col-lg-2 d-flex align-items-center">
           <span className="text-muted small">
-            Showing {visible.length} of {drivers.length} drivers
+            Showing {visible.length} of {drivers.length} DRIVERS
           </span>
         </div>
       </form>
@@ -570,7 +722,7 @@ export function CompanyDriversDirectory() {
 
       {loading ? (
         <p className="text-muted" role="status">
-          Loading company drivers…
+          Loading company DRIVERS…
         </p>
       ) : visible.length === 0 ? (
         <div className="card">
@@ -583,7 +735,7 @@ export function CompanyDriversDirectory() {
               <thead>
                 <tr>
                   <th scope="col">Name</th>
-                  <th scope="col">Emp #</th>
+                  <th scope="col">EMPLOYEE #</th>
                   <th scope="col">License</th>
                   <th scope="col">License exp.</th>
                   <th scope="col">DL copy</th>
@@ -599,16 +751,20 @@ export function CompanyDriversDirectory() {
                 {visible.map((driver) => {
                   const expiry = licenseExpiryState(driver);
                   const isOpen = expanded === driver.id;
+                  const rowClass = companyVehicleDriverRowClass(driver.status, driverStyleOptions);
                   return (
                     <Fragment key={driver.id}>
-                      <tr>
+                      <tr className={rowClass}>
                         <td>
                           {driver.personnelId ? (
                             <Link href={personFileHref(driver.personnelId)}>
-                              {driver.personnelName || "Unnamed"}
+                              {personNameDisplay(driver.personnelName, "Unnamed")}
                             </Link>
                           ) : (
-                            <span>{driver.personnelName || "Unnamed"}</span>
+                            <span>
+                              {personNameDisplay(driver.personnelName, "Unnamed")}
+                              <span className="badge bg-label-danger ms-2">No file</span>
+                            </span>
                           )}
                           {expiry === "expired" ? (
                             <div className="text-danger small">License expired</div>
@@ -641,7 +797,9 @@ export function CompanyDriversDirectory() {
                         </td>
                         <td>{licenseCopyLabel(driver) || DASH}</td>
                         <td>
-                          <span className={`badge ${companyVehicleDriverStatusBadge(driver.status)}`}>
+                          <span
+                            className={`badge ${companyVehicleDriverStatusBadge(driver.status, driverStyleOptions)}`}
+                          >
                             {companyVehicleDriverStatusLabel(driver.status)}
                           </span>
                         </td>
@@ -657,6 +815,23 @@ export function CompanyDriversDirectory() {
                                 href={personFileHref(driver.personnelId)}
                               >
                                 File
+                              </Link>
+                            ) : canManage ? (
+                              <button
+                                type="button"
+                                className="btn btn-sm btn-outline-danger"
+                                onClick={() => setExpanded(isOpen ? null : driver.id)}
+                                aria-expanded={isOpen}
+                              >
+                                {isOpen ? "Hide merge" : "Merge file"}
+                              </button>
+                            ) : null}
+                            {mvrFormId && canFillForms && driver.personnelId ? (
+                              <Link
+                                className="btn btn-sm btn-outline-primary"
+                                href={producersMvrConsentFormFillHref(mvrFormId, driver.personnelId)}
+                              >
+                                MVR form
                               </Link>
                             ) : null}
                             <button
@@ -674,6 +849,11 @@ export function CompanyDriversDirectory() {
                         <tr>
                           <td colSpan={11} className="bg-lighter">
                             <div className="row g-3 py-2">
+                              <CompanyDriverMergePanel
+                                driver={driver}
+                                canManage={canManage}
+                                onMerged={refreshDrivers}
+                              />
                               <DetailCell label="Date of birth" value={driver.dateOfBirth} />
                               <DetailCell
                                 label="On insurance since"

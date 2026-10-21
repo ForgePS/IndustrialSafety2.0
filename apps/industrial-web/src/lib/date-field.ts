@@ -47,6 +47,33 @@ export function buildIsoDate(year: string, month: string, day: string): string {
   return `${String(y).padStart(4, "0")}-${String(m).padStart(2, "0")}-${String(d).padStart(2, "0")}`;
 }
 
+export type DateParts = { year: string; month: string; day: string };
+
+export function mergeDateParts(current: DateParts, next: Partial<DateParts>): DateParts {
+  const merged: DateParts = {
+    year: next.year ?? current.year,
+    month: next.month ?? current.month,
+    day: next.day ?? current.day,
+  };
+  if (merged.year && merged.month && merged.day) {
+    const capped = Math.min(
+      Number(merged.day),
+      daysInMonth(Number(merged.year), Number(merged.month)),
+    );
+    merged.day = String(capped).padStart(2, "0");
+  }
+  return merged;
+}
+
+/** Keep partial month/day/year picks while the parent value is still incomplete. */
+export function shouldSyncDatePartsFromValue(value: string, parts: DateParts): boolean {
+  const built = buildIsoDate(parts.year, parts.month, parts.day);
+  if (value === built) return false;
+  if (!value && built) return true;
+  if (!value && (parts.year || parts.month || parts.day)) return false;
+  return true;
+}
+
 export function yearOptionsForMode(mode: DateFieldMode, now = new Date()): number[] {
   const current = now.getFullYear();
   if (mode === "birth") {

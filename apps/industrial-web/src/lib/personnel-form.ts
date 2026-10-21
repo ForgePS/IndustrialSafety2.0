@@ -11,6 +11,11 @@ import {
   toLicenseUpload,
   uploadImageSrc,
 } from "./license-copies";
+import {
+  isLicenseDocumentId,
+  licenseDocumentIdFromUpload,
+} from "./personnel-license-upload";
+import { formatEmployeeNumberFromDigits, employeeNumberDigitsForInput } from "./employee-number";
 
 export type PersonnelFieldType =
   | "text"
@@ -23,7 +28,11 @@ export type PersonnelFieldType =
   | "suggest"
   | "select"
   | "signature"
-  | "image";
+  | "image"
+  | "file";
+
+/** Binary certification copy upload (CPR / First Aid). */
+export type PersonnelFileKind = "CPR" | "FIRST_AID";
 
 /** Catalogs the page can populate a <select> from. */
 export type PersonnelLookupSource = "sites" | "departments" | "positions";
@@ -46,6 +55,12 @@ export const PERSONNEL_STATUS_OPTIONS: readonly PersonnelSelectOption[] = [
 export const SAFETY_FOOTWEAR_CLASS_OPTIONS: readonly PersonnelSelectOption[] = [
   { value: "CLASS_1", label: "Class 1 ($175.00)" },
   { value: "CLASS_2", label: "Class 2 ($75.00)" },
+];
+
+/** Sex on the personnel file — values match OSHA Form 301 Male/Female. */
+export const PERSONNEL_SEX_OPTIONS: readonly PersonnelSelectOption[] = [
+  { value: "MALE", label: "Male" },
+  { value: "FEMALE", label: "Female" },
 ];
 
 export const DEFAULT_PERSONNEL_STATUS = "Active";
@@ -78,6 +93,13 @@ export type PersonnelField = {
   fallbackLabel?: string;
   /** Spans both columns of the grid. */
   wide?: boolean;
+  /** For type "file": which certification copy this control uploads. */
+  fileKind?: PersonnelFileKind;
+  /**
+   * Companion filename field shown next to a type "file" document id.
+   * Kept as a separate form value so the UI can label the uploaded copy.
+   */
+  filenameField?: string;
 };
 
 export type PersonnelSection = {
@@ -107,7 +129,12 @@ export const PERSONNEL_FORM_SECTIONS: readonly PersonnelSection[] = [
     description: "Legal name as it should appear on training and compliance records.",
     icon: "bx-user",
     fields: [
-      { name: "employeeNumber", label: "Employee number" },
+      {
+        name: "employeeNumber",
+        label: "Employee number",
+        placeholder: "25080",
+        help: "Enter numbers only. EMP- is added automatically.",
+      },
       {
         name: "status",
         label: "Status",
@@ -128,9 +155,35 @@ export const PERSONNEL_FORM_SECTIONS: readonly PersonnelSection[] = [
     icon: "bx-phone",
     fields: [
       { name: "email", label: "Email", type: "email" },
-      { name: "phone", label: "Phone", type: "tel" },
-      { name: "companyEmail", label: "Company email", type: "email" },
-      { name: "companyPhone", label: "Company phone", type: "tel" },
+      {
+        name: "phone",
+        label: "Phone / SMS Notification number",
+        type: "tel",
+        help: "Used as the SMS Notification number for Emergency Alerts after SMS Authorization on the personnel file.",
+      },
+      {
+        name: "companyEmail",
+        label: "Company email",
+        type: "email",
+        help: "Only for employees assigned a company email address.",
+      },
+      {
+        name: "companyPhone",
+        label: "Company phone",
+        type: "tel",
+        help: "Only for employees assigned a company phone number. Not used for Emergency Alert SMS.",
+      },
+      { name: "street", label: "Street" },
+      { name: "city", label: "City" },
+      { name: "state", label: "State", placeholder: "TX" },
+      { name: "zip", label: "ZIP" },
+      {
+        name: "gender",
+        label: "Sex",
+        type: "select",
+        options: PERSONNEL_SEX_OPTIONS,
+        help: "Used on Workers' Comp and OSHA Form 301.",
+      },
     ],
   },
   {
@@ -217,6 +270,7 @@ export const PERSONNEL_FORM_SECTIONS: readonly PersonnelSection[] = [
         help: "Filled automatically from Division, Location and Department.",
       },
       { name: "hireDate", label: "Hire date", type: "date" },
+      { name: "dateOfBirth", label: "Date of birth", type: "date" },
     ],
   },
   {
@@ -231,30 +285,37 @@ export const PERSONNEL_FORM_SECTIONS: readonly PersonnelSection[] = [
   },
   {
     id: "driver",
-    title: "Driver",
+    title: "DRIVER",
     icon: "bx-car",
     description:
-      "Company drivers and DOT (DQF) files require front and back copies of the driver's license on this personnel record.",
+      "Company drivers are on the vehicle/insurance roster (MVR + MVR Consent). DOT drivers are company drivers who have a Drivers (DQF) file — license front/back copies are required.",
     fields: [
       {
-        name: "isCompanyDriver",
-        label: "Company or contract driver",
+        name: "isDotDriver",
+        label: "DOT Driver",
         type: "checkbox",
-        help: "Enables DOT and fleet requirements for this person.",
+        help: "Only for people with a DOT Drivers (DQF) file. Turning this off archives the DQF file (it returns when turned back on). At Producers, DOT drivers are also company drivers.",
+        wide: true,
+      },
+      {
+        name: "isCompanyDriver",
+        label: "Company Driver",
+        type: "checkbox",
+        help: "Adds this person to the company drivers roster. MVR Consent form is required (tracked in Needs Attention). Saving the employee record is not blocked if consent is still missing.",
         wide: true,
       },
       {
         name: "licenseFrontUrl",
-        label: "Driver's license (front)",
+        label: "DRIVER'S license (front)",
         type: "image",
-        help: "Required for company drivers and DOT (DQF) personnel files.",
+        help: "Uploads to secure storage (same as DQF), up to 12 MB. Shared with the linked DQF file.",
         wide: true,
       },
       {
         name: "licenseBackUrl",
-        label: "Driver's license (back)",
+        label: "DRIVER'S license (back)",
         type: "image",
-        help: "Required for company drivers and DOT (DQF) personnel files.",
+        help: "Uploads to secure storage (same as DQF), up to 12 MB. Shared with the linked DQF file.",
         wide: true,
       },
     ],
@@ -363,6 +424,51 @@ export const PERSONNEL_FORM_SECTIONS: readonly PersonnelSection[] = [
     ],
   },
   {
+    id: "first-aid",
+    title: "First Aid & CPR",
+    description:
+      "Track CPR and First Aid certification expiration dates on the personnel file. Upload PDF or image copies of the certificates. Expiration notifications appear 30 days prior.",
+    icon: "bx-first-aid",
+    fields: [
+      {
+        name: "tracksFirstAid",
+        label: "Track First Aid / CPR certifications",
+        type: "checkbox",
+        wide: true,
+      },
+      {
+        name: "cprCertificationExpiresDate",
+        label: "CPR certification expiration date",
+        type: "date",
+        help: "Alerts appear 30 days before this date.",
+      },
+      {
+        name: "firstAidCertificationExpiresDate",
+        label: "First Aid certification expiration date",
+        type: "date",
+        help: "Alerts appear 30 days before this date.",
+      },
+      {
+        name: "cprCertificationDocumentId",
+        label: "CPR certification copy",
+        type: "file",
+        fileKind: "CPR",
+        filenameField: "cprCertificationFilename",
+        help: "Upload a PDF or photo of the CPR card / certificate (not a JSON attachment).",
+        wide: true,
+      },
+      {
+        name: "firstAidCertificationDocumentId",
+        label: "First Aid certification copy",
+        type: "file",
+        fileKind: "FIRST_AID",
+        filenameField: "firstAidCertificationFilename",
+        help: "Upload a PDF or photo of the First Aid card / certificate (not a JSON attachment).",
+        wide: true,
+      },
+    ],
+  },
+  {
     id: "notes",
     title: "Notes",
     icon: "bx-notepad",
@@ -426,6 +532,12 @@ export function personnelFormFromRecord(record: Record<string, unknown>): Person
       continue;
     }
 
+    if (field.name === "employeeNumber") {
+      const digits = employeeNumberDigitsForInput(asFormString(record.employeeNumber));
+      if (digits !== "") values.employeeNumber = digits;
+      continue;
+    }
+
     if (field.type === "image") {
       const fromUrl = uploadImageSrc(record[field.name]);
       if (fromUrl) {
@@ -434,11 +546,41 @@ export function personnelFormFromRecord(record: Record<string, unknown>): Person
       }
       // Company-driver / DQF imports store an upload object instead of a URL field.
       if (field.name === "licenseFrontUrl") {
+        const documentId =
+          licenseDocumentIdFromUpload(record.licenseFrontUpload) ??
+          licenseDocumentIdFromUpload(record.driversLicenseCopy);
+        if (documentId) {
+          values.licenseFrontUrl = documentId;
+          continue;
+        }
         const front = uploadImageSrc(record.licenseFrontUpload);
         if (front) values.licenseFrontUrl = front;
       } else if (field.name === "licenseBackUrl") {
+        const documentId =
+          licenseDocumentIdFromUpload(record.licenseBackUpload) ??
+          licenseDocumentIdFromUpload(record.driversLicenseBack);
+        if (documentId) {
+          values.licenseBackUrl = documentId;
+          continue;
+        }
         const back = uploadImageSrc(record.licenseBackUpload);
         if (back) values.licenseBackUrl = back;
+      }
+      continue;
+    }
+
+    if (field.type === "file") {
+      const documentId = asFormString(record[field.name]);
+      if (documentId !== "") values[field.name] = documentId;
+      if (field.filenameField) {
+        const nestedKey =
+          field.fileKind === "CPR" ? "cprCertificationCopy" : "firstAidCertificationCopy";
+        const nested = record[nestedKey];
+        const fromNested =
+          nested && typeof nested === "object" && !Array.isArray(nested)
+            ? asFormString((nested as Record<string, unknown>).originalFilename)
+            : "";
+        if (fromNested !== "") values[field.filenameField] = fromNested;
       }
       continue;
     }
@@ -467,7 +609,7 @@ export function personnelFormFromRecord(record: Record<string, unknown>): Person
   return values;
 }
 
-/** Persist URL fields plus the company-driver upload object shape. */
+/** Persist S3 document refs (preferred) or legacy URL / data-URL copies. */
 function applyLicenseCopyFields(
   payload: Record<string, unknown>,
   values: PersonnelFormValues,
@@ -485,8 +627,27 @@ function applyLicenseCopyFields(
       }
       continue;
     }
-    if (isOversizedLicenseImage(value)) continue;
-    payload[side.urlKey] = value;
+    if (isLicenseDocumentId(value)) {
+      payload[side.urlKey] = "";
+      payload[side.uploadKey] = {
+        documentId: value,
+        fileName: `drivers-license-${side.side}.jpg`,
+        contentType: "image/jpeg",
+        uploadedAt: new Date().toISOString(),
+      };
+      continue;
+    }
+    // Ignore ephemeral https download URLs from GET (presigned) — keep documentId
+    // already on the server when the form still holds a fresh download link.
+    if (/^https?:\/\//i.test(value) && /X-Amz-|amazonaws\.com/i.test(value)) {
+      continue;
+    }
+    if (isOversizedLicenseImage(value)) {
+      throw new Error(
+        `${side.side === "front" ? "License front" : "License back"} photo is still too large after compression. Clear it and upload again (files upload to secure storage now).`,
+      );
+    }
+    payload[side.urlKey] = value.startsWith("data:") ? "" : value;
     payload[side.uploadKey] = toLicenseUpload(value, side.side);
   }
 }
@@ -557,6 +718,18 @@ export function buildPersonnelPayload(
 
     if (field.type === "image") continue;
 
+    if (field.type === "file") {
+      const documentId = asString(values[field.name]);
+      if (documentId !== "") payload[field.name] = documentId;
+      continue;
+    }
+
+    if (field.name === "employeeNumber") {
+      const digits = asString(values.employeeNumber);
+      if (digits !== "") payload.employeeNumber = formatEmployeeNumberFromDigits(digits);
+      continue;
+    }
+
     if (field.type === "lookup" && field.nameField) {
       const id = asString(values[field.name]);
       if (id !== "") {
@@ -618,7 +791,19 @@ export function buildPersonnelUpdatePayload(
       continue;
     }
 
+    if (field.name === "employeeNumber") {
+      const digits = asString(values.employeeNumber);
+      payload.employeeNumber = digits === "" ? "" : formatEmployeeNumberFromDigits(digits);
+      continue;
+    }
+
     if (field.type === "image") continue;
+
+    if (field.type === "file") {
+      // Empty string clears the column on update (API treats "" as null).
+      payload[field.name] = asString(values[field.name]);
+      continue;
+    }
 
     if (field.name === "signatureUrl") {
       const signature = asString(values[field.name]);

@@ -7,6 +7,7 @@ export const IND3_OPS_MODULES = [
   "incidents",
   "jsas",
   "observations",
+  "corrective-actions",
 ] as const;
 
 export type Ind3OpsModule = (typeof IND3_OPS_MODULES)[number];
@@ -24,6 +25,12 @@ export type OpsCreateFieldType =
   | "checkbox"
   | "signature";
 
+export type OpsListColumn = {
+  key: string;
+  label: string;
+  type?: "date";
+};
+
 export type OpsCreateField = {
   name: string;
   label: string;
@@ -31,6 +38,7 @@ export type OpsCreateField = {
   type?: OpsCreateFieldType;
   /** Renders the field inside a labelled fieldset; ungrouped fields come first. */
   group?: string;
+  help?: string;
 };
 
 /** Create-form groups in render order, preserving first appearance. */
@@ -67,6 +75,12 @@ export const OPS_MODULE_CONFIG: Record<
      * get a dedicated page rather than a second, diverging copy of the fields.
      */
     createHref?: string;
+    /** List columns shown between Record and Status. */
+    columns?: OpsListColumn[];
+    /** POST endpoint ({id} replaced) that closes an open record from the list. */
+    completePath?: string;
+    /** Statuses that no longer show the complete action. */
+    closedStatuses?: readonly string[];
   }
 > = {
   personnel: {
@@ -92,8 +106,20 @@ export const OPS_MODULE_CONFIG: Record<
 
       { name: "email", label: "Email", type: "email", group: "Contact" },
       { name: "phone", label: "Phone", type: "tel", group: "Contact" },
-      { name: "companyEmail", label: "Company email", type: "email", group: "Contact" },
-      { name: "companyPhone", label: "Company phone", type: "tel", group: "Contact" },
+      {
+        name: "companyEmail",
+        label: "Company email",
+        type: "email",
+        group: "Contact",
+        help: "Only for employees assigned a company email address.",
+      },
+      {
+        name: "companyPhone",
+        label: "Company phone",
+        type: "tel",
+        group: "Contact",
+        help: "Only for employees assigned a company phone number.",
+      },
 
       { name: "allergies", label: "Allergies", type: "textarea", group: "Medical" },
       {
@@ -140,10 +166,18 @@ export const OPS_MODULE_CONFIG: Record<
       { name: "signatureUrl", label: "Signature", type: "signature", group: "Records" },
 
       {
-        name: "isCompanyDriver",
-        label: "Company or contract driver",
+        name: "isDotDriver",
+        label: "DOT Driver",
         type: "checkbox",
-        group: "Driver",
+        group: "DRIVER",
+        help: "Only when this person has a Drivers (DQF) file. At Producers they are also company drivers.",
+      },
+      {
+        name: "isCompanyDriver",
+        label: "Company Driver",
+        type: "checkbox",
+        group: "DRIVER",
+        help: "Company vehicle roster (MVR + consent). Not every company driver is a DOT driver.",
       },
 
       { name: "notes", label: "Notes", type: "textarea", group: "Notes" },
@@ -235,5 +269,26 @@ export const OPS_MODULE_CONFIG: Record<
       { name: "location", label: "Location" },
       { name: "riskLevel", label: "Risk level" },
     ],
+  },
+  "corrective-actions": {
+    code: "CORRECTIVE_ACTIONS",
+    flagKey: "industrial.module.corrective_actions.enabled",
+    viewPerm: "industrial.corrective_actions.view",
+    managePerm: "industrial.corrective_actions.manage",
+    listPath: "/api/v1/industrial/corrective-actions",
+    createPath: "/api/v1/industrial/corrective-actions",
+    titleField: "title",
+    createFields: [
+      { name: "title", label: "Corrective action", required: true },
+      { name: "priority", label: "Priority" },
+      { name: "dueDate", label: "Due date", type: "date" },
+      { name: "description", label: "Description", type: "textarea" },
+    ],
+    columns: [
+      { key: "priority", label: "Priority" },
+      { key: "dueDate", label: "Due", type: "date" },
+    ],
+    completePath: "/api/v1/industrial/corrective-actions/{id}/complete",
+    closedStatuses: ["COMPLETED", "CLOSED", "CANCELLED"],
   },
 };

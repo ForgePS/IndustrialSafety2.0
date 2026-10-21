@@ -5,6 +5,7 @@
 
 import { matchesSearchTokens, matchesSearchTokensAnywhere } from "@/lib/search-text";
 import { rosterInitials } from "@/lib/personnel-directory";
+import { personNameDisplay } from "@/lib/person-name-display";
 
 export const USER_MANAGEMENT_PAGE_SIZES = [7, 10, 25, 50] as const;
 export const DEFAULT_USER_PAGE_SIZE = 7;
@@ -42,6 +43,7 @@ export type PlatformMembershipRow = {
   firstName?: string | null;
   lastName?: string | null;
   lastLoginAt?: string | Date | null;
+  lastActivityAt?: string | Date | null;
   recordVersion?: number;
   roles?: UserManagementRole[];
 };
@@ -108,6 +110,8 @@ export function canAccessUserManagement(me: AuthLike): boolean {
   if (me.isPlatformAdmin) return true;
   const permissions = new Set(me.permissions ?? []);
   if (permissions.has("platform.membership.manage")) return true;
+  if (permissions.has("platform.invitation.manage")) return true;
+  if (permissions.has("platform.user.invite")) return true;
   if (permissions.has("industrial.admin")) return true;
   if ((me.activeProducts ?? []).includes("FORGE_CREATOR")) return true;
   const industrialManage = [...permissions].filter(
@@ -119,7 +123,10 @@ export function canAccessUserManagement(me: AuthLike): boolean {
 export function canManageUserManagement(me: AuthLike): boolean {
   if (!me) return false;
   if (me.isPlatformAdmin) return true;
-  return (me.permissions ?? []).includes("platform.membership.manage");
+  const permissions = new Set(me.permissions ?? []);
+  return (
+    permissions.has("platform.membership.manage") || permissions.has("industrial.admin")
+  );
 }
 
 export function canInviteUsers(me: AuthLike): boolean {
@@ -144,7 +151,9 @@ export function userDisplayName(row: {
 }): string {
   const fromPerson = [str(row.firstName), str(row.lastName)].filter(Boolean).join(" ");
   const fromEmail = emailLocalPart(str(row.email));
-  return str(row.displayName) || fromPerson || str(row.username) || fromEmail || "User";
+  return (
+    personNameDisplay(str(row.displayName) || fromPerson || str(row.username) || fromEmail) || "User"
+  );
 }
 
 export function isVerifiedUser(row: {
@@ -327,11 +336,15 @@ export function inviteRoleOptions(roles: readonly TenantRoleOption[]): TenantRol
 
 export function preferredInviteRole(roles: readonly TenantRoleOption[]): string {
   const active = inviteRoleOptions(roles);
+  // Prefer least-privilege defaults so invite does not fail assertGrantable when
+  // the caller cannot grant the full Tenant Admin permission set.
   const preferred = [
-    "INDUSTRIAL_TENANT_ADMIN",
-    "TENANT_ADMIN",
     "INDUSTRIAL_EMPLOYEE",
     "STANDARD_USER",
+    "INDUSTRIAL_SUPERVISOR",
+    "INDUSTRIAL_SAFETY_MANAGER",
+    "INDUSTRIAL_TENANT_ADMIN",
+    "TENANT_ADMIN",
   ];
   for (const code of preferred) {
     if (active.some((role) => role.code === code)) return code;

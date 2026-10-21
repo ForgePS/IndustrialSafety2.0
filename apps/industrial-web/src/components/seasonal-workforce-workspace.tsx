@@ -1,20 +1,26 @@
 "use client";
 
-import { useCallback, useEffect, useState, type FormEvent, type ReactNode } from "react";
+import {
+  useCallback,
+  useEffect,
+  useState,
+  type Dispatch,
+  type FormEvent,
+  type ReactNode,
+  type SetStateAction,
+} from "react";
 import { ApiError, apiGet, apiSend, useAuth } from "@forge/web-kit";
 import { ModuleWorkspaceTabs } from "@/components/module-workspace-tabs";
+import { OrgLocationCascade } from "@/components/org-location-cascade";
+import { useOrgLocationLookups } from "@/hooks/use-org-location-lookups";
+import { useIndustrialModuleGate } from "@/hooks/use-industrial-module-gate";
 import {
   SEASONAL_LIFECYCLE_FLAG,
   isSeasonalLifecycleEnabled,
   seasonalLifecycleBadge,
   seasonalLifecycleBadgeClass,
 } from "@/lib/personnel-seasonal";
-
-type Bootstrap = {
-  industrialEnabled: boolean;
-  flags?: Record<string, boolean>;
-  modules: Array<{ code: string; awsEnabled: boolean; migrationStatus: string }>;
-};
+import { personNameDisplay } from "@/lib/person-name-display";
 
 type Season = {
   id: string;
@@ -136,7 +142,10 @@ const FT_STATUSES = [
 const emptyAssignment = {
   employeeNumber: "",
   facilityName: "",
+  siteId: "",
+  divisionName: "",
   departmentName: "",
+  departmentId: "",
   positionName: "",
   supervisorName: "",
   shiftName: "",
@@ -149,10 +158,8 @@ const SEASONAL_TABS = [
   { id: "workforce" as const, label: "Workforce" },
 ];
 
-const ASSIGNMENT_FIELDS = [
-  ["employeeNumber", "Employee number"],
-  ["facilityName", "Facility"],
-  ["departmentName", "Department"],
+const ASSIGNMENT_EXTRA_FIELDS = [
+  ["employeeNumber", "EMPLOYEE number"],
   ["positionName", "Position"],
   ["supervisorName", "Supervisor"],
   ["shiftName", "Shift"],
@@ -201,25 +208,55 @@ function ActionCard({ title, children }: { title: string; children: ReactNode })
   );
 }
 
-function AssignmentInputs<T extends Record<(typeof ASSIGNMENT_FIELDS)[number][0], string>>({
+function AssignmentInputs<T extends typeof emptyAssignment & Record<string, string>>({
   idPrefix,
   form,
   setForm,
+  org,
 }: {
   idPrefix: string;
   form: T;
-  setForm: (updater: (current: T) => T) => void;
+  setForm: Dispatch<SetStateAction<T>>;
+  org: ReturnType<typeof useOrgLocationLookups>;
 }) {
-  return ASSIGNMENT_FIELDS.map(([key, label]) => (
-    <FormField key={key} label={label} htmlFor={`${idPrefix}-${key}`}>
-      <input
-        id={`${idPrefix}-${key}`}
-        className="form-control"
-        value={form[key]}
-        onChange={(ev) => setForm((current) => ({ ...current, [key]: ev.target.value }))}
+  return (
+    <>
+      <OrgLocationCascade
+        idPrefix={idPrefix}
+        loading={org.loading}
+        sites={org.sites}
+        departments={org.departments}
+        divisionEntries={org.divisionEntries}
+        value={{
+          siteId: form.siteId,
+          siteName: form.facilityName,
+          divisionName: form.divisionName,
+          departmentId: form.departmentId,
+          departmentName: form.departmentName,
+        }}
+        onChange={(next) =>
+          setForm((current) => ({
+            ...current,
+            siteId: next.siteId,
+            facilityName: next.siteName ?? "",
+            divisionName: next.divisionName,
+            departmentId: next.departmentId,
+            departmentName: next.departmentName ?? "",
+          }))
+        }
       />
-    </FormField>
-  ));
+      {ASSIGNMENT_EXTRA_FIELDS.map(([key, label]) => (
+        <FormField key={key} label={label} htmlFor={`${idPrefix}-${key}`}>
+          <input
+            id={`${idPrefix}-${key}`}
+            className="form-control"
+            value={form[key]}
+            onChange={(ev) => setForm((current) => ({ ...current, [key]: ev.target.value }))}
+          />
+        </FormField>
+      ))}
+    </>
+  );
 }
 
 function opt(v: string): string | null {
@@ -242,9 +279,12 @@ export function SeasonalWorkforceWorkspace({
     permissions.has("industrial.personnel.view") || permissions.has("industrial.admin");
   const canManage =
     permissions.has("industrial.personnel.manage") || permissions.has("industrial.admin");
+  const org = useOrgLocationLookups(me?.tenantId);
+  const { bootstrap, explicitlyDisabled, awsReady } = useIndustrialModuleGate({
+    moduleCode: "PERSONNEL",
+    canView,
+  });
 
-  const [bootstrap, setBootstrap] = useState<Bootstrap | null>(null);
-  const [bootError, setBootError] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [tab, setTab] = useState<TabId>("dashboard");
 
@@ -313,29 +353,9 @@ export function SeasonalWorkforceWorkspace({
   const [confirm, setConfirm] = useState<ConfirmKind>(null);
   const [confirmBusy, setConfirmBusy] = useState(false);
 
-  const seasonalEnabled = isSeasonalLifecycleEnabled(bootstrap?.flags);
-  const personnelModuleOn = Boolean(
-    bootstrap?.industrialEnabled &&
-      bootstrap?.modules.find((m) => m.code === "PERSONNEL")?.awsEnabled,
-  );
-  const ready = Boolean(bootstrap && canView && personnelModuleOn && seasonalEnabled);
-
-  useEffect(() => {
-    let cancelled = false;
-    void (async () => {
-      try {
-        const boot = await apiGet<Bootstrap>("/api/v1/industrial/bootstrap");
-        if (!cancelled) setBootstrap(boot);
-      } catch (e) {
-        if (!cancelled) {
-          setBootError(e instanceof ApiError ? e.message : "Failed to load bootstrap");
-        }
-      }
-    })();
-    return () => {
-      cancelled = true;
-    };
-  }, []);
+  const seasonalEnabled =
+    bootstrap == null ? true : isSeasonalLifecycleEnabled(bootstrap.flags);
+  const ready = Boolean(awsReady && seasonalEnabled);
 
   const loadSeasons = useCallback(async () => {
     const data = await apiGet<{ items: Season[] }>("/api/v1/industrial/personnel/seasons", {
@@ -444,7 +464,10 @@ export function SeasonalWorkforceWorkspace({
         assignmentStatus: String(eng.assignmentStatus ?? "UNASSIGNED"),
         employeeNumber: String(eng.employeeNumber ?? ""),
         facilityName: String(eng.facilityName ?? ""),
+        siteId: String(eng.siteId ?? ""),
+        divisionName: String(eng.divisionName ?? ""),
         departmentName: String(eng.departmentName ?? ""),
+        departmentId: String(eng.departmentId ?? ""),
         positionName: String(eng.positionName ?? ""),
         supervisorName: String(eng.supervisorName ?? ""),
         shiftName: String(eng.shiftName ?? ""),
@@ -658,7 +681,10 @@ export function SeasonalWorkforceWorkspace({
         expectedEndDate: opt(activateForm.expectedEndDate),
         employeeNumber: opt(activateForm.employeeNumber),
         facilityName: opt(activateForm.facilityName),
+        siteId: opt(activateForm.siteId),
+        divisionName: opt(activateForm.divisionName),
         departmentName: opt(activateForm.departmentName),
+        departmentId: opt(activateForm.departmentId),
         positionName: opt(activateForm.positionName),
         supervisorName: opt(activateForm.supervisorName),
         shiftName: opt(activateForm.shiftName),
@@ -681,7 +707,10 @@ export function SeasonalWorkforceWorkspace({
         assignmentStatus: assignmentForm.assignmentStatus || undefined,
         employeeNumber: opt(assignmentForm.employeeNumber),
         facilityName: opt(assignmentForm.facilityName),
+        siteId: opt(assignmentForm.siteId),
+        divisionName: opt(assignmentForm.divisionName),
         departmentName: opt(assignmentForm.departmentName),
+        departmentId: opt(assignmentForm.departmentId),
         positionName: opt(assignmentForm.positionName),
         supervisorName: opt(assignmentForm.supervisorName),
         shiftName: opt(assignmentForm.shiftName),
@@ -717,7 +746,10 @@ export function SeasonalWorkforceWorkspace({
         effectiveDate: convertForm.effectiveDate,
         employeeNumber: opt(convertForm.employeeNumber),
         facilityName: opt(convertForm.facilityName),
+        siteId: opt(convertForm.siteId),
+        divisionName: opt(convertForm.divisionName),
         departmentName: opt(convertForm.departmentName),
+        departmentId: opt(convertForm.departmentId),
         positionName: opt(convertForm.positionName),
         supervisorName: opt(convertForm.supervisorName),
         shiftName: opt(convertForm.shiftName),
@@ -747,24 +779,7 @@ export function SeasonalWorkforceWorkspace({
     );
   }
 
-  if (bootError) {
-    return (
-      <div className="alert alert-danger" role="alert">
-        <h5 className="alert-heading mb-1">Seasonal Workforce</h5>
-        <p className="mb-0">{bootError}</p>
-      </div>
-    );
-  }
-
-  if (!bootstrap) {
-    return (
-      <p className="text-muted" role="status" aria-live="polite">
-        Checking feature availability…
-      </p>
-    );
-  }
-
-  if (!personnelModuleOn) {
+  if (explicitlyDisabled) {
     return (
       <div className="alert alert-warning" role="alert">
         <h5 className="alert-heading mb-1">Seasonal Workforce</h5>
@@ -773,7 +788,7 @@ export function SeasonalWorkforceWorkspace({
     );
   }
 
-  if (!seasonalEnabled) {
+  if (bootstrap != null && !seasonalEnabled) {
     return (
       <div className="alert alert-info d-flex align-items-start gap-2" role="alert">
         <i className="bx bx-info-circle fs-4" aria-hidden="true" />
@@ -795,10 +810,12 @@ export function SeasonalWorkforceWorkspace({
 
   const selectedWorker = workers.find((w) => w.personnelId === selectedId);
   const eng = lifecycle?.currentEngagement;
-  const displayName =
+  const displayName = personNameDisplay(
     selectedWorker?.displayName ||
-    (eng ? String(eng.displayName ?? "") : "") ||
-    String(lifecycle?.personnel?.displayName ?? "Worker");
+      (eng ? String(eng.displayName ?? "") : "") ||
+      String(lifecycle?.personnel?.displayName ?? ""),
+    "Worker",
+  );
 
   return (
     <section aria-labelledby="seasonal-title">
@@ -1014,7 +1031,7 @@ export function SeasonalWorkforceWorkspace({
                 <div className="card-body">
                   <p className="text-muted">
                     Only identity and season are required. Department, position, supervisor, shift,
-                    and employee number are not collected at pre-hire.
+                    and EMPLOYEE number are not collected at pre-hire.
                   </p>
                   <div className="row g-3">
                     <FormField label="First name *" htmlFor="prehire-first">
@@ -1082,7 +1099,7 @@ export function SeasonalWorkforceWorkspace({
                           className="form-control"
                           value={searchQ}
                           onChange={(ev) => setSearchQ(ev.target.value)}
-                          placeholder="Name, email, employee #"
+                          placeholder="Name, email, EMPLOYEE #"
                         />
                       </FormField>
                       <div className="col-lg-auto">
@@ -1115,7 +1132,7 @@ export function SeasonalWorkforceWorkspace({
                               }))
                             }
                           >
-                            {hit.displayName ?? hit.personnelId}
+                            {personNameDisplay(hit.displayName, hit.personnelId)}
                             {hit.employeeNumber ? ` · #${hit.employeeNumber}` : ""}
                           </button>
                         ))}
@@ -1312,7 +1329,8 @@ export function SeasonalWorkforceWorkspace({
                         className="list-group-item d-flex flex-wrap justify-content-between align-items-center gap-2 px-0"
                       >
                         <span>
-                          {a.displayName ?? a.personnelId} · {a.attendanceStatus} / {a.orientationStatus}
+                          {personNameDisplay(a.displayName, a.personnelId)} · {a.attendanceStatus} /{" "}
+                          {a.orientationStatus}
                         </span>
                         {canManage ? (
                           <div className="d-flex flex-wrap gap-1">
@@ -1385,7 +1403,11 @@ export function SeasonalWorkforceWorkspace({
                             key={w.engagementId}
                             className={selectedId === w.personnelId ? "table-active" : undefined}
                           >
-                            <td>{w.displayName ?? `${w.firstName ?? ""} ${w.lastName ?? ""}`.trim()}</td>
+                            <td>
+                              {personNameDisplay(
+                                w.displayName ?? `${w.firstName ?? ""} ${w.lastName ?? ""}`.trim(),
+                              )}
+                            </td>
                             <td>
                               <SeasonalBadge row={w} />
                             </td>
@@ -1512,6 +1534,7 @@ export function SeasonalWorkforceWorkspace({
                         idPrefix="activate"
                         form={activateForm}
                         setForm={setActivateForm}
+                        org={org}
                       />
                       <div className="col-12">
                         <button
@@ -1546,6 +1569,7 @@ export function SeasonalWorkforceWorkspace({
                         idPrefix="assignment"
                         form={assignmentForm}
                         setForm={setAssignmentForm}
+                        org={org}
                       />
                       <div className="col-12">
                         <button
@@ -1610,6 +1634,7 @@ export function SeasonalWorkforceWorkspace({
                         idPrefix="convert"
                         form={convertForm}
                         setForm={setConvertForm}
+                        org={org}
                       />
                       <div className="col-12">
                         <button

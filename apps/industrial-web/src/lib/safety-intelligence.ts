@@ -8,10 +8,12 @@ export type AnalyticsTab =
   | "safety"
   | "operations"
   | "dot"
-  | "hotspots";
+  | "hotspots"
+  | "performance";
 
 export const ANALYTICS_TABS: ReadonlyArray<{ id: AnalyticsTab; label: string }> = [
   { id: "overview", label: "Overview" },
+  { id: "performance", label: "Performance Report" },
   { id: "reports", label: "Custom Reports" },
   { id: "safety", label: "Safety Performance" },
   { id: "operations", label: "Operations" },
@@ -52,6 +54,22 @@ export type AnalyticsPeriodSummary = {
   dot?: { totalRecords: number; openItems: number; complianceScore: number };
 };
 
+export type AnalyticsDepartmentScore = {
+  departmentId: string | null;
+  departmentName: string;
+  safetyScore: number;
+  safetyGrade: "A" | "B" | "C" | "D" | "F";
+  openIncidents: number;
+  totalIncidents: number;
+  inspections: number;
+  trainingCompletions: number;
+  personnelCount: number;
+  unsafeObservations: number;
+  openUnsafeObservations: number;
+  /** Net points from observations (negative = deducted). */
+  observationPoints: number;
+};
+
 export type SafetyIntelligenceReport = {
   model: string;
   generatedAt: string;
@@ -63,6 +81,7 @@ export type SafetyIntelligenceReport = {
   safetyGrade: "A" | "B" | "C" | "D" | "F";
   insights: string[];
   periodSummaries: AnalyticsPeriodSummary[];
+  departmentScores: AnalyticsDepartmentScore[];
   kpis: AnalyticsKpi[];
   incidentTrend: AnalyticsTrendPoint[];
   observationsTrend: AnalyticsTrendPoint[];
@@ -140,6 +159,43 @@ export function toSafetyIntelligenceReport(raw: unknown): SafetyIntelligenceRepo
         ? "A"
         : "C";
 
+  const departmentScores: AnalyticsDepartmentScore[] = Array.isArray(r.departmentScores)
+    ? (r.departmentScores as Array<Record<string, unknown>>)
+        .map((row) => {
+          const deptScore = typeof row.safetyScore === "number" ? row.safetyScore : 100;
+          const deptGrade: AnalyticsDepartmentScore["safetyGrade"] =
+            row.safetyGrade === "A" ||
+            row.safetyGrade === "B" ||
+            row.safetyGrade === "C" ||
+            row.safetyGrade === "D" ||
+            row.safetyGrade === "F"
+              ? row.safetyGrade
+              : deptScore >= 90
+                ? "A"
+                : "C";
+          return {
+            departmentId: typeof row.departmentId === "string" ? row.departmentId : null,
+            departmentName:
+              typeof row.departmentName === "string" && row.departmentName.trim()
+                ? row.departmentName.trim()
+                : "Unassigned",
+            safetyScore: deptScore,
+            safetyGrade: deptGrade,
+            openIncidents: typeof row.openIncidents === "number" ? row.openIncidents : 0,
+            totalIncidents: typeof row.totalIncidents === "number" ? row.totalIncidents : 0,
+            inspections: typeof row.inspections === "number" ? row.inspections : 0,
+            trainingCompletions:
+              typeof row.trainingCompletions === "number" ? row.trainingCompletions : 0,
+            personnelCount: typeof row.personnelCount === "number" ? row.personnelCount : 0,
+            unsafeObservations: typeof row.unsafeObservations === "number" ? row.unsafeObservations : 0,
+            openUnsafeObservations:
+              typeof row.openUnsafeObservations === "number" ? row.openUnsafeObservations : 0,
+            observationPoints: typeof row.observationPoints === "number" ? row.observationPoints : 0,
+          };
+        })
+        .filter((row) => row.departmentName.length > 0)
+    : [];
+
   return {
     model: typeof r.model === "string" ? r.model : "MODEL_A",
     generatedAt: typeof r.generatedAt === "string" ? r.generatedAt : new Date().toISOString(),
@@ -154,6 +210,7 @@ export function toSafetyIntelligenceReport(raw: unknown): SafetyIntelligenceRepo
     safetyGrade: grade,
     insights: Array.isArray(r.insights) ? (r.insights as string[]) : [],
     periodSummaries: periods as AnalyticsPeriodSummary[],
+    departmentScores,
     kpis: legacyKpis,
     incidentTrend: Array.isArray(r.incidentTrend) ? (r.incidentTrend as AnalyticsTrendPoint[]) : [],
     observationsTrend: Array.isArray(r.observationsTrend)
@@ -223,8 +280,8 @@ export function buildAnalyticsExportRows(report: SafetyIntelligenceReport): stri
     ["Safety Intelligence Center"],
     ["Period", report.periodLabel],
     ["Generated", report.generatedAt],
-    ["Safety Score", String(report.safetyScore)],
-    ["Grade", report.safetyGrade],
+    ["Cumulative Safety Score", String(report.safetyScore)],
+    ["Cumulative Grade", report.safetyGrade],
     [],
     ["KPI", "Value", "Detail"],
   ];
@@ -236,6 +293,31 @@ export function buildAnalyticsExportRows(report: SafetyIntelligenceReport): stri
   rows.push([], ["Module", "Count"]);
   for (const module of report.activityByModule) {
     rows.push([module.label, String(module.count)]);
+  }
+  rows.push(
+    [],
+    [
+      "Department",
+      "Safety Score",
+      "Grade",
+      "Open Incidents",
+      "Total Incidents",
+      "Inspections",
+      "Training",
+      "Personnel",
+    ],
+  );
+  for (const dept of report.departmentScores) {
+    rows.push([
+      dept.departmentName,
+      String(dept.safetyScore),
+      dept.safetyGrade,
+      String(dept.openIncidents),
+      String(dept.totalIncidents),
+      String(dept.inspections),
+      String(dept.trainingCompletions),
+      String(dept.personnelCount),
+    ]);
   }
   return rows;
 }

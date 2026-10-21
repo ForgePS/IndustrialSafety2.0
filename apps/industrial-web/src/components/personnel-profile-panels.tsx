@@ -2,11 +2,14 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { ApiError, apiGet } from "@forge/web-kit";
+import { ApiError, apiGet, useAuth } from "@forge/web-kit";
 import {
   buildProfileMetrics,
   completedPersonnelForms,
+  describeDisciplineImpact,
+  describeObservationImpact,
   emptyPersonnelProfileAnalytics,
+  formSubmissionHref,
   itemsForSection,
   moduleListHref,
   sectionTitle,
@@ -26,7 +29,10 @@ import {
   personEditHref,
   type RosterPerson,
 } from "@/lib/personnel-directory";
+import { personNameDisplay } from "@/lib/person-name-display";
 import { formatFileDate, resolvePersonnelLocationLabel, stripImportNotes } from "@/lib/personnel-file";
+import { PersonnelTrainingHistory } from "@/components/personnel-training-history";
+import { PersonnelDisciplinaryActions } from "@/components/personnel-disciplinary-actions";
 
 type Props = {
   person: RosterPerson;
@@ -83,22 +89,67 @@ function ActivityList({
   return (
     <div className="list-group list-group-flush">
       {items.map((item) => (
-        <Link
+        <div
           key={item.id}
-          href={item.href}
-          className="list-group-item list-group-item-action d-flex justify-content-between align-items-start gap-3 px-0"
+          className="list-group-item d-flex justify-content-between align-items-start gap-3 px-0"
         >
           <div className="min-w-0">
-            <span className="d-block text-truncate fw-medium">{item.label}</span>
+            <Link
+              href={formSubmissionHref(item)}
+              className="d-block text-truncate fw-medium text-body"
+            >
+              {item.label}
+            </Link>
             <small className="text-muted">
               {item.module}
               {item.status ? ` · ${item.status}` : ""}
             </small>
           </div>
-          <small className="text-muted text-nowrap">{item.date.slice(0, 10)}</small>
-        </Link>
+          <div className="d-flex flex-column align-items-end gap-1 flex-shrink-0">
+            <small className="text-muted text-nowrap">{item.date.slice(0, 10)}</small>
+            <div className="d-flex gap-2">
+              <Link className="btn btn-link btn-sm px-0 py-0" href={formSubmissionHref(item)}>
+                View
+              </Link>
+              {item.module === "forms" ? (
+                <FormPrintLink submissionId={item.id} />
+              ) : null}
+            </div>
+          </div>
+        </div>
       ))}
     </div>
+  );
+}
+
+function FormPrintLink({ submissionId }: { submissionId: string }) {
+  const [busy, setBusy] = useState(false);
+  return (
+    <button
+      type="button"
+      className="btn btn-link btn-sm px-0 py-0"
+      disabled={busy}
+      onClick={() => {
+        void (async () => {
+          setBusy(true);
+          try {
+            const data = await apiGet<{ html?: string }>(
+              `/api/v1/industrial/form-submissions/${encodeURIComponent(submissionId)}/printable`,
+            );
+            if (data.html) {
+              const { openPrintableHtmlPopup } = await import("@/lib/dvir");
+              openPrintableHtmlPopup(data.html);
+            }
+          } catch {
+            // Fill view remains available via View.
+          } finally {
+            setBusy(false);
+          }
+        })();
+      }}
+    >
+      {busy ? "…" : "Print"}
+    </button>
   );
 }
 
@@ -151,17 +202,32 @@ export function PersonnelProfilePanels({ person, record, siteLabel, canManage }:
   const [error, setError] = useState<string | null>(null);
   const [activeSection, setActiveSection] = useState<ProfileSectionId | null>(null);
   const [personnelFormsExpanded, setPersonnelFormsExpanded] = useState(false);
+  const [attachedFormsExpanded, setAttachedFormsExpanded] = useState(false);
+  const [recentActivityExpanded, setRecentActivityExpanded] = useState(false);
+  const [analyticsVersion, setAnalyticsVersion] = useState(0);
+  const { me } = useAuth();
+  const permissions = new Set(me?.permissions ?? []);
+  const canManageDiscipline =
+    permissions.has("industrial.personnel.discipline.manage") || permissions.has("industrial.admin");
+  const canViewDiscipline =
+    canManageDiscipline || permissions.has("industrial.personnel.discipline.view");
 
   useEffect(() => {
     let cancelled = false;
-    setLoading(true);
+    if (analyticsVersion === 0) setLoading(true);
     setError(null);
     void (async () => {
       try {
         const data = await apiGet<PersonnelProfileAnalytics>(
           `/api/v1/industrial/personnel/${encodeURIComponent(person.id)}/analytics`,
         );
-        if (!cancelled) setAnalytics(data);
+        if (!cancelled) {
+          setAnalytics({
+            ...emptyPersonnelProfileAnalytics(person.id),
+            ...data,
+            workersComp: data.workersComp ?? emptyPersonnelProfileAnalytics(person.id).workersComp,
+          });
+        }
       } catch (e) {
         if (!cancelled) {
           setError(e instanceof ApiError ? e.message : "Failed to load safety analytics");
@@ -174,7 +240,7 @@ export function PersonnelProfilePanels({ person, record, siteLabel, canManage }:
     return () => {
       cancelled = true;
     };
-  }, [person.id]);
+  }, [person.id, analyticsVersion]);
 
   const searchHint =
     person.employeeNumber || person.displayName || (analytics as { searchHint?: string }).searchHint || "";
@@ -186,28 +252,31 @@ export function PersonnelProfilePanels({ person, record, siteLabel, canManage }:
     person.departmentName ||
     "No org unit assigned";
 
-  const middle =
+  const middleRaw =
     (typeof record.middleName === "string" && record.middleName.trim()) ||
     (typeof record.middleInitial === "string" && record.middleInitial.trim()) ||
-    "—";
+    "";
+  const middle = middleRaw ? personNameDisplay(middleRaw) : "—";
   const suffix = (typeof record.suffix === "string" && record.suffix.trim()) || "—";
   const email = person.email || "—";
-  const phone =
-    (typeof record.phone === "string" && record.phone.trim()) ||
-    (typeof record.companyPhone === "string" && record.companyPhone.trim()) ||
-    "—";
+  const phone = (typeof record.phone === "string" && record.phone.trim()) || "—";
   const hireDate = shortDate(record.hireDate);
+  const dateOfBirth = shortDate(record.dateOfBirth);
   const notes = stripImportNotes(typeof record.notes === "string" ? record.notes : "");
-  const preferred =
+  const preferred = personNameDisplay(
     (typeof record.preferredName === "string" && record.preferredName.trim()) ||
-    (typeof record.goesBy === "string" && record.goesBy.trim()) ||
-    "";
+      (typeof record.goesBy === "string" && record.goesBy.trim()) ||
+      "",
+  );
+  const displayName = personNameDisplay(person.displayName);
 
   function openSection(section: ProfileSectionId) {
     setActiveSection((prev) => (prev === section ? null : section));
   }
 
   const sectionItems = activeSection ? itemsForSection(analytics, activeSection) : [];
+  const observationImpact = describeObservationImpact(analytics.observations.scoreImpact);
+  const disciplineImpact = describeDisciplineImpact(analytics.discipline);
 
   return (
     <div className="ind-personnel-profile">
@@ -215,23 +284,29 @@ export function PersonnelProfilePanels({ person, record, siteLabel, canManage }:
         <div className="card-header d-flex flex-wrap align-items-start gap-3">
           <div className="avatar avatar-lg flex-shrink-0">
             <span className="avatar-initial rounded bg-label-primary">
-              {rosterInitials(person.displayName)}
+              {rosterInitials(displayName)}
             </span>
           </div>
           <div className="flex-grow-1 min-w-0">
-            <h5 className="mb-1">{person.displayName}</h5>
+            <h5 className="mb-1">{displayName}</h5>
             {preferred ? (
               <p className="text-muted small mb-1">Goes by &ldquo;{preferred}&rdquo;</p>
             ) : null}
             <p className="text-muted mb-1">
-              {person.jobTitle || "Team member"}
+              {person.jobTitle || "Team MEMBER"}
               {person.employeeNumber ? ` · ${person.employeeNumber}` : ""}
             </p>
             <p className="text-muted mb-0">{place}</p>
           </div>
-          <div className="text-center border rounded px-3 py-2">
+          <div className="text-center border rounded px-3 py-2" style={{ maxWidth: 260 }}>
             <small className="text-muted text-uppercase d-block">Safety score</small>
             <span className="fs-4 fw-bold">{loading ? "…" : analytics.safetyScore}</span>
+            {!loading && observationImpact ? (
+              <small className="text-muted d-block">Observations: {observationImpact}</small>
+            ) : null}
+            {!loading && disciplineImpact ? (
+              <small className="text-danger d-block">Discipline: {disciplineImpact}</small>
+            ) : null}
           </div>
         </div>
 
@@ -270,10 +345,38 @@ export function PersonnelProfilePanels({ person, record, siteLabel, canManage }:
               <DetailRow label="Phone" value={phone} />
             </div>
             <div className="col-6 col-md-4 col-lg">
-              <DetailRow
-                label="Company driver"
-                value={person.isCompanyDriver ? "Yes — on roster" : "No"}
-              />
+              <div>
+                <small className="text-muted text-uppercase d-block">DOT Driver</small>
+                <span className="fw-medium">{person.isDotDriver ? "Yes" : "No"}</span>
+                {typeof record.dotRecordId === "string" && record.dotRecordId.trim() ? (
+                  <div>
+                    <Link
+                      className="btn btn-link btn-sm px-0"
+                      href={`/modules/dot-compliance/file/?id=${encodeURIComponent(record.dotRecordId)}`}
+                    >
+                      Open DQF file
+                    </Link>
+                  </div>
+                ) : null}
+              </div>
+            </div>
+            <div className="col-6 col-md-4 col-lg">
+              <div>
+                <small className="text-muted text-uppercase d-block">Company Driver</small>
+                <span className="fw-medium">
+                  {person.isCompanyDriver ? "Yes — on roster" : "No"}
+                </span>
+                {person.isCompanyDriver ? (
+                  <div>
+                    <Link
+                      className="btn btn-link btn-sm px-0"
+                      href="/modules/personnel/?view=company-drivers"
+                    >
+                      Open company drivers
+                    </Link>
+                  </div>
+                ) : null}
+              </div>
             </div>
             <div className="col-6 col-md-4 col-lg">
               <PpeDateRow
@@ -291,6 +394,9 @@ export function PersonnelProfilePanels({ person, record, siteLabel, canManage }:
             </div>
             <div className="col-6 col-md-4 col-lg">
               <DetailRow label="Hire date" value={hireDate} />
+            </div>
+            <div className="col-6 col-md-4 col-lg">
+              <DetailRow label="Date of birth" value={dateOfBirth} />
             </div>
           </div>
           {notes ? <p className="text-muted small mt-3 mb-0 text-break">{notes}</p> : null}
@@ -379,7 +485,7 @@ export function PersonnelProfilePanels({ person, record, siteLabel, canManage }:
                   </div>
                   <dl className="mb-0">
                     <div className="d-flex justify-content-between gap-3 mb-2">
-                      <dt className="text-muted fw-normal">As injured/reported employee</dt>
+                      <dt className="text-muted fw-normal">As injured/reported EMPLOYEE</dt>
                       <dd className="mb-0 fw-semibold">{analytics.incidents.asSubject}</dd>
                     </div>
                     <div className="d-flex justify-content-between gap-3 mb-2">
@@ -404,6 +510,38 @@ export function PersonnelProfilePanels({ person, record, siteLabel, canManage }:
               <button
                 type="button"
                 className={`card h-100 w-100 text-start border${
+                  activeSection === "workers-comp" ? " border-primary" : ""
+                }`}
+                onClick={() => openSection("workers-comp")}
+              >
+                <div className="card-body">
+                  <div className="d-flex justify-content-between align-items-center mb-3">
+                    <h5 className="card-title mb-0">Workers&apos; compensation</h5>
+                    <i className="bx bx-chevron-right" aria-hidden="true" />
+                  </div>
+                  <dl className="mb-0">
+                    <div className="d-flex justify-content-between gap-3 mb-2">
+                      <dt className="text-muted fw-normal">Total cases</dt>
+                      <dd className="mb-0 fw-semibold">{analytics.workersComp.total}</dd>
+                    </div>
+                    <div className="d-flex justify-content-between gap-3 mb-2">
+                      <dt className="text-muted fw-normal">Open cases</dt>
+                      <dd className="mb-0 fw-semibold">{analytics.workersComp.open}</dd>
+                    </div>
+                    <div className="d-flex justify-content-between gap-3">
+                      <dt className="text-muted fw-normal">Last case date</dt>
+                      <dd className="mb-0 fw-semibold">
+                        {analytics.workersComp.lastDate?.slice(0, 10) || "—"}
+                      </dd>
+                    </div>
+                  </dl>
+                </div>
+              </button>
+            </div>
+            <div className="col-lg-6">
+              <button
+                type="button"
+                className={`card h-100 w-100 text-start border${
                   activeSection === "qualifications" ? " border-primary" : ""
                 }`}
                 onClick={() => openSection("qualifications")}
@@ -414,6 +552,10 @@ export function PersonnelProfilePanels({ person, record, siteLabel, canManage }:
                     <i className="bx bx-chevron-right" aria-hidden="true" />
                   </div>
                   <dl className="mb-0">
+                    <div className="d-flex justify-content-between gap-3 mb-2">
+                      <dt className="text-muted fw-normal">Open assignments</dt>
+                      <dd className="mb-0 fw-semibold">{analytics.training.openAssignments}</dd>
+                    </div>
                     <div className="d-flex justify-content-between gap-3 mb-2">
                       <dt className="text-muted fw-normal">In progress</dt>
                       <dd className="mb-0 fw-semibold">{analytics.training.inProgress}</dd>
@@ -440,22 +582,15 @@ export function PersonnelProfilePanels({ person, record, siteLabel, canManage }:
             </div>
           </div>
 
-          <section className="card mb-4">
-            <button
-              type="button"
-              className="card-header d-flex justify-content-between align-items-center w-100 border-0 bg-transparent text-start"
-              onClick={() => openSection("activity")}
-            >
-              <h5 className="card-title mb-0">Recent activity</h5>
-              <i className="bx bx-chevron-right" aria-hidden="true" />
-            </button>
-            <div className="card-body pt-0">
-              <ActivityList
-                items={analytics.recentActivity}
-                empty="No linked activity found yet for this person."
-              />
-            </div>
-          </section>
+          <PersonnelTrainingHistory personnelId={person.id} />
+
+          {canViewDiscipline ? (
+            <PersonnelDisciplinaryActions
+              personnelId={person.id}
+              canManage={canManageDiscipline}
+              onChanged={() => setAnalyticsVersion((v) => v + 1)}
+            />
+          ) : null}
 
           <section className="card mb-4">
             <button
@@ -482,6 +617,12 @@ export function PersonnelProfilePanels({ person, record, siteLabel, canManage }:
                   items={completedForms}
                   empty="No completed personnel forms are attached to this profile."
                 />
+                <Link
+                  className="btn btn-sm btn-outline-primary mt-2"
+                  href={`/modules/forms/?tab=library&personnel=${encodeURIComponent(person.id)}`}
+                >
+                  Fill a form for this person
+                </Link>
               </div>
             ) : null}
           </section>
@@ -490,17 +631,59 @@ export function PersonnelProfilePanels({ person, record, siteLabel, canManage }:
             <button
               type="button"
               className="card-header d-flex justify-content-between align-items-center w-100 border-0 bg-transparent text-start"
-              onClick={() => openSection("attached-forms")}
+              onClick={() => setAttachedFormsExpanded((expanded) => !expanded)}
+              aria-expanded={attachedFormsExpanded}
+              aria-controls="attached-forms-content"
             >
-              <h5 className="card-title mb-0">Attached forms</h5>
-              <i className="bx bx-chevron-right" aria-hidden="true" />
-            </button>
-            <div className="card-body pt-0">
-              <ActivityList
-                items={analytics.forms.submissions}
-                empty="No forms have been submitted for this profile yet."
+              <span>
+                <h5 className="card-title mb-0">Attached forms</h5>
+                <small className="text-muted">
+                  {analytics.forms.submissions.length} attached
+                </small>
+              </span>
+              <i
+                className={`bx bx-chevron-${attachedFormsExpanded ? "up" : "down"}`}
+                aria-hidden="true"
               />
-            </div>
+            </button>
+            {attachedFormsExpanded ? (
+              <div className="card-body pt-0" id="attached-forms-content">
+                <ActivityList
+                  items={analytics.forms.submissions}
+                  empty="No forms have been submitted for this profile yet."
+                />
+              </div>
+            ) : null}
+          </section>
+
+          <section className="card mb-4">
+            <button
+              type="button"
+              className="card-header d-flex justify-content-between align-items-center w-100 border-0 bg-transparent text-start"
+              onClick={() => setRecentActivityExpanded((open) => !open)}
+              aria-expanded={recentActivityExpanded}
+              aria-controls="personnel-recent-activity-content"
+            >
+              <span>
+                <h5 className="card-title mb-0">Recent activity</h5>
+                <small className="text-muted">
+                  {analytics.recentActivity.length} item
+                  {analytics.recentActivity.length === 1 ? "" : "s"}
+                </small>
+              </span>
+              <i
+                className={`bx bx-chevron-${recentActivityExpanded ? "up" : "down"}`}
+                aria-hidden="true"
+              />
+            </button>
+            {recentActivityExpanded ? (
+              <div className="card-body pt-0" id="personnel-recent-activity-content">
+                <ActivityList
+                  items={analytics.recentActivity}
+                  empty="No linked activity found yet for this person."
+                />
+              </div>
+            ) : null}
           </section>
         </>
       )}

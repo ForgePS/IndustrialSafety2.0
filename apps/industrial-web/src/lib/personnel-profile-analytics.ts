@@ -30,15 +30,58 @@ export type ProfileSectionId =
   | "training"
   | "certificates"
   | "qualifications"
+  | "workers-comp"
   | "scans"
   | "overdue"
   | "activity"
   | "personnel-forms"
   | "attached-forms";
 
+/** API breakdown of how observations move a person's safety score. */
+export type ObservationScoreImpact = {
+  deduction: number;
+  credit: number;
+  /** Unsafe observations where this person is marked at fault. */
+  unsafeCount: number;
+  unsafeOpen: number;
+  positiveCount: number;
+  daysClean: number | null;
+  recoveryStep: 0 | 1 | 2 | 3;
+};
+
+/** e.g. "−6 from 2 at-fault observations · 34 clean days (⅓ restored)". */
+export function describeObservationImpact(impact: ObservationScoreImpact | undefined): string | null {
+  if (!impact || (impact.unsafeCount === 0 && impact.credit === 0)) return null;
+  const parts: string[] = [];
+  if (impact.unsafeCount > 0) {
+    const pts = impact.deduction > 0 ? `−${impact.deduction}` : "0";
+    parts.push(`${pts} from ${impact.unsafeCount} at-fault observation${impact.unsafeCount === 1 ? "" : "s"}`);
+    if (impact.daysClean !== null && impact.recoveryStep > 0) {
+      const restored = impact.recoveryStep === 3 ? "fully restored" : `${impact.recoveryStep}/3 restored`;
+      parts.push(`${impact.daysClean} clean days (${restored})`);
+    }
+  }
+  if (impact.credit > 0) parts.push(`+${impact.credit} positive`);
+  return parts.join(" · ");
+}
+
+/** Active disciplinary actions; only returned to users with discipline access. */
+export type DisciplineScoreImpact = {
+  deduction: number;
+  activeCount: number;
+  totalCount: number;
+};
+
+/** e.g. "−15 from 2 active actions". */
+export function describeDisciplineImpact(impact: DisciplineScoreImpact | undefined): string | null {
+  if (!impact || impact.activeCount === 0) return null;
+  return `−${impact.deduction} from ${impact.activeCount} active action${impact.activeCount === 1 ? "" : "s"}`;
+}
+
 export type PersonnelProfileAnalytics = {
   personId: string;
   safetyScore: number;
+  discipline?: DisciplineScoreImpact;
   incidents: {
     total: number;
     open: number;
@@ -53,6 +96,7 @@ export type PersonnelProfileAnalytics = {
     open: number;
     lastDate: string | null;
     items: ProfileActivityItem[];
+    scoreImpact?: ObservationScoreImpact;
   };
   forms: {
     total: number;
@@ -69,6 +113,7 @@ export type PersonnelProfileAnalytics = {
     completed: number;
     inProgress: number;
     overdue: number;
+    openAssignments: number;
     certificates: number;
     expiringCertificates: number;
     lastActivityDate: string | null;
@@ -79,6 +124,12 @@ export type PersonnelProfileAnalytics = {
     active: number;
     expiringSoon: number;
     expired: number;
+    items: ProfileActivityItem[];
+  };
+  workersComp: {
+    total: number;
+    open: number;
+    lastDate: string | null;
     items: ProfileActivityItem[];
   };
   scanActivity: {
@@ -116,12 +167,14 @@ export function emptyPersonnelProfileAnalytics(personId: string): PersonnelProfi
       completed: 0,
       inProgress: 0,
       overdue: 0,
+      openAssignments: 0,
       certificates: 0,
       expiringCertificates: 0,
       lastActivityDate: null,
       items: [],
     },
     qualifications: { total: 0, active: 0, expiringSoon: 0, expired: 0, items: [] },
+    workersComp: { total: 0, open: 0, lastDate: null, items: [] },
     scanActivity: { completions: 0, lastDate: null, items: [] },
     recentActivity: [],
   };
@@ -136,8 +189,11 @@ export function computeSafetyScore(
   score -= analytics.training.overdue * 6;
   score -= analytics.qualifications.expired * 5;
   score -= analytics.qualifications.expiringSoon * 2;
+  score -= analytics.workersComp.open * 4;
   score += Math.min(analytics.training.completed * 2, 10);
-  score += Math.min(analytics.observations.total, 5);
+  const impact = analytics.observations.scoreImpact;
+  score += impact ? impact.credit - impact.deduction : Math.min(analytics.observations.total, 5);
+  score -= analytics.discipline?.deduction ?? 0;
   return Math.max(0, Math.min(100, Math.round(score)));
 }
 
@@ -173,13 +229,33 @@ export function moduleListHref(module: string, query?: string): string {
   return `${base}?q=${encodeURIComponent(query.trim())}`;
 }
 
-/** Forms this person finished, excluding blank templates and drafts. */
+/** Open a specific submission in Forms fill view (not a search hint). */
+export function formSubmissionHref(item: ProfileActivityItem): string {
+  if (item.module !== "forms" || !item.id) return item.href;
+  if (item.href.includes("submission=")) return item.href;
+  const params = new URLSearchParams({ tab: "fill", submission: item.id });
+  try {
+    const existing = new URL(item.href, "https://local.invalid");
+    const formId = existing.searchParams.get("form");
+    if (formId) params.set("form", formId);
+  } catch {
+    // keep submission-only deep link
+  }
+  return `/modules/forms/?${params.toString()}`;
+}
+
+/** Forms this person finished or saved pending supervisor / EHS signatures. */
 export function completedPersonnelForms(
   analytics: PersonnelProfileAnalytics,
 ): ProfileActivityItem[] {
   return analytics.forms.submissions.filter((item) => {
     const status = item.status?.trim().toLowerCase() ?? "";
-    return status.includes("submit") || status === "complete" || status === "completed";
+    return (
+      status.includes("submit") ||
+      status === "complete" ||
+      status === "completed" ||
+      status === "pending_signature"
+    );
   });
 }
 
@@ -201,7 +277,10 @@ export function buildProfileMetrics(
       id: "observations",
       label: "Observations",
       value: analytics.observations.total,
-      sub: `${analytics.observations.open} open`,
+      sub:
+        analytics.observations.scoreImpact && analytics.observations.scoreImpact.unsafeCount > 0
+          ? `${analytics.observations.open} open · ${analytics.observations.scoreImpact.unsafeCount} at fault`
+          : `${analytics.observations.open} open`,
       href: moduleListHref("observations", searchHint),
       section: "observations",
     },
@@ -236,6 +315,14 @@ export function buildProfileMetrics(
       sub: `${analytics.qualifications.total} tracked`,
       href: moduleListHref("dot-compliance", searchHint),
       section: "qualifications",
+    },
+    {
+      id: "workers-comp",
+      label: "Workers' comp",
+      value: analytics.workersComp.total,
+      sub: `${analytics.workersComp.open} open`,
+      href: moduleListHref("workers-comp", searchHint),
+      section: "workers-comp",
     },
     {
       id: "scans",
@@ -276,6 +363,8 @@ export function itemsForSection(
       return analytics.training.items;
     case "qualifications":
       return analytics.qualifications.items;
+    case "workers-comp":
+      return analytics.workersComp.items;
     case "scans":
       return analytics.scanActivity.items;
     case "activity":
@@ -304,6 +393,8 @@ export function sectionTitle(section: ProfileSectionId): string {
       return "Overdue training";
     case "qualifications":
       return "Training & qualifications";
+    case "workers-comp":
+      return "Workers' compensation";
     case "scans":
       return "Scan completions";
     case "activity":

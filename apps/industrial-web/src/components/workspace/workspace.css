@@ -37,15 +37,66 @@
 .forge-ws-drag {
   cursor: grab;
   line-height: 1;
+  display: inline-flex;
+  align-items: center;
+  font-size: 1.25rem;
+  user-select: none;
 }
 
-.forge-ws-card[draggable="true"] {
+.forge-ws-card[draggable="true"],
+.forge-dash-block[draggable="true"] {
   cursor: grab;
 }
 
-.forge-ws-card[draggable="true"]:active {
+.forge-ws-card[draggable="true"]:active,
+.forge-dash-block[draggable="true"]:active {
   cursor: grabbing;
   opacity: 0.92;
+}
+
+.forge-dash-block-preview {
+  /* Keep nested My Workspace module DnD interactive while customizing. */
+  min-height: 4rem;
+}
+
+.forge-dash-block-chrome {
+  border-style: dashed;
+}
+
+.forge-ws-customize-hint {
+  font-size: 0.8125rem;
+}
+
+/* Customize mode: keep full module names readable on compact cards */
+.forge-ws-card-edit__header {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.35rem;
+  min-width: 0;
+}
+
+.forge-ws-card-edit__title {
+  flex: 1 1 auto;
+  min-width: 0;
+  line-height: 1.25;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+  white-space: normal;
+  padding-top: 0.2rem;
+}
+
+.forge-ws-card-edit__controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.35rem;
+  margin-top: 0.35rem;
+}
+
+.forge-ws-card-edit__controls .form-select {
+  flex: 1 1 5.5rem;
+  min-width: 0;
+  max-width: 100%;
 }
 
 .forge-ws-widget-body {

@@ -16,6 +16,7 @@ import {
   type AnalyticsTrendPoint,
   type SafetyIntelligenceReport,
 } from "@/lib/safety-intelligence";
+import { PerformanceReportPanel } from "@/components/performance-report-panel";
 
 /**
  * Safety Intelligence Center — Overview plus drill-down tabs. Every metric tile,
@@ -92,7 +93,11 @@ export function AnalyticsWorkspace({ moduleName }: { moduleName: string }) {
   }
 
   return (
-    <section aria-labelledby="sic-title" className="ind-analytics">
+    <section
+      aria-labelledby="sic-title"
+      className="ind-analytics"
+      data-walkthrough="analytics-sic"
+    >
       <div className="d-flex flex-wrap justify-content-between align-items-start gap-3 mb-3">
         <div>
           <p className="text-uppercase text-primary fw-semibold small mb-1">Analytics</p>
@@ -134,7 +139,9 @@ export function AnalyticsWorkspace({ moduleName }: { moduleName: string }) {
         ))}
       </ul>
 
-      {error ? (
+      {tab === "performance" ? <PerformanceReportPanel /> : null}
+
+      {tab !== "performance" && error ? (
         <div className="alert alert-danger" role="alert">
           {error}
           <div>
@@ -145,13 +152,13 @@ export function AnalyticsWorkspace({ moduleName }: { moduleName: string }) {
         </div>
       ) : null}
 
-      {loading && !report ? (
+      {tab !== "performance" && loading && !report ? (
         <p className="text-muted" role="status">
           Loading Safety Intelligence Center…
         </p>
       ) : null}
 
-      {report ? (
+      {report && tab !== "performance" ? (
         <>
           <PeriodCards
             summaries={report.periodSummaries}
@@ -235,10 +242,10 @@ function OverviewTab({ report }: { report: SafetyIntelligenceReport }) {
         <div className="col-lg-4">
           <Link href="/modules/analytics/?tab=overview" className="card h-100 text-decoration-none">
             <div className="card-body text-center">
-              <h6 className="card-title">Safety Index</h6>
+              <h6 className="card-title">Cumulative Safety Index</h6>
               <ScoreRing score={report.safetyScore} grade={report.safetyGrade} />
               <p className="text-muted small mb-0 mt-3">
-                Weighted score for {report.periodLabel}, including DOT compliance.
+                Company-wide score for {report.periodLabel}.
               </p>
             </div>
           </Link>
@@ -266,6 +273,13 @@ function OverviewTab({ report }: { report: SafetyIntelligenceReport }) {
         </div>
       </div>
 
+      <DepartmentScoresTable
+        scores={report.departmentScores}
+        cumulativeScore={report.safetyScore}
+        cumulativeGrade={report.safetyGrade}
+        periodLabel={report.periodLabel}
+      />
+
       <KpiGrid kpis={report.kpis} />
 
       <div className="row g-3">
@@ -287,6 +301,105 @@ function OverviewTab({ report }: { report: SafetyIntelligenceReport }) {
             stroke="var(--bs-primary)"
           />
         </div>
+      </div>
+    </div>
+  );
+}
+
+function DepartmentScoresTable({
+  scores,
+  cumulativeScore,
+  cumulativeGrade,
+  periodLabel,
+}: {
+  scores: SafetyIntelligenceReport["departmentScores"];
+  cumulativeScore: number;
+  cumulativeGrade: SafetyIntelligenceReport["safetyGrade"];
+  periodLabel: string;
+}) {
+  return (
+    <div className="card">
+      <div className="card-body">
+        <div className="d-flex flex-wrap justify-content-between align-items-start gap-2 mb-3">
+          <div>
+            <h6 className="card-title mb-1">Safety Scores by Department</h6>
+            <p className="text-muted small mb-0">
+              Same Safety Index formula as the company score, scoped to each department for{" "}
+              {periodLabel}, adjusted by that department&apos;s observations.
+            </p>
+          </div>
+          <span className={`badge ${gradeBadgeClass(cumulativeGrade)}`}>
+            Cumulative {cumulativeScore} · Grade {cumulativeGrade}
+          </span>
+        </div>
+        {scores.length === 0 ? (
+          <p className="text-muted mb-0">No department scores yet. Add departments and activity to see a breakdown.</p>
+        ) : (
+          <div className="table-responsive">
+            <table className="table table-hover mb-0 align-middle">
+              <thead>
+                <tr>
+                  <th scope="col">Department</th>
+                  <th scope="col">Score</th>
+                  <th scope="col">Grade</th>
+                  <th scope="col" className="text-end">
+                    Open incidents
+                  </th>
+                  <th scope="col" className="text-end">
+                    Incidents
+                  </th>
+                  <th scope="col" className="text-end">
+                    Inspections
+                  </th>
+                  <th scope="col" className="text-end">
+                    Training
+                  </th>
+                  <th scope="col" className="text-end" title="Unsafe observations (open)">
+                    Unsafe obs.
+                  </th>
+                  <th scope="col" className="text-end" title="Net score points from observations">
+                    Obs. points
+                  </th>
+                  <th scope="col" className="text-end">
+                    Personnel
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                {scores.map((row) => (
+                  <tr key={row.departmentId ?? `unassigned-${row.departmentName}`}>
+                    <td className="fw-semibold">{row.departmentName}</td>
+                    <td>{row.safetyScore}</td>
+                    <td>
+                      <span className={`badge ${gradeBadgeClass(row.safetyGrade)}`}>
+                        {row.safetyGrade}
+                      </span>
+                    </td>
+                    <td className="text-end">{row.openIncidents}</td>
+                    <td className="text-end">{row.totalIncidents}</td>
+                    <td className="text-end">{row.inspections}</td>
+                    <td className="text-end">{row.trainingCompletions}</td>
+                    <td className="text-end">
+                      {row.unsafeObservations}
+                      {row.openUnsafeObservations > 0 ? (
+                        <span className="text-muted small"> ({row.openUnsafeObservations} open)</span>
+                      ) : null}
+                    </td>
+                    <td
+                      className={`text-end ${
+                        row.observationPoints < 0 ? "text-danger" : row.observationPoints > 0 ? "text-success" : ""
+                      }`}
+                    >
+                      {row.observationPoints > 0 ? "+" : ""}
+                      {row.observationPoints}
+                    </td>
+                    <td className="text-end">{row.personnelCount}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
       </div>
     </div>
   );
@@ -371,6 +484,12 @@ function SafetyTab({ report }: { report: SafetyIntelligenceReport }) {
         <ClickStat label="Inspections" value={total?.inspections ?? 0} href="/modules/inspections/" />
         <ClickStat label="Observations" value={total?.observations ?? 0} href="/modules/observations/" />
       </div>
+      <DepartmentScoresTable
+        scores={report.departmentScores}
+        cumulativeScore={report.safetyScore}
+        cumulativeGrade={report.safetyGrade}
+        periodLabel={report.periodLabel}
+      />
       <div className="row g-3">
         <div className="col-lg-6">
           <BreakdownCard
@@ -457,11 +576,11 @@ function DotTab({ report }: { report: SafetyIntelligenceReport }) {
           href="/modules/dot-compliance/"
           danger={report.dot.openItems > 0}
         />
-        <ClickStat label="Company drivers" value="View" href="/modules/personnel/?view=company-drivers" />
+        <ClickStat label="Company DRIVERS" value="View" href="/modules/personnel/?view=company-drivers" />
       </div>
       <div className="card">
         <div className="card-body">
-          <h6 className="card-title">DOT compliance</h6>
+          <h6 className="card-title">DOT Compliance</h6>
           <p className="text-muted mb-3">
             Open the DOT Compliance module for driver and vehicle records, expirations, and corrective
             follow-up.

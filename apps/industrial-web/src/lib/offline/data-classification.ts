@@ -62,6 +62,22 @@ export const OFFLINE_DOMAIN_POLICIES: readonly OfflineDomainPolicy[] = [
     rationale: "Inspection capture is the primary offline authoring flow.",
   },
   {
+    domain: "industrial.sanitation",
+    offlineClass: "USEFUL",
+    maxAgeMs: 2 * HOUR,
+    queueMutations: true,
+    rationale:
+      "Sanitation inspections and dust/spill reports are primary mill offline authoring flows.",
+  },
+  {
+    domain: "industrial.sanitation.templates",
+    offlineClass: "OFFLINE_REQUIRED",
+    maxAgeMs: 8 * HOUR,
+    queueMutations: false,
+    rationale:
+      "Sanitation checklist templates must be readable offline to start and continue mill inspections.",
+  },
+  {
     domain: "industrial.observations",
     offlineClass: "USEFUL",
     maxAgeMs: 2 * HOUR,

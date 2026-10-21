@@ -1,57 +1,126 @@
 "use client";
 
+import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState, type FormEvent } from "react";
 import { ApiError, apiGet, apiSend, useAuth } from "@forge/web-kit";
-import { FilterPanel } from "@/components/filter-panel";
+import { useIndustrialFacility } from "@/hooks/use-industrial-facility";
+import { useIndustrialModuleGate } from "@/hooks/use-industrial-module-gate";
+import { FilterPanel, type FilterChip } from "@/components/filter-panel";
+import { ALL_DEPARTMENTS_ID } from "@/lib/industrial-facility";
 import { ModuleUnavailable } from "@/components/module-unavailable";
 import { ModuleWorkspaceHeader } from "@/components/module-workspace-header";
 import { ModuleWorkspaceTabs } from "@/components/module-workspace-tabs";
+import { ensureActiveModuleTab, filterModulePages } from "@/lib/module-page-permissions";
+import { LotoProcedureForm } from "@/components/loto-procedure-form";
+import { LotoProcedureDetailSections } from "@/components/loto-procedure-detail-sections";
+import { LotoProcedureWorkflowActions } from "@/components/loto-procedure-workflow-actions";
+import { ForgePrintButton } from "@/components/forge-print-button";
+import { ForgePrintDialog, type ForgePrintDialogBatchItem } from "@/components/forge-print-dialog";
+import { openPrintableHtmlPopup } from "@/lib/dvir";
 import {
-  LOTO_ENERGY_TYPES,
+  ensureLotoProcedurePrintQrPayload,
+  lotoProcedurePrintFieldValues,
+} from "@/lib/module-print-fields";
+import {
   LOTO_PROCEDURE_STATUSES,
   canIssueLockout,
-  lotoPhaseBadgeClass,
+  emptyLotoProcedureForm,
+  extractProcedureDisplay,
+  isOpenLockoutStatus,
+  lockoutAuthorizedEmployee,
+  lockoutEquipmentName,
+  lotoLockoutHref,
+  lotoProcedureAreaName,
+  lotoProcedureDepartmentName,
+  lotoProcedureEquipmentName,
+  lotoProcedureEquipmentType,
+  lotoProcedureFormFromDetail,
+  lotoProcedureHref,
+  lotoProcedurePayloadFromForm,
   lotoStats,
   lotoStatusBadgeClass,
   lotoStatusLabel,
+  type LotoProcedureFormState,
   type LotoTab,
 } from "@/lib/loto";
+import {
+  canGenerateQr,
+  canPrintQr,
+  canViewQrLinks,
+  type QrLinkListResponse,
+  type QrLinkRow,
+} from "@/lib/qr-links-module";
+import { composeQrLinkStickerBlob, printQrLinkSticker } from "@/lib/qr-link-sticker";
 
-type ListResponse = { items: Array<Record<string, unknown>>; page: number; pageSize: number };
-type Bootstrap = {
-  industrialEnabled: boolean;
-  modules: Array<{ code: string; awsEnabled: boolean; migrationStatus: string }>;
+type ListResponse = {
+  items: Array<Record<string, unknown>>;
+  page: number;
+  pageSize: number;
+  total?: number;
 };
 
-type StepForm = {
-  energySourceName: string;
-  energyMagnitude: string;
-  isolationLocationText: string;
-  lockoutDeviceName: string;
-  isolationAction: string;
-  verificationMethodName: string;
-};
-
-const emptyStep = (): StepForm => ({
-  energySourceName: "",
-  energyMagnitude: "",
-  isolationLocationText: "",
-  lockoutDeviceName: "",
-  isolationAction: "",
-  verificationMethodName: "",
-});
+const PROCEDURE_PAGE_SIZES = [10, 25, 50, 100] as const;
+type ProcedurePageSize = (typeof PROCEDURE_PAGE_SIZES)[number];
+const DEFAULT_PROCEDURE_PAGE_SIZE: ProcedurePageSize = 25;
 
 const TABS: Array<{ id: LotoTab; label: string }> = [
   { id: "procedures", label: "Procedures" },
   { id: "lockouts", label: "Active lockouts" },
+  { id: "reports", label: "Reports" },
 ];
+
+const LOTO_REPORTS = [
+  {
+    key: "loto.procedures_inventory",
+    name: "LOTO Procedure Inventory",
+    description: "All procedures with status, location, department, area, and equipment.",
+  },
+  {
+    key: "loto.procedures_by_status",
+    name: "LOTO Procedures by Status",
+    description: "Procedure counts grouped by status.",
+  },
+  {
+    key: "loto.procedures_by_location",
+    name: "LOTO Procedures by Location",
+    description: "Procedure volume by site and department.",
+  },
+  {
+    key: "loto.procedure_review_due",
+    name: "LOTO Review Due",
+    description: "In-review procedures and review-due aging.",
+  },
+  {
+    key: "loto.open_lockouts",
+    name: "Open Lockouts",
+    description: "Issued and verified lockouts still open.",
+  },
+  {
+    key: "loto.lockout_history",
+    name: "Lockout History",
+    description: "Lockouts by date, employee, equipment, and procedure.",
+  },
+  {
+    key: "loto.energy_type_coverage",
+    name: "LOTO Energy Type Coverage",
+    description: "Energy types across procedures.",
+  },
+] as const;
 
 function str(value: unknown): string {
   return typeof value === "string" ? value.trim() : value == null ? "" : String(value).trim();
 }
 
 export function LotoWorkspace({ moduleName }: { moduleName: string }) {
+  const router = useRouter();
   const { me } = useAuth();
+  const {
+    query: scopeQuery,
+    departmentId: scopeDepartmentId,
+    departmentName: scopeDepartmentName,
+    setDepartmentId: setScopeDepartmentId,
+  } = useIndustrialFacility();
   const permissions = new Set(me?.permissions ?? []);
   const canView = permissions.has("industrial.loto.view") || permissions.has("industrial.admin");
   const canEdit =
@@ -67,28 +136,57 @@ export function LotoWorkspace({ moduleName }: { moduleName: string }) {
     permissions.has("industrial.loto.print") ||
     permissions.has("industrial.loto.view") ||
     permissions.has("industrial.admin");
+  const canPrintLabel =
+    permissions.has("industrial.printer.print") || permissions.has("industrial.admin");
+  const canQrView = canViewQrLinks(permissions);
+  const canQrGenerate = canGenerateQr(permissions);
+  const canQrPrint = canPrintQr(permissions);
 
-  const [bootstrap, setBootstrap] = useState<Bootstrap | null>(null);
+  const { modEntry, explicitlyDisabled, awsReady } = useIndustrialModuleGate({
+    moduleCode: "LOCKOUT_TAGOUT",
+    canView,
+  });
   const [tab, setTab] = useState<LotoTab>("procedures");
+  const visibleTabs = useMemo(
+    () =>
+      filterModulePages({
+        tabs: TABS,
+        moduleCode: "LOCKOUT_TAGOUT",
+        permissions: me?.permissions ?? [],
+      }),
+    [me?.permissions],
+  );
+  useEffect(() => {
+    setTab((current) =>
+      ensureActiveModuleTab(current, visibleTabs.map((t) => t.id), "procedures"),
+    );
+  }, [visibleTabs]);
   const [items, setItems] = useState<Array<Record<string, unknown>>>([]);
   const [lockouts, setLockouts] = useState<Array<Record<string, unknown>>>([]);
   const [equipment, setEquipment] = useState<Array<Record<string, unknown>>>([]);
+  const [sites, setSites] = useState<Array<Record<string, unknown>>>([]);
+  const [departments, setDepartments] = useState<Array<Record<string, unknown>>>([]);
   const [personnel, setPersonnel] = useState<Array<Record<string, unknown>>>([]);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [detail, setDetail] = useState<Record<string, unknown> | null>(null);
   const [printHtml, setPrintHtml] = useState<string | null>(null);
   const [q, setQ] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
+  const [procedurePage, setProcedurePage] = useState(1);
+  const [procedurePageSize, setProcedurePageSize] = useState<ProcedurePageSize>(DEFAULT_PROCEDURE_PAGE_SIZE);
+  const [procedureTotal, setProcedureTotal] = useState(0);
+  const [activeProcedureTotal, setActiveProcedureTotal] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
   const [showCreate, setShowCreate] = useState(false);
-  const [equipmentName, setEquipmentName] = useState("");
-  const [equipmentId, setEquipmentId] = useState("");
-  const [scope, setScope] = useState("");
-  const [title, setTitle] = useState("");
-  const [steps, setSteps] = useState<StepForm[]>([emptyStep()]);
-  const [restorationLabel, setRestorationLabel] = useState("Guards replaced / personnel clear");
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [createForm, setCreateForm] = useState<LotoProcedureFormState>(emptyLotoProcedureForm);
+  const [editForm, setEditForm] = useState<LotoProcedureFormState>(emptyLotoProcedureForm);
+  const [sortKey, setSortKey] = useState<"equipment" | "department" | "area">("equipment");
+  const [sortDir, setSortDir] = useState<"asc" | "desc">("asc");
+  const [organizeBy, setOrganizeBy] = useState<"all" | "department" | "area">("all");
+  const [areaFilter, setAreaFilter] = useState("");
   const [authorizedEmployee, setAuthorizedEmployee] = useState("");
   const [affectedEmployees, setAffectedEmployees] = useState("");
   const [lockTagId, setLockTagId] = useState("");
@@ -97,33 +195,60 @@ export function LotoWorkspace({ moduleName }: { moduleName: string }) {
   const [tryStartDone, setTryStartDone] = useState(false);
   const [restorationDone, setRestorationDone] = useState(false);
   const [busy, setBusy] = useState(false);
+  const [actionBusyId, setActionBusyId] = useState<string | null>(null);
+  const [qrModal, setQrModal] = useState<{
+    procedureId: string;
+    title: string;
+    stickerUrl: string | null;
+    stickerBlob: Blob | null;
+    loading: boolean;
+    error: string | null;
+  } | null>(null);
+  const [selectedProcedureIds, setSelectedProcedureIds] = useState<string[]>([]);
+  const [selectedProcedureCache, setSelectedProcedureCache] = useState<
+    Record<string, Record<string, unknown>>
+  >({});
+  const [batchPrintItems, setBatchPrintItems] = useState<ForgePrintDialogBatchItem[] | null>(
+    null,
+  );
+  const [batchPrintBusy, setBatchPrintBusy] = useState(false);
+  const [batchPrintError, setBatchPrintError] = useState<string | null>(null);
 
-  const modEntry = bootstrap?.modules.find((m) => m.code === "LOCKOUT_TAGOUT");
-  const awsReady =
-    Boolean(bootstrap?.industrialEnabled) && Boolean(modEntry?.awsEnabled) && canView;
-
-  useEffect(() => {
-    void apiGet<Bootstrap>("/api/v1/industrial/bootstrap")
-      .then(setBootstrap)
-      .catch((e) => setError(e instanceof ApiError ? e.message : "Bootstrap failed"));
-  }, []);
-
-  const loadList = useCallback(async () => {
+  const loadList = useCallback(async (nextProcedurePage: number) => {
     setLoading(true);
     setError(null);
     try {
-      const [loto, equip, people, records] = await Promise.all([
+      const [loto, activeLoto, equip, siteRows, deptRows, people, records] = await Promise.all([
         apiGet<ListResponse>("/api/v1/industrial/loto", {
           query: {
             q: q || undefined,
             status: statusFilter || undefined,
-            page: "1",
-            pageSize: "50",
+            page: String(nextProcedurePage),
+            pageSize: String(procedurePageSize),
+            ...scopeQuery,
           },
         }),
+        // Header KPI: total ACTIVE across all pages (not just the current list page).
+        statusFilter.toUpperCase() === "ACTIVE"
+          ? Promise.resolve(null)
+          : apiGet<ListResponse>("/api/v1/industrial/loto", {
+              query: {
+                q: q || undefined,
+                status: "ACTIVE",
+                page: "1",
+                pageSize: "1",
+                ...scopeQuery,
+              },
+            }).catch(() => ({ items: [] as Array<Record<string, unknown>>, total: 0 })),
         apiGet<ListResponse>("/api/v1/industrial/equipment", {
-          query: { page: "1", pageSize: "100" },
-        }).catch(() => ({ items: [] as Array<Record<string, unknown>>, page: 1, pageSize: 100 })),
+          query: { page: "1", pageSize: "500" },
+        }).catch(() => ({ items: [] as Array<Record<string, unknown>>, page: 1, pageSize: 500 })),
+        apiGet<ListResponse>("/api/v1/industrial/sites", {
+          query: { page: "1", pageSize: "500" },
+        }).catch(() => ({ items: [] as Array<Record<string, unknown>>, page: 1, pageSize: 500 })),
+        apiGet<Array<Record<string, unknown>> | { items?: Array<Record<string, unknown>> }>(
+          "/api/v1/industrial/departments",
+        ).catch(() => [] as Array<Record<string, unknown>>),
         apiGet<ListResponse>("/api/v1/industrial/personnel", {
           query: { page: "1", pageSize: "100" },
         }).catch(() => ({ items: [] as Array<Record<string, unknown>>, page: 1, pageSize: 100 })),
@@ -132,7 +257,17 @@ export function LotoWorkspace({ moduleName }: { moduleName: string }) {
         }).catch(() => ({ items: [] as Array<Record<string, unknown>>, page: 1, pageSize: 50 })),
       ]);
       setItems(loto.items ?? []);
+      setProcedurePage(loto.page ?? nextProcedurePage);
+      const nextProcedureTotal = loto.total ?? loto.items?.length ?? 0;
+      setProcedureTotal(nextProcedureTotal);
+      setActiveProcedureTotal(
+        statusFilter.toUpperCase() === "ACTIVE"
+          ? nextProcedureTotal
+          : (activeLoto?.total ?? 0),
+      );
       setEquipment(equip.items ?? []);
+      setSites(siteRows.items ?? []);
+      setDepartments(Array.isArray(deptRows) ? deptRows : (deptRows.items ?? []));
       setPersonnel(people.items ?? []);
       setLockouts(records.items ?? []);
     } catch (e) {
@@ -140,15 +275,15 @@ export function LotoWorkspace({ moduleName }: { moduleName: string }) {
     } finally {
       setLoading(false);
     }
-  }, [q, statusFilter]);
+  }, [q, statusFilter, procedurePageSize, scopeQuery]);
 
   useEffect(() => {
     if (!awsReady) {
       setLoading(false);
       return;
     }
-    void loadList();
-  }, [awsReady, loadList]);
+    void loadList(1);
+  }, [awsReady, q, statusFilter, procedurePageSize, scopeQuery, loadList]);
 
   async function openDetail(id: string) {
     setSelectedId(id);
@@ -177,34 +312,78 @@ export function LotoWorkspace({ moduleName }: { moduleName: string }) {
     setError(null);
     setBusy(true);
     try {
-      const payload = {
-        title: title || `${equipmentName} LOTO`,
-        equipmentName,
-        equipmentId: equipmentId || null,
-        scope,
-        status: "DRAFT",
-        steps: steps.map((s, i) => ({
-          sortOrder: i,
-          stepNumber: i + 1,
-          ...s,
-        })),
-        restorationChecks: restorationLabel
-          ? [{ sortOrder: 0, checkKey: "clearance", label: restorationLabel, completed: false }]
-          : [],
-      };
+      const payload = { ...lotoProcedurePayloadFromForm(createForm), status: "DRAFT" };
       const created = await apiSend<Record<string, unknown>>("/api/v1/industrial/loto", "POST", payload);
       const procedure = (created.procedure as Record<string, unknown> | undefined) ?? created;
-      setTitle("");
-      setEquipmentName("");
-      setEquipmentId("");
-      setScope("");
-      setSteps([emptyStep()]);
+      setCreateForm(emptyLotoProcedureForm());
       setShowCreate(false);
       setNotice("Draft procedure created.");
-      await loadList();
+      await loadList(1);
       if (str(procedure.id)) await openDetail(str(procedure.id));
     } catch (err) {
       setError(err instanceof ApiError ? err.message : "Create failed");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function onStartEdit(id: string) {
+    if (!canEdit || !id) return;
+    setError(null);
+    setShowCreate(false);
+    setEditingId(id);
+    setBusy(true);
+    try {
+      const data = await apiGet<Record<string, unknown>>(`/api/v1/industrial/loto/${encodeURIComponent(id)}`);
+      const next = lotoProcedureFormFromDetail(data);
+      // Migrated rows often keep Firebase site ids — resolve to catalog by name.
+      if (next.siteName && (!next.siteId || !sites.some((site) => str(site.id) === next.siteId))) {
+        const match = sites.find(
+          (site) =>
+            str(site.name).toLowerCase() === next.siteName.toLowerCase() ||
+            str(site.title).toLowerCase() === next.siteName.toLowerCase(),
+        );
+        if (match) {
+          next.siteId = str(match.id);
+          next.siteName = str(match.name || match.title) || next.siteName;
+        }
+      }
+      setEditForm(next);
+      setSelectedId(id);
+      setDetail(data);
+    } catch (err) {
+      setEditingId(null);
+      setError(err instanceof ApiError ? err.message : "Failed to load procedure for editing");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  function onCancelEdit() {
+    setEditingId(null);
+    setEditForm(emptyLotoProcedureForm());
+  }
+
+  async function onSaveEdit(e: FormEvent) {
+    e.preventDefault();
+    if (!canEdit || !editingId) return;
+    setError(null);
+    setBusy(true);
+    try {
+      const savedId = editingId;
+      const updated = await apiSend<Record<string, unknown>>(
+        `/api/v1/industrial/loto/${encodeURIComponent(savedId)}`,
+        "PATCH",
+        lotoProcedurePayloadFromForm(editForm),
+      );
+      setNotice("Procedure saved.");
+      setEditingId(null);
+      setEditForm(emptyLotoProcedureForm());
+      setDetail(updated);
+      setSelectedId(savedId);
+      await loadList(procedurePage);
+    } catch (err) {
+      setError(err instanceof ApiError ? err.message : "Save failed");
     } finally {
       setBusy(false);
     }
@@ -217,7 +396,7 @@ export function LotoWorkspace({ moduleName }: { moduleName: string }) {
     try {
       await apiSend(`/api/v1/industrial/loto/${selectedId}/${path}`, "POST", body);
       await openDetail(selectedId);
-      await loadList();
+      await loadList(procedurePage);
       setNotice("Procedure updated.");
     } catch (err) {
       setError(err instanceof ApiError ? err.message : "Transition failed");
@@ -243,7 +422,7 @@ export function LotoWorkspace({ moduleName }: { moduleName: string }) {
       setLockTagId("");
       setNotice("Lockout issued. Complete zero-energy verification before work begins.");
       await openDetail(selectedId);
-      await loadList();
+      await loadList(procedurePage);
       setTab("lockouts");
     } catch (err) {
       setError(err instanceof ApiError ? err.message : "Could not issue lockout");
@@ -262,7 +441,7 @@ export function LotoWorkspace({ moduleName }: { moduleName: string }) {
         restorationComplete: action === "close" ? restorationDone : undefined,
       });
       setNotice(action === "verify" ? "Zero-energy verification recorded." : "Lockout closed out.");
-      await loadList();
+      await loadList(procedurePage);
       if (selectedId) await openDetail(selectedId);
     } catch (err) {
       setError(err instanceof ApiError ? err.message : "Lockout update failed");
@@ -273,30 +452,446 @@ export function LotoWorkspace({ moduleName }: { moduleName: string }) {
 
   async function loadPrint() {
     if (!selectedId || !canPrint) return;
+    setBusy(true);
+    setError(null);
+    setNotice(null);
     try {
       const data = await apiGet<{ html: string }>(`/api/v1/industrial/loto/${selectedId}/printable`);
-      setPrintHtml(data.html);
+      const html = typeof data?.html === "string" ? data.html : "";
+      if (!html.trim()) throw new Error("Printable HTML was empty for this procedure.");
+      setPrintHtml(html);
+      const blocked = openPrintableHtmlPopup(html, true);
+      if (blocked) {
+        setError(blocked);
+      } else {
+        setNotice("Print dialog opened. Use Print / Save as PDF if it did not appear.");
+      }
     } catch (err) {
       setError(err instanceof ApiError ? err.message : "Printable failed");
+    } finally {
+      setBusy(false);
     }
   }
 
-  const stats = useMemo(() => lotoStats(items, lockouts), [items, lockouts]);
+  function closeQrModal() {
+    setQrModal((prev) => {
+      if (prev?.stickerUrl) URL.revokeObjectURL(prev.stickerUrl);
+      return null;
+    });
+  }
+
+  async function ensureLotoQrSticker(item: Record<string, unknown>): Promise<{
+    stickerUrl: string;
+    stickerBlob: Blob;
+    label: string;
+  }> {
+    const id = str(item.id);
+    const equipmentLabel = lotoProcedureEquipmentName(item);
+    const label =
+      equipmentLabel && equipmentLabel !== "—"
+        ? equipmentLabel
+        : str(item.procedureNumber) || str(item.title) || "LOTO procedure";
+
+    let link: QrLinkRow | undefined;
+    if (canQrView) {
+      const listed = await apiGet<QrLinkListResponse>("/api/v1/qr-links", {
+        query: { targetType: "LOTO_PROCEDURE", page: "1", pageSize: "100" },
+      });
+      link = (listed.items ?? []).find(
+        (row) => row.targetId === id && row.targetType === "LOTO_PROCEDURE",
+      );
+    }
+
+    if (!link) {
+      if (!canQrGenerate) {
+        throw new Error("No QR code for this procedure, and you cannot create one.");
+      }
+      link = await apiSend<QrLinkRow>("/api/v1/qr-links", "POST", {
+        name: `${label} LOTO QR`,
+        targetType: "LOTO_PROCEDURE",
+        targetId: id,
+        accessMode: "PUBLIC_ACTION",
+        issueToken: true,
+        isPublic: true,
+        appBaseUrl: window.location.origin,
+        actionConfig: {
+          viewLoto: true,
+          reportIssue: true,
+          lotoProcedureId: id,
+        },
+      });
+    } else {
+      const mode = String(link.accessMode ?? link.qrType ?? "").toUpperCase();
+      const needsPublicUpgrade = canQrGenerate && !mode.startsWith("PUBLIC_");
+      if (needsPublicUpgrade) {
+        link = await apiSend<QrLinkRow>(`/api/v1/qr-links/${encodeURIComponent(link.id)}`, "PATCH", {
+          accessMode: "PUBLIC_ACTION",
+          qrType: "PUBLIC_ACTION",
+          actionConfig: {
+            viewLoto: true,
+            reportIssue: true,
+            lotoProcedureId: id,
+          },
+        });
+      }
+      if (!link.publicToken && !link.token && canQrGenerate) {
+        link = await apiSend<QrLinkRow>(
+          `/api/v1/qr-links/${encodeURIComponent(link.id)}/issue-token`,
+          "POST",
+          { appBaseUrl: window.location.origin },
+        );
+      }
+    }
+
+    const token = String(link.publicToken ?? link.token ?? "").trim();
+    if (!token) {
+      throw new Error("QR link exists but has no public token yet.");
+    }
+
+    const image = await apiSend<{ dataBase64: string }>(
+      `/api/v1/qr-links/${encodeURIComponent(link.id)}/qr-image`,
+      "POST",
+      { token, appBaseUrl: window.location.origin },
+    );
+    // LOTO print stickers: equipment name only above the QR (no procedure/description text).
+    const stickerBlob = await composeQrLinkStickerBlob(image.dataBase64, label);
+    return {
+      stickerBlob,
+      stickerUrl: URL.createObjectURL(stickerBlob),
+      label,
+    };
+  }
+
+  async function onOpenQr(item: Record<string, unknown>) {
+    const id = str(item.id);
+    if (!id) return;
+    const equipmentLabel = lotoProcedureEquipmentName(item);
+    const title =
+      equipmentLabel && equipmentLabel !== "—"
+        ? equipmentLabel
+        : str(item.procedureNumber) || "LOTO procedure";
+
+    void openDetail(id);
+
+    if (!canQrView && !canQrGenerate) {
+      return;
+    }
+
+    setActionBusyId(id);
+    setError(null);
+    setQrModal((prev) => {
+      if (prev?.stickerUrl) URL.revokeObjectURL(prev.stickerUrl);
+      return {
+        procedureId: id,
+        title,
+        stickerUrl: null,
+        stickerBlob: null,
+        loading: true,
+        error: null,
+      };
+    });
+
+    try {
+      const sticker = await ensureLotoQrSticker(item);
+      setQrModal({
+        procedureId: id,
+        title: sticker.label,
+        stickerUrl: sticker.stickerUrl,
+        stickerBlob: sticker.stickerBlob,
+        loading: false,
+        error: null,
+      });
+    } catch (err) {
+      setQrModal({
+        procedureId: id,
+        title,
+        stickerUrl: null,
+        stickerBlob: null,
+        loading: false,
+        error:
+          err instanceof ApiError
+            ? err.message
+            : err instanceof Error
+              ? err.message
+              : "Unable to prepare LOTO QR",
+      });
+    } finally {
+      setActionBusyId(null);
+    }
+  }
+
+  async function onPrintProcedure(item: Record<string, unknown>) {
+    const id = str(item.id);
+    if (!id || !canPrint) return;
+    setActionBusyId(id);
+    setError(null);
+    setNotice(null);
+    try {
+      const data = await apiGet<{ html?: string } | string>(
+        `/api/v1/industrial/loto/${id}/printable`,
+      );
+      const html =
+        typeof data === "string"
+          ? data
+          : typeof data?.html === "string"
+            ? data.html
+            : "";
+      if (!html.trim() || /^https?:\/\//i.test(html.trim()) || /^blob:/i.test(html.trim())) {
+        throw new Error("Printable HTML was empty or invalid for this procedure.");
+      }
+      setPrintHtml(html);
+      const blocked = openPrintableHtmlPopup(html, true);
+      if (blocked) {
+        setError(blocked);
+      } else {
+        setNotice("Print dialog opened for this LOTO procedure.");
+      }
+    } catch (err) {
+      setError(
+        err instanceof ApiError
+          ? err.message
+          : err instanceof Error
+            ? err.message
+            : "Unable to print LOTO procedure",
+      );
+    } finally {
+      setActionBusyId(null);
+    }
+  }
+
+  async function onDeleteProcedure(item: Record<string, unknown>) {
+    if (!canEdit) return;
+    const id = str(item.id);
+    if (!id) return;
+    const label =
+      str(item.procedureNumber) ||
+      lotoProcedureEquipmentName(item) ||
+      str(item.title) ||
+      "this procedure";
+    if (!window.confirm(`Delete LOTO procedure "${label}"? This archives the record.`)) {
+      return;
+    }
+    setActionBusyId(id);
+    setError(null);
+    setNotice(null);
+    try {
+      await apiSend(`/api/v1/industrial/loto/${encodeURIComponent(id)}/archive`, "POST", {});
+      setNotice(`Archived ${label}.`);
+      if (selectedId === id) {
+        setSelectedId(null);
+        setDetail(null);
+        setPrintHtml(null);
+      }
+      if (qrModal?.procedureId === id) closeQrModal();
+      await loadList(procedurePage);
+    } catch (err) {
+      setError(err instanceof ApiError ? err.message : "Unable to delete LOTO procedure");
+    } finally {
+      setActionBusyId(null);
+    }
+  }
+
+  async function onPrintQrFromModal() {
+    if (!qrModal?.stickerUrl || !canQrPrint) return;
+    const blocked = await printQrLinkSticker(
+      qrModal.stickerUrl,
+      `${qrModal.title} LOTO QR`,
+      qrModal.stickerBlob,
+    );
+    if (blocked) setError(blocked);
+  }
+
+  const stats = useMemo(() => {
+    const base = lotoStats(items, lockouts);
+    return {
+      ...base,
+      procedures: procedureTotal || base.procedures,
+      active: activeProcedureTotal,
+    };
+  }, [items, lockouts, procedureTotal, activeProcedureTotal]);
+  const areaOptions = useMemo(
+    () =>
+      [...new Set(items.map((row) => lotoProcedureAreaName(row)).filter((name) => name && name !== "—"))].sort(
+        (a, b) => a.localeCompare(b),
+      ),
+    [items],
+  );
+  const locationOptions = useMemo(() => {
+    const values: string[] = [];
+    for (const row of items) {
+      const steps = Array.isArray(row.steps) ? row.steps : [];
+      for (const step of steps) {
+        const rec = step && typeof step === "object" ? (step as Record<string, unknown>) : {};
+        const loc = str(rec.isolationLocationText || rec.locationDescription);
+        if (loc) values.push(loc);
+      }
+    }
+    return [...new Set(values)].sort((a, b) => a.localeCompare(b));
+  }, [items]);
+  const descriptionOptions = useMemo(() => {
+    const values: string[] = [];
+    for (const row of items) {
+      const steps = Array.isArray(row.steps) ? row.steps : [];
+      for (const step of steps) {
+        const rec = step && typeof step === "object" ? (step as Record<string, unknown>) : {};
+        const code = str(rec.descriptionCode || rec.code);
+        if (code) values.push(code);
+      }
+    }
+    return [...new Set(values)].sort((a, b) => a.localeCompare(b));
+  }, [items]);
+  const sortedItems = useMemo(() => {
+    const filtered = items.filter((row) => {
+      if (areaFilter && lotoProcedureAreaName(row) !== areaFilter) return false;
+      return true;
+    });
+    const dir = sortDir === "asc" ? 1 : -1;
+    return [...filtered].sort((a, b) => {
+      const left =
+        sortKey === "department"
+          ? lotoProcedureDepartmentName(a)
+          : sortKey === "area"
+            ? lotoProcedureAreaName(a)
+            : lotoProcedureEquipmentName(a);
+      const right =
+        sortKey === "department"
+          ? lotoProcedureDepartmentName(b)
+          : sortKey === "area"
+            ? lotoProcedureAreaName(b)
+            : lotoProcedureEquipmentName(b);
+      return left.localeCompare(right) * dir;
+    });
+  }, [items, areaFilter, sortKey, sortDir]);
+  const pageProcedureIds = useMemo(
+    () => sortedItems.map((row) => str(row.id)).filter(Boolean),
+    [sortedItems],
+  );
+  const allPageSelected =
+    pageProcedureIds.length > 0 && pageProcedureIds.every((id) => selectedProcedureIds.includes(id));
+  const somePageSelected = pageProcedureIds.some((id) => selectedProcedureIds.includes(id));
+  const focusForm = Boolean(canEdit && (showCreate || editingId));
+  const procedurePageCount = Math.max(1, Math.ceil(procedureTotal / procedurePageSize));
+  const procedureRangeFrom =
+    procedureTotal === 0 ? 0 : (procedurePage - 1) * procedurePageSize + 1;
+  const procedureRangeTo = Math.min(procedurePage * procedurePageSize, procedureTotal);
   const procedure = (detail?.procedure as Record<string, unknown> | undefined) ?? detail;
-  const detailSteps = (detail?.steps as Array<Record<string, unknown>>) ?? [];
-  const energySources = (detail?.energySources as Array<Record<string, unknown>>) ?? [];
-  const isolationPoints = (detail?.isolationPoints as Array<Record<string, unknown>>) ?? [];
-  const openLockouts = lockouts.filter((row) => {
-    const status = str(row.status).toUpperCase();
-    return status === "ISSUED" || status === "VERIFIED" || status === "OPEN";
-  });
+  const procedureDisplay = detail ? extractProcedureDisplay(detail) : null;
+  const openLockouts = lockouts.filter((row) => isOpenLockoutStatus(row.status));
   const personName = (row: Record<string, unknown>) =>
     [str(row.firstName), str(row.lastName)].filter(Boolean).join(" ") ||
     str(row.displayName) ||
     str(row.preferredName) ||
     "Employee";
+  const dueDateLabel = (row: Record<string, unknown>) => {
+    const raw = str(row.dueDate);
+    if (!raw) return "";
+    const parsed = new Date(raw);
+    return Number.isNaN(parsed.getTime()) ? raw : parsed.toLocaleDateString();
+  };
+  function toggleSort(next: "equipment" | "department" | "area") {
+    if (sortKey === next) {
+      setSortDir((dir) => (dir === "asc" ? "desc" : "asc"));
+      return;
+    }
+    setSortKey(next);
+    setSortDir("asc");
+  }
 
-  if (!awsReady && bootstrap) {
+  function toggleProcedureSelected(item: Record<string, unknown>, checked: boolean) {
+    const id = str(item.id);
+    if (!id) return;
+    setSelectedProcedureIds((prev) =>
+      checked ? (prev.includes(id) ? prev : [...prev, id]) : prev.filter((x) => x !== id),
+    );
+    setSelectedProcedureCache((prev) => {
+      if (!checked) {
+        const next = { ...prev };
+        delete next[id];
+        return next;
+      }
+      return { ...prev, [id]: item };
+    });
+  }
+
+  function toggleSelectAllPage(checked: boolean) {
+    if (checked) {
+      setSelectedProcedureIds((prev) => {
+        const next = new Set(prev);
+        for (const id of pageProcedureIds) next.add(id);
+        return [...next];
+      });
+      setSelectedProcedureCache((prev) => {
+        const next = { ...prev };
+        for (const item of sortedItems) {
+          const id = str(item.id);
+          if (id) next[id] = item;
+        }
+        return next;
+      });
+      return;
+    }
+    const pageSet = new Set(pageProcedureIds);
+    setSelectedProcedureIds((prev) => prev.filter((id) => !pageSet.has(id)));
+    setSelectedProcedureCache((prev) => {
+      const next = { ...prev };
+      for (const id of pageProcedureIds) delete next[id];
+      return next;
+    });
+  }
+
+  function clearProcedureSelection() {
+    setSelectedProcedureIds([]);
+    setSelectedProcedureCache({});
+  }
+
+  async function onBatchPrintLabels() {
+    if (!canPrintLabel || selectedProcedureIds.length < 1) return;
+    setBatchPrintBusy(true);
+    setBatchPrintError(null);
+    try {
+      const selected = selectedProcedureIds
+        .map((id) => selectedProcedureCache[id] ?? items.find((row) => str(row.id) === id))
+        .filter((row): row is Record<string, unknown> => Boolean(row?.id));
+      if (selected.length === 0) {
+        throw new Error("Selected procedures are no longer on this list. Clear and reselect.");
+      }
+      const batch: ForgePrintDialogBatchItem[] = [];
+      for (const item of selected.slice(0, 200)) {
+        const id = str(item.id);
+        const equipmentName = lotoProcedureEquipmentName(item);
+        const qr = await ensureLotoProcedurePrintQrPayload(item, {
+          canView: canQrView,
+          canGenerate: canQrGenerate,
+        });
+        batch.push({
+          recordId: id,
+          title: equipmentName !== "—" ? equipmentName : str(item.procedureNumber) || "LOTO",
+          fieldValues: {
+            ...lotoProcedurePrintFieldValues(item, equipmentName),
+            ...qr,
+          },
+        });
+      }
+      setBatchPrintItems(batch);
+    } catch (err) {
+      setBatchPrintError(
+        err instanceof ApiError
+          ? err.message
+          : err instanceof Error
+            ? err.message
+            : "Could not prepare batch labels for print",
+      );
+    } finally {
+      setBatchPrintBusy(false);
+    }
+  }
+
+  function sortHeaderLabel(key: "equipment" | "department" | "area", label: string) {
+    if (sortKey !== key) return label;
+    return `${label} ${sortDir === "asc" ? "↑" : "↓"}`;
+  }
+
+  if (explicitlyDisabled) {
     return (
       <ModuleUnavailable
         moduleName={moduleName}
@@ -306,13 +901,13 @@ export function LotoWorkspace({ moduleName }: { moduleName: string }) {
   }
 
   return (
-    <section aria-labelledby="loto-title">
+    <section aria-labelledby="loto-title" data-walkthrough="loto-overview">
       <ModuleWorkspaceHeader
         id="loto-title"
         eyebrow="High-risk work"
         title={moduleName}
         description="Write energy-control procedures, isolate and verify zero energy, then issue and close lockouts."
-        onRefresh={() => void loadList()}
+        onRefresh={() => void loadList(procedurePage)}
         refreshing={loading}
       />
 
@@ -327,6 +922,7 @@ export function LotoWorkspace({ moduleName }: { moduleName: string }) {
         </div>
       ) : null}
 
+      {!focusForm ? (
       <div className="row g-3 mb-4">
         {[
           { label: "Procedures", value: stats.procedures, icon: "bx-file", tone: "primary" },
@@ -354,265 +950,138 @@ export function LotoWorkspace({ moduleName }: { moduleName: string }) {
           </div>
         ))}
       </div>
+      ) : null}
 
+      {!focusForm ? (
       <ModuleWorkspaceTabs
-        tabs={TABS}
+        tabs={visibleTabs}
         active={tab}
         onChange={setTab}
         ariaLabel="LOTO sections"
       />
+      ) : null}
 
       {tab === "procedures" ? (
         <>
-          <div className="d-flex flex-wrap justify-content-end gap-2 mb-3">
-            {canEdit ? (
-              <button
-                type="button"
-                className="btn btn-primary"
-                onClick={() => setShowCreate((open) => !open)}
-              >
-                <i className="bx bx-plus me-1" />
-                {showCreate ? "Close builder" : "New procedure"}
-              </button>
-            ) : null}
-          </div>
-
-          {canEdit && showCreate ? (
-            <form className="card mb-4" onSubmit={(e) => void onCreate(e)}>
-              <div className="card-header">
-                <h6 className="card-title mb-0">Create energy-control procedure</h6>
-              </div>
-              <div className="card-body">
-                <div className="row g-3">
-                  <div className="col-md-6">
-                    <label className="form-label" htmlFor="loto-title-field">
-                      Title
-                    </label>
-                    <input
-                      id="loto-title-field"
-                      className="form-control"
-                      value={title}
-                      onChange={(ev) => setTitle(ev.target.value)}
-                      placeholder="Mill #3 conveyor LOTO"
-                    />
-                  </div>
-                  <div className="col-md-6">
-                    <label className="form-label" htmlFor="loto-equipment-name">
-                      Equipment name
-                    </label>
-                    <input
-                      id="loto-equipment-name"
-                      className="form-control"
-                      required
-                      value={equipmentName}
-                      onChange={(ev) => setEquipmentName(ev.target.value)}
-                    />
-                  </div>
-                  <div className="col-md-6">
-                    <label className="form-label" htmlFor="loto-equipment-link">
-                      Link equipment
-                    </label>
-                    <select
-                      id="loto-equipment-link"
-                      className="form-select"
-                      value={equipmentId}
-                      onChange={(ev) => {
-                        const id = ev.target.value;
-                        setEquipmentId(id);
-                        const match = equipment.find((x) => str(x.id) === id);
-                        if (match) setEquipmentName(str(match.equipmentName || match.name || match.title));
-                      }}
-                    >
-                      <option value="">Optional catalog asset</option>
-                      {equipment.map((eq) => (
-                        <option key={str(eq.id)} value={str(eq.id)}>
-                          {str(eq.equipmentName || eq.name || eq.title) || str(eq.id)}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                  <div className="col-12">
-                    <label className="form-label" htmlFor="loto-scope">
-                      Scope of work
-                    </label>
-                    <textarea
-                      id="loto-scope"
-                      className="form-control"
-                      value={scope}
-                      onChange={(ev) => setScope(ev.target.value)}
-                      rows={2}
-                    />
-                  </div>
-                </div>
-
-                <h6 className="mt-4 mb-3">Isolation points</h6>
-                {steps.map((step, idx) => (
-                  <div className="card shadow-none bg-lighter mb-3" key={idx}>
-                    <div className="card-body">
-                      <div className="d-flex justify-content-between align-items-center mb-3">
-                        <span className="fw-medium">Point {idx + 1}</span>
-                        {steps.length > 1 ? (
-                          <button
-                            type="button"
-                            className="btn btn-sm btn-outline-danger"
-                            onClick={() => setSteps((prev) => prev.filter((_, i) => i !== idx))}
-                          >
-                            Remove
-                          </button>
-                        ) : null}
-                      </div>
-                      <div className="row g-3">
-                        <div className="col-md-4">
-                          <label className="form-label" htmlFor={`loto-energy-${idx}`}>
-                            Energy source
-                          </label>
-                          <input
-                            id={`loto-energy-${idx}`}
-                            className="form-control"
-                            list="loto-energy-types"
-                            required
-                            value={step.energySourceName}
-                            onChange={(ev) =>
-                              setSteps((prev) =>
-                                prev.map((s, i) =>
-                                  i === idx ? { ...s, energySourceName: ev.target.value } : s,
-                                ),
-                              )
-                            }
-                          />
-                        </div>
-                        <div className="col-md-4">
-                          <label className="form-label" htmlFor={`loto-magnitude-${idx}`}>
-                            Magnitude
-                          </label>
-                          <input
-                            id={`loto-magnitude-${idx}`}
-                            className="form-control"
-                            placeholder="480V / 120 psi"
-                            value={step.energyMagnitude}
-                            onChange={(ev) =>
-                              setSteps((prev) =>
-                                prev.map((s, i) =>
-                                  i === idx ? { ...s, energyMagnitude: ev.target.value } : s,
-                                ),
-                              )
-                            }
-                          />
-                        </div>
-                        <div className="col-md-4">
-                          <label className="form-label" htmlFor={`loto-isolation-${idx}`}>
-                            Isolation location
-                          </label>
-                          <input
-                            id={`loto-isolation-${idx}`}
-                            className="form-control"
-                            value={step.isolationLocationText}
-                            onChange={(ev) =>
-                              setSteps((prev) =>
-                                prev.map((s, i) =>
-                                  i === idx ? { ...s, isolationLocationText: ev.target.value } : s,
-                                ),
-                              )
-                            }
-                          />
-                        </div>
-                        <div className="col-md-4">
-                          <label className="form-label" htmlFor={`loto-device-${idx}`}>
-                            Lockout device / tag
-                          </label>
-                          <input
-                            id={`loto-device-${idx}`}
-                            className="form-control"
-                            value={step.lockoutDeviceName}
-                            onChange={(ev) =>
-                              setSteps((prev) =>
-                                prev.map((s, i) =>
-                                  i === idx ? { ...s, lockoutDeviceName: ev.target.value } : s,
-                                ),
-                              )
-                            }
-                          />
-                        </div>
-                        <div className="col-md-4">
-                          <label className="form-label" htmlFor={`loto-method-${idx}`}>
-                            Isolation method
-                          </label>
-                          <input
-                            id={`loto-method-${idx}`}
-                            className="form-control"
-                            placeholder="Open disconnect, close valve"
-                            value={step.isolationAction}
-                            onChange={(ev) =>
-                              setSteps((prev) =>
-                                prev.map((s, i) =>
-                                  i === idx ? { ...s, isolationAction: ev.target.value } : s,
-                                ),
-                              )
-                            }
-                          />
-                        </div>
-                        <div className="col-md-4">
-                          <label className="form-label" htmlFor={`loto-verify-${idx}`}>
-                            Zero-energy verification
-                          </label>
-                          <input
-                            id={`loto-verify-${idx}`}
-                            className="form-control"
-                            placeholder="Try-start, meter, gauge"
-                            value={step.verificationMethodName}
-                            onChange={(ev) =>
-                              setSteps((prev) =>
-                                prev.map((s, i) =>
-                                  i === idx ? { ...s, verificationMethodName: ev.target.value } : s,
-                                ),
-                              )
-                            }
-                          />
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-                <datalist id="loto-energy-types">
-                  {LOTO_ENERGY_TYPES.map((type) => (
-                    <option key={type} value={type} />
-                  ))}
-                </datalist>
+          {!focusForm ? (
+            <div className="d-flex flex-wrap justify-content-end gap-2 mb-3">
+              {canEdit ? (
                 <button
                   type="button"
-                  className="btn btn-outline-primary btn-sm mb-3"
-                  onClick={() => setSteps((prev) => [...prev, emptyStep()])}
+                  className="btn btn-primary"
+                  onClick={() => {
+                    setEditingId(null);
+                    setShowCreate(true);
+                  }}
                 >
-                  Add isolation point
+                  <i className="bx bx-plus me-1" />
+                  New procedure
                 </button>
-                <div className="mb-3">
-                  <label className="form-label" htmlFor="loto-restoration">
-                    Restoration / close-out check
-                  </label>
-                  <input
-                    id="loto-restoration"
-                    className="form-control"
-                    value={restorationLabel}
-                    onChange={(ev) => setRestorationLabel(ev.target.value)}
-                  />
-                </div>
-              </div>
-              <div className="card-footer d-flex justify-content-end gap-2">
-                <button type="button" className="btn btn-outline-secondary" onClick={() => setShowCreate(false)}>
-                  Cancel
+              ) : null}
+            </div>
+          ) : null}
+
+          {canEdit && showCreate ? (
+            <LotoProcedureForm
+              mode="create"
+              form={createForm}
+              setForm={setCreateForm}
+              equipment={equipment}
+              sites={sites}
+              departments={departments}
+              areaOptions={areaOptions}
+              locationOptions={locationOptions}
+              descriptionOptions={descriptionOptions}
+              busy={busy}
+              onSubmit={(e) => void onCreate(e)}
+              onCancel={() => setShowCreate(false)}
+            />
+          ) : null}
+
+          {canEdit && editingId ? (
+            <LotoProcedureForm
+              mode="edit"
+              form={editForm}
+              setForm={setEditForm}
+              equipment={equipment}
+              sites={sites}
+              departments={departments}
+              areaOptions={areaOptions}
+              locationOptions={locationOptions}
+              descriptionOptions={descriptionOptions}
+              busy={busy}
+              onSubmit={(e) => void onSaveEdit(e)}
+              onCancel={onCancelEdit}
+            />
+          ) : null}
+
+          {!focusForm ? (
+            <>
+          <div className="d-flex flex-wrap gap-2 align-items-center mb-3" role="tablist" aria-label="Organize procedures">
+            <span className="text-muted small me-1">Organize:</span>
+            {(
+              [
+                { id: "all" as const, label: "All" },
+                { id: "department" as const, label: "Department A–Z" },
+                { id: "area" as const, label: "Area A–Z" },
+              ] as const
+            ).map((entry) => (
+              <button
+                key={entry.id}
+                type="button"
+                role="tab"
+                aria-selected={organizeBy === entry.id}
+                className={`btn btn-sm ${organizeBy === entry.id ? "btn-primary" : "btn-outline-secondary"}`}
+                onClick={() => {
+                  setOrganizeBy(entry.id);
+                  if (entry.id === "all") {
+                    setAreaFilter("");
+                    setSortKey("equipment");
+                    setSortDir("asc");
+                    return;
+                  }
+                  if (entry.id === "department") {
+                    setAreaFilter("");
+                    setSortKey("department");
+                    setSortDir("asc");
+                    return;
+                  }
+                  setSortKey("area");
+                  setSortDir("asc");
+                }}
+              >
+                {entry.label}
+              </button>
+            ))}
+          </div>
+
+          {organizeBy === "area" && areaOptions.length > 0 ? (
+            <div className="d-flex flex-wrap gap-2 mb-3" aria-label="Filter by area">
+              <button
+                type="button"
+                className={`btn btn-sm ${areaFilter === "" ? "btn-secondary" : "btn-outline-secondary"}`}
+                onClick={() => setAreaFilter("")}
+              >
+                All areas
+              </button>
+              {areaOptions.map((area) => (
+                <button
+                  key={area}
+                  type="button"
+                  className={`btn btn-sm ${areaFilter === area ? "btn-secondary" : "btn-outline-secondary"}`}
+                  onClick={() => setAreaFilter(area)}
+                >
+                  {area}
                 </button>
-                <button type="submit" className="btn btn-primary" disabled={busy}>
-                  Create draft
-                </button>
-              </div>
-            </form>
+              ))}
+            </div>
           ) : null}
 
           <FilterPanel
             searchId="loto-search"
             searchValue={q}
             onSearchChange={setQ}
-            searchPlaceholder="Procedure # or title"
+            searchPlaceholder="Equipment name or title"
             statusId="loto-status"
             statusValue={statusFilter}
             onStatusChange={setStatusFilter}
@@ -634,72 +1103,369 @@ export function LotoWorkspace({ moduleName }: { moduleName: string }) {
                     },
                   ]
                 : []),
-            ]}
+              ...(scopeDepartmentId !== ALL_DEPARTMENTS_ID && scopeDepartmentName
+                ? [
+                    {
+                      id: "department",
+                      label: `Department: ${scopeDepartmentName}`,
+                      onRemove: () => setScopeDepartmentId(ALL_DEPARTMENTS_ID),
+                    },
+                  ]
+                : []),
+              ...(areaFilter
+                ? [{ id: "area", label: `Area: ${areaFilter}`, onRemove: () => setAreaFilter("") }]
+                : []),
+            ] as FilterChip[]}
             onClearAll={() => {
               setQ("");
               setStatusFilter("");
+              setScopeDepartmentId(ALL_DEPARTMENTS_ID);
+              setAreaFilter("");
             }}
-            onSubmit={() => void loadList()}
+            onSubmit={() => void loadList(1)}
           />
+
+          {batchPrintError ? (
+            <div className="alert alert-danger" role="alert">
+              {batchPrintError}
+            </div>
+          ) : null}
+
+          {canPrintLabel && selectedProcedureIds.length > 0 ? (
+            <div className="d-flex flex-wrap gap-2 align-items-center mb-3">
+              <span className="small text-muted">{selectedProcedureIds.length} selected</span>
+              <button
+                type="button"
+                className="btn btn-sm btn-primary"
+                disabled={batchPrintBusy || selectedProcedureIds.length < 1}
+                onClick={() => void onBatchPrintLabels()}
+              >
+                {batchPrintBusy
+                  ? "Preparing…"
+                  : selectedProcedureIds.length === 1
+                    ? "Print Label"
+                    : `Print ${selectedProcedureIds.length} Labels`}
+              </button>
+              <button
+                type="button"
+                className="btn btn-sm btn-outline-secondary"
+                disabled={batchPrintBusy}
+                onClick={clearProcedureSelection}
+              >
+                Clear selection
+              </button>
+            </div>
+          ) : null}
 
           <div className="card mb-4">
             <div className="table-responsive">
               <table className="table table-hover mb-0">
                 <thead>
                   <tr>
-                    <th>Procedure</th>
-                    <th>Equipment</th>
+                    {canPrintLabel ? (
+                      <th scope="col" style={{ width: 42 }}>
+                        <input
+                          type="checkbox"
+                          className="form-check-input"
+                          checked={allPageSelected}
+                          ref={(el) => {
+                            if (el) el.indeterminate = somePageSelected && !allPageSelected;
+                          }}
+                          disabled={pageProcedureIds.length === 0 || loading}
+                          onChange={(ev) => toggleSelectAllPage(ev.target.checked)}
+                          aria-label="Select all procedures on this page"
+                        />
+                      </th>
+                    ) : null}
+                    <th>
+                      <button
+                        type="button"
+                        className="btn btn-link btn-sm p-0 text-decoration-none"
+                        onClick={() => toggleSort("equipment")}
+                      >
+                        {sortHeaderLabel("equipment", "Equipment")}
+                      </button>
+                    </th>
+                    <th>
+                      <button
+                        type="button"
+                        className="btn btn-link btn-sm p-0 text-decoration-none"
+                        onClick={() => toggleSort("department")}
+                      >
+                        {sortHeaderLabel("department", "Department")}
+                      </button>
+                    </th>
+                    <th>
+                      <button
+                        type="button"
+                        className="btn btn-link btn-sm p-0 text-decoration-none"
+                        onClick={() => toggleSort("area")}
+                      >
+                        {sortHeaderLabel("area", "Area")}
+                      </button>
+                    </th>
                     <th>Status</th>
                     <th>Rev</th>
-                    <th>Updated</th>
+                    <th className="text-end">Actions</th>
                   </tr>
                 </thead>
                 <tbody>
                   {loading ? (
                     <tr>
-                      <td colSpan={5} className="text-muted">
+                      <td colSpan={canPrintLabel ? 7 : 6} className="text-muted">
                         Loading procedures…
                       </td>
                     </tr>
-                  ) : items.length === 0 ? (
+                  ) : sortedItems.length === 0 ? (
                     <tr>
-                      <td colSpan={5} className="text-muted">
+                      <td colSpan={canPrintLabel ? 7 : 6} className="text-muted">
                         No LOTO procedures yet.
                       </td>
                     </tr>
                   ) : (
-                    items.map((item) => (
-                      <tr
-                        key={str(item.id)}
-                        className={selectedId === str(item.id) ? "table-active" : undefined}
-                        style={{ cursor: "pointer" }}
-                        onClick={() => void openDetail(str(item.id))}
-                      >
-                        <td>
-                          <div className="fw-medium">
-                            {str(item.procedureNumber) || str(item.title) || "Procedure"}
-                          </div>
-                          <small className="text-muted">{str(item.title)}</small>
-                        </td>
-                        <td>{str(item.equipmentName) || "—"}</td>
-                        <td>
-                          <span className={`badge ${lotoStatusBadgeClass(str(item.status))}`}>
-                            {lotoStatusLabel(str(item.status))}
-                          </span>
-                        </td>
-                        <td>{str(item.revision) || "1"}</td>
-                        <td className="text-nowrap">
-                          {item.updatedAt ? new Date(String(item.updatedAt)).toLocaleDateString() : "—"}
-                        </td>
-                      </tr>
-                    ))
+                    sortedItems.map((item) => {
+                      const id = str(item.id);
+                      const rowBusy = actionBusyId === id;
+                      return (
+                        <tr
+                          key={id}
+                          className={selectedId === id ? "table-active" : undefined}
+                        >
+                          {canPrintLabel ? (
+                            <td>
+                              <input
+                                type="checkbox"
+                                className="form-check-input"
+                                checked={selectedProcedureIds.includes(id)}
+                                disabled={!id}
+                                onChange={(ev) =>
+                                  toggleProcedureSelected(item, ev.target.checked)
+                                }
+                                aria-label={`Select ${lotoProcedureEquipmentName(item)}`}
+                              />
+                            </td>
+                          ) : null}
+                          <td>
+                            <div className="fw-medium">{lotoProcedureEquipmentName(item)}</div>
+                            {lotoProcedureEquipmentType(item) ? (
+                              <small className="text-muted">{lotoProcedureEquipmentType(item)}</small>
+                            ) : null}
+                          </td>
+                          <td>{lotoProcedureDepartmentName(item)}</td>
+                          <td>{lotoProcedureAreaName(item)}</td>
+                          <td>
+                            <span className={`badge ${lotoStatusBadgeClass(str(item.status))}`}>
+                              {lotoStatusLabel(str(item.status))}
+                            </span>
+                          </td>
+                          <td>{str(item.revision) || "1"}</td>
+                          <td className="text-end">
+                            <div className="d-inline-flex flex-column align-items-stretch gap-1">
+                              <div className="d-flex flex-wrap gap-1 justify-content-end">
+                                <button
+                                  type="button"
+                                  className="btn btn-sm btn-outline-primary"
+                                  disabled={rowBusy || !id}
+                                  onClick={() => void onOpenQr(item)}
+                                >
+                                  Open / QR
+                                </button>
+                                {canPrint ? (
+                                  <button
+                                    type="button"
+                                    className="btn btn-sm btn-outline-secondary"
+                                    disabled={rowBusy || !id}
+                                    onClick={() => void onPrintProcedure(item)}
+                                  >
+                                    Print
+                                  </button>
+                                ) : null}
+                                <ForgePrintButton
+                                  module="LOCKOUT_TAGOUT"
+                                  recordType="loto_procedure"
+                                  recordId={id}
+                                  disabled={rowBusy || !id}
+                                  fieldValues={lotoProcedurePrintFieldValues(
+                                    item,
+                                    lotoProcedureEquipmentName(item),
+                                  )}
+                                  onPrepare={async () =>
+                                    ensureLotoProcedurePrintQrPayload(item, {
+                                      canView: canQrView,
+                                      canGenerate: canQrGenerate,
+                                    })
+                                  }
+                                />
+                                {canEdit ? (
+                                  <button
+                                    type="button"
+                                    className="btn btn-sm btn-outline-secondary"
+                                    disabled={rowBusy || !id}
+                                    onClick={() => void onStartEdit(id)}
+                                  >
+                                    Edit
+                                  </button>
+                                ) : null}
+                              </div>
+                              {canEdit ? (
+                                <button
+                                  type="button"
+                                  className="btn btn-sm btn-link text-danger p-0 align-self-end"
+                                  disabled={rowBusy || !id}
+                                  onClick={() => void onDeleteProcedure(item)}
+                                >
+                                  Delete
+                                </button>
+                              ) : null}
+                            </div>
+                          </td>
+                        </tr>
+                      );
+                    })
                   )}
                 </tbody>
               </table>
             </div>
+            <div className="card-footer d-flex flex-wrap justify-content-between align-items-center gap-2">
+              <span className="text-muted small">
+                {procedureTotal === 0
+                  ? "No procedures"
+                  : `Showing ${procedureRangeFrom} to ${procedureRangeTo} of ${procedureTotal} procedures`}
+                {areaFilter ? ` · ${sortedItems.length} on this page match area filter` : ""}
+              </span>
+              <div className="d-flex flex-wrap align-items-center gap-2">
+                <label className="small text-muted mb-0">
+                  Show
+                  <select
+                    className="form-select form-select-sm d-inline-block w-auto mx-1"
+                    value={procedurePageSize}
+                    disabled={loading}
+                    aria-label="Procedures per page"
+                    onChange={(e) => {
+                      const next = Number(e.target.value);
+                      if ((PROCEDURE_PAGE_SIZES as readonly number[]).includes(next)) {
+                        setProcedurePageSize(next as ProcedurePageSize);
+                      }
+                    }}
+                  >
+                    {PROCEDURE_PAGE_SIZES.map((size) => (
+                      <option key={size} value={size}>
+                        {size}
+                      </option>
+                    ))}
+                  </select>
+                  per page
+                </label>
+                <button
+                  type="button"
+                  className="btn btn-sm btn-outline-secondary"
+                  disabled={procedurePage <= 1 || loading}
+                  onClick={() => void loadList(procedurePage - 1)}
+                >
+                  Previous
+                </button>
+                <span className="align-self-center small text-muted">
+                  Page {procedurePage} of {procedurePageCount}
+                </span>
+                <button
+                  type="button"
+                  className="btn btn-sm btn-outline-secondary"
+                  disabled={procedurePage >= procedurePageCount || loading}
+                  onClick={() => void loadList(procedurePage + 1)}
+                >
+                  Next
+                </button>
+              </div>
+            </div>
           </div>
+            </>
+          ) : null}
 
-          {procedure && selectedId ? (
+          {qrModal ? (
+            // Modal backdrop: click outside / Escape to dismiss.
+            // eslint-disable-next-line jsx-a11y/no-noninteractive-element-interactions
+            <div
+              className="modal fade show d-block"
+              tabIndex={-1}
+              role="dialog"
+              aria-modal="true"
+              aria-labelledby="loto-qr-modal-title"
+              style={{ background: "rgba(0,0,0,0.45)" }}
+              onClick={closeQrModal}
+              onKeyDown={(ev) => {
+                if (ev.key === "Escape") closeQrModal();
+              }}
+            >
+              {/* eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-noninteractive-element-interactions */}
+              <div
+                className="modal-dialog modal-dialog-centered"
+                role="document"
+                onClick={(ev) => ev.stopPropagation()}
+              >
+                <div className="modal-content">
+                  <div className="modal-header">
+                    <h5 className="modal-title" id="loto-qr-modal-title">
+                      Open / QR — {qrModal.title}
+                    </h5>
+                    <button type="button" className="btn-close" aria-label="Close" onClick={closeQrModal} />
+                  </div>
+                  <div className="modal-body text-center">
+                    {qrModal.loading ? <p className="text-muted mb-0">Preparing QR sticker…</p> : null}
+                    {qrModal.error ? (
+                      <div className="alert alert-warning mb-3" role="alert">
+                        {qrModal.error}
+                      </div>
+                    ) : null}
+                    {qrModal.stickerUrl ? (
+                      <img
+                        src={qrModal.stickerUrl}
+                        alt={`QR for ${qrModal.title}`}
+                        className="img-fluid mb-3"
+                        style={{
+                          maxWidth: "100%",
+                          width: "auto",
+                          height: "auto",
+                          objectFit: "contain",
+                        }}
+                      />
+                    ) : null}
+                    {!qrModal.loading && !qrModal.stickerUrl && !qrModal.error ? (
+                      <p className="text-muted mb-0">QR sticker unavailable.</p>
+                    ) : null}
+                  </div>
+                  <div className="modal-footer justify-content-between flex-wrap gap-2">
+                    <button type="button" className="btn btn-outline-secondary" onClick={closeQrModal}>
+                      Close
+                    </button>
+                    <div className="d-flex flex-wrap gap-2">
+                      {qrModal.stickerUrl && canQrPrint ? (
+                        <button
+                          type="button"
+                          className="btn btn-outline-primary"
+                          onClick={() => void onPrintQrFromModal()}
+                        >
+                          Print QR
+                        </button>
+                      ) : null}
+                      <button
+                        type="button"
+                        className="btn btn-primary"
+                        onClick={() => {
+                          const id = qrModal.procedureId;
+                          closeQrModal();
+                          if (id) router.push(lotoProcedureHref(id));
+                        }}
+                      >
+                        Open procedure
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          ) : null}
+
+          {!focusForm && procedure && selectedId ? (
             <article className="card mb-4">
               <div className="card-header d-flex flex-wrap justify-content-between align-items-center gap-2">
                 <div>
@@ -710,120 +1476,71 @@ export function LotoWorkspace({ moduleName }: { moduleName: string }) {
                     {lotoStatusLabel(str(procedure.status || detail?.status))}
                   </span>
                 </div>
-                <div className="d-flex flex-wrap gap-2">
-                  {canEdit ? (
+                <LotoProcedureWorkflowActions
+                  status={str(procedure?.status || detail?.status)}
+                  busy={busy}
+                  canEdit={canEdit}
+                  canApprove={canApprove}
+                  onEdit={() => void onStartEdit(selectedId)}
+                  onSubmitForReview={() => void transition("submit-review")}
+                  onActivate={() => void transition("activate")}
+                  onApprove={() => void transition("approve")}
+                  onRequestChanges={(notes) =>
+                    void transition("request-changes", { reviewReturnNotes: notes })
+                  }
+                  extras={
                     <>
-                      <button
-                        type="button"
-                        className="btn btn-sm btn-outline-primary"
-                        disabled={busy}
-                        onClick={() => void transition("submit-review")}
-                      >
-                        Submit review
-                      </button>
-                      <button
-                        type="button"
-                        className="btn btn-sm btn-outline-primary"
-                        disabled={busy}
-                        onClick={() => void transition("submit-approval")}
-                      >
-                        Submit approval
-                      </button>
+                      {canPrint ? (
+                        <button
+                          type="button"
+                          className="btn btn-sm btn-outline-secondary"
+                          onClick={() => void loadPrint()}
+                        >
+                          Print
+                        </button>
+                      ) : null}
+                      {procedure || detail ? (
+                        <ForgePrintButton
+                          module="LOCKOUT_TAGOUT"
+                          recordType="loto_procedure"
+                          recordId={String(
+                            (procedure as { id?: string } | null)?.id ?? detail?.id ?? "",
+                          )}
+                          className="btn btn-sm btn-outline-primary"
+                          fieldValues={lotoProcedurePrintFieldValues(
+                            ((procedure as Record<string, unknown> | null) ?? detail) as Record<
+                              string,
+                              unknown
+                            >,
+                            lotoProcedureEquipmentName(
+                              ((procedure as Record<string, unknown> | null) ?? detail) as Record<
+                                string,
+                                unknown
+                              >,
+                            ),
+                          )}
+                          onPrepare={async () =>
+                            ensureLotoProcedurePrintQrPayload(
+                              ((procedure as Record<string, unknown> | null) ?? detail) as Record<
+                                string,
+                                unknown
+                              >,
+                              {
+                                canView: canQrView,
+                                canGenerate: canQrGenerate,
+                              },
+                            )
+                          }
+                        />
+                      ) : null}
                     </>
-                  ) : null}
-                  {canApprove ? (
-                    <>
-                      <button
-                        type="button"
-                        className="btn btn-sm btn-primary"
-                        disabled={busy}
-                        onClick={() => void transition("approve")}
-                      >
-                        Approve
-                      </button>
-                      <button
-                        type="button"
-                        className="btn btn-sm btn-success"
-                        disabled={busy}
-                        onClick={() => void transition("activate")}
-                      >
-                        Activate
-                      </button>
-                    </>
-                  ) : null}
-                  {canPrint ? (
-                    <button type="button" className="btn btn-sm btn-outline-secondary" onClick={() => void loadPrint()}>
-                      Printable
-                    </button>
-                  ) : null}
-                </div>
+                  }
+                />
               </div>
               <div className="card-body">
-                <p className="text-muted">
-                  Equipment {str(procedure.equipmentName || detail?.equipmentName) || "—"} · Rev{" "}
-                  {str(procedure.revision || detail?.revision) || "1"}
-                </p>
-                {str(detail?.scope || procedure.scope) ? (
-                  <p>{str(detail?.scope || procedure.scope)}</p>
-                ) : null}
+                {procedureDisplay ? <LotoProcedureDetailSections display={procedureDisplay} /> : null}
 
-                <div className="row g-3 mb-4">
-                  <div className="col-md-6">
-                    <h6>Energy sources</h6>
-                    {energySources.length === 0 ? (
-                      <p className="text-muted small mb-0">None stored on this procedure yet.</p>
-                    ) : (
-                      <ul className="list-unstyled mb-0">
-                        {energySources.map((row) => (
-                          <li key={str(row.id)} className="mb-1">
-                            <span className="badge bg-label-danger me-2">{str(row.energyType)}</span>
-                            {str(row.magnitude)}
-                          </li>
-                        ))}
-                      </ul>
-                    )}
-                  </div>
-                  <div className="col-md-6">
-                    <h6>Isolation points</h6>
-                    {isolationPoints.length === 0 ? (
-                      <p className="text-muted small mb-0">None stored on this procedure yet.</p>
-                    ) : (
-                      <ul className="list-unstyled mb-0">
-                        {isolationPoints.map((row) => (
-                          <li key={str(row.id)} className="mb-1">
-                            <strong>{str(row.label)}</strong>
-                            {str(row.locationDescription) ? ` · ${str(row.locationDescription)}` : ""}
-                          </li>
-                        ))}
-                      </ul>
-                    )}
-                  </div>
-                </div>
-
-                <h6>Control steps</h6>
-                <div className="timeline mb-4">
-                  {detailSteps.length === 0 ? (
-                    <p className="text-muted small">No isolation or verification steps saved.</p>
-                  ) : (
-                    detailSteps.map((step) => (
-                      <div className="d-flex gap-3 mb-3" key={str(step.id)}>
-                        <span className={`badge ${lotoPhaseBadgeClass(str(step.stepPhase))} align-self-start`}>
-                          {str(step.stepPhase) || "STEP"}
-                        </span>
-                        <div>
-                          <div className="fw-medium">
-                            {str(step.stepNumber)}. {str(step.instruction)}
-                          </div>
-                          {step.isVerification ? (
-                            <small className="text-warning">Zero-energy verification required</small>
-                          ) : null}
-                        </div>
-                      </div>
-                    ))
-                  )}
-                </div>
-
-                {canEdit && canIssueLockout(str(procedure.status || detail?.status)) ? (
+                {canEdit && canIssueLockout(str(procedure?.status || detail?.status)) ? (
                   <form className="border rounded p-3 mb-3" onSubmit={(e) => void issueLockout(e)}>
                     <h6 className="mb-3">Issue lockout</h6>
                     <div className="row g-3">
@@ -889,13 +1606,35 @@ export function LotoWorkspace({ moduleName }: { moduleName: string }) {
                 ) : null}
 
                 {printHtml ? (
-                  <iframe title="LOTO printable" srcDoc={printHtml} className="w-100 border rounded" style={{ minHeight: 360 }} />
+                  <div className="mb-3">
+                    <div className="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-2">
+                      <h6 className="mb-0">Printable preview</h6>
+                      <button
+                        type="button"
+                        className="btn btn-sm btn-primary"
+                        onClick={() => {
+                          const blocked = openPrintableHtmlPopup(printHtml, true);
+                          if (blocked) setError(blocked);
+                        }}
+                      >
+                        Print / Save as PDF
+                      </button>
+                    </div>
+                    <iframe
+                      title="LOTO printable"
+                      srcDoc={printHtml}
+                      className="w-100 border rounded"
+                      style={{ minHeight: 980, background: "#d8dbe0" }}
+                    />
+                  </div>
                 ) : null}
               </div>
             </article>
           ) : null}
         </>
-      ) : (
+      ) : null}
+
+      {tab === "lockouts" ? (
         <div className="card">
           <div className="card-header">
             <h6 className="card-title mb-0">Issued lockouts</h6>
@@ -906,7 +1645,9 @@ export function LotoWorkspace({ moduleName }: { moduleName: string }) {
                 <tr>
                   <th>Lockout</th>
                   <th>Authorized</th>
+                  <th>Affected</th>
                   <th>Lock / tag</th>
+                  <th>Due</th>
                   <th>Status</th>
                   <th>Verify / close</th>
                 </tr>
@@ -914,19 +1655,34 @@ export function LotoWorkspace({ moduleName }: { moduleName: string }) {
               <tbody>
                 {openLockouts.length === 0 && lockouts.length === 0 ? (
                   <tr>
-                    <td colSpan={5} className="text-muted">
-                      No lockouts issued yet. Activate a procedure, then issue a lockout.
+                    <td colSpan={7} className="text-muted">
+                      No lockouts issued yet. Approve a procedure, then issue a lockout.
                     </td>
                   </tr>
                 ) : (
                   (openLockouts.length > 0 ? openLockouts : lockouts).map((row) => (
                     <tr key={str(row.id)}>
                       <td>
-                        <div className="fw-medium">{str(row.title) || str(row.procedureNumber)}</div>
-                        <small className="text-muted">{str(row.equipmentName)}</small>
+                        <a
+                          href={lotoLockoutHref(str(row.id))}
+                          className="fw-medium text-body"
+                          onClick={(ev) => {
+                            ev.preventDefault();
+                            router.push(lotoLockoutHref(str(row.id)));
+                          }}
+                        >
+                          {str(row.title) || str(row.procedureNumber) || "Lockout"}
+                        </a>
+                        <div>
+                          <small className="text-muted">
+                            {lockoutEquipmentName(row) || str(row.equipmentName) || "—"}
+                          </small>
+                        </div>
                       </td>
-                      <td>{str(row.authorizedEmployee) || "—"}</td>
+                      <td>{lockoutAuthorizedEmployee(row) || str(row.authorizedEmployee) || "—"}</td>
+                      <td>{str(row.affectedEmployees) || "—"}</td>
                       <td>{str(row.lockTagId) || "—"}</td>
+                      <td>{dueDateLabel(row) || "—"}</td>
                       <td>
                         <span className={`badge ${lotoStatusBadgeClass(str(row.status))}`}>
                           {lotoStatusLabel(str(row.status))}
@@ -1005,7 +1761,88 @@ export function LotoWorkspace({ moduleName }: { moduleName: string }) {
             </table>
           </div>
         </div>
-      )}
+      ) : null}
+
+      {tab === "reports" ? (
+        <div className="card">
+          <div className="card-body">
+            <div className="d-flex flex-wrap gap-2 justify-content-between align-items-start mb-3">
+              <div>
+                <h6 className="mb-1">LOTO reports</h6>
+                <p className="text-muted small mb-0">
+                  Run and export from the shared Reporting Center. Save a report there to schedule
+                  recurring digests.
+                </p>
+              </div>
+              <div className="d-flex flex-wrap gap-2">
+                <Link className="btn btn-sm btn-primary" href="/reporting/library/?q=loto">
+                  Open library
+                </Link>
+                <Link
+                  className="btn btn-sm btn-outline-primary"
+                  href="/reporting/builder/?source=loto.procedures_inventory"
+                >
+                  Custom builder
+                </Link>
+              </div>
+            </div>
+            <div className="list-group list-group-flush">
+              {LOTO_REPORTS.map((report) => (
+                <div
+                  key={report.key}
+                  className="list-group-item px-0 d-flex flex-wrap gap-2 justify-content-between align-items-center"
+                >
+                  <div>
+                    <div className="fw-semibold">{report.name}</div>
+                    <div className="small text-muted">{report.description}</div>
+                  </div>
+                  <div className="d-flex flex-wrap gap-1">
+                    <Link
+                      className="btn btn-sm btn-outline-primary"
+                      href={`/reporting/library/?q=${encodeURIComponent(report.key)}`}
+                    >
+                      Open
+                    </Link>
+                    <Link
+                      className="btn btn-sm btn-outline-secondary"
+                      href={`/reporting/builder/?source=${encodeURIComponent(report.key)}`}
+                    >
+                      Build
+                    </Link>
+                  </div>
+                </div>
+              ))}
+            </div>
+            <p className="text-muted small mt-3 mb-0">
+              Schedule recurring delivery from{" "}
+              <Link href="/reporting/scheduled/">Reporting → Scheduled</Link>.
+            </p>
+          </div>
+        </div>
+      ) : null}
+
+      <ForgePrintDialog
+        open={batchPrintItems != null && batchPrintItems.length > 0}
+        onClose={() => {
+          const wasBatch = (batchPrintItems?.length ?? 0) > 1;
+          setBatchPrintItems(null);
+          if (wasBatch) clearProcedureSelection();
+        }}
+        module="LOCKOUT_TAGOUT"
+        recordType="loto_procedure"
+        {...(batchPrintItems?.length === 1 && batchPrintItems[0]?.recordId
+          ? { recordId: batchPrintItems[0].recordId }
+          : {})}
+        defaultTitle={
+          batchPrintItems && batchPrintItems.length > 1
+            ? `Print ${batchPrintItems.length} labels`
+            : "Print label"
+        }
+        fieldValues={batchPrintItems?.[0]?.fieldValues ?? {}}
+        {...(batchPrintItems && batchPrintItems.length > 1
+          ? { items: batchPrintItems }
+          : {})}
+      />
     </section>
   );
 }

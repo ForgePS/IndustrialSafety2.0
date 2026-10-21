@@ -107,6 +107,11 @@ const WIDGET_OVERRIDES: Record<string, WidgetOverride> = {
     supportedViews: ["open", "overdue", "all"],
     defaultView: "open",
   },
+  SANITATION: {
+    ...SUMMARY_BASE,
+    supportedViews: ["dashboard", "critical", "cleaning"],
+    defaultView: "dashboard",
+  },
 };
 
 /**

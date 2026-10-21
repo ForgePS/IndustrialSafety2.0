@@ -37,6 +37,11 @@ type Props = {
   captionForModule: (mod: IndustrialNavItem) => string;
   permissions?: readonly string[];
   isPlatformAdmin?: boolean;
+  /** When set, customize mode is controlled by the parent dashboard. */
+  editing?: boolean;
+  onEditingChange?: (editing: boolean) => void;
+  /** Hide the section title/toolbar when the dashboard provides one. */
+  embedded?: boolean;
 };
 
 /**
@@ -51,6 +56,9 @@ export function MyWorkspace({
   captionForModule,
   permissions = [],
   isPlatformAdmin = false,
+  editing: editingProp,
+  onEditingChange,
+  embedded = false,
 }: Props) {
   const moduleSignature = useMemo(
     () => modules.map((mod) => `${mod.code}\0${mod.name}\0${mod.route}`).join("\n"),
@@ -92,7 +100,15 @@ export function MyWorkspace({
   const [layout, setLayout] = useState<WorkspaceLayoutState>(() =>
     defaultWorkspaceLayout(registry),
   );
-  const [editing, setEditing] = useState(false);
+  const [internalEditing, setInternalEditing] = useState(false);
+  const editing = editingProp ?? internalEditing;
+  const setEditing = useCallback(
+    (next: boolean) => {
+      if (onEditingChange) onEditingChange(next);
+      else setInternalEditing(next);
+    },
+    [onEditingChange],
+  );
   const [confirmReset, setConfirmReset] = useState(false);
   const dragKeyRef = useRef<string | null>(null);
   const dragOverKeyRef = useRef<string | null>(null);
@@ -164,73 +180,106 @@ export function MyWorkspace({
   }
 
   return (
-    <section className="forge-ws" aria-labelledby="forge-ws-title">
-      <div className="d-flex flex-wrap align-items-start justify-content-between gap-3 mb-3">
-        <div>
-          <h5 className="mb-1" id="forge-ws-title">
-            My Workspace
-          </h5>
-          <p className="text-muted small mb-0">
-            {editing
-              ? "Drag to reorder, change sizes, or restore hidden modules."
-              : "Your apps, schedule, tasks, reminders, and daily work in one place."}
-          </p>
+    <section className="forge-ws" aria-labelledby={embedded ? undefined : "forge-ws-title"}>
+      {!embedded ? (
+        <div className="d-flex flex-wrap align-items-start justify-content-between gap-3 mb-3">
+          <div>
+            <h5 className="mb-1" id="forge-ws-title">
+              My Workspace
+            </h5>
+            <p className="text-muted small mb-0">
+              {editing
+                ? "Drag cards by the ≡ handle to reorder. Change size or hide modules."
+                : "Your apps, schedule, tasks, reminders, and daily work in one place."}
+            </p>
+          </div>
+          <div className="d-flex flex-wrap gap-2 align-items-center">
+            {editing ? (
+              <>
+                {hiddenModules.length > 0 ? (
+                  <label className="d-flex align-items-center gap-2 mb-0">
+                    <span className="visually-hidden">Add module to workspace</span>
+                    <select
+                      className="form-select form-select-sm"
+                      style={{ minWidth: "10rem" }}
+                      defaultValue=""
+                      onChange={(event) => {
+                        const code = event.target.value;
+                        if (!code) return;
+                        patchItem(code, { isVisible: true });
+                        event.target.value = "";
+                      }}
+                    >
+                      <option value="">Add module…</option>
+                      {hiddenModules.map((mod) => (
+                        <option key={mod.key} value={mod.key}>
+                          {mod.label}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+                ) : null}
+                <button
+                  type="button"
+                  className="btn btn-sm btn-outline-danger"
+                  onClick={() => setConfirmReset(true)}
+                >
+                  Reset Workspace
+                </button>
+                <button
+                  type="button"
+                  className="btn btn-sm btn-primary"
+                  onClick={() => {
+                    setEditing(false);
+                    setConfirmReset(false);
+                  }}
+                >
+                  Done
+                </button>
+              </>
+            ) : (
+              <button
+                type="button"
+                className="btn btn-sm btn-outline-secondary"
+                onClick={() => setEditing(true)}
+              >
+                Customize Workspace
+              </button>
+            )}
+          </div>
         </div>
-        <div className="d-flex flex-wrap gap-2 align-items-center">
-          {editing ? (
-            <>
-              {hiddenModules.length > 0 ? (
-                <label className="d-flex align-items-center gap-2 mb-0">
-                  <span className="visually-hidden">Add module to workspace</span>
-                  <select
-                    className="form-select form-select-sm"
-                    style={{ minWidth: "10rem" }}
-                    defaultValue=""
-                    onChange={(event) => {
-                      const code = event.target.value;
-                      if (!code) return;
-                      patchItem(code, { isVisible: true });
-                      event.target.value = "";
-                    }}
-                  >
-                    <option value="">Add module…</option>
-                    {hiddenModules.map((mod) => (
-                      <option key={mod.key} value={mod.key}>
-                        {mod.label}
-                      </option>
-                    ))}
-                  </select>
-                </label>
-              ) : null}
-              <button
-                type="button"
-                className="btn btn-sm btn-outline-danger"
-                onClick={() => setConfirmReset(true)}
-              >
-                Reset Workspace
-              </button>
-              <button
-                type="button"
-                className="btn btn-sm btn-primary"
-                onClick={() => {
-                  setEditing(false);
-                  setConfirmReset(false);
-                }}
-              >
-                Done
-              </button>
-            </>
-          ) : (
-            <button
-              type="button"
-              className="btn btn-sm btn-outline-secondary"
-              onClick={() => setEditing(true)}
+      ) : editing && hiddenModules.length > 0 ? (
+        <div className="d-flex flex-wrap gap-2 align-items-center mb-3">
+          <label className="d-flex align-items-center gap-2 mb-0">
+            <span className="visually-hidden">Add module to workspace</span>
+            <select
+              className="form-select form-select-sm"
+              style={{ minWidth: "10rem" }}
+              defaultValue=""
+              onChange={(event) => {
+                const code = event.target.value;
+                if (!code) return;
+                patchItem(code, { isVisible: true });
+                event.target.value = "";
+              }}
             >
-              Customize Workspace
-            </button>
-          )}
+              <option value="">Add module…</option>
+              {hiddenModules.map((mod) => (
+                <option key={mod.key} value={mod.key}>
+                  {mod.label}
+                </option>
+              ))}
+            </select>
+          </label>
+          <button
+            type="button"
+            className="btn btn-sm btn-outline-danger"
+            onClick={() => setConfirmReset(true)}
+          >
+            Reset modules
+          </button>
         </div>
-      </div>
+      ) : null}
 
       {confirmReset ? (
         <div className="alert alert-warning d-flex flex-wrap align-items-center justify-content-between gap-2 mb-3" role="status">

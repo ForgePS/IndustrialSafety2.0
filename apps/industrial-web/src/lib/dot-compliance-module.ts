@@ -1,5 +1,7 @@
 /** DOT Compliance module — categories, status helpers, and summary tiles. */
 
+import { deriveDotDqfTitle } from "./dot-dqf-fields";
+
 export type DotCategory =
   | "drivers"
   | "vehicles"
@@ -10,7 +12,7 @@ export type DotCategory =
   | "company"
   | "other";
 
-export type DotTabId = "dashboard" | DotCategory;
+export type DotTabId = "dashboard" | "reports" | DotCategory;
 
 export const DOT_RECORD_CATEGORIES: ReadonlyArray<DotCategory> = [
   "drivers",
@@ -25,7 +27,7 @@ export const DOT_RECORD_CATEGORIES: ReadonlyArray<DotCategory> = [
 
 export const DOT_TABS: ReadonlyArray<{ id: DotTabId; label: string }> = [
   { id: "dashboard", label: "Dashboard" },
-  { id: "drivers", label: "Drivers (DQF)" },
+  { id: "drivers", label: "DRIVERS (DQF)" },
   { id: "vehicles", label: "Vehicles" },
   { id: "dvirs", label: "DVIRs" },
   { id: "roadside", label: "Roadside" },
@@ -33,6 +35,7 @@ export const DOT_TABS: ReadonlyArray<{ id: DotTabId; label: string }> = [
   { id: "drug-alcohol", label: "Drug & Alcohol" },
   { id: "company", label: "Company" },
   { id: "other", label: "Other" },
+  { id: "reports", label: "Reports" },
 ];
 
 export const DOT_TAB_META: Record<
@@ -45,8 +48,8 @@ export const DOT_TAB_META: Record<
     icon: "bx-grid-alt",
   },
   drivers: {
-    label: "Drivers (DQF)",
-    description: "Driver Qualification Files — licenses, MVR, medical cards, and related documents.",
+    label: "DRIVERS (DQF)",
+    description: "DRIVER Qualification Files — licenses, MVR, medical cards, and related documents.",
     icon: "bx-user",
   },
   vehicles: {
@@ -56,7 +59,7 @@ export const DOT_TAB_META: Record<
   },
   dvirs: {
     label: "DVIRs",
-    description: "Driver Vehicle Inspection Reports — pre-trip, post-trip, and defect follow-up.",
+    description: "DRIVER Vehicle Inspection Reports — pre-trip, post-trip, and defect follow-up.",
     icon: "bx-clipboard",
   },
   roadside: {
@@ -84,14 +87,26 @@ export const DOT_TAB_META: Record<
     description: "Records that do not match a standard DOT category.",
     icon: "bx-folder",
   },
+  reports: {
+    label: "Reports",
+    description:
+      "Export DQF document status across the DRIVER roster — missing, expired, expiring, and copy-on-file.",
+    icon: "bx-export",
+  },
 };
 
 export const DOT_API = "/api/v1/industrial/dot";
 export const DOT_LIST_HREF = "/modules/dot-compliance/";
 
 /** DOT file for one record. Ids stay in the query string (static export). */
-export function dotFileHref(id: string): string {
-  return `/modules/dot-compliance/file/?id=${encodeURIComponent(id)}`;
+export function dotFileHref(
+  id: string,
+  opts?: { focus?: string; edit?: boolean },
+): string {
+  const params = new URLSearchParams({ id });
+  if (opts?.focus?.trim()) params.set("focus", opts.focus.trim());
+  if (opts?.edit) params.set("edit", "1");
+  return `/modules/dot-compliance/file/?${params.toString()}`;
 }
 
 export function dotListHref(tab?: DotTabId): string {
@@ -102,6 +117,10 @@ export function dotListHref(tab?: DotTabId): string {
 export function parseDotTab(raw: string | null | undefined): DotTabId {
   if (raw && DOT_TABS.some((tab) => tab.id === raw)) return raw as DotTabId;
   return "dashboard";
+}
+
+export function isDotCategoryTab(tab: DotTabId): tab is DotCategory {
+  return (DOT_RECORD_CATEGORIES as readonly string[]).includes(tab);
 }
 
 function haystackForCategory(row: Record<string, unknown>): string {
@@ -173,7 +192,7 @@ export function dotRecordCategory(row: Record<string, unknown>): DotCategory {
   if (isDotDqfDriverRecord(row)) return "drivers";
 
   const cat = String(row.category ?? "").trim().toLowerCase();
-  if (cat.includes("driver") || cat.includes("dqf")) return "drivers";
+  if (cat.includes("driver") || cat.includes("dqf")) return "other";
   if (cat.includes("vehicle")) return "vehicles";
   if (cat.includes("company")) return "company";
 
@@ -181,7 +200,7 @@ export function dotRecordCategory(row: Record<string, unknown>): DotCategory {
     row.sourceCollection ?? row.sourcePath ?? row.source_collection ?? "",
   ).toLowerCase();
   if (collection.includes("dqf")) return "drivers";
-  if (collection.includes("driver") && !collection.includes("companyvehicle")) return "drivers";
+  if (collection.includes("driver") && !collection.includes("companyvehicle")) return "other";
   if (collection.includes("vehicle")) return "vehicles";
   if (collection.includes("company")) return "company";
 
@@ -205,16 +224,40 @@ export function dotWorkerName(row: Record<string, unknown>): string {
   return String(row.workerName ?? row.driverName ?? row.personnelName ?? "").trim();
 }
 
+function isMissingDotRecordTitle(row: Record<string, unknown>): boolean {
+  const title = String(row.title ?? "").trim();
+  const id = String(row.id ?? "").trim();
+  if (!title) return true;
+  return id !== "" && title === id;
+}
+
+/** Title shown in DOT lists and breadcrumbs; auto-derived for DQF drivers when blank. */
+export function dotRecordTitle(row: Record<string, unknown>): string {
+  if (!isMissingDotRecordTitle(row)) return String(row.title).trim();
+  if (isDotDqfDriverRecord(row) || dotRecordCategory(row) === "drivers") {
+    const derived = deriveDotDqfTitle(row);
+    if (derived) return derived;
+  }
+  const fallback = dotDisplayName(row);
+  return fallback || "Untitled";
+}
+
 export function dotPersonnelId(row: Record<string, unknown>): string {
   return String(row.personnelId ?? "").trim();
 }
 
 /** Name shown on the DOT file header and used to match a person across records. */
 export function dotDisplayName(row: Record<string, unknown>): string {
-  return (
-    dotWorkerName(row) ||
-    String(row.displayName ?? row.name ?? row.title ?? "").trim()
-  );
+  const worker = dotWorkerName(row);
+  if (worker) return worker;
+  if (isDotDqfDriverRecord(row) || dotRecordCategory(row) === "drivers") {
+    const derived = deriveDotDqfTitle(row);
+    if (derived) return derived;
+  }
+  const title = String(row.title ?? "").trim();
+  const id = String(row.id ?? "").trim();
+  if (title && title !== id) return title;
+  return String(row.displayName ?? row.name ?? "").trim();
 }
 
 /**
@@ -222,8 +265,8 @@ export function dotDisplayName(row: Record<string, unknown>): string {
  * all collapse to the same key so duplicate DQF rows become one profile.
  */
 export function normalizeDotPersonName(value: string): string {
-  const cleaned = value
-    .normalize("NFKD")
+  const normalized = safeUnicodeNormalize(value);
+  const cleaned = normalized
     .replace(/[\u0300-\u036f]/g, "")
     .trim()
     .toLowerCase()
@@ -233,6 +276,21 @@ export function normalizeDotPersonName(value: string): string {
   const parts = cleaned.split(",").map((part) => part.trim()).filter((part) => part !== "");
   if (parts.length < 2) return cleaned.replace(/,/g, " ").replace(/\s+/g, " ").trim();
   return `${parts.slice(1).join(" ")} ${parts[0]!}`.replace(/\s+/g, " ").trim();
+}
+
+function safeUnicodeNormalize(value: string): string {
+  try {
+    return value.normalize("NFKD");
+  } catch {
+    return value.replace(/[\uD800-\uDFFF]/g, "");
+  }
+}
+
+/** True when an id is a Postgres uuid (personnel / module record deep link). */
+export function isIndustrialRecordUuid(value: string): boolean {
+  return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(
+    value.trim(),
+  );
 }
 
 function isFilledDotValue(value: unknown): boolean {
@@ -370,11 +428,18 @@ export function dotProfileMembers(
   return group ?? [row];
 }
 
+/** True DOT DQF driver files for lists, counts, and attention — not company-driver roster rows. */
+export function filterDotDqfDriverRows(
+  rows: readonly Record<string, unknown>[],
+): Record<string, unknown>[] {
+  return rows.filter((row) => isDotDqfDriverRecord(row));
+}
+
 export function collapseDotDriverProfiles(
   rows: readonly Record<string, unknown>[],
 ): Record<string, unknown>[] {
   return groupDotProfileMembers(rows)
-    .map((members) => members.filter((row) => dotRecordCategory(row) === "drivers"))
+    .map((members) => members.filter((row) => isDotDqfDriverRecord(row)))
     .filter((members) => members.length > 0)
     .map((members) => mergeDotProfileRecords(members));
 }
@@ -441,20 +506,111 @@ export function isDotRecordOpen(status: string): boolean {
 }
 
 export function dotStatusBadgeClass(status: string): string {
-  const normalized = status.trim().toUpperCase();
-  if (normalized === "ACTIVE" || normalized === "APPROVED" || normalized === "COMPLIANT") {
+  const normalized = status
+    .trim()
+    .toUpperCase()
+    .replace(/[\s-]+/g, "_");
+  if (normalized === "ACTIVE" || normalized === "APPROVED") {
     return "bg-label-success";
+  }
+  if (normalized === "COMPLIANT") {
+    return "bg-label-info";
   }
   if (normalized === "OPEN" || normalized === "PENDING" || normalized === "DRAFT") {
     return "bg-label-warning";
   }
-  if (normalized === "EXPIRED" || normalized === "OVERDUE" || normalized === "NON_COMPLIANT") {
+  if (
+    normalized === "EXPIRED" ||
+    normalized === "OVERDUE" ||
+    normalized === "NON_COMPLIANT" ||
+    normalized === "NONCOMPLIANT"
+  ) {
     return "bg-label-danger";
   }
   if (normalized === "ARCHIVED" || normalized === "CLOSED" || normalized === "COMPLETED") {
     return "bg-label-secondary";
   }
   return "bg-label-info";
+}
+
+/** Soft row background matching the status badge tone (Sneat `bg-label-*`). */
+export function dotStatusRowClass(status: string): string {
+  return dotStatusBadgeClass(status);
+}
+
+/** DRV-YYYY-NNNN when present on the DQF file. */
+export function dotDriverReferenceId(row: Record<string, unknown>): string {
+  for (const value of [
+    row.sourceDocumentId,
+    row.source_document_id,
+    row.fileNumber,
+    row.drvNumber,
+    row.title,
+    row.id,
+  ]) {
+    const match = String(value ?? "").match(/\bDRV-\d{4}-\d+\b/i);
+    if (match?.[0]) return match[0].toUpperCase();
+  }
+  return "";
+}
+
+function formatDotListDate(value: unknown): string {
+  const text = String(value ?? "").trim();
+  if (/^\d{4}-\d{2}-\d{2}/.test(text)) {
+    const iso = text.slice(0, 10);
+    const date = new Date(`${iso}T12:00:00`);
+    if (!Number.isNaN(date.getTime())) return date.toLocaleDateString();
+    return iso;
+  }
+  if (!text) return "";
+  const parsed = new Date(text);
+  if (Number.isNaN(parsed.getTime())) return "";
+  return parsed.toLocaleDateString();
+}
+
+/** e.g. "DQF Import · 8/11/2025 · Due 8/4/2026" */
+export function dotDriverSourceMeta(row: Record<string, unknown>): string {
+  const parts: string[] = [];
+  const hay = [
+    row.seededFrom,
+    row.sourceSystem,
+    row.sourceCollection,
+    row.sourcePath,
+    row.title,
+  ]
+    .map((value) => String(value ?? ""))
+    .join(" ");
+  if (/dqf\s*import/i.test(hay) || row.dqf === true || isDotDqfDriverRecord(row)) {
+    parts.push("DQF Import");
+  }
+  const created =
+    formatDotListDate(row.recordDate) ||
+    formatDotListDate(row.importedAt) ||
+    formatDotListDate(row.createdAt);
+  if (created) parts.push(created);
+  const due = formatDotListDate(row.dueDate ?? row.due_date);
+  if (due) parts.push(`Due ${due}`);
+  return parts.join(" · ");
+}
+
+function isoDayDiff(earlier: string, later: string): number {
+  const a = Date.parse(`${earlier.slice(0, 10)}T12:00:00Z`);
+  const b = Date.parse(`${later.slice(0, 10)}T12:00:00Z`);
+  if (!Number.isFinite(a) || !Number.isFinite(b)) return 0;
+  return Math.max(0, Math.round((b - a) / 86_400_000));
+}
+
+/** e.g. "Overdue 28d" when due date is in the past. */
+export function dotDueOverdueLabel(
+  row: Record<string, unknown>,
+  today = new Date().toISOString().slice(0, 10),
+): string | null {
+  const due = String(row.dueDate ?? row.due_date ?? "")
+    .trim()
+    .slice(0, 10);
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(due) || due >= today) return null;
+  const days = isoDayDiff(due, today);
+  return days > 0 ? `Overdue ${days}d` : "Overdue";
 }
 
 export type DotSummary = {
@@ -469,8 +625,7 @@ export function summarizeDotRecords(rows: readonly Record<string, unknown>[]): D
   const drivers: Record<string, unknown>[] = [];
   const rest: Record<string, unknown>[] = [];
   for (const row of rows) {
-    const category = dotRecordCategory(row);
-    if (category === "drivers") drivers.push(row);
+    if (isDotDqfDriverRecord(row)) drivers.push(row);
     else rest.push(row);
   }
   const driverProfiles = collapseDotDriverProfiles(drivers);
@@ -568,11 +723,11 @@ export function filterDotRecords(
   const status = (opts.status ?? "").trim().toUpperCase();
   const source =
     opts.tab === "drivers"
-      ? collapseDotDriverProfiles(rows.filter((row) => dotRecordCategory(row) === "drivers"))
+      ? collapseDotDriverProfiles(filterDotDqfDriverRows(rows))
       : rows;
 
   const filtered = source.filter((row) => {
-    if (opts.tab !== "dashboard" && opts.tab !== "drivers" && dotRecordCategory(row) !== opts.tab) {
+    if (isDotCategoryTab(opts.tab) && opts.tab !== "drivers" && dotRecordCategory(row) !== opts.tab) {
       return false;
     }
     if (status && String(row.status ?? "").toUpperCase() !== status) return false;

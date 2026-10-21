@@ -27,14 +27,16 @@ describe("industrial-facility", () => {
     ).toEqual([{ id: "f1", name: "Primary Facility" }]);
   });
 
-  it("defaults to all locations when several sites exist", () => {
+  it("defaults to all locations unless the user explicitly chose a site", () => {
     const options = [
       { id: "a", name: "A" },
       { id: "b", name: "B" },
     ];
     expect(pickActiveFacilityId(options, null)).toBe(ALL_FACILITIES_ID);
     expect(pickActiveFacilityId(options, "b")).toBe("b");
-    expect(pickActiveFacilityId([{ id: "a", name: "A" }], null)).toBe("a");
+    // Single-site tenants also default to All — otherwise LOTO with null site_id disappears.
+    expect(pickActiveFacilityId([{ id: "a", name: "A" }], null)).toBe(ALL_FACILITIES_ID);
+    expect(pickActiveFacilityId([{ id: "a", name: "A" }], "a")).toBe("a");
   });
 
   it("adds siteId to list queries only when a facility is selected", () => {

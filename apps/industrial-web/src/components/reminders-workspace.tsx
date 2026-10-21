@@ -212,8 +212,10 @@ export function RemindersWorkspace({ moduleName }: { moduleName: string }) {
   }
 
   return (
-    <div className="container-xxl flex-grow-1 container-p-y">
+    <div className="container-xxl flex-grow-1 container-p-y" data-walkthrough="reminders-overview">
       <ModuleWorkspaceHeader
+        id="reminders-title"
+        eyebrow="System Tools"
         title={moduleName}
         description="Create reminders linked to calendar events and/or tasks. Due reminders notify in-app (and email when channel allows)."
         onRefresh={() => void load()}
@@ -249,7 +251,7 @@ export function RemindersWorkspace({ moduleName }: { moduleName: string }) {
             <div className="card-header d-flex justify-content-between align-items-center">
               <h5 className="mb-0">Reminders</h5>
               <button type="button" className="btn btn-sm btn-outline-primary" disabled={saving} onClick={() => void processDue()}>
-                Process due now
+                Send due reminders
               </button>
             </div>
             <div className="table-responsive">
@@ -268,7 +270,11 @@ export function RemindersWorkspace({ moduleName }: { moduleName: string }) {
                   {filtered.length === 0 ? (
                     <tr>
                       <td colSpan={6} className="text-muted">
-                        No reminders match.
+                        {loading
+                          ? "Loading…"
+                          : filter || statusFilter
+                            ? "No reminders match your filters."
+                            : "No reminders yet. Create one to the right."}
                       </td>
                     </tr>
                   ) : (

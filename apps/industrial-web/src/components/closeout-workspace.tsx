@@ -4,6 +4,8 @@ import Link from "next/link";
 import { Suspense, useEffect, useState, type FormEvent } from "react";
 import { useParams, useSearchParams } from "next/navigation";
 import { ApiError, apiGet, apiSend } from "@forge/web-kit";
+import { ForgePhotoMarkupEditor, PhotoCompareViewer } from "@forge/photo-markup";
+import { compressImageToDataUrl, DEFAULT_MAX_DATA_URL_LENGTH } from "@/lib/compress-image";
 
 type CloseoutDetail = {
   id: string;
@@ -12,7 +14,13 @@ type CloseoutDetail = {
   finding?: string | null;
   status?: string | null;
   ownerName?: string | null;
-  photos?: Array<{ id?: string; fileName?: string; dataUrl?: string }>;
+  photos?: Array<{
+    id?: string;
+    fileName?: string;
+    dataUrl?: string;
+    originalDataUrl?: string;
+    hasMarkup?: boolean;
+  }>;
   completedAt?: string | null;
   evidenceNotes?: string | null;
 };
@@ -22,38 +30,17 @@ type Photo = {
   fileName: string;
   contentType: string;
   dataUrl: string;
+  originalDataUrl?: string;
+  hasMarkup?: boolean;
 };
 
 async function compressImageFile(file: File): Promise<Photo> {
-  if (!file.type.startsWith("image/")) {
-    const dataUrl = await new Promise<string>((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onerror = () => reject(new Error("Failed to read file"));
-      reader.onload = () => resolve(String(reader.result ?? ""));
-      reader.readAsDataURL(file);
-    });
-    return {
-      id: `p-${Date.now()}`,
-      fileName: file.name || "file.bin",
-      contentType: file.type || "application/octet-stream",
-      dataUrl,
-    };
-  }
-  const bitmap = await createImageBitmap(file);
-  const scale = Math.min(1, 1280 / Math.max(bitmap.width, bitmap.height));
-  const width = Math.max(1, Math.round(bitmap.width * scale));
-  const height = Math.max(1, Math.round(bitmap.height * scale));
-  const canvas = document.createElement("canvas");
-  canvas.width = width;
-  canvas.height = height;
-  const ctx = canvas.getContext("2d");
-  if (!ctx) throw new Error("Canvas unavailable");
-  ctx.drawImage(bitmap, 0, 0, width, height);
+  const dataUrl = await compressImageToDataUrl(file, DEFAULT_MAX_DATA_URL_LENGTH);
   return {
     id: `p-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
     fileName: file.name.replace(/\.\w+$/, "") + ".jpg",
     contentType: "image/jpeg",
-    dataUrl: canvas.toDataURL("image/jpeg", 0.72),
+    dataUrl,
   };
 }
 
@@ -65,6 +52,9 @@ function CloseoutForm({ token }: { token: string }) {
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [done, setDone] = useState(false);
+  const [pendingBasePhoto, setPendingBasePhoto] = useState<Photo | null>(null);
+  const [markupStep, setMarkupStep] = useState<"gate" | "edit" | null>(null);
+  const [compare, setCompare] = useState<{ before: string; after: string } | null>(null);
 
   useEffect(() => {
     if (!token) return;
@@ -95,11 +85,17 @@ function CloseoutForm({ token }: { token: string }) {
 
   async function onAddPhotos(files: FileList | null) {
     if (!files?.length) return;
-    const next: Photo[] = [];
-    for (const file of Array.from(files)) {
-      next.push(await compressImageFile(file));
-    }
-    setPhotos((prev) => [...prev, ...next]);
+    const file = Array.from(files)[0];
+    if (!file) return;
+    const photo = await compressImageFile(file);
+    setPendingBasePhoto(photo);
+    setMarkupStep("gate");
+  }
+
+  function commitCloseoutPhoto(photo: Photo) {
+    setPhotos((prev) => [...prev, photo]);
+    setPendingBasePhoto(null);
+    setMarkupStep(null);
   }
 
   async function onSubmit(ev: FormEvent) {
@@ -128,6 +124,70 @@ function CloseoutForm({ token }: { token: string }) {
 
   return (
     <div className="container-xxl">
+      {markupStep === "gate" && pendingBasePhoto ? (
+        <div
+          className="card mb-3"
+          style={{ position: "fixed", inset: 16, zIndex: 1080, overflow: "auto" }}
+        >
+          <div className="card-body">
+            <h2 className="h5">Use this evidence photo?</h2>
+            <img
+              src={pendingBasePhoto.dataUrl}
+              alt="Evidence preview"
+              className="img-fluid rounded border mb-3"
+              style={{ maxHeight: 280 }}
+            />
+            <div className="d-flex flex-wrap gap-2">
+              <button type="button" className="btn btn-primary" onClick={() => setMarkupStep("edit")}>
+                Add Markup
+              </button>
+              <button
+                type="button"
+                className="btn btn-outline-secondary"
+                onClick={() => commitCloseoutPhoto(pendingBasePhoto)}
+              >
+                Save Without Markup
+              </button>
+              <button
+                type="button"
+                className="btn btn-outline-danger"
+                onClick={() => {
+                  setPendingBasePhoto(null);
+                  setMarkupStep(null);
+                }}
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : null}
+      {markupStep === "edit" && pendingBasePhoto ? (
+        <ForgePhotoMarkupEditor
+          imageSrc={pendingBasePhoto.dataUrl}
+          title="Mark up evidence photo"
+          mode="quick"
+          module="corrective_actions"
+          onCancel={() => setMarkupStep("gate")}
+          onSave={({ renderedDataUrl }) => {
+            commitCloseoutPhoto({
+              ...pendingBasePhoto,
+              originalDataUrl: pendingBasePhoto.dataUrl,
+              dataUrl: renderedDataUrl || pendingBasePhoto.dataUrl,
+              hasMarkup: true,
+              fileName: pendingBasePhoto.fileName.replace(/(\.[^.]+)?$/, "-marked$1"),
+            });
+          }}
+        />
+      ) : null}
+      {compare ? (
+        <PhotoCompareViewer
+          originalSrc={compare.before}
+          markedSrc={compare.after}
+          title="Before / after"
+          onClose={() => setCompare(null)}
+        />
+      ) : null}
       <div className="authentication-wrapper authentication-basic container-p-y">
         <div className="authentication-inner" style={{ maxWidth: 560 }}>
           <div className="card">
@@ -153,18 +213,21 @@ function CloseoutForm({ token }: { token: string }) {
                     <small className="text-muted">Owner: {detail.ownerName}</small>
                   ) : null}
                   {(detail.photos ?? []).length > 0 ? (
-                    <div className="d-flex flex-wrap gap-2 mt-2">
-                      {(detail.photos ?? []).map((photo, idx) =>
-                        photo.dataUrl ? (
-                          <img
-                            key={photo.id || idx}
-                            src={photo.dataUrl}
-                            alt={photo.fileName || "Finding photo"}
-                            className="rounded border"
-                            style={{ width: 88, height: 88, objectFit: "cover" }}
-                          />
-                        ) : null,
-                      )}
+                    <div className="mt-2">
+                      <div className="small text-muted mb-1">Finding photos (before)</div>
+                      <div className="d-flex flex-wrap gap-2">
+                        {(detail.photos ?? []).map((photo, idx) =>
+                          photo.dataUrl ? (
+                            <img
+                              key={photo.id || idx}
+                              src={photo.dataUrl}
+                              alt={photo.fileName || "Finding photo"}
+                              className="rounded border"
+                              style={{ width: 88, height: 88, objectFit: "cover" }}
+                            />
+                          ) : null,
+                        )}
+                      </div>
                     </div>
                   ) : null}
                 </div>
@@ -215,7 +278,6 @@ function CloseoutForm({ token }: { token: string }) {
                       className="form-control"
                       accept="image/*"
                       capture="environment"
-                      multiple
                       onChange={(ev) => void onAddPhotos(ev.target.files)}
                     />
                     {photos.length > 0 ? (
@@ -230,6 +292,20 @@ function CloseoutForm({ token }: { token: string }) {
                           />
                         ))}
                       </div>
+                    ) : null}
+                    {detail.photos?.[0]?.dataUrl && photos[0]?.dataUrl ? (
+                      <button
+                        type="button"
+                        className="btn btn-sm btn-outline-primary mt-2"
+                        onClick={() =>
+                          setCompare({
+                            before: detail.photos![0]!.dataUrl!,
+                            after: photos[0]!.dataUrl,
+                          })
+                        }
+                      >
+                        Compare before / after
+                      </button>
                     ) : null}
                   </div>
                   <button type="submit" className="btn btn-primary" disabled={busy || !notes.trim()}>

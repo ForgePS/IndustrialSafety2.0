@@ -1,6 +1,13 @@
 import { describe, expect, it } from "vitest";
 import { relatedDotRecords, resolveDotFileRecord } from "./dot-compliance-module";
-import { buildDotFile, dotFileHeading, formatDotFileValue } from "./dot-file";
+import {
+  buildDotFile,
+  dotFileDraftFromRecord,
+  dotFileEditSections,
+  dotFileHeading,
+  dotFilePatchFromDraft,
+  formatDotFileValue,
+} from "./dot-file";
 
 describe("dot-file", () => {
   it("formats scalars, dates, and upload lists", () => {
@@ -24,7 +31,7 @@ describe("dot-file", () => {
       seededFrom: "industrial_fleet_drivers",
     });
     expect(groups.map((g) => g.id)).toEqual(["identity", "license", "mvr", "details"]);
-    expect(groups[0]?.rows).toEqual([{ label: "Employee #", value: "1042" }]);
+    expect(groups[0]?.rows).toEqual([{ label: "EMPLOYEE #", value: "1042" }]);
     expect(groups.find((g) => g.id === "details")?.rows).toEqual([
       { label: "Notes", value: "Needs annual MVR", wide: false },
     ]);
@@ -33,6 +40,85 @@ describe("dot-file", () => {
   it("uses the worker name as the file heading", () => {
     expect(dotFileHeading({ title: "Unit 12", workerName: "Ada Byron" })).toBe("Ada Byron");
     expect(dotFileHeading({ title: "Unit 12" })).toBe("Unit 12");
+  });
+
+  it("builds editable DQF sections and round-trips draft patches", () => {
+    const record = {
+      title: "Ada Byron",
+      workerName: "Ada Byron",
+      employeeNumber: "1042",
+      licenseNumber: "A123",
+      licenseState: "AR",
+      licenseExpiryDate: "2027-04-01",
+      notes: "Needs annual MVR",
+      category: "drivers",
+    };
+    const sections = dotFileEditSections(record);
+    expect(sections.map((section) => section.id)).toEqual([
+      "record",
+      "identity",
+      "license",
+      "medical",
+      "mvr",
+      "vehicle",
+    ]);
+    const draft = dotFileDraftFromRecord(record, sections);
+    expect(draft.employeeNumber).toBe("1042");
+    expect(draft.licenseExpiryDate).toBe("2027-04-01");
+    draft.notes = "Updated notes";
+    const patch = dotFilePatchFromDraft(draft, sections);
+    expect(patch.notes).toBe("Updated notes");
+    expect(patch.driverName).toBe("Ada Byron");
+    expect(patch.personnelName).toBe("Ada Byron");
+  });
+
+  it("builds DVIR summary sections for DOT file reports", () => {
+    const groups = buildDotFile({
+      category: "dvirs",
+      recordType: "DVIR",
+      inspectionDate: "2026-03-01",
+      workerName: "Ada Byron",
+      items: [
+        { id: "brakes", label: "Brakes", answer: "NO", notes: "Soft pedal" },
+        { id: "lights", label: "Lights", answer: "YES", notes: "" },
+      ],
+      driverSignedAt: "2026-03-01T12:00:00.000Z",
+    });
+    expect(groups.map((g) => g.id)).toEqual(["dvir-summary", "dvir-signatures"]);
+    const summary = groups[0]?.rows ?? [];
+    expect(summary).toEqual(
+      expect.arrayContaining([
+        { label: "Inspection date", value: "2026-03-01" },
+        { label: "DRIVER", value: "Ada Byron" },
+        { label: "Defects", value: "Yes" },
+        {
+          label: "Defect summary",
+          value: "Brakes: Soft pedal",
+          wide: true,
+        },
+      ]),
+    );
+  });
+
+  it("does not expose editable DVIR sections in DOT file editor", () => {
+    const record = {
+      category: "dvirs",
+      recordType: "DVIR",
+      tripType: "PRE_TRIP",
+      inspectionDate: "2026-03-01",
+      truckNumber: "12",
+      workerName: "Ada Byron",
+      conditionSatisfactory: true,
+    };
+    expect(dotFileEditSections(record)).toEqual([]);
+  });
+
+  it("uses a select for vehicle asset type when editing", () => {
+    const sections = dotFileEditSections({ category: "vehicles", title: "Unit 12" });
+    const vehicle = sections.find((section) => section.id === "vehicle");
+    const assetType = vehicle?.fields.find((field) => field.key === "assetType");
+    expect(assetType?.input).toBe("select");
+    expect(assetType?.options).toContain("FLEET_VEHICLE");
   });
 });
 

@@ -18,6 +18,7 @@ import {
   suggestionsFor,
   validatePersonnelForm,
 } from "./personnel-form";
+import { MAX_LICENSE_DATA_URL_LENGTH } from "./license-copies";
 import {
   EMPTY_LOOKUPS,
   lookupPath,
@@ -38,6 +39,14 @@ const MIGRATIONS = [
   path.resolve(
     HERE,
     "../../../../packages/database/drizzle/0045_industrial_personnel_medical_emergency_s1.sql",
+  ),
+  path.resolve(
+    HERE,
+    "../../../../packages/database/drizzle/0070_industrial_personnel_first_aid_cert_copies_s1.sql",
+  ),
+  path.resolve(
+    HERE,
+    "../../../../packages/database/drizzle/0090_industrial_personnel_date_of_birth_s1.sql",
   ),
 ];
 
@@ -96,6 +105,29 @@ describe("Add Person form model", () => {
   it("has no duplicate field names across sections", () => {
     const names = personnelFormFields().map((f) => f.name);
     expect(new Set(names).size).toBe(names.length);
+  });
+
+  it("exposes binary file uploads for CPR and First Aid certification copies", () => {
+    const cpr = personnelFieldByName("cprCertificationDocumentId");
+    const firstAid = personnelFieldByName("firstAidCertificationDocumentId");
+    expect(cpr?.type).toBe("file");
+    expect(cpr?.fileKind).toBe("CPR");
+    expect(firstAid?.type).toBe("file");
+    expect(firstAid?.fileKind).toBe("FIRST_AID");
+    expect(
+      buildPersonnelPayload({
+        firstName: "Ada",
+        lastName: "Lovelace",
+        cprCertificationDocumentId: "11111111-1111-4111-8111-111111111111",
+      }).cprCertificationDocumentId,
+    ).toBe("11111111-1111-4111-8111-111111111111");
+    expect(
+      buildPersonnelUpdatePayload({
+        firstName: "Ada",
+        lastName: "Lovelace",
+        firstAidCertificationDocumentId: "",
+      }).firstAidCertificationDocumentId,
+    ).toBe("");
   });
 
   it("gives every section a non-empty title and at least one field", () => {
@@ -203,11 +235,25 @@ describe("Add Person form model", () => {
     ]);
   });
 
-  it("uses a checkbox for the driver flag and image fields for license copies", () => {
+  it("uses checkboxes for driver flags and image fields for license copies", () => {
+    expect(personnelFieldByName("isDotDriver")?.type).toBe("checkbox");
     expect(personnelFieldByName("isCompanyDriver")?.type).toBe("checkbox");
     expect(personnelFieldByName("licenseFrontUrl")?.type).toBe("image");
     expect(personnelFieldByName("licenseBackUrl")?.type).toBe("image");
     expect(personnelFieldByName("notes")?.type).toBe("textarea");
+  });
+
+  it("marks MVR Consent as required follow-up without blocking save", () => {
+    expect(personnelFieldByName("isCompanyDriver")?.help).toMatch(/Needs Attention/i);
+    expect(personnelFieldByName("isCompanyDriver")?.help).toMatch(/not blocked/i);
+    expect(
+      validatePersonnelForm({
+        status: "Active",
+        firstName: "Tim",
+        lastName: "Bogy",
+        isCompanyDriver: true,
+      }),
+    ).toEqual([]);
   });
 });
 
@@ -321,10 +367,13 @@ describe("buildPersonnelPayload", () => {
 
   it("omits the driver flag unless ticked, letting the column default apply", () => {
     expect(buildPersonnelPayload({})).not.toHaveProperty("isCompanyDriver");
+    expect(buildPersonnelPayload({})).not.toHaveProperty("isDotDriver");
     expect(buildPersonnelPayload({ isCompanyDriver: false })).not.toHaveProperty(
       "isCompanyDriver",
     );
+    expect(buildPersonnelPayload({ isDotDriver: false })).not.toHaveProperty("isDotDriver");
     expect(buildPersonnelPayload({ isCompanyDriver: true }).isCompanyDriver).toBe(true);
+    expect(buildPersonnelPayload({ isDotDriver: true }).isDotDriver).toBe(true);
   });
 
   it("sends the resolved label alongside a lookup id", () => {
@@ -381,40 +430,60 @@ describe("buildPersonnelPayload", () => {
   it("keeps a typed name out of the payload when it is blank", () => {
     expect(buildPersonnelPayload({ jobTitle: "   " })).not.toHaveProperty("jobTitle");
   });
+
+  it("prefixes employee numbers with EMP- from digits-only input", () => {
+    expect(buildPersonnelPayload({ employeeNumber: "25080" }).employeeNumber).toBe("EMP-25080");
+    expect(buildPersonnelUpdatePayload({ employeeNumber: "25080" }).employeeNumber).toBe(
+      "EMP-25080",
+    );
+  });
+
+  it("loads employee numbers without the EMP- prefix into the form", () => {
+    expect(personnelFormFromRecord({ employeeNumber: "EMP-25080" }).employeeNumber).toBe("25080");
+  });
 });
 
 describe("buildPersonnelUpdatePayload", () => {
   it("always sends the driver flag so unticking clears it", () => {
     expect(buildPersonnelUpdatePayload({}).isCompanyDriver).toBe(false);
+    expect(buildPersonnelUpdatePayload({}).isDotDriver).toBe(false);
     expect(buildPersonnelUpdatePayload({ isCompanyDriver: true }).isCompanyDriver).toBe(true);
+    expect(buildPersonnelUpdatePayload({ isDotDriver: true }).isDotDriver).toBe(true);
   });
 
-  it("persists license front/back as URL fields and upload objects", () => {
-    const payload = buildPersonnelUpdatePayload({
-      licenseFrontUrl: "data:image/jpeg;base64,FRONT",
+  it("persists license front/back as document refs or upload objects", () => {
+    const withDoc = buildPersonnelUpdatePayload({
+      licenseFrontUrl: "11111111-1111-1111-1111-111111111111",
       licenseBackUrl: "https://cdn.example/back.jpg",
     });
-    expect(payload.licenseFrontUrl).toBe("data:image/jpeg;base64,FRONT");
-    expect(payload.licenseBackUrl).toBe("https://cdn.example/back.jpg");
-    expect(payload.licenseFrontUpload).toMatchObject({
-      dataUrl: "data:image/jpeg;base64,FRONT",
+    expect(withDoc.licenseFrontUrl).toBe("");
+    expect(withDoc.licenseFrontUpload).toMatchObject({
+      documentId: "11111111-1111-1111-1111-111111111111",
       fileName: "drivers-license-front.jpg",
     });
-    expect(payload.licenseBackUpload).toMatchObject({
+    expect(withDoc.licenseBackUrl).toBe("https://cdn.example/back.jpg");
+    expect(withDoc.licenseBackUpload).toMatchObject({
       url: "https://cdn.example/back.jpg",
       fileName: "drivers-license-back.jpg",
     });
+
+    const withData = buildPersonnelUpdatePayload({
+      licenseFrontUrl: "data:image/jpeg;base64,FRONT",
+    });
+    expect(withData.licenseFrontUrl).toBe("");
+    expect(withData.licenseFrontUpload).toMatchObject({
+      dataUrl: "data:image/jpeg;base64,FRONT",
+      fileName: "drivers-license-front.jpg",
+    });
   });
 
-  it("clears license copies when the edit form blanks them", () => {
-    const payload = buildPersonnelUpdatePayload({
-      licenseFrontUrl: "",
-      licenseBackUrl: "",
-    });
-    expect(payload.licenseFrontUrl).toBe("");
-    expect(payload.licenseBackUrl).toBe("");
-    expect(payload.licenseFrontUpload).toBeNull();
-    expect(payload.licenseBackUpload).toBeNull();
+  it("rejects oversized license data URLs instead of silently dropping them", () => {
+    const huge = `data:image/jpeg;base64,${"A".repeat(MAX_LICENSE_DATA_URL_LENGTH)}`;
+    expect(() =>
+      buildPersonnelUpdatePayload({
+        licenseFrontUrl: huge,
+      }),
+    ).toThrow(/License front photo is still too large/i);
   });
 
   it("sends blank strings so cleared fields can null out on PATCH", () => {
@@ -438,6 +507,14 @@ describe("buildPersonnelUpdatePayload", () => {
     });
     expect(payload.firstName).toBe("Ada");
     expect(payload).not.toHaveProperty("signatureUrl");
+  });
+
+  it("writes departmentName next to departmentId on PATCH", () => {
+    const payload = buildPersonnelUpdatePayload(
+      { departmentId: "dep-1", departmentName: "" },
+      (source, id) => (source === "departments" && id === "dep-1" ? "Milling" : undefined),
+    );
+    expect(payload).toMatchObject({ departmentId: "dep-1", departmentName: "Milling" });
   });
 });
 
@@ -516,7 +593,17 @@ describe("lookupPath", () => {
 
 describe("normalizeLookupRows", () => {
   it("reads a paginated envelope and a bare array alike", () => {
-    const expected = [{ id: "a", label: "Alpha", siteId: null }];
+    const expected = [
+      {
+        id: "a",
+        label: "Alpha",
+        siteId: null,
+        divisionName: null,
+        contactPersonnelId: null,
+        contactName: null,
+        contactEmail: null,
+      },
+    ];
     expect(normalizeLookupRows({ items: [{ id: "a", name: "Alpha" }] })).toEqual(expected);
     expect(normalizeLookupRows([{ id: "a", name: "Alpha" }])).toEqual(expected);
   });

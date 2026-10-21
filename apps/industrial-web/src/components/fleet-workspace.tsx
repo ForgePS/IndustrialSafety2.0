@@ -1,21 +1,24 @@
 "use client";
 
 import Link from "next/link";
-import { useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState, type FormEvent } from "react";
 import { ApiError, apiGet, apiSend, useAuth } from "@forge/web-kit";
 import { FilterPanel } from "@/components/filter-panel";
+import { ForgePrintDialog } from "@/components/forge-print-dialog";
 import { ModuleUnavailable } from "@/components/module-unavailable";
 import { ModuleWorkspaceHeader } from "@/components/module-workspace-header";
 import { ModuleWorkspaceTabs } from "@/components/module-workspace-tabs";
+import { ensureActiveModuleTab, filterModulePages } from "@/lib/module-page-permissions";
+import { FleetCustomReportBuilder } from "@/components/fleet-custom-report-builder";
+import { fleetAssetHref, fleetAssetLabel, fleetAssetPrintFieldValues, ensureFleetDvirPrintQrPayload } from "@/lib/fleet";
+import { formatApiErrorMessage } from "@/lib/api-error";
 import { personFileHref } from "@/lib/personnel-directory";
+import { personNameDisplay } from "@/lib/person-name-display";
 import { PERSONNEL_QUICK_LINKS } from "@/lib/personnel-quick-nav";
+import { useIndustrialModuleGate } from "@/hooks/use-industrial-module-gate";
 
 type ListResponse = { items: Array<Record<string, unknown>>; page: number; pageSize: number; total?: number };
-type Bootstrap = {
-  industrialEnabled: boolean;
-  modules: Array<{ code: string; awsEnabled: boolean; migrationStatus: string }>;
-};
 
 type TabId =
   | "dashboard"
@@ -33,7 +36,7 @@ type TabId =
 const TABS: Array<{ id: TabId; label: string }> = [
   { id: "dashboard", label: "Dashboard" },
   { id: "assets", label: "Assets" },
-  { id: "drivers", label: "Drivers" },
+  { id: "drivers", label: "DRIVERS" },
   { id: "renewals", label: "Renewals" },
   { id: "compliance", label: "Compliance" },
   { id: "maintenance", label: "Maintenance" },
@@ -62,14 +65,43 @@ const ASSET_TYPES = [
   "DUMP_TRUCK",
   "CONSTRUCTION_EQUIPMENT",
   "OTHER",
-];
+] as const;
+
+const ASSET_TYPE_LABELS: Record<string, string> = {
+  PASSENGER_VEHICLE: "Passenger vehicle",
+  FLEET_VEHICLE: "Fleet vehicle",
+  BOB_TRUCK: "Bob truck",
+  TRASH_TRUCK: "Trash truck",
+  TRACTOR_TRUCK: "Tractor truck",
+  DUMP_TRUCK: "Dump truck",
+  CONSTRUCTION_EQUIPMENT: "Construction equipment",
+  OTHER: "Other",
+};
+
+const FLEET_STATUS_LABELS: Record<string, string> = {
+  ACTIVE: "Active",
+  OUT_OF_SERVICE: "Out of service",
+  INACTIVE: "Inactive",
+  REMOVED: "Removed",
+  DISPOSED: "Disposed",
+  COMPLETED: "Completed",
+  OPEN: "Open",
+  PENDING: "Pending",
+  SCHEDULED: "Scheduled",
+};
+
+function fleetAssetTypeLabel(type: string | null | undefined): string {
+  if (!type) return "—";
+  return ASSET_TYPE_LABELS[type] ?? type.replaceAll("_", " ").toLowerCase().replace(/^\w/, (c) => c.toUpperCase());
+}
+
+function fleetStatusLabel(status: string | null | undefined): string {
+  if (!status) return "—";
+  return FLEET_STATUS_LABELS[status] ?? status.replaceAll("_", " ");
+}
 
 function labelOf(item: Record<string, unknown>) {
-  const year = item.year ? String(item.year) : "";
-  const make = String(item.make ?? "");
-  const model = String(item.model ?? "");
-  const plate = String(item.licensePlate ?? "");
-  return [year, make, model].filter(Boolean).join(" ") || plate || String(item.id ?? "Asset");
+  return fleetAssetLabel(item);
 }
 
 const FLEET_TAB_META: Record<TabId, { label: string; description: string; icon: string }> = {
@@ -80,7 +112,7 @@ const FLEET_TAB_META: Record<TabId, { label: string; description: string; icon: 
   },
   assets: {
     label: "Assets",
-    description: "Active vehicles and equipment — search, filter, create, and open detail.",
+    description: "Active vehicles and equipment — open any row for full edit, maintenance, insurance, and registration.",
     icon: "bx-car",
   },
   drivers: {
@@ -120,7 +152,8 @@ const FLEET_TAB_META: Record<TabId, { label: string; description: string; icon: 
   },
   reports: {
     label: "Reports",
-    description: "CSV exports for inventory, compliance, mileage, and history.",
+    description:
+      "Build custom asset reports with your own columns and filters, or download standard CSV exports.",
     icon: "bx-export",
   },
   settings: {
@@ -178,6 +211,7 @@ function FleetEmptyState({ icon, message }: { icon: string; message: string }) {
 
 export function FleetWorkspace({ moduleName }: { moduleName: string }) {
   const { me } = useAuth();
+  const router = useRouter();
   const searchParams = useSearchParams();
   const permissions = new Set(me?.permissions ?? []);
   const canView =
@@ -186,21 +220,42 @@ export function FleetWorkspace({ moduleName }: { moduleName: string }) {
     permissions.has("industrial.access");
   const canManage =
     permissions.has("industrial.fleet.manage") || permissions.has("industrial.admin");
+  const canPrintLabel =
+    permissions.has("industrial.printer.print") || permissions.has("industrial.admin");
 
-  const [bootstrap, setBootstrap] = useState<Bootstrap | null>(null);
+  const { modEntry, explicitlyDisabled, awsReady } = useIndustrialModuleGate({
+    moduleCode: "FLEET",
+    canView,
+  });
   const [tab, setTab] = useState<TabId>(() => parseFleetTab(searchParams.get("tab")));
+  const visibleTabs = useMemo(
+    () =>
+      filterModulePages({
+        tabs: TABS,
+        moduleCode: "FLEET",
+        permissions: me?.permissions ?? [],
+      }),
+    [me?.permissions],
+  );
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [dashboard, setDashboard] = useState<Record<string, unknown> | null>(null);
   const [assets, setAssets] = useState<Array<Record<string, unknown>>>([]);
+  const [printTarget, setPrintTarget] = useState<Record<string, unknown> | null>(null);
+  const [printQrPayload, setPrintQrPayload] = useState<string | null>(null);
+  const [printQrBusyId, setPrintQrBusyId] = useState<string | null>(null);
+  const [printError, setPrintError] = useState<string | null>(null);
+  const [selectedAssetIds, setSelectedAssetIds] = useState<string[]>([]);
+  const [batchPrintItems, setBatchPrintItems] = useState<
+    Array<{ recordId: string; title?: string; fieldValues: Record<string, string> }> | null
+  >(null);
+  const [batchPrintBusy, setBatchPrintBusy] = useState(false);
   const [drivers, setDrivers] = useState<Array<Record<string, unknown>>>([]);
   const [renewals, setRenewals] = useState<Record<string, unknown> | null>(null);
   const [maintenance, setMaintenance] = useState<Array<Record<string, unknown>>>([]);
   const [inspections, setInspections] = useState<Array<Record<string, unknown>>>([]);
   const [documents, setDocuments] = useState<Array<Record<string, unknown>>>([]);
   const [settings, setSettings] = useState<Record<string, unknown> | null>(null);
-  const [selected, setSelected] = useState<Record<string, unknown> | null>(null);
-  const [history, setHistory] = useState<Record<string, unknown> | null>(null);
   const [q, setQ] = useState("");
   const [assetType, setAssetType] = useState("");
   const [status, setStatus] = useState("");
@@ -218,29 +273,14 @@ export function FleetWorkspace({ moduleName }: { moduleName: string }) {
     locationName: "",
     renewalMonth: "",
     notes: "",
+    dotRegulated: false,
   });
-  const [assignName, setAssignName] = useState("");
-  const [mileage, setMileage] = useState("");
-  const [engineHours, setEngineHours] = useState("");
-  const [maintTitle, setMaintTitle] = useState("");
-  const [inspTitle, setInspTitle] = useState("");
-  const [docTitle, setDocTitle] = useState("");
   const [settingsForm, setSettingsForm] = useState({
     insurerName: "",
     insurerEmail: "",
     lastSampleYear: "",
     notificationRecipients: "",
   });
-
-  const modEntry = bootstrap?.modules.find((m) => m.code === "FLEET");
-  const awsReady =
-    Boolean(bootstrap?.industrialEnabled) && Boolean(modEntry?.awsEnabled) && canView;
-
-  useEffect(() => {
-    void apiGet<Bootstrap>("/api/v1/industrial/bootstrap")
-      .then(setBootstrap)
-      .catch((e) => setError(e instanceof ApiError ? e.message : "Bootstrap failed"));
-  }, []);
 
   useEffect(() => {
     setTab(parseFleetTab(searchParams.get("tab")));
@@ -264,7 +304,6 @@ export function FleetWorkspace({ moduleName }: { moduleName: string }) {
       clearFilters?: boolean;
     },
   ) {
-    setSelected(null);
     if (opts?.clearFilters) clearListFilters();
     if (opts?.status !== undefined) setStatus(opts.status);
     if (opts?.assetType !== undefined) setAssetType(opts.assetType);
@@ -273,8 +312,30 @@ export function FleetWorkspace({ moduleName }: { moduleName: string }) {
     setTab(next);
   }
 
-  const loadTab = useCallback(async () => {
+  useEffect(() => {
+    const next = ensureActiveModuleTab(
+      tab,
+      visibleTabs.map((t) => t.id),
+      "dashboard",
+    );
+    if (next !== tab) navigateFleet(next);
+  }, [tab, visibleTabs]);
+
+  const loadTab = useCallback(async (filterOverrides?: {
+    q?: string;
+    assetType?: string;
+    status?: string;
+    insuredFilter?: string;
+    renewalBucket?: string;
+  }) => {
     if (!awsReady) return;
+    const filters = {
+      q: filterOverrides?.q ?? q,
+      assetType: filterOverrides?.assetType ?? assetType,
+      status: filterOverrides?.status ?? status,
+      insuredFilter: filterOverrides?.insuredFilter ?? insuredFilter,
+      renewalBucket: filterOverrides?.renewalBucket ?? renewalBucket,
+    };
     setLoading(true);
     setError(null);
     try {
@@ -283,10 +344,10 @@ export function FleetWorkspace({ moduleName }: { moduleName: string }) {
       } else if (tab === "assets" || tab === "compliance") {
         const res = await apiGet<ListResponse>("/api/v1/industrial/fleet/vehicles", {
           query: {
-            q: q || undefined,
-            assetType: assetType || undefined,
-            status: status || undefined,
-            insured: insuredFilter || undefined,
+            q: filters.q || undefined,
+            assetType: filters.assetType || undefined,
+            status: filters.status || undefined,
+            insured: filters.insuredFilter || undefined,
             page: "1",
             pageSize: "100",
           },
@@ -294,19 +355,19 @@ export function FleetWorkspace({ moduleName }: { moduleName: string }) {
         setAssets(res.items ?? []);
       } else if (tab === "removed") {
         const res = await apiGet<ListResponse>("/api/v1/industrial/fleet/vehicles", {
-          query: { removed: "true", q: q || undefined, page: "1", pageSize: "100" },
+          query: { removed: "true", q: filters.q || undefined, page: "1", pageSize: "100" },
         });
         setAssets(res.items ?? []);
       } else if (tab === "drivers") {
         const res = await apiGet<ListResponse>("/api/v1/industrial/fleet/drivers", {
-          query: { q: q || undefined, page: "1", pageSize: "100" },
+          query: { q: filters.q || undefined, page: "1", pageSize: "100" },
         });
         setDrivers(res.items ?? []);
       } else if (tab === "renewals") {
         setRenewals(
           await apiGet<Record<string, unknown>>("/api/v1/industrial/fleet/renewals", {
             query: {
-              bucket: renewalBucket || undefined,
+              bucket: filters.renewalBucket || undefined,
               page: "1",
               pageSize: "500",
             },
@@ -352,22 +413,14 @@ export function FleetWorkspace({ moduleName }: { moduleName: string }) {
       return;
     }
     void loadTab();
-  }, [awsReady, loadTab]);
+    // Only auto-reload when the tab (or AWS gate) changes. Typing in search must not
+    // remount the filter panel — Apply / Clear / chip remove call loadTab explicitly.
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- intentional
+  }, [awsReady, tab]);
 
-  async function openAsset(id: string) {
-    try {
-      const [asset, hist] = await Promise.all([
-        apiGet<Record<string, unknown>>(`/api/v1/industrial/fleet/vehicles/${id}`),
-        apiGet<Record<string, unknown>>(`/api/v1/industrial/fleet/vehicles/${id}/history`),
-      ]);
-      setSelected(asset);
-      setHistory(hist);
-      setAssignName(String(asset.assignedDriverName ?? ""));
-      setMileage(asset.mileage != null ? String(asset.mileage) : "");
-      setEngineHours(asset.engineHours != null ? String(asset.engineHours) : "");
-    } catch (e) {
-      setError(e instanceof ApiError ? e.message : "Failed to load asset");
-    }
+  function openAsset(id: string) {
+    if (!id) return;
+    router.push(fleetAssetHref(id));
   }
 
   async function onCreate(e: FormEvent) {
@@ -376,7 +429,7 @@ export function FleetWorkspace({ moduleName }: { moduleName: string }) {
     setCreating(true);
     setError(null);
     try {
-      await apiSend("/api/v1/industrial/fleet/vehicles", "POST", {
+      const created = await apiSend<Record<string, unknown>>("/api/v1/industrial/fleet/vehicles", "POST", {
         year: form.year ? Number(form.year) : null,
         make: form.make || null,
         model: form.model || null,
@@ -387,6 +440,7 @@ export function FleetWorkspace({ moduleName }: { moduleName: string }) {
         locationName: form.locationName || null,
         registrationRenewalMonth: form.renewalMonth || null,
         notes: form.notes || null,
+        dotRegulated: form.dotRegulated,
       });
       setForm({
         year: "",
@@ -399,102 +453,18 @@ export function FleetWorkspace({ moduleName }: { moduleName: string }) {
         locationName: "",
         renewalMonth: "",
         notes: "",
+        dotRegulated: false,
       });
+      const createdId = String(created.id ?? "");
+      if (createdId) {
+        router.push(fleetAssetHref(createdId));
+        return;
+      }
       await loadTab();
     } catch (err) {
       setError(err instanceof ApiError ? err.message : "Create failed");
     } finally {
       setCreating(false);
-    }
-  }
-
-  async function saveSelected() {
-    if (!canManage || !selected?.id) return;
-    try {
-      await apiSend(`/api/v1/industrial/fleet/vehicles/${String(selected.id)}`, "PATCH", {
-        year: selected.year,
-        make: selected.make,
-        model: selected.model,
-        color: selected.color,
-        vin: selected.vin,
-        licensePlate: selected.licensePlate,
-        assetType: selected.assetType,
-        locationName: selected.locationName,
-        countyAssessed: selected.countyAssessed,
-        insured: selected.insured,
-        insuranceStatus: selected.insuranceStatus,
-        form2290Status: selected.form2290Status,
-        irpStatus: selected.irpStatus,
-        notOnVehicleFringeSs: selected.notOnVehicleFringeSs,
-        commuteUseStatus: selected.commuteUseStatus,
-        registrationRenewalMonth: selected.registrationRenewalMonth,
-        renewalDate: selected.renewalDate,
-        notes: selected.notes,
-        status: selected.status,
-      });
-      await loadTab();
-    } catch (err) {
-      setError(err instanceof ApiError ? err.message : "Save failed");
-    }
-  }
-
-  async function assignDriver() {
-    if (!canManage || !selected?.id) return;
-    try {
-      const updated = await apiSend<Record<string, unknown>>(
-        `/api/v1/industrial/fleet/vehicles/${String(selected.id)}/assign`,
-        "POST",
-        { driverName: assignName || null },
-      );
-      setSelected(updated);
-      const hist = await apiGet<Record<string, unknown>>(
-        `/api/v1/industrial/fleet/vehicles/${String(selected.id)}/history`,
-      );
-      setHistory(hist);
-    } catch (err) {
-      setError(err instanceof ApiError ? err.message : "Assign failed");
-    }
-  }
-
-  async function saveMileage() {
-    if (!canManage || !selected?.id) return;
-    try {
-      const updated = await apiSend<Record<string, unknown>>(
-        `/api/v1/industrial/fleet/vehicles/${String(selected.id)}/mileage`,
-        "POST",
-        { mileage: Number(mileage) },
-      );
-      setSelected(updated);
-    } catch (err) {
-      setError(err instanceof ApiError ? err.message : "Mileage update failed");
-    }
-  }
-
-  async function saveEngineHours() {
-    if (!canManage || !selected?.id) return;
-    try {
-      const updated = await apiSend<Record<string, unknown>>(
-        `/api/v1/industrial/fleet/vehicles/${String(selected.id)}/engine-hours`,
-        "POST",
-        { engineHours: Number(engineHours) },
-      );
-      setSelected(updated);
-    } catch (err) {
-      setError(err instanceof ApiError ? err.message : "Engine hours update failed");
-    }
-  }
-
-  async function disposeSelected() {
-    if (!canManage || !selected?.id) return;
-    try {
-      await apiSend(`/api/v1/industrial/fleet/vehicles/${String(selected.id)}/dispose`, "POST", {
-        status: "REMOVED",
-        dispositionNotes: "Removed from Fleet UI",
-      });
-      setSelected(null);
-      await loadTab();
-    } catch (err) {
-      setError(err instanceof ApiError ? err.message : "Dispose failed");
     }
   }
 
@@ -611,7 +581,7 @@ export function FleetWorkspace({ moduleName }: { moduleName: string }) {
 
   const activeTabMeta = FLEET_TAB_META[tab];
 
-  if (!awsReady && bootstrap) {
+  if (explicitlyDisabled) {
     return (
       <ModuleUnavailable
         moduleName={moduleName}
@@ -621,12 +591,12 @@ export function FleetWorkspace({ moduleName }: { moduleName: string }) {
   }
 
   return (
-    <section aria-labelledby="fleet-title" className="fleet-workspace">
+    <section aria-labelledby="fleet-title" className="fleet-workspace" data-walkthrough="fleet-overview">
       <ModuleWorkspaceHeader
         id="fleet-title"
-        eyebrow="Operations"
+        eyebrow="Equipment & Operations"
         title={moduleName}
-        description="Assets, drivers, compliance renewals, maintenance, and disposition."
+        description="Assets, DRIVERS, compliance renewals, maintenance, and disposition."
         onRefresh={() => void loadTab()}
         refreshing={loading}
       />
@@ -641,7 +611,7 @@ export function FleetWorkspace({ moduleName }: { moduleName: string }) {
       ) : null}
 
       <ModuleWorkspaceTabs
-        tabs={TABS}
+        tabs={visibleTabs}
         active={tab}
         onChange={(next) => navigateFleet(next)}
         ariaLabel="Fleet sections"
@@ -655,7 +625,7 @@ export function FleetWorkspace({ moduleName }: { moduleName: string }) {
           {tab === "drivers" ? (
             <Link className="btn btn-sm btn-outline-primary" href={COMPANY_DRIVERS_HREF}>
               <i className="bx bx-user me-1" />
-              Company Drivers
+              Company DRIVERS
             </Link>
           ) : null}
         </div>
@@ -778,7 +748,7 @@ export function FleetWorkspace({ moduleName }: { moduleName: string }) {
         </>
         ) : null}
 
-        {!loading && (tab === "assets" || tab === "removed" || tab === "compliance") ? (
+        {(tab === "assets" || tab === "removed" || tab === "compliance") ? (
         <>
           <FilterPanel
             searchId="fleet-asset-search"
@@ -786,26 +756,64 @@ export function FleetWorkspace({ moduleName }: { moduleName: string }) {
             onSearchChange={setQ}
             searchPlaceholder="VIN, plate, make…"
             chips={[
-              ...(q ? [{ id: "q", label: `Search: ${q}`, onRemove: () => setQ("") }] : []),
+              ...(q
+                ? [
+                    {
+                      id: "q",
+                      label: `Search: ${q}`,
+                      onRemove: () => {
+                        setQ("");
+                        void loadTab({ q: "" });
+                      },
+                    },
+                  ]
+                : []),
               ...(status && (tab === "assets" || tab === "compliance")
-                ? [{ id: "status", label: `Status: ${status}`, onRemove: () => setStatus("") }]
+                ? [
+                    {
+                      id: "status",
+                      label: `Status: ${status}`,
+                      onRemove: () => {
+                        setStatus("");
+                        void loadTab({ status: "" });
+                      },
+                    },
+                  ]
                 : []),
               ...(assetType && (tab === "assets" || tab === "compliance")
-                ? [{ id: "type", label: `Type: ${assetType}`, onRemove: () => setAssetType("") }]
+                ? [
+                    {
+                      id: "type",
+                      label: `Type: ${assetType}`,
+                      onRemove: () => {
+                        setAssetType("");
+                        void loadTab({ assetType: "" });
+                      },
+                    },
+                  ]
                 : []),
               ...(insuredFilter
                 ? [
                     {
                       id: "insured",
                       label: `Insured: ${insuredFilter === "true" ? "Yes" : insuredFilter}`,
-                      onRemove: () => setInsuredFilter(""),
+                      onRemove: () => {
+                        setInsuredFilter("");
+                        void loadTab({ insuredFilter: "" });
+                      },
                     },
                   ]
                 : []),
             ]}
             onClearAll={() => {
               clearListFilters();
-              void loadTab();
+              void loadTab({
+                q: "",
+                status: "",
+                assetType: "",
+                insuredFilter: "",
+                renewalBucket: "",
+              });
             }}
             onSubmit={() => void loadTab()}
             extraFields={
@@ -824,7 +832,7 @@ export function FleetWorkspace({ moduleName }: { moduleName: string }) {
                       <option value="">All</option>
                       {ASSET_TYPES.map((t) => (
                         <option key={t} value={t}>
-                          {t}
+                          {fleetAssetTypeLabel(t)}
                         </option>
                       ))}
                     </select>
@@ -839,10 +847,10 @@ export function FleetWorkspace({ moduleName }: { moduleName: string }) {
                       value={status}
                       onChange={(ev) => setStatus(ev.target.value)}
                     >
-                      <option value="">Active-ish</option>
-                      <option value="ACTIVE">ACTIVE</option>
-                      <option value="OUT_OF_SERVICE">OUT_OF_SERVICE</option>
-                      <option value="INACTIVE">INACTIVE</option>
+                      <option value="">Active (default)</option>
+                      <option value="ACTIVE">Active</option>
+                      <option value="OUT_OF_SERVICE">Out of service</option>
+                      <option value="INACTIVE">Inactive</option>
                     </select>
                   </div>
                   {tab === "compliance" ? (
@@ -866,6 +874,74 @@ export function FleetWorkspace({ moduleName }: { moduleName: string }) {
               ) : undefined
             }
           />
+
+          {canPrintLabel && selectedAssetIds.length > 0 ? (
+            <div className="d-flex flex-wrap gap-2 align-items-center mb-3">
+              <span className="small text-muted">{selectedAssetIds.length} selected</span>
+              <button
+                type="button"
+                className="btn btn-sm btn-primary"
+                disabled={batchPrintBusy || selectedAssetIds.length < 1}
+                onClick={() => {
+                  void (async () => {
+                    setBatchPrintBusy(true);
+                    setPrintError(null);
+                    try {
+                      const selected = assets.filter((a) =>
+                        selectedAssetIds.includes(String(a.id)),
+                      );
+                      if (selected.length === 0) return;
+                      if (selected.length === 1) {
+                        const item = selected[0]!;
+                        const qr = await ensureFleetDvirPrintQrPayload(item);
+                        setPrintQrPayload(qr ?? null);
+                        setBatchPrintItems(null);
+                        setPrintTarget(item);
+                        return;
+                      }
+                      const items: Array<{
+                        recordId: string;
+                        title?: string;
+                        fieldValues: Record<string, string>;
+                      }> = [];
+                      for (const item of selected.slice(0, 200)) {
+                        const qr = await ensureFleetDvirPrintQrPayload(item);
+                        items.push({
+                          recordId: String(item.id),
+                          title: labelOf(item),
+                          fieldValues: fleetAssetPrintFieldValues(item, {
+                            ...(qr ? { qrPayload: qr } : {}),
+                          }),
+                        });
+                      }
+                      setPrintTarget(null);
+                      setPrintQrPayload(null);
+                      setBatchPrintItems(items);
+                    } catch (e) {
+                      setPrintError(
+                        formatApiErrorMessage(e, "Could not prepare batch labels for print"),
+                      );
+                    } finally {
+                      setBatchPrintBusy(false);
+                    }
+                  })();
+                }}
+              >
+                {batchPrintBusy
+                  ? "Preparing…"
+                  : selectedAssetIds.length === 1
+                    ? "Print Label"
+                    : `Print ${selectedAssetIds.length} Labels`}
+              </button>
+              <button
+                type="button"
+                className="btn btn-sm btn-outline-secondary"
+                onClick={() => setSelectedAssetIds([])}
+              >
+                Clear selection
+              </button>
+            </div>
+          ) : null}
 
           {tab === "assets" && canManage ? (
             <div className="card border shadow-none mb-4">
@@ -942,7 +1018,7 @@ export function FleetWorkspace({ moduleName }: { moduleName: string }) {
                       >
                         {ASSET_TYPES.map((t) => (
                           <option key={t} value={t}>
-                            {t}
+                            {fleetAssetTypeLabel(t)}
                           </option>
                         ))}
                       </select>
@@ -969,6 +1045,23 @@ export function FleetWorkspace({ moduleName }: { moduleName: string }) {
                         onChange={(e) => setForm({ ...form, renewalMonth: e.target.value })}
                         placeholder="December"
                       />
+                    </div>
+                    <div className="col-12">
+                      <div className="form-check">
+                        <input
+                          id="fleet-dot-regulated"
+                          className="form-check-input"
+                          type="checkbox"
+                          checked={form.dotRegulated}
+                          onChange={(e) => setForm({ ...form, dotRegulated: e.target.checked })}
+                        />
+                        <label className="form-check-label" htmlFor="fleet-dot-regulated">
+                          DOT regulated — requires DVIR to operate
+                        </label>
+                      </div>
+                      <p className="form-text mb-0">
+                        Leave unchecked for regular non-commercial assets that do not need a DVIR.
+                      </p>
                     </div>
                     <div className="col-12">
                       <button type="submit" className="btn btn-primary btn-sm" disabled={creating}>
@@ -998,13 +1091,20 @@ export function FleetWorkspace({ moduleName }: { moduleName: string }) {
               <table className="table table-hover mb-0">
               <thead>
                 <tr>
+                  {canPrintLabel ? (
+                    <th scope="col" style={{ width: 36 }}>
+                      <span className="visually-hidden">Select</span>
+                    </th>
+                  ) : null}
                   <th scope="col">Asset</th>
                   <th scope="col">Type</th>
                   <th scope="col">VIN</th>
                   <th scope="col">Location</th>
-                  <th scope="col">Driver</th>
+                  <th scope="col">DRIVER</th>
+                  <th scope="col">DOT</th>
                   <th scope="col">Status</th>
                   {tab === "compliance" ? <th scope="col">2290 / IRP / Ins</th> : null}
+                  <th scope="col">Actions</th>
                 </tr>
               </thead>
               <tbody className="table-border-bottom-0">
@@ -1013,7 +1113,6 @@ export function FleetWorkspace({ moduleName }: { moduleName: string }) {
                     key={String(item.id)}
                     role="button"
                     tabIndex={0}
-                    className={selected?.id === item.id ? "table-active" : undefined}
                     onClick={() => void openAsset(String(item.id))}
                     onKeyDown={(ev) => {
                       if (ev.key === "Enter" || ev.key === " ") {
@@ -1022,16 +1121,37 @@ export function FleetWorkspace({ moduleName }: { moduleName: string }) {
                       }
                     }}
                   >
+                    {canPrintLabel ? (
+                      <td onClick={(ev) => ev.stopPropagation()}>
+                        <input
+                          type="checkbox"
+                          className="form-check-input"
+                          checked={selectedAssetIds.includes(String(item.id))}
+                          onChange={(ev) => {
+                            const id = String(item.id ?? "");
+                            setSelectedAssetIds((prev) =>
+                              ev.target.checked
+                                ? prev.includes(id)
+                                  ? prev
+                                  : [...prev, id]
+                                : prev.filter((x) => x !== id),
+                            );
+                          }}
+                          aria-label={`Select ${labelOf(item)}`}
+                        />
+                      </td>
+                    ) : null}
                     <td>
                       <span className="fw-semibold text-primary">{labelOf(item)}</span>
                     </td>
-                    <td>{String(item.assetType ?? "")}</td>
-                    <td>{String(item.vin ?? "")}</td>
-                    <td>{String(item.locationName ?? "")}</td>
-                    <td>{String(item.assignedDriverName ?? "")}</td>
+                    <td>{fleetAssetTypeLabel(String(item.assetType ?? ""))}</td>
+                    <td>{String(item.vin ?? "") || "—"}</td>
+                    <td>{String(item.locationName ?? "") || "—"}</td>
+                    <td>{String(item.assignedDriverName ?? "") || "—"}</td>
+                    <td>{item.dotRegulated ? "Yes" : "No"}</td>
                     <td>
                       <span className={`badge ${fleetStatusBadgeClass(String(item.status ?? ""))}`}>
-                        {String(item.status ?? "—")}
+                        {fleetStatusLabel(String(item.status ?? ""))}
                       </span>
                     </td>
                     {tab === "compliance" ? (
@@ -1040,6 +1160,46 @@ export function FleetWorkspace({ moduleName }: { moduleName: string }) {
                         {item.insured === true ? "Y" : item.insured === false ? "N" : "—"}
                       </td>
                     ) : null}
+                    <td>
+                      <div className="d-flex flex-wrap gap-1">
+                        {canPrintLabel ? (
+                          <button
+                            type="button"
+                            className="btn btn-sm btn-outline-secondary"
+                            disabled={printQrBusyId === String(item.id)}
+                            onClick={(ev) => {
+                              ev.stopPropagation();
+                              void (async () => {
+                                const id = String(item.id ?? "");
+                                setPrintQrBusyId(id);
+                                setPrintError(null);
+                                try {
+                                  const qr = await ensureFleetDvirPrintQrPayload(item);
+                                  setPrintQrPayload(qr ?? null);
+                                  setPrintTarget(item);
+                                } catch (e) {
+                                  setPrintError(
+                                    formatApiErrorMessage(e, "Could not prepare label QR for print"),
+                                  );
+                                } finally {
+                                  setPrintQrBusyId(null);
+                                }
+                              })();
+                            }}
+                          >
+                            {printQrBusyId === String(item.id) ? "…" : "Print Label"}
+                          </button>
+                        ) : null}
+                        <a
+                          href={fleetAssetHref(String(item.id), { print: true })}
+                          className="btn btn-sm btn-outline-primary"
+                          onClick={(ev) => ev.stopPropagation()}
+                        >
+                          <i className="bx bx-printer me-1" aria-hidden />
+                          Report
+                        </a>
+                      </div>
+                    </td>
                   </tr>
                 ))}
               </tbody>
@@ -1050,314 +1210,6 @@ export function FleetWorkspace({ moduleName }: { moduleName: string }) {
         </>
         ) : null}
 
-        {!loading &&
-        selected &&
-        !["dashboard", "drivers", "reports", "settings"].includes(tab) ? (
-        <div className="card border shadow-none mt-4">
-          <div className="card-header d-flex justify-content-between align-items-center">
-            <div className="min-w-0">
-              <h6 className="card-title mb-0">{labelOf(selected)}</h6>
-              <p className="text-muted small mb-0 mt-1">
-                {String(selected.vin ?? "—")} · {String(selected.licensePlate ?? "—")}
-              </p>
-            </div>
-            <button
-              type="button"
-              className="btn btn-sm btn-outline-secondary"
-              onClick={() => setSelected(null)}
-            >
-              Close
-            </button>
-          </div>
-          <div className="card-body">
-          <div className="row g-3">
-            {(
-              [
-                ["make", "Make"],
-                ["model", "Model"],
-                ["color", "Color"],
-                ["vin", "VIN"],
-                ["licensePlate", "License"],
-                ["locationName", "Location"],
-                ["countyAssessed", "County"],
-                ["insuranceStatus", "Insurance status"],
-                ["form2290Status", "Form 2290"],
-                ["irpStatus", "IRP"],
-                ["commuteUseStatus", "Commute"],
-                ["notes", "Notes"],
-              ] as const
-            ).map(([key, label]) => (
-              <div className="col-md-4" key={key}>
-                <label className="form-label" htmlFor={`fleet-detail-${key}`}>
-                  {label}
-                </label>
-                <input
-                  id={`fleet-detail-${key}`}
-                  className="form-control form-control-sm"
-                  value={String(selected[key] ?? "")}
-                  disabled={!canManage}
-                  onChange={(e) => setSelected({ ...selected, [key]: e.target.value })}
-                />
-              </div>
-            ))}
-            <div className="col-md-4">
-              <label className="form-label" htmlFor="fleet-detail-insured">
-                Insured
-              </label>
-              <select
-                id="fleet-detail-insured"
-                className="form-select form-select-sm"
-                value={selected.insured === true ? "true" : selected.insured === false ? "false" : ""}
-                disabled={!canManage}
-                onChange={(e) =>
-                  setSelected({
-                    ...selected,
-                    insured: e.target.value === "" ? null : e.target.value === "true",
-                  })
-                }
-              >
-                <option value="">Unknown</option>
-                <option value="true">Yes</option>
-                <option value="false">No</option>
-              </select>
-            </div>
-            <div className="col-md-4">
-              <label className="form-label" htmlFor="fleet-detail-fringe">
-                Fringe SS excluded
-              </label>
-              <select
-                id="fleet-detail-fringe"
-                className="form-select form-select-sm"
-                value={
-                  selected.notOnVehicleFringeSs === true
-                    ? "true"
-                    : selected.notOnVehicleFringeSs === false
-                      ? "false"
-                      : ""
-                }
-                disabled={!canManage}
-                onChange={(e) =>
-                  setSelected({
-                    ...selected,
-                    notOnVehicleFringeSs:
-                      e.target.value === "" ? null : e.target.value === "true",
-                  })
-                }
-              >
-                <option value="">Unknown</option>
-                <option value="true">Yes</option>
-                <option value="false">No</option>
-              </select>
-            </div>
-          </div>
-          {canManage ? (
-            <div className="d-flex flex-wrap gap-2 mt-3">
-              <button type="button" className="btn btn-primary btn-sm" onClick={() => void saveSelected()}>
-                Save
-              </button>
-              <button type="button" className="btn btn-outline-warning btn-sm" onClick={() => void disposeSelected()}>
-                Mark removed
-              </button>
-              <button
-                type="button"
-                className="btn btn-outline-danger btn-sm"
-                onClick={() =>
-                  void apiSend(
-                    `/api/v1/industrial/fleet/vehicles/${String(selected.id)}/out-of-service`,
-                    "POST",
-                    { outOfService: true, reason: "Marked OOS from Fleet UI" },
-                  ).then((u) => setSelected(u as Record<string, unknown>))
-                }
-              >
-                Out of service
-              </button>
-            </div>
-          ) : null}
-
-          <div className="card border shadow-none mt-4">
-            <div className="card-header">
-              <h6 className="card-title mb-0">Assignment</h6>
-            </div>
-            <div className="card-body">
-          <div className="row g-2 align-items-end">
-            <div className="col-md-6">
-              <label className="form-label" htmlFor="fleet-assign-driver">
-                Driver name
-              </label>
-              <input
-                id="fleet-assign-driver"
-                className="form-control form-control-sm"
-                value={assignName}
-                onChange={(e) => setAssignName(e.target.value)}
-                disabled={!canManage}
-              />
-            </div>
-            {canManage ? (
-              <div className="col-md-auto">
-                <button type="button" className="btn btn-primary btn-sm" onClick={() => void assignDriver()}>
-                  Assign
-                </button>
-              </div>
-            ) : null}
-          </div>
-            </div>
-          </div>
-
-          <div className="card border shadow-none mt-4">
-            <div className="card-header">
-              <h6 className="card-title mb-0">Mileage / engine hours</h6>
-            </div>
-            <div className="card-body">
-          <div className="row g-2 align-items-end">
-            <div className="col-md-3">
-              <label className="form-label" htmlFor="fleet-mileage">
-                Mileage
-              </label>
-              <input
-                id="fleet-mileage"
-                className="form-control form-control-sm"
-                value={mileage}
-                onChange={(e) => setMileage(e.target.value)}
-                disabled={!canManage}
-              />
-            </div>
-            {canManage ? (
-              <div className="col-md-auto">
-                <button type="button" className="btn btn-outline-primary btn-sm" onClick={() => void saveMileage()}>
-                  Update mileage
-                </button>
-              </div>
-            ) : null}
-            <div className="col-md-3">
-              <label className="form-label" htmlFor="fleet-engine-hours">
-                Engine hours
-              </label>
-              <input
-                id="fleet-engine-hours"
-                className="form-control form-control-sm"
-                value={engineHours}
-                onChange={(e) => setEngineHours(e.target.value)}
-                disabled={!canManage}
-              />
-            </div>
-            {canManage ? (
-              <div className="col-md-auto">
-                <button type="button" className="btn btn-outline-primary btn-sm" onClick={() => void saveEngineHours()}>
-                  Update hours
-                </button>
-              </div>
-            ) : null}
-          </div>
-            </div>
-          </div>
-
-          {canManage ? (
-            <div className="card border shadow-none mt-4">
-              <div className="card-header">
-                <h6 className="card-title mb-0">Quick add</h6>
-              </div>
-              <div className="card-body">
-              <div className="row g-2 align-items-end">
-                <div className="col-md-3">
-                  <label className="form-label" htmlFor="fleet-maint-title">
-                    Maintenance
-                  </label>
-                  <input
-                    id="fleet-maint-title"
-                    className="form-control form-control-sm"
-                    value={maintTitle}
-                    onChange={(e) => setMaintTitle(e.target.value)}
-                  />
-                </div>
-                <div className="col-md-auto">
-                  <button
-                    type="button"
-                    className="btn btn-outline-secondary btn-sm"
-                    onClick={() =>
-                      void apiSend("/api/v1/industrial/fleet/maintenance", "POST", {
-                        vehicleId: selected.id,
-                        title: maintTitle || "PM / repair",
-                        maintenanceType: "PM",
-                      }).then(() => setMaintTitle(""))
-                    }
-                  >
-                    Add
-                  </button>
-                </div>
-                <div className="col-md-3">
-                  <label className="form-label" htmlFor="fleet-insp-title">
-                    Inspection
-                  </label>
-                  <input
-                    id="fleet-insp-title"
-                    className="form-control form-control-sm"
-                    value={inspTitle}
-                    onChange={(e) => setInspTitle(e.target.value)}
-                  />
-                </div>
-                <div className="col-md-auto">
-                  <button
-                    type="button"
-                    className="btn btn-outline-secondary btn-sm"
-                    onClick={() =>
-                      void apiSend("/api/v1/industrial/fleet/inspections", "POST", {
-                        vehicleId: selected.id,
-                        title: inspTitle || "Fleet inspection",
-                      }).then(() => setInspTitle(""))
-                    }
-                  >
-                    Add
-                  </button>
-                </div>
-                <div className="col-md-3">
-                  <label className="form-label" htmlFor="fleet-doc-title">
-                    Document
-                  </label>
-                  <input
-                    id="fleet-doc-title"
-                    className="form-control form-control-sm"
-                    value={docTitle}
-                    onChange={(e) => setDocTitle(e.target.value)}
-                  />
-                </div>
-                <div className="col-md-auto">
-                  <button
-                    type="button"
-                    className="btn btn-outline-secondary btn-sm"
-                    onClick={() =>
-                      void apiSend("/api/v1/industrial/fleet/documents", "POST", {
-                        vehicleId: selected.id,
-                        title: docTitle || "Fleet document",
-                        documentType: "OTHER",
-                      }).then(() => setDocTitle(""))
-                    }
-                  >
-                    Add
-                  </button>
-                </div>
-              </div>
-              </div>
-            </div>
-          ) : null}
-
-          {history ? (
-            <div className="card border shadow-none mt-4">
-              <div className="card-header">
-                <h6 className="card-title mb-0">History</h6>
-              </div>
-              <div className="card-body">
-              <p className="small text-muted mb-0">
-                Assignments: {Array.isArray(history.assignments) ? history.assignments.length : 0} ·
-                Mileage: {Array.isArray(history.mileage) ? history.mileage.length : 0} · Engine hours:{" "}
-                {Array.isArray(history.engineHours) ? history.engineHours.length : 0}
-              </p>
-              </div>
-            </div>
-          ) : null}
-          </div>
-        </div>
-        ) : null}
-
         {!loading && tab === "drivers" ? (
         <div className="card border shadow-none">
           <div className="table-responsive text-nowrap">
@@ -1365,7 +1217,7 @@ export function FleetWorkspace({ moduleName }: { moduleName: string }) {
             <thead>
               <tr>
                 <th scope="col">Name</th>
-                <th scope="col">Employee #</th>
+                <th scope="col">EMPLOYEE #</th>
                 <th scope="col">License</th>
                 <th scope="col">Status</th>
               </tr>
@@ -1386,11 +1238,11 @@ export function FleetWorkspace({ moduleName }: { moduleName: string }) {
                       <td>
                         {personnelId ? (
                           <Link href={personFileHref(personnelId)} className="fw-semibold">
-                            {String(d.personnelName ?? "Driver")}
+                            {personNameDisplay(String(d.personnelName ?? ""), "DRIVER")}
                           </Link>
                         ) : (
                           <Link href={COMPANY_DRIVERS_HREF} className="fw-semibold">
-                            {String(d.personnelName ?? "Driver")}
+                            {personNameDisplay(String(d.personnelName ?? ""), "DRIVER")}
                           </Link>
                         )}
                       </td>
@@ -1459,6 +1311,7 @@ export function FleetWorkspace({ moduleName }: { moduleName: string }) {
               <thead>
                 <tr>
                   <th scope="col">Asset</th>
+                  <th scope="col">Location</th>
                   <th scope="col">Bucket</th>
                   <th scope="col">Month</th>
                   <th scope="col">Date</th>
@@ -1467,7 +1320,7 @@ export function FleetWorkspace({ moduleName }: { moduleName: string }) {
               <tbody className="table-border-bottom-0">
                 {((renewals.items as Array<Record<string, unknown>>) ?? []).length === 0 ? (
                   <tr>
-                    <td colSpan={4}>
+                    <td colSpan={5}>
                       <FleetEmptyState icon="bx-calendar" message="No renewals in this bucket." />
                     </td>
                   </tr>
@@ -1488,6 +1341,7 @@ export function FleetWorkspace({ moduleName }: { moduleName: string }) {
                     <td>
                       <span className="fw-semibold text-primary">{labelOf(item)}</span>
                     </td>
+                    <td>{String(item.locationName ?? "") || "—"}</td>
                     <td>
                       <span className={`badge ${renewalBucketBadgeClass(String(item.renewalBucket ?? ""))}`}>
                         {renewalBucketLabel(String(item.renewalBucket ?? ""))}
@@ -1683,33 +1537,54 @@ export function FleetWorkspace({ moduleName }: { moduleName: string }) {
         ) : null}
 
         {!loading && tab === "reports" ? (
+        <>
+        <div className="alert alert-info" role="status">
+          Prefer the shared{" "}
+          <a href="/reporting/library/?q=fleet">Reporting Center</a> for catalog reports,
+          scheduling, and CSV/XLSX/PDF exports. One-click fleet CSVs below remain for convenience;
+          new custom reports should be saved under{" "}
+          <a href="/reporting/builder/?source=fleet.assets">Reporting → Custom builder</a>.
+        </div>
+        <FleetCustomReportBuilder onError={(msg) => setError(msg)} />
         <div className="card border shadow-none">
           <div className="card-header">
-            <h6 className="card-title mb-0">CSV exports</h6>
+            <h6 className="card-title mb-0">Standard CSV exports</h6>
           </div>
-          <div className="card-body d-flex flex-wrap gap-2">
+          <div className="card-body">
+            <p className="text-muted small mb-3">
+              One-click downloads for common fleet lists. Use the Reporting Center for scheduled
+              delivery and multi-format exports.
+            </p>
+            <div className="d-flex flex-wrap gap-2">
           {[
-            "inventory",
-            "registration",
-            "insurance",
-            "county",
-            "drivers",
-            "mileage",
-            "maintenance",
-            "2290",
-            "irp",
-            "fringe",
-            "commute",
-            "removed",
-            "history",
+            { id: "inventory", label: "Asset inventory" },
+            { id: "registration", label: "Registration" },
+            { id: "insurance", label: "Insurance" },
+            { id: "county", label: "County assessment" },
+            { id: "drivers", label: "DRIVERS" },
+            { id: "mileage", label: "Mileage" },
+            { id: "maintenance", label: "Maintenance" },
+            { id: "2290", label: "Form 2290" },
+            { id: "irp", label: "IRP" },
+            { id: "fringe", label: "Fringe" },
+            { id: "commute", label: "Commute" },
+            { id: "removed", label: "Removed assets" },
+            { id: "history", label: "History" },
           ].map((r) => (
-            <button key={r} type="button" className="btn btn-outline-primary btn-sm" onClick={() => void downloadReport(r)}>
+            <button
+              key={r.id}
+              type="button"
+              className="btn btn-outline-primary btn-sm"
+              onClick={() => void downloadReport(r.id)}
+            >
               <i className="bx bx-download me-1" />
-              Export {r}
+              {r.label}
             </button>
           ))}
+            </div>
           </div>
         </div>
+        </>
         ) : null}
 
         {!loading && tab === "settings" ? (
@@ -1788,6 +1663,42 @@ export function FleetWorkspace({ moduleName }: { moduleName: string }) {
         </div>
         ) : null}
       </ModuleWorkspaceTabs>
+
+      {printError ? (
+        <div className="alert alert-danger mx-3" role="alert">
+          {printError}
+        </div>
+      ) : null}
+
+      <ForgePrintDialog
+        open={printTarget != null || (batchPrintItems != null && batchPrintItems.length > 1)}
+        onClose={() => {
+          setPrintTarget(null);
+          setPrintQrPayload(null);
+          setBatchPrintItems(null);
+          if (batchPrintItems && batchPrintItems.length > 1) {
+            setSelectedAssetIds([]);
+          }
+        }}
+        module="FLEET"
+        recordType="fleet_vehicle"
+        {...(printTarget?.id ? { recordId: String(printTarget.id) } : {})}
+        defaultTitle={
+          batchPrintItems && batchPrintItems.length > 1
+            ? `PRINT ${batchPrintItems.length} LABELS`
+            : "PRINT LABEL"
+        }
+        fieldValues={
+          printTarget
+            ? fleetAssetPrintFieldValues(printTarget, {
+                ...(printQrPayload ? { qrPayload: printQrPayload } : {}),
+              })
+            : batchPrintItems?.[0]?.fieldValues ?? {}
+        }
+        {...(batchPrintItems && batchPrintItems.length > 1
+          ? { items: batchPrintItems }
+          : {})}
+      />
     </section>
   );
 }

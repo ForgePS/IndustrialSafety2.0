@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useRef } from "react";
 import type { WorkspaceLayoutItem, WorkspaceModuleDefinition, WorkspaceWidgetSize } from "@/lib/workspace/types";
 import { WORKSPACE_SIZE_LABELS, WORKSPACE_VIEW_LABELS } from "@/lib/workspace/types";
 import { workspaceMinHeight } from "@/lib/workspace/sizing";
@@ -218,6 +219,7 @@ export function WorkspaceCard(props: Props) {
   /** Corrective Actions has no dedicated module page yet — open Inspections. */
   const openRoute =
     definition.key === "CORRECTIVE_ACTIONS" ? "/modules/inspections" : definition.route;
+  const allowDragRef = useRef(false);
   const canExpand =
     canResize &&
     definition.widgetEnabled &&
@@ -273,7 +275,11 @@ export function WorkspaceCard(props: Props) {
         style={{ minHeight: workspaceMinHeight(item.size) }}
         draggable={dragEnabled}
         onDragStart={(event) => {
-          if (!dragEnabled) return;
+          if (!dragEnabled || !allowDragRef.current) {
+            event.preventDefault();
+            return;
+          }
+          event.stopPropagation();
           event.dataTransfer.effectAllowed = "move";
           event.dataTransfer.setData("text/plain", definition.key);
           onDragStart(definition.key);
@@ -281,22 +287,58 @@ export function WorkspaceCard(props: Props) {
         onDragOver={(event) => {
           if (!dragEnabled) return;
           event.preventDefault();
+          event.stopPropagation();
           onDragOver(definition.key);
         }}
-        onDragEnd={() => onDragEnd()}
+        onDragEnd={(event) => {
+          event.stopPropagation();
+          allowDragRef.current = false;
+          onDragEnd();
+        }}
         data-module-key={definition.key}
         data-size={item.size}
       >
         {editing ? (
-          <div className="card-body p-3 h-100 d-flex flex-column">
-            <div className="d-flex align-items-center gap-2 mb-2">
-              <span className="forge-ws-drag text-muted" aria-hidden="true" title="Drag to reorder">
-                <i className="bx bx-menu" />
+          <div className="card-body p-3 h-100 d-flex flex-column forge-ws-card-edit">
+            <div className="forge-ws-card-edit__header">
+              <button
+                type="button"
+                className="btn btn-sm btn-icon forge-ws-drag text-muted flex-shrink-0"
+                title="Drag to reorder"
+                aria-label={`Drag ${definition.label}`}
+                onMouseDown={() => {
+                  allowDragRef.current = true;
+                }}
+                onTouchStart={() => {
+                  allowDragRef.current = true;
+                }}
+                onMouseUp={() => {
+                  allowDragRef.current = false;
+                }}
+              >
+                <i className="bx bx-menu" aria-hidden="true" />
+              </button>
+              <span className="fw-semibold forge-ws-card-edit__title" title={definition.label}>
+                {definition.label}
               </span>
-              <span className="fw-semibold text-truncate flex-grow-1">{definition.label}</span>
+              {canHide ? (
+                <button
+                  type="button"
+                  className="btn btn-sm btn-icon rounded-pill text-danger flex-shrink-0"
+                  aria-label={`Hide ${definition.label}`}
+                  onClick={onHide}
+                >
+                  <i className="bx bx-x bx-sm" aria-hidden="true" />
+                </button>
+              ) : (
+                <span className="badge bg-label-secondary flex-shrink-0" title="Required by company policy">
+                  Required
+                </span>
+              )}
+            </div>
+            <div className="forge-ws-card-edit__controls">
               <select
                 className="form-select form-select-sm"
-                style={{ width: "auto", maxWidth: "8rem" }}
                 aria-label={`${definition.label} size`}
                 value={item.size}
                 disabled={!canResize}
@@ -308,22 +350,8 @@ export function WorkspaceCard(props: Props) {
                   </option>
                 ))}
               </select>
-              {canHide ? (
-                <button
-                  type="button"
-                  className="btn btn-sm btn-icon rounded-pill text-danger"
-                  aria-label={`Hide ${definition.label}`}
-                  onClick={onHide}
-                >
-                  <i className="bx bx-x bx-sm" aria-hidden="true" />
-                </button>
-              ) : (
-                <span className="badge bg-label-secondary" title="Required by company policy">
-                  Required
-                </span>
-              )}
             </div>
-            <span className="text-muted small text-truncate" title={caption}>
+            <span className="text-muted small mt-1" title={caption}>
               {caption}
             </span>
           </div>

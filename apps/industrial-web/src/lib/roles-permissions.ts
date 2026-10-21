@@ -5,6 +5,17 @@
 
 import { matchesSearchTokens, matchesSearchTokensAnywhere } from "@/lib/search-text";
 import { canAccessUserManagement } from "@/lib/user-management";
+import {
+  industrialModulesWithRoleAccess,
+  mergePermissionCodesWithModules,
+  moduleCodesFromPermissionCodes,
+} from "@forge/contracts";
+
+export {
+  mergePermissionCodesWithModules,
+  moduleCodesFromPermissionCodes,
+  industrialModulesWithRoleAccess,
+};
 
 export const ROLES_PAGE_SIZES = [10, 25, 50] as const;
 export const DEFAULT_ROLES_PAGE_SIZE = 10;

@@ -128,8 +128,8 @@ function rowsFor(
 ): PersonnelFileRow[] {
   const rows: PersonnelFileRow[] = [];
   for (const field of fields) {
-    // Signature and license photos render as images, not text rows.
-    if (field.type === "signature" || field.type === "image") continue;
+    // Signature, license photos, and certification file copies render specially.
+    if (field.type === "signature" || field.type === "image" || field.type === "file") continue;
     const value = valueFor(field, record, resolve);
     if (value === "") continue;
     rows.push({

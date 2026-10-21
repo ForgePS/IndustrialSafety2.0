@@ -1,8 +1,10 @@
 "use client";
 import { useEffect, useState } from "react";
 import { ApiError, apiGet, apiSend } from "@forge/web-kit";
+import { ForgePrintButton } from "@/components/forge-print-button";
 import { ModuleWorkspaceHeader } from "@/components/module-workspace-header";
 import { ModuleWorkspaceTabs } from "@/components/module-workspace-tabs";
+import { emergencyRecordPrintFieldValues } from "@/lib/module-print-fields";
 
 const categories = ["eap", "scenarios", "drills", "responseTeams", "jsas"] as const;
 type RecordRow = {
@@ -66,10 +68,10 @@ export function EmergencyResponseWorkspace({ moduleName }: { moduleName: string 
   }
 
   return (
-    <section aria-labelledby="emergency-title">
+    <section aria-labelledby="emergency-title" data-walkthrough="emergency-response">
       <ModuleWorkspaceHeader
         id="emergency-title"
-        eyebrow="Coordination"
+        eyebrow="Emergency Management"
         title={moduleName}
         description="Compliance plans, scenarios, drills, response teams, and JSAs. This is not a CAD or 911 dispatch surface."
         onRefresh={() => void load()}
@@ -155,6 +157,9 @@ export function EmergencyResponseWorkspace({ moduleName }: { moduleName: string 
                 <th scope="col">Status</th>
                 <th scope="col">Plan</th>
                 <th scope="col">Event date</th>
+                <th scope="col" className="text-end">
+                  Actions
+                </th>
               </tr>
             </thead>
             <tbody>
@@ -166,6 +171,14 @@ export function EmergencyResponseWorkspace({ moduleName }: { moduleName: string 
                   </td>
                   <td className="text-muted">{item.planId ?? "—"}</td>
                   <td className="text-muted">{item.eventDate ?? "—"}</td>
+                  <td className="text-end">
+                    <ForgePrintButton
+                      module="EMERGENCY_RESPONSE"
+                      recordType="emergency_record"
+                      recordId={item.id}
+                      fieldValues={emergencyRecordPrintFieldValues(item as unknown as Record<string, unknown>)}
+                    />
+                  </td>
                 </tr>
               ))}
             </tbody>
