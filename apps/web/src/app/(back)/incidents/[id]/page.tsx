@@ -1,14 +1,21 @@
 import { notFound } from 'next/navigation'
-import { assetWithinScope } from '@/lib/forgeAssets'
+
 import type { Metadata } from 'next'
 import { Badge } from '@repo/ui/components/ui/badge'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@repo/ui/components/ui/card'
 import { createServiceRoleClient } from '@repo/supabase/server'
+
+import { assetWithinScope } from '@/lib/forgeAssets'
 import IncidentRecordForm from '../IncidentRecordForm'
 import IncidentWorkflowActions from '../IncidentWorkflowActions'
 import IncidentEquipment from '../IncidentEquipment'
 import IncidentCrossModuleActions from '../IncidentCrossModuleActions'
+import IncidentOshaPanel from '../IncidentOshaPanel'
 import type { IncidentFormValues } from '../actions'
+import { oshaRecordWithinScope } from '@/lib/forgeOsha'
+import { OSHA_RECORDABILITY_LABELS } from '@/lib/forgeOshaRules'
+import type { OshaRecordability } from '@/lib/forgeOshaRules'
+import { getPersonnelStructureOptions } from '@/lib/forgePersonnelStructure'
 import { getEffectiveForm } from '@/lib/forgeForms'
 import { getEffectiveLookup } from '@/lib/forgeLookups'
 import { getIncidentActivity, incidentWithinScope } from '@/lib/forgeIncidents'
@@ -104,26 +111,33 @@ const IncidentDetailPage = async ({ params }: { params: Promise<{ id: string }> 
   let linkedEquipment: Array<{
     linkId: string; assetId: string; assetNumber: string; name: string; status: string; condition: string
   }> = []
+
   if (assetViewPermission) {
     const { data: links, error: linkError } = await supabase.from('forge_incident_assets')
       .select('id, asset_id')
       .eq('organization_id', organizationId)
       .eq('incident_id', id)
       .order('linked_at', { ascending: true })
+
     if (linkError) throw new Error('Unable to load related equipment: ' + linkError.message)
+
     if (links?.length) {
       const { data: linkedAssets, error: assetsError } = await supabase.from('forge_assets')
         .select('id, organization_id, asset_number, name, status, condition, custodian_user_id, location_id, division_id')
         .eq('organization_id', organizationId)
         .in('id', links.map((link: any) => link.asset_id))
+
       if (assetsError) throw new Error('Unable to load related assets: ' + assetsError.message)
+
       const visible = await Promise.all((linkedAssets || []).map(async (asset: any) => ({
         asset,
         allowed: await assetWithinScope({
           organizationId, userId: context.user.id, scope: assetViewPermission.scope, asset
         })
       })))
+
       const byId = new Map(visible.filter(item => item.allowed).map(item => [item.asset.id, item.asset]))
+
       linkedEquipment = links.flatMap((link: any) => {
         const asset = byId.get(link.asset_id) as any
         return asset ? [{
@@ -131,6 +145,68 @@ const IncidentDetailPage = async ({ params }: { params: Promise<{ id: string }> 
           name: asset.name, status: asset.status, condition: asset.condition
         }] : []
       })
+    }
+  }
+
+  // OSHA panel: shown to OSHA viewers whose scope reaches this incident's establishment.
+  const oshaViewPermission = permissionByKey.get('osha.view')
+  const oshaEditPermission = permissionByKey.get('osha.edit')
+
+  const oshaRecordRef = {
+    organization_id: organizationId,
+    location_id: incident.location_id,
+    division_id: incident.division_id,
+    created_by: context.user.id
+  }
+
+  const [canViewOsha, canOpenOsha] = await Promise.all([
+    oshaViewPermission
+      ? oshaRecordWithinScope({ organizationId, userId: context.user.id, scope: oshaViewPermission.scope, record: oshaRecordRef })
+      : Promise.resolve(false),
+    oshaEditPermission
+      ? oshaRecordWithinScope({ organizationId, userId: context.user.id, scope: oshaEditPermission.scope, record: oshaRecordRef })
+      : Promise.resolve(false)
+  ])
+
+  const injuryRelated = incident.involves_injury || incident.incident_type === 'injury' || incident.osha_review_flag
+  let oshaPanel: null | {
+    cases: Array<{ id: string; caseNumber: string; employeeName: string; decision: string; status: string }>
+    people: Array<{ id: string; label: string }>
+    defaultPersonnelId: string | null
+  } = null
+
+  if (canViewOsha) {
+    const [{ data: oshaCases }, { data: injuredPeople }] = await Promise.all([
+      supabase
+        .from('forge_osha_cases')
+        .select('id, case_number, employee_name, recordability, status')
+        .eq('organization_id', organizationId)
+        .eq('incident_id', id)
+        .order('created_at'),
+      supabase
+        .from('forge_incident_people')
+        .select('personnel_id')
+        .eq('organization_id', organizationId)
+        .eq('incident_id', id)
+        .eq('role', 'injured')
+        .not('personnel_id', 'is', null)
+        .limit(1)
+    ])
+
+    if (injuryRelated || (oshaCases || []).length) {
+      const structure = canOpenOsha ? await getPersonnelStructureOptions({ organizationId }) : null
+
+      oshaPanel = {
+        cases: (oshaCases || []).map((item: any) => ({
+          id: item.id,
+          caseNumber: item.case_number,
+          employeeName: item.employee_name,
+          decision: OSHA_RECORDABILITY_LABELS[item.recordability as OshaRecordability],
+          status: item.status
+        })),
+        people: structure?.supervisors || [],
+        defaultPersonnelId: injuredPeople?.[0]?.personnel_id || incident.reported_by_personnel_id || null
+      }
     }
   }
 
@@ -252,6 +328,16 @@ const IncidentDetailPage = async ({ params }: { params: Promise<{ id: string }> 
           </CardContent>
         </Card>
       )}
+
+      {oshaPanel ? (
+        <IncidentOshaPanel
+          incidentId={incident.id}
+          cases={oshaPanel.cases}
+          people={oshaPanel.people}
+          defaultPersonnelId={oshaPanel.defaultPersonnelId}
+          canOpen={Boolean(canOpenOsha)}
+        />
+      ) : null}
 
       {assetViewPermission ? <IncidentEquipment incidentId={incident.id} equipment={linkedEquipment} canEdit={canEdit} /> : null}
 
