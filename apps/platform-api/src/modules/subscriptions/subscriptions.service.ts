@@ -19,6 +19,45 @@ import { OutboxService } from "../outbox/outbox.service.js";
 
 type ExpectedVersion = number | "*";
 
+type SubscriptionPlanSummary = {
+  id: string;
+  code: string;
+  name: string;
+  billingInterval: string;
+};
+
+function enrichSubscription(
+  row: {
+    id: string;
+    tenantId: string;
+    planId: string;
+    status: string;
+    billingProvider: string;
+    billingType: string;
+    externalSubscriptionId: string | null;
+    cancelAtPeriodEnd: boolean;
+    recordVersion: number;
+    startsAt: Date;
+    currentPeriodStart: Date;
+    currentPeriodEnd: Date;
+    createdAt: Date;
+    updatedAt: Date;
+    [key: string]: unknown;
+  },
+  plan: SubscriptionPlanSummary | undefined,
+) {
+  return {
+    ...row,
+    planCode: plan?.code ?? null,
+    planName: plan?.name ?? null,
+    billingInterval: plan?.billingInterval ?? null,
+    billingCycle: plan?.billingInterval ?? null,
+    renewsAt: row.currentPeriodEnd.toISOString(),
+    endsAt: row.currentPeriodEnd.toISOString(),
+    startedAt: row.startsAt.toISOString(),
+  };
+}
+
 const createSchema = z.object({
   planCode: z.string().min(1).max(64),
   status: z.enum(["TRIAL", "ACTIVE", "GRACE"]).default("TRIAL"),
@@ -104,16 +143,25 @@ export class SubscriptionsService {
         requestId: principal.requestId,
         after: row,
       });
-      return row;
+      return enrichSubscription(row, plan);
     }, principal.userId);
   }
 
   async list(tenantId: string) {
     return withTenantTransaction(this.db, tenantId, async (tx) => {
-      return tx.query.subscriptions.findMany({
+      const rows = await tx.query.subscriptions.findMany({
         where: eq(subscriptions.tenantId, tenantId),
         orderBy: (t, { desc: d }) => [d(t.createdAt)],
       });
+      const planIds = [...new Set(rows.map((row) => row.planId))];
+      const plans =
+        planIds.length > 0
+          ? await tx.query.subscriptionPlans.findMany({
+              where: inArray(subscriptionPlans.id, planIds),
+            })
+          : [];
+      const planById = new Map(plans.map((plan) => [plan.id, plan]));
+      return rows.map((row) => enrichSubscription(row, planById.get(row.planId)));
     });
   }
 
@@ -129,7 +177,10 @@ export class SubscriptionsService {
       if (!row) {
         throw new ForgeError("NOT_FOUND", "No current subscription");
       }
-      return row;
+      const plan = await tx.query.subscriptionPlans.findFirst({
+        where: eq(subscriptionPlans.id, row.planId),
+      });
+      return enrichSubscription(row, plan ?? undefined);
     });
   }
 

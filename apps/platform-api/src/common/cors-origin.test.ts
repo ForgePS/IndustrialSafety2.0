@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { isOriginAllowed, parseCorsOriginRules } from "./cors-origin.js";
+import { isLocalDevOrigin, isOriginAllowed, parseCorsOriginRules } from "./cors-origin.js";
 
 describe("parseCorsOriginRules", () => {
   it("normalizes exact origins and host suffixes", () => {
@@ -30,6 +30,13 @@ describe("isOriginAllowed", () => {
     expect(isOriginAllowed("https://producers-rice-mill.forgepublicsafety.com", rules)).toBe(
       true,
     );
+  });
+
+  it("allows loopback dev servers on any port when APP_ENV is local", () => {
+    expect(isLocalDevOrigin("http://localhost:3004")).toBe(true);
+    expect(isLocalDevOrigin("http://127.0.0.1:4000")).toBe(true);
+    expect(isLocalDevOrigin("https://localhost:3004")).toBe(false);
+    expect(isLocalDevOrigin("http://evil.localhost")).toBe(false);
   });
 
   it("rejects foreign origins", () => {

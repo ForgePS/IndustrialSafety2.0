@@ -1,9 +1,10 @@
 import "reflect-metadata";
 import { NestFactory } from "@nestjs/core";
+import type { NestExpressApplication } from "@nestjs/platform-express";
 import { LOCAL_PLACEHOLDER_ENV, loadEnvironmentAsync } from "@forge/environment";
 import { createLogger } from "@forge/observability";
 import { AppModule } from "./app.module.js";
-import { isOriginAllowed, parseCorsOriginRules } from "./common/cors-origin.js";
+import { isLocalDevOrigin, isOriginAllowed, parseCorsOriginRules } from "./common/cors-origin.js";
 import { CorrelationIdMiddleware } from "./correlation.middleware.js";
 
 async function bootstrap(): Promise<void> {
@@ -13,10 +14,17 @@ async function bootstrap(): Promise<void> {
     environment: env.APP_ENV,
   });
 
-  const app = await NestFactory.create(AppModule.register(env), {
+  const app = await NestFactory.create<NestExpressApplication>(AppModule.register(env), {
     logger: false,
     rawBody: true,
   });
+
+  app.disable("x-powered-by");
+
+  // Fleet / inspection inline photo uploads use data URLs up to ~3.5 MB.
+  // Form checklist PDF imports send base64 in JSON.
+  app.useBodyParser("json", { limit: "20mb" });
+  app.useBodyParser("urlencoded", { limit: "20mb", extended: true });
 
   app.use(new CorrelationIdMiddleware().use.bind(new CorrelationIdMiddleware()));
   const rateLimit = new (await import("./common/rate-limit.middleware.js")).RateLimitMiddleware({
@@ -28,7 +36,15 @@ async function bootstrap(): Promise<void> {
   app.enableCors({
     origin: (origin: string | undefined, callback: (err: Error | null, allow: boolean) => void) => {
       // Server-to-server callers send no Origin and are not subject to CORS.
-      callback(null, origin ? isOriginAllowed(origin, corsRules) : true);
+      if (!origin) {
+        callback(null, true);
+        return;
+      }
+      if (env.APP_ENV === "local" && isLocalDevOrigin(origin)) {
+        callback(null, true);
+        return;
+      }
+      callback(null, isOriginAllowed(origin, corsRules));
     },
     credentials: true,
     allowedHeaders: [
@@ -38,6 +54,7 @@ async function bootstrap(): Promise<void> {
       "If-Match",
       "X-Correlation-Id",
       "X-Request-Id",
+      "X-Forge-Csrf",
       "X-Forge-Dev-Principal",
       "X-Forge-Dev-User",
       "X-Tenant-Id",

@@ -17,7 +17,7 @@ import {
   MULTIPART_THRESHOLD_BYTES,
   nextStatusForAction,
   nextStatusForS3Action,
-  REFERENCE_MALWARE_PROVIDER_KEY,
+  resolveImportMalwareProviderKey,
   type ImportJobStatus,
 } from "@forge/imports";
 import type { ForgeEnvironment } from "@forge/environment";
@@ -56,7 +56,7 @@ export class ImportUploadService {
   private assertScannerAllowed(): void {
     const gate = assertScannerAllowedForEnvironment({
       appEnv: this.env.APP_ENV,
-      providerKey: REFERENCE_MALWARE_PROVIDER_KEY,
+      providerKey: resolveImportMalwareProviderKey(this.env.IMPORT_MALWARE_PROVIDER_KEY),
     });
     if (!gate.ok) {
       throw new ForgeError(gate.code, gate.message);

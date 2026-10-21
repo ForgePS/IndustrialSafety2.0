@@ -499,19 +499,21 @@ export class EntitlementsService {
       if (!product) {
         throw new ForgeError("NOT_FOUND", "Product not found");
       }
-      const mod = await tx.query.platformModules.findFirst({
+      const existing = await tx.query.platformModules.findFirst({
         where: and(
           eq(platformModules.productId, product.id),
           eq(platformModules.code, moduleCode),
         ),
       });
-      if (!mod) {
-        throw new ForgeError(
-          "NOT_FOUND",
-          `Module ${moduleCode} was not found for product ${productCode}`,
-        );
-      }
-      return mod;
+      if (existing) return existing;
+
+      const ensured = await this.ensureCatalogPlatformModule(tx, product.id, productCode, moduleCode);
+      if (ensured) return ensured;
+
+      throw new ForgeError(
+        "NOT_FOUND",
+        `Module ${moduleCode} was not found for product ${productCode}`,
+      );
     }
 
     const matches = await tx.query.platformModules.findMany({
@@ -527,6 +529,50 @@ export class EntitlementsService {
       );
     }
     return matches[0]!;
+  }
+
+  /**
+   * Backfill a missing platform_modules row from the contracts catalog.
+   * Production DBs can lag the registry when new industrial modules are added.
+   */
+  private async ensureCatalogPlatformModule(
+    tx: DatabaseTransaction,
+    productId: string,
+    productCode: string,
+    moduleCode: string,
+  ): Promise<typeof platformModules.$inferSelect | null> {
+    const catalog = findCatalogModule(productCode, moduleCode);
+    if (!catalog) return null;
+
+    const now = new Date();
+    const [inserted] = await tx
+      .insert(platformModules)
+      .values({
+        id: createId(),
+        productId,
+        code: catalog.code,
+        name: catalog.name,
+        description: catalog.description ?? null,
+        status: "ACTIVE",
+        isCore: catalog.classification === "PLATFORM_CORE",
+        category: catalog.category,
+        classification: catalog.classification,
+        implementationStatus: catalog.implementationStatus,
+        customerAssignable: catalog.customerAssignable,
+        displayOrder: catalog.displayOrder,
+        createdAt: now,
+        updatedAt: now,
+      })
+      .onConflictDoNothing()
+      .returning();
+
+    if (inserted) return inserted;
+
+    return (
+      (await tx.query.platformModules.findFirst({
+        where: and(eq(platformModules.productId, productId), eq(platformModules.code, moduleCode)),
+      })) ?? null
+    );
   }
 
   private async assertProductActiveForModule(

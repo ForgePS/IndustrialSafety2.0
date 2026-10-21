@@ -94,27 +94,31 @@ export class AuthProfileService {
     private readonly audit: AuditService,
   ) {}
 
-  async get(principal: ForgePrincipal): Promise<AuthProfile> {
+  async get(principal: ForgePrincipal, targetUserId?: string | null): Promise<AuthProfile> {
+    const userId = (targetUserId ?? "").trim() || principal.userId;
+    if (userId !== principal.userId && !canEditAuthProfile(principal, userId)) {
+      throw new ForgeError("FORBIDDEN", "You do not have permission to view this profile");
+    }
     return withTenantTransaction(this.db, principal.tenantId, async (tx) => {
       const user = await tx.query.users.findFirst({
-        where: eq(users.id, principal.userId),
+        where: and(eq(users.id, userId), eq(users.tenantId, principal.tenantId)),
       });
-      const person =
-        user?.personId ?? principal.personId
-          ? await tx.query.persons.findFirst({
-              where: and(
-                eq(persons.id, (user?.personId ?? principal.personId)!),
-                eq(persons.tenantId, principal.tenantId),
-              ),
-            })
-          : null;
+      if (!user && userId !== principal.userId) {
+        throw new ForgeError("NOT_FOUND", "User not found on this tenant");
+      }
+      const linkedPersonId = user?.personId ?? (userId === principal.userId ? principal.personId : null);
+      const person = linkedPersonId
+        ? await tx.query.persons.findFirst({
+            where: and(eq(persons.id, linkedPersonId), eq(persons.tenantId, principal.tenantId)),
+          })
+        : null;
       const personnel = await this.findPersonnel(
         tx,
         principal.tenantId,
-        principal.userId,
+        userId,
         user?.primaryEmail ?? null,
       );
-      const roleList = await this.loadRoles(tx, principal.tenantId, principal.userId);
+      const roleList = await this.loadRoles(tx, principal.tenantId, userId);
       return this.toProfile(
         principal,
         user ?? null,
@@ -130,14 +134,16 @@ export class AuthProfileService {
     principal: ForgePrincipal,
     input: unknown,
     expectedVersion: ExpectedVersion,
+    targetUserId?: string | null,
   ): Promise<AuthProfile> {
-    if (!canEditAuthProfile(principal, principal.userId)) {
+    const userId = (targetUserId ?? "").trim() || principal.userId;
+    if (!canEditAuthProfile(principal, userId)) {
       throw new ForgeError("FORBIDDEN", "You do not have permission to edit this profile");
     }
     const data = patchProfileSchema.parse(input);
     return withTenantTransaction(this.db, principal.tenantId, async (tx) => {
       const user = await tx.query.users.findFirst({
-        where: eq(users.id, principal.userId),
+        where: and(eq(users.id, userId), eq(users.tenantId, principal.tenantId)),
       });
       if (!user) {
         throw new ForgeError("NOT_FOUND", "User not found on this tenant");
@@ -248,7 +254,7 @@ export class AuthProfileService {
       const personnel = await this.findPersonnel(
         tx,
         principal.tenantId,
-        principal.userId,
+        userId,
         user.primaryEmail,
       );
       const personnelId = personnel?.id ?? null;
@@ -286,7 +292,7 @@ export class AuthProfileService {
       }
 
       const refreshedUser = await tx.query.users.findFirst({
-        where: eq(users.id, principal.userId),
+        where: eq(users.id, userId),
       });
       await this.audit.writeInTransaction(tx, {
         tenantId: principal.tenantId,
@@ -300,9 +306,9 @@ export class AuthProfileService {
         riskLevel: "LOW",
         correlationId: principal.correlationId,
         requestId: principal.requestId,
-        after: { personId: person.id, userId: principal.userId },
+        after: { personId: person.id, userId },
       });
-      const roleList = await this.loadRoles(tx, principal.tenantId, principal.userId);
+      const roleList = await this.loadRoles(tx, principal.tenantId, userId);
       return this.toProfile(
         principal,
         refreshedUser ?? user,

@@ -7,7 +7,7 @@ import {
   type DatabaseTransaction,
   withTenantTransaction,
 } from "@forge/database";
-import { eq, sql } from "drizzle-orm";
+import { and, eq, sql } from "drizzle-orm";
 import { DATABASE } from "../../tokens.js";
 
 @Injectable()
@@ -44,15 +44,25 @@ export class AuditService {
     return id;
   }
 
-  async list(tenantId: string, page = 1, pageSize = 25) {
+  async list(
+    tenantId: string,
+    page = 1,
+    pageSize = 25,
+    filters: { actorUserId?: string } = {},
+  ) {
     return withTenantTransaction(this.db, tenantId, async (tx) => {
+      const actorUserId = (filters.actorUserId ?? "").trim();
+      const whereClause = actorUserId
+        ? and(eq(auditEvents.tenantId, tenantId), eq(auditEvents.actorUserId, actorUserId))
+        : eq(auditEvents.tenantId, tenantId);
+
       const [countRow] = await tx
         .select({ count: sql<number>`count(*)::int` })
         .from(auditEvents)
-        .where(eq(auditEvents.tenantId, tenantId));
+        .where(whereClause);
       const total = countRow?.count ?? 0;
       const rows = await tx.query.auditEvents.findMany({
-        where: eq(auditEvents.tenantId, tenantId),
+        where: whereClause,
         orderBy: (t, { desc }) => [desc(t.occurredAt)],
         limit: pageSize,
         offset: (page - 1) * pageSize,

@@ -1,8 +1,11 @@
-import { Body, Controller, Get, Param, Patch, Post, Req } from "@nestjs/common";
+import { Body, Controller, Get, Param, Patch, Post, Put, Req } from "@nestjs/common";
 import { ForgeError } from "@forge/errors";
 import { ok } from "../../common/api-response.js";
 import { getRequestIds, type RequestWithIds } from "../../common/request-ids.js";
-import { RequirePermission } from "../auth-context/require-permission.decorator.js";
+import {
+  RequireAnyPermission,
+  RequirePermission,
+} from "../auth-context/require-permission.decorator.js";
 import { IndustrialService } from "./industrial.service.js";
 
 @Controller("api/v1/tenants/:tenantId/industrial")
@@ -31,6 +34,48 @@ export class IndustrialController {
     return ok(data, getRequestIds(req));
   }
 
+  @Post("sites")
+  @RequirePermission("industrial.access", {
+    requiresEntitlement: { productCode: "FORGE_INDUSTRIAL" },
+  })
+  async createSite(
+    @Param("tenantId") tenantId: string,
+    @Body() body: Record<string, unknown>,
+    @Req() req: RequestWithIds,
+  ) {
+    const input: Parameters<IndustrialService["createSite"]>[1] = {
+      name: String(body.name ?? ""),
+    };
+    if (typeof body.siteKey === "string" && body.siteKey.trim() !== "") {
+      input.siteKey = body.siteKey.trim();
+    }
+    if (typeof body.timezone === "string" && body.timezone.trim() !== "") {
+      input.timezone = body.timezone.trim();
+    }
+    const data = await this.industrial.createSite(tenantId, input);
+    return ok(data, getRequestIds(req));
+  }
+
+  @Patch("sites/:siteId")
+  @RequirePermission("industrial.access", {
+    requiresEntitlement: { productCode: "FORGE_INDUSTRIAL" },
+  })
+  async updateSite(
+    @Param("tenantId") tenantId: string,
+    @Param("siteId") siteId: string,
+    @Body() body: Record<string, unknown>,
+    @Req() req: RequestWithIds,
+  ) {
+    if (body.archive === true || body.status === "ARCHIVED") {
+      const data = await this.industrial.archiveSite(tenantId, siteId);
+      return ok(data, getRequestIds(req));
+    }
+    const data = await this.industrial.updateSite(tenantId, siteId, {
+      name: String(body.name ?? ""),
+    });
+    return ok(data, getRequestIds(req));
+  }
+
   @Get("departments")
   @RequirePermission("industrial.access", {
     requiresEntitlement: { productCode: "FORGE_INDUSTRIAL" },
@@ -53,7 +98,54 @@ export class IndustrialController {
       name: String(body.name ?? ""),
     };
     if (typeof body.description === "string") input.description = body.description;
+    if (typeof body.siteId === "string" && body.siteId.trim() !== "") {
+      input.siteId = body.siteId.trim();
+    }
+    if (typeof body.divisionName === "string") {
+      input.divisionName = body.divisionName.trim() || null;
+    }
     const data = await this.industrial.createDepartment(tenantId, input);
+    return ok(data, getRequestIds(req));
+  }
+
+  @Patch("departments/:id")
+  @RequirePermission("industrial.access", {
+    requiresEntitlement: { productCode: "FORGE_INDUSTRIAL" },
+  })
+  async updateDepartment(
+    @Param("tenantId") tenantId: string,
+    @Param("id") id: string,
+    @Body() body: Record<string, unknown>,
+    @Req() req: RequestWithIds,
+  ) {
+    if (body.archive === true || body.status === "ARCHIVED") {
+      const data = await this.industrial.archiveDepartment(tenantId, id);
+      return ok(data, getRequestIds(req));
+    }
+    const input: { name?: string; siteId?: string | null; divisionName?: string | null } = {};
+    if (body.name !== undefined && body.name !== null) {
+      input.name = String(body.name);
+    }
+    if (body.siteId !== undefined) {
+      input.siteId =
+        typeof body.siteId === "string" && body.siteId.trim() !== ""
+          ? body.siteId.trim()
+          : null;
+    }
+    if (body.divisionName !== undefined) {
+      input.divisionName =
+        typeof body.divisionName === "string" && body.divisionName.trim() !== ""
+          ? body.divisionName.trim()
+          : null;
+    }
+    if (
+      input.name === undefined &&
+      input.siteId === undefined &&
+      input.divisionName === undefined
+    ) {
+      throw new ForgeError("VALIDATION_FAILED", "name, siteId, or divisionName is required");
+    }
+    const data = await this.industrial.updateDepartment(tenantId, id, input);
     return ok(data, getRequestIds(req));
   }
 
@@ -88,12 +180,29 @@ export class IndustrialController {
   @RequirePermission("industrial.access", {
     requiresEntitlement: { productCode: "FORGE_INDUSTRIAL" },
   })
-  async archivePosition(
+  async patchPosition(
     @Param("tenantId") tenantId: string,
     @Param("id") id: string,
+    @Body() body: Record<string, unknown>,
     @Req() req: RequestWithIds,
   ) {
-    const data = await this.industrial.archivePosition(tenantId, id);
+    if (body.archive === true || body.status === "ARCHIVED") {
+      const data = await this.industrial.archivePosition(tenantId, id);
+      return ok(data, getRequestIds(req));
+    }
+    if (body.name === undefined || body.name === null || String(body.name).trim() === "") {
+      throw new ForgeError("VALIDATION_FAILED", "name is required");
+    }
+    const input: Parameters<IndustrialService["updatePosition"]>[2] = {
+      name: String(body.name),
+    };
+    if (body.departmentId !== undefined) {
+      input.departmentId =
+        typeof body.departmentId === "string" && body.departmentId.trim() !== ""
+          ? body.departmentId.trim()
+          : null;
+    }
+    const data = await this.industrial.updatePosition(tenantId, id, input);
     return ok(data, getRequestIds(req));
   }
 
@@ -127,12 +236,25 @@ export class IndustrialController {
   @RequirePermission("industrial.access", {
     requiresEntitlement: { productCode: "FORGE_INDUSTRIAL" },
   })
-  async archiveEmploymentType(
+  async patchEmploymentType(
     @Param("tenantId") tenantId: string,
     @Param("id") id: string,
+    @Body() body: Record<string, unknown>,
     @Req() req: RequestWithIds,
   ) {
-    const data = await this.industrial.archiveEmploymentType(tenantId, id);
+    if (
+      body.archive === true ||
+      body.status === "ARCHIVED" ||
+      body.name === undefined ||
+      body.name === null ||
+      String(body.name).trim() === ""
+    ) {
+      const data = await this.industrial.archiveEmploymentType(tenantId, id);
+      return ok(data, getRequestIds(req));
+    }
+    const data = await this.industrial.updateEmploymentType(tenantId, id, {
+      name: String(body.name),
+    });
     return ok(data, getRequestIds(req));
   }
 
@@ -154,11 +276,20 @@ export class IndustrialController {
     @Body() body: Record<string, unknown>,
     @Req() req: RequestWithIds,
   ) {
-    const kind = String(body.kind ?? "") as "department" | "position" | "employment_type";
-    if (kind !== "department" && kind !== "position" && kind !== "employment_type") {
+    const kind = String(body.kind ?? "") as
+      | "division"
+      | "department"
+      | "position"
+      | "employment_type";
+    if (
+      kind !== "division" &&
+      kind !== "department" &&
+      kind !== "position" &&
+      kind !== "employment_type"
+    ) {
       throw new ForgeError(
         "VALIDATION_FAILED",
-        "kind must be department, position, or employment_type",
+        "kind must be division, department, position, or employment_type",
       );
     }
     const input: Parameters<IndustrialService["createMissingOrgLookup"]>[1] = {
@@ -166,7 +297,61 @@ export class IndustrialController {
       name: String(body.name ?? ""),
     };
     if (typeof body.description === "string") input.description = body.description;
+    if (typeof body.siteId === "string" && body.siteId.trim() !== "") {
+      input.siteId = body.siteId.trim();
+    }
+    if (typeof body.departmentId === "string" && body.departmentId.trim() !== "") {
+      input.departmentId = body.departmentId.trim();
+    }
+    if (typeof body.divisionName === "string" && body.divisionName.trim() !== "") {
+      input.divisionName = body.divisionName.trim();
+    }
     const data = await this.industrial.createMissingOrgLookup(tenantId, input);
+    return ok(data, getRequestIds(req));
+  }
+
+  @Patch("org-lookups/divisions")
+  @RequirePermission("industrial.access", {
+    requiresEntitlement: { productCode: "FORGE_INDUSTRIAL" },
+  })
+  async patchPersonnelDivision(
+    @Param("tenantId") tenantId: string,
+    @Body() body: Record<string, unknown>,
+    @Req() req: RequestWithIds,
+  ) {
+    const fromName = String(body.fromName ?? body.id ?? "").trim();
+    if (!fromName) {
+      throw new ForgeError("VALIDATION_FAILED", "fromName is required");
+    }
+    const fromSiteId =
+      body.fromSiteId !== undefined
+        ? typeof body.fromSiteId === "string" && body.fromSiteId.trim() !== ""
+          ? body.fromSiteId.trim()
+          : null
+        : undefined;
+    if (body.archive === true || body.remove === true) {
+      const data = await this.industrial.removePersonnelDivision(
+        tenantId,
+        fromName,
+        fromSiteId,
+      );
+      return ok(data, getRequestIds(req));
+    }
+    const nextSiteId =
+      body.siteId !== undefined
+        ? typeof body.siteId === "string" && body.siteId.trim() !== ""
+          ? body.siteId.trim()
+          : null
+        : undefined;
+    const data = await this.industrial.renamePersonnelDivision(
+      tenantId,
+      fromName,
+      String(body.name ?? body.toName ?? ""),
+      {
+        ...(fromSiteId !== undefined ? { fromSiteId } : {}),
+        ...(nextSiteId !== undefined ? { siteId: nextSiteId } : {}),
+      },
+    );
     return ok(data, getRequestIds(req));
   }
 
@@ -260,6 +445,28 @@ export class IndustrialController {
     if (typeof body.priority === "string") input.priority = body.priority;
     if (typeof body.dueDate === "string") input.dueDate = body.dueDate;
     const data = await this.industrial.createCorrectiveAction(tenantId, input);
+    return ok(data, getRequestIds(req));
+  }
+
+  @Get("incidents/body-map-config")
+  @RequirePermission("industrial.access", {
+    requiresEntitlement: { productCode: "FORGE_INDUSTRIAL" },
+  })
+  async getBodyMapConfig(@Param("tenantId") tenantId: string, @Req() req: RequestWithIds) {
+    const data = await this.industrial.getBodyMapConfig(tenantId);
+    return ok(data, getRequestIds(req));
+  }
+
+  @Put("incidents/body-map-config")
+  @RequireAnyPermission(["industrial.admin", "platform.configuration.update"], {
+    requiresEntitlement: { productCode: "FORGE_INDUSTRIAL" },
+  })
+  async saveBodyMapConfig(
+    @Param("tenantId") tenantId: string,
+    @Body() body: Record<string, unknown>,
+    @Req() req: RequestWithIds,
+  ) {
+    const data = await this.industrial.saveBodyMapConfig(tenantId, body.regions);
     return ok(data, getRequestIds(req));
   }
 }

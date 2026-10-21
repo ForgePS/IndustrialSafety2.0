@@ -58,6 +58,14 @@ function textOf(value: unknown): string {
   return "";
 }
 
+/** Drop trailing source labels that got baked into imported template titles. */
+export function cleanInspectionTemplateName(name: string): string {
+  return name
+    .replace(/\s*\((?:imported|ehs|builtin)\)\s*$/i, "")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
 function slugId(prefix: string, label: string, index: number): string {
   const base = label
     .toLowerCase()
@@ -74,9 +82,25 @@ export function formatInspectionTitleDate(date: Date = new Date()): string {
   return `${yy}-${mm}-${dd}`;
 }
 
-export function defaultInspectionTitle(departmentName: string, date: Date = new Date()): string {
-  const dept = departmentName.trim() || "Inspection";
-  return `${formatInspectionTitleDate(date)} ${dept}`;
+/**
+ * Default inspection name: `yy-mm-dd Division, Department`.
+ * A bare string is treated as department-only (legacy callers).
+ */
+export function defaultInspectionTitle(
+  input: string | { divisionName?: string | null; departmentName?: string | null },
+  date: Date = new Date(),
+): string {
+  const datePart = formatInspectionTitleDate(date);
+  if (typeof input === "string") {
+    const dept = input.trim() || "Inspection";
+    return `${datePart} ${dept}`;
+  }
+  const division = String(input.divisionName ?? "").trim();
+  const department = String(input.departmentName ?? "").trim();
+  if (division && department) return `${datePart} ${division}, ${department}`;
+  if (division) return `${datePart} ${division}`;
+  if (department) return `${datePart} ${department}`;
+  return `${datePart} Inspection`;
 }
 
 function pushItem(
@@ -201,12 +225,13 @@ export function templateFromLegacyRow(row: {
   if (items.length === 0) return null;
   return {
     id: row.id,
-    name:
+    name: cleanInspectionTemplateName(
       textOf(row.name) ||
-      textOf(row.title) ||
-      textOf(payload.name) ||
-      textOf(payload.title) ||
-      "Imported template",
+        textOf(row.title) ||
+        textOf(payload.name) ||
+        textOf(payload.title) ||
+        "Imported template",
+    ),
     source: row.source ?? "imported",
     departmentHint:
       row.departmentHint ||
@@ -218,6 +243,58 @@ export function templateFromLegacyRow(row: {
   };
 }
 
+const SOURCE_RANK: Record<InspectionTemplateDto["source"], number> = {
+  ehs: 0,
+  imported: 1,
+  builtin: 2,
+};
+
+function templateNameKey(name: string): string {
+  return cleanInspectionTemplateName(name).toLowerCase().replace(/\s+/g, " ");
+}
+
+function preferInspectionTemplate(
+  current: InspectionTemplateDto,
+  candidate: InspectionTemplateDto,
+): InspectionTemplateDto {
+  if (candidate.items.length !== current.items.length) {
+    return candidate.items.length > current.items.length ? candidate : current;
+  }
+  return SOURCE_RANK[candidate.source] < SOURCE_RANK[current.source] ? candidate : current;
+}
+
+/**
+ * Collapse duplicate templates that share an id or the same display name
+ * (common when the same checklist was imported as both a form definition and
+ * an inspectionTemplates row).
+ */
+export function dedupeInspectionTemplates(
+  templates: readonly InspectionTemplateDto[],
+): InspectionTemplateDto[] {
+  const byId = new Map<string, InspectionTemplateDto>();
+  for (const template of templates) {
+    const cleaned: InspectionTemplateDto = {
+      ...template,
+      name: cleanInspectionTemplateName(template.name) || template.name,
+    };
+    const existing = byId.get(cleaned.id);
+    byId.set(cleaned.id, existing ? preferInspectionTemplate(existing, cleaned) : cleaned);
+  }
+
+  const byName = new Map<string, InspectionTemplateDto>();
+  for (const template of byId.values()) {
+    const key = templateNameKey(template.name);
+    const existing = byName.get(key);
+    byName.set(key, existing ? preferInspectionTemplate(existing, template) : template);
+  }
+
+  return [...byName.values()].sort((a, b) => {
+    const sourceCmp = SOURCE_RANK[a.source] - SOURCE_RANK[b.source];
+    if (sourceCmp !== 0) return sourceCmp;
+    return a.name.localeCompare(b.name, undefined, { sensitivity: "base", numeric: true });
+  });
+}
+
 export function itemsFromTemplate(template: InspectionTemplateDto): InspectionRunItem[] {
   return template.items.map((item) => ({
     ...item,
@@ -225,6 +302,22 @@ export function itemsFromTemplate(template: InspectionTemplateDto): InspectionRu
     notes: "",
     photos: [],
   }));
+}
+
+/** Map Yes/No checklist import fields into inspection template items. */
+export function checklistFieldsToInspectionItems(
+  fields: ReadonlyArray<{ id?: string; label: string; section?: string; required?: boolean }>,
+): InspectionTemplateItem[] {
+  const out: InspectionTemplateItem[] = [];
+  const seen = new Set<string>();
+  for (const field of fields) {
+    const before = out.length;
+    pushItem(out, seen, field.label, field.section, field.id?.trim() || undefined);
+    if (out.length > before) {
+      out[out.length - 1]!.required = field.required !== false;
+    }
+  }
+  return out;
 }
 
 export function parseRunItems(raw: unknown): InspectionRunItem[] {

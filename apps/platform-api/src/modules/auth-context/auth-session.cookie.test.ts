@@ -3,6 +3,7 @@ import {
   FORGE_CSRF_HEADER,
   buildClearSessionCookie,
   buildSessionSetCookie,
+  isSameOriginBrowserRequest,
   isTrustedBrowserOrigin,
   parseCookieHeader,
   readSessionTokenFromCookieHeader,
@@ -17,6 +18,23 @@ describe("auth-session-cookie", () => {
     );
     expect(sessionCookieName({ protocol: "https", host: "localhost" })).toBe("forge-session");
     expect(sessionCookieName({ protocol: "http", host: "localhost:3000" })).toBe("forge-session");
+  });
+
+  it("detects same-origin browser requests for BFF refresh", () => {
+    expect(
+      isSameOriginBrowserRequest({
+        origin: "https://dr716wyn2h1dm.cloudfront.net",
+        referer: undefined,
+        requestHost: "dr716wyn2h1dm.cloudfront.net",
+      }),
+    ).toBe(true);
+    expect(
+      isSameOriginBrowserRequest({
+        origin: "https://console-dev.forgepublicsafety.com",
+        referer: undefined,
+        requestHost: "api-dev.forgepublicsafety.com",
+      }),
+    ).toBe(false);
   });
 
   it("builds HttpOnly Strict cookies without Domain", () => {

@@ -29,6 +29,76 @@ const DEFAULT_ABSOLUTE_SECONDS = 86_400;
 const MIN_TTL_SECONDS = 60;
 const MAX_TTL_SECONDS = 60 * 60 * 24 * 30;
 
+/**
+ * Cognito InitiateAuth /oauth2/token require exactly one client id.
+ * JWT verification may still allow a comma-separated COGNITO_CLIENT_ID list.
+ */
+export function resolveCognitoSessionClientId(env: {
+  COGNITO_CLIENT_ID: string;
+  COGNITO_SESSION_CLIENT_ID?: string;
+}): string {
+  const sessionId = env.COGNITO_SESSION_CLIENT_ID?.trim() ?? "";
+  const allowed = env.COGNITO_CLIENT_ID.split(",")
+    .map((value) => value.trim())
+    .filter(Boolean);
+  if (sessionId) {
+    if (sessionId.includes(",")) {
+      throw new ForgeError(
+        "INTERNAL_ERROR",
+        "COGNITO_SESSION_CLIENT_ID must be a single Cognito app client id",
+      );
+    }
+    if (allowed.length > 0 && !allowed.includes(sessionId)) {
+      throw new ForgeError(
+        "INTERNAL_ERROR",
+        "COGNITO_SESSION_CLIENT_ID must be included in COGNITO_CLIENT_ID",
+      );
+    }
+    return sessionId;
+  }
+  if (allowed.length === 1) {
+    return allowed[0]!;
+  }
+  throw new ForgeError(
+    "INTERNAL_ERROR",
+    "Set COGNITO_SESSION_CLIENT_ID when COGNITO_CLIENT_ID lists multiple app clients",
+  );
+}
+
+function mapCognitoAuthError(error: unknown): never {
+  const name =
+    error && typeof error === "object" && "name" in error
+      ? String((error as { name?: string }).name ?? "")
+      : "";
+  const message =
+    error instanceof Error
+      ? error.message
+      : typeof error === "string"
+        ? error
+        : "Cognito authentication failed";
+
+  if (
+    name === "NotAuthorizedException" ||
+    name === "UserNotFoundException" ||
+    /incorrect username or password/i.test(message)
+  ) {
+    throw new ForgeError("UNAUTHORIZED", "Incorrect email or password");
+  }
+  if (name === "UserNotConfirmedException") {
+    throw new ForgeError("FORBIDDEN", "Confirm this account before signing in");
+  }
+  if (name === "PasswordResetRequiredException") {
+    throw new ForgeError("FORBIDDEN", "Password reset is required before signing in");
+  }
+  if (name === "TooManyRequestsException" || name === "LimitExceededException") {
+    throw new ForgeError("RATE_LIMITED", "Too many sign-in attempts. Try again shortly.");
+  }
+  if (name === "InvalidParameterException") {
+    throw new ForgeError("INTERNAL_ERROR", "Sign-in is misconfigured for this application");
+  }
+  throw new ForgeError("UNAUTHORIZED", "Sign-in failed");
+}
+
 export type AuthSessionTokens = {
   accessToken: string;
   expiresIn: number;
@@ -54,6 +124,7 @@ export type PasswordChallengeResult =
 export class AuthSessionService {
   private readonly cognitoIdp: CognitoIdentityProviderClient;
   private readonly encryptionKey: Buffer;
+  private readonly sessionClientId: string;
   private readonly idleSeconds: number;
   private readonly absoluteSeconds: number;
 
@@ -66,6 +137,7 @@ export class AuthSessionService {
       env.APP_ENV,
       env.FORGE_AUTH_SESSION_ENCRYPTION_KEY,
     );
+    this.sessionClientId = resolveCognitoSessionClientId(env);
     this.idleSeconds = clampTtl(
       env.FORGE_AUTH_SESSION_IDLE_SECONDS ?? DEFAULT_IDLE_SECONDS,
       DEFAULT_IDLE_SECONDS,
@@ -159,16 +231,21 @@ export class AuthSessionService {
       throw new ForgeError("VALIDATION_FAILED", "Email and password are required");
     }
 
-    const result = await this.cognitoIdp.send(
-      new InitiateAuthCommand({
-        AuthFlow: "USER_PASSWORD_AUTH",
-        ClientId: this.env.COGNITO_CLIENT_ID,
-        AuthParameters: {
-          USERNAME: username,
-          PASSWORD: input.password,
-        },
-      }),
-    );
+    let result;
+    try {
+      result = await this.cognitoIdp.send(
+        new InitiateAuthCommand({
+          AuthFlow: "USER_PASSWORD_AUTH",
+          ClientId: this.sessionClientId,
+          AuthParameters: {
+            USERNAME: username,
+            PASSWORD: input.password,
+          },
+        }),
+      );
+    } catch (error) {
+      mapCognitoAuthError(error);
+    }
 
     return this.mapCognitoAuthResult(result, username);
   }
@@ -180,17 +257,22 @@ export class AuthSessionService {
     responses: Record<string, string>;
   }): Promise<PasswordChallengeResult> {
     const username = input.username.trim().toLowerCase();
-    const result = await this.cognitoIdp.send(
-      new RespondToAuthChallengeCommand({
-        ClientId: this.env.COGNITO_CLIENT_ID,
-        ChallengeName: input.challengeName as ChallengeNameType,
-        Session: input.session,
-        ChallengeResponses: {
-          USERNAME: username,
-          ...input.responses,
-        },
-      }),
-    );
+    let result;
+    try {
+      result = await this.cognitoIdp.send(
+        new RespondToAuthChallengeCommand({
+          ClientId: this.sessionClientId,
+          ChallengeName: input.challengeName as ChallengeNameType,
+          Session: input.session,
+          ChallengeResponses: {
+            USERNAME: username,
+            ...input.responses,
+          },
+        }),
+      );
+    } catch (error) {
+      mapCognitoAuthError(error);
+    }
     return this.mapCognitoAuthResult(result, username);
   }
 
@@ -244,12 +326,29 @@ export class AuthSessionService {
     }
 
     const nextRefresh = tokenPayload.refresh_token ?? refreshToken;
+    const encrypted = encryptRefreshToken(nextRefresh, this.encryptionKey);
+    const csrfToken = randomBytes(32).toString("base64url");
+    const now = new Date();
+    const idleExpiresAt = new Date(now.getTime() + this.idleSeconds * 1000);
+    const expiresAt =
+      idleExpiresAt.getTime() < prior.absoluteExpiresAt.getTime()
+        ? idleExpiresAt
+        : prior.absoluteExpiresAt;
 
-    // Rotate: revoke old, insert new. Concurrent replay of the old cookie fails.
-    await withTenantTransaction(this.db, homeTenantId, async (tx) => {
-      const updated = await tx
+    // Keep the opaque cookie token stable. Rotating it on every refresh forced logout
+    // whenever Set-Cookie was dropped on the Field CF → API CF hop (PWA still held the
+    // revoked cookie and failed the next refresh after ~1 access-token window).
+    const updated = await withTenantTransaction(this.db, homeTenantId, async (tx) => {
+      return tx
         .update(authBrowserSessions)
-        .set({ revokedAt: new Date() })
+        .set({
+          refreshTokenCiphertext: encrypted.ciphertextBase64,
+          refreshTokenNonce: encrypted.nonceBase64,
+          csrfTokenHash: hashOpaqueSecret(csrfToken),
+          expiresAt,
+          idleExpiresAt,
+          lastSeenAt: now,
+        })
         .where(
           and(
             eq(authBrowserSessions.id, prior.id),
@@ -257,19 +356,21 @@ export class AuthSessionService {
           ),
         )
         .returning({ id: authBrowserSessions.id });
-      if (updated.length === 0) {
-        throw new ForgeError("UNAUTHORIZED", "Session was already rotated");
-      }
     });
+    if (updated.length === 0) {
+      throw new ForgeError("UNAUTHORIZED", "Session is invalid or expired");
+    }
 
-    return this.createSessionFromTokens({
-      userId: prior.userId,
-      homeTenantId: prior.homeTenantId,
-      refreshToken: nextRefresh,
+    return {
       accessToken: tokenPayload.access_token,
-      expiresIn: tokenPayload.expires_in,
-      rotatedFromSessionId: prior.id,
-    });
+      expiresIn: tokenPayload.expires_in ?? 3600,
+      csrfToken,
+      rawSessionToken,
+      maxAgeSeconds: Math.max(
+        60,
+        Math.floor((prior.absoluteExpiresAt.getTime() - now.getTime()) / 1000),
+      ),
+    };
   }
 
   async logoutSession(rawSessionToken: string): Promise<void> {
@@ -455,7 +556,7 @@ export class AuthSessionService {
   }): Promise<CognitoTokenPayload> {
     const body = new URLSearchParams({
       grant_type: "authorization_code",
-      client_id: this.env.COGNITO_CLIENT_ID,
+      client_id: this.sessionClientId,
       code: input.code,
       redirect_uri: input.redirectUri,
       code_verifier: input.codeVerifier,
@@ -466,7 +567,7 @@ export class AuthSessionService {
   private async refreshCognitoTokens(refreshToken: string): Promise<CognitoTokenPayload> {
     const body = new URLSearchParams({
       grant_type: "refresh_token",
-      client_id: this.env.COGNITO_CLIENT_ID,
+      client_id: this.sessionClientId,
       refresh_token: refreshToken,
     });
     return this.postCognitoToken(body);

@@ -43,7 +43,15 @@ describe("publicLoginBrandingSchema (FIS-L01)", () => {
   it("documents allowed top-level keys", () => {
     const shape = publicLoginBrandingSchema.shape;
     expect(Object.keys(shape).sort()).toEqual(
-      ["brandLabel", "displayName", "host", "login", "logoUrl", "primaryColor"].sort(),
+      [
+        "brandLabel",
+        "displayName",
+        "host",
+        "login",
+        "logoDarkUrl",
+        "logoUrl",
+        "primaryColor",
+      ].sort(),
     );
     expect("tenantId" in shape).toBe(false);
   });

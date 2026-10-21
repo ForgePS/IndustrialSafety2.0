@@ -76,6 +76,25 @@ describe("Industrial Model A API contract", () => {
     expect(service).toContain("industrialWorkersCompCases");
     expect(service).toContain("analyticsOverview");
     expect(service).toContain("bulkTraining");
+    expect(service).toContain("enableWcMedicalAccess");
+    expect(service).toContain("listWorkersCompMedical");
+    expect(service).toContain("app.industrial_wc_medical_access");
+  });
+
+  it("exposes WC medical GET and child archive routes", () => {
+    const controller = readFileSync(
+      path.join(
+        ROOT,
+        "apps/platform-api/src/modules/industrial/industrial-flat.controller.ts",
+      ),
+      "utf8",
+    );
+    expect(controller).toContain('@Get("workers-comp/:id/medical")');
+    expect(controller).toContain('@Get("workers-comp/:id/printable")');
+    expect(controller).toContain('@Post("workers-comp/:id/work-status")');
+    expect(controller).toContain('@Delete("workers-comp/:id/work-status/:periodId")');
+    expect(controller).toContain('@Delete("workers-comp/:id/restrictions/:restrictionId")');
+    expect(controller).toContain("industrial.workers_comp.medical.view");
   });
 
   it("registers the training controller before the flat catch-all controller", () => {
@@ -101,6 +120,40 @@ describe("Industrial Model A API contract", () => {
     );
   });
 
+  it("registers the emergency-alerts controller before the flat catch-all controller", () => {
+    const module = readFileSync(
+      path.join(ROOT, "apps/platform-api/src/modules/industrial/industrial.module.ts"),
+      "utf8",
+    );
+    const controllersArray = module.slice(
+      module.indexOf("controllers:"),
+      module.indexOf("providers:"),
+    );
+    expect(controllersArray.indexOf("IndustrialEmergencyAlertsController")).toBeGreaterThanOrEqual(
+      0,
+    );
+    expect(controllersArray.indexOf("IndustrialEmergencyAlertsController")).toBeLessThan(
+      controllersArray.indexOf("IndustrialFlatController"),
+    );
+  });
+
+  it("registers the document-control controller before the flat catch-all controller", () => {
+    const module = readFileSync(
+      path.join(ROOT, "apps/platform-api/src/modules/industrial/industrial.module.ts"),
+      "utf8",
+    );
+    const controllersArray = module.slice(
+      module.indexOf("controllers:"),
+      module.indexOf("providers:"),
+    );
+    expect(controllersArray.indexOf("IndustrialDocumentControlController")).toBeGreaterThanOrEqual(
+      0,
+    );
+    expect(controllersArray.indexOf("IndustrialDocumentControlController")).toBeLessThan(
+      controllersArray.indexOf("IndustrialFlatController"),
+    );
+  });
+
   it("analytics module is AVAILABLE (not LEGACY_ONLY)", () => {
     const analytics = INDUSTRIAL_MODULE_REGISTRY.find((m) => m.code === "ANALYTICS");
     expect(analytics?.implementationStatus).toBe("AVAILABLE");
@@ -121,5 +174,32 @@ describe("Industrial Model A API contract", () => {
     ]) {
       expect(schema).toContain(table);
     }
+  });
+
+  it("exposes public training portal session routes", () => {
+    const controller = readFileSync(
+      path.join(
+        ROOT,
+        "apps/platform-api/src/modules/industrial/industrial-public-training.controller.ts",
+      ),
+      "utf8",
+    );
+    expect(controller).toContain('@Post("training/:token/session/resume")');
+    expect(controller).toContain('@Post("training/:token/session/logout")');
+    expect(controller).toContain('@Get("training/access/:token")');
+    expect(controller).toContain('@Post("training/access/:token/verify")');
+    expect(controller).toContain("sessionToken");
+  });
+
+  it("defines LMS portal tables in industrial schema", () => {
+    const schema = readFileSync(
+      path.join(ROOT, "packages/database/src/schema/industrial.ts"),
+      "utf8",
+    );
+    expect(schema).toContain("industrialTrainingPortalSessions");
+    expect(schema).toContain("industrialTrainingAccessLinks");
+    expect(schema).toContain("industrialTrainingCompletions");
+    expect(schema).toContain("industrialTrainingCourseVersions");
+    expect(schema).toContain("industrialTrainingProgress");
   });
 });

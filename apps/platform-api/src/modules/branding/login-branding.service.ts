@@ -13,6 +13,7 @@ import {
 export type PublicLoginBranding = PublicLoginBrandingDto;
 
 const PRODUCERS_LOGO_PATH = "/branding/producers-rice-mill.png";
+const PRODUCERS_LOGO_DARK_PATH = "/branding/producers-rice-mill-dark.png";
 const PRODUCERS_BRAND_LABEL = "Producers Rice Mill";
 const PRODUCERS_HEADLINE = "Welcome to Producers Rice Mill";
 
@@ -40,17 +41,42 @@ function isProducersHost(host: string): boolean {
   );
 }
 
+/**
+ * Prefer same-origin /branding/… paths so vanity hosts never load logos from a
+ * stale absolute host (e.g. forgepublicsafety after the industrialsafety cutover).
+ */
+export function sameOriginBrandingLogoUrl(url: string | undefined | null): string {
+  const trimmed = String(url ?? "").trim();
+  if (!trimmed) return "";
+  if (trimmed.startsWith("/branding/")) return trimmed;
+  try {
+    const parsed = new URL(trimmed);
+    if (parsed.pathname.startsWith("/branding/")) return parsed.pathname;
+  } catch {
+    // not an absolute URL
+  }
+  const legacy = trimmed.match(/^https?:\/\/[^/]+(\/branding\/[^?#]+)/i);
+  if (legacy?.[1]) return legacy[1];
+  return trimmed;
+}
+
 function applyProducersBundled(
   host: string,
   login: ReturnType<typeof resolveLoginBranding>,
   logoUrl?: string,
-): { login: ReturnType<typeof resolveLoginBranding>; logoUrl?: string } {
+): {
+  login: ReturnType<typeof resolveLoginBranding> & { logoDarkUrl?: string };
+  logoUrl?: string;
+  logoDarkUrl?: string;
+} {
   if (!isProducersHost(host)) {
     return { login, ...(logoUrl ? { logoUrl } : {}) };
   }
 
   const bundledLogo = PRODUCERS_LOGO_PATH;
-  const resolvedLogo = login.logoUrl.trim() || logoUrl?.trim() || bundledLogo;
+  const candidate = login.logoUrl.trim() || logoUrl?.trim() || bundledLogo;
+  const resolvedLogo = sameOriginBrandingLogoUrl(candidate) || bundledLogo;
+  const resolvedDark = PRODUCERS_LOGO_DARK_PATH;
   const brandLabel =
     login.brandLabel === DEFAULT_LOGIN_BRANDING.brandLabel ||
     login.brandLabel === "Forge Industrial"
@@ -64,9 +90,11 @@ function applyProducersBundled(
 
   return {
     logoUrl: resolvedLogo,
+    logoDarkUrl: resolvedDark,
     login: {
       ...login,
       logoUrl: resolvedLogo,
+      logoDarkUrl: resolvedDark,
       brandLabel,
       headline,
       statusText: "",
@@ -87,6 +115,17 @@ export class LoginBrandingService {
       throw new ForgeError("VALIDATION_FAILED", "host query parameter is required");
     }
 
+    // CloudFront / local hosts never have vanity tenant_domains rows. Skip the DB
+    // lookup — hung pool checkout here cascades into session refresh timeouts.
+    if (
+      host.endsWith(".cloudfront.net") ||
+      host === "localhost" ||
+      host === "127.0.0.1" ||
+      host.endsWith(".local")
+    ) {
+      throw new ForgeError("NOT_FOUND", "No verified tenant domain for host");
+    }
+
     // Tenant UUID stays server-side — never returned on this unauthenticated path (FIS-L01).
     const resolved = await lookupTenantByDomain(this.db, host);
     if (!resolved) {
@@ -105,7 +144,11 @@ export class LoginBrandingService {
 
     let logoUrl =
       typeof payload.logoUrl === "string" && payload.logoUrl.trim()
-        ? payload.logoUrl.trim()
+        ? sameOriginBrandingLogoUrl(payload.logoUrl.trim()) || payload.logoUrl.trim()
+        : undefined;
+    let logoDarkUrl =
+      typeof payload.logoDarkUrl === "string" && payload.logoDarkUrl.trim()
+        ? sameOriginBrandingLogoUrl(payload.logoDarkUrl.trim()) || payload.logoDarkUrl.trim()
         : undefined;
     const primaryColor =
       typeof payload.primaryColor === "string" && payload.primaryColor.trim()
@@ -113,15 +156,30 @@ export class LoginBrandingService {
         : undefined;
 
     let login = resolveLoginBranding(payload as Parameters<typeof resolveLoginBranding>[0]);
+    if (login.logoUrl) {
+      login = {
+        ...login,
+        logoUrl: sameOriginBrandingLogoUrl(login.logoUrl) || login.logoUrl,
+      };
+    }
+    if (login.logoDarkUrl) {
+      login = {
+        ...login,
+        logoDarkUrl: sameOriginBrandingLogoUrl(login.logoDarkUrl) || login.logoDarkUrl,
+      };
+      logoDarkUrl = logoDarkUrl || login.logoDarkUrl;
+    }
     const bundled = applyProducersBundled(host, login, logoUrl);
     login = bundled.login;
     logoUrl = bundled.logoUrl;
+    logoDarkUrl = bundled.logoDarkUrl ?? logoDarkUrl;
 
     const dto = {
       host,
       displayName: login.brandLabel,
       brandLabel: login.brandLabel,
       ...(logoUrl ? { logoUrl } : {}),
+      ...(logoDarkUrl ? { logoDarkUrl } : {}),
       ...(primaryColor ? { primaryColor } : {}),
       login,
     };

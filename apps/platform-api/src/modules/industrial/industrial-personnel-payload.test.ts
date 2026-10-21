@@ -13,7 +13,7 @@ type Mapper = {
     personnelPayload: Record<string, unknown>;
     driverPayload?: Record<string, unknown> | null;
     dotPayload?: Record<string, unknown> | null;
-    isCompanyDriver: boolean;
+    isDotDriver: boolean;
   }): Record<string, unknown>;
   splitDisplayName(displayName: string): {
     firstName?: string;
@@ -147,15 +147,36 @@ describe("personnel source_payload connection", () => {
     });
   });
 
+  it("keeps the database row id when source_payload also has an id", () => {
+    const now = new Date("2026-01-01T00:00:00.000Z");
+    const item = mapper().mapListItem({
+      id: "202bd5c3-e81f-b2d4-9cb2-ae78b13013d2",
+      title: "Screw Conveyor",
+      status: "ACTIVE",
+      createdAt: now,
+      updatedAt: now,
+      sourcePayload: {
+        id: "firebase-doc-id",
+        status: "DRAFT",
+        title: "Payload title",
+        equipmentName: "Screw Conveyor",
+      },
+    });
+
+    expect(item.id).toBe("202bd5c3-e81f-b2d4-9cb2-ae78b13013d2");
+    expect(item.status).toBe("ACTIVE");
+    expect(item.equipmentName).toBe("Screw Conveyor");
+  });
+
   it("projects driver license front/back onto the personnel file payload", () => {
     const projected = mapper().projectLicenseCopies({
-      personnelPayload: { isCompanyDriver: true },
+      personnelPayload: { isDotDriver: true },
       driverPayload: {
         licenseFrontUpload: { url: "https://cdn.example/front.jpg" },
         licenseBackUpload: { dataUrl: "data:image/jpeg;base64,BACK" },
       },
       dotPayload: null,
-      isCompanyDriver: true,
+      isDotDriver: true,
     });
     expect(projected).toMatchObject({
       requiresLicenseCopies: true,
@@ -176,9 +197,28 @@ describe("personnel source_payload connection", () => {
         licenseFrontUpload: { url: "https://driver/front.jpg" },
         licenseBackUpload: { url: "https://driver/back.jpg" },
       },
-      isCompanyDriver: false,
+      isDotDriver: false,
     });
     expect(projected.licenseFrontUrl).toBe("https://personnel/front.jpg");
     expect(projected.licenseBackUrl).toBe("https://personnel/back.jpg");
+  });
+
+  it("requires license copies for DOT drivers but not company drivers alone", () => {
+    const dotOnly = mapper().projectLicenseCopies({
+      personnelPayload: { isDotDriver: true },
+      driverPayload: null,
+      dotPayload: null,
+      isDotDriver: true,
+    });
+    expect(dotOnly.requiresLicenseCopies).toBe(true);
+
+    const companyOnly = mapper().projectLicenseCopies({
+      personnelPayload: { isCompanyDriver: true },
+      driverPayload: { licenseFrontUpload: { url: "https://cdn.example/front.jpg" } },
+      dotPayload: null,
+      isDotDriver: false,
+    });
+    expect(companyOnly.requiresLicenseCopies).toBe(false);
+    expect(companyOnly.licenseFrontUrl).toBe("https://cdn.example/front.jpg");
   });
 });

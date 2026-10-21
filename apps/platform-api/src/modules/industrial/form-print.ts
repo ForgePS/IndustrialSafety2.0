@@ -68,6 +68,83 @@ export function flattenFormResponses(responses: unknown): Record<string, unknown
   return answers;
 }
 
+export type FormDefinitionField = {
+  id: string;
+  label: string;
+  type?: string | null;
+};
+
+function collectFieldArrays(root: unknown): unknown[] {
+  const rec = unwrapJsonRecord(root);
+  if (Object.keys(rec).length === 0) return [];
+  const buckets = [
+    rec.fields,
+    rec.questions,
+    rec.formFields,
+    rec.items,
+    rec.elements,
+    rec.schema,
+  ];
+  const out: unknown[] = [];
+  for (const bucket of buckets) {
+    if (Array.isArray(bucket)) out.push(...bucket);
+    const nested = unwrapJsonRecord(bucket);
+    if (Array.isArray(nested.fields)) out.push(...nested.fields);
+    if (Array.isArray(nested.questions)) out.push(...nested.questions);
+  }
+  if (Array.isArray(rec.sections)) {
+    for (const section of rec.sections) {
+      const sec = unwrapJsonRecord(section);
+      if (Array.isArray(sec.fields)) out.push(...sec.fields);
+      if (Array.isArray(sec.questions)) out.push(...sec.questions);
+    }
+  }
+  return out;
+}
+
+function normalizeFormDefinitionField(raw: unknown, index: number): FormDefinitionField | null {
+  if (typeof raw === "string" && raw.trim()) {
+    return { id: `field-${index}`, label: raw.trim(), type: null };
+  }
+  const rec = unwrapJsonRecord(raw);
+  if (Object.keys(rec).length === 0) return null;
+  const id = String(rec.id ?? rec.key ?? rec.name ?? rec.fieldId ?? `field-${index}`).trim();
+  const label = String(
+    rec.label ?? rec.title ?? rec.question ?? rec.name ?? rec.prompt ?? id,
+  ).trim();
+  if (!id && !label) return null;
+  return {
+    id: id || `field-${index}`,
+    label: label || id,
+    type: String(rec.type ?? rec.inputType ?? rec.fieldType ?? "").trim() || null,
+  };
+}
+
+/** Extract fill/print fields the same way industrial-web forms-module does. */
+export function extractFormDefinitionFields(
+  definition: Record<string, unknown> | null | undefined,
+): FormDefinitionField[] {
+  if (!definition) return [];
+  const sources = [
+    definition.schemaJson,
+    definition.schema,
+    definition.sourcePayload,
+    definition,
+  ];
+  const seen = new Set<string>();
+  const fields: FormDefinitionField[] = [];
+  for (const source of sources) {
+    for (const [index, raw] of collectFieldArrays(source).entries()) {
+      const field = normalizeFormDefinitionField(raw, index);
+      if (!field || seen.has(field.id)) continue;
+      seen.add(field.id);
+      fields.push(field);
+    }
+    if (fields.length > 0) break;
+  }
+  return fields;
+}
+
 /** Prefer column answers; fall back to source_payload.responses (Firebase). */
 export function resolveFormAnswers(
   answers: unknown,
@@ -91,7 +168,7 @@ export function escapeHtml(value: string): string {
 export type FormPrintField = {
   id: string;
   label: string;
-  kind?: "answer" | "content";
+  kind?: "answer" | "content" | "label" | "location" | "checkbox";
   content?: string;
 };
 
@@ -102,8 +179,21 @@ export type FormPrintBranding = {
   companyName: string | null;
 };
 
-function formatPrintValue(value: unknown): string {
-  if (value == null || value === "") return "—";
+function isCheckedAnswer(value: unknown): boolean {
+  return value === true || value === "true" || value === 1 || value === "1" || value === "yes";
+}
+
+function formatCheckboxPrintValue(value: unknown, blank = false): string {
+  const checked = !blank && isCheckedAnswer(value);
+  const mark = checked ? "☑" : "☐";
+  const label = blank ? "" : checked ? " Yes" : " No";
+  return `<span class="checkbox-mark" aria-hidden="true">${mark}</span>${label}`;
+}
+
+function formatPrintValue(value: unknown, blank = false): string {
+  if (value == null || value === "") {
+    return blank ? '<span class="blank-line">&nbsp;</span>' : "—";
+  }
   if (typeof value === "boolean") return value ? "Yes" : "No";
   if (typeof value === "string") {
     if (value.startsWith("data:image/") || /^https?:\/\//i.test(value)) {
@@ -182,7 +272,13 @@ export function buildFormSubmissionPrintableHtml(input: {
   fields: FormPrintField[];
   answers: Record<string, unknown>;
   branding: FormPrintBranding;
+  /** Compact layout aimed at a single letter page (MVR consent). */
+  onePage?: boolean;
+  /** Empty write-in lines instead of em dashes (blank paper form). */
+  blank?: boolean;
 }): string {
+  const onePage = Boolean(input.onePage);
+  const blank = Boolean(input.blank);
   const title = escapeHtml(input.title || "Form submission");
   const company = escapeHtml(
     input.branding.reportIdentity?.trim() ||
@@ -210,16 +306,52 @@ export function buildFormSubmissionPrintableHtml(input: {
       contentBlocks.push(formatContentBlock(field.label, field.content ?? ""));
       continue;
     }
+    if (field.kind === "label") {
+      answerRows.push(
+        `<tr class="section-label"><td colspan="2"><h2>${escapeHtml(field.label)}</h2></td></tr>`,
+      );
+      continue;
+    }
+    if (field.kind === "checkbox") {
+      answerRows.push(
+        `<tr><th scope="row">${escapeHtml(field.label)}</th><td>${formatCheckboxPrintValue(input.answers[field.id], blank)}</td></tr>`,
+      );
+      continue;
+    }
     answerRows.push(
-      `<tr><th scope="row">${escapeHtml(field.label)}</th><td>${formatPrintValue(input.answers[field.id])}</td></tr>`,
+      `<tr><th scope="row">${escapeHtml(field.label)}</th><td>${formatPrintValue(input.answers[field.id], blank)}</td></tr>`,
     );
   }
   for (const [key, value] of Object.entries(input.answers)) {
     if (known.has(key)) continue;
     answerRows.push(
-      `<tr><th scope="row">${escapeHtml(key)}</th><td>${formatPrintValue(value)}</td></tr>`,
+      `<tr><th scope="row">${escapeHtml(key)}</th><td>${formatPrintValue(value, blank)}</td></tr>`,
     );
   }
+
+  const onePageCss = onePage
+    ? `
+    body.one-page { padding: 12px; font-size: 11px; }
+    body.one-page header { gap: 10px; padding-bottom: 8px; margin-bottom: 10px; border-bottom-width: 1px; }
+    body.one-page .logo { max-height: 40px; max-width: 140px; }
+    body.one-page .company { font-size: 0.85rem; }
+    body.one-page h1 { font-size: 1.05rem; }
+    body.one-page h2 { font-size: 0.95rem; margin: 0 0 6px; }
+    body.one-page .meta { font-size: 0.8rem; margin: 0 0 8px; }
+    body.one-page .policy { margin: 0 0 8px; padding: 8px 10px; }
+    body.one-page .policy p { margin: 0 0 6px; line-height: 1.3; }
+    body.one-page th, body.one-page td { padding: 4px 6px; }
+    body.one-page .sig { max-height: 48px; }
+    body.one-page footer { margin-top: 10px; padding-top: 6px; font-size: 0.75rem; }
+    @media print {
+      @page { size: letter; margin: 0.4in; }
+      body.one-page { padding: 0; font-size: 10.5pt; }
+      body.one-page .policy, body.one-page table, body.one-page header, body.one-page footer {
+        break-inside: avoid;
+        page-break-inside: avoid;
+      }
+    }`
+    : "";
 
   return `<!doctype html>
 <html lang="en">
@@ -241,6 +373,10 @@ export function buildFormSubmissionPrintableHtml(input: {
     table { width: 100%; border-collapse: collapse; }
     th, td { text-align: left; vertical-align: top; padding: 10px 8px; border-bottom: 1px solid #d9dee3; }
     th { width: 34%; color: #334; font-weight: 600; }
+    tr.section-label td { border-bottom: none; padding-top: 18px; padding-bottom: 4px; }
+    tr.section-label h2 { font-size: 1.05rem; margin: 0; color: #1a365d; }
+    .blank-line { display: block; min-height: 1.4em; border-bottom: 1px solid #bbb; }
+    .checkbox-mark { font-size: 1.25rem; line-height: 1; vertical-align: middle; }
     .sig { max-height: 96px; max-width: 100%; background: #fff; border: 1px solid #d9dee3; }
     footer { margin-top: 28px; padding-top: 12px; border-top: 1px solid #d9dee3; color: #555; font-size: 0.85rem; }
     @media print {
@@ -248,9 +384,10 @@ export function buildFormSubmissionPrintableHtml(input: {
       header { break-after: avoid; }
       .policy, .sig { break-inside: avoid; }
     }
+    ${onePageCss}
   </style>
 </head>
-<body>
+<body class="${onePage ? "one-page" : ""}">
   <div class="sheet">
     <header>
       ${logo}

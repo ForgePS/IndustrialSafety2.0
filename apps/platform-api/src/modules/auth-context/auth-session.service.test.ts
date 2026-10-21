@@ -84,6 +84,7 @@ const env = {
   AWS_REGION: "us-east-1",
   COGNITO_USER_POOL_ID: "us-east-1_TestPool",
   COGNITO_CLIENT_ID: "client-123",
+  COGNITO_SESSION_CLIENT_ID: "client-123",
   COGNITO_DOMAIN: "example.auth.us-east-1.amazoncognito.com",
   FORGE_AUTH_SESSION_ENCRYPTION_KEY: Buffer.alloc(32, 9).toString("base64"),
   FORGE_AUTH_SESSION_IDLE_SECONDS: 43_200,
@@ -137,7 +138,7 @@ describe("AuthSessionService", () => {
     expect(insertValues).toHaveBeenCalled();
   });
 
-  it("refresh rotates session and rejects replay of old token", async () => {
+  it("refresh keeps the opaque cookie token and renews access", async () => {
     const encrypted = encryptRefreshToken("refresh-secret", key);
     selectLimit.mockResolvedValueOnce([
       {
@@ -161,21 +162,11 @@ describe("AuthSessionService", () => {
     });
     vi.stubGlobal("fetch", fetchMock);
 
-    const rotated = await service.refreshSession("raw-old-session");
-    expect(rotated.accessToken).toBe("access-new");
-    expect(rotated.rawSessionToken).not.toBe("raw-old-session");
+    const renewed = await service.refreshSession("raw-old-session");
+    expect(renewed.accessToken).toBe("access-new");
+    expect(renewed.rawSessionToken).toBe("raw-old-session");
+    expect(renewed.csrfToken).toBeTruthy();
     expect(updateWhere).toHaveBeenCalled();
-
-    // Replay: SECURITY DEFINER returns null tenant for revoked hash, owner says revoked.
-    dbExecute
-      .mockResolvedValueOnce([]) // home_tenant for active
-      .mockResolvedValueOnce([
-        { home_tenant_id: "tenant-1", user_id: "user-1", is_revoked: true },
-      ]);
-
-    await expect(service.refreshSession("raw-old-session")).rejects.toMatchObject({
-      code: "UNAUTHORIZED",
-    });
 
     vi.unstubAllGlobals();
   });

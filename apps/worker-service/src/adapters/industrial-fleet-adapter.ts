@@ -85,6 +85,20 @@ export class IndustrialFleetAdapter implements ImportRecordAdapter {
     const notes = asOptionalString(mapped.notes);
     const vehicleFringe =
       asOptionalBoolean(mapped.vehicle_fringe) ?? asOptionalBoolean(mapped.vehicleFringe);
+    const assignedDriverName =
+      asOptionalString(mapped.assigned_driver) ??
+      asOptionalString(mapped.assigned_driver_name) ??
+      asOptionalString(mapped.assignedDriverName);
+    const assetType =
+      asOptionalString(mapped.asset_type) ?? asOptionalString(mapped.assetType) ?? "FLEET_VEHICLE";
+    const form2290Status =
+      asOptionalString(mapped.form_2290) ?? asOptionalString(mapped.form2290Status);
+    const irpStatus = asOptionalString(mapped.irp) ?? asOptionalString(mapped.irpStatus);
+    const commuteUseStatus =
+      asOptionalString(mapped.commute_use) ?? asOptionalString(mapped.commuteUseStatus);
+    const registrationRenewalMonth = asOptionalNumber(
+      mapped.registration_renewal_month ?? mapped.registrationRenewalMonth,
+    );
 
     if (!vin && !make && !model && !licensePlate) {
       return {
@@ -115,6 +129,19 @@ export class IndustrialFleetAdapter implements ImportRecordAdapter {
             )
             .limit(1);
           existing = rows[0];
+        } else if (licensePlate) {
+          const rows = await tx
+            .select()
+            .from(industrialFleetVehicles)
+            .where(
+              and(
+                eq(industrialFleetVehicles.tenantId, context.tenantId),
+                eq(industrialFleetVehicles.licensePlate, licensePlate),
+                isNull(industrialFleetVehicles.archivedAt),
+              ),
+            )
+            .limit(1);
+          existing = rows[0];
         }
 
         const now = new Date();
@@ -135,6 +162,12 @@ export class IndustrialFleetAdapter implements ImportRecordAdapter {
               mileage,
               notes,
               vehicleFringe,
+              assignedDriverName,
+              assetType,
+              form2290Status,
+              irpStatus,
+              commuteUseStatus,
+              registrationRenewalMonth,
               sourceSystem: "FORGE",
               sourcePayload: { ...mapped, importJobId: context.jobId },
               updatedAt: now,
@@ -170,6 +203,12 @@ export class IndustrialFleetAdapter implements ImportRecordAdapter {
             mileage,
             notes,
             vehicleFringe,
+            assignedDriverName,
+            assetType,
+            form2290Status,
+            irpStatus,
+            commuteUseStatus,
+            registrationRenewalMonth,
             status: "ACTIVE",
             sourceSystem: "FORGE",
             sourcePayload: { ...mapped, importJobId: context.jobId },

@@ -49,8 +49,9 @@ describe("personnel template insert mapping", () => {
     ).toMatchObject({ departmentName: "Milling" });
   });
 
-  it("omits the driver flag entirely when absent, letting the column default apply", () => {
+  it("omits the driver flags entirely when absent, letting the column default apply", () => {
     expect(mapper().personnelInsertValues({})).not.toHaveProperty("isCompanyDriver");
+    expect(mapper().personnelInsertValues({})).not.toHaveProperty("isDotDriver");
   });
 
   it.each([
@@ -59,9 +60,19 @@ describe("personnel template insert mapping", () => {
     ["on", true],
     [false, false],
     ["", false],
-  ])("coerces driver flag %s to %s", (input, expected) => {
+  ])("coerces company driver flag %s to %s", (input, expected) => {
     expect(mapper().personnelInsertValues({ isCompanyDriver: input })).toMatchObject({
       isCompanyDriver: expected,
+    });
+  });
+
+  it.each([
+    [true, true],
+    ["true", true],
+    [false, false],
+  ])("coerces DOT driver flag %s to %s", (input, expected) => {
+    expect(mapper().personnelInsertValues({ isDotDriver: input })).toMatchObject({
+      isDotDriver: expected,
     });
   });
 
@@ -147,11 +158,13 @@ describe("personnel template read mapping", () => {
   it("always returns boolean allowance flags", () => {
     expect(mapper().personnelReadValues({}).isCompanyDriver).toBe(false);
     expect(mapper().personnelReadValues({}).tracksPrescriptionSafetyGlasses).toBe(false);
+    expect(mapper().personnelReadValues({}).tracksFirstAid).toBe(false);
     expect(mapper().personnelReadValues({ isCompanyDriver: true }).isCompanyDriver).toBe(true);
     expect(
       mapper().personnelReadValues({ tracksPrescriptionSafetyGlasses: true })
         .tracksPrescriptionSafetyGlasses,
     ).toBe(true);
+    expect(mapper().personnelReadValues({ tracksFirstAid: true }).tracksFirstAid).toBe(true);
   });
 
   it("round-trips every field an insert accepts", () => {

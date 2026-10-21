@@ -33,8 +33,13 @@ import {
 } from "@forge/imports";
 import { createLogger } from "@forge/observability";
 import { and, asc, eq, inArray, sql } from "drizzle-orm";
+import { IndustrialDepartmentAdapter } from "../adapters/industrial-department-adapter.js";
+import { IndustrialEmploymentTypeAdapter } from "../adapters/industrial-employment-type-adapter.js";
 import { IndustrialFleetAdapter } from "../adapters/industrial-fleet-adapter.js";
 import { IndustrialPersonnelAdapter } from "../adapters/industrial-personnel-adapter.js";
+import { IndustrialPositionAdapter } from "../adapters/industrial-position-adapter.js";
+import { IndustrialSiteAdapter } from "../adapters/industrial-site-adapter.js";
+import { IndustrialTrainingAdapter } from "../adapters/industrial-training-adapter.js";
 import { emitEmfMetric } from "../metrics.js";
 
 export type ImportExecuteOutcome = "completed" | "retry" | "rejected";
@@ -48,6 +53,11 @@ function createDefaultRegistry(): ImportAdapterRegistry {
   registry.register(new ReferenceImportAdapter("reference:generic:record@1"));
   registry.register(new IndustrialPersonnelAdapter());
   registry.register(new IndustrialFleetAdapter());
+  registry.register(new IndustrialSiteAdapter());
+  registry.register(new IndustrialDepartmentAdapter());
+  registry.register(new IndustrialPositionAdapter());
+  registry.register(new IndustrialEmploymentTypeAdapter());
+  registry.register(new IndustrialTrainingAdapter());
   return registry;
 }
 

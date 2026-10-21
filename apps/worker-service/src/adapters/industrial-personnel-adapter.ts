@@ -129,12 +129,21 @@ export class IndustrialPersonnelAdapter implements ImportRecordAdapter {
       asOptionalString(mapped.employee_number) ?? asOptionalString(mapped.employeeNumber);
     const email = asOptionalString(mapped.email);
     const phone = asOptionalString(mapped.phone);
-    const firstName =
+    const firstNameRaw =
       asOptionalString(mapped.first_name) ?? asOptionalString(mapped.firstName);
-    const lastName = asOptionalString(mapped.last_name) ?? asOptionalString(mapped.lastName);
+    const lastNameRaw = asOptionalString(mapped.last_name) ?? asOptionalString(mapped.lastName);
+    let firstName = firstNameRaw;
+    let lastName = lastNameRaw;
+    if (!firstName && !lastName && displayName) {
+      const parts = displayName.split(/\s+/).filter(Boolean);
+      firstName = parts[0];
+      lastName = parts.length > 1 ? parts.slice(1).join(" ") : undefined;
+    }
     const hireDate = asOptionalString(mapped.hire_date) ?? asOptionalString(mapped.hireDate);
     const supervisorName =
       asOptionalString(mapped.supervisor) ?? asOptionalString(mapped.supervisor_name);
+    const locationName =
+      asOptionalString(mapped.location) ?? asOptionalString(mapped.location_name);
     const departmentIdInput =
       asOptionalString(mapped.department_id) ?? asOptionalString(mapped.departmentId);
     const positionIdInput =
@@ -205,7 +214,11 @@ export class IndustrialPersonnelAdapter implements ImportRecordAdapter {
               positionId,
               employmentTypeId,
               sourceSystem: "FORGE",
-              sourcePayload: { ...mapped, importJobId: context.jobId },
+              sourcePayload: {
+              ...mapped,
+              importJobId: context.jobId,
+              ...(locationName ? { location: locationName } : {}),
+            },
               updatedAt: now,
             })
             .where(eq(industrialPersonnel.id, existing.id))
@@ -239,7 +252,11 @@ export class IndustrialPersonnelAdapter implements ImportRecordAdapter {
             employmentTypeId,
             status: "ACTIVE",
             sourceSystem: "FORGE",
-            sourcePayload: { ...mapped, importJobId: context.jobId },
+            sourcePayload: {
+              ...mapped,
+              importJobId: context.jobId,
+              ...(locationName ? { location: locationName } : {}),
+            },
             createdAt: now,
             updatedAt: now,
           })

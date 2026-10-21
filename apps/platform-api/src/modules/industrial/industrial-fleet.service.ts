@@ -1,3 +1,4 @@
+import { createHash, randomBytes } from "node:crypto";
 import { Inject, Injectable } from "@nestjs/common";
 import {
   createId,
@@ -18,8 +19,15 @@ import {
 import { ForgeError } from "@forge/errors";
 import type { ForgePrincipal } from "@forge/tenant-context";
 import { normalizeVin, validateVin } from "@forge/validation";
-import { and, desc, eq, ilike, isNull, or, sql } from "drizzle-orm";
+import { and, asc, desc, eq, ilike, isNull, ne, or, sql } from "drizzle-orm";
 import { DATABASE } from "../../tokens.js";
+import { fleetVehicleStickerAssetLabel, qrCodePngBuffer } from "./qr-svg.js";
+import { ensureCompanyDriverRosterEntry } from "./company-driver-roster.js";
+import {
+  compareFleetAssetsByLocation,
+  compareFleetRenewalsByLocationThenSoonest,
+  fleetRenewalBucket,
+} from "./fleet-list-sort.js";
 
 type ListQuery = Record<string, string | undefined>;
 
@@ -38,15 +46,6 @@ function assignmentHasDriver(assignment: {
   );
 }
 
-function normalizeDriverName(value: unknown): string {
-  return String(value ?? "")
-    .toUpperCase()
-    .replace(/[^A-Z0-9]+/g, " ")
-    .replace(/\b(JR|SR|II|III|IV)\b/g, "")
-    .replace(/\s+/g, " ")
-    .trim();
-}
-
 /** Anyone assigned to a company vehicle belongs on the Company Drivers roster. */
 async function ensureCompanyDriverFromAssignment(
   tx: DatabaseTransaction,
@@ -58,135 +57,27 @@ async function ensureCompanyDriverFromAssignment(
     siteId?: string | null;
   },
 ): Promise<string | null> {
-  const personnelId = String(assignment.personnelId ?? "").trim() || null;
-  const driverId = String(assignment.driverId ?? "").trim() || null;
-  const driverName = String(assignment.driverName ?? "").trim() || null;
-  if (!personnelId && !driverId && !driverName) return null;
-
-  const now = new Date();
-  if (personnelId) {
-    await tx
-      .update(industrialPersonnel)
-      .set({ isCompanyDriver: true, updatedAt: now })
-      .where(
-        and(eq(industrialPersonnel.id, personnelId), eq(industrialPersonnel.tenantId, tenantId)),
-      );
-  }
-
-  const revive = async (id: string) => {
-    await tx
-      .update(industrialFleetDrivers)
-      .set({
-        archivedAt: null,
-        status: "on_insurance",
-        ...(personnelId ? { personnelId } : {}),
-        ...(driverName ? { personnelName: driverName } : {}),
-        updatedAt: now,
-      })
-      .where(and(eq(industrialFleetDrivers.id, id), eq(industrialFleetDrivers.tenantId, tenantId)));
-  };
-
-  if (driverId) {
-    const [existing] = await tx
-      .select({
-        id: industrialFleetDrivers.id,
-        status: industrialFleetDrivers.status,
-        archivedAt: industrialFleetDrivers.archivedAt,
-      })
-      .from(industrialFleetDrivers)
-      .where(
-        and(eq(industrialFleetDrivers.id, driverId), eq(industrialFleetDrivers.tenantId, tenantId)),
-      )
-      .limit(1);
-    if (existing) {
-      if (existing.archivedAt || String(existing.status ?? "").toLowerCase() === "removed") {
-        await revive(existing.id);
-      } else if (personnelId) {
-        await tx
-          .update(industrialFleetDrivers)
-          .set({ personnelId, updatedAt: now })
-          .where(eq(industrialFleetDrivers.id, existing.id));
-      }
-      return existing.id;
-    }
-  }
-
-  if (personnelId) {
-    const [byPerson] = await tx
-      .select({
-        id: industrialFleetDrivers.id,
-        status: industrialFleetDrivers.status,
-        archivedAt: industrialFleetDrivers.archivedAt,
-      })
-      .from(industrialFleetDrivers)
-      .where(
-        and(
-          eq(industrialFleetDrivers.tenantId, tenantId),
-          eq(industrialFleetDrivers.personnelId, personnelId),
-        ),
-      )
-      .limit(1);
-    if (byPerson) {
-      if (byPerson.archivedAt || String(byPerson.status ?? "").toLowerCase() === "removed") {
-        await revive(byPerson.id);
-      }
-      return byPerson.id;
-    }
-  }
-
-  if (driverName) {
-    const wanted = normalizeDriverName(driverName);
-    const named = await tx
-      .select({
-        id: industrialFleetDrivers.id,
-        personnelName: industrialFleetDrivers.personnelName,
-        status: industrialFleetDrivers.status,
-        archivedAt: industrialFleetDrivers.archivedAt,
-      })
-      .from(industrialFleetDrivers)
-      .where(eq(industrialFleetDrivers.tenantId, tenantId));
-    const match = named.find((row) => normalizeDriverName(row.personnelName) === wanted);
-    if (match) {
-      if (match.archivedAt || String(match.status ?? "").toLowerCase() === "removed") {
-        await revive(match.id);
-      } else if (personnelId) {
-        await tx
-          .update(industrialFleetDrivers)
-          .set({ personnelId, updatedAt: now })
-          .where(eq(industrialFleetDrivers.id, match.id));
-      }
-      return match.id;
-    }
-  }
-
-  const [inserted] = await tx
-    .insert(industrialFleetDrivers)
-    .values({
-      id: createId(),
-      tenantId,
-      siteId: assignment.siteId ? String(assignment.siteId) : null,
-      personnelId,
-      personnelName: driverName,
-      status: "on_insurance",
-      sourceSystem: "FORGE",
-      sourceCollection: "fleetAssignedDrivers",
-      sourceDocumentId: personnelId || `name:${normalizeDriverName(driverName)}`,
-      sourcePayload: {
-        status: "on_insurance",
-        seededFrom: "fleet_vehicle_assignment",
-        personnelName: driverName,
-      },
-      createdAt: now,
-      updatedAt: now,
-    })
-    .returning({ id: industrialFleetDrivers.id });
-  return inserted?.id ?? null;
+  return ensureCompanyDriverRosterEntry(tx, tenantId, {
+    ...assignment,
+    seededFrom: "fleet_vehicle_assignment",
+  });
 }
 
 function page(query: ListQuery) {
   const pageNum = Math.max(1, Number(query.page ?? 1) || 1);
   const pageSize = Math.min(200, Math.max(1, Number(query.pageSize ?? 25) || 25));
   return { page: pageNum, pageSize, offset: (pageNum - 1) * pageSize };
+}
+
+function splitDriverPersonName(raw: string): { firstName: string; lastName: string } {
+  const parts = raw.trim().split(/\s+/).filter(Boolean);
+  if (parts.length === 0) return { firstName: "Unknown", lastName: "Driver" };
+  if (parts.length === 1) {
+    const only = parts[0] ?? "Driver";
+    return { firstName: only, lastName: only };
+  }
+  const firstName = parts[0] ?? "Unknown";
+  return { firstName, lastName: parts.slice(1).join(" ") || firstName };
 }
 
 function assertId(id: string): string {
@@ -237,6 +128,43 @@ function monthFromRenewal(raw: unknown): number | null {
   return idx >= 0 ? idx + 1 : null;
 }
 
+function unwrapPayload(raw: unknown): Record<string, unknown> {
+  if (!raw || typeof raw !== "object" || Array.isArray(raw)) return {};
+  return raw as Record<string, unknown>;
+}
+
+const VEHICLE_INSURANCE_PAYLOAD_KEYS = [
+  "insuranceCompany",
+  "insurancePolicyNumber",
+  "insurancePhone",
+  "insuranceAgentName",
+  "insuranceAgentPhone",
+  "insuranceAgentEmail",
+  "insuranceEffectiveDate",
+  "insuranceExpirationDate",
+] as const;
+
+function insuranceFieldsFromPayload(raw: unknown): Record<string, string | null> {
+  const payload = unwrapPayload(raw);
+  const out: Record<string, string | null> = {};
+  for (const key of VEHICLE_INSURANCE_PAYLOAD_KEYS) {
+    const value = payload[key];
+    out[key] = value == null || value === "" ? null : String(value).trim() || null;
+  }
+  return out;
+}
+
+function insuranceFieldsFromBody(body: Record<string, unknown>): Record<string, string | null> | null {
+  let touched = false;
+  const out: Record<string, string | null> = {};
+  for (const key of VEHICLE_INSURANCE_PAYLOAD_KEYS) {
+    if (body[key] === undefined) continue;
+    touched = true;
+    out[key] = body[key] == null || body[key] === "" ? null : String(body[key]).trim() || null;
+  }
+  return touched ? out : null;
+}
+
 function mapVehicle(row: typeof industrialFleetVehicles.$inferSelect) {
   return {
     id: row.id,
@@ -264,6 +192,7 @@ function mapVehicle(row: typeof industrialFleetVehicles.$inferSelect) {
     countyAssessmentNotes: row.countyAssessmentNotes,
     insured: row.insured,
     insuranceStatus: row.insuranceStatus,
+    ...insuranceFieldsFromPayload(row.sourcePayload),
     mileage: row.mileage,
     mileageUpdatedAt: row.mileageUpdatedAt?.toISOString() ?? null,
     engineHours: row.engineHours,
@@ -282,6 +211,9 @@ function mapVehicle(row: typeof industrialFleetVehicles.$inferSelect) {
     dispositionNotes: row.dispositionNotes,
     outOfService: Boolean(row.outOfService),
     outOfServiceReason: row.outOfServiceReason,
+    dotRegulated: Boolean(row.dotRegulated),
+    hasDvirQr: Boolean(row.dvirPublicTokenHash),
+    dvirQrIssuedAt: row.dvirPublicTokenIssuedAt?.toISOString() ?? null,
     status: row.status,
     createdAt: row.createdAt.toISOString(),
     updatedAt: row.updatedAt.toISOString(),
@@ -381,33 +313,9 @@ function vehiclePatchFromBody(body: Record<string, unknown>) {
   str("dispositionNotes");
   bool("outOfService");
   str("outOfServiceReason");
+  bool("dotRegulated");
   str("status");
   return patch;
-}
-
-function renewalBucket(row: {
-  renewalDate: string | null;
-  registrationRenewalMonth: number | null;
-}): string {
-  const today = new Date();
-  const y = today.getFullYear();
-  const m = today.getMonth() + 1;
-  const d = today.getDate();
-  let due: Date | null = null;
-  if (row.renewalDate) {
-    due = new Date(`${row.renewalDate}T00:00:00Z`);
-  } else if (row.registrationRenewalMonth && row.registrationRenewalMonth >= 1) {
-    const month = row.registrationRenewalMonth;
-    const year = month < m || (month === m && d > 1) ? y + 1 : y;
-    due = new Date(Date.UTC(year, month - 1, 1));
-  }
-  if (!due || Number.isNaN(due.getTime())) return "UNKNOWN";
-  const diffDays = Math.floor((due.getTime() - Date.UTC(y, m - 1, d)) / 86400000);
-  if (diffDays < 0) return "OVERDUE";
-  if (diffDays <= 30) return "DUE_30";
-  if (diffDays <= 60) return "DUE_60";
-  if (diffDays <= 90) return "DUE_90";
-  return "LATER";
 }
 
 @Injectable()
@@ -419,10 +327,12 @@ export class IndustrialFleetService {
     const q = (query.q ?? "").trim();
     const assetType = (query.assetType ?? "").trim();
     const status = (query.status ?? "").trim();
+    const siteId = (query.siteId ?? query.locationId ?? "").trim();
     const location = (query.location ?? query.locationName ?? "").trim();
     const insured = (query.insured ?? "").trim().toLowerCase();
     const removedOnly = query.removed === "1" || query.removed === "true";
     const overdueReg = query.overdueRegistration === "1" || query.overdueRegistration === "true";
+    const dotOnly = query.dotRegulated === "1" || query.dotRegulated === "true";
 
     return withTenantTransaction(this.db, principal.tenantId, async (tx) => {
       const conditions = [
@@ -431,6 +341,7 @@ export class IndustrialFleetService {
       ];
       if (assetType) conditions.push(eq(industrialFleetVehicles.assetType, assetType));
       if (status) conditions.push(eq(industrialFleetVehicles.status, status));
+      if (siteId) conditions.push(eq(industrialFleetVehicles.siteId, siteId));
       if (location) {
         conditions.push(ilike(industrialFleetVehicles.locationName, `%${location}%`));
       }
@@ -462,7 +373,11 @@ export class IndustrialFleetService {
         .select()
         .from(industrialFleetVehicles)
         .where(and(...conditions))
-        .orderBy(desc(industrialFleetVehicles.updatedAt));
+        .orderBy(
+          sql`${industrialFleetVehicles.locationName} ASC NULLS LAST`,
+          asc(industrialFleetVehicles.assetNumber),
+          desc(industrialFleetVehicles.updatedAt),
+        );
 
       let mapped = rows.map(mapVehicle);
       if (removedOnly) {
@@ -470,9 +385,13 @@ export class IndustrialFleetService {
       } else if (!status) {
         mapped = mapped.filter((r) => !REMOVED_STATUSES.has(String(r.status).toUpperCase()));
       }
-      if (overdueReg) {
-        mapped = mapped.filter((r) => renewalBucket(r) === "OVERDUE");
+      if (dotOnly) {
+        mapped = mapped.filter((r) => Boolean(r.dotRegulated));
       }
+      if (overdueReg) {
+        mapped = mapped.filter((r) => fleetRenewalBucket(r) === "OVERDUE");
+      }
+      mapped.sort(compareFleetAssetsByLocation);
 
       return {
         page: pageNum,
@@ -524,6 +443,7 @@ export class IndustrialFleetService {
           assetType: String(patch.assetType ?? "FLEET_VEHICLE"),
           status: String(patch.status ?? "ACTIVE"),
           outOfService: Boolean(patch.outOfService ?? false),
+          dotRegulated: Boolean(patch.dotRegulated ?? false),
           sourceSystem: "FORGE",
           sourcePayload: body,
           createdAt: now,
@@ -560,11 +480,32 @@ export class IndustrialFleetService {
   async patchVehicle(principal: ForgePrincipal, id: string, body: Record<string, unknown>) {
     const recordId = assertId(id);
     const patch = vehiclePatchFromBody(body);
+    const insurancePatch = insuranceFieldsFromBody(body);
     return withTenantTransaction(this.db, principal.tenantId, async (tx) => {
       const now = new Date();
+      const [existing] = await tx
+        .select()
+        .from(industrialFleetVehicles)
+        .where(
+          and(
+            eq(industrialFleetVehicles.id, recordId),
+            eq(industrialFleetVehicles.tenantId, principal.tenantId),
+          ),
+        )
+        .limit(1);
+      if (!existing) throw new ForgeError("NOT_FOUND", "Fleet asset not found");
+
+      const nextPayload = insurancePatch
+        ? { ...unwrapPayload(existing.sourcePayload), ...insurancePatch }
+        : undefined;
+
       const [row] = await tx
         .update(industrialFleetVehicles)
-        .set({ ...patch, updatedAt: now } as Partial<typeof industrialFleetVehicles.$inferInsert>)
+        .set({
+          ...patch,
+          ...(nextPayload ? { sourcePayload: nextPayload } : {}),
+          updatedAt: now,
+        } as Partial<typeof industrialFleetVehicles.$inferInsert>)
         .where(
           and(
             eq(industrialFleetVehicles.id, recordId),
@@ -875,7 +816,7 @@ export class IndustrialFleetService {
       for (const r of active) {
         byType[r.assetType] = (byType[r.assetType] ?? 0) + 1;
         byStatus[r.status] = (byStatus[r.status] ?? 0) + 1;
-        const bucket = renewalBucket(r);
+        const bucket = fleetRenewalBucket(r);
         renewals[bucket] = (renewals[bucket] ?? 0) + 1;
       }
       return {
@@ -893,10 +834,11 @@ export class IndustrialFleetService {
   async renewals(principal: ForgePrincipal, query: ListQuery) {
     const bucketFilter = (query.bucket ?? "").trim().toUpperCase();
     const list = await this.listVehicles(principal, { ...query, page: "1", pageSize: "500" });
-    const items = list.items.map((r) => ({ ...r, renewalBucket: renewalBucket(r) }));
+    const items = list.items.map((r) => ({ ...r, renewalBucket: fleetRenewalBucket(r) }));
     const filtered = bucketFilter
       ? items.filter((r) => r.renewalBucket === bucketFilter)
       : items;
+    filtered.sort(compareFleetRenewalsByLocationThenSoonest);
     const buckets: Record<string, number> = {
       OVERDUE: 0,
       DUE_30: 0,
@@ -959,6 +901,13 @@ export class IndustrialFleetService {
     if (!title) throw new ForgeError("VALIDATION_FAILED", "title is required");
     return withTenantTransaction(this.db, principal.tenantId, async (tx) => {
       const now = new Date();
+      const status = String(body.status ?? "OPEN").toUpperCase();
+      const completedAt =
+        status === "COMPLETED"
+          ? body.completedAt
+            ? new Date(String(body.completedAt))
+            : now
+          : null;
       const [row] = await tx
         .insert(industrialFleetMaintenance)
         .values({
@@ -967,8 +916,10 @@ export class IndustrialFleetService {
           vehicleId,
           title,
           maintenanceType: String(body.maintenanceType ?? "REPAIR"),
-          status: String(body.status ?? "OPEN"),
+          status,
           dueDate: asDate(body.dueDate),
+          completedAt:
+            completedAt && !Number.isNaN(completedAt.getTime()) ? completedAt : null,
           costCents: asInt(body.costCents),
           notes: body.notes ? String(body.notes) : null,
           sourceSystem: "FORGE",
@@ -984,7 +935,7 @@ export class IndustrialFleetService {
         maintenanceType: row!.maintenanceType,
         status: row!.status,
         dueDate: row!.dueDate,
-        completedAt: null,
+        completedAt: row!.completedAt?.toISOString() ?? null,
         costCents: row!.costCents,
         notes: row!.notes,
         createdAt: row!.createdAt.toISOString(),
@@ -1121,18 +1072,29 @@ export class IndustrialFleetService {
         page: pageNum,
         pageSize,
         total: rows.length,
-        items: rows.slice(offset, offset + pageSize).map((r) => ({
-          id: r.id,
-          vehicleId: r.vehicleId,
-          title: r.title,
-          documentType: r.documentType,
-          storageKey: r.storageKey,
-          contentType: r.contentType,
-          notes: r.notes,
-          createdAt: r.createdAt.toISOString(),
-          updatedAt: r.updatedAt.toISOString(),
-        })),
+        items: rows
+          .slice(offset, offset + pageSize)
+          .map((r) => this.mapFleetDocument(r, { includeDataUrl: false })),
       };
+    });
+  }
+
+  async getDocument(principal: ForgePrincipal, id: string) {
+    const recordId = assertId(id);
+    return withTenantTransaction(this.db, principal.tenantId, async (tx) => {
+      const [row] = await tx
+        .select()
+        .from(industrialFleetDocuments)
+        .where(
+          and(
+            eq(industrialFleetDocuments.id, recordId),
+            eq(industrialFleetDocuments.tenantId, principal.tenantId),
+            isNull(industrialFleetDocuments.archivedAt),
+          ),
+        )
+        .limit(1);
+      if (!row) throw new ForgeError("NOT_FOUND", "Document not found.");
+      return this.mapFleetDocument(row, { includeDataUrl: true });
     });
   }
 
@@ -1140,37 +1102,118 @@ export class IndustrialFleetService {
     const vehicleId = assertId(String(body.vehicleId ?? ""));
     const title = String(body.title ?? "").trim();
     if (!title) throw new ForgeError("VALIDATION_FAILED", "title is required");
+    const dataUrl = typeof body.dataUrl === "string" ? body.dataUrl.trim() : "";
+    if (dataUrl) {
+      if (!dataUrl.startsWith("data:")) {
+        throw new ForgeError("VALIDATION_FAILED", "Photo upload must be a data URL.");
+      }
+      if (dataUrl.length > 3_500_000) {
+        throw new ForgeError("VALIDATION_FAILED", "Photo is too large; compress and retry.");
+      }
+      if (!dataUrl.startsWith("data:image/") && !dataUrl.startsWith("data:application/pdf")) {
+        throw new ForgeError(
+          "VALIDATION_FAILED",
+          "Only image or PDF uploads are supported for fleet documents.",
+        );
+      }
+    }
+    const fileName = String(body.fileName ?? body.originalFilename ?? "document.jpg")
+      .trim()
+      .slice(0, 255);
+    const contentTypeFromData = (() => {
+      const match = /^data:([^;,]+)[;,]/.exec(dataUrl);
+      return match?.[1] ?? null;
+    })();
+    const contentType =
+      String(body.contentType ?? "").trim() || contentTypeFromData || null;
+
     return withTenantTransaction(this.db, principal.tenantId, async (tx) => {
+      const [vehicle] = await tx
+        .select({ id: industrialFleetVehicles.id })
+        .from(industrialFleetVehicles)
+        .where(
+          and(
+            eq(industrialFleetVehicles.id, vehicleId),
+            eq(industrialFleetVehicles.tenantId, principal.tenantId),
+            isNull(industrialFleetVehicles.archivedAt),
+          ),
+        )
+        .limit(1);
+      if (!vehicle) {
+        throw new ForgeError("NOT_FOUND", "Vehicle not found for this document.");
+      }
+
       const now = new Date();
+      const id = createId();
       const [row] = await tx
         .insert(industrialFleetDocuments)
         .values({
-          id: createId(),
+          id,
           tenantId: principal.tenantId,
           vehicleId,
           title,
           documentType: String(body.documentType ?? "OTHER"),
-          storageKey: body.storageKey ? String(body.storageKey) : null,
-          contentType: body.contentType ? String(body.contentType) : null,
+          storageKey: dataUrl ? `inline:${id}` : body.storageKey ? String(body.storageKey) : null,
+          contentType: contentType ? contentType.slice(0, 120) : null,
           notes: body.notes ? String(body.notes) : null,
           sourceSystem: "FORGE",
-          sourcePayload: body,
+          sourcePayload: {
+            fileName: fileName || null,
+            contentType,
+            ...(dataUrl ? { dataUrl } : {}),
+            documentType: String(body.documentType ?? "OTHER"),
+            notes: body.notes ? String(body.notes) : null,
+          },
           createdAt: now,
           updatedAt: now,
         })
         .returning();
-      return {
-        id: row!.id,
-        vehicleId: row!.vehicleId,
-        title: row!.title,
-        documentType: row!.documentType,
-        storageKey: row!.storageKey,
-        contentType: row!.contentType,
-        notes: row!.notes,
-        createdAt: row!.createdAt.toISOString(),
-        updatedAt: row!.updatedAt.toISOString(),
-      };
+      return this.mapFleetDocument(row!, { includeDataUrl: true });
     });
+  }
+
+  private mapFleetDocument(
+    r: {
+      id: string;
+      vehicleId: string;
+      title: string;
+      documentType: string;
+      storageKey: string | null;
+      contentType: string | null;
+      notes: string | null;
+      sourcePayload: unknown;
+      createdAt: Date;
+      updatedAt: Date;
+    },
+    options?: { includeDataUrl?: boolean },
+  ) {
+    const includeDataUrl = options?.includeDataUrl !== false;
+    const payload =
+      r.sourcePayload && typeof r.sourcePayload === "object" && !Array.isArray(r.sourcePayload)
+        ? (r.sourcePayload as Record<string, unknown>)
+        : {};
+    const inlineDataUrl =
+      typeof payload.dataUrl === "string" && payload.dataUrl.startsWith("data:")
+        ? payload.dataUrl
+        : null;
+    const fileName =
+      typeof payload.fileName === "string" && payload.fileName.trim()
+        ? payload.fileName.trim()
+        : null;
+    return {
+      id: r.id,
+      vehicleId: r.vehicleId,
+      title: r.title,
+      documentType: r.documentType,
+      storageKey: r.storageKey,
+      contentType: r.contentType,
+      notes: r.notes,
+      fileName,
+      dataUrl: includeDataUrl ? inlineDataUrl : null,
+      hasPhoto: Boolean(inlineDataUrl),
+      createdAt: r.createdAt.toISOString(),
+      updatedAt: r.updatedAt.toISOString(),
+    };
   }
 
   async listDriversEditable(principal: ForgePrincipal, query: ListQuery) {
@@ -1287,7 +1330,190 @@ export class IndustrialFleetService {
         )
         .returning();
       if (!row) throw new ForgeError("NOT_FOUND", "Fleet driver not found");
+      if (body.personnelId !== undefined && body.personnelId != null) {
+        const linkedId = String(body.personnelId).trim();
+        if (linkedId) {
+          await tx
+            .update(industrialPersonnel)
+            .set({ isCompanyDriver: true, updatedAt: now })
+            .where(
+              and(
+                eq(industrialPersonnel.id, linkedId),
+                eq(industrialPersonnel.tenantId, principal.tenantId),
+              ),
+            );
+        }
+      }
       return mapDriver(row);
+    });
+  }
+
+  /**
+   * Link a company driver roster row to an existing personnel file, or create a
+   * new personnel file from the driver record so MVR / license data lives on
+   * one person file.
+   */
+  async mergeDriverToPersonnel(
+    principal: ForgePrincipal,
+    id: string,
+    body: Record<string, unknown>,
+  ) {
+    const recordId = assertId(id);
+    const createPersonnel = body.createPersonnel === true;
+    const forceMerge = body.forceMerge === true || body.force === true;
+    const personnelIdInput =
+      body.personnelId != null ? String(body.personnelId).trim() : "";
+
+    return withTenantTransaction(this.db, principal.tenantId, async (tx) => {
+      const now = new Date();
+      const [driver] = await tx
+        .select()
+        .from(industrialFleetDrivers)
+        .where(
+          and(
+            eq(industrialFleetDrivers.id, recordId),
+            eq(industrialFleetDrivers.tenantId, principal.tenantId),
+            isNull(industrialFleetDrivers.archivedAt),
+          ),
+        )
+        .limit(1);
+      if (!driver) throw new ForgeError("NOT_FOUND", "Fleet driver not found");
+
+      if (driver.personnelId && !createPersonnel && !personnelIdInput) {
+        throw new ForgeError(
+          "VALIDATION_FAILED",
+          "This driver is already linked to a personnel file.",
+        );
+      }
+
+      let personnelId: string | null = personnelIdInput || null;
+      let personnelDisplayName: string | null = null;
+      let personnelEmployeeNumber: string | null = null;
+      let unlinkedDriverId: string | null = null;
+      let unlinkedDriverName: string | null = null;
+
+      if (createPersonnel) {
+        if (driver.personnelId) {
+          throw new ForgeError(
+            "VALIDATION_FAILED",
+            "Unlink the current personnel file before creating a new one.",
+          );
+        }
+        const rawName = String(driver.personnelName ?? "").trim();
+        const { firstName, lastName } = splitDriverPersonName(rawName);
+        const displayName = rawName || `${firstName} ${lastName}`.trim();
+        const [person] = await tx
+          .insert(industrialPersonnel)
+          .values({
+            id: createId(),
+            tenantId: principal.tenantId,
+            firstName,
+            lastName,
+            displayName,
+            employeeNumber: driver.employeeNumber,
+            isCompanyDriver: true,
+            status: "Active",
+            sourceSystem: "FORGE",
+            sourcePayload: {
+              mergedFromFleetDriverId: driver.id,
+              licenseNumber: driver.licenseNumber,
+              licenseState: driver.licenseState,
+              licenseExpiryDate: driver.licenseExpiryDate,
+            },
+            createdAt: now,
+            updatedAt: now,
+          })
+          .returning();
+        personnelId = person!.id;
+        personnelDisplayName = person!.displayName;
+        personnelEmployeeNumber = person!.employeeNumber;
+      } else if (personnelId) {
+        const [person] = await tx
+          .select()
+          .from(industrialPersonnel)
+          .where(
+            and(
+              eq(industrialPersonnel.id, personnelId),
+              eq(industrialPersonnel.tenantId, principal.tenantId),
+              isNull(industrialPersonnel.archivedAt),
+            ),
+          )
+          .limit(1);
+        if (!person) throw new ForgeError("NOT_FOUND", "Personnel not found");
+
+        const [conflict] = await tx
+          .select({
+            id: industrialFleetDrivers.id,
+            personnelName: industrialFleetDrivers.personnelName,
+          })
+          .from(industrialFleetDrivers)
+          .where(
+            and(
+              eq(industrialFleetDrivers.tenantId, principal.tenantId),
+              eq(industrialFleetDrivers.personnelId, personnelId),
+              isNull(industrialFleetDrivers.archivedAt),
+              ne(industrialFleetDrivers.id, recordId),
+            ),
+          )
+          .limit(1);
+        if (conflict) {
+          if (!forceMerge) {
+            throw new ForgeError(
+              "VALIDATION_FAILED",
+              `${person.displayName ?? "This person"} is already linked to another company driver. Use force merge to replace that link.`,
+            );
+          }
+          await tx
+            .update(industrialFleetDrivers)
+            .set({ personnelId: null, updatedAt: now })
+            .where(eq(industrialFleetDrivers.id, conflict.id));
+          unlinkedDriverId = conflict.id;
+          unlinkedDriverName = conflict.personnelName;
+        }
+
+        await tx
+          .update(industrialPersonnel)
+          .set({ isCompanyDriver: true, updatedAt: now })
+          .where(eq(industrialPersonnel.id, personnelId));
+
+        personnelDisplayName = person.displayName;
+        personnelEmployeeNumber = person.employeeNumber;
+      } else {
+        throw new ForgeError(
+          "VALIDATION_FAILED",
+          "Choose a personnel file to link, or create a new personnel file.",
+        );
+      }
+
+      const driverPatch: Partial<typeof industrialFleetDrivers.$inferInsert> = {
+        personnelId,
+        updatedAt: now,
+      };
+      if (personnelDisplayName) driverPatch.personnelName = personnelDisplayName;
+      const driverEmp = String(driver.employeeNumber ?? "").trim();
+      const personEmp = String(personnelEmployeeNumber ?? "").trim();
+      if (!driverEmp && personEmp) driverPatch.employeeNumber = personEmp;
+
+      const [row] = await tx
+        .update(industrialFleetDrivers)
+        .set(driverPatch)
+        .where(
+          and(
+            eq(industrialFleetDrivers.id, recordId),
+            eq(industrialFleetDrivers.tenantId, principal.tenantId),
+          ),
+        )
+        .returning();
+      if (!row) throw new ForgeError("NOT_FOUND", "Fleet driver not found");
+
+      return {
+        driver: mapDriver(row),
+        personnelId,
+        personnelDisplayName,
+        unlinkedDriverId,
+        unlinkedDriverName,
+        forceMerge: forceMerge && Boolean(unlinkedDriverId),
+      };
     });
   }
 
@@ -1455,6 +1681,7 @@ export class IndustrialFleetService {
       "registrationRenewalMonth",
       "insured",
       "insuranceStatus",
+      "dotRegulated",
       "countyAssessed",
       "mileage",
       "form2290Status",
@@ -1475,5 +1702,280 @@ export class IndustrialFleetService {
 
   validateVinHelper(vin: string) {
     return validateVin(vin);
+  }
+
+  private industrialAppBaseUrl(override?: string | null): string {
+    const raw =
+      (typeof override === "string" && override.trim()) ||
+      process.env.FORGE_INDUSTRIAL_APP_URL ||
+      process.env.NEXT_PUBLIC_APP_URL ||
+      "https://producersrice.forgeindustrialsafety.com";
+    let normalized = raw.trim().replace(/\/+$/, "");
+    try {
+      const parsed = new URL(normalized);
+      normalized = parsed.origin;
+    } catch {
+      // keep trimmed string when override is not a full URL
+    }
+    if (!/^https?:\/\//i.test(normalized)) {
+      throw new ForgeError(
+        "VALIDATION_FAILED",
+        "Industrial app URL must start with http:// or https://.",
+      );
+    }
+    if (normalized.length > 256) {
+      throw new ForgeError(
+        "VALIDATION_FAILED",
+        "Industrial app URL is too long for a DVIR QR code.",
+      );
+    }
+    return normalized;
+  }
+
+  private dvirPublicUrl(token: string, appBaseUrl?: string | null): string {
+    const safeToken = encodeURIComponent(token);
+    return `${this.industrialAppBaseUrl(appBaseUrl)}/dvir/${safeToken}`;
+  }
+
+  private storedDvirPublicToken(row: {
+    dvirPublicTokenHash: string | null;
+    sourcePayload: unknown;
+  }): string | null {
+    if (!row.dvirPublicTokenHash) return null;
+    const stored = String(unwrapPayload(row.sourcePayload).dvirPublicToken ?? "").trim();
+    if (!stored || stored.length < 16) return null;
+    const hash = createHash("sha256").update(stored).digest("hex");
+    return hash === row.dvirPublicTokenHash ? stored : null;
+  }
+
+  /**
+   * Return the active public DVIR URL for Brady / sticker reprints without rotating
+   * the token when the plaintext is still stored on the vehicle payload.
+   */
+  async ensureDvirQr(
+    principal: ForgePrincipal,
+    vehicleId: string,
+    body: Record<string, unknown> = {},
+  ) {
+    const recordId = assertId(vehicleId);
+    return withTenantTransaction(this.db, principal.tenantId, async (tx) => {
+      const [existing] = await tx
+        .select()
+        .from(industrialFleetVehicles)
+        .where(
+          and(
+            eq(industrialFleetVehicles.id, recordId),
+            eq(industrialFleetVehicles.tenantId, principal.tenantId),
+            isNull(industrialFleetVehicles.archivedAt),
+          ),
+        )
+        .limit(1);
+      if (!existing) throw new ForgeError("NOT_FOUND", "Vehicle not found");
+      if (!existing.dotRegulated) {
+        throw new ForgeError(
+          "VALIDATION_FAILED",
+          "This asset is not marked DOT regulated. Enable DOT regulated on the asset file before issuing a DVIR QR.",
+        );
+      }
+
+      const appBase =
+        typeof body.appBaseUrl === "string" ? body.appBaseUrl : null;
+      const reused = this.storedDvirPublicToken(existing);
+      if (reused) {
+        return {
+          token: reused,
+          url: this.dvirPublicUrl(reused, appBase),
+          reused: true,
+          vehicle: mapVehicle(existing),
+        };
+      }
+
+      const token = randomBytes(24).toString("base64url");
+      const tokenHash = createHash("sha256").update(token).digest("hex");
+      const now = new Date();
+      const nextPayload = {
+        ...unwrapPayload(existing.sourcePayload),
+        dvirPublicToken: token,
+      };
+      const [row] = await tx
+        .update(industrialFleetVehicles)
+        .set({
+          dvirPublicTokenHash: tokenHash,
+          dvirPublicTokenIssuedAt: now,
+          sourcePayload: nextPayload,
+          updatedAt: now,
+        })
+        .where(
+          and(
+            eq(industrialFleetVehicles.id, recordId),
+            eq(industrialFleetVehicles.tenantId, principal.tenantId),
+            isNull(industrialFleetVehicles.archivedAt),
+          ),
+        )
+        .returning();
+      if (!row) throw new ForgeError("NOT_FOUND", "Vehicle not found");
+      return {
+        token,
+        url: this.dvirPublicUrl(token, appBase),
+        reused: false,
+        vehicle: mapVehicle(row),
+      };
+    });
+  }
+
+  async issueDvirQr(
+    principal: ForgePrincipal,
+    vehicleId: string,
+    body: Record<string, unknown> = {},
+  ) {
+    const recordId = assertId(vehicleId);
+    const token = randomBytes(24).toString("base64url");
+    const tokenHash = createHash("sha256").update(token).digest("hex");
+    const now = new Date();
+    return withTenantTransaction(this.db, principal.tenantId, async (tx) => {
+      const [existing] = await tx
+        .select()
+        .from(industrialFleetVehicles)
+        .where(
+          and(
+            eq(industrialFleetVehicles.id, recordId),
+            eq(industrialFleetVehicles.tenantId, principal.tenantId),
+            isNull(industrialFleetVehicles.archivedAt),
+          ),
+        )
+        .limit(1);
+      if (!existing) throw new ForgeError("NOT_FOUND", "Vehicle not found");
+      if (!existing.dotRegulated) {
+        throw new ForgeError(
+          "VALIDATION_FAILED",
+          "This asset is not marked DOT regulated. Enable DOT regulated on the asset file before issuing a DVIR QR.",
+        );
+      }
+
+      const nextPayload = {
+        ...unwrapPayload(existing.sourcePayload),
+        dvirPublicToken: token,
+      };
+      const [row] = await tx
+        .update(industrialFleetVehicles)
+        .set({
+          dvirPublicTokenHash: tokenHash,
+          dvirPublicTokenIssuedAt: now,
+          sourcePayload: nextPayload,
+          updatedAt: now,
+        })
+        .where(
+          and(
+            eq(industrialFleetVehicles.id, recordId),
+            eq(industrialFleetVehicles.tenantId, principal.tenantId),
+            isNull(industrialFleetVehicles.archivedAt),
+          ),
+        )
+        .returning();
+      if (!row) throw new ForgeError("NOT_FOUND", "Vehicle not found");
+      const url = this.dvirPublicUrl(
+        token,
+        typeof body.appBaseUrl === "string" ? body.appBaseUrl : null,
+      );
+      return {
+        token,
+        url,
+        reused: false,
+        vehicle: mapVehicle(row),
+      };
+    });
+  }
+
+  async revokeDvirQr(principal: ForgePrincipal, vehicleId: string) {
+    const recordId = assertId(vehicleId);
+    return withTenantTransaction(this.db, principal.tenantId, async (tx) => {
+      const [existing] = await tx
+        .select({
+          id: industrialFleetVehicles.id,
+          sourcePayload: industrialFleetVehicles.sourcePayload,
+        })
+        .from(industrialFleetVehicles)
+        .where(
+          and(
+            eq(industrialFleetVehicles.id, recordId),
+            eq(industrialFleetVehicles.tenantId, principal.tenantId),
+          ),
+        )
+        .limit(1);
+      if (!existing) throw new ForgeError("NOT_FOUND", "Vehicle not found");
+      const prev = unwrapPayload(existing.sourcePayload);
+      const { dvirPublicToken: _removed, ...restPayload } = prev;
+      const [row] = await tx
+        .update(industrialFleetVehicles)
+        .set({
+          dvirPublicTokenHash: null,
+          dvirPublicTokenIssuedAt: null,
+          sourcePayload: restPayload,
+          updatedAt: new Date(),
+        })
+        .where(
+          and(
+            eq(industrialFleetVehicles.id, recordId),
+            eq(industrialFleetVehicles.tenantId, principal.tenantId),
+          ),
+        )
+        .returning();
+      if (!row) throw new ForgeError("NOT_FOUND", "Vehicle not found");
+      return mapVehicle(row);
+    });
+  }
+
+  async dvirQrImage(
+    principal: ForgePrincipal,
+    vehicleId: string,
+    body: Record<string, unknown> = {},
+  ) {
+    const recordId = assertId(vehicleId);
+    const token = String(body.token ?? "").trim();
+    if (!token || token.length < 16) {
+      throw new ForgeError("VALIDATION_FAILED", "Provide the DVIR QR token from issue.");
+    }
+    const tokenHash = createHash("sha256").update(token).digest("hex");
+    return withTenantTransaction(this.db, principal.tenantId, async (tx) => {
+      const [row] = await tx
+        .select()
+        .from(industrialFleetVehicles)
+        .where(
+          and(
+            eq(industrialFleetVehicles.id, recordId),
+            eq(industrialFleetVehicles.tenantId, principal.tenantId),
+            eq(industrialFleetVehicles.dvirPublicTokenHash, tokenHash),
+            isNull(industrialFleetVehicles.archivedAt),
+          ),
+        )
+        .limit(1);
+      if (!row) throw new ForgeError("NOT_FOUND", "DVIR QR token is invalid for this vehicle.");
+      const url = this.dvirPublicUrl(
+        token,
+        typeof body.appBaseUrl === "string" ? body.appBaseUrl : null,
+      );
+      const assetLabel = fleetVehicleStickerAssetLabel(row);
+      const assetName = row.assetNumber?.trim() || assetLabel;
+      let qrPng: Buffer;
+      try {
+        qrPng = await qrCodePngBuffer(url, 320);
+      } catch (error) {
+        throw new ForgeError(
+          "VALIDATION_FAILED",
+          error instanceof Error ? error.message : "Could not generate DVIR QR image.",
+        );
+      }
+      const qrPngBase64 = qrPng.toString("base64");
+      return {
+        contentType: "image/png",
+        dataBase64: qrPngBase64,
+        qrPngBase64,
+        url,
+        vehicleLabel: assetLabel,
+        assetName,
+        assetNumber: row.assetNumber ?? null,
+        vin: row.vin ?? null,
+      };
+    });
   }
 }

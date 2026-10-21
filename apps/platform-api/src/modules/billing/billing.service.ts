@@ -4,9 +4,11 @@ import {
   createBillingContractInputSchema,
   createBillingCustomerInputSchema,
   createBillingFeeInputSchema,
+  createBillingInvoiceInputSchema,
   billingWebhookEnvelopeSchema,
   patchBillingContractInputSchema,
   patchBillingCustomerInputSchema,
+  patchBillingInvoiceInputSchema,
   toOperationalSubscriptionStatus,
   BILLING_WEBHOOK_ENTITLEMENT_INVARIANT,
   type BillingProviderCode,
@@ -36,18 +38,6 @@ import { AuditService } from "../audit/audit.service.js";
 import { EntitlementsService } from "../entitlements/entitlements.service.js";
 import { OutboxService } from "../outbox/outbox.service.js";
 import { SubscriptionsService } from "../subscriptions/subscriptions.service.js";
-
-const invoiceMetadataSchema = z.object({
-  status: z.enum(["DRAFT", "OPEN", "PAID", "VOID", "UNCOLLECTIBLE"]).default("OPEN"),
-  currency: z.string().length(3).default("USD"),
-  amountDueCents: z.number().int().nonnegative().default(0),
-  amountPaidCents: z.number().int().nonnegative().default(0),
-  externalInvoiceId: z.string().max(255).optional().nullable(),
-  hostedInvoiceUrl: z.string().url().max(2000).optional().nullable(),
-  subscriptionId: z.string().uuid().optional().nullable(),
-  orderId: z.string().uuid().optional().nullable(),
-  metadata: z.record(z.unknown()).optional(),
-});
 
 const orderSchema = z.object({
   status: z.enum(["DRAFT", "OPEN", "FULFILLED", "CANCELED"]).default("OPEN"),
@@ -284,7 +274,7 @@ export class BillingService {
   }
 
   async recordInvoiceMetadata(tenantId: string, input: unknown, principal: ForgePrincipal) {
-    const data = invoiceMetadataSchema.parse(input);
+    const data = createBillingInvoiceInputSchema.parse(input);
     const customer = await this.ensureCustomer(tenantId, {}, principal);
     return withTenantTransaction(this.db, tenantId, async (tx) => {
       const now = new Date();
@@ -429,8 +419,81 @@ export class BillingService {
     return withTenantTransaction(this.db, tenantId, async (tx) =>
       tx.query.billingFeeLines.findMany({
         where: eq(billingFeeLines.tenantId, tenantId),
+        orderBy: (t, { desc: d }) => [d(t.createdAt)],
       }),
     );
+  }
+
+  async patchInvoice(
+    tenantId: string,
+    invoiceId: string,
+    input: unknown,
+    principal: ForgePrincipal,
+    expectedVersion: number | "*",
+  ) {
+    const data = patchBillingInvoiceInputSchema.parse(input);
+    return withTenantTransaction(this.db, tenantId, async (tx) => {
+      const before = await tx.query.billingInvoices.findFirst({
+        where: and(eq(billingInvoices.id, invoiceId), eq(billingInvoices.tenantId, tenantId)),
+      });
+      if (!before) {
+        throw new ForgeError("NOT_FOUND", "Billing invoice not found");
+      }
+      const version = before.recordVersion;
+      if (expectedVersion !== "*" && version !== expectedVersion) {
+        throw concurrencyConflict({
+          tenantId,
+          resourceType: "billing_invoice",
+          resourceId: invoiceId,
+          expectedVersion,
+          actualVersion: version,
+        });
+      }
+      const [row] = await tx
+        .update(billingInvoices)
+        .set({
+          ...(data.status !== undefined ? { status: data.status } : {}),
+          ...(data.currency !== undefined ? { currency: data.currency } : {}),
+          ...(data.amountDueCents !== undefined ? { amountDueCents: data.amountDueCents } : {}),
+          ...(data.amountPaidCents !== undefined ? { amountPaidCents: data.amountPaidCents } : {}),
+          ...(data.externalInvoiceId !== undefined
+            ? { externalInvoiceId: data.externalInvoiceId }
+            : {}),
+          ...(data.hostedInvoiceUrl !== undefined ? { hostedInvoiceUrl: data.hostedInvoiceUrl } : {}),
+          ...(data.subscriptionId !== undefined ? { subscriptionId: data.subscriptionId } : {}),
+          ...(data.orderId !== undefined ? { orderId: data.orderId } : {}),
+          ...(data.metadata !== undefined ? { metadataJson: data.metadata ?? {} } : {}),
+          recordVersion: version + 1,
+          updatedAt: new Date(),
+        })
+        .where(and(eq(billingInvoices.id, invoiceId), eq(billingInvoices.recordVersion, version)))
+        .returning();
+      if (!row) {
+        throw concurrencyConflict({
+          tenantId,
+          resourceType: "billing_invoice",
+          resourceId: invoiceId,
+          expectedVersion,
+          actualVersion: null,
+        });
+      }
+      await this.audit.writeInTransaction(tx, {
+        tenantId,
+        actorUserId: principal.userId,
+        actorPersonId: principal.personId,
+        actorType: "USER",
+        action: "billing.invoice.update",
+        resourceType: "billing_invoice",
+        resourceId: invoiceId,
+        result: "SUCCESS",
+        riskLevel: "MEDIUM",
+        correlationId: principal.correlationId,
+        requestId: principal.requestId,
+        before,
+        after: row,
+      });
+      return row;
+    }, principal.userId);
   }
 
   async patchContract(

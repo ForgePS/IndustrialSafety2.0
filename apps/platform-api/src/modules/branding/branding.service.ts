@@ -42,6 +42,7 @@ export class BrandingService {
     const data = putTenantBrandingInputSchema.parse(input) as PutTenantBrandingInput;
     return withTenantTransaction(this.db, tenantId, async (tx) => {
       await this.assertOwnedDocumentRef(tx, tenantId, data.logoDocumentId ?? null);
+      await this.assertOwnedDocumentRef(tx, tenantId, data.logoDarkDocumentId ?? null);
       await this.assertOwnedDocumentRef(tx, tenantId, data.iconDocumentId ?? null);
 
       const existing = await tx.query.tenantBranding.findFirst({
@@ -52,6 +53,10 @@ export class BrandingService {
         displayName: data.displayName,
         shortName: data.shortName,
         logoDocumentId: data.logoDocumentId,
+        logoDarkDocumentId:
+          data.logoDarkDocumentId !== undefined
+            ? data.logoDarkDocumentId
+            : (existing?.logoDarkDocumentId ?? null),
         iconDocumentId: data.iconDocumentId,
         primaryColor: data.primaryColor,
         secondaryColor: data.secondaryColor,

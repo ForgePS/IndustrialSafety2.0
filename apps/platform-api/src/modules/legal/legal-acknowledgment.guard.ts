@@ -35,20 +35,26 @@ export class LegalAcknowledgmentGuard implements CanActivate {
       principal,
     );
     if (!gateOn) return true;
-    const summary = await this.acknowledgments.summaryForMe(principal.tenantId, principal);
-    if (summary.status === "REQUIRED") {
-      throw new ForgeError(
-        "LEGAL_ACKNOWLEDGMENT_REQUIRED",
-        "Required legal acknowledgments must be accepted before continuing",
-        {
-          details: [
-            {
-              pendingCount: summary.pendingCount,
-              gatePath: summary.gatePath,
-            },
-          ],
-        },
-      );
+    try {
+      const summary = await this.acknowledgments.summaryForMe(principal.tenantId, principal);
+      if (summary.status === "REQUIRED") {
+        throw new ForgeError(
+          "LEGAL_ACKNOWLEDGMENT_REQUIRED",
+          "Required legal acknowledgments must be accepted before continuing",
+          {
+            details: [
+              {
+                pendingCount: summary.pendingCount,
+                gatePath: summary.gatePath,
+              },
+            ],
+          },
+        );
+      }
+    } catch (error) {
+      if (error instanceof ForgeError) throw error;
+      // Fail open: never take down Industrial APIs because the legal probe broke.
+      return true;
     }
     return true;
   }

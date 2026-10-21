@@ -168,12 +168,14 @@ export class AuthSessionController {
   @Public()
   async refresh(
     @Req() req: RequestWithIds,
-    @Headers(FORGE_CSRF_HEADER) csrf: string | undefined,
     @Res({ passthrough: true }) res: Response,
   ) {
+    // SameSite=Strict cookie + trusted Origin/Referer are sufficient. Field/Industrial
+    // reach the API through a CloudFront→API CloudFront hop where request Host is the
+    // API domain, so "same-origin" CSRF skips never matched and stale localStorage CSRF
+    // (or PWA wipes) forced logout ~access-token lifetime after backgrounding.
     this.assertTrustedOrigin(req);
     const raw = this.requireSessionCookie(req);
-    await this.sessions.assertCsrf(raw, csrf);
     const tokens = await this.sessions.refreshSession(raw);
     this.setSessionCookie(req, res, tokens);
     return ok(publicTokenPayload(tokens), getRequestIds(req));
@@ -186,7 +188,13 @@ export class AuthSessionController {
     @Headers(FORGE_CSRF_HEADER) csrf: string | undefined,
     @Res({ passthrough: true }) res: Response,
   ) {
-    this.assertTrustedOrigin(req);
+    // Prefer trusted Origin, but never skip clearing the HttpOnly cookie — sticky
+    // sessions on Android PWAs (logout Origin quirks) are worse than CSRF logout.
+    try {
+      this.assertTrustedOrigin(req);
+    } catch {
+      // continue — Set-Cookie clear below still applies to the viewer host.
+    }
     const hints = requestProtocolAndHost(req);
     const raw = readSessionTokenFromCookieHeader(
       typeof req.headers.cookie === "string" ? req.headers.cookie : undefined,

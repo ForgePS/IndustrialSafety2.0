@@ -7,17 +7,22 @@ import { Idempotent } from "../../common/idempotent.decorator.js";
 import { getRequestIds, type RequestWithIds } from "../../common/request-ids.js";
 import { Principal } from "../auth-context/principal.decorator.js";
 import { Public } from "../auth-context/public.decorator.js";
-import { RequirePermission } from "../auth-context/require-permission.decorator.js";
+import {
+  RequireAnyPermission,
+  RequirePermission,
+} from "../auth-context/require-permission.decorator.js";
 import { InvitationsService } from "./invitations.service.js";
 
 const revokeSchema = z.object({ reason: z.string().min(1).max(2000) });
+
+const INVITE_MANAGE = ["platform.invitation.manage", "platform.user.invite"] as const;
 
 @Controller("api/v1/auth/invitations")
 export class InvitationsController {
   constructor(private readonly invitations: InvitationsService) {}
 
   @Post()
-  @RequirePermission("platform.invitation.manage")
+  @RequireAnyPermission([...INVITE_MANAGE])
   @Idempotent({ resourceType: "user_invitation" })
   async create(
     @Body() body: unknown,
@@ -66,7 +71,7 @@ export class InvitationsController {
   }
 
   @Post(":invitationId/resend")
-  @RequirePermission("platform.invitation.manage")
+  @RequireAnyPermission([...INVITE_MANAGE])
   async resend(
     @Param("invitationId") invitationId: string,
     @Query("tenantId") tenantId: string | undefined,
@@ -81,7 +86,7 @@ export class InvitationsController {
   }
 
   @Post(":invitationId/revoke")
-  @RequirePermission("platform.invitation.manage")
+  @RequireAnyPermission([...INVITE_MANAGE])
   async revoke(
     @Param("invitationId") invitationId: string,
     @Query("tenantId") tenantId: string | undefined,

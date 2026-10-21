@@ -7,7 +7,10 @@ import { requireIfMatch, setETag } from "../../common/concurrency.js";
 import { Idempotent } from "../../common/idempotent.decorator.js";
 import { getRequestIds, type RequestWithIds } from "../../common/request-ids.js";
 import { Principal } from "../auth-context/principal.decorator.js";
-import { RequirePermission } from "../auth-context/require-permission.decorator.js";
+import {
+  RequireAnyPermission,
+  RequirePermission,
+} from "../auth-context/require-permission.decorator.js";
 import { MembershipsService } from "./memberships.service.js";
 
 const reasonSchema = z.object({ reason: z.string().min(1).max(2000) });
@@ -148,7 +151,7 @@ export class MembershipsController {
   }
 
   @Put(":membershipId/roles")
-  @RequirePermission("platform.membership.manage")
+  @RequireAnyPermission(["platform.membership.manage", "industrial.admin"])
   async setRoles(
     @Param("tenantId") tenantId: string,
     @Param("membershipId") membershipId: string,
@@ -172,7 +175,7 @@ export class MembershipsController {
   }
 
   @Put(":membershipId/products")
-  @RequirePermission("platform.membership.manage")
+  @RequireAnyPermission(["platform.membership.manage", "industrial.admin"])
   async setProducts(
     @Param("tenantId") tenantId: string,
     @Param("membershipId") membershipId: string,

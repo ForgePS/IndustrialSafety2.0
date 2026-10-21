@@ -110,6 +110,7 @@ export class MembershipsService {
           username: users.username,
           personId: users.personId,
           lastLoginAt: users.lastLoginAt,
+          lastActivityAt: users.lastActivityAt,
           displayName: persons.displayName,
           firstName: persons.firstName,
           lastName: persons.lastName,
@@ -778,6 +779,8 @@ export class MembershipsService {
           principal,
           productCodes: data.productCodes,
           moduleCodes: data.moduleCodes,
+          // Explicit Admin replace — empty moduleCodes must clear access, not expand to all.
+          defaultToTenantProducts: false,
         });
 
         await tx
@@ -1219,6 +1222,7 @@ export class MembershipsService {
       username: user?.username ?? null,
       personId: user?.personId ?? null,
       lastLoginAt: user?.lastLoginAt ?? null,
+      lastActivityAt: user?.lastActivityAt ?? null,
       displayName: person?.displayName ?? null,
       firstName: person?.firstName ?? null,
       lastName: person?.lastName ?? null,

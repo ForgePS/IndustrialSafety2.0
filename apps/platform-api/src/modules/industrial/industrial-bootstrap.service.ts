@@ -23,6 +23,7 @@ export class IndustrialBootstrapService {
     if (code === "DOT_COMPLIANCE") return "industrial.module.dot.enabled";
     if (code === "WORKERS_COMP") return "industrial.module.workers_comp.enabled";
     if (code === "EMERGENCY_RESPONSE") return "industrial.module.emergency_response.enabled";
+    if (code === "EMERGENCY_ALERTS") return "industrial.module.emergency_alerts.enabled";
     return `industrial.module.${code.toLowerCase()}.enabled`;
   }
 

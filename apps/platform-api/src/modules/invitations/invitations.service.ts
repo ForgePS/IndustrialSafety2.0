@@ -332,7 +332,6 @@ export class InvitationsService {
       throw new ForgeError("BAD_REQUEST", "Invitation has expired");
     }
 
-    const username = invitation.cognitoUsername ?? invitation.email;
     if (!invitation.cognitoUsername) {
       const provisioned = await this.cognito.createOrGetUser({
         email: invitation.email,
@@ -354,8 +353,12 @@ export class InvitationsService {
         },
         principal.userId,
       );
+      // createOrGetUser only emails newly created users — resend for existing ones.
+      if (!provisioned.created) {
+        await this.cognito.resendInvitation(provisioned.username);
+      }
     } else {
-      await this.cognito.resendInvitation(username);
+      await this.cognito.resendInvitation(invitation.cognitoUsername);
     }
 
     const token = randomBytes(32).toString("base64url");

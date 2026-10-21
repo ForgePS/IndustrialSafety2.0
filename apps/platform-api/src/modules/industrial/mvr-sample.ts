@@ -86,3 +86,18 @@ export function parseMvrAuditHistory(raw: unknown): MvrAuditEntry[] {
 export function appendMvrAuditEntry(existing: unknown, entry: MvrAuditEntry): MvrAuditEntry[] {
   return [entry, ...parseMvrAuditHistory(existing)];
 }
+
+/** Dedupe by year + auditedAt + driverId so personnel + driver histories can be merged. */
+export function mergeMvrAuditHistories(...sources: unknown[]): MvrAuditEntry[] {
+  const seen = new Set<string>();
+  const out: MvrAuditEntry[] = [];
+  for (const source of sources) {
+    for (const entry of parseMvrAuditHistory(source)) {
+      const key = `${entry.year}|${entry.auditedAt}|${entry.driverId}`;
+      if (seen.has(key)) continue;
+      seen.add(key);
+      out.push(entry);
+    }
+  }
+  return out.sort((a, b) => b.auditedAt.localeCompare(a.auditedAt));
+}

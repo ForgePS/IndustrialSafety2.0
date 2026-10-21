@@ -141,6 +141,27 @@ export function isTrustedBrowserOrigin(input: {
   return false;
 }
 
+/**
+ * True when the browser Origin/Referer host matches the request host.
+ * Same-origin BFF (/api proxy) already has SameSite cookie isolation; CSRF
+ * header is optional so PWA cold starts can refresh after sessionStorage wipe.
+ */
+export function isSameOriginBrowserRequest(input: {
+  origin: string | undefined;
+  referer: string | undefined;
+  requestHost: string;
+}): boolean {
+  const candidate = normalizeOriginCandidate(input.origin, input.referer);
+  if (!candidate) return false;
+  try {
+    const url = new URL(candidate);
+    const reqHost = input.requestHost.split(":")[0]?.toLowerCase() ?? "";
+    return url.hostname.toLowerCase() === reqHost;
+  } catch {
+    return false;
+  }
+}
+
 function normalizeOriginCandidate(
   origin: string | undefined,
   referer: string | undefined,

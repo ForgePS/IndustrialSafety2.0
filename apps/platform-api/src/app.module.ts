@@ -19,6 +19,8 @@ import { BrandingModule } from "./modules/branding/branding.module.js";
 import { ApiKeysModule } from "./modules/api-keys/api-keys.module.js";
 import { CognitoModule } from "./modules/cognito/cognito.module.js";
 import { CompanyDocumentsModule } from "./modules/company-documents/company-documents.module.js";
+import { PhotoMarkupModule } from "./modules/photo-markup/photo-markup.module.js";
+import { HelpdeskModule } from "./modules/helpdesk/helpdesk.module.js";
 import { ConfigurationModule } from "./modules/configuration/configuration.module.js";
 import { EntitlementsModule } from "./modules/entitlements/entitlements.module.js";
 import { FeatureFlagsModule } from "./modules/feature-flags/feature-flags.module.js";
@@ -48,6 +50,7 @@ import { SupportModule } from "./modules/support/support.module.js";
 import { SearchModule } from "./modules/search/search.module.js";
 import { JobsModule } from "./modules/jobs/jobs.module.js";
 import { ExportsModule } from "./modules/exports/exports.module.js";
+import { ReportingModule } from "./modules/reporting/reporting.module.js";
 import { PlatformAnalyticsModule } from "./modules/platform-analytics/platform-analytics.module.js";
 import { TenantsModule } from "./modules/tenants/tenants.module.js";
 import { UsersModule } from "./modules/users/users.module.js";
@@ -85,12 +88,15 @@ export class AppModule {
         ImportsModule,
         BrandingModule,
         CompanyDocumentsModule,
+        PhotoMarkupModule,
+        HelpdeskModule,
         ApiKeysModule,
         WebhooksModule,
         SupportModule,
         SearchModule,
         JobsModule,
         ExportsModule,
+        ReportingModule,
         PlatformAnalyticsModule,
         OnboardingModule,
         NerisModule,

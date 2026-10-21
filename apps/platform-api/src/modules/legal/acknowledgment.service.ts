@@ -12,7 +12,7 @@ import {
 } from "@forge/database";
 import { ForgeError } from "@forge/errors";
 import type { ForgePrincipal } from "@forge/tenant-context";
-import { and, eq, inArray, isNull, lte, or, sql } from "drizzle-orm";
+import { and, eq, gt, inArray, isNull, lte, or, sql } from "drizzle-orm";
 import { DATABASE } from "../../tokens.js";
 import { AuditService } from "../audit/audit.service.js";
 import { FeatureFlagsService } from "../feature-flags/feature-flags.service.js";
@@ -99,7 +99,7 @@ export class AcknowledgmentService {
           lte(legalAcknowledgmentRequirements.requiredFrom, now),
           or(
             isNull(legalAcknowledgmentRequirements.requiredUntil),
-            sql`${legalAcknowledgmentRequirements.requiredUntil} > ${now}`,
+            gt(legalAcknowledgmentRequirements.requiredUntil, now),
           ),
           eq(legalDocumentVersions.status, "ACTIVE"),
           lte(legalDocumentVersions.effectiveAt, now),

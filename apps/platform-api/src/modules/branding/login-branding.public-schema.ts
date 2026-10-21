@@ -6,6 +6,7 @@ import { z } from "zod";
  */
 export const publicLoginPresentationSchema = z.object({
   logoUrl: z.string(),
+  logoDarkUrl: z.string().optional(),
   brandLabel: z.string(),
   headline: z.string(),
   body: z.string(),
@@ -19,6 +20,7 @@ export const publicLoginBrandingSchema = z
     displayName: z.string().min(1),
     brandLabel: z.string().min(1),
     logoUrl: z.string().min(1).optional(),
+    logoDarkUrl: z.string().min(1).optional(),
     primaryColor: z.string().min(1).optional(),
     login: publicLoginPresentationSchema,
   })
