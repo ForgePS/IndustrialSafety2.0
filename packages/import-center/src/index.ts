@@ -14,6 +14,8 @@ export {
   SensitiveValue,
   PrivilegedAccessBanner,
   ProductionScannerRestrictionBanner,
+  isProductionLikeImportEnv,
+  isProductionImportUploadBlocked,
   ImportEmptyState,
   ImportProgressBar,
 } from "./components/badges.js";

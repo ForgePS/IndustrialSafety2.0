@@ -1,10 +1,10 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties, type ReactNode } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import type { ImportApi } from "../api.js";
 import { clearImportTenantCache, setCachedJobs, getCachedJobs } from "../cache.js";
 import { initiateProtectedDownload } from "../download.js";
-import { dashboardStatusBuckets, serializeJobFilters, type ImportJobFilterState } from "../filters.js";
+import { dashboardStatusBuckets, DASHBOARD_BUCKET_LABELS, serializeJobFilters, type ImportJobFilterState } from "../filters.js";
 import { actionAllowed, disabledReason } from "../permissions.js";
 import { formatImportError, sanitizeErrorMessage } from "../safe-error.js";
 import {
@@ -27,6 +27,7 @@ import {
   MalwareVerdictBadge,
   PrivilegedAccessBanner,
   ProductionScannerRestrictionBanner,
+  isProductionImportUploadBlocked,
   SensitiveValue,
 } from "./badges.js";
 
@@ -48,8 +49,19 @@ export type ImportCenterAppProps = {
   onNavigate?: (href: string) => void;
   /** Application environment — drives production scanner restriction banner */
   appEnv?: string | null;
+  /**
+   * Configured malware provider key (mirrors API IMPORT_MALWARE_PROVIDER_KEY).
+   * Production uploads stay blocked while this is `reference-malware`.
+   */
+  malwareProviderKey?: string | null;
   /** Compact chrome for embedding inside onboarding / setup flows */
   embedded?: boolean;
+  /** Hide package title/description when the host already provides page chrome */
+  hideChrome?: boolean;
+  /** Prefill New Import product key (e.g. FORGE_INDUSTRIAL in Industrial web). */
+  defaultProductKey?: string;
+  /** Prefill New Import module key when creating jobs. */
+  defaultModuleKey?: string;
   /** Create missing department/position/employment type from validation errors */
   createLookup?: CreateLookupFn;
 };
@@ -78,27 +90,6 @@ export function parseMissingOrgLookupHint(
   return null;
 }
 
-const panel: CSSProperties = {
-  border: "1px solid #d0d0d0",
-  borderRadius: "0.35rem",
-  padding: "1rem",
-  marginBottom: "1rem",
-  background: "#fff",
-};
-
-const tableStyle: CSSProperties = {
-  width: "100%",
-  borderCollapse: "collapse",
-  fontSize: "0.9rem",
-};
-
-const thtd: CSSProperties = {
-  borderBottom: "1px solid #e0e0e0",
-  padding: "0.5rem",
-  textAlign: "left",
-  verticalAlign: "top",
-};
-
 function normalizeJobsPayload(data: unknown): ImportJobSummary[] {
   if (Array.isArray(data)) return data as ImportJobSummary[];
   if (data && typeof data === "object" && Array.isArray((data as { items?: unknown }).items)) {
@@ -112,6 +103,16 @@ function hashFragment(hash: string | null | undefined): string {
   return `${hash.slice(0, 8)}…`;
 }
 
+const INDUSTRIAL_RECORD_PRESETS = [
+  { recordCategory: "site", moduleKey: "ORG", label: "Sites / locations" },
+  { recordCategory: "department", moduleKey: "ORG", label: "Departments" },
+  { recordCategory: "position", moduleKey: "ORG", label: "Positions / job titles" },
+  { recordCategory: "employment_type", moduleKey: "ORG", label: "Employment types" },
+  { recordCategory: "personnel", moduleKey: "PERSONNEL", label: "Personnel" },
+  { recordCategory: "fleet_vehicle", moduleKey: "FLEET", label: "Fleet vehicles" },
+  { recordCategory: "training_record", moduleKey: "TRAINING", label: "Training history" },
+] as const;
+
 export function ImportCenterApp(props: ImportCenterAppProps) {
   const {
     api,
@@ -122,7 +123,11 @@ export function ImportCenterApp(props: ImportCenterAppProps) {
     initialView = null,
     onNavigate,
     appEnv = null,
+    malwareProviderKey = null,
     embedded = false,
+    hideChrome = false,
+    defaultProductKey = "",
+    defaultModuleKey = "",
     createLookup,
   } = props;
 
@@ -130,7 +135,11 @@ export function ImportCenterApp(props: ImportCenterAppProps) {
   const [jobId, setJobId] = useState<string | null>(initialJobId);
   const [jobs, setJobs] = useState<ImportJobSummary[]>([]);
   const [job, setJob] = useState<ImportJobSummary | null>(null);
-  const [filters, setFilters] = useState<ImportJobFilterState>({ page: 1, pageSize: 25 });
+  const [filters, setFilters] = useState<ImportJobFilterState>({
+    page: 1,
+    pageSize: 25,
+    ...(defaultProductKey ? { productKey: defaultProductKey } : {}),
+  });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [correlationId, setCorrelationId] = useState<string | null>(null);
@@ -145,8 +154,8 @@ export function ImportCenterApp(props: ImportCenterAppProps) {
   const [newForm, setNewForm] = useState({
     displayName: "",
     description: "",
-    productKey: "",
-    moduleKey: "",
+    productKey: defaultProductKey,
+    moduleKey: defaultModuleKey,
     recordCategory: "",
     format: "csv" as "csv" | "xlsx" | "json",
   });
@@ -155,6 +164,11 @@ export function ImportCenterApp(props: ImportCenterAppProps) {
 
   const canView = actionAllowed(hasPermission, "import.view");
   const privileged = actionAllowed(hasPermission, "import.sensitive");
+  const [privilegedSession, setPrivilegedSession] = useState(false);
+  const productionUploadsBlocked = isProductionImportUploadBlocked({
+    appEnv,
+    malwareProviderKey,
+  });
 
   const navigate = useCallback(
     (nextView: ImportWorkflowView, nextJobId?: string | null) => {
@@ -292,6 +306,16 @@ export function ImportCenterApp(props: ImportCenterAppProps) {
       setError(blocked);
       return;
     }
+    if (productionUploadsBlocked) {
+      setError(
+        "File uploads are blocked in this environment until a production malware scanner is configured.",
+      );
+      return;
+    }
+    if (!newForm.recordCategory) {
+      setError("Select a record type before uploading a file.");
+      return;
+    }
     if (!file) {
       setError("Choose a file to upload.");
       return;
@@ -301,8 +325,8 @@ export function ImportCenterApp(props: ImportCenterAppProps) {
     setUploadProgress(0);
     try {
       const init = (await api.initializeUpload({
-        productKey: newForm.productKey || "REFERENCE",
-        moduleKey: newForm.moduleKey || "CORE",
+        productKey: newForm.productKey || defaultProductKey || "REFERENCE",
+        moduleKey: newForm.moduleKey || defaultModuleKey || "CORE",
         recordCategory: newForm.recordCategory || "generic_record",
         displayName: newForm.displayName || file.name,
         description: newForm.description || undefined,
@@ -466,6 +490,7 @@ export function ImportCenterApp(props: ImportCenterAppProps) {
         return;
       }
       if (!window.confirm("Request a privileged download? Access is audited.")) return;
+      setPrivilegedSession(true);
     }
     setLoading(true);
     try {
@@ -578,7 +603,7 @@ export function ImportCenterApp(props: ImportCenterAppProps) {
         type="button"
         disabled={lookupBusy === key}
         onClick={() => void handleCreateLookup(hint.kind, hint.name)}
-        style={{ marginLeft: "0.5rem" }}
+        className="forge-ic-inline-action"
       >
         {lookupBusy === key ? "Creating…" : `Create ${hint.kind.replace(/_/g, " ")} “${hint.name}”`}
       </button>
@@ -589,32 +614,44 @@ export function ImportCenterApp(props: ImportCenterAppProps) {
   const quarantined =
     job?.status === "QUARANTINED" || job?.file?.quarantineStatus === "QUARANTINED";
 
-  return (
-    <div>
-      <header style={{ marginBottom: embedded ? "0.75rem" : "1.25rem" }}>
-        <h1 style={{ margin: 0, fontSize: embedded ? "1.15rem" : undefined }}>
-          {embedded ? "Data Import" : "Import Center"}
-        </h1>
-        {embedded ? (
-          <p style={{ margin: "0.35rem 0 0", color: "#555" }}>
-            Import Personnel (XLSX/CSV) and Fleet without leaving onboarding.
-          </p>
-        ) : (
-          <p style={{ margin: "0.35rem 0 0", color: "#555" }}>
-            Shared Universal Import Platform — product-neutral workflow. Server state is authoritative.
-          </p>
-        )}
-      </header>
+  const rootClass = [
+    "forge-import-center",
+    embedded ? "forge-import-center--embedded" : "",
+    hideChrome ? "forge-import-center--hosted" : "",
+  ]
+    .filter(Boolean)
+    .join(" ");
 
-      <ProductionScannerRestrictionBanner appEnv={appEnv} />
-      {!embedded ? <PrivilegedAccessBanner visible={privileged && view !== "dashboard"} /> : null}
+  return (
+    <div className={rootClass}>
+      {!hideChrome ? (
+        <header className="forge-ic-header">
+          <h1 className="forge-ic-title">{embedded ? "Data Import" : "Import Center"}</h1>
+          {embedded ? (
+            <p className="forge-ic-subtitle">
+              Import Personnel (XLSX/CSV) and Fleet without leaving onboarding.
+            </p>
+          ) : (
+            <p className="forge-ic-subtitle">
+              Shared Universal Import Platform — product-neutral workflow. Server state is
+              authoritative.
+            </p>
+          )}
+        </header>
+      ) : null}
+
+      <ProductionScannerRestrictionBanner
+        appEnv={appEnv}
+        malwareProviderKey={malwareProviderKey}
+      />
+      {!embedded ? <PrivilegedAccessBanner visible={privilegedSession} /> : null}
       {lookupNotice ? (
-        <div role="status" style={{ ...panel, borderColor: "#2f855a", background: "#f0fff4" }}>
+        <div role="status" className="forge-ic-panel forge-ic-panel--success">
           {lookupNotice}
         </div>
       ) : null}
 
-      <nav aria-label="Import Center sections" style={{ display: "flex", flexWrap: "wrap", gap: "0.5rem", marginBottom: "1rem" }}>
+      <nav aria-label="Import Center sections" className="forge-ic-nav">
         {(
           [
             ["dashboard", "Overview"],
@@ -637,7 +674,7 @@ export function ImportCenterApp(props: ImportCenterAppProps) {
       {jobId && view !== "dashboard" && view !== "new" ? (
         <ol
           aria-label="Import workflow steps"
-          style={{ display: "flex", flexWrap: "wrap", gap: "0.5rem", listStyle: "none", padding: 0 }}
+          className="forge-ic-steps"
         >
           {WORKFLOW_STEP_ORDER.filter((s) => s.view !== "new").map((step) => (
             <li key={step.view}>
@@ -655,7 +692,7 @@ export function ImportCenterApp(props: ImportCenterAppProps) {
       ) : null}
 
       {error ? (
-        <div role="alert" style={{ ...panel, borderColor: "#a11" }}>
+        <div role="alert" className="forge-ic-panel forge-ic-panel--danger">
           <strong>Error</strong>
           <p>{error}</p>
           {correlationId ? <p>Correlation ID: {correlationId}</p> : null}
@@ -665,70 +702,88 @@ export function ImportCenterApp(props: ImportCenterAppProps) {
       {loading ? <p role="status">Loading…</p> : null}
 
       {view === "dashboard" ? (
-        <section aria-labelledby="import-dashboard-heading">
+        <section aria-labelledby="import-dashboard-heading" className="forge-ic-dashboard">
           <h2 id="import-dashboard-heading">Overview</h2>
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(9rem,1fr))", gap: "0.75rem" }}>
+          <div className="forge-ic-stat-grid">
             {Object.entries(buckets).map(([key, value]) => (
-              <div key={key} style={panel}>
-                <div style={{ fontSize: "0.8rem", color: "#555" }}>{key}</div>
-                <div style={{ fontSize: "1.4rem", fontWeight: 600 }}>{value}</div>
+              <div key={key} className="forge-ic-stat-card">
+                <div className="forge-ic-stat-label">{DASHBOARD_BUCKET_LABELS[key] ?? key}</div>
+                <div className="forge-ic-stat-value">{value}</div>
               </div>
             ))}
           </div>
-          <div style={panel}>
-            <label htmlFor="import-search">
-              Search
-              <input
-                id="import-search"
-                value={filters.search ?? ""}
-                onChange={(e) => setFilters((f) => ({ ...f, search: e.target.value, page: 1 }))}
-                style={{ display: "block", width: "100%", marginTop: "0.25rem" }}
-              />
-            </label>
-            <label htmlFor="import-status" style={{ display: "block", marginTop: "0.75rem" }}>
-              Status
-              <select
-                id="import-status"
-                value={filters.status ?? ""}
-                onChange={(e) =>
-                  setFilters((f) => { const next = { ...f, page: 1 }; if (e.target.value) next.status = e.target.value; else delete next.status; return next; })
-                }
-                style={{ display: "block", marginTop: "0.25rem" }}
-              >
-                <option value="">Any</option>
-                {[
-                  "READY_FOR_MAPPING",
-                  "AWAITING_APPROVAL",
-                  "PROCESSING",
-                  "COMPLETED",
-                  "FAILED",
-                  "QUARANTINED",
-                  "SCAN_FAILED",
-                ].map((s) => (
-                  <option key={s} value={s}>
-                    {s}
-                  </option>
-                ))}
-              </select>
-            </label>
-            <button type="button" style={{ marginTop: "0.75rem" }} onClick={() => void loadJobs()}>
-              Apply filters
-            </button>
+          <div className="forge-ic-panel forge-ic-filters">
+            <div className="forge-ic-filters-grid">
+              <label htmlFor="import-search" className="forge-ic-field">
+                Search
+                <input
+                  id="import-search"
+                  value={filters.search ?? ""}
+                  onChange={(e) => setFilters((f) => ({ ...f, search: e.target.value, page: 1 }))}
+                  className="forge-ic-control"
+                  placeholder="Name, file, or record type"
+                />
+              </label>
+              <label htmlFor="import-status" className="forge-ic-field">
+                Status
+                <select
+                  id="import-status"
+                  value={filters.status ?? ""}
+                  onChange={(e) =>
+                    setFilters((f) => {
+                      const next = { ...f, page: 1 };
+                      if (e.target.value) next.status = e.target.value;
+                      else delete next.status;
+                      return next;
+                    })
+                  }
+                  className="forge-ic-control"
+                >
+                  <option value="">Any</option>
+                  {[
+                    "READY_FOR_MAPPING",
+                    "AWAITING_APPROVAL",
+                    "PROCESSING",
+                    "COMPLETED",
+                    "FAILED",
+                    "QUARANTINED",
+                    "SCAN_FAILED",
+                  ].map((s) => (
+                    <option key={s} value={s}>
+                      {s}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <div className="forge-ic-filters-actions">
+                <button
+                  type="button"
+                  className="forge-ic-btn forge-ic-btn--secondary"
+                  onClick={() => void loadJobs()}
+                >
+                  Apply filters
+                </button>
+              </div>
+            </div>
           </div>
           {jobs.length === 0 && !loading ? (
             <ImportEmptyState title="No import jobs for this tenant.">
-              <button type="button" onClick={() => navigate("new", null)}>
+              <button
+                type="button"
+                className="forge-ic-btn forge-ic-btn--primary"
+                onClick={() => navigate("new", null)}
+              >
                 Start a new import
               </button>
             </ImportEmptyState>
           ) : (
-            <div style={{ overflowX: "auto" }}>
-              <table style={tableStyle}>
+            <div className="forge-ic-table-wrap">
+              <table className="forge-ic-table">
                 <thead>
                   <tr>
                     {["Name", "File", "Record", "Status", "Malware", "Progress", "Updated", "Actions"].map(
                       (h) => (
-                        <th key={h} style={thtd} scope="col">
+                        <th key={h} scope="col">
                           {h}
                         </th>
                       ),
@@ -738,22 +793,23 @@ export function ImportCenterApp(props: ImportCenterAppProps) {
                 <tbody>
                   {jobs.map((row) => (
                     <tr key={row.id}>
-                      <td style={thtd}>{row.displayName}</td>
-                      <td style={thtd}>{row.file?.fileName ?? "—"}</td>
-                      <td style={thtd}>{row.recordCategory}</td>
-                      <td style={thtd}>
+                      <td>{row.displayName}</td>
+                      <td>{row.file?.fileName ?? "—"}</td>
+                      <td>{row.recordCategory}</td>
+                      <td>
                         <ImportStatusBadge status={String(row.status)} />
                       </td>
-                      <td style={thtd}>
+                      <td>
                         <MalwareVerdictBadge
                           verdict={(row.file?.malwareVerdict as string) ?? "NOT_SUBMITTED"}
                         />
                       </td>
-                      <td style={thtd}>{row.progressPercent ?? 0}%</td>
-                      <td style={thtd}>{new Date(row.updatedAt).toLocaleString()}</td>
-                      <td style={thtd}>
+                      <td>{row.progressPercent ?? 0}%</td>
+                      <td>{new Date(row.updatedAt).toLocaleString()}</td>
+                      <td>
                         <button
                           type="button"
+                          className="forge-ic-btn forge-ic-btn--secondary"
                           onClick={() =>
                             navigate(resolveImportWorkflowView(row.status), row.id)
                           }
@@ -771,57 +827,107 @@ export function ImportCenterApp(props: ImportCenterAppProps) {
       ) : null}
 
       {view === "new" ? (
-        <section aria-labelledby="new-import-heading" style={panel}>
+        <section aria-labelledby="new-import-heading" className="forge-ic-panel forge-ic-new-import">
           <h2 id="new-import-heading">New import</h2>
-          <p>Options come from server configuration. Unavailable products stay disabled when APIs omit them.</p>
-          {(
-            [
-              ["displayName", "Import name"],
-              ["description", "Description"],
-              ["productKey", "Product key"],
-              ["moduleKey", "Module key"],
-              ["recordCategory", "Record type"],
-            ] as const
-          ).map(([key, label]) => (
-            <label key={key} htmlFor={`new-${key}`} style={{ display: "block", marginBottom: "0.75rem" }}>
-              {label}
+          <p className="forge-ic-help forge-ic-help--lead">
+            Choose a name, Industrial record type, and file. Mapping and validation happen after
+            upload.
+          </p>
+          {productionUploadsBlocked ? (
+            <div className="forge-ic-banner forge-ic-banner--warning" role="status">
+              <span className="forge-ic-banner-icon" aria-hidden="true">
+                !
+              </span>
+              <div className="forge-ic-banner-body">
+                <strong className="forge-ic-banner-title">Uploads unavailable in production</strong>
+                <p className="forge-ic-banner-text">
+                  File uploads stay blocked until a production malware scanner is configured. You can
+                  still browse templates and review existing jobs.
+                </p>
+              </div>
+            </div>
+          ) : null}
+          <div className="forge-ic-form-grid">
+            <label htmlFor="new-displayName" className="forge-ic-field forge-ic-field--span-2">
+              Import name
               <input
-                id={`new-${key}`}
-                value={newForm[key]}
-                onChange={(e) => setNewForm((f) => ({ ...f, [key]: e.target.value }))}
-                style={{ display: "block", width: "100%" }}
+                id="new-displayName"
+                value={newForm.displayName}
+                onChange={(e) => setNewForm((f) => ({ ...f, displayName: e.target.value }))}
+                className="forge-ic-control"
+                placeholder="e.g. March personnel roster"
               />
             </label>
-          ))}
-          <label htmlFor="new-format" style={{ display: "block", marginBottom: "0.75rem" }}>
-            Expected format
-            <select
-              id="new-format"
-              value={newForm.format}
-              onChange={(e) =>
-                setNewForm((f) => ({ ...f, format: e.target.value as "csv" | "xlsx" | "json" }))
-              }
-              style={{ display: "block" }}
-            >
-              <option value="csv">CSV</option>
-              <option value="xlsx">XLSX</option>
-              <option value="json">JSON</option>
-            </select>
-          </label>
-          <label htmlFor="new-file" style={{ display: "block", marginBottom: "0.75rem" }}>
-            File
-            <input
-              id="new-file"
-              type="file"
-              accept=".csv,.xlsx,.json,.zip,text/csv,application/json,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/zip"
-              onChange={(e) => void handleCreateAndUpload(e.target.files?.[0] ?? null)}
-              disabled={Boolean(disabledReason(hasPermission, "import.upload"))}
-              style={{ display: "block", marginTop: "0.35rem" }}
-            />
-          </label>
-          <p style={{ fontSize: "0.85rem", color: "#555" }}>
-            Drag-and-drop is available via the file picker. Large files are not parsed in the browser.
-            Presigned URLs are never logged.
+            <label htmlFor="new-description" className="forge-ic-field forge-ic-field--span-2">
+              Description
+              <input
+                id="new-description"
+                value={newForm.description}
+                onChange={(e) => setNewForm((f) => ({ ...f, description: e.target.value }))}
+                className="forge-ic-control"
+                placeholder="Optional notes for this import"
+              />
+            </label>
+            <label htmlFor="new-recordCategory" className="forge-ic-field">
+              Record type
+              <select
+                id="new-recordCategory"
+                value={newForm.recordCategory}
+                onChange={(e) => {
+                  const recordCategory = e.target.value;
+                  const preset = INDUSTRIAL_RECORD_PRESETS.find(
+                    (p) => p.recordCategory === recordCategory,
+                  );
+                  setNewForm((f) => ({
+                    ...f,
+                    recordCategory,
+                    moduleKey: preset?.moduleKey ?? f.moduleKey,
+                    productKey: f.productKey || defaultProductKey || "FORGE_INDUSTRIAL",
+                  }));
+                }}
+                className="forge-ic-control"
+              >
+                <option value="">Select a record type</option>
+                {INDUSTRIAL_RECORD_PRESETS.map((preset) => (
+                  <option key={preset.recordCategory} value={preset.recordCategory}>
+                    {preset.label}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <label htmlFor="new-format" className="forge-ic-field">
+              Expected format
+              <select
+                id="new-format"
+                value={newForm.format}
+                onChange={(e) =>
+                  setNewForm((f) => ({ ...f, format: e.target.value as "csv" | "xlsx" | "json" }))
+                }
+                className="forge-ic-control"
+              >
+                <option value="csv">CSV</option>
+                <option value="xlsx">XLSX</option>
+                <option value="json">JSON</option>
+              </select>
+            </label>
+            <label htmlFor="new-file" className="forge-ic-field forge-ic-field--span-2">
+              File
+              <input
+                id="new-file"
+                type="file"
+                accept=".csv,.xlsx,.json,.zip,text/csv,application/json,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/zip"
+                onChange={(e) => void handleCreateAndUpload(e.target.files?.[0] ?? null)}
+                disabled={
+                  productionUploadsBlocked ||
+                  Boolean(disabledReason(hasPermission, "import.upload")) ||
+                  !newForm.recordCategory
+                }
+                className="forge-ic-control"
+              />
+            </label>
+          </div>
+          <p className="forge-ic-help">
+            Large files are processed on the server. Presigned upload URLs are never logged.
           </p>
           {uploadProgress != null ? (
             <ImportProgressBar percent={uploadProgress} label="Upload progress" />
@@ -833,7 +939,7 @@ export function ImportCenterApp(props: ImportCenterAppProps) {
       ) : null}
 
       {view === "security" && job ? (
-        <section style={panel} aria-labelledby="security-heading">
+        <section className="forge-ic-panel" aria-labelledby="security-heading">
           <h2 id="security-heading">Security scan</h2>
           <p>
             Verdict: <MalwareVerdictBadge verdict={malwareVerdict} />
@@ -845,11 +951,11 @@ export function ImportCenterApp(props: ImportCenterAppProps) {
             <div>
               <label htmlFor="rescan-reason">
                 Rescan justification
-                <textarea id="rescan-reason" rows={3} style={{ display: "block", width: "100%" }} />
+                <textarea id="rescan-reason" rows={3} className="forge-ic-control" />
               </label>
               <button
                 type="button"
-                style={{ marginTop: "0.5rem" }}
+                className="forge-ic-btn-spacer"
                 disabled={Boolean(disabledReason(hasPermission, "import.validate"))}
                 onClick={() => {
                   const el = document.getElementById("rescan-reason") as HTMLTextAreaElement | null;
@@ -869,7 +975,7 @@ export function ImportCenterApp(props: ImportCenterAppProps) {
       ) : null}
 
       {view === "quarantine" && job ? (
-        <section style={panel} aria-labelledby="quarantine-heading">
+        <section className="forge-ic-panel" aria-labelledby="quarantine-heading">
           <h2 id="quarantine-heading">Quarantine</h2>
           <ul>
             <li>Job ID: {job.id}</li>
@@ -897,20 +1003,20 @@ export function ImportCenterApp(props: ImportCenterAppProps) {
       ) : null}
 
       {view === "mapping" && job ? (
-        <section style={panel} aria-labelledby="mapping-heading">
+        <section className="forge-ic-panel" aria-labelledby="mapping-heading">
           <h2 id="mapping-heading">Mapping workspace</h2>
           {quarantined ? (
             <p role="alert">Quarantined files cannot be mapped.</p>
           ) : (
             <>
               <p>Destination fields and transformations must match the backend mapping contract.</p>
-              <table style={tableStyle}>
+              <table className="forge-ic-table">
                 <thead>
                   <tr>
-                    <th style={thtd}>Source</th>
-                    <th style={thtd}>Destination</th>
-                    <th style={thtd}>Required</th>
-                    <th style={thtd}>Sensitive</th>
+                    <th>Source</th>
+                    <th>Destination</th>
+                    <th>Required</th>
+                    <th>Sensitive</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -927,7 +1033,7 @@ export function ImportCenterApp(props: ImportCenterAppProps) {
                       ]
                   ).map((row, index) => (
                     <tr key={index}>
-                      <td style={thtd}>
+                      <td>
                         <input
                           aria-label={`Source column ${index + 1}`}
                           value={row.sourceColumn}
@@ -938,7 +1044,7 @@ export function ImportCenterApp(props: ImportCenterAppProps) {
                           }}
                         />
                       </td>
-                      <td style={thtd}>
+                      <td>
                         <input
                           aria-label={`Destination field ${index + 1}`}
                           value={row.targetField}
@@ -949,8 +1055,8 @@ export function ImportCenterApp(props: ImportCenterAppProps) {
                           }}
                         />
                       </td>
-                      <td style={thtd}>{row.isRequired ? "Yes" : "No"}</td>
-                      <td style={thtd}>
+                      <td>{row.isRequired ? "Yes" : "No"}</td>
+                      <td>
                         {row.isSensitive ? (
                           <SensitiveValue value="[MASKED]" sensitive />
                         ) : (
@@ -1014,7 +1120,7 @@ export function ImportCenterApp(props: ImportCenterAppProps) {
       ) : null}
 
       {view === "validation" && job ? (
-        <section style={panel}>
+        <section className="forge-ic-panel">
           <h2>Validation</h2>
           <p>Server validation is authoritative. Client checks are guidance only.</p>
           <button
@@ -1033,11 +1139,11 @@ export function ImportCenterApp(props: ImportCenterAppProps) {
           >
             Refresh errors
           </button>
-          <table style={tableStyle}>
+          <table className="forge-ic-table">
             <thead>
               <tr>
                 {["Code", "Field", "Message", "Severity", "Fix"].map((h) => (
-                  <th key={h} style={thtd}>
+                  <th key={h}>
                     {h}
                   </th>
                 ))}
@@ -1046,11 +1152,11 @@ export function ImportCenterApp(props: ImportCenterAppProps) {
             <tbody>
               {errors.map((err) => (
                 <tr key={err.id}>
-                  <td style={thtd}>{err.ruleCode}</td>
-                  <td style={thtd}>{err.fieldPath ?? "—"}</td>
-                  <td style={thtd}>{err.message}</td>
-                  <td style={thtd}>{err.severity}</td>
-                  <td style={thtd}>{renderLookupAction(err)}</td>
+                  <td>{err.ruleCode}</td>
+                  <td>{err.fieldPath ?? "—"}</td>
+                  <td>{err.message}</td>
+                  <td>{err.severity}</td>
+                  <td>{renderLookupAction(err)}</td>
                 </tr>
               ))}
             </tbody>
@@ -1083,7 +1189,7 @@ export function ImportCenterApp(props: ImportCenterAppProps) {
       ) : null}
 
       {view === "preview" && job ? (
-        <section style={panel}>
+        <section className="forge-ic-panel">
           <h2>Preview</h2>
           <p>
             Preview values are policy-filtered by the server. Sensitive samples render as masked.
@@ -1098,23 +1204,23 @@ export function ImportCenterApp(props: ImportCenterAppProps) {
           >
             Request preview
           </button>
-          <table style={tableStyle}>
+          <table className="forge-ic-table">
             <thead>
               <tr>
-                <th style={thtd}>Field</th>
-                <th style={thtd}>Sample</th>
+                <th>Field</th>
+                <th>Sample</th>
               </tr>
             </thead>
             <tbody>
               <tr>
-                <td style={thtd}>email</td>
-                <td style={thtd}>
+                <td>email</td>
+                <td>
                   <SensitiveValue value="j***@example.com" sensitive privileged={privileged} />
                 </td>
               </tr>
               <tr>
-                <td style={thtd}>password</td>
-                <td style={thtd}>
+                <td>password</td>
+                <td>
                   <SensitiveValue value="********" sensitive neverReturnable />
                 </td>
               </tr>
@@ -1127,7 +1233,7 @@ export function ImportCenterApp(props: ImportCenterAppProps) {
       ) : null}
 
       {view === "duplicates" && job ? (
-        <section style={panel}>
+        <section className="forge-ic-panel">
           <h2>Duplicate review</h2>
           <p>No automatic merge action. Decisions are submitted to the server.</p>
           <button
@@ -1166,7 +1272,7 @@ export function ImportCenterApp(props: ImportCenterAppProps) {
       ) : null}
 
       {view === "approval" && job ? (
-        <section style={panel}>
+        <section className="forge-ic-panel">
           <h2>Approval</h2>
           <ul>
             <li>Job: {job.displayName}</li>
@@ -1195,7 +1301,7 @@ export function ImportCenterApp(props: ImportCenterAppProps) {
       ) : null}
 
       {view === "execute" && job ? (
-        <section style={panel}>
+        <section className="forge-ic-panel">
           <h2>Execute confirmation</h2>
           <p>
             Execution uses the backend control plane. The browser does not enqueue rows or send file
@@ -1218,14 +1324,14 @@ export function ImportCenterApp(props: ImportCenterAppProps) {
       ) : null}
 
       {view === "execution" && job ? (
-        <section style={panel} aria-live="polite">
+        <section className="forge-ic-panel" aria-live="polite">
           <h2>Execution monitor</h2>
           <p>Status: {String(statusPayload?.status ?? job.status)}</p>
           <ImportProgressBar
             percent={Number(statusPayload?.progressPercent ?? job.progressPercent ?? 0)}
             label="Execution progress"
           />
-          <pre style={{ whiteSpace: "pre-wrap", fontSize: "0.8rem" }}>
+          <pre className="forge-ic-pre">
             {JSON.stringify(statusPayload?.rowCounts ?? {}, null, 2)}
           </pre>
           <button
@@ -1243,7 +1349,7 @@ export function ImportCenterApp(props: ImportCenterAppProps) {
       ) : null}
 
       {view === "results" && job ? (
-        <section style={panel}>
+        <section className="forge-ic-panel">
           <h2>Results</h2>
           <p>
             Final status: <ImportStatusBadge status={String(job.status)} />
@@ -1264,10 +1370,10 @@ export function ImportCenterApp(props: ImportCenterAppProps) {
           >
             Refresh results
           </button>
-          <pre style={{ whiteSpace: "pre-wrap", fontSize: "0.8rem" }}>
+          <pre className="forge-ic-pre">
             {JSON.stringify(resultsPayload ?? {}, null, 2)}
           </pre>
-          <div style={{ display: "flex", flexWrap: "wrap", gap: "0.5rem" }}>
+          <div className="forge-ic-actions">
             <button type="button" onClick={() => void handleDownload("results", false)}>
               Download masked results
             </button>
@@ -1290,15 +1396,15 @@ export function ImportCenterApp(props: ImportCenterAppProps) {
               Request rollback
             </button>
           </div>
-          <p style={{ fontSize: "0.85rem", color: "#555" }}>
+          <p className="forge-ic-help">
             Rollback requests submit classification only. Full compensation is not implemented.
           </p>
           <h3>Errors</h3>
-          <table style={tableStyle}>
+          <table className="forge-ic-table">
             <thead>
               <tr>
                 {["Code", "Message", "Actions"].map((h) => (
-                  <th key={h} style={thtd}>
+                  <th key={h}>
                     {h}
                   </th>
                 ))}
@@ -1307,9 +1413,9 @@ export function ImportCenterApp(props: ImportCenterAppProps) {
             <tbody>
               {errors.map((err) => (
                 <tr key={err.id}>
-                  <td style={thtd}>{err.ruleCode}</td>
-                  <td style={thtd}>{err.message}</td>
-                  <td style={thtd}>
+                  <td>{err.ruleCode}</td>
+                  <td>{err.message}</td>
+                  <td>
                     <button
                       type="button"
                       disabled={Boolean(disabledReason(hasPermission, "import.error.reprocess"))}
@@ -1327,7 +1433,7 @@ export function ImportCenterApp(props: ImportCenterAppProps) {
       ) : null}
 
       {view === "profiles" ? (
-        <section style={panel}>
+        <section className="forge-ic-panel">
           <h2>Import profiles</h2>
           <p>
             Profile management requires import.profile.manage. Selection uses published profiles from
@@ -1348,7 +1454,7 @@ export function ImportCenterApp(props: ImportCenterAppProps) {
       ) : null}
 
       {view === "templates" ? (
-        <section style={panel}>
+        <section className="forge-ic-panel">
           <h2>Templates</h2>
           {!actionAllowed(hasPermission, "import.template.manage") &&
           !actionAllowed(hasPermission, "import.view") ? (

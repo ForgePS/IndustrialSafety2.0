@@ -40,3 +40,4 @@ export * from "./industrial-print.js";
 export * from "./reporting.js";
 export * from "./photo-markup.js";
 export * from "./auth-browser-sessions.js";
+export * from "./helpdesk.js";

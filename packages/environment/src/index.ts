@@ -47,7 +47,13 @@ const baseSchema = z.object({
   DATABASE_USERNAME: z.string().min(1),
   DATABASE_SECRET_ARN: z.string().optional().default(""),
   COGNITO_USER_POOL_ID: z.string().min(1),
+  /** Comma-separated allowed JWT audiences (multiple SPA app clients). */
   COGNITO_CLIENT_ID: z.string().min(1),
+  /**
+   * Single Cognito app client id for InitiateAuth / token endpoint (session BFF).
+   * Required when COGNITO_CLIENT_ID lists multiple clients.
+   */
+  COGNITO_SESSION_CLIENT_ID: z.string().optional().default(""),
   COGNITO_DOMAIN: z.string().min(1),
   KMS_GENERAL_KEY_ARN: z.string().min(1),
   KMS_SENSITIVE_DATA_KEY_ARN: z.string().min(1),
@@ -229,6 +235,7 @@ export const LOCAL_PLACEHOLDER_ENV: Record<string, string> = {
   DATABASE_SECRET_ARN: "",
   COGNITO_USER_POOL_ID: "local-pool",
   COGNITO_CLIENT_ID: "local-client",
+  COGNITO_SESSION_CLIENT_ID: "local-client",
   COGNITO_DOMAIN: "local.auth.example.com",
   KMS_GENERAL_KEY_ARN:
     "arn:aws:kms:us-east-1:000000000000:key/00000000-0000-0000-0000-000000000000",

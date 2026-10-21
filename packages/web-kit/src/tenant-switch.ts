@@ -19,13 +19,16 @@ export async function switchActiveTenant(input: {
   reason?: string;
 }): Promise<AuthMe> {
   // Drop prior-tenant /auth/me cache before binding the new tenant id.
+  // Keep previous x-tenant-id until select-tenant succeeds so AuthGuard resolves
+  // against the current context, not the not-yet-selected tenant.
   clearCachedAuthMe();
-  input.setActiveTenantId(input.tenantId);
   try {
-    return await input.selectTenant(input.tenantId, {
+    const updated = await input.selectTenant(input.tenantId, {
       ...(input.productCode ? { productCode: input.productCode } : {}),
       ...(input.reason ? { reason: input.reason } : {}),
     });
+    input.setActiveTenantId(input.tenantId);
+    return updated;
   } catch (error) {
     if (input.previousTenantId) {
       input.setActiveTenantId(input.previousTenantId);

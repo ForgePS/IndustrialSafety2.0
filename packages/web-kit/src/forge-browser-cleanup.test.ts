@@ -6,6 +6,7 @@ import {
   removeStorageKeysByPrefix,
   resetForgeBrowserCleanupHandlersForTests,
   runForgeBrowserCleanup,
+  withTimeout,
   type StorageLike,
 } from "./forge-browser-cleanup.js";
 
@@ -54,6 +55,13 @@ describe("removeStorageKeysByPrefix", () => {
   });
 });
 
+describe("withTimeout", () => {
+  it("returns fallback when the promise never settles", async () => {
+    const value = await withTimeout(new Promise<string>(() => undefined), 20, "fallback");
+    expect(value).toBe("fallback");
+  });
+});
+
 describe("runForgeBrowserCleanup", () => {
   it("invokes registered handlers for logout and tenant-switch", async () => {
     const seen: string[] = [];
@@ -73,6 +81,11 @@ describe("runForgeBrowserCleanup", () => {
     registerForgeBrowserCleanup(ok);
     await expect(runForgeBrowserCleanup("logout")).resolves.toBeUndefined();
     expect(ok).toHaveBeenCalledWith("logout");
+  });
+
+  it("does not hang when a handler never resolves", async () => {
+    registerForgeBrowserCleanup(() => new Promise(() => undefined));
+    await expect(runForgeBrowserCleanup("logout", { timeoutMs: 40 })).resolves.toBeUndefined();
   });
 });
 

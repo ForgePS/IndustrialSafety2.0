@@ -14,6 +14,8 @@ export type PlatformJobStatus = (typeof PLATFORM_JOB_STATUSES)[number];
 export const PLATFORM_JOB_TYPES = [
   "export.memberships.csv",
   "export.audit.json",
+  "export.reporting",
+  "export.executive-walkthrough",
 ] as const;
 
 export type PlatformJobType = (typeof PLATFORM_JOB_TYPES)[number];

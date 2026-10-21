@@ -1,4 +1,4 @@
-import { index, jsonb, pgTable, text, timestamp, uuid, varchar } from "drizzle-orm/pg-core";
+import { boolean, index, jsonb, pgTable, text, timestamp, uuid, varchar } from "drizzle-orm/pg-core";
 import { createdAtColumn, updatedAtColumn } from "./common.js";
 import { tenants } from "./tenants.js";
 import { users } from "./users.js";
@@ -43,4 +43,33 @@ export const userNotifications = pgTable(
   ],
 );
 
+/**
+ * Web Push subscriptions for Forge Safety - Field Version (and other surfaces).
+ * VAPID keys come from env / Secrets Manager — never store private keys here.
+ */
+export const userPushSubscriptions = pgTable(
+  "user_push_subscriptions",
+  {
+    id: uuid("id").primaryKey(),
+    tenantId: uuid("tenant_id")
+      .notNull()
+      .references(() => tenants.id),
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => users.id),
+    endpoint: text("endpoint").notNull(),
+    p256dh: text("p256dh").notNull(),
+    auth: text("auth").notNull(),
+    userAgent: varchar("user_agent", { length: 500 }),
+    enabled: boolean("enabled").notNull().default(true),
+    createdAt: createdAtColumn,
+    updatedAt: updatedAtColumn,
+  },
+  (table) => [
+    index("user_push_subscriptions_tenant_user_idx").on(table.tenantId, table.userId),
+    index("user_push_subscriptions_endpoint_idx").on(table.endpoint),
+  ],
+);
+
 export type UserNotification = typeof userNotifications.$inferSelect;
+export type UserPushSubscription = typeof userPushSubscriptions.$inferSelect;

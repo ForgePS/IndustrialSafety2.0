@@ -9,6 +9,7 @@ vi.mock("./cognito-oauth.js", () => ({
 
 vi.mock("./auth-storage.js", () => ({
   getBearerToken: () => getBearerTokenMock(),
+  isLogoutPending: () => false,
 }));
 
 import { tryRefreshSession } from "./session-refresh.js";
@@ -60,5 +61,30 @@ describe("tryRefreshSession", () => {
     resolveRefresh({ access_token: "new" });
     await expect(Promise.all([a, b])).resolves.toEqual([true, true]);
     expect(refreshAccessTokenMock).toHaveBeenCalledTimes(1);
+  });
+
+  it("does not abort the shared refresh when a caller signal aborts", async () => {
+    getBearerTokenMock.mockReturnValue(jwtWithExp(-10));
+    let resolveRefresh!: (value: { access_token: string }) => void;
+    refreshAccessTokenMock.mockImplementation(() => {
+      return new Promise((resolve) => {
+        resolveRefresh = resolve;
+      });
+    });
+
+    const controller = new AbortController();
+    const a = tryRefreshSession({ force: true, signal: controller.signal });
+    const b = tryRefreshSession({ force: true });
+    controller.abort();
+    resolveRefresh({ access_token: "new" });
+    await expect(Promise.all([a, b])).resolves.toEqual([true, true]);
+    expect(refreshAccessTokenMock).toHaveBeenCalledTimes(1);
+    expect(refreshAccessTokenMock).toHaveBeenCalledWith();
+  });
+
+  it("keeps an existing bearer when refresh throws (network blip)", async () => {
+    getBearerTokenMock.mockReturnValue(jwtWithExp(3600));
+    refreshAccessTokenMock.mockRejectedValue(new Error("network"));
+    await expect(tryRefreshSession({ force: true })).resolves.toBe(true);
   });
 });

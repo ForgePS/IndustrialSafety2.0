@@ -9,6 +9,8 @@ export type AuthTenant = {
   membershipStatus: string;
   isDefaultTenant: boolean;
   selectable: boolean;
+  /** When true, external SMS/email/print/DOT side effects are blocked. */
+  isDemoTenant?: boolean;
 };
 
 export type AuthMe = {
@@ -23,6 +25,8 @@ export type AuthMe = {
   authProvider: string;
   /** MEMBER for ordinary tenants; PLATFORM_ADMIN_SUPPORT for platform admin context. */
   accessMode?: "MEMBER" | "PLATFORM_ADMIN_SUPPORT";
+  /** Active tenant is a synthetic demo environment. */
+  isDemoTenant?: boolean;
   tenants: AuthTenant[];
   legalAcknowledgments?: {
     status: "REQUIRED" | "ACTION_REQUIRED" | "CURRENT" | "NOT_REQUIRED";

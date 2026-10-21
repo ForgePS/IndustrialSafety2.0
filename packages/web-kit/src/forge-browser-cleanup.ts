@@ -11,6 +11,36 @@ export type ForgeBrowserCleanupHandler = (
 
 const handlers = new Set<ForgeBrowserCleanupHandler>();
 
+/** Default budget so Android Chrome IDB/SW hangs cannot block Cognito logout redirect. */
+export const FORGE_BROWSER_CLEANUP_TIMEOUT_MS = 3000;
+const PER_OP_TIMEOUT_MS = 1500;
+
+/** Resolve with `fallback` if `promise` does not settle within `ms`. */
+export function withTimeout<T>(promise: Promise<T>, ms: number, fallback: T): Promise<T> {
+  return new Promise((resolve) => {
+    let settled = false;
+    const timer = setTimeout(() => {
+      if (settled) return;
+      settled = true;
+      resolve(fallback);
+    }, ms);
+    void promise.then(
+      (value) => {
+        if (settled) return;
+        settled = true;
+        clearTimeout(timer);
+        resolve(value);
+      },
+      () => {
+        if (settled) return;
+        settled = true;
+        clearTimeout(timer);
+        resolve(fallback);
+      },
+    );
+  });
+}
+
 /** Register a cleanup handler (idempotent by function identity). */
 export function registerForgeBrowserCleanup(handler: ForgeBrowserCleanupHandler): () => void {
   handlers.add(handler);
@@ -19,10 +49,12 @@ export function registerForgeBrowserCleanup(handler: ForgeBrowserCleanupHandler)
   };
 }
 
-/** Run all registered cleanups. Errors are swallowed so auth flow continues. */
+/** Run all registered cleanups. Errors and hangs are bounded so auth flow continues. */
 export async function runForgeBrowserCleanup(
   reason: ForgeBrowserCleanupReason,
+  options?: { timeoutMs?: number },
 ): Promise<void> {
+  const timeoutMs = options?.timeoutMs ?? FORGE_BROWSER_CLEANUP_TIMEOUT_MS;
   const pending = [...handlers].map(async (handler) => {
     try {
       await handler(reason);
@@ -30,7 +62,7 @@ export async function runForgeBrowserCleanup(
       // Best-effort — never block logout / tenant switch.
     }
   });
-  await Promise.all(pending);
+  await withTimeout(Promise.all(pending).then(() => undefined), timeoutMs, undefined);
 }
 
 /** Test helper: drop all handlers. */
@@ -63,21 +95,24 @@ export function removeStorageKeysByPrefix(
   return keys.length;
 }
 
-/** Delete IndexedDB databases by exact name (best-effort). */
+/** Delete IndexedDB databases by exact name (best-effort, time-bounded). */
 export async function deleteIndexedDatabases(names: readonly string[]): Promise<number> {
   if (typeof indexedDB === "undefined") return 0;
   let deleted = 0;
   for (const name of names) {
     try {
-      await new Promise<void>((resolve) => {
-        const req = indexedDB.deleteDatabase(name);
-        req.onsuccess = () => {
-          deleted += 1;
-          resolve();
-        };
-        req.onerror = () => resolve();
-        req.onblocked = () => resolve();
-      });
+      const ok = await withTimeout(
+        new Promise<boolean>((resolve) => {
+          const req = indexedDB.deleteDatabase(name);
+          req.onsuccess = () => resolve(true);
+          req.onerror = () => resolve(false);
+          // Android often fires blocked and never succeeds while a tab holds the DB open.
+          req.onblocked = () => resolve(false);
+        }),
+        PER_OP_TIMEOUT_MS,
+        false,
+      );
+      if (ok) deleted += 1;
     } catch {
       // ignore
     }
@@ -89,9 +124,13 @@ export async function deleteIndexedDatabases(names: readonly string[]): Promise<
 export async function deleteCacheNamesByPrefix(prefixes: readonly string[]): Promise<number> {
   if (typeof caches === "undefined") return 0;
   try {
-    const keys = await caches.keys();
+    const keys = await withTimeout(caches.keys(), PER_OP_TIMEOUT_MS, [] as string[]);
     const targets = keys.filter((key) => prefixes.some((prefix) => key.startsWith(prefix)));
-    await Promise.all(targets.map((key) => caches.delete(key)));
+    await withTimeout(
+      Promise.all(targets.map((key) => caches.delete(key))).then(() => undefined),
+      PER_OP_TIMEOUT_MS,
+      undefined,
+    );
     return targets.length;
   } catch {
     return 0;
@@ -109,7 +148,11 @@ export async function unregisterServiceWorkersByScriptMatch(
     return 0;
   }
   try {
-    const registrations = await navigator.serviceWorker.getRegistrations();
+    const registrations = await withTimeout(
+      navigator.serviceWorker.getRegistrations(),
+      PER_OP_TIMEOUT_MS,
+      [] as ReadonlyArray<ServiceWorkerRegistration>,
+    );
     let count = 0;
     for (const registration of registrations) {
       const scriptUrl =
@@ -118,7 +161,7 @@ export async function unregisterServiceWorkersByScriptMatch(
         registration.installing?.scriptURL ??
         "";
       if (markers.some((marker) => scriptUrl.includes(marker))) {
-        const ok = await registration.unregister();
+        const ok = await withTimeout(registration.unregister(), PER_OP_TIMEOUT_MS, false);
         if (ok) count += 1;
       }
     }

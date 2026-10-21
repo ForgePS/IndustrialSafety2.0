@@ -64,6 +64,16 @@ function listZipCentralDirectory(bytes: Uint8Array): ZipInventoryItem[] {
   return items;
 }
 
+/** Reject absolute paths, drive letters, and `..` segments (ZIP Slip). */
+export function isUnsafeZipEntryPath(pathName: string): boolean {
+  const normalized = String(pathName ?? "").replace(/\\/g, "/").trim();
+  if (!normalized) return true;
+  if (normalized.startsWith("/") || normalized.startsWith("~")) return true;
+  if (/^[a-zA-Z]:/.test(normalized)) return true;
+  const segments = normalized.split("/");
+  return segments.some((segment) => segment === ".." || segment === "");
+}
+
 function extractStoredFile(bytes: Uint8Array, pathName: string): Buffer | null {
   const buf = Buffer.from(bytes);
   let offset = 0;
@@ -121,6 +131,17 @@ export function validateZipMigrationBundle(input: {
   const inventory = listZipCentralDirectory(input.bytes);
   if (inventory.length === 0) {
     return { ok: false, code: "IMPORT_ZIP_INVALID", message: "ZIP archive inventory is empty or corrupt" };
+  }
+
+  for (const item of inventory) {
+    if (isUnsafeZipEntryPath(item.path)) {
+      return {
+        ok: false,
+        code: "IMPORT_ZIP_UNSAFE_PATH",
+        message: `Archive entry path is not allowed: ${item.path}`,
+        inventory,
+      };
+    }
   }
 
   const allowed = input.allowedExtensions ?? SUPPORTED_EXTENSIONS;

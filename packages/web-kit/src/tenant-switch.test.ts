@@ -56,7 +56,7 @@ describe("switchActiveTenant", () => {
       setActiveTenantId,
       clearActiveTenantId: vi.fn(),
     });
-    expect(order).toEqual(["clear-cache", "set-tenant", "select"]);
+    expect(order).toEqual(["clear-cache", "select", "set-tenant"]);
   });
 
   it("restores the previous tenant when server membership verification fails", async () => {
@@ -77,8 +77,7 @@ describe("switchActiveTenant", () => {
     ).rejects.toThrow(/No active membership/);
 
     expect(clearCachedAuthMe).toHaveBeenCalled();
-    expect(setActiveTenantId).toHaveBeenNthCalledWith(1, "tenant-b");
-    expect(setActiveTenantId).toHaveBeenNthCalledWith(2, "tenant-a");
+    expect(setActiveTenantId).toHaveBeenCalledWith("tenant-a");
     expect(clearActiveTenantId).not.toHaveBeenCalled();
   });
 
@@ -96,6 +95,7 @@ describe("switchActiveTenant", () => {
         clearActiveTenantId,
       }),
     ).rejects.toThrow(/forbidden/);
+    expect(setActiveTenantId).not.toHaveBeenCalled();
     expect(clearActiveTenantId).toHaveBeenCalled();
   });
 });

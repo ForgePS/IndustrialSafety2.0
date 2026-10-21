@@ -1,12 +1,14 @@
 import { z } from "zod";
 
-export const BRANDING_ASSET_KINDS = ["logo", "icon"] as const;
+/** Upload kinds: `logo` = light theme, `logo_dark` = dark theme, `icon` = app icon. */
+export const BRANDING_ASSET_KINDS = ["logo", "logo_dark", "icon"] as const;
 export type BrandingAssetKind = (typeof BRANDING_ASSET_KINDS)[number];
 
 export const putTenantBrandingInputSchema = z.object({
   displayName: z.string().max(200).optional().nullable(),
   shortName: z.string().max(80).optional().nullable(),
   logoDocumentId: z.string().uuid().optional().nullable(),
+  logoDarkDocumentId: z.string().uuid().optional().nullable(),
   iconDocumentId: z.string().uuid().optional().nullable(),
   primaryColor: z.string().max(32).optional().nullable(),
   secondaryColor: z.string().max(32).optional().nullable(),
@@ -49,4 +51,20 @@ export function isSignedAccessExpired(expiresAt: Date | string, now: Date = new 
 
 export function brandingObjectKeyPrefix(tenantId: string): string {
   return `tenants/${tenantId}/branding/`;
+}
+
+/** Pick the logo URL for the active theme (light/dark), with sensible fallbacks. */
+export function pickThemeLogoUrl(input: {
+  theme: "light" | "dark";
+  logoLightUrl?: string | null | undefined;
+  logoDarkUrl?: string | null | undefined;
+  fallbackUrl?: string | null | undefined;
+}): string {
+  const light = input.logoLightUrl?.trim() || "";
+  const dark = input.logoDarkUrl?.trim() || "";
+  const fallback = input.fallbackUrl?.trim() || "";
+  if (input.theme === "dark") {
+    return dark || light || fallback;
+  }
+  return light || fallback || dark;
 }

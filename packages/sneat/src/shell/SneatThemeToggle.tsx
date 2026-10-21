@@ -19,6 +19,9 @@ function applyMode(mode: SneatThemeMode) {
   document.documentElement.setAttribute("data-bs-theme", mode);
   document.documentElement.classList.toggle("dark-style", mode === "dark");
   document.documentElement.classList.toggle("light-style", mode === "light");
+  document.documentElement.classList.toggle("forge-theme-dark", mode === "dark");
+  document.documentElement.classList.toggle("forge-theme-light", mode === "light");
+  document.documentElement.style.colorScheme = mode;
 }
 
 export function useSneatThemeMode() {
@@ -30,6 +33,18 @@ export function useSneatThemeMode() {
     setMode(next);
     applyMode(next);
     setReady(true);
+
+    // Follow OS preference until the user explicitly toggles.
+    const mq = window.matchMedia?.("(prefers-color-scheme: dark)");
+    const onSystem = () => {
+      const stored = window.localStorage.getItem(STORAGE_KEY);
+      if (stored === "dark" || stored === "light") return;
+      const resolved: SneatThemeMode = mq?.matches ? "dark" : "light";
+      setMode(resolved);
+      applyMode(resolved);
+    };
+    mq?.addEventListener?.("change", onSystem);
+    return () => mq?.removeEventListener?.("change", onSystem);
   }, []);
 
   function setThemeMode(next: SneatThemeMode) {

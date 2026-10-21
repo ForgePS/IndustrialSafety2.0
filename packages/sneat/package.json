@@ -12,6 +12,9 @@
     },
     "./core.css": "./assets/vendor/css/core.css",
     "./demo.css": "./assets/css/demo.css",
+    "./theme-default.css": "./assets/css/theme-default.css",
+    "./theme-default-dark.css": "./assets/css/theme-default-dark.css",
+    "./shell.css": "./assets/css/shell.css",
     "./icons.css": "./assets/vendor/fonts/iconify-icons.subset.css",
     "./icons.full.css": "./assets/vendor/fonts/iconify-icons.css",
     "./page-auth.css": "./assets/vendor/css/pages/page-auth.css"

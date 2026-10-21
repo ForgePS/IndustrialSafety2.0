@@ -73,9 +73,9 @@ describe("CREATOR-UX-REPAIR checkbox row", () => {
 });
 
 describe("MK-S8 shell chrome", () => {
-  it("renders facility empty state", () => {
-    render(<ForgeFacilitySelector facilities={[]} state="empty" />);
-    expect(screen.getByText("No facilities")).toBeTruthy();
+  it("renders nothing when facilities are empty", () => {
+    const { container } = render(<ForgeFacilitySelector facilities={[]} state="empty" />);
+    expect(container.firstChild).toBeNull();
   });
 
   it("renders disabled search trigger", () => {

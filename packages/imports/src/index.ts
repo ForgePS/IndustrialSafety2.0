@@ -66,6 +66,9 @@ export {
   FAILURE_CLASSES,
   ROLLBACK_CLASSIFICATIONS,
   adapterRegistryKey,
+  resolveImportAdapterKey,
+  AUTHORIZED_IMPORT_ADAPTER_KEYS,
+  REFERENCE_IMPORT_ADAPTER_KEY,
   ImportAdapterRegistry,
   type FailureClass,
   type RollbackClassification,
@@ -142,6 +145,8 @@ export {
   isQuarantineVerdict,
   isFailClosedVerdict,
   DEFAULT_SCAN_TIMEOUT_MS,
+  DEFAULT_SCAN_POLL_INTERVAL_MS,
+  DEFAULT_MAX_SCAN_ATTEMPTS,
   DEFAULT_MAX_RESCANS,
   EICAR_SHA256,
   type MalwareVerdict,
@@ -156,9 +161,12 @@ export { ReferenceMalwareScanner, contentSha256 } from "./security/reference-sca
 
 export {
   REFERENCE_MALWARE_PROVIDER_KEY,
+  AWS_GUARDDUTY_MALWARE_PROVIDER_KEY,
   PRODUCTION_LIKE_APP_ENVS,
   isProductionLikeAppEnv,
   isReferenceMalwareProvider,
+  isProductionGradeMalwareProvider,
+  resolveImportMalwareProviderKey,
   assertScannerAllowedForEnvironment,
   STUCK_JOB_THRESHOLDS_MS,
   isStuckImportJob,
@@ -324,6 +332,7 @@ export {
 } from "./duplicates/engine.js";
 export {
   validateZipMigrationBundle,
+  isUnsafeZipEntryPath,
   parseZipManifest,
   type ZipManifest,
   type ZipManifestEntry,

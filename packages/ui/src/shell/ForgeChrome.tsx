@@ -2,6 +2,8 @@ import type { ReactNode } from "react";
 import { Button } from "../primitives.js";
 import type { ForgeLinkRender, ForgeShellFacility, ForgeShellTenant } from "./types.js";
 
+const TOPBAR_SELECT_CLASS = "form-select form-select-sm";
+
 export function ForgeTenantSwitcher({
   tenants,
   activeTenantId,
@@ -32,17 +34,16 @@ export function ForgeTenantSwitcher({
     return <span className="forge-topbar__meta">No {label.toLowerCase()}s</span>;
   }
   return (
-    <label className="forge-topbar__meta" style={{ display: "inline-flex", gap: "0.5rem", alignItems: "center" }}>
+    <label className="forge-topbar__control">
       <span>{label}</span>
       <select
-        className="forge-select"
+        className={TOPBAR_SELECT_CLASS}
         aria-label={`Switch ${label.toLowerCase()}`}
         disabled={disabled}
         value={activeTenantId ?? ""}
         onChange={(e) => {
           if (e.target.value) onSelect(e.target.value);
         }}
-        style={{ minWidth: "10rem", minHeight: "2.5rem" }}
       >
         {selectable.map((t) => (
           <option key={t.tenantId} value={t.tenantId}>
@@ -76,7 +77,7 @@ export function ForgeUserMenu({
   renderLink?: ForgeLinkRender;
 }) {
   return (
-    <div className="forge-topbar__actions" style={{ gap: "0.75rem" }}>
+    <div className="forge-topbar__user">
       <span className="forge-topbar__meta">{label}</span>
       {items.map((item) => {
         if (item.disabled) {
@@ -88,9 +89,10 @@ export function ForgeUserMenu({
         }
         if (item.href && renderLink) {
           return (
-            <span key={item.label} className="forge-topbar__meta">
+            <span key={item.label}>
               {renderLink({
                 href: item.href,
+                className: "forge-topbar__nav-link",
                 children: item.label,
                 ...(item.onClick ? { onClick: item.onClick } : {}),
               })}
@@ -99,7 +101,7 @@ export function ForgeUserMenu({
         }
         if (item.href) {
           return (
-            <a key={item.label} href={item.href} className="forge-topbar__meta" onClick={item.onClick}>
+            <a key={item.label} href={item.href} className="forge-topbar__nav-link" onClick={item.onClick}>
               {item.label}
             </a>
           );
@@ -307,15 +309,14 @@ export function ForgeProductSwitcher({
   }
   if (products.length === 0 || state === "empty") return null;
   return (
-    <label className="forge-topbar__meta" style={{ display: "inline-flex", gap: "0.5rem", alignItems: "center" }}>
+    <label className="forge-topbar__control">
       <span>Product</span>
       <select
-        className="forge-select"
+        className={TOPBAR_SELECT_CLASS}
         aria-label="Switch product"
         value={activeProductId ?? products[0]?.id}
         disabled={disabled || !onSelect}
         onChange={(e) => onSelect?.(e.target.value)}
-        style={{ minWidth: "9rem", minHeight: "2.5rem" }}
       >
         {products.map((p) => (
           <option key={p.id} value={p.id} disabled={p.entitlementDisabled}>
@@ -351,20 +352,19 @@ export function ForgeFacilitySelector({
     return <span className="forge-topbar__meta">Facility selector unavailable</span>;
   }
   if (facilities.length === 0 || state === "empty") {
-    return <span className="forge-topbar__meta">No facilities</span>;
+    return null;
   }
   return (
-    <label className="forge-topbar__meta" style={{ display: "inline-flex", gap: "0.5rem", alignItems: "center" }}>
+    <label className="forge-topbar__control">
       <span>Facility</span>
       <select
-        className="forge-select"
+        className={TOPBAR_SELECT_CLASS}
         aria-label="Select facility"
         disabled={disabled || !onSelect}
         value={activeFacilityId ?? facilities[0]?.id ?? ""}
         onChange={(e) => {
           if (e.target.value) onSelect?.(e.target.value);
         }}
-        style={{ minWidth: "9rem", minHeight: "2.5rem" }}
       >
         {facilities.map((f) => (
           <option key={f.id} value={f.id}>

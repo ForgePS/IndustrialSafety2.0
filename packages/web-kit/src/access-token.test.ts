@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { beforeEach, describe, expect, it } from "vitest";
-import { assertAccessTokenShape, InvalidAccessTokenError } from "./access-token.js";
+import { assertAccessTokenShape, InvalidAccessTokenError, isAccessTokenExpiredOrNearExpiry } from "./access-token.js";
 import {
   clearAuthStorage,
   getBearerToken,
@@ -39,6 +39,34 @@ describe("access token shape", () => {
 
   it("rejects arbitrary JSON", () => {
     expect(() => assertAccessTokenShape('{"access_token":"nope"}')).toThrow(InvalidAccessTokenError);
+  });
+
+  it("treats missing exp as expired", () => {
+    expect(isAccessTokenExpiredOrNearExpiry(SAMPLE_JWT)).toBe(true);
+    expect(isAccessTokenExpiredOrNearExpiry(null)).toBe(true);
+  });
+
+  it("respects exp with skew", () => {
+    const header = Buffer.from(JSON.stringify({ alg: "none" })).toString("base64url");
+    const future = Buffer.from(JSON.stringify({ exp: Math.floor(Date.now() / 1000) + 3600 })).toString(
+      "base64url",
+    );
+    const past = Buffer.from(JSON.stringify({ exp: Math.floor(Date.now() / 1000) - 10 })).toString(
+      "base64url",
+    );
+    expect(isAccessTokenExpiredOrNearExpiry(`${header}.${future}.sig`)).toBe(false);
+    expect(isAccessTokenExpiredOrNearExpiry(`${header}.${past}.sig`)).toBe(true);
+  });
+
+  it("reads expiry and near-expiry delay helpers", async () => {
+    const { getAccessTokenExpiresAtMs, msUntilAccessTokenNearExpiry } = await import("./access-token.js");
+    const header = Buffer.from(JSON.stringify({ alg: "none" })).toString("base64url");
+    const exp = Math.floor(Date.now() / 1000) + 600;
+    const token = `${header}.${Buffer.from(JSON.stringify({ exp })).toString("base64url")}.sig`;
+    expect(getAccessTokenExpiresAtMs(token)).toBe(exp * 1000);
+    const until = msUntilAccessTokenNearExpiry(token, 60);
+    expect(until).toBeGreaterThan(500_000);
+    expect(until).toBeLessThanOrEqual(540_000);
   });
 });
 

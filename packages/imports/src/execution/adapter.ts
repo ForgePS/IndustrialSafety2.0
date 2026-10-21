@@ -104,6 +104,45 @@ export function adapterRegistryKey(input: {
   return `${input.productKey}:${input.moduleKey}:${input.recordType}@${version}`;
 }
 
+/**
+ * Product adapters registered in worker-service. Keep this list in sync with
+ * `createDefaultRegistry()` in import-execute-processor.
+ */
+export const AUTHORIZED_IMPORT_ADAPTER_KEYS = [
+  "FORGE_INDUSTRIAL:PERSONNEL:personnel@1",
+  "FORGE_INDUSTRIAL:FLEET:fleet_vehicle@1",
+  "FORGE_INDUSTRIAL:ORG:department@1",
+  "FORGE_INDUSTRIAL:ORG:site@1",
+  "FORGE_INDUSTRIAL:ORG:position@1",
+  "FORGE_INDUSTRIAL:ORG:employment_type@1",
+  "FORGE_INDUSTRIAL:TRAINING:training_record@1",
+] as const;
+
+const AUTHORIZED_ADAPTER_SET = new Set<string>(AUTHORIZED_IMPORT_ADAPTER_KEYS);
+
+export const REFERENCE_IMPORT_ADAPTER_KEY = "reference:generic:record@1";
+
+/**
+ * Resolve which adapter the worker should run for an import job.
+ * Explicit adapterKey wins; otherwise derive from product/module/record when authorized.
+ */
+export function resolveImportAdapterKey(input: {
+  adapterKey?: string | null | undefined;
+  productKey: string;
+  moduleKey: string;
+  recordType: string;
+}): string {
+  const explicit = input.adapterKey?.trim();
+  if (explicit) return explicit;
+  const derived = adapterRegistryKey({
+    productKey: input.productKey,
+    moduleKey: input.moduleKey,
+    recordType: input.recordType,
+  });
+  if (AUTHORIZED_ADAPTER_SET.has(derived)) return derived;
+  return REFERENCE_IMPORT_ADAPTER_KEY;
+}
+
 export class ImportAdapterRegistry {
   private readonly adapters = new Map<string, ImportRecordAdapter>();
 

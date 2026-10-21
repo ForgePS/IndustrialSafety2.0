@@ -57,3 +57,17 @@ export function dashboardStatusBuckets(statuses: string[]): Record<string, numbe
   }
   return counts;
 }
+
+/** Display labels for overview status bucket keys. */
+export const DASHBOARD_BUCKET_LABELS: Record<string, string> = {
+  active: "Active",
+  awaitingMapping: "Awaiting mapping",
+  awaitingApproval: "Awaiting approval",
+  processing: "Processing",
+  completed: "Completed",
+  completedWithErrors: "Completed w/ errors",
+  failed: "Failed",
+  quarantined: "Quarantined",
+  scanFailed: "Scan failed",
+  rollbackPending: "Rollback pending",
+};

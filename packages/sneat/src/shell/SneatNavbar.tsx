@@ -1,4 +1,18 @@
-import type { ReactNode } from "react";
+import { Children, isValidElement, type ReactNode } from "react";
+
+function NavbarRightItems({ children }: { children: ReactNode }) {
+  const items = Children.toArray(children).filter(Boolean);
+  if (items.length === 0) return null;
+  return (
+    <ul className="navbar-nav flex-row align-items-center ms-auto flex-shrink-0 gap-2">
+      {items.map((child, index) => (
+        <li key={isValidElement(child) && child.key != null ? child.key : index} className="nav-item d-flex align-items-center">
+          {child}
+        </li>
+      ))}
+    </ul>
+  );
+}
 
 export function SneatNavbar({
   menuOpen,
@@ -40,11 +54,7 @@ export function SneatNavbar({
         ) : (
           <div className="navbar-nav align-items-center flex-grow-1" />
         )}
-        {right ? (
-          <ul className="navbar-nav flex-row align-items-center ms-auto flex-shrink-0 gap-2">
-            <li className="nav-item d-flex align-items-center gap-2 flex-wrap">{right}</li>
-          </ul>
-        ) : null}
+        {right ? <NavbarRightItems>{right}</NavbarRightItems> : null}
       </div>
     </nav>
   );

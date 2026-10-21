@@ -389,7 +389,7 @@ function buildRow(
   }
 
   const aliases: Record<string, string[]> = {
-    name: ["name", "title", "label", "displayName", "templateName"],
+    name: ["name", "title", "label", "displayName", "templateName", "equipmentName"],
     title: ["title", "name", "label", "displayTitle"],
     label: ["label", "name", "title"],
     status: ["status"],
@@ -398,8 +398,8 @@ function buildRow(
     last_name: ["lastName", "last_name"],
     email: ["email"],
     employee_number: ["employeeNumber", "employee_number"],
-    equipment_number: ["equipmentNumber", "equipment_number"],
-    equipment_type: ["equipmentType", "equipment_type", "type"],
+    equipment_number: ["equipmentNumber", "equipment_number", "assetTag"],
+    equipment_type: ["equipmentType", "equipment_type", "type", "category"],
     site_key: ["siteKey", "site_key", "siteCode"],
     history_domain: ["historyDomain", "module", "domain"],
     template_json: ["templateJson", "template", "sections"],
@@ -411,7 +411,7 @@ function buildRow(
     treatment: ["treatment"],
     appointment_date: ["appointmentDate"],
     case_id: ["caseId", "case_id"],
-    site_id: ["siteId", "site_id"],
+    site_id: ["siteId", "site_id", "locationId", "location_id"],
     department_id: ["departmentId", "department_id"],
     template_id: ["templateId", "template_id"],
     version_number: ["versionNumber", "version"],
@@ -555,6 +555,7 @@ function buildRow(
     if (col.name === "name" || col.name === "display_name" || col.name === "title") {
       row[col.name] =
         unwrapValue(data.name) ??
+        unwrapValue(data.equipmentName) ??
         unwrapValue(data.title) ??
         unwrapValue(data.displayName) ??
         unwrapValue(data.displayTitle) ??

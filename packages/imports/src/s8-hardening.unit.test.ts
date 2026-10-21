@@ -46,6 +46,16 @@ describe("S8 production scanner guards", () => {
       }).ok,
     ).toBe(true);
   });
+
+  it("resolves empty provider key to reference", async () => {
+    const { resolveImportMalwareProviderKey, AWS_GUARDDUTY_MALWARE_PROVIDER_KEY } =
+      await import("./index.js");
+    expect(resolveImportMalwareProviderKey(undefined)).toBe("reference-malware");
+    expect(resolveImportMalwareProviderKey("  ")).toBe("reference-malware");
+    expect(resolveImportMalwareProviderKey(AWS_GUARDDUTY_MALWARE_PROVIDER_KEY)).toBe(
+      AWS_GUARDDUTY_MALWARE_PROVIDER_KEY,
+    );
+  });
 });
 
 describe("S8 stuck job detection", () => {

@@ -194,5 +194,13 @@ function defaultStatus(code: ForgeErrorCode): number {
 }
 
 export function isForgeError(error: unknown): error is ForgeError {
-  return error instanceof ForgeError;
+  if (error instanceof ForgeError) return true;
+  // Duck-type across duplicate @forge/errors package instances (Nest/webpack).
+  if (!error || typeof error !== "object") return false;
+  const candidate = error as { name?: unknown; code?: unknown; statusCode?: unknown };
+  return (
+    candidate.name === "ForgeError" &&
+    typeof candidate.code === "string" &&
+    typeof candidate.statusCode === "number"
+  );
 }

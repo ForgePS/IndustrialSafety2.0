@@ -5,6 +5,9 @@
 
 export const REFERENCE_MALWARE_PROVIDER_KEY = "reference-malware" as const;
 
+/** GuardDuty Malware Protection for S3 — production-grade provider key. */
+export const AWS_GUARDDUTY_MALWARE_PROVIDER_KEY = "aws-guardduty-malware-protection" as const;
+
 /** Environments where untrusted file imports require a production-grade scanner. */
 export const PRODUCTION_LIKE_APP_ENVS = new Set([
   "staging",
@@ -20,6 +23,18 @@ export function isProductionLikeAppEnv(appEnv: string | null | undefined): boole
 
 export function isReferenceMalwareProvider(providerKey: string | null | undefined): boolean {
   return providerKey === REFERENCE_MALWARE_PROVIDER_KEY;
+}
+
+export function isProductionGradeMalwareProvider(providerKey: string | null | undefined): boolean {
+  return providerKey === AWS_GUARDDUTY_MALWARE_PROVIDER_KEY;
+}
+
+/** Resolve configured provider; empty/missing → reference (dev default). */
+export function resolveImportMalwareProviderKey(
+  value: string | null | undefined,
+): string {
+  const trimmed = value?.trim();
+  return trimmed && trimmed.length > 0 ? trimmed : REFERENCE_MALWARE_PROVIDER_KEY;
 }
 
 /**

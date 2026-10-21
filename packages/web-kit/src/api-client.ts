@@ -1,4 +1,5 @@
 import { getActiveTenantId, getBearerToken, getDevPrincipal, getCsrfToken } from "./auth-storage.js";
+import { isAccessTokenExpiredOrNearExpiry } from "./access-token.js";
 
 const FORGE_CSRF_HEADER = "x-forge-csrf";
 const STATE_CHANGING_METHODS = new Set(["POST", "PATCH", "PUT", "DELETE"]);
@@ -147,11 +148,12 @@ function requestHeaders(
   return headers;
 }
 
-async function ensureFreshBearer(signal?: AbortSignal): Promise<void> {
+async function ensureFreshBearer(_signal?: AbortSignal): Promise<void> {
   if (!clientConfig.tryRefreshSession) return;
   if (!getBearerToken()) return;
   try {
-    await clientConfig.tryRefreshSession(signal ? { signal } : undefined);
+    // Never abort the shared refresh from a per-request signal.
+    await clientConfig.tryRefreshSession();
   } catch {
     // Keep the existing bearer; the request may still succeed or recover via 401 retry.
   }
@@ -174,6 +176,14 @@ async function parseResponse<T>(
   } catch {
     // Common after SPA deploys: CloudFront returns HTML (200) for a missing
     // asset/route; JSON parse fails and the old message looked like a success.
+    // Gateway timeouts (504) are HTML error pages from CloudFront/ALB when an
+    // origin (e.g. sync label render) exceeds the edge read timeout.
+    if (res.status === 504 || res.status === 502 || res.status === 503) {
+      throw new ApiError(
+        `The server timed out (HTTP ${res.status}). Try again — large label renders can take a moment.`,
+        res.status,
+      );
+    }
     throw new ApiError(
       `Non-JSON response (HTTP ${res.status}). Hard-refresh if this followed a deploy.`,
       res.status,
@@ -188,16 +198,22 @@ async function parseResponse<T>(
   if (res.status === 401 && hadAuthorization) {
     const canRetry = options?.allowRefreshRetry !== false && Boolean(clientConfig.tryRefreshSession);
     if (canRetry) {
+      // Do not forward the request AbortSignal into refresh — navigation/timeouts
+      // must not cancel the shared session refresh for other callers.
       const refreshed = await clientConfig.tryRefreshSession!({
         force: true,
-        ...(options?.signal ? { signal: options.signal } : {}),
       });
       if (refreshed) {
         // Caller retries with a fresh Authorization header.
         throw new ApiError("ACCESS_TOKEN_REFRESHED", 401, "ACCESS_TOKEN_REFRESHED");
       }
     }
-    clientConfig.onUnauthorized?.();
+    // Only clear the browser session when refresh failed and the access token is
+    // gone or expired — transient refresh errors keep the user signed in.
+    const bearer = getBearerToken();
+    if (!bearer || isAccessTokenExpiredOrNearExpiry(bearer, 0)) {
+      clientConfig.onUnauthorized?.();
+    }
   }
 
   if (!res.ok || "error" in body) {
@@ -337,7 +353,10 @@ export async function apiFetchRaw(path: string): Promise<Response> {
     if (refreshed) {
       ({ headers, res } = await run());
     } else {
-      clientConfig.onUnauthorized?.();
+      const bearer = getBearerToken();
+      if (!bearer || isAccessTokenExpiredOrNearExpiry(bearer, 0)) {
+        clientConfig.onUnauthorized?.();
+      }
     }
   }
   return res;

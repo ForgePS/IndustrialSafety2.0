@@ -28,6 +28,11 @@ export const users = pgTable(
     primaryEmail: varchar("primary_email", { length: 320 }).notNull(),
     status: varchar("status", { length: 32 }).notNull().default("INVITED"),
     lastLoginAt: timestamp("last_login_at", { withTimezone: true }),
+    /**
+     * Last authenticated API activity. Used for messaging/platform online indicators.
+     * Updated on a throttle from AuthContextService; cleared on logout-all.
+     */
+    lastActivityAt: timestamp("last_activity_at", { withTimezone: true }),
     invitedAt: timestamp("invited_at", { withTimezone: true }),
     activatedAt: timestamp("activated_at", { withTimezone: true }),
     disabledAt: timestamp("disabled_at", { withTimezone: true }),

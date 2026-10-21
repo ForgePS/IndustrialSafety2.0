@@ -16,6 +16,7 @@ vi.mock("./cognito-oauth.js", () => ({
   refreshAccessToken: (...args: unknown[]) => refreshAccessTokenMock(...args),
   buildLogoutUrl: () => "/",
   redirectToCognitoLogin: vi.fn(),
+  clearBrowserSessionCookie: vi.fn(),
 }));
 
 vi.mock("./auth-storage.js", () => ({
@@ -28,6 +29,9 @@ vi.mock("./auth-storage.js", () => ({
   setCachedAuthMe: vi.fn(),
   clearCachedAuthMe: vi.fn(),
   setActiveTenantId: vi.fn(),
+  isLogoutPending: () => false,
+  markLogoutPending: vi.fn(),
+  clearLogoutPending: vi.fn(),
 }));
 
 import { establishSession } from "./auth-provider.js";

@@ -1,4 +1,5 @@
 import { getApiBaseUrl } from "./api-client.js";
+import { recordUserActivity } from "./idle-timeout.js";
 import {
   getCsrfToken,
   setBearerToken,
@@ -200,7 +201,7 @@ export function validateOAuthState(state: string | null): boolean {
 
 /**
  * Exchange an authorization code via the platform-api session BFF.
- * Access + CSRF stay in memory; refresh stays HttpOnly server-side.
+ * Access stays memory-only; CSRF is same-tab sessionStorage; refresh is HttpOnly.
  */
 export async function exchangeCodeForTokens(code: string): Promise<CognitoTokenResponse> {
   requireBrowser();
@@ -227,11 +228,14 @@ export async function exchangeCodeForTokens(code: string): Promise<CognitoTokenR
   sessionStorage.removeItem(PKCE_VERIFIER_KEY);
 
   const payload = await parseSessionAuthResponse(res);
-  return storeSessionAuth(payload);
+  const tokens = storeSessionAuth(payload);
+  recordUserActivity();
+  return tokens;
 }
 
 /**
- * Refresh via HttpOnly session cookie + CSRF header. Never reads a JS refresh token.
+ * Refresh via HttpOnly session cookie + CSRF header when available.
+ * Same-origin Field/Industrial /api proxy may refresh with cookie alone after PWA wipe.
  */
 export async function refreshAccessToken(
   options?: { signal?: AbortSignal },
@@ -255,7 +259,7 @@ export async function refreshAccessToken(
     ...(options?.signal ? { signal: options.signal } : {}),
   });
 
-  if (res.status === 401) {
+  if (res.status === 401 || res.status === 403) {
     return null;
   }
 
@@ -263,8 +267,41 @@ export async function refreshAccessToken(
   return storeSessionAuth(payload);
 }
 
+/**
+ * Best-effort clear of the HttpOnly browser session cookie.
+ * Required after bootstrap timeouts — clearAuthStorage cannot remove HttpOnly cookies,
+ * so a stuck refresh would otherwise loop forever on every reload.
+ */
+export async function clearBrowserSessionCookie(
+  options?: { signal?: AbortSignal },
+): Promise<void> {
+  if (typeof window === "undefined") return;
+  const csrf = getCsrfToken();
+  const headers: Record<string, string> = {
+    Accept: "application/json",
+    "Content-Type": "application/json",
+  };
+  if (csrf) {
+    headers[FORGE_CSRF_HEADER] = csrf;
+  }
+  try {
+    await fetch(sessionApiUrl("/api/v1/auth/session/logout"), {
+      method: "POST",
+      credentials: "include",
+      headers,
+      body: "{}",
+      // Survives Android PWA navigation away from the document.
+      keepalive: true,
+      ...(options?.signal ? { signal: options.signal } : {}),
+    });
+  } catch {
+    // Best-effort — login screen must still open.
+  }
+}
+
 export function buildLogoutUrl(): string {
   const config = getCognitoOAuthConfig();
+  // Must match Cognito app client LogoutURLs exactly (root trailing slash).
   const logoutUri = `${config.appUrl.replace(/\/$/, "")}/`;
   const params = new URLSearchParams({
     client_id: config.clientId,

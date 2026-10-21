@@ -59,7 +59,8 @@ describe("api client 401 refresh retry", () => {
     expect(onUnauthorized).not.toHaveBeenCalled();
   });
 
-  it("clears the session when refresh cannot recover", async () => {
+  it("clears the session when refresh cannot recover an expired token", async () => {
+    setBearerToken(jwtWithExp(-10));
     tryRefreshSession.mockResolvedValue(false);
     fetchMock.mockResolvedValue(
       new Response(JSON.stringify({ error: { message: "expired" } }), { status: 401 }),
@@ -67,6 +68,16 @@ describe("api client 401 refresh retry", () => {
 
     await expect(apiGet("/api/v1/auth/me")).rejects.toBeInstanceOf(ApiError);
     expect(onUnauthorized).toHaveBeenCalledTimes(1);
+  });
+
+  it("does not clear the session when refresh fails but the bearer is still usable", async () => {
+    tryRefreshSession.mockResolvedValue(false);
+    fetchMock.mockResolvedValue(
+      new Response(JSON.stringify({ error: { message: "expired" } }), { status: 401 }),
+    );
+
+    await expect(apiGet("/api/v1/auth/me")).rejects.toBeInstanceOf(ApiError);
+    expect(onUnauthorized).not.toHaveBeenCalled();
   });
 
   it("allows empty baseUrl for same-origin /api proxy", async () => {

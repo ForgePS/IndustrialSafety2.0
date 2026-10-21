@@ -78,6 +78,20 @@ export const TENANT_OWNER_PERMISSIONS = [
   "import.rollback",
   "import.profile.manage",
   "import.error.reprocess",
+  // Print Manager — tenant admins/owners can register bridges and manage printers
+  "industrial.printer.view",
+  "industrial.printer.print",
+  "industrial.printer.quick_print",
+  "industrial.printer.reprint",
+  "industrial.printer.cancel",
+  "industrial.printer.manage",
+  "industrial.printer.manage_defaults",
+  "industrial.printer.manage_media",
+  "industrial.printer.manage_templates",
+  "industrial.printer.manage_bridge",
+  "industrial.printer.pair_bluetooth",
+  "industrial.printer.view_logs",
+  "industrial.printer.run_diagnostics",
 ] as const;
 
 /** Tenant admin: same core SaaS surface as owner for MK-S4 (no billing-owner split yet). */

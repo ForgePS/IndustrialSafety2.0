@@ -14,6 +14,7 @@ export default tseslint.config(
       "**/coverage/**",
       "**/cdk.out/**",
       "**/.turbo/**",
+      "**/src/vendor/**",
     ],
   },
   js.configs.recommended,

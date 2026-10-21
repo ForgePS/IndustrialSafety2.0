@@ -15,9 +15,11 @@ import {
   varchar,
   bigint,
   date,
+  type AnyPgColumn,
 } from "drizzle-orm/pg-core";
 import { createdAtColumn, updatedAtColumn } from "./common.js";
 import { tenants } from "./tenants.js";
+import { users } from "./users.js";
 
 export const sourceCols = {
   sourceSystem: varchar("source_system", { length: 64 }).notNull().default("FIREBASE"),
@@ -59,6 +61,7 @@ export const industrialDepartments = pgTable(
       .references(() => tenants.id),
     siteId: uuid("site_id").references(() => industrialSites.id),
     name: varchar("name", { length: 300 }).notNull(),
+    divisionName: varchar("division_name", { length: 300 }),
     status: varchar("status", { length: 64 }).notNull().default("ACTIVE"),
     contactPersonnelId: uuid("contact_personnel_id"),
     contactName: varchar("contact_name", { length: 300 }),
@@ -68,7 +71,14 @@ export const industrialDepartments = pgTable(
     updatedAt: updatedAtColumn,
     archivedAt: timestamp("archived_at", { withTimezone: true }),
   },
-  (t) => [index("industrial_departments_tenant_site_idx").on(t.tenantId, t.siteId)],
+  (t) => [
+    index("industrial_departments_tenant_site_idx").on(t.tenantId, t.siteId),
+    index("industrial_departments_tenant_site_division_idx").on(
+      t.tenantId,
+      t.siteId,
+      t.divisionName,
+    ),
+  ],
 );
 
 export const industrialPositions = pgTable(
@@ -133,7 +143,18 @@ export const industrialPersonnel = pgTable(
     phone: varchar("phone", { length: 40 }),
     companyPhone: varchar("company_phone", { length: 40 }),
     companyEmail: varchar("company_email", { length: 320 }),
+    /** Emergency Alerts SMS opt-in (10DLC). Notification number is `phone`. */
+    smsAuthorizedAt: timestamp("sms_authorized_at", { withTimezone: true }),
+    smsAuthorizedByUserId: uuid("sms_authorized_by_user_id").references(() => users.id),
+    smsOptedOutAt: timestamp("sms_opted_out_at", { withTimezone: true }),
     hireDate: date("hire_date"),
+    dateOfBirth: date("date_of_birth"),
+    // Home address + sex for WC / OSHA Form 301 seeding (migration 0099).
+    street: varchar("street", { length: 300 }),
+    city: varchar("city", { length: 120 }),
+    state: varchar("state", { length: 64 }),
+    zip: varchar("zip", { length: 32 }),
+    gender: varchar("gender", { length: 32 }),
     supervisorName: varchar("supervisor_name", { length: 300 }),
     // Add Person template parity with legacy Firebase personnelRecords (migration 0043).
     // Free-text assignment names coexist with the site/department/position FKs: imported
@@ -146,6 +167,7 @@ export const industrialPersonnel = pgTable(
     userAuthId: varchar("user_auth_id", { length: 320 }),
     digitalSource: varchar("digital_source", { length: 200 }),
     isCompanyDriver: boolean("is_company_driver").notNull().default(false),
+    isDotDriver: boolean("is_dot_driver").notNull().default(false),
     tracksPrescriptionSafetyGlasses: boolean("tracks_prescription_safety_glasses")
       .notNull()
       .default(false),
@@ -175,6 +197,11 @@ export const industrialPersonnel = pgTable(
     }),
     safetyFootwearExtraPairApprovedDate: date("safety_footwear_extra_pair_approved_date"),
     safetyFootwearExtraPairReason: text("safety_footwear_extra_pair_reason"),
+    tracksFirstAid: boolean("tracks_first_aid").notNull().default(false),
+    cprCertificationExpiresDate: date("cpr_certification_expires_date"),
+    firstAidCertificationExpiresDate: date("first_aid_certification_expires_date"),
+    cprCertificationDocumentId: uuid("cpr_certification_document_id"),
+    firstAidCertificationDocumentId: uuid("first_aid_certification_document_id"),
     notes: text("notes"),
     signatureUrl: text("signature_url"),
     // Medical + dual emergency contacts (migration 0045).
@@ -354,6 +381,14 @@ export const industrialFleetVehicles = pgTable(
     dispositionNotes: text("disposition_notes"),
     outOfService: boolean("out_of_service").notNull().default(false),
     outOfServiceReason: text("out_of_service_reason"),
+    /**
+     * When true, this asset is DOT-regulated and must complete DVIRs before
+     * operation. Non-commercial assets leave this false and skip DVIR.
+     */
+    dotRegulated: boolean("dot_regulated").notNull().default(false),
+    /** SHA-256 hex of the public DVIR QR token (plaintext returned once on issue). */
+    dvirPublicTokenHash: varchar("dvir_public_token_hash", { length: 128 }),
+    dvirPublicTokenIssuedAt: timestamp("dvir_public_token_issued_at", { withTimezone: true }),
     status: varchar("status", { length: 64 }).notNull().default("ACTIVE"),
     ...sourceCols,
     createdAt: createdAtColumn,
@@ -364,6 +399,7 @@ export const industrialFleetVehicles = pgTable(
     uniqueIndex("industrial_fleet_vehicles_tenant_vin_uidx").on(t.tenantId, t.vin),
     index("industrial_fleet_vehicles_tenant_type_idx").on(t.tenantId, t.assetType),
     index("industrial_fleet_vehicles_tenant_renewal_idx").on(t.tenantId, t.renewalDate),
+    uniqueIndex("industrial_fleet_vehicles_dvir_token_uidx").on(t.dvirPublicTokenHash),
   ],
 );
 
@@ -535,20 +571,98 @@ export const industrialFleetDocuments = pgTable(
   (t) => [index("industrial_fleet_documents_vehicle_idx").on(t.tenantId, t.vehicleId)],
 );
 
-export const industrialWorkersCompCases = pgTable("industrial_workers_comp_cases", {
+export const industrialWorkersCompCases = pgTable(
+  "industrial_workers_comp_cases",
+  {
+    id: uuid("id").primaryKey(),
+    tenantId: uuid("tenant_id")
+      .notNull()
+      .references(() => tenants.id),
+    siteId: uuid("site_id").references(() => industrialSites.id),
+    departmentId: uuid("department_id").references(() => industrialDepartments.id),
+    personnelId: uuid("personnel_id").references(() => industrialPersonnel.id),
+    incidentId: uuid("incident_id"),
+    caseNumber: varchar("case_number", { length: 120 }),
+    status: varchar("status", { length: 64 }).notNull().default("OPEN"),
+    severity: varchar("severity", { length: 64 }),
+    workflowStage: varchar("workflow_stage", { length: 120 }),
+    reportedAt: timestamp("reported_at", { withTimezone: true }),
+    daysAway: integer("days_away"),
+    restrictedDays: integer("restricted_days"),
+    claimSummary: jsonb("claim_summary").notNull().default({}),
+    ...sourceCols,
+    createdAt: createdAtColumn,
+    updatedAt: updatedAtColumn,
+    archivedAt: timestamp("archived_at", { withTimezone: true }),
+  },
+  (t) => [
+    index("industrial_wc_cases_tenant_status_idx").on(t.tenantId, t.status),
+    index("industrial_wc_cases_personnel_idx").on(t.tenantId, t.personnelId),
+    index("industrial_wc_cases_incident_idx").on(t.tenantId, t.incidentId),
+  ],
+);
+
+export const industrialWorkersCompCarriers = pgTable("industrial_workers_comp_carriers", {
   id: uuid("id").primaryKey(),
   tenantId: uuid("tenant_id")
     .notNull()
     .references(() => tenants.id),
-  siteId: uuid("site_id").references(() => industrialSites.id),
-  personnelId: uuid("personnel_id").references(() => industrialPersonnel.id),
-  caseNumber: varchar("case_number", { length: 120 }),
-  status: varchar("status", { length: 64 }).notNull().default("OPEN"),
+  name: varchar("name", { length: 300 }).notNull(),
+  status: varchar("status", { length: 64 }).notNull().default("ACTIVE"),
+  contact: jsonb("contact").notNull().default({}),
   ...sourceCols,
   createdAt: createdAtColumn,
   updatedAt: updatedAtColumn,
   archivedAt: timestamp("archived_at", { withTimezone: true }),
 });
+
+export const industrialWorkersCompWorkStatusPeriods = pgTable(
+  "industrial_workers_comp_work_status_periods",
+  {
+    id: uuid("id").primaryKey(),
+    tenantId: uuid("tenant_id")
+      .notNull()
+      .references(() => tenants.id),
+    caseId: uuid("case_id")
+      .notNull()
+      .references(() => industrialWorkersCompCases.id),
+    status: varchar("status", { length: 64 }).notNull(),
+    startDate: date("start_date"),
+    endDate: date("end_date"),
+    notes: text("notes"),
+    createdByUserId: uuid("created_by_user_id"),
+    ...sourceCols,
+    createdAt: createdAtColumn,
+    updatedAt: updatedAtColumn,
+    archivedAt: timestamp("archived_at", { withTimezone: true }),
+  },
+  (t) => [
+    index("industrial_wc_work_status_case_idx").on(t.tenantId, t.caseId),
+    index("industrial_wc_work_status_created_by_idx").on(t.tenantId, t.createdByUserId),
+  ],
+);
+
+export const industrialWorkersCompRestrictions = pgTable(
+  "industrial_workers_comp_restrictions",
+  {
+    id: uuid("id").primaryKey(),
+    tenantId: uuid("tenant_id")
+      .notNull()
+      .references(() => tenants.id),
+    caseId: uuid("case_id")
+      .notNull()
+      .references(() => industrialWorkersCompCases.id),
+    description: text("description"),
+    startDate: date("start_date"),
+    endDate: date("end_date"),
+    status: varchar("status", { length: 64 }).notNull().default("ACTIVE"),
+    ...sourceCols,
+    createdAt: createdAtColumn,
+    updatedAt: updatedAtColumn,
+    archivedAt: timestamp("archived_at", { withTimezone: true }),
+  },
+  (t) => [index("industrial_wc_restrictions_case_idx").on(t.tenantId, t.caseId)],
+);
 
 export const industrialWorkersCompMedicalEncounters = pgTable(
   "industrial_workers_comp_medical_encounters",
@@ -562,31 +676,236 @@ export const industrialWorkersCompMedicalEncounters = pgTable(
       .references(() => industrialWorkersCompCases.id),
     appointmentDate: date("appointment_date"),
     provider: varchar("provider", { length: 300 }),
+    providerSpecialty: varchar("provider_specialty", { length: 200 }),
     diagnosis: text("diagnosis"),
     treatment: text("treatment"),
+    medication: text("medication"),
+    examFindings: text("exam_findings"),
+    assessment: text("assessment"),
+    symptoms: text("symptoms"),
+    notes: text("notes"),
     restrictedPayload: jsonb("restricted_payload").notNull().default({}),
+    createdByUserId: uuid("created_by_user_id"),
     ...sourceCols,
     createdAt: createdAtColumn,
     updatedAt: updatedAtColumn,
     archivedAt: timestamp("archived_at", { withTimezone: true }),
   },
+  (t) => [
+    index("industrial_wc_medical_case_idx").on(t.tenantId, t.caseId),
+    index("industrial_wc_medical_created_by_idx").on(t.tenantId, t.createdByUserId),
+  ],
 );
 
-export const qrLinks = pgTable("qr_links", {
-  id: uuid("id").primaryKey(),
-  tenantId: uuid("tenant_id")
-    .notNull()
-    .references(() => tenants.id),
-  siteId: uuid("site_id").references(() => industrialSites.id),
-  label: varchar("label", { length: 300 }),
-  status: varchar("status", { length: 64 }).notNull().default("ACTIVE"),
-  targetType: varchar("target_type", { length: 120 }),
-  targetId: uuid("target_id"),
-  ...sourceCols,
-  createdAt: createdAtColumn,
-  updatedAt: updatedAtColumn,
-  archivedAt: timestamp("archived_at", { withTimezone: true }),
-});
+/** Per-Thursday status notes required on open workers' compensation cases. */
+export const industrialWorkersCompWeeklyUpdates = pgTable(
+  "industrial_workers_comp_weekly_updates",
+  {
+    id: uuid("id").primaryKey(),
+    tenantId: uuid("tenant_id")
+      .notNull()
+      .references(() => tenants.id),
+    caseId: uuid("case_id")
+      .notNull()
+      .references(() => industrialWorkersCompCases.id),
+    weekOf: date("week_of").notNull(),
+    notes: text("notes").notNull(),
+    createdByUserId: uuid("created_by_user_id").references(() => users.id),
+    ...sourceCols,
+    createdAt: createdAtColumn,
+    updatedAt: updatedAtColumn,
+    archivedAt: timestamp("archived_at", { withTimezone: true }),
+  },
+  (t) => [
+    uniqueIndex("industrial_wc_weekly_updates_case_week_uidx").on(
+      t.tenantId,
+      t.caseId,
+      t.weekOf,
+    ),
+    index("industrial_wc_weekly_updates_week_idx").on(t.tenantId, t.weekOf),
+    index("industrial_wc_weekly_updates_case_idx").on(t.tenantId, t.caseId),
+  ],
+);
+
+/** Disciplinary actions on a personnel file; active points deduct from the safety score. */
+export const industrialPersonnelDisciplinaryActions = pgTable(
+  "industrial_personnel_disciplinary_actions",
+  {
+    id: uuid("id").primaryKey(),
+    tenantId: uuid("tenant_id")
+      .notNull()
+      .references(() => tenants.id),
+    personnelId: uuid("personnel_id")
+      .notNull()
+      .references(() => industrialPersonnel.id),
+    actionType: varchar("action_type", { length: 32 }).notNull(),
+    category: varchar("category", { length: 32 }).notNull().default("SAFETY"),
+    actionDate: date("action_date").notNull(),
+    reason: text("reason").notNull(),
+    details: text("details"),
+    issuedByName: varchar("issued_by_name", { length: 200 }),
+    points: integer("points").notNull().default(0),
+    countsUntil: date("counts_until"),
+    status: varchar("status", { length: 16 }).notNull().default("ACTIVE"),
+    rescindedAt: timestamp("rescinded_at", { withTimezone: true }),
+    rescindedReason: text("rescinded_reason"),
+    rescindedByUserId: uuid("rescinded_by_user_id").references(() => users.id),
+    attachments: jsonb("attachments").notNull().default([]),
+    createdByUserId: uuid("created_by_user_id").references(() => users.id),
+    createdAt: createdAtColumn,
+    updatedAt: updatedAtColumn,
+    archivedAt: timestamp("archived_at", { withTimezone: true }),
+  },
+  (t) => [
+    index("industrial_personnel_discipline_person_idx").on(
+      t.tenantId,
+      t.personnelId,
+      t.actionDate,
+    ),
+  ],
+);
+
+/** Append-only Emergency Alerts SMS consent records (QR self-service signup or admin). */
+export const industrialPersonnelSmsConsents = pgTable(
+  "industrial_personnel_sms_consents",
+  {
+    id: uuid("id").primaryKey(),
+    tenantId: uuid("tenant_id")
+      .notNull()
+      .references(() => tenants.id),
+    personnelId: uuid("personnel_id")
+      .notNull()
+      .references(() => industrialPersonnel.id),
+    action: varchar("action", { length: 16 }).notNull(),
+    method: varchar("method", { length: 32 }).notNull(),
+    phoneNumber: varchar("phone_number", { length: 40 }),
+    previousPhoneNumber: varchar("previous_phone_number", { length: 40 }),
+    consentText: text("consent_text"),
+    consentVersion: varchar("consent_version", { length: 32 }),
+    signatureName: varchar("signature_name", { length: 300 }),
+    employeeNumber: varchar("employee_number", { length: 120 }),
+    qrLinkId: uuid("qr_link_id").references((): AnyPgColumn => qrLinks.id),
+    actorUserId: uuid("actor_user_id").references(() => users.id),
+    ipAddress: varchar("ip_address", { length: 64 }),
+    userAgent: varchar("user_agent", { length: 500 }),
+    createdAt: createdAtColumn,
+  },
+  (t) => [
+    index("industrial_personnel_sms_consents_person_idx").on(t.tenantId, t.personnelId, t.createdAt),
+  ],
+);
+
+export const qrLinks = pgTable(
+  "qr_links",
+  {
+    id: uuid("id").primaryKey(),
+    tenantId: uuid("tenant_id")
+      .notNull()
+      .references(() => tenants.id),
+    siteId: uuid("site_id").references(() => industrialSites.id),
+    label: varchar("label", { length: 300 }),
+    displayCode: varchar("display_code", { length: 64 }),
+    description: text("description"),
+    status: varchar("status", { length: 64 }).notNull().default("ACTIVE"),
+    tokenHash: varchar("token_hash", { length: 128 }),
+    tokenIssuedAt: timestamp("token_issued_at", { withTimezone: true }),
+    accessMode: varchar("access_mode", { length: 64 }).notNull().default("AUTHENTICATED_ONLY"),
+    actionConfig: jsonb("action_config").notNull().default({}),
+    targetType: varchar("target_type", { length: 120 }),
+    targetId: uuid("target_id"),
+    departmentId: uuid("department_id").references(() => industrialDepartments.id),
+    currentVersionId: uuid("current_version_id"),
+    replacementQrId: uuid("replacement_qr_id").references((): AnyPgColumn => qrLinks.id),
+    createdByUserId: uuid("created_by_user_id"),
+    activatedAt: timestamp("activated_at", { withTimezone: true }),
+    deactivatedAt: timestamp("deactivated_at", { withTimezone: true }),
+    lastScannedAt: timestamp("last_scanned_at", { withTimezone: true }),
+    scanCount: integer("scan_count").notNull().default(0),
+    metadata: jsonb("metadata").notNull().default({}),
+    ...sourceCols,
+    createdAt: createdAtColumn,
+    updatedAt: updatedAtColumn,
+    archivedAt: timestamp("archived_at", { withTimezone: true }),
+  },
+  (t) => [
+    index("qr_links_tenant_status_idx").on(t.tenantId, t.status),
+    uniqueIndex("qr_links_source_uidx").on(t.tenantId, t.sourceCollection, t.sourceDocumentId),
+    uniqueIndex("qr_links_token_hash_uidx").on(t.tokenHash),
+    index("qr_links_tenant_target_idx").on(t.tenantId, t.targetType, t.targetId),
+    index("qr_links_display_code_idx").on(t.tenantId, t.displayCode),
+  ],
+);
+
+export const qrLinkVersions = pgTable(
+  "qr_link_versions",
+  {
+    id: uuid("id").primaryKey(),
+    tenantId: uuid("tenant_id")
+      .notNull()
+      .references(() => tenants.id),
+    qrLinkId: uuid("qr_link_id")
+      .notNull()
+      .references(() => qrLinks.id, { onDelete: "cascade" }),
+    versionNumber: integer("version_number").notNull().default(1),
+    payload: jsonb("payload").notNull().default({}),
+    status: varchar("status", { length: 64 }).notNull().default("ACTIVE"),
+    ...sourceCols,
+    createdAt: createdAtColumn,
+    updatedAt: updatedAtColumn,
+    archivedAt: timestamp("archived_at", { withTimezone: true }),
+  },
+  (t) => [index("qr_link_versions_link_idx").on(t.tenantId, t.qrLinkId)],
+);
+
+export const industrialQrLinkScanEvents = pgTable(
+  "industrial_qr_link_scan_events",
+  {
+    id: uuid("id").primaryKey(),
+    tenantId: uuid("tenant_id")
+      .notNull()
+      .references(() => tenants.id),
+    qrLinkId: uuid("qr_link_id").references(() => qrLinks.id, { onDelete: "set null" }),
+    versionId: uuid("version_id").references(() => qrLinkVersions.id, { onDelete: "set null" }),
+    scannedAt: timestamp("scanned_at", { withTimezone: true }).notNull().defaultNow(),
+    action: varchar("action", { length: 64 }),
+    result: varchar("result", { length: 64 }),
+    responseStatus: integer("response_status"),
+    anonymous: boolean("anonymous").notNull().default(false),
+    personnelId: uuid("personnel_id").references(() => industrialPersonnel.id),
+    userId: uuid("user_id"),
+    siteId: uuid("site_id").references(() => industrialSites.id),
+    correlationId: varchar("correlation_id", { length: 120 }),
+    metadata: jsonb("metadata").notNull().default({}),
+    ...sourceCols,
+    createdAt: createdAtColumn,
+    updatedAt: updatedAtColumn,
+    archivedAt: timestamp("archived_at", { withTimezone: true }),
+  },
+  (t) => [
+    index("industrial_qr_scan_events_link_idx").on(t.tenantId, t.qrLinkId, t.scannedAt),
+    index("industrial_qr_link_scan_events_action_idx").on(t.tenantId, t.action, t.scannedAt),
+  ],
+);
+
+export const industrialQrLinkAuditEvents = pgTable(
+  "industrial_qr_link_audit_events",
+  {
+    id: uuid("id").primaryKey(),
+    tenantId: uuid("tenant_id")
+      .notNull()
+      .references(() => tenants.id),
+    qrLinkId: uuid("qr_link_id").references(() => qrLinks.id, { onDelete: "set null" }),
+    eventType: varchar("event_type", { length: 64 }).notNull(),
+    eventAt: timestamp("event_at", { withTimezone: true }).notNull().defaultNow(),
+    actorUserId: uuid("actor_user_id"),
+    details: jsonb("details").notNull().default({}),
+    ...sourceCols,
+    createdAt: createdAtColumn,
+    updatedAt: updatedAtColumn,
+    archivedAt: timestamp("archived_at", { withTimezone: true }),
+  },
+  (t) => [index("industrial_qr_link_audit_events_link_idx").on(t.tenantId, t.qrLinkId, t.eventAt)],
+);
 
 export const industrialScanQrCodes = pgTable("industrial_scan_qr_codes", {
   id: uuid("id").primaryKey(),
@@ -603,20 +922,35 @@ export const industrialScanQrCodes = pgTable("industrial_scan_qr_codes", {
   archivedAt: timestamp("archived_at", { withTimezone: true }),
 });
 
-export const platformDocuments = pgTable("platform_documents", {
-  id: uuid("id").primaryKey(),
-  tenantId: uuid("tenant_id")
-    .notNull()
-    .references(() => tenants.id),
-  name: varchar("name", { length: 300 }).notNull(),
-  category: varchar("category", { length: 120 }),
-  status: varchar("status", { length: 64 }).notNull().default("ACTIVE"),
-  metadata: jsonb("metadata").notNull().default({}),
-  ...sourceCols,
-  createdAt: createdAtColumn,
-  updatedAt: updatedAtColumn,
-  archivedAt: timestamp("archived_at", { withTimezone: true }),
-});
+export const platformDocuments = pgTable(
+  "platform_documents",
+  {
+    id: uuid("id").primaryKey(),
+    tenantId: uuid("tenant_id")
+      .notNull()
+      .references(() => tenants.id),
+    siteId: uuid("site_id").references(() => industrialSites.id),
+    name: varchar("name", { length: 300 }).notNull(),
+    description: text("description"),
+    category: varchar("category", { length: 120 }),
+    documentNumber: varchar("document_number", { length: 120 }),
+    status: varchar("status", { length: 64 }).notNull().default("ACTIVE"),
+    workflowStatus: varchar("workflow_status", { length: 64 }).notNull().default("DRAFT"),
+    ownerUserId: uuid("owner_user_id").references(() => users.id),
+    reviewDueAt: timestamp("review_due_at", { withTimezone: true }),
+    currentApprovedVersionId: uuid("current_approved_version_id"),
+    metadata: jsonb("metadata").notNull().default({}),
+    ...sourceCols,
+    createdAt: createdAtColumn,
+    updatedAt: updatedAtColumn,
+    archivedAt: timestamp("archived_at", { withTimezone: true }),
+  },
+  (t) => [
+    index("platform_documents_tenant_status_idx").on(t.tenantId, t.status),
+    index("platform_documents_tenant_workflow_idx").on(t.tenantId, t.workflowStatus),
+    index("platform_documents_tenant_review_due_idx").on(t.tenantId, t.reviewDueAt),
+  ],
+);
 
 export const industrialAttachments = pgTable(
   "industrial_attachments",
@@ -754,7 +1088,6 @@ export const industrialTrainingSources = pgTable(
     edition: varchar("edition", { length: 120 }),
     description: text("description"),
     status: varchar("status", { length: 64 }).notNull().default("DRAFT"),
-    chapterCount: integer("chapter_count").notNull().default(0),
     questionCount: integer("question_count").notNull().default(0),
     createdByUserId: uuid("created_by_user_id"),
     publishedAt: timestamp("published_at", { withTimezone: true }),
@@ -765,8 +1098,8 @@ export const industrialTrainingSources = pgTable(
   (t) => [index("industrial_training_sources_tenant_status_idx").on(t.tenantId, t.status)],
 );
 
-export const industrialTrainingChapters = pgTable(
-  "industrial_training_chapters",
+export const industrialTrainingCourseVersions = pgTable(
+  "industrial_training_course_versions",
   {
     id: uuid("id").primaryKey(),
     tenantId: uuid("tenant_id")
@@ -775,15 +1108,50 @@ export const industrialTrainingChapters = pgTable(
     sourceId: uuid("source_id")
       .notNull()
       .references(() => industrialTrainingSources.id, { onDelete: "cascade" }),
-    title: varchar("title", { length: 500 }).notNull(),
-    sortOrder: integer("sort_order").notNull().default(0),
-    pageRange: varchar("page_range", { length: 120 }),
-    status: varchar("status", { length: 64 }).notNull().default("ACTIVE"),
+    versionNumber: integer("version_number").notNull().default(1),
+    versionLabel: varchar("version_label", { length: 120 }),
+    effectiveDate: date("effective_date"),
+    passingPercent: integer("passing_percent").notNull().default(70),
+    quizPolicyJson: jsonb("quiz_policy_json").notNull().default({}),
+    status: varchar("status", { length: 64 }).notNull().default("DRAFT"),
+    publishedAt: timestamp("published_at", { withTimezone: true }),
+    createdByUserId: uuid("created_by_user_id"),
     createdAt: createdAtColumn,
     updatedAt: updatedAtColumn,
     archivedAt: timestamp("archived_at", { withTimezone: true }),
   },
-  (t) => [index("industrial_training_chapters_source_idx").on(t.tenantId, t.sourceId, t.sortOrder)],
+  (t) => [
+    uniqueIndex("industrial_training_course_versions_uidx").on(t.sourceId, t.versionNumber),
+    index("industrial_training_course_versions_tenant_idx").on(t.tenantId, t.sourceId, t.status),
+  ],
+);
+
+export const industrialTrainingCourseSections = pgTable(
+  "industrial_training_course_sections",
+  {
+    id: uuid("id").primaryKey(),
+    tenantId: uuid("tenant_id")
+      .notNull()
+      .references(() => tenants.id),
+    versionId: uuid("version_id")
+      .notNull()
+      .references(() => industrialTrainingCourseVersions.id, { onDelete: "cascade" }),
+    title: varchar("title", { length: 300 }).notNull(),
+    sortOrder: integer("sort_order").notNull().default(0),
+    required: boolean("required").notNull().default(true),
+    contentJson: jsonb("content_json").notNull().default([]),
+    estimatedMinutes: integer("estimated_minutes"),
+    createdAt: createdAtColumn,
+    updatedAt: updatedAtColumn,
+    archivedAt: timestamp("archived_at", { withTimezone: true }),
+  },
+  (t) => [
+    index("industrial_training_course_sections_version_idx").on(
+      t.tenantId,
+      t.versionId,
+      t.sortOrder,
+    ),
+  ],
 );
 
 export const industrialTrainingQuestions = pgTable(
@@ -796,9 +1164,6 @@ export const industrialTrainingQuestions = pgTable(
     sourceId: uuid("source_id")
       .notNull()
       .references(() => industrialTrainingSources.id, { onDelete: "cascade" }),
-    chapterId: uuid("chapter_id")
-      .notNull()
-      .references(() => industrialTrainingChapters.id, { onDelete: "cascade" }),
     stem: text("stem").notNull(),
     choices: jsonb("choices").notNull().default([]),
     correctIndex: integer("correct_index").notNull().default(0),
@@ -810,10 +1175,7 @@ export const industrialTrainingQuestions = pgTable(
     updatedAt: updatedAtColumn,
     archivedAt: timestamp("archived_at", { withTimezone: true }),
   },
-  (t) => [
-    index("industrial_training_questions_chapter_idx").on(t.tenantId, t.chapterId, t.status),
-    index("industrial_training_questions_source_idx").on(t.tenantId, t.sourceId),
-  ],
+  (t) => [index("industrial_training_questions_source_idx").on(t.tenantId, t.sourceId)],
 );
 
 export const industrialTrainingQuizzes = pgTable(
@@ -831,12 +1193,14 @@ export const industrialTrainingQuizzes = pgTable(
     optionCount: integer("option_count").notNull().default(4),
     feedbackEnabled: boolean("feedback_enabled").notNull().default(true),
     timerSeconds: integer("timer_seconds"),
-    chapterIds: jsonb("chapter_ids").notNull().default([]),
     settings: jsonb("settings").notNull().default({}),
     status: varchar("status", { length: 64 }).notNull().default("ACTIVE"),
     createdAt: createdAtColumn,
     updatedAt: updatedAtColumn,
     archivedAt: timestamp("archived_at", { withTimezone: true }),
+    assignmentId: uuid("assignment_id").references(() => industrialTrainingAssignments.id, {
+      onDelete: "set null",
+    }),
   },
   (t) => [index("industrial_training_quizzes_tenant_idx").on(t.tenantId, t.createdAt)],
 );
@@ -851,7 +1215,8 @@ export const industrialTrainingAttempts = pgTable(
     quizId: uuid("quiz_id")
       .notNull()
       .references(() => industrialTrainingQuizzes.id),
-    userId: uuid("user_id").notNull(),
+    userId: uuid("user_id"),
+    employeeNumber: varchar("employee_number", { length: 120 }),
     sourceId: uuid("source_id")
       .notNull()
       .references(() => industrialTrainingSources.id),
@@ -869,10 +1234,19 @@ export const industrialTrainingAttempts = pgTable(
     createdAt: createdAtColumn,
     updatedAt: updatedAtColumn,
     archivedAt: timestamp("archived_at", { withTimezone: true }),
+    assignmentId: uuid("assignment_id").references(() => industrialTrainingAssignments.id, {
+      onDelete: "set null",
+    }),
+    courseVersionId: uuid("course_version_id").references(() => industrialTrainingCourseVersions.id, {
+      onDelete: "set null",
+    }),
+    attemptNumber: integer("attempt_number").notNull().default(1),
   },
   (t) => [
     index("industrial_training_attempts_user_idx").on(t.tenantId, t.userId, t.status),
+    index("industrial_training_attempts_employee_idx").on(t.tenantId, t.employeeNumber),
     index("industrial_training_attempts_quiz_idx").on(t.tenantId, t.quizId),
+    index("industrial_training_attempts_assignment_idx").on(t.tenantId, t.assignmentId),
   ],
 );
 
@@ -887,9 +1261,6 @@ export const industrialTrainingUserStats = pgTable(
     sourceId: uuid("source_id")
       .notNull()
       .references(() => industrialTrainingSources.id, { onDelete: "cascade" }),
-    chapterId: uuid("chapter_id").references(() => industrialTrainingChapters.id, {
-      onDelete: "cascade",
-    }),
     seenCount: integer("seen_count").notNull().default(0),
     correctCount: integer("correct_count").notNull().default(0),
     masteredCount: integer("mastered_count").notNull().default(0),
@@ -900,6 +1271,407 @@ export const industrialTrainingUserStats = pgTable(
     updatedAt: updatedAtColumn,
   },
   (t) => [index("industrial_training_user_stats_user_idx").on(t.tenantId, t.userId)],
+);
+
+/** Folders within a study source for organizing uploaded materials. */
+export const industrialTrainingSourceFolders = pgTable(
+  "industrial_training_source_folders",
+  {
+    id: uuid("id").primaryKey(),
+    tenantId: uuid("tenant_id")
+      .notNull()
+      .references(() => tenants.id),
+    sourceId: uuid("source_id")
+      .notNull()
+      .references(() => industrialTrainingSources.id, { onDelete: "cascade" }),
+    name: varchar("name", { length: 200 }).notNull(),
+    sortOrder: integer("sort_order").notNull().default(0),
+    createdAt: createdAtColumn,
+    updatedAt: updatedAtColumn,
+    archivedAt: timestamp("archived_at", { withTimezone: true }),
+  },
+  (t) => [
+    index("industrial_training_source_folders_source_idx").on(t.tenantId, t.sourceId, t.sortOrder),
+  ],
+);
+
+/** Uploaded training media (PPT/PDF/video/docs) for agency study libraries. */
+export const industrialTrainingMaterials = pgTable(
+  "industrial_training_materials",
+  {
+    id: uuid("id").primaryKey(),
+    tenantId: uuid("tenant_id")
+      .notNull()
+      .references(() => tenants.id),
+    documentId: uuid("document_id").notNull(),
+    title: varchar("title", { length: 300 }).notNull(),
+    description: text("description"),
+    category: varchar("category", { length: 64 }).notNull().default("GENERAL"),
+    mimeType: varchar("mime_type", { length: 255 }).notNull(),
+    originalFilename: varchar("original_filename", { length: 500 }).notNull(),
+    byteSize: integer("byte_size").notNull().default(0),
+    status: varchar("status", { length: 64 }).notNull().default("PENDING_UPLOAD"),
+    visibility: varchar("visibility", { length: 32 }).notNull().default("PUBLISHED"),
+    sourceId: uuid("source_id").references(() => industrialTrainingSources.id, {
+      onDelete: "set null",
+    }),
+    folderId: uuid("folder_id").references(() => industrialTrainingSourceFolders.id, {
+      onDelete: "set null",
+    }),
+    createdByUserId: uuid("created_by_user_id"),
+    createdAt: createdAtColumn,
+    updatedAt: updatedAtColumn,
+    archivedAt: timestamp("archived_at", { withTimezone: true }),
+  },
+  (t) => [
+    index("industrial_training_materials_tenant_idx").on(t.tenantId, t.status),
+    index("industrial_training_materials_source_idx").on(t.tenantId, t.sourceId),
+    index("industrial_training_materials_folder_idx").on(t.tenantId, t.sourceId, t.folderId),
+  ],
+);
+
+export const industrialTrainingGroups = pgTable(
+  "industrial_training_groups",
+  {
+    id: uuid("id").primaryKey(),
+    tenantId: uuid("tenant_id")
+      .notNull()
+      .references(() => tenants.id),
+    name: varchar("name", { length: 200 }).notNull(),
+    description: text("description"),
+    createdByUserId: uuid("created_by_user_id"),
+    createdAt: createdAtColumn,
+    updatedAt: updatedAtColumn,
+    archivedAt: timestamp("archived_at", { withTimezone: true }),
+  },
+  (t) => [index("industrial_training_groups_tenant_idx").on(t.tenantId)],
+);
+
+export const industrialTrainingGroupMembers = pgTable(
+  "industrial_training_group_members",
+  {
+    id: uuid("id").primaryKey(),
+    tenantId: uuid("tenant_id")
+      .notNull()
+      .references(() => tenants.id),
+    groupId: uuid("group_id")
+      .notNull()
+      .references(() => industrialTrainingGroups.id, { onDelete: "cascade" }),
+    userId: uuid("user_id"),
+    personnelId: uuid("personnel_id").references(() => industrialPersonnel.id, {
+      onDelete: "cascade",
+    }),
+    createdAt: createdAtColumn,
+  },
+  (t) => [
+    index("industrial_training_group_members_user_idx").on(t.tenantId, t.userId),
+    uniqueIndex("industrial_training_group_members_uidx").on(t.groupId, t.userId),
+    uniqueIndex("industrial_training_group_members_personnel_uidx").on(t.groupId, t.personnelId),
+  ],
+);
+
+/** Tags a course (source) with training groups for catalog filtering by department/cohort. */
+export const industrialTrainingSourceGroups = pgTable(
+  "industrial_training_source_groups",
+  {
+    id: uuid("id").primaryKey(),
+    tenantId: uuid("tenant_id")
+      .notNull()
+      .references(() => tenants.id),
+    sourceId: uuid("source_id")
+      .notNull()
+      .references(() => industrialTrainingSources.id, { onDelete: "cascade" }),
+    groupId: uuid("group_id")
+      .notNull()
+      .references(() => industrialTrainingGroups.id, { onDelete: "cascade" }),
+    createdAt: createdAtColumn,
+  },
+  (t) => [
+    uniqueIndex("industrial_training_source_groups_uidx").on(t.sourceId, t.groupId),
+    index("industrial_training_source_groups_tenant_idx").on(t.tenantId, t.groupId),
+    index("industrial_training_source_groups_source_idx").on(t.tenantId, t.sourceId),
+  ],
+);
+
+export const industrialTrainingAssignments = pgTable(
+  "industrial_training_assignments",
+  {
+    id: uuid("id").primaryKey(),
+    tenantId: uuid("tenant_id")
+      .notNull()
+      .references(() => tenants.id),
+    title: varchar("title", { length: 500 }).notNull(),
+    description: text("description"),
+    sourceId: uuid("source_id")
+      .notNull()
+      .references(() => industrialTrainingSources.id),
+    courseVersionId: uuid("course_version_id").references(() => industrialTrainingCourseVersions.id, {
+      onDelete: "set null",
+    }),
+    materialId: uuid("material_id").references(() => industrialTrainingMaterials.id, {
+      onDelete: "set null",
+    }),
+    dueAt: timestamp("due_at", { withTimezone: true }),
+    passingPercent: integer("passing_percent").notNull().default(70),
+    quizMode: varchar("quiz_mode", { length: 32 }).notNull().default("STANDARD"),
+    optionCount: integer("option_count").notNull().default(4),
+    feedbackEnabled: boolean("feedback_enabled").notNull().default(true),
+    timerSeconds: integer("timer_seconds"),
+    status: varchar("status", { length: 64 }).notNull().default("ACTIVE"),
+    publicTokenHash: varchar("public_token_hash", { length: 128 }),
+    publicTokenIssuedAt: timestamp("public_token_issued_at", { withTimezone: true }),
+    createdByUserId: uuid("created_by_user_id"),
+    createdAt: createdAtColumn,
+    updatedAt: updatedAtColumn,
+    archivedAt: timestamp("archived_at", { withTimezone: true }),
+  },
+  (t) => [
+    index("industrial_training_assignments_tenant_idx").on(t.tenantId, t.status),
+    index("industrial_training_assignments_source_idx").on(t.tenantId, t.sourceId),
+    uniqueIndex("industrial_training_assignments_public_token_uidx").on(t.publicTokenHash),
+  ],
+);
+
+export const industrialTrainingAssignmentAssignees = pgTable(
+  "industrial_training_assignment_assignees",
+  {
+    id: uuid("id").primaryKey(),
+    tenantId: uuid("tenant_id")
+      .notNull()
+      .references(() => tenants.id),
+    assignmentId: uuid("assignment_id")
+      .notNull()
+      .references(() => industrialTrainingAssignments.id, { onDelete: "cascade" }),
+    userId: uuid("user_id"),
+    personnelId: uuid("personnel_id").references(() => industrialPersonnel.id, {
+      onDelete: "set null",
+    }),
+    employeeNumber: varchar("employee_number", { length: 120 }),
+    status: varchar("status", { length: 64 }).notNull().default("NOT_STARTED"),
+    attemptId: uuid("attempt_id").references(() => industrialTrainingAttempts.id, {
+      onDelete: "set null",
+    }),
+    bestPercent: integer("best_percent"),
+    completedAt: timestamp("completed_at", { withTimezone: true }),
+    createdAt: createdAtColumn,
+    updatedAt: updatedAtColumn,
+  },
+  (t) => [
+    index("industrial_training_assignment_assignees_user_idx").on(t.tenantId, t.userId, t.status),
+    index("industrial_training_assignment_assignees_personnel_idx").on(
+      t.tenantId,
+      t.personnelId,
+      t.status,
+    ),
+    index("industrial_training_assignment_assignees_employee_idx").on(
+      t.tenantId,
+      t.employeeNumber,
+      t.status,
+    ),
+    uniqueIndex("industrial_training_assignment_assignees_uidx").on(t.assignmentId, t.userId),
+    uniqueIndex("industrial_training_assignment_assignees_personnel_uidx").on(
+      t.assignmentId,
+      t.personnelId,
+    ),
+  ],
+);
+
+export const industrialTrainingAccessLinks = pgTable(
+  "industrial_training_access_links",
+  {
+    id: uuid("id").primaryKey(),
+    tenantId: uuid("tenant_id")
+      .notNull()
+      .references(() => tenants.id),
+    linkType: varchar("link_type", { length: 32 }).notNull().default("COMPANY_PORTAL"),
+    title: varchar("title", { length: 300 }).notNull(),
+    description: text("description"),
+    sourceId: uuid("source_id").references(() => industrialTrainingSources.id, {
+      onDelete: "set null",
+    }),
+    assignmentId: uuid("assignment_id").references(() => industrialTrainingAssignments.id, {
+      onDelete: "set null",
+    }),
+    siteId: uuid("site_id").references(() => industrialSites.id, { onDelete: "set null" }),
+    departmentId: uuid("department_id").references(() => industrialDepartments.id, {
+      onDelete: "set null",
+    }),
+    publicTokenHash: varchar("public_token_hash", { length: 128 }),
+    publicTokenIssuedAt: timestamp("public_token_issued_at", { withTimezone: true }),
+    status: varchar("status", { length: 64 }).notNull().default("ACTIVE"),
+    expiresAt: timestamp("expires_at", { withTimezone: true }),
+    allowSelfEnrollment: boolean("allow_self_enrollment").notNull().default(false),
+    assignedOnly: boolean("assigned_only").notNull().default(true),
+    policyJson: jsonb("policy_json").notNull().default({}),
+    createdByUserId: uuid("created_by_user_id"),
+    createdAt: createdAtColumn,
+    updatedAt: updatedAtColumn,
+    archivedAt: timestamp("archived_at", { withTimezone: true }),
+  },
+  (t) => [
+    uniqueIndex("industrial_training_access_links_token_uidx").on(t.publicTokenHash),
+    index("industrial_training_access_links_tenant_idx").on(t.tenantId, t.status),
+  ],
+);
+
+export const industrialTrainingProgress = pgTable(
+  "industrial_training_progress",
+  {
+    id: uuid("id").primaryKey(),
+    tenantId: uuid("tenant_id")
+      .notNull()
+      .references(() => tenants.id),
+    assignmentId: uuid("assignment_id")
+      .notNull()
+      .references(() => industrialTrainingAssignments.id, { onDelete: "cascade" }),
+    assigneeId: uuid("assignee_id")
+      .notNull()
+      .references(() => industrialTrainingAssignmentAssignees.id, { onDelete: "cascade" }),
+    personnelId: uuid("personnel_id").references(() => industrialPersonnel.id, {
+      onDelete: "set null",
+    }),
+    employeeNumber: varchar("employee_number", { length: 120 }).notNull(),
+    versionId: uuid("version_id").references(() => industrialTrainingCourseVersions.id, {
+      onDelete: "set null",
+    }),
+    percentComplete: integer("percent_complete").notNull().default(0),
+    sectionsCompleted: jsonb("sections_completed").notNull().default([]),
+    currentSectionId: uuid("current_section_id").references(() => industrialTrainingCourseSections.id, {
+      onDelete: "set null",
+    }),
+    firstOpenedAt: timestamp("first_opened_at", { withTimezone: true }),
+    lastAccessedAt: timestamp("last_accessed_at", { withTimezone: true }),
+    contentCompletedAt: timestamp("content_completed_at", { withTimezone: true }),
+    quizAvailable: boolean("quiz_available").notNull().default(false),
+    createdAt: createdAtColumn,
+    updatedAt: updatedAtColumn,
+  },
+  (t) => [
+    uniqueIndex("industrial_training_progress_assignee_uidx").on(t.assigneeId),
+    index("industrial_training_progress_tenant_idx").on(t.tenantId, t.employeeNumber),
+  ],
+);
+
+export const industrialTrainingCompletions = pgTable(
+  "industrial_training_completions",
+  {
+    id: uuid("id").primaryKey(),
+    tenantId: uuid("tenant_id")
+      .notNull()
+      .references(() => tenants.id),
+    assignmentId: uuid("assignment_id")
+      .notNull()
+      .references(() => industrialTrainingAssignments.id, { onDelete: "cascade" }),
+    assigneeId: uuid("assignee_id")
+      .notNull()
+      .references(() => industrialTrainingAssignmentAssignees.id, { onDelete: "cascade" }),
+    personnelId: uuid("personnel_id").references(() => industrialPersonnel.id, {
+      onDelete: "set null",
+    }),
+    employeeNumber: varchar("employee_number", { length: 120 }).notNull(),
+    sourceId: uuid("source_id")
+      .notNull()
+      .references(() => industrialTrainingSources.id),
+    versionId: uuid("version_id").references(() => industrialTrainingCourseVersions.id, {
+      onDelete: "set null",
+    }),
+    attemptId: uuid("attempt_id").references(() => industrialTrainingAttempts.id, {
+      onDelete: "set null",
+    }),
+    attemptNumber: integer("attempt_number").notNull().default(1),
+    scorePercent: integer("score_percent").notNull(),
+    passingPercent: integer("passing_percent").notNull(),
+    result: varchar("result", { length: 32 }).notNull(),
+    snapshotJson: jsonb("snapshot_json").notNull().default({}),
+    completedAt: timestamp("completed_at", { withTimezone: true }).notNull().defaultNow(),
+    createdAt: createdAtColumn,
+  },
+  (t) => [
+    index("industrial_training_completions_tenant_idx").on(t.tenantId, t.personnelId, t.completedAt),
+  ],
+);
+
+export const industrialTrainingAcknowledgements = pgTable(
+  "industrial_training_acknowledgements",
+  {
+    id: uuid("id").primaryKey(),
+    tenantId: uuid("tenant_id")
+      .notNull()
+      .references(() => tenants.id),
+    progressId: uuid("progress_id").references(() => industrialTrainingProgress.id, {
+      onDelete: "set null",
+    }),
+    completionId: uuid("completion_id").references(() => industrialTrainingCompletions.id, {
+      onDelete: "set null",
+    }),
+    personnelId: uuid("personnel_id").references(() => industrialPersonnel.id, {
+      onDelete: "set null",
+    }),
+    employeeNumber: varchar("employee_number", { length: 120 }).notNull(),
+    versionId: uuid("version_id").references(() => industrialTrainingCourseVersions.id, {
+      onDelete: "set null",
+    }),
+    acknowledgementText: text("acknowledgement_text").notNull(),
+    acknowledgedAt: timestamp("acknowledged_at", { withTimezone: true }).notNull().defaultNow(),
+    requestMetadata: jsonb("request_metadata").notNull().default({}),
+    createdAt: createdAtColumn,
+  },
+  (t) => [
+    index("industrial_training_acknowledgements_tenant_idx").on(t.tenantId, t.employeeNumber),
+  ],
+);
+
+export const industrialTrainingPortalRateLimits = pgTable(
+  "industrial_training_portal_rate_limits",
+  {
+    id: uuid("id").primaryKey(),
+    tenantId: uuid("tenant_id")
+      .notNull()
+      .references(() => tenants.id),
+    bucketKey: varchar("bucket_key", { length: 256 }).notNull(),
+    failedAttempts: integer("failed_attempts").notNull().default(0),
+    windowStartedAt: timestamp("window_started_at", { withTimezone: true }).notNull().defaultNow(),
+    blockedUntil: timestamp("blocked_until", { withTimezone: true }),
+    updatedAt: updatedAtColumn,
+  },
+  (t) => [
+    uniqueIndex("industrial_training_portal_rate_limits_uidx").on(t.tenantId, t.bucketKey),
+  ],
+);
+
+export const industrialTrainingPortalSessions = pgTable(
+  "industrial_training_portal_sessions",
+  {
+    id: uuid("id").primaryKey(),
+    tenantId: uuid("tenant_id")
+      .notNull()
+      .references(() => tenants.id),
+    assignmentId: uuid("assignment_id").references(() => industrialTrainingAssignments.id, {
+      onDelete: "cascade",
+    }),
+    accessLinkId: uuid("access_link_id").references(() => industrialTrainingAccessLinks.id, {
+      onDelete: "cascade",
+    }),
+    accessTokenHash: varchar("access_token_hash", { length: 128 }).notNull(),
+    sessionTokenHash: varchar("session_token_hash", { length: 128 }).notNull(),
+    personnelId: uuid("personnel_id").references(() => industrialPersonnel.id, {
+      onDelete: "set null",
+    }),
+    employeeNumber: varchar("employee_number", { length: 120 }).notNull(),
+    expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
+    lastSeenAt: timestamp("last_seen_at", { withTimezone: true }).notNull().defaultNow(),
+    createdAt: createdAtColumn,
+    revokedAt: timestamp("revoked_at", { withTimezone: true }),
+  },
+  (t) => [
+    uniqueIndex("industrial_training_portal_sessions_token_uidx").on(t.sessionTokenHash),
+    index("industrial_training_portal_sessions_assignment_idx").on(
+      t.tenantId,
+      t.assignmentId,
+      t.employeeNumber,
+    ),
+    index("industrial_training_portal_sessions_expires_idx").on(t.expiresAt),
+  ],
 );
 
 /** Company documents uploaded during onboarding / Setup Center (tenant-scoped). */

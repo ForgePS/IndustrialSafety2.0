@@ -28,6 +28,15 @@ export {
 export { tryRefreshSession, type TryRefreshSessionOptions } from "./session-refresh.js";
 
 export {
+  consumeIdleSignOutNotice,
+  isIdleTimedOut,
+  readLastActivityAt,
+  recordUserActivity,
+  IDLE_ACTIVITY_EVENTS,
+  IDLE_ACTIVITY_WRITE_THROTTLE_MS,
+} from "./idle-timeout.js";
+
+export {
   registerForgeBrowserCleanup,
   runForgeBrowserCleanup,
   resetForgeBrowserCleanupHandlersForTests,
@@ -35,6 +44,8 @@ export {
   deleteIndexedDatabases,
   deleteCacheNamesByPrefix,
   unregisterServiceWorkersByScriptMatch,
+  withTimeout,
+  FORGE_BROWSER_CLEANUP_TIMEOUT_MS,
   type ForgeBrowserCleanupHandler,
   type ForgeBrowserCleanupReason,
   type StorageLike,
@@ -61,6 +72,9 @@ export {
   setCachedAuthMe,
   clearCachedAuthMe,
   clearAuthStorage,
+  markLogoutPending,
+  isLogoutPending,
+  clearLogoutPending,
   parseDevPrincipal,
   type DevPrincipal,
 } from "./auth-storage.js";
@@ -86,6 +100,7 @@ export {
 export {
   buildAuthorizeUrl,
   buildLogoutUrl,
+  clearBrowserSessionCookie,
   CognitoOAuthError,
   exchangeCodeForTokens,
   generateCodeChallenge,

@@ -125,7 +125,7 @@ export function Alert({
   tone = "info",
 }: {
   children: ReactNode;
-  tone?: "info" | "danger" | "success";
+  tone?: "info" | "warning" | "danger" | "success";
 }) {
   return (
     <div role="alert" data-tone={tone} className={`forge-alert forge-alert--${tone}`}>
@@ -230,9 +230,12 @@ export function EnvironmentBanner({ environment }: { environment: string }) {
     return null;
   }
   return (
-    <Alert tone="danger">
-      DEVELOPMENT ENVIRONMENT — DO NOT ENTER REAL PERSONNEL DATA ({environment})
-    </Alert>
+    <div className="forge-env-banner" role="status">
+      <span className="forge-env-banner__label">Non-production</span>
+      <span className="forge-env-banner__text">
+        Do not enter real personnel data ({environment})
+      </span>
+    </div>
   );
 }
 

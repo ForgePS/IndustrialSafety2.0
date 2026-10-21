@@ -126,7 +126,7 @@ async function postSessionPassword(
 
 /**
  * Sign in with email/password via platform-api session BFF (Cognito USER_PASSWORD_AUTH).
- * Stores access + CSRF in memory only. Throws CognitoPasswordChallengeError when needed.
+ * Stores access in memory and CSRF in same-tab sessionStorage. Throws CognitoPasswordChallengeError when needed.
  */
 export async function authenticateWithPassword(input: {
   username: string;

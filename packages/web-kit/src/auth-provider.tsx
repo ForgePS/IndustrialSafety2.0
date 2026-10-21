@@ -27,20 +27,31 @@ import {
 import {
   clearActiveTenantId,
   clearAuthStorage,
+  clearCachedAuthMe,
+  clearLogoutPending,
   getActiveTenantId,
   getBearerToken,
   getCachedAuthMe,
+  isLogoutPending,
+  markLogoutPending,
   setActiveTenantId,
   setCachedAuthMe,
-  clearCachedAuthMe,
 } from "./auth-storage.js";
-import { buildLogoutUrl, redirectToCognitoLogin, refreshAccessToken } from "./cognito-oauth.js";
+import { buildLogoutUrl, clearBrowserSessionCookie, redirectToCognitoLogin, refreshAccessToken } from "./cognito-oauth.js";
 import {
   authenticateWithPassword,
   completeMfaChallenge,
   completeNewPasswordChallenge,
   type CognitoPasswordChallenge,
 } from "./cognito-password-auth.js";
+import {
+  IDLE_ACTIVITY_EVENTS,
+  IDLE_ACTIVITY_WRITE_THROTTLE_MS,
+  isIdleTimedOut,
+  markIdleSignOutNotice,
+  readLastActivityAt,
+  recordUserActivity,
+} from "./idle-timeout.js";
 import { tryRefreshSession } from "./session-refresh.js";
 import { switchActiveTenant } from "./tenant-switch.js";
 import { syncTenantIdInUrl } from "./tenant-scoped.js";
@@ -54,7 +65,7 @@ import {
 } from "./role-preview.js";
 
 /** Max time for initial session bootstrap before surfacing a recoverable error. */
-export const AUTH_BOOTSTRAP_TIMEOUT_MS = 25_000;
+export const AUTH_BOOTSTRAP_TIMEOUT_MS = 12_000;
 
 const DEMO_WALKTHROUGH_PERMISSIONS: readonly string[] = [
   ...INDUSTRIAL_PERMISSIONS,
@@ -170,6 +181,15 @@ export async function resolveSession(signal?: AbortSignal): Promise<AuthMe> {
  * the JWT is missing/near expiry, or after a 401 from /auth/me.
  */
 export async function establishSession(signal?: AbortSignal): Promise<AuthMe> {
+  if (isLogoutPending()) {
+    await clearBrowserSessionCookie(signal ? { signal } : undefined);
+    clearAuthStorage();
+    clearLogoutPending();
+    const err = new Error("Signed out");
+    (err as { status?: number }).status = 401;
+    throw err;
+  }
+
   const bearer = getBearerToken();
   const needsRefresh = isAccessTokenExpiredOrNearExpiry(bearer);
 
@@ -241,7 +261,14 @@ function isWalkthroughCaptureSession(): boolean {
   }
 }
 
-export function AuthProvider({ children }: { children: ReactNode }) {
+export function AuthProvider({
+  children,
+  idleTimeoutMs,
+}: {
+  children: ReactNode;
+  /** Sign out after this long with no user input in any tab. Omit to disable. */
+  idleTimeoutMs?: number;
+}) {
   const [sessionMe, setMe] = useState<AuthMe | null>(
     () => readWalkthroughCaptureMe() ?? readInitialAuthMe(),
   );
@@ -268,6 +295,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     if (sessionMe) {
       setCachedAuthMe(sessionMe);
+      // Seed same-tab tenant preference after login when none is stored yet.
+      if (sessionMe.tenantId && !getActiveTenantId()) {
+        setActiveTenantId(sessionMe.tenantId);
+      }
     } else if (!getBearerToken()) {
       clearCachedAuthMe();
     }
@@ -329,11 +360,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     if (!me) return;
 
+    // Prefer cookie+CSRF refresh before clearing — static-export / HMR remounts
+    // wipe memory bearer while React `me` can still be set.
+    let recovering = false;
     const dropIfTokenMissing = () => {
       if (isWalkthroughCaptureSession()) return;
-      if (!getBearerToken()) {
-        clearSession();
-      }
+      if (getBearerToken()) return;
+      if (recovering) return;
+      recovering = true;
+      void (async () => {
+        try {
+          const ok = await tryRefreshSession({ force: true });
+          if (!ok && !getBearerToken()) {
+            clearSession();
+          }
+        } finally {
+          recovering = false;
+        }
+      })();
     };
 
     dropIfTokenMissing();
@@ -418,6 +462,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (status === 401) {
         setMe(null);
         clearCachedAuthMe();
+        clearAuthStorage();
+        void clearBrowserSessionCookie();
         return;
       }
       // Keep a previously cached session when the network times out — clearing it
@@ -429,10 +475,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           setError(bootstrapErrorMessage(err));
         } else {
           setMe(null);
+          clearAuthStorage();
+          void clearBrowserSessionCookie();
           setError(bootstrapErrorMessage(err));
         }
       } else {
         setMe(null);
+        clearAuthStorage();
+        void clearBrowserSessionCookie();
         setError(bootstrapErrorMessage(err));
       }
     } finally {
@@ -446,6 +496,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   /** After Cognito tokens are stored, load /auth/me and surface failures (including 401). */
   const establishSessionAfterLogin = useCallback(async () => {
+    clearLogoutPending();
+    recordUserActivity();
     bootstrapAbortRef.current?.abort();
     const controller = new AbortController();
     bootstrapAbortRef.current = controller;
@@ -537,6 +589,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         if (status === 401 || status === 403) {
           setMe(null);
           clearAuthStorage();
+          void clearBrowserSessionCookie();
         } else if (isAbortError(err)) {
           const cached = readInitialAuthMe();
           if (cached) {
@@ -546,11 +599,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           } else {
             setMe(null);
             clearCachedAuthMe();
+            // Orphan bearer without a principal traps SPA shells on "Loading…".
+            // Also clear HttpOnly session cookie or the next reload retries a hung refresh.
+            clearAuthStorage();
+            void clearBrowserSessionCookie();
             setError(bootstrapErrorMessage(err));
           }
         } else {
           setMe(null);
           clearCachedAuthMe();
+          clearAuthStorage();
+          void clearBrowserSessionCookie();
           setError(bootstrapErrorMessage(err));
         }
       } finally {
@@ -625,22 +684,101 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const logout = useCallback(async () => {
     setError(null);
+    bootstrapAbortRef.current?.abort();
+
+    // Survive Cognito round-trips / Android PWA reloads that would otherwise
+    // re-bootstrap from a sticky HttpOnly session cookie.
+    markLogoutPending();
+
+    // Clear cookie WHILE CSRF is still available (clearSession wipes it).
+    const cookieAbort = new AbortController();
+    const cookieTimer =
+      typeof window !== "undefined"
+        ? window.setTimeout(() => cookieAbort.abort(), 2500)
+        : undefined;
     try {
-      await runForgeBrowserCleanup("logout");
-      await logoutAll();
+      await clearBrowserSessionCookie({ signal: cookieAbort.signal });
     } catch {
-      // Clear local session even when API logout fails.
+      // continue — local clear + pending flag still block re-auth
     } finally {
-      clearSession();
-      if (typeof window !== "undefined") {
-        try {
-          window.location.assign(buildLogoutUrl());
-        } catch {
-          window.location.assign("/login/");
-        }
-      }
+      if (cookieTimer !== undefined) window.clearTimeout(cookieTimer);
+    }
+
+    clearSession();
+
+    // Non-blocking: IDB/SW cleanup must not delay navigation on Android.
+    void runForgeBrowserCleanup("logout");
+    void logoutAll().catch(() => undefined);
+
+    if (typeof window === "undefined") return;
+
+    // Cognito hosted logout ends SSO; logout_uri is app root (allow-listed).
+    // Fall back to in-app login gate if Cognito config is missing.
+    try {
+      window.location.replace(buildLogoutUrl());
+    } catch {
+      clearLogoutPending();
+      window.location.replace("/login/");
     }
   }, [clearSession]);
+
+  const logoutRef = useRef(logout);
+  logoutRef.current = logout;
+
+  // Inactivity sign-out. Background refresh keeps the server session alive while a tab is
+  // open, so only real input (in any tab, via localStorage) resets the clock.
+  useEffect(() => {
+    if (!me || !idleTimeoutMs || idleTimeoutMs <= 0) return;
+    if (isWalkthroughCaptureSession()) return;
+
+    let signingOut = false;
+    let lastWrite = 0;
+    if (readLastActivityAt() == null) {
+      lastWrite = Date.now();
+      recordUserActivity(lastWrite);
+    }
+
+    const check = () => {
+      if (signingOut) return;
+      if (!isIdleTimedOut(readLastActivityAt(), idleTimeoutMs)) return;
+      signingOut = true;
+      markIdleSignOutNotice();
+      void logoutRef.current();
+    };
+
+    const onActivity = () => {
+      if (signingOut) return;
+      const now = Date.now();
+      if (now - lastWrite < IDLE_ACTIVITY_WRITE_THROTTLE_MS) return;
+      // A tab waking from sleep must not count its first event as recent activity
+      // when the idle window already elapsed.
+      if (isIdleTimedOut(readLastActivityAt(), idleTimeoutMs, now)) {
+        check();
+        return;
+      }
+      lastWrite = now;
+      recordUserActivity(now);
+    };
+
+    check();
+    const listenerOptions: AddEventListenerOptions = { passive: true, capture: true };
+    for (const name of IDLE_ACTIVITY_EVENTS) {
+      window.addEventListener(name, onActivity, listenerOptions);
+    }
+    const onVisibility = () => {
+      if (document.visibilityState === "visible") check();
+    };
+    document.addEventListener("visibilitychange", onVisibility);
+    const timer = window.setInterval(check, Math.min(15_000, Math.max(1_000, idleTimeoutMs / 4)));
+
+    return () => {
+      for (const name of IDLE_ACTIVITY_EVENTS) {
+        window.removeEventListener(name, onActivity, listenerOptions);
+      }
+      document.removeEventListener("visibilitychange", onVisibility);
+      window.clearInterval(timer);
+    };
+  }, [me, idleTimeoutMs]);
 
   const chooseTenant = useCallback(async (tenantId: string) => {
     setError(null);
@@ -650,7 +788,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setRolePreview(null);
       const updated = await switchActiveTenant({
         tenantId,
-        previousTenantId: getActiveTenantId(),
+        previousTenantId: getActiveTenantId() ?? sessionMe?.tenantId ?? null,
         selectTenant,
         setActiveTenantId,
         clearActiveTenantId,
@@ -662,7 +800,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setError(err instanceof Error ? err.message : "Tenant switch failed");
       throw err;
     }
-  }, []);
+  }, [sessionMe?.tenantId]);
 
   const signOutAll = logout;
 
