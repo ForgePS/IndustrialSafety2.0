@@ -1,5 +1,6 @@
 import { createServiceRoleClient } from '@repo/supabase/server'
 
+import { writeForgeAudit } from '@/lib/forgeAudit'
 import type { EffectivePermission } from '@/lib/forgeEffectiveAccess'
 import { oshaRates, zonedDateTimeParts } from '@/lib/forgeOshaRules'
 import { getTenantScopeAssignments } from '@/lib/forgeScope'
@@ -416,4 +417,127 @@ export const oshaWriteErrorMessage = (error: { code?: string; message?: string }
   if (/forge_osha_cases_void_reason/.test(message)) return 'A reason is required to void a case.'
 
   return message || 'Unable to save the OSHA case.'
+}
+
+/** Display name of the personnel record linked to a login, for "completed by" fields. */
+export const personnelNameForUser = async (organizationId: string, userId: string, fallback: string | null) => {
+  const supabase = createServiceRoleClient() as any
+
+  const { data } = await supabase
+    .from('forge_personnel')
+    .select('first_name, last_name')
+    .eq('organization_id', organizationId)
+    .eq('auth_user_id', userId)
+    .is('archived_at', null)
+    .maybeSingle()
+
+  return data ? `${data.first_name} ${data.last_name}` : fallback
+}
+
+/**
+ * Opens (or finds) the OSHA case for an employee on an incident, seeding Form 300/301 fields.
+ * Callers must already have checked osha.edit / workers_comp permissions and scope.
+ * Shared by the OSHA module and the workers' comp OSHA sync.
+ */
+export const createOshaCaseForIncident = async ({
+  organizationId,
+  incident,
+  personnelId,
+  actorUserId,
+  actorEmail,
+  source = 'incident'
+}: {
+  organizationId: string
+  incident: any
+  personnelId: string
+  actorUserId: string
+  actorEmail: string | null
+  source?: 'incident' | 'workers_comp'
+}): Promise<{ id: string; caseNumber: string; existed: boolean } | { error: string }> => {
+  const supabase = createServiceRoleClient() as any
+
+  if (!incident.location_id) return { error: 'Set the incident Location first. OSHA logs are kept per establishment (Location).' }
+
+  const { data: existing } = await supabase
+    .from('forge_osha_cases')
+    .select('id, case_number')
+    .eq('organization_id', organizationId)
+    .eq('incident_id', incident.id)
+    .eq('personnel_id', personnelId)
+    .neq('status', 'voided')
+    .maybeSingle()
+
+  if (existing) return { id: existing.id, caseNumber: existing.case_number, existed: true }
+
+  const seed = await buildOshaSeedFromIncident({
+    organizationId,
+    incident,
+    personnelId,
+    completedByName: await personnelNameForUser(organizationId, actorUserId, actorEmail)
+  })
+
+  if (!seed.employee_name || !seed.injury_date) return { error: 'The incident needs an occurrence date and the employee needs a name.' }
+
+  const { data: caseNumber, error: numberError } = await supabase.rpc('next_forge_osha_case_number', {
+    p_organization_id: organizationId,
+    p_location_id: incident.location_id,
+    p_year: Number(seed.injury_date.slice(0, 4))
+  })
+
+  if (numberError || !caseNumber) return { error: numberError?.message || 'Unable to assign a case number.' }
+
+  const { data: created, error } = await supabase
+    .from('forge_osha_cases')
+    .insert({
+      organization_id: organizationId,
+      case_number: caseNumber,
+      incident_id: incident.id,
+      personnel_id: personnelId,
+      location_id: incident.location_id,
+      division_id: incident.division_id,
+      ...seed,
+      completed_date: new Date().toISOString().slice(0, 10),
+      created_by: actorUserId,
+      updated_by: actorUserId
+    })
+    .select('id, case_number')
+    .single()
+
+  if (error || !created) return { error: oshaWriteErrorMessage(error) }
+
+  await supabase
+    .from('forge_incidents')
+    .update({ osha_review_flag: true, updated_at: new Date().toISOString(), updated_by: actorUserId })
+    .eq('id', incident.id)
+    .eq('organization_id', organizationId)
+
+  await supabase.from('forge_incident_activity').insert({
+    organization_id: organizationId,
+    incident_id: incident.id,
+    activity_type: 'osha_case_opened',
+    message: `OSHA case ${created.case_number} opened.`,
+    actor_user_id: actorUserId
+  })
+
+  await writeOshaActivity({
+    organizationId,
+    caseId: created.id,
+    activityType: 'opened',
+    message:
+      source === 'workers_comp'
+        ? `Case ${created.case_number} opened from a workers' comp case on incident ${incident.incident_number}.`
+        : `Case ${created.case_number} opened from incident ${incident.incident_number}.`,
+    actorUserId
+  })
+
+  await writeForgeAudit({
+    actorUserId,
+    organizationId,
+    action: 'osha.case_opened',
+    entityType: 'osha_case',
+    entityId: created.id,
+    afterValue: { case_number: created.case_number, incident_id: incident.id, source }
+  })
+
+  return { id: created.id, caseNumber: created.case_number, existed: false }
 }

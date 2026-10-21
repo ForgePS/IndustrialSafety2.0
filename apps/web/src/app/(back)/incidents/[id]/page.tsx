@@ -1,3 +1,4 @@
+import Link from 'next/link'
 import { notFound } from 'next/navigation'
 
 import type { Metadata } from 'next'
@@ -16,6 +17,9 @@ import { oshaRecordWithinScope } from '@/lib/forgeOsha'
 import { OSHA_RECORDABILITY_LABELS } from '@/lib/forgeOshaRules'
 import type { OshaRecordability } from '@/lib/forgeOshaRules'
 import { getPersonnelStructureOptions } from '@/lib/forgePersonnelStructure'
+import { wcRecordWithinScope } from '@/lib/forgeWorkersComp'
+import { WC_STAGE_LABELS } from '@/lib/forgeWorkersCompRules'
+import type { WcStage } from '@/lib/forgeWorkersCompRules'
 import { getEffectiveForm } from '@/lib/forgeForms'
 import { getEffectiveLookup } from '@/lib/forgeLookups'
 import { getIncidentActivity, incidentWithinScope } from '@/lib/forgeIncidents'
@@ -210,6 +214,31 @@ const IncidentDetailPage = async ({ params }: { params: Promise<{ id: string }> 
     }
   }
 
+  // Workers' comp panel: cases on this incident that the viewer's workers' comp scope reaches.
+  const wcViewPermission = permissionByKey.get('workers_comp.view')
+  const canCreateWc = Boolean(permissionByKey.get('workers_comp.create'))
+  let wcCases: Array<{ id: string; caseNumber: string; employeeName: string; stage: string; status: string }> | null = null
+
+  if (wcViewPermission && (injuryRelated || incident.workers_comp_review_flag)) {
+    const { data: rows } = await supabase
+      .from('forge_wc_cases')
+      .select('id, organization_id, case_number, employee_name, stage, status, location_id, division_id, created_by')
+      .eq('organization_id', organizationId)
+      .eq('incident_id', id)
+      .order('created_at')
+
+    const visible = await Promise.all(
+      (rows || []).map(async (row: any) => ({
+        row,
+        allowed: await wcRecordWithinScope({ organizationId, userId: context.user.id, scope: wcViewPermission.scope, record: row })
+      }))
+    )
+
+    wcCases = visible
+      .filter(item => item.allowed)
+      .map(({ row }) => ({ id: row.id, caseNumber: row.case_number, employeeName: row.employee_name, stage: row.stage, status: row.status }))
+  }
+
   const statusLabels = Object.fromEntries(statusLookup.options.map(option => [option.key, option.label]))
   const typeLabels = Object.fromEntries(typeLookup.options.map(option => [option.key, option.label]))
   const severityLabels = Object.fromEntries(severityLookup.options.map(option => [option.key, option.label]))
@@ -328,6 +357,33 @@ const IncidentDetailPage = async ({ params }: { params: Promise<{ id: string }> 
           </CardContent>
         </Card>
       )}
+
+      {wcCases ? (
+        <Card data-testid='incident-wc-panel'>
+          <CardHeader>
+            <CardTitle>Workers&apos; Compensation</CardTitle>
+            <CardDescription>Claims opened for employees injured in this incident.</CardDescription>
+          </CardHeader>
+          <CardContent className='flex flex-col gap-3'>
+            {wcCases.length ? wcCases.map(item => (
+              <div key={item.id} className='flex flex-wrap items-center justify-between gap-3 rounded-lg border p-3'>
+                <div>
+                  <Link className='text-primary font-semibold hover:underline' href={`/workers-comp/${item.id}`}>{item.caseNumber}</Link>
+                  <span className='text-textSecondary ms-2 text-sm'>{item.employeeName}</span>
+                </div>
+                <Badge size='sm' variant='secondary'>{item.status === 'active' ? WC_STAGE_LABELS[item.stage as WcStage] : item.status}</Badge>
+              </div>
+            )) : <p className='text-textSecondary text-sm'>No workers&apos; comp case has been opened for this incident.</p>}
+            {canCreateWc ? (
+              <div>
+                <Link className='text-primary text-sm font-semibold hover:underline' href={`/workers-comp/create?incident=${incident.id}`}>
+                  Open workers&apos; comp case
+                </Link>
+              </div>
+            ) : null}
+          </CardContent>
+        </Card>
+      ) : null}
 
       {oshaPanel ? (
         <IncidentOshaPanel

@@ -8,6 +8,7 @@ import { writeForgeAudit } from '@/lib/forgeAudit'
 import { incidentWithinScope } from '@/lib/forgeIncidents'
 import {
   buildOshaSeedFromIncident,
+  createOshaCaseForIncident,
   oshaRecordWithinScope,
   oshaWriteErrorMessage,
   writeOshaActivity
@@ -135,18 +136,6 @@ const loadCase = async (permissionKey: 'osha.edit' | 'osha.view', caseId: string
   return { context, organizationId, supabase, record }
 }
 
-const actorName = async (supabase: any, organizationId: string, userId: string, fallback: string | null) => {
-  const { data } = await supabase
-    .from('forge_personnel')
-    .select('first_name, last_name')
-    .eq('organization_id', organizationId)
-    .eq('auth_user_id', userId)
-    .is('archived_at', null)
-    .maybeSingle()
-
-  return data ? `${data.first_name} ${data.last_name}` : fallback
-}
-
 export const openOshaCaseFromIncident = async ({
   incidentId,
   personnelId
@@ -194,89 +183,20 @@ export const openOshaCaseFromIncident = async ({
 
   if (!person) return { error: 'Choose the injured or ill employee from this company\'s personnel.' }
 
-  const { data: existing } = await supabase
-    .from('forge_osha_cases')
-    .select('id')
-    .eq('organization_id', organizationId)
-    .eq('incident_id', incidentId)
-    .eq('personnel_id', personnelId)
-    .neq('status', 'voided')
-    .maybeSingle()
-
-  if (existing) return { id: existing.id, message: 'This employee already has an OSHA case for this incident.' }
-
-  const seed = await buildOshaSeedFromIncident({
+  const result = await createOshaCaseForIncident({
     organizationId,
     incident,
     personnelId,
-    completedByName: await actorName(supabase, organizationId, context.user.id, context.user.email || null)
-  })
-
-  if (!seed.employee_name || !seed.injury_date) return { error: 'The incident needs an occurrence date and the employee needs a name.' }
-
-  const year = Number(seed.injury_date.slice(0, 4))
-
-  const { data: caseNumber, error: numberError } = await supabase.rpc('next_forge_osha_case_number', {
-    p_organization_id: organizationId,
-    p_location_id: incident.location_id,
-    p_year: year
-  })
-
-  if (numberError || !caseNumber) return { error: numberError?.message || 'Unable to assign a case number.' }
-
-  const { data: created, error } = await supabase
-    .from('forge_osha_cases')
-    .insert({
-      organization_id: organizationId,
-      case_number: caseNumber,
-      incident_id: incidentId,
-      personnel_id: personnelId,
-      location_id: incident.location_id,
-      division_id: incident.division_id,
-      ...seed,
-      completed_date: new Date().toISOString().slice(0, 10),
-      created_by: context.user.id,
-      updated_by: context.user.id
-    })
-    .select('id, case_number')
-    .single()
-
-  if (error || !created) return { error: oshaWriteErrorMessage(error) }
-
-  await supabase
-    .from('forge_incidents')
-    .update({ osha_review_flag: true, updated_at: new Date().toISOString(), updated_by: context.user.id })
-    .eq('id', incidentId)
-    .eq('organization_id', organizationId)
-
-  await supabase.from('forge_incident_activity').insert({
-    organization_id: organizationId,
-    incident_id: incidentId,
-    activity_type: 'osha_case_opened',
-    message: `OSHA case ${created.case_number} opened.`,
-    actor_user_id: context.user.id
-  })
-
-  await writeOshaActivity({
-    organizationId,
-    caseId: created.id,
-    activityType: 'opened',
-    message: `Case ${created.case_number} opened from incident ${incident.incident_number}.`,
-    actorUserId: context.user.id
-  })
-
-  await writeForgeAudit({
     actorUserId: context.user.id,
-    organizationId,
-    action: 'osha.case_opened',
-    entityType: 'osha_case',
-    entityId: created.id,
-    afterValue: { case_number: created.case_number, incident_id: incidentId }
+    actorEmail: context.user.email || null
   })
 
-  refreshOsha(created.id, incidentId)
+  if ('error' in result) return { error: result.error }
+  if (result.existed) return { id: result.id, message: 'This employee already has an OSHA case for this incident.' }
 
-  return { id: created.id, message: `OSHA case ${created.case_number} opened.` }
+  refreshOsha(result.id, incidentId)
+
+  return { id: result.id, message: `OSHA case ${result.caseNumber} opened.` }
 }
 
 export const saveOshaCase = async ({
