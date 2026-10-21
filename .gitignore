@@ -33,3 +33,53 @@ cdk.context.local.json
 
 # Next.js static export output
 apps/*/out/
+
+# --- Local build caches / snapshots (never commit) ---
+.next_locked_*/
+out_locked_*/
+apps/*/out_*/
+infrastructure/cdk/cdk.out-*/
+forge-printer-bridge/**/bin/
+forge-printer-bridge/**/obj/
+forge-printer-bridge/artifacts/
+forge-printer-bridge/installer/staging/
+forge-printer-bridge/installer/_*.txt
+
+# --- Env backups and secrets ---
+.env.*
+!.env.local.example
+!.env.example
+*.deploy-bak
+*.pfx
+*.p12
+*.snk
+_session_cookies.json
+infrastructure/cdk/.forge-*
+
+# --- Root-level deploy / diag / production dumps (may contain tenant data) ---
+/.forge-*
+/.tmp*
+/.tmp*/
+/.local-training*
+/_*
+/diag-*
+/live-*.html
+/me.json
+/stuck-*
+/tmp/
+/tmp-*
+/api-stdout*
+/api-stderr*
+/build-log*
+/loto-img-*
+/_transcript_extract/
+/exports/
+scripts/_*
+scripts/.tmp*/
+scripts/*.txt
+scripts/data/
+security-audit/**/evidence/*.txt
+security-audit/**/evidence/*.json
+
+# --- Vendored template download (not source) ---
+/sneat-mui-nextjs-admin-template-*/
