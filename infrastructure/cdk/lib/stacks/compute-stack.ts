@@ -33,6 +33,7 @@ export interface ComputeStackProps extends cdk.StackProps {
   cadApplicationQueue: sqs.IQueue;
   cadPollingQueue: sqs.IQueue;
   cadRetentionQueue: sqs.IQueue;
+  reportingSchedulesQueue: sqs.IQueue;
   eventBus: events.IEventBus;
   documentsBucket: s3.IBucket;
   importsBucket: s3.IBucket;
@@ -99,6 +100,7 @@ export class ComputeStack extends cdk.Stack {
       cadApplicationQueue: props.cadApplicationQueue,
       cadPollingQueue: props.cadPollingQueue,
       cadRetentionQueue: props.cadRetentionQueue,
+      reportingSchedulesQueue: props.reportingSchedulesQueue,
       eventBus: props.eventBus,
       documentsBucket: props.documentsBucket,
       importsBucket: props.importsBucket,

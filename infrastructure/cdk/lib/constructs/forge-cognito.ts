@@ -50,7 +50,8 @@ export class ForgeCognito extends Construct {
       generateSecret: false,
       authFlows: {
         userSrp: true,
-        userPassword: false,
+        // Public client password auth for in-app Sneat login (TLS to Cognito).
+        userPassword: true,
         adminUserPassword: true,
       },
       oAuth: {

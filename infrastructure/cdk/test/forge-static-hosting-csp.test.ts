@@ -30,22 +30,40 @@ describe("ForgeStaticHosting CSP (FIS-M01)", () => {
   });
 });
 
+describe("DirectoryIndex trailingSlash soft-nav (.txt)", () => {
+  it("documents the page.txt → page/index.txt rewrite used for iPad LOTO soft-nav", () => {
+    // Runtime CF Function is inline in forge-static-hosting.ts; assert the contract
+    // stays in source so Field /loto/{id}.txt is not SPA-fallback HTML 200.
+    const fs = require("node:fs") as typeof import("node:fs");
+    const path = require("node:path") as typeof import("node:path");
+    const source = fs.readFileSync(
+      path.join(__dirname, "../lib/constructs/forge-static-hosting.ts"),
+      "utf8",
+    );
+    expect(source).toContain("uri.slice(0, -4) + '/index.txt'");
+    expect(source).toContain("shellExt");
+    expect(source).toContain("Non-JSON (HTTP 200)");
+    const fieldSource = fs.readFileSync(
+      path.join(__dirname, "../lib/constructs/forge-field-hosting.ts"),
+      "utf8",
+    );
+    expect(fieldSource).toContain("fieldLoto");
+    expect(fieldSource).toContain("/loto/placeholder/' + shellExt");
+  });
+});
+
 describe("legacy vanity redirect snippet (FIS-L02)", () => {
-  it("emits 301 to canonical host and strips OAuth/session query params", () => {
+  it("emits 301 to established publicsafety vanity and strips OAuth/session query params", () => {
     const snippet = buildLegacyHostRedirectSnippet([
       {
-        from: "producersrice.forgepublicsafety.com",
-        to: "producersrice.forgeindustrialsafety.com",
-      },
-      {
         from: "producers-rice-mill.forgepublicsafety.com",
-        to: "producersrice.forgeindustrialsafety.com",
+        to: "producersrice.forgepublicsafety.com",
       },
     ]);
 
     expect(snippet).toContain("producers-rice-mill.forgepublicsafety.com");
     expect(snippet).toContain("producersrice.forgepublicsafety.com");
-    expect(snippet).toContain("producersrice.forgeindustrialsafety.com");
+    expect(snippet).not.toContain("forgeindustrialsafety.com");
     expect(snippet).toContain("statusCode: 301");
     for (const key of LEGACY_REDIRECT_STRIP_QUERY_PARAMS) {
       expect(snippet).toContain(`'${key}': true`);

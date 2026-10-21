@@ -51,6 +51,7 @@ export interface CostProfileKnobs {
     enableConsoleHosting: boolean;
     enableRmsHosting: boolean;
     enableTenantAdminHosting: boolean;
+    enableFieldHosting: boolean;
     monthlyBudgetUsd: number;
     budgetAlertThresholds: number[];
   };
@@ -118,6 +119,9 @@ export const developerCostProfile: CostProfile = {
       enableConsoleHosting: true,
       enableRmsHosting: true,
       enableTenantAdminHosting: true,
+      // Field ships via dedicated Forge-*-FieldFrontend stack (bin/deploy-field.ts)
+      // to avoid CLOUDFRONT WAF logging ResourcePolicy collisions across envs.
+      enableFieldHosting: false,
       monthlyBudgetUsd: 100,
       budgetAlertThresholds: [50, 80, 100, 120],
     },
@@ -172,6 +176,7 @@ export const integrationCostProfile: CostProfile = {
       enableConsoleHosting: true,
       enableRmsHosting: true,
       enableTenantAdminHosting: true,
+      enableFieldHosting: false,
       monthlyBudgetUsd: 200,
       budgetAlertThresholds: [50, 80, 100, 120],
     },
@@ -197,7 +202,8 @@ export const productionCostProfile: CostProfile = {
       enableInterfaceEndpoints: true,
     },
     database: {
-      serverlessMinCapacity: 2,
+      // Floor above 2 ACU avoids Sunday-morning cold latency after idle scale-down.
+      serverlessMinCapacity: 4,
       serverlessMaxCapacity: 32,
       backupRetentionDays: 35,
       deletionProtection: true,
@@ -226,6 +232,7 @@ export const productionCostProfile: CostProfile = {
       enableConsoleHosting: true,
       enableRmsHosting: true,
       enableTenantAdminHosting: true,
+      enableFieldHosting: false,
       monthlyBudgetUsd: 5000,
       budgetAlertThresholds: [50, 80, 100, 120],
     },

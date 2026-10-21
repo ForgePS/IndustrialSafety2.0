@@ -68,6 +68,7 @@ export interface MonitoringStackProps extends cdk.StackProps {
   cadApplicationDlq?: sqs.IQueue;
   cadPollingDlq?: sqs.IQueue;
   cadRetentionDlq?: sqs.IQueue;
+  reportingSchedulesDlq?: sqs.IQueue;
   apiCloudFrontDistributionId?: string;
   rmsCloudFrontDistributionId?: string;
   /** Shared ops topic from AlertingStack when available. */
@@ -102,6 +103,7 @@ export class MonitoringStack extends cdk.Stack {
       cadApplicationDlq: props.cadApplicationDlq,
       cadPollingDlq: props.cadPollingDlq,
       cadRetentionDlq: props.cadRetentionDlq,
+      reportingSchedulesDlq: props.reportingSchedulesDlq,
       apiCloudFrontDistributionId: props.apiCloudFrontDistributionId,
       rmsCloudFrontDistributionId: props.rmsCloudFrontDistributionId,
       alarmTopic: props.alarmTopic,

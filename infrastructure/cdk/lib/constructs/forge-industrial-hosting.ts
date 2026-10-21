@@ -10,10 +10,12 @@ export interface ForgeIndustrialHostingProps {
 /**
  * Industrial Web static hosting (IND-WEB-D1 development gate).
  *
- * Canonical Producers vanity: producersrice.forgeindustrialsafety.com.
- * Legacy forgepublicsafety.com hosts permanently 301 here. DNS/CF aliases for
- * legacy hosts remain (scripts/cf-alias-producersrice.mjs) so redirects work.
- * Apex forgeindustrialsafety.com stays marketing-only (not an alias here).
+ * Dual-serve Producers vanities on forgepublicsafety.com and
+ * forgeindustrialsafety.com (aliases via CDK + scripts/cf-alias-producersrice.mjs).
+ * Do not 301 to forgeindustrialsafety.com yet — customer firewalls often block
+ * newly registered domains. Prefer the established forgepublicsafety.com host
+ * until mill IT allowlists the new zone. Apex forgeindustrialsafety.com stays
+ * marketing-only (not an alias here).
  */
 export class ForgeIndustrialHosting extends ForgeStaticHosting {
   constructor(scope: Construct, id: string, props: ForgeIndustrialHostingProps) {
@@ -23,18 +25,21 @@ export class ForgeIndustrialHosting extends ForgeStaticHosting {
       appKey: "industrial",
       displayName: "Industrial Web",
       domainName: config.domains?.industrial,
+      // Keep vanity CNAMEs in CDK so Frontend deploys do not drop dual-serve aliases.
+      additionalDomainNames: [
+        "producersrice.forgeindustrialsafety.com",
+        "producersrice.forgepublicsafety.com",
+        "producers-rice-mill.forgepublicsafety.com",
+      ],
       certificateArn: config.edge.certificateArn,
       apiProxyOriginHostname: config.domains?.api,
       cspConnectSrcExtras: defaultSpaConnectSrcExtras(config),
-      // Matches existing branding vanity host hardcoding pattern.
+      // Collapse legacy hyphenated host onto the established publicsafety vanity
+      // (not forgeindustrialsafety.com — see newly registered domain firewalls).
       legacyRedirects: [
         {
-          from: "producersrice.forgepublicsafety.com",
-          to: "producersrice.forgeindustrialsafety.com",
-        },
-        {
           from: "producers-rice-mill.forgepublicsafety.com",
-          to: "producersrice.forgeindustrialsafety.com",
+          to: "producersrice.forgepublicsafety.com",
         },
       ],
       // Module pages are fully statically exported via generateStaticParams().

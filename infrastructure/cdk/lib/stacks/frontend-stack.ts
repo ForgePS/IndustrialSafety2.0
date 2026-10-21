@@ -5,6 +5,7 @@ import type { ForgeEnvironmentConfig } from "../config/environment-schema.js";
 import { ForgeBudgets } from "../constructs/forge-budgets.js";
 import { ForgeCloudFrontWaf } from "../constructs/forge-cloudfront-waf.js";
 import { ForgeConsoleHosting } from "../constructs/forge-console-hosting.js";
+import { ForgeFieldHosting } from "../constructs/forge-field-hosting.js";
 import { ForgeIndustrialHosting } from "../constructs/forge-industrial-hosting.js";
 import { ForgeRmsHosting } from "../constructs/forge-rms-hosting.js";
 import { ForgeTenantAdminHosting } from "../constructs/forge-tenant-admin-hosting.js";
@@ -23,7 +24,7 @@ export interface FrontendStackProps extends cdk.StackProps {
 }
 
 /**
- * Static frontends (Creator Console, RMS Web, Tenant Admin, Industrial) and budgets.
+ * Static frontends (Creator Console, RMS Web, Tenant Admin, Industrial, Field) and budgets.
  * Kept separate from Compute so UI deploys do not recycle the API service.
  */
 export class FrontendStack extends cdk.Stack {
@@ -31,6 +32,7 @@ export class FrontendStack extends cdk.Stack {
   readonly rms?: ForgeRmsHosting;
   readonly tenantAdmin?: ForgeTenantAdminHosting;
   readonly industrial?: ForgeIndustrialHosting;
+  readonly field?: ForgeFieldHosting;
 
   constructor(scope: Construct, id: string, props: FrontendStackProps) {
     super(scope, id, {
@@ -133,6 +135,29 @@ export class FrontendStack extends cdk.Stack {
         `${id}-IndustrialDistributionId`,
         this.industrial.distribution.distributionId,
         "Industrial Web CloudFront distribution ID",
+      );
+    }
+
+    if (props.config.features.enableFieldHosting) {
+      this.field = new ForgeFieldHosting(this, "Field", { config: props.config });
+      distributions.push(this.field.distribution);
+      exportValue(
+        this,
+        `${id}-FieldDomain`,
+        this.field.distribution.distributionDomainName,
+        "Field Web CloudFront domain",
+      );
+      exportValue(
+        this,
+        `${id}-FieldBucket`,
+        this.field.bucket.bucketName,
+        "Field Web origin bucket",
+      );
+      exportValue(
+        this,
+        `${id}-FieldDistributionId`,
+        this.field.distribution.distributionId,
+        "Field Web CloudFront distribution ID",
       );
     }
 

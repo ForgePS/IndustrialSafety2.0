@@ -131,6 +131,9 @@ export class ForgeCloudFrontWaf extends Construct {
       config,
       webAcl: this.webAcl,
       destinationSuffix: "cloudfront",
+      // Development shares the production account; AWS::Logs::ResourcePolicy names
+      // are account-global and collide across ForgeFrontend stacks (see deploy-field.ts).
+      adoptExisting: config.environmentName === "development",
     });
 
     new cdk.CfnOutput(this, "CloudFrontWebAclArn", {

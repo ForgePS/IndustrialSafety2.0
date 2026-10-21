@@ -94,8 +94,9 @@ export function createProductionConfig(
       enableHttps: true,
       apiHostname: `api.${PRODUCTION_ROOT_DOMAIN}`,
       consoleHostname: `creator.${PRODUCTION_ROOT_DOMAIN}`,
+      // Multi-SAN: *.forgepublicsafety.com + *.forgeindustrialsafety.com (vanity dual-serve).
       certificateArn:
-        "arn:aws:acm:us-east-1:511343547817:certificate/ca267baa-304e-4ffd-be51-7350abab0c3f",
+        "arn:aws:acm:us-east-1:511343547817:certificate/9f1513cd-5496-4bca-a5a1-8e9a56b8d9b4",
     },
     cognito: {
       callbackUrls: [

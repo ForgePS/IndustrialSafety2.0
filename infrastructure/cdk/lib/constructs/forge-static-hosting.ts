@@ -23,6 +23,8 @@ export interface ForgeStaticHostingProps {
    * Requires a us-east-1 ACM certificate ARN. Does not create Route53 records.
    */
   domainName?: string;
+  /** Extra viewer CNAMEs (e.g. Producers vanity). Requires multi-SAN cert coverage. */
+  additionalDomainNames?: string[];
   /** ACM certificate ARN in us-east-1 covering domainName (wildcard/apex). */
   certificateArn?: string;
   /**
@@ -123,7 +125,9 @@ export class ForgeStaticHosting extends Construct {
           },
           {
             header: "Cross-Origin-Opener-Policy",
-            value: "same-origin",
+            // same-origin-allow-popups keeps window.opener isolation while
+            // allowing the Web Bluetooth chooser (a popup) to complete.
+            value: "same-origin-allow-popups",
             override: true,
           },
           {
@@ -150,18 +154,23 @@ function handler(event) {
   var request = event.request;
   var uri = request.uri;
   var headers = request.headers;
-${legacyRedirectSnippet}  // Next.js static export stores RSC payloads as *.txt. Soft navigations fetch
-  // them with RSC headers. When the client router fails, it does a full document
-  // navigation to *.txt and the browser shows the raw flight payload — often in
-  // a loop. Redirect those navigations to the clean HTML route.
+${legacyRedirectSnippet}  // Next.js trailingSlash export stores RSC flight at .../page/index.txt, but
+  // soft navigations request .../page.txt. Missing .txt objects used to 403 (or
+  // SPA-fallback as text/html 200) — iPad/Safari then surfaces Non-JSON (HTTP 200)
+  // when entering routes like Field LOTO /loto/{id}.
   var isRsc =
     (headers['rsc'] && headers['rsc'].value) ||
     (headers['next-router-state-tree'] && headers['next-router-state-tree'].value) ||
     (headers['next-router-prefetch'] && headers['next-router-prefetch'].value);
+  if (uri.endsWith('.txt') && !uri.endsWith('/index.txt')) {
+    uri = uri.slice(0, -4) + '/index.txt';
+    request.uri = uri;
+  }
+  // Document navigation to a flight URL → clean HTML directory (not .../page.html).
   if (!isRsc && uri.endsWith('.txt')) {
     var location = uri.endsWith('/index.txt')
       ? uri.slice(0, -'index.txt'.length)
-      : uri.slice(0, -4) + '.html';
+      : uri.slice(0, -4) + '/';
     return {
       statusCode: 302,
       statusDescription: 'Found',
@@ -171,67 +180,76 @@ ${legacyRedirectSnippet}  // Next.js static export stores RSC payloads as *.txt.
       },
     };
   }
-  var incidentMatch = uri.match(/^\\/incidents\\/([^/]+)\\/?$/);
+  var shellExt = uri.endsWith('.txt') ? 'index.txt' : 'index.html';
+  var incidentMatch = uri.match(/^\\/incidents\\/([^/]+)(?:\\/index\\.(?:html|txt))?\\/?$/);
   if (incidentMatch) {
     var segment = incidentMatch[1];
     if (segment !== 'new' && segment !== 'placeholder') {
-      request.uri = '/incidents/placeholder/index.html';
+      request.uri = '/incidents/placeholder/' + shellExt;
       return request;
     }
   }
-  var closeoutMatch = uri.match(/^\\/closeout\\/([^/]+)\\/?$/);
+  var closeoutMatch = uri.match(/^\\/closeout\\/([^/]+)(?:\\/index\\.(?:html|txt))?\\/?$/);
   if (closeoutMatch) {
     var closeoutSegment = closeoutMatch[1];
     if (closeoutSegment !== 'placeholder') {
-      request.uri = '/closeout/placeholder/index.html';
+      request.uri = '/closeout/placeholder/' + shellExt;
       return request;
     }
   }
-  var dvirMatch = uri.match(/^\\/dvir\\/([^/]+)\\/?$/);
+  var dvirMatch = uri.match(/^\\/dvir\\/([^/]+)(?:\\/index\\.(?:html|txt))?\\/?$/);
   if (dvirMatch) {
     var dvirSegment = dvirMatch[1];
     if (dvirSegment !== 'placeholder') {
-      request.uri = '/dvir/placeholder/index.html';
+      request.uri = '/dvir/placeholder/' + shellExt;
       return request;
     }
   }
-  var trainingMatch = uri.match(/^\\/training\\/([^/]+)\\/?$/);
+  var trainingMatch = uri.match(/^\\/training\\/([^/]+)(?:\\/index\\.(?:html|txt))?\\/?$/);
   if (trainingMatch) {
     var trainingSegment = trainingMatch[1];
     if (trainingSegment !== 'placeholder' && trainingSegment !== 'portal' && trainingSegment !== 'access') {
-      request.uri = '/training/placeholder/index.html';
+      request.uri = '/training/placeholder/' + shellExt;
       return request;
     }
   }
-  var trainingAccessMatch = uri.match(/^\\/training\\/access\\/([^/]+)\\/?$/);
+  var trainingAccessMatch = uri.match(/^\\/training\\/access\\/([^/]+)(?:\\/index\\.(?:html|txt))?\\/?$/);
   if (trainingAccessMatch) {
     var accessSegment = trainingAccessMatch[1];
     if (accessSegment !== 'placeholder') {
-      request.uri = '/training/access/placeholder/index.html';
+      request.uri = '/training/access/placeholder/' + shellExt;
       return request;
     }
   }
-  var supplyRequestMatch = uri.match(/^\\/safety-supplies\\/request\\/q\\/([^/]+)\\/?$/);
+  var myTrainingAssignmentMatch = uri.match(/^\\/my-training\\/assignments\\/([^/]+)(?:\\/index\\.(?:html|txt))?\\/?$/);
+  if (myTrainingAssignmentMatch) {
+    var assignmentSegment = myTrainingAssignmentMatch[1];
+    if (assignmentSegment !== 'placeholder') {
+      request.uri = '/my-training/assignments/placeholder/' + shellExt;
+      return request;
+    }
+  }
+  var supplyRequestMatch = uri.match(/^\\/safety-supplies\\/request\\/q\\/([^/]+)(?:\\/index\\.(?:html|txt))?\\/?$/);
   if (supplyRequestMatch) {
     var supplyRequestSegment = supplyRequestMatch[1];
     if (supplyRequestSegment !== 'placeholder') {
-      request.uri = '/safety-supplies/request/q/placeholder/index.html';
+      request.uri = '/safety-supplies/request/q/placeholder/' + shellExt;
       return request;
     }
   }
-  var supplyStatusMatch = uri.match(/^\\/safety-supplies\\/request\\/status\\/([^/]+)\\/?$/);
+  var supplyStatusMatch = uri.match(/^\\/safety-supplies\\/request\\/status\\/([^/]+)(?:\\/index\\.(?:html|txt))?\\/?$/);
   if (supplyStatusMatch) {
     var supplyStatusSegment = supplyStatusMatch[1];
     if (supplyStatusSegment !== 'placeholder') {
-      request.uri = '/safety-supplies/request/status/placeholder/index.html';
+      request.uri = '/safety-supplies/request/status/placeholder/' + shellExt;
       return request;
     }
   }
-  var industrialScanMatch = uri.match(/^\\/scan\\/([^/]+)\\/?$/);
+  var industrialScanMatch = uri.match(/^\\/scan\\/([^/]+)(?:\\/index\\.(?:html|txt))?\\/?$/);
   if (industrialScanMatch) {
     var industrialScanSegment = industrialScanMatch[1];
     if (industrialScanSegment !== 'placeholder' && industrialScanSegment !== 'equipment') {
-      request.uri = '/scan/placeholder/index.html';
+      request.uri = '/scan/placeholder/' + shellExt;
       return request;
     }
   }
@@ -259,8 +277,12 @@ ${props.viewerRequestExtraRewrites ? `${props.viewerRequestExtraRewrites}\n` : "
     const apiProxyHost = props.apiProxyOriginHostname?.trim().replace(/^https?:\/\//i, "");
     const apiProxyBehaviors: Record<string, cloudfront.BehaviorOptions> = {};
     if (apiProxyHost) {
+      // Print-job create renders labels synchronously; default CF origin timeout (30s)
+      // returns HTML 504 to Bluefy/Safari ("Non-JSON response"). Match API edge (60s).
       const apiOrigin = new origins.HttpOrigin(apiProxyHost, {
         protocolPolicy: cloudfront.OriginProtocolPolicy.HTTPS_ONLY,
+        readTimeout: cdk.Duration.seconds(60),
+        keepaliveTimeout: cdk.Duration.seconds(60),
       });
       const apiBehavior: cloudfront.BehaviorOptions = {
         origin: apiOrigin,
@@ -281,9 +303,16 @@ ${props.viewerRequestExtraRewrites ? `${props.viewerRequestExtraRewrites}\n` : "
       comment: `Forge ${displayName} (${config.environmentName})`,
       defaultRootObject: "index.html",
       minimumProtocolVersion: cloudfront.SecurityPolicyProtocol.TLS_V1_2_2021,
-      ...(props.domainName && props.certificateArn
+      ...((props.domainName || (props.additionalDomainNames?.length ?? 0) > 0) &&
+      props.certificateArn
         ? {
-            domainNames: [props.domainName],
+            domainNames: [
+              ...new Set(
+                [props.domainName, ...(props.additionalDomainNames ?? [])].filter(
+                  (d): d is string => Boolean(d?.trim()),
+                ),
+              ),
+            ],
             certificate: acm.Certificate.fromCertificateArn(
               this,
               "ViewerCertificate",
@@ -313,20 +342,26 @@ ${props.viewerRequestExtraRewrites ? `${props.viewerRequestExtraRewrites}\n` : "
         },
         ...apiProxyBehaviors,
       },
-      errorResponses: [
-        {
-          httpStatus: 403,
-          responseHttpStatus: 200,
-          responsePagePath: "/index.html",
-          ttl: cdk.Duration.minutes(5),
-        },
-        {
-          httpStatus: 404,
-          responseHttpStatus: 200,
-          responsePagePath: "/index.html",
-          ttl: cdk.Duration.minutes(5),
-        },
-      ],
+      // Prefer viewer-request directory-index rewrites for SPA shells. Distribution-wide
+      // 403/404 → index.html breaks /api/* JSON (Nest 404/403 became HTML 200).
+      ...(apiProxyHost
+        ? {}
+        : {
+            errorResponses: [
+              {
+                httpStatus: 403,
+                responseHttpStatus: 200,
+                responsePagePath: "/index.html",
+                ttl: cdk.Duration.minutes(5),
+              },
+              {
+                httpStatus: 404,
+                responseHttpStatus: 200,
+                responsePagePath: "/index.html",
+                ttl: cdk.Duration.minutes(5),
+              },
+            ],
+          }),
     });
 
     const outputPrefix = appKey.charAt(0).toUpperCase() + appKey.slice(1);

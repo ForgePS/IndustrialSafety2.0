@@ -35,7 +35,22 @@ export function cognitoConnectSrcExtras(input: {
   ];
 }
 
-/** Default connect-src extras for SPA edge (Cognito, office preview, blob media). */
+/**
+ * Presigned document uploads/downloads (messaging images, training, DQF, etc.)
+ * hit virtual-hosted and path-style S3 endpoints. Without these, CSP connect-src
+ * blocks XHR PUT/GET to the documents bucket after upload-url is issued.
+ */
+export function s3DocumentConnectSrcExtras(region: string): string[] {
+  const r = region.trim() || "us-east-1";
+  return [
+    `https://*.s3.${r}.amazonaws.com`,
+    "https://*.s3.amazonaws.com",
+    `https://s3.${r}.amazonaws.com`,
+    "https://s3.amazonaws.com",
+  ];
+}
+
+/** Default connect-src extras for SPA edge (Cognito, office preview, S3 docs, blob media). */
 export function defaultSpaConnectSrcExtras(input: {
   environmentName: string;
   account: string;
@@ -43,6 +58,7 @@ export function defaultSpaConnectSrcExtras(input: {
 }): string[] {
   return [
     ...cognitoConnectSrcExtras(input),
+    ...s3DocumentConnectSrcExtras(input.region),
     "https://view.officeapps.live.com",
     "https://*.officeapps.live.com",
     "blob:",
@@ -71,8 +87,10 @@ export function buildContentSecurityPolicy(input: BuildCspInput): string {
     "font-src 'self' data: https://fonts.gstatic.com",
     // style-src keeps unsafe-inline for Sneat/Bootstrap until externalized (FIS-M01 scripts only).
     "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
-    // Theme FOUC boots are externalized under /theme-boot.js — no unsafe-inline / unsafe-eval.
-    "script-src 'self'",
+    // Theme FOUC boots are externalized under /theme-boot.js. Next.js App Router static
+    // export still embeds RSC flight as inline <script>; hashing every HTML exceeds
+    // CloudFront CSP header limits, so allow unsafe-inline but never unsafe-eval.
+    "script-src 'self' 'unsafe-inline'",
     `connect-src ${[...connectSrc].join(" ")}`,
     "form-action 'self' https:",
   ].join("; ");

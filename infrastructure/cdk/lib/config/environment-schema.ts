@@ -71,6 +71,8 @@ export const forgeEnvironmentConfigSchema = z
         api: z.string().optional(),
         industrial: z.string().optional(),
         tenantAdmin: z.string().optional(),
+        /** Forge Field mobile PWA hostname (optional until DNS cutover). */
+        field: z.string().optional(),
         /** Verified SES sending domain (no secrets). */
         ses: z.string().optional(),
       })
@@ -112,6 +114,8 @@ export const forgeEnvironmentConfigSchema = z
       enableRmsHosting: z.boolean().default(true),
       /** CloudFront + S3 static hosting for Tenant Admin (Configuration Platform). */
       enableTenantAdminHosting: z.boolean().default(true),
+      /** CloudFront + S3 static hosting for Forge Field mobile PWA. */
+      enableFieldHosting: z.boolean().default(false),
       monthlyBudgetUsd: z.number().positive().optional(),
       /** Budget alert thresholds as percentages of monthlyBudgetUsd. */
       budgetAlertThresholds: z.array(z.number().positive()).default([50, 80, 100, 120]),

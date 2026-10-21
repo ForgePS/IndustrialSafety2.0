@@ -81,6 +81,7 @@ export class ForgeApiCloudFront extends Construct {
           "If-Match",
           "X-Correlation-Id",
           "X-Request-Id",
+          "X-Forge-Csrf",
           "X-Forge-Dev-Principal",
           "X-Forge-Dev-User",
           "X-Tenant-Id",
