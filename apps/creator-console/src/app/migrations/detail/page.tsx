@@ -159,13 +159,7 @@ function MigrationDetailInner() {
           <ForgeMetricCard label="Users pending" value={detail.users.pending} />
         </ForgeMetricGrid>
 
-        <div
-          style={{
-            display: "grid",
-            gap: "1rem",
-            gridTemplateColumns: "repeat(auto-fit, minmax(16rem, 1fr))",
-          }}
-        >
+        <div className="forge-detail-grid">
           <Card title="Reconciliation">
             <table>
               <thead>

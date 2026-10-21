@@ -208,7 +208,7 @@ export const CREATOR_NAV_GROUPS: ForgeNavigationGroup[] = [
       },
       {
         id: "contracts",
-        label: "Invoices",
+        label: "Contracts",
         route: "/contracts",
         anyOfPermissions: ["platform.entitlement.manage", "tenant.billing.read"],
       },

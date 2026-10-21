@@ -5,6 +5,7 @@ import { useSearchParams } from "next/navigation";
 import { Suspense, useCallback, useEffect, useState } from "react";
 import { ComingLater, ForgePageHeader, StatusBadge, Tabs } from "@forge/ui";
 import { PlatformPageGate } from "@/components/platform-page-gate";
+import { TenantPrintHealthPanel } from "@/components/tenant-print-health-panel";
 import { listMemberships, type Membership, apiGet, apiGetResult, apiSend, toIfMatch } from "@/lib/api";
 import styles from "../page.module.css";
 
@@ -77,6 +78,7 @@ const CUSTOMER_TABS = [
   { id: "users", label: "Users" },
   { id: "products", label: "Products" },
   { id: "modules", label: "Modules" },
+  { id: "printing", label: "Printing" },
   { id: "branding", label: "Branding" },
   { id: "domains", label: "Domains" },
   { id: "billing", label: "Billing" },
@@ -87,6 +89,7 @@ const CUSTOMER_TABS = [
 function TenantDetailInner() {
   const searchParams = useSearchParams();
   const tenantId = searchParams.get("tenantId");
+  const tabParam = searchParams.get("tab");
 
   const [tenant, setTenant] = useState<Tenant | null>(null);
   const [etag, setEtag] = useState<string | null>(null);
@@ -103,7 +106,19 @@ function TenantDetailInner() {
   const [audit, setAudit] = useState<AuditEvent[]>([]);
   const [billing, setBilling] = useState<BillingOverview | null>(null);
   const [sectionErrors, setSectionErrors] = useState<Record<string, string>>({});
-  const [tab, setTab] = useState<string>("overview");
+  const [tab, setTab] = useState<string>(() => {
+    const allowed = CUSTOMER_TABS.map((t) => t.id);
+    return tabParam && allowed.includes(tabParam as (typeof CUSTOMER_TABS)[number]["id"])
+      ? tabParam
+      : "overview";
+  });
+
+  useEffect(() => {
+    const allowed = CUSTOMER_TABS.map((t) => t.id);
+    if (tabParam && allowed.includes(tabParam as (typeof CUSTOMER_TABS)[number]["id"])) {
+      setTab(tabParam);
+    }
+  }, [tabParam]);
 
   const loadCore = useCallback(async () => {
     if (!tenantId) return;
@@ -610,9 +625,27 @@ function TenantDetailInner() {
                 Manage Modules
               </Link>
               <Link href="/modules">Module catalog</Link>
+              <button type="button" className="btn btn-link" onClick={() => setTab("printing")}>
+                Printing health
+              </button>
             </nav>
             </div>
           </div>
+          ) : null}
+
+          {tab === "printing" ? (
+            <div className="card mb-4" id="printing">
+              <div className="card-header">
+                <h5 className="card-title mb-0">Printing</h5>
+              </div>
+              <div className="card-body">
+                <p className="text-muted">
+                  Tenant Print Manager enablement, bridge versions, printer counts, usage, and
+                  support diagnostics. Operational printer setup stays in Industrial.
+                </p>
+                <TenantPrintHealthPanel tenantId={tenantId} />
+              </div>
+            </div>
           ) : null}
 
           {tab === "branding" ? (

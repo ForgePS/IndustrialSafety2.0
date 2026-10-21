@@ -15,6 +15,8 @@ import {
   StatusBadge,
 } from "@forge/ui";
 import { PlatformPageGate } from "@/components/platform-page-gate";
+import { AuthSetupNotice } from "@/components/auth-setup-notice";
+import { isAuthSetupMessage } from "@/lib/auth-messages";
 import { useAuth } from "@/hooks/use-auth";
 import { tenantDetailHref } from "@/hooks/use-tenant-id";
 import {
@@ -289,7 +291,7 @@ function DashboardInner() {
         }
       />
 
-      {authError ? <div className="alert alert-danger" role="alert">{authError}</div> : null}
+      {authError && !isAuthSetupMessage(authError) ? <AuthSetupNotice message={authError} /> : null}
       {error ? (
         <ErrorState
           title="We couldn't load your dashboard"

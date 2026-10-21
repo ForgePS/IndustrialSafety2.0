@@ -1,0 +1,146 @@
+/*
+ * Creator Console shell polish — Sneat-native notices (loaded last).
+ */
+
+.forge-env-banner {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 0.5rem 0.75rem;
+  padding: 0.45rem 1rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  color: var(--bs-warning-text-emphasis, #a66d00);
+  background: color-mix(in srgb, var(--bs-warning, #ffab00) 14%, var(--bs-body-bg, #f5f5f9));
+  border-bottom: 1px solid color-mix(in srgb, var(--bs-warning, #ffab00) 28%, transparent);
+}
+
+.forge-env-banner__label {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.1rem 0.45rem;
+  border-radius: 0.25rem;
+  background: color-mix(in srgb, var(--bs-warning, #ffab00) 22%, transparent);
+}
+
+.forge-env-banner__text {
+  text-transform: none;
+  font-weight: 500;
+  letter-spacing: normal;
+}
+
+html.dark-style .forge-env-banner,
+html[data-bs-theme="dark"] .forge-env-banner {
+  color: var(--bs-warning-text-emphasis, #ffcd66);
+  background: color-mix(in srgb, var(--bs-warning, #ffab00) 16%, var(--bs-body-bg, #232333));
+}
+
+.forge-env-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-height: 1.75rem;
+  padding: 0 0.75rem;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  background: color-mix(in srgb, var(--bs-warning, #ffab00) 16%, transparent);
+  color: var(--bs-warning-text-emphasis, #a66d00);
+  border: 1px solid color-mix(in srgb, var(--bs-warning, #ffab00) 28%, transparent);
+}
+
+.forge-env-pill--production {
+  background: color-mix(in srgb, var(--bs-success, #71dd37) 16%, transparent);
+  color: var(--bs-success-text-emphasis, #3d8c1a);
+  border-color: color-mix(in srgb, var(--bs-success, #71dd37) 28%, transparent);
+}
+
+.creator-sign-in-panel .card-body {
+  padding: 1.5rem;
+}
+
+.creator-sign-in-panel h5 {
+  color: var(--bs-heading-color, inherit);
+}
+
+.creator-setup-hint {
+  align-items: flex-start;
+  background: color-mix(in srgb, var(--bs-body-bg) 92%, var(--bs-primary));
+  border: 1px solid var(--bs-border-color);
+  border-radius: 0.5rem;
+  color: var(--bs-body-color);
+  display: flex;
+  gap: 0.75rem;
+  padding: 0.85rem 1rem;
+}
+
+.creator-setup-hint .bx {
+  color: var(--bs-primary);
+  flex: 0 0 auto;
+  font-size: 1.125rem;
+  line-height: 1.4;
+  margin-top: 0.05rem;
+}
+
+.creator-setup-hint__title {
+  color: var(--bs-heading-color);
+  font-size: 0.9375rem;
+  font-weight: 600;
+  margin-bottom: 0.25rem;
+}
+
+.creator-setup-hint p {
+  color: var(--bs-secondary-color);
+  font-size: 0.875rem;
+  line-height: 1.45;
+}
+
+.authentication-wrapper.authentication-basic {
+  min-block-size: 100vh;
+  min-block-size: 100dvh;
+  background-color: var(--bs-body-bg);
+}
+
+.creator-auth-theme-toggle {
+  position: fixed;
+  inset-block-start: 1rem;
+  inset-inline-end: 1rem;
+  z-index: 10;
+}
+
+.authentication-wrapper .app-brand-auth-logo {
+  display: block;
+  width: auto;
+  max-width: 16rem;
+  max-height: 11rem;
+  height: auto;
+  margin-inline: auto;
+  object-fit: contain;
+  background: transparent;
+}
+
+.creator-inline-code,
+.authentication-wrapper code,
+.card-body code {
+  color: var(--bs-primary);
+  background: color-mix(in srgb, var(--bs-primary) 12%, var(--bs-body-bg));
+  border-radius: 0.25rem;
+  font-family: var(--bs-font-monospace);
+  font-size: 0.85em;
+  padding: 0.1rem 0.35rem;
+}
+
+html.dark-style .creator-inline-code,
+html[data-bs-theme="dark"] .creator-inline-code,
+html.dark-style .authentication-wrapper code,
+html[data-bs-theme="dark"] .authentication-wrapper code,
+html.dark-style .card-body code,
+html[data-bs-theme="dark"] .card-body code {
+  color: var(--bs-primary-text-emphasis, #a5a7ff);
+  background: color-mix(in srgb, var(--bs-primary) 16%, var(--bs-body-bg));
+}

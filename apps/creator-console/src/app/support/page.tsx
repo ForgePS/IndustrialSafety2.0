@@ -88,6 +88,7 @@ function SupportInner() {
                   </td>
                   <td className={styles.actions}>
                     <Link href={tenantDetailHref(t.id)}>Open Customer</Link>
+                    <Link href={`${tenantDetailHref(t.id)}&tab=printing`}>Print Health</Link>
                     <Link href={`${tenantDetailHref(t.id)}&tab=audit`}>View Activity</Link>
                     <Link href="/support/sessions/">Start Support Session</Link>
                   </td>

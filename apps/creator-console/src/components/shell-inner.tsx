@@ -7,7 +7,6 @@ import type { ForgeBreadcrumbItem, ForgeLinkRender } from "@forge/ui";
 import {
   EnvironmentBanner,
   ForgeBreadcrumbs,
-  ForgeFacilitySelector,
   ForgePage,
   ForgeProductSwitcher,
   ForgeShellState,
@@ -21,9 +20,9 @@ import { SneatLayout, SneatThemeToggle, type SneatLinkRender } from "@forge/snea
 import { filterNavigationForSession, useAuth } from "@forge/web-kit";
 import { ConnectedCommandPalette } from "@/components/connected-command-palette";
 import { ConnectedNotificationMenu } from "@/components/connected-notification-menu";
+import { isAuthSetupMessage } from "@/lib/auth-messages";
 import { fetchHealth, fetchReady } from "@/lib/api";
 import { CREATOR_NAV_GROUPS } from "@/lib/navigation";
-import styles from "../app/shell.module.css";
 
 const appEnv = process.env.NEXT_PUBLIC_APP_ENV ?? process.env.APP_ENV ?? "local";
 const isProduction = appEnv === "production" || appEnv === "govcloud-production";
@@ -76,6 +75,13 @@ export function ShellInner({ children }: { children: React.ReactNode }) {
   const pathname = usePathname() ?? "/";
   const { me, loading, error, logout, chooseTenant, refresh, loginWithCognito } = useAuth();
   const [healthOk, setHealthOk] = useState<boolean | null>(null);
+
+  const isBareAuthRoute =
+    pathname === "/login" ||
+    pathname === "/login/" ||
+    pathname === "/select-tenant" ||
+    pathname === "/select-tenant/" ||
+    pathname.startsWith("/auth/");
 
   const groups = useMemo(() => filterNavigationForSession(CREATOR_NAV_GROUPS, me), [me]);
 
@@ -150,6 +156,10 @@ export function ShellInner({ children }: { children: React.ReactNode }) {
 
   const crumbs = breadcrumbsForPath(pathname);
 
+  if (isBareAuthRoute) {
+    return <ToastProvider>{children}</ToastProvider>;
+  }
+
   return (
     <ToastProvider>
       <SneatLayout
@@ -178,9 +188,11 @@ export function ShellInner({ children }: { children: React.ReactNode }) {
                 </div>
               </div>
             </div>
-          ) : error ? (
+          ) : error && !isAuthSetupMessage(error) ? (
             <div className="d-grid gap-2">
-              <p className={styles.authError}>{error}</p>
+              <div className="alert alert-warning mb-0 py-2 px-3" role="status">
+                <small>{error}</small>
+              </div>
               <div className="d-flex gap-2 flex-wrap">
                 <button type="button" className="btn btn-sm btn-outline-secondary" onClick={() => void refresh()}>
                   Retry
@@ -218,25 +230,20 @@ export function ShellInner({ children }: { children: React.ReactNode }) {
           <>
             <ConnectedCommandPalette />
             {me ? (
-              <ForgeProductSwitcher
-                products={products}
-                {...(products[0]?.id ? { activeProductId: products[0].id } : {})}
-                state={products.length === 0 ? "empty" : "ready"}
-              />
-            ) : null}
-            {loading ? (
-              <ForgeFacilitySelector facilities={[]} state="loading" />
-            ) : me ? (
-              <ForgeFacilitySelector facilities={[]} state="empty" />
-            ) : null}
-            {me ? (
-              <ForgeTenantSwitcher
-                tenants={tenants}
-                activeTenantId={me.tenantId}
-                onSelect={(id) => void chooseTenant(id)}
-                disabled={tenants.filter((t) => t.selectable !== false).length <= 1}
-                state={tenants.length === 0 ? "empty" : "ready"}
-              />
+              <div className="forge-topbar__context">
+                <ForgeProductSwitcher
+                  products={products}
+                  {...(products[0]?.id ? { activeProductId: products[0].id } : {})}
+                  state={products.length === 0 ? "empty" : "ready"}
+                />
+                <ForgeTenantSwitcher
+                  tenants={tenants}
+                  activeTenantId={me.tenantId}
+                  onSelect={(id) => void chooseTenant(id)}
+                  disabled={tenants.filter((t) => t.selectable !== false).length <= 1}
+                  state={tenants.length === 0 ? "empty" : "ready"}
+                />
+              </div>
             ) : null}
             <ConnectedNotificationMenu viewAllHref="/notifications/" renderLink={renderLink} />
             <SneatThemeToggle />
@@ -246,6 +253,9 @@ export function ShellInner({ children }: { children: React.ReactNode }) {
                 onSignOut={() => void logout()}
                 renderLink={renderLink}
                 items={[
+                  ...(me.isPlatformAdmin
+                    ? [{ label: "Platform admin", href: "/settings/" }]
+                    : []),
                   { label: "Profile", href: "/profile/" },
                   { label: "Settings", href: "/settings/" },
                 ]}

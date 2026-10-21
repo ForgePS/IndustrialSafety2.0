@@ -53,6 +53,24 @@
   --forge-touch-min: 44px;
 }
 
+html.dark-style,
+html[data-bs-theme="dark"] {
+  --bs-paper-bg: #2b2c40;
+  --bs-paper-bg-rgb: 43, 44, 64;
+  --forge-color-bg: var(--bs-body-bg, #232333);
+  --forge-color-surface: #2b2c40;
+  --forge-color-surface-2: #32334a;
+  --forge-color-text: var(--bs-body-color, #b2b3ca);
+  --forge-color-heading: var(--bs-emphasis-color, #cbcbe2);
+  --forge-color-muted: #7983bb;
+  --forge-color-border: #444564;
+  --forge-color-border-light: #3b3c54;
+  --forge-color-primary-soft: rgba(105, 108, 255, 0.24);
+  --forge-shadow-sm: 0 0.125rem 0.25rem rgba(15, 20, 34, 0.45);
+  --forge-shadow-md: 0 0.25rem 1rem rgba(15, 20, 34, 0.55);
+  --forge-focus-ring: 0 0 0 0.15rem rgba(105, 108, 255, 0.45);
+}
+
 .forge-visually-hidden {
   position: absolute !important;
   width: 1px !important;
@@ -187,9 +205,9 @@ button.forge-btn:disabled {
 .forge-input,
 .forge-select,
 .forge-textarea,
-label > input:not([type="checkbox"]):not([type="radio"]),
-label > select,
-label > textarea {
+label:not(.forge-topbar__control) > input:not([type="checkbox"]):not([type="radio"]),
+label:not(.forge-topbar__control) > select,
+label:not(.forge-topbar__control) > textarea {
   display: block;
   width: 100%;
   max-width: 100%;
@@ -204,9 +222,9 @@ label > textarea {
   font: inherit;
 }
 
-label > input:not([type="checkbox"]):not([type="radio"]):focus,
-label > select:focus,
-label > textarea:focus,
+label:not(.forge-topbar__control) > input:not([type="checkbox"]):not([type="radio"]):focus,
+label:not(.forge-topbar__control) > select:focus,
+label:not(.forge-topbar__control) > textarea:focus,
 .forge-input:focus,
 .forge-select:focus,
 .forge-textarea:focus {
@@ -215,7 +233,7 @@ label > textarea:focus,
   outline: none;
 }
 
-label {
+label:not(.forge-topbar__control):not(.forge-checkbox-row):not(.forge-radio-row) {
   display: block;
   margin-bottom: var(--forge-space-3);
   color: var(--forge-color-heading);
@@ -289,6 +307,13 @@ label {
   background: rgba(255, 62, 29, 0.08);
   border-color: rgba(255, 62, 29, 0.35);
   color: #c62812;
+}
+
+[role="alert"][data-tone="warning"],
+.forge-alert--warning {
+  background: rgba(255, 171, 0, 0.12);
+  border-color: rgba(255, 171, 0, 0.4);
+  color: #a66d00;
 }
 
 [role="alert"][data-tone="success"],
@@ -551,6 +576,64 @@ table.forge-table th {
 .forge-topbar__meta {
   font-size: var(--forge-text-sm);
   color: var(--forge-color-muted);
+}
+
+.forge-topbar__context {
+  display: inline-flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--forge-space-2);
+  padding: 0.15rem 0.35rem;
+  border-radius: var(--forge-radius-md);
+  border: 1px solid var(--forge-color-border-light);
+  background: color-mix(in srgb, var(--forge-color-surface-2) 72%, transparent);
+}
+
+.forge-topbar__control {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--forge-space-2);
+  margin: 0;
+  font-size: var(--forge-text-sm);
+  font-weight: 500;
+  color: var(--forge-color-muted);
+  white-space: nowrap;
+}
+
+.forge-topbar__control > span:first-child {
+  font-size: var(--forge-text-xs);
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+}
+
+.forge-topbar__control .form-select,
+.forge-topbar__control select {
+  width: auto;
+  min-width: 8.5rem;
+  max-width: 14rem;
+  margin: 0;
+  cursor: pointer;
+}
+
+.forge-topbar__user {
+  display: inline-flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--forge-space-2);
+}
+
+.forge-detail-grid {
+  display: grid;
+  gap: var(--forge-space-4);
+  grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr));
+  align-items: stretch;
+}
+
+.forge-detail-grid .forge-card,
+.forge-detail-grid [data-component="card"] {
+  height: 100%;
+  margin: 0;
 }
 
 .forge-sidebar__session {

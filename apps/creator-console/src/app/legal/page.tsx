@@ -58,7 +58,7 @@ function LegalInner() {
     <div className={styles.page}>
       <ForgePageHeader
         title="Legal & Compliance"
-        description="Forge-global legal documents and acknowledgment configuration. Tenant admins cannot modify Forge Terms or Privacy Notice."
+        subtitle="Forge-global legal documents and acknowledgment configuration. Tenant admins cannot modify Forge Terms or Privacy Notice."
       />
       <p className={styles.muted}>
         Publishing a version that requires re-acknowledgment will gate affected users until they accept

@@ -1,7 +1,8 @@
 "use client";
 
 import type { ReactNode } from "react";
-import { Can, PermissionDenied } from "@forge/ui";
+import { Can } from "@forge/ui";
+import { SignInPanel } from "@/components/sign-in-panel";
 import { useAuth } from "@/hooks/use-auth";
 import styles from "../app/page.module.css";
 
@@ -40,21 +41,21 @@ export function PlatformPageGate({
     return (
       <section className={styles.page}>
         <h1>{title}</h1>
-        {error ? <p className={styles.error}>{error}</p> : null}
-        <PermissionDenied
-          title="Sign in required"
-          description="Sign in with your Forge account to continue."
+        <SignInPanel
+          error={error}
+          actions={
+            <>
+              <button className="btn btn-primary" type="button" onClick={() => void loginWithCognito()}>
+                Sign in
+              </button>
+              {error ? (
+                <button className="btn btn-outline-secondary" type="button" onClick={() => void refresh()}>
+                  Retry
+                </button>
+              ) : null}
+            </>
+          }
         />
-        <div className={styles.actions}>
-          <button className={styles.button} type="button" onClick={() => void loginWithCognito()}>
-            Sign in
-          </button>
-          {error ? (
-            <button className={styles.buttonSecondary} type="button" onClick={() => void refresh()}>
-              Retry
-            </button>
-          ) : null}
-        </div>
       </section>
     );
   }
@@ -65,16 +66,18 @@ export function PlatformPageGate({
       fallback={
         <section className={styles.page}>
           <h1>{title}</h1>
-          <PermissionDenied
-            title="Permission required"
-            description={
-              anyOf?.length
-                ? `Requires one of: ${anyOf.join(", ")}`
-                : permission
-                  ? `Requires permission: ${permission}`
-                  : "You do not have permission to view this page."
-            }
-          />
+          <div className="card creator-sign-in-panel">
+            <div className="card-body">
+              <h5 className="mb-2">Permission required</h5>
+              <p className="text-muted mb-0">
+                {anyOf?.length
+                  ? `Requires one of: ${anyOf.join(", ")}`
+                  : permission
+                    ? `Requires permission: ${permission}`
+                    : "You do not have permission to view this page."}
+              </p>
+            </div>
+          </div>
         </section>
       }
     >

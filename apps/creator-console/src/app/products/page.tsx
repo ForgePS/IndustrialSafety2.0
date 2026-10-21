@@ -1,12 +1,11 @@
 "use client";
 
-import { Suspense, useCallback, useEffect, useMemo, useState } from "react";
+import { Suspense, useCallback, useEffect, useMemo, useState, type FormEvent } from "react";
+import Link from "next/link";
 import {
   ErrorState,
-  ForgeModuleGrid,
   ForgePageHeader,
   LoadingState,
-  ModuleCard,
 } from "@forge/ui";
 import {
   filterBySearch,
@@ -15,44 +14,38 @@ import {
   sortByField,
 } from "@/components/list-controls";
 import { PlatformPageGate } from "@/components/platform-page-gate";
-import { apiGet } from "@/lib/api";
+import { listPlatformProducts, patchPlatformProduct, type PlatformProduct } from "@/lib/api";
 import { productDisplayName } from "@/lib/presentation";
 import styles from "../page.module.css";
-
-type CatalogProduct = { id: string; code: string; name: string; status?: string };
-type CatalogModule = { id: string; code: string; name: string; status?: string };
-
-function humanModuleStatus(status: string): string {
-  return status === "ACTIVE" ? "Active" : status.replace(/_/g, " ");
-}
 
 const PAGE_SIZE = 10;
 
 function ProductsInner() {
-  const [products, setProducts] = useState<CatalogProduct[]>([]);
-  const [modules, setModules] = useState<CatalogModule[]>([]);
+  const [products, setProducts] = useState<PlatformProduct[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [message, setMessage] = useState<string | null>(null);
+  const [submitting, setSubmitting] = useState(false);
   const [search, setSearch] = useState("");
   const [sort, setSort] = useState("code");
   const [page, setPage] = useState(1);
+  const [showArchived, setShowArchived] = useState(false);
+  const [editProduct, setEditProduct] = useState<PlatformProduct | null>(null);
+  const [editName, setEditName] = useState("");
+  const [editDescription, setEditDescription] = useState("");
+  const [editStatus, setEditStatus] = useState("ACTIVE");
 
   const load = useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
-      const [productRows, moduleRows] = await Promise.all([
-        apiGet<CatalogProduct[]>("/api/v1/platform/products"),
-        apiGet<CatalogModule[]>("/api/v1/platform/modules"),
-      ]);
-      setProducts(productRows);
-      setModules(moduleRows);
+      setProducts(await listPlatformProducts({ includeArchived: showArchived }));
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to load catalog");
+      setError(err instanceof Error ? err.message : "Failed to load products");
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [showArchived]);
 
   useEffect(() => {
     void load();
@@ -60,41 +53,88 @@ function ProductsInner() {
 
   useEffect(() => {
     setPage(1);
-  }, [search, sort]);
+  }, [search, sort, showArchived]);
 
   const filtered = useMemo(() => {
     const searched = filterBySearch(products, search, [
       (row) => row.code,
       (row) => row.name,
-      (row) => row.id,
+      (row) => row.description ?? "",
     ]);
     return sortByField(searched, sort, {
       code: (row) => row.code,
       name: (row) => row.name,
+      status: (row) => row.status,
     });
   }, [products, search, sort]);
 
   const pageItems = paginate(filtered, page, PAGE_SIZE);
 
+  function startEdit(product: PlatformProduct) {
+    setEditProduct(product);
+    setEditName(product.name);
+    setEditDescription(product.description ?? "");
+    setEditStatus(product.status);
+  }
+
+  async function onSave(event: FormEvent) {
+    event.preventDefault();
+    if (!editProduct) return;
+    setSubmitting(true);
+    setError(null);
+    setMessage(null);
+    try {
+      await patchPlatformProduct(editProduct.code, {
+        name: editName.trim(),
+        description: editDescription.trim() || null,
+        status: editStatus,
+      });
+      setMessage(`Product ${editProduct.code} updated.`);
+      setEditProduct(null);
+      await load();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to update product");
+    } finally {
+      setSubmitting(false);
+    }
+  }
+
   return (
     <section className={styles.page}>
       <ForgePageHeader
         title="Products"
-        subtitle="Forge products customers can use. Module catalog is available under Modules."
+        subtitle="Forge platform products. Product codes are fixed; display names and status are editable."
+        actions={
+          <Link className={styles.buttonSecondary} href="/modules/">
+            Module catalog
+          </Link>
+        }
       />
 
       {error ? <ErrorState title="Unable to load products" description={error} /> : null}
+      {message ? <p className={styles.success}>{message}</p> : null}
       {loading ? <LoadingState label="Loading products…" /> : null}
 
       <div className={styles.panel}>
-        <h2>Product catalog</h2>
+        <div className={styles.linkRow}>
+          <h2>Product catalog</h2>
+          <label className={styles.muted}>
+            <input
+              type="checkbox"
+              checked={showArchived}
+              onChange={(e) => setShowArchived(e.target.checked)}
+            />{" "}
+            Show archived
+          </label>
+        </div>
         <ListControls
           search={search}
           onSearchChange={setSearch}
           sort={sort}
           sortOptions={[
             { value: "name", label: "Name" },
-            { value: "code", label: "Internal code" },
+            { value: "code", label: "Code" },
+            { value: "status", label: "Status" },
           ]}
           onSortChange={setSort}
           page={page}
@@ -102,40 +142,90 @@ function ProductsInner() {
           total={filtered.length}
           onPageChange={setPage}
         />
-        {!loading && filtered.length === 0 ? (
-          <p className={styles.muted}>No products found.</p>
-        ) : null}
         {pageItems.length > 0 ? (
-          <div className={styles.productCardGrid}>
-            {pageItems.map((row) => (
-              <div key={row.id} className={styles.productCard}>
-                <strong>{row.name || productDisplayName(row.code)}</strong>
-                <span className={styles.muted}>Status: {row.status ?? "Active"}</span>
-              </div>
-            ))}
-          </div>
-        ) : null}
-      </div>
-
-      <div className={styles.panel}>
-        <h2>Modules</h2>
-        {modules.length === 0 ? (
-          <p className={styles.muted}>No modules in catalog.</p>
+          <table className={styles.table}>
+            <thead>
+              <tr>
+                <th>Code</th>
+                <th>Name</th>
+                <th>Description</th>
+                <th>Status</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {pageItems.map((row) => (
+                <tr key={row.id}>
+                  <td className={styles.mono}>{row.code}</td>
+                  <td>{row.name || productDisplayName(row.code)}</td>
+                  <td>{row.description ?? "—"}</td>
+                  <td>{row.status}</td>
+                  <td>
+                    <button
+                      type="button"
+                      className={styles.buttonSecondary}
+                      onClick={() => startEdit(row)}
+                    >
+                      Edit
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         ) : (
-          <ForgeModuleGrid>
-            {modules.map((row) => (
-              <ModuleCard
-                key={row.id}
-                name={row.name}
-                meta={row.status ? humanModuleStatus(row.status) : "Available"}
-                href="/modules/"
-                disabled
-                disabledReason="Open Modules to manage assignments"
-              />
-            ))}
-          </ForgeModuleGrid>
+          !loading && <p className={styles.muted}>No products found.</p>
         )}
       </div>
+
+      {editProduct ? (
+        <div className={styles.panel}>
+          <h2>Edit product · {editProduct.code}</h2>
+          <form className={styles.form} onSubmit={onSave}>
+            <div className={styles.formRow}>
+              <label htmlFor="product-name">Display name</label>
+              <input
+                id="product-name"
+                required
+                value={editName}
+                onChange={(e) => setEditName(e.target.value)}
+              />
+            </div>
+            <div className={styles.formRow}>
+              <label htmlFor="product-description">Description</label>
+              <textarea
+                id="product-description"
+                rows={3}
+                value={editDescription}
+                onChange={(e) => setEditDescription(e.target.value)}
+              />
+            </div>
+            <div className={styles.formRow}>
+              <label htmlFor="product-status">Status</label>
+              <select
+                id="product-status"
+                value={editStatus}
+                onChange={(e) => setEditStatus(e.target.value)}
+              >
+                <option value="ACTIVE">ACTIVE</option>
+                <option value="ARCHIVED">ARCHIVED</option>
+              </select>
+            </div>
+            <div className={styles.actions}>
+              <button className={styles.button} type="submit" disabled={submitting}>
+                Save product
+              </button>
+              <button
+                type="button"
+                className={styles.buttonSecondary}
+                onClick={() => setEditProduct(null)}
+              >
+                Cancel
+              </button>
+            </div>
+          </form>
+        </div>
+      ) : null}
     </section>
   );
 }
