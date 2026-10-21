@@ -15,6 +15,7 @@ import { FrontendStack } from "../lib/stacks/frontend-stack.js";
 import { BackupStack } from "../lib/stacks/backup-stack.js";
 import { AuditStack } from "../lib/stacks/audit-stack.js";
 import { AlertingStack } from "../lib/stacks/alerting-stack.js";
+import { ImportMalwareStack } from "../lib/stacks/import-malware-stack.js";
 import { PRODUCTION_PRE_CUTOVER_SPA_ORIGINS } from "../lib/config/production-spa-origins.js";
 
 const app = new cdk.App();
@@ -54,6 +55,15 @@ const data = new DataStack(app, "ForgeData", {
   databaseSecurityGroup: network.securityGroups.databaseSg,
   storageKey: security.storageKey,
 });
+
+const importMalware = config.features.enableGuardDuty
+  ? new ImportMalwareStack(app, "ForgeImportMalware", {
+      config,
+      env,
+      importsBucket: data.importsBucket,
+      storageKey: security.storageKey,
+    })
+  : undefined;
 
 const observability = new ObservabilityStack(app, "ForgeObservability", {
   config,
@@ -99,6 +109,7 @@ const legacyCloudFrontOrigins = isProduction
       "https://ddztl9s33wu40.cloudfront.net",
       "https://d1uxdl4szvsixc.cloudfront.net",
       "https://d2ed3566n8x2gi.cloudfront.net",
+      "https://dr716wyn2h1dm.cloudfront.net",
     ];
 const cognitoDomain = `forge-${config.environmentName}-${config.account.slice(-6)}.auth.${config.region}.amazoncognito.com`;
 
@@ -123,6 +134,7 @@ const compute = new ComputeStack(app, "ForgeCompute", {
   cadApplicationQueue: messaging.cadApplication,
   cadPollingQueue: messaging.cadPolling,
   cadRetentionQueue: messaging.cadRetention,
+  reportingSchedulesQueue: messaging.reportingSchedules,
   eventBus: messaging.eventBus,
   documentsBucket: data.documentsBucket,
   importsBucket: data.importsBucket,
@@ -169,6 +181,7 @@ new MonitoringStack(app, "ForgeMonitoring", {
   cadApplicationDlq: messaging.cadApplicationDlq,
   cadPollingDlq: messaging.cadPollingDlq,
   cadRetentionDlq: messaging.cadRetentionDlq,
+  reportingSchedulesDlq: messaging.reportingSchedulesDlq,
   apiCloudFrontDistributionId: compute.ecs.apiHttps.distribution.distributionId,
   rmsCloudFrontDistributionId: isProduction ? undefined : "E2LZJLH664YX70",
   alarmTopic: alerting.opsTopic,
@@ -203,6 +216,10 @@ new FrontendStack(app, "ForgeFrontend", {
 
 data.addStackDependency(network);
 data.addStackDependency(security);
+if (importMalware) {
+  importMalware.addDependency(data);
+  importMalware.addDependency(security);
+}
 messaging.addStackDependency(security);
 observability.addStackDependency(security);
 alerting.addStackDependency(security);

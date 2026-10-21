@@ -69,6 +69,7 @@ const compute = new ComputeStack(app, "ForgeCompute", {
   cadApplicationQueue: messaging.cadApplication,
   cadPollingQueue: messaging.cadPolling,
   cadRetentionQueue: messaging.cadRetention,
+  reportingSchedulesQueue: messaging.reportingSchedules,
   eventBus: messaging.eventBus,
   documentsBucket: data.documentsBucket,
   importsBucket: data.importsBucket,
@@ -104,6 +105,7 @@ new MonitoringStack(app, "ForgeMonitoring", {
   cadApplicationDlq: messaging.cadApplicationDlq,
   cadPollingDlq: messaging.cadPollingDlq,
   cadRetentionDlq: messaging.cadRetentionDlq,
+  reportingSchedulesDlq: messaging.reportingSchedulesDlq,
   apiCloudFrontDistributionId: compute.ecs.apiHttps.distribution.distributionId,
   rmsCloudFrontDistributionId: "E2LZJLH664YX70",
 });

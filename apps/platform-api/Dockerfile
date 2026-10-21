@@ -13,7 +13,9 @@ RUN pnpm --filter @forge/platform-api... build
 RUN pnpm prune --prod
 
 FROM node:22-alpine AS runtime
-RUN apk add --no-cache wget
+# DejaVu fonts required by @resvg/resvg-js for label title/line text (QR images
+# render without fonts; text is silently dropped otherwise).
+RUN apk add --no-cache wget ffmpeg font-dejavu
 WORKDIR /app
 ENV NODE_ENV=production
 ENV PORT=4000
