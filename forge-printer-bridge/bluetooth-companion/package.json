@@ -1,0 +1,60 @@
+{
+  "name": "forge-bluetooth-printer-companion",
+  "version": "0.1.0",
+  "description": "Forge Bluetooth Printer Companion — Phase 2 Brady Web SDK bridge over named pipe IPC",
+  "author": "Forge Public Safety",
+  "license": "UNLICENSED",
+  "private": true,
+  "main": "dist/electron/main.js",
+  "productName": "Forge Bluetooth Printer Companion",
+  "scripts": {
+    "dev": "npm run build && electron .",
+    "build": "tsc -p tsconfig.json && node scripts/copy-static.js",
+    "start": "electron .",
+    "dist": "npm run build && electron-builder --win",
+    "typecheck": "tsc -p tsconfig.json --noEmit"
+  },
+  "dependencies": {
+    "@bradycorporation/brady-web-sdk": "3.3.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.15.29",
+    "electron": "33.4.11",
+    "electron-builder": "26.15.3",
+    "esbuild": "^0.25.5",
+    "typescript": "~5.8.3"
+  },
+  "build": {
+    "appId": "com.forgepublicsafety.printerbridge.bluetooth",
+    "productName": "ForgePrinterBridge.Bluetooth",
+    "directories": {
+      "output": "release"
+    },
+    "files": [
+      "dist/**/*",
+      "package.json",
+      "node_modules/@bradycorporation/brady-web-sdk/**/*"
+    ],
+    "win": {
+      "target": [
+        {
+          "target": "portable",
+          "arch": ["x64"]
+        },
+        {
+          "target": "nsis",
+          "arch": ["x64"]
+        }
+      ],
+      "artifactName": "ForgePrinterBridge.Bluetooth-${version}-${arch}.${ext}"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "shortcutName": "Forge Bluetooth Printer Companion"
+    },
+    "extraMetadata": {
+      "main": "dist/electron/main.js"
+    }
+  }
+}

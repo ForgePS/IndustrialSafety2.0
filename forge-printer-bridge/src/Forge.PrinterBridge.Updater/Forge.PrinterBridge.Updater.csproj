@@ -1,0 +1,16 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0-windows</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <RootNamespace>Forge.PrinterBridge.Updater</RootNamespace>
+    <AssemblyName>ForgePrinterBridge.Updater</AssemblyName>
+    <OutputType>Exe</OutputType>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Forge.PrinterBridge.Shared\Forge.PrinterBridge.Shared.csproj" />
+  </ItemGroup>
+
+</Project>
