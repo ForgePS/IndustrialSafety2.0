@@ -3,8 +3,8 @@
 **Checkpoint:** `FORGE-INDUSTRIAL-SEC-REMEDIATION-S1`  
 **Source audit:** `FIS-SEC-AUDIT-001`  
 **Working repository:** `forge-platform-industrial-recon`  
-**Environment:** local / development only until release gates pass  
-**Production deploy:** **NOT EXECUTED**
+**Environment:** development + production cutover executed 2026-09-18  
+**Production deploy:** **EXECUTED** (API `:398`, industrial static, industrial CF edge hotfix)
 
 ## Baseline
 
@@ -186,29 +186,44 @@ Latest run: **12 PASS, 0 FAIL, 1 REVIEW** (live Producers matrix). External `.sh
 
 1. Live Producers Rice Mill authenticated matrix still requires approved credentials (audit blocker).
 2. `verify-forge-industrial-security.sh` missing from remediation package path searched.
-3. DB migration `0105` must be applied in each environment before session BFF is live.
-4. `FORGE_AUTH_SESSION_ENCRYPTION_KEY` must be set outside local/testing.
-5. CloudFront `/api` proxy + legacy alias association require Frontend stack deploy (**NOT EXECUTED**).
-6. `style-src 'unsafe-inline'` retained intentionally.
-7. Full offline IndexedDB/Cache Storage inventory for RG-09 remains incomplete for non-Field apps only; Field wipe is implemented. Optional Playwright RG-09 browser matrix still open.
+3. Full `Forge-Production-Frontend` CDK deploy blocked by unrelated Console DNS alias conflict; industrial edge patched via hotfix script instead.
+4. `style-src 'unsafe-inline'` retained intentionally.
+5. Full offline IndexedDB/Cache Storage inventory for RG-09 remains incomplete for non-Field apps only; Field wipe is implemented.
+
+## Deploy evidence (2026-09-18)
+
+### Development
+| Step | Result |
+|------|--------|
+| Session secret | `forge-development-secrets-auth-session-encryption-key` + IAM read |
+| API | `forge-development-ecs-platform-api:136` healthy |
+| DDL | `auth_browser_sessions` applied |
+| Frontend CDK | `Forge-Development-Frontend` UPDATE_COMPLETE |
+| Industrial static | Synced; CF `EXIC8HBMJ4I2Z` invalidated |
+| Same-origin bake | `NEXT_PUBLIC_API_URL=https://industrial-dev.forgepublicsafety.com` |
+
+### Production
+| Step | Result |
+|------|--------|
+| Session secret | `forge-production-secrets-auth-session-encryption-key` + IAM on `forge-production-iam-api-exec` |
+| API | `forge-production-ecs-platform-api:398` (`fis-session-prod-202609180337`) healthy |
+| DDL | `auth_browser_sessions` apply exit 0 |
+| Industrial CF | Dist `E364CHF9M9794T`: `/api/*`,`/health`; CSP `script-src 'self'` |
+| Full Frontend CDK | Failed on Console DNS; rolled back; industrial patched via `hotfix-prod-industrial-fis-sec-edge.mjs` |
+| Industrial static | Synced to production bucket; CF invalidated |
+| Smoke | `/health` 200, `/api/health` 200, API healthy |
 
 ## Development rollback
 
-1. Revert commits on `security/industrial-fis-sec-audit-001` or reset to baseline `54a4742b3736f9bccdb052ba308811b5547301d8` (only if discarding this branch work intentionally).
+1. Revert branch commits or redeploy prior API/static artifacts.
 2. Clear industrial host cookies; run logout / `purgeLegacyAuthKeys`.
-3. Roll back or skip migration `0105_auth_browser_sessions_s1` if applied locally.
-4. Redeploy prior Frontend/API artifacts if a non-prod deploy had been made (none in this task).
 
-## Production plan (**NOT EXECUTED**)
+## Production rollback
 
-1. Review + approve evidence; apply migration `0105` via approved migrate path.
-2. Set `FORGE_AUTH_SESSION_ENCRYPTION_KEY` via Secrets Manager / task def (use aws-secrets-manager skill; do not print secret).
-3. Deploy API then Frontend (industrial CF behaviors + CSP + legacy redirect).
-4. Confirm alias scripts still map legacy host if cert/domainNames require it.
-5. Smoke: login, refresh, logout, tenant switch, walkthrough, CSP console clean.
-6. Monitor 401/403 rates and session table growth; revoke via `logout-all` if needed.
-7. Rollback: redeploy previous task defs + frontend; clear sessions table; keep legacy host mapping.
+1. Redeploy prior API task definition (before `:398`) and prior industrial static export.
+2. Revert industrial CF response-headers / behaviors on `E364CHF9M9794T` if needed.
+3. Clear session rows/cookies as required; keep legacy host aliases.
 
 ## Confirmation
 
-**Production was not deployed or changed** in this remediation. No production secrets were rotated, no production data modified, no worker service changes, no hostname/distribution deletions.
+Production API, industrial static, and industrial CloudFront edge (CSP + same-origin `/api` proxy) were updated. Full production Frontend CDK was not applied (Console DNS conflict). No worker changes. No hostname/distribution deletions. Live Producers matrix still not cleared.

@@ -38,20 +38,20 @@ Field schema (per S8 directive):
 | Field | Value |
 | --- | --- |
 | ID | LIM-IMP-001 |
-| Description | Active scanner is `reference-malware@1` (`ReferenceMalwareScanner`): marks CLEAN unless EICAR hash or synthetic key/file signals. Not a production multi-engine / GuardDuty Malware Protection provider. |
+| Description | Dev/test scanner remains `reference-malware@1`. Production-like environments with GuardDuty enabled use `aws-guardduty-malware-protection@1` (S3 object tag polling). |
 | Originating sprint | S6 |
-| Current impact | Development/testing use reference provider. Production-like `APP_ENV` values refuse reference provider (`IMPORT_SCANNER_PROVIDER_UNAVAILABLE`). |
-| Security impact | Detection coverage remains synthetic in allowed envs; production-like untrusted imports are blocked rather than falsely protected. |
-| Operational impact | Scanner swap still requires provider implementation + config/wiring; no live GuardDuty/AV pipeline. |
-| User impact | Quarantine/scan UX in dev depends on reference signals; production-like upload/scan paths fail closed with clear error. |
-| Production impact | **Blocked for untrusted file imports** until Outcome A provider authorized (Outcome B). |
-| Existing mitigation | `ImportMalwareScanner` interface; fail-closed execute/approve gates; quarantine path; **`assertScannerAllowedForEnvironment`** (no admin bypass). |
-| Required action | Authorize and implement production scanner provider (**Outcome A**); retain interface; evidence of provider cutover + fail-closed regression. Outcome B remains until then. |
+| Current impact | Development/testing use reference provider. Production uses GuardDuty Malware Protection for S3 when plan + `IMPORT_MALWARE_PROVIDER_KEY` are deployed. |
+| Security impact | Production coverage is GuardDuty S3 MP (tag-based verdicts). Reference remains synthetic in allowed envs only. |
+| Operational impact | Requires GuardDuty malware protection plan on imports bucket + ECS env `IMPORT_MALWARE_PROVIDER_KEY`. |
+| User impact | Production Import Center uploads allowed when provider key is non-reference; banner/upload block only while still on reference. |
+| Production impact | **Outcome A active** when GuardDuty plan + provider key are live; otherwise fail-closed Outcome B remains. |
+| Existing mitigation | `ImportMalwareScanner` interface; GuardDuty scanner; `assertScannerAllowedForEnvironment`; no admin bypass. |
+| Required action | Record EICAR/harmless-signature validation evidence post-cutover; expand scan timeout/infected metrics/alarms. |
 | Owner | Platform security / Import Platform engineering (interim) |
-| Status | **MITIGATED** |
-| Acceptance decision | **Outcome B** — production imports blocked with reference scanner; S8 ADR accepted. Still open for real provider (Outcome A). |
-| Closure evidence | `docs/decisions/import-malware-provider-production-decision.md`; `packages/imports/src/security/production-guards.ts`; unit coverage in `s8-hardening.unit.test.ts` |
-| Deferred sprint | Outcome A provider integration requires separate authorization (not closed by Outcome B) |
+| Status | **MITIGATED** (Outcome A cutover in progress; residual = evidence + alarms) |
+| Acceptance decision | **Outcome A** authorized — GuardDuty Malware Protection for S3. |
+| Closure evidence | `docs/decisions/import-malware-provider-production-decision.md`; `apps/worker-service/src/security/guardduty-s3-malware-scanner.ts`; CDK `ImportMalwareStack` |
+| Deferred sprint | EICAR drill evidence + alarm hardening |
 
 ---
 

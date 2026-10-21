@@ -64,8 +64,12 @@ Production NOT applied.
 FINAL_SHA:
 (uncommitted workspace)
 
+DEV DEPLOY (2026-08-20):
+- platform-api: forge-development-ecs-platform-api:96 (tag legal-ack-s1-20260820161208) — stable
+- industrial-web: synced to Development CloudFront EXIC8HBMJ4I2Z (https://d2ed3566n8x2gi.cloudfront.net)
+
 REMAINING CONDITIONS:
-- Deploy Development platform-api + industrial-web with Legal module for live UAT
+- Manual UAT: login → gate → acknowledge → second login no prompt; training attestation; admin compliance
 - Full Nest E2E security suite still recommended
 - Ensure admin roles include industrial.legal.* for compliance UI
 ```
