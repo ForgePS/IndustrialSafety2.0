@@ -60,7 +60,64 @@ function normName(value) {
   return String(value ?? "")
     .toUpperCase()
     .replace(/[^A-Z0-9]+/g, " ")
+    .replace(/\b(JR|SR|II|III|IV)\b/g, " ")
+    .replace(/\s+/g, " ")
     .trim();
+}
+
+function nameKeys(value) {
+  const full = normName(value);
+  const keys = new Set();
+  if (!full) return keys;
+  keys.add(full);
+  const parts = full.split(" ").filter((part) => part.length > 1);
+  if (parts.length >= 2) {
+    keys.add(`${parts[0]} ${parts[parts.length - 1]}`);
+    keys.add(`${parts[parts.length - 1]} ${parts[0]}`);
+  }
+  return keys;
+}
+
+function addNameCandidates(map, person) {
+  for (const key of nameKeys(person.display_name)) {
+    const list = map.get(key) ?? [];
+    list.push(person);
+    map.set(key, list);
+  }
+  for (const key of nameKeys(`${person.first_name ?? ""} ${person.last_name ?? ""}`)) {
+    const list = map.get(key) ?? [];
+    list.push(person);
+    map.set(key, list);
+  }
+}
+
+function pickPerson(candidates) {
+  if (!candidates || candidates.length === 0) return null;
+  const active = candidates.filter((p) => !p.archived);
+  const pool = active.length > 0 ? active : candidates;
+  return pool[0] ?? null;
+}
+
+function matchPersonFuzzy(people, rawName) {
+  const parts = normName(rawName)
+    .split(" ")
+    .filter((part) => part.length >= 3);
+  if (parts.length < 2) return null;
+  const candidates = people.filter((person) => {
+    const hay = normName(`${person.display_name ?? ""} ${person.first_name ?? ""} ${person.last_name ?? ""}`);
+    return parts.every((part) => hay.includes(part));
+  });
+  return pickPerson(candidates);
+}
+
+function matchPerson(byEmp, byName, people, emp, rawName) {
+  const personFromEmp = emp ? pickPerson(byEmp.get(emp)) : null;
+  if (personFromEmp) return personFromEmp;
+  for (const key of nameKeys(rawName)) {
+    const hit = pickPerson(byName.get(key));
+    if (hit) return hit;
+  }
+  return matchPersonFuzzy(people, rawName);
 }
 
 async function main() {
@@ -80,6 +137,8 @@ async function main() {
         id::text as id,
         employee_number,
         display_name,
+        first_name,
+        last_name,
         is_company_driver,
         archived_at is not null as archived
       from industrial_personnel
@@ -95,20 +154,8 @@ async function main() {
         list.push(person);
         byEmp.set(emp, list);
       }
-      const name = normName(person.display_name);
-      if (name) {
-        const list = byName.get(name) ?? [];
-        list.push(person);
-        byName.set(name, list);
-      }
+      addNameCandidates(byName, person);
     }
-
-    const pickPerson = (candidates) => {
-      if (!candidates || candidates.length === 0) return null;
-      const active = candidates.filter((p) => !p.archived);
-      const pool = active.length > 0 ? active : candidates;
-      return pool[0] ?? null;
-    };
 
     const drivers = await sql`
       select
@@ -130,10 +177,11 @@ async function main() {
 
     for (const driver of drivers) {
       const payload = unwrap(driver.source_payload);
-      const emp = String(payload.employeeNumber ?? "").trim().toUpperCase();
-      const name = normName(driver.personnel_name || payload.personnelName);
-      const person =
-        pickPerson(emp ? byEmp.get(emp) : null) || pickPerson(name ? byName.get(name) : null);
+      const emp = String(payload.employeeNumber ?? payload.employee_number ?? "").trim().toUpperCase();
+      const rawName = driver.personnel_name || payload.personnelName || payload.personnel_name || "";
+      const person = driver.personnel_id
+        ? people.find((p) => p.id === driver.personnel_id)
+        : matchPerson(byEmp, byName, people, emp, rawName);
 
       if (driver.personnel_id) {
         alreadyLinked += 1;

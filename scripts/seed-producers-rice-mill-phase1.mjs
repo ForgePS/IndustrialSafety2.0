@@ -36,6 +36,7 @@ const ROLE_CODE = "IND3V_INDUSTRIAL_ADMIN";
 
 const MODULE_CODES = [
   "PERSONNEL",
+  "FIRST_AID",
   "EQUIPMENT",
   "LOCKOUT_TAGOUT",
   "TRAINING",
@@ -57,6 +58,7 @@ const MODULE_CODES = [
 const FLAG_KEYS = [
   "industrial.enabled",
   "industrial.module.personnel.enabled",
+  "industrial.module.first_aid.enabled",
   "industrial.module.equipment.enabled",
   "industrial.module.loto.enabled",
   "industrial.module.training.enabled",
@@ -78,6 +80,8 @@ const ADMIN_PERMS = [
   "industrial.access",
   "industrial.personnel.view",
   "industrial.personnel.manage",
+  "industrial.first_aid.view",
+  "industrial.first_aid.manage",
   "industrial.training.view",
   "industrial.training.manage",
   "industrial.forms.view",

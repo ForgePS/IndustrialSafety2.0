@@ -25,7 +25,7 @@ const DOCUMENTS_BUCKET =
   process.env.S3_DOCUMENT_BUCKET || "forge-production-documents-511343547817-us-east-1";
 const LOGO_OBJECT_KEY = `tenants/${TENANT_ID}/branding/logo/019ff7df-2c16-740a-8414-674df510762f-Producers_Logo.png`;
 const LOGO_DOCUMENT_ID = "019ff7df-2c16-740a-8414-674df510762f";
-const LOGO_PUBLIC_URL = "https://producersrice.forgepublicsafety.com/branding/producers-rice-mill.png";
+const LOGO_PUBLIC_URL = "/branding/producers-rice-mill.png";
 const LOGO_FILE_SIZE = 1_106_901;
 
 if (!ALLOWED.has(TENANT_KEY)) {
@@ -49,6 +49,7 @@ const BRANDING = {
   accentColor: "#3182ce",
   approvedColors: ["#1a365d", "#2d3748", "#3182ce"],
   logoUrl: LOGO_PUBLIC_URL,
+  logoDarkUrl: "/branding/producers-rice-mill-dark.png",
   contactName: "Producers Rice Mill",
   contactPhone: "870-673-4444",
   supportEmail: "info@producersrice.com",
@@ -57,6 +58,7 @@ const BRANDING = {
   emailFromName: "Producers Rice Mill",
   login: {
     logoUrl: LOGO_PUBLIC_URL,
+    logoDarkUrl: "/branding/producers-rice-mill-dark.png",
     brandLabel: "Producers Rice Mill",
     headline: "Welcome to Producers Rice Mill",
     body: "Sign in is required to continue.",

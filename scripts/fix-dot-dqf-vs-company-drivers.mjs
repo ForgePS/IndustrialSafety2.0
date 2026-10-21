@@ -187,6 +187,11 @@ function isCompanyDriverSource(row, payload) {
 
 function isRealDqf(row, payload) {
   if (isCompanyDriverSource(row, payload)) return false;
+  const collection = String(row.source_collection ?? "").toLowerCase();
+  // Workbook seed from DQF Files.xlsx — always keep (not company-driver roster noise).
+  if (collection === "dqfworkbookimport" || collection.includes("dqfworkbook")) return true;
+  const seeded = String(payload.seededFrom ?? payload.dqfSourceFile ?? "").toLowerCase();
+  if (seeded.includes("dqf files.xlsx")) return true;
   const text = hay(row, payload);
   const ids = drvIdsIn(text);
   if (ids.some((id) => KEEP_DRV.has(id))) return true;

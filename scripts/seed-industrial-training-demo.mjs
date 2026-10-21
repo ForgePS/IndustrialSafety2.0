@@ -8,15 +8,13 @@
  *   FORGE_TRAINING_SEED_TENANT_ID (required)
  */
 import { createRequire } from "node:module";
-import { pathToFileURL } from "node:url";
 import { randomUUID } from "node:crypto";
+import { defaultLocalDatabaseUrl, loadPostgres, repoRequireFrom } from "./seed-db-client.mjs";
 
-const apiRequire = createRequire(
-  process.env.FORGE_SEED_REQUIRE_FROM || "/app/apps/platform-api/package.json",
-);
+const apiRequire = repoRequireFrom("apps/platform-api/package.json");
 
 async function resolveDatabaseUrl() {
-  if (process.env.DATABASE_URL) return process.env.DATABASE_URL;
+  if (process.env.DATABASE_URL?.trim()) return process.env.DATABASE_URL.trim();
   const secretArn = process.env.DATABASE_SECRET_ARN?.trim();
   if (!secretArn) throw new Error("DATABASE_SECRET_ARN or DATABASE_URL required");
   const { SecretsManagerClient, GetSecretValueCommand } = apiRequire(
@@ -127,18 +125,22 @@ async function main() {
   const tenantId = process.env.FORGE_TRAINING_SEED_TENANT_ID?.trim();
   if (!tenantId) throw new Error("FORGE_TRAINING_SEED_TENANT_ID required");
 
-  let postgres;
-  try {
-    const dbRequire = createRequire("/app/apps/platform-api/node_modules/@forge/database/package.json");
-    postgres = (await import(pathToFileURL(dbRequire.resolve("postgres")).href)).default;
-  } catch {
-    const postgresMod = await import("postgres");
-    postgres = postgresMod.default ?? postgresMod;
-  }
+  const postgres = await loadPostgres();
 
   const sql = postgres(await resolveDatabaseUrl(), { max: 1 });
   try {
     await sql`select set_config('app.current_tenant_id', ${tenantId}, false)`;
+    const [tenant] = await sql`
+      select tenant_key, slug from tenants where id = ${tenantId}::uuid limit 1
+    `;
+    const allowed = new Set(["forge-platform", "forge-industrial-demo"]);
+    const key = String(tenant?.tenant_key ?? "").toLowerCase();
+    const slug = String(tenant?.slug ?? "").toLowerCase();
+    if (!allowed.has(key) && !allowed.has(slug)) {
+      throw new Error(
+        `Refusing Forge Demo training seed for tenant ${key || tenantId}. Allowed: forge-platform, forge-industrial-demo.`,
+      );
+    }
     const created = [];
     for (const src of DEMO) {
       const existing = await sql`
@@ -152,36 +154,26 @@ async function main() {
       }
       const sourceId = randomUUID();
       const now = new Date().toISOString();
+      const questionCount = src.chapters.reduce((n, c) => n + c.questions.length, 0);
       await sql`
         insert into industrial_training_sources (
-          id, tenant_id, title, edition, description, status, chapter_count, question_count,
+          id, tenant_id, title, edition, description, status, question_count,
           published_at, created_at, updated_at
         ) values (
           ${sourceId}::uuid, ${tenantId}::uuid, ${src.title}, ${src.edition}, ${src.description},
-          'PUBLISHED', ${src.chapters.length},
-          ${src.chapters.reduce((n, c) => n + c.questions.length, 0)},
+          'PUBLISHED', ${questionCount},
           ${now}::timestamptz, ${now}::timestamptz, ${now}::timestamptz
         )
       `;
-      let chapterOrder = 0;
       for (const ch of src.chapters) {
-        const chapterId = randomUUID();
-        await sql`
-          insert into industrial_training_chapters (
-            id, tenant_id, source_id, title, sort_order, status, created_at, updated_at
-          ) values (
-            ${chapterId}::uuid, ${tenantId}::uuid, ${sourceId}::uuid, ${ch.title},
-            ${chapterOrder++}, 'ACTIVE', ${now}::timestamptz, ${now}::timestamptz
-          )
-        `;
         for (const q of ch.questions) {
           const qid = randomUUID();
           await sql`
             insert into industrial_training_questions (
-              id, tenant_id, source_id, chapter_id, stem, choices, correct_index,
+              id, tenant_id, source_id, stem, choices, correct_index,
               explanation, page_ref, difficulty, status, created_at, updated_at
             ) values (
-              ${qid}::uuid, ${tenantId}::uuid, ${sourceId}::uuid, ${chapterId}::uuid,
+              ${qid}::uuid, ${tenantId}::uuid, ${sourceId}::uuid,
               ${q.stem}, ${sql.json(q.choices)}, ${q.correctIndex},
               ${q.explanation}, ${q.pageRef}, 'MEDIUM', 'PUBLISHED',
               ${now}::timestamptz, ${now}::timestamptz

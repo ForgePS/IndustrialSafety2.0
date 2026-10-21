@@ -1,7 +1,7 @@
 /**
  * producers-rice-mill only: seed company profile, organization, branding,
  * business defaults, HQ facility, positions catalog, employment types, and
- * personnel company contact fields.
+ * personnel company name only (not company phone/email — those are per-employee).
  *
  * Dry-run by default. APPLY=1 writes.
  *
@@ -164,11 +164,7 @@ async function main() {
       from industrial_personnel
       where tenant_id = ${tenantId}::uuid
         and archived_at is null
-        and (
-          company_name is null or trim(company_name) = ''
-          or company_phone is null or trim(company_phone) = ''
-          or company_email is null or trim(company_email) = ''
-        )
+        and (company_name is null or trim(company_name) = '')
     `;
     summary.personnelCompanyFields.wouldUpdate = personnelBlank[0]?.n ?? 0;
     summary.positions.distinctJobTitles = jobTitles.length;
@@ -404,16 +400,10 @@ async function main() {
     const personnelResult = await sql`
       update industrial_personnel
       set company_name = coalesce(nullif(trim(company_name), ''), ${COMPANY.companyName}),
-          company_phone = coalesce(nullif(trim(company_phone), ''), ${COMPANY.phone}),
-          company_email = coalesce(nullif(trim(company_email), ''), ${COMPANY.email}),
           updated_at = now()
       where tenant_id = ${tenantId}::uuid
         and archived_at is null
-        and (
-          company_name is null or trim(company_name) = ''
-          or company_phone is null or trim(company_phone) = ''
-          or company_email is null or trim(company_email) = ''
-        )
+        and (company_name is null or trim(company_name) = '')
     `;
     summary.personnelCompanyFields.updated = personnelResult.count ?? 0;
 

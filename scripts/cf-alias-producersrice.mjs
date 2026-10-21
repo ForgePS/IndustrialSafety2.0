@@ -1,14 +1,16 @@
 /**
  * Add Producers Rice Mill vanity aliases to Industrial CloudFront distribution.
  * Dual-serve: keep forgepublicsafety.com hosts live; add forgeindustrialsafety.com.
- * Permanent 301s to the new host are a later flip — do not remove old aliases yet.
+ * Do not flip permanent 301s to forgeindustrialsafety.com until customer firewalls
+ * allowlist that zone (newly registered domain blocks). Prefer
+ * producersrice.forgepublicsafety.com for mill users.
  *
  * Requires the industrial CF viewer cert to cover both zones (multi-SAN ACM).
  * Does not create DNS records.
  *
- * FIS-L02: Legacy producers-rice-mill is 301'd to producersrice via CloudFront
- * Function (ForgeIndustrialHosting legacyRedirects). Re-run after Frontend
- * deploys if aliases were dropped.
+ * FIS-L02: Legacy producers-rice-mill is 301'd to producersrice.forgepublicsafety.com
+ * via CloudFront Function (ForgeIndustrialHosting legacyRedirects). Re-run after
+ * Frontend deploys if aliases were dropped.
  */
 import { spawnSync } from "node:child_process";
 import fs from "node:fs";

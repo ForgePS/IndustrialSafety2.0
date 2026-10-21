@@ -98,7 +98,7 @@ function parseReportDate(raw) {
   return Number.isNaN(d.getTime()) ? null : d;
 }
 
-/** Map report body-part labels onto Safety Tim region ids. */
+/** Map report body-part labels onto body map region ids. */
 function mapBodyToken(token, preferredView) {
   const n = str(token)
     .toLowerCase()
@@ -200,11 +200,28 @@ function buildLocation(row) {
 }
 
 function buildTitle(row) {
-  const name = str(row.IncidentName);
-  if (name) return name.slice(0, 500);
   const person = str(row.PersonAffected || row.Person);
-  const type = str(row.IncidentTypeName) || "Incident";
-  return `${type}${person ? ` — ${person}` : ""}`.slice(0, 500);
+  const community = str(row.Community);
+  const division = str(row.Division);
+  const locationDetail = str(row.LocationDetail);
+  const site = str(row.IncidentLocationName);
+  const location =
+    [community, division, locationDetail, site].find((value) => {
+      const cleaned = value.trim().toLowerCase();
+      return cleaned && !/producers\s+rice\s+mill/.test(cleaned);
+    }) || "";
+  const occurred =
+    parseReportDate(row.IncidentDateTime) ||
+    parseReportDate(row.DTStamp) ||
+    parseReportDate(row.reportDateTime);
+  const date = occurred || new Date();
+  const yy = String(date.getFullYear()).slice(-2);
+  const mm = String(date.getMonth() + 1).padStart(2, "0");
+  const dd = String(date.getDate()).padStart(2, "0");
+  const stamp = `${yy}-${mm}-${dd}`;
+  const name = person || str(row.IncidentName).replace(/^\d{2}-\d{2}-\d{2}\s+/, "") || "Incident";
+  const title = location ? `${stamp}   ${name} - ${location}` : `${stamp}   ${name}`;
+  return title.slice(0, 500);
 }
 
 function toInsert(row) {

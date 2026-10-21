@@ -44,7 +44,7 @@ const { cluster, taskArn } = runPlatformApiOneOff(
   ["node", "--input-type=module", "-e", evalCode],
   "diag-cognito-identity-link",
   {
-    forgeEnvironment: "production",
+    forgeEnvironment: process.env.FORGE_ENV?.trim() || "development",
     environment: { DATABASE_SECRET_ARN: adminSecretArn, TARGET_EMAIL, COGNITO_SUB },
   },
 );

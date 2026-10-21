@@ -65,6 +65,24 @@ const header = `/*
   --forge-touch-min: 44px;
 }
 
+html.dark-style,
+html[data-bs-theme="dark"] {
+  --bs-paper-bg: #2b2c40;
+  --bs-paper-bg-rgb: 43, 44, 64;
+  --forge-color-bg: var(--bs-body-bg, #232333);
+  --forge-color-surface: #2b2c40;
+  --forge-color-surface-2: #32334a;
+  --forge-color-text: var(--bs-body-color, #b2b3ca);
+  --forge-color-heading: var(--bs-emphasis-color, #cbcbe2);
+  --forge-color-muted: #7983bb;
+  --forge-color-border: #444564;
+  --forge-color-border-light: #3b3c54;
+  --forge-color-primary-soft: rgba(105, 108, 255, 0.24);
+  --forge-shadow-sm: 0 0.125rem 0.25rem rgba(15, 20, 34, 0.45);
+  --forge-shadow-md: 0 0.25rem 1rem rgba(15, 20, 34, 0.55);
+  --forge-focus-ring: 0 0 0 0.15rem rgba(105, 108, 255, 0.45);
+}
+
 .forge-visually-hidden {
   position: absolute !important;
   width: 1px !important;

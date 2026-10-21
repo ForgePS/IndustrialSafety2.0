@@ -53,6 +53,14 @@ const INDUSTRIAL_PERMISSIONS = [
   "industrial.inspections.manage",
   "industrial.incidents.view",
   "industrial.incidents.manage",
+  "industrial.photo_markup.view",
+  "industrial.photo_markup.create",
+  "industrial.photo_markup.edit",
+  "industrial.photo_markup.delete",
+  "industrial.photo_markup.view_original",
+  "industrial.photo_markup.view_history",
+  "industrial.photo_markup.restore",
+  "industrial.photo_markup.redact",
   "industrial.jsa.view",
   "industrial.jsa.manage",
   "industrial.observations.view",
@@ -71,12 +79,27 @@ const INDUSTRIAL_PERMISSIONS = [
   "industrial.scan.manage",
   "industrial.qr_links.view",
   "industrial.qr_links.manage",
+  "industrial.qr.view",
+  "industrial.qr.scan",
+  "industrial.qr.manage",
+  "industrial.qr.generate",
+  "industrial.qr.print",
+  "industrial.qr.replace",
+  "industrial.qr.deactivate",
+  "industrial.qr.inspection.perform",
+  "industrial.qr.issue.create",
+  "industrial.qr.history.view",
+  "industrial.qr.asset.out_of_service",
+  "industrial.qr.asset.return_to_service",
+  "industrial.qr.audit.view",
+  "industrial.qr.analytics.view",
 ];
 
 /** Occupational medical records stay behind a separate, explicit grant. */
 const SENSITIVE = new Set([
   "industrial.workers_comp.medical.view",
   "industrial.workers_comp.medical.manage",
+  "industrial.photo_markup.redact",
 ]);
 
 /**

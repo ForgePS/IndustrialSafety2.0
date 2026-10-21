@@ -107,7 +107,7 @@ const FLAG_DEFS = [
     key: "industrial.legalAcknowledgments.loginGate.enabled",
     name: "Industrial legal acknowledgment login gate",
     description: "Require outstanding legal acknowledgments before Industrial app access.",
-    defaultValue: true,
+    defaultValue: false,
   },
   {
     key: "industrial.legalAcknowledgments.transactionAttestations.enabled",
