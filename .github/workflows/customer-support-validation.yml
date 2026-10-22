@@ -102,13 +102,14 @@ jobs:
           pnpm add -Dw @playwright/test@1.55.0 --lockfile=false
           pnpm exec playwright install --with-deps chromium
 
+      # Serve a production build: `next dev` compiled every route the suites visit, hit Next's
+      # 80%-of-heap restart watcher mid-run and dropped connections (ERR_CONNECTION_REFUSED/RESET).
+      - name: Build Forge web app
+        run: pnpm --filter forge-industrial-safety-2.0-web build
+
       - name: Start Forge web app
-        env:
-          # The dev server compiles every route the suites visit; with the default heap it hit
-          # Next's memory threshold mid-run and restarted (ERR_CONNECTION_REFUSED in Playwright).
-          NODE_OPTIONS: --max-old-space-size=4096
         run: |
-          pnpm --filter forge-industrial-safety-2.0-web dev --hostname 127.0.0.1 > /tmp/forge-smoke.log 2>&1 &
+          pnpm --filter forge-industrial-safety-2.0-web start --hostname 127.0.0.1 --port 3000 > /tmp/forge-smoke.log 2>&1 &
           echo $! > /tmp/forge-smoke.pid
 
           for i in $(seq 1 90); do
