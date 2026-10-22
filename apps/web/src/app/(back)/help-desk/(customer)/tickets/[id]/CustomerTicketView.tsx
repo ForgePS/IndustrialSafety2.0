@@ -61,26 +61,34 @@ const CustomerTicketView = ({ basePath, detail, currentUserId, justCreated, uplo
     })
 
   const sendReply = () =>
-    run(
-      async () => {
-        const result = await replyToTicketAction({ ticketId: ticket.id, body: reply })
+    start(async () => {
+      setMessage(null)
+      const result = await replyToTicketAction({ ticketId: ticket.id, body: reply })
 
-        if (result.ok) {
-          for (const file of replyFiles) {
-            const upload = await uploadTicketAttachment(basePath, ticket.id, file, { messageId: String(result.message_id || '') || undefined })
+      if (!result.ok) {
+        setMessage({ tone: 'error', text: result.error || 'Something went wrong.' })
 
-            if (!upload.ok) return { ok: false, error: `Reply sent, but ${file.name} failed: ${upload.error}` }
-          }
-        }
-
-        return result
-      },
-      'Reply sent.',
-      () => {
-        setReply('')
-        setReplyFiles([])
+        return
       }
-    )
+
+      // The reply now exists, so always clear the form; otherwise a failed upload invites a duplicate send.
+      const failed: string[] = []
+
+      for (const file of replyFiles) {
+        const upload = await uploadTicketAttachment(basePath, ticket.id, file, { messageId: String(result.message_id || '') || undefined })
+
+        if (!upload.ok) failed.push(`${file.name} (${upload.error})`)
+      }
+
+      setReply('')
+      setReplyFiles([])
+      setMessage(
+        failed.length
+          ? { tone: 'error', text: `Reply sent, but these files did not upload: ${failed.join(', ')}. Add them again under Attachments.` }
+          : { tone: 'ok', text: 'Reply sent.' }
+      )
+      router.refresh()
+    })
 
   const timeline = [
     ...messages.map((m: any) => ({ kind: 'message' as const, at: m.created_at, item: m })),

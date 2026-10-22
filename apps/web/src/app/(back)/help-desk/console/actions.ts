@@ -318,8 +318,9 @@ export async function removeAttachmentAction(input: { ticketId: string; attachme
 // ---------------------------------------------------------------------------
 // AI suggestions (generated on demand, never auto-sent)
 // ---------------------------------------------------------------------------
+// Suggestions are reply drafts, so they need respond rights; read-only staff (support.view) cannot create or decide them.
 export async function generateSuggestionAction(input: { ticketId: string; type: string }): Promise<ConsoleActionResult> {
-  const { access, error } = await staff()
+  const { access, error } = await staff('helpdesk.support.respond')
 
   if (!access) return error!
   if (!isUuid(input.ticketId) || !HELPDESK_SUGGESTION_TYPES.includes(input.type)) return denied('Unsupported suggestion.')
@@ -338,7 +339,7 @@ export async function generateSuggestionAction(input: { ticketId: string; type: 
 }
 
 export async function decideSuggestionAction(input: { ticketId: string; suggestionId: string; decision: 'accepted' | 'rejected'; finalOutput?: string | null }): Promise<ConsoleActionResult> {
-  const { access, error } = await staff()
+  const { access, error } = await staff('helpdesk.support.respond')
 
   if (!access) return error!
 

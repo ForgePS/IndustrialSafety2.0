@@ -617,6 +617,18 @@ async function aiSuggestions(cat) {
   const s = first(inserted.data)
   expectDenied(await request('PATCH', '/rest/v1/forge_support_ai_suggestions?id=eq.' + s.id, { output_text: 'Rewritten' }), /immutable/, 'AI output rewrite')
   expectDenied(await rpc('forge_support_decide_ai_suggestion', { p_suggestion_id: s.id, p_actor_user_id: NS_ADMIN, p_decision: 'accepted' }), /Access denied/, 'tenant admin AI decision')
+
+  // Read-only Forge staff hold helpdesk.support.view but must not decide reply drafts.
+  const setAgentRole = role => request('PATCH', '/rest/v1/forge_platform_users?user_id=eq.' + AGENT, { platform_role: role })
+  const demoted = await setAgentRole('forge_read_only')
+  assert(demoted.ok && first(demoted.data), 'could not switch agent to forge_read_only ' + JSON.stringify(demoted.data))
+  try {
+    expectDenied(await rpc('forge_support_decide_ai_suggestion', { p_suggestion_id: s.id, p_actor_user_id: AGENT, p_decision: 'accepted' }), /Access denied/, 'read-only staff AI decision')
+  } finally {
+    const restored = await setAgentRole('forge_support')
+    assert(restored.ok, 'could not restore agent role ' + JSON.stringify(restored.data))
+  }
+
   expectOk(await rpc('forge_support_decide_ai_suggestion', { p_suggestion_id: s.id, p_actor_user_id: AGENT, p_decision: 'accepted', p_final_output: 'Edited' }), 'accept suggestion')
   expectDenied(await rpc('forge_support_decide_ai_suggestion', { p_suggestion_id: s.id, p_actor_user_id: AGENT, p_decision: 'rejected' }), /already accepted/, 'second AI decision')
   const decided = await getOne('forge_support_ai_suggestions', 'id=eq.' + s.id)

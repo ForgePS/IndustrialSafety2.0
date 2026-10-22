@@ -167,6 +167,9 @@ export const getCustomerTicketDetail = async (access: HelpdeskCustomerAccess, id
   const reference = ticket.closed_at || ticket.resolved_at
   const withinReopenWindow = !reference || Date.now() - new Date(reference).getTime() <= settings.reopen_window_days * 86400000
 
+  // CSAT is the requester's private feedback; colleagues who can see the ticket never receive it.
+  const isRequester = ticket.requester_user_id === access.user.id
+
   return {
     ticket,
     messages: (messages.data || []).map((m: any) => ({
@@ -175,7 +178,7 @@ export const getCustomerTicketDetail = async (access: HelpdeskCustomerAccess, id
     })),
     events: events.data || [],
     attachments: attachments.data || [],
-    csat: csat.data || null,
+    csat: isRequester ? csat.data || null : null,
     incidents: (incidents.data || []).map((row: any) => row.incident).filter((i: any) => i && i.is_public),
     mergedInto: merged.data || null,
     settings,
@@ -184,7 +187,7 @@ export const getCustomerTicketDetail = async (access: HelpdeskCustomerAccess, id
       canAttach: access.has('helpdesk.ticket.comment') && !['resolved', 'closed'].includes(ticket.status),
       canReopen: access.has('helpdesk.ticket.reopen') && ['resolved', 'closed'].includes(ticket.status) && !ticket.merged_into_ticket_id && withinReopenWindow,
       canClose: access.has('helpdesk.ticket.close') && settings.allow_customer_close && !['closed'].includes(ticket.status) && !ticket.merged_into_ticket_id,
-      canRate: settings.csat_enabled && ticket.requester_user_id === access.user.id && ['resolved', 'closed'].includes(ticket.status) && !csat.data && !ticket.merged_into_ticket_id
+      canRate: settings.csat_enabled && isRequester && ['resolved', 'closed'].includes(ticket.status) && !csat.data && !ticket.merged_into_ticket_id
     }
   }
 }

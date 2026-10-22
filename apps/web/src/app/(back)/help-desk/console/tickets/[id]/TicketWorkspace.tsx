@@ -216,7 +216,9 @@ const TicketWorkspace = (props: WorkspaceProps) => {
       <div className='grid gap-4 lg:grid-cols-12'>
         <div className='order-2 flex flex-col gap-4 lg:order-1 lg:col-span-3'>
           <ContextPanel {...props} />
-          <AiPanel {...props} run={run} pending={pending} onUse={(text, suggestionId, mode) => setComposer({ mode, body: text, savedReplyId: null, aiSuggestionId: suggestionId })} />
+          {can('helpdesk.support.respond') ? (
+            <AiPanel {...props} run={run} pending={pending} onUse={(text, suggestionId, mode) => setComposer({ mode, body: text, savedReplyId: null, aiSuggestionId: suggestionId })} />
+          ) : null}
         </div>
 
         <div className='order-1 flex flex-col gap-4 lg:order-2 lg:col-span-6'>
