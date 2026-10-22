@@ -26,9 +26,9 @@ export const metadata: Metadata = {
 
 const creatorAreas = [
   {
-    title: 'Customer Support',
-    description: 'Triage tenant requests, reply, assign work, and track resolution.',
-    href: '/admin/creator/support',
+    title: 'Help Desk Console',
+    description: 'Work support queues, manage SLAs, incidents, knowledge and development links across tenants.',
+    href: '/help-desk/console',
     icon: TbHeadset
   },
   {

@@ -45,7 +45,7 @@ jobs:
       - database
       - web
     runs-on: ubuntu-latest
-    timeout-minutes: 45
+    timeout-minutes: 75
     steps:
       - uses: actions/checkout@v7
       - uses: actions/setup-node@v7
@@ -94,6 +94,9 @@ jobs:
       - name: Prepare second tenant for isolation test
         run: node apps/web/tests/setup-support-smoke.mjs
 
+      - name: Run help desk database regression
+        run: node apps/web/tests/fis-hd01-helpdesk-db.cjs
+
       - name: Install Playwright Chromium
         run: |
           pnpm add -Dw @playwright/test@1.55.0 --lockfile=false
@@ -114,10 +117,20 @@ jobs:
           cat /tmp/forge-smoke.log
           exit 1
 
-      - name: Run customer support browser smoke test
+      - name: Run help desk browser smoke test
         env:
           SMOKE_BASE_URL: http://127.0.0.1:3000
         run: pnpm exec playwright test apps/web/tests/support-smoke.spec.cjs --reporter=line --workers=1
+
+      - name: Run help desk customer, staff and security browser regression
+        env:
+          SMOKE_BASE_URL: http://127.0.0.1:3000
+        run: pnpm exec playwright test apps/web/tests/fis-hd-helpdesk.spec.cjs --reporter=line --workers=1
+
+      - name: Run help desk mobile layout regression
+        env:
+          SMOKE_BASE_URL: http://127.0.0.1:3000
+        run: pnpm exec playwright test apps/web/tests/fis-hd-mobile.spec.cjs --reporter=line --workers=1
 
       - name: Run Corrective Actions browser smoke test
         env:

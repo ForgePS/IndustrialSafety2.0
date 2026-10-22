@@ -1,5 +1,8 @@
 // Third-party Imports
+import Link from 'next/link'
 import { clsx } from 'clsx'
+import { TbBell, TbLifebuoy } from 'react-icons/tb'
+import { Button } from '@repo/ui/components/ui/button'
 import LayoutHeader from '@repo/ui/layouts/components/vertical/Header'
 import { Separator } from '@repo/ui/components/ui/separator'
 import { SidebarTrigger } from '@repo/ui/components/ui/sidebar'
@@ -16,6 +19,7 @@ import type { SearchDataItem } from '@/assets/data/searchData'
 import LanguageDropdown from '@components/LanguageDropdown'
 import UserDropdown from './UserDropdown'
 import TenantSwitcher from './TenantSwitcher'
+import { unreadCount } from '@/lib/forgeNotifications'
 
 // Data
 import { searchData } from '@/assets/data/searchData'
@@ -47,6 +51,7 @@ const Header = async ({
     data: { user }
   } = await getAuthUser()
 
+  const unread = user ? await unreadCount(user.id) : 0
   const userRoles = user?.user_metadata.roles
   const permissions = user?.user_metadata.permissions
   const roles = user?.user_metadata.roles
@@ -66,7 +71,23 @@ const Header = async ({
           <TenantSwitcher organizations={organizations} activeOrganizationId={activeOrganizationId} />
           <Search data={transformSearchData(permissionFilteredData)} roles={roles} />
         </div>
-        <div className='flex items-center gap-5'>
+        <div className='flex items-center gap-3 sm:gap-5'>
+          <Button variant='ghost' size='sm' asChild className='hidden sm:inline-flex'>
+            <Link href='/help-desk'>
+              <TbLifebuoy />
+              Need Help?
+            </Link>
+          </Button>
+          <Button variant='ghost' size='icon' asChild className='relative'>
+            <Link href='/notifications' aria-label={unread ? `Notifications, ${unread} unread` : 'Notifications'}>
+              <TbBell className='text-xl' />
+              {unread ? (
+                <span className='bg-destructive absolute -right-0.5 -top-0.5 min-w-[18px] rounded-full px-1 text-center text-[10px] font-semibold leading-[18px] text-white'>
+                  {unread > 99 ? '99+' : unread}
+                </span>
+              ) : null}
+            </Link>
+          </Button>
           <LanguageDropdown />
           <UserDropdown user={user} roles={userRoles} />
         </div>

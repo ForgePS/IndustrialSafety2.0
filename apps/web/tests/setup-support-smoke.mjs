@@ -97,7 +97,7 @@ if (!roleId) {
 if (!roleId) throw new Error('Unable to prepare smoke-test tenant role.')
 
 const permissions = await request(
-  '/rest/v1/forge_permission_registry?select=id,permission_key&permission_key=in.(customer_support.view,customer_support.create,corrective_actions.view,tasks.view,incidents.view,assets_equipment.view,observations.view,risk_register.view,jsa_jha.view)',
+  '/rest/v1/forge_permission_registry?select=id,permission_key&permission_key=in.(helpdesk.ticket.create,helpdesk.ticket.view_own,helpdesk.ticket.comment,helpdesk.ticket.reopen,helpdesk.ticket.close,helpdesk.knowledge.view,helpdesk.status.view,corrective_actions.view,tasks.view,incidents.view,assets_equipment.view,observations.view,risk_register.view,jsa_jha.view)',
   { method: 'GET' }
 )
 
@@ -106,8 +106,13 @@ if (!Array.isArray(permissions) || permissions.length < 2) {
 }
 
 const requiredKeys = [
-  'customer_support.view',
-  'customer_support.create',
+  'helpdesk.ticket.create',
+  'helpdesk.ticket.view_own',
+  'helpdesk.ticket.comment',
+  'helpdesk.ticket.reopen',
+  'helpdesk.ticket.close',
+  'helpdesk.knowledge.view',
+  'helpdesk.status.view',
   'corrective_actions.view',
   'tasks.view',
   'incidents.view',

@@ -242,13 +242,13 @@ const RESOURCE_DESCRIPTORS: Record<ForgeResourceType, ForgeResourceDescriptor> =
     resourceType: 'support_ticket',
     table: 'forge_support_tickets',
     featureKey: 'customer_support',
-    defaultViewPermission: 'customer_support.view',
-    defaultManagePermission: 'customer_support.company_reply',
+    defaultViewPermission: 'helpdesk.ticket.view_own',
+    defaultManagePermission: 'helpdesk.ticket.comment',
     scopeMode: 'CUSTOM',
     numberColumn: 'ticket_number',
     titleColumn: 'subject',
-    statusColumn: 'status'
-    // no location_id / division_id / archived_at
+    statusColumn: 'status',
+    archivedColumn: 'deleted_at'
   }
 }
 
@@ -467,13 +467,17 @@ const customResourceWithinScope = async ({
     if (scope === 'organization') return true
 
     const access = await getEffectiveTenantAccess({ organizationId, userId })
-    const companyAccess = access.effective.some(
-      item =>
-        (item.permissionKey === 'customer_support.company_view' ||
-          item.permissionKey === 'customer_support.company_reply') &&
-        item.allowed
-    )
-    return companyAccess
+    const allowed = (key: string) => access.effective.some(item => item.permissionKey === key && item.allowed)
+    if (allowed('helpdesk.ticket.view_tenant')) return true
+    if (allowed('helpdesk.ticket.view_location')) {
+      const locationId = asNullableString(source.location_id)
+      if (!locationId) return false
+      const { locationIds } = await getTenantScopeAssignments({ organizationId, userId })
+
+      return locationIds.includes(locationId)
+    }
+
+    return false
   }
 
   if (resource.resourceType === 'personnel') {
