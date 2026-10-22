@@ -25,6 +25,9 @@ import type { PasswordSignUpFormData } from '@repo/auth/sign-up'
 // Config Imports
 import authConfig from '@configs/authConfig'
 
+// Server Action Imports
+import { hasUnconfirmedAccount } from '../../auth/actions'
+
 const AuthForm = () => {
   // States
   const [showAlert, setShowAlert] = useState(false)
@@ -50,8 +53,7 @@ const AuthForm = () => {
     error: singUpError,
     isSuccess: isSignUpSuccess
   } = usePasswordSignUp({
-    emailRedirectTo: `${process.env.NEXT_PUBLIC_APP_URL}/checkout`,
-    verifyEmailRedirectTo: `/auth/verify-email?email=${form.getValues('email')}`
+    emailRedirectTo: `${process.env.NEXT_PUBLIC_APP_URL}/checkout`
   })
 
   const onAuthSubmit = (formData: PasswordSignInFormData | PasswordSignUpFormData) => {
@@ -68,6 +70,14 @@ const AuthForm = () => {
           return
         } catch (signInError) {
           if (signInError !== 'Invalid login credentials') throw signInError
+        }
+
+        // A wrong password on an unconfirmed account also reads as invalid credentials, and sign-up would
+        // "succeed" without changing that account's password. Send the visitor to verification instead.
+        if (await hasUnconfirmedAccount(formData.email)) {
+          router.push(`/auth/verify-email?email=${encodeURIComponent(formData.email)}`)
+
+          return
         }
 
         await handleSignUp(formData as PasswordSignUpFormData)

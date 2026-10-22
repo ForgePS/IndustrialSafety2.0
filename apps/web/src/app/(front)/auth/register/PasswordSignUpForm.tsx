@@ -4,6 +4,9 @@
 import { useEffect, useState, useTransition } from 'react'
 import type { ReactNode } from 'react'
 
+// Next Imports
+import { useRouter } from 'next/navigation'
+
 // Third-party Imports
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useForm } from 'react-hook-form'
@@ -21,6 +24,9 @@ import type { PasswordSignUpFormData } from '@repo/auth/sign-up'
 // Config Imports
 import appConfig from '@configs/appConfig'
 
+// Server Action Imports
+import { hasUnconfirmedAccount } from '../actions'
+
 const PasswordSignUpForm = () => {
   // States
   const [showAlert, setShowAlert] = useState(false)
@@ -28,6 +34,7 @@ const PasswordSignUpForm = () => {
 
   // Hooks
   const { t } = useTranslation()
+  const router = useRouter()
 
   // Vars
   const form = useForm<PasswordSignUpFormData>({
@@ -40,14 +47,22 @@ const PasswordSignUpForm = () => {
   })
 
   const { handleSignUp, error, isSuccess } = usePasswordSignUp({
-    emailRedirectTo: `${process.env.NEXT_PUBLIC_APP_URL}/auth/callback`,
-    verifyEmailRedirectTo: `/auth/verify-email?email=${form.getValues('email')}`
+    emailRedirectTo: `${process.env.NEXT_PUBLIC_APP_URL}/auth/callback`
   })
 
   const onSubmit = (formData: PasswordSignUpFormData) => {
     startTransition(async () => {
       try {
         setShowAlert(false)
+
+        // Supabase "succeeds" for an existing unconfirmed email without changing its password, so
+        // send that visitor to email verification rather than reporting a new account.
+        if (await hasUnconfirmedAccount(formData.email)) {
+          router.push(`/auth/verify-email?email=${encodeURIComponent(formData.email)}`)
+
+          return
+        }
+
         await handleSignUp(formData)
       } catch (error) {
         console.error(error)

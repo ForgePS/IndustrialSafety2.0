@@ -106,6 +106,62 @@ test('login sends an unconfirmed account to email verification', async ({ page }
   }
 })
 
+test('register sends an existing unconfirmed email to verification without changing its password', async ({ page }) => {
+  test.skip(!API || !KEY, 'needs the local Supabase service key to create an unconfirmed user')
+  const email = `pending.${run}@example.test`
+  const original = 'OriginalPass!1'
+  const created = await admin('POST', '/auth/v1/admin/users', { email, password: original, email_confirm: false })
+
+  expect(created.ok, JSON.stringify(created.data)).toBe(true)
+
+  try {
+    await page.goto(baseURL + '/auth/register')
+    await waitForForm(page, 'password')
+    await page.locator('input[name="email"]').fill(email)
+    await page.locator('input[name="password"]').fill('DifferentPass!2')
+    await page.locator('input[name="confirm-password"]').fill('DifferentPass!2')
+    await page.locator('form', { has: page.locator('input[name="password"]') }).locator('button[type="submit"]').click()
+    await page.waitForURL(/\/auth\/verify-email\?/, { timeout: 30000 })
+    expect(new URL(page.url()).searchParams.get('email')).toBe(email)
+
+    // Once confirmed, only the password chosen at the original sign-up works.
+    await admin('PUT', '/auth/v1/admin/users/' + created.data.id, { email_confirm: true })
+    const signIn = pass => admin('POST', '/auth/v1/token?grant_type=password', { email, password: pass })
+
+    expect((await signIn(original)).ok).toBe(true)
+    expect((await signIn('DifferentPass!2')).ok).toBe(false)
+  } finally {
+    await admin('DELETE', '/auth/v1/admin/users/' + created.data.id)
+  }
+})
+
+test('email state lookup answers none/unconfirmed/confirmed for the service role only', async ({ request }) => {
+  test.skip(!API || !KEY, 'needs the local Supabase service key')
+  const state = async (email, key = KEY) => {
+    const res = await request.post(API + '/rest/v1/rpc/forge_auth_email_state', {
+      headers: { apikey: key, Authorization: 'Bearer ' + key, 'Content-Type': 'application/json' },
+      data: { p_email: email }
+    })
+
+    return { status: res.status(), body: await res.json() }
+  }
+
+  const email = `state.${run}@example.test`
+  const created = await admin('POST', '/auth/v1/admin/users', { email, password, email_confirm: false })
+
+  try {
+    expect((await state(`nobody.${run}@example.test`)).body).toBe('none')
+    expect((await state(email.toUpperCase())).body).toBe('unconfirmed')
+    expect((await state('user@forge2.local')).body).toBe('confirmed')
+
+    const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || process.env.ANON_KEY
+
+    if (anonKey) expect((await state(email, anonKey)).status).toBeGreaterThanOrEqual(400)
+  } finally {
+    await admin('DELETE', '/auth/v1/admin/users/' + created.data.id)
+  }
+})
+
 test('forgot password answers the same way for an unknown address', async ({ page }) => {
   await page.goto(baseURL + '/auth/forgot-password')
   await waitForForm(page, 'email')
