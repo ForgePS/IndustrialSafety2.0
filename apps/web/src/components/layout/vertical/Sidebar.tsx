@@ -6,6 +6,7 @@ import Link from 'next/link'
 import {
   TbCircle,
   TbDashboard,
+  TbHeadset,
   TbSettingsAutomation,
   TbUser
 } from 'react-icons/tb'
@@ -71,13 +72,15 @@ const AppSidebar = ({
   permissions: _permissions,
   forgePlatformRole,
   tenantNavigation = [],
-  activeOrganizationName
+  activeOrganizationName,
+  helpdeskConsole = false
 }: {
   roles?: string[]
   permissions: string[]
   forgePlatformRole?: string | null
   tenantNavigation?: TenantNavigationItem[]
   activeOrganizationName?: string | null
+  helpdeskConsole?: boolean
 }) => {
   const { isImpersonating } = useAuthContext()
   const { isMobile, state } = useSidebar()
@@ -146,6 +149,14 @@ const AppSidebar = ({
                   <span>Forge Creator 2.0</span>
                 </MenuButton>
               </SidebarMenuItem>
+              {helpdeskConsole ? (
+                <SidebarMenuItem>
+                  <MenuButton href='/help-desk/console' exactMatch={false} tooltip='Help Desk Console'>
+                    <TbHeadset />
+                    <span>Help Desk Console</span>
+                  </MenuButton>
+                </SidebarMenuItem>
+              ) : null}
             </SidebarMenu>
           </SidebarGroup>
         )}

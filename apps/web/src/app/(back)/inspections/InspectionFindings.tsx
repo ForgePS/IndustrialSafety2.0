@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useTransition } from 'react'
+import { useRouter } from 'next/navigation'
 import { Badge } from '@repo/ui/components/ui/badge'
 import { Button } from '@repo/ui/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@repo/ui/components/ui/card'
@@ -8,7 +9,7 @@ import { Input } from '@repo/ui/components/ui/input'
 import { Label } from '@repo/ui/components/ui/label'
 import { Textarea } from '@repo/ui/components/ui/textarea'
 import { toast } from '@repo/ui/utils/toast'
-import { closeInspectionFinding, updateInspectionFinding } from './actions'
+import { closeInspectionFinding, createRiskFromFinding, updateInspectionFinding } from './actions'
 
 type Finding = {
   id: string
@@ -25,16 +26,20 @@ const InspectionFindings = ({
   findings,
   editable,
   canClose,
+  canCreateRisk,
   severityLabels,
   statusLabels
 }: {
   findings: Finding[]
   editable: boolean
   canClose: boolean
+  canCreateRisk?: boolean
   severityLabels: Record<string, string>
   statusLabels: Record<string, string>
 }) => {
+  const router = useRouter()
   const [pending, startTransition] = useTransition()
+  const [riskError, setRiskError] = useState<string | null>(null)
   const [drafts, setDrafts] = useState<Record<string, { correctiveAction: string; status: 'open' | 'in_progress' | 'pending_verification'; dueDate: string; verification: string }>>(
     Object.fromEntries(findings.map(finding => [
       finding.id,
@@ -85,6 +90,23 @@ const InspectionFindings = ({
     })
   }
 
+  const createRisk = (finding: Finding) => {
+    setRiskError(null)
+    startTransition(async () => {
+      const result = await createRiskFromFinding(finding.id)
+      if (result && 'error' in result && result.error) {
+        setRiskError(result.error)
+        toast('error', result.error)
+        return
+      }
+      if (result && 'ok' in result && result.ok && result.id) {
+        toast('success', result.message)
+        router.push('/risk-register/' + result.id)
+        router.refresh()
+      }
+    })
+  }
+
   return (
     <Card>
       <CardHeader>
@@ -103,11 +125,22 @@ const InspectionFindings = ({
                   <div className='font-semibold'>{finding.title}</div>
                   {finding.description ? <p className='text-textSecondary mt-1 text-sm'>{finding.description}</p> : null}
                 </div>
-                <div className='flex gap-2'>
+                <div className='flex flex-wrap gap-2'>
                   <Badge size='sm' variant={finding.severity === 'critical' || finding.severity === 'high' ? 'destructive' : 'secondary'}>
                     {severityLabels[finding.severity] || finding.severity}
                   </Badge>
                   <Badge size='sm' variant={closed ? 'tonalSuccess' : 'outline'}>{statusLabels[finding.status] || finding.status}</Badge>
+                  {canCreateRisk ? (
+                    <Button
+                      type='button'
+                      variant='outline'
+                      size='sm'
+                      disabled={pending}
+                      onClick={() => createRisk(finding)}
+                    >
+                      Create Risk from Finding
+                    </Button>
+                  ) : null}
                 </div>
               </div>
 
@@ -180,6 +213,7 @@ const InspectionFindings = ({
         }) : (
           <div className='text-textSecondary rounded-lg border p-6 text-center'>No findings have been recorded.</div>
         )}
+        {riskError ? <p className='text-destructive text-sm'>{riskError}</p> : null}
       </CardContent>
     </Card>
   )

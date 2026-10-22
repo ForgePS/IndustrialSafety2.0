@@ -22,6 +22,7 @@ import appConfig from '@configs/appConfig'
 import { getForgePlatformRole } from '@/lib/forgeCreatorAuth'
 import { getTenantContext } from '@/lib/forgeTenantContext'
 import { getEffectiveExperience } from '@/lib/forgeExperience'
+import { getHelpdeskStaffAccess } from '@/lib/forgeHelpdeskAccess'
 
 export async function generateMetadata(): Promise<Metadata> {
   return {
@@ -46,6 +47,7 @@ const AdminLayout = async ({ children }: { children: ReactNode }) => {
   const permissions = user.user_metadata?.permissions
   const forgePlatformRole = await getForgePlatformRole(user.id)
   const tenantContext = await getTenantContext()
+  const helpdeskStaff = forgePlatformRole ? await getHelpdeskStaffAccess() : null
 
   const tenantNavigation =
     tenantContext.user && tenantContext.activeOrganization
@@ -66,6 +68,7 @@ const AdminLayout = async ({ children }: { children: ReactNode }) => {
             forgePlatformRole={forgePlatformRole}
             tenantNavigation={tenantNavigation.filter(item => item.routeLive)}
             activeOrganizationName={tenantContext.activeOrganization?.name || null}
+            helpdeskConsole={Boolean(helpdeskStaff?.has('helpdesk.support.view'))}
           />
         }
         header={

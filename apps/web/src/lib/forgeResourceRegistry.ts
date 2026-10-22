@@ -6,6 +6,9 @@ import { getTenantContext, type TenantContextOrganization } from './forgeTenantC
 type TenantUser = NonNullable<Awaited<ReturnType<typeof getTenantContext>>['user']>
 
 export type ForgeResourceType =
+  | 'observation'
+  | 'risk_register'
+  | 'jsa'
   | 'corrective_action'
   | 'task'
   | 'incident'
@@ -54,6 +57,9 @@ export type ResolvedForgeResource = {
 }
 
 export const FORGE_RESOURCE_TYPES: ForgeResourceType[] = [
+  'observation',
+  'risk_register',
+  'jsa',
   'corrective_action',
   'task',
   'incident',
@@ -69,6 +75,42 @@ export const FORGE_RESOURCE_TYPES: ForgeResourceType[] = [
 ]
 
 const RESOURCE_DESCRIPTORS: Record<ForgeResourceType, ForgeResourceDescriptor> = {
+  observation: {
+    resourceType: 'observation',
+    table: 'forge_observations',
+    featureKey: 'observations',
+    defaultViewPermission: 'observations.view',
+    defaultManagePermission: 'observations.edit',
+    scopeMode: 'LOCATION_DIVISION',
+    numberColumn: 'observation_number',
+    titleColumn: 'title',
+    statusColumn: 'status',
+    archivedColumn: 'archived_at'
+  },
+  risk_register: {
+    resourceType: 'risk_register',
+    table: 'forge_risks',
+    featureKey: 'risk_register',
+    defaultViewPermission: 'risk_register.view',
+    defaultManagePermission: 'risk_register.edit',
+    scopeMode: 'LOCATION_DIVISION',
+    numberColumn: 'risk_number',
+    titleColumn: 'title',
+    statusColumn: 'status',
+    archivedColumn: 'archived_at'
+  },
+  jsa: {
+    resourceType: 'jsa',
+    table: 'forge_jsas',
+    featureKey: 'jsa_jha',
+    defaultViewPermission: 'jsa_jha.view',
+    defaultManagePermission: 'jsa_jha.edit',
+    scopeMode: 'LOCATION_DIVISION',
+    numberColumn: 'jsa_number',
+    titleColumn: 'title',
+    statusColumn: 'status',
+    archivedColumn: 'archived_at'
+  },
   corrective_action: {
     resourceType: 'corrective_action',
     table: 'forge_corrective_actions',
@@ -200,13 +242,13 @@ const RESOURCE_DESCRIPTORS: Record<ForgeResourceType, ForgeResourceDescriptor> =
     resourceType: 'support_ticket',
     table: 'forge_support_tickets',
     featureKey: 'customer_support',
-    defaultViewPermission: 'customer_support.view',
-    defaultManagePermission: 'customer_support.company_reply',
+    defaultViewPermission: 'helpdesk.ticket.view_own',
+    defaultManagePermission: 'helpdesk.ticket.comment',
     scopeMode: 'CUSTOM',
     numberColumn: 'ticket_number',
     titleColumn: 'subject',
-    statusColumn: 'status'
-    // no location_id / division_id / archived_at
+    statusColumn: 'status',
+    archivedColumn: 'deleted_at'
   }
 }
 
@@ -425,13 +467,17 @@ const customResourceWithinScope = async ({
     if (scope === 'organization') return true
 
     const access = await getEffectiveTenantAccess({ organizationId, userId })
-    const companyAccess = access.effective.some(
-      item =>
-        (item.permissionKey === 'customer_support.company_view' ||
-          item.permissionKey === 'customer_support.company_reply') &&
-        item.allowed
-    )
-    return companyAccess
+    const allowed = (key: string) => access.effective.some(item => item.permissionKey === key && item.allowed)
+    if (allowed('helpdesk.ticket.view_tenant')) return true
+    if (allowed('helpdesk.ticket.view_location')) {
+      const locationId = asNullableString(source.location_id)
+      if (!locationId) return false
+      const { locationIds } = await getTenantScopeAssignments({ organizationId, userId })
+
+      return locationIds.includes(locationId)
+    }
+
+    return false
   }
 
   if (resource.resourceType === 'personnel') {

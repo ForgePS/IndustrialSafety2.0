@@ -12,6 +12,9 @@ export type ForgeRelationshipDefinition = {
 }
 
 const OPERATIONAL_LINK_TYPES: ForgeResourceType[] = [
+  'observation',
+  'risk_register',
+  'jsa',
   'corrective_action',
   'task',
   'incident',
@@ -28,15 +31,31 @@ const OPERATIONAL_LINK_TYPES: ForgeResourceType[] = [
 const RELATIONSHIP_DEFINITIONS: ForgeRelationshipDefinition[] = [
   {
     relationshipType: 'involves_asset',
-    sourceTypes: ['incident'],
+    sourceTypes: ['incident', 'observation', 'risk_register', 'jsa'],
     targetTypes: ['asset'],
     reciprocalDisplay: true,
     allowDuplicate: false,
     archivable: true
   },
   {
+    relationshipType: 'involves_person',
+    sourceTypes: ['observation', 'jsa'],
+    targetTypes: ['personnel'],
+    reciprocalDisplay: true,
+    allowDuplicate: false,
+    archivable: true
+  },
+  {
+    relationshipType: 'identified_risk',
+    sourceTypes: ['incident', 'inspection_finding', 'observation', 'jsa'],
+    targetTypes: ['risk_register'],
+    reciprocalDisplay: true,
+    allowDuplicate: false,
+    archivable: true
+  },
+  {
     relationshipType: 'generated_capa',
-    sourceTypes: ['incident', 'inspection_finding'],
+    sourceTypes: ['incident', 'inspection_finding', 'observation', 'risk_register', 'jsa'],
     targetTypes: ['corrective_action'],
     reciprocalDisplay: true,
     allowDuplicate: false,
