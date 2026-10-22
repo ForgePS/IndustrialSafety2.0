@@ -12,8 +12,6 @@ import { getBillingData } from '@repo/billing/src/utils/getBillingData'
 // Config Imports
 import plans from '@configs/billingConfig'
 
-const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY)
-
 export async function POST(req: NextRequest) {
   const supabase = createServiceRoleClient()
 
@@ -174,6 +172,13 @@ export async function POST(req: NextRequest) {
 
     // Stripe webhook
     if (paymentProvider?.value === 'stripe') {
+      const stripeSecret = process.env.STRIPE_SECRET_KEY
+
+      if (!stripeSecret || !process.env.STRIPE_WEBHOOK_SECRET) {
+        return Response.json({ message: 'Stripe webhook is not configured' }, { status: 503 })
+      }
+
+      const stripe = require('stripe')(stripeSecret)
       const rawBody = await req.text()
       const sig = req.headers.get('stripe-signature')
 

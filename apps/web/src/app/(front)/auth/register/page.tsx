@@ -6,7 +6,6 @@ import type { Metadata } from 'next'
 import { TbChevronLeft } from 'react-icons/tb'
 import LeftSection from '@repo/ui/auth/LeftSection'
 import OauthProviders from '@repo/ui/providers/OauthProviders'
-import { createServiceRoleClient } from '@repo/supabase/server'
 import Trans from '@repo/i18n/Trans'
 import { cn } from '@repo/ui/lib/utils'
 
@@ -30,12 +29,6 @@ const Register = async () => {
   const renderMagicLink = authConfig.providers.magicLink
   const renderPassword = authConfig.providers.password
   const renderOAuth = authConfig.providers.oAuth.length > 0
-
-  const supabase = createServiceRoleClient()
-
-  const {
-    data: { users }
-  } = await supabase.auth.admin.listUsers()
 
   return (
     <div className='min-bs-screen flex'>
@@ -71,7 +64,7 @@ const Register = async () => {
               </p>
             )}
             <div className='flex flex-col gap-4'>
-              {renderPassword && <PasswordSignUpForm users={users} />}
+              {renderPassword && <PasswordSignUpForm />}
               {!renderPassword && !renderMagicLink ? null : (
                 <p
                   className={cn('flex flex-wrap items-center justify-center gap-1 text-base', {

@@ -42,9 +42,12 @@ const UserDropdown = ({ user, roles }: Props) => {
   const signOutMutation = useSignOut()
 
   // Vars
-  const userName = user?.user_metadata.name || user?.email
+  const userName =
+    user?.user_metadata?.name ||
+    user?.email ||
+    'Forge User'
   const avatarFallbackText = getInitials(userName).toUpperCase()
-  const avatarSrc = user?.user_metadata.user_avatar || user?.user_metadata.avatar_url
+  const avatarSrc = user?.user_metadata?.user_avatar || user?.user_metadata?.avatar_url
 
   const handleClick = (mode: Mode) => {
     if (settings.mode !== mode) {

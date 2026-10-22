@@ -4,7 +4,6 @@ import { cookies } from 'next/headers'
 import type { Metadata } from 'next'
 
 // Third-party Imports
-import { createServiceRoleClient } from '@repo/supabase/server'
 import { getAuthUser, getPublicPaymentProvider } from '@repo/supabase/serverHelpers'
 import { Alert, AlertDescription, AlertTitle } from '@repo/ui/components/ui/alert'
 import { TbAlertTriangle } from 'react-icons/tb'
@@ -25,16 +24,11 @@ export const metadata: Metadata = {
 }
 
 const CheckoutPage = async () => {
-  const supabase = createServiceRoleClient()
   const cookieStore = await cookies()
 
   const { data: paymentProvider } = await getPublicPaymentProvider()
 
   const { data: userRecord } = await getAuthUser()
-
-  const {
-    data: { users }
-  } = await supabase.auth.admin.listUsers()
 
   const isCheckoutCookieSet = cookieStore.has('checkoutData')
 
@@ -42,7 +36,7 @@ const CheckoutPage = async () => {
     <>
       <HeaderSection />
       {isCheckoutCookieSet ? (
-        <CheckoutDetails paymentProvider={paymentProvider?.value} userRecord={userRecord?.user} users={users} />
+        <CheckoutDetails paymentProvider={paymentProvider?.value} userRecord={userRecord?.user} />
       ) : (
         <div className={cn('plb-20', frontCommonStyles.layoutSpacing)}>
           <Alert variant='tonalWarning'>

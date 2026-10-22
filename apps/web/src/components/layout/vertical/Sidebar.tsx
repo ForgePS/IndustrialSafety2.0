@@ -1,28 +1,14 @@
 'use client'
 
-// React Imports
 import type { HTMLAttributeAnchorTarget, ReactNode } from 'react'
-
-// Next Imports
 import { usePathname } from 'next/navigation'
 import Link from 'next/link'
-
-// Third-party Imports
 import {
-  TbCrown,
+  TbCircle,
   TbDashboard,
-  TbExternalLink,
-  TbFileText,
-  TbHome,
-  TbLayoutGridAdd,
-  TbListDetails,
-  TbLock,
-  TbSettings,
-  TbStar,
-  TbTemplate,
-  TbUser,
-  TbUsers,
-  TbWallet
+  TbHeadset,
+  TbSettingsAutomation,
+  TbUser
 } from 'react-icons/tb'
 import {
   Sidebar,
@@ -31,7 +17,6 @@ import {
   SidebarGroupLabel,
   SidebarHeader,
   SidebarMenu,
-  SidebarMenuAction,
   SidebarMenuButton,
   SidebarMenuItem,
   SidebarRail,
@@ -39,13 +24,8 @@ import {
   useSidebar
 } from '@repo/ui/components/ui/sidebar'
 import { useAuthContext } from '@repo/auth/AuthProvider'
-import { AnyPermissionGuard, PermissionGuard } from '@repo/rbac/components'
-import Trans from '@repo/i18n/Trans'
-import { useTranslation } from 'react-i18next'
 import { cn } from '@repo/ui/lib/utils'
 import type { SidebarMenuButtonProps } from '@repo/ui/components/ui/sidebar'
-
-// Component Imports
 import Logo from './Logo'
 
 type MenuButtonProps = SidebarMenuButtonProps & {
@@ -55,15 +35,23 @@ type MenuButtonProps = SidebarMenuButtonProps & {
   target?: HTMLAttributeAnchorTarget
 }
 
-// Custom SidebarMenuButton Component
+type TenantNavigationItem = {
+  id: string
+  key: string
+  label: string
+  description: string | null
+  route: string | null
+  category: string
+  sortOrder: number
+}
+
 const MenuButton = ({ children, href, target = '_self', exactMatch = true, ...props }: MenuButtonProps) => {
-  // Hooks
   const pathname = usePathname()
 
   return (
     <SidebarMenuButton
       {...(!!href && {
-        isActive: exactMatch ? pathname === href : pathname.includes(href),
+        isActive: exactMatch ? pathname === href : pathname.startsWith(href),
         asChild: true
       })}
       {...props}
@@ -79,11 +67,23 @@ const MenuButton = ({ children, href, target = '_self', exactMatch = true, ...pr
   )
 }
 
-const AppSidebar = ({ roles, permissions }: { roles?: string[]; permissions: string[] }) => {
-  // Hooks
+const AppSidebar = ({
+  roles,
+  permissions: _permissions,
+  forgePlatformRole,
+  tenantNavigation = [],
+  activeOrganizationName,
+  helpdeskConsole = false
+}: {
+  roles?: string[]
+  permissions: string[]
+  forgePlatformRole?: string | null
+  tenantNavigation?: TenantNavigationItem[]
+  activeOrganizationName?: string | null
+  helpdeskConsole?: boolean
+}) => {
   const { isImpersonating } = useAuthContext()
   const { isMobile, state } = useSidebar()
-  const { t } = useTranslation()
 
   return (
     <Sidebar
@@ -103,179 +103,63 @@ const AppSidebar = ({ roles, permissions }: { roles?: string[]; permissions: str
           </Link>
         </div>
       </SidebarHeader>
+
       <SidebarContent>
-        <SidebarGroup>
-          <SidebarMenu>
-            <SidebarMenuItem>
-              <MenuButton href={roles?.includes('admin') ? '/admin' : '/dashboard'} tooltip={t('layout:dashboard')}>
-                <TbDashboard />
-                <span>
-                  <Trans i18nKey='layout:dashboard' />
-                </span>
-              </MenuButton>
-            </SidebarMenuItem>
-            <SidebarMenuItem>
-              <MenuButton href='/my-profile' tooltip={t('layout:myProfile')}>
-                <TbUser />
-                <span>
-                  <Trans i18nKey='layout:myProfile' />
-                </span>
-              </MenuButton>
-            </SidebarMenuItem>
-            <SidebarMenuItem>
-              <MenuButton href='/billing' tooltip={t('layout:billing')}>
-                <TbFileText />
-                <span>
-                  <Trans i18nKey='layout:billing' />
-                </span>
-              </MenuButton>
-            </SidebarMenuItem>
-            <SidebarMenuItem>
-              <MenuButton href='/' target='_blank' tooltip={t('layout:landingPage')}>
-                <TbHome />
-                <span>
-                  <Trans i18nKey='layout:landingPage' />
-                </span>
-              </MenuButton>
-              <SidebarMenuAction className='pointer-events-none hover:bg-transparent [&>svg]:size-5'>
-                <TbExternalLink />
-              </SidebarMenuAction>
-            </SidebarMenuItem>
-          </SidebarMenu>
-        </SidebarGroup>
-        <PermissionGuard permissions={permissions} permission='view_settings'>
+        {activeOrganizationName ? (
           <SidebarGroup>
             <SidebarGroupLabel className='text-nowrap'>
-              {state === 'expanded' || isMobile ? (
-                <Trans i18nKey='layout:settings' />
-              ) : (
-                <SidebarSeparator className='!is-8' />
-              )}
+              {state === 'expanded' || isMobile ? activeOrganizationName : <SidebarSeparator className='!is-8' />}
             </SidebarGroupLabel>
             <SidebarMenu>
               <SidebarMenuItem>
-                <MenuButton href='/admin/settings/general-settings' tooltip={t('layout:generalSettings')}>
-                  <TbSettings />
-                  <span>
-                    <Trans i18nKey='layout:generalSettings' />
-                  </span>
+                <MenuButton href='/dashboard' tooltip='Dashboard'>
+                  <TbDashboard />
+                  <span>Dashboard</span>
                 </MenuButton>
               </SidebarMenuItem>
-              <SidebarMenuItem>
-                <MenuButton href='/admin/settings/payment-providers' tooltip={t('layout:paymentProviders')}>
-                  <TbWallet />
-                  <span>
-                    <Trans i18nKey='layout:paymentProviders' />
-                  </span>
-                </MenuButton>
-              </SidebarMenuItem>
-            </SidebarMenu>
-          </SidebarGroup>
-        </PermissionGuard>
-        <AnyPermissionGuard
-          permissions={permissions}
-          requiredPermissions={['view_users', 'view_permission', 'view_roles']}
-        >
-          <SidebarGroup>
-            <SidebarGroupLabel className='text-nowrap'>
-              {state === 'expanded' || isMobile ? (
-                <Trans i18nKey='layout:userManagement' />
-              ) : (
-                <SidebarSeparator className='!is-8' />
-              )}
-            </SidebarGroupLabel>
-            <SidebarMenu>
-              <PermissionGuard permissions={permissions} permission='view_users'>
-                <SidebarMenuItem>
-                  <MenuButton href='/admin/users' exactMatch={false} tooltip={t('layout:users')}>
-                    <TbUsers />
-                    <span>
-                      <Trans i18nKey='layout:users' />
-                    </span>
+
+              {tenantNavigation.map(item => (
+                <SidebarMenuItem key={item.id}>
+                  <MenuButton href={item.route || '/dashboard'} exactMatch={false} tooltip={item.label}>
+                    <TbCircle />
+                    <span>{item.label}</span>
                   </MenuButton>
                 </SidebarMenuItem>
-              </PermissionGuard>
-              <PermissionGuard permissions={permissions} permission='view_roles'>
-                <SidebarMenuItem>
-                  <MenuButton href='/admin/roles' exactMatch={false} tooltip={t('layout:roles')}>
-                    <TbCrown />
-                    <span>
-                      <Trans i18nKey='layout:roles' />
-                    </span>
-                  </MenuButton>
-                </SidebarMenuItem>
-              </PermissionGuard>
-              <PermissionGuard permissions={permissions} permission='view_permission'>
-                <SidebarMenuItem>
-                  <MenuButton href='/admin/permissions' exactMatch={false} tooltip={t('layout:permissions')}>
-                    <TbLock />
-                    <span>
-                      <Trans i18nKey='layout:permissions' />
-                    </span>
-                  </MenuButton>
-                </SidebarMenuItem>
-              </PermissionGuard>
+              ))}
+
+              <SidebarMenuItem>
+                <MenuButton href='/my-profile' tooltip='My Profile'>
+                  <TbUser />
+                  <span>My Profile</span>
+                </MenuButton>
+              </SidebarMenuItem>
             </SidebarMenu>
           </SidebarGroup>
-        </AnyPermissionGuard>
-        <PermissionGuard permissions={permissions} permission='view_faqs'>
+        ) : null}
+
+        {forgePlatformRole && (
           <SidebarGroup>
             <SidebarGroupLabel className='text-nowrap'>
-              {state === 'expanded' || isMobile ? (
-                <Trans i18nKey='layout:faqs' />
-              ) : (
-                <SidebarSeparator className='!is-8' />
-              )}
+              {state === 'expanded' || isMobile ? 'Forge Platform' : <SidebarSeparator className='!is-8' />}
             </SidebarGroupLabel>
             <SidebarMenu>
               <SidebarMenuItem>
-                <MenuButton href='/admin/faqs/category' exactMatch={false} tooltip={t('layout:faqCategory')}>
-                  <TbLayoutGridAdd />
-                  <span>
-                    <Trans i18nKey='layout:category' />
-                  </span>
+                <MenuButton href='/admin/creator' exactMatch={false} tooltip='Forge Creator 2.0'>
+                  <TbSettingsAutomation />
+                  <span>Forge Creator 2.0</span>
                 </MenuButton>
               </SidebarMenuItem>
-              <SidebarMenuItem>
-                <MenuButton href='/admin/faqs/faq' exactMatch={false} tooltip={t('layout:faqs')}>
-                  <TbListDetails />
-                  <span>
-                    <Trans i18nKey='layout:faq' />
-                  </span>
-                </MenuButton>
-              </SidebarMenuItem>
+              {helpdeskConsole ? (
+                <SidebarMenuItem>
+                  <MenuButton href='/help-desk/console' exactMatch={false} tooltip='Help Desk Console'>
+                    <TbHeadset />
+                    <span>Help Desk Console</span>
+                  </MenuButton>
+                </SidebarMenuItem>
+              ) : null}
             </SidebarMenu>
           </SidebarGroup>
-        </PermissionGuard>
-        <PermissionGuard permissions={permissions} permission='view_reviews'>
-          <SidebarGroup>
-            <SidebarGroupLabel className='text-nowrap'>
-              {state === 'expanded' || isMobile ? (
-                <Trans i18nKey='layout:reviews' />
-              ) : (
-                <SidebarSeparator className='!is-8' />
-              )}
-            </SidebarGroupLabel>
-            <SidebarMenu>
-              <SidebarMenuItem>
-                <MenuButton href='/admin/reviews/platform' exactMatch={false} tooltip={t('layout:reviewPlatform')}>
-                  <TbTemplate />
-                  <span>
-                    <Trans i18nKey='layout:platform' />
-                  </span>
-                </MenuButton>
-              </SidebarMenuItem>
-              <SidebarMenuItem>
-                <MenuButton href='/admin/reviews/review' exactMatch={false} tooltip={t('layout:reviews')}>
-                  <TbStar />
-                  <span>
-                    <Trans i18nKey='layout:review' />
-                  </span>
-                </MenuButton>
-              </SidebarMenuItem>
-            </SidebarMenu>
-          </SidebarGroup>
-        </PermissionGuard>
+        )}
       </SidebarContent>
       <SidebarRail />
     </Sidebar>

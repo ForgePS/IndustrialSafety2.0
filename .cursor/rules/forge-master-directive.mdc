@@ -1,0 +1,44 @@
+---
+description: Forge Industrial Safety 2.0 next-level functionality master directive — no shells, full-path features only
+alwaysApply: true
+---
+
+# Forge 2.0 Master Directive
+
+Repo: `ForgePS/IndustrialSafety2.0`. Branch: `forge-creator-2.0`. Full text: `docs/FORGE_NEXT_LEVEL_FUNCTIONALITY_MASTER_DIRECTIVE.md`.
+
+## Definition of done
+
+A feature is complete only when this path works:
+
+`UI → server action/API → authz → validation → DB → related modules → activity/audit → notifications/automation → reporting/AI context → automated tests`
+
+Not complete because a page renders.
+
+## Absolute: no shells
+
+Do not create placeholders, fake KPIs/alerts/rows, localStorage-as-SOR, static arrays as backend data, mock production APIs, TODO workflow buttons, non-persisting forms, Coming Soon, or duplicate personnel/location/task/permission systems.
+
+`custom_data jsonb` is only for tenant-configurable custom fields. Core operational data uses explicit relational structures.
+
+## Architecture & security
+
+Reuse existing Forge systems (`getTenantContext`, `requireTenantPermission`, `getEffectiveTenantAccess`, Creator, Personnel, Training, Incidents, Inspections, Assets, QR, LOTO, Tasks, Support, AI). Never parallel implementations.
+
+Every operational table needs authoritative `organization_id`, RLS, and server-side validation of org/location/division/personnel/asset IDs. Never trust browser-supplied tenant IDs. Service-role never replaces permission checks.
+
+Order: auth → active org → feature → permission → scope → relationship validation → sensitive-data rules → business rule → mutation. Cross-tenant UUID access must fail.
+
+## Lifecycle, audit, attachments
+
+No physical delete of regulated records in normal ops (archive/retire/void/cancel). Status transitions: validated, permissioned, scoped, business-ruled, timestamped, actor-identified, activity + audit.
+
+Reuse private attachment/authorization patterns. Prefer structured evidence relationships over URL-in-text.
+
+## AI / Guardian / exclusions
+
+AI uses existing capability registry, approved-action queue, and domain actions — never unrestricted DB mutation. Guardian is a cross-module signal engine, not a chatbot. Do not build CV camera monitoring or wearable/connected-worker monitoring.
+
+## Sprint gates (required)
+
+Before declaring complete: clean DB migrate+seed, type-check, production build, Playwright smoke, authz/cross-tenant tests. Report the 16-point completion checklist. If incomplete: `SPRINT NOT COMPLETE`.

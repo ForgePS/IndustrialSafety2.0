@@ -30,9 +30,12 @@ const UserDropdown = ({ user, roles }: Props) => {
   const signOutMutation = useSignOut()
 
   // Vars
-  const userName = user.user_metadata.name || user.email
+  const userName =
+    user?.user_metadata?.name ||
+    user?.email ||
+    'Forge User'
   const avatarFallbackText = getInitials(userName).toUpperCase()
-  const avatarSrc = user?.user_metadata.user_avatar || user?.user_metadata.avatar_url
+  const avatarSrc = user?.user_metadata?.user_avatar || user?.user_metadata?.avatar_url
 
   return (
     <DropdownMenu>
@@ -55,9 +58,9 @@ const UserDropdown = ({ user, roles }: Props) => {
               </AvatarImage>
               <AvatarFallback>{avatarFallbackText}</AvatarFallback>
             </Avatar>
-            {user.user_metadata.name ? (
+            {user.user_metadata?.name ? (
               <div className='flex flex-col items-start overflow-hidden'>
-                <h6 className='is-full truncate font-semibold'>{user.user_metadata.name}</h6>
+                <h6 className='is-full truncate font-semibold'>{user.user_metadata?.name}</h6>
                 <small className='is-full truncate'>{user.email}</small>
               </div>
             ) : (
