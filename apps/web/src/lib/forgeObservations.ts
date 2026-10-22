@@ -445,6 +445,10 @@ export const createObservation = async ({
   return { ok: true as const, observation: observation as ObservationRow }
 }
 
+/** `closed` is terminal and record-locking in observations.lifecycle (no reopen transition). */
+export const OBSERVATION_LOCKED_STATUS = 'closed'
+export const OBSERVATION_CLOSED_READ_ONLY_ERROR = 'Closed observations are read-only.'
+
 export const updateObservation = async ({
   organizationId,
   userId,
@@ -476,6 +480,9 @@ export const updateObservation = async ({
 
   if (loadError) return { ok: false as const, error: loadError.message }
   if (!existing) return { ok: false as const, error: 'Observation not found.' }
+  if (existing.status === OBSERVATION_LOCKED_STATUS) {
+    return { ok: false as const, error: OBSERVATION_CLOSED_READ_ONLY_ERROR }
+  }
 
   if (Number(existing.row_version) !== Number(expectedRowVersion)) {
     return {

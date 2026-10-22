@@ -239,8 +239,8 @@ async function main() {
       organization_id: ORG_A,
       jsa_id: created[0].id,
       execution_number: exeNumber,
-      status: 'active',
-      started_at: new Date().toISOString(),
+      // Crew is assembled while planned (NX-02R2: no crew additions to active work).
+      status: 'planned',
       lead_personnel_id: personnel[0].id,
       created_by: USER_A
     }

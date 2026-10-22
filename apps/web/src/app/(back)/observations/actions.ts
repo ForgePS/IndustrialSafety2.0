@@ -7,6 +7,8 @@ import { getEffectiveForm } from '@/lib/forgeForms'
 import {
   createObservation,
   loadObservation,
+  OBSERVATION_CLOSED_READ_ONLY_ERROR,
+  OBSERVATION_LOCKED_STATUS,
   observationWithinScope,
   updateObservation
 } from '@/lib/forgeObservations'
@@ -349,6 +351,9 @@ export const updateObservationAction = async ({
     observation: existing
   })
   if (!mayEdit) return { error: 'You do not have permission to edit this Observation.' }
+  if (existing.status === OBSERVATION_LOCKED_STATUS) {
+    return { error: OBSERVATION_CLOSED_READ_ONLY_ERROR }
+  }
 
   const locationId = cleanText(values.location_id)
   const divisionId = cleanText(values.division_id)

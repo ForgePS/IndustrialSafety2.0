@@ -44,6 +44,12 @@ const cleanText = (value: unknown) => {
   return cleaned ? cleaned : null
 }
 
+/** `closed` locks the risk record (locks_record = true) until the explicit `reopen` transition. */
+const closedRiskError = (status: unknown) =>
+  status === 'closed'
+    ? { error: 'Closed risks are read-only. Reopen the risk before making changes.' }
+    : null
+
 const toIso = (value: unknown) => {
   const text = cleanText(value)
   if (!text) return null
@@ -321,6 +327,8 @@ export const updateRiskAction = async ({
     risk: existing
   })
   if (!mayEdit) return { error: 'You do not have permission to edit this Risk.' }
+  const lockedOnEdit = closedRiskError(existing.status)
+  if (lockedOnEdit) return lockedOnEdit
 
   const locationId = cleanText(values.location_id)
   const divisionId = cleanText(values.division_id)
@@ -448,6 +456,8 @@ export const assessInherentRiskAction = async ({
     risk: existing
   })
   if (!allowed) return { error: 'You do not have permission to assess this Risk.' }
+  const lockedInherent = closedRiskError(existing.status)
+  if (lockedInherent) return lockedInherent
 
   const result = await assessInherentRisk({
     organizationId,
@@ -525,6 +535,8 @@ export const assessResidualRiskAction = async ({
     risk: existing
   })
   if (!allowed) return { error: 'You do not have permission to assess this Risk.' }
+  const lockedResidual = closedRiskError(existing.status)
+  if (lockedResidual) return lockedResidual
 
   const result = await assessResidualRisk({
     organizationId,
@@ -604,6 +616,8 @@ export const addRiskControlAction = async ({
     risk: existing
   })
   if (!allowed) return { error: 'You do not have permission to treat this Risk.' }
+  const lockedControl = closedRiskError(existing.status)
+  if (lockedControl) return lockedControl
 
   const cleanedTitle = cleanText(title)
   if (!cleanedTitle) return { error: 'Control title is required.' }
@@ -679,6 +693,8 @@ export const addRiskTreatmentAction = async ({
     risk: existing
   })
   if (!allowed) return { error: 'You do not have permission to treat this Risk.' }
+  const lockedTreatment = closedRiskError(existing.status)
+  if (lockedTreatment) return lockedTreatment
 
   const cleanedTitle = cleanText(title)
   if (!cleanedTitle) return { error: 'Treatment title is required.' }
@@ -952,6 +968,8 @@ export const acceptRisk = async ({
     permission: context.permission
   })
   if (!detail) return { error: 'Risk not found.' }
+  const lockedAccept = closedRiskError(detail.risk.status)
+  if (lockedAccept) return lockedAccept
 
   const comment = cleanText(acceptanceComment)
   if (!comment) return { error: 'Acceptance comment is required.' }
@@ -1020,6 +1038,8 @@ export const createRiskReview = async ({
   })
 
   if (!detail) return { error: 'Risk not found.' }
+  const lockedReview = closedRiskError(detail.risk.status)
+  if (lockedReview) return lockedReview
 
   const nextAt = toIso(nextReviewAt)
   if (!nextAt) return { error: 'Next review date is required.' }

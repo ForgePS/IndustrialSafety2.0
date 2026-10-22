@@ -1170,9 +1170,13 @@ export const createExecution = async ({
   return { ok: true as const, execution: execution as JsaExecutionRow }
 }
 
+/** Crew may only change before work starts or while work is stopped (re-briefing required). */
+export const JSA_EXECUTION_CREW_EDITABLE_STATUSES = ['planned', 'briefing', 'stopped'] as const
+
 export const addExecutionParticipant = async ({
   organizationId,
   userId,
+  jsaId,
   executionId,
   personnelId,
   role = 'crew',
@@ -1180,6 +1184,8 @@ export const addExecutionParticipant = async ({
 }: {
   organizationId: string
   userId: string
+  /** The JSA the caller was authorized against; the execution must belong to it. */
+  jsaId: string
   executionId: string
   personnelId: string
   role?: string
@@ -1192,11 +1198,18 @@ export const addExecutionParticipant = async ({
     .select('id, jsa_id, status')
     .eq('organization_id', organizationId)
     .eq('id', executionId)
+    .eq('jsa_id', jsaId)
     .maybeSingle()
 
   if (!execution) return { ok: false as const, error: 'Execution not found.' }
-  if (['completed', 'canceled'].includes(execution.status)) {
-    return { ok: false as const, error: 'Cannot modify crew on a closed execution.' }
+  if (!(JSA_EXECUTION_CREW_EDITABLE_STATUSES as readonly string[]).includes(execution.status)) {
+    return {
+      ok: false as const,
+      error:
+        'Crew can only be added while the execution is planned, briefing, or stopped. Current status: ' +
+        execution.status +
+        '.'
+    }
   }
 
   const { data: person } = await supabase
@@ -1242,11 +1255,13 @@ export const addExecutionParticipant = async ({
 export const removeExecutionParticipant = async ({
   organizationId,
   userId,
+  jsaId,
   executionId,
   participantId
 }: {
   organizationId: string
   userId: string
+  jsaId: string
   executionId: string
   participantId: string
 }) => {
@@ -1257,6 +1272,7 @@ export const removeExecutionParticipant = async ({
     .select('id, jsa_id, status')
     .eq('organization_id', organizationId)
     .eq('id', executionId)
+    .eq('jsa_id', jsaId)
     .maybeSingle()
 
   if (!execution) return { ok: false as const, error: 'Execution not found.' }
@@ -1288,12 +1304,14 @@ export const removeExecutionParticipant = async ({
 export const acknowledgeParticipant = async ({
   organizationId,
   userId,
+  jsaId,
   executionId,
   personnelId,
   acknowledgmentId = null
 }: {
   organizationId: string
   userId: string
+  jsaId: string
   executionId: string
   personnelId?: string | null
   acknowledgmentId?: string | null
@@ -1305,6 +1323,7 @@ export const acknowledgeParticipant = async ({
     .select('id, jsa_id, status')
     .eq('organization_id', organizationId)
     .eq('id', executionId)
+    .eq('jsa_id', jsaId)
     .maybeSingle()
 
   if (!execution) return { ok: false as const, error: 'Execution not found.' }
@@ -1408,11 +1427,13 @@ export const acknowledgeParticipant = async ({
 export const completeExecution = async ({
   organizationId,
   userId,
+  jsaId,
   executionId,
   notes
 }: {
   organizationId: string
   userId: string
+  jsaId: string
   executionId: string
   notes?: string | null
 }) => {
@@ -1424,6 +1445,7 @@ export const completeExecution = async ({
     .select('*')
     .eq('organization_id', organizationId)
     .eq('id', executionId)
+    .eq('jsa_id', jsaId)
     .maybeSingle()
 
   if (!execution) return { ok: false as const, error: 'Execution not found.' }

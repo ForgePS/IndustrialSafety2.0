@@ -114,8 +114,10 @@ const RiskDetailPage = async ({
   const acceptPermission = permissions.get('risk_register.accept')
   const reviewPermission = permissions.get('risk_register.review')
   const canCreateCapa = Boolean(permissions.get('corrective_actions.create'))
+  // Closed risks are record-locked until the Reopen workflow transition (server enforces too).
+  const isLocked = record.status === 'closed'
 
-  const canEdit = editPermission
+  const canEdit = !isLocked && editPermission
     ? await riskWithinScope({
         organizationId,
         userId: context.user.id,
@@ -133,7 +135,7 @@ const RiskDetailPage = async ({
       })
     : false
 
-  const canAssess = assessPermission
+  const canAssess = !isLocked && assessPermission
     ? await riskWithinScope({
         organizationId,
         userId: context.user.id,
@@ -142,7 +144,7 @@ const RiskDetailPage = async ({
       })
     : false
 
-  const canTreat = treatPermission
+  const canTreat = !isLocked && treatPermission
     ? await riskWithinScope({
         organizationId,
         userId: context.user.id,
@@ -151,7 +153,7 @@ const RiskDetailPage = async ({
       })
     : false
 
-  const canAccept = acceptPermission
+  const canAccept = !isLocked && acceptPermission
     ? await riskWithinScope({
         organizationId,
         userId: context.user.id,
@@ -160,7 +162,7 @@ const RiskDetailPage = async ({
       })
     : false
 
-  const canReview = reviewPermission
+  const canReview = !isLocked && reviewPermission
     ? await riskWithinScope({
         organizationId,
         userId: context.user.id,

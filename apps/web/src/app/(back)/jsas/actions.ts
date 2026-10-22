@@ -212,6 +212,38 @@ const loadScopedJsa = async ({
   return { existing, supabase }
 }
 
+/**
+ * Authorizes the JSA (org + scope) and then binds the execution to that exact JSA.
+ * An execution id from another JSA — even in the same organization — resolves as not found.
+ */
+const loadScopedExecution = async ({
+  organizationId,
+  jsaId,
+  executionId,
+  userId,
+  scope
+}: {
+  organizationId: string
+  jsaId: string
+  executionId: string
+  userId: string
+  scope: string | null
+}) => {
+  const scoped = await loadScopedJsa({ organizationId, jsaId, userId, scope })
+  if ('error' in scoped && scoped.error) return { error: scoped.error }
+
+  const { data: execution } = await scoped.supabase
+    .from('forge_jsa_executions')
+    .select('*')
+    .eq('organization_id', organizationId)
+    .eq('id', executionId)
+    .eq('jsa_id', scoped.existing.id)
+    .maybeSingle()
+
+  if (!execution) return { error: 'Execution not found.' as const }
+  return { ...scoped, execution }
+}
+
 export const createJsaAction = async (values: JsaFormValues): Promise<JsaActionResult> => {
   const context = await requireTenantPermission('jsa_jha.create')
   const organizationId = context.activeOrganization.id
@@ -789,9 +821,10 @@ export const addExecutionParticipantAction = async ({
   const context = await requireTenantPermission('jsa_jha.execute')
   const organizationId = context.activeOrganization.id
 
-  const scoped = await loadScopedJsa({
+  const scoped = await loadScopedExecution({
     organizationId,
     jsaId,
+    executionId,
     userId: context.user.id,
     scope: context.permission.scope
   })
@@ -807,6 +840,7 @@ export const addExecutionParticipantAction = async ({
   const result = await addExecutionParticipant({
     organizationId,
     userId: context.user.id,
+    jsaId: scoped.existing.id,
     executionId,
     personnelId: person.personnelId!,
     role
@@ -830,9 +864,10 @@ export const removeExecutionParticipantAction = async ({
   const context = await requireTenantPermission('jsa_jha.execute')
   const organizationId = context.activeOrganization.id
 
-  const scoped = await loadScopedJsa({
+  const scoped = await loadScopedExecution({
     organizationId,
     jsaId,
+    executionId,
     userId: context.user.id,
     scope: context.permission.scope
   })
@@ -841,6 +876,7 @@ export const removeExecutionParticipantAction = async ({
   const result = await removeExecutionParticipant({
     organizationId,
     userId: context.user.id,
+    jsaId: scoped.existing.id,
     executionId,
     participantId
   })
@@ -871,23 +907,15 @@ export const transitionExecutionAction = async ({
   const context = await requireTenantPermission('jsa_jha.execute')
   const organizationId = context.activeOrganization.id
 
-  const scoped = await loadScopedJsa({
+  const scoped = await loadScopedExecution({
     organizationId,
     jsaId,
+    executionId,
     userId: context.user.id,
     scope: context.permission.scope
   })
   if ('error' in scoped && scoped.error) return { error: scoped.error }
-
-  const { data: execution } = await scoped.supabase
-    .from('forge_jsa_executions')
-    .select('*')
-    .eq('organization_id', organizationId)
-    .eq('id', executionId)
-    .eq('jsa_id', jsaId)
-    .maybeSingle()
-
-  if (!execution) return { error: 'Execution not found.' }
+  const execution = scoped.execution
 
   const patch: Record<string, unknown> = {}
   if (notes != null) patch.notes = notes
@@ -937,19 +965,56 @@ export const acknowledgeParticipantAction = async ({
   const context = await requireTenantPermission(permissionKey)
   const organizationId = context.activeOrganization.id
 
+  // Load the execution first and bind it to the JSA; acknowledgement evidence is always
+  // recorded against the execution's own parent JSA, never a client-supplied one.
+  let execution: { id: string; jsa_id: string; status: string } | null = null
   if (personnelId) {
-    const scoped = await loadScopedJsa({
+    const scoped = await loadScopedExecution({
       organizationId,
       jsaId,
+      executionId,
       userId: context.user.id,
       scope: context.permission.scope
     })
     if ('error' in scoped && scoped.error) return { error: scoped.error }
+    execution = scoped.execution
+  } else {
+    const supabase = createServiceRoleClient() as any
+    const { data } = await supabase
+      .from('forge_jsa_executions')
+      .select('id, jsa_id, status')
+      .eq('organization_id', organizationId)
+      .eq('id', executionId)
+      .eq('jsa_id', jsaId)
+      .maybeSingle()
+    execution = data || null
+  }
+  if (!execution) return { error: 'Execution not found.' }
+  if (['completed', 'canceled'].includes(execution.status)) {
+    return { error: 'This execution is no longer open for acknowledgment.' }
+  }
+
+  // The acknowledging party must be a participant of this execution before evidence is created.
+  {
+    const supabase = createServiceRoleClient() as any
+    let participantQuery = supabase
+      .from('forge_jsa_execution_participants')
+      .select('id, user_id')
+      .eq('organization_id', organizationId)
+      .eq('execution_id', execution.id)
+    participantQuery = personnelId
+      ? participantQuery.eq('personnel_id', personnelId)
+      : participantQuery.eq('user_id', context.user.id)
+    const { data: participant } = await participantQuery.maybeSingle()
+    if (!participant) return { error: 'You are not a participant on this execution.' }
+    if (participant.user_id && participant.user_id !== context.user.id && !personnelId) {
+      return { error: 'You may only acknowledge your own participation.' }
+    }
   }
 
   const ackResult = await createAcknowledgement({
     resourceType: 'jsa',
-    resourceId: jsaId,
+    resourceId: execution.jsa_id,
     acknowledgementType: 'execution_briefing',
     // Unique per participant when manager records on-behalf acknowledgments.
     resourceVersion: personnelId ? executionId + ':' + personnelId : executionId,
@@ -972,6 +1037,7 @@ export const acknowledgeParticipantAction = async ({
   const result = await acknowledgeParticipant({
     organizationId,
     userId: context.user.id,
+    jsaId: execution.jsa_id,
     executionId,
     personnelId: personnelId || null,
     acknowledgmentId
@@ -995,9 +1061,10 @@ export const completeExecutionAction = async ({
   const context = await requireTenantPermission('jsa_jha.execute')
   const organizationId = context.activeOrganization.id
 
-  const scoped = await loadScopedJsa({
+  const scoped = await loadScopedExecution({
     organizationId,
     jsaId,
+    executionId,
     userId: context.user.id,
     scope: context.permission.scope
   })
@@ -1006,6 +1073,7 @@ export const completeExecutionAction = async ({
   const result = await completeExecution({
     organizationId,
     userId: context.user.id,
+    jsaId: scoped.existing.id,
     executionId,
     notes: cleanText(notes)
   })

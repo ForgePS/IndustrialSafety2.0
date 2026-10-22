@@ -99,7 +99,8 @@ const ObservationDetailPage = async ({
   const canCreateCapa = Boolean(permissions.get('corrective_actions.create'))
   const canCreateRisk = Boolean(permissions.get('risk_register.create'))
 
-  const canEdit = editPermission
+  // Closed is terminal and record-locking (server enforces too).
+  const canEdit = record.status !== 'closed' && editPermission
     ? await observationWithinScope({
         organizationId,
         userId: context.user.id,
