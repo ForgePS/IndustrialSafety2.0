@@ -36,12 +36,11 @@ import frontCommonStyles from '../styles.module.css'
 type Props = {
   paymentProvider: Database['public']['Enums']['billing_provider_enum']
   userRecord: User | null
-  users: User[] | null
 }
 
 const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!)
 
-const CheckoutDetails = ({ paymentProvider, userRecord, users }: Props) => {
+const CheckoutDetails = ({ paymentProvider, userRecord }: Props) => {
   // States
   const [selected, setSelected] = useState<string>(paymentProvider) // Default selected value is the payment provider (Stripe or Lemon Squeezy)
   const [variantDetails, setVariantDetails] = useState<PlanVariant | null>(null) // For selected variant details (plan variant)
@@ -157,7 +156,7 @@ const CheckoutDetails = ({ paymentProvider, userRecord, users }: Props) => {
   return (
     <div className={cn('plb-20 grid gap-6 sm:gap-12 md:grid-cols-2', frontCommonStyles.layoutSpacing)}>
       <div className='flex flex-col gap-4'>
-        {!userRecord && <AuthForm users={users} />}
+        {!userRecord && <AuthForm />}
         <h3 className='text-textPrimary self-start text-xl font-semibold'>
           <Trans i18nKey='front-pages:checkoutPayWith' />
         </h3>

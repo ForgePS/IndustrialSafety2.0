@@ -16,13 +16,12 @@ import { Button } from '@repo/ui/components/ui/button'
 import { passwordSignUpFormSchema, usePasswordSignUp } from '@repo/auth/sign-up'
 import Trans from '@repo/i18n/Trans'
 import { useTranslation } from 'react-i18next'
-import type { User } from '@supabase/supabase-js'
 import type { PasswordSignUpFormData } from '@repo/auth/sign-up'
 
 // Config Imports
 import appConfig from '@configs/appConfig'
 
-const PasswordSignUpForm = ({ users }: { users: User[] | null }) => {
+const PasswordSignUpForm = () => {
   // States
   const [showAlert, setShowAlert] = useState(false)
   const [pending, startTransition] = useTransition()
@@ -49,7 +48,7 @@ const PasswordSignUpForm = ({ users }: { users: User[] | null }) => {
     startTransition(async () => {
       try {
         setShowAlert(false)
-        await handleSignUp(formData, users)
+        await handleSignUp(formData)
       } catch (error) {
         console.error(error)
         setShowAlert(true)

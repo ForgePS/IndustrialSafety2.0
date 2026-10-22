@@ -6,7 +6,6 @@ import type { Metadata } from 'next'
 import { TbChevronLeft } from 'react-icons/tb'
 import LeftSection from '@repo/ui/auth/LeftSection'
 import { Button } from '@repo/ui/components/ui/button'
-import { createServiceRoleClient } from '@repo/supabase/server'
 import Trans from '@repo/i18n/Trans'
 
 // Component Imports
@@ -23,16 +22,6 @@ export const metadata: Metadata = {
 const VerifyEmail = async (props: { searchParams: Promise<Record<string, string>> }) => {
   // Vars
   const searchParams = await props.searchParams
-  const supabase = createServiceRoleClient()
-
-  const {
-    data: { users },
-    error
-  } = await supabase.auth.admin.listUsers()
-
-  if (error) {
-    throw error.message
-  }
 
   return (
     <div className='min-bs-screen flex'>
@@ -61,7 +50,7 @@ const VerifyEmail = async (props: { searchParams: Promise<Record<string, string>
               <p className='text-textSecondary'>
                 <Trans i18nKey='auth:verifyEmailNotReceived' />
               </p>
-              <ResendVerifyEmailButton searchParams={searchParams} users={users} />
+              <ResendVerifyEmailButton searchParams={searchParams} />
               <Button variant='ghostPrimary' asChild>
                 <Link href='/auth/login' className='flex items-center gap-x-2'>
                   <TbChevronLeft className='is-[22px] bs-[22px]' />

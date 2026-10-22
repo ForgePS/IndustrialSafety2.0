@@ -6,7 +6,6 @@ import type { Metadata } from 'next'
 import { TbChevronLeft } from 'react-icons/tb'
 import { Button } from '@repo/ui/components/ui/button'
 import LeftSection from '@repo/ui/auth/LeftSection'
-import { createServiceRoleClient } from '@repo/supabase/server'
 import Trans from '@repo/i18n/Trans'
 
 // Component Imports
@@ -21,13 +20,6 @@ export const metadata: Metadata = {
 }
 
 const ForgotPassword = async () => {
-  // Vars
-  const supabase = createServiceRoleClient()
-
-  const {
-    data: { users }
-  } = await supabase.auth.admin.listUsers()
-
   return (
     <div className='min-bs-screen flex'>
       <LeftSection />
@@ -52,7 +44,7 @@ const ForgotPassword = async () => {
               </p>
             </div>
             <div className='flex flex-col gap-4'>
-              <ForgotPasswordForm users={users} />
+              <ForgotPasswordForm />
               <Button variant='ghostPrimary' asChild>
                 <Link href='/auth/login' className='flex items-center gap-x-2'>
                   <TbChevronLeft className='is-[22px] bs-[22px]' />

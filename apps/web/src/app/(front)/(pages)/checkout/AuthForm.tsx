@@ -21,12 +21,11 @@ import Trans from '@repo/i18n/Trans'
 import { useTranslation } from 'react-i18next'
 import type { PasswordSignInFormData } from '@repo/auth/sign-in'
 import type { PasswordSignUpFormData } from '@repo/auth/sign-up'
-import type { User } from '@supabase/supabase-js'
 
 // Config Imports
 import authConfig from '@configs/authConfig'
 
-const AuthForm = ({ users }: { users: User[] | null }) => {
+const AuthForm = () => {
   // States
   const [showAlert, setShowAlert] = useState(false)
   const [pending, startTransition] = useTransition()
@@ -60,11 +59,19 @@ const AuthForm = ({ users }: { users: User[] | null }) => {
       try {
         setShowAlert(false)
 
-        if (formData.email === users?.find(user => user.email === formData.email)?.email) {
-          await handleSignIn(formData, users, '').then(() => router.refresh())
-        } else {
-          await handleSignUp(formData as PasswordSignUpFormData, users).then(() => router.refresh())
+        // No user directory: try signing in, and only create an account when the provider rejects the
+        // credentials. If that email already has an account, sign-up refuses it and the visitor sees
+        // the invalid-credentials message instead of learning the account exists.
+        try {
+          await handleSignIn(formData, null, window.location.pathname + window.location.search)
+
+          return
+        } catch (signInError) {
+          if (signInError !== 'Invalid login credentials') throw signInError
         }
+
+        await handleSignUp(formData as PasswordSignUpFormData)
+        router.refresh()
       } catch (error) {
         console.error(error)
         setShowAlert(true)
