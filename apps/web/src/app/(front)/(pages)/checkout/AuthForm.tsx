@@ -31,6 +31,7 @@ import { hasUnconfirmedAccount } from '../../auth/actions'
 const AuthForm = () => {
   // States
   const [showAlert, setShowAlert] = useState(false)
+  const [lookupFailed, setLookupFailed] = useState(false)
   const [pending, startTransition] = useTransition()
 
   // Hooks
@@ -60,6 +61,7 @@ const AuthForm = () => {
     startTransition(async () => {
       try {
         setShowAlert(false)
+        setLookupFailed(false)
 
         // No user directory: try signing in, and only create an account when the provider rejects the
         // credentials. If that email already has an account, sign-up refuses it and the visitor sees
@@ -74,7 +76,20 @@ const AuthForm = () => {
 
         // A wrong password on an unconfirmed account also reads as invalid credentials, and sign-up would
         // "succeed" without changing that account's password. Send the visitor to verification instead.
-        if (await hasUnconfirmedAccount(formData.email)) {
+        // If the check cannot run, stop rather than signing up blind.
+        let unconfirmed: boolean
+
+        try {
+          unconfirmed = await hasUnconfirmedAccount(formData.email)
+        } catch (lookupError) {
+          console.error(lookupError)
+          setLookupFailed(true)
+          setShowAlert(true)
+
+          return
+        }
+
+        if (unconfirmed) {
           router.push(`/auth/verify-email?email=${encodeURIComponent(formData.email)}`)
 
           return
@@ -115,7 +130,9 @@ const AuthForm = () => {
                 <Trans i18nKey='front-pages:checkoutErrorTitle' />
               </AlertTitle>
               <AlertDescription>
-                {(singInError as unknown) === 'Invalid login credentials' ? (
+                {lookupFailed ? (
+                  <Trans i18nKey='front-pages:checkoutGenericError' />
+                ) : (singInError as unknown) === 'Invalid login credentials' ? (
                   <Trans i18nKey='front-pages:checkoutInvalidCredentials' />
                 ) : (singUpError as unknown) === 'User already registered' ? (
                   <Trans i18nKey='front-pages:checkoutUserExists' />

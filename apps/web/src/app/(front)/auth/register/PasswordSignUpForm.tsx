@@ -46,7 +46,7 @@ const PasswordSignUpForm = () => {
     }
   })
 
-  const { handleSignUp, error, isSuccess } = usePasswordSignUp({
+  const { handleSignUp, error, isSuccess, reset } = usePasswordSignUp({
     emailRedirectTo: `${process.env.NEXT_PUBLIC_APP_URL}/auth/callback`
   })
 
@@ -54,9 +54,11 @@ const PasswordSignUpForm = () => {
     startTransition(async () => {
       try {
         setShowAlert(false)
+        reset()
 
         // Supabase "succeeds" for an existing unconfirmed email without changing its password, so
-        // send that visitor to email verification rather than reporting a new account.
+        // send that visitor to email verification rather than reporting a new account. The lookup throws
+        // if it cannot run, which lands in the generic sign-up error below instead of signing up blind.
         if (await hasUnconfirmedAccount(formData.email)) {
           router.push(`/auth/verify-email?email=${encodeURIComponent(formData.email)}`)
 

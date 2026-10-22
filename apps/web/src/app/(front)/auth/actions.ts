@@ -37,6 +37,8 @@ export const verifyEmail = async (email: string, emailRedirectTo?: string): Prom
  * Supabase `signUp` reports success for such an email (and resends the confirmation) without changing
  * its password, so sign-up flows must send the visitor to email verification instead. Answers for one
  * address only; no user list ever reaches the browser.
+ *
+ * Fails closed: if the lookup cannot run, this throws so callers stop instead of signing up blind.
  */
 export const hasUnconfirmedAccount = async (email: string): Promise<boolean> => {
   const address = String(email || '').trim()
@@ -46,10 +48,10 @@ export const hasUnconfirmedAccount = async (email: string): Promise<boolean> => 
   const supabase = createServiceRoleClient()
   const { data, error } = await supabase.rpc('forge_auth_email_state', { p_email: address })
 
-  if (error) {
-    console.error('[auth] email state lookup failed:', error.code, error.message)
+  if (error || !['none', 'unconfirmed', 'confirmed'].includes(String(data))) {
+    console.error('[auth] email state lookup failed:', error?.code, error?.message ?? `unexpected result ${String(data)}`)
 
-    return false
+    throw new Error('Unable to check this email address right now. Please try again.')
   }
 
   return data === 'unconfirmed'
