@@ -54,13 +54,29 @@ Every table is service-role only. Server actions check `workers_comp.view/create
 | `/workers-comp/carriers` | Carrier list. Requires `workers_comp.configure`. |
 | Incident page | Workers' comp panel listing linked cases, with "Open workers' comp case". |
 
-## Not in this slice
+## Completion pass (rest of 1.0 workers' comp)
 
-- **Friday weekly-status email.** 1.0 sent it from its hourly reporting-schedule sweep. 2.0 has no scheduler or email delivery yet, so the report is a CSV download for now.
-- **Recurring day-count updates for open periods.** The OSHA log updates on every change and from "Update OSHA Log", but not daily.
-- **Claim costs and payments.** 1.0 did not track them either.
-- **Printable workers' comp reports**, i.e. 1.0's `workers-comp-print.ts`.
-- **Seeding Form 301 from workers' comp fields.** The OSHA case still takes its Form 301 data from the incident and the personnel record, as in slice 1.
+| Feature | 2.0 result |
+| --- | --- |
+| Weekly status email settings | `forge_wc_settings` stores the recipients (up to 50), the on/off switch, the day and the hour. Defaults match 1.0: off, Fridays, 7:00 AM, America/Chicago. `/workers-comp/settings` (needs `workers_comp.configure`) saves them and shows a live preview of this week's email in a sandboxed frame. |
+| Email content | `src/lib/forgeWorkersCompEmail.ts` (pure, unit tested): `buildWeeklyStatusEmail` builds the subject, HTML and text; `weeklyEmailDue` decides when to send without repeating a week; `parseEmailRecipients` cleans the list. |
+| Printable case report | `/workers-comp/[id]/print`: injury, claim, work status with day counts, restrictions and weekly updates. Medical visits appear only with medical access and an explicit "Include Medical Visits". Printing is audited. |
+| Queues | `/workers-comp/queues`: Employees (case counts, personnel link), Return to Work, Medical Follow-up (medical access only; flags no upcoming appointment and no visit in 14 days), and OSHA Recordable (log days against current days). |
+| Reports | `/workers-comp/reports` plus `/api/workers-comp/reports/[key]` give 1.0's catalog as CSV: open cases, by status, lost time, restricted duty, work-status history, claims summary, medical visits (medical access only) and weekly status. Scoped to what the viewer can see. Every export is audited. |
+| Corrections | Work-status periods and restrictions can be edited or removed (1.0 PATCH/DELETE) by the author or `workers_comp.configure`. Removals are kept in case history, and day counts and the OSHA log re-sync. |
+| Documents | `workers_comp_case` is registered in the resource registry, so claim packets attach through the shared evidence service (`workers_comp.view` plus `records.evidence.*`). The shared upload route now refuses files on archived records, for every module. |
+| Nightly OSHA refresh | `/api/workers-comp/cron` runs with `Authorization: Bearer $FORGE_CRON_SECRET`, the same pattern as the AI watch cron. It updates day counts on linked OSHA cases only when they changed, runs as the system, and never opens new OSHA cases. |
+
+## Still not done
+
+- **Sending the weekly email.** This waits for the help-desk notification service (`forge_notification_deliveries`, `dispatchPendingEmails`, Resend), which is uncommitted in another workstream. Once it lands, extend `/api/workers-comp/cron` as follows:
+  1. For each organization with `weekly_email_enabled`, call `weeklyEmailDue()` with the local time in `time_zone`.
+  2. Build rows with `getWeeklyStatusReport()` at organization scope, then `buildWeeklyStatusEmail()`.
+  3. Queue one delivery per recipient.
+  4. Set `last_weekly_email_week`.
+- **Scheduling the cron.** Nothing calls it yet. The deployment scheduler must call `/api/workers-comp/cron` nightly (and hourly once email is wired). Set `FORGE_CRON_SECRET`.
+- **Claim costs and reserves.** This was a placeholder in 1.0 too.
+- **Seeding Form 301 from workers' comp fields.** The OSHA case still takes its Form 301 data from the incident and the personnel record.
 
 ## Tests
 

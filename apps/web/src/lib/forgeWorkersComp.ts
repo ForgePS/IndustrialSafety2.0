@@ -3,7 +3,7 @@ import { createServiceRoleClient } from '@repo/supabase/server'
 import type { EffectivePermission } from '@/lib/forgeEffectiveAccess'
 import { OSHA_TIME_ZONE, createOshaCaseForIncident, oshaRecordWithinScope } from '@/lib/forgeOsha'
 import { zonedDateTimeParts } from '@/lib/forgeOshaRules'
-import { calculateWorkDays, currentWorkStatus, deriveOshaOutcome } from '@/lib/forgeWorkersCompRules'
+import { calculateWorkDays, capOshaDays, currentWorkStatus, deriveOshaOutcome } from '@/lib/forgeWorkersCompRules'
 import type { WcWorkPeriod } from '@/lib/forgeWorkersCompRules'
 
 /** Today's calendar date at the establishment time zone (YYYY-MM-DD). */
@@ -98,7 +98,9 @@ export const writeWcActivity = async ({
   caseId: string
   activityType: string
   message: string
-  actorUserId: string
+
+  /** Null for system jobs such as the nightly OSHA refresh. */
+  actorUserId: string | null
   metadata?: Record<string, unknown>
 }) => {
   const supabase = createServiceRoleClient() as any
@@ -122,6 +124,9 @@ export const writeWcActivity = async ({
  *   recordability, privacy flag, outcome, case type and day counts (capped at 180).
  * - Not marked recordable but already linked: mark the OSHA case not recordable.
  * - Not marked and never linked: nothing to do.
+ *
+ * System refreshes (actorUserId null) only update an already-linked OSHA case and skip it when the
+ * numbers on the log are already current, so the nightly job never opens cases or adds noise.
  */
 export const syncWcCaseToOsha = async ({
   organizationId,
@@ -131,9 +136,9 @@ export const syncWcCaseToOsha = async ({
 }: {
   organizationId: string
   caseId: string
-  actorUserId: string
+  actorUserId: string | null
   actorEmail: string | null
-}): Promise<{ oshaCaseId: string | null; message: string } | { error: string }> => {
+}): Promise<{ oshaCaseId: string | null; message: string; changed?: boolean } | { error: string }> => {
   const supabase = createServiceRoleClient() as any
 
   const { data: wc } = await supabase.from('forge_wc_cases').select('*').eq('organization_id', organizationId).eq('id', caseId).maybeSingle()
@@ -152,6 +157,7 @@ export const syncWcCaseToOsha = async ({
 
   if (!oshaCaseId) {
     if (!wc.osha_recordable) return { oshaCaseId: null, message: 'The linked OSHA case was voided; nothing to sync.' }
+    if (!actorUserId) return { oshaCaseId: null, message: 'No linked OSHA case; system refreshes never open one.', changed: false }
     if (!wc.incident_id) return { error: 'Link an injury incident before marking this case OSHA recordable.' }
     if (!wc.personnel_id) return { error: 'Link the employee\'s personnel record before marking this case OSHA recordable.' }
 
@@ -181,6 +187,26 @@ export const syncWcCaseToOsha = async ({
   const days = calculateWorkDays(periods, wc.injury_date, wcTodayIso())
   const outcome = deriveOshaOutcome({ override: wc.osha_case_outcome_override, severity: wc.severity, ...days })
 
+  if (!actorUserId) {
+    const { data: current } = await supabase
+      .from('forge_osha_cases')
+      .select('recordability, case_outcome, days_away, restricted_days, is_privacy_case')
+      .eq('id', oshaCaseId)
+      .maybeSingle()
+
+    const capped = capOshaDays(days.daysAway, days.restrictedDays)
+
+    const unchanged =
+      current &&
+      current.recordability === (wc.osha_recordable ? 'recordable' : 'not_recordable') &&
+      current.case_outcome === (wc.osha_recordable ? outcome : null) &&
+      current.is_privacy_case === Boolean(wc.osha_recordable && wc.osha_privacy_case) &&
+      current.days_away === capped.daysAway &&
+      current.restricted_days === capped.restrictedDays
+
+    if (unchanged) return { oshaCaseId, message: 'OSHA log already current.', changed: false }
+  }
+
   const { data: osha, error } = await supabase.rpc('forge_apply_wc_to_osha_case', {
     p_organization_id: organizationId,
     p_wc_case_id: caseId,
@@ -201,12 +227,79 @@ export const syncWcCaseToOsha = async ({
     caseId,
     activityType: 'osha_synced',
     message: wc.osha_recordable
-      ? `OSHA case ${osha.case_number} updated: recordable, ${osha.days_away} days away, ${osha.restricted_days} restricted.`
+      ? `OSHA case ${osha.case_number} ${actorUserId ? 'updated' : 'refreshed overnight'}: recordable, ${osha.days_away} days away, ${osha.restricted_days} restricted.`
       : `OSHA case ${osha.case_number} marked not recordable.`,
     actorUserId
   })
 
-  return { oshaCaseId, message: wc.osha_recordable ? `OSHA case ${osha.case_number} updated.` : `OSHA case ${osha.case_number} marked not recordable.` }
+  return {
+    oshaCaseId,
+    changed: true,
+    message: wc.osha_recordable ? `OSHA case ${osha.case_number} updated.` : `OSHA case ${osha.case_number} marked not recordable.`
+  }
+}
+
+/**
+ * Nightly refresh for every organization: open claims linked to the OSHA log keep their day counts current
+ * as open work-status periods grow. Runs as the system (no user) and changes only what moved.
+ */
+export const refreshWcOshaDayCounts = async () => {
+  const supabase = createServiceRoleClient() as any
+
+  const { data: cases, error } = await supabase
+    .from('forge_wc_cases')
+    .select('id, organization_id')
+    .eq('status', 'active')
+    .not('osha_case_id', 'is', null)
+
+  if (error) throw new Error(`Unable to load linked workers' comp cases: ${error.message}`)
+
+  const summary = { checked: 0, updated: 0, failed: 0 }
+
+  for (const row of cases || []) {
+    summary.checked += 1
+    const result = await syncWcCaseToOsha({ organizationId: row.organization_id, caseId: row.id, actorUserId: null, actorEmail: null })
+
+    if ('error' in result) summary.failed += 1
+    else if (result.changed) summary.updated += 1
+  }
+
+  return summary
+}
+
+/**
+ * Open cases with their week's update, as shown on the weekly page, the CSV and the weekly email.
+ * `permission` limits the rows to the viewer's scope; the email uses organization scope.
+ */
+export const getWeeklyStatusReport = async ({
+  organizationId,
+  userId,
+  permission,
+  weekOf
+}: {
+  organizationId: string
+  userId: string
+  permission: EffectivePermission
+  weekOf: string
+}) => {
+  const cases = (await getScopedWcCases({ organizationId, userId, permission })).filter(
+    (row: any) => row.status === 'active' && row.injury_date <= weekOf
+  )
+
+  const supabase = createServiceRoleClient() as any
+
+  const { data: updates } = cases.length
+    ? await supabase
+        .from('forge_wc_weekly_updates')
+        .select('case_id, notes, created_by')
+        .eq('organization_id', organizationId)
+        .eq('week_of', weekOf)
+        .in('case_id', cases.map((row: any) => row.id))
+    : { data: [] }
+
+  const byCase = new Map<string, any>((updates || []).map((row: any) => [row.case_id, row]))
+
+  return cases.map((row: any) => ({ ...row, weekly_update: byCase.get(row.id) || null }))
 }
 
 /** Readable messages for database constraint failures on workers' comp writes. */

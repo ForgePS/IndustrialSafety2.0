@@ -10,6 +10,7 @@ import { OSHA_TIME_ZONE, oshaRecordWithinScope } from '@/lib/forgeOsha'
 import { zonedDateTimeParts } from '@/lib/forgeOshaRules'
 import { requireTenantPermission } from '@/lib/forgeTenantAuth'
 import { syncWcCaseToOsha, wcRecordWithinScope, wcTodayIso, wcWriteErrorMessage, writeWcActivity } from '@/lib/forgeWorkersComp'
+import { parseEmailRecipients } from '@/lib/forgeWorkersCompEmail'
 import {
   WC_LIFTING_OPTIONS,
   WC_LOWER_EXTREMITY_LABELS,
@@ -868,4 +869,238 @@ export const setCarrierActive = async ({ carrierId, active }: { carrierId: strin
   revalidatePath('/workers-comp/carriers')
 
   return { message: active ? 'Carrier reactivated.' : 'Carrier deactivated. Existing cases keep it.' }
+}
+
+// ---------------------------------------------------------------------------
+// Editing and removing work status periods and restrictions (1.0 PATCH / DELETE)
+// ---------------------------------------------------------------------------
+
+/** Loads a child row and applies the author-or-configure rule. */
+const loadAuthoredChild = async (
+  table: 'forge_wc_work_status_periods' | 'forge_wc_restrictions',
+  target: { context: any; organizationId: string; supabase: any },
+  caseId: string,
+  rowId: string
+) => {
+  const { data: row } = await target.supabase
+    .from(table)
+    .select('*')
+    .eq('organization_id', target.organizationId)
+    .eq('case_id', caseId)
+    .eq('id', rowId)
+    .maybeSingle()
+
+  if (!row) return { error: 'Record not found.' as const }
+
+  const canConfigure = Boolean(hasPermission(target.context, 'workers_comp.configure'))
+
+  if (!canEditAuthoredNote({ userId: target.context.user.id, createdBy: row.created_by, canConfigure })) {
+    return { error: 'Only the person who recorded this, or a workers\' comp administrator, can change it.' as const }
+  }
+
+  return { row }
+}
+
+export const updateWorkStatusPeriod = async ({
+  caseId,
+  periodId,
+  values
+}: {
+  caseId: string
+  periodId: string
+  values: WcPeriodValues
+}): Promise<ActionResult> => {
+  const target = await loadCase('workers_comp.edit', caseId)
+
+  if ('error' in target) return { error: target.error }
+
+  const child = await loadAuthoredChild('forge_wc_work_status_periods', target, caseId, periodId)
+
+  if ('error' in child) return { error: child.error }
+
+  const parsed = periodSchema.safeParse(values)
+
+  if (!parsed.success) return { error: parsed.error.issues[0]?.message || 'Check the work status fields.' }
+
+  const period = parsed.data
+
+  if (period.end_date && period.end_date < period.start_date) return { error: 'The end date cannot be before the start date.' }
+  if (period.start_date < target.record.injury_date) return { error: 'Work status periods cannot start before the injury date.' }
+
+  const { error } = await target.supabase
+    .from('forge_wc_work_status_periods')
+    .update({ ...period, updated_by: target.context.user.id })
+    .eq('id', periodId)
+
+  if (error) return { error: wcWriteErrorMessage(error) }
+
+  await writeWcActivity({
+    organizationId: target.organizationId,
+    caseId,
+    activityType: 'work_status',
+    message: `Work status period corrected to ${WC_WORK_STATUS_LABELS[period.work_status]} from ${period.start_date}${period.end_date ? ` to ${period.end_date}` : ''}.`,
+    actorUserId: target.context.user.id,
+    metadata: { period_id: periodId, before: { work_status: child.row.work_status, start_date: child.row.start_date, end_date: child.row.end_date } }
+  })
+
+  const syncNote = await syncAfterChange(target, caseId)
+
+  refreshWc(caseId)
+
+  return { message: `Work status period updated.${syncNote}` }
+}
+
+export const deleteWorkStatusPeriod = async ({ caseId, periodId }: { caseId: string; periodId: string }): Promise<ActionResult> => {
+  const target = await loadCase('workers_comp.edit', caseId)
+
+  if ('error' in target) return { error: target.error }
+
+  const child = await loadAuthoredChild('forge_wc_work_status_periods', target, caseId, periodId)
+
+  if ('error' in child) return { error: child.error }
+
+  const { error } = await target.supabase.from('forge_wc_work_status_periods').delete().eq('id', periodId)
+
+  if (error) return { error: wcWriteErrorMessage(error) }
+
+  const removed = child.row
+
+  // History keeps what was removed so the day counts stay explainable.
+  await writeWcActivity({
+    organizationId: target.organizationId,
+    caseId,
+    activityType: 'work_status',
+    message: `Removed work status period: ${WC_WORK_STATUS_LABELS[removed.work_status as keyof typeof WC_WORK_STATUS_LABELS]} from ${removed.start_date}${removed.end_date ? ` to ${removed.end_date}` : ''}.`,
+    actorUserId: target.context.user.id,
+    metadata: { removed }
+  })
+
+  const syncNote = await syncAfterChange(target, caseId)
+
+  refreshWc(caseId)
+
+  return { message: `Work status period removed.${syncNote}` }
+}
+
+export const updateRestriction = async ({
+  caseId,
+  restrictionId,
+  values
+}: {
+  caseId: string
+  restrictionId: string
+  values: WcRestrictionValues
+}): Promise<ActionResult> => {
+  const target = await loadCase('workers_comp.edit', caseId)
+
+  if ('error' in target) return { error: target.error }
+
+  const child = await loadAuthoredChild('forge_wc_restrictions', target, caseId, restrictionId)
+
+  if ('error' in child) return { error: child.error }
+
+  const parsed = restrictionSchema.safeParse(values)
+
+  if (!parsed.success) return { error: parsed.error.issues[0]?.message || 'Check the restriction fields.' }
+  if (parsed.data.end_date && parsed.data.end_date < parsed.data.start_date) return { error: 'The end date cannot be before the start date.' }
+
+  const { error } = await target.supabase
+    .from('forge_wc_restrictions')
+    .update({ ...parsed.data, updated_by: target.context.user.id })
+    .eq('id', restrictionId)
+
+  if (error) return { error: wcWriteErrorMessage(error) }
+
+  await writeWcActivity({
+    organizationId: target.organizationId,
+    caseId,
+    activityType: 'restriction',
+    message: `Restrictions from ${parsed.data.start_date} corrected.`,
+    actorUserId: target.context.user.id,
+    metadata: { restriction_id: restrictionId }
+  })
+
+  refreshWc(caseId)
+
+  return { message: 'Restrictions updated.' }
+}
+
+export const deleteRestriction = async ({ caseId, restrictionId }: { caseId: string; restrictionId: string }): Promise<ActionResult> => {
+  const target = await loadCase('workers_comp.edit', caseId)
+
+  if ('error' in target) return { error: target.error }
+
+  const child = await loadAuthoredChild('forge_wc_restrictions', target, caseId, restrictionId)
+
+  if ('error' in child) return { error: child.error }
+
+  const { error } = await target.supabase.from('forge_wc_restrictions').delete().eq('id', restrictionId)
+
+  if (error) return { error: wcWriteErrorMessage(error) }
+
+  await writeWcActivity({
+    organizationId: target.organizationId,
+    caseId,
+    activityType: 'restriction',
+    message: `Removed restrictions recorded from ${child.row.start_date}.`,
+    actorUserId: target.context.user.id,
+    metadata: { removed: child.row }
+  })
+
+  refreshWc(caseId)
+
+  return { message: 'Restrictions removed.' }
+}
+
+// ---------------------------------------------------------------------------
+// Weekly status email settings
+// ---------------------------------------------------------------------------
+
+export const saveWcSettings = async ({
+  enabled,
+  recipients,
+  weekday,
+  hour
+}: {
+  enabled: boolean
+  recipients: string
+  weekday: number
+  hour: number
+}): Promise<ActionResult> => {
+  const context = await requireTenantPermission('workers_comp.configure')
+  const organizationId = context.activeOrganization.id
+  const supabase = createServiceRoleClient() as any
+
+  const parsed = parseEmailRecipients(recipients)
+
+  if (parsed.invalid.length) return { error: `Not a valid email address: ${parsed.invalid.join(', ')}` }
+  if (parsed.valid.length > 50) return { error: 'Use 50 recipients or fewer. A distribution list address works well.' }
+  if (enabled && !parsed.valid.length) return { error: 'Add at least one recipient before turning the weekly email on.' }
+  if (!Number.isInteger(weekday) || weekday < 0 || weekday > 6) return { error: 'Choose a day of the week.' }
+  if (!Number.isInteger(hour) || hour < 0 || hour > 23) return { error: 'Choose an hour.' }
+
+  const values = {
+    weekly_email_enabled: enabled,
+    weekly_email_recipients: parsed.valid,
+    weekly_email_weekday: weekday,
+    weekly_email_hour: hour,
+    updated_by: context.user.id
+  }
+
+  const { error } = await supabase.from('forge_wc_settings').upsert({ organization_id: organizationId, ...values }, { onConflict: 'organization_id' })
+
+  if (error) return { error: error.message }
+
+  await writeForgeAudit({
+    actorUserId: context.user.id,
+    organizationId,
+    action: 'workers_comp.settings_updated',
+    entityType: 'workers_comp_settings',
+    entityId: organizationId,
+    afterValue: { weekly_email_enabled: enabled, recipient_count: parsed.valid.length, weekday, hour }
+  })
+
+  revalidatePath('/workers-comp/settings')
+
+  return { message: 'Weekly email settings saved.' }
 }

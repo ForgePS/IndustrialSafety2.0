@@ -1,20 +1,10 @@
-import { NextResponse } from 'next/server'
-
 import { parseOshaParams } from '@/app/(back)/osha/params'
 import { writeForgeAudit } from '@/lib/forgeAudit'
+import { csvResponse } from '@/lib/forgeCsv'
 import { getOshaLocations, getScopedOshaCases, oshaLocationIdsInScope } from '@/lib/forgeOsha'
 import { OSHA_CASE_OUTCOME_LABELS, OSHA_CASE_TYPE_LABELS, form300EmployeeName } from '@/lib/forgeOshaRules'
 import type { OshaCaseOutcome, OshaCaseType } from '@/lib/forgeOshaRules'
 import { requireTenantPermission } from '@/lib/forgeTenantAuth'
-
-const csvCell = (value: unknown) => {
-  const text = value === null || value === undefined ? '' : String(value)
-
-  // Quote every cell and neutralize spreadsheet formulas.
-  const safe = /^[=+\-@\t\r]/.test(text) ? `'${text}` : text
-
-  return `"${safe.replace(/"/g, '""')}"`
-}
 
 export const GET = async (request: Request) => {
   const context = await requireTenantPermission('osha.export')
@@ -56,13 +46,5 @@ export const GET = async (request: Request) => {
     afterValue: { year, location_id: locationId, rows: lines.length }
   })
 
-  const body = [header, ...lines].map(line => line.map(csvCell).join(',')).join('\r\n')
-
-  return new NextResponse(body, {
-    headers: {
-      'Content-Type': 'text/csv; charset=utf-8',
-      'Content-Disposition': `attachment; filename="osha-300-log-${year}.csv"`,
-      'Cache-Control': 'no-store'
-    }
-  })
+  return csvResponse(`osha-300-log-${year}.csv`, header, lines)
 }

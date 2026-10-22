@@ -59,6 +59,9 @@ const WorkersCompPage = async () => {
         </div>
         <div className='flex flex-wrap gap-3'>
           {allowed('workers_comp.configure') ? <Button variant='outline' asChild><Link href='/workers-comp/carriers'>Carriers</Link></Button> : null}
+          {allowed('workers_comp.configure') ? <Button variant='outline' asChild><Link href='/workers-comp/settings'>Settings</Link></Button> : null}
+          {allowed('workers_comp.export') ? <Button variant='outline' asChild><Link href='/workers-comp/reports'>Reports</Link></Button> : null}
+          <Button variant='outline' asChild><Link href='/workers-comp/queues'>Queues</Link></Button>
           <Button variant='outline' asChild><Link href='/workers-comp/weekly'>Weekly Updates</Link></Button>
           {allowed('workers_comp.create') ? <Button asChild><Link href='/workers-comp/create'>New Case</Link></Button> : null}
         </div>

@@ -1,20 +1,11 @@
-import { NextResponse } from 'next/server'
-import { createServiceRoleClient } from '@repo/supabase/server'
-
 import { writeForgeAudit } from '@/lib/forgeAudit'
+import { csvResponse } from '@/lib/forgeCsv'
 import { requireTenantPermission } from '@/lib/forgeTenantAuth'
-import { getScopedWcCases, wcTodayIso } from '@/lib/forgeWorkersComp'
+import { getWeeklyStatusReport, wcTodayIso } from '@/lib/forgeWorkersComp'
 import { WC_STAGE_LABELS, WC_WORK_STATUS_LABELS, thursdayWeekOf, weeklyUpdateStatus } from '@/lib/forgeWorkersCompRules'
 import type { WcStage, WcWorkStatus } from '@/lib/forgeWorkersCompRules'
 
-const csvCell = (value: unknown) => {
-  const text = value === null || value === undefined ? '' : String(value)
-  const safe = /^[=+\-@\t\r]/.test(text) ? `'${text}` : text
-
-  return `"${safe.replace(/"/g, '""')}"`
-}
-
-/** Weekly open-case status report (1.0 emailed this every Friday; 2.0 offers it as a download for now). */
+/** Weekly open-case status report: the same content as the weekly status email. */
 export const GET = async (request: Request) => {
   const context = await requireTenantPermission('workers_comp.export')
   const organizationId = context.activeOrganization.id
@@ -22,21 +13,11 @@ export const GET = async (request: Request) => {
   const requested = new URL(request.url).searchParams.get('week') || today
   const weekOf = thursdayWeekOf(/^\d{4}-\d{2}-\d{2}$/.test(requested) && requested <= today ? requested : today)
 
-  const cases = (await getScopedWcCases({ organizationId, userId: context.user.id, permission: context.permission })).filter(
-    (row: any) => row.status === 'active' && row.injury_date <= weekOf
-  )
-
-  const supabase = createServiceRoleClient() as any
-
-  const { data: updates } = cases.length
-    ? await supabase.from('forge_wc_weekly_updates').select('case_id, notes').eq('organization_id', organizationId).eq('week_of', weekOf).in('case_id', cases.map((row: any) => row.id))
-    : { data: [] }
-
-  const notes = new Map<string, string>((updates || []).map((row: any) => [row.case_id, row.notes]))
+  const rows = await getWeeklyStatusReport({ organizationId, userId: context.user.id, permission: context.permission, weekOf })
 
   const header = ['Case', 'Employee', 'Injury date', 'Location', 'Stage', 'Work status', 'Days away', 'Days restricted', 'Claim number', 'Update status', 'Weekly note']
 
-  const lines = cases.map((row: any) => [
+  const lines = rows.map((row: any) => [
     row.case_number,
     row.employee_name,
     row.injury_date,
@@ -46,8 +27,8 @@ export const GET = async (request: Request) => {
     row.daysAway,
     row.restrictedDays,
     row.is_self_pay ? 'Self pay' : row.claim_number || '',
-    weeklyUpdateStatus(weekOf, notes.has(row.id), today),
-    notes.get(row.id) || ''
+    weeklyUpdateStatus(weekOf, Boolean(row.weekly_update), today),
+    row.weekly_update?.notes || ''
   ])
 
   await writeForgeAudit({
@@ -59,11 +40,5 @@ export const GET = async (request: Request) => {
     afterValue: { week_of: weekOf, rows: lines.length }
   })
 
-  return new NextResponse([header, ...lines].map(line => line.map(csvCell).join(',')).join('\r\n'), {
-    headers: {
-      'Content-Type': 'text/csv; charset=utf-8',
-      'Content-Disposition': `attachment; filename="workers-comp-weekly-${weekOf}.csv"`,
-      'Cache-Control': 'no-store'
-    }
-  })
+  return csvResponse(`workers-comp-weekly-${weekOf}.csv`, header, lines)
 }

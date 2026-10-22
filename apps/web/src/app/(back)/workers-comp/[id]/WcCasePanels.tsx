@@ -15,13 +15,17 @@ import { toast } from '@repo/ui/utils/toast'
 import {
   addRestriction,
   addWorkStatusPeriod,
+  deleteRestriction,
+  deleteWorkStatusPeriod,
   endWorkStatusPeriod,
   liftRestriction,
   saveMedicalEncounter,
   saveWcCase,
   saveWeeklyUpdate,
   setWcCaseStatus,
-  syncWcToOshaNow
+  syncWcToOshaNow,
+  updateRestriction,
+  updateWorkStatusPeriod
 } from '../actions'
 import type { WcCaseValues, WcEncounterValues, WcRestrictionValues } from '../actions'
 import { OSHA_CASE_OUTCOME_LABELS, OSHA_CASE_TYPE_LABELS } from '@/lib/forgeOshaRules'
@@ -262,6 +266,12 @@ export const WcWorkStatusPanel = ({
   const { pending, run } = useAction()
   const empty = { work_status: 'off_work' as const, start_date: today, end_date: '', notes: '' }
   const [form, setForm] = useState<{ work_status: (typeof WC_WORK_STATUSES)[number]; start_date: string; end_date: string; notes: string }>(empty)
+  const [editingId, setEditingId] = useState<string | null>(null)
+
+  const reset = () => {
+    setEditingId(null)
+    setForm(empty)
+  }
 
   return (
     <Card data-testid='wc-work-status'>
@@ -280,8 +290,33 @@ export const WcWorkStatusPanel = ({
                   <div className='font-semibold'>{WC_WORK_STATUS_LABELS[period.work_status as keyof typeof WC_WORK_STATUS_LABELS]}</div>
                   <div className='text-textSecondary text-sm'>{period.start_date} → {period.end_date || 'ongoing'}{period.notes ? ` · ${period.notes}` : ''}</div>
                 </div>
-                {canEdit && !period.end_date && period.canChange ? (
-                  <Button size='sm' variant='outline' disabled={pending} onClick={() => run(() => endWorkStatusPeriod({ caseId, periodId: period.id, endDate: today }))}>End Today</Button>
+                {canEdit && period.canChange ? (
+                  <div className='flex flex-wrap gap-2'>
+                    {!period.end_date ? (
+                      <Button size='sm' variant='outline' disabled={pending} onClick={() => run(() => endWorkStatusPeriod({ caseId, periodId: period.id, endDate: today }))}>End Today</Button>
+                    ) : null}
+                    <Button
+                      size='sm'
+                      variant='outline'
+                      disabled={pending}
+                      aria-label={`Edit ${period.start_date} period`}
+                      onClick={() => {
+                        setEditingId(period.id)
+                        setForm({ work_status: period.work_status as (typeof WC_WORK_STATUSES)[number], start_date: period.start_date, end_date: period.end_date || '', notes: period.notes || '' })
+                      }}
+                    >
+                      Edit
+                    </Button>
+                    <Button
+                      size='sm'
+                      variant='outline'
+                      disabled={pending}
+                      aria-label={`Remove ${period.start_date} period`}
+                      onClick={() => window.confirm('Remove this work status period? Day counts will be recalculated.') && run(() => deleteWorkStatusPeriod({ caseId, periodId: period.id }), reset)}
+                    >
+                      Remove
+                    </Button>
+                  </div>
                 ) : null}
               </li>
             ))}
@@ -290,8 +325,9 @@ export const WcWorkStatusPanel = ({
 
         {canEdit ? (
           <div className='grid grid-cols-1 gap-4 border-t pt-4 md:grid-cols-12'>
+            {editingId ? <div className='font-semibold md:col-span-12'>Correct work status period</div> : null}
             <div className='md:col-span-4'>
-              <Label htmlFor='wc-period-status'>New status</Label>
+              <Label htmlFor='wc-period-status'>{editingId ? 'Status' : 'New status'}</Label>
               <select id='wc-period-status' className={selectClass} value={form.work_status} disabled={pending} onChange={event => setForm(current => ({ ...current, work_status: event.target.value as typeof form.work_status }))}>
                 {WC_WORK_STATUSES.map(item => <option key={item} value={item}>{WC_WORK_STATUS_LABELS[item]}</option>)}
               </select>
@@ -308,8 +344,15 @@ export const WcWorkStatusPanel = ({
               <Label htmlFor='wc-period-notes'>Notes</Label>
               <Input id='wc-period-notes' className='mt-2' value={form.notes} disabled={pending} onChange={event => setForm(current => ({ ...current, notes: event.target.value }))} />
             </div>
-            <div className='flex items-end md:col-span-3'>
-              <Button disabled={pending} onClick={() => run(() => addWorkStatusPeriod({ caseId, values: form }), () => setForm(empty))}>Record Status</Button>
+            <div className='flex items-end gap-2 md:col-span-3'>
+              {editingId ? (
+                <>
+                  <Button disabled={pending} onClick={() => run(() => updateWorkStatusPeriod({ caseId, periodId: editingId, values: form }), reset)}>Save Period</Button>
+                  <Button variant='tonalDefault' disabled={pending} onClick={reset}>Cancel</Button>
+                </>
+              ) : (
+                <Button disabled={pending} onClick={() => run(() => addWorkStatusPeriod({ caseId, values: form }), reset)}>Record Status</Button>
+              )}
             </div>
           </div>
         ) : null}
@@ -342,12 +385,18 @@ export const WcRestrictionsPanel = ({
   today
 }: {
   caseId: string
-  restrictions: Array<{ id: string; status: string; start_date: string; end_date: string | null; summary: string[] }>
+  restrictions: Array<{ id: string; status: string; start_date: string; end_date: string | null; summary: string[]; canChange: boolean; values: WcRestrictionValues }>
   canEdit: boolean
   today: string
 }) => {
   const { pending, run } = useAction()
   const [form, setForm] = useState<WcRestrictionValues>(emptyRestriction(today))
+  const [editingId, setEditingId] = useState<string | null>(null)
+
+  const reset = () => {
+    setEditingId(null)
+    setForm(emptyRestriction(today))
+  }
 
   const toggle = (key: 'upper_extremity' | 'lower_extremity', value: string) =>
     setForm(current => ({
@@ -383,8 +432,26 @@ export const WcRestrictionsPanel = ({
                   </div>
                   <div className='text-textSecondary text-sm'>{item.summary.join(' · ') || 'No details'}</div>
                 </div>
-                {canEdit && item.status === 'active' ? (
-                  <Button size='sm' variant='outline' disabled={pending} onClick={() => run(() => liftRestriction({ caseId, restrictionId: item.id }))}>Lift</Button>
+                {canEdit ? (
+                  <div className='flex flex-wrap gap-2'>
+                    {item.status === 'active' ? (
+                      <Button size='sm' variant='outline' disabled={pending} onClick={() => run(() => liftRestriction({ caseId, restrictionId: item.id }))}>Lift</Button>
+                    ) : null}
+                    {item.canChange ? (
+                      <>
+                        <Button size='sm' variant='outline' disabled={pending} aria-label={`Edit restrictions from ${item.start_date}`} onClick={() => { setEditingId(item.id); setForm(item.values) }}>Edit</Button>
+                        <Button
+                          size='sm'
+                          variant='outline'
+                          disabled={pending}
+                          aria-label={`Remove restrictions from ${item.start_date}`}
+                          onClick={() => window.confirm('Remove these restrictions?') && run(() => deleteRestriction({ caseId, restrictionId: item.id }), reset)}
+                        >
+                          Remove
+                        </Button>
+                      </>
+                    ) : null}
+                  </div>
                 ) : null}
               </li>
             ))}
@@ -393,6 +460,7 @@ export const WcRestrictionsPanel = ({
 
         {canEdit ? (
           <div className='grid grid-cols-1 gap-4 border-t pt-4 md:grid-cols-12'>
+            {editingId ? <div className='font-semibold md:col-span-12'>Correct restrictions</div> : null}
             <div className='md:col-span-4'>
               <Label htmlFor='wc-r-start'>From</Label>
               <Input id='wc-r-start' type='date' className='mt-2' value={form.start_date} disabled={pending} onChange={event => setForm(current => ({ ...current, start_date: event.target.value }))} />
@@ -437,8 +505,15 @@ export const WcRestrictionsPanel = ({
               <Label htmlFor='wc-r-description'>Other restrictions</Label>
               <Input id='wc-r-description' className='mt-2' value={form.description} disabled={pending} onChange={event => setForm(current => ({ ...current, description: event.target.value }))} />
             </div>
-            <div className='md:col-span-12'>
-              <Button disabled={pending} onClick={() => run(() => addRestriction({ caseId, values: form }), () => setForm(emptyRestriction(today)))}>Record Restrictions</Button>
+            <div className='flex gap-2 md:col-span-12'>
+              {editingId ? (
+                <>
+                  <Button disabled={pending} onClick={() => run(() => updateRestriction({ caseId, restrictionId: editingId, values: form }), reset)}>Save Restrictions</Button>
+                  <Button variant='tonalDefault' disabled={pending} onClick={reset}>Cancel</Button>
+                </>
+              ) : (
+                <Button disabled={pending} onClick={() => run(() => addRestriction({ caseId, values: form }), reset)}>Record Restrictions</Button>
+              )}
             </div>
           </div>
         ) : null}

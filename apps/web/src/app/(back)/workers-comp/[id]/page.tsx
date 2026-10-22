@@ -6,6 +6,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@repo
 import { createServiceRoleClient } from '@repo/supabase/server'
 
 import { WcCaseEditor, WcMedicalPanel, WcRestrictionsPanel, WcWeeklyPanel, WcWorkStatusPanel } from './WcCasePanels'
+import RecordEvidencePanel from '@/components/workflow/RecordEvidencePanel'
+import { listRecordEvidence } from '@/lib/forgeEvidence'
 import { requireTenantPermission } from '@/lib/forgeTenantAuth'
 import { getWcPeriods, wcRecordWithinScope, wcTodayIso, withWorkDays } from '@/lib/forgeWorkersComp'
 import {
@@ -74,6 +76,9 @@ const WcCasePage = async ({ params }: { params: Promise<{ id: string }> }) => {
   ])
 
   const periods = periodsByCase.get(id) || []
+
+  // Shared evidence service: enforces workers_comp.view plus records.evidence.view for this case.
+  const documents = await listRecordEvidence({ organizationId, resourceType: 'workers_comp_case', resourceId: id })
   const live = withWorkDays(record, periods, today)
   const editable = canEdit && record.status !== 'archived'
 
@@ -96,6 +101,7 @@ const WcCasePage = async ({ params }: { params: Promise<{ id: string }> }) => {
         </p>
         <div className='mt-1 flex flex-wrap items-center gap-3'>
           <h1 className='text-textPrimary text-3xl font-bold'>{record.case_number}</h1>
+          <Link className='text-primary text-sm font-semibold hover:underline' href={`/workers-comp/${record.id}/print`}>Printable report</Link>
           <Badge size='sm' variant='secondary'>{WC_STAGE_LABELS[record.stage as WcStage]}</Badge>
           {record.status !== 'active' ? <Badge size='sm' variant='secondary' className='capitalize'>{record.status}</Badge> : null}
         </div>
@@ -171,9 +177,34 @@ const WcCasePage = async ({ params }: { params: Promise<{ id: string }> }) => {
           status: item.status,
           start_date: item.start_date,
           end_date: item.end_date,
-          summary: restrictionSummary(item)
+          summary: restrictionSummary(item),
+          canChange: canEditAuthoredNote({ userId, createdBy: item.created_by, canConfigure }),
+          values: {
+            start_date: item.start_date,
+            end_date: text(item.end_date),
+            stand_walk_hours: item.stand_walk_hours || '',
+            sit_hours: item.sit_hours || '',
+            lifting_level: item.lifting_level || '',
+            upper_extremity: item.upper_extremity || [],
+            lower_extremity: item.lower_extremity || [],
+            push_pull_limit_lbs: text(item.push_pull_limit_lbs),
+            transitional_hours_per_day: item.transitional_hours_per_day ? (String(item.transitional_hours_per_day) as '2' | '4' | '6' | '8') : '',
+            description: text(item.description)
+          }
         }))}
       />
+
+      <div data-testid='wc-documents'>
+        <RecordEvidencePanel
+          resourceType='workers_comp_case'
+          resourceId={record.id}
+          evidence={documents}
+          canUpload={editable}
+        />
+        <p className='text-textSecondary mt-2 text-xs'>
+          Claim packets, carrier letters and forms. Anyone with workers&apos; comp access to this case can open these files; keep detailed medical records in Medical Visits.
+        </p>
+      </div>
 
       {showMedical ? (
         <WcMedicalPanel

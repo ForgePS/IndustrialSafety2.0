@@ -3,11 +3,10 @@ import type { Metadata } from 'next'
 import { Badge } from '@repo/ui/components/ui/badge'
 import { Button } from '@repo/ui/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@repo/ui/components/ui/card'
-import { createServiceRoleClient } from '@repo/supabase/server'
 
 import WeeklyNoteForm from './WeeklyNoteForm'
 import { requireTenantPermission } from '@/lib/forgeTenantAuth'
-import { getScopedWcCases, wcRecordWithinScope, wcTodayIso } from '@/lib/forgeWorkersComp'
+import { getWeeklyStatusReport, wcRecordWithinScope, wcTodayIso } from '@/lib/forgeWorkersComp'
 import { WC_WORK_STATUS_LABELS, addDaysIso, canEditAuthoredNote, thursdayWeekOf, weeklyUpdateStatus } from '@/lib/forgeWorkersCompRules'
 import type { WcWorkStatus } from '@/lib/forgeWorkersCompRules'
 
@@ -22,17 +21,7 @@ const WeeklyUpdatesPage = async ({ searchParams }: { searchParams: Promise<Recor
   const requested = typeof params.week === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(params.week) ? params.week : today
   const weekOf = thursdayWeekOf(requested > today ? today : requested)
 
-  const cases = (await getScopedWcCases({ organizationId, userId, permission: context.permission })).filter(
-    (row: any) => row.status === 'active' && row.injury_date <= weekOf
-  )
-
-  const supabase = createServiceRoleClient() as any
-
-  const { data: updates } = cases.length
-    ? await supabase.from('forge_wc_weekly_updates').select('case_id, notes, created_by').eq('organization_id', organizationId).eq('week_of', weekOf).in('case_id', cases.map((row: any) => row.id))
-    : { data: [] }
-
-  const byCase = new Map<string, any>((updates || []).map((row: any) => [row.case_id, row]))
+  const cases = await getWeeklyStatusReport({ organizationId, userId, permission: context.permission, weekOf })
 
   const editPermission = context.access.effective.find(item => item.permissionKey === 'workers_comp.edit' && item.allowed)
   const canConfigure = context.access.effective.some(item => item.permissionKey === 'workers_comp.configure' && item.allowed)
@@ -40,7 +29,7 @@ const WeeklyUpdatesPage = async ({ searchParams }: { searchParams: Promise<Recor
 
   const rows = await Promise.all(
     cases.map(async (row: any) => {
-      const update = byCase.get(row.id)
+      const update = row.weekly_update
       const mayEdit = editPermission ? await wcRecordWithinScope({ organizationId, userId, scope: editPermission.scope, record: row }) : false
 
       return {
