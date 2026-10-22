@@ -197,7 +197,8 @@ test('case manager runs a claim end to end and syncs it to the OSHA log', async 
   await page.waitForLoadState('networkidle')
   page.once('dialog', dialog => dialog.accept())
   await page.getByRole('button', { name: 'Close Case' }).click()
-  await expect(page.getByText(/Case closed\./)).toBeVisible({ timeout: 30000 })
+  // The toast and the new activity entry both say it; either means the close went through.
+  await expect(page.getByText(/Case closed\./).first()).toBeVisible({ timeout: 30000 })
   await page.goto(caseUrl)
   await page.waitForLoadState('networkidle')
   await expect(page.getByTestId('wc-work-status')).toContainText(`${addDays(injuryDate, 6)} → ${today}`, { timeout: 30000 })

@@ -10,7 +10,7 @@ import { OSHA_TIME_ZONE, oshaRecordWithinScope } from '@/lib/forgeOsha'
 import { zonedDateTimeParts } from '@/lib/forgeOshaRules'
 import { requireTenantPermission } from '@/lib/forgeTenantAuth'
 import { syncWcCaseToOsha, wcRecordWithinScope, wcTodayIso, wcWriteErrorMessage, writeWcActivity } from '@/lib/forgeWorkersComp'
-import { parseEmailRecipients } from '@/lib/forgeWorkersCompEmail'
+import { wcViewPermissionFor } from '@/lib/forgeWorkersCompNotify'
 import {
   WC_LIFTING_OPTIONS,
   WC_LOWER_EXTREMITY_LABELS,
@@ -1058,12 +1058,12 @@ export const deleteRestriction = async ({ caseId, restrictionId }: { caseId: str
 
 export const saveWcSettings = async ({
   enabled,
-  recipients,
+  recipientIds,
   weekday,
   hour
 }: {
   enabled: boolean
-  recipients: string
+  recipientIds: string[]
   weekday: number
   hour: number
 }): Promise<ActionResult> => {
@@ -1071,17 +1071,24 @@ export const saveWcSettings = async ({
   const organizationId = context.activeOrganization.id
   const supabase = createServiceRoleClient() as any
 
-  const parsed = parseEmailRecipients(recipients)
+  const ids = [...new Set(Array.isArray(recipientIds) ? recipientIds : [])]
 
-  if (parsed.invalid.length) return { error: `Not a valid email address: ${parsed.invalid.join(', ')}` }
-  if (parsed.valid.length > 50) return { error: 'Use 50 recipients or fewer. A distribution list address works well.' }
-  if (enabled && !parsed.valid.length) return { error: 'Add at least one recipient before turning the weekly email on.' }
+  if (ids.some(id => !z.string().uuid().safeParse(id).success)) return { error: 'Invalid recipient.' }
+  if (ids.length > 50) return { error: 'Choose 50 recipients or fewer.' }
+  if (enabled && !ids.length) return { error: 'Choose at least one recipient before turning the weekly notice on.' }
   if (!Number.isInteger(weekday) || weekday < 0 || weekday > 6) return { error: 'Choose a day of the week.' }
   if (!Number.isInteger(hour) || hour < 0 || hour > 23) return { error: 'Choose an hour.' }
 
+  // Only active members who can view workers' comp may receive it. The sweep checks again at send time.
+  const checks = await Promise.all(ids.map(async id => ({ id, permission: await wcViewPermissionFor(organizationId, id) })))
+
+  if (checks.some(item => !item.permission)) {
+    return { error: 'Every recipient must be an active member with access to workers\' comp. Remove anyone who no longer has access.' }
+  }
+
   const values = {
     weekly_email_enabled: enabled,
-    weekly_email_recipients: parsed.valid,
+    weekly_email_recipient_ids: ids,
     weekly_email_weekday: weekday,
     weekly_email_hour: hour,
     updated_by: context.user.id
@@ -1097,10 +1104,10 @@ export const saveWcSettings = async ({
     action: 'workers_comp.settings_updated',
     entityType: 'workers_comp_settings',
     entityId: organizationId,
-    afterValue: { weekly_email_enabled: enabled, recipient_count: parsed.valid.length, weekday, hour }
+    afterValue: { weekly_email_enabled: enabled, recipient_ids: ids, weekday, hour }
   })
 
   revalidatePath('/workers-comp/settings')
 
-  return { message: 'Weekly email settings saved.' }
+  return { message: 'Weekly notice settings saved.' }
 }

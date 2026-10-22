@@ -58,8 +58,10 @@ Every table is service-role only. Server actions check `workers_comp.view/create
 
 | Feature | 2.0 result |
 | --- | --- |
-| Weekly status email settings | `forge_wc_settings` stores the recipients (up to 50), the on/off switch, the day and the hour. Defaults match 1.0: off, Fridays, 7:00 AM, America/Chicago. `/workers-comp/settings` (needs `workers_comp.configure`) saves them and shows a live preview of this week's email in a sandboxed frame. |
-| Email content | `src/lib/forgeWorkersCompEmail.ts` (pure, unit tested): `buildWeeklyStatusEmail` builds the subject, HTML and text; `weeklyEmailDue` decides when to send without repeating a week; `parseEmailRecipients` cleans the list. |
+| Weekly status notice settings | `forge_wc_settings` stores the on/off switch, the day, the hour and up to 50 recipients (`weekly_email_recipient_ids`). Defaults match 1.0: off, Fridays, 7:00 AM, America/Chicago. `/workers-comp/settings` needs `workers_comp.configure`. Recipients are picked from active members who have `workers_comp.view`; anyone who has lost access is flagged for removal. The page previews the viewer's own notice, rendered by the shared email renderer in a sandboxed frame. |
+| Notice delivery | Sent through the shared notification service from the Help Desk work (`forge_notification_events` / `forge_notification_deliveries`). Each recipient gets an in-app notice in Forge notifications plus an email, linked to `/workers-comp/weekly`. 1.0 emailed a full case table to any typed address. 2.0 sends only to Forge users, and only the cases inside that recipient's own workers' comp scope. The notice lists case numbers, stage, work status, day counts and missing updates. Employee names and injury details stay behind login. The content limit is 200 characters for the title and 2,000 for the body; longer lists end with "... and N more". |
+| Notice timing | `/api/workers-comp/cron` should run hourly. It calls `queueDueWcWeeklyNotices()` (`src/lib/forgeWorkersCompNotify.ts`), which uses `weeklyEmailDue()` with each tenant's local time. Access is checked again at send time, so people who lost access since the save are skipped. Then `forge_wc_queue_weekly_status` writes the event and deliveries and marks the week sent in one locked step: two overlapping runs cannot send a week twice, and it refuses anyone who is not on the saved list or not an active member. The cron only queues. `/api/helpdesk/cron` drains the platform outbox (`dispatchPendingEmails`, Resend), so only one job ever sends email. |
+| Notice content | `src/lib/forgeWorkersCompEmail.ts` (pure, unit tested): `buildWeeklyStatusNotice` builds the title and body within the service limits. `weeklyEmailDue` and `reportWeekOf` handle timing. |
 | Printable case report | `/workers-comp/[id]/print`: injury, claim, work status with day counts, restrictions and weekly updates. Medical visits appear only with medical access and an explicit "Include Medical Visits". Printing is audited. |
 | Queues | `/workers-comp/queues`: Employees (case counts, personnel link), Return to Work, Medical Follow-up (medical access only; flags no upcoming appointment and no visit in 14 days), and OSHA Recordable (log days against current days). |
 | Reports | `/workers-comp/reports` plus `/api/workers-comp/reports/[key]` give 1.0's catalog as CSV: open cases, by status, lost time, restricted duty, work-status history, claims summary, medical visits (medical access only) and weekly status. Scoped to what the viewer can see. Every export is audited. |
@@ -69,12 +71,13 @@ Every table is service-role only. Server actions check `workers_comp.view/create
 
 ## Still not done
 
-- **Sending the weekly email.** This waits for the help-desk notification service (`forge_notification_deliveries`, `dispatchPendingEmails`, Resend), which is uncommitted in another workstream. Once it lands, extend `/api/workers-comp/cron` as follows:
-  1. For each organization with `weekly_email_enabled`, call `weeklyEmailDue()` with the local time in `time_zone`.
-  2. Build rows with `getWeeklyStatusReport()` at organization scope, then `buildWeeklyStatusEmail()`.
-  3. Queue one delivery per recipient.
-  4. Set `last_weekly_email_week`.
-- **Scheduling the cron.** Nothing calls it yet. The deployment scheduler must call `/api/workers-comp/cron` nightly (and hourly once email is wired). Set `FORGE_CRON_SECRET`.
+- **Scheduling the crons.** Nothing calls them yet. The deployment scheduler must:
+  - call `/api/workers-comp/cron` hourly with `FORGE_CRON_SECRET`
+  - call `/api/helpdesk/cron` often enough to drain email, with `HELPDESK_CRON_SECRET`
+
+  Email also needs `RESEND_API_KEY` and `FORGE_NOTIFICATIONS_EMAIL_FROM`. Without them, deliveries are marked skipped and only the in-app notice arrives.
+- **Outbox throughput.** `/api/helpdesk/cron` sends at most 100 emails per run, oldest first, shared across modules.
+- **Per-user email preferences.** The notification service has no per-user opt-out yet. Recipients are controlled only by the workers' comp settings list.
 - **Claim costs and reserves.** This was a placeholder in 1.0 too.
 - **Seeding Form 301 from workers' comp fields.** The OSHA case still takes its Form 301 data from the incident and the personnel record.
 
@@ -89,3 +92,16 @@ pnpm exec playwright test apps/web/tests/port-s2-workers-comp.spec.cjs --reporte
 - **Unit tests (12):** Thursday week math, update status, OSHA day counting, the 180-day cap, outcome derivation, next-action rules and author-only editing.
 - **DB contract (42 checks):** duplicates, constraints, overlap exclusion, the Thursday rule, restriction options, the OSHA sync with cap and clearing, tenant guards, archived cases, role grants, and no member access.
 - **Browser:** incident → case → work status (5 away / 15 restricted) → restrictions → medical visit → weekly update → OSHA recordable sync (the OSHA case shows days away, 5 and 15) → close. Also checks that a coordinator without medical access sees no medical data and cannot reach carriers.
+
+Weekly notice tests:
+- `tests/port-s2-workers-comp-email.test.cjs` (5): timing, ordering, the 2,000-character cut, no employee details.
+- `tests/port-s2-workers-comp-settings-db.cjs` (20 checks):
+  - recipient limits
+  - the queue function: membership and list checks, in-app plus email delivery, no repeat week, rollback on refusal
+  - service role only
+- `tests/port-s2-workers-comp-completion.spec.cjs`:
+  - choosing recipients, and the preview (case numbers, no employee name)
+  - the hourly job queueing once
+  - the inbox
+  - send-time access recheck
+  - the outbox drain, when `HELPDESK_CRON_SECRET` is set for the test and the server

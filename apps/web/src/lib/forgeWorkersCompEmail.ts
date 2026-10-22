@@ -1,40 +1,35 @@
 /**
- * Workers' comp weekly status email (1.0 workers_comp.weekly_status). Pure functions with no imports so
+ * Workers' comp weekly status notice (1.0 workers_comp.weekly_status). Pure functions with no imports so
  * they can be unit tested directly with `node --experimental-strip-types`.
  *
- * The preview page uses these today. When the shared notification/email service lands, its sweep uses
- * weeklyEmailDue() to decide when to send and buildWeeklyStatusEmail() for the content.
+ * The hourly sweep (forgeWorkersCompNotify.ts) uses weeklyEmailDue() to decide when to send and
+ * buildWeeklyStatusNotice() for the content. The notice is delivered through the shared notification service
+ * (in-app inbox plus email), so it follows that service's limits: a 200-character title and a 2,000-character
+ * plain-text body. It carries case numbers and status only. Employee names and injury details stay behind login.
  */
 
 export const WC_WEEKDAY_LABELS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'] as const
 
-const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+export const WC_WEEKLY_NOTICE_LINK = '/workers-comp/weekly'
+
 const DAY_MS = 86_400_000
+const TITLE_MAX = 200
+const BODY_MAX = 2000
+
+// Room kept for the "... and N more" line when cases are cut.
+const MORE_RESERVE = 40
 
 const utcDay = (iso: string) => new Date(Date.parse(iso + 'T00:00:00Z')).getUTCDay()
 const addDays = (iso: string, days: number) => new Date(Date.parse(iso + 'T00:00:00Z') + days * DAY_MS).toISOString().slice(0, 10)
 
-/** Splits a pasted list (commas, semicolons, spaces or new lines) into unique, lowercase addresses. */
-export const parseEmailRecipients = (raw: string) => {
-  const valid: string[] = []
-  const invalid: string[] = []
-
-  for (const part of raw.split(/[\s,;]+/)) {
-    const email = part.trim().toLowerCase()
-
-    if (!email) continue
-    if (!EMAIL_PATTERN.test(email)) invalid.push(email)
-    else if (!valid.includes(email)) valid.push(email)
-  }
-
-  return { valid, invalid }
-}
+/** Day of the week (0 = Sunday) for a YYYY-MM-DD date. */
+export const weekdayOf = (iso: string) => utcDay(iso)
 
 /** The most recent Thursday on or before the date: the week a report sent that day covers. */
 export const reportWeekOf = (iso: string) => addDays(iso, -((utcDay(iso) - 4 + 7) % 7))
 
 /**
- * Whether the weekly email should go out now. `local` is the current date, weekday (0 = Sunday) and hour
+ * Whether the weekly notice should go out now. `local` is the current date, weekday (0 = Sunday) and hour
  * in the tenant's time zone. Never repeats a week that was already sent.
  */
 export const weeklyEmailDue = (
@@ -47,92 +42,56 @@ export const weeklyEmailDue = (
   return { due, weekOf }
 }
 
-export type WcWeeklyEmailRow = {
+export type WcWeeklyNoticeRow = {
   caseNumber: string
-  employeeName: string
-  injuryDate: string
-  location: string
   stage: string
   workStatus: string
   daysAway: number
   restrictedDays: number
-  claim: string
-  carrier: string
-  note: string | null
-  link: string
+  hasUpdate: boolean
 }
-
-const escapeHtml = (value: string) =>
-  value
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#39;')
 
 const plural = (count: number, word: string) => `${count} ${word}${count === 1 ? '' : 's'}`
 
-/** Subject, HTML and plain-text bodies for the weekly open-case status email. */
-export const buildWeeklyStatusEmail = ({
+/** Title and plain-text body for one recipient's weekly status notice, sized for the notification service. */
+export const buildWeeklyStatusNotice = ({
   organizationName,
   weekOf,
   rows
 }: {
   organizationName: string
   weekOf: string
-  rows: WcWeeklyEmailRow[]
+  rows: WcWeeklyNoticeRow[]
 }) => {
-  const missing = rows.filter(row => !row.note).length
-  const subject = `Workers' comp weekly status: ${plural(rows.length, 'open case')} (week of ${weekOf})`
+  const missing = rows.filter(row => !row.hasUpdate)
+  const title = `Workers' comp weekly status: ${plural(rows.length, 'open case')} (week of ${weekOf})`.slice(0, TITLE_MAX)
 
-  const textRows = rows.map(row =>
-    [
-      `${row.caseNumber} - ${row.employeeName}`,
-      `  Injured ${row.injuryDate} at ${row.location || 'unknown location'} | ${row.stage} | ${row.workStatus}`,
-      `  ${row.daysAway} days away, ${row.restrictedDays} restricted | Claim: ${row.claim}${row.carrier ? ` (${row.carrier})` : ''}`,
-      `  This week: ${row.note || 'NO UPDATE ENTERED'}`,
-      `  ${row.link}`
-    ].join('\n')
-  )
-
-  const text = [
-    `${organizationName}: workers' comp weekly status for the week of ${weekOf}.`,
-    `${plural(rows.length, 'open case')}; ${missing} without this week's update.`,
-    ...(textRows.length ? textRows : ['No open cases.'])
-  ].join('\n\n')
-
-  const cell = 'padding:6px 8px;border-bottom:1px solid #e5e7eb;vertical-align:top;font-size:13px;'
-
-  const htmlRows = rows
-    .map(row =>
-      [
-        '<tr>',
-        `<td style="${cell}"><a href="${escapeHtml(row.link)}">${escapeHtml(row.caseNumber)}</a><br>${escapeHtml(row.employeeName)}</td>`,
-        `<td style="${cell}">${escapeHtml(row.injuryDate)}<br>${escapeHtml(row.location)}</td>`,
-        `<td style="${cell}">${escapeHtml(row.stage)}<br>${escapeHtml(row.workStatus)}</td>`,
-        `<td style="${cell}">${row.daysAway} / ${row.restrictedDays}</td>`,
-        `<td style="${cell}">${escapeHtml(row.claim)}${row.carrier ? `<br>${escapeHtml(row.carrier)}` : ''}</td>`,
-        `<td style="${cell}">${row.note ? escapeHtml(row.note).replace(/\n/g, '<br>') : '<strong style="color:#b91c1c">No update entered</strong>'}</td>`,
-        '</tr>'
-      ].join('')
-    )
-    .join('\n')
-
-  const header = ['Case', 'Injury', 'Stage / status', 'Days away / restricted', 'Claim', 'This week']
-    .map(label => `<th align="left" style="${cell}">${label}</th>`)
-    .join('')
-
-  const html = [
-    '<div style="font-family:Arial,sans-serif;color:#111827">',
-    '<h2 style="margin:0 0 4px">Workers&#39; comp weekly status</h2>',
-    `<p style="margin:0 0 12px">${escapeHtml(organizationName)} · week of ${escapeHtml(weekOf)} · ${plural(rows.length, 'open case')}, ${missing} without this week&#39;s update.</p>`,
-    '<table style="border-collapse:collapse;width:100%">',
-    `<thead><tr>${header}</tr></thead>`,
-    `<tbody>${htmlRows || `<tr><td colspan="6" style="${cell}">No open cases.</td></tr>`}</tbody>`,
-    '</table>',
-    '<p style="font-size:12px;color:#6b7280;margin-top:12px">Contains confidential claim information. Do not forward.</p>',
-    '</div>'
+  const intro = [
+    `${organizationName}: workers' comp status for the week of ${weekOf}.`,
+    rows.length ? `${plural(rows.length, 'open case')}; ${missing.length} without this week's update.` : 'No open cases in your area.'
   ].join('\n')
 
-  return { subject, html, text }
+  const footer = 'Open the weekly status page in Forge for employee details. Contains confidential claim information.'
+
+  // Cases missing an update come first, since they need action.
+  const ordered = [...missing, ...rows.filter(row => row.hasUpdate)]
+  const budget = BODY_MAX - intro.length - footer.length - 4 - MORE_RESERVE
+  const lines: string[] = []
+  let used = 0
+
+  for (const [index, row] of ordered.entries()) {
+    const line = `- ${row.caseNumber}: ${row.stage}, ${row.workStatus}, ${row.daysAway} away / ${row.restrictedDays} restricted${row.hasUpdate ? '' : ' - NO UPDATE'}`
+
+    if (used + line.length + 1 > budget) {
+      lines.push(`... and ${ordered.length - index} more`)
+      break
+    }
+
+    lines.push(line)
+    used += line.length + 1
+  }
+
+  const body = [intro, lines.join('\n'), footer].filter(Boolean).join('\n\n')
+
+  return { title, body }
 }

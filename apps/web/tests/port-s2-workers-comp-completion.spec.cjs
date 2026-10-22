@@ -1,7 +1,7 @@
 /**
  * Port slice 2 completion browser smoke: nightly OSHA refresh (cron), printable report, editing and removing
- * work status periods, case documents, weekly email settings and preview, queues, CSV reports, and
- * medical access control on all of them.
+ * work status periods, case documents, weekly status notice settings, preview and delivery through the shared
+ * notification service, queues, CSV reports, and medical access control on all of them.
  *
  * Run: pnpm exec playwright test apps/web/tests/port-s2-workers-comp-completion.spec.cjs --reporter=line --workers=1
  */
@@ -21,6 +21,7 @@ const baseURL = process.env.SMOKE_BASE_URL || 'http://127.0.0.1:3000'
 const API_URL = process.env.API_URL || process.env.NEXT_PUBLIC_SUPABASE_URL
 const SERVICE_ROLE_KEY = process.env.SERVICE_ROLE_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY
 const CRON_SECRET = process.env.FORGE_CRON_SECRET
+const HELPDESK_CRON_SECRET = process.env.HELPDESK_CRON_SECRET
 const ORG_A = '20000000-0000-4000-8000-000000000100'
 const ADMIN_USER = '20000000-0000-4000-8000-000000000001'
 const DEMO_USER = '20000000-0000-4000-8000-000000000002'
@@ -202,22 +203,28 @@ test('administrator: printable report, period corrections, documents, settings, 
   await documents.getByRole('button', { name: 'Upload' }).click()
   await expect(documents).toContainText(`claim-packet-${RUN}.txt`, { timeout: 30000 })
 
-  // Weekly email settings and preview.
+  // Weekly status notice settings and preview. Recipients are Forge users with workers' comp access.
+  const [adminProfile] = await rest(`/rest/v1/users?user_id=eq.${ADMIN_USER}&select=name,email`)
+  const adminLabel = adminProfile.name || adminProfile.email
   await open(page, `${baseURL}/workers-comp/settings`)
+  const recipients = page.getByTestId('wc-settings-recipients')
+  await expect(recipients.getByRole('checkbox', { name: adminLabel })).toBeVisible({ timeout: 30000 })
   await page.locator('#wc-settings-enabled').click()
-  await page.locator('#wc-settings-recipients').fill('risk@example.com, not-an-email')
   await page.getByRole('button', { name: 'Save Settings' }).click()
-  await expect(page.getByText('Not a valid email address: not-an-email')).toBeVisible({ timeout: 30000 })
-  await page.locator('#wc-settings-recipients').fill('Risk@Example.com, hr@example.com')
+  await expect(page.getByText('Choose at least one recipient before turning the weekly notice on.')).toBeVisible({ timeout: 30000 })
+  await recipients.getByRole('checkbox', { name: adminLabel }).check()
   await page.locator('#wc-settings-weekday').selectOption('1')
   await page.getByRole('button', { name: 'Save Settings' }).click()
-  await expect(page.getByText('Weekly email settings saved.')).toBeVisible({ timeout: 30000 })
+  await expect(page.getByText('Weekly notice settings saved.')).toBeVisible({ timeout: 30000 })
   await open(page, `${baseURL}/workers-comp/settings`)
-  await expect(page.locator('#wc-settings-recipients')).toHaveValue('risk@example.com, hr@example.com')
+  await expect(page.getByTestId('wc-settings-recipients').getByRole('checkbox', { name: adminLabel })).toBeChecked()
   await expect(page.locator('#wc-settings-weekday')).toHaveValue('1')
   await expect(page.getByTestId('wc-email-subject')).toContainText(/Workers' comp weekly status: \d+ open cases?/)
-  const preview = page.frameLocator('iframe[title="Weekly status email preview"]')
+  const preview = page.frameLocator('iframe[title="Weekly status notice preview"]')
   await expect(preview.getByText(caseNumber)).toBeVisible()
+
+  // The notice names cases, never the employee.
+  await expect(preview.locator('body')).not.toContainText(`Jordan Complete ${RUN}`)
 
   // Queues.
   await open(page, `${baseURL}/workers-comp/queues?view=employees`)
@@ -242,6 +249,83 @@ test('administrator: printable report, period corrections, documents, settings, 
   expect(await history.text()).toContain('Restricted / transitional duty')
 
   expect(person.id).toBeTruthy()
+})
+
+test('the hourly job queues the weekly notice once, rechecks access, and the platform outbox picks it up', async ({ page, request }) => {
+  const caseNumber = fx.wc.case_number
+  const nowParts = Object.fromEntries(
+    new Intl.DateTimeFormat('en-US', { timeZone: 'America/Chicago', weekday: 'short', hour: '2-digit', hourCycle: 'h23' })
+      .formatToParts(new Date())
+      .map(part => [part.type, part.value])
+  )
+  const weekday = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].indexOf(nowParts.weekday)
+
+  // Due right now in the tenant's time zone, to the admin and the coordinator.
+  await rest(`/rest/v1/forge_wc_settings?organization_id=eq.${ORG_A}`, {
+    method: 'PATCH',
+    body: { weekly_email_enabled: true, weekly_email_recipient_ids: [ADMIN_USER, DEMO_USER], weekly_email_weekday: weekday, weekly_email_hour: Number(nowParts.hour), last_weekly_email_week: null }
+  })
+
+  const events = () => rest(`/rest/v1/forge_notification_events?organization_id=eq.${ORG_A}&source_module=eq.workers_comp&select=id,created_at&order=created_at.desc`)
+  const before = (await events()).length
+
+  const first = await request.post(`${baseURL}/api/workers-comp/cron`, { headers: { Authorization: `Bearer ${CRON_SECRET}` } })
+  expect(first.ok()).toBeTruthy()
+  const firstResult = (await first.json()).weeklyNotices.results.find(item => item.organizationId === ORG_A)
+  expect(firstResult).toMatchObject({ reason: 'queued', queued: 2, skippedRecipients: 0 })
+
+  const [event] = await events()
+  expect((await events()).length).toBe(before + 1)
+  const deliveries = await rest(`/rest/v1/forge_notification_deliveries?event_id=eq.${event.id}&select=recipient_user_id,channel,status,body,link_path`)
+  expect(deliveries).toHaveLength(4)
+  expect(deliveries.filter(item => item.channel === 'in_app').every(item => item.status === 'sent')).toBeTruthy()
+  expect(deliveries.filter(item => item.channel === 'email').every(item => item.status === 'pending')).toBeTruthy()
+  expect(deliveries.every(item => item.body.includes(caseNumber) && !item.body.includes(`Jordan Complete ${RUN}`))).toBeTruthy()
+
+  // A second run in the same hour sends nothing new.
+  await request.post(`${baseURL}/api/workers-comp/cron`, { headers: { Authorization: `Bearer ${CRON_SECRET}` } })
+  expect((await events()).length).toBe(before + 1)
+
+  // The in-app notice is in the recipient's Forge notifications.
+  await login(page, 'admin@forge2.local')
+  await open(page, `${baseURL}/notifications`)
+  await expect(page.getByText(/Workers' comp weekly status: \d+ open cases?/).first()).toBeVisible({ timeout: 30000 })
+
+  // Access is checked again at send time: a recipient denied workers' comp since the save is skipped.
+  const [viewPermission] = await rest('/rest/v1/forge_permission_registry?select=id&permission_key=eq.workers_comp.view')
+  await rest('/rest/v1/forge_user_permission_overrides', {
+    method: 'POST',
+    body: { organization_id: ORG_A, user_id: DEMO_USER, permission_id: viewPermission.id, override_state: 'deny' }
+  })
+  try {
+    await rest(`/rest/v1/forge_wc_settings?organization_id=eq.${ORG_A}`, { method: 'PATCH', body: { last_weekly_email_week: null } })
+    const again = await request.post(`${baseURL}/api/workers-comp/cron`, { headers: { Authorization: `Bearer ${CRON_SECRET}` } })
+    const againResult = (await again.json()).weeklyNotices.results.find(item => item.organizationId === ORG_A)
+    expect(againResult).toMatchObject({ reason: 'queued', queued: 1, skippedRecipients: 1 })
+    const [latest] = await events()
+    const latestDeliveries = await rest(`/rest/v1/forge_notification_deliveries?event_id=eq.${latest.id}&select=recipient_user_id`)
+    expect(latestDeliveries.every(item => item.recipient_user_id === ADMIN_USER)).toBeTruthy()
+  } finally {
+    await rest(`/rest/v1/forge_user_permission_overrides?organization_id=eq.${ORG_A}&user_id=eq.${DEMO_USER}&permission_id=eq.${viewPermission.id}`, { method: 'DELETE' })
+  }
+
+  // The shared outbox drain (the Help Desk cron) processes the emails. Without a configured provider it
+  // marks them skipped; with one it sends them. Either way they leave the pending queue.
+  // Each drain run handles up to 100 emails, oldest first, so other modules' mail may go ahead of ours.
+  if (HELPDESK_CRON_SECRET) {
+    const ours = () => rest(`/rest/v1/forge_notification_deliveries?event_id=eq.${event.id}&channel=eq.email&select=status,last_error`)
+    let emails = await ours()
+
+    for (let round = 0; round < 10 && emails.some(item => item.status === 'pending'); round += 1) {
+      const drained = await request.post(`${baseURL}/api/helpdesk/cron`, { headers: { Authorization: `Bearer ${HELPDESK_CRON_SECRET}` } })
+      expect(drained.ok()).toBeTruthy()
+      emails = await ours()
+    }
+
+    expect(emails.every(item => item.status === 'sent' || (item.status === 'skipped' && item.last_error === 'No email provider is configured.'))).toBeTruthy()
+  }
+
+  await rest(`/rest/v1/forge_wc_settings?organization_id=eq.${ORG_A}`, { method: 'PATCH', body: { weekly_email_enabled: false } })
 })
 
 test('coordinator without medical access sees no medical data anywhere', async ({ page }) => {

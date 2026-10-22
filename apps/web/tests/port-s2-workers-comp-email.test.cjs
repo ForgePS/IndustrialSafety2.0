@@ -1,5 +1,5 @@
 /**
- * Port slice 2 completion: unit tests for the weekly status email (src/lib/forgeWorkersCompEmail.ts).
+ * Unit tests for the workers' comp weekly status notice (src/lib/forgeWorkersCompEmail.ts).
  * Run: node --experimental-strip-types --test apps/web/tests/port-s2-workers-comp-email.test.cjs
  */
 const test = require('node:test')
@@ -8,12 +8,14 @@ const path = require('path')
 
 const email = require(path.join(__dirname, '../src/lib/forgeWorkersCompEmail.ts'))
 
-test('recipient lists are split, lowercased, de-duplicated and validated', () => {
-  assert.deepEqual(email.parseEmailRecipients('Risk@Example.com, hr@example.com;risk@example.com\nnot-an-email'), {
-    valid: ['risk@example.com', 'hr@example.com'],
-    invalid: ['not-an-email']
-  })
-  assert.deepEqual(email.parseEmailRecipients('   '), { valid: [], invalid: [] })
+const row = (overrides = {}) => ({
+  caseNumber: 'WC-2026-0001',
+  stage: 'Treatment',
+  workStatus: 'Restricted duty',
+  daysAway: 5,
+  restrictedDays: 15,
+  hasUpdate: true,
+  ...overrides
 })
 
 test('the report week is the most recent Thursday', () => {
@@ -21,9 +23,10 @@ test('the report week is the most recent Thursday', () => {
   assert.equal(email.reportWeekOf('2026-10-23'), '2026-10-22') // Friday
   assert.equal(email.reportWeekOf('2026-10-26'), '2026-10-22') // Monday
   assert.equal(email.reportWeekOf('2026-10-21'), '2026-10-15') // Wednesday
+  assert.equal(email.weekdayOf('2026-10-23'), 5)
 })
 
-test('weekly email is due once on the chosen day and hour', () => {
+test('weekly notice is due once on the chosen day and hour', () => {
   const settings = { enabled: true, weekday: 5, hour: 7, lastSentWeek: null }
 
   // 2026-10-23 is a Friday.
@@ -34,36 +37,34 @@ test('weekly email is due once on the chosen day and hour', () => {
   assert.equal(email.weeklyEmailDue(settings, { date: '2026-10-22', weekday: 4, hour: 9 }).due, false)
 })
 
-test('weekly email escapes content and flags missing updates', () => {
-  const built = email.buildWeeklyStatusEmail({
-    organizationName: 'Demo <Co>',
+test('the notice lists cases missing an update first and carries no employee details', () => {
+  const notice = email.buildWeeklyStatusNotice({
+    organizationName: 'Demo Co',
     weekOf: '2026-10-22',
-    rows: [
-      {
-        caseNumber: 'WC-2026-0001', employeeName: 'Pat <script>', injuryDate: '2026-10-01', location: 'Plant', stage: 'Treatment',
-        workStatus: 'Restricted', daysAway: 5, restrictedDays: 15, claim: 'CLM-1', carrier: 'Mutual', note: null,
-        link: 'https://forge.example/workers-comp/1'
-      },
-      {
-        caseNumber: 'WC-2026-0002', employeeName: 'Sam', injuryDate: '2026-10-02', location: 'Plant', stage: 'Intake',
-        workStatus: 'Off work', daysAway: 3, restrictedDays: 0, claim: 'Self pay', carrier: '', note: 'Seen by clinic',
-        link: 'https://forge.example/workers-comp/2'
-      }
-    ]
+    rows: [row(), row({ caseNumber: 'WC-2026-0002', stage: 'Intake', workStatus: 'Off work', daysAway: 3, restrictedDays: 0, hasUpdate: false })]
   })
 
-  assert.equal(built.subject, "Workers' comp weekly status: 2 open cases (week of 2026-10-22)")
-  assert.match(built.html, /Pat &lt;script&gt;/)
-  assert.doesNotMatch(built.html, /<script>/)
-  assert.match(built.html, /Demo &lt;Co&gt;/)
-  assert.match(built.html, /No update entered/)
-  assert.match(built.text, /1 without this week's update/)
-  assert.match(built.text, /This week: Seen by clinic/)
-  assert.match(built.text, /This week: NO UPDATE ENTERED/)
+  assert.equal(notice.title, "Workers' comp weekly status: 2 open cases (week of 2026-10-22)")
+  assert.match(notice.body, /2 open cases; 1 without this week's update/)
+  assert.ok(notice.body.indexOf('WC-2026-0002') < notice.body.indexOf('WC-2026-0001'), 'missing updates come first')
+  assert.match(notice.body, /WC-2026-0002: Intake, Off work, 3 away \/ 0 restricted - NO UPDATE/)
+  assert.match(notice.body, /WC-2026-0001: Treatment, Restricted duty, 5 away \/ 15 restricted\n/)
+  assert.match(notice.body, /Open the weekly status page in Forge/)
 })
 
-test('an empty week still produces a valid email', () => {
-  const built = email.buildWeeklyStatusEmail({ organizationName: 'Demo', weekOf: '2026-10-22', rows: [] })
-  assert.equal(built.subject, "Workers' comp weekly status: 0 open cases (week of 2026-10-22)")
-  assert.match(built.html, /No open cases/)
+test('a long list is cut to fit the notification service limit', () => {
+  const rows = Array.from({ length: 200 }, (_, index) => row({ caseNumber: `WC-2026-${String(index + 1).padStart(4, '0')}`, hasUpdate: index % 2 === 0 }))
+  const notice = email.buildWeeklyStatusNotice({ organizationName: 'A'.repeat(200), weekOf: '2026-10-22', rows })
+
+  assert.ok(notice.body.length <= 2000, `body is ${notice.body.length} characters`)
+  assert.ok(notice.title.length <= 200)
+  assert.match(notice.body, /\.\.\. and \d+ more/)
+  assert.match(notice.body, /200 open cases; 100 without this week's update/)
+})
+
+test('an empty week still produces a valid notice', () => {
+  const notice = email.buildWeeklyStatusNotice({ organizationName: 'Demo', weekOf: '2026-10-22', rows: [] })
+
+  assert.equal(notice.title, "Workers' comp weekly status: 0 open cases (week of 2026-10-22)")
+  assert.match(notice.body, /No open cases in your area/)
 })

@@ -87,7 +87,7 @@ Rules enforced in the database:
 ## Still not done
 
 - **Automatic retraining on expiry.** Groups can assign expired and expiring training on demand ("Assign Required Training"). Nothing runs this on a schedule yet, because 2.0 has no scheduler. A nightly cron should call `assignGroupRequirements` for each group, the same way `/api/workers-comp/cron` runs.
-- **Reminder and overdue emails.** These wait for the help-desk notification service, like the workers' comp weekly email.
+- **Reminder and overdue emails.** Not built. The shared notification service is now available; follow the workers' comp weekly notice pattern (`src/lib/forgeWorkersCompNotify.ts` plus an atomic queue function).
 - **Certificate templates.** 1.0 had several layouts. 2.0 has one layout with organization-level title, signer and footer.
 - **Video normalization.** MP4 only, as noted above.
 - **Kiosk QR target type.** The kiosk has its own QR on `/training/portal`. Linking it into the managed-QR system comes with the scan platform slice.
