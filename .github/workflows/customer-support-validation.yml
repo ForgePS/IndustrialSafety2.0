@@ -122,6 +122,11 @@ jobs:
           cat /tmp/forge-smoke.log
           exit 1
 
+      - name: Run sign-in hardening regression
+        env:
+          SMOKE_BASE_URL: http://127.0.0.1:3000
+        run: pnpm exec playwright test apps/web/tests/auth-signin.spec.cjs --reporter=line --workers=1
+
       - name: Run help desk browser smoke test
         env:
           SMOKE_BASE_URL: http://127.0.0.1:3000
@@ -149,7 +154,9 @@ jobs:
 
       - name: Print web log on failure
         if: failure()
-        run: cat /tmp/forge-smoke.log || true
+        run: |
+          cat /tmp/forge-smoke.log || true
+          find test-results -name error-context.md -type f -exec cat {} + || true
 
       - name: Upload Playwright failure artifacts
         if: failure()

@@ -1,45 +1,53 @@
-// Third-party Imports
 import { useRouter } from 'next/navigation'
-import { useSignInWithPassword } from '@repo/supabase/hooks'
+import { EMAIL_NOT_CONFIRMED_ERROR, useSignInWithPassword } from '@repo/supabase/hooks'
 import type { User } from '@supabase/supabase-js'
 
-// Type Imports
 import type { PasswordSignInFormData } from '@repo/auth/sign-in'
 
-/**
- * @param verifyEmailRedirectTo (optional) - The redirection URL to the verify email page for unconfirmed users.
- */
+/** Authenticate with the provider; never require a client-side user directory. */
 export const usePasswordSignIn = (verifyEmailRedirectTo?: string) => {
   const router = useRouter()
   const signInWithPasswordMutation = useSignInWithPassword()
 
-  const handleSignIn = async (formData: PasswordSignInFormData, users: User[] | null, redirectTo: string = '') => {
-    // Check if user already exists with the email address
-    const existingUserData = users?.find(user => user.email === formData.email)
+  // The optional legacy argument preserves compatibility with packaged login templates.
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const handleSignIn = async (formData: PasswordSignInFormData, _users: User[] | null = null, redirectTo: string = '') => {
+    try {
+      await signInWithPasswordMutation.mutateAsync(formData)
+    } catch (error) {
+      // Only the authentication provider decides whether credentials are valid
+      // and whether email confirmation is still required.
+      if (verifyEmailRedirectTo && error === EMAIL_NOT_CONFIRMED_ERROR) {
+        const target = new URL(verifyEmailRedirectTo, window.location.origin)
 
-    // If user exists but email is not confirmed, return early with redirect info
-    if (existingUserData && !existingUserData.email_confirmed_at) {
-      if (verifyEmailRedirectTo) {
-        router.push(verifyEmailRedirectTo)
-      } else {
-        throw new Error('Email is not verified. Please verify your email address.')
+        target.searchParams.set('email', formData.email)
+        router.push(target.pathname + target.search)
+
+        return
       }
+
+      throw error
+    }
+
+    // A fresh document loads server components with the newly established session,
+    // avoiding a race between client navigation, auth updates, and router refresh.
+    const loginSuffix = /\/auth\/login\/?$/
+    const basePath = loginSuffix.test(window.location.pathname) ? window.location.pathname.replace(loginSuffix, '') : ''
+    const target = new URL(redirectTo || '/', window.location.origin)
+
+    if (target.origin !== window.location.origin) {
+      window.location.assign(basePath + '/')
 
       return
     }
 
-    try {
-      await signInWithPasswordMutation.mutateAsync(formData).then(() => {
-        router.push(redirectTo || '/')
-        router.refresh()
-      })
-    } catch (error) {
-      throw error
-    }
+    const pathname =
+      basePath && target.pathname !== basePath && !target.pathname.startsWith(basePath + '/')
+        ? basePath + target.pathname
+        : target.pathname
+
+    window.location.assign(pathname + target.search + target.hash)
   }
 
-  return {
-    handleSignIn,
-    ...signInWithPasswordMutation
-  }
+  return { handleSignIn, ...signInWithPasswordMutation }
 }

@@ -21,14 +21,17 @@ import Trans from '@repo/i18n/Trans'
 import { useTranslation } from 'react-i18next'
 import type { PasswordSignInFormData } from '@repo/auth/sign-in'
 import type { PasswordSignUpFormData } from '@repo/auth/sign-up'
-import type { User } from '@supabase/supabase-js'
 
 // Config Imports
 import authConfig from '@configs/authConfig'
 
-const AuthForm = ({ users }: { users: User[] | null }) => {
+// Server Action Imports
+import { hasUnconfirmedAccount } from '../../auth/actions'
+
+const AuthForm = () => {
   // States
   const [showAlert, setShowAlert] = useState(false)
+  const [lookupFailed, setLookupFailed] = useState(false)
   const [pending, startTransition] = useTransition()
 
   // Hooks
@@ -51,20 +54,49 @@ const AuthForm = ({ users }: { users: User[] | null }) => {
     error: singUpError,
     isSuccess: isSignUpSuccess
   } = usePasswordSignUp({
-    emailRedirectTo: `${process.env.NEXT_PUBLIC_APP_URL}/checkout`,
-    verifyEmailRedirectTo: `/auth/verify-email?email=${form.getValues('email')}`
+    emailRedirectTo: `${process.env.NEXT_PUBLIC_APP_URL}/checkout`
   })
 
   const onAuthSubmit = (formData: PasswordSignInFormData | PasswordSignUpFormData) => {
     startTransition(async () => {
       try {
         setShowAlert(false)
+        setLookupFailed(false)
 
-        if (formData.email === users?.find(user => user.email === formData.email)?.email) {
-          await handleSignIn(formData, users, '').then(() => router.refresh())
-        } else {
-          await handleSignUp(formData as PasswordSignUpFormData, users).then(() => router.refresh())
+        // No user directory: try signing in, and only create an account when the provider rejects the
+        // credentials. If that email already has an account, sign-up refuses it and the visitor sees
+        // the invalid-credentials message instead of learning the account exists.
+        try {
+          await handleSignIn(formData, null, window.location.pathname + window.location.search)
+
+          return
+        } catch (signInError) {
+          if (signInError !== 'Invalid login credentials') throw signInError
         }
+
+        // A wrong password on an unconfirmed account also reads as invalid credentials, and sign-up would
+        // "succeed" without changing that account's password. Send the visitor to verification instead.
+        // If the check cannot run, stop rather than signing up blind.
+        let unconfirmed: boolean
+
+        try {
+          unconfirmed = await hasUnconfirmedAccount(formData.email)
+        } catch (lookupError) {
+          console.error(lookupError)
+          setLookupFailed(true)
+          setShowAlert(true)
+
+          return
+        }
+
+        if (unconfirmed) {
+          router.push(`/auth/verify-email?email=${encodeURIComponent(formData.email)}`)
+
+          return
+        }
+
+        await handleSignUp(formData as PasswordSignUpFormData)
+        router.refresh()
       } catch (error) {
         console.error(error)
         setShowAlert(true)
@@ -98,7 +130,9 @@ const AuthForm = ({ users }: { users: User[] | null }) => {
                 <Trans i18nKey='front-pages:checkoutErrorTitle' />
               </AlertTitle>
               <AlertDescription>
-                {(singInError as unknown) === 'Invalid login credentials' ? (
+                {lookupFailed ? (
+                  <Trans i18nKey='front-pages:checkoutGenericError' />
+                ) : (singInError as unknown) === 'Invalid login credentials' ? (
                   <Trans i18nKey='front-pages:checkoutInvalidCredentials' />
                 ) : (singUpError as unknown) === 'User already registered' ? (
                   <Trans i18nKey='front-pages:checkoutUserExists' />
