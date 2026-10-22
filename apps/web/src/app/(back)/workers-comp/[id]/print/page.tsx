@@ -4,7 +4,7 @@ import type { Metadata } from 'next'
 import { Button } from '@repo/ui/components/ui/button'
 import { createServiceRoleClient } from '@repo/supabase/server'
 
-import PrintButton from './PrintButton'
+import PrintButton from '@/components/common/PrintButton'
 import { writeForgeAudit } from '@/lib/forgeAudit'
 import { requireTenantPermission } from '@/lib/forgeTenantAuth'
 import { getWcPeriods, wcRecordWithinScope, wcTodayIso, withWorkDays } from '@/lib/forgeWorkersComp'
