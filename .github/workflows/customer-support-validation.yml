@@ -103,6 +103,10 @@ jobs:
           pnpm exec playwright install --with-deps chromium
 
       - name: Start Forge web app
+        env:
+          # The dev server compiles every route the suites visit; with the default heap it hit
+          # Next's memory threshold mid-run and restarted (ERR_CONNECTION_REFUSED in Playwright).
+          NODE_OPTIONS: --max-old-space-size=4096
         run: |
           pnpm --filter forge-industrial-safety-2.0-web dev --hostname 127.0.0.1 > /tmp/forge-smoke.log 2>&1 &
           echo $! > /tmp/forge-smoke.pid
