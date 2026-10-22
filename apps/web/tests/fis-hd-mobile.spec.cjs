@@ -27,9 +27,20 @@ async function rest(urlPath) {
 
 async function login(page, email) {
   await page.goto(baseURL + '/auth/login')
+  // Wait for React to hydrate the form (independent of translations, which can load slowly on a
+  // cold dev server and leave the submit button unlabeled), then submit it directly.
+  await page.waitForFunction(
+    () => {
+      const form = document.querySelector('input[name="password"]')?.form
+
+      return !!form && Object.keys(form).some(key => key.startsWith('__react'))
+    },
+    null,
+    { timeout: 90000 }
+  )
   await page.locator('input[name="email"]').fill(email)
   await page.locator('input[name="password"]').fill('ForgeDev2!')
-  await page.getByRole('button', { name: /Sign in to Forge Industrial Safety 2\.0/i }).click()
+  await page.locator('form', { has: page.locator('input[name="password"]') }).locator('button[type="submit"]').click()
   await page.waitForURL(url => !url.pathname.startsWith('/auth/login'), { timeout: 60000 })
 }
 
