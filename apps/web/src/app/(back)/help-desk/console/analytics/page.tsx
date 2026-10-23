@@ -1,14 +1,15 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import Form from 'next/form'
-import { TbChartBar, TbDownload } from 'react-icons/tb'
+import { TbChartBar, TbDownload, TbStar, TbStarFilled } from 'react-icons/tb'
 import { Button } from '@repo/ui/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@repo/ui/components/ui/card'
 import { Input } from '@repo/ui/components/ui/input'
 
 import { formatDuration, label, priorityLabels, statusLabels } from '@/lib/forgeHelpdesk'
 import { requireHelpdeskStaff } from '@/lib/forgeHelpdeskAccess'
-import { ANALYTICS_RANGES, getHelpdeskAnalytics, resolveAnalyticsRange } from '@/lib/forgeHelpdeskData'
+import { ANALYTICS_RANGES, getHelpdeskAnalytics, getHelpdeskServiceReport, resolveAnalyticsRange } from '@/lib/forgeHelpdeskData'
+import type { HelpdeskRatingComment } from '@/lib/forgeHelpdeskData'
 import { listTenantOptions } from '@/lib/forgeHelpdeskConsoleData'
 
 export const metadata: Metadata = { title: 'Help Desk Analytics' }
@@ -46,11 +47,58 @@ const Breakdown = ({ title, items, format }: { title: string; items: any[]; form
   )
 }
 
+const Stars = ({ rating }: { rating: number }) => (
+  <span className='text-primary inline-flex' aria-label={`${rating} out of 5`}>
+    {[1, 2, 3, 4, 5].map(n => (n <= rating ? <TbStarFilled key={n} aria-hidden /> : <TbStar key={n} aria-hidden />))}
+  </span>
+)
+
+const RatingComments = ({ comments }: { comments: HelpdeskRatingComment[] }) => (
+  <Card>
+    <CardHeader>
+      <CardTitle className='text-base'>Rating comments</CardTitle>
+    </CardHeader>
+    <CardContent className='flex flex-col gap-3 text-sm'>
+      {comments.length ? (
+        <ul className='flex flex-col gap-3' aria-label='Rating comments'>
+          {comments.map(c => (
+            <li
+              key={c.ticket_id}
+              data-testid='rating-comment'
+              className={`rounded-md border p-3 ${c.rating <= 2 ? 'border-destructive/40 bg-destructive/5' : ''}`}
+            >
+              <div className='flex flex-wrap items-center justify-between gap-2'>
+                <Stars rating={c.rating} />
+                <span className='text-textSecondary text-xs'>{new Date(c.submitted_at).toLocaleString()}</span>
+              </div>
+              <p className='mt-2 whitespace-pre-wrap break-words'>{c.comment}</p>
+              <p className='text-textSecondary mt-2 text-xs'>
+                <Link className='text-primary font-medium' href={`/help-desk/console/tickets/${c.ticket_id}`}>
+                  {c.ticket_number}
+                </Link>{' '}
+                · {c.subject} · {c.organization_name || 'Unknown tenant'} · {c.assignee_name || 'Unassigned'}
+              </p>
+            </li>
+          ))}
+        </ul>
+      ) : (
+        <p className='text-textSecondary'>No rating comments in this range.</p>
+      )}
+    </CardContent>
+  </Card>
+)
+
 const AnalyticsPage = async ({ searchParams }: { searchParams: Promise<{ range?: string; from?: string; to?: string; tenant?: string }> }) => {
   const staff = await requireHelpdeskStaff('helpdesk.analytics.view')
   const params = await searchParams
   const range = resolveAnalyticsRange(params.range, params.from, params.to)
-  const [data, tenants] = await Promise.all([getHelpdeskAnalytics({ from: range.from, to: range.to, organizationId: params.tenant }), listTenantOptions()])
+
+  const [data, service, tenants] = await Promise.all([
+    getHelpdeskAnalytics({ from: range.from, to: range.to, organizationId: params.tenant }),
+    getHelpdeskServiceReport({ from: range.from, to: range.to, organizationId: params.tenant }),
+    listTenantOptions()
+  ])
+
   const query = new URLSearchParams()
 
   query.set('range', range.key)
@@ -76,7 +124,16 @@ const AnalyticsPage = async ({ searchParams }: { searchParams: Promise<{ range?:
     { label: 'Duplicate rate', value: pct(data.duplicate_rate_percent) },
     { label: 'Known issues', value: data.known_issue_count },
     { label: 'Feature requests', value: data.feature_request_count },
-    { label: 'CSAT', value: data.csat_average ? `${data.csat_average} / 5 (${data.csat_responses})` : '—' }
+    { label: 'CSAT', value: data.csat_average ? `${data.csat_average} / 5 (${data.csat_responses})` : '—' },
+    { label: 'Satisfied (4–5)', value: pct(service.csat_satisfied_percent) },
+    { label: 'Low ratings (1–2)', value: service.csat_low_count }
+  ]
+
+  // Point-in-time figures: they ignore the date range (but respect the tenant filter).
+  const now = [
+    { label: 'First response overdue', value: service.first_response_overdue_now },
+    { label: 'Resolution overdue', value: service.resolution_overdue_now },
+    { label: 'Unassigned open', value: service.unassigned_open }
   ]
 
   const daily: any[] = data.daily || []
@@ -142,6 +199,22 @@ const AnalyticsPage = async ({ searchParams }: { searchParams: Promise<{ range?:
         ))}
       </div>
 
+      <section aria-labelledby='helpdesk-now' className='flex flex-col gap-2'>
+        <h2 id='helpdesk-now' className='text-textPrimary text-lg font-semibold'>
+          Right now <span className='text-textSecondary text-sm font-normal'>(all dates; paused SLAs excluded)</span>
+        </h2>
+        <div className='grid grid-cols-1 gap-3 sm:grid-cols-3'>
+          {now.map(m => (
+            <Card key={m.label} data-testid='helpdesk-now-metric'>
+              <CardContent className='p-4'>
+                <p className='text-textSecondary text-xs font-medium'>{m.label}</p>
+                <p className={`mt-1 text-xl font-bold ${m.value > 0 ? 'text-destructive' : ''}`}>{m.value ?? 0}</p>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      </section>
+
       <Card>
         <CardHeader>
           <CardTitle className='text-base'>Created vs resolved per day</CardTitle>
@@ -179,6 +252,8 @@ const AnalyticsPage = async ({ searchParams }: { searchParams: Promise<{ range?:
         <Breakdown title='By assignee' items={data.by_assignee || []} />
         <Breakdown title='Top recurring issues' items={data.top_recurring || []} />
       </div>
+
+      <RatingComments comments={service.csat_comments} />
     </div>
   )
 }
