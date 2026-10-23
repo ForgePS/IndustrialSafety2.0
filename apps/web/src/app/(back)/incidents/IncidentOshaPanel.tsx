@@ -17,13 +17,17 @@ const IncidentOshaPanel = ({
   cases,
   people,
   defaultPersonnelId,
-  canOpen
+  canOpen,
+  hiddenCount = 0
 }: {
   incidentId: string
   cases: Array<{ id: string; caseNumber: string; employeeName: string; decision: string; status: string }>
   people: Array<{ id: string; label: string }>
   defaultPersonnelId: string | null
   canOpen: boolean
+
+  /** Cases on this incident outside the viewer's OSHA access: counted, never shown. */
+  hiddenCount?: number
 }) => {
   const router = useRouter()
   const [pending, startTransition] = useTransition()
@@ -65,9 +69,14 @@ const IncidentOshaPanel = ({
               </li>
             ))}
           </ul>
-        ) : (
+        ) : hiddenCount ? null : (
           <p className='text-textSecondary text-sm'>No OSHA case has been opened for this incident.</p>
         )}
+        {hiddenCount ? (
+          <p className='text-textSecondary text-sm' data-testid='incident-osha-hidden'>
+            {hiddenCount === 1 ? 'One other OSHA case' : `${hiddenCount} other OSHA cases`} on this incident {hiddenCount === 1 ? 'is' : 'are'} outside your OSHA access.
+          </p>
+        ) : null}
 
         {canOpen ? (
           <div className='grid gap-3 md:grid-cols-[1fr_auto] md:items-end'>

@@ -192,7 +192,26 @@ export const openOshaCaseFromIncident = async ({
   })
 
   if ('error' in result) return { error: result.error }
-  if (result.existed) return { id: result.id, message: 'This employee already has an OSHA case for this incident.' }
+
+  if (result.existed) {
+    // Only hand back the existing case when the viewer can open it; otherwise say so instead of sending them to a 404.
+    const { data: existing } = await supabase
+      .from('forge_osha_cases')
+      .select('id, organization_id, location_id, division_id, created_by')
+      .eq('organization_id', organizationId)
+      .eq('id', result.id)
+      .maybeSingle()
+
+    const view = context.access.effective.find(item => item.permissionKey === 'osha.view' && item.allowed)
+
+    const visible = existing && view
+      ? await oshaRecordWithinScope({ organizationId, userId: context.user.id, scope: view.scope, record: existing })
+      : false
+
+    if (!visible) return { error: 'This employee already has an OSHA case for this incident, outside your OSHA access. Ask an OSHA administrator.' }
+
+    return { id: result.id, message: 'This employee already has an OSHA case for this incident.' }
+  }
 
   refreshOsha(result.id, incidentId)
 

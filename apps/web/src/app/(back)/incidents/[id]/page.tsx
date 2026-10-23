@@ -177,6 +177,7 @@ const IncidentDetailPage = async ({ params }: { params: Promise<{ id: string }> 
     cases: Array<{ id: string; caseNumber: string; employeeName: string; decision: string; status: string }>
     people: Array<{ id: string; label: string }>
     defaultPersonnelId: string | null
+    hiddenCount: number
   } = null
 
   if (canViewOsha) {
@@ -210,7 +211,10 @@ const IncidentDetailPage = async ({ params }: { params: Promise<{ id: string }> 
       .filter(entry => entry.visible)
       .map(entry => entry.item)
 
-    if (injuryRelated || oshaCases.length) {
+    // Cases the viewer cannot open are counted, so the panel never claims none exist.
+    const hiddenCount = (allOshaCases || []).length - oshaCases.length
+
+    if (injuryRelated || oshaCases.length || hiddenCount) {
       const structure = canOpenOsha ? await getPersonnelStructureOptions({ organizationId }) : null
 
       oshaPanel = {
@@ -222,7 +226,8 @@ const IncidentDetailPage = async ({ params }: { params: Promise<{ id: string }> 
           status: item.status
         })),
         people: structure?.supervisors || [],
-        defaultPersonnelId: injuredPeople?.[0]?.personnel_id || incident.reported_by_personnel_id || null
+        defaultPersonnelId: injuredPeople?.[0]?.personnel_id || incident.reported_by_personnel_id || null,
+        hiddenCount
       }
     }
   }
@@ -403,6 +408,7 @@ const IncidentDetailPage = async ({ params }: { params: Promise<{ id: string }> 
           incidentId={incident.id}
           cases={oshaPanel.cases}
           people={oshaPanel.people}
+          hiddenCount={oshaPanel.hiddenCount}
           defaultPersonnelId={oshaPanel.defaultPersonnelId}
           canOpen={Boolean(canOpenOsha)}
         />

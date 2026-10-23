@@ -178,10 +178,10 @@ test('an own-scope OSHA viewer sees only their own cases on an incident', async 
     body: { organization_id: ORG, role_key: `port-osha-own-${RUN}`, name: `OSHA Own ${RUN}`, is_system_role: false, is_active: true, sort_order: 907 }
   })
   try {
-    const permissions = await rest('/rest/v1/forge_permission_registry?select=id,permission_key&permission_key=in.(incidents.view,osha.view)')
+    const permissions = await rest('/rest/v1/forge_permission_registry?select=id,permission_key&permission_key=in.(incidents.view,osha.view,osha.edit)')
     await rest('/rest/v1/forge_tenant_role_permissions', {
       method: 'POST',
-      body: permissions.map(item => ({ role_id: role.id, permission_id: item.id, allowed: true, scope: item.permission_key === 'osha.view' ? 'own' : 'organization' }))
+      body: permissions.map(item => ({ role_id: role.id, permission_id: item.id, allowed: true, scope: item.permission_key.startsWith('osha.') ? 'own' : 'organization' }))
     })
     await rest('/rest/v1/forge_tenant_user_roles', { method: 'POST', body: { organization_id: ORG, user_id: DEMO_USER, role_id: role.id } })
 
@@ -191,6 +191,17 @@ test('an own-scope OSHA viewer sees only their own cases on an incident', async 
     await expect(panel).toContainText(ownCase, { timeout: 30000 })
     await expect(panel).not.toContainText(othersCase)
     await expect(panel).not.toContainText(`Someone Else ${RUN}`)
+    await expect(page.getByTestId('incident-osha-hidden')).toHaveText('One other OSHA case on this incident is outside your OSHA access.')
+    await expect(panel).not.toContainText('No OSHA case has been opened')
+
+    // Opening a case for the employee whose case is hidden explains it, instead of sending the viewer to a 404.
+    await panel.locator('#osha-injured-person').evaluate((select, value) => {
+      if (![...select.options].some(option => option.value === value)) select.add(new Option('Injured employee', value))
+    }, fx.near.id)
+    await panel.locator('#osha-injured-person').selectOption(fx.near.id)
+    await panel.getByRole('button', { name: 'Open OSHA Case' }).click()
+    await expect(page.getByText('This employee already has an OSHA case for this incident, outside your OSHA access. Ask an OSHA administrator.')).toBeVisible({ timeout: 30000 })
+    expect(new URL(page.url()).pathname).toBe(`/incidents/${incident.id}`)
   } finally {
     await rest(`/rest/v1/forge_tenant_roles?id=eq.${role.id}`, { method: 'DELETE' })
   }
