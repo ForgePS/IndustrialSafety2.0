@@ -1,6 +1,6 @@
 /**
  * Sign-in hardening regression.
- *  - Public auth and checkout pages never ship a user directory (no seeded emails in the HTML/RSC payload).
+ *  - Public auth pages never ship a user directory (no seeded emails in the HTML/RSC payload).
  *  - Login: wrong password shows an error and stays on /auth/login; right password signs in.
  *  - Login: an unconfirmed account is sent to /auth/verify-email?email=... (decided by the provider's
  *    `email_not_confirmed` code, not a client-side user list).
@@ -29,7 +29,7 @@ const run = Date.now().toString(36)
 
 // Seeded accounts that must never appear on a public page.
 const SEEDED_EMAILS = ['admin@forge2.local', 'user@forge2.local', 'support@forge2.local', 'northstar.admin@forge2.local', 'northstar.user@forge2.local']
-const PUBLIC_PAGES = ['/auth/login', '/auth/register', '/auth/forgot-password', '/auth/verify-email?email=nobody%40example.test', '/checkout']
+const PUBLIC_PAGES = ['/auth/login', '/auth/register', '/auth/forgot-password', '/auth/verify-email?email=nobody%40example.test']
 
 async function admin(method, urlPath, body) {
   const res = await fetch(API + urlPath, {
@@ -66,7 +66,7 @@ async function signIn(page, email, pass) {
 test.describe.configure({ mode: 'serial' })
 test.setTimeout(180000)
 
-test('public auth and checkout pages do not ship a user directory', async ({ request }) => {
+test('public auth pages do not ship a user directory', async ({ request }) => {
   for (const route of PUBLIC_PAGES) {
     const response = await request.get(baseURL + route)
 

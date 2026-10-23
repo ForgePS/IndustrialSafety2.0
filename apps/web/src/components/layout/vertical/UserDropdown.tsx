@@ -9,7 +9,7 @@ import Link from 'next/link'
 // Third-party Imports
 import { useMedia } from 'react-use'
 import { useTheme } from 'next-themes'
-import { TbUser, TbMoodSmile, TbSun, TbMoonStars, TbDeviceDesktop, TbSettings, TbLogout } from 'react-icons/tb'
+import { TbUser, TbMoodSmile, TbSun, TbMoonStars, TbDeviceDesktop, TbLogout } from 'react-icons/tb'
 import {
   DropdownMenu,
   DropdownMenuTrigger,
@@ -34,7 +34,7 @@ type Props = {
   roles?: string[]
 }
 
-const UserDropdown = ({ user, roles }: Props) => {
+const UserDropdown = ({ user }: Props) => {
   // Hooks
   const { setTheme, systemTheme } = useTheme()
   const { settings, updateSettings } = useSettings()
@@ -46,6 +46,7 @@ const UserDropdown = ({ user, roles }: Props) => {
     user?.user_metadata?.name ||
     user?.email ||
     'Forge User'
+
   const avatarFallbackText = getInitials(userName).toUpperCase()
   const avatarSrc = user?.user_metadata?.user_avatar || user?.user_metadata?.avatar_url
 
@@ -98,17 +99,7 @@ const UserDropdown = ({ user, roles }: Props) => {
           </DropdownMenuRadioItem>
         </DropdownMenuRadioGroup>
         <DropdownMenuSeparator />
-        {roles?.includes('admin') ? (
-          <DropdownMenuItem asChild>
-            <Link href='/admin' className='flex gap-2'>
-              <TbSettings className='text-xl' />
-              <span className='flex-1 truncate'>
-                <Trans i18nKey='layout:adminDashboard' />
-              </span>
-            </Link>
-          </DropdownMenuItem>
-        ) : (
-          <DropdownMenuItem asChild>
+        <DropdownMenuItem asChild>
             <Link href='/dashboard' className='flex gap-2'>
               <TbMoodSmile className='text-xl' />
               <span className='flex-1 truncate'>
@@ -116,7 +107,6 @@ const UserDropdown = ({ user, roles }: Props) => {
               </span>
             </Link>
           </DropdownMenuItem>
-        )}
         <form
           action={() =>
             signOutMutation.mutateAsync().then(() => {
