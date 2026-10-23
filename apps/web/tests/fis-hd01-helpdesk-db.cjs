@@ -636,6 +636,95 @@ async function aiSuggestions(cat) {
   ok('AI suggestion decision recorded once with original preserved')
 }
 
+async function csatAlertsAndServiceReport(cat) {
+  console.log('Rating alerts and service report')
+  const change = (id, changes, actor = OWNER) =>
+    rpc('forge_support_apply_ticket_change', { p_ticket_id: id, p_actor_user_id: actor, p_actor_type: 'staff', p_changes: changes })
+  const reply = id =>
+    rpc('forge_support_add_message', {
+      p_ticket_id: id, p_actor_user_id: AGENT, p_actor_type: 'staff', p_message_type: 'support_reply', p_body: 'Looking into it.'
+    })
+  const resolve = id => change(id, { status: 'resolved', resolution_summary: 'Fixed for the rating regression.' }, AGENT)
+  const deliveries = async (ticketId, eventType) => {
+    const events = await request('GET', `/rest/v1/forge_notification_events?resource_id=eq.${ticketId}&event_type=eq.${eventType}&select=id`)
+    const ids = (events.data || []).map(e => e.id)
+
+    if (!ids.length) return []
+    const rows = await request('GET', `/rest/v1/forge_notification_deliveries?event_id=in.(${ids.join(',')})&select=recipient_user_id,recipient_audience,channel,link_path`)
+
+    return rows.data || []
+  }
+  const report = (key = KEY) =>
+    request(
+      'POST',
+      '/rest/v1/rpc/forge_support_analytics_service',
+      { p_from: new Date(Date.now() - 86400000).toISOString(), p_to: new Date(Date.now() + 86400000).toISOString(), p_organization_id: NS_ORG },
+      key
+    )
+
+  // Any rating reaches the assignee (never the customer), linked to the console ticket.
+  const rated = expectOk(await createTicket(cat, { subject: 'Rating alert assigned ' + stamp() }), 'assigned rating ticket')
+  expectOk(await change(rated.ticket_id, { assigned_user_id: AGENT }), 'assign rating ticket')
+  expectOk(await reply(rated.ticket_id), 'reply on rating ticket')
+  expectOk(await resolve(rated.ticket_id), 'resolve rating ticket')
+  const comment = 'Great help, thanks ' + stamp()
+  expectOk(
+    await rpc('forge_support_submit_csat', { p_ticket_id: rated.ticket_id, p_requester_user_id: NS_USER, p_organization_id: NS_ORG, p_rating: 5, p_comment: comment }),
+    'rate 5'
+  )
+  const good = await deliveries(rated.ticket_id, 'csat_received')
+  assert(good.some(d => d.recipient_user_id === AGENT && d.channel === 'in_app' && d.link_path === '/help-desk/console/tickets/' + rated.ticket_id), 'assignee must get an in-app rating alert linked to the console ticket: ' + JSON.stringify(good))
+  assert(!good.some(d => d.recipient_audience === 'customer' || d.recipient_user_id === NS_USER), 'rating alerts must never go to customers')
+  assert(!(await deliveries(rated.ticket_id, 'csat_low')).length, 'a 5-star rating must not raise a low-rating alert')
+  ok('rating notifies the assignee (never the customer), linked to the console ticket')
+
+  // A low rating on an unassigned ticket still reaches staff (ticket team or default triage).
+  const low = expectOk(await createTicket(cat, { subject: 'Rating alert unassigned ' + stamp() }), 'unassigned rating ticket')
+  expectOk(await reply(low.ticket_id), 'reply on unassigned ticket')
+  expectOk(await resolve(low.ticket_id), 'resolve unassigned ticket')
+  if ((await ticket(low.ticket_id)).assigned_user_id) expectOk(await change(low.ticket_id, { assigned_user_id: null }), 'unassign rating ticket')
+  assert(!(await ticket(low.ticket_id)).assigned_user_id, 'precondition: ticket must be unassigned')
+  expectOk(
+    await rpc('forge_support_submit_csat', { p_ticket_id: low.ticket_id, p_requester_user_id: NS_USER, p_organization_id: NS_ORG, p_rating: 1, p_comment: 'Took too long.' }),
+    'rate 1'
+  )
+  const lowAlerts = await deliveries(low.ticket_id, 'csat_low')
+  assert(lowAlerts.some(d => d.recipient_audience === 'internal'), 'an unassigned low rating must reach the ticket team or triage: ' + JSON.stringify(lowAlerts))
+  assert(!lowAlerts.some(d => d.recipient_audience === 'customer'), 'low-rating alerts must never go to customers')
+  ok('unassigned low rating reaches the team / triage')
+
+  // Service report: overdue now (paused SLAs excluded), unassigned backlog, satisfaction and comments.
+  const before = expectOk(await report(), 'service report')
+  const past = new Date(Date.now() - 3600000).toISOString()
+  const overdue = expectOk(await createTicket(cat, { subject: 'Overdue now ' + stamp() }), 'overdue ticket')
+  const backdated = await request('PATCH', '/rest/v1/forge_support_sla_instances?ticket_id=eq.' + overdue.ticket_id, { first_response_due_at: past, resolution_due_at: past })
+  assert(backdated.ok, 'could not back-date SLA ' + JSON.stringify(backdated.data))
+  const after = expectOk(await report(), 'service report after back-dating')
+  assert(after.first_response_overdue_now === before.first_response_overdue_now + 1, `first response overdue must rise by 1 (${before.first_response_overdue_now} -> ${after.first_response_overdue_now})`)
+  assert(after.resolution_overdue_now === before.resolution_overdue_now + 1, `resolution overdue must rise by 1 (${before.resolution_overdue_now} -> ${after.resolution_overdue_now})`)
+  assert(after.unassigned_open === before.unassigned_open + 1, `unassigned open must rise by 1 (${before.unassigned_open} -> ${after.unassigned_open})`)
+  ok('overdue-now and unassigned counts track open tickets')
+
+  expectOk(
+    await rpc('forge_support_add_message', {
+      p_ticket_id: overdue.ticket_id, p_actor_user_id: AGENT, p_actor_type: 'staff', p_message_type: 'support_reply',
+      p_body: 'Need more detail.', p_set_status: 'waiting_on_customer'
+    }),
+    'pause overdue ticket'
+  )
+  await request('PATCH', '/rest/v1/forge_support_sla_instances?ticket_id=eq.' + overdue.ticket_id, { resolution_due_at: past })
+  const paused = expectOk(await report(), 'service report after pausing')
+  assert(paused.resolution_overdue_now === before.resolution_overdue_now, 'a paused SLA must not count as overdue now')
+  ok('paused SLAs are excluded from overdue now')
+
+  assert(after.csat_low_count >= 1 && after.csat_satisfied_percent !== null, 'report must include satisfaction figures')
+  const found = (after.csat_comments || []).find(c => c.comment === comment)
+  assert(found && found.rating === 5 && found.ticket_id === rated.ticket_id && found.organization_name, 'report must list the rating comment with ticket and tenant')
+  ok('service report includes satisfaction % and rating comments')
+
+  expectDenied(await report(ANON), /permission denied|not found|Could not find/i, 'service report via anon key')
+}
+
 async function directAccess() {
   console.log('Direct table access')
   if (!ANON) {
@@ -662,6 +751,7 @@ async function directAccess() {
   await knowledge()
   await incidents(cat)
   await aiSuggestions(cat)
+  await csatAlertsAndServiceReport(cat)
   await directAccess()
   console.log(`\nFIS-HD-01 help desk DB regression: ${passed} checks passed.`)
 })().catch(error => {

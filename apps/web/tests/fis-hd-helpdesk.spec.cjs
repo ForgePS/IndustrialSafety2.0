@@ -28,6 +28,7 @@ const DEMO_USER = '20000000-0000-4000-8000-000000000002'
 const run = Date.now().toString(36)
 const subject = `HD browser regression ${run}`
 const publicReply = `Public Forge reply ${run}`
+const ratingComment = `Rating comment ${run}: slow to start, fine after.`
 const internalNote = `INTERNAL-HD-NOTE-${run}`
 const customerFile = `customer-${run}.txt`
 const internalFile = `internal-${run}.txt`
@@ -185,7 +186,9 @@ test('customer sees only public content, rates and reopens', async ({ browser })
   expect(allowed.ok()).toBeTruthy()
   expect((await allowed.body()).toString('utf8')).toContain('customer help desk attachment')
 
-  await page.getByRole('radio', { name: '5 stars' }).click()
+  // A low rating with a comment: staff are alerted and it appears in the analytics comments list.
+  await page.getByRole('radio', { name: '2 stars' }).click()
+  await page.getByLabel('Rating comment').fill(ratingComment)
   await page.getByRole('button', { name: 'Submit rating' }).click()
   await expect(page.getByText('Thanks for rating your experience.')).toBeVisible()
   await page.reload()
@@ -268,6 +271,16 @@ test('console surfaces render for the Forge owner', async ({ browser }) => {
     expect(response?.status(), route).toBeLessThan(400)
     await expect(owner.getByRole('heading', { name: heading })).toBeVisible()
   }
+  // Service figures and the low rating left by the customer in the earlier test.
+  await owner.goto(baseURL + '/help-desk/console/analytics?range=7d')
+  await expect(owner.getByRole('heading', { name: /Right now/ })).toBeVisible()
+  await expect(owner.getByTestId('helpdesk-now-metric')).toHaveCount(3)
+  await expect(owner.getByTestId('rating-comment').filter({ hasText: ratingComment })).toBeVisible()
+
+  // The ticket is unassigned, so its low rating went to the default triage team, which includes the owner.
+  await owner.goto(baseURL + '/notifications')
+  await expect(owner.getByText(/Low rating \(2\/5\) on SUP-/).first()).toBeVisible()
+
   const [incident] = await rest('/rest/v1/forge_support_platform_incidents?status=neq.resolved&order=created_at.asc&limit=1&select=id,incident_number')
   await owner.goto(baseURL + '/help-desk/console/incidents/' + incident.id)
   await expect(owner.getByRole('heading', { name: new RegExp(incident.incident_number) })).toBeVisible()
