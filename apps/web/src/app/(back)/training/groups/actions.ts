@@ -157,7 +157,14 @@ export const assignGroupTraining = async ({ groupId, dueDate }: { groupId: strin
   if (!assign) return { error: 'Assigning training needs the Assign Training permission.' }
   if (dueDate && !/^\d{4}-\d{2}-\d{2}$/.test(dueDate)) return { error: 'Enter the due date as YYYY-MM-DD.' }
 
-  const result = await assignGroupRequirements({ organizationId: target.organizationId, groupId, dueDate: dueDate || null, actorUserId: target.context.user.id })
+  // Only members inside the assigner's Assign Training scope get assignments; the rest are counted and skipped.
+  const result = await assignGroupRequirements({
+    organizationId: target.organizationId,
+    groupId,
+    dueDate: dueDate || null,
+    actorUserId: target.context.user.id,
+    scope: assign.scope
+  })
 
   await writeForgeAudit({
     actorUserId: target.context.user.id,
@@ -165,11 +172,13 @@ export const assignGroupTraining = async ({ groupId, dueDate }: { groupId: strin
     action: 'training.group_assigned',
     entityType: 'training_group',
     entityId: groupId,
-    afterValue: { created: result.created, skipped: result.skipped, due_date: dueDate || null }
+    afterValue: { created: result.created, skipped: result.skipped, out_of_scope: result.outOfScope, due_date: dueDate || null }
   })
 
   revalidatePath('/training')
   refresh()
 
-  return { message: `${result.created} assignment${result.created === 1 ? '' : 's'} created; ${result.skipped} already current or assigned.` }
+  const outside = result.outOfScope ? ` ${result.outOfScope} member${result.outOfScope === 1 ? ' is' : 's are'} outside your assignment access and were skipped.` : ''
+
+  return { message: `${result.created} assignment${result.created === 1 ? '' : 's'} created; ${result.skipped} already current or assigned.${outside}` }
 }

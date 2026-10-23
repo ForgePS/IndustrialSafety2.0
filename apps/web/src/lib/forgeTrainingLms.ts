@@ -6,6 +6,7 @@ import type { EffectivePermission } from '@/lib/forgeEffectiveAccess'
 import { OSHA_TIME_ZONE } from '@/lib/forgeOsha'
 import { zonedDateTimeParts } from '@/lib/forgeOshaRules'
 import { getScopedPersonnel } from '@/lib/forgePersonnel'
+import { personnelRecordWithinScope } from '@/lib/forgeScope'
 import { contentComplete, isOpenAssignment, matrixStatus } from '@/lib/forgeTrainingRules'
 import type { MatrixStatus } from '@/lib/forgeTrainingRules'
 
@@ -88,14 +89,25 @@ export const getLearnerView = async (organizationId: string, assignmentId: strin
     .eq('status', 'published')
     .maybeSingle()
 
-  const [{ data: sections }, { data: materials }, { data: progress }, { data: attempts }, { count: questionCount }] = await Promise.all([
+  const [{ data: sections }, { data: materials }, { data: progress }, { data: attempts }, { count: questionCount }, { data: completion }] = await Promise.all([
     version ? supabase.from('forge_training_sections').select('*').eq('version_id', version.id).order('sort_order').order('created_at') : { data: [] },
     supabase.from('forge_training_materials').select('id, title, file_name, content_type, size_bytes').eq('course_id', assignment.course_id).is('archived_at', null),
     supabase.from('forge_training_progress').select('*').eq('assignment_id', assignmentId).maybeSingle(),
     supabase.from('forge_training_attempts').select('*').eq('assignment_id', assignmentId).order('attempt_number', { ascending: false }),
     version
       ? supabase.from('forge_training_questions').select('id', { count: 'exact', head: true }).eq('version_id', version.id).eq('is_active', true)
-      : { count: 0 }
+      : { count: 0 },
+
+    // The approved completion for this assignment, for the certificate link on courses without a quiz.
+    supabase
+      .from('forge_training_completions')
+      .select('id')
+      .eq('organization_id', organizationId)
+      .eq('assignment_id', assignmentId)
+      .eq('approval_status', 'approved')
+      .order('completed_at', { ascending: false })
+      .limit(1)
+      .maybeSingle()
   ])
 
   const openAttempt = (attempts || []).find((item: any) => item.status === 'in_progress') || null
@@ -159,6 +171,7 @@ export const getLearnerView = async (organizationId: string, assignmentId: strin
     attemptsRemaining: version?.max_attempts ? Math.max(version.max_attempts - used, 0) : null,
     quiz,
     review,
+    completionId: (completion?.id as string | undefined) || null,
     attempts: attempts || []
   }
 }
@@ -196,7 +209,32 @@ export const completeLearnerSection = async (organizationId: string, assignmentI
     await supabase.from('forge_training_assignments').update({ status: 'in_progress', updated_at: now }).eq('id', assignmentId).in('status', ['assigned', 'overdue'])
   }
 
-  return { message: finished ? 'All required sections are done. The quiz is open.' : 'Section complete.' }
+  if (!finished) return { message: 'Section complete.' }
+
+  return { message: view.hasQuiz ? 'All required sections are done. The quiz is open.' : 'All required sections are done. Complete the course below.' }
+}
+
+/** Completes a course that has no quiz, once its required sections are done (and acknowledged, if required). */
+export const completeLearnerCourse = async (
+  organizationId: string,
+  assignmentId: string,
+  channel: 'online' | 'kiosk',
+  acknowledged: boolean,
+  actorUserId: string | null
+) => {
+  const supabase = createServiceRoleClient() as any
+
+  const { data, error } = await supabase.rpc('forge_complete_training_without_quiz', {
+    p_organization_id: organizationId,
+    p_assignment_id: assignmentId,
+    p_channel: channel,
+    p_acknowledged: Boolean(acknowledged),
+    p_actor_user_id: actorUserId
+  })
+
+  if (error) return { error: trainingErrorMessage(error) }
+
+  return { message: 'Course complete.', passed: true, completionId: (data as string | null) || null }
 }
 
 export const startLearnerQuiz = async (organizationId: string, assignmentId: string, channel: 'online' | 'kiosk', actorUserId: string | null) => {
@@ -298,7 +336,13 @@ export const resolvePortalSession = async (link: any, sessionToken: string | und
     .maybeSingle()
 
   if (!session || session.revoked_at || Date.parse(session.expires_at) < Date.now()) return null
-  if (!session.forge_personnel || session.forge_personnel.archived_at) return null
+
+  // The same rules as sign-in, rechecked on every request: a person terminated, archived or moved away from this
+  // kiosk's location since signing in loses the session at once.
+  const person = session.forge_personnel
+
+  if (!person || person.archived_at || person.employment_status === 'terminated') return null
+  if (link.location_id && person.location_id !== link.location_id) return null
 
   await supabase.from('forge_training_portal_sessions').update({ last_seen_at: new Date().toISOString() }).eq('id', session.id)
 
@@ -337,25 +381,43 @@ export const assignGroupRequirements = async ({
   organizationId,
   groupId,
   dueDate,
-  actorUserId
+  actorUserId,
+  scope
 }: {
   organizationId: string
   groupId: string
   dueDate: string | null
   actorUserId: string
+
+  /** The assigner's Assign Training scope; members outside it are skipped. A scheduled job passes 'organization'. */
+  scope: string | null
 }) => {
   const supabase = createServiceRoleClient() as any
   const today = trainingTodayIso()
 
   const [{ data: members }, { data: requirements }] = await Promise.all([
-    supabase.from('forge_training_group_members').select('personnel_id, forge_personnel!inner(archived_at)').eq('group_id', groupId).eq('organization_id', organizationId),
+    supabase
+      .from('forge_training_group_members')
+      .select('personnel_id, forge_personnel!inner(organization_id, archived_at, location_id, division_id, auth_user_id, supervisor_user_id)')
+      .eq('group_id', groupId)
+      .eq('organization_id', organizationId),
     supabase.from('forge_training_group_requirements').select('course_id').eq('group_id', groupId).eq('organization_id', organizationId)
   ])
 
-  const people = (members || []).filter((row: any) => !row.forge_personnel?.archived_at).map((row: any) => row.personnel_id)
+  const active = (members || []).filter((row: any) => !row.forge_personnel?.archived_at)
+
+  const checked = await Promise.all(
+    active.map(async (row: any) => ({
+      personnelId: row.personnel_id as string,
+      allowed: await personnelRecordWithinScope({ organizationId, userId: actorUserId, scope, record: row.forge_personnel })
+    }))
+  )
+
+  const people = checked.filter(item => item.allowed).map(item => item.personnelId)
+  const outOfScope = checked.length - people.length
   const courses = (requirements || []).map((row: any) => row.course_id)
 
-  if (!people.length || !courses.length) return { created: 0, skipped: 0 }
+  if (!people.length || !courses.length) return { created: 0, skipped: 0, outOfScope }
 
   const [{ data: assignments }, { data: completions }] = await Promise.all([
     supabase.from('forge_training_assignments').select('personnel_id, course_id, status, due_date').eq('organization_id', organizationId).in('personnel_id', people).in('course_id', courses),
@@ -402,7 +464,7 @@ export const assignGroupRequirements = async ({
     if (error) throw new Error(`Unable to create assignments: ${error.message}`)
   }
 
-  return { created: rows.length, skipped }
+  return { created: rows.length, skipped, outOfScope }
 }
 
 export type MatrixRow = {

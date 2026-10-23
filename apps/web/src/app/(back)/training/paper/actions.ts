@@ -4,6 +4,7 @@ import { revalidatePath } from 'next/cache'
 import { createServiceRoleClient } from '@repo/supabase/server'
 
 import { writeForgeAudit } from '@/lib/forgeAudit'
+import { personnelRecordWithinScope } from '@/lib/forgeScope'
 import { trainingErrorMessage, trainingTodayIso } from '@/lib/forgeTrainingLms'
 import { parsePaperResults } from '@/lib/forgeTrainingRules'
 import { requireTenantPermission } from '@/lib/forgeTenantAuth'
@@ -43,7 +44,13 @@ export const recordPaperResults = async ({ courseId, raw, defaultDate }: { cours
 
     const person = (matches || [])[0]
 
-    if (!person) {
+    // Same rule as recording a completion by hand: only people inside the recorder's scope. People outside it
+    // get the same answer as an unknown number, so the result does not reveal who exists elsewhere.
+    const inScope = person
+      ? !person.archived_at && (await personnelRecordWithinScope({ organizationId, userId: context.user.id, scope: context.permission.scope, record: person }))
+      : false
+
+    if (!person || !inScope) {
       outcomes.push({ line: row.line, employeeNumber: row.employeeNumber, name: null, ok: false, message: 'Employee number not found.' })
       continue
     }

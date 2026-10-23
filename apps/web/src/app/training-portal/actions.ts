@@ -7,6 +7,7 @@ import { writeForgeAudit } from '@/lib/forgeAudit'
 import {
   PORTAL_COOKIE,
   PORTAL_SESSION_MINUTES,
+  completeLearnerCourse,
   completeLearnerSection,
   hashToken,
   materialSignedUrl,
@@ -173,6 +174,28 @@ export const portalSubmitQuiz = async (token: string, assignmentId: string, atte
       entityType: 'training_attempt',
       entityId: attemptId,
       afterValue: { link_id: target.link.id, personnel_id: target.session.personnel_id, passed: result.passed ?? null }
+    }).catch(() => undefined)
+  }
+
+  return result
+}
+
+export const portalCompleteCourse = async (token: string, assignmentId: string, acknowledged: boolean): Promise<Result> => {
+  const target = await loadPortalAssignment(token, assignmentId)
+
+  if ('error' in target) return { error: target.error }
+
+  const result = await completeLearnerCourse(target.link.organization_id, assignmentId, 'kiosk', acknowledged, null)
+
+  if (!result.error) {
+    // Kiosk learners have no login, so the audit actor is empty and the personnel id is recorded instead.
+    await writeForgeAudit({
+      actorUserId: null,
+      organizationId: target.link.organization_id,
+      action: 'training.kiosk_course_completed',
+      entityType: 'training_assignment',
+      entityId: assignmentId,
+      afterValue: { link_id: target.link.id, personnel_id: target.session.personnel_id, completion_id: result.completionId ?? null }
     }).catch(() => undefined)
   }
 

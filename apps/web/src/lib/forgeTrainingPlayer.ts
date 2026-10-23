@@ -25,5 +25,6 @@ export const toCoursePlayerData = (view: LearnerView): CoursePlayerData => ({
   hasQuiz: view.hasQuiz,
   attemptsRemaining: view.attemptsRemaining,
   quiz: view.quiz,
-  review: view.review
+  review: view.review,
+  completionId: view.completionId
 })

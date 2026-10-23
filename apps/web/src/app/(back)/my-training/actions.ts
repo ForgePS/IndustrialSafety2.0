@@ -3,7 +3,7 @@
 import { revalidatePath } from 'next/cache'
 import { createServiceRoleClient } from '@repo/supabase/server'
 
-import { completeLearnerSection, materialSignedUrl, startLearnerQuiz, submitLearnerQuiz } from '@/lib/forgeTrainingLms'
+import { completeLearnerCourse, completeLearnerSection, materialSignedUrl, startLearnerQuiz, submitLearnerQuiz } from '@/lib/forgeTrainingLms'
 import { requireTenantPermission } from '@/lib/forgeTenantAuth'
 
 type Result = { error?: string; message?: string; url?: string; passed?: boolean; completionId?: string | null }
@@ -77,6 +77,18 @@ export const mySubmitQuiz = async (assignmentId: string, attemptId: string, answ
   if (!attempt) return { error: 'Quiz not found.' }
 
   const result = await submitLearnerQuiz(target.organizationId, attemptId, answers, acknowledged, target.context.user.id)
+
+  refresh(assignmentId)
+
+  return result
+}
+
+export const myCompleteCourse = async (assignmentId: string, acknowledged: boolean): Promise<Result> => {
+  const target = await loadOwnAssignment(assignmentId)
+
+  if ('error' in target) return { error: target.error }
+
+  const result = await completeLearnerCourse(target.organizationId, assignmentId, 'online', acknowledged, target.context.user.id)
 
   refresh(assignmentId)
 

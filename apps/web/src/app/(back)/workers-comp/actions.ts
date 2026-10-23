@@ -379,38 +379,44 @@ export const setWcCaseStatus = async ({
 
   const record = target.record
   const userId = target.context.user.id
-  let update: Record<string, unknown>
 
   if (action === 'close') {
     if (record.status !== 'active') return { error: 'Only active cases can be closed.' }
 
-    // Close any open work status period so day counts stop growing.
-    await target.supabase
-      .from('forge_wc_work_status_periods')
-      .update({ end_date: wcTodayIso(), updated_by: userId })
-      .eq('case_id', caseId)
-      .is('end_date', null)
+    // One locked step: check the version, end the open work-status period, close the case.
+    const { error } = await target.supabase.rpc('forge_close_wc_case', {
+      p_organization_id: target.organizationId,
+      p_case_id: caseId,
+      p_expected_version: rowVersion,
+      p_today: wcTodayIso(),
+      p_actor_user_id: userId
+    })
 
-    update = { status: 'closed', stage: 'closed', closed_at: new Date().toISOString(), closed_by: userId }
-  } else if (action === 'reopen') {
-    if (record.status !== 'closed') return { error: 'Only closed cases can be reopened.' }
-    update = { status: 'active', stage: 'claim_admin', closed_at: null, closed_by: null }
+    if (error?.code === '40001') return { error: 'This case changed since you opened it. Reload and try again.' }
+    if (error) return { error: error.code === '23514' && error.message ? error.message : wcWriteErrorMessage(error) }
   } else {
-    if (record.osha_recordable) return { error: 'Clear the OSHA recordable flag before archiving, so the OSHA log stays accurate.' }
-    update = { status: 'archived' }
+    let update: Record<string, unknown>
+
+    if (action === 'reopen') {
+      if (record.status !== 'closed') return { error: 'Only closed cases can be reopened.' }
+      update = { status: 'active', stage: 'claim_admin', closed_at: null, closed_by: null }
+    } else {
+      if (record.osha_recordable) return { error: 'Clear the OSHA recordable flag before archiving, so the OSHA log stays accurate.' }
+      update = { status: 'archived' }
+    }
+
+    const { data: updated, error } = await target.supabase
+      .from('forge_wc_cases')
+      .update({ ...update, updated_by: userId })
+      .eq('id', caseId)
+      .eq('organization_id', target.organizationId)
+      .eq('row_version', rowVersion)
+      .select('id')
+      .maybeSingle()
+
+    if (error) return { error: wcWriteErrorMessage(error) }
+    if (!updated) return { error: 'This case changed since you opened it. Reload and try again.' }
   }
-
-  const { data: updated, error } = await target.supabase
-    .from('forge_wc_cases')
-    .update({ ...update, updated_by: userId })
-    .eq('id', caseId)
-    .eq('organization_id', target.organizationId)
-    .eq('row_version', rowVersion)
-    .select('id')
-    .maybeSingle()
-
-  if (error) return { error: wcWriteErrorMessage(error) }
-  if (!updated) return { error: 'This case changed since you opened it. Reload and try again.' }
 
   const label = action === 'close' ? 'closed' : action === 'reopen' ? 'reopened' : 'archived'
 

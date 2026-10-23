@@ -4,7 +4,7 @@ import type { Metadata } from 'next'
 import { Button } from '@repo/ui/components/ui/button'
 import { createServiceRoleClient } from '@repo/supabase/server'
 
-import { myCompleteSection, myOpenMaterial, myStartQuiz, mySubmitQuiz } from '../actions'
+import { myCompleteCourse, myCompleteSection, myOpenMaterial, myStartQuiz, mySubmitQuiz } from '../actions'
 import CoursePlayer from '@/components/training/CoursePlayer'
 import { getLearnerView } from '@/lib/forgeTrainingLms'
 import { toCoursePlayerData } from '@/lib/forgeTrainingPlayer'
@@ -38,6 +38,7 @@ const MyCoursePage = async ({ params }: { params: Promise<{ assignmentId: string
         completeSection={myCompleteSection.bind(null, assignmentId)}
         startQuiz={myStartQuiz.bind(null, assignmentId)}
         submitQuiz={mySubmitQuiz.bind(null, assignmentId)}
+        completeCourse={myCompleteCourse.bind(null, assignmentId)}
         openMaterial={myOpenMaterial.bind(null, assignmentId)}
         certificateBase='/training/certificates/'
       />

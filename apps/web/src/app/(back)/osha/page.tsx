@@ -8,8 +8,8 @@ import { createServiceRoleClient } from '@repo/supabase/server'
 
 import OshaFilters from './OshaFilters'
 import { parseOshaParams } from './params'
-import { getOshaLocations, getOshaYearSummary, getScopedOshaCases, oshaLocationIdsInScope } from '@/lib/forgeOsha'
-import { OSHA_CASE_OUTCOME_LABELS, OSHA_RECORDABILITY_LABELS } from '@/lib/forgeOshaRules'
+import { OSHA_TIME_ZONE, getOshaLocations, getOshaYearSummary, getScopedOshaCases, oshaLocationIdsInScope } from '@/lib/forgeOsha'
+import { OSHA_CASE_OUTCOME_LABELS, OSHA_RECORDABILITY_LABELS, zonedDateTimeParts } from '@/lib/forgeOshaRules'
 import type { OshaCaseOutcome, OshaRecordability } from '@/lib/forgeOshaRules'
 import { requireTenantPermission } from '@/lib/forgeTenantAuth'
 
@@ -31,7 +31,9 @@ const OshaPage = async ({ searchParams }: { searchParams: Promise<Record<string,
     getScopedOshaCases({ organizationId, userId: context.user.id, permission: context.permission, year, locationId })
   ])
 
-  // Injury incidents in the year that have no OSHA decision yet.
+  // Injury incidents in the year that have no OSHA decision yet. The year is decided the same way a case's injury
+  // date is: the incident's local date in the OSHA time zone. The query window is padded a day each side to cover
+  // any UTC offset, then narrowed exactly, so every incident lands in exactly one year.
   const supabase = createServiceRoleClient() as any
 
   const pendingIncidents = selectedIds.length
@@ -42,14 +44,17 @@ const OshaPage = async ({ searchParams }: { searchParams: Promise<Record<string,
           .eq('organization_id', organizationId)
           .in('location_id', selectedIds)
           .or('involves_injury.eq.true,incident_type.eq.injury,osha_review_flag.eq.true')
-          .gte('occurred_at', `${year}-01-01`)
+          .gte('occurred_at', `${year - 1}-12-31`)
           .lt('occurred_at', `${year + 1}-01-02`)
           .order('occurred_at', { ascending: false })
       ).data || []
     : []
 
   const awaitingReview = pendingIncidents.filter(
-    (incident: any) => !(incident.forge_osha_cases || []).some((item: any) => item.status !== 'voided')
+    (incident: any) =>
+      incident.occurred_at &&
+      zonedDateTimeParts(incident.occurred_at, OSHA_TIME_ZONE).date.startsWith(`${year}-`) &&
+      !(incident.forge_osha_cases || []).some((item: any) => item.status !== 'voided')
   )
 
   const canEdit = context.access.effective.some(item => item.permissionKey === 'osha.edit' && item.allowed)

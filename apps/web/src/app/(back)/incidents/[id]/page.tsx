@@ -180,10 +180,10 @@ const IncidentDetailPage = async ({ params }: { params: Promise<{ id: string }> 
   } = null
 
   if (canViewOsha) {
-    const [{ data: oshaCases }, { data: injuredPeople }] = await Promise.all([
+    const [{ data: allOshaCases }, { data: injuredPeople }] = await Promise.all([
       supabase
         .from('forge_osha_cases')
-        .select('id, case_number, employee_name, recordability, status')
+        .select('id, organization_id, case_number, employee_name, recordability, status, location_id, division_id, created_by')
         .eq('organization_id', organizationId)
         .eq('incident_id', id)
         .order('created_at'),
@@ -197,7 +197,20 @@ const IncidentDetailPage = async ({ params }: { params: Promise<{ id: string }> 
         .limit(1)
     ])
 
-    if (injuryRelated || (oshaCases || []).length) {
+    // Each case is checked against the viewer's own OSHA scope (as the workers' comp panel below does), so an
+    // own-scope viewer only sees cases they opened.
+    const oshaCases = (
+      await Promise.all(
+        (allOshaCases || []).map(async (item: any) => ({
+          item,
+          visible: await oshaRecordWithinScope({ organizationId, userId: context.user.id, scope: oshaViewPermission!.scope, record: item })
+        }))
+      )
+    )
+      .filter(entry => entry.visible)
+      .map(entry => entry.item)
+
+    if (injuryRelated || oshaCases.length) {
       const structure = canOpenOsha ? await getPersonnelStructureOptions({ organizationId }) : null
 
       oshaPanel = {

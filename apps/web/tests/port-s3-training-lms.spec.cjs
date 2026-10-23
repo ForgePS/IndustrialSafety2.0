@@ -240,6 +240,19 @@ test('kiosk: employee-number sign-in, failed then passed quiz', async ({ page, b
   await open(kiosk, portalUrl)
   await kiosk.getByRole('button', { name: 'Sign Out' }).click()
   await expect(kiosk.getByTestId('portal-sign-in')).toBeVisible({ timeout: 30000 })
+
+  // Someone terminated after signing in loses the kiosk session on their next request.
+  await kiosk.locator('#portal-employee-number').fill(`EMP-00${Number(RUN)}`)
+  await kiosk.getByRole('button', { name: 'Start Training' }).click()
+  await expect(kiosk.getByTestId('portal-welcome')).toBeVisible({ timeout: 30000 })
+  await rest(`/rest/v1/forge_personnel?id=eq.${fx.kiosk.id}`, { method: 'PATCH', body: { employment_status: 'terminated' } })
+  try {
+    await open(kiosk, portalUrl)
+    await expect(kiosk.getByTestId('portal-sign-in')).toBeVisible({ timeout: 30000 })
+    await expect(kiosk.getByTestId('portal-welcome')).toHaveCount(0)
+  } finally {
+    await rest(`/rest/v1/forge_personnel?id=eq.${fx.kiosk.id}`, { method: 'PATCH', body: { employment_status: 'active' } })
+  }
   await kioskContext.close()
 
   const [attempts] = [await rest(`/rest/v1/forge_training_attempts?personnel_id=eq.${fx.kiosk.id}&select=channel,passed&order=attempt_number`)]

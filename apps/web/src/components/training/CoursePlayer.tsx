@@ -32,6 +32,9 @@ export type CoursePlayerData = {
     completionId: string | null
     items: Array<{ stem: string; chosen: string | null; correct: boolean; explanation: string | null }>
   } | null
+
+  /** The approved completion for this assignment (used for the certificate link on courses without a quiz). */
+  completionId: string | null
 }
 
 const LETTERS = ['A', 'B', 'C', 'D', 'E', 'F']
@@ -45,6 +48,7 @@ const CoursePlayer = ({
   completeSection,
   startQuiz,
   submitQuiz,
+  completeCourse,
   openMaterial,
   certificateBase
 }: {
@@ -52,6 +56,9 @@ const CoursePlayer = ({
   completeSection: (sectionId: string) => Promise<Result>
   startQuiz: () => Promise<Result>
   submitQuiz: (attemptId: string, answers: number[], acknowledged: boolean) => Promise<Result>
+
+  /** Finishes a course that has no quiz. */
+  completeCourse: (acknowledged: boolean) => Promise<Result>
   openMaterial: (materialId: string) => Promise<Result>
 
   /** URL prefix the completion id is appended to, e.g. "/training/certificates/". */
@@ -137,6 +144,38 @@ const CoursePlayer = ({
           </Card>
         )
       })}
+
+      {data.published && !data.hasQuiz ? (
+        <Card data-testid='course-complete'>
+          <CardHeader>
+            <CardTitle>Complete the Course</CardTitle>
+            <CardDescription>This course has no quiz. Finish the required sections, then complete it here.</CardDescription>
+          </CardHeader>
+          <CardContent className='flex flex-col gap-4'>
+            {open ? (
+              data.contentDone ? (
+                <>
+                  {data.requiresAcknowledgement ? (
+                    <label className='flex items-start gap-3 rounded-lg border p-4'>
+                      <input type='checkbox' className='mt-1' checked={acknowledged} disabled={pending} onChange={event => setAcknowledged(event.target.checked)} />
+                      <span>{data.acknowledgementText}</span>
+                    </label>
+                  ) : null}
+                  <div>
+                    <Button disabled={pending || (data.requiresAcknowledgement && !acknowledged)} onClick={() => run(() => completeCourse(acknowledged))}>
+                      {pending ? 'Saving...' : 'Complete Course'}
+                    </Button>
+                  </div>
+                </>
+              ) : (
+                <p className='text-textSecondary'>Finish the required sections to complete the course.</p>
+              )
+            ) : data.status === 'completed' && data.completionId ? (
+              <div><Button variant='outline' asChild><a href={certificateBase + data.completionId}>View Certificate</a></Button></div>
+            ) : null}
+          </CardContent>
+        </Card>
+      ) : null}
 
       {data.hasQuiz ? (
         <Card data-testid='course-quiz'>

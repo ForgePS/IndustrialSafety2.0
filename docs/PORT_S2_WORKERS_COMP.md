@@ -66,6 +66,7 @@ Every table is service-role only. Server actions check `workers_comp.view/create
 | Queues | `/workers-comp/queues`: Employees (case counts, personnel link), Return to Work, Medical Follow-up (medical access only; flags no upcoming appointment and no visit in 14 days), and OSHA Recordable (log days against current days). |
 | Reports | `/workers-comp/reports` plus `/api/workers-comp/reports/[key]` give 1.0's catalog as CSV: open cases, by status, lost time, restricted duty, work-status history, claims summary, medical visits (medical access only) and weekly status. Scoped to what the viewer can see. Every export is audited. |
 | Corrections | Work-status periods and restrictions can be edited or removed (1.0 PATCH/DELETE) by the author or `workers_comp.configure`. Removals are kept in case history, and day counts and the OSHA log re-sync. |
+| Closing a case | `forge_close_wc_case` checks the case version, ends the open work-status period and closes the case in one locked step. A conflict changes nothing. |
 | Documents | `workers_comp_case` is registered in the resource registry, so claim packets attach through the shared evidence service (`workers_comp.view` plus `records.evidence.*`). The shared upload route now refuses files on archived records, for every module. |
 | Nightly OSHA refresh | `/api/workers-comp/cron` runs with `Authorization: Bearer $FORGE_CRON_SECRET`, the same pattern as the AI watch cron. It updates day counts on linked OSHA cases only when they changed, runs as the system, and never opens new OSHA cases. |
 

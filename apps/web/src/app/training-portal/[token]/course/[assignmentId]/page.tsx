@@ -3,7 +3,7 @@ import { notFound, redirect } from 'next/navigation'
 import type { Metadata } from 'next'
 import { Button } from '@repo/ui/components/ui/button'
 
-import { portalCompleteSection, portalOpenMaterial, portalStartQuiz, portalSubmitQuiz } from '../../../actions'
+import { portalCompleteCourse, portalCompleteSection, portalOpenMaterial, portalStartQuiz, portalSubmitQuiz } from '../../../actions'
 import { PortalSignOut } from '../../../PortalControls'
 import { loadPortal } from '../../../portalContext'
 import CoursePlayer from '@/components/training/CoursePlayer'
@@ -34,6 +34,7 @@ const PortalCoursePage = async ({ params }: { params: Promise<{ token: string; a
         completeSection={portalCompleteSection.bind(null, token, assignmentId)}
         startQuiz={portalStartQuiz.bind(null, token, assignmentId)}
         submitQuiz={portalSubmitQuiz.bind(null, token, assignmentId)}
+        completeCourse={portalCompleteCourse.bind(null, token, assignmentId)}
         openMaterial={portalOpenMaterial.bind(null, token, assignmentId)}
         certificateBase={`/training-portal/${token}/certificate/`}
       />

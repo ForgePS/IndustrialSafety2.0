@@ -48,8 +48,11 @@ Rules enforced in the database:
   - a certificate number
   - closure of the assignment
 - Max attempts are enforced. A failed attempt leaves the assignment open while attempts remain.
-- Paper results (`forge_record_paper_training_result`) apply the same pass mark and record a `paper` completion.
+- Paper results (`forge_record_paper_training_result`) apply the same pass mark and record a `paper` completion. Only people inside the recorder's `training.record_completion` scope can be recorded; anyone else is reported as "not found".
+- Assigning a group's required training skips members outside the assigner's `training.assign` scope, and says how many were skipped.
+- A course with sections but no quiz is completed with **Complete Course** once its required sections are done (`forge_complete_training_without_quiz`). If the version asks for an acknowledgement, it's recorded on the learner's progress. The course then earns a certificate like a quiz pass.
 - Kiosk sign-in failures are counted per device (IP) and per employee number. Eight failures in 15 minutes blocks for 15 minutes, as in 1.0.
+- Kiosk sessions recheck the sign-in rules on every request. Someone terminated, archived or moved away from the kiosk's location loses the session at once.
 - Every table is tenant-guarded (`forge_assert_same_org`), has RLS enabled and is service-role only. The functions are granted to `service_role` only.
 - New permissions:
   - `training.manage_content`
