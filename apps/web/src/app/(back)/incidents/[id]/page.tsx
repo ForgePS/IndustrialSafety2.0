@@ -211,8 +211,10 @@ const IncidentDetailPage = async ({ params }: { params: Promise<{ id: string }> 
       .filter(entry => entry.visible)
       .map(entry => entry.item)
 
-    // Cases the viewer cannot open are counted, so the panel never claims none exist.
-    const hiddenCount = (allOshaCases || []).length - oshaCases.length
+    // Live cases the viewer cannot open are counted, so the panel never claims none exist. Voided cases are left
+    // out, as everywhere else (they do not block a new case for the same employee).
+    const visibleIds = new Set(oshaCases.map((item: any) => item.id))
+    const hiddenCount = (allOshaCases || []).filter((item: any) => item.status !== 'voided' && !visibleIds.has(item.id)).length
 
     if (injuryRelated || oshaCases.length || hiddenCount) {
       const structure = canOpenOsha ? await getPersonnelStructureOptions({ organizationId }) : null

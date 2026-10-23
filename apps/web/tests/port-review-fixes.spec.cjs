@@ -202,6 +202,15 @@ test('an own-scope OSHA viewer sees only their own cases on an incident', async 
     await panel.getByRole('button', { name: 'Open OSHA Case' }).click()
     await expect(page.getByText('This employee already has an OSHA case for this incident, outside your OSHA access. Ask an OSHA administrator.')).toBeVisible({ timeout: 30000 })
     expect(new URL(page.url()).pathname).toBe(`/incidents/${incident.id}`)
+
+    // A voided case is history, not a live case: it no longer counts as hidden.
+    await rest(`/rest/v1/forge_osha_cases?case_number=eq.${othersCase}&organization_id=eq.${ORG}`, {
+      method: 'PATCH',
+      body: { status: 'voided', void_reason: 'Opened in error', voided_at: new Date().toISOString(), voided_by: ADMIN }
+    })
+    await open(page, `/incidents/${incident.id}`)
+    await expect(page.getByTestId('incident-osha-panel')).toContainText(ownCase, { timeout: 30000 })
+    await expect(page.getByTestId('incident-osha-hidden')).toHaveCount(0)
   } finally {
     await rest(`/rest/v1/forge_tenant_roles?id=eq.${role.id}`, { method: 'DELETE' })
   }

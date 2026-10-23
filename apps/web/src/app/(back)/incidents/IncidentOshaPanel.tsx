@@ -74,7 +74,8 @@ const IncidentOshaPanel = ({
         )}
         {hiddenCount ? (
           <p className='text-textSecondary text-sm' data-testid='incident-osha-hidden'>
-            {hiddenCount === 1 ? 'One other OSHA case' : `${hiddenCount} other OSHA cases`} on this incident {hiddenCount === 1 ? 'is' : 'are'} outside your OSHA access.
+            {hiddenCount === 1 ? (cases.length ? 'One other OSHA case' : 'An OSHA case') : `${hiddenCount}${cases.length ? ' other' : ''} OSHA cases`} on this incident{' '}
+            {hiddenCount === 1 ? 'is' : 'are'} outside your OSHA access.
           </p>
         ) : null}
 
