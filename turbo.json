@@ -32,7 +32,8 @@
     "SESSION_SECRET",
     "NEXT_PUBLIC_I18N_COOKIE_NAME",
     "FORGE_DEFAULT_TIME_ZONE",
-    "FORGE_CRON_SECRET"
+    "FORGE_CRON_SECRET",
+    "FORGE_EMAIL_CAPTURE_DIR"
   ],
   "tasks": {
     "dev": {

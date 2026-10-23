@@ -70,8 +70,11 @@ export const markNotificationsRead = async (userId: string, ids: string[] | 'all
 // ---------------------------------------------------------------------------
 // Email delivery
 // ---------------------------------------------------------------------------
-export type EmailMessage = { to: string; subject: string; text: string; html: string }
+export type EmailAttachment = { filename: string; content: Uint8Array; contentType: string }
+export type EmailMessage = { to: string; subject: string; text: string; html: string; attachments?: EmailAttachment[] }
 export type EmailSendResult = { ok: true; providerMessageId: string | null } | { ok: false; error: string; retryable: boolean }
+
+const toBase64 = (bytes: Uint8Array) => Buffer.from(bytes).toString('base64')
 
 export interface EmailAdapter {
   readonly name: string
@@ -91,7 +94,16 @@ class ResendEmailAdapter implements EmailAdapter {
       const response = await fetch('https://api.resend.com/emails', {
         method: 'POST',
         headers: { Authorization: 'Bearer ' + this.apiKey, 'Content-Type': 'application/json' },
-        body: JSON.stringify({ from: this.from, to: [message.to], subject: message.subject, text: message.text, html: message.html }),
+        body: JSON.stringify({
+          from: this.from,
+          to: [message.to],
+          subject: message.subject,
+          text: message.text,
+          html: message.html,
+          ...(message.attachments?.length
+            ? { attachments: message.attachments.map(item => ({ filename: item.filename, content: toBase64(item.content), content_type: item.contentType })) }
+            : {})
+        }),
         cache: 'no-store'
       })
 
@@ -108,11 +120,47 @@ class ResendEmailAdapter implements EmailAdapter {
   }
 }
 
+/**
+ * Local test adapter: writes each message (attachments base64) as a JSON file instead of sending it.
+ * Used only when FORGE_EMAIL_CAPTURE_DIR is set and no real provider is configured. Never set it in a deployment.
+ */
+class CaptureEmailAdapter implements EmailAdapter {
+  readonly name = 'capture'
+
+  constructor(private readonly directory: string) {}
+
+  async send(message: EmailMessage): Promise<EmailSendResult> {
+    try {
+      const { mkdir, writeFile } = await import('node:fs/promises')
+      const { join } = await import('node:path')
+      const { randomUUID } = await import('node:crypto')
+      const id = randomUUID()
+
+      await mkdir(this.directory, { recursive: true })
+      await writeFile(
+        join(this.directory, `${Date.now()}-${id}.json`),
+        JSON.stringify({
+          id,
+          to: message.to,
+          subject: message.subject,
+          text: message.text,
+          attachments: (message.attachments || []).map(item => ({ filename: item.filename, contentType: item.contentType, size: item.content.byteLength, content: toBase64(item.content) }))
+        })
+      )
+
+      return { ok: true, providerMessageId: id }
+    } catch (error) {
+      return { ok: false, error: error instanceof Error ? error.message.slice(0, 500) : 'Capture failed.', retryable: false }
+    }
+  }
+}
+
 export const getEmailAdapter = (): EmailAdapter | null => {
   const apiKey = process.env.RESEND_API_KEY
   const from = process.env.FORGE_NOTIFICATIONS_EMAIL_FROM
 
   if (apiKey && from) return new ResendEmailAdapter(apiKey, from)
+  if (!apiKey && process.env.FORGE_EMAIL_CAPTURE_DIR) return new CaptureEmailAdapter(process.env.FORGE_EMAIL_CAPTURE_DIR)
 
   return null
 }

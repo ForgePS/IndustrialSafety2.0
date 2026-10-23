@@ -4,7 +4,10 @@ import { Button } from '@repo/ui/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@repo/ui/components/ui/card'
 import { createServiceRoleClient } from '@repo/supabase/server'
 
+import WcFormTemplatesCard from './WcFormTemplatesCard'
 import WcSettingsForm from './WcSettingsForm'
+import { getActiveWcFormTemplates } from '@/lib/forgeWcForms'
+import { WC_FORM_DEFINITIONS, WC_FORM_KEYS } from '@/lib/forgeWcFormsRules'
 import { renderNotificationEmail } from '@/lib/forgeNotifications'
 import { requireTenantPermission } from '@/lib/forgeTenantAuth'
 import { wcTodayIso } from '@/lib/forgeWorkersComp'
@@ -18,10 +21,11 @@ const WcSettingsPage = async () => {
   const organizationId = context.activeOrganization.id
   const supabase = createServiceRoleClient() as any
 
-  const [{ data: settings }, candidates, viewPermission] = await Promise.all([
+  const [{ data: settings }, candidates, viewPermission, formTemplates] = await Promise.all([
     supabase.from('forge_wc_settings').select('*').eq('organization_id', organizationId).maybeSingle(),
     getWcRecipientCandidates(organizationId),
-    wcViewPermissionFor(organizationId, context.user.id)
+    wcViewPermissionFor(organizationId, context.user.id),
+    getActiveWcFormTemplates(organizationId)
   ])
 
   const selected: string[] = settings?.weekly_email_recipient_ids || []
@@ -64,6 +68,20 @@ const WcSettingsPage = async () => {
           weekday: settings?.weekly_email_weekday ?? 5,
           hour: settings?.weekly_email_hour ?? 7
         }}
+      />
+
+      <WcFormTemplatesCard
+        slots={WC_FORM_KEYS.map(formKey => {
+          const current = formTemplates.find(item => item.form_key === formKey)
+
+          return {
+            formKey,
+            title: WC_FORM_DEFINITIONS[formKey].title,
+            description: WC_FORM_DEFINITIONS[formKey].description,
+            medical: WC_FORM_DEFINITIONS[formKey].medical,
+            current: current ? { id: current.id, fileName: current.file_name, uploadedAt: current.created_at } : null
+          }
+        })}
       />
 
       <Card className='min-w-0 [contain:inline-size]' data-testid='wc-email-preview'>

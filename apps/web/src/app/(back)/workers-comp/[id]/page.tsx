@@ -6,8 +6,12 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@repo
 import { createServiceRoleClient } from '@repo/supabase/server'
 
 import { WcCaseEditor, WcMedicalPanel, WcRestrictionsPanel, WcWeeklyPanel, WcWorkStatusPanel } from './WcCasePanels'
+import WcFormsPanel from './forms/WcFormsPanel'
 import RecordEvidencePanel from '@/components/workflow/RecordEvidencePanel'
 import { listRecordEvidence } from '@/lib/forgeEvidence'
+import { getActiveWcFormTemplates, wcFormAccess, wcFormSignedDate } from '@/lib/forgeWcForms'
+import { WC_FORM_DEFINITIONS } from '@/lib/forgeWcFormsRules'
+import type { WcFormKey } from '@/lib/forgeWcFormsRules'
 import { requireTenantPermission } from '@/lib/forgeTenantAuth'
 import { getWcPeriods, wcRecordWithinScope, wcTodayIso, withWorkDays } from '@/lib/forgeWorkersComp'
 import {
@@ -79,6 +83,21 @@ const WcCasePage = async ({ params }: { params: Promise<{ id: string }> }) => {
 
   // Shared evidence service: enforces workers_comp.view plus records.evidence.view for this case.
   const documents = await listRecordEvidence({ organizationId, resourceType: 'workers_comp_case', resourceId: id })
+
+  // Case forms appear only for companies that uploaded those forms, and HIPAA only with medical access.
+  const [formTemplates, formAccess, { data: caseForms }] = await Promise.all([
+    getActiveWcFormTemplates(organizationId),
+    wcFormAccess(context, record),
+    supabase
+      .from('forge_wc_case_forms')
+      .select('id, form_key, status, signer_name, signed_at, created_at')
+      .eq('organization_id', organizationId)
+      .eq('case_id', id)
+      .order('created_at', { ascending: false })
+  ])
+
+  const visibleTemplates = formTemplates.filter(item => formAccess.canView(item.form_key))
+  const visibleForms = (caseForms || []).filter((item: any) => formAccess.canView(item.form_key as WcFormKey))
   const live = withWorkDays(record, periods, today)
   const editable = canEdit && record.status !== 'archived'
 
@@ -205,6 +224,29 @@ const WcCasePage = async ({ params }: { params: Promise<{ id: string }> }) => {
           Claim packets, carrier letters and forms. Anyone with workers&apos; comp access to this case can open these files; keep detailed medical records in Medical Visits.
         </p>
       </div>
+
+      {visibleTemplates.length || visibleForms.length ? (
+        <WcFormsPanel
+          caseId={record.id}
+          available={visibleTemplates.map(item => ({
+            formKey: item.form_key,
+            title: WC_FORM_DEFINITIONS[item.form_key].title,
+            description: WC_FORM_DEFINITIONS[item.form_key].description,
+            templateId: item.id,
+            medical: WC_FORM_DEFINITIONS[item.form_key].medical,
+            canStart: formAccess.canManage(item.form_key)
+          }))}
+          forms={visibleForms.map((item: any) => ({
+            id: item.id,
+            title: WC_FORM_DEFINITIONS[item.form_key as WcFormKey].title,
+            status: item.status,
+            signerName: item.signer_name,
+            signedDate: wcFormSignedDate(item.signed_at),
+            createdAt: item.created_at,
+            medical: WC_FORM_DEFINITIONS[item.form_key as WcFormKey].medical
+          }))}
+        />
+      ) : null}
 
       {showMedical ? (
         <WcMedicalPanel

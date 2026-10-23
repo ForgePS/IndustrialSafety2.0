@@ -69,6 +69,44 @@ Every table is service-role only. Server actions check `workers_comp.view/create
 | Documents | `workers_comp_case` is registered in the resource registry, so claim packets attach through the shared evidence service (`workers_comp.view` plus `records.evidence.*`). The shared upload route now refuses files on archived records, for every module. |
 | Nightly OSHA refresh | `/api/workers-comp/cron` runs with `Authorization: Bearer $FORGE_CRON_SECRET`, the same pattern as the AI watch cron. It updates day counts on linked OSHA cases only when they changed, runs as the system, and never opens new OSHA cases. |
 
+## Case forms (company paper forms, filled and signed digitally)
+
+Two forms, matching the 1.0 build of the same feature:
+- **Employee Injury Guidelines:** the employee signs to acknowledge receiving them. The paper form has no blanks, so the acknowledgment (signature, printed name, date) is drawn in the empty lower part of the page.
+- **HIPAA Authorization:** name, date of birth, the provider authorized to disclose, the four initialed lines, the signature of the patient or a personal representative, the printed name and relationship, and the date.
+
+**Templates are per company.** Forms carry a company's logo, staff names and phone numbers, so no form files are in the repository.
+- A user with `workers_comp.configure` uploads the original PDF under Settings → Case Forms. Each upload is checked as an unprotected PDF of 1–4 pages, up to 5 MB, and stored unchanged in the private `forge-wc-forms` bucket.
+- A form appears on cases only for companies that uploaded it.
+- Replacing a template keeps forms already filled on the old one, so they still print from it.
+
+**Printing**
+- The blank form (`/api/workers-comp/forms/templates/[id]`) is the original file, byte for byte.
+- The filled form (`/api/workers-comp/forms/[id]/pdf`) is that same file with the values and signature drawn on with `pdf-lib`, so it looks like the paper copy filled in by hand. Dates print as MM/DD/YYYY.
+- Positions live in `src/lib/forgeWcFormsRules.ts` as page fractions, measured from the original forms. A template's `layout` column can override any position for a company whose form is laid out differently.
+- A draft prints without a signature, so it can be signed on paper.
+
+**Signing**
+- A reusable canvas `SignaturePad` (`src/components/common/SignaturePad.tsx`) handles mouse, pen and touch.
+- The PNG goes to private storage. `forge_sign_wc_case_form` signs the form in one locked, version-checked step and checks the signature belongs to that form.
+- Signed forms cannot change. Corrections are a void with a reason (`forge_void_wc_case_form`) plus a new form. Drafts can be voided too.
+
+**Email**
+- Sends the signed, filled PDF as an attachment. Each recipient gets their own message.
+- Recipients are chosen staff from personnel (addresses come from the personnel record, never the browser) and/or up to 10 typed outside addresses, 20 in total, with an optional note.
+- Sent directly through the platform email adapter in `forgeNotifications.ts`, which now supports attachments. The notification outbox only addresses Forge users, so it isn't used here.
+- Every attempt is recorded on the form history: recipients, result, and the attachment's name, size and SHA-256. Without `RESEND_API_KEY` the app says email isn't set up and records the failed attempt.
+
+**Access**
+- Guidelines: view with `workers_comp.view`; fill, sign, void and email with `workers_comp.edit`.
+- HIPAA: view with `workers_comp.medical.view`; fill, sign, void and email with `workers_comp.medical.manage`. Date of birth is prefilled from the personnel record only for `workers_comp.medical.manage`.
+- HIPAA forms are kept out of case evidence and case history, both of which any case viewer can see. To anyone else, a HIPAA form or its PDF looks like it doesn't exist (404).
+- Archived cases take no new forms.
+
+**Audit:** created, updated, signed, voided, printed, downloaded and emailed go to the append-only `forge_wc_case_form_events` and to the platform audit log (`forge_creator_audit_log`).
+
+**Test-only email capture.** When `FORGE_EMAIL_CAPTURE_DIR` is set and `RESEND_API_KEY` is not, emails are written as JSON files (attachments base64) instead of being sent. Never set it in a deployment.
+
 ## Still not done
 
 - **Scheduling the crons.** Nothing calls them yet. The deployment scheduler must:
@@ -92,6 +130,19 @@ pnpm exec playwright test apps/web/tests/port-s2-workers-comp.spec.cjs --reporte
 - **Unit tests (12):** Thursday week math, update status, OSHA day counting, the 180-day cap, outcome derivation, next-action rules and author-only editing.
 - **DB contract (42 checks):** duplicates, constraints, overlap exclusion, the Thursday rule, restriction options, the OSHA sync with cap and clearing, tenant guards, archived cases, role grants, and no member access.
 - **Browser:** incident → case → work status (5 away / 15 restricted) → restrictions → medical visit → weekly update → OSHA recordable sync (the OSHA case shows days away, 5 and 15) → close. Also checks that a coordinator without medical access sees no medical data and cannot reach carriers.
+
+Case form tests:
+- `tests/port-s2-wc-forms.test.cjs` (5): field rules, printed values, layout overrides, email parsing, and the PDF overlay on a synthetic template.
+- `tests/port-s2-wc-forms-db.cjs` (40 checks):
+  - tenant guards, template replacement and size cap
+  - signing (version, signature ownership), immutability, voiding
+  - append-only history, archived cases
+  - member denial, the private bucket, and deleting a company with signed forms
+- `tests/port-s2-wc-forms.spec.cjs` (4, synthetic forms; set `FORGE_EMAIL_CAPTURE_DIR` for both the server and the test):
+  - upload, and the byte-identical blank
+  - HIPAA fill → sign → download → email two recipients with the attachment checked → void
+  - the guidelines acknowledgment
+  - a coordinator without medical access getting 404s
 
 Weekly notice tests:
 - `tests/port-s2-workers-comp-email.test.cjs` (5): timing, ordering, the 2,000-character cut, no employee details.
