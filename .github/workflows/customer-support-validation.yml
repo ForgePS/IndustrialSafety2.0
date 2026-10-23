@@ -142,6 +142,11 @@ jobs:
           SMOKE_BASE_URL: http://127.0.0.1:3000
         run: pnpm exec playwright test apps/web/tests/fis-hd-mobile.spec.cjs --reporter=line --workers=1
 
+      - name: Run phone layout regression
+        env:
+          SMOKE_BASE_URL: http://127.0.0.1:3000
+        run: pnpm exec playwright test apps/web/tests/phone-layout.spec.cjs --reporter=line --workers=1
+
       - name: Run Corrective Actions browser smoke test
         env:
           SMOKE_BASE_URL: http://127.0.0.1:3000

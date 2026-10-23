@@ -213,7 +213,7 @@ const TicketWorkspace = (props: WorkspaceProps) => {
         </p>
       ) : null}
 
-      <div className='grid gap-4 lg:grid-cols-12'>
+      <div className='grid grid-cols-1 gap-4 lg:grid-cols-12'>
         <div className='order-2 flex flex-col gap-4 lg:order-1 lg:col-span-3'>
           <ContextPanel {...props} />
           {can('helpdesk.support.respond') ? (
@@ -223,9 +223,9 @@ const TicketWorkspace = (props: WorkspaceProps) => {
 
         <div className='order-1 flex flex-col gap-4 lg:order-2 lg:col-span-6'>
           <Card>
-            <CardHeader className='flex flex-row items-center justify-between gap-2 space-y-0'>
+            <CardHeader className='flex flex-row flex-wrap items-center justify-between gap-2 space-y-0'>
               <CardTitle className='text-lg'>Conversation</CardTitle>
-              <div className='flex gap-1' role='group' aria-label='Filter conversation'>
+              <div className='flex flex-wrap gap-1' role='group' aria-label='Filter conversation'>
                 {(['all', 'public', 'internal'] as const).map(f => (
                   <Button key={f} type='button' size='xs' variant={filter === f ? 'tonal' : 'ghost'} onClick={() => setFilter(f)}>
                     {f === 'all' ? 'All' : f === 'public' ? 'Customer-visible' : 'Internal'}
