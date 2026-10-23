@@ -611,7 +611,7 @@ const PropertiesPanel = (props: Props) => {
                 {label(priorityLabels, sla.priority)} · {sla.hours_mode === 'business' ? 'business hours' : '24×7'}
               </span>
             </div>
-            <dl className='grid grid-cols-[100px_1fr] gap-y-1 text-xs'>
+            <dl className='grid grid-cols-[100px_minmax(0,1fr)] gap-y-1 text-xs'>
               <dt className='text-textSecondary'>First response</dt>
               {/* SLA values are relative to "now" and can differ by a minute between server and browser. */}
               <dd suppressHydrationWarning>{sla.first_responded_at ? `Met ${new Date(sla.first_responded_at).toLocaleString()}` : dueIn(sla.first_response_due_at)}</dd>

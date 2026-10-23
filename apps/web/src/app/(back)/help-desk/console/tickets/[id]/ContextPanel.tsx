@@ -24,7 +24,7 @@ const ContextPanel = ({ detail, similar }: WorkspaceProps) => {
           <CardTitle className='text-base'>Requester</CardTitle>
         </CardHeader>
         <CardContent>
-          <dl className='grid grid-cols-[90px_1fr] gap-x-2 gap-y-1.5 text-sm'>
+          <dl className='grid grid-cols-[90px_minmax(0,1fr)] gap-x-2 gap-y-1.5 text-sm'>
             <Row term='Name' value={detail.requester.name} />
             <Row term='Email' value={detail.requester.email ? <a className='text-primary underline' href={`mailto:${detail.requester.email}`}>{detail.requester.email}</a> : null} />
             <Row
@@ -50,7 +50,7 @@ const ContextPanel = ({ detail, similar }: WorkspaceProps) => {
         </CardHeader>
         <CardContent>
           {tc ? (
-            <dl className='grid grid-cols-[90px_1fr] gap-x-2 gap-y-1.5 text-sm'>
+            <dl className='grid grid-cols-[90px_minmax(0,1fr)] gap-x-2 gap-y-1.5 text-sm'>
               <Row term='Captured' value={tc.captured ? new Date(tc.captured_at).toLocaleString() : 'Not captured (legacy)'} />
               <Row term='Route' value={tc.route} />
               <Row term='Page' value={tc.page_url} />

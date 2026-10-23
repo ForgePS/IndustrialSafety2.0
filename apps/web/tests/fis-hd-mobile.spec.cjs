@@ -48,7 +48,9 @@ async function expectFits(page, route, visible) {
   const response = await page.goto(baseURL + route)
   expect(response.status(), route).toBeLessThan(400)
   await expect(visible(page), route).toBeVisible({ timeout: 60000 })
-  const overflow = await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth)
+  // Compare with the phone width, not window.innerWidth: mobile emulation widens the layout viewport
+  // to fit wide content, which would hide the overflow this check exists to catch.
+  const overflow = await page.evaluate(width => document.documentElement.scrollWidth - width, phone.viewport.width)
   expect(overflow, `${route} must not scroll horizontally`).toBeLessThanOrEqual(1)
 }
 

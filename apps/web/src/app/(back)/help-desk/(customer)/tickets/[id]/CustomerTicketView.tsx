@@ -255,7 +255,7 @@ const CustomerTicketView = ({ basePath, detail, currentUserId, justCreated, uplo
               <CardTitle>Details</CardTitle>
             </CardHeader>
             <CardContent>
-              <dl className='grid grid-cols-[110px_1fr] gap-y-2 text-sm'>
+              <dl className='grid grid-cols-[110px_minmax(0,1fr)] gap-y-2 text-sm'>
                 <dt className='text-textSecondary'>Status</dt>
                 <dd>{label(customerStatusLabels, ticket.status)}</dd>
                 <dt className='text-textSecondary'>Your impact</dt>
