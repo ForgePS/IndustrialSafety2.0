@@ -46,10 +46,10 @@ async function waitForForm(page) {
   )
 }
 
-async function signIn(page) {
+async function signIn(page, email = 'admin@forge2.local') {
   await page.goto(baseURL + '/auth/login')
   await waitForForm(page)
-  await page.locator('input[name="email"]').fill('admin@forge2.local')
+  await page.locator('input[name="email"]').fill(email)
   await page.locator('input[name="password"]').fill('ForgeDev2!')
   await page.locator('form', { has: page.locator('input[name="password"]') }).locator('button[type="submit"]').click()
   await page.waitForURL(url => !url.pathname.startsWith('/auth/login'), { timeout: 60000 })
@@ -99,6 +99,18 @@ test('signed-in users land on the dashboard and removed pages return 404', async
   await expect(page).toHaveURL(/\/dashboard/)
 
   for (const route of REMOVED) {
+    const res = await page.request.get(baseURL + route, { maxRedirects: 0 })
+    expect(res.status(), route).toBe(404)
+  }
+})
+
+// A regular user has none of the template admin permissions; removed pages must still 404 for them,
+// not redirect to /not-authorized.
+test('removed admin pages return 404 for a regular user too', async ({ page }) => {
+  await signIn(page, 'user@forge2.local')
+  await expect(page).toHaveURL(/\/dashboard/)
+
+  for (const route of REMOVED.filter(r => r.startsWith('/admin'))) {
     const res = await page.request.get(baseURL + route, { maxRedirects: 0 })
     expect(res.status(), route).toBe(404)
   }
