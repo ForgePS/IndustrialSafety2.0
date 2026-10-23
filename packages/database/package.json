@@ -30,7 +30,7 @@
     "test": "vitest run --passWithNoTests",
     "test:unit": "vitest run --passWithNoTests",
     "test:integration": "vitest run src/tenant-isolation.integration.test.ts src/neris/neris-integrity.integration.test.ts",
-    "test:rls": "vitest run src/tenant-isolation.integration.test.ts src/helpdesk-isolation.integration.test.ts src/neris/neris-integrity.integration.test.ts",
+    "test:rls": "vitest run src/tenant-isolation.integration.test.ts src/workers-comp-forms.integration.test.ts src/helpdesk-isolation.integration.test.ts src/neris/neris-integrity.integration.test.ts",
     "test:neris": "vitest run src/neris/neris-integrity.integration.test.ts",
     "clean": "rimraf dist",
     "db:generate": "drizzle-kit generate",

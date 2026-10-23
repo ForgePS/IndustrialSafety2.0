@@ -46,6 +46,8 @@ import { IndustrialCalendarService } from "./industrial-calendar.service.js";
 import { IndustrialTasksExtrasController } from "./industrial-tasks-extras.controller.js";
 import { IndustrialTasksExtrasService } from "./industrial-tasks-extras.service.js";
 import { IndustrialDocumentControlController } from "./industrial-document-control.controller.js";
+import { WorkersCompFormsController } from "./workers-comp-forms.controller.js";
+import { WorkersCompFormsService } from "./workers-comp-forms.service.js";
 import { IndustrialDocumentControlService } from "./industrial-document-control.service.js";
 import { IndustrialExecutiveWalkthroughController } from "./industrial-executive-walkthrough.controller.js";
 import { IndustrialPublicExecutiveWalkthroughController } from "./industrial-public-executive-walkthrough.controller.js";
@@ -73,6 +75,7 @@ import { IndustrialLabelRendererService } from "./industrial-label-renderer.serv
     IndustrialController,
     IndustrialTrainingController,
     IndustrialDocumentControlController,
+    WorkersCompFormsController,
     IndustrialPrintController,
     IndustrialPrintCreatorController,
     IndustrialExecutiveWalkthroughController,
@@ -105,6 +108,7 @@ import { IndustrialLabelRendererService } from "./industrial-label-renderer.serv
     IndustrialSupplyRequestQrService,
     IndustrialDotDqfDocumentsService,
     IndustrialMvrConsentDocumentsService,
+    WorkersCompFormsService,
     IndustrialPersonnelCertificationsService,
     IndustrialPersonnelLicenseDocumentsService,
     IndustrialTrainingRecordAttachmentsService,

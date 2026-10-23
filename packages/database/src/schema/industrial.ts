@@ -697,6 +697,39 @@ export const industrialWorkersCompMedicalEncounters = pgTable(
   ],
 );
 
+/**
+ * Signed Producers paper forms on a workers' compensation case (Employee Injury Guidelines
+ * acknowledgment, HIPAA Authorization). Signed content is immutable; HIPAA rows also require the
+ * WC medical-access RLS flag. See drizzle/0112_industrial_workers_comp_forms_s1.sql.
+ */
+export const industrialWorkersCompForms = pgTable(
+  "industrial_workers_comp_forms",
+  {
+    id: uuid("id").primaryKey(),
+    tenantId: uuid("tenant_id")
+      .notNull()
+      .references(() => tenants.id),
+    caseId: uuid("case_id")
+      .notNull()
+      .references(() => industrialWorkersCompCases.id),
+    formKey: varchar("form_key", { length: 64 }).notNull(),
+    status: varchar("status", { length: 16 }).notNull().default("SIGNED"),
+    formData: jsonb("form_data").notNull().default({}),
+    signatureDataUrl: text("signature_data_url").notNull(),
+    signerName: varchar("signer_name", { length: 200 }).notNull(),
+    signerRelationship: varchar("signer_relationship", { length: 120 }),
+    signedAt: timestamp("signed_at", { withTimezone: true }).notNull().defaultNow(),
+    createdByUserId: uuid("created_by_user_id"),
+    voidedAt: timestamp("voided_at", { withTimezone: true }),
+    voidedByUserId: uuid("voided_by_user_id"),
+    voidReason: text("void_reason"),
+    emailLog: jsonb("email_log").notNull().default([]),
+    createdAt: createdAtColumn,
+    updatedAt: updatedAtColumn,
+  },
+  (t) => [index("industrial_wc_forms_case_idx").on(t.tenantId, t.caseId, t.formKey)],
+);
+
 /** Per-Thursday status notes required on open workers' compensation cases. */
 export const industrialWorkersCompWeeklyUpdates = pgTable(
   "industrial_workers_comp_weekly_updates",

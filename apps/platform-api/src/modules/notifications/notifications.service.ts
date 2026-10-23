@@ -83,6 +83,11 @@ const DEFAULT_EMAIL_BODIES: Record<
     htmlBody: "{{htmlBody}}",
     textBody: "{{textBody}}",
   },
+  workers_comp_form: {
+    subject: "{{subject}}",
+    htmlBody: "{{htmlBody}}",
+    textBody: "{{textBody}}",
+  },
   observation_assigned: {
     subject: "{{subject}}",
     htmlBody: "{{htmlBody}}",
