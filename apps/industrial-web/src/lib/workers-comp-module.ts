@@ -186,7 +186,7 @@ export const WC_MODULE_TAB_META: Record<
 
 /** Active claim tabs. Legacy `work-status` / `restrictions` remain for dead panel
  *  branches until those sections are fully folded into Overview. */
-export type WcDetailTab = "overview" | "medical" | "carrier" | "work-status" | "restrictions";
+export type WcDetailTab = "overview" | "medical" | "carrier" | "forms" | "work-status" | "restrictions";
 
 export type WcNextActionPriority = "HIGH" | "MEDIUM" | "LOW";
 
@@ -852,7 +852,7 @@ export function parseWcDetailTab(raw: string | null): WcDetailTab {
   if (raw === "work-status" || raw === "restrictions") {
     return "overview";
   }
-  if (raw === "medical" || raw === "carrier" || raw === "overview") {
+  if (raw === "medical" || raw === "carrier" || raw === "forms" || raw === "overview") {
     return raw;
   }
   return "overview";

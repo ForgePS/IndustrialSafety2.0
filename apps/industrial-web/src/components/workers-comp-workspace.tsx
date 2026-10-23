@@ -12,6 +12,8 @@ import { WorkersCompCarrierCatalog } from "@/components/workers-comp-carrier-cat
 import { WorkersCompCarrierSelect } from "@/components/workers-comp-carrier-select";
 import { WorkersCompRestrictionsForm } from "@/components/workers-comp-restrictions-form";
 import { OshaInlinePanel } from "@/components/osha-inline-panel";
+import { WorkersCompFormsPanel } from "@/components/workers-comp-forms-panel";
+import { isProducersRiceMillTenant } from "@/lib/producers-mvr-policy";
 import { openPrintableHtmlPopup } from "@/lib/dvir";
 import { describeCronExpression, REPORT_SCHEDULE_TIMEZONE } from "@/lib/report-schedule-friendly";
 import {
@@ -116,6 +118,9 @@ export function WorkersCompWorkspace({ moduleName }: { moduleName: string }) {
   const canManage =
     permissions.has("industrial.workers_comp.manage") || permissions.has("industrial.admin");
   const canAdminCarriers = permissions.has("industrial.admin");
+  // Producers paper forms (injury guidelines, HIPAA authorization); the API enforces this too.
+  const activeTenant = me?.tenants?.find((tenant) => tenant.tenantId === me.tenantId) ?? me?.tenants?.[0];
+  const hasProducersForms = isProducersRiceMillTenant(activeTenant?.slug, activeTenant?.displayName);
   const canViewOsha =
     permissions.has("industrial.osha.view") ||
     permissions.has("industrial.admin") ||
@@ -1791,6 +1796,7 @@ export function WorkersCompWorkspace({ moduleName }: { moduleName: string }) {
                         ["medical", "Medical"],
                       ] as Array<[WcDetailTab, string]>
                     )
+                      .concat(hasProducersForms ? [["forms", "Forms"]] : [])
                       .concat(canAdminCarriers ? [["carrier", "Carriers"]] : [])
                       .map(([id, label]) => (
                       <li className="nav-item" key={id}>
@@ -2649,6 +2655,13 @@ export function WorkersCompWorkspace({ moduleName }: { moduleName: string }) {
                     )}
                   </div>
                 </div>
+              ) : null}
+
+              {detailTab === "forms" && hasProducersForms ? (
+                <WorkersCompFormsPanel
+                  caseId={detail.id}
+                  caseLabel={[wcClaimNumber(detail), personNameDisplay(detail.workerName, "")].filter(Boolean).join(" · ")}
+                />
               ) : null}
 
               {detailTab === "carrier" && canAdminCarriers ? (

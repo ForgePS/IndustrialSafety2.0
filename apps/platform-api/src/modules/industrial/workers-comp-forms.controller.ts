@@ -60,6 +60,12 @@ export class WorkersCompFormsController {
     return ok(await this.forms.create(principal, caseId, body ?? {}), getRequestIds(req));
   }
 
+  @Get("recipients")
+  @RequireAnyPermission([...ACT], { requiresEntitlement: ENTITLEMENT })
+  async recipients(@Principal() principal: ForgePrincipal, @Req() req: RequestWithIds) {
+    return ok(await this.forms.recipients(principal), getRequestIds(req));
+  }
+
   @Get("templates/:formKey/blank")
   @RequireAnyPermission([...VIEW], { requiresEntitlement: ENTITLEMENT })
   async blank(@Principal() principal: ForgePrincipal, @Param("formKey") formKey: string, @Res() res: Response) {

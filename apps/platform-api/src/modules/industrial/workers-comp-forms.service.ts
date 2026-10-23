@@ -421,6 +421,49 @@ export class WorkersCompFormsService {
     });
   }
 
+  /** Producers staff who can receive a form by email (active, with an email on file). */
+  async recipients(principal: ForgePrincipal) {
+    const tenantId = this.tenant(principal);
+    const perms = wcFormPermissions(principal);
+    if (!perms.canManage && !perms.canManageMedical) {
+      throw new ForgeError("FORBIDDEN", "You do not have permission to email workers' comp forms");
+    }
+    return withTenantTransaction(this.db, tenantId, async tx => {
+      await this.assertAvailable(tx, tenantId);
+      const rows = await tx
+        .select({
+          id: industrialPersonnel.id,
+          displayName: industrialPersonnel.displayName,
+          firstName: industrialPersonnel.firstName,
+          lastName: industrialPersonnel.lastName,
+          preferredName: industrialPersonnel.preferredName,
+          email: industrialPersonnel.email,
+          companyEmail: industrialPersonnel.companyEmail,
+          jobTitle: industrialPersonnel.jobTitle,
+          departmentName: industrialPersonnel.departmentName,
+        })
+        .from(industrialPersonnel)
+        .where(
+          and(
+            eq(industrialPersonnel.tenantId, tenantId),
+            isNull(industrialPersonnel.archivedAt),
+            sql`lower(coalesce(${industrialPersonnel.status}, 'active')) not in ('inactive', 'terminated', 'separated', 'archived')`,
+          ),
+        )
+        .limit(5000);
+      return rows
+        .map(row => {
+          const email = [row.companyEmail, row.email].map(v => v?.trim() ?? "").find(v => EMAIL_RE.test(v));
+          if (!email) return null;
+          const first = row.preferredName?.trim() || row.firstName?.trim() || "";
+          const name = [first, row.lastName?.trim() ?? ""].filter(Boolean).join(" ") || row.displayName?.trim() || "Unnamed";
+          return { id: row.id, name, email, jobTitle: row.jobTitle?.trim() || null, departmentName: row.departmentName?.trim() || null };
+        })
+        .filter((row): row is NonNullable<typeof row> => row !== null)
+        .sort((a, b) => a.name.localeCompare(b.name));
+    });
+  }
+
   async email(principal: ForgePrincipal, formId: string, body: Record<string, unknown>) {
     const tenantId = this.tenant(principal);
     const { personnelIds, emails, message } = parseWcFormRecipients(body);
