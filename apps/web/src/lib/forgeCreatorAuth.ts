@@ -16,6 +16,7 @@ export const getForgePlatformRole = async (userId?: string | null): Promise<Forg
   if (!userId) return null
 
   const supabase = createServiceRoleClient() as any
+
   const { data, error } = await supabase
     .from('forge_platform_users')
     .select('platform_role, is_active')
@@ -41,7 +42,7 @@ export const requireForgePlatformRole = async (allowedRoles?: ForgePlatformRole[
   const { user, platformRole } = await getForgePlatformAccess()
 
   if (!user || !platformRole || (allowedRoles && !allowedRoles.includes(platformRole))) {
-    redirect('/admin')
+    redirect('/not-authorized')
   }
 
   return { user, platformRole }

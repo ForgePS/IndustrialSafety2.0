@@ -4,37 +4,9 @@ import type { Permission } from './types'
 // Cache for storing permission results
 const permissionCache = new Map<string, boolean>()
 
-export const ROUTE_PERMISSIONS = [
-  // --- Reviews Routes ---
-  { pattern: /^\/admin\/reviews\/(?:platform|review)\/create/, permissions: ['view_reviews', 'create_reviews'] },
-  { pattern: /^\/admin\/reviews\/(?:platform|review)\/\d+\/edit$/, permissions: ['view_reviews', 'update_reviews'] },
-  { pattern: /^\/admin\/reviews/, permissions: ['view_reviews'] },
-
-  // --- Settings Route ---
-  { pattern: /^\/admin\/settings/, permissions: ['view_settings'] },
-
-  // --- Users Routes ---
-  { pattern: /^\/admin\/users\/create/, permissions: ['view_users', 'create_users'] },
-  { pattern: /^\/admin\/users\/\d+\/edit$/, permissions: ['view_users', 'update_users'] },
-  { pattern: /^\/admin\/users/, permissions: ['view_users'] },
-
-  // --- Roles Routes ---
-  { pattern: /^\/admin\/roles\/create/, permissions: ['view_roles', 'create_roles'] },
-  { pattern: /^\/admin\/roles\/\d+\/edit$/, permissions: ['view_roles', 'update_roles'] },
-  { pattern: /^\/admin\/roles/, permissions: ['view_roles'] },
-
-  // --- Permissions Routes ---
-  { pattern: /^\/admin\/permissions\/create/, permissions: ['view_permission', 'create_permission'] },
-  { pattern: /^\/admin\/permissions/, permissions: ['view_permission'] },
-
-  // --- FAQs Routes ---
-  { pattern: /^\/admin\/faqs\/(?:faq|category)\/create/, permissions: ['create_faqs'] },
-  { pattern: /^\/admin\/faqs\/(?:faq|category)\/\d+\/edit$/, permissions: ['update_faqs'] },
-  { pattern: /^\/admin\/faqs/, permissions: ['view_faqs'] },
-
-  // --- Keystatic Routes ---
-  { pattern: /^\/keystatic/, permissions: ['manage_blog_section'] }
-]
+// Route-level permission rules. The template admin pages these used to guard were removed, so there are
+// none today; a rule here would turn a deleted page into a /not-authorized redirect instead of a 404.
+export const ROUTE_PERMISSIONS: { pattern: RegExp; permissions: Permission[] }[] = []
 
 export const clearPermissionCache = () => {
   permissionCache.clear()

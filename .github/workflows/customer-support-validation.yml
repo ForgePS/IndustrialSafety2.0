@@ -127,6 +127,11 @@ jobs:
           SMOKE_BASE_URL: http://127.0.0.1:3000
         run: pnpm exec playwright test apps/web/tests/auth-signin.spec.cjs --reporter=line --workers=1
 
+      - name: Run template removal regression
+        env:
+          SMOKE_BASE_URL: http://127.0.0.1:3000
+        run: pnpm exec playwright test apps/web/tests/template-removal.spec.cjs --reporter=line --workers=1
+
       - name: Run help desk browser smoke test
         env:
           SMOKE_BASE_URL: http://127.0.0.1:3000
