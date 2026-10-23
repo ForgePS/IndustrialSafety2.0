@@ -384,7 +384,7 @@ const TenantFormBuilder = ({
               <div>
                 <Label>Field Type</Label>
                 <select value={fieldDrafts[selectedField.id].fieldType} disabled={!selectedField.can_change_input_type} onChange={e => setFieldDrafts(c => ({...c,[selectedField.id]:{...c[selectedField.id],fieldType:e.target.value}}))} className='border-input bg-card text-textSecondary mt-2 h-[38px] w-full rounded-md border px-3'>
-                  {['text','textarea','email','phone','number','currency','date','datetime','time','select','multi_select','checkbox','switch','radio','file','photo','signature','person','location','division','asset','vehicle','read_only'].map(type => <option key={type} value={type}>{type}</option>)}
+                  {['text','textarea','email','phone','number','currency','date','datetime','time','select','multi_select','checkbox','switch','radio','file','photo','signature','person','location','division','department','position','asset','vehicle','read_only'].map(type => <option key={type} value={type}>{type}</option>)}
                 </select>
               </div>
               <div className='md:col-span-2'>

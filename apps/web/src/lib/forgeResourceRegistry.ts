@@ -21,6 +21,7 @@ export type ForgeResourceType =
   | 'training_assignment'
   | 'personnel'
   | 'support_ticket'
+  | 'workers_comp_case'
 
 export type ForgeResourceScopeMode =
   | 'ORGANIZATION'
@@ -71,7 +72,8 @@ export const FORGE_RESOURCE_TYPES: ForgeResourceType[] = [
   'training_course',
   'training_assignment',
   'personnel',
-  'support_ticket'
+  'support_ticket',
+  'workers_comp_case'
 ]
 
 const RESOURCE_DESCRIPTORS: Record<ForgeResourceType, ForgeResourceDescriptor> = {
@@ -249,6 +251,19 @@ const RESOURCE_DESCRIPTORS: Record<ForgeResourceType, ForgeResourceDescriptor> =
     titleColumn: 'subject',
     statusColumn: 'status',
     archivedColumn: 'deleted_at'
+  },
+
+  // Case documents (claim packets, carrier letters) attach through the shared evidence service. Archived is a status value, not a column.
+  workers_comp_case: {
+    resourceType: 'workers_comp_case',
+    table: 'forge_wc_cases',
+    featureKey: 'workers_comp',
+    defaultViewPermission: 'workers_comp.view',
+    defaultManagePermission: 'workers_comp.edit',
+    scopeMode: 'LOCATION_DIVISION',
+    numberColumn: 'case_number',
+    titleColumn: 'employee_name',
+    statusColumn: 'status'
   }
 }
 

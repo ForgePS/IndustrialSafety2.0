@@ -1,4 +1,5 @@
 import type { Metadata } from 'next'
+
 import PersonnelList from './PersonnelList'
 import type { PersonnelListItem } from './PersonnelList'
 import { requireTenantPermission } from '@/lib/forgeTenantAuth'
@@ -26,6 +27,10 @@ const PersonnelPage = async () => {
     item => item.permissionKey === 'personnel.create' && item.allowed
   )
 
+  const canConfigure = context.access.effective.some(
+    item => item.permissionKey === 'personnel.configure' && item.allowed
+  )
+
   const statusLabels = Object.fromEntries(
     statusLookup.options.map(option => [option.key, option.label])
   )
@@ -36,16 +41,18 @@ const PersonnelPage = async () => {
     last_name: record.last_name,
     employee_number: record.employee_number,
     employment_status: record.employment_status,
-    job_title: record.job_title,
+    job_title: record.position?.name || record.job_title,
     email: record.email,
     locationName: record.locations?.name || null,
-    divisionName: record.divisions?.name || null
+    divisionName: record.divisions?.name || null,
+    departmentName: record.department?.name || null
   }))
 
   return (
     <PersonnelList
       personnel={personnel}
       canCreate={canCreate}
+      canConfigure={canConfigure}
       statusLabels={statusLabels}
     />
   )

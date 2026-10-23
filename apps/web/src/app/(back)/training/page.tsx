@@ -1,4 +1,5 @@
 import type { Metadata } from 'next'
+
 import TrainingOverview from './TrainingOverview'
 import { requireTenantPermission } from '@/lib/forgeTenantAuth'
 import { getTrainingOverview } from '@/lib/forgeTraining'
@@ -40,6 +41,13 @@ const TrainingPage = async () => {
       canAssign={has('training.assign')}
       canRecordCompletion={has('training.record_completion')}
       canApprove={has('training.approve')}
+      lmsLinks={[
+        { href: '/training/matrix', label: 'Compliance Matrix', allowed: true },
+        { href: '/training/groups', label: 'Groups', allowed: has('training.manage_groups') },
+        { href: '/training/paper', label: 'Paper Quizzes', allowed: has('training.record_completion') },
+        { href: '/training/portal', label: 'Kiosk Links', allowed: has('training.manage_portal') },
+        { href: '/training/settings', label: 'Certificates', allowed: has('training.issue_certificate') }
+      ].filter(link => link.allowed).map(({ href, label }) => ({ href, label }))}
     />
   )
 }

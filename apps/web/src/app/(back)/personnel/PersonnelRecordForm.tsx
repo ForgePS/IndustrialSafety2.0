@@ -1,6 +1,7 @@
 'use client'
 
 import { useMemo, useState, useTransition } from 'react'
+
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { TbArchive } from 'react-icons/tb'
@@ -11,6 +12,7 @@ import { Label } from '@repo/ui/components/ui/label'
 import { Switch } from '@repo/ui/components/ui/switch'
 import { Textarea } from '@repo/ui/components/ui/textarea'
 import { toast } from '@repo/ui/utils/toast'
+
 import { archivePersonnel, createPersonnel, updatePersonnel } from './actions'
 import type { PersonnelFormValues } from './actions'
 
@@ -47,6 +49,9 @@ type ResourceOption = {
   label: string
 }
 
+type DepartmentChoice = ResourceOption & { locationId: string | null }
+type PositionChoice = ResourceOption & { departmentId: string | null }
+
 const widthClass: Record<string, string> = {
   quarter: 'md:col-span-3',
   third: 'md:col-span-4',
@@ -62,6 +67,9 @@ const PersonnelRecordForm = ({
   personnelId,
   locations,
   divisions,
+  departments = [],
+  positions = [],
+  supervisors = [],
   readOnly = false,
   canArchive = false
 }: {
@@ -70,13 +78,18 @@ const PersonnelRecordForm = ({
   personnelId?: string
   locations: ResourceOption[]
   divisions: ResourceOption[]
+  departments?: DepartmentChoice[]
+  positions?: PositionChoice[]
+  supervisors?: ResourceOption[]
   readOnly?: boolean
   canArchive?: boolean
 }) => {
   const router = useRouter()
   const [pending, startTransition] = useTransition()
+
   const [values, setValues] = useState<PersonnelFormValues>(() => {
     const next: PersonnelFormValues = { ...initialValues }
+
     for (const field of form.fields) {
       if (!(field.key in next)) next[field.key] = field.fieldType === 'checkbox' || field.fieldType === 'switch' ? false : ''
     }
@@ -85,6 +98,7 @@ const PersonnelRecordForm = ({
 
   const sections = useMemo(() => {
     const map = new Map<string, { label: string; fields: Field[] }>()
+
     for (const field of form.fields) {
       if (!map.has(field.sectionKey)) map.set(field.sectionKey, { label: field.sectionLabel, fields: [] })
       map.get(field.sectionKey)?.fields.push(field)
@@ -93,8 +107,36 @@ const PersonnelRecordForm = ({
   }, [form.fields])
 
   const setValue = (key: string, value: string | boolean | null) => {
-    setValues(current => ({ ...current, [key]: value }))
+    setValues(current => {
+      const next = { ...current, [key]: value }
+
+      // Changing department clears a position that belongs to a different department.
+      if (key === 'department_id' && next.position_id) {
+        const position = positions.find(item => item.id === next.position_id)
+
+        if (position?.departmentId && position.departmentId !== value) next.position_id = ''
+      }
+
+      // A DOT-regulated driver is always a company driver.
+      if (key === 'is_dot_driver' && value === true) next.is_company_driver = true
+      if (key === 'is_company_driver' && value === false) next.is_dot_driver = false
+
+      return next
+    })
   }
+
+  const resourceSelect = (field: Field, options: ResourceOption[], disabled: boolean) => (
+    <select
+      id={field.key}
+      value={String(values[field.key] ?? '')}
+      disabled={disabled}
+      onChange={event => setValue(field.key, event.target.value)}
+      className='border-input bg-card text-textSecondary h-[38px] w-full rounded-md border px-3 disabled:opacity-60'
+    >
+      <option value=''>{field.fieldType === 'person' ? 'No supervisor' : 'Select...'}</option>
+      {options.map(option => <option key={option.id} value={option.id}>{option.label}</option>)}
+    </select>
+  )
 
   const renderField = (field: Field) => {
     const disabled = readOnly || field.readOnly || pending
@@ -103,6 +145,7 @@ const PersonnelRecordForm = ({
     if (field.fieldType === 'textarea') {
       return (
         <Textarea
+          id={field.key}
           value={String(value ?? '')}
           placeholder={field.placeholder || undefined}
           disabled={disabled}
@@ -115,6 +158,7 @@ const PersonnelRecordForm = ({
     if (field.fieldType === 'select') {
       return (
         <select
+          id={field.key}
           value={String(value ?? '')}
           disabled={disabled}
           onChange={event => setValue(field.key, event.target.value)}
@@ -130,6 +174,7 @@ const PersonnelRecordForm = ({
       const options = field.fieldType === 'location' ? locations : divisions
       return (
         <select
+          id={field.key}
           value={String(value ?? '')}
           disabled={disabled}
           onChange={event => setValue(field.key, event.target.value)}
@@ -141,10 +186,33 @@ const PersonnelRecordForm = ({
       )
     }
 
+    if (field.fieldType === 'department') {
+      const selectedLocation = values.location_id ? String(values.location_id) : null
+
+      const options = departments.filter(
+        option => !option.locationId || !selectedLocation || option.locationId === selectedLocation || option.id === value
+      )
+      return resourceSelect(field, options, disabled)
+    }
+
+    if (field.fieldType === 'position') {
+      const selectedDepartment = values.department_id ? String(values.department_id) : null
+
+      const options = positions.filter(
+        option => !option.departmentId || !selectedDepartment || option.departmentId === selectedDepartment || option.id === value
+      )
+      return resourceSelect(field, options, disabled)
+    }
+
+    if (field.fieldType === 'person') {
+      return resourceSelect(field, supervisors.filter(option => option.id !== personnelId), disabled)
+    }
+
     if (field.fieldType === 'checkbox' || field.fieldType === 'switch') {
       return (
         <div className='flex h-[38px] items-center gap-3'>
           <Switch
+            id={field.key}
             checked={Boolean(value)}
             disabled={disabled}
             onCheckedChange={checked => setValue(field.key, checked)}
@@ -165,6 +233,7 @@ const PersonnelRecordForm = ({
 
     return (
       <Input
+        id={field.key}
         type={inputType}
         value={String(value ?? '')}
         placeholder={field.placeholder || undefined}

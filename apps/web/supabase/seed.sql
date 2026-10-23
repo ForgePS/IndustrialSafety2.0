@@ -2052,7 +2052,7 @@ where not exists (
 );
 
 
--- =============================================================================
+-- ======================================================================
 -- FIS-HD-01 Help Desk local demo data (fictional companies, people and issues).
 --   Forge support agent:  support@forge2.local / ForgeDev2!   (Forge staff, no tenant membership)
 --   Northstar admin:      northstar.admin@forge2.local / ForgeDev2!
@@ -2628,3 +2628,27 @@ drop function if exists public.forge_seed_hd_shift(uuid, interval);
 drop function if exists public.forge_seed_hd_article(text, text, text, text, text, text, text, uuid, text, boolean);
 drop function if exists public.forge_seed_hd_ticket(uuid, uuid, text, text, text, text, text, text, uuid, jsonb, uuid);
 drop function if exists public.forge_seed_hd_ok(jsonb, text);
+-- Port slice 0: synthetic departments and positions for the demo tenant (no customer data).
+insert into public.forge_departments (id, organization_id, location_id, division_id, name, code, description, created_by, updated_by)
+values
+  ('20000000-0000-4000-8000-000000002001','20000000-0000-4000-8000-000000000100','20000000-0000-4000-8000-000000000300','20000000-0000-4000-8000-000000000200','Milling','MILL','Demo production department.','20000000-0000-4000-8000-000000000001','20000000-0000-4000-8000-000000000001'),
+  ('20000000-0000-4000-8000-000000002002','20000000-0000-4000-8000-000000000100','20000000-0000-4000-8000-000000000300','20000000-0000-4000-8000-000000000200','Maintenance','MAINT','Demo maintenance department.','20000000-0000-4000-8000-000000000001','20000000-0000-4000-8000-000000000001'),
+  ('20000000-0000-4000-8000-000000002003','20000000-0000-4000-8000-000000000100','20000000-0000-4000-8000-000000000300','20000000-0000-4000-8000-000000000200','Shipping & Receiving','SHIP','Demo warehouse and loadout department.','20000000-0000-4000-8000-000000000001','20000000-0000-4000-8000-000000000001')
+on conflict (id) do update
+set name = excluded.name, code = excluded.code, description = excluded.description, is_active = true, updated_at = now();
+
+insert into public.forge_positions (id, organization_id, department_id, name, code, created_by, updated_by)
+values
+  ('20000000-0000-4000-8000-000000002101','20000000-0000-4000-8000-000000000100','20000000-0000-4000-8000-000000002001','Mill Operator','MILL-OP','20000000-0000-4000-8000-000000000001','20000000-0000-4000-8000-000000000001'),
+  ('20000000-0000-4000-8000-000000002102','20000000-0000-4000-8000-000000000100','20000000-0000-4000-8000-000000002002','Maintenance Technician','MAINT-TECH','20000000-0000-4000-8000-000000000001','20000000-0000-4000-8000-000000000001'),
+  ('20000000-0000-4000-8000-000000002103','20000000-0000-4000-8000-000000000100',null,'Forklift Operator','PIT-OP','20000000-0000-4000-8000-000000000001','20000000-0000-4000-8000-000000000001')
+on conflict (id) do update
+set name = excluded.name, code = excluded.code, department_id = excluded.department_id, is_active = true, updated_at = now();
+
+update public.forge_personnel
+set
+  department_id = '20000000-0000-4000-8000-000000002001',
+  position_id = '20000000-0000-4000-8000-000000002101',
+  employment_type = 'full_time',
+  updated_at = now()
+where id = '20000000-0000-4000-8000-000000000600';
