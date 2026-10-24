@@ -1,1 +1,0 @@
-{"Version":"2012-10-17","Statement":[{"Effect":"Allow","Sid":"DefS8023ImportQueueSend","Resource":"arn:aws:sqs:us-east-1:511343547817:forge-development-sqs-imports","Action":["sqs:SendMessage","sqs:GetQueueAttributes","sqs:GetQueueUrl"]}]}

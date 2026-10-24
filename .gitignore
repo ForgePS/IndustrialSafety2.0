@@ -83,3 +83,21 @@ security-audit/**/evidence/*.json
 
 # --- Vendored template download (not source) ---
 /sneat-mui-nextjs-admin-template-*/
+
+# --- Local scratch output: deploy logs, diagnostics, captured API responses ---
+# These hold production details and must never be committed.
+/*.txt
+/*.json
+!/package.json
+!/tsconfig.base.json
+!/turbo.json
+/*.html
+/live-*
+/.*.json
+/.*.txt
+/.tmp-*/
+/.tmp-*
+**/diag-*.txt
+**/diag-*.json
+**/diag-*.png
+**/_deploy-*-out.txt
