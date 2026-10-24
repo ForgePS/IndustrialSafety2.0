@@ -8,7 +8,11 @@ import type {
 
 function asItems<T>(payload: unknown): T[] {
   if (Array.isArray(payload)) return payload as T[];
-  if (payload && typeof payload === "object" && Array.isArray((payload as { items?: unknown }).items)) {
+  if (
+    payload &&
+    typeof payload === "object" &&
+    Array.isArray((payload as { items?: unknown }).items)
+  ) {
     return ((payload as { items: T[] }).items ?? []) as T[];
   }
   return [];
@@ -38,9 +42,7 @@ export const emergencyApi = {
   },
 
   getAlert: (id: string) =>
-    apiGet<FieldEmergencyAlert>(
-      `/api/v1/industrial/emergency-alerts/${encodeURIComponent(id)}`,
-    ),
+    apiGet<FieldEmergencyAlert>(`/api/v1/industrial/emergency-alerts/${encodeURIComponent(id)}`),
 
   acknowledge: (id: string, body?: { locationId?: string; responseText?: string }) =>
     apiSend<FieldEmergencyAckResult>(
@@ -49,8 +51,7 @@ export const emergencyApi = {
       body ?? {},
     ),
 
-  getSettings: () =>
-    apiGet<EmergencyAlertSettings>("/api/v1/industrial/emergency-alerts/settings"),
+  getSettings: () => apiGet<EmergencyAlertSettings>("/api/v1/industrial/emergency-alerts/settings"),
 
   dashboard: () =>
     apiGet<{

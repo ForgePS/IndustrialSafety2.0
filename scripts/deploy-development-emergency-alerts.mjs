@@ -15,7 +15,10 @@ const CLUSTER = "forge-development-ecs-platform";
 const API_SERVICE = "forge-development-ecs-platform-api";
 const API_ECR = `${ACCOUNT}.dkr.ecr.${REGION}.amazonaws.com/forge-development-ecr-platformapi`;
 
-const stamp = new Date().toISOString().replace(/[-:TZ.]/g, "").slice(0, 14);
+const stamp = new Date()
+  .toISOString()
+  .replace(/[-:TZ.]/g, "")
+  .slice(0, 14);
 const tag = `emergency-alerts-${stamp}`;
 
 function sh(cmd, opts = {}) {

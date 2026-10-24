@@ -41,9 +41,7 @@ export const platformModules = pgTable(
     /** MODULE-CATALOG-S2: People & Workforce, Compliance, etc. */
     category: varchar("category", { length: 128 }).notNull().default("General"),
     /** CUSTOMER_MODULE | PLATFORM_CORE | INTERNAL_TOOL | SHARED_SERVICE */
-    classification: varchar("classification", { length: 64 })
-      .notNull()
-      .default("CUSTOMER_MODULE"),
+    classification: varchar("classification", { length: 64 }).notNull().default("CUSTOMER_MODULE"),
     /** READY | IN_DEVELOPMENT | MIGRATING | COMING_SOON | RETIRED | UNAVAILABLE */
     implementationStatus: varchar("implementation_status", { length: 64 })
       .notNull()

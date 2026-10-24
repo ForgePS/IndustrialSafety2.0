@@ -2,9 +2,7 @@
 
 import Link from "next/link";
 import { IncidentAttachmentsPanel } from "@/components/incident-attachments-panel";
-import {
-  bodyLocationSummaryLabel,
-} from "@/lib/incident-body-map";
+import { bodyLocationSummaryLabel } from "@/lib/incident-body-map";
 import { useBodyRegions } from "@/hooks/use-body-regions";
 import type { IncidentAttachment } from "@/lib/incident-attachments";
 import {
@@ -82,7 +80,10 @@ export function IncidentReportPanel({
   const suspicionRows = suspicion ? formatReasonableSuspicionDetailLines(suspicion) : [];
 
   return (
-    <div className="card border-primary mb-4 incidents-report" id={`incident-report-${incident.id}`}>
+    <div
+      className="card border-primary mb-4 incidents-report"
+      id={`incident-report-${incident.id}`}
+    >
       <div className="card-header d-flex flex-wrap align-items-start justify-content-between gap-2">
         <div className="min-w-0">
           <div className="d-flex flex-wrap align-items-center gap-2 mb-1">
@@ -133,7 +134,12 @@ export function IncidentReportPanel({
             </button>
           ) : null}
           {canManage && onEdit ? (
-            <button type="button" className="btn btn-sm btn-outline-primary" disabled={busy} onClick={onEdit}>
+            <button
+              type="button"
+              className="btn btn-sm btn-outline-primary"
+              disabled={busy}
+              onClick={onEdit}
+            >
               Edit report
             </button>
           ) : null}
@@ -192,7 +198,11 @@ export function IncidentReportPanel({
                 <dt className="text-muted small text-uppercase fw-normal mb-1">{row.label}</dt>
                 <dd className="mb-0">
                   {row.label === "Person affected" && incident.personnelId ? (
-                    <Link href={personFileHref(incident.personnelId)} target="_blank" rel="noreferrer">
+                    <Link
+                      href={personFileHref(incident.personnelId)}
+                      target="_blank"
+                      rel="noreferrer"
+                    >
                       {personNameDisplay(row.value, "Open profile")}
                     </Link>
                   ) : (
@@ -234,7 +244,9 @@ export function IncidentReportPanel({
 
         {suspicion && suspicionRows.length > 0 ? (
           <div className="incidents-report__narrative mt-3 pt-3 border-top">
-            <h6 className="text-muted text-uppercase small mb-2">Reasonable Suspicion Observation</h6>
+            <h6 className="text-muted text-uppercase small mb-2">
+              Reasonable Suspicion Observation
+            </h6>
             <dl className="row mb-0">
               {suspicionRows.map((row) => (
                 <div className="col-12 mb-2" key={row.label}>
@@ -291,7 +303,7 @@ export function IncidentReportPanel({
                 </div>
               ))}
             </dl>
-            {(refusal.employeeSignature || refusal.witnessSignature) ? (
+            {refusal.employeeSignature || refusal.witnessSignature ? (
               <div className="row g-3 mt-1">
                 {refusal.employeeSignature ? (
                   <div className="col-md-6">

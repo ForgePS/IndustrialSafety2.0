@@ -32,9 +32,6 @@ export function isRetentionEligible(candidate: RetentionCandidate): boolean {
   return candidate.retentionDeleteAt.getTime() <= now.getTime();
 }
 
-export function retentionDeleteAt(
-  from: Date,
-  days: number,
-): Date {
+export function retentionDeleteAt(from: Date, days: number): Date {
   return new Date(from.getTime() + days * 24 * 60 * 60 * 1000);
 }

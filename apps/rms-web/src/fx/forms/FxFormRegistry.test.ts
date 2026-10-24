@@ -1,10 +1,5 @@
 import { beforeEach, describe, expect, it } from "vitest";
-import {
-  clearFormRegistryForTests,
-  getForm,
-  listForms,
-  registerForm,
-} from "./FxFormRegistry";
+import { clearFormRegistryForTests, getForm, listForms, registerForm } from "./FxFormRegistry";
 import { RMS_FX_FORMS_FLAG } from "./forms-flags";
 
 describe("FxFormRegistry", () => {

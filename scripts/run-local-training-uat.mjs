@@ -69,7 +69,8 @@ function main() {
     ...process.env,
     DATABASE_URL,
     FORGE_TRAINING_SEED_TENANT_ID: tenantId,
-    FORGE_TRAINING_UAT_APP_BASE_URL: process.env.FORGE_TRAINING_UAT_APP_BASE_URL ?? "http://localhost:3004",
+    FORGE_TRAINING_UAT_APP_BASE_URL:
+      process.env.FORGE_TRAINING_UAT_APP_BASE_URL ?? "http://localhost:3004",
   };
 
   console.log(`Using tenant ${tenantId}`);

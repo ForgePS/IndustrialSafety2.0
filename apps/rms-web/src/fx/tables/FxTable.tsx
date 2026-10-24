@@ -45,13 +45,20 @@ export function FxTable<T>({
   loading?: boolean;
   density?: "default" | "compact";
 }) {
-  const allSelected = rows.length > 0 && selectedIds && rows.every((r) => selectedIds.has(rowKey(r)));
+  const allSelected =
+    rows.length > 0 && selectedIds && rows.every((r) => selectedIds.has(rowKey(r)));
 
   return (
     <TableSectionBoundary title={caption}>
       <div className={`rms-fx-table-wrap rms-fx-table-wrap--${density}`} data-testid="rms-fx-table">
-        {loading ? <p className="rms-fx-table__status" role="status" aria-live="polite">Loading…</p> : null}
-        {!loading && rows.length === 0 ? empty ?? <p className="rms-fx-table__status">No rows.</p> : null}
+        {loading ? (
+          <p className="rms-fx-table__status" role="status" aria-live="polite">
+            Loading…
+          </p>
+        ) : null}
+        {!loading && rows.length === 0
+          ? (empty ?? <p className="rms-fx-table__status">No rows.</p>)
+          : null}
         {rows.length > 0 ? (
           <table className="rms-fx-table">
             <caption className="rms-fx-table__caption">{caption}</caption>
@@ -69,7 +76,11 @@ export function FxTable<T>({
                 ) : null}
                 {columns.map((col) => {
                   const active = sort?.id === col.id;
-                  const ariaSort = active ? (sort.direction === "asc" ? "ascending" : "descending") : "none";
+                  const ariaSort = active
+                    ? sort.direction === "asc"
+                      ? "ascending"
+                      : "descending"
+                    : "none";
                   return (
                     <th key={col.id} scope="col" aria-sort={col.sortable ? ariaSort : undefined}>
                       {col.sortable && onSortChange ? (
@@ -78,7 +89,8 @@ export function FxTable<T>({
                           className="rms-fx-table__sort"
                           onClick={() => {
                             if (!active) onSortChange({ id: col.id, direction: "asc" });
-                            else if (sort.direction === "asc") onSortChange({ id: col.id, direction: "desc" });
+                            else if (sort.direction === "asc")
+                              onSortChange({ id: col.id, direction: "desc" });
                             else onSortChange(null);
                           }}
                         >

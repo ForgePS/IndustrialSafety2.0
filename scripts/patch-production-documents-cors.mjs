@@ -23,9 +23,7 @@ function sh(cmd) {
 }
 
 function patchBucket(bucket) {
-  const raw = sh(
-    `aws s3api get-bucket-cors --bucket ${bucket} --region ${REGION} --output json`,
-  );
+  const raw = sh(`aws s3api get-bucket-cors --bucket ${bucket} --region ${REGION} --output json`);
   const cors = JSON.parse(raw);
   const rule = cors.CORSRules?.[0];
   if (!rule) throw new Error(`No CORS rule on ${bucket}`);
@@ -38,7 +36,9 @@ function patchBucket(bucket) {
   rule.AllowedOrigins = [...origins].sort();
   const path = `.forge-cors-${bucket.replace(/[^a-z0-9-]/gi, "-")}.json`;
   fs.writeFileSync(path, JSON.stringify({ CORSRules: cors.CORSRules }, null, 2));
-  sh(`aws s3api put-bucket-cors --bucket ${bucket} --region ${REGION} --cors-configuration file://${path}`);
+  sh(
+    `aws s3api put-bucket-cors --bucket ${bucket} --region ${REGION} --cors-configuration file://${path}`,
+  );
   console.log(`${bucket}: added ${VANITY_ORIGIN}`);
 }
 

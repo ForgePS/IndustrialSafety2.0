@@ -37,14 +37,19 @@ describe("industrial-import-helpers", () => {
       "qr_links::001vRoN4Z2DkvjqlobDO",
       "32a32c76-d310-2293-e76f-660135cce547",
     );
-    indexLogicalId(index, "platform_ehs_audit_templates", "forge_tmpl_ehs_annual_34", "18d383cc-56d2-934e-c27e-781c3b82772c");
+    indexLogicalId(
+      index,
+      "platform_ehs_audit_templates",
+      "forge_tmpl_ehs_annual_34",
+      "18d383cc-56d2-934e-c27e-781c3b82772c",
+    );
 
     expect(resolveMappedId(index, "001vRoN4Z2DkvjqlobDO", ["qr_links"])).toBe(
       "32a32c76-d310-2293-e76f-660135cce547",
     );
-    expect(resolveMappedId(index, "forge_tmpl_ehs_annual_34", ["platform_ehs_audit_templates"])).toBe(
-      "18d383cc-56d2-934e-c27e-781c3b82772c",
-    );
+    expect(
+      resolveMappedId(index, "forge_tmpl_ehs_annual_34", ["platform_ehs_audit_templates"]),
+    ).toBe("18d383cc-56d2-934e-c27e-781c3b82772c");
     expect(resolveMappedId(index, "missing-parent", ["qr_links"])).toBeUndefined();
   });
 
@@ -85,8 +90,6 @@ describe("industrial-import-helpers", () => {
     const a = deterministicTargetId("equipmentDocuments", "doc-096f1869a44d89a85e31");
     const b = deterministicTargetId("equipmentDocuments", "doc-096f1869a44d89a85e31");
     expect(a).toBe(b);
-    expect(a).toMatch(
-      /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i,
-    );
+    expect(a).toMatch(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i);
   });
 });

@@ -29,7 +29,11 @@ export function EmergencySmsSignupForm({ token }: { token: string }) {
   const phoneDigits = normalizeSmsDigits(phone);
   const phoneOk = Boolean(phoneDigits && phoneDigits.length === 10);
   const canSubmit =
-    employeeNumber.trim() && lastName.trim() && phoneOk && consent && signatureName.trim().length >= 2;
+    employeeNumber.trim() &&
+    lastName.trim() &&
+    phoneOk &&
+    consent &&
+    signatureName.trim().length >= 2;
 
   async function submit(event: FormEvent) {
     event.preventDefault();
@@ -60,7 +64,11 @@ export function EmergencySmsSignupForm({ token }: { token: string }) {
     return (
       <div className="card border shadow-none mt-3">
         <div className="card-body text-center py-5">
-          <i className="bx bx-check-circle text-success" style={{ fontSize: "3.5rem" }} aria-hidden />
+          <i
+            className="bx bx-check-circle text-success"
+            style={{ fontSize: "3.5rem" }}
+            aria-hidden
+          />
           <h5 className="mt-2 mb-2">
             {result.firstName ? `You're signed up, ${result.firstName}.` : "You're signed up."}
           </h5>
@@ -140,9 +148,7 @@ export function EmergencySmsSignupForm({ token }: { token: string }) {
               onChange={(e) => setPhone(e.target.value)}
             />
             <div className="invalid-feedback">Enter a 10-digit US mobile number.</div>
-            <div className="form-text">
-              This becomes the SMS number on your personnel file.
-            </div>
+            <div className="form-text">This becomes the SMS number on your personnel file.</div>
           </div>
         </div>
 

@@ -15,22 +15,22 @@ The assistant never approves, finalizes, submits to NERIS, or submits ePCR.
 
 ## Classification gate
 
-| Classification | Default |
-| --- | --- |
-| PUBLIC / INTERNAL | Allowed |
-| CONFIDENTIAL | Requires tenant model policy `allowConfidential` |
-| RESTRICTED | Blocked unless tenant allows, caller has `ai.narrative.use_sensitive_data`, `authorizeSensitiveData`, and `businessPurpose` |
+| Classification    | Default                                                                                                                     |
+| ----------------- | --------------------------------------------------------------------------------------------------------------------------- |
+| PUBLIC / INTERNAL | Allowed                                                                                                                     |
+| CONFIDENTIAL      | Requires tenant model policy `allowConfidential`                                                                            |
+| RESTRICTED        | Blocked unless tenant allows, caller has `ai.narrative.use_sensitive_data`, `authorizeSensitiveData`, and `businessPurpose` |
 
 ## Tenant narrative policy defaults
 
-| Setting | Default |
-| --- | --- |
-| Status | DISABLED |
-| Require accepted terms | true |
-| Monthly request quota | 100 |
-| Daily user quota | 20 |
-| Per-record limit | 10 |
-| Cost ceiling | optional |
+| Setting                | Default  |
+| ---------------------- | -------- |
+| Status                 | DISABLED |
+| Require accepted terms | true     |
+| Monthly request quota  | 100      |
+| Daily user quota       | 20       |
+| Per-record limit       | 10       |
+| Cost ceiling           | optional |
 
 ## Feature flags
 

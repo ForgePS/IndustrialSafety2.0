@@ -10,10 +10,10 @@
 
 ## Permissions
 
-| Permission | Purpose |
-| --- | --- |
-| `rms.neris.civilian_casualty.view` / `.edit` | Civilian casualty access |
-| `rms.neris.fire_service_casualty.view` / `.edit` | Fire-service casualty access |
-| `rms.neris.safety_review` | Safety officer review actions |
+| Permission                                       | Purpose                       |
+| ------------------------------------------------ | ----------------------------- |
+| `rms.neris.civilian_casualty.view` / `.edit`     | Civilian casualty access      |
+| `rms.neris.fire_service_casualty.view` / `.edit` | Fire-service casualty access  |
+| `rms.neris.safety_review`                        | Safety officer review actions |
 
 Specialized reviewer roles in starter templates grant scoped access without unrestricted rights to unrelated restricted data.

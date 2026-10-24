@@ -7,22 +7,22 @@
 
 ## Dashboard
 
-| Item | Value |
-| --- | --- |
-| Name | `forge-development-configuration-platform` |
+| Item    | Value                                                    |
+| ------- | -------------------------------------------------------- |
+| Name    | `forge-development-configuration-platform`               |
 | Widgets | ECS CPU/Memory; Logs Insights; EMF Configuration metrics |
 
 ## Alarms
 
-| Alarm | Metric | Threshold |
-| --- | --- | --- |
-| `forge-development-config-api-cpu-high` | ECS CPUUtilization | > 80% for 2×5m |
-| `forge-development-config-api-memory-high` | ECS MemoryUtilization | > 85% for 2×5m |
-| `forge-development-config-rls-denials` | `Forge/Configuration` `ConfigRlsDenials` | ≥ 1 / 5m |
-| `forge-development-config-authorization-denials` | `ConfigAuthorizationDenials` | ≥ 5 / 5m |
-| `forge-development-config-publish-failures` | `ConfigPublishFailures` | ≥ 1 / 5m |
-| `forge-development-config-rollback-failures` | `ConfigRollbackFailures` | ≥ 1 / 5m |
-| `forge-development-config-validation-failures` | `ConfigValidationFailures` | ≥ 10 / 5m |
+| Alarm                                            | Metric                                   | Threshold      |
+| ------------------------------------------------ | ---------------------------------------- | -------------- |
+| `forge-development-config-api-cpu-high`          | ECS CPUUtilization                       | > 80% for 2×5m |
+| `forge-development-config-api-memory-high`       | ECS MemoryUtilization                    | > 85% for 2×5m |
+| `forge-development-config-rls-denials`           | `Forge/Configuration` `ConfigRlsDenials` | ≥ 1 / 5m       |
+| `forge-development-config-authorization-denials` | `ConfigAuthorizationDenials`             | ≥ 5 / 5m       |
+| `forge-development-config-publish-failures`      | `ConfigPublishFailures`                  | ≥ 1 / 5m       |
+| `forge-development-config-rollback-failures`     | `ConfigRollbackFailures`                 | ≥ 1 / 5m       |
+| `forge-development-config-validation-failures`   | `ConfigValidationFailures`               | ≥ 10 / 5m      |
 
 Dimensions: `Environment=development`, `Service=platform-api`. Initial state may be `INSUFFICIENT_DATA`.
 
@@ -38,10 +38,10 @@ Emitted from `apps/platform-api` (`configuration-metrics.ts`) on:
 
 ## Runbook
 
-1. Alarm fires → dashboard `forge-development-configuration-platform`.  
-2. Check ECS `forge-development-ecs-platform-api`.  
-3. Inspect `/forge/development/platform-api` logs for EMF / `FORBIDDEN` / `VALIDATION_FAILED`.  
-4. Rollback API to `:27` / `config-accept-20260728054933` / `sha256:f0f139ec…` if needed.  
+1. Alarm fires → dashboard `forge-development-configuration-platform`.
+2. Check ECS `forge-development-ecs-platform-api`.
+3. Inspect `/forge/development/platform-api` logs for EMF / `FORBIDDEN` / `VALIDATION_FAILED`.
+4. Rollback API to `:27` / `config-accept-20260728054933` / `sha256:f0f139ec…` if needed.
 5. Do **not** rotate app DB secret.
 
 ## Scripts

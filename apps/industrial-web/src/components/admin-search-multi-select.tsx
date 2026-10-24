@@ -93,7 +93,12 @@ export function AdminSearchMultiSelect({
             <p className="small text-muted mb-0 mt-2">Nothing selected yet.</p>
           )}
         </div>
-        <div className="p-2" style={{ maxHeight, overflowY: "auto" }} role="listbox" aria-multiselectable>
+        <div
+          className="p-2"
+          style={{ maxHeight, overflowY: "auto" }}
+          role="listbox"
+          aria-multiselectable
+        >
           {filtered.length === 0 ? (
             <p className="small text-muted mb-0">{emptyMessage}</p>
           ) : (
@@ -123,13 +128,7 @@ export function AdminSearchMultiSelect({
   );
 }
 
-export function AdminToneIcon({
-  icon,
-  tone = "primary",
-}: {
-  icon: string;
-  tone?: AdminLabelTone;
-}) {
+export function AdminToneIcon({ icon, tone = "primary" }: { icon: string; tone?: AdminLabelTone }) {
   return (
     <span className="settings-admin-stat-icon rounded">
       <span className={`avatar-initial rounded ${adminLabelToneClass(tone)}`}>

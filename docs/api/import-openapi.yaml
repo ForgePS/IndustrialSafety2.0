@@ -275,7 +275,16 @@ paths:
           application/json:
             schema:
               type: object
-              required: [productKey, moduleKey, recordCategory, displayName, fileName, contentType, byteSize]
+              required:
+                [
+                  productKey,
+                  moduleKey,
+                  recordCategory,
+                  displayName,
+                  fileName,
+                  contentType,
+                  byteSize,
+                ]
               properties:
                 productKey: { type: string }
                 moduleKey: { type: string }

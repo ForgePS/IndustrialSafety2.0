@@ -124,14 +124,38 @@ async function main() {
     }
 
     const permMeta = {
-      "industrial.sanitation.view": ["View sanitation", "View sanitation dashboard, inspections, and records"],
-      "industrial.sanitation.manage": ["Manage sanitation", "Configure profiles, templates, MSS, and settings"],
-      "industrial.sanitation.inspect": ["Conduct sanitation inspections", "Start and complete sanitation inspections"],
-      "industrial.sanitation.clean": ["Complete cleaning tasks", "Perform and complete MSS cleaning tasks"],
-      "industrial.sanitation.verify": ["Verify sanitation cleaning", "Independent cleaning verification"],
-      "industrial.sanitation.report": ["Report sanitation concerns", "Report spills, dust, and sanitation issues"],
-      "field.sanitation.report": ["Field report sanitation", "Field app sanitation concern and spill reporting"],
-      "field.sanitation.inspect": ["Field sanitation inspect", "Field app sanitation inspections and dust measurements"],
+      "industrial.sanitation.view": [
+        "View sanitation",
+        "View sanitation dashboard, inspections, and records",
+      ],
+      "industrial.sanitation.manage": [
+        "Manage sanitation",
+        "Configure profiles, templates, MSS, and settings",
+      ],
+      "industrial.sanitation.inspect": [
+        "Conduct sanitation inspections",
+        "Start and complete sanitation inspections",
+      ],
+      "industrial.sanitation.clean": [
+        "Complete cleaning tasks",
+        "Perform and complete MSS cleaning tasks",
+      ],
+      "industrial.sanitation.verify": [
+        "Verify sanitation cleaning",
+        "Independent cleaning verification",
+      ],
+      "industrial.sanitation.report": [
+        "Report sanitation concerns",
+        "Report spills, dust, and sanitation issues",
+      ],
+      "field.sanitation.report": [
+        "Field report sanitation",
+        "Field app sanitation concern and spill reporting",
+      ],
+      "field.sanitation.inspect": [
+        "Field sanitation inspect",
+        "Field app sanitation inspections and dust measurements",
+      ],
       "field.sanitation.clean": ["Field sanitation clean", "Field app cleaning task completion"],
     };
 
@@ -230,7 +254,8 @@ async function main() {
       if (!mma) {
         membershipGranted += 1;
         if (APPLY) {
-          if (!grantActor) throw new Error("No actor user for membership_module_access.granted_by_user_id");
+          if (!grantActor)
+            throw new Error("No actor user for membership_module_access.granted_by_user_id");
           await sql`
             insert into membership_module_access (
               id, tenant_id, membership_id, module_id, status, granted_by_user_id, created_at, updated_at

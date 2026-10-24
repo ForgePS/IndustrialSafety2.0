@@ -14,11 +14,11 @@
 
 ## Surfaces
 
-| App | Role |
-| --- | --- |
-| Creator Console `/studio` | Full admin (27 modules) |
-| Tenant Admin `/studio` | Delegated (13 modules) |
-| RMS | Consumes terminology + dropdowns (+ navigation hook) |
+| App                       | Role                                                 |
+| ------------------------- | ---------------------------------------------------- |
+| Creator Console `/studio` | Full admin (27 modules)                              |
+| Tenant Admin `/studio`    | Delegated (13 modules)                               |
+| RMS                       | Consumes terminology + dropdowns (+ navigation hook) |
 
 ## API
 

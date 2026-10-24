@@ -95,8 +95,8 @@ export function DrugAlcoholIncidentForm({
 
       {!value.testingRequired ? (
         <p className="text-muted small mb-0">
-          Check the box above when post-accident or other required testing applies. Consent and
-          test details will appear here.
+          Check the box above when post-accident or other required testing applies. Consent and test
+          details will appear here.
         </p>
       ) : (
         <>
@@ -235,11 +235,7 @@ export function DrugAlcoholIncidentForm({
                       disabled={disabled}
                       onChange={(e) =>
                         patch({
-                          substances: toggleSubstance(
-                            value.substances,
-                            opt.id,
-                            e.target.checked,
-                          ),
+                          substances: toggleSubstance(value.substances, opt.id, e.target.checked),
                         })
                       }
                     />
@@ -260,8 +256,7 @@ export function DrugAlcoholIncidentForm({
                   disabled={disabled}
                   onChange={(e) =>
                     patch({
-                      testStatus: e.target
-                        .value as DrugAlcoholIncidentSection["testStatus"],
+                      testStatus: e.target.value as DrugAlcoholIncidentSection["testStatus"],
                     })
                   }
                 >

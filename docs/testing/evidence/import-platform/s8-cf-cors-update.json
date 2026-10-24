@@ -27,24 +27,12 @@
     },
     "AccessControlAllowMethods": {
       "Quantity": 7,
-      "Items": [
-        "GET",
-        "HEAD",
-        "OPTIONS",
-        "PUT",
-        "POST",
-        "PATCH",
-        "DELETE"
-      ]
+      "Items": ["GET", "HEAD", "OPTIONS", "PUT", "POST", "PATCH", "DELETE"]
     },
     "AccessControlAllowCredentials": true,
     "AccessControlExposeHeaders": {
       "Quantity": 3,
-      "Items": [
-        "ETag",
-        "X-Correlation-Id",
-        "X-Request-Id"
-      ]
+      "Items": ["ETag", "X-Correlation-Id", "X-Request-Id"]
     },
     "AccessControlMaxAgeSec": 600,
     "OriginOverride": false

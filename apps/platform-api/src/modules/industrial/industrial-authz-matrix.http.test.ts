@@ -120,7 +120,10 @@ const ROLE_PERMS: Record<string, string[]> = {
 type RoleName = keyof typeof ROLE_PERMS;
 
 let txMock: {
-  query: Record<string, { findFirst?: ReturnType<typeof vi.fn>; findMany?: ReturnType<typeof vi.fn> }>;
+  query: Record<
+    string,
+    { findFirst?: ReturnType<typeof vi.fn>; findMany?: ReturnType<typeof vi.fn> }
+  >;
 };
 
 function principalFor(role: RoleName, tenantId: string): ForgePrincipal {
@@ -332,10 +335,7 @@ function executionContextFor(input: {
   };
 }
 
-function createAuthService(overrides?: {
-  appEnv?: string;
-  sessionsRevokedAt?: Date | null;
-}) {
+function createAuthService(overrides?: { appEnv?: string; sessionsRevokedAt?: Date | null }) {
   const sessionsRevokedAt = overrides?.sessionsRevokedAt ?? null;
   txMock = {
     query: {
@@ -397,9 +397,14 @@ function createAuthService(overrides?: {
     COGNITO_CLIENT_ID: "client-a",
   } as never;
 
-  return new AuthContextService(db as never, env, { enabled: false } as never, {
-    writeInTransaction: vi.fn(async () => "audit-1"),
-  } as never);
+  return new AuthContextService(
+    db as never,
+    env,
+    { enabled: false } as never,
+    {
+      writeInTransaction: vi.fn(async () => "audit-1"),
+    } as never,
+  );
 }
 
 function httpRequest(headers: Record<string, string | undefined>) {
@@ -450,7 +455,11 @@ describe("Industrial authz HTTP matrix (FIS-SEC Step 3)", () => {
       params,
     });
 
-    if (row.expect === "forbidden" && row.routeTenantId && row.routeTenantId !== row.principalTenant) {
+    if (
+      row.expect === "forbidden" &&
+      row.routeTenantId &&
+      row.routeTenantId !== row.principalTenant
+    ) {
       expect(() => tenantGuard.canActivate(ctx as never)).toThrow(ForgeError);
       try {
         tenantGuard.canActivate(ctx as never);
@@ -591,10 +600,7 @@ describe("Industrial authz matrix — anonymous / bearer / forged principal deni
       row.setup?.();
       const service = createAuthService({
         appEnv: row.appEnv,
-        sessionsRevokedAt:
-          row.id === "REVOKED_SESSION"
-            ? new Date()
-            : null,
+        sessionsRevokedAt: row.id === "REVOKED_SESSION" ? new Date() : null,
       });
       const authGuard = new AuthGuard(service, new Reflector());
       const ctx = {

@@ -27,11 +27,13 @@ export const MEDICAL_REFUSAL_CONFIRMATION_OPTIONS = [
   },
   {
     id: "askedQuestions",
-    label: "I have had the opportunity to ask questions regarding the medical care or evaluation offered.",
+    label:
+      "I have had the opportunity to ask questions regarding the medical care or evaluation offered.",
   },
   {
     id: "understandsRisks",
-    label: "I understand the potential risks associated with declining medical evaluation or treatment.",
+    label:
+      "I understand the potential risks associated with declining medical evaluation or treatment.",
   },
   {
     id: "documentsDecision",
@@ -71,17 +73,16 @@ export const MEDICAL_REFUSAL_DECISION_OPTIONS = [
   },
   {
     id: "decline-ambulance",
-    label: "I decline ambulance transportation and intend to seek medical evaluation by another means.",
+    label:
+      "I decline ambulance transportation and intend to seek medical evaluation by another means.",
   },
   { id: "other", label: "Other" },
 ] as const;
 
 export type MedicalRefusalConfirmationId =
   (typeof MEDICAL_REFUSAL_CONFIRMATION_OPTIONS)[number]["id"];
-export type MedicalServiceOfferedId =
-  (typeof MEDICAL_SERVICES_OFFERED_OPTIONS)[number]["id"];
-export type MedicalRefusalDecisionId =
-  (typeof MEDICAL_REFUSAL_DECISION_OPTIONS)[number]["id"] | "";
+export type MedicalServiceOfferedId = (typeof MEDICAL_SERVICES_OFFERED_OPTIONS)[number]["id"];
+export type MedicalRefusalDecisionId = (typeof MEDICAL_REFUSAL_DECISION_OPTIONS)[number]["id"] | "";
 
 export type MedicalRefusalConfirmations = Record<MedicalRefusalConfirmationId, boolean>;
 
@@ -149,9 +150,7 @@ const SERVICE_IDS = MEDICAL_SERVICES_OFFERED_OPTIONS.map((o) => o.id);
 const DECISION_IDS = MEDICAL_REFUSAL_DECISION_OPTIONS.map((o) => o.id);
 const CONFIRMATION_IDS = MEDICAL_REFUSAL_CONFIRMATION_OPTIONS.map((o) => o.id);
 
-export function parseMedicalRefusalAcknowledgment(
-  raw: unknown,
-): MedicalRefusalAcknowledgment {
+export function parseMedicalRefusalAcknowledgment(raw: unknown): MedicalRefusalAcknowledgment {
   if (!raw || typeof raw !== "object" || Array.isArray(raw)) {
     return { ...EMPTY_MEDICAL_REFUSAL_ACKNOWLEDGMENT, confirmations: emptyConfirmations() };
   }
@@ -162,8 +161,7 @@ export function parseMedicalRefusalAcknowledgment(
       : {};
   const confirmations = emptyConfirmations();
   for (const id of CONFIRMATION_IDS) {
-    confirmations[id] =
-      confRaw[id] === true || String(confRaw[id] ?? "").toLowerCase() === "true";
+    confirmations[id] = confRaw[id] === true || String(confRaw[id] ?? "").toLowerCase() === "true";
   }
   const decision = asText(row.employeeDecision).trim();
   return {
@@ -192,18 +190,18 @@ export function medicalRefusalAcknowledgmentHasContent(
 ): boolean {
   return Boolean(
     Object.values(value.confirmations).some(Boolean) ||
-      value.servicesOffered.length ||
-      value.servicesOther ||
-      value.employeeDecision ||
-      value.employeeDecisionOther ||
-      value.employeeStatementAck ||
-      value.employeeSignature.trim() ||
-      value.employeeSignedAt ||
-      value.witnessName ||
-      value.witnessTitle ||
-      value.witnessSignature.trim() ||
-      value.witnessSignedAt ||
-      value.additionalComments.trim(),
+    value.servicesOffered.length ||
+    value.servicesOther ||
+    value.employeeDecision ||
+    value.employeeDecisionOther ||
+    value.employeeStatementAck ||
+    value.employeeSignature.trim() ||
+    value.employeeSignedAt ||
+    value.witnessName ||
+    value.witnessTitle ||
+    value.witnessSignature.trim() ||
+    value.witnessSignedAt ||
+    value.additionalComments.trim(),
   );
 }
 
@@ -214,8 +212,7 @@ export function medicalRefusalAcknowledgmentIsComplete(
   const allConfirmations = MEDICAL_REFUSAL_CONFIRMATION_OPTIONS.every(
     (opt) => value.confirmations[opt.id],
   );
-  const hasServices =
-    value.servicesOffered.length > 0 || value.servicesOther.trim().length > 0;
+  const hasServices = value.servicesOffered.length > 0 || value.servicesOther.trim().length > 0;
   const hasDecision =
     Boolean(value.employeeDecision) &&
     (value.employeeDecision !== "other" || value.employeeDecisionOther.trim().length > 0);
@@ -256,18 +253,14 @@ export function medicalRefusalValidationMessage(
   return null;
 }
 
-export function summarizeMedicalRefusalAcknowledgment(
-  value: MedicalRefusalAcknowledgment,
-): string {
+export function summarizeMedicalRefusalAcknowledgment(value: MedicalRefusalAcknowledgment): string {
   const parts: string[] = [];
   if (value.employeeDecision) {
-    const decision = MEDICAL_REFUSAL_DECISION_OPTIONS.find(
-      (o) => o.id === value.employeeDecision,
-    );
+    const decision = MEDICAL_REFUSAL_DECISION_OPTIONS.find((o) => o.id === value.employeeDecision);
     parts.push(
       value.employeeDecision === "other" && value.employeeDecisionOther
         ? `Decision: ${value.employeeDecisionOther}`
-        : decision?.label ?? value.employeeDecision,
+        : (decision?.label ?? value.employeeDecision),
     );
   }
   if (value.servicesOffered.length || value.servicesOther) {
@@ -303,15 +296,13 @@ export function formatMedicalRefusalDetailLines(
     .filter((label): label is string => Boolean(label));
   if (services.length) rows.push({ label: "Medical services offered", value: services.join(", ") });
   if (value.employeeDecision) {
-    const decision = MEDICAL_REFUSAL_DECISION_OPTIONS.find(
-      (o) => o.id === value.employeeDecision,
-    );
+    const decision = MEDICAL_REFUSAL_DECISION_OPTIONS.find((o) => o.id === value.employeeDecision);
     rows.push({
       label: "Employee decision",
       value:
         value.employeeDecision === "other" && value.employeeDecisionOther
           ? value.employeeDecisionOther
-          : decision?.label ?? value.employeeDecision,
+          : (decision?.label ?? value.employeeDecision),
     });
   }
   if (value.employeeSignedAt) {

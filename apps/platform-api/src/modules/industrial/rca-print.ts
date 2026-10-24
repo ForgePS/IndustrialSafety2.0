@@ -3,7 +3,12 @@
  */
 import { escapeIncidentHtml as esc } from "./incident-print.js";
 
-export type RcaPrintAction = { action: string; assignedTo: string; dueDate: string; status: string };
+export type RcaPrintAction = {
+  action: string;
+  assignedTo: string;
+  dueDate: string;
+  status: string;
+};
 
 export type RcaPrintData = {
   incidentSummary: string;
@@ -104,7 +109,10 @@ export function buildRcaPrintableHtml(input: {
     ["Event date", formatRcaDate(rca.eventDate || text(incident.dateOccurred))],
     ["Incident type", text(incident.incidentTypeName) || text(incident.category)],
     ["Person affected", text(incident.personAffected)],
-    ["Location", [text(incident.location), text(incident.departmentName)].filter(Boolean).join(" · ")],
+    [
+      "Location",
+      [text(incident.location), text(incident.departmentName)].filter(Boolean).join(" · "),
+    ],
     ["Incident status", text(incident.status)],
     ["Analysis conducted by", rca.conductedBy],
     ["Analysis date", formatRcaDate(rca.conductedAt)],
@@ -123,11 +131,14 @@ export function buildRcaPrintableHtml(input: {
     ? `<ul class="rca__list">${rca.contributingFactors.map((f) => `<li>${esc(f)}</li>`).join("")}</ul>`
     : `<p class="rca__text rca__muted">None recorded.</p>`;
 
-  const whyRows = Array.from({ length: Math.max(rca.fiveWhys.length, rca.fiveWhyQuestions.length) }, (_, i) => ({
-    n: i + 1,
-    q: rca.fiveWhyQuestions[i] ?? "",
-    a: rca.fiveWhys[i] ?? "",
-  })).filter((r) => r.q || r.a);
+  const whyRows = Array.from(
+    { length: Math.max(rca.fiveWhys.length, rca.fiveWhyQuestions.length) },
+    (_, i) => ({
+      n: i + 1,
+      q: rca.fiveWhyQuestions[i] ?? "",
+      a: rca.fiveWhys[i] ?? "",
+    }),
+  ).filter((r) => r.q || r.a);
   const whysHtml = whyRows.length
     ? `<table class="rca__table"><thead><tr><th style="width:56px">Why</th><th style="width:38%">Question</th><th>Answer</th></tr></thead><tbody>${whyRows
         .map(

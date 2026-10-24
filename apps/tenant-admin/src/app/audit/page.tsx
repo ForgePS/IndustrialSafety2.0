@@ -77,9 +77,7 @@ function AuditInner() {
         count: number;
         exportedAt: string;
       }>(`/api/v1/tenants/${tenantId}/audit-events/export`, "POST");
-      setExportNote(
-        `Export ${result.exportId} · ${result.count} events · ${result.exportedAt}`,
-      );
+      setExportNote(`Export ${result.exportId} · ${result.count} events · ${result.exportedAt}`);
       await load(page);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Export failed");

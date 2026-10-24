@@ -13,14 +13,14 @@ platform-api + worker-service — **pass**
 
 ## Live deploy
 
-| Check | Result |
-| --- | --- |
-| API TD | `:34` |
-| Worker TD | `:20` |
-| Migrate `0024` | exit 0 |
-| Health | 200 |
-| Upload unauth | 401 |
-| App secret | unchanged |
+| Check          | Result    |
+| -------------- | --------- |
+| API TD         | `:34`     |
+| Worker TD      | `:20`     |
+| Migrate `0024` | exit 0    |
+| Health         | 200       |
+| Upload unauth  | 401       |
+| App secret     | unchanged |
 
 ## Acceptance checklist
 

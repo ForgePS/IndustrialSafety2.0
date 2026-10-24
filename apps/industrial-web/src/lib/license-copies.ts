@@ -17,11 +17,7 @@ export type LicenseCopies = {
  */
 export const MAX_LICENSE_DATA_URL_LENGTH = 3_500_000;
 
-export function uploadImageSrc(
-  raw: unknown,
-  seen?: Set<object>,
-  depth = 0,
-): string | null {
+export function uploadImageSrc(raw: unknown, seen?: Set<object>, depth = 0): string | null {
   if (depth > 12) return null;
   if (typeof raw === "string") {
     const value = raw.trim();
@@ -100,9 +96,7 @@ export function personnelLicenseCopies(record: Record<string, unknown>): License
 
   const copy =
     uploadImageSrc(record.driversLicenseCopy) ??
-    uploadImageSrc(
-      Array.isArray(record.driversLicenseCopy) ? record.driversLicenseCopy[0] : null,
-    );
+    uploadImageSrc(Array.isArray(record.driversLicenseCopy) ? record.driversLicenseCopy[0] : null);
   return { front: copy, back: null };
 }
 

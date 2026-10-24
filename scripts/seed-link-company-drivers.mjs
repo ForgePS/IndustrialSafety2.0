@@ -104,7 +104,9 @@ function matchPersonFuzzy(people, rawName) {
     .filter((part) => part.length >= 3);
   if (parts.length < 2) return null;
   const candidates = people.filter((person) => {
-    const hay = normName(`${person.display_name ?? ""} ${person.first_name ?? ""} ${person.last_name ?? ""}`);
+    const hay = normName(
+      `${person.display_name ?? ""} ${person.first_name ?? ""} ${person.last_name ?? ""}`,
+    );
     return parts.every((part) => hay.includes(part));
   });
   return pickPerson(candidates);
@@ -148,7 +150,9 @@ async function main() {
     const byEmp = new Map();
     const byName = new Map();
     for (const person of people) {
-      const emp = String(person.employee_number ?? "").trim().toUpperCase();
+      const emp = String(person.employee_number ?? "")
+        .trim()
+        .toUpperCase();
       if (emp) {
         const list = byEmp.get(emp) ?? [];
         list.push(person);
@@ -177,8 +181,11 @@ async function main() {
 
     for (const driver of drivers) {
       const payload = unwrap(driver.source_payload);
-      const emp = String(payload.employeeNumber ?? payload.employee_number ?? "").trim().toUpperCase();
-      const rawName = driver.personnel_name || payload.personnelName || payload.personnel_name || "";
+      const emp = String(payload.employeeNumber ?? payload.employee_number ?? "")
+        .trim()
+        .toUpperCase();
+      const rawName =
+        driver.personnel_name || payload.personnelName || payload.personnel_name || "";
       const person = driver.personnel_id
         ? people.find((p) => p.id === driver.personnel_id)
         : matchPerson(byEmp, byName, people, emp, rawName);

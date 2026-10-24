@@ -409,8 +409,7 @@ async function main() {
         asText(payload.equipmentName) ||
         asText(proc.title) ||
         "LOTO Procedure";
-      const nextNumber =
-        asText(payload.procedureNumber) || asText(proc.procedure_number) || null;
+      const nextNumber = asText(payload.procedureNumber) || asText(proc.procedure_number) || null;
       const nextRevision = asText(payload.revision) || asText(proc.revision) || "1";
       const nextStatus = mapStatus(payload.status) || asText(proc.status) || "DRAFT";
 
@@ -424,8 +423,7 @@ async function main() {
         equipmentId = equipmentMap.get(externalId) || equipmentByNumber.get(externalId) || null;
       }
       if (!equipmentId && asText(payload.equipmentName)) {
-        equipmentId =
-          equipmentByNumber.get(asText(payload.equipmentName).toLowerCase()) || null;
+        equipmentId = equipmentByNumber.get(asText(payload.equipmentName).toLowerCase()) || null;
       }
 
       const siteResolved = resolveSiteId(
@@ -492,8 +490,7 @@ async function main() {
             stepsType: Array.isArray(payload.steps)
               ? `array:${payload.steps.length}`
               : typeof payload.steps,
-            firstStep:
-              Array.isArray(payload.steps) && payload.steps[0] ? payload.steps[0] : null,
+            firstStep: Array.isArray(payload.steps) && payload.steps[0] ? payload.steps[0] : null,
           });
         }
         continue;

@@ -45,11 +45,14 @@ describe("NotificationsService.markUnreadByTypeAndThread", () => {
       }),
     );
 
-    service = new NotificationsService({} as never, {
-      sendToUser: async () => ({ sent: 0, failed: 0 }),
-      isEnabled: () => false,
-      getPublicKey: () => ({ enabled: false, publicKey: null }),
-    } as never);
+    service = new NotificationsService(
+      {} as never,
+      {
+        sendToUser: async () => ({ sent: 0, failed: 0 }),
+        isEnabled: () => false,
+        getPublicKey: () => ({ enabled: false, publicKey: null }),
+      } as never,
+    );
   });
 
   it("marks unread rows matching type and threadId metadata", async () => {

@@ -32,7 +32,11 @@ export function WalkthroughControls(props: Props) {
       <button type="button" className="btn btn-sm btn-outline-secondary" onClick={props.onNext}>
         Next
       </button>
-      <button type="button" className="btn btn-sm btn-outline-secondary" onClick={props.onToggleMute}>
+      <button
+        type="button"
+        className="btn btn-sm btn-outline-secondary"
+        onClick={props.onToggleMute}
+      >
         {props.muted ? "Unmute" : "Mute"}
       </button>
       <button
@@ -42,7 +46,11 @@ export function WalkthroughControls(props: Props) {
       >
         CC
       </button>
-      <button type="button" className="btn btn-sm btn-outline-secondary" onClick={props.onFullscreen}>
+      <button
+        type="button"
+        className="btn btn-sm btn-outline-secondary"
+        onClick={props.onFullscreen}
+      >
         Full
       </button>
       <button type="button" className="btn btn-sm btn-outline-danger" onClick={props.onExit}>

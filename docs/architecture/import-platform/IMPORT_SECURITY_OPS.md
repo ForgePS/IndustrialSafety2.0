@@ -30,14 +30,14 @@
 
 ## Retention
 
-| Kind | Default days |
-| --- | --- |
-| Clean source | 30 |
-| Quarantine | 90 |
-| Scan events | 365 |
-| Masked artifacts | 30 |
-| Privileged artifacts | 7 |
-| Security reports | 180 |
+| Kind                 | Default days |
+| -------------------- | ------------ |
+| Clean source         | 30           |
+| Quarantine           | 90           |
+| Scan events          | 365          |
+| Masked artifacts     | 30           |
+| Privileged artifacts | 7            |
+| Security reports     | 180          |
 
 Cleanup must skip security holds, active jobs, and pending rollback.
 

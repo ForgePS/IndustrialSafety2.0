@@ -37,17 +37,17 @@ Nothing inside a product should recreate functionality already owned by Forge Ex
 
 ## Forge Experience does not own
 
-| Area | Owner |
-| --- | --- |
-| Business rules | Product |
-| Database design | Platform / product data owners |
-| Cloud infrastructure | Platform |
-| Authentication | Platform |
-| Permissions | Platform / product policy |
-| Tenant logic | Platform |
-| Backend APIs | Platform / product services |
-| Industry regulations | Product + compliance |
-| Operational policies | Customer / product configuration |
+| Area                       | Owner                                |
+| -------------------------- | ------------------------------------ |
+| Business rules             | Product                              |
+| Database design            | Platform / product data owners       |
+| Cloud infrastructure       | Platform                             |
+| Authentication             | Platform                             |
+| Permissions                | Platform / product policy            |
+| Tenant logic               | Platform                             |
+| Backend APIs               | Platform / product services          |
+| Industry regulations       | Product + compliance                 |
+| Operational policies       | Customer / product configuration     |
 | Product-specific workflows | Product (using FX workflow patterns) |
 
 ## Product extension model

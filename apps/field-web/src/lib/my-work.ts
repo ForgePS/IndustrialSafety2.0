@@ -33,12 +33,7 @@ export type FieldMyWorkResult = {
 export type TaskDueTab = "all" | "today" | "overdue" | "completed";
 
 /** Spec My Work kind filters. */
-export type TaskKindFilter =
-  | "all"
-  | "tasks"
-  | "inspections"
-  | "corrective_actions"
-  | "training";
+export type TaskKindFilter = "all" | "tasks" | "inspections" | "corrective_actions" | "training";
 
 export type DueBucket = "overdue" | "dueNow" | "dueToday" | "upcoming" | "none";
 
@@ -123,10 +118,7 @@ export function isCompletedStatus(status: string): boolean {
 /** @deprecated use TaskDueTab */
 export type TaskTab = TaskDueTab;
 
-export function filterTasksForKind(
-  items: FieldWorkItem[],
-  kind: TaskKindFilter,
-): FieldWorkItem[] {
+export function filterTasksForKind(items: FieldWorkItem[], kind: TaskKindFilter): FieldWorkItem[] {
   if (kind === "all") return items;
   if (kind === "tasks") return items.filter((item) => item.kind === "task");
   if (kind === "training") return items.filter((item) => item.kind === "training");

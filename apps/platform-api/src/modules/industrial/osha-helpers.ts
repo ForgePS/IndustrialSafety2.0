@@ -220,8 +220,7 @@ export function parseOccurredDateTime(raw: unknown): {
     return { date, ...formatOshaClock(hour24, minute) };
   }
 
-  const us =
-    /^(\d{1,2})\/(\d{1,2})\/(\d{4})(?:[,\s]+(\d{1,2}):(\d{2})\s*(AM|PM))?$/i.exec(text);
+  const us = /^(\d{1,2})\/(\d{1,2})\/(\d{4})(?:[,\s]+(\d{1,2}):(\d{2})\s*(AM|PM))?$/i.exec(text);
   if (us) {
     const mm = String(us[1]).padStart(2, "0");
     const dd = String(us[2]).padStart(2, "0");
@@ -245,10 +244,7 @@ export function parseOccurredDateTime(raw: unknown): {
   return { date: null, time: "", amPm: null };
 }
 
-function formatOshaClock(
-  hour24: number,
-  minute: number,
-): { time: string; amPm: OshaAmPm } {
+function formatOshaClock(hour24: number, minute: number): { time: string; amPm: OshaAmPm } {
   const amPm: OshaAmPm = hour24 >= 12 ? "PM" : "AM";
   let hour12 = hour24 % 12;
   if (hour12 === 0) hour12 = 12;
@@ -306,7 +302,9 @@ function asInt(value: unknown): number | null {
 }
 
 export function normalizeOshaCaseOutcome(raw: unknown): OshaCaseOutcome | null {
-  const text = asText(raw).toUpperCase().replace(/[\s-]+/g, "_");
+  const text = asText(raw)
+    .toUpperCase()
+    .replace(/[\s-]+/g, "_");
   if (!text) return null;
   if (text === "G" || text === "DEATH" || text === "FATALITY") return "DEATH";
   if (text === "H" || text === "DAYS_AWAY" || text === "DAYS_AWAY_FROM_WORK") return "DAYS_AWAY";
@@ -379,7 +377,9 @@ export function unwrapOshaSourcePayload(raw: unknown): Record<string, unknown> {
 }
 
 export function normalizeOshaRecordability(raw: unknown): OshaRecordability {
-  const text = asText(raw).toUpperCase().replace(/[\s-]+/g, "_");
+  const text = asText(raw)
+    .toUpperCase()
+    .replace(/[\s-]+/g, "_");
   if (text === "RECORDABLE" || text === "YES") return "RECORDABLE";
   if (
     text === "NOT_RECORDABLE" ||
@@ -467,10 +467,7 @@ export function seedForm301FieldsFromIncident(input: {
     payload.shiftStartTime ?? payload.timeBeganWork ?? payload.workStartTime,
   );
   const injuryDate =
-    occurred.date ||
-    asDate(payload.injuryDate) ||
-    asDate(payload.dateOfInjury) ||
-    null;
+    occurred.date || asDate(payload.injuryDate) || asDate(payload.dateOfInjury) || null;
 
   const employeeName =
     asText(payload.personAffected) ||
@@ -513,10 +510,8 @@ export function seedForm301FieldsFromIncident(input: {
     asText(person.street) ||
     asText(person.address) ||
     "";
-  const city =
-    asText(payload.city) || asText(employee.city) || asText(person.city) || "";
-  const state =
-    asText(payload.state) || asText(employee.state) || asText(person.state) || "";
+  const city = asText(payload.city) || asText(employee.city) || asText(person.city) || "";
+  const state = asText(payload.state) || asText(employee.state) || asText(person.state) || "";
   const zip =
     asText(payload.zip) ||
     asText(payload.zipCode) ||
@@ -531,25 +526,17 @@ export function seedForm301FieldsFromIncident(input: {
   );
 
   const whatHappened =
-    asText(payload.whatHappened) ||
-    asText(payload.howInjuryOccurred) ||
-    description;
+    asText(payload.whatHappened) || asText(payload.howInjuryOccurred) || description;
   const activityBefore =
     asText(payload.activityBefore) ||
     asText(payload.whatDoing) ||
     (eventLocation ? `Working at ${eventLocation}` : "");
   const injuryOrIllness =
-    asText(payload.injuryOrIllness) ||
-    asText(payload.bodyParts) ||
-    description;
-  const objectOrSubstance =
-    asText(payload.objectOrSubstance) || asText(payload.harmedBy) || "";
+    asText(payload.injuryOrIllness) || asText(payload.bodyParts) || description;
+  const objectOrSubstance = asText(payload.objectOrSubstance) || asText(payload.harmedBy) || "";
 
   const completedBy =
-    asText(payload.completedBy) ||
-    asText(payload.reportedBy) ||
-    asText(payload.submittedBy) ||
-    "";
+    asText(payload.completedBy) || asText(payload.reportedBy) || asText(payload.submittedBy) || "";
   const completedByPhone =
     asText(payload.completedByPhone) ||
     asText(payload.reportedByPhone) ||
@@ -562,10 +549,7 @@ export function seedForm301FieldsFromIncident(input: {
     asDate(payload.reportedAt) ||
     null;
 
-  const personnelId =
-    asText(payload.personnelId) ||
-    asText(person.id) ||
-    "";
+  const personnelId = asText(payload.personnelId) || asText(person.id) || "";
 
   return {
     incidentId: input.incidentId,
@@ -605,17 +589,10 @@ export function seedForm301FieldsFromIncident(input: {
       payload.hospitalizedOvernight ?? payload.hospitalized ?? payload.inpatient,
     ),
     timeBeganWork:
-      asText(payload.timeBeganWork) ||
-      asText(payload.workStartTime) ||
-      shiftStart.time ||
-      "",
+      asText(payload.timeBeganWork) || asText(payload.workStartTime) || shiftStart.time || "",
     timeBeganWorkAmPm:
       normalizeOshaAmPm(payload.timeBeganWorkAmPm ?? payload.workStartAmPm) || shiftStart.amPm,
-    timeOfEvent:
-      asText(payload.timeOfEvent) ||
-      asText(payload.incidentTime) ||
-      occurred.time ||
-      "",
+    timeOfEvent: asText(payload.timeOfEvent) || asText(payload.incidentTime) || occurred.time || "",
     timeOfEventAmPm:
       normalizeOshaAmPm(payload.timeOfEventAmPm ?? payload.incidentAmPm) || occurred.amPm,
     timeCannotBeDetermined: asBool(payload.timeCannotBeDetermined) === true,
@@ -642,9 +619,7 @@ export function mergeOshaSeedPreferExisting(
   for (const [key, value] of Object.entries(seed)) {
     const current = out[key];
     const empty =
-      current == null ||
-      current === "" ||
-      (typeof current === "string" && current.trim() === "");
+      current == null || current === "" || (typeof current === "string" && current.trim() === "");
     if (empty && value != null && value !== "") {
       out[key] = value;
     }
@@ -697,7 +672,8 @@ export function mergeOshaCasePayloadFields(
         next[key] = asBool(value) ?? false;
         break;
       default:
-        next[key] = typeof value === "string" ? value.trim() : value == null ? "" : String(value).trim();
+        next[key] =
+          typeof value === "string" ? value.trim() : value == null ? "" : String(value).trim();
         break;
     }
   }

@@ -297,7 +297,8 @@ async function main() {
           and mra.status = 'ACTIVE' and mra.revoked_at is null
       `
     ).map((r) => r.code);
-    report.canViewPersonnel = effective.includes("industrial.personnel.view") || effective.includes("industrial.admin");
+    report.canViewPersonnel =
+      effective.includes("industrial.personnel.view") || effective.includes("industrial.admin");
     report.canManagePersonnel =
       effective.includes("industrial.personnel.manage") || effective.includes("industrial.admin");
     report.personnelPermsPresent = PERSONNEL_PERMS.filter((c) => effective.includes(c));

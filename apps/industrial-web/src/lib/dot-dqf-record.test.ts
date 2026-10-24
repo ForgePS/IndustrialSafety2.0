@@ -73,9 +73,9 @@ describe("dot-dqf-fields", () => {
   });
 
   it("derives a display title from employee number and location", () => {
-    expect(
-      deriveDotDqfTitle({ employeeNumber: "19628", locationDepartment: "Dewitt" }),
-    ).toBe("19628 · DEWITT");
+    expect(deriveDotDqfTitle({ employeeNumber: "19628", locationDepartment: "Dewitt" })).toBe(
+      "19628 · DEWITT",
+    );
   });
 });
 

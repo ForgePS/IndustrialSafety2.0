@@ -110,7 +110,9 @@ export class IndustrialMvrConsentDocumentsService {
     const meta = KIND_META[kind];
     const personnelId = String(body.personnelId ?? "").trim();
     const filename = String(body.filename ?? "").trim();
-    const mimeType = String(body.mimeType ?? "").trim().toLowerCase();
+    const mimeType = String(body.mimeType ?? "")
+      .trim()
+      .toLowerCase();
     const contentLength = Number(body.contentLength ?? 0);
 
     if (!UUID_PATTERN.test(personnelId)) {
@@ -141,31 +143,36 @@ export class IndustrialMvrConsentDocumentsService {
     const documentId = createId();
     const now = new Date();
 
-    await withTenantTransaction(this.db, tenantId, async (tx) => {
-      await ensureCompanyDriverRosterEntry(tx, tenantId, {
-        personnelId,
-        seededFrom: kind === "report" ? "mvr_report_paper_upload" : "mvr_consent_paper_upload",
-      });
+    await withTenantTransaction(
+      this.db,
+      tenantId,
+      async (tx) => {
+        await ensureCompanyDriverRosterEntry(tx, tenantId, {
+          personnelId,
+          seededFrom: kind === "report" ? "mvr_report_paper_upload" : "mvr_consent_paper_upload",
+        });
 
-      await tx.insert(forgeDocuments).values({
-        id: documentId,
-        tenantId,
-        originalFilename: filename,
-        storedFilename,
-        objectKey,
-        bucketName: this.storage.bucketName,
-        mimeType,
-        fileSizeBytes: contentLength,
-        securityClassification: "INTERNAL",
-        malwareScanStatus: "PENDING",
-        retentionRule: meta.retentionRule,
-        uploadStatus: "INITIALIZED",
-        source: meta.source,
-        uploadedByUserId: principal.userId,
-        createdAt: now,
-        updatedAt: now,
-      });
-    }, principal.userId);
+        await tx.insert(forgeDocuments).values({
+          id: documentId,
+          tenantId,
+          originalFilename: filename,
+          storedFilename,
+          objectKey,
+          bucketName: this.storage.bucketName,
+          mimeType,
+          fileSizeBytes: contentLength,
+          securityClassification: "INTERNAL",
+          malwareScanStatus: "PENDING",
+          retentionRule: meta.retentionRule,
+          uploadStatus: "INITIALIZED",
+          source: meta.source,
+          uploadedByUserId: principal.userId,
+          createdAt: now,
+          updatedAt: now,
+        });
+      },
+      principal.userId,
+    );
 
     const presign = await this.storage.createPresignedUploadUrl({
       objectKey,
@@ -202,167 +209,173 @@ export class IndustrialMvrConsentDocumentsService {
       throw new ForgeError("VALIDATION_FAILED", "documentId must be a UUID");
     }
 
-    return withTenantTransaction(this.db, tenantId, async (tx) => {
-      const document = await tx.query.forgeDocuments.findFirst({
-        where: and(eq(forgeDocuments.id, documentId), eq(forgeDocuments.tenantId, tenantId)),
-      });
-      if (!document) throw new ForgeError("NOT_FOUND", "Document not found");
-      if (!documentBelongsToTenant(document.tenantId, tenantId)) {
-        throw new ForgeError("FORBIDDEN", "Document does not belong to the requested tenant");
-      }
-      if (!objectKeyBelongsToTenant(document.objectKey, tenantId)) {
-        throw new ForgeError("FORBIDDEN", "Object key does not belong to the requested tenant");
-      }
-      if (document.source !== meta.source) {
-        throw new ForgeError(
-          "VALIDATION_FAILED",
-          kind === "report"
-            ? "Document is not an MVR report upload"
-            : "Document is not an MVR consent upload",
-        );
-      }
-
-      await this.storage.assertObjectExists(document.objectKey);
-
-      const now = new Date();
-      await tx
-        .update(forgeDocuments)
-        .set({
-          uploadStatus: "COMPLETE",
-          uploadedAt: now,
-          updatedAt: now,
-        })
-        .where(and(eq(forgeDocuments.id, documentId), eq(forgeDocuments.tenantId, tenantId)));
-
-      const [driver] = await tx
-        .select()
-        .from(industrialFleetDrivers)
-        .where(
-          and(
-            eq(industrialFleetDrivers.tenantId, tenantId),
-            eq(industrialFleetDrivers.personnelId, personnelId),
-          ),
-        )
-        .orderBy(desc(industrialFleetDrivers.updatedAt))
-        .limit(1);
-      if (!driver) throw new ForgeError("NOT_FOUND", "Company driver roster entry not found");
-
-      const payload = unwrapPayload(driver.sourcePayload);
-      const uploads = asUploadList(payload[meta.payloadKey]);
-      const entry = {
-        name: document.originalFilename,
-        fileName: document.originalFilename,
-        documentId: document.id,
-        contentType: document.mimeType,
-        uploadedAt: now.toISOString(),
-      };
-      if (!uploads.some((row) => String(row.documentId ?? "") === document.id)) {
-        uploads.push(entry);
-      }
-      const today = now.toISOString().slice(0, 10);
-      const nextPayload: Record<string, unknown> = {
-        ...payload,
-        [meta.payloadKey]: uploads,
-        [meta.dateKey]: String(payload[meta.dateKey] ?? "").trim() || today,
-      };
-      if (kind === "report" && !String(payload.initialMvrDate ?? "").trim()) {
-        nextPayload.initialMvrDate = today;
-      }
-
-      await tx
-        .update(industrialFleetDrivers)
-        .set({
-          sourcePayload: nextPayload,
-          archivedAt: null,
-          status: driver.status === "removed" ? "on_insurance" : driver.status,
-          ...(kind === "report"
-            ? {
-                lastMvrDate: today,
-                ...(String(driver.initialMvrDate ?? "").trim()
-                  ? {}
-                  : { initialMvrDate: today }),
-              }
-            : {}),
-          updatedAt: now,
-        })
-        .where(eq(industrialFleetDrivers.id, driver.id));
-
-      const [dot] = await tx
-        .select()
-        .from(industrialDotComplianceRecords)
-        .where(
-          and(
-            eq(industrialDotComplianceRecords.tenantId, tenantId),
-            eq(industrialDotComplianceRecords.personnelId, personnelId),
-            isNull(industrialDotComplianceRecords.archivedAt),
-          ),
-        )
-        .orderBy(desc(industrialDotComplianceRecords.updatedAt))
-        .limit(1);
-      if (dot) {
-        const dotPayload = unwrapPayload(dot.sourcePayload);
-        const details =
-          dotPayload.details && typeof dotPayload.details === "object" && !Array.isArray(dotPayload.details)
-            ? { ...(dotPayload.details as Record<string, unknown>) }
-            : {};
-        const copyJson = JSON.stringify([
-          {
-            name: document.originalFilename,
-            documentId: document.id,
-            contentType: document.mimeType,
-            uploadedAt: now.toISOString(),
-          },
-        ]);
-        if (kind === "consent") {
-          details.mvrReleaseFormCopy = copyJson;
-          details.mvrReleaseForm = String(details.mvrReleaseForm ?? "").trim() || today;
-          await tx
-            .update(industrialDotComplianceRecords)
-            .set({
-              sourcePayload: {
-                ...dotPayload,
-                details,
-                mvrReleaseFormCopy: copyJson,
-                mvrReleaseForm: details.mvrReleaseForm,
-                mvrReleaseDate: today,
-              },
-              updatedAt: now,
-            })
-            .where(eq(industrialDotComplianceRecords.id, dot.id));
-        } else {
-          details.mvrAnnualCopy = copyJson;
-          details.mvrAnnual = String(details.mvrAnnual ?? "").trim() || today;
-          await tx
-            .update(industrialDotComplianceRecords)
-            .set({
-              sourcePayload: {
-                ...dotPayload,
-                details,
-                mvrAnnualCopy: copyJson,
-                mvrAnnual: details.mvrAnnual,
-                lastMvrDate: today,
-              },
-              updatedAt: now,
-            })
-            .where(eq(industrialDotComplianceRecords.id, dot.id));
+    return withTenantTransaction(
+      this.db,
+      tenantId,
+      async (tx) => {
+        const document = await tx.query.forgeDocuments.findFirst({
+          where: and(eq(forgeDocuments.id, documentId), eq(forgeDocuments.tenantId, tenantId)),
+        });
+        if (!document) throw new ForgeError("NOT_FOUND", "Document not found");
+        if (!documentBelongsToTenant(document.tenantId, tenantId)) {
+          throw new ForgeError("FORBIDDEN", "Document does not belong to the requested tenant");
         }
-      }
+        if (!objectKeyBelongsToTenant(document.objectKey, tenantId)) {
+          throw new ForgeError("FORBIDDEN", "Object key does not belong to the requested tenant");
+        }
+        if (document.source !== meta.source) {
+          throw new ForgeError(
+            "VALIDATION_FAILED",
+            kind === "report"
+              ? "Document is not an MVR report upload"
+              : "Document is not an MVR consent upload",
+          );
+        }
 
-      return {
-        documentId: document.id,
-        personnelId,
-        driverId: driver.id,
-        kind,
-        originalFilename: document.originalFilename,
-        mimeType: document.mimeType,
-        uploadedAt: now.toISOString(),
-        mvrReleaseDate: kind === "consent" ? today : String(nextPayload.mvrReleaseDate ?? "").trim(),
-        lastMvrDate: kind === "report" ? today : String(nextPayload.lastMvrDate ?? "").trim(),
-        mvrReleaseUploadCount: asUploadList(nextPayload.mvrReleaseUploads).length,
-        mvrUploadCount: asUploadList(nextPayload.mvrUploads).length,
-        file: entry,
-      };
-    }, principal.userId);
+        await this.storage.assertObjectExists(document.objectKey);
+
+        const now = new Date();
+        await tx
+          .update(forgeDocuments)
+          .set({
+            uploadStatus: "COMPLETE",
+            uploadedAt: now,
+            updatedAt: now,
+          })
+          .where(and(eq(forgeDocuments.id, documentId), eq(forgeDocuments.tenantId, tenantId)));
+
+        const [driver] = await tx
+          .select()
+          .from(industrialFleetDrivers)
+          .where(
+            and(
+              eq(industrialFleetDrivers.tenantId, tenantId),
+              eq(industrialFleetDrivers.personnelId, personnelId),
+            ),
+          )
+          .orderBy(desc(industrialFleetDrivers.updatedAt))
+          .limit(1);
+        if (!driver) throw new ForgeError("NOT_FOUND", "Company driver roster entry not found");
+
+        const payload = unwrapPayload(driver.sourcePayload);
+        const uploads = asUploadList(payload[meta.payloadKey]);
+        const entry = {
+          name: document.originalFilename,
+          fileName: document.originalFilename,
+          documentId: document.id,
+          contentType: document.mimeType,
+          uploadedAt: now.toISOString(),
+        };
+        if (!uploads.some((row) => String(row.documentId ?? "") === document.id)) {
+          uploads.push(entry);
+        }
+        const today = now.toISOString().slice(0, 10);
+        const nextPayload: Record<string, unknown> = {
+          ...payload,
+          [meta.payloadKey]: uploads,
+          [meta.dateKey]: String(payload[meta.dateKey] ?? "").trim() || today,
+        };
+        if (kind === "report" && !String(payload.initialMvrDate ?? "").trim()) {
+          nextPayload.initialMvrDate = today;
+        }
+
+        await tx
+          .update(industrialFleetDrivers)
+          .set({
+            sourcePayload: nextPayload,
+            archivedAt: null,
+            status: driver.status === "removed" ? "on_insurance" : driver.status,
+            ...(kind === "report"
+              ? {
+                  lastMvrDate: today,
+                  ...(String(driver.initialMvrDate ?? "").trim() ? {} : { initialMvrDate: today }),
+                }
+              : {}),
+            updatedAt: now,
+          })
+          .where(eq(industrialFleetDrivers.id, driver.id));
+
+        const [dot] = await tx
+          .select()
+          .from(industrialDotComplianceRecords)
+          .where(
+            and(
+              eq(industrialDotComplianceRecords.tenantId, tenantId),
+              eq(industrialDotComplianceRecords.personnelId, personnelId),
+              isNull(industrialDotComplianceRecords.archivedAt),
+            ),
+          )
+          .orderBy(desc(industrialDotComplianceRecords.updatedAt))
+          .limit(1);
+        if (dot) {
+          const dotPayload = unwrapPayload(dot.sourcePayload);
+          const details =
+            dotPayload.details &&
+            typeof dotPayload.details === "object" &&
+            !Array.isArray(dotPayload.details)
+              ? { ...(dotPayload.details as Record<string, unknown>) }
+              : {};
+          const copyJson = JSON.stringify([
+            {
+              name: document.originalFilename,
+              documentId: document.id,
+              contentType: document.mimeType,
+              uploadedAt: now.toISOString(),
+            },
+          ]);
+          if (kind === "consent") {
+            details.mvrReleaseFormCopy = copyJson;
+            details.mvrReleaseForm = String(details.mvrReleaseForm ?? "").trim() || today;
+            await tx
+              .update(industrialDotComplianceRecords)
+              .set({
+                sourcePayload: {
+                  ...dotPayload,
+                  details,
+                  mvrReleaseFormCopy: copyJson,
+                  mvrReleaseForm: details.mvrReleaseForm,
+                  mvrReleaseDate: today,
+                },
+                updatedAt: now,
+              })
+              .where(eq(industrialDotComplianceRecords.id, dot.id));
+          } else {
+            details.mvrAnnualCopy = copyJson;
+            details.mvrAnnual = String(details.mvrAnnual ?? "").trim() || today;
+            await tx
+              .update(industrialDotComplianceRecords)
+              .set({
+                sourcePayload: {
+                  ...dotPayload,
+                  details,
+                  mvrAnnualCopy: copyJson,
+                  mvrAnnual: details.mvrAnnual,
+                  lastMvrDate: today,
+                },
+                updatedAt: now,
+              })
+              .where(eq(industrialDotComplianceRecords.id, dot.id));
+          }
+        }
+
+        return {
+          documentId: document.id,
+          personnelId,
+          driverId: driver.id,
+          kind,
+          originalFilename: document.originalFilename,
+          mimeType: document.mimeType,
+          uploadedAt: now.toISOString(),
+          mvrReleaseDate:
+            kind === "consent" ? today : String(nextPayload.mvrReleaseDate ?? "").trim(),
+          lastMvrDate: kind === "report" ? today : String(nextPayload.lastMvrDate ?? "").trim(),
+          mvrReleaseUploadCount: asUploadList(nextPayload.mvrReleaseUploads).length,
+          mvrUploadCount: asUploadList(nextPayload.mvrUploads).length,
+          file: entry,
+        };
+      },
+      principal.userId,
+    );
   }
 
   async createDownloadUrl(principal: ForgePrincipal, documentIdRaw: string) {

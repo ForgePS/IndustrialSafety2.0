@@ -1,9 +1,9 @@
 {
-    "adminSecret":  "forge-development-secrets-database",
-    "exitCode":  0,
-    "stopCode":  "EssentialContainerExited",
-    "taskArn":  "arn:aws:ecs:us-east-1:511343547817:task/forge-development-ecs-platform/1fd8a2e6b07647ea9dce3b6dd4dc0d2a",
-    "migration":  "0027_import_platform_s6_security",
-    "taskDef":  "arn:aws:ecs:us-east-1:511343547817:task-definition/forge-development-ecs-platform-api:39",
-    "status":  "STOPPED"
+  "adminSecret": "forge-development-secrets-database",
+  "exitCode": 0,
+  "stopCode": "EssentialContainerExited",
+  "taskArn": "arn:aws:ecs:us-east-1:511343547817:task/forge-development-ecs-platform/1fd8a2e6b07647ea9dce3b6dd4dc0d2a",
+  "migration": "0027_import_platform_s6_security",
+  "taskDef": "arn:aws:ecs:us-east-1:511343547817:task-definition/forge-development-ecs-platform-api:39",
+  "status": "STOPPED"
 }

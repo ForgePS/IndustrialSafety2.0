@@ -56,12 +56,20 @@ export class IncidentNumberingService {
 
     if (manualNumber) {
       if (!config.allowManual) {
-        throw new ForgeError("BAD_REQUEST", "Manual incident numbers are not allowed for this tenant");
+        throw new ForgeError(
+          "BAD_REQUEST",
+          "Manual incident numbers are not allowed for this tenant",
+        );
       }
       const [existing] = await tx
         .select({ id: nerisIncidentNumbers.id })
         .from(nerisIncidentNumbers)
-        .where(and(eq(nerisIncidentNumbers.tenantId, tenantId), eq(nerisIncidentNumbers.number, manualNumber)))
+        .where(
+          and(
+            eq(nerisIncidentNumbers.tenantId, tenantId),
+            eq(nerisIncidentNumbers.number, manualNumber),
+          ),
+        )
         .limit(1);
       if (existing) {
         throw new ForgeError("CONFLICT", "Incident number already assigned");
@@ -81,7 +89,11 @@ export class IncidentNumberingService {
       return { number: manualNumber, ledgerId };
     }
 
-    const periodKey = this.resolvePeriodKey(config.resetMode, config.fiscalYearStartMonth, ctx.incidentDate);
+    const periodKey = this.resolvePeriodKey(
+      config.resetMode,
+      config.fiscalYearStartMonth,
+      ctx.incidentDate,
+    );
     const scopedStationId = config.scope === "STATION" ? (ctx.stationId ?? null) : null;
     const scopedCategoryKey = config.scope === "CATEGORY" ? (ctx.categoryKey ?? null) : null;
 
@@ -168,7 +180,9 @@ export class IncidentNumberingService {
     await tx
       .update(nerisIncidentNumbers)
       .set({ incidentId, updatedAt: new Date() })
-      .where(and(eq(nerisIncidentNumbers.id, ledgerId), eq(nerisIncidentNumbers.tenantId, tenantId)));
+      .where(
+        and(eq(nerisIncidentNumbers.id, ledgerId), eq(nerisIncidentNumbers.tenantId, tenantId)),
+      );
   }
 
   formatNumber(

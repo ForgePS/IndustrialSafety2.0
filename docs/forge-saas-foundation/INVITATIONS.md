@@ -14,25 +14,25 @@ Tokens: plaintext returned once on create/resend; only SHA-256 `invitationTokenH
 
 ## Workflows
 
-| Action | Behavior |
-| --- | --- |
-| invite | Create user+PENDING membership+roles/products; optional Cognito provision; optional `facilityIds` |
-| resend | Rotate token; Cognito resend; **extends `expiresAt` by 168h** (ADR-020) |
-| revoke | Terminal; linked membership REVOKED |
-| accept | Hash lookup; optional `email` must match invite; activate membership; link Cognito `sub` |
-| duplicate | CONFLICT if active invite or non-revoked membership for email |
+| Action    | Behavior                                                                                          |
+| --------- | ------------------------------------------------------------------------------------------------- |
+| invite    | Create user+PENDING membership+roles/products; optional Cognito provision; optional `facilityIds` |
+| resend    | Rotate token; Cognito resend; **extends `expiresAt` by 168h** (ADR-020)                           |
+| revoke    | Terminal; linked membership REVOKED                                                               |
+| accept    | Hash lookup; optional `email` must match invite; activate membership; link Cognito `sub`          |
+| duplicate | CONFLICT if active invite or non-revoked membership for email                                     |
 
 Cross-tenant invite create is forbidden unless platform admin.
 
 ## Member admin
 
-| Action | API |
-| --- | --- |
-| list / search / filter | `GET .../memberships?status=&userId=&q=` (`q` = email ilike) |
-| change role | `PUT .../memberships/:id/roles` |
-| change products | `PUT .../memberships/:id/products` |
-| facility scope | `PUT .../memberships/:id/facilities` `{ facilityIds }` |
-| deactivate / reactivate / remove | suspend / activate / revoke |
+| Action                           | API                                                          |
+| -------------------------------- | ------------------------------------------------------------ |
+| list / search / filter           | `GET .../memberships?status=&userId=&q=` (`q` = email ilike) |
+| change role                      | `PUT .../memberships/:id/roles`                              |
+| change products                  | `PUT .../memberships/:id/products`                           |
+| facility scope                   | `PUT .../memberships/:id/facilities` `{ facilityIds }`       |
+| deactivate / reactivate / remove | suspend / activate / revoke                                  |
 
 ## Facility scope
 

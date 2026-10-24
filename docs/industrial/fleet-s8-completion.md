@@ -69,14 +69,14 @@
 
 ## Parity checklist (producers-rice-mill)
 
-| Sheet | Expected rows | Covered |
-|-------|---------------|---------|
-| Personal | 38 | Yes (PASSENGER_VEHICLE + fringe) |
-| Fleet | 42 | Yes (FLEET_VEHICLE + commute) |
-| Bob-Trash Trucks | 19 | Yes (BOB/TRASH + 2290/IRP) |
-| Big Trucks | 13 | Yes (TRACTOR/DUMP + 2290/IRP) |
-| Const. Equipment | 11 | Yes |
-| Removed | 15 | Yes (status REMOVED) |
+| Sheet            | Expected rows | Covered                          |
+| ---------------- | ------------- | -------------------------------- |
+| Personal         | 38            | Yes (PASSENGER_VEHICLE + fringe) |
+| Fleet            | 42            | Yes (FLEET_VEHICLE + commute)    |
+| Bob-Trash Trucks | 19            | Yes (BOB/TRASH + 2290/IRP)       |
+| Big Trucks       | 13            | Yes (TRACTOR/DUMP + 2290/IRP)    |
+| Const. Equipment | 11            | Yes                              |
+| Removed          | 15            | Yes (status REMOVED)             |
 
 ## Deploy note
 

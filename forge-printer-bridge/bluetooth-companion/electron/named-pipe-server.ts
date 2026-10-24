@@ -7,9 +7,7 @@ import {
   toJsonLine,
 } from "../services/protocol";
 
-export type NamedPipeRequestHandler = (
-  request: CompanionRequest
-) => Promise<CompanionResponse>;
+export type NamedPipeRequestHandler = (request: CompanionRequest) => Promise<CompanionResponse>;
 
 /**
  * Windows named-pipe JSON-lines server (main process only).
@@ -109,7 +107,7 @@ export class NamedPipeServer {
           type: "ERROR",
           code: "INVALID_REQUEST",
           message: "Expected a JSON object with a type field per line.",
-        })
+        }),
       );
       return;
     }
@@ -128,7 +126,7 @@ export class NamedPipeServer {
             code: "INTERNAL_ERROR",
             message,
             requestId: request.requestId,
-          })
+          }),
         );
       }
     }

@@ -61,7 +61,13 @@ export function SensitiveValue({
       data-sensitive={sensitive ? "true" : undefined}
       data-privileged={privileged ? "true" : undefined}
       data-never-returnable={neverReturnable ? "true" : undefined}
-      title={neverReturnable ? "Never-returnable credential" : sensitive ? "Sensitive (masked)" : undefined}
+      title={
+        neverReturnable
+          ? "Never-returnable credential"
+          : sensitive
+            ? "Sensitive (masked)"
+            : undefined
+      }
     >
       {text}
       {sensitive ? (
@@ -146,13 +152,7 @@ export function ImportEmptyState({ title, children }: { title: string; children?
   );
 }
 
-export function ImportProgressBar({
-  percent,
-  label,
-}: {
-  percent: number;
-  label?: string;
-}) {
+export function ImportProgressBar({ percent, label }: { percent: number; label?: string }) {
   const safe = Math.max(0, Math.min(100, percent));
   return (
     <div

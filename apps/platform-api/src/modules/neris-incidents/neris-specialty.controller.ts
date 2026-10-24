@@ -73,8 +73,14 @@ export class NerisSpecialtyController {
     @Req() req: RequestWithIds,
     @Res({ passthrough: true }) res: Response,
   ) {
-    const data = await this.specialty.patchExposure(tenantId, incidentId, exposureId, body, principal,
-    requireIfMatch(req, "neris_specialty_record"));
+    const data = await this.specialty.patchExposure(
+      tenantId,
+      incidentId,
+      exposureId,
+      body,
+      principal,
+      requireIfMatch(req, "neris_specialty_record"),
+    );
     setETag(res, data!.recordVersion);
     return ok(data, getRequestIds(req));
   }
@@ -329,7 +335,10 @@ export class NerisSpecialtyController {
     @Principal() principal: ForgePrincipal,
     @Req() req: RequestWithIds,
   ) {
-    return ok(await this.specialty.listHazmatSubstances(tenantId, incidentId, principal), getRequestIds(req));
+    return ok(
+      await this.specialty.listHazmatSubstances(tenantId, incidentId, principal),
+      getRequestIds(req),
+    );
   }
 
   @Post("hazmat/substances")
@@ -399,7 +408,10 @@ export class NerisSpecialtyController {
     @Principal() principal: ForgePrincipal,
     @Req() req: RequestWithIds,
   ) {
-    return ok(await this.specialty.listHazmatContainers(tenantId, incidentId, principal), getRequestIds(req));
+    return ok(
+      await this.specialty.listHazmatContainers(tenantId, incidentId, principal),
+      getRequestIds(req),
+    );
   }
 
   @Post("hazmat/containers")
@@ -470,7 +482,10 @@ export class NerisSpecialtyController {
     @Principal() principal: ForgePrincipal,
     @Req() req: RequestWithIds,
   ) {
-    return ok(await this.specialty.listAlarmSystems(tenantId, incidentId, principal), getRequestIds(req));
+    return ok(
+      await this.specialty.listAlarmSystems(tenantId, incidentId, principal),
+      getRequestIds(req),
+    );
   }
 
   @Post("alarm-systems")
@@ -626,7 +641,10 @@ export class NerisSpecialtyController {
     @Principal() principal: ForgePrincipal,
     @Req() req: RequestWithIds,
   ) {
-    return ok(await this.attachments.initializeUpload(tenantId, incidentId, body, principal), getRequestIds(req));
+    return ok(
+      await this.attachments.initializeUpload(tenantId, incidentId, body, principal),
+      getRequestIds(req),
+    );
   }
 
   @Post("attachments/:attachmentId/complete")
@@ -713,7 +731,10 @@ export class NerisSpecialtyController {
     @Principal() principal: ForgePrincipal,
     @Req() req: RequestWithIds,
   ) {
-    return ok(await this.specialty.listOccupancyLinks(tenantId, incidentId, principal), getRequestIds(req));
+    return ok(
+      await this.specialty.listOccupancyLinks(tenantId, incidentId, principal),
+      getRequestIds(req),
+    );
   }
 
   @Post("occupancy-links")
@@ -755,7 +776,10 @@ export class NerisSpecialtyController {
     @Principal() principal: ForgePrincipal,
     @Req() req: RequestWithIds,
   ) {
-    return ok(await this.specialty.approveSection(tenantId, incidentId, body, principal), getRequestIds(req));
+    return ok(
+      await this.specialty.approveSection(tenantId, incidentId, body, principal),
+      getRequestIds(req),
+    );
   }
 
   @Post("section-returns")

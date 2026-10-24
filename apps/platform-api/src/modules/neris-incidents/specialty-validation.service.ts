@@ -237,7 +237,8 @@ export class SpecialtyValidationService {
           source: "WORKFLOW",
           severity: "BLOCKING_ERROR",
           sectionKey: "FIRE_SERVICE_CASUALTIES",
-          message: "Each fire-service casualty needs a personnel reference or documented exception.",
+          message:
+            "Each fire-service casualty needs a personnel reference or documented exception.",
           suggestedCorrection: "Link personnel or document an external/unknown responder.",
           technicalReference: `ff_casualty.${row.id}.personnel`,
         });

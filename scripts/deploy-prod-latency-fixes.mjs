@@ -20,7 +20,10 @@ const SERVICE = "forge-production-ecs-platform-api";
 const ECR = `${ACCOUNT}.dkr.ecr.${REGION}.amazonaws.com/forge-production-ecr-platformapi`;
 const skipWeb = process.argv.includes("--skip-web");
 const skipApi = process.argv.includes("--skip-api");
-const stamp = new Date().toISOString().replace(/[-:TZ.]/g, "").slice(0, 14);
+const stamp = new Date()
+  .toISOString()
+  .replace(/[-:TZ.]/g, "")
+  .slice(0, 14);
 const tag = `latency-${stamp}`;
 const root = path.join(path.dirname(fileURLToPath(import.meta.url)), "..");
 
@@ -63,9 +66,7 @@ if (!skipApi) {
     "ephemeralStorage",
   ];
   const svc = JSON.parse(
-    shOut(
-      `aws ecs describe-services --cluster ${CLUSTER} --services ${SERVICE} --output json`,
-    ),
+    shOut(`aws ecs describe-services --cluster ${CLUSTER} --services ${SERVICE} --output json`),
   );
   const currentTd = svc.services?.[0]?.taskDefinition;
   if (!currentTd) throw new Error("No task definition for API service");
@@ -86,7 +87,9 @@ if (!skipApi) {
   fs.writeFileSync(tdPath, JSON.stringify(next));
   try {
     const registered = JSON.parse(
-      shOut(`aws ecs register-task-definition --cli-input-json file://${tdPath.replace(/\\/g, "/")} --output json`),
+      shOut(
+        `aws ecs register-task-definition --cli-input-json file://${tdPath.replace(/\\/g, "/")} --output json`,
+      ),
     ).taskDefinition;
     sh(
       `aws ecs update-service --cluster ${CLUSTER} --service ${SERVICE} --task-definition ${registered.taskDefinitionArn} --force-new-deployment --output json`,

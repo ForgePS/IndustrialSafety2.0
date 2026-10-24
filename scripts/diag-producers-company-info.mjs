@@ -58,9 +58,12 @@ async function main() {
     const sites = await sql`
       select name, status from industrial_sites where tenant_id = ${tenantId}::uuid order by name limit 20
     `;
-    const deptCount = await sql`select count(*)::int as n from industrial_departments where tenant_id = ${tenantId}::uuid`;
-    const posCount = await sql`select count(*)::int as n from industrial_positions where tenant_id = ${tenantId}::uuid`;
-    const empTypeCount = await sql`select count(*)::int as n from industrial_employment_types where tenant_id = ${tenantId}::uuid`;
+    const deptCount =
+      await sql`select count(*)::int as n from industrial_departments where tenant_id = ${tenantId}::uuid`;
+    const posCount =
+      await sql`select count(*)::int as n from industrial_positions where tenant_id = ${tenantId}::uuid`;
+    const empTypeCount =
+      await sql`select count(*)::int as n from industrial_employment_types where tenant_id = ${tenantId}::uuid`;
     const personnelCompany = await sql`
       select
         count(*) filter (where company_name is not null and trim(company_name) <> '')::int as with_company_name,

@@ -1,7 +1,11 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import type { TrainingAssignment, TrainingGroup, TrainingTeamSummary } from "@/features/training/types";
+import type {
+  TrainingAssignment,
+  TrainingGroup,
+  TrainingTeamSummary,
+} from "@/features/training/types";
 import type { RosterPerson } from "@/lib/personnel-directory";
 import {
   buildAssignmentFilterOptions,
@@ -105,10 +109,7 @@ export function TrainingAssignmentsHierarchy({
     };
   }, []);
 
-  const personnelMeta = useMemo(
-    () => buildPersonnelMetaMap(personnelRoster),
-    [personnelRoster],
-  );
+  const personnelMeta = useMemo(() => buildPersonnelMetaMap(personnelRoster), [personnelRoster]);
 
   const options = useMemo(
     () =>
@@ -146,14 +147,20 @@ export function TrainingAssignmentsHierarchy({
     [assignments, roster, filters, personnelMeta],
   );
 
-  const visibleAssignmentCount = useMemo(() => countVisibleAssignments(courseGroups), [courseGroups]);
+  const visibleAssignmentCount = useMemo(
+    () => countVisibleAssignments(courseGroups),
+    [courseGroups],
+  );
   const visibleAssigneeCount = useMemo(
     () => courseGroups.reduce((sum, course) => sum + course.assigneeCount, 0),
     [courseGroups],
   );
   const activeYear = filters.year.trim() || String(new Date().getFullYear());
 
-  function updateFilter<K extends keyof AssignmentRosterFilters>(key: K, value: AssignmentRosterFilters[K]) {
+  function updateFilter<K extends keyof AssignmentRosterFilters>(
+    key: K,
+    value: AssignmentRosterFilters[K],
+  ) {
     setFilters((current) => ({ ...current, [key]: value }));
     setExpandedCourseId(null);
     setExpandedMonthKey(null);
@@ -333,8 +340,9 @@ export function TrainingAssignmentsHierarchy({
 
       <div className="d-flex flex-wrap align-items-center gap-3">
         <div className="text-muted small">
-          {courseGroups.length} course{courseGroups.length === 1 ? "" : "s"} · {visibleAssignmentCount}{" "}
-          assignment{visibleAssignmentCount === 1 ? "" : "s"} · {visibleAssigneeCount} assignee
+          {courseGroups.length} course{courseGroups.length === 1 ? "" : "s"} ·{" "}
+          {visibleAssignmentCount} assignment{visibleAssignmentCount === 1 ? "" : "s"} ·{" "}
+          {visibleAssigneeCount} assignee
           {visibleAssigneeCount === 1 ? "" : "s"} in {activeYear}
         </div>
         {hasActiveFilters ? (
@@ -366,7 +374,9 @@ export function TrainingAssignmentsHierarchy({
                     aria-expanded={courseOpen}
                     aria-controls={coursePanelId}
                     onClick={() => {
-                      setExpandedCourseId((current) => (current === course.sourceId ? null : course.sourceId));
+                      setExpandedCourseId((current) =>
+                        current === course.sourceId ? null : course.sourceId,
+                      );
                       setExpandedMonthKey(null);
                     }}
                   >
@@ -374,8 +384,8 @@ export function TrainingAssignmentsHierarchy({
                       <span className="fw-semibold">{course.sourceTitle}</span>
                       <span className="text-muted small">
                         {course.months.length} month{course.months.length === 1 ? "" : "s"} ·{" "}
-                        {course.assignmentCount} assignment{course.assignmentCount === 1 ? "" : "s"} ·{" "}
-                        {course.assigneeCount} assignee{course.assigneeCount === 1 ? "" : "s"}
+                        {course.assignmentCount} assignment{course.assignmentCount === 1 ? "" : "s"}{" "}
+                        · {course.assigneeCount} assignee{course.assigneeCount === 1 ? "" : "s"}
                       </span>
                     </div>
                   </button>
@@ -405,14 +415,17 @@ export function TrainingAssignmentsHierarchy({
                                 aria-expanded={monthOpen}
                                 aria-controls={monthPanelId}
                                 onClick={() =>
-                                  setExpandedMonthKey((current) => (current === monthToken ? null : monthToken))
+                                  setExpandedMonthKey((current) =>
+                                    current === monthToken ? null : monthToken,
+                                  )
                                 }
                               >
                                 <div className="d-flex flex-wrap justify-content-between align-items-center gap-2 w-100 pe-3">
                                   <span>{month.monthLabel}</span>
                                   <span className="text-muted small">
-                                    {month.batches.length} batch{month.batches.length === 1 ? "" : "es"} ·{" "}
-                                    {monthAssignees} assignee{monthAssignees === 1 ? "" : "s"}
+                                    {month.batches.length} batch
+                                    {month.batches.length === 1 ? "" : "es"} · {monthAssignees}{" "}
+                                    assignee{monthAssignees === 1 ? "" : "s"}
                                   </span>
                                 </div>
                               </button>
@@ -426,7 +439,10 @@ export function TrainingAssignmentsHierarchy({
                                 {month.batches.map((batch) => {
                                   const assignment = batch.assignment;
                                   const completionPct = assignment.assigneeCount
-                                    ? Math.round((assignment.completedCount / assignment.assigneeCount) * 100)
+                                    ? Math.round(
+                                        (assignment.completedCount / assignment.assigneeCount) *
+                                          100,
+                                      )
                                     : 0;
                                   return (
                                     <div key={assignment.id} className="card border mb-3">
@@ -435,9 +451,10 @@ export function TrainingAssignmentsHierarchy({
                                           <div>
                                             <div className="fw-semibold">{assignment.title}</div>
                                             <div className="text-muted small">
-                                              Assigned {formatAssignmentDate(assignment.createdAt)} ·{" "}
-                                              {assignment.completedCount}/{assignment.assigneeCount} complete (
-                                              {completionPct}%) · Pass {assignment.passingPercent}% ·{" "}
+                                              Assigned {formatAssignmentDate(assignment.createdAt)}{" "}
+                                              · {assignment.completedCount}/
+                                              {assignment.assigneeCount} complete ({completionPct}%)
+                                              · Pass {assignment.passingPercent}% ·{" "}
                                               {formatDue(assignment.dueAt)}
                                               {assignment.hasPublicQr ? " · QR active" : ""}
                                             </div>
@@ -448,7 +465,11 @@ export function TrainingAssignmentsHierarchy({
                                                 type="button"
                                                 className="btn btn-sm btn-outline-secondary"
                                                 onClick={() =>
-                                                  onQrToggle(qrAssignmentId === assignment.id ? null : assignment.id)
+                                                  onQrToggle(
+                                                    qrAssignmentId === assignment.id
+                                                      ? null
+                                                      : assignment.id,
+                                                  )
                                                 }
                                               >
                                                 QR
@@ -497,7 +518,9 @@ export function TrainingAssignmentsHierarchy({
                                                 <th>Best %</th>
                                                 <th>Due</th>
                                                 <th>Completed</th>
-                                                {canManage ? <th className="text-end">Actions</th> : null}
+                                                {canManage ? (
+                                                  <th className="text-end">Actions</th>
+                                                ) : null}
                                               </tr>
                                             </thead>
                                             <tbody>
@@ -520,13 +543,18 @@ export function TrainingAssignmentsHierarchy({
                                                     </span>
                                                   </td>
                                                   <td>
-                                                    {person.bestPercent != null ? `${person.bestPercent}%` : "—"}
+                                                    {person.bestPercent != null
+                                                      ? `${person.bestPercent}%`
+                                                      : "—"}
                                                   </td>
                                                   <td>{formatDue(person.dueAt)}</td>
-                                                  <td>{formatAssignmentDate(person.completedAt)}</td>
+                                                  <td>
+                                                    {formatAssignmentDate(person.completedAt)}
+                                                  </td>
                                                   {canManage ? (
                                                     <td className="text-end">
-                                                      {person.status.toUpperCase() === "NOT_STARTED" ? (
+                                                      {person.status.toUpperCase() ===
+                                                      "NOT_STARTED" ? (
                                                         <button
                                                           type="button"
                                                           className="btn btn-sm btn-outline-danger"
@@ -549,7 +577,10 @@ export function TrainingAssignmentsHierarchy({
                                               ))}
                                               {!batch.personnel.length ? (
                                                 <tr>
-                                                  <td colSpan={canManage ? 12 : 11} className="text-muted">
+                                                  <td
+                                                    colSpan={canManage ? 12 : 11}
+                                                    className="text-muted"
+                                                  >
                                                     No assignees match the current filters.
                                                   </td>
                                                 </tr>

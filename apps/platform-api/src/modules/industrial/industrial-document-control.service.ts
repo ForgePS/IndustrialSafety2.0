@@ -216,113 +216,123 @@ export class IndustrialDocumentControlService {
     if (!name) throw new ForgeError("VALIDATION_FAILED", "name is required");
     const now = new Date();
     const id = createId();
-    return withTenantTransaction(this.db, principal.tenantId, async (tx) => {
-      const [row] = await tx
-        .insert(platformDocuments)
-        .values({
-          id,
+    return withTenantTransaction(
+      this.db,
+      principal.tenantId,
+      async (tx) => {
+        const [row] = await tx
+          .insert(platformDocuments)
+          .values({
+            id,
+            tenantId: principal.tenantId,
+            name,
+            description: body.description != null ? String(body.description) : null,
+            category: body.category != null ? String(body.category).trim() || null : "GENERAL",
+            documentNumber:
+              body.documentNumber != null ? String(body.documentNumber).trim() || null : null,
+            siteId:
+              typeof body.siteId === "string" && body.siteId.trim() ? body.siteId.trim() : null,
+            status: "ACTIVE",
+            workflowStatus: DOC_WORKFLOW.DRAFT,
+            ownerUserId: principal.userId,
+            reviewDueAt:
+              typeof body.reviewDueAt === "string" && body.reviewDueAt.trim()
+                ? new Date(body.reviewDueAt)
+                : null,
+            metadata: {},
+            sourceSystem: "FORGE",
+            sourcePayload: {},
+            createdAt: now,
+            updatedAt: now,
+          })
+          .returning();
+        await tx.insert(platformDocumentDistributions).values({
+          id: createId(),
           tenantId: principal.tenantId,
-          name,
-          description: body.description != null ? String(body.description) : null,
-          category: body.category != null ? String(body.category).trim() || null : "GENERAL",
-          documentNumber:
-            body.documentNumber != null ? String(body.documentNumber).trim() || null : null,
-          siteId:
-            typeof body.siteId === "string" && body.siteId.trim() ? body.siteId.trim() : null,
-          status: "ACTIVE",
-          workflowStatus: DOC_WORKFLOW.DRAFT,
-          ownerUserId: principal.userId,
-          reviewDueAt:
-            typeof body.reviewDueAt === "string" && body.reviewDueAt.trim()
-              ? new Date(body.reviewDueAt)
-              : null,
-          metadata: {},
-          sourceSystem: "FORGE",
-          sourcePayload: {},
+          documentId: id,
+          scopeType: DISTRIBUTION_SCOPE.TENANT,
+          scopeId: null,
+          enabled: true,
           createdAt: now,
           updatedAt: now,
-        })
-        .returning();
-      await tx.insert(platformDocumentDistributions).values({
-        id: createId(),
-        tenantId: principal.tenantId,
-        documentId: id,
-        scopeType: DISTRIBUTION_SCOPE.TENANT,
-        scopeId: null,
-        enabled: true,
-        createdAt: now,
-        updatedAt: now,
-      });
-      await this.audit.writeInTransaction(tx, {
-        tenantId: principal.tenantId,
-        actorUserId: principal.userId,
-        actorPersonId: principal.personId,
-        actorType: "USER",
-        action: "document_control.created",
-        resourceType: "platform_document",
-        resourceId: id,
-        result: "SUCCESS",
-        riskLevel: "LOW",
-        correlationId: "",
-        requestId: "",
-        metadata: { name },
-      });
-      return this.mapDoc(row!);
-    }, principal.userId);
+        });
+        await this.audit.writeInTransaction(tx, {
+          tenantId: principal.tenantId,
+          actorUserId: principal.userId,
+          actorPersonId: principal.personId,
+          actorType: "USER",
+          action: "document_control.created",
+          resourceType: "platform_document",
+          resourceId: id,
+          result: "SUCCESS",
+          riskLevel: "LOW",
+          correlationId: "",
+          requestId: "",
+          metadata: { name },
+        });
+        return this.mapDoc(row!);
+      },
+      principal.userId,
+    );
   }
 
   async update(principal: ForgePrincipal, id: string, body: Record<string, unknown>) {
-    return withTenantTransaction(this.db, principal.tenantId, async (tx) => {
-      const [existing] = await tx
-        .select()
-        .from(platformDocuments)
-        .where(
-          and(eq(platformDocuments.id, id), eq(platformDocuments.tenantId, principal.tenantId)),
-        )
-        .limit(1);
-      if (!existing || existing.archivedAt) {
-        throw new ForgeError("NOT_FOUND", "Document not found");
-      }
-      const now = new Date();
-      const patch: Record<string, unknown> = { updatedAt: now };
-      if (body.name !== undefined) {
-        const name = String(body.name).trim();
-        if (!name) throw new ForgeError("VALIDATION_FAILED", "name is required");
-        patch.name = name;
-      }
-      if (body.description !== undefined) {
-        patch.description = body.description == null ? null : String(body.description);
-      }
-      if (body.category !== undefined) {
-        patch.category = body.category == null ? null : String(body.category).trim() || null;
-      }
-      if (body.documentNumber !== undefined) {
-        patch.documentNumber =
-          body.documentNumber == null ? null : String(body.documentNumber).trim() || null;
-      }
-      if (body.siteId !== undefined) {
-        patch.siteId =
-          typeof body.siteId === "string" && body.siteId.trim() ? body.siteId.trim() : null;
-      }
-      if (body.reviewDueAt !== undefined) {
-        patch.reviewDueAt =
-          typeof body.reviewDueAt === "string" && body.reviewDueAt.trim()
-            ? new Date(body.reviewDueAt)
-            : null;
-      }
-      if (body.ownerUserId !== undefined) {
-        patch.ownerUserId =
-          typeof body.ownerUserId === "string" && body.ownerUserId.trim()
-            ? body.ownerUserId.trim()
-            : null;
-      }
-      const [row] = await tx
-        .update(platformDocuments)
-        .set(patch)
-        .where(eq(platformDocuments.id, id))
-        .returning();
-      return this.mapDoc(row!);
-    }, principal.userId);
+    return withTenantTransaction(
+      this.db,
+      principal.tenantId,
+      async (tx) => {
+        const [existing] = await tx
+          .select()
+          .from(platformDocuments)
+          .where(
+            and(eq(platformDocuments.id, id), eq(platformDocuments.tenantId, principal.tenantId)),
+          )
+          .limit(1);
+        if (!existing || existing.archivedAt) {
+          throw new ForgeError("NOT_FOUND", "Document not found");
+        }
+        const now = new Date();
+        const patch: Record<string, unknown> = { updatedAt: now };
+        if (body.name !== undefined) {
+          const name = String(body.name).trim();
+          if (!name) throw new ForgeError("VALIDATION_FAILED", "name is required");
+          patch.name = name;
+        }
+        if (body.description !== undefined) {
+          patch.description = body.description == null ? null : String(body.description);
+        }
+        if (body.category !== undefined) {
+          patch.category = body.category == null ? null : String(body.category).trim() || null;
+        }
+        if (body.documentNumber !== undefined) {
+          patch.documentNumber =
+            body.documentNumber == null ? null : String(body.documentNumber).trim() || null;
+        }
+        if (body.siteId !== undefined) {
+          patch.siteId =
+            typeof body.siteId === "string" && body.siteId.trim() ? body.siteId.trim() : null;
+        }
+        if (body.reviewDueAt !== undefined) {
+          patch.reviewDueAt =
+            typeof body.reviewDueAt === "string" && body.reviewDueAt.trim()
+              ? new Date(body.reviewDueAt)
+              : null;
+        }
+        if (body.ownerUserId !== undefined) {
+          patch.ownerUserId =
+            typeof body.ownerUserId === "string" && body.ownerUserId.trim()
+              ? body.ownerUserId.trim()
+              : null;
+        }
+        const [row] = await tx
+          .update(platformDocuments)
+          .set(patch)
+          .where(eq(platformDocuments.id, id))
+          .returning();
+        return this.mapDoc(row!);
+      },
+      principal.userId,
+    );
   }
 
   async createVersionUploadUrl(principal: ForgePrincipal, documentId: string, input: unknown) {
@@ -331,94 +341,104 @@ export class IndustrialDocumentControlService {
     if (!ALLOWED_MIME.has(mime)) {
       throw new ForgeError("VALIDATION_FAILED", "MIME type not allowed for controlled documents");
     }
-    return withTenantTransaction(this.db, principal.tenantId, async (tx) => {
-      const [doc] = await tx
-        .select()
-        .from(platformDocuments)
-        .where(
-          and(
-            eq(platformDocuments.id, documentId),
-            eq(platformDocuments.tenantId, principal.tenantId),
-            isNull(platformDocuments.archivedAt),
-          ),
-        )
-        .limit(1);
-      if (!doc) throw new ForgeError("NOT_FOUND", "Document not found");
-      const [{ maxVersion } = { maxVersion: 0 }] = await tx
-        .select({
-          maxVersion: sql<number>`coalesce(max(${platformDocumentVersions.versionNumber}), 0)::int`,
-        })
-        .from(platformDocumentVersions)
-        .where(
-          and(
-            eq(platformDocumentVersions.documentId, documentId),
-            eq(platformDocumentVersions.tenantId, principal.tenantId),
-          ),
-        );
-      const versionId = createId();
-      const storedFilename = this.storage.buildStoredFilename(data.filename);
-      const key = objectKey(principal.tenantId, documentId, versionId, storedFilename);
-      this.storage.assertTenantObjectKey(key, principal.tenantId);
-      const now = new Date();
-      await tx.insert(platformDocumentVersions).values({
-        id: versionId,
-        tenantId: principal.tenantId,
-        documentId,
-        versionNumber: maxVersion + 1,
-        filename: data.filename,
-        contentType: mime,
-        contentLength: data.contentLength,
-        storageBucket: this.storage.bucketName,
-        storageKey: key,
-        status: "PENDING_UPLOAD",
-        workflowStatus: VERSION_WORKFLOW.DRAFT,
-        changeSummary: data.changeSummary?.trim() || null,
-        metadata: {},
-        sourceSystem: "FORGE",
-        sourcePayload: {},
-        createdAt: now,
-        updatedAt: now,
-      });
-      const presign = await this.storage.createPresignedUploadUrl({
-        objectKey: key,
-        mimeType: mime,
-        contentLength: data.contentLength,
-      });
-      return {
-        versionId,
-        documentId,
-        versionNumber: maxVersion + 1,
-        objectKey: key,
-        uploadUrl: presign.uploadUrl,
-        expiresInSeconds: presign.expiresInSeconds,
-        mode: "S3_PRESIGNED" as const,
-      };
-    }, principal.userId);
+    return withTenantTransaction(
+      this.db,
+      principal.tenantId,
+      async (tx) => {
+        const [doc] = await tx
+          .select()
+          .from(platformDocuments)
+          .where(
+            and(
+              eq(platformDocuments.id, documentId),
+              eq(platformDocuments.tenantId, principal.tenantId),
+              isNull(platformDocuments.archivedAt),
+            ),
+          )
+          .limit(1);
+        if (!doc) throw new ForgeError("NOT_FOUND", "Document not found");
+        const [{ maxVersion } = { maxVersion: 0 }] = await tx
+          .select({
+            maxVersion: sql<number>`coalesce(max(${platformDocumentVersions.versionNumber}), 0)::int`,
+          })
+          .from(platformDocumentVersions)
+          .where(
+            and(
+              eq(platformDocumentVersions.documentId, documentId),
+              eq(platformDocumentVersions.tenantId, principal.tenantId),
+            ),
+          );
+        const versionId = createId();
+        const storedFilename = this.storage.buildStoredFilename(data.filename);
+        const key = objectKey(principal.tenantId, documentId, versionId, storedFilename);
+        this.storage.assertTenantObjectKey(key, principal.tenantId);
+        const now = new Date();
+        await tx.insert(platformDocumentVersions).values({
+          id: versionId,
+          tenantId: principal.tenantId,
+          documentId,
+          versionNumber: maxVersion + 1,
+          filename: data.filename,
+          contentType: mime,
+          contentLength: data.contentLength,
+          storageBucket: this.storage.bucketName,
+          storageKey: key,
+          status: "PENDING_UPLOAD",
+          workflowStatus: VERSION_WORKFLOW.DRAFT,
+          changeSummary: data.changeSummary?.trim() || null,
+          metadata: {},
+          sourceSystem: "FORGE",
+          sourcePayload: {},
+          createdAt: now,
+          updatedAt: now,
+        });
+        const presign = await this.storage.createPresignedUploadUrl({
+          objectKey: key,
+          mimeType: mime,
+          contentLength: data.contentLength,
+        });
+        return {
+          versionId,
+          documentId,
+          versionNumber: maxVersion + 1,
+          objectKey: key,
+          uploadUrl: presign.uploadUrl,
+          expiresInSeconds: presign.expiresInSeconds,
+          mode: "S3_PRESIGNED" as const,
+        };
+      },
+      principal.userId,
+    );
   }
 
   async completeVersionUpload(principal: ForgePrincipal, documentId: string, versionId: string) {
-    return withTenantTransaction(this.db, principal.tenantId, async (tx) => {
-      const [version] = await tx
-        .select()
-        .from(platformDocumentVersions)
-        .where(
-          and(
-            eq(platformDocumentVersions.id, versionId),
-            eq(platformDocumentVersions.documentId, documentId),
-            eq(platformDocumentVersions.tenantId, principal.tenantId),
-          ),
-        )
-        .limit(1);
-      if (!version) throw new ForgeError("NOT_FOUND", "Version not found");
-      await this.storage.assertObjectExists(version.storageKey);
-      const now = new Date();
-      const [row] = await tx
-        .update(platformDocumentVersions)
-        .set({ status: "ACTIVE", updatedAt: now })
-        .where(eq(platformDocumentVersions.id, versionId))
-        .returning();
-      return this.mapVersion(row!);
-    }, principal.userId);
+    return withTenantTransaction(
+      this.db,
+      principal.tenantId,
+      async (tx) => {
+        const [version] = await tx
+          .select()
+          .from(platformDocumentVersions)
+          .where(
+            and(
+              eq(platformDocumentVersions.id, versionId),
+              eq(platformDocumentVersions.documentId, documentId),
+              eq(platformDocumentVersions.tenantId, principal.tenantId),
+            ),
+          )
+          .limit(1);
+        if (!version) throw new ForgeError("NOT_FOUND", "Version not found");
+        await this.storage.assertObjectExists(version.storageKey);
+        const now = new Date();
+        const [row] = await tx
+          .update(platformDocumentVersions)
+          .set({ status: "ACTIVE", updatedAt: now })
+          .where(eq(platformDocumentVersions.id, versionId))
+          .returning();
+        return this.mapVersion(row!);
+      },
+      principal.userId,
+    );
   }
 
   async downloadUrl(
@@ -472,272 +492,302 @@ export class IndustrialDocumentControlService {
   }
 
   async submitReview(principal: ForgePrincipal, documentId: string, versionId: string) {
-    return withTenantTransaction(this.db, principal.tenantId, async (tx) => {
-      const [doc] = await tx
-        .select()
-        .from(platformDocuments)
-        .where(
-          and(
-            eq(platformDocuments.id, documentId),
-            eq(platformDocuments.tenantId, principal.tenantId),
-            isNull(platformDocuments.archivedAt),
-          ),
-        )
-        .limit(1);
-      if (!doc) throw new ForgeError("NOT_FOUND", "Document not found");
-      const [version] = await tx
-        .select()
-        .from(platformDocumentVersions)
-        .where(
-          and(
-            eq(platformDocumentVersions.id, versionId),
-            eq(platformDocumentVersions.documentId, documentId),
-            eq(platformDocumentVersions.tenantId, principal.tenantId),
-          ),
-        )
-        .limit(1);
-      if (!version) throw new ForgeError("NOT_FOUND", "Version not found");
-      if (version.status === "PENDING_UPLOAD") {
-        throw new ForgeError("VALIDATION_FAILED", "Complete the file upload before submitting");
-      }
-      if (!canSubmitVersionForReview(version.workflowStatus, normalizeDocWorkflow(doc.workflowStatus))) {
-        throw new ForgeError("VALIDATION_FAILED", "Version cannot be submitted for review");
-      }
-      const now = new Date();
-      await tx
-        .update(platformDocumentVersions)
-        .set({
-          workflowStatus: VERSION_WORKFLOW.IN_REVIEW,
-          submittedByUserId: principal.userId,
-          submittedAt: now,
-          updatedAt: now,
-        })
-        .where(eq(platformDocumentVersions.id, versionId));
-      await tx
-        .update(platformDocuments)
-        .set({ workflowStatus: DOC_WORKFLOW.IN_REVIEW, updatedAt: now })
-        .where(eq(platformDocuments.id, documentId));
-      await this.audit.writeInTransaction(tx, {
-        tenantId: principal.tenantId,
-        actorUserId: principal.userId,
-        actorPersonId: principal.personId,
-        actorType: "USER",
-        action: "document_control.submitted_review",
-        resourceType: "platform_document_version",
-        resourceId: versionId,
-        result: "SUCCESS",
-        riskLevel: "LOW",
-        correlationId: "",
-        requestId: "",
-        metadata: { documentId },
-      });
-      return { ok: true as const, documentId, versionId };
-    }, principal.userId);
+    return withTenantTransaction(
+      this.db,
+      principal.tenantId,
+      async (tx) => {
+        const [doc] = await tx
+          .select()
+          .from(platformDocuments)
+          .where(
+            and(
+              eq(platformDocuments.id, documentId),
+              eq(platformDocuments.tenantId, principal.tenantId),
+              isNull(platformDocuments.archivedAt),
+            ),
+          )
+          .limit(1);
+        if (!doc) throw new ForgeError("NOT_FOUND", "Document not found");
+        const [version] = await tx
+          .select()
+          .from(platformDocumentVersions)
+          .where(
+            and(
+              eq(platformDocumentVersions.id, versionId),
+              eq(platformDocumentVersions.documentId, documentId),
+              eq(platformDocumentVersions.tenantId, principal.tenantId),
+            ),
+          )
+          .limit(1);
+        if (!version) throw new ForgeError("NOT_FOUND", "Version not found");
+        if (version.status === "PENDING_UPLOAD") {
+          throw new ForgeError("VALIDATION_FAILED", "Complete the file upload before submitting");
+        }
+        if (
+          !canSubmitVersionForReview(
+            version.workflowStatus,
+            normalizeDocWorkflow(doc.workflowStatus),
+          )
+        ) {
+          throw new ForgeError("VALIDATION_FAILED", "Version cannot be submitted for review");
+        }
+        const now = new Date();
+        await tx
+          .update(platformDocumentVersions)
+          .set({
+            workflowStatus: VERSION_WORKFLOW.IN_REVIEW,
+            submittedByUserId: principal.userId,
+            submittedAt: now,
+            updatedAt: now,
+          })
+          .where(eq(platformDocumentVersions.id, versionId));
+        await tx
+          .update(platformDocuments)
+          .set({ workflowStatus: DOC_WORKFLOW.IN_REVIEW, updatedAt: now })
+          .where(eq(platformDocuments.id, documentId));
+        await this.audit.writeInTransaction(tx, {
+          tenantId: principal.tenantId,
+          actorUserId: principal.userId,
+          actorPersonId: principal.personId,
+          actorType: "USER",
+          action: "document_control.submitted_review",
+          resourceType: "platform_document_version",
+          resourceId: versionId,
+          result: "SUCCESS",
+          riskLevel: "LOW",
+          correlationId: "",
+          requestId: "",
+          metadata: { documentId },
+        });
+        return { ok: true as const, documentId, versionId };
+      },
+      principal.userId,
+    );
   }
 
   async approve(principal: ForgePrincipal, documentId: string, versionId: string) {
-    return withTenantTransaction(this.db, principal.tenantId, async (tx) => {
-      const [doc] = await tx
-        .select()
-        .from(platformDocuments)
-        .where(
-          and(
-            eq(platformDocuments.id, documentId),
-            eq(platformDocuments.tenantId, principal.tenantId),
-            isNull(platformDocuments.archivedAt),
-          ),
-        )
-        .limit(1);
-      if (!doc) throw new ForgeError("NOT_FOUND", "Document not found");
-      const [version] = await tx
-        .select()
-        .from(platformDocumentVersions)
-        .where(
-          and(
-            eq(platformDocumentVersions.id, versionId),
-            eq(platformDocumentVersions.documentId, documentId),
-            eq(platformDocumentVersions.tenantId, principal.tenantId),
-          ),
-        )
-        .limit(1);
-      if (!version) throw new ForgeError("NOT_FOUND", "Version not found");
-      if (!canApproveVersion(version.workflowStatus)) {
-        throw new ForgeError("VALIDATION_FAILED", "Only versions in review can be approved");
-      }
-      const now = new Date();
-      if (doc.currentApprovedVersionId) {
+    return withTenantTransaction(
+      this.db,
+      principal.tenantId,
+      async (tx) => {
+        const [doc] = await tx
+          .select()
+          .from(platformDocuments)
+          .where(
+            and(
+              eq(platformDocuments.id, documentId),
+              eq(platformDocuments.tenantId, principal.tenantId),
+              isNull(platformDocuments.archivedAt),
+            ),
+          )
+          .limit(1);
+        if (!doc) throw new ForgeError("NOT_FOUND", "Document not found");
+        const [version] = await tx
+          .select()
+          .from(platformDocumentVersions)
+          .where(
+            and(
+              eq(platformDocumentVersions.id, versionId),
+              eq(platformDocumentVersions.documentId, documentId),
+              eq(platformDocumentVersions.tenantId, principal.tenantId),
+            ),
+          )
+          .limit(1);
+        if (!version) throw new ForgeError("NOT_FOUND", "Version not found");
+        if (!canApproveVersion(version.workflowStatus)) {
+          throw new ForgeError("VALIDATION_FAILED", "Only versions in review can be approved");
+        }
+        const now = new Date();
+        if (doc.currentApprovedVersionId) {
+          await tx
+            .update(platformDocumentVersions)
+            .set({ workflowStatus: VERSION_WORKFLOW.SUPERSEDED, updatedAt: now })
+            .where(eq(platformDocumentVersions.id, doc.currentApprovedVersionId));
+        }
         await tx
           .update(platformDocumentVersions)
-          .set({ workflowStatus: VERSION_WORKFLOW.SUPERSEDED, updatedAt: now })
-          .where(eq(platformDocumentVersions.id, doc.currentApprovedVersionId));
-      }
-      await tx
-        .update(platformDocumentVersions)
-        .set({
-          workflowStatus: VERSION_WORKFLOW.APPROVED,
-          approvedByUserId: principal.userId,
-          approvedAt: now,
-          status: "ACTIVE",
-          updatedAt: now,
-        })
-        .where(eq(platformDocumentVersions.id, versionId));
-      await tx
-        .update(platformDocuments)
-        .set({
-          workflowStatus: DOC_WORKFLOW.PUBLISHED,
-          currentApprovedVersionId: versionId,
-          status: "ACTIVE",
-          updatedAt: now,
-        })
-        .where(eq(platformDocuments.id, documentId));
+          .set({
+            workflowStatus: VERSION_WORKFLOW.APPROVED,
+            approvedByUserId: principal.userId,
+            approvedAt: now,
+            status: "ACTIVE",
+            updatedAt: now,
+          })
+          .where(eq(platformDocumentVersions.id, versionId));
+        await tx
+          .update(platformDocuments)
+          .set({
+            workflowStatus: DOC_WORKFLOW.PUBLISHED,
+            currentApprovedVersionId: versionId,
+            status: "ACTIVE",
+            updatedAt: now,
+          })
+          .where(eq(platformDocuments.id, documentId));
 
-      const dists = await tx
-        .select()
-        .from(platformDocumentDistributions)
-        .where(
-          and(
-            eq(platformDocumentDistributions.documentId, documentId),
-            eq(platformDocumentDistributions.tenantId, principal.tenantId),
-            eq(platformDocumentDistributions.enabled, true),
-          ),
-        );
-      for (const dist of dists) {
-        await tx.insert(platformDocumentAckRequirements).values({
-          id: createId(),
+        const dists = await tx
+          .select()
+          .from(platformDocumentDistributions)
+          .where(
+            and(
+              eq(platformDocumentDistributions.documentId, documentId),
+              eq(platformDocumentDistributions.tenantId, principal.tenantId),
+              eq(platformDocumentDistributions.enabled, true),
+            ),
+          );
+        for (const dist of dists) {
+          await tx.insert(platformDocumentAckRequirements).values({
+            id: createId(),
+            tenantId: principal.tenantId,
+            documentId,
+            versionId,
+            distributionId: dist.id,
+            required: true,
+            createdAt: now,
+            updatedAt: now,
+          });
+        }
+        await this.audit.writeInTransaction(tx, {
           tenantId: principal.tenantId,
-          documentId,
-          versionId,
-          distributionId: dist.id,
-          required: true,
-          createdAt: now,
-          updatedAt: now,
+          actorUserId: principal.userId,
+          actorPersonId: principal.personId,
+          actorType: "USER",
+          action: "document_control.approved",
+          resourceType: "platform_document_version",
+          resourceId: versionId,
+          result: "SUCCESS",
+          riskLevel: "MEDIUM",
+          correlationId: "",
+          requestId: "",
+          metadata: { documentId },
         });
-      }
-      await this.audit.writeInTransaction(tx, {
-        tenantId: principal.tenantId,
-        actorUserId: principal.userId,
-        actorPersonId: principal.personId,
-        actorType: "USER",
-        action: "document_control.approved",
-        resourceType: "platform_document_version",
-        resourceId: versionId,
-        result: "SUCCESS",
-        riskLevel: "MEDIUM",
-        correlationId: "",
-        requestId: "",
-        metadata: { documentId },
-      });
-      return { ok: true as const, documentId, versionId };
-    }, principal.userId);
+        return { ok: true as const, documentId, versionId };
+      },
+      principal.userId,
+    );
   }
 
   async reject(principal: ForgePrincipal, documentId: string, versionId: string) {
-    return withTenantTransaction(this.db, principal.tenantId, async (tx) => {
-      const [version] = await tx
-        .select()
-        .from(platformDocumentVersions)
-        .where(
-          and(
-            eq(platformDocumentVersions.id, versionId),
-            eq(platformDocumentVersions.documentId, documentId),
-            eq(platformDocumentVersions.tenantId, principal.tenantId),
-          ),
-        )
-        .limit(1);
-      if (!version) throw new ForgeError("NOT_FOUND", "Version not found");
-      if (!canRejectVersion(version.workflowStatus)) {
-        throw new ForgeError("VALIDATION_FAILED", "Only versions in review can be rejected");
-      }
-      const now = new Date();
-      await tx
-        .update(platformDocumentVersions)
-        .set({
-          workflowStatus: VERSION_WORKFLOW.DRAFT,
-          submittedAt: null,
-          submittedByUserId: null,
-          updatedAt: now,
-        })
-        .where(eq(platformDocumentVersions.id, versionId));
-      const [doc] = await tx
-        .select()
-        .from(platformDocuments)
-        .where(eq(platformDocuments.id, documentId))
-        .limit(1);
-      await tx
-        .update(platformDocuments)
-        .set({
-          workflowStatus: doc?.currentApprovedVersionId
-            ? DOC_WORKFLOW.PUBLISHED
-            : DOC_WORKFLOW.DRAFT,
-          updatedAt: now,
-        })
-        .where(eq(platformDocuments.id, documentId));
-      return { ok: true as const, documentId, versionId };
-    }, principal.userId);
+    return withTenantTransaction(
+      this.db,
+      principal.tenantId,
+      async (tx) => {
+        const [version] = await tx
+          .select()
+          .from(platformDocumentVersions)
+          .where(
+            and(
+              eq(platformDocumentVersions.id, versionId),
+              eq(platformDocumentVersions.documentId, documentId),
+              eq(platformDocumentVersions.tenantId, principal.tenantId),
+            ),
+          )
+          .limit(1);
+        if (!version) throw new ForgeError("NOT_FOUND", "Version not found");
+        if (!canRejectVersion(version.workflowStatus)) {
+          throw new ForgeError("VALIDATION_FAILED", "Only versions in review can be rejected");
+        }
+        const now = new Date();
+        await tx
+          .update(platformDocumentVersions)
+          .set({
+            workflowStatus: VERSION_WORKFLOW.DRAFT,
+            submittedAt: null,
+            submittedByUserId: null,
+            updatedAt: now,
+          })
+          .where(eq(platformDocumentVersions.id, versionId));
+        const [doc] = await tx
+          .select()
+          .from(platformDocuments)
+          .where(eq(platformDocuments.id, documentId))
+          .limit(1);
+        await tx
+          .update(platformDocuments)
+          .set({
+            workflowStatus: doc?.currentApprovedVersionId
+              ? DOC_WORKFLOW.PUBLISHED
+              : DOC_WORKFLOW.DRAFT,
+            updatedAt: now,
+          })
+          .where(eq(platformDocuments.id, documentId));
+        return { ok: true as const, documentId, versionId };
+      },
+      principal.userId,
+    );
   }
 
   async obsolete(principal: ForgePrincipal, documentId: string) {
-    return withTenantTransaction(this.db, principal.tenantId, async (tx) => {
-      const [doc] = await tx
-        .select()
-        .from(platformDocuments)
-        .where(
-          and(
-            eq(platformDocuments.id, documentId),
-            eq(platformDocuments.tenantId, principal.tenantId),
-          ),
-        )
-        .limit(1);
-      if (!doc) throw new ForgeError("NOT_FOUND", "Document not found");
-      if (!canObsoleteDocument(normalizeDocWorkflow(doc.workflowStatus))) {
-        throw new ForgeError("VALIDATION_FAILED", "Document cannot be marked obsolete");
-      }
-      const now = new Date();
-      const [row] = await tx
-        .update(platformDocuments)
-        .set({ workflowStatus: DOC_WORKFLOW.OBSOLETE, updatedAt: now })
-        .where(eq(platformDocuments.id, documentId))
-        .returning();
-      await this.audit.writeInTransaction(tx, {
-        tenantId: principal.tenantId,
-        actorUserId: principal.userId,
-        actorPersonId: principal.personId,
-        actorType: "USER",
-        action: "document_control.obsoleted",
-        resourceType: "platform_document",
-        resourceId: documentId,
-        result: "SUCCESS",
-        riskLevel: "MEDIUM",
-        correlationId: "",
-        requestId: "",
-        metadata: {},
-      });
-      return this.mapDoc(row!);
-    }, principal.userId);
+    return withTenantTransaction(
+      this.db,
+      principal.tenantId,
+      async (tx) => {
+        const [doc] = await tx
+          .select()
+          .from(platformDocuments)
+          .where(
+            and(
+              eq(platformDocuments.id, documentId),
+              eq(platformDocuments.tenantId, principal.tenantId),
+            ),
+          )
+          .limit(1);
+        if (!doc) throw new ForgeError("NOT_FOUND", "Document not found");
+        if (!canObsoleteDocument(normalizeDocWorkflow(doc.workflowStatus))) {
+          throw new ForgeError("VALIDATION_FAILED", "Document cannot be marked obsolete");
+        }
+        const now = new Date();
+        const [row] = await tx
+          .update(platformDocuments)
+          .set({ workflowStatus: DOC_WORKFLOW.OBSOLETE, updatedAt: now })
+          .where(eq(platformDocuments.id, documentId))
+          .returning();
+        await this.audit.writeInTransaction(tx, {
+          tenantId: principal.tenantId,
+          actorUserId: principal.userId,
+          actorPersonId: principal.personId,
+          actorType: "USER",
+          action: "document_control.obsoleted",
+          resourceType: "platform_document",
+          resourceId: documentId,
+          result: "SUCCESS",
+          riskLevel: "MEDIUM",
+          correlationId: "",
+          requestId: "",
+          metadata: {},
+        });
+        return this.mapDoc(row!);
+      },
+      principal.userId,
+    );
   }
 
   async archive(principal: ForgePrincipal, documentId: string) {
-    return withTenantTransaction(this.db, principal.tenantId, async (tx) => {
-      const now = new Date();
-      const [row] = await tx
-        .update(platformDocuments)
-        .set({
-          archivedAt: now,
-          status: "ARCHIVED",
-          workflowStatus: DOC_WORKFLOW.OBSOLETE,
-          updatedAt: now,
-        })
-        .where(
-          and(
-            eq(platformDocuments.id, documentId),
-            eq(platformDocuments.tenantId, principal.tenantId),
-            isNull(platformDocuments.archivedAt),
-          ),
-        )
-        .returning();
-      if (!row) throw new ForgeError("NOT_FOUND", "Document not found");
-      return this.mapDoc(row);
-    }, principal.userId);
+    return withTenantTransaction(
+      this.db,
+      principal.tenantId,
+      async (tx) => {
+        const now = new Date();
+        const [row] = await tx
+          .update(platformDocuments)
+          .set({
+            archivedAt: now,
+            status: "ARCHIVED",
+            workflowStatus: DOC_WORKFLOW.OBSOLETE,
+            updatedAt: now,
+          })
+          .where(
+            and(
+              eq(platformDocuments.id, documentId),
+              eq(platformDocuments.tenantId, principal.tenantId),
+              isNull(platformDocuments.archivedAt),
+            ),
+          )
+          .returning();
+        if (!row) throw new ForgeError("NOT_FOUND", "Document not found");
+        return this.mapDoc(row);
+      },
+      principal.userId,
+    );
   }
 
   async replaceDistributions(
@@ -746,52 +796,57 @@ export class IndustrialDocumentControlService {
     body: { distributions?: Array<{ scopeType: string; scopeId?: string | null }> },
   ) {
     const items = Array.isArray(body.distributions) ? body.distributions : [];
-    return withTenantTransaction(this.db, principal.tenantId, async (tx) => {
-      const [doc] = await tx
-        .select()
-        .from(platformDocuments)
-        .where(
-          and(
-            eq(platformDocuments.id, documentId),
-            eq(platformDocuments.tenantId, principal.tenantId),
-          ),
-        )
-        .limit(1);
-      if (!doc) throw new ForgeError("NOT_FOUND", "Document not found");
-      await tx
-        .delete(platformDocumentDistributions)
-        .where(
-          and(
-            eq(platformDocumentDistributions.documentId, documentId),
-            eq(platformDocumentDistributions.tenantId, principal.tenantId),
-          ),
-        );
-      const now = new Date();
-      const rows =
-        items.length > 0
-          ? items
-          : [{ scopeType: DISTRIBUTION_SCOPE.TENANT, scopeId: null as string | null }];
-      for (const item of rows) {
-        const scopeType = String(item.scopeType ?? "")
-          .trim()
-          .toUpperCase();
-        if (!Object.values(DISTRIBUTION_SCOPE).includes(scopeType as never)) {
-          throw new ForgeError("VALIDATION_FAILED", `Invalid scopeType: ${scopeType}`);
+    return withTenantTransaction(
+      this.db,
+      principal.tenantId,
+      async (tx) => {
+        const [doc] = await tx
+          .select()
+          .from(platformDocuments)
+          .where(
+            and(
+              eq(platformDocuments.id, documentId),
+              eq(platformDocuments.tenantId, principal.tenantId),
+            ),
+          )
+          .limit(1);
+        if (!doc) throw new ForgeError("NOT_FOUND", "Document not found");
+        await tx
+          .delete(platformDocumentDistributions)
+          .where(
+            and(
+              eq(platformDocumentDistributions.documentId, documentId),
+              eq(platformDocumentDistributions.tenantId, principal.tenantId),
+            ),
+          );
+        const now = new Date();
+        const rows =
+          items.length > 0
+            ? items
+            : [{ scopeType: DISTRIBUTION_SCOPE.TENANT, scopeId: null as string | null }];
+        for (const item of rows) {
+          const scopeType = String(item.scopeType ?? "")
+            .trim()
+            .toUpperCase();
+          if (!Object.values(DISTRIBUTION_SCOPE).includes(scopeType as never)) {
+            throw new ForgeError("VALIDATION_FAILED", `Invalid scopeType: ${scopeType}`);
+          }
+          await tx.insert(platformDocumentDistributions).values({
+            id: createId(),
+            tenantId: principal.tenantId,
+            documentId,
+            scopeType,
+            scopeId:
+              typeof item.scopeId === "string" && item.scopeId.trim() ? item.scopeId.trim() : null,
+            enabled: true,
+            createdAt: now,
+            updatedAt: now,
+          });
         }
-        await tx.insert(platformDocumentDistributions).values({
-          id: createId(),
-          tenantId: principal.tenantId,
-          documentId,
-          scopeType,
-          scopeId:
-            typeof item.scopeId === "string" && item.scopeId.trim() ? item.scopeId.trim() : null,
-          enabled: true,
-          createdAt: now,
-          updatedAt: now,
-        });
-      }
-      return { ok: true as const, documentId };
-    }, principal.userId);
+        return { ok: true as const, documentId };
+      },
+      principal.userId,
+    );
   }
 
   async listApprovalsQueue(principal: ForgePrincipal) {
@@ -802,10 +857,7 @@ export class IndustrialDocumentControlService {
           document: platformDocuments,
         })
         .from(platformDocumentVersions)
-        .innerJoin(
-          platformDocuments,
-          eq(platformDocuments.id, platformDocumentVersions.documentId),
-        )
+        .innerJoin(platformDocuments, eq(platformDocuments.id, platformDocumentVersions.documentId))
         .where(
           and(
             eq(platformDocumentVersions.tenantId, principal.tenantId),
@@ -897,56 +949,61 @@ export class IndustrialDocumentControlService {
   async acknowledge(principal: ForgePrincipal, versionIds: string[]) {
     const ids = [...new Set(versionIds.map((id) => id.trim()).filter(Boolean))];
     if (!ids.length) throw new ForgeError("VALIDATION_FAILED", "versionIds required");
-    return withTenantTransaction(this.db, principal.tenantId, async (tx) => {
-      const now = new Date();
-      const created: string[] = [];
-      for (const versionId of ids) {
-        const [version] = await tx
-          .select()
-          .from(platformDocumentVersions)
-          .where(
-            and(
-              eq(platformDocumentVersions.id, versionId),
-              eq(platformDocumentVersions.tenantId, principal.tenantId),
-            ),
-          )
-          .limit(1);
-        if (!version || version.workflowStatus !== VERSION_WORKFLOW.APPROVED) {
-          throw new ForgeError("VALIDATION_FAILED", `Version not acknowledgeable: ${versionId}`);
+    return withTenantTransaction(
+      this.db,
+      principal.tenantId,
+      async (tx) => {
+        const now = new Date();
+        const created: string[] = [];
+        for (const versionId of ids) {
+          const [version] = await tx
+            .select()
+            .from(platformDocumentVersions)
+            .where(
+              and(
+                eq(platformDocumentVersions.id, versionId),
+                eq(platformDocumentVersions.tenantId, principal.tenantId),
+              ),
+            )
+            .limit(1);
+          if (!version || version.workflowStatus !== VERSION_WORKFLOW.APPROVED) {
+            throw new ForgeError("VALIDATION_FAILED", `Version not acknowledgeable: ${versionId}`);
+          }
+          const id = createId();
+          try {
+            await tx.insert(platformDocumentAcknowledgments).values({
+              id,
+              tenantId: principal.tenantId,
+              documentId: version.documentId,
+              versionId,
+              userId: principal.userId,
+              acceptedAt: now,
+              source: "DOCUMENT_CONTROL",
+              createdAt: now,
+            });
+            created.push(id);
+          } catch {
+            // unique constraint — already acknowledged
+          }
         }
-        const id = createId();
-        try {
-          await tx.insert(platformDocumentAcknowledgments).values({
-            id,
-            tenantId: principal.tenantId,
-            documentId: version.documentId,
-            versionId,
-            userId: principal.userId,
-            acceptedAt: now,
-            source: "DOCUMENT_CONTROL",
-            createdAt: now,
-          });
-          created.push(id);
-        } catch {
-          // unique constraint — already acknowledged
-        }
-      }
-      await this.audit.writeInTransaction(tx, {
-        tenantId: principal.tenantId,
-        actorUserId: principal.userId,
-        actorPersonId: principal.personId,
-        actorType: "USER",
-        action: "document_control.acknowledged",
-        resourceType: "platform_document_acknowledgment",
-        resourceId: created[0] ?? ids[0]!,
-        result: "SUCCESS",
-        riskLevel: "LOW",
-        correlationId: "",
-        requestId: "",
-        metadata: { versionIds: ids, count: created.length },
-      });
-      return { acknowledged: created.length, versionIds: ids };
-    }, principal.userId);
+        await this.audit.writeInTransaction(tx, {
+          tenantId: principal.tenantId,
+          actorUserId: principal.userId,
+          actorPersonId: principal.personId,
+          actorType: "USER",
+          action: "document_control.acknowledged",
+          resourceType: "platform_document_acknowledgment",
+          resourceId: created[0] ?? ids[0]!,
+          result: "SUCCESS",
+          riskLevel: "LOW",
+          correlationId: "",
+          requestId: "",
+          metadata: { versionIds: ids, count: created.length },
+        });
+        return { acknowledged: created.length, versionIds: ids };
+      },
+      principal.userId,
+    );
   }
 
   async listDocumentAcknowledgments(principal: ForgePrincipal, documentId: string) {

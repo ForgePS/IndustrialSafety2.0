@@ -54,7 +54,12 @@ type DashboardPayload = {
 };
 
 type UpcomingPayload = {
-  events: Array<{ id: string; title: string; startsAt: string | null; category?: { color: string } | null }>;
+  events: Array<{
+    id: string;
+    title: string;
+    startsAt: string | null;
+    category?: { color: string } | null;
+  }>;
   tasks: Array<{ id: string; title: string; dueDate: string | null; href: string }>;
   reminders: Array<{ id: string; title: string | null; remindAt: string | null }>;
 };
@@ -140,7 +145,8 @@ export function IndustrialDashboard() {
 
   const available = nav.filter((n) => n.available && n.code !== "CORE");
   const availableCodes = useMemo(() => new Set(available.map((m) => m.code)), [available]);
-  const canAccess = entitled && (hasPermission("industrial.access") || Boolean(me?.isPlatformAdmin));
+  const canAccess =
+    entitled && (hasPermission("industrial.access") || Boolean(me?.isPlatformAdmin));
   const canViewIncidents =
     entitled &&
     (Boolean(me?.isPlatformAdmin) ||
@@ -153,8 +159,7 @@ export function IndustrialDashboard() {
   const showInspections = availableCodes.has("INSPECTIONS");
   /** Incident trend is incidents/analytics work — not granted by industrial.access alone. */
   const showIncidentTrend =
-    availableCodes.has("ANALYTICS") ||
-    (availableCodes.has("INCIDENTS") && canViewIncidents);
+    availableCodes.has("ANALYTICS") || (availableCodes.has("INCIDENTS") && canViewIncidents);
   /** Safety Index lives under Analytics; do not show for every industrial user. */
   const showSafetyIndex = availableCodes.has("ANALYTICS") || availableCodes.has("REPORTING");
   const showDotScore = availableCodes.has("DOT_COMPLIANCE");
@@ -524,20 +529,14 @@ export function IndustrialDashboard() {
           />
         ) : null;
       case "insight-trend":
-        return (
-          <IncidentTrendCard points={incidentTrend} dateStart={dateStart} dateEnd={dateEnd} />
-        );
+        return <IncidentTrendCard points={incidentTrend} dateStart={dateStart} dateEnd={dateEnd} />;
       case "insight-safety":
         return <SafetyIndexCard report={analytics} showDotScore={showDotScore} />;
       case "insight-tasks":
         return <TaskSchedulerCard tasks={tasks} />;
       case "insight-inspections":
         return (
-          <InspectionsBySiteCard
-            sites={inspectionSites}
-            dateStart={dateStart}
-            dateEnd={dateEnd}
-          />
+          <InspectionsBySiteCard sites={inspectionSites} dateStart={dateStart} dateEnd={dateEnd} />
         );
       case "body-map":
         return (
@@ -626,8 +625,8 @@ export function IndustrialDashboard() {
           role="status"
         >
           <span className="small mb-0">
-            Reset the dashboard layout to defaults? This clears your block order, sizes, and
-            hidden blocks (My Workspace module layout is separate).
+            Reset the dashboard layout to defaults? This clears your block order, sizes, and hidden
+            blocks (My Workspace module layout is separate).
           </span>
           <div className="d-flex gap-2">
             <button

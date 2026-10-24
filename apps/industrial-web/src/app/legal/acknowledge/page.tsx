@@ -136,10 +136,14 @@ export default function LegalAcknowledgePage() {
       </header>
 
       <section className="mb-4" aria-labelledby="required-docs-heading">
-        <h2 id="required-docs-heading" className="h5 mb-3">Required Documents</h2>
+        <h2 id="required-docs-heading" className="h5 mb-3">
+          Required Documents
+        </h2>
 
         {loadingDocs && pending.length > 0 ? (
-          <p className="text-muted small mb-3" role="status">Loading required documents…</p>
+          <p className="text-muted small mb-3" role="status">
+            Loading required documents…
+          </p>
         ) : null}
 
         {pending.length === 0 ? (
@@ -202,7 +206,11 @@ export default function LegalAcknowledgePage() {
           >
             {submitting ? "Saving…" : "I Acknowledge & Continue"}
           </button>
-          <button type="button" className="btn btn-outline-secondary" onClick={() => void onDecline()}>
+          <button
+            type="button"
+            className="btn btn-outline-secondary"
+            onClick={() => void onDecline()}
+          >
             Decline &amp; Sign Out
           </button>
         </div>

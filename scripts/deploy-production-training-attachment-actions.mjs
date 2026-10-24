@@ -13,7 +13,10 @@ const REGION = "us-east-1";
 const CLUSTER = "forge-production-ecs-platform";
 const API_SERVICE = "forge-production-ecs-platform-api";
 const API_ECR = `${ACCOUNT}.dkr.ecr.${REGION}.amazonaws.com/forge-production-ecr-platformapi`;
-const stamp = new Date().toISOString().replace(/[-:TZ.]/g, "").slice(0, 14);
+const stamp = new Date()
+  .toISOString()
+  .replace(/[-:TZ.]/g, "")
+  .slice(0, 14);
 const tag = `training-attach-actions-${stamp}`;
 
 function sh(cmd, opts = {}) {
@@ -29,7 +32,12 @@ function clearIndustrialBuildDirs() {
   const appRoot = path.join("apps", "industrial-web");
   if (!fs.existsSync(appRoot)) return;
   for (const name of fs.readdirSync(appRoot)) {
-    if (name === ".next" || name === "out" || name.startsWith(".next_locked_") || name.startsWith("out_locked_")) {
+    if (
+      name === ".next" ||
+      name === "out" ||
+      name.startsWith(".next_locked_") ||
+      name.startsWith("out_locked_")
+    ) {
       const full = path.join(appRoot, name);
       const dest = path.join(
         process.env.TEMP || process.env.TMP || ".",

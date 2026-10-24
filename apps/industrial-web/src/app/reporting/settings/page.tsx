@@ -3,10 +3,7 @@
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 import { ApiError } from "@forge/web-kit";
-import {
-  fetchReportingSettings,
-  runDueSchedules,
-} from "@/lib/reporting-api";
+import { fetchReportingSettings, runDueSchedules } from "@/lib/reporting-api";
 
 type SettingsPayload = Awaited<ReturnType<typeof fetchReportingSettings>>;
 

@@ -13,9 +13,7 @@ import os from "node:os";
 import path from "node:path";
 import { createRequire } from "node:module";
 
-const EVID_DIR = path.resolve(
-  "docs/program/industrial-migration/ind-11/evidence/p2/04-parity",
-);
+const EVID_DIR = path.resolve("docs/program/industrial-migration/ind-11/evidence/p2/04-parity");
 const APPROVAL = path.join(EVID_DIR, "APPROVE-PRODUCERS-PHASE4-LOAD.md");
 const STAGING = "0882c865-59c2-49a6-ab88-ce6ca89be30c";
 const TENANT_A = "019faa15-e558-70b6-adcd-a510c3c995f4";
@@ -58,7 +56,9 @@ if (mode === "cognito") {
       : [];
     if (!smokeFiles.length) throw new Error("no smoke password file");
     const secrets = JSON.parse(fs.readFileSync(path.join(secretDir, smokeFiles.at(-1)), "utf8"));
-    const email = (process.env.FORGE_P2_SMOKE_EMAIL || "safetyadmin@producersrice.com").toLowerCase();
+    const email = (
+      process.env.FORGE_P2_SMOKE_EMAIL || "safetyadmin@producersrice.com"
+    ).toLowerCase();
     const entry = (secrets.passwords || []).find((p) => p.email?.toLowerCase() === email);
     if (!entry?.password) throw new Error(`missing password for ${email}`);
 
@@ -125,9 +125,7 @@ async function call(label, p, opts = {}) {
     }
     const items = body?.data?.items;
     const total =
-      body?.data?.total ??
-      body?.data?.count ??
-      (Array.isArray(items) ? items.length : null);
+      body?.data?.total ?? body?.data?.count ?? (Array.isArray(items) ? items.length : null);
     const sampleTenant =
       items?.[0]?.tenantId ?? body?.data?.tenantId ?? body?.data?.items?.[0]?.tenantId ?? null;
     return {
@@ -201,7 +199,10 @@ const isolation = {
 };
 
 const ok =
-  results.filter((r) => ["auth_me", "bootstrap", "modules", "personnel", "equipment", "loto"].includes(r.label))
+  results
+    .filter((r) =>
+      ["auth_me", "bootstrap", "modules", "personnel", "equipment", "loto"].includes(r.label),
+    )
     .every((r) => r.pass) &&
   isolation.sampleTenantIsStaging &&
   isolation.notTenantA;
@@ -218,7 +219,10 @@ const out = {
   results,
 };
 fs.mkdirSync(EVID_DIR, { recursive: true });
-fs.writeFileSync(path.join(EVID_DIR, "api-smoke-staging.json"), `${JSON.stringify(out, null, 2)}\n`);
+fs.writeFileSync(
+  path.join(EVID_DIR, "api-smoke-staging.json"),
+  `${JSON.stringify(out, null, 2)}\n`,
+);
 fs.writeFileSync(
   path.join(EVID_DIR, "api-smoke-staging-latest.json"),
   `${JSON.stringify(out, null, 2)}\n`,

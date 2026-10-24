@@ -204,7 +204,13 @@ export function formatDateTime(value: string | null | undefined): string {
   if (!value) return "";
   const d = new Date(value);
   if (Number.isNaN(d.getTime())) return "";
-  return d.toLocaleString(undefined, { month: "short", day: "numeric", year: "numeric", hour: "numeric", minute: "2-digit" });
+  return d.toLocaleString(undefined, {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+    hour: "numeric",
+    minute: "2-digit",
+  });
 }
 
 export function formatAge(value: string | null | undefined, now = Date.now()): string {
@@ -350,18 +356,32 @@ function putToStorage(uploadUrl: string, file: File, mimeType: string): Promise<
       xhr.status >= 200 && xhr.status < 300
         ? resolve()
         : reject(new Error(`Upload to storage failed (${xhr.status}). Please try again.`));
-    xhr.onerror = () => reject(new Error("Upload blocked by the browser (network or CORS). Try again after a hard refresh."));
+    xhr.onerror = () =>
+      reject(
+        new Error(
+          "Upload blocked by the browser (network or CORS). Try again after a hard refresh.",
+        ),
+      );
     xhr.send(file);
   });
 }
 
 /** Presign, PUT to S3, then confirm. `base` is the ticket route (customer or support). */
-export async function uploadTicketAttachment(base: string, file: File, internal = false): Promise<HelpdeskAttachment> {
+export async function uploadTicketAttachment(
+  base: string,
+  file: File,
+  internal = false,
+): Promise<HelpdeskAttachment> {
   const mimeType = guessMimeType(file);
   const presign = await apiSend<{ attachmentId: string; uploadUrl: string; mimeType: string }>(
     `${base}/attachments/upload-url`,
     "POST",
-    { filename: file.name, mimeType, contentLength: file.size, ...(internal ? { internal: true } : {}) },
+    {
+      filename: file.name,
+      mimeType,
+      contentLength: file.size,
+      ...(internal ? { internal: true } : {}),
+    },
   );
   await putToStorage(presign.uploadUrl, file, presign.mimeType || mimeType);
   const done = await apiSend<{ attachment: HelpdeskAttachment }>(
@@ -373,7 +393,9 @@ export async function uploadTicketAttachment(base: string, file: File, internal 
 }
 
 export async function openTicketAttachment(base: string, attachmentId: string): Promise<void> {
-  const res = await apiGet<{ downloadUrl: string }>(`${base}/attachments/${encodeURIComponent(attachmentId)}/download`);
+  const res = await apiGet<{ downloadUrl: string }>(
+    `${base}/attachments/${encodeURIComponent(attachmentId)}/download`,
+  );
   window.open(res.downloadUrl, "_blank", "noopener");
 }
 

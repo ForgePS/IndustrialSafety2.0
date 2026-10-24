@@ -144,8 +144,7 @@ function hydrate(row) {
         }
       : null;
 
-  const firebasePersonnelId =
-    asText(payload.personnelId) || asText(employee.personnelId) || "";
+  const firebasePersonnelId = asText(payload.personnelId) || asText(employee.personnelId) || "";
 
   const sourcePayload = {
     ...payload,

@@ -155,7 +155,8 @@ async function linkOne(sql, row, roleIds, productId) {
         ${id}::uuid, ${TENANT_ID}::uuid, ${userId}::uuid, 'ACTIVE', false, now(), now(), now()
       )
     `;
-    membership = await sql`select id::text as id, status from user_tenant_memberships where id = ${id}::uuid`;
+    membership =
+      await sql`select id::text as id, status from user_tenant_memberships where id = ${id}::uuid`;
     membershipCreated = true;
   } else if (membership[0].status !== "ACTIVE") {
     await sql`

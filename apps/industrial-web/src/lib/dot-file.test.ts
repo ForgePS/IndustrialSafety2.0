@@ -152,8 +152,8 @@ describe("relatedDotRecords", () => {
     const duplicate = { id: "d2", category: "drivers", workerName: "ADA BYRON" };
     const accident = { id: "a1", category: "accidents", workerName: "Ada Byron" };
     const other = { id: "x1", category: "drivers", workerName: "Bea Nguyen" };
-    expect(relatedDotRecords(driver, [driver, duplicate, accident, other]).map((r) => r.id)).toEqual([
-      "a1",
-    ]);
+    expect(
+      relatedDotRecords(driver, [driver, duplicate, accident, other]).map((r) => r.id),
+    ).toEqual(["a1"]);
   });
 });

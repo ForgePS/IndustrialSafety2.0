@@ -80,7 +80,10 @@ export function QrCameraScanner({ onToken, onError, autoStart = true }: Props) {
       setTorchSupported(Boolean(caps?.torch));
       await refreshDevices();
     } catch (err) {
-      const name = err && typeof err === "object" && "name" in err ? String((err as { name: string }).name) : "";
+      const name =
+        err && typeof err === "object" && "name" in err
+          ? String((err as { name: string }).name)
+          : "";
       if (name === "NotAllowedError" || name === "PermissionDeniedError") {
         setPermissionDenied(true);
         setShowManual(true);
@@ -204,7 +207,8 @@ export function QrCameraScanner({ onToken, onError, autoStart = true }: Props) {
         <div className="ff-state ff-state--error" role="alert">
           <h2 className="ff-page-title">Camera access required</h2>
           <p className="ff-page-body">
-            Camera access is required to scan QR codes. Allow camera permission, or use manual entry.
+            Camera access is required to scan QR codes. Allow camera permission, or use manual
+            entry.
           </p>
           <button type="button" className="ff-btn" onClick={() => setShowManual(true)}>
             Open manual entry
@@ -218,7 +222,11 @@ export function QrCameraScanner({ onToken, onError, autoStart = true }: Props) {
           <div className="ff-scan-reticle" aria-hidden="true" />
           <div className="ff-scan-controls">
             {torchSupported ? (
-              <button type="button" className="ff-btn ff-btn-secondary" onClick={() => void toggleTorch()}>
+              <button
+                type="button"
+                className="ff-btn ff-btn-secondary"
+                onClick={() => void toggleTorch()}
+              >
                 {torchOn ? "Flash off" : "Flash on"}
               </button>
             ) : null}
@@ -228,7 +236,12 @@ export function QrCameraScanner({ onToken, onError, autoStart = true }: Props) {
           </div>
         </div>
       ) : !permissionDenied ? (
-        <button type="button" className="ff-scan-hero" disabled={busy} onClick={() => void startCamera()}>
+        <button
+          type="button"
+          className="ff-scan-hero"
+          disabled={busy}
+          onClick={() => void startCamera()}
+        >
           {busy ? "Opening camera…" : "OPEN CAMERA"}
         </button>
       ) : null}

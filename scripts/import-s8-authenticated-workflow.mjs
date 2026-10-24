@@ -72,7 +72,11 @@ async function main() {
   // 0. me
   {
     const r = await api("GET", "/api/v1/auth/me", { userId: op });
-    evidence.steps.push({ step: "auth.me.operator", status: r.status, permissions: r.json?.data?.permissions });
+    evidence.steps.push({
+      step: "auth.me.operator",
+      status: r.status,
+      permissions: r.json?.data?.permissions,
+    });
     if (r.status !== 200) throw new Error("operator /me failed");
   }
 
@@ -105,8 +109,10 @@ async function main() {
   const jobId = upload.json.data.job.id;
   const uploadUrl = upload.json.data.upload.uploadUrl;
   evidence.jobId = jobId;
-  if (upload.json?.meta?.correlationId) evidence.correlationIds.push(upload.json.meta.correlationId);
-  if (upload.json?.data?.job?.correlationId) evidence.correlationIds.push(upload.json.data.job.correlationId);
+  if (upload.json?.meta?.correlationId)
+    evidence.correlationIds.push(upload.json.meta.correlationId);
+  if (upload.json?.data?.job?.correlationId)
+    evidence.correlationIds.push(upload.json.data.job.correlationId);
 
   // 2. PUT bytes — signed headers are content-length + x-amz-server-side-encryption
   // (checksum is query-signed; do not send as request header)
@@ -134,7 +140,11 @@ async function main() {
     idempotencyKey: idk("complete"),
     body: { checksumSha256: SHA },
   });
-  evidence.steps.push({ step: "upload.complete", status: complete.status, body: complete.json?.data ?? complete.json });
+  evidence.steps.push({
+    step: "upload.complete",
+    status: complete.status,
+    body: complete.json?.data ?? complete.json,
+  });
   if (complete.status >= 300) {
     fs.mkdirSync("docs/testing/evidence/import-platform", { recursive: true });
     fs.writeFileSync(
@@ -152,8 +162,16 @@ async function main() {
     const st = await api("GET", `/api/v1/imports/jobs/${jobId}/status`, { userId: op });
     status = st.json?.data?.job?.status ?? st.json?.data?.status ?? st.json?.data?.jobStatus;
     currentStage = st.json?.data?.job?.currentStage ?? st.json?.data?.currentStage;
-    evidence.steps.push({ step: `poll.${i}`, http: st.status, jobStatus: status, stage: currentStage });
-    if (["READY_FOR_MAPPING", "MAPPED", "VALIDATION_FAILED", "QUARANTINED", "FAILED"].includes(status)) break;
+    evidence.steps.push({
+      step: `poll.${i}`,
+      http: st.status,
+      jobStatus: status,
+      stage: currentStage,
+    });
+    if (
+      ["READY_FOR_MAPPING", "MAPPED", "VALIDATION_FAILED", "QUARANTINED", "FAILED"].includes(status)
+    )
+      break;
   }
   if (status === "SCANNING" && currentStage === "FORMAT_DETECTION") {
     if (process.env.FORGE_S8_REQUIRE_NO_REPLAY === "1") {
@@ -168,7 +186,11 @@ async function main() {
     }
     const fileRes = await api("GET", `/api/v1/imports/${jobId}/file`, { userId: op });
     const file = fileRes.json?.data;
-    evidence.steps.push({ step: "detect.replay.prepare", fileId: file?.id, status: fileRes.status });
+    evidence.steps.push({
+      step: "detect.replay.prepare",
+      fileId: file?.id,
+      status: fileRes.status,
+    });
     if (file?.id && file?.s3Bucket && file?.s3Key) {
       const { execSync } = await import("node:child_process");
       const detectBody = {
@@ -199,8 +221,18 @@ async function main() {
         const st = await api("GET", `/api/v1/imports/jobs/${jobId}/status`, { userId: op });
         status = st.json?.data?.job?.status ?? st.json?.data?.status;
         currentStage = st.json?.data?.job?.currentStage ?? st.json?.data?.currentStage;
-        evidence.steps.push({ step: `poll.afterDetect.${i}`, http: st.status, jobStatus: status, stage: currentStage });
-        if (["READY_FOR_MAPPING", "MAPPED", "VALIDATION_FAILED", "QUARANTINED", "FAILED"].includes(status)) break;
+        evidence.steps.push({
+          step: `poll.afterDetect.${i}`,
+          http: st.status,
+          jobStatus: status,
+          stage: currentStage,
+        });
+        if (
+          ["READY_FOR_MAPPING", "MAPPED", "VALIDATION_FAILED", "QUARANTINED", "FAILED"].includes(
+            status,
+          )
+        )
+          break;
       }
     }
   }
@@ -226,7 +258,11 @@ async function main() {
       ],
     },
   });
-  evidence.steps.push({ step: "mappings.put", status: map.status, jobStatus: map.json?.data?.status });
+  evidence.steps.push({
+    step: "mappings.put",
+    status: map.status,
+    jobStatus: map.json?.data?.status,
+  });
   if (map.status >= 300) throw new Error(`map ${map.status}`);
 
   // 6-8 validation / preview / submit (audit orchestration)
@@ -246,7 +282,11 @@ async function main() {
     idempotencyKey: idk("approve"),
     body: {},
   });
-  evidence.steps.push({ step: "approve", status: approve.status, data: approve.json?.data ?? approve.json });
+  evidence.steps.push({
+    step: "approve",
+    status: approve.status,
+    data: approve.json?.data ?? approve.json,
+  });
   if (approve.status >= 300) throw new Error(`approve ${approve.status}`);
 
   // 10. stage rows (required for execute)
@@ -255,12 +295,22 @@ async function main() {
     idempotencyKey: idk("stage"),
     body: {
       rows: [
-        { sourceRowKey: `S8-${runId}-001`, mapped: { externalId: `S8-${runId}-001`, firstName: "Ada", lastName: "Lovelace" } },
-        { sourceRowKey: `S8-${runId}-002`, mapped: { externalId: `S8-${runId}-002`, firstName: "Grace", lastName: "Hopper" } },
+        {
+          sourceRowKey: `S8-${runId}-001`,
+          mapped: { externalId: `S8-${runId}-001`, firstName: "Ada", lastName: "Lovelace" },
+        },
+        {
+          sourceRowKey: `S8-${runId}-002`,
+          mapped: { externalId: `S8-${runId}-002`, firstName: "Grace", lastName: "Hopper" },
+        },
       ],
     },
   });
-  evidence.steps.push({ step: "rows.stage", status: stage.status, data: stage.json?.data ?? stage.json });
+  evidence.steps.push({
+    step: "rows.stage",
+    status: stage.status,
+    data: stage.json?.data ?? stage.json,
+  });
   if (stage.status >= 300) throw new Error(`stage ${stage.status}`);
 
   // 11. execute — omit adapterKey when FORGE_S8_DEFAULT_ADAPTER=1 (DEF-S8-024)
@@ -276,7 +326,8 @@ async function main() {
   evidence.steps.push({
     step: "execute",
     status: execute.status,
-    adapterKeyUsed: execute.json?.data?.job?.adapterKey ?? execute.json?.data?.execution?.adapterKey,
+    adapterKeyUsed:
+      execute.json?.data?.job?.adapterKey ?? execute.json?.data?.execution?.adapterKey,
     omittedAdapterKey: process.env.FORGE_S8_DEFAULT_ADAPTER === "1",
     data: execute.json?.data ?? execute.json,
   });
@@ -324,7 +375,11 @@ async function main() {
     idempotencyKey: idk("rollback"),
     body: { reason: "S8 evidence rollback classification drill" },
   });
-  evidence.steps.push({ step: "rollback-request", status: rb.status, data: rb.json?.data ?? rb.json });
+  evidence.steps.push({
+    step: "rollback-request",
+    status: rb.status,
+    data: rb.json?.data ?? rb.json,
+  });
 
   evidence.completedAt = new Date().toISOString();
   evidence.detectReplayUsed = evidence.steps.some((s) => s.step === "detect.replay.enqueued");

@@ -231,7 +231,12 @@ export function PhotoMarkupSettingsPanel() {
         ))}
 
         <div className="mt-4">
-          <button type="button" className="btn btn-primary" disabled={busy} onClick={() => void save()}>
+          <button
+            type="button"
+            className="btn btn-primary"
+            disabled={busy}
+            onClick={() => void save()}
+          >
             {busy ? "Saving…" : "Save settings"}
           </button>
         </div>

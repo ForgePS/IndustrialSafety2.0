@@ -158,7 +158,12 @@ export class IndustrialTrainingAssignmentsService {
 
   async createGroup(
     principal: ForgePrincipal,
-    body: { name?: string; description?: string; memberUserIds?: string[]; memberPersonnelIds?: string[] },
+    body: {
+      name?: string;
+      description?: string;
+      memberUserIds?: string[];
+      memberPersonnelIds?: string[];
+    },
   ) {
     const tenantId = this.tenant(principal);
     const name = String(body.name ?? "").trim();
@@ -213,7 +218,9 @@ export class IndustrialTrainingAssignmentsService {
         .set({
           name: body.name?.trim() || existing.name,
           description:
-            body.description !== undefined ? body.description?.trim() || null : existing.description,
+            body.description !== undefined
+              ? body.description?.trim() || null
+              : existing.description,
           updatedAt: now,
         })
         .where(eq(industrialTrainingGroups.id, groupId))
@@ -237,7 +244,9 @@ export class IndustrialTrainingAssignmentsService {
           );
         resolved = {
           memberCount: members.length,
-          memberUserIds: members.map((member) => member.userId).filter((id): id is string => Boolean(id)),
+          memberUserIds: members
+            .map((member) => member.userId)
+            .filter((id): id is string => Boolean(id)),
           memberPersonnelIds: members
             .map((member) => member.personnelId)
             .filter((id): id is string => Boolean(id)),
@@ -389,13 +398,7 @@ export class IndustrialTrainingAssignmentsService {
         .orderBy(desc(industrialTrainingAssignments.updatedAt))
         .limit(pageSize)
         .offset(offset);
-      const items = await this.hydrateAssignments(
-        tx,
-        tenantId,
-        rows,
-        principal.userId,
-        canManage,
-      );
+      const items = await this.hydrateAssignments(tx, tenantId, rows, principal.userId, canManage);
       return { items, page, pageSize };
     });
   }
@@ -504,7 +507,8 @@ export class IndustrialTrainingAssignmentsService {
       const now = new Date();
       const assignmentId = createId();
       const passingPercent = Math.min(100, Math.max(1, Number(body.passingPercent ?? 70) || 70));
-      const quizMode = String(body.quizMode ?? "STANDARD").toUpperCase() === "ADAPTIVE" ? "ADAPTIVE" : "STANDARD";
+      const quizMode =
+        String(body.quizMode ?? "STANDARD").toUpperCase() === "ADAPTIVE" ? "ADAPTIVE" : "STANDARD";
       const optionCount = Math.min(4, Math.max(2, Number(body.optionCount ?? 4) || 4));
       const dueAt = body.dueAt ? new Date(body.dueAt) : null;
       if (dueAt && Number.isNaN(dueAt.getTime())) {
@@ -651,9 +655,7 @@ export class IndustrialTrainingAssignmentsService {
           );
         }
         const previousPersonnelIds = new Set(
-          current
-            .map((row) => String(row.personnelId ?? "").trim())
-            .filter(Boolean),
+          current.map((row) => String(row.personnelId ?? "").trim()).filter(Boolean),
         );
         await tx
           .delete(industrialTrainingAssignmentAssignees)
@@ -835,17 +837,16 @@ export class IndustrialTrainingAssignmentsService {
         notStarted: assignees.filter((a) => a.status === "NOT_STARTED").length,
         overdue: assignees.filter((a) => {
           const assignment = assignments.find((x) => x.id === a.assignmentId);
-          return (
-            assignment?.dueAt &&
-            assignment.dueAt < new Date() &&
-            a.status !== "PASSED"
-          );
+          return assignment?.dueAt && assignment.dueAt < new Date() && a.status !== "PASSED";
         }).length,
       };
 
       const roster = assignees.map((a) => {
         const assignment = assignments.find((x) => x.id === a.assignmentId)!;
-        const employeeNumber = a.employeeNumber?.trim() || personnelLabels.get(a.personnelId ?? "")?.employeeNumber || null;
+        const employeeNumber =
+          a.employeeNumber?.trim() ||
+          personnelLabels.get(a.personnelId ?? "")?.employeeNumber ||
+          null;
         const personnelLabel = a.personnelId ? personnelLabels.get(a.personnelId) : null;
         return {
           assigneeId: a.id,
@@ -921,8 +922,7 @@ export class IndustrialTrainingAssignmentsService {
       if (!assignee) return;
 
       const bestPercent = Math.max(assignee.bestPercent ?? 0, input.percent);
-      const nextStatus =
-        assignee.status === "PASSED" ? "PASSED" : passed ? "PASSED" : status;
+      const nextStatus = assignee.status === "PASSED" ? "PASSED" : passed ? "PASSED" : status;
 
       await tx
         .update(industrialTrainingAssignmentAssignees)
@@ -930,7 +930,8 @@ export class IndustrialTrainingAssignmentsService {
           status: nextStatus,
           attemptId: input.attemptId,
           bestPercent,
-          completedAt: nextStatus === "PASSED" ? (assignee.completedAt ?? now) : assignee.completedAt,
+          completedAt:
+            nextStatus === "PASSED" ? (assignee.completedAt ?? now) : assignee.completedAt,
           updatedAt: now,
         })
         .where(eq(industrialTrainingAssignmentAssignees.id, assignee.id));
@@ -1059,9 +1060,15 @@ export class IndustrialTrainingAssignmentsService {
       .where(inArray(industrialTrainingSources.id, sourceIds));
     const sourceTitle = new Map(sources.map((s: { id: string; title: string }) => [s.id, s.title]));
 
-    const viewerEmployeeNumber = await this.resolveEmployeeNumberForUser(tx, tenantId, viewerUserId);
+    const viewerEmployeeNumber = await this.resolveEmployeeNumberForUser(
+      tx,
+      tenantId,
+      viewerUserId,
+    );
     const personnelIds = uniqueStrings(
-      assignees.map((a: { personnelId?: string | null }) => a.personnelId).filter(Boolean) as string[],
+      assignees
+        .map((a: { personnelId?: string | null }) => a.personnelId)
+        .filter(Boolean) as string[],
     );
     const personnelLabels = includeAssigneeDetails
       ? await this.personnelLabels(tx, tenantId, personnelIds)
@@ -1117,7 +1124,7 @@ export class IndustrialTrainingAssignmentsService {
                     employeeNumber,
                     label: employeeNumber
                       ? `#${employeeNumber}${personnel ? ` · ${personnel.displayName}` : ""}`
-                      : personnel?.label ?? "Assignee",
+                      : (personnel?.label ?? "Assignee"),
                     status: a.status,
                     bestPercent: a.bestPercent ?? null,
                   };
@@ -1354,11 +1361,7 @@ export class IndustrialTrainingAssignmentsService {
           continue;
         }
         if (!member.userId) continue;
-        const employeeNumber = await this.resolveEmployeeNumberForUser(
-          tx,
-          tenantId,
-          member.userId,
-        );
+        const employeeNumber = await this.resolveEmployeeNumberForUser(tx, tenantId, member.userId);
         if (employeeNumber) await addEmployeeNumber(employeeNumber);
       }
     }
@@ -1593,8 +1596,7 @@ export class IndustrialTrainingAssignmentsService {
       if (!assignee) return;
 
       const bestPercent = Math.max(assignee.bestPercent ?? 0, input.percent);
-      const nextStatus =
-        assignee.status === "PASSED" ? "PASSED" : passed ? "PASSED" : status;
+      const nextStatus = assignee.status === "PASSED" ? "PASSED" : passed ? "PASSED" : status;
 
       await tx
         .update(industrialTrainingAssignmentAssignees)
@@ -1602,7 +1604,8 @@ export class IndustrialTrainingAssignmentsService {
           status: nextStatus,
           attemptId: input.attemptId,
           bestPercent,
-          completedAt: nextStatus === "PASSED" ? (assignee.completedAt ?? now) : assignee.completedAt,
+          completedAt:
+            nextStatus === "PASSED" ? (assignee.completedAt ?? now) : assignee.completedAt,
           updatedAt: now,
         })
         .where(eq(industrialTrainingAssignmentAssignees.id, assignee.id));
@@ -1717,7 +1720,10 @@ export class IndustrialTrainingAssignmentsService {
       }
       const completedAt = row.completedAt ? new Date(String(row.completedAt)) : new Date();
       if (Number.isNaN(completedAt.getTime())) {
-        throw new ForgeError("VALIDATION_FAILED", `Result for ${employeeNumber} has an invalid completedAt.`);
+        throw new ForgeError(
+          "VALIDATION_FAILED",
+          `Result for ${employeeNumber} has an invalid completedAt.`,
+        );
       }
       return { employeeNumber, percent, completedAt };
     });
@@ -1772,7 +1778,10 @@ export class IndustrialTrainingAssignmentsService {
       for (const result of normalized) {
         const seed = seedByNumber.get(result.employeeNumber.toLowerCase());
         if (!seed) {
-          throw new ForgeError("VALIDATION_FAILED", `Employee number not found: ${result.employeeNumber}`);
+          throw new ForgeError(
+            "VALIDATION_FAILED",
+            `Employee number not found: ${result.employeeNumber}`,
+          );
         }
 
         let assignee =
@@ -1813,7 +1822,9 @@ export class IndustrialTrainingAssignmentsService {
         const bestPercent = Math.max(assignee.bestPercent ?? 0, result.percent);
         const nextStatus = assignee.status === "PASSED" ? "PASSED" : status;
         const completedAt =
-          nextStatus === "PASSED" ? (assignee.completedAt ?? result.completedAt) : assignee.completedAt;
+          nextStatus === "PASSED"
+            ? (assignee.completedAt ?? result.completedAt)
+            : assignee.completedAt;
 
         await tx
           .update(industrialTrainingAssignmentAssignees)
@@ -1989,11 +2000,7 @@ export class IndustrialTrainingAssignmentsService {
     }
 
     const employeeNumbers = [
-      ...new Set(
-        results
-          .map((row) => String(row.employeeNumber ?? "").trim())
-          .filter(Boolean),
-      ),
+      ...new Set(results.map((row) => String(row.employeeNumber ?? "").trim()).filter(Boolean)),
     ];
     const created = await this.createAssignment(principal, {
       title: `Paper quiz: ${source.title}`,

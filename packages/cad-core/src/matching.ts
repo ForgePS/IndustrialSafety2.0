@@ -86,7 +86,8 @@ export function decideMatchOutcome(input: {
 
   if (candidateIncidentIds.length > 1 && score >= thresholds.possibleDuplicateThreshold) {
     return {
-      outcome: score >= thresholds.automaticMatchThreshold ? "REQUIRES_REVIEW" : "POSSIBLE_DUPLICATE",
+      outcome:
+        score >= thresholds.automaticMatchThreshold ? "REQUIRES_REVIEW" : "POSSIBLE_DUPLICATE",
       score,
       candidateIncidentIds,
       signals: ["multiple_candidates"],
@@ -164,11 +165,7 @@ export function buildCadIdempotencyKey(parts: {
 }
 
 export type CadOutOfOrderAction =
-  | "APPLY"
-  | "APPLY_WITH_WARNING"
-  | "PRESERVE_ONLY"
-  | "REQUIRES_REVIEW"
-  | "REJECT_STALE";
+  "APPLY" | "APPLY_WITH_WARNING" | "PRESERVE_ONLY" | "REQUIRES_REVIEW" | "REJECT_STALE";
 
 export function decideOutOfOrderAction(input: {
   incomingSequence?: number | null;
@@ -177,8 +174,13 @@ export function decideOutOfOrderAction(input: {
   lastAppliedTimestamp?: string | null;
   containsNewInformation: boolean;
 }): CadOutOfOrderAction {
-  const { incomingSequence, lastAppliedSequence, incomingTimestamp, lastAppliedTimestamp, containsNewInformation } =
-    input;
+  const {
+    incomingSequence,
+    lastAppliedSequence,
+    incomingTimestamp,
+    lastAppliedTimestamp,
+    containsNewInformation,
+  } = input;
 
   if (
     incomingSequence != null &&
@@ -206,11 +208,7 @@ export function decideOutOfOrderAction(input: {
 }
 
 export type CadOwnershipDecision =
-  | "APPLY_CAD"
-  | "KEEP_FORGE"
-  | "CREATE_CONFLICT"
-  | "APPEND"
-  | "SKIP";
+  "APPLY_CAD" | "KEEP_FORGE" | "CREATE_CONFLICT" | "APPEND" | "SKIP";
 
 export function decideFieldOwnership(input: {
   ownershipPolicy: string;

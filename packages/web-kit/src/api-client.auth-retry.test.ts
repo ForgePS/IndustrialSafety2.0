@@ -1,10 +1,6 @@
 // @vitest-environment jsdom
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import {
-  ApiError,
-  apiGet,
-  configureApiClient,
-} from "./api-client.js";
+import { ApiError, apiGet, configureApiClient } from "./api-client.js";
 import { clearAuthStorage, setBearerToken } from "./auth-storage.js";
 
 function jwtWithExp(expSecondsFromNow: number): string {

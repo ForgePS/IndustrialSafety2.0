@@ -3,10 +3,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { ApiError, useAuth } from "@forge/web-kit";
-import {
-  formatWalkthroughRuntime,
-  INDUSTRIAL_PLATFORM_WALKTHROUGH_ID,
-} from "@forge/contracts";
+import { formatWalkthroughRuntime, INDUSTRIAL_PLATFORM_WALKTHROUGH_ID } from "@forge/contracts";
 import { canAccessWalkthroughStudio, canManageWalkthroughStudio } from "@/lib/platform-admin";
 import { formatApiErrorMessage } from "@/lib/api-error";
 import {
@@ -110,7 +107,8 @@ export function WalkthroughStudio() {
         .listShares(d.walkthrough.id || primary.id)
         .catch(() => null);
       setShares(shareRes?.items ?? []);
-    }  }, []);
+    }
+  }, []);
 
   useEffect(() => {
     if (authLoading) return;
@@ -264,7 +262,10 @@ export function WalkthroughStudio() {
                     <Link className="btn btn-primary btn-sm" href="/demo/industrial/">
                       Present
                     </Link>
-                    <Link className="btn btn-outline-primary btn-sm" href="/demo/industrial/?preview=1">
+                    <Link
+                      className="btn btn-outline-primary btn-sm"
+                      href="/demo/industrial/?preview=1"
+                    >
                       Preview
                     </Link>
                     <button
@@ -346,9 +347,7 @@ export function WalkthroughStudio() {
                                       void withBusy(async () => {
                                         await walkthroughStudioApi.revokeShare(card.id, share.id);
                                         setShares(
-                                          (
-                                            await walkthroughStudioApi.listShares(card.id)
-                                          ).items,
+                                          (await walkthroughStudioApi.listShares(card.id)).items,
                                         );
                                         setMessage(`Revoked ${share.path}`);
                                       })
@@ -376,7 +375,8 @@ export function WalkthroughStudio() {
                         ) : (
                           validation.issues.map((issue) => (
                             <li key={issue.code + issue.message}>
-                              <span className="text-uppercase">{issue.severity}</span>: {issue.message}
+                              <span className="text-uppercase">{issue.severity}</span>:{" "}
+                              {issue.message}
                             </li>
                           ))
                         )}
@@ -447,7 +447,9 @@ export function WalkthroughStudio() {
                                 ...patch,
                               });
                               if (!updated?.scenes || !Array.isArray(updated.scenes)) {
-                                throw new Error("Save succeeded but the walkthrough response was incomplete.");
+                                throw new Error(
+                                  "Save succeeded but the walkthrough response was incomplete.",
+                                );
                               }
                               const saved = updated.scenes.find((s) => s.id === selectedScene.id);
                               if (
@@ -522,9 +524,7 @@ export function WalkthroughStudio() {
               }
               const saved = updated.scenes.find((s) => s.id === sceneId);
               if (patch.narrationText != null && saved?.narrationText !== patch.narrationText) {
-                throw new Error(
-                  "Narration script did not persist. Refresh and try saving again.",
-                );
+                throw new Error("Narration script did not persist. Refresh and try saving again.");
               }
               setDetail(updated);
               setMessage("Narration and pause updated.");
@@ -542,7 +542,9 @@ export function WalkthroughStudio() {
             void withBusy(async () => {
               const next = await walkthroughStudioApi.enableDemo(true);
               setDemo(next);
-              setMessage("Demo mode enabled. External SMS, email, alerts, and DOT side effects are blocked.");
+              setMessage(
+                "Demo mode enabled. External SMS, email, alerts, and DOT side effects are blocked.",
+              );
             })
           }
           onReset={() =>
@@ -748,9 +750,7 @@ function NarrationPanel({
 
   const pauseSeconds = parsePauseInput(pauseInput);
   const narrationEstimateMs = safeNarrationEstimateMs(text);
-  const nextDurationMs = selectedScene
-    ? durationMsFromPause(narrationEstimateMs, pauseSeconds)
-    : 0;
+  const nextDurationMs = selectedScene ? durationMsFromPause(narrationEstimateMs, pauseSeconds) : 0;
 
   return (
     <div className="row g-3">
@@ -818,8 +818,7 @@ function NarrationPanel({
               <>
                 {!canManage ? (
                   <div className="alert alert-warning py-2 small" role="status">
-                    You can view Available pause, but saving requires walkthrough manage
-                    permission.
+                    You can view Available pause, but saving requires walkthrough manage permission.
                   </div>
                 ) : null}
                 <label className="form-label" htmlFor={`narration-pause-${selectedScene.id}`}>
@@ -1041,9 +1040,7 @@ function ExportsPanel({
                   type="checkbox"
                   id="overrideRuntime"
                   checked={exportForm.overrideRuntime}
-                  onChange={(e) =>
-                    onChange({ ...exportForm, overrideRuntime: e.target.checked })
-                  }
+                  onChange={(e) => onChange({ ...exportForm, overrideRuntime: e.target.checked })}
                 />
                 <label className="form-check-label" htmlFor="overrideRuntime">
                   Override Standard Runtime

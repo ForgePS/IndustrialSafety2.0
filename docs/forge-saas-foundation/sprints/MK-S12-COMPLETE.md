@@ -27,10 +27,10 @@ Tenant Admin is the customer-facing admin surface with the required sections, pe
 
 ## Verification
 
-| Check | Result |
-| --- | --- |
-| tenant-admin typecheck | PASS |
-| Production operations | NONE |
+| Check                  | Result |
+| ---------------------- | ------ |
+| tenant-admin typecheck | PASS   |
+| Production operations  | NONE   |
 
 ## Next sprint
 

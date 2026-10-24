@@ -49,11 +49,7 @@ export function generateStaticParams() {
   return [...slugs].map((module) => ({ module }));
 }
 
-export default async function ModulePage({
-  params,
-}: {
-  params: Promise<{ module: string }>;
-}) {
+export default async function ModulePage({ params }: { params: Promise<{ module: string }> }) {
   const { module } = await params;
   const entry = INDUSTRIAL_MODULE_REGISTRY.find(
     (m) => m.route === `/modules/${module}` || m.code.toLowerCase().replace(/_/g, "-") === module,
@@ -212,5 +208,7 @@ export default async function ModulePage({
     return <OpsModuleWorkspace module={module} moduleName={name} />;
   }
 
-  return <ModuleUnavailable moduleName={name} status={entry?.migrationStatus ?? "LEGACY_FIREBASE"} />;
+  return (
+    <ModuleUnavailable moduleName={name} status={entry?.migrationStatus ?? "LEGACY_FIREBASE"} />
+  );
 }

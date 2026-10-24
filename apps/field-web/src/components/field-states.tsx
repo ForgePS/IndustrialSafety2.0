@@ -30,13 +30,7 @@ export function ErrorState({
   );
 }
 
-export function EmptyState({
-  title,
-  message,
-}: {
-  title: string;
-  message?: string;
-}) {
+export function EmptyState({ title, message }: { title: string; message?: string }) {
   return (
     <div className="ff-state ff-state--empty">
       <h2 className="ff-page-title">{title}</h2>

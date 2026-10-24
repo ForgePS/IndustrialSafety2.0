@@ -42,7 +42,10 @@ export const fieldFormApi = {
       getOfflineCache()?.set("industrial.forms.definitions", id, row);
       return row;
     } catch (err) {
-      const cached = getOfflineCache()?.get<FieldFormDefinition>("industrial.forms.definitions", id);
+      const cached = getOfflineCache()?.get<FieldFormDefinition>(
+        "industrial.forms.definitions",
+        id,
+      );
       if (cached) return cached;
       throw err;
     }

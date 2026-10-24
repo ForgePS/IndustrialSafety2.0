@@ -368,8 +368,7 @@ export function PrintHistoryWorkspace({
                               label: "Reprint",
                               icon: "bx-printer",
                               hidden:
-                                !canReprint ||
-                                !["COMPLETED", "SENT_TO_PRINTER"].includes(status),
+                                !canReprint || !["COMPLETED", "SENT_TO_PRINTER"].includes(status),
                               onClick: () => void onReprint(job),
                             },
                             {

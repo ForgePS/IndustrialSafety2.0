@@ -46,14 +46,8 @@ if (identity.Account !== ACCOUNT) {
 const results = {};
 
 if (!skipApi) {
-  const svc = awsJson([
-    "ecs",
-    "describe-services",
-    "--cluster",
-    CLUSTER,
-    "--services",
-    SERVICE,
-  ]).services?.[0];
+  const svc = awsJson(["ecs", "describe-services", "--cluster", CLUSTER, "--services", SERVICE])
+    .services?.[0];
   if (!svc?.taskDefinition) throw new Error("API service / task definition missing");
 
   const td = awsJson([
@@ -116,12 +110,8 @@ if (!skipApi) {
 }
 
 if (!skipAurora) {
-  const before = awsJson([
-    "rds",
-    "describe-db-clusters",
-    "--db-cluster-identifier",
-    AURORA_CLUSTER,
-  ]).DBClusters?.[0]?.ServerlessV2ScalingConfiguration;
+  const before = awsJson(["rds", "describe-db-clusters", "--db-cluster-identifier", AURORA_CLUSTER])
+    .DBClusters?.[0]?.ServerlessV2ScalingConfiguration;
 
   awsText([
     "rds",

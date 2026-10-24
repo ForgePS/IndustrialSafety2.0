@@ -41,7 +41,11 @@ export async function ensureConfigDefaults(tenantId: string): Promise<void> {
 export async function loadConfigNamespace(
   tenantId: string,
   namespace: string,
-): Promise<{ object: SettingsConfigObject | null; versions: SettingsConfigVersion[]; draft: SettingsConfigVersion | null }> {
+): Promise<{
+  object: SettingsConfigObject | null;
+  versions: SettingsConfigVersion[];
+  draft: SettingsConfigVersion | null;
+}> {
   await ensureConfigDefaults(tenantId);
   const listed = await apiGet<{ items: SettingsConfigObject[] }>(
     `/api/v1/tenants/${tenantId}/config/${namespace}`,
@@ -54,8 +58,7 @@ export async function loadConfigNamespace(
   const history = await apiGet<{ object: SettingsConfigObject; versions: SettingsConfigVersion[] }>(
     `/api/v1/tenants/${tenantId}/config/${namespace}/${target.objectKey}/versions`,
   );
-  const draft =
-    history.versions.find((v) => v.state === "DRAFT") ?? null;
+  const draft = history.versions.find((v) => v.state === "DRAFT") ?? null;
   return { object: history.object, versions: history.versions, draft };
 }
 
@@ -124,14 +127,7 @@ export async function saveNamespaceDraft(
 ): Promise<void> {
   const { object, draft } = await loadConfigNamespace(tenantId, namespace);
   if (draft && object) {
-    await patchConfigDraft(
-      tenantId,
-      namespace,
-      object.objectKey,
-      draft.id,
-      payload,
-      changeSummary,
-    );
+    await patchConfigDraft(tenantId, namespace, object.objectKey, draft.id, payload, changeSummary);
     return;
   }
   await createConfigDraft(tenantId, namespace, payload, displayName, changeSummary);

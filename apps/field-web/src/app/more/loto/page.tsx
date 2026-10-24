@@ -3,18 +3,17 @@
 import { Suspense, useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { ApiError, getApiBaseUrl, useAuth } from "@forge/web-kit";
-import {
-  FieldPrintDialog,
-  type FieldPrintDialogBatchItem,
-} from "@/components/field-print-label";
+import { FieldPrintDialog, type FieldPrintDialogBatchItem } from "@/components/field-print-label";
 import { OrgContextBar } from "@/components/org-context-bar";
 import { useFieldOrgOptional } from "@/components/field-org-provider";
 import { fieldLotoApi } from "@/lib/loto-api";
+import { ensureLotoProcedurePrintQrPayload, lotoProcedurePrintFieldValues } from "@/lib/loto-print";
 import {
-  ensureLotoProcedurePrintQrPayload,
-  lotoProcedurePrintFieldValues,
-} from "@/lib/loto-print";
-import { canAuthorFieldLoto, canExecuteFieldLoto, canViewFieldLoto, fieldAuthOpts } from "@/lib/field-permissions";
+  canAuthorFieldLoto,
+  canExecuteFieldLoto,
+  canViewFieldLoto,
+  fieldAuthOpts,
+} from "@/lib/field-permissions";
 import {
   extractLockoutSnapshot,
   filterAndSortLotoProcedures,
@@ -48,13 +47,13 @@ function LotoListInner() {
   const canPrint = hasAnyPermission(["industrial.printer.print", "industrial.admin"]);
   const canQrView = Boolean(
     me?.permissions?.includes("industrial.qr.view") ||
-      me?.permissions?.includes("industrial.qr.generate") ||
-      me?.permissions?.includes("industrial.admin"),
+    me?.permissions?.includes("industrial.qr.generate") ||
+    me?.permissions?.includes("industrial.admin"),
   );
   const canQrGenerate = Boolean(
     me?.permissions?.includes("industrial.qr.generate") ||
-      me?.permissions?.includes("industrial.admin") ||
-      canAuthor,
+    me?.permissions?.includes("industrial.admin") ||
+    canAuthor,
   );
   const appEnv = process.env.NEXT_PUBLIC_APP_ENV || "development";
   const apiHost = (() => {
@@ -65,9 +64,7 @@ function LotoListInner() {
     }
   })();
   const tenantName =
-    me?.tenants?.find((t) => t.tenantId === me.tenantId)?.displayName ||
-    me?.tenantId ||
-    "";
+    me?.tenants?.find((t) => t.tenantId === me.tenantId)?.displayName || me?.tenantId || "";
 
   const locationId = org?.selection.locationId ?? "";
   const departmentId = org?.selection.departmentId ?? "";
@@ -246,9 +243,7 @@ function LotoListInner() {
   }
 
   function toggleSelectAllVisible() {
-    const ids = visibleProcedures
-      .map((row) => String(row.id ?? ""))
-      .filter(Boolean);
+    const ids = visibleProcedures.map((row) => String(row.id ?? "")).filter(Boolean);
     const allSelected = ids.length > 0 && ids.every((id) => selectedIds.includes(id));
     if (allSelected) {
       const pageSet = new Set(ids);
@@ -347,7 +342,11 @@ function LotoListInner() {
       {canAuthor ? (
         <div className="ff-action-grid ff-section">
           {canExecute ? (
-            <button type="button" className="ff-btn" onClick={() => router.push("/more/loto/new/?start=1")}>
+            <button
+              type="button"
+              className="ff-btn"
+              onClick={() => router.push("/more/loto/new/?start=1")}
+            >
               Start lockout
             </button>
           ) : null}
@@ -453,7 +452,12 @@ function LotoListInner() {
             {openLockouts.map((row) => {
               const id = String(row.id ?? "");
               return (
-                <button key={id} type="button" className="ff-stack-item" onClick={() => openLockout(row)}>
+                <button
+                  key={id}
+                  type="button"
+                  className="ff-stack-item"
+                  onClick={() => openLockout(row)}
+                >
                   <strong>{lockoutEquipmentName(row)}</strong>
                   <span className="ff-meta">
                     {lotoStatusLabel(row.status)}
@@ -484,9 +488,8 @@ function LotoListInner() {
                 </p>
                 {appEnv === "production" && tenantName.toLowerCase().includes("forge platform") ? (
                   <p className="ff-meta" style={{ marginTop: "0.35rem" }}>
-                    You are on Platform home. Switch to{" "}
-                    <strong>Producers Rice Mill</strong> under More → Switch company to see
-                    procedures.
+                    You are on Platform home. Switch to <strong>Producers Rice Mill</strong> under
+                    More → Switch company to see procedures.
                   </p>
                 ) : null}
                 {appEnv !== "production" ? (
@@ -539,9 +542,7 @@ function LotoListInner() {
                     className="ff-btn ff-btn-secondary"
                     onClick={() => toggleSelectAllVisible()}
                   >
-                    {visibleProcedures.every((row) =>
-                      selectedIds.includes(String(row.id ?? "")),
-                    )
+                    {visibleProcedures.every((row) => selectedIds.includes(String(row.id ?? "")))
                       ? "Clear page"
                       : "Select page"}
                   </button>
@@ -667,7 +668,12 @@ function LotoListInner() {
             {closedLockouts.map((row) => {
               const id = String(row.id ?? "");
               return (
-                <button key={id} type="button" className="ff-stack-item" onClick={() => openLockout(row)}>
+                <button
+                  key={id}
+                  type="button"
+                  className="ff-stack-item"
+                  onClick={() => openLockout(row)}
+                >
                   <strong>{lockoutEquipmentName(row)}</strong>
                   <span className="ff-meta">
                     {lotoStatusLabel(row.status)}
@@ -684,7 +690,12 @@ function LotoListInner() {
         <button type="button" className="ff-btn" onClick={() => router.push("/scan/")}>
           SCAN QR CODE
         </button>
-        <button type="button" className="ff-btn ff-btn-secondary" disabled={loading} onClick={() => void load()}>
+        <button
+          type="button"
+          className="ff-btn ff-btn-secondary"
+          disabled={loading}
+          onClick={() => void load()}
+        >
           Refresh
         </button>
       </div>
@@ -722,9 +733,7 @@ function LotoListInner() {
           ? { recordId: batchItems[0].recordId }
           : {})}
         dialogTitle={
-          batchItems && batchItems.length > 1
-            ? `Print ${batchItems.length} labels`
-            : "Print label"
+          batchItems && batchItems.length > 1 ? `Print ${batchItems.length} labels` : "Print label"
         }
         fieldValues={batchItems?.[0]?.fieldValues ?? {}}
         {...(batchItems?.[0]?.title ? { title: batchItems[0].title } : {})}

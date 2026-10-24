@@ -11,7 +11,10 @@ const REGION = "us-east-1";
 const CLUSTER = "forge-production-ecs-platform";
 const API_SERVICE = "forge-production-ecs-platform-api";
 const API_ECR = `${ACCOUNT}.dkr.ecr.${REGION}.amazonaws.com/forge-production-ecr-platformapi`;
-const stamp = new Date().toISOString().replace(/[-:TZ.]/g, "").slice(0, 14);
+const stamp = new Date()
+  .toISOString()
+  .replace(/[-:TZ.]/g, "")
+  .slice(0, 14);
 const tag = `training-portal-gaps-${stamp}`;
 
 function sh(cmd, opts = {}) {
@@ -70,15 +73,12 @@ sh(
 );
 
 console.log("\nSyncing industrial static site…");
-sh(
-  `node scripts/sync-static-site.mjs --app industrial --environment production`,
-  {
-    env: {
-      ...process.env,
-      NEXT_PUBLIC_APP_ENV: "production",
-    },
+sh(`node scripts/sync-static-site.mjs --app industrial --environment production`, {
+  env: {
+    ...process.env,
+    NEXT_PUBLIC_APP_ENV: "production",
   },
-);
+});
 
 console.log(`\nDone. API image tag: ${tag}`);
 console.log(`Task definition: ${apiReg.taskDefinitionArn}`);

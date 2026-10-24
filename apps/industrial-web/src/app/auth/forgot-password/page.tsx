@@ -62,8 +62,8 @@ export default function ForgotPasswordPage() {
               <form className="card-body" onSubmit={(event) => void onSubmit(event)}>
                 <h1 className="h4 mb-2">Forgot password?</h1>
                 <p className="mb-4">
-                  Enter the email on your account. We will email a verification code and a link to set
-                  a new password.
+                  Enter the email on your account. We will email a verification code and a link to
+                  set a new password.
                 </p>
                 {error ? (
                   <div className="alert alert-danger" role="alert">

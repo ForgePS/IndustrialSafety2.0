@@ -50,12 +50,14 @@ export function TrainingQuestionImportPanel({
 
   const body = (
     <>
-      <div className={`d-flex flex-wrap justify-content-between align-items-start gap-2 ${compact ? "mb-2" : "mb-2"}`}>
+      <div
+        className={`d-flex flex-wrap justify-content-between align-items-start gap-2 ${compact ? "mb-2" : "mb-2"}`}
+      >
         <div>
           <h6 className={compact ? "small fw-semibold mb-1" : "mb-1"}>Upload quiz / test</h6>
           <p className="text-muted small mb-0">
-            Import questions from Excel, CSV, JSON, or PDF{sourceTitle ? ` for ${sourceTitle}` : ""}.
-            Assignments only use <strong>Published</strong> questions.
+            Import questions from Excel, CSV, JSON, or PDF{sourceTitle ? ` for ${sourceTitle}` : ""}
+            . Assignments only use <strong>Published</strong> questions.
           </p>
         </div>
         <div className="d-flex flex-wrap gap-2">
@@ -115,8 +117,8 @@ export function TrainingQuestionImportPanel({
       </div>
       <div className="form-text mt-2">
         Excel/CSV columns: <code>Question</code> (or <code>stem</code>), <code>correct</code>,{" "}
-        <code>choice1</code>…<code>choice4</code> (or columns A–D). PDF: numbered questions with A/B/C/D
-        and <code>Answer: B</code> lines.
+        <code>choice1</code>…<code>choice4</code> (or columns A–D). PDF: numbered questions with
+        A/B/C/D and <code>Answer: B</code> lines.
         {uploading ? " Importing…" : ""}
       </div>
       {lastResult ? <div className="text-success small mt-2">{lastResult}</div> : null}

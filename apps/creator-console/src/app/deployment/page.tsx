@@ -19,10 +19,7 @@ export default function DeploymentPage() {
     setLoading(true);
     setError(null);
     try {
-      const [healthResult, readyResult] = await Promise.allSettled([
-        fetchHealth(),
-        fetchReady(),
-      ]);
+      const [healthResult, readyResult] = await Promise.allSettled([fetchHealth(), fetchReady()]);
       if (healthResult.status === "fulfilled") setHealth(healthResult.value);
       if (readyResult.status === "fulfilled") setReady(readyResult.value);
     } catch (err) {

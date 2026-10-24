@@ -104,10 +104,7 @@ function FeaturesInner() {
 
   return (
     <section className={styles.page}>
-      <ForgePageHeader
-        title="Features"
-        subtitle={`Tenant ${tenantId}`}
-      />
+      <ForgePageHeader title="Features" subtitle={`Tenant ${tenantId}`} />
       <p className={styles.lead}>
         <Link href={tenantDetailHref(tenantId)}>Tenant detail</Link>
       </p>
@@ -158,16 +155,12 @@ function FeaturesInner() {
         title="Apply feature override?"
         description={
           <>
-            This calls <code>PUT /api/v1/tenants/{tenantId}/features/{featureKey || "…"}</code> with
-            value <code>{valueText}</code>
-            {reason.trim() ? (
-              <>
-                {" "}
-                and reason &ldquo;{reason.trim()}&rdquo;.
-              </>
-            ) : (
-              "."
-            )}
+            This calls{" "}
+            <code>
+              PUT /api/v1/tenants/{tenantId}/features/{featureKey || "…"}
+            </code>{" "}
+            with value <code>{valueText}</code>
+            {reason.trim() ? <> and reason &ldquo;{reason.trim()}&rdquo;.</> : "."}
           </>
         }
         confirmLabel="Apply override"

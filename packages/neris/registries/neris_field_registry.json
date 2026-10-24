@@ -585,10 +585,7 @@
         },
         {
           "key": "parcel",
-          "field_names": [
-            "location",
-            "location_use"
-          ]
+          "field_names": ["location", "location_use"]
         },
         {
           "key": "structure",
@@ -603,15 +600,11 @@
         },
         {
           "key": "risk_reduction",
-          "field_names": [
-            "fire_doors_operable"
-          ]
+          "field_names": ["fire_doors_operable"]
         },
         {
           "key": "general",
-          "field_names": [
-            "notes"
-          ]
+          "field_names": ["notes"]
         }
       ],
       "fields": [
@@ -681,9 +674,7 @@
           "example": "See type_location_use",
           "comments": null,
           "ordinal": 4,
-          "value_set_candidates": [
-            "type_location_use"
-          ]
+          "value_set_candidates": ["type_location_use"]
         },
         {
           "name": "date",
@@ -949,17 +940,11 @@
         },
         {
           "key": "impact",
-          "field_names": [
-            "target_audience",
-            "persons_attended",
-            "persons_engaged"
-          ]
+          "field_names": ["target_audience", "persons_attended", "persons_engaged"]
         },
         {
           "key": "general",
-          "field_names": [
-            "notes"
-          ]
+          "field_names": ["notes"]
         }
       ],
       "fields": [
@@ -1080,9 +1065,7 @@
           "example": "See type_location_use",
           "comments": null,
           "ordinal": 7,
-          "value_set_candidates": [
-            "type_location_use"
-          ]
+          "value_set_candidates": ["type_location_use"]
         },
         {
           "name": "activity_category",
@@ -1099,9 +1082,7 @@
           "example": "See type_crr_activities",
           "comments": null,
           "ordinal": 8,
-          "value_set_candidates": [
-            "type_crr_activities"
-          ]
+          "value_set_candidates": ["type_crr_activities"]
         },
         {
           "name": "activity_type",
@@ -1118,9 +1099,7 @@
           "example": "See type_crr_activities",
           "comments": null,
           "ordinal": 9,
-          "value_set_candidates": [
-            "type_crr_activities"
-          ]
+          "value_set_candidates": ["type_crr_activities"]
         },
         {
           "name": "activity_campaign",
@@ -1137,9 +1116,7 @@
           "example": "See type_crr_activities",
           "comments": null,
           "ordinal": 10,
-          "value_set_candidates": [
-            "type_crr_activities"
-          ]
+          "value_set_candidates": ["type_crr_activities"]
         },
         {
           "name": "target_audience",
@@ -1156,9 +1133,7 @@
           "example": "K-12",
           "comments": null,
           "ordinal": 11,
-          "value_set_candidates": [
-            "type_target_audience"
-          ]
+          "value_set_candidates": ["type_target_audience"]
         },
         {
           "name": "persons_attended",
@@ -1222,33 +1197,23 @@
       "groups": [
         {
           "key": "dispatch",
-          "field_names": [
-            "NERIS_ID"
-          ]
+          "field_names": ["NERIS_ID"]
         },
         {
           "key": "visit",
-          "field_names": [
-            "home_location_visit"
-          ]
+          "field_names": ["home_location_visit"]
         },
         {
           "key": "event",
-          "field_names": [
-            "community_event"
-          ]
+          "field_names": ["community_event"]
         },
         {
           "key": "parcel",
-          "field_names": [
-            "mod_parcel_data_collection"
-          ]
+          "field_names": ["mod_parcel_data_collection"]
         },
         {
           "key": "hydrant",
-          "field_names": [
-            "hydrant_inspection"
-          ]
+          "field_names": ["hydrant_inspection"]
         }
       ],
       "fields": [
@@ -1360,18 +1325,11 @@
         },
         {
           "key": "risk_reduction",
-          "field_names": [
-            "risk_reduction_alarms",
-            "activity_category"
-          ]
+          "field_names": ["risk_reduction_alarms", "activity_category"]
         },
         {
           "key": "community health",
-          "field_names": [
-            "health_problems",
-            "participation_capability",
-            "alcohol_tobacco_drug_use"
-          ]
+          "field_names": ["health_problems", "participation_capability", "alcohol_tobacco_drug_use"]
         },
         {
           "key": "services",
@@ -1390,9 +1348,7 @@
         },
         {
           "key": "general",
-          "field_names": [
-            "notes"
-          ]
+          "field_names": ["notes"]
         }
       ],
       "fields": [
@@ -1530,9 +1486,7 @@
           "example": "Language barrier",
           "comments": null,
           "ordinal": 8,
-          "value_set_candidates": [
-            "type_reason_not_engaged"
-          ]
+          "value_set_candidates": ["type_reason_not_engaged"]
         },
         {
           "name": "location_use",
@@ -1549,9 +1503,7 @@
           "example": "See type_location_use",
           "comments": null,
           "ordinal": 9,
-          "value_set_candidates": [
-            "type_location_use"
-          ]
+          "value_set_candidates": ["type_location_use"]
         },
         {
           "name": "num_alarms",
@@ -1585,9 +1537,7 @@
           "example": "See type_crr_activities",
           "comments": null,
           "ordinal": 11,
-          "value_set_candidates": [
-            "type_crr_activities"
-          ]
+          "value_set_candidates": ["type_crr_activities"]
         },
         {
           "name": "activity_campaign",
@@ -1604,9 +1554,7 @@
           "example": "See type_crr_activities",
           "comments": null,
           "ordinal": 12,
-          "value_set_candidates": [
-            "type_crr_activities"
-          ]
+          "value_set_candidates": ["type_crr_activities"]
         },
         {
           "name": "risk_reduction_alarms",
@@ -1640,9 +1588,7 @@
           "example": "See type_crr_activities",
           "comments": null,
           "ordinal": 14,
-          "value_set_candidates": [
-            "type_crr_activities"
-          ]
+          "value_set_candidates": ["type_crr_activities"]
         },
         {
           "name": "health_problems",
@@ -1659,9 +1605,7 @@
           "example": "See type_health_problems",
           "comments": null,
           "ordinal": 15,
-          "value_set_candidates": [
-            "type_health_problems"
-          ]
+          "value_set_candidates": ["type_health_problems"]
         },
         {
           "name": "participation_capability",
@@ -1695,9 +1639,7 @@
           "example": false,
           "comments": null,
           "ordinal": 17,
-          "value_set_candidates": [
-            "type_alcohol_tobacco_drugs"
-          ]
+          "value_set_candidates": ["type_alcohol_tobacco_drugs"]
         },
         {
           "name": "referral",
@@ -1731,9 +1673,7 @@
           "example": "See type_referral",
           "comments": null,
           "ordinal": 19,
-          "value_set_candidates": [
-            "type_referral"
-          ]
+          "value_set_candidates": ["type_referral"]
         },
         {
           "name": "num_residents_18_older",
@@ -1869,9 +1809,7 @@
           "example": "See type_services_referred",
           "comments": null,
           "ordinal": 27,
-          "value_set_candidates": [
-            "type_services_referred"
-          ]
+          "value_set_candidates": ["type_services_referred"]
         },
         {
           "name": "notes",
@@ -2053,9 +1991,7 @@
           "example": null,
           "comments": null,
           "ordinal": 8,
-          "value_set_candidates": [
-            "type_hydrant_impediment"
-          ]
+          "value_set_candidates": ["type_hydrant_impediment"]
         },
         {
           "name": "maintenence_referred",
@@ -2123,9 +2059,7 @@
           "example": null,
           "comments": null,
           "ordinal": 12,
-          "value_set_candidates": [
-            "type_nfpa_rating"
-          ]
+          "value_set_candidates": ["type_nfpa_rating"]
         },
         {
           "name": "notes",
@@ -2155,10 +2089,7 @@
       "groups": [
         {
           "key": "general",
-          "field_names": [
-            "inspection_id",
-            "date"
-          ]
+          "field_names": ["inspection_id", "date"]
         },
         {
           "key": "parcel",
@@ -2243,9 +2174,7 @@
           "example": "See type_location_use",
           "comments": null,
           "ordinal": 4,
-          "value_set_candidates": [
-            "type_location_use"
-          ]
+          "value_set_candidates": ["type_location_use"]
         },
         {
           "name": "distance_between_structures",
@@ -2279,9 +2208,7 @@
           "example": "feet",
           "comments": null,
           "ordinal": 6,
-          "value_set_candidates": [
-            "type_distance_unit"
-          ]
+          "value_set_candidates": ["type_distance_unit"]
         },
         {
           "name": "structures_across_parcel",
@@ -2315,9 +2242,7 @@
           "example": "feet",
           "comments": null,
           "ordinal": 8,
-          "value_set_candidates": [
-            "type_distance_unit"
-          ]
+          "value_set_candidates": ["type_distance_unit"]
         },
         {
           "name": "fuel_arrangement",
@@ -2334,9 +2259,7 @@
           "example": "See type_fuel_arrangment",
           "comments": null,
           "ordinal": 9,
-          "value_set_candidates": [
-            "type_fuel_arrangment"
-          ]
+          "value_set_candidates": ["type_fuel_arrangment"]
         },
         {
           "name": "fuel_size",
@@ -2353,9 +2276,7 @@
           "example": "See type_fuel_size",
           "comments": null,
           "ordinal": 10,
-          "value_set_candidates": [
-            "type_fuel_size"
-          ]
+          "value_set_candidates": ["type_fuel_size"]
         },
         {
           "name": "fuel_distribution",
@@ -2372,9 +2293,7 @@
           "example": "See type_fuel_distribution",
           "comments": null,
           "ordinal": 11,
-          "value_set_candidates": [
-            "type_fuel_distribution"
-          ]
+          "value_set_candidates": ["type_fuel_distribution"]
         },
         {
           "name": "foundation_type",
@@ -2391,9 +2310,7 @@
           "example": "Poured concrete slab",
           "comments": null,
           "ordinal": 12,
-          "value_set_candidates": [
-            "type_foundation"
-          ]
+          "value_set_candidates": ["type_foundation"]
         }
       ]
     },
@@ -2436,17 +2353,11 @@
         },
         {
           "key": "assessment",
-          "field_names": [
-            "map_number",
-            "map_parcel_id",
-            "edit_date"
-          ]
+          "field_names": ["map_number", "map_parcel_id", "edit_date"]
         },
         {
           "key": "general",
-          "field_names": [
-            "notes"
-          ]
+          "field_names": ["notes"]
         }
       ],
       "fields": [
@@ -2550,9 +2461,7 @@
           "example": "See type_location_use",
           "comments": null,
           "ordinal": 6,
-          "value_set_candidates": [
-            "type_location_use"
-          ]
+          "value_set_candidates": ["type_location_use"]
         },
         {
           "name": "zoning",
@@ -2569,9 +2478,7 @@
           "example": "see type_zoning",
           "comments": null,
           "ordinal": 7,
-          "value_set_candidates": [
-            "type_zoning"
-          ]
+          "value_set_candidates": ["type_zoning"]
         },
         {
           "name": "flood_plane",
@@ -2622,9 +2529,7 @@
           "example": "square feet, acres",
           "comments": null,
           "ordinal": 10,
-          "value_set_candidates": [
-            "type_lot_units"
-          ]
+          "value_set_candidates": ["type_lot_units"]
         },
         {
           "name": "unit_count",
@@ -2875,11 +2780,7 @@
       "groups": [
         {
           "key": "inspection",
-          "field_names": [
-            "inspection_id",
-            "date",
-            "reinspection_required"
-          ]
+          "field_names": ["inspection_id", "date", "reinspection_required"]
         },
         {
           "key": "parcel",
@@ -2986,9 +2887,7 @@
           "example": "See type_location_use",
           "comments": null,
           "ordinal": 4,
-          "value_set_candidates": [
-            "type_location_use"
-          ]
+          "value_set_candidates": ["type_location_use"]
         },
         {
           "name": "units_in_structure",
@@ -3039,9 +2938,7 @@
           "example": "Abandoned",
           "comments": null,
           "ordinal": 7,
-          "value_set_candidates": [
-            "type_vacancy"
-          ]
+          "value_set_candidates": ["type_vacancy"]
         },
         {
           "name": "year_built",
@@ -3126,9 +3023,7 @@
           "example": "See type_construction",
           "comments": null,
           "ordinal": 12,
-          "value_set_candidates": [
-            "type_construction"
-          ]
+          "value_set_candidates": ["type_construction"]
         },
         {
           "name": "roof_material",
@@ -3145,9 +3040,7 @@
           "example": "See type_roof_material",
           "comments": null,
           "ordinal": 13,
-          "value_set_candidates": [
-            "type_roof_material"
-          ]
+          "value_set_candidates": ["type_roof_material"]
         },
         {
           "name": "solar_panels",
@@ -3215,9 +3108,7 @@
           "example": "See type_eaves",
           "comments": null,
           "ordinal": 17,
-          "value_set_candidates": [
-            "type_eaves"
-          ]
+          "value_set_candidates": ["type_eaves"]
         },
         {
           "name": "vent_screen",
@@ -3234,9 +3125,7 @@
           "example": "See type_vents",
           "comments": null,
           "ordinal": 18,
-          "value_set_candidates": [
-            "type_vents"
-          ]
+          "value_set_candidates": ["type_vents"]
         },
         {
           "name": "exterior_finish",
@@ -3253,10 +3142,7 @@
           "example": "See type_finish",
           "comments": null,
           "ordinal": 19,
-          "value_set_candidates": [
-            "type_exterior_finish",
-            "type_finish"
-          ]
+          "value_set_candidates": ["type_exterior_finish", "type_finish"]
         },
         {
           "name": "window_panes",
@@ -3273,10 +3159,7 @@
           "example": "See type_windows",
           "comments": null,
           "ordinal": 20,
-          "value_set_candidates": [
-            "type_window_panes",
-            "type_windows"
-          ]
+          "value_set_candidates": ["type_window_panes", "type_windows"]
         },
         {
           "name": "hurricane_clips",
@@ -3344,9 +3227,7 @@
           "example": "See type_deck_porch_grade",
           "comments": null,
           "ordinal": 24,
-          "value_set_candidates": [
-            "type_deck_porch_grade"
-          ]
+          "value_set_candidates": ["type_deck_porch_grade"]
         },
         {
           "name": "deck_porch_material",
@@ -3363,9 +3244,7 @@
           "example": "See type_deck_porch_material",
           "comments": null,
           "ordinal": 25,
-          "value_set_candidates": [
-            "type_deck_porch_material"
-          ]
+          "value_set_candidates": ["type_deck_porch_material"]
         },
         {
           "name": "attached_addition",
@@ -3382,9 +3261,7 @@
           "example": "See type_attached",
           "comments": null,
           "ordinal": 26,
-          "value_set_candidates": [
-            "type_attached"
-          ]
+          "value_set_candidates": ["type_attached"]
         },
         {
           "name": "attached_addition_materials",
@@ -3401,9 +3278,7 @@
           "example": "See type_attached_material",
           "comments": null,
           "ordinal": 27,
-          "value_set_candidates": [
-            "type_attached_material"
-          ]
+          "value_set_candidates": ["type_attached_material"]
         },
         {
           "name": "distance_to_nearest_structure",
@@ -3437,9 +3312,7 @@
           "example": "feet",
           "comments": null,
           "ordinal": 29,
-          "value_set_candidates": [
-            "type_distance_unit"
-          ]
+          "value_set_candidates": ["type_distance_unit"]
         },
         {
           "name": "assessed_value",
@@ -3484,10 +3357,7 @@
         },
         {
           "key": "dispatch.comment",
-          "field_names": [
-            "dispatch_comment",
-            "dispatch_comment_timestamp"
-          ]
+          "field_names": ["dispatch_comment", "dispatch_comment_timestamp"]
         },
         {
           "key": "dispatch.time",
@@ -3501,21 +3371,15 @@
         },
         {
           "key": "unit_response.time.computed",
-          "field_names": [
-            "dispatch_time_alarm_processing"
-          ]
+          "field_names": ["dispatch_time_alarm_processing"]
         },
         {
           "key": "unit_response",
-          "field_names": [
-            "dispatch_unit_response"
-          ]
+          "field_names": ["dispatch_unit_response"]
         },
         {
           "key": "tactic_timestamps",
-          "field_names": [
-            "dispatch_tactic_timestamps"
-          ]
+          "field_names": ["dispatch_tactic_timestamps"]
         }
       ],
       "fields": [
@@ -3621,9 +3485,7 @@
           "NERIS Validation Range": null,
           "NIEM Definition": null,
           "ordinal": 4,
-          "value_set_candidates": [
-            "type_psap_id"
-          ]
+          "value_set_candidates": ["type_psap_id"]
         },
         {
           "name": "dispatch_location",
@@ -4085,38 +3947,23 @@
         },
         {
           "key": "children",
-          "field_names": [
-            "fd_child_name"
-          ]
+          "field_names": ["fd_child_name"]
         },
         {
           "key": "aid",
-          "field_names": [
-            "fd_aid_name"
-          ]
+          "field_names": ["fd_aid_name"]
         },
         {
           "key": "population",
-          "field_names": [
-            "fd_population_protected",
-            "fd_population_protected_source"
-          ]
+          "field_names": ["fd_population_protected", "fd_population_protected_source"]
         },
         {
           "key": "services",
-          "field_names": [
-            "fd_fire_services",
-            "fd_ems_services",
-            "fd_investigation_services"
-          ]
+          "field_names": ["fd_fire_services", "fd_ems_services", "fd_investigation_services"]
         },
         {
           "key": "shift",
-          "field_names": [
-            "fd_shift_count",
-            "fd_shift_duration",
-            "fd_shift_signup"
-          ]
+          "field_names": ["fd_shift_count", "fd_shift_duration", "fd_shift_signup"]
         },
         {
           "key": "dispatch.response",
@@ -4175,11 +4022,7 @@
         },
         {
           "key": "dept.attributes",
-          "field_names": [
-            "assess_iso_rating",
-            "assess_cpse_acredit",
-            "assess_caas_acredit"
-          ]
+          "field_names": ["assess_iso_rating", "assess_cpse_acredit", "assess_caas_acredit"]
         }
       ],
       "fields": [
@@ -4321,9 +4164,7 @@
           "comments": null,
           "orm_map_landing": null,
           "ordinal": 7,
-          "value_set_candidates": [
-            "type_rel_dept_dept"
-          ]
+          "value_set_candidates": ["type_rel_dept_dept"]
         },
         {
           "name": "fd_address_1",
@@ -4603,9 +4444,7 @@
           "comments": null,
           "orm_map_landing": null,
           "ordinal": 21,
-          "value_set_candidates": [
-            "type_dept"
-          ]
+          "value_set_candidates": ["type_dept"]
         },
         {
           "name": "fd_organization",
@@ -4625,9 +4464,7 @@
           "comments": null,
           "orm_map_landing": null,
           "ordinal": 22,
-          "value_set_candidates": [
-            "type_org"
-          ]
+          "value_set_candidates": ["type_org"]
         },
         {
           "name": "fd_jurisiction_set",
@@ -4667,9 +4504,7 @@
           "comments": "Common values would be city, county, township, etc.",
           "orm_map_landing": null,
           "ordinal": 24,
-          "value_set_candidates": [
-            "type_region"
-          ]
+          "value_set_candidates": ["type_region"]
         },
         {
           "name": "fd_primary_division_set",
@@ -4709,9 +4544,7 @@
           "comments": "Common values would be battalion, division, district, etc. For smaller agencies with no or a single battalion/district this may be null.",
           "orm_map_landing": null,
           "ordinal": 26,
-          "value_set_candidates": [
-            "type_region"
-          ]
+          "value_set_candidates": ["type_region"]
         },
         {
           "name": "fd_coverage_set",
@@ -4751,9 +4584,7 @@
           "comments": "Common values would include first due. For smaller agencies with no or a single battalion/district this may be null.",
           "orm_map_landing": null,
           "ordinal": 28,
-          "value_set_candidates": [
-            "type_region"
-          ]
+          "value_set_candidates": ["type_region"]
         },
         {
           "name": "fd_population_protected",
@@ -4793,9 +4624,7 @@
           "comments": null,
           "orm_map_landing": null,
           "ordinal": 30,
-          "value_set_candidates": [
-            "type_pop_source"
-          ]
+          "value_set_candidates": ["type_pop_source"]
         },
         {
           "name": "fd_station_count",
@@ -4835,9 +4664,7 @@
           "comments": "See fd_services sheet. Mandatory-ness not enforced by db.",
           "orm_map_landing": null,
           "ordinal": 32,
-          "value_set_candidates": [
-            "type_serv_fd"
-          ]
+          "value_set_candidates": ["type_serv_fd"]
         },
         {
           "name": "fd_ems_services",
@@ -4857,9 +4684,7 @@
           "comments": "See ems_services sheet. Mandatory-ness not enforced by db.",
           "orm_map_landing": null,
           "ordinal": 33,
-          "value_set_candidates": [
-            "type_serv_ems"
-          ]
+          "value_set_candidates": ["type_serv_ems"]
         },
         {
           "name": "fd_investigation_services",
@@ -4879,9 +4704,7 @@
           "comments": "See investigate_services sheet. Mandatory-ness not enforced by db.",
           "orm_map_landing": null,
           "ordinal": 34,
-          "value_set_candidates": [
-            "type_serv_invest"
-          ]
+          "value_set_candidates": ["type_serv_invest"]
         },
         {
           "name": "fd_continue_education",
@@ -5001,9 +4824,7 @@
           "comments": "A primary PSAP is an emergency communication center responsible for answering the initial 9-1-1 call.  A secondary PSAP receives emergency calls transferred from a primary PSAP due to jurisdictional call sequencing (PSAP X receives neutral 911 calls and transfers to Secondary PSAP Y or Z) or discipline specific dispatching (PSAP X receives all 911 calls for a jurisdiction but a secondary PSAP Y handles fire and EMS calls).",
           "orm_map_landing": null,
           "ordinal": 40,
-          "value_set_candidates": [
-            "type_psap"
-          ]
+          "value_set_candidates": ["type_psap"]
         },
         {
           "name": "dispatch_psap_jurisdiction",
@@ -5023,9 +4844,7 @@
           "comments": "A single-jurisdiction is a facility where only one political entity (city/county) utilizes the 9-1-1, PSAP and dispatching services.  A multi-jurisdictional facility is where one or more public safety political jurisdictions choose to operate as a single 9-1-1 entity (e.g., City A, B, C)",
           "orm_map_landing": null,
           "ordinal": 41,
-          "value_set_candidates": [
-            "type_psap_juris"
-          ]
+          "value_set_candidates": ["type_psap_juris"]
         },
         {
           "name": "dispatch_psap_discipline",
@@ -5045,9 +4864,7 @@
           "comments": "A single discipline facility operates one disciplines of dispatch (e.g., fire or EMS or police).  A multiple discipline facility operates multi-disciplines of dispatch (e.g., fire-EMS-police).",
           "orm_map_landing": null,
           "ordinal": 42,
-          "value_set_candidates": [
-            "type_psap_disc"
-          ]
+          "value_set_candidates": ["type_psap_disc"]
         },
         {
           "name": "dispatch_psap_capability",
@@ -5067,9 +4884,7 @@
           "comments": "A legacy PSAP cannot process calls received via i3-defined call interfaces (IP-based calls) and still requires the use of CAMA or ISDN trunk technology for delivery of 9-1-1 emergency calls. A NG9-1-1 PSAP can process calls and access data services as defined in NENA's i3 specification, NENA-STA-010.",
           "orm_map_landing": null,
           "ordinal": 43,
-          "value_set_candidates": [
-            "type_psap_capa"
-          ]
+          "value_set_candidates": ["type_psap_capa"]
         },
         {
           "name": "dispatch_cad_software",
@@ -5109,9 +4924,7 @@
           "comments": null,
           "orm_map_landing": null,
           "ordinal": 45,
-          "value_set_candidates": [
-            "type_disp_proto_fire"
-          ]
+          "value_set_candidates": ["type_disp_proto_fire"]
         },
         {
           "name": "dispatch_protocol_medical",
@@ -5131,9 +4944,7 @@
           "comments": null,
           "orm_map_landing": null,
           "ordinal": 46,
-          "value_set_candidates": [
-            "type_disp_proto_med"
-          ]
+          "value_set_candidates": ["type_disp_proto_med"]
         },
         {
           "name": "dispatch_avl_usage",
@@ -5433,9 +5244,7 @@
           "comments": null,
           "orm_map_landing": null,
           "ordinal": 61,
-          "value_set_candidates": [
-            "type_unit"
-          ]
+          "value_set_candidates": ["type_unit"]
         },
         {
           "name": "station_unit_staffing",
@@ -5748,21 +5557,15 @@
       "groups": [
         {
           "key": "dispatch",
-          "field_names": [
-            "NERIS_ID"
-          ]
+          "field_names": ["NERIS_ID"]
         },
         {
           "key": "incident",
-          "field_names": [
-            "incident_response"
-          ]
+          "field_names": ["incident_response"]
         },
         {
           "key": "injury",
-          "field_names": [
-            "personnel_injury"
-          ]
+          "field_names": ["personnel_injury"]
         }
       ],
       "fields": [
@@ -5825,26 +5628,15 @@
       "groups": [
         {
           "key": "incident",
-          "field_names": [
-            "neris_incident_id",
-            "incident_type",
-            "actions_taken",
-            "traumatic_event"
-          ]
+          "field_names": ["neris_incident_id", "incident_type", "actions_taken", "traumatic_event"]
         },
         {
           "key": "response",
-          "field_names": [
-            "unit",
-            "on_scene_duration",
-            "asleep_at_alarm"
-          ]
+          "field_names": ["unit", "on_scene_duration", "asleep_at_alarm"]
         },
         {
           "key": "exposure",
-          "field_names": [
-            "exposure_type"
-          ]
+          "field_names": ["exposure_type"]
         }
       ],
       "fields": [
@@ -5894,10 +5686,7 @@
           "example": "See type_actions_tactics",
           "comments": null,
           "ordinal": 3,
-          "value_set_candidates": [
-            "type_action_tactic",
-            "type_actions_tactics"
-          ]
+          "value_set_candidates": ["type_action_tactic", "type_actions_tactics"]
         },
         {
           "name": "traumatic_event",
@@ -5913,9 +5702,7 @@
           "example": "See type_traumatic_event",
           "comments": null,
           "ordinal": 4,
-          "value_set_candidates": [
-            "type_traumatic_event"
-          ]
+          "value_set_candidates": ["type_traumatic_event"]
         },
         {
           "name": "unit",
@@ -5979,9 +5766,7 @@
           "example": "Smoke",
           "comments": null,
           "ordinal": 8,
-          "value_set_candidates": [
-            "type_exposure"
-          ]
+          "value_set_candidates": ["type_exposure"]
         }
       ]
     },
@@ -6008,17 +5793,11 @@
         },
         {
           "key": "incident",
-          "field_names": [
-            "neris_id_last_incident",
-            "hours_slept"
-          ]
+          "field_names": ["neris_id_last_incident", "hours_slept"]
         },
         {
           "key": "shift",
-          "field_names": [
-            "shift_schedule",
-            "shift_start_datetime"
-          ]
+          "field_names": ["shift_schedule", "shift_start_datetime"]
         }
       ],
       "fields": [
@@ -6052,9 +5831,7 @@
           "example": "See type_assignment",
           "comments": null,
           "ordinal": 2,
-          "value_set_candidates": [
-            "type_assignment"
-          ]
+          "value_set_candidates": ["type_assignment"]
         },
         {
           "name": "severity",
@@ -6070,9 +5847,7 @@
           "example": "See type_severity",
           "comments": null,
           "ordinal": 3,
-          "value_set_candidates": [
-            "type_severity"
-          ]
+          "value_set_candidates": ["type_severity"]
         },
         {
           "name": "disposition",
@@ -6088,9 +5863,7 @@
           "example": "See type_disposition",
           "comments": null,
           "ordinal": 4,
-          "value_set_candidates": [
-            "type_disposition"
-          ]
+          "value_set_candidates": ["type_disposition"]
         },
         {
           "name": "location",
@@ -6122,9 +5895,7 @@
           "example": "See type_activity",
           "comments": null,
           "ordinal": 6,
-          "value_set_candidates": [
-            "type_activity"
-          ]
+          "value_set_candidates": ["type_activity"]
         },
         {
           "name": "injury_type",
@@ -6140,9 +5911,7 @@
           "example": "See type_injury",
           "comments": null,
           "ordinal": 7,
-          "value_set_candidates": [
-            "type_injury"
-          ]
+          "value_set_candidates": ["type_injury"]
         },
         {
           "name": "body_part_injured",
@@ -6158,9 +5927,7 @@
           "example": "See type_body_part_injured",
           "comments": null,
           "ordinal": 8,
-          "value_set_candidates": [
-            "type_body_part_injured"
-          ]
+          "value_set_candidates": ["type_body_part_injured"]
         },
         {
           "name": "injury_cause",
@@ -6176,9 +5943,7 @@
           "example": "See type_injury_cause",
           "comments": null,
           "ordinal": 9,
-          "value_set_candidates": [
-            "type_injury_cause"
-          ]
+          "value_set_candidates": ["type_injury_cause"]
         },
         {
           "name": "neris_id_last_incident",
@@ -6226,9 +5991,7 @@
           "example": "See type_shift_schedule",
           "comments": null,
           "ordinal": 12,
-          "value_set_candidates": [
-            "type_shift_schedule"
-          ]
+          "value_set_candidates": ["type_shift_schedule"]
         },
         {
           "name": "shift_start_datetime",
@@ -6257,20 +6020,11 @@
       "groups": [
         {
           "key": "personal",
-          "field_names": [
-            "first_name",
-            "last_name",
-            "last_4_ssn",
-            "nfr_number",
-            "dob",
-            "race"
-          ]
+          "field_names": ["first_name", "last_name", "last_4_ssn", "nfr_number", "dob", "race"]
         },
         {
           "key": "lifestyle",
-          "field_names": [
-            "gender"
-          ]
+          "field_names": ["gender"]
         },
         {
           "key": "service",
@@ -6380,9 +6134,7 @@
           "example": "White",
           "comments": null,
           "ordinal": 6,
-          "value_set_candidates": [
-            "type_race"
-          ]
+          "value_set_candidates": ["type_race"]
         },
         {
           "name": "gender",
@@ -6398,9 +6150,7 @@
           "example": "Male",
           "comments": null,
           "ordinal": 7,
-          "value_set_candidates": [
-            "type_gender"
-          ]
+          "value_set_candidates": ["type_gender"]
         },
         {
           "name": "neris_entity_id",
@@ -6496,9 +6246,7 @@
           "example": "See type_shift",
           "comments": null,
           "ordinal": 13,
-          "value_set_candidates": [
-            "type_shift"
-          ]
+          "value_set_candidates": ["type_shift"]
         },
         {
           "name": "service_type",
@@ -6514,9 +6262,7 @@
           "example": "Volunteer",
           "comments": null,
           "ordinal": 14,
-          "value_set_candidates": [
-            "type_service_type"
-          ]
+          "value_set_candidates": ["type_service_type"]
         }
       ]
     },
@@ -6529,10 +6275,7 @@
       "groups": [
         {
           "key": "incident",
-          "field_names": [
-            "incident_neris_id",
-            "incident_internal_id"
-          ]
+          "field_names": ["incident_neris_id", "incident_internal_id"]
         },
         {
           "key": "type_identifiers",
@@ -6544,33 +6287,23 @@
         },
         {
           "key": "fire",
-          "field_names": [
-            "fire"
-          ]
+          "field_names": ["fire"]
         },
         {
           "key": "medical",
-          "field_names": [
-            "medical"
-          ]
+          "field_names": ["medical"]
         },
         {
           "key": "hazsit",
-          "field_names": [
-            "hazsit"
-          ]
+          "field_names": ["hazsit"]
         },
         {
           "key": "emerging_hazard",
-          "field_names": [
-            "emerging_hazard"
-          ]
+          "field_names": ["emerging_hazard"]
         },
         {
           "key": "tactic_timestamps",
-          "field_names": [
-            "tactic_timestamps"
-          ]
+          "field_names": ["tactic_timestamps"]
         },
         {
           "key": "location",
@@ -6584,43 +6317,27 @@
         },
         {
           "key": "displacement",
-          "field_names": [
-            "incident_displaced_number",
-            "incident_displaced_cause"
-          ]
+          "field_names": ["incident_displaced_number", "incident_displaced_cause"]
         },
         {
           "key": "exposure",
-          "field_names": [
-            "exposure"
-          ]
+          "field_names": ["exposure"]
         },
         {
           "key": "rescues",
-          "field_names": [
-            "rescue_ff",
-            "rescue_nonff",
-            "incident_rescue_animal"
-          ]
+          "field_names": ["rescue_ff", "rescue_nonff", "incident_rescue_animal"]
         },
         {
           "key": "actions_taken",
-          "field_names": [
-            "incident_actions_taken",
-            "incident_noaction"
-          ]
+          "field_names": ["incident_actions_taken", "incident_noaction"]
         },
         {
           "key": "unit_response",
-          "field_names": [
-            "unit_response"
-          ]
+          "field_names": ["unit_response"]
         },
         {
           "key": "risk_reduction",
-          "field_names": [
-            "risk_reduction"
-          ]
+          "field_names": ["risk_reduction"]
         },
         {
           "key": "aid",
@@ -6633,17 +6350,11 @@
         },
         {
           "key": "narrative",
-          "field_names": [
-            "incident_narrative_impedance",
-            "incident_narrative_outcome"
-          ]
+          "field_names": ["incident_narrative_impedance", "incident_narrative_outcome"]
         },
         {
           "key": "augmentation",
-          "field_names": [
-            "parcel",
-            "weather"
-          ]
+          "field_names": ["parcel", "weather"]
         }
       ],
       "fields": [
@@ -6717,9 +6428,7 @@
           "comments": null,
           "neris_core_aid": true,
           "ordinal": 3,
-          "value_set_candidates": [
-            "type_incident"
-          ]
+          "value_set_candidates": ["type_incident"]
         },
         {
           "name": "incident_final_type_primary",
@@ -6767,9 +6476,7 @@
           "comments": null,
           "neris_core_aid": true,
           "ordinal": 5,
-          "value_set_candidates": [
-            "type_special_modifier"
-          ]
+          "value_set_candidates": ["type_special_modifier"]
         },
         {
           "name": "fire",
@@ -7057,9 +6764,7 @@
           "comments": null,
           "neris_core_aid": true,
           "ordinal": 17,
-          "value_set_candidates": [
-            "type_displace_cause"
-          ]
+          "value_set_candidates": ["type_displace_cause"]
         },
         {
           "name": "exposure",
@@ -7179,10 +6884,7 @@
           "comments": null,
           "neris_core_aid": true,
           "ordinal": 22,
-          "value_set_candidates": [
-            "type_actions_tactics",
-            "type_action_tactic"
-          ]
+          "value_set_candidates": ["type_actions_tactics", "type_action_tactic"]
         },
         {
           "name": "incident_noaction",
@@ -7206,9 +6908,7 @@
           "comments": null,
           "neris_core_aid": true,
           "ordinal": 23,
-          "value_set_candidates": [
-            "type_noaction"
-          ]
+          "value_set_candidates": ["type_noaction"]
         },
         {
           "name": "unit_response",
@@ -7280,9 +6980,7 @@
           "comments": null,
           "neris_core_aid": true,
           "ordinal": 26,
-          "value_set_candidates": [
-            "type_aid_direction"
-          ]
+          "value_set_candidates": ["type_aid_direction"]
         },
         {
           "name": "incident_aid_type",
@@ -7306,9 +7004,7 @@
           "comments": null,
           "neris_core_aid": true,
           "ordinal": 27,
-          "value_set_candidates": [
-            "type_aid"
-          ]
+          "value_set_candidates": ["type_aid"]
         },
         {
           "name": "incident_aid_department_name",
@@ -7356,9 +7052,7 @@
           "comments": null,
           "neris_core_aid": true,
           "ordinal": 29,
-          "value_set_candidates": [
-            "type_aid_nonfd"
-          ]
+          "value_set_candidates": ["type_aid_nonfd"]
         },
         {
           "name": "incident_narrative_impedance",
@@ -7479,24 +7173,15 @@
         },
         {
           "key": "powergeneration",
-          "field_names": [
-            "powergen_hardware_type"
-          ]
+          "field_names": ["powergen_hardware_type"]
         },
         {
           "key": "powergeneration.pv",
-          "field_names": [
-            "powergen_pv_ignition",
-            "powergen_pv_type"
-          ]
+          "field_names": ["powergen_pv_ignition", "powergen_pv_type"]
         },
         {
           "key": "csst",
-          "field_names": [
-            "csst_ignition_source",
-            "csst_lightning",
-            "csst_grounded"
-          ]
+          "field_names": ["csst_ignition_source", "csst_lightning", "csst_grounded"]
         }
       ],
       "fields": [
@@ -7520,9 +7205,7 @@
           "example": "See type_emerghaz_elec table",
           "comments": null,
           "ordinal": 1,
-          "value_set_candidates": [
-            "type_emerghaz_elec"
-          ]
+          "value_set_candidates": ["type_emerghaz_elec"]
         },
         {
           "name": "elec_type",
@@ -7544,9 +7227,7 @@
           "example": "See type_emerghaz_elec table",
           "comments": "Based on category selection",
           "ordinal": 2,
-          "value_set_candidates": [
-            "type_emerghaz_elec"
-          ]
+          "value_set_candidates": ["type_emerghaz_elec"]
         },
         {
           "name": "elec_subtype",
@@ -7568,10 +7249,7 @@
           "example": "See type_emerghaz_ev_power table",
           "comments": "Only for vehicles",
           "ordinal": 3,
-          "value_set_candidates": [
-            "type_emerghaz_elec",
-            "type_emerghaz_ev_power"
-          ]
+          "value_set_candidates": ["type_emerghaz_elec", "type_emerghaz_ev_power"]
         },
         {
           "name": "elec_target",
@@ -7593,9 +7271,7 @@
           "example": "See type_source_target table",
           "comments": null,
           "ordinal": 4,
-          "value_set_candidates": [
-            "type_source_target"
-          ]
+          "value_set_candidates": ["type_source_target"]
         },
         {
           "name": "elec_suppress",
@@ -7617,9 +7293,7 @@
           "example": "See type_emerghaz_suppression",
           "comments": null,
           "ordinal": 5,
-          "value_set_candidates": [
-            "type_emerghaz_suppression"
-          ]
+          "value_set_candidates": ["type_emerghaz_suppression"]
         },
         {
           "name": "elec_reignition",
@@ -7685,9 +7359,7 @@
           "example": "See type_emerghaz_powergen table",
           "comments": null,
           "ordinal": 8,
-          "value_set_candidates": [
-            "type_emerghaz_powergen"
-          ]
+          "value_set_candidates": ["type_emerghaz_powergen"]
         },
         {
           "name": "powergen_pv_ignition",
@@ -7709,9 +7381,7 @@
           "example": "See type_emerghaz_pv_ign table",
           "comments": null,
           "ordinal": 9,
-          "value_set_candidates": [
-            "type_emerghaz_pv_ign"
-          ]
+          "value_set_candidates": ["type_emerghaz_pv_ign"]
         },
         {
           "name": "powergen_pv_type",
@@ -7733,9 +7403,7 @@
           "example": "See type_emerghaz_pv table",
           "comments": null,
           "ordinal": 10,
-          "value_set_candidates": [
-            "type_emerghaz_pv"
-          ]
+          "value_set_candidates": ["type_emerghaz_pv"]
         },
         {
           "name": "csst_ignition_source",
@@ -7779,9 +7447,7 @@
           "example": "See type_yes_no_unknown table",
           "comments": null,
           "ordinal": 12,
-          "value_set_candidates": [
-            "type_yes_no_unknown"
-          ]
+          "value_set_candidates": ["type_yes_no_unknown"]
         },
         {
           "name": "csst_grounded",
@@ -7803,9 +7469,7 @@
           "example": "See type_yes_no_unknown table",
           "comments": null,
           "ordinal": 13,
-          "value_set_candidates": [
-            "type_yes_no_unknown"
-          ]
+          "value_set_candidates": ["type_yes_no_unknown"]
         }
       ]
     },
@@ -7818,12 +7482,7 @@
       "groups": [
         {
           "key": "exposure",
-          "field_names": [
-            "exposure_type",
-            "exposure_item",
-            "exposure_point",
-            "exposure_damage"
-          ]
+          "field_names": ["exposure_type", "exposure_item", "exposure_point", "exposure_damage"]
         },
         {
           "key": "location",
@@ -7836,21 +7495,15 @@
         },
         {
           "key": "location.augmentation",
-          "field_names": [
-            "exposure_parcel"
-          ]
+          "field_names": ["exposure_parcel"]
         },
         {
           "key": "displacement.aggregated",
-          "field_names": [
-            "exposure_displaced_number"
-          ]
+          "field_names": ["exposure_displaced_number"]
         },
         {
           "key": "displacement",
-          "field_names": [
-            "exposure_displaced_cause"
-          ]
+          "field_names": ["exposure_displaced_cause"]
         }
       ],
       "fields": [
@@ -7874,9 +7527,7 @@
           "example": null,
           "comments": "See type_exposure_loc",
           "ordinal": 1,
-          "value_set_candidates": [
-            "type_exposure_loc"
-          ]
+          "value_set_candidates": ["type_exposure_loc"]
         },
         {
           "name": "exposure_item",
@@ -7898,9 +7549,7 @@
           "example": null,
           "comments": "See type_exposure_item",
           "ordinal": 2,
-          "value_set_candidates": [
-            "type_exposure_item"
-          ]
+          "value_set_candidates": ["type_exposure_item"]
         },
         {
           "name": "exposure_point",
@@ -8054,9 +7703,7 @@
           "example": "See type_exposure_damage table",
           "comments": null,
           "ordinal": 9,
-          "value_set_candidates": [
-            "type_exposure_damage"
-          ]
+          "value_set_candidates": ["type_exposure_damage"]
         },
         {
           "name": "exposure_displaced_number",
@@ -8100,9 +7747,7 @@
           "example": "See type_displace_cause table",
           "comments": null,
           "ordinal": 11,
-          "value_set_candidates": [
-            "type_displace_cause"
-          ]
+          "value_set_candidates": ["type_displace_cause"]
         }
       ]
     },
@@ -8135,10 +7780,7 @@
         },
         {
           "key": "outdoor",
-          "field_names": [
-            "outside_fire_cause",
-            "outside_fire_acres_burned"
-          ]
+          "field_names": ["outside_fire_cause", "outside_fire_acres_burned"]
         }
       ],
       "fields": [
@@ -8162,9 +7804,7 @@
           "example": "See type_suppress_appliance table",
           "comments": null,
           "ordinal": 1,
-          "value_set_candidates": [
-            "type_suppress_appliance"
-          ]
+          "value_set_candidates": ["type_suppress_appliance"]
         },
         {
           "name": "fire_water_supply",
@@ -8186,9 +7826,7 @@
           "example": "See type_water_supply table",
           "comments": null,
           "ordinal": 2,
-          "value_set_candidates": [
-            "type_water_supply"
-          ]
+          "value_set_candidates": ["type_water_supply"]
         },
         {
           "name": "fire_investigation_need",
@@ -8210,9 +7848,7 @@
           "example": "See type_fire_invest_need table",
           "comments": null,
           "ordinal": 3,
-          "value_set_candidates": [
-            "type_fire_invest_need"
-          ]
+          "value_set_candidates": ["type_fire_invest_need"]
         },
         {
           "name": "fire_investigation_type",
@@ -8234,9 +7870,7 @@
           "example": "See type_fire_invest table",
           "comments": "Allow for multiple selections then require incident analysis/investigation model to be completed for formal information about the fire.",
           "ordinal": 4,
-          "value_set_candidates": [
-            "type_fire_invest"
-          ]
+          "value_set_candidates": ["type_fire_invest"]
         },
         {
           "name": "structure_arrival_conditions",
@@ -8258,9 +7892,7 @@
           "example": "See type_fire_condition_arrival table",
           "comments": null,
           "ordinal": 5,
-          "value_set_candidates": [
-            "type_fire_condition_arrival"
-          ]
+          "value_set_candidates": ["type_fire_condition_arrival"]
         },
         {
           "name": "structure_progression_conditions",
@@ -8304,9 +7936,7 @@
           "example": "See type_fire_bldg_damage table",
           "comments": null,
           "ordinal": 7,
-          "value_set_candidates": [
-            "type_fire_bldg_damage"
-          ]
+          "value_set_candidates": ["type_fire_bldg_damage"]
         },
         {
           "name": "structure_floor_of_origin",
@@ -8350,9 +7980,7 @@
           "example": "See type_room table",
           "comments": null,
           "ordinal": 9,
-          "value_set_candidates": [
-            "type_room"
-          ]
+          "value_set_candidates": ["type_room"]
         },
         {
           "name": "structure_fire_cause",
@@ -8374,9 +8002,7 @@
           "example": "See type_fire_cause_in table",
           "comments": null,
           "ordinal": 10,
-          "value_set_candidates": [
-            "type_fire_cause_in"
-          ]
+          "value_set_candidates": ["type_fire_cause_in"]
         },
         {
           "name": "outside_fire_cause",
@@ -8398,9 +8024,7 @@
           "example": "See type_fire_cause_out table",
           "comments": null,
           "ordinal": 11,
-          "value_set_candidates": [
-            "type_fire_cause_out"
-          ]
+          "value_set_candidates": ["type_fire_cause_out"]
         },
         {
           "name": "outside_fire_acres_burned",
@@ -8435,18 +8059,11 @@
       "groups": [
         {
           "key": "hazsit",
-          "field_names": [
-            "hazsit_disposition",
-            "hazsit_evacuated"
-          ]
+          "field_names": ["hazsit_disposition", "hazsit_evacuated"]
         },
         {
           "key": "chemical",
-          "field_names": [
-            "chemical_dot_class",
-            "chemical_name",
-            "chemical_release_occurred"
-          ]
+          "field_names": ["chemical_dot_class", "chemical_name", "chemical_release_occurred"]
         },
         {
           "key": "chemical.release",
@@ -8481,9 +8098,7 @@
           "comments": null,
           "api_class": null,
           "ordinal": 1,
-          "value_set_candidates": [
-            "type_hazard_disposition"
-          ]
+          "value_set_candidates": ["type_hazard_disposition"]
         },
         {
           "name": "hazsit_evacuated",
@@ -8529,9 +8144,7 @@
           "comments": "If any related to batteries, complete emerging_hazard_submodule",
           "api_class": null,
           "ordinal": 3,
-          "value_set_candidates": [
-            "type_hazard_dot"
-          ]
+          "value_set_candidates": ["type_hazard_dot"]
         },
         {
           "name": "chemical_name",
@@ -8623,9 +8236,7 @@
           "comments": null,
           "api_class": null,
           "ordinal": 7,
-          "value_set_candidates": [
-            "type_hazard_unit"
-          ]
+          "value_set_candidates": ["type_hazard_unit"]
         },
         {
           "name": "chemical_physical_state",
@@ -8648,9 +8259,7 @@
           "comments": null,
           "api_class": null,
           "ordinal": 8,
-          "value_set_candidates": [
-            "type_hazard_physical_state"
-          ]
+          "value_set_candidates": ["type_hazard_physical_state"]
         },
         {
           "name": "chemical_release_into",
@@ -8673,9 +8282,7 @@
           "comments": null,
           "api_class": null,
           "ordinal": 9,
-          "value_set_candidates": [
-            "type_hazard_released_into"
-          ]
+          "value_set_candidates": ["type_hazard_released_into"]
         },
         {
           "name": "chemical_release_cause",
@@ -8698,9 +8305,7 @@
           "comments": null,
           "api_class": null,
           "ordinal": 10,
-          "value_set_candidates": [
-            "type_hazard_cause"
-          ]
+          "value_set_candidates": ["type_hazard_cause"]
         }
       ]
     },
@@ -8764,9 +8369,7 @@
           "example": "See type_medical_patient_care table",
           "comments": "Patient Evaluated and Care Provided, Patient Evaluated and Refused Care, Patient Evaluated, No Care Required, Patient Refused Evaluation/Care, Patient Support Services Provided",
           "ordinal": 2,
-          "value_set_candidates": [
-            "type_medical_patient_care"
-          ]
+          "value_set_candidates": ["type_medical_patient_care"]
         },
         {
           "name": "patient_improved_status",
@@ -8788,9 +8391,7 @@
           "example": "See type_medical_patient_status table",
           "comments": "NEMSIS values for Response -- Improved (9916001), Unchanged (9916003), 9916005 (Worse)",
           "ordinal": 3,
-          "value_set_candidates": [
-            "type_medical_patient_status"
-          ]
+          "value_set_candidates": ["type_medical_patient_status"]
         },
         {
           "name": "medical_disposition",
@@ -8812,9 +8413,7 @@
           "example": "See type_medical_transport table",
           "comments": null,
           "ordinal": 4,
-          "value_set_candidates": [
-            "type_medical_transport"
-          ]
+          "value_set_candidates": ["type_medical_transport"]
         }
       ]
     },
@@ -8827,19 +8426,11 @@
       "groups": [
         {
           "key": "general",
-          "field_names": [
-            "ff_rescue_birth_month_year",
-            "ff_rescue_gender",
-            "ff_rescue_race"
-          ]
+          "field_names": ["ff_rescue_birth_month_year", "ff_rescue_gender", "ff_rescue_race"]
         },
         {
           "key": "casualty.demographic",
-          "field_names": [
-            "ff_casualty_rank",
-            "ff_casualty_service",
-            "ff_casualty_classification"
-          ]
+          "field_names": ["ff_casualty_rank", "ff_casualty_service", "ff_casualty_classification"]
         },
         {
           "key": "rescue",
@@ -8870,9 +8461,7 @@
         },
         {
           "key": "casualty",
-          "field_names": [
-            "ff_casualty_type"
-          ]
+          "field_names": ["ff_casualty_type"]
         },
         {
           "key": "casualty.injured.deployment",
@@ -8935,9 +8524,7 @@
           "neris_core_app": null,
           "neris_core_cad": null,
           "ordinal": 2,
-          "value_set_candidates": [
-            "type_gender"
-          ]
+          "value_set_candidates": ["type_gender"]
         },
         {
           "name": "ff_rescue_race",
@@ -8961,9 +8548,7 @@
           "neris_core_app": null,
           "neris_core_cad": null,
           "ordinal": 3,
-          "value_set_candidates": [
-            "type_race"
-          ]
+          "value_set_candidates": ["type_race"]
         },
         {
           "name": "ff_casualty_rank",
@@ -9035,9 +8620,7 @@
           "neris_core_app": null,
           "neris_core_cad": null,
           "ordinal": 6,
-          "value_set_candidates": [
-            "type_rescue"
-          ]
+          "value_set_candidates": ["type_rescue"]
         },
         {
           "name": "ff_rescue_primary_mode",
@@ -9061,9 +8644,7 @@
           "neris_core_app": null,
           "neris_core_cad": null,
           "ordinal": 7,
-          "value_set_candidates": [
-            "type_rescue_mode"
-          ]
+          "value_set_candidates": ["type_rescue_mode"]
         },
         {
           "name": "ff_rescue_actions",
@@ -9087,9 +8668,7 @@
           "neris_core_app": null,
           "neris_core_cad": null,
           "ordinal": 8,
-          "value_set_candidates": [
-            "type_rescue_action"
-          ]
+          "value_set_candidates": ["type_rescue_action"]
         },
         {
           "name": "ff_rescue_impedance_type",
@@ -9113,9 +8692,7 @@
           "neris_core_app": null,
           "neris_core_cad": null,
           "ordinal": 9,
-          "value_set_candidates": [
-            "type_rescue_impedance"
-          ]
+          "value_set_candidates": ["type_rescue_impedance"]
         },
         {
           "name": "ff_rescue_mayday",
@@ -9163,9 +8740,7 @@
           "neris_core_app": null,
           "neris_core_cad": null,
           "ordinal": 11,
-          "value_set_candidates": [
-            "type_suppress_time"
-          ]
+          "value_set_candidates": ["type_suppress_time"]
         },
         {
           "name": "ff_rescue_rit_activated",
@@ -9213,9 +8788,7 @@
           "neris_core_app": null,
           "neris_core_cad": null,
           "ordinal": 13,
-          "value_set_candidates": [
-            "type_room"
-          ]
+          "value_set_candidates": ["type_room"]
         },
         {
           "name": "ff_rescue_elevation_type",
@@ -9239,9 +8812,7 @@
           "neris_core_app": null,
           "neris_core_cad": null,
           "ordinal": 14,
-          "value_set_candidates": [
-            "type_rescue_elevation"
-          ]
+          "value_set_candidates": ["type_rescue_elevation"]
         },
         {
           "name": "ff_rescue_gas_isolation",
@@ -9289,9 +8860,7 @@
           "neris_core_app": null,
           "neris_core_cad": null,
           "ordinal": 16,
-          "value_set_candidates": [
-            "type_rescue_path"
-          ]
+          "value_set_candidates": ["type_rescue_path"]
         },
         {
           "name": "ff_rescue_fire_relative_time",
@@ -9315,9 +8884,7 @@
           "neris_core_app": null,
           "neris_core_cad": null,
           "ordinal": 17,
-          "value_set_candidates": [
-            "type_suppress_time"
-          ]
+          "value_set_candidates": ["type_suppress_time"]
         },
         {
           "name": "ff_casualty_type",
@@ -9341,9 +8908,7 @@
           "neris_core_app": null,
           "neris_core_cad": null,
           "ordinal": 18,
-          "value_set_candidates": [
-            "type_casualty"
-          ]
+          "value_set_candidates": ["type_casualty"]
         },
         {
           "name": "ff_casualty_classification",
@@ -9367,9 +8932,7 @@
           "neris_core_app": null,
           "neris_core_cad": null,
           "ordinal": 19,
-          "value_set_candidates": [
-            "type_job_classification"
-          ]
+          "value_set_candidates": ["type_job_classification"]
         },
         {
           "name": "ff_casualty_linked_unit_id",
@@ -9441,9 +9004,7 @@
           "neris_core_app": null,
           "neris_core_cad": null,
           "ordinal": 22,
-          "value_set_candidates": [
-            "type_duty"
-          ]
+          "value_set_candidates": ["type_duty"]
         },
         {
           "name": "ff_casualty_cause",
@@ -9467,9 +9028,7 @@
           "neris_core_app": null,
           "neris_core_cad": null,
           "ordinal": 23,
-          "value_set_candidates": [
-            "type_casualty_cause"
-          ]
+          "value_set_candidates": ["type_casualty_cause"]
         },
         {
           "name": "ff_casualty_action",
@@ -9493,10 +9052,7 @@
           "neris_core_app": null,
           "neris_core_cad": null,
           "ordinal": 24,
-          "value_set_candidates": [
-            "type_casualty_actions",
-            "type_casualty_action"
-          ]
+          "value_set_candidates": ["type_casualty_actions", "type_casualty_action"]
         },
         {
           "name": "ff_casualty_ppe",
@@ -9520,9 +9076,7 @@
           "neris_core_app": null,
           "neris_core_cad": null,
           "ordinal": 25,
-          "value_set_candidates": [
-            "type_casualty_ppe"
-          ]
+          "value_set_candidates": ["type_casualty_ppe"]
         },
         {
           "name": "ff_casualty_incident_command",
@@ -9570,9 +9124,7 @@
           "neris_core_app": null,
           "neris_core_cad": null,
           "ordinal": 27,
-          "value_set_candidates": [
-            "type_casualty_timeline"
-          ]
+          "value_set_candidates": ["type_casualty_timeline"]
         }
       ]
     },
@@ -9613,15 +9165,11 @@
         },
         {
           "key": "casualty",
-          "field_names": [
-            "nonff_casualty_casualty_type"
-          ]
+          "field_names": ["nonff_casualty_casualty_type"]
         },
         {
           "key": "casualty.injured",
-          "field_names": [
-            "nonff_casualty_casualty_cause"
-          ]
+          "field_names": ["nonff_casualty_casualty_cause"]
         }
       ],
       "fields": [
@@ -9669,9 +9217,7 @@
           "comments": null,
           "api_class": null,
           "ordinal": 2,
-          "value_set_candidates": [
-            "type_gender"
-          ]
+          "value_set_candidates": ["type_gender"]
         },
         {
           "name": "nonff_rescue_race",
@@ -9694,9 +9240,7 @@
           "comments": null,
           "api_class": null,
           "ordinal": 3,
-          "value_set_candidates": [
-            "type_race"
-          ]
+          "value_set_candidates": ["type_race"]
         },
         {
           "name": "nonff_rescue_type",
@@ -9719,9 +9263,7 @@
           "comments": null,
           "api_class": null,
           "ordinal": 4,
-          "value_set_candidates": [
-            "type_rescue"
-          ]
+          "value_set_candidates": ["type_rescue"]
         },
         {
           "name": "nonff_rescue_presence_known",
@@ -9744,9 +9286,7 @@
           "comments": null,
           "api_class": null,
           "ordinal": 5,
-          "value_set_candidates": [
-            "type_rescue_presence_known"
-          ]
+          "value_set_candidates": ["type_rescue_presence_known"]
         },
         {
           "name": "nonff_rescue_primary_mode",
@@ -9769,9 +9309,7 @@
           "comments": null,
           "api_class": null,
           "ordinal": 6,
-          "value_set_candidates": [
-            "type_rescue_mode"
-          ]
+          "value_set_candidates": ["type_rescue_mode"]
         },
         {
           "name": "nonff_rescue_actions",
@@ -9794,9 +9332,7 @@
           "comments": null,
           "api_class": null,
           "ordinal": 7,
-          "value_set_candidates": [
-            "type_rescue_action"
-          ]
+          "value_set_candidates": ["type_rescue_action"]
         },
         {
           "name": "nonff_rescue_impedance_type",
@@ -9819,9 +9355,7 @@
           "comments": null,
           "api_class": null,
           "ordinal": 8,
-          "value_set_candidates": [
-            "type_rescue_impedance"
-          ]
+          "value_set_candidates": ["type_rescue_impedance"]
         },
         {
           "name": "nonff_rescue_room_type",
@@ -9844,9 +9378,7 @@
           "comments": null,
           "api_class": null,
           "ordinal": 9,
-          "value_set_candidates": [
-            "type_room"
-          ]
+          "value_set_candidates": ["type_room"]
         },
         {
           "name": "nonff_rescue_elevation_type",
@@ -9869,9 +9401,7 @@
           "comments": null,
           "api_class": null,
           "ordinal": 10,
-          "value_set_candidates": [
-            "type_rescue_elevation"
-          ]
+          "value_set_candidates": ["type_rescue_elevation"]
         },
         {
           "name": "nonff_rescue_gas_isolation",
@@ -9917,9 +9447,7 @@
           "comments": null,
           "api_class": null,
           "ordinal": 12,
-          "value_set_candidates": [
-            "type_rescue_path"
-          ]
+          "value_set_candidates": ["type_rescue_path"]
         },
         {
           "name": "nonff_rescue_fire_relative_time",
@@ -9942,9 +9470,7 @@
           "comments": null,
           "api_class": null,
           "ordinal": 13,
-          "value_set_candidates": [
-            "type_suppress_time"
-          ]
+          "value_set_candidates": ["type_suppress_time"]
         },
         {
           "name": "nonff_casualty_casualty_type",
@@ -9967,9 +9493,7 @@
           "comments": null,
           "api_class": null,
           "ordinal": 14,
-          "value_set_candidates": [
-            "type_casualty"
-          ]
+          "value_set_candidates": ["type_casualty"]
         },
         {
           "name": "nonff_casualty_casualty_cause",
@@ -9992,9 +9516,7 @@
           "comments": null,
           "api_class": null,
           "ordinal": 15,
-          "value_set_candidates": [
-            "type_casualty_cause"
-          ]
+          "value_set_candidates": ["type_casualty_cause"]
         }
       ]
     },
@@ -10007,34 +9529,23 @@
       "groups": [
         {
           "key": "smoke_alarm",
-          "field_names": [
-            "smoke_alarm_presence"
-          ]
+          "field_names": ["smoke_alarm_presence"]
         },
         {
           "key": "smoke_alarm.present",
-          "field_names": [
-            "smoke_alarm_type",
-            "smoke_alarm_working"
-          ]
+          "field_names": ["smoke_alarm_type", "smoke_alarm_working"]
         },
         {
           "key": "smoke_alarm.present.fire",
-          "field_names": [
-            "smoke_alarm_operation"
-          ]
+          "field_names": ["smoke_alarm_operation"]
         },
         {
           "key": "smoke_alarm.present.fire.failed",
-          "field_names": [
-            "smoke_alarm_operation_fail"
-          ]
+          "field_names": ["smoke_alarm_operation_fail"]
         },
         {
           "key": "smoke_alarm.working_fire.alerted",
-          "field_names": [
-            "smoke_alarm_operation_action"
-          ]
+          "field_names": ["smoke_alarm_operation_action"]
         },
         {
           "key": "general",
@@ -10047,52 +9558,35 @@
         },
         {
           "key": "fire_alarm.present",
-          "field_names": [
-            "fire_alarm_type"
-          ]
+          "field_names": ["fire_alarm_type"]
         },
         {
           "key": "fire_alarm.present.fire",
-          "field_names": [
-            "fire_alarm_operation"
-          ]
+          "field_names": ["fire_alarm_operation"]
         },
         {
           "key": "other_alarm.present",
-          "field_names": [
-            "other_alarm_type"
-          ]
+          "field_names": ["other_alarm_type"]
         },
         {
           "key": "fire_suppression.present",
-          "field_names": [
-            "fire_suppression_type",
-            "fire_suppression_full_partial"
-          ]
+          "field_names": ["fire_suppression_type", "fire_suppression_full_partial"]
         },
         {
           "key": "fire_suppression.present.fire",
-          "field_names": [
-            "fire_suppression_operation"
-          ]
+          "field_names": ["fire_suppression_operation"]
         },
         {
           "key": "fire_suppression.present.fire.operated",
-          "field_names": [
-            "fire_suppression_operation_sprinkler"
-          ]
+          "field_names": ["fire_suppression_operation_sprinkler"]
         },
         {
           "key": "fire_suppression.present.fire.failed",
-          "field_names": [
-            "fire_suppression_operation_failure"
-          ]
+          "field_names": ["fire_suppression_operation_failure"]
         },
         {
           "key": "cooking_fire_suppression.present",
-          "field_names": [
-            "cooking_fire_suppression_type"
-          ]
+          "field_names": ["cooking_fire_suppression_type"]
         }
       ],
       "fields": [
@@ -10116,9 +9610,7 @@
           "example": "See type_rr_presence table",
           "comments": null,
           "ordinal": 1,
-          "value_set_candidates": [
-            "type_rr_presence"
-          ]
+          "value_set_candidates": ["type_rr_presence"]
         },
         {
           "name": "smoke_alarm_type",
@@ -10140,9 +9632,7 @@
           "example": "See type_alarm_smoke table",
           "comments": null,
           "ordinal": 2,
-          "value_set_candidates": [
-            "type_alarm_smoke"
-          ]
+          "value_set_candidates": ["type_alarm_smoke"]
         },
         {
           "name": "smoke_alarm_working",
@@ -10186,9 +9676,7 @@
           "example": "See type_alarm_operation table",
           "comments": null,
           "ordinal": 4,
-          "value_set_candidates": [
-            "type_alarm_operation"
-          ]
+          "value_set_candidates": ["type_alarm_operation"]
         },
         {
           "name": "smoke_alarm_operation_fail",
@@ -10210,9 +9698,7 @@
           "example": "See type_alarm_failure table",
           "comments": null,
           "ordinal": 5,
-          "value_set_candidates": [
-            "type_alarm_failure"
-          ]
+          "value_set_candidates": ["type_alarm_failure"]
         },
         {
           "name": "smoke_alarm_operation_action",
@@ -10234,9 +9720,7 @@
           "example": "See type_occupant_response table",
           "comments": null,
           "ordinal": 6,
-          "value_set_candidates": [
-            "type_occupant_response"
-          ]
+          "value_set_candidates": ["type_occupant_response"]
         },
         {
           "name": "fire_alarm_presence",
@@ -10258,9 +9742,7 @@
           "example": "See type_rr_presence table",
           "comments": null,
           "ordinal": 7,
-          "value_set_candidates": [
-            "type_rr_presence"
-          ]
+          "value_set_candidates": ["type_rr_presence"]
         },
         {
           "name": "fire_alarm_type",
@@ -10282,9 +9764,7 @@
           "example": "See type_alarm_fire table",
           "comments": null,
           "ordinal": 8,
-          "value_set_candidates": [
-            "type_alarm_fire"
-          ]
+          "value_set_candidates": ["type_alarm_fire"]
         },
         {
           "name": "fire_alarm_operation",
@@ -10306,9 +9786,7 @@
           "example": "TRUE",
           "comments": null,
           "ordinal": 9,
-          "value_set_candidates": [
-            "type_alarm_operation"
-          ]
+          "value_set_candidates": ["type_alarm_operation"]
         },
         {
           "name": "other_alarm_presence",
@@ -10330,9 +9808,7 @@
           "example": "See type_rr_presence table",
           "comments": null,
           "ordinal": 10,
-          "value_set_candidates": [
-            "type_rr_presence"
-          ]
+          "value_set_candidates": ["type_rr_presence"]
         },
         {
           "name": "other_alarm_type",
@@ -10354,9 +9830,7 @@
           "example": "See type_alarm_other table",
           "comments": null,
           "ordinal": 11,
-          "value_set_candidates": [
-            "type_alarm_other"
-          ]
+          "value_set_candidates": ["type_alarm_other"]
         },
         {
           "name": "fire_suppression_presence",
@@ -10378,9 +9852,7 @@
           "example": "See type_rr_presence table",
           "comments": null,
           "ordinal": 12,
-          "value_set_candidates": [
-            "type_rr_presence"
-          ]
+          "value_set_candidates": ["type_rr_presence"]
         },
         {
           "name": "fire_suppression_type",
@@ -10402,9 +9874,7 @@
           "example": "See type_suppress_fire table",
           "comments": null,
           "ordinal": 13,
-          "value_set_candidates": [
-            "type_suppress_fire"
-          ]
+          "value_set_candidates": ["type_suppress_fire"]
         },
         {
           "name": "fire_suppression_full_partial",
@@ -10426,9 +9896,7 @@
           "example": "See type_full_partial table",
           "comments": null,
           "ordinal": 14,
-          "value_set_candidates": [
-            "type_full_partial"
-          ]
+          "value_set_candidates": ["type_full_partial"]
         },
         {
           "name": "fire_suppression_operation",
@@ -10450,9 +9918,7 @@
           "example": "See type_suppression_operation table",
           "comments": null,
           "ordinal": 15,
-          "value_set_candidates": [
-            "type_suppression_operation"
-          ]
+          "value_set_candidates": ["type_suppression_operation"]
         },
         {
           "name": "fire_suppression_operation_sprinkler",
@@ -10496,9 +9962,7 @@
           "example": "See type_suppression_failure table",
           "comments": null,
           "ordinal": 17,
-          "value_set_candidates": [
-            "type_suppression_failure"
-          ]
+          "value_set_candidates": ["type_suppression_failure"]
         },
         {
           "name": "cooking_fire_suppression_presence",
@@ -10520,9 +9984,7 @@
           "example": "See type_rr_presence table",
           "comments": null,
           "ordinal": 18,
-          "value_set_candidates": [
-            "type_rr_presence"
-          ]
+          "value_set_candidates": ["type_rr_presence"]
         },
         {
           "name": "cooking_fire_suppression_type",
@@ -10544,9 +10006,7 @@
           "example": "See type_suppress_cooking table",
           "comments": null,
           "ordinal": 19,
-          "value_set_candidates": [
-            "type_suppress_cooking"
-          ]
+          "value_set_candidates": ["type_suppress_cooking"]
         }
       ]
     },
@@ -10559,9 +10019,7 @@
       "groups": [
         {
           "key": "dispatch",
-          "field_names": [
-            "NERIS_ID"
-          ]
+          "field_names": ["NERIS_ID"]
         },
         {
           "key": "incident",
@@ -10576,9 +10034,7 @@
         },
         {
           "key": "consumer_product",
-          "field_names": [
-            "consumer_product_involved"
-          ]
+          "field_names": ["consumer_product_involved"]
         },
         {
           "key": "analysis",
@@ -10639,9 +10095,7 @@
           "example": "See type_inc table value 2",
           "comments": "Comes from Incident module and drives other modules within analysis",
           "ordinal": 3,
-          "value_set_candidates": [
-            "type_inc"
-          ]
+          "value_set_candidates": ["type_inc"]
         },
         {
           "name": "human_factors",
@@ -10657,9 +10111,7 @@
           "example": "See type_human_factors",
           "comments": "Which of these are potential options",
           "ordinal": 4,
-          "value_set_candidates": [
-            "type_human_factors"
-          ]
+          "value_set_candidates": ["type_human_factors"]
         },
         {
           "name": "consumer_product_involved",
@@ -10857,11 +10309,7 @@
         },
         {
           "key": "incident",
-          "field_names": [
-            "impacted_from_source",
-            "thermal_runaway",
-            "fd_suppression"
-          ]
+          "field_names": ["impacted_from_source", "thermal_runaway", "fd_suppression"]
         }
       ],
       "fields": [
@@ -10879,9 +10327,7 @@
           "example": "See type_emerghaz_elec",
           "comments": null,
           "ordinal": 1,
-          "value_set_candidates": [
-            "type_emerghaz_elec"
-          ]
+          "value_set_candidates": ["type_emerghaz_elec"]
         },
         {
           "name": "original_battery",
@@ -10977,9 +10423,7 @@
           "example": "Indoor",
           "comments": null,
           "ordinal": 7,
-          "value_set_candidates": [
-            "type_indoor_outdoor"
-          ]
+          "value_set_candidates": ["type_indoor_outdoor"]
         },
         {
           "name": "in_direct_sunlight",
@@ -11011,9 +10455,7 @@
           "example": "Outdoor",
           "comments": null,
           "ordinal": 9,
-          "value_set_candidates": [
-            "type_indoor_outdoor"
-          ]
+          "value_set_candidates": ["type_indoor_outdoor"]
         },
         {
           "name": "impacted_from_source",
@@ -11061,9 +10503,7 @@
           "example": "See type_emerghaz_suppression",
           "comments": null,
           "ordinal": 12,
-          "value_set_candidates": [
-            "type_emerghaz_suppression"
-          ]
+          "value_set_candidates": ["type_emerghaz_suppression"]
         },
         {
           "name": "battery_cell",
@@ -11079,9 +10519,7 @@
           "example": "See type battery_cell",
           "comments": null,
           "ordinal": 13,
-          "value_set_candidates": [
-            "type_battery_cell"
-          ]
+          "value_set_candidates": ["type_battery_cell"]
         },
         {
           "name": "battery_chemistry",
@@ -11097,9 +10535,7 @@
           "example": "See type_battery_chemistry",
           "comments": null,
           "ordinal": 14,
-          "value_set_candidates": [
-            "type_battery_chemistry"
-          ]
+          "value_set_candidates": ["type_battery_chemistry"]
         },
         {
           "name": "battery_size_voltage",
@@ -11201,9 +10637,7 @@
         },
         {
           "key": "general",
-          "field_names": [
-            "ff_casualty_room"
-          ]
+          "field_names": ["ff_casualty_room"]
         }
       ],
       "fields": [
@@ -11237,9 +10671,7 @@
           "example": "See type_gender table",
           "comments": null,
           "ordinal": 2,
-          "value_set_candidates": [
-            "type_gender"
-          ]
+          "value_set_candidates": ["type_gender"]
         },
         {
           "name": "ff_rescue_race",
@@ -11255,9 +10687,7 @@
           "example": "See type_race table",
           "comments": null,
           "ordinal": 3,
-          "value_set_candidates": [
-            "type_race"
-          ]
+          "value_set_candidates": ["type_race"]
         },
         {
           "name": "ff_casualty_type",
@@ -11273,9 +10703,7 @@
           "example": "See type_casualty table",
           "comments": null,
           "ordinal": 4,
-          "value_set_candidates": [
-            "type_casualty"
-          ]
+          "value_set_candidates": ["type_casualty"]
         },
         {
           "name": "ff_casualty_rank",
@@ -11323,9 +10751,7 @@
           "example": "See type_job_classification table",
           "comments": null,
           "ordinal": 7,
-          "value_set_candidates": [
-            "type_job_classification"
-          ]
+          "value_set_candidates": ["type_job_classification"]
         },
         {
           "name": "ff_casualty_linked_unit_id",
@@ -11373,9 +10799,7 @@
           "example": "See type_duty table",
           "comments": null,
           "ordinal": 10,
-          "value_set_candidates": [
-            "type_duty"
-          ]
+          "value_set_candidates": ["type_duty"]
         },
         {
           "name": "ff_casualty_cause",
@@ -11391,9 +10815,7 @@
           "example": "See type_casualty_cause table",
           "comments": "Jump",
           "ordinal": 11,
-          "value_set_candidates": [
-            "type_casualty_cause"
-          ]
+          "value_set_candidates": ["type_casualty_cause"]
         },
         {
           "name": "ff_casualty_action",
@@ -11409,10 +10831,7 @@
           "example": "See type_casualty_action table",
           "comments": null,
           "ordinal": 12,
-          "value_set_candidates": [
-            "type_casualty_actions",
-            "type_casualty_action"
-          ]
+          "value_set_candidates": ["type_casualty_actions", "type_casualty_action"]
         },
         {
           "name": "ff_casualty_ppe",
@@ -11428,9 +10847,7 @@
           "example": "See type_casualty_ppe table",
           "comments": null,
           "ordinal": 13,
-          "value_set_candidates": [
-            "type_casualty_ppe"
-          ]
+          "value_set_candidates": ["type_casualty_ppe"]
         },
         {
           "name": "ff_casualty_incident_command",
@@ -11462,9 +10879,7 @@
           "example": "See type_casualty_timeline table",
           "comments": null,
           "ordinal": 15,
-          "value_set_candidates": [
-            "type_casualty_timeline"
-          ]
+          "value_set_candidates": ["type_casualty_timeline"]
         },
         {
           "name": "ff_casualty_room",
@@ -11480,9 +10895,7 @@
           "example": null,
           "comments": null,
           "ordinal": 16,
-          "value_set_candidates": [
-            "type_room"
-          ]
+          "value_set_candidates": ["type_room"]
         }
       ]
     },
@@ -11504,15 +10917,11 @@
         },
         {
           "key": "casualty",
-          "field_names": [
-            "nonff_casualty_casualty_type"
-          ]
+          "field_names": ["nonff_casualty_casualty_type"]
         },
         {
           "key": "casualty.injured",
-          "field_names": [
-            "nonff_casualty_casualty_cause"
-          ]
+          "field_names": ["nonff_casualty_casualty_cause"]
         }
       ],
       "fields": [
@@ -11546,9 +10955,7 @@
           "example": "See type_gender table",
           "comments": null,
           "ordinal": 2,
-          "value_set_candidates": [
-            "type_gender"
-          ]
+          "value_set_candidates": ["type_gender"]
         },
         {
           "name": "nonff_rescue_race",
@@ -11564,9 +10971,7 @@
           "example": "See type_race table",
           "comments": null,
           "ordinal": 3,
-          "value_set_candidates": [
-            "type_race"
-          ]
+          "value_set_candidates": ["type_race"]
         },
         {
           "name": "nonff_casualty_casualty_type",
@@ -11582,9 +10987,7 @@
           "example": "See type_casualty table",
           "comments": null,
           "ordinal": 4,
-          "value_set_candidates": [
-            "type_casualty"
-          ]
+          "value_set_candidates": ["type_casualty"]
         },
         {
           "name": "nonff_casualty_casualty_cause",
@@ -11600,9 +11003,7 @@
           "example": "See type_casualty_cause table",
           "comments": null,
           "ordinal": 5,
-          "value_set_candidates": [
-            "type_casualty_cause"
-          ]
+          "value_set_candidates": ["type_casualty_cause"]
         },
         {
           "name": "nonff_casualty_room",
@@ -11618,9 +11019,7 @@
           "example": null,
           "comments": null,
           "ordinal": 6,
-          "value_set_candidates": [
-            "type_room"
-          ]
+          "value_set_candidates": ["type_room"]
         }
       ]
     },
@@ -11643,9 +11042,7 @@
         },
         {
           "key": "general",
-          "field_names": [
-            "notes"
-          ]
+          "field_names": ["notes"]
         }
       ],
       "fields": [
@@ -11663,9 +11060,7 @@
           "example": "Christmas tree",
           "comments": null,
           "ordinal": 1,
-          "value_set_candidates": [
-            "type_consumer_product"
-          ]
+          "value_set_candidates": ["type_consumer_product"]
         },
         {
           "name": "product_contribution",
@@ -11681,9 +11076,7 @@
           "example": "Ignition",
           "comments": null,
           "ordinal": 2,
-          "value_set_candidates": [
-            "type_product_contribution"
-          ]
+          "value_set_candidates": ["type_product_contribution"]
         },
         {
           "name": "consumer_product_manufacturer",
@@ -11778,11 +11171,7 @@
         },
         {
           "key": "incident",
-          "field_names": [
-            "date",
-            "incident_name",
-            "fire_origin_location"
-          ]
+          "field_names": ["date", "incident_name", "fire_origin_location"]
         },
         {
           "key": "parcel",
@@ -11903,9 +11292,7 @@
           "example": null,
           "comments": null,
           "ordinal": 6,
-          "value_set_candidates": [
-            "type_vacancy"
-          ]
+          "value_set_candidates": ["type_vacancy"]
         },
         {
           "name": "multi_unit",
@@ -11953,9 +11340,7 @@
           "example": null,
           "comments": null,
           "ordinal": 9,
-          "value_set_candidates": [
-            "type_construction"
-          ]
+          "value_set_candidates": ["type_construction"]
         },
         {
           "name": "roof_material",
@@ -11971,9 +11356,7 @@
           "example": null,
           "comments": null,
           "ordinal": 10,
-          "value_set_candidates": [
-            "type_roof_material"
-          ]
+          "value_set_candidates": ["type_roof_material"]
         },
         {
           "name": "eaves",
@@ -11989,9 +11372,7 @@
           "example": null,
           "comments": null,
           "ordinal": 11,
-          "value_set_candidates": [
-            "type_eaves"
-          ]
+          "value_set_candidates": ["type_eaves"]
         },
         {
           "name": "year_built",
@@ -12023,9 +11404,7 @@
           "example": null,
           "comments": null,
           "ordinal": 13,
-          "value_set_candidates": [
-            "type_vents"
-          ]
+          "value_set_candidates": ["type_vents"]
         },
         {
           "name": "exterior_finish",
@@ -12041,9 +11420,7 @@
           "example": null,
           "comments": null,
           "ordinal": 14,
-          "value_set_candidates": [
-            "type_exterior_finish"
-          ]
+          "value_set_candidates": ["type_exterior_finish"]
         },
         {
           "name": "window_panes",
@@ -12059,9 +11436,7 @@
           "example": null,
           "comments": null,
           "ordinal": 15,
-          "value_set_candidates": [
-            "type_window_panes"
-          ]
+          "value_set_candidates": ["type_window_panes"]
         },
         {
           "name": "outbuildings",
@@ -12093,9 +11468,7 @@
           "example": null,
           "comments": null,
           "ordinal": 17,
-          "value_set_candidates": [
-            "type_deck_porch_grade"
-          ]
+          "value_set_candidates": ["type_deck_porch_grade"]
         },
         {
           "name": "deck_porch_material",
@@ -12111,9 +11484,7 @@
           "example": null,
           "comments": null,
           "ordinal": 18,
-          "value_set_candidates": [
-            "type_deck_porch_material"
-          ]
+          "value_set_candidates": ["type_deck_porch_material"]
         },
         {
           "name": "attached_addition",
@@ -12129,9 +11500,7 @@
           "example": null,
           "comments": null,
           "ordinal": 19,
-          "value_set_candidates": [
-            "type_attached"
-          ]
+          "value_set_candidates": ["type_attached"]
         },
         {
           "name": "attached_addition_materials",
@@ -12147,9 +11516,7 @@
           "example": null,
           "comments": null,
           "ordinal": 20,
-          "value_set_candidates": [
-            "type_attached_materials"
-          ]
+          "value_set_candidates": ["type_attached_materials"]
         },
         {
           "name": "distance_to_nearest_structure",
@@ -12181,9 +11548,7 @@
           "example": null,
           "comments": null,
           "ordinal": 22,
-          "value_set_candidates": [
-            "type_distance_unit"
-          ]
+          "value_set_candidates": ["type_distance_unit"]
         },
         {
           "name": "window_damage",
@@ -12199,9 +11564,7 @@
           "example": null,
           "comments": null,
           "ordinal": 23,
-          "value_set_candidates": [
-            "type_window_damage"
-          ]
+          "value_set_candidates": ["type_window_damage"]
         },
         {
           "name": "impacted_additions",
@@ -12217,9 +11580,7 @@
           "example": null,
           "comments": null,
           "ordinal": 24,
-          "value_set_candidates": [
-            "type_attached"
-          ]
+          "value_set_candidates": ["type_attached"]
         },
         {
           "name": "fire_origin_location",
@@ -12235,9 +11596,7 @@
           "example": "See type_dins_origin_location",
           "comments": null,
           "ordinal": 25,
-          "value_set_candidates": [
-            "type_dins_origin_location"
-          ]
+          "value_set_candidates": ["type_dins_origin_location"]
         },
         {
           "name": "damage_assessment",
@@ -12253,9 +11612,7 @@
           "example": null,
           "comments": null,
           "ordinal": 26,
-          "value_set_candidates": [
-            "type_fire_bldg_damage"
-          ]
+          "value_set_candidates": ["type_fire_bldg_damage"]
         },
         {
           "name": "displacement",
@@ -12303,9 +11660,7 @@
           "example": null,
           "comments": null,
           "ordinal": 29,
-          "value_set_candidates": [
-            "type_displace_cause"
-          ]
+          "value_set_candidates": ["type_displace_cause"]
         }
       ]
     },
@@ -12330,10 +11685,7 @@
         },
         {
           "key": "incident",
-          "field_names": [
-            "cause_of_release",
-            "release_factors"
-          ]
+          "field_names": ["cause_of_release", "release_factors"]
         },
         {
           "key": "impact",
@@ -12377,9 +11729,7 @@
           "example": "See type_hazard_dot",
           "comments": null,
           "ordinal": 2,
-          "value_set_candidates": [
-            "type_hazard_dot"
-          ]
+          "value_set_candidates": ["type_hazard_dot"]
         },
         {
           "name": "electrification",
@@ -12411,9 +11761,7 @@
           "example": "See type_hazard_physical_state",
           "comments": null,
           "ordinal": 4,
-          "value_set_candidates": [
-            "type_hazard_physical_state"
-          ]
+          "value_set_candidates": ["type_hazard_physical_state"]
         },
         {
           "name": "hazsit_type",
@@ -12429,9 +11777,7 @@
           "example": "See type_hazsit_type",
           "comments": null,
           "ordinal": 5,
-          "value_set_candidates": [
-            "type_hazsit_type"
-          ]
+          "value_set_candidates": ["type_hazsit_type"]
         },
         {
           "name": "quantity_released",
@@ -12463,9 +11809,7 @@
           "example": "See type_hazard_unit",
           "comments": null,
           "ordinal": 7,
-          "value_set_candidates": [
-            "type_hazard_unit"
-          ]
+          "value_set_candidates": ["type_hazard_unit"]
         },
         {
           "name": "cause_of_release",
@@ -12481,9 +11825,7 @@
           "example": "See type_hazard_cause",
           "comments": null,
           "ordinal": 8,
-          "value_set_candidates": [
-            "type_hazard_cause"
-          ]
+          "value_set_candidates": ["type_hazard_cause"]
         },
         {
           "name": "release_factors",
@@ -12499,9 +11841,7 @@
           "example": "See type_hazsit_release_factors",
           "comments": "Value 1 and Value 2 for primary and secondary factors",
           "ordinal": 9,
-          "value_set_candidates": [
-            "type_hazsit_release_factors"
-          ]
+          "value_set_candidates": ["type_hazsit_release_factors"]
         },
         {
           "name": "evacuation_count",
@@ -12549,9 +11889,7 @@
           "example": "See type_hazsit_disposition",
           "comments": null,
           "ordinal": 12,
-          "value_set_candidates": [
-            "type_hazsit_disposition"
-          ]
+          "value_set_candidates": ["type_hazsit_disposition"]
         },
         {
           "name": "description_of_events",
@@ -12630,11 +11968,7 @@
         },
         {
           "key": "fuels",
-          "field_names": [
-            "fuel_arrangment",
-            "fuel_size",
-            "fuel_distribution"
-          ]
+          "field_names": ["fuel_arrangment", "fuel_size", "fuel_distribution"]
         }
       ],
       "fields": [
@@ -12668,9 +12002,7 @@
           "example": "Natural",
           "comments": null,
           "ordinal": 2,
-          "value_set_candidates": [
-            "type_general_fire_cause"
-          ]
+          "value_set_candidates": ["type_general_fire_cause"]
         },
         {
           "name": "general_cause",
@@ -12686,9 +12018,7 @@
           "example": "See type_outdoor_cause",
           "comments": null,
           "ordinal": 3,
-          "value_set_candidates": [
-            "type_outdoor_cause"
-          ]
+          "value_set_candidates": ["type_outdoor_cause"]
         },
         {
           "name": "specific_cause",
@@ -12704,9 +12034,7 @@
           "example": "See type_outdoor_cause",
           "comments": null,
           "ordinal": 4,
-          "value_set_candidates": [
-            "type_outdoor_cause"
-          ]
+          "value_set_candidates": ["type_outdoor_cause"]
         },
         {
           "name": "cause_certainty",
@@ -12722,9 +12050,7 @@
           "example": "Probable",
           "comments": null,
           "ordinal": 5,
-          "value_set_candidates": [
-            "type_certainty"
-          ]
+          "value_set_candidates": ["type_certainty"]
         },
         {
           "name": "permit_issued",
@@ -12756,9 +12082,7 @@
           "example": "see type_outdoor_activities",
           "comments": null,
           "ordinal": 7,
-          "value_set_candidates": [
-            "type_outdoor_activities"
-          ]
+          "value_set_candidates": ["type_outdoor_activities"]
         },
         {
           "name": "structures_involved",
@@ -12838,9 +12162,7 @@
           "example": "see type_fuel_arrangement",
           "comments": null,
           "ordinal": 12,
-          "value_set_candidates": [
-            "type_fuel_arrangement"
-          ]
+          "value_set_candidates": ["type_fuel_arrangement"]
         },
         {
           "name": "fuel_size",
@@ -12856,9 +12178,7 @@
           "example": "see type_fuel_size",
           "comments": null,
           "ordinal": 13,
-          "value_set_candidates": [
-            "type_fuel_size"
-          ]
+          "value_set_candidates": ["type_fuel_size"]
         },
         {
           "name": "fuel_distribution",
@@ -12874,9 +12194,7 @@
           "example": "see type_fuel_distribution",
           "comments": null,
           "ordinal": 14,
-          "value_set_candidates": [
-            "type_fuel_distribution"
-          ]
+          "value_set_candidates": ["type_fuel_distribution"]
         },
         {
           "name": "elevation",
@@ -12908,9 +12226,7 @@
           "example": "Valley Bottom",
           "comments": null,
           "ordinal": 16,
-          "value_set_candidates": [
-            "type_relative_position"
-          ]
+          "value_set_candidates": ["type_relative_position"]
         },
         {
           "name": "aspect",
@@ -12926,9 +12242,7 @@
           "example": "NW",
           "comments": null,
           "ordinal": 17,
-          "value_set_candidates": [
-            "type_aspect"
-          ]
+          "value_set_candidates": ["type_aspect"]
         },
         {
           "name": "flame_length",
@@ -12960,9 +12274,7 @@
           "example": null,
           "comments": null,
           "ordinal": 19,
-          "value_set_candidates": [
-            "type_rate_of_spread"
-          ]
+          "value_set_candidates": ["type_rate_of_spread"]
         },
         {
           "name": "minor_involved",
@@ -13048,10 +12360,7 @@
         },
         {
           "key": "detection",
-          "field_names": [
-            "initial_detection",
-            "risk_reduction"
-          ]
+          "field_names": ["initial_detection", "risk_reduction"]
         },
         {
           "key": "flame_spread",
@@ -13065,11 +12374,7 @@
         },
         {
           "key": "general",
-          "field_names": [
-            "minor_involved",
-            "description_of_events",
-            "recommendations"
-          ]
+          "field_names": ["minor_involved", "description_of_events", "recommendations"]
         }
       ],
       "fields": [
@@ -13199,9 +12504,7 @@
           "example": "See type_room value",
           "comments": null,
           "ordinal": 8,
-          "value_set_candidates": [
-            "type_room"
-          ]
+          "value_set_candidates": ["type_room"]
         },
         {
           "name": "intersectional_space",
@@ -13233,9 +12536,7 @@
           "example": null,
           "comments": null,
           "ordinal": 10,
-          "value_set_candidates": [
-            "type_intersectional_space"
-          ]
+          "value_set_candidates": ["type_intersectional_space"]
         },
         {
           "name": "level_of_origin",
@@ -13267,9 +12568,7 @@
           "example": "See type_general_fire_cause",
           "comments": null,
           "ordinal": 12,
-          "value_set_candidates": [
-            "type_general_fire_cause"
-          ]
+          "value_set_candidates": ["type_general_fire_cause"]
         },
         {
           "name": "general_cause",
@@ -13285,10 +12584,7 @@
           "example": "See type_fire_indoor_cause",
           "comments": null,
           "ordinal": 13,
-          "value_set_candidates": [
-            "type_indoor_cause",
-            "type_fire_indoor_cause"
-          ]
+          "value_set_candidates": ["type_indoor_cause", "type_fire_indoor_cause"]
         },
         {
           "name": "specific_cause",
@@ -13304,10 +12600,7 @@
           "example": "See type_fire_indoor_cause",
           "comments": null,
           "ordinal": 14,
-          "value_set_candidates": [
-            "type_indoor_cause",
-            "type_fire_indoor_cause"
-          ]
+          "value_set_candidates": ["type_indoor_cause", "type_fire_indoor_cause"]
         },
         {
           "name": "initial_detection",
@@ -13323,9 +12616,7 @@
           "example": "See type_initial_detection",
           "comments": null,
           "ordinal": 15,
-          "value_set_candidates": [
-            "type_initial_detection"
-          ]
+          "value_set_candidates": ["type_initial_detection"]
         },
         {
           "name": "risk_reduction",
@@ -13421,9 +12712,7 @@
           "example": null,
           "comments": null,
           "ordinal": 21,
-          "value_set_candidates": [
-            "type_flame_spread"
-          ]
+          "value_set_candidates": ["type_flame_spread"]
         },
         {
           "name": "contributing_hazards",
@@ -13439,9 +12728,7 @@
           "example": null,
           "comments": null,
           "ordinal": 22,
-          "value_set_candidates": [
-            "type_contributing_hazards"
-          ]
+          "value_set_candidates": ["type_contributing_hazards"]
         },
         {
           "name": "minor_involved",
@@ -13562,9 +12849,7 @@
           "example": "See type_vehicle_type value",
           "comments": null,
           "ordinal": 3,
-          "value_set_candidates": [
-            "type_vehicle_type"
-          ]
+          "value_set_candidates": ["type_vehicle_type"]
         },
         {
           "name": "auto_body_style",
@@ -13580,10 +12865,7 @@
           "example": "See type_body_style value",
           "comments": null,
           "ordinal": 4,
-          "value_set_candidates": [
-            "type_automobile_body_style",
-            "type_body_style"
-          ]
+          "value_set_candidates": ["type_automobile_body_style", "type_body_style"]
         },
         {
           "name": "vehicle_vin",
@@ -13631,10 +12913,7 @@
           "example": "See type_powertrian value",
           "comments": "Electric selection prompts battery_incident module",
           "ordinal": 7,
-          "value_set_candidates": [
-            "type_powertrain",
-            "type_powertrian"
-          ]
+          "value_set_candidates": ["type_powertrain", "type_powertrian"]
         },
         {
           "name": "vehicle_state",
@@ -13735,22 +13014,15 @@
         },
         {
           "key": "cldxf_address_descriptor",
-          "field_names": [
-            "place"
-          ]
+          "field_names": ["place"]
         },
         {
           "key": "neris_addition",
-          "field_names": [
-            "additional_attributes"
-          ]
+          "field_names": ["additional_attributes"]
         },
         {
           "key": "neris_addition.cross_street",
-          "field_names": [
-            "cross_street",
-            "type_cross_street"
-          ]
+          "field_names": ["cross_street", "type_cross_street"]
         }
       ],
       "fields": [
@@ -13950,9 +13222,7 @@
           "example": "\"Old\" in \"Old North First Street\" (\"Old\" is a Street Name Pre Modifier because the Street Name Pre Directional \"North\" separates \"Old\" from the Street Name \"First\" and the Street Name Post Type \"Street\".)",
           "comments": null,
           "ordinal": 9,
-          "value_set_candidates": [
-            "type_loc_sn_pre_post"
-          ]
+          "value_set_candidates": ["type_loc_sn_pre_post"]
         },
         {
           "name": "sn_pre_directional",
@@ -13996,9 +13266,7 @@
           "example": "\"Avenue\" in \"Avenue A\"",
           "comments": null,
           "ordinal": 11,
-          "value_set_candidates": [
-            "type_loc_sn_pre_post"
-          ]
+          "value_set_candidates": ["type_loc_sn_pre_post"]
         },
         {
           "name": "sn_pre_type_separator",
@@ -14020,9 +13288,7 @@
           "example": "\"of the\" in \"Avenue of the Americas\" ",
           "comments": null,
           "ordinal": 12,
-          "value_set_candidates": [
-            "type_loc_sn_pre_sep"
-          ]
+          "value_set_candidates": ["type_loc_sn_pre_sep"]
         },
         {
           "name": "sn_street_name",
@@ -14066,9 +13332,7 @@
           "example": "\"Avenue\" in \"North Fairfax Avenue\" ",
           "comments": null,
           "ordinal": 14,
-          "value_set_candidates": [
-            "type_loc_sn_pre_post"
-          ]
+          "value_set_candidates": ["type_loc_sn_pre_post"]
         },
         {
           "name": "sn_post_directional",
@@ -14134,9 +13398,7 @@
           "example": "\"northbound\" in \"Interstate Highway 5 North northbound\" ",
           "comments": null,
           "ordinal": 17,
-          "value_set_candidates": [
-            "type_loc_sn_direction"
-          ]
+          "value_set_candidates": ["type_loc_sn_direction"]
         },
         {
           "name": "nl_wing",
@@ -14554,9 +13816,7 @@
           "example": "US",
           "comments": null,
           "ordinal": 36,
-          "value_set_candidates": [
-            "type_loc_csp_country"
-          ]
+          "value_set_candidates": ["type_loc_csp_country"]
         },
         {
           "name": "place",
@@ -14578,9 +13838,7 @@
           "example": "Airport",
           "comments": null,
           "ordinal": 37,
-          "value_set_candidates": [
-            "type_loc_place"
-          ]
+          "value_set_candidates": ["type_loc_place"]
         },
         {
           "name": "additional_attributes",
@@ -14646,10 +13904,7 @@
           "example": "See type_cross_street",
           "comments": null,
           "ordinal": 40,
-          "value_set_candidates": [
-            "type_location_cross_street",
-            "type_cross_street"
-          ]
+          "value_set_candidates": ["type_location_cross_street", "type_cross_street"]
         }
       ]
     },
@@ -14695,9 +13950,7 @@
           "example": "See type_location_use table",
           "comments": null,
           "ordinal": 1,
-          "value_set_candidates": [
-            "type_location_use"
-          ]
+          "value_set_candidates": ["type_location_use"]
         },
         {
           "name": "use_subtype",
@@ -14719,9 +13972,7 @@
           "example": "See type_location_use table",
           "comments": null,
           "ordinal": 2,
-          "value_set_candidates": [
-            "type_location_use"
-          ]
+          "value_set_candidates": ["type_location_use"]
         },
         {
           "name": "use_status",
@@ -14787,9 +14038,7 @@
           "example": "See type_vacancy",
           "comments": null,
           "ordinal": 5,
-          "value_set_candidates": [
-            "type_vacancy"
-          ]
+          "value_set_candidates": ["type_vacancy"]
         },
         {
           "name": "use_secondary",
@@ -14833,9 +14082,7 @@
           "example": "See type_location_use table",
           "comments": null,
           "ordinal": 7,
-          "value_set_candidates": [
-            "type_location_use"
-          ]
+          "value_set_candidates": ["type_location_use"]
         },
         {
           "name": "use_subtype_secondary",
@@ -14857,9 +14104,7 @@
           "example": "See type_location_use table",
           "comments": null,
           "ordinal": 8,
-          "value_set_candidates": [
-            "type_location_use"
-          ]
+          "value_set_candidates": ["type_location_use"]
         }
       ]
     },
@@ -15143,16 +14388,11 @@
         },
         {
           "key": "unit_response.med",
-          "field_names": [
-            "hospital_destination"
-          ]
+          "field_names": ["hospital_destination"]
         },
         {
           "key": "unit_response.time.computed",
-          "field_names": [
-            "time_turnout",
-            "time_travel"
-          ]
+          "field_names": ["time_turnout", "time_travel"]
         }
       ],
       "fields": [
@@ -15279,9 +14519,7 @@
           "NERIS Validation Range": null,
           "NIEM Definition": null,
           "ordinal": 5,
-          "value_set_candidates": [
-            "type_response_mode"
-          ]
+          "value_set_candidates": ["type_response_mode"]
         },
         {
           "name": "unit_dispatch_point",
@@ -15706,9 +14944,7 @@
           "NERIS Validation Range": null,
           "NIEM Definition": null,
           "ordinal": 22,
-          "value_set_candidates": [
-            "type_response_mode"
-          ]
+          "value_set_candidates": ["type_response_mode"]
         }
       ]
     }

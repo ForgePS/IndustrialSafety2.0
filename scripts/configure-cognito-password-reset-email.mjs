@@ -21,10 +21,7 @@ const ROLE_NAME = "forge-production-lambda-cognito-custom-message-role";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const repoRoot = path.join(__dirname, "..");
-const handlerDir = path.join(
-  repoRoot,
-  "infrastructure/cdk/lib/lambdas/cognito-custom-message",
-);
+const handlerDir = path.join(repoRoot, "infrastructure/cdk/lib/lambdas/cognito-custom-message");
 const workDir = fs.mkdtempSync(path.join(os.tmpdir(), "forge-cognito-msg-"));
 
 function aws(args, options = {}) {
@@ -156,15 +153,7 @@ try {
     { stdio: "inherit" },
   );
   aws(
-    [
-      "lambda",
-      "wait",
-      "function-updated-v2",
-      "--function-name",
-      LAMBDA_NAME,
-      "--region",
-      REGION,
-    ],
+    ["lambda", "wait", "function-updated-v2", "--function-name", LAMBDA_NAME, "--region", REGION],
     { stdio: "inherit" },
   );
   aws(
@@ -187,7 +176,16 @@ try {
 } catch {
   let roleArn;
   try {
-    roleArn = aws(["iam", "get-role", "--role-name", ROLE_NAME, "--query", "Role.Arn", "--output", "text"]);
+    roleArn = aws([
+      "iam",
+      "get-role",
+      "--role-name",
+      ROLE_NAME,
+      "--query",
+      "Role.Arn",
+      "--output",
+      "text",
+    ]);
   } catch {
     const trustPath = path.join(workDir, "trust.json");
     fs.writeFileSync(
@@ -222,7 +220,7 @@ try {
       ],
       { stdio: "inherit" },
     );
-    execSync("powershell -NoProfile -Command \"Start-Sleep -Seconds 12\"", { stdio: "inherit" });
+    execSync('powershell -NoProfile -Command "Start-Sleep -Seconds 12"', { stdio: "inherit" });
   }
 
   functionArn = awsJson([
@@ -290,7 +288,14 @@ fs.writeFileSync(
   ),
 );
 aws(
-  ["cognito-idp", "update-user-pool", "--region", REGION, "--cli-input-json", `file://${updatePath}`],
+  [
+    "cognito-idp",
+    "update-user-pool",
+    "--region",
+    REGION,
+    "--cli-input-json",
+    `file://${updatePath}`,
+  ],
   { stdio: "inherit" },
 );
 

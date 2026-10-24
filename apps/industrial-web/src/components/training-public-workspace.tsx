@@ -23,7 +23,10 @@ import {
 import { TrainingAccessPortalForm } from "@/components/training-access-portal";
 import { TrainingPortalLauncher } from "@/components/training-portal-launcher";
 import { TrainingMaterialViewer } from "@/components/training-material-viewer";
-import { fetchPublicTrainingMaterialBlob, fetchPublicTrainingMaterialViewUrl } from "@/features/training/materials";
+import {
+  fetchPublicTrainingMaterialBlob,
+  fetchPublicTrainingMaterialViewUrl,
+} from "@/features/training/materials";
 import type { TrainingMaterial } from "@/features/training/types";
 import { personNameDisplay } from "@/lib/person-name-display";
 import { unlockTrainingAudioPlayback } from "@/lib/training-slide-audio-player";
@@ -68,7 +71,8 @@ function TrainingPublicForm({ token }: { token: string }) {
         setSessionToken(verified.sessionToken);
         writeStoredPortalSession(token, {
           sessionToken: verified.sessionToken,
-          sessionExpiresAt: verified.sessionExpiresAt ?? new Date(Date.now() + 60 * 60 * 1000).toISOString(),
+          sessionExpiresAt:
+            verified.sessionExpiresAt ?? new Date(Date.now() + 60 * 60 * 1000).toISOString(),
           displayName: verified.displayName,
           employeeNumber: verified.employeeNumber,
         });
@@ -86,7 +90,8 @@ function TrainingPublicForm({ token }: { token: string }) {
   }, [assignee, employeeNumber, sessionToken]);
 
   const clearPortalSession = useCallback(async () => {
-    const activeToken = sessionToken ?? assignee?.sessionToken ?? readStoredPortalSession(token)?.sessionToken;
+    const activeToken =
+      sessionToken ?? assignee?.sessionToken ?? readStoredPortalSession(token)?.sessionToken;
     clearStoredPortalSession(token);
     setSessionToken(null);
     if (activeToken) {
@@ -193,7 +198,9 @@ function TrainingPublicForm({ token }: { token: string }) {
       applyAssigneeSession(verified);
       setScreen("assignment");
     } catch (e) {
-      setError(e instanceof ApiError ? e.message : "EMPLOYEE number not recognized for this assignment");
+      setError(
+        e instanceof ApiError ? e.message : "EMPLOYEE number not recognized for this assignment",
+      );
     } finally {
       setBusy(false);
     }
@@ -201,7 +208,11 @@ function TrainingPublicForm({ token }: { token: string }) {
 
   function applyNextPayload(next: PublicQuizRunner) {
     if (next.done) {
-      setRunner({ done: true, ...(next.mode ? { mode: next.mode } : {}), ...(next.mastery ? { mastery: next.mastery } : {}) });
+      setRunner({
+        done: true,
+        ...(next.mode ? { mode: next.mode } : {}),
+        ...(next.mastery ? { mastery: next.mastery } : {}),
+      });
       return;
     }
     setRunner(next);
@@ -219,7 +230,11 @@ function TrainingPublicForm({ token }: { token: string }) {
       const created = await apiSend<{
         attempt: { id: string };
         next: PublicQuizRunner;
-      }>(`/api/v1/public/training/${encodeURIComponent(token)}/quizzes`, "POST", publicCredentials());
+      }>(
+        `/api/v1/public/training/${encodeURIComponent(token)}/quizzes`,
+        "POST",
+        publicCredentials(),
+      );
       setAttemptId(created.attempt.id);
       applyNextPayload(created.next);
       setScreen("quiz");
@@ -241,13 +256,18 @@ function TrainingPublicForm({ token }: { token: string }) {
         explanation?: string;
         pageRef?: string;
         correctIndex?: number;
-      }>(`/api/v1/public/training/${encodeURIComponent(token)}/attempts/${encodeURIComponent(attemptId)}/answer`, "POST", {
-        ...publicCredentials(),
-        questionId: runner.question.id,
-        selectedIndex: fromTimeout ? 999 : selectedIndex,
-      });
+      }>(
+        `/api/v1/public/training/${encodeURIComponent(token)}/attempts/${encodeURIComponent(attemptId)}/answer`,
+        "POST",
+        {
+          ...publicCredentials(),
+          questionId: runner.question.id,
+          selectedIndex: fromTimeout ? 999 : selectedIndex,
+        },
+      );
 
-      const showFeedback = Boolean(runner.feedbackEnabled ?? context?.feedbackEnabled) || fromTimeout;
+      const showFeedback =
+        Boolean(runner.feedbackEnabled ?? context?.feedbackEnabled) || fromTimeout;
       if (showFeedback) {
         setPendingFeedback({
           selectedIndex: fromTimeout ? 999 : selectedIndex,
@@ -341,7 +361,9 @@ function TrainingPublicForm({ token }: { token: string }) {
   }
 
   const passed =
-    results && assignee ? results.percent >= (assignee.passingPercent ?? context?.passingPercent ?? 70) : false;
+    results && assignee
+      ? results.percent >= (assignee.passingPercent ?? context?.passingPercent ?? 70)
+      : false;
 
   return (
     <div className="container py-4" style={{ maxWidth: "48rem" }}>
@@ -359,9 +381,7 @@ function TrainingPublicForm({ token }: { token: string }) {
         </div>
       ) : null}
 
-      {busy && !context ? (
-        <p className="text-muted">Loading assignment…</p>
-      ) : null}
+      {busy && !context ? <p className="text-muted">Loading assignment…</p> : null}
 
       {context && screen === "gate" ? (
         <div className="card">
@@ -425,17 +445,19 @@ function TrainingPublicForm({ token }: { token: string }) {
               <TrainingMaterialViewer
                 embedded
                 immersive
-                material={{
-                  id: context.material.id,
-                  title: context.material.title,
-                  mimeType: context.material.mimeType ?? "application/octet-stream",
-                  originalFilename:
-                    context.material.originalFilename?.trim() || `${context.material.title}.pptx`,
-                  category: context.material.category ?? "GENERAL",
-                  byteSize: 0,
-                  status: "ACTIVE",
-                  visibility: "PUBLISHED",
-                } satisfies TrainingMaterial}
+                material={
+                  {
+                    id: context.material.id,
+                    title: context.material.title,
+                    mimeType: context.material.mimeType ?? "application/octet-stream",
+                    originalFilename:
+                      context.material.originalFilename?.trim() || `${context.material.title}.pptx`,
+                    category: context.material.category ?? "GENERAL",
+                    byteSize: 0,
+                    status: "ACTIVE",
+                    visibility: "PUBLISHED",
+                  } satisfies TrainingMaterial
+                }
                 fetchBlob={(materialId) =>
                   fetchPublicTrainingMaterialBlob({
                     accessToken: token,
@@ -462,7 +484,12 @@ function TrainingPublicForm({ token }: { token: string }) {
               {assignee.status === "PASSED" ? (
                 <p className="text-success mb-0">You have already passed this assignment.</p>
               ) : (
-                <button type="button" className="btn btn-primary" disabled={busy} onClick={() => void startQuiz()}>
+                <button
+                  type="button"
+                  className="btn btn-primary"
+                  disabled={busy}
+                  onClick={() => void startQuiz()}
+                >
                   {assignee.status === "IN_PROGRESS" ? "Resume quiz" : "Take quiz"}
                 </button>
               )}
@@ -504,7 +531,11 @@ function TrainingPublicForm({ token }: { token: string }) {
             {secondsLeft != null ? (
               <span
                 className={`badge ${
-                  secondsLeft <= 12 ? "bg-danger" : secondsLeft <= 30 ? "bg-warning" : "bg-label-secondary"
+                  secondsLeft <= 12
+                    ? "bg-danger"
+                    : secondsLeft <= 30
+                      ? "bg-warning"
+                      : "bg-label-secondary"
                 }`}
               >
                 {formatClock(secondsLeft)}
@@ -541,7 +572,9 @@ function TrainingPublicForm({ token }: { token: string }) {
                     ? "Correct"
                     : "Incorrect"}
               </strong>
-              {pendingFeedback.explanation ? <div className="mt-1">{pendingFeedback.explanation}</div> : null}
+              {pendingFeedback.explanation ? (
+                <div className="mt-1">{pendingFeedback.explanation}</div>
+              ) : null}
               <button
                 type="button"
                 className="btn btn-sm btn-primary mt-3"

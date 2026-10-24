@@ -262,9 +262,7 @@ export function OshaCaseEditor({
                       disabled={!canManage}
                       onChange={() => set("caseOutcome", outcome as OshaCaseOutcome)}
                     />
-                    <span className="form-check-label">
-                      {caseOutcomeLabel(outcome)}
-                    </span>
+                    <span className="form-check-label">{caseOutcomeLabel(outcome)}</span>
                   </label>
                 ))}
                 <label className="form-check">
@@ -496,9 +494,7 @@ export function OshaCaseEditor({
                           disabled={!canManage}
                           onChange={() => set("gender", g as OshaGender)}
                         />
-                        <span className="form-check-label">
-                          {g === "MALE" ? "Male" : "Female"}
-                        </span>
+                        <span className="form-check-label">{g === "MALE" ? "Male" : "Female"}</span>
                       </label>
                     ))}
                   </div>
@@ -654,10 +650,7 @@ export function OshaCaseEditor({
                         value={draft.timeBeganWorkAmPm ?? ""}
                         disabled={!canManage}
                         onChange={(ev) =>
-                          set(
-                            "timeBeganWorkAmPm",
-                            (ev.target.value || null) as OshaAmPm | null,
-                          )
+                          set("timeBeganWorkAmPm", (ev.target.value || null) as OshaAmPm | null)
                         }
                       >
                         <option value="">—</option>
@@ -707,7 +700,9 @@ export function OshaCaseEditor({
                       disabled={!canManage}
                       onChange={(ev) => set("timeCannotBeDetermined", ev.target.checked)}
                     />
-                    <span className="form-check-label">{FORM_301.fields.timeCannotBeDetermined}</span>
+                    <span className="form-check-label">
+                      {FORM_301.fields.timeCannotBeDetermined}
+                    </span>
                   </label>
                 </div>
                 {(

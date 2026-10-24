@@ -5,11 +5,11 @@
 
 ## Separation
 
-| Mechanism | Owner | Purpose |
-| --- | --- | --- |
-| **Entitlements** | Commercial / billing | Paid right to use a product or module |
-| **Feature flags** | Engineering / product | Kill-switches and gradual rollout |
-| **Subscription** | Commercial | Plan lifecycle for a tenant |
+| Mechanism         | Owner                 | Purpose                               |
+| ----------------- | --------------------- | ------------------------------------- |
+| **Entitlements**  | Commercial / billing  | Paid right to use a product or module |
+| **Feature flags** | Engineering / product | Kill-switches and gradual rollout     |
+| **Subscription**  | Commercial            | Plan lifecycle for a tenant           |
 
 Flags must not grant unpaid access. Product gates require entitlement; flags may further restrict ([ADR-017](../decisions/ADR-017-feature-flags-vs-entitlements.md)).
 
@@ -17,12 +17,12 @@ Flags must not grant unpaid access. Product gates require entitlement; flags may
 
 Seeded platform products and modules:
 
-| Product | Modules (examples) |
-| --- | --- |
-| `FORGE_ACADEMY` | `CORE`, `ADMINISTRATION` |
-| `FORGE_RMS` | `CORE`, `PERSONNEL` |
-| `FORGE_INDUSTRIAL` | `CORE` |
-| `FORGE_CREATOR` | `CORE`, `TENANT_ADMIN` |
+| Product            | Modules (examples)       |
+| ------------------ | ------------------------ |
+| `FORGE_ACADEMY`    | `CORE`, `ADMINISTRATION` |
+| `FORGE_RMS`        | `CORE`, `PERSONNEL`      |
+| `FORGE_INDUSTRIAL` | `CORE`                   |
+| `FORGE_CREATOR`    | `CORE`, `TENANT_ADMIN`   |
 
 Read catalog: `GET /api/v1/platform/products`, `GET /api/v1/platform/modules`.
 
@@ -30,13 +30,13 @@ Read catalog: `GET /api/v1/platform/products`, `GET /api/v1/platform/modules`.
 
 Under `api/v1/tenants/:tenantId`:
 
-| Method | Path | Action |
-| --- | --- | --- |
-| GET | `/entitlements` | List effective entitlements |
-| PUT | `/products/:productCode` | Grant/update product entitlement |
-| PUT | `/modules/:moduleCode/entitlement` | Grant/update module entitlement |
-| POST | `/modules/:moduleCode/suspend` | Suspend module |
-| POST | `/modules/:moduleCode/activate` | Reactivate module |
+| Method | Path                               | Action                           |
+| ------ | ---------------------------------- | -------------------------------- |
+| GET    | `/entitlements`                    | List effective entitlements      |
+| PUT    | `/products/:productCode`           | Grant/update product entitlement |
+| PUT    | `/modules/:moduleCode/entitlement` | Grant/update module entitlement  |
+| POST   | `/modules/:moduleCode/suspend`     | Suspend module                   |
+| POST   | `/modules/:moduleCode/activate`    | Reactivate module                |
 
 Principal loads `activeProducts` / `activeModules` sets for authorization checks.
 
@@ -56,10 +56,10 @@ Suspension or expiry **denies product/domain APIs** while allowing limited auth 
 
 Separate from entitlements:
 
-| Method | Path |
-| --- | --- |
-| GET | `/api/v1/platform/features` |
-| GET | `/api/v1/tenants/:tenantId/features/effective` |
+| Method     | Path                                             |
+| ---------- | ------------------------------------------------ |
+| GET        | `/api/v1/platform/features`                      |
+| GET        | `/api/v1/tenants/:tenantId/features/effective`   |
 | PUT/DELETE | `/api/v1/tenants/:tenantId/features/:featureKey` |
 
 ## Configuration Studio (foundation)

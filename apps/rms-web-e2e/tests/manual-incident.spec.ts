@@ -10,7 +10,9 @@ import {
 import { e2eRunId, syntheticDispatchDescription } from "../src/helpers/test-data.js";
 
 test.describe("Manual incident intake", () => {
-  test("creates incident and fills overview assignments @smoke", async ({ authenticatedPage: page }) => {
+  test("creates incident and fills overview assignments @smoke", async ({
+    authenticatedPage: page,
+  }) => {
     const runId = e2eRunId();
     const description = syntheticDispatchDescription(runId);
 
@@ -23,7 +25,9 @@ test.describe("Manual incident intake", () => {
 
     const dispatchField = page.getByLabel(/dispatch description/i);
     if (await dispatchField.isVisible().catch(() => false)) {
-      await expect(dispatchField).toHaveValue(new RegExp(runId.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")));
+      await expect(dispatchField).toHaveValue(
+        new RegExp(runId.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")),
+      );
     }
 
     await assignUnitIfPresent(page, incidentId);

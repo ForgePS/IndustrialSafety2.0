@@ -93,10 +93,7 @@ export const tenantWebhookDeliveries = pgTable(
     updatedAt: updatedAtColumn,
   },
   (table) => [
-    index("tenant_webhook_deliveries_endpoint_created_idx").on(
-      table.endpointId,
-      table.createdAt,
-    ),
+    index("tenant_webhook_deliveries_endpoint_created_idx").on(table.endpointId, table.createdAt),
     index("tenant_webhook_deliveries_tenant_status_idx").on(table.tenantId, table.status),
   ],
 );

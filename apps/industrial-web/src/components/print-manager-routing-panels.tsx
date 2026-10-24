@@ -257,13 +257,16 @@ export function PrintManagerGroupsPanel() {
                         ? "—"
                         : g.members
                             .map((m) => {
-                              const label = printerNameById.get(m.printerId) ?? m.printerId.slice(0, 8);
+                              const label =
+                                printerNameById.get(m.printerId) ?? m.printerId.slice(0, 8);
                               return m.isPrimary ? `${label} (primary)` : label;
                             })
                             .join(", ")}
                     </td>
                     <td>
-                      <span className={`badge ${g.enabled ? "bg-label-success" : "bg-label-secondary"}`}>
+                      <span
+                        className={`badge ${g.enabled ? "bg-label-success" : "bg-label-secondary"}`}
+                      >
                         {g.enabled ? "Enabled" : "Disabled"}
                       </span>
                     </td>
@@ -483,9 +486,8 @@ export function PrintManagerRoutingPanel() {
       ) : null}
 
       <p className="text-muted small mb-3">
-        Precedence: explicit printer → highest-priority matching rule → tenant default printer.
-        Jobs record <code>job.routing.completed</code> and <code>job.failover.accepted</code>{" "}
-        events.
+        Precedence: explicit printer → highest-priority matching rule → tenant default printer. Jobs
+        record <code>job.routing.completed</code> and <code>job.failover.accepted</code> events.
       </p>
 
       {canManage ? (
@@ -607,7 +609,11 @@ export function PrintManagerRoutingPanel() {
               </div>
             </div>
             <div className="mt-3">
-              <button type="submit" className="btn btn-primary btn-sm" disabled={busy || !name.trim()}>
+              <button
+                type="submit"
+                className="btn btn-primary btn-sm"
+                disabled={busy || !name.trim()}
+              >
                 Create rule
               </button>
             </div>
@@ -696,8 +702,8 @@ export function PrintManagerRoutingPanel() {
               ) : rules.length === 0 ? (
                 <tr>
                   <td colSpan={6} className="text-muted">
-                    No routing rules yet. Without a rule, jobs need an explicit printer or a
-                    tenant default.
+                    No routing rules yet. Without a rule, jobs need an explicit printer or a tenant
+                    default.
                   </td>
                 </tr>
               ) : (

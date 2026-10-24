@@ -224,7 +224,8 @@ async function main() {
     for (const row of fleetVehicles) {
       const payload = unwrap(row.source_payload);
       const docId = vehicleDocId(row);
-      const sourceCollection = String(row.source_collection || VEHICLE_SOURCE).trim() || VEHICLE_SOURCE;
+      const sourceCollection =
+        String(row.source_collection || VEHICLE_SOURCE).trim() || VEHICLE_SOURCE;
       const sourceKey = `${sourceCollection}::${docId}`;
       if (bySource.has(sourceKey)) {
         vehiclesSkipped += 1;
@@ -309,7 +310,8 @@ async function main() {
     let accidentsInserted = 0;
     for (const row of incidents) {
       const payload = unwrap(row.source_payload);
-      const hay = `${row.title ?? ""} ${payload.category ?? ""} ${payload.incidentCategory ?? ""} ${payload.type ?? ""}`.toLowerCase();
+      const hay =
+        `${row.title ?? ""} ${payload.category ?? ""} ${payload.incidentCategory ?? ""} ${payload.type ?? ""}`.toLowerCase();
       if (!/(auto|vehicle|crash|collision|accident|roadside)/.test(hay)) continue;
       const docId = String(row.source_document_id || row.id).trim();
       const sourceCollection = "dotAccidentsFromIncidents";
@@ -355,7 +357,8 @@ async function main() {
     let dvirsInserted = 0;
     for (const row of inspections) {
       const payload = unwrap(row.source_payload);
-      const hay = `${row.title ?? ""} ${payload.category ?? ""} ${payload.type ?? ""} ${payload.inspectionType ?? ""}`.toLowerCase();
+      const hay =
+        `${row.title ?? ""} ${payload.category ?? ""} ${payload.type ?? ""} ${payload.inspectionType ?? ""}`.toLowerCase();
       if (!/\bdvir\b|pre[-\s]?trip|post[-\s]?trip|vehicle inspection/.test(hay)) continue;
       const docId = String(row.source_document_id || row.id).trim();
       const sourceCollection = "dotDvirsFromInspections";

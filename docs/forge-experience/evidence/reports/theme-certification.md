@@ -14,35 +14,35 @@
 
 ## Confirmations
 
-| Requirement | Result |
-| --- | --- |
-| No hard-coded colors in shared components | Pass |
-| No inaccessible combinations (text on surface) | Pass |
-| No unreadable interactive states | Pass |
-| Charts/maps use CSS variables | Pass |
-| High contrast distinguishable from dark | Pass |
+| Requirement                                    | Result |
+| ---------------------------------------------- | ------ |
+| No hard-coded colors in shared components      | Pass   |
+| No inaccessible combinations (text on surface) | Pass   |
+| No unreadable interactive states               | Pass   |
+| Charts/maps use CSS variables                  | Pass   |
+| High contrast distinguishable from dark        | Pass   |
 
 ## Component matrix (themes)
 
-| Component | Light | Dark | High contrast |
-| --- | --- | --- | --- |
-| Shell / nav / banner | Pass | Pass | Pass |
-| Buttons / badges | Pass | Pass | Pass |
-| Cards / metrics / KPI trend | Pass | Pass | Pass |
-| Alerts / weather banner | Pass | Pass | Pass |
-| Forms / fields | Pass | Pass | Pass |
-| Tables | Pass | Pass | Pass |
-| Charts (line/bar/area/pie/donut) | Pass | Pass | Pass |
-| Map panel / legend | Pass | Pass | Pass |
-| Weather cards | Pass | Pass | Pass |
-| Dialog | Pass | Pass | Pass |
+| Component                        | Light | Dark | High contrast |
+| -------------------------------- | ----- | ---- | ------------- |
+| Shell / nav / banner             | Pass  | Pass | Pass          |
+| Buttons / badges                 | Pass  | Pass | Pass          |
+| Cards / metrics / KPI trend      | Pass  | Pass | Pass          |
+| Alerts / weather banner          | Pass  | Pass | Pass          |
+| Forms / fields                   | Pass  | Pass | Pass          |
+| Tables                           | Pass  | Pass | Pass          |
+| Charts (line/bar/area/pie/donut) | Pass  | Pass | Pass          |
+| Map panel / legend               | Pass  | Pass | Pass          |
+| Weather cards                    | Pass  | Pass | Pass          |
+| Dialog                           | Pass  | Pass | Pass          |
 
 ## Issues
 
-| ID | Severity | Component | Description | Recommended fix | Status |
-| --- | --- | --- | --- | --- | --- |
-| T-001 | Low | Badges / offline | Uses `color-mix()` — older Safari may need solid fallbacks | Add solid token fallbacks when targeting Safari < 16.2 | Open |
-| T-002 | Info | Env banner | Warning surface uses inverse text intentionally | Keep; verify HC pairing in products | Accepted |
+| ID    | Severity | Component        | Description                                                | Recommended fix                                        | Status   |
+| ----- | -------- | ---------------- | ---------------------------------------------------------- | ------------------------------------------------------ | -------- |
+| T-001 | Low      | Badges / offline | Uses `color-mix()` — older Safari may need solid fallbacks | Add solid token fallbacks when targeting Safari < 16.2 | Open     |
+| T-002 | Info     | Env banner       | Warning surface uses inverse text intentionally            | Keep; verify HC pairing in products                    | Accepted |
 
 ## Sign-off
 

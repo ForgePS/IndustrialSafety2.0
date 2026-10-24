@@ -16,9 +16,7 @@ import { createRequire } from "node:module";
 
 const BUSINESS_ID = "business-1782553339499";
 const PROJECT_ID = "forge-industrial-safety";
-const EVID_DIR = path.resolve(
-  "docs/program/industrial-migration/ind-11/evidence/p2/02-cognito",
-);
+const EVID_DIR = path.resolve("docs/program/industrial-migration/ind-11/evidence/p2/02-cognito");
 
 function fail(msg, code = 2) {
   console.error(JSON.stringify({ ok: false, error: msg }));
@@ -26,7 +24,9 @@ function fail(msg, code = 2) {
 }
 
 if (process.env.FORGE_P2_AUTH_EXPORT_AUTHORIZED?.trim() !== "true") {
-  fail("Refused: set FORGE_P2_AUTH_EXPORT_AUTHORIZED=true after signing APPROVE-PRODUCERS-AUTH-EXPORT.md");
+  fail(
+    "Refused: set FORGE_P2_AUTH_EXPORT_AUTHORIZED=true after signing APPROVE-PRODUCERS-AUTH-EXPORT.md",
+  );
 }
 
 const saPath = process.env.FORGE_FIREBASE_RO_SERVICE_ACCOUNT_PATH?.trim();
@@ -37,9 +37,7 @@ if (!fs.existsSync(saPath)) {
   fail(`Service account file missing: ${saPath}`);
 }
 
-const requireFromMig = createRequire(
-  path.resolve("packages/migration-firebase/package.json"),
-);
+const requireFromMig = createRequire(path.resolve("packages/migration-firebase/package.json"));
 let admin;
 let getAuth;
 try {
@@ -58,9 +56,7 @@ const root = admin;
 const appName = `p2-auth-export-${Date.now()}`;
 const certFn = root.credential?.cert ?? root.cert;
 if (typeof certFn !== "function" || typeof root.initializeApp !== "function") {
-  fail(
-    `firebase-admin API unexpected (cert=${typeof certFn}, init=${typeof root.initializeApp})`,
-  );
+  fail(`firebase-admin API unexpected (cert=${typeof certFn}, init=${typeof root.initializeApp})`);
 }
 if (typeof getAuth !== "function") {
   fail("firebase-admin/auth getAuth unavailable");
@@ -142,9 +138,7 @@ async function main() {
     producersriceEmailNoClaim: allUsers
       .filter(
         (u) =>
-          !u.inProducers &&
-          typeof u.email === "string" &&
-          /@producersrice\.com$/i.test(u.email),
+          !u.inProducers && typeof u.email === "string" && /@producersrice\.com$/i.test(u.email),
       )
       .map((u) => ({ uid: u.uid, email: u.email, businessIds: u.businessIds })),
   };
@@ -196,7 +190,9 @@ async function main() {
         createdAt: u.createdAt,
         lastSignInAt: u.lastSignInAt,
       }))
-      .sort((a, b) => String(a.emailNormalized || a.uid).localeCompare(String(b.emailNormalized || b.uid))),
+      .sort((a, b) =>
+        String(a.emailNormalized || a.uid).localeCompare(String(b.emailNormalized || b.uid)),
+      ),
     exceptions,
   };
 

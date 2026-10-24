@@ -94,7 +94,9 @@ export function materialMediaLabel(mediaKind: string): string {
   }
 }
 
-export function materialIconClass(material: Pick<TrainingMaterial, "mediaKind" | "category" | "mimeType">): string {
+export function materialIconClass(
+  material: Pick<TrainingMaterial, "mediaKind" | "category" | "mimeType">,
+): string {
   const kind = materialMediaKind(material);
   if (kind === "VIDEO") return "bx-video";
   if (kind === "PRESENTATION") return "bx-slideshow";
@@ -260,7 +262,9 @@ export function publicTrainingMaterialViewUrlPath(
   return `${prefix}/materials/${encodeURIComponent(materialId)}/view-url?sessionToken=${encodeURIComponent(sessionToken)}`;
 }
 
-export async function fetchTrainingMaterialViewUrl(materialId: string): Promise<TrainingMaterialViewUrl> {
+export async function fetchTrainingMaterialViewUrl(
+  materialId: string,
+): Promise<TrainingMaterialViewUrl> {
   return apiSend<TrainingMaterialViewUrl>(
     `/api/v1/industrial/training/materials/${encodeURIComponent(materialId)}/view-url`,
     "POST",
@@ -427,7 +431,9 @@ export async function uploadTrainingMaterialFile(params: {
   visibility?: string;
 }): Promise<string> {
   if (params.file.size <= 0 || params.file.size > MAX_TRAINING_MATERIAL_BYTES) {
-    throw new Error(`File must be between 1 byte and ${formatMaterialBytes(MAX_TRAINING_MATERIAL_BYTES)}.`);
+    throw new Error(
+      `File must be between 1 byte and ${formatMaterialBytes(MAX_TRAINING_MATERIAL_BYTES)}.`,
+    );
   }
   const title =
     params.title?.trim() || params.file.name.replace(/\.[^.]+$/, "") || params.file.name;

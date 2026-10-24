@@ -1,10 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import {
-  useModuleSummaryCaption,
-  useModuleSummaryWidget,
-} from "@/hooks/use-module-summary-widget";
+import { useModuleSummaryCaption, useModuleSummaryWidget } from "@/hooks/use-module-summary-widget";
 import type { WorkspaceWidgetSize } from "@/lib/workspace/types";
 import { WORKSPACE_VIEW_LABELS } from "@/lib/workspace/types";
 
@@ -59,11 +56,7 @@ export function SummaryWorkspaceWidget({
   moduleLabel,
 }: Props) {
   const activeView = view && views.includes(view) ? view : (views[0] ?? "");
-  const { status, error, payload, refresh } = useModuleSummaryWidget(
-    moduleKey,
-    activeView,
-    true,
-  );
+  const { status, error, payload, refresh } = useModuleSummaryWidget(moduleKey, activeView, true);
   const showStats = size === "medium" || size === "wide" || size === "large" || size === "full";
   const useSelect = views.length > 1 && size === "medium";
   const showTabs = views.length > 1 && !useSelect;

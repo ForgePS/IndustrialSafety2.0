@@ -43,9 +43,15 @@ export default function ComplianceAcknowledgmentsPage() {
       try {
         const [data, docs] = await Promise.all([
           apiGet<{ items: AckRow[] }>("/api/v1/legal/admin/acknowledgments"),
-          apiGet<{ items: Array<{ id: string; documentKey: string; title: string; status: string; documentType: string }> }>(
-            "/api/v1/legal/admin/documents?scope=tenant",
-          ).catch(() => ({ items: [] })),
+          apiGet<{
+            items: Array<{
+              id: string;
+              documentKey: string;
+              title: string;
+              status: string;
+              documentType: string;
+            }>;
+          }>("/api/v1/legal/admin/documents?scope=tenant").catch(() => ({ items: [] })),
         ]);
         if (!cancelled) {
           setItems(data.items ?? []);
@@ -66,7 +72,9 @@ export default function ComplianceAcknowledgmentsPage() {
     return (
       <>
         <h1 className="h4">User Acknowledgments</h1>
-        <p className="text-muted">You do not have permission to view tenant acknowledgment reports.</p>
+        <p className="text-muted">
+          You do not have permission to view tenant acknowledgment reports.
+        </p>
       </>
     );
   }
@@ -163,7 +171,9 @@ export default function ComplianceAcknowledgmentsPage() {
                           );
                           setSelected(detail);
                         } catch (err) {
-                          setError(err instanceof ApiError ? err.message : "Could not load evidence");
+                          setError(
+                            err instanceof ApiError ? err.message : "Could not load evidence",
+                          );
                         }
                       })()
                     }
@@ -189,7 +199,11 @@ export default function ComplianceAcknowledgmentsPage() {
           <div className="card-body">
             <div className="d-flex justify-content-between">
               <h2 className="h6">Evidence detail</h2>
-              <button type="button" className="btn btn-sm btn-outline-secondary" onClick={() => setSelected(null)}>
+              <button
+                type="button"
+                className="btn btn-sm btn-outline-secondary"
+                onClick={() => setSelected(null)}
+              >
                 Close
               </button>
             </div>

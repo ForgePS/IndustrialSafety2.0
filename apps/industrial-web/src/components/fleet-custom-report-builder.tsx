@@ -37,9 +37,7 @@ export function FleetCustomReportBuilder({ onError }: { onError: (msg: string) =
   const tenantId = me?.tenantId ?? "";
 
   const [reportName, setReportName] = useState("Custom asset report");
-  const [selectedFields, setSelectedFields] = useState<string[]>(
-    FLEET_REPORT_PRESETS[0]!.fields,
-  );
+  const [selectedFields, setSelectedFields] = useState<string[]>(FLEET_REPORT_PRESETS[0]!.fields);
   const [filters, setFilters] = useState<FleetReportFilters>(DEFAULT_FLEET_REPORT_FILTERS);
   const [savedReports, setSavedReports] = useState<FleetCustomReportTemplate[]>([]);
   const [saveNotice, setSaveNotice] = useState<string | null>(null);
@@ -67,15 +65,9 @@ export function FleetCustomReportBuilder({ onError }: { onError: (msg: string) =
     return map;
   }, []);
 
-  const filteredRows = useMemo(
-    () => filterFleetReportRows(rows, filters),
-    [rows, filters],
-  );
+  const filteredRows = useMemo(() => filterFleetReportRows(rows, filters), [rows, filters]);
 
-  const activeFields = useMemo(
-    () => normalizeFleetReportFields(selectedFields),
-    [selectedFields],
-  );
+  const activeFields = useMemo(() => normalizeFleetReportFields(selectedFields), [selectedFields]);
 
   const loadFleetRows = useCallback(async () => {
     setLoading(true);
@@ -107,22 +99,14 @@ export function FleetCustomReportBuilder({ onError }: { onError: (msg: string) =
     } finally {
       setLoading(false);
     }
-  }, [
-    filters.assetType,
-    filters.includeRemoved,
-    filters.insured,
-    filters.status,
-    onError,
-  ]);
+  }, [filters.assetType, filters.includeRemoved, filters.insured, filters.status, onError]);
 
   useEffect(() => {
     void loadFleetRows();
   }, [loadFleetRows]);
 
   function toggleField(id: string) {
-    setSelectedFields((prev) =>
-      prev.includes(id) ? prev.filter((f) => f !== id) : [...prev, id],
-    );
+    setSelectedFields((prev) => (prev.includes(id) ? prev.filter((f) => f !== id) : [...prev, id]));
     setActiveTemplateId(null);
   }
 
@@ -248,289 +232,291 @@ export function FleetCustomReportBuilder({ onError }: { onError: (msg: string) =
   return (
     <>
       <div className="fleet-custom-report">
-      <div className="card border shadow-none mb-4">
-        <div className="card-header d-flex flex-wrap justify-content-between align-items-center gap-2">
-          <h6 className="card-title mb-0">Custom asset report</h6>
-          <div className="d-flex flex-wrap gap-2">
-            <button
-              type="button"
-              className="btn btn-sm btn-outline-secondary"
-              disabled={loading}
-              onClick={() => void loadFleetRows()}
-            >
-              Refresh data
-            </button>
-            <button
-              type="button"
-              className="btn btn-sm btn-outline-primary"
-              disabled={loading || activeFields.length === 0}
-              onClick={() => exportCsv()}
-            >
-              <i className="bx bx-download me-1" aria-hidden />
-              Export CSV
-            </button>
-            <button
-              type="button"
-              className="btn btn-sm btn-primary fleet-custom-report__print-btn"
-              disabled={loading || activeFields.length === 0 || filteredRows.length === 0}
-              onClick={() => printReport()}
-            >
-              <i className="bx bx-printer me-1" aria-hidden />
-              Print
-            </button>
-          </div>
-        </div>
-        <div className="card-body">
-          {saveNotice ? (
-            <div className="alert alert-success py-2" role="status">
-              {saveNotice}
-            </div>
-          ) : null}
-          <div className="row g-3 mb-4">
-            <div className="col-md-4">
-              <label className="form-label" htmlFor="fleet-custom-report-name">
-                Report name
-              </label>
-              <input
-                id="fleet-custom-report-name"
-                className="form-control form-control-sm"
-                value={reportName}
-                onChange={(e) => {
-                  setReportName(e.target.value);
-                  setSaveNotice(null);
-                }}
-              />
-            </div>
-            <div className="col-md-8 d-flex flex-wrap align-items-end gap-2">
-              <button type="button" className="btn btn-sm btn-outline-secondary" onClick={saveTemplate}>
-                Save custom report
-              </button>
-              {savedReports.length > 0 ? (
-                <span className="text-muted small align-self-center">
-                  {savedReports.length} saved
-                </span>
-              ) : null}
-            </div>
-          </div>
-
-          <p className="text-muted small">Quick presets</p>
-          <div className="d-flex flex-wrap gap-2 mb-4">
-            {FLEET_REPORT_PRESETS.map((preset) => (
+        <div className="card border shadow-none mb-4">
+          <div className="card-header d-flex flex-wrap justify-content-between align-items-center gap-2">
+            <h6 className="card-title mb-0">Custom asset report</h6>
+            <div className="d-flex flex-wrap gap-2">
               <button
-                key={preset.id}
+                type="button"
+                className="btn btn-sm btn-outline-secondary"
+                disabled={loading}
+                onClick={() => void loadFleetRows()}
+              >
+                Refresh data
+              </button>
+              <button
                 type="button"
                 className="btn btn-sm btn-outline-primary"
-                onClick={() => applyPreset(preset.id)}
-                title={preset.description}
+                disabled={loading || activeFields.length === 0}
+                onClick={() => exportCsv()}
               >
-                {preset.name}
+                <i className="bx bx-download me-1" aria-hidden />
+                Export CSV
               </button>
-            ))}
+              <button
+                type="button"
+                className="btn btn-sm btn-primary fleet-custom-report__print-btn"
+                disabled={loading || activeFields.length === 0 || filteredRows.length === 0}
+                onClick={() => printReport()}
+              >
+                <i className="bx bx-printer me-1" aria-hidden />
+                Print
+              </button>
+            </div>
           </div>
-
-          {savedReports.length > 0 ? (
-            <>
-              <p className="text-muted small mb-2">Saved custom reports</p>
-              <div className="d-flex flex-wrap gap-2 mb-4">
-                {savedReports.map((template) => (
-                  <div key={template.id} className="btn-group btn-group-sm">
-                    <button
-                      type="button"
-                      className={`btn ${activeTemplateId === template.id ? "btn-primary" : "btn-outline-primary"}`}
-                      onClick={() => loadTemplate(template)}
-                    >
-                      {template.name}
-                    </button>
-                    <button
-                      type="button"
-                      className="btn btn-outline-danger"
-                      aria-label={`Delete ${template.name}`}
-                      onClick={() => deleteTemplate(template.id)}
-                    >
-                      ×
-                    </button>
-                  </div>
-                ))}
+          <div className="card-body">
+            {saveNotice ? (
+              <div className="alert alert-success py-2" role="status">
+                {saveNotice}
               </div>
-            </>
-          ) : null}
-
-          <p className="text-muted small mb-2">Filters</p>
-          <div className="row g-3 mb-4">
-            <div className="col-md-3">
-              <label className="form-label" htmlFor="fleet-report-q">
-                Search
-              </label>
-              <input
-                id="fleet-report-q"
-                className="form-control form-control-sm"
-                value={filters.q}
-                onChange={(e) => setFilters((f) => ({ ...f, q: e.target.value }))}
-                placeholder="VIN, plate, DRIVER…"
-              />
-            </div>
-            <div className="col-md-2">
-              <label className="form-label" htmlFor="fleet-report-type">
-                Type
-              </label>
-              <select
-                id="fleet-report-type"
-                className="form-select form-select-sm"
-                value={filters.assetType}
-                onChange={(e) => setFilters((f) => ({ ...f, assetType: e.target.value }))}
-              >
-                <option value="">All</option>
-                {FLEET_ASSET_TYPE_OPTIONS.map((t) => (
-                  <option key={t} value={t}>
-                    {t.replaceAll("_", " ")}
-                  </option>
-                ))}
-              </select>
-            </div>
-            <div className="col-md-2">
-              <label className="form-label" htmlFor="fleet-report-status">
-                Status
-              </label>
-              <select
-                id="fleet-report-status"
-                className="form-select form-select-sm"
-                value={filters.status}
-                onChange={(e) => setFilters((f) => ({ ...f, status: e.target.value }))}
-              >
-                <option value="">Any active</option>
-                {FLEET_ASSET_STATUS_OPTIONS.map((t) => (
-                  <option key={t} value={t}>
-                    {t.replaceAll("_", " ")}
-                  </option>
-                ))}
-              </select>
-            </div>
-            <div className="col-md-2">
-              <label className="form-label" htmlFor="fleet-report-insured">
-                Insured
-              </label>
-              <select
-                id="fleet-report-insured"
-                className="form-select form-select-sm"
-                value={filters.insured}
-                onChange={(e) =>
-                  setFilters((f) => ({
-                    ...f,
-                    insured: e.target.value as FleetReportFilters["insured"],
-                  }))
-                }
-              >
-                <option value="">All</option>
-                <option value="true">Insured</option>
-                <option value="false">Not insured</option>
-              </select>
-            </div>
-            <div className="col-md-3 d-flex align-items-end">
-              <div className="form-check mb-2">
-                <input
-                  id="fleet-report-removed"
-                  type="checkbox"
-                  className="form-check-input"
-                  checked={filters.includeRemoved}
-                  onChange={(e) =>
-                    setFilters((f) => ({ ...f, includeRemoved: e.target.checked }))
-                  }
-                />
-                <label className="form-check-label" htmlFor="fleet-report-removed">
-                  Include removed / disposed assets
+            ) : null}
+            <div className="row g-3 mb-4">
+              <div className="col-md-4">
+                <label className="form-label" htmlFor="fleet-custom-report-name">
+                  Report name
                 </label>
+                <input
+                  id="fleet-custom-report-name"
+                  className="form-control form-control-sm"
+                  value={reportName}
+                  onChange={(e) => {
+                    setReportName(e.target.value);
+                    setSaveNotice(null);
+                  }}
+                />
+              </div>
+              <div className="col-md-8 d-flex flex-wrap align-items-end gap-2">
+                <button
+                  type="button"
+                  className="btn btn-sm btn-outline-secondary"
+                  onClick={saveTemplate}
+                >
+                  Save custom report
+                </button>
+                {savedReports.length > 0 ? (
+                  <span className="text-muted small align-self-center">
+                    {savedReports.length} saved
+                  </span>
+                ) : null}
               </div>
             </div>
-          </div>
 
-          <div className="d-flex flex-wrap gap-2 mb-3">
-            <button
-              type="button"
-              className="btn btn-sm btn-outline-secondary"
-              onClick={() =>
-                setSelectedFields(FLEET_REPORT_FIELDS.map((f) => f.id))
-              }
-            >
-              Select all columns
-            </button>
-            <button
-              type="button"
-              className="btn btn-sm btn-outline-secondary"
-              onClick={() => setSelectedFields([])}
-            >
-              Clear columns
-            </button>
-            <span className="text-muted small align-self-center">
-              {activeFields.length} column{activeFields.length === 1 ? "" : "s"} selected
-            </span>
-          </div>
+            <p className="text-muted small">Quick presets</p>
+            <div className="d-flex flex-wrap gap-2 mb-4">
+              {FLEET_REPORT_PRESETS.map((preset) => (
+                <button
+                  key={preset.id}
+                  type="button"
+                  className="btn btn-sm btn-outline-primary"
+                  onClick={() => applyPreset(preset.id)}
+                  title={preset.description}
+                >
+                  {preset.name}
+                </button>
+              ))}
+            </div>
 
-          <div className="row g-3 mb-4">
-            {[...fieldGroups.entries()].map(([group, fields]) => (
-              <div key={group} className="col-md-4 col-lg-3">
-                <p className="fw-semibold small mb-2">{group}</p>
-                <div className="border rounded p-2" style={{ maxHeight: 200, overflowY: "auto" }}>
-                  {fields.map((field) => (
-                    <label
-                      key={field.id}
-                      className="d-flex align-items-start gap-2 py-1 mb-0 small"
-                      style={{ cursor: "pointer" }}
-                    >
-                      <input
-                        type="checkbox"
-                        className="form-check-input mt-1"
-                        checked={selectedFields.includes(field.id)}
-                        onChange={() => toggleField(field.id)}
-                      />
-                      <span>{field.label}</span>
-                    </label>
+            {savedReports.length > 0 ? (
+              <>
+                <p className="text-muted small mb-2">Saved custom reports</p>
+                <div className="d-flex flex-wrap gap-2 mb-4">
+                  {savedReports.map((template) => (
+                    <div key={template.id} className="btn-group btn-group-sm">
+                      <button
+                        type="button"
+                        className={`btn ${activeTemplateId === template.id ? "btn-primary" : "btn-outline-primary"}`}
+                        onClick={() => loadTemplate(template)}
+                      >
+                        {template.name}
+                      </button>
+                      <button
+                        type="button"
+                        className="btn btn-outline-danger"
+                        aria-label={`Delete ${template.name}`}
+                        onClick={() => deleteTemplate(template.id)}
+                      >
+                        ×
+                      </button>
+                    </div>
                   ))}
                 </div>
-              </div>
-            ))}
-          </div>
+              </>
+            ) : null}
 
-          <p className="text-muted small mb-2">
-            Preview ({filteredRows.length} asset{filteredRows.length === 1 ? "" : "s"})
-            {loading ? " — loading…" : ""}
-          </p>
-          <div className="table-responsive fleet-custom-report__preview">
-            <table className="table table-sm table-bordered mb-0">
-              <thead>
-                <tr>
-                  {activeFields.map((id) => (
-                    <th key={id}>{FLEET_REPORT_FIELDS.find((f) => f.id === id)?.label ?? id}</th>
+            <p className="text-muted small mb-2">Filters</p>
+            <div className="row g-3 mb-4">
+              <div className="col-md-3">
+                <label className="form-label" htmlFor="fleet-report-q">
+                  Search
+                </label>
+                <input
+                  id="fleet-report-q"
+                  className="form-control form-control-sm"
+                  value={filters.q}
+                  onChange={(e) => setFilters((f) => ({ ...f, q: e.target.value }))}
+                  placeholder="VIN, plate, DRIVER…"
+                />
+              </div>
+              <div className="col-md-2">
+                <label className="form-label" htmlFor="fleet-report-type">
+                  Type
+                </label>
+                <select
+                  id="fleet-report-type"
+                  className="form-select form-select-sm"
+                  value={filters.assetType}
+                  onChange={(e) => setFilters((f) => ({ ...f, assetType: e.target.value }))}
+                >
+                  <option value="">All</option>
+                  {FLEET_ASSET_TYPE_OPTIONS.map((t) => (
+                    <option key={t} value={t}>
+                      {t.replaceAll("_", " ")}
+                    </option>
                   ))}
-                </tr>
-              </thead>
-              <tbody>
-                {filteredRows.length === 0 ? (
-                  <tr>
-                    <td colSpan={Math.max(activeFields.length, 1)} className="text-muted">
-                      No assets match these filters.
-                    </td>
-                  </tr>
-                ) : (
-                  filteredRows.slice(0, 25).map((row) => (
-                    <tr key={String(row.id)}>
-                      {activeFields.map((id) => (
-                        <td key={id}>{formatFleetReportCell(row[id])}</td>
-                      ))}
-                    </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
-          </div>
-          {filteredRows.length > 25 ? (
-            <p className="text-muted small mt-2 mb-0">
-              Showing first 25 rows in preview. Export or print includes all{" "}
-              {filteredRows.length} matching assets.
+                </select>
+              </div>
+              <div className="col-md-2">
+                <label className="form-label" htmlFor="fleet-report-status">
+                  Status
+                </label>
+                <select
+                  id="fleet-report-status"
+                  className="form-select form-select-sm"
+                  value={filters.status}
+                  onChange={(e) => setFilters((f) => ({ ...f, status: e.target.value }))}
+                >
+                  <option value="">Any active</option>
+                  {FLEET_ASSET_STATUS_OPTIONS.map((t) => (
+                    <option key={t} value={t}>
+                      {t.replaceAll("_", " ")}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div className="col-md-2">
+                <label className="form-label" htmlFor="fleet-report-insured">
+                  Insured
+                </label>
+                <select
+                  id="fleet-report-insured"
+                  className="form-select form-select-sm"
+                  value={filters.insured}
+                  onChange={(e) =>
+                    setFilters((f) => ({
+                      ...f,
+                      insured: e.target.value as FleetReportFilters["insured"],
+                    }))
+                  }
+                >
+                  <option value="">All</option>
+                  <option value="true">Insured</option>
+                  <option value="false">Not insured</option>
+                </select>
+              </div>
+              <div className="col-md-3 d-flex align-items-end">
+                <div className="form-check mb-2">
+                  <input
+                    id="fleet-report-removed"
+                    type="checkbox"
+                    className="form-check-input"
+                    checked={filters.includeRemoved}
+                    onChange={(e) =>
+                      setFilters((f) => ({ ...f, includeRemoved: e.target.checked }))
+                    }
+                  />
+                  <label className="form-check-label" htmlFor="fleet-report-removed">
+                    Include removed / disposed assets
+                  </label>
+                </div>
+              </div>
+            </div>
+
+            <div className="d-flex flex-wrap gap-2 mb-3">
+              <button
+                type="button"
+                className="btn btn-sm btn-outline-secondary"
+                onClick={() => setSelectedFields(FLEET_REPORT_FIELDS.map((f) => f.id))}
+              >
+                Select all columns
+              </button>
+              <button
+                type="button"
+                className="btn btn-sm btn-outline-secondary"
+                onClick={() => setSelectedFields([])}
+              >
+                Clear columns
+              </button>
+              <span className="text-muted small align-self-center">
+                {activeFields.length} column{activeFields.length === 1 ? "" : "s"} selected
+              </span>
+            </div>
+
+            <div className="row g-3 mb-4">
+              {[...fieldGroups.entries()].map(([group, fields]) => (
+                <div key={group} className="col-md-4 col-lg-3">
+                  <p className="fw-semibold small mb-2">{group}</p>
+                  <div className="border rounded p-2" style={{ maxHeight: 200, overflowY: "auto" }}>
+                    {fields.map((field) => (
+                      <label
+                        key={field.id}
+                        className="d-flex align-items-start gap-2 py-1 mb-0 small"
+                        style={{ cursor: "pointer" }}
+                      >
+                        <input
+                          type="checkbox"
+                          className="form-check-input mt-1"
+                          checked={selectedFields.includes(field.id)}
+                          onChange={() => toggleField(field.id)}
+                        />
+                        <span>{field.label}</span>
+                      </label>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            <p className="text-muted small mb-2">
+              Preview ({filteredRows.length} asset{filteredRows.length === 1 ? "" : "s"})
+              {loading ? " — loading…" : ""}
             </p>
-          ) : null}
+            <div className="table-responsive fleet-custom-report__preview">
+              <table className="table table-sm table-bordered mb-0">
+                <thead>
+                  <tr>
+                    {activeFields.map((id) => (
+                      <th key={id}>{FLEET_REPORT_FIELDS.find((f) => f.id === id)?.label ?? id}</th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {filteredRows.length === 0 ? (
+                    <tr>
+                      <td colSpan={Math.max(activeFields.length, 1)} className="text-muted">
+                        No assets match these filters.
+                      </td>
+                    </tr>
+                  ) : (
+                    filteredRows.slice(0, 25).map((row) => (
+                      <tr key={String(row.id)}>
+                        {activeFields.map((id) => (
+                          <td key={id}>{formatFleetReportCell(row[id])}</td>
+                        ))}
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            </div>
+            {filteredRows.length > 25 ? (
+              <p className="text-muted small mt-2 mb-0">
+                Showing first 25 rows in preview. Export or print includes all {filteredRows.length}{" "}
+                matching assets.
+              </p>
+            ) : null}
+          </div>
         </div>
-      </div>
-      {printMounted ? customPrintReport : null}
+        {printMounted ? customPrintReport : null}
       </div>
     </>
   );

@@ -69,9 +69,15 @@ function main() {
 
   fs.writeFileSync(
     ETAG_PATH,
-    JSON.stringify({ functionName: FUNCTION_NAME, etag: publish.ETag, updatedAt: new Date().toISOString() }, null, 2),
+    JSON.stringify(
+      { functionName: FUNCTION_NAME, etag: publish.ETag, updatedAt: new Date().toISOString() },
+      null,
+      2,
+    ),
   );
-  console.log(JSON.stringify({ ok: true, functionName: FUNCTION_NAME, etag: publish.ETag }, null, 2));
+  console.log(
+    JSON.stringify({ ok: true, functionName: FUNCTION_NAME, etag: publish.ETag }, null, 2),
+  );
 }
 
 main();

@@ -46,14 +46,14 @@ One authoritative tenant domain is documented and hardened:
 
 ## Verification
 
-| Check | Result |
-| --- | --- |
-| `@forge/contracts` unit | 5 passed |
-| `@forge/authorization` unit | 9 passed |
-| `@forge/platform-api` unit | 53 passed (includes tenants 8, facilities 3, entitlements 2) |
-| Typecheck (platform-api + domain packages) | PASS after Repair Pass 1 |
-| Build (contracts without untracked analytics) | PASS after Repair Pass 2 |
-| Production operations | NONE |
+| Check                                         | Result                                                       |
+| --------------------------------------------- | ------------------------------------------------------------ |
+| `@forge/contracts` unit                       | 5 passed                                                     |
+| `@forge/authorization` unit                   | 9 passed                                                     |
+| `@forge/platform-api` unit                    | 53 passed (includes tenants 8, facilities 3, entitlements 2) |
+| Typecheck (platform-api + domain packages)    | PASS after Repair Pass 1                                     |
+| Build (contracts without untracked analytics) | PASS after Repair Pass 2                                     |
+| Production operations                         | NONE                                                         |
 
 ## Repair Pass 1
 

@@ -318,7 +318,8 @@ export const BUILT_IN_REPORTS: readonly BuiltInReport[] = [
     id: "rpt-wc-medical",
     key: "workers_comp.medical_encounters",
     name: "Medical Encounters",
-    description: "Medical encounter rows for workers' compensation cases (medical permission required).",
+    description:
+      "Medical encounter rows for workers' compensation cases (medical permission required).",
     module: "Workers' Comp",
     category: "WorkersComp",
     reportType: "compliance",
@@ -473,7 +474,9 @@ export type ReportingCatalogFilters = {
   reportType?: string;
 };
 
-export function listReportCategories(reports: readonly BuiltInReport[] = BUILT_IN_REPORTS): string[] {
+export function listReportCategories(
+  reports: readonly BuiltInReport[] = BUILT_IN_REPORTS,
+): string[] {
   return [...new Set(reports.map((r) => r.category))].sort((a, b) => a.localeCompare(b));
 }
 

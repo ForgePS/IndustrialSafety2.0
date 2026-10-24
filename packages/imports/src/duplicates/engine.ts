@@ -1,22 +1,12 @@
 import type { DuplicateAction } from "../types.js";
 
-export const MATCH_ALGORITHMS = [
-  "exact",
-  "weighted",
-  "fuzzy",
-  "composite",
-] as const;
+export const MATCH_ALGORITHMS = ["exact", "weighted", "fuzzy", "composite"] as const;
 export type MatchAlgorithm = (typeof MATCH_ALGORITHMS)[number];
 
 export const CONFIDENCE_BANDS = ["HIGH", "MEDIUM", "LOW"] as const;
 export type ConfidenceBand = (typeof CONFIDENCE_BANDS)[number];
 
-export const DUPLICATE_REVIEW_STATUSES = [
-  "PENDING",
-  "IN_REVIEW",
-  "APPROVED",
-  "REJECTED",
-] as const;
+export const DUPLICATE_REVIEW_STATUSES = ["PENDING", "IN_REVIEW", "APPROVED", "REJECTED"] as const;
 export type DuplicateReviewStatus = (typeof DUPLICATE_REVIEW_STATUSES)[number];
 
 export type DuplicateFieldRule = {
@@ -325,15 +315,11 @@ export function detectDuplicates(input: {
 
   return results.sort(
     (a, b) =>
-      b.confidence - a.confidence ||
-      a.incomingSourceRowKey.localeCompare(b.incomingSourceRowKey),
+      b.confidence - a.confidence || a.incomingSourceRowKey.localeCompare(b.incomingSourceRowKey),
   );
 }
 
 export function buildMergeCandidate(score: ScoredDuplicate): MergeCandidate {
-  const {
-    matchFields: _omit,
-    ...rest
-  } = score;
+  const { matchFields: _omit, ...rest } = score;
   return rest;
 }

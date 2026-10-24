@@ -7,14 +7,14 @@
 
 ## Components added
 
-| Component | Package |
-|---|---|
-| `ForgeAppShell`, `ForgeSidebar`, `ForgeTopbar` | `@forge/ui` |
-| `ForgeBreadcrumbs`, `ForgePageHeader`, `ForgePageActions` | `@forge/ui` |
-| `ForgeTenantSwitcher`, `ForgeUserMenu`, `ForgeNotificationMenu`, `ForgeProductSwitcher` | `@forge/ui` |
-| `ForgeMetricCard/Grid`, `ForgeStatusCard`, `ForgeModuleCard/Grid`, `ForgeStepper` | `@forge/ui` |
-| `ForgeDataTable`, `Can`, `PermissionDenied`, `FixtureBanner`, `ForgeSkeleton` | `@forge/ui` |
-| `filterNavigationItems/Groups`, `ForgeNavigationItem` types | `@forge/design-system` |
+| Component                                                                               | Package                |
+| --------------------------------------------------------------------------------------- | ---------------------- |
+| `ForgeAppShell`, `ForgeSidebar`, `ForgeTopbar`                                          | `@forge/ui`            |
+| `ForgeBreadcrumbs`, `ForgePageHeader`, `ForgePageActions`                               | `@forge/ui`            |
+| `ForgeTenantSwitcher`, `ForgeUserMenu`, `ForgeNotificationMenu`, `ForgeProductSwitcher` | `@forge/ui`            |
+| `ForgeMetricCard/Grid`, `ForgeStatusCard`, `ForgeModuleCard/Grid`, `ForgeStepper`       | `@forge/ui`            |
+| `ForgeDataTable`, `Can`, `PermissionDenied`, `FixtureBanner`, `ForgeSkeleton`           | `@forge/ui`            |
+| `filterNavigationItems/Groups`, `ForgeNavigationItem` types                             | `@forge/design-system` |
 
 ## Sneat reused
 
@@ -28,8 +28,8 @@
 
 ## Data source status
 
-- Live: Creator auth/session chrome  
-- Mock: n/a in S1  
+- Live: Creator auth/session chrome
+- Mock: n/a in S1
 - Not Connected: Notification menu (disabled with reason)
 
 ## Feature flags
@@ -57,8 +57,8 @@ Shell CSS includes ≤991.98px drawer behavior. Manual device matrix deferred to
 
 ## Known limitations
 
-- Command palette / global search deferred  
-- Forge logo/wordmark assets not authored  
+- Command palette / global search deferred
+- Forge logo/wordmark assets not authored
 - Industrial not yet on `ForgeAppShell` (keeps Sneat JS/CSS shell)
 
 ## Next checkpoint

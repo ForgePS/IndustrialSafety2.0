@@ -25,12 +25,7 @@ export type OfflineScope = {
   userId: string;
 };
 
-export type QueuedMutationStatus =
-  | "PENDING"
-  | "IN_FLIGHT"
-  | "CONFLICT"
-  | "FAILED"
-  | "ABANDONED";
+export type QueuedMutationStatus = "PENDING" | "IN_FLIGHT" | "CONFLICT" | "FAILED" | "ABANDONED";
 
 export type QueuedMutation = {
   id: string;
@@ -106,8 +101,7 @@ export class FieldMutationQueue {
       const parsed = JSON.parse(raw) as QueuedMutation[];
       return Array.isArray(parsed)
         ? parsed.filter(
-            (item) =>
-              item.tenantId === this.scope.tenantId && item.userId === this.scope.userId,
+            (item) => item.tenantId === this.scope.tenantId && item.userId === this.scope.userId,
           )
         : [];
     } catch {

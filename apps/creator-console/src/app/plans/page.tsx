@@ -2,12 +2,7 @@
 
 import { Suspense, useCallback, useEffect, useMemo, useState, type FormEvent } from "react";
 import { ConfirmDialog } from "@/components/confirm-dialog";
-import {
-  filterBySearch,
-  ListControls,
-  paginate,
-  sortByField,
-} from "@/components/list-controls";
+import { filterBySearch, ListControls, paginate, sortByField } from "@/components/list-controls";
 import { PlatformPageGate } from "@/components/platform-page-gate";
 import {
   archivePlanPrice,
@@ -289,8 +284,8 @@ function PlansInner() {
     <section className={styles.page}>
       <h1>Plans & Pricing</h1>
       <p className={styles.lead}>
-        Manage Forge subscription plans and price tiers. Delete removes unused plans
-        permanently; plans still used by subscriptions are archived instead.
+        Manage Forge subscription plans and price tiers. Delete removes unused plans permanently;
+        plans still used by subscriptions are archived instead.
       </p>
 
       {error ? <p className={styles.error}>{error}</p> : null}
@@ -659,9 +654,7 @@ function PlansInner() {
                 id="edit-price-nickname"
                 required
                 value={editPriceRow.nickname}
-                onChange={(e) =>
-                  setEditPriceRow({ ...editPriceRow, nickname: e.target.value })
-                }
+                onChange={(e) => setEditPriceRow({ ...editPriceRow, nickname: e.target.value })}
               />
             </div>
             <div className={styles.formRow}>
@@ -698,9 +691,7 @@ function PlansInner() {
               <select
                 id="edit-price-billing"
                 value={editPriceRow.billingType}
-                onChange={(e) =>
-                  setEditPriceRow({ ...editPriceRow, billingType: e.target.value })
-                }
+                onChange={(e) => setEditPriceRow({ ...editPriceRow, billingType: e.target.value })}
               >
                 {BILLING_TYPES.map((value) => (
                   <option key={value} value={value}>

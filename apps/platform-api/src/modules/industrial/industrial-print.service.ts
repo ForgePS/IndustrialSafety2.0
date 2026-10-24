@@ -197,7 +197,11 @@ export function generatePairingCode(): string {
 }
 
 export function isPairingCodeFormat(code: string): boolean {
-  return /^FPB-\d{3}-\d{3}$/.test(String(code ?? "").trim().toUpperCase());
+  return /^FPB-\d{3}-\d{3}$/.test(
+    String(code ?? "")
+      .trim()
+      .toUpperCase(),
+  );
 }
 
 export function isTerminalSuccessStatus(status: string): boolean {
@@ -727,53 +731,53 @@ export class IndustrialPrintService {
       description: "Default Forge Printer Bridge test label",
       enabled: true,
     });
-      await tx.insert(industrialLabelTemplateVersions).values({
-        id: versionId,
-        tenantId,
-        templateId,
-        version: 1,
-        layoutJson: {
-          kind: "ELEMENTS",
-          elements: [
-            {
-              id: "title",
-              type: "text",
-              x: 0.15,
-              y: 0.15,
-              width: 3.7,
-              height: 0.35,
-              content: "FORGE PRINTER TEST",
-              fontSizePt: 16,
-              fontWeight: "bold",
-            },
-            {
-              id: "meta",
-              type: "dynamicText",
-              x: 0.15,
-              y: 0.55,
-              width: 2.5,
-              height: 1.0,
-              content: "{{printerName}}\n{{connection}}\n{{date.current}}",
-              fontSizePt: 10,
-            },
-            {
-              id: "qr",
-              type: "qr",
-              x: 2.8,
-              y: 0.5,
-              width: 1.0,
-              height: 1.0,
-              content: "forge-print-test:{{printerId}}",
-            },
-          ],
-        },
-        dpi: BRADY_I4311_DPI,
-        widthInches: DEFAULT_WIDTH_IN,
-        heightInches: DEFAULT_HEIGHT_IN,
-        status: "PUBLISHED",
-      });
-      return { templateId, version: 1 };
-    }
+    await tx.insert(industrialLabelTemplateVersions).values({
+      id: versionId,
+      tenantId,
+      templateId,
+      version: 1,
+      layoutJson: {
+        kind: "ELEMENTS",
+        elements: [
+          {
+            id: "title",
+            type: "text",
+            x: 0.15,
+            y: 0.15,
+            width: 3.7,
+            height: 0.35,
+            content: "FORGE PRINTER TEST",
+            fontSizePt: 16,
+            fontWeight: "bold",
+          },
+          {
+            id: "meta",
+            type: "dynamicText",
+            x: 0.15,
+            y: 0.55,
+            width: 2.5,
+            height: 1.0,
+            content: "{{printerName}}\n{{connection}}\n{{date.current}}",
+            fontSizePt: 10,
+          },
+          {
+            id: "qr",
+            type: "qr",
+            x: 2.8,
+            y: 0.5,
+            width: 1.0,
+            height: 1.0,
+            content: "forge-print-test:{{printerId}}",
+          },
+        ],
+      },
+      dpi: BRADY_I4311_DPI,
+      widthInches: DEFAULT_WIDTH_IN,
+      heightInches: DEFAULT_HEIGHT_IN,
+      status: "PUBLISHED",
+    });
+    return { templateId, version: 1 };
+  }
 
   // ─── Authenticated: bridges ─────────────────────────────────────────────
 
@@ -786,231 +790,272 @@ export class IndustrialPrintService {
     const bridgeId = createId();
     const pendingDeviceId = `pending:${pairingId}`;
 
-    return withTenantTransaction(this.db, principal.tenantId, async (tx) => {
-      await tx.insert(industrialPrinterBridges).values({
-        id: bridgeId,
-        tenantId: principal.tenantId,
-        name: input.name?.trim() || "Printer Bridge",
-        deviceId: pendingDeviceId,
-        locationId: input.locationId ?? null,
-        divisionId: input.divisionId ?? null,
-        status: BridgeStatus.PAIRING,
-        registeredBy: principal.userId,
-        enabled: true,
-        pairingCodeHash: codeHash,
-        pairingExpiresAt: expiresAt,
-      });
+    return withTenantTransaction(
+      this.db,
+      principal.tenantId,
+      async (tx) => {
+        await tx.insert(industrialPrinterBridges).values({
+          id: bridgeId,
+          tenantId: principal.tenantId,
+          name: input.name?.trim() || "Printer Bridge",
+          deviceId: pendingDeviceId,
+          locationId: input.locationId ?? null,
+          divisionId: input.divisionId ?? null,
+          status: BridgeStatus.PAIRING,
+          registeredBy: principal.userId,
+          enabled: true,
+          pairingCodeHash: codeHash,
+          pairingExpiresAt: expiresAt,
+        });
 
-      await tx.insert(industrialBridgePairingCodes).values({
-        id: pairingId,
-        tenantId: principal.tenantId,
-        codeHash,
-        codeDisplay: code,
-        expiresAt,
-        createdBy: principal.userId,
-        bridgeId,
-      });
+        await tx.insert(industrialBridgePairingCodes).values({
+          id: pairingId,
+          tenantId: principal.tenantId,
+          codeHash,
+          codeDisplay: code,
+          expiresAt,
+          createdBy: principal.userId,
+          bridgeId,
+        });
 
-      return {
-        pairingCode: code,
-        expiresAt: expiresAt.toISOString(),
-        bridgeId,
-        name: input.name?.trim() || "Printer Bridge",
-        locationId: input.locationId ?? null,
-        divisionId: input.divisionId ?? null,
-      };
-    }, principal.userId);
+        return {
+          pairingCode: code,
+          expiresAt: expiresAt.toISOString(),
+          bridgeId,
+          name: input.name?.trim() || "Printer Bridge",
+          locationId: input.locationId ?? null,
+          divisionId: input.divisionId ?? null,
+        };
+      },
+      principal.userId,
+    );
   }
 
   async listBridges(principal: ForgePrincipal) {
-    return withTenantTransaction(this.db, principal.tenantId, async (tx) => {
-      const rows = await tx
-        .select()
-        .from(industrialPrinterBridges)
-        .where(eq(industrialPrinterBridges.tenantId, principal.tenantId))
-        .orderBy(asc(industrialPrinterBridges.name));
-      return { items: rows.map((r) => this.mapBridge(r)) };
-    }, principal.userId);
+    return withTenantTransaction(
+      this.db,
+      principal.tenantId,
+      async (tx) => {
+        const rows = await tx
+          .select()
+          .from(industrialPrinterBridges)
+          .where(eq(industrialPrinterBridges.tenantId, principal.tenantId))
+          .orderBy(asc(industrialPrinterBridges.name));
+        return { items: rows.map((r) => this.mapBridge(r)) };
+      },
+      principal.userId,
+    );
   }
 
   async getBridge(principal: ForgePrincipal, id: string) {
-    return withTenantTransaction(this.db, principal.tenantId, async (tx) => {
-      const [row] = await tx
-        .select()
-        .from(industrialPrinterBridges)
-        .where(
-          and(
-            eq(industrialPrinterBridges.id, id),
-            eq(industrialPrinterBridges.tenantId, principal.tenantId),
-          ),
-        )
-        .limit(1);
-      if (!row) throw new ForgeError("NOT_FOUND", "Printer bridge not found");
-      return this.mapBridge(row);
-    }, principal.userId);
+    return withTenantTransaction(
+      this.db,
+      principal.tenantId,
+      async (tx) => {
+        const [row] = await tx
+          .select()
+          .from(industrialPrinterBridges)
+          .where(
+            and(
+              eq(industrialPrinterBridges.id, id),
+              eq(industrialPrinterBridges.tenantId, principal.tenantId),
+            ),
+          )
+          .limit(1);
+        if (!row) throw new ForgeError("NOT_FOUND", "Printer bridge not found");
+        return this.mapBridge(row);
+      },
+      principal.userId,
+    );
   }
 
   async updateBridge(principal: ForgePrincipal, id: string, body: unknown) {
     const input = updateBridgeSchema.parse(body ?? {});
-    return withTenantTransaction(this.db, principal.tenantId, async (tx) => {
-      const [existing] = await tx
-        .select()
-        .from(industrialPrinterBridges)
-        .where(
-          and(
-            eq(industrialPrinterBridges.id, id),
-            eq(industrialPrinterBridges.tenantId, principal.tenantId),
-          ),
-        )
-        .limit(1);
-      if (!existing) throw new ForgeError("NOT_FOUND", "Printer bridge not found");
+    return withTenantTransaction(
+      this.db,
+      principal.tenantId,
+      async (tx) => {
+        const [existing] = await tx
+          .select()
+          .from(industrialPrinterBridges)
+          .where(
+            and(
+              eq(industrialPrinterBridges.id, id),
+              eq(industrialPrinterBridges.tenantId, principal.tenantId),
+            ),
+          )
+          .limit(1);
+        if (!existing) throw new ForgeError("NOT_FOUND", "Printer bridge not found");
 
-      const patch: Partial<typeof industrialPrinterBridges.$inferInsert> = {
-        updatedAt: new Date(),
-      };
-      if (input.name !== undefined) patch.name = input.name.trim();
-      if (input.locationId !== undefined) patch.locationId = input.locationId;
-      if (input.divisionId !== undefined) patch.divisionId = input.divisionId;
-      if (input.enabled !== undefined) {
-        patch.enabled = input.enabled;
-        if (!input.enabled) {
-          patch.status = BridgeStatus.DISABLED;
-        } else if (
-          input.status === undefined &&
-          (existing.status === BridgeStatus.DISABLED || !existing.enabled)
-        ) {
-          // Re-enable leaves the bridge offline until the agent heartbeats.
-          patch.status = BridgeStatus.OFFLINE;
+        const patch: Partial<typeof industrialPrinterBridges.$inferInsert> = {
+          updatedAt: new Date(),
+        };
+        if (input.name !== undefined) patch.name = input.name.trim();
+        if (input.locationId !== undefined) patch.locationId = input.locationId;
+        if (input.divisionId !== undefined) patch.divisionId = input.divisionId;
+        if (input.enabled !== undefined) {
+          patch.enabled = input.enabled;
+          if (!input.enabled) {
+            patch.status = BridgeStatus.DISABLED;
+          } else if (
+            input.status === undefined &&
+            (existing.status === BridgeStatus.DISABLED || !existing.enabled)
+          ) {
+            // Re-enable leaves the bridge offline until the agent heartbeats.
+            patch.status = BridgeStatus.OFFLINE;
+          }
         }
-      }
-      if (input.autoUpdateEnabled !== undefined) patch.autoUpdateEnabled = input.autoUpdateEnabled;
-      if (input.status !== undefined) patch.status = input.status;
+        if (input.autoUpdateEnabled !== undefined)
+          patch.autoUpdateEnabled = input.autoUpdateEnabled;
+        if (input.status !== undefined) patch.status = input.status;
 
-      const [updated] = await tx
-        .update(industrialPrinterBridges)
-        .set(patch)
-        .where(
-          and(
-            eq(industrialPrinterBridges.id, id),
-            eq(industrialPrinterBridges.tenantId, principal.tenantId),
-          ),
-        )
-        .returning();
-      return this.mapBridge(updated!);
-    }, principal.userId);
+        const [updated] = await tx
+          .update(industrialPrinterBridges)
+          .set(patch)
+          .where(
+            and(
+              eq(industrialPrinterBridges.id, id),
+              eq(industrialPrinterBridges.tenantId, principal.tenantId),
+            ),
+          )
+          .returning();
+        return this.mapBridge(updated!);
+      },
+      principal.userId,
+    );
   }
 
   async deleteBridge(principal: ForgePrincipal, id: string) {
-    return withTenantTransaction(this.db, principal.tenantId, async (tx) => {
-      const [existing] = await tx
-        .select()
-        .from(industrialPrinterBridges)
-        .where(
-          and(
-            eq(industrialPrinterBridges.id, id),
-            eq(industrialPrinterBridges.tenantId, principal.tenantId),
-          ),
-        )
-        .limit(1);
-      if (!existing) throw new ForgeError("NOT_FOUND", "Printer bridge not found");
+    return withTenantTransaction(
+      this.db,
+      principal.tenantId,
+      async (tx) => {
+        const [existing] = await tx
+          .select()
+          .from(industrialPrinterBridges)
+          .where(
+            and(
+              eq(industrialPrinterBridges.id, id),
+              eq(industrialPrinterBridges.tenantId, principal.tenantId),
+            ),
+          )
+          .limit(1);
+        if (!existing) throw new ForgeError("NOT_FOUND", "Printer bridge not found");
 
-      const [updated] = await tx
-        .update(industrialPrinterBridges)
-        .set({
-          enabled: false,
-          status: BridgeStatus.DISABLED,
-          accessTokenHash: null,
-          pairingCodeHash: null,
-          pairingExpiresAt: null,
-          updatedAt: new Date(),
-        })
-        .where(
-          and(
-            eq(industrialPrinterBridges.id, id),
-            eq(industrialPrinterBridges.tenantId, principal.tenantId),
-          ),
-        )
-        .returning();
-      return this.mapBridge(updated!);
-    }, principal.userId);
+        const [updated] = await tx
+          .update(industrialPrinterBridges)
+          .set({
+            enabled: false,
+            status: BridgeStatus.DISABLED,
+            accessTokenHash: null,
+            pairingCodeHash: null,
+            pairingExpiresAt: null,
+            updatedAt: new Date(),
+          })
+          .where(
+            and(
+              eq(industrialPrinterBridges.id, id),
+              eq(industrialPrinterBridges.tenantId, principal.tenantId),
+            ),
+          )
+          .returning();
+        return this.mapBridge(updated!);
+      },
+      principal.userId,
+    );
   }
 
   // ─── Authenticated: printers ────────────────────────────────────────────
 
   async listPrinters(principal: ForgePrincipal, query: { bridgeId?: string; enabled?: string }) {
-    return withTenantTransaction(this.db, principal.tenantId, async (tx) => {
-      const conditions = [eq(industrialPrinters.tenantId, principal.tenantId)];
-      if (query.bridgeId) conditions.push(eq(industrialPrinters.bridgeId, query.bridgeId));
-      if (query.enabled === "1" || query.enabled === "true") {
-        conditions.push(eq(industrialPrinters.enabled, true));
-      } else if (query.enabled === "0" || query.enabled === "false") {
-        conditions.push(eq(industrialPrinters.enabled, false));
-      }
-      const rows = await tx
-        .select()
-        .from(industrialPrinters)
-        .where(and(...conditions))
-        .orderBy(asc(industrialPrinters.name));
-      return { items: rows.map((r) => this.mapPrinter(r)) };
-    }, principal.userId);
+    return withTenantTransaction(
+      this.db,
+      principal.tenantId,
+      async (tx) => {
+        const conditions = [eq(industrialPrinters.tenantId, principal.tenantId)];
+        if (query.bridgeId) conditions.push(eq(industrialPrinters.bridgeId, query.bridgeId));
+        if (query.enabled === "1" || query.enabled === "true") {
+          conditions.push(eq(industrialPrinters.enabled, true));
+        } else if (query.enabled === "0" || query.enabled === "false") {
+          conditions.push(eq(industrialPrinters.enabled, false));
+        }
+        const rows = await tx
+          .select()
+          .from(industrialPrinters)
+          .where(and(...conditions))
+          .orderBy(asc(industrialPrinters.name));
+        return { items: rows.map((r) => this.mapPrinter(r)) };
+      },
+      principal.userId,
+    );
   }
 
   async getPrinter(principal: ForgePrincipal, id: string) {
-    return withTenantTransaction(this.db, principal.tenantId, async (tx) => {
-      const [row] = await tx
-        .select()
-        .from(industrialPrinters)
-        .where(
-          and(eq(industrialPrinters.id, id), eq(industrialPrinters.tenantId, principal.tenantId)),
-        )
-        .limit(1);
-      if (!row) throw new ForgeError("NOT_FOUND", "Printer not found");
-      return this.mapPrinter(row);
-    }, principal.userId);
+    return withTenantTransaction(
+      this.db,
+      principal.tenantId,
+      async (tx) => {
+        const [row] = await tx
+          .select()
+          .from(industrialPrinters)
+          .where(
+            and(eq(industrialPrinters.id, id), eq(industrialPrinters.tenantId, principal.tenantId)),
+          )
+          .limit(1);
+        if (!row) throw new ForgeError("NOT_FOUND", "Printer not found");
+        return this.mapPrinter(row);
+      },
+      principal.userId,
+    );
   }
 
   async updatePrinter(principal: ForgePrincipal, id: string, body: unknown) {
     const input = updatePrinterSchema.parse(body ?? {});
-    return withTenantTransaction(this.db, principal.tenantId, async (tx) => {
-      const [existing] = await tx
-        .select()
-        .from(industrialPrinters)
-        .where(
-          and(eq(industrialPrinters.id, id), eq(industrialPrinters.tenantId, principal.tenantId)),
-        )
-        .limit(1);
-      if (!existing) throw new ForgeError("NOT_FOUND", "Printer not found");
-
-      if (input.isDefault === true) {
-        await tx
-          .update(industrialPrinters)
-          .set({ isDefault: false, updatedAt: new Date() })
+    return withTenantTransaction(
+      this.db,
+      principal.tenantId,
+      async (tx) => {
+        const [existing] = await tx
+          .select()
+          .from(industrialPrinters)
           .where(
-            and(
-              eq(industrialPrinters.tenantId, principal.tenantId),
-              eq(industrialPrinters.isDefault, true),
-            ),
-          );
-      }
+            and(eq(industrialPrinters.id, id), eq(industrialPrinters.tenantId, principal.tenantId)),
+          )
+          .limit(1);
+        if (!existing) throw new ForgeError("NOT_FOUND", "Printer not found");
 
-      const patch: Partial<typeof industrialPrinters.$inferInsert> = { updatedAt: new Date() };
-      if (input.displayName !== undefined) patch.displayName = input.displayName;
-      if (input.enabled !== undefined) patch.enabled = input.enabled;
-      if (input.isDefault !== undefined) patch.isDefault = input.isDefault;
-      if (input.locationId !== undefined) patch.locationId = input.locationId;
-      if (input.divisionId !== undefined) patch.divisionId = input.divisionId;
-      if (input.dpi !== undefined) patch.dpi = input.dpi;
-      if (input.transportType !== undefined) patch.transportType = input.transportType;
+        if (input.isDefault === true) {
+          await tx
+            .update(industrialPrinters)
+            .set({ isDefault: false, updatedAt: new Date() })
+            .where(
+              and(
+                eq(industrialPrinters.tenantId, principal.tenantId),
+                eq(industrialPrinters.isDefault, true),
+              ),
+            );
+        }
 
-      const [updated] = await tx
-        .update(industrialPrinters)
-        .set(patch)
-        .where(
-          and(eq(industrialPrinters.id, id), eq(industrialPrinters.tenantId, principal.tenantId)),
-        )
-        .returning();
-      return this.mapPrinter(updated!);
-    }, principal.userId);
+        const patch: Partial<typeof industrialPrinters.$inferInsert> = { updatedAt: new Date() };
+        if (input.displayName !== undefined) patch.displayName = input.displayName;
+        if (input.enabled !== undefined) patch.enabled = input.enabled;
+        if (input.isDefault !== undefined) patch.isDefault = input.isDefault;
+        if (input.locationId !== undefined) patch.locationId = input.locationId;
+        if (input.divisionId !== undefined) patch.divisionId = input.divisionId;
+        if (input.dpi !== undefined) patch.dpi = input.dpi;
+        if (input.transportType !== undefined) patch.transportType = input.transportType;
+
+        const [updated] = await tx
+          .update(industrialPrinters)
+          .set(patch)
+          .where(
+            and(eq(industrialPrinters.id, id), eq(industrialPrinters.tenantId, principal.tenantId)),
+          )
+          .returning();
+        return this.mapPrinter(updated!);
+      },
+      principal.userId,
+    );
   }
 
   /**
@@ -1018,193 +1063,202 @@ export class IndustrialPrintService {
    * Marks printer as reconnecting; bridge polls status and updates via upsert/heartbeat.
    */
   async reconnectPrinter(principal: ForgePrincipal, id: string) {
-    return withTenantTransaction(this.db, principal.tenantId, async (tx) => {
-      const [printer] = await tx
-        .select()
-        .from(industrialPrinters)
-        .where(
-          and(eq(industrialPrinters.id, id), eq(industrialPrinters.tenantId, principal.tenantId)),
-        )
-        .limit(1);
-      if (!printer) throw new ForgeError("NOT_FOUND", "Printer not found");
+    return withTenantTransaction(
+      this.db,
+      principal.tenantId,
+      async (tx) => {
+        const [printer] = await tx
+          .select()
+          .from(industrialPrinters)
+          .where(
+            and(eq(industrialPrinters.id, id), eq(industrialPrinters.tenantId, principal.tenantId)),
+          )
+          .limit(1);
+        if (!printer) throw new ForgeError("NOT_FOUND", "Printer not found");
 
-      const transport = String(printer.transportType ?? "").toUpperCase();
-      const connection = String(printer.connectionType ?? "").toUpperCase();
-      const isBle =
-        transport === "BRADY_WEB_BLUETOOTH" ||
-        connection === "BLUETOOTH_BLE" ||
-        connection === "BLUETOOTH";
-      if (!isBle) {
-        throw new ForgeError("BAD_REQUEST", "Reconnect applies to Bluetooth printers only");
-      }
-      if (!printer.bluetoothSavedId && !printer.bluetoothDeviceId) {
-        throw new ForgeError(
-          "BAD_REQUEST",
-          "Printer has no saved Bluetooth association. Pair again from the Bridge companion.",
-        );
-      }
+        const transport = String(printer.transportType ?? "").toUpperCase();
+        const connection = String(printer.connectionType ?? "").toUpperCase();
+        const isBle =
+          transport === "BRADY_WEB_BLUETOOTH" ||
+          connection === "BLUETOOTH_BLE" ||
+          connection === "BLUETOOTH";
+        if (!isBle) {
+          throw new ForgeError("BAD_REQUEST", "Reconnect applies to Bluetooth printers only");
+        }
+        if (!printer.bluetoothSavedId && !printer.bluetoothDeviceId) {
+          throw new ForgeError(
+            "BAD_REQUEST",
+            "Printer has no saved Bluetooth association. Pair again from the Bridge companion.",
+          );
+        }
 
-      const [updated] = await tx
-        .update(industrialPrinters)
-        .set({
-          ready: false,
-          connected: false,
-          online: false,
-          lastErrorCode: null,
-          lastErrorMessage: "Reconnect requested",
-          updatedAt: new Date(),
-        })
-        .where(
-          and(eq(industrialPrinters.id, id), eq(industrialPrinters.tenantId, principal.tenantId)),
-        )
-        .returning();
+        const [updated] = await tx
+          .update(industrialPrinters)
+          .set({
+            ready: false,
+            connected: false,
+            online: false,
+            lastErrorCode: null,
+            lastErrorMessage: "Reconnect requested",
+            updatedAt: new Date(),
+          })
+          .where(
+            and(eq(industrialPrinters.id, id), eq(industrialPrinters.tenantId, principal.tenantId)),
+          )
+          .returning();
 
-      return {
-        ...this.mapPrinter(updated!),
-        reconnectRequested: true,
-        message:
-          "Reconnect requested. Keep the Forge Bluetooth Printer Companion open near the printer.",
-      };
-    }, principal.userId);
+        return {
+          ...this.mapPrinter(updated!),
+          reconnectRequested: true,
+          message:
+            "Reconnect requested. Keep the Forge Bluetooth Printer Companion open near the printer.",
+        };
+      },
+      principal.userId,
+    );
   }
 
   /**
    * Forget Bluetooth association (spec §71). Clears SDK device ids; does not remove Windows drivers.
    */
   async forgetBluetoothPrinter(principal: ForgePrincipal, id: string) {
-    return withTenantTransaction(this.db, principal.tenantId, async (tx) => {
-      const [printer] = await tx
-        .select()
-        .from(industrialPrinters)
-        .where(
-          and(eq(industrialPrinters.id, id), eq(industrialPrinters.tenantId, principal.tenantId)),
-        )
-        .limit(1);
-      if (!printer) throw new ForgeError("NOT_FOUND", "Printer not found");
+    return withTenantTransaction(
+      this.db,
+      principal.tenantId,
+      async (tx) => {
+        const [printer] = await tx
+          .select()
+          .from(industrialPrinters)
+          .where(
+            and(eq(industrialPrinters.id, id), eq(industrialPrinters.tenantId, principal.tenantId)),
+          )
+          .limit(1);
+        if (!printer) throw new ForgeError("NOT_FOUND", "Printer not found");
 
-      const [updated] = await tx
-        .update(industrialPrinters)
-        .set({
-          bluetoothDeviceId: null,
-          bluetoothSavedId: null,
-          connected: false,
-          ready: false,
-          online: false,
-          enabled: false,
-          lastErrorCode: null,
-          lastErrorMessage: "Bluetooth association forgotten",
-          updatedAt: new Date(),
-        })
-        .where(
-          and(eq(industrialPrinters.id, id), eq(industrialPrinters.tenantId, principal.tenantId)),
-        )
-        .returning();
+        const [updated] = await tx
+          .update(industrialPrinters)
+          .set({
+            bluetoothDeviceId: null,
+            bluetoothSavedId: null,
+            connected: false,
+            ready: false,
+            online: false,
+            enabled: false,
+            lastErrorCode: null,
+            lastErrorMessage: "Bluetooth association forgotten",
+            updatedAt: new Date(),
+          })
+          .where(
+            and(eq(industrialPrinters.id, id), eq(industrialPrinters.tenantId, principal.tenantId)),
+          )
+          .returning();
 
-      return this.mapPrinter(updated!);
-    }, principal.userId);
+        return this.mapPrinter(updated!);
+      },
+      principal.userId,
+    );
   }
 
   async testPrint(principal: ForgePrincipal, printerId: string) {
-    return withTenantTransaction(this.db, principal.tenantId, async (tx) => {
-      const [printer] = await tx
-        .select()
-        .from(industrialPrinters)
-        .where(
-          and(
-            eq(industrialPrinters.id, printerId),
-            eq(industrialPrinters.tenantId, principal.tenantId),
-          ),
-        )
-        .limit(1);
-      if (!printer) throw new ForgeError("NOT_FOUND", "Printer not found");
-      if (!printer.enabled) throw new ForgeError("BAD_REQUEST", "Printer is disabled");
-      if (!printer.bridgeId) {
-        throw new ForgeError("BAD_REQUEST", "Printer is not assigned to a bridge");
-      }
-
-      const [bridge] = await tx
-        .select()
-        .from(industrialPrinterBridges)
-        .where(
-          and(
-            eq(industrialPrinterBridges.id, printer.bridgeId),
-            eq(industrialPrinterBridges.tenantId, principal.tenantId),
-          ),
-        )
-        .limit(1);
-      if (!bridge || !bridge.enabled || bridge.status === BridgeStatus.DISABLED) {
-        throw new ForgeError("BAD_REQUEST", "Printer bridge is not available");
-      }
-
-      const template = await this.ensureTestPrintTemplate(tx, principal.tenantId);
-      const locationName = await this.resolveSiteName(
-        tx,
-        principal.tenantId,
-        printer.locationId ?? bridge.locationId,
-      );
-      const divisionName = await this.resolveDivisionName(
-        tx,
-        principal.tenantId,
-        printer.divisionId ?? bridge.divisionId,
-      );
-
-      const [ver] = await tx
-        .select()
-        .from(industrialLabelTemplateVersions)
-        .where(
-          and(
-            eq(industrialLabelTemplateVersions.templateId, template.templateId),
-            eq(industrialLabelTemplateVersions.tenantId, principal.tenantId),
-            eq(industrialLabelTemplateVersions.version, template.version),
-          ),
-        )
-        .limit(1);
-
-      const fieldValues: Record<string, string> = {
-        title: "FORGE PRINTER TEST",
-        printerName: printer.displayName || printer.name,
-        connection: printer.connectionType ?? "",
-        bridgeName: bridge.name,
-        locationName: locationName ?? "",
-        divisionName: divisionName ?? "",
-        printerId: printer.id,
-      };
-
-      const rendered = ver
-        ? await this.renderFromTemplateVersion(
-            tx,
-            principal.tenantId,
-            ver,
-            fieldValues,
-            "png",
+    return withTenantTransaction(
+      this.db,
+      principal.tenantId,
+      async (tx) => {
+        const [printer] = await tx
+          .select()
+          .from(industrialPrinters)
+          .where(
+            and(
+              eq(industrialPrinters.id, printerId),
+              eq(industrialPrinters.tenantId, principal.tenantId),
+            ),
           )
-        : await this.renderer.renderTestLabel({
-            printerName: printer.displayName || printer.name,
-            connection: printer.connectionType,
-            bridgeName: bridge.name,
-            locationName,
-            divisionName,
-            printerId: printer.id,
-            dpi: printer.dpi ?? BRADY_I4311_DPI,
-          });
+          .limit(1);
+        if (!printer) throw new ForgeError("NOT_FOUND", "Printer not found");
+        if (!printer.enabled) throw new ForgeError("BAD_REQUEST", "Printer is disabled");
+        if (!printer.bridgeId) {
+          throw new ForgeError("BAD_REQUEST", "Printer is not assigned to a bridge");
+        }
 
-      return this.insertQueuedJob(tx, {
-        tenantId: principal.tenantId,
-        printer,
-        bridge,
-        templateId: template.templateId,
-        templateVersion: template.version,
-        module: "printer",
-        recordType: "TEST_PRINT",
-        requestedBy: principal.userId,
-        copies: 1,
-        widthInches: rendered.widthInches,
-        heightInches: rendered.heightInches,
-        dpi: rendered.dpi,
-        rendered,
-        priority: 100,
-      });
-    }, principal.userId);
+        const [bridge] = await tx
+          .select()
+          .from(industrialPrinterBridges)
+          .where(
+            and(
+              eq(industrialPrinterBridges.id, printer.bridgeId),
+              eq(industrialPrinterBridges.tenantId, principal.tenantId),
+            ),
+          )
+          .limit(1);
+        if (!bridge || !bridge.enabled || bridge.status === BridgeStatus.DISABLED) {
+          throw new ForgeError("BAD_REQUEST", "Printer bridge is not available");
+        }
+
+        const template = await this.ensureTestPrintTemplate(tx, principal.tenantId);
+        const locationName = await this.resolveSiteName(
+          tx,
+          principal.tenantId,
+          printer.locationId ?? bridge.locationId,
+        );
+        const divisionName = await this.resolveDivisionName(
+          tx,
+          principal.tenantId,
+          printer.divisionId ?? bridge.divisionId,
+        );
+
+        const [ver] = await tx
+          .select()
+          .from(industrialLabelTemplateVersions)
+          .where(
+            and(
+              eq(industrialLabelTemplateVersions.templateId, template.templateId),
+              eq(industrialLabelTemplateVersions.tenantId, principal.tenantId),
+              eq(industrialLabelTemplateVersions.version, template.version),
+            ),
+          )
+          .limit(1);
+
+        const fieldValues: Record<string, string> = {
+          title: "FORGE PRINTER TEST",
+          printerName: printer.displayName || printer.name,
+          connection: printer.connectionType ?? "",
+          bridgeName: bridge.name,
+          locationName: locationName ?? "",
+          divisionName: divisionName ?? "",
+          printerId: printer.id,
+        };
+
+        const rendered = ver
+          ? await this.renderFromTemplateVersion(tx, principal.tenantId, ver, fieldValues, "png")
+          : await this.renderer.renderTestLabel({
+              printerName: printer.displayName || printer.name,
+              connection: printer.connectionType,
+              bridgeName: bridge.name,
+              locationName,
+              divisionName,
+              printerId: printer.id,
+              dpi: printer.dpi ?? BRADY_I4311_DPI,
+            });
+
+        return this.insertQueuedJob(tx, {
+          tenantId: principal.tenantId,
+          printer,
+          bridge,
+          templateId: template.templateId,
+          templateVersion: template.version,
+          module: "printer",
+          recordType: "TEST_PRINT",
+          requestedBy: principal.userId,
+          copies: 1,
+          widthInches: rendered.widthInches,
+          heightInches: rendered.heightInches,
+          dpi: rendered.dpi,
+          rendered,
+          priority: 100,
+        });
+      },
+      principal.userId,
+    );
   }
 
   // ─── Authenticated: jobs ────────────────────────────────────────────────
@@ -1219,7 +1273,10 @@ export class IndustrialPrintService {
       .select()
       .from(industrialPrinterBridges)
       .where(
-        and(eq(industrialPrinterBridges.id, bridgeId), eq(industrialPrinterBridges.tenantId, tenantId)),
+        and(
+          eq(industrialPrinterBridges.id, bridgeId),
+          eq(industrialPrinterBridges.tenantId, tenantId),
+        ),
       )
       .limit(1);
     return bridge ?? null;
@@ -1286,7 +1343,11 @@ export class IndustrialPrintService {
     let fallbackName: string | null = null;
     if (profile?.fallbackPrinterId) {
       const [fb] = await tx
-        .select({ id: industrialPrinters.id, name: industrialPrinters.name, displayName: industrialPrinters.displayName })
+        .select({
+          id: industrialPrinters.id,
+          name: industrialPrinters.name,
+          displayName: industrialPrinters.displayName,
+        })
         .from(industrialPrinters)
         .where(
           and(
@@ -1432,10 +1493,7 @@ export class IndustrialPrintService {
       (input.module ? `${input.module} label` : "Forge Label");
     const subtitle = fieldValues.subtitle?.trim() || undefined;
     const brand = fieldValues.brand?.trim() || undefined;
-    const caption =
-      fieldValues.caption?.trim() ||
-      fieldValues.station?.trim() ||
-      undefined;
+    const caption = fieldValues.caption?.trim() || fieldValues.station?.trim() || undefined;
     const specialKeys = new Set([
       "title",
       "Title",
@@ -1707,168 +1765,100 @@ export class IndustrialPrintService {
 
   async resolvePrintRoutePreview(principal: ForgePrincipal, body: unknown) {
     const input = resolvePrintRouteInputSchema.parse(body ?? {});
-    return withTenantTransaction(this.db, principal.tenantId, async (tx) => {
-      const route = await this.resolvePrintDestination(tx, principal.tenantId, {
-        printerId: input.printerId ?? null,
-        printerGroupId: input.printerGroupId ?? null,
-        locationId: input.locationId ?? null,
-        divisionId: input.divisionId ?? null,
-        module: input.module ?? null,
-        recordType: input.recordType ?? null,
-      });
-      const [printer] = await tx
-        .select()
-        .from(industrialPrinters)
-        .where(
-          and(
-            eq(industrialPrinters.id, route.printerId),
-            eq(industrialPrinters.tenantId, principal.tenantId),
-          ),
-        )
-        .limit(1);
-      return {
-        ...route,
-        printer: printer ? this.mapPrinter(printer) : null,
-      };
-    }, principal.userId);
+    return withTenantTransaction(
+      this.db,
+      principal.tenantId,
+      async (tx) => {
+        const route = await this.resolvePrintDestination(tx, principal.tenantId, {
+          printerId: input.printerId ?? null,
+          printerGroupId: input.printerGroupId ?? null,
+          locationId: input.locationId ?? null,
+          divisionId: input.divisionId ?? null,
+          module: input.module ?? null,
+          recordType: input.recordType ?? null,
+        });
+        const [printer] = await tx
+          .select()
+          .from(industrialPrinters)
+          .where(
+            and(
+              eq(industrialPrinters.id, route.printerId),
+              eq(industrialPrinters.tenantId, principal.tenantId),
+            ),
+          )
+          .limit(1);
+        return {
+          ...route,
+          printer: printer ? this.mapPrinter(printer) : null,
+        };
+      },
+      principal.userId,
+    );
   }
 
   async listPrinterGroups(principal: ForgePrincipal) {
-    return withTenantTransaction(this.db, principal.tenantId, async (tx) => {
-      const groups = await tx
-        .select()
-        .from(industrialPrinterGroups)
-        .where(eq(industrialPrinterGroups.tenantId, principal.tenantId))
-        .orderBy(asc(industrialPrinterGroups.name));
-      const members = await tx
-        .select()
-        .from(industrialPrinterGroupMembers)
-        .where(eq(industrialPrinterGroupMembers.tenantId, principal.tenantId));
-      return {
-        items: groups.map((g) => ({
-          id: g.id,
-          name: g.name,
-          strategy: g.strategy,
-          locationId: g.locationId,
-          divisionId: g.divisionId,
-          enabled: g.enabled,
-          createdAt: toIso(g.createdAt),
-          updatedAt: toIso(g.updatedAt),
-          members: members
-            .filter((m) => m.groupId === g.id)
-            .sort((a, b) => a.sortOrder - b.sortOrder)
-            .map((m) => ({
-              id: m.id,
-              printerId: m.printerId,
-              sortOrder: m.sortOrder,
-              isPrimary: m.isPrimary,
-            })),
-        })),
-      };
-    }, principal.userId);
+    return withTenantTransaction(
+      this.db,
+      principal.tenantId,
+      async (tx) => {
+        const groups = await tx
+          .select()
+          .from(industrialPrinterGroups)
+          .where(eq(industrialPrinterGroups.tenantId, principal.tenantId))
+          .orderBy(asc(industrialPrinterGroups.name));
+        const members = await tx
+          .select()
+          .from(industrialPrinterGroupMembers)
+          .where(eq(industrialPrinterGroupMembers.tenantId, principal.tenantId));
+        return {
+          items: groups.map((g) => ({
+            id: g.id,
+            name: g.name,
+            strategy: g.strategy,
+            locationId: g.locationId,
+            divisionId: g.divisionId,
+            enabled: g.enabled,
+            createdAt: toIso(g.createdAt),
+            updatedAt: toIso(g.updatedAt),
+            members: members
+              .filter((m) => m.groupId === g.id)
+              .sort((a, b) => a.sortOrder - b.sortOrder)
+              .map((m) => ({
+                id: m.id,
+                printerId: m.printerId,
+                sortOrder: m.sortOrder,
+                isPrimary: m.isPrimary,
+              })),
+          })),
+        };
+      },
+      principal.userId,
+    );
   }
 
   async createPrinterGroup(principal: ForgePrincipal, body: unknown) {
     const input = createPrinterGroupInputSchema.parse(body ?? {});
-    return withTenantTransaction(this.db, principal.tenantId, async (tx) => {
-      const id = createId();
-      const now = new Date();
-      const [row] = await tx
-        .insert(industrialPrinterGroups)
-        .values({
-          id,
-          tenantId: principal.tenantId,
-          name: input.name.trim(),
-          strategy: input.strategy,
-          locationId: input.locationId ?? null,
-          divisionId: input.divisionId ?? null,
-          enabled: input.enabled ?? true,
-          createdAt: now,
-          updatedAt: now,
-        })
-        .returning();
-      for (const [index, member] of (input.members ?? []).entries()) {
-        await tx.insert(industrialPrinterGroupMembers).values({
-          id: createId(),
-          tenantId: principal.tenantId,
-          groupId: id,
-          printerId: member.printerId,
-          sortOrder: member.sortOrder ?? index,
-          isPrimary: member.isPrimary ?? index === 0,
-        });
-      }
-      const members = await tx
-        .select()
-        .from(industrialPrinterGroupMembers)
-        .where(
-          and(
-            eq(industrialPrinterGroupMembers.tenantId, principal.tenantId),
-            eq(industrialPrinterGroupMembers.groupId, id),
-          ),
-        );
-      return {
-        id: row!.id,
-        name: row!.name,
-        strategy: row!.strategy,
-        locationId: row!.locationId,
-        divisionId: row!.divisionId,
-        enabled: row!.enabled,
-        createdAt: toIso(row!.createdAt),
-        updatedAt: toIso(row!.updatedAt),
-        members: members
-          .sort((a, b) => a.sortOrder - b.sortOrder)
-          .map((m) => ({
-            id: m.id,
-            printerId: m.printerId,
-            sortOrder: m.sortOrder,
-            isPrimary: m.isPrimary,
-          })),
-      };
-    }, principal.userId);
-  }
-
-  async patchPrinterGroup(principal: ForgePrincipal, id: string, body: unknown) {
-    const input = patchPrinterGroupInputSchema.parse(body ?? {});
-    return withTenantTransaction(this.db, principal.tenantId, async (tx) => {
-      const [existing] = await tx
-        .select()
-        .from(industrialPrinterGroups)
-        .where(
-          and(
-            eq(industrialPrinterGroups.id, id),
-            eq(industrialPrinterGroups.tenantId, principal.tenantId),
-          ),
-        )
-        .limit(1);
-      if (!existing) throw new ForgeError("NOT_FOUND", "Printer group not found");
-
-      const patch: Record<string, unknown> = { updatedAt: new Date() };
-      if (input.name !== undefined) patch.name = input.name.trim();
-      if (input.strategy !== undefined) patch.strategy = input.strategy;
-      if (input.locationId !== undefined) patch.locationId = input.locationId;
-      if (input.divisionId !== undefined) patch.divisionId = input.divisionId;
-      if (input.enabled !== undefined) patch.enabled = input.enabled;
-
-      await tx
-        .update(industrialPrinterGroups)
-        .set(patch)
-        .where(
-          and(
-            eq(industrialPrinterGroups.id, id),
-            eq(industrialPrinterGroups.tenantId, principal.tenantId),
-          ),
-        );
-
-      if (input.members) {
-        await tx
-          .delete(industrialPrinterGroupMembers)
-          .where(
-            and(
-              eq(industrialPrinterGroupMembers.groupId, id),
-              eq(industrialPrinterGroupMembers.tenantId, principal.tenantId),
-            ),
-          );
-        for (const [index, member] of input.members.entries()) {
+    return withTenantTransaction(
+      this.db,
+      principal.tenantId,
+      async (tx) => {
+        const id = createId();
+        const now = new Date();
+        const [row] = await tx
+          .insert(industrialPrinterGroups)
+          .values({
+            id,
+            tenantId: principal.tenantId,
+            name: input.name.trim(),
+            strategy: input.strategy,
+            locationId: input.locationId ?? null,
+            divisionId: input.divisionId ?? null,
+            enabled: input.enabled ?? true,
+            createdAt: now,
+            updatedAt: now,
+          })
+          .returning();
+        for (const [index, member] of (input.members ?? []).entries()) {
           await tx.insert(industrialPrinterGroupMembers).values({
             id: createId(),
             tenantId: principal.tenantId,
@@ -1878,176 +1868,292 @@ export class IndustrialPrintService {
             isPrimary: member.isPrimary ?? index === 0,
           });
         }
-      }
+        const members = await tx
+          .select()
+          .from(industrialPrinterGroupMembers)
+          .where(
+            and(
+              eq(industrialPrinterGroupMembers.tenantId, principal.tenantId),
+              eq(industrialPrinterGroupMembers.groupId, id),
+            ),
+          );
+        return {
+          id: row!.id,
+          name: row!.name,
+          strategy: row!.strategy,
+          locationId: row!.locationId,
+          divisionId: row!.divisionId,
+          enabled: row!.enabled,
+          createdAt: toIso(row!.createdAt),
+          updatedAt: toIso(row!.updatedAt),
+          members: members
+            .sort((a, b) => a.sortOrder - b.sortOrder)
+            .map((m) => ({
+              id: m.id,
+              printerId: m.printerId,
+              sortOrder: m.sortOrder,
+              isPrimary: m.isPrimary,
+            })),
+        };
+      },
+      principal.userId,
+    );
+  }
 
-      const [row] = await tx
-        .select()
-        .from(industrialPrinterGroups)
-        .where(
-          and(
-            eq(industrialPrinterGroups.id, id),
-            eq(industrialPrinterGroups.tenantId, principal.tenantId),
-          ),
-        )
-        .limit(1);
-      const members = await tx
-        .select()
-        .from(industrialPrinterGroupMembers)
-        .where(
-          and(
-            eq(industrialPrinterGroupMembers.tenantId, principal.tenantId),
-            eq(industrialPrinterGroupMembers.groupId, id),
-          ),
-        );
-      return {
-        id: row!.id,
-        name: row!.name,
-        strategy: row!.strategy,
-        locationId: row!.locationId,
-        divisionId: row!.divisionId,
-        enabled: row!.enabled,
-        createdAt: toIso(row!.createdAt),
-        updatedAt: toIso(row!.updatedAt),
-        members: members
-          .sort((a, b) => a.sortOrder - b.sortOrder)
-          .map((m) => ({
-            id: m.id,
-            printerId: m.printerId,
-            sortOrder: m.sortOrder,
-            isPrimary: m.isPrimary,
-          })),
-      };
-    }, principal.userId);
+  async patchPrinterGroup(principal: ForgePrincipal, id: string, body: unknown) {
+    const input = patchPrinterGroupInputSchema.parse(body ?? {});
+    return withTenantTransaction(
+      this.db,
+      principal.tenantId,
+      async (tx) => {
+        const [existing] = await tx
+          .select()
+          .from(industrialPrinterGroups)
+          .where(
+            and(
+              eq(industrialPrinterGroups.id, id),
+              eq(industrialPrinterGroups.tenantId, principal.tenantId),
+            ),
+          )
+          .limit(1);
+        if (!existing) throw new ForgeError("NOT_FOUND", "Printer group not found");
+
+        const patch: Record<string, unknown> = { updatedAt: new Date() };
+        if (input.name !== undefined) patch.name = input.name.trim();
+        if (input.strategy !== undefined) patch.strategy = input.strategy;
+        if (input.locationId !== undefined) patch.locationId = input.locationId;
+        if (input.divisionId !== undefined) patch.divisionId = input.divisionId;
+        if (input.enabled !== undefined) patch.enabled = input.enabled;
+
+        await tx
+          .update(industrialPrinterGroups)
+          .set(patch)
+          .where(
+            and(
+              eq(industrialPrinterGroups.id, id),
+              eq(industrialPrinterGroups.tenantId, principal.tenantId),
+            ),
+          );
+
+        if (input.members) {
+          await tx
+            .delete(industrialPrinterGroupMembers)
+            .where(
+              and(
+                eq(industrialPrinterGroupMembers.groupId, id),
+                eq(industrialPrinterGroupMembers.tenantId, principal.tenantId),
+              ),
+            );
+          for (const [index, member] of input.members.entries()) {
+            await tx.insert(industrialPrinterGroupMembers).values({
+              id: createId(),
+              tenantId: principal.tenantId,
+              groupId: id,
+              printerId: member.printerId,
+              sortOrder: member.sortOrder ?? index,
+              isPrimary: member.isPrimary ?? index === 0,
+            });
+          }
+        }
+
+        const [row] = await tx
+          .select()
+          .from(industrialPrinterGroups)
+          .where(
+            and(
+              eq(industrialPrinterGroups.id, id),
+              eq(industrialPrinterGroups.tenantId, principal.tenantId),
+            ),
+          )
+          .limit(1);
+        const members = await tx
+          .select()
+          .from(industrialPrinterGroupMembers)
+          .where(
+            and(
+              eq(industrialPrinterGroupMembers.tenantId, principal.tenantId),
+              eq(industrialPrinterGroupMembers.groupId, id),
+            ),
+          );
+        return {
+          id: row!.id,
+          name: row!.name,
+          strategy: row!.strategy,
+          locationId: row!.locationId,
+          divisionId: row!.divisionId,
+          enabled: row!.enabled,
+          createdAt: toIso(row!.createdAt),
+          updatedAt: toIso(row!.updatedAt),
+          members: members
+            .sort((a, b) => a.sortOrder - b.sortOrder)
+            .map((m) => ({
+              id: m.id,
+              printerId: m.printerId,
+              sortOrder: m.sortOrder,
+              isPrimary: m.isPrimary,
+            })),
+        };
+      },
+      principal.userId,
+    );
   }
 
   async deletePrinterGroup(principal: ForgePrincipal, id: string) {
-    return withTenantTransaction(this.db, principal.tenantId, async (tx) => {
-      const deleted = await tx
-        .delete(industrialPrinterGroups)
-        .where(
-          and(
-            eq(industrialPrinterGroups.id, id),
-            eq(industrialPrinterGroups.tenantId, principal.tenantId),
-          ),
-        )
-        .returning({ id: industrialPrinterGroups.id });
-      if (!deleted.length) throw new ForgeError("NOT_FOUND", "Printer group not found");
-      return { id };
-    }, principal.userId);
+    return withTenantTransaction(
+      this.db,
+      principal.tenantId,
+      async (tx) => {
+        const deleted = await tx
+          .delete(industrialPrinterGroups)
+          .where(
+            and(
+              eq(industrialPrinterGroups.id, id),
+              eq(industrialPrinterGroups.tenantId, principal.tenantId),
+            ),
+          )
+          .returning({ id: industrialPrinterGroups.id });
+        if (!deleted.length) throw new ForgeError("NOT_FOUND", "Printer group not found");
+        return { id };
+      },
+      principal.userId,
+    );
   }
 
   async listPrintRoutingRules(principal: ForgePrincipal) {
-    return withTenantTransaction(this.db, principal.tenantId, async (tx) => {
-      const rows = await tx
-        .select()
-        .from(industrialPrintRoutingRules)
-        .where(eq(industrialPrintRoutingRules.tenantId, principal.tenantId))
-        .orderBy(desc(industrialPrintRoutingRules.priority), asc(industrialPrintRoutingRules.name));
-      return {
-        items: rows.map((row) => ({
-          id: row.id,
-          name: row.name,
-          priority: row.priority,
-          enabled: row.enabled,
-          conditions: row.conditionsJson ?? {},
-          action: row.actionJson ?? {},
-          createdAt: toIso(row.createdAt),
-          updatedAt: toIso(row.updatedAt),
-        })),
-      };
-    }, principal.userId);
+    return withTenantTransaction(
+      this.db,
+      principal.tenantId,
+      async (tx) => {
+        const rows = await tx
+          .select()
+          .from(industrialPrintRoutingRules)
+          .where(eq(industrialPrintRoutingRules.tenantId, principal.tenantId))
+          .orderBy(
+            desc(industrialPrintRoutingRules.priority),
+            asc(industrialPrintRoutingRules.name),
+          );
+        return {
+          items: rows.map((row) => ({
+            id: row.id,
+            name: row.name,
+            priority: row.priority,
+            enabled: row.enabled,
+            conditions: row.conditionsJson ?? {},
+            action: row.actionJson ?? {},
+            createdAt: toIso(row.createdAt),
+            updatedAt: toIso(row.updatedAt),
+          })),
+        };
+      },
+      principal.userId,
+    );
   }
 
   async createPrintRoutingRule(principal: ForgePrincipal, body: unknown) {
     const input = createPrintRoutingRuleInputSchema.parse(body ?? {});
-    return withTenantTransaction(this.db, principal.tenantId, async (tx) => {
-      const id = createId();
-      const now = new Date();
-      const [row] = await tx
-        .insert(industrialPrintRoutingRules)
-        .values({
-          id,
-          tenantId: principal.tenantId,
-          name: input.name.trim(),
-          priority: input.priority,
-          enabled: input.enabled ?? true,
-          conditionsJson: input.conditions ?? {},
-          actionJson: input.action,
-          createdBy: principal.userId,
-          createdAt: now,
-          updatedAt: now,
-        })
-        .returning();
-      return {
-        id: row!.id,
-        name: row!.name,
-        priority: row!.priority,
-        enabled: row!.enabled,
-        conditions: row!.conditionsJson ?? {},
-        action: row!.actionJson ?? {},
-        createdAt: toIso(row!.createdAt),
-        updatedAt: toIso(row!.updatedAt),
-      };
-    }, principal.userId);
+    return withTenantTransaction(
+      this.db,
+      principal.tenantId,
+      async (tx) => {
+        const id = createId();
+        const now = new Date();
+        const [row] = await tx
+          .insert(industrialPrintRoutingRules)
+          .values({
+            id,
+            tenantId: principal.tenantId,
+            name: input.name.trim(),
+            priority: input.priority,
+            enabled: input.enabled ?? true,
+            conditionsJson: input.conditions ?? {},
+            actionJson: input.action,
+            createdBy: principal.userId,
+            createdAt: now,
+            updatedAt: now,
+          })
+          .returning();
+        return {
+          id: row!.id,
+          name: row!.name,
+          priority: row!.priority,
+          enabled: row!.enabled,
+          conditions: row!.conditionsJson ?? {},
+          action: row!.actionJson ?? {},
+          createdAt: toIso(row!.createdAt),
+          updatedAt: toIso(row!.updatedAt),
+        };
+      },
+      principal.userId,
+    );
   }
 
   async patchPrintRoutingRule(principal: ForgePrincipal, id: string, body: unknown) {
     const input = patchPrintRoutingRuleInputSchema.parse(body ?? {});
-    return withTenantTransaction(this.db, principal.tenantId, async (tx) => {
-      const [existing] = await tx
-        .select()
-        .from(industrialPrintRoutingRules)
-        .where(
-          and(
-            eq(industrialPrintRoutingRules.id, id),
-            eq(industrialPrintRoutingRules.tenantId, principal.tenantId),
-          ),
-        )
-        .limit(1);
-      if (!existing) throw new ForgeError("NOT_FOUND", "Routing rule not found");
-      const patch: Record<string, unknown> = { updatedAt: new Date() };
-      if (input.name !== undefined) patch.name = input.name.trim();
-      if (input.priority !== undefined) patch.priority = input.priority;
-      if (input.enabled !== undefined) patch.enabled = input.enabled;
-      if (input.conditions !== undefined) patch.conditionsJson = input.conditions;
-      if (input.action !== undefined) patch.actionJson = input.action;
-      const [row] = await tx
-        .update(industrialPrintRoutingRules)
-        .set(patch)
-        .where(
-          and(
-            eq(industrialPrintRoutingRules.id, id),
-            eq(industrialPrintRoutingRules.tenantId, principal.tenantId),
-          ),
-        )
-        .returning();
-      return {
-        id: row!.id,
-        name: row!.name,
-        priority: row!.priority,
-        enabled: row!.enabled,
-        conditions: row!.conditionsJson ?? {},
-        action: row!.actionJson ?? {},
-        createdAt: toIso(row!.createdAt),
-        updatedAt: toIso(row!.updatedAt),
-      };
-    }, principal.userId);
+    return withTenantTransaction(
+      this.db,
+      principal.tenantId,
+      async (tx) => {
+        const [existing] = await tx
+          .select()
+          .from(industrialPrintRoutingRules)
+          .where(
+            and(
+              eq(industrialPrintRoutingRules.id, id),
+              eq(industrialPrintRoutingRules.tenantId, principal.tenantId),
+            ),
+          )
+          .limit(1);
+        if (!existing) throw new ForgeError("NOT_FOUND", "Routing rule not found");
+        const patch: Record<string, unknown> = { updatedAt: new Date() };
+        if (input.name !== undefined) patch.name = input.name.trim();
+        if (input.priority !== undefined) patch.priority = input.priority;
+        if (input.enabled !== undefined) patch.enabled = input.enabled;
+        if (input.conditions !== undefined) patch.conditionsJson = input.conditions;
+        if (input.action !== undefined) patch.actionJson = input.action;
+        const [row] = await tx
+          .update(industrialPrintRoutingRules)
+          .set(patch)
+          .where(
+            and(
+              eq(industrialPrintRoutingRules.id, id),
+              eq(industrialPrintRoutingRules.tenantId, principal.tenantId),
+            ),
+          )
+          .returning();
+        return {
+          id: row!.id,
+          name: row!.name,
+          priority: row!.priority,
+          enabled: row!.enabled,
+          conditions: row!.conditionsJson ?? {},
+          action: row!.actionJson ?? {},
+          createdAt: toIso(row!.createdAt),
+          updatedAt: toIso(row!.updatedAt),
+        };
+      },
+      principal.userId,
+    );
   }
 
   async deletePrintRoutingRule(principal: ForgePrincipal, id: string) {
-    return withTenantTransaction(this.db, principal.tenantId, async (tx) => {
-      const deleted = await tx
-        .delete(industrialPrintRoutingRules)
-        .where(
-          and(
-            eq(industrialPrintRoutingRules.id, id),
-            eq(industrialPrintRoutingRules.tenantId, principal.tenantId),
-          ),
-        )
-        .returning({ id: industrialPrintRoutingRules.id });
-      if (!deleted.length) throw new ForgeError("NOT_FOUND", "Routing rule not found");
-      return { id };
-    }, principal.userId);
+    return withTenantTransaction(
+      this.db,
+      principal.tenantId,
+      async (tx) => {
+        const deleted = await tx
+          .delete(industrialPrintRoutingRules)
+          .where(
+            and(
+              eq(industrialPrintRoutingRules.id, id),
+              eq(industrialPrintRoutingRules.tenantId, principal.tenantId),
+            ),
+          )
+          .returning({ id: industrialPrintRoutingRules.id });
+        if (!deleted.length) throw new ForgeError("NOT_FOUND", "Routing rule not found");
+        return { id };
+      },
+      principal.userId,
+    );
   }
 
   // ─── Label templates (Phase 4) ───────────────────────────────────────────
@@ -2239,7 +2345,9 @@ export class IndustrialPrintService {
         dpi,
         title: "FORGE PRINTER TEST",
         lines: Object.entries(merged)
-          .filter(([k]) => !k.startsWith("date.") && !k.startsWith("time.") && !k.startsWith("datetime."))
+          .filter(
+            ([k]) => !k.startsWith("date.") && !k.startsWith("time.") && !k.startsWith("datetime."),
+          )
           .slice(0, 8)
           .map(([k, v]) => `${k}: ${v}`),
         qrPayload: merged.qr || merged.qrPayload || `forge-print-test:${version.templateId}`,
@@ -2301,333 +2409,151 @@ export class IndustrialPrintService {
       ...(brand.trim() ? { brand: brand.trim() } : {}),
       ...(subtitle.trim() ? { subtitle: subtitle.trim() } : {}),
       ...(caption.trim() ? { caption: caption.trim() } : {}),
-      ...(footerLines.filter(Boolean).length
-        ? { footerLines: footerLines.filter(Boolean) }
-        : {}),
+      ...(footerLines.filter(Boolean).length ? { footerLines: footerLines.filter(Boolean) } : {}),
       ...(qrPayload.trim() ? { qrPayload: qrPayload.trim() } : {}),
     });
   }
 
   async listLabelTemplates(principal: ForgePrincipal) {
-    return withTenantTransaction(this.db, principal.tenantId, async (tx) => {
-      const templates = await tx
-        .select()
-        .from(industrialLabelTemplates)
-        .where(eq(industrialLabelTemplates.tenantId, principal.tenantId))
-        .orderBy(asc(industrialLabelTemplates.category), asc(industrialLabelTemplates.name));
-      const versions = await tx
-        .select()
-        .from(industrialLabelTemplateVersions)
-        .where(eq(industrialLabelTemplateVersions.tenantId, principal.tenantId));
-      return {
-        items: templates.map((t) => {
-          const tvs = versions.filter((v) => v.templateId === t.id);
-          const published = tvs
-            .filter((v) => v.status === LabelTemplateVersionStatus.PUBLISHED)
-            .sort((a, b) => b.version - a.version)[0];
-          const draft = tvs
-            .filter((v) => v.status === LabelTemplateVersionStatus.DRAFT)
-            .sort((a, b) => b.version - a.version)[0];
-          return this.mapLabelTemplate(t, {
-            publishedVersion: published?.version ?? null,
-            draftVersion: draft?.version ?? null,
-          });
-        }),
-      };
-    }, principal.userId);
+    return withTenantTransaction(
+      this.db,
+      principal.tenantId,
+      async (tx) => {
+        const templates = await tx
+          .select()
+          .from(industrialLabelTemplates)
+          .where(eq(industrialLabelTemplates.tenantId, principal.tenantId))
+          .orderBy(asc(industrialLabelTemplates.category), asc(industrialLabelTemplates.name));
+        const versions = await tx
+          .select()
+          .from(industrialLabelTemplateVersions)
+          .where(eq(industrialLabelTemplateVersions.tenantId, principal.tenantId));
+        return {
+          items: templates.map((t) => {
+            const tvs = versions.filter((v) => v.templateId === t.id);
+            const published = tvs
+              .filter((v) => v.status === LabelTemplateVersionStatus.PUBLISHED)
+              .sort((a, b) => b.version - a.version)[0];
+            const draft = tvs
+              .filter((v) => v.status === LabelTemplateVersionStatus.DRAFT)
+              .sort((a, b) => b.version - a.version)[0];
+            return this.mapLabelTemplate(t, {
+              publishedVersion: published?.version ?? null,
+              draftVersion: draft?.version ?? null,
+            });
+          }),
+        };
+      },
+      principal.userId,
+    );
   }
 
   async getLabelTemplate(principal: ForgePrincipal, id: string) {
-    return withTenantTransaction(this.db, principal.tenantId, async (tx) => {
-      const [row] = await tx
-        .select()
-        .from(industrialLabelTemplates)
-        .where(
-          and(
-            eq(industrialLabelTemplates.id, id),
-            eq(industrialLabelTemplates.tenantId, principal.tenantId),
-          ),
-        )
-        .limit(1);
-      if (!row) throw new ForgeError("NOT_FOUND", "Label template not found");
-      const versions = await tx
-        .select()
-        .from(industrialLabelTemplateVersions)
-        .where(
-          and(
-            eq(industrialLabelTemplateVersions.templateId, id),
-            eq(industrialLabelTemplateVersions.tenantId, principal.tenantId),
-          ),
-        )
-        .orderBy(desc(industrialLabelTemplateVersions.version));
-      const mappedVersions = [];
-      for (const v of versions) {
-        const fields = await this.loadTemplateFields(tx, principal.tenantId, v.id);
-        mappedVersions.push(this.mapLabelTemplateVersion(v, fields));
-      }
-      const published = mappedVersions.find(
-        (v) => v.status === LabelTemplateVersionStatus.PUBLISHED,
-      );
-      const draft = mappedVersions.find((v) => v.status === LabelTemplateVersionStatus.DRAFT);
-      return this.mapLabelTemplate(row, {
-        versions: mappedVersions,
-        publishedVersion: published?.version ?? null,
-        draftVersion: draft?.version ?? null,
-      });
-    }, principal.userId);
+    return withTenantTransaction(
+      this.db,
+      principal.tenantId,
+      async (tx) => {
+        const [row] = await tx
+          .select()
+          .from(industrialLabelTemplates)
+          .where(
+            and(
+              eq(industrialLabelTemplates.id, id),
+              eq(industrialLabelTemplates.tenantId, principal.tenantId),
+            ),
+          )
+          .limit(1);
+        if (!row) throw new ForgeError("NOT_FOUND", "Label template not found");
+        const versions = await tx
+          .select()
+          .from(industrialLabelTemplateVersions)
+          .where(
+            and(
+              eq(industrialLabelTemplateVersions.templateId, id),
+              eq(industrialLabelTemplateVersions.tenantId, principal.tenantId),
+            ),
+          )
+          .orderBy(desc(industrialLabelTemplateVersions.version));
+        const mappedVersions = [];
+        for (const v of versions) {
+          const fields = await this.loadTemplateFields(tx, principal.tenantId, v.id);
+          mappedVersions.push(this.mapLabelTemplateVersion(v, fields));
+        }
+        const published = mappedVersions.find(
+          (v) => v.status === LabelTemplateVersionStatus.PUBLISHED,
+        );
+        const draft = mappedVersions.find((v) => v.status === LabelTemplateVersionStatus.DRAFT);
+        return this.mapLabelTemplate(row, {
+          versions: mappedVersions,
+          publishedVersion: published?.version ?? null,
+          draftVersion: draft?.version ?? null,
+        });
+      },
+      principal.userId,
+    );
   }
 
   async createLabelTemplate(principal: ForgePrincipal, body: unknown) {
     const input = createLabelTemplateInputSchema.parse(body ?? {});
-    return withTenantTransaction(this.db, principal.tenantId, async (tx) => {
-      const code = input.code.trim().toUpperCase();
-      const [dup] = await tx
-        .select({ id: industrialLabelTemplates.id })
-        .from(industrialLabelTemplates)
-        .where(
-          and(
-            eq(industrialLabelTemplates.tenantId, principal.tenantId),
-            eq(industrialLabelTemplates.code, code),
-          ),
-        )
-        .limit(1);
-      if (dup) throw new ForgeError("CONFLICT", "Template code already exists");
+    return withTenantTransaction(
+      this.db,
+      principal.tenantId,
+      async (tx) => {
+        const code = input.code.trim().toUpperCase();
+        const [dup] = await tx
+          .select({ id: industrialLabelTemplates.id })
+          .from(industrialLabelTemplates)
+          .where(
+            and(
+              eq(industrialLabelTemplates.tenantId, principal.tenantId),
+              eq(industrialLabelTemplates.code, code),
+            ),
+          )
+          .limit(1);
+        if (dup) throw new ForgeError("CONFLICT", "Template code already exists");
 
-      const templateId = createId();
-      const versionId = createId();
-      const now = new Date();
-      const layout = input.layout ?? defaultElementsLayout();
+        const templateId = createId();
+        const versionId = createId();
+        const now = new Date();
+        const layout = input.layout ?? defaultElementsLayout();
 
-      await tx.insert(industrialLabelTemplates).values({
-        id: templateId,
-        tenantId: principal.tenantId,
-        code,
-        name: input.name.trim(),
-        category: input.category.trim(),
-        description: input.description ?? null,
-        enabled: input.enabled ?? true,
-        createdAt: now,
-        updatedAt: now,
-      });
-      await tx.insert(industrialLabelTemplateVersions).values({
-        id: versionId,
-        tenantId: principal.tenantId,
-        templateId,
-        version: 1,
-        layoutJson: layout,
-        dpi: input.dpi,
-        widthInches: input.widthInches,
-        heightInches: input.heightInches,
-        status: LabelTemplateVersionStatus.DRAFT,
-        createdAt: now,
-        updatedAt: now,
-      });
-      const defaultFields =
-        input.fields ??
-        ([
-          { fieldKey: "title", fieldType: "string", label: "Title", required: true },
-          { fieldKey: "body", fieldType: "string", label: "Body", required: false },
-          { fieldKey: "qr", fieldType: "string", label: "QR payload", required: false },
-          { fieldKey: "asset", fieldType: "string", label: "Asset / barcode", required: false },
-        ] as const);
-      await this.replaceTemplateFields(
-        tx,
-        principal.tenantId,
-        versionId,
-        defaultFields.map((f) => {
-          const row: {
-            fieldKey: string;
-            fieldType: string;
-            label?: string | null;
-            required?: boolean;
-            defaultValue?: string | null;
-            metadataJson?: Record<string, unknown>;
-          } = {
-            fieldKey: f.fieldKey,
-            fieldType: f.fieldType,
-            label: f.label ?? null,
-            required: f.required ?? false,
-            defaultValue: "defaultValue" in f ? (f.defaultValue ?? null) : null,
-          };
-          if ("metadataJson" in f && f.metadataJson) {
-            row.metadataJson = f.metadataJson as Record<string, unknown>;
-          }
-          return row;
-        }),
-      );
-      return templateId;
-    }, principal.userId).then((templateId) => this.getLabelTemplate(principal, templateId));
-  }
-
-  async patchLabelTemplate(principal: ForgePrincipal, id: string, body: unknown) {
-    const input = patchLabelTemplateInputSchema.parse(body ?? {});
-    await withTenantTransaction(this.db, principal.tenantId, async (tx) => {
-      const [existing] = await tx
-        .select()
-        .from(industrialLabelTemplates)
-        .where(
-          and(
-            eq(industrialLabelTemplates.id, id),
-            eq(industrialLabelTemplates.tenantId, principal.tenantId),
-          ),
-        )
-        .limit(1);
-      if (!existing) throw new ForgeError("NOT_FOUND", "Label template not found");
-      const patch: Record<string, unknown> = { updatedAt: new Date() };
-      if (input.name !== undefined) patch.name = input.name.trim();
-      if (input.category !== undefined) patch.category = input.category.trim();
-      if (input.description !== undefined) patch.description = input.description;
-      if (input.enabled !== undefined) patch.enabled = input.enabled;
-      await tx
-        .update(industrialLabelTemplates)
-        .set(patch)
-        .where(
-          and(
-            eq(industrialLabelTemplates.id, id),
-            eq(industrialLabelTemplates.tenantId, principal.tenantId),
-          ),
-        );
-    }, principal.userId);
-    return this.getLabelTemplate(principal, id);
-  }
-
-  async createLabelTemplateDraft(principal: ForgePrincipal, id: string) {
-    await withTenantTransaction(this.db, principal.tenantId, async (tx) => {
-      const [template] = await tx
-        .select()
-        .from(industrialLabelTemplates)
-        .where(
-          and(
-            eq(industrialLabelTemplates.id, id),
-            eq(industrialLabelTemplates.tenantId, principal.tenantId),
-          ),
-        )
-        .limit(1);
-      if (!template) throw new ForgeError("NOT_FOUND", "Label template not found");
-
-      const [existingDraft] = await tx
-        .select()
-        .from(industrialLabelTemplateVersions)
-        .where(
-          and(
-            eq(industrialLabelTemplateVersions.templateId, id),
-            eq(industrialLabelTemplateVersions.tenantId, principal.tenantId),
-            eq(industrialLabelTemplateVersions.status, LabelTemplateVersionStatus.DRAFT),
-          ),
-        )
-        .limit(1);
-      if (existingDraft) {
-        throw new ForgeError("CONFLICT", "A draft version already exists for this template");
-      }
-
-      const [source] = await tx
-        .select()
-        .from(industrialLabelTemplateVersions)
-        .where(
-          and(
-            eq(industrialLabelTemplateVersions.templateId, id),
-            eq(industrialLabelTemplateVersions.tenantId, principal.tenantId),
-          ),
-        )
-        .orderBy(desc(industrialLabelTemplateVersions.version))
-        .limit(1);
-      if (!source) throw new ForgeError("NOT_FOUND", "No template version to copy");
-
-      const nextVersion = source.version + 1;
-      const versionId = createId();
-      const now = new Date();
-      await tx.insert(industrialLabelTemplateVersions).values({
-        id: versionId,
-        tenantId: principal.tenantId,
-        templateId: id,
-        version: nextVersion,
-        layoutJson: source.layoutJson ?? {},
-        dpi: source.dpi,
-        widthInches: source.widthInches,
-        heightInches: source.heightInches,
-        status: LabelTemplateVersionStatus.DRAFT,
-        createdAt: now,
-        updatedAt: now,
-      });
-      const fields = await this.loadTemplateFields(tx, principal.tenantId, source.id);
-      await this.replaceTemplateFields(
-        tx,
-        principal.tenantId,
-        versionId,
-        fields.map((f) => ({
-          fieldKey: f.fieldKey,
-          fieldType: f.fieldType,
-          label: f.label,
-          required: f.required,
-          defaultValue: f.defaultValue,
-          metadataJson:
-            f.metadataJson && typeof f.metadataJson === "object"
-              ? (f.metadataJson as Record<string, unknown>)
-              : {},
-        })),
-      );
-      await tx
-        .update(industrialLabelTemplates)
-        .set({ updatedAt: now })
-        .where(
-          and(
-            eq(industrialLabelTemplates.id, id),
-            eq(industrialLabelTemplates.tenantId, principal.tenantId),
-          ),
-        );
-    }, principal.userId);
-    return this.getLabelTemplate(principal, id);
-  }
-
-  async patchLabelTemplateVersion(
-    principal: ForgePrincipal,
-    templateId: string,
-    versionId: string,
-    body: unknown,
-  ) {
-    const input = patchLabelTemplateVersionInputSchema.parse(body ?? {});
-    await withTenantTransaction(this.db, principal.tenantId, async (tx) => {
-      const [version] = await tx
-        .select()
-        .from(industrialLabelTemplateVersions)
-        .where(
-          and(
-            eq(industrialLabelTemplateVersions.id, versionId),
-            eq(industrialLabelTemplateVersions.templateId, templateId),
-            eq(industrialLabelTemplateVersions.tenantId, principal.tenantId),
-          ),
-        )
-        .limit(1);
-      if (!version) throw new ForgeError("NOT_FOUND", "Template version not found");
-      try {
-        assertTemplateVersionMutable(version.status);
-      } catch (err) {
-        throw new ForgeError(
-          "VALIDATION_FAILED",
-          err instanceof Error ? err.message : "Published versions are immutable",
-        );
-      }
-
-      const patch: Record<string, unknown> = { updatedAt: new Date() };
-      if (input.widthInches !== undefined) patch.widthInches = input.widthInches;
-      if (input.heightInches !== undefined) patch.heightInches = input.heightInches;
-      if (input.dpi !== undefined) patch.dpi = input.dpi;
-      if (input.layout !== undefined) patch.layoutJson = input.layout;
-      await tx
-        .update(industrialLabelTemplateVersions)
-        .set(patch)
-        .where(
-          and(
-            eq(industrialLabelTemplateVersions.id, versionId),
-            eq(industrialLabelTemplateVersions.tenantId, principal.tenantId),
-          ),
-        );
-      if (input.fields) {
+        await tx.insert(industrialLabelTemplates).values({
+          id: templateId,
+          tenantId: principal.tenantId,
+          code,
+          name: input.name.trim(),
+          category: input.category.trim(),
+          description: input.description ?? null,
+          enabled: input.enabled ?? true,
+          createdAt: now,
+          updatedAt: now,
+        });
+        await tx.insert(industrialLabelTemplateVersions).values({
+          id: versionId,
+          tenantId: principal.tenantId,
+          templateId,
+          version: 1,
+          layoutJson: layout,
+          dpi: input.dpi,
+          widthInches: input.widthInches,
+          heightInches: input.heightInches,
+          status: LabelTemplateVersionStatus.DRAFT,
+          createdAt: now,
+          updatedAt: now,
+        });
+        const defaultFields =
+          input.fields ??
+          ([
+            { fieldKey: "title", fieldType: "string", label: "Title", required: true },
+            { fieldKey: "body", fieldType: "string", label: "Body", required: false },
+            { fieldKey: "qr", fieldType: "string", label: "QR payload", required: false },
+            { fieldKey: "asset", fieldType: "string", label: "Asset / barcode", required: false },
+          ] as const);
         await this.replaceTemplateFields(
           tx,
           principal.tenantId,
           versionId,
-          input.fields.map((f) => {
+          defaultFields.map((f) => {
             const row: {
               fieldKey: string;
               fieldType: string;
@@ -2640,139 +2566,328 @@ export class IndustrialPrintService {
               fieldType: f.fieldType,
               label: f.label ?? null,
               required: f.required ?? false,
-              defaultValue: f.defaultValue ?? null,
+              defaultValue: "defaultValue" in f ? (f.defaultValue ?? null) : null,
             };
-            if (f.metadataJson) row.metadataJson = f.metadataJson;
+            if ("metadataJson" in f && f.metadataJson) {
+              row.metadataJson = f.metadataJson as Record<string, unknown>;
+            }
             return row;
           }),
         );
-      }
-    }, principal.userId);
+        return templateId;
+      },
+      principal.userId,
+    ).then((templateId) => this.getLabelTemplate(principal, templateId));
+  }
+
+  async patchLabelTemplate(principal: ForgePrincipal, id: string, body: unknown) {
+    const input = patchLabelTemplateInputSchema.parse(body ?? {});
+    await withTenantTransaction(
+      this.db,
+      principal.tenantId,
+      async (tx) => {
+        const [existing] = await tx
+          .select()
+          .from(industrialLabelTemplates)
+          .where(
+            and(
+              eq(industrialLabelTemplates.id, id),
+              eq(industrialLabelTemplates.tenantId, principal.tenantId),
+            ),
+          )
+          .limit(1);
+        if (!existing) throw new ForgeError("NOT_FOUND", "Label template not found");
+        const patch: Record<string, unknown> = { updatedAt: new Date() };
+        if (input.name !== undefined) patch.name = input.name.trim();
+        if (input.category !== undefined) patch.category = input.category.trim();
+        if (input.description !== undefined) patch.description = input.description;
+        if (input.enabled !== undefined) patch.enabled = input.enabled;
+        await tx
+          .update(industrialLabelTemplates)
+          .set(patch)
+          .where(
+            and(
+              eq(industrialLabelTemplates.id, id),
+              eq(industrialLabelTemplates.tenantId, principal.tenantId),
+            ),
+          );
+      },
+      principal.userId,
+    );
+    return this.getLabelTemplate(principal, id);
+  }
+
+  async createLabelTemplateDraft(principal: ForgePrincipal, id: string) {
+    await withTenantTransaction(
+      this.db,
+      principal.tenantId,
+      async (tx) => {
+        const [template] = await tx
+          .select()
+          .from(industrialLabelTemplates)
+          .where(
+            and(
+              eq(industrialLabelTemplates.id, id),
+              eq(industrialLabelTemplates.tenantId, principal.tenantId),
+            ),
+          )
+          .limit(1);
+        if (!template) throw new ForgeError("NOT_FOUND", "Label template not found");
+
+        const [existingDraft] = await tx
+          .select()
+          .from(industrialLabelTemplateVersions)
+          .where(
+            and(
+              eq(industrialLabelTemplateVersions.templateId, id),
+              eq(industrialLabelTemplateVersions.tenantId, principal.tenantId),
+              eq(industrialLabelTemplateVersions.status, LabelTemplateVersionStatus.DRAFT),
+            ),
+          )
+          .limit(1);
+        if (existingDraft) {
+          throw new ForgeError("CONFLICT", "A draft version already exists for this template");
+        }
+
+        const [source] = await tx
+          .select()
+          .from(industrialLabelTemplateVersions)
+          .where(
+            and(
+              eq(industrialLabelTemplateVersions.templateId, id),
+              eq(industrialLabelTemplateVersions.tenantId, principal.tenantId),
+            ),
+          )
+          .orderBy(desc(industrialLabelTemplateVersions.version))
+          .limit(1);
+        if (!source) throw new ForgeError("NOT_FOUND", "No template version to copy");
+
+        const nextVersion = source.version + 1;
+        const versionId = createId();
+        const now = new Date();
+        await tx.insert(industrialLabelTemplateVersions).values({
+          id: versionId,
+          tenantId: principal.tenantId,
+          templateId: id,
+          version: nextVersion,
+          layoutJson: source.layoutJson ?? {},
+          dpi: source.dpi,
+          widthInches: source.widthInches,
+          heightInches: source.heightInches,
+          status: LabelTemplateVersionStatus.DRAFT,
+          createdAt: now,
+          updatedAt: now,
+        });
+        const fields = await this.loadTemplateFields(tx, principal.tenantId, source.id);
+        await this.replaceTemplateFields(
+          tx,
+          principal.tenantId,
+          versionId,
+          fields.map((f) => ({
+            fieldKey: f.fieldKey,
+            fieldType: f.fieldType,
+            label: f.label,
+            required: f.required,
+            defaultValue: f.defaultValue,
+            metadataJson:
+              f.metadataJson && typeof f.metadataJson === "object"
+                ? (f.metadataJson as Record<string, unknown>)
+                : {},
+          })),
+        );
+        await tx
+          .update(industrialLabelTemplates)
+          .set({ updatedAt: now })
+          .where(
+            and(
+              eq(industrialLabelTemplates.id, id),
+              eq(industrialLabelTemplates.tenantId, principal.tenantId),
+            ),
+          );
+      },
+      principal.userId,
+    );
+    return this.getLabelTemplate(principal, id);
+  }
+
+  async patchLabelTemplateVersion(
+    principal: ForgePrincipal,
+    templateId: string,
+    versionId: string,
+    body: unknown,
+  ) {
+    const input = patchLabelTemplateVersionInputSchema.parse(body ?? {});
+    await withTenantTransaction(
+      this.db,
+      principal.tenantId,
+      async (tx) => {
+        const [version] = await tx
+          .select()
+          .from(industrialLabelTemplateVersions)
+          .where(
+            and(
+              eq(industrialLabelTemplateVersions.id, versionId),
+              eq(industrialLabelTemplateVersions.templateId, templateId),
+              eq(industrialLabelTemplateVersions.tenantId, principal.tenantId),
+            ),
+          )
+          .limit(1);
+        if (!version) throw new ForgeError("NOT_FOUND", "Template version not found");
+        try {
+          assertTemplateVersionMutable(version.status);
+        } catch (err) {
+          throw new ForgeError(
+            "VALIDATION_FAILED",
+            err instanceof Error ? err.message : "Published versions are immutable",
+          );
+        }
+
+        const patch: Record<string, unknown> = { updatedAt: new Date() };
+        if (input.widthInches !== undefined) patch.widthInches = input.widthInches;
+        if (input.heightInches !== undefined) patch.heightInches = input.heightInches;
+        if (input.dpi !== undefined) patch.dpi = input.dpi;
+        if (input.layout !== undefined) patch.layoutJson = input.layout;
+        await tx
+          .update(industrialLabelTemplateVersions)
+          .set(patch)
+          .where(
+            and(
+              eq(industrialLabelTemplateVersions.id, versionId),
+              eq(industrialLabelTemplateVersions.tenantId, principal.tenantId),
+            ),
+          );
+        if (input.fields) {
+          await this.replaceTemplateFields(
+            tx,
+            principal.tenantId,
+            versionId,
+            input.fields.map((f) => {
+              const row: {
+                fieldKey: string;
+                fieldType: string;
+                label?: string | null;
+                required?: boolean;
+                defaultValue?: string | null;
+                metadataJson?: Record<string, unknown>;
+              } = {
+                fieldKey: f.fieldKey,
+                fieldType: f.fieldType,
+                label: f.label ?? null,
+                required: f.required ?? false,
+                defaultValue: f.defaultValue ?? null,
+              };
+              if (f.metadataJson) row.metadataJson = f.metadataJson;
+              return row;
+            }),
+          );
+        }
+      },
+      principal.userId,
+    );
     return this.getLabelTemplate(principal, templateId);
   }
 
   async publishLabelTemplate(principal: ForgePrincipal, id: string, body?: unknown) {
-    const input = z
-      .object({ versionId: z.string().uuid().optional() })
-      .parse(body ?? {});
-    await withTenantTransaction(this.db, principal.tenantId, async (tx) => {
-      const [template] = await tx
-        .select()
-        .from(industrialLabelTemplates)
-        .where(
-          and(
-            eq(industrialLabelTemplates.id, id),
-            eq(industrialLabelTemplates.tenantId, principal.tenantId),
-          ),
-        )
-        .limit(1);
-      if (!template) throw new ForgeError("NOT_FOUND", "Label template not found");
+    const input = z.object({ versionId: z.string().uuid().optional() }).parse(body ?? {});
+    await withTenantTransaction(
+      this.db,
+      principal.tenantId,
+      async (tx) => {
+        const [template] = await tx
+          .select()
+          .from(industrialLabelTemplates)
+          .where(
+            and(
+              eq(industrialLabelTemplates.id, id),
+              eq(industrialLabelTemplates.tenantId, principal.tenantId),
+            ),
+          )
+          .limit(1);
+        if (!template) throw new ForgeError("NOT_FOUND", "Label template not found");
 
-      const draftQuery = tx
-        .select()
-        .from(industrialLabelTemplateVersions)
-        .where(
-          and(
-            eq(industrialLabelTemplateVersions.templateId, id),
-            eq(industrialLabelTemplateVersions.tenantId, principal.tenantId),
-            eq(industrialLabelTemplateVersions.status, LabelTemplateVersionStatus.DRAFT),
-            ...(input.versionId
-              ? [eq(industrialLabelTemplateVersions.id, input.versionId)]
-              : []),
-          ),
-        )
-        .orderBy(desc(industrialLabelTemplateVersions.version))
-        .limit(1);
-      const [draft] = await draftQuery;
-      if (!draft) throw new ForgeError("VALIDATION_FAILED", "No draft version to publish");
+        const draftQuery = tx
+          .select()
+          .from(industrialLabelTemplateVersions)
+          .where(
+            and(
+              eq(industrialLabelTemplateVersions.templateId, id),
+              eq(industrialLabelTemplateVersions.tenantId, principal.tenantId),
+              eq(industrialLabelTemplateVersions.status, LabelTemplateVersionStatus.DRAFT),
+              ...(input.versionId ? [eq(industrialLabelTemplateVersions.id, input.versionId)] : []),
+            ),
+          )
+          .orderBy(desc(industrialLabelTemplateVersions.version))
+          .limit(1);
+        const [draft] = await draftQuery;
+        if (!draft) throw new ForgeError("VALIDATION_FAILED", "No draft version to publish");
 
-      const now = new Date();
-      await tx
-        .update(industrialLabelTemplateVersions)
-        .set({ status: LabelTemplateVersionStatus.ARCHIVED, updatedAt: now })
-        .where(
-          and(
-            eq(industrialLabelTemplateVersions.templateId, id),
-            eq(industrialLabelTemplateVersions.tenantId, principal.tenantId),
-            eq(industrialLabelTemplateVersions.status, LabelTemplateVersionStatus.PUBLISHED),
-          ),
-        );
-      await tx
-        .update(industrialLabelTemplateVersions)
-        .set({ status: LabelTemplateVersionStatus.PUBLISHED, updatedAt: now })
-        .where(
-          and(
-            eq(industrialLabelTemplateVersions.id, draft.id),
-            eq(industrialLabelTemplateVersions.tenantId, principal.tenantId),
-          ),
-        );
-      await tx
-        .update(industrialLabelTemplates)
-        .set({ updatedAt: now, enabled: true })
-        .where(
-          and(
-            eq(industrialLabelTemplates.id, id),
-            eq(industrialLabelTemplates.tenantId, principal.tenantId),
-          ),
-        );
-    }, principal.userId);
+        const now = new Date();
+        await tx
+          .update(industrialLabelTemplateVersions)
+          .set({ status: LabelTemplateVersionStatus.ARCHIVED, updatedAt: now })
+          .where(
+            and(
+              eq(industrialLabelTemplateVersions.templateId, id),
+              eq(industrialLabelTemplateVersions.tenantId, principal.tenantId),
+              eq(industrialLabelTemplateVersions.status, LabelTemplateVersionStatus.PUBLISHED),
+            ),
+          );
+        await tx
+          .update(industrialLabelTemplateVersions)
+          .set({ status: LabelTemplateVersionStatus.PUBLISHED, updatedAt: now })
+          .where(
+            and(
+              eq(industrialLabelTemplateVersions.id, draft.id),
+              eq(industrialLabelTemplateVersions.tenantId, principal.tenantId),
+            ),
+          );
+        await tx
+          .update(industrialLabelTemplates)
+          .set({ updatedAt: now, enabled: true })
+          .where(
+            and(
+              eq(industrialLabelTemplates.id, id),
+              eq(industrialLabelTemplates.tenantId, principal.tenantId),
+            ),
+          );
+      },
+      principal.userId,
+    );
     return this.getLabelTemplate(principal, id);
   }
 
   async previewLabelTemplate(principal: ForgePrincipal, id: string, body: unknown) {
     const input = previewLabelTemplateInputSchema.parse(body ?? {});
-    return withTenantTransaction(this.db, principal.tenantId, async (tx) => {
-      const [template] = await tx
-        .select()
-        .from(industrialLabelTemplates)
-        .where(
-          and(
-            eq(industrialLabelTemplates.id, id),
-            eq(industrialLabelTemplates.tenantId, principal.tenantId),
-          ),
-        )
-        .limit(1);
-      if (!template) throw new ForgeError("NOT_FOUND", "Label template not found");
+    return withTenantTransaction(
+      this.db,
+      principal.tenantId,
+      async (tx) => {
+        const [template] = await tx
+          .select()
+          .from(industrialLabelTemplates)
+          .where(
+            and(
+              eq(industrialLabelTemplates.id, id),
+              eq(industrialLabelTemplates.tenantId, principal.tenantId),
+            ),
+          )
+          .limit(1);
+        if (!template) throw new ForgeError("NOT_FOUND", "Label template not found");
 
-      let version: typeof industrialLabelTemplateVersions.$inferSelect | undefined;
-      if (input.versionId) {
-        [version] = await tx
-          .select()
-          .from(industrialLabelTemplateVersions)
-          .where(
-            and(
-              eq(industrialLabelTemplateVersions.id, input.versionId),
-              eq(industrialLabelTemplateVersions.templateId, id),
-              eq(industrialLabelTemplateVersions.tenantId, principal.tenantId),
-            ),
-          )
-          .limit(1);
-      } else if (input.version) {
-        [version] = await tx
-          .select()
-          .from(industrialLabelTemplateVersions)
-          .where(
-            and(
-              eq(industrialLabelTemplateVersions.templateId, id),
-              eq(industrialLabelTemplateVersions.tenantId, principal.tenantId),
-              eq(industrialLabelTemplateVersions.version, input.version),
-            ),
-          )
-          .limit(1);
-      } else {
-        [version] = await tx
-          .select()
-          .from(industrialLabelTemplateVersions)
-          .where(
-            and(
-              eq(industrialLabelTemplateVersions.templateId, id),
-              eq(industrialLabelTemplateVersions.tenantId, principal.tenantId),
-              eq(industrialLabelTemplateVersions.status, LabelTemplateVersionStatus.DRAFT),
-            ),
-          )
-          .orderBy(desc(industrialLabelTemplateVersions.version))
-          .limit(1);
-        if (!version) {
+        let version: typeof industrialLabelTemplateVersions.$inferSelect | undefined;
+        if (input.versionId) {
+          [version] = await tx
+            .select()
+            .from(industrialLabelTemplateVersions)
+            .where(
+              and(
+                eq(industrialLabelTemplateVersions.id, input.versionId),
+                eq(industrialLabelTemplateVersions.templateId, id),
+                eq(industrialLabelTemplateVersions.tenantId, principal.tenantId),
+              ),
+            )
+            .limit(1);
+        } else if (input.version) {
           [version] = await tx
             .select()
             .from(industrialLabelTemplateVersions)
@@ -2780,92 +2895,97 @@ export class IndustrialPrintService {
               and(
                 eq(industrialLabelTemplateVersions.templateId, id),
                 eq(industrialLabelTemplateVersions.tenantId, principal.tenantId),
-                eq(industrialLabelTemplateVersions.status, LabelTemplateVersionStatus.PUBLISHED),
+                eq(industrialLabelTemplateVersions.version, input.version),
+              ),
+            )
+            .limit(1);
+        } else {
+          [version] = await tx
+            .select()
+            .from(industrialLabelTemplateVersions)
+            .where(
+              and(
+                eq(industrialLabelTemplateVersions.templateId, id),
+                eq(industrialLabelTemplateVersions.tenantId, principal.tenantId),
+                eq(industrialLabelTemplateVersions.status, LabelTemplateVersionStatus.DRAFT),
               ),
             )
             .orderBy(desc(industrialLabelTemplateVersions.version))
             .limit(1);
+          if (!version) {
+            [version] = await tx
+              .select()
+              .from(industrialLabelTemplateVersions)
+              .where(
+                and(
+                  eq(industrialLabelTemplateVersions.templateId, id),
+                  eq(industrialLabelTemplateVersions.tenantId, principal.tenantId),
+                  eq(industrialLabelTemplateVersions.status, LabelTemplateVersionStatus.PUBLISHED),
+                ),
+              )
+              .orderBy(desc(industrialLabelTemplateVersions.version))
+              .limit(1);
+          }
         }
-      }
-      if (!version) throw new ForgeError("NOT_FOUND", "Template version not found");
+        if (!version) throw new ForgeError("NOT_FOUND", "Template version not found");
 
-      const rendered = await this.renderFromTemplateVersion(
-        tx,
-        principal.tenantId,
-        version,
-        input.fieldValues ?? {},
-        input.output,
-      );
-      return {
-        templateId: id,
-        versionId: version.id,
-        version: version.version,
-        status: version.status,
-        contentType: rendered.contentType,
-        base64: rendered.buffer.toString("base64"),
-        previewDataUrl: rendered.previewDataUrl,
-        sha256: rendered.sha256,
-        widthInches: rendered.widthInches,
-        heightInches: rendered.heightInches,
-        dpi: rendered.dpi,
-      };
-    }, principal.userId);
+        const rendered = await this.renderFromTemplateVersion(
+          tx,
+          principal.tenantId,
+          version,
+          input.fieldValues ?? {},
+          input.output,
+        );
+        return {
+          templateId: id,
+          versionId: version.id,
+          version: version.version,
+          status: version.status,
+          contentType: rendered.contentType,
+          base64: rendered.buffer.toString("base64"),
+          previewDataUrl: rendered.previewDataUrl,
+          sha256: rendered.sha256,
+          widthInches: rendered.widthInches,
+          heightInches: rendered.heightInches,
+          dpi: rendered.dpi,
+        };
+      },
+      principal.userId,
+    );
   }
 
   async exportLabelTemplateZpl(principal: ForgePrincipal, id: string, body: unknown) {
     const input = exportLabelTemplateZplInputSchema.parse(body ?? {});
-    return withTenantTransaction(this.db, principal.tenantId, async (tx) => {
-      const [template] = await tx
-        .select()
-        .from(industrialLabelTemplates)
-        .where(
-          and(
-            eq(industrialLabelTemplates.id, id),
-            eq(industrialLabelTemplates.tenantId, principal.tenantId),
-          ),
-        )
-        .limit(1);
-      if (!template) throw new ForgeError("NOT_FOUND", "Label template not found");
+    return withTenantTransaction(
+      this.db,
+      principal.tenantId,
+      async (tx) => {
+        const [template] = await tx
+          .select()
+          .from(industrialLabelTemplates)
+          .where(
+            and(
+              eq(industrialLabelTemplates.id, id),
+              eq(industrialLabelTemplates.tenantId, principal.tenantId),
+            ),
+          )
+          .limit(1);
+        if (!template) throw new ForgeError("NOT_FOUND", "Label template not found");
 
-      let version: typeof industrialLabelTemplateVersions.$inferSelect | undefined;
-      if (input.versionId) {
-        [version] = await tx
-          .select()
-          .from(industrialLabelTemplateVersions)
-          .where(
-            and(
-              eq(industrialLabelTemplateVersions.id, input.versionId),
-              eq(industrialLabelTemplateVersions.templateId, id),
-              eq(industrialLabelTemplateVersions.tenantId, principal.tenantId),
-            ),
-          )
-          .limit(1);
-      } else if (input.version) {
-        [version] = await tx
-          .select()
-          .from(industrialLabelTemplateVersions)
-          .where(
-            and(
-              eq(industrialLabelTemplateVersions.templateId, id),
-              eq(industrialLabelTemplateVersions.tenantId, principal.tenantId),
-              eq(industrialLabelTemplateVersions.version, input.version),
-            ),
-          )
-          .limit(1);
-      } else {
-        [version] = await tx
-          .select()
-          .from(industrialLabelTemplateVersions)
-          .where(
-            and(
-              eq(industrialLabelTemplateVersions.templateId, id),
-              eq(industrialLabelTemplateVersions.tenantId, principal.tenantId),
-              eq(industrialLabelTemplateVersions.status, LabelTemplateVersionStatus.DRAFT),
-            ),
-          )
-          .orderBy(desc(industrialLabelTemplateVersions.version))
-          .limit(1);
-        if (!version) {
+        let version: typeof industrialLabelTemplateVersions.$inferSelect | undefined;
+        if (input.versionId) {
+          [version] = await tx
+            .select()
+            .from(industrialLabelTemplateVersions)
+            .where(
+              and(
+                eq(industrialLabelTemplateVersions.id, input.versionId),
+                eq(industrialLabelTemplateVersions.templateId, id),
+                eq(industrialLabelTemplateVersions.tenantId, principal.tenantId),
+              ),
+            )
+            .limit(1);
+        } else if (input.version) {
           [version] = await tx
             .select()
             .from(industrialLabelTemplateVersions)
@@ -2873,55 +2993,82 @@ export class IndustrialPrintService {
               and(
                 eq(industrialLabelTemplateVersions.templateId, id),
                 eq(industrialLabelTemplateVersions.tenantId, principal.tenantId),
-                eq(industrialLabelTemplateVersions.status, LabelTemplateVersionStatus.PUBLISHED),
+                eq(industrialLabelTemplateVersions.version, input.version),
+              ),
+            )
+            .limit(1);
+        } else {
+          [version] = await tx
+            .select()
+            .from(industrialLabelTemplateVersions)
+            .where(
+              and(
+                eq(industrialLabelTemplateVersions.templateId, id),
+                eq(industrialLabelTemplateVersions.tenantId, principal.tenantId),
+                eq(industrialLabelTemplateVersions.status, LabelTemplateVersionStatus.DRAFT),
               ),
             )
             .orderBy(desc(industrialLabelTemplateVersions.version))
             .limit(1);
+          if (!version) {
+            [version] = await tx
+              .select()
+              .from(industrialLabelTemplateVersions)
+              .where(
+                and(
+                  eq(industrialLabelTemplateVersions.templateId, id),
+                  eq(industrialLabelTemplateVersions.tenantId, principal.tenantId),
+                  eq(industrialLabelTemplateVersions.status, LabelTemplateVersionStatus.PUBLISHED),
+                ),
+              )
+              .orderBy(desc(industrialLabelTemplateVersions.version))
+              .limit(1);
+          }
         }
-      }
-      if (!version) throw new ForgeError("NOT_FOUND", "Template version not found");
+        if (!version) throw new ForgeError("NOT_FOUND", "Template version not found");
 
-      const layout =
-        version.layoutJson && typeof version.layoutJson === "object"
-          ? (version.layoutJson as Record<string, unknown>)
-          : {};
-      const kind = layoutKind(layout);
-      if (kind !== "ELEMENTS") {
-        throw new ForgeError(
-          "VALIDATION_FAILED",
-          "ZPL export is available for ELEMENTS layouts only",
-        );
-      }
+        const layout =
+          version.layoutJson && typeof version.layoutJson === "object"
+            ? (version.layoutJson as Record<string, unknown>)
+            : {};
+        const kind = layoutKind(layout);
+        if (kind !== "ELEMENTS") {
+          throw new ForgeError(
+            "VALIDATION_FAILED",
+            "ZPL export is available for ELEMENTS layouts only",
+          );
+        }
 
-      const fields = await this.loadTemplateFields(tx, principal.tenantId, version.id);
-      const merged = mergeTemplateFieldValues({
-        fields: fields.map((f) => ({
-          fieldKey: f.fieldKey,
-          required: f.required,
-          defaultValue: f.defaultValue,
-        })),
-        fieldValues: input.fieldValues ?? {},
-      });
-      const zpl = elementsToZpl({
-        widthInches: version.widthInches,
-        heightInches: version.heightInches,
-        dpi: version.dpi || BRADY_I4311_DPI,
-        elements: parseLayoutElements(layout),
-        values: merged,
-      });
-      return {
-        templateId: id,
-        versionId: version.id,
-        version: version.version,
-        dpi: version.dpi,
-        widthInches: version.widthInches,
-        heightInches: version.heightInches,
-        zpl,
-        contentType: "application/zpl",
-        filename: `${template.code}-v${version.version}.zpl`,
-      };
-    }, principal.userId);
+        const fields = await this.loadTemplateFields(tx, principal.tenantId, version.id);
+        const merged = mergeTemplateFieldValues({
+          fields: fields.map((f) => ({
+            fieldKey: f.fieldKey,
+            required: f.required,
+            defaultValue: f.defaultValue,
+          })),
+          fieldValues: input.fieldValues ?? {},
+        });
+        const zpl = elementsToZpl({
+          widthInches: version.widthInches,
+          heightInches: version.heightInches,
+          dpi: version.dpi || BRADY_I4311_DPI,
+          elements: parseLayoutElements(layout),
+          values: merged,
+        });
+        return {
+          templateId: id,
+          versionId: version.id,
+          version: version.version,
+          dpi: version.dpi,
+          widthInches: version.widthInches,
+          heightInches: version.heightInches,
+          zpl,
+          contentType: "application/zpl",
+          filename: `${template.code}-v${version.version}.zpl`,
+        };
+      },
+      principal.userId,
+    );
   }
 
   async createPrintJob(principal: ForgePrincipal, body: unknown) {
@@ -2932,126 +3079,131 @@ export class IndustrialPrintService {
       );
     }
     const input = createPrintJobInputSchema.parse(body ?? {});
-    return withTenantTransaction(this.db, principal.tenantId, async (tx) => {
-      const route = await this.resolvePrintDestination(tx, principal.tenantId, {
-        printerId: input.printerId ?? null,
-        printerGroupId: input.printerGroupId ?? null,
-        locationId: input.locationId ?? null,
-        divisionId: input.divisionId ?? null,
-        module: input.module ?? null,
-        recordType: input.recordType ?? null,
-      });
+    return withTenantTransaction(
+      this.db,
+      principal.tenantId,
+      async (tx) => {
+        const route = await this.resolvePrintDestination(tx, principal.tenantId, {
+          printerId: input.printerId ?? null,
+          printerGroupId: input.printerGroupId ?? null,
+          locationId: input.locationId ?? null,
+          divisionId: input.divisionId ?? null,
+          module: input.module ?? null,
+          recordType: input.recordType ?? null,
+        });
 
-      const { printer, bridge, isDirect, failover } = await this.resolvePrinterForPrint(
-        tx,
-        principal.tenantId,
-        route.printerId,
-        {
-          ...(input.printMode !== undefined ? { printMode: input.printMode } : {}),
-          ...(input.acceptFailover !== undefined ? { acceptFailover: input.acceptFailover } : {}),
-        },
-      );
-
-      let templateId = input.templateId ?? null;
-      let templateVersion = input.templateVersion ?? null;
-      const mediaDims = await this.resolveMediaDimensions(
-        tx,
-        principal.tenantId,
-        input.mediaProfileId,
-        input.widthInches,
-        input.heightInches,
-      );
-      let widthInches = mediaDims.widthInches;
-      let heightInches = mediaDims.heightInches;
-      let dpi = input.dpi ?? printer.dpi ?? BRADY_I4311_DPI;
-      let pinnedVersion: typeof industrialLabelTemplateVersions.$inferSelect | null = null;
-
-      if (templateId) {
-        const [tmpl] = await tx
-          .select()
-          .from(industrialLabelTemplates)
-          .where(
-            and(
-              eq(industrialLabelTemplates.id, templateId),
-              eq(industrialLabelTemplates.tenantId, principal.tenantId),
-            ),
-          )
-          .limit(1);
-        if (!tmpl) throw new ForgeError("NOT_FOUND", "Label template not found");
-        const versionQuery = tx
-          .select()
-          .from(industrialLabelTemplateVersions)
-          .where(
-            and(
-              eq(industrialLabelTemplateVersions.templateId, templateId),
-              eq(industrialLabelTemplateVersions.tenantId, principal.tenantId),
-              ...(templateVersion
-                ? [eq(industrialLabelTemplateVersions.version, templateVersion)]
-                : [eq(industrialLabelTemplateVersions.status, "PUBLISHED")]),
-            ),
-          )
-          .orderBy(desc(industrialLabelTemplateVersions.version))
-          .limit(1);
-        const [ver] = await versionQuery;
-        if (!ver) throw new ForgeError("NOT_FOUND", "Label template version not found");
-        pinnedVersion = ver;
-        templateVersion = ver.version;
-        widthInches = input.widthInches ?? ver.widthInches;
-        heightInches = input.heightInches ?? ver.heightInches;
-        dpi = input.dpi ?? ver.dpi ?? dpi;
-      }
-
-      const fieldValues = input.fieldValues ?? {};
-      const rendered = pinnedVersion
-        ? await this.renderFromTemplateVersion(
-            tx,
-            principal.tenantId,
-            pinnedVersion,
-            fieldValues,
-            "png",
-          )
-        : await this.renderer.renderLabel(
-            this.buildFieldLabelRenderOpts({
-              fieldValues,
-              widthInches,
-              heightInches,
-              dpi,
-              module: input.module ?? null,
-              layout: input.layout ?? null,
-            }),
-          );
-
-      if (isDirect && rendered.contentType !== "image/png") {
-        throw new ForgeError(
-          "INTERNAL_ERROR",
-          "Label renderer produced a non-PNG artifact. Brady Bluetooth printing requires PNG bitmaps.",
+        const { printer, bridge, isDirect, failover } = await this.resolvePrinterForPrint(
+          tx,
+          principal.tenantId,
+          route.printerId,
+          {
+            ...(input.printMode !== undefined ? { printMode: input.printMode } : {}),
+            ...(input.acceptFailover !== undefined ? { acceptFailover: input.acceptFailover } : {}),
+          },
         );
-      }
 
-      return this.insertQueuedJob(tx, {
-        tenantId: principal.tenantId,
-        printer,
-        bridge,
-        isDirect,
-        templateId,
-        templateVersion,
-        module: input.module ?? null,
-        recordType: input.recordType ?? null,
-        recordId: input.recordId ?? null,
-        requestedBy: principal.userId,
-        requestedFromDevice: input.requestedFromDevice ?? null,
-        copies: input.copies,
-        widthInches: rendered.widthInches,
-        heightInches: rendered.heightInches,
-        dpi: rendered.dpi,
-        orientation: input.orientation ?? null,
-        cutMode: input.cutMode ?? null,
-        rendered,
-        priority: input.priority ?? 0,
-        routing: route,
-        failover,
-      });
-    }, principal.userId);
+        let templateId = input.templateId ?? null;
+        let templateVersion = input.templateVersion ?? null;
+        const mediaDims = await this.resolveMediaDimensions(
+          tx,
+          principal.tenantId,
+          input.mediaProfileId,
+          input.widthInches,
+          input.heightInches,
+        );
+        let widthInches = mediaDims.widthInches;
+        let heightInches = mediaDims.heightInches;
+        let dpi = input.dpi ?? printer.dpi ?? BRADY_I4311_DPI;
+        let pinnedVersion: typeof industrialLabelTemplateVersions.$inferSelect | null = null;
+
+        if (templateId) {
+          const [tmpl] = await tx
+            .select()
+            .from(industrialLabelTemplates)
+            .where(
+              and(
+                eq(industrialLabelTemplates.id, templateId),
+                eq(industrialLabelTemplates.tenantId, principal.tenantId),
+              ),
+            )
+            .limit(1);
+          if (!tmpl) throw new ForgeError("NOT_FOUND", "Label template not found");
+          const versionQuery = tx
+            .select()
+            .from(industrialLabelTemplateVersions)
+            .where(
+              and(
+                eq(industrialLabelTemplateVersions.templateId, templateId),
+                eq(industrialLabelTemplateVersions.tenantId, principal.tenantId),
+                ...(templateVersion
+                  ? [eq(industrialLabelTemplateVersions.version, templateVersion)]
+                  : [eq(industrialLabelTemplateVersions.status, "PUBLISHED")]),
+              ),
+            )
+            .orderBy(desc(industrialLabelTemplateVersions.version))
+            .limit(1);
+          const [ver] = await versionQuery;
+          if (!ver) throw new ForgeError("NOT_FOUND", "Label template version not found");
+          pinnedVersion = ver;
+          templateVersion = ver.version;
+          widthInches = input.widthInches ?? ver.widthInches;
+          heightInches = input.heightInches ?? ver.heightInches;
+          dpi = input.dpi ?? ver.dpi ?? dpi;
+        }
+
+        const fieldValues = input.fieldValues ?? {};
+        const rendered = pinnedVersion
+          ? await this.renderFromTemplateVersion(
+              tx,
+              principal.tenantId,
+              pinnedVersion,
+              fieldValues,
+              "png",
+            )
+          : await this.renderer.renderLabel(
+              this.buildFieldLabelRenderOpts({
+                fieldValues,
+                widthInches,
+                heightInches,
+                dpi,
+                module: input.module ?? null,
+                layout: input.layout ?? null,
+              }),
+            );
+
+        if (isDirect && rendered.contentType !== "image/png") {
+          throw new ForgeError(
+            "INTERNAL_ERROR",
+            "Label renderer produced a non-PNG artifact. Brady Bluetooth printing requires PNG bitmaps.",
+          );
+        }
+
+        return this.insertQueuedJob(tx, {
+          tenantId: principal.tenantId,
+          printer,
+          bridge,
+          isDirect,
+          templateId,
+          templateVersion,
+          module: input.module ?? null,
+          recordType: input.recordType ?? null,
+          recordId: input.recordId ?? null,
+          requestedBy: principal.userId,
+          requestedFromDevice: input.requestedFromDevice ?? null,
+          copies: input.copies,
+          widthInches: rendered.widthInches,
+          heightInches: rendered.heightInches,
+          dpi: rendered.dpi,
+          orientation: input.orientation ?? null,
+          cutMode: input.cutMode ?? null,
+          rendered,
+          priority: input.priority ?? 0,
+          routing: route,
+          failover,
+        });
+      },
+      principal.userId,
+    );
   }
 
   private async insertQueuedJob(
@@ -3215,46 +3367,49 @@ export class IndustrialPrintService {
   ) {
     const page = Math.max(1, Number(query.page ?? 1) || 1);
     const pageSize = Math.min(100, Math.max(1, Number(query.pageSize ?? 50) || 50));
-    return withTenantTransaction(this.db, principal.tenantId, async (tx) => {
-      const conditions = [eq(industrialPrintJobs.tenantId, principal.tenantId)];
-      if (query.printerId) conditions.push(eq(industrialPrintJobs.printerId, query.printerId));
-      if (query.bridgeId) conditions.push(eq(industrialPrintJobs.bridgeId, query.bridgeId));
+    return withTenantTransaction(
+      this.db,
+      principal.tenantId,
+      async (tx) => {
+        const conditions = [eq(industrialPrintJobs.tenantId, principal.tenantId)];
+        if (query.printerId) conditions.push(eq(industrialPrintJobs.printerId, query.printerId));
+        if (query.bridgeId) conditions.push(eq(industrialPrintJobs.bridgeId, query.bridgeId));
 
-      const statusFilter = (query.status ?? "").trim().toUpperCase();
-      if (statusFilter) {
-        conditions.push(eq(industrialPrintJobs.status, statusFilter));
-      } else if (query.queue === "1" || query.queue === "true") {
-        conditions.push(
-          sql`${industrialPrintJobs.status} not in (${sql.join(
-            [...HISTORY_STATUSES].map((s) => sql`${s}`),
-            sql`, `,
-          )})`,
-        );
-      } else if (query.history === "1" || query.history === "true") {
-        conditions.push(
-          inArray(industrialPrintJobs.status, [...HISTORY_STATUSES] as string[]),
-        );
-      }
+        const statusFilter = (query.status ?? "").trim().toUpperCase();
+        if (statusFilter) {
+          conditions.push(eq(industrialPrintJobs.status, statusFilter));
+        } else if (query.queue === "1" || query.queue === "true") {
+          conditions.push(
+            sql`${industrialPrintJobs.status} not in (${sql.join(
+              [...HISTORY_STATUSES].map((s) => sql`${s}`),
+              sql`, `,
+            )})`,
+          );
+        } else if (query.history === "1" || query.history === "true") {
+          conditions.push(inArray(industrialPrintJobs.status, [...HISTORY_STATUSES] as string[]));
+        }
 
-      const [countRow] = await tx
-        .select({ count: sql<number>`count(*)::int` })
-        .from(industrialPrintJobs)
-        .where(and(...conditions));
-      const rows = await tx
-        .select()
-        .from(industrialPrintJobs)
-        .where(and(...conditions))
-        .orderBy(desc(industrialPrintJobs.createdAt))
-        .limit(pageSize)
-        .offset((page - 1) * pageSize);
+        const [countRow] = await tx
+          .select({ count: sql<number>`count(*)::int` })
+          .from(industrialPrintJobs)
+          .where(and(...conditions));
+        const rows = await tx
+          .select()
+          .from(industrialPrintJobs)
+          .where(and(...conditions))
+          .orderBy(desc(industrialPrintJobs.createdAt))
+          .limit(pageSize)
+          .offset((page - 1) * pageSize);
 
-      return {
-        page,
-        pageSize,
-        total: countRow?.count ?? rows.length,
-        items: rows.map((r) => this.mapJob(r)),
-      };
-    }, principal.userId);
+        return {
+          page,
+          pageSize,
+          total: countRow?.count ?? rows.length,
+          items: rows.map((r) => this.mapJob(r)),
+        };
+      },
+      principal.userId,
+    );
   }
 
   /**
@@ -3262,327 +3417,341 @@ export class IndustrialPrintService {
    * Does not introduce a parallel print stack.
    */
   async getPrintManagerSummary(principal: ForgePrincipal) {
-    return withTenantTransaction(this.db, principal.tenantId, async (tx) => {
-      const [printers, bridges, recentJobs, failedTodayRows, statusCounts, labelsTodayRow] =
-        await Promise.all([
-          tx
-            .select()
-            .from(industrialPrinters)
-            .where(eq(industrialPrinters.tenantId, principal.tenantId))
-            .orderBy(asc(industrialPrinters.name)),
-          tx
-            .select()
-            .from(industrialPrinterBridges)
-            .where(eq(industrialPrinterBridges.tenantId, principal.tenantId))
-            .orderBy(asc(industrialPrinterBridges.name)),
-          tx
-            .select()
-            .from(industrialPrintJobs)
-            .where(eq(industrialPrintJobs.tenantId, principal.tenantId))
-            .orderBy(desc(industrialPrintJobs.createdAt))
-            .limit(25),
-          tx
-            .select()
-            .from(industrialPrintJobs)
-            .where(
-              and(
-                eq(industrialPrintJobs.tenantId, principal.tenantId),
-                eq(industrialPrintJobs.status, PrintJobStatus.FAILED),
-                sql`${industrialPrintJobs.createdAt} >= date_trunc('day', now() at time zone 'utc')`,
+    return withTenantTransaction(
+      this.db,
+      principal.tenantId,
+      async (tx) => {
+        const [printers, bridges, recentJobs, failedTodayRows, statusCounts, labelsTodayRow] =
+          await Promise.all([
+            tx
+              .select()
+              .from(industrialPrinters)
+              .where(eq(industrialPrinters.tenantId, principal.tenantId))
+              .orderBy(asc(industrialPrinters.name)),
+            tx
+              .select()
+              .from(industrialPrinterBridges)
+              .where(eq(industrialPrinterBridges.tenantId, principal.tenantId))
+              .orderBy(asc(industrialPrinterBridges.name)),
+            tx
+              .select()
+              .from(industrialPrintJobs)
+              .where(eq(industrialPrintJobs.tenantId, principal.tenantId))
+              .orderBy(desc(industrialPrintJobs.createdAt))
+              .limit(25),
+            tx
+              .select()
+              .from(industrialPrintJobs)
+              .where(
+                and(
+                  eq(industrialPrintJobs.tenantId, principal.tenantId),
+                  eq(industrialPrintJobs.status, PrintJobStatus.FAILED),
+                  sql`${industrialPrintJobs.createdAt} >= date_trunc('day', now() at time zone 'utc')`,
+                ),
+              )
+              .orderBy(desc(industrialPrintJobs.createdAt))
+              .limit(20),
+            tx
+              .select({
+                status: industrialPrintJobs.status,
+                count: sql<number>`count(*)::int`,
+              })
+              .from(industrialPrintJobs)
+              .where(eq(industrialPrintJobs.tenantId, principal.tenantId))
+              .groupBy(industrialPrintJobs.status),
+            tx
+              .select({
+                labels: sql<number>`coalesce(sum(${industrialPrintJobs.copies}), 0)::int`,
+                jobs: sql<number>`count(*)::int`,
+              })
+              .from(industrialPrintJobs)
+              .where(
+                and(
+                  eq(industrialPrintJobs.tenantId, principal.tenantId),
+                  inArray(industrialPrintJobs.status, [...PRINT_MANAGER_SUCCESS_STATUSES]),
+                  sql`${industrialPrintJobs.completedAt} >= date_trunc('day', now() at time zone 'utc')`,
+                ),
               ),
-            )
-            .orderBy(desc(industrialPrintJobs.createdAt))
-            .limit(20),
-          tx
-            .select({
-              status: industrialPrintJobs.status,
-              count: sql<number>`count(*)::int`,
-            })
-            .from(industrialPrintJobs)
-            .where(eq(industrialPrintJobs.tenantId, principal.tenantId))
-            .groupBy(industrialPrintJobs.status),
-          tx
-            .select({
-              labels: sql<number>`coalesce(sum(${industrialPrintJobs.copies}), 0)::int`,
-              jobs: sql<number>`count(*)::int`,
-            })
-            .from(industrialPrintJobs)
-            .where(
-              and(
-                eq(industrialPrintJobs.tenantId, principal.tenantId),
-                inArray(industrialPrintJobs.status, [...PRINT_MANAGER_SUCCESS_STATUSES]),
-                sql`${industrialPrintJobs.completedAt} >= date_trunc('day', now() at time zone 'utc')`,
-              ),
-            ),
-        ]);
+          ]);
 
-      const printerHealth = printers.map((row) => {
-        const mapped = this.mapPrinter(row);
-        const health = classifyPrintManagerPrinterHealth(mapped);
+        const printerHealth = printers.map((row) => {
+          const mapped = this.mapPrinter(row);
+          const health = classifyPrintManagerPrinterHealth(mapped);
+          return {
+            id: mapped.id,
+            name: mapped.displayName || mapped.name,
+            locationId: mapped.locationId,
+            bridgeId: mapped.bridgeId,
+            connectionType: mapped.connectionType,
+            transportType: mapped.transportType,
+            status: health,
+            online: mapped.online,
+            ready: mapped.ready,
+            enabled: mapped.enabled,
+            lastSeenAt: mapped.lastSeenAt,
+            lastErrorCode: mapped.lastErrorCode,
+            lastErrorMessage: mapped.lastErrorMessage,
+            currentJobId:
+              recentJobs.find(
+                (j) =>
+                  j.printerId === mapped.id &&
+                  PRINT_MANAGER_PRINTING_STATUSES.includes(
+                    j.status as (typeof PRINT_MANAGER_PRINTING_STATUSES)[number],
+                  ),
+              )?.id ?? null,
+          };
+        });
+
+        const printerCounts = {
+          online: 0,
+          offline: 0,
+          warning: 0,
+          error: 0,
+          total: printerHealth.length,
+        };
+        for (const p of printerHealth) {
+          if (p.status === "ONLINE") printerCounts.online += 1;
+          else if (p.status === "OFFLINE") printerCounts.offline += 1;
+          else if (p.status === "WARNING") printerCounts.warning += 1;
+          else printerCounts.error += 1;
+        }
+
+        const bridgeHealth = bridges.map((row) => {
+          const mapped = this.mapBridge(row);
+          const printerCount = printers.filter((p) => p.bridgeId === mapped.id).length;
+          const pendingJobs = recentJobs.filter(
+            (j) =>
+              j.bridgeId === mapped.id &&
+              (PRINT_MANAGER_QUEUED_STATUSES.includes(
+                j.status as (typeof PRINT_MANAGER_QUEUED_STATUSES)[number],
+              ) ||
+                PRINT_MANAGER_PRINTING_STATUSES.includes(
+                  j.status as (typeof PRINT_MANAGER_PRINTING_STATUSES)[number],
+                )),
+          ).length;
+          return {
+            id: mapped.id,
+            name: mapped.name,
+            computerName: mapped.computerName,
+            locationId: mapped.locationId,
+            version: mapped.bridgeVersion,
+            status: mapped.status,
+            enabled: mapped.enabled,
+            lastSeenAt: mapped.lastSeenAt,
+            printerCount,
+            pendingJobs,
+          };
+        });
+
+        const bridgeCounts = {
+          online: bridgeHealth.filter((b) => b.enabled && b.status === BridgeStatus.ONLINE).length,
+          offline: bridgeHealth.filter(
+            (b) =>
+              !b.enabled || b.status === BridgeStatus.OFFLINE || b.status === BridgeStatus.DISABLED,
+          ).length,
+          total: bridgeHealth.length,
+        };
+
+        const byStatus = new Map(statusCounts.map((r) => [r.status, Number(r.count) || 0]));
+        const countStatuses = (statuses: readonly string[]) =>
+          statuses.reduce((sum, s) => sum + (byStatus.get(s) ?? 0), 0);
+
+        const [completedTodayRow] = await tx
+          .select({ count: sql<number>`count(*)::int` })
+          .from(industrialPrintJobs)
+          .where(
+            and(
+              eq(industrialPrintJobs.tenantId, principal.tenantId),
+              inArray(industrialPrintJobs.status, [...PRINT_MANAGER_SUCCESS_STATUSES]),
+              sql`${industrialPrintJobs.completedAt} >= date_trunc('day', now() at time zone 'utc')`,
+            ),
+          );
+        const [failedTodayCountRow] = await tx
+          .select({ count: sql<number>`count(*)::int` })
+          .from(industrialPrintJobs)
+          .where(
+            and(
+              eq(industrialPrintJobs.tenantId, principal.tenantId),
+              eq(industrialPrintJobs.status, PrintJobStatus.FAILED),
+              sql`${industrialPrintJobs.createdAt} >= date_trunc('day', now() at time zone 'utc')`,
+            ),
+          );
+
+        const batchRows = await tx
+          .select()
+          .from(industrialPrintBatches)
+          .where(eq(industrialPrintBatches.tenantId, principal.tenantId))
+          .orderBy(desc(industrialPrintBatches.createdAt))
+          .limit(50);
+
+        const batchSummary = {
+          active: batchRows.filter((b) => b.status === "PRINTING" || b.status === "QUEUED").length,
+          completedToday: batchRows.filter(
+            (b) =>
+              (b.status === "COMPLETED" || b.status === "PARTIAL") &&
+              b.completedAt &&
+              b.completedAt.getTime() >=
+                Date.UTC(
+                  new Date().getUTCFullYear(),
+                  new Date().getUTCMonth(),
+                  new Date().getUTCDate(),
+                ),
+          ).length,
+          failedToday: batchRows.filter(
+            (b) =>
+              b.status === "FAILED" &&
+              b.completedAt &&
+              b.completedAt.getTime() >=
+                Date.UTC(
+                  new Date().getUTCFullYear(),
+                  new Date().getUTCMonth(),
+                  new Date().getUTCDate(),
+                ),
+          ).length,
+          jobsCompleted: batchRows.reduce((s, b) => s + (b.completedJobs ?? 0), 0),
+          jobsFailed: batchRows.reduce((s, b) => s + (b.failedJobs ?? 0), 0),
+          jobsPending: batchRows.reduce(
+            (s, b) =>
+              s + Math.max(0, (b.totalJobs ?? 0) - (b.completedJobs ?? 0) - (b.failedJobs ?? 0)),
+            0,
+          ),
+        };
+
+        const supplyRows = await tx
+          .select()
+          .from(industrialPrintSupplies)
+          .where(
+            and(
+              eq(industrialPrintSupplies.tenantId, principal.tenantId),
+              eq(industrialPrintSupplies.enabled, true),
+            ),
+          );
+        const supplySummary = {
+          warning: 0,
+          critical: 0,
+          empty: 0,
+          total: supplyRows.length,
+        };
+        for (const s of supplyRows) {
+          const level = computeSupplyAlertLevel({
+            estimatedRemaining: s.estimatedRemaining,
+            warningThreshold: s.warningThreshold,
+            criticalThreshold: s.criticalThreshold,
+          });
+          if (level === PrintSupplyAlertLevel.EMPTY) supplySummary.empty += 1;
+          else if (level === PrintSupplyAlertLevel.CRITICAL) supplySummary.critical += 1;
+          else if (level === PrintSupplyAlertLevel.LOW) supplySummary.warning += 1;
+        }
+
+        const printerNameById = new Map(
+          printers.map((p) => [p.id, p.displayName || p.name] as const),
+        );
+        const bridgeNameById = new Map(bridges.map((b) => [b.id, b.name] as const));
+
         return {
-          id: mapped.id,
-          name: mapped.displayName || mapped.name,
-          locationId: mapped.locationId,
-          bridgeId: mapped.bridgeId,
-          connectionType: mapped.connectionType,
-          transportType: mapped.transportType,
-          status: health,
-          online: mapped.online,
-          ready: mapped.ready,
-          enabled: mapped.enabled,
-          lastSeenAt: mapped.lastSeenAt,
-          lastErrorCode: mapped.lastErrorCode,
-          lastErrorMessage: mapped.lastErrorMessage,
-          currentJobId:
-            recentJobs.find(
+          printers: printerCounts,
+          bridges: bridgeCounts,
+          jobs: {
+            queued: countStatuses(PRINT_MANAGER_QUEUED_STATUSES),
+            printing: countStatuses(PRINT_MANAGER_PRINTING_STATUSES),
+            completedToday: completedTodayRow?.count ?? 0,
+            failedToday: failedTodayCountRow?.count ?? 0,
+            labelsPrintedToday: Array.isArray(labelsTodayRow)
+              ? (labelsTodayRow[0]?.labels ?? 0)
+              : 0,
+            pagesPrintedToday: 0,
+          },
+          batches: batchSummary,
+          supplies: supplySummary,
+          liveQueue: recentJobs
+            .filter(
               (j) =>
-                j.printerId === mapped.id &&
+                PRINT_MANAGER_QUEUED_STATUSES.includes(
+                  j.status as (typeof PRINT_MANAGER_QUEUED_STATUSES)[number],
+                ) ||
                 PRINT_MANAGER_PRINTING_STATUSES.includes(
                   j.status as (typeof PRINT_MANAGER_PRINTING_STATUSES)[number],
                 ),
-            )?.id ?? null,
-        };
-      });
-
-      const printerCounts = {
-        online: 0,
-        offline: 0,
-        warning: 0,
-        error: 0,
-        total: printerHealth.length,
-      };
-      for (const p of printerHealth) {
-        if (p.status === "ONLINE") printerCounts.online += 1;
-        else if (p.status === "OFFLINE") printerCounts.offline += 1;
-        else if (p.status === "WARNING") printerCounts.warning += 1;
-        else printerCounts.error += 1;
-      }
-
-      const bridgeHealth = bridges.map((row) => {
-        const mapped = this.mapBridge(row);
-        const printerCount = printers.filter((p) => p.bridgeId === mapped.id).length;
-        const pendingJobs = recentJobs.filter(
-          (j) =>
-            j.bridgeId === mapped.id &&
-            (PRINT_MANAGER_QUEUED_STATUSES.includes(
-              j.status as (typeof PRINT_MANAGER_QUEUED_STATUSES)[number],
-            ) ||
-              PRINT_MANAGER_PRINTING_STATUSES.includes(
-                j.status as (typeof PRINT_MANAGER_PRINTING_STATUSES)[number],
-              )),
-        ).length;
-        return {
-          id: mapped.id,
-          name: mapped.name,
-          computerName: mapped.computerName,
-          locationId: mapped.locationId,
-          version: mapped.bridgeVersion,
-          status: mapped.status,
-          enabled: mapped.enabled,
-          lastSeenAt: mapped.lastSeenAt,
-          printerCount,
-          pendingJobs,
-        };
-      });
-
-      const bridgeCounts = {
-        online: bridgeHealth.filter((b) => b.enabled && b.status === BridgeStatus.ONLINE).length,
-        offline: bridgeHealth.filter(
-          (b) => !b.enabled || b.status === BridgeStatus.OFFLINE || b.status === BridgeStatus.DISABLED,
-        ).length,
-        total: bridgeHealth.length,
-      };
-
-      const byStatus = new Map(statusCounts.map((r) => [r.status, Number(r.count) || 0]));
-      const countStatuses = (statuses: readonly string[]) =>
-        statuses.reduce((sum, s) => sum + (byStatus.get(s) ?? 0), 0);
-
-      const [completedTodayRow] = await tx
-        .select({ count: sql<number>`count(*)::int` })
-        .from(industrialPrintJobs)
-        .where(
-          and(
-            eq(industrialPrintJobs.tenantId, principal.tenantId),
-            inArray(industrialPrintJobs.status, [...PRINT_MANAGER_SUCCESS_STATUSES]),
-            sql`${industrialPrintJobs.completedAt} >= date_trunc('day', now() at time zone 'utc')`,
-          ),
-        );
-      const [failedTodayCountRow] = await tx
-        .select({ count: sql<number>`count(*)::int` })
-        .from(industrialPrintJobs)
-        .where(
-          and(
-            eq(industrialPrintJobs.tenantId, principal.tenantId),
-            eq(industrialPrintJobs.status, PrintJobStatus.FAILED),
-            sql`${industrialPrintJobs.createdAt} >= date_trunc('day', now() at time zone 'utc')`,
-          ),
-        );
-
-      const batchRows = await tx
-        .select()
-        .from(industrialPrintBatches)
-        .where(eq(industrialPrintBatches.tenantId, principal.tenantId))
-        .orderBy(desc(industrialPrintBatches.createdAt))
-        .limit(50);
-
-      const batchSummary = {
-        active: batchRows.filter((b) => b.status === "PRINTING" || b.status === "QUEUED").length,
-        completedToday: batchRows.filter(
-          (b) =>
-            (b.status === "COMPLETED" || b.status === "PARTIAL") &&
-            b.completedAt &&
-            b.completedAt.getTime() >=
-              Date.UTC(
-                new Date().getUTCFullYear(),
-                new Date().getUTCMonth(),
-                new Date().getUTCDate(),
-              ),
-        ).length,
-        failedToday: batchRows.filter(
-          (b) =>
-            b.status === "FAILED" &&
-            b.completedAt &&
-            b.completedAt.getTime() >=
-              Date.UTC(
-                new Date().getUTCFullYear(),
-                new Date().getUTCMonth(),
-                new Date().getUTCDate(),
-              ),
-        ).length,
-        jobsCompleted: batchRows.reduce((s, b) => s + (b.completedJobs ?? 0), 0),
-        jobsFailed: batchRows.reduce((s, b) => s + (b.failedJobs ?? 0), 0),
-        jobsPending: batchRows.reduce(
-          (s, b) =>
-            s + Math.max(0, (b.totalJobs ?? 0) - (b.completedJobs ?? 0) - (b.failedJobs ?? 0)),
-          0,
-        ),
-      };
-
-      const supplyRows = await tx
-        .select()
-        .from(industrialPrintSupplies)
-        .where(
-          and(
-            eq(industrialPrintSupplies.tenantId, principal.tenantId),
-            eq(industrialPrintSupplies.enabled, true),
-          ),
-        );
-      const supplySummary = {
-        warning: 0,
-        critical: 0,
-        empty: 0,
-        total: supplyRows.length,
-      };
-      for (const s of supplyRows) {
-        const level = computeSupplyAlertLevel({
-          estimatedRemaining: s.estimatedRemaining,
-          warningThreshold: s.warningThreshold,
-          criticalThreshold: s.criticalThreshold,
-        });
-        if (level === PrintSupplyAlertLevel.EMPTY) supplySummary.empty += 1;
-        else if (level === PrintSupplyAlertLevel.CRITICAL) supplySummary.critical += 1;
-        else if (level === PrintSupplyAlertLevel.LOW) supplySummary.warning += 1;
-      }
-
-      const printerNameById = new Map(
-        printers.map((p) => [p.id, p.displayName || p.name] as const),
-      );
-      const bridgeNameById = new Map(bridges.map((b) => [b.id, b.name] as const));
-
-      return {
-        printers: printerCounts,
-        bridges: bridgeCounts,
-        jobs: {
-          queued: countStatuses(PRINT_MANAGER_QUEUED_STATUSES),
-          printing: countStatuses(PRINT_MANAGER_PRINTING_STATUSES),
-          completedToday: completedTodayRow?.count ?? 0,
-          failedToday: failedTodayCountRow?.count ?? 0,
-          labelsPrintedToday: Array.isArray(labelsTodayRow)
-            ? (labelsTodayRow[0]?.labels ?? 0)
-            : 0,
-          pagesPrintedToday: 0,
-        },
-        batches: batchSummary,
-        supplies: supplySummary,
-        liveQueue: recentJobs
-          .filter(
-            (j) =>
-              PRINT_MANAGER_QUEUED_STATUSES.includes(
-                j.status as (typeof PRINT_MANAGER_QUEUED_STATUSES)[number],
-              ) ||
-              PRINT_MANAGER_PRINTING_STATUSES.includes(
-                j.status as (typeof PRINT_MANAGER_PRINTING_STATUSES)[number],
-              ),
-          )
-          .slice(0, 15)
-          .map((j) => ({
-            ...this.mapJob(j),
+            )
+            .slice(0, 15)
+            .map((j) => ({
+              ...this.mapJob(j),
+              printerName: j.printerId ? (printerNameById.get(j.printerId) ?? null) : null,
+              bridgeName: j.bridgeId ? (bridgeNameById.get(j.bridgeId) ?? null) : null,
+            })),
+          printerHealth: printerHealth.slice(0, 25),
+          bridgeHealth,
+          recentErrors: failedTodayRows.map((j) => ({
+            id: j.id,
+            createdAt: toIso(j.createdAt),
+            printerId: j.printerId,
             printerName: j.printerId ? (printerNameById.get(j.printerId) ?? null) : null,
-            bridgeName: j.bridgeId ? (bridgeNameById.get(j.bridgeId) ?? null) : null,
+            status: j.status,
+            errorCode: j.errorCode,
+            errorMessage: j.errorMessage,
+            retryCount: j.retryCount,
           })),
-        printerHealth: printerHealth.slice(0, 25),
-        bridgeHealth,
-        recentErrors: failedTodayRows.map((j) => ({
-          id: j.id,
-          createdAt: toIso(j.createdAt),
-          printerId: j.printerId,
-          printerName: j.printerId ? (printerNameById.get(j.printerId) ?? null) : null,
-          status: j.status,
-          errorCode: j.errorCode,
-          errorMessage: j.errorMessage,
-          retryCount: j.retryCount,
-        })),
-      };
-    }, principal.userId);
+        };
+      },
+      principal.userId,
+    );
   }
 
   async getJob(principal: ForgePrincipal, id: string) {
-    return withTenantTransaction(this.db, principal.tenantId, async (tx) => {
-      const [job] = await tx
-        .select()
-        .from(industrialPrintJobs)
-        .where(
-          and(eq(industrialPrintJobs.id, id), eq(industrialPrintJobs.tenantId, principal.tenantId)),
-        )
-        .limit(1);
-      if (!job) throw new ForgeError("NOT_FOUND", "Print job not found");
+    return withTenantTransaction(
+      this.db,
+      principal.tenantId,
+      async (tx) => {
+        const [job] = await tx
+          .select()
+          .from(industrialPrintJobs)
+          .where(
+            and(
+              eq(industrialPrintJobs.id, id),
+              eq(industrialPrintJobs.tenantId, principal.tenantId),
+            ),
+          )
+          .limit(1);
+        if (!job) throw new ForgeError("NOT_FOUND", "Print job not found");
 
-      const events = await tx
-        .select()
-        .from(industrialPrintJobEvents)
-        .where(
-          and(
-            eq(industrialPrintJobEvents.printJobId, id),
-            eq(industrialPrintJobEvents.tenantId, principal.tenantId),
-          ),
-        )
-        .orderBy(asc(industrialPrintJobEvents.createdAt));
+        const events = await tx
+          .select()
+          .from(industrialPrintJobEvents)
+          .where(
+            and(
+              eq(industrialPrintJobEvents.printJobId, id),
+              eq(industrialPrintJobEvents.tenantId, principal.tenantId),
+            ),
+          )
+          .orderBy(asc(industrialPrintJobEvents.createdAt));
 
-      let artifactUrl: string | null = null;
-      if (job.artifactStorageKey) {
-        const presign = await this.storage.createPresignedDownloadUrl({
-          objectKey: job.artifactStorageKey,
-          mimeType: job.artifactType === "PNG" ? "image/png" : "application/pdf",
-          filename: `${job.id}.${job.artifactType === "PNG" ? "png" : "pdf"}`,
-          inline: true,
-        });
-        artifactUrl = presign.downloadUrl;
-      }
+        let artifactUrl: string | null = null;
+        if (job.artifactStorageKey) {
+          const presign = await this.storage.createPresignedDownloadUrl({
+            objectKey: job.artifactStorageKey,
+            mimeType: job.artifactType === "PNG" ? "image/png" : "application/pdf",
+            filename: `${job.id}.${job.artifactType === "PNG" ? "png" : "pdf"}`,
+            inline: true,
+          });
+          artifactUrl = presign.downloadUrl;
+        }
 
-      return {
-        ...this.mapJob(job),
-        artifactUrl,
-        events: events.map((e) => ({
-          id: e.id,
-          event: e.event,
-          status: e.status,
-          message: e.message,
-          source: e.source,
-          metadata: e.metadataJson,
-          createdAt: toIso(e.createdAt),
-        })),
-      };
-    }, principal.userId);
+        return {
+          ...this.mapJob(job),
+          artifactUrl,
+          events: events.map((e) => ({
+            id: e.id,
+            event: e.event,
+            status: e.status,
+            message: e.message,
+            source: e.source,
+            metadata: e.metadataJson,
+            createdAt: toIso(e.createdAt),
+          })),
+        };
+      },
+      principal.userId,
+    );
   }
 
   /**
@@ -3590,21 +3759,29 @@ export class IndustrialPrintService {
    * Used by Direct Bluetooth so the browser can flatten the PNG without S3 CORS.
    */
   async getJobArtifact(principal: ForgePrincipal, id: string) {
-    const job = await withTenantTransaction(this.db, principal.tenantId, async (tx) => {
-      const [row] = await tx
-        .select({
-          id: industrialPrintJobs.id,
-          artifactStorageKey: industrialPrintJobs.artifactStorageKey,
-          artifactType: industrialPrintJobs.artifactType,
-        })
-        .from(industrialPrintJobs)
-        .where(
-          and(eq(industrialPrintJobs.id, id), eq(industrialPrintJobs.tenantId, principal.tenantId)),
-        )
-        .limit(1);
-      if (!row) throw new ForgeError("NOT_FOUND", "Print job not found");
-      return row;
-    }, principal.userId);
+    const job = await withTenantTransaction(
+      this.db,
+      principal.tenantId,
+      async (tx) => {
+        const [row] = await tx
+          .select({
+            id: industrialPrintJobs.id,
+            artifactStorageKey: industrialPrintJobs.artifactStorageKey,
+            artifactType: industrialPrintJobs.artifactType,
+          })
+          .from(industrialPrintJobs)
+          .where(
+            and(
+              eq(industrialPrintJobs.id, id),
+              eq(industrialPrintJobs.tenantId, principal.tenantId),
+            ),
+          )
+          .limit(1);
+        if (!row) throw new ForgeError("NOT_FOUND", "Print job not found");
+        return row;
+      },
+      principal.userId,
+    );
 
     if (!job.artifactStorageKey) {
       throw new ForgeError("NOT_FOUND", "Print artifact is not ready yet.");
@@ -3613,8 +3790,7 @@ export class IndustrialPrintService {
     const stream = await this.storage.getObjectStream(job.artifactStorageKey);
     const ext = job.artifactType === "PNG" ? "png" : "pdf";
     const contentType =
-      stream.contentType ??
-      (job.artifactType === "PNG" ? "image/png" : "application/pdf");
+      stream.contentType ?? (job.artifactType === "PNG" ? "image/png" : "application/pdf");
     return {
       body: stream.body,
       contentType,
@@ -3624,170 +3800,202 @@ export class IndustrialPrintService {
   }
 
   async cancelJob(principal: ForgePrincipal, id: string) {
-    return withTenantTransaction(this.db, principal.tenantId, async (tx) => {
-      const [job] = await tx
-        .select()
-        .from(industrialPrintJobs)
-        .where(
-          and(eq(industrialPrintJobs.id, id), eq(industrialPrintJobs.tenantId, principal.tenantId)),
-        )
-        .limit(1);
-      if (!job) throw new ForgeError("NOT_FOUND", "Print job not found");
-      if (isTerminalSuccessStatus(job.status) || job.status === PrintJobStatus.CANCELLED) {
-        return this.mapJob(job);
-      }
+    return withTenantTransaction(
+      this.db,
+      principal.tenantId,
+      async (tx) => {
+        const [job] = await tx
+          .select()
+          .from(industrialPrintJobs)
+          .where(
+            and(
+              eq(industrialPrintJobs.id, id),
+              eq(industrialPrintJobs.tenantId, principal.tenantId),
+            ),
+          )
+          .limit(1);
+        if (!job) throw new ForgeError("NOT_FOUND", "Print job not found");
+        if (isTerminalSuccessStatus(job.status) || job.status === PrintJobStatus.CANCELLED) {
+          return this.mapJob(job);
+        }
 
-      const wasTerminal = BATCH_TERMINAL_JOB_STATUSES.has(job.status);
-      const [updated] = await tx
-        .update(industrialPrintJobs)
-        .set({ status: PrintJobStatus.CANCELLED })
-        .where(
-          and(eq(industrialPrintJobs.id, id), eq(industrialPrintJobs.tenantId, principal.tenantId)),
-        )
-        .returning();
-      await this.appendJobEvent(tx, {
-        tenantId: principal.tenantId,
-        printJobId: id,
-        event: "job.cancelled",
-        status: PrintJobStatus.CANCELLED,
-        message: "Cancelled by user",
-        source: "platform",
-      });
-      if (!wasTerminal && updated?.batchId) {
-        await this.applyBatchCounterForJobStatus(tx, principal.tenantId, updated.batchId, PrintJobStatus.CANCELLED);
-      }
-      return this.mapJob(updated!);
-    }, principal.userId);
+        const wasTerminal = BATCH_TERMINAL_JOB_STATUSES.has(job.status);
+        const [updated] = await tx
+          .update(industrialPrintJobs)
+          .set({ status: PrintJobStatus.CANCELLED })
+          .where(
+            and(
+              eq(industrialPrintJobs.id, id),
+              eq(industrialPrintJobs.tenantId, principal.tenantId),
+            ),
+          )
+          .returning();
+        await this.appendJobEvent(tx, {
+          tenantId: principal.tenantId,
+          printJobId: id,
+          event: "job.cancelled",
+          status: PrintJobStatus.CANCELLED,
+          message: "Cancelled by user",
+          source: "platform",
+        });
+        if (!wasTerminal && updated?.batchId) {
+          await this.applyBatchCounterForJobStatus(
+            tx,
+            principal.tenantId,
+            updated.batchId,
+            PrintJobStatus.CANCELLED,
+          );
+        }
+        return this.mapJob(updated!);
+      },
+      principal.userId,
+    );
   }
 
   async retryJob(principal: ForgePrincipal, id: string) {
-    return withTenantTransaction(this.db, principal.tenantId, async (tx) => {
-      const [job] = await tx
-        .select()
-        .from(industrialPrintJobs)
-        .where(
-          and(eq(industrialPrintJobs.id, id), eq(industrialPrintJobs.tenantId, principal.tenantId)),
-        )
-        .limit(1);
-      if (!job) throw new ForgeError("NOT_FOUND", "Print job not found");
+    return withTenantTransaction(
+      this.db,
+      principal.tenantId,
+      async (tx) => {
+        const [job] = await tx
+          .select()
+          .from(industrialPrintJobs)
+          .where(
+            and(
+              eq(industrialPrintJobs.id, id),
+              eq(industrialPrintJobs.tenantId, principal.tenantId),
+            ),
+          )
+          .limit(1);
+        if (!job) throw new ForgeError("NOT_FOUND", "Print job not found");
 
-      // Idempotency: completed / sent jobs are never re-queued.
-      if (isTerminalSuccessStatus(job.status)) {
-        return this.mapJob(job);
-      }
-      if (job.status !== PrintJobStatus.FAILED && job.status !== PrintJobStatus.EXPIRED) {
-        throw new ForgeError("BAD_REQUEST", "Only failed or expired jobs can be retried");
-      }
+        // Idempotency: completed / sent jobs are never re-queued.
+        if (isTerminalSuccessStatus(job.status)) {
+          return this.mapJob(job);
+        }
+        if (job.status !== PrintJobStatus.FAILED && job.status !== PrintJobStatus.EXPIRED) {
+          throw new ForgeError("BAD_REQUEST", "Only failed or expired jobs can be retried");
+        }
 
-      const now = new Date();
-      const [updated] = await tx
-        .update(industrialPrintJobs)
-        .set({
+        const now = new Date();
+        const [updated] = await tx
+          .update(industrialPrintJobs)
+          .set({
+            status: PrintJobStatus.BRIDGE_ASSIGNED,
+            queuedAt: now,
+            failedAt: null,
+            errorCode: null,
+            errorMessage: null,
+            retryCount: job.retryCount + 1,
+          })
+          .where(
+            and(
+              eq(industrialPrintJobs.id, id),
+              eq(industrialPrintJobs.tenantId, principal.tenantId),
+            ),
+          )
+          .returning();
+        await this.appendJobEvent(tx, {
+          tenantId: principal.tenantId,
+          printJobId: id,
+          event: "job.retried",
           status: PrintJobStatus.BRIDGE_ASSIGNED,
-          queuedAt: now,
-          failedAt: null,
-          errorCode: null,
-          errorMessage: null,
-          retryCount: job.retryCount + 1,
-        })
-        .where(
-          and(eq(industrialPrintJobs.id, id), eq(industrialPrintJobs.tenantId, principal.tenantId)),
-        )
-        .returning();
-      await this.appendJobEvent(tx, {
-        tenantId: principal.tenantId,
-        printJobId: id,
-        event: "job.retried",
-        status: PrintJobStatus.BRIDGE_ASSIGNED,
-        message: `Retry #${job.retryCount + 1}`,
-        source: "platform",
-      });
-      return this.mapJob(updated!);
-    }, principal.userId);
+          message: `Retry #${job.retryCount + 1}`,
+          source: "platform",
+        });
+        return this.mapJob(updated!);
+      },
+      principal.userId,
+    );
   }
 
   async reprintJob(principal: ForgePrincipal, id: string, body: unknown) {
     const input = reprintJobInputSchema.parse(body ?? {});
-    return withTenantTransaction(this.db, principal.tenantId, async (tx) => {
-      const [parent] = await tx
-        .select()
-        .from(industrialPrintJobs)
-        .where(
-          and(eq(industrialPrintJobs.id, id), eq(industrialPrintJobs.tenantId, principal.tenantId)),
-        )
-        .limit(1);
-      if (!parent) throw new ForgeError("NOT_FOUND", "Print job not found");
-      if (!parent.printerId) {
-        throw new ForgeError("BAD_REQUEST", "Parent job has no printer assignment");
-      }
+    return withTenantTransaction(
+      this.db,
+      principal.tenantId,
+      async (tx) => {
+        const [parent] = await tx
+          .select()
+          .from(industrialPrintJobs)
+          .where(
+            and(
+              eq(industrialPrintJobs.id, id),
+              eq(industrialPrintJobs.tenantId, principal.tenantId),
+            ),
+          )
+          .limit(1);
+        if (!parent) throw new ForgeError("NOT_FOUND", "Print job not found");
+        if (!parent.printerId) {
+          throw new ForgeError("BAD_REQUEST", "Parent job has no printer assignment");
+        }
 
-      const [printer] = await tx
-        .select()
-        .from(industrialPrinters)
-        .where(
-          and(
-            eq(industrialPrinters.id, parent.printerId),
-            eq(industrialPrinters.tenantId, principal.tenantId),
-          ),
-        )
-        .limit(1);
-      if (!printer) {
-        throw new ForgeError("BAD_REQUEST", "Printer no longer available");
-      }
+        const [printer] = await tx
+          .select()
+          .from(industrialPrinters)
+          .where(
+            and(
+              eq(industrialPrinters.id, parent.printerId),
+              eq(industrialPrinters.tenantId, principal.tenantId),
+            ),
+          )
+          .limit(1);
+        if (!printer) {
+          throw new ForgeError("BAD_REQUEST", "Printer no longer available");
+        }
 
-      const isDirect =
-        !parent.bridgeId ||
-        isDirectBluetoothPrintPath({
-          bridgeId: printer.bridgeId,
-          transportType: printer.transportType,
+        const isDirect =
+          !parent.bridgeId ||
+          isDirectBluetoothPrintPath({
+            bridgeId: printer.bridgeId,
+            transportType: printer.transportType,
+          });
+        let bridge: IndustrialPrinterBridgeRow | null = null;
+        if (!isDirect) {
+          if (!parent.bridgeId) {
+            throw new ForgeError("BAD_REQUEST", "Parent job has no printer/bridge assignment");
+          }
+          bridge = await this.loadBridgeForPrinter(tx, principal.tenantId, parent.bridgeId);
+          if (!bridge) {
+            throw new ForgeError("BAD_REQUEST", "Printer or bridge no longer available");
+          }
+        }
+
+        // Re-render from parent dimensions (same WYSIWYG renderer path).
+        const rendered = await this.renderer.renderLabel({
+          widthInches: parent.widthInches ?? DEFAULT_WIDTH_IN,
+          heightInches: parent.heightInches ?? DEFAULT_HEIGHT_IN,
+          dpi: parent.dpi ?? BRADY_I4311_DPI,
+          title: "Reprint",
+          lines: [`Parent: ${parent.id}`, `Reason: ${input.reason}`],
+          qrPayload: `forge-reprint:${parent.id}`,
         });
-      let bridge: IndustrialPrinterBridgeRow | null = null;
-      if (!isDirect) {
-        if (!parent.bridgeId) {
-          throw new ForgeError("BAD_REQUEST", "Parent job has no printer/bridge assignment");
-        }
-        bridge = await this.loadBridgeForPrinter(tx, principal.tenantId, parent.bridgeId);
-        if (!bridge) {
-          throw new ForgeError("BAD_REQUEST", "Printer or bridge no longer available");
-        }
-      }
 
-      // Re-render from parent dimensions (same WYSIWYG renderer path).
-      const rendered = await this.renderer.renderLabel({
-        widthInches: parent.widthInches ?? DEFAULT_WIDTH_IN,
-        heightInches: parent.heightInches ?? DEFAULT_HEIGHT_IN,
-        dpi: parent.dpi ?? BRADY_I4311_DPI,
-        title: "Reprint",
-        lines: [
-          `Parent: ${parent.id}`,
-          `Reason: ${input.reason}`,
-        ],
-        qrPayload: `forge-reprint:${parent.id}`,
-      });
-
-      return this.insertQueuedJob(tx, {
-        tenantId: principal.tenantId,
-        printer,
-        bridge,
-        isDirect,
-        templateId: parent.templateId,
-        templateVersion: parent.templateVersion,
-        module: parent.module,
-        recordType: parent.recordType,
-        recordId: parent.recordId,
-        requestedBy: principal.userId,
-        copies: input.copies ?? parent.copies,
-        widthInches: rendered.widthInches,
-        heightInches: rendered.heightInches,
-        dpi: rendered.dpi,
-        orientation: parent.orientation,
-        cutMode: parent.cutMode,
-        rendered,
-        parentJobId: parent.id,
-        reprintReason: input.reason,
-        priority: parent.priority,
-      });
-    }, principal.userId);
+        return this.insertQueuedJob(tx, {
+          tenantId: principal.tenantId,
+          printer,
+          bridge,
+          isDirect,
+          templateId: parent.templateId,
+          templateVersion: parent.templateVersion,
+          module: parent.module,
+          recordType: parent.recordType,
+          recordId: parent.recordId,
+          requestedBy: principal.userId,
+          copies: input.copies ?? parent.copies,
+          widthInches: rendered.widthInches,
+          heightInches: rendered.heightInches,
+          dpi: rendered.dpi,
+          orientation: parent.orientation,
+          cutMode: parent.cutMode,
+          rendered,
+          parentJobId: parent.id,
+          reprintReason: input.reason,
+          priority: parent.priority,
+        });
+      },
+      principal.userId,
+    );
   }
 
   private async applyBatchCounterForJobStatus(
@@ -3889,9 +4097,7 @@ export class IndustrialPrintService {
           errorCode: "BATCH_STOP_ON_FAIL",
           errorMessage: opts.reason,
         })
-        .where(
-          and(eq(industrialPrintJobs.id, job.id), eq(industrialPrintJobs.tenantId, tenantId)),
-        );
+        .where(and(eq(industrialPrintJobs.id, job.id), eq(industrialPrintJobs.tenantId, tenantId)));
       await this.appendJobEvent(tx, {
         tenantId,
         printJobId: job.id,
@@ -3912,354 +4118,382 @@ export class IndustrialPrintService {
       "Batch printing",
     );
     const input = createPrintBatchInputSchema.parse(body ?? {});
-    return withTenantTransaction(this.db, principal.tenantId, async (tx) => {
-      const firstItem = input.items[0];
-      const route = await this.resolvePrintDestination(tx, principal.tenantId, {
-        printerId: input.printerId ?? null,
-        printerGroupId: input.printerGroupId ?? null,
-        locationId: input.locationId ?? null,
-        divisionId: input.divisionId ?? null,
-        module: firstItem?.module ?? null,
-        recordType: firstItem?.recordType ?? null,
-      });
-      const { printer, bridge, isDirect, failover } = await this.resolvePrinterForPrint(
-        tx,
-        principal.tenantId,
-        route.printerId,
-        {
-          ...(input.printMode !== undefined ? { printMode: input.printMode } : {}),
-          ...(input.acceptFailover !== undefined ? { acceptFailover: input.acceptFailover } : {}),
-        },
-      );
-
-      const mediaDims = await this.resolveMediaDimensions(
-        tx,
-        principal.tenantId,
-        input.mediaProfileId,
-        input.widthInches,
-        input.heightInches,
-      );
-      const dpi = input.dpi ?? printer.dpi ?? BRADY_I4311_DPI;
-      const printMode =
-        input.printMode ??
-        (isDirect ? ForgePrintMode.DIRECT_BLUETOOTH : ForgePrintMode.BRIDGE);
-
-      const batchId = createId();
-      const [batch] = await tx
-        .insert(industrialPrintBatches)
-        .values({
-          id: batchId,
-          tenantId: principal.tenantId,
-          requestedBy: principal.userId,
-          printerId: printer.id,
-          name: input.name ?? null,
-          stopOnFail: input.stopOnFail,
-          printMode,
-          mediaProfileId: input.mediaProfileId ?? null,
-          copiesPerItem: input.copiesPerItem,
-          totalJobs: 0,
-          completedJobs: 0,
-          failedJobs: 0,
-          status: "PRINTING",
-        })
-        .returning();
-
-      const jobs = [];
-      const itemCount = input.items.length;
-      for (let i = 0; i < itemCount; i++) {
-        const item = input.items[i]!;
-        const fieldValues = item.fieldValues ?? {};
-        const rendered = await this.renderer.renderLabel(
-          this.buildFieldLabelRenderOpts({
-            fieldValues,
-            widthInches: mediaDims.widthInches,
-            heightInches: mediaDims.heightInches,
-            dpi,
-            module: item.module ?? null,
-            titleOverride: item.title ?? null,
-            layout: input.layout ?? null,
-          }),
+    return withTenantTransaction(
+      this.db,
+      principal.tenantId,
+      async (tx) => {
+        const firstItem = input.items[0];
+        const route = await this.resolvePrintDestination(tx, principal.tenantId, {
+          printerId: input.printerId ?? null,
+          printerGroupId: input.printerGroupId ?? null,
+          locationId: input.locationId ?? null,
+          divisionId: input.divisionId ?? null,
+          module: firstItem?.module ?? null,
+          recordType: firstItem?.recordType ?? null,
+        });
+        const { printer, bridge, isDirect, failover } = await this.resolvePrinterForPrint(
+          tx,
+          principal.tenantId,
+          route.printerId,
+          {
+            ...(input.printMode !== undefined ? { printMode: input.printMode } : {}),
+            ...(input.acceptFailover !== undefined ? { acceptFailover: input.acceptFailover } : {}),
+          },
         );
 
-        // Higher priority for earlier items so claim order stays sequential.
-        const priority = itemCount - i;
-        const job = await this.insertQueuedJob(tx, {
-          tenantId: principal.tenantId,
-          printer,
-          bridge,
-          isDirect,
-          batchId,
-          templateId: null,
-          templateVersion: null,
-          module: item.module ?? null,
-          recordType: item.recordType ?? null,
-          recordId: item.recordId ?? null,
-          requestedBy: principal.userId,
-          copies: input.copiesPerItem,
-          widthInches: rendered.widthInches,
-          heightInches: rendered.heightInches,
-          dpi: rendered.dpi,
-          orientation: input.orientation ?? "AUTO",
-          cutMode: input.cutMode ?? null,
-          rendered,
-          priority,
-          routing: route,
-          failover,
-        });
-        jobs.push(job);
-      }
+        const mediaDims = await this.resolveMediaDimensions(
+          tx,
+          principal.tenantId,
+          input.mediaProfileId,
+          input.widthInches,
+          input.heightInches,
+        );
+        const dpi = input.dpi ?? printer.dpi ?? BRADY_I4311_DPI;
+        const printMode =
+          input.printMode ?? (isDirect ? ForgePrintMode.DIRECT_BLUETOOTH : ForgePrintMode.BRIDGE);
 
-      const [updatedBatch] = await tx
-        .update(industrialPrintBatches)
-        .set({ totalJobs: jobs.length })
-        .where(
-          and(
-            eq(industrialPrintBatches.id, batchId),
-            eq(industrialPrintBatches.tenantId, principal.tenantId),
-          ),
-        )
-        .returning();
+        const batchId = createId();
+        const [batch] = await tx
+          .insert(industrialPrintBatches)
+          .values({
+            id: batchId,
+            tenantId: principal.tenantId,
+            requestedBy: principal.userId,
+            printerId: printer.id,
+            name: input.name ?? null,
+            stopOnFail: input.stopOnFail,
+            printMode,
+            mediaProfileId: input.mediaProfileId ?? null,
+            copiesPerItem: input.copiesPerItem,
+            totalJobs: 0,
+            completedJobs: 0,
+            failedJobs: 0,
+            status: "PRINTING",
+          })
+          .returning();
 
-      return {
-        ...this.mapBatch(updatedBatch ?? batch!),
-        jobs,
-      };
-    }, principal.userId);
+        const jobs = [];
+        const itemCount = input.items.length;
+        for (let i = 0; i < itemCount; i++) {
+          const item = input.items[i]!;
+          const fieldValues = item.fieldValues ?? {};
+          const rendered = await this.renderer.renderLabel(
+            this.buildFieldLabelRenderOpts({
+              fieldValues,
+              widthInches: mediaDims.widthInches,
+              heightInches: mediaDims.heightInches,
+              dpi,
+              module: item.module ?? null,
+              titleOverride: item.title ?? null,
+              layout: input.layout ?? null,
+            }),
+          );
+
+          // Higher priority for earlier items so claim order stays sequential.
+          const priority = itemCount - i;
+          const job = await this.insertQueuedJob(tx, {
+            tenantId: principal.tenantId,
+            printer,
+            bridge,
+            isDirect,
+            batchId,
+            templateId: null,
+            templateVersion: null,
+            module: item.module ?? null,
+            recordType: item.recordType ?? null,
+            recordId: item.recordId ?? null,
+            requestedBy: principal.userId,
+            copies: input.copiesPerItem,
+            widthInches: rendered.widthInches,
+            heightInches: rendered.heightInches,
+            dpi: rendered.dpi,
+            orientation: input.orientation ?? "AUTO",
+            cutMode: input.cutMode ?? null,
+            rendered,
+            priority,
+            routing: route,
+            failover,
+          });
+          jobs.push(job);
+        }
+
+        const [updatedBatch] = await tx
+          .update(industrialPrintBatches)
+          .set({ totalJobs: jobs.length })
+          .where(
+            and(
+              eq(industrialPrintBatches.id, batchId),
+              eq(industrialPrintBatches.tenantId, principal.tenantId),
+            ),
+          )
+          .returning();
+
+        return {
+          ...this.mapBatch(updatedBatch ?? batch!),
+          jobs,
+        };
+      },
+      principal.userId,
+    );
   }
 
   async listPrintBatches(principal: ForgePrincipal) {
-    return withTenantTransaction(this.db, principal.tenantId, async (tx) => {
-      const rows = await tx
-        .select()
-        .from(industrialPrintBatches)
-        .where(eq(industrialPrintBatches.tenantId, principal.tenantId))
-        .orderBy(desc(industrialPrintBatches.createdAt))
-        .limit(100);
-      return { items: rows.map((r) => this.mapBatch(r)) };
-    }, principal.userId);
+    return withTenantTransaction(
+      this.db,
+      principal.tenantId,
+      async (tx) => {
+        const rows = await tx
+          .select()
+          .from(industrialPrintBatches)
+          .where(eq(industrialPrintBatches.tenantId, principal.tenantId))
+          .orderBy(desc(industrialPrintBatches.createdAt))
+          .limit(100);
+        return { items: rows.map((r) => this.mapBatch(r)) };
+      },
+      principal.userId,
+    );
   }
 
   async getPrintBatch(principal: ForgePrincipal, id: string) {
-    return withTenantTransaction(this.db, principal.tenantId, async (tx) => {
-      const [batch] = await tx
-        .select()
-        .from(industrialPrintBatches)
-        .where(
-          and(
-            eq(industrialPrintBatches.id, id),
-            eq(industrialPrintBatches.tenantId, principal.tenantId),
-          ),
-        )
-        .limit(1);
-      if (!batch) throw new ForgeError("NOT_FOUND", "Print batch not found");
-      const jobs = await tx
-        .select()
-        .from(industrialPrintJobs)
-        .where(
-          and(
-            eq(industrialPrintJobs.batchId, id),
-            eq(industrialPrintJobs.tenantId, principal.tenantId),
-          ),
-        )
-        .orderBy(desc(industrialPrintJobs.priority), asc(industrialPrintJobs.createdAt));
-      return { ...this.mapBatch(batch), jobs: jobs.map((j) => this.mapJob(j)) };
-    }, principal.userId);
+    return withTenantTransaction(
+      this.db,
+      principal.tenantId,
+      async (tx) => {
+        const [batch] = await tx
+          .select()
+          .from(industrialPrintBatches)
+          .where(
+            and(
+              eq(industrialPrintBatches.id, id),
+              eq(industrialPrintBatches.tenantId, principal.tenantId),
+            ),
+          )
+          .limit(1);
+        if (!batch) throw new ForgeError("NOT_FOUND", "Print batch not found");
+        const jobs = await tx
+          .select()
+          .from(industrialPrintJobs)
+          .where(
+            and(
+              eq(industrialPrintJobs.batchId, id),
+              eq(industrialPrintJobs.tenantId, principal.tenantId),
+            ),
+          )
+          .orderBy(desc(industrialPrintJobs.priority), asc(industrialPrintJobs.createdAt));
+        return { ...this.mapBatch(batch), jobs: jobs.map((j) => this.mapJob(j)) };
+      },
+      principal.userId,
+    );
   }
 
   async onAuthenticatedJobStatus(principal: ForgePrincipal, jobId: string, body: unknown) {
     const input = printJobStatusUpdateSchema.parse(body ?? {}) as PrintJobStatusUpdate;
     const status = String(input.status).trim().toUpperCase();
 
-    return withTenantTransaction(this.db, principal.tenantId, async (tx) => {
-      const [job] = await tx
-        .select()
-        .from(industrialPrintJobs)
-        .where(
-          and(
-            eq(industrialPrintJobs.id, jobId),
-            eq(industrialPrintJobs.tenantId, principal.tenantId),
-          ),
-        )
-        .limit(1);
-      if (!job) throw new ForgeError("NOT_FOUND", "Print job not found");
-      if (job.bridgeId != null) {
-        throw new ForgeError(
-          "BAD_REQUEST",
-          "Bridge-assigned jobs must report status via the printer bridge",
-        );
-      }
-      const ownsJob = job.requestedBy === principal.userId;
-      if (!ownsJob && !principal.permissions.has("industrial.printer.print") && !principal.permissions.has("industrial.admin")) {
-        throw new ForgeError("FORBIDDEN", "Not allowed to update this print job");
-      }
+    return withTenantTransaction(
+      this.db,
+      principal.tenantId,
+      async (tx) => {
+        const [job] = await tx
+          .select()
+          .from(industrialPrintJobs)
+          .where(
+            and(
+              eq(industrialPrintJobs.id, jobId),
+              eq(industrialPrintJobs.tenantId, principal.tenantId),
+            ),
+          )
+          .limit(1);
+        if (!job) throw new ForgeError("NOT_FOUND", "Print job not found");
+        if (job.bridgeId != null) {
+          throw new ForgeError(
+            "BAD_REQUEST",
+            "Bridge-assigned jobs must report status via the printer bridge",
+          );
+        }
+        const ownsJob = job.requestedBy === principal.userId;
+        if (
+          !ownsJob &&
+          !principal.permissions.has("industrial.printer.print") &&
+          !principal.permissions.has("industrial.admin")
+        ) {
+          throw new ForgeError("FORBIDDEN", "Not allowed to update this print job");
+        }
 
-      if (isTerminalSuccessStatus(job.status) && isTerminalSuccessStatus(status)) {
-        return this.mapJob(job);
-      }
+        if (isTerminalSuccessStatus(job.status) && isTerminalSuccessStatus(status)) {
+          return this.mapJob(job);
+        }
 
-      const wasTerminal = BATCH_TERMINAL_JOB_STATUSES.has(job.status);
-      const now = new Date();
-      const patch: Partial<typeof industrialPrintJobs.$inferInsert> = { status };
-      if (status === PrintJobStatus.RECEIVED) patch.receivedAt = now;
-      if (
-        status === PrintJobStatus.PRINTING ||
-        status === PrintJobStatus.SPOOLING ||
-        status === PrintJobStatus.TRANSMITTING
-      ) {
-        patch.startedAt = job.startedAt ?? now;
-      }
-      if (isTerminalSuccessStatus(status)) patch.completedAt = now;
-      if (status === PrintJobStatus.FAILED) {
-        patch.failedAt = now;
-        patch.errorCode = input.errorCode ?? null;
-        patch.errorMessage = input.errorMessage ?? input.message ?? null;
-      }
+        const wasTerminal = BATCH_TERMINAL_JOB_STATUSES.has(job.status);
+        const now = new Date();
+        const patch: Partial<typeof industrialPrintJobs.$inferInsert> = { status };
+        if (status === PrintJobStatus.RECEIVED) patch.receivedAt = now;
+        if (
+          status === PrintJobStatus.PRINTING ||
+          status === PrintJobStatus.SPOOLING ||
+          status === PrintJobStatus.TRANSMITTING
+        ) {
+          patch.startedAt = job.startedAt ?? now;
+        }
+        if (isTerminalSuccessStatus(status)) patch.completedAt = now;
+        if (status === PrintJobStatus.FAILED) {
+          patch.failedAt = now;
+          patch.errorCode = input.errorCode ?? null;
+          patch.errorMessage = input.errorMessage ?? input.message ?? null;
+        }
 
-      const [updated] = await tx
-        .update(industrialPrintJobs)
-        .set(patch)
-        .where(
-          and(
-            eq(industrialPrintJobs.id, jobId),
-            eq(industrialPrintJobs.tenantId, principal.tenantId),
-          ),
-        )
-        .returning();
+        const [updated] = await tx
+          .update(industrialPrintJobs)
+          .set(patch)
+          .where(
+            and(
+              eq(industrialPrintJobs.id, jobId),
+              eq(industrialPrintJobs.tenantId, principal.tenantId),
+            ),
+          )
+          .returning();
 
-      await this.appendJobEvent(tx, {
-        tenantId: principal.tenantId,
-        printJobId: jobId,
-        event: `job.status.${status.toLowerCase()}`,
-        status,
-        message: input.message ?? input.errorMessage ?? null,
-        source: "client",
-        metadata: (input.metadata as Record<string, unknown> | undefined) ?? {},
-      });
-
-      if (!wasTerminal && updated?.batchId && BATCH_TERMINAL_JOB_STATUSES.has(status)) {
-        await this.applyBatchCounterForJobStatus(tx, principal.tenantId, updated.batchId, status);
-      }
-
-      if (!wasTerminal && updated && isTerminalSuccessStatus(status)) {
-        await this.applySupplyUsageForCompletedJob(tx, {
+        await this.appendJobEvent(tx, {
           tenantId: principal.tenantId,
-          principal,
-          job: updated,
+          printJobId: jobId,
+          event: `job.status.${status.toLowerCase()}`,
+          status,
+          message: input.message ?? input.errorMessage ?? null,
+          source: "client",
+          metadata: (input.metadata as Record<string, unknown> | undefined) ?? {},
         });
-      }
 
-      return this.mapJob(updated!);
-    }, principal.userId);
+        if (!wasTerminal && updated?.batchId && BATCH_TERMINAL_JOB_STATUSES.has(status)) {
+          await this.applyBatchCounterForJobStatus(tx, principal.tenantId, updated.batchId, status);
+        }
+
+        if (!wasTerminal && updated && isTerminalSuccessStatus(status)) {
+          await this.applySupplyUsageForCompletedJob(tx, {
+            tenantId: principal.tenantId,
+            principal,
+            job: updated,
+          });
+        }
+
+        return this.mapJob(updated!);
+      },
+      principal.userId,
+    );
   }
 
   async registerDirectBluetoothPrinter(principal: ForgePrincipal, body: unknown) {
     const input = registerDirectBluetoothPrinterInputSchema.parse(body ?? {});
-    return withTenantTransaction(this.db, principal.tenantId, async (tx) => {
-      const now = new Date();
+    return withTenantTransaction(
+      this.db,
+      principal.tenantId,
+      async (tx) => {
+        const now = new Date();
 
-      // printer.locationId FK → industrial_sites (not supply locations).
-      let locationId: string | null = null;
-      if (input.locationId) {
-        const [site] = await tx
-          .select({ id: industrialSites.id })
-          .from(industrialSites)
+        // printer.locationId FK → industrial_sites (not supply locations).
+        let locationId: string | null = null;
+        if (input.locationId) {
+          const [site] = await tx
+            .select({ id: industrialSites.id })
+            .from(industrialSites)
+            .where(
+              and(
+                eq(industrialSites.id, input.locationId),
+                eq(industrialSites.tenantId, principal.tenantId),
+              ),
+            )
+            .limit(1);
+          locationId = site?.id ?? null;
+        }
+
+        let divisionId: string | null = null;
+        if (input.divisionId) {
+          const [dept] = await tx
+            .select({ id: industrialDepartments.id })
+            .from(industrialDepartments)
+            .where(
+              and(
+                eq(industrialDepartments.id, input.divisionId),
+                eq(industrialDepartments.tenantId, principal.tenantId),
+              ),
+            )
+            .limit(1);
+          divisionId = dept?.id ?? null;
+        }
+
+        const [existing] = await tx
+          .select()
+          .from(industrialPrinters)
           .where(
             and(
-              eq(industrialSites.id, input.locationId),
-              eq(industrialSites.tenantId, principal.tenantId),
+              eq(industrialPrinters.tenantId, principal.tenantId),
+              eq(industrialPrinters.bluetoothSavedId, input.bluetoothSavedId),
+              isNull(industrialPrinters.bridgeId),
             ),
           )
           .limit(1);
-        locationId = site?.id ?? null;
-      }
 
-      let divisionId: string | null = null;
-      if (input.divisionId) {
-        const [dept] = await tx
-          .select({ id: industrialDepartments.id })
-          .from(industrialDepartments)
-          .where(
-            and(
-              eq(industrialDepartments.id, input.divisionId),
-              eq(industrialDepartments.tenantId, principal.tenantId),
-            ),
-          )
-          .limit(1);
-        divisionId = dept?.id ?? null;
-      }
+        if (existing) {
+          const [updated] = await tx
+            .update(industrialPrinters)
+            .set({
+              name: input.name,
+              displayName: input.displayName ?? input.name,
+              model: input.model,
+              manufacturer: "Brady",
+              connectionType: PrinterConnectionType.BLUETOOTH_BLE,
+              transportType: PrinterTransportType.BRADY_WEB_BLUETOOTH,
+              bluetoothDeviceId: input.bluetoothDeviceId ?? existing.bluetoothDeviceId,
+              bluetoothSavedId: input.bluetoothSavedId,
+              deviceIdentifier: input.bluetoothSavedId,
+              locationId: locationId ?? existing.locationId,
+              divisionId: divisionId ?? existing.divisionId,
+              dpi: existing.dpi ?? BRADY_I4311_DPI,
+              online: true,
+              connected: true,
+              ready: true,
+              enabled: true,
+              lastSeenAt: now,
+              updatedAt: now,
+            })
+            .where(
+              and(
+                eq(industrialPrinters.id, existing.id),
+                eq(industrialPrinters.tenantId, principal.tenantId),
+              ),
+            )
+            .returning();
+          return this.mapPrinter(updated!);
+        }
 
-      const [existing] = await tx
-        .select()
-        .from(industrialPrinters)
-        .where(
-          and(
-            eq(industrialPrinters.tenantId, principal.tenantId),
-            eq(industrialPrinters.bluetoothSavedId, input.bluetoothSavedId),
-            isNull(industrialPrinters.bridgeId),
-          ),
-        )
-        .limit(1);
-
-      if (existing) {
-        const [updated] = await tx
-          .update(industrialPrinters)
-          .set({
+        const [inserted] = await tx
+          .insert(industrialPrinters)
+          .values({
+            id: createId(),
+            tenantId: principal.tenantId,
+            bridgeId: null,
             name: input.name,
             displayName: input.displayName ?? input.name,
-            model: input.model,
             manufacturer: "Brady",
+            model: input.model,
             connectionType: PrinterConnectionType.BLUETOOTH_BLE,
             transportType: PrinterTransportType.BRADY_WEB_BLUETOOTH,
-            bluetoothDeviceId: input.bluetoothDeviceId ?? existing.bluetoothDeviceId,
-            bluetoothSavedId: input.bluetoothSavedId,
             deviceIdentifier: input.bluetoothSavedId,
-            locationId: locationId ?? existing.locationId,
-            divisionId: divisionId ?? existing.divisionId,
-            dpi: existing.dpi ?? BRADY_I4311_DPI,
+            bluetoothDeviceId: input.bluetoothDeviceId ?? null,
+            bluetoothSavedId: input.bluetoothSavedId,
+            dpi: BRADY_I4311_DPI,
+            locationId,
+            divisionId,
             online: true,
             connected: true,
             ready: true,
             enabled: true,
             lastSeenAt: now,
-            updatedAt: now,
           })
-          .where(
-            and(
-              eq(industrialPrinters.id, existing.id),
-              eq(industrialPrinters.tenantId, principal.tenantId),
-            ),
-          )
           .returning();
-        return this.mapPrinter(updated!);
-      }
-
-      const [inserted] = await tx
-        .insert(industrialPrinters)
-        .values({
-          id: createId(),
-          tenantId: principal.tenantId,
-          bridgeId: null,
-          name: input.name,
-          displayName: input.displayName ?? input.name,
-          manufacturer: "Brady",
-          model: input.model,
-          connectionType: PrinterConnectionType.BLUETOOTH_BLE,
-          transportType: PrinterTransportType.BRADY_WEB_BLUETOOTH,
-          deviceIdentifier: input.bluetoothSavedId,
-          bluetoothDeviceId: input.bluetoothDeviceId ?? null,
-          bluetoothSavedId: input.bluetoothSavedId,
-          dpi: BRADY_I4311_DPI,
-          locationId,
-          divisionId,
-          online: true,
-          connected: true,
-          ready: true,
-          enabled: true,
-          lastSeenAt: now,
-        })
-        .returning();
-      return this.mapPrinter(inserted!);
-    }, principal.userId);
+        return this.mapPrinter(inserted!);
+      },
+      principal.userId,
+    );
   }
 
   private async ensureDefaultMediaProfiles(
@@ -4295,235 +4529,274 @@ export class IndustrialPrintService {
   }
 
   async listMediaProfiles(principal: ForgePrincipal) {
-    return withTenantTransaction(this.db, principal.tenantId, async (tx) => {
-      const rows = await this.ensureDefaultMediaProfiles(tx, principal.tenantId);
-      return { items: rows.map((r) => this.mapMediaProfile(r)) };
-    }, principal.userId);
+    return withTenantTransaction(
+      this.db,
+      principal.tenantId,
+      async (tx) => {
+        const rows = await this.ensureDefaultMediaProfiles(tx, principal.tenantId);
+        return { items: rows.map((r) => this.mapMediaProfile(r)) };
+      },
+      principal.userId,
+    );
   }
 
   async createMediaProfile(principal: ForgePrincipal, body: unknown) {
     const input = createMediaProfileInputSchema.parse(body ?? {});
-    return withTenantTransaction(this.db, principal.tenantId, async (tx) => {
-      const [row] = await tx
-        .insert(industrialPrinterMediaProfiles)
-        .values({
-          id: createId(),
-          tenantId: principal.tenantId,
-          manufacturer: input.manufacturer,
-          printerModel: input.printerModel,
-          partNumber: input.partNumber ?? null,
-          name: input.name,
-          widthInches: input.widthInches,
-          heightInches: input.heightInches,
-          continuous: input.continuous ?? false,
-          dieCut: input.dieCut ?? true,
-          printableWidth: input.printableWidth ?? null,
-          printableHeight: input.printableHeight ?? null,
-          orientation: input.orientation ?? null,
-        })
-        .returning();
-      return this.mapMediaProfile(row!);
-    }, principal.userId);
+    return withTenantTransaction(
+      this.db,
+      principal.tenantId,
+      async (tx) => {
+        const [row] = await tx
+          .insert(industrialPrinterMediaProfiles)
+          .values({
+            id: createId(),
+            tenantId: principal.tenantId,
+            manufacturer: input.manufacturer,
+            printerModel: input.printerModel,
+            partNumber: input.partNumber ?? null,
+            name: input.name,
+            widthInches: input.widthInches,
+            heightInches: input.heightInches,
+            continuous: input.continuous ?? false,
+            dieCut: input.dieCut ?? true,
+            printableWidth: input.printableWidth ?? null,
+            printableHeight: input.printableHeight ?? null,
+            orientation: input.orientation ?? null,
+          })
+          .returning();
+        return this.mapMediaProfile(row!);
+      },
+      principal.userId,
+    );
   }
 
   async patchMediaProfile(principal: ForgePrincipal, id: string, body: unknown) {
     const input = patchMediaProfileInputSchema.parse(body ?? {});
-    return withTenantTransaction(this.db, principal.tenantId, async (tx) => {
-      const [existing] = await tx
-        .select()
-        .from(industrialPrinterMediaProfiles)
-        .where(
-          and(
-            eq(industrialPrinterMediaProfiles.id, id),
-            eq(industrialPrinterMediaProfiles.tenantId, principal.tenantId),
-          ),
-        )
-        .limit(1);
-      if (!existing) throw new ForgeError("NOT_FOUND", "Media profile not found");
-
-      const [updated] = await tx
-        .update(industrialPrinterMediaProfiles)
-        .set({
-          ...(input.manufacturer !== undefined ? { manufacturer: input.manufacturer } : {}),
-          ...(input.printerModel !== undefined ? { printerModel: input.printerModel } : {}),
-          ...(input.partNumber !== undefined ? { partNumber: input.partNumber } : {}),
-          ...(input.name !== undefined ? { name: input.name } : {}),
-          ...(input.widthInches !== undefined ? { widthInches: input.widthInches } : {}),
-          ...(input.heightInches !== undefined ? { heightInches: input.heightInches } : {}),
-          ...(input.continuous !== undefined ? { continuous: input.continuous } : {}),
-          ...(input.dieCut !== undefined ? { dieCut: input.dieCut } : {}),
-          ...(input.printableWidth !== undefined ? { printableWidth: input.printableWidth } : {}),
-          ...(input.printableHeight !== undefined ? { printableHeight: input.printableHeight } : {}),
-          ...(input.orientation !== undefined ? { orientation: input.orientation } : {}),
-          updatedAt: new Date(),
-        })
-        .where(
-          and(
-            eq(industrialPrinterMediaProfiles.id, id),
-            eq(industrialPrinterMediaProfiles.tenantId, principal.tenantId),
-          ),
-        )
-        .returning();
-      return this.mapMediaProfile(updated!);
-    }, principal.userId);
-  }
-
-  async deleteMediaProfile(principal: ForgePrincipal, id: string) {
-    return withTenantTransaction(this.db, principal.tenantId, async (tx) => {
-      const [deleted] = await tx
-        .delete(industrialPrinterMediaProfiles)
-        .where(
-          and(
-            eq(industrialPrinterMediaProfiles.id, id),
-            eq(industrialPrinterMediaProfiles.tenantId, principal.tenantId),
-          ),
-        )
-        .returning();
-      if (!deleted) throw new ForgeError("NOT_FOUND", "Media profile not found");
-      return { ok: true, id };
-    }, principal.userId);
-  }
-
-  async getPrinterProfile(principal: ForgePrincipal, printerId: string) {
-    return withTenantTransaction(this.db, principal.tenantId, async (tx) => {
-      const [printer] = await tx
-        .select({ id: industrialPrinters.id })
-        .from(industrialPrinters)
-        .where(
-          and(
-            eq(industrialPrinters.id, printerId),
-            eq(industrialPrinters.tenantId, principal.tenantId),
-          ),
-        )
-        .limit(1);
-      if (!printer) throw new ForgeError("NOT_FOUND", "Printer not found");
-      const profile = await this.loadPrinterProfile(tx, principal.tenantId, printerId);
-      return profile
-        ? this.mapPrinterProfile(profile)
-        : {
-            id: null,
-            printerId,
-            dpi: null,
-            defaultMediaId: null,
-            defaultOrientation: null,
-            defaultCopies: 1,
-            defaultCutMode: null,
-            darkness: null,
-            speed: null,
-            xOffset: null,
-            yOffset: null,
-            preferredTransport: null,
-            fallbackPrinterId: null,
-            createdAt: null,
-            updatedAt: null,
-          };
-    }, principal.userId);
-  }
-
-  async upsertPrinterProfile(principal: ForgePrincipal, printerId: string, body: unknown) {
-    const input = upsertPrinterProfileInputSchema.parse(body ?? {});
-    return withTenantTransaction(this.db, principal.tenantId, async (tx) => {
-      const [printer] = await tx
-        .select({ id: industrialPrinters.id })
-        .from(industrialPrinters)
-        .where(
-          and(
-            eq(industrialPrinters.id, printerId),
-            eq(industrialPrinters.tenantId, principal.tenantId),
-          ),
-        )
-        .limit(1);
-      if (!printer) throw new ForgeError("NOT_FOUND", "Printer not found");
-
-      if (input.fallbackPrinterId) {
-        const [fallback] = await tx
-          .select({ id: industrialPrinters.id })
-          .from(industrialPrinters)
+    return withTenantTransaction(
+      this.db,
+      principal.tenantId,
+      async (tx) => {
+        const [existing] = await tx
+          .select()
+          .from(industrialPrinterMediaProfiles)
           .where(
             and(
-              eq(industrialPrinters.id, input.fallbackPrinterId),
-              eq(industrialPrinters.tenantId, principal.tenantId),
+              eq(industrialPrinterMediaProfiles.id, id),
+              eq(industrialPrinterMediaProfiles.tenantId, principal.tenantId),
             ),
           )
           .limit(1);
-        if (!fallback) throw new ForgeError("NOT_FOUND", "Fallback printer not found");
-        if (fallback.id === printerId) {
-          throw new ForgeError("BAD_REQUEST", "Fallback printer cannot be the same printer");
-        }
-      }
+        if (!existing) throw new ForgeError("NOT_FOUND", "Media profile not found");
 
-      const existing = await this.loadPrinterProfile(tx, principal.tenantId, printerId);
-      if (existing) {
         const [updated] = await tx
-          .update(industrialPrinterProfiles)
+          .update(industrialPrinterMediaProfiles)
           .set({
-            ...(input.dpi !== undefined ? { dpi: input.dpi } : {}),
-            ...(input.defaultMediaId !== undefined ? { defaultMediaId: input.defaultMediaId } : {}),
-            ...(input.defaultCopies !== undefined ? { defaultCopies: input.defaultCopies } : {}),
-            ...(input.preferredTransport !== undefined
-              ? { preferredTransport: input.preferredTransport }
+            ...(input.manufacturer !== undefined ? { manufacturer: input.manufacturer } : {}),
+            ...(input.printerModel !== undefined ? { printerModel: input.printerModel } : {}),
+            ...(input.partNumber !== undefined ? { partNumber: input.partNumber } : {}),
+            ...(input.name !== undefined ? { name: input.name } : {}),
+            ...(input.widthInches !== undefined ? { widthInches: input.widthInches } : {}),
+            ...(input.heightInches !== undefined ? { heightInches: input.heightInches } : {}),
+            ...(input.continuous !== undefined ? { continuous: input.continuous } : {}),
+            ...(input.dieCut !== undefined ? { dieCut: input.dieCut } : {}),
+            ...(input.printableWidth !== undefined ? { printableWidth: input.printableWidth } : {}),
+            ...(input.printableHeight !== undefined
+              ? { printableHeight: input.printableHeight }
               : {}),
-            ...(input.fallbackPrinterId !== undefined
-              ? { fallbackPrinterId: input.fallbackPrinterId }
-              : {}),
+            ...(input.orientation !== undefined ? { orientation: input.orientation } : {}),
             updatedAt: new Date(),
           })
           .where(
             and(
-              eq(industrialPrinterProfiles.id, existing.id),
-              eq(industrialPrinterProfiles.tenantId, principal.tenantId),
+              eq(industrialPrinterMediaProfiles.id, id),
+              eq(industrialPrinterMediaProfiles.tenantId, principal.tenantId),
             ),
           )
           .returning();
-        return this.mapPrinterProfile(updated!);
-      }
+        return this.mapMediaProfile(updated!);
+      },
+      principal.userId,
+    );
+  }
 
-      const [inserted] = await tx
-        .insert(industrialPrinterProfiles)
-        .values({
-          id: createId(),
-          tenantId: principal.tenantId,
-          printerId,
-          dpi: input.dpi ?? null,
-          defaultMediaId: input.defaultMediaId ?? null,
-          defaultCopies: input.defaultCopies ?? 1,
-          preferredTransport: input.preferredTransport ?? null,
-          fallbackPrinterId: input.fallbackPrinterId ?? null,
-        })
-        .returning();
-      return this.mapPrinterProfile(inserted!);
-    }, principal.userId);
+  async deleteMediaProfile(principal: ForgePrincipal, id: string) {
+    return withTenantTransaction(
+      this.db,
+      principal.tenantId,
+      async (tx) => {
+        const [deleted] = await tx
+          .delete(industrialPrinterMediaProfiles)
+          .where(
+            and(
+              eq(industrialPrinterMediaProfiles.id, id),
+              eq(industrialPrinterMediaProfiles.tenantId, principal.tenantId),
+            ),
+          )
+          .returning();
+        if (!deleted) throw new ForgeError("NOT_FOUND", "Media profile not found");
+        return { ok: true, id };
+      },
+      principal.userId,
+    );
+  }
+
+  async getPrinterProfile(principal: ForgePrincipal, printerId: string) {
+    return withTenantTransaction(
+      this.db,
+      principal.tenantId,
+      async (tx) => {
+        const [printer] = await tx
+          .select({ id: industrialPrinters.id })
+          .from(industrialPrinters)
+          .where(
+            and(
+              eq(industrialPrinters.id, printerId),
+              eq(industrialPrinters.tenantId, principal.tenantId),
+            ),
+          )
+          .limit(1);
+        if (!printer) throw new ForgeError("NOT_FOUND", "Printer not found");
+        const profile = await this.loadPrinterProfile(tx, principal.tenantId, printerId);
+        return profile
+          ? this.mapPrinterProfile(profile)
+          : {
+              id: null,
+              printerId,
+              dpi: null,
+              defaultMediaId: null,
+              defaultOrientation: null,
+              defaultCopies: 1,
+              defaultCutMode: null,
+              darkness: null,
+              speed: null,
+              xOffset: null,
+              yOffset: null,
+              preferredTransport: null,
+              fallbackPrinterId: null,
+              createdAt: null,
+              updatedAt: null,
+            };
+      },
+      principal.userId,
+    );
+  }
+
+  async upsertPrinterProfile(principal: ForgePrincipal, printerId: string, body: unknown) {
+    const input = upsertPrinterProfileInputSchema.parse(body ?? {});
+    return withTenantTransaction(
+      this.db,
+      principal.tenantId,
+      async (tx) => {
+        const [printer] = await tx
+          .select({ id: industrialPrinters.id })
+          .from(industrialPrinters)
+          .where(
+            and(
+              eq(industrialPrinters.id, printerId),
+              eq(industrialPrinters.tenantId, principal.tenantId),
+            ),
+          )
+          .limit(1);
+        if (!printer) throw new ForgeError("NOT_FOUND", "Printer not found");
+
+        if (input.fallbackPrinterId) {
+          const [fallback] = await tx
+            .select({ id: industrialPrinters.id })
+            .from(industrialPrinters)
+            .where(
+              and(
+                eq(industrialPrinters.id, input.fallbackPrinterId),
+                eq(industrialPrinters.tenantId, principal.tenantId),
+              ),
+            )
+            .limit(1);
+          if (!fallback) throw new ForgeError("NOT_FOUND", "Fallback printer not found");
+          if (fallback.id === printerId) {
+            throw new ForgeError("BAD_REQUEST", "Fallback printer cannot be the same printer");
+          }
+        }
+
+        const existing = await this.loadPrinterProfile(tx, principal.tenantId, printerId);
+        if (existing) {
+          const [updated] = await tx
+            .update(industrialPrinterProfiles)
+            .set({
+              ...(input.dpi !== undefined ? { dpi: input.dpi } : {}),
+              ...(input.defaultMediaId !== undefined
+                ? { defaultMediaId: input.defaultMediaId }
+                : {}),
+              ...(input.defaultCopies !== undefined ? { defaultCopies: input.defaultCopies } : {}),
+              ...(input.preferredTransport !== undefined
+                ? { preferredTransport: input.preferredTransport }
+                : {}),
+              ...(input.fallbackPrinterId !== undefined
+                ? { fallbackPrinterId: input.fallbackPrinterId }
+                : {}),
+              updatedAt: new Date(),
+            })
+            .where(
+              and(
+                eq(industrialPrinterProfiles.id, existing.id),
+                eq(industrialPrinterProfiles.tenantId, principal.tenantId),
+              ),
+            )
+            .returning();
+          return this.mapPrinterProfile(updated!);
+        }
+
+        const [inserted] = await tx
+          .insert(industrialPrinterProfiles)
+          .values({
+            id: createId(),
+            tenantId: principal.tenantId,
+            printerId,
+            dpi: input.dpi ?? null,
+            defaultMediaId: input.defaultMediaId ?? null,
+            defaultCopies: input.defaultCopies ?? 1,
+            preferredTransport: input.preferredTransport ?? null,
+            fallbackPrinterId: input.fallbackPrinterId ?? null,
+          })
+          .returning();
+        return this.mapPrinterProfile(inserted!);
+      },
+      principal.userId,
+    );
   }
 
   async getPrinterHealth(principal: ForgePrincipal, printerId: string) {
-    return withTenantTransaction(this.db, principal.tenantId, async (tx) => {
-      const [printer] = await tx
-        .select()
-        .from(industrialPrinters)
-        .where(
-          and(
-            eq(industrialPrinters.id, printerId),
-            eq(industrialPrinters.tenantId, principal.tenantId),
-          ),
-        )
-        .limit(1);
-      if (!printer) throw new ForgeError("NOT_FOUND", "Printer not found");
-      const bridge = await this.loadBridgeForPrinter(tx, principal.tenantId, printer.bridgeId);
-      const mapped = this.mapPrinter(printer);
-      return {
-        printer: mapped,
-        bridge: bridge ? this.mapBridge(bridge) : null,
-        ribbonOk: printer.ribbonOk,
-        mediaOk: printer.mediaOk,
-        batteryPercent: printer.batteryPercent,
-        supplyName: printer.supplyName,
-        lastHealthAt: toIso(printer.lastHealthAt),
-        capabilities: mapped.capabilities,
-        online: printer.online,
-        connected: printer.connected,
-        ready: printer.ready,
-      };
-    }, principal.userId);
+    return withTenantTransaction(
+      this.db,
+      principal.tenantId,
+      async (tx) => {
+        const [printer] = await tx
+          .select()
+          .from(industrialPrinters)
+          .where(
+            and(
+              eq(industrialPrinters.id, printerId),
+              eq(industrialPrinters.tenantId, principal.tenantId),
+            ),
+          )
+          .limit(1);
+        if (!printer) throw new ForgeError("NOT_FOUND", "Printer not found");
+        const bridge = await this.loadBridgeForPrinter(tx, principal.tenantId, printer.bridgeId);
+        const mapped = this.mapPrinter(printer);
+        return {
+          printer: mapped,
+          bridge: bridge ? this.mapBridge(bridge) : null,
+          ribbonOk: printer.ribbonOk,
+          mediaOk: printer.mediaOk,
+          batteryPercent: printer.batteryPercent,
+          supplyName: printer.supplyName,
+          lastHealthAt: toIso(printer.lastHealthAt),
+          capabilities: mapped.capabilities,
+          online: printer.online,
+          connected: printer.connected,
+          ready: printer.ready,
+        };
+      },
+      principal.userId,
+    );
   }
 
   async runDiagnostics(principal: ForgePrincipal, printerId: string) {
@@ -4552,10 +4825,7 @@ export class IndustrialPrintService {
     return tenantId;
   }
 
-  private async resolveTenantForDeviceToken(
-    deviceId: string,
-    tokenHash: string,
-  ): Promise<string> {
+  private async resolveTenantForDeviceToken(deviceId: string, tokenHash: string): Promise<string> {
     const rows = await this.db.execute(
       sql`select forge_industrial_printer_bridge_tenant_for_device_token(${deviceId}, ${tokenHash}) as tenant_id`,
     );
@@ -4684,11 +4954,11 @@ export class IndustrialPrintService {
         where id = ${tenantId}::uuid
         limit 1
       `);
-      const tenantRow = (Array.isArray(tenantRows)
-        ? tenantRows[0]
-        : (tenantRows as { rows?: Array<Record<string, unknown>> }).rows?.[0]) as
-        | Record<string, unknown>
-        | undefined;
+      const tenantRow = (
+        Array.isArray(tenantRows)
+          ? tenantRows[0]
+          : (tenantRows as { rows?: Array<Record<string, unknown>> }).rows?.[0]
+      ) as Record<string, unknown> | undefined;
 
       return {
         bridgeId: bridge.id,
@@ -4734,9 +5004,11 @@ export class IndustrialPrintService {
 
   async upsertPrinters(deviceId: string, accessToken: string, body: unknown) {
     const bridge = await this.authenticateBridge(deviceId, accessToken);
-    const printers = z.array(bridgePrinterUpsertSchema).parse(
-      Array.isArray(body) ? body : (body as { printers?: unknown })?.printers ?? [],
-    ) as BridgePrinterUpsert[];
+    const printers = z
+      .array(bridgePrinterUpsertSchema)
+      .parse(
+        Array.isArray(body) ? body : ((body as { printers?: unknown })?.printers ?? []),
+      ) as BridgePrinterUpsert[];
 
     return withTenantTransaction(this.db, bridge.tenantId, async (tx) => {
       const now = new Date();
@@ -4981,10 +5253,7 @@ export class IndustrialPrintService {
         .select()
         .from(industrialPrintJobs)
         .where(
-          and(
-            eq(industrialPrintJobs.id, jobId),
-            eq(industrialPrintJobs.tenantId, bridge.tenantId),
-          ),
+          and(eq(industrialPrintJobs.id, jobId), eq(industrialPrintJobs.tenantId, bridge.tenantId)),
         )
         .limit(1);
       if (!job) throw new ForgeError("NOT_FOUND", "Print job not found");
@@ -5022,10 +5291,7 @@ export class IndustrialPrintService {
         .update(industrialPrintJobs)
         .set(patch)
         .where(
-          and(
-            eq(industrialPrintJobs.id, jobId),
-            eq(industrialPrintJobs.tenantId, bridge.tenantId),
-          ),
+          and(eq(industrialPrintJobs.id, jobId), eq(industrialPrintJobs.tenantId, bridge.tenantId)),
         )
         .returning();
 
@@ -5208,25 +5474,30 @@ export class IndustrialPrintService {
       "forge.printing.supplies.enabled",
       "Print supplies",
     );
-    return withTenantTransaction(this.db, principal.tenantId, async (tx) => {
-      const rows = await tx
-        .select()
-        .from(industrialPrintSupplies)
-        .where(eq(industrialPrintSupplies.tenantId, principal.tenantId))
-        .orderBy(asc(industrialPrintSupplies.name));
-      const printers = await tx
-        .select({
-          id: industrialPrinters.id,
-          name: industrialPrinters.name,
-          displayName: industrialPrinters.displayName,
-        })
-        .from(industrialPrinters)
-        .where(eq(industrialPrinters.tenantId, principal.tenantId));
-      const nameById = new Map(printers.map((p) => [p.id, p.displayName || p.name] as const));
-      return {
-        items: rows.map((r) => this.mapSupply(r, r.printerId ? nameById.get(r.printerId) : null)),
-      };
-    }, principal.userId);
+    return withTenantTransaction(
+      this.db,
+      principal.tenantId,
+      async (tx) => {
+        const rows = await tx
+          .select()
+          .from(industrialPrintSupplies)
+          .where(eq(industrialPrintSupplies.tenantId, principal.tenantId))
+          .orderBy(asc(industrialPrintSupplies.name));
+        const printers = await tx
+          .select({
+            id: industrialPrinters.id,
+            name: industrialPrinters.name,
+            displayName: industrialPrinters.displayName,
+          })
+          .from(industrialPrinters)
+          .where(eq(industrialPrinters.tenantId, principal.tenantId));
+        const nameById = new Map(printers.map((p) => [p.id, p.displayName || p.name] as const));
+        return {
+          items: rows.map((r) => this.mapSupply(r, r.printerId ? nameById.get(r.printerId) : null)),
+        };
+      },
+      principal.userId,
+    );
   }
 
   async createPrintSupply(principal: ForgePrincipal, body: unknown) {
@@ -5242,49 +5513,54 @@ export class IndustrialPrintService {
         "criticalThreshold must be less than or equal to warningThreshold",
       );
     }
-    return withTenantTransaction(this.db, principal.tenantId, async (tx) => {
-      if (input.printerId) {
-        const [printer] = await tx
-          .select({ id: industrialPrinters.id })
-          .from(industrialPrinters)
-          .where(
-            and(
-              eq(industrialPrinters.id, input.printerId),
-              eq(industrialPrinters.tenantId, principal.tenantId),
-            ),
-          )
-          .limit(1);
-        if (!printer) throw new ForgeError("NOT_FOUND", "Printer not found");
-      }
-      const remaining = input.estimatedRemaining ?? input.startingQuantity;
-      const alertLevel = computeSupplyAlertLevel({
-        estimatedRemaining: remaining,
-        warningThreshold: input.warningThreshold,
-        criticalThreshold: input.criticalThreshold,
-      });
-      const id = createId();
-      const [row] = await tx
-        .insert(industrialPrintSupplies)
-        .values({
-          id,
-          tenantId: principal.tenantId,
-          printerId: input.printerId ?? null,
-          supplyType: input.supplyType,
-          name: input.name,
-          sku: input.sku ?? null,
-          unit: input.unit,
-          startingQuantity: input.startingQuantity,
+    return withTenantTransaction(
+      this.db,
+      principal.tenantId,
+      async (tx) => {
+        if (input.printerId) {
+          const [printer] = await tx
+            .select({ id: industrialPrinters.id })
+            .from(industrialPrinters)
+            .where(
+              and(
+                eq(industrialPrinters.id, input.printerId),
+                eq(industrialPrinters.tenantId, principal.tenantId),
+              ),
+            )
+            .limit(1);
+          if (!printer) throw new ForgeError("NOT_FOUND", "Printer not found");
+        }
+        const remaining = input.estimatedRemaining ?? input.startingQuantity;
+        const alertLevel = computeSupplyAlertLevel({
           estimatedRemaining: remaining,
-          unitsConsumed: 0,
           warningThreshold: input.warningThreshold,
           criticalThreshold: input.criticalThreshold,
-          lastAlertLevel: alertLevel,
-          alertUserIds: input.alertUserIds ?? [],
-          enabled: input.enabled ?? true,
-        })
-        .returning();
-      return this.mapSupply(row!);
-    }, principal.userId);
+        });
+        const id = createId();
+        const [row] = await tx
+          .insert(industrialPrintSupplies)
+          .values({
+            id,
+            tenantId: principal.tenantId,
+            printerId: input.printerId ?? null,
+            supplyType: input.supplyType,
+            name: input.name,
+            sku: input.sku ?? null,
+            unit: input.unit,
+            startingQuantity: input.startingQuantity,
+            estimatedRemaining: remaining,
+            unitsConsumed: 0,
+            warningThreshold: input.warningThreshold,
+            criticalThreshold: input.criticalThreshold,
+            lastAlertLevel: alertLevel,
+            alertUserIds: input.alertUserIds ?? [],
+            enabled: input.enabled ?? true,
+          })
+          .returning();
+        return this.mapSupply(row!);
+      },
+      principal.userId,
+    );
   }
 
   async patchPrintSupply(principal: ForgePrincipal, id: string, body: unknown) {
@@ -5294,82 +5570,87 @@ export class IndustrialPrintService {
       "Print supplies",
     );
     const input = patchPrintSupplyInputSchema.parse(body ?? {});
-    return withTenantTransaction(this.db, principal.tenantId, async (tx) => {
-      const [existing] = await tx
-        .select()
-        .from(industrialPrintSupplies)
-        .where(
-          and(
-            eq(industrialPrintSupplies.id, id),
-            eq(industrialPrintSupplies.tenantId, principal.tenantId),
-          ),
-        )
-        .limit(1);
-      if (!existing) throw new ForgeError("NOT_FOUND", "Print supply not found");
-
-      const warning = input.warningThreshold ?? existing.warningThreshold;
-      const critical = input.criticalThreshold ?? existing.criticalThreshold;
-      if (critical > warning) {
-        throw new ForgeError(
-          "BAD_REQUEST",
-          "criticalThreshold must be less than or equal to warningThreshold",
-        );
-      }
-      if (input.printerId) {
-        const [printer] = await tx
-          .select({ id: industrialPrinters.id })
-          .from(industrialPrinters)
+    return withTenantTransaction(
+      this.db,
+      principal.tenantId,
+      async (tx) => {
+        const [existing] = await tx
+          .select()
+          .from(industrialPrintSupplies)
           .where(
             and(
-              eq(industrialPrinters.id, input.printerId),
-              eq(industrialPrinters.tenantId, principal.tenantId),
+              eq(industrialPrintSupplies.id, id),
+              eq(industrialPrintSupplies.tenantId, principal.tenantId),
             ),
           )
           .limit(1);
-        if (!printer) throw new ForgeError("NOT_FOUND", "Printer not found");
-      }
+        if (!existing) throw new ForgeError("NOT_FOUND", "Print supply not found");
 
-      const remaining = input.estimatedRemaining ?? existing.estimatedRemaining;
-      const alertLevel = computeSupplyAlertLevel({
-        estimatedRemaining: remaining,
-        warningThreshold: warning,
-        criticalThreshold: critical,
-      });
-      const [row] = await tx
-        .update(industrialPrintSupplies)
-        .set({
-          ...(input.printerId !== undefined ? { printerId: input.printerId } : {}),
-          ...(input.supplyType !== undefined ? { supplyType: input.supplyType } : {}),
-          ...(input.name !== undefined ? { name: input.name } : {}),
-          ...(input.sku !== undefined ? { sku: input.sku } : {}),
-          ...(input.unit !== undefined ? { unit: input.unit } : {}),
-          ...(input.startingQuantity !== undefined
-            ? { startingQuantity: input.startingQuantity }
-            : {}),
-          ...(input.estimatedRemaining !== undefined
-            ? { estimatedRemaining: input.estimatedRemaining }
-            : {}),
-          ...(input.unitsConsumed !== undefined ? { unitsConsumed: input.unitsConsumed } : {}),
-          ...(input.warningThreshold !== undefined
-            ? { warningThreshold: input.warningThreshold }
-            : {}),
-          ...(input.criticalThreshold !== undefined
-            ? { criticalThreshold: input.criticalThreshold }
-            : {}),
-          ...(input.alertUserIds !== undefined ? { alertUserIds: input.alertUserIds } : {}),
-          ...(input.enabled !== undefined ? { enabled: input.enabled } : {}),
-          lastAlertLevel: alertLevel,
-          updatedAt: new Date(),
-        })
-        .where(
-          and(
-            eq(industrialPrintSupplies.id, id),
-            eq(industrialPrintSupplies.tenantId, principal.tenantId),
-          ),
-        )
-        .returning();
-      return this.mapSupply(row!);
-    }, principal.userId);
+        const warning = input.warningThreshold ?? existing.warningThreshold;
+        const critical = input.criticalThreshold ?? existing.criticalThreshold;
+        if (critical > warning) {
+          throw new ForgeError(
+            "BAD_REQUEST",
+            "criticalThreshold must be less than or equal to warningThreshold",
+          );
+        }
+        if (input.printerId) {
+          const [printer] = await tx
+            .select({ id: industrialPrinters.id })
+            .from(industrialPrinters)
+            .where(
+              and(
+                eq(industrialPrinters.id, input.printerId),
+                eq(industrialPrinters.tenantId, principal.tenantId),
+              ),
+            )
+            .limit(1);
+          if (!printer) throw new ForgeError("NOT_FOUND", "Printer not found");
+        }
+
+        const remaining = input.estimatedRemaining ?? existing.estimatedRemaining;
+        const alertLevel = computeSupplyAlertLevel({
+          estimatedRemaining: remaining,
+          warningThreshold: warning,
+          criticalThreshold: critical,
+        });
+        const [row] = await tx
+          .update(industrialPrintSupplies)
+          .set({
+            ...(input.printerId !== undefined ? { printerId: input.printerId } : {}),
+            ...(input.supplyType !== undefined ? { supplyType: input.supplyType } : {}),
+            ...(input.name !== undefined ? { name: input.name } : {}),
+            ...(input.sku !== undefined ? { sku: input.sku } : {}),
+            ...(input.unit !== undefined ? { unit: input.unit } : {}),
+            ...(input.startingQuantity !== undefined
+              ? { startingQuantity: input.startingQuantity }
+              : {}),
+            ...(input.estimatedRemaining !== undefined
+              ? { estimatedRemaining: input.estimatedRemaining }
+              : {}),
+            ...(input.unitsConsumed !== undefined ? { unitsConsumed: input.unitsConsumed } : {}),
+            ...(input.warningThreshold !== undefined
+              ? { warningThreshold: input.warningThreshold }
+              : {}),
+            ...(input.criticalThreshold !== undefined
+              ? { criticalThreshold: input.criticalThreshold }
+              : {}),
+            ...(input.alertUserIds !== undefined ? { alertUserIds: input.alertUserIds } : {}),
+            ...(input.enabled !== undefined ? { enabled: input.enabled } : {}),
+            lastAlertLevel: alertLevel,
+            updatedAt: new Date(),
+          })
+          .where(
+            and(
+              eq(industrialPrintSupplies.id, id),
+              eq(industrialPrintSupplies.tenantId, principal.tenantId),
+            ),
+          )
+          .returning();
+        return this.mapSupply(row!);
+      },
+      principal.userId,
+    );
   }
 
   async replacePrintSupply(principal: ForgePrincipal, id: string, body: unknown) {
@@ -5379,42 +5660,47 @@ export class IndustrialPrintService {
       "Print supplies",
     );
     const input = replacePrintSupplyInputSchema.parse(body ?? {});
-    return withTenantTransaction(this.db, principal.tenantId, async (tx) => {
-      const [existing] = await tx
-        .select()
-        .from(industrialPrintSupplies)
-        .where(
-          and(
-            eq(industrialPrintSupplies.id, id),
-            eq(industrialPrintSupplies.tenantId, principal.tenantId),
-          ),
-        )
-        .limit(1);
-      if (!existing) throw new ForgeError("NOT_FOUND", "Print supply not found");
-      const alertLevel = computeSupplyAlertLevel({
-        estimatedRemaining: input.quantity,
-        warningThreshold: existing.warningThreshold,
-        criticalThreshold: existing.criticalThreshold,
-      });
-      const [row] = await tx
-        .update(industrialPrintSupplies)
-        .set({
-          startingQuantity: input.quantity,
+    return withTenantTransaction(
+      this.db,
+      principal.tenantId,
+      async (tx) => {
+        const [existing] = await tx
+          .select()
+          .from(industrialPrintSupplies)
+          .where(
+            and(
+              eq(industrialPrintSupplies.id, id),
+              eq(industrialPrintSupplies.tenantId, principal.tenantId),
+            ),
+          )
+          .limit(1);
+        if (!existing) throw new ForgeError("NOT_FOUND", "Print supply not found");
+        const alertLevel = computeSupplyAlertLevel({
           estimatedRemaining: input.quantity,
-          unitsConsumed: input.resetConsumed === false ? existing.unitsConsumed : 0,
-          lastReplacedAt: new Date(),
-          lastAlertLevel: alertLevel,
-          updatedAt: new Date(),
-        })
-        .where(
-          and(
-            eq(industrialPrintSupplies.id, id),
-            eq(industrialPrintSupplies.tenantId, principal.tenantId),
-          ),
-        )
-        .returning();
-      return this.mapSupply(row!);
-    }, principal.userId);
+          warningThreshold: existing.warningThreshold,
+          criticalThreshold: existing.criticalThreshold,
+        });
+        const [row] = await tx
+          .update(industrialPrintSupplies)
+          .set({
+            startingQuantity: input.quantity,
+            estimatedRemaining: input.quantity,
+            unitsConsumed: input.resetConsumed === false ? existing.unitsConsumed : 0,
+            lastReplacedAt: new Date(),
+            lastAlertLevel: alertLevel,
+            updatedAt: new Date(),
+          })
+          .where(
+            and(
+              eq(industrialPrintSupplies.id, id),
+              eq(industrialPrintSupplies.tenantId, principal.tenantId),
+            ),
+          )
+          .returning();
+        return this.mapSupply(row!);
+      },
+      principal.userId,
+    );
   }
 
   async deletePrintSupply(principal: ForgePrincipal, id: string) {
@@ -5423,19 +5709,24 @@ export class IndustrialPrintService {
       "forge.printing.supplies.enabled",
       "Print supplies",
     );
-    return withTenantTransaction(this.db, principal.tenantId, async (tx) => {
-      const deleted = await tx
-        .delete(industrialPrintSupplies)
-        .where(
-          and(
-            eq(industrialPrintSupplies.id, id),
-            eq(industrialPrintSupplies.tenantId, principal.tenantId),
-          ),
-        )
-        .returning({ id: industrialPrintSupplies.id });
-      if (!deleted.length) throw new ForgeError("NOT_FOUND", "Print supply not found");
-      return { id };
-    }, principal.userId);
+    return withTenantTransaction(
+      this.db,
+      principal.tenantId,
+      async (tx) => {
+        const deleted = await tx
+          .delete(industrialPrintSupplies)
+          .where(
+            and(
+              eq(industrialPrintSupplies.id, id),
+              eq(industrialPrintSupplies.tenantId, principal.tenantId),
+            ),
+          )
+          .returning({ id: industrialPrintSupplies.id });
+        if (!deleted.length) throw new ForgeError("NOT_FOUND", "Print supply not found");
+        return { id };
+      },
+      principal.userId,
+    );
   }
 
   private async loadAnalyticsJobs(
@@ -5492,94 +5783,110 @@ export class IndustrialPrintService {
     return { jobs, from, to, filters: parsed };
   }
 
-  async getPrintAnalyticsSummary(principal: ForgePrincipal, query: Record<string, string | undefined>) {
+  async getPrintAnalyticsSummary(
+    principal: ForgePrincipal,
+    query: Record<string, string | undefined>,
+  ) {
     await this.assertPrintingFeatureEnabled(
       principal,
       "forge.printing.analytics.enabled",
       "Print analytics",
     );
-    return withTenantTransaction(this.db, principal.tenantId, async (tx) => {
-      const { jobs, from, to } = await this.loadAnalyticsJobs(tx, principal.tenantId, query);
-      const total = jobs.length;
-      const completed = jobs.filter((j) => isTerminalSuccessStatus(j.status)).length;
-      const failed = jobs.filter((j) => j.status === PrintJobStatus.FAILED).length;
-      const cancelled = jobs.filter((j) => j.status === PrintJobStatus.CANCELLED).length;
-      const reprints = jobs.filter((j) => j.parentJobId != null).length;
-      const retried = jobs.filter((j) => (j.retryCount ?? 0) > 0).length;
-      const labelsPrinted = jobs
-        .filter((j) => isTerminalSuccessStatus(j.status))
-        .reduce((s, j) => s + (j.copies ?? 1), 0);
-      const queueSamples = jobs.map((j) => {
-        if (!j.queuedAt || !j.startedAt) return null;
-        return j.startedAt.getTime() - j.queuedAt.getTime();
-      });
-      const printSamples = jobs.map((j) => {
-        if (!j.startedAt || !j.completedAt) return null;
-        return j.completedAt.getTime() - j.startedAt.getTime();
-      });
-      const byModule = new Map<string, number>();
-      for (const j of jobs) {
-        const key = j.module || "(none)";
-        byModule.set(key, (byModule.get(key) ?? 0) + 1);
-      }
-      return {
-        from: from.toISOString(),
-        to: to.toISOString(),
-        totals: {
-          jobs: total,
-          completed,
-          failed,
-          cancelled,
-          reprints,
-          labelsPrinted,
-          pagesPrinted: 0,
-          failureRate: computePrintFailureRate(total, failed),
-          retryRate: computePrintRetryRate(total, retried),
-          averageQueueMs: averageMs(queueSamples),
-          averagePrintMs: averageMs(printSamples),
-        },
-        byModule: [...byModule.entries()]
-          .map(([module, count]) => ({ module, count }))
-          .sort((a, b) => b.count - a.count),
-      };
-    }, principal.userId);
+    return withTenantTransaction(
+      this.db,
+      principal.tenantId,
+      async (tx) => {
+        const { jobs, from, to } = await this.loadAnalyticsJobs(tx, principal.tenantId, query);
+        const total = jobs.length;
+        const completed = jobs.filter((j) => isTerminalSuccessStatus(j.status)).length;
+        const failed = jobs.filter((j) => j.status === PrintJobStatus.FAILED).length;
+        const cancelled = jobs.filter((j) => j.status === PrintJobStatus.CANCELLED).length;
+        const reprints = jobs.filter((j) => j.parentJobId != null).length;
+        const retried = jobs.filter((j) => (j.retryCount ?? 0) > 0).length;
+        const labelsPrinted = jobs
+          .filter((j) => isTerminalSuccessStatus(j.status))
+          .reduce((s, j) => s + (j.copies ?? 1), 0);
+        const queueSamples = jobs.map((j) => {
+          if (!j.queuedAt || !j.startedAt) return null;
+          return j.startedAt.getTime() - j.queuedAt.getTime();
+        });
+        const printSamples = jobs.map((j) => {
+          if (!j.startedAt || !j.completedAt) return null;
+          return j.completedAt.getTime() - j.startedAt.getTime();
+        });
+        const byModule = new Map<string, number>();
+        for (const j of jobs) {
+          const key = j.module || "(none)";
+          byModule.set(key, (byModule.get(key) ?? 0) + 1);
+        }
+        return {
+          from: from.toISOString(),
+          to: to.toISOString(),
+          totals: {
+            jobs: total,
+            completed,
+            failed,
+            cancelled,
+            reprints,
+            labelsPrinted,
+            pagesPrinted: 0,
+            failureRate: computePrintFailureRate(total, failed),
+            retryRate: computePrintRetryRate(total, retried),
+            averageQueueMs: averageMs(queueSamples),
+            averagePrintMs: averageMs(printSamples),
+          },
+          byModule: [...byModule.entries()]
+            .map(([module, count]) => ({ module, count }))
+            .sort((a, b) => b.count - a.count),
+        };
+      },
+      principal.userId,
+    );
   }
 
-  async getPrintAnalyticsVolume(principal: ForgePrincipal, query: Record<string, string | undefined>) {
+  async getPrintAnalyticsVolume(
+    principal: ForgePrincipal,
+    query: Record<string, string | undefined>,
+  ) {
     await this.assertPrintingFeatureEnabled(
       principal,
       "forge.printing.analytics.enabled",
       "Print analytics",
     );
-    return withTenantTransaction(this.db, principal.tenantId, async (tx) => {
-      const { jobs, from, to } = await this.loadAnalyticsJobs(tx, principal.tenantId, query);
-      const byDay = new Map<string, { jobs: number; labels: number; failed: number }>();
-      const byMonth = new Map<string, { jobs: number; labels: number; failed: number }>();
-      for (const j of jobs) {
-        const day = dayBucketUtc(j.createdAt);
-        const month = monthBucketUtc(j.createdAt);
-        const dayRow = byDay.get(day) ?? { jobs: 0, labels: 0, failed: 0 };
-        dayRow.jobs += 1;
-        if (isTerminalSuccessStatus(j.status)) dayRow.labels += j.copies ?? 1;
-        if (j.status === PrintJobStatus.FAILED) dayRow.failed += 1;
-        byDay.set(day, dayRow);
-        const monthRow = byMonth.get(month) ?? { jobs: 0, labels: 0, failed: 0 };
-        monthRow.jobs += 1;
-        if (isTerminalSuccessStatus(j.status)) monthRow.labels += j.copies ?? 1;
-        if (j.status === PrintJobStatus.FAILED) monthRow.failed += 1;
-        byMonth.set(month, monthRow);
-      }
-      return {
-        from: from.toISOString(),
-        to: to.toISOString(),
-        byDay: [...byDay.entries()]
-          .sort(([a], [b]) => a.localeCompare(b))
-          .map(([date, v]) => ({ date, ...v })),
-        byMonth: [...byMonth.entries()]
-          .sort(([a], [b]) => a.localeCompare(b))
-          .map(([month, v]) => ({ month, ...v })),
-      };
-    }, principal.userId);
+    return withTenantTransaction(
+      this.db,
+      principal.tenantId,
+      async (tx) => {
+        const { jobs, from, to } = await this.loadAnalyticsJobs(tx, principal.tenantId, query);
+        const byDay = new Map<string, { jobs: number; labels: number; failed: number }>();
+        const byMonth = new Map<string, { jobs: number; labels: number; failed: number }>();
+        for (const j of jobs) {
+          const day = dayBucketUtc(j.createdAt);
+          const month = monthBucketUtc(j.createdAt);
+          const dayRow = byDay.get(day) ?? { jobs: 0, labels: 0, failed: 0 };
+          dayRow.jobs += 1;
+          if (isTerminalSuccessStatus(j.status)) dayRow.labels += j.copies ?? 1;
+          if (j.status === PrintJobStatus.FAILED) dayRow.failed += 1;
+          byDay.set(day, dayRow);
+          const monthRow = byMonth.get(month) ?? { jobs: 0, labels: 0, failed: 0 };
+          monthRow.jobs += 1;
+          if (isTerminalSuccessStatus(j.status)) monthRow.labels += j.copies ?? 1;
+          if (j.status === PrintJobStatus.FAILED) monthRow.failed += 1;
+          byMonth.set(month, monthRow);
+        }
+        return {
+          from: from.toISOString(),
+          to: to.toISOString(),
+          byDay: [...byDay.entries()]
+            .sort(([a], [b]) => a.localeCompare(b))
+            .map(([date, v]) => ({ date, ...v })),
+          byMonth: [...byMonth.entries()]
+            .sort(([a], [b]) => a.localeCompare(b))
+            .map(([month, v]) => ({ month, ...v })),
+        };
+      },
+      principal.userId,
+    );
   }
 
   async getPrintAnalyticsFailures(
@@ -5591,47 +5898,52 @@ export class IndustrialPrintService {
       "forge.printing.analytics.enabled",
       "Print analytics",
     );
-    return withTenantTransaction(this.db, principal.tenantId, async (tx) => {
-      const { jobs, from, to } = await this.loadAnalyticsJobs(tx, principal.tenantId, query);
-      const failed = jobs.filter((j) => j.status === PrintJobStatus.FAILED);
-      const byCode = new Map<string, number>();
-      for (const j of failed) {
-        const code = j.errorCode || "(unknown)";
-        byCode.set(code, (byCode.get(code) ?? 0) + 1);
-      }
-      const printers = await tx
-        .select({
-          id: industrialPrinters.id,
-          name: industrialPrinters.name,
-          displayName: industrialPrinters.displayName,
-        })
-        .from(industrialPrinters)
-        .where(eq(industrialPrinters.tenantId, principal.tenantId));
-      const nameById = new Map(printers.map((p) => [p.id, p.displayName || p.name] as const));
-      return {
-        from: from.toISOString(),
-        to: to.toISOString(),
-        totalFailed: failed.length,
-        failureRate: computePrintFailureRate(jobs.length, failed.length),
-        byErrorCode: [...byCode.entries()]
-          .map(([errorCode, count]) => ({ errorCode, count }))
-          .sort((a, b) => b.count - a.count),
-        recent: failed
-          .slice()
-          .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime())
-          .slice(0, 50)
-          .map((j) => ({
-            id: j.id,
-            createdAt: toIso(j.createdAt),
-            printerId: j.printerId,
-            printerName: j.printerId ? (nameById.get(j.printerId) ?? null) : null,
-            module: j.module,
-            errorCode: j.errorCode,
-            errorMessage: j.errorMessage,
-            retryCount: j.retryCount,
-          })),
-      };
-    }, principal.userId);
+    return withTenantTransaction(
+      this.db,
+      principal.tenantId,
+      async (tx) => {
+        const { jobs, from, to } = await this.loadAnalyticsJobs(tx, principal.tenantId, query);
+        const failed = jobs.filter((j) => j.status === PrintJobStatus.FAILED);
+        const byCode = new Map<string, number>();
+        for (const j of failed) {
+          const code = j.errorCode || "(unknown)";
+          byCode.set(code, (byCode.get(code) ?? 0) + 1);
+        }
+        const printers = await tx
+          .select({
+            id: industrialPrinters.id,
+            name: industrialPrinters.name,
+            displayName: industrialPrinters.displayName,
+          })
+          .from(industrialPrinters)
+          .where(eq(industrialPrinters.tenantId, principal.tenantId));
+        const nameById = new Map(printers.map((p) => [p.id, p.displayName || p.name] as const));
+        return {
+          from: from.toISOString(),
+          to: to.toISOString(),
+          totalFailed: failed.length,
+          failureRate: computePrintFailureRate(jobs.length, failed.length),
+          byErrorCode: [...byCode.entries()]
+            .map(([errorCode, count]) => ({ errorCode, count }))
+            .sort((a, b) => b.count - a.count),
+          recent: failed
+            .slice()
+            .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime())
+            .slice(0, 50)
+            .map((j) => ({
+              id: j.id,
+              createdAt: toIso(j.createdAt),
+              printerId: j.printerId,
+              printerName: j.printerId ? (nameById.get(j.printerId) ?? null) : null,
+              module: j.module,
+              errorCode: j.errorCode,
+              errorMessage: j.errorMessage,
+              retryCount: j.retryCount,
+            })),
+        };
+      },
+      principal.userId,
+    );
   }
 
   async getPrintAnalyticsPrinters(
@@ -5643,63 +5955,70 @@ export class IndustrialPrintService {
       "forge.printing.analytics.enabled",
       "Print analytics",
     );
-    return withTenantTransaction(this.db, principal.tenantId, async (tx) => {
-      const { jobs, from, to } = await this.loadAnalyticsJobs(tx, principal.tenantId, query);
-      const printers = await tx
-        .select()
-        .from(industrialPrinters)
-        .where(eq(industrialPrinters.tenantId, principal.tenantId));
-      const byPrinter = new Map<
-        string,
-        { jobs: number; completed: number; failed: number; labels: number; printMs: number[] }
-      >();
-      for (const j of jobs) {
-        const key = j.printerId || "(unassigned)";
-        const row = byPrinter.get(key) ?? {
-          jobs: 0,
-          completed: 0,
-          failed: 0,
-          labels: 0,
-          printMs: [],
-        };
-        row.jobs += 1;
-        if (isTerminalSuccessStatus(j.status)) {
-          row.completed += 1;
-          row.labels += j.copies ?? 1;
-          if (j.startedAt && j.completedAt) {
-            row.printMs.push(j.completedAt.getTime() - j.startedAt.getTime());
+    return withTenantTransaction(
+      this.db,
+      principal.tenantId,
+      async (tx) => {
+        const { jobs, from, to } = await this.loadAnalyticsJobs(tx, principal.tenantId, query);
+        const printers = await tx
+          .select()
+          .from(industrialPrinters)
+          .where(eq(industrialPrinters.tenantId, principal.tenantId));
+        const byPrinter = new Map<
+          string,
+          { jobs: number; completed: number; failed: number; labels: number; printMs: number[] }
+        >();
+        for (const j of jobs) {
+          const key = j.printerId || "(unassigned)";
+          const row = byPrinter.get(key) ?? {
+            jobs: 0,
+            completed: 0,
+            failed: 0,
+            labels: 0,
+            printMs: [],
+          };
+          row.jobs += 1;
+          if (isTerminalSuccessStatus(j.status)) {
+            row.completed += 1;
+            row.labels += j.copies ?? 1;
+            if (j.startedAt && j.completedAt) {
+              row.printMs.push(j.completedAt.getTime() - j.startedAt.getTime());
+            }
           }
+          if (j.status === PrintJobStatus.FAILED) row.failed += 1;
+          byPrinter.set(key, row);
         }
-        if (j.status === PrintJobStatus.FAILED) row.failed += 1;
-        byPrinter.set(key, row);
-      }
-      const nameById = new Map(printers.map((p) => [p.id, p.displayName || p.name] as const));
-      const windowMs = Math.max(1, to.getTime() - from.getTime());
-      return {
-        from: from.toISOString(),
-        to: to.toISOString(),
-        printers: [...byPrinter.entries()]
-          .map(([printerId, v]) => {
-            const avgPrint = averageMs(v.printMs);
-            const busyMs = v.printMs.reduce((a, b) => a + b, 0);
-            return {
-              printerId: printerId === "(unassigned)" ? null : printerId,
-              printerName:
-                printerId === "(unassigned)" ? "(unassigned)" : (nameById.get(printerId) ?? printerId),
-              jobs: v.jobs,
-              completed: v.completed,
-              failed: v.failed,
-              labelsPrinted: v.labels,
-              failureRate: computePrintFailureRate(v.jobs, v.failed),
-              averagePrintMs: avgPrint,
-              /** Estimated busy fraction of the window based on measured print durations. */
-              utilizationPercent:
-                Math.round(Math.min(100, (busyMs / windowMs) * 100) * 100) / 100,
-            };
-          })
-          .sort((a, b) => b.jobs - a.jobs),
-      };
-    }, principal.userId);
+        const nameById = new Map(printers.map((p) => [p.id, p.displayName || p.name] as const));
+        const windowMs = Math.max(1, to.getTime() - from.getTime());
+        return {
+          from: from.toISOString(),
+          to: to.toISOString(),
+          printers: [...byPrinter.entries()]
+            .map(([printerId, v]) => {
+              const avgPrint = averageMs(v.printMs);
+              const busyMs = v.printMs.reduce((a, b) => a + b, 0);
+              return {
+                printerId: printerId === "(unassigned)" ? null : printerId,
+                printerName:
+                  printerId === "(unassigned)"
+                    ? "(unassigned)"
+                    : (nameById.get(printerId) ?? printerId),
+                jobs: v.jobs,
+                completed: v.completed,
+                failed: v.failed,
+                labelsPrinted: v.labels,
+                failureRate: computePrintFailureRate(v.jobs, v.failed),
+                averagePrintMs: avgPrint,
+                /** Estimated busy fraction of the window based on measured print durations. */
+                utilizationPercent:
+                  Math.round(Math.min(100, (busyMs / windowMs) * 100) * 100) / 100,
+              };
+            })
+            .sort((a, b) => b.jobs - a.jobs),
+        };
+      },
+      principal.userId,
+    );
   }
 
   getConnectInfo(deviceId: string) {

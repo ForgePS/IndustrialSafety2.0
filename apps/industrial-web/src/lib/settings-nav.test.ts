@@ -1,5 +1,9 @@
 import { describe, expect, it } from "vitest";
-import { buildSettingsNavGroups, settingsNavActive, type SettingsNavVisibility } from "./settings-nav";
+import {
+  buildSettingsNavGroups,
+  settingsNavActive,
+  type SettingsNavVisibility,
+} from "./settings-nav";
 
 describe("buildSettingsNavGroups", () => {
   const allOn: SettingsNavVisibility = {

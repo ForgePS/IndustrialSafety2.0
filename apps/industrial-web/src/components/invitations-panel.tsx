@@ -35,7 +35,10 @@ export function InvitationsPanel({ onChanged }: Props) {
     setLoading(true);
     setError(null);
     try {
-      const rows = await listInvitations(tenantId, statusFilter ? { status: statusFilter } : undefined);
+      const rows = await listInvitations(
+        tenantId,
+        statusFilter ? { status: statusFilter } : undefined,
+      );
       setItems(rows);
     } catch (err) {
       setError(err instanceof ApiError ? err.message : "Failed to load invitations");
@@ -127,7 +130,12 @@ export function InvitationsPanel({ onChanged }: Props) {
               <option value="EXPIRED">Expired</option>
             </select>
           </label>
-          <button type="button" className="btn btn-sm btn-outline-primary" onClick={() => void load()} disabled={loading}>
+          <button
+            type="button"
+            className="btn btn-sm btn-outline-primary"
+            onClick={() => void load()}
+            disabled={loading}
+          >
             Refresh
           </button>
         </div>
@@ -166,9 +174,7 @@ export function InvitationsPanel({ onChanged }: Props) {
                 items.map((row) => (
                   <tr key={row.id}>
                     <td>{row.email}</td>
-                    <td>
-                      {[row.firstName, row.lastName].filter(Boolean).join(" ") || "—"}
-                    </td>
+                    <td>{[row.firstName, row.lastName].filter(Boolean).join(" ") || "—"}</td>
                     <td>
                       <span
                         className={`badge ${

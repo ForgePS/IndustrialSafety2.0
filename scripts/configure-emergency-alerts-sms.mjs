@@ -55,9 +55,7 @@ const body = {
   smsEnabled: Boolean(values.enable),
   settings: {
     originationIdentity: values["origination-identity"],
-    ...(values["configuration-set"]
-      ? { configurationSetName: values["configuration-set"] }
-      : {}),
+    ...(values["configuration-set"] ? { configurationSetName: values["configuration-set"] } : {}),
     dryRun: values["dry-run"] !== false,
     messageType: "TRANSACTIONAL",
   },

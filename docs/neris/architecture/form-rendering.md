@@ -15,32 +15,32 @@ Phase 2 intake renders NERIS fields from a server-composed descriptor rather tha
 
 ## Supported render patterns
 
-| Pattern | Source |
-| --- | --- |
-| Text / number / boolean / timestamp | Registry data type |
-| Select / multi-select | Value sets via `NerisValueSetService` |
-| Searchable / hierarchical selects | Value set hierarchy APIs |
-| Person / unit / apparatus / occupancy lookups | RMS master-data APIs |
-| Repeatable cards | Repeatable group/item APIs |
-| Conditional visibility | Condition engine evaluation |
-| Specialty section activation | `@forge/neris` specialty workflow engine |
+| Pattern                                       | Source                                   |
+| --------------------------------------------- | ---------------------------------------- |
+| Text / number / boolean / timestamp           | Registry data type                       |
+| Select / multi-select                         | Value sets via `NerisValueSetService`    |
+| Searchable / hierarchical selects             | Value set hierarchy APIs                 |
+| Person / unit / apparatus / occupancy lookups | RMS master-data APIs                     |
+| Repeatable cards                              | Repeatable group/item APIs               |
+| Conditional visibility                        | Condition engine evaluation              |
+| Specialty section activation                  | `@forge/neris` specialty workflow engine |
 
 ## Specialized workspace steps
 
 Layout wrappers (not alternate storage):
 
-| Step | Maps to sections / fields |
-| --- | --- |
-| Overview | `OVERVIEW`, basics |
-| Dispatch | `DISPATCH`, timestamps |
-| Location | `LOCATION`, addresses |
-| Units & personnel | `UNITS_PERSONNEL`, roster-driven assignment |
-| Classification | `CLASSIFICATION` (+ optional specialty add) |
-| Fire / Structure / Wildland / Hazmat / Rescue / Explosion | Specialty groups |
-| Exposures / Casualties / Alarm / Protection / Emerging / CRR / Analysis | Specialty groups |
-| Narrative | `NARRATIVE` |
-| Attachments | `ATTACHMENTS` |
-| Review | `REVIEW`, validation summary |
+| Step                                                                    | Maps to sections / fields                   |
+| ----------------------------------------------------------------------- | ------------------------------------------- |
+| Overview                                                                | `OVERVIEW`, basics                          |
+| Dispatch                                                                | `DISPATCH`, timestamps                      |
+| Location                                                                | `LOCATION`, addresses                       |
+| Units & personnel                                                       | `UNITS_PERSONNEL`, roster-driven assignment |
+| Classification                                                          | `CLASSIFICATION` (+ optional specialty add) |
+| Fire / Structure / Wildland / Hazmat / Rescue / Explosion               | Specialty groups                            |
+| Exposures / Casualties / Alarm / Protection / Emerging / CRR / Analysis | Specialty groups                            |
+| Narrative                                                               | `NARRATIVE`                                 |
+| Attachments                                                             | `ATTACHMENTS`                               |
+| Review                                                                  | `REVIEW`, validation summary                |
 
 `APPLICABLE_MODULES` is no longer used as a dump bucket for all NERIS fields.
 

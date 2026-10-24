@@ -137,7 +137,9 @@ describe("helpdesk status workflow", () => {
 
   it("lets support pause on the customer or on Forge", () => {
     expect(canTransitionHelpdeskStatus("IN_PROGRESS", "WAITING_ON_CUSTOMER", "SUPPORT")).toBe(true);
-    expect(canTransitionHelpdeskStatus("WAITING_ON_CUSTOMER", "WAITING_ON_FORGE", "SUPPORT")).toBe(true);
+    expect(canTransitionHelpdeskStatus("WAITING_ON_CUSTOMER", "WAITING_ON_FORGE", "SUPPORT")).toBe(
+      true,
+    );
     expect(allowedHelpdeskTransitions("TRIAGE", "SUPPORT")).not.toContain("TRIAGE");
   });
 });
@@ -159,8 +161,16 @@ describe("customer ticket view", () => {
       message("m4", "AI_DRAFT", true),
       message("m5", "SYSTEM_EVENT", false),
     ],
-    attachments: [attachment("a1", false), attachment("a2", true), attachment("a3", false, "PENDING")],
-    events: [event("e1", "CREATED", false), event("e2", "ASSIGNED", true), event("e3", "STATUS_CHANGED", false)],
+    attachments: [
+      attachment("a1", false),
+      attachment("a2", true),
+      attachment("a3", false, "PENDING"),
+    ],
+    events: [
+      event("e1", "CREATED", false),
+      event("e2", "ASSIGNED", true),
+      event("e3", "STATUS_CHANGED", false),
+    ],
   });
 
   it("never includes internal notes or AI drafts", () => {
@@ -180,7 +190,14 @@ describe("customer ticket view", () => {
   it("hides assignee identity, disposition, and technical context", () => {
     const t = toCustomerTicket(ticket()) as Record<string, unknown>;
     expect(t.isAssigned).toBe(true);
-    for (const key of ["assignedUserId", "assignedUserName", "assignedTeam", "disposition", "technicalContext", "tenantId"]) {
+    for (const key of [
+      "assignedUserId",
+      "assignedUserName",
+      "assignedTeam",
+      "disposition",
+      "technicalContext",
+      "tenantId",
+    ]) {
       expect(t).not.toHaveProperty(key);
     }
     expect(JSON.stringify(view)).not.toContain("Sam Support");
@@ -219,7 +236,9 @@ describe("technical context capture", () => {
 
 describe("ticket input validation", () => {
   it("requires a meaningful subject and description", () => {
-    expect(() => createTicketSchema.parse({ requestType: "OTHER", subject: "hi", description: "help" })).toThrow();
+    expect(() =>
+      createTicketSchema.parse({ requestType: "OTHER", subject: "hi", description: "help" }),
+    ).toThrow();
     const ok = createTicketSchema.parse({
       requestType: "OTHER",
       subject: "Cannot log in",

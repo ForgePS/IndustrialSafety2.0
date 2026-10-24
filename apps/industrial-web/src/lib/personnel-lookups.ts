@@ -147,13 +147,15 @@ export async function loadAssignmentOptions(): Promise<AssignmentOptions> {
       supervisors?: AssignmentOptions["supervisors"];
     }>("/api/v1/industrial/personnel/assignment-options");
     const divisionEntries = Array.isArray(data?.divisionEntries)
-      ? data.divisionEntries.map((entry) => ({
-          name: String(entry.name ?? "").trim(),
-          siteId:
-            typeof entry.siteId === "string" && entry.siteId.trim() !== ""
-              ? entry.siteId.trim()
-              : null,
-        })).filter((entry) => entry.name !== "")
+      ? data.divisionEntries
+          .map((entry) => ({
+            name: String(entry.name ?? "").trim(),
+            siteId:
+              typeof entry.siteId === "string" && entry.siteId.trim() !== ""
+                ? entry.siteId.trim()
+                : null,
+          }))
+          .filter((entry) => entry.name !== "")
       : Array.isArray(data?.divisions)
         ? data.divisions
             .map((name) => String(name).trim())
@@ -191,9 +193,7 @@ export const EMPTY_ORG_FILTER_CATALOGS: OrgFilterCatalogs = {
  * Locations / departments / divisions for filter dropdowns.
  * Always sourced from admin Settings → Dropdown lists catalogs (not roster distincts).
  */
-export async function loadOrgFilterCatalogs(
-  tenantId?: string | null,
-): Promise<OrgFilterCatalogs> {
+export async function loadOrgFilterCatalogs(tenantId?: string | null): Promise<OrgFilterCatalogs> {
   const { apiGet } = await import("@forge/web-kit");
 
   const [sites, departments, assignment] = await Promise.all([

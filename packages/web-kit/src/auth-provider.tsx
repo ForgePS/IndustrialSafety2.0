@@ -20,10 +20,7 @@ import {
 } from "@forge/contracts";
 import { configureApiClient } from "./api-client.js";
 import { authMe, logoutAll, selectTenant, type AuthMe } from "./auth-api.js";
-import {
-  isAccessTokenExpiredOrNearExpiry,
-  msUntilAccessTokenNearExpiry,
-} from "./access-token.js";
+import { isAccessTokenExpiredOrNearExpiry, msUntilAccessTokenNearExpiry } from "./access-token.js";
 import {
   clearActiveTenantId,
   clearAuthStorage,
@@ -37,7 +34,12 @@ import {
   setActiveTenantId,
   setCachedAuthMe,
 } from "./auth-storage.js";
-import { buildLogoutUrl, clearBrowserSessionCookie, redirectToCognitoLogin, refreshAccessToken } from "./cognito-oauth.js";
+import {
+  buildLogoutUrl,
+  clearBrowserSessionCookie,
+  redirectToCognitoLogin,
+  refreshAccessToken,
+} from "./cognito-oauth.js";
 import {
   authenticateWithPassword,
   completeMfaChallenge,
@@ -92,9 +94,7 @@ function withWalkthroughDemoAccess(me: AuthMe): AuthMe {
   return {
     ...me,
     permissions: Array.from(new Set([...me.permissions, ...DEMO_WALKTHROUGH_PERMISSIONS])),
-    activeModules: Array.from(
-      new Set([...(me.activeModules ?? []), ...DEMO_WALKTHROUGH_MODULES]),
-    ),
+    activeModules: Array.from(new Set([...(me.activeModules ?? []), ...DEMO_WALKTHROUGH_MODULES])),
   };
 }
 
@@ -113,8 +113,14 @@ export type AuthContextValue = {
   loginWithCognito: () => Promise<void>;
   /** In-app email/password via Cognito USER_PASSWORD_AUTH. Throws CognitoPasswordChallengeError for MFA / new password. */
   loginWithPassword: (username: string, password: string) => Promise<void>;
-  completeNewPassword: (challenge: Extract<CognitoPasswordChallenge, { kind: "new_password_required" }>, newPassword: string) => Promise<void>;
-  completeMfa: (challenge: Extract<CognitoPasswordChallenge, { kind: "mfa_required" }>, code: string) => Promise<void>;
+  completeNewPassword: (
+    challenge: Extract<CognitoPasswordChallenge, { kind: "new_password_required" }>,
+    newPassword: string,
+  ) => Promise<void>;
+  completeMfa: (
+    challenge: Extract<CognitoPasswordChallenge, { kind: "mfa_required" }>,
+    code: string,
+  ) => Promise<void>;
   logout: () => Promise<void>;
   chooseTenant: (tenantId: string) => Promise<void>;
   signOutAll: () => Promise<void>;
@@ -156,10 +162,7 @@ export async function resolveSession(signal?: AbortSignal): Promise<AuthMe> {
       me.tenants.some((t) => t.tenantId === persisted && t.selectable)
     ) {
       me = await selectTenant(persisted, signal ? { signal } : undefined);
-    } else if (
-      persisted &&
-      !me.tenants.some((t) => t.tenantId === persisted && t.selectable)
-    ) {
+    } else if (persisted && !me.tenants.some((t) => t.tenantId === persisted && t.selectable)) {
       clearActiveTenantId();
       me = await authMe(signal ? { signal } : undefined);
     }
@@ -228,7 +231,9 @@ function bootstrapErrorMessage(err: unknown): string {
 function isAuthMeShape(value: unknown): value is AuthMe {
   if (!value || typeof value !== "object") return false;
   const row = value as Partial<AuthMe>;
-  return typeof row.userId === "string" && Array.isArray(row.tenants) && Array.isArray(row.permissions);
+  return (
+    typeof row.userId === "string" && Array.isArray(row.tenants) && Array.isArray(row.permissions)
+  );
 }
 
 function readInitialAuthMe(): AuthMe | null {
@@ -426,7 +431,9 @@ export function AuthProvider({
       timer = window.setTimeout(() => {
         void (async () => {
           if (cancelled) return;
-          await tryRefreshSession({ force: isAccessTokenExpiredOrNearExpiry(getBearerToken(), 120) });
+          await tryRefreshSession({
+            force: isAccessTokenExpiredOrNearExpiry(getBearerToken(), 120),
+          });
           schedule();
         })();
       }, delay);
@@ -522,7 +529,10 @@ export function AuthProvider({
         if (apiMessage.toLowerCase().includes("not linked")) {
           message =
             "This Cognito account is not linked to a Forge user yet. Ask an administrator to link it.";
-        } else if (apiMessage.toLowerCase().includes("invalid") || apiMessage.toLowerCase().includes("expired")) {
+        } else if (
+          apiMessage.toLowerCase().includes("invalid") ||
+          apiMessage.toLowerCase().includes("expired")
+        ) {
           message = "Sign-in token was rejected by the API. Try again, or use SSO.";
         } else if (apiMessage && apiMessage.toLowerCase() !== "authentication failed") {
           message = apiMessage;
@@ -780,27 +790,30 @@ export function AuthProvider({
     };
   }, [me, idleTimeoutMs]);
 
-  const chooseTenant = useCallback(async (tenantId: string) => {
-    setError(null);
-    try {
-      await runForgeBrowserCleanup("tenant-switch");
-      clearRolePreview();
-      setRolePreview(null);
-      const updated = await switchActiveTenant({
-        tenantId,
-        previousTenantId: getActiveTenantId() ?? sessionMe?.tenantId ?? null,
-        selectTenant,
-        setActiveTenantId,
-        clearActiveTenantId,
-      });
-      // Replace the entire AuthMe summary so prior tenant capabilities cannot linger.
-      setMe(updated);
-      syncTenantIdInUrl(tenantId);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Tenant switch failed");
-      throw err;
-    }
-  }, [sessionMe?.tenantId]);
+  const chooseTenant = useCallback(
+    async (tenantId: string) => {
+      setError(null);
+      try {
+        await runForgeBrowserCleanup("tenant-switch");
+        clearRolePreview();
+        setRolePreview(null);
+        const updated = await switchActiveTenant({
+          tenantId,
+          previousTenantId: getActiveTenantId() ?? sessionMe?.tenantId ?? null,
+          selectTenant,
+          setActiveTenantId,
+          clearActiveTenantId,
+        });
+        // Replace the entire AuthMe summary so prior tenant capabilities cannot linger.
+        setMe(updated);
+        syncTenantIdInUrl(tenantId);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : "Tenant switch failed");
+        throw err;
+      }
+    },
+    [sessionMe?.tenantId],
+  );
 
   const signOutAll = logout;
 

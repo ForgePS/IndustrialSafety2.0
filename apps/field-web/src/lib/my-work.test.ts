@@ -11,7 +11,9 @@ import {
   type FieldWorkItem,
 } from "./my-work";
 
-function item(partial: Partial<FieldWorkItem> & Pick<FieldWorkItem, "id" | "kind" | "title">): FieldWorkItem {
+function item(
+  partial: Partial<FieldWorkItem> & Pick<FieldWorkItem, "id" | "kind" | "title">,
+): FieldWorkItem {
   return {
     subtitle: null,
     dueAt: null,

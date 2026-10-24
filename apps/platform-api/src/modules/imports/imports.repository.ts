@@ -22,7 +22,20 @@ import type {
   PutMappingsInput,
 } from "@forge/imports";
 import { S2_INITIAL_JOB_STATUS, S3_INITIAL_UPLOAD_JOB_STATUS } from "@forge/imports";
-import { and, asc, count, desc, eq, gte, ilike, isNotNull, isNull, lte, SQL, sql } from "drizzle-orm";
+import {
+  and,
+  asc,
+  count,
+  desc,
+  eq,
+  gte,
+  ilike,
+  isNotNull,
+  isNull,
+  lte,
+  SQL,
+  sql,
+} from "drizzle-orm";
 
 @Injectable()
 export class ImportsRepository {
@@ -186,7 +199,7 @@ export class ImportsRepository {
   async updateJobStatus(
     tx: DatabaseTransaction,
     job: typeof importJobs.$inferSelect,
-    status: typeof importJobs.status.enumValues[number],
+    status: (typeof importJobs.status.enumValues)[number],
     userId: string,
     extras: Partial<typeof importJobs.$inferInsert> = {},
   ) {
@@ -251,16 +264,13 @@ export class ImportsRepository {
     return tx
       .select()
       .from(importColumnMappings)
-      .where(and(eq(importColumnMappings.tenantId, tenantId), eq(importColumnMappings.jobId, jobId)))
+      .where(
+        and(eq(importColumnMappings.tenantId, tenantId), eq(importColumnMappings.jobId, jobId)),
+      )
       .orderBy(asc(importColumnMappings.ordinal), asc(importColumnMappings.sourceColumn));
   }
 
-  async deleteMapping(
-    tx: DatabaseTransaction,
-    tenantId: string,
-    jobId: string,
-    mappingId: string,
-  ) {
+  async deleteMapping(tx: DatabaseTransaction, tenantId: string, jobId: string, mappingId: string) {
     const [row] = await tx
       .delete(importColumnMappings)
       .where(
@@ -419,7 +429,9 @@ export class ImportsRepository {
     const [row] = await tx
       .select({ value: count() })
       .from(importColumnMappings)
-      .where(and(eq(importColumnMappings.tenantId, tenantId), eq(importColumnMappings.jobId, jobId)));
+      .where(
+        and(eq(importColumnMappings.tenantId, tenantId), eq(importColumnMappings.jobId, jobId)),
+      );
     return Number(row?.value ?? 0);
   }
 
@@ -539,11 +551,7 @@ export class ImportsRepository {
     });
   }
 
-  async findCompletedByContentHash(
-    tx: DatabaseTransaction,
-    tenantId: string,
-    contentHash: string,
-  ) {
+  async findCompletedByContentHash(tx: DatabaseTransaction, tenantId: string, contentHash: string) {
     return tx.query.importFiles.findFirst({
       where: and(
         eq(importFiles.tenantId, tenantId),

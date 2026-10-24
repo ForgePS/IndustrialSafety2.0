@@ -22,8 +22,18 @@ export function TicketStatusBadge({ status }: { status: string }) {
   return <span className={`badge bg-label-${statusTone(status)}`}>{statusLabel(status)}</span>;
 }
 
-export function TicketPriorityBadge({ priority, short = true }: { priority: string | null | undefined; short?: boolean }) {
-  return <span className={`badge bg-label-${priorityTone(priority)}`}>{priorityLabel(priority, short)}</span>;
+export function TicketPriorityBadge({
+  priority,
+  short = true,
+}: {
+  priority: string | null | undefined;
+  short?: boolean;
+}) {
+  return (
+    <span className={`badge bg-label-${priorityTone(priority)}`}>
+      {priorityLabel(priority, short)}
+    </span>
+  );
 }
 
 /** Validates a picked file against the Help Desk upload rules; returns an error message or null. */
@@ -32,7 +42,8 @@ export function validateTicketFile(file: File): string | null {
   if (file.size > MAX_TICKET_ATTACHMENT_BYTES) {
     return `${file.name} is ${formatBytes(file.size)}; the limit is ${formatBytes(MAX_TICKET_ATTACHMENT_BYTES)}`;
   }
-  if (!isAllowedHelpdeskAttachmentMime(guessMimeType(file))) return `${file.name} is not a supported file type`;
+  if (!isAllowedHelpdeskAttachmentMime(guessMimeType(file)))
+    return `${file.name} is not a supported file type`;
   return null;
 }
 
@@ -111,7 +122,9 @@ export function AttachmentPicker({
           }}
         />
       </div>
-      <p className="form-text mb-1">Screenshots, photos, PDFs, Office files, CSV, or short videos up to 25 MB each.</p>
+      <p className="form-text mb-1">
+        Screenshots, photos, PDFs, Office files, CSV, or short videos up to 25 MB each.
+      </p>
       {error ? <p className="text-danger small mb-1">{error}</p> : null}
       {files.length ? (
         <ul className="list-unstyled mb-0 small">
@@ -179,7 +192,9 @@ export function TicketTimeline({
   supportView?: boolean;
 }) {
   const items = useMemo<TimelineItem[]>(() => {
-    const list: TimelineItem[] = [{ kind: "description", at: createdAt, author: requesterName, body: description }];
+    const list: TimelineItem[] = [
+      { kind: "description", at: createdAt, author: requesterName, body: description },
+    ];
     for (const m of messages) list.push({ kind: "message", at: m.createdAt, message: m });
     for (const a of attachments) list.push({ kind: "attachment", at: a.uploadedAt, attachment: a });
     for (const e of events) {
@@ -194,11 +209,16 @@ export function TicketTimeline({
       {items.map((item, idx) => {
         if (item.kind === "event") {
           return (
-            <li key={`e-${item.event.id}`} className="d-flex gap-2 align-items-start small text-muted py-2">
+            <li
+              key={`e-${item.event.id}`}
+              className="d-flex gap-2 align-items-start small text-muted py-2"
+            >
               <i className={`bx ${item.event.isInternal ? "bx-lock-alt" : "bx-history"} mt-1`} />
               <span>
                 {eventSentence(item.event)}
-                {item.event.isInternal && supportView ? <span className="badge bg-label-warning ms-2">Internal</span> : null}
+                {item.event.isInternal && supportView ? (
+                  <span className="badge bg-label-warning ms-2">Internal</span>
+                ) : null}
                 <span className="ms-2">{formatDateTime(item.at)}</span>
               </span>
             </li>
@@ -212,14 +232,20 @@ export function TicketTimeline({
                 className={`d-flex flex-wrap align-items-center gap-2 border rounded px-3 py-2 ${a.isInternal ? "border-warning bg-label-warning" : ""}`}
               >
                 <i className="bx bx-paperclip" />
-                <button type="button" className="btn btn-link p-0 text-start text-break" onClick={() => onOpenAttachment(a)}>
+                <button
+                  type="button"
+                  className="btn btn-link p-0 text-start text-break"
+                  onClick={() => onOpenAttachment(a)}
+                >
                   {a.originalFilename}
                 </button>
                 <span className="small text-muted">{formatBytes(a.sizeBytes)}</span>
                 <span className="small text-muted">
                   {a.uploadedByName ? `by ${a.uploadedByName}` : ""} {formatDateTime(a.uploadedAt)}
                 </span>
-                {a.isInternal ? <span className="badge bg-warning text-dark">Internal only</span> : null}
+                {a.isInternal ? (
+                  <span className="badge bg-warning text-dark">Internal only</span>
+                ) : null}
                 {onDeleteAttachment ? (
                   <button
                     type="button"
@@ -236,13 +262,20 @@ export function TicketTimeline({
         }
         const internal = item.kind === "message" && item.message.isInternal;
         const fromSupport = item.kind === "message" && item.message.authorType === "SUPPORT";
-        const title = item.kind === "description" ? `${item.author} opened this ticket` : messageTitle(item.message);
+        const title =
+          item.kind === "description"
+            ? `${item.author} opened this ticket`
+            : messageTitle(item.message);
         const body = item.kind === "description" ? item.body : item.message.body;
         return (
           <li key={item.kind === "message" ? `m-${item.message.id}` : `d-${idx}`} className="py-2">
             <div
               className={`rounded border p-3 ${
-                internal ? "border-warning bg-label-warning" : fromSupport ? "border-primary bg-label-primary" : "bg-body"
+                internal
+                  ? "border-warning bg-label-warning"
+                  : fromSupport
+                    ? "border-primary bg-label-primary"
+                    : "bg-body"
               }`}
             >
               <div className="d-flex flex-wrap justify-content-between gap-2 mb-1">
@@ -252,7 +285,11 @@ export function TicketTimeline({
                 </span>
                 <span className="small text-muted">{formatDateTime(item.at)}</span>
               </div>
-              {internal ? <div className="small fw-semibold text-warning mb-1">Internal note - not visible to the customer</div> : null}
+              {internal ? (
+                <div className="small fw-semibold text-warning mb-1">
+                  Internal note - not visible to the customer
+                </div>
+              ) : null}
               <div style={{ whiteSpace: "pre-wrap", overflowWrap: "anywhere" }}>{body}</div>
             </div>
           </li>

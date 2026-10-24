@@ -78,11 +78,7 @@ export default function MePage() {
               </div>
             );
           })}
-          <button
-            type="button"
-            className="ff-action-tile"
-            onClick={() => router.push("/report/")}
-          >
+          <button type="button" className="ff-action-tile" onClick={() => router.push("/report/")}>
             Report
           </button>
           {selectableCount > 1 ? (

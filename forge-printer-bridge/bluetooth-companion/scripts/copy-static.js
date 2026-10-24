@@ -30,9 +30,7 @@ fs.mkdirSync(bradyDestDir, { recursive: true });
 if (fs.existsSync(bradyBundle)) {
   fs.copyFileSync(bradyBundle, path.join(bradyDestDir, "bundle.js"));
 } else {
-  console.warn(
-    "[copy-static] Brady Web SDK bundle not found. Run npm install before build.",
-  );
+  console.warn("[copy-static] Brady Web SDK bundle not found. Run npm install before build.");
 }
 
 esbuild

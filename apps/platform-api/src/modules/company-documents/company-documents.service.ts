@@ -6,10 +6,7 @@ import {
   type Database,
   withTenantTransaction,
 } from "@forge/database";
-import {
-  documentBelongsToTenant,
-  objectKeyBelongsToTenant,
-} from "@forge/contracts";
+import { documentBelongsToTenant, objectKeyBelongsToTenant } from "@forge/contracts";
 import { ForgeError } from "@forge/errors";
 import type { ForgePrincipal } from "@forge/tenant-context";
 import { and, desc, eq, isNull } from "drizzle-orm";
@@ -19,7 +16,10 @@ import { AuditService } from "../audit/audit.service.js";
 import { DocumentStorageService } from "../neris-incidents/document-storage.service.js";
 import { isAllowedCompanyDocumentMime } from "./company-documents.mime.js";
 
-export { COMPANY_DOCUMENT_ALLOWED_MIME_TYPES, isAllowedCompanyDocumentMime } from "./company-documents.mime.js";
+export {
+  COMPANY_DOCUMENT_ALLOWED_MIME_TYPES,
+  isAllowedCompanyDocumentMime,
+} from "./company-documents.mime.js";
 
 const MAX_CONTENT_LENGTH = 25_000_000;
 
@@ -61,10 +61,7 @@ export class CompanyDocumentsService {
   async createUploadUrl(tenantId: string, input: unknown, principal: ForgePrincipal) {
     const data = uploadUrlSchema.parse(input);
     if (!isAllowedCompanyDocumentMime(data.mimeType)) {
-      throw new ForgeError(
-        "VALIDATION_FAILED",
-        "MIME type not allowed for company documents",
-      );
+      throw new ForgeError("VALIDATION_FAILED", "MIME type not allowed for company documents");
     }
 
     const storedFilename = this.storage.buildStoredFilename(data.filename);
@@ -75,56 +72,61 @@ export class CompanyDocumentsService {
     const companyDocumentId = createId();
     const now = new Date();
 
-    await withTenantTransaction(this.db, tenantId, async (tx) => {
-      await tx.insert(forgeDocuments).values({
-        id: documentId,
-        tenantId,
-        originalFilename: data.filename,
-        storedFilename,
-        objectKey,
-        bucketName: this.storage.bucketName,
-        mimeType: data.mimeType,
-        fileSizeBytes: data.contentLength,
-        securityClassification: "INTERNAL",
-        malwareScanStatus: "PENDING",
-        retentionRule: "COMPANY_DOCUMENT_DEFAULT",
-        uploadStatus: "INITIALIZED",
-        source: "COMPANY_DOCUMENT",
-        uploadedByUserId: principal.userId,
-        createdAt: now,
-        updatedAt: now,
-      });
+    await withTenantTransaction(
+      this.db,
+      tenantId,
+      async (tx) => {
+        await tx.insert(forgeDocuments).values({
+          id: documentId,
+          tenantId,
+          originalFilename: data.filename,
+          storedFilename,
+          objectKey,
+          bucketName: this.storage.bucketName,
+          mimeType: data.mimeType,
+          fileSizeBytes: data.contentLength,
+          securityClassification: "INTERNAL",
+          malwareScanStatus: "PENDING",
+          retentionRule: "COMPANY_DOCUMENT_DEFAULT",
+          uploadStatus: "INITIALIZED",
+          source: "COMPANY_DOCUMENT",
+          uploadedByUserId: principal.userId,
+          createdAt: now,
+          updatedAt: now,
+        });
 
-      await tx.insert(platformCompanyDocuments).values({
-        id: companyDocumentId,
-        tenantId,
-        documentId,
-        title: data.title,
-        category: data.category,
-        mimeType: data.mimeType,
-        originalFilename: data.filename,
-        byteSize: data.contentLength,
-        status: "PENDING_UPLOAD",
-        createdByUserId: principal.userId,
-        createdAt: now,
-        updatedAt: now,
-      });
+        await tx.insert(platformCompanyDocuments).values({
+          id: companyDocumentId,
+          tenantId,
+          documentId,
+          title: data.title,
+          category: data.category,
+          mimeType: data.mimeType,
+          originalFilename: data.filename,
+          byteSize: data.contentLength,
+          status: "PENDING_UPLOAD",
+          createdByUserId: principal.userId,
+          createdAt: now,
+          updatedAt: now,
+        });
 
-      await this.audit.writeInTransaction(tx, {
-        tenantId,
-        actorUserId: principal.userId,
-        actorPersonId: principal.personId,
-        actorType: "USER",
-        action: "company_document.upload_initialized",
-        resourceType: "platform_company_document",
-        resourceId: companyDocumentId,
-        result: "SUCCESS",
-        riskLevel: "LOW",
-        correlationId: principal.correlationId,
-        requestId: principal.requestId,
-        after: { documentId, objectKey, title: data.title },
-      });
-    }, principal.userId);
+        await this.audit.writeInTransaction(tx, {
+          tenantId,
+          actorUserId: principal.userId,
+          actorPersonId: principal.personId,
+          actorType: "USER",
+          action: "company_document.upload_initialized",
+          resourceType: "platform_company_document",
+          resourceId: companyDocumentId,
+          result: "SUCCESS",
+          riskLevel: "LOW",
+          correlationId: principal.correlationId,
+          requestId: principal.requestId,
+          after: { documentId, objectKey, title: data.title },
+        });
+      },
+      principal.userId,
+    );
 
     const presign = await this.storage.createPresignedUploadUrl({
       objectKey,
@@ -143,173 +145,188 @@ export class CompanyDocumentsService {
   }
 
   async completeUpload(tenantId: string, id: string, principal: ForgePrincipal) {
-    return withTenantTransaction(this.db, tenantId, async (tx) => {
-      const companyDoc = await tx.query.platformCompanyDocuments.findFirst({
-        where: and(
-          eq(platformCompanyDocuments.id, id),
-          eq(platformCompanyDocuments.tenantId, tenantId),
-        ),
-      });
-      if (!companyDoc || companyDoc.archivedAt) {
-        throw new ForgeError("NOT_FOUND", "Company document not found");
-      }
+    return withTenantTransaction(
+      this.db,
+      tenantId,
+      async (tx) => {
+        const companyDoc = await tx.query.platformCompanyDocuments.findFirst({
+          where: and(
+            eq(platformCompanyDocuments.id, id),
+            eq(platformCompanyDocuments.tenantId, tenantId),
+          ),
+        });
+        if (!companyDoc || companyDoc.archivedAt) {
+          throw new ForgeError("NOT_FOUND", "Company document not found");
+        }
 
-      const document = await tx.query.forgeDocuments.findFirst({
-        where: and(
-          eq(forgeDocuments.id, companyDoc.documentId),
-          eq(forgeDocuments.tenantId, tenantId),
-        ),
-      });
-      if (!document) {
-        throw new ForgeError("NOT_FOUND", "Document not found");
-      }
-      if (!documentBelongsToTenant(document.tenantId, tenantId)) {
-        throw new ForgeError("FORBIDDEN", "Document does not belong to the requested tenant");
-      }
-      if (!objectKeyBelongsToTenant(document.objectKey, tenantId)) {
-        throw new ForgeError("FORBIDDEN", "Object key does not belong to the requested tenant");
-      }
+        const document = await tx.query.forgeDocuments.findFirst({
+          where: and(
+            eq(forgeDocuments.id, companyDoc.documentId),
+            eq(forgeDocuments.tenantId, tenantId),
+          ),
+        });
+        if (!document) {
+          throw new ForgeError("NOT_FOUND", "Document not found");
+        }
+        if (!documentBelongsToTenant(document.tenantId, tenantId)) {
+          throw new ForgeError("FORBIDDEN", "Document does not belong to the requested tenant");
+        }
+        if (!objectKeyBelongsToTenant(document.objectKey, tenantId)) {
+          throw new ForgeError("FORBIDDEN", "Object key does not belong to the requested tenant");
+        }
 
-      const now = new Date();
-      await tx
-        .update(forgeDocuments)
-        .set({
-          uploadStatus: "COMPLETE",
-          uploadedAt: now,
-          updatedAt: now,
-        })
-        .where(eq(forgeDocuments.id, document.id));
+        const now = new Date();
+        await tx
+          .update(forgeDocuments)
+          .set({
+            uploadStatus: "COMPLETE",
+            uploadedAt: now,
+            updatedAt: now,
+          })
+          .where(eq(forgeDocuments.id, document.id));
 
-      const [updated] = await tx
-        .update(platformCompanyDocuments)
-        .set({
-          status: "ACTIVE",
-          updatedAt: now,
-        })
-        .where(eq(platformCompanyDocuments.id, id))
-        .returning();
+        const [updated] = await tx
+          .update(platformCompanyDocuments)
+          .set({
+            status: "ACTIVE",
+            updatedAt: now,
+          })
+          .where(eq(platformCompanyDocuments.id, id))
+          .returning();
 
-      await this.audit.writeInTransaction(tx, {
-        tenantId,
-        actorUserId: principal.userId,
-        actorPersonId: principal.personId,
-        actorType: "USER",
-        action: "company_document.upload_completed",
-        resourceType: "platform_company_document",
-        resourceId: id,
-        result: "SUCCESS",
-        riskLevel: "LOW",
-        correlationId: principal.correlationId,
-        requestId: principal.requestId,
-      });
+        await this.audit.writeInTransaction(tx, {
+          tenantId,
+          actorUserId: principal.userId,
+          actorPersonId: principal.personId,
+          actorType: "USER",
+          action: "company_document.upload_completed",
+          resourceType: "platform_company_document",
+          resourceId: id,
+          result: "SUCCESS",
+          riskLevel: "LOW",
+          correlationId: principal.correlationId,
+          requestId: principal.requestId,
+        });
 
-      return updated;
-    }, principal.userId);
+        return updated;
+      },
+      principal.userId,
+    );
   }
 
   async createDownloadUrl(tenantId: string, id: string, principal: ForgePrincipal) {
-    return withTenantTransaction(this.db, tenantId, async (tx) => {
-      const companyDoc = await tx.query.platformCompanyDocuments.findFirst({
-        where: and(
-          eq(platformCompanyDocuments.id, id),
-          eq(platformCompanyDocuments.tenantId, tenantId),
-        ),
-      });
-      if (!companyDoc || companyDoc.archivedAt) {
-        throw new ForgeError("NOT_FOUND", "Company document not found");
-      }
+    return withTenantTransaction(
+      this.db,
+      tenantId,
+      async (tx) => {
+        const companyDoc = await tx.query.platformCompanyDocuments.findFirst({
+          where: and(
+            eq(platformCompanyDocuments.id, id),
+            eq(platformCompanyDocuments.tenantId, tenantId),
+          ),
+        });
+        if (!companyDoc || companyDoc.archivedAt) {
+          throw new ForgeError("NOT_FOUND", "Company document not found");
+        }
 
-      const document = await tx.query.forgeDocuments.findFirst({
-        where: and(
-          eq(forgeDocuments.id, companyDoc.documentId),
-          eq(forgeDocuments.tenantId, tenantId),
-        ),
-      });
-      if (!document) {
-        throw new ForgeError("NOT_FOUND", "Document not found");
-      }
-      if (!documentBelongsToTenant(document.tenantId, tenantId)) {
-        throw new ForgeError("FORBIDDEN", "Document does not belong to the requested tenant");
-      }
-      if (!objectKeyBelongsToTenant(document.objectKey, tenantId)) {
-        throw new ForgeError("FORBIDDEN", "Object key does not belong to the requested tenant");
-      }
-      if (!document.objectKey.startsWith(companyDocumentsObjectKeyPrefix(tenantId))) {
-        throw new ForgeError("FORBIDDEN", "Document is not a company document for this tenant");
-      }
+        const document = await tx.query.forgeDocuments.findFirst({
+          where: and(
+            eq(forgeDocuments.id, companyDoc.documentId),
+            eq(forgeDocuments.tenantId, tenantId),
+          ),
+        });
+        if (!document) {
+          throw new ForgeError("NOT_FOUND", "Document not found");
+        }
+        if (!documentBelongsToTenant(document.tenantId, tenantId)) {
+          throw new ForgeError("FORBIDDEN", "Document does not belong to the requested tenant");
+        }
+        if (!objectKeyBelongsToTenant(document.objectKey, tenantId)) {
+          throw new ForgeError("FORBIDDEN", "Object key does not belong to the requested tenant");
+        }
+        if (!document.objectKey.startsWith(companyDocumentsObjectKeyPrefix(tenantId))) {
+          throw new ForgeError("FORBIDDEN", "Document is not a company document for this tenant");
+        }
 
-      const presign = await this.storage.createPresignedDownloadUrl({
-        objectKey: document.objectKey,
-        mimeType: document.mimeType,
-        filename: document.originalFilename,
-      });
-      this.storage.assertDownloadNotExpired(presign.expiresAt);
+        const presign = await this.storage.createPresignedDownloadUrl({
+          objectKey: document.objectKey,
+          mimeType: document.mimeType,
+          filename: document.originalFilename,
+        });
+        this.storage.assertDownloadNotExpired(presign.expiresAt);
 
-      await this.audit.writeInTransaction(tx, {
-        tenantId,
-        actorUserId: principal.userId,
-        actorPersonId: principal.personId,
-        actorType: "USER",
-        action: "company_document.download_requested",
-        resourceType: "platform_company_document",
-        resourceId: id,
-        result: "SUCCESS",
-        riskLevel: "LOW",
-        correlationId: principal.correlationId,
-        requestId: principal.requestId,
-        after: { expiresAt: presign.expiresAt },
-      });
+        await this.audit.writeInTransaction(tx, {
+          tenantId,
+          actorUserId: principal.userId,
+          actorPersonId: principal.personId,
+          actorType: "USER",
+          action: "company_document.download_requested",
+          resourceType: "platform_company_document",
+          resourceId: id,
+          result: "SUCCESS",
+          riskLevel: "LOW",
+          correlationId: principal.correlationId,
+          requestId: principal.requestId,
+          after: { expiresAt: presign.expiresAt },
+        });
 
-      return {
-        id: companyDoc.id,
-        documentId: document.id,
-        downloadUrl: presign.downloadUrl,
-        expiresInSeconds: presign.expiresInSeconds,
-        expiresAt: presign.expiresAt,
-        mode: presign.mode,
-        mimeType: document.mimeType,
-      };
-    }, principal.userId);
+        return {
+          id: companyDoc.id,
+          documentId: document.id,
+          downloadUrl: presign.downloadUrl,
+          expiresInSeconds: presign.expiresInSeconds,
+          expiresAt: presign.expiresAt,
+          mode: presign.mode,
+          mimeType: document.mimeType,
+        };
+      },
+      principal.userId,
+    );
   }
 
   async archive(tenantId: string, id: string, principal: ForgePrincipal) {
-    return withTenantTransaction(this.db, tenantId, async (tx) => {
-      const companyDoc = await tx.query.platformCompanyDocuments.findFirst({
-        where: and(
-          eq(platformCompanyDocuments.id, id),
-          eq(platformCompanyDocuments.tenantId, tenantId),
-        ),
-      });
-      if (!companyDoc || companyDoc.archivedAt) {
-        throw new ForgeError("NOT_FOUND", "Company document not found");
-      }
+    return withTenantTransaction(
+      this.db,
+      tenantId,
+      async (tx) => {
+        const companyDoc = await tx.query.platformCompanyDocuments.findFirst({
+          where: and(
+            eq(platformCompanyDocuments.id, id),
+            eq(platformCompanyDocuments.tenantId, tenantId),
+          ),
+        });
+        if (!companyDoc || companyDoc.archivedAt) {
+          throw new ForgeError("NOT_FOUND", "Company document not found");
+        }
 
-      const now = new Date();
-      const [updated] = await tx
-        .update(platformCompanyDocuments)
-        .set({
-          status: "ARCHIVED",
-          archivedAt: now,
-          updatedAt: now,
-        })
-        .where(eq(platformCompanyDocuments.id, id))
-        .returning();
+        const now = new Date();
+        const [updated] = await tx
+          .update(platformCompanyDocuments)
+          .set({
+            status: "ARCHIVED",
+            archivedAt: now,
+            updatedAt: now,
+          })
+          .where(eq(platformCompanyDocuments.id, id))
+          .returning();
 
-      await this.audit.writeInTransaction(tx, {
-        tenantId,
-        actorUserId: principal.userId,
-        actorPersonId: principal.personId,
-        actorType: "USER",
-        action: "company_document.archived",
-        resourceType: "platform_company_document",
-        resourceId: id,
-        result: "SUCCESS",
-        riskLevel: "LOW",
-        correlationId: principal.correlationId,
-        requestId: principal.requestId,
-      });
+        await this.audit.writeInTransaction(tx, {
+          tenantId,
+          actorUserId: principal.userId,
+          actorPersonId: principal.personId,
+          actorType: "USER",
+          action: "company_document.archived",
+          resourceType: "platform_company_document",
+          resourceId: id,
+          result: "SUCCESS",
+          riskLevel: "LOW",
+          correlationId: principal.correlationId,
+          requestId: principal.requestId,
+        });
 
-      return updated;
-    }, principal.userId);
+        return updated;
+      },
+      principal.userId,
+    );
   }
 }

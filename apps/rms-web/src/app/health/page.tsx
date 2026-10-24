@@ -18,7 +18,8 @@ function healthTone(status: string): "success" | "warning" | "danger" | "neutral
   const normalized = status.toLowerCase();
   if (normalized === "ok" || normalized === "healthy" || normalized === "up") return "success";
   if (normalized === "degraded") return "warning";
-  if (normalized === "down" || normalized === "error" || normalized === "unhealthy") return "danger";
+  if (normalized === "down" || normalized === "error" || normalized === "unhealthy")
+    return "danger";
   return "neutral";
 }
 
@@ -42,17 +43,15 @@ export default function HealthPage() {
   const useFx = !moduleFlagLoading && healthMode === "fx";
 
   return (
-    <section
-      className={styles.page}
-      data-testid={useFx ? "rms-fx-health" : "rms-legacy-health"}
-    >
+    <section className={styles.page} data-testid={useFx ? "rms-fx-health" : "rms-legacy-health"}>
       <h1>Platform health</h1>
       {error ? <p className={styles.error}>{error}</p> : null}
       {useFx ? (
         health ? (
           <FxPanel title="API health">
             <p>
-              Status: <FxStatusBadge tone={healthTone(health.status)}>{health.status}</FxStatusBadge>
+              Status:{" "}
+              <FxStatusBadge tone={healthTone(health.status)}>{health.status}</FxStatusBadge>
             </p>
             <p>Service: {health.service}</p>
             <p>Environment: {health.environment}</p>

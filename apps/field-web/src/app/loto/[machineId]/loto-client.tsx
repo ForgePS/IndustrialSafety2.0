@@ -10,10 +10,7 @@ import { useFieldPathname } from "@/hooks/use-field-pathname";
 import { useFieldProfile } from "@/hooks/use-field-profile";
 import { openPrintableHtmlPopup } from "@/lib/dvir";
 import { fieldLotoApi } from "@/lib/loto-api";
-import {
-  ensureLotoProcedurePrintQrPayload,
-  lotoProcedurePrintFieldValues,
-} from "@/lib/loto-print";
+import { ensureLotoProcedurePrintQrPayload, lotoProcedurePrintFieldValues } from "@/lib/loto-print";
 import {
   canApproveFieldLoto,
   canAuthorFieldLoto,
@@ -86,10 +83,10 @@ function LotoRunnerInner() {
   const canApprove = canApproveFieldLoto(permissions, authOpts);
   const canQr = Boolean(
     me?.permissions?.includes("industrial.qr.view") ||
-      me?.permissions?.includes("industrial.qr.manage") ||
-      me?.permissions?.includes("industrial.qr.generate") ||
-      me?.permissions?.includes("industrial.admin") ||
-      authOpts.isPlatformAdmin,
+    me?.permissions?.includes("industrial.qr.manage") ||
+    me?.permissions?.includes("industrial.qr.generate") ||
+    me?.permissions?.includes("industrial.admin") ||
+    authOpts.isPlatformAdmin,
   );
 
   const [phase, setPhase] = useState<Phase>("loading");
@@ -233,7 +230,9 @@ function LotoRunnerInner() {
         setError("No active LOTO procedure found for this equipment.");
       } catch (listErr) {
         setPhase("error");
-        setError(listErr instanceof Error ? listErr.message : "Unable to resolve LOTO for this id.");
+        setError(
+          listErr instanceof Error ? listErr.message : "Unable to resolve LOTO for this id.",
+        );
       }
     }
   }, [canView, routeId, loadProcedure, router]);
@@ -452,7 +451,11 @@ function LotoRunnerInner() {
         <button type="button" className="ff-btn" onClick={() => router.push("/scan/")}>
           SCAN QR CODE
         </button>
-        <button type="button" className="ff-btn ff-btn-secondary" onClick={() => router.push("/more/loto/")}>
+        <button
+          type="button"
+          className="ff-btn ff-btn-secondary"
+          onClick={() => router.push("/more/loto/")}
+        >
           Browse procedures
         </button>
       </>
@@ -509,9 +512,7 @@ function LotoRunnerInner() {
             busy={busy}
             canEdit={canAuthor}
             canApprove={canApprove}
-            onEdit={() =>
-              router.push(`/more/loto/new/?id=${encodeURIComponent(display.id)}`)
-            }
+            onEdit={() => router.push(`/more/loto/new/?id=${encodeURIComponent(display.id)}`)}
             onSubmitForReview={() => void transition("submit-review")}
             onActivate={() => void transition("activate")}
             onApprove={() => void transition("approve")}
@@ -623,7 +624,9 @@ function LotoRunnerInner() {
             {lotoStatusLabel(openLockout.status)}
             {openLockout.authorizedEmployee ? ` · ${openLockout.authorizedEmployee}` : ""}
           </p>
-          {openLockout.lockTagId ? <p className="ff-meta">Lock / tag: {openLockout.lockTagId}</p> : null}
+          {openLockout.lockTagId ? (
+            <p className="ff-meta">Lock / tag: {openLockout.lockTagId}</p>
+          ) : null}
           {openLockout.affectedEmployees ? (
             <p className="ff-meta">Affected: {openLockout.affectedEmployees}</p>
           ) : null}
@@ -746,9 +749,7 @@ function LotoRunnerInner() {
               type="button"
               className="ff-btn"
               disabled={
-                busy ||
-                !zeroEnergy ||
-                Boolean(openLockout?.tryStartRequired && !tryStartDone)
+                busy || !zeroEnergy || Boolean(openLockout?.tryStartRequired && !tryStartDone)
               }
               onClick={() => void onVerify()}
             >
@@ -770,8 +771,8 @@ function LotoRunnerInner() {
 
       {!canIssueLockout(display.status) && !open ? (
         <p className="ff-page-body">
-          This procedure is {lotoStatusLabel(display.status)}. Only active or approved procedures can
-          be issued from Field.
+          This procedure is {lotoStatusLabel(display.status)}. Only active or approved procedures
+          can be issued from Field.
         </p>
       ) : null}
 

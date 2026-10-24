@@ -13,11 +13,11 @@ Poll interval: **2 seconds** when `APP_ENV` is set.
 
 ## Configuration
 
-| Variable | Required | Description |
-| --- | --- | --- |
-| `DATABASE_URL` | yes | PostgreSQL connection string |
-| `AWS_REGION` | yes | AWS region for EventBridge |
-| `EVENT_BUS_NAME` or `EVENTBRIDGE_BUS_NAME` | no | Bus name (default `forge-platform`) |
+| Variable                                   | Required | Description                         |
+| ------------------------------------------ | -------- | ----------------------------------- |
+| `DATABASE_URL`                             | yes      | PostgreSQL connection string        |
+| `AWS_REGION`                               | yes      | AWS region for EventBridge          |
+| `EVENT_BUS_NAME` or `EVENTBRIDGE_BUS_NAME` | no       | Bus name (default `forge-platform`) |
 
 ## Local run
 

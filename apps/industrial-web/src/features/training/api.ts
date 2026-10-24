@@ -97,7 +97,9 @@ async function openPrintableUrl(url: string, fallbackFilename: string) {
 }
 
 export const trainingApi = {
-  listSources: (opts?: string | { q?: string; groupId?: string; archived?: "true" | "false" | "all" }) => {
+  listSources: (
+    opts?: string | { q?: string; groupId?: string; archived?: "true" | "false" | "all" },
+  ) => {
     const q = typeof opts === "string" ? opts : opts?.q;
     const groupId = typeof opts === "string" ? undefined : opts?.groupId;
     const archived = typeof opts === "string" ? undefined : opts?.archived;
@@ -227,7 +229,8 @@ export const trainingApi = {
   updateSourceFolder: (
     folderId: string,
     body: { name?: string; sortOrder?: number; status?: string },
-  ) => apiSend<TrainingSourceFolder>(`/api/v1/industrial/training/folders/${folderId}`, "PATCH", body),
+  ) =>
+    apiSend<TrainingSourceFolder>(`/api/v1/industrial/training/folders/${folderId}`, "PATCH", body),
   listQuestions: (sourceId: string) =>
     apiGet<TrainingQuestion[]>(`/api/v1/industrial/training/sources/${sourceId}/questions`),
   createQuestion: (
@@ -502,10 +505,7 @@ export const trainingApi = {
       "POST",
       body ?? {},
     ),
-  assignmentQrImage: (
-    assignmentId: string,
-    body: { token: string; appBaseUrl?: string },
-  ) =>
+  assignmentQrImage: (assignmentId: string, body: { token: string; appBaseUrl?: string }) =>
     apiSend<{ dataBase64: string; contentType: string; url: string }>(
       `/api/v1/industrial/training/assignments/${assignmentId}/qr/image`,
       "POST",
@@ -635,17 +635,13 @@ export const trainingApi = {
       "POST",
       body,
     ),
-  postAssignmentPaperResults: (
-    assignmentId: string,
-    body: { results: PaperQuizResultRow[] },
-  ) =>
+  postAssignmentPaperResults: (assignmentId: string, body: { results: PaperQuizResultRow[] }) =>
     apiSend<PaperQuizPostResult>(
       `/api/v1/industrial/training/assignments/${assignmentId}/paper-results`,
       "POST",
       body,
     ),
-  teamSummary: () =>
-    apiGet<TrainingTeamSummary>("/api/v1/industrial/training/team-summary"),
+  teamSummary: () => apiGet<TrainingTeamSummary>("/api/v1/industrial/training/team-summary"),
   nextQuestion: (attemptId: string) =>
     apiGet<{
       done: boolean;

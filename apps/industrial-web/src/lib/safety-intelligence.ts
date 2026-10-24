@@ -3,13 +3,7 @@
  */
 
 export type AnalyticsTab =
-  | "overview"
-  | "reports"
-  | "safety"
-  | "operations"
-  | "dot"
-  | "hotspots"
-  | "performance";
+  "overview" | "reports" | "safety" | "operations" | "dot" | "hotspots" | "performance";
 
 export const ANALYTICS_TABS: ReadonlyArray<{ id: AnalyticsTab; label: string }> = [
   { id: "overview", label: "Overview" },
@@ -187,10 +181,12 @@ export function toSafetyIntelligenceReport(raw: unknown): SafetyIntelligenceRepo
             trainingCompletions:
               typeof row.trainingCompletions === "number" ? row.trainingCompletions : 0,
             personnelCount: typeof row.personnelCount === "number" ? row.personnelCount : 0,
-            unsafeObservations: typeof row.unsafeObservations === "number" ? row.unsafeObservations : 0,
+            unsafeObservations:
+              typeof row.unsafeObservations === "number" ? row.unsafeObservations : 0,
             openUnsafeObservations:
               typeof row.openUnsafeObservations === "number" ? row.openUnsafeObservations : 0,
-            observationPoints: typeof row.observationPoints === "number" ? row.observationPoints : 0,
+            observationPoints:
+              typeof row.observationPoints === "number" ? row.observationPoints : 0,
           };
         })
         .filter((row) => row.departmentName.length > 0)

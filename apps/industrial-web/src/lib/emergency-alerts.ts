@@ -156,7 +156,11 @@ export function buildEmergencyAlertSmsBody(input: {
   return `${prefix}${short}`.trim().slice(0, 1600);
 }
 
-export function estimateSmsSegments(body: string): { length: number; segments: number; perSegment: number } {
+export function estimateSmsSegments(body: string): {
+  length: number;
+  segments: number;
+  perSegment: number;
+} {
   const length = [...body].length;
   const unicode = /[^\u0000-\u007F]/.test(body);
   const perSegment = unicode ? 70 : 160;

@@ -1,7 +1,6 @@
 /** MVR Consent follow-up for company-driver roster rows. */
 
-export const COMPANY_DRIVER_MVR_CONSENT_NOTIFICATION_TYPE =
-  "industrial.company-driver.mvr-consent";
+export const COMPANY_DRIVER_MVR_CONSENT_NOTIFICATION_TYPE = "industrial.company-driver.mvr-consent";
 
 function uploadCount(raw: unknown): number {
   if (!Array.isArray(raw)) return 0;

@@ -4,21 +4,21 @@
 
 ## Signals
 
-| Layer | Signal | Notes |
-| --- | --- | --- |
-| SQS | Visible messages, age, DLQ depth | Primary ops signals |
-| ECS | Running task count, events, deploy revisions | API + worker services |
-| CloudWatch Logs | correlationId / jobId / tenantId | Never log raw row PII or presigns |
-| Aurora | Lock contention, slow queries (standard DB ops) | No import-specific EMF pack required for S8 |
-| App | Job status / progress percent / scan events | UI polls ~3s |
+| Layer           | Signal                                          | Notes                                       |
+| --------------- | ----------------------------------------------- | ------------------------------------------- |
+| SQS             | Visible messages, age, DLQ depth                | Primary ops signals                         |
+| ECS             | Running task count, events, deploy revisions    | API + worker services                       |
+| CloudWatch Logs | correlationId / jobId / tenantId                | Never log raw row PII or presigns           |
+| Aurora          | Lock contention, slow queries (standard DB ops) | No import-specific EMF pack required for S8 |
+| App             | Job status / progress percent / scan events     | UI polls ~3s                                |
 
 ## Alarms (CDK `ForgeMonitoring`)
 
-| Alarm pattern | Metric | Threshold |
-| --- | --- | --- |
-| `*-alarm-importsdlq` | DLQ `ApproximateNumberOfMessagesVisible` | ≥ 1 |
-| `*-alarm-imports-backlog` | Queue visible messages | ≥ 100 (multi-period) |
-| Worker running tasks | ECS desired/running | capacity loss |
+| Alarm pattern             | Metric                                   | Threshold            |
+| ------------------------- | ---------------------------------------- | -------------------- |
+| `*-alarm-importsdlq`      | DLQ `ApproximateNumberOfMessagesVisible` | ≥ 1                  |
+| `*-alarm-imports-backlog` | Queue visible messages                   | ≥ 100 (multi-period) |
+| Worker running tasks      | ECS desired/running                      | capacity loss        |
 
 Development inspection (S8 baseline): `forge-development-alarm-importsdlq` and `imports-backlog` were **OK**; DLQ depth **0**.
 
@@ -36,21 +36,21 @@ Every mutating import path should carry `correlationId` (API + queue messages). 
 
 Use `isStuckImportJob` thresholds:
 
-| Status | Threshold |
-| --- | --- |
-| SCANNING | 15m |
-| VALIDATING / READY_FOR_PREVIEW / QUEUED | 30m |
-| PROCESSING | 2h |
-| ROLLBACK_PENDING | 24h |
+| Status                                  | Threshold |
+| --------------------------------------- | --------- |
+| SCANNING                                | 15m       |
+| VALIDATING / READY_FOR_PREVIEW / QUEUED | 30m       |
+| PROCESSING                              | 2h        |
+| ROLLBACK_PENDING                        | 24h       |
 
 Emit operational tickets with jobId + tenantId + correlationId only (no payload dumps).
 
 ## What not to log
 
-- Presigned URLs  
-- Raw imported row values / credentials  
-- Full SQS message bodies into tickets (DLQ script already redacts Body)  
-- Malware binary content  
+- Presigned URLs
+- Raw imported row values / credentials
+- Full SQS message bodies into tickets (DLQ script already redacts Body)
+- Malware binary content
 
 ## Runbooks
 

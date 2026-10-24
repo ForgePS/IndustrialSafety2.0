@@ -15,7 +15,10 @@ const postgresMod = await import(pathToFileURL(dbRequire.resolve("postgres")).hr
 const postgres = postgresMod.default ?? postgresMod;
 
 const TENANT_KEY = (process.env.TENANT_KEY || "producers-rice-mill").trim();
-const API_BASE = (process.env.API_BASE || "https://dygmtx4vxgy9i.cloudfront.net").replace(/\/$/, "");
+const API_BASE = (process.env.API_BASE || "https://dygmtx4vxgy9i.cloudfront.net").replace(
+  /\/$/,
+  "",
+);
 const ALLOWED = new Set(["producers-rice-mill"]);
 
 if (!ALLOWED.has(TENANT_KEY)) throw new Error(`Refusing tenant ${TENANT_KEY}`);

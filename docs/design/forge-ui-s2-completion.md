@@ -7,10 +7,10 @@
 
 ## Routes added
 
-| Route | Purpose | Data |
-|---|---|---|
-| `/migrations` | Migration Center list | MOCK fixture |
-| `/migrations/detail?id=` | Migration detail | MOCK fixture |
+| Route                    | Purpose               | Data         |
+| ------------------------ | --------------------- | ------------ |
+| `/migrations`            | Migration Center list | MOCK fixture |
+| `/migrations/detail?id=` | Migration detail      | MOCK fixture |
 
 ## Surfaces polished
 
@@ -24,9 +24,9 @@ Tenants, Products, Entitlements, Users, Onboarding, Health, Audit, Studio — al
 
 ## Data source status
 
-- Live: Dashboard KPIs (tenants/users/…) where API responds; health/ready  
-- Mock: Migration Center  
-- Not Connected: Queue health; Notification center  
+- Live: Dashboard KPIs (tenants/users/…) where API responds; health/ready
+- Mock: Migration Center
+- Not Connected: Queue health; Notification center
 
 ## Feature flags
 
@@ -44,8 +44,8 @@ None added.
 
 ```ts
 interface MigrationStatusService {
-  listMigrations(): Promise<MigrationSummary[]>
-  getMigration(id: string): Promise<MigrationDetail | null>
+  listMigrations(): Promise<MigrationSummary[]>;
+  getMigration(id: string): Promise<MigrationDetail | null>;
 }
 ```
 

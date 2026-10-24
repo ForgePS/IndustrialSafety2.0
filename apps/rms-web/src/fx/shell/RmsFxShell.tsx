@@ -148,10 +148,7 @@ export function RmsFxShell({
           <MyWorkEntryPoint />
           <NotificationsEntryPoint />
           <HelpEntryPoint />
-          <SupportEntryPoint
-            environment={appEnv}
-            {...(appVersion ? { appVersion } : {})}
-          />
+          <SupportEntryPoint environment={appEnv} {...(appVersion ? { appVersion } : {})} />
           <label className="rms-fx-label" htmlFor="rms-fx-theme">
             Theme
           </label>

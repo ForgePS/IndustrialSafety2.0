@@ -228,7 +228,8 @@ async function ensureAdminUser(sql, tenantId, tenantKey, roleId) {
         ${id}::uuid, ${tenantId}::uuid, ${userId}::uuid, 'ACTIVE', true, now(), now(), now()
       )
     `;
-    membership = await sql`select id::text as id, status from user_tenant_memberships where id = ${id}::uuid`;
+    membership =
+      await sql`select id::text as id, status from user_tenant_memberships where id = ${id}::uuid`;
     membershipCreated = true;
   } else if (membership[0].status !== "ACTIVE") {
     await sql`
@@ -263,7 +264,8 @@ async function entitle(sql, tenantId, membershipId, userId) {
   const product = await sql`
     select id::text as id from platform_products where code = 'FORGE_INDUSTRIAL' limit 1
   `;
-  if (!product[0]) throw new Error("FORGE_INDUSTRIAL product missing — run platform catalog seed first");
+  if (!product[0])
+    throw new Error("FORGE_INDUSTRIAL product missing — run platform catalog seed first");
 
   const tp = await sql`
     select id::text as id from tenant_products

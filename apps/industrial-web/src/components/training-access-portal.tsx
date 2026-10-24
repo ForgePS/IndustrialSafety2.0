@@ -21,7 +21,10 @@ import {
   type PublicQuizRunner,
 } from "@/lib/training-public";
 import { TrainingMaterialViewer } from "@/components/training-material-viewer";
-import { fetchPublicTrainingMaterialBlob, fetchPublicTrainingMaterialViewUrl } from "@/features/training/materials";
+import {
+  fetchPublicTrainingMaterialBlob,
+  fetchPublicTrainingMaterialViewUrl,
+} from "@/features/training/materials";
 import { trainingApi } from "@/features/training/api";
 import type { TrainingMaterial } from "@/features/training/types";
 import { personNameDisplay } from "@/lib/person-name-display";
@@ -43,8 +46,8 @@ function statusBadgeClass(status: string) {
 function isOverdue(assignment: PublicPortalAssignment) {
   return Boolean(
     assignment.dueAt &&
-      assignment.status !== "PASSED" &&
-      new Date(assignment.dueAt).getTime() < Date.now(),
+    assignment.status !== "PASSED" &&
+    new Date(assignment.dueAt).getTime() < Date.now(),
   );
 }
 
@@ -112,7 +115,9 @@ export function TrainingAccessPortalForm({ token }: { token: string }) {
   const [dashTab, setDashTab] = useState<DashboardTab>("training");
   const [trainingStatusFilter, setTrainingStatusFilter] = useState("ALL");
   const [transcriptQuery, setTranscriptQuery] = useState("");
-  const [transcriptSort, setTranscriptSort] = useState<"date-desc" | "date-asc" | "score-desc" | "name">("date-desc");
+  const [transcriptSort, setTranscriptSort] = useState<
+    "date-desc" | "date-asc" | "score-desc" | "name"
+  >("date-desc");
   const [acknowledged, setAcknowledged] = useState(false);
   const [ackSavedAt, setAckSavedAt] = useState<string | null>(null);
 
@@ -200,13 +205,17 @@ export function TrainingAccessPortalForm({ token }: { token: string }) {
         setContext(data);
         const stored = readStoredPortalSession(token);
         if (stored?.sessionToken) {
-          const resumed = await apiSend<PublicPortalSession>(`${apiAccess}/session/resume`, "POST", {
-            sessionToken: stored.sessionToken,
-          });
+          const resumed = await apiSend<PublicPortalSession>(
+            `${apiAccess}/session/resume`,
+            "POST",
+            {
+              sessionToken: stored.sessionToken,
+            },
+          );
           if (!cancelled) {
             applyPortalSession(resumed);
             setScreen("dashboard");
-            if (!(resumed.assignments?.length) && (resumed.trainingRecords?.length ?? 0) > 0) {
+            if (!resumed.assignments?.length && (resumed.trainingRecords?.length ?? 0) > 0) {
               setDashTab("transcript");
             }
             await loadCompletionHistory(resumed.sessionToken);
@@ -215,7 +224,9 @@ export function TrainingAccessPortalForm({ token }: { token: string }) {
       } catch (e) {
         if (!cancelled) {
           clearStoredPortalSession(token);
-          setError(e instanceof ApiError ? e.message : "Training portal link is invalid or revoked");
+          setError(
+            e instanceof ApiError ? e.message : "Training portal link is invalid or revoked",
+          );
         }
       } finally {
         if (!cancelled) setBusy(false);
@@ -241,7 +252,7 @@ export function TrainingAccessPortalForm({ token }: { token: string }) {
       });
       applyPortalSession(verified);
       setScreen("dashboard");
-      if (!(verified.assignments?.length) && (verified.trainingRecords?.length ?? 0) > 0) {
+      if (!verified.assignments?.length && (verified.trainingRecords?.length ?? 0) > 0) {
         setDashTab("transcript");
       }
       await loadCompletionHistory(verified.sessionToken);
@@ -263,9 +274,9 @@ export function TrainingAccessPortalForm({ token }: { token: string }) {
 
   const certifications = useMemo(
     () =>
-      completionHistory.filter((row) => row.completion.result === "PASSED").sort((a, b) =>
-        b.completion.completedAt.localeCompare(a.completion.completedAt),
-      ),
+      completionHistory
+        .filter((row) => row.completion.result === "PASSED")
+        .sort((a, b) => b.completion.completedAt.localeCompare(a.completion.completedAt)),
     [completionHistory],
   );
 
@@ -681,9 +692,11 @@ export function TrainingAccessPortalForm({ token }: { token: string }) {
                 disabled={busy || !activeSession}
                 onClick={() => {
                   if (!activeSession) return;
-                  void trainingApi.openAccessTrainingReport(token, activeSession).catch((e: unknown) => {
-                    setError(e instanceof Error ? e.message : "Could not open training report");
-                  });
+                  void trainingApi
+                    .openAccessTrainingReport(token, activeSession)
+                    .catch((e: unknown) => {
+                      setError(e instanceof Error ? e.message : "Could not open training report");
+                    });
                 }}
               >
                 Print / download report
@@ -723,7 +736,11 @@ export function TrainingAccessPortalForm({ token }: { token: string }) {
                         {assignment.dueAt ? (
                           <div className="small text-muted">
                             Due {assignment.dueAt.slice(0, 10)}
-                            {isOverdue(assignment) ? " · Overdue" : isDueSoon(assignment) ? " · Due soon" : ""}
+                            {isOverdue(assignment)
+                              ? " · Overdue"
+                              : isDueSoon(assignment)
+                                ? " · Due soon"
+                                : ""}
                           </div>
                         ) : null}
                         {assignment.bestPercent != null ? (
@@ -738,7 +755,10 @@ export function TrainingAccessPortalForm({ token }: { token: string }) {
                             isOverdue(assignment) ? "OVERDUE" : assignment.status,
                           )}`}
                         >
-                          {(isOverdue(assignment) ? "OVERDUE" : assignment.status).replace(/_/g, " ")}
+                          {(isOverdue(assignment) ? "OVERDUE" : assignment.status).replace(
+                            /_/g,
+                            " ",
+                          )}
                           {assignment.status === "PASSED" && assignment.bestPercent != null
                             ? ` · ${assignment.bestPercent}%`
                             : ""}
@@ -755,7 +775,9 @@ export function TrainingAccessPortalForm({ token }: { token: string }) {
                     </li>
                   ))}
                   {!filteredAssignments.length ? (
-                    <li className="list-group-item text-muted px-0">No training matches this filter.</li>
+                    <li className="list-group-item text-muted px-0">
+                      No training matches this filter.
+                    </li>
                   ) : null}
                 </ul>
               </>
@@ -775,9 +797,7 @@ export function TrainingAccessPortalForm({ token }: { token: string }) {
                     className="form-select form-select-sm"
                     style={{ maxWidth: "12rem" }}
                     value={transcriptSort}
-                    onChange={(e) =>
-                      setTranscriptSort(e.target.value as typeof transcriptSort)
-                    }
+                    onChange={(e) => setTranscriptSort(e.target.value as typeof transcriptSort)}
                   >
                     <option value="date-desc">Newest first</option>
                     <option value="date-asc">Oldest first</option>
@@ -790,8 +810,7 @@ export function TrainingAccessPortalForm({ token }: { token: string }) {
                     const completedAt =
                       typeof row.completedAt === "string" ? row.completedAt.slice(0, 10) : null;
                     const resultLabel = (row.result ?? "COMPLETED").replace(/_/g, " ");
-                    const scoreLabel =
-                      row.scorePercent != null ? `${row.scorePercent}%` : null;
+                    const scoreLabel = row.scorePercent != null ? `${row.scorePercent}%` : null;
                     return (
                       <li
                         key={row.id}
@@ -800,7 +819,14 @@ export function TrainingAccessPortalForm({ token }: { token: string }) {
                         <div>
                           <strong>{row.title}</strong>
                           <div className="small text-muted">
-                            {[row.courseName && row.courseName !== row.title ? row.courseName : null, resultLabel, scoreLabel, completedAt]
+                            {[
+                              row.courseName && row.courseName !== row.title
+                                ? row.courseName
+                                : null,
+                              resultLabel,
+                              scoreLabel,
+                              completedAt,
+                            ]
                               .filter(Boolean)
                               .join(" · ")}
                           </div>
@@ -813,9 +839,15 @@ export function TrainingAccessPortalForm({ token }: { token: string }) {
                             onClick={() => {
                               if (!activeSession || !row.printCompletionId) return;
                               void trainingApi
-                                .openAccessCompletionPrintable(token, activeSession, row.printCompletionId)
+                                .openAccessCompletionPrintable(
+                                  token,
+                                  activeSession,
+                                  row.printCompletionId,
+                                )
                                 .catch((e: unknown) => {
-                                  setError(e instanceof Error ? e.message : "Could not print quiz results");
+                                  setError(
+                                    e instanceof Error ? e.message : "Could not print quiz results",
+                                  );
                                 });
                             }}
                           >
@@ -933,7 +965,9 @@ export function TrainingAccessPortalForm({ token }: { token: string }) {
                           {section.contentBody}
                         </div>
                       ) : (
-                        <p className="small text-muted mb-2">Review this section before continuing.</p>
+                        <p className="small text-muted mb-2">
+                          Review this section before continuing.
+                        </p>
                       )}
                       {!done ? (
                         <button
@@ -950,7 +984,9 @@ export function TrainingAccessPortalForm({ token }: { token: string }) {
                 })}
               </div>
             ) : (
-              <p className="text-muted">No course sections configured. You can proceed to the quiz.</p>
+              <p className="text-muted">
+                No course sections configured. You can proceed to the quiz.
+              </p>
             )}
             {course.assigneeStatus !== "PASSED" ? (
               <div className="border rounded p-3 mb-3">
@@ -1060,7 +1096,9 @@ export function TrainingAccessPortalForm({ token }: { token: string }) {
                 : `${results.percent}%`}
             </h2>
             <p className={passed ? "text-success" : "text-warning"}>
-              {passed ? "You passed." : `Passing score is ${passingPercent}%. You can retake the quiz.`}
+              {passed
+                ? "You passed."
+                : `Passing score is ${passingPercent}%. You can retake the quiz.`}
             </p>
             <div className="d-flex flex-wrap gap-2 justify-content-center">
               {attemptId && activeSession ? (

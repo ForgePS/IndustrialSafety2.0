@@ -12,22 +12,22 @@ governing; see [Historical appendix](#historical-appendix--legacy-phases-117).
 Exceptions that reorder or narrow scope are recorded in
 `docs/program/architecture-exceptions.md`.
 
-| §42 Phase | Capability | Status | Est. overall |
-| --- | --- | --- | --- |
-| 0 | Discovery | COMPLETE (freshness review due) | ~95% |
-| 1 | Monorepo & developer platform | COMPLETE | ~95% |
-| 2 | AWS landing zone | PARTIALLY_COMPLETE (staged account — AX-AWS-01) | ~85% |
-| 3 | Shared platform services | PARTIALLY_COMPLETE | ~70% |
-| 4 | Configuration platform | PARTIALLY_COMPLETE (ACCEPTED_WITH_LIMITATIONS) | ~55% |
-| 5 | Import **and** Export Center | PARTIALLY_COMPLETE (Import advanced; Export NOT_STARTED) | ~45% |
-| 5A | Shared QR platform | NOT_STARTED | ~0% |
-| 6 | Academy core | NOT_STARTED (scaffold only) | ~5% |
-| 7 | Academy advanced | NOT_STARTED | ~0% |
-| 8 | Academy migration (Firebase → AWS) | NOT_STARTED | ~0% |
-| 9 | RMS core | PARTIALLY_COMPLETE (NERIS/CAD/FX slice — AX-RMS-01) | ~25% |
-| 10 | RMS operations | PARTIALLY_COMPLETE | ~20% |
-| 11 | Hardening | PARTIALLY_COMPLETE | ~40% |
-| 12 | GovCloud readiness | NOT_STARTED | ~5% |
+| §42 Phase | Capability                         | Status                                                   | Est. overall |
+| --------- | ---------------------------------- | -------------------------------------------------------- | ------------ |
+| 0         | Discovery                          | COMPLETE (freshness review due)                          | ~95%         |
+| 1         | Monorepo & developer platform      | COMPLETE                                                 | ~95%         |
+| 2         | AWS landing zone                   | PARTIALLY_COMPLETE (staged account — AX-AWS-01)          | ~85%         |
+| 3         | Shared platform services           | PARTIALLY_COMPLETE                                       | ~70%         |
+| 4         | Configuration platform             | PARTIALLY_COMPLETE (ACCEPTED_WITH_LIMITATIONS)           | ~55%         |
+| 5         | Import **and** Export Center       | PARTIALLY_COMPLETE (Import advanced; Export NOT_STARTED) | ~45%         |
+| 5A        | Shared QR platform                 | NOT_STARTED                                              | ~0%          |
+| 6         | Academy core                       | NOT_STARTED (scaffold only)                              | ~5%          |
+| 7         | Academy advanced                   | NOT_STARTED                                              | ~0%          |
+| 8         | Academy migration (Firebase → AWS) | NOT_STARTED                                              | ~0%          |
+| 9         | RMS core                           | PARTIALLY_COMPLETE (NERIS/CAD/FX slice — AX-RMS-01)      | ~25%         |
+| 10        | RMS operations                     | PARTIALLY_COMPLETE                                       | ~20%         |
+| 11        | Hardening                          | PARTIALLY_COMPLETE                                       | ~40%         |
+| 12        | GovCloud readiness                 | NOT_STARTED                                              | ~5%          |
 
 **Current governing position:** Foundations through Phase 3 largely delivered;
 Phase 4 accepted with limitations; Phase 5 Import in acceptance closure;
@@ -162,22 +162,22 @@ GovCloud org, compatibility register, partition deploy (Directive §4.2, §39).
 
 ## Nested product tracks (not §42 phase IDs)
 
-| Track | Nest under | Notes |
-| --- | --- | --- |
-| Import S1–S8 | Phase 5 | Acceptance closure required |
-| NERIS P1–P4 | Phases 9–10 | P5 blocked |
-| Forge Experience S0–S2F | Phases 9–10 UX | Flags default false; pilot tenant required |
-| AI Narrative foundation | Blocked expansion | Flags false; no product expansion |
-| Industrial / Marketplace | After QR / later | NOT_STARTED |
+| Track                    | Nest under        | Notes                                      |
+| ------------------------ | ----------------- | ------------------------------------------ |
+| Import S1–S8             | Phase 5           | Acceptance closure required                |
+| NERIS P1–P4              | Phases 9–10       | P5 blocked                                 |
+| Forge Experience S0–S2F  | Phases 9–10 UX    | Flags default false; pilot tenant required |
+| AI Narrative foundation  | Blocked expansion | Flags false; no product expansion          |
+| Industrial / Marketplace | After QR / later  | NOT_STARTED                                |
 
 ---
 
 ## Current recommended next (authorization still required)
 
-1. Keep governance current (DR-1 complete as docs).  
-2. Import Phase 5 acceptance closure (no unauthorized S9).  
-3. FX pilot only after tenant designation (not unblocked by DR-1).  
-4. Phase 4 limitation closure (forms/workflows) when authorized.  
+1. Keep governance current (DR-1 complete as docs).
+2. Import Phase 5 acceptance closure (no unauthorized S9).
+3. FX pilot only after tenant designation (not unblocked by DR-1).
+4. Phase 4 limitation closure (forms/workflows) when authorized.
 5. Do **not** start Academy / QR / Export / GovCloud / NERIS P5 without
    explicit authorization.
 
@@ -191,25 +191,25 @@ Dashboard: `docs/program/program-dashboard.md`.
 > **SUPERSEDED as Source of Truth** (DR-1 / AX-RDMP-01 / DEC-005).  
 > Retained for audit only. Do not plan new work against these IDs.
 
-| Legacy ID | Capability (historical) | Maps primarily to §42 |
-| --- | --- | --- |
-| 1 | Infrastructure | Phase 2 |
-| 2 | Shared Platform | Phase 3 |
-| 3 | Identity | Phase 3 |
-| 4 | Person Registry | Phase 3 |
-| 5 | Organizations | Phase 3 |
-| 6 | Tenant Management | Phase 3 |
-| 7 | Authorization | Phase 3 |
-| 8 | Configuration Studio | Phase 4 |
-| 9 | Document Engine | Phase 3 / 11 (GAP-DOC-01) |
-| 10 | Notification Engine | Phase 3 (GAP-NTF-01) |
-| 11 | Reporting Engine | Phase 11 (GAP-RPT-01) |
-| 12 | Import Engine | Phase 5 (import half) |
-| 13 | Forge Academy | Phases 6–8 |
-| 14 | Forge RMS | Phases 9–10 |
-| 15 | Forge Industrial | Post–5A / later |
-| 16 | Marketplace | Later |
-| 17 | GovCloud | Phase 12 |
+| Legacy ID | Capability (historical) | Maps primarily to §42     |
+| --------- | ----------------------- | ------------------------- |
+| 1         | Infrastructure          | Phase 2                   |
+| 2         | Shared Platform         | Phase 3                   |
+| 3         | Identity                | Phase 3                   |
+| 4         | Person Registry         | Phase 3                   |
+| 5         | Organizations           | Phase 3                   |
+| 6         | Tenant Management       | Phase 3                   |
+| 7         | Authorization           | Phase 3                   |
+| 8         | Configuration Studio    | Phase 4                   |
+| 9         | Document Engine         | Phase 3 / 11 (GAP-DOC-01) |
+| 10        | Notification Engine     | Phase 3 (GAP-NTF-01)      |
+| 11        | Reporting Engine        | Phase 11 (GAP-RPT-01)     |
+| 12        | Import Engine           | Phase 5 (import half)     |
+| 13        | Forge Academy           | Phases 6–8                |
+| 14        | Forge RMS               | Phases 9–10               |
+| 15        | Forge Industrial        | Post–5A / later           |
+| 16        | Marketplace             | Later                     |
+| 17        | GovCloud                | Phase 12                  |
 
 Prior narrative detail for legacy phases lived in pre–DR-1 revisions of this
 file (see git history).

@@ -67,16 +67,18 @@ describe("workers-comp-helpers", () => {
         incidentPayload,
       }),
     ).toBe("Dryer building");
-    expect(
-      resolveWorkersCompReportLocation({ locationText: "Knee", claimBodyParts: "Knee" }),
-    ).toBe("");
+    expect(resolveWorkersCompReportLocation({ locationText: "Knee", claimBodyParts: "Knee" })).toBe(
+      "",
+    );
     expect(
       incidentPlaceFromPayload(
         { location: "Back", bodyParts: "Back" },
         "26-08-22   Robert Drotar - Warehouse",
       ),
     ).toBe("Warehouse");
-    expect(incidentPlaceFromPayload({ location: "Stuttgart", bodyParts: "Back" })).toBe("Stuttgart");
+    expect(incidentPlaceFromPayload({ location: "Stuttgart", bodyParts: "Back" })).toBe(
+      "Stuttgart",
+    );
     expect(
       resolveWorkersCompReportLocation({
         locationText: "Left hand / wrist",
@@ -124,7 +126,13 @@ describe("workers-comp-helpers", () => {
   });
 
   it("recognizes body-part text but not place names", () => {
-    for (const text of ["Hand, Wrist", "L index finger", "Both knees", "Upper arm & shoulder", "Back"]) {
+    for (const text of [
+      "Hand, Wrist",
+      "L index finger",
+      "Both knees",
+      "Upper arm & shoulder",
+      "Back",
+    ]) {
       expect(looksLikeBodyPartText(text)).toBe(true);
     }
     for (const text of ["Back dock", "Head office", "Packaging - Bagging Line", "Middle bay", ""]) {
@@ -226,9 +234,9 @@ describe("workers-comp-helpers", () => {
   });
 
   it("gates medical view/manage permissions", () => {
-    expect(
-      canViewWorkersCompMedical({ permissions: ["industrial.workers_comp.view"] }),
-    ).toBe(false);
+    expect(canViewWorkersCompMedical({ permissions: ["industrial.workers_comp.view"] })).toBe(
+      false,
+    );
     expect(
       canViewWorkersCompMedical({ permissions: ["industrial.workers_comp.medical.view"] }),
     ).toBe(true);
@@ -291,9 +299,7 @@ describe("workers-comp-helpers", () => {
       nextAction: { label: "Need classification", dueDate: "2026-01-01" },
       personnelId: "p1",
     };
-    expect(unwrapWorkersCompSourcePayload(JSON.stringify(doubleEncoded)).caseNumber).toBe(
-      "WC-9",
-    );
+    expect(unwrapWorkersCompSourcePayload(JSON.stringify(doubleEncoded)).caseNumber).toBe("WC-9");
     const hydrated = hydrateWorkersCompFromSource({
       caseNumber: null,
       status: null,
@@ -347,9 +353,9 @@ describe("workers-comp-helpers", () => {
 
 describe("workers-comp weekly status email", () => {
   it("normalizes and dedupes recipients", () => {
-    expect(
-      normalizeEmailRecipients(["a@x.com", " A@x.com ", "bad", "b@y.com", "a@x.com"]),
-    ).toEqual(["a@x.com", "b@y.com"]);
+    expect(normalizeEmailRecipients(["a@x.com", " A@x.com ", "bad", "b@y.com", "a@x.com"])).toEqual(
+      ["a@x.com", "b@y.com"],
+    );
     expect(normalizeEmailRecipients("safety@co.com; ops@co.com\n safety@co.com")).toEqual([
       "safety@co.com",
       "ops@co.com",
@@ -501,12 +507,10 @@ describe("workers-comp weekly status email", () => {
   });
 
   it("derives OSHA Form 300 outcome from WC days and severity", () => {
-    expect(
-      deriveOshaOutcomeFromWorkersComp({ daysAway: 3, restrictedDays: 0 }),
-    ).toBe("DAYS_AWAY");
-    expect(
-      deriveOshaOutcomeFromWorkersComp({ daysAway: 0, restrictedDays: 5 }),
-    ).toBe("JOB_TRANSFER_RESTRICTION");
+    expect(deriveOshaOutcomeFromWorkersComp({ daysAway: 3, restrictedDays: 0 })).toBe("DAYS_AWAY");
+    expect(deriveOshaOutcomeFromWorkersComp({ daysAway: 0, restrictedDays: 5 })).toBe(
+      "JOB_TRANSFER_RESTRICTION",
+    );
     expect(
       deriveOshaOutcomeFromWorkersComp({
         daysAway: 0,
@@ -514,9 +518,9 @@ describe("workers-comp weekly status email", () => {
         severity: "fatality",
       }),
     ).toBe("DEATH");
-    expect(
-      deriveOshaOutcomeFromWorkersComp({ daysAway: 0, restrictedDays: 0 }),
-    ).toBe("OTHER_RECORDABLE");
+    expect(deriveOshaOutcomeFromWorkersComp({ daysAway: 0, restrictedDays: 0 })).toBe(
+      "OTHER_RECORDABLE",
+    );
     expect(
       deriveOshaOutcomeFromWorkersComp({ daysAway: 0, restrictedDays: 0, severity: "lost_time" }),
     ).toBe("DAYS_AWAY");

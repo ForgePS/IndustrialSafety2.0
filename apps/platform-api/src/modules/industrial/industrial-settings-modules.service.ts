@@ -51,7 +51,8 @@ export class IndustrialSettingsModulesService {
     const tenantId = this.tenantId(principal);
     const data = await this.entitlements.list(tenantId);
     const productEntitled = data.products.some(
-      (p) => p.productCode === INDUSTRIAL_PRODUCT_CODE && String(p.status).toUpperCase() === "ACTIVE",
+      (p) =>
+        p.productCode === INDUSTRIAL_PRODUCT_CODE && String(p.status).toUpperCase() === "ACTIVE",
     );
     const entitlementByCode = new Map(
       data.modules
@@ -91,10 +92,7 @@ export class IndustrialSettingsModulesService {
       throw new ForgeError("NOT_FOUND", "Module not found");
     }
     if (!industrialModuleIsToggleable(entry)) {
-      throw new ForgeError(
-        "CONFLICT",
-        `${entry.name} cannot be enabled until it is ready.`,
-      );
+      throw new ForgeError("CONFLICT", `${entry.name} cannot be enabled until it is ready.`);
     }
 
     await this.entitlements.putModule(
@@ -120,54 +118,62 @@ export class IndustrialSettingsModulesService {
 
   /** Ensure every ACTIVE tenant membership can use the module once entitled. */
   private async grantMembershipAccess(tenantId: string, moduleCode: string, actorUserId: string) {
-    return withTenantTransaction(this.db, tenantId, async (tx) => {
-      const product = await tx.query.platformProducts.findFirst({
-        where: eq(platformProducts.code, INDUSTRIAL_PRODUCT_CODE),
-      });
-      if (!product) return;
-      const mod = await tx.query.platformModules.findFirst({
-        where: and(eq(platformModules.productId, product.id), eq(platformModules.code, moduleCode)),
-      });
-      if (!mod) return;
-
-      const memberships = await tx
-        .select({ id: userTenantMemberships.id })
-        .from(userTenantMemberships)
-        .where(
-          and(
-            eq(userTenantMemberships.tenantId, tenantId),
-            eq(userTenantMemberships.status, "ACTIVE"),
-          ),
-        );
-
-      const now = new Date();
-      for (const membership of memberships) {
-        const existing = await tx.query.membershipModuleAccess.findFirst({
+    return withTenantTransaction(
+      this.db,
+      tenantId,
+      async (tx) => {
+        const product = await tx.query.platformProducts.findFirst({
+          where: eq(platformProducts.code, INDUSTRIAL_PRODUCT_CODE),
+        });
+        if (!product) return;
+        const mod = await tx.query.platformModules.findFirst({
           where: and(
-            eq(membershipModuleAccess.membershipId, membership.id),
-            eq(membershipModuleAccess.moduleId, mod.id),
+            eq(platformModules.productId, product.id),
+            eq(platformModules.code, moduleCode),
           ),
         });
-        if (existing) {
-          if (existing.status !== "ACTIVE") {
-            await tx
-              .update(membershipModuleAccess)
-              .set({ status: "ACTIVE", updatedAt: now })
-              .where(eq(membershipModuleAccess.id, existing.id));
+        if (!mod) return;
+
+        const memberships = await tx
+          .select({ id: userTenantMemberships.id })
+          .from(userTenantMemberships)
+          .where(
+            and(
+              eq(userTenantMemberships.tenantId, tenantId),
+              eq(userTenantMemberships.status, "ACTIVE"),
+            ),
+          );
+
+        const now = new Date();
+        for (const membership of memberships) {
+          const existing = await tx.query.membershipModuleAccess.findFirst({
+            where: and(
+              eq(membershipModuleAccess.membershipId, membership.id),
+              eq(membershipModuleAccess.moduleId, mod.id),
+            ),
+          });
+          if (existing) {
+            if (existing.status !== "ACTIVE") {
+              await tx
+                .update(membershipModuleAccess)
+                .set({ status: "ACTIVE", updatedAt: now })
+                .where(eq(membershipModuleAccess.id, existing.id));
+            }
+            continue;
           }
-          continue;
+          await tx.insert(membershipModuleAccess).values({
+            id: createId(),
+            tenantId,
+            membershipId: membership.id,
+            moduleId: mod.id,
+            status: "ACTIVE",
+            grantedByUserId: actorUserId,
+            createdAt: now,
+            updatedAt: now,
+          });
         }
-        await tx.insert(membershipModuleAccess).values({
-          id: createId(),
-          tenantId,
-          membershipId: membership.id,
-          moduleId: mod.id,
-          status: "ACTIVE",
-          grantedByUserId: actorUserId,
-          createdAt: now,
-          updatedAt: now,
-        });
-      }
-    }, actorUserId);
+      },
+      actorUserId,
+    );
   }
 }

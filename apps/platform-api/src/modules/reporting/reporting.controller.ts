@@ -18,10 +18,7 @@ import type { Response } from "express";
 import { ok } from "../../common/api-response.js";
 import { getRequestIds, type RequestWithIds } from "../../common/request-ids.js";
 import { AuthContextService } from "../auth-context/auth-context.service.js";
-import {
-  Principal,
-  type AuthenticatedRequest,
-} from "../auth-context/principal.decorator.js";
+import { Principal, type AuthenticatedRequest } from "../auth-context/principal.decorator.js";
 import { Public } from "../auth-context/public.decorator.js";
 import { RequireAnyPermission } from "../auth-context/require-permission.decorator.js";
 import { ReportingService } from "./reporting.service.js";
@@ -288,7 +285,8 @@ export class ReportingController {
       workersCompWeeklyStatus = await this.reporting.migrateWorkersCompWeeklyStatusSchedules();
     } catch (error) {
       workersCompWeeklyStatus = {
-        error: error instanceof Error ? error.message.slice(0, 500) : "Weekly status migration failed",
+        error:
+          error instanceof Error ? error.message.slice(0, 500) : "Weekly status migration failed",
       };
     }
     const schedules = await this.reporting.runDueSchedulesSweep(sweepIds);

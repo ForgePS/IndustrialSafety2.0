@@ -8,13 +8,13 @@ Public (no Cognito). Authentication is HMAC-based per connection.
 
 ## Required headers (synthetic adapter)
 
-| Header | Purpose |
-| --- | --- |
-| `X-Forge-CAD-Key-Id` | Key id for rotation |
-| `X-Forge-CAD-Timestamp` | Unix seconds (or ms) |
-| `X-Forge-CAD-Nonce` | Unique nonce |
-| `X-Forge-CAD-Message-Id` | Unique message id |
-| `X-Forge-CAD-Signature` | Hex HMAC-SHA256 |
+| Header                   | Purpose              |
+| ------------------------ | -------------------- |
+| `X-Forge-CAD-Key-Id`     | Key id for rotation  |
+| `X-Forge-CAD-Timestamp`  | Unix seconds (or ms) |
+| `X-Forge-CAD-Nonce`      | Unique nonce         |
+| `X-Forge-CAD-Message-Id` | Unique message id    |
+| `X-Forge-CAD-Signature`  | Hex HMAC-SHA256      |
 
 ## Canonical string
 

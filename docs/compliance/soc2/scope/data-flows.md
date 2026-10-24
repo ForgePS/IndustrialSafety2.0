@@ -10,15 +10,15 @@ High-level data flows within the Forge system boundary. Used for Confidentiality
 
 ## 1. Data categories (logical)
 
-| Category | Examples | Sensitivity |
-| --- | --- | --- |
-| Identity | Cognito username/email, subject (`sub`), MFA factors | Confidential |
-| Tenancy | Tenant IDs, memberships, roles | Confidential |
-| Operational RMS / incident | Incident records, narratives, unit/status fields | Confidential — public-safety operational |
-| NERIS-related | Schema / payload fields processed by Phase 1–2 | Confidential |
-| Audit | Application audit events (actor, action, tenant, timestamp) | Confidential / integrity-critical |
-| Secrets | DB credentials, API keys in Secrets Manager | Restricted |
-| Telemetry | CloudWatch logs/metrics (may contain identifiers) | Confidential — minimize PII in logs |
+| Category                   | Examples                                                    | Sensitivity                              |
+| -------------------------- | ----------------------------------------------------------- | ---------------------------------------- |
+| Identity                   | Cognito username/email, subject (`sub`), MFA factors        | Confidential                             |
+| Tenancy                    | Tenant IDs, memberships, roles                              | Confidential                             |
+| Operational RMS / incident | Incident records, narratives, unit/status fields            | Confidential — public-safety operational |
+| NERIS-related              | Schema / payload fields processed by Phase 1–2              | Confidential                             |
+| Audit                      | Application audit events (actor, action, tenant, timestamp) | Confidential / integrity-critical        |
+| Secrets                    | DB credentials, API keys in Secrets Manager                 | Restricted                               |
+| Telemetry                  | CloudWatch logs/metrics (may contain identifiers)           | Confidential — minimize PII in logs      |
 
 ---
 
@@ -98,19 +98,19 @@ Mark availability controls as **partial** until restore testing is evidenced.
 
 ## 7. Data egress
 
-| Egress path | Destination | Notes |
-| --- | --- | --- |
-| Browser responses | End user | TLS; authorization required |
-| Logs | CloudWatch | Retention and access controls |
-| AWS support / tooling | AWS | Covered by AWS agreements / SOC |
+| Egress path           | Destination  | Notes                            |
+| --------------------- | ------------ | -------------------------------- |
+| Browser responses     | End user     | TLS; authorization required      |
+| Logs                  | CloudWatch   | Retention and access controls    |
+| AWS support / tooling | AWS          | Covered by AWS agreements / SOC  |
 | Third-party analytics | None claimed | Do not add without vendor review |
 
 ---
 
 ## 8. Open data-flow items
 
-| ID | Item | Owner action |
-| --- | --- | --- |
-| DF-01 | Inventory exact log fields for PII | Observability owner |
-| DF-02 | Confirm backup path is live | Infra owner |
-| DF-03 | Document any email/SMS notification providers | Product + security |
+| ID    | Item                                          | Owner action        |
+| ----- | --------------------------------------------- | ------------------- |
+| DF-01 | Inventory exact log fields for PII            | Observability owner |
+| DF-02 | Confirm backup path is live                   | Infra owner         |
+| DF-03 | Document any email/SMS notification providers | Product + security  |

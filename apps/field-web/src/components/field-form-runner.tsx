@@ -113,8 +113,7 @@ export function FieldFormRunner({
   const progress = useMemo(() => answeredProgress(fields, answers), [fields, answers]);
   const visible = useMemo(() => visibleFields(fields, answers), [fields, answers]);
 
-  const locationName =
-    org.locations.find((l) => l.id === org.selection.locationId)?.name ?? "";
+  const locationName = org.locations.find((l) => l.id === org.selection.locationId)?.name ?? "";
   const departmentName =
     org.departments.find((d) => d.id === org.selection.departmentId)?.name ?? "";
 
@@ -359,7 +358,11 @@ export function FieldFormRunner({
           <button type="button" className="ff-btn" onClick={() => router.push("/tasks/")}>
             My Work
           </button>
-          <button type="button" className="ff-btn ff-btn-secondary" onClick={() => router.push("/")}>
+          <button
+            type="button"
+            className="ff-btn ff-btn-secondary"
+            onClick={() => router.push("/")}
+          >
             Home
           </button>
         </div>
@@ -404,7 +407,9 @@ export function FieldFormRunner({
             onChange={setAnswer}
             onPhotos={(files) => void onPhotoSelected(field.id, files)}
             onRemovePhoto={(photoId) => {
-              const next = parsePhotoAnswer(answers[field.id] ?? "").filter((p) => p.id !== photoId);
+              const next = parsePhotoAnswer(answers[field.id] ?? "").filter(
+                (p) => p.id !== photoId,
+              );
               setAnswer(field.id, next.length ? JSON.stringify(next) : "");
             }}
           />
@@ -412,7 +417,12 @@ export function FieldFormRunner({
       </div>
 
       <div className="ff-action-grid" style={{ marginTop: 20 }}>
-        <button type="button" className="ff-btn" disabled={busy} onClick={() => void handleSubmit()}>
+        <button
+          type="button"
+          className="ff-btn"
+          disabled={busy}
+          onClick={() => void handleSubmit()}
+        >
           Submit
         </button>
         <button

@@ -75,8 +75,7 @@ export class IndustrialSiteAdapter implements ImportRecordAdapter {
       };
     }
 
-    const siteKeyInput =
-      asOptionalString(mapped.site_key) ?? asOptionalString(mapped.siteKey);
+    const siteKeyInput = asOptionalString(mapped.site_key) ?? asOptionalString(mapped.siteKey);
     const timezone = asOptionalString(mapped.timezone);
     const notes = asOptionalString(mapped.notes);
 

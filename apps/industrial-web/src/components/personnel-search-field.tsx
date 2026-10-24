@@ -132,22 +132,22 @@ export function PersonnelSearchField({
   }, [disabled, personnelId, runSearch, searchQ]);
 
   function hitText(value: unknown): string {
-  return typeof value === "string" ? value.trim() : "";
-}
+    return typeof value === "string" ? value.trim() : "";
+  }
 
-function hitHireDate(value: unknown): string {
-  const raw = hitText(value);
-  if (!raw) return "";
-  if (/^\d{4}-\d{2}-\d{2}/.test(raw)) return raw.slice(0, 10);
-  const parsed = new Date(raw);
-  if (Number.isNaN(parsed.getTime())) return "";
-  const yyyy = parsed.getFullYear();
-  const mm = String(parsed.getMonth() + 1).padStart(2, "0");
-  const dd = String(parsed.getDate()).padStart(2, "0");
-  return `${yyyy}-${mm}-${dd}`;
-}
+  function hitHireDate(value: unknown): string {
+    const raw = hitText(value);
+    if (!raw) return "";
+    if (/^\d{4}-\d{2}-\d{2}/.test(raw)) return raw.slice(0, 10);
+    const parsed = new Date(raw);
+    if (Number.isNaN(parsed.getTime())) return "";
+    const yyyy = parsed.getFullYear();
+    const mm = String(parsed.getMonth() + 1).padStart(2, "0");
+    const dd = String(parsed.getDate()).padStart(2, "0");
+    return `${yyyy}-${mm}-${dd}`;
+  }
 
-function selectPerson(hit: PersonnelSearchHit) {
+  function selectPerson(hit: PersonnelSearchHit) {
     const idValue = hitId(hit);
     if (!idValue) return;
     onLinkedChange({

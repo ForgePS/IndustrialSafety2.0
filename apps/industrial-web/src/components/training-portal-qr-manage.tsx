@@ -7,10 +7,7 @@ import { apiGet, apiSend } from "@forge/web-kit";
 import { formatApiErrorMessage } from "@/lib/api-error";
 import { decodeBase64ToBlob } from "@/lib/binary";
 import { canManageTrainingPortalQr } from "@/lib/platform-admin";
-import {
-  TRAINING_PORTAL_HEADING,
-  copyPortalUrl,
-} from "@/lib/training-portal-share";
+import { TRAINING_PORTAL_HEADING, copyPortalUrl } from "@/lib/training-portal-share";
 import { trainingApi } from "@/features/training/api";
 
 type AccessLink = {
@@ -195,8 +192,8 @@ export function TrainingPortalQrManage() {
         <p className="settings-admin-sidebar__eyebrow mb-2">Platform admin</p>
         <h1 className="h4 mb-1">Training portal QR</h1>
         <p className="text-muted mb-0">
-          Create and rotate the company training portal QR code. Training staff can view, download, and
-          print a copy from{" "}
+          Create and rotate the company training portal QR code. Training staff can view, download,
+          and print a copy from{" "}
           <Link href="/modules/training/?section=access">Training → QR / Access</Link>.
         </p>
       </div>
@@ -204,7 +201,12 @@ export function TrainingPortalQrManage() {
       <div className="card border shadow-none">
         <div className="card-header d-flex justify-content-between align-items-center">
           <h6 className="mb-0">Portal QR management</h6>
-          <button type="button" className="btn btn-sm btn-outline-primary" disabled={busy} onClick={() => void load()}>
+          <button
+            type="button"
+            className="btn btn-sm btn-outline-primary"
+            disabled={busy}
+            onClick={() => void load()}
+          >
             Refresh
           </button>
         </div>
@@ -213,8 +215,8 @@ export function TrainingPortalQrManage() {
           {notice ? <div className="alert alert-success">{notice}</div> : null}
 
           <p className="small text-muted mb-3">
-            Employees sign in with the <strong>employee number</strong> on their personnel record. Assign
-            training before they use the portal.
+            Employees sign in with the <strong>employee number</strong> on their personnel record.
+            Assign training before they use the portal.
           </p>
 
           <div className="border rounded p-3 mb-4">
@@ -337,7 +339,11 @@ export function TrainingPortalQrManage() {
                       type="button"
                       className="btn btn-sm btn-outline-secondary"
                       disabled={busy}
-                      onClick={() => void copyPortalUrl(issued.url).then((ok) => setNotice(ok ? "Portal link copied." : "Could not copy link."))}
+                      onClick={() =>
+                        void copyPortalUrl(issued.url).then((ok) =>
+                          setNotice(ok ? "Portal link copied." : "Could not copy link."),
+                        )
+                      }
                     >
                       Copy link
                     </button>
@@ -346,14 +352,22 @@ export function TrainingPortalQrManage() {
               </div>
               <div className="text-center">
                 <p className="fw-semibold mb-2">{TRAINING_PORTAL_HEADING}</p>
-                <img src={qrImageHref} alt="Training portal QR code" className="img-fluid" style={{ maxWidth: 280 }} />
+                <img
+                  src={qrImageHref}
+                  alt="Training portal QR code"
+                  className="img-fluid"
+                  style={{ maxWidth: 280 }}
+                />
               </div>
             </div>
           ) : null}
 
           <ul className="list-group list-group-flush">
             {links.map((link) => (
-              <li key={link.id} className="list-group-item d-flex justify-content-between align-items-center gap-2">
+              <li
+                key={link.id}
+                className="list-group-item d-flex justify-content-between align-items-center gap-2"
+              >
                 <div>
                   <strong>{link.title}</strong>
                   <div className="small text-muted">

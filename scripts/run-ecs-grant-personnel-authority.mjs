@@ -101,5 +101,7 @@ try {
 }
 
 console.log(logs);
-console.log(JSON.stringify({ taskArn, exitCode, apply: APPLY === "1", targetEmail: TARGET_EMAIL }, null, 2));
+console.log(
+  JSON.stringify({ taskArn, exitCode, apply: APPLY === "1", targetEmail: TARGET_EMAIL }, null, 2),
+);
 process.exit(exitCode === 0 ? 0 : 1);

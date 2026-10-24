@@ -21,11 +21,7 @@ export function SignInPanel({
     <div className="card creator-sign-in-panel">
       <div className="card-body">
         <h5 className="mb-2">{setup ? "Local development" : title}</h5>
-        <p className="text-muted mb-0">
-          {setup
-            ? friendlyAuthMessage(error ?? "")
-            : description}
-        </p>
+        <p className="text-muted mb-0">{setup ? friendlyAuthMessage(error ?? "") : description}</p>
         {setup ? (
           <p className="text-muted mb-0 mt-2">
             You can also open login options to use a dev principal when Cognito is not configured.

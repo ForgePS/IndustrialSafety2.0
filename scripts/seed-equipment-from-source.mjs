@@ -165,7 +165,8 @@ if (!adminArn) throw new Error("DATABASE_SECRET_ARN required");
 const sql = postgres(await resolveDatabaseUrl(adminArn), { max: 1 });
 
 try {
-  const tenant = await sql`select id::text as id from tenants where tenant_key = ${TENANT_KEY} limit 1`;
+  const tenant =
+    await sql`select id::text as id from tenants where tenant_key = ${TENANT_KEY} limit 1`;
   if (!tenant[0]) throw new Error(`tenant not found: ${TENANT_KEY}`);
   const tenantId = tenant[0].id;
 
@@ -202,12 +203,7 @@ try {
     if (filled(currentSiteId) && sitesById.has(String(currentSiteId))) {
       return String(currentSiteId);
     }
-    const candidates = [
-      payload.siteId,
-      payload.site_id,
-      payload.locationId,
-      payload.location_id,
-    ];
+    const candidates = [payload.siteId, payload.site_id, payload.locationId, payload.location_id];
     for (const candidate of candidates) {
       const text = asText(candidate);
       if (!text) continue;
@@ -215,7 +211,11 @@ try {
       const mapped = siteIdBySourceDoc.get(text);
       if (mapped) return mapped;
     }
-    const siteName = firstFilled(payload.site, payload.siteName, payload.locationName).toLowerCase();
+    const siteName = firstFilled(
+      payload.site,
+      payload.siteName,
+      payload.locationName,
+    ).toLowerCase();
     if (siteName && sitesByName.has(siteName)) return sitesByName.get(siteName);
     return filled(currentSiteId) ? String(currentSiteId) : null;
   }

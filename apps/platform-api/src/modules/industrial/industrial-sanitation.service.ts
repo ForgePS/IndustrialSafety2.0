@@ -955,8 +955,7 @@ const CLEANING_STATUSES = new Set([
 ]);
 
 /** Accept any UUID-shaped id (incl. Forge UUIDv7 and import deterministicTargetId hashes). */
-const UUID_RE =
-  /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 function asOptionalUuid(value: unknown): string | null {
   const raw = String(value ?? "").trim();
@@ -1102,10 +1101,18 @@ function avgScore(scores: Array<number | null | undefined>): number | null {
   return Math.round((vals.reduce((a, b) => a + b, 0) / vals.length) * 10) / 10;
 }
 
-function isPreopInspection(inspectionType: string | null | undefined, templateCategory?: string | null): boolean {
+function isPreopInspection(
+  inspectionType: string | null | undefined,
+  templateCategory?: string | null,
+): boolean {
   const type = String(inspectionType ?? "").toUpperCase();
   const cat = String(templateCategory ?? "").toUpperCase();
-  return type.includes("PREOP") || cat.includes("PREOP") || type.includes("PRE-OP") || cat.includes("PRE-OP");
+  return (
+    type.includes("PREOP") ||
+    cat.includes("PREOP") ||
+    type.includes("PRE-OP") ||
+    cat.includes("PRE-OP")
+  );
 }
 
 function locationSanitationStatus(input: {
@@ -1759,9 +1766,7 @@ export class IndustrialSanitationService {
     const thirtyDaysAgo = daysAgo(30);
 
     return withTenantTransaction(this.db, tenantId, async (tx) => {
-      const siteFilter = siteId
-        ? eq(industrialSanitationInspections.siteId, siteId)
-        : undefined;
+      const siteFilter = siteId ? eq(industrialSanitationInspections.siteId, siteId) : undefined;
 
       const [todayInspections] = await tx
         .select({ c: count() })
@@ -1796,10 +1801,7 @@ export class IndustrialSanitationService {
           and(
             eq(industrialSanitationInspections.tenantId, tenantId),
             isNull(industrialSanitationInspections.archivedAt),
-            inArray(industrialSanitationInspections.complianceStatus, [
-              "FAIL",
-              "CRITICAL_FAIL",
-            ]),
+            inArray(industrialSanitationInspections.complianceStatus, ["FAIL", "CRITICAL_FAIL"]),
             gte(industrialSanitationInspections.completedAt, todayStart),
             siteFilter,
           ),
@@ -2046,7 +2048,12 @@ export class IndustrialSanitationService {
 
       const areaAgg = new Map<
         string,
-        { locationId: string | null; locationName: string; findingCount: number; criticalCount: number }
+        {
+          locationId: string | null;
+          locationName: string;
+          findingCount: number;
+          criticalCount: number;
+        }
       >();
       for (const row of openFindingsForAreas) {
         const key = row.locationId ?? "none";
@@ -2113,9 +2120,7 @@ export class IndustrialSanitationService {
         const sites = await tx
           .select({ id: industrialSites.id, name: industrialSites.name })
           .from(industrialSites)
-          .where(
-            and(eq(industrialSites.tenantId, tenantId), isNull(industrialSites.archivedAt)),
-          )
+          .where(and(eq(industrialSites.tenantId, tenantId), isNull(industrialSites.archivedAt)))
           .limit(50);
         for (const site of sites) {
           const siteScores = await tx
@@ -2187,9 +2192,7 @@ export class IndustrialSanitationService {
               ),
             );
           const mssPct =
-            (mssA?.c ?? 0) === 0
-              ? 100
-              : Math.round(((mssO?.c ?? 0) / (mssA?.c ?? 1)) * 1000) / 10;
+            (mssA?.c ?? 0) === 0 ? 100 : Math.round(((mssO?.c ?? 0) / (mssA?.c ?? 1)) * 1000) / 10;
           multiSiteComparison.push({
             siteId: site.id,
             siteName: site.name,
@@ -2265,7 +2268,10 @@ export class IndustrialSanitationService {
         )
         .groupBy(industrialSanitationPestFindings.locationId);
 
-      const findingStats = new Map<string, { findingCount: number; criticalCount: number; majorCount: number }>();
+      const findingStats = new Map<
+        string,
+        { findingCount: number; criticalCount: number; majorCount: number }
+      >();
       for (const row of openFindingsByLoc) {
         if (!row.locationId) continue;
         const cur = findingStats.get(row.locationId) ?? {
@@ -2280,13 +2286,23 @@ export class IndustrialSanitationService {
         findingStats.set(row.locationId, cur);
       }
       const dustMap = new Map(
-        dustByLoc.filter((r) => r.locationId).map((r) => [r.locationId as string, Number(r.c ?? 0)]),
+        dustByLoc
+          .filter((r) => r.locationId)
+          .map((r) => [r.locationId as string, Number(r.c ?? 0)]),
       );
       const pestMap = new Map(
-        pestByLoc.filter((r) => r.locationId).map((r) => [r.locationId as string, Number(r.c ?? 0)]),
+        pestByLoc
+          .filter((r) => r.locationId)
+          .map((r) => [r.locationId as string, Number(r.c ?? 0)]),
       );
 
-      const heatMapSummary = { GOOD: 0, ATTENTION: 0, MAJOR: 0, CRITICAL: 0, total: heatLocations.length };
+      const heatMapSummary = {
+        GOOD: 0,
+        ATTENTION: 0,
+        MAJOR: 0,
+        CRITICAL: 0,
+        total: heatLocations.length,
+      };
       for (const loc of heatLocations) {
         const stats = findingStats.get(loc.id) ?? {
           findingCount: 0,
@@ -2381,7 +2397,11 @@ export class IndustrialSanitationService {
           patch.dustActionThresholdInches = Number(body.dustActionThresholdInches);
         }
         if (body.dustMeasurementUnit != null) {
-          patch.dustMeasurementUnit = asRequiredString(body.dustMeasurementUnit, "dustMeasurementUnit", 16);
+          patch.dustMeasurementUnit = asRequiredString(
+            body.dustMeasurementUnit,
+            "dustMeasurementUnit",
+            16,
+          );
         }
         if (body.priorityHousekeepingEnabled != null) {
           patch.priorityHousekeepingEnabled = asBool(body.priorityHousekeepingEnabled);
@@ -2391,7 +2411,9 @@ export class IndustrialSanitationService {
         }
         if (body.settings != null) {
           const previous =
-            existing.settings && typeof existing.settings === "object" && !Array.isArray(existing.settings)
+            existing.settings &&
+            typeof existing.settings === "object" &&
+            !Array.isArray(existing.settings)
               ? (existing.settings as Record<string, unknown>)
               : {};
           patch.settings = { ...previous, ...asJsonObject(body.settings) };
@@ -2417,9 +2439,7 @@ export class IndustrialSanitationService {
           facilityTypes: asJsonArray(body.facilityTypes),
           complianceFrameworks: asJsonArray(body.complianceFrameworks),
           dustActionThresholdInches:
-            body.dustActionThresholdInches != null
-              ? Number(body.dustActionThresholdInches)
-              : 0.125,
+            body.dustActionThresholdInches != null ? Number(body.dustActionThresholdInches) : 0.125,
           dustMeasurementUnit: asOptionalString(body.dustMeasurementUnit, 16) ?? "INCHES",
           priorityHousekeepingEnabled: asBool(body.priorityHousekeepingEnabled, false),
           independentVerificationRequired: asBool(body.independentVerificationRequired, true),
@@ -2505,7 +2525,8 @@ export class IndustrialSanitationService {
       if (body.siteId !== undefined) patch.siteId = asOptionalUuid(body.siteId);
       if (body.code !== undefined) patch.code = asOptionalString(body.code, 64);
       if (body.name != null) patch.name = asRequiredString(body.name, "name", 300);
-      if (body.description !== undefined) patch.description = asOptionalString(body.description, 4000);
+      if (body.description !== undefined)
+        patch.description = asOptionalString(body.description, 4000);
       if (body.sortOrder != null && Number.isFinite(Number(body.sortOrder))) {
         patch.sortOrder = Number(body.sortOrder);
       }
@@ -2578,9 +2599,7 @@ export class IndustrialSanitationService {
             isNull(industrialSanitationLocations.archivedAt),
             siteId ? eq(industrialSanitationLocations.siteId, siteId) : undefined,
             zoneId ? eq(industrialSanitationLocations.zoneId, zoneId) : undefined,
-            departmentId
-              ? eq(industrialSanitationLocations.departmentId, departmentId)
-              : undefined,
+            departmentId ? eq(industrialSanitationLocations.departmentId, departmentId) : undefined,
           ),
         )
         .orderBy(industrialSanitationLocations.name),
@@ -2667,10 +2686,12 @@ export class IndustrialSanitationService {
       }
       if (body.qrToken !== undefined) patch.qrToken = asOptionalString(body.qrToken, 120);
       if (body.mapX !== undefined) {
-        patch.mapX = body.mapX != null && Number.isFinite(Number(body.mapX)) ? Number(body.mapX) : null;
+        patch.mapX =
+          body.mapX != null && Number.isFinite(Number(body.mapX)) ? Number(body.mapX) : null;
       }
       if (body.mapY !== undefined) {
-        patch.mapY = body.mapY != null && Number.isFinite(Number(body.mapY)) ? Number(body.mapY) : null;
+        patch.mapY =
+          body.mapY != null && Number.isFinite(Number(body.mapY)) ? Number(body.mapY) : null;
       }
       if (body.status != null) patch.status = asRequiredString(body.status, "status", 64);
       if (body.metadata != null) patch.metadata = asJsonObject(body.metadata);
@@ -2753,9 +2774,7 @@ export class IndustrialSanitationService {
           ),
         );
       const byCode = new Map(
-        existing
-          .filter((r) => r.code && r.tenantId === tenantId)
-          .map((r) => [r.code as string, r]),
+        existing.filter((r) => r.code && r.tenantId === tenantId).map((r) => [r.code as string, r]),
       );
       let seeded = 0;
       let updated = 0;
@@ -2810,9 +2829,7 @@ export class IndustrialSanitationService {
         updated += 1;
       }
       if (seeded || updated) {
-        this.logger.log(
-          `Builtin sanitation templates: seeded=${seeded} updated=${updated}`,
-        );
+        this.logger.log(`Builtin sanitation templates: seeded=${seeded} updated=${updated}`);
       }
 
       const all = await tx
@@ -3043,9 +3060,7 @@ export class IndustrialSanitationService {
       if (!template) throw new ForgeError("NOT_FOUND", "Template not found");
 
       const inspectionNumber = await this.nextNumber(tx, tenantId, "INSPECTION", "SAN");
-      const title =
-        asOptionalString(body.title, 500) ??
-        `${template.name} — ${now.toISOString()}`;
+      const title = asOptionalString(body.title, 500) ?? `${template.name} — ${now.toISOString()}`;
 
       const [row] = await tx
         .insert(industrialSanitationInspections)
@@ -3123,11 +3138,7 @@ export class IndustrialSanitationService {
     });
   }
 
-  async completeInspection(
-    principal: ForgePrincipal,
-    id: string,
-    body: Record<string, unknown>,
-  ) {
+  async completeInspection(principal: ForgePrincipal, id: string, body: Record<string, unknown>) {
     const tenantId = this.tenant(principal);
     const inspectionId = asRequiredUuid(id, "id");
     const now = new Date();
@@ -3190,10 +3201,22 @@ export class IndustrialSanitationService {
         const result = String(resp.result ?? resp.answer ?? resp.status ?? "")
           .trim()
           .toUpperCase();
-        if (!result || result === "PASS" || result === "YES" || result === "NA" || result === "N/A") {
+        if (
+          !result ||
+          result === "PASS" ||
+          result === "YES" ||
+          result === "NA" ||
+          result === "N/A"
+        ) {
           continue;
         }
-        if (result !== "FAIL" && result !== "NO" && result !== "MINOR" && result !== "MAJOR" && result !== "CRITICAL") {
+        if (
+          result !== "FAIL" &&
+          result !== "NO" &&
+          result !== "MINOR" &&
+          result !== "MAJOR" &&
+          result !== "CRITICAL"
+        ) {
           continue;
         }
 
@@ -3374,7 +3397,12 @@ export class IndustrialSanitationService {
 
   private async sendCompletedInspectionReportEmail(
     principal: ForgePrincipal,
-    completed: { id: string; siteId?: string | null; title?: string | null; inspectionNumber?: string | null },
+    completed: {
+      id: string;
+      siteId?: string | null;
+      title?: string | null;
+      inspectionNumber?: string | null;
+    },
   ) {
     const tenantId = this.tenant(principal);
     const to = await this.resolveCompletedReportEmail(tenantId, completed.siteId);
@@ -3382,8 +3410,9 @@ export class IndustrialSanitationService {
 
     const printable = await this.getInspectionPrintable(principal, completed.id);
     const title =
-      String(printable.title ?? completed.title ?? completed.inspectionNumber ?? "Sanitation inspection").trim() ||
-      "Sanitation inspection";
+      String(
+        printable.title ?? completed.title ?? completed.inspectionNumber ?? "Sanitation inspection",
+      ).trim() || "Sanitation inspection";
     const subject = `Sanitation report completed: ${title}`;
     const textBody = [
       `A sanitation inspection was completed.`,
@@ -3423,10 +3452,7 @@ export class IndustrialSanitationService {
       if (!existing) throw new ForgeError("NOT_FOUND", "Inspection not found");
       const status = String(existing.status ?? "").toUpperCase();
       if (status === "COMPLETED" || existing.completedAt) {
-        throw new ForgeError(
-          "VALIDATION_FAILED",
-          "Completed inspections cannot be deleted",
-        );
+        throw new ForgeError("VALIDATION_FAILED", "Completed inspections cannot be deleted");
       }
       const [row] = await tx
         .update(industrialSanitationInspections)
@@ -3463,9 +3489,7 @@ export class IndustrialSanitationService {
             status ? eq(industrialSanitationFindings.status, status) : undefined,
             siteId ? eq(industrialSanitationFindings.siteId, siteId) : undefined,
             severity ? eq(industrialSanitationFindings.severity, severity) : undefined,
-            inspectionId
-              ? eq(industrialSanitationFindings.inspectionId, inspectionId)
-              : undefined,
+            inspectionId ? eq(industrialSanitationFindings.inspectionId, inspectionId) : undefined,
           ),
         )
         .orderBy(desc(industrialSanitationFindings.createdAt))
@@ -3535,11 +3559,7 @@ export class IndustrialSanitationService {
     });
   }
 
-  async updateFindingStatus(
-    principal: ForgePrincipal,
-    id: string,
-    body: Record<string, unknown>,
-  ) {
+  async updateFindingStatus(principal: ForgePrincipal, id: string, body: Record<string, unknown>) {
     const tenantId = this.tenant(principal);
     const findingId = asRequiredUuid(id, "id");
     const status = asRequiredString(body.status, "status", 64).toUpperCase();
@@ -3787,11 +3807,7 @@ export class IndustrialSanitationService {
           zoneId: asOptionalUuid(body.zoneId),
           equipmentId: asOptionalUuid(body.equipmentId),
           title: asRequiredString(body.title, "title", 500),
-          cleaningTask: asRequiredString(
-            body.cleaningTask ?? body.title,
-            "cleaningTask",
-            500,
-          ),
+          cleaningTask: asRequiredString(body.cleaningTask ?? body.title, "cleaningTask", 500),
           cleaningProcedure: asOptionalString(body.cleaningProcedure, 8000),
           frequency: asOptionalString(body.frequency, 64) ?? "DAILY",
           frequencyCustom: asOptionalString(body.frequencyCustom, 200),
@@ -3854,7 +3870,8 @@ export class IndustrialSanitationService {
       if (body.cleaningProcedure !== undefined) {
         patch.cleaningProcedure = asOptionalString(body.cleaningProcedure, 8000);
       }
-      if (body.frequency != null) patch.frequency = asRequiredString(body.frequency, "frequency", 64);
+      if (body.frequency != null)
+        patch.frequency = asRequiredString(body.frequency, "frequency", 64);
       if (body.nextDueAt !== undefined) patch.nextDueAt = asOptionalDate(body.nextDueAt);
       if (body.status != null) patch.status = asRequiredString(body.status, "status", 64);
       if (body.verificationRequired != null) {
@@ -4106,9 +4123,7 @@ export class IndustrialSanitationService {
         .limit(1);
       if (!existing) throw new ForgeError("NOT_FOUND", "Cleaning task not found");
 
-      const nextStatus = existing.verificationRequired
-        ? "AWAITING_VERIFICATION"
-        : "CLOSED";
+      const nextStatus = existing.verificationRequired ? "AWAITING_VERIFICATION" : "CLOSED";
 
       const [row] = await tx
         .update(industrialSanitationCleaningTasks)
@@ -4166,8 +4181,7 @@ export class IndustrialSanitationService {
         .limit(1);
       if (!task) throw new ForgeError("NOT_FOUND", "Cleaning task not found");
 
-      const verifiedByUserId =
-        asOptionalUuid(body.verifiedByUserId) ?? principal.userId ?? null;
+      const verifiedByUserId = asOptionalUuid(body.verifiedByUserId) ?? principal.userId ?? null;
 
       if (task.siteId) {
         const [profile] = await tx
@@ -4423,7 +4437,8 @@ export class IndustrialSanitationService {
       const patch: Partial<typeof industrialSanitationPestDevices.$inferInsert> = {
         updatedAt: now,
       };
-      if (body.deviceType != null) patch.deviceType = asRequiredString(body.deviceType, "deviceType", 64);
+      if (body.deviceType != null)
+        patch.deviceType = asRequiredString(body.deviceType, "deviceType", 64);
       if (body.pestType !== undefined) patch.pestType = asOptionalString(body.pestType, 64);
       if (body.status != null) patch.status = asRequiredString(body.status, "status", 64);
       if (body.locationId !== undefined) patch.locationId = asOptionalUuid(body.locationId);
@@ -4688,9 +4703,7 @@ export class IndustrialSanitationService {
           and(
             eq(industrialSanitationCompressedAirRequests.tenantId, tenantId),
             isNull(industrialSanitationCompressedAirRequests.archivedAt),
-            status
-              ? eq(industrialSanitationCompressedAirRequests.status, status)
-              : undefined,
+            status ? eq(industrialSanitationCompressedAirRequests.status, status) : undefined,
             siteId ? eq(industrialSanitationCompressedAirRequests.siteId, siteId) : undefined,
           ),
         )
@@ -4973,8 +4986,12 @@ export class IndustrialSanitationService {
         dustBuckets.push({ days, label: `Last ${days}d`, count: c, value: c });
       }
 
-      const mssCompletionTrend: Array<{ weekStart: string; percent: number; active: number; onTime: number }> =
-        [];
+      const mssCompletionTrend: Array<{
+        weekStart: string;
+        percent: number;
+        active: number;
+        onTime: number;
+      }> = [];
       for (let i = 7; i >= 0; i -= 1) {
         const weekEnd = new Date(startOfWeek(now));
         weekEnd.setDate(weekEnd.getDate() - i * 7 + 6);
@@ -5019,8 +5036,11 @@ export class IndustrialSanitationService {
         });
       }
 
-      const inspectionScoreTrend: Array<{ weekStart: string; avgScore: number | null; count: number }> =
-        [];
+      const inspectionScoreTrend: Array<{
+        weekStart: string;
+        avgScore: number | null;
+        count: number;
+      }> = [];
       for (let i = 11; i >= 0; i -= 1) {
         const weekStart = new Date(startOfWeek(now));
         weekStart.setDate(weekStart.getDate() - i * 7);
@@ -5070,8 +5090,7 @@ export class IndustrialSanitationService {
         );
       const totalV = Number(verifTotal?.c ?? 0);
       const failV = Number(verifFail?.c ?? 0);
-      const failedVerificationRate =
-        totalV === 0 ? null : Math.round((failV / totalV) * 1000) / 10;
+      const failedVerificationRate = totalV === 0 ? null : Math.round((failV / totalV) * 1000) / 10;
 
       const recurringByFlag = await tx
         .select()
@@ -5163,9 +5182,7 @@ export class IndustrialSanitationService {
         findingsByCategory: toCountRows(byCategory),
         findingsBySeverity: toCountRows(bySeverity),
         findingsByArea: toCountRows(byArea),
-        findingsByInspector: toCountRows(
-          byInspector.map((r) => ({ key: r.key, c: r.c })),
-        ),
+        findingsByInspector: toCountRows(byInspector.map((r) => ({ key: r.key, c: r.c }))),
         dustAccumulationTrend: dustBuckets,
         dustTrend: dustBuckets,
         mssCompletionTrend: mssCompletionTrend.map((w) => ({
@@ -5278,7 +5295,10 @@ export class IndustrialSanitationService {
           industrialSanitationPestFindings.deviceId,
         );
 
-      const findingStats = new Map<string, { findingCount: number; criticalCount: number; majorCount: number }>();
+      const findingStats = new Map<
+        string,
+        { findingCount: number; criticalCount: number; majorCount: number }
+      >();
       for (const row of openFindings) {
         if (!row.locationId) continue;
         const cur = findingStats.get(row.locationId) ?? {
@@ -5293,7 +5313,9 @@ export class IndustrialSanitationService {
         findingStats.set(row.locationId, cur);
       }
       const dustMap = new Map(
-        dustAlerts.filter((r) => r.locationId).map((r) => [r.locationId as string, Number(r.c ?? 0)]),
+        dustAlerts
+          .filter((r) => r.locationId)
+          .map((r) => [r.locationId as string, Number(r.c ?? 0)]),
       );
       const pestByLocation = new Map<string, number>();
       const pestByDevice = new Map<string, number>();
@@ -5544,7 +5566,7 @@ export class IndustrialSanitationService {
     const detail = await this.getInspection(principal, id);
     const inspection = detail as Record<string, unknown>;
     const findings = Array.isArray((detail as { findings?: unknown }).findings)
-      ? ((detail as { findings: Array<Record<string, unknown>> }).findings)
+      ? (detail as { findings: Array<Record<string, unknown>> }).findings
       : [];
     const title =
       String(inspection.title ?? inspection.inspectionNumber ?? "Sanitation inspection").trim() ||
@@ -5565,11 +5587,11 @@ export class IndustrialSanitationService {
         where id = ${tenantId}::uuid
         limit 1
       `);
-      const tenantRow = (Array.isArray(tenantRows)
-        ? tenantRows[0]
-        : (tenantRows as { rows?: Array<Record<string, unknown>> }).rows?.[0]) as
-        | Record<string, unknown>
-        | undefined;
+      const tenantRow = (
+        Array.isArray(tenantRows)
+          ? tenantRows[0]
+          : (tenantRows as { rows?: Array<Record<string, unknown>> }).rows?.[0]
+      ) as Record<string, unknown> | undefined;
       const brandingRows = await tx.execute(sql`
         select cv.payload_json as payload
         from config_objects co
@@ -5579,11 +5601,11 @@ export class IndustrialSanitationService {
           and co.object_key = 'default'
         limit 1
       `);
-      const brandingPayloadRaw = (Array.isArray(brandingRows)
-        ? brandingRows[0]
-        : (brandingRows as { rows?: Array<{ payload?: unknown }> }).rows?.[0]) as
-        | { payload?: unknown }
-        | undefined;
+      const brandingPayloadRaw = (
+        Array.isArray(brandingRows)
+          ? brandingRows[0]
+          : (brandingRows as { rows?: Array<{ payload?: unknown }> }).rows?.[0]
+      ) as { payload?: unknown } | undefined;
       const payload =
         brandingPayloadRaw?.payload && typeof brandingPayloadRaw.payload === "object"
           ? (brandingPayloadRaw.payload as Record<string, unknown>)
@@ -5591,10 +5613,7 @@ export class IndustrialSanitationService {
       const tenantKey = String(tenantRow?.tenant_key ?? "").trim();
       const companyName =
         String(
-          payload.productDisplayName ??
-            tenantRow?.display_name ??
-            tenantRow?.legal_name ??
-            "",
+          payload.productDisplayName ?? tenantRow?.display_name ?? tenantRow?.legal_name ?? "",
         ).trim() || null;
       const logoUrl =
         String(payload.logoUrl ?? payload.logo_url ?? "").trim() ||
@@ -5726,7 +5745,11 @@ export class IndustrialSanitationService {
         questions = sections.flatMap((s) =>
           (s.questions ?? [])
             .filter((q) => q && typeof q.id === "string")
-            .map((q) => ({ id: q.id, label: String(q.label ?? q.id), section: String(s.title ?? "") })),
+            .map((q) => ({
+              id: q.id,
+              label: String(q.label ?? q.id),
+              section: String(s.title ?? ""),
+            })),
         );
       }
 
@@ -5781,7 +5804,10 @@ export class IndustrialSanitationService {
       recipients.push({ personnelId, name, email });
     }
     if (!recipients.length) {
-      throw new ForgeError("VALIDATION_FAILED", "None of the selected people have an email address");
+      throw new ForgeError(
+        "VALIDATION_FAILED",
+        "None of the selected people have an email address",
+      );
     }
 
     const branding = await this.loadReportBranding(tenantId);
@@ -5814,7 +5840,9 @@ export class IndustrialSanitationService {
       String(detail.title ?? detail.inspectionNumber ?? "Sanitation inspection").trim() ||
       "Sanitation inspection";
     const number = String(detail.inspectionNumber ?? "").trim();
-    const compliance = String(detail.complianceStatus ?? "").replace(/_/g, " ").trim();
+    const compliance = String(detail.complianceStatus ?? "")
+      .replace(/_/g, " ")
+      .trim();
     const score =
       detail.scorePercent != null && Number.isFinite(Number(detail.scorePercent))
         ? `${Math.round(Number(detail.scorePercent))}%`
@@ -5829,7 +5857,10 @@ export class IndustrialSanitationService {
     ];
     const factHtml = facts
       .filter(([, v]) => v)
-      .map(([k, v]) => `<li><strong>${escapeSanitationHtml(k)}:</strong> ${escapeSanitationHtml(v)}</li>`)
+      .map(
+        ([k, v]) =>
+          `<li><strong>${escapeSanitationHtml(k)}:</strong> ${escapeSanitationHtml(v)}</li>`,
+      )
       .join("");
     const noteHtml = note
       ? `<p style="white-space:pre-wrap;border-left:3px solid #d1d5db;padding-left:10px">${escapeSanitationHtml(note)}</p>`
@@ -6289,13 +6320,7 @@ export class IndustrialSanitationService {
             )
             .orderBy(desc(industrialSanitationPestFindings.observedAt))
             .limit(2000);
-          const headers = [
-            "pestCategory",
-            "pestSpecies",
-            "activityLevel",
-            "status",
-            "observedAt",
-          ];
+          const headers = ["pestCategory", "pestSpecies", "activityLevel", "status", "observedAt"];
           return {
             csv: rowsToCsv(
               headers,
@@ -6488,8 +6513,16 @@ export class IndustrialSanitationService {
           : null,
         actions: [
           { id: "start_inspection", label: "Start Inspection", href: "/sanitation/?mode=inspect" },
-          { id: "complete_cleaning", label: "Complete Cleaning", href: "/sanitation/?mode=cleaning" },
-          { id: "report_issue", label: "Report Sanitation Issue", href: "/sanitation/?mode=concern" },
+          {
+            id: "complete_cleaning",
+            label: "Complete Cleaning",
+            href: "/sanitation/?mode=cleaning",
+          },
+          {
+            id: "report_issue",
+            label: "Report Sanitation Issue",
+            href: "/sanitation/?mode=concern",
+          },
           { id: "dust_measurement", label: "Dust Measurement", href: "/sanitation/?mode=dust" },
         ],
       };
@@ -6532,7 +6565,11 @@ export class IndustrialSanitationService {
         recentFindings: findings.map(mapPestFinding),
         actions: [
           { id: "record_finding", label: "Record Pest Finding", href: "/sanitation/?mode=concern" },
-          { id: "start_pest_inspection", label: "Start Pest Inspection", href: "/sanitation/?mode=inspect" },
+          {
+            id: "start_pest_inspection",
+            label: "Start Pest Inspection",
+            href: "/sanitation/?mode=inspect",
+          },
         ],
       };
     });
@@ -6569,7 +6606,9 @@ export class IndustrialSanitationService {
     });
 
     return {
-      items: [...refs].sort((a, b) => a.localeCompare(b)).map((regulationRef) => ({ regulationRef })),
+      items: [...refs]
+        .sort((a, b) => a.localeCompare(b))
+        .map((regulationRef) => ({ regulationRef })),
     };
   }
 
@@ -6588,26 +6627,32 @@ export class IndustrialSanitationService {
     const tenantId = this.tenant(principal);
     const disabledTabs = this.normalizeDisabledTabs(body.disabledTabs);
 
-    return withTenantTransaction(this.db, tenantId, async (tx) => {
-      const current = await this.getOrCreateUiSettings(tx, tenantId, principal.userId);
-      const now = new Date();
-      await tx
-        .update(industrialSanitationUiSettings)
-        .set({
-          disabledTabs,
-          updatedByUserId: principal.userId,
-          updatedAt: now,
-        })
-        .where(eq(industrialSanitationUiSettings.id, current.id));
+    return withTenantTransaction(
+      this.db,
+      tenantId,
+      async (tx) => {
+        const current = await this.getOrCreateUiSettings(tx, tenantId, principal.userId);
+        const now = new Date();
+        await tx
+          .update(industrialSanitationUiSettings)
+          .set({
+            disabledTabs,
+            updatedByUserId: principal.userId,
+            updatedAt: now,
+          })
+          .where(eq(industrialSanitationUiSettings.id, current.id));
 
-      const [updated] = await tx
-        .select()
-        .from(industrialSanitationUiSettings)
-        .where(eq(industrialSanitationUiSettings.id, current.id))
-        .limit(1);
-      if (!updated) throw new ForgeError("INTERNAL_ERROR", "Failed to update sanitation UI settings");
-      return this.mapUiSettings(updated);
-    }, principal.userId);
+        const [updated] = await tx
+          .select()
+          .from(industrialSanitationUiSettings)
+          .where(eq(industrialSanitationUiSettings.id, current.id))
+          .limit(1);
+        if (!updated)
+          throw new ForgeError("INTERNAL_ERROR", "Failed to update sanitation UI settings");
+        return this.mapUiSettings(updated);
+      },
+      principal.userId,
+    );
   }
 
   private assertCanManageSanitationSubmodules(principal: ForgePrincipal) {
@@ -6660,11 +6705,7 @@ export class IndustrialSanitationService {
     };
   }
 
-  private async getOrCreateUiSettings(
-    tx: DatabaseTransaction,
-    tenantId: string,
-    userId: string,
-  ) {
+  private async getOrCreateUiSettings(tx: DatabaseTransaction, tenantId: string, userId: string) {
     const [existing] = await tx
       .select()
       .from(industrialSanitationUiSettings)

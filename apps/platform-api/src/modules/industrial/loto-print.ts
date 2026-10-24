@@ -26,9 +26,7 @@ export function plainLotoPrintText(value: unknown): string {
 function isDisplayableImage(url: unknown): boolean {
   const value = plainLotoPrintText(url);
   return (
-    value.startsWith("data:image/") ||
-    value.startsWith("https://") ||
-    value.startsWith("http://")
+    value.startsWith("data:image/") || value.startsWith("https://") || value.startsWith("http://")
   );
 }
 
@@ -46,7 +44,10 @@ export function loadProducersLotoSheetDataUrl(): string | null {
   const candidates = [
     path.join(here, "../../../assets/branding/producers-loto-procedure-sheet.png"),
     path.join(process.cwd(), "assets/branding/producers-loto-procedure-sheet.png"),
-    path.join(process.cwd(), "apps/platform-api/assets/branding/producers-loto-procedure-sheet.png"),
+    path.join(
+      process.cwd(),
+      "apps/platform-api/assets/branding/producers-loto-procedure-sheet.png",
+    ),
   ];
   for (const candidate of candidates) {
     if (!existsSync(candidate)) continue;
@@ -104,8 +105,7 @@ export const LOTO_DEFAULT_SHUTDOWN_SEQUENCE: LotoSequenceStep[] = [
   },
   {
     step: "Lockout Energy",
-    description:
-      "Lock out the energy isolating device(s) with assigned individual lock(s).",
+    description: "Lock out the energy isolating device(s) with assigned individual lock(s).",
   },
   {
     step: "Dissipate Energy",
@@ -115,7 +115,7 @@ export const LOTO_DEFAULT_SHUTDOWN_SEQUENCE: LotoSequenceStep[] = [
   {
     step: "Attempt Restart",
     description:
-      "Ensure that the equipment is disconnected from the energy source(s) by first checking that no personnel are exposed, then verify the isolation of the equipment by operating the push button or other normal operating control(s) or by testing to make certain the equipment will not operate. Caution: Return operating control(s) to neutral or \"off\" position after verifying the isolation of the equipment.",
+      'Ensure that the equipment is disconnected from the energy source(s) by first checking that no personnel are exposed, then verify the isolation of the equipment by operating the push button or other normal operating control(s) or by testing to make certain the equipment will not operate. Caution: Return operating control(s) to neutral or "off" position after verifying the isolation of the equipment.',
   },
 ];
 
@@ -132,8 +132,7 @@ export const LOTO_DEFAULT_RESTORE_SEQUENCE: LotoSequenceStep[] = [
   },
   {
     step: "Verify Machine",
-    description:
-      "Verify that the controls are in neutral.",
+    description: "Verify that the controls are in neutral.",
   },
   {
     step: "Remove Lockout",
@@ -160,7 +159,8 @@ function normalizeSequence(raw: unknown, fallback: LotoSequenceStep[]): LotoSequ
   const rows: LotoSequenceStep[] = [];
   for (const item of raw) {
     const row = asRecord(item);
-    const step = plainLotoPrintText(row.step) || plainLotoPrintText(row.title) || plainLotoPrintText(row.name);
+    const step =
+      plainLotoPrintText(row.step) || plainLotoPrintText(row.title) || plainLotoPrintText(row.name);
     const description =
       plainLotoPrintText(row.description) ||
       plainLotoPrintText(row.text) ||
@@ -214,8 +214,7 @@ export function normalizeLotoPrintArrows(raw: unknown): LotoPrintArrow[] {
     const dx = x2 - x1;
     const dy = y2 - y1;
     if (dx * dx + dy * dy < 0.00005) continue;
-    const id =
-      typeof row.id === "string" && row.id.trim() ? row.id.trim() : `arrow-${index}`;
+    const id = typeof row.id === "string" && row.id.trim() ? row.id.trim() : `arrow-${index}`;
     arrows.push({
       id,
       x1: clampUnit(x1),
@@ -420,9 +419,7 @@ export function buildLotoPrintableHtml(input: LotoPrintableInput): string {
   const siteName =
     plainLotoPrintText(detail.siteName) || plainLotoPrintText(procedure.siteName) || "";
   const departmentName =
-    plainLotoPrintText(detail.departmentName) ||
-    plainLotoPrintText(procedure.departmentName) ||
-    "";
+    plainLotoPrintText(detail.departmentName) || plainLotoPrintText(procedure.departmentName) || "";
   const areaName =
     plainLotoPrintText(detail.areaName) || plainLotoPrintText(procedure.areaName) || "";
   const facility = [siteName, departmentName].filter(Boolean).join(" — ") || siteName || "—";
@@ -432,10 +429,7 @@ export function buildLotoPrintableHtml(input: LotoPrintableInput): string {
     formatDate(procedure.createdAt) ||
     formatDate(detail.effectiveAt) ||
     "";
-  const revised =
-    formatDate(detail.updatedAt) ||
-    formatDate(procedure.updatedAt) ||
-    created;
+  const revised = formatDate(detail.updatedAt) || formatDate(procedure.updatedAt) || created;
   const noteText =
     normalizeNotes(detail.notes) ||
     normalizeNotes(procedure.notes) ||
@@ -478,8 +472,7 @@ export function buildLotoPrintableHtml(input: LotoPrintableInput): string {
   );
 
   const sheetUrl =
-    plainLotoPrintText(input.sheetBackgroundUrl) ||
-    resolveLotoSheetBackgroundUrl(input.appBaseUrl);
+    plainLotoPrintText(input.sheetBackgroundUrl) || resolveLotoSheetBackgroundUrl(input.appBaseUrl);
   const qrImageDataUrl = isDisplayableImage(input.qrImageDataUrl)
     ? plainLotoPrintText(input.qrImageDataUrl)
     : "";
@@ -540,7 +533,10 @@ export function buildLotoPrintableHtml(input: LotoPrintableInput): string {
       const detailMarker = `Detail: ${customDescription}`;
       const idx = action.toLowerCase().indexOf(detailMarker.toLowerCase());
       if (idx >= 0) {
-        const before = action.slice(0, idx).replace(/\s*[—-]\s*$/, "").trim();
+        const before = action
+          .slice(0, idx)
+          .replace(/\s*[—-]\s*$/, "")
+          .trim();
         const after = action
           .slice(idx + detailMarker.length)
           .replace(/^\s*[—-]\s*/, "")
@@ -559,11 +555,7 @@ export function buildLotoPrintableHtml(input: LotoPrintableInput): string {
         plainLotoPrintText(payload.stepImageStorageKey),
       annotations: payload.stepImageAnnotations ?? row.stepImageAnnotations,
     });
-    const infoCell = annotatedPhotosHtml(
-      stepPhotos,
-      `Lockout point ${stepNumber}`,
-      "info-photo",
-    );
+    const infoCell = annotatedPhotosHtml(stepPhotos, `Lockout point ${stepNumber}`, "info-photo");
     return `<tr>
         <td class="step-num" style="background:${colors.bg};color:${colors.fg};">
           <div class="step-line">${stepNumber} ${escapeLotoHtml(energyType)}</div>

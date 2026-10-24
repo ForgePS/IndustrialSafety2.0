@@ -13,10 +13,7 @@ import {
   writeDashboardLayout,
 } from "@/lib/dashboard-layout";
 
-export function useDashboardLayout(
-  permissions: readonly string[],
-  opts?: DashboardCardOpts,
-) {
+export function useDashboardLayout(permissions: readonly string[], opts?: DashboardCardOpts) {
   const [pinnedIds, setPinnedIds] = useState<string[]>([]);
   const [ready, setReady] = useState(false);
 

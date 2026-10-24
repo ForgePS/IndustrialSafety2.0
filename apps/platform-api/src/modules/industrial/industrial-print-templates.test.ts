@@ -16,9 +16,9 @@ describe("print template helpers", () => {
         "employee.first_name": "Ada",
       }),
     ).toBe("Hello Ada ()");
-    expect(
-      substituteTemplateVariables("Keep {{unknown}}", {}, { keepUnknown: true }),
-    ).toBe("Keep {{unknown}}");
+    expect(substituteTemplateVariables("Keep {{unknown}}", {}, { keepUnknown: true })).toBe(
+      "Keep {{unknown}}",
+    );
   });
 
   it("extracts variable keys and merges required field defaults", () => {

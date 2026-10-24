@@ -1,8 +1,4 @@
-import {
-  DeleteMessageCommand,
-  ReceiveMessageCommand,
-  SQSClient,
-} from "@aws-sdk/client-sqs";
+import { DeleteMessageCommand, ReceiveMessageCommand, SQSClient } from "@aws-sdk/client-sqs";
 import { createLogger } from "@forge/observability";
 import { processCadIntakeJob, type CadIntakeJob } from "./cad-intake-processor.js";
 
@@ -43,7 +39,9 @@ export class CadIntakeSqsConsumer {
       try {
         const job = JSON.parse(message.Body) as CadIntakeJob;
         if (job.type !== "cad.intake.normalize.v1") {
-          this.logger.warn("unknown cad intake job type", { type: (job as { type?: string }).type });
+          this.logger.warn("unknown cad intake job type", {
+            type: (job as { type?: string }).type,
+          });
           await this.client.send(
             new DeleteMessageCommand({
               QueueUrl: this.props.queueUrl,

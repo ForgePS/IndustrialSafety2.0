@@ -56,7 +56,11 @@ async function main(): Promise<void> {
   const now = new Date();
 
   const platformTenantKey = "forge-platform";
-  let [tenant] = await db.select().from(tenants).where(eq(tenants.tenantKey, platformTenantKey)).limit(1);
+  let [tenant] = await db
+    .select()
+    .from(tenants)
+    .where(eq(tenants.tenantKey, platformTenantKey))
+    .limit(1);
   if (!tenant) {
     const tenantId = createId();
     await db.insert(tenants).values({

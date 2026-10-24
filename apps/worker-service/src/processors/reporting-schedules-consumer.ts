@@ -1,8 +1,4 @@
-import {
-  DeleteMessageCommand,
-  ReceiveMessageCommand,
-  SQSClient,
-} from "@aws-sdk/client-sqs";
+import { DeleteMessageCommand, ReceiveMessageCommand, SQSClient } from "@aws-sdk/client-sqs";
 import { createLogger } from "@forge/observability";
 import {
   processReportingSchedulesRunDue,

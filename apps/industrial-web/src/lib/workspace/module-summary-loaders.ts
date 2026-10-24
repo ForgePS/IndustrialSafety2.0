@@ -4,13 +4,13 @@
  */
 
 import { apiGet } from "@forge/web-kit";
-import {
-  listApprovalsQueue,
-  listMyPendingAcks,
-  listOverdueReviews,
-} from "@/lib/document-control";
+import { listApprovalsQueue, listMyPendingAcks, listOverdueReviews } from "@/lib/document-control";
 
-export type ModuleSummaryStat = { label: string; value: number; tone?: "danger" | "warning" | "muted" };
+export type ModuleSummaryStat = {
+  label: string;
+  value: number;
+  tone?: "danger" | "warning" | "muted";
+};
 
 export type ModuleSummaryRow = {
   id: string;
@@ -88,8 +88,7 @@ export async function loadInspectionsSummary(view: string): Promise<ModuleSummar
   });
   const open = items.filter((row) => statusOpen(String(row.status ?? "")));
   const due = items.filter((row) => String(row.status ?? "").toUpperCase() === "DUE");
-  const list =
-    view === "due" ? due : view === "all" ? items : open;
+  const list = view === "due" ? due : view === "all" ? items : open;
 
   return {
     caption:
@@ -137,12 +136,7 @@ export async function loadTrainingSummary(view: string): Promise<ModuleSummaryPa
   });
   const dueSoon = incomplete.filter((row) => isDueSoon(row.dueAt));
   const overdue = incomplete.filter((row) => isOverdueDate(row.dueAt));
-  const list =
-    view === "due-soon"
-      ? dueSoon
-      : view === "overdue"
-        ? overdue
-        : incomplete;
+  const list = view === "due-soon" ? dueSoon : view === "overdue" ? overdue : incomplete;
 
   return {
     caption:
@@ -162,7 +156,9 @@ export async function loadTrainingSummary(view: string): Promise<ModuleSummaryPa
       summaryRow({
         id: row.id,
         title: row.title || "Training assignment",
-        meta: row.dueAt ? `Due ${new Date(row.dueAt).toLocaleDateString()}` : String(row.status ?? ""),
+        meta: row.dueAt
+          ? `Due ${new Date(row.dueAt).toLocaleDateString()}`
+          : String(row.status ?? ""),
         href: "/modules/training",
         badge: isOverdueDate(row.dueAt) ? "Overdue" : isDueSoon(row.dueAt) ? "Due soon" : undefined,
         tone: isOverdueDate(row.dueAt) ? "danger" : isDueSoon(row.dueAt) ? "warning" : undefined,
@@ -306,7 +302,9 @@ export async function loadMessagingSummary(view: string): Promise<ModuleSummaryP
       summaryRow({
         id: row.id,
         title: row.title || "Thread",
-        meta: row.lastMessagePreview || (row.lastMessageAt ? new Date(row.lastMessageAt).toLocaleString() : ""),
+        meta:
+          row.lastMessagePreview ||
+          (row.lastMessageAt ? new Date(row.lastMessageAt).toLocaleString() : ""),
         href: "/modules/messaging",
         badge: (row.unreadCount ?? 0) > 0 ? `${row.unreadCount} new` : undefined,
         tone: (row.unreadCount ?? 0) > 0 ? "warning" : undefined,
@@ -380,8 +378,16 @@ export async function loadSafetySuppliesSummary(view: string): Promise<ModuleSum
           ? `${dash.pendingRequests} pending requests`
           : "Supplies look healthy",
     stats: [
-      { label: "Low stock", value: dash.lowStockItems, tone: dash.lowStockItems ? "warning" : "muted" },
-      { label: "Out", value: dash.outOfStockItems, tone: dash.outOfStockItems ? "danger" : "muted" },
+      {
+        label: "Low stock",
+        value: dash.lowStockItems,
+        tone: dash.lowStockItems ? "warning" : "muted",
+      },
+      {
+        label: "Out",
+        value: dash.outOfStockItems,
+        tone: dash.outOfStockItems ? "danger" : "muted",
+      },
       { label: "Requests", value: dash.pendingRequests },
     ],
     rows,
@@ -422,7 +428,10 @@ export async function loadCorrectiveActionsSummary(view: string): Promise<Module
       summaryRow({
         id: row.id,
         title: row.title || "Corrective action",
-        meta: [row.priority, row.dueDate ? `Due ${new Date(row.dueDate).toLocaleDateString()}` : null]
+        meta: [
+          row.priority,
+          row.dueDate ? `Due ${new Date(row.dueDate).toLocaleDateString()}` : null,
+        ]
           .filter(Boolean)
           .join(" · "),
         href: "/modules/inspections",

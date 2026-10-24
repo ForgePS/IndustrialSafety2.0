@@ -16,11 +16,7 @@ export {
   demoPhone,
   type DemoSeedPlan,
 } from "./demo-seed-plan.js";
-export {
-  alterRolePassword,
-  ensureAppLoginRole,
-  redactCredentialError,
-} from "./safe-admin.js";
+export { alterRolePassword, ensureAppLoginRole, redactCredentialError } from "./safe-admin.js";
 
 export type Database = ReturnType<typeof createDatabase>;
 

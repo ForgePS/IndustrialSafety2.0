@@ -23,13 +23,8 @@ import {
   openForm301PdfForPrint,
 } from "@/lib/osha-form-301-pdf";
 import { incidentOshaForm301Api, OSHA_API, toOshaCase } from "@/lib/osha-module";
-import {
-  bodyLocationSummaryLabel,
-} from "@/lib/incident-body-map";
-import {
-  canDeleteIncidents,
-  type SignatoryRoleRef,
-} from "@/lib/form-signatory";
+import { bodyLocationSummaryLabel } from "@/lib/incident-body-map";
+import { canDeleteIncidents, type SignatoryRoleRef } from "@/lib/form-signatory";
 import {
   buildIncidentCreatePayload,
   buildIncidentUpdatePayload,
@@ -209,23 +204,26 @@ export function IncidentsWorkspace({ moduleName }: { moduleName: string }) {
     setSummary(toIncidentSummary(data));
   }, []);
 
-  const loadRecords = useCallback(async (category?: IncidentCategory) => {
-    const all: unknown[] = [];
-    for (let page = 1; page <= MAX_PAGES; page += 1) {
-      const result = await apiGetResult<ListResponse>("/api/v1/industrial/incidents", {
-        query: {
-          ...(category ? { category } : {}),
-          page: String(page),
-          pageSize: String(FETCH_SIZE),
-          ...facilityQuery,
-        },
-      });
-      const items = Array.isArray(result.data.items) ? result.data.items : [];
-      all.push(...items);
-      if (items.length < FETCH_SIZE) break;
-    }
-    setRecords(toIncidentRecords(all));
-  }, [facilityQuery]);
+  const loadRecords = useCallback(
+    async (category?: IncidentCategory) => {
+      const all: unknown[] = [];
+      for (let page = 1; page <= MAX_PAGES; page += 1) {
+        const result = await apiGetResult<ListResponse>("/api/v1/industrial/incidents", {
+          query: {
+            ...(category ? { category } : {}),
+            page: String(page),
+            pageSize: String(FETCH_SIZE),
+            ...facilityQuery,
+          },
+        });
+        const items = Array.isArray(result.data.items) ? result.data.items : [];
+        all.push(...items);
+        if (items.length < FETCH_SIZE) break;
+      }
+      setRecords(toIncidentRecords(all));
+    },
+    [facilityQuery],
+  );
 
   const reload = useCallback(async () => {
     setLoading(true);
@@ -281,7 +279,9 @@ export function IncidentsWorkspace({ moduleName }: { moduleName: string }) {
   }
 
   function syncIncidentUrl(incidentId: string | null, nextTab: IncidentWorkspaceTab = tab) {
-    router.replace(incidentWorkspaceHref(nextTab, incidentUrlExtras(incidentId)), { scroll: false });
+    router.replace(incidentWorkspaceHref(nextTab, incidentUrlExtras(incidentId)), {
+      scroll: false,
+    });
   }
 
   function openIncidentReport(record: IncidentRecord) {
@@ -339,9 +339,7 @@ export function IncidentsWorkspace({ moduleName }: { moduleName: string }) {
             role="button"
             tabIndex={0}
             onClick={() =>
-              selectedIncidentId === record.id
-                ? closeIncidentReport()
-                : openIncidentReport(record)
+              selectedIncidentId === record.id ? closeIncidentReport() : openIncidentReport(record)
             }
             onKeyDown={(ev) => {
               if (ev.key === "Enter" || ev.key === " ") {
@@ -386,11 +384,7 @@ export function IncidentsWorkspace({ moduleName }: { moduleName: string }) {
     setDeleting(true);
     setError(null);
     try {
-      await apiSend(
-        `${INCIDENTS_API}/${encodeURIComponent(record.id)}/archive`,
-        "POST",
-        {},
-      );
+      await apiSend(`${INCIDENTS_API}/${encodeURIComponent(record.id)}/archive`, "POST", {});
       setEditingReport(false);
       setFormError(null);
       syncIncidentUrl(null);
@@ -463,13 +457,22 @@ export function IncidentsWorkspace({ moduleName }: { moduleName: string }) {
       const warn = openForm301PdfForPrint(pdfBytes, `osha-form-301-${label}.pdf`);
       if (warn) setError(warn);
     } catch (e) {
-      setError(e instanceof ApiError ? e.message : e instanceof Error ? e.message : "Failed to print OSHA Form 301");
+      setError(
+        e instanceof ApiError
+          ? e.message
+          : e instanceof Error
+            ? e.message
+            : "Failed to print OSHA Form 301",
+      );
     } finally {
       setPrintingOsha301(false);
     }
   }
 
-  function applyIncidentAttachments(incidentId: string, attachments: IncidentRecord["attachments"]) {
+  function applyIncidentAttachments(
+    incidentId: string,
+    attachments: IncidentRecord["attachments"],
+  ) {
     setRecords((prev) =>
       prev.map((row) => (row.id === incidentId ? { ...row, attachments } : row)),
     );
@@ -803,9 +806,7 @@ export function IncidentsWorkspace({ moduleName }: { moduleName: string }) {
       }
       setEmbeddedOshaCaseId(caseId);
     } catch (e) {
-      setFormError(
-        e instanceof ApiError ? e.message : "Failed to save incident and open OSHA",
-      );
+      setFormError(e instanceof ApiError ? e.message : "Failed to save incident and open OSHA");
     } finally {
       setSaving(false);
     }
@@ -890,7 +891,11 @@ export function IncidentsWorkspace({ moduleName }: { moduleName: string }) {
         </ul>
 
         <div className="tab-content">
-          <div className="tab-pane fade show active" role="tabpanel" aria-label={incidentTabLabel(tab)}>
+          <div
+            className="tab-pane fade show active"
+            role="tabpanel"
+            aria-label={incidentTabLabel(tab)}
+          >
             <div className="d-flex flex-wrap justify-content-between align-items-start gap-3 mb-4">
               <div className="min-w-0">
                 <h5 className="mb-1">{incidentTabLabel(tab)}</h5>
@@ -997,7 +1002,10 @@ export function IncidentsWorkspace({ moduleName }: { moduleName: string }) {
             ) : null}
 
             {error ? (
-              <div className="alert alert-danger d-flex flex-wrap align-items-center gap-3" role="alert">
+              <div
+                className="alert alert-danger d-flex flex-wrap align-items-center gap-3"
+                role="alert"
+              >
                 <span className="flex-grow-1">{error}</span>
                 <button
                   type="button"
@@ -1097,9 +1105,7 @@ export function IncidentsWorkspace({ moduleName }: { moduleName: string }) {
                     ),
                   );
                   setSelectedReport((prev) =>
-                    prev && prev.id === selectedReport.id
-                      ? { ...prev, oshaCaseId: caseId }
-                      : prev,
+                    prev && prev.id === selectedReport.id ? { ...prev, oshaCaseId: caseId } : prev,
                   );
                 }}
               />
@@ -1128,8 +1134,7 @@ export function IncidentsWorkspace({ moduleName }: { moduleName: string }) {
                     openingWc={saving}
                     onOpenWorkersComp={() => void openWorkersCompCase(selectedReport)}
                     canManageOsha={
-                      canManageOsha ||
-                      (canViewOsha && Boolean(selectedReport.oshaCaseId.trim()))
+                      canManageOsha || (canViewOsha && Boolean(selectedReport.oshaCaseId.trim()))
                     }
                     openingOsha={saving}
                     onOpenOsha={() => void openOshaCase(selectedReport)}
@@ -1144,45 +1149,47 @@ export function IncidentsWorkspace({ moduleName }: { moduleName: string }) {
                   />
                 ) : null}
                 {tab === "incident-workflow" ? (
-                <IncidentsWorkflowPanel
-                  incidents={records}
-                  canManage={canManage}
-                  onSave={(incidentId, lifecycle) => patchIncident(incidentId, { lifecycle })}
-                />
-              ) : tab === "evaluation-checklist" ? (
-                <IncidentsEvaluationPanel
-                  incidents={records}
-                  canManage={canManage}
-                  onSave={(incidentId, checklist) =>
-                    patchIncident(incidentId, { evaluationChecklist: checklist })
-                  }
-                />
-              ) : tab === "body-map" ? (
-                <IncidentsBodyMapPanel
-                  incidents={records}
-                  initialRegionId={searchParams.get("region")}
-                  selectedId={selectedIncidentId}
-                  onSelectedIdChange={(id) => {
-                    if (!id) {
-                      closeIncidentReport();
-                      return;
+                  <IncidentsWorkflowPanel
+                    incidents={records}
+                    canManage={canManage}
+                    onSave={(incidentId, lifecycle) => patchIncident(incidentId, { lifecycle })}
+                  />
+                ) : tab === "evaluation-checklist" ? (
+                  <IncidentsEvaluationPanel
+                    incidents={records}
+                    canManage={canManage}
+                    onSave={(incidentId, checklist) =>
+                      patchIncident(incidentId, { evaluationChecklist: checklist })
                     }
-                    const record = records.find((row) => row.id === id);
-                    if (record) openIncidentReport(record);
-                    else syncIncidentUrl(id);
-                  }}
-                  canManage={canManage}
-                  onSaveLocations={(incidentId, locations) =>
-                    patchIncident(incidentId, { bodyLocations: locations })
-                  }
-                />
-              ) : (
-                <IncidentsRcaPanel
-                  incidents={records}
-                  canManage={canManage}
-                  onSave={(incidentId, rca) => patchIncident(incidentId, { rootCauseAnalysis: rca })}
-                />
-              )}
+                  />
+                ) : tab === "body-map" ? (
+                  <IncidentsBodyMapPanel
+                    incidents={records}
+                    initialRegionId={searchParams.get("region")}
+                    selectedId={selectedIncidentId}
+                    onSelectedIdChange={(id) => {
+                      if (!id) {
+                        closeIncidentReport();
+                        return;
+                      }
+                      const record = records.find((row) => row.id === id);
+                      if (record) openIncidentReport(record);
+                      else syncIncidentUrl(id);
+                    }}
+                    canManage={canManage}
+                    onSaveLocations={(incidentId, locations) =>
+                      patchIncident(incidentId, { bodyLocations: locations })
+                    }
+                  />
+                ) : (
+                  <IncidentsRcaPanel
+                    incidents={records}
+                    canManage={canManage}
+                    onSave={(incidentId, rca) =>
+                      patchIncident(incidentId, { rootCauseAnalysis: rca })
+                    }
+                  />
+                )}
               </>
             ) : (
               <>
@@ -1203,8 +1210,7 @@ export function IncidentsWorkspace({ moduleName }: { moduleName: string }) {
                     openingWc={saving}
                     onOpenWorkersComp={() => void openWorkersCompCase(selectedReport)}
                     canManageOsha={
-                      canManageOsha ||
-                      (canViewOsha && Boolean(selectedReport.oshaCaseId.trim()))
+                      canManageOsha || (canViewOsha && Boolean(selectedReport.oshaCaseId.trim()))
                     }
                     openingOsha={saving}
                     onOpenOsha={() => void openOshaCase(selectedReport)}
@@ -1310,9 +1316,7 @@ export function IncidentsWorkspace({ moduleName }: { moduleName: string }) {
                                             void openWorkersCompCase(record);
                                           }}
                                         >
-                                          {record.workersCompCaseId.trim()
-                                            ? "View WC"
-                                            : "Open WC"}
+                                          {record.workersCompCaseId.trim() ? "View WC" : "Open WC"}
                                         </button>
                                       ) : null}
                                       {canManageOsha ||
@@ -1331,7 +1335,10 @@ export function IncidentsWorkspace({ moduleName }: { moduleName: string }) {
                                         </button>
                                       ) : null}
                                       {!canManageWc &&
-                                      !(canManageOsha || (canViewOsha && record.oshaCaseId.trim())) ? (
+                                      !(
+                                        canManageOsha ||
+                                        (canViewOsha && record.oshaCaseId.trim())
+                                      ) ? (
                                         <span className="text-muted">—</span>
                                       ) : null}
                                     </div>

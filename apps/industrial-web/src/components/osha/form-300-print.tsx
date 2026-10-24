@@ -68,8 +68,7 @@ function Form300Page({
               <strong>Establishment name</strong> {establishment || "—"}
             </div>
             <div>
-              <strong>City</strong> {city || "—"}{" "}
-              <strong>State</strong> {state || "—"}
+              <strong>City</strong> {city || "—"} <strong>State</strong> {state || "—"}
             </div>
             {pageCount > 1 ? (
               <div className="small text-muted">

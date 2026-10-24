@@ -2,10 +2,10 @@
 
 ## Automated
 
-| Suite | Coverage |
-| --- | --- |
-| `module-flags.test.ts` | cadConnections ∧ forms ∧ tables matrix |
-| E2E scaffold | Module off → legacy; module+forms+tables smoke |
+| Suite                  | Coverage                                       |
+| ---------------------- | ---------------------------------------------- |
+| `module-flags.test.ts` | cadConnections ∧ forms ∧ tables matrix         |
+| E2E scaffold           | Module off → legacy; module+forms+tables smoke |
 
 ## Manual / pilot
 

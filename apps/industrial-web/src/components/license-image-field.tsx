@@ -2,10 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { ApiError, apiGet, apiSend } from "@forge/web-kit";
-import {
-  compressImageToUploadFile,
-  imageCompressErrorMessage,
-} from "@/lib/compress-image";
+import { compressImageToUploadFile, imageCompressErrorMessage } from "@/lib/compress-image";
 import { useImageCrop } from "@/hooks/use-image-crop";
 import {
   guessPersonnelLicenseMime,
@@ -90,9 +87,7 @@ export function LicenseImageField({
           downloadUrl?: string;
           mimeType?: string;
           originalFilename?: string;
-        }>(
-          `/api/v1/industrial/personnel/license/${encodeURIComponent(trimmed)}/download-url`,
-        );
+        }>(`/api/v1/industrial/personnel/license/${encodeURIComponent(trimmed)}/download-url`);
         if (!cancelled && data.downloadUrl) {
           setPreviewUrl(data.downloadUrl);
           setPreviewMime(data.mimeType?.trim() || null);
@@ -183,9 +178,7 @@ export function LicenseImageField({
               <div className="d-flex align-items-start gap-2">
                 <i className="bx bxs-file-pdf fs-2 text-danger flex-shrink-0" aria-hidden="true" />
                 <div className="min-w-0">
-                  <p className="mb-1 fw-medium text-break">
-                    {previewName || `${label} (PDF)`}
-                  </p>
+                  <p className="mb-1 fw-medium text-break">{previewName || `${label} (PDF)`}</p>
                   <p className="text-muted small mb-2">
                     PDF copies open in a new tab (embedded preview is blocked by the browser).
                   </p>
@@ -247,7 +240,9 @@ export function LicenseImageField({
       {help ? (
         <div className="form-text">{help}</div>
       ) : (
-        <div className="form-text">Photos open a crop tool before upload so only the license is saved.</div>
+        <div className="form-text">
+          Photos open a crop tool before upload so only the license is saved.
+        </div>
       )}
     </div>
   );

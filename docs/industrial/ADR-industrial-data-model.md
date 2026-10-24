@@ -10,10 +10,10 @@
 
 ## Decision
 
-| Field | Value |
-|-------|--------|
+| Field                              | Value                                                                                                                                    |
+| ---------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------- |
 | **AUTHORITATIVE_PRODUCTION_MODEL** | MODEL A — normalized Industrial schema (`0040_industrial_domain_s1` + `0041_onboarding_org_lookups_s1` + related platform/QR/doc tables) |
-| **DEPRECATED_MODEL** | MODEL B — single generic `industrial_ops_records` table (diverged branch `forge-ui-sneat-s0-s5`) |
+| **DEPRECATED_MODEL**               | MODEL B — single generic `industrial_ops_records` table (diverged branch `forge-ui-sneat-s0-s5`)                                         |
 
 ---
 
@@ -36,25 +36,25 @@ Drizzle applies migrations by high-water mark on `created_at` / journal `when`. 
 
 ## Features to forward-port (from diverged branch)
 
-| Capability | Target form | Schema change? |
-|------------|-------------|----------------|
+| Capability                                                                   | Target form                                             | Schema change?    |
+| ---------------------------------------------------------------------------- | ------------------------------------------------------- | ----------------- |
 | Flat `GET/POST /api/v1/industrial/{domain}` contracts used by industrial-web | Nest controllers/services against **normalized** tables | No (tables exist) |
-| Analytics overview/incidents/inspections/personnel/loto/dot/wc | Rebuild queries on Model A tables | No |
-| FilterPanel + mobile drawer / chips | industrial-web component | No |
-| FieldQuickBar sticky field CTAs | industrial-web component | No |
-| LOTO tabbed workspace (dashboard/procedures/equipment/reviews) | industrial-web against Model A LOTO APIs | No |
-| Workers' Comp case tabs / KPI polish | industrial-web against Model A WC tables | No |
-| Admin/Settings section tabs | industrial-web | No |
-| Journey contract tests | vitest contracts | No |
-| `--env`-required migrate runner + migration ledger audit | scripts (see a23a60a review) | No |
+| Analytics overview/incidents/inspections/personnel/loto/dot/wc               | Rebuild queries on Model A tables                       | No                |
+| FilterPanel + mobile drawer / chips                                          | industrial-web component                                | No                |
+| FieldQuickBar sticky field CTAs                                              | industrial-web component                                | No                |
+| LOTO tabbed workspace (dashboard/procedures/equipment/reviews)               | industrial-web against Model A LOTO APIs                | No                |
+| Workers' Comp case tabs / KPI polish                                         | industrial-web against Model A WC tables                | No                |
+| Admin/Settings section tabs                                                  | industrial-web                                          | No                |
+| Journey contract tests                                                       | vitest contracts                                        | No                |
+| `--env`-required migrate runner + migration ledger audit                     | scripts (see a23a60a review)                            | No                |
 
 ## Data to transform / preserve / archive
 
-| Class | Action |
-|-------|--------|
-| Production normalized rows | **PRESERVE** — authoritative |
+| Class                                            | Action                                                                                            |
+| ------------------------------------------------ | ------------------------------------------------------------------------------------------------- |
+| Production normalized rows                       | **PRESERVE** — authoritative                                                                      |
 | `industrial_ops_records` (if present in any env) | **ARCHIVE / TRANSFORM** via separate cleanup sprint after UNKNOWN=0; do not delete in this sprint |
-| Branch-only journal entries / DDL for Model B | **Do not apply to production**; retire from merge path |
+| Branch-only journal entries / DDL for Model B    | **Do not apply to production**; retire from merge path                                            |
 
 ## Compatibility strategy
 

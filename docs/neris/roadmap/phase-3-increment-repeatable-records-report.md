@@ -28,11 +28,11 @@ This increment builds on the specialty workflow engine with:
 
 ## Feature flag
 
-| Tenant | Specialty flag |
-| --- | --- |
-| Default / production-capable | Disabled (`false`) |
-| `rms-synthetic-fd` | Enabled via override |
-| `rms-synthetic-fd-b` | Remains disabled (no specialty override) |
+| Tenant                       | Specialty flag                           |
+| ---------------------------- | ---------------------------------------- |
+| Default / production-capable | Disabled (`false`)                       |
+| `rms-synthetic-fd`           | Enabled via override                     |
+| `rms-synthetic-fd-b`         | Remains disabled (no specialty override) |
 
 APIs call `assertSpecialtyWorkflowsEnabled`. Form descriptor returns core-only navigation when disabled. RMS hides specialty add controls via feature gate.
 

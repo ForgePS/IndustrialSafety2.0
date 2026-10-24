@@ -177,8 +177,12 @@ export async function importNerisSchema(options?: {
       }
 
       // Incomplete prior import for this checksum — remove and re-import.
-      await db.execute(sql`delete from neris_schema_validation_results where schema_version_id = ${existingVersion.id}`);
-      await db.execute(sql`delete from neris_schema_import_history where schema_version_id = ${existingVersion.id}`);
+      await db.execute(
+        sql`delete from neris_schema_validation_results where schema_version_id = ${existingVersion.id}`,
+      );
+      await db.execute(
+        sql`delete from neris_schema_import_history where schema_version_id = ${existingVersion.id}`,
+      );
       await db.execute(sql`
         delete from neris_value_set_hierarchy
         where value_set_id in (select id from neris_value_sets where schema_version_id = ${existingVersion.id})
@@ -187,7 +191,9 @@ export async function importNerisSchema(options?: {
         delete from neris_value_options
         where value_set_id in (select id from neris_value_sets where schema_version_id = ${existingVersion.id})
       `);
-      await db.execute(sql`delete from neris_value_sets where schema_version_id = ${existingVersion.id}`);
+      await db.execute(
+        sql`delete from neris_value_sets where schema_version_id = ${existingVersion.id}`,
+      );
       await db.execute(sql`
         delete from neris_field_mappings
         where field_id in (select id from neris_fields where schema_version_id = ${existingVersion.id})
@@ -196,12 +202,16 @@ export async function importNerisSchema(options?: {
         delete from neris_field_conditions
         where field_id in (select id from neris_fields where schema_version_id = ${existingVersion.id})
       `);
-      await db.execute(sql`delete from neris_fields where schema_version_id = ${existingVersion.id}`);
+      await db.execute(
+        sql`delete from neris_fields where schema_version_id = ${existingVersion.id}`,
+      );
       await db.execute(sql`
         delete from neris_module_groups
         where module_id in (select id from neris_modules where schema_version_id = ${existingVersion.id})
       `);
-      await db.execute(sql`delete from neris_modules where schema_version_id = ${existingVersion.id}`);
+      await db.execute(
+        sql`delete from neris_modules where schema_version_id = ${existingVersion.id}`,
+      );
       await db.execute(sql`delete from neris_schema_versions where id = ${existingVersion.id}`);
     }
 
@@ -632,10 +642,13 @@ async function main(): Promise<void> {
 }
 
 const isDirect =
-  process.argv[1] &&
-  pathToFileURL(path.resolve(process.argv[1])).href === import.meta.url;
+  process.argv[1] && pathToFileURL(path.resolve(process.argv[1])).href === import.meta.url;
 
-if (isDirect || process.argv[1]?.endsWith("import-schema.ts") || process.argv[1]?.endsWith("import-schema.js")) {
+if (
+  isDirect ||
+  process.argv[1]?.endsWith("import-schema.ts") ||
+  process.argv[1]?.endsWith("import-schema.js")
+) {
   main().catch((error: unknown) => {
     console.error(error);
     process.exit(1);

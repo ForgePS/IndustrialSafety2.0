@@ -1,9 +1,5 @@
 import type { ImportJobStatus } from "../types.js";
-import {
-  isAcceptableMalwareVerdict,
-  isQuarantineVerdict,
-  type MalwareVerdict,
-} from "./malware.js";
+import { isAcceptableMalwareVerdict, isQuarantineVerdict, type MalwareVerdict } from "./malware.js";
 
 export const S6_MALWARE_TRANSITIONS: Record<string, ReadonlyArray<ImportJobStatus>> = {
   malware_start: ["UPLOADED"],
@@ -20,9 +16,7 @@ export function assertS6MalwareTransition(
 ): void {
   const allowed = S6_MALWARE_TRANSITIONS[action] ?? [];
   if (!allowed.includes(current)) {
-    const error = new Error(
-      `Import job status '${current}' does not allow action '${action}'`,
-    );
+    const error = new Error(`Import job status '${current}' does not allow action '${action}'`);
     (error as Error & { code: string }).code = "IMPORT_INVALID_STATE_TRANSITION";
     throw error;
   }
@@ -58,8 +52,7 @@ export function jobStatusForVerdict(verdict: MalwareVerdict): ImportJobStatus {
 }
 
 export type MalwareGateResult =
-  | { ok: true; verdict: string }
-  | { ok: false; code: string; message: string };
+  { ok: true; verdict: string } | { ok: false; code: string; message: string };
 
 export function assertMalwareGate(input: {
   verdict: string | null | undefined;

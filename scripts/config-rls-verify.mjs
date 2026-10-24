@@ -129,15 +129,7 @@ console.log(desc.stdout);
 
 const logs = spawnSync(
   "aws",
-  [
-    "logs",
-    "tail",
-    "/forge/development/ecs/platform-api",
-    "--since",
-    "5m",
-    "--format",
-    "short",
-  ],
+  ["logs", "tail", "/forge/development/ecs/platform-api", "--since", "5m", "--format", "short"],
   { encoding: "utf8", shell: true, env: process.env },
 );
 if (logs.stdout) {
@@ -146,4 +138,4 @@ if (logs.stdout) {
 }
 
 const parsed = JSON.parse(desc.stdout || "{}");
-process.exit(parsed.exitCode === 0 ? 0 : parsed.exitCode ?? 1);
+process.exit(parsed.exitCode === 0 ? 0 : (parsed.exitCode ?? 1));

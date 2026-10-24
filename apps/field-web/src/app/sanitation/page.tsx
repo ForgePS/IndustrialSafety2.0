@@ -69,15 +69,7 @@ const CONCERN_OPTIONS: Array<{ id: ConcernType; label: string }> = [
 ];
 
 type Mode =
-  | "home"
-  | "concern"
-  | "cleaning"
-  | "dust"
-  | "spill"
-  | "inspect"
-  | "preop"
-  | "verify"
-  | "runner";
+  "home" | "concern" | "cleaning" | "dust" | "spill" | "inspect" | "preop" | "verify" | "runner";
 
 export default function SanitationFieldPage() {
   const router = useRouter();
@@ -136,7 +128,7 @@ export default function SanitationFieldPage() {
       const res = await apiGet<{ items?: SiteRow[] }>("/api/v1/industrial/sites");
       const items = res.items ?? [];
       setSites(items);
-      setSiteId((prev) => (prev || (items.length === 1 ? items[0]!.id : prev)));
+      setSiteId((prev) => prev || (items.length === 1 ? items[0]!.id : prev));
     } catch {
       /* optional */
     }
@@ -189,8 +181,7 @@ export default function SanitationFieldPage() {
   }, [loadTasks, refreshPending]);
 
   const awaitingVerification = useMemo(
-    () =>
-      tasks.filter((t) => String(t.status ?? "").toUpperCase() === "AWAITING_VERIFICATION"),
+    () => tasks.filter((t) => String(t.status ?? "").toUpperCase() === "AWAITING_VERIFICATION"),
     [tasks],
   );
 
@@ -212,7 +203,11 @@ export default function SanitationFieldPage() {
       <>
         <h1 className="ff-page-title">Sanitation</h1>
         <p className="ff-page-body">You do not have sanitation permissions for this company.</p>
-        <button type="button" className="ff-btn ff-btn-secondary" onClick={() => router.push("/more/")}>
+        <button
+          type="button"
+          className="ff-btn ff-btn-secondary"
+          onClick={() => router.push("/more/")}
+        >
           Back
         </button>
       </>
@@ -386,17 +381,13 @@ export default function SanitationFieldPage() {
     setError(null);
     setOkMsg(null);
     try {
-      const result = await sanitationSend(
-        `${API}/verifications`,
-        "POST",
-        {
-          cleaningTaskId: taskId,
-          method: "VISUAL",
-          result: verifyResult,
-          notes: verifyNotes.trim() || undefined,
-          ...(siteId ? { siteId } : {}),
-        },
-      );
+      const result = await sanitationSend(`${API}/verifications`, "POST", {
+        cleaningTaskId: taskId,
+        method: "VISUAL",
+        result: verifyResult,
+        notes: verifyNotes.trim() || undefined,
+        ...(siteId ? { siteId } : {}),
+      });
       refreshPending();
       setOkMsg(
         result.queued
@@ -506,7 +497,11 @@ export default function SanitationFieldPage() {
               </span>
             </button>
           ) : null}
-          <button type="button" className="ff-btn ff-btn-secondary ff-action-grid-span" onClick={() => router.push("/more/")}>
+          <button
+            type="button"
+            className="ff-btn ff-btn-secondary ff-action-grid-span"
+            onClick={() => router.push("/more/")}
+          >
             Back to More
           </button>
         </div>
@@ -519,7 +514,11 @@ export default function SanitationFieldPage() {
           </h2>
           <label className="ff-field">
             <span className="ff-label">Site</span>
-            <select className="ff-select" value={siteId} onChange={(e) => setSiteId(e.target.value)}>
+            <select
+              className="ff-select"
+              value={siteId}
+              onChange={(e) => setSiteId(e.target.value)}
+            >
               <option value="">Select site…</option>
               {sites.map((s) => (
                 <option key={s.id} value={s.id}>
@@ -616,7 +615,11 @@ export default function SanitationFieldPage() {
             <div key={task.id} className="ff-card">
               <strong>{task.title || "Cleaning task"}</strong>
               <p className="ff-hint ff-hint--left">
-                {[task.taskNumber, task.status, task.dueAt ? new Date(task.dueAt).toLocaleString() : null]
+                {[
+                  task.taskNumber,
+                  task.status,
+                  task.dueAt ? new Date(task.dueAt).toLocaleString() : null,
+                ]
                   .filter(Boolean)
                   .join(" · ")}
               </p>
@@ -681,7 +684,11 @@ export default function SanitationFieldPage() {
           <h2 className="ff-page-title ff-page-title--section">Dust measurement</h2>
           <label className="ff-field">
             <span className="ff-label">Surface</span>
-            <input className="ff-input" value={dustSurface} onChange={(e) => setDustSurface(e.target.value)} />
+            <input
+              className="ff-input"
+              value={dustSurface}
+              onChange={(e) => setDustSurface(e.target.value)}
+            />
           </label>
           <label className="ff-field">
             <span className="ff-label">Dust depth</span>
@@ -739,7 +746,11 @@ export default function SanitationFieldPage() {
           <h2 className="ff-page-title ff-page-title--section">Report spill</h2>
           <label className="ff-field">
             <span className="ff-label">Product</span>
-            <input className="ff-input" value={spillProduct} onChange={(e) => setSpillProduct(e.target.value)} />
+            <input
+              className="ff-input"
+              value={spillProduct}
+              onChange={(e) => setSpillProduct(e.target.value)}
+            />
           </label>
           <label className="ff-field">
             <span className="ff-label">Exact location</span>
@@ -751,7 +762,11 @@ export default function SanitationFieldPage() {
           </label>
           <label className="ff-field">
             <span className="ff-label">Estimated quantity</span>
-            <input className="ff-input" value={spillQty} onChange={(e) => setSpillQty(e.target.value)} />
+            <input
+              className="ff-input"
+              value={spillQty}
+              onChange={(e) => setSpillQty(e.target.value)}
+            />
           </label>
           <label className="ff-field">
             <span className="ff-label">Cause / notes</span>
@@ -785,7 +800,11 @@ export default function SanitationFieldPage() {
             <div key={task.id} className="ff-card">
               <strong>{task.title || "Cleaning task"}</strong>
               <p className="ff-hint ff-hint--left">
-                {[task.taskNumber, task.status, task.dueAt ? new Date(task.dueAt).toLocaleString() : null]
+                {[
+                  task.taskNumber,
+                  task.status,
+                  task.dueAt ? new Date(task.dueAt).toLocaleString() : null,
+                ]
                   .filter(Boolean)
                   .join(" · ")}
               </p>

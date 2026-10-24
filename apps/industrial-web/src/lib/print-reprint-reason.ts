@@ -17,10 +17,7 @@ export type PrintReprintReason = (typeof PRINT_REPRINT_REASONS)[number];
  */
 export function promptReprintReason(): PrintReprintReason | null {
   const list = PRINT_REPRINT_REASONS.map((r, i) => `${i + 1}. ${r}`).join("\n");
-  const raw = window.prompt(
-    `Reprint reason (enter number or exact text):\n${list}`,
-    "1",
-  );
+  const raw = window.prompt(`Reprint reason (enter number or exact text):\n${list}`, "1");
   if (raw == null) return null;
   const trimmed = raw.trim();
   const byIndex = Number.parseInt(trimmed, 10);

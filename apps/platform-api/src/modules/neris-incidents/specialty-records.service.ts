@@ -65,7 +65,12 @@ export class SpecialtyRecordsService {
 
   // --- Exposures ---
 
-  async listExposures(tenantId: string, incidentId: string, principal: ForgePrincipal, search?: string) {
+  async listExposures(
+    tenantId: string,
+    incidentId: string,
+    principal: ForgePrincipal,
+    search?: string,
+  ) {
     await this.access.assertSpecialtyWorkflowsEnabled(principal);
     return withTenantTransaction(this.db, tenantId, async (tx) => {
       await this.requireIncident(tx, tenantId, incidentId);
@@ -121,7 +126,12 @@ export class SpecialtyRecordsService {
     });
   }
 
-  async getExposure(tenantId: string, incidentId: string, exposureId: string, principal: ForgePrincipal) {
+  async getExposure(
+    tenantId: string,
+    incidentId: string,
+    exposureId: string,
+    principal: ForgePrincipal,
+  ) {
     await this.access.assertSpecialtyWorkflowsEnabled(principal);
     return withTenantTransaction(this.db, tenantId, async (tx) => {
       await this.requireIncident(tx, tenantId, incidentId);
@@ -143,7 +153,13 @@ export class SpecialtyRecordsService {
       await this.requireEditableIncident(tx, tenantId, incidentId);
       const existing = await this.requireExposure(tx, incidentId, exposureId);
       if (expected !== "*" && existing.recordVersion !== expected) {
-        throw concurrencyConflict({ tenantId, resourceType: "neris_specialty_record", resourceId: existing.id, expectedVersion: expected, actualVersion: existing.recordVersion });
+        throw concurrencyConflict({
+          tenantId,
+          resourceType: "neris_specialty_record",
+          resourceId: existing.id,
+          expectedVersion: expected,
+          actualVersion: existing.recordVersion,
+        });
       }
       const [row] = await tx
         .update(nerisIncidentExposures)
@@ -172,7 +188,13 @@ export class SpecialtyRecordsService {
       await this.requireEditableIncident(tx, tenantId, incidentId);
       const existing = await this.requireExposure(tx, incidentId, exposureId);
       if (expected !== "*" && existing.recordVersion !== expected) {
-        throw concurrencyConflict({ tenantId, resourceType: "neris_specialty_record", resourceId: existing.id, expectedVersion: expected, actualVersion: existing.recordVersion });
+        throw concurrencyConflict({
+          tenantId,
+          resourceType: "neris_specialty_record",
+          resourceId: existing.id,
+          expectedVersion: expected,
+          actualVersion: existing.recordVersion,
+        });
       }
       const [row] = await tx
         .update(nerisIncidentExposures)
@@ -210,7 +232,13 @@ export class SpecialtyRecordsService {
       });
       if (!existing) throw new ForgeError("NOT_FOUND", "Exposure not found");
       if (expected !== "*" && existing.recordVersion !== expected) {
-        throw concurrencyConflict({ tenantId, resourceType: "neris_specialty_record", resourceId: existing.id, expectedVersion: expected, actualVersion: existing.recordVersion });
+        throw concurrencyConflict({
+          tenantId,
+          resourceType: "neris_specialty_record",
+          resourceId: existing.id,
+          expectedVersion: expected,
+          actualVersion: existing.recordVersion,
+        });
       }
       const [row] = await tx
         .update(nerisIncidentExposures)
@@ -247,7 +275,15 @@ export class SpecialtyRecordsService {
       const full = Boolean(options?.full);
       if (full) {
         for (const row of rows) {
-          await this.recordCasualtyAccess(tx, principal, tenantId, incidentId, "CIVILIAN", row.id, "VIEW");
+          await this.recordCasualtyAccess(
+            tx,
+            principal,
+            tenantId,
+            incidentId,
+            "CIVILIAN",
+            row.id,
+            "VIEW",
+          );
         }
         return rows;
       }
@@ -283,7 +319,15 @@ export class SpecialtyRecordsService {
           updatedByUserId: principal.userId,
         })
         .returning();
-      await this.recordCasualtyAccess(tx, principal, tenantId, incidentId, "CIVILIAN", id, "CREATE");
+      await this.recordCasualtyAccess(
+        tx,
+        principal,
+        tenantId,
+        incidentId,
+        "CIVILIAN",
+        id,
+        "CREATE",
+      );
       await this.auditSpecialty(tx, principal, tenantId, "neris.civilian_casualty.create", id, {
         incidentId,
         personKnown: data.personKnown,
@@ -309,7 +353,15 @@ export class SpecialtyRecordsService {
         ),
       });
       if (!row || row.archivedAt) throw new ForgeError("NOT_FOUND", "Civilian casualty not found");
-      await this.recordCasualtyAccess(tx, principal, tenantId, incidentId, "CIVILIAN", row.id, "VIEW");
+      await this.recordCasualtyAccess(
+        tx,
+        principal,
+        tenantId,
+        incidentId,
+        "CIVILIAN",
+        row.id,
+        "VIEW",
+      );
       return row;
     });
   }
@@ -336,7 +388,13 @@ export class SpecialtyRecordsService {
         throw new ForgeError("NOT_FOUND", "Civilian casualty not found");
       }
       if (expected !== "*" && existing.recordVersion !== expected) {
-        throw concurrencyConflict({ tenantId, resourceType: "neris_specialty_record", resourceId: existing.id, expectedVersion: expected, actualVersion: existing.recordVersion });
+        throw concurrencyConflict({
+          tenantId,
+          resourceType: "neris_specialty_record",
+          resourceId: existing.id,
+          expectedVersion: expected,
+          actualVersion: existing.recordVersion,
+        });
       }
       const [row] = await tx
         .update(nerisIncidentCivilianCasualties)
@@ -348,7 +406,15 @@ export class SpecialtyRecordsService {
         })
         .where(eq(nerisIncidentCivilianCasualties.id, casualtyId))
         .returning();
-      await this.recordCasualtyAccess(tx, principal, tenantId, incidentId, "CIVILIAN", casualtyId, "EDIT");
+      await this.recordCasualtyAccess(
+        tx,
+        principal,
+        tenantId,
+        incidentId,
+        "CIVILIAN",
+        casualtyId,
+        "EDIT",
+      );
       return row;
     });
   }
@@ -371,7 +437,13 @@ export class SpecialtyRecordsService {
       });
       if (!existing) throw new ForgeError("NOT_FOUND", "Civilian casualty not found");
       if (expected !== "*" && existing.recordVersion !== expected) {
-        throw concurrencyConflict({ tenantId, resourceType: "neris_specialty_record", resourceId: existing.id, expectedVersion: expected, actualVersion: existing.recordVersion });
+        throw concurrencyConflict({
+          tenantId,
+          resourceType: "neris_specialty_record",
+          resourceId: existing.id,
+          expectedVersion: expected,
+          actualVersion: existing.recordVersion,
+        });
       }
       const [row] = await tx
         .update(nerisIncidentCivilianCasualties)
@@ -407,7 +479,15 @@ export class SpecialtyRecordsService {
       });
       if (options?.full) {
         for (const row of rows) {
-          await this.recordCasualtyAccess(tx, principal, tenantId, incidentId, "FIRE_SERVICE", row.id, "VIEW");
+          await this.recordCasualtyAccess(
+            tx,
+            principal,
+            tenantId,
+            incidentId,
+            "FIRE_SERVICE",
+            row.id,
+            "VIEW",
+          );
         }
         return rows;
       }
@@ -446,7 +526,15 @@ export class SpecialtyRecordsService {
           updatedByUserId: principal.userId,
         })
         .returning();
-      await this.recordCasualtyAccess(tx, principal, tenantId, incidentId, "FIRE_SERVICE", id, "CREATE");
+      await this.recordCasualtyAccess(
+        tx,
+        principal,
+        tenantId,
+        incidentId,
+        "FIRE_SERVICE",
+        id,
+        "CREATE",
+      );
       await this.auditSpecialty(tx, principal, tenantId, "neris.fire_service_casualty.create", id, {
         incidentId,
         mayday: data.mayday ?? false,
@@ -473,7 +561,15 @@ export class SpecialtyRecordsService {
       if (!row || row.archivedAt) {
         throw new ForgeError("NOT_FOUND", "Fire-service casualty not found");
       }
-      await this.recordCasualtyAccess(tx, principal, tenantId, incidentId, "FIRE_SERVICE", row.id, "VIEW");
+      await this.recordCasualtyAccess(
+        tx,
+        principal,
+        tenantId,
+        incidentId,
+        "FIRE_SERVICE",
+        row.id,
+        "VIEW",
+      );
       return row;
     });
   }
@@ -500,7 +596,13 @@ export class SpecialtyRecordsService {
         throw new ForgeError("NOT_FOUND", "Fire-service casualty not found");
       }
       if (expected !== "*" && existing.recordVersion !== expected) {
-        throw concurrencyConflict({ tenantId, resourceType: "neris_specialty_record", resourceId: existing.id, expectedVersion: expected, actualVersion: existing.recordVersion });
+        throw concurrencyConflict({
+          tenantId,
+          resourceType: "neris_specialty_record",
+          resourceId: existing.id,
+          expectedVersion: expected,
+          actualVersion: existing.recordVersion,
+        });
       }
       const [row] = await tx
         .update(nerisIncidentFireServiceCasualties)
@@ -512,7 +614,15 @@ export class SpecialtyRecordsService {
         })
         .where(eq(nerisIncidentFireServiceCasualties.id, casualtyId))
         .returning();
-      await this.recordCasualtyAccess(tx, principal, tenantId, incidentId, "FIRE_SERVICE", casualtyId, "EDIT");
+      await this.recordCasualtyAccess(
+        tx,
+        principal,
+        tenantId,
+        incidentId,
+        "FIRE_SERVICE",
+        casualtyId,
+        "EDIT",
+      );
       return row;
     });
   }
@@ -535,7 +645,13 @@ export class SpecialtyRecordsService {
       });
       if (!existing) throw new ForgeError("NOT_FOUND", "Fire-service casualty not found");
       if (expected !== "*" && existing.recordVersion !== expected) {
-        throw concurrencyConflict({ tenantId, resourceType: "neris_specialty_record", resourceId: existing.id, expectedVersion: expected, actualVersion: existing.recordVersion });
+        throw concurrencyConflict({
+          tenantId,
+          resourceType: "neris_specialty_record",
+          resourceId: existing.id,
+          expectedVersion: expected,
+          actualVersion: existing.recordVersion,
+        });
       }
       const [row] = await tx
         .update(nerisIncidentFireServiceCasualties)
@@ -624,9 +740,16 @@ export class SpecialtyRecordsService {
           eq(nerisIncidentHazmatSubstances.incidentId, incidentId),
         ),
       });
-      if (!existing || existing.archivedAt) throw new ForgeError("NOT_FOUND", "Substance not found");
+      if (!existing || existing.archivedAt)
+        throw new ForgeError("NOT_FOUND", "Substance not found");
       if (expected !== "*" && existing.recordVersion !== expected) {
-        throw concurrencyConflict({ tenantId, resourceType: "neris_specialty_record", resourceId: existing.id, expectedVersion: expected, actualVersion: existing.recordVersion });
+        throw concurrencyConflict({
+          tenantId,
+          resourceType: "neris_specialty_record",
+          resourceId: existing.id,
+          expectedVersion: expected,
+          actualVersion: existing.recordVersion,
+        });
       }
       const [row] = await tx
         .update(nerisIncidentHazmatSubstances)
@@ -649,7 +772,9 @@ export class SpecialtyRecordsService {
             ? { environmentalImpact: data.environmentalImpact }
             : {}),
           ...(data.waterwayImpact !== undefined ? { waterwayImpact: data.waterwayImpact } : {}),
-          ...(data.responsibleParty !== undefined ? { responsibleParty: data.responsibleParty } : {}),
+          ...(data.responsibleParty !== undefined
+            ? { responsibleParty: data.responsibleParty }
+            : {}),
           ...(data.narrative !== undefined ? { narrative: data.narrative } : {}),
           recordVersion: existing.recordVersion + 1,
           updatedByUserId: principal.userId,
@@ -679,7 +804,13 @@ export class SpecialtyRecordsService {
       });
       if (!existing) throw new ForgeError("NOT_FOUND", "Substance not found");
       if (expected !== "*" && existing.recordVersion !== expected) {
-        throw concurrencyConflict({ tenantId, resourceType: "neris_specialty_record", resourceId: existing.id, expectedVersion: expected, actualVersion: existing.recordVersion });
+        throw concurrencyConflict({
+          tenantId,
+          resourceType: "neris_specialty_record",
+          resourceId: existing.id,
+          expectedVersion: expected,
+          actualVersion: existing.recordVersion,
+        });
       }
       const [row] = await tx
         .update(nerisIncidentHazmatSubstances)
@@ -721,7 +852,11 @@ export class SpecialtyRecordsService {
       await this.requireEditableIncident(tx, tenantId, incidentId);
       const id = createId();
       const capacity =
-        data.capacity === undefined ? undefined : data.capacity === null ? null : String(data.capacity);
+        data.capacity === undefined
+          ? undefined
+          : data.capacity === null
+            ? null
+            : String(data.capacity);
       const [row] = await tx
         .insert(nerisIncidentHazmatContainers)
         .values({
@@ -766,12 +901,23 @@ export class SpecialtyRecordsService {
           eq(nerisIncidentHazmatContainers.incidentId, incidentId),
         ),
       });
-      if (!existing || existing.archivedAt) throw new ForgeError("NOT_FOUND", "Container not found");
+      if (!existing || existing.archivedAt)
+        throw new ForgeError("NOT_FOUND", "Container not found");
       if (expected !== "*" && existing.recordVersion !== expected) {
-        throw concurrencyConflict({ tenantId, resourceType: "neris_specialty_record", resourceId: existing.id, expectedVersion: expected, actualVersion: existing.recordVersion });
+        throw concurrencyConflict({
+          tenantId,
+          resourceType: "neris_specialty_record",
+          resourceId: existing.id,
+          expectedVersion: expected,
+          actualVersion: existing.recordVersion,
+        });
       }
       const capacity =
-        data.capacity === undefined ? undefined : data.capacity === null ? null : String(data.capacity);
+        data.capacity === undefined
+          ? undefined
+          : data.capacity === null
+            ? null
+            : String(data.capacity);
       const [row] = await tx
         .update(nerisIncidentHazmatContainers)
         .set({
@@ -815,7 +961,13 @@ export class SpecialtyRecordsService {
       });
       if (!existing) throw new ForgeError("NOT_FOUND", "Container not found");
       if (expected !== "*" && existing.recordVersion !== expected) {
-        throw concurrencyConflict({ tenantId, resourceType: "neris_specialty_record", resourceId: existing.id, expectedVersion: expected, actualVersion: existing.recordVersion });
+        throw concurrencyConflict({
+          tenantId,
+          resourceType: "neris_specialty_record",
+          resourceId: existing.id,
+          expectedVersion: expected,
+          actualVersion: existing.recordVersion,
+        });
       }
       const [row] = await tx
         .update(nerisIncidentHazmatContainers)
@@ -890,9 +1042,16 @@ export class SpecialtyRecordsService {
           eq(nerisIncidentAlarmSystems.incidentId, incidentId),
         ),
       });
-      if (!existing || existing.archivedAt) throw new ForgeError("NOT_FOUND", "Alarm system not found");
+      if (!existing || existing.archivedAt)
+        throw new ForgeError("NOT_FOUND", "Alarm system not found");
       if (expected !== "*" && existing.recordVersion !== expected) {
-        throw concurrencyConflict({ tenantId, resourceType: "neris_specialty_record", resourceId: existing.id, expectedVersion: expected, actualVersion: existing.recordVersion });
+        throw concurrencyConflict({
+          tenantId,
+          resourceType: "neris_specialty_record",
+          resourceId: existing.id,
+          expectedVersion: expected,
+          actualVersion: existing.recordVersion,
+        });
       }
       const [row] = await tx
         .update(nerisIncidentAlarmSystems)
@@ -926,7 +1085,13 @@ export class SpecialtyRecordsService {
       });
       if (!existing) throw new ForgeError("NOT_FOUND", "Alarm system not found");
       if (expected !== "*" && existing.recordVersion !== expected) {
-        throw concurrencyConflict({ tenantId, resourceType: "neris_specialty_record", resourceId: existing.id, expectedVersion: expected, actualVersion: existing.recordVersion });
+        throw concurrencyConflict({
+          tenantId,
+          resourceType: "neris_specialty_record",
+          resourceId: existing.id,
+          expectedVersion: expected,
+          actualVersion: existing.recordVersion,
+        });
       }
       const [row] = await tx
         .update(nerisIncidentAlarmSystems)
@@ -1003,7 +1168,13 @@ export class SpecialtyRecordsService {
         throw new ForgeError("NOT_FOUND", "Protection system not found");
       }
       if (expected !== "*" && existing.recordVersion !== expected) {
-        throw concurrencyConflict({ tenantId, resourceType: "neris_specialty_record", resourceId: existing.id, expectedVersion: expected, actualVersion: existing.recordVersion });
+        throw concurrencyConflict({
+          tenantId,
+          resourceType: "neris_specialty_record",
+          resourceId: existing.id,
+          expectedVersion: expected,
+          actualVersion: existing.recordVersion,
+        });
       }
       const [row] = await tx
         .update(nerisIncidentProtectionSystems)
@@ -1037,7 +1208,13 @@ export class SpecialtyRecordsService {
       });
       if (!existing) throw new ForgeError("NOT_FOUND", "Protection system not found");
       if (expected !== "*" && existing.recordVersion !== expected) {
-        throw concurrencyConflict({ tenantId, resourceType: "neris_specialty_record", resourceId: existing.id, expectedVersion: expected, actualVersion: existing.recordVersion });
+        throw concurrencyConflict({
+          tenantId,
+          resourceType: "neris_specialty_record",
+          resourceId: existing.id,
+          expectedVersion: expected,
+          actualVersion: existing.recordVersion,
+        });
       }
       const [row] = await tx
         .update(nerisIncidentProtectionSystems)
@@ -1230,10 +1407,17 @@ export class SpecialtyRecordsService {
         createdAt: new Date(),
         updatedAt: new Date(),
       });
-      await this.auditSpecialty(tx, principal, tenantId, "neris.specialty_section.return", incidentId, {
-        sectionKey,
-        specialtyRecordId: data.specialtyRecordId,
-      });
+      await this.auditSpecialty(
+        tx,
+        principal,
+        tenantId,
+        "neris.specialty_section.return",
+        incidentId,
+        {
+          sectionKey,
+          specialtyRecordId: data.specialtyRecordId,
+        },
+      );
       return { incidentId, sectionKey, status: "RETURNED" };
     });
   }
@@ -1291,12 +1475,7 @@ export class SpecialtyRecordsService {
   // --- helpers ---
 
   private mapExposure(data: Record<string, unknown>) {
-    const numericKeys = new Set([
-      "propertyLoss",
-      "contentLoss",
-      "propertyValue",
-      "contentValue",
-    ]);
+    const numericKeys = new Set(["propertyLoss", "contentLoss", "propertyValue", "contentValue"]);
     const out: Record<string, unknown> = {};
     for (const [key, value] of Object.entries(data)) {
       if (value === undefined || key === "completionStatus") continue;

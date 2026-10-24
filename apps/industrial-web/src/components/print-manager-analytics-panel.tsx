@@ -182,9 +182,7 @@ export function PrintManagerAnalyticsPanel() {
               <div className="card border shadow-none">
                 <div className="card-body py-3">
                   <div className="text-muted small text-uppercase">Avg queue</div>
-                  <div className="fs-4 fw-semibold">
-                    {formatMs(summary.totals.averageQueueMs)}
-                  </div>
+                  <div className="fs-4 fw-semibold">{formatMs(summary.totals.averageQueueMs)}</div>
                 </div>
               </div>
             </div>
@@ -192,9 +190,7 @@ export function PrintManagerAnalyticsPanel() {
               <div className="card border shadow-none">
                 <div className="card-body py-3">
                   <div className="text-muted small text-uppercase">Avg print</div>
-                  <div className="fs-4 fw-semibold">
-                    {formatMs(summary.totals.averagePrintMs)}
-                  </div>
+                  <div className="fs-4 fw-semibold">{formatMs(summary.totals.averagePrintMs)}</div>
                 </div>
               </div>
             </div>
@@ -339,7 +335,10 @@ export function PrintManagerAnalyticsPanel() {
                             <td className="small">{formatAdminDate(f.createdAt)}</td>
                             <td>{f.printerName || "—"}</td>
                             <td className="font-monospace small">{f.errorCode || "—"}</td>
-                            <td className="small text-muted text-truncate" style={{ maxWidth: 180 }}>
+                            <td
+                              className="small text-muted text-truncate"
+                              style={{ maxWidth: 180 }}
+                            >
                               {f.errorMessage || "—"}
                             </td>
                           </tr>

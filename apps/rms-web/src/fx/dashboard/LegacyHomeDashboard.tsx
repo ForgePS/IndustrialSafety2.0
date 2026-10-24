@@ -16,8 +16,8 @@ export function LegacyHomeDashboard() {
     <section className={styles.page} data-testid="rms-legacy-dashboard">
       <h1>Records Management</h1>
       <p className={styles.lead}>
-        Manual incident intake and officer review for NERIS reporting. This workspace supports guided data
-        entry without CAD integration.
+        Manual incident intake and officer review for NERIS reporting. This workspace supports
+        guided data entry without CAD integration.
       </p>
 
       {!loading && !me ? (
@@ -67,7 +67,8 @@ export function LegacyHomeDashboard() {
             <div className={styles.panel}>
               <h2>NERIS configuration</h2>
               <p className={styles.muted}>
-                Customize labels, help text, field order, and visibility without changing official codes.
+                Customize labels, help text, field order, and visibility without changing official
+                codes.
               </p>
               <Link href="/configuration/">Edit configuration</Link>
             </div>

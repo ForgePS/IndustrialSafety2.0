@@ -206,9 +206,7 @@ export function SafetySupplyRequestPublicWorkspace() {
     setCart((prev) => {
       const existing = prev.find((l) => l.key === key);
       if (existing) {
-        return prev.map((l) =>
-          l.key === key ? { ...l, quantity: l.quantity + 1 } : l,
-        );
+        return prev.map((l) => (l.key === key ? { ...l, quantity: l.quantity + 1 } : l));
       }
       return [
         ...prev,
@@ -307,7 +305,10 @@ export function SafetySupplyRequestPublicWorkspace() {
         </div>
         <ul className="list-group mb-3">
           {confirmation.items.map((line, idx) => (
-            <li key={`${line.name}-${idx}`} className="list-group-item d-flex justify-content-between">
+            <li
+              key={`${line.name}-${idx}`}
+              className="list-group-item d-flex justify-content-between"
+            >
               <span>{line.name}</span>
               <span>× {line.quantity}</span>
             </li>
@@ -483,9 +484,7 @@ export function SafetySupplyRequestPublicWorkspace() {
         </section>
       ) : (
         <>
-          {employeeLabel ? (
-            <div className="alert alert-light border">{employeeLabel}</div>
-          ) : null}
+          {employeeLabel ? <div className="alert alert-light border">{employeeLabel}</div> : null}
 
           <div className="mb-3">
             <input
@@ -534,9 +533,7 @@ export function SafetySupplyRequestPublicWorkspace() {
                             : item.availability === "LOW"
                               ? "Low Stock"
                               : "Available"}
-                          {item.quantityAvailable != null
-                            ? ` · ${item.quantityAvailable}`
-                            : ""}
+                          {item.quantityAvailable != null ? ` · ${item.quantityAvailable}` : ""}
                         </span>
                       ) : null}
                     </div>
@@ -718,8 +715,8 @@ export function SafetySupplyRequestPublicWorkspace() {
                   </select>
                   {priority === "URGENT" ? (
                     <div className="form-text">
-                      Urgent requests should be used when the requested safety supply is required
-                      to safely perform assigned work.
+                      Urgent requests should be used when the requested safety supply is required to
+                      safely perform assigned work.
                     </div>
                   ) : null}
                 </div>

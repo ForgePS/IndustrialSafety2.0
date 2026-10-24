@@ -1,10 +1,6 @@
 import { test, expect } from "../src/fixtures/index.js";
 import { apiRequest, readTenantId } from "../src/helpers/api.js";
-import {
-  getSecondaryCredentials,
-  hasSecondaryCredentials,
-  REQUIRE_SECONDARY,
-} from "../src/env.js";
+import { getSecondaryCredentials, hasSecondaryCredentials, REQUIRE_SECONDARY } from "../src/env.js";
 import { ensureAuthenticated } from "../src/helpers/navigation.js";
 import { e2eRunId } from "../src/helpers/test-data.js";
 import {
@@ -44,7 +40,13 @@ test.describe("Phase 3 attachment acceptance matrix @phase3", () => {
       bytes: Uint8Array,
       mimeType: string,
       filename: string,
-    ): Promise<{ attachmentId: string; objectKey: string; recordVersion: number; malwareScanStatus?: string; clearedForUse?: boolean }> {
+    ): Promise<{
+      attachmentId: string;
+      objectKey: string;
+      recordVersion: number;
+      malwareScanStatus?: string;
+      clearedForUse?: boolean;
+    }> {
       const checksum = await sha256Hex(bytes);
       const init = await initializeAttachment(page, tenantId!, incidentId, {
         originalFilename: filename,
@@ -126,7 +128,11 @@ test.describe("Phase 3 attachment acceptance matrix @phase3", () => {
     expect([400, 422]).toContain(badMime.status);
 
     // Dangerous filenames — rejected at the edge/API, or accepted with sanitized object keys.
-    for (const name of [`..\\evil-${runId}.jpg`, `../evil-${runId}.jpg`, `path/evil-${runId}.jpg`]) {
+    for (const name of [
+      `..\\evil-${runId}.jpg`,
+      `../evil-${runId}.jpg`,
+      `path/evil-${runId}.jpg`,
+    ]) {
       const checksum = await sha256Hex(TINY_JPEG);
       const init = await initializeAttachment(page, tenantId!, incidentId, {
         originalFilename: name,
@@ -206,9 +212,21 @@ test.describe("Phase 3 attachment acceptance matrix @phase3", () => {
     });
     const dup = unwrapData<{ attachmentId: string; uploadUrl: string }>(dupInit.json);
     await uploadBytesToPresign(dup.uploadUrl, TINY_JPEG, "image/jpeg");
-    const first = await completeAttachment(page, tenantId!, incidentId, dup.attachmentId, dupChecksum);
+    const first = await completeAttachment(
+      page,
+      tenantId!,
+      incidentId,
+      dup.attachmentId,
+      dupChecksum,
+    );
     expect([200, 201]).toContain(first.status);
-    const second = await completeAttachment(page, tenantId!, incidentId, dup.attachmentId, dupChecksum);
+    const second = await completeAttachment(
+      page,
+      tenantId!,
+      incidentId,
+      dup.attachmentId,
+      dupChecksum,
+    );
     const secondDto = unwrapData<{ malwareScanStatus?: string; clearedForUse?: boolean }>(
       second.json,
     );

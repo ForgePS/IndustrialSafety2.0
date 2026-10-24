@@ -34,8 +34,10 @@ async function main(): Promise<void> {
     unexpectedPasses: 0,
   };
 
-  const who = [...(await db.execute(sql`select current_user as u, rolsuper, rolbypassrls
-    from pg_roles r where r.rolname = current_user`))][0] as {
+  const who = [
+    ...(await db.execute(sql`select current_user as u, rolsuper, rolbypassrls
+    from pg_roles r where r.rolname = current_user`)),
+  ][0] as {
     u?: string;
     rolsuper?: boolean;
     rolbypassrls?: boolean;
@@ -130,10 +132,13 @@ async function main(): Promise<void> {
   }
 
   // Same-tenant read positive (profiles)
-  const aProfiles = await withTenantTransaction(db, tenantA, async (tx) =>
-    [...(await tx.execute(sql`select count(*)::int as c from import_profiles`))] as Array<{
-      c: number;
-    }>,
+  const aProfiles = await withTenantTransaction(
+    db,
+    tenantA,
+    async (tx) =>
+      [...(await tx.execute(sql`select count(*)::int as c from import_profiles`))] as Array<{
+        c: number;
+      }>,
   );
   cases.push({
     name: "tenant_a_read_own_profiles",
@@ -141,10 +146,13 @@ async function main(): Promise<void> {
     detail: String(aProfiles[0]?.c ?? 0),
   });
 
-  const bProfiles = await withTenantTransaction(db, tenantB, async (tx) =>
-    [...(await tx.execute(sql`select count(*)::int as c from import_profiles`))] as Array<{
-      c: number;
-    }>,
+  const bProfiles = await withTenantTransaction(
+    db,
+    tenantB,
+    async (tx) =>
+      [...(await tx.execute(sql`select count(*)::int as c from import_profiles`))] as Array<{
+        c: number;
+      }>,
   );
   cases.push({
     name: "tenant_b_read_own_profiles",
@@ -153,12 +161,15 @@ async function main(): Promise<void> {
   });
 
   // Cross-tenant child table denials using A's job id from B
-  const aJob = await withTenantTransaction(db, tenantA, async (tx) =>
-    [
-      ...(await tx.execute(sql`
+  const aJob = await withTenantTransaction(
+    db,
+    tenantA,
+    async (tx) =>
+      [
+        ...(await tx.execute(sql`
         select id::text as id from import_jobs where profile_key like 's1-acceptance-%' limit 1
       `)),
-    ] as Array<{ id: string }>,
+      ] as Array<{ id: string }>,
   );
   const jobAId = aJob[0]?.id;
   if (!jobAId) {
@@ -178,10 +189,17 @@ async function main(): Promise<void> {
   ] as const;
 
   for (const t of childTables) {
-    const leaked = await withTenantTransaction(db, tenantB, async (tx) =>
-      [...(await tx.execute(sql.raw(`select count(*)::int as c from ${t} where job_id = '${jobAId}'`)))] as Array<{
-        c: number;
-      }>,
+    const leaked = await withTenantTransaction(
+      db,
+      tenantB,
+      async (tx) =>
+        [
+          ...(await tx.execute(
+            sql.raw(`select count(*)::int as c from ${t} where job_id = '${jobAId}'`),
+          )),
+        ] as Array<{
+          c: number;
+        }>,
     );
     const c = leaked[0]?.c ?? 0;
     const pass = c === 0;
@@ -190,26 +208,31 @@ async function main(): Promise<void> {
   }
 
   // Cross-tenant profile select by id
-  const profileA = await withTenantTransaction(db, tenantA, async (tx) =>
-    [
-      ...(await tx.execute(sql`
+  const profileA = await withTenantTransaction(
+    db,
+    tenantA,
+    async (tx) =>
+      [
+        ...(await tx.execute(sql`
         select id::text as id from import_profiles where profile_key like 's1-acceptance-profile-%' limit 1
       `)),
-    ] as Array<{ id: string }>,
+      ] as Array<{ id: string }>,
   );
   const profileAId = profileA[0]?.id;
   if (profileAId) {
-    const cross = await withTenantTransaction(db, tenantB, async (tx) =>
-      [...(await tx.execute(sql`select id::text as id from import_profiles where id = ${profileAId}::uuid`))],
-    );
+    const cross = await withTenantTransaction(db, tenantB, async (tx) => [
+      ...(await tx.execute(
+        sql`select id::text as id from import_profiles where id = ${profileAId}::uuid`,
+      )),
+    ]);
     cases.push({ name: "cross_deny_profile_by_id", pass: cross.length === 0 });
     if (cross.length) out.crossTenantReads = Number(out.crossTenantReads) + cross.length;
   }
 
   // Guessed UUID
-  const guess = await withTenantTransaction(db, tenantB, async (tx) =>
-    [...(await tx.execute(sql`select id::text as id from import_jobs where id = ${jobAId}::uuid`))],
-  );
+  const guess = await withTenantTransaction(db, tenantB, async (tx) => [
+    ...(await tx.execute(sql`select id::text as id from import_jobs where id = ${jobAId}::uuid`)),
+  ]);
   cases.push({ name: "guessed_uuid_job_denied", pass: guess.length === 0 });
   if (guess.length) out.crossTenantReads = Number(out.crossTenantReads) + guess.length;
 
@@ -247,12 +270,15 @@ async function main(): Promise<void> {
       where id = ${probeId}::uuid
     `);
   });
-  const updated = await withTenantTransaction(db, tenantA, async (tx) =>
-    [
-      ...(await tx.execute(sql`
+  const updated = await withTenantTransaction(
+    db,
+    tenantA,
+    async (tx) =>
+      [
+        ...(await tx.execute(sql`
         select display_name from import_profiles where id = ${probeId}::uuid
       `)),
-    ] as Array<{ display_name: string }>,
+      ] as Array<{ display_name: string }>,
   );
   cases.push({
     name: "tenant_a_insert_update_own",
@@ -269,10 +295,15 @@ async function main(): Promise<void> {
       // drizzle may not throw if 0 rows; treat 0 as deny success
       void res;
     });
-    const still = await withTenantTransaction(db, tenantA, async (tx) =>
-      [
-        ...(await tx.execute(sql`select display_name from import_profiles where id = ${probeId}::uuid`)),
-      ] as Array<{ display_name: string }>,
+    const still = await withTenantTransaction(
+      db,
+      tenantA,
+      async (tx) =>
+        [
+          ...(await tx.execute(
+            sql`select display_name from import_profiles where id = ${probeId}::uuid`,
+          )),
+        ] as Array<{ display_name: string }>,
     );
     updateBlocked = still[0]?.display_name === "probe2";
   } catch {
@@ -287,9 +318,9 @@ async function main(): Promise<void> {
     await withTenantTransaction(db, tenantB, async (tx) => {
       await tx.execute(sql`delete from import_profiles where id = ${probeId}::uuid`);
     });
-    const still = await withTenantTransaction(db, tenantA, async (tx) =>
-      [...(await tx.execute(sql`select id from import_profiles where id = ${probeId}::uuid`))],
-    );
+    const still = await withTenantTransaction(db, tenantA, async (tx) => [
+      ...(await tx.execute(sql`select id from import_profiles where id = ${probeId}::uuid`)),
+    ]);
     deleteBlocked = still.length === 1;
   } catch {
     deleteBlocked = true;
@@ -331,8 +362,7 @@ async function main(): Promise<void> {
 }
 
 const isDirect =
-  process.argv[1] &&
-  pathToFileURL(path.resolve(process.argv[1])).href === import.meta.url;
+  process.argv[1] && pathToFileURL(path.resolve(process.argv[1])).href === import.meta.url;
 
 if (
   isDirect ||

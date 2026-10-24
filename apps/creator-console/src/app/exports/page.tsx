@@ -103,7 +103,11 @@ function ExportsInner() {
       <p>Authorized, tenant-scoped exports with expiring download access.</p>
       <div style={{ display: "flex", gap: "0.75rem", flexWrap: "wrap", marginBottom: "1rem" }}>
         {hasPermission("platform.membership.read") ? (
-          <button type="button" disabled={busy} onClick={() => void createExport("memberships.csv")}>
+          <button
+            type="button"
+            disabled={busy}
+            onClick={() => void createExport("memberships.csv")}
+          >
             Export memberships (CSV)
           </button>
         ) : null}

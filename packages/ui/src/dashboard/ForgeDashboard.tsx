@@ -15,11 +15,7 @@ export function ForgeMetricCard({
   /** Shown when value is null/undefined (never fabricate 0). */
   unavailableLabel?: string;
 }) {
-  const display = loading
-    ? "…"
-    : value === null || value === undefined
-      ? unavailableLabel
-      : value;
+  const display = loading ? "…" : value === null || value === undefined ? unavailableLabel : value;
   return (
     <article className="forge-metric-card">
       <p className="forge-metric-card__label">{label}</p>
@@ -49,7 +45,9 @@ export function ChartCard({
         <h3 className="forge-chart-card__title">{title}</h3>
         {description ? <p className="forge-chart-card__desc">{description}</p> : null}
       </header>
-      <div className="forge-chart-card__body">{children ?? <p className="forge-muted">{emptyLabel}</p>}</div>
+      <div className="forge-chart-card__body">
+        {children ?? <p className="forge-muted">{emptyLabel}</p>}
+      </div>
     </article>
   );
 }
@@ -71,7 +69,10 @@ export function ForgeStatusCard({
   return (
     <article className="forge-metric-card">
       <p className="forge-metric-card__label">{title}</p>
-      <p className="forge-metric-card__value" style={{ fontSize: "1.1rem", display: "flex", gap: "0.5rem", alignItems: "center" }}>
+      <p
+        className="forge-metric-card__value"
+        style={{ fontSize: "1.1rem", display: "flex", gap: "0.5rem", alignItems: "center" }}
+      >
         <span className={`forge-status-dot forge-status-dot--${tone}`} aria-hidden />
         {status}
       </p>

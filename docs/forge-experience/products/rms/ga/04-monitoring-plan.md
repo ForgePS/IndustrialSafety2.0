@@ -1,16 +1,16 @@
 # 04 — Monitoring Plan (GA)
 
-**Status:** **DRAFT**  
+**Status:** **DRAFT**
 
 ## Signals
 
-| Signal | Source | GA use |
-| --- | --- | --- |
-| API latency / 5xx | Platform API / ALB / CloudWatch | Alert on regression after enable |
-| Auth failures | Cognito / auth logs | Spike → investigate / pause |
-| Feature override audit | `feature.put` / `FEATURE_CHANGED` | Detect unexpected tenants |
-| Client errors | RUM / browser sink (if deployed) | Correlate to FX routes |
-| Permission denials | API 403 rates | Compare to baseline |
+| Signal                 | Source                            | GA use                           |
+| ---------------------- | --------------------------------- | -------------------------------- |
+| API latency / 5xx      | Platform API / ALB / CloudWatch   | Alert on regression after enable |
+| Auth failures          | Cognito / auth logs               | Spike → investigate / pause      |
+| Feature override audit | `feature.put` / `FEATURE_CHANGED` | Detect unexpected tenants        |
+| Client errors          | RUM / browser sink (if deployed)  | Correlate to FX routes           |
+| Permission denials     | API 403 rates                     | Compare to baseline              |
 
 ## Dashboards / alerts
 

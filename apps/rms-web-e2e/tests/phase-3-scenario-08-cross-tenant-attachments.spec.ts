@@ -1,10 +1,6 @@
 import { test, expect } from "../src/fixtures/index.js";
 import { apiRequest, readTenantId } from "../src/helpers/api.js";
-import {
-  getSecondaryCredentials,
-  hasSecondaryCredentials,
-  REQUIRE_SECONDARY,
-} from "../src/env.js";
+import { getSecondaryCredentials, hasSecondaryCredentials, REQUIRE_SECONDARY } from "../src/env.js";
 import { createManualIncident, ensureAuthenticated } from "../src/helpers/navigation.js";
 import { e2eRunId, syntheticDispatchDescription } from "../src/helpers/test-data.js";
 import {
@@ -163,7 +159,10 @@ test.describe("Phase 3 scenario 8 — cross-tenant attachments @phase3", () => {
 
     // Reuse Tenant A upload URL as Tenant B identity is irrelevant (presign is capability URL),
     // but expired/corrupted signature must fail.
-    const expiredLike = upload.uploadUrl.replace(/X-Amz-Signature=[^&]+/, "X-Amz-Signature=deadbeef");
+    const expiredLike = upload.uploadUrl.replace(
+      /X-Amz-Signature=[^&]+/,
+      "X-Amz-Signature=deadbeef",
+    );
     const expiredPut = await fetch(expiredLike, {
       method: "PUT",
       headers: { "Content-Type": "image/jpeg" },

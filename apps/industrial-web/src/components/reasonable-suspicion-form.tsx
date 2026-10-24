@@ -41,9 +41,9 @@ export function ReasonableSuspicionForm({ value, onChange, disabled = false }: P
   return (
     <div className="reasonable-suspicion">
       <p className="small text-muted mb-3">
-        Record only what you personally saw, heard, or smelled, as it happened. Reasonable
-        suspicion must be based on specific, current observations of the employee&apos;s
-        appearance, behavior, speech, or body odor.
+        Record only what you personally saw, heard, or smelled, as it happened. Reasonable suspicion
+        must be based on specific, current observations of the employee&apos;s appearance, behavior,
+        speech, or body odor.
       </p>
 
       <div className="row g-3 mb-3">
@@ -87,8 +87,8 @@ export function ReasonableSuspicionForm({ value, onChange, disabled = false }: P
 
       {deadlines ? (
         <div className="alert alert-info small py-2" role="note">
-          <strong>Testing windows:</strong> alcohol test by {formatDeadline(deadlines.alcoholBy)}{" "}
-          (2 hours; stop trying after {formatDeadline(deadlines.alcoholCutoff)}) · drug test by{" "}
+          <strong>Testing windows:</strong> alcohol test by {formatDeadline(deadlines.alcoholBy)} (2
+          hours; stop trying after {formatDeadline(deadlines.alcoholCutoff)}) · drug test by{" "}
           {formatDeadline(deadlines.drugBy)} (32 hours). Document the reason if a test is late or
           not done.
         </div>

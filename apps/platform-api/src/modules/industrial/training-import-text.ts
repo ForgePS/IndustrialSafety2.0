@@ -127,7 +127,8 @@ export function repairUtf8Mojibake(text: string): string {
   if (!text) return "";
   let current = text;
   for (let pass = 0; pass < 2; pass += 1) {
-    if (!/[\u00C0-\u00FF]|â|Ã|Â|[\u0080-\u009F]/.test(current) && !current.includes("\uFFFD")) break;
+    if (!/[\u00C0-\u00FF]|â|Ã|Â|[\u0080-\u009F]/.test(current) && !current.includes("\uFFFD"))
+      break;
     try {
       const bytes = encodeWindows1252(current);
       const candidate = new TextDecoder("utf-8", { fatal: false }).decode(bytes);
@@ -159,25 +160,23 @@ function mapLegacyControlChars(text: string): string {
 
 /** Normalize punctuation and repair common mojibake from mis-encoded imports. */
 export function sanitizeTrainingImportText(text: string): string {
-  return (
-    repairUtf8Mojibake(text)
-      .replace(/\uFEFF/g, "")
-      .replace(/\u00A0/g, " ")
-      .replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F]/g, "")
-      .replace(/[\u0080-\u009F]/g, (ch) => CP1252_HIGH_BYTES[ch.charCodeAt(0)] ?? "")
-      .replace(/â€™|â€˜/g, "'")
-      .replace(/â€œ/g, '"')
-      .replace(/â€\u009d/g, '"')
-      .replace(/â€"/g, "—")
-      .replace(/â€"/g, "–")
-      .replace(/â€¦/g, "...")
-      .replace(/[\u2018\u2019]/g, "'")
-      .replace(/[\u201C\u201D]/g, '"')
-      .replace(/Â(?=[\s!?,.)}\]]|$)/g, "")
-      .replace(/\uFFFD/g, "")
-      .normalize("NFC")
-      .trim()
-  );
+  return repairUtf8Mojibake(text)
+    .replace(/\uFEFF/g, "")
+    .replace(/\u00A0/g, " ")
+    .replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F]/g, "")
+    .replace(/[\u0080-\u009F]/g, (ch) => CP1252_HIGH_BYTES[ch.charCodeAt(0)] ?? "")
+    .replace(/â€™|â€˜/g, "'")
+    .replace(/â€œ/g, '"')
+    .replace(/â€\u009d/g, '"')
+    .replace(/â€"/g, "—")
+    .replace(/â€"/g, "–")
+    .replace(/â€¦/g, "...")
+    .replace(/[\u2018\u2019]/g, "'")
+    .replace(/[\u201C\u201D]/g, '"')
+    .replace(/Â(?=[\s!?,.)}\]]|$)/g, "")
+    .replace(/\uFFFD/g, "")
+    .normalize("NFC")
+    .trim();
 }
 
 export { mapLegacyControlChars };

@@ -35,7 +35,13 @@ export function ForgeSidebar({
           {productLabel ? (
             <>
               <br />
-              <span style={{ fontSize: "var(--forge-text-xs)", fontWeight: 500, color: "var(--forge-color-muted)" }}>
+              <span
+                style={{
+                  fontSize: "var(--forge-text-xs)",
+                  fontWeight: 500,
+                  color: "var(--forge-color-muted)",
+                }}
+              >
                 {productLabel}
               </span>
             </>

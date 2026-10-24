@@ -25,29 +25,31 @@ describe("alterRolePassword", () => {
   it("does not expose the supplied password when the driver rejects the statement", async () => {
     vi.resetModules();
     vi.doMock("postgres", () => {
-      const fn = Object.assign(
-        () => {
-          const client = Object.assign(
-            async () => {
-              throw Object.assign(new Error("ALTER ROLE x PASSWORD 'should-not-leak'"), {
-                code: "42501",
-              });
+      const fn = Object.assign(() => {
+        const client = Object.assign(
+          async () => {
+            throw Object.assign(new Error("ALTER ROLE x PASSWORD 'should-not-leak'"), {
+              code: "42501",
+            });
+          },
+          {
+            unsafe: async (_sql: string, params: unknown[]) => {
+              const fake = Object.assign(
+                new Error(
+                  `Failed query: ALTER ROLE forge_app WITH PASSWORD '${String(params[0])}'`,
+                ),
+                {
+                  code: "42501",
+                  query: `ALTER ROLE forge_app WITH PASSWORD '${String(params[0])}'`,
+                },
+              );
+              throw fake;
             },
-            {
-              unsafe: async (_sql: string, params: unknown[]) => {
-                const fake = Object.assign(
-                  new Error(`Failed query: ALTER ROLE forge_app WITH PASSWORD '${String(params[0])}'`),
-                  { code: "42501", query: `ALTER ROLE forge_app WITH PASSWORD '${String(params[0])}'` },
-                );
-                throw fake;
-              },
-              end: async () => undefined,
-            },
-          );
-          return client;
-        },
-        {},
-      );
+            end: async () => undefined,
+          },
+        );
+        return client;
+      }, {});
       return { default: fn };
     });
 
@@ -61,7 +63,9 @@ describe("alterRolePassword", () => {
       }),
     ).rejects.toSatisfy((error: unknown) => {
       const message = error instanceof Error ? error.message : String(error);
-      const serialized = JSON.stringify(error instanceof Error ? { message: error.message, stack: error.stack } : error);
+      const serialized = JSON.stringify(
+        error instanceof Error ? { message: error.message, stack: error.stack } : error,
+      );
       return !message.includes(secret) && !serialized.includes(secret);
     });
   });

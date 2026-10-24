@@ -35,12 +35,12 @@ describe("buildPersonnelFile", () => {
   });
 
   it("uses free-text site/department from roster imports when FKs are blank", () => {
-    expect(
-      groupById({ site: "GREENVILLE", department: "GREENVILLE" }, "assignment")?.rows,
-    ).toEqual([
-      { label: "Location", value: "GREENVILLE", wide: false },
-      { label: "Department", value: "GREENVILLE", wide: false },
-    ]);
+    expect(groupById({ site: "GREENVILLE", department: "GREENVILLE" }, "assignment")?.rows).toEqual(
+      [
+        { label: "Location", value: "GREENVILLE", wide: false },
+        { label: "Department", value: "GREENVILLE", wide: false },
+      ],
+    );
   });
 
   it("reads legacy roster location keys on the personnel file", () => {
@@ -140,7 +140,9 @@ describe("buildPersonnelFile", () => {
   });
 
   it("drops the notes section when it holds only import provenance", () => {
-    expect(groupById({ notes: "Synced from employee roster (roster.xlsx)." }, "notes")).toBeUndefined();
+    expect(
+      groupById({ notes: "Synced from employee roster (roster.xlsx)." }, "notes"),
+    ).toBeUndefined();
   });
 });
 

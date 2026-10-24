@@ -11,11 +11,11 @@ This is **not** CAD inbound webhooks, billing PSP inbound webhooks, or import co
 
 ## Permissions
 
-| Code | Use |
-| --- | --- |
-| `tenant.api_key.read` | List key metadata |
-| `tenant.api_key.manage` | Create / revoke |
-| `tenant.webhook.read` | List endpoints + deliveries |
+| Code                    | Use                               |
+| ----------------------- | --------------------------------- |
+| `tenant.api_key.read`   | List key metadata                 |
+| `tenant.api_key.manage` | Create / revoke                   |
+| `tenant.webhook.read`   | List endpoints + deliveries       |
 | `tenant.webhook.manage` | Create / patch / deliver / replay |
 
 Owner and Admin personas include all four via `TENANT_OWNER_PERMISSIONS`.

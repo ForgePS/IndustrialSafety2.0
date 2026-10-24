@@ -71,13 +71,7 @@ export class FacilitiesController {
     @Res({ passthrough: true }) res: Response,
   ) {
     const expected = requireIfMatch(req, "facility");
-    const data = await this.facilities.patch(
-      tenantId,
-      facilityId,
-      body,
-      principal,
-      expected,
-    );
+    const data = await this.facilities.patch(tenantId, facilityId, body, principal, expected);
     setETag(res, data.recordVersion);
     return ok(data, getRequestIds(req));
   }

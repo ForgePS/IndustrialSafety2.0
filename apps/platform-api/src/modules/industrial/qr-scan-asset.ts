@@ -30,7 +30,10 @@ function andEqVehicle(targetId: string, tenantId: string) {
 }
 
 function eqVehicle(targetId: string, tenantId: string) {
-  return and(eq(industrialFleetVehicles.id, targetId), eq(industrialFleetVehicles.tenantId, tenantId));
+  return and(
+    eq(industrialFleetVehicles.id, targetId),
+    eq(industrialFleetVehicles.tenantId, tenantId),
+  );
 }
 
 function andEqEquipment(targetId: string, tenantId: string) {

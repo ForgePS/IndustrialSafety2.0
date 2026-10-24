@@ -1,11 +1,6 @@
 "use client";
 
-import {
-  FxBreadcrumb,
-  FxDashboardLayout,
-  FxGridItem,
-  FxResponsiveGrid,
-} from "@forge/fx-layouts";
+import { FxBreadcrumb, FxDashboardLayout, FxGridItem, FxResponsiveGrid } from "@forge/fx-layouts";
 import {
   FxAlert,
   FxAreaChart,
@@ -52,12 +47,7 @@ const MARKERS = [
 export default function DashboardPage() {
   return (
     <FxDashboardLayout title="Operational dashboard">
-      <FxBreadcrumb
-        items={[
-          { label: "Operations", href: "/" },
-          { label: "Dashboard" },
-        ]}
-      />
+      <FxBreadcrumb items={[{ label: "Operations", href: "/" }, { label: "Dashboard" }]} />
       <FxAlert tone="warning" title="Synthetic reference data only">
         Widgets use static demo values. No RMS, Academy, or Industrial APIs are called.
       </FxAlert>
@@ -111,14 +101,35 @@ export default function DashboardPage() {
           <FxMapPanel title="Operational map" markers={MARKERS} />
         </FxGridItem>
         <FxGridItem span={6}>
-          <FxCard title="Queue summary" actions={<FxStatusBadge tone="danger">2 overdue</FxStatusBadge>}>
+          <FxCard
+            title="Queue summary"
+            actions={<FxStatusBadge tone="danger">2 overdue</FxStatusBadge>}
+          >
             <FxTable
               caption="Work queues"
               columns={["Queue", "Count", "Status"]}
               rows={[
-                ["Inspections", "8", <FxStatusBadge key="a" tone="warning">Attention</FxStatusBadge>],
-                ["Approvals", "4", <FxStatusBadge key="b" tone="info">Needs review</FxStatusBadge>],
-                ["Incidents", "1", <FxStatusBadge key="c" tone="danger">Open</FxStatusBadge>],
+                [
+                  "Inspections",
+                  "8",
+                  <FxStatusBadge key="a" tone="warning">
+                    Attention
+                  </FxStatusBadge>,
+                ],
+                [
+                  "Approvals",
+                  "4",
+                  <FxStatusBadge key="b" tone="info">
+                    Needs review
+                  </FxStatusBadge>,
+                ],
+                [
+                  "Incidents",
+                  "1",
+                  <FxStatusBadge key="c" tone="danger">
+                    Open
+                  </FxStatusBadge>,
+                ],
               ]}
             />
           </FxCard>

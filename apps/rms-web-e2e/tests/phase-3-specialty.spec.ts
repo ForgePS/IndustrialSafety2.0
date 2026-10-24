@@ -7,11 +7,7 @@ import {
   waitForAutosaveSaved,
 } from "../src/helpers/navigation.js";
 import { e2eRunId, syntheticDispatchDescription } from "../src/helpers/test-data.js";
-import {
-  getSecondaryCredentials,
-  hasSecondaryCredentials,
-  REQUIRE_SECONDARY,
-} from "../src/env.js";
+import { getSecondaryCredentials, hasSecondaryCredentials, REQUIRE_SECONDARY } from "../src/env.js";
 
 function unwrapData<T>(json: unknown): T {
   if (json && typeof json === "object" && "data" in json) {

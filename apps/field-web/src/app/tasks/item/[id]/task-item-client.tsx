@@ -61,12 +61,7 @@ export function TaskItemClient() {
   };
 
   if (!id || id === "placeholder") {
-    return (
-      <EmptyState
-        title="Open a task"
-        message="Choose an assigned task from My Work."
-      />
-    );
+    return <EmptyState title="Open a task" message="Choose an assigned task from My Work." />;
   }
 
   if (loading) return <LoadingState label="Loading task…" />;
@@ -81,10 +76,8 @@ export function TaskItemClient() {
       : typeof payload.notes === "string"
         ? payload.notes
         : null;
-  const locationName =
-    typeof payload.locationName === "string" ? payload.locationName : null;
-  const divisionName =
-    typeof payload.divisionName === "string" ? payload.divisionName : null;
+  const locationName = typeof payload.locationName === "string" ? payload.locationName : null;
+  const divisionName = typeof payload.divisionName === "string" ? payload.divisionName : null;
 
   return (
     <>

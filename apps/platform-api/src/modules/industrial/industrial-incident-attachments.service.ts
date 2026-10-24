@@ -82,7 +82,9 @@ export class IndustrialIncidentAttachmentsService {
     const tenantId = this.tenant(principal);
     const id = String(incidentId ?? "").trim();
     const filename = String(body.filename ?? "").trim();
-    const mimeType = String(body.mimeType ?? "").trim().toLowerCase();
+    const mimeType = String(body.mimeType ?? "")
+      .trim()
+      .toLowerCase();
     const contentLength = Number(body.contentLength ?? 0);
 
     if (!UUID_PATTERN.test(id)) {
@@ -112,39 +114,44 @@ export class IndustrialIncidentAttachmentsService {
     const documentId = createId();
     const now = new Date();
 
-    await withTenantTransaction(this.db, tenantId, async (tx) => {
-      const [incident] = await tx
-        .select({ id: industrialIncidents.id })
-        .from(industrialIncidents)
-        .where(
-          and(
-            eq(industrialIncidents.id, id),
-            eq(industrialIncidents.tenantId, tenantId),
-            isNull(industrialIncidents.archivedAt),
-          ),
-        )
-        .limit(1);
-      if (!incident) throw new ForgeError("NOT_FOUND", "Incident not found");
+    await withTenantTransaction(
+      this.db,
+      tenantId,
+      async (tx) => {
+        const [incident] = await tx
+          .select({ id: industrialIncidents.id })
+          .from(industrialIncidents)
+          .where(
+            and(
+              eq(industrialIncidents.id, id),
+              eq(industrialIncidents.tenantId, tenantId),
+              isNull(industrialIncidents.archivedAt),
+            ),
+          )
+          .limit(1);
+        if (!incident) throw new ForgeError("NOT_FOUND", "Incident not found");
 
-      await tx.insert(forgeDocuments).values({
-        id: documentId,
-        tenantId,
-        originalFilename: filename,
-        storedFilename,
-        objectKey,
-        bucketName: this.storage.bucketName,
-        mimeType,
-        fileSizeBytes: contentLength,
-        securityClassification: "INTERNAL",
-        malwareScanStatus: "PENDING",
-        retentionRule: "INCIDENT_ATTACHMENT_DEFAULT",
-        uploadStatus: "INITIALIZED",
-        source: INCIDENT_ATTACHMENT_SOURCE,
-        uploadedByUserId: principal.userId,
-        createdAt: now,
-        updatedAt: now,
-      });
-    }, principal.userId);
+        await tx.insert(forgeDocuments).values({
+          id: documentId,
+          tenantId,
+          originalFilename: filename,
+          storedFilename,
+          objectKey,
+          bucketName: this.storage.bucketName,
+          mimeType,
+          fileSizeBytes: contentLength,
+          securityClassification: "INTERNAL",
+          malwareScanStatus: "PENDING",
+          retentionRule: "INCIDENT_ATTACHMENT_DEFAULT",
+          uploadStatus: "INITIALIZED",
+          source: INCIDENT_ATTACHMENT_SOURCE,
+          uploadedByUserId: principal.userId,
+          createdAt: now,
+          updatedAt: now,
+        });
+      },
+      principal.userId,
+    );
 
     const presign = await this.storage.createPresignedUploadUrl({
       objectKey,
@@ -184,81 +191,86 @@ export class IndustrialIncidentAttachmentsService {
       );
     }
 
-    return withTenantTransaction(this.db, tenantId, async (tx) => {
-      const [incident] = await tx
-        .select()
-        .from(industrialIncidents)
-        .where(
-          and(
-            eq(industrialIncidents.id, id),
-            eq(industrialIncidents.tenantId, tenantId),
-            isNull(industrialIncidents.archivedAt),
-          ),
-        )
-        .limit(1);
-      if (!incident) throw new ForgeError("NOT_FOUND", "Incident not found");
+    return withTenantTransaction(
+      this.db,
+      tenantId,
+      async (tx) => {
+        const [incident] = await tx
+          .select()
+          .from(industrialIncidents)
+          .where(
+            and(
+              eq(industrialIncidents.id, id),
+              eq(industrialIncidents.tenantId, tenantId),
+              isNull(industrialIncidents.archivedAt),
+            ),
+          )
+          .limit(1);
+        if (!incident) throw new ForgeError("NOT_FOUND", "Incident not found");
 
-      const document = await tx.query.forgeDocuments.findFirst({
-        where: and(eq(forgeDocuments.id, documentId), eq(forgeDocuments.tenantId, tenantId)),
-      });
-      if (!document) throw new ForgeError("NOT_FOUND", "Document not found");
-      if (!documentBelongsToTenant(document.tenantId, tenantId)) {
-        throw new ForgeError("FORBIDDEN", "Document does not belong to the requested tenant");
-      }
-      if (!objectKeyBelongsToTenant(document.objectKey, tenantId)) {
-        throw new ForgeError("FORBIDDEN", "Object key does not belong to the requested tenant");
-      }
-      if (document.source !== INCIDENT_ATTACHMENT_SOURCE) {
-        throw new ForgeError("VALIDATION_FAILED", "Document is not an incident attachment");
-      }
-      const expectedPrefix = incidentAttachmentObjectKeyPrefix(tenantId, id);
-      if (!document.objectKey.startsWith(expectedPrefix)) {
-        throw new ForgeError("VALIDATION_FAILED", "Document does not belong to this incident");
-      }
+        const document = await tx.query.forgeDocuments.findFirst({
+          where: and(eq(forgeDocuments.id, documentId), eq(forgeDocuments.tenantId, tenantId)),
+        });
+        if (!document) throw new ForgeError("NOT_FOUND", "Document not found");
+        if (!documentBelongsToTenant(document.tenantId, tenantId)) {
+          throw new ForgeError("FORBIDDEN", "Document does not belong to the requested tenant");
+        }
+        if (!objectKeyBelongsToTenant(document.objectKey, tenantId)) {
+          throw new ForgeError("FORBIDDEN", "Object key does not belong to the requested tenant");
+        }
+        if (document.source !== INCIDENT_ATTACHMENT_SOURCE) {
+          throw new ForgeError("VALIDATION_FAILED", "Document is not an incident attachment");
+        }
+        const expectedPrefix = incidentAttachmentObjectKeyPrefix(tenantId, id);
+        if (!document.objectKey.startsWith(expectedPrefix)) {
+          throw new ForgeError("VALIDATION_FAILED", "Document does not belong to this incident");
+        }
 
-      await this.storage.assertObjectExists(document.objectKey);
+        await this.storage.assertObjectExists(document.objectKey);
 
-      const now = new Date();
-      await tx
-        .update(forgeDocuments)
-        .set({
-          uploadStatus: "COMPLETE",
-          uploadedAt: now,
-          updatedAt: now,
-        })
-        .where(and(eq(forgeDocuments.id, documentId), eq(forgeDocuments.tenantId, tenantId)));
+        const now = new Date();
+        await tx
+          .update(forgeDocuments)
+          .set({
+            uploadStatus: "COMPLETE",
+            uploadedAt: now,
+            updatedAt: now,
+          })
+          .where(and(eq(forgeDocuments.id, documentId), eq(forgeDocuments.tenantId, tenantId)));
 
-      const payload = unwrapPayload(incident.sourcePayload);
-      const uploads = readIncidentAttachments(payload);
-      if (!uploads.some((row) => row.documentId === document.id)) {
-        uploads.push({
+        const payload = unwrapPayload(incident.sourcePayload);
+        const uploads = readIncidentAttachments(payload);
+        if (!uploads.some((row) => row.documentId === document.id)) {
+          uploads.push({
+            documentId: document.id,
+            fileName: document.originalFilename,
+            contentType: document.mimeType,
+            uploadedAt: now.toISOString(),
+          });
+        }
+
+        const [updated] = await tx
+          .update(industrialIncidents)
+          .set({
+            sourcePayload: {
+              ...payload,
+              attachments: uploads,
+            },
+            updatedAt: now,
+          })
+          .where(eq(industrialIncidents.id, id))
+          .returning();
+
+        return {
+          incidentId: id,
           documentId: document.id,
           fileName: document.originalFilename,
-          contentType: document.mimeType,
-          uploadedAt: now.toISOString(),
-        });
-      }
-
-      const [updated] = await tx
-        .update(industrialIncidents)
-        .set({
-          sourcePayload: {
-            ...payload,
-            attachments: uploads,
-          },
-          updatedAt: now,
-        })
-        .where(eq(industrialIncidents.id, id))
-        .returning();
-
-      return {
-        incidentId: id,
-        documentId: document.id,
-        fileName: document.originalFilename,
-        attachments: uploads,
-        incident: updated,
-      };
-    }, principal.userId);
+          attachments: uploads,
+          incident: updated,
+        };
+      },
+      principal.userId,
+    );
   }
 
   async createDownloadUrl(principal: ForgePrincipal, incidentId: string, documentId: string) {
@@ -269,54 +281,60 @@ export class IndustrialIncidentAttachmentsService {
       throw new ForgeError("VALIDATION_FAILED", "incidentId and documentId must be UUIDs");
     }
 
-    return withTenantTransaction(this.db, tenantId, async (tx) => {
-      const [incident] = await tx
-        .select({
-          id: industrialIncidents.id,
-          sourcePayload: industrialIncidents.sourcePayload,
-        })
-        .from(industrialIncidents)
-        .where(
-          and(
-            eq(industrialIncidents.id, id),
-            eq(industrialIncidents.tenantId, tenantId),
-            isNull(industrialIncidents.archivedAt),
-          ),
-        )
-        .limit(1);
-      if (!incident) throw new ForgeError("NOT_FOUND", "Incident not found");
+    return withTenantTransaction(
+      this.db,
+      tenantId,
+      async (tx) => {
+        const [incident] = await tx
+          .select({
+            id: industrialIncidents.id,
+            sourcePayload: industrialIncidents.sourcePayload,
+          })
+          .from(industrialIncidents)
+          .where(
+            and(
+              eq(industrialIncidents.id, id),
+              eq(industrialIncidents.tenantId, tenantId),
+              isNull(industrialIncidents.archivedAt),
+            ),
+          )
+          .limit(1);
+        if (!incident) throw new ForgeError("NOT_FOUND", "Incident not found");
 
-      const attachments = readIncidentAttachments(incident.sourcePayload);
-      if (!attachments.some((row) => row.documentId === docId)) {
-        throw new ForgeError("NOT_FOUND", "Attachment not found on this incident");
-      }
+        const attachments = readIncidentAttachments(incident.sourcePayload);
+        if (!attachments.some((row) => row.documentId === docId)) {
+          throw new ForgeError("NOT_FOUND", "Attachment not found on this incident");
+        }
 
-      const document = await tx.query.forgeDocuments.findFirst({
-        where: and(eq(forgeDocuments.id, docId), eq(forgeDocuments.tenantId, tenantId)),
-      });
-      if (!document) throw new ForgeError("NOT_FOUND", "Document not found");
-      if (document.source !== INCIDENT_ATTACHMENT_SOURCE) {
-        throw new ForgeError("VALIDATION_FAILED", "Document is not an incident attachment");
-      }
+        const document = await tx.query.forgeDocuments.findFirst({
+          where: and(eq(forgeDocuments.id, docId), eq(forgeDocuments.tenantId, tenantId)),
+        });
+        if (!document) throw new ForgeError("NOT_FOUND", "Document not found");
+        if (document.source !== INCIDENT_ATTACHMENT_SOURCE) {
+          throw new ForgeError("VALIDATION_FAILED", "Document is not an incident attachment");
+        }
 
-      const inline = document.mimeType.startsWith("image/") || document.mimeType === "application/pdf";
-      const download = await this.storage.createPresignedDownloadUrl({
-        objectKey: document.objectKey,
-        mimeType: document.mimeType,
-        filename: document.originalFilename,
-        inline,
-      });
+        const inline =
+          document.mimeType.startsWith("image/") || document.mimeType === "application/pdf";
+        const download = await this.storage.createPresignedDownloadUrl({
+          objectKey: document.objectKey,
+          mimeType: document.mimeType,
+          filename: document.originalFilename,
+          inline,
+        });
 
-      return {
-        documentId: document.id,
-        fileName: document.originalFilename,
-        mimeType: document.mimeType,
-        downloadUrl: download.downloadUrl,
-        expiresInSeconds: download.expiresInSeconds,
-        expiresAt: download.expiresAt,
-        mode: download.mode,
-      };
-    }, principal.userId);
+        return {
+          documentId: document.id,
+          fileName: document.originalFilename,
+          mimeType: document.mimeType,
+          downloadUrl: download.downloadUrl,
+          expiresInSeconds: download.expiresInSeconds,
+          expiresAt: download.expiresAt,
+          mode: download.mode,
+        };
+      },
+      principal.userId,
+    );
   }
 
   async deleteAttachment(principal: ForgePrincipal, incidentId: string, documentId: string) {
@@ -327,62 +345,67 @@ export class IndustrialIncidentAttachmentsService {
       throw new ForgeError("VALIDATION_FAILED", "incidentId and documentId must be UUIDs");
     }
 
-    return withTenantTransaction(this.db, tenantId, async (tx) => {
-      const [incident] = await tx
-        .select()
-        .from(industrialIncidents)
-        .where(
-          and(
-            eq(industrialIncidents.id, id),
-            eq(industrialIncidents.tenantId, tenantId),
-            isNull(industrialIncidents.archivedAt),
-          ),
-        )
-        .limit(1);
-      if (!incident) throw new ForgeError("NOT_FOUND", "Incident not found");
+    return withTenantTransaction(
+      this.db,
+      tenantId,
+      async (tx) => {
+        const [incident] = await tx
+          .select()
+          .from(industrialIncidents)
+          .where(
+            and(
+              eq(industrialIncidents.id, id),
+              eq(industrialIncidents.tenantId, tenantId),
+              isNull(industrialIncidents.archivedAt),
+            ),
+          )
+          .limit(1);
+        if (!incident) throw new ForgeError("NOT_FOUND", "Incident not found");
 
-      const payload = unwrapPayload(incident.sourcePayload);
-      const existing = readIncidentAttachments(payload);
-      if (!existing.some((row) => row.documentId === docId)) {
-        throw new ForgeError("NOT_FOUND", "Attachment not found on this incident");
-      }
+        const payload = unwrapPayload(incident.sourcePayload);
+        const existing = readIncidentAttachments(payload);
+        if (!existing.some((row) => row.documentId === docId)) {
+          throw new ForgeError("NOT_FOUND", "Attachment not found on this incident");
+        }
 
-      const document = await tx.query.forgeDocuments.findFirst({
-        where: and(eq(forgeDocuments.id, docId), eq(forgeDocuments.tenantId, tenantId)),
-      });
-      if (!document) throw new ForgeError("NOT_FOUND", "Document not found");
-      if (!documentBelongsToTenant(document.tenantId, tenantId)) {
-        throw new ForgeError("FORBIDDEN", "Document does not belong to the requested tenant");
-      }
-      if (!objectKeyBelongsToTenant(document.objectKey, tenantId)) {
-        throw new ForgeError("FORBIDDEN", "Object key does not belong to the requested tenant");
-      }
-      if (document.source !== INCIDENT_ATTACHMENT_SOURCE) {
-        throw new ForgeError("VALIDATION_FAILED", "Document is not an incident attachment");
-      }
+        const document = await tx.query.forgeDocuments.findFirst({
+          where: and(eq(forgeDocuments.id, docId), eq(forgeDocuments.tenantId, tenantId)),
+        });
+        if (!document) throw new ForgeError("NOT_FOUND", "Document not found");
+        if (!documentBelongsToTenant(document.tenantId, tenantId)) {
+          throw new ForgeError("FORBIDDEN", "Document does not belong to the requested tenant");
+        }
+        if (!objectKeyBelongsToTenant(document.objectKey, tenantId)) {
+          throw new ForgeError("FORBIDDEN", "Object key does not belong to the requested tenant");
+        }
+        if (document.source !== INCIDENT_ATTACHMENT_SOURCE) {
+          throw new ForgeError("VALIDATION_FAILED", "Document is not an incident attachment");
+        }
 
-      const now = new Date();
-      const next = existing.filter((row) => row.documentId !== docId);
-      await tx
-        .update(industrialIncidents)
-        .set({
-          sourcePayload: {
-            ...payload,
-            attachments: next,
-          },
-          updatedAt: now,
-        })
-        .where(eq(industrialIncidents.id, id));
+        const now = new Date();
+        const next = existing.filter((row) => row.documentId !== docId);
+        await tx
+          .update(industrialIncidents)
+          .set({
+            sourcePayload: {
+              ...payload,
+              attachments: next,
+            },
+            updatedAt: now,
+          })
+          .where(eq(industrialIncidents.id, id));
 
-      await tx
-        .update(forgeDocuments)
-        .set({
-          uploadStatus: "DELETED",
-          updatedAt: now,
-        })
-        .where(and(eq(forgeDocuments.id, docId), eq(forgeDocuments.tenantId, tenantId)));
+        await tx
+          .update(forgeDocuments)
+          .set({
+            uploadStatus: "DELETED",
+            updatedAt: now,
+          })
+          .where(and(eq(forgeDocuments.id, docId), eq(forgeDocuments.tenantId, tenantId)));
 
-      return { incidentId: id, documentId: docId, attachments: next };
-    }, principal.userId);
+        return { incidentId: id, documentId: docId, attachments: next };
+      },
+      principal.userId,
+    );
   }
 }

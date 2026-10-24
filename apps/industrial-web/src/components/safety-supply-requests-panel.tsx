@@ -362,7 +362,9 @@ export function SafetySupplyRequestsPanel({
                       <tbody>
                         {detail.items.map((line) => (
                           <tr key={line.id}>
-                            <td>{line.itemName || line.customItemName || line.itemId || "Custom"}</td>
+                            <td>
+                              {line.itemName || line.customItemName || line.itemId || "Custom"}
+                            </td>
                             <td>{qty(line.quantityRequested)}</td>
                             <td>{qty(line.quantityApproved)}</td>
                             <td>{qty(line.quantityIssued)}</td>
@@ -511,9 +513,7 @@ export function SafetySupplyRequestsPanel({
                             <div className="fw-semibold">{ev.eventType.replace(/_/g, " ")}</div>
                             <div className="small text-muted">
                               {ev.previousStatus || "—"} → {ev.newStatus || "—"}
-                              {ev.createdAt
-                                ? ` · ${new Date(ev.createdAt).toLocaleString()}`
-                                : ""}
+                              {ev.createdAt ? ` · ${new Date(ev.createdAt).toLocaleString()}` : ""}
                             </div>
                             {ev.notes ? <div className="small">{ev.notes}</div> : null}
                           </li>

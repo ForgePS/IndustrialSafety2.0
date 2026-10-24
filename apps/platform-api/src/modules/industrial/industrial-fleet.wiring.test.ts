@@ -12,10 +12,7 @@ describe("Industrial fleet module wiring", () => {
       "utf8",
     );
     const controller = readFileSync(
-      path.join(
-        ROOT,
-        "apps/platform-api/src/modules/industrial/industrial-flat.controller.ts",
-      ),
+      path.join(ROOT, "apps/platform-api/src/modules/industrial/industrial-flat.controller.ts"),
       "utf8",
     );
     const service = readFileSync(
@@ -34,10 +31,7 @@ describe("Industrial fleet module wiring", () => {
 
   it("keeps fleet migration and discovery artifacts", () => {
     const migration = readFileSync(
-      path.join(
-        ROOT,
-        "packages/database/drizzle/0046_industrial_fleet_module_s1.sql",
-      ),
+      path.join(ROOT, "packages/database/drizzle/0046_industrial_fleet_module_s1.sql"),
       "utf8",
     );
     const discovery = readFileSync(

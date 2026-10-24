@@ -1,4 +1,10 @@
-import type { RowValidationResult, StagedRow, TargetSchema, Validator, ValidationIssue } from "../interfaces.js";
+import type {
+  RowValidationResult,
+  StagedRow,
+  TargetSchema,
+  Validator,
+  ValidationIssue,
+} from "../interfaces.js";
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 

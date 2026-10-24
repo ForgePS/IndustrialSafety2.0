@@ -108,7 +108,10 @@ export function extractTokenFromQrText(text: string): string | null {
   const trimmed = String(text ?? "").trim();
   if (!trimmed) return null;
   try {
-    const url = new URL(trimmed, typeof window !== "undefined" ? window.location.origin : undefined);
+    const url = new URL(
+      trimmed,
+      typeof window !== "undefined" ? window.location.origin : undefined,
+    );
     const scanMatch = url.pathname.match(/\/scan\/(?:equipment\/)?([^/]+)/i);
     if (scanMatch?.[1]) {
       const token = decodeURIComponent(scanMatch[1]).trim();

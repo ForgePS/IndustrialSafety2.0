@@ -8,24 +8,24 @@ Maturity: `Documented` → `Prototype` → `A11y reviewed` → `Tested` → `Rev
 
 See authoritative matrix: [43-component-certification.md](./43-component-certification.md).
 
-| Component / package | Doc | Prototype | A11y | Testing | Review | Prod ready |
-| --- | --- | --- | --- | --- | --- | --- |
-| fx-design-tokens | ✓ | ✓ | ✓ | ✓ | ✓ RC1 | □ (post S2) |
-| FxButton | ✓ | ✓ | ✓ | ✓ | ✓ | □ |
-| FxStatusBadge / Priority | ✓ | ✓ | ✓ | ✓ | ✓ | □ |
-| FxCard / MetricCard / KPI | ✓ | ✓ | ✓ | ✓ | ✓ | □ |
-| FxAlert | ✓ | ✓ | ✓ | ✓ | ✓ | □ |
-| FxTextField | ✓ | ✓ | ✓ | ✓ | ✓ | □ |
-| FxTable | ✓ | ✓ | ✓ | ✓ | ✓ | □ |
-| FxDialog | ✓ | ✓ | ✓ | ✓ | ✓ | □ |
-| FxEmptyState / Skeleton | ✓ | ✓ | ✓ | ✓ | ✓ | □ |
-| FxOfflineIndicator / EnvBanner | ✓ | ✓ | ✓ | ✓ | ✓ | □ |
-| FxAppShell | ✓ | ✓ | △ mobile nav | ✓ | ✓ | □ |
-| FxWorkspaceLayout | ✓ | ✓ | ✓ | ✓ | ✓ | □ |
-| FxDashboardLayout / Grid | ✓ | ✓ | ✓ | ✓ | ✓ | □ |
-| FxBreadcrumb | ✓ | ✓ | ✓ | ✓ | ✓ | □ |
-| Create/Delete patterns | ✓ | ✓ | ✓ | ✓ | ✓ | □ |
-| Charts / Map / Weather | ✓ | ✓ | ✓ | ✓ | ✓ | □ |
-| Command palette | ✓ S0 | □ | □ | □ | □ | □ |
+| Component / package            | Doc  | Prototype | A11y         | Testing | Review | Prod ready  |
+| ------------------------------ | ---- | --------- | ------------ | ------- | ------ | ----------- |
+| fx-design-tokens               | ✓    | ✓         | ✓            | ✓       | ✓ RC1  | □ (post S2) |
+| FxButton                       | ✓    | ✓         | ✓            | ✓       | ✓      | □           |
+| FxStatusBadge / Priority       | ✓    | ✓         | ✓            | ✓       | ✓      | □           |
+| FxCard / MetricCard / KPI      | ✓    | ✓         | ✓            | ✓       | ✓      | □           |
+| FxAlert                        | ✓    | ✓         | ✓            | ✓       | ✓      | □           |
+| FxTextField                    | ✓    | ✓         | ✓            | ✓       | ✓      | □           |
+| FxTable                        | ✓    | ✓         | ✓            | ✓       | ✓      | □           |
+| FxDialog                       | ✓    | ✓         | ✓            | ✓       | ✓      | □           |
+| FxEmptyState / Skeleton        | ✓    | ✓         | ✓            | ✓       | ✓      | □           |
+| FxOfflineIndicator / EnvBanner | ✓    | ✓         | ✓            | ✓       | ✓      | □           |
+| FxAppShell                     | ✓    | ✓         | △ mobile nav | ✓       | ✓      | □           |
+| FxWorkspaceLayout              | ✓    | ✓         | ✓            | ✓       | ✓      | □           |
+| FxDashboardLayout / Grid       | ✓    | ✓         | ✓            | ✓       | ✓      | □           |
+| FxBreadcrumb                   | ✓    | ✓         | ✓            | ✓       | ✓      | □           |
+| Create/Delete patterns         | ✓    | ✓         | ✓            | ✓       | ✓      | □           |
+| Charts / Map / Weather         | ✓    | ✓         | ✓            | ✓       | ✓      | □           |
+| Command palette                | ✓ S0 | □         | □            | □       | □      | □           |
 
 RC1 certifies the **reference design system**. Product “Production ready” still requires FX-S2+ adoption gates.

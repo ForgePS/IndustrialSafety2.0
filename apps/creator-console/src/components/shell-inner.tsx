@@ -63,8 +63,7 @@ function breadcrumbsForPath(pathname: string): ForgeBreadcrumbItem[] {
   for (let i = 0; i < segments.length; i += 1) {
     acc += `/${segments[i]}`;
     const seg = segments[i]!;
-    const label =
-      labelMap[seg] ?? seg.replace(/-/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
+    const label = labelMap[seg] ?? seg.replace(/-/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
     const last = i === segments.length - 1;
     items.push(last ? { label } : { label, href: `${acc}/` });
   }
@@ -194,7 +193,11 @@ export function ShellInner({ children }: { children: React.ReactNode }) {
                 <small>{error}</small>
               </div>
               <div className="d-flex gap-2 flex-wrap">
-                <button type="button" className="btn btn-sm btn-outline-secondary" onClick={() => void refresh()}>
+                <button
+                  type="button"
+                  className="btn btn-sm btn-outline-secondary"
+                  onClick={() => void refresh()}
+                >
                   Retry
                 </button>
                 <button
@@ -208,8 +211,16 @@ export function ShellInner({ children }: { children: React.ReactNode }) {
             </div>
           ) : (
             <div className="d-grid gap-2">
-              <ForgeShellState state="empty" title="Not signed in" description="Sign in to manage customers." />
-              <button type="button" className="btn btn-sm btn-primary" onClick={() => void loginWithCognito()}>
+              <ForgeShellState
+                state="empty"
+                title="Not signed in"
+                description="Sign in to manage customers."
+              />
+              <button
+                type="button"
+                className="btn btn-sm btn-primary"
+                onClick={() => void loginWithCognito()}
+              >
                 Sign in
               </button>
             </div>
@@ -217,7 +228,11 @@ export function ShellInner({ children }: { children: React.ReactNode }) {
         }
         navbarCenter={
           <span className="d-inline-flex align-items-center gap-2 flex-wrap">
-            <span className={isProduction ? "forge-env-pill forge-env-pill--production" : "forge-env-pill"}>
+            <span
+              className={
+                isProduction ? "forge-env-pill forge-env-pill--production" : "forge-env-pill"
+              }
+            >
               {isProduction ? "Production" : appEnv}
             </span>
             <StatusBadge tone={healthOk === null ? "neutral" : healthOk ? "success" : "danger"}>
@@ -253,9 +268,7 @@ export function ShellInner({ children }: { children: React.ReactNode }) {
                 onSignOut={() => void logout()}
                 renderLink={renderLink}
                 items={[
-                  ...(me.isPlatformAdmin
-                    ? [{ label: "Platform admin", href: "/settings/" }]
-                    : []),
+                  ...(me.isPlatformAdmin ? [{ label: "Platform admin", href: "/settings/" }] : []),
                   { label: "Profile", href: "/profile/" },
                   { label: "Settings", href: "/settings/" },
                 ]}

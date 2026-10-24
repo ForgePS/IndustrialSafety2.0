@@ -86,10 +86,7 @@ function ProductsInner() {
 
 export default function ProductsPage() {
   return (
-    <TenantPageGate
-      title="Products"
-      anyOf={["tenant.billing.read", "platform.entitlement.manage"]}
-    >
+    <TenantPageGate title="Products" anyOf={["tenant.billing.read", "platform.entitlement.manage"]}>
       <Suspense fallback={<p className={styles.muted}>Loading…</p>}>
         <ProductsInner />
       </Suspense>

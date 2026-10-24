@@ -6,17 +6,17 @@ Versioned, append-only legal acknowledgment evidence and transaction attestation
 
 ## Authoritative adaptations
 
-| Concern | Forge source of truth |
-| --- | --- |
-| Authentication | Cognito JWT → `AuthContextService` / `authentication_identities` |
-| Session | Cognito access token; safe `jti`/`iat` references only — never tokens/passwords |
-| Tenant | `x-tenant-id` + `withTenantTransaction` / FORCE RLS |
-| User | `users` + `user_tenant_memberships` |
-| Personnel | Optional snapshot via `industrial_personnel.userAuthId` — **not** duplicated |
-| RBAC | `permissions` / roles; codes `industrial.legal.*` |
-| Audit | `AuditService` → `audit_events` (parallel to evidence tables) |
-| Feature flags | `feature_definitions` / `feature_overrides` |
-| Migrations | `packages/database/drizzle/0052_legal_acknowledgments_s1.sql` |
+| Concern        | Forge source of truth                                                           |
+| -------------- | ------------------------------------------------------------------------------- |
+| Authentication | Cognito JWT → `AuthContextService` / `authentication_identities`                |
+| Session        | Cognito access token; safe `jti`/`iat` references only — never tokens/passwords |
+| Tenant         | `x-tenant-id` + `withTenantTransaction` / FORCE RLS                             |
+| User           | `users` + `user_tenant_memberships`                                             |
+| Personnel      | Optional snapshot via `industrial_personnel.userAuthId` — **not** duplicated    |
+| RBAC           | `permissions` / roles; codes `industrial.legal.*`                               |
+| Audit          | `AuditService` → `audit_events` (parallel to evidence tables)                   |
+| Feature flags  | `feature_definitions` / `feature_overrides`                                     |
+| Migrations     | `packages/database/drizzle/0052_legal_acknowledgments_s1.sql`                   |
 
 ## Levels
 

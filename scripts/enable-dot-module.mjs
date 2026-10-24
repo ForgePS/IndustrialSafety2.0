@@ -114,7 +114,11 @@ async function main() {
       }
     }
 
-    for (const code of ["industrial.dot.view", "industrial.dot.manage", "industrial.dot.view_sensitive"]) {
+    for (const code of [
+      "industrial.dot.view",
+      "industrial.dot.manage",
+      "industrial.dot.view_sensitive",
+    ]) {
       const [perm] = await sql`select id::text as id from permissions where code = ${code} limit 1`;
       if (!perm) {
         reportBase.actions.push({ step: "permission", code, action: "insert" });
@@ -215,7 +219,8 @@ async function main() {
       if (!mma) {
         membershipGranted += 1;
         if (APPLY) {
-          if (!grantActor) throw new Error("No actor user for membership_module_access.granted_by_user_id");
+          if (!grantActor)
+            throw new Error("No actor user for membership_module_access.granted_by_user_id");
           await sql`
             insert into membership_module_access (
               id, tenant_id, membership_id, module_id, status, granted_by_user_id, created_at, updated_at
@@ -333,7 +338,11 @@ async function main() {
     }
     let rolePermGrants = 0;
     for (const role of roles) {
-      for (const code of ["industrial.dot.view", "industrial.dot.manage", "industrial.dot.view_sensitive"]) {
+      for (const code of [
+        "industrial.dot.view",
+        "industrial.dot.manage",
+        "industrial.dot.view_sensitive",
+      ]) {
         const pid = permIds[code];
         if (!pid) continue;
         const [existing] = await sql`

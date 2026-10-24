@@ -20,7 +20,10 @@ function absoluteUrl(pathOrUrl: string, appBaseUrl?: string | null): string {
     (typeof window !== "undefined" ? window.location.origin : "");
   if (!base) return raw;
   try {
-    return new URL(raw.startsWith("/") ? raw : `/${raw}`, base.endsWith("/") ? base : `${base}/`).toString();
+    return new URL(
+      raw.startsWith("/") ? raw : `/${raw}`,
+      base.endsWith("/") ? base : `${base}/`,
+    ).toString();
   } catch {
     return raw;
   }

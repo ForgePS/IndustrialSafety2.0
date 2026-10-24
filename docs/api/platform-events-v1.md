@@ -18,19 +18,19 @@ See [outbox-worker.md](../operations/outbox-worker.md) and [queue-dlq-runbook.md
 
 `ForgeDomainEvent<TPayload>`:
 
-| Field | Type | Purpose |
-| --- | --- | --- |
-| `id` | string (UUID) | Stable idempotency key for consumers |
-| `type` | string | Versioned type (suffix `.vN`) |
-| `version` | number | Envelope version (default 1) |
-| `occurredAt` | string (ISO-8601) | When the domain change occurred |
-| `tenantId` | string \| null | Tenant context; null for platform-global |
-| `actorUserId` | string \| null | Acting user when known |
-| `aggregateType` | string | Source aggregate name |
-| `aggregateId` | string | Source aggregate id |
-| `correlationId` | string | Trace linkage to API request |
-| `causationId` | string \| null | Parent event id when applicable |
-| `payload` | object | Domain-specific JSON |
+| Field           | Type              | Purpose                                  |
+| --------------- | ----------------- | ---------------------------------------- |
+| `id`            | string (UUID)     | Stable idempotency key for consumers     |
+| `type`          | string            | Versioned type (suffix `.vN`)            |
+| `version`       | number            | Envelope version (default 1)             |
+| `occurredAt`    | string (ISO-8601) | When the domain change occurred          |
+| `tenantId`      | string \| null    | Tenant context; null for platform-global |
+| `actorUserId`   | string \| null    | Acting user when known                   |
+| `aggregateType` | string            | Source aggregate name                    |
+| `aggregateId`   | string            | Source aggregate id                      |
+| `correlationId` | string            | Trace linkage to API request             |
+| `causationId`   | string \| null    | Parent event id when applicable          |
+| `payload`       | object            | Domain-specific JSON                     |
 
 Factory: `createDomainEvent()` in `@forge/events`.
 
@@ -42,78 +42,78 @@ Types are versioned independently of the HTTP API ([ADR-028](../decisions/ADR-02
 
 ### Tenant
 
-| Constant | Type string |
-| --- | --- |
-| `TENANT_CREATED` | `platform.tenant.created.v1` |
+| Constant           | Type string                    |
+| ------------------ | ------------------------------ |
+| `TENANT_CREATED`   | `platform.tenant.created.v1`   |
 | `TENANT_ACTIVATED` | `platform.tenant.activated.v1` |
 | `TENANT_SUSPENDED` | `platform.tenant.suspended.v1` |
-| `TENANT_ARCHIVED` | `platform.tenant.archived.v1` |
+| `TENANT_ARCHIVED`  | `platform.tenant.archived.v1`  |
 
 ### Organization
 
-| Constant | Type string |
-| --- | --- |
+| Constant               | Type string                        |
+| ---------------------- | ---------------------------------- |
 | `ORGANIZATION_CREATED` | `platform.organization.created.v1` |
 | `ORGANIZATION_UPDATED` | `platform.organization.updated.v1` |
 
 ### Person
 
-| Constant | Type string |
-| --- | --- |
-| `PERSON_CREATED` | `platform.person.created.v1` |
-| `PERSON_UPDATED` | `platform.person.updated.v1` |
-| `PERSON_MERGED` | `platform.person.merged.v1` |
+| Constant          | Type string                   |
+| ----------------- | ----------------------------- |
+| `PERSON_CREATED`  | `platform.person.created.v1`  |
+| `PERSON_UPDATED`  | `platform.person.updated.v1`  |
+| `PERSON_MERGED`   | `platform.person.merged.v1`   |
 | `PERSON_ARCHIVED` | `platform.person.archived.v1` |
 
 ### User (legacy invite flow)
 
-| Constant | Type string |
-| --- | --- |
-| `USER_INVITED` | `platform.user.invited.v1` |
+| Constant         | Type string                  |
+| ---------------- | ---------------------------- |
+| `USER_INVITED`   | `platform.user.invited.v1`   |
 | `USER_ACTIVATED` | `platform.user.activated.v1` |
-| `USER_DISABLED` | `platform.user.disabled.v1` |
+| `USER_DISABLED`  | `platform.user.disabled.v1`  |
 
 ### User invitation (Sprint 1E, ADR-020)
 
-| Constant | Type string |
-| --- | --- |
-| `USER_INVITATION_CREATED` | `platform.user_invitation.created.v1` |
-| `USER_INVITATION_SENT` | `platform.user_invitation.sent.v1` |
+| Constant                   | Type string                            |
+| -------------------------- | -------------------------------------- |
+| `USER_INVITATION_CREATED`  | `platform.user_invitation.created.v1`  |
+| `USER_INVITATION_SENT`     | `platform.user_invitation.sent.v1`     |
 | `USER_INVITATION_ACCEPTED` | `platform.user_invitation.accepted.v1` |
-| `USER_INVITATION_REVOKED` | `platform.user_invitation.revoked.v1` |
-| `USER_INVITATION_EXPIRED` | `platform.user_invitation.expired.v1` |
-| `USER_INVITATION_FAILED` | `platform.user_invitation.failed.v1` |
+| `USER_INVITATION_REVOKED`  | `platform.user_invitation.revoked.v1`  |
+| `USER_INVITATION_EXPIRED`  | `platform.user_invitation.expired.v1`  |
+| `USER_INVITATION_FAILED`   | `platform.user_invitation.failed.v1`   |
 
 ### Membership (Sprint 1E, ADR-021)
 
-| Constant | Type string |
-| --- | --- |
-| `MEMBERSHIP_CREATED` | `platform.membership.created.v1` |
-| `MEMBERSHIP_ACTIVATED` | `platform.membership.activated.v1` |
-| `MEMBERSHIP_SUSPENDED` | `platform.membership.suspended.v1` |
-| `MEMBERSHIP_REVOKED` | `platform.membership.revoked.v1` |
+| Constant                   | Type string                            |
+| -------------------------- | -------------------------------------- |
+| `MEMBERSHIP_CREATED`       | `platform.membership.created.v1`       |
+| `MEMBERSHIP_ACTIVATED`     | `platform.membership.activated.v1`     |
+| `MEMBERSHIP_SUSPENDED`     | `platform.membership.suspended.v1`     |
+| `MEMBERSHIP_REVOKED`       | `platform.membership.revoked.v1`       |
 | `MEMBERSHIP_ROLES_CHANGED` | `platform.membership.roles_changed.v1` |
 
 ### Entitlement, subscription, feature, configuration
 
-| Constant | Type string |
-| --- | --- |
-| `ENTITLEMENT_CHANGED` | `platform.entitlement.changed.v1` |
-| `SUBSCRIPTION_CHANGED` | `platform.subscription.changed.v1` |
-| `FEATURE_CHANGED` | `platform.feature.changed.v1` |
+| Constant                | Type string                         |
+| ----------------------- | ----------------------------------- |
+| `ENTITLEMENT_CHANGED`   | `platform.entitlement.changed.v1`   |
+| `SUBSCRIPTION_CHANGED`  | `platform.subscription.changed.v1`  |
+| `FEATURE_CHANGED`       | `platform.feature.changed.v1`       |
 | `CONFIGURATION_CHANGED` | `platform.configuration.changed.v1` |
 
 ### Role
 
-| Constant | Type string |
-| --- | --- |
+| Constant        | Type string                 |
+| --------------- | --------------------------- |
 | `ROLE_ASSIGNED` | `platform.role.assigned.v1` |
-| `ROLE_REVOKED` | `platform.role.revoked.v1` |
+| `ROLE_REVOKED`  | `platform.role.revoked.v1`  |
 
 ### Onboarding (Sprint 1E, ADR-027)
 
-| Constant | Type string |
-| --- | --- |
+| Constant               | Type string                        |
+| ---------------------- | ---------------------------------- |
 | `ONBOARDING_COMPLETED` | `platform.onboarding.completed.v1` |
 
 ## Pipeline proof set

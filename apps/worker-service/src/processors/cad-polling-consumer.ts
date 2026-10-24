@@ -1,8 +1,4 @@
-import {
-  DeleteMessageCommand,
-  ReceiveMessageCommand,
-  SQSClient,
-} from "@aws-sdk/client-sqs";
+import { DeleteMessageCommand, ReceiveMessageCommand, SQSClient } from "@aws-sdk/client-sqs";
 import { createLogger } from "@forge/observability";
 import { processCadPollingTick, type CadPollingJob } from "./cad-polling-processor.js";
 
@@ -56,9 +52,7 @@ export class CadPollingSqsConsumer {
           databaseUrl: this.props.databaseUrl,
           region: this.props.region,
           intakeQueueUrl: this.props.intakeQueueUrl,
-          ...(this.props.pollingTenantIds
-            ? { pollingTenantIds: this.props.pollingTenantIds }
-            : {}),
+          ...(this.props.pollingTenantIds ? { pollingTenantIds: this.props.pollingTenantIds } : {}),
         });
         await this.client.send(
           new DeleteMessageCommand({

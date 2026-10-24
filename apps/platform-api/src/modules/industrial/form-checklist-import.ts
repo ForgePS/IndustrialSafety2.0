@@ -29,7 +29,9 @@ function slugId(label: string, index: number): string {
 
 function asCellText(value: unknown): string {
   if (value == null) return "";
-  return String(value).replace(/\u00a0/g, " ").trim();
+  return String(value)
+    .replace(/\u00a0/g, " ")
+    .trim();
 }
 
 function normalizeHeaderKey(key: string): string {
@@ -128,7 +130,10 @@ function parseOutlineSectionRows(
 }
 
 /** Extract checklist question lines from plain text (PDF extraction). */
-export function parseChecklistText(text: string, defaultTitle = "Imported checklist"): ChecklistImportResult {
+export function parseChecklistText(
+  text: string,
+  defaultTitle = "Imported checklist",
+): ChecklistImportResult {
   const lines = text
     .split(/\r?\n/)
     .map((line) => line.trim())
@@ -175,7 +180,10 @@ export function parseChecklistText(text: string, defaultTitle = "Imported checkl
   };
 }
 
-export function parseChecklistCsv(text: string, defaultTitle = "Imported checklist"): ChecklistImportResult {
+export function parseChecklistCsv(
+  text: string,
+  defaultTitle = "Imported checklist",
+): ChecklistImportResult {
   const lines = text
     .split(/\r?\n/)
     .map((line) => line.trim())
@@ -216,7 +224,9 @@ export function parseChecklistCsv(text: string, defaultTitle = "Imported checkli
   const headers = parseLine(lines[0]!);
   const questionIdx = headers.findIndex((h) => headerIsQuestion(h));
   const sectionIdx = headers.findIndex((h) => headerIsSection(h));
-  const titleIdx = headers.findIndex((h) => normalizeHeaderKey(h) === "formname" || normalizeHeaderKey(h) === "title");
+  const titleIdx = headers.findIndex(
+    (h) => normalizeHeaderKey(h) === "formname" || normalizeHeaderKey(h) === "title",
+  );
 
   if (questionIdx < 0) {
     // No header — treat first column as questions.
@@ -246,7 +256,10 @@ export function parseChecklistCsv(text: string, defaultTitle = "Imported checkli
   return { title, category: null, fields };
 }
 
-export function parseChecklistXlsx(buffer: Buffer, defaultTitle = "Imported checklist"): ChecklistImportResult {
+export function parseChecklistXlsx(
+  buffer: Buffer,
+  defaultTitle = "Imported checklist",
+): ChecklistImportResult {
   const workbook = XLSX.read(buffer, { type: "buffer" });
   const sheetName =
     workbook.SheetNames.find((name) => /inspect|question|checklist/i.test(name)) ??

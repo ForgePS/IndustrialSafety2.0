@@ -111,9 +111,7 @@ export function SafetySupplyQrStationsPanel({
         },
       });
       setSuccess(
-        created.publicUrl
-          ? `QR created. URL: ${created.publicUrl}`
-          : "QR station created.",
+        created.publicUrl ? `QR created. URL: ${created.publicUrl}` : "QR station created.",
       );
       setError("");
       setForm((prev) => ({ ...prev, name: "", description: "", workArea: "" }));
@@ -192,8 +190,7 @@ ${
     }
   }
 
-  const siteName = (id?: string | null) =>
-    sites.find((s) => s.id === id)?.label ?? id ?? "—";
+  const siteName = (id?: string | null) => sites.find((s) => s.id === id)?.label ?? id ?? "—";
 
   const locationForStation = (station: Station) =>
     locations.find((loc) => loc.id === station.locationId) ?? null;
@@ -221,7 +218,11 @@ ${
                 <option value="half">Half sheet</option>
                 <option value="qr">QR only</option>
               </select>
-              <button type="button" className="btn btn-sm btn-outline-secondary" onClick={() => void load()}>
+              <button
+                type="button"
+                className="btn btn-sm btn-outline-secondary"
+                onClick={() => void load()}
+              >
                 Refresh
               </button>
             </div>
@@ -230,8 +231,8 @@ ${
           {success ? <div className="alert alert-success m-3">{success}</div> : null}
           <div className="alert alert-info m-3 mb-0 py-2 small">
             Use <strong>Print label</strong> for Brady i4311 / Forge printers.{" "}
-            <strong>Print poster</strong> opens the browser print dialog (office printers only —
-            do not select the i4311 there).
+            <strong>Print poster</strong> opens the browser print dialog (office printers only — do
+            not select the i4311 there).
           </div>
           <div className="table-responsive">
             <table className="table mb-0">
@@ -247,88 +248,88 @@ ${
               </thead>
               <tbody>
                 {stations.map((station) => (
-                    <tr key={station.id}>
-                      <td>
-                        <div className="fw-semibold">{station.name}</div>
-                        {station.publicUrl ? (
-                          <div className="small text-truncate" style={{ maxWidth: 220 }}>
+                  <tr key={station.id}>
+                    <td>
+                      <div className="fw-semibold">{station.name}</div>
+                      {station.publicUrl ? (
+                        <div className="small text-truncate" style={{ maxWidth: 220 }}>
+                          <button
+                            type="button"
+                            className="btn btn-link btn-sm p-0"
+                            onClick={() => {
+                              void navigator.clipboard.writeText(station.publicUrl || "");
+                              setSuccess("URL copied");
+                            }}
+                          >
+                            Copy URL
+                          </button>
+                        </div>
+                      ) : null}
+                    </td>
+                    <td>{siteName(station.siteId)}</td>
+                    <td>{station.status}</td>
+                    <td>{station.scanCount}</td>
+                    <td>{station.requestCount}</td>
+                    {showActions ? (
+                      <td className="text-end text-nowrap">
+                        {canPrintLabel || canManage ? (
+                          <button
+                            type="button"
+                            className="btn btn-sm btn-primary me-1"
+                            disabled={saving || !station.publicUrl}
+                            title={
+                              station.publicUrl
+                                ? "Opens Forge Print Dialog for Brady / bridge printers"
+                                : "No public URL yet"
+                            }
+                            onClick={() => setLabelPrintStation(station)}
+                          >
+                            Print label
+                          </button>
+                        ) : null}
+                        {canManage ? (
+                          <>
                             <button
                               type="button"
-                              className="btn btn-link btn-sm p-0"
-                              onClick={() => {
-                                void navigator.clipboard.writeText(station.publicUrl || "");
-                                setSuccess("URL copied");
-                              }}
+                              className="btn btn-sm btn-outline-primary me-1"
+                              disabled={saving}
+                              title="Browser print for letter/half posters — not for Brady i4311"
+                              onClick={() => void runStationAction(station.id, "png")}
                             >
-                              Copy URL
+                              Print poster
                             </button>
-                          </div>
+                            <button
+                              type="button"
+                              className="btn btn-sm btn-outline-secondary me-1"
+                              disabled={saving}
+                              onClick={() => void runStationAction(station.id, "regenerate")}
+                            >
+                              Regenerate
+                            </button>
+                            {station.status === "ACTIVE" ? (
+                              <button
+                                type="button"
+                                className="btn btn-sm btn-outline-warning"
+                                disabled={saving}
+                                onClick={() => void runStationAction(station.id, "disable")}
+                              >
+                                Disable
+                              </button>
+                            ) : (
+                              <button
+                                type="button"
+                                className="btn btn-sm btn-outline-success"
+                                disabled={saving}
+                                onClick={() => void runStationAction(station.id, "enable")}
+                              >
+                                Enable
+                              </button>
+                            )}
+                          </>
                         ) : null}
                       </td>
-                      <td>{siteName(station.siteId)}</td>
-                      <td>{station.status}</td>
-                      <td>{station.scanCount}</td>
-                      <td>{station.requestCount}</td>
-                      {showActions ? (
-                        <td className="text-end text-nowrap">
-                          {canPrintLabel || canManage ? (
-                            <button
-                              type="button"
-                              className="btn btn-sm btn-primary me-1"
-                              disabled={saving || !station.publicUrl}
-                              title={
-                                station.publicUrl
-                                  ? "Opens Forge Print Dialog for Brady / bridge printers"
-                                  : "No public URL yet"
-                              }
-                              onClick={() => setLabelPrintStation(station)}
-                            >
-                              Print label
-                            </button>
-                          ) : null}
-                          {canManage ? (
-                            <>
-                              <button
-                                type="button"
-                                className="btn btn-sm btn-outline-primary me-1"
-                                disabled={saving}
-                                title="Browser print for letter/half posters — not for Brady i4311"
-                                onClick={() => void runStationAction(station.id, "png")}
-                              >
-                                Print poster
-                              </button>
-                              <button
-                                type="button"
-                                className="btn btn-sm btn-outline-secondary me-1"
-                                disabled={saving}
-                                onClick={() => void runStationAction(station.id, "regenerate")}
-                              >
-                                Regenerate
-                              </button>
-                              {station.status === "ACTIVE" ? (
-                                <button
-                                  type="button"
-                                  className="btn btn-sm btn-outline-warning"
-                                  disabled={saving}
-                                  onClick={() => void runStationAction(station.id, "disable")}
-                                >
-                                  Disable
-                                </button>
-                              ) : (
-                                <button
-                                  type="button"
-                                  className="btn btn-sm btn-outline-success"
-                                  disabled={saving}
-                                  onClick={() => void runStationAction(station.id, "enable")}
-                                >
-                                  Enable
-                                </button>
-                              )}
-                            </>
-                          ) : null}
-                        </td>
-                      ) : null}
-                    </tr>
+                    ) : null}
+                  </tr>
                 ))}
                 {!loading && stations.length === 0 ? (
                   <tr>

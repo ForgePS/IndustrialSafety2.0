@@ -88,11 +88,13 @@ export class IndustrialEmergencyAlertsService {
     @Inject(NotificationsService) private readonly notifications: NotificationsService,
   ) {}
 
-  private smsConfigFromSettings(settings: {
-    smsProvider?: string | null;
-    smsEnabled?: boolean | null;
-    settingsJson?: unknown;
-  } | null) {
+  private smsConfigFromSettings(
+    settings: {
+      smsProvider?: string | null;
+      smsEnabled?: boolean | null;
+      settingsJson?: unknown;
+    } | null,
+  ) {
     return resolveEmergencyAlertSmsConfig(this.env, settings);
   }
 
@@ -216,7 +218,8 @@ export class IndustrialEmergencyAlertsService {
         .where(eq(industrialEmergencyAlertSettings.tenantId, tenantId))
         .limit(1);
       const smsConfig = this.smsConfigFromSettings(settings ?? null);
-      const configured = smsConfig.provider === SMS_PROVIDER_AWS && Boolean(smsConfig.originationIdentity);
+      const configured =
+        smsConfig.provider === SMS_PROVIDER_AWS && Boolean(smsConfig.originationIdentity);
       const ready = isSmsProviderReady(smsConfig);
 
       return {
@@ -256,9 +259,15 @@ export class IndustrialEmergencyAlertsService {
       if (query.status) {
         const status = query.status.toUpperCase();
         if (status === "ACTIVE") {
-          items = items.filter((i) => ACTIVE_STATUSES.includes(i.status as (typeof ACTIVE_STATUSES)[number]));
+          items = items.filter((i) =>
+            ACTIVE_STATUSES.includes(i.status as (typeof ACTIVE_STATUSES)[number]),
+          );
         } else if (status === "HISTORY") {
-          items = items.filter((i) => !ACTIVE_STATUSES.includes(i.status as (typeof ACTIVE_STATUSES)[number]) && i.status !== "DRAFT");
+          items = items.filter(
+            (i) =>
+              !ACTIVE_STATUSES.includes(i.status as (typeof ACTIVE_STATUSES)[number]) &&
+              i.status !== "DRAFT",
+          );
         } else {
           items = items.filter((i) => i.status === status);
         }
@@ -307,12 +316,7 @@ export class IndustrialEmergencyAlertsService {
         .orderBy(desc(industrialEmergencyAlertAuditLogs.createdAt))
         .limit(50);
 
-      const myAcknowledgment = await this.findMyAcknowledgment(
-        tx,
-        tenantId,
-        id,
-        principal.userId,
-      );
+      const myAcknowledgment = await this.findMyAcknowledgment(tx, tenantId, id, principal.userId);
 
       return {
         ...this.mapAlert(row),
@@ -410,7 +414,10 @@ export class IndustrialEmergencyAlertsService {
         .select()
         .from(industrialEmergencyAlerts)
         .where(
-          and(eq(industrialEmergencyAlerts.tenantId, tenantId), eq(industrialEmergencyAlerts.id, id)),
+          and(
+            eq(industrialEmergencyAlerts.tenantId, tenantId),
+            eq(industrialEmergencyAlerts.id, id),
+          ),
         )
         .limit(1);
       if (!alert) throw new ForgeError("NOT_FOUND", "Emergency alert not found");
@@ -421,10 +428,7 @@ export class IndustrialEmergencyAlertsService {
         );
       }
       if (!alert.requiresAcknowledgment) {
-        throw new ForgeError(
-          "VALIDATION_FAILED",
-          "This alert does not require acknowledgment",
-        );
+        throw new ForgeError("VALIDATION_FAILED", "This alert does not require acknowledgment");
       }
 
       const existing = await this.findMyAcknowledgment(tx, tenantId, id, userId);
@@ -539,7 +543,8 @@ export class IndustrialEmergencyAlertsService {
           id,
           tenantId,
           alertNumber,
-          alertType: asString(body.alertType ?? body.alert_type, "GENERAL").toUpperCase() || "GENERAL",
+          alertType:
+            asString(body.alertType ?? body.alert_type, "GENERAL").toUpperCase() || "GENERAL",
           severity: asString(body.severity, "SEVERE").toUpperCase() || "SEVERE",
           headline: headline.slice(0, 300),
           shortMessage: shortMessage.slice(0, 500),
@@ -600,12 +605,13 @@ export class IndustrialEmergencyAlertsService {
           alertType:
             asString(body.alertType ?? body.alert_type, existing.alertType).toUpperCase() ||
             existing.alertType,
-          severity:
-            asString(body.severity, existing.severity).toUpperCase() || existing.severity,
+          severity: asString(body.severity, existing.severity).toUpperCase() || existing.severity,
           headline: asString(body.headline, existing.headline).slice(0, 300) || existing.headline,
           shortMessage:
-            asString(body.shortMessage ?? body.short_message, existing.shortMessage).slice(0, 500) ||
-            existing.shortMessage,
+            asString(body.shortMessage ?? body.short_message, existing.shortMessage).slice(
+              0,
+              500,
+            ) || existing.shortMessage,
           detailedMessage:
             body.detailedMessage !== undefined || body.detailed_message !== undefined
               ? asString(body.detailedMessage ?? body.detailed_message) || null
@@ -619,17 +625,14 @@ export class IndustrialEmergencyAlertsService {
               ? asBool(body.isDrill ?? body.is_drill, existing.isDrill)
               : existing.isDrill,
           requiresAcknowledgment:
-            body.requiresAcknowledgment !== undefined ||
-            body.requires_acknowledgment !== undefined
+            body.requiresAcknowledgment !== undefined || body.requires_acknowledgment !== undefined
               ? asBool(
                   body.requiresAcknowledgment ?? body.requires_acknowledgment,
                   existing.requiresAcknowledgment,
                 )
               : existing.requiresAcknowledgment,
           audienceJson:
-            body.audience !== undefined
-              ? parseAudience(body.audience)
-              : existing.audienceJson,
+            body.audience !== undefined ? parseAudience(body.audience) : existing.audienceJson,
           channelsJson: channels,
           updatedAt: new Date(),
         })
@@ -1163,7 +1166,9 @@ export class IndustrialEmergencyAlertsService {
       }
 
       const [latest] = await tx
-        .select({ max: sql<number>`coalesce(max(${industrialEmergencyAlertVersions.versionNumber}), 0)::int` })
+        .select({
+          max: sql<number>`coalesce(max(${industrialEmergencyAlertVersions.versionNumber}), 0)::int`,
+        })
         .from(industrialEmergencyAlertVersions)
         .where(eq(industrialEmergencyAlertVersions.alertId, id));
       const nextVersion = (latest?.max ?? 0) + 1;
@@ -1251,7 +1256,9 @@ export class IndustrialEmergencyAlertsService {
 
       const now = new Date();
       const [latest] = await tx
-        .select({ max: sql<number>`coalesce(max(${industrialEmergencyAlertVersions.versionNumber}), 0)::int` })
+        .select({
+          max: sql<number>`coalesce(max(${industrialEmergencyAlertVersions.versionNumber}), 0)::int`,
+        })
         .from(industrialEmergencyAlertVersions)
         .where(eq(industrialEmergencyAlertVersions.alertId, id));
       const clearMessage =
@@ -1426,10 +1433,7 @@ export class IndustrialEmergencyAlertsService {
 
       const name = asString(body.name, existing.name);
       const headline = asString(body.headline, existing.headline);
-      const shortMessage = asString(
-        body.shortMessage ?? body.short_message,
-        existing.shortMessage,
-      );
+      const shortMessage = asString(body.shortMessage ?? body.short_message, existing.shortMessage);
       if (!name || !headline || !shortMessage) {
         throw new ForgeError("VALIDATION_FAILED", "name, headline, and shortMessage are required");
       }
@@ -1446,8 +1450,7 @@ export class IndustrialEmergencyAlertsService {
           alertType:
             asString(body.alertType ?? body.alert_type, existing.alertType).toUpperCase() ||
             existing.alertType,
-          severity:
-            asString(body.severity, existing.severity).toUpperCase() || existing.severity,
+          severity: asString(body.severity, existing.severity).toUpperCase() || existing.severity,
           headline: headline.slice(0, 300),
           shortMessage: shortMessage.slice(0, 500),
           detailedMessage:
@@ -1460,17 +1463,14 @@ export class IndustrialEmergencyAlertsService {
               : existing.instructions,
           channelsJson: channels,
           requiresAcknowledgment:
-            body.requiresAcknowledgment !== undefined ||
-            body.requires_acknowledgment !== undefined
+            body.requiresAcknowledgment !== undefined || body.requires_acknowledgment !== undefined
               ? asBool(
                   body.requiresAcknowledgment ?? body.requires_acknowledgment,
                   existing.requiresAcknowledgment,
                 )
               : existing.requiresAcknowledgment,
           enabled:
-            body.enabled !== undefined
-              ? asBool(body.enabled, existing.enabled)
-              : existing.enabled,
+            body.enabled !== undefined ? asBool(body.enabled, existing.enabled) : existing.enabled,
           updatedAt: new Date(),
         })
         .where(eq(industrialEmergencyAlertTemplates.id, id))
@@ -1547,10 +1547,7 @@ export class IndustrialEmergencyAlertsService {
       const smsProvider = providerRaw
         ? providerRaw.toUpperCase()
         : (existing?.smsProvider ?? SMS_PROVIDER_STUB);
-      if (
-        smsProvider !== SMS_PROVIDER_STUB &&
-        smsProvider !== SMS_PROVIDER_AWS
-      ) {
+      if (smsProvider !== SMS_PROVIDER_STUB && smsProvider !== SMS_PROVIDER_AWS) {
         throw new ForgeError(
           "VALIDATION_FAILED",
           `smsProvider must be ${SMS_PROVIDER_STUB} or ${SMS_PROVIDER_AWS}`,
@@ -1595,8 +1592,7 @@ export class IndustrialEmergencyAlertsService {
             ? asBool(body.inAppEnabled ?? body.in_app_enabled, true)
             : (existing?.inAppEnabled ?? true),
         requireSendConfirmation:
-          body.requireSendConfirmation !== undefined ||
-          body.require_send_confirmation !== undefined
+          body.requireSendConfirmation !== undefined || body.require_send_confirmation !== undefined
             ? asBool(body.requireSendConfirmation ?? body.require_send_confirmation, true)
             : (existing?.requireSendConfirmation ?? true),
         defaultChannelsJson:
@@ -1918,8 +1914,7 @@ ${entries}
     const name = asString(body.name);
     if (!name) throw new ForgeError("VALIDATION_FAILED", "name is required");
     const dynamic =
-      asBool(body.dynamic, false) ||
-      asString(body.groupType).toUpperCase() === "DYNAMIC";
+      asBool(body.dynamic, false) || asString(body.groupType).toUpperCase() === "DYNAMIC";
     const personnelIds = Array.isArray(body.personnelIds)
       ? body.personnelIds.map((id) => String(id).trim()).filter(Boolean)
       : [];
@@ -1945,9 +1940,7 @@ ${entries}
               ? (body.ruleJson as Record<string, unknown>)
               : {
                   locationIds: asString(body.locationId) ? [asString(body.locationId)] : [],
-                  departmentIds: asString(body.departmentId)
-                    ? [asString(body.departmentId)]
-                    : [],
+                  departmentIds: asString(body.departmentId) ? [asString(body.departmentId)] : [],
                 },
           enabled: true,
           expiresAt: asString(body.expiresAt) ? new Date(asString(body.expiresAt)) : null,
@@ -2004,9 +1997,7 @@ ${entries}
           enabled:
             body.enabled !== undefined ? asBool(body.enabled, existing.enabled) : existing.enabled,
           locationId:
-            body.locationId !== undefined
-              ? asString(body.locationId) || null
-              : existing.locationId,
+            body.locationId !== undefined ? asString(body.locationId) || null : existing.locationId,
           departmentId:
             body.departmentId !== undefined
               ? asString(body.departmentId) || null

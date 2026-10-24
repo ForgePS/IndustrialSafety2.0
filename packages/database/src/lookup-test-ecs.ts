@@ -13,9 +13,7 @@ async function main(): Promise<void> {
   try {
     const who = await sql`select current_user, session_user`;
     console.warn(JSON.stringify({ who }));
-    const rows = await sql.unsafe(
-      `select * from forge_lookup_user_tenants('${USER_ID}'::uuid)`,
-    );
+    const rows = await sql.unsafe(`select * from forge_lookup_user_tenants('${USER_ID}'::uuid)`);
     console.warn(JSON.stringify({ ok: true, count: rows.length, rows }));
   } catch (error: unknown) {
     console.error(

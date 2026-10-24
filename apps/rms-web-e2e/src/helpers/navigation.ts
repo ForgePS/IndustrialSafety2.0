@@ -116,7 +116,11 @@ export async function createManualIncident(page: Page, description: string): Pro
   return match[1];
 }
 
-export async function openIncidentSection(page: Page, incidentId: string, section: string): Promise<void> {
+export async function openIncidentSection(
+  page: Page,
+  incidentId: string,
+  section: string,
+): Promise<void> {
   const baseUrl = getBaseUrl();
   const targetPath = `/incidents/${incidentId}/`;
   const current = new URL(page.url());
@@ -128,7 +132,10 @@ export async function openIncidentSection(page: Page, incidentId: string, sectio
     await page.goto(`${baseUrl}${targetPath}?section=${section}`);
   }
 
-  await page.getByText(/signed in/i).waitFor({ timeout: 30_000 }).catch(() => {});
+  await page
+    .getByText(/signed in/i)
+    .waitFor({ timeout: 30_000 })
+    .catch(() => {});
   await page.getByRole("navigation", { name: /incident sections/i }).waitFor({ timeout: 45_000 });
 }
 
@@ -160,7 +167,10 @@ export async function searchAndSelectLookup(
 }
 
 export async function fillOverviewIfPresent(page: Page): Promise<void> {
-  await page.getByRole("heading", { name: /^overview$/i }).waitFor({ timeout: 15_000 }).catch(() => {});
+  await page
+    .getByRole("heading", { name: /^overview$/i })
+    .waitFor({ timeout: 15_000 })
+    .catch(() => {});
 
   await searchAndSelectLookup(page, /^station$/i, "st");
   await searchAndSelectLookup(page, /^shift$/i, "sh");
@@ -168,11 +178,17 @@ export async function fillOverviewIfPresent(page: Page): Promise<void> {
 
 export async function assignUnitIfPresent(page: Page, incidentId: string): Promise<void> {
   await openIncidentSection(page, incidentId, "UNITS_PERSONNEL");
-  await page.getByRole("heading", { name: /units & personnel/i }).waitFor({ timeout: 10_000 }).catch(() => {});
+  await page
+    .getByRole("heading", { name: /units & personnel/i })
+    .waitFor({ timeout: 10_000 })
+    .catch(() => {});
 
   const assigned = await searchAndSelectLookup(page, /^unit$/i, "en");
   if (assigned) {
-    await page.getByRole("heading", { name: /assigned units/i }).waitFor({ timeout: 10_000 }).catch(() => {});
+    await page
+      .getByRole("heading", { name: /assigned units/i })
+      .waitFor({ timeout: 10_000 })
+      .catch(() => {});
   }
 }
 

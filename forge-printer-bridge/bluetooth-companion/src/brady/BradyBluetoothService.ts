@@ -15,16 +15,10 @@ import { BradyErrorMapper } from "./BradyErrorMapper";
 
 export type StatusChangeHandler = (
   status: BluetoothStatus,
-  printer: PrinterInfoPayload | null
+  printer: PrinterInfoPayload | null,
 ) => void;
 
-const RECONNECT_BACKOFF_MS = [
-  5_000,
-  15_000,
-  30_000,
-  60_000,
-  5 * 60_000,
-] as const;
+const RECONNECT_BACKOFF_MS = [5_000, 15_000, 30_000, 60_000, 5 * 60_000] as const;
 
 /**
  * High-level Brady Bluetooth service used by the renderer.
@@ -78,7 +72,7 @@ export class BradyBluetoothService {
 
   private setStatus(
     status: BluetoothStatus,
-    printer: PrinterInfoPayload | null = this.printer
+    printer: PrinterInfoPayload | null = this.printer,
   ): void {
     this.status = status;
     this.printer = printer;
@@ -87,9 +81,7 @@ export class BradyBluetoothService {
     }
   }
 
-  async handlePipeRequest(
-    request: CompanionRequest
-  ): Promise<CompanionResponse> {
+  async handlePipeRequest(request: CompanionRequest): Promise<CompanionResponse> {
     switch (request.type) {
       case "BLUETOOTH_STATUS":
         return this.statusResponse(request.requestId);
@@ -101,8 +93,7 @@ export class BradyBluetoothService {
           savedId?: string | null;
           requestId?: string;
         };
-        const ownership =
-          connectReq.savedId ?? connectReq.deviceId ?? null;
+        const ownership = connectReq.savedId ?? connectReq.deviceId ?? null;
         const result = await this.connect(ownership, connectReq.requestId);
         if (ownership) {
           this.adapter.setOwnershipDeviceId(ownership);
@@ -117,13 +108,15 @@ export class BradyBluetoothService {
       case "DISCONNECT":
         return this.disconnect(request.requestId);
       case "PRINT":
-        return this.print(request as {
-          type: "PRINT";
-          jobId: string;
-          artifactPath: string;
-          copies?: number;
-          requestId?: string;
-        });
+        return this.print(
+          request as {
+            type: "PRINT";
+            jobId: string;
+            artifactPath: string;
+            copies?: number;
+            requestId?: string;
+          },
+        );
       case "CANCEL":
         this.cancelRequested = true;
         return this.statusResponse(request.requestId);
@@ -186,13 +179,13 @@ export class BradyBluetoothService {
       const deviceId = await this.adapter.showDiscoveredBleDevices(null);
       if (!deviceId) {
         const mapped = BradyErrorMapper.fromConnectionFailure(
-          this.adapter.getConnectionErrorMessage()
+          this.adapter.getConnectionErrorMessage(),
         );
         this.setStatus(
           mapped.code === "BLUETOOTH_PERMISSION_REQUIRED"
             ? "PERMISSION_REQUIRED"
             : "USER_ACTION_REQUIRED",
-          null
+          null,
         );
         return {
           type: "ERROR",
@@ -226,10 +219,7 @@ export class BradyBluetoothService {
     }
   }
 
-  async connect(
-    deviceId: string | null,
-    requestId?: string
-  ): Promise<ConnectResultResponse> {
+  async connect(deviceId: string | null, requestId?: string): Promise<ConnectResultResponse> {
     const supported = await this.adapter.isSupportedBrowser();
     if (!supported) {
       this.setStatus("PERMISSION_REQUIRED", null);
@@ -245,20 +235,16 @@ export class BradyBluetoothService {
     this.setStatus("PAIRING", this.printer);
 
     try {
-      const ownership =
-        deviceId ?? this.adapter.getOwnershipDeviceId() ?? null;
-      const connectedId =
-        await this.adapter.showDiscoveredBleDevices(ownership);
+      const ownership = deviceId ?? this.adapter.getOwnershipDeviceId() ?? null;
+      const connectedId = await this.adapter.showDiscoveredBleDevices(ownership);
 
       if (!connectedId || !this.adapter.isConnected()) {
         const mapped = BradyErrorMapper.fromConnectionFailure(
-          this.adapter.getConnectionErrorMessage()
+          this.adapter.getConnectionErrorMessage(),
         );
         this.setStatus(
-          mapped.code === "BLUETOOTH_PERMISSION_REQUIRED"
-            ? "PERMISSION_REQUIRED"
-            : "DISCONNECTED",
-          null
+          mapped.code === "BLUETOOTH_PERMISSION_REQUIRED" ? "PERMISSION_REQUIRED" : "DISCONNECTED",
+          null,
         );
         return {
           type: "CONNECT_RESULT",
@@ -389,9 +375,7 @@ export class BradyBluetoothService {
       }
 
       const copies =
-        typeof request.copies === "number" && request.copies > 0
-          ? Math.floor(request.copies)
-          : 1;
+        typeof request.copies === "number" && request.copies > 0 ? Math.floor(request.copies) : 1;
       this.adapter.setCopies(copies);
 
       // Flatten to opaque B&W so thermal printers get a clean bitmap.
@@ -399,12 +383,9 @@ export class BradyBluetoothService {
       const ok = await this.adapter.printBitmap(printable, 0, 0);
       if (!ok) {
         const mapped = BradyErrorMapper.printFailed(
-          "BradySdk.printBitmap returned false (often means no printer connected)."
+          "BradySdk.printBitmap returned false (often means no printer connected).",
         );
-        this.setStatus(
-          this.adapter.isConnected() ? "PRINTER_ERROR" : "DISCONNECTED",
-          this.printer
-        );
+        this.setStatus(this.adapter.isConnected() ? "PRINTER_ERROR" : "DISCONNECTED", this.printer);
         return {
           type: "PRINT_RESULT",
           jobId: request.jobId,
@@ -424,10 +405,7 @@ export class BradyBluetoothService {
       };
     } catch (err) {
       const message = err instanceof Error ? err.message : String(err);
-      this.setStatus(
-        this.adapter.isConnected() ? "PRINTER_ERROR" : "DISCONNECTED",
-        this.printer
-      );
+      this.setStatus(this.adapter.isConnected() ? "PRINTER_ERROR" : "DISCONNECTED", this.printer);
       return {
         type: "PRINT_RESULT",
         jobId: request.jobId,
@@ -464,9 +442,7 @@ export class BradyBluetoothService {
       clearTimeout(this.reconnectTimer);
     }
     const delay =
-      RECONNECT_BACKOFF_MS[
-        Math.min(this.reconnectAttempt, RECONNECT_BACKOFF_MS.length - 1)
-      ];
+      RECONNECT_BACKOFF_MS[Math.min(this.reconnectAttempt, RECONNECT_BACKOFF_MS.length - 1)];
     this.reconnectAttempt += 1;
     this.reconnectTimer = setTimeout(() => {
       void this.reconnectOnce(savedOwnershipId);
@@ -491,10 +467,7 @@ export class BradyBluetoothService {
       }
 
       const errMsg = this.adapter.getConnectionErrorMessage();
-      if (
-        errMsg.toLowerCase().includes("gesture") ||
-        errMsg.toLowerCase().includes("user")
-      ) {
+      if (errMsg.toLowerCase().includes("gesture") || errMsg.toLowerCase().includes("user")) {
         this.setStatus("USER_ACTION_REQUIRED", this.printer);
       } else {
         this.setStatus("DISCONNECTED", this.printer);
@@ -511,15 +484,12 @@ function loadImageElement(dataUrl: string): Promise<HTMLImageElement> {
   return new Promise((resolve, reject) => {
     const img = new Image();
     img.onload = () => resolve(img);
-    img.onerror = () =>
-      reject(new Error("Failed to decode print artifact as an image."));
+    img.onerror = () => reject(new Error("Failed to decode print artifact as an image."));
     img.src = dataUrl;
   });
 }
 
-async function toBradyPrintableImage(
-  source: HTMLImageElement
-): Promise<HTMLImageElement> {
+async function toBradyPrintableImage(source: HTMLImageElement): Promise<HTMLImageElement> {
   const width = source.naturalWidth;
   const height = source.naturalHeight;
   const canvas = document.createElement("canvas");

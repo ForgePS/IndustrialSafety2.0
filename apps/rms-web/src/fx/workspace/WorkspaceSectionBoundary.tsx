@@ -20,7 +20,12 @@ export class WorkspaceSectionBoundary extends Component<Props, State> {
 
   override componentDidCatch(error: Error, info: ErrorInfo): void {
     if (process.env.NODE_ENV !== "production") {
-      console.warn("[rms-fx-workspace] section failed", this.props.title, error, info.componentStack);
+      console.warn(
+        "[rms-fx-workspace] section failed",
+        this.props.title,
+        error,
+        info.componentStack,
+      );
     }
   }
 

@@ -29,7 +29,10 @@ describe("extractFormFields", () => {
   it("infers signature and photo from labels", () => {
     const fields = extractFormFields({
       schemaJson: {
-        fields: [{ id: "a", label: "Worker signature" }, { id: "b", label: "Site photo" }],
+        fields: [
+          { id: "a", label: "Worker signature" },
+          { id: "b", label: "Site photo" },
+        ],
       },
     });
     expect(fields[0]?.type).toBe("signature");

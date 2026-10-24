@@ -125,8 +125,7 @@ export const OFFLINE_DOMAIN_POLICIES: readonly OfflineDomainPolicy[] = [
     offlineClass: "NEVER_CACHE",
     maxAgeMs: 0,
     queueMutations: false,
-    rationale:
-      "Document bytes and short-lived delivery URLs are never persisted on the device.",
+    rationale: "Document bytes and short-lived delivery URLs are never persisted on the device.",
   },
   {
     domain: "platform.exports",
@@ -144,9 +143,7 @@ export const OFFLINE_DOMAIN_POLICIES: readonly OfflineDomainPolicy[] = [
   },
 ];
 
-const POLICY_BY_DOMAIN = new Map(
-  OFFLINE_DOMAIN_POLICIES.map((policy) => [policy.domain, policy]),
-);
+const POLICY_BY_DOMAIN = new Map(OFFLINE_DOMAIN_POLICIES.map((policy) => [policy.domain, policy]));
 
 /**
  * Unknown domains default to NEVER_CACHE so a new module cannot accidentally

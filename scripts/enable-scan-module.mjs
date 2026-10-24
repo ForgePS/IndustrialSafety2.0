@@ -187,7 +187,8 @@ async function ensureMembershipAccess(sql, tenantId, moduleId, moduleCode, grant
     if (!mma) {
       membershipGranted += 1;
       if (APPLY) {
-        if (!grantActor) throw new Error("No actor user for membership_module_access.granted_by_user_id");
+        if (!grantActor)
+          throw new Error("No actor user for membership_module_access.granted_by_user_id");
         await sql`
           insert into membership_module_access (
             id, tenant_id, membership_id, module_id, status, granted_by_user_id, created_at, updated_at
@@ -242,7 +243,8 @@ async function ensureFeatureFlag(sql, tenantId, flagKey, flagName, actor, action
   }
 
   if (!flagDef || !actor) {
-    if (!actor) actions.push({ step: "feature_override", key: flagKey, action: "skipped_no_actor_user" });
+    if (!actor)
+      actions.push({ step: "feature_override", key: flagKey, action: "skipped_no_actor_user" });
     return;
   }
 
@@ -311,7 +313,8 @@ async function main() {
 
     for (const code of PERM_CODES) {
       if (code === "industrial.access") {
-        const [perm] = await sql`select id::text as id from permissions where code = ${code} limit 1`;
+        const [perm] =
+          await sql`select id::text as id from permissions where code = ${code} limit 1`;
         actions.push({
           step: "permission",
           code,

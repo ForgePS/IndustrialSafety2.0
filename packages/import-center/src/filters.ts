@@ -40,12 +40,23 @@ export function dashboardStatusBuckets(statuses: string[]): Record<string, numbe
     rollbackPending: 0,
   };
   for (const status of statuses) {
-    if (["UPLOADED", "SCANNING", "READY_FOR_MAPPING", "MAPPED", "VALIDATING", "PREVIEW_READY"].includes(status)) {
+    if (
+      [
+        "UPLOADED",
+        "SCANNING",
+        "READY_FOR_MAPPING",
+        "MAPPED",
+        "VALIDATING",
+        "PREVIEW_READY",
+      ].includes(status)
+    ) {
       counts.active = (counts.active ?? 0) + 1;
     }
     if (status === "READY_FOR_MAPPING") counts.awaitingMapping = (counts.awaitingMapping ?? 0) + 1;
-    if (status === "AWAITING_APPROVAL") counts.awaitingApproval = (counts.awaitingApproval ?? 0) + 1;
-    if (status === "QUEUED" || status === "PROCESSING") counts.processing = (counts.processing ?? 0) + 1;
+    if (status === "AWAITING_APPROVAL")
+      counts.awaitingApproval = (counts.awaitingApproval ?? 0) + 1;
+    if (status === "QUEUED" || status === "PROCESSING")
+      counts.processing = (counts.processing ?? 0) + 1;
     if (status === "COMPLETED") counts.completed = (counts.completed ?? 0) + 1;
     if (status === "COMPLETED_WITH_ERRORS") {
       counts.completedWithErrors = (counts.completedWithErrors ?? 0) + 1;

@@ -21,7 +21,9 @@ describe("normalizeIncidentBodyRegions", () => {
 
   it("rejects invalid geometry", () => {
     expect(() =>
-      normalizeIncidentBodyRegions([{ id: "head-front", top: "bad", left: 1, width: 1, height: 1 }]),
+      normalizeIncidentBodyRegions([
+        { id: "head-front", top: "bad", left: 1, width: 1, height: 1 },
+      ]),
     ).toThrow(/Invalid geometry/);
   });
 });

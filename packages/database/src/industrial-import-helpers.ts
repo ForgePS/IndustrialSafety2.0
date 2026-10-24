@@ -9,8 +9,7 @@ export const PACKAGE_TENANT_ID = "5da680d3-50f5-46ac-8b85-6cf454b6a0da";
 export const PRODUCTION_TENANT_ID = "019ff7d0-c20f-7659-81e4-c0cd68e23262";
 export const AUTHORIZED_TENANT_IDS = new Set([PACKAGE_TENANT_ID, PRODUCTION_TENANT_ID]);
 
-const UUID_RE =
-  /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 export type IdMapIndex = {
   bySourceId: Map<string, string>;

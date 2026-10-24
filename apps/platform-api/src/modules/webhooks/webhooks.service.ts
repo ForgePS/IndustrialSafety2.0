@@ -12,18 +12,17 @@ import {
   type Database,
 } from "@forge/database";
 import { ForgeError } from "@forge/errors";
-import {
-  generateWebhookSigningSecret,
-  redactSensitive,
-  signWebhookPayload,
-} from "@forge/security";
+import { generateWebhookSigningSecret, redactSensitive, signWebhookPayload } from "@forge/security";
 import type { ForgePrincipal } from "@forge/tenant-context";
 import { and, desc, eq } from "drizzle-orm";
 import { createLogger, logOperationalFailure } from "@forge/observability";
 import { DATABASE } from "../../tokens.js";
 import { AuditService } from "../audit/audit.service.js";
 
-const opsLogger = createLogger({ service: "platform-api-webhooks", environment: process.env.APP_ENV ?? "local" });
+const opsLogger = createLogger({
+  service: "platform-api-webhooks",
+  environment: process.env.APP_ENV ?? "local",
+});
 
 export type WebhookHttpResult = {
   ok: boolean;
@@ -83,9 +82,7 @@ function toPublicEndpoint(
     disabledAt: row.disabledAt,
     createdAt: row.createdAt,
     updatedAt: row.updatedAt,
-    ...(opts?.includeSecret
-      ? { signingSecret: opts.signingSecret ?? row.signingSecret }
-      : {}),
+    ...(opts?.includeSecret ? { signingSecret: opts.signingSecret ?? row.signingSecret } : {}),
   };
 }
 
@@ -135,8 +132,14 @@ export class WebhooksService {
   async createEndpoint(tenantId: string, input: unknown, principal: ForgePrincipal) {
     this.assertTenant(tenantId, principal);
     const data = createWebhookEndpointInputSchema.parse(input);
-    if (!data.endpointUrl.startsWith("https://") && !data.endpointUrl.startsWith("http://localhost")) {
-      throw new ForgeError("BAD_REQUEST", "Webhook endpoint URL must be https (or localhost for labs)");
+    if (
+      !data.endpointUrl.startsWith("https://") &&
+      !data.endpointUrl.startsWith("http://localhost")
+    ) {
+      throw new ForgeError(
+        "BAD_REQUEST",
+        "Webhook endpoint URL must be https (or localhost for labs)",
+      );
     }
 
     const signingSecret = generateWebhookSigningSecret();
@@ -144,42 +147,47 @@ export class WebhooksService {
 
     const id = createId();
     const now = new Date();
-    const row = await withTenantTransaction(this.db, tenantId, async (tx) => {
-      const [inserted] = await tx
-        .insert(tenantWebhookEndpoints)
-        .values({
-          id,
-          tenantId,
-          name: data.name,
-          endpointUrl: data.endpointUrl,
-          eventTypesJson: data.eventTypes,
-          signingSecret,
-          enabled: data.enabled ?? true,
-          createdByUserId: principal.userId,
-          disabledAt: data.enabled === false ? now : null,
-          createdAt: now,
-          updatedAt: now,
-        })
-        .returning();
-      if (inserted) {
-        await this.audit.writeInTransaction(tx, {
-          tenantId,
-          actorUserId: principal.userId,
-          actorPersonId: principal.personId,
-          actorType: "USER",
-          action: "webhook.endpoint.changed",
-          resourceType: "tenant_webhook_endpoint",
-          resourceId: inserted.id,
-          result: "SUCCESS",
-          riskLevel: "HIGH",
-          correlationId: principal.correlationId,
-          requestId: principal.requestId,
-          metadata: { change: "create" },
-          after: toPublicEndpoint(inserted),
-        });
-      }
-      return inserted;
-    }, principal.userId);
+    const row = await withTenantTransaction(
+      this.db,
+      tenantId,
+      async (tx) => {
+        const [inserted] = await tx
+          .insert(tenantWebhookEndpoints)
+          .values({
+            id,
+            tenantId,
+            name: data.name,
+            endpointUrl: data.endpointUrl,
+            eventTypesJson: data.eventTypes,
+            signingSecret,
+            enabled: data.enabled ?? true,
+            createdByUserId: principal.userId,
+            disabledAt: data.enabled === false ? now : null,
+            createdAt: now,
+            updatedAt: now,
+          })
+          .returning();
+        if (inserted) {
+          await this.audit.writeInTransaction(tx, {
+            tenantId,
+            actorUserId: principal.userId,
+            actorPersonId: principal.personId,
+            actorType: "USER",
+            action: "webhook.endpoint.changed",
+            resourceType: "tenant_webhook_endpoint",
+            resourceId: inserted.id,
+            result: "SUCCESS",
+            riskLevel: "HIGH",
+            correlationId: principal.correlationId,
+            requestId: principal.requestId,
+            metadata: { change: "create" },
+            after: toPublicEndpoint(inserted),
+          });
+        }
+        return inserted;
+      },
+      principal.userId,
+    );
 
     if (!row) throw new ForgeError("INTERNAL_ERROR", "Failed to create webhook endpoint");
     return toPublicEndpoint(row, { includeSecret: true, signingSecret });
@@ -194,82 +202,87 @@ export class WebhooksService {
     this.assertTenant(tenantId, principal);
     const data = patchWebhookEndpointInputSchema.parse(input);
 
-    return withTenantTransaction(this.db, tenantId, async (tx) => {
-      const existing = await tx.query.tenantWebhookEndpoints.findFirst({
-        where: and(
-          eq(tenantWebhookEndpoints.id, endpointId),
-          eq(tenantWebhookEndpoints.tenantId, tenantId),
-        ),
-      });
-      if (!existing) throw new ForgeError("NOT_FOUND", "Webhook endpoint not found");
-
-      const now = new Date();
-      let nextSecret = existing.signingSecret;
-      let includeSecret = false;
-      if (data.rotateSecret) {
-        nextSecret = generateWebhookSigningSecret();
-        includeSecret = true;
-        void redactSensitive({ signingSecret: nextSecret });
-      }
-
-      if (data.endpointUrl) {
-        if (
-          !data.endpointUrl.startsWith("https://") &&
-          !data.endpointUrl.startsWith("http://localhost")
-        ) {
-          throw new ForgeError(
-            "BAD_REQUEST",
-            "Webhook endpoint URL must be https (or localhost for labs)",
-          );
-        }
-      }
-
-      const enabled = data.enabled ?? existing.enabled;
-      const [updated] = await tx
-        .update(tenantWebhookEndpoints)
-        .set({
-          name: data.name ?? existing.name,
-          endpointUrl: data.endpointUrl ?? existing.endpointUrl,
-          eventTypesJson: data.eventTypes ?? existing.eventTypesJson,
-          signingSecret: nextSecret,
-          enabled,
-          disabledAt: enabled ? null : existing.disabledAt ?? now,
-          updatedAt: now,
-        })
-        .where(
-          and(
+    return withTenantTransaction(
+      this.db,
+      tenantId,
+      async (tx) => {
+        const existing = await tx.query.tenantWebhookEndpoints.findFirst({
+          where: and(
             eq(tenantWebhookEndpoints.id, endpointId),
             eq(tenantWebhookEndpoints.tenantId, tenantId),
           ),
-        )
-        .returning();
+        });
+        if (!existing) throw new ForgeError("NOT_FOUND", "Webhook endpoint not found");
 
-      const row = updated ?? existing;
-      await this.audit.writeInTransaction(tx, {
-        tenantId,
-        actorUserId: principal.userId,
-        actorPersonId: principal.personId,
-        actorType: "USER",
-        action: "webhook.endpoint.changed",
-        resourceType: "tenant_webhook_endpoint",
-        resourceId: row.id,
-        result: "SUCCESS",
-        riskLevel: "HIGH",
-        correlationId: principal.correlationId,
-        requestId: principal.requestId,
-        metadata: {
-          change: "patch",
-          rotateSecret: Boolean(data.rotateSecret),
-          enabled,
-        },
-        after: toPublicEndpoint(row),
-      });
+        const now = new Date();
+        let nextSecret = existing.signingSecret;
+        let includeSecret = false;
+        if (data.rotateSecret) {
+          nextSecret = generateWebhookSigningSecret();
+          includeSecret = true;
+          void redactSensitive({ signingSecret: nextSecret });
+        }
 
-      return toPublicEndpoint(row, {
-        includeSecret,
-        signingSecret: nextSecret,
-      });
-    }, principal.userId);
+        if (data.endpointUrl) {
+          if (
+            !data.endpointUrl.startsWith("https://") &&
+            !data.endpointUrl.startsWith("http://localhost")
+          ) {
+            throw new ForgeError(
+              "BAD_REQUEST",
+              "Webhook endpoint URL must be https (or localhost for labs)",
+            );
+          }
+        }
+
+        const enabled = data.enabled ?? existing.enabled;
+        const [updated] = await tx
+          .update(tenantWebhookEndpoints)
+          .set({
+            name: data.name ?? existing.name,
+            endpointUrl: data.endpointUrl ?? existing.endpointUrl,
+            eventTypesJson: data.eventTypes ?? existing.eventTypesJson,
+            signingSecret: nextSecret,
+            enabled,
+            disabledAt: enabled ? null : (existing.disabledAt ?? now),
+            updatedAt: now,
+          })
+          .where(
+            and(
+              eq(tenantWebhookEndpoints.id, endpointId),
+              eq(tenantWebhookEndpoints.tenantId, tenantId),
+            ),
+          )
+          .returning();
+
+        const row = updated ?? existing;
+        await this.audit.writeInTransaction(tx, {
+          tenantId,
+          actorUserId: principal.userId,
+          actorPersonId: principal.personId,
+          actorType: "USER",
+          action: "webhook.endpoint.changed",
+          resourceType: "tenant_webhook_endpoint",
+          resourceId: row.id,
+          result: "SUCCESS",
+          riskLevel: "HIGH",
+          correlationId: principal.correlationId,
+          requestId: principal.requestId,
+          metadata: {
+            change: "patch",
+            rotateSecret: Boolean(data.rotateSecret),
+            enabled,
+          },
+          after: toPublicEndpoint(row),
+        });
+
+        return toPublicEndpoint(row, {
+          includeSecret,
+          signingSecret: nextSecret,
+        });
+      },
+      principal.userId,
+    );
   }
 
   async listDeliveries(tenantId: string, endpointId: string) {
@@ -294,7 +307,12 @@ export class WebhooksService {
     });
   }
 
-  async createDelivery(tenantId: string, endpointId: string, input: unknown, principal: ForgePrincipal) {
+  async createDelivery(
+    tenantId: string,
+    endpointId: string,
+    input: unknown,
+    principal: ForgePrincipal,
+  ) {
     this.assertTenant(tenantId, principal);
     const data = createWebhookDeliveryInputSchema.parse(input);
 
@@ -312,7 +330,11 @@ export class WebhooksService {
     }
 
     const eventTypes = (endpoint.eventTypesJson as string[]) ?? [];
-    if (eventTypes.length > 0 && !eventTypes.includes(data.eventType) && !eventTypes.includes("*")) {
+    if (
+      eventTypes.length > 0 &&
+      !eventTypes.includes(data.eventType) &&
+      !eventTypes.includes("*")
+    ) {
       throw new ForgeError("BAD_REQUEST", "Event type is not subscribed on this endpoint");
     }
 

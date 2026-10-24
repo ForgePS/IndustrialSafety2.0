@@ -1,8 +1,5 @@
 import { describe, expect, it } from "vitest";
-import {
-  certCopyFromRecord,
-  guessPersonnelCertMime,
-} from "./personnel-cert-upload";
+import { certCopyFromRecord, guessPersonnelCertMime } from "./personnel-cert-upload";
 
 describe("guessPersonnelCertMime", () => {
   it("prefers the browser-provided type", () => {

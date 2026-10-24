@@ -1,8 +1,5 @@
 import { describe, expect, it } from "vitest";
-import {
-  parseQuestionImportCsv,
-  parseQuestionImportJson,
-} from "./training-question-import";
+import { parseQuestionImportCsv, parseQuestionImportJson } from "./training-question-import";
 
 describe("parseQuestionImportJson", () => {
   it("parses chapters with questions", () => {

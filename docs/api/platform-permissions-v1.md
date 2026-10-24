@@ -12,31 +12,31 @@ Amazon Cognito groups may exist for pool administration but are **not** the plat
 
 ## Permission catalog
 
-| Code | Typical use |
-| --- | --- |
-| `platform.tenant.read` | List and read tenants |
-| `platform.tenant.create` | Create tenants (creator-only) |
-| `platform.tenant.update` | Update and lifecycle tenants |
-| `platform.tenant.suspend` | Suspend tenants (creator-only) |
-| `platform.organization.read` | Read organizations |
-| `platform.organization.create` | Create and update organizations |
-| `platform.person.read` | Read persons |
-| `platform.person.create` | Create persons |
-| `platform.person.update` | Update and archive persons |
-| `platform.person.merge` | Merge person records |
-| `platform.user.invite` | Invite and manage users |
-| `platform.role.assign` | Roles and role assignments |
-| `platform.permission.read` | List permissions; authorization check |
-| `platform.audit.read` | Audit events |
-| `platform.feature.manage` | Feature flags |
-| `platform.entitlement.manage` | Products, modules, subscriptions |
-| `platform.configuration.update` | Configuration and branding |
-| `platform.sensitive_data.read` | Reveal sensitive identifiers |
-| `platform.invitation.read` | List and read invitations |
-| `platform.invitation.manage` | Create, resend, revoke invitations |
-| `platform.membership.read` | Read memberships |
-| `platform.membership.manage` | Membership CRUD and lifecycle |
-| `platform.onboarding.manage` | Customer onboarding sessions (creator-only) |
+| Code                            | Typical use                                 |
+| ------------------------------- | ------------------------------------------- |
+| `platform.tenant.read`          | List and read tenants                       |
+| `platform.tenant.create`        | Create tenants (creator-only)               |
+| `platform.tenant.update`        | Update and lifecycle tenants                |
+| `platform.tenant.suspend`       | Suspend tenants (creator-only)              |
+| `platform.organization.read`    | Read organizations                          |
+| `platform.organization.create`  | Create and update organizations             |
+| `platform.person.read`          | Read persons                                |
+| `platform.person.create`        | Create persons                              |
+| `platform.person.update`        | Update and archive persons                  |
+| `platform.person.merge`         | Merge person records                        |
+| `platform.user.invite`          | Invite and manage users                     |
+| `platform.role.assign`          | Roles and role assignments                  |
+| `platform.permission.read`      | List permissions; authorization check       |
+| `platform.audit.read`           | Audit events                                |
+| `platform.feature.manage`       | Feature flags                               |
+| `platform.entitlement.manage`   | Products, modules, subscriptions            |
+| `platform.configuration.update` | Configuration and branding                  |
+| `platform.sensitive_data.read`  | Reveal sensitive identifiers                |
+| `platform.invitation.read`      | List and read invitations                   |
+| `platform.invitation.manage`    | Create, resend, revoke invitations          |
+| `platform.membership.read`      | Read memberships                            |
+| `platform.membership.manage`    | Membership CRUD and lifecycle               |
+| `platform.onboarding.manage`    | Customer onboarding sessions (creator-only) |
 
 ## Creator-only permissions
 
@@ -68,12 +68,12 @@ Only `ACTIVE` membership status grants access. `SUSPENDED`, `REVOKED`, and other
 
 ## Entitlements vs permissions
 
-| Mechanism | Purpose |
-| --- | --- |
-| Permission codes | API handler authorization (`@RequirePermission`) |
-| Product/module entitlements | What the tenant purchased and what modules are enabled |
-| Membership product/module access | What this user may use within entitled products |
-| Feature flags | Operational toggles ([ADR-017](../decisions/ADR-017-feature-flags-vs-entitlements.md)) |
+| Mechanism                        | Purpose                                                                                |
+| -------------------------------- | -------------------------------------------------------------------------------------- |
+| Permission codes                 | API handler authorization (`@RequirePermission`)                                       |
+| Product/module entitlements      | What the tenant purchased and what modules are enabled                                 |
+| Membership product/module access | What this user may use within entitled products                                        |
+| Feature flags                    | Operational toggles ([ADR-017](../decisions/ADR-017-feature-flags-vs-entitlements.md)) |
 
 A user may hold `platform.person.read` but still be blocked if the tenant subscription is read-only or the module is suspended.
 
@@ -93,31 +93,31 @@ Programmatic check: `POST /api/v1/authorization/check` with body describing the 
 
 From `packages/database/src/seed.ts`:
 
-| Template | Type | Intent |
-| --- | --- | --- |
-| `PLATFORM_SUPER_ADMIN` | PLATFORM | Full platform permission set |
-| `CREATOR_ADMIN` | PLATFORM | Creator console administration |
-| `TENANT_ADMIN` | TENANT | Tenant administration |
-| Additional templates | TENANT | Narrower operational roles |
+| Template               | Type     | Intent                         |
+| ---------------------- | -------- | ------------------------------ |
+| `PLATFORM_SUPER_ADMIN` | PLATFORM | Full platform permission set   |
+| `CREATOR_ADMIN`        | PLATFORM | Creator console administration |
+| `TENANT_ADMIN`         | TENANT   | Tenant administration          |
+| Additional templates   | TENANT   | Narrower operational roles     |
 
 Starter onboarding templates (`INDUSTRIAL_STARTER`, `RMS_STARTER`, `ACADEMY_STARTER`) define tenant role codes and permission sets in `@forge/contracts` `starter-templates.ts`.
 
 ## API surface
 
-| Method | Path | Permission |
-| --- | --- | --- |
-| GET | `/api/v1/tenants/:tenantId/permissions` | `platform.permission.read` |
-| POST | `/api/v1/tenants/:tenantId/roles` | `platform.role.assign` |
-| GET | `/api/v1/tenants/:tenantId/roles` | `platform.permission.read` |
-| GET | `/api/v1/tenants/:tenantId/roles/:roleId` | `platform.permission.read` |
-| PATCH | `/api/v1/tenants/:tenantId/roles/:roleId` | `platform.role.assign` |
-| PUT | `/api/v1/tenants/:tenantId/roles/:roleId/permissions` | `platform.role.assign` |
-| POST | `/api/v1/tenants/:tenantId/users/:userId/role-assignments` | `platform.role.assign` |
-| DELETE | `/api/v1/tenants/:tenantId/users/:userId/role-assignments/:assignmentId` | `platform.role.assign` |
-| POST | `/api/v1/authorization/check` | `platform.permission.read` |
+| Method | Path                                                                     | Permission                 |
+| ------ | ------------------------------------------------------------------------ | -------------------------- |
+| GET    | `/api/v1/tenants/:tenantId/permissions`                                  | `platform.permission.read` |
+| POST   | `/api/v1/tenants/:tenantId/roles`                                        | `platform.role.assign`     |
+| GET    | `/api/v1/tenants/:tenantId/roles`                                        | `platform.permission.read` |
+| GET    | `/api/v1/tenants/:tenantId/roles/:roleId`                                | `platform.permission.read` |
+| PATCH  | `/api/v1/tenants/:tenantId/roles/:roleId`                                | `platform.role.assign`     |
+| PUT    | `/api/v1/tenants/:tenantId/roles/:roleId/permissions`                    | `platform.role.assign`     |
+| POST   | `/api/v1/tenants/:tenantId/users/:userId/role-assignments`               | `platform.role.assign`     |
+| DELETE | `/api/v1/tenants/:tenantId/users/:userId/role-assignments/:assignmentId` | `platform.role.assign`     |
+| POST   | `/api/v1/authorization/check`                                            | `platform.permission.read` |
 
 Membership role assignment replaces per-user assignments for new integrations:
 
-| Method | Path | Permission |
-| --- | --- | --- |
+| Method  | Path                                                        | Permission    |
+| ------- | ----------------------------------------------------------- | ------------- |
 | GET/PUT | `/api/v1/tenants/:tenantId/memberships/:membershipId/roles` | read / manage |

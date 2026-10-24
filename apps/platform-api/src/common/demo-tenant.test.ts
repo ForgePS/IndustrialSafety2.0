@@ -97,9 +97,8 @@ describe("demo / SMS_DRY_RUN outbound containment hooks", () => {
   });
 
   it("SMS_DRY_RUN env forces dryRun when tenant settings omit dryRun", async () => {
-    const { resolveEmergencyAlertSmsConfig } = await import(
-      "../modules/industrial/sms/resolve-sms-provider.js"
-    );
+    const { resolveEmergencyAlertSmsConfig } =
+      await import("../modules/industrial/sms/resolve-sms-provider.js");
     const config = resolveEmergencyAlertSmsConfig(
       {
         AWS_REGION: "us-east-1",
@@ -119,7 +118,9 @@ describe("demo / SMS_DRY_RUN outbound containment hooks", () => {
   it("assertTenantAllowedForDemoSeed rejects customer tenant keys", async () => {
     const { assertTenantAllowedForDemoSeed } = await import("./demo-tenant.js");
     clearDemoTenantCache();
-    const where = vi.fn(async () => [{ tenantKey: "producers-rice-mill", slug: "producers-rice-mill" }]);
+    const where = vi.fn(async () => [
+      { tenantKey: "producers-rice-mill", slug: "producers-rice-mill" },
+    ]);
     const db = {
       select: vi.fn(() => ({
         from: vi.fn(() => ({

@@ -12,14 +12,14 @@ Forge SaaS capabilities, architecture, and verification baseline are documented 
 
 ## Deliverables
 
-| Artifact | Path |
-| --- | --- |
-| Program state | `docs/forge-saas-foundation/PROGRAM_STATE.json` |
-| Active sprint lock | `docs/forge-saas-foundation/ACTIVE_SPRINT.md` |
-| Backlog | `docs/forge-saas-foundation/BACKLOG.md` |
-| Baseline + matrix + diagrams | `docs/forge-saas-foundation/MK-S0-baseline.md` |
-| Plan | `docs/forge-saas-foundation/sprints/MK-S0-PLAN.md` |
-| This completion record | `docs/forge-saas-foundation/sprints/MK-S0-COMPLETE.md` |
+| Artifact                     | Path                                                   |
+| ---------------------------- | ------------------------------------------------------ |
+| Program state                | `docs/forge-saas-foundation/PROGRAM_STATE.json`        |
+| Active sprint lock           | `docs/forge-saas-foundation/ACTIVE_SPRINT.md`          |
+| Backlog                      | `docs/forge-saas-foundation/BACKLOG.md`                |
+| Baseline + matrix + diagrams | `docs/forge-saas-foundation/MK-S0-baseline.md`         |
+| Plan                         | `docs/forge-saas-foundation/sprints/MK-S0-PLAN.md`     |
+| This completion record       | `docs/forge-saas-foundation/sprints/MK-S0-COMPLETE.md` |
 
 ## Key findings
 
@@ -31,15 +31,15 @@ Forge SaaS capabilities, architecture, and verification baseline are documented 
 
 ## Baseline verification (2026-08-10)
 
-| Check | Command | Result | Notes |
-| --- | --- | --- | --- |
-| Typecheck | `pnpm typecheck` | **FAIL (historical)** | `@forge/rms-web-e2e` — `document` missing from TS lib (`phase-3-*.spec.ts`). Unrelated to MK-S0 docs. |
-| Lint | `pnpm lint` | **FAIL (historical)** | `@forge/imports` — unused `fileName` in `src/formats/detect.ts`. Unrelated to MK-S0 docs. |
-| Unit | `pnpm test:unit` | **FAIL (historical)** | Fail-fast on `@forge/creator-console` — cannot resolve `@forge/web-kit` in `api-url.test.ts`. Also observed `@forge/infrastructure-cdk` cost-profile assertion failure mid-run. Many packages passed beforehand (incl. `@forge/authorization` 7/7, `@forge/tenant-context` 1/1, `@forge/audit` 2/2, `@forge/web-kit` 13/13). |
-| Core SaaS build | filtered build of tenant-context, authorization, auth, audit, contracts, web-kit, database | **PASS** | Full monorepo `pnpm build` not required for S0 once core build verified; historical failures would dominate anyway. |
-| Infra validate | `pnpm infra:validate` | **PASS** | Development config validation `ok: true`. |
-| Production check | N/A | **NOT RUN** | No root `production-check` script; production ops prohibited. |
-| Integration / E2E / Auth suite | Full suites | **NOT RUN** | Heavy env dependency; S0 records existing unit authZ coverage instead. |
+| Check                          | Command                                                                                    | Result                | Notes                                                                                                                                                                                                                                                                                                                        |
+| ------------------------------ | ------------------------------------------------------------------------------------------ | --------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Typecheck                      | `pnpm typecheck`                                                                           | **FAIL (historical)** | `@forge/rms-web-e2e` — `document` missing from TS lib (`phase-3-*.spec.ts`). Unrelated to MK-S0 docs.                                                                                                                                                                                                                        |
+| Lint                           | `pnpm lint`                                                                                | **FAIL (historical)** | `@forge/imports` — unused `fileName` in `src/formats/detect.ts`. Unrelated to MK-S0 docs.                                                                                                                                                                                                                                    |
+| Unit                           | `pnpm test:unit`                                                                           | **FAIL (historical)** | Fail-fast on `@forge/creator-console` — cannot resolve `@forge/web-kit` in `api-url.test.ts`. Also observed `@forge/infrastructure-cdk` cost-profile assertion failure mid-run. Many packages passed beforehand (incl. `@forge/authorization` 7/7, `@forge/tenant-context` 1/1, `@forge/audit` 2/2, `@forge/web-kit` 13/13). |
+| Core SaaS build                | filtered build of tenant-context, authorization, auth, audit, contracts, web-kit, database | **PASS**              | Full monorepo `pnpm build` not required for S0 once core build verified; historical failures would dominate anyway.                                                                                                                                                                                                          |
+| Infra validate                 | `pnpm infra:validate`                                                                      | **PASS**              | Development config validation `ok: true`.                                                                                                                                                                                                                                                                                    |
+| Production check               | N/A                                                                                        | **NOT RUN**           | No root `production-check` script; production ops prohibited.                                                                                                                                                                                                                                                                |
+| Integration / E2E / Auth suite | Full suites                                                                                | **NOT RUN**           | Heavy env dependency; S0 records existing unit authZ coverage instead.                                                                                                                                                                                                                                                       |
 
 MK-S0 intentionally **did not repair** historical failures (directive §27 / §52).
 

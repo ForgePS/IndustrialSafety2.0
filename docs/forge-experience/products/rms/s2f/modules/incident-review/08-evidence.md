@@ -1,11 +1,11 @@
 # S2F-2 Incident Review — Evidence
 
-| Item | Status |
-| --- | --- |
-| Resolver unit tests | Pass |
-| Payload parity (same handlers) | Documented |
-| Screenshots | Placeholder under `../../evidence/screenshots/` |
-| Specialty FX chrome | Deferred (compat) |
+| Item                           | Status                                          |
+| ------------------------------ | ----------------------------------------------- |
+| Resolver unit tests            | Pass                                            |
+| Payload parity (same handlers) | Documented                                      |
+| Screenshots                    | Placeholder under `../../evidence/screenshots/` |
+| Specialty FX chrome            | Deferred (compat)                               |
 
 Local enable:
 

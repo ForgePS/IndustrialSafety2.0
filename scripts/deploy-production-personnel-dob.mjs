@@ -20,10 +20,12 @@ const CLUSTER = "forge-production-ecs-platform";
 const API_SERVICE = "forge-production-ecs-platform-api";
 const API_ECR = `${ACCOUNT}.dkr.ecr.${REGION}.amazonaws.com/forge-production-ecr-platformapi`;
 
-const skipWeb =
-  process.argv.includes("--skip-web") || process.argv.includes("--api-only");
+const skipWeb = process.argv.includes("--skip-web") || process.argv.includes("--api-only");
 const skipMigrate = process.argv.includes("--skip-migrate");
-const stamp = new Date().toISOString().replace(/[-:TZ.]/g, "").slice(0, 14);
+const stamp = new Date()
+  .toISOString()
+  .replace(/[-:TZ.]/g, "")
+  .slice(0, 14);
 const tag = process.env.DEPLOY_TAG || `personnel-dob-${stamp}`;
 
 function sh(cmd, opts = {}) {
@@ -96,7 +98,9 @@ const apiReg = register(apiPath);
 // Migrations are additive; apply them before new API code that depends on them.
 if (!skipMigrate) {
   console.log("=== Apply migrations (production) ===");
-  sh(`node scripts/run-ecs-migrate.mjs --env production --task-definition ${apiReg.taskDefinitionArn}`);
+  sh(
+    `node scripts/run-ecs-migrate.mjs --env production --task-definition ${apiReg.taskDefinitionArn}`,
+  );
 }
 
 console.log("=== Roll production platform-api ===");

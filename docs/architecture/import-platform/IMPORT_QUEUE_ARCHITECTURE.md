@@ -5,19 +5,19 @@
 
 ## Existing AWS resources (reuse)
 
-| Resource | Naming pattern |
-| --- | --- |
-| Imports queue | `forge-{env}-sqs-imports` |
-| Imports DLQ | companion DLQ from `forge-queues` construct |
-| Imports bucket | `forge-{env}-...-imports` (uniqueBucketName) |
-| Env | `SQS_IMPORT_QUEUE_URL`, `S3_IMPORT_BUCKET` on API + worker |
+| Resource       | Naming pattern                                             |
+| -------------- | ---------------------------------------------------------- |
+| Imports queue  | `forge-{env}-sqs-imports`                                  |
+| Imports DLQ    | companion DLQ from `forge-queues` construct                |
+| Imports bucket | `forge-{env}-...-imports` (uniqueBucketName)               |
+| Env            | `SQS_IMPORT_QUEUE_URL`, `S3_IMPORT_BUCKET` on API + worker |
 
 ## New (implementation sprint)
 
-| Resource | Purpose |
-| --- | --- |
-| Step Functions state machine | Stage orchestration for long jobs |
-| Optional scan Lambda / GuardDuty MP | Malware |
+| Resource                            | Purpose                           |
+| ----------------------------------- | --------------------------------- |
+| Step Functions state machine        | Stage orchestration for long jobs |
+| Optional scan Lambda / GuardDuty MP | Malware                           |
 
 ## Message flow
 
@@ -53,13 +53,13 @@ Preferred pattern: API enqueues `ImportJobMessage`; worker (or EventBridge Pipe)
 
 ## Guarantees
 
-| Property | Approach |
-| --- | --- |
-| Idempotent | Stage checkpoints in `import_jobs` / `import_batches` |
-| Retryable | SQS visibility timeout + SF retries with backoff |
-| Tenant-aware | `tenantId` in message; worker sets RLS GUC before DB |
-| Auditable | Audit write per stage transition |
-| Poison isolation | DLQ after N receives; alarm on DLQ depth |
+| Property         | Approach                                              |
+| ---------------- | ----------------------------------------------------- |
+| Idempotent       | Stage checkpoints in `import_jobs` / `import_batches` |
+| Retryable        | SQS visibility timeout + SF retries with backoff      |
+| Tenant-aware     | `tenantId` in message; worker sets RLS GUC before DB  |
+| Auditable        | Audit write per stage transition                      |
+| Poison isolation | DLQ after N receives; alarm on DLQ depth              |
 
 ## Monitoring
 

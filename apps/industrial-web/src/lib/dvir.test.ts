@@ -33,11 +33,7 @@ function allYes(items: DvirItemAnswer[]): DvirItemAnswer[] {
   return items.map((item) => ({ ...item, answer: "YES" as const, notes: "" }));
 }
 
-function withNo(
-  form: DvirFormState,
-  id: string,
-  notes: string,
-): DvirFormState {
+function withNo(form: DvirFormState, id: string, notes: string): DvirFormState {
   let items = setDvirItemAnswer(allYes(form.items), id, "NO");
   items = setDvirItemNotes(items, id, notes);
   return { ...form, items, conditionSatisfactory: false };
@@ -77,11 +73,7 @@ describe("dvir", () => {
       }),
     ).toMatchObject({ ok: false, message: expect.stringMatching(/note/i) });
 
-    expect(
-      validateDvirDriverSubmit(
-        withNo(base, "brakes", "Soft pedal"),
-      ),
-    ).toEqual({ ok: true });
+    expect(validateDvirDriverSubmit(withNo(base, "brakes", "Soft pedal"))).toEqual({ ok: true });
 
     expect(
       validateDvirDriverSubmit({
@@ -136,9 +128,11 @@ describe("dvir", () => {
       answer: "NO",
       notes: "Weak horn",
     });
-    expect(payload.items.every((item) => item.answer === "YES" || item.answer === "NO" || item.answer === "NA")).toBe(
-      true,
-    );
+    expect(
+      payload.items.every(
+        (item) => item.answer === "YES" || item.answer === "NO" || item.answer === "NA",
+      ),
+    ).toBe(true);
   });
 
   it("detects follow-up needs from items or legacy defects", () => {
@@ -253,7 +247,9 @@ describe("dvir", () => {
       yesNo: "Yes",
       text: "Brakes: Soft pedal",
     });
-    expect(dvirDefectSummary({ items: [{ id: "lights", label: "Lights", answer: "YES" }] })).toEqual({
+    expect(
+      dvirDefectSummary({ items: [{ id: "lights", label: "Lights", answer: "YES" }] }),
+    ).toEqual({
       hasDefects: false,
       yesNo: "No",
       text: "",

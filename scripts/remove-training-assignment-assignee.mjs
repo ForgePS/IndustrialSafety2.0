@@ -101,7 +101,9 @@ for (const row of matches) {
       and tenant_id = ${tenantId}::uuid
   `;
   removed += 1;
-  console.log(`Removed assignee ${row.assignee_id} (${row.employee_number}) from ${row.assignment_title}`);
+  console.log(
+    `Removed assignee ${row.assignee_id} (${row.employee_number}) from ${row.assignment_title}`,
+  );
 }
 
 console.log(

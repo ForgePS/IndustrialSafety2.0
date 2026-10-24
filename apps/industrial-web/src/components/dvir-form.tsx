@@ -34,7 +34,9 @@ function ChecklistSection({
   return (
     <fieldset className="mb-4" disabled={disabled}>
       <legend className="form-label fw-semibold mb-2">{title}</legend>
-      <p className="text-muted small mb-3">Answer Yes, No, or N/A for every item. No requires a note.</p>
+      <p className="text-muted small mb-3">
+        Answer Yes, No, or N/A for every item. No requires a note.
+      </p>
       <div className="d-flex flex-column gap-3">
         {itemIds.map((id) => {
           const item = byId.get(id);
@@ -47,7 +49,11 @@ function ChecklistSection({
             >
               <div className="dvir-checklist-item__header">
                 <span className="dvir-checklist-item__label fw-medium">{item.label}</span>
-                <div className="btn-group dvir-checklist-item__answers" role="group" aria-label={`${item.label} answer`}>
+                <div
+                  className="btn-group dvir-checklist-item__answers"
+                  role="group"
+                  aria-label={`${item.label} answer`}
+                >
                   {(["YES", "NO", "NA"] as const).map((answer) => (
                     <button
                       key={answer}

@@ -115,9 +115,7 @@ describe("Sprint 1E Wave 8 platform E2E", () => {
       membershipStatus: "ACTIVE",
     });
 
-    await harness.createRole(tenant.tenantId, "CREATOR_ESCALATION", [
-      "platform.onboarding.manage",
-    ]);
+    await harness.createRole(tenant.tenantId, "CREATOR_ESCALATION", ["platform.onboarding.manage"]);
 
     const membership = await harness
       .api(tenantAdmin.userId, tenant.tenantId)

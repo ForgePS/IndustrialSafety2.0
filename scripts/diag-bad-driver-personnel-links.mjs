@@ -96,7 +96,8 @@ try {
 
     const issues = [];
     if (!UUID_PATTERN.test(effectivePid)) issues.push("non_uuid");
-    if (UUID_PATTERN.test(effectivePid) && !personnelSet.has(effectivePid)) issues.push("missing_personnel");
+    if (UUID_PATTERN.test(effectivePid) && !personnelSet.has(effectivePid))
+      issues.push("missing_personnel");
     if (columnPid && payloadPid && columnPid !== payloadPid) issues.push("column_payload_mismatch");
 
     if (issues.length > 0) {

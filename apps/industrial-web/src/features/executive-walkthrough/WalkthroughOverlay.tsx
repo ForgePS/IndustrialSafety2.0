@@ -81,9 +81,7 @@ export function WalkthroughOverlayHost() {
           <div className="exec-walkthrough-card-inner">
             {session.card === "opening" ? (
               <>
-                <WalkthroughBrandMark
-                  {...(logoLightUrl.trim() ? { logoUrl: logoLightUrl } : {})}
-                />
+                <WalkthroughBrandMark {...(logoLightUrl.trim() ? { logoUrl: logoLightUrl } : {})} />
                 <p className="exec-walkthrough-tagline fw-semibold mb-3">
                   One Platform. Total Safety Visibility.
                 </p>
@@ -95,9 +93,7 @@ export function WalkthroughOverlayHost() {
               </>
             ) : (
               <>
-                <WalkthroughBrandMark
-                  {...(logoLightUrl.trim() ? { logoUrl: logoLightUrl } : {})}
-                />
+                <WalkthroughBrandMark {...(logoLightUrl.trim() ? { logoUrl: logoLightUrl } : {})} />
                 <p className="exec-walkthrough-tagline fw-semibold mb-3">
                   Connected Safety. One Platform.
                 </p>

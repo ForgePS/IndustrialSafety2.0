@@ -41,9 +41,7 @@ export function evaluatePendingRequirements(input: {
 }): PendingRequirement[] {
   const now = input.now ?? new Date();
   const accepted = new Set(
-    input.acceptances
-      .filter((a) => a.status === "ACKNOWLEDGED")
-      .map((a) => a.documentVersionId),
+    input.acceptances.filter((a) => a.status === "ACKNOWLEDGED").map((a) => a.documentVersionId),
   );
   const pending: PendingRequirement[] = [];
   for (const req of input.requirements) {

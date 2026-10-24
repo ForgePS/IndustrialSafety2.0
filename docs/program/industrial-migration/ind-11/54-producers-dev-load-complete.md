@@ -9,39 +9,39 @@ Authorized scope: **all remaining domain loads into development** (metadata-only
 
 ## Load summary (tenant A sample counts)
 
-| Domain | Count (verify) |
-| --- | ---: |
-| Sites | 27 |
-| Equipment | 2490 |
-| LOTO procedures | 2524 |
-| Personnel | 1009 |
-| Training records | 18 |
-| Form definitions / submissions | 49 / 34 |
-| Inspections | 6 |
-| Incidents | 13 |
-| High-risk (sample: CS / hot work) | 27 / 26 |
-| Chemical safety | 53 |
-| Tasks / emergency | 3 / 31 |
-| QR links (tokens **rotated**) | 2505 |
-| Platform documents (PENDING_UPLOAD) | 8 |
-| Equipment document links (paths only) | 12 |
-| **Sample totals** | **~8835** |
+| Domain                                | Count (verify) |
+| ------------------------------------- | -------------: |
+| Sites                                 |             27 |
+| Equipment                             |           2490 |
+| LOTO procedures                       |           2524 |
+| Personnel                             |           1009 |
+| Training records                      |             18 |
+| Form definitions / submissions        |        49 / 34 |
+| Inspections                           |              6 |
+| Incidents                             |             13 |
+| High-risk (sample: CS / hot work)     |        27 / 26 |
+| Chemical safety                       |             53 |
+| Tasks / emergency                     |         3 / 31 |
+| QR links (tokens **rotated**)         |           2505 |
+| Platform documents (PENDING_UPLOAD)   |              8 |
+| Equipment document links (paths only) |             12 |
+| **Sample totals**                     |      **~8835** |
 
 Wave-3 workbooks also loaded: WAH, electrical, crane/rigging, machine, DOT, forklift, WC cases, OSHA, warehouse/mfg/contractor/process/environmental (all `errorCount: 0`).
 
 ## Explicitly still out of scope / blocked
 
-| Item | Why |
-| --- | --- |
-| Cognito Firebase Auth → user import | Fail-closed (not authorized) |
-| Storage → S3 blob copy | Fail-closed; docs use `PENDING_UPLOAD` placeholders |
-| Production Aurora SoT / IND-13 cutover | Fail-closed |
-| `correctiveActionRecords` | No Aurora table |
-| `scan_*` family | No applied scan tables / mapping gap |
-| `lotoRecords` / `lotoLibraries` | Execution/library targets not in 0031 |
-| WC satellites (medical/restrictions/carriers) | Unmapped |
-| `companyVehicleDrivers*`, certificates, `activityLogs` | Unmapped / policy |
-| Document access events | 0 loaded (orphaned FKs to pre-import docs) |
+| Item                                                   | Why                                                 |
+| ------------------------------------------------------ | --------------------------------------------------- |
+| Cognito Firebase Auth → user import                    | Fail-closed (not authorized)                        |
+| Storage → S3 blob copy                                 | Fail-closed; docs use `PENDING_UPLOAD` placeholders |
+| Production Aurora SoT / IND-13 cutover                 | Fail-closed                                         |
+| `correctiveActionRecords`                              | No Aurora table                                     |
+| `scan_*` family                                        | No applied scan tables / mapping gap                |
+| `lotoRecords` / `lotoLibraries`                        | Execution/library targets not in 0031               |
+| WC satellites (medical/restrictions/carriers)          | Unmapped                                            |
+| `companyVehicleDrivers*`, certificates, `activityLogs` | Unmapped / policy                                   |
+| Document access events                                 | 0 loaded (orphaned FKs to pre-import docs)          |
 
 ## Evidence
 

@@ -7,24 +7,24 @@
 
 ## Package
 
-| Artifact | Location |
-| --- | --- |
-| Transformed AWS import package | `.tmp-data-migration/dm-s2/aws-import-run/aws-import/` (gitignored) |
-| Import readiness JSON | `.tmp-data-migration/dm-s2/aws-import-run/import-readiness.json` |
-| Storage staging | `s3://forge-production-imports-511343547817-us-east-1/storage/source/` |
-| Storage ownership summary | `.tmp-data-migration/dm-s2/storage-ownership-summary.json` |
+| Artifact                       | Location                                                               |
+| ------------------------------ | ---------------------------------------------------------------------- |
+| Transformed AWS import package | `.tmp-data-migration/dm-s2/aws-import-run/aws-import/` (gitignored)    |
+| Import readiness JSON          | `.tmp-data-migration/dm-s2/aws-import-run/import-readiness.json`       |
+| Storage staging                | `s3://forge-production-imports-511343547817-us-east-1/storage/source/` |
+| Storage ownership summary      | `.tmp-data-migration/dm-s2/storage-ownership-summary.json`             |
 
 ## Hard gates (transformer)
 
-| Gate | Value |
-| --- | --- |
-| UNKNOWN_TENANT | 0 |
-| UNKNOWN_TARGET | 0 |
-| DUPLICATE_TARGET_KEYS | 0 |
-| FATAL_TRANSFORM_ERRORS | 0 |
-| REQUIRED_PARENT_MISSING | 0 |
-| CROSS_TENANT_RELATIONSHIPS | 0 |
-| UNKNOWN_SOURCE_TARGET_MAPPINGS | 0 |
+| Gate                           | Value |
+| ------------------------------ | ----- |
+| UNKNOWN_TENANT                 | 0     |
+| UNKNOWN_TARGET                 | 0     |
+| DUPLICATE_TARGET_KEYS          | 0     |
+| FATAL_TRANSFORM_ERRORS         | 0     |
+| REQUIRED_PARENT_MISSING        | 0     |
+| CROSS_TENANT_RELATIONSHIPS     | 0     |
+| UNKNOWN_SOURCE_TARGET_MAPPINGS | 0     |
 
 ## Blocking CONDITIONS
 

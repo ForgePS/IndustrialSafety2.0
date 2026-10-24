@@ -25,7 +25,9 @@ export function getStorageStatePath(): string | undefined {
 }
 
 export function hasPrimaryCredentials(): boolean {
-  return Boolean(process.env.E2E_COGNITO_USERNAME?.trim() && process.env.E2E_COGNITO_PASSWORD?.trim());
+  return Boolean(
+    process.env.E2E_COGNITO_USERNAME?.trim() && process.env.E2E_COGNITO_PASSWORD?.trim(),
+  );
 }
 
 export function getPrimaryCredentials(): E2eCredentials {

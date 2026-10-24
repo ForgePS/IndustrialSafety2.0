@@ -184,9 +184,7 @@ export function createSesSendFn(region?: string) {
           Subject: { Data: message.subject, Charset: "UTF-8" },
           Body: {
             Html: { Data: message.htmlBody, Charset: "UTF-8" },
-            ...(message.textBody
-              ? { Text: { Data: message.textBody, Charset: "UTF-8" } }
-              : {}),
+            ...(message.textBody ? { Text: { Data: message.textBody, Charset: "UTF-8" } } : {}),
           },
         },
       }),
@@ -249,9 +247,7 @@ export function createResendSendFn(apiKey: string) {
   };
 }
 
-export function createEmailProviderFromEnv(
-  env: NodeJS.ProcessEnv = process.env,
-): EmailProvider {
+export function createEmailProviderFromEnv(env: NodeJS.ProcessEnv = process.env): EmailProvider {
   const mode = (env.FORGE_EMAIL_PROVIDER ?? "noop").toLowerCase();
   if (mode === "resend") {
     return new ResendEmailProvider({
@@ -273,9 +269,6 @@ export function createEmailProviderFromEnv(
 }
 
 /** Minimal {{var}} substitution for seeded templates. */
-export function renderTemplate(
-  template: string,
-  vars: Record<string, string>,
-): string {
+export function renderTemplate(template: string, vars: Record<string, string>): string {
   return template.replace(/\{\{\s*([a-zA-Z0-9_]+)\s*\}\}/g, (_, key: string) => vars[key] ?? "");
 }

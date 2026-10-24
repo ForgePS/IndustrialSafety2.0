@@ -48,7 +48,11 @@ export const industrialSites = pgTable(
   },
   (t) => [
     index("industrial_sites_tenant_status_idx").on(t.tenantId, t.status),
-    uniqueIndex("industrial_sites_source_uidx").on(t.tenantId, t.sourceCollection, t.sourceDocumentId),
+    uniqueIndex("industrial_sites_source_uidx").on(
+      t.tenantId,
+      t.sourceCollection,
+      t.sourceDocumentId,
+    ),
   ],
 );
 
@@ -489,11 +493,7 @@ export const industrialFleetMileageHistory = pgTable(
     createdAt: createdAtColumn,
   },
   (t) => [
-    index("industrial_fleet_mileage_history_vehicle_idx").on(
-      t.tenantId,
-      t.vehicleId,
-      t.recordedAt,
-    ),
+    index("industrial_fleet_mileage_history_vehicle_idx").on(t.tenantId, t.vehicleId, t.recordedAt),
   ],
 );
 
@@ -543,9 +543,7 @@ export const industrialFleetMaintenance = pgTable(
     updatedAt: updatedAtColumn,
     archivedAt: timestamp("archived_at", { withTimezone: true }),
   },
-  (t) => [
-    index("industrial_fleet_maintenance_vehicle_idx").on(t.tenantId, t.vehicleId, t.status),
-  ],
+  (t) => [index("industrial_fleet_maintenance_vehicle_idx").on(t.tenantId, t.vehicleId, t.status)],
 );
 
 export const industrialFleetDocuments = pgTable(
@@ -750,11 +748,7 @@ export const industrialWorkersCompWeeklyUpdates = pgTable(
     archivedAt: timestamp("archived_at", { withTimezone: true }),
   },
   (t) => [
-    uniqueIndex("industrial_wc_weekly_updates_case_week_uidx").on(
-      t.tenantId,
-      t.caseId,
-      t.weekOf,
-    ),
+    uniqueIndex("industrial_wc_weekly_updates_case_week_uidx").on(t.tenantId, t.caseId, t.weekOf),
     index("industrial_wc_weekly_updates_week_idx").on(t.tenantId, t.weekOf),
     index("industrial_wc_weekly_updates_case_idx").on(t.tenantId, t.caseId),
   ],
@@ -790,11 +784,7 @@ export const industrialPersonnelDisciplinaryActions = pgTable(
     archivedAt: timestamp("archived_at", { withTimezone: true }),
   },
   (t) => [
-    index("industrial_personnel_discipline_person_idx").on(
-      t.tenantId,
-      t.personnelId,
-      t.actionDate,
-    ),
+    index("industrial_personnel_discipline_person_idx").on(t.tenantId, t.personnelId, t.actionDate),
   ],
 );
 
@@ -824,7 +814,11 @@ export const industrialPersonnelSmsConsents = pgTable(
     createdAt: createdAtColumn,
   },
   (t) => [
-    index("industrial_personnel_sms_consents_person_idx").on(t.tenantId, t.personnelId, t.createdAt),
+    index("industrial_personnel_sms_consents_person_idx").on(
+      t.tenantId,
+      t.personnelId,
+      t.createdAt,
+    ),
   ],
 );
 
@@ -1270,9 +1264,12 @@ export const industrialTrainingAttempts = pgTable(
     assignmentId: uuid("assignment_id").references(() => industrialTrainingAssignments.id, {
       onDelete: "set null",
     }),
-    courseVersionId: uuid("course_version_id").references(() => industrialTrainingCourseVersions.id, {
-      onDelete: "set null",
-    }),
+    courseVersionId: uuid("course_version_id").references(
+      () => industrialTrainingCourseVersions.id,
+      {
+        onDelete: "set null",
+      },
+    ),
     attemptNumber: integer("attempt_number").notNull().default(1),
   },
   (t) => [
@@ -1438,9 +1435,12 @@ export const industrialTrainingAssignments = pgTable(
     sourceId: uuid("source_id")
       .notNull()
       .references(() => industrialTrainingSources.id),
-    courseVersionId: uuid("course_version_id").references(() => industrialTrainingCourseVersions.id, {
-      onDelete: "set null",
-    }),
+    courseVersionId: uuid("course_version_id").references(
+      () => industrialTrainingCourseVersions.id,
+      {
+        onDelete: "set null",
+      },
+    ),
     materialId: uuid("material_id").references(() => industrialTrainingMaterials.id, {
       onDelete: "set null",
     }),
@@ -1569,9 +1569,12 @@ export const industrialTrainingProgress = pgTable(
     }),
     percentComplete: integer("percent_complete").notNull().default(0),
     sectionsCompleted: jsonb("sections_completed").notNull().default([]),
-    currentSectionId: uuid("current_section_id").references(() => industrialTrainingCourseSections.id, {
-      onDelete: "set null",
-    }),
+    currentSectionId: uuid("current_section_id").references(
+      () => industrialTrainingCourseSections.id,
+      {
+        onDelete: "set null",
+      },
+    ),
     firstOpenedAt: timestamp("first_opened_at", { withTimezone: true }),
     lastAccessedAt: timestamp("last_accessed_at", { withTimezone: true }),
     contentCompletedAt: timestamp("content_completed_at", { withTimezone: true }),
@@ -1620,7 +1623,11 @@ export const industrialTrainingCompletions = pgTable(
     createdAt: createdAtColumn,
   },
   (t) => [
-    index("industrial_training_completions_tenant_idx").on(t.tenantId, t.personnelId, t.completedAt),
+    index("industrial_training_completions_tenant_idx").on(
+      t.tenantId,
+      t.personnelId,
+      t.completedAt,
+    ),
   ],
 );
 
@@ -1667,9 +1674,7 @@ export const industrialTrainingPortalRateLimits = pgTable(
     blockedUntil: timestamp("blocked_until", { withTimezone: true }),
     updatedAt: updatedAtColumn,
   },
-  (t) => [
-    uniqueIndex("industrial_training_portal_rate_limits_uidx").on(t.tenantId, t.bucketKey),
-  ],
+  (t) => [uniqueIndex("industrial_training_portal_rate_limits_uidx").on(t.tenantId, t.bucketKey)],
 );
 
 export const industrialTrainingPortalSessions = pgTable(

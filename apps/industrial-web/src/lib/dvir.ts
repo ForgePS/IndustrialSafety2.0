@@ -240,10 +240,7 @@ export function tripTypeLabel(tripType: DvirTripType): string {
   return tripType === "POST_TRIP" ? "Post-trip" : "Pre-trip";
 }
 
-export function buildDvirTitle(input: {
-  tripType: DvirTripType;
-  truckNumber: string;
-}): string {
+export function buildDvirTitle(input: { tripType: DvirTripType; truckNumber: string }): string {
   const unit = input.truckNumber.trim() || "Unit";
   return `${tripTypeLabel(input.tripType)} DVIR ${unit}`;
 }
@@ -467,11 +464,7 @@ export function dvirNeedsDriverReview(row: Record<string, unknown>): boolean {
   return !row.driverReviewSignedAt && !row.driverReviewSignatureDataUrl;
 }
 
-export type DvirFollowUpStatus =
-  | "none"
-  | "needs_mechanic"
-  | "needs_driver_review"
-  | "complete";
+export type DvirFollowUpStatus = "none" | "needs_mechanic" | "needs_driver_review" | "complete";
 
 export function dvirFollowUpStatus(row: Record<string, unknown>): DvirFollowUpStatus {
   const defects = defectCountFromRecord(row);
@@ -544,7 +537,11 @@ export function setDvirItemAnswer(
   );
 }
 
-export function setDvirItemNotes(items: DvirItemAnswer[], id: string, notes: string): DvirItemAnswer[] {
+export function setDvirItemNotes(
+  items: DvirItemAnswer[],
+  id: string,
+  notes: string,
+): DvirItemAnswer[] {
   return items.map((item) => (item.id === id ? { ...item, notes } : item));
 }
 
@@ -565,8 +562,8 @@ export function resolveDvirReportItems(row: Record<string, unknown>): DvirItemAn
       return {
         id,
         label: String(raw.label ?? catalog?.label ?? id),
-        section: (catalog?.section ??
-          (String(raw.section ?? "truck") as DvirChecklistItem["section"])) ||
+        section:
+          (catalog?.section ?? (String(raw.section ?? "truck") as DvirChecklistItem["section"])) ||
           "truck",
         answer: isAnswer(answerRaw) ? answerRaw : null,
         notes: String(raw.notes ?? ""),

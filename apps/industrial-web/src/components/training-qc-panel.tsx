@@ -373,7 +373,11 @@ export function TrainingQcPanel() {
                 />
               </div>
               <div className="col-6 col-md-4 col-xl-2">
-                <MetricCard label="Avg score" value={`${data.summary.avgScore}%`} hint="All completions" />
+                <MetricCard
+                  label="Avg score"
+                  value={`${data.summary.avgScore}%`}
+                  hint="All completions"
+                />
               </div>
               <div className="col-6 col-md-4 col-xl-2">
                 <MetricCard

@@ -82,7 +82,13 @@ export function ForgeUserMenu({
       {items.map((item) => {
         if (item.disabled) {
           return (
-            <Button key={item.label} type="button" variant="secondary" disabled title={item.title ?? item.label}>
+            <Button
+              key={item.label}
+              type="button"
+              variant="secondary"
+              disabled
+              title={item.title ?? item.label}
+            >
               {item.label}
             </Button>
           );
@@ -101,13 +107,24 @@ export function ForgeUserMenu({
         }
         if (item.href) {
           return (
-            <a key={item.label} href={item.href} className="forge-topbar__nav-link" onClick={item.onClick}>
+            <a
+              key={item.label}
+              href={item.href}
+              className="forge-topbar__nav-link"
+              onClick={item.onClick}
+            >
               {item.label}
             </a>
           );
         }
         return (
-          <Button key={item.label} type="button" variant="outline" onClick={item.onClick} title={item.title}>
+          <Button
+            key={item.label}
+            type="button"
+            variant="outline"
+            onClick={item.onClick}
+            title={item.title}
+          >
             {item.label}
           </Button>
         );
@@ -157,13 +174,7 @@ export function ForgeNotificationMenu({
 }) {
   if (disabled) {
     return (
-      <Button
-        type="button"
-        variant="secondary"
-        aria-label={label}
-        title={disabledReason}
-        disabled
-      >
+      <Button type="button" variant="secondary" aria-label={label} title={disabledReason} disabled>
         {label}
         {count > 0 ? ` (${count})` : ""}
       </Button>
@@ -269,11 +280,11 @@ export function ForgeNotificationMenu({
           )}
           {viewAllHref ? (
             <div style={{ marginTop: "0.65rem", fontSize: "0.85rem" }}>
-              {renderLink
-                ? renderLink({ href: viewAllHref, children: "View all" })
-                : (
-                    <a href={viewAllHref}>View all</a>
-                  )}
+              {renderLink ? (
+                renderLink({ href: viewAllHref, children: "View all" })
+              ) : (
+                <a href={viewAllHref}>View all</a>
+              )}
             </div>
           ) : null}
         </div>
@@ -418,7 +429,13 @@ export function ForgeHelpMenu({
 }) {
   if (disabled) {
     return (
-      <Button type="button" variant="secondary" aria-label={label} title={disabledReason ?? label} disabled>
+      <Button
+        type="button"
+        variant="secondary"
+        aria-label={label}
+        title={disabledReason ?? label}
+        disabled
+      >
         {label}
       </Button>
     );

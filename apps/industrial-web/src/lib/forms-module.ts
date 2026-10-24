@@ -140,7 +140,9 @@ export function isSignatureLabel(label: string): boolean {
 }
 
 function fieldType(raw: unknown, label = ""): FormFieldType {
-  const key = String(raw ?? "").trim().toLowerCase();
+  const key = String(raw ?? "")
+    .trim()
+    .toLowerCase();
   const mapped = key ? TYPE_MAP[key] : undefined;
   // Explicit non-text types win. Plain "text"/blank still upgrades when the
   // label is clearly a signature capture field.
@@ -196,7 +198,9 @@ function normalizeField(raw: unknown, index: number): FormField | null {
   const options = optionList(rec.options ?? rec.choices ?? rec.values);
   const declaredType = rec.type ?? rec.inputType ?? rec.fieldType;
   // Explicit date/datetime wins over a "Signature date" label heuristic.
-  const declaredKey = String(declaredType ?? "").trim().toLowerCase();
+  const declaredKey = String(declaredType ?? "")
+    .trim()
+    .toLowerCase();
   const type =
     declaredKey === "date" || declaredKey === "datetime"
       ? ("date" as const)
@@ -220,14 +224,7 @@ function normalizeField(raw: unknown, index: number): FormField | null {
 function collectFieldArrays(root: unknown): unknown[] {
   const rec = asRecord(root);
   if (!rec) return [];
-  const buckets = [
-    rec.fields,
-    rec.questions,
-    rec.formFields,
-    rec.items,
-    rec.elements,
-    rec.schema,
-  ];
+  const buckets = [rec.fields, rec.questions, rec.formFields, rec.items, rec.elements, rec.schema];
   const out: unknown[] = [];
   for (const bucket of buckets) {
     if (Array.isArray(bucket)) out.push(...bucket);
@@ -246,12 +243,7 @@ function collectFieldArrays(root: unknown): unknown[] {
 }
 
 export function extractFormFields(definition: Record<string, unknown>): FormField[] {
-  const sources = [
-    definition.schemaJson,
-    definition.schema,
-    definition.sourcePayload,
-    definition,
-  ];
+  const sources = [definition.schemaJson, definition.schema, definition.sourcePayload, definition];
   const seen = new Set<string>();
   const fields: FormField[] = [];
   for (const source of sources) {
@@ -327,7 +319,9 @@ export function parseFormFieldsInput(raw: string): FormField[] {
       let cursor = 0;
       let id = `field-${index + 1}`;
       const typeAt = (part: string | undefined) => {
-        const key = String(part ?? "").trim().toLowerCase();
+        const key = String(part ?? "")
+          .trim()
+          .toLowerCase();
         return Boolean(key && TYPE_MAP[key]);
       };
       if (parts.length >= 3 && parts[0] && !typeAt(parts[1])) {
@@ -364,7 +358,9 @@ export function formatFormFieldsForEditor(fields: readonly FormField[]): string 
     .join("\n");
 }
 
-export async function fetchFormDefinitionPrintable(formId: string): Promise<{ html: string; title?: string }> {
+export async function fetchFormDefinitionPrintable(
+  formId: string,
+): Promise<{ html: string; title?: string }> {
   return apiGet<{ html: string; title?: string }>(
     `${FORMS_API}/${encodeURIComponent(formId)}/printable`,
   );
@@ -374,7 +370,11 @@ export async function updateFormDefinition(
   formId: string,
   body: Record<string, unknown>,
 ): Promise<Record<string, unknown>> {
-  return apiSend<Record<string, unknown>>(`${FORMS_API}/${encodeURIComponent(formId)}`, "PATCH", body);
+  return apiSend<Record<string, unknown>>(
+    `${FORMS_API}/${encodeURIComponent(formId)}`,
+    "PATCH",
+    body,
+  );
 }
 
 export async function archiveFormDefinition(formId: string): Promise<Record<string, unknown>> {
@@ -433,7 +433,10 @@ export function hydrateFormAnswers(
 
 export function isEmployeeNumberField(field: Pick<FormField, "type" | "id" | "label">): boolean {
   if (field.type === "employeeNumber") return true;
-  const id = field.id.trim().toLowerCase().replace(/[\s-]+/g, "_");
+  const id = field.id
+    .trim()
+    .toLowerCase()
+    .replace(/[\s-]+/g, "_");
   if (
     id === "employeenumber" ||
     id === "employee_number" ||
@@ -663,9 +666,7 @@ export function groupRowsByFormType<T extends Record<string, unknown>>(
 }
 
 /** Unique type labels for the type filter dropdown. */
-export function collectFormTypeOptions(
-  definitions: readonly Record<string, unknown>[],
-): string[] {
+export function collectFormTypeOptions(definitions: readonly Record<string, unknown>[]): string[] {
   const types = new Set<string>();
   for (const row of definitions) {
     const label = formTypeLabel(row);
@@ -698,9 +699,14 @@ export const SAMPLE_FORM_IMPORT_JSON = {
           { id: "submittedBy", label: "Submitted by", type: "text", required: true },
           { id: "location", label: "Location", type: "text" },
           { id: "recordDate", label: "Date", type: "date", required: true },
-        { id: "notes", label: "Notes", type: "textarea" },
-        { id: "exampleItem", label: "Example checklist item", type: "yesno", options: [...YES_NO_NA_OPTIONS] },
-      ],
+          { id: "notes", label: "Notes", type: "textarea" },
+          {
+            id: "exampleItem",
+            label: "Example checklist item",
+            type: "yesno",
+            options: [...YES_NO_NA_OPTIONS],
+          },
+        ],
       },
     },
   ],

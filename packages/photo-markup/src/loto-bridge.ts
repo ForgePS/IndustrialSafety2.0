@@ -13,9 +13,7 @@ export type LotoImageArrow = {
   y2: number;
 };
 
-export function lotoArrowsToAnnotations(
-  arrows: readonly LotoImageArrow[],
-): PhotoAnnotation[] {
+export function lotoArrowsToAnnotations(arrows: readonly LotoImageArrow[]): PhotoAnnotation[] {
   return arrows.map((arrow, index) => ({
     id: arrow.id || createAnnotationId("arrow"),
     type: "arrow" as const,
@@ -30,9 +28,7 @@ export function lotoArrowsToAnnotations(
   }));
 }
 
-export function annotationsToLotoArrows(
-  annotations: readonly PhotoAnnotation[],
-): LotoImageArrow[] {
+export function annotationsToLotoArrows(annotations: readonly PhotoAnnotation[]): LotoImageArrow[] {
   return annotations
     .filter((a) => a.type === "arrow")
     .map((a) => ({

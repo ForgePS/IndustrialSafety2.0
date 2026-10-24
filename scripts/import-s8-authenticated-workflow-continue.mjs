@@ -82,7 +82,11 @@ async function main() {
     idempotencyKey: idk("approve"),
     body: {},
   });
-  evidence.steps.push({ step: "approve", status: approve.status, data: approve.json?.data ?? approve.json });
+  evidence.steps.push({
+    step: "approve",
+    status: approve.status,
+    data: approve.json?.data ?? approve.json,
+  });
   if (approve.status >= 300) throw new Error(`approve ${approve.status}`);
 
   const runTag = jobId.slice(-8);
@@ -91,12 +95,22 @@ async function main() {
     idempotencyKey: idk("stage"),
     body: {
       rows: [
-        { sourceRowKey: `S8-${runTag}-001`, mapped: { externalId: `S8-${runTag}-001`, firstName: "Ada", lastName: "Lovelace" } },
-        { sourceRowKey: `S8-${runTag}-002`, mapped: { externalId: `S8-${runTag}-002`, firstName: "Grace", lastName: "Hopper" } },
+        {
+          sourceRowKey: `S8-${runTag}-001`,
+          mapped: { externalId: `S8-${runTag}-001`, firstName: "Ada", lastName: "Lovelace" },
+        },
+        {
+          sourceRowKey: `S8-${runTag}-002`,
+          mapped: { externalId: `S8-${runTag}-002`, firstName: "Grace", lastName: "Hopper" },
+        },
       ],
     },
   });
-  evidence.steps.push({ step: "stage", status: stage.status, data: stage.json?.data ?? stage.json });
+  evidence.steps.push({
+    step: "stage",
+    status: stage.status,
+    data: stage.json?.data ?? stage.json,
+  });
   if (stage.status >= 300) throw new Error(`stage ${stage.status}`);
 
   const execute = await api("POST", `/api/v1/imports/jobs/${jobId}/execute`, {
@@ -104,7 +118,11 @@ async function main() {
     idempotencyKey: idk("execute"),
     body: { batchSize: 50 },
   });
-  evidence.steps.push({ step: "execute", status: execute.status, data: execute.json?.data ?? execute.json });
+  evidence.steps.push({
+    step: "execute",
+    status: execute.status,
+    data: execute.json?.data ?? execute.json,
+  });
   if (execute.status >= 300) throw new Error(`execute ${execute.status}`);
 
   let status = null;
@@ -136,7 +154,11 @@ async function main() {
     idempotencyKey: idk("rollback"),
     body: { reason: "S8 evidence rollback classification" },
   });
-  evidence.steps.push({ step: "rollback-request", status: rb.status, data: rb.json?.data ?? rb.json });
+  evidence.steps.push({
+    step: "rollback-request",
+    status: rb.status,
+    data: rb.json?.data ?? rb.json,
+  });
 
   evidence.ok = ["COMPLETED", "COMPLETED_WITH_ERRORS"].includes(status);
   evidence.completedAt = new Date().toISOString();

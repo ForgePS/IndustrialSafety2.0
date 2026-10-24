@@ -27,7 +27,11 @@ export type InspectionCompleteResult = InspectionRecord & {
 
 function asItems<T>(payload: unknown): T[] {
   if (Array.isArray(payload)) return payload as T[];
-  if (payload && typeof payload === "object" && Array.isArray((payload as { items?: unknown }).items)) {
+  if (
+    payload &&
+    typeof payload === "object" &&
+    Array.isArray((payload as { items?: unknown }).items)
+  ) {
     return ((payload as { items: T[] }).items ?? []) as T[];
   }
   return [];
@@ -35,10 +39,9 @@ function asItems<T>(payload: unknown): T[] {
 
 export const fieldInspectionApi = {
   async listTemplates(query?: Record<string, string>): Promise<InspectionTemplate[]> {
-    const rows = await apiGet<Array<Record<string, unknown>> | { items?: Array<Record<string, unknown>> }>(
-      "/api/v1/industrial/inspection-templates",
-      query ? { query } : undefined,
-    );
+    const rows = await apiGet<
+      Array<Record<string, unknown>> | { items?: Array<Record<string, unknown>> }
+    >("/api/v1/industrial/inspection-templates", query ? { query } : undefined);
     const list = Array.isArray(rows) ? rows : Array.isArray(rows.items) ? rows.items : [];
     const templates = list
       .map((row) => normalizeTemplateRow(row))

@@ -24,9 +24,7 @@ export const fieldTaskApi = {
     apiGet<FieldTaskRecord>(`/api/v1/industrial/tasks/${encodeURIComponent(id)}`),
 
   detail: (id: string) =>
-    apiGet<FieldTaskDetailExtras>(
-      `/api/v1/industrial/tasks/${encodeURIComponent(id)}/detail`,
-    ),
+    apiGet<FieldTaskDetailExtras>(`/api/v1/industrial/tasks/${encodeURIComponent(id)}/detail`),
 
   complete: (id: string) =>
     apiSend<FieldTaskRecord>(

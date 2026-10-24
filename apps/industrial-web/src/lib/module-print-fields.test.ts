@@ -129,8 +129,8 @@ describe("module-print-fields", () => {
     expect(oshaCasePrintFieldValues({ caseNumber: "2026-014", year: 2026 }).title).toBe(
       "OSHA 2026-014",
     );
-    expect(
-      emergencyRecordPrintFieldValues({ title: "Fire drill", status: "ACTIVE" }).status,
-    ).toBe("ACTIVE");
+    expect(emergencyRecordPrintFieldValues({ title: "Fire drill", status: "ACTIVE" }).status).toBe(
+      "ACTIVE",
+    );
   });
 });

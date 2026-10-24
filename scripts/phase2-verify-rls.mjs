@@ -118,5 +118,8 @@ if (parsed.exitCode !== 0) {
 }
 
 console.log(
-  JSON.stringify({ ok: true, note: "Task exited 0; JSON details are in CloudWatch platform-api logs" }),
+  JSON.stringify({
+    ok: true,
+    note: "Task exited 0; JSON details are in CloudWatch platform-api logs",
+  }),
 );

@@ -210,9 +210,9 @@ describe.skipIf(!ENABLED)("AI Narrative foundation E2E (live API)", () => {
     expect(drafts[0]?.label).toContain("NOT REVIEWED");
     expect(drafts[0]?.acceptedAt).toBeNull();
     expect(JSON.stringify(sources)).not.toContain("000-00-0000");
-    expect(
-      sources[0]?.manifestJson.fields.find((f) => f.fieldId === "patient_ssn")?.included,
-    ).toBe(false);
+    expect(sources[0]?.manifestJson.fields.find((f) => f.fieldId === "patient_ssn")?.included).toBe(
+      false,
+    );
     expect(
       (drafts[0]?.structuredResponseJson.missingInformation ?? []).some((m) =>
         /water supply/i.test(m),
@@ -236,12 +236,14 @@ describe.skipIf(!ENABLED)("AI Narrative foundation E2E (live API)", () => {
       idempotencyKey: `ai-e2e-${incidentId}`,
     });
     expect(dup.status).toBeLessThan(400);
-    expect(((dup.json as { data: { request: { id: string } } }).data.request.id)).toBe(request.id);
+    expect((dup.json as { data: { request: { id: string } } }).data.request.id).toBe(request.id);
 
     // Narrative must not auto-insert — get narrative body empty or unchanged without accept+insert
-    const before = await api("GET", `/api/v1/tenants/${tenantId}/neris/incidents/${incidentId}/narrative`);
-    const beforeBody =
-      ((before.json as { data?: { body?: string } }).data?.body ?? "") || "";
+    const before = await api(
+      "GET",
+      `/api/v1/tenants/${tenantId}/neris/incidents/${incidentId}/narrative`,
+    );
+    const beforeBody = ((before.json as { data?: { body?: string } }).data?.body ?? "") || "";
 
     const accept = await api("POST", `/api/v1/ai/narratives/${request.id}/accept`, {
       draftId: drafts[0]!.id,
@@ -249,14 +251,15 @@ describe.skipIf(!ENABLED)("AI Narrative foundation E2E (live API)", () => {
       insertIntoRecord: true,
     });
     expect(accept.status).toBeLessThan(400);
-    const acceptedDraft = (
-      (accept.json as { data: { drafts: typeof drafts } }).data.drafts[0]
-    );
+    const acceptedDraft = (accept.json as { data: { drafts: typeof drafts } }).data.drafts[0];
     expect(acceptedDraft?.label).toContain("HUMAN REVIEWED");
     expect(acceptedDraft?.acceptedAt).toBeTruthy();
     expect(acceptedDraft?.acceptedByUserId).toBeTruthy();
 
-    const after = await api("GET", `/api/v1/tenants/${tenantId}/neris/incidents/${incidentId}/narrative`);
+    const after = await api(
+      "GET",
+      `/api/v1/tenants/${tenantId}/neris/incidents/${incidentId}/narrative`,
+    );
     const afterBody = ((after.json as { data?: { body?: string } }).data?.body ?? "") || "";
     expect(afterBody.length).toBeGreaterThan(beforeBody.length);
 

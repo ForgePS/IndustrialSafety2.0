@@ -28,7 +28,8 @@ const adminArn = process.env.DATABASE_SECRET_ARN?.trim();
 if (!adminArn) throw new Error("DATABASE_SECRET_ARN required");
 const sql = postgres(await resolveDatabaseUrl(adminArn), { max: 1 });
 try {
-  const tenant = await sql`select id::text as id from tenants where tenant_key = ${TENANT_KEY} limit 1`;
+  const tenant =
+    await sql`select id::text as id from tenants where tenant_key = ${TENANT_KEY} limit 1`;
   const tenantId = tenant[0].id;
 
   const depts = await sql`
@@ -54,7 +55,12 @@ try {
     for (const k of Object.keys(p)) {
       keyHits.set(k, (keyHits.get(k) || 0) + 1);
       const lk = k.toLowerCase();
-      if (lk.includes("div") || lk.includes("company") || lk.includes("org") || lk.includes("unit")) {
+      if (
+        lk.includes("div") ||
+        lk.includes("company") ||
+        lk.includes("org") ||
+        lk.includes("unit")
+      ) {
         interesting.push({ key: k, value: p[k] });
       }
     }

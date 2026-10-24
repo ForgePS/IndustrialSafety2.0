@@ -1,8 +1,5 @@
 import { describe, expect, it } from "vitest";
-import {
-  dqfWorksheetFocusKey,
-  resolveDotAttentionHref,
-} from "./dot-attention-links";
+import { dqfWorksheetFocusKey, resolveDotAttentionHref } from "./dot-attention-links";
 import type { DotAttentionIssue } from "./dot-dqf-attention";
 
 describe("dot-attention-links", () => {
@@ -53,9 +50,9 @@ describe("dot-attention-links", () => {
       fieldId: "cdlExpiry",
       reason: "License expired",
     };
-    expect(
-      resolveDotAttentionHref(issue, { dqfFormIds: {} }),
-    ).toBe("/modules/dot-compliance/file/?id=drv-1&focus=cdl-section");
+    expect(resolveDotAttentionHref(issue, { dqfFormIds: {} })).toBe(
+      "/modules/dot-compliance/file/?id=drv-1&focus=cdl-section",
+    );
   });
 
   it("opens generic form fill for non-MVR linked templates", () => {
@@ -70,9 +67,7 @@ describe("dot-attention-links", () => {
     const href = resolveDotAttentionHref(issue, {
       dqfFormIds: { certificationOfRoadTest: "form-road" },
     });
-    expect(href).toBe(
-      "/modules/forms/?tab=fill&form=form-road&personnel=person-2&dotRecord=drv-2",
-    );
+    expect(href).toBe("/modules/forms/?tab=fill&form=form-road&personnel=person-2&dotRecord=drv-2");
   });
 
   it("opens the personnel file for company roster license issues", () => {

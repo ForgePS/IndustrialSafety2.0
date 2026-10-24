@@ -27,10 +27,7 @@ import type { ForgePrincipal } from "@forge/tenant-context";
 import { and, desc, eq, gte, inArray, isNull, or, sql } from "drizzle-orm";
 import { DATABASE } from "../../tokens.js";
 import { NotificationsService } from "../notifications/notifications.service.js";
-import {
-  employeeNumberLookupKeys,
-  findPersonnelByEmployeeNumber,
-} from "./employee-number.js";
+import { employeeNumberLookupKeys, findPersonnelByEmployeeNumber } from "./employee-number.js";
 import { unwrapJsonRecord } from "./form-print.js";
 import { readTrainingRecordAttachments } from "./industrial-training-record-attachments.service.js";
 import { notifyTrainingAssigned } from "./notify-training-assigned.js";
@@ -125,9 +122,12 @@ export class IndustrialTrainingLmsService {
         return;
       }
 
-      const windowExpired =
-        now.getTime() - row.windowStartedAt.getTime() > RATE_LIMIT_WINDOW_MS;
-      const failedAttempts = windowExpired ? (failed ? 1 : 0) : row.failedAttempts + (failed ? 1 : 0);
+      const windowExpired = now.getTime() - row.windowStartedAt.getTime() > RATE_LIMIT_WINDOW_MS;
+      const failedAttempts = windowExpired
+        ? failed
+          ? 1
+          : 0
+        : row.failedAttempts + (failed ? 1 : 0);
       const blockedUntil =
         failedAttempts >= RATE_LIMIT_MAX_FAILURES
           ? new Date(now.getTime() + RATE_LIMIT_BLOCK_MS)
@@ -205,7 +205,9 @@ export class IndustrialTrainingLmsService {
     const tenantId = this.tenant(principal);
     const title = String(body.title ?? "").trim();
     if (!title) throw new ForgeError("VALIDATION_FAILED", "title is required");
-    const linkType = String(body.linkType ?? "COMPANY_PORTAL").trim().toUpperCase();
+    const linkType = String(body.linkType ?? "COMPANY_PORTAL")
+      .trim()
+      .toUpperCase();
     const now = new Date();
     const shouldIssueQr = body.issueQr !== false;
     const appBaseUrl = String(body.appBaseUrl ?? "").trim();
@@ -749,7 +751,9 @@ export class IndustrialTrainingLmsService {
   }
 
   async getPortalTenantConfig(tenantId: string) {
-    return withTenantTransaction(this.db, tenantId, async (tx) => this.readPortalTenantConfig(tx, tenantId));
+    return withTenantTransaction(this.db, tenantId, async (tx) =>
+      this.readPortalTenantConfig(tx, tenantId),
+    );
   }
 
   async readPortalTenantConfig(tx: DatabaseTransaction, tenantId: string) {
@@ -1317,8 +1321,9 @@ export class IndustrialTrainingLmsService {
               10,
           ) / 10
         : 0;
-      const uniqueLearners = new Set(completions.map((c) => c.employeeNumber.trim()).filter(Boolean))
-        .size;
+      const uniqueLearners = new Set(
+        completions.map((c) => c.employeeNumber.trim()).filter(Boolean),
+      ).size;
 
       const scoreBuckets = [
         { label: "0–49", min: 0, max: 49 },
@@ -1367,7 +1372,10 @@ export class IndustrialTrainingLmsService {
         }))
         .sort((a, b) => b.completions - a.completions);
 
-      const attemptMap = new Map<number, { attemptNumber: number; count: number; passed: number }>();
+      const attemptMap = new Map<
+        number,
+        { attemptNumber: number; count: number; passed: number }
+      >();
       for (const c of completions) {
         const n = Math.max(1, c.attemptNumber || 1);
         const row = attemptMap.get(n) ?? { attemptNumber: n, count: 0, passed: 0 };
@@ -1519,10 +1527,7 @@ export class IndustrialTrainingLmsService {
         summary: { assigned: 0, completed: 0, overdue: 0 },
       };
     }
-    const history = await this.listPersonnelTrainingHistory(
-      learner.tenantId,
-      learner.personnelId,
-    );
+    const history = await this.listPersonnelTrainingHistory(learner.tenantId, learner.personnelId);
     const openAssignments = history.openAssignments ?? [];
     const trainingRecords = history.trainingRecords ?? [];
     const now = Date.now();
@@ -1754,12 +1759,11 @@ export class IndustrialTrainingLmsService {
             };
           })
           .filter((row): row is NonNullable<typeof row> => row != null),
-      ]
-        .sort((a, b) => {
-          const aTime = a.completedAt ? new Date(a.completedAt).getTime() : 0;
-          const bTime = b.completedAt ? new Date(b.completedAt).getTime() : 0;
-          return bTime - aTime;
-        });
+      ].sort((a, b) => {
+        const aTime = a.completedAt ? new Date(a.completedAt).getTime() : 0;
+        const bTime = b.completedAt ? new Date(b.completedAt).getTime() : 0;
+        return bTime - aTime;
+      });
 
       // Collapse same course name + same completed day (e.g. import + LMS both present).
       const deduped: typeof trainingRecords = [];
@@ -1784,9 +1788,7 @@ export class IndustrialTrainingLmsService {
         const courseKey = String(row.title || row.courseName || "")
           .trim()
           .toLowerCase();
-        const day = row.completedAt
-          ? new Date(row.completedAt).toISOString().slice(0, 10)
-          : "none";
+        const day = row.completedAt ? new Date(row.completedAt).toISOString().slice(0, 10) : "none";
         const key = `${courseKey}::${day}`;
         if (!courseKey || seenKeys.has(key)) continue;
         seenKeys.add(key);
@@ -1864,11 +1866,11 @@ export class IndustrialTrainingLmsService {
       where id = ${tenantId}::uuid
       limit 1
     `);
-    const tenantRow = (Array.isArray(tenantRows)
-      ? tenantRows[0]
-      : (tenantRows as { rows?: Array<Record<string, unknown>> }).rows?.[0]) as
-      | Record<string, unknown>
-      | undefined;
+    const tenantRow = (
+      Array.isArray(tenantRows)
+        ? tenantRows[0]
+        : (tenantRows as { rows?: Array<Record<string, unknown>> }).rows?.[0]
+    ) as Record<string, unknown> | undefined;
 
     const brandingRows = await tx.execute(sql`
       select cv.payload_json as payload
@@ -1879,11 +1881,11 @@ export class IndustrialTrainingLmsService {
         and co.object_key = 'default'
       limit 1
     `);
-    const brandingPayloadRaw = (Array.isArray(brandingRows)
-      ? brandingRows[0]
-      : (brandingRows as { rows?: Array<{ payload?: unknown }> }).rows?.[0]) as
-      | { payload?: unknown }
-      | undefined;
+    const brandingPayloadRaw = (
+      Array.isArray(brandingRows)
+        ? brandingRows[0]
+        : (brandingRows as { rows?: Array<{ payload?: unknown }> }).rows?.[0]
+    ) as { payload?: unknown } | undefined;
     const brandingPayload = unwrapJsonRecord(brandingPayloadRaw?.payload);
     const tenantKey = String(tenantRow?.tenant_key ?? "").trim();
     const companyName =
@@ -2053,17 +2055,19 @@ export class IndustrialTrainingLmsService {
           employeeNumber.toLowerCase() === attemptEmployee.toLowerCase()) ||
         (personnelId &&
           attemptEmployee &&
-          (await tx
-            .select({ id: industrialPersonnel.id })
-            .from(industrialPersonnel)
-            .where(
-              and(
-                eq(industrialPersonnel.id, personnelId),
-                eq(industrialPersonnel.tenantId, tenantId),
-                sql`lower(trim(${industrialPersonnel.employeeNumber})) = lower(${attemptEmployee})`,
-              ),
-            )
-            .limit(1)).length > 0);
+          (
+            await tx
+              .select({ id: industrialPersonnel.id })
+              .from(industrialPersonnel)
+              .where(
+                and(
+                  eq(industrialPersonnel.id, personnelId),
+                  eq(industrialPersonnel.tenantId, tenantId),
+                  sql`lower(trim(${industrialPersonnel.employeeNumber})) = lower(${attemptEmployee})`,
+                ),
+              )
+              .limit(1)
+          ).length > 0);
       if (!allowed) throw new ForgeError("FORBIDDEN", "Attempt not available");
 
       let resolvedPersonnelId = personnelId ?? null;

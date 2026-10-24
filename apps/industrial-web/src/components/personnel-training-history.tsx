@@ -9,10 +9,7 @@ import {
   putPresignedTrainingRecordUpload,
   type TrainingRecordAttachment,
 } from "@/lib/training-record-attachments";
-import {
-  compressImageToUploadFile,
-  imageCompressErrorMessage,
-} from "@/lib/compress-image";
+import { compressImageToUploadFile, imageCompressErrorMessage } from "@/lib/compress-image";
 import { useImageCrop } from "@/hooks/use-image-crop";
 
 type TrainingHistoryResponse = {
@@ -92,8 +89,7 @@ export function PersonnelTrainingHistory({ personnelId }: { personnelId: string 
   const canManageRecords =
     permissions.has("industrial.training.manage") || permissions.has("industrial.admin");
   const canEditOrDeleteRecords = Boolean(me?.isPlatformAdmin) || canManageRecords;
-  const canDeleteAttachments =
-    canManageRecords || permissions.has("industrial.personnel.manage");
+  const canDeleteAttachments = canManageRecords || permissions.has("industrial.personnel.manage");
 
   const [expanded, setExpanded] = useState(false);
   const [data, setData] = useState<TrainingHistoryResponse | null>(null);
@@ -281,7 +277,8 @@ export function PersonnelTrainingHistory({ personnelId }: { personnelId: string 
     setPendingCertificate(null);
     setManualForm({
       title: row.title || row.courseName || "",
-      completedAt: formatDate(row.completedAt) === "—" ? todayInputValue() : formatDate(row.completedAt),
+      completedAt:
+        formatDate(row.completedAt) === "—" ? todayInputValue() : formatDate(row.completedAt),
       instructorName: row.instructorName ?? "",
       notes: row.notes ?? "",
       expiresAt: formatDate(row.expiresAt) === "—" ? "" : formatDate(row.expiresAt),
@@ -295,9 +292,7 @@ export function PersonnelTrainingHistory({ personnelId }: { personnelId: string 
     if (!canEditOrDeleteRecords || row.kind === "completion") return;
     const label = row.title || row.courseName || "this training record";
     if (
-      !window.confirm(
-        `Delete “${label}”? This removes it from training history (soft delete).`,
-      )
+      !window.confirm(`Delete “${label}”? This removes it from training history (soft delete).`)
     ) {
       return;
     }
@@ -432,408 +427,430 @@ export function PersonnelTrainingHistory({ personnelId }: { personnelId: string 
   return (
     <>
       {cropModal}
-    <section className="card mb-4">
-      <button
-        type="button"
-        className="card-header d-flex justify-content-between align-items-center w-100 border-0 bg-transparent text-start"
-        onClick={() => void toggleExpanded()}
-        aria-expanded={expanded}
-        aria-controls="personnel-training-history-content"
-      >
-        <span>
-          <h5 className="card-title mb-0">Training history</h5>
-          <small className="text-muted">{summary}</small>
-        </span>
-        <i className={`bx bx-chevron-${expanded ? "up" : "down"}`} aria-hidden="true" />
-      </button>
-      {expanded ? (
-        <div className="card-body pt-0" id="personnel-training-history-content">
-          <div className="d-flex gap-2 mb-3 flex-wrap">
-            <button
-              type="button"
-              className="btn btn-sm btn-outline-secondary"
-              disabled={busy}
-              onClick={() => void openFullReport()}
-            >
-              Full report
-            </button>
-            <button
-              type="button"
-              className="btn btn-sm btn-outline-primary"
-              disabled={busy}
-              onClick={() => void load()}
-            >
-              Refresh
-            </button>
-            {canManageRecords ? (
+      <section className="card mb-4">
+        <button
+          type="button"
+          className="card-header d-flex justify-content-between align-items-center w-100 border-0 bg-transparent text-start"
+          onClick={() => void toggleExpanded()}
+          aria-expanded={expanded}
+          aria-controls="personnel-training-history-content"
+        >
+          <span>
+            <h5 className="card-title mb-0">Training history</h5>
+            <small className="text-muted">{summary}</small>
+          </span>
+          <i className={`bx bx-chevron-${expanded ? "up" : "down"}`} aria-hidden="true" />
+        </button>
+        {expanded ? (
+          <div className="card-body pt-0" id="personnel-training-history-content">
+            <div className="d-flex gap-2 mb-3 flex-wrap">
               <button
                 type="button"
-                className="btn btn-sm btn-primary"
-                disabled={busy || createBusy}
-                onClick={() => {
-                  if (formOpen && formMode === "create") {
-                    void cancelRecordForm();
-                    return;
-                  }
-                  setEditingRecordId(null);
-                  setManualForm(emptyManualForm());
-                  setPendingCertificate(null);
-                  setShowAddForm(true);
-                  setCreateError(null);
-                }}
+                className="btn btn-sm btn-outline-secondary"
+                disabled={busy}
+                onClick={() => void openFullReport()}
               >
-                {formOpen && formMode === "create" ? "Cancel" : "Add training record"}
+                Full report
               </button>
-            ) : null}
-          </div>
-          {formOpen && ((formMode === "create" && canManageRecords) || (formMode === "edit" && canEditOrDeleteRecords)) ? (
-            <form className="border rounded p-3 mb-3 bg-light" onSubmit={(e) => void saveManualRecord(e)}>
-              <h6 className="mb-3">{formMode === "edit" ? "Edit training record" : "Add training record"}</h6>
-              <div className="row g-2">
-                <div className="col-md-6">
-                  <label className="form-label" htmlFor="manual-training-title">
-                    Course name
-                  </label>
-                  <input
-                    id="manual-training-title"
-                    className="form-control form-control-sm"
-                    value={manualForm.title}
-                    onChange={(e) => setManualForm((f) => ({ ...f, title: e.target.value }))}
-                    required
-                    disabled={createBusy}
-                    placeholder="Same format as imported training records"
-                  />
-                </div>
-                <div className="col-md-3">
-                  <label className="form-label" htmlFor="manual-training-completed">
-                    Completed
-                  </label>
-                  <input
-                    id="manual-training-completed"
-                    type="date"
-                    className="form-control form-control-sm"
-                    value={manualForm.completedAt}
-                    onChange={(e) => setManualForm((f) => ({ ...f, completedAt: e.target.value }))}
-                    required
-                    disabled={createBusy}
-                  />
-                </div>
-                <div className="col-md-3">
-                  <label className="form-label" htmlFor="manual-training-expires">
-                    Expires (optional)
-                  </label>
-                  <input
-                    id="manual-training-expires"
-                    type="date"
-                    className="form-control form-control-sm"
-                    value={manualForm.expiresAt}
-                    onChange={(e) => setManualForm((f) => ({ ...f, expiresAt: e.target.value }))}
-                    disabled={createBusy}
-                  />
-                </div>
-                <div className="col-md-4">
-                  <label className="form-label" htmlFor="manual-training-result">
-                    Result
-                  </label>
-                  <select
-                    id="manual-training-result"
-                    className="form-select form-select-sm"
-                    value={manualForm.result}
-                    onChange={(e) => setManualForm((f) => ({ ...f, result: e.target.value }))}
-                    disabled={createBusy}
-                  >
-                    <option value="COMPLETED">Completed</option>
-                    <option value="PASSED">Passed</option>
-                    <option value="FAILED">Failed</option>
-                  </select>
-                </div>
-                <div className="col-md-4">
-                  <label className="form-label" htmlFor="manual-training-score">
-                    Score (%)
-                  </label>
-                  <input
-                    id="manual-training-score"
-                    type="number"
-                    min={0}
-                    max={100}
-                    step={1}
-                    className="form-control form-control-sm"
-                    value={manualForm.scorePercent}
-                    onChange={(e) => setManualForm((f) => ({ ...f, scorePercent: e.target.value }))}
-                    disabled={createBusy}
-                    placeholder="Optional"
-                  />
-                </div>
-                <div className="col-md-4">
-                  <label className="form-label" htmlFor="manual-training-attempts">
-                    Attempts
-                  </label>
-                  <input
-                    id="manual-training-attempts"
-                    type="number"
-                    min={1}
-                    step={1}
-                    className="form-control form-control-sm"
-                    value={manualForm.attemptNumber}
-                    onChange={(e) => setManualForm((f) => ({ ...f, attemptNumber: e.target.value }))}
-                    disabled={createBusy}
-                    placeholder="Optional"
-                  />
-                </div>
-                <div className="col-md-6">
-                  <label className="form-label" htmlFor="manual-training-instructor">
-                    Instructor (optional)
-                  </label>
-                  <input
-                    id="manual-training-instructor"
-                    className="form-control form-control-sm"
-                    value={manualForm.instructorName}
-                    onChange={(e) =>
-                      setManualForm((f) => ({ ...f, instructorName: e.target.value }))
-                    }
-                    disabled={createBusy}
-                  />
-                </div>
-                <div className="col-md-6">
-                  <label className="form-label" htmlFor="manual-training-certificate">
-                    Certificate / attachment (optional)
-                  </label>
-                  <input
-                    id="manual-training-certificate"
-                    type="file"
-                    className="form-control form-control-sm"
-                    accept=".pdf,.png,.jpg,.jpeg,.webp,.heic,.heif,application/pdf,image/*"
-                    disabled={createBusy}
-                    onChange={(e) => {
-                      setPendingCertificate(e.target.files?.[0] ?? null);
-                    }}
-                  />
-                  {pendingCertificate ? (
-                    <div className="small text-muted mt-1">{pendingCertificate.name}</div>
-                  ) : null}
-                </div>
-                <div className="col-12">
-                  <label className="form-label" htmlFor="manual-training-notes">
-                    Notes (optional)
-                  </label>
-                  <textarea
-                    id="manual-training-notes"
-                    className="form-control form-control-sm"
-                    rows={2}
-                    value={manualForm.notes}
-                    onChange={(e) => setManualForm((f) => ({ ...f, notes: e.target.value }))}
-                    disabled={createBusy}
-                  />
-                </div>
-              </div>
-              {createError ? <div className="alert alert-warning mt-3 mb-0">{createError}</div> : null}
-              <div className="mt-3 d-flex gap-2 flex-wrap">
-                <button type="submit" className="btn btn-sm btn-primary" disabled={createBusy}>
-                  {createBusy
-                    ? "Saving…"
-                    : formMode === "edit"
-                      ? "Save changes"
-                      : "Save training record"}
-                </button>
+              <button
+                type="button"
+                className="btn btn-sm btn-outline-primary"
+                disabled={busy}
+                onClick={() => void load()}
+              >
+                Refresh
+              </button>
+              {canManageRecords ? (
                 <button
                   type="button"
-                  className="btn btn-sm btn-outline-secondary"
-                  disabled={createBusy}
-                  onClick={() => void cancelRecordForm()}
+                  className="btn btn-sm btn-primary"
+                  disabled={busy || createBusy}
+                  onClick={() => {
+                    if (formOpen && formMode === "create") {
+                      void cancelRecordForm();
+                      return;
+                    }
+                    setEditingRecordId(null);
+                    setManualForm(emptyManualForm());
+                    setPendingCertificate(null);
+                    setShowAddForm(true);
+                    setCreateError(null);
+                  }}
                 >
-                  Cancel
+                  {formOpen && formMode === "create" ? "Cancel" : "Add training record"}
                 </button>
-              </div>
-            </form>
-          ) : null}
-          {error ? <div className="alert alert-warning mb-3">{error}</div> : null}
-          {printError ? <div className="alert alert-warning mb-3">{printError}</div> : null}
-          {uploadError ? <div className="alert alert-warning mb-3">{uploadError}</div> : null}
-          {busy && !data ? <p className="text-muted mb-0">Loading training history…</p> : null}
-          {data ? (
-            <>
-              <h6 className="mb-2">Open assignments</h6>
-              <ul className="list-group list-group-flush mb-4">
-                {data.openAssignments.map((row, index) => (
-                  <li
-                    key={`${row.assignment.title}-${index}`}
-                    className="list-group-item d-flex justify-content-between align-items-start gap-2 px-0"
-                  >
-                    <div>
-                      <strong>{row.assignment.title}</strong>
-                      <div className="small text-muted">{row.sourceTitle}</div>
-                    </div>
-                    <span className={`badge ${statusClass(row.assignee.status)}`}>
-                      {row.assignee.status.replace(/_/g, " ")}
-                    </span>
-                  </li>
-                ))}
-                {!data.openAssignments.length ? (
-                  <li className="list-group-item text-muted px-0">No open assignments.</li>
+              ) : null}
+            </div>
+            {formOpen &&
+            ((formMode === "create" && canManageRecords) ||
+              (formMode === "edit" && canEditOrDeleteRecords)) ? (
+              <form
+                className="border rounded p-3 mb-3 bg-light"
+                onSubmit={(e) => void saveManualRecord(e)}
+              >
+                <h6 className="mb-3">
+                  {formMode === "edit" ? "Edit training record" : "Add training record"}
+                </h6>
+                <div className="row g-2">
+                  <div className="col-md-6">
+                    <label className="form-label" htmlFor="manual-training-title">
+                      Course name
+                    </label>
+                    <input
+                      id="manual-training-title"
+                      className="form-control form-control-sm"
+                      value={manualForm.title}
+                      onChange={(e) => setManualForm((f) => ({ ...f, title: e.target.value }))}
+                      required
+                      disabled={createBusy}
+                      placeholder="Same format as imported training records"
+                    />
+                  </div>
+                  <div className="col-md-3">
+                    <label className="form-label" htmlFor="manual-training-completed">
+                      Completed
+                    </label>
+                    <input
+                      id="manual-training-completed"
+                      type="date"
+                      className="form-control form-control-sm"
+                      value={manualForm.completedAt}
+                      onChange={(e) =>
+                        setManualForm((f) => ({ ...f, completedAt: e.target.value }))
+                      }
+                      required
+                      disabled={createBusy}
+                    />
+                  </div>
+                  <div className="col-md-3">
+                    <label className="form-label" htmlFor="manual-training-expires">
+                      Expires (optional)
+                    </label>
+                    <input
+                      id="manual-training-expires"
+                      type="date"
+                      className="form-control form-control-sm"
+                      value={manualForm.expiresAt}
+                      onChange={(e) => setManualForm((f) => ({ ...f, expiresAt: e.target.value }))}
+                      disabled={createBusy}
+                    />
+                  </div>
+                  <div className="col-md-4">
+                    <label className="form-label" htmlFor="manual-training-result">
+                      Result
+                    </label>
+                    <select
+                      id="manual-training-result"
+                      className="form-select form-select-sm"
+                      value={manualForm.result}
+                      onChange={(e) => setManualForm((f) => ({ ...f, result: e.target.value }))}
+                      disabled={createBusy}
+                    >
+                      <option value="COMPLETED">Completed</option>
+                      <option value="PASSED">Passed</option>
+                      <option value="FAILED">Failed</option>
+                    </select>
+                  </div>
+                  <div className="col-md-4">
+                    <label className="form-label" htmlFor="manual-training-score">
+                      Score (%)
+                    </label>
+                    <input
+                      id="manual-training-score"
+                      type="number"
+                      min={0}
+                      max={100}
+                      step={1}
+                      className="form-control form-control-sm"
+                      value={manualForm.scorePercent}
+                      onChange={(e) =>
+                        setManualForm((f) => ({ ...f, scorePercent: e.target.value }))
+                      }
+                      disabled={createBusy}
+                      placeholder="Optional"
+                    />
+                  </div>
+                  <div className="col-md-4">
+                    <label className="form-label" htmlFor="manual-training-attempts">
+                      Attempts
+                    </label>
+                    <input
+                      id="manual-training-attempts"
+                      type="number"
+                      min={1}
+                      step={1}
+                      className="form-control form-control-sm"
+                      value={manualForm.attemptNumber}
+                      onChange={(e) =>
+                        setManualForm((f) => ({ ...f, attemptNumber: e.target.value }))
+                      }
+                      disabled={createBusy}
+                      placeholder="Optional"
+                    />
+                  </div>
+                  <div className="col-md-6">
+                    <label className="form-label" htmlFor="manual-training-instructor">
+                      Instructor (optional)
+                    </label>
+                    <input
+                      id="manual-training-instructor"
+                      className="form-control form-control-sm"
+                      value={manualForm.instructorName}
+                      onChange={(e) =>
+                        setManualForm((f) => ({ ...f, instructorName: e.target.value }))
+                      }
+                      disabled={createBusy}
+                    />
+                  </div>
+                  <div className="col-md-6">
+                    <label className="form-label" htmlFor="manual-training-certificate">
+                      Certificate / attachment (optional)
+                    </label>
+                    <input
+                      id="manual-training-certificate"
+                      type="file"
+                      className="form-control form-control-sm"
+                      accept=".pdf,.png,.jpg,.jpeg,.webp,.heic,.heif,application/pdf,image/*"
+                      disabled={createBusy}
+                      onChange={(e) => {
+                        setPendingCertificate(e.target.files?.[0] ?? null);
+                      }}
+                    />
+                    {pendingCertificate ? (
+                      <div className="small text-muted mt-1">{pendingCertificate.name}</div>
+                    ) : null}
+                  </div>
+                  <div className="col-12">
+                    <label className="form-label" htmlFor="manual-training-notes">
+                      Notes (optional)
+                    </label>
+                    <textarea
+                      id="manual-training-notes"
+                      className="form-control form-control-sm"
+                      rows={2}
+                      value={manualForm.notes}
+                      onChange={(e) => setManualForm((f) => ({ ...f, notes: e.target.value }))}
+                      disabled={createBusy}
+                    />
+                  </div>
+                </div>
+                {createError ? (
+                  <div className="alert alert-warning mt-3 mb-0">{createError}</div>
                 ) : null}
-              </ul>
-              <h6 className="mb-2">Training records</h6>
-              <div className="mb-2">
-                <input
-                  type="search"
-                  className="form-control form-control-sm"
-                  placeholder="Filter this person’s records by course or result"
-                  value={recordSearch}
-                  onChange={(e) => setRecordSearch(e.target.value)}
-                />
-              </div>
-              <div className="table-responsive">
-                <table className="table table-sm mb-0">
-                  <thead>
-                    <tr>
-                      <th>Course</th>
-                      <th>Result</th>
-                      <th>Score</th>
-                      <th>Attempts</th>
-                      <th>Date</th>
-                      <th>Attachment</th>
-                      <th className="text-end">Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {filteredRecords.map((row) => {
-                      const attachments = row.attachments ?? [];
-                      const canUpload = Boolean(row.canUploadAttachment) && attachments.length === 0;
-                      const uploading = uploadBusyId === row.id;
-                      const primaryAttachment = attachments[attachments.length - 1] ?? null;
-                      const isLegacyRecord = row.kind === "record" || !row.printCompletionId;
-                      return (
-                        <tr key={row.id}>
-                          <td>
-                            {row.title}
-                            {row.courseName && row.courseName !== row.title ? (
-                              <div className="small text-muted">{row.courseName}</div>
-                            ) : null}
-                          </td>
-                          <td>{row.result ?? "—"}</td>
-                          <td>{row.scorePercent != null ? `${row.scorePercent}%` : "—"}</td>
-                          <td>{row.attemptNumber != null ? `#${row.attemptNumber}` : "—"}</td>
-                          <td>{formatDate(row.completedAt)}</td>
-                          <td>
-                            {attachments.length ? (
-                              <ul className="list-unstyled mb-0 small">
-                                {attachments.map((file) => {
-                                  const deleting = deleteBusyId === file.documentId;
-                                  return (
-                                    <li
-                                      key={file.documentId}
-                                      className="d-flex align-items-center gap-2 flex-wrap"
+                <div className="mt-3 d-flex gap-2 flex-wrap">
+                  <button type="submit" className="btn btn-sm btn-primary" disabled={createBusy}>
+                    {createBusy
+                      ? "Saving…"
+                      : formMode === "edit"
+                        ? "Save changes"
+                        : "Save training record"}
+                  </button>
+                  <button
+                    type="button"
+                    className="btn btn-sm btn-outline-secondary"
+                    disabled={createBusy}
+                    onClick={() => void cancelRecordForm()}
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </form>
+            ) : null}
+            {error ? <div className="alert alert-warning mb-3">{error}</div> : null}
+            {printError ? <div className="alert alert-warning mb-3">{printError}</div> : null}
+            {uploadError ? <div className="alert alert-warning mb-3">{uploadError}</div> : null}
+            {busy && !data ? <p className="text-muted mb-0">Loading training history…</p> : null}
+            {data ? (
+              <>
+                <h6 className="mb-2">Open assignments</h6>
+                <ul className="list-group list-group-flush mb-4">
+                  {data.openAssignments.map((row, index) => (
+                    <li
+                      key={`${row.assignment.title}-${index}`}
+                      className="list-group-item d-flex justify-content-between align-items-start gap-2 px-0"
+                    >
+                      <div>
+                        <strong>{row.assignment.title}</strong>
+                        <div className="small text-muted">{row.sourceTitle}</div>
+                      </div>
+                      <span className={`badge ${statusClass(row.assignee.status)}`}>
+                        {row.assignee.status.replace(/_/g, " ")}
+                      </span>
+                    </li>
+                  ))}
+                  {!data.openAssignments.length ? (
+                    <li className="list-group-item text-muted px-0">No open assignments.</li>
+                  ) : null}
+                </ul>
+                <h6 className="mb-2">Training records</h6>
+                <div className="mb-2">
+                  <input
+                    type="search"
+                    className="form-control form-control-sm"
+                    placeholder="Filter this person’s records by course or result"
+                    value={recordSearch}
+                    onChange={(e) => setRecordSearch(e.target.value)}
+                  />
+                </div>
+                <div className="table-responsive">
+                  <table className="table table-sm mb-0">
+                    <thead>
+                      <tr>
+                        <th>Course</th>
+                        <th>Result</th>
+                        <th>Score</th>
+                        <th>Attempts</th>
+                        <th>Date</th>
+                        <th>Attachment</th>
+                        <th className="text-end">Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {filteredRecords.map((row) => {
+                        const attachments = row.attachments ?? [];
+                        const canUpload =
+                          Boolean(row.canUploadAttachment) && attachments.length === 0;
+                        const uploading = uploadBusyId === row.id;
+                        const primaryAttachment = attachments[attachments.length - 1] ?? null;
+                        const isLegacyRecord = row.kind === "record" || !row.printCompletionId;
+                        return (
+                          <tr key={row.id}>
+                            <td>
+                              {row.title}
+                              {row.courseName && row.courseName !== row.title ? (
+                                <div className="small text-muted">{row.courseName}</div>
+                              ) : null}
+                            </td>
+                            <td>{row.result ?? "—"}</td>
+                            <td>{row.scorePercent != null ? `${row.scorePercent}%` : "—"}</td>
+                            <td>{row.attemptNumber != null ? `#${row.attemptNumber}` : "—"}</td>
+                            <td>{formatDate(row.completedAt)}</td>
+                            <td>
+                              {attachments.length ? (
+                                <ul className="list-unstyled mb-0 small">
+                                  {attachments.map((file) => {
+                                    const deleting = deleteBusyId === file.documentId;
+                                    return (
+                                      <li
+                                        key={file.documentId}
+                                        className="d-flex align-items-center gap-2 flex-wrap"
+                                      >
+                                        <span>{file.fileName}</span>
+                                        {canDeleteAttachments ? (
+                                          <button
+                                            type="button"
+                                            className="btn btn-link btn-sm text-danger p-0 align-baseline"
+                                            disabled={deleting || busy || uploading}
+                                            onClick={() =>
+                                              void deleteAttachment(
+                                                row.id,
+                                                file.documentId,
+                                                file.fileName,
+                                              )
+                                            }
+                                          >
+                                            {deleting ? "Deleting…" : "Delete"}
+                                          </button>
+                                        ) : null}
+                                      </li>
+                                    );
+                                  })}
+                                </ul>
+                              ) : (
+                                <span className="text-muted small">None</span>
+                              )}
+                            </td>
+                            <td className="text-end">
+                              <div className="d-inline-flex flex-wrap gap-1 justify-content-end">
+                                {row.printCompletionId ? (
+                                  <button
+                                    type="button"
+                                    className="btn btn-sm btn-outline-secondary"
+                                    onClick={() => void openCompletionPrint(row.printCompletionId!)}
+                                  >
+                                    Print
+                                  </button>
+                                ) : null}
+                                {!row.printCompletionId && primaryAttachment ? (
+                                  <button
+                                    type="button"
+                                    className="btn btn-sm btn-outline-secondary"
+                                    onClick={() =>
+                                      void printAttachment(row.id, primaryAttachment.documentId)
+                                    }
+                                  >
+                                    Print
+                                  </button>
+                                ) : null}
+                                {!row.printCompletionId && !primaryAttachment && isLegacyRecord ? (
+                                  <button
+                                    type="button"
+                                    className="btn btn-sm btn-outline-secondary"
+                                    onClick={() => void openRecordPrint(row.id)}
+                                  >
+                                    Print
+                                  </button>
+                                ) : null}
+                                {canUpload ? (
+                                  <label
+                                    className={`btn btn-sm btn-outline-primary mb-0 ${uploading ? "disabled" : ""}`}
+                                  >
+                                    {uploading ? "Uploading…" : "Upload"}
+                                    <input
+                                      type="file"
+                                      className="d-none"
+                                      accept=".pdf,.png,.jpg,.jpeg,.webp,.heic,.heif,application/pdf,image/*"
+                                      disabled={uploading || busy}
+                                      onChange={(e) => {
+                                        const file = e.target.files?.[0] ?? null;
+                                        e.target.value = "";
+                                        void uploadAttachment(row.id, file);
+                                      }}
+                                    />
+                                  </label>
+                                ) : null}
+                                {canEditOrDeleteRecords && row.kind !== "completion" ? (
+                                  <>
+                                    <button
+                                      type="button"
+                                      className="btn btn-sm btn-outline-primary"
+                                      disabled={busy || createBusy || archiveBusyId === row.id}
+                                      onClick={() => startEditRecord(row)}
                                     >
-                                      <span>{file.fileName}</span>
-                                      {canDeleteAttachments ? (
-                                        <button
-                                          type="button"
-                                          className="btn btn-link btn-sm text-danger p-0 align-baseline"
-                                          disabled={deleting || busy || uploading}
-                                          onClick={() =>
-                                            void deleteAttachment(row.id, file.documentId, file.fileName)
-                                          }
-                                        >
-                                          {deleting ? "Deleting…" : "Delete"}
-                                        </button>
-                                      ) : null}
-                                    </li>
-                                  );
-                                })}
-                              </ul>
-                            ) : (
-                              <span className="text-muted small">None</span>
-                            )}
-                          </td>
-                          <td className="text-end">
-                            <div className="d-inline-flex flex-wrap gap-1 justify-content-end">
-                              {row.printCompletionId ? (
-                                <button
-                                  type="button"
-                                  className="btn btn-sm btn-outline-secondary"
-                                  onClick={() => void openCompletionPrint(row.printCompletionId!)}
-                                >
-                                  Print
-                                </button>
-                              ) : null}
-                              {!row.printCompletionId && primaryAttachment ? (
-                                <button
-                                  type="button"
-                                  className="btn btn-sm btn-outline-secondary"
-                                  onClick={() =>
-                                    void printAttachment(row.id, primaryAttachment.documentId)
-                                  }
-                                >
-                                  Print
-                                </button>
-                              ) : null}
-                              {!row.printCompletionId && !primaryAttachment && isLegacyRecord ? (
-                                <button
-                                  type="button"
-                                  className="btn btn-sm btn-outline-secondary"
-                                  onClick={() => void openRecordPrint(row.id)}
-                                >
-                                  Print
-                                </button>
-                              ) : null}
-                              {canUpload ? (
-                                <label className={`btn btn-sm btn-outline-primary mb-0 ${uploading ? "disabled" : ""}`}>
-                                  {uploading ? "Uploading…" : "Upload"}
-                                  <input
-                                    type="file"
-                                    className="d-none"
-                                    accept=".pdf,.png,.jpg,.jpeg,.webp,.heic,.heif,application/pdf,image/*"
-                                    disabled={uploading || busy}
-                                    onChange={(e) => {
-                                      const file = e.target.files?.[0] ?? null;
-                                      e.target.value = "";
-                                      void uploadAttachment(row.id, file);
-                                    }}
-                                  />
-                                </label>
-                              ) : null}
-                              {canEditOrDeleteRecords && row.kind !== "completion" ? (
-                                <>
-                                  <button
-                                    type="button"
-                                    className="btn btn-sm btn-outline-primary"
-                                    disabled={busy || createBusy || archiveBusyId === row.id}
-                                    onClick={() => startEditRecord(row)}
-                                  >
-                                    Edit
-                                  </button>
-                                  <button
-                                    type="button"
-                                    className="btn btn-sm btn-outline-danger"
-                                    disabled={busy || createBusy || archiveBusyId === row.id}
-                                    onClick={() => void archiveTrainingRecord(row)}
-                                  >
-                                    {archiveBusyId === row.id ? "Deleting…" : "Delete"}
-                                  </button>
-                                </>
-                              ) : null}
-                            </div>
+                                      Edit
+                                    </button>
+                                    <button
+                                      type="button"
+                                      className="btn btn-sm btn-outline-danger"
+                                      disabled={busy || createBusy || archiveBusyId === row.id}
+                                      onClick={() => void archiveTrainingRecord(row)}
+                                    >
+                                      {archiveBusyId === row.id ? "Deleting…" : "Delete"}
+                                    </button>
+                                  </>
+                                ) : null}
+                              </div>
+                            </td>
+                          </tr>
+                        );
+                      })}
+                      {!filteredRecords.length ? (
+                        <tr>
+                          <td colSpan={7} className="text-muted">
+                            {recordNeedle
+                              ? "No training records match that filter."
+                              : "No training records yet."}
                           </td>
                         </tr>
-                      );
-                    })}
-                    {!filteredRecords.length ? (
-                      <tr>
-                        <td colSpan={7} className="text-muted">
-                          {recordNeedle
-                            ? "No training records match that filter."
-                            : "No training records yet."}
-                        </td>
-                      </tr>
-                    ) : null}
-                  </tbody>
-                </table>
-              </div>
-            </>
-          ) : null}
-        </div>
-      ) : null}
-    </section>
+                      ) : null}
+                    </tbody>
+                  </table>
+                </div>
+              </>
+            ) : null}
+          </div>
+        ) : null}
+      </section>
     </>
   );
 }

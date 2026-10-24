@@ -194,10 +194,7 @@ function describeBradyPrinterError(sdk: BradySdkInstance, fallback: string): str
     const supply = sdk.supplyName ? String(sdk.supplyName).trim() : "";
     const w = Number(sdk.supplyWidth);
     const h = Number(sdk.supplyHeight);
-    const size =
-      Number.isFinite(w) && Number.isFinite(h) && w > 0 && h > 0
-        ? `${w}×${h}`
-        : "";
+    const size = Number.isFinite(w) && Number.isFinite(h) && w > 0 && h > 0 ? `${w}×${h}` : "";
     if (supply || size) {
       parts.push(
         `Printer reported supply${supply ? ` “${supply}”` : ""}${size ? ` ${size}` : ""}. Tap Print again.`,
@@ -223,9 +220,9 @@ function isBradySupplyPartial(sdk: BradySdkInstance): boolean {
   if (!sdk.isConnected()) return false;
   return Boolean(
     String(sdk.printerModel ?? "").trim() ||
-      String(sdk.supplyName ?? "").trim() ||
-      String(sdk.supplyDimensions ?? "").trim() ||
-      (Number.isFinite(Number(sdk.supplyWidth)) && Number(sdk.supplyWidth) > 0),
+    String(sdk.supplyName ?? "").trim() ||
+    String(sdk.supplyDimensions ?? "").trim() ||
+    (Number.isFinite(Number(sdk.supplyWidth)) && Number(sdk.supplyWidth) > 0),
   );
 }
 
@@ -234,10 +231,7 @@ function isBradySupplyPartial(sdk: BradySdkInstance): boolean {
  * Brady often leaves model/name/width empty for seconds (or forever) after
  * connect; printBitmap is the real authority (matches industrial / WebSdkDemo).
  */
-async function settleBradySupplyStatus(
-  sdk: BradySdkInstance,
-  timeoutMs = 5000,
-): Promise<void> {
+async function settleBradySupplyStatus(sdk: BradySdkInstance, timeoutMs = 5000): Promise<void> {
   if (isBradySupplyReady(sdk)) return;
 
   const started = Date.now();
@@ -512,14 +506,11 @@ export async function readConnectedBradySupplySize(): Promise<BradySupplySize | 
     if (!sdk.isConnected() || !isBradySupplyReady(sdk)) return null;
 
     const fromDims = parseBradySupplyDimensions(sdk.supplyDimensions ?? null);
-    const width =
-      fromDims?.widthInches ?? normalizeBradyDimInches(Number(sdk.supplyWidth));
-    const height =
-      fromDims?.heightInches ?? normalizeBradyDimInches(Number(sdk.supplyHeight));
+    const width = fromDims?.widthInches ?? normalizeBradyDimInches(Number(sdk.supplyWidth));
+    const height = fromDims?.heightInches ?? normalizeBradyDimInches(Number(sdk.supplyHeight));
     if (width == null) return null;
 
-    const heightInches =
-      height != null && height >= 0.4 && height <= 12 ? height : width;
+    const heightInches = height != null && height >= 0.4 && height <= 12 ? height : width;
     const supplyName = sdk.supplyName ? String(sdk.supplyName).trim() : "";
     const printerName = sdk.printerName ? String(sdk.printerName).trim() : "";
     return {
@@ -555,9 +546,7 @@ function loadImageElement(url: string): Promise<HTMLImageElement> {
  * anti-aliased QR modules and makes codes unscannable on Brady thermal.
  * Brady's print pipeline handles dithering for the printhead.
  */
-async function toBradyPrintableImage(
-  source: HTMLImageElement,
-): Promise<HTMLImageElement> {
+async function toBradyPrintableImage(source: HTMLImageElement): Promise<HTMLImageElement> {
   const width = source.naturalWidth;
   const height = source.naturalHeight;
 
@@ -647,8 +636,7 @@ export async function printPngViaDirectBluetooth(opts: {
       );
     }
 
-    const copies =
-      typeof opts.copies === "number" && opts.copies > 0 ? Math.floor(opts.copies) : 1;
+    const copies = typeof opts.copies === "number" && opts.copies > 0 ? Math.floor(opts.copies) : 1;
     sdk.setCopies(copies);
     if (typeof sdk.setCutOption === "function") {
       sdk.setCutOption(0); // EndOfJob

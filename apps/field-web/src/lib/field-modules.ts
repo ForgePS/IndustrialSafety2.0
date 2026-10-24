@@ -63,7 +63,9 @@ export function isEmergencyFeatureModuleEnabled(
 }
 
 const AVAILABLE_CODES = new Set(
-  INDUSTRIAL_MODULE_REGISTRY.filter((m) => m.implementationStatus === "AVAILABLE").map((m) => m.code),
+  INDUSTRIAL_MODULE_REGISTRY.filter((m) => m.implementationStatus === "AVAILABLE").map(
+    (m) => m.code,
+  ),
 );
 
 /**

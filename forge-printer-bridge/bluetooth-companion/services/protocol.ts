@@ -5,8 +5,7 @@
 
 export const BLUETOOTH_NAMED_PIPE = String.raw`\\.\pipe\ForgePrinterBridgeBluetooth`;
 
-export const PROGRAM_DATA_BLUETOOTH_DIR =
-  String.raw`C:\ProgramData\Forge Public Safety\Printer Bridge\Bluetooth`;
+export const PROGRAM_DATA_BLUETOOTH_DIR = String.raw`C:\ProgramData\Forge Public Safety\Printer Bridge\Bluetooth`;
 
 export type CompanionRequestType =
   | "BLUETOOTH_STATUS"
@@ -106,10 +105,7 @@ export interface DiscoverRequest extends CompanionRequestBase {
 }
 
 export type CompanionRequest =
-  | CompanionRequestBase
-  | PrintRequest
-  | ConnectRequest
-  | DiscoverRequest;
+  CompanionRequestBase | PrintRequest | ConnectRequest | DiscoverRequest;
 
 export interface StatusResponse {
   type: "STATUS";

@@ -54,7 +54,11 @@ export function PerformanceReportPanel() {
     employeeLimit: 5,
     hoursWorked: "",
   });
-  const [org, setOrg] = useState<PerformanceOrgOptions>({ sites: [], departments: [], divisions: [] });
+  const [org, setOrg] = useState<PerformanceOrgOptions>({
+    sites: [],
+    departments: [],
+    divisions: [],
+  });
   const [report, setReport] = useState<PerformanceReport | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [running, setRunning] = useState(false);
@@ -64,7 +68,9 @@ export function PerformanceReportPanel() {
     let cancelled = false;
     void (async () => {
       const [sites, departments] = await Promise.all([
-        apiGet<unknown>("/api/v1/industrial/sites", { query: { page: "1", pageSize: "200" } }).catch(() => []),
+        apiGet<unknown>("/api/v1/industrial/sites", {
+          query: { page: "1", pageSize: "200" },
+        }).catch(() => []),
         apiGet<unknown>("/api/v1/industrial/departments").catch(() => []),
       ]);
       if (!cancelled) setOrg(parsePerformanceOrgOptions(sites, departments));
@@ -79,7 +85,11 @@ export function PerformanceReportPanel() {
     return me.tenants?.find((t) => t.tenantId === me.tenantId) ?? null;
   }, [me]);
   const companyName = tenant?.displayName?.trim() || appShortName;
-  const logo = navLogoForTenant({ slug: tenant?.slug, displayName: companyName, brandingLogoUrl: logoUrl });
+  const logo = navLogoForTenant({
+    slug: tenant?.slug,
+    displayName: companyName,
+    brandingLogoUrl: logoUrl,
+  });
 
   const departmentsInScope = useMemo(
     () =>
@@ -121,13 +131,19 @@ export function PerformanceReportPanel() {
     setRunning(true);
     setError(null);
     try {
-      const raw = await apiSend<unknown>(PERFORMANCE_REPORT_PATH, "POST", buildPerformanceReportRequest(form));
+      const raw = await apiSend<unknown>(
+        PERFORMANCE_REPORT_PATH,
+        "POST",
+        buildPerformanceReportRequest(form),
+      );
       const parsed = parsePerformanceReport(raw);
       if (!parsed) throw new Error("Unexpected report response");
       setReport(parsed);
     } catch (e) {
       setReport(null);
-      setError(e instanceof ApiError || e instanceof Error ? e.message : "Unable to generate the report");
+      setError(
+        e instanceof ApiError || e instanceof Error ? e.message : "Unable to generate the report",
+      );
     } finally {
       setRunning(false);
     }
@@ -149,8 +165,9 @@ export function PerformanceReportPanel() {
             <div>
               <h6 className="card-title mb-1">Performance Report</h6>
               <p className="text-muted small mb-0">
-                Organization-wide safety performance with a breakdown by location, division, department, or
-                area. Choose the sections to include, generate, then print or save as PDF.
+                Organization-wide safety performance with a breakdown by location, division,
+                department, or area. Choose the sections to include, generate, then print or save as
+                PDF.
               </p>
             </div>
           </div>
@@ -260,8 +277,9 @@ export function PerformanceReportPanel() {
               />
               <div className="col-12">
                 <p className="text-muted small mb-0">
-                  Leave a list empty to include everything. Records are matched to a department first, then to the
-                  location and division of that department or the employee involved.
+                  Leave a list empty to include everything. Records are matched to a department
+                  first, then to the location and division of that department or the employee
+                  involved.
                 </p>
               </div>
             </div>
@@ -279,7 +297,11 @@ export function PerformanceReportPanel() {
               >
                 Select all
               </button>
-              <button type="button" className="btn btn-sm btn-outline-secondary" onClick={() => update("sections", [])}>
+              <button
+                type="button"
+                className="btn btn-sm btn-outline-secondary"
+                onClick={() => update("sections", [])}
+              >
                 Clear
               </button>
             </div>
@@ -293,10 +315,15 @@ export function PerformanceReportPanel() {
                     type="checkbox"
                     className="form-check-input ms-0 mt-1 flex-shrink-0"
                     checked={form.sections.includes(s.id)}
-                    onChange={() => update("sections", toggle<PerformanceSectionId>(form.sections, s.id))}
+                    onChange={() =>
+                      update("sections", toggle<PerformanceSectionId>(form.sections, s.id))
+                    }
                   />
                   <div>
-                    <label htmlFor={`perf-section-${s.id}`} className="form-check-label d-block fw-semibold">
+                    <label
+                      htmlFor={`perf-section-${s.id}`}
+                      className="form-check-label d-block fw-semibold"
+                    >
                       {s.label}
                     </label>
                     <span className="d-block small text-muted">{s.hint}</span>
@@ -321,7 +348,10 @@ export function PerformanceReportPanel() {
                     className="form-control"
                     value={form.employeeLimit}
                     onChange={(e) =>
-                      update("employeeLimit", Math.min(25, Math.max(1, Number(e.target.value) || 1)))
+                      update(
+                        "employeeLimit",
+                        Math.min(25, Math.max(1, Number(e.target.value) || 1)),
+                      )
                     }
                   />
                 </div>
@@ -351,10 +381,20 @@ export function PerformanceReportPanel() {
           ) : null}
 
           <div className="d-flex flex-wrap gap-2 mt-3">
-            <button type="button" className="btn btn-primary" onClick={() => void generate()} disabled={running}>
+            <button
+              type="button"
+              className="btn btn-primary"
+              onClick={() => void generate()}
+              disabled={running}
+            >
               {running ? "Generating…" : "Generate report"}
             </button>
-            <button type="button" className="btn btn-outline-primary" onClick={printReport} disabled={!report}>
+            <button
+              type="button"
+              className="btn btn-outline-primary"
+              onClick={printReport}
+              disabled={!report}
+            >
               <i className="bx bx-printer me-1" aria-hidden />
               Print / Save as PDF
             </button>
@@ -434,7 +474,9 @@ function ReportPreview({ report, html }: { report: PerformanceReport; html: stri
             <div className="col-6 col-md-3" key={m.key}>
               <div className="border rounded p-2 h-100">
                 <div className="small text-muted">{m.label}</div>
-                <div className="fs-5 fw-semibold">{formatPerformanceValue(report.overview.totals[m.key], m.format)}</div>
+                <div className="fs-5 fw-semibold">
+                  {formatPerformanceValue(report.overview.totals[m.key], m.format)}
+                </div>
               </div>
             </div>
           ))}

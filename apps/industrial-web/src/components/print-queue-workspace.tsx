@@ -299,10 +299,13 @@ export function PrintQueueWorkspace({
                 filtered.map((job) => {
                   const printer = job.printerId ? printerMap.get(job.printerId) : undefined;
                   const status = String(job.status ?? "").toUpperCase();
-                  const active =
-                    !["COMPLETED", "SENT_TO_PRINTER", "FAILED", "CANCELLED", "EXPIRED"].includes(
-                      status,
-                    );
+                  const active = ![
+                    "COMPLETED",
+                    "SENT_TO_PRINTER",
+                    "FAILED",
+                    "CANCELLED",
+                    "EXPIRED",
+                  ].includes(status);
                   return (
                     <tr key={job.id}>
                       <td>
@@ -354,8 +357,7 @@ export function PrintQueueWorkspace({
                               label: "Reprint",
                               icon: "bx-printer",
                               hidden:
-                                !canReprint ||
-                                !["COMPLETED", "SENT_TO_PRINTER"].includes(status),
+                                !canReprint || !["COMPLETED", "SENT_TO_PRINTER"].includes(status),
                               onClick: () => void onReprint(job),
                             },
                             {

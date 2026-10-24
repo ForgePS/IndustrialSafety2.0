@@ -21,8 +21,7 @@ function resolveAppUrl(event) {
 export const handler = async (event) => {
   const source = event.triggerSource;
   const isPasswordReset =
-    source === "CustomMessage_ForgotPassword" ||
-    source === "CustomMessage_AdminResetUserPassword";
+    source === "CustomMessage_ForgotPassword" || source === "CustomMessage_AdminResetUserPassword";
 
   if (!isPasswordReset) {
     return event;

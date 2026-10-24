@@ -353,10 +353,7 @@ export class IndustrialPrintController {
     @Body() body: Record<string, unknown>,
     @Req() req: RequestWithIds,
   ) {
-    return ok(
-      await this.print.publishLabelTemplate(principal, id, body ?? {}),
-      getRequestIds(req),
-    );
+    return ok(await this.print.publishLabelTemplate(principal, id, body ?? {}), getRequestIds(req));
   }
 
   @Post("label-templates/:id/preview")
@@ -367,10 +364,7 @@ export class IndustrialPrintController {
     @Body() body: Record<string, unknown>,
     @Req() req: RequestWithIds,
   ) {
-    return ok(
-      await this.print.previewLabelTemplate(principal, id, body ?? {}),
-      getRequestIds(req),
-    );
+    return ok(await this.print.previewLabelTemplate(principal, id, body ?? {}), getRequestIds(req));
   }
 
   @Post("label-templates/:id/export-zpl")
@@ -498,10 +492,7 @@ export class IndustrialPrintController {
     @Body() body: Record<string, unknown>,
     @Req() req: RequestWithIds,
   ) {
-    return ok(
-      await this.print.upsertPrinterProfile(principal, id, body ?? {}),
-      getRequestIds(req),
-    );
+    return ok(await this.print.upsertPrinterProfile(principal, id, body ?? {}), getRequestIds(req));
   }
 
   @Get("printers/:id/health")
@@ -585,10 +576,7 @@ export class IndustrialPrintController {
     @Body() body: Record<string, unknown>,
     @Req() req: RequestWithIds,
   ) {
-    return ok(
-      await this.print.patchMediaProfile(principal, id, body ?? {}),
-      getRequestIds(req),
-    );
+    return ok(await this.print.patchMediaProfile(principal, id, body ?? {}), getRequestIds(req));
   }
 
   @Delete("printer-media-profiles/:id")
@@ -687,7 +675,10 @@ export class IndustrialPrintController {
   ) {
     const file = await this.print.getJobArtifact(principal, id);
     const safeName =
-      file.filename.replace(/"/g, "").replace(/[^\w.\-() ]+/g, "_").slice(0, 180) || "label.png";
+      file.filename
+        .replace(/"/g, "")
+        .replace(/[^\w.\-() ]+/g, "_")
+        .slice(0, 180) || "label.png";
     res.setHeader("Content-Type", file.contentType);
     res.setHeader("Content-Disposition", `inline; filename="${safeName}"`);
     res.setHeader("Cache-Control", "private, no-store");

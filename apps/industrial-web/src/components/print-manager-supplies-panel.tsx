@@ -38,10 +38,7 @@ export function PrintManagerSuppliesPanel() {
     "industrial.printer.print",
     "industrial.admin",
   ]);
-  const canManage = hasAnyPermission([
-    "industrial.printer.manage_media",
-    "industrial.admin",
-  ]);
+  const canManage = hasAnyPermission(["industrial.printer.manage_media", "industrial.admin"]);
 
   const [items, setItems] = useState<PrintSupply[]>([]);
   const [printers, setPrinters] = useState<ForgePrinter[]>([]);
@@ -89,9 +86,8 @@ export function PrintManagerSuppliesPanel() {
       ) : null}
 
       <p className="text-muted small mb-3">
-        Remaining quantities are <strong>estimates</strong> based on successful print jobs
-        (copies), not live printer telemetry. Configure alert recipients on each supply via API if
-        needed.
+        Remaining quantities are <strong>estimates</strong> based on successful print jobs (copies),
+        not live printer telemetry. Configure alert recipients on each supply via API if needed.
       </p>
 
       {canManage ? (

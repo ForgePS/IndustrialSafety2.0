@@ -138,7 +138,9 @@ export function isSignatureLabel(label: string): boolean {
 }
 
 function fieldType(raw: unknown, label = ""): FieldFormFieldType {
-  const key = String(raw ?? "").trim().toLowerCase();
+  const key = String(raw ?? "")
+    .trim()
+    .toLowerCase();
   const mapped = key ? TYPE_MAP[key] : undefined;
   if (mapped && mapped !== "text") return mapped;
   if (isSignatureLabel(label)) return "signature";
@@ -202,7 +204,9 @@ function normalizeField(raw: unknown, index: number): FieldFormField | null {
     rec.mandatory === true;
   const options = optionList(rec.options ?? rec.choices ?? rec.values);
   const declaredType = rec.type ?? rec.inputType ?? rec.fieldType;
-  const declaredKey = String(declaredType ?? "").trim().toLowerCase();
+  const declaredKey = String(declaredType ?? "")
+    .trim()
+    .toLowerCase();
   const type =
     declaredKey === "date" || declaredKey === "datetime"
       ? ("date" as const)
@@ -394,7 +398,11 @@ export function validateFormAnswers(
     if (field.type === "yesno") {
       const answer = normalizeYesNoAnswer(answers[field.id] ?? "");
       if (!answer) {
-        return { ok: false, message: `Answer Yes, No, or N/A for “${field.label}”.`, fieldId: field.id };
+        return {
+          ok: false,
+          message: `Answer Yes, No, or N/A for “${field.label}”.`,
+          fieldId: field.id,
+        };
       }
       if (answer === "NO" && !(answers[yesNoNotesFieldId(field.id)] ?? "").trim()) {
         return {

@@ -115,10 +115,14 @@ try {
       payloadKeyHits.set(key, (payloadKeyHits.get(key) || 0) + 1);
     }
 
-    const colStatus = String(row.status || "").trim().toLowerCase();
+    const colStatus = String(row.status || "")
+      .trim()
+      .toLowerCase();
     statusCounts.set(colStatus || "(blank)", (statusCounts.get(colStatus || "(blank)") || 0) + 1);
 
-    const pStatus = String(payload.status || "").trim().toLowerCase();
+    const pStatus = String(payload.status || "")
+      .trim()
+      .toLowerCase();
     if (pStatus) {
       payloadStatusCounts.set(pStatus, (payloadStatusCounts.get(pStatus) || 0) + 1);
     }

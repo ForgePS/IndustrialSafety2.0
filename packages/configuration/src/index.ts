@@ -421,13 +421,12 @@ export function validateConfigPayload(namespace: ConfigNamespace, payload: unkno
 }
 
 export function hashConfigPayload(payload: unknown): string {
-  return createHash("sha256").update(JSON.stringify(payload ?? {})).digest("hex");
+  return createHash("sha256")
+    .update(JSON.stringify(payload ?? {}))
+    .digest("hex");
 }
 
-export function assertTransition(
-  from: ConfigVersionState,
-  to: ConfigVersionState,
-): void {
+export function assertTransition(from: ConfigVersionState, to: ConfigVersionState): void {
   const allowed: Record<ConfigVersionState, ConfigVersionState[]> = {
     DRAFT: ["SCHEDULED", "PUBLISHED", "ARCHIVED"],
     SCHEDULED: ["PUBLISHED", "ARCHIVED", "DRAFT"],
@@ -471,12 +470,14 @@ export function comparePayloads(
   return diffs;
 }
 
-export function resolveEffectiveVersion<T extends {
-  state: string;
-  effectiveFrom: Date | string | null;
-  effectiveTo: Date | string | null;
-  publishedAt: Date | string | null;
-}>(versions: T[], at: Date = new Date()): T | null {
+export function resolveEffectiveVersion<
+  T extends {
+    state: string;
+    effectiveFrom: Date | string | null;
+    effectiveTo: Date | string | null;
+    publishedAt: Date | string | null;
+  },
+>(versions: T[], at: Date = new Date()): T | null {
   const published = versions
     .filter((v) => v.state === "PUBLISHED" || v.state === "SCHEDULED")
     .filter((v) => {
@@ -732,8 +733,7 @@ export function resolveLoginBranding(
     DEFAULT_LOGIN_BRANDING.brandLabel;
   const logoUrl =
     login?.logoUrl?.trim() || branding?.logoUrl?.trim() || DEFAULT_LOGIN_BRANDING.logoUrl;
-  const logoDarkUrl =
-    login?.logoDarkUrl?.trim() || branding?.logoDarkUrl?.trim() || undefined;
+  const logoDarkUrl = login?.logoDarkUrl?.trim() || branding?.logoDarkUrl?.trim() || undefined;
   const statusText =
     login?.statusText !== undefined && login?.statusText !== null
       ? login.statusText.trim()

@@ -44,9 +44,7 @@ export function MarkupToolbar({
   allowedTools,
 }: Props) {
   const base = mode === "quick" ? QUICK_TOOLS : FULL_TOOLS;
-  const tools = allowedTools
-    ? base.filter((t) => allowedTools.includes(t.id))
-    : base;
+  const tools = allowedTools ? base.filter((t) => allowedTools.includes(t.id)) : base;
   // If allowedTools filters everything from quick mode, fall back to full list filtered.
   const resolved =
     tools.length > 0
@@ -90,7 +88,13 @@ export function MarkupToolbar({
               padding: "6px 10px",
               borderRadius: 8,
               border: active ? "2px solid #2563eb" : "1px solid #d1d5db",
-              background: active ? (isBottom ? "#1e3a8a" : "#dbeafe") : isBottom ? "#374151" : "#ffffff",
+              background: active
+                ? isBottom
+                  ? "#1e3a8a"
+                  : "#dbeafe"
+                : isBottom
+                  ? "#374151"
+                  : "#ffffff",
               color: isBottom ? "#f9fafb" : "#111827",
               cursor: "pointer",
               fontSize: 12,
@@ -129,7 +133,11 @@ export function ColorPicker({ color, onChange }: ColorProps) {
               height: 28,
               borderRadius: "50%",
               background: c.hex,
-              border: active ? "2px solid #2563eb" : c.hex === "#FFFFFF" ? "1px solid #9ca3af" : "1px solid transparent",
+              border: active
+                ? "2px solid #2563eb"
+                : c.hex === "#FFFFFF"
+                  ? "1px solid #9ca3af"
+                  : "1px solid transparent",
               outline: active ? "2px solid #93c5fd" : undefined,
               outlineOffset: 1,
               cursor: "pointer",
@@ -145,7 +153,13 @@ export function ColorPicker({ color, onChange }: ColorProps) {
           value={/^#[0-9A-Fa-f]{6}$/.test(color) ? color : "#DC2626"}
           onChange={(e) => onChange(e.target.value)}
           aria-label="Custom color"
-          style={{ width: 32, height: 28, border: "none", background: "transparent", cursor: "pointer" }}
+          style={{
+            width: 32,
+            height: 28,
+            border: "none",
+            background: "transparent",
+            cursor: "pointer",
+          }}
         />
       </label>
     </div>

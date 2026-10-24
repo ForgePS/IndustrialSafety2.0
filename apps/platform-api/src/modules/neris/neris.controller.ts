@@ -296,7 +296,10 @@ export class NerisTenantController {
     @Principal() principal: ForgePrincipal,
     @Req() req: RequestWithIds,
   ) {
-    return ok(await this.overlays.upsertConfiguration(tenantId, body, principal), getRequestIds(req));
+    return ok(
+      await this.overlays.upsertConfiguration(tenantId, body, principal),
+      getRequestIds(req),
+    );
   }
 
   @Get("field-overlays")
@@ -313,7 +316,10 @@ export class NerisTenantController {
     @Principal() principal: ForgePrincipal,
     @Req() req: RequestWithIds,
   ) {
-    return ok(await this.overlays.upsertFieldOverlay(tenantId, body, principal), getRequestIds(req));
+    return ok(
+      await this.overlays.upsertFieldOverlay(tenantId, body, principal),
+      getRequestIds(req),
+    );
   }
 
   @Put("value-overlays")
@@ -324,6 +330,9 @@ export class NerisTenantController {
     @Principal() principal: ForgePrincipal,
     @Req() req: RequestWithIds,
   ) {
-    return ok(await this.overlays.upsertValueOverlay(tenantId, body, principal), getRequestIds(req));
+    return ok(
+      await this.overlays.upsertValueOverlay(tenantId, body, principal),
+      getRequestIds(req),
+    );
   }
 }

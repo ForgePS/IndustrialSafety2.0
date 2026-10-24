@@ -62,6 +62,9 @@ export function computeNextCronRun(cronExpression: string, from: Date = new Date
 }
 
 /** Next run strictly after `from`. */
-export function computeNextCronRunAfter(cronExpression: string, from: Date = new Date()): Date | null {
+export function computeNextCronRunAfter(
+  cronExpression: string,
+  from: Date = new Date(),
+): Date | null {
   return computeNextCronRun(cronExpression, new Date(from.getTime() + 60_000));
 }

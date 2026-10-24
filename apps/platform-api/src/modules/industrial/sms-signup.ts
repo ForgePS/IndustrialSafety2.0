@@ -26,7 +26,10 @@ function foldName(value: string): string {
 const NAME_SUFFIXES = new Set(["jr", "sr", "ii", "iii", "iv", "v"]);
 
 /** Surname candidates for a personnel file: the lastName column, else derived from displayName. */
-function surnameCandidates(person: { lastName?: string | null; displayName?: string | null }): string[] {
+function surnameCandidates(person: {
+  lastName?: string | null;
+  displayName?: string | null;
+}): string[] {
   const out: string[] = [];
   const add = (value: string) => {
     const folded = foldName(value);

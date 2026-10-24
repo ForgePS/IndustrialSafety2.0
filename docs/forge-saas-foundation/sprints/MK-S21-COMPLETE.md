@@ -25,12 +25,12 @@ MEDIUM: facility depth ACL, outbound webhook timed signatures, API-key request a
 
 ## Verification
 
-| Check | Result |
-| --- | --- |
-| authorization.escalation unit | 2 passed |
+| Check                          | Result   |
+| ------------------------------ | -------- |
+| authorization.escalation unit  | 2 passed |
 | authorization.system-role unit | 2 passed |
-| platform-api typecheck | PASS |
-| Production operations | NONE |
+| platform-api typecheck         | PASS     |
+| Production operations          | NONE     |
 
 ## Next sprint
 

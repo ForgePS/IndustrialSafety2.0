@@ -185,9 +185,7 @@ function stockIdFromDims(width: number, height: number): string {
 }
 
 function isUuid(value: string): boolean {
-  return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(
-    value,
-  );
+  return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value);
 }
 
 function formatDimLabel(n: number): string {
@@ -196,11 +194,7 @@ function formatDimLabel(n: number): string {
   return v.toFixed(2).replace(/0+$/, "").replace(/\.$/, "");
 }
 
-function shortSizeChipLabel(
-  name: string,
-  widthInches: number,
-  heightInches: number,
-): string {
+function shortSizeChipLabel(name: string, widthInches: number, heightInches: number): string {
   const dims = `${formatDimLabel(widthInches)}×${formatDimLabel(heightInches)}`;
   const raw = name.trim();
   if (!raw) return dims;
@@ -267,10 +261,7 @@ export function FieldPrintDialog({
     "industrial.printer.manage",
     "industrial.admin",
   ]);
-  const canManageMedia = hasAnyPermission([
-    "industrial.printer.manage_media",
-    "industrial.admin",
-  ]);
+  const canManageMedia = hasAnyPermission(["industrial.printer.manage_media", "industrial.admin"]);
   /** Print operators can create saved sizes (API + device backup). */
   const canSaveMedia = canManageMedia || canPrint;
   const canView = hasAnyPermission([
@@ -350,14 +341,13 @@ export function FieldPrintDialog({
   const adjustableFieldKeys = useMemo(() => {
     const keys = Object.keys(stableFieldValues).filter((k) => !RESERVED_FIELD_KEYS.has(k));
     const preferred = PREFERRED_CONTENT_KEYS.filter((k) => keys.includes(k));
-    const rest = keys.filter((k) => !PREFERRED_CONTENT_KEYS.includes(k as (typeof PREFERRED_CONTENT_KEYS)[number]));
+    const rest = keys.filter(
+      (k) => !PREFERRED_CONTENT_KEYS.includes(k as (typeof PREFERRED_CONTENT_KEYS)[number]),
+    );
     return [...preferred, ...rest];
   }, [stableFieldValues]);
 
-  const selected = useMemo(
-    () => printers.find((p) => p.id === printerId),
-    [printers, printerId],
-  );
+  const selected = useMemo(() => printers.find((p) => p.id === printerId), [printers, printerId]);
 
   const mediaProfileId = stockId.startsWith("media:") ? stockId.slice("media:".length) : "";
 
@@ -397,7 +387,12 @@ export function FieldPrintDialog({
     const seen = new Set<string>();
     const unique: Opt[] = [];
     for (const c of candidates) {
-      if (BUILTIN_STOCK.some((b) => dimsClose(b.widthInches, c.widthInches) && dimsClose(b.heightInches, c.heightInches))) {
+      if (
+        BUILTIN_STOCK.some(
+          (b) =>
+            dimsClose(b.widthInches, c.widthInches) && dimsClose(b.heightInches, c.heightInches),
+        )
+      ) {
         continue;
       }
       const key = sizeKey(c.widthInches, c.heightInches);
@@ -592,16 +587,10 @@ export function FieldPrintDialog({
         writeLocal(LAST_PRINTER_KEY, directPrinter.id);
       }
       const size = await detectDirectBradySupplySize(directPrinter.bluetoothSavedId);
-      const applied = applyDetectedSize(
-        size.widthInches,
-        size.heightInches,
-        size.supplyName,
-      );
+      const applied = applyDetectedSize(size.widthInches, size.heightInches, size.supplyName);
       writeLocal(LAST_STOCK_KEY, stockIdFromDims(applied.width, applied.height));
       const nameBit = size.supplyName ? ` (${size.supplyName})` : "";
-      setMessage(
-        `Detected ${applied.width}×${applied.height} in from printer${nameBit}.`,
-      );
+      setMessage(`Detected ${applied.width}×${applied.height} in from printer${nameBit}.`);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Could not read label size from printer.");
     } finally {
@@ -740,9 +729,7 @@ export function FieldPrintDialog({
       }
     }
     if (allowTitleEdit) {
-      setTitleDraft(
-        (title || fieldValues.title || fieldValues.name || "").trim() || "Field label",
-      );
+      setTitleDraft((title || fieldValues.title || fieldValues.name || "").trim() || "Field label");
     }
 
     // Content fields are opt-in; start unchecked so labels default to title + QR only.
@@ -751,7 +738,16 @@ export function FieldPrintDialog({
       if (!RESERVED_FIELD_KEYS.has(k)) defaults[k] = false;
     }
     setIncludedFields(defaults);
-  }, [open, load, widthInches, heightInches, allowTitleEdit, title, fieldValues, stableFieldValues]);
+  }, [
+    open,
+    load,
+    widthInches,
+    heightInches,
+    allowTitleEdit,
+    title,
+    fieldValues,
+    stableFieldValues,
+  ]);
 
   useEffect(() => {
     if (!open || typeof document === "undefined") return;
@@ -800,7 +796,13 @@ export function FieldPrintDialog({
       }
       if (includedFields[k] === true) next[k] = String(v);
     }
-    const titleValue = (opts?.overrideTitle || next.title || source.title || source.name || "").trim();
+    const titleValue = (
+      opts?.overrideTitle ||
+      next.title ||
+      source.title ||
+      source.name ||
+      ""
+    ).trim();
     if (titleValue) {
       next.title = titleValue;
       if (!next.name) next.name = (source.name || titleValue).trim();
@@ -950,9 +952,7 @@ export function FieldPrintDialog({
 
       let bytes: Uint8Array;
       try {
-        bytes = await (prefetched?.jobId === jobId
-          ? prefetched.bytes
-          : fetchDirectJobBytes(jobId));
+        bytes = await (prefetched?.jobId === jobId ? prefetched.bytes : fetchDirectJobBytes(jobId));
       } catch (err) {
         const msg = err instanceof Error ? err.message : "Label render failed.";
         failed += 1;
@@ -1015,8 +1015,7 @@ export function FieldPrintDialog({
     setStartAt(1);
     const sent = total - failed;
     if (failed > 0 && sent <= 0) throw new Error("All batch labels failed.");
-    const range =
-      run.labelOffset > 0 ? ` (${run.labelOffset + 1}–${run.labelOffset + total})` : "";
+    const range = run.labelOffset > 0 ? ` (${run.labelOffset + 1}–${run.labelOffset + total})` : "";
     setMessage(
       failed > 0
         ? `Printed ${sent} of ${total} labels${range} (${failed} failed).`
@@ -1039,7 +1038,11 @@ export function FieldPrintDialog({
       await runDirectBatch({ ...run, freshLink: false });
     } catch (err) {
       setError(
-        err instanceof ApiError ? err.message : err instanceof Error ? err.message : "Print failed.",
+        err instanceof ApiError
+          ? err.message
+          : err instanceof Error
+            ? err.message
+            : "Print failed.",
       );
     } finally {
       setBusy(false);
@@ -1061,13 +1064,15 @@ export function FieldPrintDialog({
       });
       setPreviewUrl(preview.previewDataUrl || `data:image/png;base64,${preview.base64}`);
       setMessage(
-        batchCount > 1
-          ? `Preview updated (first of ${batchCount} labels).`
-          : "Preview updated.",
+        batchCount > 1 ? `Preview updated (first of ${batchCount} labels).` : "Preview updated.",
       );
     } catch (err) {
       setError(
-        err instanceof ApiError ? err.message : err instanceof Error ? err.message : "Preview failed.",
+        err instanceof ApiError
+          ? err.message
+          : err instanceof Error
+            ? err.message
+            : "Preview failed.",
       );
     } finally {
       setPreviewBusy(false);
@@ -1149,9 +1154,7 @@ export function FieldPrintDialog({
         const finalBatch = await pollPrintBatchUntilTerminal(batch.id);
         const status = String(finalBatch.status ?? "").toUpperCase();
         if (status === "FAILED") {
-          throw new Error(
-            `${finalBatch.failedJobs} of ${finalBatch.totalJobs} labels failed.`,
-          );
+          throw new Error(`${finalBatch.failedJobs} of ${finalBatch.totalJobs} labels failed.`);
         }
         setMessage(
           status === "PARTIAL"
@@ -1185,7 +1188,11 @@ export function FieldPrintDialog({
       setMessage(`Print job ${created.id.slice(0, 8)}… queued for bridge (${created.status}).`);
     } catch (err) {
       setError(
-        err instanceof ApiError ? err.message : err instanceof Error ? err.message : "Print failed.",
+        err instanceof ApiError
+          ? err.message
+          : err instanceof Error
+            ? err.message
+            : "Print failed.",
       );
     } finally {
       setBusy(false);
@@ -1206,8 +1213,7 @@ export function FieldPrintDialog({
   const formDisabled = busy || previewBusy || saveBusy || detectBusy;
   const sizeLabel = `${formatDimLabel(labelWidthIn)}×${formatDimLabel(labelHeightIn)} in`;
   const heading =
-    dialogTitle?.trim() ||
-    (batchCount > 1 ? `Print ${batchCount} labels` : "Print label");
+    dialogTitle?.trim() || (batchCount > 1 ? `Print ${batchCount} labels` : "Print label");
   const printButtonLabel = busy
     ? batchCount > 1
       ? "Printing…"
@@ -1254,8 +1260,7 @@ export function FieldPrintDialog({
               <strong className="ff-size-panel__readout-value">{sizeLabel}</strong>
               {stockId === "builtin:custom" || stockId.startsWith("local:") ? (
                 <span className="ff-chip ff-chip--info">Custom</span>
-              ) : stockId.startsWith("media:") ||
-                savedSizeOptions.some((s) => s.id === stockId) ? (
+              ) : stockId.startsWith("media:") || savedSizeOptions.some((s) => s.id === stockId) ? (
                 <span className="ff-chip ff-chip--info">Saved</span>
               ) : null}
             </div>
@@ -1315,7 +1320,11 @@ export function FieldPrintDialog({
                 <span className="ff-label" id="field-print-width-label">
                   Width (in)
                 </span>
-                <div className="ff-stepper ff-stepper--size" role="group" aria-labelledby="field-print-width-label">
+                <div
+                  className="ff-stepper ff-stepper--size"
+                  role="group"
+                  aria-labelledby="field-print-width-label"
+                >
                   <button
                     type="button"
                     className="ff-btn ff-btn-secondary"
@@ -1356,7 +1365,11 @@ export function FieldPrintDialog({
                 <span className="ff-label" id="field-print-height-label">
                   Height (in)
                 </span>
-                <div className="ff-stepper ff-stepper--size" role="group" aria-labelledby="field-print-height-label">
+                <div
+                  className="ff-stepper ff-stepper--size"
+                  role="group"
+                  aria-labelledby="field-print-height-label"
+                >
                   <button
                     type="button"
                     className="ff-btn ff-btn-secondary"

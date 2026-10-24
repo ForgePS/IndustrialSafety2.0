@@ -2,7 +2,11 @@
 
 import Link from "next/link";
 import { useRef } from "react";
-import type { WorkspaceLayoutItem, WorkspaceModuleDefinition, WorkspaceWidgetSize } from "@/lib/workspace/types";
+import type {
+  WorkspaceLayoutItem,
+  WorkspaceModuleDefinition,
+  WorkspaceWidgetSize,
+} from "@/lib/workspace/types";
 import { WORKSPACE_SIZE_LABELS, WORKSPACE_VIEW_LABELS } from "@/lib/workspace/types";
 import { workspaceMinHeight } from "@/lib/workspace/sizing";
 import { calendarCreateHref } from "@/lib/calendar/types";
@@ -16,14 +20,7 @@ import { TasksCompactCaption, TasksWorkspaceWidget } from "./widgets/tasks-widge
 import { RemindersCompactCaption, RemindersWorkspaceWidget } from "./widgets/reminders-widget";
 import { SummaryCompactCaption, SummaryWorkspaceWidget } from "./widgets/summary-widget";
 
-const TILE_TONES = [
-  "primary",
-  "info",
-  "success",
-  "warning",
-  "danger",
-  "secondary",
-] as const;
+const TILE_TONES = ["primary", "info", "success", "warning", "danger", "secondary"] as const;
 
 function toneForCode(code: string): (typeof TILE_TONES)[number] {
   let hash = 0;
@@ -68,8 +65,17 @@ function buildMenuEntries(params: {
   onReset: () => void;
   onMove: (direction: "up" | "down" | "top" | "bottom") => void;
 }): WorkspaceMenuEntry[] {
-  const { definition, item, canHide, canResize, onSizeChange, onViewChange, onHide, onReset, onMove } =
-    params;
+  const {
+    definition,
+    item,
+    canHide,
+    canResize,
+    onSizeChange,
+    onViewChange,
+    onHide,
+    onReset,
+    onMove,
+  } = params;
   const openRoute = openRouteForModule(definition);
   const entries: WorkspaceMenuEntry[] = [
     {
@@ -123,7 +129,10 @@ function buildMenuEntries(params: {
     });
   }
 
-  entries.push({ type: "divider", id: "d1" }, { type: "label", id: "size-label", label: "Widget Size" });
+  entries.push(
+    { type: "divider", id: "d1" },
+    { type: "label", id: "size-label", label: "Widget Size" },
+  );
   if (canResize) {
     entries.push(
       ...definition.supportedSizes.map((size) => ({
@@ -331,7 +340,10 @@ export function WorkspaceCard(props: Props) {
                   <i className="bx bx-x bx-sm" aria-hidden="true" />
                 </button>
               ) : (
-                <span className="badge bg-label-secondary flex-shrink-0" title="Required by company policy">
+                <span
+                  className="badge bg-label-secondary flex-shrink-0"
+                  title="Required by company policy"
+                >
                   Required
                 </span>
               )}
@@ -370,7 +382,10 @@ export function WorkspaceCard(props: Props) {
                   <i className={`bx ${definition.icon}`} aria-hidden="true" />
                 </span>
               </div>
-              <span className="d-block fw-semibold text-heading text-truncate" title={definition.label}>
+              <span
+                className="d-block fw-semibold text-heading text-truncate"
+                title={definition.label}
+              >
                 {definition.label}
               </span>
               <span className="d-block text-muted small text-truncate">{compactCaption}</span>
@@ -441,7 +456,9 @@ export function WorkspaceCard(props: Props) {
                 </>
               ) : (
                 <>
-                  <p className="text-muted small mb-auto">Open this module to work with its records.</p>
+                  <p className="text-muted small mb-auto">
+                    Open this module to work with its records.
+                  </p>
                   <Link href={definition.route} className="small mt-2 align-self-start">
                     Open {definition.label} →
                   </Link>

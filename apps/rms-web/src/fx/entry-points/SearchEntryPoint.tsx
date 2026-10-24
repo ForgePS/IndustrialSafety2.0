@@ -8,7 +8,11 @@ export function SearchEntryPoint() {
   const [open, setOpen] = useState(false);
   return (
     <>
-      <FxButton tone="ghost" aria-label="Search incidents and current area" onClick={() => setOpen(true)}>
+      <FxButton
+        tone="ghost"
+        aria-label="Search incidents and current area"
+        onClick={() => setOpen(true)}
+      >
         Search
       </FxButton>
       <FxDialog
@@ -22,8 +26,8 @@ export function SearchEntryPoint() {
         }
       >
         <p>
-          Global cross-module search is not available yet. Use list filters on Incidents, Review, or CAD
-          pages to find records in the current area.
+          Global cross-module search is not available yet. Use list filters on Incidents, Review, or
+          CAD pages to find records in the current area.
         </p>
       </FxDialog>
     </>

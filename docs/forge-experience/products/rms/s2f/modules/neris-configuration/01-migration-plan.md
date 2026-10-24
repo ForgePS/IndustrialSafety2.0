@@ -2,10 +2,10 @@
 
 ## Composition
 
-| Surface | FX when | Compatibility |
-| --- | --- | --- |
+| Surface             | FX when                               | Compatibility    |
+| ------------------- | ------------------------------------- | ---------------- |
 | Operating mode form | `module.nerisConfiguration` ∧ `forms` | Legacy HTML form |
-| Field overlay form | `module.nerisConfiguration` ∧ `forms` | Legacy HTML form |
+| Field overlay form  | `module.nerisConfiguration` ∧ `forms` | Legacy HTML form |
 
 ## Foundations used
 

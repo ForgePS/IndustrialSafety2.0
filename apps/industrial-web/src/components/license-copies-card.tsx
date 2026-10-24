@@ -63,9 +63,7 @@ function useLicensePreview(
           downloadUrl?: string;
           mimeType?: string;
           originalFilename?: string;
-        }>(
-          `/api/v1/industrial/personnel/license/${encodeURIComponent(documentId)}/download-url`,
-        );
+        }>(`/api/v1/industrial/personnel/license/${encodeURIComponent(documentId)}/download-url`);
         if (cancelled) return;
         if (data.downloadUrl) {
           setUrl(data.downloadUrl);
@@ -167,10 +165,8 @@ export function LicenseCopiesCard({ copies, record, personName, required }: Prop
     licenseDocumentIdFromUpload(record?.driversLicenseBack) ??
     (copies.back && isLicenseDocumentId(copies.back) ? copies.back : null);
 
-  const frontDirect =
-    copies.front && !isLicenseDocumentId(copies.front) ? copies.front : null;
-  const backDirect =
-    copies.back && !isLicenseDocumentId(copies.back) ? copies.back : null;
+  const frontDirect = copies.front && !isLicenseDocumentId(copies.front) ? copies.front : null;
+  const backDirect = copies.back && !isLicenseDocumentId(copies.back) ? copies.back : null;
 
   const frontPreview = useLicensePreview(
     frontDirect,

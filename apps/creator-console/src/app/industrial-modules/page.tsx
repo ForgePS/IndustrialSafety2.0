@@ -165,7 +165,9 @@ function IndustrialModulesInner() {
 
   async function runBulk(mode: "enable" | "disable") {
     if (!tenantId) return;
-    const targets = rows.filter((r) => r.toggleable && (mode === "enable" ? !r.customerOn : r.customerOn));
+    const targets = rows.filter(
+      (r) => r.toggleable && (mode === "enable" ? !r.customerOn : r.customerOn),
+    );
     setBulkOpen(null);
     for (const row of targets) {
       await setModuleAccess(row.code, mode === "enable");
@@ -224,7 +226,9 @@ function IndustrialModulesInner() {
       {!productEntitled && !loading ? (
         <Alert tone="info">
           Forge Industrial Safety is not entitled for this customer. Enable the product under{" "}
-          <Link href={`/entitlements/?tenantId=${encodeURIComponent(tenantId)}`}>Product Access</Link>{" "}
+          <Link href={`/entitlements/?tenantId=${encodeURIComponent(tenantId)}`}>
+            Product Access
+          </Link>{" "}
           before assigning modules.
         </Alert>
       ) : null}
@@ -282,7 +286,9 @@ function IndustrialModulesInner() {
                       {row.toggleable ? (
                         <button
                           type="button"
-                          className={row.customerOn ? "forge-btn forge-btn--secondary" : "forge-btn"}
+                          className={
+                            row.customerOn ? "forge-btn forge-btn--secondary" : "forge-btn"
+                          }
                           disabled={!productEntitled || busyCode === row.code}
                           onClick={() => void setModuleAccess(row.code, !row.customerOn)}
                         >
@@ -328,7 +334,11 @@ function IndustrialModulesInner() {
             <dt>Toggleable</dt>
             <dd>{industrialModuleIsToggleable(details) ? "Yes" : "No — not Ready in AWS"}</dd>
           </dl>
-          <button type="button" className="forge-btn forge-btn--secondary" onClick={() => setDetailsCode(null)}>
+          <button
+            type="button"
+            className="forge-btn forge-btn--secondary"
+            onClick={() => setDetailsCode(null)}
+          >
             Close details
           </button>
         </div>

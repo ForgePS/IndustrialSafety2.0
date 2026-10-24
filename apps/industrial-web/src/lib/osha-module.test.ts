@@ -126,8 +126,6 @@ describe("osha-module", () => {
   });
 
   it("links OSHA cases to the incidents deep-link query", () => {
-    expect(incidentHref("abc-123")).toBe(
-      "/modules/incidents/?tab=injuries&incident=abc-123",
-    );
+    expect(incidentHref("abc-123")).toBe("/modules/incidents/?tab=injuries&incident=abc-123");
   });
 });

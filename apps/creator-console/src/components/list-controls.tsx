@@ -54,7 +54,11 @@ export function ListControls({
       {filterOptions && onFilterChange ? (
         <div className={styles.formRow}>
           <label htmlFor="list-filter">{filterLabel}</label>
-          <select id="list-filter" value={filter ?? ""} onChange={(e) => onFilterChange(e.target.value)}>
+          <select
+            id="list-filter"
+            value={filter ?? ""}
+            onChange={(e) => onFilterChange(e.target.value)}
+          >
             {filterOptions.map((option) => (
               <option key={option.value} value={option.value}>
                 {option.label}
@@ -106,12 +110,14 @@ export function paginate<T>(items: T[], page: number, pageSize: number): T[] {
   return items.slice(start, start + pageSize);
 }
 
-export function filterBySearch<T>(items: T[], search: string, keys: Array<(item: T) => string>): T[] {
+export function filterBySearch<T>(
+  items: T[],
+  search: string,
+  keys: Array<(item: T) => string>,
+): T[] {
   const needle = search.trim().toLowerCase();
   if (!needle) return items;
-  return items.filter((item) =>
-    keys.some((key) => key(item).toLowerCase().includes(needle)),
-  );
+  return items.filter((item) => keys.some((key) => key(item).toLowerCase().includes(needle)));
 }
 
 export function sortByField<T>(

@@ -91,10 +91,7 @@ export class SqsConsumer {
     try {
       event = parseEventBridgeSqsBody(message.Body);
     } catch (error) {
-      if (
-        error instanceof MalformedDomainEventError ||
-        error instanceof RejectedDomainEventError
-      ) {
+      if (error instanceof MalformedDomainEventError || error instanceof RejectedDomainEventError) {
         this.logger.error("rejected domain event", {
           messageId: message.MessageId,
           receiveCount,
@@ -142,6 +139,8 @@ export class SqsConsumer {
   }
 }
 
-export function resolveIntegrationQueueUrl(env: NodeJS.ProcessEnv = process.env): string | undefined {
+export function resolveIntegrationQueueUrl(
+  env: NodeJS.ProcessEnv = process.env,
+): string | undefined {
   return env.INTEGRATION_QUEUE_URL || env.SQS_INTEGRATION_QUEUE_URL;
 }

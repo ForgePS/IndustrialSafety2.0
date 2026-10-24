@@ -7,11 +7,11 @@ Executable (electron-builder): **ForgePrinterBridge.Bluetooth.exe**
 
 ## Phase 1 vs Phase 2
 
-| | Phase 1 | Phase 2 (this app) |
-|--|---------|---------------------|
-| Path | Forge → Cloud → Bridge Service → Windows Spooler → Brady driver → i4311 | Forge → Cloud → Bridge Service → **named pipe** → **this companion** → Brady Web SDK → BLE → printer |
-| Process | Always-on Windows Service | Interactive user-session Electron app (Web Bluetooth requires a UI session) |
-| Protocol | Spooler / GDI | Documented Brady Web SDK only (no reverse-engineered BLE) |
+|          | Phase 1                                                                 | Phase 2 (this app)                                                                                   |
+| -------- | ----------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------- |
+| Path     | Forge → Cloud → Bridge Service → Windows Spooler → Brady driver → i4311 | Forge → Cloud → Bridge Service → **named pipe** → **this companion** → Brady Web SDK → BLE → printer |
+| Process  | Always-on Windows Service                                               | Interactive user-session Electron app (Web Bluetooth requires a UI session)                          |
+| Protocol | Spooler / GDI                                                           | Documented Brady Web SDK only (no reverse-engineered BLE)                                            |
 
 Phase 1 remains the USB / Ethernet / Wi-Fi path. This companion does **not** replace the spooler transport.
 
@@ -81,12 +81,12 @@ npm run dev
 
 Scripts:
 
-| Script | Purpose |
-|--------|---------|
-| `npm run dev` | Build + launch Electron |
+| Script          | Purpose                                |
+| --------------- | -------------------------------------- |
+| `npm run dev`   | Build + launch Electron                |
 | `npm run build` | Compile main/preload + bundle renderer |
-| `npm start` | Launch Electron (after build) |
-| `npm run dist` | electron-builder Windows portable/nsis |
+| `npm start`     | Launch Electron (after build)          |
+| `npm run dist`  | electron-builder Windows portable/nsis |
 
 ## PRINT flow
 

@@ -4,11 +4,11 @@ Manual intake sessions are long-lived. Autosave must be reliable without sacrifi
 
 ## Client behavior (rms-web)
 
-| State | UX |
-| --- | --- |
-| Saving | "Saving…" indicator |
-| Saved | "All changes saved" |
-| Error | Retry affordance + message |
+| State          | UX                                              |
+| -------------- | ----------------------------------------------- |
+| Saving         | "Saving…" indicator                             |
+| Saved          | "All changes saved"                             |
+| Error          | Retry affordance + message                      |
 | Conflict (412) | `ConflictDialog` — reload server state or retry |
 
 Implementation: `apps/rms-web/src/hooks/use-autosave.tsx`, workspace in `incident-workspace-client.tsx`.
@@ -20,12 +20,12 @@ Implementation: `apps/rms-web/src/hooks/use-autosave.tsx`, workspace in `inciden
 
 ## API contract
 
-| Operation | Concurrency |
-| --- | --- |
+| Operation                | Concurrency                 |
+| ------------------------ | --------------------------- |
 | `PATCH …/incidents/{id}` | `If-Match` on incident ETag |
-| `PATCH …/field-values` | Batch upsert; incident ETag |
-| `PATCH …/narrative` | Narrative version ETag |
-| `POST …/incidents` | `Idempotency-Key` |
+| `PATCH …/field-values`   | Batch upsert; incident ETag |
+| `PATCH …/narrative`      | Narrative version ETag      |
+| `POST …/incidents`       | `Idempotency-Key`           |
 
 Missing `If-Match` → `428 PRECONDITION_REQUIRED`.  
 Stale version → `412 PRECONDITION_FAILED` with Forge error envelope.

@@ -34,7 +34,11 @@ import {
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const SAFETY_DIRECTOR_MARKER = "role:SAFETY_DIRECTOR";
-const WC_WEEKLY_DEFAULT: FriendlyScheduleDraft = { frequency: "weekly", weekday: 5, hourCentral: 7 };
+const WC_WEEKLY_DEFAULT: FriendlyScheduleDraft = {
+  frequency: "weekly",
+  weekday: 5,
+  hourCentral: 7,
+};
 
 function isDirectorMarker(email: string): boolean {
   return email.trim().toUpperCase() === SAFETY_DIRECTOR_MARKER.toUpperCase();
@@ -51,7 +55,9 @@ function recipientSummary(row: ReportScheduleRow): string {
   const list = row.recipients ?? [];
   if (list.length === 0) return "No recipients";
   const labels = list.map((r) => (isDirectorMarker(r.email) ? "Safety Directors" : r.email));
-  return labels.length > 2 ? `${labels.slice(0, 2).join(", ")} +${labels.length - 2} more` : labels.join(", ");
+  return labels.length > 2
+    ? `${labels.slice(0, 2).join(", ")} +${labels.length - 2} more`
+    : labels.join(", ");
 }
 
 export default function ReportingScheduledPage() {
@@ -81,10 +87,12 @@ export default function ReportingScheduledPage() {
   );
   const builtinReports = useMemo(() => library.filter((r) => r.origin === "builtin"), [library]);
   const scheduleSummary = useMemo(() => describeFriendlyDraft(draft), [draft]);
-  const editingRow = editingId ? items.find((r) => r.id === editingId) ?? null : null;
+  const editingRow = editingId ? (items.find((r) => r.id === editingId) ?? null) : null;
   const isWcWeekly =
     reportChoice === `builtin:${WC_WEEKLY_STATUS_REPORT_KEY}` ||
-    savedReports.some((r) => r.id === reportChoice && r.sourceKey === WC_WEEKLY_STATUS_REPORT_KEY) ||
+    savedReports.some(
+      (r) => r.id === reportChoice && r.sourceKey === WC_WEEKLY_STATUS_REPORT_KEY,
+    ) ||
     editingRow?.sourceKey === WC_WEEKLY_STATUS_REPORT_KEY;
 
   const load = useCallback(async () => {
@@ -123,7 +131,9 @@ export default function ReportingScheduledPage() {
     setReportChoice(row.reportDefinitionId);
     setName(row.name);
     setDraft(cronToFriendlySchedule(row.cronExpression));
-    setFormat((["csv", "xlsx", "pdf"].includes(row.format) ? row.format : "csv") as ReportExportFormat);
+    setFormat(
+      (["csv", "xlsx", "pdf"].includes(row.format) ? row.format : "csv") as ReportExportFormat,
+    );
     setEmails(
       recipients
         .filter((r) => !isDirectorMarker(r.email))
@@ -166,7 +176,9 @@ export default function ReportingScheduledPage() {
       ? builtinReports.find((r) => r.key === value.slice("builtin:".length))
       : savedReports.find((r) => r.id === value);
     if (selected && !name.trim()) setName(selected.name);
-    const sourceKey = value.startsWith("builtin:") ? value.slice("builtin:".length) : selected?.sourceKey;
+    const sourceKey = value.startsWith("builtin:")
+      ? value.slice("builtin:".length)
+      : selected?.sourceKey;
     if (sourceKey === WC_WEEKLY_STATUS_REPORT_KEY) {
       setDraft(WC_WEEKLY_DEFAULT);
       setFormat("pdf");
@@ -375,8 +387,8 @@ export default function ReportingScheduledPage() {
               ) : null}
               {isWcWeekly ? (
                 <div className="form-text">
-                  Sends the Workers&apos; Comp weekly status email (open cases, location, days away /
-                  restricted, and Thursday notes) to everyone listed below.
+                  Sends the Workers&apos; Comp weekly status email (open cases, location, days away
+                  / restricted, and Thursday notes) to everyone listed below.
                 </div>
               ) : null}
             </div>

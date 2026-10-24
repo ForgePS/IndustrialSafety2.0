@@ -13,16 +13,16 @@ Phase 2 supports **MANUAL_ONLY** operating mode first. CAD adapters, CAD UI, and
 
 ## Workspace sections
 
-| Order | Section | Content |
-| --- | --- | --- |
-| 1 | Overview | Basics, incident date, station |
-| 2 | Dispatch | Alarm/dispatch/en-route/arrival/cleared timestamps |
-| 3 | Location | Address, geolocation, occupancy link |
-| 4 | Units & personnel | Roster-driven unit/personnel assignment |
-| 5 | Classification | Incident type / classification fields |
-| 6 | Applicable modules | Condition-driven module visibility |
-| 7 | Narrative | Plain-text narrative with templates |
-| 8 | Review | Validation summary before submit |
+| Order | Section            | Content                                            |
+| ----- | ------------------ | -------------------------------------------------- |
+| 1     | Overview           | Basics, incident date, station                     |
+| 2     | Dispatch           | Alarm/dispatch/en-route/arrival/cleared timestamps |
+| 3     | Location           | Address, geolocation, occupancy link               |
+| 4     | Units & personnel  | Roster-driven unit/personnel assignment            |
+| 5     | Classification     | Incident type / classification fields              |
+| 6     | Applicable modules | Condition-driven module visibility                 |
+| 7     | Narrative          | Plain-text narrative with templates                |
+| 8     | Review             | Validation summary before submit                   |
 
 Rendering: [form rendering architecture](../architecture/form-rendering.md).
 
@@ -40,11 +40,11 @@ Values may arrive from tenant defaults, roster, personnel, apparatus, occupancy,
 
 ## Feature flags required
 
-| Step | Flag |
-| --- | --- |
+| Step      | Flag                               |
+| --------- | ---------------------------------- |
 | Any write | `rms.neris.incident_shell.enabled` |
-| Create | `rms.neris.manual_intake.enabled` |
-| Review | `rms.neris.officer_review.enabled` |
+| Create    | `rms.neris.manual_intake.enabled`  |
+| Review    | `rms.neris.officer_review.enabled` |
 
 ## Out of scope
 

@@ -5,11 +5,7 @@ export {
   DashboardWidgetBody,
   DashboardWidgetFooter,
 } from "./DashboardWidgetChrome";
-export {
-  DashboardEmptyState,
-  DashboardLoadingState,
-  DashboardErrorState,
-} from "./DashboardStates";
+export { DashboardEmptyState, DashboardLoadingState, DashboardErrorState } from "./DashboardStates";
 export {
   registerDashboardWidget,
   listDashboardWidgets,

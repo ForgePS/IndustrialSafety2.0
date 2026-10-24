@@ -8,11 +8,11 @@
 
 **Maximum navigation depth is three visible levels.**
 
-| Level | Meaning | Example |
-| --- | --- | --- |
-| Level 1 | Major work area | Operations |
-| Level 2 | Module | Inspections |
-| Level 3 | Workspace tabs | Queue · Map · Reports |
+| Level   | Meaning         | Example               |
+| ------- | --------------- | --------------------- |
+| Level 1 | Major work area | Operations            |
+| Level 2 | Module          | Inspections           |
+| Level 3 | Workspace tabs  | Queue · Map · Reports |
 
 Never exceed three visible navigation levels.  
 Use **record tabs** instead of deeper navigation whenever possible.
@@ -21,48 +21,48 @@ Use **record tabs** instead of deeper navigation whenever possible.
 
 ### Do
 
-- Operations  
-- Personnel  
-- Training  
-- Fleet  
-- Prevention  
-- Communications  
-- Administration  
+- Operations
+- Personnel
+- Training
+- Fleet
+- Prevention
+- Communications
+- Administration
 
 ### Do not
 
-- Collections  
-- Tables  
-- Settings (as a dumping ground)  
-- Miscellaneous  
-- Data  
-- System  
+- Collections
+- Tables
+- Settings (as a dumping ground)
+- Miscellaneous
+- Data
+- System
 
 Administration is allowed as a Level-1 **work area** for entitled admins; it still uses work-oriented module names (Users, Roles, Integrations) — not schema names.
 
 ## Behavior standards
 
-- Primary + secondary nav share identical interaction across products  
-- Active route uses `aria-current="page"`  
-- Unauthorized destinations are omitted (prefer omit over disabled tease when disclosure is sensitive)  
-- Product Switcher changes product extension, not shell metaphor  
-- Breadcrumbs mirror the three-level IA only  
+- Primary + secondary nav share identical interaction across products
+- Active route uses `aria-current="page"`
+- Unauthorized destinations are omitted (prefer omit over disabled tease when disclosure is sensitive)
+- Product Switcher changes product extension, not shell metaphor
+- Breadcrumbs mirror the three-level IA only
 
 ## Responsive behavior
 
-| Breakpoint | Nav presentation |
-| --- | --- |
-| Phone | Sheets / bottom nav; breadcrumbs collapse |
-| Tablet portrait | Collapsible rail |
-| Tablet landscape / desktop | Expanded sidebar |
-| Operations display | Optional simplified primary list; favor content |
+| Breakpoint                 | Nav presentation                                |
+| -------------------------- | ----------------------------------------------- |
+| Phone                      | Sheets / bottom nav; breadcrumbs collapse       |
+| Tablet portrait            | Collapsible rail                                |
+| Tablet landscape / desktop | Expanded sidebar                                |
+| Operations display         | Optional simplified primary list; favor content |
 
 ## Anti-patterns
 
-- Four-level trees  
-- Duplicate “Home” metaphors per module  
-- Schema-driven menus  
-- Different nav interaction models per product  
+- Four-level trees
+- Duplicate “Home” metaphors per module
+- Schema-driven menus
+- Different nav interaction models per product
 
 ## Related
 

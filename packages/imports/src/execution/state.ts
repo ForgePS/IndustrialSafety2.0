@@ -19,9 +19,7 @@ export function assertS5Transition(
 ): void {
   const allowed = S5_EXECUTION_TRANSITIONS[action] ?? [];
   if (!allowed.includes(current)) {
-    const error = new Error(
-      `Import job status '${current}' does not allow action '${action}'`,
-    );
+    const error = new Error(`Import job status '${current}' does not allow action '${action}'`);
     (error as Error & { code: string }).code = "IMPORT_INVALID_STATE_TRANSITION";
     throw error;
   }

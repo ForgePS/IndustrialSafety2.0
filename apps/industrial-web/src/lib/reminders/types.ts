@@ -19,7 +19,9 @@ export const REMINDERS_WIDGET_VIEWS: readonly RemindersWidgetView[] = [
   "all",
 ] as const;
 
-export function isRemindersWidgetView(value: string | undefined | null): value is RemindersWidgetView {
+export function isRemindersWidgetView(
+  value: string | undefined | null,
+): value is RemindersWidgetView {
   return (
     value === "today" ||
     value === "upcoming" ||

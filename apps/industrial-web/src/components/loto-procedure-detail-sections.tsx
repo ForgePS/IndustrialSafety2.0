@@ -1,14 +1,8 @@
 "use client";
 
 import { LotoAnnotatedImage } from "@/components/loto-annotated-image";
-import {
-  isDisplayableLotoImageUrl,
-} from "@/lib/loto-clipboard-images";
-import {
-  lotoEnergyLetterStyle,
-  lotoPhaseBadgeClass,
-  type LotoProcedureDisplay,
-} from "@/lib/loto";
+import { isDisplayableLotoImageUrl } from "@/lib/loto-clipboard-images";
+import { lotoEnergyLetterStyle, lotoPhaseBadgeClass, type LotoProcedureDisplay } from "@/lib/loto";
 
 type LotoProcedureDetailSectionsProps = {
   display: LotoProcedureDisplay;
@@ -52,9 +46,7 @@ export function LotoProcedureDetailSections({ display }: LotoProcedureDetailSect
           <p className="mb-1">{display.reviewReturnNotes}</p>
           {display.reviewReturnedByName || display.reviewReturnedAt ? (
             <p className="small text-muted mb-0">
-              {[display.reviewReturnedByName, display.reviewReturnedAt]
-                .filter(Boolean)
-                .join(" · ")}
+              {[display.reviewReturnedByName, display.reviewReturnedAt].filter(Boolean).join(" · ")}
             </p>
           ) : null}
         </div>
@@ -68,9 +60,7 @@ export function LotoProcedureDetailSections({ display }: LotoProcedureDetailSect
                 <LotoAnnotatedImage
                   src={photo.imageUrl}
                   alt={
-                    photo.caption ||
-                    display.equipmentImageCaption ||
-                    `Equipment photo ${index + 1}`
+                    photo.caption || display.equipmentImageCaption || `Equipment photo ${index + 1}`
                   }
                   arrows={photo.annotations}
                   imgStyle={{ maxHeight: 280 }}
@@ -108,28 +98,27 @@ export function LotoProcedureDetailSections({ display }: LotoProcedureDetailSect
           ) : (
             <ul className="list-unstyled mb-0">
               {display.energySources.map((row) => {
-                  const energy = lotoEnergyLetterStyle(row.magnitude || row.description, row.energyType);
-                  return (
-                <li key={row.id} className="mb-2">
-                  <span
-                    className={`badge me-2 ${energy ? "" : "bg-label-danger"}`.trim()}
-                    style={
-                      energy
-                        ? { backgroundColor: energy.bg, color: energy.fg }
-                        : undefined
-                    }
-                  >
-                    {energy ? `🔒${energy.letter}` : null}
-                    {energy ? " " : null}
-                    {row.energyType}
-                  </span>
-                  {row.magnitude}
-                  {row.description ? (
-                    <div className="small text-muted mt-1">{row.description}</div>
-                  ) : null}
-                </li>
-                  );
-                })}
+                const energy = lotoEnergyLetterStyle(
+                  row.magnitude || row.description,
+                  row.energyType,
+                );
+                return (
+                  <li key={row.id} className="mb-2">
+                    <span
+                      className={`badge me-2 ${energy ? "" : "bg-label-danger"}`.trim()}
+                      style={energy ? { backgroundColor: energy.bg, color: energy.fg } : undefined}
+                    >
+                      {energy ? `🔒${energy.letter}` : null}
+                      {energy ? " " : null}
+                      {row.energyType}
+                    </span>
+                    {row.magnitude}
+                    {row.description ? (
+                      <div className="small text-muted mt-1">{row.description}</div>
+                    ) : null}
+                  </li>
+                );
+              })}
             </ul>
           )}
         </div>
@@ -161,65 +150,65 @@ export function LotoProcedureDetailSections({ display }: LotoProcedureDetailSect
           display.steps.map((step) => {
             const energy = lotoEnergyLetterStyle(step.descriptionCode, step.energySourceName);
             return (
-            <div className="d-flex gap-3 mb-3" key={step.id}>
-              <span
-                className={`badge align-self-start rounded-1 px-2 py-2 text-start ${energy ? "" : lotoPhaseBadgeClass(step.stepPhase)}`.trim()}
-                style={
-                  energy
-                    ? { backgroundColor: energy.bg, color: energy.fg, minWidth: "3.25rem" }
-                    : { minWidth: "3.25rem" }
-                }
-                title={energy ? `🔒${energy.letter} — ${energy.label}` : undefined}
-              >
-                {energy ? (
-                  <>
-                    <span className="d-block fw-bold">#{step.stepNumber}</span>
-                    <span className="d-block small">🔒{energy.letter}</span>
-                  </>
-                ) : (
-                  step.stepPhase || "STEP"
-                )}
-              </span>
-              <div>
-                <div className="fw-medium">
-                  {step.stepNumber}. {step.instruction}
-                </div>
-                {step.descriptionCode ? (
-                  <div className="small text-muted mt-1">{step.descriptionCode}</div>
-                ) : null}
-                {step.customDescription ? (
-                  <div className="small text-muted mt-1">
-                    Enter your own description: {step.customDescription}
+              <div className="d-flex gap-3 mb-3" key={step.id}>
+                <span
+                  className={`badge align-self-start rounded-1 px-2 py-2 text-start ${energy ? "" : lotoPhaseBadgeClass(step.stepPhase)}`.trim()}
+                  style={
+                    energy
+                      ? { backgroundColor: energy.bg, color: energy.fg, minWidth: "3.25rem" }
+                      : { minWidth: "3.25rem" }
+                  }
+                  title={energy ? `🔒${energy.letter} — ${energy.label}` : undefined}
+                >
+                  {energy ? (
+                    <>
+                      <span className="d-block fw-bold">#{step.stepNumber}</span>
+                      <span className="d-block small">🔒{energy.letter}</span>
+                    </>
+                  ) : (
+                    step.stepPhase || "STEP"
+                  )}
+                </span>
+                <div>
+                  <div className="fw-medium">
+                    {step.stepNumber}. {step.instruction}
                   </div>
-                ) : null}
-                {step.isVerification ? (
-                  <small className="text-warning">Zero-energy verification required</small>
-                ) : null}
-                {(step.stepImages?.length
-                  ? step.stepImages
-                  : step.stepImageUrl
-                    ? [
-                        {
-                          imageUrl: step.stepImageUrl,
-                          annotations: step.stepImageAnnotations,
-                          caption: "",
-                        },
-                      ]
-                    : []
-                ).map((photo, photoIndex) =>
-                  isDisplayableLotoImageUrl(photo.imageUrl) ? (
-                    <div className="mt-2" key={`${step.id}-photo-${photoIndex}`}>
-                      <LotoAnnotatedImage
-                        src={photo.imageUrl}
-                        alt={`Step ${step.stepNumber} photo ${photoIndex + 1}`}
-                        arrows={photo.annotations}
-                        imgStyle={{ maxHeight: 180 }}
-                      />
+                  {step.descriptionCode ? (
+                    <div className="small text-muted mt-1">{step.descriptionCode}</div>
+                  ) : null}
+                  {step.customDescription ? (
+                    <div className="small text-muted mt-1">
+                      Enter your own description: {step.customDescription}
                     </div>
-                  ) : null,
-                )}
+                  ) : null}
+                  {step.isVerification ? (
+                    <small className="text-warning">Zero-energy verification required</small>
+                  ) : null}
+                  {(step.stepImages?.length
+                    ? step.stepImages
+                    : step.stepImageUrl
+                      ? [
+                          {
+                            imageUrl: step.stepImageUrl,
+                            annotations: step.stepImageAnnotations,
+                            caption: "",
+                          },
+                        ]
+                      : []
+                  ).map((photo, photoIndex) =>
+                    isDisplayableLotoImageUrl(photo.imageUrl) ? (
+                      <div className="mt-2" key={`${step.id}-photo-${photoIndex}`}>
+                        <LotoAnnotatedImage
+                          src={photo.imageUrl}
+                          alt={`Step ${step.stepNumber} photo ${photoIndex + 1}`}
+                          arrows={photo.annotations}
+                          imgStyle={{ maxHeight: 180 }}
+                        />
+                      </div>
+                    ) : null,
+                  )}
+                </div>
               </div>
-            </div>
             );
           })
         )}
@@ -232,9 +221,7 @@ export function LotoProcedureDetailSections({ display }: LotoProcedureDetailSect
             {display.restorationChecks.map((check) => (
               <li key={check.id}>
                 {check.label}
-                {check.completed ? (
-                  <span className="badge bg-label-success ms-2">Done</span>
-                ) : null}
+                {check.completed ? <span className="badge bg-label-success ms-2">Done</span> : null}
               </li>
             ))}
           </ul>

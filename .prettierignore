@@ -16,3 +16,8 @@ docs/testing/evidence/import-platform/s4-migrate.json
 docs/testing/evidence/import-platform/s4-td-register.json
 docs/testing/evidence/import-platform/s8-def-023-iam-raw.json
 docs/testing/evidence/import-platform/s8-deploy.json
+
+# Generated reports, machine output kept as evidence, and vendored bundles
+**/evidence/**
+**/playwright-report/**
+apps/industrial-web/src/vendor/**

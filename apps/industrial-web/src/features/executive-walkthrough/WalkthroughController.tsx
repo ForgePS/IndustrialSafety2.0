@@ -16,7 +16,11 @@ import {
   EXECUTIVE_WALKTHROUGH_SESSION_EVENT,
   type WalkthroughAction,
 } from "@forge/contracts";
-import type { WalkthroughPlaybackMode, WalkthroughNarrationAsset, WalkthroughSessionState } from "./types";
+import type {
+  WalkthroughPlaybackMode,
+  WalkthroughNarrationAsset,
+  WalkthroughSessionState,
+} from "./types";
 import { WALKTHROUGH_SESSION_KEY } from "./types";
 import { findWalkthroughTarget, waitForWalkthroughSceneReady } from "./utils";
 import { executiveWalkthroughApi } from "./api";
@@ -196,7 +200,12 @@ export function WalkthroughProvider({ children }: { children: ReactNode }) {
 
   const ensureNarrationMap = useCallback(async (voiceId?: string) => {
     const applyAssets = (
-      assets: Array<{ sceneId: string; durationMs: number; downloadUrl: string; contentType?: string }>,
+      assets: Array<{
+        sceneId: string;
+        durationMs: number;
+        downloadUrl: string;
+        contentType?: string;
+      }>,
     ) => {
       const map = new Map<string, WalkthroughNarrationAsset>();
       for (const asset of assets) {
@@ -231,9 +240,7 @@ export function WalkthroughProvider({ children }: { children: ReactNode }) {
     }
 
     try {
-      const ensured = await executiveWalkthroughApi.ensureNarration(
-        voiceId ? { voiceId } : {},
-      );
+      const ensured = await executiveWalkthroughApi.ensureNarration(voiceId ? { voiceId } : {});
       return applyAssets(ensured.assets);
     } catch {
       try {
@@ -403,8 +410,7 @@ export function WalkthroughProvider({ children }: { children: ReactNode }) {
             action.type === "cursorMove" ||
             action.type === "callout"
           ) {
-            const target =
-              "target" in action && action.target ? action.target : null;
+            const target = "target" in action && action.target ? action.target : null;
             if (target) {
               const el = findWalkthroughTarget(target);
               if (el) {
@@ -432,7 +438,11 @@ export function WalkthroughProvider({ children }: { children: ReactNode }) {
             }
           } else if (action.type === "pause" || action.type === "wait") {
             // Timeline delay handled below.
-          } else if (action.type === "click" || action.type === "selectTab" || action.type === "expand") {
+          } else if (
+            action.type === "click" ||
+            action.type === "selectTab" ||
+            action.type === "expand"
+          ) {
             const el = findWalkthroughTarget(action.target);
             if (el) {
               el.scrollIntoView({ behavior: "smooth", block: "center" });
@@ -764,7 +774,10 @@ export function WalkthroughProvider({ children }: { children: ReactNode }) {
     if (!session?.active || session.mode === "render") return;
     const onKey = (e: KeyboardEvent) => {
       const target = e.target as HTMLElement | null;
-      if (target && (target.tagName === "INPUT" || target.tagName === "TEXTAREA" || target.isContentEditable)) {
+      if (
+        target &&
+        (target.tagName === "INPUT" || target.tagName === "TEXTAREA" || target.isContentEditable)
+      ) {
         return;
       }
       if (e.code === "Space") {
@@ -819,7 +832,7 @@ export function WalkthroughProvider({ children }: { children: ReactNode }) {
     () => ({
       session,
       stepIndex: session?.stepIndex ?? 0,
-      step: session ? stepsRef.current[session.stepIndex] ?? null : null,
+      step: session ? (stepsRef.current[session.stepIndex] ?? null) : null,
       stepCount: stepsRef.current.length,
       start,
       exit,
@@ -870,7 +883,8 @@ export function WalkthroughProvider({ children }: { children: ReactNode }) {
       }
     ).__FORGE_WALKTHROUGH_API__ = api;
     return () => {
-      delete (window as Window & { __FORGE_WALKTHROUGH_API__?: typeof api }).__FORGE_WALKTHROUGH_API__;
+      delete (window as Window & { __FORGE_WALKTHROUGH_API__?: typeof api })
+        .__FORGE_WALKTHROUGH_API__;
     };
   }, [start, next, previous, exit, session?.stepIndex, session?.active]);
 

@@ -22,10 +22,13 @@ export default function FormsPage() {
       <FxBreadcrumb items={[{ label: "Forms" }, { label: "Wizard prototype" }]} />
       <h1 style={{ fontFamily: "var(--fx-font-display)", fontSize: 28 }}>Forms prototype</h1>
       <p className="fx-card__body">
-        Demonstrates single-page fields, wizard steps, validation, auto-save affordance, review and completion —
-        no production APIs.
+        Demonstrates single-page fields, wizard steps, validation, auto-save affordance, review and
+        completion — no production APIs.
       </p>
-      <div style={{ display: "flex", gap: "var(--fx-space-8)", margin: "var(--fx-space-16) 0" }} role="list">
+      <div
+        style={{ display: "flex", gap: "var(--fx-space-8)", margin: "var(--fx-space-16) 0" }}
+        role="list"
+      >
         {STEPS.map((s, i) => (
           <span
             key={s}
@@ -59,13 +62,17 @@ export default function FormsPage() {
               error={error}
               onChange={(e) => setTitle(e.target.value)}
             />
-            <FxTextField id="form-notes" label="Notes" hint="Conditional sections would appear based on product rules." />
+            <FxTextField
+              id="form-notes"
+              label="Notes"
+              hint="Conditional sections would appear based on product rules."
+            />
           </div>
         )}
         {step === 1 && (
           <p>
-            Attachment / signature / QR scanner slots go here using FX form controls. Offline draft banner would
-            show when disconnected.
+            Attachment / signature / QR scanner slots go here using FX form controls. Offline draft
+            banner would show when disconnected.
           </p>
         )}
         {step === 2 && (

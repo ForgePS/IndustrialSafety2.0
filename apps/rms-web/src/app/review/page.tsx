@@ -49,7 +49,10 @@ function ReviewInner() {
 
   return (
     <FeatureGate flag="officerReview" title="Review">
-      <section className={styles.page} data-testid={useFx ? "rms-fx-review-queue" : "rms-legacy-review-queue"}>
+      <section
+        className={styles.page}
+        data-testid={useFx ? "rms-fx-review-queue" : "rms-legacy-review-queue"}
+      >
         <h1>Officer review</h1>
         <p className={styles.lead}>Incidents awaiting review, approval, or correction.</p>
         {error ? <p className={styles.error}>{error}</p> : null}
@@ -74,9 +77,7 @@ function ReviewInner() {
               { id: "status", header: "Status", accessor: (row) => row.status },
               { id: "date", header: "Date", accessor: (row) => row.incidentDate ?? "—" },
             ]}
-            rowActions={(row) => (
-              <Link href={`/incidents/${row.id}/?section=REVIEW`}>Review</Link>
-            )}
+            rowActions={(row) => <Link href={`/incidents/${row.id}/?section=REVIEW`}>Review</Link>}
           />
         ) : (
           <div className={styles.panel}>

@@ -171,7 +171,12 @@ function sectionHeading(doc: PDFKit.PDFDocument, text: string) {
   doc.moveDown(0.6);
   doc.font("Helvetica-Bold").fontSize(12).fillColor("#111827").text(pdfSafeText(text), MARGIN);
   const y = doc.y + 2;
-  doc.moveTo(MARGIN, y).lineTo(MARGIN + CONTENT_WIDTH, y).lineWidth(0.5).strokeColor("#9ca3af").stroke();
+  doc
+    .moveTo(MARGIN, y)
+    .lineTo(MARGIN + CONTENT_WIDTH, y)
+    .lineWidth(0.5)
+    .strokeColor("#9ca3af")
+    .stroke();
   doc.y = y + 6;
 }
 
@@ -246,12 +251,20 @@ function metaBlock(doc: PDFKit.PDFDocument, items: Array<[string, string]>) {
     const y = doc.y;
     pair.forEach(([label, value], j) => {
       const x = MARGIN + j * colWidth;
-      doc.font("Helvetica-Bold").fontSize(7).fillColor("#6b7280").text(label.toUpperCase(), x, y, {
-        width: colWidth - 10,
-      });
-      doc.font("Helvetica").fontSize(9).fillColor("#111827").text(pdfSafeText(value), x, y + 10, {
-        width: colWidth - 10,
-      });
+      doc
+        .font("Helvetica-Bold")
+        .fontSize(7)
+        .fillColor("#6b7280")
+        .text(label.toUpperCase(), x, y, {
+          width: colWidth - 10,
+        });
+      doc
+        .font("Helvetica")
+        .fontSize(9)
+        .fillColor("#111827")
+        .text(pdfSafeText(value), x, y + 10, {
+          width: colWidth - 10,
+        });
     });
     doc.y = y + height;
   }
@@ -266,7 +279,8 @@ function resultFill(row: string[]): string | null {
 
 export async function buildSanitationInspectionPdf(input: SanitationPdfInput): Promise<Buffer> {
   const { inspection, findings } = input;
-  const timeZone = input.timeZone && isValidTimeZone(input.timeZone) ? input.timeZone : "America/Chicago";
+  const timeZone =
+    input.timeZone && isValidTimeZone(input.timeZone) ? input.timeZone : "America/Chicago";
   const title =
     plain(inspection.title) || plain(inspection.inspectionNumber) || "Sanitation inspection";
   const doc = new PDFDocument({
@@ -317,9 +331,13 @@ export async function buildSanitationInspectionPdf(input: SanitationPdfInput): P
   if (plain(inspection.notes)) {
     ensureSpace(doc, 30);
     doc.font("Helvetica-Bold").fontSize(7).fillColor("#6b7280").text("NOTES", MARGIN);
-    doc.font("Helvetica").fontSize(9).fillColor("#111827").text(pdfSafeText(plain(inspection.notes)), MARGIN, doc.y + 1, {
-      width: CONTENT_WIDTH,
-    });
+    doc
+      .font("Helvetica")
+      .fontSize(9)
+      .fillColor("#111827")
+      .text(pdfSafeText(plain(inspection.notes)), MARGIN, doc.y + 1, {
+        width: CONTENT_WIDTH,
+      });
   }
 
   const rows = sanitationPdfRows(inspection.responsesJson, input.questions);
@@ -351,7 +369,9 @@ export async function buildSanitationInspectionPdf(input: SanitationPdfInput): P
       highlight: resultFill,
     });
   } else {
-    drawTable(doc, ["Item", "Result", "Notes"], [262, 60, 210], tableRows, { highlight: resultFill });
+    drawTable(doc, ["Item", "Result", "Notes"], [262, 60, 210], tableRows, {
+      highlight: resultFill,
+    });
   }
 
   sectionHeading(doc, `Findings (${findings.length})`);
@@ -376,13 +396,21 @@ export async function buildSanitationInspectionPdf(input: SanitationPdfInput): P
       for (const photo of row.photos) {
         if (embedded >= MAX_PHOTOS) break;
         ensureSpace(doc, 210);
-        doc.font("Helvetica-Bold").fontSize(9).fillColor("#111827").text(pdfSafeText(row.label), MARGIN);
+        doc
+          .font("Helvetica-Bold")
+          .fontSize(9)
+          .fillColor("#111827")
+          .text(pdfSafeText(row.label), MARGIN);
         const y = doc.y + 3;
         try {
           doc.image(photo, MARGIN, y, { fit: [260, 190] });
           doc.y = y + 196;
         } catch {
-          doc.font("Helvetica-Oblique").fontSize(8.5).fillColor("#6b7280").text("Photo could not be embedded.", MARGIN, y);
+          doc
+            .font("Helvetica-Oblique")
+            .fontSize(8.5)
+            .fillColor("#6b7280")
+            .text("Photo could not be embedded.", MARGIN, y);
         }
         doc.x = MARGIN;
         embedded += 1;
@@ -398,7 +426,11 @@ export async function buildSanitationInspectionPdf(input: SanitationPdfInput): P
   const signatures = Array.isArray(inspection.signaturesJson) ? inspection.signaturesJson : [];
   sectionHeading(doc, "Signatures");
   if (!signatures.length) {
-    doc.font("Helvetica-Oblique").fontSize(9).fillColor("#6b7280").text("No signatures recorded.", MARGIN);
+    doc
+      .font("Helvetica-Oblique")
+      .fontSize(9)
+      .fillColor("#6b7280")
+      .text("No signatures recorded.", MARGIN);
   }
   for (const sig of signatures) {
     const rec = (sig ?? {}) as Record<string, unknown>;
@@ -421,11 +453,18 @@ export async function buildSanitationInspectionPdf(input: SanitationPdfInput): P
         doc.image(image, MARGIN, y, { fit: [220, 64] });
         doc.y = y + 70;
       } catch {
-        doc.font("Helvetica-Oblique").fontSize(8.5).text("Signature image could not be embedded.", MARGIN, y);
+        doc
+          .font("Helvetica-Oblique")
+          .fontSize(8.5)
+          .text("Signature image could not be embedded.", MARGIN, y);
       }
     } else if (value) {
       const typed = value.startsWith("typed:") ? value.slice(6) : value;
-      doc.font("Helvetica-Oblique").fontSize(13).fillColor("#111827").text(pdfSafeText(typed), MARGIN, doc.y + 4);
+      doc
+        .font("Helvetica-Oblique")
+        .fontSize(13)
+        .fillColor("#111827")
+        .text(pdfSafeText(typed), MARGIN, doc.y + 4);
     }
     doc.x = MARGIN;
     doc.moveDown(0.6);
@@ -455,6 +494,9 @@ export async function buildSanitationInspectionPdf(input: SanitationPdfInput): P
 export function sanitationPdfFilename(inspection: Record<string, unknown>): string {
   const base =
     plain(inspection.inspectionNumber) || plain(inspection.title) || "sanitation-inspection";
-  const safe = base.replace(/[^a-zA-Z0-9._-]+/g, "-").replace(/^-+|-+$/g, "").slice(0, 80);
+  const safe = base
+    .replace(/[^a-zA-Z0-9._-]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+    .slice(0, 80);
   return `${safe || "sanitation-inspection"}.pdf`;
 }

@@ -22,9 +22,9 @@ describe("scan-public", () => {
   });
 
   it("extracts tokens from scan URLs and raw strings", () => {
-    expect(
-      extractTokenFromQrText("https://example.com/scan/my-scan-token-abcdef"),
-    ).toBe("my-scan-token-abcdef");
+    expect(extractTokenFromQrText("https://example.com/scan/my-scan-token-abcdef")).toBe(
+      "my-scan-token-abcdef",
+    );
     expect(extractTokenFromQrText("raw-token-1234567890abcd")).toBe("raw-token-1234567890abcd");
     expect(extractTokenFromQrText("short")).toBeNull();
   });

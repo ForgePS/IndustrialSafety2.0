@@ -37,8 +37,7 @@ const ALLOWED = new Set(["producers-rice-mill"]);
 const PAYLOAD_BUCKET =
   process.env.FORMS_FREEZE_BUCKET || "forge-production-imports-511343547817-us-east-1";
 const PAYLOAD_KEY =
-  process.env.FORMS_FREEZE_KEY ||
-  "seed/forms-from-freeze/source/wave2-remaining-payload.json";
+  process.env.FORMS_FREEZE_KEY || "seed/forms-from-freeze/source/wave2-remaining-payload.json";
 
 if (!ALLOWED.has(TENANT_KEY)) {
   throw new Error(`Refusing tenant ${TENANT_KEY}; allowed: ${[...ALLOWED].join(", ")}`);
@@ -57,9 +56,7 @@ async function resolveDatabaseUrl(secretArn) {
 
 async function loadPayload() {
   const client = new S3Client({ region: process.env.AWS_REGION || "us-east-1" });
-  const res = await client.send(
-    new GetObjectCommand({ Bucket: PAYLOAD_BUCKET, Key: PAYLOAD_KEY }),
-  );
+  const res = await client.send(new GetObjectCommand({ Bucket: PAYLOAD_BUCKET, Key: PAYLOAD_KEY }));
   const text = await res.Body.transformToString("utf8");
   return JSON.parse(text);
 }
@@ -189,7 +186,11 @@ try {
       .trim()
       .slice(0, 120);
     const fields = normalizeFields(data.fields);
-    const schemaJson = { fields, category: data.category ?? null, description: data.description ?? null };
+    const schemaJson = {
+      fields,
+      category: data.category ?? null,
+      description: data.description ?? null,
+    };
     const id = deterministicUuid(["form-def", tenantId, sourceCollection, sourceDocumentId]);
     templateIdMap.set(sourceDocumentId, id);
 
@@ -256,14 +257,17 @@ try {
       continue;
     }
     const templateId = String(data.templateId ?? data.formTemplateId ?? "").trim();
-    const formDefinitionId = templateId ? templateIdMap.get(templateId) ?? null : null;
+    const formDefinitionId = templateId ? (templateIdMap.get(templateId) ?? null) : null;
     if (!formDefinitionId) summary.submissionsUnlinked += 1;
 
     const answers = flattenResponses(data.responses ?? data.answers ?? data.values);
     const title =
       String(data.templateName ?? data.title ?? data.name ?? "Form submission").trim() ||
       "Form submission";
-    const status = String(data.status ?? "SUBMITTED").trim().toUpperCase() || "SUBMITTED";
+    const status =
+      String(data.status ?? "SUBMITTED")
+        .trim()
+        .toUpperCase() || "SUBMITTED";
     const submittedAt = parseDate(data.submittedAt ?? data.createdAt) ?? new Date().toISOString();
     const id = deterministicUuid(["form-sub", tenantId, sourceCollection, sourceDocumentId]);
 
@@ -339,11 +343,14 @@ try {
     const answers = flattenResponses(data.responses ?? data.answers ?? data.values);
     if (Object.keys(answers).length === 0) continue;
     const templateId = String(data.templateId ?? data.formTemplateId ?? "").trim();
-    const formDefinitionId = templateId ? templateIdMap.get(templateId) ?? null : null;
+    const formDefinitionId = templateId ? (templateIdMap.get(templateId) ?? null) : null;
     const title =
       String(data.templateName ?? data.title ?? data.name ?? "Form submission").trim() ||
       "Form submission";
-    const status = String(data.status ?? "SUBMITTED").trim().toUpperCase() || "SUBMITTED";
+    const status =
+      String(data.status ?? "SUBMITTED")
+        .trim()
+        .toUpperCase() || "SUBMITTED";
     const submittedAt = parseDate(data.submittedAt ?? data.createdAt);
     if (APPLY) {
       await sql`

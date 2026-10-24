@@ -35,7 +35,10 @@ const targets = {
 const productionOnly = process.argv.includes("--production-only");
 const developmentOnly = process.argv.includes("--development-only");
 const skipWait = process.argv.includes("--skip-wait");
-const stamp = new Date().toISOString().replace(/[-:TZ.]/g, "").slice(0, 14);
+const stamp = new Date()
+  .toISOString()
+  .replace(/[-:TZ.]/g, "")
+  .slice(0, 14);
 const tag = process.env.DEPLOY_TAG || `sec-audit-hotfix-${stamp}`;
 
 const envs = [];

@@ -6,18 +6,18 @@
 
 ## Resources
 
-| Resource | Value |
-| --- | --- |
-| CDK stack | `Forge-Development-Frontend` (`ForgeFrontend`) |
-| Construct | `ForgeTenantAdminHosting` → `ForgeStaticHosting` (`appKey=tenantadmin`) |
-| S3 origin | `forge-development-tenantadmin-511343547817-us-east-1` (versioned, private, SSL enforced) |
-| CloudFront | `E3O4NP8GCEEK23` |
-| Domain | `https://d1uxdl4szvsixc.cloudfront.net` |
-| OAC | enabled (S3 origin access control) |
-| HTTPS | Viewer protocol redirect-to-https; TLS min policy on distribution |
-| SPA routing | CloudFront Function directory-index rewrite + 403/404 → `/index.html` |
-| Secure headers | CSP, HSTS, XFO DENY, nosniff, referrer, Permissions-Policy |
-| Cache | Managed CachingOptimized policy (`658327ea-f89d-4fab-a63d-7e88639e58f6`) + compress |
+| Resource       | Value                                                                                     |
+| -------------- | ----------------------------------------------------------------------------------------- |
+| CDK stack      | `Forge-Development-Frontend` (`ForgeFrontend`)                                            |
+| Construct      | `ForgeTenantAdminHosting` → `ForgeStaticHosting` (`appKey=tenantadmin`)                   |
+| S3 origin      | `forge-development-tenantadmin-511343547817-us-east-1` (versioned, private, SSL enforced) |
+| CloudFront     | `E3O4NP8GCEEK23`                                                                          |
+| Domain         | `https://d1uxdl4szvsixc.cloudfront.net`                                                   |
+| OAC            | enabled (S3 origin access control)                                                        |
+| HTTPS          | Viewer protocol redirect-to-https; TLS min policy on distribution                         |
+| SPA routing    | CloudFront Function directory-index rewrite + 403/404 → `/index.html`                     |
+| Secure headers | CSP, HSTS, XFO DENY, nosniff, referrer, Permissions-Policy                                |
+| Cache          | Managed CachingOptimized policy (`658327ea-f89d-4fab-a63d-7e88639e58f6`) + compress       |
 
 ## Immutable / versioned deployment
 
@@ -36,12 +36,12 @@
 
 ## Validation (this release)
 
-| Check | Result |
-| --- | --- |
-| CDK deploy | PASS (`DEPLOY_EXIT=0`) |
-| Static sync | PASS |
-| `GET /` | 200 |
-| `GET /studio/` | 200 |
+| Check          | Result                              |
+| -------------- | ----------------------------------- |
+| CDK deploy     | PASS (`DEPLOY_EXIT=0`)              |
+| Static sync    | PASS                                |
+| `GET /`        | 200                                 |
+| `GET /studio/` | 200                                 |
 | Modules hosted | 13 delegated studio routes exported |
 
 ## Delegated modules

@@ -10,7 +10,9 @@ import {
   type StorageLike,
 } from "./forge-browser-cleanup.js";
 
-function memoryStore(initial: Record<string, string> = {}): StorageLike & { data: Map<string, string> } {
+function memoryStore(
+  initial: Record<string, string> = {},
+): StorageLike & { data: Map<string, string> } {
   const data = new Map(Object.entries(initial));
   return {
     data,

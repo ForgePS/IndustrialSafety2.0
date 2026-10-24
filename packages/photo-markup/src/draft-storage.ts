@@ -62,7 +62,7 @@ export function loadMarkupSessionDraft(
     const annotations = normalizeAnnotations(parsed.annotations);
     if (!annotations.length && !parsed.document) return null;
     const document = parsed.document
-      ? normalizeMarkupDocument(parsed.document) ?? undefined
+      ? (normalizeMarkupDocument(parsed.document) ?? undefined)
       : undefined;
     return {
       imageSrcFingerprint: String(parsed.imageSrcFingerprint ?? ""),

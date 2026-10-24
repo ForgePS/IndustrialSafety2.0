@@ -27,16 +27,16 @@ Shared SaaS `platform_jobs` model and authorized export foundation are in place.
 
 ## Verification
 
-| Check | Result |
-| --- | --- |
-| contracts jobs-domain unit | 5 passed |
+| Check                         | Result   |
+| ----------------------------- | -------- |
+| contracts jobs-domain unit    | 5 passed |
 | imports s2-control-plane unit | 8 passed |
-| platform-api jobs unit | 2 passed |
-| audit unit | 3 passed |
-| platform-api typecheck | PASS |
-| creator-console typecheck | PASS |
-| tenant-admin typecheck | PASS |
-| Production operations | NONE |
+| platform-api jobs unit        | 2 passed |
+| audit unit                    | 3 passed |
+| platform-api typecheck        | PASS     |
+| creator-console typecheck     | PASS     |
+| tenant-admin typecheck        | PASS     |
+| Production operations         | NONE     |
 
 ## Next sprint
 

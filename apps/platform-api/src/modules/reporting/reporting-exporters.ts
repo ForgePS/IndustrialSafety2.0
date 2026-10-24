@@ -3,8 +3,7 @@ import * as XLSX from "xlsx";
 import type { ReportColumn, ReportRow } from "./reporting-adapters.js";
 
 const CSV_CONTENT_TYPE = "text/csv; charset=utf-8";
-const XLSX_CONTENT_TYPE =
-  "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
+const XLSX_CONTENT_TYPE = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
 const PDF_CONTENT_TYPE = "application/pdf";
 
 function escapeCsvCell(value: unknown): string {
@@ -18,9 +17,7 @@ function escapeCsvCell(value: unknown): string {
 
 export function rowsToCsv(columns: ReportColumn[], rows: ReportRow[]): string {
   const header = columns.map((c) => escapeCsvCell(c.label)).join(",");
-  const body = rows.map((row) =>
-    columns.map((c) => escapeCsvCell(row[c.key])).join(","),
-  );
+  const body = rows.map((row) => columns.map((c) => escapeCsvCell(row[c.key])).join(","));
   return [header, ...body].join("\r\n");
 }
 

@@ -15,9 +15,7 @@ import path from "node:path";
 import { createRequire } from "node:module";
 import { randomBytes } from "node:crypto";
 
-const EVID = path.resolve(
-  "docs/program/industrial-migration/ind-11/evidence/p2/02-cognito",
-);
+const EVID = path.resolve("docs/program/industrial-migration/ind-11/evidence/p2/02-cognito");
 const POOL = "us-east-1_VYjUFLXG4";
 const REGION = "us-east-1";
 
@@ -33,9 +31,7 @@ if (process.env.FORGE_P2_COGNITO_CREATE_AUTHORIZED?.trim() !== "true") {
 }
 
 const plan = JSON.parse(fs.readFileSync(path.join(EVID, "roster-map-plan.json"), "utf8"));
-const require = createRequire(
-  path.resolve("apps/platform-api/package.json"),
-);
+const require = createRequire(path.resolve("apps/platform-api/package.json"));
 const {
   CognitoIdentityProviderClient,
   AdminCreateUserCommand,

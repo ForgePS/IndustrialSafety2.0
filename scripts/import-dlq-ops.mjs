@@ -112,9 +112,7 @@ if (mode === "inspect" || mode === "dry-run-replay") {
   console.log(JSON.stringify({ count: sanitized.length, messages: sanitized }, null, 2));
 
   if (mode === "dry-run-replay") {
-    const target = messageId
-      ? sanitized.find((m) => m.messageId === messageId)
-      : sanitized[0];
+    const target = messageId ? sanitized.find((m) => m.messageId === messageId) : sanitized[0];
     console.log(
       JSON.stringify(
         {

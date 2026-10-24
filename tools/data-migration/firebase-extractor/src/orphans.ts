@@ -19,11 +19,7 @@ export type OrphanReport = {
   totals: { relationshipsChecked: number; orphanReferenceCount: number };
 };
 
-async function loadIdSet(
-  db: Firestore,
-  collection: string,
-  max = 20000,
-): Promise<Set<string>> {
+async function loadIdSet(db: Firestore, collection: string, max = 20000): Promise<Set<string>> {
   const ids = new Set<string>();
   let last: QueryDocumentSnapshot | undefined;
   while (ids.size < max) {

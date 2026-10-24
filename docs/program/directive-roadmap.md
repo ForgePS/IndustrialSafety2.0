@@ -15,16 +15,16 @@
 
 ## Near-term product (authorization required per track)
 
-| Order (prefer MD) | Work | Gate |
-| --- | --- | --- |
-| Phase 4 closeout | Form builder + workflow builder | Config authorization |
-| Phase 5 closeout | Export Center + Import acceptance | Platform authorization |
-| Phase 5A | Shared QR platform (QR-S0+) | Explicit authorize |
-| Phases 6–8 | Academy AWS + migration | Explicit authorize; dual-stack rules |
-| Phases 9–10 | Remaining RMS modules | Scope MVP vs full §20 |
-| FX-P1 | Pilot tenant UUID + Wave 1 flags | Tenant designated |
-| Phase 11 | Hardening / DR drill / a11y | Continuous |
-| Phase 12 | GovCloud | After commercial hardening |
+| Order (prefer MD) | Work                              | Gate                                 |
+| ----------------- | --------------------------------- | ------------------------------------ |
+| Phase 4 closeout  | Form builder + workflow builder   | Config authorization                 |
+| Phase 5 closeout  | Export Center + Import acceptance | Platform authorization               |
+| Phase 5A          | Shared QR platform (QR-S0+)       | Explicit authorize                   |
+| Phases 6–8        | Academy AWS + migration           | Explicit authorize; dual-stack rules |
+| Phases 9–10       | Remaining RMS modules             | Scope MVP vs full §20                |
+| FX-P1             | Pilot tenant UUID + Wave 1 flags  | Tenant designated                    |
+| Phase 11          | Hardening / DR drill / a11y       | Continuous                           |
+| Phase 12          | GovCloud                          | After commercial hardening           |
 
 ## Hard stops (unchanged)
 

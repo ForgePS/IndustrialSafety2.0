@@ -65,9 +65,7 @@ export class ForgeVpc extends Construct {
             config.environmentName.includes("production") ||
             config.environmentName.startsWith("govcloud")
           ),
-          lifecycleRules: [
-            { expiration: cdk.Duration.days(config.retention.securityLogsDays) },
-          ],
+          lifecycleRules: [{ expiration: cdk.Duration.days(config.retention.securityLogsDays) }],
         });
         this.vpc.addFlowLog("FlowLog", {
           destination: ec2.FlowLogDestination.toS3(this.flowLogBucket),

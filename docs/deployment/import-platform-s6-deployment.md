@@ -6,25 +6,25 @@
 
 ## Results
 
-| Item | Value |
-| --- | --- |
-| Image tag | `import-s6-20260729202056` |
-| Migration file | `packages/database/drizzle/0027_import_platform_s6_security.sql` |
-| Migration SHA256 | `dfcefcbc5df866866e47babe2377dc71eee923f56d6c407d85b407647ec16601` |
-| API digest | `sha256:ee121aa53a77a8a8cde0a761d3684f77e13a4b44340602ee827c51aa8dc45e9f` |
-| Worker digest | `sha256:9df1d452ed237bacf2ab35f84c4c0832efd6611798465655b591a107f4c28ab7` |
-| Prior API TD | `:38` (S5) |
-| Deployed API TD | `:39` |
-| Prior worker TD | `:23` (S5) |
-| Deployed worker TD | `:24` |
-| Migrate task | `.../1fd8a2e6b07647ea9dce3b6dd4dc0d2a` |
-| Migrate exit | **0** (admin secret `forge-development-secrets-database`) |
-| Migration | `0027_import_platform_s6_security` |
-| Health GET | `200` |
-| POST .../execute unauth | `401` |
-| POST .../results/download unauth | `401` |
-| POST .../files/.../rescan unauth | `401` |
-| App secret LastChangedDate | unchanged `2026-07-26T15:30:16.387000-05:00` |
+| Item                             | Value                                                                     |
+| -------------------------------- | ------------------------------------------------------------------------- |
+| Image tag                        | `import-s6-20260729202056`                                                |
+| Migration file                   | `packages/database/drizzle/0027_import_platform_s6_security.sql`          |
+| Migration SHA256                 | `dfcefcbc5df866866e47babe2377dc71eee923f56d6c407d85b407647ec16601`        |
+| API digest                       | `sha256:ee121aa53a77a8a8cde0a761d3684f77e13a4b44340602ee827c51aa8dc45e9f` |
+| Worker digest                    | `sha256:9df1d452ed237bacf2ab35f84c4c0832efd6611798465655b591a107f4c28ab7` |
+| Prior API TD                     | `:38` (S5)                                                                |
+| Deployed API TD                  | `:39`                                                                     |
+| Prior worker TD                  | `:23` (S5)                                                                |
+| Deployed worker TD               | `:24`                                                                     |
+| Migrate task                     | `.../1fd8a2e6b07647ea9dce3b6dd4dc0d2a`                                    |
+| Migrate exit                     | **0** (admin secret `forge-development-secrets-database`)                 |
+| Migration                        | `0027_import_platform_s6_security`                                        |
+| Health GET                       | `200`                                                                     |
+| POST .../execute unauth          | `401`                                                                     |
+| POST .../results/download unauth | `401`                                                                     |
+| POST .../files/.../rescan unauth | `401`                                                                     |
+| App secret LastChangedDate       | unchanged `2026-07-26T15:30:16.387000-05:00`                              |
 
 ## Evidence
 

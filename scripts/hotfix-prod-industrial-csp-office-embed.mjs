@@ -34,7 +34,13 @@ const csp = cfg.SecurityHeadersConfig?.ContentSecurityPolicy?.ContentSecurityPol
 const updatedCsp = upsertOfficeFrameSrc(csp);
 
 if (updatedCsp === csp) {
-  console.log(JSON.stringify({ ok: true, policyId, message: "Office frame-src already present", csp }, null, 2));
+  console.log(
+    JSON.stringify(
+      { ok: true, policyId, message: "Office frame-src already present", csp },
+      null,
+      2,
+    ),
+  );
   process.exit(0);
 }
 

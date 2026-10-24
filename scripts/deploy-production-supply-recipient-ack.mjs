@@ -16,7 +16,10 @@ const CLUSTER = "forge-production-ecs-platform";
 const API_SERVICE = "forge-production-ecs-platform-api";
 const API_ECR = `${ACCOUNT}.dkr.ecr.${REGION}.amazonaws.com/forge-production-ecr-platformapi`;
 const FROM_ADDRESS = "noreply@forgepublicsafety.com";
-const stamp = new Date().toISOString().replace(/[-:TZ.]/g, "").slice(0, 14);
+const stamp = new Date()
+  .toISOString()
+  .replace(/[-:TZ.]/g, "")
+  .slice(0, 14);
 const tag = `supply-recipient-ack-${stamp}`;
 
 function sh(cmd, opts = {}) {
@@ -123,10 +126,14 @@ const apiReg = register(apiPath);
 sh(
   `aws ecs update-service --cluster ${CLUSTER} --service ${API_SERVICE} --task-definition ${apiReg.taskDefinitionArn} --force-new-deployment --region ${REGION} --output json`,
 );
-sh(`aws ecs wait services-stable --cluster ${CLUSTER} --services ${API_SERVICE} --region ${REGION}`);
+sh(
+  `aws ecs wait services-stable --cluster ${CLUSTER} --services ${API_SERVICE} --region ${REGION}`,
+);
 
 console.log("=== Migrate production (0089 recipient ack) ===");
-sh(`node scripts/run-ecs-migrate.mjs --env production --task-definition ${apiReg.taskDefinitionArn}`);
+sh(
+  `node scripts/run-ecs-migrate.mjs --env production --task-definition ${apiReg.taskDefinitionArn}`,
+);
 
 console.log("=== Sync industrial-web ===");
 sh(`node scripts/sync-static-site.mjs --app industrial --environment production`);

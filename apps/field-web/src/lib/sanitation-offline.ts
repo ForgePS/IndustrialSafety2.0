@@ -204,8 +204,7 @@ export async function sanitationSend<T = Record<string, unknown>>(
     });
   }
 
-  const offline =
-    opts?.forceQueue || (typeof navigator !== "undefined" && !navigator.onLine);
+  const offline = opts?.forceQueue || (typeof navigator !== "undefined" && !navigator.onLine);
 
   if (offline) {
     enqueueSanitationMutation(method, path, body, opts?.offlineClientId);
@@ -302,7 +301,7 @@ export function buildResponsesJson(
             }
           : {}),
       label: entry.label ?? q.label,
-      ...(entry.severity ?? q.severity ? { severity: entry.severity ?? q.severity } : {}),
+      ...((entry.severity ?? q.severity) ? { severity: entry.severity ?? q.severity } : {}),
       ...(entry.dustDepth?.trim() ? { dustDepth: entry.dustDepth.trim() } : {}),
       ...(entry.dustUnit ? { dustUnit: entry.dustUnit } : {}),
     };

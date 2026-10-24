@@ -2,9 +2,19 @@
 
 import type { ReactNode } from "react";
 
-export function FxActionBar({ children, align = "start" }: { children: ReactNode; align?: "start" | "end" }) {
+export function FxActionBar({
+  children,
+  align = "start",
+}: {
+  children: ReactNode;
+  align?: "start" | "end";
+}) {
   return (
-    <div className={`rms-fx-action-bar rms-fx-action-bar--${align}`} role="group" aria-label="Form actions">
+    <div
+      className={`rms-fx-action-bar rms-fx-action-bar--${align}`}
+      role="group"
+      aria-label="Form actions"
+    >
       {children}
     </div>
   );

@@ -150,9 +150,9 @@ describe("company vehicle drivers helpers", () => {
     const all = driversWithLicenseIssues(roster, today);
     expect(all.map((row) => row.driver.id)).toEqual(["expired", "missing", "expiring"]);
     expect(all[0]?.reason).toBe("Expired 2025-01-01");
-    expect(driversWithLicenseIssues(roster, today, ["missing"]).map((row) => row.driver.id)).toEqual([
-      "missing",
-    ]);
+    expect(
+      driversWithLicenseIssues(roster, today, ["missing"]).map((row) => row.driver.id),
+    ).toEqual(["missing"]);
   });
 
   it("labels statuses the way the legacy panel did", () => {
@@ -165,7 +165,9 @@ describe("company vehicle drivers helpers", () => {
     expect(companyVehicleDriverRowClass("pending_mvr", { producersRiceMill: true })).toBe(
       "table-row-pending-mvr-prm",
     );
-    expect(companyVehicleDriverRowClass("on_insurance", { producersRiceMill: true })).toBeUndefined();
+    expect(
+      companyVehicleDriverRowClass("on_insurance", { producersRiceMill: true }),
+    ).toBeUndefined();
   });
 
   it("filters by name or employee number", () => {
@@ -199,11 +201,7 @@ describe("company vehicle drivers helpers", () => {
       "3",
       "1",
     ]);
-    expect(sortCompanyVehicleDrivers(roster, "lastName").map((d) => d.id)).toEqual([
-      "1",
-      "3",
-      "2",
-    ]);
+    expect(sortCompanyVehicleDrivers(roster, "lastName").map((d) => d.id)).toEqual(["1", "3", "2"]);
   });
 
   it("pins expired licenses, pending MVR, and on-insurance drivers to the top", () => {

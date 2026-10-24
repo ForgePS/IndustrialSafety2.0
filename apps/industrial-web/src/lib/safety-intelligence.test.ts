@@ -46,7 +46,9 @@ describe("safety intelligence helpers", () => {
           openIncidents: 0,
         },
       ],
-      kpis: [{ id: "safety-score", label: "Safety Score", value: 100, href: "/modules/analytics/" }],
+      kpis: [
+        { id: "safety-score", label: "Safety Score", value: 100, href: "/modules/analytics/" },
+      ],
       incidentTrend: [{ month: "2026-08", count: 0 }],
       observationsTrend: [],
       inspectionsTrend: [],

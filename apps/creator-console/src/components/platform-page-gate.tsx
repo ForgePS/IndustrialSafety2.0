@@ -45,11 +45,19 @@ export function PlatformPageGate({
           error={error}
           actions={
             <>
-              <button className="btn btn-primary" type="button" onClick={() => void loginWithCognito()}>
+              <button
+                className="btn btn-primary"
+                type="button"
+                onClick={() => void loginWithCognito()}
+              >
                 Sign in
               </button>
               {error ? (
-                <button className="btn btn-outline-secondary" type="button" onClick={() => void refresh()}>
+                <button
+                  className="btn btn-outline-secondary"
+                  type="button"
+                  onClick={() => void refresh()}
+                >
                   Retry
                 </button>
               ) : null}

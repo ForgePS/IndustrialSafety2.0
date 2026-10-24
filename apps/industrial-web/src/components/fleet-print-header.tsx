@@ -11,13 +11,7 @@ function absoluteAssetUrl(src: string): string {
   return new URL(src, window.location.origin).href;
 }
 
-export function FleetPrintHeader({
-  title,
-  subtitle,
-}: {
-  title: string;
-  subtitle?: string;
-}) {
+export function FleetPrintHeader({ title, subtitle }: { title: string; subtitle?: string }) {
   const { me } = useAuth();
   const { logoUrl, appShortName } = useTenantBranding();
 

@@ -1,8 +1,4 @@
-import {
-  DeleteMessageCommand,
-  ReceiveMessageCommand,
-  SQSClient,
-} from "@aws-sdk/client-sqs";
+import { DeleteMessageCommand, ReceiveMessageCommand, SQSClient } from "@aws-sdk/client-sqs";
 import { createLogger } from "@forge/observability";
 import { processCadRetentionRun, type CadRetentionJob } from "./cad-retention-processor.js";
 
@@ -52,9 +48,7 @@ export class CadRetentionSqsConsumer {
         }
 
         const tenantIds =
-          job.tenantId != null
-            ? [job.tenantId]
-            : (this.props.retentionTenantIds ?? []);
+          job.tenantId != null ? [job.tenantId] : (this.props.retentionTenantIds ?? []);
 
         if (tenantIds.length === 0) {
           const jobPayload: CadRetentionJob = { type: "cad.retention.run.v1" };

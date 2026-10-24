@@ -16,10 +16,7 @@
     {
       "name": "unauthorized list jobs",
       "permission": "import.view",
-      "expected": [
-        401,
-        403
-      ],
+      "expected": [401, 403],
       "actual": 403,
       "code": "FORBIDDEN",
       "pass": true,
@@ -118,10 +115,7 @@
     {
       "name": "operator profile create allowed",
       "permission": "import.profile.manage",
-      "expected": [
-        200,
-        201
-      ],
+      "expected": [200, 201],
       "actual": 201,
       "code": null,
       "pass": true,
@@ -139,11 +133,7 @@
     {
       "name": "viewer privileged download denied",
       "permission": "import.sensitive",
-      "expected": [
-        403,
-        404,
-        409
-      ],
+      "expected": [403, 404, 409],
       "actual": 403,
       "code": "IMPORT_SENSITIVE_ACCESS_DENIED",
       "pass": true,

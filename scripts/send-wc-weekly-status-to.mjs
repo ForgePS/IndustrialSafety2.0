@@ -9,12 +9,7 @@
 import "reflect-metadata";
 import { NestFactory } from "@nestjs/core";
 import { LOCAL_PLACEHOLDER_ENV, loadEnvironmentAsync } from "@forge/environment";
-import {
-  tenants,
-  userTenantMemberships,
-  users,
-  withBypassRlsTransaction,
-} from "@forge/database";
+import { tenants, userTenantMemberships, users, withBypassRlsTransaction } from "@forge/database";
 import { and, eq, sql } from "drizzle-orm";
 
 const DIST = "/app/apps/platform-api/dist";

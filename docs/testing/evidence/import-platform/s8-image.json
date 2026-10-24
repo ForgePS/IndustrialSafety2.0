@@ -1,11 +1,11 @@
 ﻿{
-    "worker":  {
-                   "digest":  "sha256:e4472318107466d4ad4a40032d73a8aaa81b338fa8e262ad4b74e19578def557",
-                   "repository":  "forge-development-ecr-workerservice"
-               },
-    "api":  {
-                "digest":  "sha256:f86fef9e8be4969f88e72d201323f07286d504cb097f7b575e59ea309d77935b",
-                "repository":  "forge-development-ecr-platformapi"
-            },
-    "tag":  "import-s8-20260729182259"
+  "worker": {
+    "digest": "sha256:e4472318107466d4ad4a40032d73a8aaa81b338fa8e262ad4b74e19578def557",
+    "repository": "forge-development-ecr-workerservice"
+  },
+  "api": {
+    "digest": "sha256:f86fef9e8be4969f88e72d201323f07286d504cb097f7b575e59ea309d77935b",
+    "repository": "forge-development-ecr-platformapi"
+  },
+  "tag": "import-s8-20260729182259"
 }

@@ -40,7 +40,10 @@ const FROM_ADDRESS = "noreply@forgepublicsafety.com";
 const skipMigrate = process.argv.includes("--skip-migrate");
 const skipApiBuild = process.argv.includes("--skip-api-build");
 const infraOnly = process.argv.includes("--infra-only");
-const stamp = new Date().toISOString().replace(/[-:TZ.]/g, "").slice(0, 14);
+const stamp = new Date()
+  .toISOString()
+  .replace(/[-:TZ.]/g, "")
+  .slice(0, 14);
 const tag = `reporting-schedules-${stamp}`;
 
 function sh(cmd, opts = {}) {
@@ -172,9 +175,7 @@ fs.writeFileSync(
     },
   ]),
 );
-sh(
-  `aws events put-targets --rule ${RULE_NAME} --targets file://${targetsPath} --region ${REGION}`,
-);
+sh(`aws events put-targets --rule ${RULE_NAME} --targets file://${targetsPath} --region ${REGION}`);
 
 console.log("=== Sweep token secret ===");
 let sweepSecretArn;

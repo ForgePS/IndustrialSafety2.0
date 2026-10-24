@@ -57,7 +57,9 @@ export function ScanResultHub({ token }: { token: string }) {
   const applyOrgFromContext = useCallback(
     (ctx: ScanPublicContext) => {
       if (!org || !isOrgContextTarget(ctx.targetType) || !ctx.targetId) return;
-      const type = String(ctx.targetType ?? "").toUpperCase().replace(/-/g, "_");
+      const type = String(ctx.targetType ?? "")
+        .toUpperCase()
+        .replace(/-/g, "_");
       const kind =
         type === "DIVISION" ? "division" : type === "DEPARTMENT" ? "department" : "location";
       org.applyScanOrgContext({
@@ -94,8 +96,7 @@ export function ScanResultHub({ token }: { token: string }) {
       applyOrgFromContext(ctx);
 
       const needsGate =
-        (ctx.requiresSignIn && !me) ||
-        (ctx.requiresEmployeeNumber && !storedEmployee && !me);
+        (ctx.requiresSignIn && !me) || (ctx.requiresEmployeeNumber && !storedEmployee && !me);
 
       if (needsGate) {
         setScreen("gate");
@@ -131,10 +132,7 @@ export function ScanResultHub({ token }: { token: string }) {
       }
 
       // Match industrial-web: public LOTO stickers open the procedure without sign-in.
-      if (
-        ctx.publicLimited &&
-        String(ctx.targetType ?? "").toUpperCase() === "LOTO_PROCEDURE"
-      ) {
+      if (ctx.publicLimited && String(ctx.targetType ?? "").toUpperCase() === "LOTO_PROCEDURE") {
         try {
           await loadLotoProcedure();
           return;
@@ -194,9 +192,7 @@ export function ScanResultHub({ token }: { token: string }) {
           setError("Sign in to view equipment history.");
           return;
         }
-        router.push(
-          `/equipment/${encodeURIComponent(context.targetId ?? "unknown")}/?tab=history`,
-        );
+        router.push(`/equipment/${encodeURIComponent(context.targetId ?? "unknown")}/?tab=history`);
         return;
       }
     }
@@ -329,7 +325,11 @@ export function ScanResultHub({ token }: { token: string }) {
           <LoadingState label="Loading LOTO procedure…" />
         )}
         <div className="ff-action-grid" style={{ marginTop: "1rem" }}>
-          <button type="button" className="ff-btn ff-btn-secondary" onClick={() => setScreen("hub")}>
+          <button
+            type="button"
+            className="ff-btn ff-btn-secondary"
+            onClick={() => setScreen("hub")}
+          >
             Back to actions
           </button>
           <button type="button" className="ff-btn" onClick={() => setScreen("report")}>
@@ -434,11 +434,21 @@ export function ScanResultHub({ token }: { token: string }) {
           </button>
         </div>
       ) : primary ? (
-        <button type="button" className="ff-scan-hero" onClick={() => runAction(primary)} disabled={busy}>
+        <button
+          type="button"
+          className="ff-scan-hero"
+          onClick={() => runAction(primary)}
+          disabled={busy}
+        >
           {primary.label.toUpperCase()}
         </button>
       ) : (
-        <button type="button" className="ff-scan-hero" onClick={openPrimaryResource} disabled={busy}>
+        <button
+          type="button"
+          className="ff-scan-hero"
+          onClick={openPrimaryResource}
+          disabled={busy}
+        >
           OPEN {typeLabel.toUpperCase()}
         </button>
       )}
@@ -469,7 +479,11 @@ export function ScanResultHub({ token }: { token: string }) {
         </div>
       </section>
 
-      <button type="button" className="ff-btn ff-btn-secondary" onClick={() => router.push("/scan/")}>
+      <button
+        type="button"
+        className="ff-btn ff-btn-secondary"
+        onClick={() => router.push("/scan/")}
+      >
         Scan another
       </button>
     </>

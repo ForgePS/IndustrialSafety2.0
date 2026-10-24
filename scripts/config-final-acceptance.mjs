@@ -63,14 +63,12 @@ const CONFIG_NAMESPACES = [
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const repoRoot = path.join(__dirname, "..");
-const evidenceDir = path.join(
-  repoRoot,
-  "docs/testing/evidence/config-final-acceptance",
-);
+const evidenceDir = path.join(repoRoot, "docs/testing/evidence/config-final-acceptance");
 mkdirSync(evidenceDir, { recursive: true });
 
 const BASE = process.env.FORGE_API_BASE ?? "https://d108fstxdv69bo.cloudfront.net";
-const PLATFORM_USER = process.env.FORGE_PLATFORM_ADMIN_USER_ID ?? "019f9c33-288e-7171-8d94-b76c4a4658b6";
+const PLATFORM_USER =
+  process.env.FORGE_PLATFORM_ADMIN_USER_ID ?? "019f9c33-288e-7171-8d94-b76c4a4658b6";
 const PLATFORM_TENANT =
   process.env.FORGE_PLATFORM_TENANT_ID ?? "019f9c33-2875-75aa-8d0e-e4bec722565e";
 const AI_USER = "019fa5c5-6bd9-734c-ace5-7eb763a6ad5f";
@@ -145,7 +143,10 @@ function fail(step, msg) {
 
 function ok(step, detail) {
   report.steps[step] = { ok: true, ...detail };
-  console.log(`PASS [${step}]`, typeof detail === "object" ? JSON.stringify(detail).slice(0, 200) : detail);
+  console.log(
+    `PASS [${step}]`,
+    typeof detail === "object" ? JSON.stringify(detail).slice(0, 200) : detail,
+  );
 }
 
 async function step1Catalog() {
@@ -184,7 +185,8 @@ async function step1Catalog() {
   const schemaOk =
     auth.status === 200 &&
     (Array.isArray(auth.json?.data?.namespaces) || Array.isArray(auth.json?.data));
-  if (!schemaOk) fail("catalog.auth", `expected 200 schema, got ${auth.status} ${auth.text.slice(0, 300)}`);
+  if (!schemaOk)
+    fail("catalog.auth", `expected 200 schema, got ${auth.status} ${auth.text.slice(0, 300)}`);
   else
     ok("catalog.auth", {
       status: 200,
@@ -195,7 +197,12 @@ async function step1Catalog() {
       leak: auth.leak,
       ms: auth.ms,
     });
-  save("step1-catalog.json", { health, unauth, forbidden, auth: { ...auth, text: auth.text.slice(0, 2000) } });
+  save("step1-catalog.json", {
+    health,
+    unauth,
+    forbidden,
+    auth: { ...auth, text: auth.text.slice(0, 2000) },
+  });
   if (auth.status !== 200) {
     throw new Error("STOP: authorized catalog did not return 200");
   }
@@ -263,7 +270,11 @@ async function step2Lifecycle(tenantId) {
   }
   let version = create.json?.data?.version ?? create.json?.version;
   let object = create.json?.data?.object ?? create.json?.object;
-  ok("lifecycle.create", { versionId: version?.id, version: version?.version, state: version?.state });
+  ok("lifecycle.create", {
+    versionId: version?.id,
+    version: version?.version,
+    state: version?.state,
+  });
 
   const get1 = await req(
     "GET",
@@ -296,8 +307,13 @@ async function step2Lifecycle(tenantId) {
     `/api/v1/tenants/${tenantId}/config/${ns}/${objectKey}/versions/${version.id}/publish`,
     { ...actor, idempotency: `pub1-${Date.now()}` },
   );
-  if (![200, 201].includes(publish1.status)) fail("lifecycle.publish", `${publish1.status} ${publish1.text.slice(0, 400)}`);
-  else ok("lifecycle.publish", { state: publish1.json?.data?.version?.state ?? publish1.json?.version?.state, status: publish1.status });
+  if (![200, 201].includes(publish1.status))
+    fail("lifecycle.publish", `${publish1.status} ${publish1.text.slice(0, 400)}`);
+  else
+    ok("lifecycle.publish", {
+      state: publish1.json?.data?.version?.state ?? publish1.json?.version?.state,
+      status: publish1.status,
+    });
   const publishedV1Id = version.id;
   const publishedV1Num = version.version;
 
@@ -342,7 +358,10 @@ async function step2Lifecycle(tenantId) {
     actor,
   );
   if (compare.status !== 200) fail("lifecycle.compare", compare.text.slice(0, 300));
-  else ok("lifecycle.compare", { diffs: compare.json?.data?.diffs?.length ?? compare.json?.diffs?.length });
+  else
+    ok("lifecycle.compare", {
+      diffs: compare.json?.data?.diffs?.length ?? compare.json?.diffs?.length,
+    });
 
   const future = new Date(Date.now() + 60_000).toISOString();
   const schedule = await req(
@@ -353,8 +372,12 @@ async function step2Lifecycle(tenantId) {
       body: { effectiveFrom: future, changeSummary: "scheduled v2" },
     },
   );
-  if (![200, 201].includes(schedule.status)) fail("lifecycle.schedule", `${schedule.status} ${schedule.text.slice(0, 400)}`);
-  else ok("lifecycle.schedule", { state: schedule.json?.data?.version?.state ?? schedule.json?.version?.state });
+  if (![200, 201].includes(schedule.status))
+    fail("lifecycle.schedule", `${schedule.status} ${schedule.text.slice(0, 400)}`);
+  else
+    ok("lifecycle.schedule", {
+      state: schedule.json?.data?.version?.state ?? schedule.json?.version?.state,
+    });
 
   const early = await req(
     "GET",
@@ -371,8 +394,12 @@ async function step2Lifecycle(tenantId) {
     `/api/v1/tenants/${tenantId}/config/${ns}/${objectKey}/versions/${v2.id}/publish`,
     { ...actor, idempotency: `act-${Date.now()}` },
   );
-  if (![200, 201].includes(activate.status)) fail("lifecycle.activate", `${activate.status} ${activate.text.slice(0, 400)}`);
-  else ok("lifecycle.activate", { state: activate.json?.data?.version?.state ?? activate.json?.version?.state });
+  if (![200, 201].includes(activate.status))
+    fail("lifecycle.activate", `${activate.status} ${activate.text.slice(0, 400)}`);
+  else
+    ok("lifecycle.activate", {
+      state: activate.json?.data?.version?.state ?? activate.json?.version?.state,
+    });
 
   // create archiveable draft then archive it (SUPERSEDED cannot transition to ARCHIVED)
   const archDraft = await req("POST", `/api/v1/tenants/${tenantId}/config/${ns}`, {
@@ -390,7 +417,8 @@ async function step2Lifecycle(tenantId) {
     `/api/v1/tenants/${tenantId}/config/${ns}/${objectKey}/versions/${archV?.id}/archive`,
     { ...actor, idempotency: `arch-${Date.now()}` },
   );
-  if (![200, 201].includes(archive.status)) fail("lifecycle.archive", `${archive.status} ${archive.text.slice(0, 300)}`);
+  if (![200, 201].includes(archive.status))
+    fail("lifecycle.archive", `${archive.status} ${archive.text.slice(0, 300)}`);
   else ok("lifecycle.archive", { status: archive.status });
 
   const versionsBefore = await req(
@@ -405,7 +433,8 @@ async function step2Lifecycle(tenantId) {
     `/api/v1/tenants/${tenantId}/config/${ns}/${objectKey}/versions/${publishedV1Id}/rollback`,
     { ...actor, idempotency: `rb-${Date.now()}` },
   );
-  if (![200, 201].includes(rollback.status)) fail("lifecycle.rollback", `${rollback.status} ${rollback.text.slice(0, 400)}`);
+  if (![200, 201].includes(rollback.status))
+    fail("lifecycle.rollback", `${rollback.status} ${rollback.text.slice(0, 400)}`);
   else {
     const newV = rollback.json?.data?.version ?? rollback.json?.version;
     ok("lifecycle.rollback", {
@@ -439,8 +468,10 @@ async function step2Lifecycle(tenantId) {
     ...actor,
     body: { format: "not-a-bundle", objects: [], versions: [] },
   });
-  if (![400, 422].includes(badImport.status)) fail("lifecycle.import.invalid", String(badImport.status));
-  else ok("lifecycle.import.invalid", { status: badImport.status, code: badImport.json?.error?.code });
+  if (![400, 422].includes(badImport.status))
+    fail("lifecycle.import.invalid", String(badImport.status));
+  else
+    ok("lifecycle.import.invalid", { status: badImport.status, code: badImport.json?.error?.code });
 
   const goodImport = await req("POST", `/api/v1/tenants/${tenantId}/config-import`, {
     ...actor,
@@ -457,7 +488,8 @@ async function step2Lifecycle(tenantId) {
       ],
     },
   });
-  if (![200, 201].includes(goodImport.status)) fail("lifecycle.import.valid", goodImport.text.slice(0, 400));
+  if (![200, 201].includes(goodImport.status))
+    fail("lifecycle.import.valid", goodImport.text.slice(0, 400));
   else ok("lifecycle.import.valid", { imported: goodImport.json?.data?.imported });
 
   const unauthPub = await req(
@@ -661,7 +693,8 @@ async function step4Authz(tenantId) {
     const draftPass =
       c.expectDraft === 201
         ? [200, 201].includes(draft.status)
-        : draft.status === c.expectDraft || (c.expectDraft === 403 && [401, 403].includes(draft.status));
+        : draft.status === c.expectDraft ||
+          (c.expectDraft === 403 && [401, 403].includes(draft.status));
     matrix.push({
       role: c.name,
       catalog: catalog.status,
@@ -669,7 +702,8 @@ async function step4Authz(tenantId) {
       catalogPass,
       draftPass,
     });
-    if (!catalogPass || !draftPass) fail(`authz.${c.name}`, JSON.stringify({ catalog: catalog.status, draft: draft.status }));
+    if (!catalogPass || !draftPass)
+      fail(`authz.${c.name}`, JSON.stringify({ catalog: catalog.status, draft: draft.status }));
     else ok(`authz.${c.name}`, { catalog: catalog.status, draft: draft.status });
   }
 
@@ -690,8 +724,12 @@ async function step4Authz(tenantId) {
   );
   report.steps.authorizationTotals = {
     cases: matrix.length,
-    passed: matrix.filter((m) => m.catalogPass !== false && m.draftPass !== false && m.pass !== false).length,
-    failed: matrix.filter((m) => m.catalogPass === false || m.draftPass === false || m.pass === false).length,
+    passed: matrix.filter(
+      (m) => m.catalogPass !== false && m.draftPass !== false && m.pass !== false,
+    ).length,
+    failed: matrix.filter(
+      (m) => m.catalogPass === false || m.draftPass === false || m.pass === false,
+    ).length,
     matrix,
   };
   save("step4-authz.json", matrix);
@@ -705,13 +743,14 @@ async function step6Studio(tenantId) {
       userId: PLATFORM_USER,
       tenantId: PLATFORM_TENANT,
     });
-    const ensure = list.status === 200 && (list.json?.data?.items?.length ?? 0) === 0
-      ? await req("POST", `/api/v1/tenants/${tenantId}/config/ensure-defaults`, {
-          userId: PLATFORM_USER,
-          tenantId: PLATFORM_TENANT,
-          idempotency: `ens-ns-${ns}-${Date.now()}`,
-        })
-      : null;
+    const ensure =
+      list.status === 200 && (list.json?.data?.items?.length ?? 0) === 0
+        ? await req("POST", `/api/v1/tenants/${tenantId}/config/ensure-defaults`, {
+            userId: PLATFORM_USER,
+            tenantId: PLATFORM_TENANT,
+            idempotency: `ens-ns-${ns}-${Date.now()}`,
+          })
+        : null;
     const again = await req("GET", `/api/v1/tenants/${tenantId}/config/${ns}`, {
       userId: PLATFORM_USER,
       tenantId: PLATFORM_TENANT,
@@ -727,7 +766,9 @@ async function step6Studio(tenantId) {
   }
   report.steps.studio = {
     total: classifications.length,
-    operationalGeneric: classifications.filter((c) => c.classification === "OPERATIONAL_GENERIC_EDITOR").length,
+    operationalGeneric: classifications.filter(
+      (c) => c.classification === "OPERATIONAL_GENERIC_EDITOR",
+    ).length,
     classifications,
   };
   save("step6-studio.json", classifications);
@@ -832,7 +873,13 @@ async function main() {
   report.finishedAt = new Date().toISOString();
   report.ok = report.failures.length === 0;
   save("harness-summary.json", report);
-  console.log(JSON.stringify({ ok: report.ok, failures: report.failures.length, limitations: report.limitations.length }, null, 2));
+  console.log(
+    JSON.stringify(
+      { ok: report.ok, failures: report.failures.length, limitations: report.limitations.length },
+      null,
+      2,
+    ),
+  );
   process.exit(report.ok ? 0 : 1);
 }
 

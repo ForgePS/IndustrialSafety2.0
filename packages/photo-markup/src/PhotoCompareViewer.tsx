@@ -94,14 +94,28 @@ export function PhotoCompareViewer({
         {mode === "toggle" ? (
           <div style={{ height: "100%", display: "flex", flexDirection: "column", gap: 8 }}>
             <div style={{ display: "flex", gap: 8, justifyContent: "center" }}>
-              <button type="button" style={btnLight} onClick={() => setShowMarked(false)} aria-pressed={!showMarked}>
+              <button
+                type="button"
+                style={btnLight}
+                onClick={() => setShowMarked(false)}
+                aria-pressed={!showMarked}
+              >
                 Original
               </button>
-              <button type="button" style={btnLight} onClick={() => setShowMarked(true)} aria-pressed={showMarked}>
+              <button
+                type="button"
+                style={btnLight}
+                onClick={() => setShowMarked(true)}
+                aria-pressed={showMarked}
+              >
                 Marked
               </button>
             </div>
-            <LabeledImage src={showMarked ? markedSrc : originalSrc} label={showMarked ? "Marked" : "Original"} fill />
+            <LabeledImage
+              src={showMarked ? markedSrc : originalSrc}
+              label={showMarked ? "Marked" : "Original"}
+              fill
+            />
           </div>
         ) : null}
 
@@ -131,7 +145,13 @@ export function PhotoCompareViewer({
               src={originalSrc}
               alt="Original"
               draggable={false}
-              style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "contain" }}
+              style={{
+                position: "absolute",
+                inset: 0,
+                width: "100%",
+                height: "100%",
+                objectFit: "contain",
+              }}
             />
             <div
               style={{
@@ -217,7 +237,10 @@ export function PhotoCompareViewer({
   }
 
   return (
-    <div className={className} style={{ display: "flex", flexDirection: "column", minHeight: 360, ...style }}>
+    <div
+      className={className}
+      style={{ display: "flex", flexDirection: "column", minHeight: 360, ...style }}
+    >
       {body}
     </div>
   );

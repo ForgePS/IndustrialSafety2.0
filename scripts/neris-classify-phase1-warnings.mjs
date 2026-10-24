@@ -97,9 +97,7 @@ export function classifyWarning(warning, valueSetKeys) {
 
     if (candidates.length > 0) {
       const anyCandidateResolves = candidates.some((candidate) =>
-        [...valueSetKeys].some(
-          (key) => key === candidate || key.endsWith(`.${candidate}`),
-        ),
+        [...valueSetKeys].some((key) => key === candidate || key.endsWith(`.${candidate}`)),
       );
       if (anyCandidateResolves) return "ambiguous-condition";
       return "missing-metadata";
@@ -231,9 +229,7 @@ function summarize(classified) {
   for (const row of classified) {
     byCategory[row.category].push(row);
   }
-  const counts = Object.fromEntries(
-    CATEGORIES.map((c) => [c, byCategory[c].length]),
-  );
+  const counts = Object.fromEntries(CATEGORIES.map((c) => [c, byCategory[c].length]));
   return { byCategory, counts, total: classified.length };
 }
 
@@ -369,7 +365,11 @@ async function main() {
     await fs.mkdir(path.dirname(docPath), { recursive: true });
     await fs.writeFile(
       docPath,
-      buildReportMarkdown({ ...summary, source: loaded.source, schemaVersion: loaded.schemaVersion }),
+      buildReportMarkdown({
+        ...summary,
+        source: loaded.source,
+        schemaVersion: loaded.schemaVersion,
+      }),
       "utf8",
     );
     console.info(JSON.stringify({ ok: true, wrote: docPath, counts: summary.counts }, null, 2));

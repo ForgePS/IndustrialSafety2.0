@@ -76,7 +76,9 @@ describe("help desk tenant isolation (integration)", () => {
     try {
       const admin = createDatabase(adminUrl);
       await admin.delete(supportTicketMessages).where(eq(supportTicketMessages.ticketId, ticketA));
-      await admin.delete(supportTickets).where(inArray(supportTickets.tenantId, [tenantA, tenantB]));
+      await admin
+        .delete(supportTickets)
+        .where(inArray(supportTickets.tenantId, [tenantA, tenantB]));
       await admin.execute(sql`delete from support_ticket_sequences where year = ${TEST_YEAR}`);
       await admin.delete(tenants).where(inArray(tenants.id, [tenantA, tenantB]));
     } catch {
@@ -87,7 +89,10 @@ describe("help desk tenant isolation (integration)", () => {
   it("hides tenant A tickets and messages from tenant B", async () => {
     const result = await withTenantTransaction(db, tenantB, async (tx) => ({
       tickets: await tx.select().from(supportTickets).where(eq(supportTickets.id, ticketA)),
-      messages: await tx.select().from(supportTicketMessages).where(eq(supportTicketMessages.ticketId, ticketA)),
+      messages: await tx
+        .select()
+        .from(supportTicketMessages)
+        .where(eq(supportTicketMessages.ticketId, ticketA)),
     }));
     expect(result.tickets).toHaveLength(0);
     expect(result.messages).toHaveLength(0);

@@ -49,20 +49,25 @@ export class AuthorizationDecisionService {
     }
 
     try {
-      await withTenantTransaction(this.db, input.tenantId, async (tx) => {
-        await tx.insert(authorizationDecisionLog).values({
-          id: createId(),
-          tenantId: input.tenantId!,
-          userId: input.userId,
-          permissionCode: input.permissionCode,
-          resourceType: input.resourceType,
-          resourceId: input.resourceId ?? null,
-          decision: "DENIED",
-          reasonCode: input.reasonCode,
-          contextJson: input.context ?? {},
-          correlationId: input.correlationId,
-        });
-      }, input.userId);
+      await withTenantTransaction(
+        this.db,
+        input.tenantId,
+        async (tx) => {
+          await tx.insert(authorizationDecisionLog).values({
+            id: createId(),
+            tenantId: input.tenantId!,
+            userId: input.userId,
+            permissionCode: input.permissionCode,
+            resourceType: input.resourceType,
+            resourceId: input.resourceId ?? null,
+            decision: "DENIED",
+            reasonCode: input.reasonCode,
+            contextJson: input.context ?? {},
+            correlationId: input.correlationId,
+          });
+        },
+        input.userId,
+      );
     } catch {
       // Do not fail the request path if decision logging fails.
       authzLogger.warn("authorization_decision_log insert failed", {

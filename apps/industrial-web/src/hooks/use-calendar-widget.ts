@@ -19,7 +19,10 @@ export type CalendarWidgetData = {
 /**
  * Loads calendar events for a workspace widget view via the existing events API.
  */
-export function useCalendarWidgetData(view: CalendarWidgetView, enabled: boolean): CalendarWidgetData {
+export function useCalendarWidgetData(
+  view: CalendarWidgetView,
+  enabled: boolean,
+): CalendarWidgetData {
   const [events, setEvents] = useState<CalendarEvent[]>([]);
   const [status, setStatus] = useState<Status>("loading");
   const [error, setError] = useState<string | null>(null);
@@ -51,9 +54,9 @@ export function useCalendarWidgetData(view: CalendarWidgetView, enabled: boolean
         apiGet<{ items: CalendarEvent[] }>(`/api/v1/industrial/calendar/events?${qs}`),
         view === "today"
           ? Promise.resolve(null)
-          : apiGet<{ items: CalendarEvent[] }>(`/api/v1/industrial/calendar/events?${todayQs}`).catch(
-              () => ({ items: [] as CalendarEvent[] }),
-            ),
+          : apiGet<{ items: CalendarEvent[] }>(
+              `/api/v1/industrial/calendar/events?${todayQs}`,
+            ).catch(() => ({ items: [] as CalendarEvent[] })),
       ]);
 
       const items = primary.items ?? [];

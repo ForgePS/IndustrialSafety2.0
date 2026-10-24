@@ -85,10 +85,7 @@ function ModulesInner() {
 
 export default function ModulesPage() {
   return (
-    <TenantPageGate
-      title="Modules"
-      anyOf={["tenant.billing.read", "platform.entitlement.manage"]}
-    >
+    <TenantPageGate title="Modules" anyOf={["tenant.billing.read", "platform.entitlement.manage"]}>
       <Suspense fallback={<p className={styles.muted}>Loading…</p>}>
         <ModulesInner />
       </Suspense>

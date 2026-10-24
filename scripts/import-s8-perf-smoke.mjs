@@ -18,7 +18,10 @@ const REGION = process.env.AWS_REGION || "us-east-1";
 const EVIDENCE_DIR = "docs/testing/evidence/import-platform";
 const PERSONAS_PATH = `${EVIDENCE_DIR}/s8-personas-seed.json`;
 const TERMINAL_STATUSES = new Set(["COMPLETED", "COMPLETED_WITH_ERRORS", "FAILED", "CANCELLED"]);
-const RUN_ID = `s8-perf-${new Date().toISOString().replaceAll(/[-:.TZ]/g, "").slice(0, 14)}-${crypto.randomUUID().slice(0, 6)}`;
+const RUN_ID = `s8-perf-${new Date()
+  .toISOString()
+  .replaceAll(/[-:.TZ]/g, "")
+  .slice(0, 14)}-${crypto.randomUUID().slice(0, 6)}`;
 // Keep each authenticated request below the deployed CloudFront/WAF body inspection boundary.
 const STAGE_CHUNK_SIZE = Number(process.env.FORGE_S8_STAGE_CHUNK_SIZE || 25);
 const POLL_INTERVAL_MS = Number(process.env.FORGE_S8_POLL_INTERVAL_MS || 2000);
@@ -83,7 +86,9 @@ async function api(method, path, tenant, personaName, { body, idempotent = false
 
 function requireSuccess(response, step) {
   if (response.status >= 300) {
-    throw new Error(`${step} returned ${response.status}: ${JSON.stringify(response.json).slice(0, 500)}`);
+    throw new Error(
+      `${step} returned ${response.status}: ${JSON.stringify(response.json).slice(0, 500)}`,
+    );
   }
   return response;
 }
@@ -147,10 +152,7 @@ async function prepareJob({ tenant, label, rowCount }) {
   const timing = { startedAt: now() };
   const wallStarted = performance.now();
 
-  requireSuccess(
-    await api("GET", "/api/v1/auth/me", tenant, "operator"),
-    `${label} auth`,
-  );
+  requireSuccess(await api("GET", "/api/v1/auth/me", tenant, "operator"), `${label} auth`);
 
   const upload = requireSuccess(
     await api("POST", "/api/v1/imports/upload", tenant, "operator", {
@@ -274,18 +276,19 @@ async function executePrepared(prepared, batchSize) {
   const startedAt = now();
   const wallStarted = performance.now();
   const execute = requireSuccess(
-    await api("POST", `/api/v1/imports/jobs/${prepared.jobId}/execute`, prepared.tenant, "executor", {
-      idempotent: true,
-      body: { batchSize, adapterKey: "reference:generic:record@1" },
-    }),
+    await api(
+      "POST",
+      `/api/v1/imports/jobs/${prepared.jobId}/execute`,
+      prepared.tenant,
+      "executor",
+      {
+        idempotent: true,
+        body: { batchSize, adapterKey: "reference:generic:record@1" },
+      },
+    ),
     `${prepared.label} execute`,
   );
-  const poll = await pollFor(
-    prepared.tenant,
-    "full",
-    prepared.jobId,
-    TERMINAL_STATUSES,
-  );
+  const poll = await pollFor(prepared.tenant, "full", prepared.jobId, TERMINAL_STATUSES);
   const results = await api(
     "GET",
     `/api/v1/imports/jobs/${prepared.jobId}/results`,
@@ -308,7 +311,8 @@ async function executePrepared(prepared, batchSize) {
     executeHttpStatus: execute.status,
     finalStatus: poll.status,
     executeToTerminalMs: poll.durationMs,
-    totalWorkflowWallMs: Math.round(performance.now() - wallStarted) + prepared.timing.prepareWallMs,
+    totalWorkflowWallMs:
+      Math.round(performance.now() - wallStarted) + prepared.timing.prepareWallMs,
     startedAt,
     completedAt: now(),
     workerResult: result
@@ -358,7 +362,10 @@ function awsJson(args) {
     { encoding: "utf8" },
   );
   if (result.status !== 0) {
-    return { unavailable: true, error: (result.stderr || result.stdout || "AWS CLI failed").trim() };
+    return {
+      unavailable: true,
+      error: (result.stderr || result.stdout || "AWS CLI failed").trim(),
+    };
   }
   try {
     return JSON.parse(result.stdout || "{}");
@@ -444,15 +451,64 @@ function operationalMetrics(startedAt, completedAt) {
   return {
     window: { startTime, endTime },
     worker: {
-      cpuAverage: metric("AWS/ECS", "CPUUtilization", workerDimensions, "Average", startTime, endTime),
-      cpuMaximum: metric("AWS/ECS", "CPUUtilization", workerDimensions, "Maximum", startTime, endTime),
-      memoryAverage: metric("AWS/ECS", "MemoryUtilization", workerDimensions, "Average", startTime, endTime),
-      memoryMaximum: metric("AWS/ECS", "MemoryUtilization", workerDimensions, "Maximum", startTime, endTime),
+      cpuAverage: metric(
+        "AWS/ECS",
+        "CPUUtilization",
+        workerDimensions,
+        "Average",
+        startTime,
+        endTime,
+      ),
+      cpuMaximum: metric(
+        "AWS/ECS",
+        "CPUUtilization",
+        workerDimensions,
+        "Maximum",
+        startTime,
+        endTime,
+      ),
+      memoryAverage: metric(
+        "AWS/ECS",
+        "MemoryUtilization",
+        workerDimensions,
+        "Average",
+        startTime,
+        endTime,
+      ),
+      memoryMaximum: metric(
+        "AWS/ECS",
+        "MemoryUtilization",
+        workerDimensions,
+        "Maximum",
+        startTime,
+        endTime,
+      ),
     },
     aurora: {
-      cpuMaximum: metric("AWS/RDS", "CPUUtilization", auroraDimensions, "Maximum", startTime, endTime),
-      connectionsMaximum: metric("AWS/RDS", "DatabaseConnections", auroraDimensions, "Maximum", startTime, endTime),
-      acuMaximum: metric("AWS/RDS", "ACUUtilization", auroraDimensions, "Maximum", startTime, endTime),
+      cpuMaximum: metric(
+        "AWS/RDS",
+        "CPUUtilization",
+        auroraDimensions,
+        "Maximum",
+        startTime,
+        endTime,
+      ),
+      connectionsMaximum: metric(
+        "AWS/RDS",
+        "DatabaseConnections",
+        auroraDimensions,
+        "Maximum",
+        startTime,
+        endTime,
+      ),
+      acuMaximum: metric(
+        "AWS/RDS",
+        "ACUUtilization",
+        auroraDimensions,
+        "Maximum",
+        startTime,
+        endTime,
+      ),
     },
   };
 }
@@ -462,12 +518,7 @@ async function verifyTenantIsolation(concurrencyRuns, preparedByLabel) {
   for (const run of concurrencyRuns.filter((item) => item.jobId)) {
     const owner = preparedByLabel.get(run.label)?.tenant;
     const other = owner?.tenantId === tenantA.tenantId ? tenantB : tenantA;
-    const crossTenant = await api(
-      "GET",
-      `/api/v1/imports/jobs/${run.jobId}/status`,
-      other,
-      "full",
-    );
+    const crossTenant = await api("GET", `/api/v1/imports/jobs/${run.jobId}/status`, other, "full");
     checks.push({
       jobId: run.jobId,
       ownerTenantId: owner?.tenantId,
@@ -518,9 +569,7 @@ async function main() {
     { tenant: tenantB, label: "concurrent-b1-200", rowCount: 200 },
   ];
   const prepared = await Promise.all(
-    concurrencyConfigs.map((config) =>
-      captureFailure(config.label, () => prepareJob(config)),
-    ),
+    concurrencyConfigs.map((config) => captureFailure(config.label, () => prepareJob(config))),
   );
   const preparedByLabel = new Map(prepared.map((item) => [item.label, item]));
   const concurrencyStartedAt = now();
@@ -585,8 +634,7 @@ async function main() {
     ...common,
     defect: "DEF-S8-016",
     status:
-      concurrencyRuns.every((run) => run.ok) &&
-      isolationChecks.every((check) => check.isolated)
+      concurrencyRuns.every((run) => run.ok) && isolationChecks.every((check) => check.isolated)
         ? "PARTIAL"
         : "NOT_VERIFIED",
     rationale:

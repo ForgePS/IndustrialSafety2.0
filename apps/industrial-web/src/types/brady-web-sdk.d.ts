@@ -13,17 +13,9 @@ declare module "@bradycorporation/brady-web-sdk" {
     isConnected(): boolean;
     getConnectionErrorMessage(): string;
     isSupportedBrowser(): Promise<boolean>;
-    printBitmap(
-      bitmap: HTMLImageElement,
-      xOffset?: number,
-      yOffset?: number,
-    ): Promise<boolean>;
+    printBitmap(bitmap: HTMLImageElement, xOffset?: number, yOffset?: number): Promise<boolean>;
     /** One print job with one page per bitmap (i-series sends this as a single job). */
-    printBitmaps(
-      bitmaps: HTMLImageElement[],
-      xOffset?: number,
-      yOffset?: number,
-    ): Promise<boolean>;
+    printBitmaps(bitmaps: HTMLImageElement[], xOffset?: number, yOffset?: number): Promise<boolean>;
     setCopies(copies: number): void;
     setCutOption?(cutOption: number): void;
     disconnect(): Promise<boolean>;

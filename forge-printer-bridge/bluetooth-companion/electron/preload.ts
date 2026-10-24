@@ -1,8 +1,5 @@
 import { contextBridge, ipcRenderer, IpcRendererEvent } from "electron";
-import type {
-  CompanionPreloadApi,
-  SavedPairing,
-} from "../services/preload-api";
+import type { CompanionPreloadApi, SavedPairing } from "../services/preload-api";
 import type {
   BluetoothStatus,
   CompanionRequest,
@@ -12,18 +9,16 @@ import type {
 
 const api: CompanionPreloadApi = {
   getSavedPairing: () => ipcRenderer.invoke("pairing:get"),
-  savePairing: (pairing: SavedPairing) =>
-    ipcRenderer.invoke("pairing:save", pairing),
+  savePairing: (pairing: SavedPairing) => ipcRenderer.invoke("pairing:save", pairing),
   clearPairing: () => ipcRenderer.invoke("pairing:clear"),
-  readArtifactAsDataUrl: (artifactPath) =>
-    ipcRenderer.invoke("artifact:readDataUrl", artifactPath),
+  readArtifactAsDataUrl: (artifactPath) => ipcRenderer.invoke("artifact:readDataUrl", artifactPath),
   reportStatus: (status, printer) => {
     ipcRenderer.send("companion:status", { status, printer });
   },
   onPipeRequest: (handler) => {
     const listener = async (
       _event: IpcRendererEvent,
-      payload: { correlationId: string; request: CompanionRequest }
+      payload: { correlationId: string; request: CompanionRequest },
     ) => {
       try {
         const response = await handler(payload.request);
@@ -50,7 +45,7 @@ const api: CompanionPreloadApi = {
   onBluetoothDeviceList: (handler) => {
     const listener = (
       _event: IpcRendererEvent,
-      devices: Array<{ deviceId: string; deviceName: string }>
+      devices: Array<{ deviceId: string; deviceName: string }>,
     ) => {
       handler(devices);
     };

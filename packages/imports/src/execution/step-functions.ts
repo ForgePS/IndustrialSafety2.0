@@ -49,7 +49,9 @@ export const IMPORT_EXECUTION_ASL = {
     UpdateProgress: { Type: "Pass", Next: "MoreRows" },
     MoreRows: {
       Type: "Choice",
-      Choices: [{ Variable: "$.progress.hasMore", BooleanEquals: true, Next: "CreateOrResumeBatch" }],
+      Choices: [
+        { Variable: "$.progress.hasMore", BooleanEquals: true, Next: "CreateOrResumeBatch" },
+      ],
       Default: "FinalizeJob",
     },
     FinalizeJob: { Type: "Pass", Next: "GenerateResults" },
@@ -60,5 +62,4 @@ export const IMPORT_EXECUTION_ASL = {
   TimeoutSeconds: 86400,
 } as const;
 
-export const IMPORT_EXECUTION_SFN_STATUS =
-  "DEFINITION_COMPLETE_DEPLOYMENT_PENDING" as const;
+export const IMPORT_EXECUTION_SFN_STATUS = "DEFINITION_COMPLETE_DEPLOYMENT_PENDING" as const;

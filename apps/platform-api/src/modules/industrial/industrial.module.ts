@@ -41,7 +41,10 @@ import { IndustrialPersonnelDisciplineAttachmentsService } from "./industrial-pe
 import { IndustrialPerformanceReportService } from "./industrial-performance-report.service.js";
 import { IndustrialTrainingVideoNormalizeService } from "./industrial-training-video-normalize.service.js";
 import { IndustrialIncidentAttachmentsService } from "./industrial-incident-attachments.service.js";
-import { IndustrialCalendarController, IndustrialRemindersController } from "./industrial-calendar.controller.js";
+import {
+  IndustrialCalendarController,
+  IndustrialRemindersController,
+} from "./industrial-calendar.controller.js";
 import { IndustrialCalendarService } from "./industrial-calendar.service.js";
 import { IndustrialTasksExtrasController } from "./industrial-tasks-extras.controller.js";
 import { IndustrialTasksExtrasService } from "./industrial-tasks-extras.service.js";

@@ -1,10 +1,7 @@
 "use client";
 
 import type { CSSProperties } from "react";
-import {
-  lotoArrowHeadPoints,
-  type LotoImageArrow,
-} from "@/lib/loto-image-annotations";
+import { lotoArrowHeadPoints, type LotoImageArrow } from "@/lib/loto-image-annotations";
 
 type Props = {
   src: string;

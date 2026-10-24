@@ -175,7 +175,11 @@ export const importJobs = pgTable(
     updatedBy: uuid("updated_by").references(() => users.id),
   },
   (table) => [
-    index("import_jobs_tenant_status_created_idx").on(table.tenantId, table.status, table.createdAt),
+    index("import_jobs_tenant_status_created_idx").on(
+      table.tenantId,
+      table.status,
+      table.createdAt,
+    ),
     index("import_jobs_tenant_product_idx").on(
       table.tenantId,
       table.productCode,
@@ -445,9 +449,7 @@ export const importRollbackEvents = pgTable(
     updatedAt: updatedAtColumn,
     updatedBy: uuid("updated_by").references(() => users.id),
   },
-  (table) => [
-    index("import_rollback_events_tenant_job_idx").on(table.tenantId, table.jobId),
-  ],
+  (table) => [index("import_rollback_events_tenant_job_idx").on(table.tenantId, table.jobId)],
 );
 
 export const importExecutionJournal = pgTable(
@@ -481,7 +483,11 @@ export const importExecutionJournal = pgTable(
     createdBy: uuid("created_by").references(() => users.id),
   },
   (table) => [
-    index("import_execution_journal_tenant_job_idx").on(table.tenantId, table.jobId, table.committedAt),
+    index("import_execution_journal_tenant_job_idx").on(
+      table.tenantId,
+      table.jobId,
+      table.committedAt,
+    ),
   ],
 );
 
@@ -505,7 +511,10 @@ export const importDuplicateCandidates = pgTable(
     matchAlgorithm: varchar("match_algorithm", { length: 64 }),
     recommendedAction: varchar("recommended_action", { length: 32 }).notNull(),
     resolvedAction: varchar("resolved_action", { length: 32 }),
-    matchFieldsJson: jsonb("match_fields_json").$type<Record<string, unknown>>().notNull().default({}),
+    matchFieldsJson: jsonb("match_fields_json")
+      .$type<Record<string, unknown>>()
+      .notNull()
+      .default({}),
     matchReasonsJson: jsonb("match_reasons_json").$type<unknown[]>().notNull().default([]),
     mergeCandidateJson: jsonb("merge_candidate_json")
       .$type<Record<string, unknown>>()
@@ -657,6 +666,10 @@ export const importSecurityArtifacts = pgTable(
     updatedAt: updatedAtColumn,
   },
   (table) => [
-    index("import_security_artifacts_tenant_job_idx").on(table.tenantId, table.jobId, table.createdAt),
+    index("import_security_artifacts_tenant_job_idx").on(
+      table.tenantId,
+      table.jobId,
+      table.createdAt,
+    ),
   ],
 );

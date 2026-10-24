@@ -16,6 +16,11 @@ import { LegalAdminController, LegalController } from "./legal.controller.js";
     LegalDocumentsService,
     LegalAcknowledgmentGuard,
   ],
-  exports: [AcknowledgmentService, AttestationService, LegalDocumentsService, LegalAcknowledgmentGuard],
+  exports: [
+    AcknowledgmentService,
+    AttestationService,
+    LegalDocumentsService,
+    LegalAcknowledgmentGuard,
+  ],
 })
 export class LegalModule {}

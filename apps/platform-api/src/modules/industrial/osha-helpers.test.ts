@@ -237,10 +237,7 @@ describe("osha-helpers", () => {
     expect(withCompleter.completedByPhone).toBe("337-555-0199");
     expect(withCompleter.completedByDate).toBe("2026-01-08");
 
-    const merged = mergeOshaSeedPreferExisting(
-      { employeeName: "Existing", street: "" },
-      seed,
-    );
+    const merged = mergeOshaSeedPreferExisting({ employeeName: "Existing", street: "" }, seed);
     expect(merged.employeeName).toBe("Existing");
     expect(merged.street).toBe("100 Main St");
   });

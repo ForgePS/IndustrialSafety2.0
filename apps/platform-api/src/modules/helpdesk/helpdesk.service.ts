@@ -85,8 +85,17 @@ function displayName(row: {
   username?: string | null;
   email?: string | null;
 }): string {
-  const full = [row.firstName, row.lastName].filter((p) => p && p.trim()).join(" ").trim();
-  return (row.displayName?.trim() || full || row.username?.trim() || row.email?.trim() || "User").slice(0, 200);
+  const full = [row.firstName, row.lastName]
+    .filter((p) => p && p.trim())
+    .join(" ")
+    .trim();
+  return (
+    row.displayName?.trim() ||
+    full ||
+    row.username?.trim() ||
+    row.email?.trim() ||
+    "User"
+  ).slice(0, 200);
 }
 
 function rowsOf<T>(result: unknown): T[] {
@@ -199,7 +208,12 @@ export class HelpdeskService {
     tenantId: string,
     action: string,
     ticketId: string,
-    detail: { before?: unknown; after?: unknown; metadata?: Record<string, unknown>; risk?: "LOW" | "MEDIUM" } = {},
+    detail: {
+      before?: unknown;
+      after?: unknown;
+      metadata?: Record<string, unknown>;
+      risk?: "LOW" | "MEDIUM";
+    } = {},
   ) {
     await this.audit.writeInTransaction(tx, {
       tenantId,
@@ -224,7 +238,12 @@ export class HelpdeskService {
     ticket: { id: string; tenantId: string },
     actor: Actor,
     eventType: string,
-    values: { from?: string | null; to?: string | null; internal?: boolean; metadata?: Record<string, unknown> } = {},
+    values: {
+      from?: string | null;
+      to?: string | null;
+      internal?: boolean;
+      metadata?: Record<string, unknown>;
+    } = {},
   ) {
     await tx.insert(supportTicketEvents).values({
       id: createId(),
@@ -241,11 +260,21 @@ export class HelpdeskService {
     });
   }
 
-  private async findTicket(tx: DatabaseTransaction, tenantId: string, id: string): Promise<TicketRow | null> {
+  private async findTicket(
+    tx: DatabaseTransaction,
+    tenantId: string,
+    id: string,
+  ): Promise<TicketRow | null> {
     const [row] = await tx
       .select()
       .from(supportTickets)
-      .where(and(eq(supportTickets.id, id), eq(supportTickets.tenantId, tenantId), isNull(supportTickets.deletedAt)))
+      .where(
+        and(
+          eq(supportTickets.id, id),
+          eq(supportTickets.tenantId, tenantId),
+          isNull(supportTickets.deletedAt),
+        ),
+      )
       .limit(1);
     return (row as TicketRow | undefined) ?? null;
   }
@@ -257,19 +286,35 @@ export class HelpdeskService {
     expectedVersion?: number,
   ): Promise<TicketRow> {
     if (expectedVersion !== undefined && expectedVersion !== ticket.recordVersion) {
-      throw new ForgeError("CONFLICT", "This ticket was updated by someone else. Refresh and try again.");
+      throw new ForgeError(
+        "CONFLICT",
+        "This ticket was updated by someone else. Refresh and try again.",
+      );
     }
     const [row] = await tx
       .update(supportTickets)
       .set({ ...patch, updatedAt: new Date(), recordVersion: ticket.recordVersion + 1 })
-      .where(and(eq(supportTickets.id, ticket.id), eq(supportTickets.recordVersion, ticket.recordVersion)))
+      .where(
+        and(
+          eq(supportTickets.id, ticket.id),
+          eq(supportTickets.recordVersion, ticket.recordVersion),
+        ),
+      )
       .returning();
-    if (!row) throw new ForgeError("CONFLICT", "This ticket was updated by someone else. Refresh and try again.");
+    if (!row)
+      throw new ForgeError(
+        "CONFLICT",
+        "This ticket was updated by someone else. Refresh and try again.",
+      );
     return row as TicketRow;
   }
 
   /** Customer access: same tenant, and own ticket unless the user may view all company tickets. */
-  private async customerTicket(tx: DatabaseTransaction, principal: ForgePrincipal, id: string): Promise<TicketRow> {
+  private async customerTicket(
+    tx: DatabaseTransaction,
+    principal: ForgePrincipal,
+    id: string,
+  ): Promise<TicketRow> {
     const ticket = await this.findTicket(tx, this.tenantOf(principal), id);
     if (!ticket) throw new ForgeError("NOT_FOUND", "Ticket not found");
     if (ticket.requesterUserId !== principal.userId && !this.canViewTenantTickets(principal)) {
@@ -280,11 +325,13 @@ export class HelpdeskService {
 
   /** Resolve which tenant a ticket lives in, honoring the support scope. */
   private async supportTicketTenant(principal: ForgePrincipal, id: string): Promise<string> {
-    if (!this.isSupportAgent(principal)) throw new ForgeError("FORBIDDEN", "Support access required");
+    if (!this.isSupportAgent(principal))
+      throw new ForgeError("FORBIDDEN", "Support access required");
     const ticketId = assertUuid(id, "ticketId");
     const run = async (tx: DatabaseTransaction) => {
       const conditions = [eq(supportTickets.id, ticketId), isNull(supportTickets.deletedAt)];
-      if (!this.crossTenant(principal)) conditions.push(eq(supportTickets.tenantId, this.tenantOf(principal)));
+      if (!this.crossTenant(principal))
+        conditions.push(eq(supportTickets.tenantId, this.tenantOf(principal)));
       const [row] = await tx
         .select({ tenantId: supportTickets.tenantId })
         .from(supportTickets)
@@ -320,7 +367,13 @@ export class HelpdeskService {
   private async notify(
     principal: ForgePrincipal,
     userId: string | null,
-    message: { type: string; title: string; body: string; href: string; priority?: "NORMAL" | "HIGH" },
+    message: {
+      type: string;
+      title: string;
+      body: string;
+      href: string;
+      priority?: "NORMAL" | "HIGH";
+    },
   ) {
     if (!userId || userId === principal.userId) return;
     try {
@@ -355,12 +408,16 @@ export class HelpdeskService {
         .where(eq(supportCategories.active, true))
         .orderBy(asc(supportCategories.sortOrder), asc(supportCategories.label)),
     );
-    const requestTypes = rows.filter((r) => r.kind === "REQUEST_TYPE").map((r) => ({ code: r.code, label: r.label }));
+    const requestTypes = rows
+      .filter((r) => r.kind === "REQUEST_TYPE")
+      .map((r) => ({ code: r.code, label: r.label }));
     const productAreas = rows
       .filter((r) => r.kind === "PRODUCT_AREA")
       .map((r) => ({ code: r.code, label: r.label, productCode: r.productCode }));
     return {
-      requestTypes: requestTypes.length ? requestTypes : HELPDESK_REQUEST_TYPES.map((r) => ({ ...r })),
+      requestTypes: requestTypes.length
+        ? requestTypes
+        : HELPDESK_REQUEST_TYPES.map((r) => ({ ...r })),
       productAreas: productAreas.length
         ? productAreas
         : HELPDESK_INDUSTRIAL_PRODUCT_AREAS.map((r) => ({ ...r, productCode: "FORGE_INDUSTRIAL" })),
@@ -399,7 +456,11 @@ export class HelpdeskService {
   }
 
   async createTicket(principal: ForgePrincipal, body: unknown) {
-    this.require(principal, "helpdesk.ticket.create", "You do not have permission to submit support tickets");
+    this.require(
+      principal,
+      "helpdesk.ticket.create",
+      "You do not have permission to submit support tickets",
+    );
     const tenantId = this.tenantOf(principal);
     const input = createTicketSchema.parse(body ?? {});
     const actor = await this.actorFor(principal, "CUSTOMER");
@@ -503,19 +564,31 @@ export class HelpdeskService {
 
   async listMyTickets(principal: ForgePrincipal, query: Record<string, unknown>) {
     const tenantId = this.tenantOf(principal);
-    const scope = String(query.scope ?? "mine") === "company" && this.canViewTenantTickets(principal) ? "company" : "mine";
+    const scope =
+      String(query.scope ?? "mine") === "company" && this.canViewTenantTickets(principal)
+        ? "company"
+        : "mine";
     if (scope === "mine") {
-      this.require(principal, "helpdesk.ticket.view_own", "You do not have permission to view support tickets");
+      this.require(
+        principal,
+        "helpdesk.ticket.view_own",
+        "You do not have permission to view support tickets",
+      );
     }
     const { page, pageSize, offset } = parsePaging(query, 100);
     const status = String(query.status ?? "").trim();
     const q = String(query.q ?? "").trim();
 
     return withTenantTransaction(this.db, tenantId, async (tx) => {
-      const conditions: SQL[] = [eq(supportTickets.tenantId, tenantId), isNull(supportTickets.deletedAt)];
+      const conditions: SQL[] = [
+        eq(supportTickets.tenantId, tenantId),
+        isNull(supportTickets.deletedAt),
+      ];
       if (scope === "mine") conditions.push(eq(supportTickets.requesterUserId, principal.userId));
-      if (status === "open") conditions.push(inArray(supportTickets.status, [...HELPDESK_OPEN_STATUSES]));
-      else if (status === "closed") conditions.push(inArray(supportTickets.status, ["RESOLVED", "CLOSED"]));
+      if (status === "open")
+        conditions.push(inArray(supportTickets.status, [...HELPDESK_OPEN_STATUSES]));
+      else if (status === "closed")
+        conditions.push(inArray(supportTickets.status, ["RESOLVED", "CLOSED"]));
       else if (isHelpdeskStatus(status)) conditions.push(eq(supportTickets.status, status));
       if (q) conditions.push(this.searchCondition(q));
       const where = and(...conditions);
@@ -545,10 +618,18 @@ export class HelpdeskService {
           canReply: this.has(principal, "helpdesk.ticket.comment") && ticket.status !== "CLOSED",
           canReopen:
             this.has(principal, "helpdesk.ticket.reopen") &&
-            canTransitionHelpdeskStatus(ticket.status as HelpdeskTicketStatus, "REOPENED", "CUSTOMER"),
+            canTransitionHelpdeskStatus(
+              ticket.status as HelpdeskTicketStatus,
+              "REOPENED",
+              "CUSTOMER",
+            ),
           canClose:
             this.has(principal, "helpdesk.ticket.close") &&
-            canTransitionHelpdeskStatus(ticket.status as HelpdeskTicketStatus, "CLOSED", "CUSTOMER"),
+            canTransitionHelpdeskStatus(
+              ticket.status as HelpdeskTicketStatus,
+              "CLOSED",
+              "CUSTOMER",
+            ),
         };
       },
       principal.userId,
@@ -570,12 +651,19 @@ export class HelpdeskService {
     const messages = (await tx
       .select()
       .from(supportTicketMessages)
-      .where(and(eq(supportTicketMessages.ticketId, ticketId), isNull(supportTicketMessages.deletedAt)))
+      .where(
+        and(eq(supportTicketMessages.ticketId, ticketId), isNull(supportTicketMessages.deletedAt)),
+      )
       .orderBy(asc(supportTicketMessages.createdAt))) as MessageRow[];
     const attachments = (await tx
       .select()
       .from(supportTicketAttachments)
-      .where(and(eq(supportTicketAttachments.ticketId, ticketId), isNull(supportTicketAttachments.deletedAt)))
+      .where(
+        and(
+          eq(supportTicketAttachments.ticketId, ticketId),
+          isNull(supportTicketAttachments.deletedAt),
+        ),
+      )
       .orderBy(asc(supportTicketAttachments.createdAt))) as AttachmentRow[];
     const events = (await tx
       .select()
@@ -586,7 +674,11 @@ export class HelpdeskService {
   }
 
   async customerReply(principal: ForgePrincipal, id: string, body: unknown) {
-    this.require(principal, "helpdesk.ticket.comment", "You do not have permission to reply on support tickets");
+    this.require(
+      principal,
+      "helpdesk.ticket.comment",
+      "You do not have permission to reply on support tickets",
+    );
     const ticketId = assertUuid(id, "ticketId");
     const input = messageSchema.parse(body ?? {});
     const actor = await this.actorFor(principal, "CUSTOMER");
@@ -597,7 +689,10 @@ export class HelpdeskService {
         let ticket = await this.customerTicket(tx, principal, ticketId);
         const from = ticket.status as HelpdeskTicketStatus;
         if (from === "CLOSED") {
-          throw new ForgeError("VALIDATION_FAILED", "This ticket is closed. Reopen it to continue the conversation.");
+          throw new ForgeError(
+            "VALIDATION_FAILED",
+            "This ticket is closed. Reopen it to continue the conversation.",
+          );
         }
         let next: HelpdeskTicketStatus | null = null;
         if (from === "RESOLVED") {
@@ -626,10 +721,24 @@ export class HelpdeskService {
           ...(next ? { status: next } : {}),
           ...(next === "REOPENED" ? { reopenedAt: now, resolvedAt: null } : {}),
         });
-        if (next) await this.addEvent(tx, ticket, actor, next === "REOPENED" ? "REOPENED" : "STATUS_CHANGED", { from, to: next });
-        await this.writeAudit(tx, principal, ticket.tenantId, "helpdesk.message.created", ticket.id, {
-          metadata: { messageId, messageType: "CUSTOMER_MESSAGE", statusChangedTo: next },
-        });
+        if (next)
+          await this.addEvent(
+            tx,
+            ticket,
+            actor,
+            next === "REOPENED" ? "REOPENED" : "STATUS_CHANGED",
+            { from, to: next },
+          );
+        await this.writeAudit(
+          tx,
+          principal,
+          ticket.tenantId,
+          "helpdesk.message.created",
+          ticket.id,
+          {
+            metadata: { messageId, messageType: "CUSTOMER_MESSAGE", statusChangedTo: next },
+          },
+        );
         return { ticket, messageId };
       },
       principal.userId,
@@ -643,11 +752,18 @@ export class HelpdeskService {
     return { ticket: toCustomerTicket(result.ticket), messageId: result.messageId };
   }
 
-  async customerSetStatus(principal: ForgePrincipal, id: string, target: "REOPENED" | "CLOSED", body: unknown) {
+  async customerSetStatus(
+    principal: ForgePrincipal,
+    id: string,
+    target: "REOPENED" | "CLOSED",
+    body: unknown,
+  ) {
     this.require(
       principal,
       target === "REOPENED" ? "helpdesk.ticket.reopen" : "helpdesk.ticket.close",
-      target === "REOPENED" ? "You cannot reopen support tickets" : "You cannot close support tickets",
+      target === "REOPENED"
+        ? "You cannot reopen support tickets"
+        : "You cannot close support tickets",
     );
     const ticketId = assertUuid(id, "ticketId");
     const input = customerStatusSchema.parse(body ?? {});
@@ -681,9 +797,14 @@ export class HelpdeskService {
         const updated = await this.updateTicket(tx, current, {
           status: target,
           lastCustomerActivityAt: now,
-          ...(target === "REOPENED" ? { reopenedAt: now, resolvedAt: null, closedAt: null } : { closedAt: now }),
+          ...(target === "REOPENED"
+            ? { reopenedAt: now, resolvedAt: null, closedAt: null }
+            : { closedAt: now }),
         });
-        await this.addEvent(tx, updated, actor, target === "REOPENED" ? "REOPENED" : "CLOSED", { from, to: target });
+        await this.addEvent(tx, updated, actor, target === "REOPENED" ? "REOPENED" : "CLOSED", {
+          from,
+          to: target,
+        });
         await this.writeAudit(
           tx,
           principal,
@@ -728,8 +849,12 @@ export class HelpdeskService {
     return or(...parts) as SQL;
   }
 
-  private supportScope<T>(principal: ForgePrincipal, fn: (tx: DatabaseTransaction) => Promise<T>): Promise<T> {
-    if (!this.isSupportAgent(principal)) throw new ForgeError("FORBIDDEN", "Support access required");
+  private supportScope<T>(
+    principal: ForgePrincipal,
+    fn: (tx: DatabaseTransaction) => Promise<T>,
+  ): Promise<T> {
+    if (!this.isSupportAgent(principal))
+      throw new ForgeError("FORBIDDEN", "Support access required");
     return this.crossTenant(principal)
       ? withBypassRlsTransaction(this.db, fn, principal.userId)
       : withTenantTransaction(this.db, this.tenantOf(principal), fn, principal.userId);
@@ -737,7 +862,8 @@ export class HelpdeskService {
 
   private scopeConditions(principal: ForgePrincipal): SQL[] {
     const conditions: SQL[] = [isNull(supportTickets.deletedAt)];
-    if (!this.crossTenant(principal)) conditions.push(eq(supportTickets.tenantId, this.tenantOf(principal)));
+    if (!this.crossTenant(principal))
+      conditions.push(eq(supportTickets.tenantId, this.tenantOf(principal)));
     return conditions;
   }
 
@@ -780,16 +906,28 @@ export class HelpdeskService {
           conditions.push(inArray(supportTickets.status, openList));
           break;
         case "unassigned":
-          conditions.push(inArray(supportTickets.status, openList), isNull(supportTickets.assignedUserId));
+          conditions.push(
+            inArray(supportTickets.status, openList),
+            isNull(supportTickets.assignedUserId),
+          );
           break;
         case "mine":
-          conditions.push(inArray(supportTickets.status, openList), eq(supportTickets.assignedUserId, principal.userId));
+          conditions.push(
+            inArray(supportTickets.status, openList),
+            eq(supportTickets.assignedUserId, principal.userId),
+          );
           break;
         case "critical":
-          conditions.push(inArray(supportTickets.status, openList), eq(supportTickets.priority, "P1_CRITICAL"));
+          conditions.push(
+            inArray(supportTickets.status, openList),
+            eq(supportTickets.priority, "P1_CRITICAL"),
+          );
           break;
         case "high":
-          conditions.push(inArray(supportTickets.status, openList), eq(supportTickets.priority, "P2_HIGH"));
+          conditions.push(
+            inArray(supportTickets.status, openList),
+            eq(supportTickets.priority, "P2_HIGH"),
+          );
           break;
         case "waiting_customer":
           conditions.push(eq(supportTickets.status, "WAITING_ON_CUSTOMER"));
@@ -799,7 +937,10 @@ export class HelpdeskService {
           break;
         case "feature_requests":
           conditions.push(
-            or(eq(supportTickets.requestType, "FEATURE_REQUEST"), eq(supportTickets.disposition, "FEATURE_REQUEST")) as SQL,
+            or(
+              eq(supportTickets.requestType, "FEATURE_REQUEST"),
+              eq(supportTickets.disposition, "FEATURE_REQUEST"),
+            ) as SQL,
           );
           break;
         case "bugs":
@@ -814,7 +955,8 @@ export class HelpdeskService {
         default:
           break;
       }
-      if (isHelpdeskStatus(str("status"))) conditions.push(eq(supportTickets.status, str("status")));
+      if (isHelpdeskStatus(str("status")))
+        conditions.push(eq(supportTickets.status, str("status")));
       if (str("priority")) conditions.push(eq(supportTickets.priority, str("priority")));
       if (UUID.test(str("tenantId")) && this.crossTenant(principal)) {
         conditions.push(eq(supportTickets.tenantId, str("tenantId")));
@@ -822,7 +964,8 @@ export class HelpdeskService {
       if (str("productCode")) conditions.push(eq(supportTickets.productCode, str("productCode")));
       if (str("requestType")) conditions.push(eq(supportTickets.requestType, str("requestType")));
       if (str("productArea")) conditions.push(eq(supportTickets.productArea, str("productArea")));
-      if (UUID.test(str("assigneeUserId"))) conditions.push(eq(supportTickets.assignedUserId, str("assigneeUserId")));
+      if (UUID.test(str("assigneeUserId")))
+        conditions.push(eq(supportTickets.assignedUserId, str("assigneeUserId")));
       if (UUID.test(str("tagId"))) {
         conditions.push(
           sql`exists (select 1 from support_ticket_tags tt where tt.ticket_id = ${supportTickets.id} and tt.tag_id = ${str("tagId")}::uuid)`,
@@ -870,7 +1013,12 @@ export class HelpdeskService {
     const detail = await this.withSupportTicket(principal, id, async (tx, ticket) => {
       const [messages, attachments, events] = await this.loadThread(tx, ticket.id);
       const tags = await tx
-        .select({ id: supportTags.id, slug: supportTags.slug, label: supportTags.label, color: supportTags.color })
+        .select({
+          id: supportTags.id,
+          slug: supportTags.slug,
+          label: supportTags.label,
+          color: supportTags.color,
+        })
         .from(supportTicketTags)
         .innerJoin(supportTags, eq(supportTags.id, supportTicketTags.tagId))
         .where(eq(supportTicketTags.ticketId, ticket.id))
@@ -890,13 +1038,19 @@ export class HelpdeskService {
       events: detail.events.map(toEvent),
       tags: detail.tags,
       watchers: detail.watchers,
-      allowedStatuses: allowedHelpdeskTransitions(detail.ticket.status as HelpdeskTicketStatus, "SUPPORT"),
+      allowedStatuses: allowedHelpdeskTransitions(
+        detail.ticket.status as HelpdeskTicketStatus,
+        "SUPPORT",
+      ),
     };
   }
 
   async supportAgents(principal: ForgePrincipal) {
-    if (!this.isSupportAgent(principal)) throw new ForgeError("FORBIDDEN", "Support access required");
-    const tenantFilter = this.crossTenant(principal) ? sql`` : sql`and u.tenant_id = ${this.tenantOf(principal)}::uuid`;
+    if (!this.isSupportAgent(principal))
+      throw new ForgeError("FORBIDDEN", "Support access required");
+    const tenantFilter = this.crossTenant(principal)
+      ? sql``
+      : sql`and u.tenant_id = ${this.tenantOf(principal)}::uuid`;
     const result = await withBypassRlsTransaction(this.db, (tx) =>
       tx.execute(sql`
         with holders as (
@@ -951,7 +1105,13 @@ export class HelpdeskService {
   async supportTags(principal: ForgePrincipal) {
     return this.supportScope(principal, async (tx) => {
       const rows = await tx
-        .select({ id: supportTags.id, slug: supportTags.slug, label: supportTags.label, color: supportTags.color, tenantId: supportTags.tenantId })
+        .select({
+          id: supportTags.id,
+          slug: supportTags.slug,
+          label: supportTags.label,
+          color: supportTags.color,
+          tenantId: supportTags.tenantId,
+        })
         .from(supportTags)
         .where(eq(supportTags.active, true))
         .orderBy(asc(supportTags.label));
@@ -963,16 +1123,27 @@ export class HelpdeskService {
   }
 
   async supportReply(principal: ForgePrincipal, id: string, body: unknown) {
-    this.require(principal, "helpdesk.support.respond", "You do not have permission to reply to customers");
+    this.require(
+      principal,
+      "helpdesk.support.respond",
+      "You do not have permission to reply to customers",
+    );
     const input = supportReplySchema.parse(body ?? {});
     const actor = await this.actorFor(principal, "SUPPORT");
     const result = await this.withSupportTicket(principal, id, async (tx, current) => {
       const from = current.status as HelpdeskTicketStatus;
       let next = input.nextStatus ?? null;
       if (next && next !== from) {
-        this.require(principal, "helpdesk.support.change_status", "You do not have permission to change ticket status");
+        this.require(
+          principal,
+          "helpdesk.support.change_status",
+          "You do not have permission to change ticket status",
+        );
         if (!canTransitionHelpdeskStatus(from, next, "SUPPORT")) {
-          throw new ForgeError("VALIDATION_FAILED", `Cannot move a ${HELPDESK_STATUS_LABELS[from]} ticket to ${HELPDESK_STATUS_LABELS[next]}`);
+          throw new ForgeError(
+            "VALIDATION_FAILED",
+            `Cannot move a ${HELPDESK_STATUS_LABELS[from]} ticket to ${HELPDESK_STATUS_LABELS[next]}`,
+          );
         }
       } else {
         next = null;
@@ -998,9 +1169,15 @@ export class HelpdeskService {
         firstResponseAt: current.firstResponseAt ?? now,
         ...(next ? this.statusPatch(next, now) : {}),
       });
-      if (next) await this.addEvent(tx, ticket, actor, this.statusEventType(next), { from, to: next });
+      if (next)
+        await this.addEvent(tx, ticket, actor, this.statusEventType(next), { from, to: next });
       await this.writeAudit(tx, principal, ticket.tenantId, "helpdesk.message.created", ticket.id, {
-        metadata: { messageId, messageType: "SUPPORT_REPLY", mode: "CUSTOMER_REPLY", statusChangedTo: next },
+        metadata: {
+          messageId,
+          messageType: "SUPPORT_REPLY",
+          mode: "CUSTOMER_REPLY",
+          statusChangedTo: next,
+        },
       });
       return { ticket, messageId };
     });
@@ -1014,7 +1191,11 @@ export class HelpdeskService {
   }
 
   async supportInternalNote(principal: ForgePrincipal, id: string, body: unknown) {
-    this.require(principal, "helpdesk.support.internal_note", "You do not have permission to add internal notes");
+    this.require(
+      principal,
+      "helpdesk.support.internal_note",
+      "You do not have permission to add internal notes",
+    );
     const input = messageSchema.parse(body ?? {});
     const actor = await this.actorFor(principal, "SUPPORT");
     return this.withSupportTicket(principal, id, async (tx, current) => {
@@ -1031,17 +1212,28 @@ export class HelpdeskService {
         isInternal: true,
       });
       const ticket = await this.updateTicket(tx, current, { lastSupportActivityAt: new Date() });
-      await this.writeAudit(tx, principal, ticket.tenantId, "helpdesk.internal_note.created", ticket.id, {
-        metadata: { messageId, messageType: "INTERNAL_NOTE", mode: "INTERNAL_NOTE" },
-      });
+      await this.writeAudit(
+        tx,
+        principal,
+        ticket.tenantId,
+        "helpdesk.internal_note.created",
+        ticket.id,
+        {
+          metadata: { messageId, messageType: "INTERNAL_NOTE", mode: "INTERNAL_NOTE" },
+        },
+      );
       return { messageId, ticket: toSupportTicket(ticket, null) };
     });
   }
 
-  private statusPatch(next: HelpdeskTicketStatus, now: Date): Partial<typeof supportTickets.$inferInsert> {
+  private statusPatch(
+    next: HelpdeskTicketStatus,
+    now: Date,
+  ): Partial<typeof supportTickets.$inferInsert> {
     if (next === "RESOLVED") return { status: next, resolvedAt: now };
     if (next === "CLOSED") return { status: next, closedAt: now };
-    if (next === "REOPENED") return { status: next, reopenedAt: now, resolvedAt: null, closedAt: null };
+    if (next === "REOPENED")
+      return { status: next, reopenedAt: now, resolvedAt: null, closedAt: null };
     return { status: next };
   }
 
@@ -1053,17 +1245,25 @@ export class HelpdeskService {
   }
 
   async supportChangeStatus(principal: ForgePrincipal, id: string, body: unknown) {
-    this.require(principal, "helpdesk.support.change_status", "You do not have permission to change ticket status");
+    this.require(
+      principal,
+      "helpdesk.support.change_status",
+      "You do not have permission to change ticket status",
+    );
     const input = statusChangeSchema.parse(body ?? {});
     const actor = await this.actorFor(principal, "SUPPORT");
     const ticket = await this.withSupportTicket(principal, id, async (tx, current) => {
       const from = current.status as HelpdeskTicketStatus;
       const next = input.status;
       if (!canTransitionHelpdeskStatus(from, next, "SUPPORT")) {
-        throw new ForgeError("VALIDATION_FAILED", `Cannot move a ${HELPDESK_STATUS_LABELS[from]} ticket to ${HELPDESK_STATUS_LABELS[next]}`);
+        throw new ForgeError(
+          "VALIDATION_FAILED",
+          `Cannot move a ${HELPDESK_STATUS_LABELS[from]} ticket to ${HELPDESK_STATUS_LABELS[next]}`,
+        );
       }
       const now = new Date();
-      const dispositionChanged = input.disposition !== undefined && input.disposition !== current.disposition;
+      const dispositionChanged =
+        input.disposition !== undefined && input.disposition !== current.disposition;
       const updated = await this.updateTicket(
         tx,
         current,
@@ -1095,10 +1295,17 @@ export class HelpdeskService {
           isInternal: true,
         });
       }
-      await this.writeAudit(tx, principal, updated.tenantId, `helpdesk.ticket.${this.statusEventType(next).toLowerCase()}`, updated.id, {
-        before: { status: from, disposition: current.disposition },
-        after: { status: next, disposition: updated.disposition },
-      });
+      await this.writeAudit(
+        tx,
+        principal,
+        updated.tenantId,
+        `helpdesk.ticket.${this.statusEventType(next).toLowerCase()}`,
+        updated.id,
+        {
+          before: { status: from, disposition: current.disposition },
+          after: { status: next, disposition: updated.disposition },
+        },
+      );
       return updated;
     });
     if (["RESOLVED", "WAITING_ON_CUSTOMER", "CLOSED"].includes(input.status)) {
@@ -1113,38 +1320,62 @@ export class HelpdeskService {
   }
 
   async supportChangePriority(principal: ForgePrincipal, id: string, body: unknown) {
-    this.require(principal, "helpdesk.support.change_priority", "You do not have permission to change priority");
+    this.require(
+      principal,
+      "helpdesk.support.change_priority",
+      "You do not have permission to change priority",
+    );
     const input = priorityChangeSchema.parse(body ?? {});
     const actor = await this.actorFor(principal, "SUPPORT");
     return this.withSupportTicket(principal, id, async (tx, current) => {
       if (current.priority === input.priority) return { ticket: toSupportTicket(current, null) };
-      const updated = await this.updateTicket(tx, current, { priority: input.priority }, input.expectedVersion);
+      const updated = await this.updateTicket(
+        tx,
+        current,
+        { priority: input.priority },
+        input.expectedVersion,
+      );
       await this.addEvent(tx, updated, actor, "PRIORITY_CHANGED", {
         from: current.priority,
         to: input.priority,
         internal: true,
       });
-      await this.writeAudit(tx, principal, updated.tenantId, "helpdesk.ticket.priority_changed", updated.id, {
-        before: { priority: current.priority },
-        after: { priority: input.priority },
-      });
+      await this.writeAudit(
+        tx,
+        principal,
+        updated.tenantId,
+        "helpdesk.ticket.priority_changed",
+        updated.id,
+        {
+          before: { priority: current.priority },
+          after: { priority: input.priority },
+        },
+      );
       return { ticket: toSupportTicket(updated, null) };
     });
   }
 
   async supportAssign(principal: ForgePrincipal, id: string, body: unknown) {
-    this.require(principal, "helpdesk.support.assign", "You do not have permission to assign tickets");
+    this.require(
+      principal,
+      "helpdesk.support.assign",
+      "You do not have permission to assign tickets",
+    );
     const input = assignSchema.parse(body ?? {});
     const actor = await this.actorFor(principal, "SUPPORT");
     let assigneeName: string | null = null;
     if (input.assigneeUserId) {
       const { agents } = await this.supportAgents(principal);
       const agent = agents.find((a) => a.userId === input.assigneeUserId);
-      if (!agent) throw new ForgeError("VALIDATION_FAILED", "Assignee must be a Forge support agent");
+      if (!agent)
+        throw new ForgeError("VALIDATION_FAILED", "Assignee must be a Forge support agent");
       assigneeName = agent.name;
     }
     const ticket = await this.withSupportTicket(principal, id, async (tx, current) => {
-      if (current.assignedUserId === input.assigneeUserId && (input.team ?? current.assignedTeam) === current.assignedTeam) {
+      if (
+        current.assignedUserId === input.assigneeUserId &&
+        (input.team ?? current.assignedTeam) === current.assignedTeam
+      ) {
         return current;
       }
       const from = current.status as HelpdeskTicketStatus;
@@ -1155,17 +1386,29 @@ export class HelpdeskService {
         ...(input.team !== undefined ? { assignedTeam: input.team } : {}),
         ...(autoAssign ? { status: "ASSIGNED" } : {}),
       });
-      const eventType = !input.assigneeUserId ? "UNASSIGNED" : current.assignedUserId ? "REASSIGNED" : "ASSIGNED";
+      const eventType = !input.assigneeUserId
+        ? "UNASSIGNED"
+        : current.assignedUserId
+          ? "REASSIGNED"
+          : "ASSIGNED";
       await this.addEvent(tx, updated, actor, eventType, {
         from: current.assignedUserName,
         to: assigneeName,
         internal: true,
       });
-      if (autoAssign) await this.addEvent(tx, updated, actor, "STATUS_CHANGED", { from, to: "ASSIGNED" });
-      await this.writeAudit(tx, principal, updated.tenantId, "helpdesk.ticket.assignee_changed", updated.id, {
-        before: { assignedUserId: current.assignedUserId, assignedTeam: current.assignedTeam },
-        after: { assignedUserId: updated.assignedUserId, assignedTeam: updated.assignedTeam },
-      });
+      if (autoAssign)
+        await this.addEvent(tx, updated, actor, "STATUS_CHANGED", { from, to: "ASSIGNED" });
+      await this.writeAudit(
+        tx,
+        principal,
+        updated.tenantId,
+        "helpdesk.ticket.assignee_changed",
+        updated.id,
+        {
+          before: { assignedUserId: current.assignedUserId, assignedTeam: current.assignedTeam },
+          after: { assignedUserId: updated.assignedUserId, assignedTeam: updated.assignedTeam },
+        },
+      );
       return updated;
     });
     if (input.assigneeUserId) {
@@ -1181,7 +1424,11 @@ export class HelpdeskService {
   }
 
   async supportTagsChange(principal: ForgePrincipal, id: string, body: unknown) {
-    this.require(principal, "helpdesk.support.manage_watchers", "You do not have permission to tag tickets");
+    this.require(
+      principal,
+      "helpdesk.support.manage_watchers",
+      "You do not have permission to tag tickets",
+    );
     const input = tagChangeSchema.parse(body ?? {});
     const actor = await this.actorFor(principal, "SUPPORT");
     const slugs = [...new Set(input.add.map(slugifyTag).filter(Boolean))];
@@ -1193,7 +1440,12 @@ export class HelpdeskService {
         this.db,
         async (tx) => {
           const rows = await tx
-            .select({ id: supportTags.id, slug: supportTags.slug, label: supportTags.label, tenantId: supportTags.tenantId })
+            .select({
+              id: supportTags.id,
+              slug: supportTags.slug,
+              label: supportTags.label,
+              tenantId: supportTags.tenantId,
+            })
             .from(supportTags)
             .where(and(inArray(supportTags.slug, slugs), isNull(supportTags.tenantId)));
           for (const r of rows) tagIds.set(r.slug, { id: r.id, label: r.label });
@@ -1203,7 +1455,11 @@ export class HelpdeskService {
           }
           for (const slug of missing) {
             const tagId = createId();
-            const label = input.add.find((l) => slugifyTag(l) === slug)?.trim().slice(0, 80) || slug;
+            const label =
+              input.add
+                .find((l) => slugifyTag(l) === slug)
+                ?.trim()
+                .slice(0, 80) || slug;
             await tx.insert(supportTags).values({ id: tagId, tenantId: null, slug, label });
             tagIds.set(slug, { id: tagId, label });
           }
@@ -1221,7 +1477,12 @@ export class HelpdeskService {
       const added: string[] = [];
       for (const { id: tagId, label } of tagIds.values()) {
         if (have.has(tagId)) continue;
-        await tx.insert(supportTicketTags).values({ tenantId: ticket.tenantId, ticketId: ticket.id, tagId, addedByUserId: principal.userId });
+        await tx.insert(supportTicketTags).values({
+          tenantId: ticket.tenantId,
+          ticketId: ticket.id,
+          tagId,
+          addedByUserId: principal.userId,
+        });
         await this.addEvent(tx, ticket, actor, "TAG_ADDED", { to: label, internal: true });
         added.push(label);
       }
@@ -1233,27 +1494,45 @@ export class HelpdeskService {
           .where(inArray(supportTags.id, toRemove));
         await tx
           .delete(supportTicketTags)
-          .where(and(eq(supportTicketTags.ticketId, ticket.id), inArray(supportTicketTags.tagId, toRemove)));
-        for (const l of labels) await this.addEvent(tx, ticket, actor, "TAG_REMOVED", { from: l.label, internal: true });
+          .where(
+            and(
+              eq(supportTicketTags.ticketId, ticket.id),
+              inArray(supportTicketTags.tagId, toRemove),
+            ),
+          );
+        for (const l of labels)
+          await this.addEvent(tx, ticket, actor, "TAG_REMOVED", { from: l.label, internal: true });
       }
       if (added.length || toRemove.length) {
         await this.updateTicket(tx, ticket, {});
-        await this.writeAudit(tx, principal, ticket.tenantId, "helpdesk.ticket.tags_changed", ticket.id, {
-          metadata: { added, removed: toRemove },
-        });
+        await this.writeAudit(
+          tx,
+          principal,
+          ticket.tenantId,
+          "helpdesk.ticket.tags_changed",
+          ticket.id,
+          {
+            metadata: { added, removed: toRemove },
+          },
+        );
       }
       return { added, removed: toRemove };
     });
   }
 
   async supportWatchersChange(principal: ForgePrincipal, id: string, body: unknown) {
-    this.require(principal, "helpdesk.support.manage_watchers", "You do not have permission to manage watchers");
+    this.require(
+      principal,
+      "helpdesk.support.manage_watchers",
+      "You do not have permission to manage watchers",
+    );
     const input = watcherChangeSchema.parse(body ?? {});
     const actor = await this.actorFor(principal, "SUPPORT");
     const { agents } = input.add.length ? await this.supportAgents(principal) : { agents: [] };
     const agentById = new Map(agents.map((a) => [a.userId, a]));
     for (const userId of input.add) {
-      if (!agentById.has(userId)) throw new ForgeError("VALIDATION_FAILED", "Watchers must be Forge support agents");
+      if (!agentById.has(userId))
+        throw new ForgeError("VALIDATION_FAILED", "Watchers must be Forge support agents");
     }
     return this.withSupportTicket(principal, id, async (tx, ticket) => {
       const existing = await tx
@@ -1279,13 +1558,29 @@ export class HelpdeskService {
       if (toRemove.length) {
         await tx
           .delete(supportTicketWatchers)
-          .where(and(eq(supportTicketWatchers.ticketId, ticket.id), inArray(supportTicketWatchers.userId, toRemove)));
-        for (const u of toRemove) await this.addEvent(tx, ticket, actor, "WATCHER_REMOVED", { from: have.get(u) ?? null, internal: true });
+          .where(
+            and(
+              eq(supportTicketWatchers.ticketId, ticket.id),
+              inArray(supportTicketWatchers.userId, toRemove),
+            ),
+          );
+        for (const u of toRemove)
+          await this.addEvent(tx, ticket, actor, "WATCHER_REMOVED", {
+            from: have.get(u) ?? null,
+            internal: true,
+          });
       }
       if (added.length || toRemove.length) {
-        await this.writeAudit(tx, principal, ticket.tenantId, "helpdesk.ticket.watchers_changed", ticket.id, {
-          metadata: { added, removed: toRemove },
-        });
+        await this.writeAudit(
+          tx,
+          principal,
+          ticket.tenantId,
+          "helpdesk.ticket.watchers_changed",
+          ticket.id,
+          {
+            metadata: { added, removed: toRemove },
+          },
+        );
       }
       return { added, removed: toRemove };
     });
@@ -1306,16 +1601,28 @@ export class HelpdeskService {
     return ticket;
   }
 
-  private async attachmentTenant(principal: ForgePrincipal, mode: Mode, ticketId: string): Promise<string> {
+  private async attachmentTenant(
+    principal: ForgePrincipal,
+    mode: Mode,
+    ticketId: string,
+  ): Promise<string> {
     if (mode === "support") return this.supportTicketTenant(principal, ticketId);
     return this.tenantOf(principal);
   }
 
   async createAttachmentUpload(principal: ForgePrincipal, mode: Mode, id: string, body: unknown) {
     if (mode === "customer") {
-      this.require(principal, "helpdesk.ticket.comment", "You do not have permission to add attachments");
+      this.require(
+        principal,
+        "helpdesk.ticket.comment",
+        "You do not have permission to add attachments",
+      );
     } else {
-      this.require(principal, "helpdesk.support.respond", "You do not have permission to add attachments");
+      this.require(
+        principal,
+        "helpdesk.support.respond",
+        "You do not have permission to add attachments",
+      );
     }
     const ticketId = assertUuid(id, "ticketId");
     const input = attachmentUploadSchema.parse(body ?? {});
@@ -1383,7 +1690,11 @@ export class HelpdeskService {
       principal.userId,
     );
 
-    const presign = await this.storage.createPresignedUploadUrl({ objectKey, mimeType, contentLength: input.contentLength });
+    const presign = await this.storage.createPresignedUploadUrl({
+      objectKey,
+      mimeType,
+      contentLength: input.contentLength,
+    });
     return {
       attachmentId,
       uploadUrl: presign.uploadUrl,
@@ -1392,7 +1703,12 @@ export class HelpdeskService {
     };
   }
 
-  async completeAttachmentUpload(principal: ForgePrincipal, mode: Mode, id: string, attachmentId: string) {
+  async completeAttachmentUpload(
+    principal: ForgePrincipal,
+    mode: Mode,
+    id: string,
+    attachmentId: string,
+  ) {
     const ticketId = assertUuid(id, "ticketId");
     const attId = assertUuid(attachmentId, "attachmentId");
     const tenantId = await this.attachmentTenant(principal, mode, ticketId);
@@ -1414,7 +1730,8 @@ export class HelpdeskService {
           )
           .limit(1)) as AttachmentRow[];
         if (!att) throw new ForgeError("NOT_FOUND", "Attachment not found");
-        if (att.uploadedByUserId !== principal.userId) throw new ForgeError("FORBIDDEN", "Only the uploader can finish this upload");
+        if (att.uploadedByUserId !== principal.userId)
+          throw new ForgeError("FORBIDDEN", "Only the uploader can finish this upload");
         if (att.status === "COMPLETE") return { attachment: toAttachment(att) };
         const document = await tx.query.forgeDocuments.findFirst({
           where: and(eq(forgeDocuments.id, att.documentId), eq(forgeDocuments.tenantId, tenantId)),
@@ -1422,7 +1739,10 @@ export class HelpdeskService {
         if (!document || !documentBelongsToTenant(document.tenantId, tenantId)) {
           throw new ForgeError("NOT_FOUND", "Document not found");
         }
-        if (!objectKeyBelongsToTenant(document.objectKey, tenantId) || !document.objectKey.startsWith(helpdeskAttachmentPrefix(tenantId, ticket.id))) {
+        if (
+          !objectKeyBelongsToTenant(document.objectKey, tenantId) ||
+          !document.objectKey.startsWith(helpdeskAttachmentPrefix(tenantId, ticket.id))
+        ) {
           throw new ForgeError("FORBIDDEN", "Document does not belong to this ticket");
         }
         await this.storage.assertObjectExists(document.objectKey);
@@ -1436,10 +1756,22 @@ export class HelpdeskService {
           .set({ status: "COMPLETE", uploadedAt: now })
           .where(eq(supportTicketAttachments.id, att.id))
           .returning()) as AttachmentRow[];
-        await this.addEvent(tx, ticket, actor, "ATTACHMENT_ADDED", { to: att.originalFilename, internal: att.isInternal });
-        await this.updateTicket(tx, ticket, mode === "customer" ? { lastCustomerActivityAt: now } : { lastSupportActivityAt: now });
+        await this.addEvent(tx, ticket, actor, "ATTACHMENT_ADDED", {
+          to: att.originalFilename,
+          internal: att.isInternal,
+        });
+        await this.updateTicket(
+          tx,
+          ticket,
+          mode === "customer" ? { lastCustomerActivityAt: now } : { lastSupportActivityAt: now },
+        );
         await this.writeAudit(tx, principal, tenantId, "helpdesk.attachment.added", ticket.id, {
-          metadata: { attachmentId: att.id, documentId: att.documentId, filename: att.originalFilename, internal: att.isInternal },
+          metadata: {
+            attachmentId: att.id,
+            documentId: att.documentId,
+            filename: att.originalFilename,
+            internal: att.isInternal,
+          },
         });
         return { attachment: toAttachment(updated!) };
       },
@@ -1447,7 +1779,12 @@ export class HelpdeskService {
     );
   }
 
-  async attachmentDownload(principal: ForgePrincipal, mode: Mode, id: string, attachmentId: string) {
+  async attachmentDownload(
+    principal: ForgePrincipal,
+    mode: Mode,
+    id: string,
+    attachmentId: string,
+  ) {
     const ticketId = assertUuid(id, "ticketId");
     const attId = assertUuid(attachmentId, "attachmentId");
     const tenantId = await this.attachmentTenant(principal, mode, ticketId);
@@ -1468,7 +1805,8 @@ export class HelpdeskService {
             ),
           )
           .limit(1)) as AttachmentRow[];
-        if (!att || (mode === "customer" && att.isInternal)) throw new ForgeError("NOT_FOUND", "Attachment not found");
+        if (!att || (mode === "customer" && att.isInternal))
+          throw new ForgeError("NOT_FOUND", "Attachment not found");
         const document = await tx.query.forgeDocuments.findFirst({
           where: and(eq(forgeDocuments.id, att.documentId), eq(forgeDocuments.tenantId, tenantId)),
         });
@@ -1486,7 +1824,12 @@ export class HelpdeskService {
       filename: doc.originalFilename,
       inline,
     });
-    return { fileName: doc.originalFilename, mimeType: doc.mimeType, downloadUrl: download.downloadUrl, expiresAt: download.expiresAt };
+    return {
+      fileName: doc.originalFilename,
+      mimeType: doc.mimeType,
+      downloadUrl: download.downloadUrl,
+      expiresAt: download.expiresAt,
+    };
   }
 
   async deleteAttachment(principal: ForgePrincipal, mode: Mode, id: string, attachmentId: string) {
@@ -1510,7 +1853,8 @@ export class HelpdeskService {
             ),
           )
           .limit(1)) as AttachmentRow[];
-        if (!att || (mode === "customer" && att.isInternal)) throw new ForgeError("NOT_FOUND", "Attachment not found");
+        if (!att || (mode === "customer" && att.isInternal))
+          throw new ForgeError("NOT_FOUND", "Attachment not found");
         if (mode === "customer" && att.uploadedByUserId !== principal.userId) {
           throw new ForgeError("FORBIDDEN", "You can only remove attachments you uploaded");
         }
@@ -1519,9 +1863,16 @@ export class HelpdeskService {
           .update(supportTicketAttachments)
           .set({ deletedAt: now, deletedByUserId: principal.userId })
           .where(eq(supportTicketAttachments.id, att.id));
-        await this.addEvent(tx, ticket, actor, "ATTACHMENT_REMOVED", { from: att.originalFilename, internal: att.isInternal });
+        await this.addEvent(tx, ticket, actor, "ATTACHMENT_REMOVED", {
+          from: att.originalFilename,
+          internal: att.isInternal,
+        });
         await this.writeAudit(tx, principal, tenantId, "helpdesk.attachment.removed", ticket.id, {
-          metadata: { attachmentId: att.id, documentId: att.documentId, filename: att.originalFilename },
+          metadata: {
+            attachmentId: att.id,
+            documentId: att.documentId,
+            filename: att.originalFilename,
+          },
         });
         return { removed: att.id };
       },

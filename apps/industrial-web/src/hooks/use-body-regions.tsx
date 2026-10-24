@@ -1,12 +1,16 @@
 "use client";
 
-import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
-import { ApiError, apiGet, apiSend, useAuth } from "@forge/web-kit";
 import {
-  BODY_REGIONS,
-  clampBodyRegion,
-  type BodyRegion,
-} from "@/lib/incident-body-map";
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useState,
+  type ReactNode,
+} from "react";
+import { ApiError, apiGet, apiSend, useAuth } from "@forge/web-kit";
+import { BODY_REGIONS, clampBodyRegion, type BodyRegion } from "@/lib/incident-body-map";
 
 export type BodyMapConfigResponse = {
   regions: BodyRegion[];
@@ -75,33 +79,35 @@ export function BodyRegionsProvider({ children }: { children: ReactNode }) {
     void refresh();
   }, [refresh]);
 
-  const saveRegions = useCallback(async (next: readonly BodyRegion[]) => {
-    if (!tenantId) {
-      throw new Error("Sign in to save body map settings.");
-    }
-    const normalized = normalizeRegions(next);
-    setSaving(true);
-    setError(null);
-    setNotice(null);
-    try {
-      const result = await apiSend<BodyMapConfigResponse>(
-        `/api/v1/tenants/${tenantId}/industrial/incidents/body-map-config`,
-        "PUT",
-        { regions: normalized },
-      );
-      setRegions(normalizeRegions(result.regions));
-      setIsCustom(result.isCustom);
-      setUpdatedAt(result.updatedAt);
-      setNotice("Body map saved for your company.");
-    } catch (err) {
-      const message =
-        err instanceof ApiError ? err.message : "Could not save body map settings.";
-      setError(message);
-      throw new Error(message);
-    } finally {
-      setSaving(false);
-    }
-  }, [tenantId]);
+  const saveRegions = useCallback(
+    async (next: readonly BodyRegion[]) => {
+      if (!tenantId) {
+        throw new Error("Sign in to save body map settings.");
+      }
+      const normalized = normalizeRegions(next);
+      setSaving(true);
+      setError(null);
+      setNotice(null);
+      try {
+        const result = await apiSend<BodyMapConfigResponse>(
+          `/api/v1/tenants/${tenantId}/industrial/incidents/body-map-config`,
+          "PUT",
+          { regions: normalized },
+        );
+        setRegions(normalizeRegions(result.regions));
+        setIsCustom(result.isCustom);
+        setUpdatedAt(result.updatedAt);
+        setNotice("Body map saved for your company.");
+      } catch (err) {
+        const message = err instanceof ApiError ? err.message : "Could not save body map settings.";
+        setError(message);
+        throw new Error(message);
+      } finally {
+        setSaving(false);
+      }
+    },
+    [tenantId],
+  );
 
   const clearNotice = useCallback(() => setNotice(null), []);
 
@@ -118,7 +124,18 @@ export function BodyRegionsProvider({ children }: { children: ReactNode }) {
       saveRegions,
       clearNotice,
     }),
-    [regions, loading, saving, isCustom, updatedAt, error, notice, refresh, saveRegions, clearNotice],
+    [
+      regions,
+      loading,
+      saving,
+      isCustom,
+      updatedAt,
+      error,
+      notice,
+      refresh,
+      saveRegions,
+      clearNotice,
+    ],
   );
 
   return <BodyRegionsContext.Provider value={value}>{children}</BodyRegionsContext.Provider>;

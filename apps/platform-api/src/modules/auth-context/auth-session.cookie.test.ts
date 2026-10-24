@@ -63,9 +63,9 @@ describe("auth-session-cookie", () => {
   it("parses cookie header and reads session token", () => {
     const header = "a=1; forge-session=abc%2Fdef; other=x";
     expect(parseCookieHeader(header)["forge-session"]).toBe("abc/def");
-    expect(
-      readSessionTokenFromCookieHeader(header, { protocol: "http", host: "localhost" }),
-    ).toBe("abc/def");
+    expect(readSessionTokenFromCookieHeader(header, { protocol: "http", host: "localhost" })).toBe(
+      "abc/def",
+    );
   });
 
   it("exports CSRF header name", () => {

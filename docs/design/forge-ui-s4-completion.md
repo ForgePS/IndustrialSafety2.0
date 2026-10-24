@@ -7,22 +7,22 @@
 
 ## Changes
 
-| App | Cutover |
-|---|---|
-| Academy | New `ForgeAppShell` + Home/Health nav (no auth yet) |
-| Tenant Admin | Hand-rolled shell → `ForgeAppShell`; local AuthProvider retained |
-| RMS | **Legacy adapter only** → `ForgeAppShell`; FX shell/boundary/flags untouched |
+| App          | Cutover                                                                      |
+| ------------ | ---------------------------------------------------------------------------- |
+| Academy      | New `ForgeAppShell` + Home/Health nav (no auth yet)                          |
+| Tenant Admin | Hand-rolled shell → `ForgeAppShell`; local AuthProvider retained             |
+| RMS          | **Legacy adapter only** → `ForgeAppShell`; FX shell/boundary/flags untouched |
 
 ## Data source status
 
-- Live: existing auth / feature flags where previously wired  
-- Mock: none  
-- Not Connected: Academy auth; notification menus  
+- Live: existing auth / feature flags where previously wired
+- Mock: none
+- Not Connected: Academy auth; notification menus
 
 ## Feature flags
 
-- RMS legacy nav still gated by `rms.neris.*` / `rms.cad.*` via `filterNavigationGroups`  
-- `fx.rms.shell.enabled` behavior unchanged  
+- RMS legacy nav still gated by `rms.neris.*` / `rms.cad.*` via `filterNavigationGroups`
+- `fx.rms.shell.enabled` behavior unchanged
 
 ## Migration impact
 
@@ -34,9 +34,9 @@
 
 ## Known limitations
 
-- Academy still foundation-only (no modules)  
-- Tenant Admin still on local auth (not web-kit)  
-- RMS FX presentation path unchanged by design  
+- Academy still foundation-only (no modules)
+- Tenant Admin still on local auth (not web-kit)
+- RMS FX presentation path unchanged by design
 
 ## Next recommended checkpoint
 

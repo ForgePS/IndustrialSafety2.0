@@ -32,7 +32,9 @@ async function resolveDatabaseUrl() {
   const secretArn = process.env.DATABASE_SECRET_ARN?.trim();
   if (!secretArn) throw new Error("DATABASE_SECRET_ARN or DATABASE_URL required");
   const apiRequire = repoRequireFrom("apps/platform-api/package.json");
-  const { SecretsManagerClient, GetSecretValueCommand } = apiRequire("@aws-sdk/client-secrets-manager");
+  const { SecretsManagerClient, GetSecretValueCommand } = apiRequire(
+    "@aws-sdk/client-secrets-manager",
+  );
   const client = new SecretsManagerClient({ region: process.env.AWS_REGION || "us-east-1" });
   const res = await client.send(new GetSecretValueCommand({ SecretId: secretArn }));
   const raw = JSON.parse(res.SecretString);
@@ -49,7 +51,9 @@ async function resolvePostgres() {
 async function main() {
   const tenantId = process.env.FORGE_TRAINING_SEED_TENANT_ID?.trim();
   if (!tenantId) throw new Error("FORGE_TRAINING_SEED_TENANT_ID required");
-  const appBaseUrl = (process.env.FORGE_TRAINING_UAT_APP_BASE_URL || "http://localhost:3004").replace(/\/$/, "");
+  const appBaseUrl = (
+    process.env.FORGE_TRAINING_UAT_APP_BASE_URL || "http://localhost:3004"
+  ).replace(/\/$/, "");
 
   const postgres = await resolvePostgres();
   const sql = postgres(process.env.DATABASE_URL?.trim() || defaultLocalDatabaseUrl(), { max: 1 });
@@ -244,7 +248,11 @@ async function main() {
         {
           ok: true,
           tenantId,
-          employee: { name: EMPLOYEE_NAME, employeeNumber: EMPLOYEE_NUMBER, personnelId: person.id },
+          employee: {
+            name: EMPLOYEE_NAME,
+            employeeNumber: EMPLOYEE_NUMBER,
+            personnelId: person.id,
+          },
           department: DEPARTMENT_NAME,
           assignmentId: assignment.id,
           sourceId: source.id,

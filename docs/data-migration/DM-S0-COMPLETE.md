@@ -4,7 +4,7 @@
 **Sprint:** DM-S0  
 **Status:** PASS WITH CONDITIONS  
 **Source project:** `forge-industrial-safety` only  
-**Date:** 2026-08-12  
+**Date:** 2026-08-12
 
 ## Scope honored
 
@@ -17,29 +17,29 @@
 
 ## Preflight
 
-| Check | Result |
-| --- | --- |
-| GCP account | `admin@forgepublicsafety.com` |
-| GCP / Firebase project | `forge-industrial-safety` |
-| Project access | PASS |
-| Project guard in tooling | PASS (refuses any other project) |
-| Existing dirty worktree preserved | YES |
+| Check                             | Result                           |
+| --------------------------------- | -------------------------------- |
+| GCP account                       | `admin@forgepublicsafety.com`    |
+| GCP / Firebase project            | `forge-industrial-safety`        |
+| Project access                    | PASS                             |
+| Project guard in tooling          | PASS (refuses any other project) |
+| Existing dirty worktree preserved | YES                              |
 
 ## Headline counts (live)
 
-| Metric | Value |
-| --- | --- |
-| Firestore database | `(default)` · `nam5` · `FIRESTORE_NATIVE` |
-| Root collections | 80 |
-| Firestore documents (sum of counts) | 42,265 |
-| Distinct business/tenant keys observed | 4 (see ownership doc) |
-| Sites (facility proxies) | 27 |
-| Firebase Auth users | 10 (all enabled, password provider) |
-| Customer Storage objects | 9,303 |
-| Customer Storage bytes | ~15.43 GiB |
-| Realtime Database | NOT USED (HTTP shallow probe 404) |
-| Composite indexes | 92 |
-| Cloud Functions (active writers/helpers) | 28 listed |
+| Metric                                   | Value                                     |
+| ---------------------------------------- | ----------------------------------------- |
+| Firestore database                       | `(default)` · `nam5` · `FIRESTORE_NATIVE` |
+| Root collections                         | 80                                        |
+| Firestore documents (sum of counts)      | 42,265                                    |
+| Distinct business/tenant keys observed   | 4 (see ownership doc)                     |
+| Sites (facility proxies)                 | 27                                        |
+| Firebase Auth users                      | 10 (all enabled, password provider)       |
+| Customer Storage objects                 | 9,303                                     |
+| Customer Storage bytes                   | ~15.43 GiB                                |
+| Realtime Database                        | NOT USED (HTTP shallow probe 404)         |
+| Composite indexes                        | 92                                        |
+| Cloud Functions (active writers/helpers) | 28 listed                                 |
 
 ## Deliverables
 

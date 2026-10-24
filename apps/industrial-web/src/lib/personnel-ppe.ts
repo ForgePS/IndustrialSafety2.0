@@ -45,16 +45,11 @@ function startOfUtcDay(date: Date): Date {
 }
 
 /** Days from today until the expiration date (negative if already expired). */
-export function daysUntilPpeExpiry(
-  expiresDate: unknown,
-  today: Date = new Date(),
-): number | null {
+export function daysUntilPpeExpiry(expiresDate: unknown, today: Date = new Date()): number | null {
   const expires = parseIsoDate(expiresDate);
   if (!expires) return null;
   const msPerDay = 86_400_000;
-  return Math.floor(
-    (startOfUtcDay(expires).getTime() - startOfUtcDay(today).getTime()) / msPerDay,
-  );
+  return Math.floor((startOfUtcDay(expires).getTime() - startOfUtcDay(today).getTime()) / msPerDay);
 }
 
 export function isPpeIssuedInFuture(issuedDate: unknown, today: Date = new Date()): boolean {
@@ -218,7 +213,10 @@ export function buildPersonnelPpeSummary(
   };
 }
 
-export function personHasPpeExpiryAlert(record: Record<string, unknown>, today = new Date()): boolean {
+export function personHasPpeExpiryAlert(
+  record: Record<string, unknown>,
+  today = new Date(),
+): boolean {
   if (record.tracksPrescriptionSafetyGlasses === true) {
     const status = ppeExpiryStatus(
       record.prescriptionSafetyGlassesExpiresDate,
@@ -395,12 +393,7 @@ export function matchesPpeAllowanceQuery(person: PpeAllowancePerson, query: stri
   const needle = query.trim().toLowerCase();
   if (needle === "") return true;
   const extra = `${formatPpeExtraPairSummary(person.glassesExtra)} ${formatPpeExtraPairSummary(person.footwearExtra)}`;
-  const haystack = [
-    person.displayName,
-    person.employeeNumber,
-    person.footwearClass,
-    extra,
-  ]
+  const haystack = [person.displayName, person.employeeNumber, person.footwearClass, extra]
     .join(" ")
     .toLowerCase();
   return haystack.includes(needle);
@@ -428,7 +421,9 @@ export function filterPpeAllowancePeople(
   });
 }
 
-export function sortPpeAllowancePeople(people: readonly PpeAllowancePerson[]): PpeAllowancePerson[] {
+export function sortPpeAllowancePeople(
+  people: readonly PpeAllowancePerson[],
+): PpeAllowancePerson[] {
   return [...people].sort((a, b) =>
     a.displayName.localeCompare(b.displayName, undefined, { sensitivity: "base" }),
   );

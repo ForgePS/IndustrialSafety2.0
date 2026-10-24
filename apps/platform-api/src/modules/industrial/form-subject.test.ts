@@ -18,9 +18,9 @@ describe("formSubmissionBelongsToPerson", () => {
   });
 
   it("connects when answers.employeeNumber matches", () => {
-    expect(
-      formSubmissionBelongsToPerson({ answers: { employeeNumber: "EMP-100" } }, person),
-    ).toBe(true);
+    expect(formSubmissionBelongsToPerson({ answers: { employeeNumber: "EMP-100" } }, person)).toBe(
+      true,
+    );
   });
 
   it("connects when responses.employeeName matches (imported forms)", () => {

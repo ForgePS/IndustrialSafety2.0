@@ -9,11 +9,7 @@
  */
 "use client";
 
-import {
-  getPrintJobArtifactBytes,
-  reportPrintJobStatus,
-  type ForgePrinter,
-} from "@/lib/print-api";
+import { getPrintJobArtifactBytes, reportPrintJobStatus, type ForgePrinter } from "@/lib/print-api";
 import { waitForArtifactUrl } from "@/lib/direct-print";
 import {
   printPngsAsOneJobViaDirectBluetooth,
@@ -146,14 +142,18 @@ export async function runDirectBatch(
     }
 
     const nextStart = start + LABELS_PER_JOB;
-    prefetched = nextStart < total ? { start: nextStart, chunk: fetchChunk(chunkIds(nextStart)) } : null;
+    prefetched =
+      nextStart < total ? { start: nextStart, chunk: fetchChunk(chunkIds(nextStart)) } : null;
 
     if (chunk.bytes.length) {
       try {
         await printPngsAsOneJobViaDirectBluetooth({ pngs: chunk.bytes, copies: run.copies });
       } catch (err) {
         const alert = await readDirectBradyPrinterAlert().catch(() => null);
-        return pause(start, alert?.text ?? (err instanceof Error ? err.message : "Labels did not send."));
+        return pause(
+          start,
+          alert?.text ?? (err instanceof Error ? err.message : "Labels did not send."),
+        );
       }
 
       await sleep(SETTLE_MS);

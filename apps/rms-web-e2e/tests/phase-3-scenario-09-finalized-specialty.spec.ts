@@ -189,10 +189,9 @@ test.describe("Phase 3 scenario 9 — finalized specialty edits @phase3", () => 
     await submitApproveFinalize(page, tenantId!, incidentId);
 
     const reject = async (label: string, result: { status: number; body: string }) => {
-      expect(
-        [...DENIED, 409, 400, 422],
-        `${label}: ${result.status} ${result.body}`,
-      ).toContain(result.status);
+      expect([...DENIED, 409, 400, 422], `${label}: ${result.status} ${result.body}`).toContain(
+        result.status,
+      );
     };
 
     await reject(

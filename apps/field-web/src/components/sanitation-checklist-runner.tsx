@@ -325,7 +325,8 @@ export function SanitationChecklistRunner({
   }
 
   useEffect(() => {
-    const latest = loadSanitationDraft(initial.offlineClientId) ?? loadSanitationDraft(inspectionId);
+    const latest =
+      loadSanitationDraft(initial.offlineClientId) ?? loadSanitationDraft(inspectionId);
     if (latest && latest.inspectionId !== inspectionId) {
       setInspectionId(latest.inspectionId);
     }
@@ -355,9 +356,7 @@ export function SanitationChecklistRunner({
             No answers: {questions.filter((q) => isSanitationNo(responses[q.id]?.result)).length}
           </p>
           {missingNoNotes.length ? (
-            <p className="ff-error">
-              {missingNoNotes.length} No answer(s) still need notes.
-            </p>
+            <p className="ff-error">{missingNoNotes.length} No answer(s) still need notes.</p>
           ) : null}
         </div>
         <label className="ff-field">
@@ -407,7 +406,11 @@ export function SanitationChecklistRunner({
             drawingRef.current = false;
           }}
         />
-        <button type="button" className="ff-btn ff-btn-secondary" onClick={() => clearSignatureCanvas()}>
+        <button
+          type="button"
+          className="ff-btn ff-btn-secondary"
+          onClick={() => clearSignatureCanvas()}
+        >
           Clear drawing
         </button>
         {error ? <p className="ff-error">{error}</p> : null}
@@ -451,10 +454,7 @@ export function SanitationChecklistRunner({
             const photos = questionPhotos(entry);
             const hasNotes = Boolean(String(entry?.notes ?? "").trim());
             return (
-              <div
-                key={q.id}
-                className={`ff-sanitation-item${isNo ? " is-fail" : ""}`}
-              >
+              <div key={q.id} className={`ff-sanitation-item${isNo ? " is-fail" : ""}`}>
                 <button
                   type="button"
                   className="ff-sanitation-item__question"
@@ -527,9 +527,7 @@ export function SanitationChecklistRunner({
                             step="any"
                             min="0"
                             value={entry?.dustDepth ?? ""}
-                            onChange={(e) =>
-                              patchResponse(q.id, { dustDepth: e.target.value })
-                            }
+                            onChange={(e) => patchResponse(q.id, { dustDepth: e.target.value })}
                           />
                         </label>
                         <label className="ff-label">

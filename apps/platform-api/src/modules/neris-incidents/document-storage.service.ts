@@ -1,4 +1,9 @@
-import { GetObjectCommand, HeadObjectCommand, PutObjectCommand, S3Client } from "@aws-sdk/client-s3";
+import {
+  GetObjectCommand,
+  HeadObjectCommand,
+  PutObjectCommand,
+  S3Client,
+} from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { Inject, Injectable } from "@nestjs/common";
 import {
@@ -208,5 +213,10 @@ export class DocumentStorageService {
 
 function sanitizeDownloadFilename(filename: string | undefined): string {
   const base = (filename ?? "download").replace(/\\/g, "/").split("/").pop() ?? "download";
-  return base.replace(/"/g, "").replace(/[^\w.\-() ]+/g, "_").slice(0, 180) || "download";
+  return (
+    base
+      .replace(/"/g, "")
+      .replace(/[^\w.\-() ]+/g, "_")
+      .slice(0, 180) || "download"
+  );
 }

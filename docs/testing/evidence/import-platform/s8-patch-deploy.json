@@ -16,9 +16,6 @@
     "worker": "511343547817.dkr.ecr.us-east-1.amazonaws.com/forge-development-ecr-workerservice@sha256:cc4fa0c35ccdff05aed487b6b31a5b54b7411ced558335b18cf537bc47f93d3f"
   },
   "migration": "0027",
-  "defectsClosedPendingEvidence": [
-    "DEF-S8-023",
-    "DEF-S8-024"
-  ],
+  "defectsClosedPendingEvidence": ["DEF-S8-023", "DEF-S8-024"],
   "secretUnchanged": "2026-07-26T15:30:16.387000-05:00"
 }

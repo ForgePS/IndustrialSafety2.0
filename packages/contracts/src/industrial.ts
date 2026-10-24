@@ -190,22 +190,13 @@ export type IndustrialPermission = (typeof INDUSTRIAL_PERMISSIONS)[number];
  * Separate from customer entitlement and from historical data migration.
  */
 export type IndustrialImplementationStatus =
-  | "AVAILABLE"
-  | "LEGACY_ONLY"
-  | "MIGRATING"
-  | "COMING_SOON"
-  | "DEPRECATED"
-  | "UNAVAILABLE";
+  "AVAILABLE" | "LEGACY_ONLY" | "MIGRATING" | "COMING_SOON" | "DEPRECATED" | "UNAVAILABLE";
 
 /**
  * @deprecated Prefer implementationStatus. Kept for API/bootstrap compatibility.
  */
 export type IndustrialMigrationStatus =
-  | "FOUNDATION_ONLY"
-  | "MIGRATION_IN_PROGRESS"
-  | "LEGACY_FIREBASE"
-  | "DISABLED"
-  | "LIVE";
+  "FOUNDATION_ONLY" | "MIGRATION_IN_PROGRESS" | "LEGACY_FIREBASE" | "DISABLED" | "LIVE";
 
 export type IndustrialModuleRegistryEntry = {
   code: string;
@@ -284,7 +275,12 @@ export const INDUSTRIAL_MODULE_REGISTRY: readonly IndustrialModuleRegistryEntry[
   entry("WORKING_AT_HEIGHTS", "Working at Heights", "High-Risk Work", "AVAILABLE"),
   entry("CHEMICAL_SAFETY", "Chemical Safety", "Facility & Operations Safety", "AVAILABLE"),
   entry("WAREHOUSE_SAFETY", "Warehouse Safety", "Facility & Operations Safety", "AVAILABLE"),
-  entry("MANUFACTURING_SAFETY", "Manufacturing Safety", "Facility & Operations Safety", "AVAILABLE"),
+  entry(
+    "MANUFACTURING_SAFETY",
+    "Manufacturing Safety",
+    "Facility & Operations Safety",
+    "AVAILABLE",
+  ),
   entry("EMERGENCY_RESPONSE", "Emergency Response", "Emergency Management", "AVAILABLE"),
   entry("EMERGENCY_ALERTS", "Emergency Alerts", "Emergency Management", "AVAILABLE"),
   entry("TASKS", "Tasks", "System Tools", "AVAILABLE"),
@@ -445,12 +441,7 @@ export const FLEET_INSURANCE_STATUSES = [
 ] as const;
 export type FleetInsuranceStatus = (typeof FLEET_INSURANCE_STATUSES)[number];
 
-export const FLEET_COMMUTE_STATUSES = [
-  "UNKNOWN",
-  "YES",
-  "NO",
-  "OCCASIONAL",
-] as const;
+export const FLEET_COMMUTE_STATUSES = ["UNKNOWN", "YES", "NO", "OCCASIONAL"] as const;
 export type FleetCommuteStatus = (typeof FLEET_COMMUTE_STATUSES)[number];
 
 export const FLEET_COMPLIANCE_STATUSES = [
@@ -546,11 +537,4 @@ export type FleetDriver = {
   updatedAt: string;
 };
 
-export type FleetRenewalBucket =
-  | "OVERDUE"
-  | "DUE_30"
-  | "DUE_60"
-  | "DUE_90"
-  | "LATER"
-  | "UNKNOWN";
-
+export type FleetRenewalBucket = "OVERDUE" | "DUE_30" | "DUE_60" | "DUE_90" | "LATER" | "UNKNOWN";

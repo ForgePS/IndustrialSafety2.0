@@ -36,7 +36,12 @@ export function incidentPrintDetailRows(
     { label: "Status", value: firstText(record, ["status"]) },
     {
       label: "Type",
-      value: firstText(record, ["incidentTypeName", "IncidentTypeName", "category", "incidentCategory"]),
+      value: firstText(record, [
+        "incidentTypeName",
+        "IncidentTypeName",
+        "category",
+        "incidentCategory",
+      ]),
     },
     { label: "Severity", value: firstText(record, ["severity"]) },
     {
@@ -189,7 +194,7 @@ export function reasonableSuspicionPrintRows(
       value:
         transport === "other"
           ? text(row, "transportationOther") || "Other"
-          : SUSPICION_TRANSPORT_LABELS[transport] ?? transport,
+          : (SUSPICION_TRANSPORT_LABELS[transport] ?? transport),
     });
   }
   const statement = text(row, "employeeStatement");
@@ -205,8 +210,9 @@ export function drugAlcoholConsentPrintBlocks(
 ): Array<{ employee: string; rows: Array<{ label: string; value: string }> }> {
   if (!Array.isArray(raw)) return [];
   return raw
-    .filter((item): item is Record<string, unknown> =>
-      Boolean(item) && typeof item === "object" && !Array.isArray(item),
+    .filter(
+      (item): item is Record<string, unknown> =>
+        Boolean(item) && typeof item === "object" && !Array.isArray(item),
     )
     .filter((item) => item.testingRequired === true)
     .map((item, index) => {
@@ -217,7 +223,8 @@ export function drugAlcoholConsentPrintBlocks(
       const rows = [
         {
           label: "Reason",
-          value: reason === "other" ? text(item, "reasonOther") || "Other" : reason.replace(/-/g, " "),
+          value:
+            reason === "other" ? text(item, "reasonOther") || "Other" : reason.replace(/-/g, " "),
         },
         { label: "Tests", value: substances },
         { label: "Test status", value: text(item, "testStatus").replace(/-/g, " ") },
@@ -237,8 +244,7 @@ export function buildIncidentPrintableHtml(
   record: Record<string, unknown>,
   branding: { companyName?: string | null; logoUrl?: string | null } = {},
 ): string {
-  const title =
-    firstText(record, ["title", "displayName", "IncidentName"]) || "Incident report";
+  const title = firstText(record, ["title", "displayName", "IncidentName"]) || "Incident report";
   const description = firstText(record, [
     "description",
     "IncidentDescription",
@@ -255,7 +261,7 @@ export function buildIncidentPrintableHtml(
     : "";
   const detailHtml =
     details.length === 0
-      ? "<p class=\"muted\">No detail fields recorded.</p>"
+      ? '<p class="muted">No detail fields recorded.</p>'
       : `<div class="incident-print__meta">${details
           .map(
             (row) =>
@@ -295,9 +301,7 @@ export function buildIncidentPrintableHtml(
         label: "Witness",
         value: [
           String(row.witnessName).trim(),
-          String(row.witnessTitle ?? "").trim()
-            ? `(${String(row.witnessTitle).trim()})`
-            : "",
+          String(row.witnessTitle ?? "").trim() ? `(${String(row.witnessTitle).trim()})` : "",
         ]
           .filter(Boolean)
           .join(" "),

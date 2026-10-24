@@ -3,7 +3,14 @@
 import { useEffect, useId, useRef, useState } from "react";
 
 export type WorkspaceMenuEntry =
-  | { type: "action"; id: string; label: string; disabled?: boolean; danger?: boolean; onClick: () => void }
+  | {
+      type: "action";
+      id: string;
+      label: string;
+      disabled?: boolean;
+      danger?: boolean;
+      onClick: () => void;
+    }
   | { type: "label"; id: string; label: string }
   | { type: "divider"; id: string };
 

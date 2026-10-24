@@ -33,9 +33,7 @@ describe("MessagingStack", () => {
       Targets: Match.arrayWith([
         Match.objectLike({
           Arn: Match.objectLike({
-            "Fn::GetAtt": Match.arrayWith([
-              Match.stringLikeRegexp("integrationeventsQueue"),
-            ]),
+            "Fn::GetAtt": Match.arrayWith([Match.stringLikeRegexp("integrationeventsQueue")]),
           }),
         }),
       ]),

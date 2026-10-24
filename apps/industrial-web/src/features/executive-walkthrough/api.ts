@@ -52,7 +52,9 @@ export const executiveWalkthroughApi = {
     return apiGet(`${BASE}/exports`);
   },
 
-  downloadExport(exportId: string): Promise<{ downloadUrl: string; fileName: string; expiresAt: string }> {
+  downloadExport(
+    exportId: string,
+  ): Promise<{ downloadUrl: string; fileName: string; expiresAt: string }> {
     return apiGet(`${BASE}/exports/${exportId}/download`);
   },
 

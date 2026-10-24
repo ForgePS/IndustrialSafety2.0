@@ -101,7 +101,9 @@ export function DashboardShortcuts({
           {pickerOpen ? (
             <div className="ff-dashboard-picker">
               {addableCards.length === 0 ? (
-                <p className="ff-page-body">All available shortcuts are already on your home screen.</p>
+                <p className="ff-page-body">
+                  All available shortcuts are already on your home screen.
+                </p>
               ) : (
                 <div className="ff-action-grid">
                   {addableCards.map((card) => (

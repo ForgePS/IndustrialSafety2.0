@@ -39,7 +39,10 @@ export function PersonnelQuickNav({ current }: { current: PersonnelQuickView }) 
                     <strong>{link.label}</strong>
                     <small>{link.description}</small>
                   </span>
-                  <i className="bx bx-chevron-right ind-personnel-quick-link__chevron" aria-hidden="true" />
+                  <i
+                    className="bx bx-chevron-right ind-personnel-quick-link__chevron"
+                    aria-hidden="true"
+                  />
                 </Link>
               </div>
             ))}

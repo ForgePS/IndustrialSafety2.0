@@ -80,41 +80,75 @@ export const driverDqfGroupLabels: Record<keyof typeof driverDqfFieldGroups, str
   documents: "DQF Documents",
 };
 
-export const driverDqfGroupDescriptions: Partial<Record<keyof typeof driverDqfFieldGroups, string>> = {
+export const driverDqfGroupDescriptions: Partial<
+  Record<keyof typeof driverDqfFieldGroups, string>
+> = {
   cdl: "Upload a photo of the DRIVER'S license and track its expiration. CDL DRIVERS also need CDL number; Non-CDL DRIVERS still keep license photo and expiry on file.",
   documents:
     "Enter the date each document was placed in the DRIVER qualification file and upload a copy (PDF or picture).",
 };
 
 const driverDqfDocumentDateFields: DotDqfFieldDef[] = [
-  { id: "employmentEligibilityI9", label: "Employment Eligibility Verification Form I-9", type: "date" },
+  {
+    id: "employmentEligibilityI9",
+    label: "Employment Eligibility Verification Form I-9",
+    type: "date",
+  },
   { id: "consentDrugAlcoholTest", label: "Pre-Employment Drug Screen Consent", type: "date" },
   { id: "drugScreenCompleted", label: "Pre-Employment Drug Screen — Completed", type: "date" },
-  { id: "safetyPerformanceHistoryRequest", label: "Previous Employer Record Request", type: "date" },
+  {
+    id: "safetyPerformanceHistoryRequest",
+    label: "Previous Employer Record Request",
+    type: "date",
+  },
   {
     id: "previousEmployerSafetyPerformance",
     label: "Previous Employer Safety Performance Worksheet",
     type: "date",
   },
-  { id: "drugAlcoholClearinghouseConsent", label: "FMCSA Clearinghouse Query Consent", type: "date" },
-  { id: "drugAlcoholClearinghouseCompleted", label: "FMCSA Clearinghouse Query Completed", type: "date" },
-  { id: "mvrReleaseForm", label: "MVR Consent / Acknowledgement for Driving Company Vehicles", type: "date" },
+  {
+    id: "drugAlcoholClearinghouseConsent",
+    label: "FMCSA Clearinghouse Query Consent",
+    type: "date",
+  },
+  {
+    id: "drugAlcoholClearinghouseCompleted",
+    label: "FMCSA Clearinghouse Query Completed",
+    type: "date",
+  },
+  {
+    id: "mvrReleaseForm",
+    label: "MVR Consent / Acknowledgement for Driving Company Vehicles",
+    type: "date",
+  },
   { id: "mvrAnnual", label: "MVR (Annual)", type: "date" },
   { id: "mvrCompleted", label: "MVR completed / pulled date", type: "date" },
-  { id: "medicalExaminationReportMer", label: "Medical Examination Report (MER) Form", type: "date" },
+  {
+    id: "medicalExaminationReportMer",
+    label: "Medical Examination Report (MER) Form",
+    type: "date",
+  },
   {
     id: "medicalExaminerNationalRegistryVerification",
     label: "Medical Examiner's National Registry Verification Form",
     type: "date",
   },
-  { id: "cdlSelfCertificationAffidavitAr", label: "CDL Self-Certification Affidavit (Arkansas)", type: "date" },
+  {
+    id: "cdlSelfCertificationAffidavitAr",
+    label: "CDL Self-Certification Affidavit (Arkansas)",
+    type: "date",
+  },
   {
     id: "cdlSelfCertificationAffidavitMs",
     label: "CDL Medical Self-Certification Affidavit (Mississippi)",
     type: "date",
   },
   { id: "drugAlcoholTestConsentForm", label: "Drug and Alcohol Test Consent Form", type: "date" },
-  { id: "documentationRefusalToTest", label: "Documentation of Refusal to Test Form", type: "date" },
+  {
+    id: "documentationRefusalToTest",
+    label: "Documentation of Refusal to Test Form",
+    type: "date",
+  },
   {
     id: "observedBehaviorReasonableSuspicion",
     label: "Observed Behavior Reasonable Suspicion Record",
@@ -123,7 +157,11 @@ const driverDqfDocumentDateFields: DotDqfFieldDef[] = [
   { id: "drugAlcoholRecordkeepingLog", label: "Drug & Alcohol Record Log", type: "date" },
   { id: "certificationOfRoadTest", label: "Certificate of Road Test", type: "date" },
   { id: "certificationComplianceDriverLicense", label: "DQF Review", type: "date" },
-  { id: "driverStatementOnDutyHours", label: "DRIVER'S Statement of On-Duty Hours and Log Use", type: "date" },
+  {
+    id: "driverStatementOnDutyHours",
+    label: "DRIVER'S Statement of On-Duty Hours and Log Use",
+    type: "date",
+  },
   {
     id: "preEmploymentDrugAlcoholStatement",
     label: "Previous Pre-Employment Drug and Alcohol Test Statement",
@@ -259,8 +297,17 @@ export const DOT_DQF_DRIVER_FIELDS: DotDqfFieldDef[] = [
     label: "Certificate of Road Test — Preceptor signature",
     type: "text",
   },
-  { id: "certificationComplianceOnFile", label: "DQF Review — On file", type: "yesno", options: YES_NO },
-  { id: "certificationComplianceEvaluatorName", label: "DQF Review — Evaluator Name", type: "text" },
+  {
+    id: "certificationComplianceOnFile",
+    label: "DQF Review — On file",
+    type: "yesno",
+    options: YES_NO,
+  },
+  {
+    id: "certificationComplianceEvaluatorName",
+    label: "DQF Review — Evaluator Name",
+    type: "text",
+  },
   { id: "dqfReviews", label: "DQF Review entries", type: "text" },
   ...driverDqfDocumentDateFields,
   ...driverDqfDocumentCopyFields,
@@ -356,13 +403,13 @@ export function filterDriverDqfDocumentFields(
 ): DotDqfFieldDef[] {
   return fields.filter((field) => {
     if (DISABLED_DQF_DOCUMENT_IDS.has(field.id)) return false;
-    if (
-      field.id.endsWith("Copy") &&
-      DISABLED_DQF_DOCUMENT_IDS.has(field.id.slice(0, -4))
-    ) {
+    if (field.id.endsWith("Copy") && DISABLED_DQF_DOCUMENT_IDS.has(field.id.slice(0, -4))) {
       return false;
     }
-    if (tenantSlug === PRODUCERS_RICE_MILL_TENANT_SLUG && PRODUCERS_RICE_HIDDEN_DQF_DOCUMENT_IDS.has(field.id)) {
+    if (
+      tenantSlug === PRODUCERS_RICE_MILL_TENANT_SLUG &&
+      PRODUCERS_RICE_HIDDEN_DQF_DOCUMENT_IDS.has(field.id)
+    ) {
       return false;
     }
     return true;
@@ -443,8 +490,7 @@ export function deriveDotDqfTitle(source: Record<string, unknown>): string {
   if (name) return formatDotDqfDisplayTitle(name);
 
   const employeeNumber = fields.employeeNumber;
-  const location =
-    fields.locationDepartment || fields.locationText || fields.siteName;
+  const location = fields.locationDepartment || fields.locationText || fields.siteName;
   if (employeeNumber && location) {
     return formatDotDqfDisplayTitle(`${employeeNumber} · ${location}`);
   }

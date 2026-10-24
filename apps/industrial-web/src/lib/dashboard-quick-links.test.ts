@@ -13,10 +13,9 @@ describe("resolveDashboardQuickLinkCodes", () => {
   });
 
   it("keeps stored order and drops unavailable codes", () => {
-    expect(resolveDashboardQuickLinkCodes(["TRAINING", "MISSING", "PERSONNEL"], available)).toEqual([
-      "TRAINING",
-      "PERSONNEL",
-    ]);
+    expect(resolveDashboardQuickLinkCodes(["TRAINING", "MISSING", "PERSONNEL"], available)).toEqual(
+      ["TRAINING", "PERSONNEL"],
+    );
   });
 
   it("falls back to all available when stored list is empty after filtering", () => {

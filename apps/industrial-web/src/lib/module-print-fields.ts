@@ -78,7 +78,10 @@ export function lotoProcedureOwnDescriptions(
   if (!item) return "";
   const procedure = asRecord(item.procedure ?? item);
   const payload = asRecord(
-    procedure.sourcePayload ?? procedure.source_payload ?? item.sourcePayload ?? item.source_payload,
+    procedure.sourcePayload ??
+      procedure.source_payload ??
+      item.sourcePayload ??
+      item.source_payload,
   );
   const sources = [
     item.steps,
@@ -113,7 +116,10 @@ function absoluteUrl(pathOrUrl: string, appBaseUrl?: string | null): string {
     (typeof window !== "undefined" ? window.location.origin : "");
   if (!base) return raw;
   try {
-    return new URL(raw.startsWith("/") ? raw : `/${raw}`, base.endsWith("/") ? base : `${base}/`).toString();
+    return new URL(
+      raw.startsWith("/") ? raw : `/${raw}`,
+      base.endsWith("/") ? base : `${base}/`,
+    ).toString();
   } catch {
     return raw;
   }

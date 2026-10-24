@@ -67,7 +67,9 @@ function blank(value) {
 }
 
 function isUnnamedDisplay(value) {
-  const text = String(value ?? "").trim().toLowerCase();
+  const text = String(value ?? "")
+    .trim()
+    .toLowerCase();
   return text === "unnamed employee" || text === "unnamed" || text === "";
 }
 
@@ -101,7 +103,8 @@ if (!adminArn) throw new Error("DATABASE_SECRET_ARN required");
 const sql = postgres(await resolveDatabaseUrl(adminArn), { max: 1 });
 
 try {
-  const tenant = await sql`select id::text as id from tenants where tenant_key = ${TENANT_KEY} limit 1`;
+  const tenant =
+    await sql`select id::text as id from tenants where tenant_key = ${TENANT_KEY} limit 1`;
   if (!tenant[0]) throw new Error(`tenant not found: ${TENANT_KEY}`);
   const tenantId = tenant[0].id;
 

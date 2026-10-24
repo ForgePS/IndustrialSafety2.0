@@ -16,16 +16,16 @@ Forge RMS · Forge Academy · Forge Industrial Safety · future Forge applicatio
 
 ## Goals
 
-- Products extend; they do not replace  
-- RMS becomes the reference implementation  
-- Later products reuse shared components  
+- Products extend; they do not replace
+- RMS becomes the reference implementation
+- Later products reuse shared components
 
 ## Definitions
 
-| Term | Meaning |
-| --- | --- |
-| Extension | Domain records, widgets data, module dashboards, extra tabs |
-| Replacement | Forbidden parallel shell/design system |
+| Term        | Meaning                                                     |
+| ----------- | ----------------------------------------------------------- |
+| Extension   | Domain records, widgets data, module dashboards, extra tabs |
+| Replacement | Forbidden parallel shell/design system                      |
 
 ---
 
@@ -45,9 +45,9 @@ LOTO · JSA · Permits · Contractors · Equipment · Safety Observations · Ind
 
 ### Rules
 
-- Register extensions through FX extension points  
-- Reuse shell, tokens, components, patterns  
-- Do not fork navigation metaphors or workflow state meanings  
+- Register extensions through FX extension points
+- Reuse shell, tokens, components, patterns
+- Do not fork navigation metaphors or workflow state meanings
 
 ---
 
@@ -55,7 +55,7 @@ LOTO · JSA · Permits · Contractors · Equipment · Safety Observations · Ind
 
 ### Phase 1 — Forge Experience Foundation (this phase)
 
-Documentation · Standards · Architecture · Wireframes · Component specifications  
+Documentation · Standards · Architecture · Wireframes · Component specifications
 
 **Status:** FX-S0 complete (docs). Production UI migration **not** started.
 
@@ -79,35 +79,35 @@ Automatically inherit Forge Experience.
 
 ## Success metrics
 
-| Metric | Target |
-| --- | --- |
-| Duplicated UI components | Reduce ≥ **80%** |
-| Component library | Single shared library |
-| Navigation framework | Single framework |
-| Design tokens | Single token system |
-| Workflows | Consistent across products |
-| Onboarding time | Reduced for new users |
-| Accessibility | Improved WCAG 2.2 AA compliance |
-| Maintainability | Improved |
-| Future module effort | Reduced |
+| Metric                   | Target                          |
+| ------------------------ | ------------------------------- |
+| Duplicated UI components | Reduce ≥ **80%**                |
+| Component library        | Single shared library           |
+| Navigation framework     | Single framework                |
+| Design tokens            | Single token system             |
+| Workflows                | Consistent across products      |
+| Onboarding time          | Reduced for new users           |
+| Accessibility            | Improved WCAG 2.2 AA compliance |
+| Maintainability          | Improved                        |
+| Future module effort     | Reduced                         |
 
 ## Best practices
 
-- Gap-analyze each product screen against FX patterns before rewriting  
-- Prefer adopt-in-place over big-bang rewrites after approval  
+- Gap-analyze each product screen against FX patterns before rewriting
+- Prefer adopt-in-place over big-bang rewrites after approval
 
 ## Anti-patterns
 
-- Academy inventing a second design system while waiting for RMS  
-- “Temporary” product shells that become permanent  
+- Academy inventing a second design system while waiting for RMS
+- “Temporary” product shells that become permanent
 
 ## Future enhancements
 
-- Automated drift detection vs FX component inventory  
+- Automated drift detection vs FX component inventory
 
 ## Dependencies
 
-- FX-S0 foundation approval · Platform stabilization complete before production UI migration  
+- FX-S0 foundation approval · Platform stabilization complete before production UI migration
 
 ## Implementation notes
 
@@ -115,18 +115,18 @@ Automatically inherit Forge Experience.
 
 ## Acceptance criteria
 
-- [x] Extension lists documented  
-- [x] Phases 1–5 documented  
-- [x] Success metrics documented  
+- [x] Extension lists documented
+- [x] Phases 1–5 documented
+- [x] Success metrics documented
 
 ## Revision history
 
-| Date | Change |
-| --- | --- |
+| Date       | Change                   |
+| ---------- | ------------------------ |
 | 2026-07-30 | Part 4 adoption strategy |
 
 ## Related
 
-- [02-product-boundaries.md](./02-product-boundaries.md)  
-- [33-migration-strategy.md](./33-migration-strategy.md)  
-- [27-roadmap.md](./27-roadmap.md)  
+- [02-product-boundaries.md](./02-product-boundaries.md)
+- [33-migration-strategy.md](./33-migration-strategy.md)
+- [27-roadmap.md](./27-roadmap.md)

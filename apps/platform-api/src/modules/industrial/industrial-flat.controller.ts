@@ -138,9 +138,7 @@ const LOTO_AUTHOR = [
   "field.loto.execute",
   "field.access",
 ] as const;
-const LOTO_TRANSITION = [
-  ...new Set([...LOTO_AUTHOR, ...LOTO_APPROVE]),
-] as const;
+const LOTO_TRANSITION = [...new Set([...LOTO_AUTHOR, ...LOTO_APPROVE])] as const;
 
 const MODULE_VIEW = {
   training: ["industrial.training.view", "industrial.admin", "industrial.access"],
@@ -175,12 +173,7 @@ const MODULE_VIEW = {
   "electrical-safety": ["industrial.access", "industrial.admin"],
   "cranes-rigging": ["industrial.access", "industrial.admin"],
   "machine-safety": ["industrial.access", "industrial.admin"],
-  forklifts: [
-    "industrial.access",
-    "industrial.admin",
-    "field.fleet.inspect",
-    "field.access",
-  ],
+  forklifts: ["industrial.access", "industrial.admin", "field.fleet.inspect", "field.access"],
   dot: [
     "industrial.access",
     "industrial.admin",
@@ -272,12 +265,7 @@ const MODULE_MANAGE = {
   ],
   "cranes-rigging": ["industrial.admin", "industrial.access"],
   "machine-safety": ["industrial.admin", "industrial.access"],
-  forklifts: [
-    "industrial.admin",
-    "industrial.access",
-    "field.fleet.inspect",
-    "field.access",
-  ],
+  forklifts: ["industrial.admin", "industrial.access", "field.fleet.inspect", "field.access"],
   dot: [
     "industrial.admin",
     "industrial.access",
@@ -287,12 +275,7 @@ const MODULE_MANAGE = {
     "field.access",
   ],
   osha: ["industrial.admin", "industrial.access"],
-  "chemical-safety": [
-    "industrial.admin",
-    "industrial.access",
-    "field.sds.view",
-    "field.access",
-  ],
+  "chemical-safety": ["industrial.admin", "industrial.access", "field.sds.view", "field.access"],
   "warehouse-safety": ["industrial.admin", "industrial.access"],
   "manufacturing-safety": ["industrial.admin", "industrial.access"],
   "contractor-safety": ["industrial.admin", "industrial.access"],
@@ -398,17 +381,11 @@ export class IndustrialFlatController {
   }
 
   @Get("settings/photo-markup")
-  @RequireAnyPermission(
-    ["industrial.admin", "industrial.photo_markup.view", "industrial.access"],
-    {
-      requiresEntitlement: ENTITLEMENT,
-      allowWhenSuspended: true,
-    },
-  )
-  async getPhotoMarkupSettings(
-    @Principal() principal: ForgePrincipal,
-    @Req() req: RequestWithIds,
-  ) {
+  @RequireAnyPermission(["industrial.admin", "industrial.photo_markup.view", "industrial.access"], {
+    requiresEntitlement: ENTITLEMENT,
+    allowWhenSuspended: true,
+  })
+  async getPhotoMarkupSettings(@Principal() principal: ForgePrincipal, @Req() req: RequestWithIds) {
     return ok(await this.photoMarkupSettings.get(principal), getRequestIds(req));
   }
 
@@ -546,12 +523,7 @@ export class IndustrialFlatController {
    */
   @Get("fleet/drivers")
   @RequireAnyPermission(
-    [
-      "industrial.personnel.view",
-      "industrial.fleet.view",
-      "industrial.admin",
-      "industrial.access",
-    ],
+    ["industrial.personnel.view", "industrial.fleet.view", "industrial.admin", "industrial.access"],
     { requiresEntitlement: ENTITLEMENT },
   )
   async listCompanyVehicleDrivers(
@@ -560,20 +532,16 @@ export class IndustrialFlatController {
     @Req() req: RequestWithIds,
   ) {
     const data = await this.domain.listCompanyVehicleDrivers(principal, query);
-    return ok(
-      { items: data.items, summary: data.summary },
-      getRequestIds(req),
-      { page: data.page, pageSize: data.pageSize, total: data.total },
-    );
+    return ok({ items: data.items, summary: data.summary }, getRequestIds(req), {
+      page: data.page,
+      pageSize: data.pageSize,
+      total: data.total,
+    });
   }
 
   @Post("fleet/drivers/mvr-sample/start")
   @RequireAnyPermission(
-    [
-      "industrial.personnel.manage",
-      "industrial.fleet.manage",
-      "industrial.admin",
-    ],
+    ["industrial.personnel.manage", "industrial.fleet.manage", "industrial.admin"],
     { requiresEntitlement: ENTITLEMENT },
   )
   @Idempotent({ resourceType: "industrial_fleet_mvr_sample" })
@@ -582,16 +550,15 @@ export class IndustrialFlatController {
     @Body() body: Record<string, unknown>,
     @Req() req: RequestWithIds,
   ) {
-    return ok(await this.domain.startCompanyDriverMvrSample(principal, body ?? {}), getRequestIds(req));
+    return ok(
+      await this.domain.startCompanyDriverMvrSample(principal, body ?? {}),
+      getRequestIds(req),
+    );
   }
 
   @Post("fleet/drivers/:id/mvr-sample/complete")
   @RequireAnyPermission(
-    [
-      "industrial.personnel.manage",
-      "industrial.fleet.manage",
-      "industrial.admin",
-    ],
+    ["industrial.personnel.manage", "industrial.fleet.manage", "industrial.admin"],
     { requiresEntitlement: ENTITLEMENT },
   )
   @Idempotent({ resourceType: "industrial_fleet_mvr_sample_complete" })
@@ -656,10 +623,9 @@ export class IndustrialFlatController {
   }
 
   @Get("fleet/vehicles")
-  @RequireAnyPermission(
-    [...FLEET_VIEW, "industrial.dot.view", "industrial.dot.manage"],
-    { requiresEntitlement: ENTITLEMENT },
-  )
+  @RequireAnyPermission([...FLEET_VIEW, "industrial.dot.view", "industrial.dot.manage"], {
+    requiresEntitlement: ENTITLEMENT,
+  })
   async listFleetVehiclesFlat(
     @Principal() principal: ForgePrincipal,
     @Query() query: ListQuery,
@@ -1325,10 +1291,7 @@ export class IndustrialFlatController {
     @Param("kind") kind: string,
     @Req() req: RequestWithIds,
   ) {
-    return ok(
-      await this.personnelCerts.createDownloadUrl(principal, id, kind),
-      getRequestIds(req),
-    );
+    return ok(await this.personnelCerts.createDownloadUrl(principal, id, kind), getRequestIds(req));
   }
 
   @Get("personnel/:id")
@@ -1547,10 +1510,7 @@ export class IndustrialFlatController {
     @Param("id") id: string,
     @Req() req: RequestWithIds,
   ) {
-    return ok(
-      await this.domain.revokePersonnelSmsAuthorization(principal, id),
-      getRequestIds(req),
-    );
+    return ok(await this.domain.revokePersonnelSmsAuthorization(principal, id), getRequestIds(req));
   }
 
   @Post("personnel/:id/archive")
@@ -1703,11 +1663,9 @@ export class IndustrialFlatController {
   }
 
   @Get("workers-comp")
-  @RequireAnyPermission([
-    "industrial.workers_comp.view",
-    "industrial.admin",
-    "industrial.access",
-  ], { requiresEntitlement: ENTITLEMENT })
+  @RequireAnyPermission(["industrial.workers_comp.view", "industrial.admin", "industrial.access"], {
+    requiresEntitlement: ENTITLEMENT,
+  })
   async listWorkersComp(
     @Principal() principal: ForgePrincipal,
     @Query() query: ListQuery,
@@ -1730,11 +1688,9 @@ export class IndustrialFlatController {
   }
 
   @Get("workers-comp/carriers")
-  @RequireAnyPermission([
-    "industrial.workers_comp.view",
-    "industrial.admin",
-    "industrial.access",
-  ], { requiresEntitlement: ENTITLEMENT })
+  @RequireAnyPermission(["industrial.workers_comp.view", "industrial.admin", "industrial.access"], {
+    requiresEntitlement: ENTITLEMENT,
+  })
   async listWorkersCompCarriers(
     @Principal() principal: ForgePrincipal,
     @Req() req: RequestWithIds,
@@ -1743,15 +1699,10 @@ export class IndustrialFlatController {
   }
 
   @Get("workers-comp/settings")
-  @RequireAnyPermission([
-    "industrial.workers_comp.view",
-    "industrial.admin",
-    "industrial.access",
-  ], { requiresEntitlement: ENTITLEMENT })
-  async getWorkersCompSettings(
-    @Principal() principal: ForgePrincipal,
-    @Req() req: RequestWithIds,
-  ) {
+  @RequireAnyPermission(["industrial.workers_comp.view", "industrial.admin", "industrial.access"], {
+    requiresEntitlement: ENTITLEMENT,
+  })
+  async getWorkersCompSettings(@Principal() principal: ForgePrincipal, @Req() req: RequestWithIds) {
     return ok(await this.domain.getWorkersCompSettings(principal), getRequestIds(req));
   }
 
@@ -1768,19 +1719,14 @@ export class IndustrialFlatController {
   }
 
   @Get("workers-comp/weekly-status/preview")
-  @RequireAnyPermission([
-    "industrial.workers_comp.view",
-    "industrial.admin",
-    "industrial.access",
-  ], { requiresEntitlement: ENTITLEMENT })
+  @RequireAnyPermission(["industrial.workers_comp.view", "industrial.admin", "industrial.access"], {
+    requiresEntitlement: ENTITLEMENT,
+  })
   async previewWorkersCompWeeklyStatus(
     @Principal() principal: ForgePrincipal,
     @Req() req: RequestWithIds,
   ) {
-    return ok(
-      await this.domain.previewWorkersCompWeeklyStatus(principal),
-      getRequestIds(req),
-    );
+    return ok(await this.domain.previewWorkersCompWeeklyStatus(principal), getRequestIds(req));
   }
 
   @Post("workers-comp/weekly-status/send")
@@ -1800,11 +1746,9 @@ export class IndustrialFlatController {
   }
 
   @Get("workers-comp/weekly-updates")
-  @RequireAnyPermission([
-    "industrial.workers_comp.view",
-    "industrial.admin",
-    "industrial.access",
-  ], { requiresEntitlement: ENTITLEMENT })
+  @RequireAnyPermission(["industrial.workers_comp.view", "industrial.admin", "industrial.access"], {
+    requiresEntitlement: ENTITLEMENT,
+  })
   async listWorkersCompWeeklyUpdates(
     @Principal() principal: ForgePrincipal,
     @Query() query: ListQuery,
@@ -1874,11 +1818,9 @@ export class IndustrialFlatController {
   }
 
   @Get("workers-comp/:id")
-  @RequireAnyPermission([
-    "industrial.workers_comp.view",
-    "industrial.admin",
-    "industrial.access",
-  ], { requiresEntitlement: ENTITLEMENT })
+  @RequireAnyPermission(["industrial.workers_comp.view", "industrial.admin", "industrial.access"], {
+    requiresEntitlement: ENTITLEMENT,
+  })
   async getWorkersComp(
     @Principal() principal: ForgePrincipal,
     @Param("id") id: string,
@@ -1888,11 +1830,9 @@ export class IndustrialFlatController {
   }
 
   @Get("workers-comp/:id/printable")
-  @RequireAnyPermission([
-    "industrial.workers_comp.view",
-    "industrial.admin",
-    "industrial.access",
-  ], { requiresEntitlement: ENTITLEMENT })
+  @RequireAnyPermission(["industrial.workers_comp.view", "industrial.admin", "industrial.access"], {
+    requiresEntitlement: ENTITLEMENT,
+  })
   async workersCompPrintable(
     @Principal() principal: ForgePrincipal,
     @Param("id") id: string,
@@ -2044,10 +1984,9 @@ export class IndustrialFlatController {
   }
 
   @Post("workers-comp/:id/medical")
-  @RequireAnyPermission(
-    ["industrial.workers_comp.medical.manage", "industrial.admin"],
-    { requiresEntitlement: ENTITLEMENT },
-  )
+  @RequireAnyPermission(["industrial.workers_comp.medical.manage", "industrial.admin"], {
+    requiresEntitlement: ENTITLEMENT,
+  })
   @Idempotent({ resourceType: "industrial_workers_comp_medical" })
   async createWorkersCompMedical(
     @Principal() principal: ForgePrincipal,
@@ -2084,10 +2023,9 @@ export class IndustrialFlatController {
   }
 
   @Get("observations/settings")
-  @RequireAnyPermission(
-    ["industrial.observations.view", "industrial.admin", "industrial.access"],
-    { requiresEntitlement: ENTITLEMENT },
-  )
+  @RequireAnyPermission(["industrial.observations.view", "industrial.admin", "industrial.access"], {
+    requiresEntitlement: ENTITLEMENT,
+  })
   async getObservationsSettings(
     @Principal() principal: ForgePrincipal,
     @Req() req: RequestWithIds,
@@ -2262,10 +2200,9 @@ export class IndustrialFlatController {
 
   /** Soft-delete. Service enforces Tenant Admin or Creator only. */
   @Post("supplies/items/:id/archive")
-  @RequireAnyPermission(
-    ["industrial.supplies.delete", ...SUPPLIES_VIEW],
-    { requiresEntitlement: ENTITLEMENT },
-  )
+  @RequireAnyPermission(["industrial.supplies.delete", ...SUPPLIES_VIEW], {
+    requiresEntitlement: ENTITLEMENT,
+  })
   async archiveSuppliesItem(
     @Principal() principal: ForgePrincipal,
     @Param("id") id: string,
@@ -2319,10 +2256,9 @@ export class IndustrialFlatController {
 
   /** Service enforces Tenant Admin or Creator only. */
   @Patch("supplies/locations/:id")
-  @RequireAnyPermission(
-    ["industrial.supplies.manage", "industrial.admin", ...SUPPLIES_VIEW],
-    { requiresEntitlement: ENTITLEMENT },
-  )
+  @RequireAnyPermission(["industrial.supplies.manage", "industrial.admin", ...SUPPLIES_VIEW], {
+    requiresEntitlement: ENTITLEMENT,
+  })
   async patchSuppliesLocation(
     @Principal() principal: ForgePrincipal,
     @Param("id") id: string,
@@ -2334,10 +2270,9 @@ export class IndustrialFlatController {
 
   /** Soft-delete. Service enforces Tenant Admin or Creator only. */
   @Post("supplies/locations/:id/archive")
-  @RequireAnyPermission(
-    ["industrial.supplies.delete", "industrial.admin", ...SUPPLIES_VIEW],
-    { requiresEntitlement: ENTITLEMENT },
-  )
+  @RequireAnyPermission(["industrial.supplies.delete", "industrial.admin", ...SUPPLIES_VIEW], {
+    requiresEntitlement: ENTITLEMENT,
+  })
   async archiveSuppliesLocation(
     @Principal() principal: ForgePrincipal,
     @Param("id") id: string,
@@ -2413,7 +2348,13 @@ export class IndustrialFlatController {
 
   @Get("supplies/ppe")
   @RequireAnyPermission(
-    ["industrial.supplies.ppe.view", "industrial.supplies.view", "industrial.supplies.manage", "industrial.admin", "industrial.access"],
+    [
+      "industrial.supplies.ppe.view",
+      "industrial.supplies.view",
+      "industrial.supplies.manage",
+      "industrial.admin",
+      "industrial.access",
+    ],
     { requiresEntitlement: ENTITLEMENT },
   )
   async suppliesPpe(
@@ -2437,7 +2378,12 @@ export class IndustrialFlatController {
 
   @Post("supplies/ppe/:id/return")
   @RequireAnyPermission(
-    ["industrial.supplies.ppe.return", "industrial.supplies.return", "industrial.supplies.manage", "industrial.admin"],
+    [
+      "industrial.supplies.ppe.return",
+      "industrial.supplies.return",
+      "industrial.supplies.manage",
+      "industrial.admin",
+    ],
     { requiresEntitlement: ENTITLEMENT },
   )
   @Idempotent({ resourceType: "industrial_supply_ppe_return" })
@@ -2452,7 +2398,13 @@ export class IndustrialFlatController {
 
   @Get("supplies/counts")
   @RequireAnyPermission(
-    ["industrial.supplies.count", "industrial.supplies.view", "industrial.supplies.manage", "industrial.admin", "industrial.access"],
+    [
+      "industrial.supplies.count",
+      "industrial.supplies.view",
+      "industrial.supplies.manage",
+      "industrial.admin",
+      "industrial.access",
+    ],
     { requiresEntitlement: ENTITLEMENT },
   )
   async suppliesCounts(
@@ -2493,7 +2445,12 @@ export class IndustrialFlatController {
 
   @Post("supplies/counts/:id/submit")
   @RequireAnyPermission(
-    ["industrial.supplies.count", "industrial.supplies.count.approve", "industrial.supplies.manage", "industrial.admin"],
+    [
+      "industrial.supplies.count",
+      "industrial.supplies.count.approve",
+      "industrial.supplies.manage",
+      "industrial.admin",
+    ],
     { requiresEntitlement: ENTITLEMENT },
   )
   async submitSuppliesCount(
@@ -2527,7 +2484,12 @@ export class IndustrialFlatController {
 
   @Post("supplies/inspections")
   @RequireAnyPermission(
-    ["industrial.supplies.inspection.perform", "industrial.supplies.inspection.manage", "industrial.supplies.manage", "industrial.admin"],
+    [
+      "industrial.supplies.inspection.perform",
+      "industrial.supplies.inspection.manage",
+      "industrial.supplies.manage",
+      "industrial.admin",
+    ],
     { requiresEntitlement: ENTITLEMENT },
   )
   @Idempotent({ resourceType: "industrial_supply_inspection" })
@@ -2541,11 +2503,7 @@ export class IndustrialFlatController {
 
   @Get("supplies/requests")
   @RequireAnyPermission(
-    [
-      "industrial.supplies.requests.view",
-      "industrial.supplies.requests.create",
-      ...SUPPLIES_VIEW,
-    ],
+    ["industrial.supplies.requests.view", "industrial.supplies.requests.create", ...SUPPLIES_VIEW],
     { requiresEntitlement: ENTITLEMENT },
   )
   async suppliesRequests(
@@ -2591,10 +2549,9 @@ export class IndustrialFlatController {
   }
 
   @Post("supplies/requests/:id/fulfill")
-  @RequireAnyPermission(
-    ["industrial.supplies.requests.fulfill", ...SUPPLIES_ISSUE],
-    { requiresEntitlement: ENTITLEMENT },
-  )
+  @RequireAnyPermission(["industrial.supplies.requests.fulfill", ...SUPPLIES_ISSUE], {
+    requiresEntitlement: ENTITLEMENT,
+  })
   async fulfillSuppliesRequest(
     @Principal() principal: ForgePrincipal,
     @Param("id") id: string,
@@ -2605,10 +2562,9 @@ export class IndustrialFlatController {
   }
 
   @Get("supplies/requests/:id")
-  @RequireAnyPermission(
-    ["industrial.supplies.requests.view", ...SUPPLIES_VIEW],
-    { requiresEntitlement: ENTITLEMENT },
-  )
+  @RequireAnyPermission(["industrial.supplies.requests.view", ...SUPPLIES_VIEW], {
+    requiresEntitlement: ENTITLEMENT,
+  })
   async getSuppliesRequest(
     @Principal() principal: ForgePrincipal,
     @Param("id") id: string,
@@ -2709,10 +2665,9 @@ export class IndustrialFlatController {
   }
 
   @Get("supplies/qr-stations")
-  @RequireAnyPermission(
-    ["industrial.supplies.requests.view", ...SUPPLIES_VIEW],
-    { requiresEntitlement: ENTITLEMENT },
-  )
+  @RequireAnyPermission(["industrial.supplies.requests.view", ...SUPPLIES_VIEW], {
+    requiresEntitlement: ENTITLEMENT,
+  })
   async supplyQrStations(
     @Principal() principal: ForgePrincipal,
     @Query() query: ListQuery,
@@ -2750,10 +2705,7 @@ export class IndustrialFlatController {
     @Param("id") id: string,
     @Req() req: RequestWithIds,
   ) {
-    return ok(
-      await this.supplyQr.setStationStatus(principal, id, "INACTIVE"),
-      getRequestIds(req),
-    );
+    return ok(await this.supplyQr.setStationStatus(principal, id, "INACTIVE"), getRequestIds(req));
   }
 
   @Post("supplies/qr-stations/:id/enable")
@@ -2763,10 +2715,7 @@ export class IndustrialFlatController {
     @Param("id") id: string,
     @Req() req: RequestWithIds,
   ) {
-    return ok(
-      await this.supplyQr.setStationStatus(principal, id, "ACTIVE"),
-      getRequestIds(req),
-    );
+    return ok(await this.supplyQr.setStationStatus(principal, id, "ACTIVE"), getRequestIds(req));
   }
 
   @Post("supplies/qr-stations/:id/regenerate")
@@ -2790,10 +2739,9 @@ export class IndustrialFlatController {
   }
 
   @Get("supplies/qr-stations/:id/png")
-  @RequireAnyPermission(
-    ["industrial.supplies.requests.view", ...SUPPLIES_VIEW],
-    { requiresEntitlement: ENTITLEMENT },
-  )
+  @RequireAnyPermission(["industrial.supplies.requests.view", ...SUPPLIES_VIEW], {
+    requiresEntitlement: ENTITLEMENT,
+  })
   async supplyQrStationPng(
     @Principal() principal: ForgePrincipal,
     @Param("id") id: string,
@@ -2804,14 +2752,10 @@ export class IndustrialFlatController {
   }
 
   @Get("supplies/request-analytics")
-  @RequireAnyPermission(
-    ["industrial.supplies.requests.view", ...SUPPLIES_VIEW],
-    { requiresEntitlement: ENTITLEMENT },
-  )
-  async supplyRequestAnalytics(
-    @Principal() principal: ForgePrincipal,
-    @Req() req: RequestWithIds,
-  ) {
+  @RequireAnyPermission(["industrial.supplies.requests.view", ...SUPPLIES_VIEW], {
+    requiresEntitlement: ENTITLEMENT,
+  })
+  async supplyRequestAnalytics(@Principal() principal: ForgePrincipal, @Req() req: RequestWithIds) {
     return ok(await this.supplyQr.requestAnalytics(principal), getRequestIds(req));
   }
 
@@ -2840,7 +2784,9 @@ export class IndustrialFlatController {
   }
 
   @Get("supplies/purchase-orders")
-  @RequireAnyPermission([...SUPPLIES_PURCHASE, ...SUPPLIES_VIEW], { requiresEntitlement: ENTITLEMENT })
+  @RequireAnyPermission([...SUPPLIES_PURCHASE, ...SUPPLIES_VIEW], {
+    requiresEntitlement: ENTITLEMENT,
+  })
   async suppliesPurchaseOrders(
     @Principal() principal: ForgePrincipal,
     @Query() query: ListQuery,
@@ -2868,7 +2814,10 @@ export class IndustrialFlatController {
     @Body() body: Record<string, unknown>,
     @Req() req: RequestWithIds,
   ) {
-    return ok(await this.supplies.updatePurchaseOrderStatus(principal, id, body), getRequestIds(req));
+    return ok(
+      await this.supplies.updatePurchaseOrderStatus(principal, id, body),
+      getRequestIds(req),
+    );
   }
 
   @Get("supplies/reorder")
@@ -2919,10 +2868,9 @@ export class IndustrialFlatController {
   }
 
   @Get("supplies/reports/usage")
-  @RequireAnyPermission(
-    ["industrial.supplies.reports.view", ...SUPPLIES_VIEW],
-    { requiresEntitlement: ENTITLEMENT },
-  )
+  @RequireAnyPermission(["industrial.supplies.reports.view", ...SUPPLIES_VIEW], {
+    requiresEntitlement: ENTITLEMENT,
+  })
   async suppliesUsageReport(
     @Principal() principal: ForgePrincipal,
     @Query() query: ListQuery,
@@ -2932,10 +2880,9 @@ export class IndustrialFlatController {
   }
 
   @Get("supplies/reports/custom")
-  @RequireAnyPermission(
-    ["industrial.supplies.reports.view", ...SUPPLIES_VIEW],
-    { requiresEntitlement: ENTITLEMENT },
-  )
+  @RequireAnyPermission(["industrial.supplies.reports.view", ...SUPPLIES_VIEW], {
+    requiresEntitlement: ENTITLEMENT,
+  })
   async suppliesCustomReport(
     @Principal() principal: ForgePrincipal,
     @Query() query: ListQuery,
@@ -2951,7 +2898,10 @@ export class IndustrialFlatController {
     @Body() body: Record<string, unknown>,
     @Req() req: RequestWithIds,
   ) {
-    return ok(await this.supplies.resolveScan(principal, String(body.code ?? "")), getRequestIds(req));
+    return ok(
+      await this.supplies.resolveScan(principal, String(body.code ?? "")),
+      getRequestIds(req),
+    );
   }
 
   @Get("messaging/threads")
@@ -3092,7 +3042,10 @@ export class IndustrialFlatController {
   ) {
     const file = await this.messaging.getAttachmentContent(principal, id);
     const safeName =
-      file.filename.replace(/"/g, "").replace(/[^\w.\-() ]+/g, "_").slice(0, 180) || "attachment";
+      file.filename
+        .replace(/"/g, "")
+        .replace(/[^\w.\-() ]+/g, "_")
+        .slice(0, 180) || "attachment";
     res.setHeader("Content-Type", file.contentType);
     res.setHeader("Content-Disposition", `${file.disposition}; filename="${safeName}"`);
     res.setHeader("Cache-Control", "private, max-age=300");
@@ -3330,8 +3283,7 @@ export class IndustrialFlatController {
     ]);
     if (ehsOnlyActions.has(actionKey)) {
       const allowed =
-        principal.isPlatformAdmin ||
-        LOTO_APPROVE.some((code) => principal.permissions.has(code));
+        principal.isPlatformAdmin || LOTO_APPROVE.some((code) => principal.permissions.has(code));
       if (!allowed) {
         throw new ForgeError(
           "FORBIDDEN",
@@ -3348,8 +3300,7 @@ export class IndustrialFlatController {
       }
     } else if (authorActions.has(actionKey)) {
       const allowed =
-        principal.isPlatformAdmin ||
-        LOTO_AUTHOR.some((code) => principal.permissions.has(code));
+        principal.isPlatformAdmin || LOTO_AUTHOR.some((code) => principal.permissions.has(code));
       if (!allowed) {
         throw new ForgeError("FORBIDDEN", "You do not have permission to submit this procedure.");
       }
@@ -3453,19 +3404,17 @@ export class IndustrialFlatController {
    * generic :module/:id catch-all so "summary" is not parsed as an id.
    */
   @Get("incidents/summary")
-  @RequireAnyPermission(
-    ["industrial.incidents.view", "industrial.admin", "industrial.access"],
-    { requiresEntitlement: ENTITLEMENT },
-  )
+  @RequireAnyPermission(["industrial.incidents.view", "industrial.admin", "industrial.access"], {
+    requiresEntitlement: ENTITLEMENT,
+  })
   async incidentsSummary(@Principal() principal: ForgePrincipal, @Req() req: RequestWithIds) {
     return ok(await this.domain.incidentsSummary(principal), getRequestIds(req));
   }
 
   @Get("incidents")
-  @RequireAnyPermission(
-    ["industrial.incidents.view", "industrial.admin", "industrial.access"],
-    { requiresEntitlement: ENTITLEMENT },
-  )
+  @RequireAnyPermission(["industrial.incidents.view", "industrial.admin", "industrial.access"], {
+    requiresEntitlement: ENTITLEMENT,
+  })
   async listIncidents(
     @Principal() principal: ForgePrincipal,
     @Query() query: ListQuery,
@@ -3522,10 +3471,9 @@ export class IndustrialFlatController {
 
   /** Soft-delete. Service enforces EHS Director or Creator only. */
   @Post("incidents/:id/archive")
-  @RequireAnyPermission(
-    ["industrial.incidents.view", "industrial.admin", "industrial.access"],
-    { requiresEntitlement: ENTITLEMENT },
-  )
+  @RequireAnyPermission(["industrial.incidents.view", "industrial.admin", "industrial.access"], {
+    requiresEntitlement: ENTITLEMENT,
+  })
   async archiveIncident(
     @Principal() principal: ForgePrincipal,
     @Param("id") id: string,
@@ -3535,10 +3483,9 @@ export class IndustrialFlatController {
   }
 
   @Get("incidents/:id/printable")
-  @RequireAnyPermission(
-    ["industrial.incidents.view", "industrial.admin", "industrial.access"],
-    { requiresEntitlement: ENTITLEMENT },
-  )
+  @RequireAnyPermission(["industrial.incidents.view", "industrial.admin", "industrial.access"], {
+    requiresEntitlement: ENTITLEMENT,
+  })
   async incidentPrintable(
     @Principal() principal: ForgePrincipal,
     @Param("id") id: string,
@@ -3548,27 +3495,24 @@ export class IndustrialFlatController {
   }
 
   @Post("incidents/:id/rca/printable")
-  @RequireAnyPermission(
-    ["industrial.incidents.view", "industrial.admin", "industrial.access"],
-    { requiresEntitlement: ENTITLEMENT },
-  )
+  @RequireAnyPermission(["industrial.incidents.view", "industrial.admin", "industrial.access"], {
+    requiresEntitlement: ENTITLEMENT,
+  })
   async incidentRcaPrintable(
     @Principal() principal: ForgePrincipal,
     @Param("id") id: string,
     @Body() body: Record<string, unknown>,
     @Req() req: RequestWithIds,
   ) {
-    return ok(await this.domain.incidentRcaPrintable(principal, id, body ?? {}), getRequestIds(req));
+    return ok(
+      await this.domain.incidentRcaPrintable(principal, id, body ?? {}),
+      getRequestIds(req),
+    );
   }
 
   @Get("incidents/:id/osha-form-301")
   @RequireAnyPermission(
-    [
-      "industrial.incidents.view",
-      "industrial.osha.view",
-      "industrial.admin",
-      "industrial.access",
-    ],
+    ["industrial.incidents.view", "industrial.osha.view", "industrial.admin", "industrial.access"],
     { requiresEntitlement: ENTITLEMENT },
   )
   async incidentOshaForm301(
@@ -3628,10 +3572,9 @@ export class IndustrialFlatController {
   }
 
   @Get("incidents/:id/attachments/:documentId/download-url")
-  @RequireAnyPermission(
-    ["industrial.incidents.view", "industrial.admin", "industrial.access"],
-    { requiresEntitlement: ENTITLEMENT },
-  )
+  @RequireAnyPermission(["industrial.incidents.view", "industrial.admin", "industrial.access"], {
+    requiresEntitlement: ENTITLEMENT,
+  })
   async incidentAttachmentDownloadUrl(
     @Principal() principal: ForgePrincipal,
     @Param("id") id: string,
@@ -3698,7 +3641,10 @@ export class IndustrialFlatController {
     @Body() body: Record<string, unknown>,
     @Req() req: RequestWithIds,
   ) {
-    return ok(await this.domain.updateFormDefinition(principal, id, body ?? {}), getRequestIds(req));
+    return ok(
+      await this.domain.updateFormDefinition(principal, id, body ?? {}),
+      getRequestIds(req),
+    );
   }
 
   /** Soft-delete. Service enforces Tenant Admin or Creator only. */
@@ -3884,10 +3830,9 @@ export class IndustrialFlatController {
   }
 
   @Post("inspections/:id/delete")
-  @RequireAnyPermission(
-    ["industrial.admin", "industrial.inspections.manage"],
-    { requiresEntitlement: ENTITLEMENT },
-  )
+  @RequireAnyPermission(["industrial.admin", "industrial.inspections.manage"], {
+    requiresEntitlement: ENTITLEMENT,
+  })
   @Idempotent({ resourceType: "industrial_inspections_delete" })
   async deleteInspection(
     @Principal() principal: ForgePrincipal,
@@ -3905,7 +3850,10 @@ export class IndustrialFlatController {
     @Body() body: Record<string, unknown>,
     @Req() req: RequestWithIds,
   ) {
-    return ok(await this.domain.createInspectionAttachment(principal, body ?? {}), getRequestIds(req));
+    return ok(
+      await this.domain.createInspectionAttachment(principal, body ?? {}),
+      getRequestIds(req),
+    );
   }
 
   @Patch("departments/:id/contact")
@@ -3919,7 +3867,10 @@ export class IndustrialFlatController {
     @Body() body: Record<string, unknown>,
     @Req() req: RequestWithIds,
   ) {
-    return ok(await this.domain.updateDepartmentContact(principal, id, body ?? {}), getRequestIds(req));
+    return ok(
+      await this.domain.updateDepartmentContact(principal, id, body ?? {}),
+      getRequestIds(req),
+    );
   }
 
   @Post("corrective-actions/:id/complete")
@@ -3951,10 +3902,9 @@ export class IndustrialFlatController {
 
   // Generic module routes (ops + high-risk + compliance packs)
   @Get("osha")
-  @RequireAnyPermission(
-    ["industrial.osha.view", "industrial.admin", "industrial.access"],
-    { requiresEntitlement: ENTITLEMENT },
-  )
+  @RequireAnyPermission(["industrial.osha.view", "industrial.admin", "industrial.access"], {
+    requiresEntitlement: ENTITLEMENT,
+  })
   async listOsha(
     @Principal() principal: ForgePrincipal,
     @Query() query: ListQuery,
@@ -3977,10 +3927,9 @@ export class IndustrialFlatController {
   }
 
   @Get("osha/:id")
-  @RequireAnyPermission(
-    ["industrial.osha.view", "industrial.admin", "industrial.access"],
-    { requiresEntitlement: ENTITLEMENT },
-  )
+  @RequireAnyPermission(["industrial.osha.view", "industrial.admin", "industrial.access"], {
+    requiresEntitlement: ENTITLEMENT,
+  })
   async getOsha(
     @Principal() principal: ForgePrincipal,
     @Param("id") id: string,
@@ -4003,10 +3952,9 @@ export class IndustrialFlatController {
   }
 
   @Get("osha-form-300a")
-  @RequireAnyPermission(
-    ["industrial.osha.view", "industrial.admin", "industrial.access"],
-    { requiresEntitlement: ENTITLEMENT },
-  )
+  @RequireAnyPermission(["industrial.osha.view", "industrial.admin", "industrial.access"], {
+    requiresEntitlement: ENTITLEMENT,
+  })
   async getOshaForm300AMeta(
     @Principal() principal: ForgePrincipal,
     @Query() query: { year?: string; siteId?: string; establishment?: string },
@@ -4109,7 +4057,14 @@ export class IndustrialFlatController {
 
   @Get(":module")
   @RequireAnyPermission(
-    ["industrial.access", "industrial.admin", "field.access", "field.jsa.execute", "field.sds.view", "field.permits.view"],
+    [
+      "industrial.access",
+      "industrial.admin",
+      "field.access",
+      "field.jsa.execute",
+      "field.sds.view",
+      "field.permits.view",
+    ],
     {
       requiresEntitlement: ENTITLEMENT,
     },
@@ -4177,7 +4132,14 @@ export class IndustrialFlatController {
 
   @Get(":module/:id")
   @RequireAnyPermission(
-    ["industrial.access", "industrial.admin", "field.access", "field.jsa.execute", "field.sds.view", "field.permits.view"],
+    [
+      "industrial.access",
+      "industrial.admin",
+      "field.access",
+      "field.jsa.execute",
+      "field.sds.view",
+      "field.permits.view",
+    ],
     {
       requiresEntitlement: ENTITLEMENT,
     },
@@ -4194,7 +4156,10 @@ export class IndustrialFlatController {
     if (moduleKey === "osha") {
       return ok(await this.domain.getOsha(principal, id), getRequestIds(req));
     }
-    return ok(await this.domain.getModule(principal, moduleKey as ModuleKey, id), getRequestIds(req));
+    return ok(
+      await this.domain.getModule(principal, moduleKey as ModuleKey, id),
+      getRequestIds(req),
+    );
   }
 
   @Post(":module/:id/:action")

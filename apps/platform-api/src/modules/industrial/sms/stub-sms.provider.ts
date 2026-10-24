@@ -34,7 +34,5 @@ export function createStubSmsProvider(config: EmergencyAlertSmsConfig): Emergenc
       "SMS provider is STUB. Set smsProvider to AWS_END_USER_MESSAGING and configure originationIdentity.",
     );
   }
-  return new StubEmergencyAlertSmsProvider(
-    `SMS provider "${config.provider}" is not implemented`,
-  );
+  return new StubEmergencyAlertSmsProvider(`SMS provider "${config.provider}" is not implemented`);
 }

@@ -17,7 +17,8 @@ export const DRUG_ALCOHOL_CONSENT_OPTIONS = [
   },
   {
     id: "voluntaryConsent",
-    label: "I voluntarily consent to the testing described above (or acknowledge a required test under company/DOT policy).",
+    label:
+      "I voluntarily consent to the testing described above (or acknowledge a required test under company/DOT policy).",
   },
   {
     id: "understandsRefusal",
@@ -60,10 +61,8 @@ export const DRUG_ALCOHOL_SUBSTANCE_OPTIONS = [
 
 export type DrugAlcoholConsentId = (typeof DRUG_ALCOHOL_CONSENT_OPTIONS)[number]["id"];
 export type DrugAlcoholReasonId = (typeof DRUG_ALCOHOL_REASON_OPTIONS)[number]["id"] | "";
-export type DrugAlcoholTestStatusId =
-  (typeof DRUG_ALCOHOL_TEST_STATUS_OPTIONS)[number]["id"];
-export type DrugAlcoholSubstanceId =
-  (typeof DRUG_ALCOHOL_SUBSTANCE_OPTIONS)[number]["id"];
+export type DrugAlcoholTestStatusId = (typeof DRUG_ALCOHOL_TEST_STATUS_OPTIONS)[number]["id"];
+export type DrugAlcoholSubstanceId = (typeof DRUG_ALCOHOL_SUBSTANCE_OPTIONS)[number]["id"];
 
 export type DrugAlcoholConsentFlags = Record<DrugAlcoholConsentId, boolean>;
 
@@ -181,8 +180,7 @@ export function parseDrugAlcoholIncident(raw: unknown): DrugAlcoholIncidentSecti
     orderedAt: typeof r.orderedAt === "string" ? r.orderedAt : "",
     completedAt: typeof r.completedAt === "string" ? r.completedAt : "",
     resultNotes: typeof r.resultNotes === "string" ? r.resultNotes : "",
-    additionalComments:
-      typeof r.additionalComments === "string" ? r.additionalComments : "",
+    additionalComments: typeof r.additionalComments === "string" ? r.additionalComments : "",
   };
 }
 
@@ -199,9 +197,7 @@ export function drugAlcoholIncidentHasContent(value: DrugAlcoholIncidentSection)
 }
 
 /** When testing is flagged required, consent + reason must be complete. */
-export function drugAlcoholValidationMessage(
-  value: DrugAlcoholIncidentSection,
-): string | null {
+export function drugAlcoholValidationMessage(value: DrugAlcoholIncidentSection): string | null {
   if (!value.testingRequired) return null;
   if (!value.reason) {
     return "Select a reason for drug and/or alcohol testing.";

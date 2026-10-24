@@ -81,16 +81,19 @@ export function IncidentBodyMapCalibrator() {
 
   const selected = regions.find((region) => region.id === selectedId) ?? null;
 
-  const patchRegion = useCallback((id: string, patch: Partial<Pick<BodyRegion, "top" | "left" | "width" | "height">>) => {
-    setDirty(true);
-    clearNotice();
-    setSaveError(null);
-    setRegions((current) =>
-      current.map((region) =>
-        region.id === id ? clampBodyRegion({ ...region, ...patch }) : region,
-      ),
-    );
-  }, [clearNotice]);
+  const patchRegion = useCallback(
+    (id: string, patch: Partial<Pick<BodyRegion, "top" | "left" | "width" | "height">>) => {
+      setDirty(true);
+      clearNotice();
+      setSaveError(null);
+      setRegions((current) =>
+        current.map((region) =>
+          region.id === id ? clampBodyRegion({ ...region, ...patch }) : region,
+        ),
+      );
+    },
+    [clearNotice],
+  );
 
   const finishDrag = useCallback(() => {
     dragRef.current = null;
@@ -309,7 +312,10 @@ export function IncidentBodyMapCalibrator() {
                   <div className="row g-2">
                     {(["top", "left", "width", "height"] as const).map((field) => (
                       <div className="col-6" key={field}>
-                        <label className="form-label small text-capitalize mb-1" htmlFor={`cal-${field}`}>
+                        <label
+                          className="form-label small text-capitalize mb-1"
+                          htmlFor={`cal-${field}`}
+                        >
                           {field} (%)
                         </label>
                         <input
@@ -331,7 +337,9 @@ export function IncidentBodyMapCalibrator() {
                   </div>
                 </>
               ) : (
-                <p className="text-muted small mb-0">Select a hotspot on the map to edit numbers.</p>
+                <p className="text-muted small mb-0">
+                  Select a hotspot on the map to edit numbers.
+                </p>
               )}
             </div>
           </div>

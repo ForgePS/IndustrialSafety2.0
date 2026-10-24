@@ -189,7 +189,9 @@ function DvirInner() {
   return (
     <>
       <p className="ff-brand-mark">DVIR</p>
-      <h1 className="ff-page-title">{vehicle ? fleetDisplayName(vehicle) : "Driver vehicle inspection"}</h1>
+      <h1 className="ff-page-title">
+        {vehicle ? fleetDisplayName(vehicle) : "Driver vehicle inspection"}
+      </h1>
       <p className="ff-page-body">
         Complete every item. Answer No requires a note.{" "}
         {org?.selection.locationName ? `Location: ${org.selection.locationName}.` : null}
@@ -258,7 +260,11 @@ function DvirInner() {
       {(["truck", "safety", "trailer"] as const).map((section) => (
         <section key={section} className="ff-section" aria-label={`${section} checklist`}>
           <h2 className="ff-section-title">
-            {section === "truck" ? "Truck / tractor" : section === "safety" ? "Safety equipment" : "Trailer"}
+            {section === "truck"
+              ? "Truck / tractor"
+              : section === "safety"
+                ? "Safety equipment"
+                : "Trailer"}
           </h2>
           <div className="ff-stack-list">
             {(sections[section] ?? []).map((item) => (

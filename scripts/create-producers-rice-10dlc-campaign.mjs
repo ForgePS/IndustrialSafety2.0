@@ -14,10 +14,14 @@ const BRAND_REGISTRATION_ID = "registration-0c0ee25650f6433fa73f4c7cd5bfbab0";
 const submit = process.argv.includes("--submit");
 
 function aws(args, { json = true } = {}) {
-  const out = execFileSync("aws", [...args, "--region", REGION, ...(json ? ["--output", "json"] : [])], {
-    encoding: "utf8",
-    maxBuffer: 10 * 1024 * 1024,
-  });
+  const out = execFileSync(
+    "aws",
+    [...args, "--region", REGION, ...(json ? ["--output", "json"] : [])],
+    {
+      encoding: "utf8",
+      maxBuffer: 10 * 1024 * 1024,
+    },
+  );
   return json ? JSON.parse(out || "{}") : out;
 }
 

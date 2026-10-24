@@ -75,9 +75,7 @@ export const INDUSTRIAL_DASHBOARD_ATTENTION_SOURCES: readonly IndustrialDashboar
     },
   ] as const;
 
-const BY_KEY = new Map(
-  INDUSTRIAL_DASHBOARD_ATTENTION_SOURCES.map((row) => [row.key, row]),
-);
+const BY_KEY = new Map(INDUSTRIAL_DASHBOARD_ATTENTION_SOURCES.map((row) => [row.key, row]));
 
 export function industrialDashboardAttentionSource(
   key: string,
@@ -138,9 +136,7 @@ export function filterIndustrialDashboardAttentionItems<T extends { key: string 
       moduleCode: source.moduleCode,
       permissions: input.permissions,
       ...(input.activeModules !== undefined ? { activeModules: input.activeModules } : {}),
-      ...(input.isPlatformAdmin !== undefined
-        ? { isPlatformAdmin: input.isPlatformAdmin }
-        : {}),
+      ...(input.isPlatformAdmin !== undefined ? { isPlatformAdmin: input.isPlatformAdmin } : {}),
     });
   });
 }

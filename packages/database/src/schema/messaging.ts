@@ -1,4 +1,13 @@
-import { index, integer, jsonb, pgTable, text, timestamp, uuid, varchar } from "drizzle-orm/pg-core";
+import {
+  index,
+  integer,
+  jsonb,
+  pgTable,
+  text,
+  timestamp,
+  uuid,
+  varchar,
+} from "drizzle-orm/pg-core";
 import { createdAtColumn, updatedAtColumn } from "./common.js";
 import { forgeDocuments } from "./neris-specialty.js";
 import { tenants } from "./tenants.js";
@@ -82,10 +91,7 @@ export const industrialMessagingMessages = pgTable(
     deletedAt: timestamp("deleted_at", { withTimezone: true }),
   },
   (table) => [
-    index("industrial_messaging_messages_thread_created_idx").on(
-      table.threadId,
-      table.createdAt,
-    ),
+    index("industrial_messaging_messages_thread_created_idx").on(table.threadId, table.createdAt),
     index("industrial_messaging_messages_tenant_idx").on(table.tenantId, table.createdAt),
   ],
 );

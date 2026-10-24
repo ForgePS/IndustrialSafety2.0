@@ -53,9 +53,7 @@ async function main() {
       where ai.tenant_id = ${tenant.id}::uuid and ai.provider = 'COGNITO'
     `;
 
-    const missingIdentity = members.filter(
-      (m) => !identities.some((i) => i.user_id === m.user_id),
-    );
+    const missingIdentity = members.filter((m) => !identities.some((i) => i.user_id === m.user_id));
 
     console.log(
       JSON.stringify(

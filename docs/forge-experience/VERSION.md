@@ -26,13 +26,13 @@ None vs prior RC (initial public RC). Relative to informal S1 scaffold:
 
 ## Future roadmap
 
-1. Formal human approval of FX-S1.5 exit criteria  
-2. FX-S2 — Forge RMS migration onto FX RC1 (no product-specific UI divergence)  
-3. Collapsible phone navigation  
-4. Chart non-color encodings (patterns)  
-5. Virtualized data tables  
-6. Optional MapLibre adapter behind FX map contract  
-7. Stable `v1.0.0` after S2 pilot feedback  
+1. Formal human approval of FX-S1.5 exit criteria
+2. FX-S2 — Forge RMS migration onto FX RC1 (no product-specific UI divergence)
+3. Collapsible phone navigation
+4. Chart non-color encodings (patterns)
+5. Virtualized data tables
+6. Optional MapLibre adapter behind FX map contract
+7. Stable `v1.0.0` after S2 pilot feedback
 
 ## Authorization
 

@@ -27,8 +27,7 @@ export function validateFirstAidAddCertification(
   if (!draft.personnelId.trim()) {
     return "Select an employee personnel file.";
   }
-  const hasCpr =
-    Boolean(draft.cprExpiresDate.trim()) || Boolean(draft.cprDocumentId.trim());
+  const hasCpr = Boolean(draft.cprExpiresDate.trim()) || Boolean(draft.cprDocumentId.trim());
   const hasFirstAid =
     Boolean(draft.firstAidExpiresDate.trim()) || Boolean(draft.firstAidDocumentId.trim());
   if (!hasCpr && !hasFirstAid) {
@@ -59,4 +58,3 @@ export function buildFirstAidAssignPayload(
   }
   return payload;
 }
-

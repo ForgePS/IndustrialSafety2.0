@@ -40,9 +40,7 @@ export function LotoProcedureWorkflowActions({
   const showActivate = (canEdit || canApprove) && lotoCanActivateDirect(status);
   const showSubmit = canEdit && lotoCanSubmitForReview(status);
   const showEhsActions = canApprove && lotoCanEhsReview(status);
-  const submitLabel = lotoIsNeedsCorrection(status)
-    ? "Resubmit for review"
-    : "Submit for review";
+  const submitLabel = lotoIsNeedsCorrection(status) ? "Resubmit for review" : "Submit for review";
   const activateLabel = lotoIsNeedsCorrection(status) ? "Activate after corrections" : "Activate";
 
   function openSendBack() {

@@ -1,11 +1,11 @@
 # S2F-6 NERIS Configuration — Evidence
 
-| Item | Status |
-| --- | --- |
-| Baseline inventory | `00-baseline.md` |
-| Resolver unit tests | Pass |
-| Screenshots | Sanitized placeholders under `../../evidence/screenshots/` |
-| Official NERIS codes | Never edited; avoid capturing sensitive tenant overlays |
+| Item                 | Status                                                     |
+| -------------------- | ---------------------------------------------------------- |
+| Baseline inventory   | `00-baseline.md`                                           |
+| Resolver unit tests  | Pass                                                       |
+| Screenshots          | Sanitized placeholders under `../../evidence/screenshots/` |
+| Official NERIS codes | Never edited; avoid capturing sensitive tenant overlays    |
 
 Local enable:
 

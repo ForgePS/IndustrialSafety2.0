@@ -11,11 +11,7 @@ import { QrCameraScanner } from "@/components/qr-camera-scanner";
 import { ScanInspectionRunner } from "@/components/scan-inspection-runner";
 import { TenantBrandHeader } from "@/components/tenant-brand-header";
 import { formatApiErrorMessage } from "@/lib/api-error";
-import {
-  extractProcedureDisplay,
-  lotoStatusBadgeClass,
-  lotoStatusLabel,
-} from "@/lib/loto";
+import { extractProcedureDisplay, lotoStatusBadgeClass, lotoStatusLabel } from "@/lib/loto";
 import {
   clearStoredScanEmployee,
   filterClientScanActions,
@@ -400,7 +396,9 @@ function ScanPublicForm({ token }: { token: string }) {
         <div className="alert alert-danger" role="alert">
           {error ?? "This QR link is not available."}
         </div>
-        <Link href="/scan" className="btn btn-outline-primary btn-sm">Scan another code</Link>
+        <Link href="/scan" className="btn btn-outline-primary btn-sm">
+          Scan another code
+        </Link>
       </div>
     );
   }
@@ -430,8 +428,16 @@ function ScanPublicForm({ token }: { token: string }) {
         subtitle={context.displayCode ? `Code ${context.displayCode}` : "Forge QR Scan"}
       />
 
-      {error ? <div className="alert alert-danger mt-3" role="alert">{error}</div> : null}
-      {notice ? <div className="alert alert-success mt-3" role="status">{notice}</div> : null}
+      {error ? (
+        <div className="alert alert-danger mt-3" role="alert">
+          {error}
+        </div>
+      ) : null}
+      {notice ? (
+        <div className="alert alert-success mt-3" role="status">
+          {notice}
+        </div>
+      ) : null}
 
       {screen === "gate" ? (
         <div className="card border shadow-none mt-3">
@@ -443,7 +449,9 @@ function ScanPublicForm({ token }: { token: string }) {
                   This QR link requires an authenticated Forge Industrial session. Sign in to the
                   app, then scan the code again.
                 </p>
-                <Link href="/" className="btn btn-primary btn-sm">Open Forge Industrial</Link>
+                <Link href="/" className="btn btn-primary btn-sm">
+                  Open Forge Industrial
+                </Link>
               </>
             ) : (
               <>
@@ -516,7 +524,11 @@ function ScanPublicForm({ token }: { token: string }) {
                 {identify?.employeeNumber ? ` · #${identify.employeeNumber}` : ""}
                 {identify?.departmentName ? ` · ${identify.departmentName}` : ""}
               </div>
-              <button type="button" className="btn btn-link btn-sm p-0 mt-1" onClick={switchEmployee}>
+              <button
+                type="button"
+                className="btn btn-link btn-sm p-0 mt-1"
+                onClick={switchEmployee}
+              >
                 Switch EMPLOYEE
               </button>
             </div>
@@ -686,7 +698,11 @@ function ScanPublicForm({ token }: { token: string }) {
                     </label>
                   ) : null}
                   <div className="d-flex gap-2">
-                    <button type="button" className="btn btn-outline-secondary" onClick={() => setHubPanel("actions")}>
+                    <button
+                      type="button"
+                      className="btn btn-outline-secondary"
+                      onClick={() => setHubPanel("actions")}
+                    >
                       Cancel
                     </button>
                     <button type="submit" className="btn btn-primary" disabled={busy}>
@@ -716,7 +732,11 @@ function ScanPublicForm({ token }: { token: string }) {
                       ))}
                     </ul>
                   )}
-                  <button type="button" className="btn btn-outline-secondary btn-sm" onClick={() => setHubPanel("actions")}>
+                  <button
+                    type="button"
+                    className="btn btn-outline-secondary btn-sm"
+                    onClick={() => setHubPanel("actions")}
+                  >
                     Back to actions
                   </button>
                 </div>
@@ -740,7 +760,11 @@ function ScanPublicForm({ token }: { token: string }) {
                     onChange={(e) => setOosNotes(e.target.value)}
                   />
                   <div className="d-flex gap-2">
-                    <button type="button" className="btn btn-outline-secondary" onClick={() => setHubPanel("actions")}>
+                    <button
+                      type="button"
+                      className="btn btn-outline-secondary"
+                      onClick={() => setHubPanel("actions")}
+                    >
                       Cancel
                     </button>
                     <button type="submit" className="btn btn-danger" disabled={busy}>
@@ -751,7 +775,10 @@ function ScanPublicForm({ token }: { token: string }) {
               ) : null}
 
               {hubPanel === "return_to_service" ? (
-                <form className="d-grid gap-2" onSubmit={(event) => void submitReturnToService(event)}>
+                <form
+                  className="d-grid gap-2"
+                  onSubmit={(event) => void submitReturnToService(event)}
+                >
                   <textarea
                     className="form-control"
                     rows={3}
@@ -760,7 +787,11 @@ function ScanPublicForm({ token }: { token: string }) {
                     onChange={(e) => setReturnNotes(e.target.value)}
                   />
                   <div className="d-flex gap-2">
-                    <button type="button" className="btn btn-outline-secondary" onClick={() => setHubPanel("actions")}>
+                    <button
+                      type="button"
+                      className="btn btn-outline-secondary"
+                      onClick={() => setHubPanel("actions")}
+                    >
                       Cancel
                     </button>
                     <button type="submit" className="btn btn-success" disabled={busy}>
@@ -836,7 +867,13 @@ function ScanPublicWorkspaceInner() {
 
 export function ScanPublicWorkspace() {
   return (
-    <Suspense fallback={<div className="container py-4"><p className="text-muted">Loading scan…</p></div>}>
+    <Suspense
+      fallback={
+        <div className="container py-4">
+          <p className="text-muted">Loading scan…</p>
+        </div>
+      }
+    >
       <ScanPublicWorkspaceInner />
     </Suspense>
   );

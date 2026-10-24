@@ -8,14 +8,24 @@ const LOG_GROUP = process.env.FORGE_API_LOG_GROUP || "/forge/production/platform
 const start = Date.now() - 3 * 60 * 60 * 1000;
 
 function awsJson(args) {
-  const out = spawnSync("aws", args, { encoding: "utf8", shell: true, maxBuffer: 20 * 1024 * 1024 });
+  const out = spawnSync("aws", args, {
+    encoding: "utf8",
+    shell: true,
+    maxBuffer: 20 * 1024 * 1024,
+  });
   if (out.status !== 0) {
     throw new Error(out.stderr || out.stdout || "aws failed");
   }
   return JSON.parse(out.stdout || "{}");
 }
 
-const patterns = ["unhandled exception", "INTERNAL_ERROR", "tracks_first_aid", "column", "Failed query"];
+const patterns = [
+  "unhandled exception",
+  "INTERNAL_ERROR",
+  "tracks_first_aid",
+  "column",
+  "Failed query",
+];
 
 const all = [];
 for (const pattern of patterns) {

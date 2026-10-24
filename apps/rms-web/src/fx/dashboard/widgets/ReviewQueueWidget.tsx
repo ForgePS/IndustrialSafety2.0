@@ -5,7 +5,11 @@ import { useCallback, useEffect, useState } from "react";
 import { useAuth } from "@forge/web-kit";
 import { REVIEW_STATUSES } from "@/lib/constants";
 import { listIncidents, type IncidentSummary } from "@/lib/rms-api";
-import { DashboardEmptyState, DashboardErrorState, DashboardLoadingState } from "../DashboardStates";
+import {
+  DashboardEmptyState,
+  DashboardErrorState,
+  DashboardLoadingState,
+} from "../DashboardStates";
 import type { DashboardWidgetComponentProps } from "../types";
 
 export function ReviewQueueWidget({ onRefreshRequest }: DashboardWidgetComponentProps) {
@@ -39,7 +43,12 @@ export function ReviewQueueWidget({ onRefreshRequest }: DashboardWidgetComponent
   }, [load, tick]);
 
   if (!me) {
-    return <DashboardEmptyState title="Sign in required" description="Sign in to view the review queue." />;
+    return (
+      <DashboardEmptyState
+        title="Sign in required"
+        description="Sign in to view the review queue."
+      />
+    );
   }
   if (loading) return <DashboardLoadingState label="Loading review queue" />;
   if (error) {
@@ -47,7 +56,11 @@ export function ReviewQueueWidget({ onRefreshRequest }: DashboardWidgetComponent
       <DashboardErrorState
         description={error}
         action={
-          <button type="button" className="fx-btn fx-btn--secondary" onClick={() => setTick((n) => n + 1)}>
+          <button
+            type="button"
+            className="fx-btn fx-btn--secondary"
+            onClick={() => setTick((n) => n + 1)}
+          >
             Retry
           </button>
         }
@@ -55,7 +68,12 @@ export function ReviewQueueWidget({ onRefreshRequest }: DashboardWidgetComponent
     );
   }
   if (items.length === 0) {
-    return <DashboardEmptyState title="Queue empty" description="No incidents are currently in review statuses." />;
+    return (
+      <DashboardEmptyState
+        title="Queue empty"
+        description="No incidents are currently in review statuses."
+      />
+    );
   }
 
   return (

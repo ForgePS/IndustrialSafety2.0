@@ -8,24 +8,24 @@
 
 Development uses the **Developer** cost profile (~$50–80/month):
 
-| Control | Setting |
-| --- | --- |
-| Aurora Serverless v2 | Min 0 ACU, auto-pause after 60 minutes idle |
-| Worker service | Desired count **0** |
-| NAT Gateway | 1 (not per-AZ) |
-| VPC flow logs | S3 (not CloudWatch Logs) |
-| Interface VPC endpoints | Off |
-| Budget alarm | 50/80/100/120% thresholds (Sprint 1E Wave 6) |
+| Control                 | Setting                                      |
+| ----------------------- | -------------------------------------------- |
+| Aurora Serverless v2    | Min 0 ACU, auto-pause after 60 minutes idle  |
+| Worker service          | Desired count **0**                          |
+| NAT Gateway             | 1 (not per-AZ)                               |
+| VPC flow logs           | S3 (not CloudWatch Logs)                     |
+| Interface VPC endpoints | Off                                          |
+| Budget alarm            | 50/80/100/120% thresholds (Sprint 1E Wave 6) |
 
 Source: `infrastructure/cdk/lib/config/cost-profile.ts`
 
 ## Sprint 1E additions
 
-| Addition | Approximate cost |
-| --- | --- |
-| Creator Console (CloudFront + S3) | ~$1/month ([ADR-026](../decisions/ADR-026-creator-console-hosting.md)) |
-| CloudWatch dashboards and extra alarms | negligible at dev volume |
-| AWS Budgets (four environments) | free tier |
+| Addition                               | Approximate cost                                                       |
+| -------------------------------------- | ---------------------------------------------------------------------- |
+| Creator Console (CloudFront + S3)      | ~$1/month ([ADR-026](../decisions/ADR-026-creator-console-hosting.md)) |
+| CloudWatch dashboards and extra alarms | negligible at dev volume                                               |
+| AWS Budgets (four environments)        | free tier                                                              |
 
 No NAT or Aurora capacity tier changes in Sprint 1E.
 

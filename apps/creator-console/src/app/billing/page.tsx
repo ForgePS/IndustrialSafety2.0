@@ -256,9 +256,7 @@ function BillingInner() {
               <dt>Subscription status</dt>
               <dd>{overview.subscription?.status ?? "None"}</dd>
               <dt>Current plan</dt>
-              <dd>
-                {overview.subscription?.planName ?? overview.subscription?.planCode ?? "—"}
-              </dd>
+              <dd>{overview.subscription?.planName ?? overview.subscription?.planCode ?? "—"}</dd>
               <dt>Billing contact</dt>
               <dd>{overview.customer?.billingEmail ?? "—"}</dd>
             </dl>
@@ -383,9 +381,7 @@ function BillingInner() {
                   <select
                     id="edit-invoice-status"
                     value={editInvoice.status}
-                    onChange={(e) =>
-                      setEditInvoice({ ...editInvoice, status: e.target.value })
-                    }
+                    onChange={(e) => setEditInvoice({ ...editInvoice, status: e.target.value })}
                   >
                     {INVOICE_STATUSES.map((value) => (
                       <option key={value} value={value}>
@@ -653,7 +649,13 @@ export default function BillingPage() {
       title="Billing"
       anyOf={["platform.entitlement.manage", "tenant.billing.read"]}
     >
-      <Suspense fallback={<section className={styles.page}><p>Loading…</p></section>}>
+      <Suspense
+        fallback={
+          <section className={styles.page}>
+            <p>Loading…</p>
+          </section>
+        }
+      >
         <BillingInner />
       </Suspense>
     </PlatformPageGate>

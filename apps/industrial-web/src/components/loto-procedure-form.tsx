@@ -66,20 +66,17 @@ function uniqueSorted(values: string[]): string[] {
   );
 }
 
-function toDepartmentOptions(
-  departments: Array<Record<string, unknown>>,
-): DepartmentOption[] {
+function toDepartmentOptions(departments: Array<Record<string, unknown>>): DepartmentOption[] {
   return departments
     .map((row) => {
       const payload =
-        row.sourcePayload && typeof row.sourcePayload === "object" && !Array.isArray(row.sourcePayload)
+        row.sourcePayload &&
+        typeof row.sourcePayload === "object" &&
+        !Array.isArray(row.sourcePayload)
           ? (row.sourcePayload as Record<string, unknown>)
           : null;
       const divisionName =
-        str(row.divisionName) ||
-        str(payload?.division) ||
-        str(payload?.divisionName) ||
-        null;
+        str(row.divisionName) || str(payload?.division) || str(payload?.divisionName) || null;
       return {
         id: str(row.id),
         label: str(row.name) || str(row.label) || str(row.title),
@@ -142,7 +139,9 @@ export function LotoProcedureForm({
   const [photoNotice, setPhotoNotice] = useState<string | null>(null);
   const [photoBusy, setPhotoBusy] = useState(false);
   const [annotatorTarget, setAnnotatorTarget] = useState<
-    { slot: "equipment"; photoIndex: number } | { slot: "step"; stepIndex: number; photoIndex: number } | null
+    | { slot: "equipment"; photoIndex: number }
+    | { slot: "step"; stepIndex: number; photoIndex: number }
+    | null
   >(null);
   /** Last photo zone the user focused / clicked — used when Ctrl+V happens elsewhere on the form. */
   const [activePhotoTarget, setActivePhotoTarget] = useState<"equipment" | number>(0);
@@ -193,19 +192,12 @@ export function LotoProcedureForm({
 
   const locations = useMemo(
     () =>
-      uniqueSorted([
-        ...locationOptions,
-        ...form.steps.map((step) => step.isolationLocationText),
-      ]),
+      uniqueSorted([...locationOptions, ...form.steps.map((step) => step.isolationLocationText)]),
     [locationOptions, form.steps],
   );
 
   const descriptions = useMemo(
-    () =>
-      uniqueSorted([
-        ...descriptionOptions,
-        ...form.steps.map((step) => step.descriptionCode),
-      ]),
+    () => uniqueSorted([...descriptionOptions, ...form.steps.map((step) => step.descriptionCode)]),
     [descriptionOptions, form.steps],
   );
 
@@ -256,10 +248,7 @@ export function LotoProcedureForm({
     });
   }
 
-  async function appendPhotos(
-    target: "equipment" | number,
-    files: File[],
-  ) {
+  async function appendPhotos(target: "equipment" | number, files: File[]) {
     const images = files.filter((file) => isLotoImageFile(file) || file.type.startsWith("image/"));
     if (!images.length) {
       setPhotoNotice("Paste or choose a JPG, PNG, HEIC, or WebP image.");
@@ -607,7 +596,10 @@ export function LotoProcedureForm({
             />
           </div>
           <div className="col-md-4">
-            <label className="form-label text-uppercase small fw-semibold" htmlFor="loto-equip-type">
+            <label
+              className="form-label text-uppercase small fw-semibold"
+              htmlFor="loto-equip-type"
+            >
               Type
             </label>
             <select
@@ -627,7 +619,10 @@ export function LotoProcedureForm({
             </select>
           </div>
           <div className="col-12">
-            <div className="form-label text-uppercase small fw-semibold" id="loto-precautions-label">
+            <div
+              className="form-label text-uppercase small fw-semibold"
+              id="loto-precautions-label"
+            >
               Precaution statements
             </div>
             <div className="position-relative">
@@ -687,7 +682,9 @@ export function LotoProcedureForm({
         <p className="text-muted mt-4 mb-3">Enter steps for this procedure.</p>
 
         {photoNotice ? (
-          <p className={`small mb-3 ${photoNotice.includes("fail") || photoNotice.includes("Could") || photoNotice.includes("no image") ? "text-danger" : "text-success"}`}>
+          <p
+            className={`small mb-3 ${photoNotice.includes("fail") || photoNotice.includes("Could") || photoNotice.includes("no image") ? "text-danger" : "text-success"}`}
+          >
             {photoNotice}
           </p>
         ) : null}
@@ -701,11 +698,7 @@ export function LotoProcedureForm({
             <div
               className="card shadow-none border mb-3"
               key={idx}
-              style={
-                energyStyle
-                  ? { borderLeft: `5px solid ${energyStyle.bg}` }
-                  : undefined
-              }
+              style={energyStyle ? { borderLeft: `5px solid ${energyStyle.bg}` } : undefined}
             >
               <div className="card-body">
                 <div className="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
@@ -726,14 +719,10 @@ export function LotoProcedureForm({
                             }
                       }
                       title={
-                        energyStyle
-                          ? `🔒${energyStyle.letter} — ${energyStyle.label}`
-                          : "Step"
+                        energyStyle ? `🔒${energyStyle.letter} — ${energyStyle.label}` : "Step"
                       }
                     >
-                      <span className="d-block fw-bold">
-                        Step # {idx + 1}
-                      </span>
+                      <span className="d-block fw-bold">Step # {idx + 1}</span>
                       {energyStyle ? (
                         <span className="d-block small opacity-90">🔒{energyStyle.letter}</span>
                       ) : null}
@@ -810,14 +799,13 @@ export function LotoProcedureForm({
                       onChange={(ev) => updateStep(idx, { lockoutDeviceName: ev.target.value })}
                     >
                       <option value="">Select</option>
-                      {uniqueSorted([
-                        ...LOTO_LOCKOUT_DEVICE_OPTIONS,
-                        step.lockoutDeviceName,
-                      ]).map((device) => (
-                        <option key={device} value={device}>
-                          {device}
-                        </option>
-                      ))}
+                      {uniqueSorted([...LOTO_LOCKOUT_DEVICE_OPTIONS, step.lockoutDeviceName]).map(
+                        (device) => (
+                          <option key={device} value={device}>
+                            {device}
+                          </option>
+                        ),
+                      )}
                     </select>
                   </div>
                   <div className="col-md-4">
@@ -855,14 +843,13 @@ export function LotoProcedureForm({
                       onChange={(ev) => updateStep(idx, { isolationAction: ev.target.value })}
                     >
                       <option value="">Select</option>
-                      {uniqueSorted([
-                        ...LOTO_LOCKOUT_METHOD_OPTIONS,
-                        step.isolationAction,
-                      ]).map((method) => (
-                        <option key={method} value={method}>
-                          {method}
-                        </option>
-                      ))}
+                      {uniqueSorted([...LOTO_LOCKOUT_METHOD_OPTIONS, step.isolationAction]).map(
+                        (method) => (
+                          <option key={method} value={method}>
+                            {method}
+                          </option>
+                        ),
+                      )}
                     </select>
                   </div>
                   <div className="col-md-6">
@@ -879,7 +866,8 @@ export function LotoProcedureForm({
                       onChange={(ev) => updateStep(idx, { customDescription: ev.target.value })}
                     />
                     <p className="form-text small text-muted mb-0">
-                      Used on QR label prints when selected — not shown on the printed procedure sheet.
+                      Used on QR label prints when selected — not shown on the printed procedure
+                      sheet.
                     </p>
                   </div>
                   <div className="col-12">
@@ -973,7 +961,10 @@ export function LotoProcedureForm({
                       {stepPhotos.map((photo, photoIndex) => {
                         const preview = photoSrc(photo);
                         return (
-                          <div key={`step-${idx}-photo-${photoIndex}`} className="border rounded p-2">
+                          <div
+                            key={`step-${idx}-photo-${photoIndex}`}
+                            className="border rounded p-2"
+                          >
                             {preview ? (
                               <LotoAnnotatedImage
                                 src={preview}
@@ -1051,8 +1042,8 @@ export function LotoProcedureForm({
         >
           <h6 className="mb-1">Equipment images</h6>
           <p className="text-muted small mb-3">
-            Upload, take, paste, or drop photos onto this box — they stay on the form (not a new tab).
-            Up to {LOTO_MAX_PHOTOS_PER_SLOT} photos.
+            Upload, take, paste, or drop photos onto this box — they stay on the form (not a new
+            tab). Up to {LOTO_MAX_PHOTOS_PER_SLOT} photos.
           </p>
           <div className="d-flex flex-wrap gap-2 mb-3">
             <button
@@ -1143,9 +1134,7 @@ export function LotoProcedureForm({
                         type="button"
                         className="btn btn-sm btn-outline-dark"
                         disabled={photoBusy || !preview}
-                        onClick={() =>
-                          setAnnotatorTarget({ slot: "equipment", photoIndex })
-                        }
+                        onClick={() => setAnnotatorTarget({ slot: "equipment", photoIndex })}
                       >
                         Annotate
                       </button>
@@ -1254,7 +1243,10 @@ export function LotoProcedureForm({
                   onClick={() =>
                     setForm((prev) => ({
                       ...prev,
-                      [field]: [...prev[field], { step: "", description: "" } as LotoSequenceStepForm],
+                      [field]: [
+                        ...prev[field],
+                        { step: "", description: "" } as LotoSequenceStepForm,
+                      ],
                     }))
                   }
                 >
@@ -1320,10 +1312,20 @@ export function LotoProcedureForm({
 
         <div className="row g-3">
           <div className="col-md-4">
-            <input className="form-control" readOnly value={siteName || "Site"} aria-label="Site footer" />
+            <input
+              className="form-control"
+              readOnly
+              value={siteName || "Site"}
+              aria-label="Site footer"
+            />
           </div>
           <div className="col-md-4">
-            <input className="form-control" readOnly value={form.areaName || "Area"} aria-label="Area footer" />
+            <input
+              className="form-control"
+              readOnly
+              value={form.areaName || "Area"}
+              aria-label="Area footer"
+            />
           </div>
           <div className="col-md-4">
             <input className="form-control" readOnly value={footerDate} aria-label="Date footer" />

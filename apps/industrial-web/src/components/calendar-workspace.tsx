@@ -155,7 +155,13 @@ export function CalendarWorkspace({ moduleName }: { moduleName: string }) {
     setCategoryId(ev.categoryId ?? "");
     const rule = (ev.recurrenceRule ?? "").toUpperCase();
     setRecurrenceRule(
-      rule.includes("DAILY") ? "DAILY" : rule.includes("WEEKLY") ? "WEEKLY" : rule.includes("MONTHLY") ? "MONTHLY" : "NONE",
+      rule.includes("DAILY")
+        ? "DAILY"
+        : rule.includes("WEEKLY")
+          ? "WEEKLY"
+          : rule.includes("MONTHLY")
+            ? "MONTHLY"
+            : "NONE",
     );
     setRecurrenceUntil(toLocalDateValue(ev.recurrenceUntil));
     setReminderOffsets([]);
@@ -206,7 +212,9 @@ export function CalendarWorkspace({ moduleName }: { moduleName: string }) {
 
   function toggleReminder(minutes: number) {
     setReminderOffsets((prev) =>
-      prev.includes(minutes) ? prev.filter((m) => m !== minutes) : [...prev, minutes].sort((a, b) => a - b),
+      prev.includes(minutes)
+        ? prev.filter((m) => m !== minutes)
+        : [...prev, minutes].sort((a, b) => a - b),
     );
   }
 
@@ -227,7 +235,9 @@ export function CalendarWorkspace({ moduleName }: { moduleName: string }) {
         taskId: taskId || null,
         categoryId: categoryId || null,
         recurrenceRule: recurrenceRule === "NONE" ? null : recurrenceRule,
-        recurrenceUntil: recurrenceUntil ? new Date(`${recurrenceUntil}T23:59:59`).toISOString() : null,
+        recurrenceUntil: recurrenceUntil
+          ? new Date(`${recurrenceUntil}T23:59:59`).toISOString()
+          : null,
       };
       if (!editing && reminderOffsets.length) {
         payload.reminderOffsetsMinutes = reminderOffsets;
@@ -240,7 +250,11 @@ export function CalendarWorkspace({ moduleName }: { moduleName: string }) {
 
       if (editing) {
         const id = editing.sourceEventId || editing.id.split(":")[0]!;
-        await apiSend(`/api/v1/industrial/calendar/events/${encodeURIComponent(id)}`, "PATCH", payload);
+        await apiSend(
+          `/api/v1/industrial/calendar/events/${encodeURIComponent(id)}`,
+          "PATCH",
+          payload,
+        );
       } else {
         await apiSend("/api/v1/industrial/calendar/events", "POST", payload);
       }
@@ -259,7 +273,11 @@ export function CalendarWorkspace({ moduleName }: { moduleName: string }) {
     setSaving(true);
     setError("");
     try {
-      await apiSend(`/api/v1/industrial/calendar/events/${encodeURIComponent(id)}/archive`, "POST", {});
+      await apiSend(
+        `/api/v1/industrial/calendar/events/${encodeURIComponent(id)}/archive`,
+        "POST",
+        {},
+      );
       if (editing && (editing.id === ev.id || editing.sourceEventId === id)) setEditing(null);
       await load();
     } catch (err) {
@@ -274,7 +292,11 @@ export function CalendarWorkspace({ moduleName }: { moduleName: string }) {
     setSaving(true);
     setError("");
     try {
-      await apiSend(`/api/v1/industrial/calendar/events/${encodeURIComponent(id)}/link-task`, "POST", {});
+      await apiSend(
+        `/api/v1/industrial/calendar/events/${encodeURIComponent(id)}/link-task`,
+        "POST",
+        {},
+      );
       await load();
     } catch (err) {
       setError(err instanceof ApiError ? err.message : "Failed to create linked task");
@@ -284,7 +306,8 @@ export function CalendarWorkspace({ moduleName }: { moduleName: string }) {
   }
 
   function shiftAnchor(delta: number) {
-    if (view === "day" || view === "agenda") setAnchor(addDays(anchor, delta * (view === "agenda" ? 14 : 1)));
+    if (view === "day" || view === "agenda")
+      setAnchor(addDays(anchor, delta * (view === "agenda" ? 14 : 1)));
     else if (view === "week") setAnchor(addDays(anchor, delta * 7));
     else setAnchor(new Date(anchor.getFullYear(), anchor.getMonth() + delta, 1));
   }
@@ -318,7 +341,9 @@ export function CalendarWorkspace({ moduleName }: { moduleName: string }) {
       if (!ev.startsAt) return false;
       const start = new Date(ev.startsAt);
       const end = ev.endsAt ? new Date(ev.endsAt) : start;
-      return start.getTime() <= endOfDay(day).getTime() && end.getTime() >= startOfDay(day).getTime();
+      return (
+        start.getTime() <= endOfDay(day).getTime() && end.getTime() >= startOfDay(day).getTime()
+      );
     }).length;
   }
 
@@ -351,7 +376,11 @@ export function CalendarWorkspace({ moduleName }: { moduleName: string }) {
             </button>
           ))}
         </div>
-        <button type="button" className="btn btn-sm btn-outline-secondary" onClick={() => shiftAnchor(-1)}>
+        <button
+          type="button"
+          className="btn btn-sm btn-outline-secondary"
+          onClick={() => shiftAnchor(-1)}
+        >
           Prev
         </button>
         <button
@@ -365,11 +394,19 @@ export function CalendarWorkspace({ moduleName }: { moduleName: string }) {
         >
           Today
         </button>
-        <button type="button" className="btn btn-sm btn-outline-secondary" onClick={() => shiftAnchor(1)}>
+        <button
+          type="button"
+          className="btn btn-sm btn-outline-secondary"
+          onClick={() => shiftAnchor(1)}
+        >
           Next
         </button>
         <span className="fw-semibold ms-1">{headerLabel}</span>
-        <button type="button" className="btn btn-sm btn-primary ms-auto" onClick={() => openCreate(selected)}>
+        <button
+          type="button"
+          className="btn btn-sm btn-primary ms-auto"
+          onClick={() => openCreate(selected)}
+        >
           New event
         </button>
       </div>
@@ -431,7 +468,9 @@ export function CalendarWorkspace({ moduleName }: { moduleName: string }) {
                     }}
                     onDoubleClick={() => openCreate(day)}
                   >
-                    <div className={`small ${isToday ? "text-primary fw-bold" : ""}`}>{day.getDate()}</div>
+                    <div className={`small ${isToday ? "text-primary fw-bold" : ""}`}>
+                      {day.getDate()}
+                    </div>
                     {count > 0 ? (
                       <div className="badge bg-label-primary mt-1">
                         {count} event{count === 1 ? "" : "s"}
@@ -498,14 +537,20 @@ export function CalendarWorkspace({ moduleName }: { moduleName: string }) {
                           />
                         ) : null}
                         {ev.title}
-                        {ev.isOccurrence ? <span className="badge bg-label-secondary ms-2">Recurring</span> : null}
+                        {ev.isOccurrence ? (
+                          <span className="badge bg-label-secondary ms-2">Recurring</span>
+                        ) : null}
                       </div>
                       <div className="small text-muted">
                         {ev.startsAt ? new Date(ev.startsAt).toLocaleString() : "—"}
                         {ev.category ? ` · ${ev.category.name}` : ""}
                       </div>
                     </div>
-                    <button type="button" className="btn btn-sm btn-outline-primary" onClick={() => openEdit(ev)}>
+                    <button
+                      type="button"
+                      className="btn btn-sm btn-outline-primary"
+                      onClick={() => openEdit(ev)}
+                    >
                       Edit
                     </button>
                   </li>
@@ -568,7 +613,11 @@ export function CalendarWorkspace({ moduleName }: { moduleName: string }) {
                               + Task
                             </button>
                           ) : null}
-                          <button type="button" className="btn btn-outline-primary" onClick={() => openEdit(ev)}>
+                          <button
+                            type="button"
+                            className="btn btn-outline-primary"
+                            onClick={() => openEdit(ev)}
+                          >
                             Edit
                           </button>
                           <button
@@ -710,7 +759,9 @@ export function CalendarWorkspace({ moduleName }: { moduleName: string }) {
                         key={p.minutes}
                         type="button"
                         className={`btn btn-sm ${
-                          reminderOffsets.includes(p.minutes) ? "btn-primary" : "btn-outline-secondary"
+                          reminderOffsets.includes(p.minutes)
+                            ? "btn-primary"
+                            : "btn-outline-secondary"
                         }`}
                         onClick={() => toggleReminder(p.minutes)}
                       >
@@ -741,7 +792,12 @@ export function CalendarWorkspace({ moduleName }: { moduleName: string }) {
                   </select>
                 </div>
                 <div className="d-flex gap-2">
-                  <button type="button" className="btn btn-primary" disabled={saving} onClick={() => void saveEvent()}>
+                  <button
+                    type="button"
+                    className="btn btn-primary"
+                    disabled={saving}
+                    onClick={() => void saveEvent()}
+                  >
                     {saving ? "Saving…" : editing ? "Save changes" : "Create event"}
                   </button>
                   {editing || title ? (

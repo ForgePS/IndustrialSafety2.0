@@ -1,10 +1,6 @@
 import { test, expect } from "../src/fixtures/index.js";
 import { apiRequest, listPersonnelRaw, listUnitsRaw, readTenantId } from "../src/helpers/api.js";
-import {
-  getSecondaryCredentials,
-  hasSecondaryCredentials,
-  REQUIRE_SECONDARY,
-} from "../src/env.js";
+import { getSecondaryCredentials, hasSecondaryCredentials, REQUIRE_SECONDARY } from "../src/env.js";
 import { ensureAuthenticated } from "../src/helpers/navigation.js";
 import { e2eRunId } from "../src/helpers/test-data.js";
 import {
@@ -126,9 +122,14 @@ test.describe("Phase 3 scenario 3 — fire-service casualty @phase3", () => {
     );
     expect(masked.status).toBe(200);
     const maskedRow = (
-      unwrapData<Array<{ id: string; personnelDisplayName?: string; narrative?: string; restricted?: boolean }>>(
-        masked.json,
-      ) ?? []
+      unwrapData<
+        Array<{
+          id: string;
+          personnelDisplayName?: string;
+          narrative?: string;
+          restricted?: boolean;
+        }>
+      >(masked.json) ?? []
     ).find((r) => r.id === casualty.id);
     expect(maskedRow?.restricted).toBe(true);
     expect(maskedRow?.personnelDisplayName).toBe("[Restricted]");
@@ -151,9 +152,9 @@ test.describe("Phase 3 scenario 3 — fire-service casualty @phase3", () => {
 
     const audit = await listAudit(page, tenantId!, incidentId);
     if (audit.length > 0) {
-      expect(audit.some((e) => /fire_service_casualty|specialty_section|section/i.test(e.action ?? ""))).toBe(
-        true,
-      );
+      expect(
+        audit.some((e) => /fire_service_casualty|specialty_section|section/i.test(e.action ?? "")),
+      ).toBe(true);
       expect(JSON.stringify(audit)).not.toContain(`FF restricted narrative ${runId}`);
     }
 

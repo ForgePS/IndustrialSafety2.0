@@ -22,10 +22,16 @@ describe("task-assignees", () => {
     expect(isSafetyOrEhsOrgAssignment({ departmentName: "Safety", divisionName: "" })).toBe(true);
     expect(isSafetyOrEhsOrgAssignment({ departmentName: "", divisionName: "Safety" })).toBe(true);
     expect(
-      isSafetyOrEhsOrgAssignment({ departmentName: "Greenville MS EHS", divisionName: "Greenville MS" }),
+      isSafetyOrEhsOrgAssignment({
+        departmentName: "Greenville MS EHS",
+        divisionName: "Greenville MS",
+      }),
     ).toBe(true);
     expect(
-      isSafetyOrEhsOrgAssignment({ departmentName: "Food Safety", divisionName: "Stuttgart Milling Operations" }),
+      isSafetyOrEhsOrgAssignment({
+        departmentName: "Food Safety",
+        divisionName: "Stuttgart Milling Operations",
+      }),
     ).toBe(false);
     expect(
       isSafetyOrEhsOrgAssignment({

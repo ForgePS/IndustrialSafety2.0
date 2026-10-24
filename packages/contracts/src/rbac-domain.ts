@@ -122,8 +122,7 @@ export const SAAS_PERSONA_TO_ROLE_TEMPLATE = {
   viewer: "READ_ONLY_USER",
 } as const satisfies Record<SaasRolePersona, string>;
 
-export type SaasPersonaRoleTemplateCode =
-  (typeof SAAS_PERSONA_TO_ROLE_TEMPLATE)[SaasRolePersona];
+export type SaasPersonaRoleTemplateCode = (typeof SAAS_PERSONA_TO_ROLE_TEMPLATE)[SaasRolePersona];
 
 export const SAAS_PERSONA_PERMISSIONS = {
   owner: TENANT_OWNER_PERMISSIONS,
@@ -141,7 +140,9 @@ export function resolveSaasRolePersona(value: string): SaasRolePersona | null {
   return isSaasRolePersona(normalized) ? normalized : null;
 }
 
-export function roleTemplateCodeForSaasPersona(persona: SaasRolePersona): SaasPersonaRoleTemplateCode {
+export function roleTemplateCodeForSaasPersona(
+  persona: SaasRolePersona,
+): SaasPersonaRoleTemplateCode {
   return SAAS_PERSONA_TO_ROLE_TEMPLATE[persona];
 }
 
@@ -149,7 +150,10 @@ export function permissionsForSaasPersona(persona: SaasRolePersona): readonly st
   return SAAS_PERSONA_PERMISSIONS[persona];
 }
 
-export function saasPersonaHasPermission(persona: SaasRolePersona, permissionCode: string): boolean {
+export function saasPersonaHasPermission(
+  persona: SaasRolePersona,
+  permissionCode: string,
+): boolean {
   return (SAAS_PERSONA_PERMISSIONS[persona] as readonly string[]).includes(permissionCode);
 }
 

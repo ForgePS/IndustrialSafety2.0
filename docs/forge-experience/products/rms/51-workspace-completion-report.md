@@ -3,7 +3,7 @@
 **Date:** 2026-07-30  
 **Product:** Forge RMS  
 **Reference standard:** Forge Experience Design System v1.0.0-RC1  
-**Gate:** FX-S2D  
+**Gate:** FX-S2D
 
 ## Decision requested
 
@@ -15,8 +15,8 @@ Alternates: `APPROVE WITH CONDITIONS` · `RETURN FOR CORRECTION`
 
 ### Suggested conditions
 
-1. Capture desktop/tablet/mobile + theme screenshots in `evidence/s2d/screenshots/` before tenant enablement.  
-2. Keep `fx.rms.workspace.enabled` default-off until internal non-prod validation.  
+1. Capture desktop/tablet/mobile + theme screenshots in `evidence/s2d/screenshots/` before tenant enablement.
+2. Keep `fx.rms.workspace.enabled` default-off until internal non-prod validation.
 3. Do not begin forms/tables migration until S2E/S2F are separately authorized.
 
 ## Summary
@@ -25,9 +25,9 @@ Shared workspace presentation framework implemented under `apps/rms-web/src/fx/w
 
 ## Workspace inventory
 
-| ID | Status |
-| --- | --- |
-| `rms-incident` | Implemented (presentation chrome) |
+| ID                             | Status                                    |
+| ------------------------------ | ----------------------------------------- |
+| `rms-incident`                 | Implemented (presentation chrome)         |
 | Personnel / Prevention / Fleet | **Not present** in rms-web — not invented |
 
 ## Component registry (workspace package)
@@ -50,18 +50,18 @@ Flag off → legacy incident chrome. Routes/session/drafts preserved — `49-wor
 
 ## Defects
 
-| Severity | Count |
-| --- | --- |
-| P0 | 0 |
-| P1 | 0 |
-| P3 | Screenshot package pending pilot process |
+| Severity | Count                                    |
+| -------- | ---------------------------------------- |
+| P0       | 0                                        |
+| P1       | 0                                        |
+| P3       | Screenshot package pending pilot process |
 
 ## Risks
 
-| ID | Notes |
-| --- | --- |
+| ID       | Notes                                                                                            |
+| -------- | ------------------------------------------------------------------------------------------------ |
 | R-S2-015 | Sidebar timeline is record-timestamp presentation only (full history stays on Review) — accepted |
-| R-S2-016 | Notes/Attachments/Audit sidebar panels hidden for Incident to avoid duplicate UX — accepted |
+| R-S2-016 | Notes/Attachments/Audit sidebar panels hidden for Incident to avoid duplicate UX — accepted      |
 
 ## Evidence
 
@@ -69,12 +69,12 @@ Flag off → legacy incident chrome. Routes/session/drafts preserved — `49-wor
 
 ## Production changes
 
-| Area | Changed? |
-| --- | --- |
-| Default incident UX | **No** (flag off) |
-| APIs / DB / auth / NERIS / CAD / permissions | **No** |
-| Seed flag definition | Yes — default false |
-| Code behind flag | Yes |
+| Area                                         | Changed?            |
+| -------------------------------------------- | ------------------- |
+| Default incident UX                          | **No** (flag off)   |
+| APIs / DB / auth / NERIS / CAD / permissions | **No**              |
+| Seed flag definition                         | Yes — default false |
+| Code behind flag                             | Yes                 |
 
 ## Recommended next step
 

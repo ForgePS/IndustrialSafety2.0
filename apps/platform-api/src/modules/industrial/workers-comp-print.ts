@@ -102,7 +102,9 @@ function workStatusSection(items: unknown): string {
     .map((item) => {
       const row = asRecord(item);
       if (!row) return "";
-      const range = [formatDate(row.startDate), formatDate(row.endDate)].filter(Boolean).join(" – ");
+      const range = [formatDate(row.startDate), formatDate(row.endDate)]
+        .filter(Boolean)
+        .join(" – ");
       const notes = asText(row.notes);
       return `<div class="wc-print__block">
   <div><strong>${escapeIncidentHtml(asText(row.status) || "Status")}</strong>${
@@ -124,7 +126,9 @@ function restrictionsSection(items: unknown): string {
     .map((item) => {
       const row = asRecord(item);
       if (!row) return "";
-      const range = [formatDate(row.startDate), formatDate(row.endDate)].filter(Boolean).join(" – ");
+      const range = [formatDate(row.startDate), formatDate(row.endDate)]
+        .filter(Boolean)
+        .join(" – ");
       const description = asText(row.description);
       const accommodations = row.accommodations as WorkersCompAccommodationsPayload | undefined;
       const accommodationSummary =

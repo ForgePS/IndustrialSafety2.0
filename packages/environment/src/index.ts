@@ -127,7 +127,12 @@ const baseSchema = z.object({
   /** Idle session lifetime in seconds (default 12h). */
   FORGE_AUTH_SESSION_IDLE_SECONDS: z.coerce.number().int().positive().optional().default(43_200),
   /** Absolute session lifetime in seconds (default 24h). */
-  FORGE_AUTH_SESSION_ABSOLUTE_SECONDS: z.coerce.number().int().positive().optional().default(86_400),
+  FORGE_AUTH_SESSION_ABSOLUTE_SECONDS: z.coerce
+    .number()
+    .int()
+    .positive()
+    .optional()
+    .default(86_400),
 });
 
 export type ForgeEnvironment = z.infer<typeof baseSchema>;

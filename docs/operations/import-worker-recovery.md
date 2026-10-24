@@ -25,14 +25,14 @@ ECS describe/update, CloudWatch logs, SQS read, DB support read.
 
 ## Failure checkpoints and expected behavior
 
-| Checkpoint | Expected recovery |
-| --- | --- |
-| Before job lock | Message redelivered; another worker acquires lock |
-| After job lock | Lock expires; redelivery resumes at safe boundary |
-| During batch | Incomplete batch detected; successful rows not duplicated (journal) |
-| After DB commit / before ack | Redelivery skips committed journal entries |
-| During artifact generation | Terminal status reconciled; artifact request idempotent |
-| Visibility expiry | Message becomes visible; idempotent processing |
+| Checkpoint                   | Expected recovery                                                   |
+| ---------------------------- | ------------------------------------------------------------------- |
+| Before job lock              | Message redelivered; another worker acquires lock                   |
+| After job lock               | Lock expires; redelivery resumes at safe boundary                   |
+| During batch                 | Incomplete batch detected; successful rows not duplicated (journal) |
+| After DB commit / before ack | Redelivery skips committed journal entries                          |
+| During artifact generation   | Terminal status reconciled; artifact request idempotent             |
+| Visibility expiry            | Message becomes visible; idempotent processing                      |
 
 ## Diagnostic steps
 

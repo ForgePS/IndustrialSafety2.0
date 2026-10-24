@@ -22,7 +22,11 @@ describe("SearchService (MK-S18)", () => {
   it("rejects tenant scope mismatch for non-platform admins", async () => {
     const service = new SearchService({} as never);
     await expect(
-      service.search("other-tenant", { q: "acme", types: ["tenant"] }, principal(["platform.tenant.read"])),
+      service.search(
+        "other-tenant",
+        { q: "acme", types: ["tenant"] },
+        principal(["platform.tenant.read"]),
+      ),
     ).rejects.toThrow(/Tenant scope mismatch/);
   });
 

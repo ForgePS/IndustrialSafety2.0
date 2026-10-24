@@ -1,7 +1,4 @@
-import {
-  absolutizePrintLogoUrl,
-  sanitizeQuizDisplayText,
-} from "./training-paper-quiz.js";
+import { absolutizePrintLogoUrl, sanitizeQuizDisplayText } from "./training-paper-quiz.js";
 
 function escapeHtml(value: string): string {
   return value

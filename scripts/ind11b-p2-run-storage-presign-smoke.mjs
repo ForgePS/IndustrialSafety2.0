@@ -10,13 +10,10 @@ import fs from "node:fs";
 import path from "node:path";
 import { awsJson, awsText, runPlatformApiOneOff } from "./ecs-oneoff.mjs";
 
-const EVID_DIR = path.resolve(
-  "docs/program/industrial-migration/ind-11/evidence/p2/03-storage",
-);
+const EVID_DIR = path.resolve("docs/program/industrial-migration/ind-11/evidence/p2/03-storage");
 const META_APPROVAL = path.join(EVID_DIR, "APPROVE-PRODUCERS-STORAGE-AURORA-METADATA.md");
 const MAP_LOCAL =
-  process.env.FORGE_P2_STORAGE_MAP?.trim() ||
-  path.join(EVID_DIR, "s3-map-staging-latest.json");
+  process.env.FORGE_P2_STORAGE_MAP?.trim() || path.join(EVID_DIR, "s3-map-staging-latest.json");
 const STAGING = "0882c865-59c2-49a6-ab88-ce6ca89be30c";
 const BUCKET_IMPORTS =
   process.env.FORGE_IND11B_IMPORTS_BUCKET || "forge-development-imports-511343547817-us-east-1";
@@ -71,13 +68,7 @@ for (const [label, m] of Object.entries(samples)) {
     "json",
   ]);
   const head = JSON.parse(headRaw);
-  const url = awsOk([
-    "s3",
-    "presign",
-    `s3://${m.destBucket}/${m.s3Key}`,
-    "--expires-in",
-    "300",
-  ]);
+  const url = awsOk(["s3", "presign", `s3://${m.destBucket}/${m.s3Key}`, "--expires-in", "300"]);
   const res = await fetch(url, { method: "GET" });
   const buf = Buffer.from(await res.arrayBuffer());
   downloadResults.push({

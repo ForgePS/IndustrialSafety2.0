@@ -16,7 +16,11 @@ describe("SchemaRowValidator", () => {
     const validator = new SchemaRowValidator();
     const results = await validator.validate(
       [
-        { sourceRowKey: "1", raw: {}, mapped: { display_name: "Ok", email: "ok@ex.com", hire_date: "2020-01-15" } },
+        {
+          sourceRowKey: "1",
+          raw: {},
+          mapped: { display_name: "Ok", email: "ok@ex.com", hire_date: "2020-01-15" },
+        },
         { sourceRowKey: "2", raw: {}, mapped: { email: "bad" } },
         { sourceRowKey: "3", raw: {}, mapped: { display_name: "X", hire_date: "not-a-date" } },
       ],

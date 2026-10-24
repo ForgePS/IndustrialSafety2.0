@@ -22,8 +22,7 @@ export const fieldRemindersApi = {
     return asItems<FieldReminder>(result);
   },
 
-  create: (body: Record<string, unknown>) =>
-    apiSend<FieldReminder>(REMINDERS_API, "POST", body),
+  create: (body: Record<string, unknown>) => apiSend<FieldReminder>(REMINDERS_API, "POST", body),
 
   update: (id: string, body: Record<string, unknown>) =>
     apiSend<FieldReminder>(`${REMINDERS_API}/${encodeURIComponent(id)}`, "PATCH", body),

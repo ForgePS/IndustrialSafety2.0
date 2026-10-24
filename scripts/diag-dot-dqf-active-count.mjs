@@ -47,15 +47,24 @@ function isCompanyDriverSource(row, payload) {
   const seeded = String(payload.seededFrom ?? "").toLowerCase();
   const collection = String(row.source_collection ?? "").toLowerCase();
   const path = String(row.source_path ?? "").toLowerCase();
-  if (seeded.includes("industrial_fleet_drivers") || seeded.includes("is_company_driver")) return true;
-  if (collection === "companyvehicledrivers" || collection === "personneldriverqualification") return true;
+  if (seeded.includes("industrial_fleet_drivers") || seeded.includes("is_company_driver"))
+    return true;
+  if (collection === "companyvehicledrivers" || collection === "personneldriverqualification")
+    return true;
   if (path.includes("companyvehicledrivers")) return true;
   return false;
 }
 
 function isDotDqf(row, payload) {
   if (isCompanyDriverSource(row, payload)) return false;
-  const hay = [row.source_document_id, row.source_path, row.source_collection, row.title, payload.category, payload.seededFrom]
+  const hay = [
+    row.source_document_id,
+    row.source_path,
+    row.source_collection,
+    row.title,
+    payload.category,
+    payload.seededFrom,
+  ]
     .map((v) => String(v ?? ""))
     .join(" ")
     .toLowerCase();
@@ -68,7 +77,8 @@ function isDotDqf(row, payload) {
 async function main() {
   const sql = postgres(await resolveDatabaseUrl(process.env.DATABASE_SECRET_ARN), { max: 1 });
   try {
-    const [tenant] = await sql`select id::text as id from tenants where tenant_key = ${TENANT_KEY} limit 1`;
+    const [tenant] =
+      await sql`select id::text as id from tenants where tenant_key = ${TENANT_KEY} limit 1`;
     const flags = await sql`
       select count(*) filter (where is_dot_driver)::int as dot_flags,
              count(*) filter (where is_company_driver)::int as company
@@ -92,16 +102,25 @@ async function main() {
           title ilike '%terminated%'
           or source_payload::text ilike '%terminated%'
         )`;
-    console.log(JSON.stringify({
-      tenant: TENANT_KEY,
-      activeDqfTitles: active.length,
-      titles: active.sort(),
-      personnelDotFlags: flags[0].dot_flags,
-      companyDrivers: flags[0].company,
-      archivedTerminatedish: archivedTerm[0].n,
-    }, null, 2));
+    console.log(
+      JSON.stringify(
+        {
+          tenant: TENANT_KEY,
+          activeDqfTitles: active.length,
+          titles: active.sort(),
+          personnelDotFlags: flags[0].dot_flags,
+          companyDrivers: flags[0].company,
+          archivedTerminatedish: archivedTerm[0].n,
+        },
+        null,
+        2,
+      ),
+    );
   } finally {
     await sql.end({ timeout: 5 });
   }
 }
-main().catch((e) => { console.error(e); process.exit(1); });
+main().catch((e) => {
+  console.error(e);
+  process.exit(1);
+});

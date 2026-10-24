@@ -6,15 +6,8 @@
  * signature pad that the generic ops workspace has no concept of. Column names
  * still match migration 0043 so both paths POST the same payload shape.
  */
-import {
-  isOversizedLicenseImage,
-  toLicenseUpload,
-  uploadImageSrc,
-} from "./license-copies";
-import {
-  isLicenseDocumentId,
-  licenseDocumentIdFromUpload,
-} from "./personnel-license-upload";
+import { isOversizedLicenseImage, toLicenseUpload, uploadImageSrc } from "./license-copies";
+import { isLicenseDocumentId, licenseDocumentIdFromUpload } from "./personnel-license-upload";
 import { formatEmployeeNumberFromDigits, employeeNumberDigitsForInput } from "./employee-number";
 
 export type PersonnelFieldType =
@@ -278,7 +271,11 @@ export const PERSONNEL_FORM_SECTIONS: readonly PersonnelSection[] = [
     title: "Records and access",
     icon: "bx-id-card",
     fields: [
-      { name: "fileBase", label: "File base", help: "Legacy record prefix, if the person has one." },
+      {
+        name: "fileBase",
+        label: "File base",
+        help: "Legacy record prefix, if the person has one.",
+      },
       { name: "userAuthId", label: "User auth ID", help: "Links this record to a login account." },
       { name: "digitalSource", label: "Digital source", placeholder: "kiosk, import, web" },
     ],
@@ -692,10 +689,7 @@ export function personnelDisplayName(values: PersonnelFormValues): string {
   return [first, last].filter(Boolean).join(" ");
 }
 
-export type LookupNameResolver = (
-  source: PersonnelLookupSource,
-  id: string,
-) => string | undefined;
+export type LookupNameResolver = (source: PersonnelLookupSource, id: string) => string | undefined;
 
 /**
  * Build the POST body. Blank fields are omitted rather than sent as empty

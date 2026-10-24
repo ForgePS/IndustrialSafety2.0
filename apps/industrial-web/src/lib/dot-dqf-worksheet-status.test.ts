@@ -1,8 +1,5 @@
 import { describe, expect, it } from "vitest";
-import {
-  dqfWorksheetDocumentStatus,
-  dqfWorksheetLicenseStatus,
-} from "./dot-dqf-worksheet-status";
+import { dqfWorksheetDocumentStatus, dqfWorksheetLicenseStatus } from "./dot-dqf-worksheet-status";
 
 describe("dot-dqf-worksheet-status", () => {
   it("marks expired license as critical (red)", () => {
@@ -25,7 +22,8 @@ describe("dot-dqf-worksheet-status", () => {
     const status = dqfWorksheetLicenseStatus(
       {
         cdlExpiry: "2026-01-20",
-        driversLicenseCopy: '[{"name":"dl.jpg","documentId":"01900000-0000-7000-8000-000000000001"}]',
+        driversLicenseCopy:
+          '[{"name":"dl.jpg","documentId":"01900000-0000-7000-8000-000000000001"}]',
       },
       "2026-01-01",
     );
@@ -50,8 +48,7 @@ describe("dot-dqf-worksheet-status", () => {
         workerClassification: "Full Time",
         driverLicenseClass: "CDL DRIVER",
         medicalCertExpiry: "2026-01-20",
-        medicalCertCopy:
-          '[{"name":"mec.pdf","documentId":"01900000-0000-7000-8000-000000000002"}]',
+        medicalCertCopy: '[{"name":"mec.pdf","documentId":"01900000-0000-7000-8000-000000000002"}]',
       },
       { today: "2026-01-01" },
     );
@@ -82,8 +79,7 @@ describe("dot-dqf-worksheet-status", () => {
     expect(status.tone).toBe("ok");
   });
 
-  const eyeExamCopy =
-    '[{"name":"eye.pdf","documentId":"01900000-0000-7000-8000-000000000004"}]';
+  const eyeExamCopy = '[{"name":"eye.pdf","documentId":"01900000-0000-7000-8000-000000000004"}]';
 
   it("treats diabetic eye exam as optional for non-diabetic drivers", () => {
     const status = dqfWorksheetDocumentStatus("diabeticEyeExam", {});

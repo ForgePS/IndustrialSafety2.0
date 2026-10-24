@@ -1,8 +1,5 @@
 import { describe, expect, it } from "vitest";
-import {
-  evaluateAuthorization,
-  evaluateTenantOperationalState,
-} from "@forge/authorization";
+import { evaluateAuthorization, evaluateTenantOperationalState } from "@forge/authorization";
 import type { ForgePrincipal } from "@forge/tenant-context";
 
 function principal(overrides: Partial<ForgePrincipal> = {}): ForgePrincipal {

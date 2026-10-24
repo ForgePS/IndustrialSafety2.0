@@ -2,17 +2,8 @@
 
 import { Suspense, useCallback, useEffect, useMemo, useState, type FormEvent } from "react";
 import Link from "next/link";
-import {
-  ErrorState,
-  ForgePageHeader,
-  LoadingState,
-} from "@forge/ui";
-import {
-  filterBySearch,
-  ListControls,
-  paginate,
-  sortByField,
-} from "@/components/list-controls";
+import { ErrorState, ForgePageHeader, LoadingState } from "@forge/ui";
+import { filterBySearch, ListControls, paginate, sortByField } from "@/components/list-controls";
 import { PlatformPageGate } from "@/components/platform-page-gate";
 import { listPlatformProducts, patchPlatformProduct, type PlatformProduct } from "@/lib/api";
 import { productDisplayName } from "@/lib/presentation";

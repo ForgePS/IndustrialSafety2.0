@@ -79,8 +79,8 @@ export default function SettingsPresentationPage() {
           <h4 className="mb-1">Forge Industrial Safety Walkthrough</h4>
           <p className="text-muted mb-0">
             Launch the Complete Platform Overview presentation and manage export defaults. Prefer{" "}
-            <a href="/admin/walkthrough-studio/">Walkthrough Studio</a> for narration, demo reset, and
-            share links. Target runtime is under ten minutes.
+            <a href="/admin/walkthrough-studio/">Walkthrough Studio</a> for narration, demo reset,
+            and share links. Target runtime is under ten minutes.
           </p>
         </div>
         <a className="btn btn-primary" href="/demo/industrial/">
@@ -223,9 +223,7 @@ export default function SettingsPresentationPage() {
                 rows={3}
                 value={settings.closingText ?? ""}
                 disabled={!canEdit}
-                onChange={(e) =>
-                  setSettings({ ...settings, closingText: e.target.value || null })
-                }
+                onChange={(e) => setSettings({ ...settings, closingText: e.target.value || null })}
               />
             </div>
           </div>

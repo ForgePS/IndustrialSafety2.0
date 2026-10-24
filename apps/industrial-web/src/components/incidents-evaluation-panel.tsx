@@ -145,7 +145,9 @@ export function IncidentsEvaluationPanel({ incidents, canManage, onSave }: Props
               <i className="bx bx-list-check" />
             </span>
           </div>
-          <p className="text-muted mb-0">Choose an incident to complete the evaluation checklist.</p>
+          <p className="text-muted mb-0">
+            Choose an incident to complete the evaluation checklist.
+          </p>
         </div>
       ) : (
         <>
@@ -168,7 +170,10 @@ export function IncidentsEvaluationPanel({ incidents, canManage, onSave }: Props
                       disabled={!canManage}
                       onChange={() => toggleItem(item.id)}
                     />
-                    <label className="form-check-label fw-semibold" htmlFor={`eval-item-${item.id}`}>
+                    <label
+                      className="form-check-label fw-semibold"
+                      htmlFor={`eval-item-${item.id}`}
+                    >
                       {item.label}
                     </label>
                   </div>

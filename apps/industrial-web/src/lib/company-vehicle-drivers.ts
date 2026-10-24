@@ -7,11 +7,7 @@ import { parseMvrAuditHistory } from "@/lib/mvr-sample";
 import { personNameDisplay } from "@/lib/person-name-display";
 
 export type CompanyVehicleDriverStatus =
-  | "pending_mvr"
-  | "on_insurance"
-  | "suspended"
-  | "removed"
-  | string;
+  "pending_mvr" | "on_insurance" | "suspended" | "removed" | string;
 
 export type CompanyVehicleDriver = {
   id: string;
@@ -313,11 +309,7 @@ export function matchesCompanyDriverQuery(driver: CompanyVehicleDriver, query: s
 }
 
 export type CompanyDriverSort =
-  | "firstName"
-  | "lastName"
-  | "expired"
-  | "pending_mvr"
-  | "on_insurance";
+  "firstName" | "lastName" | "expired" | "pending_mvr" | "on_insurance";
 
 export const COMPANY_DRIVER_SORT_OPTIONS: ReadonlyArray<{
   value: CompanyDriverSort;
@@ -337,7 +329,10 @@ function firstWord(value: string): string {
 }
 
 function lastWord(value: string): string {
-  const words = value.trim().split(/\s+/).filter((w) => w !== "");
+  const words = value
+    .trim()
+    .split(/\s+/)
+    .filter((w) => w !== "");
   return words.length === 0 ? "" : words[words.length - 1]!;
 }
 
@@ -351,7 +346,11 @@ function collate(a: string, b: string): number {
   return a.localeCompare(b, undefined, { sensitivity: "base", numeric: true });
 }
 
-function compareByName(a: CompanyVehicleDriver, b: CompanyVehicleDriver, sort: "firstName" | "lastName"): number {
+function compareByName(
+  a: CompanyVehicleDriver,
+  b: CompanyVehicleDriver,
+  sort: "firstName" | "lastName",
+): number {
   const aParts = driverNameParts(a.personnelName);
   const bParts = driverNameParts(b.personnelName);
   const [aPrimary, aSecondary] =

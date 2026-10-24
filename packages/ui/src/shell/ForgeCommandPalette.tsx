@@ -141,7 +141,10 @@ export function ForgeCommandPalette({
             Close
           </Button>
         </div>
-        <label htmlFor="forge-command-palette-input" style={{ display: "block", marginTop: "0.75rem" }}>
+        <label
+          htmlFor="forge-command-palette-input"
+          style={{ display: "block", marginTop: "0.75rem" }}
+        >
           <span className="forge-visually-hidden">Command</span>
           <input
             id="forge-command-palette-input"
@@ -191,7 +194,9 @@ export function ForgeCommandPalette({
                           padding: "0.55rem 0.65rem",
                           border: "1px solid transparent",
                           borderRadius: "0.4rem",
-                          background: active ? "var(--forge-color-surface-muted, #f1f5f9)" : "transparent",
+                          background: active
+                            ? "var(--forge-color-surface-muted, #f1f5f9)"
+                            : "transparent",
                           cursor: item.disabled ? "not-allowed" : "pointer",
                         }}
                       >

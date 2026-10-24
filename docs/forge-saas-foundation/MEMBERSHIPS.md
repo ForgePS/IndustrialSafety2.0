@@ -5,25 +5,25 @@
 **Canonical table:** `user_tenant_memberships` (ADR-021)  
 Compatibility projection `user_tenant_access` remains dual-written — do not invent a third model.
 
-| Field | Column |
-| --- | --- |
-| membershipId | `id` |
-| userId | `user_id` |
-| tenantId | `tenant_id` |
-| status | `status` |
-| createdAt | `created_at` |
-| updatedAt | `updated_at` |
-| joinedAt | `activated_at` (when ACTIVE) |
+| Field         | Column                        |
+| ------------- | ----------------------------- |
+| membershipId  | `id`                          |
+| userId        | `user_id`                     |
+| tenantId      | `tenant_id`                   |
+| status        | `status`                      |
+| createdAt     | `created_at`                  |
+| updatedAt     | `updated_at`                  |
+| joinedAt      | `activated_at` (when ACTIVE)  |
 | deactivatedAt | `suspended_at` / `revoked_at` |
 
 ## Status mapping (SaaS vocabulary → Forge)
 
-| SaaS | Forge (stored) | Tenant selectable |
-| --- | --- | --- |
-| pending | `PENDING` | No |
-| active | `ACTIVE` | Yes (if tenant session-eligible) |
-| inactive | `SUSPENDED` | No |
-| removed | `REVOKED` | No |
+| SaaS     | Forge (stored) | Tenant selectable                |
+| -------- | -------------- | -------------------------------- |
+| pending  | `PENDING`      | No                               |
+| active   | `ACTIVE`       | Yes (if tenant session-eligible) |
+| inactive | `SUSPENDED`    | No                               |
+| removed  | `REVOKED`      | No                               |
 
 Also present: `EXPIRED`, `ARCHIVED` (ADR-021 terminals).
 

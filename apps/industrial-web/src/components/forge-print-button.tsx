@@ -2,10 +2,7 @@
 
 import { useCallback, useState } from "react";
 import { useAuth } from "@forge/web-kit";
-import {
-  ForgePrintDialog,
-  type ForgePrintDialogBatchItem,
-} from "@/components/forge-print-dialog";
+import { ForgePrintDialog, type ForgePrintDialogBatchItem } from "@/components/forge-print-dialog";
 
 export type ForgePrintButtonProps = {
   module: string;

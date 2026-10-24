@@ -34,9 +34,7 @@ describe("loto-print", () => {
         scope: "[object Object],[object Object]",
         notes: [{ text: "Ensure the machine has come to a complete stop." }],
         equipmentImageUrl: "data:image/jpeg;base64,equip",
-        equipmentImageAnnotations: [
-          { id: "a1", x1: 0.2, y1: 0.3, x2: 0.6, y2: 0.55 },
-        ],
+        equipmentImageAnnotations: [{ id: "a1", x1: 0.2, y1: 0.3, x2: 0.6, y2: 0.55 }],
         printPurpose: "Custom purpose text",
         printScopeStatement: "Custom scope text",
         printEnforcement: "Custom enforcement text",
@@ -57,9 +55,7 @@ describe("loto-print", () => {
               lockoutDeviceName: "lock and hasp",
               verificationMethodName: "Attempt restart at all control panels",
               stepImageUrl: "data:image/jpeg;base64,step",
-              stepImageAnnotations: [
-                { id: "s1", x1: 0.1, y1: 0.1, x2: 0.4, y2: 0.5 },
-              ],
+              stepImageAnnotations: [{ id: "s1", x1: 0.1, y1: 0.1, x2: 0.4, y2: 0.5 }],
             },
           },
         ],

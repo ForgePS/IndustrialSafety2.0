@@ -49,7 +49,9 @@ async function main() {
       order by display_name
       limit 20
     `;
-    console.log(JSON.stringify({ ok: true, tenantKey: TENANT_KEY, needle: NEEDLE, matches: rows }, null, 2));
+    console.log(
+      JSON.stringify({ ok: true, tenantKey: TENANT_KEY, needle: NEEDLE, matches: rows }, null, 2),
+    );
   } finally {
     await sql.end({ timeout: 5 });
   }

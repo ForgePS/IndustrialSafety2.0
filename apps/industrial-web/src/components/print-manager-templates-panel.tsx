@@ -82,10 +82,7 @@ function parsePreviewValues(raw: string): Record<string, string> {
 
 export function PrintManagerTemplatesPanel() {
   const { hasAnyPermission } = useAuth();
-  const canManage = hasAnyPermission([
-    "industrial.printer.manage_templates",
-    "industrial.admin",
-  ]);
+  const canManage = hasAnyPermission(["industrial.printer.manage_templates", "industrial.admin"]);
   const canPrint = hasAnyPermission(["industrial.printer.print", "industrial.admin"]);
 
   const [templates, setTemplates] = useState<LabelTemplate[]>([]);
@@ -501,7 +498,9 @@ export function PrintManagerTemplatesPanel() {
                           <div>{t.name}</div>
                           <div className="small text-muted font-monospace">{t.code}</div>
                           <div className="small">
-                            {t.publishedVersion != null ? `pub v${t.publishedVersion}` : "unpublished"}
+                            {t.publishedVersion != null
+                              ? `pub v${t.publishedVersion}`
+                              : "unpublished"}
                             {t.draftVersion != null ? ` · draft v${t.draftVersion}` : ""}
                           </div>
                         </td>

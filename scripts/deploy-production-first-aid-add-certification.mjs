@@ -19,7 +19,10 @@ const API_ECR = `${ACCOUNT}.dkr.ecr.${REGION}.amazonaws.com/forge-production-ecr
 
 const registerOnly = process.argv.includes("--register-only");
 const skipWeb = process.argv.includes("--skip-web");
-const stamp = new Date().toISOString().replace(/[-:TZ.]/g, "").slice(0, 14);
+const stamp = new Date()
+  .toISOString()
+  .replace(/[-:TZ.]/g, "")
+  .slice(0, 14);
 const tag = `first-aid-add-cert-${stamp}`;
 
 function sh(cmd, opts = {}) {

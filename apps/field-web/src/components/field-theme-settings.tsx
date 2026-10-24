@@ -34,8 +34,9 @@ export function useFieldThemeMode() {
     sync();
 
     const onTheme = (event: Event) => {
-      const detail = (event as CustomEvent<{ preference?: FieldThemePreference; resolved?: FieldResolvedTheme }>)
-        .detail;
+      const detail = (
+        event as CustomEvent<{ preference?: FieldThemePreference; resolved?: FieldResolvedTheme }>
+      ).detail;
       if (detail?.preference) setPreference(detail.preference);
       if (detail?.resolved === "light" || detail?.resolved === "dark") {
         setResolved(detail.resolved);

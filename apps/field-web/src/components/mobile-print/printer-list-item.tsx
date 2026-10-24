@@ -15,9 +15,7 @@ export function PrinterListItem({ printer, isDefault, actions }: PrinterListItem
       <div className="ff-stack-item-main">
         <strong>
           {printerDisplayName(printer)}
-          {isDefault || printer.isDefault ? (
-            <span className="ff-meta"> · Default</span>
-          ) : null}
+          {isDefault || printer.isDefault ? <span className="ff-meta"> · Default</span> : null}
         </strong>
         <span className="ff-meta">
           {[printer.transportType || printer.connectionType || "Bluetooth", printer.model]

@@ -114,7 +114,8 @@ export const SAFETY_WORKFLOWS: readonly SafetyWorkflowDef[] = [
   },
 ];
 
-export type PermitTypeId = "hot-work" | "confined-space" | "working-at-heights" | "electrical-safety";
+export type PermitTypeId =
+  "hot-work" | "confined-space" | "working-at-heights" | "electrical-safety";
 
 export const PERMIT_TYPES: Array<{
   id: PermitTypeId;
@@ -247,14 +248,18 @@ export function hasPersonAcknowledged(
   const name = (displayName ?? "").trim().toLowerCase();
   return acks.some((ack) => {
     const ackPid = String(ack.personnelId ?? "").trim();
-    const ackName = String(ack.name ?? "").trim().toLowerCase();
+    const ackName = String(ack.name ?? "")
+      .trim()
+      .toLowerCase();
     if (pid && ackPid && pid === ackPid) return true;
     if (name && ackName && name === ackName) return true;
     return false;
   });
 }
 
-export function chemicalCriticalFields(record: SafetyRecord): Array<{ label: string; value: string }> {
+export function chemicalCriticalFields(
+  record: SafetyRecord,
+): Array<{ label: string; value: string }> {
   const pairs: Array<[string, string[]]> = [
     ["Product", ["title", "name", "productName", "chemicalName"]],
     ["CAS", ["casNumber", "cas"]],

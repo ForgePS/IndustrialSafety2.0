@@ -4,19 +4,10 @@
  */
 
 export type FieldReportType =
-  | "incident"
-  | "near-miss"
-  | "observation"
-  | "hazard"
-  | "equipment"
-  | "security";
+  "incident" | "near-miss" | "observation" | "hazard" | "equipment" | "security";
 
 export type IncidentCategory =
-  | "injuries"
-  | "near-misses"
-  | "medical-refusals"
-  | "property-damage"
-  | "automotive";
+  "injuries" | "near-misses" | "medical-refusals" | "property-damage" | "automotive";
 
 export type ObservationKind = "SAFE" | "UNSAFE";
 

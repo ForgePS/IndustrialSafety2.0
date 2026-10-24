@@ -2,9 +2,9 @@
 
 ## Composition
 
-| Surface | FX when | Compatibility |
-| --- | --- | --- |
-| Create synthetic webhook form | `module.cadConnections` ∧ `forms` | Legacy HTML form |
+| Surface                        | FX when                            | Compatibility         |
+| ------------------------------ | ---------------------------------- | --------------------- |
+| Create synthetic webhook form  | `module.cadConnections` ∧ `forms`  | Legacy HTML form      |
 | Connections list + row actions | `module.cadConnections` ∧ `tables` | Legacy `styles.table` |
 
 ## Foundations used

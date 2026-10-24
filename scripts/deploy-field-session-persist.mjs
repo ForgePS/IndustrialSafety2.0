@@ -11,7 +11,10 @@ import fs from "node:fs";
 
 const ACCOUNT = "511343547817";
 const REGION = "us-east-1";
-const stamp = new Date().toISOString().replace(/[-:TZ.]/g, "").slice(0, 14);
+const stamp = new Date()
+  .toISOString()
+  .replace(/[-:TZ.]/g, "")
+  .slice(0, 14);
 const tag = `field-session-${stamp}`;
 
 function sh(cmd, opts = {}) {
@@ -75,9 +78,7 @@ for (const t of targets) {
   sh(`docker tag forge-platform-api:${tag} ${t.ecr}:${tag}`);
   sh(`docker push ${t.ecr}:${tag}`);
   const svc = JSON.parse(
-    shOut(
-      `aws ecs describe-services --cluster ${t.cluster} --services ${t.service} --output json`,
-    ),
+    shOut(`aws ecs describe-services --cluster ${t.cluster} --services ${t.service} --output json`),
   );
   const currentTd = svc.services?.[0]?.taskDefinition;
   if (!currentTd) throw new Error(`No task definition for ${t.service}`);
@@ -111,7 +112,7 @@ for (const t of targets) {
 
 sh("node scripts/sync-static-site.mjs --app field --environment development --full-invalidate");
 sh(
-  "cmd /c \"set FORGE_SAME_ORIGIN_API=1&& set FORGE_PRODUCTION_ACCOUNT=511343547817&& node scripts/sync-static-site.mjs --app field --environment production --full-invalidate\"",
+  'cmd /c "set FORGE_SAME_ORIGIN_API=1&& set FORGE_PRODUCTION_ACCOUNT=511343547817&& node scripts/sync-static-site.mjs --app field --environment production --full-invalidate"',
   { shell: true },
 );
 

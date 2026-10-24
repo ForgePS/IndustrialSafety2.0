@@ -68,17 +68,13 @@ export function buildDvirPrintableHtml(
   const merged = { ...payload, ...record };
   const trip = String(merged.tripType ?? "").toUpperCase();
   const tripType: DvirTripType = trip === "POST_TRIP" ? "POST_TRIP" : "PRE_TRIP";
-  const inspectionDate = String(
-    merged.inspectionDate ?? merged.recordDate ?? "",
-  ).slice(0, 10);
+  const inspectionDate = String(merged.inspectionDate ?? merged.recordDate ?? "").slice(0, 10);
   const title = String(merged.title ?? `${tripLabel(tripType)} DVIR`);
   const items = resolveItems(merged);
   const defects = dvirDefectCountFromPayload(merged);
   const company = String(branding.companyName ?? "").trim();
   const logo = String(branding.logoUrl ?? "").trim();
-  const logoHtml = logo
-    ? `<img class="dvir-print__logo" src="${escapeHtml(logo)}" alt="" />`
-    : "";
+  const logoHtml = logo ? `<img class="dvir-print__logo" src="${escapeHtml(logo)}" alt="" />` : "";
 
   return `<!doctype html><html lang="en"><head><meta charset="utf-8" />
 <title>${escapeHtml(title)}</title>
@@ -146,9 +142,7 @@ export function buildDvirDayPrintableHtml(
 ): string {
   const company = String(branding.companyName ?? "").trim();
   const logo = String(branding.logoUrl ?? "").trim();
-  const logoHtml = logo
-    ? `<img class="dvir-print__logo" src="${escapeHtml(logo)}" alt="" />`
-    : "";
+  const logoHtml = logo ? `<img class="dvir-print__logo" src="${escapeHtml(logo)}" alt="" />` : "";
   const sorted = [...records].sort((a, b) => {
     const ta = String(a.tripType ?? "").toUpperCase() === "POST_TRIP" ? 1 : 0;
     const tb = String(b.tripType ?? "").toUpperCase() === "POST_TRIP" ? 1 : 0;

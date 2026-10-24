@@ -30,7 +30,8 @@ function Inner() {
   const { hasPermission } = useAuth();
   const canRead =
     hasPermission("platform.ai.narrative.manage") || hasPermission("platform.ai.usage.view");
-  const canWrite = hasPermission("platform.ai.narrative.manage") || hasPermission("platform.feature.manage");
+  const canWrite =
+    hasPermission("platform.ai.narrative.manage") || hasPermission("platform.feature.manage");
   const [flags, setFlags] = useState<Record<string, boolean>>({});
   const [loading, setLoading] = useState(Boolean(tenantId));
   const [error, setError] = useState<string | null>(null);
@@ -147,7 +148,13 @@ function Inner() {
 
 export default function Page() {
   return (
-    <Suspense fallback={<main className={styles.page}><p className={styles.muted}>Loading…</p></main>}>
+    <Suspense
+      fallback={
+        <main className={styles.page}>
+          <p className={styles.muted}>Loading…</p>
+        </main>
+      }
+    >
       <Inner />
     </Suspense>
   );

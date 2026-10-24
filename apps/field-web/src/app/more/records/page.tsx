@@ -140,7 +140,11 @@ export default function RecordsPage() {
         })}
       </div>
 
-      <button type="button" className="ff-btn ff-btn-secondary" onClick={() => router.push("/training/")}>
+      <button
+        type="button"
+        className="ff-btn ff-btn-secondary"
+        onClick={() => router.push("/training/")}
+      >
         My Training
       </button>
     </>

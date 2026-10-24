@@ -10,7 +10,9 @@ test.describe("Mobile viewport @smoke", () => {
     await page.goto(`${baseUrl}/`);
     await expect(page.getByRole("heading", { name: /records management/i })).toBeVisible();
 
-    const createLink = page.getByRole("link", { name: /create manual incident|view incidents/i }).first();
+    const createLink = page
+      .getByRole("link", { name: /create manual incident|view incidents/i })
+      .first();
     await expect(createLink).toBeVisible();
 
     await page.goto(`${baseUrl}/incidents/`);

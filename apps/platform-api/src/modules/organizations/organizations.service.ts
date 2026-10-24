@@ -1,8 +1,5 @@
 import { Inject, Injectable } from "@nestjs/common";
-import {
-  createOrganizationInputSchema,
-  type CreateOrganizationInput,
-} from "@forge/contracts";
+import { createOrganizationInputSchema, type CreateOrganizationInput } from "@forge/contracts";
 import {
   createId,
   organizationTypes,
@@ -41,63 +38,68 @@ export class OrganizationsService {
 
   async create(tenantId: string, input: unknown, principal: ForgePrincipal) {
     const data = createOrganizationInputSchema.parse(input) as CreateOrganizationInput;
-    return withTenantTransaction(this.db, tenantId, async (tx) => {
-      const orgType = await tx.query.organizationTypes.findFirst({
-        where: eq(organizationTypes.code, data.organizationTypeCode),
-      });
-      if (!orgType) {
-        throw new ForgeError("BAD_REQUEST", "Unknown organization type code");
-      }
-      const id = createId();
-      const now = new Date();
-      const [row] = await tx
-        .insert(organizations)
-        .values({
-          id,
-          tenantId,
-          organizationTypeId: orgType.id,
-          parentOrganizationId: data.parentOrganizationId,
-          slug: data.slug,
-          legalName: data.legalName,
-          displayName: data.displayName,
-          email: data.email,
-          phone: data.phone,
-          timezone: data.timezone,
-          status: "ACTIVE",
-          createdAt: now,
-          updatedAt: now,
-        })
-        .returning();
-      if (!row) {
-        throw new ForgeError("INTERNAL_ERROR", "Failed to create organization");
-      }
+    return withTenantTransaction(
+      this.db,
+      tenantId,
+      async (tx) => {
+        const orgType = await tx.query.organizationTypes.findFirst({
+          where: eq(organizationTypes.code, data.organizationTypeCode),
+        });
+        if (!orgType) {
+          throw new ForgeError("BAD_REQUEST", "Unknown organization type code");
+        }
+        const id = createId();
+        const now = new Date();
+        const [row] = await tx
+          .insert(organizations)
+          .values({
+            id,
+            tenantId,
+            organizationTypeId: orgType.id,
+            parentOrganizationId: data.parentOrganizationId,
+            slug: data.slug,
+            legalName: data.legalName,
+            displayName: data.displayName,
+            email: data.email,
+            phone: data.phone,
+            timezone: data.timezone,
+            status: "ACTIVE",
+            createdAt: now,
+            updatedAt: now,
+          })
+          .returning();
+        if (!row) {
+          throw new ForgeError("INTERNAL_ERROR", "Failed to create organization");
+        }
 
-      await this.outbox.write(tx, {
-        tenantId,
-        aggregateType: "organization",
-        aggregateId: id,
-        eventType: DOMAIN_EVENT_TYPES.ORGANIZATION_CREATED,
-        payload: { organizationId: id, tenantId, slug: data.slug },
-        correlationId: principal.correlationId,
-        actorUserId: principal.userId,
-      });
-      await this.audit.writeInTransaction(tx, {
-        tenantId,
-        actorUserId: principal.userId,
-        actorPersonId: principal.personId,
-        actorType: "USER",
-        action: "organization.create",
-        resourceType: "organization",
-        resourceId: id,
-        organizationId: id,
-        result: "SUCCESS",
-        riskLevel: "LOW",
-        correlationId: principal.correlationId,
-        requestId: principal.requestId,
-        after: row,
-      });
-      return row;
-    }, principal.userId);
+        await this.outbox.write(tx, {
+          tenantId,
+          aggregateType: "organization",
+          aggregateId: id,
+          eventType: DOMAIN_EVENT_TYPES.ORGANIZATION_CREATED,
+          payload: { organizationId: id, tenantId, slug: data.slug },
+          correlationId: principal.correlationId,
+          actorUserId: principal.userId,
+        });
+        await this.audit.writeInTransaction(tx, {
+          tenantId,
+          actorUserId: principal.userId,
+          actorPersonId: principal.personId,
+          actorType: "USER",
+          action: "organization.create",
+          resourceType: "organization",
+          resourceId: id,
+          organizationId: id,
+          result: "SUCCESS",
+          riskLevel: "LOW",
+          correlationId: principal.correlationId,
+          requestId: principal.requestId,
+          after: row,
+        });
+        return row;
+      },
+      principal.userId,
+    );
   }
 
   async list(tenantId: string) {
@@ -129,65 +131,72 @@ export class OrganizationsService {
     expectedVersion: ExpectedVersion,
   ) {
     const data = patchSchema.parse(input);
-    return withTenantTransaction(this.db, tenantId, async (tx) => {
-      const before = await tx.query.organizations.findFirst({
-        where: and(eq(organizations.id, organizationId), eq(organizations.tenantId, tenantId)),
-      });
-      if (!before) {
-        throw new ForgeError("NOT_FOUND", "Organization not found");
-      }
-      const version = before.recordVersion;
-      if (expectedVersion !== "*" && version !== expectedVersion) {
-        throw concurrencyConflict({
-          tenantId,
-          resourceType: "organization",
-          resourceId: organizationId,
-          expectedVersion,
-          actualVersion: version,
+    return withTenantTransaction(
+      this.db,
+      tenantId,
+      async (tx) => {
+        const before = await tx.query.organizations.findFirst({
+          where: and(eq(organizations.id, organizationId), eq(organizations.tenantId, tenantId)),
         });
-      }
-      const [updated] = await tx
-        .update(organizations)
-        .set({ ...data, recordVersion: version + 1, updatedAt: new Date() })
-        .where(and(eq(organizations.id, organizationId), eq(organizations.recordVersion, version)))
-        .returning();
-      if (!updated) {
-        throw concurrencyConflict({
-          tenantId,
-          resourceType: "organization",
-          resourceId: organizationId,
-          expectedVersion,
-          actualVersion: null,
-        });
-      }
+        if (!before) {
+          throw new ForgeError("NOT_FOUND", "Organization not found");
+        }
+        const version = before.recordVersion;
+        if (expectedVersion !== "*" && version !== expectedVersion) {
+          throw concurrencyConflict({
+            tenantId,
+            resourceType: "organization",
+            resourceId: organizationId,
+            expectedVersion,
+            actualVersion: version,
+          });
+        }
+        const [updated] = await tx
+          .update(organizations)
+          .set({ ...data, recordVersion: version + 1, updatedAt: new Date() })
+          .where(
+            and(eq(organizations.id, organizationId), eq(organizations.recordVersion, version)),
+          )
+          .returning();
+        if (!updated) {
+          throw concurrencyConflict({
+            tenantId,
+            resourceType: "organization",
+            resourceId: organizationId,
+            expectedVersion,
+            actualVersion: null,
+          });
+        }
 
-      await this.outbox.write(tx, {
-        tenantId,
-        aggregateType: "organization",
-        aggregateId: organizationId,
-        eventType: DOMAIN_EVENT_TYPES.ORGANIZATION_UPDATED,
-        payload: { organizationId, tenantId },
-        correlationId: principal.correlationId,
-        actorUserId: principal.userId,
-      });
-      await this.audit.writeInTransaction(tx, {
-        tenantId,
-        actorUserId: principal.userId,
-        actorPersonId: principal.personId,
-        actorType: "USER",
-        action: "organization.update",
-        resourceType: "organization",
-        resourceId: organizationId,
-        organizationId,
-        result: "SUCCESS",
-        riskLevel: "LOW",
-        correlationId: principal.correlationId,
-        requestId: principal.requestId,
-        before,
-        after: updated,
-      });
-      return updated;
-    }, principal.userId);
+        await this.outbox.write(tx, {
+          tenantId,
+          aggregateType: "organization",
+          aggregateId: organizationId,
+          eventType: DOMAIN_EVENT_TYPES.ORGANIZATION_UPDATED,
+          payload: { organizationId, tenantId },
+          correlationId: principal.correlationId,
+          actorUserId: principal.userId,
+        });
+        await this.audit.writeInTransaction(tx, {
+          tenantId,
+          actorUserId: principal.userId,
+          actorPersonId: principal.personId,
+          actorType: "USER",
+          action: "organization.update",
+          resourceType: "organization",
+          resourceId: organizationId,
+          organizationId,
+          result: "SUCCESS",
+          riskLevel: "LOW",
+          correlationId: principal.correlationId,
+          requestId: principal.requestId,
+          before,
+          after: updated,
+        });
+        return updated;
+      },
+      principal.userId,
+    );
   }
 
   async archive(
@@ -196,60 +205,67 @@ export class OrganizationsService {
     principal: ForgePrincipal,
     expectedVersion: ExpectedVersion,
   ) {
-    return withTenantTransaction(this.db, tenantId, async (tx) => {
-      const before = await tx.query.organizations.findFirst({
-        where: and(eq(organizations.id, organizationId), eq(organizations.tenantId, tenantId)),
-      });
-      if (!before) {
-        throw new ForgeError("NOT_FOUND", "Organization not found");
-      }
-      const version = before.recordVersion;
-      if (expectedVersion !== "*" && version !== expectedVersion) {
-        throw concurrencyConflict({
+    return withTenantTransaction(
+      this.db,
+      tenantId,
+      async (tx) => {
+        const before = await tx.query.organizations.findFirst({
+          where: and(eq(organizations.id, organizationId), eq(organizations.tenantId, tenantId)),
+        });
+        if (!before) {
+          throw new ForgeError("NOT_FOUND", "Organization not found");
+        }
+        const version = before.recordVersion;
+        if (expectedVersion !== "*" && version !== expectedVersion) {
+          throw concurrencyConflict({
+            tenantId,
+            resourceType: "organization",
+            resourceId: organizationId,
+            expectedVersion,
+            actualVersion: version,
+          });
+        }
+        const now = new Date();
+        const [updated] = await tx
+          .update(organizations)
+          .set({
+            status: "ARCHIVED",
+            archivedAt: now,
+            recordVersion: version + 1,
+            updatedAt: now,
+          })
+          .where(
+            and(eq(organizations.id, organizationId), eq(organizations.recordVersion, version)),
+          )
+          .returning();
+        if (!updated) {
+          throw concurrencyConflict({
+            tenantId,
+            resourceType: "organization",
+            resourceId: organizationId,
+            expectedVersion,
+            actualVersion: null,
+          });
+        }
+        await this.audit.writeInTransaction(tx, {
           tenantId,
+          actorUserId: principal.userId,
+          actorPersonId: principal.personId,
+          actorType: "USER",
+          action: "organization.archive",
           resourceType: "organization",
           resourceId: organizationId,
-          expectedVersion,
-          actualVersion: version,
+          organizationId,
+          result: "SUCCESS",
+          riskLevel: "MEDIUM",
+          correlationId: principal.correlationId,
+          requestId: principal.requestId,
+          before,
+          after: updated,
         });
-      }
-      const now = new Date();
-      const [updated] = await tx
-        .update(organizations)
-        .set({
-          status: "ARCHIVED",
-          archivedAt: now,
-          recordVersion: version + 1,
-          updatedAt: now,
-        })
-        .where(and(eq(organizations.id, organizationId), eq(organizations.recordVersion, version)))
-        .returning();
-      if (!updated) {
-        throw concurrencyConflict({
-          tenantId,
-          resourceType: "organization",
-          resourceId: organizationId,
-          expectedVersion,
-          actualVersion: null,
-        });
-      }
-      await this.audit.writeInTransaction(tx, {
-        tenantId,
-        actorUserId: principal.userId,
-        actorPersonId: principal.personId,
-        actorType: "USER",
-        action: "organization.archive",
-        resourceType: "organization",
-        resourceId: organizationId,
-        organizationId,
-        result: "SUCCESS",
-        riskLevel: "MEDIUM",
-        correlationId: principal.correlationId,
-        requestId: principal.requestId,
-        before,
-        after: updated,
-      });
-      return updated;
-    }, principal.userId);
+        return updated;
+      },
+      principal.userId,
+    );
   }
 }

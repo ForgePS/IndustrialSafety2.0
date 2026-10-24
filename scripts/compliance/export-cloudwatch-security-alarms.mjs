@@ -15,10 +15,7 @@ async function main() {
   const caller = discoverCaller(args);
   const outDir = join(REPO_ROOT, "docs", "compliance", "soc2", "evidence", "logging");
   const prefix = `forge-${args.environment}-alarm-`;
-  const alarms = awsJson(
-    ["cloudwatch", "describe-alarms", "--alarm-name-prefix", prefix],
-    args,
-  );
+  const alarms = awsJson(["cloudwatch", "describe-alarms", "--alarm-name-prefix", prefix], args);
   const metricFilters = awsJson(
     [
       "logs",

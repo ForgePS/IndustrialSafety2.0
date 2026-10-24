@@ -3,8 +3,7 @@ import { createId } from "@forge/database";
 
 /** Same pattern used by training record attachment completeUpload. */
 const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-const LEGACY_STRICT =
-  /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+const LEGACY_STRICT = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
 describe("training record attachment documentId UUID check", () => {
   it("accepts createId() UUIDv7 values that the old RFC 4122 v1-5 regex rejected", () => {

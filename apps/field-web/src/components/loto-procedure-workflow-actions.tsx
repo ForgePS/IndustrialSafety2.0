@@ -40,9 +40,7 @@ export function LotoProcedureWorkflowActions({
   const showActivate = (canEdit || canApprove) && lotoCanActivateDirect(status);
   const showSubmit = canEdit && lotoCanSubmitForReview(status);
   const showEhsActions = canApprove && lotoCanEhsReview(status);
-  const submitLabel = lotoIsNeedsCorrection(status)
-    ? "Resubmit for review"
-    : "Submit for review";
+  const submitLabel = lotoIsNeedsCorrection(status) ? "Resubmit for review" : "Submit for review";
   const activateLabel = lotoIsNeedsCorrection(status) ? "Activate after corrections" : "Activate";
 
   function openSendBack() {
@@ -65,7 +63,12 @@ export function LotoProcedureWorkflowActions({
     <>
       <div className="ff-action-grid">
         {canEdit && onEdit ? (
-          <button type="button" className="ff-btn ff-btn-secondary" disabled={busy} onClick={onEdit}>
+          <button
+            type="button"
+            className="ff-btn ff-btn-secondary"
+            disabled={busy}
+            onClick={onEdit}
+          >
             Edit
           </button>
         ) : null}

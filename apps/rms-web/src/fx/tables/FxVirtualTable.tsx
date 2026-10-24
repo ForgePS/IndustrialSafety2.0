@@ -43,7 +43,11 @@ export function FxVirtualTable<T>({
       />
       {rows.length > windowSize ? (
         <div className="rms-fx-virtual-table__controls">
-          <button type="button" disabled={offset <= 0} onClick={() => setOffset((o) => Math.max(0, o - windowSize))}>
+          <button
+            type="button"
+            disabled={offset <= 0}
+            onClick={() => setOffset((o) => Math.max(0, o - windowSize))}
+          >
             Earlier
           </button>
           <span aria-live="polite">

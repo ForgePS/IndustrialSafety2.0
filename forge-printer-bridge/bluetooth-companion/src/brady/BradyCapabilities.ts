@@ -16,9 +16,7 @@ export const BRADY_I4311_BLE_CAPABILITIES: PrinterCapabilitiesPayload = {
   dpi: [300],
 };
 
-export function capabilitiesForModel(
-  model: string | null | undefined
-): PrinterCapabilitiesPayload {
+export function capabilitiesForModel(model: string | null | undefined): PrinterCapabilitiesPayload {
   const normalized = (model ?? "").toLowerCase().replace(/\s+/g, "");
   if (normalized.includes("i4311") || normalized === "") {
     return { ...BRADY_I4311_BLE_CAPABILITIES };

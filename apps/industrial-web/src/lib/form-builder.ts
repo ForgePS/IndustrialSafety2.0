@@ -133,10 +133,7 @@ export function createFormBuilderField(
 ): FormField {
   const fieldLabel = label?.trim() || DEFAULT_LABELS[type] || "Field";
   const field: FormField = {
-    id:
-      type === "employeeNumber"
-        ? "employeeNumber"
-        : slugifyFormFieldId(fieldLabel, index),
+    id: type === "employeeNumber" ? "employeeNumber" : slugifyFormFieldId(fieldLabel, index),
     label: fieldLabel,
     type,
   };
@@ -152,10 +149,7 @@ export function createFormBuilderField(
 }
 
 /** Change an existing field's type while keeping label/id and applying type defaults. */
-export function changeFormBuilderFieldType(
-  field: FormField,
-  newType: FormFieldType,
-): FormField {
+export function changeFormBuilderFieldType(field: FormField, newType: FormFieldType): FormField {
   if (field.type === newType) return field;
 
   const next: FormField = {
@@ -166,8 +160,7 @@ export function changeFormBuilderFieldType(
 
   if (newType === "content") {
     next.content =
-      field.content ??
-      "Enter instructions or policy text for the person filling out this form.";
+      field.content ?? "Enter instructions or policy text for the person filling out this form.";
     return next;
   }
 

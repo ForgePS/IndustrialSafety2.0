@@ -34,10 +34,7 @@ export class AttestationService {
     return master?.value !== false && attest?.value !== false;
   }
 
-  async getActiveTemplate(
-    tenantId: string,
-    templateKey: string,
-  ) {
+  async getActiveTemplate(tenantId: string, templateKey: string) {
     return withTenantTransaction(this.db, tenantId, async (tx) => {
       const templates = await tx
         .select()

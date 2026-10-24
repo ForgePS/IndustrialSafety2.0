@@ -4,7 +4,7 @@
 **Product:** Forge RMS  
 **Module flags:** `fx.rms.module.administration.enabled`, `fx.rms.module.utilities.enabled` (default **false**)  
 **Foundation dependencies:** tables for select-tenant FX; utilities health needs no foundation  
-**Gate:** FX-S2F-7 (final functional S2F migration)  
+**Gate:** FX-S2F-7 (final functional S2F migration)
 
 ## Decision requested
 
@@ -16,9 +16,9 @@ Alternates: `APPROVE WITH CONDITIONS` · `RETURN FOR CORRECTION`
 
 ### Suggested conditions
 
-1. Capture sanitized desktop/tablet screenshots before tenant enablement.  
-2. Keep both module flags default-off.  
-3. Confirm `/login/` remains legacy (auth out of scope).  
+1. Capture sanitized desktop/tablet screenshots before tenant enablement.
+2. Keep both module flags default-off.
+3. Confirm `/login/` remains legacy (auth out of scope).
 4. Do not begin Stabilization, Legacy Retirement, Pilot, or GA until formally authorized.
 
 ## Executive summary
@@ -27,31 +27,31 @@ S2F-7 migrates verified RMS Administration (`/select-tenant/`) and Utilities (`/
 
 ## Verified scope
 
-| Route | Status |
-| --- | --- |
+| Route             | Status                             |
+| ----------------- | ---------------------------------- |
 | `/select-tenant/` | Migrated (administration ∧ tables) |
-| `/health/` | Migrated (utilities) |
+| `/health/`        | Migrated (utilities)               |
 
 ## Deferred / N/A
 
-| Item | Disposition |
-| --- | --- |
-| `/login/` | Deferred — authentication |
-| `/auth/callback/` | N/A |
-| User/role/RBAC/org/feature admin UIs | N/A — absent |
-| CAD unmapped / mappings | Deferred — CAD ops, not this module |
-| Stabilization / legacy retirement / pilot / GA | Not authorized |
+| Item                                           | Disposition                         |
+| ---------------------------------------------- | ----------------------------------- |
+| `/login/`                                      | Deferred — authentication           |
+| `/auth/callback/`                              | N/A                                 |
+| User/role/RBAC/org/feature admin UIs           | N/A — absent                        |
+| CAD unmapped / mappings                        | Deferred — CAD ops, not this module |
+| Stabilization / legacy retirement / pilot / GA | Not authorized                      |
 
 ## Feature-flag behavior
 
-| Combo | Result |
-| --- | --- |
-| Administration off | Legacy select-tenant |
-| Administration on + tables off | Legacy compat |
-| Administration on + tables on | FX select-tenant |
-| Utilities off | Legacy health |
-| Utilities on | FX health panel |
-| Flags independent | Yes |
+| Combo                          | Result               |
+| ------------------------------ | -------------------- |
+| Administration off             | Legacy select-tenant |
+| Administration on + tables off | Legacy compat        |
+| Administration on + tables on  | FX select-tenant     |
+| Utilities off                  | Legacy health        |
+| Utilities on                   | FX health panel      |
+| Flags independent              | Yes                  |
 
 ## Component inventory
 
@@ -59,11 +59,11 @@ See `04-component-map.md`.
 
 ## Forms / tables / dialogs
 
-| Surface | Notes |
-| --- | --- |
-| Forms | None on verified admin/utilities routes |
-| Tables | Select-tenant columns + Select action preserved |
-| Dialogs | None on verified routes |
+| Surface | Notes                                           |
+| ------- | ----------------------------------------------- |
+| Forms   | None on verified admin/utilities routes         |
+| Tables  | Select-tenant columns + Select action preserved |
+| Dialogs | None on verified routes                         |
 
 ## Permissions / feature gates
 
@@ -95,19 +95,19 @@ Resolver unit tests + e2e scaffold; independent module rollback verified by desi
 
 ## Defects
 
-| Sev | Count |
-| --- | --- |
-| P0 | 0 |
-| P1 | 0 |
-| P3 | Screenshots pending; login deferred by design |
+| Sev | Count                                         |
+| --- | --------------------------------------------- |
+| P0  | 0                                             |
+| P1  | 0                                             |
+| P3  | Screenshots pending; login deferred by design |
 
 ## Risks
 
-| ID | Notes |
-| --- | --- |
-| R-S2F-015 | Login left legacy — intentional auth boundary |
+| ID        | Notes                                                           |
+| --------- | --------------------------------------------------------------- |
+| R-S2F-015 | Login left legacy — intentional auth boundary                   |
 | R-S2F-016 | Planning “admin” broader than live RMS — migrated verified only |
-| R-S2F-017 | Health FX needs no foundation — documented exception |
+| R-S2F-017 | Health FX needs no foundation — documented exception            |
 
 ## Evidence index
 
@@ -115,11 +115,11 @@ Resolver unit tests + e2e scaffold; independent module rollback verified by desi
 
 ## Production changes
 
-| Area | Changed? |
-| --- | --- |
-| Default UX | **No** (flags off) |
-| Auth / RBAC / tenant resolution / APIs | **No** |
-| Code behind flags | Yes |
+| Area                                   | Changed?           |
+| -------------------------------------- | ------------------ |
+| Default UX                             | **No** (flags off) |
+| Auth / RBAC / tenant resolution / APIs | **No**             |
+| Code behind flags                      | Yes                |
 
 ## Recommendation
 

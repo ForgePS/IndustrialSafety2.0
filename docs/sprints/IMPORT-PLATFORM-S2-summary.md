@@ -39,27 +39,27 @@ Job/profile/mapping lifecycle events via `OutboxService` + `AuditService` (Impor
 
 ## Tests (local)
 
-| Suite | Passed | Failed | Skipped |
-| --- | --- | --- | --- |
-| imports unit | 14 | 0 | 0 |
-| errors/events unit | 4 | 0 | 0 |
-| imports e2e | 1 | 0 | 0 |
-| typecheck | PASS | | |
+| Suite              | Passed | Failed | Skipped |
+| ------------------ | ------ | ------ | ------- |
+| imports unit       | 14     | 0      | 0       |
+| errors/events unit | 4      | 0      | 0       |
+| imports e2e        | 1      | 0      | 0       |
+| typecheck          | PASS   |        |         |
 
 ## Known limitations
 
-1. Validation/preview = `NOT_AVAILABLE_UNTIL_S3`  
-2. No upload/parse/worker/execute/rollback/adapters  
+1. Validation/preview = `NOT_AVAILABLE_UNTIL_S3`
+2. No upload/parse/worker/execute/rollback/adapters
 
 ## Deployment
 
-| Item | Value |
-| --- | --- |
-| Image | `import-s2-20260729072334` / `sha256:017657bc…` |
-| API TD | `:33` (rollback `:32`) |
-| Worker | `:19` |
-| Migrate 0023 | exit **0** |
-| Health | 200 |
+| Item         | Value                                           |
+| ------------ | ----------------------------------------------- |
+| Image        | `import-s2-20260729072334` / `sha256:017657bc…` |
+| API TD       | `:33` (rollback `:32`)                          |
+| Worker       | `:19`                                           |
+| Migrate 0023 | exit **0**                                      |
+| Health       | 200                                             |
 
 ## Recommendation for S3
 

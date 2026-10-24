@@ -15,10 +15,7 @@ import {
   type DotFormFileValue,
 } from "@/lib/dot-dqf-files";
 import type { DotDqfFieldDef } from "@/lib/dot-dqf-fields";
-import {
-  compressImageToUploadFile,
-  imageCompressErrorMessage,
-} from "@/lib/compress-image";
+import { compressImageToUploadFile, imageCompressErrorMessage } from "@/lib/compress-image";
 import { useImageCrop } from "@/hooks/use-image-crop";
 
 function uploadPrimaryLabel(field: DotDqfFieldDef, hasFiles: boolean): string {

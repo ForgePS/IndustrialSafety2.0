@@ -407,11 +407,7 @@ function wrapCognitoError(error: unknown, message: string): ForgeError {
     name === "InvalidParameterException" && /username should be an email/i.test(cognitoMessage)
       ? "Username should be an email"
       : undefined;
-  return new ForgeError(
-    "INTERNAL_ERROR",
-    safeHint ? `${message} (${safeHint})` : message,
-    {
-      details: [{ provider: "COGNITO", reason: name }],
-    },
-  );
+  return new ForgeError("INTERNAL_ERROR", safeHint ? `${message} (${safeHint})` : message, {
+    details: [{ provider: "COGNITO", reason: name }],
+  });
 }

@@ -21,10 +21,7 @@ describe("producers MVR consent form helpers", () => {
 
   it("finds the MVR consent form in a definitions list", () => {
     expect(
-      findProducersMvrConsentForm([
-        { id: "other", title: "Near miss report" },
-        mvrForm,
-      ]),
+      findProducersMvrConsentForm([{ id: "other", title: "Near miss report" }, mvrForm]),
     ).toEqual(mvrForm);
   });
 

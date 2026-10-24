@@ -46,7 +46,9 @@ async function resolveDatabaseUrl(secretArn) {
 }
 
 function hashSql(content) {
-  return createHash("sha256").update(String(content).replace(/\r\n/g, "\n").trim(), "utf8").digest("hex");
+  return createHash("sha256")
+    .update(String(content).replace(/\r\n/g, "\n").trim(), "utf8")
+    .digest("hex");
 }
 
 const MIGRATIONS = [

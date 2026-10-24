@@ -291,7 +291,9 @@ export default function SettingsBrandingPage() {
       await loadPreview(documentIdForKind(updated, kind), kind);
       setMessage(`${ASSET_META[kind].label} uploaded.`);
     } catch (err) {
-      setError(err instanceof ApiError ? err.message : `Failed to upload ${ASSET_META[kind].label}`);
+      setError(
+        err instanceof ApiError ? err.message : `Failed to upload ${ASSET_META[kind].label}`,
+      );
     } finally {
       setUploadingKind(null);
     }
@@ -578,7 +580,11 @@ export default function SettingsBrandingPage() {
           </div>
 
           <div className="d-flex flex-wrap gap-2 mt-4">
-            <button type="submit" className="btn btn-primary" disabled={busy || uploadingKind !== null}>
+            <button
+              type="submit"
+              className="btn btn-primary"
+              disabled={busy || uploadingKind !== null}
+            >
               {busy ? "Saving…" : "Save branding"}
             </button>
           </div>

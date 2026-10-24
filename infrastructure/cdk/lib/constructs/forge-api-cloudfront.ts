@@ -68,7 +68,8 @@ export class ForgeApiCloudFront extends Construct {
         },
         xssProtection: { protection: true, modeBlock: true, override: true },
         contentSecurityPolicy: {
-          contentSecurityPolicy: "default-src 'none'; frame-ancestors 'none'; base-uri 'none'; form-action 'none'",
+          contentSecurityPolicy:
+            "default-src 'none'; frame-ancestors 'none'; base-uri 'none'; form-action 'none'",
           override: true,
         },
       },
@@ -117,7 +118,11 @@ export class ForgeApiCloudFront extends Construct {
       ...(apiDomain && certificateArn
         ? {
             domainNames: [apiDomain],
-            certificate: acm.Certificate.fromCertificateArn(this, "ViewerCertificate", certificateArn),
+            certificate: acm.Certificate.fromCertificateArn(
+              this,
+              "ViewerCertificate",
+              certificateArn,
+            ),
           }
         : {}),
       defaultBehavior: {

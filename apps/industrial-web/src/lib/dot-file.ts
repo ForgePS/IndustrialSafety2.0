@@ -175,7 +175,10 @@ export function formatDotFileValue(value: unknown): string {
   if (Array.isArray(value)) {
     if (value.length === 0) return "";
     if (value.every((entry) => typeof entry !== "object")) {
-      return value.map((entry) => str(entry)).filter(Boolean).join(", ");
+      return value
+        .map((entry) => str(entry))
+        .filter(Boolean)
+        .join(", ");
     }
     return `${value.length} on file`;
   }
@@ -261,9 +264,24 @@ export function buildDotFile(record: Record<string, unknown>): DotFileGroup[] {
   }
 
   const groups: Array<{ id: string; title: string; icon: string; fields?: DotFileRow[] }> = [
-    { id: "identity", title: "Identity", icon: "bx-id-card", fields: rowsFor(record, IDENTITY_FIELDS) },
-    { id: "license", title: "License", icon: "bx-credit-card", fields: rowsFor(record, LICENSE_FIELDS) },
-    { id: "medical", title: "Medical", icon: "bx-plus-medical", fields: rowsFor(record, MEDICAL_FIELDS) },
+    {
+      id: "identity",
+      title: "Identity",
+      icon: "bx-id-card",
+      fields: rowsFor(record, IDENTITY_FIELDS),
+    },
+    {
+      id: "license",
+      title: "License",
+      icon: "bx-credit-card",
+      fields: rowsFor(record, LICENSE_FIELDS),
+    },
+    {
+      id: "medical",
+      title: "Medical",
+      icon: "bx-plus-medical",
+      fields: rowsFor(record, MEDICAL_FIELDS),
+    },
     { id: "mvr", title: "MVR", icon: "bx-file", fields: rowsFor(record, MVR_FIELDS) },
     { id: "vehicle", title: "Vehicle", icon: "bx-car", fields: rowsFor(record, VEHICLE_FIELDS) },
     { id: "record", title: "Record", icon: "bx-clipboard", fields: rowsFor(record, RECORD_FIELDS) },

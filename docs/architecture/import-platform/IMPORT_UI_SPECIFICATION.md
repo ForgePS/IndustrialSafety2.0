@@ -5,28 +5,28 @@
 
 ## Surfaces
 
-| Surface | Audience |
-| --- | --- |
-| Creator Console — Import Center | Platform operators / support |
-| Tenant Admin — Import Center | Tenant administrators / configuration managers |
-| Shared components | Design-system based wizard steps |
+| Surface                         | Audience                                       |
+| ------------------------------- | ---------------------------------------------- |
+| Creator Console — Import Center | Platform operators / support                   |
+| Tenant Admin — Import Center    | Tenant administrators / configuration managers |
+| Shared components               | Design-system based wizard steps               |
 
 Reuse shared UI components; do not fork separate Academy/RMS/Industrial importers.
 
 ## Wizard flow
 
-1. Select Product  
-2. Select Module  
-3. Select Record Type  
-4. Download Template  
-5. Upload File  
-6. Map Columns  
-7. Resolve Errors  
-8. Preview  
-9. Approve  
-10. Execute  
-11. Monitor Progress  
-12. Review Results  
+1. Select Product
+2. Select Module
+3. Select Record Type
+4. Download Template
+5. Upload File
+6. Map Columns
+7. Resolve Errors
+8. Preview
+9. Approve
+10. Execute
+11. Monitor Progress
+12. Review Results
 13. Rollback (where allowed)
 
 ## UX rules

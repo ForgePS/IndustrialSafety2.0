@@ -69,7 +69,9 @@ async function main(): Promise<void> {
       `)),
     ];
     const perms = [
-      ...(await db.execute(sql`select code from permissions where code like 'import.%' order by 1`)),
+      ...(await db.execute(
+        sql`select code from permissions where code like 'import.%' order by 1`,
+      )),
     ] as Array<{ code: string }>;
 
     const ok =
@@ -111,8 +113,7 @@ async function main(): Promise<void> {
 }
 
 const isDirect =
-  process.argv[1] &&
-  pathToFileURL(path.resolve(process.argv[1])).href === import.meta.url;
+  process.argv[1] && pathToFileURL(path.resolve(process.argv[1])).href === import.meta.url;
 
 if (
   isDirect ||

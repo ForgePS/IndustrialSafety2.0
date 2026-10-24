@@ -8,21 +8,21 @@
 
 ## Phase tracker
 
-| Phase | Status | Scope |
-|-------|--------|-------|
-| **0** | **COMPLETE** | Audit |
-| **1** | **COMPLETE** | Foundation shell / nav / org / permissions |
-| **2** | **COMPLETE** | Home and My Work |
-| **3** | **COMPLETE** (2026-09-10) | QR scanner, manual entry, resolver routing, Location/Division/Form/Supply/Equipment paths |
-| **4** | **COMPLETE** (2026-09-10) | Field form engine |
-| **5** | **COMPLETE** (2026-09-10) | Inspections depth |
-| **6** | **COMPLETE** (2026-09-10) | Reporting |
-| **7** | **COMPLETE** (2026-09-10) | Safety workflows |
-| **8** | **COMPLETE** (2026-09-10) | Operations |
-| **9** | **COMPLETE** (2026-09-11) | Emergency |
-| **10** | **COMPLETE** (2026-09-11) | Offline engine |
-| **11** | **COMPLETE** (2026-09-11) | Calendar, Reminders, My Forge |
-| **12** | **COMPLETE** (2026-09-11) | Hardening |
+| Phase  | Status                    | Scope                                                                                     |
+| ------ | ------------------------- | ----------------------------------------------------------------------------------------- |
+| **0**  | **COMPLETE**              | Audit                                                                                     |
+| **1**  | **COMPLETE**              | Foundation shell / nav / org / permissions                                                |
+| **2**  | **COMPLETE**              | Home and My Work                                                                          |
+| **3**  | **COMPLETE** (2026-09-10) | QR scanner, manual entry, resolver routing, Location/Division/Form/Supply/Equipment paths |
+| **4**  | **COMPLETE** (2026-09-10) | Field form engine                                                                         |
+| **5**  | **COMPLETE** (2026-09-10) | Inspections depth                                                                         |
+| **6**  | **COMPLETE** (2026-09-10) | Reporting                                                                                 |
+| **7**  | **COMPLETE** (2026-09-10) | Safety workflows                                                                          |
+| **8**  | **COMPLETE** (2026-09-10) | Operations                                                                                |
+| **9**  | **COMPLETE** (2026-09-11) | Emergency                                                                                 |
+| **10** | **COMPLETE** (2026-09-11) | Offline engine                                                                            |
+| **11** | **COMPLETE** (2026-09-11) | Calendar, Reminders, My Forge                                                             |
+| **12** | **COMPLETE** (2026-09-11) | Hardening                                                                                 |
 
 ---
 

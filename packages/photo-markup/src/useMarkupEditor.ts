@@ -60,24 +60,27 @@ export function useMarkupEditor(options: UseMarkupEditorOptions = {}) {
     [annotations, syncHistoryFlags],
   );
 
-  const reset = useCallback((next: readonly PhotoAnnotation[], doc?: MarkupDocument) => {
-    historyRef.current.clear();
-    setAnnotations(
-      next.map((a) => {
-        const copy: PhotoAnnotation = { ...a };
-        if (a.points) copy.points = [...a.points];
-        return copy;
-      }),
-    );
-    setSelectedId(null);
-    setDraft(null);
-    setCrop(doc?.crop);
-    setRotation(doc?.rotation ?? 0);
-    setFlipX(doc?.flipX ?? false);
-    setFlipY(doc?.flipY ?? false);
-    setDirty(false);
-    syncHistoryFlags();
-  }, [syncHistoryFlags]);
+  const reset = useCallback(
+    (next: readonly PhotoAnnotation[], doc?: MarkupDocument) => {
+      historyRef.current.clear();
+      setAnnotations(
+        next.map((a) => {
+          const copy: PhotoAnnotation = { ...a };
+          if (a.points) copy.points = [...a.points];
+          return copy;
+        }),
+      );
+      setSelectedId(null);
+      setDraft(null);
+      setCrop(doc?.crop);
+      setRotation(doc?.rotation ?? 0);
+      setFlipX(doc?.flipX ?? false);
+      setFlipY(doc?.flipY ?? false);
+      setDirty(false);
+      syncHistoryFlags();
+    },
+    [syncHistoryFlags],
+  );
 
   const undo = useCallback(() => {
     const previous = historyRef.current.undo(annotations);
@@ -208,7 +211,13 @@ export function useMarkupEditor(options: UseMarkupEditorOptions = {}) {
       if (prev.type === "line" || prev.type === "arrow") {
         return { ...prev, x2: point.x, y2: point.y };
       }
-      if ((prev.type === "rectangle" || prev.type === "ellipse" || prev.type === "blur" || prev.type === "redaction") && origin) {
+      if (
+        (prev.type === "rectangle" ||
+          prev.type === "ellipse" ||
+          prev.type === "blur" ||
+          prev.type === "redaction") &&
+        origin
+      ) {
         // crop drafts also use rectangle type
         return {
           ...prev,
@@ -260,7 +269,12 @@ export function useMarkupEditor(options: UseMarkupEditorOptions = {}) {
       setSelectedId(current.id);
       return;
     }
-    if (current.type === "rectangle" || current.type === "ellipse" || current.type === "blur" || current.type === "redaction") {
+    if (
+      current.type === "rectangle" ||
+      current.type === "ellipse" ||
+      current.type === "blur" ||
+      current.type === "redaction"
+    ) {
       if ((current.width ?? 0) < 0.01 || (current.height ?? 0) < 0.01) return;
       commit([...annotations, current]);
       setSelectedId(current.id);
@@ -281,15 +295,15 @@ export function useMarkupEditor(options: UseMarkupEditorOptions = {}) {
           const y2 = a.y2 ?? a.y;
           const dist = pointToSegmentDistance(point.x, point.y, a.x, a.y, x2, y2);
           if (dist < 0.025) return a;
-        } else if (a.type === "rectangle" || a.type === "ellipse" || a.type === "blur" || a.type === "redaction") {
+        } else if (
+          a.type === "rectangle" ||
+          a.type === "ellipse" ||
+          a.type === "blur" ||
+          a.type === "redaction"
+        ) {
           const w = a.width ?? 0;
           const h = a.height ?? 0;
-          if (
-            point.x >= a.x &&
-            point.x <= a.x + w &&
-            point.y >= a.y &&
-            point.y <= a.y + h
-          ) {
+          if (point.x >= a.x && point.x <= a.x + w && point.y >= a.y && point.y <= a.y + h) {
             return a;
           }
         } else if (a.type === "callout" || a.type === "text" || a.type === "icon") {
@@ -334,9 +348,7 @@ export function useMarkupEditor(options: UseMarkupEditorOptions = {}) {
   const updateSelectedText = useCallback(
     (text: string) => {
       if (!selectedId) return;
-      commit(
-        annotations.map((a) => (a.id === selectedId ? { ...a, text } : a)),
-      );
+      commit(annotations.map((a) => (a.id === selectedId ? { ...a, text } : a)));
     },
     [annotations, commit, selectedId],
   );

@@ -40,12 +40,16 @@ function notifyOfflineListeners(): void {
   }
 }
 
-export function getMutationQueue(scope: OfflineScope | null = activeScope): FieldMutationQueue | null {
+export function getMutationQueue(
+  scope: OfflineScope | null = activeScope,
+): FieldMutationQueue | null {
   if (!scope?.tenantId || !scope.userId) return null;
   return new FieldMutationQueue(scope);
 }
 
-export function getOfflineCache(scope: OfflineScope | null = activeScope): FieldOfflineCache | null {
+export function getOfflineCache(
+  scope: OfflineScope | null = activeScope,
+): FieldOfflineCache | null {
   if (!scope?.tenantId || !scope.userId) return null;
   return new FieldOfflineCache(scope);
 }
@@ -209,9 +213,7 @@ export async function flushOfflineQueue(
   for (const item of remaining) {
     if (!byId.has(item.id)) byId.set(item.id, item);
   }
-  queue.replaceAll(
-    [...byId.values()].sort((a, b) => a.queuedAt - b.queuedAt),
-  );
+  queue.replaceAll([...byId.values()].sort((a, b) => a.queuedAt - b.queuedAt));
 
   notifyOfflineListeners();
   return {
@@ -239,8 +241,7 @@ export async function offlineSend<T = Record<string, unknown>>(
     targetId?: string | null;
   },
 ): Promise<{ queued: boolean; data?: T }> {
-  const offline =
-    opts?.forceQueue || (typeof navigator !== "undefined" && !navigator.onLine);
+  const offline = opts?.forceQueue || (typeof navigator !== "undefined" && !navigator.onLine);
 
   if (offline) {
     if (!acceptsQueuedMutations(domain)) {

@@ -31,13 +31,10 @@ export const OPERATIONAL_SUBSCRIPTION_STATUSES = [
   "CANCELED",
 ] as const;
 
-export type OperationalSubscriptionStatus =
-  (typeof OPERATIONAL_SUBSCRIPTION_STATUSES)[number];
+export type OperationalSubscriptionStatus = (typeof OPERATIONAL_SUBSCRIPTION_STATUSES)[number];
 
 /** Map operational DB status → SaaS ADR-019 label. */
-export function toSaasSubscriptionStatus(
-  status: string,
-): SaasSubscriptionStatus | null {
+export function toSaasSubscriptionStatus(status: string): SaasSubscriptionStatus | null {
   switch (status) {
     case "TRIAL":
     case "ACTIVE":
@@ -104,36 +101,15 @@ export const BILLING_TYPES = [
 
 export type BillingType = (typeof BILLING_TYPES)[number];
 
-export const BILLING_FEE_TYPES = [
-  "IMPLEMENTATION",
-  "MIGRATION",
-  "SETUP",
-  "OTHER",
-] as const;
+export const BILLING_FEE_TYPES = ["IMPLEMENTATION", "MIGRATION", "SETUP", "OTHER"] as const;
 
 export type BillingFeeType = (typeof BILLING_FEE_TYPES)[number];
 
-export const BILLING_CONTRACT_STATUSES = [
-  "DRAFT",
-  "ACTIVE",
-  "EXPIRED",
-  "CANCELED",
-] as const;
+export const BILLING_CONTRACT_STATUSES = ["DRAFT", "ACTIVE", "EXPIRED", "CANCELED"] as const;
 
-export const BILLING_ORDER_STATUSES = [
-  "DRAFT",
-  "OPEN",
-  "FULFILLED",
-  "CANCELED",
-] as const;
+export const BILLING_ORDER_STATUSES = ["DRAFT", "OPEN", "FULFILLED", "CANCELED"] as const;
 
-export const BILLING_INVOICE_STATUSES = [
-  "DRAFT",
-  "OPEN",
-  "PAID",
-  "VOID",
-  "UNCOLLECTIBLE",
-] as const;
+export const BILLING_INVOICE_STATUSES = ["DRAFT", "OPEN", "PAID", "VOID", "UNCOLLECTIBLE"] as const;
 
 export const PRICE_INTERVALS = ["MONTHLY", "ANNUAL", "ONE_TIME", "USAGE"] as const;
 

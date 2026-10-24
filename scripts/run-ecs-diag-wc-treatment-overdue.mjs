@@ -14,7 +14,9 @@ const IMPORTS_BUCKET =
   process.env.FORGE_IMPORTS_BUCKET || "forge-production-imports-511343547817-us-east-1";
 const LOG_GROUP =
   process.env.FORGE_API_LOG_GROUP ||
-  (FORGE_ENV === "production" ? "/forge/production/platform-api" : "/forge/development/platform-api");
+  (FORGE_ENV === "production"
+    ? "/forge/production/platform-api"
+    : "/forge/development/platform-api");
 
 const prefix = `ops/diag-wc-treatment-overdue/${new Date().toISOString().replace(/[:.]/g, "-")}`;
 const scriptKey = `${prefix}/diag-wc-treatment-overdue.mjs`;
@@ -94,4 +96,3 @@ try {
 
 console.log(JSON.stringify({ exitCode, logs }, null, 2));
 process.exit(exitCode === 0 ? 0 : 1);
-

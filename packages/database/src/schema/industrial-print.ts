@@ -213,7 +213,11 @@ export const industrialPrinterMediaProfiles = pgTable(
     updatedAt: updatedAtColumn,
   },
   (t) => [
-    index("industrial_printer_media_profiles_tenant_idx").on(t.tenantId, t.manufacturer, t.printerModel),
+    index("industrial_printer_media_profiles_tenant_idx").on(
+      t.tenantId,
+      t.manufacturer,
+      t.printerModel,
+    ),
     uniqueIndex("industrial_printer_media_profiles_part_uidx").on(
       t.tenantId,
       t.manufacturer,
@@ -399,11 +403,9 @@ export const industrialBridgePairingCodes = pgTable(
 export type IndustrialPrinterBridgeRow = typeof industrialPrinterBridges.$inferSelect;
 export type IndustrialPrinterRow = typeof industrialPrinters.$inferSelect;
 export type IndustrialLabelTemplateRow = typeof industrialLabelTemplates.$inferSelect;
-export type IndustrialLabelTemplateVersionRow =
-  typeof industrialLabelTemplateVersions.$inferSelect;
+export type IndustrialLabelTemplateVersionRow = typeof industrialLabelTemplateVersions.$inferSelect;
 export type IndustrialLabelTemplateFieldRow = typeof industrialLabelTemplateFields.$inferSelect;
-export type IndustrialPrinterMediaProfileRow =
-  typeof industrialPrinterMediaProfiles.$inferSelect;
+export type IndustrialPrinterMediaProfileRow = typeof industrialPrinterMediaProfiles.$inferSelect;
 export type IndustrialPrinterProfileRow = typeof industrialPrinterProfiles.$inferSelect;
 export type IndustrialPrintBatchRow = typeof industrialPrintBatches.$inferSelect;
 export type IndustrialPrintJobRow = typeof industrialPrintJobs.$inferSelect;
@@ -475,9 +477,7 @@ export const industrialPrintRoutingRules = pgTable(
     createdAt: createdAtColumn,
     updatedAt: updatedAtColumn,
   },
-  (t) => [
-    index("industrial_print_routing_rules_tenant_idx").on(t.tenantId, t.enabled, t.priority),
-  ],
+  (t) => [index("industrial_print_routing_rules_tenant_idx").on(t.tenantId, t.enabled, t.priority)],
 );
 
 /** Printer media / consumable stock with estimated remaining (Phase 7). */

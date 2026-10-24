@@ -49,9 +49,7 @@ export function writeFieldThemePreference(preference: FieldThemePreference): Fie
   const resolved = resolveFieldTheme(preference);
   applyFieldTheme(resolved);
   if (typeof window !== "undefined") {
-    window.dispatchEvent(
-      new CustomEvent(FIELD_THEME_EVENT, { detail: { preference, resolved } }),
-    );
+    window.dispatchEvent(new CustomEvent(FIELD_THEME_EVENT, { detail: { preference, resolved } }));
   }
   return resolved;
 }

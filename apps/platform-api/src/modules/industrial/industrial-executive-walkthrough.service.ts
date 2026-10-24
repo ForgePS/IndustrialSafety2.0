@@ -158,47 +158,53 @@ export class IndustrialExecutiveWalkthroughService {
   private async getOrCreateSettings(principal: ForgePrincipal) {
     await assertWalkthroughTenantAllowed(this.db, principal.tenantId);
     const preferredVoice = process.env.POLLY_VOICE_ID?.trim() || "Stephen";
-    return withTenantTransaction(this.db, principal.tenantId, async (tx) => {
-      const existing = await tx.query.industrialExecutiveWalkthroughSettings.findFirst({
-        where: eq(industrialExecutiveWalkthroughSettings.tenantId, principal.tenantId),
-      });
-      if (existing) {
-        // Upgrade the original robotic default to a natural generative voice.
-        if (existing.voiceId === "Joanna" && preferredVoice !== "Joanna") {
-          const now = new Date();
-          await tx
-            .update(industrialExecutiveWalkthroughSettings)
-            .set({ voiceId: preferredVoice, updatedAt: now })
-            .where(eq(industrialExecutiveWalkthroughSettings.id, existing.id));
-          return { ...existing, voiceId: preferredVoice, updatedAt: now };
+    return withTenantTransaction(
+      this.db,
+      principal.tenantId,
+      async (tx) => {
+        const existing = await tx.query.industrialExecutiveWalkthroughSettings.findFirst({
+          where: eq(industrialExecutiveWalkthroughSettings.tenantId, principal.tenantId),
+        });
+        if (existing) {
+          // Upgrade the original robotic default to a natural generative voice.
+          if (existing.voiceId === "Joanna" && preferredVoice !== "Joanna") {
+            const now = new Date();
+            await tx
+              .update(industrialExecutiveWalkthroughSettings)
+              .set({ voiceId: preferredVoice, updatedAt: now })
+              .where(eq(industrialExecutiveWalkthroughSettings.id, existing.id));
+            return { ...existing, voiceId: preferredVoice, updatedAt: now };
+          }
+          return existing;
         }
-        return existing;
-      }
-      const id = createId();
-      const now = new Date();
-      await tx.insert(industrialExecutiveWalkthroughSettings).values({
-        id,
-        tenantId: principal.tenantId,
-        enabled: true,
-        voiceId: preferredVoice,
-        narrationSpeed: 100,
-        captionsDefault: true,
-        includeIntro: true,
-        includeOutro: true,
-        exportResolution: "1080p",
-        retentionDays: null,
-        closingText: null,
-        sceneOverrides: {},
-        metadata: {},
-        createdAt: now,
-        updatedAt: now,
-      });
-      const created = await tx.query.industrialExecutiveWalkthroughSettings.findFirst({
-        where: eq(industrialExecutiveWalkthroughSettings.id, id),
-      });
-      if (!created) throw new ForgeError("INTERNAL_ERROR", "Failed to create walkthrough settings");
-      return created;
-    }, principal.userId);
+        const id = createId();
+        const now = new Date();
+        await tx.insert(industrialExecutiveWalkthroughSettings).values({
+          id,
+          tenantId: principal.tenantId,
+          enabled: true,
+          voiceId: preferredVoice,
+          narrationSpeed: 100,
+          captionsDefault: true,
+          includeIntro: true,
+          includeOutro: true,
+          exportResolution: "1080p",
+          retentionDays: null,
+          closingText: null,
+          sceneOverrides: {},
+          metadata: {},
+          createdAt: now,
+          updatedAt: now,
+        });
+        const created = await tx.query.industrialExecutiveWalkthroughSettings.findFirst({
+          where: eq(industrialExecutiveWalkthroughSettings.id, id),
+        });
+        if (!created)
+          throw new ForgeError("INTERNAL_ERROR", "Failed to create walkthrough settings");
+        return created;
+      },
+      principal.userId,
+    );
   }
 
   private mapExport(row: typeof platformJobs.$inferSelect) {
@@ -222,7 +228,8 @@ export class IndustrialExecutiveWalkthroughService {
       durationSeconds:
         typeof result.durationSeconds === "number" ? result.durationSeconds : undefined,
       fileName: row.artifactFilename ?? undefined,
-      errorMessage: row.failure ?? (typeof result.errorMessage === "string" ? result.errorMessage : undefined),
+      errorMessage:
+        row.failure ?? (typeof result.errorMessage === "string" ? result.errorMessage : undefined),
       contentVersion: String(result.contentVersion ?? ""),
       requestedAt: row.createdAt.toISOString(),
       completedAt: row.completedAt?.toISOString(),
@@ -238,34 +245,39 @@ export class IndustrialExecutiveWalkthroughService {
     this.assertAny(principal, MANAGE);
     const patch = settingsPatchSchema.parse(body ?? {});
     const current = await this.getOrCreateSettings(principal);
-    return withTenantTransaction(this.db, principal.tenantId, async (tx) => {
-      await tx
-        .update(industrialExecutiveWalkthroughSettings)
-        .set({
-          ...patch,
-          updatedAt: new Date(),
-        })
-        .where(eq(industrialExecutiveWalkthroughSettings.id, current.id));
-      const updated = await tx.query.industrialExecutiveWalkthroughSettings.findFirst({
-        where: eq(industrialExecutiveWalkthroughSettings.id, current.id),
-      });
-      if (!updated) throw new ForgeError("NOT_FOUND", "Settings not found");
-      await this.audit.writeInTransaction(tx, {
-        tenantId: principal.tenantId,
-        actorUserId: principal.userId,
-        actorPersonId: principal.personId,
-        actorType: "USER",
-        action: "industrial.presentation.executive.settings.update",
-        resourceType: "executive_walkthrough_settings",
-        resourceId: updated.id,
-        result: "SUCCESS",
-        riskLevel: "LOW",
-        correlationId: principal.correlationId,
-        requestId: principal.requestId,
-        after: patch,
-      });
-      return this.mapSettings(updated);
-    }, principal.userId);
+    return withTenantTransaction(
+      this.db,
+      principal.tenantId,
+      async (tx) => {
+        await tx
+          .update(industrialExecutiveWalkthroughSettings)
+          .set({
+            ...patch,
+            updatedAt: new Date(),
+          })
+          .where(eq(industrialExecutiveWalkthroughSettings.id, current.id));
+        const updated = await tx.query.industrialExecutiveWalkthroughSettings.findFirst({
+          where: eq(industrialExecutiveWalkthroughSettings.id, current.id),
+        });
+        if (!updated) throw new ForgeError("NOT_FOUND", "Settings not found");
+        await this.audit.writeInTransaction(tx, {
+          tenantId: principal.tenantId,
+          actorUserId: principal.userId,
+          actorPersonId: principal.personId,
+          actorType: "USER",
+          action: "industrial.presentation.executive.settings.update",
+          resourceType: "executive_walkthrough_settings",
+          resourceId: updated.id,
+          result: "SUCCESS",
+          riskLevel: "LOW",
+          correlationId: principal.correlationId,
+          requestId: principal.requestId,
+          after: patch,
+        });
+        return this.mapSettings(updated);
+      },
+      principal.userId,
+    );
   }
 
   async validate(principal: ForgePrincipal) {
@@ -488,9 +500,7 @@ export class IndustrialExecutiveWalkthroughService {
   async ensureNarration(principal: ForgePrincipal, body: unknown = {}) {
     // Interactive Present needs narration assets; do not gate behind export-only.
     this.assertAny(principal, VIEW);
-    const input = z
-      .object({ voiceId: z.string().min(1).max(120).optional() })
-      .parse(body ?? {});
+    const input = z.object({ voiceId: z.string().min(1).max(120).optional() }).parse(body ?? {});
     const settings = this.mapSettings(await this.getOrCreateSettings(principal));
     const voiceId = input.voiceId?.trim() || settings.voiceId;
     if (
@@ -567,41 +577,46 @@ export class IndustrialExecutiveWalkthroughService {
       closingText: settings.closingText,
     };
 
-    await withTenantTransaction(this.db, principal.tenantId, async (tx) => {
-      await tx.insert(platformJobs).values({
-        id: jobId,
-        tenantId: principal.tenantId,
-        type: "export.executive-walkthrough",
-        status: "QUEUED",
-        progress: 0,
-        attempt: 0,
-        createdByUserId: principal.userId,
-        correlationId: principal.correlationId,
-        requestId: principal.requestId,
-        resultJson: {
-          kind: "executive-walkthrough",
-          walkthroughStatus: "queued",
-          presentationId: EXECUTIVE_WALKTHROUGH_PRESENTATION_ID,
-          ...options,
-        },
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      });
-      await this.audit.writeInTransaction(tx, {
-        tenantId: principal.tenantId,
-        actorUserId: principal.userId,
-        actorPersonId: principal.personId,
-        actorType: "USER",
-        action: "executive_walkthrough_export_requested",
-        resourceType: "platform_job",
-        resourceId: jobId,
-        result: "SUCCESS",
-        riskLevel: "MEDIUM",
-        correlationId: principal.correlationId,
-        requestId: principal.requestId,
-        after: options,
-      });
-    }, principal.userId);
+    await withTenantTransaction(
+      this.db,
+      principal.tenantId,
+      async (tx) => {
+        await tx.insert(platformJobs).values({
+          id: jobId,
+          tenantId: principal.tenantId,
+          type: "export.executive-walkthrough",
+          status: "QUEUED",
+          progress: 0,
+          attempt: 0,
+          createdByUserId: principal.userId,
+          correlationId: principal.correlationId,
+          requestId: principal.requestId,
+          resultJson: {
+            kind: "executive-walkthrough",
+            walkthroughStatus: "queued",
+            presentationId: EXECUTIVE_WALKTHROUGH_PRESENTATION_ID,
+            ...options,
+          },
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        });
+        await this.audit.writeInTransaction(tx, {
+          tenantId: principal.tenantId,
+          actorUserId: principal.userId,
+          actorPersonId: principal.personId,
+          actorType: "USER",
+          action: "executive_walkthrough_export_requested",
+          resourceType: "platform_job",
+          resourceId: jobId,
+          result: "SUCCESS",
+          riskLevel: "MEDIUM",
+          correlationId: principal.correlationId,
+          requestId: principal.requestId,
+          after: options,
+        });
+      },
+      principal.userId,
+    );
 
     setImmediate(() => {
       void this.render.processExport(jobId, principal, options).catch((error) => {
@@ -629,46 +644,61 @@ export class IndustrialExecutiveWalkthroughService {
   async listExports(principal: ForgePrincipal) {
     await assertWalkthroughTenantAllowed(this.db, principal.tenantId);
     this.assertAny(principal, VIEW);
-    return withTenantTransaction(this.db, principal.tenantId, async (tx) => {
-      const rows = await tx.query.platformJobs.findMany({
-        where: and(
-          eq(platformJobs.tenantId, principal.tenantId),
-          eq(platformJobs.type, "export.executive-walkthrough"),
-        ),
-        orderBy: [desc(platformJobs.createdAt)],
-        limit: 25,
-      });
-      return { items: rows.map((row) => this.mapExport(row)) };
-    }, principal.userId);
+    return withTenantTransaction(
+      this.db,
+      principal.tenantId,
+      async (tx) => {
+        const rows = await tx.query.platformJobs.findMany({
+          where: and(
+            eq(platformJobs.tenantId, principal.tenantId),
+            eq(platformJobs.type, "export.executive-walkthrough"),
+          ),
+          orderBy: [desc(platformJobs.createdAt)],
+          limit: 25,
+        });
+        return { items: rows.map((row) => this.mapExport(row)) };
+      },
+      principal.userId,
+    );
   }
 
   async getExport(principal: ForgePrincipal, exportId: string) {
     await assertWalkthroughTenantAllowed(this.db, principal.tenantId);
     this.assertAny(principal, VIEW);
-    return withTenantTransaction(this.db, principal.tenantId, async (tx) => {
-      const row = await tx.query.platformJobs.findFirst({
-        where: and(
-          eq(platformJobs.id, exportId),
-          eq(platformJobs.tenantId, principal.tenantId),
-          eq(platformJobs.type, "export.executive-walkthrough"),
-        ),
-      });
-      if (!row) throw new ForgeError("NOT_FOUND", "Export not found");
-      return this.mapExport(row);
-    }, principal.userId);
+    return withTenantTransaction(
+      this.db,
+      principal.tenantId,
+      async (tx) => {
+        const row = await tx.query.platformJobs.findFirst({
+          where: and(
+            eq(platformJobs.id, exportId),
+            eq(platformJobs.tenantId, principal.tenantId),
+            eq(platformJobs.type, "export.executive-walkthrough"),
+          ),
+        });
+        if (!row) throw new ForgeError("NOT_FOUND", "Export not found");
+        return this.mapExport(row);
+      },
+      principal.userId,
+    );
   }
 
   async downloadExport(principal: ForgePrincipal, exportId: string) {
     this.assertAny(principal, EXPORT);
-    const row = await withTenantTransaction(this.db, principal.tenantId, async (tx) => {
-      return tx.query.platformJobs.findFirst({
-        where: and(
-          eq(platformJobs.id, exportId),
-          eq(platformJobs.tenantId, principal.tenantId),
-          eq(platformJobs.type, "export.executive-walkthrough"),
-        ),
-      });
-    }, principal.userId);
+    const row = await withTenantTransaction(
+      this.db,
+      principal.tenantId,
+      async (tx) => {
+        return tx.query.platformJobs.findFirst({
+          where: and(
+            eq(platformJobs.id, exportId),
+            eq(platformJobs.tenantId, principal.tenantId),
+            eq(platformJobs.type, "export.executive-walkthrough"),
+          ),
+        });
+      },
+      principal.userId,
+    );
     if (!row) throw new ForgeError("NOT_FOUND", "Export not found");
     if (row.status !== "SUCCEEDED" || !row.artifactObjectKey) {
       throw new ForgeError("VALIDATION_FAILED", "Export is not ready for download");
@@ -677,21 +707,26 @@ export class IndustrialExecutiveWalkthroughService {
       row.artifactObjectKey,
       row.artifactFilename ?? "executive-walkthrough.mp4",
     );
-    await withTenantTransaction(this.db, principal.tenantId, async (tx) => {
-      await this.audit.writeInTransaction(tx, {
-        tenantId: principal.tenantId,
-        actorUserId: principal.userId,
-        actorPersonId: principal.personId,
-        actorType: "USER",
-        action: "executive_walkthrough_export_downloaded",
-        resourceType: "platform_job",
-        resourceId: exportId,
-        result: "SUCCESS",
-        riskLevel: "MEDIUM",
-        correlationId: principal.correlationId,
-        requestId: principal.requestId,
-      });
-    }, principal.userId);
+    await withTenantTransaction(
+      this.db,
+      principal.tenantId,
+      async (tx) => {
+        await this.audit.writeInTransaction(tx, {
+          tenantId: principal.tenantId,
+          actorUserId: principal.userId,
+          actorPersonId: principal.personId,
+          actorType: "USER",
+          action: "executive_walkthrough_export_downloaded",
+          resourceType: "platform_job",
+          resourceId: exportId,
+          result: "SUCCESS",
+          riskLevel: "MEDIUM",
+          correlationId: principal.correlationId,
+          requestId: principal.requestId,
+        });
+      },
+      principal.userId,
+    );
     return {
       downloadUrl: signed.downloadUrl,
       fileName: row.artifactFilename ?? "executive-walkthrough.mp4",
@@ -701,34 +736,39 @@ export class IndustrialExecutiveWalkthroughService {
 
   async deleteExport(principal: ForgePrincipal, exportId: string) {
     this.assertAny(principal, DELETE_EXPORT);
-    const objectKey = await withTenantTransaction(this.db, principal.tenantId, async (tx) => {
-      const row = await tx.query.platformJobs.findFirst({
-        where: and(
-          eq(platformJobs.id, exportId),
-          eq(platformJobs.tenantId, principal.tenantId),
-          eq(platformJobs.type, "export.executive-walkthrough"),
-        ),
-      });
-      if (!row) throw new ForgeError("NOT_FOUND", "Export not found");
-      const key = row.artifactObjectKey;
-      await tx
-        .delete(platformJobs)
-        .where(and(eq(platformJobs.id, exportId), eq(platformJobs.tenantId, principal.tenantId)));
-      await this.audit.writeInTransaction(tx, {
-        tenantId: principal.tenantId,
-        actorUserId: principal.userId,
-        actorPersonId: principal.personId,
-        actorType: "USER",
-        action: "executive_walkthrough_export_deleted",
-        resourceType: "platform_job",
-        resourceId: exportId,
-        result: "SUCCESS",
-        riskLevel: "MEDIUM",
-        correlationId: principal.correlationId,
-        requestId: principal.requestId,
-      });
-      return key;
-    }, principal.userId);
+    const objectKey = await withTenantTransaction(
+      this.db,
+      principal.tenantId,
+      async (tx) => {
+        const row = await tx.query.platformJobs.findFirst({
+          where: and(
+            eq(platformJobs.id, exportId),
+            eq(platformJobs.tenantId, principal.tenantId),
+            eq(platformJobs.type, "export.executive-walkthrough"),
+          ),
+        });
+        if (!row) throw new ForgeError("NOT_FOUND", "Export not found");
+        const key = row.artifactObjectKey;
+        await tx
+          .delete(platformJobs)
+          .where(and(eq(platformJobs.id, exportId), eq(platformJobs.tenantId, principal.tenantId)));
+        await this.audit.writeInTransaction(tx, {
+          tenantId: principal.tenantId,
+          actorUserId: principal.userId,
+          actorPersonId: principal.personId,
+          actorType: "USER",
+          action: "executive_walkthrough_export_deleted",
+          resourceType: "platform_job",
+          resourceId: exportId,
+          result: "SUCCESS",
+          riskLevel: "MEDIUM",
+          correlationId: principal.correlationId,
+          requestId: principal.requestId,
+        });
+        return key;
+      },
+      principal.userId,
+    );
     if (objectKey) {
       await this.render.deleteExportObject(objectKey).catch(() => undefined);
     }
@@ -739,22 +779,27 @@ export class IndustrialExecutiveWalkthroughService {
     this.assertAny(principal, VIEW);
     const event = String((body as { event?: string } | null)?.event ?? "").trim();
     if (!event) throw new ForgeError("VALIDATION_FAILED", "event is required");
-    await withTenantTransaction(this.db, principal.tenantId, async (tx) => {
-      await this.audit.writeInTransaction(tx, {
-        tenantId: principal.tenantId,
-        actorUserId: principal.userId,
-        actorPersonId: principal.personId,
-        actorType: "USER",
-        action: event.slice(0, 120),
-        resourceType: "executive_walkthrough",
-        resourceId: EXECUTIVE_WALKTHROUGH_PRESENTATION_ID,
-        result: "SUCCESS",
-        riskLevel: "LOW",
-        correlationId: principal.correlationId,
-        requestId: principal.requestId,
-        after: body as Record<string, unknown>,
-      });
-    }, principal.userId);
+    await withTenantTransaction(
+      this.db,
+      principal.tenantId,
+      async (tx) => {
+        await this.audit.writeInTransaction(tx, {
+          tenantId: principal.tenantId,
+          actorUserId: principal.userId,
+          actorPersonId: principal.personId,
+          actorType: "USER",
+          action: event.slice(0, 120),
+          resourceType: "executive_walkthrough",
+          resourceId: EXECUTIVE_WALKTHROUGH_PRESENTATION_ID,
+          result: "SUCCESS",
+          riskLevel: "LOW",
+          correlationId: principal.correlationId,
+          requestId: principal.requestId,
+          after: body as Record<string, unknown>,
+        });
+      },
+      principal.userId,
+    );
     return { ok: true };
   }
 

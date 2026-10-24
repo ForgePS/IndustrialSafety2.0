@@ -21,8 +21,8 @@ export function HelpEntryPoint() {
         }
       >
         <p>
-          Forge RMS helps agencies capture and review NERIS incidents and CAD-related operational work.
-          Contact your department administrator for role and feature access questions.
+          Forge RMS helps agencies capture and review NERIS incidents and CAD-related operational
+          work. Contact your department administrator for role and feature access questions.
         </p>
       </FxDialog>
     </>

@@ -1,10 +1,7 @@
 "use client";
 
 import { useMemo, useState, type CSSProperties } from "react";
-import {
-  buildEmergencyAlertSmsBody,
-  estimateSmsSegments,
-} from "@/lib/emergency-alerts";
+import { buildEmergencyAlertSmsBody, estimateSmsSegments } from "@/lib/emergency-alerts";
 
 export type MessagePreviewInput = {
   alertType: string;
@@ -152,8 +149,8 @@ export function EmergencyAlertMessagePreview({
           </div>
           <p className="small text-muted mb-0 mt-2">
             {smsMeta.length} characters · ~{smsMeta.segments} SMS segment
-            {smsMeta.segments === 1 ? "" : "s"} ({smsMeta.perSegment}/segment). Carriers receive
-            the short message
+            {smsMeta.segments === 1 ? "" : "s"} ({smsMeta.perSegment}/segment). Carriers receive the
+            short message
             {isDrill ? " with a [DRILL] prefix" : ""}; headline is not included in SMS.
           </p>
         </div>
@@ -200,7 +197,10 @@ export function EmergencyAlertMessagePreview({
           <div className="fw-bold lh-sm mb-3" style={{ fontSize: "1.75rem" }}>
             {headline.trim() || "Untitled alert"}
           </div>
-          <p className="mb-0" style={{ whiteSpace: "pre-wrap", fontSize: "1.15rem", opacity: 0.95 }}>
+          <p
+            className="mb-0"
+            style={{ whiteSpace: "pre-wrap", fontSize: "1.15rem", opacity: 0.95 }}
+          >
             {shortMessage.trim() || "—"}
           </p>
           {instructions.trim() ? (

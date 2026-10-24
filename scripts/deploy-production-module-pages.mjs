@@ -21,7 +21,10 @@ const API_ECR = `${ACCOUNT}.dkr.ecr.${REGION}.amazonaws.com/forge-production-ecr
 
 const skipWeb = process.argv.includes("--skip-web");
 const skipMigrate = process.argv.includes("--skip-migrate");
-const stamp = new Date().toISOString().replace(/[-:TZ.]/g, "").slice(0, 14);
+const stamp = new Date()
+  .toISOString()
+  .replace(/[-:TZ.]/g, "")
+  .slice(0, 14);
 const tag = process.env.DEPLOY_TAG || `module-pages-${stamp}`;
 
 process.env.AWS_PROFILE = process.env.AWS_PROFILE ?? "forge-dev";
@@ -123,7 +126,9 @@ if (!skipWeb) {
   } catch {
     /* ignore */
   }
-  sh(`node scripts/sync-static-site.mjs --app industrial --environment production --full-invalidate`);
+  sh(
+    `node scripts/sync-static-site.mjs --app industrial --environment production --full-invalidate`,
+  );
 }
 
 console.log(

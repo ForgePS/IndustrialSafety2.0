@@ -140,7 +140,9 @@ try {
     if (payload.archived === true || payload.isArchived === true || payload.archivedAt) {
       payloadArchivedTrue += 1;
     }
-    const pStatus = String(payload.status ?? payload.employmentStatus ?? payload.employeeStatus ?? "")
+    const pStatus = String(
+      payload.status ?? payload.employmentStatus ?? payload.employeeStatus ?? "",
+    )
       .trim()
       .toLowerCase();
     if (pStatus) {

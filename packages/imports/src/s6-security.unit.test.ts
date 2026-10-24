@@ -27,7 +27,9 @@ describe("S6 malware verdicts and gate", () => {
     expect(assertMalwareGate({ verdict: "CLEAN", contentHash: "a", verdictHash: "b" }).code).toBe(
       "IMPORT_SCAN_HASH_MISMATCH",
     );
-    expect(assertMalwareGate({ verdict: "CLEAN", contentHash: "a", verdictHash: "a" }).ok).toBe(true);
+    expect(assertMalwareGate({ verdict: "CLEAN", contentHash: "a", verdictHash: "a" }).ok).toBe(
+      true,
+    );
     expect(isAcceptableMalwareVerdict("OVERRIDE_APPROVED")).toBe(true);
   });
 

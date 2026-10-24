@@ -1108,9 +1108,9 @@ export function PrinterBridgesWorkspace() {
                       Open Printer Bridge on this PC
                     </button>
                     <p className="small text-muted mt-2 mb-0">
-                      If nothing opens, install the bridge under Program Files\Forge Public Safety\Printer
-                      Bridge, then look for the tray icon (Windows may hide it under the overflow{" "}
-                      <strong>^</strong>).
+                      If nothing opens, install the bridge under Program Files\Forge Public
+                      Safety\Printer Bridge, then look for the tray icon (Windows may hide it under
+                      the overflow <strong>^</strong>).
                     </p>
                   </div>
                 )}

@@ -16,16 +16,16 @@ Transactional outbox ([ADR-016](../decisions/ADR-016-outbox-pattern.md)):
 
 Defined in `@forge/events` as `ForgeDomainEvent`:
 
-| Field | Purpose |
-| --- | --- |
-| `id` | Stable event id |
-| `type` | Versioned type string (e.g. `platform.person.created.v1`) |
-| `version` | Envelope version (default 1) |
-| `occurredAt` | ISO timestamp |
-| `tenantId` / `actorUserId` | Context (tenant may be null for platform-global) |
-| `aggregateType` / `aggregateId` | Source aggregate |
-| `correlationId` / `causationId` | Trace linkage |
-| `payload` | JSON; must not include sensitive fields |
+| Field                           | Purpose                                                   |
+| ------------------------------- | --------------------------------------------------------- |
+| `id`                            | Stable event id                                           |
+| `type`                          | Versioned type string (e.g. `platform.person.created.v1`) |
+| `version`                       | Envelope version (default 1)                              |
+| `occurredAt`                    | ISO timestamp                                             |
+| `tenantId` / `actorUserId`      | Context (tenant may be null for platform-global)          |
+| `aggregateType` / `aggregateId` | Source aggregate                                          |
+| `correlationId` / `causationId` | Trace linkage                                             |
+| `payload`                       | JSON; must not include sensitive fields                   |
 
 `assertSafeEventPayload` rejects payloads that look like they contain `ssn`, `password`, `token`, or `secret` keys.
 

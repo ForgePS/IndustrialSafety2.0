@@ -7,17 +7,17 @@
 
 ### Shared contract (all form controls)
 
-| Section | Spec |
-| --- | --- |
-| Properties | `label`, `name`, `value`, `error`, `hint`, `required`, `disabled`, `readOnly` (+ control-specific) |
-| States | default, focus, filled, error, disabled, read-only |
-| Permissions | Field-level read-only vs hidden from product policy |
-| Accessibility | Visible label; errors via `aria-describedby`; required in text |
-| Keyboard | Native control keys; Esc closes pickers/menus |
-| Screen reader | Validation Summary announced on submit failure |
-| Responsive | Full-width on phone; touch-friendly pickers; 44px targets |
-| Anti-patterns | Placeholder-as-label; inventing one-off inputs |
-| Future extension points | Product field types map into these controls only |
+| Section                 | Spec                                                                                               |
+| ----------------------- | -------------------------------------------------------------------------------------------------- |
+| Properties              | `label`, `name`, `value`, `error`, `hint`, `required`, `disabled`, `readOnly` (+ control-specific) |
+| States                  | default, focus, filled, error, disabled, read-only                                                 |
+| Permissions             | Field-level read-only vs hidden from product policy                                                |
+| Accessibility           | Visible label; errors via `aria-describedby`; required in text                                     |
+| Keyboard                | Native control keys; Esc closes pickers/menus                                                      |
+| Screen reader           | Validation Summary announced on submit failure                                                     |
+| Responsive              | Full-width on phone; touch-friendly pickers; 44px targets                                          |
+| Anti-patterns           | Placeholder-as-label; inventing one-off inputs                                                     |
+| Future extension points | Product field types map into these controls only                                                   |
 
 ---
 

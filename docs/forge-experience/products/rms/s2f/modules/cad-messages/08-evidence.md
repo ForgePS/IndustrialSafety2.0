@@ -1,11 +1,11 @@
 # S2F-3 CAD Messages — Evidence
 
-| Item | Status |
-| --- | --- |
-| Baseline inventory | `00-baseline.md` |
-| Resolver unit tests | Pass |
-| Screenshots | Sanitized placeholders under `../../evidence/screenshots/` |
-| Sensitive CAD payloads | Never captured |
+| Item                   | Status                                                     |
+| ---------------------- | ---------------------------------------------------------- |
+| Baseline inventory     | `00-baseline.md`                                           |
+| Resolver unit tests    | Pass                                                       |
+| Screenshots            | Sanitized placeholders under `../../evidence/screenshots/` |
+| Sensitive CAD payloads | Never captured                                             |
 
 Local enable:
 

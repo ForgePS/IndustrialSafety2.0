@@ -7,12 +7,12 @@
 
 Related contract documents:
 
-| Document | Scope |
-| --- | --- |
-| [platform-events-v1.md](./platform-events-v1.md) | Domain event envelope and catalog |
-| [platform-permissions-v1.md](./platform-permissions-v1.md) | Permission codes and evaluation |
-| [platform-errors-v1.md](./platform-errors-v1.md) | Error envelope and HTTP mapping |
-| [platform-versioning-policy.md](./platform-versioning-policy.md) | v1 freeze and v2 policy |
+| Document                                                         | Scope                             |
+| ---------------------------------------------------------------- | --------------------------------- |
+| [platform-events-v1.md](./platform-events-v1.md)                 | Domain event envelope and catalog |
+| [platform-permissions-v1.md](./platform-permissions-v1.md)       | Permission codes and evaluation   |
+| [platform-errors-v1.md](./platform-errors-v1.md)                 | Error envelope and HTTP mapping   |
+| [platform-versioning-policy.md](./platform-versioning-policy.md) | v1 freeze and v2 policy           |
 
 Health endpoints (outside `/api/v1`): `GET /health`, `GET /ready`.
 
@@ -46,24 +46,24 @@ Amazon Cognito groups may exist for pool administration, but **authorization is 
 
 ### Auth context endpoints
 
-| Method | Path | Auth | Notes |
-| --- | --- | --- | --- |
-| GET | `/api/v1/auth/me` | Bearer or dev principal | Current principal summary plus selectable tenants |
-| POST | `/api/v1/auth/select-tenant` | Bearer or dev principal | Body: `{ "tenantId": "<uuid>" }` |
-| POST | `/api/v1/auth/logout-all` | Bearer or dev principal | Revokes all sessions; bumps `session_version` |
+| Method | Path                         | Auth                    | Notes                                             |
+| ------ | ---------------------------- | ----------------------- | ------------------------------------------------- |
+| GET    | `/api/v1/auth/me`            | Bearer or dev principal | Current principal summary plus selectable tenants |
+| POST   | `/api/v1/auth/select-tenant` | Bearer or dev principal | Body: `{ "tenantId": "<uuid>" }`                  |
+| POST   | `/api/v1/auth/logout-all`    | Bearer or dev principal | Revokes all sessions; bumps `session_version`     |
 
 ### Invitations (ADR-020)
 
 Base: `/api/v1/auth/invitations`
 
-| Method | Path | Permission | Idempotent |
-| --- | --- | --- | --- |
-| POST | `/` | `platform.invitation.manage` | yes |
-| GET | `/` | `platform.invitation.read` | |
-| GET | `/:invitationId` | `platform.invitation.read` | |
-| POST | `/accept` | public | |
-| POST | `/:invitationId/resend` | `platform.invitation.manage` | |
-| POST | `/:invitationId/revoke` | `platform.invitation.manage` | |
+| Method | Path                    | Permission                   | Idempotent |
+| ------ | ----------------------- | ---------------------------- | ---------- |
+| POST   | `/`                     | `platform.invitation.manage` | yes        |
+| GET    | `/`                     | `platform.invitation.read`   |            |
+| GET    | `/:invitationId`        | `platform.invitation.read`   |            |
+| POST   | `/accept`               | public                       |            |
+| POST   | `/:invitationId/resend` | `platform.invitation.manage` |            |
+| POST   | `/:invitationId/revoke` | `platform.invitation.manage` |            |
 
 Query filters on list: `tenantId`, `status`, `email`. Token hash is never returned.
 
@@ -98,10 +98,10 @@ Every response includes `meta.requestId` and `meta.correlationId`. Clients may s
 
 ### Pagination
 
-| Parameter | Default | Max | Notes |
-| --- | --- | --- | --- |
-| `page` | 1 | | 1-based |
-| `pageSize` | varies | 200 | Audit list caps at 200 |
+| Parameter  | Default | Max | Notes                  |
+| ---------- | ------- | --- | ---------------------- |
+| `page`     | 1       |     | 1-based                |
+| `pageSize` | varies  | 200 | Audit list caps at 200 |
 
 Many list endpoints currently return the full in-memory result set with `meta.page`, `meta.pageSize`, and `meta.total` reflecting the returned array. Cursor pagination may be added within v1 as an optional field without breaking existing clients.
 
@@ -137,15 +137,15 @@ Initial coverage: tenants, organizations, persons, users, memberships, roles, en
 
 Base: `/api/v1/platform/tenants`
 
-| Method | Path | Permission |
-| --- | --- | --- |
-| POST | `/` | `platform.tenant.create` |
-| GET | `/` | `platform.tenant.read` |
-| GET | `/:tenantId` | `platform.tenant.read` |
-| PATCH | `/:tenantId` | `platform.tenant.update` |
-| POST | `/:tenantId/activate` | `platform.tenant.update` |
-| POST | `/:tenantId/suspend` | `platform.tenant.suspend` |
-| POST | `/:tenantId/archive` | `platform.tenant.update` |
+| Method | Path                  | Permission                |
+| ------ | --------------------- | ------------------------- |
+| POST   | `/`                   | `platform.tenant.create`  |
+| GET    | `/`                   | `platform.tenant.read`    |
+| GET    | `/:tenantId`          | `platform.tenant.read`    |
+| PATCH  | `/:tenantId`          | `platform.tenant.update`  |
+| POST   | `/:tenantId/activate` | `platform.tenant.update`  |
+| POST   | `/:tenantId/suspend`  | `platform.tenant.suspend` |
+| POST   | `/:tenantId/archive`  | `platform.tenant.update`  |
 
 Create input: `createTenantInputSchema` in `@forge/contracts`.
 
@@ -171,18 +171,18 @@ List, get, patch, disable, enable. Invitations also available under auth routes 
 
 Base: `/api/v1/tenants/:tenantId/memberships`
 
-| Method | Path | Notes |
-| --- | --- | --- |
-| GET | `/` | Filters: `status`, `userId` |
-| POST | `/` | Idempotent create |
-| GET | `/:membershipId` | ETag |
-| PATCH | `/:membershipId` | If-Match required |
-| POST | `/:membershipId/activate` | If-Match |
-| POST | `/:membershipId/suspend` | Body: `{ "reason": "…" }`, If-Match |
-| POST | `/:membershipId/revoke` | Body: `{ "reason": "…" }`, If-Match |
-| GET/PUT | `/:membershipId/roles` | PUT requires If-Match |
-| GET/PUT | `/:membershipId/products` | PUT requires If-Match |
-| GET | `/:membershipId/history` | Lifecycle audit trail |
+| Method  | Path                      | Notes                               |
+| ------- | ------------------------- | ----------------------------------- |
+| GET     | `/`                       | Filters: `status`, `userId`         |
+| POST    | `/`                       | Idempotent create                   |
+| GET     | `/:membershipId`          | ETag                                |
+| PATCH   | `/:membershipId`          | If-Match required                   |
+| POST    | `/:membershipId/activate` | If-Match                            |
+| POST    | `/:membershipId/suspend`  | Body: `{ "reason": "…" }`, If-Match |
+| POST    | `/:membershipId/revoke`   | Body: `{ "reason": "…" }`, If-Match |
+| GET/PUT | `/:membershipId/roles`    | PUT requires If-Match               |
+| GET/PUT | `/:membershipId/products` | PUT requires If-Match               |
+| GET     | `/:membershipId/history`  | Lifecycle audit trail               |
 
 Only `ACTIVE` membership grants tenant access (except platform admin bypass).
 
@@ -190,27 +190,27 @@ Statuses: `PENDING`, `ACTIVE`, `SUSPENDED`, `EXPIRED`, `REVOKED`, `ARCHIVED`.
 
 ### Role and permission
 
-| Method | Path |
-| --- | --- |
-| GET | `/api/v1/tenants/:tenantId/permissions` |
-| POST/GET/PATCH | `/api/v1/tenants/:tenantId/roles`… |
-| PUT | `/api/v1/tenants/:tenantId/roles/:roleId/permissions` |
-| POST/DELETE | `/api/v1/tenants/:tenantId/users/:userId/role-assignments`… |
-| POST | `/api/v1/authorization/check` |
+| Method         | Path                                                        |
+| -------------- | ----------------------------------------------------------- |
+| GET            | `/api/v1/tenants/:tenantId/permissions`                     |
+| POST/GET/PATCH | `/api/v1/tenants/:tenantId/roles`…                          |
+| PUT            | `/api/v1/tenants/:tenantId/roles/:roleId/permissions`       |
+| POST/DELETE    | `/api/v1/tenants/:tenantId/users/:userId/role-assignments`… |
+| POST           | `/api/v1/authorization/check`                               |
 
 Legacy `user_role_assignments` remain for unmigrated rows; new access should use membership role assignments.
 
 ### Product, module, entitlement
 
-| Method | Path |
-| --- | --- |
-| GET | `/api/v1/platform/products` |
-| GET | `/api/v1/platform/modules` |
-| GET | `/api/v1/tenants/:tenantId/entitlements` |
-| PUT | `/api/v1/tenants/:tenantId/products/:productCode` |
-| PUT | `/api/v1/tenants/:tenantId/modules/:moduleCode/entitlement` |
-| POST | `/api/v1/tenants/:tenantId/modules/:moduleCode/suspend` |
-| POST | `/api/v1/tenants/:tenantId/modules/:moduleCode/activate` |
+| Method | Path                                                        |
+| ------ | ----------------------------------------------------------- |
+| GET    | `/api/v1/platform/products`                                 |
+| GET    | `/api/v1/platform/modules`                                  |
+| GET    | `/api/v1/tenants/:tenantId/entitlements`                    |
+| PUT    | `/api/v1/tenants/:tenantId/products/:productCode`           |
+| PUT    | `/api/v1/tenants/:tenantId/modules/:moduleCode/entitlement` |
+| POST   | `/api/v1/tenants/:tenantId/modules/:moduleCode/suspend`     |
+| POST   | `/api/v1/tenants/:tenantId/modules/:moduleCode/activate`    |
 
 ### Subscription
 
@@ -220,23 +220,23 @@ Statuses in `@forge/contracts`: `ACTIVE`, `PAYMENT_DUE`, `GRACE_PERIOD`, `READ_O
 
 ### Feature flag
 
-| Method | Path |
-| --- | --- |
-| GET | `/api/v1/platform/features` |
-| GET | `/api/v1/tenants/:tenantId/features/effective` |
-| PUT | `/api/v1/tenants/:tenantId/features/:featureKey` |
+| Method | Path                                             |
+| ------ | ------------------------------------------------ |
+| GET    | `/api/v1/platform/features`                      |
+| GET    | `/api/v1/tenants/:tenantId/features/effective`   |
+| PUT    | `/api/v1/tenants/:tenantId/features/:featureKey` |
 | DELETE | `/api/v1/tenants/:tenantId/features/:featureKey` |
 
 Feature flags are operational toggles; product access is enforced through entitlements ([ADR-017](../decisions/ADR-017-feature-flags-vs-entitlements.md)).
 
 ### Configuration and branding
 
-| Method | Path |
-| --- | --- |
-| GET | `/api/v1/tenants/:tenantId/configuration` |
-| GET | `/api/v1/tenants/:tenantId/configuration/:namespace` |
-| PUT | `/api/v1/tenants/:tenantId/configuration/:namespace/:key` |
-| GET/PUT | `/api/v1/tenants/:tenantId/branding` |
+| Method  | Path                                                      |
+| ------- | --------------------------------------------------------- |
+| GET     | `/api/v1/tenants/:tenantId/configuration`                 |
+| GET     | `/api/v1/tenants/:tenantId/configuration/:namespace`      |
+| PUT     | `/api/v1/tenants/:tenantId/configuration/:namespace/:key` |
+| GET/PUT | `/api/v1/tenants/:tenantId/branding`                      |
 
 ### Audit
 
@@ -248,13 +248,13 @@ Paginated list (`page`, `pageSize`), get by id, and `POST /export`.
 
 Schema and ADR are in place ([ADR-027](../decisions/ADR-027-customer-onboarding-sessions.md)). HTTP handlers and MK-S7 hardening (templates GET, default facility on activate, open-session activate bypass block) are live. The v1 contract targets:
 
-| Method | Path | Permission |
-| --- | --- | --- |
-| GET | `/api/v1/platform/onboarding/templates` | `platform.onboarding.manage` |
-| POST | `/api/v1/platform/onboarding/sessions` | `platform.onboarding.manage` |
-| GET | `/api/v1/platform/onboarding/sessions/:sessionId` | `platform.onboarding.manage` |
-| POST | `/api/v1/platform/onboarding/sessions/:sessionId/steps` | `platform.onboarding.manage` |
-| POST | `/api/v1/platform/onboarding/sessions/:sessionId/activate` | `platform.onboarding.manage` |
+| Method | Path                                                       | Permission                   |
+| ------ | ---------------------------------------------------------- | ---------------------------- |
+| GET    | `/api/v1/platform/onboarding/templates`                    | `platform.onboarding.manage` |
+| POST   | `/api/v1/platform/onboarding/sessions`                     | `platform.onboarding.manage` |
+| GET    | `/api/v1/platform/onboarding/sessions/:sessionId`          | `platform.onboarding.manage` |
+| POST   | `/api/v1/platform/onboarding/sessions/:sessionId/steps`    | `platform.onboarding.manage` |
+| POST   | `/api/v1/platform/onboarding/sessions/:sessionId/activate` | `platform.onboarding.manage` |
 
 Eleven ordered steps from `@forge/contracts` `ONBOARDING_STEPS`. Starter templates: `INDUSTRIAL_STARTER`, `RMS_STARTER`, `ACADEMY_STARTER`. Activation is server-gated; the console cannot bypass checks.
 
@@ -280,13 +280,13 @@ Routes under `/api/v1/ai/*` (narratives CRUD actions, regenerate, accept, reject
 
 ## Source of truth
 
-| Concern | Package / path |
-| --- | --- |
-| Request/response schemas | `packages/contracts` |
-| Error codes | `packages/errors` |
-| Domain events | `packages/events` |
-| HTTP routes | `apps/platform-api/src/modules/**/*.controller.ts` |
-| Principal shape | `packages/tenant-context` |
-| AI narrative contracts | `packages/ai-contracts` |
+| Concern                  | Package / path                                     |
+| ------------------------ | -------------------------------------------------- |
+| Request/response schemas | `packages/contracts`                               |
+| Error codes              | `packages/errors`                                  |
+| Domain events            | `packages/events`                                  |
+| HTTP routes              | `apps/platform-api/src/modules/**/*.controller.ts` |
+| Principal shape          | `packages/tenant-context`                          |
+| AI narrative contracts   | `packages/ai-contracts`                            |
 
 Prior sprint endpoint summary (superseded for detail): [platform-core-api.md](./platform-core-api.md).

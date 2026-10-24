@@ -96,7 +96,10 @@ const evidence = {
   exitCode,
   logExcerpt: String(logs).slice(0, 20000),
 };
-fs.writeFileSync(path.join(evidenceDir, "phase1-seed-result.json"), `${JSON.stringify(evidence, null, 2)}\n`);
+fs.writeFileSync(
+  path.join(evidenceDir, "phase1-seed-result.json"),
+  `${JSON.stringify(evidence, null, 2)}\n`,
+);
 
 // Prefer structured JSON from log for tenant-ids.json update
 let parsed = null;

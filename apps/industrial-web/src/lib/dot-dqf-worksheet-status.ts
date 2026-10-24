@@ -45,10 +45,7 @@ function worksheetOnFile(details: Record<string, string>, key: string): boolean 
   return false;
 }
 
-function toneStatus(
-  tone: DqfWorksheetItemTone,
-  label: string,
-): DqfWorksheetItemStatus {
+function toneStatus(tone: DqfWorksheetItemTone, label: string): DqfWorksheetItemStatus {
   switch (tone) {
     case "critical":
       return {
@@ -136,8 +133,8 @@ export function dqfWorksheetDocumentStatus(
     const fields = worksheetDocumentFields(key);
     const date =
       key === "mvrAnnual"
-        ? details.mvrAnnual?.trim() ?? ""
-        : details[fields.dateId]?.trim() ?? "";
+        ? (details.mvrAnnual?.trim() ?? "")
+        : (details[fields.dateId]?.trim() ?? "");
     const copyId = fields.copyId ?? driverDocumentCopyFieldId(key);
     const onFile = worksheetOnFile(details, key);
     const status = statusFromExpiryAndOnFile(date, onFile, opts?.today);
@@ -212,8 +209,7 @@ export function dqfWorksheetDocumentStatus(
     if (details.medicalExaminerRegistrationNumber?.trim()) {
       return toneStatus("ok", details.medicalExaminerRegistrationNumber.trim());
     }
-    const label =
-      details.medicalExaminerNationalRegistryVerificationStatus?.trim() || "On file";
+    const label = details.medicalExaminerNationalRegistryVerificationStatus?.trim() || "On file";
     return toneStatus("ok", label);
   }
   return toneStatus("ok", "On file");

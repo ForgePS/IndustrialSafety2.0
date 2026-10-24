@@ -13,18 +13,19 @@ describe("cognito password auth", () => {
     process.env.NEXT_PUBLIC_APP_URL = "https://industrial.example.com";
     vi.stubGlobal(
       "fetch",
-      vi.fn(async () =>
-        new Response(
-          JSON.stringify({
-            data: {
-              accessToken: SAMPLE_JWT,
-              expiresIn: 3600,
-              csrfToken: "csrf-token",
-            },
-            meta: { requestId: "r1", correlationId: "c1" },
-          }),
-          { status: 200, headers: { "Content-Type": "application/json" } },
-        ),
+      vi.fn(
+        async () =>
+          new Response(
+            JSON.stringify({
+              data: {
+                accessToken: SAMPLE_JWT,
+                expiresIn: 3600,
+                csrfToken: "csrf-token",
+              },
+              meta: { requestId: "r1", correlationId: "c1" },
+            }),
+            { status: 200, headers: { "Content-Type": "application/json" } },
+          ),
       ),
     );
   });
@@ -71,26 +72,26 @@ describe("cognito password auth", () => {
   it("surfaces NEW_PASSWORD_REQUIRED as a typed challenge", async () => {
     vi.stubGlobal(
       "fetch",
-      vi.fn(async () =>
-        new Response(
-          JSON.stringify({
-            data: {
-              challenge: {
-                kind: "new_password_required",
-                session: "session-abc",
-                username: "user@example.com",
+      vi.fn(
+        async () =>
+          new Response(
+            JSON.stringify({
+              data: {
+                challenge: {
+                  kind: "new_password_required",
+                  session: "session-abc",
+                  username: "user@example.com",
+                },
               },
-            },
-            meta: { requestId: "r1", correlationId: "c1" },
-          }),
-          { status: 200, headers: { "Content-Type": "application/json" } },
-        ),
+              meta: { requestId: "r1", correlationId: "c1" },
+            }),
+            { status: 200, headers: { "Content-Type": "application/json" } },
+          ),
       ),
     );
 
-    const { authenticateWithPassword, CognitoPasswordChallengeError } = await import(
-      "./cognito-password-auth.js"
-    );
+    const { authenticateWithPassword, CognitoPasswordChallengeError } =
+      await import("./cognito-password-auth.js");
 
     await expect(
       authenticateWithPassword({ username: "user@example.com", password: "TempPass1!" }),

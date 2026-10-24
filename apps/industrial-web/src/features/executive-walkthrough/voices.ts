@@ -1,7 +1,4 @@
-import {
-  WALKTHROUGH_VOICE_PROFILES,
-  DEFAULT_WALKTHROUGH_VOICE_PROFILE_ID,
-} from "@forge/contracts";
+import { WALKTHROUGH_VOICE_PROFILES, DEFAULT_WALKTHROUGH_VOICE_PROFILE_ID } from "@forge/contracts";
 
 /** Amazon Polly voices mapped through Walkthrough Studio voice profiles. */
 export const WALKTHROUGH_VOICE_OPTIONS = WALKTHROUGH_VOICE_PROFILES.map((profile) => ({

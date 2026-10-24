@@ -93,8 +93,7 @@ export function TrainingRecordsSearchPanel() {
     event.preventDefault();
     const nextQ = draftQ.trim();
     if (!nextQ) return;
-    const exact =
-      courseNames.find((name) => name.toLowerCase() === nextQ.toLowerCase()) ?? "";
+    const exact = courseNames.find((name) => name.toLowerCase() === nextQ.toLowerCase()) ?? "";
     if (exact) {
       setCourse(exact);
       setQ("");
@@ -152,7 +151,12 @@ export function TrainingRecordsSearchPanel() {
               {busy ? "Searching…" : "Search"}
             </button>
             {hasFilter ? (
-              <button type="button" className="btn btn-outline-secondary" disabled={busy} onClick={clearSearch}>
+              <button
+                type="button"
+                className="btn btn-outline-secondary"
+                disabled={busy}
+                onClick={clearSearch}
+              >
                 Clear
               </button>
             ) : null}

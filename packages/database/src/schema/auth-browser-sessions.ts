@@ -30,7 +30,5 @@ export const authBrowserSessions = pgTable(
     createdAt: createdAtColumn,
     lastSeenAt: timestamp("last_seen_at", { withTimezone: true }).notNull().defaultNow(),
   },
-  (t) => [
-    uniqueIndex("auth_browser_sessions_token_uidx").on(t.sessionTokenHash),
-  ],
+  (t) => [uniqueIndex("auth_browser_sessions_token_uidx").on(t.sessionTokenHash)],
 );

@@ -5,15 +5,14 @@
 /** FMCSA-style retention window — records older than this are purged automatically. */
 export const DVIR_RETENTION_DAYS = 91;
 
-export function isDvirDotRecord(
-  sourcePayload: unknown,
-  sourceCollection?: string | null,
-): boolean {
+export function isDvirDotRecord(sourcePayload: unknown, sourceCollection?: string | null): boolean {
   if (sourceCollection === "dvirs") return true;
   if (!sourcePayload || typeof sourcePayload !== "object" || Array.isArray(sourcePayload)) {
     return false;
   }
-  return String((sourcePayload as Record<string, unknown>).recordType ?? "").toUpperCase() === "DVIR";
+  return (
+    String((sourcePayload as Record<string, unknown>).recordType ?? "").toUpperCase() === "DVIR"
+  );
 }
 
 export function dvirRetentionCutoffDate(now = new Date()): string {
@@ -145,7 +144,9 @@ export function assertDvirDriverBody(body: Record<string, unknown>): {
   driverSignatureDataUrl: string;
   vehicleId?: string;
 } {
-  const tripRaw = String(body.tripType ?? "").trim().toUpperCase();
+  const tripRaw = String(body.tripType ?? "")
+    .trim()
+    .toUpperCase();
   if (tripRaw !== "PRE_TRIP" && tripRaw !== "POST_TRIP") {
     throw new Error("Choose pre-trip or post-trip.");
   }
@@ -165,7 +166,9 @@ export function assertDvirDriverBody(body: Record<string, unknown>): {
     if (!raw || typeof raw !== "object" || Array.isArray(raw)) continue;
     const row = raw as Record<string, unknown>;
     const id = String(row.id ?? "").trim();
-    const answerRaw = String(row.answer ?? "").trim().toUpperCase();
+    const answerRaw = String(row.answer ?? "")
+      .trim()
+      .toUpperCase();
     if (!id || !isAnswer(answerRaw)) continue;
     const notes = String(row.notes ?? "").trim();
     if (answerRaw === "NO" && !notes) {
@@ -257,12 +260,8 @@ export function resolveDvirItemsFromPayload(payload: Record<string, unknown>): D
       notes: String(raw.notes ?? ""),
     }));
   }
-  const truck = Array.isArray(payload.truckDefects)
-    ? (payload.truckDefects as string[])
-    : [];
-  const trailer = Array.isArray(payload.trailerDefects)
-    ? (payload.trailerDefects as string[])
-    : [];
+  const truck = Array.isArray(payload.truckDefects) ? (payload.truckDefects as string[]) : [];
+  const trailer = Array.isArray(payload.trailerDefects) ? (payload.trailerDefects as string[]) : [];
   const defectSet = new Set([...truck, ...trailer]);
   const remarks = String(payload.remarks ?? "");
   return REQUIRED_ITEM_IDS.map((id) => ({

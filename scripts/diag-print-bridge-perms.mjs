@@ -93,11 +93,7 @@ async function main() {
     `;
 
     console.log(
-      JSON.stringify(
-        { tenant, perm, roleGrants, usersWithBridge, moduleEnt, productEnt },
-        null,
-        2,
-      ),
+      JSON.stringify({ tenant, perm, roleGrants, usersWithBridge, moduleEnt, productEnt }, null, 2),
     );
   } finally {
     await sql.end({ timeout: 5 });

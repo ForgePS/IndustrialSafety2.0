@@ -5,7 +5,7 @@
 **Commit:** `54a4742b3736f9bccdb052ba308811b5547301d8` (`industrial/training-employee-portal`)  
 **Auditor:** Cursor under operator supervision  
 **Presentation tenant:** Producers Rice Mill  
-**Mode:** Non-destructive source, configuration, dependency, authorization, tenant-isolation, and deployment review  
+**Mode:** Non-destructive source, configuration, dependency, authorization, tenant-isolation, and deployment review
 
 ## Decision
 
@@ -23,8 +23,8 @@ Production API (`api.forgepublicsafety.com`) correctly rejects anonymous and for
 
 **DO NOT USE LIVE PLATFORM** until:
 
-1. Hosted development (and any UAT) either disables the `x-forge-dev-principal` path or is unreachable from presentation browsers/networks, and  
-2. Approved Producers Rice Mill authenticated RG-01 / RG-02 tests are executed and pass, and  
+1. Hosted development (and any UAT) either disables the `x-forge-dev-principal` path or is unreachable from presentation browsers/networks, and
+2. Approved Producers Rice Mill authenticated RG-01 / RG-02 tests are executed and pass, and
 3. Presentation traffic is locked to production Industrial / Producers vanity hosts and `api.forgepublicsafety.com` only.
 
 Safe interim alternatives: pre-recorded walkthrough, static screenshots, or a local synthetic tenant environment. Do **not** demonstrate live public QR history/actions until FIS-SEC-010 is patched.
@@ -35,20 +35,20 @@ Safe interim alternatives: pre-recorded walkthrough, static screenshots, or a lo
 
 ### Monorepo map (relevant)
 
-| Area | Location |
-| --- | --- |
-| Industrial frontend | `apps/industrial-web` (static export / CloudFront) |
-| Field frontend | `apps/field-web` |
-| Creator / platform admin | `apps/creator-console` |
-| Tenant admin | `apps/tenant-admin` |
-| API | `apps/platform-api` (NestJS) |
-| Workers | `apps/worker-service` |
-| Auth / tokens (shared) | `packages/auth`, `packages/web-kit` |
-| Authorization | `packages/authorization` |
-| Tenant context | `packages/tenant-context` |
-| Database / RLS helpers | `packages/database` |
-| Imports | `packages/imports`, `packages/import-center`, API import modules |
-| IaC | `infrastructure/cdk` |
+| Area                     | Location                                                         |
+| ------------------------ | ---------------------------------------------------------------- |
+| Industrial frontend      | `apps/industrial-web` (static export / CloudFront)               |
+| Field frontend           | `apps/field-web`                                                 |
+| Creator / platform admin | `apps/creator-console`                                           |
+| Tenant admin             | `apps/tenant-admin`                                              |
+| API                      | `apps/platform-api` (NestJS)                                     |
+| Workers                  | `apps/worker-service`                                            |
+| Auth / tokens (shared)   | `packages/auth`, `packages/web-kit`                              |
+| Authorization            | `packages/authorization`                                         |
+| Tenant context           | `packages/tenant-context`                                        |
+| Database / RLS helpers   | `packages/database`                                              |
+| Imports                  | `packages/imports`, `packages/import-center`, API import modules |
+| IaC                      | `infrastructure/cdk`                                             |
 
 ### Observed public origins
 
@@ -86,14 +86,14 @@ Static frontend code is **not** a trust boundary. Enforcement must hold at API +
 
 ## 2. Authentication findings (summary)
 
-| Control | Result | Evidence |
-| --- | --- | --- |
-| Prod anonymous `/api/v1/auth/me` | **PASS** (`401`, Bearer required) | `evidence/rg03-rg04-cors.txt` |
-| Prod forged `x-forge-dev-principal` | **PASS** (`401`, Bearer required) | Node + curl probes |
-| Dev forged `x-forge-dev-principal` | **FAIL** (principal path active; unknown user → `User not found`) | Node probe against `api-dev` |
-| Cognito verify path (source) | Present via `verifyCognitoAccessToken` | `auth-context.service.ts` |
-| Refresh token storage | **HIGH** — `localStorage` key `forge-refresh-token` | `packages/web-kit/src/auth-storage.ts` |
-| Frontend deploy strips `NEXT_PUBLIC_ALLOW_DEV_PRINCIPAL` | Intended by `scripts/sync-static-site.mjs` | Source review |
+| Control                                                  | Result                                                            | Evidence                               |
+| -------------------------------------------------------- | ----------------------------------------------------------------- | -------------------------------------- |
+| Prod anonymous `/api/v1/auth/me`                         | **PASS** (`401`, Bearer required)                                 | `evidence/rg03-rg04-cors.txt`          |
+| Prod forged `x-forge-dev-principal`                      | **PASS** (`401`, Bearer required)                                 | Node + curl probes                     |
+| Dev forged `x-forge-dev-principal`                       | **FAIL** (principal path active; unknown user → `User not found`) | Node probe against `api-dev`           |
+| Cognito verify path (source)                             | Present via `verifyCognitoAccessToken`                            | `auth-context.service.ts`              |
+| Refresh token storage                                    | **HIGH** — `localStorage` key `forge-refresh-token`               | `packages/web-kit/src/auth-storage.ts` |
+| Frontend deploy strips `NEXT_PUBLIC_ALLOW_DEV_PRINCIPAL` | Intended by `scripts/sync-static-site.mjs`                        | Source review                          |
 
 ### Critical path: hosted development principal
 
@@ -131,11 +131,11 @@ Any actor who can reach `api-dev` and knows (or can guess / enumerate) a real `u
 
 ### Live verification
 
-| Test | Status |
-| --- | --- |
-| Producers user + foreign `x-tenant-id` | **BLOCKED** — no approved credentials |
-| Producers user + foreign object ID (IDOR) | **BLOCKED** |
-| Platform-admin shadow unit test | **FAILED** locally (`auth-context.platform-admin-shadow.test.ts`) — privilege-model uncertainty |
+| Test                                      | Status                                                                                          |
+| ----------------------------------------- | ----------------------------------------------------------------------------------------------- |
+| Producers user + foreign `x-tenant-id`    | **BLOCKED** — no approved credentials                                                           |
+| Producers user + foreign object ID (IDOR) | **BLOCKED**                                                                                     |
+| Platform-admin shadow unit test           | **FAILED** locally (`auth-context.platform-admin-shadow.test.ts`) — privilege-model uncertainty |
 
 **Gate status:** RG-01 **BLOCKED**, RG-02 **BLOCKED** for live clearance. Code review is supportive but insufficient alone per sprint rules.
 
@@ -153,14 +153,14 @@ Failing platform-admin shadow unit test indicates uncertainty when a platform ad
 
 ## 5. Browser / XSS / offline
 
-| Item | Assessment |
-| --- | --- |
-| Access + refresh tokens in `localStorage` | **HIGH** (XSS → session theft) |
-| `clearAuthStorage()` on logout | Present (tokens + active tenant + auth me cache) |
-| Offline / IndexedDB full inventory | Partial review only — full RG-09 browser matrix **BLOCKED** without presentation profile |
-| `dangerouslySetInnerHTML` on legal acknowledge page | **MEDIUM** — platform-authored HTML, no DOMPurify at render |
-| Photo markup SVG `dangerouslySetInnerHTML` | Review as defense-in-depth |
-| Live CSP | Present; `script-src 'self' 'unsafe-inline'` weakens XSS mitigation |
+| Item                                                | Assessment                                                                               |
+| --------------------------------------------------- | ---------------------------------------------------------------------------------------- |
+| Access + refresh tokens in `localStorage`           | **HIGH** (XSS → session theft)                                                           |
+| `clearAuthStorage()` on logout                      | Present (tokens + active tenant + auth me cache)                                         |
+| Offline / IndexedDB full inventory                  | Partial review only — full RG-09 browser matrix **BLOCKED** without presentation profile |
+| `dangerouslySetInnerHTML` on legal acknowledge page | **MEDIUM** — platform-authored HTML, no DOMPurify at render                              |
+| Photo markup SVG `dangerouslySetInnerHTML`          | Review as defense-in-depth                                                               |
+| Live CSP                                            | Present; `script-src 'self' 'unsafe-inline'` weakens XSS mitigation                      |
 
 ---
 
@@ -212,17 +212,17 @@ These are **not** auto-classified as exploitable in the Forge attack path withou
 
 ## 10. Automated checks executed
 
-| Command | Result |
-| --- | --- |
-| `pnpm --filter @forge/platform-api exec vitest run ...auth-context.security.test.ts` | PASS (8) |
-| `... qr-token.security.test.ts` | PASS (4) |
-| `... configuration-tenant-isolation.unit.test.ts` | PASS (3) |
-| `... auth-context.select-tenant.test.ts` | PASS (8) |
-| `... auth-context.platform-admin-shadow.test.ts` | FAIL (1) |
-| `pnpm audit --prod` | 37 findings (2 critical / 16 high) |
-| Live header / auth / CORS probes | See `evidence/` |
-| Full monorepo typecheck/lint/build | **NOT RUN** (timeboxed; not required to overturn Critical finding) |
-| DB RLS integration test | **NOT RUN** (requires local Postgres `forge_app`) |
+| Command                                                                              | Result                                                             |
+| ------------------------------------------------------------------------------------ | ------------------------------------------------------------------ |
+| `pnpm --filter @forge/platform-api exec vitest run ...auth-context.security.test.ts` | PASS (8)                                                           |
+| `... qr-token.security.test.ts`                                                      | PASS (4)                                                           |
+| `... configuration-tenant-isolation.unit.test.ts`                                    | PASS (3)                                                           |
+| `... auth-context.select-tenant.test.ts`                                             | PASS (8)                                                           |
+| `... auth-context.platform-admin-shadow.test.ts`                                     | FAIL (1)                                                           |
+| `pnpm audit --prod`                                                                  | 37 findings (2 critical / 16 high)                                 |
+| Live header / auth / CORS probes                                                     | See `evidence/`                                                    |
+| Full monorepo typecheck/lint/build                                                   | **NOT RUN** (timeboxed; not required to overturn Critical finding) |
+| DB RLS integration test                                                              | **NOT RUN** (requires local Postgres `forge_app`)                  |
 
 ---
 

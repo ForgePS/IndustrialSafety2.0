@@ -13,14 +13,14 @@ audit events, worker enqueue, tests, and documentation.
 
 ## Scope boundaries (this sprint)
 
-| In scope | Out of scope (later sprints) |
-| --- | --- |
-| Presigned PUT + multipart upload | Malware vendor scanning (S6) |
-| Upload complete / abort / cancel | ZIP migration bundles (S4) |
-| CSV / XLSX / JSON **structure** detection | Duplicate engine (S4) |
-| File metadata + SHA-256 hashing | Row import / execution (S5) |
-| Config profile snapshot on upload | Import Center UI (S7) |
-| Import SQS detect consumer | Product adapters |
+| In scope                                  | Out of scope (later sprints) |
+| ----------------------------------------- | ---------------------------- |
+| Presigned PUT + multipart upload          | Malware vendor scanning (S6) |
+| Upload complete / abort / cancel          | ZIP migration bundles (S4)   |
+| CSV / XLSX / JSON **structure** detection | Duplicate engine (S4)        |
+| File metadata + SHA-256 hashing           | Row import / execution (S5)  |
+| Config profile snapshot on upload         | Import Center UI (S7)        |
+| Import SQS detect consumer                | Product adapters             |
 
 ## Completed work
 
@@ -62,13 +62,13 @@ content-hash uniqueness for completed files, expanded `scan_status` check.
 
 ## Deployment (COMPLETE)
 
-| Item | Value |
-| --- | --- |
-| API TD | `:34` |
-| Worker TD | `:20` |
-| Migrate `0024` | exit **0** (`…/de1a4227562045d1855848411d3df22b`) |
-| Health / upload unauth | `200` / `401` |
-| App DB secret | unchanged |
+| Item                   | Value                                             |
+| ---------------------- | ------------------------------------------------- |
+| API TD                 | `:34`                                             |
+| Worker TD              | `:20`                                             |
+| Migrate `0024`         | exit **0** (`…/de1a4227562045d1855848411d3df22b`) |
+| Health / upload unauth | `200` / `401`                                     |
+| App DB secret          | unchanged                                         |
 
 Evidence: `docs/testing/evidence/import-platform/s3-*.json`  
 Deployment report: `docs/deployment/import-platform-s3-deployment.md`

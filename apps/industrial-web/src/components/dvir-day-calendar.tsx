@@ -43,12 +43,7 @@ function formatDayLabel(date: string): string {
   return d.toLocaleDateString(undefined, { month: "short", day: "numeric" });
 }
 
-export function DvirDayCalendar({
-  vehicleId,
-  publicToken,
-  rows,
-  onViewReport,
-}: Props) {
+export function DvirDayCalendar({ vehicleId, publicToken, rows, onViewReport }: Props) {
   const dvirRows = useMemo(() => rows.filter(isDvirRecord), [rows]);
   const byDate = useMemo(() => groupDvirsByDate(dvirRows), [dvirRows]);
   const dates = useMemo(() => dvirRetentionDateRange(), []);
@@ -90,8 +85,8 @@ export function DvirDayCalendar({
         <div>
           <h6 className="mb-1">Inspection calendar</h6>
           <p className="text-muted small mb-0">
-            Last {DVIR_RETENTION_DAYS} calendar days on file. Older records are removed automatically.
-            Click a day to review or print.
+            Last {DVIR_RETENTION_DAYS} calendar days on file. Older records are removed
+            automatically. Click a day to review or print.
           </p>
         </div>
         <button

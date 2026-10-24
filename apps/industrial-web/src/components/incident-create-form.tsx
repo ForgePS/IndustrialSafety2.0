@@ -7,10 +7,7 @@ import { MedicalRefusalAcknowledgmentForm } from "@/components/medical-refusal-a
 import { ReasonableSuspicionForm } from "@/components/reasonable-suspicion-form";
 import { DrugAlcoholConsentList } from "@/components/drug-alcohol-incident-form";
 import { useBodyRegions } from "@/hooks/use-body-regions";
-import {
-  bodyLocationSummaryLabel,
-  toggleBodyLocation,
-} from "@/lib/incident-body-map";
+import { bodyLocationSummaryLabel, toggleBodyLocation } from "@/lib/incident-body-map";
 import { medicalRefusalValidationMessage } from "@/lib/medical-refusal-acknowledgment";
 import { reasonableSuspicionValidationMessage } from "@/lib/reasonable-suspicion";
 import { drugAlcoholConsentsValidationMessage } from "@/lib/drug-alcohol-incident";
@@ -30,10 +27,7 @@ import {
 } from "@/lib/personnel-lookups";
 import { fetchAllPersonnelRows } from "@/lib/personnel-roster-fetch";
 import { personNameDisplay } from "@/lib/person-name-display";
-import {
-  isSafetyOrEhsStaffPerson,
-  safetyOrEhsDepartmentIds,
-} from "@/lib/task-assignees";
+import { isSafetyOrEhsStaffPerson, safetyOrEhsDepartmentIds } from "@/lib/task-assignees";
 import {
   applyPersonnelLinkToIncidentForm,
   emptyIncidentCreateForm,
@@ -203,7 +197,8 @@ export function IncidentCreateForm({
     if (mode !== "edit" || !initialIncident || lookupsLoading) return;
     if (initialIncident.departmentId || !initialIncident.departmentName.trim()) return;
     const match = lookups.departments.find(
-      (dept) => dept.label.trim().toLowerCase() === initialIncident.departmentName.trim().toLowerCase(),
+      (dept) =>
+        dept.label.trim().toLowerCase() === initialIncident.departmentName.trim().toLowerCase(),
     );
     if (!match) return;
     setForm((prev) => (prev.departmentId ? prev : { ...prev, departmentId: match.id }));
@@ -271,7 +266,7 @@ export function IncidentCreateForm({
       .map((person) => {
         const resolvedDepartment =
           person.departmentName.trim() ||
-          (person.departmentId ? deptLabelById.get(person.departmentId) ?? "" : "");
+          (person.departmentId ? (deptLabelById.get(person.departmentId) ?? "") : "");
         return {
           id: person.id,
           displayName: person.displayName,
@@ -291,9 +286,7 @@ export function IncidentCreateForm({
   const completedByStaffId = useMemo(() => {
     const name = form.completedBy.trim().toLowerCase();
     if (!name) return "";
-    return (
-      ehsStaff.find((person) => person.displayName.trim().toLowerCase() === name)?.id ?? ""
-    );
+    return ehsStaff.find((person) => person.displayName.trim().toLowerCase() === name)?.id ?? "";
   }, [form.completedBy, ehsStaff]);
 
   const completedByOrphan = useMemo(() => {
@@ -302,9 +295,7 @@ export function IncidentCreateForm({
     return name;
   }, [form.completedBy, completedByStaffId]);
 
-  const siteLabel = form.siteId
-    ? resolveLookupLabel(lookups, "sites", form.siteId)
-    : undefined;
+  const siteLabel = form.siteId ? resolveLookupLabel(lookups, "sites", form.siteId) : undefined;
   const departmentLabel = form.departmentId
     ? resolveLookupLabel(lookups, "departments", form.departmentId)
     : undefined;
@@ -361,14 +352,10 @@ export function IncidentCreateForm({
       return;
     }
     setValidationError(null);
-    await onSubmit(
-      { ...form, title },
-      bodyLocations,
-      {
-        ...(siteLabel ? { siteLabel } : {}),
-        ...(departmentLabel ? { departmentLabel } : {}),
-      },
-    );
+    await onSubmit({ ...form, title }, bodyLocations, {
+      ...(siteLabel ? { siteLabel } : {}),
+      ...(departmentLabel ? { departmentLabel } : {}),
+    });
   }
 
   async function handleContinueToWorkersComp() {
@@ -390,14 +377,10 @@ export function IncidentCreateForm({
       return;
     }
     setValidationError(null);
-    await onContinueToWorkersComp(
-      { ...form, title, workersCompRelevant: true },
-      bodyLocations,
-      {
-        ...(siteLabel ? { siteLabel } : {}),
-        ...(departmentLabel ? { departmentLabel } : {}),
-      },
-    );
+    await onContinueToWorkersComp({ ...form, title, workersCompRelevant: true }, bodyLocations, {
+      ...(siteLabel ? { siteLabel } : {}),
+      ...(departmentLabel ? { departmentLabel } : {}),
+    });
   }
 
   async function handleContinueToOsha() {
@@ -413,14 +396,10 @@ export function IncidentCreateForm({
       return;
     }
     setValidationError(null);
-    await onContinueToOsha(
-      { ...form, title },
-      bodyLocations,
-      {
-        ...(siteLabel ? { siteLabel } : {}),
-        ...(departmentLabel ? { departmentLabel } : {}),
-      },
-    );
+    await onContinueToOsha({ ...form, title }, bodyLocations, {
+      ...(siteLabel ? { siteLabel } : {}),
+      ...(departmentLabel ? { departmentLabel } : {}),
+    });
   }
 
   const isEdit = mode === "edit";
@@ -429,8 +408,7 @@ export function IncidentCreateForm({
     form.workersCompRelevant &&
     canContinueToWorkersComp &&
     Boolean(onContinueToWorkersComp);
-  const showContinueToOsha =
-    showWorkersComp && canContinueToOsha && Boolean(onContinueToOsha);
+  const showContinueToOsha = showWorkersComp && canContinueToOsha && Boolean(onContinueToOsha);
 
   return (
     <div className="card incidents-create mb-4" id="incident-create-form">
@@ -567,9 +545,7 @@ export function IncidentCreateForm({
                   type="date"
                   className="form-control"
                   value={form.dateOfBirth}
-                  onChange={(ev) =>
-                    setForm((prev) => ({ ...prev, dateOfBirth: ev.target.value }))
-                  }
+                  onChange={(ev) => setForm((prev) => ({ ...prev, dateOfBirth: ev.target.value }))}
                 />
               </Field>
               <Field
@@ -778,11 +754,7 @@ export function IncidentCreateForm({
                   />
                 </Field>
               </div>
-              <IncidentBodyMap
-                mode="select"
-                selected={bodyLocations}
-                onToggle={onBodyMapToggle}
-              />
+              <IncidentBodyMap mode="select" selected={bodyLocations} onToggle={onBodyMapToggle} />
               <p className="text-muted small mt-3 mb-0">
                 {bodyPartSelectionCount > 0 ? (
                   <>
@@ -805,9 +777,7 @@ export function IncidentCreateForm({
                   rows={4}
                   placeholder="What happened? Include equipment, tasks, and environmental factors."
                   value={form.description}
-                  onChange={(ev) =>
-                    setForm((prev) => ({ ...prev, description: ev.target.value }))
-                  }
+                  onChange={(ev) => setForm((prev) => ({ ...prev, description: ev.target.value }))}
                 />
               </Field>
               <Field
@@ -915,18 +885,13 @@ export function IncidentCreateForm({
                         { value: false, label: "No" },
                       ] as const
                     ).map((opt) => (
-                      <label
-                        key={`er-${opt.label}`}
-                        className="form-check form-check-inline mb-0"
-                      >
+                      <label key={`er-${opt.label}`} className="form-check form-check-inline mb-0">
                         <input
                           type="radio"
                           className="form-check-input"
                           name="incident-treated-er"
                           checked={form.treatedInEr === opt.value}
-                          onChange={() =>
-                            setForm((prev) => ({ ...prev, treatedInEr: opt.value }))
-                          }
+                          onChange={() => setForm((prev) => ({ ...prev, treatedInEr: opt.value }))}
                         />
                         <span className="form-check-label">{opt.label}</span>
                       </label>
@@ -987,9 +952,7 @@ export function IncidentCreateForm({
                   id="incident-reported-by"
                   className="form-control"
                   value={form.reportedBy}
-                  onChange={(ev) =>
-                    setForm((prev) => ({ ...prev, reportedBy: ev.target.value }))
-                  }
+                  onChange={(ev) => setForm((prev) => ({ ...prev, reportedBy: ev.target.value }))}
                 />
               </Field>
               {showWorkersComp ? (
@@ -1030,9 +993,7 @@ export function IncidentCreateForm({
                     <select
                       id="incident-completed-by"
                       className="form-select"
-                      value={
-                        completedByStaffId || (completedByOrphan ? "__orphan__" : "")
-                      }
+                      value={completedByStaffId || (completedByOrphan ? "__orphan__" : "")}
                       onChange={(ev) => {
                         const value = ev.target.value;
                         if (!value) {
@@ -1055,9 +1016,7 @@ export function IncidentCreateForm({
                     >
                       <option value="">Select EHS staff…</option>
                       {completedByOrphan ? (
-                        <option value="__orphan__">
-                          {personNameDisplay(completedByOrphan)}
-                        </option>
+                        <option value="__orphan__">{personNameDisplay(completedByOrphan)}</option>
                       ) : null}
                       {ehsStaff.map((person) => (
                         <option key={person.id} value={person.id}>
@@ -1100,9 +1059,7 @@ export function IncidentCreateForm({
                   className="form-control"
                   placeholder="Optional"
                   value={form.witnessNames}
-                  onChange={(ev) =>
-                    setForm((prev) => ({ ...prev, witnessNames: ev.target.value }))
-                  }
+                  onChange={(ev) => setForm((prev) => ({ ...prev, witnessNames: ev.target.value }))}
                 />
               </Field>
             </div>

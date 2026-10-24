@@ -107,17 +107,13 @@ export function ScanInspectionRunner({
   }, [notesModalItemId]);
 
   function setAnswer(itemId: string, answer: InspectionAnswer) {
-    setItems((prev) =>
-      prev.map((item) => (item.id === itemId ? { ...item, answer } : item)),
-    );
+    setItems((prev) => prev.map((item) => (item.id === itemId ? { ...item, answer } : item)));
     if (answer === "NO") setNotesModalItemId(itemId);
     else if (notesModalItemId === itemId) setNotesModalItemId(null);
   }
 
   function setNotes(itemId: string, notes: string) {
-    setItems((prev) =>
-      prev.map((item) => (item.id === itemId ? { ...item, notes } : item)),
-    );
+    setItems((prev) => prev.map((item) => (item.id === itemId ? { ...item, notes } : item)));
   }
 
   async function addPhotos(itemId: string, files: FileList | null) {
@@ -186,7 +182,11 @@ export function ScanInspectionRunner({
         </button>
       </div>
       <form className="card-body" onSubmit={(event) => void complete(event)}>
-        {error ? <div className="alert alert-danger py-2" role="alert">{error}</div> : null}
+        {error ? (
+          <div className="alert alert-danger py-2" role="alert">
+            {error}
+          </div>
+        ) : null}
         <div className="d-grid gap-3">
           {items.map((item) => (
             <div key={item.id} className="border rounded p-2">
@@ -228,7 +228,11 @@ export function ScanInspectionRunner({
             </div>
           ))}
         </div>
-        <button type="submit" className="btn btn-primary w-100 mt-3" disabled={busy || !inspectionId}>
+        <button
+          type="submit"
+          className="btn btn-primary w-100 mt-3"
+          disabled={busy || !inspectionId}
+        >
           {busy ? "Submitting…" : "Complete inspection"}
         </button>
       </form>

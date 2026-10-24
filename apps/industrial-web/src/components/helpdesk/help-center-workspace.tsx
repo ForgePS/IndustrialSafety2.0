@@ -102,7 +102,12 @@ export function HelpCenterWorkspace() {
       {flash ? (
         <div className={`alert alert-${flash.tone} alert-dismissible`} role="status">
           {flash.text}
-          <button type="button" className="btn-close" aria-label="Dismiss" onClick={() => setFlash(null)} />
+          <button
+            type="button"
+            className="btn-close"
+            aria-label="Dismiss"
+            onClick={() => setFlash(null)}
+          />
         </div>
       ) : null}
       {ticketId ? (
@@ -158,10 +163,30 @@ export function HelpCenterWorkspace() {
 type StatusTab = "open" | "closed" | "all";
 
 const QUICK_STARTS = [
-  { type: "TECHNICAL_ISSUE", icon: "bx-error-circle", title: "Something isn't working", body: "Errors, broken pages, or features not behaving as expected." },
-  { type: "HOW_DO_I", icon: "bx-help-circle", title: "How do I...?", body: "Questions about using Forge Industrial Safety." },
-  { type: "ACCOUNT_LOGIN", icon: "bx-key", title: "Login or access", body: "Sign-in trouble, permissions, or user accounts." },
-  { type: "FEATURE_REQUEST", icon: "bx-bulb", title: "Suggest an improvement", body: "Ideas and feature requests for the Forge team." },
+  {
+    type: "TECHNICAL_ISSUE",
+    icon: "bx-error-circle",
+    title: "Something isn't working",
+    body: "Errors, broken pages, or features not behaving as expected.",
+  },
+  {
+    type: "HOW_DO_I",
+    icon: "bx-help-circle",
+    title: "How do I...?",
+    body: "Questions about using Forge Industrial Safety.",
+  },
+  {
+    type: "ACCOUNT_LOGIN",
+    icon: "bx-key",
+    title: "Login or access",
+    body: "Sign-in trouble, permissions, or user accounts.",
+  },
+  {
+    type: "FEATURE_REQUEST",
+    icon: "bx-bulb",
+    title: "Suggest an improvement",
+    body: "Ideas and feature requests for the Forge team.",
+  },
 ] as const;
 
 function HelpCenterHome({
@@ -200,7 +225,9 @@ function HelpCenterHome({
       const params = new URLSearchParams({ scope, page: String(page), pageSize: String(pageSize) });
       if (tab !== "all") params.set("status", tab);
       if (q) params.set("q", q);
-      const res = await apiGet<{ items: HelpdeskTicket[]; total: number }>(`${HELPDESK_API}/tickets?${params}`);
+      const res = await apiGet<{ items: HelpdeskTicket[]; total: number }>(
+        `${HELPDESK_API}/tickets?${params}`,
+      );
       setItems(res.items ?? []);
       setTotal(res.total ?? 0);
     } catch (err) {
@@ -230,7 +257,9 @@ function HelpCenterHome({
       <div className="card mb-4">
         <div className="card-body">
           <h5 className="mb-1">Need help?</h5>
-          <p className="text-muted mb-3">Search your existing tickets, or tell us what is going on.</p>
+          <p className="text-muted mb-3">
+            Search your existing tickets, or tell us what is going on.
+          </p>
           <form
             className="d-flex flex-column flex-md-row gap-2"
             onSubmit={(e) => {
@@ -253,7 +282,11 @@ function HelpCenterHome({
               />
             </div>
             {caps.canCreate ? (
-              <button type="button" className="btn btn-primary text-nowrap" onClick={() => onStart(search.trim())}>
+              <button
+                type="button"
+                className="btn btn-primary text-nowrap"
+                onClick={() => onStart(search.trim())}
+              >
                 <i className="bx bx-plus me-1" />
                 Submit a ticket
               </button>
@@ -262,7 +295,11 @@ function HelpCenterHome({
           {q && caps.canCreate ? (
             <p className="small mb-0 mt-2">
               Don&apos;t see what you need?{" "}
-              <button type="button" className="btn btn-link btn-sm p-0 align-baseline" onClick={() => onStart(q)}>
+              <button
+                type="button"
+                className="btn btn-link btn-sm p-0 align-baseline"
+                onClick={() => onStart(q)}
+              >
                 Start a ticket about &ldquo;{q}&rdquo;
               </button>
             </p>
@@ -336,7 +373,11 @@ function HelpCenterHome({
         </div>
         {!loading && !items.length && !error ? (
           <div className="card-body pt-0 text-muted">
-            {q ? `No tickets match "${q}".` : tab === "open" ? "You have no open tickets." : "No tickets yet."}
+            {q
+              ? `No tickets match "${q}".`
+              : tab === "open"
+                ? "You have no open tickets."
+                : "No tickets yet."}
           </div>
         ) : null}
         <div className="list-group list-group-flush">
@@ -362,7 +403,12 @@ function HelpCenterHome({
         </div>
         {pages > 1 ? (
           <div className="card-footer d-flex justify-content-between align-items-center">
-            <button type="button" className="btn btn-sm btn-outline-secondary" disabled={page <= 1} onClick={() => setPage(page - 1)}>
+            <button
+              type="button"
+              className="btn btn-sm btn-outline-secondary"
+              disabled={page <= 1}
+              onClick={() => setPage(page - 1)}
+            >
               Previous
             </button>
             <span className="small text-muted">
@@ -416,7 +462,8 @@ function SubmitTicketForm({
   const submit = async () => {
     if (!requestType) return setError("Choose what kind of help you need.");
     if (subject.trim().length < 3) return setError("Add a short subject (at least 3 characters).");
-    if (description.trim().length < 10) return setError("Describe the issue in at least 10 characters.");
+    if (description.trim().length < 10)
+      return setError("Describe the issue in at least 10 characters.");
     setSubmitting(true);
     setError("");
     try {
@@ -431,7 +478,9 @@ function SubmitTicketForm({
         technicalContext: includeTech ? captureTechnicalContext(HELP_DESK_PATH) : null,
         clientRequestId,
       });
-      const failed = files.length ? await uploadAll(`${HELPDESK_API}/tickets/${res.ticket.id}`, files) : [];
+      const failed = files.length
+        ? await uploadAll(`${HELPDESK_API}/tickets/${res.ticket.id}`, files)
+        : [];
       onCreated(res.ticket, failed);
     } catch (err) {
       setError(errorText(err, "Could not submit the ticket. Please try again."));
@@ -460,7 +509,13 @@ function SubmitTicketForm({
               <label className="form-label" htmlFor="hd-type">
                 What do you need help with? <span className="text-danger">*</span>
               </label>
-              <select id="hd-type" className="form-select" value={requestType} onChange={(e) => setRequestType(e.target.value)} required>
+              <select
+                id="hd-type"
+                className="form-select"
+                value={requestType}
+                onChange={(e) => setRequestType(e.target.value)}
+                required
+              >
                 <option value="">Choose a request type</option>
                 {config.requestTypes.map((r) => (
                   <option key={r.code} value={r.code}>
@@ -473,7 +528,12 @@ function SubmitTicketForm({
               <label className="form-label" htmlFor="hd-area">
                 Which part of the app?
               </label>
-              <select id="hd-area" className="form-select" value={productArea} onChange={(e) => setProductArea(e.target.value)}>
+              <select
+                id="hd-area"
+                className="form-select"
+                value={productArea}
+                onChange={(e) => setProductArea(e.target.value)}
+              >
                 <option value="">Not sure / general</option>
                 {config.productAreas.map((a) => (
                   <option key={a.code} value={a.code}>
@@ -515,7 +575,12 @@ function SubmitTicketForm({
               <label className="form-label" htmlFor="hd-severity">
                 How much is this affecting your work?
               </label>
-              <select id="hd-severity" className="form-select" value={severity} onChange={(e) => setSeverity(e.target.value)}>
+              <select
+                id="hd-severity"
+                className="form-select"
+                value={severity}
+                onChange={(e) => setSeverity(e.target.value)}
+              >
                 <option value="">Let Forge Support decide</option>
                 {HELPDESK_PRIORITIES.map((p) => (
                   <option key={p} value={p}>
@@ -524,12 +589,22 @@ function SubmitTicketForm({
                 ))}
               </select>
               {severity ? (
-                <div className="form-text">{HELPDESK_PRIORITY_META[severity as keyof typeof HELPDESK_PRIORITY_META]?.description}</div>
+                <div className="form-text">
+                  {
+                    HELPDESK_PRIORITY_META[severity as keyof typeof HELPDESK_PRIORITY_META]
+                      ?.description
+                  }
+                </div>
               ) : null}
             </div>
             <div className="col-md-6">
               <span className="form-label d-block">Attachments</span>
-              <AttachmentPicker files={files} onChange={setFiles} disabled={submitting} idPrefix="hd-new" />
+              <AttachmentPicker
+                files={files}
+                onChange={setFiles}
+                disabled={submitting}
+                idPrefix="hd-new"
+              />
             </div>
             <div className="col-12">
               <div className="form-check">
@@ -543,7 +618,11 @@ function SubmitTicketForm({
                 <label className="form-check-label" htmlFor="hd-tech">
                   Include technical details (browser, device, screen size, app version)
                 </label>
-                <button type="button" className="btn btn-link btn-sm p-0 ms-2 align-baseline" onClick={() => setShowTech((v) => !v)}>
+                <button
+                  type="button"
+                  className="btn btn-link btn-sm p-0 ms-2 align-baseline"
+                  onClick={() => setShowTech((v) => !v)}
+                >
                   {showTech ? "Hide" : "What's included?"}
                 </button>
               </div>
@@ -563,7 +642,12 @@ function SubmitTicketForm({
           </div>
           {error ? <div className="alert alert-danger mt-3 mb-0">{error}</div> : null}
           <div className="d-flex flex-column-reverse flex-sm-row justify-content-end gap-2 mt-4">
-            <button type="button" className="btn btn-outline-secondary" onClick={onCancel} disabled={submitting}>
+            <button
+              type="button"
+              className="btn btn-outline-secondary"
+              onClick={onCancel}
+              disabled={submitting}
+            >
               Cancel
             </button>
             <button type="submit" className="btn btn-primary" disabled={submitting}>
@@ -578,7 +662,15 @@ function SubmitTicketForm({
 
 // ---------------------------------------------------------------- ticket detail
 
-function CustomerTicketView({ ticketId, config, onBack }: { ticketId: string; config: HelpdeskConfig; onBack: () => void }) {
+function CustomerTicketView({
+  ticketId,
+  config,
+  onBack,
+}: {
+  ticketId: string;
+  config: HelpdeskConfig;
+  onBack: () => void;
+}) {
   const [detail, setDetail] = useState<CustomerTicketDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -623,7 +715,11 @@ function CustomerTicketView({ ticketId, config, onBack }: { ticketId: string; co
   };
 
   const setStatus = async (action: "reopen" | "close") => {
-    if (action === "close" && !window.confirm("Close this ticket? You can reopen it later if you need more help.")) return;
+    if (
+      action === "close" &&
+      !window.confirm("Close this ticket? You can reopen it later if you need more help.")
+    )
+      return;
     setBusy(true);
     setActionError("");
     try {
@@ -644,7 +740,13 @@ function CustomerTicketView({ ticketId, config, onBack }: { ticketId: string; co
     </button>
   );
 
-  if (loading && !detail) return <>{backButton}<p className="text-muted mb-0">Loading ticket…</p></>;
+  if (loading && !detail)
+    return (
+      <>
+        {backButton}
+        <p className="text-muted mb-0">Loading ticket…</p>
+      </>
+    );
   if (error || !detail) {
     return (
       <>
@@ -667,18 +769,30 @@ function CustomerTicketView({ ticketId, config, onBack }: { ticketId: string; co
           <div className="d-flex flex-wrap gap-2 align-items-center">
             <TicketStatusBadge status={status} />
             <TicketPriorityBadge priority={t.priority} />
-            <span className="small text-muted">{t.isAssigned ? "Assigned to Forge Support" : "Awaiting assignment"}</span>
+            <span className="small text-muted">
+              {t.isAssigned ? "Assigned to Forge Support" : "Awaiting assignment"}
+            </span>
           </div>
         </div>
         <div className="d-flex gap-2">
           {detail.canReopen ? (
-            <button type="button" className="btn btn-outline-warning" disabled={busy} onClick={() => void setStatus("reopen")}>
+            <button
+              type="button"
+              className="btn btn-outline-warning"
+              disabled={busy}
+              onClick={() => void setStatus("reopen")}
+            >
               <i className="bx bx-revision me-1" />
               Reopen
             </button>
           ) : null}
           {detail.canClose ? (
-            <button type="button" className="btn btn-outline-secondary" disabled={busy} onClick={() => void setStatus("close")}>
+            <button
+              type="button"
+              className="btn btn-outline-secondary"
+              disabled={busy}
+              onClick={() => void setStatus("close")}
+            >
               <i className="bx bx-check-circle me-1" />
               Close ticket
             </button>
@@ -698,7 +812,9 @@ function CustomerTicketView({ ticketId, config, onBack }: { ticketId: string; co
                 attachments={detail.attachments}
                 events={detail.events}
                 onOpenAttachment={(a) => {
-                  openTicketAttachment(base, a.id).catch((err) => setActionError(errorText(err, "Could not open the file")));
+                  openTicketAttachment(base, a.id).catch((err) =>
+                    setActionError(errorText(err, "Could not open the file")),
+                  );
                 }}
               />
             </div>
@@ -711,7 +827,9 @@ function CustomerTicketView({ ticketId, config, onBack }: { ticketId: string; co
                   Reply to Forge Support
                 </label>
                 {status === "RESOLVED" ? (
-                  <p className="small text-warning mb-2">This ticket is resolved. Sending a reply will reopen it.</p>
+                  <p className="small text-warning mb-2">
+                    This ticket is resolved. Sending a reply will reopen it.
+                  </p>
                 ) : null}
                 {status === "WAITING_ON_CUSTOMER" ? (
                   <p className="small text-info mb-2">Forge Support is waiting on your response.</p>
@@ -726,8 +844,15 @@ function CustomerTicketView({ ticketId, config, onBack }: { ticketId: string; co
                   onChange={(e) => setReply(e.target.value)}
                   disabled={busy}
                 />
-                <AttachmentPicker files={files} onChange={setFiles} disabled={busy} idPrefix="hd-reply" />
-                {actionError ? <div className="alert alert-danger mt-2 mb-0">{actionError}</div> : null}
+                <AttachmentPicker
+                  files={files}
+                  onChange={setFiles}
+                  disabled={busy}
+                  idPrefix="hd-reply"
+                />
+                {actionError ? (
+                  <div className="alert alert-danger mt-2 mb-0">{actionError}</div>
+                ) : null}
                 <div className="d-flex justify-content-end mt-2">
                   <button
                     type="button"
@@ -735,7 +860,11 @@ function CustomerTicketView({ ticketId, config, onBack }: { ticketId: string; co
                     disabled={busy || (!reply.trim() && !files.length)}
                     onClick={() => void sendReply()}
                   >
-                    {busy ? "Sending…" : files.length && !reply.trim() ? "Upload files" : "Send reply"}
+                    {busy
+                      ? "Sending…"
+                      : files.length && !reply.trim()
+                        ? "Upload files"
+                        : "Send reply"}
                   </button>
                 </div>
               </div>
@@ -750,7 +879,9 @@ function CustomerTicketView({ ticketId, config, onBack }: { ticketId: string; co
                       : "This ticket is closed."
                     : "You can view this ticket but not reply to it."}
                 </p>
-                {actionError ? <div className="alert alert-danger mt-2 mb-0">{actionError}</div> : null}
+                {actionError ? (
+                  <div className="alert alert-danger mt-2 mb-0">{actionError}</div>
+                ) : null}
               </div>
             </div>
           )}

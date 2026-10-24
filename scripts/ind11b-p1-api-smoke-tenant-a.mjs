@@ -63,12 +63,8 @@ results.push(
   }),
 );
 results.push(await call("auth_me_tenant_a", "/api/v1/auth/me", { activeTenantId: TENANT_A }));
-results.push(
-  await call("modules", "/api/v1/industrial/modules", { activeTenantId: TENANT_A }),
-);
-results.push(
-  await call("bootstrap", "/api/v1/industrial/bootstrap", { activeTenantId: TENANT_A }),
-);
+results.push(await call("modules", "/api/v1/industrial/modules", { activeTenantId: TENANT_A }));
+results.push(await call("bootstrap", "/api/v1/industrial/bootstrap", { activeTenantId: TENANT_A }));
 results.push(
   await call("personnel", "/api/v1/industrial/personnel?limit=3", {
     activeTenantId: TENANT_A,
@@ -79,9 +75,7 @@ results.push(
     activeTenantId: TENANT_A,
   }),
 );
-results.push(
-  await call("loto", "/api/v1/industrial/loto?limit=3", { activeTenantId: TENANT_A }),
-);
+results.push(await call("loto", "/api/v1/industrial/loto?limit=3", { activeTenantId: TENANT_A }));
 
 const ok = results.every((r) => r.status != null && r.status >= 200 && r.status < 300);
 const out = {
@@ -93,9 +87,7 @@ const out = {
   tenantAId: TENANT_A,
   results,
 };
-const evidenceDir = path.resolve(
-  "docs/program/industrial-migration/ind-11/evidence/wave3",
-);
+const evidenceDir = path.resolve("docs/program/industrial-migration/ind-11/evidence/wave3");
 fs.mkdirSync(evidenceDir, { recursive: true });
 const file = path.join(evidenceDir, "api-smoke-tenant-a.json");
 fs.writeFileSync(file, `${JSON.stringify(out, null, 2)}\n`);

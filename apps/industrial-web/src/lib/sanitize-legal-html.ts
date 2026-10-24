@@ -24,7 +24,10 @@ export function sanitizeLegalHtml(html: string): string {
         el.removeAttribute(attr.name);
         continue;
       }
-      if ((name === "href" || name === "src" || name === "xlink:href") && /^javascript:/i.test(value)) {
+      if (
+        (name === "href" || name === "src" || name === "xlink:href") &&
+        /^javascript:/i.test(value)
+      ) {
         el.removeAttribute(attr.name);
       }
     }

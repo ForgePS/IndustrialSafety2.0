@@ -75,10 +75,7 @@ async function bootstrap(): Promise<void> {
       // Browser clients call the API from separate CloudFront origins (ADR-036).
       res.setHeader("Cross-Origin-Resource-Policy", "cross-origin");
       if (env.APP_ENV !== "local") {
-        res.setHeader(
-          "Strict-Transport-Security",
-          "max-age=31536000; includeSubDomains",
-        );
+        res.setHeader("Strict-Transport-Security", "max-age=31536000; includeSubDomains");
       }
       next();
     },

@@ -18,8 +18,8 @@ type Step = "credentials" | "new_password" | "mfa";
 function hasCognitoPublicEnv(): boolean {
   return Boolean(
     process.env.NEXT_PUBLIC_COGNITO_DOMAIN &&
-      process.env.NEXT_PUBLIC_COGNITO_CLIENT_ID &&
-      process.env.NEXT_PUBLIC_COGNITO_USER_POOL_ID,
+    process.env.NEXT_PUBLIC_COGNITO_CLIENT_ID &&
+    process.env.NEXT_PUBLIC_COGNITO_USER_POOL_ID,
   );
 }
 
@@ -27,11 +27,7 @@ function hasCognitoPublicEnv(): boolean {
  * FIELD-S0 login gate.
  * Sign-in is Cognito email/password or SSO until employee-number + PIN auth ships.
  */
-export function LoginGate({
-  authError,
-}: {
-  authError?: string | null;
-}) {
+export function LoginGate({ authError }: { authError?: string | null }) {
   const { loginWithPassword, completeNewPassword, completeMfa, loginWithCognito } = useAuth();
   const { branding } = useFieldLoginBranding();
   const { resolved } = useFieldThemeMode();
@@ -134,8 +130,7 @@ export function LoginGate({
       <div className="ff-login-card">
         {!cognitoReady ? (
           <p className="ff-error" role="alert">
-            Cognito is not configured. Copy{" "}
-            <code>apps/field-web/.env.local.example</code> to{" "}
+            Cognito is not configured. Copy <code>apps/field-web/.env.local.example</code> to{" "}
             <code>.env.local</code> and restart the Field app.
           </p>
         ) : null}
@@ -210,8 +205,8 @@ export function LoginGate({
             </p>
             {displayError?.includes("Incorrect email or password") ? (
               <p className="ff-hint">
-                If your company uses single sign-on, try <strong>Sign in with SSO</strong> instead of
-                email and password.
+                If your company uses single sign-on, try <strong>Sign in with SSO</strong> instead
+                of email and password.
               </p>
             ) : null}
           </form>

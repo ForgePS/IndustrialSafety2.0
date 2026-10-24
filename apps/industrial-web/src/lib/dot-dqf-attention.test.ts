@@ -59,11 +59,9 @@ describe("dot-dqf-attention", () => {
       workerClassification: "Full Time",
       driverLicenseClass: "CDL DRIVER",
       cdlExpiry: "2028-01-01",
-      driversLicenseCopy:
-        '[{"name":"license.jpg","dataUrl":"data:image/jpeg;base64,abc"}]',
+      driversLicenseCopy: '[{"name":"license.jpg","dataUrl":"data:image/jpeg;base64,abc"}]',
       medicalCertExpiry: "2028-01-01",
-      medicalCertCopy:
-        '[{"name":"mec.pdf","dataUrl":"data:application/pdf;base64,abc"}]',
+      medicalCertCopy: '[{"name":"mec.pdf","dataUrl":"data:application/pdf;base64,abc"}]',
     });
     expect(missing).not.toContain("Employment Eligibility Verification Form I-9");
     expect(missing).not.toContain("Documentation of Refusal to Test Form");
@@ -118,9 +116,8 @@ describe("dot-dqf-attention", () => {
           details: {
             workerClassification: "Full Time",
             driverLicenseClass: "CDL DRIVER",
-            driversLicenseCopy: "[{\"name\":\"license.jpg\",\"dataUrl\":\"data:image/jpeg;base64,abc\"}]",
-            medicalCertCopy:
-              "[{\"name\":\"mec.pdf\",\"dataUrl\":\"data:application/pdf;base64,abc\"}]",
+            driversLicenseCopy: '[{"name":"license.jpg","dataUrl":"data:image/jpeg;base64,abc"}]',
+            medicalCertCopy: '[{"name":"mec.pdf","dataUrl":"data:application/pdf;base64,abc"}]',
           },
         },
       ],
@@ -165,8 +162,8 @@ describe("dot-dqf-attention", () => {
             driverLicenseClass: "CDL DRIVER",
             cdlExpiry: "2025-01-01",
             medicalCertExpiry: "2025-06-01",
-            driversLicenseCopy: "[{\"name\":\"license.jpg\"}]",
-            medicalCertCopy: "[{\"name\":\"mec.pdf\"}]",
+            driversLicenseCopy: '[{"name":"license.jpg"}]',
+            medicalCertCopy: '[{"name":"mec.pdf"}]',
           },
         },
       ],
@@ -190,8 +187,8 @@ describe("dot-dqf-attention", () => {
             workerClassification: "Full Time",
             driverLicenseClass: "CDL DRIVER",
             cdlExpiry: "2028-01-01",
-            driversLicenseCopy: "[{\"name\":\"license.jpg\"}]",
-            medicalCertCopy: "[{\"name\":\"mec.pdf\"}]",
+            driversLicenseCopy: '[{"name":"license.jpg"}]',
+            medicalCertCopy: '[{"name":"mec.pdf"}]',
             medicalCertExpiry: "2028-01-01",
           },
         },
@@ -280,6 +277,9 @@ describe("dot-dqf-attention", () => {
     };
     const summary = summarizeCompanyDriverAttention([driver], { today: "2026-06-01" });
     expect(summary.missingMvrConsent).toBe(1);
-    expect(buildCompanyDriverAttentionCards(summary).find((card) => card.key === "missingMvrConsent")?.count).toBe(1);
+    expect(
+      buildCompanyDriverAttentionCards(summary).find((card) => card.key === "missingMvrConsent")
+        ?.count,
+    ).toBe(1);
   });
 });

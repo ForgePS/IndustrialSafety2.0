@@ -108,9 +108,7 @@ export const listJobsQuerySchema = z.object({
   createdFrom: z.string().datetime().optional(),
   createdTo: z.string().datetime().optional(),
   createdBy: z.string().uuid().optional(),
-  sort: z
-    .enum(["createdAt", "updatedAt", "displayName", "status"])
-    .default("createdAt"),
+  sort: z.enum(["createdAt", "updatedAt", "displayName", "status"]).default("createdAt"),
   sortDir: z.enum(["asc", "desc"]).default("desc"),
 });
 

@@ -25,8 +25,7 @@ export async function notifyPrintSupplyAlert(
 
   const level = input.alertLevel.toUpperCase();
   const where = input.printerName ? ` on ${input.printerName}` : "";
-  const pct =
-    input.percentRemaining != null ? ` (~${input.percentRemaining}% remaining)` : "";
+  const pct = input.percentRemaining != null ? ` (~${input.percentRemaining}% remaining)` : "";
   const title =
     level === "EMPTY"
       ? "Print supply empty"

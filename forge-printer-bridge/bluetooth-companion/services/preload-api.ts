@@ -17,17 +17,10 @@ export interface CompanionPreloadApi {
   savePairing: (pairing: SavedPairing) => Promise<void>;
   clearPairing: () => Promise<void>;
   readArtifactAsDataUrl: (artifactPath: string) => Promise<string>;
-  reportStatus: (
-    status: BluetoothStatus,
-    printer?: PrinterInfoPayload | null
-  ) => void;
-  onPipeRequest: (
-    handler: (request: CompanionRequest) => Promise<CompanionResponse>
-  ) => () => void;
+  reportStatus: (status: BluetoothStatus, printer?: PrinterInfoPayload | null) => void;
+  onPipeRequest: (handler: (request: CompanionRequest) => Promise<CompanionResponse>) => () => void;
   onBluetoothDeviceList: (
-    handler: (
-      devices: Array<{ deviceId: string; deviceName: string }>
-    ) => void
+    handler: (devices: Array<{ deviceId: string; deviceName: string }>) => void,
   ) => () => void;
   selectBluetoothDevice: (deviceId: string | null) => void;
   focusWindow: () => void;

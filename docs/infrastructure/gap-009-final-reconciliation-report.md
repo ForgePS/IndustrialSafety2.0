@@ -15,11 +15,11 @@ GAP-009 is closed. The Data stack no longer attempts to create `forge-developmen
 
 ## 2. Final decision
 
-| Decision | Selected |
-| --- | --- |
-| **RECONCILED** | **Yes** |
-| RECONCILED_WITH_LIMITATIONS | No |
-| NOT_RECONCILED | No |
+| Decision                    | Selected |
+| --------------------------- | -------- |
+| **RECONCILED**              | **Yes**  |
+| RECONCILED_WITH_LIMITATIONS | No       |
+| NOT_RECONCILED              | No       |
 
 ---
 
@@ -37,52 +37,52 @@ Application secret existed outside CloudFormation with the same name Data CDK tr
 
 ## 5. CDK implementation
 
-- Config flag + `ForgeDatabase` import branch  
-- Protection tests  
+- Config flag + `ForgeDatabase` import branch
+- Protection tests
 - Compute continues name lookup (no AppDbSecret export)
 
 ---
 
 ## 6–9. Secret ownership / before-after
 
-| Item | Before | After |
-| --- | --- | --- |
-| Ownership | External | External (referenced by CDK; not CFN-created) |
-| ARN | `…database-app-SknUu5` | **Unchanged** |
-| LastChangedDate | 2026-07-26T15:30:16-05:00 | **Unchanged** |
-| CFN AppDbSecret | Absent (failed create rolled back) | **Absent** |
+| Item            | Before                             | After                                         |
+| --------------- | ---------------------------------- | --------------------------------------------- |
+| Ownership       | External                           | External (referenced by CDK; not CFN-created) |
+| ARN             | `…database-app-SknUu5`             | **Unchanged**                                 |
+| LastChangedDate | 2026-07-26T15:30:16-05:00          | **Unchanged**                                 |
+| CFN AppDbSecret | Absent (failed create rolled back) | **Absent**                                    |
 
 ---
 
 ## 10–11. ECS / Aurora / CloudFormation
 
-| Area | Result |
-| --- | --- |
-| ECS | `:16` HEALTHY; `DATABASE_SECRET_ARN` → app secret name |
-| Aurora | `forge-development-rds-aurora` **available**; not replaced |
-| CFN | CDK deploy **no changes**; tag update → **UPDATE_COMPLETE** (2026-07-27T12:39:56Z) |
+| Area   | Result                                                                             |
+| ------ | ---------------------------------------------------------------------------------- |
+| ECS    | `:16` HEALTHY; `DATABASE_SECRET_ARN` → app secret name                             |
+| Aurora | `forge-development-rds-aurora` **available**; not replaced                         |
+| CFN    | CDK deploy **no changes**; tag update → **UPDATE_COMPLETE** (2026-07-27T12:39:56Z) |
 
 ---
 
 ## 12. Deployment result
 
-1. `cdk deploy ForgeData --exclusively --require-approval never` → **✅ no changes** (~28s)  
+1. `cdk deploy ForgeData --exclusively --require-approval never` → **✅ no changes** (~28s)
 2. `update-stack --use-previous-template` + `Gap009ReconciledAt` tag → **UPDATE_COMPLETE** (cleared stale rollback status; no secret create)
 
 ---
 
 ## 13–20. Verification
 
-| Check | Result |
-| --- | --- |
-| API health | **200** |
-| RMS | **200** |
-| Runtime role | **`forge_app`** (`phase2-verify-rls.mjs` exit 0) |
-| FORCE RLS | **PASS** (same probe) |
-| Tenant isolation | **7/7 PASS** |
-| Phase 3 smoke | **3/3 PASS** (review, scenario 1, scenario 10) |
-| CloudWatch api-5xx family | **OK** |
-| CloudTrail | **IsLogging true** |
+| Check                     | Result                                           |
+| ------------------------- | ------------------------------------------------ |
+| API health                | **200**                                          |
+| RMS                       | **200**                                          |
+| Runtime role              | **`forge_app`** (`phase2-verify-rls.mjs` exit 0) |
+| FORCE RLS                 | **PASS** (same probe)                            |
+| Tenant isolation          | **7/7 PASS**                                     |
+| Phase 3 smoke             | **3/3 PASS** (review, scenario 1, scenario 10)   |
+| CloudWatch api-5xx family | **OK**                                           |
+| CloudTrail                | **IsLogging true**                               |
 
 ---
 
@@ -96,26 +96,26 @@ Plan: `docs/infrastructure/gap-009-data-secret-reconciliation-plan.md`
 
 ## 22. Known limitations
 
-1. Application secret remains **externally owned** (not CFN-lifecycle-managed) in development — by design.  
-2. Greenfield envs still create via `importExistingAppSecret=false`.  
+1. Application secret remains **externally owned** (not CFN-lifecycle-managed) in development — by design.
+2. Greenfield envs still create via `importExistingAppSecret=false`.
 3. Tag update caused non-replacement `UPDATE_COMPLETE` events on tagged resources (buckets/Aurora writer metadata); secret value untouched.
 
 ---
 
 ## 23. Open risks
 
-| Risk | Severity | Notes |
-| --- | --- | --- |
-| Future accidental create path | Low | Protection tests + flag default false |
+| Risk                          | Severity | Notes                                 |
+| ----------------------------- | -------- | ------------------------------------- |
+| Future accidental create path | Low      | Protection tests + flag default false |
 
 ---
 
 ## 24. Human sign-off section
 
-| Role | Name | Date | Decision | Notes |
-| --- | --- | --- | --- | --- |
-| Infrastructure / Product | Jeremy Powell | 2026-07-27 | APPROVED deploy | Founder, Forge Public Safety |
-| Engineering closeout | Agent-assisted | 2026-07-27 | RECONCILED | Evidence captured |
+| Role                     | Name           | Date       | Decision        | Notes                        |
+| ------------------------ | -------------- | ---------- | --------------- | ---------------------------- |
+| Infrastructure / Product | Jeremy Powell  | 2026-07-27 | APPROVED deploy | Founder, Forge Public Safety |
+| Engineering closeout     | Agent-assisted | 2026-07-27 | RECONCILED      | Evidence captured            |
 
 ---
 

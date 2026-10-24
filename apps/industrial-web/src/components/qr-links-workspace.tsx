@@ -37,7 +37,6 @@ import {
   type QrTargetOption,
 } from "@/lib/qr-links-module";
 
-
 type IssuedQrSession = {
   linkId: string;
   token: string;
@@ -103,7 +102,11 @@ export function QrLinksWorkspace({ moduleName }: { moduleName: string }) {
   );
   useEffect(() => {
     setTab((current) =>
-      ensureActiveModuleTab(current, visibleTabs.map((t) => t.id), "registry"),
+      ensureActiveModuleTab(
+        current,
+        visibleTabs.map((t) => t.id),
+        "registry",
+      ),
     );
   }, [visibleTabs]);
   const [items, setItems] = useState<QrLinkRow[]>([]);
@@ -156,9 +159,8 @@ export function QrLinksWorkspace({ moduleName }: { moduleName: string }) {
     trainingAssignmentId: "",
     chemicalSafetyId: "",
   });
-  const [detailFlags, setDetailFlags] = useState<Record<QrActionFlagKey, boolean>>(
-    defaultQrActionFlags(),
-  );
+  const [detailFlags, setDetailFlags] =
+    useState<Record<QrActionFlagKey, boolean>>(defaultQrActionFlags());
   const [detailLinks, setDetailLinks] = useState({
     lotoProcedureId: "",
     jsaId: "",
@@ -263,7 +265,8 @@ export function QrLinksWorkspace({ moduleName }: { moduleName: string }) {
     void loadList();
   }, [awsReady, loadList]);
 
-  const targetPicker = QR_TARGET_TYPES.find((t) => t.value === createForm.targetType)?.picker ?? "none";
+  const targetPicker =
+    QR_TARGET_TYPES.find((t) => t.value === createForm.targetType)?.picker ?? "none";
 
   useEffect(() => {
     if (!awsReady || tab !== "create") return;
@@ -333,9 +336,7 @@ export function QrLinksWorkspace({ moduleName }: { moduleName: string }) {
       ...(links.lotoProcedureId ? { lotoProcedureId: links.lotoProcedureId } : {}),
       ...(links.jsaId ? { jsaId: links.jsaId } : {}),
       ...(links.documentId ? { documentId: links.documentId } : {}),
-      ...(links.trainingAssignmentId
-        ? { trainingAssignmentId: links.trainingAssignmentId }
-        : {}),
+      ...(links.trainingAssignmentId ? { trainingAssignmentId: links.trainingAssignmentId } : {}),
       ...(links.chemicalSafetyId ? { chemicalSafetyId: links.chemicalSafetyId } : {}),
     };
   }
@@ -464,9 +465,13 @@ export function QrLinksWorkspace({ moduleName }: { moduleName: string }) {
     setError(null);
     setNotice(null);
     try {
-      const res = await apiSend<QrLinkRow>(`${API_BASE}/${encodeURIComponent(link.id)}/issue-token`, "POST", {
-        appBaseUrl: window.location.origin,
-      });
+      const res = await apiSend<QrLinkRow>(
+        `${API_BASE}/${encodeURIComponent(link.id)}/issue-token`,
+        "POST",
+        {
+          appBaseUrl: window.location.origin,
+        },
+      );
       await applyIssuedQr(link.id, recordLabel(link), res);
       if (selectedId === link.id) await loadDetail(link.id);
       await loadList();
@@ -497,7 +502,11 @@ export function QrLinksWorkspace({ moduleName }: { moduleName: string }) {
 
   async function replaceLink(link: QrLinkRow) {
     if (!canReplace) return;
-    if (!window.confirm(`Replace "${recordLabel(link)}" with a new QR code? The old label will be marked REPLACED.`)) {
+    if (
+      !window.confirm(
+        `Replace "${recordLabel(link)}" with a new QR code? The old label will be marked REPLACED.`,
+      )
+    ) {
       return;
     }
     setBusy(true);
@@ -648,7 +657,11 @@ export function QrLinksWorkspace({ moduleName }: { moduleName: string }) {
                     </button>
                   </>
                 ) : null}
-                <button type="button" className="btn btn-sm btn-outline-secondary" onClick={clearIssued}>
+                <button
+                  type="button"
+                  className="btn btn-sm btn-outline-secondary"
+                  onClick={clearIssued}
+                >
                   Dismiss
                 </button>
               </div>
@@ -718,7 +731,13 @@ export function QrLinksWorkspace({ moduleName }: { moduleName: string }) {
               chips={[
                 ...(q ? [{ id: "q", label: `Search: ${q}`, onRemove: () => setQ("") }] : []),
                 ...(statusFilter
-                  ? [{ id: "status", label: `Status: ${statusFilter}`, onRemove: () => setStatusFilter("") }]
+                  ? [
+                      {
+                        id: "status",
+                        label: `Status: ${statusFilter}`,
+                        onRemove: () => setStatusFilter(""),
+                      },
+                    ]
                   : []),
                 ...(targetTypeFilter
                   ? [
@@ -739,7 +758,9 @@ export function QrLinksWorkspace({ moduleName }: { moduleName: string }) {
               onSubmit={() => void loadList()}
               extraFields={
                 <div className="col-md-4">
-                  <label className="form-label" htmlFor="qr-target-type-filter">Target type</label>
+                  <label className="form-label" htmlFor="qr-target-type-filter">
+                    Target type
+                  </label>
                   <select
                     id="qr-target-type-filter"
                     className="form-select form-select-sm"
@@ -748,7 +769,9 @@ export function QrLinksWorkspace({ moduleName }: { moduleName: string }) {
                   >
                     <option value="">All targets</option>
                     {QR_TARGET_TYPES.map((t) => (
-                      <option key={t.value} value={t.value}>{t.label}</option>
+                      <option key={t.value} value={t.value}>
+                        {t.label}
+                      </option>
                     ))}
                   </select>
                 </div>
@@ -756,9 +779,15 @@ export function QrLinksWorkspace({ moduleName }: { moduleName: string }) {
             />
             <div className="card border shadow-none">
               <div className="card-header d-flex justify-content-between align-items-center">
-                <span className="text-muted small">{total} QR link{total === 1 ? "" : "s"}</span>
+                <span className="text-muted small">
+                  {total} QR link{total === 1 ? "" : "s"}
+                </span>
                 {canManage || canGenerate ? (
-                  <button type="button" className="btn btn-sm btn-primary" onClick={() => setTab("create")}>
+                  <button
+                    type="button"
+                    className="btn btn-sm btn-primary"
+                    onClick={() => setTab("create")}
+                  >
                     New QR link
                   </button>
                 ) : null}
@@ -803,7 +832,9 @@ export function QrLinksWorkspace({ moduleName }: { moduleName: string }) {
                           <td>{link.scanCount ?? 0}</td>
                           <td>{link.publicTokenHint ?? "—"}</td>
                           <td>
-                            <span className={`badge ${qrStatusBadgeClass(link.status)}`}>{link.status}</span>
+                            <span className={`badge ${qrStatusBadgeClass(link.status)}`}>
+                              {link.status}
+                            </span>
                           </td>
                           <td>
                             <div className="d-flex flex-wrap gap-1">
@@ -843,7 +874,9 @@ export function QrLinksWorkspace({ moduleName }: { moduleName: string }) {
             <div className="card-body">
               <form className="row g-3" onSubmit={(event) => void createLink(event)}>
                 <div className="col-md-6">
-                  <label className="form-label" htmlFor="qr-create-name">Name</label>
+                  <label className="form-label" htmlFor="qr-create-name">
+                    Name
+                  </label>
                   <input
                     id="qr-create-name"
                     className="form-control form-control-sm"
@@ -853,7 +886,9 @@ export function QrLinksWorkspace({ moduleName }: { moduleName: string }) {
                   />
                 </div>
                 <div className="col-md-6">
-                  <label className="form-label" htmlFor="qr-create-access">Access mode</label>
+                  <label className="form-label" htmlFor="qr-create-access">
+                    Access mode
+                  </label>
                   <select
                     id="qr-create-access"
                     className="form-select form-select-sm"
@@ -861,12 +896,16 @@ export function QrLinksWorkspace({ moduleName }: { moduleName: string }) {
                     onChange={(e) => setCreateForm((f) => ({ ...f, accessMode: e.target.value }))}
                   >
                     {QR_ACCESS_MODES.map((mode) => (
-                      <option key={mode.value} value={mode.value}>{mode.label}</option>
+                      <option key={mode.value} value={mode.value}>
+                        {mode.label}
+                      </option>
                     ))}
                   </select>
                 </div>
                 <div className="col-12">
-                  <label className="form-label" htmlFor="qr-create-description">Description</label>
+                  <label className="form-label" htmlFor="qr-create-description">
+                    Description
+                  </label>
                   <textarea
                     id="qr-create-description"
                     className="form-control form-control-sm"
@@ -876,7 +915,9 @@ export function QrLinksWorkspace({ moduleName }: { moduleName: string }) {
                   />
                 </div>
                 <div className="col-md-6">
-                  <label className="form-label" htmlFor="qr-create-target-type">Assign to</label>
+                  <label className="form-label" htmlFor="qr-create-target-type">
+                    Assign to
+                  </label>
                   <select
                     id="qr-create-target-type"
                     className="form-select form-select-sm"
@@ -894,17 +935,22 @@ export function QrLinksWorkspace({ moduleName }: { moduleName: string }) {
                     }}
                   >
                     {QR_TARGET_TYPES.map((t) => (
-                      <option key={t.value} value={t.value}>{t.label}</option>
+                      <option key={t.value} value={t.value}>
+                        {t.label}
+                      </option>
                     ))}
                   </select>
                   {createForm.targetType === "LOTO_PROCEDURE" ? (
                     <div className="form-text">
-                      LOTO procedure stickers are public (view procedure + report a problem, no login).
+                      LOTO procedure stickers are public (view procedure + report a problem, no
+                      login).
                     </div>
                   ) : null}
                 </div>
                 <div className="col-md-6">
-                  <label className="form-label" htmlFor="qr-create-target-id">Target record</label>
+                  <label className="form-label" htmlFor="qr-create-target-id">
+                    Target record
+                  </label>
                   {targetPicker === "none" ? (
                     <input
                       id="qr-create-target-id"
@@ -922,7 +968,9 @@ export function QrLinksWorkspace({ moduleName }: { moduleName: string }) {
                     >
                       <option value="">Select record (optional)</option>
                       {targetOptions.map((opt) => (
-                        <option key={opt.id} value={opt.id}>{opt.label}</option>
+                        <option key={opt.id} value={opt.id}>
+                          {opt.label}
+                        </option>
                       ))}
                     </select>
                   )}
@@ -954,7 +1002,9 @@ export function QrLinksWorkspace({ moduleName }: { moduleName: string }) {
                   </div>
                 </div>
                 <div className="col-md-6">
-                  <label className="form-label" htmlFor="qr-create-loto">Linked LOTO</label>
+                  <label className="form-label" htmlFor="qr-create-loto">
+                    Linked LOTO
+                  </label>
                   <select
                     id="qr-create-loto"
                     className="form-select form-select-sm"
@@ -965,12 +1015,16 @@ export function QrLinksWorkspace({ moduleName }: { moduleName: string }) {
                   >
                     <option value="">None</option>
                     {linkedOptions.loto.map((opt) => (
-                      <option key={opt.id} value={opt.id}>{opt.label}</option>
+                      <option key={opt.id} value={opt.id}>
+                        {opt.label}
+                      </option>
                     ))}
                   </select>
                 </div>
                 <div className="col-md-6">
-                  <label className="form-label" htmlFor="qr-create-jsa">Linked JSA</label>
+                  <label className="form-label" htmlFor="qr-create-jsa">
+                    Linked JSA
+                  </label>
                   <select
                     id="qr-create-jsa"
                     className="form-select form-select-sm"
@@ -979,12 +1033,16 @@ export function QrLinksWorkspace({ moduleName }: { moduleName: string }) {
                   >
                     <option value="">None</option>
                     {linkedOptions.jsa.map((opt) => (
-                      <option key={opt.id} value={opt.id}>{opt.label}</option>
+                      <option key={opt.id} value={opt.id}>
+                        {opt.label}
+                      </option>
                     ))}
                   </select>
                 </div>
                 <div className="col-md-4">
-                  <label className="form-label" htmlFor="qr-create-doc">Linked document</label>
+                  <label className="form-label" htmlFor="qr-create-doc">
+                    Linked document
+                  </label>
                   <select
                     id="qr-create-doc"
                     className="form-select form-select-sm"
@@ -993,12 +1051,16 @@ export function QrLinksWorkspace({ moduleName }: { moduleName: string }) {
                   >
                     <option value="">None</option>
                     {linkedOptions.document.map((opt) => (
-                      <option key={opt.id} value={opt.id}>{opt.label}</option>
+                      <option key={opt.id} value={opt.id}>
+                        {opt.label}
+                      </option>
                     ))}
                   </select>
                 </div>
                 <div className="col-md-4">
-                  <label className="form-label" htmlFor="qr-create-training">Required training</label>
+                  <label className="form-label" htmlFor="qr-create-training">
+                    Required training
+                  </label>
                   <select
                     id="qr-create-training"
                     className="form-select form-select-sm"
@@ -1009,12 +1071,16 @@ export function QrLinksWorkspace({ moduleName }: { moduleName: string }) {
                   >
                     <option value="">None</option>
                     {linkedOptions.training.map((opt) => (
-                      <option key={opt.id} value={opt.id}>{opt.label}</option>
+                      <option key={opt.id} value={opt.id}>
+                        {opt.label}
+                      </option>
                     ))}
                   </select>
                 </div>
                 <div className="col-md-4">
-                  <label className="form-label" htmlFor="qr-create-sds">SDS / chemical</label>
+                  <label className="form-label" htmlFor="qr-create-sds">
+                    SDS / chemical
+                  </label>
                   <select
                     id="qr-create-sds"
                     className="form-select form-select-sm"
@@ -1025,7 +1091,9 @@ export function QrLinksWorkspace({ moduleName }: { moduleName: string }) {
                   >
                     <option value="">None</option>
                     {linkedOptions.chemical.map((opt) => (
-                      <option key={opt.id} value={opt.id}>{opt.label}</option>
+                      <option key={opt.id} value={opt.id}>
+                        {opt.label}
+                      </option>
                     ))}
                   </select>
                 </div>
@@ -1036,7 +1104,9 @@ export function QrLinksWorkspace({ moduleName }: { moduleName: string }) {
                       className="form-check-input"
                       type="checkbox"
                       checked={createForm.issueToken}
-                      onChange={(e) => setCreateForm((f) => ({ ...f, issueToken: e.target.checked }))}
+                      onChange={(e) =>
+                        setCreateForm((f) => ({ ...f, issueToken: e.target.checked }))
+                      }
                     />
                     <label className="form-check-label" htmlFor="qr-create-issue">
                       Issue scannable token immediately
@@ -1057,7 +1127,9 @@ export function QrLinksWorkspace({ moduleName }: { moduleName: string }) {
           <div className="card border shadow-none">
             <div className="card-body">
               {!selectedId || !detail ? (
-                <p className="text-muted mb-0">Select a QR link from the registry to view details.</p>
+                <p className="text-muted mb-0">
+                  Select a QR link from the registry to view details.
+                </p>
               ) : (
                 <>
                   <div className="d-flex flex-wrap justify-content-between align-items-start gap-2 mb-3">
@@ -1068,7 +1140,9 @@ export function QrLinksWorkspace({ moduleName }: { moduleName: string }) {
                         {detail.description ? ` · ${detail.description}` : ""}
                       </p>
                     </div>
-                    <span className={`badge ${qrStatusBadgeClass(detail.status)}`}>{detail.status}</span>
+                    <span className={`badge ${qrStatusBadgeClass(detail.status)}`}>
+                      {detail.status}
+                    </span>
                   </div>
                   <dl className="row small mb-4">
                     <dt className="col-sm-3">Target</dt>
@@ -1081,7 +1155,9 @@ export function QrLinksWorkspace({ moduleName }: { moduleName: string }) {
                     <dt className="col-sm-3">Scans</dt>
                     <dd className="col-sm-9">
                       {detail.scanCount ?? 0}
-                      {detail.lastScannedAt ? ` · last ${formatQrTimestamp(detail.lastScannedAt)}` : ""}
+                      {detail.lastScannedAt
+                        ? ` · last ${formatQrTimestamp(detail.lastScannedAt)}`
+                        : ""}
                     </dd>
                     <dt className="col-sm-3">Token hint</dt>
                     <dd className="col-sm-9">{detail.publicTokenHint ?? "Not issued"}</dd>
@@ -1170,7 +1246,9 @@ export function QrLinksWorkspace({ moduleName }: { moduleName: string }) {
                       </div>
                       <div className="row g-3 mb-3">
                         <div className="col-md-6">
-                          <label className="form-label" htmlFor="qr-detail-loto">Linked LOTO</label>
+                          <label className="form-label" htmlFor="qr-detail-loto">
+                            Linked LOTO
+                          </label>
                           <select
                             id="qr-detail-loto"
                             className="form-select form-select-sm"
@@ -1181,12 +1259,16 @@ export function QrLinksWorkspace({ moduleName }: { moduleName: string }) {
                           >
                             <option value="">None</option>
                             {linkedOptions.loto.map((opt) => (
-                              <option key={opt.id} value={opt.id}>{opt.label}</option>
+                              <option key={opt.id} value={opt.id}>
+                                {opt.label}
+                              </option>
                             ))}
                           </select>
                         </div>
                         <div className="col-md-6">
-                          <label className="form-label" htmlFor="qr-detail-jsa">Linked JSA</label>
+                          <label className="form-label" htmlFor="qr-detail-jsa">
+                            Linked JSA
+                          </label>
                           <select
                             id="qr-detail-jsa"
                             className="form-select form-select-sm"
@@ -1197,12 +1279,16 @@ export function QrLinksWorkspace({ moduleName }: { moduleName: string }) {
                           >
                             <option value="">None</option>
                             {linkedOptions.jsa.map((opt) => (
-                              <option key={opt.id} value={opt.id}>{opt.label}</option>
+                              <option key={opt.id} value={opt.id}>
+                                {opt.label}
+                              </option>
                             ))}
                           </select>
                         </div>
                         <div className="col-md-4">
-                          <label className="form-label" htmlFor="qr-detail-doc">Document</label>
+                          <label className="form-label" htmlFor="qr-detail-doc">
+                            Document
+                          </label>
                           <select
                             id="qr-detail-doc"
                             className="form-select form-select-sm"
@@ -1213,12 +1299,16 @@ export function QrLinksWorkspace({ moduleName }: { moduleName: string }) {
                           >
                             <option value="">None</option>
                             {linkedOptions.document.map((opt) => (
-                              <option key={opt.id} value={opt.id}>{opt.label}</option>
+                              <option key={opt.id} value={opt.id}>
+                                {opt.label}
+                              </option>
                             ))}
                           </select>
                         </div>
                         <div className="col-md-4">
-                          <label className="form-label" htmlFor="qr-detail-training">Training</label>
+                          <label className="form-label" htmlFor="qr-detail-training">
+                            Training
+                          </label>
                           <select
                             id="qr-detail-training"
                             className="form-select form-select-sm"
@@ -1232,12 +1322,16 @@ export function QrLinksWorkspace({ moduleName }: { moduleName: string }) {
                           >
                             <option value="">None</option>
                             {linkedOptions.training.map((opt) => (
-                              <option key={opt.id} value={opt.id}>{opt.label}</option>
+                              <option key={opt.id} value={opt.id}>
+                                {opt.label}
+                              </option>
                             ))}
                           </select>
                         </div>
                         <div className="col-md-4">
-                          <label className="form-label" htmlFor="qr-detail-sds">SDS / chemical</label>
+                          <label className="form-label" htmlFor="qr-detail-sds">
+                            SDS / chemical
+                          </label>
                           <select
                             id="qr-detail-sds"
                             className="form-select form-select-sm"
@@ -1248,7 +1342,9 @@ export function QrLinksWorkspace({ moduleName }: { moduleName: string }) {
                           >
                             <option value="">None</option>
                             {linkedOptions.chemical.map((opt) => (
-                              <option key={opt.id} value={opt.id}>{opt.label}</option>
+                              <option key={opt.id} value={opt.id}>
+                                {opt.label}
+                              </option>
                             ))}
                           </select>
                         </div>
@@ -1270,8 +1366,8 @@ export function QrLinksWorkspace({ moduleName }: { moduleName: string }) {
                     <ul className="list-unstyled small mb-4">
                       {scanEvents.map((event) => (
                         <li key={String(event.id)} className="mb-1">
-                          {formatQrTimestamp(String(event.scannedAt ?? ""))} · {String(event.action ?? "SCAN")} ·{" "}
-                          {String(event.result ?? "OK")}
+                          {formatQrTimestamp(String(event.scannedAt ?? ""))} ·{" "}
+                          {String(event.action ?? "SCAN")} · {String(event.result ?? "OK")}
                         </li>
                       ))}
                     </ul>
@@ -1285,7 +1381,8 @@ export function QrLinksWorkspace({ moduleName }: { moduleName: string }) {
                         <ul className="list-unstyled small">
                           {auditEvents.map((event) => (
                             <li key={String(event.id)} className="mb-1">
-                              {formatQrTimestamp(String(event.eventAt ?? ""))} · {String(event.eventType ?? "EVENT")}
+                              {formatQrTimestamp(String(event.eventAt ?? ""))} ·{" "}
+                              {String(event.eventType ?? "EVENT")}
                             </li>
                           ))}
                         </ul>
@@ -1301,5 +1398,3 @@ export function QrLinksWorkspace({ moduleName }: { moduleName: string }) {
     </section>
   );
 }
-
-

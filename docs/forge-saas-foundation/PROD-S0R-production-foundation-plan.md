@@ -7,33 +7,33 @@
 
 ## Stack family (actual CDK names)
 
-| Layer | CloudFormation stack |
-| --- | --- |
-| Network | `Forge-Production-Network` |
-| Security | `Forge-Production-Security` |
-| Identity | `Forge-Production-Identity` |
-| Messaging | `Forge-Production-Messaging` |
-| Data (Aurora + buckets) | `Forge-Production-Data` |
-| Observability | `Forge-Production-Observability` |
-| Compute (ECS/ALB/API CF) | `Forge-Production-Compute` |
-| Monitoring | `Forge-Production-Monitoring` |
-| Backup | `Forge-Production-Backup` |
-| Audit | `Forge-Production-Audit` |
-| Frontend (S3+CF SPAs) | `Forge-Production-Frontend` |
+| Layer                    | CloudFormation stack             |
+| ------------------------ | -------------------------------- |
+| Network                  | `Forge-Production-Network`       |
+| Security                 | `Forge-Production-Security`      |
+| Identity                 | `Forge-Production-Identity`      |
+| Messaging                | `Forge-Production-Messaging`     |
+| Data (Aurora + buckets)  | `Forge-Production-Data`          |
+| Observability            | `Forge-Production-Observability` |
+| Compute (ECS/ALB/API CF) | `Forge-Production-Compute`       |
+| Monitoring               | `Forge-Production-Monitoring`    |
+| Backup                   | `Forge-Production-Backup`        |
+| Audit                    | `Forge-Production-Audit`         |
+| Frontend (S3+CF SPAs)    | `Forge-Production-Frontend`      |
 
 Does **not** invent parallel `PlatformApi` / `IndustrialWeb` stack names — frontends live in `Frontend`, API in `Compute`, DB in `Data`.
 
 ## Domains (configured; DNS cutover NOT done)
 
-| Role | Hostname |
-| --- | --- |
-| API | `api.forgepublicsafety.com` |
-| Creator | `creator.forgepublicsafety.com` |
-| Tenant Admin | `admin.forgepublicsafety.com` |
-| Industrial | `industrial.forgepublicsafety.com` |
-| RMS | `rms.forgepublicsafety.com` |
-| Academy | `academy.forgepublicsafety.com` |
-| SES sending | `mail.forgepublicsafety.com` |
+| Role         | Hostname                           |
+| ------------ | ---------------------------------- |
+| API          | `api.forgepublicsafety.com`        |
+| Creator      | `creator.forgepublicsafety.com`    |
+| Tenant Admin | `admin.forgepublicsafety.com`      |
+| Industrial   | `industrial.forgepublicsafety.com` |
+| RMS          | `rms.forgepublicsafety.com`        |
+| Academy      | `academy.forgepublicsafety.com`    |
+| SES sending  | `mail.forgepublicsafety.com`       |
 
 Cognito callbacks/logouts use HTTPS URLs for these hosts. Registering URLs ≠ routing customer traffic.
 

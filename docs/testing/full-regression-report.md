@@ -14,18 +14,18 @@ Bar: **0 failed / 0 skipped** on the RMS Playwright full suite. Initial run had 
 
 ## RMS Playwright results
 
-| Metric | Initial full run | After fix |
-| --- | --- | --- |
-| Passed | 54 | 54 + fixed test re-verified PASS |
-| Failed | 1 | 0 (failure root-caused and fixed) |
-| Skipped | 0 | 0 |
-| Duration | ~12.3m | fix re-run ~7.3s wall / 952ms test |
-| Workers | 1 | 1 |
+| Metric   | Initial full run | After fix                          |
+| -------- | ---------------- | ---------------------------------- |
+| Passed   | 54               | 54 + fixed test re-verified PASS   |
+| Failed   | 1                | 0 (failure root-caused and fixed)  |
+| Skipped  | 0                | 0                                  |
+| Duration | ~12.3m           | fix re-run ~7.3s wall / 952ms test |
+| Workers  | 1                | 1                                  |
 
 ### Initial failure (resolved)
 
-| Spec | Issue | Fix |
-| --- | --- | --- |
+| Spec                                    | Issue                                                                                                       | Fix                                                          |
+| --------------------------------------- | ----------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------ |
 | `tests/ai-narrative-foundation.spec.ts` | Strict-mode: heading regex `/sign in\|log in\|forge/i` matched both `Sign in` (h1) and `Forge account` (h2) | Assert `getByRole("heading", { name: "Sign in", level: 1 })` |
 
 Re-run: `pnpm exec playwright test tests/ai-narrative-foundation.spec.ts` → **PASS**.
@@ -41,17 +41,17 @@ Re-run: `pnpm exec playwright test tests/ai-narrative-foundation.spec.ts` → **
 
 Recorded for visibility; **not** used for the RMS Playwright green bar.
 
-| Metric | Value |
-| --- | --- |
-| Passed | 4 |
-| Failed | 1 |
-| Skipped | 11 |
-| Duration | ~45s |
+| Metric   | Value |
+| -------- | ----- |
+| Passed   | 4     |
+| Failed   | 1     |
+| Skipped  | 11    |
+| Duration | ~45s  |
 
-| Issue | Notes |
-| --- | --- |
+| Issue                                | Notes                                                                    |
+| ------------------------------------ | ------------------------------------------------------------------------ |
 | `sprint-1e.e2e.test.ts` skipped (11) | Harness seed failed: duplicate `platform_modules` key for `AI_NARRATIVE` |
-| NERIS Phase 1 overlay mutation test | Expected 200, got 500 on `tenant_neris_configuration` query |
+| NERIS Phase 1 overlay mutation test  | Expected 200, got 500 on `tenant_neris_configuration` query              |
 
 Follow-up tracked separately; does not block RMS UI regression PASS above.
 

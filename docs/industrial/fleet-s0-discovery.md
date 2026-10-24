@@ -6,14 +6,14 @@
 
 ## Spreadsheet → domain
 
-| Sheet | Rows | Default `assetType` | Status |
-|-------|------|---------------------|--------|
-| Personal | ~38 | PASSENGER_VEHICLE | ACTIVE; fringe flag |
-| Fleet | ~42 | FLEET_VEHICLE | ACTIVE; commute column |
-| Bob-Trash Trucks | ~19 | BOB_TRUCK / TRASH_TRUCK | 2290, IRP |
-| Big Trucks | ~13 | TRACTOR_TRUCK / DUMP_TRUCK | 2290, IRP |
-| Const. Equipment | ~11 | CONSTRUCTION_EQUIPMENT | ACTIVE |
-| Removed | ~15 | (preserve type if known) | REMOVED |
+| Sheet            | Rows | Default `assetType`        | Status                 |
+| ---------------- | ---- | -------------------------- | ---------------------- |
+| Personal         | ~38  | PASSENGER_VEHICLE          | ACTIVE; fringe flag    |
+| Fleet            | ~42  | FLEET_VEHICLE              | ACTIVE; commute column |
+| Bob-Trash Trucks | ~19  | BOB_TRUCK / TRASH_TRUCK    | 2290, IRP              |
+| Big Trucks       | ~13  | TRACTOR_TRUCK / DUMP_TRUCK | 2290, IRP              |
+| Const. Equipment | ~11  | CONSTRUCTION_EQUIPMENT     | ACTIVE                 |
+| Removed          | ~15  | (preserve type if known)   | REMOVED                |
 
 Shared columns: Year, Make, Model, Color, VIN, License, Ren Date, Location, Assigned Driver, County Assessed, Insured?, Mileage, Notes.
 

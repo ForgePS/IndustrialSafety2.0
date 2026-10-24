@@ -17,13 +17,7 @@ export function isInd3OpsModule(module: string): module is Ind3OpsModule {
 }
 
 export type OpsCreateFieldType =
-  | "text"
-  | "email"
-  | "tel"
-  | "date"
-  | "textarea"
-  | "checkbox"
-  | "signature";
+  "text" | "email" | "tel" | "date" | "textarea" | "checkbox" | "signature";
 
 export type OpsListColumn = {
   key: string;

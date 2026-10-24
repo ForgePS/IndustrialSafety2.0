@@ -208,9 +208,7 @@ export const walkthroughVoiceProfiles = pgTable(
     createdAt: createdAtColumn,
     updatedAt: updatedAtColumn,
   },
-  (t) => [
-    uniqueIndex("walkthrough_voice_profiles_key_uidx").on(t.tenantId, t.profileKey),
-  ],
+  (t) => [uniqueIndex("walkthrough_voice_profiles_key_uidx").on(t.tenantId, t.profileKey)],
 );
 
 export const walkthroughAudioAssets = pgTable(

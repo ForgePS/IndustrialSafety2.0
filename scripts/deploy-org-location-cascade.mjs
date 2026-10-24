@@ -16,7 +16,10 @@ import path from "node:path";
 
 const ACCOUNT = "511343547817";
 const REGION = "us-east-1";
-const stamp = new Date().toISOString().replace(/[-:TZ.]/g, "").slice(0, 14);
+const stamp = new Date()
+  .toISOString()
+  .replace(/[-:TZ.]/g, "")
+  .slice(0, 14);
 const tag = process.env.DEPLOY_TAG || `org-cascade-${stamp}`;
 const apiOnly = process.argv.includes("--api-only");
 

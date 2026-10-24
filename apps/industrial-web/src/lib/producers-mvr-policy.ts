@@ -24,7 +24,9 @@ export function isProducersRiceMillTenant(
   return /producers[-_\s]?rice/.test(hay);
 }
 
-export function isProducersMvrConsentForm(definition: Record<string, unknown> | null | undefined): boolean {
+export function isProducersMvrConsentForm(
+  definition: Record<string, unknown> | null | undefined,
+): boolean {
   if (!definition) return false;
   const title = String(definition.title ?? definition.name ?? "").toLowerCase();
   const formKey = String(definition.formKey ?? "").toLowerCase();

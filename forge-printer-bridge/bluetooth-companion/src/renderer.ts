@@ -1,9 +1,5 @@
 import { BradyBluetoothService } from "./brady/BradyBluetoothService";
-import {
-  renderPairingScreen,
-  renderConnectedScreen,
-  renderStatusScreen,
-} from "./ui/pairing";
+import { renderPairingScreen, renderConnectedScreen, renderStatusScreen } from "./ui/pairing";
 import { getCompanionApi, publishStatus, tryGetCompanionApi } from "./services/companion-api";
 import type { BluetoothStatus, PrinterInfoPayload } from "../services/protocol";
 
@@ -116,18 +112,13 @@ function showConnected(printer: PrinterInfoPayload | null): void {
     showStatus(service.getStatus(), service.getPrinter());
   });
 
-  document
-    .getElementById("btn-disconnect")
-    ?.addEventListener("click", async () => {
-      await service.disconnect();
-      showStatus(service.getStatus(), service.getPrinter());
-    });
+  document.getElementById("btn-disconnect")?.addEventListener("click", async () => {
+    await service.disconnect();
+    showStatus(service.getStatus(), service.getPrinter());
+  });
 }
 
-function showStatus(
-  status: BluetoothStatus,
-  printer: PrinterInfoPayload | null
-): void {
+function showStatus(status: BluetoothStatus, printer: PrinterInfoPayload | null): void {
   currentView = "status";
   const detail = printer
     ? [printer.displayName, printer.model, printer.messageTitle || printer.message]
@@ -173,10 +164,7 @@ service.onStatusChange((status, printer) => {
 
   if (currentView === "status") {
     showStatus(status, printer);
-  } else if (
-    currentView === "connected" &&
-    (status === "READY" || status === "CONNECTED")
-  ) {
+  } else if (currentView === "connected" && (status === "READY" || status === "CONNECTED")) {
     showConnected(printer);
   } else if (
     status === "DISCONNECTED" ||
@@ -227,11 +215,7 @@ try {
       await getCompanionApi().clearPairing();
     }
     const response = await service.handlePipeRequest(request);
-    if (
-      request.type === "CONNECT" &&
-      response.type === "CONNECT_RESULT" &&
-      response.success
-    ) {
+    if (request.type === "CONNECT" && response.type === "CONNECT_RESULT" && response.success) {
       showConnected(response.printer ?? service.getPrinter());
     }
     if (request.type === "DISCOVER" && response.type === "DISCOVER_RESULT") {

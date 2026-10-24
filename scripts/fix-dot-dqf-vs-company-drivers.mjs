@@ -156,7 +156,11 @@ function hay(row, payload) {
 }
 
 function drvIdsIn(text) {
-  return [...String(text).toUpperCase().matchAll(/\bDRV-\d{4}-\d+\b/g)].map((m) => m[0]);
+  return [
+    ...String(text)
+      .toUpperCase()
+      .matchAll(/\bDRV-\d{4}-\d+\b/g),
+  ].map((m) => m[0]);
 }
 
 function normalizePersonKey(value) {
@@ -196,7 +200,11 @@ function isRealDqf(row, payload) {
   const ids = drvIdsIn(text);
   if (ids.some((id) => KEEP_DRV.has(id))) return true;
   const nameKey = normalizePersonKey(row.title || payload.workerName || payload.driverName || "");
-  if (nameKey && KEEP_NAMES.has(nameKey) && (/dqf\s*import/i.test(text) || /\/drivers\//i.test(text))) {
+  if (
+    nameKey &&
+    KEEP_NAMES.has(nameKey) &&
+    (/dqf\s*import/i.test(text) || /\/drivers\//i.test(text))
+  ) {
     return true;
   }
   return false;
@@ -218,7 +226,11 @@ function otherDotCategory(row, payload) {
   if (/\baccidents?\b|\bcrashes?\b|\bcollisions?\b/.test(text)) return true;
   if (/drug\s*(&|and)?\s*alcohol|\bclearinghouse\b/.test(text)) return true;
   const cat = String(payload.category ?? "").toLowerCase();
-  if (["vehicles", "dvirs", "accidents", "roadside", "company", "drug-alcohol"].some((c) => cat.includes(c))) {
+  if (
+    ["vehicles", "dvirs", "accidents", "roadside", "company", "drug-alcohol"].some((c) =>
+      cat.includes(c),
+    )
+  ) {
     return true;
   }
   return false;
@@ -320,7 +332,9 @@ async function main() {
           cat.includes("driver") ||
           cat.includes("dqf") ||
           payload.dqf === true ||
-          String(row.source_path ?? "").toLowerCase().includes("/drivers/")
+          String(row.source_path ?? "")
+            .toLowerCase()
+            .includes("/drivers/")
         );
       })
       .map(({ row, payload }) => ({

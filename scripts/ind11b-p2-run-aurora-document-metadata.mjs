@@ -16,13 +16,10 @@ import fs from "node:fs";
 import path from "node:path";
 import { awsJson, awsText, runPlatformApiOneOff } from "./ecs-oneoff.mjs";
 
-const EVID_DIR = path.resolve(
-  "docs/program/industrial-migration/ind-11/evidence/p2/03-storage",
-);
+const EVID_DIR = path.resolve("docs/program/industrial-migration/ind-11/evidence/p2/03-storage");
 const APPROVAL = path.join(EVID_DIR, "APPROVE-PRODUCERS-STORAGE-AURORA-METADATA.md");
 const MAP_LOCAL =
-  process.env.FORGE_P2_STORAGE_MAP?.trim() ||
-  path.join(EVID_DIR, "s3-map-staging-latest.json");
+  process.env.FORGE_P2_STORAGE_MAP?.trim() || path.join(EVID_DIR, "s3-map-staging-latest.json");
 const LOADER_LOCAL = path.resolve("scripts/ind11b-p2-aurora-document-metadata-ecs-loader.mjs");
 const BUCKET =
   process.env.FORGE_IND11B_IMPORTS_BUCKET || "forge-development-imports-511343547817-us-east-1";
@@ -98,9 +95,12 @@ const env = {
   FORGE_P2_DOC_MAP_S3_URI: mapUri,
   FORGE_P2_DOC_TENANT_ID: "0882c865-59c2-49a6-ab88-ce6ca89be30c",
 };
-if (process.env.FORGE_P2_DOC_LIMIT?.trim()) env.FORGE_P2_DOC_LIMIT = process.env.FORGE_P2_DOC_LIMIT.trim();
-if (process.env.FORGE_P2_DOC_OFFSET?.trim()) env.FORGE_P2_DOC_OFFSET = process.env.FORGE_P2_DOC_OFFSET.trim();
-if (process.env.FORGE_P2_DOC_BATCH?.trim()) env.FORGE_P2_DOC_BATCH = process.env.FORGE_P2_DOC_BATCH.trim();
+if (process.env.FORGE_P2_DOC_LIMIT?.trim())
+  env.FORGE_P2_DOC_LIMIT = process.env.FORGE_P2_DOC_LIMIT.trim();
+if (process.env.FORGE_P2_DOC_OFFSET?.trim())
+  env.FORGE_P2_DOC_OFFSET = process.env.FORGE_P2_DOC_OFFSET.trim();
+if (process.env.FORGE_P2_DOC_BATCH?.trim())
+  env.FORGE_P2_DOC_BATCH = process.env.FORGE_P2_DOC_BATCH.trim();
 
 const { cluster, taskArn } = runPlatformApiOneOff(
   ["node", "--input-type=module", "-e", evalCode],

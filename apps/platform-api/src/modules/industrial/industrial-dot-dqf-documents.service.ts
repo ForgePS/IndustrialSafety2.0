@@ -55,7 +55,9 @@ export class IndustrialDotDqfDocumentsService {
     const tenantId = this.tenant(principal);
     const fieldId = this.parseFieldId(body.fieldId);
     const filename = String(body.filename ?? "").trim();
-    const mimeType = String(body.mimeType ?? "").trim().toLowerCase();
+    const mimeType = String(body.mimeType ?? "")
+      .trim()
+      .toLowerCase();
     const contentLength = Number(body.contentLength ?? 0);
     const recordId = String(body.recordId ?? "").trim();
 
@@ -87,41 +89,46 @@ export class IndustrialDotDqfDocumentsService {
     const documentId = createId();
     const now = new Date();
 
-    await withTenantTransaction(this.db, tenantId, async (tx) => {
-      if (recordId) {
-        const [record] = await tx
-          .select({ id: industrialDotComplianceRecords.id })
-          .from(industrialDotComplianceRecords)
-          .where(
-            and(
-              eq(industrialDotComplianceRecords.id, recordId),
-              eq(industrialDotComplianceRecords.tenantId, tenantId),
-              isNull(industrialDotComplianceRecords.archivedAt),
-            ),
-          )
-          .limit(1);
-        if (!record) throw new ForgeError("NOT_FOUND", "DOT record not found");
-      }
+    await withTenantTransaction(
+      this.db,
+      tenantId,
+      async (tx) => {
+        if (recordId) {
+          const [record] = await tx
+            .select({ id: industrialDotComplianceRecords.id })
+            .from(industrialDotComplianceRecords)
+            .where(
+              and(
+                eq(industrialDotComplianceRecords.id, recordId),
+                eq(industrialDotComplianceRecords.tenantId, tenantId),
+                isNull(industrialDotComplianceRecords.archivedAt),
+              ),
+            )
+            .limit(1);
+          if (!record) throw new ForgeError("NOT_FOUND", "DOT record not found");
+        }
 
-      await tx.insert(forgeDocuments).values({
-        id: documentId,
-        tenantId,
-        originalFilename: filename,
-        storedFilename,
-        objectKey,
-        bucketName: this.storage.bucketName,
-        mimeType,
-        fileSizeBytes: contentLength,
-        securityClassification: "INTERNAL",
-        malwareScanStatus: "PENDING",
-        retentionRule: "DOT_DQF_DEFAULT",
-        uploadStatus: "INITIALIZED",
-        source: "INDUSTRIAL_DOT_DQF",
-        uploadedByUserId: principal.userId,
-        createdAt: now,
-        updatedAt: now,
-      });
-    }, principal.userId);
+        await tx.insert(forgeDocuments).values({
+          id: documentId,
+          tenantId,
+          originalFilename: filename,
+          storedFilename,
+          objectKey,
+          bucketName: this.storage.bucketName,
+          mimeType,
+          fileSizeBytes: contentLength,
+          securityClassification: "INTERNAL",
+          malwareScanStatus: "PENDING",
+          retentionRule: "DOT_DQF_DEFAULT",
+          uploadStatus: "INITIALIZED",
+          source: "INDUSTRIAL_DOT_DQF",
+          uploadedByUserId: principal.userId,
+          createdAt: now,
+          updatedAt: now,
+        });
+      },
+      principal.userId,
+    );
 
     const presign = await this.storage.createPresignedUploadUrl({
       objectKey,
@@ -157,39 +164,44 @@ export class IndustrialDotDqfDocumentsService {
       throw new ForgeError("VALIDATION_FAILED", "recordId must be a UUID");
     }
 
-    return withTenantTransaction(this.db, tenantId, async (tx) => {
-      const document = await tx.query.forgeDocuments.findFirst({
-        where: and(eq(forgeDocuments.id, documentId), eq(forgeDocuments.tenantId, tenantId)),
-      });
-      if (!document) throw new ForgeError("NOT_FOUND", "Document not found");
-      if (!documentBelongsToTenant(document.tenantId, tenantId)) {
-        throw new ForgeError("FORBIDDEN", "Document does not belong to the requested tenant");
-      }
-      if (!objectKeyBelongsToTenant(document.objectKey, tenantId)) {
-        throw new ForgeError("FORBIDDEN", "Object key does not belong to the requested tenant");
-      }
-      if (document.source !== "INDUSTRIAL_DOT_DQF") {
-        throw new ForgeError("VALIDATION_FAILED", "Document is not a DOT DQF upload");
-      }
+    return withTenantTransaction(
+      this.db,
+      tenantId,
+      async (tx) => {
+        const document = await tx.query.forgeDocuments.findFirst({
+          where: and(eq(forgeDocuments.id, documentId), eq(forgeDocuments.tenantId, tenantId)),
+        });
+        if (!document) throw new ForgeError("NOT_FOUND", "Document not found");
+        if (!documentBelongsToTenant(document.tenantId, tenantId)) {
+          throw new ForgeError("FORBIDDEN", "Document does not belong to the requested tenant");
+        }
+        if (!objectKeyBelongsToTenant(document.objectKey, tenantId)) {
+          throw new ForgeError("FORBIDDEN", "Object key does not belong to the requested tenant");
+        }
+        if (document.source !== "INDUSTRIAL_DOT_DQF") {
+          throw new ForgeError("VALIDATION_FAILED", "Document is not a DOT DQF upload");
+        }
 
-      await this.storage.assertObjectExists(document.objectKey);
+        await this.storage.assertObjectExists(document.objectKey);
 
-      const now = new Date();
-      await tx
-        .update(forgeDocuments)
-        .set({ uploadStatus: "COMPLETE", uploadedAt: now, updatedAt: now })
-        .where(eq(forgeDocuments.id, document.id));
+        const now = new Date();
+        await tx
+          .update(forgeDocuments)
+          .set({ uploadStatus: "COMPLETE", uploadedAt: now, updatedAt: now })
+          .where(eq(forgeDocuments.id, document.id));
 
-      return {
-        documentId: document.id,
-        fieldId: fieldId || undefined,
-        originalFilename: document.originalFilename,
-        mimeType: document.mimeType,
-        fileSizeBytes: document.fileSizeBytes,
-        uploadStatus: "COMPLETE",
-        ...(recordId ? { recordId } : {}),
-      };
-    }, principal.userId);
+        return {
+          documentId: document.id,
+          fieldId: fieldId || undefined,
+          originalFilename: document.originalFilename,
+          mimeType: document.mimeType,
+          fileSizeBytes: document.fileSizeBytes,
+          uploadStatus: "COMPLETE",
+          ...(recordId ? { recordId } : {}),
+        };
+      },
+      principal.userId,
+    );
   }
 
   async createDownloadUrl(principal: ForgePrincipal, documentIdRaw: string) {

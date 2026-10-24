@@ -33,7 +33,14 @@ function StateRow({ label, children }: { label: string; children: React.ReactNod
   return (
     <div style={{ display: "grid", gap: "var(--fx-space-8)", marginBottom: "var(--fx-space-24)" }}>
       <h3 style={{ margin: 0 }}>{label}</h3>
-      <div style={{ display: "flex", flexWrap: "wrap", gap: "var(--fx-space-8)", alignItems: "center" }}>
+      <div
+        style={{
+          display: "flex",
+          flexWrap: "wrap",
+          gap: "var(--fx-space-8)",
+          alignItems: "center",
+        }}
+      >
         {children}
       </div>
     </div>
@@ -46,8 +53,8 @@ export default function PlaygroundPage() {
       <FxBreadcrumb items={[{ label: "Playground" }]} />
       <h1 style={{ fontFamily: "var(--fx-font-display)", fontSize: 28 }}>Component playground</h1>
       <p className="fx-card__body">
-        Every control below inherits FX tokens. Switch theme from the shell header to validate light / dark /
-        high-contrast. Resize the viewport for responsive checks.
+        Every control below inherits FX tokens. Switch theme from the shell header to validate light
+        / dark / high-contrast. Resize the viewport for responsive checks.
       </p>
       <FxCard title="Buttons">
         <StateRow label="Default / tones">

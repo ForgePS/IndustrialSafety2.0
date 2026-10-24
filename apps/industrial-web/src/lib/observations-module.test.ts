@@ -102,7 +102,11 @@ describe("observations module", () => {
   it("treats the department contact as its supervisor", () => {
     expect(departmentSupervisor(null)).toBeNull();
     expect(departmentSupervisor({ contactName: "", contactPersonnelId: null })).toBeNull();
-    const boss = departmentSupervisor({ contactPersonnelId: "p9", contactName: "Pat Boss", contactEmail: "pat@x.com" });
+    const boss = departmentSupervisor({
+      contactPersonnelId: "p9",
+      contactName: "Pat Boss",
+      contactEmail: "pat@x.com",
+    });
     expect(boss).toEqual({ personnelId: "p9", name: "Pat Boss", email: "pat@x.com" });
 
     const form = emptyObservationForm();
@@ -111,7 +115,12 @@ describe("observations module", () => {
     form.assignedToPersonnelId = "p9";
     form.assignedToName = "Pat";
     expect(sameAssignee(form, boss)).toBe(true);
-    expect(sameAssignee({ assignedToPersonnelId: "", assignedToName: "pat boss" }, { personnelId: "", name: "Pat Boss", email: "" })).toBe(true);
+    expect(
+      sameAssignee(
+        { assignedToPersonnelId: "", assignedToName: "pat boss" },
+        { personnelId: "", name: "Pat Boss", email: "" },
+      ),
+    ).toBe(true);
   });
 
   it("sends the assignee with the payload and validates its email", () => {

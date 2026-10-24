@@ -101,14 +101,22 @@ export async function seedRmsSyntheticTenant(options?: {
       const [admin] = await db
         .select({ id: users.id })
         .from(users)
-        .where(and(eq(users.tenantId, existing.id), eq(users.primaryEmail, "admin@rms-synthetic.test")))
+        .where(
+          and(eq(users.tenantId, existing.id), eq(users.primaryEmail, "admin@rms-synthetic.test")),
+        )
         .limit(1);
       const stationRows = await db
         .select({ id: rmsStations.id })
         .from(rmsStations)
         .where(eq(rmsStations.tenantId, existing.id));
       // Ensure Phase 3 specialty flag override remains enabled on the approved synthetic tenant.
-      await ensureFeatureOverrides(db, existing.id, admin?.id ?? null, [...PHASE2_FEATURE_FLAGS], now);
+      await ensureFeatureOverrides(
+        db,
+        existing.id,
+        admin?.id ?? null,
+        [...PHASE2_FEATURE_FLAGS],
+        now,
+      );
       // Sync specialty permissions onto the synthetic admin role (idempotent).
       await ensureSyntheticAdminPermissions(db, existing.id, now);
       return {
@@ -214,7 +222,10 @@ export async function seedRmsSyntheticTenant(options?: {
       .from(platformModules)
       .innerJoin(platformProducts, eq(platformProducts.id, platformModules.productId))
       .where(
-        and(eq(platformProducts.code, "FORGE_RMS"), inArray(platformModules.code, [...RMS_MODULES])),
+        and(
+          eq(platformProducts.code, "FORGE_RMS"),
+          inArray(platformModules.code, [...RMS_MODULES]),
+        ),
       );
     for (const row of moduleRows) {
       await db.insert(tenantModuleEntitlements).values({
@@ -267,7 +278,15 @@ export async function seedRmsSyntheticTenant(options?: {
     const permRows = await db
       .select({ id: permissions.id })
       .from(permissions)
-      .where(inArray(permissions.code, [...RMS_PERMISSIONS, "platform.tenant.read", "platform.organization.read", "platform.person.read", "platform.feature.manage"]));
+      .where(
+        inArray(permissions.code, [
+          ...RMS_PERMISSIONS,
+          "platform.tenant.read",
+          "platform.organization.read",
+          "platform.person.read",
+          "platform.feature.manage",
+        ]),
+      );
     for (const perm of permRows) {
       await db.insert(rolePermissions).values({
         roleId,
@@ -591,7 +610,8 @@ export async function seedRmsSyntheticTenant(options?: {
       occupancyId,
       versionLabel: "1",
       approvalStatus: "APPROVED",
-      tacticalSummary: "Synthetic preplan: sprinklered commercial occupancy, roof access on north side.",
+      tacticalSummary:
+        "Synthetic preplan: sprinklered commercial occupancy, roof access on north side.",
       hazards: "Synthetic hazard notes only.",
       primaryStationId: station1Id,
       createdByUserId: adminUserId,
@@ -761,8 +781,7 @@ async function main(): Promise<void> {
 }
 
 const isDirect =
-  process.argv[1] &&
-  pathToFileURL(path.resolve(process.argv[1])).href === import.meta.url;
+  process.argv[1] && pathToFileURL(path.resolve(process.argv[1])).href === import.meta.url;
 
 if (
   isDirect ||

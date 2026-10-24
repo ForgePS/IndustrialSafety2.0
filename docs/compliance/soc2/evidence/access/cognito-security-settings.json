@@ -30,17 +30,11 @@
         "TemporaryPasswordValidityDays": 7
       },
       "SignInPolicy": {
-        "AllowedFirstAuthFactors": [
-          "PASSWORD"
-        ]
+        "AllowedFirstAuthFactors": ["PASSWORD"]
       }
     },
-    "autoVerifiedAttributes": [
-      "email"
-    ],
-    "usernameAttributes": [
-      "email"
-    ],
+    "autoVerifiedAttributes": ["email"],
+    "usernameAttributes": ["email"],
     "accountRecoverySetting": {
       "RecoveryMechanisms": [
         {

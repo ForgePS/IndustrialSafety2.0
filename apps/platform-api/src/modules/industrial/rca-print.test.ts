@@ -23,7 +23,11 @@ describe("rca-print", () => {
 
   it("renders the full report with escaped content", () => {
     const html = buildRcaPrintableHtml({
-      incident: { title: "26-10-05 SHANNA R FREEMAN - Mill", personAffected: "Shanna", status: "open" },
+      incident: {
+        title: "26-10-05 SHANNA R FREEMAN - Mill",
+        personAffected: "Shanna",
+        status: "open",
+      },
       rca: normalizeRcaForPrint({
         eventDate: "2026-10-05",
         conductedBy: "Tim Bogy, EHS Director",
@@ -32,7 +36,14 @@ describe("rca-print", () => {
         fiveWhyQuestions: ["Why did it move?", "", "", "", ""],
         fiveWhys: ["Because it broke free", "", "", "", ""],
         rootCause: "Conveyor designed without weight considered",
-        correctiveActions: [{ action: "Replace wheels", assignedTo: "WR Maintenance", dueDate: "2026-11-02", status: "in-progress" }],
+        correctiveActions: [
+          {
+            action: "Replace wheels",
+            assignedTo: "WR Maintenance",
+            dueDate: "2026-11-02",
+            status: "in-progress",
+          },
+        ],
       }),
       branding: { companyName: "Producers Rice Mill", logoUrl: "https://example.com/logo.png" },
       generatedAt: new Date("2026-10-08T12:00:00Z"),

@@ -87,9 +87,7 @@ async function main() {
       order by r.code, p.code
     `;
 
-    console.log(
-      JSON.stringify({ modules, flags, membershipAccess, rolePerms }, null, 2),
-    );
+    console.log(JSON.stringify({ modules, flags, membershipAccess, rolePerms }, null, 2));
   } finally {
     await sql.end({ timeout: 5 });
   }

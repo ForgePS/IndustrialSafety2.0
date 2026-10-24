@@ -154,9 +154,7 @@ export function useLoginBranding() {
         };
         const darkRaw = json.data.logoDarkUrl || json.data.login.logoDarkUrl;
         const darkUrl =
-          (darkRaw ? sameOriginBrandingLogoUrl(darkRaw) : "") ||
-          bundled?.login.logoDarkUrl ||
-          "";
+          (darkRaw ? sameOriginBrandingLogoUrl(darkRaw) : "") || bundled?.login.logoDarkUrl || "";
         if (darkUrl) nextLogin.logoDarkUrl = darkUrl;
         setHostLogin(nextLogin);
         setHostPrimaryColor(json.data.primaryColor?.trim() || "");
@@ -192,8 +190,7 @@ export function useLoginBranding() {
     me?.tenantId && !hostMismatch
       ? {
           ...resolveLoginBranding(tenant.branding, themeMode),
-          logoUrl:
-            tenant.logoUrl || resolveLoginBranding(tenant.branding, themeMode).logoUrl,
+          logoUrl: tenant.logoUrl || resolveLoginBranding(tenant.branding, themeMode).logoUrl,
         }
       : hostLogin
         ? {
@@ -208,9 +205,7 @@ export function useLoginBranding() {
         : resolveLoginBranding(undefined, themeMode);
 
   const primaryColor =
-    me?.tenantId && !hostMismatch
-      ? tenant.primaryColor
-      : hostPrimaryColor || tenant.primaryColor;
+    me?.tenantId && !hostMismatch ? tenant.primaryColor : hostPrimaryColor || tenant.primaryColor;
 
   return {
     loading: me?.tenantId ? tenant.loading : loadingHost,

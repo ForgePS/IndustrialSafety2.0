@@ -3,10 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { EmptyState, ErrorState, LoadingState } from "@/components/field-states";
-import {
-  fieldCorrectiveApi,
-  type FieldCorrectiveRecord,
-} from "@/lib/corrective-api";
+import { fieldCorrectiveApi, type FieldCorrectiveRecord } from "@/lib/corrective-api";
 import { formatDueLabel, statusLabel } from "@/lib/my-work";
 import { useFieldProfile } from "@/hooks/use-field-profile";
 
@@ -131,7 +128,12 @@ export function CorrectiveClient() {
 
       <div className="ff-action-grid" style={{ marginTop: 16 }}>
         {!completed ? (
-          <button type="button" className="ff-btn" disabled={busy} onClick={() => void markComplete()}>
+          <button
+            type="button"
+            className="ff-btn"
+            disabled={busy}
+            onClick={() => void markComplete()}
+          >
             Mark complete
           </button>
         ) : (

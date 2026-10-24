@@ -214,7 +214,9 @@ export function FormBuilderModal({
                               className="btn btn-sm btn-outline-secondary"
                               disabled={saving || index === 0}
                               aria-label="Move up"
-                              onClick={() => onChangeFields(moveFormBuilderField(fields, index, -1))}
+                              onClick={() =>
+                                onChangeFields(moveFormBuilderField(fields, index, -1))
+                              }
                             >
                               <i className="bx bx-up-arrow-alt" aria-hidden="true" />
                             </button>
@@ -249,7 +251,10 @@ export function FormBuilderModal({
                         {expanded ? (
                           <div className="row g-3 pt-2 border-top">
                             <div className="col-md-4">
-                              <label className="form-label small" htmlFor={`field-type-${field.id}`}>
+                              <label
+                                className="form-label small"
+                                htmlFor={`field-type-${field.id}`}
+                              >
                                 Question type
                               </label>
                               <select
@@ -269,7 +274,10 @@ export function FormBuilderModal({
                               </select>
                             </div>
                             <div className="col-md-8">
-                              <label className="form-label small" htmlFor={`field-label-${field.id}`}>
+                              <label
+                                className="form-label small"
+                                htmlFor={`field-label-${field.id}`}
+                              >
                                 Question / label
                               </label>
                               <input
@@ -325,7 +333,10 @@ export function FormBuilderModal({
                             ) : null}
                             {field.type === "select" ? (
                               <div className="col-12">
-                                <label className="form-label small" htmlFor={`field-options-${field.id}`}>
+                                <label
+                                  className="form-label small"
+                                  htmlFor={`field-options-${field.id}`}
+                                >
                                   Dropdown options (one per line)
                                 </label>
                                 <textarea
@@ -363,7 +374,10 @@ export function FormBuilderModal({
                             ) : null}
                             {field.type === "content" ? (
                               <div className="col-12">
-                                <label className="form-label small" htmlFor={`field-content-${field.id}`}>
+                                <label
+                                  className="form-label small"
+                                  htmlFor={`field-content-${field.id}`}
+                                >
                                   Instructions text
                                 </label>
                                 <textarea
@@ -372,7 +386,9 @@ export function FormBuilderModal({
                                   rows={4}
                                   disabled={saving}
                                   value={field.content ?? ""}
-                                  onChange={(ev) => updateField(index, { content: ev.target.value })}
+                                  onChange={(ev) =>
+                                    updateField(index, { content: ev.target.value })
+                                  }
                                 />
                               </div>
                             ) : null}
@@ -394,7 +410,11 @@ export function FormBuilderModal({
             >
               Cancel
             </button>
-            <button type="submit" className="btn btn-primary" disabled={saving || fields.length === 0}>
+            <button
+              type="submit"
+              className="btn btn-primary"
+              disabled={saving || fields.length === 0}
+            >
               {saving
                 ? "Saving…"
                 : mode === "edit"

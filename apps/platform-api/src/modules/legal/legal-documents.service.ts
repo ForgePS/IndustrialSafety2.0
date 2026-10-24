@@ -105,7 +105,10 @@ export class LegalDocumentsService {
         perms.has("industrial.legal.tenantPolicies.publish") ||
         perms.has("industrial.admin");
       if (!allowed) {
-        throw new ForgeError("TENANT_POLICY_NOT_AUTHORIZED", "Not authorized to manage tenant policies");
+        throw new ForgeError(
+          "TENANT_POLICY_NOT_AUTHORIZED",
+          "Not authorized to manage tenant policies",
+        );
       }
     }
 
@@ -115,7 +118,10 @@ export class LegalDocumentsService {
         .select({ id: legalDocuments.id })
         .from(legalDocuments)
         .where(
-          and(eq(legalDocuments.tenantId, tenantId), eq(legalDocuments.documentKey, body.documentKey)),
+          and(
+            eq(legalDocuments.tenantId, tenantId),
+            eq(legalDocuments.documentKey, body.documentKey),
+          ),
         )
         .limit(1);
       if (existing[0]) {
@@ -255,7 +261,9 @@ export class LegalDocumentsService {
       }
 
       const maxRows = await tx
-        .select({ maxVersion: sql<number>`coalesce(max(${legalDocumentVersions.versionNumber}), 0)` })
+        .select({
+          maxVersion: sql<number>`coalesce(max(${legalDocumentVersions.versionNumber}), 0)`,
+        })
         .from(legalDocumentVersions)
         .where(eq(legalDocumentVersions.legalDocumentId, documentId));
       const nextNumber = Number(maxRows[0]?.maxVersion ?? 0) + 1;

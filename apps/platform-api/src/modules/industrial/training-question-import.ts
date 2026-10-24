@@ -1,8 +1,5 @@
 import * as XLSX from "xlsx";
-import {
-  sanitizeTrainingImportText,
-  textQualityScore,
-} from "./training-import-text.js";
+import { sanitizeTrainingImportText, textQualityScore } from "./training-import-text.js";
 
 export type QuestionImportRow = {
   stem: string;
@@ -25,8 +22,7 @@ export type QuestionImportPayload = {
 };
 
 function asText(value: unknown): string {
-  const raw =
-    typeof value === "string" ? value : value == null ? "" : String(value);
+  const raw = typeof value === "string" ? value : value == null ? "" : String(value);
   return sanitizeTrainingImportText(raw);
 }
 
@@ -59,7 +55,11 @@ function letterToIndex(value: string): number | null {
   return letter.charCodeAt(0) - 65;
 }
 
-function normalizeQuestion(row: Record<string, unknown>, index: number, chapterLabel: string): QuestionImportRow {
+function normalizeQuestion(
+  row: Record<string, unknown>,
+  index: number,
+  chapterLabel: string,
+): QuestionImportRow {
   const stem = asText(row.stem ?? row.question ?? row.prompt);
   if (!stem) {
     throw new Error(`${chapterLabel}: question ${index + 1} is missing stem`);
@@ -137,9 +137,7 @@ function parseQuestionBlock(block: string, questionNumber?: number): QuestionImp
       const raw = answerMatch[1]!;
       const asNum = Number(raw);
       correctIndex =
-        Number.isInteger(asNum) && asNum >= 0
-          ? asNum
-          : (letterToIndex(raw) ?? correctIndex);
+        Number.isInteger(asNum) && asNum >= 0 ? asNum : (letterToIndex(raw) ?? correctIndex);
       continue;
     }
     const explainMatch = line.match(/^explanation\s*[:\-]\s*(.+)$/i);
@@ -184,7 +182,10 @@ export function parseQuestionImportText(
   text: string,
   defaultChapterTitle = "Imported from PDF",
 ): QuestionImportPayload {
-  const normalized = text.replace(/\r\n/g, "\n").replace(/\u00a0/g, " ").trim();
+  const normalized = text
+    .replace(/\r\n/g, "\n")
+    .replace(/\u00a0/g, " ")
+    .trim();
   if (!normalized) {
     throw new Error("Document contained no readable text");
   }
@@ -280,9 +281,12 @@ export function parseQuestionImportCsv(text: string): QuestionImportPayload {
     .filter(({ header }) => /^choice\d+$/.test(header) || /^choice[a-f]$/.test(header));
 
   if (stemIdx === -1) throw new Error('CSV header must include a "stem" column');
-  if (correctIdx === -1) throw new Error('CSV header must include a "correctIndex" or "correct" column');
+  if (correctIdx === -1)
+    throw new Error('CSV header must include a "correctIndex" or "correct" column');
   if (!choiceIndices.length && choicesIdx === -1) {
-    throw new Error('CSV header must include choice columns (choice1, choice2, …) or a "choices" column');
+    throw new Error(
+      'CSV header must include choice columns (choice1, choice2, …) or a "choices" column',
+    );
   }
 
   const byChapter = new Map<string, QuestionImportChapter>();
@@ -412,7 +416,9 @@ function readExcelWorkbook(buffer: Buffer): XLSX.WorkBook {
 
   return candidates.reduce((best, candidate) => {
     const bestSheet = best.SheetNames[0] ? best.Sheets[best.SheetNames[0]!] : undefined;
-    const candidateSheet = candidate.SheetNames[0] ? candidate.Sheets[candidate.SheetNames[0]!] : undefined;
+    const candidateSheet = candidate.SheetNames[0]
+      ? candidate.Sheets[candidate.SheetNames[0]!]
+      : undefined;
     const bestScore = scoreSheetRecords(bestSheet ? sheetToRecords(bestSheet) : []);
     const candidateScore = scoreSheetRecords(candidateSheet ? sheetToRecords(candidateSheet) : []);
     return candidateScore < bestScore ? candidate : best;

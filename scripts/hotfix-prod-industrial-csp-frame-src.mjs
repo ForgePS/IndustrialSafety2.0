@@ -20,7 +20,9 @@ const cfg = full.ResponseHeadersPolicy.ResponseHeadersPolicyConfig;
 const csp = cfg.SecurityHeadersConfig?.ContentSecurityPolicy?.ContentSecurityPolicy ?? "";
 
 if (csp.includes("frame-src")) {
-  console.log(JSON.stringify({ ok: true, policyId, message: "frame-src already present", csp }, null, 2));
+  console.log(
+    JSON.stringify({ ok: true, policyId, message: "frame-src already present", csp }, null, 2),
+  );
   process.exit(0);
 }
 

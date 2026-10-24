@@ -66,7 +66,8 @@ function statusBadge(status: string): string {
     return "bg-label-success";
   }
   if (s === "WARNING" || s === "PAIRING" || s === "UNPUBLISHED") return "bg-label-warning";
-  if (s === "ERROR" || s === "FAILED" || s === "OFFLINE" || s === "DISABLED") return "bg-label-danger";
+  if (s === "ERROR" || s === "FAILED" || s === "OFFLINE" || s === "DISABLED")
+    return "bg-label-danger";
   if (s === "PRINTING" || s === "SPOOLING" || s === "TRANSMITTING") return "bg-label-primary";
   return "bg-label-secondary";
 }
@@ -145,7 +146,11 @@ export function PrintManagerWorkspace({ moduleName }: { moduleName: string }) {
   );
   useEffect(() => {
     setTab((current) =>
-      ensureActiveModuleTab(current, visibleTabs.map((t) => t.id), "dashboard"),
+      ensureActiveModuleTab(
+        current,
+        visibleTabs.map((t) => t.id),
+        "dashboard",
+      ),
     );
   }, [tab, visibleTabs]);
   const [summary, setSummary] = useState<PrintManagerSummary | null>(null);
@@ -287,9 +292,17 @@ export function PrintManagerWorkspace({ moduleName }: { moduleName: string }) {
             ) : summary ? (
               <>
                 <div className="row g-3 mb-4">
-                  <StatCard label="Printers online" value={summary.printers.online} tone="success" />
+                  <StatCard
+                    label="Printers online"
+                    value={summary.printers.online}
+                    tone="success"
+                  />
                   <StatCard label="Printers offline" value={summary.printers.offline} />
-                  <StatCard label="Printers warning" value={summary.printers.warning} tone="warning" />
+                  <StatCard
+                    label="Printers warning"
+                    value={summary.printers.warning}
+                    tone="warning"
+                  />
                   <StatCard label="Printers error" value={summary.printers.error} tone="danger" />
                   <StatCard label="Bridges online" value={summary.bridges.online} tone="success" />
                   <StatCard label="Bridges offline" value={summary.bridges.offline} tone="danger" />
@@ -480,9 +493,7 @@ export function PrintManagerWorkspace({ moduleName }: { moduleName: string }) {
 
         {tab === "queue" ? <PrintQueueWorkspace moduleName="Print Queue" embedded /> : null}
 
-        {tab === "history" ? (
-          <PrintHistoryWorkspace moduleName="Print History" embedded />
-        ) : null}
+        {tab === "history" ? <PrintHistoryWorkspace moduleName="Print History" embedded /> : null}
 
         {tab === "printers" ? (
           <div>
@@ -520,8 +531,8 @@ export function PrintManagerWorkspace({ moduleName }: { moduleName: string }) {
                       printers.map((p) => {
                         const health = !p.enabled
                           ? "UNPUBLISHED"
-                          : summary?.printerHealth.find((h) => h.id === p.id)?.status ??
-                            (p.online ? (p.ready ? "ONLINE" : "WARNING") : "OFFLINE");
+                          : (summary?.printerHealth.find((h) => h.id === p.id)?.status ??
+                            (p.online ? (p.ready ? "ONLINE" : "WARNING") : "OFFLINE"));
                         return (
                           <tr key={p.id}>
                             <td>

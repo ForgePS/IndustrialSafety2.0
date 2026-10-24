@@ -13,6 +13,7 @@ pnpm test
 ```
 
 Env:
+
 - `CREATOR_BASE_URL` default `https://ddztl9s33wu40.cloudfront.net`
 - `TENANT_ADMIN_BASE_URL` default `https://d1uxdl4szvsixc.cloudfront.net`
 - `FORGE_E2E_USER_ID` / `FORGE_E2E_TENANT_ID` (platform admin)

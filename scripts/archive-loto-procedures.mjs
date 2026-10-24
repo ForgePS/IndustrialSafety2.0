@@ -74,8 +74,12 @@ try {
         apply: APPLY,
         proceduresToArchive: procs.length,
         lockoutsToArchive: lockouts.length,
-        sampleProcedures: procs.slice(0, 5).map((r) => ({ id: r.id, title: r.title, status: r.status })),
-        sampleLockouts: lockouts.slice(0, 5).map((r) => ({ id: r.id, title: r.title, status: r.status })),
+        sampleProcedures: procs
+          .slice(0, 5)
+          .map((r) => ({ id: r.id, title: r.title, status: r.status })),
+        sampleLockouts: lockouts
+          .slice(0, 5)
+          .map((r) => ({ id: r.id, title: r.title, status: r.status })),
       },
       null,
       2,

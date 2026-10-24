@@ -19,7 +19,10 @@ async function main() {
   const encryption = awsJson(["s3api", "get-bucket-encryption", "--bucket", bucketName], args);
   const pab = awsJson(["s3api", "get-public-access-block", "--bucket", bucketName], args);
   const versioning = awsJson(["s3api", "get-bucket-versioning", "--bucket", bucketName], args);
-  const lifecycle = awsJson(["s3api", "get-bucket-lifecycle-configuration", "--bucket", bucketName], args);
+  const lifecycle = awsJson(
+    ["s3api", "get-bucket-lifecycle-configuration", "--bucket", bucketName],
+    args,
+  );
   let policy = null;
   try {
     policy = awsJson(["s3api", "get-bucket-policy", "--bucket", bucketName], args);

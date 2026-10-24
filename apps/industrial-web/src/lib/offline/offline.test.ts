@@ -104,11 +104,23 @@ describe("mutation queue", () => {
   it("queues inspection mutations and replays oldest first", () => {
     const queue = new MutationQueue(scopeA, memoryStore());
     queue.enqueue(
-      { id: "m2", domain: "industrial.inspections", operation: "create", payload: {}, correlationId: "c2" },
+      {
+        id: "m2",
+        domain: "industrial.inspections",
+        operation: "create",
+        payload: {},
+        correlationId: "c2",
+      },
       200,
     );
     queue.enqueue(
-      { id: "m1", domain: "industrial.inspections", operation: "create", payload: {}, correlationId: "c1" },
+      {
+        id: "m1",
+        domain: "industrial.inspections",
+        operation: "create",
+        payload: {},
+        correlationId: "c1",
+      },
       100,
     );
     expect(queue.pending().map((item) => item.id)).toEqual(["m1", "m2"]);

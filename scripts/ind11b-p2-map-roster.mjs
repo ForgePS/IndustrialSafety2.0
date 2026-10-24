@@ -7,9 +7,7 @@
 import fs from "node:fs";
 import path from "node:path";
 
-const EVID = path.resolve(
-  "docs/program/industrial-migration/ind-11/evidence/p2/02-cognito",
-);
+const EVID = path.resolve("docs/program/industrial-migration/ind-11/evidence/p2/02-cognito");
 const freezePath = path.join(EVID, "roster-export-latest.json");
 const freeze = JSON.parse(fs.readFileSync(freezePath, "utf8"));
 

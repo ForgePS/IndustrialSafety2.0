@@ -1,9 +1,4 @@
-export type SuppliesReportType =
-  | "transactions"
-  | "usage"
-  | "inventory"
-  | "ppe"
-  | "expiring";
+export type SuppliesReportType = "transactions" | "usage" | "inventory" | "ppe" | "expiring";
 
 export type SuppliesReportField = {
   id: string;
@@ -395,9 +390,7 @@ export function saveSuppliesCustomReports(
   localStorage.setItem(`${STORAGE_KEY}.${tenantId}`, JSON.stringify(templates));
 }
 
-export function buildSuppliesReportQuery(
-  filters: SuppliesReportFilters,
-): Record<string, string> {
+export function buildSuppliesReportQuery(filters: SuppliesReportFilters): Record<string, string> {
   const query: Record<string, string> = {
     reportType: filters.reportType,
     page: "1",

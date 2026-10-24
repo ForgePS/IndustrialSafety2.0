@@ -6,12 +6,12 @@
 
 ## Disposition summary
 
-| Disposition | Count (approx intent) |
-| --- | --- |
-| TRANSFORM / MERGE / SPLIT / DIRECT | Operational industrial + platform identity |
-| GLOBAL | EHS templates, platform settings |
-| ARCHIVE | Schema gaps, high-volume audit, tooling residue |
-| EXCLUDE_WITH_APPROVAL | Billing, messaging, platform ops |
+| Disposition                        | Count (approx intent)                           |
+| ---------------------------------- | ----------------------------------------------- |
+| TRANSFORM / MERGE / SPLIT / DIRECT | Operational industrial + platform identity      |
+| GLOBAL                             | EHS templates, platform settings                |
+| ARCHIVE                            | Schema gaps, high-volume audit, tooling residue |
+| EXCLUDE_WITH_APPROVAL              | Billing, messaging, platform ops                |
 
 ## UNKNOWN_SOURCE_TARGET_MAPPINGS
 

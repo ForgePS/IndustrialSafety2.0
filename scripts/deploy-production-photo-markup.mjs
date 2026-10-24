@@ -27,7 +27,10 @@ const skipWeb = process.argv.includes("--skip-web");
 const skipField = process.argv.includes("--skip-field");
 const skipMigrate = process.argv.includes("--skip-migrate");
 const skipPerms = process.argv.includes("--skip-perms");
-const stamp = new Date().toISOString().replace(/[-:TZ.]/g, "").slice(0, 14);
+const stamp = new Date()
+  .toISOString()
+  .replace(/[-:TZ.]/g, "")
+  .slice(0, 14);
 const tag = process.env.DEPLOY_TAG || `photo-markup-${stamp}`;
 
 function sh(cmd, opts = {}) {

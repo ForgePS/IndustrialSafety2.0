@@ -132,7 +132,6 @@ export async function readDirectBradyPrinterSnapshot(): Promise<BradyPrinterSnap
   };
 }
 
-
 /**
  * Cheap capability check — does not load the Brady Web SDK bundle.
  * Full SDK support is re-checked inside pair/print helpers.
@@ -228,9 +227,7 @@ export async function reconnectDirectBradyPrinter(savedId?: string | null): Prom
     try {
       return await discoverAndConnect(null);
     } catch {
-      throw first instanceof Error
-        ? first
-        : new Error("Could not reconnect to Brady printer.");
+      throw first instanceof Error ? first : new Error("Could not reconnect to Brady printer.");
     }
   }
 }
@@ -324,8 +321,7 @@ export async function printPngViaDirectBluetooth(opts: {
       );
     }
 
-    const copies =
-      typeof opts.copies === "number" && opts.copies > 0 ? Math.floor(opts.copies) : 1;
+    const copies = typeof opts.copies === "number" && opts.copies > 0 ? Math.floor(opts.copies) : 1;
     sdk.setCopies(copies);
     // Match Brady demo default cut path; i4311 has no cut feature.
     if (typeof sdk.setCutOption === "function") {
@@ -379,8 +375,7 @@ export async function printPngsAsOneJobViaDirectBluetooth(opts: {
       images.push(img);
     }
 
-    const copies =
-      typeof opts.copies === "number" && opts.copies > 0 ? Math.floor(opts.copies) : 1;
+    const copies = typeof opts.copies === "number" && opts.copies > 0 ? Math.floor(opts.copies) : 1;
     sdk.setCopies(copies);
     if (typeof sdk.setCutOption === "function") {
       sdk.setCutOption(1); // EndOfLabel: one job holds many labels, so cut between each

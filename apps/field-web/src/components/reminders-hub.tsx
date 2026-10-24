@@ -185,7 +185,9 @@ function RemindersInner() {
           <h2 id="create-reminder-heading" className="ff-section-title">
             New reminder
           </h2>
-          <p className="ff-hint ff-hint--left">Reminders must link to a task (or calendar event).</p>
+          <p className="ff-hint ff-hint--left">
+            Reminders must link to a task (or calendar event).
+          </p>
           <label className="ff-label" htmlFor="rem-task">
             Task
           </label>

@@ -4,15 +4,15 @@ Specialty repeatable records are first-class, tenant-isolated tables linked to a
 
 ## Record families
 
-| Family | Table | Numbering |
-| --- | --- | --- |
-| Exposures | `neris_incident_exposures` | Per-incident sequence (`neris_incident_exposure_sequences`) |
-| Civilian casualties | `neris_incident_civilian_casualties` | UUID; masked list views |
-| Fire-service casualties | `neris_incident_fire_service_casualties` | UUID; separate permissions |
-| Hazmat substances | `neris_incident_hazmat_substances` | UUID |
-| Hazmat containers | `neris_incident_hazmat_containers` | UUID; optional substance link |
-| Alarm systems | `neris_incident_alarm_systems` | UUID |
-| Protection systems | `neris_incident_protection_systems` | UUID |
+| Family                  | Table                                    | Numbering                                                   |
+| ----------------------- | ---------------------------------------- | ----------------------------------------------------------- |
+| Exposures               | `neris_incident_exposures`               | Per-incident sequence (`neris_incident_exposure_sequences`) |
+| Civilian casualties     | `neris_incident_civilian_casualties`     | UUID; masked list views                                     |
+| Fire-service casualties | `neris_incident_fire_service_casualties` | UUID; separate permissions                                  |
+| Hazmat substances       | `neris_incident_hazmat_substances`       | UUID                                                        |
+| Hazmat containers       | `neris_incident_hazmat_containers`       | UUID; optional substance link                               |
+| Alarm systems           | `neris_incident_alarm_systems`           | UUID                                                        |
+| Protection systems      | `neris_incident_protection_systems`      | UUID                                                        |
 
 ## Shared behaviors
 

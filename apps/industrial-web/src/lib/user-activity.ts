@@ -123,10 +123,7 @@ export function filterUserActivityRows(
   const q = query.trim();
   if (!q) return [...rows];
   return rows.filter((row) =>
-    matchesSearchTokens(
-      [row.displayName, row.email, row.roles.join(" "), row.membershipStatus],
-      q,
-    ),
+    matchesSearchTokens([row.displayName, row.email, row.roles.join(" "), row.membershipStatus], q),
   );
 }
 

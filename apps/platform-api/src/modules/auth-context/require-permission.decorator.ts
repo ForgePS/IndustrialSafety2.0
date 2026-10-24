@@ -15,7 +15,11 @@ export interface RequirePermissionMeta {
 export const RequirePermission = (
   permissionCode: string,
   options?: Omit<RequirePermissionMeta, "permissionCode" | "anyOf">,
-) => SetMetadata(REQUIRE_PERMISSION_KEY, { permissionCode, ...options } satisfies RequirePermissionMeta);
+) =>
+  SetMetadata(REQUIRE_PERMISSION_KEY, {
+    permissionCode,
+    ...options,
+  } satisfies RequirePermissionMeta);
 
 export const RequireAnyPermission = (
   anyOf: string[],
