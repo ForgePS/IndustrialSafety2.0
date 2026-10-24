@@ -33,12 +33,24 @@ describe("IndustrialDomainService record id validation", () => {
     expect(db.transaction).not.toHaveBeenCalled();
   });
 
-  it("returns NOT_FOUND for a non-uuid personnel id", async () => {
-    const { svc, db } = service();
+  it("returns NOT_FOUND for a non-uuid personnel id that matches no legacy id or employee #", async () => {
+    // Non-uuid personnel ids are resolved through the legacy-id / employee-number
+    // index before any personnel row is read, so an unmatched id is NOT_FOUND.
+    const tx = { execute: vi.fn(async () => ({ rows: [] })), select: vi.fn() };
+    const transaction = vi.fn(async (cb: (inner: unknown) => unknown) => cb(tx));
+    const svc = new IndustrialDomainService({ transaction } as never);
+    const loadIndex = vi
+      .spyOn(
+        svc as unknown as { loadPersonnelLinkIndex: (...args: unknown[]) => unknown },
+        "loadPersonnelLinkIndex",
+      )
+      .mockResolvedValue({ byLegacyId: new Map(), byEmployee: new Map() });
+
     await expect(svc.getPersonnel(principal, "orientation")).rejects.toMatchObject({
       code: "NOT_FOUND",
     });
-    expect(db.transaction).not.toHaveBeenCalled();
+    expect(loadIndex).toHaveBeenCalledTimes(1);
+    expect(tx.select).not.toHaveBeenCalled();
   });
 
   it("still rejects unknown modules before id parsing", async () => {

@@ -1,3 +1,5 @@
+import fs from "node:fs";
+import path from "node:path";
 import { describe, expect, it } from "vitest";
 import {
   buildContentSecurityPolicy,
@@ -34,8 +36,6 @@ describe("DirectoryIndex trailingSlash soft-nav (.txt)", () => {
   it("documents the page.txt → page/index.txt rewrite used for iPad LOTO soft-nav", () => {
     // Runtime CF Function is inline in forge-static-hosting.ts; assert the contract
     // stays in source so Field /loto/{id}.txt is not SPA-fallback HTML 200.
-    const fs = require("node:fs") as typeof import("node:fs");
-    const path = require("node:path") as typeof import("node:path");
     const source = fs.readFileSync(
       path.join(__dirname, "../lib/constructs/forge-static-hosting.ts"),
       "utf8",

@@ -17,7 +17,7 @@ describe("buildSettingsNavGroups", () => {
   };
 
   it("groups visible items and drops empty groups", () => {
-    const groups = buildSettingsNavGroups(allOn);
+    const groups = buildSettingsNavGroups({ ...allOn, canPresentation: true });
     expect(groups.map((g) => g.id)).toEqual([
       "home",
       "organization",
@@ -25,6 +25,7 @@ describe("buildSettingsNavGroups", () => {
       "modules",
       "forms-fields",
       "qr",
+      "integrations",
       "compliance-audit",
       "account",
     ]);
@@ -41,7 +42,11 @@ describe("buildSettingsNavGroups", () => {
       canPresentation: true,
     });
     const org = groups.find((g) => g.id === "organization");
-    expect(org?.items.map((i) => i.href)).toEqual(["/settings/presentation/"]);
+    expect(org?.items.map((i) => i.href)).toEqual([
+      "/settings/presentation/",
+      "/settings/presentation-logo/",
+      "/admin/walkthrough-studio/",
+    ]);
   });
 
   it("hides organization when configuration is denied", () => {

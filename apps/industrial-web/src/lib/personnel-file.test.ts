@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import {
   buildPersonnelFile,
   formatFileDate,
@@ -89,7 +89,14 @@ describe("buildPersonnelFile", () => {
     });
   });
 
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
   it("shows PPE allowance fields when set", () => {
+    // Expiry labels are relative to today; pin the clock so the test does not age out.
+    vi.useFakeTimers({ toFake: ["Date"] });
+    vi.setSystemTime(new Date("2026-08-15T12:00:00Z"));
     expect(
       groupById(
         {

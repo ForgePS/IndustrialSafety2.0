@@ -4,10 +4,13 @@ const getPrintJob = vi.fn();
 const reportPrintJobStatus = vi.fn();
 const printPngViaDirectBluetooth = vi.fn();
 const isDirectBluetoothSupported = vi.fn();
+const ensureDirectBradyConnected = vi.fn();
+const getPrintJobArtifactBytes = vi.fn();
 
 vi.mock("@/lib/print-api", () => ({
   getPrintJob: (...args: unknown[]) => getPrintJob(...args),
   reportPrintJobStatus: (...args: unknown[]) => reportPrintJobStatus(...args),
+  getPrintJobArtifactBytes: (...args: unknown[]) => getPrintJobArtifactBytes(...args),
   createPrintJob: vi.fn(),
   getPrinter: vi.fn(),
   isDirectBluetoothPrinter: vi.fn(),
@@ -16,15 +19,19 @@ vi.mock("@/lib/print-api", () => ({
 
 vi.mock("@/lib/direct-brady-bluetooth", () => ({
   isDirectBluetoothSupported: (...args: unknown[]) => isDirectBluetoothSupported(...args),
+  ensureDirectBradyConnected: (...args: unknown[]) => ensureDirectBradyConnected(...args),
   printPngViaDirectBluetooth: (...args: unknown[]) => printPngViaDirectBluetooth(...args),
 }));
 
-describe("printJobViaDirectBluetooth", () => {
+// Each test cold-imports ./direct-print, which can exceed the 5s default when the whole suite runs.
+describe("printJobViaDirectBluetooth", { timeout: 30_000 }, () => {
   beforeEach(() => {
     getPrintJob.mockReset();
     reportPrintJobStatus.mockReset();
     printPngViaDirectBluetooth.mockReset();
     isDirectBluetoothSupported.mockReset();
+    ensureDirectBradyConnected.mockReset();
+    getPrintJobArtifactBytes.mockReset();
   });
 
   it("prints artifact and reports COMPLETED", async () => {
@@ -36,6 +43,9 @@ describe("printJobViaDirectBluetooth", () => {
     });
     reportPrintJobStatus.mockResolvedValue({ id: "job-1", status: "COMPLETED" });
     printPngViaDirectBluetooth.mockResolvedValue(undefined);
+    ensureDirectBradyConnected.mockResolvedValue("saved-1");
+    const pngBytes = new Uint8Array([0x89, 0x50, 0x4e, 0x47]);
+    getPrintJobArtifactBytes.mockResolvedValue(pngBytes);
 
     const { printJobViaDirectBluetooth } = await import("./direct-print");
     const result = await printJobViaDirectBluetooth(
@@ -44,9 +54,11 @@ describe("printJobViaDirectBluetooth", () => {
       2,
     );
 
+    expect(ensureDirectBradyConnected).toHaveBeenCalledWith("saved-1");
+    expect(getPrintJobArtifactBytes).toHaveBeenCalledWith("job-1");
     expect(printPngViaDirectBluetooth).toHaveBeenCalledWith(
       expect.objectContaining({
-        pngUrl: "https://example.com/label.png",
+        pngBytes,
         copies: 2,
         savedId: "saved-1",
       }),

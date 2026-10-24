@@ -148,10 +148,12 @@ describe("resolveDotFileRecord", () => {
 
 describe("relatedDotRecords", () => {
   it("returns other records for the same person", () => {
-    const driver = { id: "d1", category: "drivers", workerName: "Ada Byron" };
-    const duplicate = { id: "d2", category: "drivers", workerName: "ADA BYRON" };
+    // Only DQF driver files count as "drivers"; a plain "drivers" category is the
+    // company-driver roster (see isDotDqfDriverRecord), so mark these as DQF rows.
+    const driver = { id: "d1", category: "drivers", dqf: true, workerName: "Ada Byron" };
+    const duplicate = { id: "d2", category: "drivers", dqf: true, workerName: "ADA BYRON" };
     const accident = { id: "a1", category: "accidents", workerName: "Ada Byron" };
-    const other = { id: "x1", category: "drivers", workerName: "Bea Nguyen" };
+    const other = { id: "x1", category: "drivers", dqf: true, workerName: "Bea Nguyen" };
     expect(
       relatedDotRecords(driver, [driver, duplicate, accident, other]).map((r) => r.id),
     ).toEqual(["a1"]);

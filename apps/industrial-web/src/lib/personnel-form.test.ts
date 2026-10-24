@@ -175,6 +175,11 @@ describe("Add Person form model", () => {
       "phone",
       "companyEmail",
       "companyPhone",
+      "street",
+      "city",
+      "state",
+      "zip",
+      "gender",
     ]);
   });
 

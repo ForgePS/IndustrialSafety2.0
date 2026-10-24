@@ -20,6 +20,8 @@ function walk(dir: string): string[] {
   const out: string[] = [];
   for (const name of readdirSync(dir)) {
     if (name.endsWith(".test.ts")) continue;
+    // Third-party dependencies are not inventory sources; crawling them made this test time out.
+    if (name === "node_modules") continue;
     const full = path.join(dir, name);
     if (statSync(full).isDirectory()) out.push(...walk(full));
     else if (name.endsWith(".ts")) out.push(full);
