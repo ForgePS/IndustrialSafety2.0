@@ -28,7 +28,7 @@
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "lint": "eslint src --max-warnings=0",
     "test": "vitest run --passWithNoTests",
-    "test:unit": "vitest run --passWithNoTests",
+    "test:unit": "vitest run --passWithNoTests --exclude \"**/*.integration.test.ts\"",
     "test:integration": "vitest run src/tenant-isolation.integration.test.ts src/neris/neris-integrity.integration.test.ts",
     "test:rls": "vitest run src/tenant-isolation.integration.test.ts src/workers-comp-forms.integration.test.ts src/helpdesk-isolation.integration.test.ts src/neris/neris-integrity.integration.test.ts",
     "test:neris": "vitest run src/neris/neris-integrity.integration.test.ts",
