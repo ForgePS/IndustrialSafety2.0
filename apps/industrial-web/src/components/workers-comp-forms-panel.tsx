@@ -48,7 +48,9 @@ function newKey(): string {
 
 function formatDateTime(iso: string): string {
   const d = new Date(iso);
-  return Number.isNaN(d.getTime()) ? iso : d.toLocaleString(undefined, { dateStyle: "medium", timeStyle: "short" });
+  return Number.isNaN(d.getTime())
+    ? iso
+    : d.toLocaleString(undefined, { dateStyle: "medium", timeStyle: "short" });
 }
 
 function Modal({
@@ -79,7 +81,13 @@ function Modal({
   return (
     <>
       <div className="modal-backdrop fade show" aria-hidden="true" />
-      <div className="modal fade show d-block" tabIndex={-1} role="dialog" aria-modal="true" aria-labelledby={titleId}>
+      <div
+        className="modal fade show d-block"
+        tabIndex={-1}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby={titleId}
+      >
         <div className={`modal-dialog modal-dialog-centered modal-dialog-scrollable ${size}`}>
           <div className="modal-content">
             <div className="modal-header">
@@ -87,9 +95,17 @@ function Modal({
                 <h5 className="modal-title mb-0" id={titleId}>
                   {title}
                 </h5>
-                {subtitle ? <p className="text-muted small mb-0 mt-1 text-truncate">{subtitle}</p> : null}
+                {subtitle ? (
+                  <p className="text-muted small mb-0 mt-1 text-truncate">{subtitle}</p>
+                ) : null}
               </div>
-              <button type="button" className="btn-close" aria-label="Close" disabled={busy} onClick={onClose} />
+              <button
+                type="button"
+                className="btn-close"
+                aria-label="Close"
+                disabled={busy}
+                onClick={onClose}
+              />
             </div>
             <div className="modal-body">{children}</div>
             <div className="modal-footer">{footer}</div>
@@ -113,7 +129,11 @@ function GuidelinesSignDialog({
   onClose: () => void;
   onSigned: (form: WcSignedForm) => void;
 }) {
-  const [draft, setDraft] = useState<GuidelinesDraft>({ employeeName, signedDate: todayLocalIso(), signatureDataUrl: "" });
+  const [draft, setDraft] = useState<GuidelinesDraft>({
+    employeeName,
+    signedDate: todayLocalIso(),
+    signatureDataUrl: "",
+  });
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [idempotencyKey] = useState(newKey);
@@ -135,16 +155,21 @@ function GuidelinesSignDialog({
   async function openSheet() {
     try {
       const { bytes } = await fetchBlankWcFormPdf("INJURY_GUIDELINES_ACK");
-      const url = URL.createObjectURL(new Blob([new Uint8Array(bytes).buffer], { type: "application/pdf" }));
+      const url = URL.createObjectURL(
+        new Blob([new Uint8Array(bytes).buffer], { type: "application/pdf" }),
+      );
       setPreview(url);
     } catch (e) {
       setError(errorMessage(e));
     }
   }
 
-  useEffect(() => () => {
-    if (preview) URL.revokeObjectURL(preview);
-  }, [preview]);
+  useEffect(
+    () => () => {
+      if (preview) URL.revokeObjectURL(preview);
+    },
+    [preview],
+  );
 
   return (
     <Modal
@@ -154,10 +179,20 @@ function GuidelinesSignDialog({
       busy={busy}
       footer={
         <>
-          <button type="button" className="btn btn-outline-secondary" disabled={busy} onClick={onClose}>
+          <button
+            type="button"
+            className="btn btn-outline-secondary"
+            disabled={busy}
+            onClick={onClose}
+          >
             Cancel
           </button>
-          <button type="button" className="btn btn-primary" disabled={busy} onClick={() => void submit()}>
+          <button
+            type="button"
+            className="btn btn-primary"
+            disabled={busy}
+            onClick={() => void submit()}
+          >
             {busy ? "Saving…" : "Sign acknowledgment"}
           </button>
         </>
@@ -169,12 +204,22 @@ function GuidelinesSignDialog({
         </div>
       ) : null}
       <p className="small text-muted">
-        Give the employee their copy of the guidelines, then have them sign below to acknowledge they received it.
+        Give the employee their copy of the guidelines, then have them sign below to acknowledge
+        they received it.
       </p>
       {preview ? (
-        <iframe title="Employee Injury Guidelines" src={preview} className="w-100 border rounded mb-3" style={{ height: 420 }} />
+        <iframe
+          title="Employee Injury Guidelines"
+          src={preview}
+          className="w-100 border rounded mb-3"
+          style={{ height: 420 }}
+        />
       ) : (
-        <button type="button" className="btn btn-sm btn-outline-primary mb-3" onClick={() => void openSheet()}>
+        <button
+          type="button"
+          className="btn btn-sm btn-outline-primary mb-3"
+          onClick={() => void openSheet()}
+        >
           Show the guidelines
         </button>
       )}
@@ -191,7 +236,9 @@ function GuidelinesSignDialog({
           disabled={busy}
         />
       </div>
-      <p className="small mb-2">I received a copy of the Employee Injury Guidelines and will follow them.</p>
+      <p className="small mb-2">
+        I received a copy of the Employee Injury Guidelines and will follow them.
+      </p>
       <SignaturePad
         label="Employee signature"
         value={draft.signatureDataUrl}
@@ -244,10 +291,20 @@ function HipaaSignDialog({
       busy={busy}
       footer={
         <>
-          <button type="button" className="btn btn-outline-secondary" disabled={busy} onClick={onClose}>
+          <button
+            type="button"
+            className="btn btn-outline-secondary"
+            disabled={busy}
+            onClick={onClose}
+          >
             Cancel
           </button>
-          <button type="button" className="btn btn-primary" disabled={busy} onClick={() => void submit()}>
+          <button
+            type="button"
+            className="btn btn-primary"
+            disabled={busy}
+            onClick={() => void submit()}
+          >
             {busy ? "Saving…" : "Sign authorization"}
           </button>
         </>
@@ -263,13 +320,28 @@ function HipaaSignDialog({
           <label className="form-label" htmlFor="wc-hipaa-name">
             Name
           </label>
-          <input id="wc-hipaa-name" className="form-control" maxLength={200} value={draft.patientName} onChange={(ev) => set({ patientName: ev.target.value })} disabled={busy} />
+          <input
+            id="wc-hipaa-name"
+            className="form-control"
+            maxLength={200}
+            value={draft.patientName}
+            onChange={(ev) => set({ patientName: ev.target.value })}
+            disabled={busy}
+          />
         </div>
         <div className="col-md-4">
           <label className="form-label" htmlFor="wc-hipaa-dob">
             Date of birth
           </label>
-          <input id="wc-hipaa-dob" type="date" className="form-control" max={todayLocalIso()} value={draft.dateOfBirth} onChange={(ev) => set({ dateOfBirth: ev.target.value })} disabled={busy} />
+          <input
+            id="wc-hipaa-dob"
+            type="date"
+            className="form-control"
+            max={todayLocalIso()}
+            value={draft.dateOfBirth}
+            onChange={(ev) => set({ dateOfBirth: ev.target.value })}
+            disabled={busy}
+          />
         </div>
         <div className="col-12">
           <label className="form-label" htmlFor="wc-hipaa-provider">
@@ -284,7 +356,10 @@ function HipaaSignDialog({
             onChange={(ev) => set({ providerName: ev.target.value })}
             disabled={busy}
           />
-          <div className="form-text">…to disclose the protected health information described below to Producers Rice Mill, Inc.</div>
+          <div className="form-text">
+            …to disclose the protected health information described below to Producers Rice Mill,
+            Inc.
+          </div>
         </div>
       </div>
 
@@ -302,7 +377,11 @@ function HipaaSignDialog({
                 placeholder="Initials"
                 aria-describedby={`${inputId}-text`}
                 value={draft.initials[line.key]}
-                onChange={(ev) => set({ initials: { ...draft.initials, [line.key]: ev.target.value.toUpperCase() } })}
+                onChange={(ev) =>
+                  set({
+                    initials: { ...draft.initials, [line.key]: ev.target.value.toUpperCase() },
+                  })
+                }
                 disabled={busy}
               />
               <label htmlFor={inputId} id={`${inputId}-text`} className="small mb-0">
@@ -326,13 +405,27 @@ function HipaaSignDialog({
           <label className="form-label" htmlFor="wc-hipaa-signer">
             Printed name of patient or personal representative
           </label>
-          <input id="wc-hipaa-signer" className="form-control" maxLength={200} value={draft.signerName} onChange={(ev) => set({ signerName: ev.target.value })} disabled={busy} />
+          <input
+            id="wc-hipaa-signer"
+            className="form-control"
+            maxLength={200}
+            value={draft.signerName}
+            onChange={(ev) => set({ signerName: ev.target.value })}
+            disabled={busy}
+          />
         </div>
         <div className="col-md-4">
           <label className="form-label" htmlFor="wc-hipaa-relationship">
             Relationship to patient
           </label>
-          <input id="wc-hipaa-relationship" className="form-control" maxLength={120} value={draft.signerRelationship} onChange={(ev) => set({ signerRelationship: ev.target.value })} disabled={busy} />
+          <input
+            id="wc-hipaa-relationship"
+            className="form-control"
+            maxLength={120}
+            value={draft.signerRelationship}
+            onChange={(ev) => set({ signerRelationship: ev.target.value })}
+            disabled={busy}
+          />
         </div>
       </div>
       <div className="mt-3">
@@ -349,7 +442,15 @@ function HipaaSignDialog({
   );
 }
 
-function EmailDialog({ form, onClose, onSent }: { form: WcSignedForm; onClose: () => void; onSent: () => void }) {
+function EmailDialog({
+  form,
+  onClose,
+  onSent,
+}: {
+  form: WcSignedForm;
+  onClose: () => void;
+  onSent: () => void;
+}) {
   const [recipients, setRecipients] = useState<WcFormRecipient[]>([]);
   const [loading, setLoading] = useState(true);
   const [query, setQuery] = useState("");
@@ -385,18 +486,32 @@ function EmailDialog({ form, onClose, onSent }: { form: WcSignedForm; onClose: (
 
   function toggle(id: string) {
     setSummary(null);
-    setSelected((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : prev.length >= MAX_STAFF ? prev : [...prev, id]));
+    setSelected((prev) =>
+      prev.includes(id)
+        ? prev.filter((x) => x !== id)
+        : prev.length >= MAX_STAFF
+          ? prev
+          : [...prev, id],
+    );
   }
 
   async function send() {
-    if (parsedOutside.invalid.length) return setError(`Check these email addresses: ${parsedOutside.invalid.slice(0, 3).join(", ")}`);
+    if (parsedOutside.invalid.length)
+      return setError(
+        `Check these email addresses: ${parsedOutside.invalid.slice(0, 3).join(", ")}`,
+      );
     if (!total) return setError("Choose at least one person or enter an outside email address.");
-    if (parsedOutside.emails.length > 10) return setError("Enter no more than 10 outside addresses.");
+    if (parsedOutside.emails.length > 10)
+      return setError("Enter no more than 10 outside addresses.");
     setBusy(true);
     setError(null);
     setSummary(null);
     try {
-      const result = await emailWcForm(form.id, { personnelIds: selected, emails: parsedOutside.emails, message: message.trim() });
+      const result = await emailWcForm(form.id, {
+        personnelIds: selected,
+        emails: parsedOutside.emails,
+        message: message.trim(),
+      });
       const next = wcFormEmailSummary(result);
       setSummary(next);
       if (result.sent > 0) {
@@ -420,10 +535,20 @@ function EmailDialog({ form, onClose, onSent }: { form: WcSignedForm; onClose: (
       busy={busy}
       footer={
         <>
-          <button type="button" className="btn btn-outline-secondary" disabled={busy} onClick={onClose}>
+          <button
+            type="button"
+            className="btn btn-outline-secondary"
+            disabled={busy}
+            onClick={onClose}
+          >
             {summary && summary.tone !== "danger" ? "Done" : "Cancel"}
           </button>
-          <button type="button" className="btn btn-primary" disabled={busy || total === 0} onClick={() => void send()}>
+          <button
+            type="button"
+            className="btn btn-primary"
+            disabled={busy || total === 0}
+            onClick={() => void send()}
+          >
             {busy ? "Sending…" : `Send PDF${total ? ` to ${total}` : ""}`}
           </button>
         </>
@@ -431,7 +556,8 @@ function EmailDialog({ form, onClose, onSent }: { form: WcSignedForm; onClose: (
     >
       {medical ? (
         <div className="alert alert-warning py-2 small" role="note">
-          This form contains protected health information. Send it only to people authorized to receive it.
+          This form contains protected health information. Send it only to people authorized to
+          receive it.
         </div>
       ) : null}
       {error ? (
@@ -451,7 +577,10 @@ function EmailDialog({ form, onClose, onSent }: { form: WcSignedForm; onClose: (
       {selected.length ? (
         <div className="d-flex flex-wrap gap-1 mb-2">
           {selected.map((id) => (
-            <span key={id} className="badge bg-label-primary d-inline-flex align-items-center gap-1">
+            <span
+              key={id}
+              className="badge bg-label-primary d-inline-flex align-items-center gap-1"
+            >
               {byId.get(id)?.name ?? id}
               <button
                 type="button"
@@ -477,7 +606,9 @@ function EmailDialog({ form, onClose, onSent }: { form: WcSignedForm; onClose: (
           <div className="p-3 text-muted small">Loading people…</div>
         ) : filtered.length === 0 ? (
           <div className="p-3 text-muted small">
-            {recipients.length ? "No one matches that search." : "No personnel have an email address on file."}
+            {recipients.length
+              ? "No one matches that search."
+              : "No personnel have an email address on file."}
           </div>
         ) : (
           <ul className="list-group list-group-flush">
@@ -496,9 +627,12 @@ function EmailDialog({ form, onClose, onSent }: { form: WcSignedForm; onClose: (
                       onChange={() => toggle(person.id)}
                     />
                     <label className="form-check-label w-100" htmlFor={inputId}>
-                      <span className="fw-medium">{person.name}</span> <span className="text-muted small">{person.email}</span>
+                      <span className="fw-medium">{person.name}</span>{" "}
+                      <span className="text-muted small">{person.email}</span>
                       {person.jobTitle || person.departmentName ? (
-                        <span className="d-block text-muted small">{[person.jobTitle, person.departmentName].filter(Boolean).join(" · ")}</span>
+                        <span className="d-block text-muted small">
+                          {[person.jobTitle, person.departmentName].filter(Boolean).join(" · ")}
+                        </span>
                       ) : null}
                     </label>
                   </div>
@@ -524,8 +658,15 @@ function EmailDialog({ form, onClose, onSent }: { form: WcSignedForm; onClose: (
         }}
         disabled={busy}
       />
-      <div className="form-text">For a clinic, physician&apos;s office or insurance carrier. Separate addresses with commas. Up to 10.</div>
-      {parsedOutside.invalid.length ? <div className="invalid-feedback d-block">Not a valid address: {parsedOutside.invalid.join(", ")}</div> : null}
+      <div className="form-text">
+        For a clinic, physician&apos;s office or insurance carrier. Separate addresses with commas.
+        Up to 10.
+      </div>
+      {parsedOutside.invalid.length ? (
+        <div className="invalid-feedback d-block">
+          Not a valid address: {parsedOutside.invalid.join(", ")}
+        </div>
+      ) : null}
 
       <label className="form-label mt-3" htmlFor="wc-form-email-message">
         Message (optional)
@@ -543,7 +684,15 @@ function EmailDialog({ form, onClose, onSent }: { form: WcSignedForm; onClose: (
   );
 }
 
-function VoidDialog({ form, onClose, onVoided }: { form: WcSignedForm; onClose: () => void; onVoided: () => void }) {
+function VoidDialog({
+  form,
+  onClose,
+  onVoided,
+}: {
+  form: WcSignedForm;
+  onClose: () => void;
+  onVoided: () => void;
+}) {
   const [reason, setReason] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -570,10 +719,20 @@ function VoidDialog({ form, onClose, onVoided }: { form: WcSignedForm; onClose: 
       size=""
       footer={
         <>
-          <button type="button" className="btn btn-outline-secondary" disabled={busy} onClick={onClose}>
+          <button
+            type="button"
+            className="btn btn-outline-secondary"
+            disabled={busy}
+            onClick={onClose}
+          >
             Cancel
           </button>
-          <button type="button" className="btn btn-danger" disabled={busy} onClick={() => void submit()}>
+          <button
+            type="button"
+            className="btn btn-danger"
+            disabled={busy}
+            onClick={() => void submit()}
+          >
             {busy ? "Voiding…" : "Void form"}
           </button>
         </>
@@ -585,7 +744,8 @@ function VoidDialog({ form, onClose, onVoided }: { form: WcSignedForm; onClose: 
         </div>
       ) : null}
       <p className="small">
-        Signed forms can&apos;t be edited. Voiding keeps this copy on file, marked as voided, so you can have a new one signed.
+        Signed forms can&apos;t be edited. Voiding keeps this copy on file, marked as voided, so you
+        can have a new one signed.
       </p>
       <label className="form-label" htmlFor="wc-form-void-reason">
         Reason
@@ -610,7 +770,13 @@ type Dialog =
   | null;
 
 /** "Forms" tab on a workers' comp case: the Producers injury guidelines and HIPAA authorization. */
-export function WorkersCompFormsPanel({ caseId, caseLabel }: { caseId: string; caseLabel: string }) {
+export function WorkersCompFormsPanel({
+  caseId,
+  caseLabel,
+}: {
+  caseId: string;
+  caseLabel: string;
+}) {
   const [overview, setOverview] = useState<WcFormsOverview | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -634,7 +800,11 @@ export function WorkersCompFormsPanel({ caseId, caseLabel }: { caseId: string; c
     void load();
   }, [load]);
 
-  async function withPdf(id: string, run: () => Promise<{ bytes: Uint8Array; filename: string }>, mode: "print" | "download") {
+  async function withPdf(
+    id: string,
+    run: () => Promise<{ bytes: Uint8Array; filename: string }>,
+    mode: "print" | "download",
+  ) {
     setBusyId(id);
     setError(null);
     setNotice(null);
@@ -652,7 +822,8 @@ export function WorkersCompFormsPanel({ caseId, caseLabel }: { caseId: string; c
     }
   }
 
-  if (loading && !overview) return <div className="card card-body text-muted small">Loading forms…</div>;
+  if (loading && !overview)
+    return <div className="card card-body text-muted small">Loading forms…</div>;
   if (!overview) {
     return (
       <div className="alert alert-danger" role="alert">
@@ -661,10 +832,17 @@ export function WorkersCompFormsPanel({ caseId, caseLabel }: { caseId: string; c
     );
   }
   if (!overview.available) {
-    return <div className="card card-body text-muted small">Injury forms are not set up for this company.</div>;
+    return (
+      <div className="card card-body text-muted small">
+        Injury forms are not set up for this company.
+      </div>
+    );
   }
 
-  const access = { INJURY_GUIDELINES_ACK: overview.permissions.guidelines, HIPAA_AUTHORIZATION: overview.permissions.hipaa };
+  const access = {
+    INJURY_GUIDELINES_ACK: overview.permissions.guidelines,
+    HIPAA_AUTHORIZATION: overview.permissions.hipaa,
+  };
   const formKeys = (Object.keys(access) as WcFormKey[]).filter((key) => access[key].read);
 
   return (
@@ -680,7 +858,9 @@ export function WorkersCompFormsPanel({ caseId, caseLabel }: { caseId: string; c
         </div>
       ) : null}
       {overview.caseArchived ? (
-        <div className="alert alert-secondary py-2 mb-0">This case is archived. Signed forms can still be printed and emailed.</div>
+        <div className="alert alert-secondary py-2 mb-0">
+          This case is archived. Signed forms can still be printed and emailed.
+        </div>
       ) : null}
 
       <div className="row g-3">
@@ -692,7 +872,11 @@ export function WorkersCompFormsPanel({ caseId, caseLabel }: { caseId: string; c
                 <p className="small text-muted flex-grow-1">{WC_FORM_DESCRIPTIONS[key]}</p>
                 <div className="d-flex flex-wrap gap-2">
                   {access[key].act && !overview.caseArchived ? (
-                    <button type="button" className="btn btn-sm btn-primary" onClick={() => setDialog({ kind: "sign", formKey: key })}>
+                    <button
+                      type="button"
+                      className="btn btn-sm btn-primary"
+                      onClick={() => setDialog({ kind: "sign", formKey: key })}
+                    >
                       Fill out &amp; sign
                     </button>
                   ) : null}
@@ -700,7 +884,9 @@ export function WorkersCompFormsPanel({ caseId, caseLabel }: { caseId: string; c
                     type="button"
                     className="btn btn-sm btn-outline-secondary"
                     disabled={busyId === `blank-${key}`}
-                    onClick={() => void withPdf(`blank-${key}`, () => fetchBlankWcFormPdf(key), "print")}
+                    onClick={() =>
+                      void withPdf(`blank-${key}`, () => fetchBlankWcFormPdf(key), "print")
+                    }
                   >
                     Print blank form
                   </button>
@@ -714,12 +900,19 @@ export function WorkersCompFormsPanel({ caseId, caseLabel }: { caseId: string; c
       <div className="card">
         <div className="card-header d-flex align-items-center justify-content-between">
           <h6 className="mb-0">Signed forms</h6>
-          <button type="button" className="btn btn-sm btn-outline-secondary" disabled={loading} onClick={() => void load()}>
+          <button
+            type="button"
+            className="btn btn-sm btn-outline-secondary"
+            disabled={loading}
+            onClick={() => void load()}
+          >
             Refresh
           </button>
         </div>
         {overview.forms.length === 0 ? (
-          <div className="card-body text-muted small">No forms have been signed on this case yet.</div>
+          <div className="card-body text-muted small">
+            No forms have been signed on this case yet.
+          </div>
         ) : (
           <div className="table-responsive">
             <table className="table table-sm align-middle mb-0">
@@ -744,7 +937,9 @@ export function WorkersCompFormsPanel({ caseId, caseLabel }: { caseId: string; c
                       <td>
                         {form.signerName}
                         {form.signerRelationship && form.signerRelationship !== "Self" ? (
-                          <span className="d-block small text-muted">{form.signerRelationship}</span>
+                          <span className="d-block small text-muted">
+                            {form.signerRelationship}
+                          </span>
                         ) : null}
                       </td>
                       <td className="small">{formatDateTime(form.signedAt)}</td>
@@ -752,7 +947,9 @@ export function WorkersCompFormsPanel({ caseId, caseLabel }: { caseId: string; c
                         {voided ? (
                           <>
                             <span className="badge bg-label-secondary">Voided</span>
-                            {form.voidReason ? <span className="d-block text-muted">{form.voidReason}</span> : null}
+                            {form.voidReason ? (
+                              <span className="d-block text-muted">{form.voidReason}</span>
+                            ) : null}
                           </>
                         ) : (
                           <span className="badge bg-label-success">Signed</span>
@@ -769,7 +966,9 @@ export function WorkersCompFormsPanel({ caseId, caseLabel }: { caseId: string; c
                             type="button"
                             className="btn btn-sm btn-outline-primary"
                             disabled={busyId === form.id}
-                            onClick={() => void withPdf(form.id, () => fetchSignedWcFormPdf(form.id), "print")}
+                            onClick={() =>
+                              void withPdf(form.id, () => fetchSignedWcFormPdf(form.id), "print")
+                            }
                           >
                             Print
                           </button>
@@ -777,16 +976,26 @@ export function WorkersCompFormsPanel({ caseId, caseLabel }: { caseId: string; c
                             type="button"
                             className="btn btn-sm btn-outline-secondary"
                             disabled={busyId === form.id}
-                            onClick={() => void withPdf(form.id, () => fetchSignedWcFormPdf(form.id), "download")}
+                            onClick={() =>
+                              void withPdf(form.id, () => fetchSignedWcFormPdf(form.id), "download")
+                            }
                           >
                             Download
                           </button>
                           {canAct && !voided ? (
                             <>
-                              <button type="button" className="btn btn-sm btn-outline-secondary" onClick={() => setDialog({ kind: "email", form })}>
+                              <button
+                                type="button"
+                                className="btn btn-sm btn-outline-secondary"
+                                onClick={() => setDialog({ kind: "email", form })}
+                              >
                                 Email
                               </button>
-                              <button type="button" className="btn btn-sm btn-outline-danger" onClick={() => setDialog({ kind: "void", form })}>
+                              <button
+                                type="button"
+                                className="btn btn-sm btn-outline-danger"
+                                onClick={() => setDialog({ kind: "void", form })}
+                              >
                                 Void
                               </button>
                             </>
@@ -828,7 +1037,13 @@ export function WorkersCompFormsPanel({ caseId, caseLabel }: { caseId: string; c
           }}
         />
       ) : null}
-      {dialog?.kind === "email" ? <EmailDialog form={dialog.form} onClose={() => setDialog(null)} onSent={() => void load()} /> : null}
+      {dialog?.kind === "email" ? (
+        <EmailDialog
+          form={dialog.form}
+          onClose={() => setDialog(null)}
+          onSent={() => void load()}
+        />
+      ) : null}
       {dialog?.kind === "void" ? (
         <VoidDialog
           form={dialog.form}

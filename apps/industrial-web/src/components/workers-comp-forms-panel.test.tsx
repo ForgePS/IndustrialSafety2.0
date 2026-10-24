@@ -14,8 +14,16 @@ const api = vi.hoisted(() => ({
   fetchSignedWcFormPdf: vi.fn(),
 }));
 
-vi.mock("@forge/web-kit", () => ({ ApiError: class ApiError extends Error {}, apiFetchRaw: vi.fn(), apiGet: vi.fn(), apiSend: vi.fn() }));
-vi.mock("@/lib/wc-forms", async () => ({ ...(await vi.importActual<typeof import("@/lib/wc-forms")>("@/lib/wc-forms")), ...api }));
+vi.mock("@forge/web-kit", () => ({
+  ApiError: class ApiError extends Error {},
+  apiFetchRaw: vi.fn(),
+  apiGet: vi.fn(),
+  apiSend: vi.fn(),
+}));
+vi.mock("@/lib/wc-forms", async () => ({
+  ...(await vi.importActual<typeof import("@/lib/wc-forms")>("@/lib/wc-forms")),
+  ...api,
+}));
 // A drawn signature: one click "signs" with a fixed image.
 vi.mock("@/components/signature-pad", () => ({
   SignaturePad: ({ label, onChange }: { label: string; onChange: (v: string) => void }) => (
@@ -63,7 +71,9 @@ async function render() {
 
 const text = () => container.textContent ?? "";
 const button = (label: string | RegExp) =>
-  [...container.querySelectorAll("button")].find((b) => (typeof label === "string" ? b.textContent?.trim() === label : label.test(b.textContent ?? ""))) as HTMLButtonElement | undefined;
+  [...container.querySelectorAll("button")].find((b) =>
+    typeof label === "string" ? b.textContent?.trim() === label : label.test(b.textContent ?? ""),
+  ) as HTMLButtonElement | undefined;
 const input = (id: string) => container.querySelector(`#${id}`) as HTMLInputElement;
 
 function type(el: HTMLInputElement, value: string) {
@@ -99,7 +109,9 @@ describe("WorkersCompFormsPanel", () => {
 
   it("hides the HIPAA form and the action buttons from a read-only viewer", async () => {
     api.getWcForms.mockResolvedValue(
-      overview({ permissions: { guidelines: { read: true, act: false }, hipaa: { read: false, act: false } } }),
+      overview({
+        permissions: { guidelines: { read: true, act: false }, hipaa: { read: false, act: false } },
+      }),
     );
     await render();
     expect(text()).not.toContain("HIPAA Authorization");
@@ -120,7 +132,9 @@ describe("WorkersCompFormsPanel", () => {
     api.signWcForm.mockResolvedValue({ id: "form-2" });
     await render();
 
-    const fillButtons = [...container.querySelectorAll("button")].filter((b) => b.textContent?.includes("Fill out & sign"));
+    const fillButtons = [...container.querySelectorAll("button")].filter((b) =>
+      b.textContent?.includes("Fill out & sign"),
+    );
     await act(async () => fillButtons[1]!.click());
     expect(text()).toContain("HIPAA Authorization Form");
     expect(input("wc-hipaa-name").value).toBe("Jordan Lee");
@@ -156,7 +170,12 @@ describe("WorkersCompFormsPanel", () => {
   });
 
   it("warns about protected health information when emailing a HIPAA form", async () => {
-    const hipaa = { ...overview().forms[0]!, id: "form-3", formKey: "HIPAA_AUTHORIZATION", title: "HIPAA Authorization" };
+    const hipaa = {
+      ...overview().forms[0]!,
+      id: "form-3",
+      formKey: "HIPAA_AUTHORIZATION",
+      title: "HIPAA Authorization",
+    };
     api.getWcForms.mockResolvedValue(overview({ forms: [hipaa] }));
     await render();
     await act(async () => button("Email")!.click());

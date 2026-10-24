@@ -21,7 +21,8 @@ export const WC_FORM_DESCRIPTIONS: Record<WcFormKey, string> = {
     "Authorizes the employee's provider to disclose protected health information to Producers Rice Mill.",
 };
 
-export type HipaaInitialKey = "releaseRecords" | "sensitiveInformation" | "postalOrFax" | "unencryptedEmail";
+export type HipaaInitialKey =
+  "releaseRecords" | "sensitiveInformation" | "postalOrFax" | "unencryptedEmail";
 
 /** The four initialed lines, worded as on the paper form. */
 export const HIPAA_INITIAL_LINES: Array<{ key: HipaaInitialKey; text: string }> = [
@@ -86,7 +87,11 @@ export type WcFormEmailResult = {
   skipped: Array<{ personnelId: string; name: string | null; reason: string }>;
 };
 
-export type GuidelinesDraft = { employeeName: string; signedDate: string; signatureDataUrl: string };
+export type GuidelinesDraft = {
+  employeeName: string;
+  signedDate: string;
+  signatureDataUrl: string;
+};
 
 export type HipaaDraft = {
   patientName: string;
@@ -104,12 +109,20 @@ export function todayLocalIso(now = new Date()): string {
   return new Date(now.getTime() - offset).toISOString().slice(0, 10);
 }
 
-export function emptyHipaaDraft(prefill: WcFormsOverview["prefill"], today = todayLocalIso()): HipaaDraft {
+export function emptyHipaaDraft(
+  prefill: WcFormsOverview["prefill"],
+  today = todayLocalIso(),
+): HipaaDraft {
   return {
     patientName: prefill.employeeName,
     dateOfBirth: prefill.dateOfBirth,
     providerName: "",
-    initials: { releaseRecords: "", sensitiveInformation: "", postalOrFax: "", unencryptedEmail: "" },
+    initials: {
+      releaseRecords: "",
+      sensitiveInformation: "",
+      postalOrFax: "",
+      unencryptedEmail: "",
+    },
     signerName: prefill.employeeName,
     signerRelationship: "Self",
     signedDate: today,
@@ -118,7 +131,10 @@ export function emptyHipaaDraft(prefill: WcFormsOverview["prefill"], today = tod
 }
 
 /** Mirrors the server checks so people see problems before submitting. */
-export function guidelinesDraftError(draft: GuidelinesDraft, today = todayLocalIso()): string | null {
+export function guidelinesDraftError(
+  draft: GuidelinesDraft,
+  today = todayLocalIso(),
+): string | null {
   if (!draft.employeeName.trim()) return "Enter the employee's name.";
   if (!draft.signedDate) return "Enter the date signed.";
   if (draft.signedDate > today) return "The date signed cannot be in the future.";
@@ -150,7 +166,10 @@ export function parseOutsideEmails(raw: string): { emails: string[]; invalid: st
     .map((v) => v.trim().toLowerCase())
     .filter(Boolean);
   const emails = [...new Set(parts)];
-  return { emails: emails.filter((e) => EMAIL_RE.test(e)), invalid: emails.filter((e) => !EMAIL_RE.test(e)) };
+  return {
+    emails: emails.filter((e) => EMAIL_RE.test(e)),
+    invalid: emails.filter((e) => !EMAIL_RE.test(e)),
+  };
 }
 
 export function getWcForms(caseId: string) {
@@ -158,7 +177,12 @@ export function getWcForms(caseId: string) {
 }
 
 /** One key per fill dialog, so a double click or a retried request never signs the form twice. */
-export function signWcForm(caseId: string, formKey: WcFormKey, draft: GuidelinesDraft | HipaaDraft, idempotencyKey: string) {
+export function signWcForm(
+  caseId: string,
+  formKey: WcFormKey,
+  draft: GuidelinesDraft | HipaaDraft,
+  idempotencyKey: string,
+) {
   return apiSend<WcSignedForm>(
     `${WC_FORMS_API}/cases/${encodeURIComponent(caseId)}`,
     "POST",
@@ -168,24 +192,46 @@ export function signWcForm(caseId: string, formKey: WcFormKey, draft: Guidelines
 }
 
 export function voidWcForm(formId: string, reason: string) {
-  return apiSend<WcSignedForm>(`${WC_FORMS_API}/${encodeURIComponent(formId)}/void`, "POST", { reason });
+  return apiSend<WcSignedForm>(`${WC_FORMS_API}/${encodeURIComponent(formId)}/void`, "POST", {
+    reason,
+  });
 }
 
 export function getWcFormRecipients() {
   return apiGet<WcFormRecipient[]>(`${WC_FORMS_API}/recipients`);
 }
 
-export function emailWcForm(formId: string, body: { personnelIds: string[]; emails: string[]; message: string }) {
-  return apiSend<WcFormEmailResult>(`${WC_FORMS_API}/${encodeURIComponent(formId)}/email`, "POST", body);
+export function emailWcForm(
+  formId: string,
+  body: { personnelIds: string[]; emails: string[]; message: string },
+) {
+  return apiSend<WcFormEmailResult>(
+    `${WC_FORMS_API}/${encodeURIComponent(formId)}/email`,
+    "POST",
+    body,
+  );
 }
 
-export function wcFormEmailSummary(result: WcFormEmailResult): { tone: "success" | "warning" | "danger"; text: string } {
+export function wcFormEmailSummary(result: WcFormEmailResult): {
+  tone: "success" | "warning" | "danger";
+  text: string;
+} {
   const failed = result.failed.length;
   const skipped = result.skipped.length;
-  if (!result.sent) return { tone: "danger", text: "The email could not be sent. Check the addresses and try again." };
+  if (!result.sent)
+    return {
+      tone: "danger",
+      text: "The email could not be sent. Check the addresses and try again.",
+    };
   const parts = [`Sent to ${result.sent} recipient${result.sent === 1 ? "" : "s"}.`];
-  if (failed) parts.push(`${failed} could not be delivered: ${result.failed.map((f) => f.email).join(", ")}.`);
-  if (skipped) parts.push(`${skipped} skipped: ${result.skipped.map((s) => `${s.name ?? "Unknown"} (${s.reason})`).join(", ")}.`);
+  if (failed)
+    parts.push(
+      `${failed} could not be delivered: ${result.failed.map((f) => f.email).join(", ")}.`,
+    );
+  if (skipped)
+    parts.push(
+      `${skipped} skipped: ${result.skipped.map((s) => `${s.name ?? "Unknown"} (${s.reason})`).join(", ")}.`,
+    );
   return { tone: failed || skipped ? "warning" : "success", text: parts.join(" ") };
 }
 
@@ -216,7 +262,9 @@ export function fetchSignedWcFormPdf(formId: string) {
 
 /** Save the PDF to the device. */
 export function downloadPdf(bytes: Uint8Array, filename: string) {
-  const url = URL.createObjectURL(new Blob([new Uint8Array(bytes).buffer], { type: "application/pdf" }));
+  const url = URL.createObjectURL(
+    new Blob([new Uint8Array(bytes).buffer], { type: "application/pdf" }),
+  );
   const a = document.createElement("a");
   a.href = url;
   a.download = filename;

@@ -39,7 +39,10 @@ export const MAX_WC_FORM_EXTERNAL_RECIPIENTS = 10;
 const MAX_WC_FORM_PDF_BYTES = 8 * 1024 * 1024;
 
 /** These forms carry Producers Rice Mill branding and staff contacts, so only that tenant gets them. */
-export function isProducersRiceMillTenant(slug?: string | null, displayName?: string | null): boolean {
+export function isProducersRiceMillTenant(
+  slug?: string | null,
+  displayName?: string | null,
+): boolean {
   const hay = [slug, displayName].filter(Boolean).join(" ").trim().toLowerCase();
   return hay ? /producers[-_\s]?rice/.test(hay) : false;
 }
@@ -48,15 +51,29 @@ type Perms = { isPlatformAdmin?: boolean; permissions: ReadonlySet<string> };
 
 function has(principal: Perms, ...codes: string[]): boolean {
   if (principal.isPlatformAdmin) return true;
-  return codes.some(code => principal.permissions.has(code)) || principal.permissions.has("industrial.admin");
+  return (
+    codes.some((code) => principal.permissions.has(code)) ||
+    principal.permissions.has("industrial.admin")
+  );
 }
 
 export function wcFormPermissions(principal: Perms) {
   return {
-    canView: has(principal, "industrial.workers_comp.view", "industrial.workers_comp.manage", "industrial.access"),
+    canView: has(
+      principal,
+      "industrial.workers_comp.view",
+      "industrial.workers_comp.manage",
+      "industrial.access",
+    ),
     canManage: has(principal, "industrial.workers_comp.manage"),
-    canViewMedical: canViewWorkersCompMedical({ isPlatformAdmin: principal.isPlatformAdmin === true, permissions: principal.permissions }),
-    canManageMedical: canManageWorkersCompMedical({ isPlatformAdmin: principal.isPlatformAdmin === true, permissions: principal.permissions }),
+    canViewMedical: canViewWorkersCompMedical({
+      isPlatformAdmin: principal.isPlatformAdmin === true,
+      permissions: principal.permissions,
+    }),
+    canManageMedical: canManageWorkersCompMedical({
+      isPlatformAdmin: principal.isPlatformAdmin === true,
+      permissions: principal.permissions,
+    }),
   };
 }
 
@@ -79,7 +96,9 @@ function isRealDate(value: string): boolean {
 }
 
 export function parseWcFormKey(value: unknown): WcFormKey {
-  const key = String(value ?? "").trim().toUpperCase();
+  const key = String(value ?? "")
+    .trim()
+    .toUpperCase();
   if (!(WC_FORM_KEYS as readonly string[]).includes(key)) {
     throw new ForgeError("VALIDATION_FAILED", "Unknown form");
   }
@@ -90,7 +109,10 @@ export function parseSignatureDataUrl(value: unknown): string {
   const signature = typeof value === "string" ? value.trim() : "";
   if (!signature) throw new ForgeError("VALIDATION_FAILED", "A signature is required");
   if (signature.length > MAX_SIGNATURE_CHARS || !SIGNATURE_RE.test(signature)) {
-    throw new ForgeError("VALIDATION_FAILED", "The signature image is not valid. Clear it and sign again.");
+    throw new ForgeError(
+      "VALIDATION_FAILED",
+      "The signature image is not valid. Clear it and sign again.",
+    );
   }
   return signature;
 }
@@ -100,15 +122,24 @@ export function parseWcFormData(
   formKey: WcFormKey,
   body: Record<string, unknown>,
   today: string,
-): { data: InjuryGuidelinesAckData | HipaaAuthorizationData; signerName: string; signerRelationship: string | null } {
+): {
+  data: InjuryGuidelinesAckData | HipaaAuthorizationData;
+  signerName: string;
+  signerRelationship: string | null;
+} {
   const signedDate = text(body.signedDate, 10) || today;
   if (!isRealDate(signedDate)) throw new ForgeError("VALIDATION_FAILED", "Enter the date signed");
-  if (signedDate > today) throw new ForgeError("VALIDATION_FAILED", "The date signed cannot be in the future");
+  if (signedDate > today)
+    throw new ForgeError("VALIDATION_FAILED", "The date signed cannot be in the future");
 
   if (formKey === "INJURY_GUIDELINES_ACK") {
     const employeeName = text(body.employeeName, 200);
     if (!employeeName) throw new ForgeError("VALIDATION_FAILED", "Enter the employee's name");
-    return { data: { employeeName, signedDate }, signerName: employeeName, signerRelationship: "Self" };
+    return {
+      data: { employeeName, signedDate },
+      signerName: employeeName,
+      signerRelationship: "Self",
+    };
   }
 
   const patientName = text(body.patientName, 200);
@@ -116,9 +147,11 @@ export function parseWcFormData(
   const providerName = text(body.providerName, 200);
   const signerName = text(body.signerName, 200) || patientName;
   const signerRelationship = text(body.signerRelationship, 120) || "Self";
-  const rawInitials = (body.initials && typeof body.initials === "object" ? body.initials : {}) as Record<string, unknown>;
+  const rawInitials = (
+    body.initials && typeof body.initials === "object" ? body.initials : {}
+  ) as Record<string, unknown>;
   const initials = Object.fromEntries(
-    HIPAA_INITIAL_KEYS.map(key => [key, text(rawInitials[key], 6).toUpperCase()]),
+    HIPAA_INITIAL_KEYS.map((key) => [key, text(rawInitials[key], 6).toUpperCase()]),
   ) as HipaaAuthorizationData["initials"];
 
   if (!patientName) throw new ForgeError("VALIDATION_FAILED", "Enter the patient's name");
@@ -126,16 +159,29 @@ export function parseWcFormData(
     throw new ForgeError("VALIDATION_FAILED", "Enter a valid date of birth");
   }
   if (!providerName) {
-    throw new ForgeError("VALIDATION_FAILED", "Enter the provider being authorized to disclose records");
+    throw new ForgeError(
+      "VALIDATION_FAILED",
+      "Enter the provider being authorized to disclose records",
+    );
   }
-  if (!HIPAA_INITIAL_KEYS.some(key => initials[key])) {
+  if (!HIPAA_INITIAL_KEYS.some((key) => initials[key])) {
     throw new ForgeError("VALIDATION_FAILED", "Initial at least one authorization line");
   }
-  if (HIPAA_INITIAL_KEYS.some(key => initials[key] && !/^[A-Z][A-Z.\- ]{0,5}$/.test(initials[key]))) {
+  if (
+    HIPAA_INITIAL_KEYS.some((key) => initials[key] && !/^[A-Z][A-Z.\- ]{0,5}$/.test(initials[key]))
+  ) {
     throw new ForgeError("VALIDATION_FAILED", "Initials should be letters only, like JM");
   }
   return {
-    data: { patientName, dateOfBirth, providerName, initials, signerName, signerRelationship, signedDate },
+    data: {
+      patientName,
+      dateOfBirth,
+      providerName,
+      initials,
+      signerName,
+      signerRelationship,
+      signedDate,
+    },
     signerName,
     signerRelationship,
   };
@@ -146,8 +192,8 @@ export function parseWcFormRecipients(body: Record<string, unknown>) {
   const personnelIds = [
     ...new Set(
       (Array.isArray(body.personnelIds) ? body.personnelIds : [])
-        .map(v => String(v ?? "").trim())
-        .filter(v => UUID_RE.test(v)),
+        .map((v) => String(v ?? "").trim())
+        .filter((v) => UUID_RE.test(v)),
     ),
   ];
   const rawEmails = Array.isArray(body.emails)
@@ -155,26 +201,48 @@ export function parseWcFormRecipients(body: Record<string, unknown>) {
     : typeof body.emails === "string"
       ? body.emails.split(/[\s,;]+/)
       : [];
-  const emails = [...new Set(rawEmails.map(v => String(v ?? "").trim().toLowerCase()).filter(Boolean))];
-  const invalid = emails.filter(email => email.length > 320 || !EMAIL_RE.test(email));
+  const emails = [
+    ...new Set(
+      rawEmails
+        .map((v) =>
+          String(v ?? "")
+            .trim()
+            .toLowerCase(),
+        )
+        .filter(Boolean),
+    ),
+  ];
+  const invalid = emails.filter((email) => email.length > 320 || !EMAIL_RE.test(email));
   if (invalid.length) {
-    throw new ForgeError("VALIDATION_FAILED", `Check these email addresses: ${invalid.slice(0, 3).join(", ")}`);
+    throw new ForgeError(
+      "VALIDATION_FAILED",
+      `Check these email addresses: ${invalid.slice(0, 3).join(", ")}`,
+    );
   }
   if (!personnelIds.length && !emails.length) {
     throw new ForgeError("VALIDATION_FAILED", "Choose at least one recipient");
   }
   if (personnelIds.length > MAX_WC_FORM_PERSONNEL_RECIPIENTS) {
-    throw new ForgeError("VALIDATION_FAILED", `Choose no more than ${MAX_WC_FORM_PERSONNEL_RECIPIENTS} people`);
+    throw new ForgeError(
+      "VALIDATION_FAILED",
+      `Choose no more than ${MAX_WC_FORM_PERSONNEL_RECIPIENTS} people`,
+    );
   }
   if (emails.length > MAX_WC_FORM_EXTERNAL_RECIPIENTS) {
-    throw new ForgeError("VALIDATION_FAILED", `Enter no more than ${MAX_WC_FORM_EXTERNAL_RECIPIENTS} outside addresses`);
+    throw new ForgeError(
+      "VALIDATION_FAILED",
+      `Enter no more than ${MAX_WC_FORM_EXTERNAL_RECIPIENTS} outside addresses`,
+    );
   }
   const message = typeof body.message === "string" ? body.message.trim().slice(0, 2000) : "";
   return { personnelIds, emails, message };
 }
 
 function escapeHtml(value: string): string {
-  return value.replace(/[&<>"']/g, ch => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[ch]!);
+  return value.replace(
+    /[&<>"']/g,
+    (ch) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[ch]!,
+  );
 }
 
 function todayUtc(): string {
@@ -234,21 +302,39 @@ export class WorkersCompFormsService {
         dateOfBirth: industrialPersonnel.dateOfBirth,
       })
       .from(industrialWorkersCompCases)
-      .leftJoin(industrialPersonnel, eq(industrialPersonnel.id, industrialWorkersCompCases.personnelId))
-      .where(and(eq(industrialWorkersCompCases.id, caseId), eq(industrialWorkersCompCases.tenantId, tenantId)))
+      .leftJoin(
+        industrialPersonnel,
+        eq(industrialPersonnel.id, industrialWorkersCompCases.personnelId),
+      )
+      .where(
+        and(
+          eq(industrialWorkersCompCases.id, caseId),
+          eq(industrialWorkersCompCases.tenantId, tenantId),
+        ),
+      )
       .limit(1);
     if (!row) throw new ForgeError("NOT_FOUND", "Workers compensation case not found");
     return row;
   }
 
   /** Load one form the principal may read. HIPAA rows are only visible with the medical flag. */
-  private async loadForm(tx: DatabaseTransaction, principal: ForgePrincipal, tenantId: string, formId: string) {
+  private async loadForm(
+    tx: DatabaseTransaction,
+    principal: ForgePrincipal,
+    tenantId: string,
+    formId: string,
+  ) {
     if (!UUID_RE.test(formId)) throw new ForgeError("VALIDATION_FAILED", "Invalid form id");
     if (wcFormPermissions(principal).canViewMedical) await this.enableMedical(tx);
     const [row] = await tx
       .select()
       .from(industrialWorkersCompForms)
-      .where(and(eq(industrialWorkersCompForms.id, formId), eq(industrialWorkersCompForms.tenantId, tenantId)))
+      .where(
+        and(
+          eq(industrialWorkersCompForms.id, formId),
+          eq(industrialWorkersCompForms.tenantId, tenantId),
+        ),
+      )
       .limit(1);
     if (!row) throw new ForgeError("NOT_FOUND", "Form not found");
     return row;
@@ -275,7 +361,13 @@ export class WorkersCompFormsService {
     };
   }
 
-  private auditEvent(tx: DatabaseTransaction, principal: ForgePrincipal, action: string, row: Pick<FormRow, "id" | "caseId" | "formKey">, metadata: Record<string, unknown> = {}) {
+  private auditEvent(
+    tx: DatabaseTransaction,
+    principal: ForgePrincipal,
+    action: string,
+    row: Pick<FormRow, "id" | "caseId" | "formKey">,
+    metadata: Record<string, unknown> = {},
+  ) {
     return this.audit.writeInTransaction(tx, {
       tenantId: principal.tenantId,
       actorUserId: principal.userId,
@@ -295,7 +387,7 @@ export class WorkersCompFormsService {
   async list(principal: ForgePrincipal, caseId: string) {
     const tenantId = this.tenant(principal);
     const perms = wcFormPermissions(principal);
-    return withTenantTransaction(this.db, tenantId, async tx => {
+    return withTenantTransaction(this.db, tenantId, async (tx) => {
       const available = await this.formsAvailable(tx, tenantId);
       const wcCase = await this.loadCase(tx, tenantId, caseId);
       const base = {
@@ -306,7 +398,10 @@ export class WorkersCompFormsService {
         },
         prefill: {
           employeeName:
-            [wcCase.personnelFirstName, wcCase.personnelLastName].filter(Boolean).join(" ").trim() ||
+            [wcCase.personnelFirstName, wcCase.personnelLastName]
+              .filter(Boolean)
+              .join(" ")
+              .trim() ||
             wcCase.personnelName ||
             "",
           // Date of birth is medical-adjacent; only send it to people who may fill the HIPAA form.
@@ -319,11 +414,16 @@ export class WorkersCompFormsService {
       const rows = await tx
         .select()
         .from(industrialWorkersCompForms)
-        .where(and(eq(industrialWorkersCompForms.tenantId, tenantId), eq(industrialWorkersCompForms.caseId, caseId)))
+        .where(
+          and(
+            eq(industrialWorkersCompForms.tenantId, tenantId),
+            eq(industrialWorkersCompForms.caseId, caseId),
+          ),
+        )
         .orderBy(asc(industrialWorkersCompForms.signedAt));
       const forms = rows
-        .filter(row => wcFormAccess(principal, row.formKey as WcFormKey).read)
-        .map(row => this.mapForm(row, true));
+        .filter((row) => wcFormAccess(principal, row.formKey as WcFormKey).read)
+        .map((row) => this.mapForm(row, true));
       return { ...base, forms };
     });
   }
@@ -332,14 +432,17 @@ export class WorkersCompFormsService {
     const tenantId = this.tenant(principal);
     const formKey = parseWcFormKey(body.formKey);
     if (!wcFormAccess(principal, formKey).act) {
-      throw new ForgeError("FORBIDDEN", WC_FORM_META[formKey].medical
-        ? "You need the workers' comp medical permission to complete the HIPAA form"
-        : "You need permission to manage workers' comp cases to complete this form");
+      throw new ForgeError(
+        "FORBIDDEN",
+        WC_FORM_META[formKey].medical
+          ? "You need the workers' comp medical permission to complete the HIPAA form"
+          : "You need permission to manage workers' comp cases to complete this form",
+      );
     }
     const signatureDataUrl = parseSignatureDataUrl(body.signatureDataUrl);
     const parsed = parseWcFormData(formKey, body, todayUtc());
 
-    return withTenantTransaction(this.db, tenantId, async tx => {
+    return withTenantTransaction(this.db, tenantId, async (tx) => {
       await this.assertAvailable(tx, tenantId);
       const wcCase = await this.loadCase(tx, tenantId, caseId);
       if (wcCase.archivedAt) throw new ForgeError("VALIDATION_FAILED", "This case is archived");
@@ -368,16 +471,27 @@ export class WorkersCompFormsService {
     const tenantId = this.tenant(principal);
     const reason = text(body.reason, 1000);
     if (!reason) throw new ForgeError("VALIDATION_FAILED", "Enter a reason for voiding this form");
-    return withTenantTransaction(this.db, tenantId, async tx => {
+    return withTenantTransaction(this.db, tenantId, async (tx) => {
       const row = await this.loadForm(tx, principal, tenantId, formId);
       if (!wcFormAccess(principal, row.formKey as WcFormKey).act) {
         throw new ForgeError("FORBIDDEN", "You do not have permission to void this form");
       }
-      if (row.status === "VOIDED") throw new ForgeError("VALIDATION_FAILED", "This form is already voided");
+      if (row.status === "VOIDED")
+        throw new ForgeError("VALIDATION_FAILED", "This form is already voided");
       const [updated] = await tx
         .update(industrialWorkersCompForms)
-        .set({ status: "VOIDED", voidedAt: new Date(), voidedByUserId: principal.userId ?? null, voidReason: reason })
-        .where(and(eq(industrialWorkersCompForms.id, row.id), eq(industrialWorkersCompForms.tenantId, tenantId)))
+        .set({
+          status: "VOIDED",
+          voidedAt: new Date(),
+          voidedByUserId: principal.userId ?? null,
+          voidReason: reason,
+        })
+        .where(
+          and(
+            eq(industrialWorkersCompForms.id, row.id),
+            eq(industrialWorkersCompForms.tenantId, tenantId),
+          ),
+        )
         .returning();
       await this.auditEvent(tx, principal, "workers_comp.form.voided", row, { reason });
       return this.mapForm(updated!, true);
@@ -391,24 +505,36 @@ export class WorkersCompFormsService {
     if (!wcFormAccess(principal, formKey).read) {
       throw new ForgeError("FORBIDDEN", "You do not have permission to open this form");
     }
-    await withTenantTransaction(this.db, tenantId, tx => this.assertAvailable(tx, tenantId));
+    await withTenantTransaction(this.db, tenantId, (tx) => this.assertAvailable(tx, tenantId));
     return { filename: wcFormPdfFilename(formKey, null, false), pdf: buildBlankWcFormPdf(formKey) };
   }
 
   private async renderFilled(row: FormRow, caseNumber: string | null) {
     const formKey = row.formKey as WcFormKey;
-    const common = { formId: row.id, signedAt: row.signedAt, signatureDataUrl: row.signatureDataUrl };
+    const common = {
+      formId: row.id,
+      signedAt: row.signedAt,
+      signatureDataUrl: row.signatureDataUrl,
+    };
     const pdf =
       formKey === "HIPAA_AUTHORIZATION"
-        ? await buildFilledWcFormPdf({ ...common, formKey, data: row.formData as HipaaAuthorizationData })
-        : await buildFilledWcFormPdf({ ...common, formKey, data: row.formData as InjuryGuidelinesAckData });
+        ? await buildFilledWcFormPdf({
+            ...common,
+            formKey,
+            data: row.formData as HipaaAuthorizationData,
+          })
+        : await buildFilledWcFormPdf({
+            ...common,
+            formKey,
+            data: row.formData as InjuryGuidelinesAckData,
+          });
     return { filename: wcFormPdfFilename(formKey, caseNumber, true), pdf };
   }
 
   /** The signed form drawn onto the original page. */
   async filledPdf(principal: ForgePrincipal, formId: string) {
     const tenantId = this.tenant(principal);
-    return withTenantTransaction(this.db, tenantId, async tx => {
+    return withTenantTransaction(this.db, tenantId, async (tx) => {
       await this.assertAvailable(tx, tenantId);
       const row = await this.loadForm(tx, principal, tenantId, formId);
       if (!wcFormAccess(principal, row.formKey as WcFormKey).read) {
@@ -428,7 +554,7 @@ export class WorkersCompFormsService {
     if (!perms.canManage && !perms.canManageMedical) {
       throw new ForgeError("FORBIDDEN", "You do not have permission to email workers' comp forms");
     }
-    return withTenantTransaction(this.db, tenantId, async tx => {
+    return withTenantTransaction(this.db, tenantId, async (tx) => {
       await this.assertAvailable(tx, tenantId);
       const rows = await tx
         .select({
@@ -452,12 +578,23 @@ export class WorkersCompFormsService {
         )
         .limit(5000);
       return rows
-        .map(row => {
-          const email = [row.companyEmail, row.email].map(v => v?.trim() ?? "").find(v => EMAIL_RE.test(v));
+        .map((row) => {
+          const email = [row.companyEmail, row.email]
+            .map((v) => v?.trim() ?? "")
+            .find((v) => EMAIL_RE.test(v));
           if (!email) return null;
           const first = row.preferredName?.trim() || row.firstName?.trim() || "";
-          const name = [first, row.lastName?.trim() ?? ""].filter(Boolean).join(" ") || row.displayName?.trim() || "Unnamed";
-          return { id: row.id, name, email, jobTitle: row.jobTitle?.trim() || null, departmentName: row.departmentName?.trim() || null };
+          const name =
+            [first, row.lastName?.trim() ?? ""].filter(Boolean).join(" ") ||
+            row.displayName?.trim() ||
+            "Unnamed";
+          return {
+            id: row.id,
+            name,
+            email,
+            jobTitle: row.jobTitle?.trim() || null,
+            departmentName: row.departmentName?.trim() || null,
+          };
         })
         .filter((row): row is NonNullable<typeof row> => row !== null)
         .sort((a, b) => a.name.localeCompare(b.name));
@@ -468,13 +605,14 @@ export class WorkersCompFormsService {
     const tenantId = this.tenant(principal);
     const { personnelIds, emails, message } = parseWcFormRecipients(body);
 
-    const loaded = await withTenantTransaction(this.db, tenantId, async tx => {
+    const loaded = await withTenantTransaction(this.db, tenantId, async (tx) => {
       await this.assertAvailable(tx, tenantId);
       const row = await this.loadForm(tx, principal, tenantId, formId);
       if (!wcFormAccess(principal, row.formKey as WcFormKey).act) {
         throw new ForgeError("FORBIDDEN", "You do not have permission to email this form");
       }
-      if (row.status === "VOIDED") throw new ForgeError("VALIDATION_FAILED", "Voided forms cannot be emailed");
+      if (row.status === "VOIDED")
+        throw new ForgeError("VALIDATION_FAILED", "Voided forms cannot be emailed");
       const wcCase = await this.loadCase(tx, tenantId, row.caseId);
       const people = personnelIds.length
         ? await tx
@@ -496,18 +634,25 @@ export class WorkersCompFormsService {
       return { row, caseNumber: wcCase.caseNumber, people };
     });
 
-    const recipients: Array<{ email: string; name: string | null; personnelId: string | null }> = [];
+    const recipients: Array<{ email: string; name: string | null; personnelId: string | null }> =
+      [];
     const skipped: Array<{ personnelId: string; name: string | null; reason: string }> = [];
     const seen = new Set<string>();
     for (const id of personnelIds) {
-      const person = loaded.people.find(p => p.id === id);
+      const person = loaded.people.find((p) => p.id === id);
       if (!person) {
         skipped.push({ personnelId: id, name: null, reason: "Person not found" });
         continue;
       }
-      const email = [person.companyEmail, person.email].map(v => v?.trim() ?? "").find(v => EMAIL_RE.test(v));
+      const email = [person.companyEmail, person.email]
+        .map((v) => v?.trim() ?? "")
+        .find((v) => EMAIL_RE.test(v));
       if (!email) {
-        skipped.push({ personnelId: id, name: person.displayName, reason: "No email address on file" });
+        skipped.push({
+          personnelId: id,
+          name: person.displayName,
+          reason: "No email address on file",
+        });
         continue;
       }
       if (seen.has(email.toLowerCase())) continue;
@@ -519,7 +664,11 @@ export class WorkersCompFormsService {
       seen.add(email);
       recipients.push({ email, name: null, personnelId: null });
     }
-    if (!recipients.length) throw new ForgeError("VALIDATION_FAILED", "None of the selected people have an email address");
+    if (!recipients.length)
+      throw new ForgeError(
+        "VALIDATION_FAILED",
+        "None of the selected people have an email address",
+      );
 
     const formKey = loaded.row.formKey as WcFormKey;
     const { filename, pdf } = await this.renderFilled(loaded.row, loaded.caseNumber);
@@ -527,7 +676,9 @@ export class WorkersCompFormsService {
       throw new ForgeError("VALIDATION_FAILED", "The PDF is too large to email. Print it instead.");
     }
     const title = WC_FORM_META[formKey].title;
-    const caseLabel = loaded.caseNumber ? `case ${loaded.caseNumber}` : "a workers' compensation case";
+    const caseLabel = loaded.caseNumber
+      ? `case ${loaded.caseNumber}`
+      : "a workers' compensation case";
     const subject = `${title} (signed) - ${loaded.row.signerName}`;
     const confidential = WC_FORM_META[formKey].medical
       ? "This form contains protected health information. Do not forward it to anyone who is not authorized to receive it."
@@ -536,8 +687,12 @@ export class WorkersCompFormsService {
     const htmlBody = [
       `<p>The signed <strong>${escapeHtml(title)}</strong> for ${escapeHtml(loaded.row.signerName)} (${escapeHtml(caseLabel)}) is attached as a PDF.</p>`,
       `<p>Signed ${escapeHtml(signedOn)}.</p>`,
-      message ? `<p style="white-space:pre-wrap;border-left:3px solid #d1d5db;padding-left:10px">${escapeHtml(message)}</p>` : "",
-      confidential ? `<p style="color:#b91c1c"><strong>Confidential:</strong> ${escapeHtml(confidential)}</p>` : "",
+      message
+        ? `<p style="white-space:pre-wrap;border-left:3px solid #d1d5db;padding-left:10px">${escapeHtml(message)}</p>`
+        : "",
+      confidential
+        ? `<p style="color:#b91c1c"><strong>Confidential:</strong> ${escapeHtml(confidential)}</p>`
+        : "",
       `<p style="color:#6b7280;font-size:12px">Attachment: ${escapeHtml(filename)}</p>`,
     ].join("");
     const textBody = [
@@ -549,9 +704,18 @@ export class WorkersCompFormsService {
     ]
       .filter(Boolean)
       .join("\n\n");
-    const attachment = { filename, contentType: "application/pdf", contentBase64: pdf.toString("base64") };
+    const attachment = {
+      filename,
+      contentType: "application/pdf",
+      contentBase64: pdf.toString("base64"),
+    };
 
-    const results: Array<{ email: string; name: string | null; accepted: boolean; detail?: string }> = [];
+    const results: Array<{
+      email: string;
+      name: string | null;
+      accepted: boolean;
+      detail?: string;
+    }> = [];
     for (const recipient of recipients) {
       try {
         const result = await this.notifications.sendTemplatedEmail({
@@ -568,31 +732,43 @@ export class WorkersCompFormsService {
           ...(result.accepted || !result.detail ? {} : { detail: result.detail }),
         });
       } catch (err) {
-        results.push({ email: recipient.email, name: recipient.name, accepted: false, detail: err instanceof Error ? err.message : String(err) });
+        results.push({
+          email: recipient.email,
+          name: recipient.name,
+          accepted: false,
+          detail: err instanceof Error ? err.message : String(err),
+        });
       }
     }
 
     const entry = {
       at: new Date().toISOString(),
       byUserId: principal.userId ?? null,
-      to: results.map(r => ({ email: r.email, name: r.name, accepted: r.accepted })),
+      to: results.map((r) => ({ email: r.email, name: r.name, accepted: r.accepted })),
       message: message || null,
     };
-    await withTenantTransaction(this.db, tenantId, async tx => {
+    await withTenantTransaction(this.db, tenantId, async (tx) => {
       if (wcFormPermissions(principal).canViewMedical) await this.enableMedical(tx);
       await tx
         .update(industrialWorkersCompForms)
-        .set({ emailLog: sql`${industrialWorkersCompForms.emailLog} || ${JSON.stringify([entry])}::jsonb` })
-        .where(and(eq(industrialWorkersCompForms.id, loaded.row.id), eq(industrialWorkersCompForms.tenantId, tenantId)));
+        .set({
+          emailLog: sql`${industrialWorkersCompForms.emailLog} || ${JSON.stringify([entry])}::jsonb`,
+        })
+        .where(
+          and(
+            eq(industrialWorkersCompForms.id, loaded.row.id),
+            eq(industrialWorkersCompForms.tenantId, tenantId),
+          ),
+        );
       await this.auditEvent(tx, principal, "workers_comp.form.emailed", loaded.row, {
-        recipients: results.map(r => r.email),
-        accepted: results.filter(r => r.accepted).length,
+        recipients: results.map((r) => r.email),
+        accepted: results.filter((r) => r.accepted).length,
       });
     });
 
     return {
-      sent: results.filter(r => r.accepted).length,
-      failed: results.filter(r => !r.accepted),
+      sent: results.filter((r) => r.accepted).length,
+      failed: results.filter((r) => !r.accepted),
       skipped,
       results,
     };

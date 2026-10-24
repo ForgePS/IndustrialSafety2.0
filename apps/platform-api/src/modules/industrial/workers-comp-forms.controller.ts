@@ -24,7 +24,12 @@ const ACT = [
   "industrial.admin",
 ] as const;
 
-function sendPdf(res: Response, filename: string, pdf: Buffer, disposition: "inline" | "attachment") {
+function sendPdf(
+  res: Response,
+  filename: string,
+  pdf: Buffer,
+  disposition: "inline" | "attachment",
+) {
   const safeName = filename.replace(/[^\w.-]+/g, "_").slice(0, 180) || "form.pdf";
   res.setHeader("Content-Type", "application/pdf");
   res.setHeader("Content-Disposition", `${disposition}; filename="${safeName}"`);
@@ -44,7 +49,11 @@ export class WorkersCompFormsController {
 
   @Get("cases/:caseId")
   @RequireAnyPermission([...VIEW], { requiresEntitlement: ENTITLEMENT })
-  async list(@Principal() principal: ForgePrincipal, @Param("caseId") caseId: string, @Req() req: RequestWithIds) {
+  async list(
+    @Principal() principal: ForgePrincipal,
+    @Param("caseId") caseId: string,
+    @Req() req: RequestWithIds,
+  ) {
     return ok(await this.forms.list(principal, caseId), getRequestIds(req));
   }
 
@@ -68,14 +77,22 @@ export class WorkersCompFormsController {
 
   @Get("templates/:formKey/blank")
   @RequireAnyPermission([...VIEW], { requiresEntitlement: ENTITLEMENT })
-  async blank(@Principal() principal: ForgePrincipal, @Param("formKey") formKey: string, @Res() res: Response) {
+  async blank(
+    @Principal() principal: ForgePrincipal,
+    @Param("formKey") formKey: string,
+    @Res() res: Response,
+  ) {
     const { filename, pdf } = await this.forms.blankPdf(principal, formKey);
     sendPdf(res, filename, pdf, "inline");
   }
 
   @Get(":formId/pdf")
   @RequireAnyPermission([...VIEW], { requiresEntitlement: ENTITLEMENT })
-  async pdf(@Principal() principal: ForgePrincipal, @Param("formId") formId: string, @Res() res: Response) {
+  async pdf(
+    @Principal() principal: ForgePrincipal,
+    @Param("formId") formId: string,
+    @Res() res: Response,
+  ) {
     const { filename, pdf } = await this.forms.filledPdf(principal, formId);
     sendPdf(res, filename, pdf, "inline");
   }

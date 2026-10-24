@@ -47,7 +47,11 @@ describe("workers' comp forms (integration)", () => {
   const medical = (tx: DatabaseTransaction) =>
     tx.execute(sql`select set_config('app.industrial_wc_medical_access', 'on', true)`);
 
-  const insertForm = (tx: DatabaseTransaction, formKey: "INJURY_GUIDELINES_ACK" | "HIPAA_AUTHORIZATION", tenantId = tenantA) => {
+  const insertForm = (
+    tx: DatabaseTransaction,
+    formKey: "INJURY_GUIDELINES_ACK" | "HIPAA_AUTHORIZATION",
+    tenantId = tenantA,
+  ) => {
     const id = createId();
     createdForms.push(id);
     return tx
@@ -88,7 +92,9 @@ describe("workers' comp forms (integration)", () => {
       });
     }
     await withTenantTransaction(db, tenantA, async (tx) => {
-      await tx.insert(industrialWorkersCompCases).values({ id: caseA, tenantId: tenantA, caseNumber: "WC-TEST-1" });
+      await tx
+        .insert(industrialWorkersCompCases)
+        .values({ id: caseA, tenantId: tenantA, caseNumber: "WC-TEST-1" });
     });
   }, 60_000);
 
@@ -96,9 +102,13 @@ describe("workers' comp forms (integration)", () => {
     try {
       const admin = createDatabase(adminUrl);
       if (createdForms.length) {
-        await admin.delete(industrialWorkersCompForms).where(inArray(industrialWorkersCompForms.id, createdForms));
+        await admin
+          .delete(industrialWorkersCompForms)
+          .where(inArray(industrialWorkersCompForms.id, createdForms));
       }
-      await admin.delete(industrialWorkersCompCases).where(eq(industrialWorkersCompCases.id, caseA));
+      await admin
+        .delete(industrialWorkersCompCases)
+        .where(eq(industrialWorkersCompCases.id, caseA));
       await admin.delete(tenants).where(inArray(tenants.id, [tenantA, tenantB]));
     } catch {
       /* ignore */
@@ -106,19 +116,29 @@ describe("workers' comp forms (integration)", () => {
   });
 
   it("keeps guidelines acknowledgments inside their tenant", async () => {
-    const [row] = await withTenantTransaction(db, tenantA, (tx) => insertForm(tx, "INJURY_GUIDELINES_ACK"));
+    const [row] = await withTenantTransaction(db, tenantA, (tx) =>
+      insertForm(tx, "INJURY_GUIDELINES_ACK"),
+    );
     const own = await withTenantTransaction(db, tenantA, (tx) =>
-      tx.select().from(industrialWorkersCompForms).where(eq(industrialWorkersCompForms.id, row!.id)),
+      tx
+        .select()
+        .from(industrialWorkersCompForms)
+        .where(eq(industrialWorkersCompForms.id, row!.id)),
     );
     expect(own).toHaveLength(1);
     const other = await withTenantTransaction(db, tenantB, (tx) =>
-      tx.select().from(industrialWorkersCompForms).where(eq(industrialWorkersCompForms.id, row!.id)),
+      tx
+        .select()
+        .from(industrialWorkersCompForms)
+        .where(eq(industrialWorkersCompForms.id, row!.id)),
     );
     expect(other).toHaveLength(0);
   });
 
   it("refuses HIPAA inserts without the medical-access flag", async () => {
-    await expect(withTenantTransaction(db, tenantA, (tx) => insertForm(tx, "HIPAA_AUTHORIZATION"))).rejects.toThrow();
+    await expect(
+      withTenantTransaction(db, tenantA, (tx) => insertForm(tx, "HIPAA_AUTHORIZATION")),
+    ).rejects.toThrow();
   });
 
   it("hides HIPAA rows unless the medical-access flag is on", async () => {
@@ -127,42 +147,64 @@ describe("workers' comp forms (integration)", () => {
       return insertForm(tx, "HIPAA_AUTHORIZATION");
     });
     const withoutFlag = await withTenantTransaction(db, tenantA, (tx) =>
-      tx.select().from(industrialWorkersCompForms).where(eq(industrialWorkersCompForms.id, row!.id)),
+      tx
+        .select()
+        .from(industrialWorkersCompForms)
+        .where(eq(industrialWorkersCompForms.id, row!.id)),
     );
     expect(withoutFlag).toHaveLength(0);
     const withFlag = await withTenantTransaction(db, tenantA, async (tx) => {
       await medical(tx);
-      return tx.select().from(industrialWorkersCompForms).where(eq(industrialWorkersCompForms.id, row!.id));
+      return tx
+        .select()
+        .from(industrialWorkersCompForms)
+        .where(eq(industrialWorkersCompForms.id, row!.id));
     });
     expect(withFlag).toHaveLength(1);
     const otherTenant = await withTenantTransaction(db, tenantB, async (tx) => {
       await medical(tx);
-      return tx.select().from(industrialWorkersCompForms).where(eq(industrialWorkersCompForms.id, row!.id));
+      return tx
+        .select()
+        .from(industrialWorkersCompForms)
+        .where(eq(industrialWorkersCompForms.id, row!.id));
     });
     expect(otherTenant).toHaveLength(0);
   });
 
   it("never lets signed content change", async () => {
-    const [row] = await withTenantTransaction(db, tenantA, (tx) => insertForm(tx, "INJURY_GUIDELINES_ACK"));
+    const [row] = await withTenantTransaction(db, tenantA, (tx) =>
+      insertForm(tx, "INJURY_GUIDELINES_ACK"),
+    );
     await expectDbError(
       withTenantTransaction(db, tenantA, (tx) =>
-        tx.update(industrialWorkersCompForms).set({ formData: { employeeName: "Changed" } }).where(eq(industrialWorkersCompForms.id, row!.id)),
+        tx
+          .update(industrialWorkersCompForms)
+          .set({ formData: { employeeName: "Changed" } })
+          .where(eq(industrialWorkersCompForms.id, row!.id)),
       ),
       /cannot be changed/,
     );
     await expectDbError(
       withTenantTransaction(db, tenantA, (tx) =>
-        tx.update(industrialWorkersCompForms).set({ signatureDataUrl: "data:image/png;base64,AAAA" }).where(eq(industrialWorkersCompForms.id, row!.id)),
+        tx
+          .update(industrialWorkersCompForms)
+          .set({ signatureDataUrl: "data:image/png;base64,AAAA" })
+          .where(eq(industrialWorkersCompForms.id, row!.id)),
       ),
       /cannot be changed/,
     );
   });
 
   it("requires a reason to void and keeps voided forms final", async () => {
-    const [row] = await withTenantTransaction(db, tenantA, (tx) => insertForm(tx, "INJURY_GUIDELINES_ACK"));
+    const [row] = await withTenantTransaction(db, tenantA, (tx) =>
+      insertForm(tx, "INJURY_GUIDELINES_ACK"),
+    );
     await expectDbError(
       withTenantTransaction(db, tenantA, (tx) =>
-        tx.update(industrialWorkersCompForms).set({ status: "VOIDED", voidedAt: new Date() }).where(eq(industrialWorkersCompForms.id, row!.id)),
+        tx
+          .update(industrialWorkersCompForms)
+          .set({ status: "VOIDED", voidedAt: new Date() })
+          .where(eq(industrialWorkersCompForms.id, row!.id)),
       ),
       /industrial_wc_forms_void_reason/,
     );
@@ -174,17 +216,25 @@ describe("workers' comp forms (integration)", () => {
     );
     await expectDbError(
       withTenantTransaction(db, tenantA, (tx) =>
-        tx.update(industrialWorkersCompForms).set({ status: "SIGNED" }).where(eq(industrialWorkersCompForms.id, row!.id)),
+        tx
+          .update(industrialWorkersCompForms)
+          .set({ status: "SIGNED" })
+          .where(eq(industrialWorkersCompForms.id, row!.id)),
       ),
       /cannot be changed/,
     );
   });
 
   it("only appends to the email history", async () => {
-    const [row] = await withTenantTransaction(db, tenantA, (tx) => insertForm(tx, "INJURY_GUIDELINES_ACK"));
+    const [row] = await withTenantTransaction(db, tenantA, (tx) =>
+      insertForm(tx, "INJURY_GUIDELINES_ACK"),
+    );
     const first = { to: ["a@example.test"], at: "2026-10-23T00:00:00Z" };
     await withTenantTransaction(db, tenantA, (tx) =>
-      tx.update(industrialWorkersCompForms).set({ emailLog: [first] }).where(eq(industrialWorkersCompForms.id, row!.id)),
+      tx
+        .update(industrialWorkersCompForms)
+        .set({ emailLog: [first] })
+        .where(eq(industrialWorkersCompForms.id, row!.id)),
     );
     await withTenantTransaction(db, tenantA, (tx) =>
       tx
@@ -196,7 +246,12 @@ describe("workers' comp forms (integration)", () => {
       withTenantTransaction(db, tenantA, (tx) =>
         tx
           .update(industrialWorkersCompForms)
-          .set({ emailLog: [{ to: ["rewritten@example.test"], at: "2026-10-23T00:00:00Z" }, { to: ["b@example.test"], at: "2026-10-23T01:00:00Z" }] })
+          .set({
+            emailLog: [
+              { to: ["rewritten@example.test"], at: "2026-10-23T00:00:00Z" },
+              { to: ["b@example.test"], at: "2026-10-23T01:00:00Z" },
+            ],
+          })
           .where(eq(industrialWorkersCompForms.id, row!.id)),
       ),
       /append-only/,
@@ -204,9 +259,13 @@ describe("workers' comp forms (integration)", () => {
   });
 
   it("does not allow forge_app to delete forms", async () => {
-    const [row] = await withTenantTransaction(db, tenantA, (tx) => insertForm(tx, "INJURY_GUIDELINES_ACK"));
+    const [row] = await withTenantTransaction(db, tenantA, (tx) =>
+      insertForm(tx, "INJURY_GUIDELINES_ACK"),
+    );
     await expectDbError(
-      withTenantTransaction(db, tenantA, (tx) => tx.delete(industrialWorkersCompForms).where(eq(industrialWorkersCompForms.id, row!.id))),
+      withTenantTransaction(db, tenantA, (tx) =>
+        tx.delete(industrialWorkersCompForms).where(eq(industrialWorkersCompForms.id, row!.id)),
+      ),
       /permission denied/,
     );
   });
