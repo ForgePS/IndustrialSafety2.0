@@ -227,7 +227,7 @@ export function parseOccurredDateTime(raw: unknown): {
     const yyyy = us[3]!;
     const date = `${yyyy}-${mm}-${dd}`;
     if (!us[4]) return { date, time: "", amPm: null };
-    let hour12 = Number(us[4]);
+    const hour12 = Number(us[4]);
     const minute = Number(us[5]);
     const amPm = normalizeOshaAmPm(us[6]);
     if (!Number.isFinite(hour12) || !Number.isFinite(minute) || !amPm) {
@@ -258,7 +258,7 @@ function parseShiftStartClock(raw: unknown): { time: string; amPm: OshaAmPm | nu
 
   const withAmPm = /^(\d{1,2}):(\d{2})(?::\d{2})?\s*(AM|PM)$/i.exec(text);
   if (withAmPm) {
-    let hour12 = Number(withAmPm[1]);
+    const hour12 = Number(withAmPm[1]);
     const minute = Number(withAmPm[2]);
     const amPm = normalizeOshaAmPm(withAmPm[3]);
     if (!Number.isFinite(hour12) || !Number.isFinite(minute) || !amPm) {

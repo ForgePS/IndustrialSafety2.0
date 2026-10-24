@@ -65,23 +65,6 @@ const TABS = [
   { id: "contacts" as const, label: "Dept contacts" },
 ];
 
-function fileToDataUrl(file: File): Promise<InspectionPhoto> {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onerror = () => reject(new Error("Failed to read photo"));
-    reader.onload = () => {
-      const dataUrl = String(reader.result ?? "");
-      resolve({
-        id: `p-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
-        fileName: file.name || "photo.jpg",
-        contentType: file.type || "image/jpeg",
-        dataUrl,
-      });
-    };
-    reader.readAsDataURL(file);
-  });
-}
-
 async function compressImageFile(file: File): Promise<InspectionPhoto> {
   const dataUrl = await compressImageToDataUrl(file, DEFAULT_MAX_DATA_URL_LENGTH);
   return {
@@ -932,6 +915,7 @@ export function InspectionsWorkspace({ moduleName }: { moduleName: string }) {
                                       if (ev.key === "Escape") cancelRenameTemplate();
                                     }}
                                     disabled={renamingTemplateId === t.id}
+                                    // eslint-disable-next-line jsx-a11y/no-autofocus -- inline rename field opened by the user's click; focus must move into the field
                                     autoFocus
                                     aria-label="Template name"
                                   />
@@ -1473,7 +1457,7 @@ export function InspectionsWorkspace({ moduleName }: { moduleName: string }) {
       </ModuleWorkspaceTabs>
 
       {notesModalItem && canManage ? (
-        // eslint-disable-next-line jsx-a11y/no-noninteractive-element-interactions, jsx-a11y/click-events-have-key-events
+        // eslint-disable-next-line jsx-a11y/no-noninteractive-element-interactions
         <div
           className="modal fade show d-block"
           tabIndex={-1}

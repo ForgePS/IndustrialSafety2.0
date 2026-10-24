@@ -133,7 +133,7 @@ function LicenseSidePreview({
             </div>
           </div>
         ) : (
-          // eslint-disable-next-line @next/next/no-img-element
+          // Plain <img> on purpose: static export, so next/image optimization is unavailable.
           <img
             src={preview.url}
             alt={`DRIVER'S license ${label.toLowerCase()} for ${personName}`}

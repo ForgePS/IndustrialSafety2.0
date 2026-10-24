@@ -140,16 +140,22 @@ export function WalkthroughExportDialog({ contentVersion, onClose, latestExport 
                 </div>
               ) : null}
               <div className="col-12">
-                <label className="form-label">Video title</label>
+                <label className="form-label" htmlFor="ew-export-video-title">
+                  Video title
+                </label>
                 <input
+                  id="ew-export-video-title"
                   className="form-control"
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}
                 />
               </div>
               <div className="col-md-6">
-                <label className="form-label">Quality</label>
+                <label className="form-label" htmlFor="ew-export-quality">
+                  Quality
+                </label>
                 <select
+                  id="ew-export-quality"
                   className="form-select"
                   value={resolution}
                   onChange={(e) => setResolution(e.target.value as "1080p" | "720p")}

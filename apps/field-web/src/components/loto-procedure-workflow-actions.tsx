@@ -125,6 +125,7 @@ export function LotoProcedureWorkflowActions({
       ) : null}
 
       {sendBackOpen ? (
+        // eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-noninteractive-element-interactions -- backdrop click-to-dismiss is a pointer convenience; keyboard users close via the dialog's buttons
         <div
           role="dialog"
           aria-modal="true"
@@ -141,6 +142,7 @@ export function LotoProcedureWorkflowActions({
           }}
           onClick={() => setSendBackOpen(false)}
         >
+          {/* eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions -- only stops clicks inside the dialog reaching the click-to-dismiss backdrop; not a control */}
           <div
             style={{
               background: "var(--ff-surface, #fff)",

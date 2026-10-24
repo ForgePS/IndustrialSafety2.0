@@ -164,8 +164,11 @@ export default function DemoIndustrialPage() {
           {!presentationMode ? (
             <div className="row g-3 align-items-end mb-2">
               <div className="col-12 col-md-4">
-                <label className="form-label">Voice</label>
+                <label className="form-label" htmlFor="demo-ind-voice">
+                  Voice
+                </label>
                 <select
+                  id="demo-ind-voice"
                   className="form-select"
                   value={voiceProfileId}
                   disabled={Boolean(walkthrough.session?.active)}

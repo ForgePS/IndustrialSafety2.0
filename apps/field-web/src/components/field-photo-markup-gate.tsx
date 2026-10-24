@@ -116,10 +116,9 @@ export function FieldPhotoMarkupGate({
           minHeight: 0,
         }}
       >
-        {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           src={pending.original.dataUrl}
-          alt="Captured photo"
+          alt="Capture preview"
           style={{ maxWidth: "100%", maxHeight: "100%", objectFit: "contain", borderRadius: 8 }}
         />
       </div>

@@ -2,7 +2,6 @@ import { createHash, randomBytes } from "node:crypto";
 import { Inject, Injectable } from "@nestjs/common";
 import {
   createId,
-  industrialPersonnel,
   industrialTrainingAccessLinks,
   industrialTrainingAssignmentAssignees,
   industrialTrainingAssignments,

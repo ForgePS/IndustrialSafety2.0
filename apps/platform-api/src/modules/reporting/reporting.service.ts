@@ -587,7 +587,7 @@ export class ReportingService {
     const large = contentBase64.length > INLINE_MAX_CHARS;
 
     let artifactObjectKey: string | null = null;
-    let artifactInline: string | null = large ? null : contentBase64;
+    const artifactInline: string | null = large ? null : contentBase64;
     let jobId: string | null = null;
     let storage: "INLINE" | "S3" = "INLINE";
 

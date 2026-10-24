@@ -2108,7 +2108,7 @@ export class IndustrialSanitationService {
         else correctiveActionAging[4]!.count += 1;
       }
 
-      let multiSiteComparison: Array<{
+      const multiSiteComparison: Array<{
         siteId: string;
         siteName: string;
         score: number | null;

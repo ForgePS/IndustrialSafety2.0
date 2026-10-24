@@ -70,7 +70,7 @@ export function MyTrainingWorkspace() {
   }, [load]);
 
   const openRows = data?.openAssignments ?? [];
-  const records = data?.trainingRecords ?? [];
+  const records = useMemo(() => data?.trainingRecords ?? [], [data?.trainingRecords]);
   const completedRows = useMemo(
     () =>
       records.filter((row) => {

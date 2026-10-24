@@ -29,6 +29,8 @@ import { notifyTrainingAssigned } from "./notify-training-assigned.js";
 import { qrCodePngBuffer } from "./qr-svg.js";
 import { IndustrialTrainingLmsService } from "./industrial-training-lms.service.js";
 
+type DatabaseTransaction = Parameters<Parameters<Database["transaction"]>[0]>[0];
+
 type ListQuery = Record<string, string | undefined>;
 
 function pageParams(query: ListQuery) {
@@ -264,7 +266,7 @@ export class IndustrialTrainingAssignmentsService {
   }
 
   private async replaceGroupMembers(
-    tx: any,
+    tx: DatabaseTransaction,
     tenantId: string,
     groupId: string,
     now: Date,
@@ -1034,11 +1036,10 @@ export class IndustrialTrainingAssignmentsService {
     );
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   private async hydrateAssignments(
-    tx: any,
+    tx: DatabaseTransaction,
     tenantId: string,
-    rows: any[],
+    rows: Array<typeof industrialTrainingAssignments.$inferSelect>,
     viewerUserId: string,
     includeAssigneeDetails = false,
   ) {
@@ -1138,7 +1139,11 @@ export class IndustrialTrainingAssignmentsService {
     });
   }
 
-  private async personnelRosterMeta(tx: any, tenantId: string, personnelIds: string[]) {
+  private async personnelRosterMeta(
+    tx: DatabaseTransaction,
+    tenantId: string,
+    personnelIds: string[],
+  ) {
     const labels = new Map<
       string,
       {
@@ -1226,7 +1231,7 @@ export class IndustrialTrainingAssignmentsService {
     return labels;
   }
 
-  private async personnelLabels(tx: any, tenantId: string, personnelIds: string[]) {
+  private async personnelLabels(tx: DatabaseTransaction, tenantId: string, personnelIds: string[]) {
     const labels = new Map<
       string,
       { label: string; employeeNumber: string | null; displayName: string }
@@ -1262,7 +1267,11 @@ export class IndustrialTrainingAssignmentsService {
     return labels;
   }
 
-  private async resolveEmployeeNumberForUser(tx: any, tenantId: string, userId: string) {
+  private async resolveEmployeeNumberForUser(
+    tx: DatabaseTransaction,
+    tenantId: string,
+    userId: string,
+  ) {
     const person = await tx.query.industrialPersonnel.findFirst({
       where: and(
         eq(industrialPersonnel.tenantId, tenantId),
@@ -1274,12 +1283,16 @@ export class IndustrialTrainingAssignmentsService {
     return employeeNumber || null;
   }
 
-  private async findPersonnelByEmployeeNumber(tx: any, tenantId: string, employeeNumber: string) {
+  private async findPersonnelByEmployeeNumber(
+    tx: DatabaseTransaction,
+    tenantId: string,
+    employeeNumber: string,
+  ) {
     return queryPersonnelByEmployeeNumber(tx, tenantId, employeeNumber);
   }
 
   private async findAssigneeForPrincipal(
-    tx: any,
+    tx: DatabaseTransaction,
     tenantId: string,
     assignmentId: string,
     userId: string,
@@ -1300,7 +1313,7 @@ export class IndustrialTrainingAssignmentsService {
   }
 
   private async buildAssigneeRows(
-    tx: any,
+    tx: DatabaseTransaction,
     tenantId: string,
     input: { employeeNumbers: string[]; groupIds: string[] },
   ): Promise<AssigneeSeed[]> {

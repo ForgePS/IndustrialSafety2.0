@@ -414,8 +414,6 @@ export function buildLotoPrintableHtml(input: LotoPrintableInput): string {
     plainLotoPrintText(detail.procedureNumber) ||
     plainLotoPrintText(procedure.procedureNumber) ||
     "";
-  const revision =
-    plainLotoPrintText(detail.revision) || plainLotoPrintText(procedure.revision) || "1";
   const siteName =
     plainLotoPrintText(detail.siteName) || plainLotoPrintText(procedure.siteName) || "";
   const departmentName =

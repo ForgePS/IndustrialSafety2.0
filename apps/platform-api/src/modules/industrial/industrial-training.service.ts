@@ -4,7 +4,6 @@ import {
   forgeDocuments,
   industrialPersonnel,
   industrialTrainingAttempts,
-  industrialTrainingAssignmentAssignees,
   industrialTrainingAssignments,
   industrialTrainingCompletions,
   industrialTrainingGroups,
@@ -543,9 +542,8 @@ export class IndustrialTrainingService {
     );
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   private async resolveRecordPersonnelId(
-    tx: any,
+    tx: DatabaseTransaction,
     tenantId: string,
     body: { personnelId?: string; employeeNumber?: string },
   ) {
@@ -1991,9 +1989,8 @@ export class IndustrialTrainingService {
       .where(eq(industrialTrainingSources.id, sourceId));
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   private async updateStats(
-    tx: any,
+    tx: DatabaseTransaction,
     tenantId: string,
     userId: string,
     sourceId: string,
@@ -3153,9 +3150,8 @@ export class IndustrialTrainingService {
     });
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   private async requireAttemptForEmployee(
-    tx: any,
+    tx: DatabaseTransaction,
     tenantId: string,
     attemptId: string,
     employeeNumber: string,

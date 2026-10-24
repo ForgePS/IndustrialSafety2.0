@@ -2631,6 +2631,7 @@ export function WorkersCompWorkspace({ moduleName }: { moduleName: string }) {
                                           onChange={(e) =>
                                             setNoteEdit({ ...noteEdit, notes: e.target.value })
                                           }
+                                          // eslint-disable-next-line jsx-a11y/no-autofocus -- inline note editor opened by the user's click; focus must move into the field
                                           autoFocus
                                         />
                                         <div className="d-flex gap-1">
@@ -3348,6 +3349,7 @@ export function WorkersCompWorkspace({ moduleName }: { moduleName: string }) {
                 </div>
                 {weeklyPreview ? (
                   <>
+                    {/* eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-noninteractive-element-interactions -- backdrop click-to-close, same as the other Forge modals; keyboard users close with the Close/Cancel button */}
                     <div
                       className="modal d-block"
                       tabIndex={-1}

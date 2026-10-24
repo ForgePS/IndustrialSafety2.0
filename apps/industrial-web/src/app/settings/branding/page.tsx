@@ -383,7 +383,7 @@ export default function SettingsBrandingPage() {
                   <p className="text-muted small mb-2">{meta.hint}</p>
                   <div className="mb-3">
                     {state.previewUrl ? (
-                      // eslint-disable-next-line @next/next/no-img-element
+                      // Plain <img> on purpose: static export, so next/image optimization is unavailable.
                       <img
                         src={state.previewUrl}
                         alt={`${meta.label} preview`}

@@ -120,8 +120,8 @@ function parseQuestionBlock(block: string, questionNumber?: number): QuestionImp
   if (!lines.length) return null;
 
   let stem = lines[0]!
-    .replace(/^(?:Q\s*)?\d+[\).:\]]\s*/i, "")
-    .replace(/^\d+[\).:\]]\s*/, "")
+    .replace(/^(?:Q\s*)?\d+[).:\]]\s*/i, "")
+    .replace(/^\d+[).:\]]\s*/, "")
     .trim();
   const choices: string[] = [];
   let correctIndex: number | null = null;
@@ -131,7 +131,7 @@ function parseQuestionBlock(block: string, questionNumber?: number): QuestionImp
   for (let i = 1; i < lines.length; i += 1) {
     const line = lines[i]!;
     const answerMatch = line.match(
-      /^(?:correct\s*)?answer(?:\s*key)?\s*[:\-]?\s*([A-Fa-f]|\d+)\s*$/i,
+      /^(?:correct\s*)?answer(?:\s*key)?\s*[:-]?\s*([A-Fa-f]|\d+)\s*$/i,
     );
     if (answerMatch) {
       const raw = answerMatch[1]!;
@@ -140,17 +140,17 @@ function parseQuestionBlock(block: string, questionNumber?: number): QuestionImp
         Number.isInteger(asNum) && asNum >= 0 ? asNum : (letterToIndex(raw) ?? correctIndex);
       continue;
     }
-    const explainMatch = line.match(/^explanation\s*[:\-]\s*(.+)$/i);
+    const explainMatch = line.match(/^explanation\s*[:-]\s*(.+)$/i);
     if (explainMatch) {
       explanation = explainMatch[1]!.trim();
       continue;
     }
-    const pageMatch = line.match(/^(?:page|ref)\s*[:\-]\s*(.+)$/i);
+    const pageMatch = line.match(/^(?:page|ref)\s*[:-]\s*(.+)$/i);
     if (pageMatch) {
       pageRef = pageMatch[1]!.trim();
       continue;
     }
-    const choiceMatch = line.match(/^([A-Fa-f])[\).:\]]\s+(.+)$/);
+    const choiceMatch = line.match(/^([A-Fa-f])[).:\]]\s+(.+)$/);
     if (choiceMatch) {
       choices.push(choiceMatch[2]!.trim());
       continue;
@@ -191,14 +191,14 @@ export function parseQuestionImportText(
   }
 
   const blocks = normalized
-    .split(/(?=^\s*(?:(?:Q\s*)?\d+[\).:\]]\s+))/m)
+    .split(/(?=^\s*(?:(?:Q\s*)?\d+[).:\]]\s+))/m)
     .map((block) => block.trim())
     .filter(Boolean);
 
   const questions: QuestionImportRow[] = [];
-  if (blocks.length > 1 || /^\s*(?:(?:Q\s*)?\d+[\).:\]])/m.test(normalized)) {
+  if (blocks.length > 1 || /^\s*(?:(?:Q\s*)?\d+[).:\]])/m.test(normalized)) {
     for (const block of blocks) {
-      const numberMatch = block.match(/^(?:Q\s*)?(\d+)[\).:\]]/i);
+      const numberMatch = block.match(/^(?:Q\s*)?(\d+)[).:\]]/i);
       const questionNumber = numberMatch ? Number(numberMatch[1]) : undefined;
       const parsed = parseQuestionBlock(block, questionNumber);
       if (parsed) questions.push(parsed);
@@ -209,7 +209,7 @@ export function parseQuestionImportText(
     const fallbackBlocks = normalized
       .split(/\n{2,}/)
       .map((block) => block.trim())
-      .filter((block) => /[A-Da-d][\).:\]]/.test(block));
+      .filter((block) => /[A-Da-d][).:\]]/.test(block));
     for (const block of fallbackBlocks) {
       const parsed = parseQuestionBlock(block);
       if (parsed) questions.push(parsed);

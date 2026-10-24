@@ -44,7 +44,6 @@ import {
   type ConsumeBridgePairingInput,
   type PrintJobStatusUpdate,
   type PrintLabelLayout,
-  type ReprintJobInput,
 } from "@forge/contracts";
 import {
   createId,
@@ -3102,7 +3101,7 @@ export class IndustrialPrintService {
           },
         );
 
-        let templateId = input.templateId ?? null;
+        const templateId = input.templateId ?? null;
         let templateVersion = input.templateVersion ?? null;
         const mediaDims = await this.resolveMediaDimensions(
           tx,
@@ -4027,7 +4026,7 @@ export class IndustrialPrintService {
         ? 1
         : 0;
 
-    let completedJobs = batch.completedJobs + completedDelta;
+    const completedJobs = batch.completedJobs + completedDelta;
     let failedJobs = batch.failedJobs + failedDelta;
 
     // stopOnFail: cancel remaining claimable jobs so they do not keep printing after a failure.

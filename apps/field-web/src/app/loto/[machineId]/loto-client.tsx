@@ -596,7 +596,6 @@ function LotoRunnerInner() {
                       <span className="ff-meta">Detail: {step.customDescription}</span>
                     ) : null}
                     {isDisplayableLotoImageUrl(step.stepImageUrl) ? (
-                      // eslint-disable-next-line @next/next/no-img-element
                       <img
                         src={step.stepImageUrl}
                         alt={`Step ${step.stepNumber}`}

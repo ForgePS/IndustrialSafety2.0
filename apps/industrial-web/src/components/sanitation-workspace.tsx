@@ -408,7 +408,7 @@ export function SanitationWorkspace({ moduleName }: { moduleName: string }) {
 
   // Start / run inspection
   const [startTemplateId, setStartTemplateId] = useState("");
-  const [startLocationId, setStartLocationId] = useState("");
+  const [startLocationId] = useState("");
   const [startTitle, setStartTitle] = useState("");
   const [activeInspection, setActiveInspection] = useState<Row | null>(null);
   const [responses, setResponses] = useState<Record<string, ResponseEntry>>({});
@@ -1311,11 +1311,6 @@ export function SanitationWorkspace({ moduleName }: { moduleName: string }) {
         },
       };
     });
-  }
-
-  async function addQuestionPhoto(questionId: string, file: File | null) {
-    if (!file) return;
-    await addQuestionPhotos(questionId, [file]);
   }
 
   async function postDustFromQuestion(questionId: string) {
@@ -2971,7 +2966,7 @@ export function SanitationWorkspace({ moduleName }: { moduleName: string }) {
                 <div className="d-flex flex-wrap justify-content-between gap-3 align-items-start">
                   <div className="d-flex gap-3 align-items-start">
                     {formLogoSrc ? (
-                      // eslint-disable-next-line @next/next/no-img-element
+                      // Plain <img> on purpose: static export, so next/image optimization is unavailable.
                       <img
                         src={formLogoSrc}
                         alt={formLogo?.label || tenantLabel}
@@ -3298,7 +3293,7 @@ export function SanitationWorkspace({ moduleName }: { moduleName: string }) {
                               <div className="d-flex flex-wrap gap-2 mb-2">
                                 {(entry?.photos ?? []).map((p) => (
                                   <div key={p.id} className="position-relative">
-                                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                                    {/* Plain <img> on purpose: static export, so next/image optimization is unavailable. */}
                                     <img
                                       src={p.dataUrl}
                                       alt={p.fileName}

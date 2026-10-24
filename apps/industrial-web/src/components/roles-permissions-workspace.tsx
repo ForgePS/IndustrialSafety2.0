@@ -42,7 +42,6 @@ import { industrialModuleRoleAccess, isIndustrialModulePagePermission } from "@f
 import {
   catalogsForSelectedModules,
   enabledPageIdsFromPermissionCodes,
-  filterModulePages,
   mergePermissionCodesWithModulePages,
 } from "@/lib/module-page-permissions";
 

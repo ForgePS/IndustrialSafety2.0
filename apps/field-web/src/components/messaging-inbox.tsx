@@ -112,6 +112,7 @@ function MessagingInboxInner() {
                 key={thread.id}
                 type="button"
                 className="ff-msg-inbox-row"
+                // eslint-disable-next-line jsx-a11y/no-interactive-element-to-noninteractive-role -- the row button is the list item; a wrapper element would change the inbox flex layout
                 role="listitem"
                 onClick={() => router.push(`/messaging/${encodeURIComponent(thread.id)}/`)}
               >

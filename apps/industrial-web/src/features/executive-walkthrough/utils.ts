@@ -125,7 +125,7 @@ export async function waitForWalkthroughSceneReady(input: {
 
 export function sanitizeExportFilename(name: string): string {
   return name
-    .replace(/[^\w.\-]+/g, "_")
+    .replace(/[^\w.-]+/g, "_")
     .replace(/_+/g, "_")
     .replace(/^\.+/, "")
     .slice(0, 180);

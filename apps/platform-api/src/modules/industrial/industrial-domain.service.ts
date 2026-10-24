@@ -401,7 +401,6 @@ const PERSONNEL_BOOLEAN_FIELDS = [
 ] as const;
 
 type PersonnelTextField = (typeof PERSONNEL_TEXT_FIELDS)[number];
-type PersonnelBooleanField = (typeof PERSONNEL_BOOLEAN_FIELDS)[number];
 
 /** The pre-0043 form posted `department`; keep accepting it as `departmentName`. */
 const PERSONNEL_FIELD_ALIASES: Partial<Record<PersonnelTextField, string>> = {
@@ -567,7 +566,7 @@ export class IndustrialDomainService {
     tenantId: string,
     values: Record<string, unknown>,
   ): Promise<void> {
-    if (!Boolean(values.isDotDriver)) return;
+    if (!values.isDotDriver) return;
     const tenantRows = await tx.execute(sql`
       select tenant_key::text as tenant_key
       from tenants
@@ -9203,7 +9202,7 @@ export class IndustrialDomainService {
           updatedAt: now,
         } as never)
         .returning();
-      if (Boolean(insertValues.isCompanyDriver)) {
+      if (insertValues.isCompanyDriver) {
         await ensureCompanyDriverRosterEntry(tx, principal.tenantId, {
           personnelId: row!.id,
           driverName: displayName,
@@ -9323,7 +9322,7 @@ export class IndustrialDomainService {
         .where(eq(industrialPersonnel.id, recordId))
         .returning();
 
-      if (Boolean(updateValues.isCompanyDriver)) {
+      if (updateValues.isCompanyDriver) {
         await ensureCompanyDriverRosterEntry(tx, principal.tenantId, {
           personnelId: recordId,
           driverName: displayName,

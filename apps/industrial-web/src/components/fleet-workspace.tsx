@@ -338,6 +338,7 @@ export function FleetWorkspace({ moduleName }: { moduleName: string }) {
       "dashboard",
     );
     if (next !== tab) navigateFleet(next);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- navigateFleet is recreated every render; re-run only when the tab or visible tabs change
   }, [tab, visibleTabs]);
 
   const loadTab = useCallback(

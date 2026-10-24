@@ -12,7 +12,7 @@ type FormViewModalProps = {
 
 export function FormViewModal({ title, subtitle, onClose, footer, children }: FormViewModalProps) {
   return (
-    // eslint-disable-next-line jsx-a11y/no-noninteractive-element-interactions, jsx-a11y/click-events-have-key-events
+    // eslint-disable-next-line jsx-a11y/no-noninteractive-element-interactions
     <div
       className="modal fade show d-block"
       tabIndex={-1}

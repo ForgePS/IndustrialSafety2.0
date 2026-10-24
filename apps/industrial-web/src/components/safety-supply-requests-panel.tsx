@@ -388,8 +388,11 @@ export function SafetySupplyRequestsPanel({
                     </label>
                   </div>
                   <div className="mb-3">
-                    <label className="form-label">Employee message</label>
+                    <label className="form-label" htmlFor="supply-review-employee-message">
+                      Employee message
+                    </label>
                     <input
+                      id="supply-review-employee-message"
                       className="form-control"
                       value={employeeMessage}
                       onChange={(e) => setEmployeeMessage(e.target.value)}
@@ -397,8 +400,11 @@ export function SafetySupplyRequestsPanel({
                     />
                   </div>
                   <div className="mb-3">
-                    <label className="form-label">Deny reason</label>
+                    <label className="form-label" htmlFor="supply-review-deny-reason">
+                      Deny reason
+                    </label>
                     <input
+                      id="supply-review-deny-reason"
                       className="form-control"
                       value={denyReason}
                       onChange={(e) => setDenyReason(e.target.value)}

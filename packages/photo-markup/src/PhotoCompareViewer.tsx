@@ -140,7 +140,6 @@ export function PhotoCompareViewer({
               updateSlider(event.clientX);
             }}
           >
-            {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src={originalSrc}
               alt="Original"
@@ -162,7 +161,6 @@ export function PhotoCompareViewer({
                 borderRight: "2px solid #fff",
               }}
             >
-              {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 src={markedSrc}
                 alt="Marked"
@@ -265,7 +263,6 @@ function LabeledImage({ src, label, fill }: { src: string; label: string; fill?:
       >
         {label}
       </span>
-      {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
         src={src}
         alt={label}

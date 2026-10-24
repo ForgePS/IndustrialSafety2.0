@@ -271,7 +271,7 @@ export function ImageCropModal({
     }
   }
 
-  async function useFullImage() {
+  async function submitFullImage() {
     if (!natural || busy) return;
     setBusy(true);
     setError(null);
@@ -340,10 +340,10 @@ export function ImageCropModal({
                 style={{ maxWidth: "100%", maxHeight: "60vh", touchAction: "none" }}
               >
                 {objectUrl ? (
-                  // eslint-disable-next-line @next/next/no-img-element
+                  // Plain <img> on purpose: static export, so next/image optimization is unavailable.
                   <img
                     src={objectUrl}
-                    alt="Image to crop"
+                    alt="Crop preview"
                     className="d-block"
                     style={{
                       maxWidth: "100%",
@@ -432,7 +432,7 @@ export function ImageCropModal({
                 type="button"
                 className="btn btn-outline-primary"
                 disabled={busy || !natural}
-                onClick={() => void useFullImage()}
+                onClick={() => void submitFullImage()}
               >
                 Use full image
               </button>

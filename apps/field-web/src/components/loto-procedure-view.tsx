@@ -32,7 +32,6 @@ export function LotoProcedureView({ display }: { display: FieldLotoProcedureDisp
       {isDisplayableLotoImageUrl(display.equipmentImageUrl) ? (
         <section className="ff-section" aria-label="Equipment photo">
           <h2 className="ff-section-title">Equipment photo</h2>
-          {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src={display.equipmentImageUrl}
             alt={display.equipmentImageCaption || display.equipmentName || "Equipment"}

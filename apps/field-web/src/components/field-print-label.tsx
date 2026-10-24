@@ -1232,6 +1232,7 @@ export function FieldPrintDialog({
         if (!formDisabled) onClose();
       }}
     >
+      {/* eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-noninteractive-element-interactions -- only stops clicks inside the dialog reaching the click-to-dismiss backdrop; not a control */}
       <div
         className="ff-modal ff-modal--print"
         role="dialog"
@@ -1656,7 +1657,6 @@ export function FieldPrintDialog({
 
               {previewUrl ? (
                 <div className="ff-print-preview">
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img src={previewUrl} alt="Label preview" />
                 </div>
               ) : null}

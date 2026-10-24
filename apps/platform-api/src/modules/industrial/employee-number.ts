@@ -75,16 +75,19 @@ export function employeeNumberWhereClause(employeeNumber: string): SQL | null {
   )!;
 }
 
-export function pickPreferredPersonnelMatch<T>(
-  candidates: readonly T[],
-  input: string,
-  readEmployeeNumber: (candidate: T) => string | null | undefined = (candidate) =>
-    typeof candidate === "object" &&
+function readDefaultEmployeeNumber(candidate: unknown): string | null {
+  return typeof candidate === "object" &&
     candidate !== null &&
     "employeeNumber" in candidate &&
     typeof (candidate as { employeeNumber?: unknown }).employeeNumber === "string"
-      ? (candidate as { employeeNumber: string }).employeeNumber
-      : null,
+    ? (candidate as { employeeNumber: string }).employeeNumber
+    : null;
+}
+
+export function pickPreferredPersonnelMatch<T>(
+  candidates: readonly T[],
+  input: string,
+  readEmployeeNumber: (candidate: T) => string | null | undefined = readDefaultEmployeeNumber,
 ): T | null {
   if (!candidates.length) return null;
   if (candidates.length === 1) return candidates[0]!;
@@ -95,8 +98,8 @@ export function pickPreferredPersonnelMatch<T>(
   return exact ?? candidates[0]!;
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export async function findPersonnelByEmployeeNumber(
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- accepts the db handle or a transaction handle
   tx: any,
   tenantId: string,
   employeeNumber: string,

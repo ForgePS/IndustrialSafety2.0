@@ -471,7 +471,7 @@ export function ForgePrintDialog({
     } catch (err) {
       setLoadError(err instanceof ApiError ? err.message : "Could not load printers.");
     }
-  }, [canView, locationId, divisionId, applyPrinterProfile]);
+  }, [canView, locationId, divisionId, applyPrinterProfile, applyStockSelection]);
 
   useEffect(() => {
     if (!open) {
@@ -1120,7 +1120,7 @@ export function ForgePrintDialog({
                         <p className="text-danger small mb-0">{previewError}</p>
                       ) : null}
                       {previewUrl ? (
-                        // eslint-disable-next-line @next/next/no-img-element
+                        // Plain <img> on purpose: static export, so next/image optimization is unavailable.
                         <img
                           src={previewUrl}
                           alt="Label preview"

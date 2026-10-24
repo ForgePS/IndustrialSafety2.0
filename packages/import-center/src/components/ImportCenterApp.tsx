@@ -78,7 +78,7 @@ export function parseMissingOrgLookupHint(
 ): { kind: "department" | "position" | "employment_type"; name: string } | null {
   const haystack = `${fieldPath ?? ""} ${message}`;
   const match = haystack.match(
-    /(?:unknown|missing|invalid)\s+(department|position|employment[_\s-]?type)\s*(?:named\s+)?[:\-]?\s*["']?([^"'.,;\n]+)/i,
+    /(?:unknown|missing|invalid)\s+(department|position|employment[_\s-]?type)\s*(?:named\s+)?[:-]?\s*["']?([^"'.,;\n]+)/i,
   );
   if (match?.[1] && match[2]) {
     const raw = match[1].toLowerCase().replace(/[\s-]+/g, "_");

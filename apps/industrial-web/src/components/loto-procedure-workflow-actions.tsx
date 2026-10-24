@@ -125,6 +125,7 @@ export function LotoProcedureWorkflowActions({
       ) : null}
 
       {sendBackOpen ? (
+        // eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-noninteractive-element-interactions -- backdrop click-to-close, same as the other Forge modals; keyboard users close with the Close/Cancel button
         <div
           className="modal fade show d-block"
           tabIndex={-1}
@@ -134,6 +135,7 @@ export function LotoProcedureWorkflowActions({
           style={{ background: "rgba(0,0,0,0.45)" }}
           onClick={() => setSendBackOpen(false)}
         >
+          {/* eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-noninteractive-element-interactions -- stops backdrop click-to-close from firing inside the dialog; not a control */}
           <div
             className="modal-dialog modal-dialog-centered"
             role="document"

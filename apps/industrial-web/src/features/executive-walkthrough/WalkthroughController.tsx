@@ -849,6 +849,7 @@ export function WalkthroughProvider({ children }: { children: ReactNode }) {
       isRenderMode: session?.mode === "render",
       isReadOnly: Boolean(session?.active),
     }),
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- stepsVersion re-reads stepsRef.current when the steps change
     [
       session,
       stepsVersion,

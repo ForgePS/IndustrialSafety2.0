@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { ApiError, useAuth } from "@forge/web-kit";
+import { useAuth } from "@forge/web-kit";
 import { formatWalkthroughRuntime, INDUSTRIAL_PLATFORM_WALKTHROUGH_ID } from "@forge/contracts";
 import { canAccessWalkthroughStudio, canManageWalkthroughStudio } from "@/lib/platform-admin";
 import { formatApiErrorMessage } from "@/lib/api-error";
@@ -659,6 +659,7 @@ function SceneConfigPanel({
   useEffect(() => {
     setText(scene.narrationText);
     setPauseInput(String(pauseSecondsFromScene(scene)));
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- reset the draft only when the scene fields change, not on every parent re-render
   }, [scene.id, scene.narrationText, scene.availablePauseMs]);
 
   const pauseSeconds = parsePauseInput(pauseInput);
@@ -746,6 +747,7 @@ function NarrationPanel({
   useEffect(() => {
     setText(selectedScene?.narrationText ?? "");
     setPauseInput(selectedScene ? String(pauseSecondsFromScene(selectedScene)) : "0");
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- reset the draft only when the scene fields change, not on every parent re-render
   }, [selectedScene?.id, selectedScene?.narrationText, selectedScene?.availablePauseMs]);
 
   const pauseSeconds = parsePauseInput(pauseInput);
@@ -987,8 +989,11 @@ function ExportsPanel({
           </div>
           <div className="card-body">
             <div className="mb-3">
-              <label className="form-label">Voice</label>
+              <label className="form-label" htmlFor="wts-export-voice">
+                Voice
+              </label>
               <select
+                id="wts-export-voice"
                 className="form-select"
                 value={exportForm.voiceProfileId}
                 onChange={(e) => onChange({ ...exportForm, voiceProfileId: e.target.value })}
@@ -1001,8 +1006,11 @@ function ExportsPanel({
               </select>
             </div>
             <div className="mb-3">
-              <label className="form-label">Resolution</label>
+              <label className="form-label" htmlFor="wts-export-resolution">
+                Resolution
+              </label>
               <select
+                id="wts-export-resolution"
                 className="form-select"
                 value={exportForm.resolution}
                 onChange={(e) =>
@@ -1017,8 +1025,11 @@ function ExportsPanel({
               </select>
             </div>
             <div className="mb-3">
-              <label className="form-label">Captions</label>
+              <label className="form-label" htmlFor="wts-export-captions">
+                Captions
+              </label>
               <select
+                id="wts-export-captions"
                 className="form-select"
                 value={exportForm.captions}
                 onChange={(e) =>

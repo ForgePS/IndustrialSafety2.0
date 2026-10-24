@@ -2100,7 +2100,7 @@ export class IndustrialTrainingLmsService {
 
       let assignmentTitle = "Training quiz";
       let sourceTitle = "Training course";
-      let versionLabel: string | null = null;
+      const versionLabel: string | null = null;
       if (attempt.assignmentId) {
         const [assignmentRow] = await tx
           .select({

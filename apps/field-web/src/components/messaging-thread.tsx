@@ -373,7 +373,6 @@ function FieldAttachmentPreview({ attachment }: { attachment: MessagingAttachmen
 
   if (isImage && imageUrl) {
     return (
-      // eslint-disable-next-line @next/next/no-img-element
       <img
         className="ff-msg-bubble-image"
         src={imageUrl}

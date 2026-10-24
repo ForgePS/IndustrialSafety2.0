@@ -1,12 +1,10 @@
 import {
   dotDateExpiryState,
   isMedicalExaminerNationalRegistryOnFile,
-  isWorksheetDocumentOnFile,
   worksheetDocumentFields,
 } from "./dot-dqf-attention";
 import {
   DQF_WORKSHEET_DOCUMENT_ORDER,
-  dotDqfField,
   driverDocumentCopyFieldId,
   driverDocumentDateFields,
   filterDriverDqfDocumentFields,

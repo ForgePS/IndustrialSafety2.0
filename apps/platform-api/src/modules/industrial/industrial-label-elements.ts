@@ -139,10 +139,13 @@ export function elementsToZpl(input: {
 
 function escapeZpl(value: string): string {
   // ZPL field data: strip control chars; caret/tilde are command markers.
-  return String(value ?? "")
-    .replace(/[\x00-\x1f]/g, " ")
-    .replace(/\^/g, " ")
-    .replace(/~/g, " ");
+  return (
+    String(value ?? "")
+      // eslint-disable-next-line no-control-regex -- intentionally strips control chars from ZPL field data
+      .replace(/[\x00-\x1f]/g, " ")
+      .replace(/\^/g, " ")
+      .replace(/~/g, " ")
+  );
 }
 
 export function defaultElementsLayout(): {

@@ -114,8 +114,14 @@ export function DotNewDriverForm({ tenantSlug, onCancel, onCreated }: Props) {
   }, [companyDefault, company]);
 
   const sites = catalogs?.sites ?? [];
-  const divisionEntries: DivisionOption[] = catalogs?.divisionEntries ?? [];
-  const departments: LookupOption[] = catalogs?.departments ?? [];
+  const divisionEntries: DivisionOption[] = useMemo(
+    () => catalogs?.divisionEntries ?? [],
+    [catalogs?.divisionEntries],
+  );
+  const departments: LookupOption[] = useMemo(
+    () => catalogs?.departments ?? [],
+    [catalogs?.departments],
+  );
 
   const divisionsForSite = useMemo(
     () =>

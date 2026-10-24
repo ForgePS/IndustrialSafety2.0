@@ -300,7 +300,7 @@ export default function SettingsPresentationLogoPage() {
                 <div className="exec-walkthrough-card-inner">
                   {showLogo ? (
                     <div className="exec-walkthrough-card-logo-wrap">
-                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      {/* Plain <img> on purpose: static export, so next/image optimization is unavailable. */}
                       <img
                         className="exec-walkthrough-card-logo"
                         src={previewUrl!}

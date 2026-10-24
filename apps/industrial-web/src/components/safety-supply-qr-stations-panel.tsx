@@ -192,9 +192,6 @@ ${
 
   const siteName = (id?: string | null) => sites.find((s) => s.id === id)?.label ?? id ?? "—";
 
-  const locationForStation = (station: Station) =>
-    locations.find((loc) => loc.id === station.locationId) ?? null;
-
   const showActions = canManage || canPrintLabel;
 
   return (
@@ -350,8 +347,11 @@ ${
               <h5 className="card-title">Generate Supply Request QR</h5>
               <form onSubmit={(e) => void createStation(e)}>
                 <div className="mb-3">
-                  <label className="form-label">QR Name *</label>
+                  <label className="form-label" htmlFor="qr-station-qr-name">
+                    QR Name *
+                  </label>
                   <input
+                    id="qr-station-qr-name"
                     className="form-control"
                     required
                     value={form.name}
@@ -359,8 +359,11 @@ ${
                   />
                 </div>
                 <div className="mb-3">
-                  <label className="form-label">Description</label>
+                  <label className="form-label" htmlFor="qr-station-description">
+                    Description
+                  </label>
                   <textarea
+                    id="qr-station-description"
                     className="form-control"
                     rows={2}
                     value={form.description}
@@ -368,8 +371,11 @@ ${
                   />
                 </div>
                 <div className="mb-3">
-                  <label className="form-label">Site *</label>
+                  <label className="form-label" htmlFor="qr-station-site">
+                    Site *
+                  </label>
                   <select
+                    id="qr-station-site"
                     className="form-select"
                     required
                     value={form.siteId}
@@ -384,8 +390,11 @@ ${
                   </select>
                 </div>
                 <div className="mb-3">
-                  <label className="form-label">Inventory location</label>
+                  <label className="form-label" htmlFor="qr-station-inventory-location">
+                    Inventory location
+                  </label>
                   <select
+                    id="qr-station-inventory-location"
                     className="form-select"
                     value={form.locationId}
                     onChange={(e) => setForm({ ...form, locationId: e.target.value })}
@@ -401,8 +410,11 @@ ${
                   </select>
                 </div>
                 <div className="mb-3">
-                  <label className="form-label">Work area</label>
+                  <label className="form-label" htmlFor="qr-station-work-area">
+                    Work area
+                  </label>
                   <input
+                    id="qr-station-work-area"
                     className="form-control"
                     value={form.workArea}
                     onChange={(e) => setForm({ ...form, workArea: e.target.value })}

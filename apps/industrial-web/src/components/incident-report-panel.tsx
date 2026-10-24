@@ -262,7 +262,7 @@ export function IncidentReportPanel({
                 {suspicion.observerSignature ? (
                   <div className="col-md-6">
                     <div className="small text-muted mb-1">Supervisor signature</div>
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    {/* Plain <img> on purpose: static export, so next/image optimization is unavailable. */}
                     <img
                       src={suspicion.observerSignature}
                       alt="Supervisor signature"
@@ -274,7 +274,7 @@ export function IncidentReportPanel({
                 {suspicion.secondObserverSignature ? (
                   <div className="col-md-6">
                     <div className="small text-muted mb-1">Second observer signature</div>
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    {/* Plain <img> on purpose: static export, so next/image optimization is unavailable. */}
                     <img
                       src={suspicion.secondObserverSignature}
                       alt="Second observer signature"
@@ -308,7 +308,7 @@ export function IncidentReportPanel({
                 {refusal.employeeSignature ? (
                   <div className="col-md-6">
                     <div className="small text-muted mb-1">Employee signature</div>
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    {/* Plain <img> on purpose: static export, so next/image optimization is unavailable. */}
                     <img
                       src={refusal.employeeSignature}
                       alt="Employee signature"
@@ -320,7 +320,7 @@ export function IncidentReportPanel({
                 {refusal.witnessSignature ? (
                   <div className="col-md-6">
                     <div className="small text-muted mb-1">Witness signature</div>
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    {/* Plain <img> on purpose: static export, so next/image optimization is unavailable. */}
                     <img
                       src={refusal.witnessSignature}
                       alt="Witness signature"

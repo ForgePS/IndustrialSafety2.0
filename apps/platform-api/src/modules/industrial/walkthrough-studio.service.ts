@@ -374,7 +374,7 @@ export class WalkthroughStudioService {
     } catch {
       settingsVoiceId = null;
     }
-    let voice =
+    const voice =
       (settingsVoiceId
         ? WALKTHROUGH_VOICE_PROFILES.find((v) => v.providerVoiceId === settingsVoiceId)
         : undefined) ??

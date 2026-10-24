@@ -198,7 +198,7 @@ export function ExecutiveWalkthroughLaunch() {
       <div className="exec-walkthrough-launch-hero">
         {logoLightUrl.trim() && !logoFailed ? (
           <div className="exec-walkthrough-card-logo-wrap">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
+            {/* Plain <img> on purpose: static export, so next/image optimization is unavailable. */}
             <img
               className="exec-walkthrough-card-logo mb-0"
               src={logoLightUrl}

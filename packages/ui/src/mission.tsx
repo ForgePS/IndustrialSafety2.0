@@ -252,7 +252,6 @@ export function ForgeAssetUploader({
       >
         {previewUrl ? (
           <div style={{ display: "flex", gap: "1rem", alignItems: "center", flexWrap: "wrap" }}>
-            {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src={previewUrl}
               alt="Upload preview"

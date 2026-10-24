@@ -104,6 +104,7 @@ function ScanPublicForm({ token }: { token: string }) {
         }),
       );
     },
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- keep me so actions are re-fetched when the signed-in user changes
     [token, me, permissions],
   );
 

@@ -1251,22 +1251,6 @@ export function SafetySuppliesWorkspace({ moduleName }: { moduleName: string }) 
     }, "Request submitted");
   }
 
-  async function approveRequest(id: string) {
-    await runAction(async () => {
-      await apiSend(`/api/v1/industrial/supplies/requests/${id}/approve`, "POST", {
-        locationId: approveLocationId || undefined,
-      });
-    }, "Request approved");
-  }
-
-  async function fulfillRequest(id: string) {
-    await runAction(async () => {
-      await apiSend(`/api/v1/industrial/supplies/requests/${id}/fulfill`, "POST", {
-        locationId: approveLocationId || undefined,
-      });
-    }, "Request fulfilled");
-  }
-
   async function createVendor(e: FormEvent) {
     e.preventDefault();
     await runAction(async () => {

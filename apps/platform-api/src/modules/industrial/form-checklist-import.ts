@@ -159,7 +159,7 @@ export function parseChecklistText(
     if (/^section\s*[:]/i.test(line)) continue;
 
     const stripped = line
-      .replace(/^(?:Q\s*)?\d+[\.\):\-]\s*/i, "")
+      .replace(/^(?:Q\s*)?\d+[.):-]\s*/i, "")
       .replace(/^[-•*]\s+/, "")
       .trim();
     if (stripped.length < 4) continue;

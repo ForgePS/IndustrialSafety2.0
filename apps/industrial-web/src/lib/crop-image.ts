@@ -31,8 +31,8 @@ export function clampCropRect(
   const maxH = Math.max(1, imageHeight);
   let width = Math.min(Math.max(minSize, crop.width), maxW);
   let height = Math.min(Math.max(minSize, crop.height), maxH);
-  let x = Math.min(Math.max(0, crop.x), Math.max(0, maxW - width));
-  let y = Math.min(Math.max(0, crop.y), Math.max(0, maxH - height));
+  const x = Math.min(Math.max(0, crop.x), Math.max(0, maxW - width));
+  const y = Math.min(Math.max(0, crop.y), Math.max(0, maxH - height));
   width = Math.min(width, maxW - x);
   height = Math.min(height, maxH - y);
   return {

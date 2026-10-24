@@ -109,8 +109,11 @@ export default function SettingsPresentationPage() {
               </label>
             </div>
             <div className="col-md-6">
-              <label className="form-label">Voice</label>
+              <label className="form-label" htmlFor="ew-voice">
+                Voice
+              </label>
               <select
+                id="ew-voice"
                 className="form-select"
                 value={settings.voiceId}
                 disabled={!canEdit}
@@ -130,8 +133,11 @@ export default function SettingsPresentationPage() {
               </div>
             </div>
             <div className="col-md-6">
-              <label className="form-label">Narration speed (%)</label>
+              <label className="form-label" htmlFor="ew-narration-speed">
+                Narration speed (%)
+              </label>
               <input
+                id="ew-narration-speed"
                 type="number"
                 min={80}
                 max={120}
@@ -144,8 +150,11 @@ export default function SettingsPresentationPage() {
               />
             </div>
             <div className="col-md-6">
-              <label className="form-label">Export resolution</label>
+              <label className="form-label" htmlFor="ew-export-resolution">
+                Export resolution
+              </label>
               <select
+                id="ew-export-resolution"
                 className="form-select"
                 value={settings.exportResolution}
                 disabled={!canEdit}
@@ -161,8 +170,11 @@ export default function SettingsPresentationPage() {
               </select>
             </div>
             <div className="col-md-6">
-              <label className="form-label">Retain exports (days)</label>
+              <label className="form-label" htmlFor="ew-retain-exports-days">
+                Retain exports (days)
+              </label>
               <input
+                id="ew-retain-exports-days"
                 type="number"
                 min={1}
                 className="form-control"
@@ -217,8 +229,11 @@ export default function SettingsPresentationPage() {
               </label>
             </div>
             <div className="col-12">
-              <label className="form-label">Optional custom closing text</label>
+              <label className="form-label" htmlFor="ew-optional-custom-closing-text">
+                Optional custom closing text
+              </label>
               <textarea
+                id="ew-optional-custom-closing-text"
                 className="form-control"
                 rows={3}
                 value={settings.closingText ?? ""}

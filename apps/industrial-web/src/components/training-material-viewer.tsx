@@ -970,6 +970,7 @@ export function TrainingMaterialViewer({
         ) : null}
         {isPresentation && isPptx ? pptxStage : null}
         {!isPresentation && previewUrl && isVideo ? (
+          // eslint-disable-next-line jsx-a11y/media-has-caption -- customer-uploaded training videos; no caption files exist to attach
           <video
             key={previewUrl}
             className="w-100"

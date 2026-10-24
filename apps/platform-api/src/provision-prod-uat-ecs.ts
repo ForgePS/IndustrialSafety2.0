@@ -497,6 +497,7 @@ async function main(): Promise<void> {
       roleId: ownerRoleB,
     });
 
+    // eslint-disable-next-line no-console -- CLI provisioning script reports its result on stdout
     console.info(
       JSON.stringify({
         status: "provisioned",

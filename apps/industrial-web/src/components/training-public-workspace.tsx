@@ -161,6 +161,7 @@ function TrainingPublicForm({ token }: { token: string }) {
       });
     }, 1000);
     return () => window.clearInterval(timer);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- timer restarts per question (keyed by id), not on every question object change
   }, [runner?.question?.id, runner?.timerSeconds, runner?.done, pendingFeedback, busy]);
 
   useEffect(() => {

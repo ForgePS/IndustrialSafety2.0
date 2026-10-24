@@ -24,7 +24,7 @@ export function LotoAnnotatedImage({
 }: Props) {
   return (
     <div className={`loto-annotated-photo position-relative d-inline-block ${className}`.trim()}>
-      {/* eslint-disable-next-line @next/next/no-img-element */}
+      {/* Plain <img> on purpose: static export, so next/image optimization is unavailable. */}
       <img
         src={src}
         alt={alt}

@@ -392,6 +392,7 @@ export function PrintHistoryWorkspace({
       </div>
 
       {viewJob ? (
+        // eslint-disable-next-line jsx-a11y/no-noninteractive-element-interactions -- backdrop click-to-close, same as the other Forge modals; Escape is handled by onKeyDown
         <div
           className="modal fade show d-block"
           tabIndex={-1}
@@ -446,6 +447,7 @@ export function PrintHistoryWorkspace({
       ) : null}
 
       {errorJob ? (
+        // eslint-disable-next-line jsx-a11y/no-noninteractive-element-interactions -- backdrop click-to-close, same as the other Forge modals; Escape is handled by onKeyDown
         <div
           className="modal fade show d-block"
           tabIndex={-1}

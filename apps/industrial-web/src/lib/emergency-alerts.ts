@@ -162,7 +162,7 @@ export function estimateSmsSegments(body: string): {
   perSegment: number;
 } {
   const length = [...body].length;
-  const unicode = /[^\u0000-\u007F]/.test(body);
+  const unicode = /[\u0080-\uFFFF]/.test(body);
   const perSegment = unicode ? 70 : 160;
   const segments = length === 0 ? 0 : Math.ceil(length / perSegment);
   return { length, segments, perSegment };

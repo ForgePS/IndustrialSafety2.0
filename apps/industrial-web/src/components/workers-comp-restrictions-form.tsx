@@ -90,6 +90,7 @@ export function WorkersCompRestrictionsForm({
         </div>
         <div className="d-flex flex-column gap-2">
           {WC_LIFTING_OPTIONS.map((opt) => (
+            // eslint-disable-next-line jsx-a11y/label-has-associated-control -- wraps its radio; text is in nested spans deeper than the rule scans
             <label key={opt.id} className="form-check">
               <input
                 type="radio"

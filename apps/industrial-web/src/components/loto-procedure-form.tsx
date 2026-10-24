@@ -889,8 +889,10 @@ export function LotoProcedureForm({
                   </div>
                 </div>
 
+                {/* eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions -- paste/drop target; focusing it already sets the active photo target, so keyboard users are covered */}
                 <div
                   className="border border-dashed rounded p-3 mt-3"
+                  // eslint-disable-next-line jsx-a11y/no-noninteractive-tabindex -- focusable so Ctrl+V paste lands in this drop zone
                   tabIndex={0}
                   onFocus={() => setActivePhotoTarget(idx)}
                   onClick={() => setActivePhotoTarget(idx)}
@@ -1030,8 +1032,10 @@ export function LotoProcedureForm({
           Add new step
         </button>
 
+        {/* eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions -- paste/drop target; focusing it already sets the active photo target, so keyboard users are covered */}
         <div
           className="border rounded p-3 mb-3"
+          // eslint-disable-next-line jsx-a11y/no-noninteractive-tabindex -- focusable so Ctrl+V paste lands in this drop zone
           tabIndex={0}
           onFocus={() => setActivePhotoTarget("equipment")}
           onClick={() => setActivePhotoTarget("equipment")}

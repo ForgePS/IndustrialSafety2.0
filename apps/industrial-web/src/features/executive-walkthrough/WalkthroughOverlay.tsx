@@ -20,7 +20,7 @@ function WalkthroughBrandMark({ logoUrl }: { logoUrl?: string }) {
     <>
       {show ? (
         <div className="exec-walkthrough-card-logo-wrap">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
+          {/* Plain <img> on purpose: static export, so next/image optimization is unavailable. */}
           <img
             className="exec-walkthrough-card-logo"
             src={logoUrl}

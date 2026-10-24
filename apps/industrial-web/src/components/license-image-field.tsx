@@ -194,7 +194,7 @@ export function LicenseImageField({
               </div>
             </div>
           ) : (
-            // eslint-disable-next-line @next/next/no-img-element
+            // Plain <img> on purpose: static export, so next/image optimization is unavailable.
             <img
               src={previewUrl}
               alt={label}
