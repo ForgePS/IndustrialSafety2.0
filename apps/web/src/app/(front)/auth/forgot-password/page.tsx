@@ -13,10 +13,7 @@ import Logo from '@components/layout/front/Logo'
 import ForgotPasswordForm from './ForgotPasswordForm'
 
 export const metadata: Metadata = {
-  title: { absolute: 'Forgot Password' },
-  alternates: {
-    canonical: 'https://jetship-nextjs-saas-boilerplate-demo.vercel.app/auth/forgot-password'
-  }
+  title: { absolute: 'Forgot Password' }
 }
 
 const ForgotPassword = async () => {
@@ -25,10 +22,10 @@ const ForgotPassword = async () => {
       <LeftSection />
       <div className='bg-card min-bs-screen relative basis-full lg:basis-2/5 xl:basis-1/3'>
         <div className='pbs-8 is-full absolute'>
-          <Link href='/' className='is-10/12 md:is-1/2 lg:is-4/5 mli-auto flex items-center gap-2'>
+          <Link href='/auth/login' className='is-10/12 md:is-1/2 lg:is-4/5 mli-auto flex items-center gap-2'>
             <TbChevronLeft className='is-[22px] bs-[22px] text-textSecondary' />
             <span className='text-textSecondary'>
-              <Trans i18nKey='auth:backToWebsite' />
+              <Trans i18nKey='auth:backToLoginButton' />
             </span>
           </Link>
         </div>

@@ -1,6 +1,7 @@
 'use client'
 
 import type { HTMLAttributeAnchorTarget, ReactNode } from 'react'
+
 import { usePathname } from 'next/navigation'
 import Link from 'next/link'
 import {
@@ -26,6 +27,7 @@ import {
 import { useAuthContext } from '@repo/auth/AuthProvider'
 import { cn } from '@repo/ui/lib/utils'
 import type { SidebarMenuButtonProps } from '@repo/ui/components/ui/sidebar'
+
 import Logo from './Logo'
 
 type MenuButtonProps = SidebarMenuButtonProps & {
@@ -68,8 +70,6 @@ const MenuButton = ({ children, href, target = '_self', exactMatch = true, ...pr
 }
 
 const AppSidebar = ({
-  roles,
-  permissions: _permissions,
   forgePlatformRole,
   tenantNavigation = [],
   activeOrganizationName,
@@ -98,7 +98,7 @@ const AppSidebar = ({
             'mis-2 mie-0': state === 'collapsed'
           })}
         >
-          <Link href={roles?.includes('admin') ? '/admin' : '/dashboard'}>
+          <Link href='/dashboard'>
             <Logo />
           </Link>
         </div>
