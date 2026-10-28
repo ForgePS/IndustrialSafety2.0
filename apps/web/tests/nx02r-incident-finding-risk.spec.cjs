@@ -30,7 +30,7 @@ async function createDraftIncident(page, summary) {
   const locationSelect = page.getByLabel('Location')
   const locationValue = await locationSelect
     .locator('option')
-    .filter({ hasText: /Demo Location/i })
+    .filter({ hasText: /Cypress Bend Main Plant/i })
     .first()
     .getAttribute('value')
   expect(locationValue).toBeTruthy()
@@ -68,12 +68,12 @@ async function createInspectionWithFinding(page, findingTitle) {
 
   const locationSelect = main
     .locator('select')
-    .filter({ has: page.locator('option', { hasText: /Demo Location/i }) })
+    .filter({ has: page.locator('option', { hasText: /Cypress Bend Main Plant/i }) })
     .first()
   await expect(locationSelect).toBeVisible({ timeout: 20000 })
   const demoValue = await locationSelect
     .locator('option')
-    .filter({ hasText: /Demo Location/i })
+    .filter({ hasText: /Cypress Bend Main Plant/i })
     .first()
     .getAttribute('value')
   expect(demoValue).toBeTruthy()

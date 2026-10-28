@@ -65,7 +65,7 @@ test.describe('NX-02R cross-tenant + location-scope UI', () => {
     await addJsaStepHazardControl(adminPage)
     await activateJsaViaWorkflow(adminPage)
     await selectFirstNonEmptyOption(adminPage.locator('#execution-lead'))
-    await selectByLabelHint(adminPage.locator('#execution-location'), /Demo Location/i)
+    await selectByLabelHint(adminPage.locator('#execution-location'), /Cypress Bend Main Plant/i)
     const start = adminPage.getByRole('button', { name: /Start execution/i })
     await clickUntilPost(adminPage, start, /\/jsas(\/|$)/i)
     await adminPage.waitForURL(/\/jsas\/[0-9a-f-]+\/executions\/[0-9a-f-]+$/i, { timeout: 30000 })

@@ -15,9 +15,12 @@ async function login(page, email) {
   // Settle past i18n hydration mismatch so Local Demo / form submit handlers remain attached.
   await page.waitForTimeout(500)
 
-  if (email === 'user@forge2.local' || email === 'admin@forge2.local') {
-    const demoName = email === 'admin@forge2.local' ? 'Local Forge Admin' : 'Local Demo User'
-    const demo = page.getByRole('button', { name: demoName })
+  // The quick-login buttons only render in development builds (NODE_ENV !== 'production'); against a
+  // production build (as in CI) type the credentials like any other account.
+  const demoName = email === 'admin@forge2.local' ? 'Local Forge Admin' : email === 'user@forge2.local' ? 'Local Demo User' : null
+  const demo = demoName ? page.getByRole('button', { name: demoName }) : null
+
+  if (demo && (await demo.count()) > 0) {
     await expect(demo).toBeVisible({ timeout: 20000 })
     await demo.click()
     await expect(page.locator('input[type="email"]')).toHaveValue(email, { timeout: 10000 })
@@ -134,7 +137,7 @@ async function createObservation(page, title) {
 
   await selectByLabelHint(
     page.locator('select[name="location_id"], #observation-location_id').first(),
-    /Demo Location/i
+    /Cypress Bend Main Plant/i
   )
 
   await page.getByRole('button', { name: /Save Observation/i }).click()
@@ -161,7 +164,7 @@ async function createRisk(page, title) {
     await hazard.fill('Unguarded pinch point during changeover.')
   }
 
-  await selectByLabelHint(page.locator('select[name="location_id"], #risk-location_id').first(), /Demo Location/i)
+  await selectByLabelHint(page.locator('select[name="location_id"], #risk-location_id').first(), /Cypress Bend Main Plant/i)
   await selectByLabelHint(
     page.locator('select[name="owner_personnel_id"], #risk-owner_personnel_id').first(),
     /Forge Demo User/i
@@ -206,7 +209,7 @@ async function createJsa(page, title, options = {}) {
 
   const locationSelect = page.locator('select[name="location_id"], #jsa-location_id').first()
   if (options.locationLabel) await selectByLabelStrict(locationSelect, options.locationLabel)
-  else await selectByLabelHint(locationSelect, /Demo Location/i)
+  else await selectByLabelHint(locationSelect, /Cypress Bend Main Plant/i)
   await selectFirstNonEmptyOption(page.locator('select[name="prepared_by_personnel_id"], #jsa-prepared_by_personnel_id').first())
 
   if (options.isTemplate) {

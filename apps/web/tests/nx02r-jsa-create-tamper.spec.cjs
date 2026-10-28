@@ -26,7 +26,7 @@ for (const tamperedStatus of ['active', 'approved']) {
     await titleField.click()
     await titleField.fill('')
     await titleField.pressSequentially(title, { delay: 10 })
-    await selectByLabelHint(page.locator('select[name="location_id"], #jsa-location_id').first(), /Demo Location/i)
+    await selectByLabelHint(page.locator('select[name="location_id"], #jsa-location_id').first(), /Cypress Bend Main Plant/i)
     await selectFirstNonEmptyOption(
       page.locator('select[name="prepared_by_personnel_id"], #jsa-prepared_by_personnel_id').first()
     )
