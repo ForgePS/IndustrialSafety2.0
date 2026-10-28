@@ -683,6 +683,62 @@ export const getHelpdeskAnalytics = async ({ from, to, organizationId, productId
   return data as Record<string, any>
 }
 
+export type HelpdeskRatingComment = {
+  ticket_id: string
+  ticket_number: string
+  subject: string
+  rating: number
+  comment: string
+  submitted_at: string
+  organization_name: string | null
+  assignee_name: string | null
+}
+
+export type HelpdeskServiceReport = {
+  first_response_overdue_now: number
+  resolution_overdue_now: number
+  unassigned_open: number
+  csat_responses: number
+  csat_satisfied_percent: number | null
+  csat_low_count: number
+  csat_comments: HelpdeskRatingComment[]
+}
+
+/** Service figures beside the main analytics: overdue now, unassigned backlog and rating feedback. */
+export const getHelpdeskServiceReport = async ({
+  from,
+  to,
+  organizationId,
+  productId,
+  commentLimit = 50
+}: {
+  from: Date
+  to: Date
+  organizationId?: string
+  productId?: string
+  commentLimit?: number
+}): Promise<HelpdeskServiceReport> => {
+  const { data, error } = await db().rpc('forge_support_analytics_service', {
+    p_from: from.toISOString(),
+    p_to: to.toISOString(),
+    p_organization_id: isUuid(organizationId) ? organizationId : null,
+    p_product_id: isUuid(productId) ? productId : null,
+    p_comment_limit: commentLimit
+  })
+
+  if (error) fail('service report', error)
+  const comments: any[] = data?.csat_comments || []
+  const names = await userNames(comments.map(c => c.assigned_user_id))
+
+  return {
+    ...(data as Omit<HelpdeskServiceReport, 'csat_comments'>),
+    csat_comments: comments.map(({ assigned_user_id, ...c }) => ({
+      ...c,
+      assignee_name: assigned_user_id ? names.get(assigned_user_id)?.name || 'Forge user' : null
+    }))
+  }
+}
+
 // Lazy SLA evaluation for console loads; the cron route is the scheduled path.
 let lastSlaEvaluation = 0
 

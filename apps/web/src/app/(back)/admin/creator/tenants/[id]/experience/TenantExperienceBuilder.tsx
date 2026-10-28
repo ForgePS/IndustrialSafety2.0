@@ -1,6 +1,7 @@
 'use client'
 
 import { useMemo, useState, useTransition } from 'react'
+
 import { TbEye, TbEyeOff, TbRefresh, TbSearch } from 'react-icons/tb'
 import { Badge } from '@repo/ui/components/ui/badge'
 import { Button } from '@repo/ui/components/ui/button'
@@ -10,6 +11,7 @@ import { Label } from '@repo/ui/components/ui/label'
 import { Switch } from '@repo/ui/components/ui/switch'
 import { Textarea } from '@repo/ui/components/ui/textarea'
 import { toast } from '@repo/ui/utils/toast'
+
 import { resetCreatorTenantExperience, saveCreatorTenantExperience } from './actions'
 
 type Element = {
@@ -93,7 +95,9 @@ const TenantExperienceBuilder = ({
 
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase()
-    return elements.filter(element => {
+
+    
+return elements.filter(element => {
       const matches =
         !q ||
         element.name.toLowerCase().includes(q) ||
@@ -129,7 +133,8 @@ const TenantExperienceBuilder = ({
 
       if ('error' in result) {
         toast('error', result.error || 'Unable to save tenant experience.')
-        return
+        
+return
       }
 
       toast('success', result.message)
@@ -147,7 +152,8 @@ const TenantExperienceBuilder = ({
 
       if ('error' in result) {
         toast('error', result.error || 'Unable to reset tenant experience.')
-        return
+        
+return
       }
 
       setDrafts(current => ({
@@ -175,7 +181,7 @@ const TenantExperienceBuilder = ({
   }
 
   return (
-    <div className='grid gap-6 xl:grid-cols-[340px_minmax(0,1fr)]'>
+    <div className='grid grid-cols-1 gap-6 xl:grid-cols-[340px_minmax(0,1fr)]'>
       <div className='flex flex-col gap-4'>
         <Card>
           <CardContent className='grid gap-3 p-4'>
@@ -228,7 +234,7 @@ const TenantExperienceBuilder = ({
                   <CardTitle>{selected.name}</CardTitle>
                   <CardDescription>{selected.element_key}</CardDescription>
                 </div>
-                <div className='flex gap-2'>
+                <div className='flex flex-wrap gap-2'>
                   <Button variant='outline' onClick={reset} disabled={pending}>
                     <TbRefresh />
                     Reset Tenant
@@ -380,7 +386,9 @@ const TenantExperienceBuilder = ({
                 ['canReorderOverride','Reorder',selected.can_reorder]
               ] as const).map(([key,label,platformAllowed]) => {
                 const value = draft[key as keyof Draft] as boolean | null
-                return (
+
+                
+return (
                   <div key={String(key)} className='rounded-lg border p-4'>
                     <div className='text-textPrimary font-medium'>{label}</div>
                     <div className='text-textSecondary mt-1 text-xs'>Platform default: {platformAllowed ? 'Allowed' : 'Locked'}</div>

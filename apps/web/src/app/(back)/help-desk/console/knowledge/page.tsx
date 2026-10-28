@@ -59,7 +59,7 @@ const KnowledgeAdminPage = async ({ searchParams }: { searchParams: Promise<{ st
       </div>
 
       <div className='grid gap-6 xl:grid-cols-3'>
-        <Card className='xl:col-span-2'>
+        <Card className='min-w-0 xl:col-span-2'>
           <CardContent className='flex flex-col divide-y p-0'>
             {articles.map((a: any) => (
               <Link key={a.id} href={`/help-desk/console/knowledge/${a.id}`} className='hover:bg-muted/40 flex flex-col gap-1 px-6 py-3 sm:flex-row sm:items-center sm:justify-between'>

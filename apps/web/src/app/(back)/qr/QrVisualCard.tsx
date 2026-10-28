@@ -1,10 +1,12 @@
 'use client'
 
 import { useTransition } from 'react'
+
 import { TbCopy, TbDownload, TbRefresh } from 'react-icons/tb'
 import { Button } from '@repo/ui/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@repo/ui/components/ui/card'
 import { toast } from '@repo/ui/utils/toast'
+
 import { rotateManagedQrToken } from './actions'
 
 const QrVisualCard = ({
@@ -50,7 +52,8 @@ const QrVisualCard = ({
 
       if ('error' in result) {
         toast('error', result.error || 'Unable to rotate QR token.')
-        return
+        
+return
       }
 
       toast('success', result.message)
@@ -67,7 +70,7 @@ const QrVisualCard = ({
       <CardContent>
         <div className='grid gap-6 lg:grid-cols-[360px_minmax(0,1fr)] lg:items-center'>
           <div className='mx-auto w-full max-w-[360px] rounded-xl border bg-white p-4'>
-            <div dangerouslySetInnerHTML={{ __html: svg }} />
+            <div className='[&_svg]:block [&_svg]:h-auto [&_svg]:w-full' dangerouslySetInnerHTML={{ __html: svg }} />
           </div>
 
           <div>

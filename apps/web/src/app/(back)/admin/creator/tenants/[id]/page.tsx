@@ -5,6 +5,7 @@ import { Badge } from '@repo/ui/components/ui/badge'
 import { Button } from '@repo/ui/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@repo/ui/components/ui/card'
 import { createServiceRoleClient } from '@repo/supabase/server'
+
 import { requireForgePlatformRole } from '@/lib/forgeCreatorAuth'
 
 export const metadata: Metadata = { title: 'Tenant | Forge Creator 2.0' }
@@ -49,7 +50,7 @@ const TenantDetailPage = async ({ params }: { params: Promise<{ id: string }> })
           </div>
           <p className='text-textSecondary mt-2'>{tenant.slug}</p>
         </div>
-        <div className='flex gap-3'>
+        <div className='flex flex-wrap gap-3'>
           <Button variant='outline' asChild><Link href='/admin/creator/tenants'>All Tenants</Link></Button>
           <Button variant='outline' asChild><Link href={`/admin/creator/tenants/${tenant.id}/experience`}>Experience Builder</Link></Button>
           <Button variant='outline' asChild><Link href={`/admin/creator/tenants/${tenant.id}/lookups`}>Dropdowns & Lookups</Link></Button>
