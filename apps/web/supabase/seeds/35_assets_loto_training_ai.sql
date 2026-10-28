@@ -1,3 +1,9 @@
+-- Seed-only helpers live in a scratch schema, not session temp objects: the Supabase CLI does not
+-- guarantee one database session per seed file, so temp tables and pg_temp functions can vanish
+-- between statements. Dropped at the end of this file.
+drop schema if exists demo_seed_35 cascade;
+create schema demo_seed_35;
+
 -- =============================================================================
 -- Demo plant: Cypress Bend Rice Mill — Assets & Equipment, LOTO, QR codes, base Training
 -- (courses / assignments / completions) and Forge AI (knowledge, watch, usage, analytics).
@@ -733,8 +739,8 @@ on conflict (id) do nothing;
 
 -- Training records. ckey: course; p: personnel suffix (00 = Forge Demo User); asg/due: assignment age and due offset
 -- (null = no assignment, e.g. records imported from paper at Forge setup); comp: completion age (null = still open).
-drop table if exists pg_temp.cb_training_rows;
-create temporary table cb_training_rows as
+drop table if exists demo_seed_35.cb_training_rows;
+create table cb_training_rows as
 select
   v.n, v.ckey, c.id as course_id, c.validity_months,
   case when v.p = '00' then '20000000-0000-4000-8000-000000000600'::uuid
@@ -862,7 +868,7 @@ from cb_training_rows t
 where t.comp is not null
 on conflict (id) do nothing;
 
-drop table if exists pg_temp.cb_training_rows;
+drop table if exists demo_seed_35.cb_training_rows;
 
 -- The seed.sql assignment/completion for the Forge Demo User.
 update public.forge_training_assignments
@@ -1191,3 +1197,5 @@ from public.forge_ai_watch_rules r
 join public.forge_ai_watch_rule_templates t on t.id = r.template_id
 where r.organization_id = '20000000-0000-4000-8000-000000000100' and t.rule_key = 'asset.out_of_service'
 on conflict (organization_id, dedupe_key) do nothing;
+
+drop schema if exists demo_seed_35 cascade;

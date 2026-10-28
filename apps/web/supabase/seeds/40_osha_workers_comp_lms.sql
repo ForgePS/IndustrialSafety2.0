@@ -1,3 +1,9 @@
+-- Seed-only helpers live in a scratch schema, not session temp objects: the Supabase CLI does not
+-- guarantee one database session per seed file, so temp tables and pg_temp functions can vanish
+-- between statements. Dropped at the end of this file.
+drop schema if exists demo_seed_40 cascade;
+create schema demo_seed_40;
+
 -- =============================================================================
 -- Demo plant: OSHA recordkeeping, workers' compensation, training LMS content and
 -- personnel sensitive data / emergency contacts for Cypress Bend Rice Mill.
@@ -20,19 +26,19 @@
 -- =============================================================================
 
 -- Helpers (session only).
-create or replace function pg_temp.cb_ts(p_days_ago integer, p_time text)
+create or replace function demo_seed_40.cb_ts(p_days_ago integer, p_time text)
 returns timestamptz language sql stable as $$
   select ((current_date - p_days_ago) + p_time::time) at time zone 'America/Chicago'
 $$;
 
-create or replace function pg_temp.cb_id(p_suffix integer)
+create or replace function demo_seed_40.cb_id(p_suffix integer)
 returns uuid language sql immutable as $$
   select ('64000000-0000-4000-8000-' || lpad(p_suffix::text, 12, '0'))::uuid
 $$;
 
 -- Days away / restricted from work-status periods (lib/forgeWorkersCompRules.ts calculateWorkDays):
 -- calendar days, not counting the injury day, through today for an open period.
-create or replace function pg_temp.cb_wc_days(p_case_id uuid, out days_away integer, out restricted_days integer)
+create or replace function demo_seed_40.cb_wc_days(p_case_id uuid, out days_away integer, out restricted_days integer)
 language sql stable as $$
   select
     coalesce(sum(d) filter (where work_status = 'off_work'), 0)::integer,
@@ -83,7 +89,7 @@ from (values
 on conflict (personnel_id) do nothing;
 
 insert into public.forge_personnel_emergency_contacts (id, organization_id, personnel_id, priority, name, relationship, phone, alternate_phone, updated_by, created_at)
-select pg_temp.cb_id(1800 + v.n), '20000000-0000-4000-8000-000000000100', ('60000000-0000-4000-8000-0000000030' || v.nn)::uuid,
+select demo_seed_40.cb_id(1800 + v.n), '20000000-0000-4000-8000-000000000100', ('60000000-0000-4000-8000-0000000030' || v.nn)::uuid,
        v.priority, v.name, v.relationship, v.phone, v.alt, '20000000-0000-4000-8000-000000000001', now() - interval '280 days'
 from (values
   (1,'01',1,'Robert Carter','Spouse','870-555-0141',null),
@@ -110,7 +116,7 @@ on conflict (id) do nothing;
 
 insert into public.forge_wc_carriers (id, organization_id, name, policy_number, contact_name, phone, email, claims_address, is_active, created_by, updated_by, created_at)
 values (
-  pg_temp.cb_id(201), '20000000-0000-4000-8000-000000000100', 'Lower Delta Mutual Insurance', 'WC-44-118203', 'Pamela Reyes',
+  demo_seed_40.cb_id(201), '20000000-0000-4000-8000-000000000100', 'Lower Delta Mutual Insurance', 'WC-44-118203', 'Pamela Reyes',
   '501-555-0182', 'claims@lowerdeltamutual.example', 'PO Box 4410, Little Rock, AR 72214', true,
   '20000000-0000-4000-8000-000000000001', '20000000-0000-4000-8000-000000000001', now() - interval '120 days'
 )
@@ -148,36 +154,36 @@ insert into public.forge_wc_cases (
   closed_at, closed_by, created_by, updated_by, created_at
 )
 select
-  pg_temp.cb_id(n.id), '20000000-0000-4000-8000-000000000100',
+  demo_seed_40.cb_id(n.id), '20000000-0000-4000-8000-000000000100',
   'WC-' || extract(year from n.injury_date)::text || '-' || lpad(n.seq::text, 4, '0'),
   null, ('60000000-0000-4000-8000-00000000' || n.person)::uuid, n.name,
   '20000000-0000-4000-8000-000000000300', '20000000-0000-4000-8000-000000000200',
   n.injury_date, current_date - n.reported_ago, n.status, n.stage, n.severity,
-  case when n.claim is not null then pg_temp.cb_id(201) end, false, n.claim,
+  case when n.claim is not null then demo_seed_40.cb_id(201) end, false, n.claim,
   case when n.claim is not null then 'Pamela Reyes' end,
   case when n.claim is not null then '501-555-0182' end,
   case when n.claim is not null then 'pamela.reyes@lowerdeltamutual.example' end,
   n.body, n.notes, n.na_label, current_date + n.na_due, n.na_priority,
-  case when n.closed_ago is not null then pg_temp.cb_ts(n.closed_ago, '15:20') end,
+  case when n.closed_ago is not null then demo_seed_40.cb_ts(n.closed_ago, '15:20') end,
   case when n.closed_ago is not null then '20000000-0000-4000-8000-000000000001'::uuid end,
   '20000000-0000-4000-8000-000000000001', '20000000-0000-4000-8000-000000000001',
-  pg_temp.cb_ts(n.reported_ago, '13:05')
+  demo_seed_40.cb_ts(n.reported_ago, '13:05')
 from numbered n
 on conflict (id) do nothing;
 
 insert into public.forge_wc_case_sequences (organization_id, case_year, next_value)
 select '20000000-0000-4000-8000-000000000100', extract(year from injury_date)::integer, count(*) + 1
 from public.forge_wc_cases
-where id between pg_temp.cb_id(301) and pg_temp.cb_id(306)
+where id between demo_seed_40.cb_id(301) and demo_seed_40.cb_id(306)
 group by 2
 on conflict (organization_id, case_year) do update
 set next_value = greatest(public.forge_wc_case_sequences.next_value, excluded.next_value);
 
 -- Work status periods (drive days away / restricted).
 insert into public.forge_wc_work_status_periods (id, organization_id, case_id, work_status, start_date, end_date, notes, created_by, updated_by, created_at)
-select pg_temp.cb_id(v.id), '20000000-0000-4000-8000-000000000100', pg_temp.cb_id(v.case_n), v.status,
+select demo_seed_40.cb_id(v.id), '20000000-0000-4000-8000-000000000100', demo_seed_40.cb_id(v.case_n), v.status,
        current_date - v.start_ago, current_date - v.end_ago, v.notes,
-       '20000000-0000-4000-8000-000000000001', '20000000-0000-4000-8000-000000000001', pg_temp.cb_ts(v.start_ago, '16:10')
+       '20000000-0000-4000-8000-000000000001', '20000000-0000-4000-8000-000000000001', demo_seed_40.cb_ts(v.start_ago, '16:10')
 from (values
   (401, 301, 'full_duty', 78, 63, 'Returned to his regular job after the clinic visit.'),
   (402, 302, 'off_work', 57, 57, 'ER discharge note: rest and fluids for 24 hours.'),
@@ -196,23 +202,23 @@ insert into public.forge_wc_restrictions (
   upper_extremity, push_pull_limit_lbs, lower_extremity, transitional_hours_per_day, description, created_by, updated_by, created_at
 )
 values
-  (pg_temp.cb_id(501), '20000000-0000-4000-8000-000000000100', pg_temp.cb_id(303), current_date - 51, current_date - 34, 'lifted',
+  (demo_seed_40.cb_id(501), '20000000-0000-4000-8000-000000000100', demo_seed_40.cb_id(303), current_date - 51, current_date - 34, 'lifted',
    '6-8', 'unlimited', 'light', array['no-lift-floor-waist'], 25, array['no-stooping-bending'], 8,
    'Light duty in the mill control room and sample station: grading samples, logbook and walk-down checks. No shoveling, no bag handling.',
-   '20000000-0000-4000-8000-000000000001', '20000000-0000-4000-8000-000000000001', pg_temp.cb_ts(51, '08:30')),
-  (pg_temp.cb_id(502), '20000000-0000-4000-8000-000000000100', pg_temp.cb_id(305), current_date - 14, null, 'active',
+   '20000000-0000-4000-8000-000000000001', '20000000-0000-4000-8000-000000000001', demo_seed_40.cb_ts(51, '08:30')),
+  (demo_seed_40.cb_id(502), '20000000-0000-4000-8000-000000000100', demo_seed_40.cb_id(305), current_date - 14, null, 'active',
    '1-4', 'unlimited', 'sedentary', array[]::text[], null, array['no-foot-pedal','no-ladders','no-squatting-kneeling'], 8,
    'Seated work in the shipping office: bill of lading prep, scale ticket reconciliation and bag label printing. No forklift or pallet jack. Walking boot on at all times.',
-   '20000000-0000-4000-8000-000000000001', '20000000-0000-4000-8000-000000000001', pg_temp.cb_ts(14, '07:45'))
+   '20000000-0000-4000-8000-000000000001', '20000000-0000-4000-8000-000000000001', demo_seed_40.cb_ts(14, '07:45'))
 on conflict (id) do nothing;
 
 insert into public.forge_wc_medical_encounters (
   id, organization_id, case_id, encounter_date, provider_name, provider_specialty, facility, symptoms, exam_findings,
   diagnosis, assessment, treatment, medication, notes, next_appointment_date, created_by, updated_by, created_at
 )
-select pg_temp.cb_id(v.id), '20000000-0000-4000-8000-000000000100', pg_temp.cb_id(v.case_n), current_date - v.ago,
+select demo_seed_40.cb_id(v.id), '20000000-0000-4000-8000-000000000100', demo_seed_40.cb_id(v.case_n), current_date - v.ago,
        v.provider, v.specialty, v.facility, v.symptoms, v.findings, v.diagnosis, v.assessment, v.treatment, v.medication, v.notes,
-       current_date - v.next_ago, '20000000-0000-4000-8000-000000000001', '20000000-0000-4000-8000-000000000001', pg_temp.cb_ts(v.ago, '17:30')
+       current_date - v.next_ago, '20000000-0000-4000-8000-000000000001', '20000000-0000-4000-8000-000000000001', demo_seed_40.cb_ts(v.ago, '17:30')
 from (values
   (601, 301, 78, 'Dr. Alan Whitfield', 'Occupational medicine', 'Delta OccuCare Clinic, DeWitt', 'Bleeding cut to left forearm.',
    '4 cm laceration, clean edges, no tendon involvement.', 'Laceration of left forearm', 'Simple repair.', 'Six sutures; tetanus booster.', null,
@@ -272,7 +278,7 @@ weeks as (
   select c.id as case_id, c.injury_date, coalesce(c.closed_at::date, current_date) as last_day, n as case_n,
          t.week_of, row_number() over (partition by c.id order by t.week_of) as k
   from (values (301), (302), (303), (304), (305)) as cases(n)
-  join public.forge_wc_cases c on c.id = pg_temp.cb_id(cases.n)
+  join public.forge_wc_cases c on c.id = demo_seed_40.cb_id(cases.n)
   cross join lateral (
     select (current_date + (4 - extract(dow from current_date))::integer) - 7 * g as week_of
     from generate_series(0, 20) g
@@ -281,7 +287,7 @@ weeks as (
     and t.week_of <= coalesce(c.closed_at::date, current_date)
 )
 insert into public.forge_wc_weekly_updates (id, organization_id, case_id, week_of, notes, created_by, updated_by, created_at)
-select pg_temp.cb_id(700 + (w.case_n - 300) * 10 + w.k::integer), '20000000-0000-4000-8000-000000000100', w.case_id, w.week_of,
+select demo_seed_40.cb_id(700 + (w.case_n - 300) * 10 + w.k::integer), '20000000-0000-4000-8000-000000000100', w.case_id, w.week_of,
        coalesce(n.note, 'No change this week.'),
        '20000000-0000-4000-8000-000000000001', '20000000-0000-4000-8000-000000000001',
        (w.week_of + time '14:30') at time zone 'America/Chicago'
@@ -297,34 +303,34 @@ insert into public.forge_wc_case_activity (organization_id, case_id, activity_ty
 select h.organization_id, h.case_id, h.activity_type, h.message, h.actor_user_id, h.created_at
 from (
 select organization_id, id as case_id, 'opened' as activity_type, 'Case opened.' as message, '20000000-0000-4000-8000-000000000001'::uuid as actor_user_id, created_at
-from public.forge_wc_cases where id between pg_temp.cb_id(301) and pg_temp.cb_id(306)
+from public.forge_wc_cases where id between demo_seed_40.cb_id(301) and demo_seed_40.cb_id(306)
 union all
 select organization_id, id, 'updated', 'Stage: ' || case stage when 'closed' then 'Claim administration' when 'claim_admin' then 'Claim administration'
          when 'return_to_work' then 'Return to work' else 'Medical review' end || '.',
        '20000000-0000-4000-8000-000000000001', created_at + interval '50 minutes'
-from public.forge_wc_cases where id between pg_temp.cb_id(301) and pg_temp.cb_id(306)
+from public.forge_wc_cases where id between demo_seed_40.cb_id(301) and demo_seed_40.cb_id(306)
 union all
 select p.organization_id, p.case_id, 'work_status',
        'Work status: ' || case p.work_status when 'full_duty' then 'Full duty' when 'restricted' then 'Restricted / transitional duty' else 'Off work (lost time)' end
          || ' from ' || p.start_date || case when p.end_date is not null and p.end_date < current_date then ' to ' || p.end_date else '' end || '.',
        '20000000-0000-4000-8000-000000000001', p.created_at
-from public.forge_wc_work_status_periods p where p.case_id between pg_temp.cb_id(301) and pg_temp.cb_id(306)
+from public.forge_wc_work_status_periods p where p.case_id between demo_seed_40.cb_id(301) and demo_seed_40.cb_id(306)
 union all
 select r.organization_id, r.case_id, 'restriction', 'Restrictions recorded from ' || r.start_date || '.', '20000000-0000-4000-8000-000000000001', r.created_at
-from public.forge_wc_restrictions r where r.case_id between pg_temp.cb_id(301) and pg_temp.cb_id(306)
+from public.forge_wc_restrictions r where r.case_id between demo_seed_40.cb_id(301) and demo_seed_40.cb_id(306)
 union all
 select r.organization_id, r.case_id, 'restriction', 'Restrictions lifted ' || r.end_date || '.', '20000000-0000-4000-8000-000000000001',
        (r.end_date + time '15:00') at time zone 'America/Chicago'
-from public.forge_wc_restrictions r where r.case_id between pg_temp.cb_id(301) and pg_temp.cb_id(306) and r.status = 'lifted'
+from public.forge_wc_restrictions r where r.case_id between demo_seed_40.cb_id(301) and demo_seed_40.cb_id(306) and r.status = 'lifted'
 union all
 select m.organization_id, m.case_id, 'medical', 'Medical visit on ' || m.encounter_date || ' recorded.', '20000000-0000-4000-8000-000000000001', m.created_at
-from public.forge_wc_medical_encounters m where m.case_id between pg_temp.cb_id(301) and pg_temp.cb_id(306)
+from public.forge_wc_medical_encounters m where m.case_id between demo_seed_40.cb_id(301) and demo_seed_40.cb_id(306)
 union all
 select u.organization_id, u.case_id, 'weekly_update', 'Weekly update for the week of ' || u.week_of || ' recorded.', '20000000-0000-4000-8000-000000000001', u.created_at
-from public.forge_wc_weekly_updates u where u.case_id between pg_temp.cb_id(301) and pg_temp.cb_id(306)
+from public.forge_wc_weekly_updates u where u.case_id between demo_seed_40.cb_id(301) and demo_seed_40.cb_id(306)
 union all
 select organization_id, id, 'closed', 'Case closed.', closed_by, closed_at
-from public.forge_wc_cases where id between pg_temp.cb_id(301) and pg_temp.cb_id(306) and status = 'closed'
+from public.forge_wc_cases where id between demo_seed_40.cb_id(301) and demo_seed_40.cb_id(306) and status = 'closed'
 ) h
 where not exists (select 1 from public.forge_wc_case_activity a where a.case_id = h.case_id)
 order by h.created_at;
@@ -398,7 +404,7 @@ insert into public.forge_osha_cases (
   status, closed_at, closed_by, created_by, updated_by, created_at
 )
 select
-  pg_temp.cb_id(n.id), '20000000-0000-4000-8000-000000000100',
+  demo_seed_40.cb_id(n.id), '20000000-0000-4000-8000-000000000100',
   extract(year from n.injury_date)::text || '-' || lpad(n.seq::text, 3, '0'),
   null, p.id, '20000000-0000-4000-8000-000000000300', '20000000-0000-4000-8000-000000000200',
   n.name, n.job_title, n.injury_date, n.place, n.descr,
@@ -410,14 +416,14 @@ select
   n.began::time, n.happened::time, n.activity, n.what, n.injury, n.object,
   'Marcus Bell', 'Safety Coordinator', '870-555-0102', current_date - n.injury_ago + 1,
   n.status,
-  case when n.closed_ago is not null then pg_temp.cb_ts(n.closed_ago, '10:30') end,
+  case when n.closed_ago is not null then demo_seed_40.cb_ts(n.closed_ago, '10:30') end,
   case when n.closed_ago is not null then '20000000-0000-4000-8000-000000000001'::uuid end,
   '20000000-0000-4000-8000-000000000001', '20000000-0000-4000-8000-000000000001',
-  pg_temp.cb_ts(n.injury_ago - 1, '09:15')
+  demo_seed_40.cb_ts(n.injury_ago - 1, '09:15')
 from numbered n
 join public.forge_personnel p on p.id = ('60000000-0000-4000-8000-00000000' || n.person)::uuid
 left join public.forge_personnel_sensitive s on s.personnel_id = p.id
-left join lateral pg_temp.cb_wc_days(pg_temp.cb_id(n.wc_case)) d on true
+left join lateral demo_seed_40.cb_wc_days(demo_seed_40.cb_id(n.wc_case)) d on true
 on conflict (id) do nothing;
 
 -- Last year's log (two closed cases) for the certified 300A.
@@ -432,7 +438,7 @@ insert into public.forge_osha_cases (
   status, closed_at, closed_by, created_by, updated_by, created_at
 )
 select
-  pg_temp.cb_id(v.id), '20000000-0000-4000-8000-000000000100', v.number, null, p.id,
+  demo_seed_40.cb_id(v.id), '20000000-0000-4000-8000-000000000100', v.number, null, p.id,
   '20000000-0000-4000-8000-000000000300', '20000000-0000-4000-8000-000000000200',
   v.name, v.job_title, v.injury_date, v.place, v.descr, 'recordable', false, v.outcome, 'injury', v.away, v.restricted,
   s.address_line1, s.city, s.state_region, s.postal_code, s.date_of_birth, p.hire_date, s.sex,
@@ -466,7 +472,7 @@ on conflict (id) do nothing;
 insert into public.forge_osha_case_sequences (organization_id, location_id, case_year, next_value)
 select '20000000-0000-4000-8000-000000000100', '20000000-0000-4000-8000-000000000300', calendar_year, count(*) + 1
 from public.forge_osha_cases
-where id in (select pg_temp.cb_id(g) from generate_series(101, 112) g)
+where id in (select demo_seed_40.cb_id(g) from generate_series(101, 112) g)
 group by calendar_year
 on conflict (organization_id, location_id, case_year) do update
 set next_value = greatest(public.forge_osha_case_sequences.next_value, excluded.next_value);
@@ -475,7 +481,7 @@ set next_value = greatest(public.forge_osha_case_sequences.next_value, excluded.
 insert into public.forge_osha_case_activity (organization_id, case_id, activity_type, message, actor_user_id, metadata, created_at)
 select c.organization_id, c.id, 'opened', 'Case ' || c.case_number || ' opened.', c.created_by, '{}'::jsonb, c.created_at
 from public.forge_osha_cases c
-where c.id in (select pg_temp.cb_id(g) from generate_series(101, 112) g)
+where c.id in (select demo_seed_40.cb_id(g) from generate_series(101, 112) g)
   and not exists (select 1 from public.forge_osha_case_activity a where a.case_id = c.id)
 union all
 select c.organization_id, c.id, 'updated',
@@ -489,12 +495,12 @@ select c.organization_id, c.id, 'updated',
        jsonb_build_object('changed_fields', jsonb_build_array('recordability', 'case_outcome', 'case_type', 'days_away', 'restricted_days', 'what_happened')),
        c.created_at + interval '1 day 2 hours'
 from public.forge_osha_cases c
-where c.id in (select pg_temp.cb_id(g) from generate_series(101, 112) g) and c.recordability <> 'pending'
+where c.id in (select demo_seed_40.cb_id(g) from generate_series(101, 112) g) and c.recordability <> 'pending'
   and not exists (select 1 from public.forge_osha_case_activity a where a.case_id = c.id)
 union all
 select c.organization_id, c.id, 'closed', 'Case closed.', c.closed_by, '{}'::jsonb, c.closed_at
 from public.forge_osha_cases c
-where c.id in (select pg_temp.cb_id(g) from generate_series(101, 112) g) and c.status = 'closed'
+where c.id in (select demo_seed_40.cb_id(g) from generate_series(101, 112) g) and c.status = 'closed'
   and not exists (select 1 from public.forge_osha_case_activity a where a.case_id = c.id);
 
 -- Form 300A: this year in draft with establishment info; last year certified (frozen totals from the log).
@@ -503,7 +509,7 @@ insert into public.forge_osha_establishment_years (
   annual_average_employees, total_hours_worked, status, created_by, updated_by, created_at
 )
 values (
-  pg_temp.cb_id(151), '20000000-0000-4000-8000-000000000100', '20000000-0000-4000-8000-000000000300', extract(year from current_date)::integer,
+  demo_seed_40.cb_id(151), '20000000-0000-4000-8000-000000000100', '20000000-0000-4000-8000-000000000300', extract(year from current_date)::integer,
   'Cypress Bend Main Plant', '2200 Levee Road', 'DeWitt', 'AR', '72042', 'Rice milling', '311212',
   68, 118400, 'draft', '20000000-0000-4000-8000-000000000001', '20000000-0000-4000-8000-000000000001', now() - interval '41 days'
 )
@@ -518,7 +524,7 @@ insert into public.forge_osha_establishment_years (
   created_by, updated_by, created_at
 )
 select
-  pg_temp.cb_id(152), '20000000-0000-4000-8000-000000000100', '20000000-0000-4000-8000-000000000300', y.yr,
+  demo_seed_40.cb_id(152), '20000000-0000-4000-8000-000000000100', '20000000-0000-4000-8000-000000000300', y.yr,
   'Cypress Bend Main Plant', '2200 Levee Road', 'DeWitt', 'AR', '72042', 'Rice milling', '311212',
   64, 133120, 'certified', 'Denise Carter', 'Plant Manager', '870-555-0101', y.cert_date,
   (y.cert_date + time '10:15') at time zone 'America/Chicago', '20000000-0000-4000-8000-000000000001',
@@ -550,8 +556,8 @@ begin
            w.id as wc_id, w.case_number as wc_number
     from public.forge_osha_cases o
     left join public.forge_wc_cases w on w.personnel_id = o.personnel_id and w.injury_date = o.injury_date
-      and w.id in (select pg_temp.cb_id(g) from generate_series(301, 306) g)
-    where o.id in (select pg_temp.cb_id(g) from generate_series(101, 107) g)
+      and w.id in (select demo_seed_40.cb_id(g) from generate_series(301, 306) g)
+    where o.id in (select demo_seed_40.cb_id(g) from generate_series(101, 107) g)
       and o.incident_id is null
   loop
     select i.id, i.incident_number, i.organization_id into v_incident
@@ -623,13 +629,13 @@ on conflict (organization_id) do nothing;
 
 insert into public.forge_training_courses (id, organization_id, course_code, title, description, category_key, delivery_method, duration_minutes, validity_months, is_active, created_by, updated_by, created_at, updated_at)
 values
-  (pg_temp.cb_id(1001), '20000000-0000-4000-8000-000000000100', 'GBE-110', 'Grain Bin Entry & Engulfment Prevention',
+  (demo_seed_40.cb_id(1001), '20000000-0000-4000-8000-000000000100', 'GBE-110', 'Grain Bin Entry & Engulfment Prevention',
    'Permit-required bin entry at Cypress Bend: engulfment hazards, lockout of unloading equipment, atmospheric testing, lifelines and rescue. Required before entering any bin or tank.',
    'safety', 'online', 30, 12, true, '20000000-0000-4000-8000-000000000001', '20000000-0000-4000-8000-000000000001', now() - interval '88 days', now() - interval '80 days'),
-  (pg_temp.cb_id(1002), '20000000-0000-4000-8000-000000000100', 'DUST-120', 'Combustible Grain Dust & Housekeeping',
+  (demo_seed_40.cb_id(1002), '20000000-0000-4000-8000-000000000100', 'DUST-120', 'Combustible Grain Dust & Housekeeping',
    'How grain dust explosions happen, the 1/8-inch housekeeping rule in priority areas, bucket elevator hazard monitoring and hot work controls.',
    'compliance', 'online', 25, 12, true, '20000000-0000-4000-8000-000000000001', '20000000-0000-4000-8000-000000000001', now() - interval '89 days', now() - interval '40 days'),
-  (pg_temp.cb_id(1003), '20000000-0000-4000-8000-000000000100', 'FLT-130', 'Forklift & Pedestrian Safety Refresher',
+  (demo_seed_40.cb_id(1003), '20000000-0000-4000-8000-000000000100', 'FLT-130', 'Forklift & Pedestrian Safety Refresher',
    'Classroom refresher for powered industrial truck operators: pre-use inspection, pedestrian right-of-way, load handling for bagged rice and rail car dock plates. Paper quiz.',
    'equipment', 'classroom', 45, 36, true, '20000000-0000-4000-8000-000000000001', '20000000-0000-4000-8000-000000000001', now() - interval '60 days', now() - interval '36 days')
 on conflict (id) do nothing;
@@ -637,19 +643,19 @@ on conflict (id) do nothing;
 -- Versions are created as drafts, filled, then published (and retired) exactly as the app does.
 insert into public.forge_training_course_versions (id, organization_id, course_id, version_number, label, status, passing_percent, quiz_question_count, max_attempts, requires_acknowledgement, acknowledgement_text, effective_date, created_by, updated_by, created_at)
 values
-  (pg_temp.cb_id(1101), '20000000-0000-4000-8000-000000000100', pg_temp.cb_id(1001), 1, '2026 program', 'draft', 80, null, 3, true,
+  (demo_seed_40.cb_id(1101), '20000000-0000-4000-8000-000000000100', demo_seed_40.cb_id(1001), 1, '2026 program', 'draft', 80, null, 3, true,
    'I will not enter a bin without a signed entry permit, a locked-out unloading auger, a tested atmosphere and an attendant outside.',
    current_date - 80, '20000000-0000-4000-8000-000000000001', '20000000-0000-4000-8000-000000000001', now() - interval '86 days'),
-  (pg_temp.cb_id(1102), '20000000-0000-4000-8000-000000000100', pg_temp.cb_id(1002), 1, null, 'draft', 70, null, null, false, null,
+  (demo_seed_40.cb_id(1102), '20000000-0000-4000-8000-000000000100', demo_seed_40.cb_id(1002), 1, null, 'draft', 70, null, null, false, null,
    current_date - 86, '20000000-0000-4000-8000-000000000001', '20000000-0000-4000-8000-000000000001', now() - interval '88 days'),
-  (pg_temp.cb_id(1103), '20000000-0000-4000-8000-000000000100', pg_temp.cb_id(1002), 2, 'Adds hot work controls', 'draft', 70, null, null, false, null,
+  (demo_seed_40.cb_id(1103), '20000000-0000-4000-8000-000000000100', demo_seed_40.cb_id(1002), 2, 'Adds hot work controls', 'draft', 70, null, null, false, null,
    current_date - 40, '20000000-0000-4000-8000-000000000001', '20000000-0000-4000-8000-000000000001', now() - interval '42 days'),
-  (pg_temp.cb_id(1104), '20000000-0000-4000-8000-000000000100', pg_temp.cb_id(1003), 1, null, 'draft', 70, null, null, false, null,
+  (demo_seed_40.cb_id(1104), '20000000-0000-4000-8000-000000000100', demo_seed_40.cb_id(1003), 1, null, 'draft', 70, null, null, false, null,
    current_date - 36, '20000000-0000-4000-8000-000000000001', '20000000-0000-4000-8000-000000000001', now() - interval '38 days')
 on conflict (id) do nothing;
 
 insert into public.forge_training_sections (id, organization_id, version_id, title, body, sort_order, is_required, estimated_minutes, created_at)
-select pg_temp.cb_id(v.id), '20000000-0000-4000-8000-000000000100', pg_temp.cb_id(v.version_n), v.title, v.body, v.sort_order, true, v.minutes,
+select demo_seed_40.cb_id(v.id), '20000000-0000-4000-8000-000000000100', demo_seed_40.cb_id(v.version_n), v.title, v.body, v.sort_order, true, v.minutes,
        now() - (v.days_ago || ' days')::interval
 from (values
   (1201, 1101, 10, 'Why bins kill: engulfment and bridged grain',
@@ -678,7 +684,7 @@ from (values
 on conflict (id) do nothing;
 
 insert into public.forge_training_questions (id, organization_id, version_id, stem, choices, correct_index, explanation, sort_order, created_at)
-select pg_temp.cb_id(v.id), '20000000-0000-4000-8000-000000000100', pg_temp.cb_id(v.version_n), v.stem, v.choices, v.correct, v.explanation, v.sort_order,
+select demo_seed_40.cb_id(v.id), '20000000-0000-4000-8000-000000000100', demo_seed_40.cb_id(v.version_n), v.stem, v.choices, v.correct, v.explanation, v.sort_order,
        now() - (v.days_ago || ' days')::interval
 from (values
   (1301, 1101, 10, 'Rice in a bin has crusted over and bridged. What is the danger?',
@@ -728,40 +734,40 @@ on conflict (id) do nothing;
 -- Publish: DUST-120 v1, then GBE-110 v1, then DUST-120 v2 retiring v1, then FLT-130 v1.
 update public.forge_training_course_versions
 set status = 'published', published_at = now() - interval '86 days', published_by = '20000000-0000-4000-8000-000000000001'
-where id = pg_temp.cb_id(1102) and status = 'draft';
+where id = demo_seed_40.cb_id(1102) and status = 'draft';
 update public.forge_training_course_versions
 set status = 'published', published_at = now() - interval '80 days', published_by = '20000000-0000-4000-8000-000000000001'
-where id = pg_temp.cb_id(1101) and status = 'draft';
+where id = demo_seed_40.cb_id(1101) and status = 'draft';
 update public.forge_training_course_versions
 set status = 'retired'
-where id = pg_temp.cb_id(1102) and status = 'published' and exists (select 1 from public.forge_training_course_versions where id = pg_temp.cb_id(1103) and status = 'draft');
+where id = demo_seed_40.cb_id(1102) and status = 'published' and exists (select 1 from public.forge_training_course_versions where id = demo_seed_40.cb_id(1103) and status = 'draft');
 update public.forge_training_course_versions
 set status = 'published', published_at = now() - interval '40 days', published_by = '20000000-0000-4000-8000-000000000001'
-where id = pg_temp.cb_id(1103) and status = 'draft';
+where id = demo_seed_40.cb_id(1103) and status = 'draft';
 update public.forge_training_course_versions
 set status = 'published', published_at = now() - interval '36 days', published_by = '20000000-0000-4000-8000-000000000001'
-where id = pg_temp.cb_id(1104) and status = 'draft';
+where id = demo_seed_40.cb_id(1104) and status = 'draft';
 
 -- Groups and required training.
 insert into public.forge_training_groups (id, organization_id, name, description, is_active, created_by, updated_by, created_at)
 values
-  (pg_temp.cb_id(1401), '20000000-0000-4000-8000-000000000100', 'Bin Entry Crew', 'Dryer operators, maintenance techs and supervisors authorized to enter bins and tanks.', true,
+  (demo_seed_40.cb_id(1401), '20000000-0000-4000-8000-000000000100', 'Bin Entry Crew', 'Dryer operators, maintenance techs and supervisors authorized to enter bins and tanks.', true,
    '20000000-0000-4000-8000-000000000001', '20000000-0000-4000-8000-000000000001', now() - interval '79 days'),
-  (pg_temp.cb_id(1402), '20000000-0000-4000-8000-000000000100', 'Mill Floor Operators', 'Hulling, whitening and grading line operators on both shifts.', true,
+  (demo_seed_40.cb_id(1402), '20000000-0000-4000-8000-000000000100', 'Mill Floor Operators', 'Hulling, whitening and grading line operators on both shifts.', true,
    '20000000-0000-4000-8000-000000000001', '20000000-0000-4000-8000-000000000001', now() - interval '41 days'),
-  (pg_temp.cb_id(1403), '20000000-0000-4000-8000-000000000100', 'Shipping & Loadout', 'Forklift, packaging and truck/rail loadout crew.', true,
+  (demo_seed_40.cb_id(1403), '20000000-0000-4000-8000-000000000100', 'Shipping & Loadout', 'Forklift, packaging and truck/rail loadout crew.', true,
    '20000000-0000-4000-8000-000000000001', '20000000-0000-4000-8000-000000000001', now() - interval '37 days')
 on conflict (id) do nothing;
 
 insert into public.forge_training_group_requirements (group_id, course_id, organization_id, added_by, added_at)
 values
-  (pg_temp.cb_id(1401), pg_temp.cb_id(1001), '20000000-0000-4000-8000-000000000100', '20000000-0000-4000-8000-000000000001', now() - interval '79 days'),
-  (pg_temp.cb_id(1402), pg_temp.cb_id(1002), '20000000-0000-4000-8000-000000000100', '20000000-0000-4000-8000-000000000001', now() - interval '41 days'),
-  (pg_temp.cb_id(1403), pg_temp.cb_id(1003), '20000000-0000-4000-8000-000000000100', '20000000-0000-4000-8000-000000000001', now() - interval '37 days')
+  (demo_seed_40.cb_id(1401), demo_seed_40.cb_id(1001), '20000000-0000-4000-8000-000000000100', '20000000-0000-4000-8000-000000000001', now() - interval '79 days'),
+  (demo_seed_40.cb_id(1402), demo_seed_40.cb_id(1002), '20000000-0000-4000-8000-000000000100', '20000000-0000-4000-8000-000000000001', now() - interval '41 days'),
+  (demo_seed_40.cb_id(1403), demo_seed_40.cb_id(1003), '20000000-0000-4000-8000-000000000100', '20000000-0000-4000-8000-000000000001', now() - interval '37 days')
 on conflict do nothing;
 
 insert into public.forge_training_group_members (group_id, personnel_id, organization_id, added_by, added_at)
-select pg_temp.cb_id(v.g), ('60000000-0000-4000-8000-00000000' || v.person)::uuid, '20000000-0000-4000-8000-000000000100',
+select demo_seed_40.cb_id(v.g), ('60000000-0000-4000-8000-00000000' || v.person)::uuid, '20000000-0000-4000-8000-000000000100',
        '20000000-0000-4000-8000-000000000001', now() - (v.days_ago || ' days')::interval
 from (values
   (1401,'3003',79),(1401,'3010',79),(1401,'3011',79),(1401,'3013',79),(1401,'3015',79),(1401,'3014',66),
@@ -772,9 +778,9 @@ on conflict do nothing;
 
 -- Assignments from the group requirements (final status set by the results below).
 insert into public.forge_training_assignments (id, organization_id, course_id, personnel_id, status, assigned_at, due_date, assigned_by, notes, created_at, updated_at)
-select pg_temp.cb_id(v.id), '20000000-0000-4000-8000-000000000100', pg_temp.cb_id(v.course_n), ('60000000-0000-4000-8000-00000000' || v.person)::uuid,
-       'assigned', pg_temp.cb_ts(v.assigned_ago, '09:05'), current_date + v.due_in, '20000000-0000-4000-8000-000000000001',
-       'Assigned from training group requirements.', pg_temp.cb_ts(v.assigned_ago, '09:05'), pg_temp.cb_ts(v.assigned_ago, '09:05')
+select demo_seed_40.cb_id(v.id), '20000000-0000-4000-8000-000000000100', demo_seed_40.cb_id(v.course_n), ('60000000-0000-4000-8000-00000000' || v.person)::uuid,
+       'assigned', demo_seed_40.cb_ts(v.assigned_ago, '09:05'), current_date + v.due_in, '20000000-0000-4000-8000-000000000001',
+       'Assigned from training group requirements.', demo_seed_40.cb_ts(v.assigned_ago, '09:05'), demo_seed_40.cb_ts(v.assigned_ago, '09:05')
 from (values
   (1501,1001,'3013',78,-48),(1502,1001,'3015',78,-48),(1503,1001,'3010',78,-48),(1504,1001,'3011',78,-48),(1505,1001,'3003',78,-48),(1506,1001,'3014',66,-36),
   (1511,1002,'3005',39,-9),(1512,1002,'3006',39,-9),(1513,1002,'3007',39,-9),(1514,1002,'3008',39,-9),(1515,1002,'3004',39,-9),
@@ -784,14 +790,14 @@ on conflict (id) do nothing;
 
 -- Kiosk link in the break room (only the token hash is stored, as the app does).
 insert into public.forge_training_portal_links (id, organization_id, title, token_hash, location_id, is_active, last_used_at, created_by, created_at, updated_at)
-values (pg_temp.cb_id(1901), '20000000-0000-4000-8000-000000000100', 'Break room kiosk', encode(sha256(convert_to(gen_random_uuid()::text || gen_random_uuid()::text, 'UTF8')), 'hex'),
-        '20000000-0000-4000-8000-000000000300', true, pg_temp.cb_ts(18, '15:20'), '20000000-0000-4000-8000-000000000001',
+values (demo_seed_40.cb_id(1901), '20000000-0000-4000-8000-000000000100', 'Break room kiosk', encode(sha256(convert_to(gen_random_uuid()::text || gen_random_uuid()::text, 'UTF8')), 'hex'),
+        '20000000-0000-4000-8000-000000000300', true, demo_seed_40.cb_ts(18, '15:20'), '20000000-0000-4000-8000-000000000001',
         now() - interval '82 days', now() - interval '82 days')
 on conflict (id) do nothing;
 
 -- A kiosk quiz attempt as forge_start/submit_training_attempt record it (actor null on the kiosk),
 -- with section progress, and on a pass the completion with certificate number and expiry.
-create or replace function pg_temp.cb_kiosk_attempt(
+create or replace function demo_seed_40.cb_kiosk_attempt(
   p_attempt integer, p_completion integer, p_assignment integer, p_version integer, p_attempt_number integer,
   p_wrong integer, p_days_ago integer, p_time text
 ) returns void language plpgsql as $$
@@ -804,16 +810,16 @@ declare
   v_correct integer := 0;
   v_total integer;
   v_percent integer;
-  v_started timestamptz := pg_temp.cb_ts(p_days_ago, p_time);
-  v_submitted timestamptz := pg_temp.cb_ts(p_days_ago, p_time) + interval '11 minutes';
+  v_started timestamptz := demo_seed_40.cb_ts(p_days_ago, p_time);
+  v_submitted timestamptz := demo_seed_40.cb_ts(p_days_ago, p_time) + interval '11 minutes';
   v_completion uuid;
   q record;
   i integer := 0;
 begin
-  if exists (select 1 from public.forge_training_attempts where id = pg_temp.cb_id(p_attempt)) then return; end if;
+  if exists (select 1 from public.forge_training_attempts where id = demo_seed_40.cb_id(p_attempt)) then return; end if;
 
-  select * into v_assignment from public.forge_training_assignments where id = pg_temp.cb_id(p_assignment);
-  select * into v_version from public.forge_training_course_versions where id = pg_temp.cb_id(p_version);
+  select * into v_assignment from public.forge_training_assignments where id = demo_seed_40.cb_id(p_assignment);
+  select * into v_version from public.forge_training_course_versions where id = demo_seed_40.cb_id(p_version);
   select * into v_course from public.forge_training_courses where id = v_assignment.course_id;
 
   v_questions := '{}';
@@ -847,7 +853,7 @@ begin
     acknowledged_at, acknowledgement_text, started_at, submitted_at, started_by
   )
   values (
-    pg_temp.cb_id(p_attempt), v_assignment.organization_id, v_assignment.id, v_assignment.course_id, v_version.id, v_assignment.personnel_id,
+    demo_seed_40.cb_id(p_attempt), v_assignment.organization_id, v_assignment.id, v_assignment.course_id, v_version.id, v_assignment.personnel_id,
     p_attempt_number, 'kiosk', 'submitted', v_questions, v_answers, v_correct, v_total, v_percent, v_version.passing_percent,
     v_percent >= v_version.passing_percent,
     case when v_version.requires_acknowledgement then v_submitted end,
@@ -856,7 +862,7 @@ begin
   );
 
   if v_percent >= v_version.passing_percent then
-    v_completion := pg_temp.cb_id(p_completion);
+    v_completion := demo_seed_40.cb_id(p_completion);
     insert into public.forge_training_completions (
       id, organization_id, assignment_id, course_id, personnel_id, completed_at, score, result,
       approval_status, approved_by, approved_at, certificate_number, expires_at, version_id, attempt_id, source,
@@ -866,9 +872,9 @@ begin
       v_completion, v_assignment.organization_id, v_assignment.id, v_assignment.course_id, v_assignment.personnel_id, v_submitted, v_percent, 'passed',
       'approved', null, v_submitted, public.next_forge_training_certificate_number(v_assignment.organization_id),
       case when v_course.validity_months is not null then (v_submitted::date + make_interval(months => v_course.validity_months))::date end,
-      v_version.id, pg_temp.cb_id(p_attempt), 'kiosk', null, null, v_submitted, v_submitted
+      v_version.id, demo_seed_40.cb_id(p_attempt), 'kiosk', null, null, v_submitted, v_submitted
     );
-    update public.forge_training_attempts set completion_id = v_completion where id = pg_temp.cb_id(p_attempt);
+    update public.forge_training_attempts set completion_id = v_completion where id = demo_seed_40.cb_id(p_attempt);
     update public.forge_training_assignments set status = 'completed', updated_at = v_submitted where id = v_assignment.id;
   else
     update public.forge_training_assignments set status = 'in_progress', updated_at = v_submitted where id = v_assignment.id and status in ('assigned', 'overdue');
@@ -877,7 +883,7 @@ end;
 $$;
 
 -- A paper result as forge_record_paper_training_result records it (entered by the trainer).
-create or replace function pg_temp.cb_paper_result(
+create or replace function demo_seed_40.cb_paper_result(
   p_attempt integer, p_completion integer, p_assignment integer, p_version integer, p_percent integer, p_days_ago integer
 ) returns void language plpgsql as $$
 declare
@@ -887,10 +893,10 @@ declare
   v_on timestamptz := (current_date - p_days_ago)::timestamptz;
   v_admin uuid := '20000000-0000-4000-8000-000000000001';
 begin
-  if exists (select 1 from public.forge_training_attempts where id = pg_temp.cb_id(p_attempt)) then return; end if;
+  if exists (select 1 from public.forge_training_attempts where id = demo_seed_40.cb_id(p_attempt)) then return; end if;
 
-  select * into v_assignment from public.forge_training_assignments where id = pg_temp.cb_id(p_assignment);
-  select * into v_version from public.forge_training_course_versions where id = pg_temp.cb_id(p_version);
+  select * into v_assignment from public.forge_training_assignments where id = demo_seed_40.cb_id(p_assignment);
+  select * into v_version from public.forge_training_course_versions where id = demo_seed_40.cb_id(p_version);
   select * into v_course from public.forge_training_courses where id = v_assignment.course_id;
 
   insert into public.forge_training_attempts (
@@ -898,7 +904,7 @@ begin
     score_percent, passing_percent, passed, started_at, submitted_at, entered_by
   )
   values (
-    pg_temp.cb_id(p_attempt), v_assignment.organization_id, v_assignment.id, v_assignment.course_id, v_version.id, v_assignment.personnel_id,
+    demo_seed_40.cb_id(p_attempt), v_assignment.organization_id, v_assignment.id, v_assignment.course_id, v_version.id, v_assignment.personnel_id,
     (select coalesce(max(attempt_number), 0) + 1 from public.forge_training_attempts where assignment_id = v_assignment.id),
     'paper', 'submitted', p_percent, v_version.passing_percent, p_percent >= v_version.passing_percent, v_on, v_on, v_admin
   );
@@ -910,45 +916,47 @@ begin
       created_by, updated_by, created_at, updated_at
     )
     values (
-      pg_temp.cb_id(p_completion), v_assignment.organization_id, v_assignment.id, v_assignment.course_id, v_assignment.personnel_id, v_on, p_percent, 'passed',
-      'approved', v_admin, pg_temp.cb_ts(p_days_ago, '16:40'), public.next_forge_training_certificate_number(v_assignment.organization_id),
+      demo_seed_40.cb_id(p_completion), v_assignment.organization_id, v_assignment.id, v_assignment.course_id, v_assignment.personnel_id, v_on, p_percent, 'passed',
+      'approved', v_admin, demo_seed_40.cb_ts(p_days_ago, '16:40'), public.next_forge_training_certificate_number(v_assignment.organization_id),
       case when v_course.validity_months is not null then (v_on::date + make_interval(months => v_course.validity_months))::date end,
-      v_version.id, pg_temp.cb_id(p_attempt), 'paper', v_admin, v_admin, pg_temp.cb_ts(p_days_ago, '16:40'), pg_temp.cb_ts(p_days_ago, '16:40')
+      v_version.id, demo_seed_40.cb_id(p_attempt), 'paper', v_admin, v_admin, demo_seed_40.cb_ts(p_days_ago, '16:40'), demo_seed_40.cb_ts(p_days_ago, '16:40')
     );
-    update public.forge_training_attempts set completion_id = pg_temp.cb_id(p_completion) where id = pg_temp.cb_id(p_attempt);
-    update public.forge_training_assignments set status = 'completed', updated_at = pg_temp.cb_ts(p_days_ago, '16:40') where id = v_assignment.id;
+    update public.forge_training_attempts set completion_id = demo_seed_40.cb_id(p_completion) where id = demo_seed_40.cb_id(p_attempt);
+    update public.forge_training_assignments set status = 'completed', updated_at = demo_seed_40.cb_ts(p_days_ago, '16:40') where id = v_assignment.id;
   end if;
 end;
 $$;
 
 -- Results in date order (certificate numbers follow completion order).
 --                          attempt completion assignment version try wrong days_ago time
-select pg_temp.cb_kiosk_attempt(1601, 1701, 1501, 1101, 1, 0, 71, '13:10');  -- Earl Broussard 100%
-select pg_temp.cb_kiosk_attempt(1602, null, 1502, 1101, 1, 2, 69, '19:40');  -- Darnell Hayes 60%, not passed
-select pg_temp.cb_kiosk_attempt(1603, 1703, 1502, 1101, 2, 1, 68, '19:15');  -- Darnell Hayes 80%
-select pg_temp.cb_kiosk_attempt(1604, 1704, 1503, 1101, 1, 0, 62, '12:35');  -- Hector Ramos 100%
-select pg_temp.cb_kiosk_attempt(1605, 1705, 1504, 1101, 1, 1, 61, '12:50');  -- Travis Guidry 80%
-select pg_temp.cb_paper_result(1606, 1706, 1505, 1101, 92, 58);              -- Ray Thibodeaux, paper 92%
-select pg_temp.cb_kiosk_attempt(1611, 1711, 1511, 1103, 1, 0, 33, '13:20');  -- Luis Hernandez 100%
-select pg_temp.cb_kiosk_attempt(1612, 1712, 1512, 1103, 1, 1, 30, '14:05');  -- Kevin Doucet 80%
-select pg_temp.cb_kiosk_attempt(1615, 1715, 1515, 1103, 1, 0, 27, '21:30');  -- Tamika Wright 100%
-select pg_temp.cb_paper_result(1622, 1722, 1522, 1104, 88, 21);              -- Curtis Landry 88%
-select pg_temp.cb_paper_result(1623, 1723, 1523, 1104, 96, 21);              -- Maria Gonzalez 96%
-select pg_temp.cb_paper_result(1624, 1724, 1524, 1104, 76, 21);              -- Tyrone Jackson 76%
-select pg_temp.cb_paper_result(1625, 1725, 1525, 1104, 100, 21);             -- Billy Hebert 100%
-select pg_temp.cb_paper_result(1626, null, 1526, 1104, 64, 21);              -- Gary Simoneaux 64%, retake needed
-select pg_temp.cb_kiosk_attempt(1613, null, 1513, 1103, 1, 2, 18, '20:45');  -- Brianna Sims 60%, not passed
+select demo_seed_40.cb_kiosk_attempt(1601, 1701, 1501, 1101, 1, 0, 71, '13:10');  -- Earl Broussard 100%
+select demo_seed_40.cb_kiosk_attempt(1602, null, 1502, 1101, 1, 2, 69, '19:40');  -- Darnell Hayes 60%, not passed
+select demo_seed_40.cb_kiosk_attempt(1603, 1703, 1502, 1101, 2, 1, 68, '19:15');  -- Darnell Hayes 80%
+select demo_seed_40.cb_kiosk_attempt(1604, 1704, 1503, 1101, 1, 0, 62, '12:35');  -- Hector Ramos 100%
+select demo_seed_40.cb_kiosk_attempt(1605, 1705, 1504, 1101, 1, 1, 61, '12:50');  -- Travis Guidry 80%
+select demo_seed_40.cb_paper_result(1606, 1706, 1505, 1101, 92, 58);              -- Ray Thibodeaux, paper 92%
+select demo_seed_40.cb_kiosk_attempt(1611, 1711, 1511, 1103, 1, 0, 33, '13:20');  -- Luis Hernandez 100%
+select demo_seed_40.cb_kiosk_attempt(1612, 1712, 1512, 1103, 1, 1, 30, '14:05');  -- Kevin Doucet 80%
+select demo_seed_40.cb_kiosk_attempt(1615, 1715, 1515, 1103, 1, 0, 27, '21:30');  -- Tamika Wright 100%
+select demo_seed_40.cb_paper_result(1622, 1722, 1522, 1104, 88, 21);              -- Curtis Landry 88%
+select demo_seed_40.cb_paper_result(1623, 1723, 1523, 1104, 96, 21);              -- Maria Gonzalez 96%
+select demo_seed_40.cb_paper_result(1624, 1724, 1524, 1104, 76, 21);              -- Tyrone Jackson 76%
+select demo_seed_40.cb_paper_result(1625, 1725, 1525, 1104, 100, 21);             -- Billy Hebert 100%
+select demo_seed_40.cb_paper_result(1626, null, 1526, 1104, 64, 21);              -- Gary Simoneaux 64%, retake needed
+select demo_seed_40.cb_kiosk_attempt(1613, null, 1513, 1103, 1, 2, 18, '20:45');  -- Brianna Sims 60%, not passed
 
 -- Shelby Arceneaux started the bin entry course on the kiosk but has not finished the sections (overdue).
 insert into public.forge_training_progress (assignment_id, organization_id, version_id, sections_completed, content_completed_at, first_opened_at, last_accessed_at)
-values (pg_temp.cb_id(1506), '20000000-0000-4000-8000-000000000100', pg_temp.cb_id(1101),
-        array[pg_temp.cb_id(1201), pg_temp.cb_id(1202)], null, pg_temp.cb_ts(41, '12:20'), pg_temp.cb_ts(40, '12:45'))
+values (demo_seed_40.cb_id(1506), '20000000-0000-4000-8000-000000000100', demo_seed_40.cb_id(1101),
+        array[demo_seed_40.cb_id(1201), demo_seed_40.cb_id(1202)], null, demo_seed_40.cb_ts(41, '12:20'), demo_seed_40.cb_ts(40, '12:45'))
 on conflict (assignment_id) do nothing;
-update public.forge_training_assignments set status = 'in_progress', updated_at = pg_temp.cb_ts(41, '12:20')
-where id = pg_temp.cb_id(1506) and status = 'assigned';
+update public.forge_training_assignments set status = 'in_progress', updated_at = demo_seed_40.cb_ts(41, '12:20')
+where id = demo_seed_40.cb_id(1506) and status = 'assigned';
 
-drop function if exists pg_temp.cb_kiosk_attempt(integer, integer, integer, integer, integer, integer, integer, text);
-drop function if exists pg_temp.cb_paper_result(integer, integer, integer, integer, integer, integer);
-drop function if exists pg_temp.cb_wc_days(uuid);
-drop function if exists pg_temp.cb_id(integer);
-drop function if exists pg_temp.cb_ts(integer, text);
+drop function if exists demo_seed_40.cb_kiosk_attempt(integer, integer, integer, integer, integer, integer, integer, text);
+drop function if exists demo_seed_40.cb_paper_result(integer, integer, integer, integer, integer, integer);
+drop function if exists demo_seed_40.cb_wc_days(uuid);
+drop function if exists demo_seed_40.cb_id(integer);
+drop function if exists demo_seed_40.cb_ts(integer, text);
+
+drop schema if exists demo_seed_40 cascade;
