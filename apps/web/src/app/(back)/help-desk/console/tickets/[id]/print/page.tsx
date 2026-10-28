@@ -41,7 +41,7 @@ const PrintTicketPage = async ({ params, searchParams }: { params: Promise<{ id:
         </h1>
         <p>{includeInternal ? 'INTERNAL — contains Forge-only notes' : 'Customer-safe copy'}</p>
       </header>
-      <dl className='grid grid-cols-[140px_1fr] gap-y-1'>
+      <dl className='grid grid-cols-[140px_minmax(0,1fr)] gap-y-1'>
         <dt className='font-semibold'>Tenant</dt>
         <dd>{(ticket as any).organization?.name}</dd>
         <dt className='font-semibold'>Requester</dt>

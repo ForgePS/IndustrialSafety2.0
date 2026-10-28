@@ -263,7 +263,7 @@ const NewTicketForm = ({
             <CardTitle>Review and submit</CardTitle>
           </CardHeader>
           <CardContent className='flex flex-col gap-4 text-sm'>
-            <dl className='grid gap-x-4 gap-y-2 sm:grid-cols-[160px_1fr]'>
+            <dl className='grid gap-x-4 gap-y-2 sm:grid-cols-[160px_minmax(0,1fr)]'>
               <dt className='text-textSecondary'>Request type</dt>
               <dd>{category?.label}</dd>
               <dt className='text-textSecondary'>Product area</dt>
@@ -286,7 +286,7 @@ const NewTicketForm = ({
                 {showContext ? (
                   <div className='border-t p-3'>
                     <p className='text-textSecondary mb-2 text-xs'>Collected automatically to help diagnose problems. We never collect passwords, cookies or page query strings.</p>
-                    <dl className='grid gap-x-4 gap-y-1 sm:grid-cols-[160px_1fr]'>
+                    <dl className='grid gap-x-4 gap-y-1 sm:grid-cols-[160px_minmax(0,1fr)]'>
                       {contextRows.map(([k, v]) => (
                         <div key={k} className='contents'>
                           <dt className='text-textSecondary'>{k}</dt>
