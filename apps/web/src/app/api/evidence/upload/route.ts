@@ -1,5 +1,8 @@
 import { createServiceRoleClient } from '@repo/supabase/server'
 import { getAuthUser } from '@repo/supabase/serverHelpers'
+
+import { NextResponse } from 'next/server'
+
 import {
   createEvidenceMetadata,
   EVIDENCE_MAX_BYTES,
@@ -10,13 +13,13 @@ import {
   requireForgePermissionForResource,
   requireForgeResourceManage
 } from '@/lib/forgeResourceRegistry'
-import { NextResponse } from 'next/server'
 
 export async function POST(request: Request) {
   const origin = request.headers.get('origin')
   const forwardedHost = request.headers.get('x-forwarded-host')
   const host = forwardedHost || request.headers.get('host')
   let validOrigin = false
+
   if (origin && host) {
     try {
       validOrigin = new URL(origin).host === host
@@ -24,6 +27,7 @@ export async function POST(request: Request) {
       validOrigin = false
     }
   }
+
   if (!validOrigin) {
     return NextResponse.json({ error: 'Invalid request origin.' }, { status: 403 })
   }
@@ -35,6 +39,7 @@ export async function POST(request: Request) {
   const {
     data: { user }
   } = await getAuthUser()
+
   if (!user) return NextResponse.json({ error: 'Sign in required.' }, { status: 401 })
 
   const form = await request.formData()
@@ -49,8 +54,14 @@ export async function POST(request: Request) {
   }
 
   const auth = await requireForgeResourceManage({ resourceType, resourceId })
+
   if (!auth.ok) {
     return NextResponse.json({ error: 'Not found.' }, { status: 404 })
+  }
+
+  // Archived records are read-only, whether archiving is a column or a status value.
+  if (auth.resource.archived || auth.resource.lifecycleState === 'archived') {
+    return NextResponse.json({ error: 'Archived records cannot receive new files.' }, { status: 409 })
   }
 
   const evidencePerm = await requireForgePermissionForResource({
@@ -60,6 +71,7 @@ export async function POST(request: Request) {
     organizationId: auth.context.activeOrganization.id,
     userId: auth.context.user.id
   })
+
   if (!evidencePerm.ok) {
     return NextResponse.json({ error: 'Not found.' }, { status: 404 })
   }
@@ -86,6 +98,7 @@ export async function POST(request: Request) {
     'measurement',
     'other'
   ]
+
   const type = allowedTypes.includes(evidenceType) ? evidenceType : 'other'
 
   const evidenceId = crypto.randomUUID()

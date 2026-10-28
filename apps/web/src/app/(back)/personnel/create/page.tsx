@@ -2,8 +2,10 @@ import Link from 'next/link'
 import type { Metadata } from 'next'
 import { Button } from '@repo/ui/components/ui/button'
 import { createServiceRoleClient } from '@repo/supabase/server'
+
 import PersonnelRecordForm from '../PersonnelRecordForm'
 import { getEffectiveForm } from '@/lib/forgeForms'
+import { getPersonnelStructureOptions } from '@/lib/forgePersonnelStructure'
 import { getTenantScopeAssignments } from '@/lib/forgeScope'
 import { requireTenantPermission } from '@/lib/forgeTenantAuth'
 
@@ -45,6 +47,11 @@ const AddPersonnelPage = async () => {
       ? (allDivisions || []).filter((item: any) => assignments.divisionIds.includes(item.id))
       : (allDivisions || [])
 
+  const structure = await getPersonnelStructureOptions({
+    organizationId,
+    locationIds: context.permission.scope === 'location' ? assignments.locationIds : null
+  })
+
   return (
     <div className='flex flex-col gap-6'>
       <div>
@@ -57,6 +64,9 @@ const AddPersonnelPage = async () => {
         form={form}
         locations={locations.map((item: any) => ({ id: item.id, label: item.code ? `${item.name} (${item.code})` : item.name }))}
         divisions={divisions.map((item: any) => ({ id: item.id, label: item.code ? `${item.name} (${item.code})` : item.name }))}
+        departments={structure.departments}
+        positions={structure.positions}
+        supervisors={structure.supervisors}
       />
     </div>
   )

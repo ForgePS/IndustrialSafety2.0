@@ -1,6 +1,7 @@
 'use client'
 
 import { useMemo, useState, useTransition } from 'react'
+
 import Link from 'next/link'
 import { TbBook2, TbCheck, TbClipboardList, TbPlus, TbSearch } from 'react-icons/tb'
 import { Badge } from '@repo/ui/components/ui/badge'
@@ -9,6 +10,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@repo
 import { Input } from '@repo/ui/components/ui/input'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@repo/ui/components/ui/table'
 import { toast } from '@repo/ui/utils/toast'
+
 import { approveTrainingCompletion } from './actions'
 
 type Course = {
@@ -51,7 +53,8 @@ const TrainingOverview = ({
   canCreateCourse,
   canAssign,
   canRecordCompletion,
-  canApprove
+  canApprove,
+  lmsLinks = []
 }: {
   courses: Course[]
   assignments: Assignment[]
@@ -65,6 +68,9 @@ const TrainingOverview = ({
   canAssign: boolean
   canRecordCompletion: boolean
   canApprove: boolean
+
+  /** Links to the LMS tools the viewer may use (matrix, groups, paper quizzes, kiosk, certificates). */
+  lmsLinks?: Array<{ href: string; label: string }>
 }) => {
   const [search, setSearch] = useState('')
   const [pending, startTransition] = useTransition()
@@ -105,10 +111,12 @@ const TrainingOverview = ({
   const approve = (completionId: string) => {
     startTransition(async () => {
       const result = await approveTrainingCompletion(completionId)
+
       if ('error' in result) {
         toast('error', result.error || 'Unable to approve completion.')
         return
       }
+
       toast('success', result.message)
       window.location.reload()
     })
@@ -127,6 +135,12 @@ const TrainingOverview = ({
           {canRecordCompletion ? <Button asChild><Link href='/training/completions/create'><TbCheck />Record Completion</Link></Button> : null}
         </div>
       </div>
+
+      {lmsLinks.length ? (
+        <nav className='flex flex-wrap gap-2' aria-label='Training tools' data-testid='training-tools'>
+          {lmsLinks.map(link => <Button key={link.href} size='sm' variant='tonalDefault' asChild><Link href={link.href}>{link.label}</Link></Button>)}
+        </nav>
+      ) : null}
 
       <Card>
         <CardContent className='p-5'>

@@ -1,6 +1,8 @@
+import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import type { Metadata } from 'next'
 import { createServiceRoleClient } from '@repo/supabase/server'
+
 import TrainingRecordForm from '../../TrainingRecordForm'
 import type { TrainingFormValues } from '../../actions'
 import { getEffectiveForm } from '@/lib/forgeForms'
@@ -30,6 +32,7 @@ const TrainingCoursePage = async ({ params }: { params: Promise<{ id: string }> 
   const canEdit = context.access.effective.some(
     item => item.permissionKey === 'training.create_course' && item.allowed
   )
+
   const canUseAi = context.access.effective.some(
     item => item.permissionKey === 'forge_ai.use' && item.allowed
   )
@@ -52,13 +55,18 @@ const TrainingCoursePage = async ({ params }: { params: Promise<{ id: string }> 
           <h1 className='text-textPrimary mt-1 text-3xl font-bold'>{course.title}</h1>
           <p className='text-textSecondary mt-2'>{canEdit ? 'Edit the course using the tenant-configured Training form.' : 'Your role has view-only access to this course.'}</p>
         </div>
-        {canUseAi ? (
-          <ForgeAiContextButton
-            contextType='training_course'
-            recordId={course.id}
-            recordLabel={course.course_code || course.title}
-          />
-        ) : null}
+        <div className='flex flex-wrap items-center gap-3'>
+          {context.access.effective.some(item => item.permissionKey === 'training.manage_content' && item.allowed) ? (
+            <Link className='text-primary font-semibold hover:underline' href={`/training/courses/${course.id}/content`}>Content &amp; Quiz</Link>
+          ) : null}
+          {canUseAi ? (
+            <ForgeAiContextButton
+              contextType='training_course'
+              recordId={course.id}
+              recordLabel={course.course_code || course.title}
+            />
+          ) : null}
+        </div>
       </div>
 
       {canEdit ? (

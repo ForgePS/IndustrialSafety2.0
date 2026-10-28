@@ -1,7 +1,9 @@
+import Link from 'next/link'
 import type { Metadata } from 'next'
 import { Badge } from '@repo/ui/components/ui/badge'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@repo/ui/components/ui/card'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@repo/ui/components/ui/table'
+
 import { requireTenantPermission } from '@/lib/forgeTenantAuth'
 import { getMyTraining } from '@/lib/forgeTraining'
 import { getEffectiveLookup } from '@/lib/forgeLookups'
@@ -75,7 +77,7 @@ const MyTrainingPage = async () => {
               return (
                 <TableRow key={item.id}>
                   <TableCell>
-                    <div className='font-semibold'>{item.forge_training_courses?.title || 'Unknown course'}</div>
+                    <Link className='text-primary font-semibold hover:underline' href={`/my-training/${item.id}`}>{item.forge_training_courses?.title || 'Unknown course'}</Link>
                     <div className='text-textSecondary text-xs'>{item.forge_training_courses?.course_code || 'No course code'}</div>
                   </TableCell>
                   <TableCell>
@@ -116,7 +118,11 @@ const MyTrainingPage = async () => {
               <TableRow key={item.id}>
                 <TableCell>
                   <div className='font-semibold'>{item.forge_training_courses?.title || 'Unknown course'}</div>
-                  <div className='text-textSecondary text-xs'>{item.certificate_number || 'No certificate number'}</div>
+                  {item.certificate_number && item.approval_status === 'approved' && ['passed', 'completed'].includes(item.result) ? (
+                    <Link className='text-primary text-xs hover:underline' href={`/training/certificates/${item.id}`}>Certificate {item.certificate_number}</Link>
+                  ) : (
+                    <div className='text-textSecondary text-xs'>{item.certificate_number || 'No certificate number'}</div>
+                  )}
                 </TableCell>
                 <TableCell>{new Date(item.completed_at).toLocaleDateString()}</TableCell>
                 <TableCell>{resultLabels[item.result] || item.result}</TableCell>

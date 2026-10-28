@@ -1,8 +1,9 @@
 'use client'
 
 import { useMemo, useState } from 'react'
+
 import Link from 'next/link'
-import { TbPlus, TbSearch } from 'react-icons/tb'
+import { TbPlus, TbSearch, TbSitemap } from 'react-icons/tb'
 import { Badge } from '@repo/ui/components/ui/badge'
 import { Button } from '@repo/ui/components/ui/button'
 import { Card, CardContent } from '@repo/ui/components/ui/card'
@@ -19,15 +20,18 @@ export type PersonnelListItem = {
   email: string | null
   locationName: string | null
   divisionName: string | null
+  departmentName: string | null
 }
 
 const PersonnelList = ({
   personnel,
   canCreate,
+  canConfigure = false,
   statusLabels
 }: {
   personnel: PersonnelListItem[]
   canCreate: boolean
+  canConfigure?: boolean
   statusLabels: Record<string, string>
 }) => {
   const [search, setSearch] = useState('')
@@ -44,7 +48,8 @@ const PersonnelList = ({
         person.job_title?.toLowerCase().includes(q) ||
         person.email?.toLowerCase().includes(q) ||
         person.locationName?.toLowerCase().includes(q) ||
-        person.divisionName?.toLowerCase().includes(q)
+        person.divisionName?.toLowerCase().includes(q) ||
+        person.departmentName?.toLowerCase().includes(q)
 
       return matchesText && (status === 'all' || person.employment_status === status)
     })
@@ -59,11 +64,18 @@ const PersonnelList = ({
           <h1 className='text-textPrimary text-3xl font-bold'>Personnel</h1>
           <p className='text-textSecondary mt-2'>Personnel records visible within your assigned access scope.</p>
         </div>
-        {canCreate ? (
-          <Button asChild>
-            <Link href='/personnel/create'><TbPlus />Add Personnel</Link>
-          </Button>
-        ) : null}
+        <div className='flex flex-wrap gap-3'>
+          {canConfigure ? (
+            <Button variant='outline' asChild>
+              <Link href='/personnel/structure'><TbSitemap />Departments &amp; Positions</Link>
+            </Button>
+          ) : null}
+          {canCreate ? (
+            <Button asChild>
+              <Link href='/personnel/create'><TbPlus />Add Personnel</Link>
+            </Button>
+          ) : null}
+        </div>
       </div>
 
       <Card>
@@ -96,6 +108,7 @@ const PersonnelList = ({
               <TableHead>Employee #</TableHead>
               <TableHead>Status</TableHead>
               <TableHead>Job Title</TableHead>
+              <TableHead>Department</TableHead>
               <TableHead>Location</TableHead>
               <TableHead>Division</TableHead>
               <TableHead className='text-right'>Record</TableHead>
@@ -111,6 +124,7 @@ const PersonnelList = ({
                 <TableCell>{person.employee_number || '—'}</TableCell>
                 <TableCell><Badge size='sm' variant={person.employment_status === 'active' ? 'tonalSuccess' : 'secondary'}>{statusLabels[person.employment_status] || person.employment_status}</Badge></TableCell>
                 <TableCell>{person.job_title || '—'}</TableCell>
+                <TableCell>{person.departmentName || '—'}</TableCell>
                 <TableCell>{person.locationName || '—'}</TableCell>
                 <TableCell>{person.divisionName || '—'}</TableCell>
                 <TableCell className='text-right'>
@@ -118,7 +132,7 @@ const PersonnelList = ({
                 </TableCell>
               </TableRow>
             )) : (
-              <TableRow><TableCell colSpan={7} className='py-10 text-center'>No personnel match the current filters.</TableCell></TableRow>
+              <TableRow><TableCell colSpan={8} className='py-10 text-center'>No personnel match the current filters.</TableCell></TableRow>
             )}
           </TableBody>
         </Table>
