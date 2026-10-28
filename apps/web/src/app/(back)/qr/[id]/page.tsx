@@ -12,6 +12,7 @@ import { getScopedAssets } from '@/lib/forgeAssets'
 import { getEffectiveForm } from '@/lib/forgeForms'
 import { getEffectiveLookup } from '@/lib/forgeLookups'
 import { generateForgeQrSvg } from '@/lib/forgeQrSvg'
+import { describeQrDestination } from '@/lib/forgeQrDestination'
 import { getForgeQrScanUrl, getQrScanHistory, qrCodeWithinScope } from '@/lib/forgeQr'
 import { requireTenantPermission } from '@/lib/forgeTenantAuth'
 import ForgeAiContextButton from '@/components/forge-ai/ForgeAiContextButton'
@@ -198,7 +199,7 @@ const QrCodeDetailPage = async ({ params }: { params: Promise<{ id: string }> })
                 <TableRow key={scan.id}>
                   <TableCell>{new Date(scan.scanned_at).toLocaleString()}</TableCell>
                   <TableCell>{scan.auth_user_id ? 'Authenticated' : 'Not signed in'}</TableCell>
-                  <TableCell className='font-mono text-xs'>{scan.destination_path}</TableCell>
+                  <TableCell>{describeQrDestination(scan.destination_path, targetAsset?.name)}</TableCell>
                   <TableCell className='max-w-md truncate'>{scan.user_agent || '—'}</TableCell>
                 </TableRow>
               )) : (
