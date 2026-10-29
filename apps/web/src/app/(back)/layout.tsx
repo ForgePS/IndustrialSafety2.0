@@ -3,6 +3,7 @@ import type { ReactNode } from 'react'
 
 // Next Imports
 import { cookies } from 'next/headers'
+import { redirect } from 'next/navigation'
 import type { Metadata } from 'next'
 
 // Third-party Imports
@@ -17,20 +18,22 @@ import Header from '@components/layout/vertical/Header'
 // Config Imports
 import appConfig from '@configs/appConfig'
 
+// Lib Imports
+import { getForgePlatformRole } from '@/lib/forgeCreatorAuth'
+import { getTenantContext } from '@/lib/forgeTenantContext'
+import { getEffectiveExperience } from '@/lib/forgeExperience'
+import { getHelpdeskStaffAccess } from '@/lib/forgeHelpdeskAccess'
+
 export async function generateMetadata(): Promise<Metadata> {
   return {
     title: {
-      template: `%s | ${appConfig.appName} - Next.js Boilerplate PRO`,
-      default: `${appConfig.appName} - Next.js Boilerplate PRO`
-    },
-    alternates: {
-      canonical: 'https://jetship-nextjs-saas-boilerplate-demo.vercel.app'
+      template: `%s | ${appConfig.appName}`,
+      default: appConfig.appName
     }
   }
 }
 
 const AdminLayout = async ({ children }: { children: ReactNode }) => {
-  // Vars
   const cookieStore = await cookies()
   const sidebarCookie = cookieStore.get('is-sidebar-open')
 
@@ -38,12 +41,43 @@ const AdminLayout = async ({ children }: { children: ReactNode }) => {
     data: { user }
   } = await getAuthUser()
 
-  const roles = user?.user_metadata.roles
-  const permissions = user?.user_metadata.permissions
+  if (!user) redirect('/auth/login')
+
+  const roles = user.user_metadata?.roles
+  const permissions = user.user_metadata?.permissions
+  const forgePlatformRole = await getForgePlatformRole(user.id)
+  const tenantContext = await getTenantContext()
+  const helpdeskStaff = forgePlatformRole ? await getHelpdeskStaffAccess() : null
+
+  const tenantNavigation =
+    tenantContext.user && tenantContext.activeOrganization
+      ? await getEffectiveExperience({
+          organizationId: tenantContext.activeOrganization.id,
+          userId: tenantContext.user.id,
+          types: ['menu']
+        })
+      : []
 
   return (
     <SidebarProvider defaultOpen={sidebarCookie ? JSON.parse(sidebarCookie.value) : appConfig.layout === 'vertical'}>
-      <VerticalLayout navigation={<Sidebar roles={roles} permissions={permissions} />} header={<Header />}>
+      <VerticalLayout
+        navigation={
+          <Sidebar
+            roles={roles}
+            permissions={permissions}
+            forgePlatformRole={forgePlatformRole}
+            tenantNavigation={tenantNavigation.filter(item => item.routeLive)}
+            activeOrganizationName={tenantContext.activeOrganization?.name || null}
+            helpdeskConsole={Boolean(helpdeskStaff?.has('helpdesk.support.view'))}
+          />
+        }
+        header={
+          <Header
+            organizations={tenantContext.organizations}
+            activeOrganizationId={tenantContext.activeOrganization?.id || null}
+          />
+        }
+      >
         {children}
       </VerticalLayout>
     </SidebarProvider>

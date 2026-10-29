@@ -1,0 +1,179 @@
+name: Forge module validation
+
+on:
+  pull_request:
+    branches:
+      - forge-creator-2.0
+
+permissions:
+  contents: read
+
+jobs:
+  database:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v7
+      - uses: supabase/setup-cli@v2
+        with:
+          version: 2.108.0
+      - name: Apply migrations to a fresh local database
+        working-directory: apps/web
+        run: supabase db start
+      - name: Run local seed
+        working-directory: apps/web
+        run: supabase db reset
+
+  web:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '22'
+      - uses: pnpm/action-setup@v6
+        with:
+          version: 9.13.2
+      - run: pnpm install --frozen-lockfile
+      - run: node scripts/check-forge-ai-schemas.cjs
+      - run: pnpm --filter forge-industrial-safety-2.0-web type-check
+      - run: pnpm --filter forge-industrial-safety-2.0-web build
+
+  browser-smoke:
+    needs:
+      - database
+      - web
+    runs-on: ubuntu-latest
+    timeout-minutes: 75
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '22'
+      - uses: pnpm/action-setup@v6
+        with:
+          version: 9.13.2
+      - uses: supabase/setup-cli@v2
+        with:
+          version: 2.108.0
+
+      - run: pnpm install --frozen-lockfile
+
+      - name: Start and seed local Supabase
+        working-directory: apps/web
+        run: |
+          supabase start
+          supabase db reset
+          supabase status -o env > /tmp/supabase.env
+
+      - name: Export local Supabase environment
+        shell: bash
+        run: |
+          set -a
+          source /tmp/supabase.env
+          set +a
+          echo "API_URL=$API_URL" >> "$GITHUB_ENV"
+          echo "ANON_KEY=$ANON_KEY" >> "$GITHUB_ENV"
+          echo "SERVICE_ROLE_KEY=$SERVICE_ROLE_KEY" >> "$GITHUB_ENV"
+
+          cat > apps/web/.env.local <<EOF
+          NEXT_PUBLIC_APP_URL=http://127.0.0.1:3000
+          NEXT_PUBLIC_APP_DOMAIN=127.0.0.1
+          NEXT_PUBLIC_APP_NAME=Forge Industrial Safety 2.0
+          NEXT_PUBLIC_APP_TITLE=%s | Forge Industrial Safety 2.0
+          NEXT_PUBLIC_APP_DESCRIPTION=Forge Industrial Safety 2.0
+          NEXT_PUBLIC_SUPABASE_URL=$API_URL
+          NEXT_PUBLIC_SUPABASE_ANON_KEY=$ANON_KEY
+          SUPABASE_SERVICE_ROLE_KEY=$SERVICE_ROLE_KEY
+          NEXT_PUBLIC_AUTH_PASSWORD=true
+          NEXT_PUBLIC_AUTH_MAGIC_LINK=false
+          SESSION_SECRET=forge-module-smoke-test-session-secret
+          EOF
+
+      - name: Prepare second tenant for isolation test
+        run: node apps/web/tests/setup-support-smoke.mjs
+
+      - name: Run help desk database regression
+        run: node apps/web/tests/fis-hd01-helpdesk-db.cjs
+
+      - name: Install Playwright Chromium
+        run: |
+          pnpm add -Dw @playwright/test@1.55.0 --lockfile=false
+          pnpm exec playwright install --with-deps chromium
+
+      # Serve a production build: `next dev` compiled every route the suites visit, hit Next's
+      # 80%-of-heap restart watcher mid-run and dropped connections (ERR_CONNECTION_REFUSED/RESET).
+      - name: Build Forge web app
+        run: pnpm --filter forge-industrial-safety-2.0-web build
+
+      - name: Start Forge web app
+        run: |
+          pnpm --filter forge-industrial-safety-2.0-web start --hostname 127.0.0.1 --port 3000 > /tmp/forge-smoke.log 2>&1 &
+          echo $! > /tmp/forge-smoke.pid
+
+          for i in $(seq 1 90); do
+            if curl -fsS http://127.0.0.1:3000/auth/login >/dev/null; then
+              exit 0
+            fi
+            sleep 2
+          done
+
+          cat /tmp/forge-smoke.log
+          exit 1
+
+      - name: Run sign-in hardening regression
+        env:
+          SMOKE_BASE_URL: http://127.0.0.1:3000
+        run: pnpm exec playwright test apps/web/tests/auth-signin.spec.cjs --reporter=line --workers=1
+
+      - name: Run template removal regression
+        env:
+          SMOKE_BASE_URL: http://127.0.0.1:3000
+        run: pnpm exec playwright test apps/web/tests/template-removal.spec.cjs --reporter=line --workers=1
+
+      - name: Run help desk browser smoke test
+        env:
+          SMOKE_BASE_URL: http://127.0.0.1:3000
+        run: pnpm exec playwright test apps/web/tests/support-smoke.spec.cjs --reporter=line --workers=1
+
+      - name: Run help desk customer, staff and security browser regression
+        env:
+          SMOKE_BASE_URL: http://127.0.0.1:3000
+        run: pnpm exec playwright test apps/web/tests/fis-hd-helpdesk.spec.cjs --reporter=line --workers=1
+
+      - name: Run help desk mobile layout regression
+        env:
+          SMOKE_BASE_URL: http://127.0.0.1:3000
+        run: pnpm exec playwright test apps/web/tests/fis-hd-mobile.spec.cjs --reporter=line --workers=1
+
+      - name: Run phone layout regression
+        env:
+          SMOKE_BASE_URL: http://127.0.0.1:3000
+        run: pnpm exec playwright test apps/web/tests/phone-layout.spec.cjs --reporter=line --workers=1
+
+      - name: Run Corrective Actions browser smoke test
+        env:
+          SMOKE_BASE_URL: http://127.0.0.1:3000
+        run: pnpm exec playwright test apps/web/tests/corrective-actions-smoke.spec.cjs --reporter=line --workers=1
+
+      - name: Run incident equipment browser smoke test
+        env:
+          SMOKE_BASE_URL: http://127.0.0.1:3000
+        run: pnpm exec playwright test apps/web/tests/incident-equipment-smoke.spec.cjs --reporter=line --workers=1
+
+      - name: Print web log on failure
+        if: failure()
+        run: |
+          cat /tmp/forge-smoke.log || true
+          find test-results -name error-context.md -type f -exec cat {} + || true
+
+      - name: Upload Playwright failure artifacts
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: forge-module-smoke-artifacts
+          path: |
+            test-results
+            playwright-report
+          if-no-files-found: ignore

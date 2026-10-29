@@ -14,6 +14,9 @@ type MagicLinkParamsType = {
   email: string
 }
 
+/** Thrown by `useSignInWithPassword` when the account exists but its email is not confirmed yet. */
+export const EMAIL_NOT_CONFIRMED_ERROR = 'Email not confirmed'
+
 export const useSignInWithPassword = () => {
   // Vars
   const supabase = createClient()
@@ -22,7 +25,8 @@ export const useSignInWithPassword = () => {
     const { data, error } = await supabase.auth.signInWithPassword(params)
 
     if (error) {
-      throw error.message
+      // Decide on the stable error code, not the provider's wording, so callers can branch reliably.
+      throw error.code === 'email_not_confirmed' ? EMAIL_NOT_CONFIRMED_ERROR : error.message
     }
 
     return data

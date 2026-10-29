@@ -4,6 +4,9 @@
 import { useEffect, useState, useTransition } from 'react'
 import type { ReactNode } from 'react'
 
+// Next Imports
+import { useRouter } from 'next/navigation'
+
 // Third-party Imports
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useForm } from 'react-hook-form'
@@ -16,19 +19,22 @@ import { Button } from '@repo/ui/components/ui/button'
 import { passwordSignUpFormSchema, usePasswordSignUp } from '@repo/auth/sign-up'
 import Trans from '@repo/i18n/Trans'
 import { useTranslation } from 'react-i18next'
-import type { User } from '@supabase/supabase-js'
 import type { PasswordSignUpFormData } from '@repo/auth/sign-up'
 
 // Config Imports
 import appConfig from '@configs/appConfig'
 
-const PasswordSignUpForm = ({ users }: { users: User[] | null }) => {
+// Server Action Imports
+import { hasUnconfirmedAccount } from '../actions'
+
+const PasswordSignUpForm = () => {
   // States
   const [showAlert, setShowAlert] = useState(false)
   const [pending, startTransition] = useTransition()
 
   // Hooks
   const { t } = useTranslation()
+  const router = useRouter()
 
   // Vars
   const form = useForm<PasswordSignUpFormData>({
@@ -40,16 +46,26 @@ const PasswordSignUpForm = ({ users }: { users: User[] | null }) => {
     }
   })
 
-  const { handleSignUp, error, isSuccess } = usePasswordSignUp({
-    emailRedirectTo: `${process.env.NEXT_PUBLIC_APP_URL}/auth/callback`,
-    verifyEmailRedirectTo: `/auth/verify-email?email=${form.getValues('email')}`
+  const { handleSignUp, error, isSuccess, reset } = usePasswordSignUp({
+    emailRedirectTo: `${process.env.NEXT_PUBLIC_APP_URL}/auth/callback`
   })
 
   const onSubmit = (formData: PasswordSignUpFormData) => {
     startTransition(async () => {
       try {
         setShowAlert(false)
-        await handleSignUp(formData, users)
+        reset()
+
+        // Supabase "succeeds" for an existing unconfirmed email without changing its password, so
+        // send that visitor to email verification rather than reporting a new account. The lookup throws
+        // if it cannot run, which lands in the generic sign-up error below instead of signing up blind.
+        if (await hasUnconfirmedAccount(formData.email)) {
+          router.push(`/auth/verify-email?email=${encodeURIComponent(formData.email)}`)
+
+          return
+        }
+
+        await handleSignUp(formData)
       } catch (error) {
         console.error(error)
         setShowAlert(true)

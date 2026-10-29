@@ -26,12 +26,12 @@ const animateIcons = {
   transition: {
     y: {
       repeat: Infinity,
-      repeatType: 'mirror',
+      repeatType: 'mirror' as const,
       duration: 2
     },
     rotate: {
       repeat: Infinity,
-      repeatType: 'mirror',
+      repeatType: 'mirror' as const,
       duration: 2
     }
   }

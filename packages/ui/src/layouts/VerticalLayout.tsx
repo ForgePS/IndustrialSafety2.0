@@ -21,7 +21,7 @@ const VerticalLayout = (props: VerticalLayoutProps) => {
   const { header, navigation, children } = props
 
   return (
-    <div className={clsx(verticalLayoutClasses.root, 'flex flex-auto')}>
+    <div className={clsx(verticalLayoutClasses.root, 'min-is-0 flex flex-auto')}>
       {navigation ?? null}
       <div className={clsx(verticalLayoutClasses.content, 'min-is-0 is-full flex flex-col')}>
         {header ?? null}

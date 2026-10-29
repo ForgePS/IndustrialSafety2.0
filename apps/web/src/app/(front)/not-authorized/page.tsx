@@ -5,10 +5,7 @@ import type { Metadata } from 'next'
 import NotAuthorized from '@repo/ui/components/NotAuthorized'
 
 export const metadata: Metadata = {
-  title: { absolute: 'Not Authorized' },
-  alternates: {
-    canonical: 'https://jetship-nextjs-saas-boilerplate-demo.vercel.app/not-authorized'
-  }
+  title: { absolute: 'Not Authorized' }
 }
 
 const NotAuthorizedPage = () => {
