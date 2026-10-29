@@ -34,13 +34,18 @@ describe("legacy vanity redirect snippet (FIS-L02)", () => {
   it("emits 301 to canonical host and strips OAuth/session query params", () => {
     const snippet = buildLegacyHostRedirectSnippet([
       {
+        from: "producersrice.forgepublicsafety.com",
+        to: "producersrice.forgeindustrialsafety.com",
+      },
+      {
         from: "producers-rice-mill.forgepublicsafety.com",
-        to: "producersrice.forgepublicsafety.com",
+        to: "producersrice.forgeindustrialsafety.com",
       },
     ]);
 
     expect(snippet).toContain("producers-rice-mill.forgepublicsafety.com");
     expect(snippet).toContain("producersrice.forgepublicsafety.com");
+    expect(snippet).toContain("producersrice.forgeindustrialsafety.com");
     expect(snippet).toContain("statusCode: 301");
     for (const key of LEGACY_REDIRECT_STRIP_QUERY_PARAMS) {
       expect(snippet).toContain(`'${key}': true`);

@@ -2,7 +2,7 @@
  * Idempotent map of Producers Rice Mill vanity hosts → production tenant.
  *
  *   TENANT_ID=019ff7d0-c20f-7659-81e4-c0cd68e23262 \
- *   DOMAIN=producersrice.forgepublicsafety.com \
+ *   DOMAIN=producersrice.forgeindustrialsafety.com \
  *   node packages/database/dist/seed-producers-domain-ecs.js
  */
 import { LOCAL_PLACEHOLDER_ENV, loadEnvironmentAsync } from "@forge/environment";
@@ -17,8 +17,14 @@ import { tenantDomains, tenants } from "./schema.js";
 export const PRODUCERS_PRODUCTION_TENANT_ID = "019ff7d0-c20f-7659-81e4-c0cd68e23262";
 
 export const PRODUCERS_VANITY_HOSTS = [
+  "producersrice.forgeindustrialsafety.com",
   "producersrice.forgepublicsafety.com",
   "producers-rice-mill.forgepublicsafety.com",
+  // Field / Industrial CloudFront hosts (pre-cutover) so login branding and
+  // Field auto-tenant switch resolve to Producers Rice Mill.
+  "d2qv0f0hojgvqo.cloudfront.net",
+  "d1n0e5wvjwbpdf.cloudfront.net",
+  "dr716wyn2h1dm.cloudfront.net",
 ] as const;
 
 export async function seedProducersDomain(options?: {

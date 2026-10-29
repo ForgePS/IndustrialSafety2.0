@@ -90,7 +90,7 @@ const publicProducersIndustrialUrl = isProduction
  * domains stay in browserOrigins; this suffix covers tenant hosts under our zone
  * so each new vanity hostname does not require an API CORS redeploy.
  */
-const browserOriginSuffixes = [".forgepublicsafety.com"];
+const browserOriginSuffixes = [".forgepublicsafety.com", ".forgeindustrialsafety.com"];
 /** CloudFront origins retained until customer DNS cutover (explicit CORS allowlist). */
 const legacyCloudFrontOrigins = isProduction
   ? [...PRODUCTION_PRE_CUTOVER_SPA_ORIGINS]

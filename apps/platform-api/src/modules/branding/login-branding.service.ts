@@ -34,6 +34,7 @@ function normalizeHost(raw: string): string {
 
 function isProducersHost(host: string): boolean {
   return (
+    host === "producersrice.forgeindustrialsafety.com" ||
     host === "producersrice.forgepublicsafety.com" ||
     host === "producers-rice-mill.forgepublicsafety.com"
   );

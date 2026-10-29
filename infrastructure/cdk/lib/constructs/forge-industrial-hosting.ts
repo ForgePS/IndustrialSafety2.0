@@ -10,9 +10,10 @@ export interface ForgeIndustrialHostingProps {
 /**
  * Industrial Web static hosting (IND-WEB-D1 development gate).
  *
- * Legacy vanity: producers-rice-mill → producersrice (FIS-L02). DNS/CF aliases for
- * both hosts remain managed by scripts/cf-alias-producersrice.mjs and
- * scripts/ind11b-p2-cf-alias-producers-dark.mjs — do not delete those aliases.
+ * Canonical Producers vanity: producersrice.forgeindustrialsafety.com.
+ * Legacy forgepublicsafety.com hosts permanently 301 here. DNS/CF aliases for
+ * legacy hosts remain (scripts/cf-alias-producersrice.mjs) so redirects work.
+ * Apex forgeindustrialsafety.com stays marketing-only (not an alias here).
  */
 export class ForgeIndustrialHosting extends ForgeStaticHosting {
   constructor(scope: Construct, id: string, props: ForgeIndustrialHostingProps) {
@@ -28,12 +29,16 @@ export class ForgeIndustrialHosting extends ForgeStaticHosting {
       // Matches existing branding vanity host hardcoding pattern.
       legacyRedirects: [
         {
+          from: "producersrice.forgepublicsafety.com",
+          to: "producersrice.forgeindustrialsafety.com",
+        },
+        {
           from: "producers-rice-mill.forgepublicsafety.com",
-          to: "producersrice.forgepublicsafety.com",
+          to: "producersrice.forgeindustrialsafety.com",
         },
       ],
       // Module pages are fully statically exported via generateStaticParams().
-      // Directory index rewrite still maps /modules/{code}/ → index.html.
+      // Directory index rewrite still maps /modules/{code}/ to index.html.
     });
   }
 }

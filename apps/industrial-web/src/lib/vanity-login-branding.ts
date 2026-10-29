@@ -36,6 +36,10 @@ const PRODUCERS_LOGIN: VanityLoginBranding["login"] = {
 
 /** Hostname → bundled branding (lowercase, no port). */
 const VANITY_HOSTS: Readonly<Record<string, VanityLoginBranding>> = {
+  "producersrice.forgeindustrialsafety.com": {
+    tenantId: PRODUCERS_PRODUCTION_TENANT_ID,
+    login: PRODUCERS_LOGIN,
+  },
   "producersrice.forgepublicsafety.com": {
     tenantId: PRODUCERS_PRODUCTION_TENANT_ID,
     login: PRODUCERS_LOGIN,

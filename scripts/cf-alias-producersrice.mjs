@@ -1,11 +1,14 @@
 /**
- * Add producersrice.forgepublicsafety.com alias to Industrial CloudFront distribution.
- * Uses existing *.forgepublicsafety.com ACM cert. Does not create DNS records.
+ * Add Producers Rice Mill vanity aliases to Industrial CloudFront distribution.
+ * Dual-serve: keep forgepublicsafety.com hosts live; add forgeindustrialsafety.com.
+ * Permanent 301s to the new host are a later flip — do not remove old aliases yet.
  *
- * FIS-L02: Keep this alias. Legacy producers-rice-mill is 301'd to producersrice via
- * CloudFront Function (ForgeIndustrialHosting legacyRedirects). Do not delete either
- * alias — CDK domainNames may only list the primary industrial host; re-run this
- * script after Frontend deploys if aliases were dropped.
+ * Requires the industrial CF viewer cert to cover both zones (multi-SAN ACM).
+ * Does not create DNS records.
+ *
+ * FIS-L02: Legacy producers-rice-mill is 301'd to producersrice via CloudFront
+ * Function (ForgeIndustrialHosting legacyRedirects). Re-run after Frontend
+ * deploys if aliases were dropped.
  */
 import { spawnSync } from "node:child_process";
 import fs from "node:fs";
@@ -13,6 +16,7 @@ import path from "node:path";
 
 const DIST_ID = process.env.INDUSTRIAL_CF_DIST_ID || "E364CHF9M9794T";
 const NEW_ALIASES = [
+  "producersrice.forgeindustrialsafety.com",
   "producersrice.forgepublicsafety.com",
   ...(process.env.EXTRA_CF_ALIAS ? [process.env.EXTRA_CF_ALIAS.trim()] : []),
 ];
@@ -73,6 +77,6 @@ const note = {
   aliasesAdded: NEW_ALIASES.filter((a) => !(got.DistributionConfig?.Aliases?.Items ?? []).includes(a)),
   aliases,
   note:
-    "Create CNAME at DNS owner: producersrice.forgepublicsafety.com -> CloudFront domain above.",
+    "Create CNAME at DNS owner: producersrice.forgeindustrialsafety.com -> CloudFront domain above. Apex forgeindustrialsafety.com stays marketing-only (do not alias to this distro).",
 };
 console.log(JSON.stringify(note, null, 2));
