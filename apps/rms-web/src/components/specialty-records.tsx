@@ -110,7 +110,9 @@ export function SpecialtyRecordsPanel({
         <p className={styles.muted}>Restricted — you do not have access to these details.</p>
       ) : null}
 
-      <ul style={{ listStyle: "none", padding: 0, margin: "1rem 0", display: "grid", gap: "0.75rem" }}>
+      <ul
+        style={{ listStyle: "none", padding: 0, margin: "1rem 0", display: "grid", gap: "0.75rem" }}
+      >
         {items.map((item) => {
           const id = String(item.id);
           const version = Number(item.recordVersion ?? 1);
@@ -158,7 +160,11 @@ export function SpecialtyRecordsPanel({
                 </div>
               ))}
               {canEdit ? (
-                <button type="button" className={styles.secondaryButton} onClick={() => void onArchive(id, version)}>
+                <button
+                  type="button"
+                  className={styles.secondaryButton}
+                  onClick={() => void onArchive(id, version)}
+                >
                   Archive
                 </button>
               ) : (

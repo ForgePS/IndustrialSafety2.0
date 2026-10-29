@@ -8,33 +8,33 @@
 
 Import-specific backup and restore for:
 
-| Layer | What is protected |
-| --- | --- |
+| Layer             | What is protected                                                                                                   |
+| ----------------- | ------------------------------------------------------------------------------------------------------------------- |
 | Aurora PostgreSQL | Job metadata, rows, journals, mappings, scan events, security artifacts (FORCE RLS tables through migration `0027`) |
-| S3 imports bucket | Uploaded objects and generated artifacts (SSE-KMS, versioning enabled) |
-| Queue | Transient only — SQS is **not** a durable backup; DLQ retention is operational hold, not archive |
+| S3 imports bucket | Uploaded objects and generated artifacts (SSE-KMS, versioning enabled)                                              |
+| Queue             | Transient only — SQS is **not** a durable backup; DLQ retention is operational hold, not archive                    |
 
 This runbook does **not** cover product destination data written by future adapters (none ship in S8).
 
 ## Current posture (inspected / documented)
 
-| Control | Status |
-| --- | --- |
-| Aurora continuous backup / PITR | Platform Aurora cluster covered by `ForgeBackups` / backup plan (e.g. `forge-development-backup-daily`) |
-| Imports S3 versioning | **Enabled** on `forge-*-imports-*-us-east-1` |
-| Imports bucket in AWS Backup selection | **Not** selected in CDK `ForgeBackups` — rely on versioning + lifecycle + DB metadata |
-| Lifecycle | `retention.importFilesDays` (developer profile: **14 days**); incomplete MPU abort ~3 days |
-| Cross-region DR | **Not claimed** — no tested cross-region restore evidence for import workloads |
+| Control                                | Status                                                                                                  |
+| -------------------------------------- | ------------------------------------------------------------------------------------------------------- |
+| Aurora continuous backup / PITR        | Platform Aurora cluster covered by `ForgeBackups` / backup plan (e.g. `forge-development-backup-daily`) |
+| Imports S3 versioning                  | **Enabled** on `forge-*-imports-*-us-east-1`                                                            |
+| Imports bucket in AWS Backup selection | **Not** selected in CDK `ForgeBackups` — rely on versioning + lifecycle + DB metadata                   |
+| Lifecycle                              | `retention.importFilesDays` (developer profile: **14 days**); incomplete MPU abort ~3 days              |
+| Cross-region DR                        | **Not claimed** — no tested cross-region restore evidence for import workloads                          |
 
 ## RPO / RTO (placeholders — fill after controlled restore test)
 
-| Objective | Target (placeholder) | Evidence status |
-| --- | --- | --- |
-| RPO (Aurora metadata) | *TBD after PITR drill* — typically bounded by Aurora continuous backup granularity | PENDING_CONTROLLED_TEST |
-| RTO (Aurora metadata) | *TBD* — restore cluster/DB + re-point app secrets + smoke import APIs | PENDING_CONTROLLED_TEST |
-| RPO (S3 objects) | Versioning allows point-in-time object recovery within retention; lifecycle may expire versions | PENDING_CONTROLLED_TEST |
-| RTO (S3 objects) | *TBD* — version restore or copy + job file pointer reconciliation | PENDING_CONTROLLED_TEST |
-| Cross-region RPO/RTO | **Do not publish** until a controlled cross-region restore is executed and documented | NOT CLAIMED |
+| Objective             | Target (placeholder)                                                                            | Evidence status         |
+| --------------------- | ----------------------------------------------------------------------------------------------- | ----------------------- |
+| RPO (Aurora metadata) | _TBD after PITR drill_ — typically bounded by Aurora continuous backup granularity              | PENDING_CONTROLLED_TEST |
+| RTO (Aurora metadata) | _TBD_ — restore cluster/DB + re-point app secrets + smoke import APIs                           | PENDING_CONTROLLED_TEST |
+| RPO (S3 objects)      | Versioning allows point-in-time object recovery within retention; lifecycle may expire versions | PENDING_CONTROLLED_TEST |
+| RTO (S3 objects)      | _TBD_ — version restore or copy + job file pointer reconciliation                               | PENDING_CONTROLLED_TEST |
+| Cross-region RPO/RTO  | **Do not publish** until a controlled cross-region restore is executed and documented           | NOT CLAIMED             |
 
 Update this table only with measured results from a named drill; never invent timings.
 

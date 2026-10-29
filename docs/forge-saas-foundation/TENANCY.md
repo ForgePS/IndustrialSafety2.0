@@ -6,14 +6,14 @@ Canonical commercial and structural tenancy for FORGE-SAAS-CORE.
 
 **Canonical entity:** `tenants` (`packages/database/src/schema/tenants.ts`)
 
-| Concept | Representation |
-| --- | --- |
-| Tenant / organization (billing customer) | `tenants` |
-| Tenant settings | `tenant_settings` |
-| Tenant branding | `tenant_branding` |
-| Tenant domains | `tenant_domains` |
-| Tenant products | `tenant_products` |
-| Tenant modules | `tenant_module_entitlements` |
+| Concept                                  | Representation               |
+| ---------------------------------------- | ---------------------------- |
+| Tenant / organization (billing customer) | `tenants`                    |
+| Tenant settings                          | `tenant_settings`            |
+| Tenant branding                          | `tenant_branding`            |
+| Tenant domains                           | `tenant_domains`             |
+| Tenant products                          | `tenant_products`            |
+| Tenant modules                           | `tenant_module_entitlements` |
 
 Do not introduce `tenants_v2` / `accounts` tables. Map SaaS “account” language to `tenants`.
 
@@ -63,11 +63,11 @@ Transitions enforced via `assertTenantStatusTransition` / TenantsService. See [A
 
 ### Adapters (not parallel roots)
 
-| Existing surface | Relationship |
-| --- | --- |
-| Config Studio `facilities` namespace | Configuration document — may later sync into `facilities` |
-| RMS `rms_stations` | Product-specific fire stations — keep; map to platform facility when needed |
-| Industrial “sites” UI | Should resolve against platform `facilities` over time |
+| Existing surface                     | Relationship                                                                |
+| ------------------------------------ | --------------------------------------------------------------------------- |
+| Config Studio `facilities` namespace | Configuration document — may later sync into `facilities`                   |
+| RMS `rms_stations`                   | Product-specific fire stations — keep; map to platform facility when needed |
+| Industrial “sites” UI                | Should resolve against platform `facilities` over time                      |
 
 ## Departments
 

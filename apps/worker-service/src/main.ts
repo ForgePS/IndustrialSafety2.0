@@ -6,6 +6,7 @@ import { CadMatchSqsConsumer } from "./processors/cad-match-consumer.js";
 import { CadPollingSqsConsumer } from "./processors/cad-polling-consumer.js";
 import { CadRetentionSqsConsumer } from "./processors/cad-retention-consumer.js";
 import { ImportSqsConsumer } from "./processors/import-upload-consumer.js";
+import { ReportingSchedulesSqsConsumer } from "./processors/reporting-schedules-consumer.js";
 import { OutboxPublisher, resolveEventBusName } from "./processors/outbox-publisher.js";
 import { resolveIntegrationQueueUrl, SqsConsumer } from "./processors/sqs-consumer.js";
 
@@ -32,6 +33,7 @@ async function main(): Promise<void> {
   let cadMatchTimer: ReturnType<typeof setInterval> | undefined;
   let cadPollingTimer: ReturnType<typeof setInterval> | undefined;
   let cadRetentionTimer: ReturnType<typeof setInterval> | undefined;
+  let reportingSchedulesTimer: ReturnType<typeof setInterval> | undefined;
   let importTimer: ReturnType<typeof setInterval> | undefined;
 
   const publisher = new OutboxPublisher({
@@ -99,6 +101,17 @@ async function main(): Promise<void> {
         databaseUrl: env.DATABASE_URL,
         environment: env.APP_ENV,
         retentionTenantIds: parseTenantIds(env.CAD_RETENTION_TENANT_IDS),
+      })
+    : undefined;
+
+  const reportingSchedulesQueueUrl = env.SQS_REPORTING_SCHEDULES_QUEUE_URL;
+  const reportingSchedulesConsumer = reportingSchedulesQueueUrl
+    ? new ReportingSchedulesSqsConsumer({
+        queueUrl: reportingSchedulesQueueUrl,
+        region: env.AWS_REGION,
+        environment: env.APP_ENV,
+        publicApiUrl: env.PUBLIC_API_URL,
+        sweepToken: env.FORGE_REPORTING_SWEEP_TOKEN ?? "",
       })
     : undefined;
 
@@ -242,6 +255,28 @@ async function main(): Promise<void> {
       cadRetentionTimer = setInterval(() => void retentionTick(), 5000);
     }
 
+    if (reportingSchedulesConsumer) {
+      logger.info("reporting schedules consumer loop starting", {
+        intervalMs: 5000,
+        queueUrl: reportingSchedulesQueueUrl,
+      });
+      const reportingTick = async () => {
+        if (shuttingDown) return;
+        try {
+          const count = await reportingSchedulesConsumer.pollOnce();
+          if (count > 0) {
+            logger.info("processed reporting schedule sweeps", { count });
+          }
+        } catch (error) {
+          logger.error("reporting schedules poll failed", {
+            error,
+          });
+        }
+      };
+      void reportingTick();
+      reportingSchedulesTimer = setInterval(() => void reportingTick(), 5000);
+    }
+
     if (importConsumer) {
       logger.info("import queue consumer loop starting", {
         intervalMs: 1000,
@@ -273,6 +308,7 @@ async function main(): Promise<void> {
       cadMatchConsumer ? "cad-match" : null,
       cadPollingConsumer ? "cad-polling" : null,
       cadRetentionConsumer ? "cad-retention" : null,
+      reportingSchedulesConsumer ? "reporting-schedules" : null,
       importConsumer ? "import-queue" : null,
     ]
       .filter(Boolean)
@@ -289,6 +325,7 @@ async function main(): Promise<void> {
     if (cadMatchTimer) clearInterval(cadMatchTimer);
     if (cadPollingTimer) clearInterval(cadPollingTimer);
     if (cadRetentionTimer) clearInterval(cadRetentionTimer);
+    if (reportingSchedulesTimer) clearInterval(reportingSchedulesTimer);
     if (importTimer) clearInterval(importTimer);
     process.exit(0);
   };

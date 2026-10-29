@@ -6,6 +6,11 @@ import * as s3 from "aws-cdk-lib/aws-s3";
 import { Construct } from "constructs";
 import type { ForgeEnvironmentConfig } from "../config/environment-schema.js";
 import { resourceName, uniqueBucketName } from "../utils/naming.js";
+import {
+  buildContentSecurityPolicy,
+  buildLegacyHostRedirectSnippet,
+  type LegacyHostRedirect,
+} from "./forge-static-hosting-csp.js";
 
 export interface ForgeStaticHostingProps {
   config: ForgeEnvironmentConfig;
@@ -18,8 +23,39 @@ export interface ForgeStaticHostingProps {
    * Requires a us-east-1 ACM certificate ARN. Does not create Route53 records.
    */
   domainName?: string;
+  /** Extra viewer CNAMEs (e.g. Producers vanity). Requires multi-SAN cert coverage. */
+  additionalDomainNames?: string[];
   /** ACM certificate ARN in us-east-1 covering domainName (wildcard/apex). */
   certificateArn?: string;
+  /**
+   * Permissions-Policy header value. Default disables camera/mic/geo.
+   * Field App needs camera=(self) for QR scanning.
+   */
+  permissionsPolicy?: string;
+  /**
+   * Extra CloudFront Function rewrite statements inserted before the
+   * directory-index rewrite (viewer-request). Use for SPA placeholder shells.
+   */
+  viewerRequestExtraRewrites?: string;
+  /**
+   * Allow embedding in iframes (device preview tools). Dev-only; production keeps DENY.
+   */
+  allowIframeEmbedding?: boolean;
+  /**
+   * API origin hostname (no scheme) for /api/* and /health CloudFront behaviors
+   * and for connect-src allowlisting (FIS-M01).
+   */
+  apiProxyOriginHostname?: string;
+  /**
+   * Extra connect-src entries (Cognito hosted UI, cognito-idp, media, etc.).
+   * Prefer explicit domains from environment config over wildcards.
+   */
+  cspConnectSrcExtras?: string[];
+  /**
+   * Permanent viewer-request redirects for legacy vanity hosts (FIS-L02).
+   * Does not remove DNS/CloudFront aliases — see scripts/cf-alias-producersrice.mjs.
+   */
+  legacyRedirects?: LegacyHostRedirect[];
 }
 
 /**
@@ -48,11 +84,21 @@ export class ForgeStaticHosting extends Construct {
       autoDeleteObjects: !retain,
     });
 
+    const contentSecurityPolicy = buildContentSecurityPolicy({
+      allowIframeEmbedding: props.allowIframeEmbedding,
+      apiProxyOriginHostname: props.apiProxyOriginHostname,
+      cspConnectSrcExtras: props.cspConnectSrcExtras,
+    });
+
     const responseHeaders = new cloudfront.ResponseHeadersPolicy(this, "SecureHeaders", {
       responseHeadersPolicyName: resourceName(config, "cfrhp", appKeyLower),
       securityHeadersBehavior: {
         contentTypeOptions: { override: true },
-        frameOptions: { frameOption: cloudfront.HeadersFrameOption.DENY, override: true },
+        ...(props.allowIframeEmbedding
+          ? {}
+          : {
+              frameOptions: { frameOption: cloudfront.HeadersFrameOption.DENY, override: true },
+            }),
         referrerPolicy: {
           referrerPolicy: cloudfront.HeadersReferrerPolicy.STRICT_ORIGIN_WHEN_CROSS_ORIGIN,
           override: true,
@@ -65,18 +111,7 @@ export class ForgeStaticHosting extends Construct {
         },
         xssProtection: { protection: true, modeBlock: true, override: true },
         contentSecurityPolicy: {
-          contentSecurityPolicy: [
-            "default-src 'self'",
-            "base-uri 'self'",
-            "frame-ancestors 'none'",
-            "object-src 'none'",
-            "img-src 'self' data: blob:",
-            "font-src 'self' data:",
-            "style-src 'self' 'unsafe-inline'",
-            "script-src 'self' 'unsafe-inline'",
-            "connect-src 'self' https:",
-            "form-action 'self' https:",
-          ].join("; "),
+          contentSecurityPolicy,
           override: true,
         },
       },
@@ -84,12 +119,26 @@ export class ForgeStaticHosting extends Construct {
         customHeaders: [
           {
             header: "Permissions-Policy",
-            value: "camera=(), microphone=(), geolocation=()",
+            value: props.permissionsPolicy ?? "camera=(), microphone=(), geolocation=()",
+            override: true,
+          },
+          {
+            header: "Cross-Origin-Opener-Policy",
+            // same-origin-allow-popups keeps window.opener isolation while
+            // allowing the Web Bluetooth chooser (a popup) to complete.
+            value: "same-origin-allow-popups",
+            override: true,
+          },
+          {
+            header: "Cross-Origin-Resource-Policy",
+            value: "same-origin",
             override: true,
           },
         ],
       },
     });
+
+    const legacyRedirectSnippet = buildLegacyHostRedirectSnippet(props.legacyRedirects);
 
     // S3 OAC does not apply website-style directory indexes. Next.js static export
     // with trailingSlash writes /login/index.html; without this rewrite, /login/
@@ -103,15 +152,107 @@ export class ForgeStaticHosting extends Construct {
 function handler(event) {
   var request = event.request;
   var uri = request.uri;
-  var incidentMatch = uri.match(/^\\/incidents\\/([^/]+)\\/?$/);
+  var headers = request.headers;
+${legacyRedirectSnippet}  // Next.js trailingSlash export stores RSC flight at .../page/index.txt, but
+  // soft navigations request .../page.txt. Missing .txt objects used to 403 (or
+  // SPA-fallback as text/html 200) — iPad/Safari then surfaces Non-JSON (HTTP 200)
+  // when entering routes like Field LOTO /loto/{id}.
+  var isRsc =
+    (headers['rsc'] && headers['rsc'].value) ||
+    (headers['next-router-state-tree'] && headers['next-router-state-tree'].value) ||
+    (headers['next-router-prefetch'] && headers['next-router-prefetch'].value);
+  if (uri.endsWith('.txt') && !uri.endsWith('/index.txt')) {
+    uri = uri.slice(0, -4) + '/index.txt';
+    request.uri = uri;
+  }
+  // Document navigation to a flight URL → clean HTML directory (not .../page.html).
+  if (!isRsc && uri.endsWith('.txt')) {
+    var location = uri.endsWith('/index.txt')
+      ? uri.slice(0, -'index.txt'.length)
+      : uri.slice(0, -4) + '/';
+    return {
+      statusCode: 302,
+      statusDescription: 'Found',
+      headers: {
+        location: { value: location },
+        'cache-control': { value: 'no-store' },
+      },
+    };
+  }
+  var shellExt = uri.endsWith('.txt') ? 'index.txt' : 'index.html';
+  var incidentMatch = uri.match(/^\\/incidents\\/([^/]+)(?:\\/index\\.(?:html|txt))?\\/?$/);
   if (incidentMatch) {
     var segment = incidentMatch[1];
     if (segment !== 'new' && segment !== 'placeholder') {
-      request.uri = '/incidents/placeholder/index.html';
+      request.uri = '/incidents/placeholder/' + shellExt;
       return request;
     }
   }
-  if (uri.endsWith('/')) {
+  var closeoutMatch = uri.match(/^\\/closeout\\/([^/]+)(?:\\/index\\.(?:html|txt))?\\/?$/);
+  if (closeoutMatch) {
+    var closeoutSegment = closeoutMatch[1];
+    if (closeoutSegment !== 'placeholder') {
+      request.uri = '/closeout/placeholder/' + shellExt;
+      return request;
+    }
+  }
+  var dvirMatch = uri.match(/^\\/dvir\\/([^/]+)(?:\\/index\\.(?:html|txt))?\\/?$/);
+  if (dvirMatch) {
+    var dvirSegment = dvirMatch[1];
+    if (dvirSegment !== 'placeholder') {
+      request.uri = '/dvir/placeholder/' + shellExt;
+      return request;
+    }
+  }
+  var trainingMatch = uri.match(/^\\/training\\/([^/]+)(?:\\/index\\.(?:html|txt))?\\/?$/);
+  if (trainingMatch) {
+    var trainingSegment = trainingMatch[1];
+    if (trainingSegment !== 'placeholder' && trainingSegment !== 'portal' && trainingSegment !== 'access') {
+      request.uri = '/training/placeholder/' + shellExt;
+      return request;
+    }
+  }
+  var trainingAccessMatch = uri.match(/^\\/training\\/access\\/([^/]+)(?:\\/index\\.(?:html|txt))?\\/?$/);
+  if (trainingAccessMatch) {
+    var accessSegment = trainingAccessMatch[1];
+    if (accessSegment !== 'placeholder') {
+      request.uri = '/training/access/placeholder/' + shellExt;
+      return request;
+    }
+  }
+  var myTrainingAssignmentMatch = uri.match(/^\\/my-training\\/assignments\\/([^/]+)(?:\\/index\\.(?:html|txt))?\\/?$/);
+  if (myTrainingAssignmentMatch) {
+    var assignmentSegment = myTrainingAssignmentMatch[1];
+    if (assignmentSegment !== 'placeholder') {
+      request.uri = '/my-training/assignments/placeholder/' + shellExt;
+      return request;
+    }
+  }
+  var supplyRequestMatch = uri.match(/^\\/safety-supplies\\/request\\/q\\/([^/]+)(?:\\/index\\.(?:html|txt))?\\/?$/);
+  if (supplyRequestMatch) {
+    var supplyRequestSegment = supplyRequestMatch[1];
+    if (supplyRequestSegment !== 'placeholder') {
+      request.uri = '/safety-supplies/request/q/placeholder/' + shellExt;
+      return request;
+    }
+  }
+  var supplyStatusMatch = uri.match(/^\\/safety-supplies\\/request\\/status\\/([^/]+)(?:\\/index\\.(?:html|txt))?\\/?$/);
+  if (supplyStatusMatch) {
+    var supplyStatusSegment = supplyStatusMatch[1];
+    if (supplyStatusSegment !== 'placeholder') {
+      request.uri = '/safety-supplies/request/status/placeholder/' + shellExt;
+      return request;
+    }
+  }
+  var industrialScanMatch = uri.match(/^\\/scan\\/([^/]+)(?:\\/index\\.(?:html|txt))?\\/?$/);
+  if (industrialScanMatch) {
+    var industrialScanSegment = industrialScanMatch[1];
+    if (industrialScanSegment !== 'placeholder' && industrialScanSegment !== 'equipment') {
+      request.uri = '/scan/placeholder/' + shellExt;
+      return request;
+    }
+  }
+${props.viewerRequestExtraRewrites ? `${props.viewerRequestExtraRewrites}\n` : ""}  if (uri.endsWith('/')) {
     request.uri = uri + 'index.html';
   } else if (uri.length > 1 && uri.indexOf('.') === -1) {
     request.uri = uri + '/index.html';
@@ -122,13 +263,55 @@ function handler(event) {
       runtime: cloudfront.FunctionRuntime.JS_2_0,
     });
 
+    // Shared origin + viewer settings for default HTML and hashed Next assets.
+    // compress:true enables gzip/brotli at the edge (transfer size << object size).
+    const origin = origins.S3BucketOrigin.withOriginAccessControl(this.bucket);
+    const functionAssociations: cloudfront.FunctionAssociation[] = [
+      {
+        function: directoryIndexFn,
+        eventType: cloudfront.FunctionEventType.VIEWER_REQUEST,
+      },
+    ];
+
+    const apiProxyHost = props.apiProxyOriginHostname?.trim().replace(/^https?:\/\//i, "");
+    const apiProxyBehaviors: Record<string, cloudfront.BehaviorOptions> = {};
+    if (apiProxyHost) {
+      // Print-job create renders labels synchronously; default CF origin timeout (30s)
+      // returns HTML 504 to Bluefy/Safari ("Non-JSON response"). Match API edge (60s).
+      const apiOrigin = new origins.HttpOrigin(apiProxyHost, {
+        protocolPolicy: cloudfront.OriginProtocolPolicy.HTTPS_ONLY,
+        readTimeout: cdk.Duration.seconds(60),
+        keepaliveTimeout: cdk.Duration.seconds(60),
+      });
+      const apiBehavior: cloudfront.BehaviorOptions = {
+        origin: apiOrigin,
+        viewerProtocolPolicy: cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
+        allowedMethods: cloudfront.AllowedMethods.ALLOW_ALL,
+        cachedMethods: cloudfront.CachedMethods.CACHE_GET_HEAD_OPTIONS,
+        cachePolicy: cloudfront.CachePolicy.CACHING_DISABLED,
+        originRequestPolicy: cloudfront.OriginRequestPolicy.ALL_VIEWER_EXCEPT_HOST_HEADER,
+        responseHeadersPolicy: responseHeaders,
+        compress: true,
+        // No directory-index function — proxy path must reach the API unchanged.
+      };
+      apiProxyBehaviors["/api/*"] = apiBehavior;
+      apiProxyBehaviors["/health"] = apiBehavior;
+    }
+
     this.distribution = new cloudfront.Distribution(this, "Distribution", {
       comment: `Forge ${displayName} (${config.environmentName})`,
       defaultRootObject: "index.html",
       minimumProtocolVersion: cloudfront.SecurityPolicyProtocol.TLS_V1_2_2021,
-      ...(props.domainName && props.certificateArn
+      ...((props.domainName || (props.additionalDomainNames?.length ?? 0) > 0) &&
+      props.certificateArn
         ? {
-            domainNames: [props.domainName],
+            domainNames: [
+              ...new Set(
+                [props.domainName, ...(props.additionalDomainNames ?? [])].filter(
+                  (d): d is string => Boolean(d?.trim()),
+                ),
+              ),
+            ],
             certificate: acm.Certificate.fromCertificateArn(
               this,
               "ViewerCertificate",
@@ -136,32 +319,48 @@ function handler(event) {
             ),
           }
         : {}),
+      // HTML / RSC shells change every deploy and must not be sticky at the edge.
+      // Hashed /_next/static/* uses a long-lived behavior below (immutable URLs).
       defaultBehavior: {
-        origin: origins.S3BucketOrigin.withOriginAccessControl(this.bucket),
+        origin,
         viewerProtocolPolicy: cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
         responseHeadersPolicy: responseHeaders,
         compress: true,
-        functionAssociations: [
-          {
-            function: directoryIndexFn,
-            eventType: cloudfront.FunctionEventType.VIEWER_REQUEST,
-          },
-        ],
+        cachePolicy: cloudfront.CachePolicy.CACHING_DISABLED,
+        functionAssociations,
       },
-      errorResponses: [
-        {
-          httpStatus: 403,
-          responseHttpStatus: 200,
-          responsePagePath: "/index.html",
-          ttl: cdk.Duration.minutes(5),
+      additionalBehaviors: {
+        "/_next/static/*": {
+          origin,
+          viewerProtocolPolicy: cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
+          responseHeadersPolicy: responseHeaders,
+          compress: true,
+          // Honors S3 Cache-Control (sync sets max-age=31536000, immutable).
+          cachePolicy: cloudfront.CachePolicy.CACHING_OPTIMIZED,
+          functionAssociations,
         },
-        {
-          httpStatus: 404,
-          responseHttpStatus: 200,
-          responsePagePath: "/index.html",
-          ttl: cdk.Duration.minutes(5),
-        },
-      ],
+        ...apiProxyBehaviors,
+      },
+      // Prefer viewer-request directory-index rewrites for SPA shells. Distribution-wide
+      // 403/404 → index.html breaks /api/* JSON (Nest 404/403 became HTML 200).
+      ...(apiProxyHost
+        ? {}
+        : {
+            errorResponses: [
+              {
+                httpStatus: 403,
+                responseHttpStatus: 200,
+                responsePagePath: "/index.html",
+                ttl: cdk.Duration.minutes(5),
+              },
+              {
+                httpStatus: 404,
+                responseHttpStatus: 200,
+                responsePagePath: "/index.html",
+                ttl: cdk.Duration.minutes(5),
+              },
+            ],
+          }),
     });
 
     const outputPrefix = appKey.charAt(0).toUpperCase() + appKey.slice(1);

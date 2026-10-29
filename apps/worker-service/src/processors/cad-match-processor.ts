@@ -1,10 +1,6 @@
 import { SendMessageCommand, SQSClient } from "@aws-sdk/client-sqs";
 import type { CadNormalizedEvent } from "@forge/cad-contracts";
-import {
-  decideFieldOwnership,
-  decideOutOfOrderAction,
-  evaluateCadMatch,
-} from "@forge/cad-core";
+import { decideFieldOwnership, decideOutOfOrderAction, evaluateCadMatch } from "@forge/cad-core";
 import {
   auditEvents,
   cadConflicts,
@@ -242,8 +238,7 @@ export async function processCadMatchJob(input: {
           normalizedEventId: normalized.id,
           conflictType:
             decision.outcome === "POSSIBLE_DUPLICATE" ? "DUPLICATE_INCIDENT" : "AMBIGUOUS_MATCH",
-          recommendedResolution:
-            decision.outcome === "POSSIBLE_DUPLICATE" ? "LINK" : "CREATE_NEW",
+          recommendedResolution: decision.outcome === "POSSIBLE_DUPLICATE" ? "LINK" : "CREATE_NEW",
           cadValueJson: { decision },
           matchScore: decision.score,
           candidateIncidentIds: decision.candidateIncidentIds,
@@ -283,10 +278,7 @@ export async function processCadMatchJob(input: {
           details: decision,
           cutoffPolicy: tenantConfig?.cadUpdateCutoffPolicy ?? "UNTIL_FINALIZED",
         });
-      } else if (
-        decision.outcome === "UPDATE_EXISTING" ||
-        decision.outcome === "LINK_TO_MANUAL"
-      ) {
+      } else if (decision.outcome === "UPDATE_EXISTING" || decision.outcome === "LINK_TO_MANUAL") {
         if (!incidentId) throw new Error("missing candidate for update/link");
         const incident = await tx.query.nerisIncidents.findFirst({
           where: eq(nerisIncidents.id, incidentId),
@@ -302,14 +294,10 @@ export async function processCadMatchJob(input: {
             normalizedEventId: normalized.id,
             incidentId,
             conflictType: "FINALIZED_RECORD_CONFLICT",
-            fieldIdentifier: hasCallType
-              ? "incident.primaryIncidentTypeCode"
-              : "incident.status",
+            fieldIdentifier: hasCallType ? "incident.primaryIncidentTypeCode" : "incident.status",
             ownershipPolicy: "CAD_UNTIL_MANUAL_EDIT",
             recommendedResolution: "KEEP_FORGE",
-            cadValueJson: hasCallType
-              ? event.incident.callType
-              : { eventType: event.eventType },
+            cadValueJson: hasCallType ? event.incident.callType : { eventType: event.eventType },
             forgeValueJson: hasCallType
               ? incident.primaryIncidentTypeCode
               : { status: incident.status },

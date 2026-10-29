@@ -16,42 +16,42 @@ All documents under `docs/forge-experience/`.
 
 ## Required sections (every document)
 
-| Section | Intent |
-| --- | --- |
-| Purpose | Why the document exists |
-| Scope | What is covered / not covered |
-| Goals | Outcomes |
-| Definitions | Key terms |
-| Responsibilities | Who owns what |
-| Examples | Concrete illustrations |
-| Best Practices | Do |
-| Anti-patterns | Don’t |
-| Future Enhancements | Later work |
-| Dependencies | Upstream/downstream |
-| Implementation Notes | How/when to build |
-| Acceptance Criteria | Done-when |
-| Revision History | Change log |
-| Author | Owner |
-| Last Updated | Date |
+| Section              | Intent                        |
+| -------------------- | ----------------------------- |
+| Purpose              | Why the document exists       |
+| Scope                | What is covered / not covered |
+| Goals                | Outcomes                      |
+| Definitions          | Key terms                     |
+| Responsibilities     | Who owns what                 |
+| Examples             | Concrete illustrations        |
+| Best Practices       | Do                            |
+| Anti-patterns        | Don’t                         |
+| Future Enhancements  | Later work                    |
+| Dependencies         | Upstream/downstream           |
+| Implementation Notes | How/when to build             |
+| Acceptance Criteria  | Done-when                     |
+| Revision History     | Change log                    |
+| Author               | Owner                         |
+| Last Updated         | Date                          |
 
 Shorter pattern stubs may compress sections but must not omit Purpose, Dependencies, Acceptance Criteria, Author, Last Updated, and Revision History.
 
 ## Best practices
 
-- Link related FX docs instead of duplicating  
-- Mark status: FOUNDATION / APPROVED / SUPERSEDED  
+- Link related FX docs instead of duplicating
+- Mark status: FOUNDATION / APPROVED / SUPERSEDED
 
 ## Anti-patterns
 
-- Docs without acceptance criteria  
-- Undated revisions  
+- Docs without acceptance criteria
+- Undated revisions
 
 ## Acceptance criteria
 
-- [x] Template mandated for FX docs  
+- [x] Template mandated for FX docs
 
 ## Revision history
 
-| Date | Change |
-| --- | --- |
+| Date       | Change  |
+| ---------- | ------- |
 | 2026-07-30 | Initial |

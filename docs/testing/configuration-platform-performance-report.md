@@ -4,11 +4,11 @@
 **Evidence:** `docs/testing/evidence/config-final-acceptance/step9-perf.json`  
 **Method:** 8 sequential samples via CloudFront → API (client-side wall clock)
 
-| Operation | p50 (ms) | p95 (ms) | p99 (ms) | Error rate |
-| --- | --- | --- | --- | --- |
-| catalog | 166 | 215 | 215 | 0 |
-| configuration list (terminology) | 141 | 167 | 167 | 0 |
-| effective-version | 180 | 371 | 371 | 0 |
+| Operation                        | p50 (ms) | p95 (ms) | p99 (ms) | Error rate |
+| -------------------------------- | -------- | -------- | -------- | ---------- |
+| catalog                          | 166      | 215      | 215      | 0          |
+| configuration list (terminology) | 141      | 167      | 167      | 0          |
+| effective-version                | 180      | 371      | 371      | 0          |
 
 ## Not measured (limitations)
 

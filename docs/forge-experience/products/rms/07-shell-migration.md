@@ -6,21 +6,21 @@
 
 ## Implementation
 
-| Piece | Path | Retirement |
-| --- | --- | --- |
-| Boundary | `src/fx/shell/RmsShellBoundary.tsx` | Permanent selector |
-| FX shell | `src/fx/shell/RmsFxShell.tsx` | Evolves with FX |
-| Legacy adapter | `src/fx/shell/RmsLegacyShellAdapter.tsx` | After GA + window |
-| Flag resolver | `src/fx/flags/rms-fx-flags.ts` | Permanent |
+| Piece          | Path                                     | Retirement         |
+| -------------- | ---------------------------------------- | ------------------ |
+| Boundary       | `src/fx/shell/RmsShellBoundary.tsx`      | Permanent selector |
+| FX shell       | `src/fx/shell/RmsFxShell.tsx`            | Evolves with FX    |
+| Legacy adapter | `src/fx/shell/RmsLegacyShellAdapter.tsx` | After GA + window  |
+| Flag resolver  | `src/fx/flags/rms-fx-flags.ts`           | Permanent          |
 
 ## Flags
 
-| Shell | Nav | Result |
-| --- | --- | --- |
-| false | false | Legacy |
-| true | false | FX shell + registry nav via legacy bridge |
-| true | true | FX shell + secondary nav |
-| false | true | Rejected → legacy |
+| Shell | Nav   | Result                                    |
+| ----- | ----- | ----------------------------------------- |
+| false | false | Legacy                                    |
+| true  | false | FX shell + registry nav via legacy bridge |
+| true  | true  | FX shell + secondary nav                  |
+| false | true  | Rejected → legacy                         |
 
 Platform-admin wildcard does **not** auto-enable FX presentation. Use tenant override, `NEXT_PUBLIC_FX_RMS_*_ENABLED=true`, or `sessionStorage` for tests.
 

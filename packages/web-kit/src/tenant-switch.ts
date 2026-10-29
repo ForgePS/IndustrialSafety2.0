@@ -1,4 +1,5 @@
 import type { AuthMe } from "./auth-api.js";
+import { clearCachedAuthMe } from "./auth-storage.js";
 
 /**
  * Server-verified tenant switch with local persistence rollback on failure.
@@ -17,12 +18,17 @@ export async function switchActiveTenant(input: {
   productCode?: string;
   reason?: string;
 }): Promise<AuthMe> {
-  input.setActiveTenantId(input.tenantId);
+  // Drop prior-tenant /auth/me cache before binding the new tenant id.
+  // Keep previous x-tenant-id until select-tenant succeeds so AuthGuard resolves
+  // against the current context, not the not-yet-selected tenant.
+  clearCachedAuthMe();
   try {
-    return await input.selectTenant(input.tenantId, {
+    const updated = await input.selectTenant(input.tenantId, {
       ...(input.productCode ? { productCode: input.productCode } : {}),
       ...(input.reason ? { reason: input.reason } : {}),
     });
+    input.setActiveTenantId(input.tenantId);
+    return updated;
   } catch (error) {
     if (input.previousTenantId) {
       input.setActiveTenantId(input.previousTenantId);

@@ -28,10 +28,7 @@ type NavigationPayload = {
   }>;
 };
 
-async function loadEffective<T>(
-  tenantId: string,
-  namespace: string,
-): Promise<T | null> {
+async function loadEffective<T>(tenantId: string, namespace: string): Promise<T | null> {
   try {
     const result = await apiGet<EffectiveResponse>(
       `/api/v1/tenants/${tenantId}/config/${namespace}/default/effective`,
@@ -69,8 +66,7 @@ export function useTenantConfigStudio() {
       ]);
       if (cancelled) return;
       setTerminology(terms?.terms ?? {});
-      const roles =
-        dropdowns?.catalogs?.find((c) => c.key === "personnel_roles")?.options ?? [];
+      const roles = dropdowns?.catalogs?.find((c) => c.key === "personnel_roles")?.options ?? [];
       setPersonnelRoles(roles);
       setNavGroups(navigation?.groups ?? null);
       setLoading(false);

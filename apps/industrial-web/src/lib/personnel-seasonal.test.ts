@@ -3,6 +3,7 @@ import {
   SEASONAL_LIFECYCLE_FLAG,
   isSeasonalLifecycleEnabled,
   seasonalLifecycleBadge,
+  seasonalLifecycleBadgeClass,
 } from "./personnel-seasonal";
 
 describe("seasonal lifecycle UI gates", () => {
@@ -30,7 +31,9 @@ describe("seasonal lifecycle UI gates", () => {
   });
 
   it("maps lifecycle fields to badges", () => {
-    expect(seasonalLifecycleBadge({ personStatus: "PRE_HIRE", employmentType: "SEASONAL" })).toEqual({
+    expect(
+      seasonalLifecycleBadge({ personStatus: "PRE_HIRE", employmentType: "SEASONAL" }),
+    ).toEqual({
       label: "SEASONAL PRE-HIRE",
       kind: "pre-hire",
     });
@@ -38,9 +41,18 @@ describe("seasonal lifecycle UI gates", () => {
       label: "Active seasonal",
       kind: "active-seasonal",
     });
-    expect(seasonalLifecycleBadge({ personStatus: "ACTIVE", employmentType: "FULL_TIME" })).toEqual({
-      label: "Full-time",
-      kind: "full-time",
-    });
+    expect(seasonalLifecycleBadge({ personStatus: "ACTIVE", employmentType: "FULL_TIME" })).toEqual(
+      {
+        label: "Full-time",
+        kind: "full-time",
+      },
+    );
+  });
+
+  it("maps badge kinds to Sneat label classes", () => {
+    expect(seasonalLifecycleBadgeClass("pre-hire")).toBe("bg-label-warning");
+    expect(seasonalLifecycleBadgeClass("active-seasonal")).toBe("bg-label-success");
+    expect(seasonalLifecycleBadgeClass("full-time")).toBe("bg-label-primary");
+    expect(seasonalLifecycleBadgeClass("other")).toBe("bg-label-secondary");
   });
 });

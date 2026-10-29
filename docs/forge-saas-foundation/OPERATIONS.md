@@ -5,17 +5,17 @@
 
 ## Health
 
-| Check | Where |
-| --- | --- |
-| API `/health` | ALB target + container health (`forge-ecs`) |
-| Dev smoke | `scripts/smoke-development.mjs` |
+| Check         | Where                                                                                |
+| ------------- | ------------------------------------------------------------------------------------ |
+| API `/health` | ALB target + container health (`forge-ecs`)                                          |
+| Dev smoke     | `scripts/smoke-development.mjs`                                                      |
 | Auth failures | [authentication-failure-runbook.md](../operations/authentication-failure-runbook.md) |
 
 ## Logging & audit
 
-- CloudWatch log groups (API, worker, DB, WAF, migration) — KMS encrypted  
-- Application audit events: `GET /api/v1/tenants/:tenantId/audit-events`  
-- Domain side effects: transactional outbox → workers  
+- CloudWatch log groups (API, worker, DB, WAF, migration) — KMS encrypted
+- Application audit events: `GET /api/v1/tenants/:tenantId/audit-events`
+- Domain side effects: transactional outbox → workers
 
 ## Alarms (baseline)
 
@@ -25,25 +25,25 @@ Defined in `forge-monitoring.ts`: unhealthy targets, API 5xx, DB CPU/connections
 
 ## Support surfaces
 
-| Role | Tools |
-| --- | --- |
+| Role                   | Tools                                                              |
+| ---------------------- | ------------------------------------------------------------------ |
 | Creator / platform ops | Creator Console (tenants, entitlements, billing manage, analytics) |
-| Tenant admins | Tenant Admin (memberships, config, billing read) |
-| Engineers | CloudWatch, ECS exec (gated), migrate runbook |
+| Tenant admins          | Tenant Admin (memberships, config, billing read)                   |
+| Engineers              | CloudWatch, ECS exec (gated), migrate runbook                      |
 
 ## Incidents (lightweight)
 
-1. Check ALB/API health + CloudWatch 5xx  
-2. Check Cognito / auth anomaly  
-3. Check DB connections / CPU  
-4. Check SQS DLQs  
-5. Rollback ECS task def / static sync per [DEPLOYMENT.md](./DEPLOYMENT.md)  
+1. Check ALB/API health + CloudWatch 5xx
+2. Check Cognito / auth anomaly
+3. Check DB connections / CPU
+4. Check SQS DLQs
+5. Rollback ECS task def / static sync per [DEPLOYMENT.md](./DEPLOYMENT.md)
 6. DB corruption → PITR/snapshot only (forward-only migrations)
 
 ## Email / notifications
 
-- In-app notifications: COMPLETE (API + UI)  
-- SES outbound: **GAP** (noop/stub) — invitations may not deliver in production until SES wired  
+- In-app notifications: COMPLETE (API + UI)
+- SES outbound: **GAP** (noop/stub) — invitations may not deliver in production until SES wired
 
 ## Data / RLS verification
 

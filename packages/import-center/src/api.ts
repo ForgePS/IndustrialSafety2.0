@@ -35,10 +35,10 @@ export function createImportApi(transport: ImportApiTransport) {
 
   return {
     listJobs(query?: Record<string, string | undefined>) {
-      return transport.get<{ items: ImportJobSummary[]; page?: number; pageSize?: number; total?: number } | ImportJobSummary[]>(
-        `${base}/jobs`,
-        query !== undefined ? { query } : {},
-      );
+      return transport.get<
+        | { items: ImportJobSummary[]; page?: number; pageSize?: number; total?: number }
+        | ImportJobSummary[]
+      >(`${base}/jobs`, query !== undefined ? { query } : {});
     },
     getJob(jobId: string) {
       // Includes file/security fields via upload getJobDetail route.
@@ -95,13 +95,24 @@ export function createImportApi(transport: ImportApiTransport) {
       );
     },
     listProfiles(query?: Record<string, string | undefined>) {
-      return transport.get<{ items: unknown[] } | unknown[]>(`${base}/profiles`, query !== undefined ? { query } : {});
+      return transport.get<{ items: unknown[] } | unknown[]>(
+        `${base}/profiles`,
+        query !== undefined ? { query } : {},
+      );
     },
     listTemplates() {
       return transport.get<unknown[]>(`${base}/templates`);
     },
     listMappings(jobId: string) {
       return transport.get<ImportMappingRow[]>(`${base}/jobs/${jobId}/mappings`);
+    },
+    suggestMappings(jobId: string) {
+      return transport.send<{
+        jobId: string;
+        templateKey: string;
+        detectedHeaders: string[];
+        mappings: ImportMappingRow[];
+      }>(`${base}/jobs/${jobId}/suggest-mappings`, "POST", {});
     },
     putMappings(jobId: string, mappings: ImportMappingRow[], idempotencyKey?: string) {
       return transport.send(
@@ -134,12 +145,9 @@ export function createImportApi(transport: ImportApiTransport) {
       );
     },
     reviewDuplicate(duplicateId: string, body: Record<string, unknown>, idempotencyKey?: string) {
-      return transport.send(
-        `${base}/duplicates/${duplicateId}/review`,
-        "POST",
-        body,
-        { idempotencyKey: idempotencyKey ?? createIdempotencyKey("import-dup-review") },
-      );
+      return transport.send(`${base}/duplicates/${duplicateId}/review`, "POST", body, {
+        idempotencyKey: idempotencyKey ?? createIdempotencyKey("import-dup-review"),
+      });
     },
     submitForApproval(jobId: string, idempotencyKey?: string) {
       return transport.send(
@@ -166,20 +174,14 @@ export function createImportApi(transport: ImportApiTransport) {
       );
     },
     execute(jobId: string, body?: Record<string, unknown>, idempotencyKey?: string) {
-      return transport.send(
-        `${base}/jobs/${jobId}/execute`,
-        "POST",
-        body ?? {},
-        { idempotencyKey: idempotencyKey ?? createIdempotencyKey("import-execute") },
-      );
+      return transport.send(`${base}/jobs/${jobId}/execute`, "POST", body ?? {}, {
+        idempotencyKey: idempotencyKey ?? createIdempotencyKey("import-execute"),
+      });
     },
     cancelExecution(jobId: string, body?: Record<string, unknown>, idempotencyKey?: string) {
-      return transport.send(
-        `${base}/jobs/${jobId}/cancel-execution`,
-        "POST",
-        body ?? {},
-        { idempotencyKey: idempotencyKey ?? createIdempotencyKey("import-cancel-exec") },
-      );
+      return transport.send(`${base}/jobs/${jobId}/cancel-execution`, "POST", body ?? {}, {
+        idempotencyKey: idempotencyKey ?? createIdempotencyKey("import-cancel-exec"),
+      });
     },
     cancelJob(jobId: string, idempotencyKey?: string) {
       return transport.send(
@@ -201,21 +203,20 @@ export function createImportApi(transport: ImportApiTransport) {
     listErrors(jobId: string) {
       return transport.get<ImportRowError[]>(`${base}/jobs/${jobId}/errors`);
     },
-    retryError(jobId: string, errorId: string, body?: Record<string, unknown>, idempotencyKey?: string) {
-      return transport.send(
-        `${base}/jobs/${jobId}/errors/${errorId}/retry`,
-        "POST",
-        body ?? {},
-        { idempotencyKey: idempotencyKey ?? createIdempotencyKey("import-retry") },
-      );
+    retryError(
+      jobId: string,
+      errorId: string,
+      body?: Record<string, unknown>,
+      idempotencyKey?: string,
+    ) {
+      return transport.send(`${base}/jobs/${jobId}/errors/${errorId}/retry`, "POST", body ?? {}, {
+        idempotencyKey: idempotencyKey ?? createIdempotencyKey("import-retry"),
+      });
     },
     requestRollback(jobId: string, body?: Record<string, unknown>, idempotencyKey?: string) {
-      return transport.send(
-        `${base}/jobs/${jobId}/rollback-request`,
-        "POST",
-        body ?? {},
-        { idempotencyKey: idempotencyKey ?? createIdempotencyKey("import-rollback") },
-      );
+      return transport.send(`${base}/jobs/${jobId}/rollback-request`, "POST", body ?? {}, {
+        idempotencyKey: idempotencyKey ?? createIdempotencyKey("import-rollback"),
+      });
     },
     downloadResults(jobId: string, privileged?: boolean) {
       return transport.send<ProtectedDownloadResponse>(
@@ -242,3 +243,27 @@ export function createImportApi(transport: ImportApiTransport) {
 }
 
 export type ImportApi = ReturnType<typeof createImportApi>;
+
+export type CreateLookupInput = {
+  kind: string;
+  name: string;
+  description?: string;
+};
+
+export type CreateLookupResult = {
+  id: string;
+  name: string;
+};
+
+/** Creates missing industrial org lookups (department / position / employment_type). */
+export function createLookupViaTransport(
+  transport: ImportApiTransport,
+  tenantId: string,
+): (input: CreateLookupInput) => Promise<CreateLookupResult> {
+  return (input) =>
+    transport.send<CreateLookupResult>(
+      `/api/v1/tenants/${tenantId}/industrial/org-lookups/create-missing`,
+      "POST",
+      input,
+    );
+}

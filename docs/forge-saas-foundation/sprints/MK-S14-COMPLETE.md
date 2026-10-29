@@ -28,13 +28,13 @@ Tenant branding fields expanded; logo/icon assignments require tenant-owned `for
 
 ## Verification
 
-| Check | Result |
-| --- | --- |
-| contracts/database/configuration build | PASS |
-| platform-api / creator / tenant-admin typecheck | PASS |
-| contracts unit | 34 passed |
-| branding ownership + document-storage unit | 7 passed |
-| Production operations | NONE |
+| Check                                           | Result    |
+| ----------------------------------------------- | --------- |
+| contracts/database/configuration build          | PASS      |
+| platform-api / creator / tenant-admin typecheck | PASS      |
+| contracts unit                                  | 34 passed |
+| branding ownership + document-storage unit      | 7 passed  |
+| Production operations                           | NONE      |
 
 ## Next sprint
 

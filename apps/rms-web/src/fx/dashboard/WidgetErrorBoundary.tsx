@@ -2,7 +2,11 @@
 
 import { Component, type ErrorInfo, type ReactNode } from "react";
 import { DashboardErrorState } from "./DashboardStates";
-import { DashboardWidgetBody, DashboardWidgetFooter, DashboardWidgetHeader } from "./DashboardWidgetChrome";
+import {
+  DashboardWidgetBody,
+  DashboardWidgetFooter,
+  DashboardWidgetHeader,
+} from "./DashboardWidgetChrome";
 
 type Props = {
   title: string;
@@ -20,7 +24,12 @@ export class WidgetErrorBoundary extends Component<Props, State> {
 
   override componentDidCatch(error: Error, info: ErrorInfo): void {
     if (process.env.NODE_ENV !== "production") {
-      console.warn("[rms-fx-dashboard] widget failed", this.props.title, error, info.componentStack);
+      console.warn(
+        "[rms-fx-dashboard] widget failed",
+        this.props.title,
+        error,
+        info.componentStack,
+      );
     }
   }
 
@@ -30,7 +39,9 @@ export class WidgetErrorBoundary extends Component<Props, State> {
         <article className="rms-fx-widget">
           <DashboardWidgetHeader title={this.props.title} />
           <DashboardWidgetBody>
-            <DashboardErrorState description={this.state.error.message || "Unexpected widget error."} />
+            <DashboardErrorState
+              description={this.state.error.message || "Unexpected widget error."}
+            />
           </DashboardWidgetBody>
           <DashboardWidgetFooter />
         </article>

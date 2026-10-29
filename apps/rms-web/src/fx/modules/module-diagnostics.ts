@@ -8,7 +8,10 @@ export function logFxModulePresentation(event: {
   mode: "fx" | "legacy";
   reason: string;
 }): void {
-  if (process.env.NODE_ENV === "production" && process.env.NEXT_PUBLIC_FX_RMS_DIAGNOSTICS !== "true") {
+  if (
+    process.env.NODE_ENV === "production" &&
+    process.env.NEXT_PUBLIC_FX_RMS_DIAGNOSTICS !== "true"
+  ) {
     return;
   }
   // eslint-disable-next-line no-console

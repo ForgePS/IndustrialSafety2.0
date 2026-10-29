@@ -21,6 +21,7 @@ import {
   executeImportJobSchema,
   nextStatusForS5Action,
   resolveBatchSize,
+  resolveImportAdapterKey,
   rollbackRequestSchema,
   retryRowErrorSchema,
   sanitizeObject,
@@ -136,10 +137,15 @@ export class ImportExecutionService {
             ),
             orderBy: [asc(importColumnMappings.ordinal)],
           });
-          // S8 / pre-S9: no product adapters are authorized. Default to the neutral
-          // reference adapter so execute does not invent FORGE_*:… keys that the worker
-          // cannot resolve (DEF-S8-024). Callers may still pass an explicit adapterKey.
-          const adapterKey = input.adapterKey ?? "reference:generic:record@1";
+          // Prefer an explicit adapterKey; otherwise select authorized Industrial
+          // product adapters from the job's product/module/record (S9 enablement).
+          // Unknown products still fall back to the neutral reference adapter.
+          const adapterKey = resolveImportAdapterKey({
+            adapterKey: input.adapterKey,
+            productKey: job.productCode,
+            moduleKey: job.moduleCode,
+            recordType: job.recordType,
+          });
           const batchSize = resolveBatchSize(input.batchSize);
           const [rowCount] = await tx
             .select({ value: count() })
@@ -577,7 +583,8 @@ export class ImportExecutionService {
   ) {
     const tenantId = this.requireTenant(principal);
     const input = rollbackRequestSchema.parse(body ?? {});
-    const idempotencyKey = input.idempotencyKey ?? headerIdempotencyKey ?? `rb:${jobId}:${correlationId}`;
+    const idempotencyKey =
+      input.idempotencyKey ?? headerIdempotencyKey ?? `rb:${jobId}:${correlationId}`;
 
     try {
       return await withTenantTransaction(

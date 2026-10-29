@@ -48,10 +48,7 @@ test.describe("Incident autosave", () => {
       await ensureAuthenticated(pageB, credentials);
 
       const runId = e2eRunId();
-      const incidentId = await createManualIncident(
-        pageA,
-        syntheticDispatchDescription(runId),
-      );
+      const incidentId = await createManualIncident(pageA, syntheticDispatchDescription(runId));
 
       await openIncidentSection(pageA, incidentId, "OVERVIEW");
       await openIncidentSection(pageB, incidentId, "OVERVIEW");

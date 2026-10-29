@@ -33,9 +33,7 @@ function Inner() {
     setLoading(true);
     setError(null);
     try {
-      setData(
-        await apiGet<AiOverview>("/api/v1/ai/management/overview", { query: { tenantId } }),
-      );
+      setData(await apiGet<AiOverview>("/api/v1/ai/management/overview", { query: { tenantId } }));
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to load tenant access");
     } finally {
@@ -63,9 +61,7 @@ function Inner() {
         Tenant <span className={styles.mono}>{tenantId}</span> ·{" "}
         <Link href={`/ai${tenantQuery(tenantId)}`}>Overview</Link>
       </p>
-      {!canRead ? (
-        <p className={styles.error}>Missing platform AI management permission</p>
-      ) : null}
+      {!canRead ? <p className={styles.error}>Missing platform AI management permission</p> : null}
       {error ? <p className={styles.error}>{error}</p> : null}
       {loading ? <p className={styles.muted}>Loading…</p> : null}
       {data ? (
@@ -78,7 +74,9 @@ function Inner() {
                 : "Not entitled"}
             </dd>
             <dt>Policy status</dt>
-            <dd>{data.policy?.status ?? "None"} ({data.policy?.product ?? "—"})</dd>
+            <dd>
+              {data.policy?.status ?? "None"} ({data.policy?.product ?? "—"})
+            </dd>
             <dt>Suspended</dt>
             <dd>{data.suspended ? "Yes" : "No"}</dd>
             <dt>Sensitive data path</dt>
@@ -127,7 +125,13 @@ function Inner() {
 
 export default function Page() {
   return (
-    <Suspense fallback={<main className={styles.page}><p className={styles.muted}>Loading…</p></main>}>
+    <Suspense
+      fallback={
+        <main className={styles.page}>
+          <p className={styles.muted}>Loading…</p>
+        </main>
+      }
+    >
       <Inner />
     </Suspense>
   );

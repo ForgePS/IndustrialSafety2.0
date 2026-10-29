@@ -125,9 +125,7 @@ function CadMappingsInner() {
         </div>
         <div className={styles.panel}>
           <h2>Unknown personnel</h2>
-          {personnel.length === 0 ? (
-            <p className={styles.muted}>No unknown personnel.</p>
-          ) : null}
+          {personnel.length === 0 ? <p className={styles.muted}>No unknown personnel.</p> : null}
           {personnel.length > 0 ? (
             <table className={styles.table}>
               <thead>

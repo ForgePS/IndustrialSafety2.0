@@ -4,12 +4,12 @@
 
 Implemented in `forge-ecs.ts` when `features.enableWaf` (production: true):
 
-| Priority | Rule | Action |
-| --- | --- | --- |
-| 0 | AWSManagedRulesAmazonIpReputationList | managed none override |
-| 1 | AWSManagedRulesCommonRuleSet | managed none override |
-| 2 | AWSManagedRulesKnownBadInputsRuleSet | managed none override |
-| 3 | RateLimitPerIp (2000/5min) | block |
+| Priority | Rule                                  | Action                |
+| -------- | ------------------------------------- | --------------------- |
+| 0        | AWSManagedRulesAmazonIpReputationList | managed none override |
+| 1        | AWSManagedRulesCommonRuleSet          | managed none override |
+| 2        | AWSManagedRulesKnownBadInputsRuleSet  | managed none override |
+| 3        | RateLimitPerIp (2000/5min)            | block                 |
 
 **Deploy status:** WebACL associates to ALB only when `Forge-Production-Compute` is deployed. Compute is **not** authorized in PROD-S0R → ACL not yet live.
 

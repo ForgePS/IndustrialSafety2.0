@@ -1,20 +1,9 @@
-import type { CSSProperties, ReactNode } from "react";
+import type { ReactNode } from "react";
 import type { MalwareVerdict } from "../types.js";
-
-const badgeBase: CSSProperties = {
-  display: "inline-flex",
-  alignItems: "center",
-  gap: "0.35rem",
-  padding: "0.15rem 0.5rem",
-  borderRadius: "0.25rem",
-  fontSize: "0.85rem",
-  border: "1px solid currentColor",
-  background: "transparent",
-};
 
 export function ImportStatusBadge({ status }: { status: string }) {
   return (
-    <span style={badgeBase} role="status" aria-label={`Import status ${status}`}>
+    <span className="forge-ic-badge" role="status" aria-label={`Import status ${status}`}>
       <span aria-hidden="true">●</span>
       {status}
     </span>
@@ -24,13 +13,13 @@ export function ImportStatusBadge({ status }: { status: string }) {
 export function MalwareVerdictBadge({ verdict }: { verdict: MalwareVerdict | string }) {
   const tone =
     verdict === "CLEAN" || verdict === "OVERRIDE_APPROVED"
-      ? "#0a7a3e"
+      ? "success"
       : verdict === "QUARANTINED" || verdict === "INFECTED" || verdict === "SUSPICIOUS"
-        ? "#a11"
-        : "#666";
+        ? "danger"
+        : "muted";
   return (
     <span
-      style={{ ...badgeBase, color: tone }}
+      className={`forge-ic-badge forge-ic-badge--${tone}`}
       role="status"
       aria-label={`Malware verdict ${verdict}`}
     >
@@ -49,7 +38,7 @@ export function DuplicateConfidenceBadge({
 }) {
   const label = band ?? (confidence >= 0.85 ? "HIGH" : confidence >= 0.6 ? "MEDIUM" : "LOW");
   return (
-    <span style={badgeBase} role="status" aria-label={`Duplicate confidence ${label}`}>
+    <span className="forge-ic-badge" role="status" aria-label={`Duplicate confidence ${label}`}>
       {label} ({Math.round(confidence * 100)}%)
     </span>
   );
@@ -72,11 +61,17 @@ export function SensitiveValue({
       data-sensitive={sensitive ? "true" : undefined}
       data-privileged={privileged ? "true" : undefined}
       data-never-returnable={neverReturnable ? "true" : undefined}
-      title={neverReturnable ? "Never-returnable credential" : sensitive ? "Sensitive (masked)" : undefined}
+      title={
+        neverReturnable
+          ? "Never-returnable credential"
+          : sensitive
+            ? "Sensitive (masked)"
+            : undefined
+      }
     >
       {text}
       {sensitive ? (
-        <span style={{ marginLeft: "0.35rem", fontSize: "0.75rem", color: "#666" }}>
+        <span className="forge-ic-sensitive-tag">
           {neverReturnable ? "[SECRET]" : privileged ? "[PRIVILEGED]" : "[MASKED]"}
         </span>
       ) : null}
@@ -87,9 +82,16 @@ export function SensitiveValue({
 export function PrivilegedAccessBanner({ visible }: { visible: boolean }) {
   if (!visible) return null;
   return (
-    <div role="status" style={{ padding: "0.75rem", border: "1px solid #a11", marginBottom: "1rem" }}>
-      Privileged sensitive access is active for this session. Credentials and secrets remain
-      non-returnable. Do not copy values into tickets or chat.
+    <div role="status" className="forge-ic-banner forge-ic-banner--danger">
+      <span className="forge-ic-banner-icon" aria-hidden="true">
+        !
+      </span>
+      <div className="forge-ic-banner-body">
+        <strong className="forge-ic-banner-title">Privileged access active</strong>
+        <p className="forge-ic-banner-text">
+          Credentials and secrets remain non-returnable. Do not copy values into tickets or chat.
+        </p>
+      </div>
     </div>
   );
 }
@@ -101,42 +103,56 @@ const PRODUCTION_LIKE = new Set([
   "govcloud-production",
 ]);
 
+export function isProductionLikeImportEnv(appEnv?: string | null): boolean {
+  return Boolean(appEnv && PRODUCTION_LIKE.has(appEnv));
+}
+
+/** True when production-like env still uses the reference (blocked) scanner. */
+export function isProductionImportUploadBlocked(input: {
+  appEnv?: string | null | undefined;
+  malwareProviderKey?: string | null | undefined;
+}): boolean {
+  if (!isProductionLikeImportEnv(input.appEnv)) return false;
+  const key = (input.malwareProviderKey ?? "reference-malware").trim() || "reference-malware";
+  return key === "reference-malware";
+}
+
 /** Outcome B production restriction banner — not dismissible; admins cannot bypass. */
-export function ProductionScannerRestrictionBanner({ appEnv }: { appEnv?: string | null }) {
-  if (!appEnv || !PRODUCTION_LIKE.has(appEnv)) return null;
+export function ProductionScannerRestrictionBanner({
+  appEnv,
+  malwareProviderKey,
+}: {
+  appEnv?: string | null;
+  /** When a production-grade provider is configured, banner is hidden. */
+  malwareProviderKey?: string | null;
+}) {
+  if (!isProductionImportUploadBlocked({ appEnv, malwareProviderKey })) return null;
   return (
-    <div
-      role="alert"
-      style={{
-        padding: "0.75rem",
-        border: "1px solid #8a5a00",
-        background: "#fff8e6",
-        marginBottom: "1rem",
-      }}
-    >
-      <strong>Production import restriction.</strong> Untrusted file imports are blocked in this
-      environment until a production-grade malware scanner is configured. The reference scanner is
-      development/test only. Administrators cannot bypass this control.
+    <div role="alert" className="forge-ic-banner forge-ic-banner--warning">
+      <span className="forge-ic-banner-icon" aria-hidden="true">
+        !
+      </span>
+      <div className="forge-ic-banner-body">
+        <strong className="forge-ic-banner-title">Production import restriction</strong>
+        <p className="forge-ic-banner-text">
+          Untrusted file imports are blocked until a production-grade malware scanner is configured.
+          The reference scanner is development/test only. Administrators cannot bypass this control.
+        </p>
+      </div>
     </div>
   );
 }
 
 export function ImportEmptyState({ title, children }: { title: string; children?: ReactNode }) {
   return (
-    <div role="status" style={{ padding: "2rem", textAlign: "center", color: "#555" }}>
-      <p style={{ fontWeight: 600 }}>{title}</p>
+    <div role="status" className="forge-ic-empty">
+      <p className="forge-ic-empty-title">{title}</p>
       {children}
     </div>
   );
 }
 
-export function ImportProgressBar({
-  percent,
-  label,
-}: {
-  percent: number;
-  label?: string;
-}) {
+export function ImportProgressBar({ percent, label }: { percent: number; label?: string }) {
   const safe = Math.max(0, Math.min(100, percent));
   return (
     <div
@@ -145,14 +161,9 @@ export function ImportProgressBar({
       aria-valuemin={0}
       aria-valuemax={100}
       aria-label={label ?? "Import progress"}
-      style={{
-        height: "0.75rem",
-        background: "#e8e8e8",
-        borderRadius: "0.25rem",
-        overflow: "hidden",
-      }}
+      className="forge-ic-progress"
     >
-      <div style={{ width: `${safe}%`, height: "100%", background: "#246" }} />
+      <div className="forge-ic-progress-bar" style={{ width: `${safe}%` }} />
     </div>
   );
 }

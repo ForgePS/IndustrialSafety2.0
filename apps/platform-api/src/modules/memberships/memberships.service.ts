@@ -16,6 +16,7 @@ import {
   membershipProductAccess,
   membershipRoleAssignments,
   permissions,
+  persons,
   platformModules,
   platformProducts,
   rolePermissions,
@@ -32,7 +33,7 @@ import {
 import { ForgeError } from "@forge/errors";
 import { DOMAIN_EVENT_TYPES } from "@forge/events";
 import type { ForgePrincipal } from "@forge/tenant-context";
-import { and, eq, ilike, inArray, isNull } from "drizzle-orm";
+import { and, eq, ilike, inArray, isNull, or } from "drizzle-orm";
 import { concurrencyConflict } from "../../common/concurrency.js";
 import { DATABASE } from "../../tokens.js";
 import { AuditService } from "../audit/audit.service.js";
@@ -80,9 +81,16 @@ export class MembershipsService {
       }
       const q = filters.q?.trim();
       if (q) {
-        conditions.push(ilike(users.primaryEmail, `%${q}%`));
+        const search = or(
+          ilike(users.primaryEmail, `%${q}%`),
+          ilike(users.username, `%${q}%`),
+          ilike(persons.displayName, `%${q}%`),
+          ilike(persons.firstName, `%${q}%`),
+          ilike(persons.lastName, `%${q}%`),
+        );
+        if (search) conditions.push(search);
       }
-      return tx
+      const rows = await tx
         .select({
           id: userTenantMemberships.id,
           tenantId: userTenantMemberships.tenantId,
@@ -99,11 +107,50 @@ export class MembershipsService {
           updatedAt: userTenantMemberships.updatedAt,
           email: users.primaryEmail,
           userStatus: users.status,
+          username: users.username,
+          personId: users.personId,
+          lastLoginAt: users.lastLoginAt,
+          lastActivityAt: users.lastActivityAt,
+          displayName: persons.displayName,
+          firstName: persons.firstName,
+          lastName: persons.lastName,
         })
         .from(userTenantMemberships)
         .innerJoin(users, eq(users.id, userTenantMemberships.userId))
+        .leftJoin(persons, eq(persons.id, users.personId))
         .where(and(...conditions))
         .orderBy(users.primaryEmail);
+
+      const membershipIds = rows.map((row) => row.id);
+      const rolesByMembership = new Map<string, Array<{ roleCode: string; roleName: string }>>();
+      if (membershipIds.length > 0) {
+        const roleRows = await tx
+          .select({
+            membershipId: membershipRoleAssignments.membershipId,
+            roleCode: roles.code,
+            roleName: roles.name,
+          })
+          .from(membershipRoleAssignments)
+          .innerJoin(roles, eq(roles.id, membershipRoleAssignments.roleId))
+          .where(
+            and(
+              eq(membershipRoleAssignments.tenantId, tenantId),
+              inArray(membershipRoleAssignments.membershipId, membershipIds),
+              inArray(membershipRoleAssignments.status, ["ACTIVE", "PENDING"]),
+            ),
+          )
+          .orderBy(roles.code);
+        for (const role of roleRows) {
+          const list = rolesByMembership.get(role.membershipId) ?? [];
+          list.push({ roleCode: role.roleCode, roleName: role.roleName });
+          rolesByMembership.set(role.membershipId, list);
+        }
+      }
+
+      return rows.map((row) => ({
+        ...row,
+        roles: rolesByMembership.get(row.id) ?? [],
+      }));
     });
   }
 
@@ -208,7 +255,13 @@ export class MembershipsService {
           toStatus: data.status,
           principal,
         });
-        await this.syncAccessProjection(tx, tenantId, data.userId, data.status, data.isDefaultTenant);
+        await this.syncAccessProjection(
+          tx,
+          tenantId,
+          data.userId,
+          data.status,
+          data.isDefaultTenant,
+        );
 
         await this.outbox.write(tx, {
           tenantId,
@@ -261,12 +314,19 @@ export class MembershipsService {
       tenantId,
       async (tx) => {
         const before = await this.requireMembership(tx, tenantId, membershipId);
-        const version = this.assertVersion(tenantId, membershipId, before.recordVersion, expectedVersion);
+        const version = this.assertVersion(
+          tenantId,
+          membershipId,
+          before.recordVersion,
+          expectedVersion,
+        );
 
         const [updated] = await tx
           .update(userTenantMemberships)
           .set({
-            ...(data.isDefaultTenant === undefined ? {} : { isDefaultTenant: data.isDefaultTenant }),
+            ...(data.isDefaultTenant === undefined
+              ? {}
+              : { isDefaultTenant: data.isDefaultTenant }),
             ...(data.expiresAt === undefined
               ? {}
               : { expiresAt: data.expiresAt === null ? null : new Date(data.expiresAt) }),
@@ -556,7 +616,11 @@ export class MembershipsService {
 
         await tx
           .update(userTenantMemberships)
-          .set({ recordVersion: version + 1, updatedByUserId: principal.userId, updatedAt: new Date() })
+          .set({
+            recordVersion: version + 1,
+            updatedByUserId: principal.userId,
+            updatedAt: new Date(),
+          })
           .where(
             and(
               eq(userTenantMemberships.id, membershipId),
@@ -732,11 +796,17 @@ export class MembershipsService {
           principal,
           productCodes: data.productCodes,
           moduleCodes: data.moduleCodes,
+          // Explicit Admin replace — empty moduleCodes must clear access, not expand to all.
+          defaultToTenantProducts: false,
         });
 
         await tx
           .update(userTenantMemberships)
-          .set({ recordVersion: version + 1, updatedByUserId: principal.userId, updatedAt: new Date() })
+          .set({
+            recordVersion: version + 1,
+            updatedByUserId: principal.userId,
+            updatedAt: new Date(),
+          })
           .where(
             and(
               eq(userTenantMemberships.id, membershipId),
@@ -799,7 +869,11 @@ export class MembershipsService {
       throw new ForgeError("NOT_FOUND", `Unknown role code: ${missing.join(", ")}`);
     }
 
-    await this.assertGrantable(tx, input.principal, [...roleByCode.values()].map((r) => r.id));
+    await this.assertGrantable(
+      tx,
+      input.principal,
+      [...roleByCode.values()].map((r) => r.id),
+    );
 
     const now = new Date();
     for (const requested of input.roles) {
@@ -842,16 +916,10 @@ export class MembershipsService {
         continue;
       }
       if (isCreatorOnlyPermission(row.code) && !principal.isPlatformAdmin) {
-        throw new ForgeError(
-          "FORBIDDEN",
-          "Tenant administrators cannot grant creator permissions",
-        );
+        throw new ForgeError("FORBIDDEN", "Tenant administrators cannot grant creator permissions");
       }
       if (!principal.isPlatformAdmin && !principal.permissions.has(row.code)) {
-        throw new ForgeError(
-          "FORBIDDEN",
-          "Cannot grant a permission the caller does not hold",
-        );
+        throw new ForgeError("FORBIDDEN", "Cannot grant a permission the caller does not hold");
       }
     }
   }
@@ -886,7 +954,9 @@ export class MembershipsService {
         .select({ code: platformProducts.code })
         .from(tenantProducts)
         .innerJoin(platformProducts, eq(platformProducts.id, tenantProducts.productId))
-        .where(and(eq(tenantProducts.tenantId, input.tenantId), eq(tenantProducts.status, "ACTIVE")));
+        .where(
+          and(eq(tenantProducts.tenantId, input.tenantId), eq(tenantProducts.status, "ACTIVE")),
+        );
       productCodes = catalog.map((row) => row.code);
     }
 
@@ -1139,11 +1209,7 @@ export class MembershipsService {
     return current;
   }
 
-  private async requireMembership(
-    tx: DatabaseTransaction,
-    tenantId: string,
-    membershipId: string,
-  ) {
+  private async requireMembership(tx: DatabaseTransaction, tenantId: string, membershipId: string) {
     const row = await tx.query.userTenantMemberships.findFirst({
       where: and(
         eq(userTenantMemberships.id, membershipId),
@@ -1159,6 +1225,9 @@ export class MembershipsService {
   private async loadDetail(tx: DatabaseTransaction, tenantId: string, membershipId: string) {
     const membership = await this.requireMembership(tx, tenantId, membershipId);
     const user = await tx.query.users.findFirst({ where: eq(users.id, membership.userId) });
+    const person = user?.personId
+      ? await tx.query.persons.findFirst({ where: eq(persons.id, user.personId) })
+      : undefined;
     const [roleRows, access] = await Promise.all([
       this.loadRoles(tx, membershipId),
       this.loadProducts(tx, membershipId),
@@ -1167,6 +1236,13 @@ export class MembershipsService {
       ...membership,
       email: user?.primaryEmail ?? null,
       userStatus: user?.status ?? null,
+      username: user?.username ?? null,
+      personId: user?.personId ?? null,
+      lastLoginAt: user?.lastLoginAt ?? null,
+      lastActivityAt: user?.lastActivityAt ?? null,
+      displayName: person?.displayName ?? null,
+      firstName: person?.firstName ?? null,
+      lastName: person?.lastName ?? null,
       roles: roleRows,
       products: access.products,
       modules: access.modules,

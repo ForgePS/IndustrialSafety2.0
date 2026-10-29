@@ -96,6 +96,11 @@ const navItemSchema = z.object({
   featureFlag: z.string().max(120).optional(),
 });
 
+/** Absolute https URL, empty string, or same-origin static mark under /branding/. */
+const brandingLogoUrlSchema = z
+  .union([z.string().url(), z.string().regex(/^\/branding\/[A-Za-z0-9._/-]+$/), z.literal("")])
+  .optional();
+
 const payloadSchemas: Record<ConfigNamespace, z.ZodType> = {
   tenant_profile: z.object({
     displayName: z.string().min(1).max(200),
@@ -122,7 +127,9 @@ const payloadSchemas: Record<ConfigNamespace, z.ZodType> = {
     secondaryColor: z.string().max(32).optional(),
     accentColor: z.string().max(32).optional(),
     approvedColors: z.array(z.string().max(32)).max(32).optional(),
-    logoUrl: z.string().url().optional().or(z.literal("")),
+    // Absolute URLs or same-origin static marks under /branding/.
+    logoUrl: brandingLogoUrlSchema,
+    logoDarkUrl: brandingLogoUrlSchema,
     contactName: z.string().max(200).optional(),
     contactPhone: z.string().max(40).optional(),
     supportEmail: z.string().email().optional().or(z.literal("")),
@@ -131,6 +138,17 @@ const payloadSchemas: Record<ConfigNamespace, z.ZodType> = {
     emailFromName: z.string().max(120).optional(),
     emailFromAddress: z.string().email().optional().or(z.literal("")),
     customCss: z.string().max(20000).optional(),
+    login: z
+      .object({
+        logoUrl: brandingLogoUrlSchema,
+        logoDarkUrl: brandingLogoUrlSchema,
+        brandLabel: z.string().max(200).optional(),
+        headline: z.string().max(300).optional(),
+        body: z.string().max(2000).optional(),
+        statusText: z.string().max(200).optional(),
+        buttonLabel: z.string().max(80).optional(),
+      })
+      .optional(),
   }),
   navigation: z.object({
     groups: z.array(
@@ -403,13 +421,12 @@ export function validateConfigPayload(namespace: ConfigNamespace, payload: unkno
 }
 
 export function hashConfigPayload(payload: unknown): string {
-  return createHash("sha256").update(JSON.stringify(payload ?? {})).digest("hex");
+  return createHash("sha256")
+    .update(JSON.stringify(payload ?? {}))
+    .digest("hex");
 }
 
-export function assertTransition(
-  from: ConfigVersionState,
-  to: ConfigVersionState,
-): void {
+export function assertTransition(from: ConfigVersionState, to: ConfigVersionState): void {
   const allowed: Record<ConfigVersionState, ConfigVersionState[]> = {
     DRAFT: ["SCHEDULED", "PUBLISHED", "ARCHIVED"],
     SCHEDULED: ["PUBLISHED", "ARCHIVED", "DRAFT"],
@@ -453,12 +470,14 @@ export function comparePayloads(
   return diffs;
 }
 
-export function resolveEffectiveVersion<T extends {
-  state: string;
-  effectiveFrom: Date | string | null;
-  effectiveTo: Date | string | null;
-  publishedAt: Date | string | null;
-}>(versions: T[], at: Date = new Date()): T | null {
+export function resolveEffectiveVersion<
+  T extends {
+    state: string;
+    effectiveFrom: Date | string | null;
+    effectiveTo: Date | string | null;
+    publishedAt: Date | string | null;
+  },
+>(versions: T[], at: Date = new Date()): T | null {
   const published = versions
     .filter((v) => v.state === "PUBLISHED" || v.state === "SCHEDULED")
     .filter((v) => {
@@ -623,6 +642,12 @@ export const DEFAULT_PAYLOADS: Record<ConfigNamespace, unknown> = {
         htmlBody: "<p>{{detail}}</p>",
         textBody: "{{detail}}",
       },
+      {
+        key: "workers_comp_weekly_status",
+        subject: "{{subject}}",
+        htmlBody: "{{htmlBody}}",
+        textBody: "{{textBody}}",
+      },
     ],
   },
   document_templates: { templates: [] },
@@ -655,3 +680,71 @@ export const DEFAULT_PAYLOADS: Record<ConfigNamespace, unknown> = {
 };
 
 export const packageStatus = "ACTIVE" as const;
+
+/** Defaults used when branding.login fields (or legacy flat fields) are absent. */
+export const DEFAULT_LOGIN_BRANDING = {
+  brandLabel: "Industrial",
+  headline: "Welcome to Forge Industrial Safety",
+  body: "Sign in is required to continue.",
+  statusText: "Unauthenticated",
+  buttonLabel: "Sign in",
+  logoUrl: "",
+} as const;
+
+export type ResolvedLoginBranding = {
+  logoUrl: string;
+  logoDarkUrl?: string;
+  brandLabel: string;
+  headline: string;
+  body: string;
+  statusText: string;
+  buttonLabel: string;
+};
+
+type BrandingLike = {
+  logoUrl?: string | null;
+  logoDarkUrl?: string | null;
+  loginShortName?: string | null;
+  productDisplayName?: string | null;
+  login?: {
+    logoUrl?: string | null;
+    logoDarkUrl?: string | null;
+    brandLabel?: string | null;
+    headline?: string | null;
+    body?: string | null;
+    statusText?: string | null;
+    buttonLabel?: string | null;
+  } | null;
+};
+
+/**
+ * Resolve Sign-in / gate copy from a branding payload.
+ * Prefer nested `login.*`; fall back to legacy flat fields when missing.
+ */
+export function resolveLoginBranding(
+  branding: BrandingLike | null | undefined,
+): ResolvedLoginBranding {
+  const login = branding?.login ?? undefined;
+  const product = branding?.productDisplayName?.trim();
+  const legacyHeadline = product ? `Welcome to ${product}` : DEFAULT_LOGIN_BRANDING.headline;
+  const brandLabel =
+    login?.brandLabel?.trim() ||
+    branding?.loginShortName?.trim() ||
+    DEFAULT_LOGIN_BRANDING.brandLabel;
+  const logoUrl =
+    login?.logoUrl?.trim() || branding?.logoUrl?.trim() || DEFAULT_LOGIN_BRANDING.logoUrl;
+  const logoDarkUrl = login?.logoDarkUrl?.trim() || branding?.logoDarkUrl?.trim() || undefined;
+  const statusText =
+    login?.statusText !== undefined && login?.statusText !== null
+      ? login.statusText.trim()
+      : DEFAULT_LOGIN_BRANDING.statusText;
+  return {
+    logoUrl,
+    ...(logoDarkUrl ? { logoDarkUrl } : {}),
+    brandLabel,
+    headline: login?.headline?.trim() || legacyHeadline,
+    body: login?.body?.trim() || DEFAULT_LOGIN_BRANDING.body,
+    statusText,
+    buttonLabel: login?.buttonLabel?.trim() || DEFAULT_LOGIN_BRANDING.buttonLabel,
+  };
+}

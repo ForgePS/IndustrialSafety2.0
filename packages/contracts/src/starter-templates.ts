@@ -6,6 +6,7 @@
  */
 
 import { catalogModulesForSeed } from "./module-catalog.js";
+import { FIELD_EMPLOYEE_PERMISSIONS, FIELD_SUPERVISOR_PERMISSIONS } from "./field.js";
 import {
   RMS_DEPARTMENT_ADMIN_PERMISSIONS,
   RMS_FIRE_INVESTIGATOR_PERMISSIONS,
@@ -79,6 +80,7 @@ const MANAGER_PERMISSIONS = [
   "platform.person.update",
   "platform.user.invite",
   "platform.invitation.read",
+  "platform.invitation.manage",
   "platform.membership.read",
   "platform.permission.read",
 ] as const;
@@ -109,10 +111,30 @@ export const FORGE_INDUSTRIAL_TEMPLATE: StarterTemplate = {
     isCore: m.isCore,
   })),
   roles: [
-    { code: "INDUSTRIAL_TENANT_ADMIN", name: "Tenant Admin", permissions: ADMIN_PERMISSIONS },
-    { code: "INDUSTRIAL_SAFETY_MANAGER", name: "Safety Manager", permissions: MANAGER_PERMISSIONS },
-    { code: "INDUSTRIAL_SUPERVISOR", name: "Supervisor", permissions: SUPERVISOR_PERMISSIONS },
-    { code: "INDUSTRIAL_EMPLOYEE", name: "Employee", permissions: MEMBER_PERMISSIONS },
+    {
+      code: "INDUSTRIAL_TENANT_ADMIN",
+      name: "Tenant Admin",
+      permissions: [...ADMIN_PERMISSIONS, ...FIELD_SUPERVISOR_PERMISSIONS, "industrial.access"],
+    },
+    {
+      code: "INDUSTRIAL_SAFETY_MANAGER",
+      name: "Safety Director",
+      permissions: [...MANAGER_PERMISSIONS, ...FIELD_SUPERVISOR_PERMISSIONS, "industrial.access"],
+    },
+    {
+      code: "INDUSTRIAL_SUPERVISOR",
+      name: "Supervisor",
+      permissions: [
+        ...SUPERVISOR_PERMISSIONS,
+        ...FIELD_SUPERVISOR_PERMISSIONS,
+        "industrial.access",
+      ],
+    },
+    {
+      code: "INDUSTRIAL_EMPLOYEE",
+      name: "Employee",
+      permissions: [...MEMBER_PERMISSIONS, ...FIELD_EMPLOYEE_PERMISSIONS, "industrial.access"],
+    },
   ],
 };
 

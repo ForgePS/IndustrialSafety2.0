@@ -26,9 +26,7 @@ const PROJECT_ID = "forge-industrial-safety";
 const STAGING_TENANT = "0882c865-59c2-49a6-ab88-ce6ca89be30c";
 const DEST_BUCKET = "forge-development-documents-511343547817-us-east-1";
 const REGION = "us-east-1";
-const EVID_DIR = path.resolve(
-  "docs/program/industrial-migration/ind-11/evidence/p2/03-storage",
-);
+const EVID_DIR = path.resolve("docs/program/industrial-migration/ind-11/evidence/p2/03-storage");
 const APPROVAL = path.join(EVID_DIR, "APPROVE-PRODUCERS-STORAGE-COPY.md");
 const AV_DECISION = path.join(EVID_DIR, "av-approach-decision.md");
 
@@ -72,17 +70,13 @@ const concurrency = Math.max(
 const limitEnv = process.env.FORGE_P2_STORAGE_COPY_LIMIT?.trim();
 const limit = limitEnv ? Math.max(0, Number(limitEnv)) : null;
 const offset = Math.max(0, Number(process.env.FORGE_P2_STORAGE_COPY_OFFSET || 0));
-const skipExisting =
-  process.env.FORGE_P2_STORAGE_COPY_SKIP_EXISTING?.trim() !== "false";
+const skipExisting = process.env.FORGE_P2_STORAGE_COPY_SKIP_EXISTING?.trim() !== "false";
 
 const mapPath =
-  process.env.FORGE_P2_STORAGE_MAP?.trim() ||
-  path.join(EVID_DIR, "s3-map-staging-latest.json");
+  process.env.FORGE_P2_STORAGE_MAP?.trim() || path.join(EVID_DIR, "s3-map-staging-latest.json");
 if (!fs.existsSync(mapPath)) fail(`S3 map missing: ${mapPath}`);
 
-const requireFromApi = createRequire(
-  path.resolve(process.cwd(), "apps/platform-api/package.json"),
-);
+const requireFromApi = createRequire(path.resolve(process.cwd(), "apps/platform-api/package.json"));
 const requireFromMig = createRequire(
   path.resolve(process.cwd(), "packages/migration-firebase/package.json"),
 );
@@ -93,9 +87,7 @@ let HeadObjectCommand;
 let admin;
 let getStorage;
 try {
-  ({ S3Client, PutObjectCommand, HeadObjectCommand } = requireFromApi(
-    "@aws-sdk/client-s3",
-  ));
+  ({ S3Client, PutObjectCommand, HeadObjectCommand } = requireFromApi("@aws-sdk/client-s3"));
 } catch (e) {
   fail(`@aws-sdk/client-s3 unavailable via platform-api: ${e}`);
 }
@@ -131,10 +123,7 @@ function md5Base64ToHex(b64) {
 }
 
 async function resolveSourceBucket(storage) {
-  const candidates = [
-    `${PROJECT_ID}.firebasestorage.app`,
-    `${PROJECT_ID}.appspot.com`,
-  ];
+  const candidates = [`${PROJECT_ID}.firebasestorage.app`, `${PROJECT_ID}.appspot.com`];
   const errors = [];
   for (const name of candidates) {
     try {
@@ -155,9 +144,7 @@ async function resolveSourceBucket(storage) {
 
 async function headOk(key) {
   try {
-    const out = await s3.send(
-      new HeadObjectCommand({ Bucket: DEST_BUCKET, Key: key }),
-    );
+    const out = await s3.send(new HeadObjectCommand({ Bucket: DEST_BUCKET, Key: key }));
     return out;
   } catch (err) {
     const status = err?.$metadata?.httpStatusCode;
@@ -314,9 +301,7 @@ async function main() {
 
   // Probe dest bucket with a no-op-ish head on a known non-existent key pattern
   try {
-    await headOk(
-      `tenants/${STAGING_TENANT}/documents/00000000-0000-5000-8000-000000000000/probe`,
-    );
+    await headOk(`tenants/${STAGING_TENANT}/documents/00000000-0000-5000-8000-000000000000/probe`);
   } catch (err) {
     fail(
       `Cannot access dest bucket ${DEST_BUCKET}: ${err instanceof Error ? err.message : String(err)}`,
@@ -445,17 +430,11 @@ async function main() {
   const resultPath = path.join(EVID_DIR, `s3-copy-staging-result-${stamp}.json`);
   const latestPath = path.join(EVID_DIR, "s3-copy-staging-result.json");
   const errorsPath = path.join(EVID_DIR, `s3-copy-staging-errors-${stamp}.json`);
-  const objectsPath = path.join(
-    EVID_DIR,
-    `s3-copy-staging-objects-${stamp}.json`,
-  );
+  const objectsPath = path.join(EVID_DIR, `s3-copy-staging-objects-${stamp}.json`);
 
   fs.writeFileSync(resultPath, `${JSON.stringify(report, null, 2)}\n`);
   fs.writeFileSync(latestPath, `${JSON.stringify(report, null, 2)}\n`);
-  fs.writeFileSync(
-    errorsPath,
-    `${JSON.stringify({ ok: errors.length === 0, errors }, null, 2)}\n`,
-  );
+  fs.writeFileSync(errorsPath, `${JSON.stringify({ ok: errors.length === 0, errors }, null, 2)}\n`);
   fs.writeFileSync(
     objectsPath,
     `${JSON.stringify({
@@ -492,9 +471,7 @@ async function main() {
 
 main()
   .catch((e) => {
-    console.error(
-      JSON.stringify({ ok: false, error: String(e), stack: e?.stack }),
-    );
+    console.error(JSON.stringify({ ok: false, error: String(e), stack: e?.stack }));
     process.exit(1);
   })
   .finally(async () => {

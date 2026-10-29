@@ -9,25 +9,25 @@ Authorize on **permission codes**, never role display names. Deny wins over allo
 
 ## Registries
 
-| Layer | Location |
-| --- | --- |
-| Permission catalog | `@forge/contracts` `PLATFORM_PERMISSIONS` / `ALL_PERMISSIONS`; DB `permissions` |
-| Role templates | DB `role_templates` + `role_template_permissions` (seeded) |
-| Tenant roles | DB `roles` + `role_permissions` (`effect` ALLOW \| DENY) |
-| Membership → role | `membership_role_assignments` (primary); legacy `user_role_assignments` |
-| Evaluation | `@forge/authorization` `evaluateAuthorization` + `resolveEffectivePermissionCodes` |
-| API service | `AuthorizationService` (list/create/patch roles, set permissions, assign/revoke, check) |
-| Server guard | `PermissionGuard` + `@RequirePermission` / `@RequireAnyPermission` |
-| UI helpers | `usePermission` / `useAnyPermission` / `useAllPermissions`; `<Can allowed={...}>` |
+| Layer              | Location                                                                                |
+| ------------------ | --------------------------------------------------------------------------------------- |
+| Permission catalog | `@forge/contracts` `PLATFORM_PERMISSIONS` / `ALL_PERMISSIONS`; DB `permissions`         |
+| Role templates     | DB `role_templates` + `role_template_permissions` (seeded)                              |
+| Tenant roles       | DB `roles` + `role_permissions` (`effect` ALLOW \| DENY)                                |
+| Membership → role  | `membership_role_assignments` (primary); legacy `user_role_assignments`                 |
+| Evaluation         | `@forge/authorization` `evaluateAuthorization` + `resolveEffectivePermissionCodes`      |
+| API service        | `AuthorizationService` (list/create/patch roles, set permissions, assign/revoke, check) |
+| Server guard       | `PermissionGuard` + `@RequirePermission` / `@RequireAnyPermission`                      |
+| UI helpers         | `usePermission` / `useAnyPermission` / `useAllPermissions`; `<Can allowed={...}>`       |
 
 ## SaaS personas → Forge templates
 
-| Persona | Template code | Typical access |
-| --- | --- | --- |
-| owner | `TENANT_OWNER` | Full tenant SaaS admin (parity with admin in MK-S4) |
-| admin | `TENANT_ADMIN` | Same core SaaS admin bundle |
-| member | `STANDARD_USER` | Org/person/permission read |
-| viewer | `READ_ONLY_USER` | Member reads + `platform.audit.read` |
+| Persona | Template code    | Typical access                                      |
+| ------- | ---------------- | --------------------------------------------------- |
+| owner   | `TENANT_OWNER`   | Full tenant SaaS admin (parity with admin in MK-S4) |
+| admin   | `TENANT_ADMIN`   | Same core SaaS admin bundle                         |
+| member  | `STANDARD_USER`  | Org/person/permission read                          |
+| viewer  | `READ_ONLY_USER` | Member reads + `platform.audit.read`                |
 
 Helpers: `resolveSaasRolePersona`, `roleTemplateCodeForSaasPersona`, `saasPersonaHasPermission` in `@forge/contracts`.
 

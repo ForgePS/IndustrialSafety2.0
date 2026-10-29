@@ -22,5 +22,6 @@ The Creator Console is an internal single-page application that talks only to th
 
 - Cost is roughly $1/month instead of roughly $10/month.
 - There is no server-side rendering or server-side session handling, so authentication state lives in the browser.
-- Cache invalidation becomes a deployment step, since CloudFront must be invalidated to serve new assets promptly.
+- **Cache strategy:** hashed `/_next/static/*` is long-cached (immutable `Cache-Control` + CloudFront `CachingOptimized` behavior). HTML shells use `CachingDisabled` / `max-age=0,must-revalidate`, so deploys invalidate entry shells (`/` and `/index.html`) rather than `/*` by default. Use `--full-invalidate` when rolling out CDN policy changes.
+- **Compression:** CloudFront `compress: true` serves gzip/brotli; Network-panel transfer size is often far smaller than the S3 object size.
 - The private bucket plus Origin Access Control means objects are never publicly readable except through CloudFront.

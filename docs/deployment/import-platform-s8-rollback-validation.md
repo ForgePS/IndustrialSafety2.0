@@ -6,19 +6,19 @@
 
 ## Controlled development rehearsal
 
-| Step | Target | Status |
-| --- | --- | --- |
-| Pre-state | API `:42`, worker `:26`, running/desired `1/1` | **VERIFIED** |
-| Roll back API TD | `:42` → `:40` | **VERIFIED** |
-| Roll back worker TD | `:26` → `:25` | **VERIFIED** |
-| Wait for rollback stability | API and worker running/desired/pending `1/1/0` | **VERIFIED** |
-| Smoke after rollback | `/health` 200; unauthenticated `/api/v1/imports/jobs` 401 | **VERIFIED** |
-| Leave schema `0027` in place | No migration command run | **VERIFIED** |
-| Roll forward API TD | `:40` → `:42` | **VERIFIED** |
-| Roll forward worker TD | `:25` → `:26` | **VERIFIED** |
-| Wait for final stability | Both rollout states `COMPLETED`, running/desired/pending `1/1/0` | **VERIFIED** |
-| Repeat final smoke | `/health` 200; unauthenticated `/api/v1/imports/jobs` 401 | **VERIFIED** |
-| Preserve app DB secret | LastChangedDate `2026-07-26T15:30:16.387000-05:00` | **VERIFIED — unchanged** |
+| Step                         | Target                                                           | Status                   |
+| ---------------------------- | ---------------------------------------------------------------- | ------------------------ |
+| Pre-state                    | API `:42`, worker `:26`, running/desired `1/1`                   | **VERIFIED**             |
+| Roll back API TD             | `:42` → `:40`                                                    | **VERIFIED**             |
+| Roll back worker TD          | `:26` → `:25`                                                    | **VERIFIED**             |
+| Wait for rollback stability  | API and worker running/desired/pending `1/1/0`                   | **VERIFIED**             |
+| Smoke after rollback         | `/health` 200; unauthenticated `/api/v1/imports/jobs` 401        | **VERIFIED**             |
+| Leave schema `0027` in place | No migration command run                                         | **VERIFIED**             |
+| Roll forward API TD          | `:40` → `:42`                                                    | **VERIFIED**             |
+| Roll forward worker TD       | `:25` → `:26`                                                    | **VERIFIED**             |
+| Wait for final stability     | Both rollout states `COMPLETED`, running/desired/pending `1/1/0` | **VERIFIED**             |
+| Repeat final smoke           | `/health` 200; unauthenticated `/api/v1/imports/jobs` 401        | **VERIFIED**             |
+| Preserve app DB secret       | LastChangedDate `2026-07-26T15:30:16.387000-05:00`               | **VERIFIED — unchanged** |
 
 ## Image evidence
 
@@ -36,12 +36,12 @@ Procedure: `docs/deployment/import-platform-s8-rollback.md`
 
 ## Constraints
 
-- Never disable FORCE RLS  
-- Never weaken Outcome B to “false” production imports  
-- Development only — no laptop production deploy  
+- Never disable FORCE RLS
+- Never weaken Outcome B to “false” production imports
+- Development only — no laptop production deploy
 
 ## Sign-off
 
-| Role | Result | Date |
-| --- | --- | --- |
+| Role      | Result       | Date       |
+| --------- | ------------ | ---------- |
 | Ops / eng | **VERIFIED** | 2026-07-30 |

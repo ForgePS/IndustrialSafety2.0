@@ -4,16 +4,16 @@ Phase 2 introduces minimal reusable master data for manual intake prefill and lo
 
 ## Tables (migration `0009`)
 
-| Table | Purpose |
-| --- | --- |
-| `rms_stations` | Fire stations / districts |
-| `rms_shifts` | Shift definitions |
-| `rms_apparatus` | Apparatus records |
-| `rms_units` | Response units |
-| `rms_personnel` | Personnel linked to shared `persons` (no identity duplication) |
-| `rms_daily_rosters` / `rms_roster_assignments` | Daily roster and assignments |
-| `rms_occupancies` | Occupancy records for location prefill |
-| `rms_preplans` | Preplan references |
+| Table                                          | Purpose                                                        |
+| ---------------------------------------------- | -------------------------------------------------------------- |
+| `rms_stations`                                 | Fire stations / districts                                      |
+| `rms_shifts`                                   | Shift definitions                                              |
+| `rms_apparatus`                                | Apparatus records                                              |
+| `rms_units`                                    | Response units                                                 |
+| `rms_personnel`                                | Personnel linked to shared `persons` (no identity duplication) |
+| `rms_daily_rosters` / `rms_roster_assignments` | Daily roster and assignments                                   |
+| `rms_occupancies`                              | Occupancy records for location prefill                         |
+| `rms_preplans`                                 | Preplan references                                             |
 
 All tables: tenant-scoped UUID PKs, audit columns, `record_version`, soft delete where applicable, FORCE RLS.
 
@@ -27,9 +27,9 @@ Patterns mirror platform core: pagination, search, `@Idempotent` create, ETag/If
 
 ## Permissions
 
-| Permission | Scope |
-| --- | --- |
-| `rms.masterdata.read` | List/get lookups |
+| Permission              | Scope                |
+| ----------------------- | -------------------- |
+| `rms.masterdata.read`   | List/get lookups     |
 | `rms.masterdata.manage` | Create/update/delete |
 
 Granular per-domain permission codes are deferred; documented here for future splits.

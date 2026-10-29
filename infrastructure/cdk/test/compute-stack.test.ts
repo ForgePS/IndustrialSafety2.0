@@ -58,6 +58,7 @@ describe("ComputeStack", () => {
     cadApplicationQueue: messaging.cadApplication,
     cadPollingQueue: messaging.cadPolling,
     cadRetentionQueue: messaging.cadRetention,
+    reportingSchedulesQueue: messaging.reportingSchedules,
     eventBus: messaging.eventBus,
     documentsBucket: data.documentsBucket,
     importsBucket: data.importsBucket,

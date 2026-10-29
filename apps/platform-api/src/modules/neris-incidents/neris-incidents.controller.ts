@@ -59,7 +59,10 @@ export class NerisIncidentsController {
     @Query("excludeIncidentId") excludeIncidentId: string | undefined,
     @Req() req: RequestWithIds,
   ) {
-    return ok(await this.incidents.checkDuplicates(tenantId, body, excludeIncidentId), getRequestIds(req));
+    return ok(
+      await this.incidents.checkDuplicates(tenantId, body, excludeIncidentId),
+      getRequestIds(req),
+    );
   }
 
   @Get(":incidentId")
@@ -269,7 +272,13 @@ export class NerisIncidentsController {
     @Res({ passthrough: true }) res: Response,
   ) {
     const expected = requireIfMatch(req, "neris_incident");
-    const data = await this.incidents.upsertNarrative(tenantId, incidentId, body, principal, expected);
+    const data = await this.incidents.upsertNarrative(
+      tenantId,
+      incidentId,
+      body,
+      principal,
+      expected,
+    );
     if (data && "recordVersion" in data && data.recordVersion) {
       setETag(res, data.recordVersion);
     }
@@ -305,7 +314,10 @@ export class NerisIncidentsController {
     @Principal() principal: ForgePrincipal,
     @Req() req: RequestWithIds,
   ) {
-    return ok(await this.incidents.addReviewComment(tenantId, incidentId, body, principal), getRequestIds(req));
+    return ok(
+      await this.incidents.addReviewComment(tenantId, incidentId, body, principal),
+      getRequestIds(req),
+    );
   }
 
   @Post(":incidentId/review-comments/:commentId/resolve")
@@ -357,7 +369,10 @@ export class NerisIncidentsController {
     @Param("incidentId") incidentId: string,
     @Req() req: RequestWithIds,
   ) {
-    return ok(await this.incidents.listConfigurationSnapshots(tenantId, incidentId), getRequestIds(req));
+    return ok(
+      await this.incidents.listConfigurationSnapshots(tenantId, incidentId),
+      getRequestIds(req),
+    );
   }
 
   @Get(":incidentId/validation-runs")
@@ -378,7 +393,10 @@ export class NerisIncidentsController {
     @Param("runId") runId: string,
     @Req() req: RequestWithIds,
   ) {
-    return ok(await this.incidents.getValidationRun(tenantId, incidentId, runId), getRequestIds(req));
+    return ok(
+      await this.incidents.getValidationRun(tenantId, incidentId, runId),
+      getRequestIds(req),
+    );
   }
 
   @Get(":incidentId/units")
@@ -506,7 +524,13 @@ export class NerisIncidentsController {
   ) {
     const expected = requireIfMatch(req, "neris_incident_personnel");
     return ok(
-      await this.assignments.deletePersonnel(tenantId, incidentId, assignmentId, principal, expected),
+      await this.assignments.deletePersonnel(
+        tenantId,
+        incidentId,
+        assignmentId,
+        principal,
+        expected,
+      ),
       getRequestIds(req),
     );
   }

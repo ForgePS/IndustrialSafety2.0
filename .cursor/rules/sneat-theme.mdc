@@ -1,0 +1,19 @@
+---
+description: UI styling must stay on the Sneat theme
+globs: apps/industrial-web/**/*.tsx,apps/industrial-web/**/*.css
+alwaysApply: false
+---
+
+# Sneat theme only
+
+All industrial-web UI uses the Sneat (Bootstrap 5) theme. Unless the user
+explicitly asks for something different:
+
+- Style with Sneat/Bootstrap classes (`card`, `card-header`, `badge`,
+  `bg-label-*`, `avatar-initial`, `text-muted`, `form-select`, ...).
+- Do not introduce custom colors: no gradients, no hard-coded hex or rgba
+  color values, no `text-white`/`bg-*` overrides on top of theme surfaces.
+- Do not redefine Bootstrap utility classes in `globals.css`.
+- Custom CSS is acceptable only for behavior the theme does not provide
+  (hover affordances, transitions, layout fixes) and must reference theme
+  variables such as `--ind-primary` rather than literal colors.

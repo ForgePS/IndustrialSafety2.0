@@ -36,10 +36,19 @@ export class GlobalExceptionFilter implements ExceptionFilter {
     }
 
     if (exception instanceof ZodError) {
+      const issueSummary = exception.issues
+        .slice(0, 4)
+        .map((issue) => {
+          const path = issue.path.length ? issue.path.join(".") : "body";
+          return `${path}: ${issue.message}`;
+        })
+        .join("; ");
       response.status(400).json(
         fail(
           "VALIDATION_FAILED",
-          "Request validation failed",
+          issueSummary
+            ? `Request validation failed (${issueSummary})`
+            : "Request validation failed",
           ids,
           exception.issues.map((issue) => ({
             path: issue.path.join("."),
@@ -81,7 +90,7 @@ export class GlobalExceptionFilter implements ExceptionFilter {
           ? body
           : typeof body === "object" && body && "message" in body
             ? Array.isArray((body as { message: unknown }).message)
-              ? ((body as { message: string[] }).message.join(", "))
+              ? (body as { message: string[] }).message.join(", ")
               : String((body as { message: unknown }).message)
             : exception.message;
       const code =

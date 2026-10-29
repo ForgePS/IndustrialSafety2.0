@@ -2,31 +2,22 @@
 
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
-import {
-  EmptyState,
-  ErrorState,
-  ForgePageHeader,
-  LoadingState,
-  StatusBadge,
-} from "@forge/ui";
+import { EmptyState, ErrorState, ForgePageHeader, LoadingState, StatusBadge } from "@forge/ui";
 import { PlatformPageGate } from "@/components/platform-page-gate";
+import { TenantRequired } from "@/components/tenant-required";
 import { useAuth } from "@/hooks/use-auth";
-import { apiGet } from "@/lib/api";
+import { tenantQuery, useTenantId } from "@/hooks/use-tenant-id";
+import { listSubscriptions, type TenantSubscription } from "@/lib/api";
 import { unavailableLabel } from "@/lib/presentation";
 import styles from "../page.module.css";
 
-type SubscriptionRow = {
-  id: string;
-  status?: string;
-  planName?: string | null;
-  currentPeriodEnd?: string | null;
-  renewsAt?: string | null;
-  tenantDisplayName?: string | null;
-  tenantId?: string | null;
-};
+type SubscriptionRow = TenantSubscription;
 
 function RenewalsInner() {
-  const { me } = useAuth();
+  const tenantId = useTenantId();
+  const { hasPermission } = useAuth();
+  const canRead =
+    hasPermission("platform.entitlement.manage") || hasPermission("tenant.billing.read");
   const [rows, setRows] = useState<SubscriptionRow[] | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -35,20 +26,19 @@ function RenewalsInner() {
     setLoading(true);
     setError(null);
     try {
-      const tenantId = me?.tenantId;
-      if (!tenantId) {
+      if (!tenantId || !canRead) {
         setRows([]);
         return;
       }
-      const list = await apiGet<SubscriptionRow[]>(`/api/v1/tenants/${tenantId}/subscriptions`);
-      setRows(list);
+      const list = await listSubscriptions(tenantId);
+      setRows(list.filter((row) => row.status !== "CANCELED"));
     } catch (err) {
       setError(err instanceof Error ? err.message : "We couldn't load renewals.");
       setRows(null);
     } finally {
       setLoading(false);
     }
-  }, [me?.tenantId]);
+  }, [tenantId, canRead]);
 
   useEffect(() => {
     void load();
@@ -60,6 +50,7 @@ function RenewalsInner() {
         title="Renewals"
         subtitle="Upcoming subscription renewals for the selected customer context."
       />
+      {!tenantId ? <TenantRequired /> : null}
       {error ? <ErrorState title="Renewals unavailable" description={error} /> : null}
       {loading ? <LoadingState label="Loading renewals…" /> : null}
       {!loading && rows && rows.length === 0 ? (
@@ -95,7 +86,9 @@ function RenewalsInner() {
                     </td>
                     <td>{renewAt ? new Date(renewAt).toLocaleDateString() : unavailableLabel()}</td>
                     <td>
-                      <Link href="/billing/">Review</Link>
+                      <Link href={`/subscriptions${tenantId ? tenantQuery(tenantId) : ""}`}>
+                        Manage
+                      </Link>
                     </td>
                   </tr>
                 );

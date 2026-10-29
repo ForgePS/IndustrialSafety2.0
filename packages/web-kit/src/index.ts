@@ -20,7 +20,36 @@ export {
 export {
   assertAccessTokenShape,
   InvalidAccessTokenError,
+  isAccessTokenExpiredOrNearExpiry,
+  getAccessTokenExpiresAtMs,
+  msUntilAccessTokenNearExpiry,
 } from "./access-token.js";
+
+export { tryRefreshSession, type TryRefreshSessionOptions } from "./session-refresh.js";
+
+export {
+  consumeIdleSignOutNotice,
+  isIdleTimedOut,
+  readLastActivityAt,
+  recordUserActivity,
+  IDLE_ACTIVITY_EVENTS,
+  IDLE_ACTIVITY_WRITE_THROTTLE_MS,
+} from "./idle-timeout.js";
+
+export {
+  registerForgeBrowserCleanup,
+  runForgeBrowserCleanup,
+  resetForgeBrowserCleanupHandlersForTests,
+  removeStorageKeysByPrefix,
+  deleteIndexedDatabases,
+  deleteCacheNamesByPrefix,
+  unregisterServiceWorkersByScriptMatch,
+  withTimeout,
+  FORGE_BROWSER_CLEANUP_TIMEOUT_MS,
+  type ForgeBrowserCleanupHandler,
+  type ForgeBrowserCleanupReason,
+  type StorageLike,
+} from "./forge-browser-cleanup.js";
 
 export {
   getDevPrincipal,
@@ -32,10 +61,20 @@ export {
   getRefreshToken,
   setRefreshToken,
   clearRefreshToken,
+  getCsrfToken,
+  setCsrfToken,
+  clearCsrfToken,
+  purgeLegacyAuthKeys,
   getActiveTenantId,
   setActiveTenantId,
   clearActiveTenantId,
+  getCachedAuthMe,
+  setCachedAuthMe,
+  clearCachedAuthMe,
   clearAuthStorage,
+  markLogoutPending,
+  isLogoutPending,
+  clearLogoutPending,
   parseDevPrincipal,
   type DevPrincipal,
 } from "./auth-storage.js";
@@ -61,22 +100,36 @@ export {
 export {
   buildAuthorizeUrl,
   buildLogoutUrl,
+  clearBrowserSessionCookie,
   CognitoOAuthError,
   exchangeCodeForTokens,
   generateCodeChallenge,
   generateCodeVerifier,
   getCognitoOAuthConfig,
+  isCognitoOAuthConfigured,
   redirectToCognitoLogin,
   refreshAccessToken,
+  requestCognitoPasswordReset,
+  confirmCognitoPasswordReset,
   validateOAuthState,
   type CognitoOAuthConfig,
   type CognitoTokenResponse,
+  type SessionAuthResponse,
 } from "./cognito-oauth.js";
+
+export {
+  authenticateWithPassword,
+  completeNewPasswordChallenge,
+  completeMfaChallenge,
+  CognitoPasswordChallengeError,
+  type CognitoPasswordChallenge,
+} from "./cognito-password-auth.js";
 
 export {
   AuthProvider,
   AUTH_BOOTSTRAP_TIMEOUT_MS,
   resolveSession,
+  establishSession,
   useAuth,
   usePermission,
   useAnyPermission,
@@ -85,6 +138,16 @@ export {
   useModuleEnabled,
   type AuthContextValue,
 } from "./auth-provider.js";
+
+export {
+  ROLE_PREVIEW_STORAGE_KEY,
+  applyRolePreviewToMe,
+  clearRolePreview,
+  permissionCodesFromRolePermissions,
+  readRolePreview,
+  writeRolePreview,
+  type RolePreviewState,
+} from "./role-preview.js";
 
 export {
   sessionProductEnabled,

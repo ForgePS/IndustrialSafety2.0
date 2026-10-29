@@ -44,7 +44,10 @@ describe("NERIS Phase 2 incidents API", () => {
         .limit(1);
       if (!feature) continue;
       const existing = await harness.adminDb.query.featureOverrides.findFirst({
-        where: and(eq(featureOverrides.tenantId, tenantId), eq(featureOverrides.featureDefinitionId, feature.id)),
+        where: and(
+          eq(featureOverrides.tenantId, tenantId),
+          eq(featureOverrides.featureDefinitionId, feature.id),
+        ),
       });
       if (!existing) {
         await harness.adminDb.insert(featureOverrides).values({
@@ -171,7 +174,9 @@ describe("NERIS Phase 2 incidents API", () => {
   });
 
   it("manages incident unit and personnel assignments", async () => {
-    const tenant = await harness.createTenant({ moduleCodes: ["CORE", "PERSONNEL", "NERIS", "APPARATUS"] });
+    const tenant = await harness.createTenant({
+      moduleCodes: ["CORE", "PERSONNEL", "NERIS", "APPARATUS"],
+    });
     const user = await createIncidentUser(tenant.tenantId);
     await enableIncidentFlags(tenant.tenantId, user.userId);
     const api = harness.api(user.userId, tenant.tenantId);
@@ -230,9 +235,9 @@ describe("NERIS Phase 2 incidents API", () => {
       )
       .expect(200);
     expect(Array.isArray(prefill.body.data)).toBe(true);
-    expect(prefill.body.data.some((row: { fieldKey: string }) => row.fieldKey === "response_district")).toBe(
-      true,
-    );
+    expect(
+      prefill.body.data.some((row: { fieldKey: string }) => row.fieldKey === "response_district"),
+    ).toBe(true);
 
     await api
       .delete(

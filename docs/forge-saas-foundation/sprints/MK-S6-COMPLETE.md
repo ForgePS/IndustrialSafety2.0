@@ -37,12 +37,12 @@ Invitation lifecycle hardened (resend expiry, email bind, facility scope); membe
 
 ## Verification
 
-| Check | Result |
-| --- | --- |
-| contracts unit | 21 passed |
-| invitations unit | 7 passed |
-| platform-api typecheck | PASS |
-| Production operations | NONE |
+| Check                  | Result    |
+| ---------------------- | --------- |
+| contracts unit         | 21 passed |
+| invitations unit       | 7 passed  |
+| platform-api typecheck | PASS      |
+| Production operations  | NONE      |
 
 ## Next sprint
 

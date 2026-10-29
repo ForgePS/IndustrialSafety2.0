@@ -13,7 +13,13 @@ type BillingOverview = {
   subscription: { status: string; planName: string | null; planCode: string | null } | null;
 };
 
-type AuditEvent = { id: string; action: string; resourceType: string; occurredAt: string; result: string };
+type AuditEvent = {
+  id: string;
+  action: string;
+  resourceType: string;
+  occurredAt: string;
+  result: string;
+};
 
 function OverviewInner() {
   const tenantId = useTenantId();
@@ -31,7 +37,9 @@ function OverviewInner() {
       const tasks: Array<Promise<void>> = [];
       if (hasPermission("platform.membership.read")) {
         tasks.push(
-          listMemberships(tenantId).then((rows) => setMemberCount(rows.length)).catch(() => setMemberCount(null)),
+          listMemberships(tenantId)
+            .then((rows) => setMemberCount(rows.length))
+            .catch(() => setMemberCount(null)),
         );
       }
       if (hasPermission("platform.invitation.read")) {
@@ -128,8 +136,8 @@ function OverviewInner() {
           <ul>
             {audit.map((row) => (
               <li key={row.id}>
-                <span className={styles.mono}>{row.occurredAt}</span> · {row.action} · {row.resourceType} ·{" "}
-                {row.result}
+                <span className={styles.mono}>{row.occurredAt}</span> · {row.action} ·{" "}
+                {row.resourceType} · {row.result}
               </li>
             ))}
           </ul>

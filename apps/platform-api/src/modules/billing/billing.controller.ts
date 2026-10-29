@@ -100,15 +100,20 @@ export class BillingController {
     @Res({ passthrough: true }) res: Response,
   ) {
     const expected = requireIfMatch(req, "billing_contract");
-    const data = await this.billing.patchContract(
-      tenantId,
-      contractId,
-      body,
-      principal,
-      expected,
-    );
+    const data = await this.billing.patchContract(tenantId, contractId, body, principal, expected);
     setETag(res, data.recordVersion);
     return ok(data, getRequestIds(req));
+  }
+
+  @Get("api/v1/tenants/:tenantId/billing/fees")
+  @RequireAnyPermission([...BILLING_READ], { allowWhenSuspended: true })
+  async listFees(@Param("tenantId") tenantId: string, @Req() req: RequestWithIds) {
+    const data = await this.billing.listFees(tenantId);
+    return ok(data, getRequestIds(req), {
+      page: 1,
+      pageSize: data.length,
+      total: data.length,
+    });
   }
 
   @Post("api/v1/tenants/:tenantId/billing/fees")
@@ -155,6 +160,22 @@ export class BillingController {
     @Req() req: RequestWithIds,
   ) {
     const data = await this.billing.recordInvoiceMetadata(tenantId, body, principal);
+    return ok(data, getRequestIds(req));
+  }
+
+  @Patch("api/v1/tenants/:tenantId/billing/invoices/:invoiceId")
+  @RequirePermission("platform.entitlement.manage", { allowWhenSuspended: true })
+  async patchInvoice(
+    @Param("tenantId") tenantId: string,
+    @Param("invoiceId") invoiceId: string,
+    @Body() body: unknown,
+    @Principal() principal: ForgePrincipal,
+    @Req() req: RequestWithIds,
+    @Res({ passthrough: true }) res: Response,
+  ) {
+    const expected = requireIfMatch(req, "billing_invoice");
+    const data = await this.billing.patchInvoice(tenantId, invoiceId, body, principal, expected);
+    setETag(res, data.recordVersion);
     return ok(data, getRequestIds(req));
   }
 

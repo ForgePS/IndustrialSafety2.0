@@ -14,7 +14,11 @@ import { DATABASE } from "../../tokens.js";
 export class JobsService {
   constructor(@Inject(DATABASE) private readonly db: Database) {}
 
-  async list(tenantId: string, rawQuery: unknown, principal: ForgePrincipal): Promise<PlatformJob[]> {
+  async list(
+    tenantId: string,
+    rawQuery: unknown,
+    principal: ForgePrincipal,
+  ): Promise<PlatformJob[]> {
     this.assertTenant(tenantId, principal);
     const query = listPlatformJobsQuerySchema.parse(rawQuery);
     return withTenantTransaction(this.db, tenantId, async (tx) => {

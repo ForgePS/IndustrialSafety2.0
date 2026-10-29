@@ -6,15 +6,16 @@
 
 ## Deployment (development)
 
-| Item | Value |
-| --- | --- |
-| Tag | `import-s5-20260729135433` |
-| API TD | `:38` |
-| Worker TD | `:23` |
-| Migrate | `0026` exit 0 |
-| Step Functions | DEFINITION_COMPLETE_DEPLOYMENT_PENDING |
-| Health / unauth execute+status | 200 / 401 / 401 |
-| App secret | unchanged |
+| Item                           | Value                                  |
+| ------------------------------ | -------------------------------------- |
+| Tag                            | `import-s5-20260729135433`             |
+| API TD                         | `:38`                                  |
+| Worker TD                      | `:23`                                  |
+| Migrate                        | `0026` exit 0                          |
+| Step Functions                 | DEFINITION_COMPLETE_DEPLOYMENT_PENDING |
+| Health / unauth execute+status | 200 / 401 / 401                        |
+| App secret                     | unchanged                              |
+
 ## Objectives
 
 Shared import execution engine: control-plane execute/cancel/status/results,
@@ -35,17 +36,17 @@ definition — without product adapters or malware.
 
 ## API endpoints
 
-| Method | Path | Permission |
-| --- | --- | --- |
-| POST | `/jobs/{id}/execute` | import.execute |
-| POST | `/jobs/{id}/cancel` | import.execute / upload / approve |
-| GET | `/jobs/{id}/status` | import.view |
-| GET | `/jobs/{id}/results` | import.view |
-| GET | `/jobs/{id}/batches` | import.view |
-| GET | `/jobs/{id}/batches/{batchId}` | import.view |
-| GET | `/jobs/{id}/errors` | import.view |
-| POST | `/jobs/{id}/errors/{errorId}/retry` | import.error.reprocess |
-| POST | `/jobs/{id}/rollback-request` | import.rollback |
+| Method | Path                                | Permission                        |
+| ------ | ----------------------------------- | --------------------------------- |
+| POST   | `/jobs/{id}/execute`                | import.execute                    |
+| POST   | `/jobs/{id}/cancel`                 | import.execute / upload / approve |
+| GET    | `/jobs/{id}/status`                 | import.view                       |
+| GET    | `/jobs/{id}/results`                | import.view                       |
+| GET    | `/jobs/{id}/batches`                | import.view                       |
+| GET    | `/jobs/{id}/batches/{batchId}`      | import.view                       |
+| GET    | `/jobs/{id}/errors`                 | import.view                       |
+| POST   | `/jobs/{id}/errors/{errorId}/retry` | import.error.reprocess            |
+| POST   | `/jobs/{id}/rollback-request`       | import.rollback                   |
 
 ## Step Functions status
 
@@ -56,16 +57,16 @@ activation deferred (`activate: false`).
 
 ## State transition matrix (execution)
 
-| From | Action | To |
-| --- | --- | --- |
-| APPROVED | execute | QUEUED |
-| QUEUED | start_processing | PROCESSING |
-| PROCESSING | complete | COMPLETED |
-| PROCESSING | complete_with_errors | COMPLETED_WITH_ERRORS |
-| PROCESSING / QUEUED | fail | FAILED |
-| QUEUED | cancel | CANCELLED |
-| PROCESSING | cancel (safe) | CANCELLED |
-| COMPLETED / COMPLETED_WITH_ERRORS | rollback-request | ROLLBACK_PENDING or ROLLBACK_REFUSED |
+| From                              | Action               | To                                   |
+| --------------------------------- | -------------------- | ------------------------------------ |
+| APPROVED                          | execute              | QUEUED                               |
+| QUEUED                            | start_processing     | PROCESSING                           |
+| PROCESSING                        | complete             | COMPLETED                            |
+| PROCESSING                        | complete_with_errors | COMPLETED_WITH_ERRORS                |
+| PROCESSING / QUEUED               | fail                 | FAILED                               |
+| QUEUED                            | cancel               | CANCELLED                            |
+| PROCESSING                        | cancel (safe)        | CANCELLED                            |
+| COMPLETED / COMPLETED_WITH_ERRORS | rollback-request     | ROLLBACK_PENDING or ROLLBACK_REFUSED |
 
 ## Known limitations
 

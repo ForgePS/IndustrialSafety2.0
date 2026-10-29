@@ -12,11 +12,14 @@ export const DEFAULT_ONBOARDING_STEPS = [
   { number: 6, key: "CONFIGURE_SUBSCRIPTION", label: "Configure subscription" },
   { number: 7, key: "CONFIGURE_LOCATIONS", label: "Configure locations" },
   { number: 8, key: "CONFIGURE_ORG_LOOKUPS", label: "Configure organization setup" },
-  { number: 9, key: "CONFIGURE_BRANDING", label: "Configure branding" },
-  { number: 10, key: "CREATE_PRIMARY_ADMINISTRATOR", label: "Create primary administrator" },
-  { number: 11, key: "SEND_INVITATION", label: "Send invitation" },
-  { number: 12, key: "REVIEW_CONFIGURATION", label: "Review configuration" },
-  { number: 13, key: "ACTIVATE_TENANT", label: "Activate company" },
+  { number: 9, key: "CONFIGURE_DATA_IMPORT", label: "Import company data" },
+  { number: 10, key: "CONFIGURE_DOCUMENTS", label: "Upload company documents" },
+  { number: 11, key: "CONFIGURE_BRANDING", label: "Configure branding" },
+  { number: 12, key: "CONFIGURE_BUSINESS_SETTINGS", label: "Configure business settings" },
+  { number: 13, key: "CREATE_PRIMARY_ADMINISTRATOR", label: "Create primary administrator" },
+  { number: 14, key: "SEND_INVITATION", label: "Send invitation" },
+  { number: 15, key: "REVIEW_CONFIGURATION", label: "Review configuration" },
+  { number: 16, key: "ACTIVATE_TENANT", label: "Activate company" },
 ] as const;
 
 export type DefaultOnboardingStepKey = (typeof DEFAULT_ONBOARDING_STEPS)[number]["key"];
@@ -28,10 +31,7 @@ export type OnboardingStepDefinition = {
 };
 
 /** Steps that may never be skipped by product/template overrides. */
-export const REQUIRED_ONBOARDING_STEP_KEYS = [
-  "CREATE_TENANT",
-  "ACTIVATE_TENANT",
-] as const;
+export const REQUIRED_ONBOARDING_STEP_KEYS = ["CREATE_TENANT", "ACTIVATE_TENANT"] as const;
 
 export type OnboardingStepOverrides = {
   /** Step keys to mark SKIPPED at session start (must not include required keys). */
@@ -49,8 +49,7 @@ export const ONBOARDING_ACTIVATION_ERROR_CODES = [
   "FACILITY_MISSING",
 ] as const;
 
-export type OnboardingActivationErrorCode =
-  (typeof ONBOARDING_ACTIVATION_ERROR_CODES)[number];
+export type OnboardingActivationErrorCode = (typeof ONBOARDING_ACTIVATION_ERROR_CODES)[number];
 
 /**
  * Resolve ordered onboarding steps for a product/template.
@@ -62,8 +61,7 @@ export function resolveOnboardingSteps(
 ): OnboardingStepDefinition[] {
   const skip = new Set(
     (overrides?.skipStepKeys ?? []).filter(
-      (key) =>
-        !(REQUIRED_ONBOARDING_STEP_KEYS as readonly string[]).includes(key),
+      (key) => !(REQUIRED_ONBOARDING_STEP_KEYS as readonly string[]).includes(key),
     ),
   );
   const kept = base.filter((step) => !skip.has(step.key));

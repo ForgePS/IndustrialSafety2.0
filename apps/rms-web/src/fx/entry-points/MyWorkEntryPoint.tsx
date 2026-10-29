@@ -54,7 +54,9 @@ export function MyWorkEntryPoint() {
             ))}
           </ul>
         )}
-        <p className="rms-fx-muted">Counts are not shown unless backed by an existing API source.</p>
+        <p className="rms-fx-muted">
+          Counts are not shown unless backed by an existing API source.
+        </p>
       </FxDialog>
     </>
   );

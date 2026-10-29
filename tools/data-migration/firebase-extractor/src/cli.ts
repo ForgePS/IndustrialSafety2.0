@@ -70,7 +70,13 @@ function gitSha(): string {
 
 function assertNoWriteApisInSource(): void {
   // Defense-in-depth: refuse if extractor source itself contains write APIs.
-  const roots = ["extract-firestore.ts", "extract-auth.ts", "extract-storage.ts", "orphans.ts", "cli.ts"];
+  const roots = [
+    "extract-firestore.ts",
+    "extract-auth.ts",
+    "extract-storage.ts",
+    "orphans.ts",
+    "cli.ts",
+  ];
   const srcDir = path.dirname(new URL(import.meta.url).pathname.replace(/^\/([A-Za-z]:)/, "$1"));
   const banned = [
     /\.set\(/,
@@ -253,8 +259,7 @@ async function main(): Promise<void> {
       collection: r.collection,
       SOURCE_COUNT: r.sourceCount,
       EXTRACTED_COUNT: r.extractedCount,
-      DIFFERENCE:
-        typeof r.sourceCount === "number" ? r.extractedCount - r.sourceCount : "UNKNOWN",
+      DIFFERENCE: typeof r.sourceCount === "number" ? r.extractedCount - r.sourceCount : "UNKNOWN",
       errors: r.errors,
     })),
     subcollections: subResult
@@ -283,9 +288,11 @@ async function main(): Promise<void> {
   const nativeExportPrefix =
     args.nativeExportPrefix ||
     (existsSync(".tmp-data-migration/dm-s1-export-op.json")
-      ? (JSON.parse(readFileSync(".tmp-data-migration/dm-s1-export-op.json", "utf8")) as {
-          EXPORT_PREFIX?: string;
-        }).EXPORT_PREFIX
+      ? (
+          JSON.parse(readFileSync(".tmp-data-migration/dm-s1-export-op.json", "utf8")) as {
+            EXPORT_PREFIX?: string;
+          }
+        ).EXPORT_PREFIX
       : undefined) ||
     null;
 
@@ -353,9 +360,7 @@ async function main(): Promise<void> {
         COUNT_DIFFERENCE: rootDifference,
         AUTH_USERS: authResult?.extractedCount ?? 0,
         STORAGE_OBJECTS: storageResult?.objectCount ?? 0,
-        manifestSha256: createHash("sha256")
-          .update(readFileSync(manifestPath))
-          .digest("hex"),
+        manifestSha256: createHash("sha256").update(readFileSync(manifestPath)).digest("hex"),
       },
       null,
       2,

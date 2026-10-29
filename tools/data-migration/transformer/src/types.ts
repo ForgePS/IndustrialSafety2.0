@@ -1,13 +1,7 @@
 /** Shared types for DM-S2 transformer (no AWS writes). */
 
 export type Disposition =
-  | "DIRECT"
-  | "TRANSFORM"
-  | "SPLIT"
-  | "MERGE"
-  | "GLOBAL"
-  | "ARCHIVE"
-  | "EXCLUDE_WITH_APPROVAL";
+  "DIRECT" | "TRANSFORM" | "SPLIT" | "MERGE" | "GLOBAL" | "ARCHIVE" | "EXCLUDE_WITH_APPROVAL";
 
 export type ImplementationStatus = "READY" | "PARTIAL" | "MISSING" | "ARCHIVE_ONLY";
 

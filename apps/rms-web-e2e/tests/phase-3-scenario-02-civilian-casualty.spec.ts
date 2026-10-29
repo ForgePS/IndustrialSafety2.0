@@ -165,9 +165,9 @@ test.describe("Phase 3 scenario 2 — civilian casualty @phase3", () => {
     const fullRows = unwrapData<Array<{ id: string; displayName?: string; restricted?: boolean }>>(
       fullList.json,
     );
-    expect((Array.isArray(fullRows) ? fullRows : []).find((r) => r.id === casualty.id)?.displayName).toBe(
-      casualtyName,
-    );
+    expect(
+      (Array.isArray(fullRows) ? fullRows : []).find((r) => r.id === casualty.id)?.displayName,
+    ).toBe(casualtyName);
 
     const getOne = await apiRequest(
       page,
@@ -185,9 +185,9 @@ test.describe("Phase 3 scenario 2 — civilian casualty @phase3", () => {
     );
     expect(maskedList.status).toBe(200);
     const masked = (
-      unwrapData<Array<{ id: string; displayName?: string | null; narrative?: string; restricted?: boolean }>>(
-        maskedList.json,
-      ) ?? []
+      unwrapData<
+        Array<{ id: string; displayName?: string | null; narrative?: string; restricted?: boolean }>
+      >(maskedList.json) ?? []
     ).find((r) => r.id === casualty.id);
     expect(masked?.restricted).toBe(true);
     expect(masked?.displayName).toBe("[Restricted]");

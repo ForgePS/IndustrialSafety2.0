@@ -5,7 +5,12 @@ import { FxWorkspaceEmpty } from "./FxWorkspaceEmpty";
 
 export function FxWorkspaceSummary({ items }: { items: WorkspaceSummaryItem[] }) {
   if (items.length === 0) {
-    return <FxWorkspaceEmpty title="No summary" description="Summary fields are not available for this record." />;
+    return (
+      <FxWorkspaceEmpty
+        title="No summary"
+        description="Summary fields are not available for this record."
+      />
+    );
   }
 
   return (

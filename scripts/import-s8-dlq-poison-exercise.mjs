@@ -21,9 +21,13 @@ function has(name) {
 function aws(args) {
   const profile = process.env.AWS_PROFILE || "forge-dev";
   const region = process.env.AWS_REGION || "us-east-1";
-  const r = spawnSync("aws", [...args, "--profile", profile, "--region", region, "--output", "json"], {
-    encoding: "utf8",
-  });
+  const r = spawnSync(
+    "aws",
+    [...args, "--profile", profile, "--region", region, "--output", "json"],
+    {
+      encoding: "utf8",
+    },
+  );
   if (r.status !== 0) throw new Error(r.stderr || r.stdout || "aws failed");
   return r.stdout ? JSON.parse(r.stdout) : {};
 }
@@ -87,9 +91,13 @@ while (Date.now() - started < 180_000) {
   ]);
   dlqDepth = Number(attrs.Attributes?.ApproximateNumberOfMessages ?? 0);
   if (dlqDepth >= 1) break;
-  spawnSync(process.platform === "win32" ? "timeout" : "sleep", process.platform === "win32" ? ["/m", "15"] : ["15"], {
-    shell: true,
-  });
+  spawnSync(
+    process.platform === "win32" ? "timeout" : "sleep",
+    process.platform === "win32" ? ["/m", "15"] : ["15"],
+    {
+      shell: true,
+    },
+  );
   waitedMs = Date.now() - started;
 }
 
@@ -125,5 +133,11 @@ writeFileSync(
   "docs/testing/evidence/import-platform/s8-dlq-poison.json",
   JSON.stringify(evidence, null, 2),
 );
-console.log(JSON.stringify({ ok: dlqDepth >= 1, correlationId, dlqDepth, messageId: send.MessageId }, null, 2));
+console.log(
+  JSON.stringify(
+    { ok: dlqDepth >= 1, correlationId, dlqDepth, messageId: send.MessageId },
+    null,
+    2,
+  ),
+);
 process.exit(dlqDepth >= 1 ? 0 : 1);

@@ -2,12 +2,7 @@
 
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
-import {
-  EmptyState,
-  ErrorState,
-  ForgePageHeader,
-  LoadingState,
-} from "@forge/ui";
+import { EmptyState, ErrorState, ForgePageHeader, LoadingState } from "@forge/ui";
 import { useAuth } from "@/hooks/use-auth";
 import { apiGet } from "@/lib/api";
 import styles from "../page.module.css";
@@ -37,9 +32,7 @@ function NotificationsInner() {
     setLoading(true);
     setError(null);
     try {
-      const list = await apiGet<NotificationRow[]>(
-        `/api/v1/tenants/${me.tenantId}/notifications`,
-      );
+      const list = await apiGet<NotificationRow[]>(`/api/v1/tenants/${me.tenantId}/notifications`);
       setRows(list);
     } catch (err) {
       setError(err instanceof Error ? err.message : "We couldn't load notifications.");

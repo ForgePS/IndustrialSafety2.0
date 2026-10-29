@@ -2,13 +2,7 @@
 
 import { useState } from "react";
 import { FxBreadcrumb, FxWorkspaceLayout } from "@forge/fx-layouts";
-import {
-  FxButton,
-  FxCard,
-  FxPriorityBadge,
-  FxStatusBadge,
-  FxTable,
-} from "@forge/fx-ui";
+import { FxButton, FxCard, FxPriorityBadge, FxStatusBadge, FxTable } from "@forge/fx-ui";
 import { useWorkspace } from "@forge/fx-hooks";
 
 const TABS = [
@@ -31,16 +25,14 @@ export default function WorkspacePage() {
   return (
     <>
       <FxBreadcrumb
-        items={[
-          { label: "Personnel", href: "/" },
-          { label: "People" },
-          { label: "Alex Rivera" },
-        ]}
+        items={[{ label: "Personnel", href: "/" }, { label: "People" }, { label: "Alex Rivera" }]}
       />
       <FxWorkspaceLayout
         title="Alex Rivera"
         status={
-          <div style={{ display: "flex", gap: "var(--fx-space-8)", marginTop: "var(--fx-space-8)" }}>
+          <div
+            style={{ display: "flex", gap: "var(--fx-space-8)", marginTop: "var(--fx-space-8)" }}
+          >
             <FxStatusBadge tone="success">Active</FxStatusBadge>
             <FxPriorityBadge priority="normal" />
             <span className="fx-field__hint">ID · PRS-10042</span>
@@ -71,11 +63,12 @@ export default function WorkspacePage() {
         {tab === "overview" && (
           <div style={{ display: "grid", gap: "var(--fx-space-16)" }}>
             <FxCard title="Record summary">
-              Rank: Firefighter · Station 3 · Hire date: 2019-04-12. This workspace is the FX template for every
-              product record.
+              Rank: Firefighter · Station 3 · Hire date: 2019-04-12. This workspace is the FX
+              template for every product record.
             </FxCard>
             <FxCard title="Status panel">
-              Workflow: <FxStatusBadge tone="info">In Progress</FxStatusBadge> · Record health: complete
+              Workflow: <FxStatusBadge tone="info">In Progress</FxStatusBadge> · Record health:
+              complete
             </FxCard>
           </div>
         )}
@@ -97,11 +90,17 @@ export default function WorkspacePage() {
             />
           </FxCard>
         )}
-        {tab === "attachments" && <FxCard title="Attachments">No files yet (empty-state ready).</FxCard>}
+        {tab === "attachments" && (
+          <FxCard title="Attachments">No files yet (empty-state ready).</FxCard>
+        )}
         {tab === "tasks" && <FxCard title="Tasks">No open tasks on this record.</FxCard>}
         {tab === "notes" && <FxCard title="Notes">Notes / comments panel.</FxCard>}
-        {tab === "audit" && <FxCard title="Audit">Audit-oriented view with deep links (demo).</FxCard>}
-        {tab === "related" && <FxCard title="Related records">Linked certifications, assignments.</FxCard>}
+        {tab === "audit" && (
+          <FxCard title="Audit">Audit-oriented view with deep links (demo).</FxCard>
+        )}
+        {tab === "related" && (
+          <FxCard title="Related records">Linked certifications, assignments.</FxCard>
+        )}
         {tab === "documents" && <FxCard title="Documents">Document versions panel.</FxCard>}
         {tab === "history" && <FxCard title="History">Human-readable change history.</FxCard>}
       </FxWorkspaceLayout>

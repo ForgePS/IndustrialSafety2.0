@@ -9,9 +9,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { awsJson, awsText, runPlatformApiOneOff } from "./ecs-oneoff.mjs";
 
-const EVID = path.resolve(
-  "docs/program/industrial-migration/ind-11/evidence/p2/02-cognito",
-);
+const EVID = path.resolve("docs/program/industrial-migration/ind-11/evidence/p2/02-cognito");
 const createResult = JSON.parse(
   fs.readFileSync(path.join(EVID, "cognito-create-staging-result.json"), "utf8"),
 );

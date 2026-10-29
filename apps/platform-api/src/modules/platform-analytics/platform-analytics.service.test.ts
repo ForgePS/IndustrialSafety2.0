@@ -18,7 +18,11 @@ function queryChain(result: unknown) {
           Promise.resolve(result).then(resolve, reject);
       }
       if (!(prop in target)) {
-        Reflect.set(target, prop, vi.fn(() => self));
+        Reflect.set(
+          target,
+          prop,
+          vi.fn(() => self),
+        );
       }
       return Reflect.get(target, prop, receiver);
     },

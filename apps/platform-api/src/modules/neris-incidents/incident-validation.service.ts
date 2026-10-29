@@ -115,11 +115,9 @@ export class IncidentValidationService {
   ) {
     const result = await this.runValidation(tx, tenantId, incidentId, incident, trigger, principal);
     if (!result.ok) {
-      throw new ForgeError(
-        "VALIDATION_FAILED",
-        "Incident has blocking validation errors",
-        { details: result.findings.filter((f) => f.severity === "BLOCKING_ERROR") },
-      );
+      throw new ForgeError("VALIDATION_FAILED", "Incident has blocking validation errors", {
+        details: result.findings.filter((f) => f.severity === "BLOCKING_ERROR"),
+      });
     }
     return result;
   }

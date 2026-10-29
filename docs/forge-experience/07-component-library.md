@@ -17,47 +17,47 @@ Family overviews live in `components/`. Individual deep specs are added as imple
 
 ## Foundation components
 
-| Component | Spec |
-| --- | --- |
-| AppShell | [foundation.md](./components/foundation.md#appshell) |
-| PageHeader | [foundation.md](./components/foundation.md#pageheader) |
-| SectionHeader | [foundation.md](./components/foundation.md#sectionheader) |
-| ContentPanel | [foundation.md](./components/foundation.md#contentpanel) |
+| Component       | Spec                                                        |
+| --------------- | ----------------------------------------------------------- |
+| AppShell        | [foundation.md](./components/foundation.md#appshell)        |
+| PageHeader      | [foundation.md](./components/foundation.md#pageheader)      |
+| SectionHeader   | [foundation.md](./components/foundation.md#sectionheader)   |
+| ContentPanel    | [foundation.md](./components/foundation.md#contentpanel)    |
 | WorkspaceHeader | [foundation.md](./components/foundation.md#workspaceheader) |
-| SummaryPanel | [foundation.md](./components/foundation.md#summarypanel) |
-| Sidebar | [foundation.md](./components/foundation.md#sidebar) |
-| Toolbar | [foundation.md](./components/foundation.md#toolbar) |
-| Footer | [foundation.md](./components/foundation.md#footer) |
-| SplitView | [foundation.md](./components/foundation.md#splitview) |
-| ResponsiveGrid | [foundation.md](./components/foundation.md#responsivegrid) |
-| WorkspaceTabs | [foundation.md](./components/foundation.md#workspacetabs) |
+| SummaryPanel    | [foundation.md](./components/foundation.md#summarypanel)    |
+| Sidebar         | [foundation.md](./components/foundation.md#sidebar)         |
+| Toolbar         | [foundation.md](./components/foundation.md#toolbar)         |
+| Footer          | [foundation.md](./components/foundation.md#footer)          |
+| SplitView       | [foundation.md](./components/foundation.md#splitview)       |
+| ResponsiveGrid  | [foundation.md](./components/foundation.md#responsivegrid)  |
+| WorkspaceTabs   | [foundation.md](./components/foundation.md#workspacetabs)   |
 
 ## Navigation components
 
-| Component | Spec |
-| --- | --- |
-| Primary Navigation | [navigation.md](./components/navigation.md) |
+| Component            | Spec                                        |
+| -------------------- | ------------------------------------------- |
+| Primary Navigation   | [navigation.md](./components/navigation.md) |
 | Secondary Navigation | [navigation.md](./components/navigation.md) |
-| Breadcrumb | [navigation.md](./components/navigation.md) |
-| Quick Navigation | [navigation.md](./components/navigation.md) |
-| Recent Items | [navigation.md](./components/navigation.md) |
-| Favorites | [navigation.md](./components/navigation.md) |
-| Product Switcher | [navigation.md](./components/navigation.md) |
-| Tenant Switcher | [navigation.md](./components/navigation.md) |
-| User Menu | [navigation.md](./components/navigation.md) |
-| Search Bar | [navigation.md](./components/navigation.md) |
-| Command Palette | [navigation.md](./components/navigation.md) |
+| Breadcrumb           | [navigation.md](./components/navigation.md) |
+| Quick Navigation     | [navigation.md](./components/navigation.md) |
+| Recent Items         | [navigation.md](./components/navigation.md) |
+| Favorites            | [navigation.md](./components/navigation.md) |
+| Product Switcher     | [navigation.md](./components/navigation.md) |
+| Tenant Switcher      | [navigation.md](./components/navigation.md) |
+| User Menu            | [navigation.md](./components/navigation.md) |
+| Search Bar           | [navigation.md](./components/navigation.md) |
+| Command Palette      | [navigation.md](./components/navigation.md) |
 
 ## Action components
 
-| Component | Spec |
-| --- | --- |
+| Component                           | Spec                                  |
+| ----------------------------------- | ------------------------------------- |
 | Primary / Secondary / Danger Button | [actions.md](./components/actions.md) |
-| Icon Button | [actions.md](./components/actions.md) |
-| Floating Action Button | [actions.md](./components/actions.md) |
-| Action Menu | [actions.md](./components/actions.md) |
-| Confirmation Dialog | [actions.md](./components/actions.md) |
-| Quick Actions | [actions.md](./components/actions.md) |
+| Icon Button                         | [actions.md](./components/actions.md) |
+| Floating Action Button              | [actions.md](./components/actions.md) |
+| Action Menu                         | [actions.md](./components/actions.md) |
+| Confirmation Dialog                 | [actions.md](./components/actions.md) |
+| Quick Actions                       | [actions.md](./components/actions.md) |
 
 ## Form components
 

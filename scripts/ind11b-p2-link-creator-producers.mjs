@@ -20,7 +20,9 @@ const dbRequire = createRequire("/app/apps/platform-api/node_modules/@forge/data
 const postgresMod = await import(pathToFileURL(dbRequire.resolve("postgres")).href);
 const postgres = postgresMod.default ?? postgresMod;
 
-const EMAIL = (process.env.FORGE_P2_LINK_EMAIL ?? "admin@forgepublicsafety.com").trim().toLowerCase();
+const EMAIL = (process.env.FORGE_P2_LINK_EMAIL ?? "admin@forgepublicsafety.com")
+  .trim()
+  .toLowerCase();
 const COGNITO_SUB = (process.env.FORGE_P2_LINK_COGNITO_SUB ?? "").trim();
 const ROLE_CODE = "IND3V_INDUSTRIAL_ADMIN";
 
@@ -92,7 +94,8 @@ async function linkTenant(sql, tenantId, tenantKey, userId) {
         ${id}::uuid, ${tenantId}::uuid, ${userId}::uuid, 'ACTIVE', false, now(), now(), now()
       )
     `;
-    membership = await sql`select id::text as id, status from user_tenant_memberships where id = ${id}::uuid`;
+    membership =
+      await sql`select id::text as id, status from user_tenant_memberships where id = ${id}::uuid`;
     membershipCreated = true;
   } else if (membership[0].status !== "ACTIVE") {
     await sql`

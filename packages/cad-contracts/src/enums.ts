@@ -207,13 +207,7 @@ export const CAD_MATCH_OUTCOMES = [
 ] as const;
 export type CadMatchOutcome = (typeof CAD_MATCH_OUTCOMES)[number];
 
-export const CAD_LINK_STATUSES = [
-  "ACTIVE",
-  "SUSPENDED",
-  "UNLINKED",
-  "CLOSED",
-  "CONFLICT",
-] as const;
+export const CAD_LINK_STATUSES = ["ACTIVE", "SUSPENDED", "UNLINKED", "CLOSED", "CONFLICT"] as const;
 export type CadLinkStatus = (typeof CAD_LINK_STATUSES)[number];
 
 export const CAD_LINK_METHODS = ["AUTOMATIC", "MANUAL", "HYBRID_MATCH", "IMPORT"] as const;
@@ -347,9 +341,7 @@ export const RMS_CAD_PERMISSIONS = [
 export type RmsCadPermission = (typeof RMS_CAD_PERMISSIONS)[number];
 
 /** High-sensitivity; not on ordinary tenant admin templates by default. */
-export const RMS_CAD_RESTRICTED_PERMISSIONS = [
-  "rms.cad.raw_payload.view_restricted",
-] as const;
+export const RMS_CAD_RESTRICTED_PERMISSIONS = ["rms.cad.raw_payload.view_restricted"] as const;
 
 export type RmsCadRestrictedPermission = (typeof RMS_CAD_RESTRICTED_PERMISSIONS)[number];
 

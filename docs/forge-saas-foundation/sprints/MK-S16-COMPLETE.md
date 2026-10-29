@@ -28,15 +28,15 @@ REUSED `@forge/audit` / correlation / observability / CloudWatch foundations. EX
 
 ## Verification
 
-| Check | Result |
-| --- | --- |
-| audit / observability / contracts build | PASS |
-| platform-api typecheck | PASS |
-| tenant-admin typecheck | PASS |
-| audit unit | 3 passed |
-| observability unit | 2 passed |
-| api-keys + webhooks unit | 7 passed |
-| Production operations | NONE |
+| Check                                   | Result   |
+| --------------------------------------- | -------- |
+| audit / observability / contracts build | PASS     |
+| platform-api typecheck                  | PASS     |
+| tenant-admin typecheck                  | PASS     |
+| audit unit                              | 3 passed |
+| observability unit                      | 2 passed |
+| api-keys + webhooks unit                | 7 passed |
+| Production operations                   | NONE     |
 
 ## Next sprint
 

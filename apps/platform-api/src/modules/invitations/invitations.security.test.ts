@@ -64,13 +64,15 @@ describe("InvitationsService security", () => {
       status: "SENT",
       expiresAt: new Date(Date.now() - 60_000),
     });
-    withTenantTransaction.mockImplementation(async (_db, _tid, fn) => fn({
-      update: vi.fn(() => ({
-        set: vi.fn(() => ({
-          where: vi.fn(async () => undefined),
+    withTenantTransaction.mockImplementation(async (_db, _tid, fn) =>
+      fn({
+        update: vi.fn(() => ({
+          set: vi.fn(() => ({
+            where: vi.fn(async () => undefined),
+          })),
         })),
-      })),
-    }));
+      }),
+    );
 
     await expect(
       service.accept({ token: "a".repeat(24) }, { correlationId: "c", requestId: "r" }),
@@ -130,9 +132,7 @@ describe("InvitationsService security", () => {
         { correlationId: "c", requestId: "r" },
       ),
     ).rejects.toMatchObject({ code: "FORBIDDEN" });
-    expect(emailsMatchForInvitationAccept("invitee@example.com", "wrong@example.com")).toBe(
-      false,
-    );
+    expect(emailsMatchForInvitationAccept("invitee@example.com", "wrong@example.com")).toBe(false);
   });
 
   it("denies create into another tenant for non-platform admins", async () => {

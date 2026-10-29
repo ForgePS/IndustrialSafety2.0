@@ -4,15 +4,15 @@
 
 For each module document (template):
 
-| Field | Content |
-| --- | --- |
-| Legacy entry point | … |
-| FX replacement | … |
-| Feature flag | … |
-| Remaining dependencies | … |
-| Pilot duration | … |
-| Rollback window | … |
-| Retirement prerequisites | … |
-| Proposed deletion phase | S2G+ |
+| Field                    | Content |
+| ------------------------ | ------- |
+| Legacy entry point       | …       |
+| FX replacement           | …       |
+| Feature flag             | …       |
+| Remaining dependencies   | …       |
+| Pilot duration           | …       |
+| Rollback window          | …       |
+| Retirement prerequisites | …       |
+| Proposed deletion phase  | S2G+    |
 
 Incidents: see `modules/incidents/07-rollback.md` (keep legacy).

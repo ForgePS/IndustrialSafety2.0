@@ -63,8 +63,6 @@ export function listCadSimulatorScenarios(): CadSimulatorScenario[] {
   return [...CAD_SIMULATOR_SCENARIOS];
 }
 
-export function getCadSimulatorScenario(
-  id: string,
-): CadSimulatorScenario | undefined {
+export function getCadSimulatorScenario(id: string): CadSimulatorScenario | undefined {
   return CAD_SIMULATOR_SCENARIOS.find((row) => row.id === id);
 }

@@ -346,12 +346,7 @@ export function createMembership(
   },
   options?: ApiRequestOptions,
 ): Promise<Membership> {
-  return apiSend<Membership>(
-    `/api/v1/tenants/${tenantId}/memberships`,
-    "POST",
-    payload,
-    options,
-  );
+  return apiSend<Membership>(`/api/v1/tenants/${tenantId}/memberships`, "POST", payload, options);
 }
 
 export function suspendMembership(
@@ -500,7 +495,11 @@ export async function onboardingCompleteStep(
 export async function onboardingActivate(
   sessionId: string,
   options: { ifMatch: string; tenantId?: string },
-): Promise<ApiResult<OnboardingSessionView & { tenant?: { id: string; displayName: string; status: string } }>> {
+): Promise<
+  ApiResult<
+    OnboardingSessionView & { tenant?: { id: string; displayName: string; status: string } }
+  >
+> {
   const request: ApiRequestOptions = { ifMatch: options.ifMatch };
   if (options.tenantId) request.query = { tenantId: options.tenantId };
   return apiSendResult(
@@ -543,6 +542,543 @@ export function humanizeForgeError(message: string): string {
     return "This page was updated elsewhere. Refresh and try again.";
   }
   return message.replace(/ValidationError\s*/gi, "").replace(/invalid_string/gi, "invalid value");
+}
+
+// ---------------------------------------------------------------------------
+// Plans & pricing (platform catalog)
+// ---------------------------------------------------------------------------
+
+export type SubscriptionPlan = {
+  id: string;
+  code: string;
+  name: string;
+  billingInterval: string;
+  status: string;
+  basePriceCents: number | null;
+  currency: string;
+  configurationJson?: Record<string, unknown>;
+  createdAt: string;
+  updatedAt: string;
+};
+
+export type PlanPrice = {
+  id: string;
+  planId: string;
+  code: string;
+  nickname: string;
+  interval: string;
+  amountCents: number | null;
+  currency: string;
+  billingType: string;
+  status: string;
+  configurationJson?: Record<string, unknown>;
+  createdAt: string;
+  updatedAt: string;
+};
+
+export type SubscriptionPlanDetail = SubscriptionPlan & { prices: PlanPrice[] };
+
+export function listPlans(options?: { includeArchived?: boolean }): Promise<SubscriptionPlan[]> {
+  const request: ApiRequestOptions = {};
+  if (options?.includeArchived) {
+    request.query = { includeArchived: "true" };
+  }
+  return apiGet<SubscriptionPlan[]>("/api/v1/platform/plans", request);
+}
+
+export function getPlan(planCode: string): Promise<SubscriptionPlanDetail> {
+  return apiGet<SubscriptionPlanDetail>(`/api/v1/platform/plans/${encodeURIComponent(planCode)}`);
+}
+
+export function createPlan(payload: {
+  code: string;
+  name: string;
+  billingInterval: string;
+  basePriceCents?: number | null;
+  currency?: string;
+  status?: string;
+}): Promise<SubscriptionPlan> {
+  return apiSend<SubscriptionPlan>("/api/v1/platform/plans", "POST", payload);
+}
+
+export function patchPlan(
+  planCode: string,
+  payload: Partial<{
+    name: string;
+    billingInterval: string;
+    basePriceCents: number | null;
+    currency: string;
+    status: string;
+  }>,
+): Promise<SubscriptionPlan> {
+  return apiSend<SubscriptionPlan>(
+    `/api/v1/platform/plans/${encodeURIComponent(planCode)}`,
+    "PATCH",
+    payload,
+  );
+}
+
+export type DeletePlanResult = {
+  mode: "deleted" | "archived";
+  plan: { id: string; code: string; name: string; status?: string };
+  subscriptionCount: number;
+  message: string;
+};
+
+/** Permanently deletes an unused plan; archives if subscriptions still reference it. */
+export function deletePlan(planCode: string): Promise<DeletePlanResult> {
+  return apiSend<DeletePlanResult>(
+    `/api/v1/platform/plans/${encodeURIComponent(planCode)}`,
+    "DELETE",
+  );
+}
+
+/** @deprecated Prefer deletePlan — DELETE now hard-deletes unused plans or archives in-use ones. */
+export function archivePlan(planCode: string): Promise<DeletePlanResult> {
+  return deletePlan(planCode);
+}
+
+export function listPlanPrices(
+  planCode: string,
+  options?: { includeArchived?: boolean },
+): Promise<PlanPrice[]> {
+  const request: ApiRequestOptions = {};
+  if (options?.includeArchived) {
+    request.query = { includeArchived: "true" };
+  }
+  return apiGet<PlanPrice[]>(
+    `/api/v1/platform/plans/${encodeURIComponent(planCode)}/prices`,
+    request,
+  );
+}
+
+export function createPlanPrice(
+  planCode: string,
+  payload: {
+    code: string;
+    nickname: string;
+    interval: string;
+    amountCents?: number | null;
+    currency?: string;
+    billingType?: string;
+    status?: string;
+  },
+): Promise<PlanPrice> {
+  return apiSend<PlanPrice>(
+    `/api/v1/platform/plans/${encodeURIComponent(planCode)}/prices`,
+    "POST",
+    payload,
+  );
+}
+
+export function patchPlanPrice(
+  planCode: string,
+  priceCode: string,
+  payload: Partial<{
+    nickname: string;
+    interval: string;
+    amountCents: number | null;
+    currency: string;
+    billingType: string;
+    status: string;
+  }>,
+): Promise<PlanPrice> {
+  return apiSend<PlanPrice>(
+    `/api/v1/platform/plans/${encodeURIComponent(planCode)}/prices/${encodeURIComponent(priceCode)}`,
+    "PATCH",
+    payload,
+  );
+}
+
+export function archivePlanPrice(planCode: string, priceCode: string): Promise<PlanPrice> {
+  return apiSend<PlanPrice>(
+    `/api/v1/platform/plans/${encodeURIComponent(planCode)}/prices/${encodeURIComponent(priceCode)}`,
+    "DELETE",
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Subscriptions (tenant)
+// ---------------------------------------------------------------------------
+
+export type TenantSubscription = {
+  id: string;
+  tenantId: string;
+  planId: string;
+  status: string;
+  billingProvider: string;
+  billingType: string;
+  externalSubscriptionId: string | null;
+  cancelAtPeriodEnd: boolean;
+  recordVersion: number;
+  createdAt: string;
+  updatedAt: string;
+  planCode: string | null;
+  planName: string | null;
+  billingInterval: string | null;
+  billingCycle: string | null;
+  renewsAt: string | null;
+  endsAt: string | null;
+  startedAt: string | null;
+  currentPeriodStart?: string;
+  currentPeriodEnd?: string;
+};
+
+export function listSubscriptions(tenantId: string): Promise<TenantSubscription[]> {
+  return apiGet<TenantSubscription[]>(`/api/v1/tenants/${tenantId}/subscriptions`);
+}
+
+export function getCurrentSubscription(tenantId: string): Promise<ApiResult<TenantSubscription>> {
+  return apiGetResult<TenantSubscription>(`/api/v1/tenants/${tenantId}/subscriptions/current`);
+}
+
+export function createSubscription(
+  tenantId: string,
+  payload: {
+    planCode: string;
+    status?: string;
+    billingProvider?: string;
+    periodDays?: number;
+  },
+  options?: ApiRequestOptions,
+): Promise<TenantSubscription> {
+  return apiSend<TenantSubscription>(
+    `/api/v1/tenants/${tenantId}/subscriptions`,
+    "POST",
+    payload,
+    options,
+  );
+}
+
+export function patchSubscription(
+  tenantId: string,
+  subscriptionId: string,
+  payload: {
+    status?: string;
+    cancelAtPeriodEnd?: boolean;
+    externalSubscriptionId?: string | null;
+  },
+  ifMatch: string,
+): Promise<TenantSubscription> {
+  return apiSend<TenantSubscription>(
+    `/api/v1/tenants/${tenantId}/subscriptions/${subscriptionId}`,
+    "PATCH",
+    payload,
+    { ifMatch },
+  );
+}
+
+export function suspendSubscription(
+  tenantId: string,
+  subscriptionId: string,
+  ifMatch: string,
+): Promise<TenantSubscription> {
+  return apiSend<TenantSubscription>(
+    `/api/v1/tenants/${tenantId}/subscriptions/${subscriptionId}/suspend`,
+    "POST",
+    undefined,
+    { ifMatch },
+  );
+}
+
+export function reactivateSubscription(
+  tenantId: string,
+  subscriptionId: string,
+  ifMatch: string,
+): Promise<TenantSubscription> {
+  return apiSend<TenantSubscription>(
+    `/api/v1/tenants/${tenantId}/subscriptions/${subscriptionId}/reactivate`,
+    "POST",
+    undefined,
+    { ifMatch },
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Billing contracts (tenant)
+// ---------------------------------------------------------------------------
+
+export type BillingContract = {
+  id: string;
+  name: string;
+  status: string;
+  billingType: string;
+  startsOn: string | null;
+  endsOn: string | null;
+  renewalOn: string | null;
+  setupFeeCents: number | null;
+  notes: string | null;
+  recordVersion: number;
+  pricingJson?: {
+    overrideAmountCents?: number;
+    currency?: string;
+    modules?: Array<{ moduleCode: string; amountCents: number }>;
+  };
+};
+
+export type BillingOverview = {
+  customer: {
+    id: string;
+    displayName: string;
+    billingEmail: string | null;
+    recordVersion: number;
+  } | null;
+  subscription: {
+    id: string;
+    status: string;
+    planCode: string | null;
+    planName: string | null;
+    billingInterval: string | null;
+    billingType?: string;
+  } | null;
+  contracts: BillingContract[];
+  invoices: BillingInvoice[];
+  fees: BillingFeeLine[];
+};
+
+export type BillingInvoice = {
+  id: string;
+  status: string;
+  currency: string;
+  amountDueCents: number;
+  amountPaidCents: number;
+  externalInvoiceId: string | null;
+  hostedInvoiceUrl: string | null;
+  recordVersion: number;
+  createdAt: string;
+};
+
+export type BillingFeeLine = {
+  id: string;
+  feeType: string;
+  amountCents: number;
+  currency: string;
+  description: string | null;
+  contractId: string | null;
+  orderId: string | null;
+  createdAt: string;
+};
+
+export type PlatformProduct = {
+  id: string;
+  code: string;
+  name: string;
+  description: string | null;
+  status: string;
+  platformKey?: string | null;
+  createdAt: string;
+  updatedAt: string;
+};
+
+export type PlatformModule = {
+  id: string;
+  code: string;
+  name: string;
+  description: string | null;
+  status: string;
+  isCore: boolean;
+  category: string;
+  classification: string;
+  implementationStatus: string;
+  availabilityLabel: string;
+  customerAssignable: boolean;
+  displayOrder: number;
+  productId: string;
+  productCode: string;
+  productName: string;
+  platformKey?: string | null;
+  customerAssignmentCount: number;
+  route: string | null;
+};
+
+export function listPlatformProducts(options?: {
+  includeArchived?: boolean;
+}): Promise<PlatformProduct[]> {
+  const request: ApiRequestOptions = {};
+  if (options?.includeArchived) {
+    request.query = { includeArchived: "true" };
+  }
+  return apiGet<PlatformProduct[]>("/api/v1/platform/products", request);
+}
+
+export function patchPlatformProduct(
+  productCode: string,
+  payload: Partial<{ name: string; description: string | null; status: string }>,
+): Promise<PlatformProduct> {
+  return apiSend<PlatformProduct>(
+    `/api/v1/platform/products/${encodeURIComponent(productCode)}`,
+    "PATCH",
+    payload,
+  );
+}
+
+export function listPlatformModules(options?: {
+  productCode?: string;
+  includeArchived?: boolean;
+}): Promise<PlatformModule[]> {
+  const request: ApiRequestOptions = {};
+  const query: Record<string, string> = {};
+  if (options?.productCode) query.productCode = options.productCode;
+  if (options?.includeArchived) query.includeArchived = "true";
+  if (Object.keys(query).length > 0) request.query = query;
+  return apiGet<PlatformModule[]>("/api/v1/platform/modules", request);
+}
+
+export function createPlatformModule(
+  productCode: string,
+  payload: {
+    code: string;
+    name: string;
+    description?: string | null;
+    category?: string;
+    classification?: string;
+    implementationStatus?: string;
+    customerAssignable?: boolean;
+    displayOrder?: number;
+    isCore?: boolean;
+  },
+): Promise<PlatformModule> {
+  return apiSend<PlatformModule>(
+    `/api/v1/platform/products/${encodeURIComponent(productCode)}/modules`,
+    "POST",
+    payload,
+  );
+}
+
+export function patchPlatformModule(
+  productCode: string,
+  moduleCode: string,
+  payload: Partial<{
+    name: string;
+    description: string | null;
+    category: string;
+    classification: string;
+    implementationStatus: string;
+    customerAssignable: boolean;
+    displayOrder: number;
+    isCore: boolean;
+    status: string;
+  }>,
+): Promise<PlatformModule> {
+  return apiSend<PlatformModule>(
+    `/api/v1/platform/products/${encodeURIComponent(productCode)}/modules/${encodeURIComponent(moduleCode)}`,
+    "PATCH",
+    payload,
+  );
+}
+
+export function archivePlatformModule(
+  productCode: string,
+  moduleCode: string,
+): Promise<PlatformModule> {
+  return apiSend<PlatformModule>(
+    `/api/v1/platform/products/${encodeURIComponent(productCode)}/modules/${encodeURIComponent(moduleCode)}`,
+    "DELETE",
+  );
+}
+
+export function listBillingInvoices(tenantId: string): Promise<BillingInvoice[]> {
+  return apiGet<BillingInvoice[]>(`/api/v1/tenants/${tenantId}/billing/invoices`);
+}
+
+export function createBillingInvoice(
+  tenantId: string,
+  payload: {
+    status?: string;
+    currency?: string;
+    amountDueCents?: number;
+    amountPaidCents?: number;
+    externalInvoiceId?: string | null;
+    hostedInvoiceUrl?: string | null;
+    subscriptionId?: string | null;
+    orderId?: string | null;
+  },
+): Promise<BillingInvoice> {
+  return apiSend<BillingInvoice>(`/api/v1/tenants/${tenantId}/billing/invoices`, "POST", payload);
+}
+
+export function patchBillingInvoice(
+  tenantId: string,
+  invoiceId: string,
+  payload: Partial<{
+    status: string;
+    currency: string;
+    amountDueCents: number;
+    amountPaidCents: number;
+    externalInvoiceId: string | null;
+    hostedInvoiceUrl: string | null;
+  }>,
+  ifMatch: string,
+): Promise<BillingInvoice> {
+  return apiSend<BillingInvoice>(
+    `/api/v1/tenants/${tenantId}/billing/invoices/${invoiceId}`,
+    "PATCH",
+    payload,
+    { ifMatch },
+  );
+}
+
+export function listBillingFees(tenantId: string): Promise<BillingFeeLine[]> {
+  return apiGet<BillingFeeLine[]>(`/api/v1/tenants/${tenantId}/billing/fees`);
+}
+
+export function createBillingFee(
+  tenantId: string,
+  payload: {
+    feeType: string;
+    amountCents: number;
+    currency?: string;
+    description?: string | null;
+    contractId?: string | null;
+    orderId?: string | null;
+  },
+): Promise<BillingFeeLine> {
+  return apiSend<BillingFeeLine>(`/api/v1/tenants/${tenantId}/billing/fees`, "POST", payload);
+}
+
+export function getBillingOverview(tenantId: string): Promise<BillingOverview> {
+  return apiGet<BillingOverview>(`/api/v1/tenants/${tenantId}/billing/overview`);
+}
+
+export function createBillingContract(
+  tenantId: string,
+  payload: {
+    name: string;
+    status?: string;
+    billingType?: string;
+    startsOn?: string | null;
+    endsOn?: string | null;
+    renewalOn?: string | null;
+    notes?: string | null;
+    setupFeeCents?: number | null;
+    pricingJson?: BillingContract["pricingJson"];
+  },
+): Promise<BillingContract> {
+  return apiSend<BillingContract>(`/api/v1/tenants/${tenantId}/billing/contracts`, "POST", payload);
+}
+
+export function patchBillingContract(
+  tenantId: string,
+  contractId: string,
+  payload: Partial<{
+    name: string;
+    status: string;
+    billingType: string;
+    startsOn: string | null;
+    endsOn: string | null;
+    renewalOn: string | null;
+    notes: string | null;
+    setupFeeCents: number | null;
+    pricingJson: BillingContract["pricingJson"];
+  }>,
+  ifMatch: string,
+): Promise<BillingContract> {
+  return apiSend<BillingContract>(
+    `/api/v1/tenants/${tenantId}/billing/contracts/${contractId}`,
+    "PATCH",
+    payload,
+    { ifMatch },
+  );
 }
 
 // ---------------------------------------------------------------------------

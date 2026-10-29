@@ -83,12 +83,7 @@ export class AiNarrativeService {
     this.providers.register(new StubAiNarrativeProvider());
   }
 
-  async create(
-    tenantId: string,
-    principal: ForgePrincipal,
-    body: unknown,
-    correlationId: string,
-  ) {
+  async create(tenantId: string, principal: ForgePrincipal, body: unknown, correlationId: string) {
     const input = createAiNarrativeRequestSchema.parse(body);
     await this.assertActivation(tenantId, principal, input.product);
 
@@ -258,7 +253,10 @@ export class AiNarrativeService {
       }
 
       if (!pipeline.ok) {
-        if (pipeline.reasonCode.includes("RESTRICTED") || pipeline.reasonCode.includes("SENSITIVE")) {
+        if (
+          pipeline.reasonCode.includes("RESTRICTED") ||
+          pipeline.reasonCode.includes("SENSITIVE")
+        ) {
           emitAiNarrativeMetric({
             metric: AI_NARRATIVE_METRICS.SensitiveDataBlocked,
             tenantId,
@@ -454,7 +452,10 @@ export class AiNarrativeService {
 
     return withTenantTransaction(this.db, tenantId, async (tx) => {
       const request = await tx.query.aiNarrativeRequests.findFirst({
-        where: and(eq(aiNarrativeRequests.id, requestId), eq(aiNarrativeRequests.tenantId, tenantId)),
+        where: and(
+          eq(aiNarrativeRequests.id, requestId),
+          eq(aiNarrativeRequests.tenantId, tenantId),
+        ),
       });
       if (!request) throw new ForgeError("NOT_FOUND", "AI narrative request not found");
       if (request.status !== "READY_FOR_REVIEW") {
@@ -472,7 +473,10 @@ export class AiNarrativeService {
 
       if (request.recordType === "neris_incident") {
         const incident = await tx.query.nerisIncidents.findFirst({
-          where: and(eq(nerisIncidents.id, request.recordId), eq(nerisIncidents.tenantId, tenantId)),
+          where: and(
+            eq(nerisIncidents.id, request.recordId),
+            eq(nerisIncidents.tenantId, tenantId),
+          ),
         });
         if (!incident) throw new ForgeError("NOT_FOUND", "Source incident not found");
         try {
@@ -607,7 +611,10 @@ export class AiNarrativeService {
 
     return withTenantTransaction(this.db, tenantId, async (tx) => {
       const request = await tx.query.aiNarrativeRequests.findFirst({
-        where: and(eq(aiNarrativeRequests.id, requestId), eq(aiNarrativeRequests.tenantId, tenantId)),
+        where: and(
+          eq(aiNarrativeRequests.id, requestId),
+          eq(aiNarrativeRequests.tenantId, tenantId),
+        ),
       });
       if (!request) throw new ForgeError("NOT_FOUND", "AI narrative request not found");
 
@@ -652,7 +659,10 @@ export class AiNarrativeService {
     await this.assertActivation(tenantId, principal, undefined);
     return withTenantTransaction(this.db, tenantId, async (tx) => {
       const request = await tx.query.aiNarrativeRequests.findFirst({
-        where: and(eq(aiNarrativeRequests.id, requestId), eq(aiNarrativeRequests.tenantId, tenantId)),
+        where: and(
+          eq(aiNarrativeRequests.id, requestId),
+          eq(aiNarrativeRequests.tenantId, tenantId),
+        ),
       });
       if (!request) throw new ForgeError("NOT_FOUND", "AI narrative request not found");
       const drafts = await tx.query.aiNarrativeDrafts.findMany({
@@ -1103,7 +1113,10 @@ export class AiNarrativeService {
     };
     return withTenantTransaction(this.db, tenantId, async (tx) => {
       const existing = await tx.query.aiNarrativePolicies.findFirst({
-        where: and(eq(aiNarrativePolicies.id, policyId), eq(aiNarrativePolicies.tenantId, tenantId)),
+        where: and(
+          eq(aiNarrativePolicies.id, policyId),
+          eq(aiNarrativePolicies.tenantId, tenantId),
+        ),
       });
       if (!existing) {
         throw new ForgeError("NOT_FOUND", "Policy not found");
@@ -1117,14 +1130,12 @@ export class AiNarrativeService {
           ? existing.monthlyRequestQuota
           : Number(input.monthlyRequestQuota);
       const daily =
-        input.dailyUserQuota === undefined
-          ? existing.dailyUserQuota
-          : Number(input.dailyUserQuota);
+        input.dailyUserQuota === undefined ? existing.dailyUserQuota : Number(input.dailyUserQuota);
       const perRecord =
-        input.perRecordLimit === undefined
-          ? existing.perRecordLimit
-          : Number(input.perRecordLimit);
-      if (![monthly, daily, perRecord].every((n) => Number.isFinite(n) && n >= 0 && n <= 1_000_000)) {
+        input.perRecordLimit === undefined ? existing.perRecordLimit : Number(input.perRecordLimit);
+      if (
+        ![monthly, daily, perRecord].every((n) => Number.isFinite(n) && n >= 0 && n <= 1_000_000)
+      ) {
         throw new ForgeError("VALIDATION_FAILED", "Quota values must be non-negative numbers");
       }
       const now = new Date();
@@ -1199,11 +1210,7 @@ export class AiNarrativeService {
     });
   }
 
-  async listAudit(
-    tenantId: string,
-    principal: ForgePrincipal,
-    options?: { limit?: number },
-  ) {
+  async listAudit(tenantId: string, principal: ForgePrincipal, options?: { limit?: number }) {
     if (
       !principal.isPlatformAdmin &&
       !principal.permissions.has("ai.narrative.view_audit") &&
@@ -1383,10 +1390,7 @@ export class AiNarrativeService {
     });
   }
 
-  resolveManagementTenantId(
-    principal: ForgePrincipal,
-    queryTenantId: string | undefined,
-  ): string {
+  resolveManagementTenantId(principal: ForgePrincipal, queryTenantId: string | undefined): string {
     if (queryTenantId) {
       if (
         !principal.isPlatformAdmin &&
@@ -1474,7 +1478,10 @@ export class AiNarrativeService {
       if (productFlag) {
         const enabled = await this.resolveFlag(tenantId, productFlag, false);
         if (!enabled && !principal.isPlatformAdmin) {
-          throw new ForgeError("FORBIDDEN", `AI Narrative is disabled for product (${productFlag})`);
+          throw new ForgeError(
+            "FORBIDDEN",
+            `AI Narrative is disabled for product (${productFlag})`,
+          );
         }
       }
       if (!principal.isPlatformAdmin) {
@@ -1504,10 +1511,7 @@ export class AiNarrativeService {
       if (!incident) {
         throw new ForgeError("NOT_FOUND", "Source incident not found or not visible");
       }
-      if (
-        !principal.isPlatformAdmin &&
-        !principal.permissions.has("rms.neris.incident.view")
-      ) {
+      if (!principal.isPlatformAdmin && !principal.permissions.has("rms.neris.incident.view")) {
         throw new ForgeError("FORBIDDEN", "Missing permission to view source record");
       }
       try {
@@ -1660,11 +1664,7 @@ export class AiNarrativeService {
       .where(eq(aiNarrativeRequests.id, requestId));
   }
 
-  private async loadRequestBundle(
-    tx: DatabaseTransaction,
-    tenantId: string,
-    requestId: string,
-  ) {
+  private async loadRequestBundle(tx: DatabaseTransaction, tenantId: string, requestId: string) {
     const request = await tx.query.aiNarrativeRequests.findFirst({
       where: and(eq(aiNarrativeRequests.id, requestId), eq(aiNarrativeRequests.tenantId, tenantId)),
     });

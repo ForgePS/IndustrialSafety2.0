@@ -8,9 +8,7 @@ import { PRODUCTION_PRE_CUTOVER_SPA_ORIGINS } from "../lib/config/production-spa
  */
 describe("production pre-cutover SPA origins", () => {
   it("includes the live Creator Console CloudFront origin", () => {
-    expect(PRODUCTION_PRE_CUTOVER_SPA_ORIGINS).toContain(
-      "https://d204ytvvxvsqgl.cloudfront.net",
-    );
+    expect(PRODUCTION_PRE_CUTOVER_SPA_ORIGINS).toContain("https://d204ytvvxvsqgl.cloudfront.net");
   });
 
   it("uses https only (no wildcard, no localhost)", () => {
@@ -19,5 +17,14 @@ describe("production pre-cutover SPA origins", () => {
       expect(origin.includes("*")).toBe(false);
       expect(origin.includes("localhost")).toBe(false);
     }
+  });
+
+  it("documents that first-party vanity hosts use a zone suffix, not this exact list", () => {
+    // Exact CloudFront defaults stay here. Tenant vanity hosts under
+    // forgepublicsafety.com are covered by CORS_ORIGIN_SUFFIXES /
+    // CloudFront https://*.forgepublicsafety.com (see forge-api-cloudfront).
+    expect(PRODUCTION_PRE_CUTOVER_SPA_ORIGINS.some((o) => o.includes("producers-rice-mill"))).toBe(
+      false,
+    );
   });
 });

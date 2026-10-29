@@ -28,15 +28,15 @@ Authorized global search and a command palette for Creator Console and Tenant Ad
 
 ## Verification
 
-| Check | Result |
-| --- | --- |
+| Check                        | Result   |
+| ---------------------------- | -------- |
 | contracts search-domain unit | 2 passed |
-| ui index.test | 8 passed |
-| platform-api search unit | 3 passed |
-| platform-api typecheck | PASS |
-| tenant-admin typecheck | PASS |
-| creator-console typecheck | PASS |
-| Production operations | NONE |
+| ui index.test                | 8 passed |
+| platform-api search unit     | 3 passed |
+| platform-api typecheck       | PASS     |
+| tenant-admin typecheck       | PASS     |
+| creator-console typecheck    | PASS     |
+| Production operations        | NONE     |
 
 ## Next sprint
 

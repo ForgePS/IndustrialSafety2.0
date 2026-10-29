@@ -28,6 +28,7 @@ export interface ForgeMonitoringProps {
   cadApplicationDlq?: sqs.IQueue;
   cadPollingDlq?: sqs.IQueue;
   cadRetentionDlq?: sqs.IQueue;
+  reportingSchedulesDlq?: sqs.IQueue;
   /** Optional CloudFront distribution IDs for edge error alarms. */
   apiCloudFrontDistributionId?: string;
   rmsCloudFrontDistributionId?: string;
@@ -160,6 +161,9 @@ export class ForgeMonitoring extends Construct {
     if (props.cadApplicationDlq) dlqAlarms.push(["CadApplicationDlq", props.cadApplicationDlq]);
     if (props.cadPollingDlq) dlqAlarms.push(["CadPollingDlq", props.cadPollingDlq]);
     if (props.cadRetentionDlq) dlqAlarms.push(["CadRetentionDlq", props.cadRetentionDlq]);
+    if (props.reportingSchedulesDlq) {
+      dlqAlarms.push(["ReportingSchedulesDlq", props.reportingSchedulesDlq]);
+    }
 
     for (const [idSuffix, queue] of dlqAlarms) {
       new cloudwatch.Alarm(this, `${idSuffix}Alarm`, {

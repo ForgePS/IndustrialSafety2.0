@@ -9,26 +9,16 @@
  * not appear as ordinary customer toggles.
  */
 
-import {
-  INDUSTRIAL_MODULE_REGISTRY,
-  type IndustrialImplementationStatus,
-} from "./industrial.js";
+import { INDUSTRIAL_MODULE_REGISTRY, type IndustrialImplementationStatus } from "./industrial.js";
+import { z } from "zod";
 
 export type ForgePlatformKey = "INDUSTRIAL" | "RMS" | "ACADEMY" | "CREATOR";
 
 export type ModuleClassification =
-  | "CUSTOMER_MODULE"
-  | "PLATFORM_CORE"
-  | "INTERNAL_TOOL"
-  | "SHARED_SERVICE";
+  "CUSTOMER_MODULE" | "PLATFORM_CORE" | "INTERNAL_TOOL" | "SHARED_SERVICE";
 
 export type CatalogImplementationStatus =
-  | "READY"
-  | "IN_DEVELOPMENT"
-  | "MIGRATING"
-  | "COMING_SOON"
-  | "RETIRED"
-  | "UNAVAILABLE";
+  "READY" | "IN_DEVELOPMENT" | "MIGRATING" | "COMING_SOON" | "RETIRED" | "UNAVAILABLE";
 
 export type ForgePlatformDefinition = {
   key: ForgePlatformKey;
@@ -481,9 +471,7 @@ export function findCatalogModule(
   productCode: string,
   moduleCode: string,
 ): ForgeModuleCatalogEntry | undefined {
-  return FORGE_MODULE_CATALOG.find(
-    (m) => m.productCode === productCode && m.code === moduleCode,
-  );
+  return FORGE_MODULE_CATALOG.find((m) => m.productCode === productCode && m.code === moduleCode);
 }
 
 /** Seed/template shape for platform_modules rows. */
@@ -510,3 +498,48 @@ export function catalogModulesForSeed(productCode: string): Array<{
     ...(m.description ? { description: m.description } : {}),
   }));
 }
+
+export const CATALOG_RECORD_STATUSES = ["ACTIVE", "ARCHIVED"] as const;
+
+export const MODULE_CLASSIFICATIONS = [
+  "CUSTOMER_MODULE",
+  "PLATFORM_CORE",
+  "INTERNAL_TOOL",
+  "SHARED_SERVICE",
+] as const;
+
+export const CATALOG_IMPLEMENTATION_STATUSES = [
+  "READY",
+  "IN_DEVELOPMENT",
+  "MIGRATING",
+  "COMING_SOON",
+  "RETIRED",
+  "UNAVAILABLE",
+] as const;
+
+export const patchPlatformProductInputSchema = z.object({
+  name: z.string().min(1).max(200).optional(),
+  description: z.string().max(4000).optional().nullable(),
+  status: z.enum(CATALOG_RECORD_STATUSES).optional(),
+});
+
+export const createPlatformModuleInputSchema = z.object({
+  code: z
+    .string()
+    .min(1)
+    .max(64)
+    .regex(/^[A-Z][A-Z0-9_]*$/, "Code must be uppercase letters, digits, and underscores"),
+  name: z.string().min(1).max(200),
+  description: z.string().max(4000).optional().nullable(),
+  category: z.string().min(1).max(128).default("General"),
+  classification: z.enum(MODULE_CLASSIFICATIONS).default("CUSTOMER_MODULE"),
+  implementationStatus: z.enum(CATALOG_IMPLEMENTATION_STATUSES).default("READY"),
+  customerAssignable: z.boolean().default(true),
+  displayOrder: z.number().int().min(0).max(9999).default(100),
+  isCore: z.boolean().default(false),
+  status: z.enum(CATALOG_RECORD_STATUSES).default("ACTIVE"),
+});
+
+export const patchPlatformModuleInputSchema = createPlatformModuleInputSchema
+  .omit({ code: true })
+  .partial();

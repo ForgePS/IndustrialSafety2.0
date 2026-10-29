@@ -39,19 +39,19 @@ Architecture (naming, network, data, identity, AWS overview), security (encrypti
 
 ## Verification
 
-| Check | Result |
-| --- | --- |
-| `pnpm infra:validate` | PASS (`costProfile: developer`, account `511343547817`) |
-| `pnpm --filter @forge/infrastructure-cdk typecheck` | PASS |
-| `pnpm --filter @forge/infrastructure-cdk test` | PASS (30 tests) |
-| `pnpm infra:nag` | PASS (AwsSolutionsChecks + documented suppressions) |
-| `pnpm infra:synth` | PASS → `cdk.out` |
-| Local Docker builds | PASS (`forge-platform-api:development`, `forge-worker-service:development`) |
-| `pnpm infra:bootstrap` | PASS (`aws://511343547817/us-east-1`) |
-| `pnpm infra:deploy` | PASS — all 9 Forge stacks + CDKToolkit |
-| `pnpm smoke:development` | PASS |
-| `GET /health` | `healthy` |
-| `GET /ready` | `ready` with `database: true` |
+| Check                                               | Result                                                                      |
+| --------------------------------------------------- | --------------------------------------------------------------------------- |
+| `pnpm infra:validate`                               | PASS (`costProfile: developer`, account `511343547817`)                     |
+| `pnpm --filter @forge/infrastructure-cdk typecheck` | PASS                                                                        |
+| `pnpm --filter @forge/infrastructure-cdk test`      | PASS (30 tests)                                                             |
+| `pnpm infra:nag`                                    | PASS (AwsSolutionsChecks + documented suppressions)                         |
+| `pnpm infra:synth`                                  | PASS → `cdk.out`                                                            |
+| Local Docker builds                                 | PASS (`forge-platform-api:development`, `forge-worker-service:development`) |
+| `pnpm infra:bootstrap`                              | PASS (`aws://511343547817/us-east-1`)                                       |
+| `pnpm infra:deploy`                                 | PASS — all 9 Forge stacks + CDKToolkit                                      |
+| `pnpm smoke:development`                            | PASS                                                                        |
+| `GET /health`                                       | `healthy`                                                                   |
+| `GET /ready`                                        | `ready` with `database: true`                                               |
 
 ## Deployed environment (Developer cost profile)
 

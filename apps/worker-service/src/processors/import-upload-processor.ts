@@ -1,11 +1,6 @@
 import { createHash } from "node:crypto";
 import { GetObjectCommand, S3Client } from "@aws-sdk/client-s3";
-import {
-  getSharedDatabase,
-  importFiles,
-  importJobs,
-  withTenantTransaction,
-} from "@forge/database";
+import { getSharedDatabase, importFiles, importJobs, withTenantTransaction } from "@forge/database";
 import {
   assertMalwareGate,
   detectImportFormat,

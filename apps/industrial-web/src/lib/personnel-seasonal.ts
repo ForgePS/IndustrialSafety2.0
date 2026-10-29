@@ -9,7 +9,9 @@ export type SeasonalLifecycleBadge = {
   kind: SeasonalLifecycleBadgeKind;
 };
 
-export function isSeasonalLifecycleEnabled(flags: Record<string, boolean> | null | undefined): boolean {
+export function isSeasonalLifecycleEnabled(
+  flags: Record<string, boolean> | null | undefined,
+): boolean {
   return Boolean(flags?.[SEASONAL_LIFECYCLE_FLAG]);
 }
 
@@ -31,4 +33,18 @@ export function seasonalLifecycleBadge(row: {
     return { label: "Active seasonal", kind: "active-seasonal" };
   }
   return { label: employmentType || personStatus || "Unknown", kind: "other" };
+}
+
+/** Sneat label badge class for lifecycle state. */
+export function seasonalLifecycleBadgeClass(kind: SeasonalLifecycleBadgeKind): string {
+  switch (kind) {
+    case "pre-hire":
+      return "bg-label-warning";
+    case "active-seasonal":
+      return "bg-label-success";
+    case "full-time":
+      return "bg-label-primary";
+    default:
+      return "bg-label-secondary";
+  }
 }

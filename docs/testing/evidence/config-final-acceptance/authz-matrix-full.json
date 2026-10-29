@@ -24,10 +24,7 @@
       "permission": "platform.configuration.update",
       "expectedEffect": "allow",
       "actualStatus": 201,
-      "expectedStatus": [
-        200,
-        201
-      ],
+      "expectedStatus": [200, 201],
       "pass": true,
       "notes": ""
     },
@@ -37,10 +34,7 @@
       "permission": "platform.configuration.publish",
       "expectedEffect": "allow",
       "actualStatus": 201,
-      "expectedStatus": [
-        200,
-        201
-      ],
+      "expectedStatus": [200, 201],
       "pass": true,
       "notes": ""
     },
@@ -60,10 +54,7 @@
       "permission": "platform.configuration.update",
       "expectedEffect": "allow",
       "actualStatus": 201,
-      "expectedStatus": [
-        200,
-        201
-      ],
+      "expectedStatus": [200, 201],
       "pass": true,
       "notes": ""
     },
@@ -73,10 +64,7 @@
       "permission": "platform.configuration.publish",
       "expectedEffect": "allow",
       "actualStatus": 201,
-      "expectedStatus": [
-        200,
-        201
-      ],
+      "expectedStatus": [200, 201],
       "pass": true,
       "notes": ""
     },
@@ -86,10 +74,7 @@
       "permission": "platform.configuration.update",
       "expectedEffect": "allow",
       "actualStatus": 201,
-      "expectedStatus": [
-        200,
-        201
-      ],
+      "expectedStatus": [200, 201],
       "pass": true,
       "notes": "support may manage security NS"
     },
@@ -99,10 +84,7 @@
       "permission": "tenant.configuration.update",
       "expectedEffect": "allow",
       "actualStatus": 201,
-      "expectedStatus": [
-        200,
-        201
-      ],
+      "expectedStatus": [200, 201],
       "pass": true,
       "notes": ""
     },
@@ -122,10 +104,7 @@
       "permission": "tenant.configuration.update",
       "expectedEffect": "allow",
       "actualStatus": 201,
-      "expectedStatus": [
-        200,
-        201
-      ],
+      "expectedStatus": [200, 201],
       "pass": true,
       "notes": ""
     },
@@ -195,10 +174,7 @@
       "permission": "platform.configuration.update",
       "expectedEffect": "allow",
       "actualStatus": 201,
-      "expectedStatus": [
-        200,
-        201
-      ],
+      "expectedStatus": [200, 201],
       "pass": true,
       "notes": ""
     },
@@ -248,10 +224,7 @@
       "permission": "platform.configuration.update",
       "expectedEffect": "allow",
       "actualStatus": 201,
-      "expectedStatus": [
-        200,
-        201
-      ],
+      "expectedStatus": [200, 201],
       "pass": true,
       "notes": "validation-only no persistence"
     }

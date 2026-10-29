@@ -1,6 +1,6 @@
 import { CanActivate, ExecutionContext, Injectable } from "@nestjs/common";
 import { Reflector } from "@nestjs/core";
-import { ForgeError } from "@forge/errors";
+import { ForgeError, isForgeError } from "@forge/errors";
 import { AuthContextService } from "./auth-context.service.js";
 import type { AuthenticatedRequest } from "./principal.decorator.js";
 import { IS_PUBLIC_KEY } from "./public.decorator.js";
@@ -25,10 +25,11 @@ export class AuthGuard implements CanActivate {
     try {
       request.principal = await this.authContext.resolvePrincipal(request);
     } catch (error) {
-      if (error instanceof ForgeError) {
+      if (isForgeError(error)) {
         throw error;
       }
-      throw new ForgeError("UNAUTHORIZED", "Authentication failed", { cause: error });
+      const detail = error instanceof Error ? error.message : "Unexpected auth error";
+      throw new ForgeError("UNAUTHORIZED", `Authentication failed: ${detail}`, { cause: error });
     }
     return true;
   }

@@ -39,15 +39,15 @@ Centralized SaaS RBAC documentation and contracts; deny-wins effective permissio
 
 ## Verification
 
-| Check | Result |
-| --- | --- |
-| contracts unit | 14 passed |
-| authorization unit | 35 passed |
-| tenant-context unit | 2 passed |
-| web-kit unit | 16 passed |
-| platform-api authz/auth-context unit | 22 passed |
-| typecheck (contracts, authorization, tenant-context, web-kit, platform-api, database) | PASS |
-| Production operations | NONE |
+| Check                                                                                 | Result    |
+| ------------------------------------------------------------------------------------- | --------- |
+| contracts unit                                                                        | 14 passed |
+| authorization unit                                                                    | 35 passed |
+| tenant-context unit                                                                   | 2 passed  |
+| web-kit unit                                                                          | 16 passed |
+| platform-api authz/auth-context unit                                                  | 22 passed |
+| typecheck (contracts, authorization, tenant-context, web-kit, platform-api, database) | PASS      |
+| Production operations                                                                 | NONE      |
 
 ## Next sprint
 

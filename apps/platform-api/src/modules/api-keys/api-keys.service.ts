@@ -1,15 +1,6 @@
 import { Inject, Injectable } from "@nestjs/common";
-import {
-  API_KEY_PREFIX,
-  createApiKeyInputSchema,
-  type CreateApiKeyInput,
-} from "@forge/contracts";
-import {
-  createId,
-  tenantApiKeys,
-  withTenantTransaction,
-  type Database,
-} from "@forge/database";
+import { API_KEY_PREFIX, createApiKeyInputSchema, type CreateApiKeyInput } from "@forge/contracts";
+import { createId, tenantApiKeys, withTenantTransaction, type Database } from "@forge/database";
 import { ForgeError } from "@forge/errors";
 import { generateApiKey, redactSensitive } from "@forge/security";
 import type { ForgePrincipal } from "@forge/tenant-context";
@@ -65,42 +56,47 @@ export class ApiKeysService {
     const id = createId();
     const now = new Date();
 
-    const row = await withTenantTransaction(this.db, tenantId, async (tx) => {
-      const [inserted] = await tx
-        .insert(tenantApiKeys)
-        .values({
-          id,
-          tenantId,
-          name: data.name,
-          keyPrefix: generated.prefix,
-          displayHint: generated.displayHint,
-          keyHash: generated.keyHash,
-          scopesJson: data.scopes,
-          createdByUserId: principal.userId,
-          expiresAt: data.expiresAt ? new Date(data.expiresAt) : null,
-          createdAt: now,
-          updatedAt: now,
-        })
-        .returning();
+    const row = await withTenantTransaction(
+      this.db,
+      tenantId,
+      async (tx) => {
+        const [inserted] = await tx
+          .insert(tenantApiKeys)
+          .values({
+            id,
+            tenantId,
+            name: data.name,
+            keyPrefix: generated.prefix,
+            displayHint: generated.displayHint,
+            keyHash: generated.keyHash,
+            scopesJson: data.scopes,
+            createdByUserId: principal.userId,
+            expiresAt: data.expiresAt ? new Date(data.expiresAt) : null,
+            createdAt: now,
+            updatedAt: now,
+          })
+          .returning();
 
-      if (inserted) {
-        await this.audit.writeInTransaction(tx, {
-          tenantId,
-          actorUserId: principal.userId,
-          actorPersonId: principal.personId,
-          actorType: "USER",
-          action: "api_key.create",
-          resourceType: "tenant_api_key",
-          resourceId: inserted.id,
-          result: "SUCCESS",
-          riskLevel: "HIGH",
-          correlationId: principal.correlationId,
-          requestId: principal.requestId,
-          after: toPublicKey(inserted),
-        });
-      }
-      return inserted;
-    }, principal.userId);
+        if (inserted) {
+          await this.audit.writeInTransaction(tx, {
+            tenantId,
+            actorUserId: principal.userId,
+            actorPersonId: principal.personId,
+            actorType: "USER",
+            action: "api_key.create",
+            resourceType: "tenant_api_key",
+            resourceId: inserted.id,
+            result: "SUCCESS",
+            riskLevel: "HIGH",
+            correlationId: principal.correlationId,
+            requestId: principal.requestId,
+            after: toPublicKey(inserted),
+          });
+        }
+        return inserted;
+      },
+      principal.userId,
+    );
 
     if (!row) {
       throw new ForgeError("INTERNAL_ERROR", "Failed to create API key");
@@ -118,44 +114,49 @@ export class ApiKeysService {
       throw new ForgeError("FORBIDDEN", "Cannot revoke API keys for another tenant");
     }
 
-    return withTenantTransaction(this.db, tenantId, async (tx) => {
-      const existing = await tx.query.tenantApiKeys.findFirst({
-        where: and(eq(tenantApiKeys.id, keyId), eq(tenantApiKeys.tenantId, tenantId)),
-      });
-      if (!existing) {
-        throw new ForgeError("NOT_FOUND", "API key not found");
-      }
-      if (existing.revokedAt) {
-        return toPublicKey(existing);
-      }
-      const now = new Date();
-      const [updated] = await tx
-        .update(tenantApiKeys)
-        .set({ revokedAt: now, updatedAt: now })
-        .where(
-          and(
-            eq(tenantApiKeys.id, keyId),
-            eq(tenantApiKeys.tenantId, tenantId),
-            isNull(tenantApiKeys.revokedAt),
-          ),
-        )
-        .returning();
-      const row = updated ?? existing;
-      await this.audit.writeInTransaction(tx, {
-        tenantId,
-        actorUserId: principal.userId,
-        actorPersonId: principal.personId,
-        actorType: "USER",
-        action: "api_key.revoke",
-        resourceType: "tenant_api_key",
-        resourceId: row.id,
-        result: "SUCCESS",
-        riskLevel: "HIGH",
-        correlationId: principal.correlationId,
-        requestId: principal.requestId,
-        after: toPublicKey(row),
-      });
-      return toPublicKey(row);
-    }, principal.userId);
+    return withTenantTransaction(
+      this.db,
+      tenantId,
+      async (tx) => {
+        const existing = await tx.query.tenantApiKeys.findFirst({
+          where: and(eq(tenantApiKeys.id, keyId), eq(tenantApiKeys.tenantId, tenantId)),
+        });
+        if (!existing) {
+          throw new ForgeError("NOT_FOUND", "API key not found");
+        }
+        if (existing.revokedAt) {
+          return toPublicKey(existing);
+        }
+        const now = new Date();
+        const [updated] = await tx
+          .update(tenantApiKeys)
+          .set({ revokedAt: now, updatedAt: now })
+          .where(
+            and(
+              eq(tenantApiKeys.id, keyId),
+              eq(tenantApiKeys.tenantId, tenantId),
+              isNull(tenantApiKeys.revokedAt),
+            ),
+          )
+          .returning();
+        const row = updated ?? existing;
+        await this.audit.writeInTransaction(tx, {
+          tenantId,
+          actorUserId: principal.userId,
+          actorPersonId: principal.personId,
+          actorType: "USER",
+          action: "api_key.revoke",
+          resourceType: "tenant_api_key",
+          resourceId: row.id,
+          result: "SUCCESS",
+          riskLevel: "HIGH",
+          correlationId: principal.correlationId,
+          requestId: principal.requestId,
+          after: toPublicKey(row),
+        });
+        return toPublicKey(row);
+      },
+      principal.userId,
+    );
   }
 }

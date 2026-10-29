@@ -1,14 +1,14 @@
 # Data Classification Policy
 
-| Field | Value |
-| --- | --- |
-| Document ID | SOC2-POL-009 |
-| Version | 0.1 |
-| Status | APPROVED |
-| Owner | Security and Compliance Owner |
-| Approver | Jeremy Powell, Founder, Forge Public Safety |
-| Effective date | 2026-07-26 |
-| Next review date | 2027-07-26 |
+| Field            | Value                                       |
+| ---------------- | ------------------------------------------- |
+| Document ID      | SOC2-POL-009                                |
+| Version          | 0.1                                         |
+| Status           | APPROVED                                    |
+| Owner            | Security and Compliance Owner               |
+| Approver         | Jeremy Powell, Founder, Forge Public Safety |
+| Effective date   | 2026-07-26                                  |
+| Next review date | 2027-07-26                                  |
 
 ## Purpose
 
@@ -40,23 +40,24 @@ Applies to the Forge Public Safety system boundary documented in `docs/complianc
 10. Control owners maintain evidence per the control matrix and testing plan.
 
 ### Classification model
-| Class | Examples | Handling |
-| --- | --- | --- |
-| Public | Marketing site copy | No confidentiality controls beyond integrity |
-| Internal | Architecture docs, non-secret configs | Need-to-know; repo access controlled |
-| Confidential | Tenant operational RMS/NERIS data, Cognito identifiers | Encryption, RLS, least privilege |
-| Restricted | Secrets, KMS key material references, SSN if present | Secrets Manager/KMS; minimal access; no Git |
+
+| Class        | Examples                                               | Handling                                     |
+| ------------ | ------------------------------------------------------ | -------------------------------------------- |
+| Public       | Marketing site copy                                    | No confidentiality controls beyond integrity |
+| Internal     | Architecture docs, non-secret configs                  | Need-to-know; repo access controlled         |
+| Confidential | Tenant operational RMS/NERIS data, Cognito identifiers | Encryption, RLS, least privilege             |
+| Restricted   | Secrets, KMS key material references, SSN if present   | Secrets Manager/KMS; minimal access; no Git  |
 
 CloudTrail evidence exports are Confidential; secret values never enter Git evidence.
 
 ## Roles and responsibilities
 
-| Role | Responsibility |
-| --- | --- |
-| Jeremy Powell (Founder) | Policy approval; High/Critical risk acceptance; claims restriction enforcement |
-| Security and Compliance Owner | Operational ownership of this policy |
-| Engineering Lead | Ensure engineering practices implement requirements |
-| All personnel | Follow policy; report violations and incidents |
+| Role                          | Responsibility                                                                 |
+| ----------------------------- | ------------------------------------------------------------------------------ |
+| Jeremy Powell (Founder)       | Policy approval; High/Critical risk acceptance; claims restriction enforcement |
+| Security and Compliance Owner | Operational ownership of this policy                                           |
+| Engineering Lead              | Ensure engineering practices implement requirements                            |
+| All personnel                 | Follow policy; report violations and incidents                                 |
 
 ## Exceptions
 
@@ -82,7 +83,7 @@ See `docs/compliance/soc2/procedures/` for operating procedures mapped to access
 
 ## Revision history
 
-| Version | Date | Change |
-| --- | --- | --- |
-| 0.1 | 2026-07-26 | Phase 1 draft — PENDING_APPROVAL |
-| 0.1 | 2026-07-26 | Approved by Jeremy Powell |
+| Version | Date       | Change                           |
+| ------- | ---------- | -------------------------------- |
+| 0.1     | 2026-07-26 | Phase 1 draft — PENDING_APPROVAL |
+| 0.1     | 2026-07-26 | Approved by Jeremy Powell        |

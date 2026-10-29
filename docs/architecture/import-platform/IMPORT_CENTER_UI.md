@@ -2,10 +2,10 @@
 
 ## Surfaces
 
-| App | Route | Audience |
-| --- | --- | --- |
-| Creator Console | `/imports/` | Platform operators |
-| Tenant Admin | `/imports/` | Tenant administrators |
+| App             | Route       | Audience              |
+| --------------- | ----------- | --------------------- |
+| Creator Console | `/imports/` | Platform operators    |
+| Tenant Admin    | `/imports/` | Tenant administrators |
 
 Shared UI lives in `@forge/import-center`. Product apps (RMS/Academy) do not host the shared center.
 

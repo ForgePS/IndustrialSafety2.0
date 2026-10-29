@@ -6,13 +6,13 @@
 
 ## Implementation
 
-| Piece | Path |
-| --- | --- |
-| Framework | `apps/rms-web/src/fx/dashboard/` |
-| Flag | `fx.rms.dashboard.enabled` (default false) |
-| FX home | `DashboardPage` |
-| Legacy home | `LegacyHomeDashboard` |
-| Switch | `apps/rms-web/src/app/page.tsx` |
+| Piece       | Path                                       |
+| ----------- | ------------------------------------------ |
+| Framework   | `apps/rms-web/src/fx/dashboard/`           |
+| Flag        | `fx.rms.dashboard.enabled` (default false) |
+| FX home     | `DashboardPage`                            |
+| Legacy home | `LegacyHomeDashboard`                      |
+| Switch      | `apps/rms-web/src/app/page.tsx`            |
 
 ## Live widgets only
 

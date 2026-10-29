@@ -3,27 +3,13 @@
 import { useEffect, useState, type FormEvent } from "react";
 import { ApiError, apiGet, apiSend, useAuth } from "@forge/web-kit";
 import { ModuleUnavailable } from "@/components/module-unavailable";
-import {
-  HIGH_RISK_MODULE_CONFIG,
-  type Ind5HighRiskModule,
-} from "@/lib/high-risk-modules";
+import { useIndustrialModuleGate } from "@/hooks/use-industrial-module-gate";
+import { HIGH_RISK_MODULE_CONFIG, type Ind5HighRiskModule } from "@/lib/high-risk-modules";
 
 type ListResponse = {
   items: Array<Record<string, unknown>>;
   page: number;
   pageSize: number;
-};
-
-type BootstrapModule = {
-  code: string;
-  awsEnabled: boolean;
-  available: boolean;
-  migrationStatus: string;
-};
-
-type Bootstrap = {
-  industrialEnabled: boolean;
-  modules: BootstrapModule[];
 };
 
 export function HighRiskWorkspace({
@@ -39,8 +25,11 @@ export function HighRiskWorkspace({
   const canView = permissions.has(cfg.viewPerm) || permissions.has("industrial.admin");
   const canManage = permissions.has(cfg.managePerm) || permissions.has("industrial.admin");
   const canApprove = permissions.has(cfg.approvePerm) || permissions.has("industrial.admin");
+  const { modEntry, explicitlyDisabled, awsReady } = useIndustrialModuleGate({
+    moduleCode: cfg.code,
+    canView,
+  });
 
-  const [bootstrap, setBootstrap] = useState<Bootstrap | null>(null);
   const [items, setItems] = useState<Array<Record<string, unknown>>>([]);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [detail, setDetail] = useState<Record<string, unknown> | null>(null);
@@ -53,27 +42,6 @@ export function HighRiskWorkspace({
   const [title, setTitle] = useState("");
   const [locationText, setLocationText] = useState("");
   const [workerName, setWorkerName] = useState("");
-
-  const modEntry = bootstrap?.modules.find((m) => m.code === cfg.code);
-  const awsReady =
-    Boolean(bootstrap?.industrialEnabled) && Boolean(modEntry?.awsEnabled) && canView;
-
-  useEffect(() => {
-    let cancelled = false;
-    (async () => {
-      try {
-        const boot = await apiGet<Bootstrap>("/api/v1/industrial/bootstrap");
-        if (!cancelled) setBootstrap(boot);
-      } catch (e) {
-        if (!cancelled) {
-          setError(e instanceof ApiError ? e.message : "Failed to load module bootstrap");
-        }
-      }
-    })();
-    return () => {
-      cancelled = true;
-    };
-  }, []);
 
   async function loadList(search = q, st = status, cat = category) {
     setLoading(true);
@@ -128,21 +96,12 @@ export function HighRiskWorkspace({
     );
   }
 
-  if (bootstrap && !awsReady) {
+  if (explicitlyDisabled) {
     return (
       <ModuleUnavailable
         moduleName={moduleName}
         status={modEntry?.migrationStatus ?? "MIGRATION_IN_PROGRESS"}
       />
-    );
-  }
-
-  if (!bootstrap) {
-    return (
-      <section className="ind-state" role="status" aria-live="polite">
-        <h1>{moduleName}</h1>
-        <p>Checking module availability…</p>
-      </section>
     );
   }
 
@@ -174,11 +133,7 @@ export function HighRiskWorkspace({
   async function transition(action: "submit" | "approve" | "close" | "archive") {
     if (!selectedId) return;
     const allowed =
-      action === "approve"
-        ? canApprove
-        : action === "close"
-          ? canManage || canApprove
-          : canManage;
+      action === "approve" ? canApprove : action === "close" ? canManage || canApprove : canManage;
     if (!allowed) return;
     setError(null);
     try {
@@ -270,9 +225,7 @@ export function HighRiskWorkspace({
                   <td>
                     <span data-status={String(row.status ?? "")}>{String(row.status ?? "—")}</span>
                   </td>
-                  <td>
-                    {row.updatedAt ? new Date(String(row.updatedAt)).toLocaleString() : "—"}
-                  </td>
+                  <td>{row.updatedAt ? new Date(String(row.updatedAt)).toLocaleString() : "—"}</td>
                   <td>
                     <button type="button" onClick={() => void loadDetail(String(row.id))}>
                       Open
@@ -316,7 +269,8 @@ export function HighRiskWorkspace({
           </div>
           {Array.isArray(detail.assignments) && (detail.assignments as unknown[]).length > 0 ? (
             <p className="ind-muted">
-              Assignments: {(detail.assignments as Array<{ roleKey?: string }>).map((a) => a.roleKey).join(", ")}
+              Assignments:{" "}
+              {(detail.assignments as Array<{ roleKey?: string }>).map((a) => a.roleKey).join(", ")}
             </p>
           ) : null}
           {Array.isArray(detail.readings) && (detail.readings as unknown[]).length > 0 ? (
@@ -328,7 +282,11 @@ export function HighRiskWorkspace({
       ) : null}
 
       {canManage ? (
-        <form className="ind-ops-create" onSubmit={(e) => void onCreate(e)} aria-label="Create record">
+        <form
+          className="ind-ops-create"
+          onSubmit={(e) => void onCreate(e)}
+          aria-label="Create record"
+        >
           <h2>Create</h2>
           <label>
             Title
@@ -373,8 +331,8 @@ export function HighRiskWorkspace({
       )}
 
       <p className="ind-muted" role="note">
-        Field UX targets tablet completion. Hosted Playwright remains pending nonproduction web hosting.
-        Optional Equipment/LOTO links are validated server-side when provided.
+        Field UX targets tablet completion. Hosted Playwright remains pending nonproduction web
+        hosting. Optional Equipment/LOTO links are validated server-side when provided.
       </p>
     </section>
   );

@@ -2,10 +2,10 @@
 
 ## Automated
 
-| Suite | Coverage |
-| --- | --- |
+| Suite                  | Coverage                          |
+| ---------------------- | --------------------------------- |
 | `module-flags.test.ts` | Review module ∧ foundation matrix |
-| E2E scaffold | Module off → legacy queue |
+| E2E scaffold           | Module off → legacy queue         |
 
 ## Manual
 

@@ -24,24 +24,15 @@ export type FxFieldChromeProps = {
 };
 
 export function FxField(props: FxFieldChromeProps) {
-  const {
-    id,
-    label,
-    description,
-    helpText,
-    hint,
-    required,
-    error,
-    warning,
-    success,
-    children,
-  } = props;
+  const { id, label, description, helpText, hint, required, error, warning, success, children } =
+    props;
 
   const hintId = hint || description || helpText ? `${id}-hint` : undefined;
   const errorId = error ? `${id}-error` : undefined;
   const warningId = !error && warning ? `${id}-warning` : undefined;
   const successId = !error && !warning && success ? `${id}-success` : undefined;
-  const describedBy = [hintId, errorId, warningId, successId].filter(Boolean).join(" ") || undefined;
+  const describedBy =
+    [hintId, errorId, warningId, successId].filter(Boolean).join(" ") || undefined;
 
   return (
     <div
@@ -90,8 +81,7 @@ export function fieldAriaProps(props: {
   warning?: string;
   success?: string;
 }) {
-  const hintId =
-    props.hint || props.description || props.helpText ? `${props.id}-hint` : undefined;
+  const hintId = props.hint || props.description || props.helpText ? `${props.id}-hint` : undefined;
   const errorId = props.error ? `${props.id}-error` : undefined;
   const warningId = !props.error && props.warning ? `${props.id}-warning` : undefined;
   const successId =

@@ -8,4 +8,5 @@ export const PRODUCTION_PRE_CUTOVER_SPA_ORIGINS = [
   "https://d2epagkvbhk1s0.cloudfront.net",
   "https://dw797mr8rhedy.cloudfront.net",
   "https://d1n0e5wvjwbpdf.cloudfront.net",
+  "https://d2qv0f0hojgvqo.cloudfront.net",
 ] as const;

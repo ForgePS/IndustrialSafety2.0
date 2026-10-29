@@ -1,1 +1,5 @@
-export { buildPrimaryNavigation, buildSecondaryNavigation, filterNavigationItems } from "./navigation.adapter";
+export {
+  buildPrimaryNavigation,
+  buildSecondaryNavigation,
+  filterNavigationItems,
+} from "./navigation.adapter";

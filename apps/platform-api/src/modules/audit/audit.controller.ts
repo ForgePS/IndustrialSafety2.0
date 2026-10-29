@@ -20,11 +20,15 @@ export class AuditController {
     @Param("tenantId") tenantId: string,
     @Query("page") pageRaw: string | undefined,
     @Query("pageSize") pageSizeRaw: string | undefined,
+    @Query("actorUserId") actorUserIdRaw: string | undefined,
     @Req() req: RequestWithIds,
   ) {
     const page = Math.max(1, Number(pageRaw ?? 1) || 1);
     const pageSize = Math.min(200, Math.max(1, Number(pageSizeRaw ?? 25) || 25));
-    const { rows, total } = await this.audit.list(tenantId, page, pageSize);
+    const actorUserId = typeof actorUserIdRaw === "string" ? actorUserIdRaw.trim() : "";
+    const { rows, total } = await this.audit.list(tenantId, page, pageSize, {
+      ...(actorUserId ? { actorUserId } : {}),
+    });
     return ok(rows, getRequestIds(req), {
       page,
       pageSize,

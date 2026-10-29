@@ -2,6 +2,10 @@
  * Add producers-rice-mill.forgepublicsafety.com alias to Industrial CF (dark).
  * Uses existing *.forgepublicsafety.com ACM cert. Does not create DNS records
  * (no Route53 hosted zone in this account).
+ *
+ * FIS-L02: Keep this legacy alias so existing bookmarks/links resolve. Industrial
+ * CloudFront Function 301s this host to producersrice.forgepublicsafety.com and
+ * strips OAuth/session query params. Do not delete the alias.
  */
 import { spawnSync } from "node:child_process";
 import fs from "node:fs";
@@ -9,9 +13,7 @@ import path from "node:path";
 
 const DIST_ID = "EXIC8HBMJ4I2Z";
 const NEW_ALIAS = "producers-rice-mill.forgepublicsafety.com";
-const EVID = path.resolve(
-  "docs/program/industrial-migration/ind-11/evidence/p2/01-tenant-infra",
-);
+const EVID = path.resolve("docs/program/industrial-migration/ind-11/evidence/p2/01-tenant-infra");
 
 function awsJson(args) {
   const r = spawnSync("aws", args, { encoding: "utf8", shell: true });
@@ -23,14 +25,7 @@ function awsJson(args) {
 
 fs.mkdirSync(EVID, { recursive: true });
 
-const got = awsJson([
-  "cloudfront",
-  "get-distribution-config",
-  "--id",
-  DIST_ID,
-  "--output",
-  "json",
-]);
+const got = awsJson(["cloudfront", "get-distribution-config", "--id", DIST_ID, "--output", "json"]);
 const etag = got.ETag;
 const cfg = got.DistributionConfig;
 fs.writeFileSync(
@@ -77,8 +72,7 @@ const dnsNote = {
   certificateArn:
     "arn:aws:acm:us-east-1:511343547817:certificate/ca267baa-304e-4ffd-be51-7350abab0c3f",
   certificateCovers: ["forgepublicsafety.com", "*.forgepublicsafety.com"],
-  note:
-    "No Route53 hosted zone in account 511343547817. Create CNAME at DNS owner: producers-rice-mill.forgepublicsafety.com -> d2ed3566n8x2gi.cloudfront.net (or alias record). Nested *.industrial.* hostname abandoned for TLS wildcard limits.",
+  note: "No Route53 hosted zone in account 511343547817. Create CNAME at DNS owner: producers-rice-mill.forgepublicsafety.com -> d2ed3566n8x2gi.cloudfront.net (or alias record). Nested *.industrial.* hostname abandoned for TLS wildcard limits.",
   status: "CF_ALIAS_DARK_DNS_PENDING",
 };
 fs.writeFileSync(

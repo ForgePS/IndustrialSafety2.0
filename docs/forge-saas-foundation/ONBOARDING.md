@@ -13,16 +13,16 @@ ADR-027 onboarding sessions provision tenants that start in `PROVISIONING` and b
 
 Default steps live in `@forge/contracts` (`ONBOARDING_STEPS` / `DEFAULT_ONBOARDING_STEPS`). Templates may set `onboarding.skipStepKeys` for optional steps; `CREATE_TENANT` and `ACTIVATE_TENANT` cannot be skipped (`resolveOnboardingSteps`).
 
-| Area | How it is covered |
-| --- | --- |
-| Tenant | Created at session start as `PROVISIONING` |
-| Owner / admin | `CREATE_PRIMARY_ADMINISTRATOR` + `SEND_INVITATION` |
-| Roles | Starter template `ensureStarterRoles` |
-| Settings / security | Review step + security namespace settings |
-| Products / modules | Entitlement steps |
-| Facility | Auto-created at activate if none exist (`default` / Primary Facility) |
-| Billing | `CONFIGURE_SUBSCRIPTION` (or waiver) |
-| Notification defaults | Deferred (BACKLOG) |
+| Area                  | How it is covered                                                     |
+| --------------------- | --------------------------------------------------------------------- |
+| Tenant                | Created at session start as `PROVISIONING`                            |
+| Owner / admin         | `CREATE_PRIMARY_ADMINISTRATOR` + `SEND_INVITATION`                    |
+| Roles                 | Starter template `ensureStarterRoles`                                 |
+| Settings / security   | Review step + security namespace settings                             |
+| Products / modules    | Entitlement steps                                                     |
+| Facility              | Auto-created at activate if none exist (`default` / Primary Facility) |
+| Billing               | `CONFIGURE_SUBSCRIPTION` (or waiver)                                  |
+| Notification defaults | Deferred (BACKLOG)                                                    |
 
 ## Templates
 

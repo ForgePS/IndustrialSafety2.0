@@ -243,8 +243,7 @@ export class ImportSecurityService {
   ) {
     const tenantId = this.requireTenant(principal);
     const input = downloadArtifactSchema.parse(body ?? {});
-    const allowUnmask =
-      Boolean(input.privileged) && hasPermission(principal, "import.sensitive");
+    const allowUnmask = Boolean(input.privileged) && hasPermission(principal, "import.sensitive");
 
     return withTenantTransaction(
       this.db,

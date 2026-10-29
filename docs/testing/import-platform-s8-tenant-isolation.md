@@ -6,10 +6,10 @@
 
 ## Verified
 
-| Check | Status | Evidence |
-| --- | --- | --- |
-| FORCE RLS + cross-tenant deny (DB verify suite) | **VERIFIED** 45/45 | Post-deploy ECS task `1ddecfd893184a6f929aed5e28c77a04` |
-| Cross-tenant reads/writes / bypass / metadata leakage counters | **0** (suite totals) | Same run |
+| Check                                                          | Status               | Evidence                                                |
+| -------------------------------------------------------------- | -------------------- | ------------------------------------------------------- |
+| FORCE RLS + cross-tenant deny (DB verify suite)                | **VERIFIED** 45/45   | Post-deploy ECS task `1ddecfd893184a6f929aed5e28c77a04` |
+| Cross-tenant reads/writes / bypass / metadata leakage counters | **0** (suite totals) | Same run                                                |
 
 ### Evidence file note (`s8-rls-verify.json`)
 
@@ -17,11 +17,11 @@ The checked-in JSON may still show an earlier task ARN (`11803659bc6045b5bff1c09
 
 ## Partial / not verified
 
-| Check | Status |
-| --- | --- |
+| Check                                                 | Status                                                                                         |
+| ----------------------------------------------------- | ---------------------------------------------------------------------------------------------- |
 | Full API endpoint isolation matrix beyond RLS harness | **PARTIALLY_VERIFIED** (prior S2 e2e lineage + RLS) — live S8 endpoint matrix **NOT_VERIFIED** |
-| Browser tenant-switch cache clearing | **NOT_VERIFIED** (Playwright suite added; run failed) |
-| Cross-tenant privileged download | **NOT_VERIFIED** |
+| Browser tenant-switch cache clearing                  | **NOT_VERIFIED** (Playwright suite added; run failed)                                          |
+| Cross-tenant privileged download                      | **NOT_VERIFIED**                                                                               |
 
 ## Deployed baseline
 
@@ -29,6 +29,6 @@ Tag `import-s8-20260729182259`, API `:40`, worker `:25`, migration `0027`.
 
 ## Related
 
-- `docs/security/import-platform-tenant-isolation-report.md`  
-- Gap GAP-030 / GAP-031  
+- `docs/security/import-platform-tenant-isolation-report.md`
+- Gap GAP-030 / GAP-031
 - LIM-IMP-012

@@ -4,17 +4,17 @@
 
 ## Unit
 
-| Suite | Passed | Failed |
-| --- | --- | --- |
-| `@forge/imports` (incl. S2 control plane) | 14 | 0 |
-| `@forge/errors` | 1 | 0 |
-| `@forge/events` | 3 | 0 |
+| Suite                                     | Passed | Failed |
+| ----------------------------------------- | ------ | ------ |
+| `@forge/imports` (incl. S2 control plane) | 14     | 0      |
+| `@forge/errors`                           | 1      | 0      |
+| `@forge/events`                           | 3      | 0      |
 
 ## Integration / API e2e (local)
 
-| Suite | Passed | Failed | Skipped |
-| --- | --- | --- | --- |
-| `imports.e2e.test.ts` | 1 (covers create/list/map/lifecycle/profile/template/idempotency/isolation/authz/entitlement/health) | 0 | 0 |
+| Suite                 | Passed                                                                                               | Failed | Skipped |
+| --------------------- | ---------------------------------------------------------------------------------------------------- | ------ | ------- |
+| `imports.e2e.test.ts` | 1 (covers create/list/map/lifecycle/profile/template/idempotency/isolation/authz/entitlement/health) | 0      | 0       |
 
 Covered scenarios:
 

@@ -16,6 +16,7 @@ import { fileURLToPath, pathToFileURL } from "node:url";
 import postgres from "postgres";
 import { createId } from "./ids.js";
 import * as schema from "./schema.js";
+import { seedLegalAcknowledgments } from "./seed-legal-acknowledgments.js";
 import {
   featureDefinitions,
   organizationTypes,
@@ -134,6 +135,20 @@ const ROLE_TEMPLATES = [
       "import.template.manage",
       "import.error.reprocess",
       "import.sensitive",
+      // Creator support for customer Print Manager / Printer Bridge
+      "industrial.printer.view",
+      "industrial.printer.print",
+      "industrial.printer.quick_print",
+      "industrial.printer.reprint",
+      "industrial.printer.cancel",
+      "industrial.printer.manage",
+      "industrial.printer.manage_defaults",
+      "industrial.printer.manage_media",
+      "industrial.printer.manage_templates",
+      "industrial.printer.manage_bridge",
+      "industrial.printer.pair_bluetooth",
+      "industrial.printer.view_logs",
+      "industrial.printer.run_diagnostics",
     ],
   },
   {
@@ -157,6 +172,10 @@ const ROLE_TEMPLATES = [
       "import.execute",
       "import.rollback",
       "import.error.reprocess",
+      "industrial.printer.view",
+      "industrial.printer.view_logs",
+      "industrial.printer.manage_bridge",
+      "industrial.printer.run_diagnostics",
     ],
   },
   {
@@ -395,7 +414,8 @@ const FEATURES = [
   {
     key: "platform.cad.adapter_management.enabled",
     name: "CAD adapter management",
-    description: "Enable Creator Console CAD adapter and mapping template management. Default false.",
+    description:
+      "Enable Creator Console CAD adapter and mapping template management. Default false.",
     valueType: "BOOLEAN",
     defaultValueJson: false as const,
   },
@@ -418,6 +438,48 @@ const FEATURES = [
     key: "ai.narrative.industrial.enabled",
     name: "AI Narrative for Forge Industrial",
     description: "Enable AI narratives for Industrial records. Default false.",
+    valueType: "BOOLEAN",
+    defaultValueJson: false as const,
+  },
+  {
+    key: "industrial.legalAcknowledgments.enabled",
+    name: "Industrial legal acknowledgments",
+    description: "Enable legal acknowledgment subsystem for Forge Industrial Safety.",
+    valueType: "BOOLEAN",
+    defaultValueJson: true as const,
+  },
+  {
+    key: "industrial.legalAcknowledgments.loginGate.enabled",
+    name: "Industrial legal acknowledgment login gate",
+    description: "Require outstanding legal acknowledgments before Industrial app access.",
+    valueType: "BOOLEAN",
+    defaultValueJson: false as const,
+  },
+  {
+    key: "industrial.legalAcknowledgments.transactionAttestations.enabled",
+    name: "Industrial transaction attestations",
+    description: "Enable transaction-specific electronic attestations.",
+    valueType: "BOOLEAN",
+    defaultValueJson: true as const,
+  },
+  {
+    key: "industrial.legalAcknowledgments.adminReporting.enabled",
+    name: "Industrial legal acknowledgment admin reporting",
+    description: "Enable admin compliance reporting and CSV export for acknowledgments.",
+    valueType: "BOOLEAN",
+    defaultValueJson: true as const,
+  },
+  {
+    key: "rms.legalAcknowledgments.enabled",
+    name: "RMS legal acknowledgments",
+    description: "Enable legal acknowledgments for Forge RMS. Default false.",
+    valueType: "BOOLEAN",
+    defaultValueJson: false as const,
+  },
+  {
+    key: "academy.legalAcknowledgments.enabled",
+    name: "Academy legal acknowledgments",
+    description: "Enable legal acknowledgments for Forge Academy. Default false.",
     valueType: "BOOLEAN",
     defaultValueJson: false as const,
   },
@@ -576,6 +638,91 @@ const FEATURES = [
     valueType: "BOOLEAN",
     defaultValueJson: false as const,
   },
+  {
+    key: "forge.printing.enabled",
+    name: "Forge Printing",
+    description:
+      "Master switch for Forge Print Manager surfaces. Missing override defaults ON for AVAILABLE modules.",
+    valueType: "BOOLEAN",
+    defaultValueJson: true as const,
+  },
+  {
+    key: "forge.printing.print_manager.enabled",
+    name: "Print Manager hub",
+    description: "Enable Print Manager navigation and hub in Industrial.",
+    valueType: "BOOLEAN",
+    defaultValueJson: true as const,
+  },
+  {
+    key: "forge.printing.bridge.enabled",
+    name: "Print Bridge",
+    description: "Enable Windows Print Bridge registration and job claim.",
+    valueType: "BOOLEAN",
+    defaultValueJson: true as const,
+  },
+  {
+    key: "forge.printing.bluetooth.enabled",
+    name: "Bluetooth printing",
+    description: "Enable Bluetooth printer paths.",
+    valueType: "BOOLEAN",
+    defaultValueJson: true as const,
+  },
+  {
+    key: "forge.printing.directBluetooth.enabled",
+    name: "Direct Bluetooth printing",
+    description: "Enable direct (browser) Bluetooth Brady print path.",
+    valueType: "BOOLEAN",
+    defaultValueJson: true as const,
+  },
+  {
+    key: "forge.printing.batch.enabled",
+    name: "Batch printing",
+    description: "Enable multi-label batch print jobs.",
+    valueType: "BOOLEAN",
+    defaultValueJson: true as const,
+  },
+  {
+    key: "forge.printing.failover.enabled",
+    name: "Print failover",
+    description: "Enable printer group failover routing.",
+    valueType: "BOOLEAN",
+    defaultValueJson: true as const,
+  },
+  {
+    key: "forge.printing.analytics.enabled",
+    name: "Print analytics",
+    description: "Enable Print Manager analytics tab and APIs.",
+    valueType: "BOOLEAN",
+    defaultValueJson: true as const,
+  },
+  {
+    key: "forge.printing.supplies.enabled",
+    name: "Print supplies",
+    description: "Enable print supply tracking and alerts.",
+    valueType: "BOOLEAN",
+    defaultValueJson: true as const,
+  },
+  {
+    key: "industrial.module.print_manager.enabled",
+    name: "Industrial module — Print Manager",
+    description: "Module nav flag for Print Manager (alongside module entitlement).",
+    valueType: "BOOLEAN",
+    defaultValueJson: true as const,
+  },
+  {
+    key: "industrial.module.print_queue.enabled",
+    name: "Industrial module — Print Queue",
+    description: "Module nav flag for Print Queue.",
+    valueType: "BOOLEAN",
+    defaultValueJson: true as const,
+  },
+  {
+    key: "industrial.module.print_history.enabled",
+    name: "Industrial module — Print History",
+    description: "Module nav flag for Print History.",
+    valueType: "BOOLEAN",
+    defaultValueJson: true as const,
+  },
 ] as const;
 
 function permissionMeta(code: string): {
@@ -644,9 +791,7 @@ export async function seedPlatformData(db: SeedDatabase): Promise<void> {
       const existing = await db
         .select({ id: platformModules.id })
         .from(platformModules)
-        .where(
-          and(eq(platformModules.productId, productId), eq(platformModules.code, mod.code)),
-        )
+        .where(and(eq(platformModules.productId, productId), eq(platformModules.code, mod.code)))
         .limit(1);
       if (existing.length === 0) {
         await db.insert(platformModules).values({
@@ -801,6 +946,8 @@ export async function seedPlatformData(db: SeedDatabase): Promise<void> {
         .where(eq(featureDefinitions.id, existing[0]!.id));
     }
   }
+
+  await seedLegalAcknowledgments(db);
 }
 
 async function main(): Promise<void> {

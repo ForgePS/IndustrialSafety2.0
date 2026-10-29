@@ -33,6 +33,7 @@ export interface ComputeStackProps extends cdk.StackProps {
   cadApplicationQueue: sqs.IQueue;
   cadPollingQueue: sqs.IQueue;
   cadRetentionQueue: sqs.IQueue;
+  reportingSchedulesQueue: sqs.IQueue;
   eventBus: events.IEventBus;
   documentsBucket: s3.IBucket;
   importsBucket: s3.IBucket;
@@ -43,6 +44,8 @@ export interface ComputeStackProps extends cdk.StackProps {
   cognitoClientIds: string;
   cognitoDomain: string;
   browserOrigins: string[];
+  /** Host suffixes for per-tenant vanity https origins (e.g. .forgepublicsafety.com). */
+  browserOriginSuffixes?: string[];
   publicRmsUrl: string;
   publicCreatorUrl: string;
 }
@@ -97,6 +100,7 @@ export class ComputeStack extends cdk.Stack {
       cadApplicationQueue: props.cadApplicationQueue,
       cadPollingQueue: props.cadPollingQueue,
       cadRetentionQueue: props.cadRetentionQueue,
+      reportingSchedulesQueue: props.reportingSchedulesQueue,
       eventBus: props.eventBus,
       documentsBucket: props.documentsBucket,
       importsBucket: props.importsBucket,
@@ -108,6 +112,7 @@ export class ComputeStack extends cdk.Stack {
       cognitoClientIds: props.cognitoClientIds,
       cognitoDomain: props.cognitoDomain,
       browserOrigins: props.browserOrigins,
+      browserOriginSuffixes: props.browserOriginSuffixes,
       publicRmsUrl: props.publicRmsUrl,
       publicCreatorUrl: props.publicCreatorUrl,
     });

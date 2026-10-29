@@ -14,7 +14,11 @@ export const DEFAULT_RETRY_POLICY: RetryPolicy = {
   jitterRatio: 0.2,
 };
 
-export function shouldRetryFailure(failureClass: FailureClass, attempt: number, policy = DEFAULT_RETRY_POLICY): boolean {
+export function shouldRetryFailure(
+  failureClass: FailureClass,
+  attempt: number,
+  policy = DEFAULT_RETRY_POLICY,
+): boolean {
   if (failureClass !== "RETRIABLE") return false;
   return attempt < policy.maxAttempts;
 }
@@ -40,7 +44,12 @@ export function classifyErrorMessage(message: string): FailureClass {
   ) {
     return "RETRIABLE";
   }
-  if (lower.includes("tenant") || lower.includes("rls") || lower.includes("unauthorized") || lower.includes("tamper")) {
+  if (
+    lower.includes("tenant") ||
+    lower.includes("rls") ||
+    lower.includes("unauthorized") ||
+    lower.includes("tamper")
+  ) {
     return "SECURITY_FAILURE";
   }
   if (lower.includes("adapter") || lower.includes("mapping") || lower.includes("corrupt")) {

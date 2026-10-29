@@ -1,10 +1,7 @@
 "use client";
 
 import { Suspense, useCallback, useEffect, useMemo, useState } from "react";
-import {
-  FORGE_PLATFORMS,
-  catalogAvailabilityLabel,
-} from "@forge/contracts";
+import { FORGE_PLATFORMS, catalogAvailabilityLabel } from "@forge/contracts";
 import {
   EmptyState,
   ErrorState,
@@ -15,6 +12,7 @@ import {
   StatusBadge,
 } from "@forge/ui";
 import { PlatformPageGate } from "@/components/platform-page-gate";
+import { CatalogModuleManager } from "@/components/catalog-module-manager";
 import { apiGet } from "@/lib/api";
 import styles from "../page.module.css";
 import catalogStyles from "./modules.module.css";
@@ -123,8 +121,10 @@ function ModulesInner() {
     <section className={styles.page}>
       <ForgePageHeader
         title="Module Catalog"
-        subtitle="Customer modules grouped by Forge platform. Core and internal tools stay hidden."
+        subtitle="Customer modules grouped by Forge platform. Use catalog management to add or edit module records."
       />
+
+      <CatalogModuleManager />
 
       {error ? <ErrorState title="Unable to load modules" description={error} /> : null}
 
@@ -208,9 +208,7 @@ function ModulesInner() {
                       <button
                         type="button"
                         className="forge-btn forge-btn--secondary"
-                        onClick={() =>
-                          setAdvancedId((cur) => (cur === row.id ? null : row.id))
-                        }
+                        onClick={() => setAdvancedId((cur) => (cur === row.id ? null : row.id))}
                       >
                         {advancedId === row.id ? "Hide details" : "Advanced details"}
                       </button>

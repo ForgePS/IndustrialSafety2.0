@@ -1,4 +1,4 @@
-/** Static Sneat Free CSS (vendored under /public/sneat). */
+/** Static Sneat CSS (Pro core + Free theme shell, dark from logistics demo). */
 export function SneatHeadAssets() {
   return (
     <>
@@ -11,6 +11,7 @@ export function SneatHeadAssets() {
       <link rel="stylesheet" href="/sneat/fonts/boxicons.css" />
       <link rel="stylesheet" href="/sneat/css/core.css" />
       <link rel="stylesheet" href="/sneat/css/theme-default.css" />
+      <link rel="stylesheet" href="/sneat/css/theme-default-dark.css" />
       <link rel="stylesheet" href="/sneat/css/demo.css" />
       <link rel="stylesheet" href="/sneat/css/pages/page-auth.css" />
     </>

@@ -1,7 +1,11 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { pickThemeLogoUrl } from "@forge/contracts";
 import { useAuth } from "@forge/web-kit";
+import { useIndustrialThemeMode } from "@/components/theme-mode-toggle";
+import { sameOriginBrandingLogoUrl } from "@/lib/branding-logo-url";
+import { vanityLoginBrandingForHost } from "@/lib/vanity-login-branding";
 import { useTenantBranding, type TenantBranding } from "./use-tenant-branding";
 
 export type ResolvedLoginBranding = {
@@ -14,20 +18,38 @@ export type ResolvedLoginBranding = {
 };
 
 const DEFAULT_LOGIN: ResolvedLoginBranding = {
-  brandLabel: "Forge Industrial",
+  brandLabel: "Forge Industrial Safety",
   headline: "Welcome to Forge Industrial Safety",
   body: "Sign in is required to continue.",
   statusText: "Unauthenticated",
   buttonLabel: "Sign in",
-  logoUrl: "",
+  logoUrl: "/branding/forge-industrial-safety.png",
 };
 
-function resolveLoginBranding(branding: TenantBranding | null | undefined): ResolvedLoginBranding {
+function resolveLoginBranding(
+  branding: TenantBranding | null | undefined,
+  theme: "light" | "dark",
+): ResolvedLoginBranding {
   const login = branding?.login;
   const product = branding?.productDisplayName?.trim();
   const legacyHeadline = product ? `Welcome to ${product}` : DEFAULT_LOGIN.headline;
+  const logoUrl = pickThemeLogoUrl({
+    theme,
+    ...(login?.logoUrl || branding?.logoUrl
+      ? {
+          logoLightUrl: sameOriginBrandingLogoUrl(login?.logoUrl || branding?.logoUrl) || null,
+        }
+      : {}),
+    ...(login?.logoDarkUrl || branding?.logoDarkUrl
+      ? {
+          logoDarkUrl:
+            sameOriginBrandingLogoUrl(login?.logoDarkUrl || branding?.logoDarkUrl) || null,
+        }
+      : {}),
+    fallbackUrl: DEFAULT_LOGIN.logoUrl,
+  });
   return {
-    logoUrl: login?.logoUrl?.trim() || branding?.logoUrl?.trim() || DEFAULT_LOGIN.logoUrl,
+    logoUrl,
     brandLabel:
       login?.brandLabel?.trim() || branding?.loginShortName?.trim() || DEFAULT_LOGIN.brandLabel,
     headline: login?.headline?.trim() || legacyHeadline,
@@ -37,12 +59,15 @@ function resolveLoginBranding(branding: TenantBranding | null | undefined): Reso
   };
 }
 
+/** Public API shape — no tenantId (FIS-L01). */
 type PublicLoginBrandingResponse = {
-  tenantId: string;
   host: string;
+  displayName?: string;
+  brandLabel?: string;
   logoUrl?: string;
+  logoDarkUrl?: string;
   primaryColor?: string;
-  login: ResolvedLoginBranding;
+  login: ResolvedLoginBranding & { logoDarkUrl?: string };
 };
 
 type ApiEnvelope<T> = { data: T };
@@ -53,13 +78,16 @@ function apiBase(): string {
 
 /**
  * Sign-in / gate branding: host lookup pre-auth, authenticated tenant branding post-auth.
- * Also exposes hostTenantId so vanity hosts can prefer that tenant after Cognito sign-in.
- * Kept browser-local (no @forge/configuration) so Next static export stays free of node:crypto.
+ * hostTenantId comes from bundled vanity maps only (not the public API) so vanity hosts
+ * can prefer that tenant after Cognito sign-in without disclosing UUIDs pre-auth.
  */
 export function useLoginBranding() {
   const { me } = useAuth();
+  const themeMode = useIndustrialThemeMode();
   const tenant = useTenantBranding();
-  const [hostLogin, setHostLogin] = useState<ResolvedLoginBranding | null>(null);
+  const [hostLogin, setHostLogin] = useState<
+    (ResolvedLoginBranding & { logoDarkUrl?: string }) | null
+  >(null);
   const [hostPrimaryColor, setHostPrimaryColor] = useState("");
   const [hostTenantId, setHostTenantId] = useState<string | null>(null);
   const [loadingHost, setLoadingHost] = useState(true);
@@ -68,37 +96,90 @@ export function useLoginBranding() {
     if (typeof window === "undefined") return;
     let cancelled = false;
     const host = window.location.hostname;
+    const bundled = vanityLoginBrandingForHost(host);
+    // Prefer bundled tenant id for post-auth switch; never read tenantId from public API.
+    if (bundled?.tenantId) {
+      setHostTenantId(bundled.tenantId);
+    }
+
+    const lower = host.toLowerCase();
+    const skipRemote =
+      lower.endsWith(".cloudfront.net") ||
+      lower === "localhost" ||
+      lower === "127.0.0.1" ||
+      lower.endsWith(".local");
+    if (skipRemote) {
+      if (bundled) {
+        setHostLogin(bundled.login);
+        setHostPrimaryColor("");
+      }
+      setLoadingHost(false);
+      return;
+    }
+
+    const controller = new AbortController();
+    const timeout = window.setTimeout(() => {
+      controller.abort();
+      if (!cancelled) setLoadingHost(false);
+    }, 2500);
+
     void (async () => {
       setLoadingHost(true);
       try {
         const res = await fetch(
           `${apiBase()}/api/v1/public/login-branding?host=${encodeURIComponent(host)}`,
-          { credentials: "omit" },
+          { credentials: "omit", signal: controller.signal },
         );
         if (!res.ok) {
           if (!cancelled) {
-            setHostLogin(null);
-            setHostTenantId(null);
-            setHostPrimaryColor("");
+            if (bundled) {
+              setHostLogin(bundled.login);
+              setHostPrimaryColor("");
+            } else {
+              setHostLogin(null);
+              setHostTenantId(null);
+              setHostPrimaryColor("");
+            }
           }
           return;
         }
         const json = (await res.json()) as ApiEnvelope<PublicLoginBrandingResponse>;
         if (cancelled) return;
-        setHostLogin(json.data.login);
-        setHostTenantId(json.data.tenantId?.trim() || null);
+        const nextLogin: ResolvedLoginBranding & { logoDarkUrl?: string } = {
+          ...json.data.login,
+          logoUrl:
+            sameOriginBrandingLogoUrl(json.data.login.logoUrl) ||
+            bundled?.login.logoUrl ||
+            json.data.login.logoUrl,
+        };
+        const darkRaw = json.data.logoDarkUrl || json.data.login.logoDarkUrl;
+        const darkUrl =
+          (darkRaw ? sameOriginBrandingLogoUrl(darkRaw) : "") || bundled?.login.logoDarkUrl || "";
+        if (darkUrl) nextLogin.logoDarkUrl = darkUrl;
+        setHostLogin(nextLogin);
         setHostPrimaryColor(json.data.primaryColor?.trim() || "");
-      } catch {
-        if (!cancelled) {
-          setHostLogin(null);
+        if (!bundled?.tenantId) {
           setHostTenantId(null);
         }
+      } catch {
+        if (!cancelled) {
+          if (bundled) {
+            setHostLogin(bundled.login);
+            setHostPrimaryColor("");
+          } else {
+            setHostLogin(null);
+            setHostTenantId(null);
+          }
+        }
       } finally {
+        window.clearTimeout(timeout);
         if (!cancelled) setLoadingHost(false);
       }
     })();
     return () => {
       cancelled = true;
+      controller.abort();
+      window.clearTimeout(timeout);
     };
   }, []);
 
@@ -107,13 +188,24 @@ export function useLoginBranding() {
 
   const login: ResolvedLoginBranding =
     me?.tenantId && !hostMismatch
-      ? resolveLoginBranding(tenant.branding)
-      : (hostLogin ?? resolveLoginBranding(undefined));
+      ? {
+          ...resolveLoginBranding(tenant.branding, themeMode),
+          logoUrl: tenant.logoUrl || resolveLoginBranding(tenant.branding, themeMode).logoUrl,
+        }
+      : hostLogin
+        ? {
+            ...hostLogin,
+            logoUrl: pickThemeLogoUrl({
+              theme: themeMode,
+              logoLightUrl: hostLogin.logoUrl,
+              logoDarkUrl: hostLogin.logoDarkUrl,
+              fallbackUrl: hostLogin.logoUrl,
+            }),
+          }
+        : resolveLoginBranding(undefined, themeMode);
 
   const primaryColor =
-    me?.tenantId && !hostMismatch
-      ? tenant.primaryColor
-      : hostPrimaryColor || tenant.primaryColor;
+    me?.tenantId && !hostMismatch ? tenant.primaryColor : hostPrimaryColor || tenant.primaryColor;
 
   return {
     loading: me?.tenantId ? tenant.loading : loadingHost,

@@ -1,10 +1,15 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties, type ReactNode } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import type { ImportApi } from "../api.js";
 import { clearImportTenantCache, setCachedJobs, getCachedJobs } from "../cache.js";
 import { initiateProtectedDownload } from "../download.js";
-import { dashboardStatusBuckets, serializeJobFilters, type ImportJobFilterState } from "../filters.js";
+import {
+  dashboardStatusBuckets,
+  DASHBOARD_BUCKET_LABELS,
+  serializeJobFilters,
+  type ImportJobFilterState,
+} from "../filters.js";
 import { actionAllowed, disabledReason } from "../permissions.js";
 import { formatImportError, sanitizeErrorMessage } from "../safe-error.js";
 import {
@@ -27,8 +32,14 @@ import {
   MalwareVerdictBadge,
   PrivilegedAccessBanner,
   ProductionScannerRestrictionBanner,
+  isProductionImportUploadBlocked,
   SensitiveValue,
 } from "./badges.js";
+
+export type CreateLookupFn = (input: {
+  kind: string;
+  name: string;
+}) => Promise<{ id: string; name: string }>;
 
 export type ImportCenterAppProps = {
   api: ImportApi;
@@ -43,28 +54,47 @@ export type ImportCenterAppProps = {
   onNavigate?: (href: string) => void;
   /** Application environment — drives production scanner restriction banner */
   appEnv?: string | null;
+  /**
+   * Configured malware provider key (mirrors API IMPORT_MALWARE_PROVIDER_KEY).
+   * Production uploads stay blocked while this is `reference-malware`.
+   */
+  malwareProviderKey?: string | null;
+  /** Compact chrome for embedding inside onboarding / setup flows */
+  embedded?: boolean;
+  /** Hide package title/description when the host already provides page chrome */
+  hideChrome?: boolean;
+  /** Prefill New Import product key (e.g. FORGE_INDUSTRIAL in Industrial web). */
+  defaultProductKey?: string;
+  /** Prefill New Import module key when creating jobs. */
+  defaultModuleKey?: string;
+  /** Create missing department/position/employment type from validation errors */
+  createLookup?: CreateLookupFn;
 };
 
-const panel: CSSProperties = {
-  border: "1px solid #d0d0d0",
-  borderRadius: "0.35rem",
-  padding: "1rem",
-  marginBottom: "1rem",
-  background: "#fff",
-};
-
-const tableStyle: CSSProperties = {
-  width: "100%",
-  borderCollapse: "collapse",
-  fontSize: "0.9rem",
-};
-
-const thtd: CSSProperties = {
-  borderBottom: "1px solid #e0e0e0",
-  padding: "0.5rem",
-  textAlign: "left",
-  verticalAlign: "top",
-};
+/** Parse row-error text that mentions an unknown department or position. */
+export function parseMissingOrgLookupHint(
+  message: string,
+  fieldPath?: string | null,
+): { kind: "department" | "position" | "employment_type"; name: string } | null {
+  const haystack = `${fieldPath ?? ""} ${message}`;
+  const match = haystack.match(
+    /(?:unknown|missing|invalid)\s+(department|position|employment[_\s-]?type)\s*(?:named\s+)?[:-]?\s*["']?([^"'.,;\n]+)/i,
+  );
+  if (match?.[1] && match[2]) {
+    const raw = match[1].toLowerCase().replace(/[\s-]+/g, "_");
+    const kind = raw.startsWith("employment")
+      ? ("employment_type" as const)
+      : (raw as "department" | "position");
+    return { kind, name: match[2].trim() };
+  }
+  const quoted = message.match(/["']([^"']+)["']/);
+  if (quoted?.[1] && fieldPath) {
+    if (/department/i.test(fieldPath)) return { kind: "department", name: quoted[1].trim() };
+    if (/position|job.?title/i.test(fieldPath)) return { kind: "position", name: quoted[1].trim() };
+    if (/employment/i.test(fieldPath)) return { kind: "employment_type", name: quoted[1].trim() };
+  }
+  return null;
+}
 
 function normalizeJobsPayload(data: unknown): ImportJobSummary[] {
   if (Array.isArray(data)) return data as ImportJobSummary[];
@@ -79,6 +109,16 @@ function hashFragment(hash: string | null | undefined): string {
   return `${hash.slice(0, 8)}…`;
 }
 
+const INDUSTRIAL_RECORD_PRESETS = [
+  { recordCategory: "site", moduleKey: "ORG", label: "Sites / locations" },
+  { recordCategory: "department", moduleKey: "ORG", label: "Departments" },
+  { recordCategory: "position", moduleKey: "ORG", label: "Positions / job titles" },
+  { recordCategory: "employment_type", moduleKey: "ORG", label: "Employment types" },
+  { recordCategory: "personnel", moduleKey: "PERSONNEL", label: "Personnel" },
+  { recordCategory: "fleet_vehicle", moduleKey: "FLEET", label: "Fleet vehicles" },
+  { recordCategory: "training_record", moduleKey: "TRAINING", label: "Training history" },
+] as const;
+
 export function ImportCenterApp(props: ImportCenterAppProps) {
   const {
     api,
@@ -89,13 +129,23 @@ export function ImportCenterApp(props: ImportCenterAppProps) {
     initialView = null,
     onNavigate,
     appEnv = null,
+    malwareProviderKey = null,
+    embedded = false,
+    hideChrome = false,
+    defaultProductKey = "",
+    defaultModuleKey = "",
+    createLookup,
   } = props;
 
   const [view, setView] = useState<ImportWorkflowView>(initialView ?? "dashboard");
   const [jobId, setJobId] = useState<string | null>(initialJobId);
   const [jobs, setJobs] = useState<ImportJobSummary[]>([]);
   const [job, setJob] = useState<ImportJobSummary | null>(null);
-  const [filters, setFilters] = useState<ImportJobFilterState>({ page: 1, pageSize: 25 });
+  const [filters, setFilters] = useState<ImportJobFilterState>({
+    page: 1,
+    pageSize: 25,
+    ...(defaultProductKey ? { productKey: defaultProductKey } : {}),
+  });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [correlationId, setCorrelationId] = useState<string | null>(null);
@@ -105,11 +155,13 @@ export function ImportCenterApp(props: ImportCenterAppProps) {
   const [resultsPayload, setResultsPayload] = useState<Record<string, unknown> | null>(null);
   const [duplicates, setDuplicates] = useState<unknown[]>([]);
   const [uploadProgress, setUploadProgress] = useState<number | null>(null);
+  const [lookupBusy, setLookupBusy] = useState<string | null>(null);
+  const [lookupNotice, setLookupNotice] = useState<string | null>(null);
   const [newForm, setNewForm] = useState({
     displayName: "",
     description: "",
-    productKey: "",
-    moduleKey: "",
+    productKey: defaultProductKey,
+    moduleKey: defaultModuleKey,
     recordCategory: "",
     format: "csv" as "csv" | "xlsx" | "json",
   });
@@ -118,6 +170,11 @@ export function ImportCenterApp(props: ImportCenterAppProps) {
 
   const canView = actionAllowed(hasPermission, "import.view");
   const privileged = actionAllowed(hasPermission, "import.sensitive");
+  const [privilegedSession, setPrivilegedSession] = useState(false);
+  const productionUploadsBlocked = isProductionImportUploadBlocked({
+    appEnv,
+    malwareProviderKey,
+  });
 
   const navigate = useCallback(
     (nextView: ImportWorkflowView, nextJobId?: string | null) => {
@@ -233,10 +290,7 @@ export function ImportCenterApp(props: ImportCenterAppProps) {
     };
   }, [api, jobId, loadJob, view]);
 
-  const buckets = useMemo(
-    () => dashboardStatusBuckets(jobs.map((j) => String(j.status))),
-    [jobs],
-  );
+  const buckets = useMemo(() => dashboardStatusBuckets(jobs.map((j) => String(j.status))), [jobs]);
 
   if (!tenantId) {
     return <ImportEmptyState title="Select a tenant to open Import Center." />;
@@ -255,6 +309,16 @@ export function ImportCenterApp(props: ImportCenterAppProps) {
       setError(blocked);
       return;
     }
+    if (productionUploadsBlocked) {
+      setError(
+        "File uploads are blocked in this environment until a production malware scanner is configured.",
+      );
+      return;
+    }
+    if (!newForm.recordCategory) {
+      setError("Select a record type before uploading a file.");
+      return;
+    }
     if (!file) {
       setError("Choose a file to upload.");
       return;
@@ -264,8 +328,8 @@ export function ImportCenterApp(props: ImportCenterAppProps) {
     setUploadProgress(0);
     try {
       const init = (await api.initializeUpload({
-        productKey: newForm.productKey || "REFERENCE",
-        moduleKey: newForm.moduleKey || "CORE",
+        productKey: newForm.productKey || defaultProductKey || "REFERENCE",
+        moduleKey: newForm.moduleKey || defaultModuleKey || "CORE",
         recordCategory: newForm.recordCategory || "generic_record",
         displayName: newForm.displayName || file.name,
         description: newForm.description || undefined,
@@ -367,9 +431,12 @@ export function ImportCenterApp(props: ImportCenterAppProps) {
     if (!jobId) return;
     setLoading(true);
     try {
-      await api.putMappings(jobId, mappings.length ? mappings : [
-        { sourceColumn: "col1", targetField: "field1", isRequired: true, ordinal: 0 },
-      ]);
+      await api.putMappings(
+        jobId,
+        mappings.length
+          ? mappings
+          : [{ sourceColumn: "col1", targetField: "field1", isRequired: true, ordinal: 0 }],
+      );
       await loadJob(jobId);
       setView("validation");
     } catch (err) {
@@ -406,7 +473,9 @@ export function ImportCenterApp(props: ImportCenterAppProps) {
       return;
     }
     if (!jobId) return;
-    if (!window.confirm("Queue this import for execution? Row data is not sent from the browser.")) {
+    if (
+      !window.confirm("Queue this import for execution? Row data is not sent from the browser.")
+    ) {
       return;
     }
     setLoading(true);
@@ -429,6 +498,7 @@ export function ImportCenterApp(props: ImportCenterAppProps) {
         return;
       }
       if (!window.confirm("Request a privileged download? Access is audited.")) return;
+      setPrivilegedSession(true);
     }
     setLoading(true);
     try {
@@ -496,23 +566,99 @@ export function ImportCenterApp(props: ImportCenterAppProps) {
     }
   }
 
+  async function handleAutoMap() {
+    if (!jobId) return;
+    const blocked = disabledReason(hasPermission, "import.map");
+    if (blocked) {
+      setError(blocked);
+      return;
+    }
+    setLoading(true);
+    setError(null);
+    try {
+      const suggested = await api.suggestMappings(jobId);
+      setMappings(Array.isArray(suggested.mappings) ? suggested.mappings : []);
+    } catch (err) {
+      reportError(err);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function handleCreateLookup(kind: string, name: string) {
+    if (!createLookup) return;
+    const key = `${kind}:${name}`;
+    setLookupBusy(key);
+    setLookupNotice(null);
+    setError(null);
+    try {
+      const created = await createLookup({ kind, name });
+      setLookupNotice(
+        `Created ${kind.replace(/_/g, " ")} “${created.name}”. Re-validate to continue.`,
+      );
+    } catch (err) {
+      reportError(err);
+    } finally {
+      setLookupBusy(null);
+    }
+  }
+
+  function renderLookupAction(err: ImportRowError) {
+    if (!createLookup) return null;
+    const hint = parseMissingOrgLookupHint(err.message, err.fieldPath);
+    if (!hint) return null;
+    const key = `${hint.kind}:${hint.name}`;
+    return (
+      <button
+        type="button"
+        disabled={lookupBusy === key}
+        onClick={() => void handleCreateLookup(hint.kind, hint.name)}
+        className="forge-ic-inline-action"
+      >
+        {lookupBusy === key ? "Creating…" : `Create ${hint.kind.replace(/_/g, " ")} “${hint.name}”`}
+      </button>
+    );
+  }
+
   const malwareVerdict = (job?.file?.malwareVerdict ?? "NOT_SUBMITTED") as MalwareVerdict;
   const quarantined =
     job?.status === "QUARANTINED" || job?.file?.quarantineStatus === "QUARANTINED";
 
+  const rootClass = [
+    "forge-import-center",
+    embedded ? "forge-import-center--embedded" : "",
+    hideChrome ? "forge-import-center--hosted" : "",
+  ]
+    .filter(Boolean)
+    .join(" ");
+
   return (
-    <div>
-      <header style={{ marginBottom: "1.25rem" }}>
-        <h1 style={{ margin: 0 }}>Import Center</h1>
-        <p style={{ margin: "0.35rem 0 0", color: "#555" }}>
-          Shared Universal Import Platform — product-neutral workflow. Server state is authoritative.
-        </p>
-      </header>
+    <div className={rootClass}>
+      {!hideChrome ? (
+        <header className="forge-ic-header">
+          <h1 className="forge-ic-title">{embedded ? "Data Import" : "Import Center"}</h1>
+          {embedded ? (
+            <p className="forge-ic-subtitle">
+              Import Personnel (XLSX/CSV) and Fleet without leaving onboarding.
+            </p>
+          ) : (
+            <p className="forge-ic-subtitle">
+              Shared Universal Import Platform — product-neutral workflow. Server state is
+              authoritative.
+            </p>
+          )}
+        </header>
+      ) : null}
 
-      <ProductionScannerRestrictionBanner appEnv={appEnv} />
-      <PrivilegedAccessBanner visible={privileged && view !== "dashboard"} />
+      <ProductionScannerRestrictionBanner appEnv={appEnv} malwareProviderKey={malwareProviderKey} />
+      {!embedded ? <PrivilegedAccessBanner visible={privilegedSession} /> : null}
+      {lookupNotice ? (
+        <div role="status" className="forge-ic-panel forge-ic-panel--success">
+          {lookupNotice}
+        </div>
+      ) : null}
 
-      <nav aria-label="Import Center sections" style={{ display: "flex", flexWrap: "wrap", gap: "0.5rem", marginBottom: "1rem" }}>
+      <nav aria-label="Import Center sections" className="forge-ic-nav">
         {(
           [
             ["dashboard", "Overview"],
@@ -533,10 +679,7 @@ export function ImportCenterApp(props: ImportCenterAppProps) {
       </nav>
 
       {jobId && view !== "dashboard" && view !== "new" ? (
-        <ol
-          aria-label="Import workflow steps"
-          style={{ display: "flex", flexWrap: "wrap", gap: "0.5rem", listStyle: "none", padding: 0 }}
-        >
+        <ol aria-label="Import workflow steps" className="forge-ic-steps">
           {WORKFLOW_STEP_ORDER.filter((s) => s.view !== "new").map((step) => (
             <li key={step.view}>
               <button
@@ -553,7 +696,7 @@ export function ImportCenterApp(props: ImportCenterAppProps) {
       ) : null}
 
       {error ? (
-        <div role="alert" style={{ ...panel, borderColor: "#a11" }}>
+        <div role="alert" className="forge-ic-panel forge-ic-panel--danger">
           <strong>Error</strong>
           <p>{error}</p>
           {correlationId ? <p>Correlation ID: {correlationId}</p> : null}
@@ -563,98 +706,122 @@ export function ImportCenterApp(props: ImportCenterAppProps) {
       {loading ? <p role="status">Loading…</p> : null}
 
       {view === "dashboard" ? (
-        <section aria-labelledby="import-dashboard-heading">
+        <section aria-labelledby="import-dashboard-heading" className="forge-ic-dashboard">
           <h2 id="import-dashboard-heading">Overview</h2>
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(9rem,1fr))", gap: "0.75rem" }}>
+          <div className="forge-ic-stat-grid">
             {Object.entries(buckets).map(([key, value]) => (
-              <div key={key} style={panel}>
-                <div style={{ fontSize: "0.8rem", color: "#555" }}>{key}</div>
-                <div style={{ fontSize: "1.4rem", fontWeight: 600 }}>{value}</div>
+              <div key={key} className="forge-ic-stat-card">
+                <div className="forge-ic-stat-label">{DASHBOARD_BUCKET_LABELS[key] ?? key}</div>
+                <div className="forge-ic-stat-value">{value}</div>
               </div>
             ))}
           </div>
-          <div style={panel}>
-            <label htmlFor="import-search">
-              Search
-              <input
-                id="import-search"
-                value={filters.search ?? ""}
-                onChange={(e) => setFilters((f) => ({ ...f, search: e.target.value, page: 1 }))}
-                style={{ display: "block", width: "100%", marginTop: "0.25rem" }}
-              />
-            </label>
-            <label htmlFor="import-status" style={{ display: "block", marginTop: "0.75rem" }}>
-              Status
-              <select
-                id="import-status"
-                value={filters.status ?? ""}
-                onChange={(e) =>
-                  setFilters((f) => { const next = { ...f, page: 1 }; if (e.target.value) next.status = e.target.value; else delete next.status; return next; })
-                }
-                style={{ display: "block", marginTop: "0.25rem" }}
-              >
-                <option value="">Any</option>
-                {[
-                  "READY_FOR_MAPPING",
-                  "AWAITING_APPROVAL",
-                  "PROCESSING",
-                  "COMPLETED",
-                  "FAILED",
-                  "QUARANTINED",
-                  "SCAN_FAILED",
-                ].map((s) => (
-                  <option key={s} value={s}>
-                    {s}
-                  </option>
-                ))}
-              </select>
-            </label>
-            <button type="button" style={{ marginTop: "0.75rem" }} onClick={() => void loadJobs()}>
-              Apply filters
-            </button>
+          <div className="forge-ic-panel forge-ic-filters">
+            <div className="forge-ic-filters-grid">
+              <label htmlFor="import-search" className="forge-ic-field">
+                Search
+                <input
+                  id="import-search"
+                  value={filters.search ?? ""}
+                  onChange={(e) => setFilters((f) => ({ ...f, search: e.target.value, page: 1 }))}
+                  className="forge-ic-control"
+                  placeholder="Name, file, or record type"
+                />
+              </label>
+              <label htmlFor="import-status" className="forge-ic-field">
+                Status
+                <select
+                  id="import-status"
+                  value={filters.status ?? ""}
+                  onChange={(e) =>
+                    setFilters((f) => {
+                      const next = { ...f, page: 1 };
+                      if (e.target.value) next.status = e.target.value;
+                      else delete next.status;
+                      return next;
+                    })
+                  }
+                  className="forge-ic-control"
+                >
+                  <option value="">Any</option>
+                  {[
+                    "READY_FOR_MAPPING",
+                    "AWAITING_APPROVAL",
+                    "PROCESSING",
+                    "COMPLETED",
+                    "FAILED",
+                    "QUARANTINED",
+                    "SCAN_FAILED",
+                  ].map((s) => (
+                    <option key={s} value={s}>
+                      {s}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <div className="forge-ic-filters-actions">
+                <button
+                  type="button"
+                  className="forge-ic-btn forge-ic-btn--secondary"
+                  onClick={() => void loadJobs()}
+                >
+                  Apply filters
+                </button>
+              </div>
+            </div>
           </div>
           {jobs.length === 0 && !loading ? (
             <ImportEmptyState title="No import jobs for this tenant.">
-              <button type="button" onClick={() => navigate("new", null)}>
+              <button
+                type="button"
+                className="forge-ic-btn forge-ic-btn--primary"
+                onClick={() => navigate("new", null)}
+              >
                 Start a new import
               </button>
             </ImportEmptyState>
           ) : (
-            <div style={{ overflowX: "auto" }}>
-              <table style={tableStyle}>
+            <div className="forge-ic-table-wrap">
+              <table className="forge-ic-table">
                 <thead>
                   <tr>
-                    {["Name", "File", "Record", "Status", "Malware", "Progress", "Updated", "Actions"].map(
-                      (h) => (
-                        <th key={h} style={thtd} scope="col">
-                          {h}
-                        </th>
-                      ),
-                    )}
+                    {[
+                      "Name",
+                      "File",
+                      "Record",
+                      "Status",
+                      "Malware",
+                      "Progress",
+                      "Updated",
+                      "Actions",
+                    ].map((h) => (
+                      <th key={h} scope="col">
+                        {h}
+                      </th>
+                    ))}
                   </tr>
                 </thead>
                 <tbody>
                   {jobs.map((row) => (
                     <tr key={row.id}>
-                      <td style={thtd}>{row.displayName}</td>
-                      <td style={thtd}>{row.file?.fileName ?? "—"}</td>
-                      <td style={thtd}>{row.recordCategory}</td>
-                      <td style={thtd}>
+                      <td>{row.displayName}</td>
+                      <td>{row.file?.fileName ?? "—"}</td>
+                      <td>{row.recordCategory}</td>
+                      <td>
                         <ImportStatusBadge status={String(row.status)} />
                       </td>
-                      <td style={thtd}>
+                      <td>
                         <MalwareVerdictBadge
                           verdict={(row.file?.malwareVerdict as string) ?? "NOT_SUBMITTED"}
                         />
                       </td>
-                      <td style={thtd}>{row.progressPercent ?? 0}%</td>
-                      <td style={thtd}>{new Date(row.updatedAt).toLocaleString()}</td>
-                      <td style={thtd}>
+                      <td>{row.progressPercent ?? 0}%</td>
+                      <td>{new Date(row.updatedAt).toLocaleString()}</td>
+                      <td>
                         <button
                           type="button"
-                          onClick={() =>
-                            navigate(resolveImportWorkflowView(row.status), row.id)
-                          }
+                          className="forge-ic-btn forge-ic-btn--secondary"
+                          onClick={() => navigate(resolveImportWorkflowView(row.status), row.id)}
                         >
                           Open
                         </button>
@@ -669,57 +836,110 @@ export function ImportCenterApp(props: ImportCenterAppProps) {
       ) : null}
 
       {view === "new" ? (
-        <section aria-labelledby="new-import-heading" style={panel}>
+        <section
+          aria-labelledby="new-import-heading"
+          className="forge-ic-panel forge-ic-new-import"
+        >
           <h2 id="new-import-heading">New import</h2>
-          <p>Options come from server configuration. Unavailable products stay disabled when APIs omit them.</p>
-          {(
-            [
-              ["displayName", "Import name"],
-              ["description", "Description"],
-              ["productKey", "Product key"],
-              ["moduleKey", "Module key"],
-              ["recordCategory", "Record type"],
-            ] as const
-          ).map(([key, label]) => (
-            <label key={key} htmlFor={`new-${key}`} style={{ display: "block", marginBottom: "0.75rem" }}>
-              {label}
+          <p className="forge-ic-help forge-ic-help--lead">
+            Choose a name, Industrial record type, and file. Mapping and validation happen after
+            upload.
+          </p>
+          {productionUploadsBlocked ? (
+            <div className="forge-ic-banner forge-ic-banner--warning" role="status">
+              <span className="forge-ic-banner-icon" aria-hidden="true">
+                !
+              </span>
+              <div className="forge-ic-banner-body">
+                <strong className="forge-ic-banner-title">Uploads unavailable in production</strong>
+                <p className="forge-ic-banner-text">
+                  File uploads stay blocked until a production malware scanner is configured. You
+                  can still browse templates and review existing jobs.
+                </p>
+              </div>
+            </div>
+          ) : null}
+          <div className="forge-ic-form-grid">
+            <label htmlFor="new-displayName" className="forge-ic-field forge-ic-field--span-2">
+              Import name
               <input
-                id={`new-${key}`}
-                value={newForm[key]}
-                onChange={(e) => setNewForm((f) => ({ ...f, [key]: e.target.value }))}
-                style={{ display: "block", width: "100%" }}
+                id="new-displayName"
+                value={newForm.displayName}
+                onChange={(e) => setNewForm((f) => ({ ...f, displayName: e.target.value }))}
+                className="forge-ic-control"
+                placeholder="e.g. March personnel roster"
               />
             </label>
-          ))}
-          <label htmlFor="new-format" style={{ display: "block", marginBottom: "0.75rem" }}>
-            Expected format
-            <select
-              id="new-format"
-              value={newForm.format}
-              onChange={(e) =>
-                setNewForm((f) => ({ ...f, format: e.target.value as "csv" | "xlsx" | "json" }))
-              }
-              style={{ display: "block" }}
-            >
-              <option value="csv">CSV</option>
-              <option value="xlsx">XLSX</option>
-              <option value="json">JSON</option>
-            </select>
-          </label>
-          <label htmlFor="new-file" style={{ display: "block", marginBottom: "0.75rem" }}>
-            File
-            <input
-              id="new-file"
-              type="file"
-              accept=".csv,.xlsx,.json,.zip,text/csv,application/json,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/zip"
-              onChange={(e) => void handleCreateAndUpload(e.target.files?.[0] ?? null)}
-              disabled={Boolean(disabledReason(hasPermission, "import.upload"))}
-              style={{ display: "block", marginTop: "0.35rem" }}
-            />
-          </label>
-          <p style={{ fontSize: "0.85rem", color: "#555" }}>
-            Drag-and-drop is available via the file picker. Large files are not parsed in the browser.
-            Presigned URLs are never logged.
+            <label htmlFor="new-description" className="forge-ic-field forge-ic-field--span-2">
+              Description
+              <input
+                id="new-description"
+                value={newForm.description}
+                onChange={(e) => setNewForm((f) => ({ ...f, description: e.target.value }))}
+                className="forge-ic-control"
+                placeholder="Optional notes for this import"
+              />
+            </label>
+            <label htmlFor="new-recordCategory" className="forge-ic-field">
+              Record type
+              <select
+                id="new-recordCategory"
+                value={newForm.recordCategory}
+                onChange={(e) => {
+                  const recordCategory = e.target.value;
+                  const preset = INDUSTRIAL_RECORD_PRESETS.find(
+                    (p) => p.recordCategory === recordCategory,
+                  );
+                  setNewForm((f) => ({
+                    ...f,
+                    recordCategory,
+                    moduleKey: preset?.moduleKey ?? f.moduleKey,
+                    productKey: f.productKey || defaultProductKey || "FORGE_INDUSTRIAL",
+                  }));
+                }}
+                className="forge-ic-control"
+              >
+                <option value="">Select a record type</option>
+                {INDUSTRIAL_RECORD_PRESETS.map((preset) => (
+                  <option key={preset.recordCategory} value={preset.recordCategory}>
+                    {preset.label}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <label htmlFor="new-format" className="forge-ic-field">
+              Expected format
+              <select
+                id="new-format"
+                value={newForm.format}
+                onChange={(e) =>
+                  setNewForm((f) => ({ ...f, format: e.target.value as "csv" | "xlsx" | "json" }))
+                }
+                className="forge-ic-control"
+              >
+                <option value="csv">CSV</option>
+                <option value="xlsx">XLSX</option>
+                <option value="json">JSON</option>
+              </select>
+            </label>
+            <label htmlFor="new-file" className="forge-ic-field forge-ic-field--span-2">
+              File
+              <input
+                id="new-file"
+                type="file"
+                accept=".csv,.xlsx,.json,.zip,text/csv,application/json,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/zip"
+                onChange={(e) => void handleCreateAndUpload(e.target.files?.[0] ?? null)}
+                disabled={
+                  productionUploadsBlocked ||
+                  Boolean(disabledReason(hasPermission, "import.upload")) ||
+                  !newForm.recordCategory
+                }
+                className="forge-ic-control"
+              />
+            </label>
+          </div>
+          <p className="forge-ic-help">
+            Large files are processed on the server. Presigned upload URLs are never logged.
           </p>
           {uploadProgress != null ? (
             <ImportProgressBar percent={uploadProgress} label="Upload progress" />
@@ -731,23 +951,27 @@ export function ImportCenterApp(props: ImportCenterAppProps) {
       ) : null}
 
       {view === "security" && job ? (
-        <section style={panel} aria-labelledby="security-heading">
+        <section className="forge-ic-panel" aria-labelledby="security-heading">
           <h2 id="security-heading">Security scan</h2>
           <p>
             Verdict: <MalwareVerdictBadge verdict={malwareVerdict} />
           </p>
-          <p>Job status: <ImportStatusBadge status={String(job.status)} /></p>
+          <p>
+            Job status: <ImportStatusBadge status={String(job.status)} />
+          </p>
           <p>Hash: {hashFragment(job.file?.contentHash)}</p>
           <p>Scan attempts are managed by the server. No malware override control is available.</p>
-          {job.status === "SCAN_FAILED" || malwareVerdict === "SCAN_TIMEOUT" || malwareVerdict === "SCAN_FAILED" ? (
+          {job.status === "SCAN_FAILED" ||
+          malwareVerdict === "SCAN_TIMEOUT" ||
+          malwareVerdict === "SCAN_FAILED" ? (
             <div>
               <label htmlFor="rescan-reason">
                 Rescan justification
-                <textarea id="rescan-reason" rows={3} style={{ display: "block", width: "100%" }} />
+                <textarea id="rescan-reason" rows={3} className="forge-ic-control" />
               </label>
               <button
                 type="button"
-                style={{ marginTop: "0.5rem" }}
+                className="forge-ic-btn-spacer"
                 disabled={Boolean(disabledReason(hasPermission, "import.validate"))}
                 onClick={() => {
                   const el = document.getElementById("rescan-reason") as HTMLTextAreaElement | null;
@@ -767,7 +991,7 @@ export function ImportCenterApp(props: ImportCenterAppProps) {
       ) : null}
 
       {view === "quarantine" && job ? (
-        <section style={panel} aria-labelledby="quarantine-heading">
+        <section className="forge-ic-panel" aria-labelledby="quarantine-heading">
           <h2 id="quarantine-heading">Quarantine</h2>
           <ul>
             <li>Job ID: {job.id}</li>
@@ -781,8 +1005,8 @@ export function ImportCenterApp(props: ImportCenterAppProps) {
             <li>Security hold: {job.securityHold || quarantined ? "yes" : "no"}</li>
           </ul>
           <p role="status">
-            Mapping, validation, approval, execution, and normal downloads are blocked. Malware payload
-            details are not shown. Quarantine release is unavailable in this sprint.
+            Mapping, validation, approval, execution, and normal downloads are blocked. Malware
+            payload details are not shown. Quarantine release is unavailable in this sprint.
           </p>
           <button
             type="button"
@@ -795,20 +1019,20 @@ export function ImportCenterApp(props: ImportCenterAppProps) {
       ) : null}
 
       {view === "mapping" && job ? (
-        <section style={panel} aria-labelledby="mapping-heading">
+        <section className="forge-ic-panel" aria-labelledby="mapping-heading">
           <h2 id="mapping-heading">Mapping workspace</h2>
           {quarantined ? (
             <p role="alert">Quarantined files cannot be mapped.</p>
           ) : (
             <>
               <p>Destination fields and transformations must match the backend mapping contract.</p>
-              <table style={tableStyle}>
+              <table className="forge-ic-table">
                 <thead>
                   <tr>
-                    <th style={thtd}>Source</th>
-                    <th style={thtd}>Destination</th>
-                    <th style={thtd}>Required</th>
-                    <th style={thtd}>Sensitive</th>
+                    <th>Source</th>
+                    <th>Destination</th>
+                    <th>Required</th>
+                    <th>Sensitive</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -825,7 +1049,7 @@ export function ImportCenterApp(props: ImportCenterAppProps) {
                       ]
                   ).map((row, index) => (
                     <tr key={index}>
-                      <td style={thtd}>
+                      <td>
                         <input
                           aria-label={`Source column ${index + 1}`}
                           value={row.sourceColumn}
@@ -836,7 +1060,7 @@ export function ImportCenterApp(props: ImportCenterAppProps) {
                           }}
                         />
                       </td>
-                      <td style={thtd}>
+                      <td>
                         <input
                           aria-label={`Destination field ${index + 1}`}
                           value={row.targetField}
@@ -847,13 +1071,9 @@ export function ImportCenterApp(props: ImportCenterAppProps) {
                           }}
                         />
                       </td>
-                      <td style={thtd}>{row.isRequired ? "Yes" : "No"}</td>
-                      <td style={thtd}>
-                        {row.isSensitive ? (
-                          <SensitiveValue value="[MASKED]" sensitive />
-                        ) : (
-                          "No"
-                        )}
+                      <td>{row.isRequired ? "Yes" : "No"}</td>
+                      <td>
+                        {row.isSensitive ? <SensitiveValue value="[MASKED]" sensitive /> : "No"}
                       </td>
                     </tr>
                   ))}
@@ -874,6 +1094,13 @@ export function ImportCenterApp(props: ImportCenterAppProps) {
                 }
               >
                 Add mapping row
+              </button>{" "}
+              <button
+                type="button"
+                disabled={Boolean(disabledReason(hasPermission, "import.map"))}
+                onClick={() => void handleAutoMap()}
+              >
+                Auto-map columns
               </button>{" "}
               <button
                 type="button"
@@ -905,7 +1132,7 @@ export function ImportCenterApp(props: ImportCenterAppProps) {
       ) : null}
 
       {view === "validation" && job ? (
-        <section style={panel}>
+        <section className="forge-ic-panel">
           <h2>Validation</h2>
           <p>Server validation is authoritative. Client checks are guidance only.</p>
           <button
@@ -924,27 +1151,47 @@ export function ImportCenterApp(props: ImportCenterAppProps) {
           >
             Refresh errors
           </button>
-          <table style={tableStyle}>
+          <table className="forge-ic-table">
             <thead>
               <tr>
-                {["Code", "Field", "Message", "Severity"].map((h) => (
-                  <th key={h} style={thtd}>
-                    {h}
-                  </th>
+                {["Code", "Field", "Message", "Severity", "Fix"].map((h) => (
+                  <th key={h}>{h}</th>
                 ))}
               </tr>
             </thead>
             <tbody>
               {errors.map((err) => (
                 <tr key={err.id}>
-                  <td style={thtd}>{err.ruleCode}</td>
-                  <td style={thtd}>{err.fieldPath ?? "—"}</td>
-                  <td style={thtd}>{err.message}</td>
-                  <td style={thtd}>{err.severity}</td>
+                  <td>{err.ruleCode}</td>
+                  <td>{err.fieldPath ?? "—"}</td>
+                  <td>{err.message}</td>
+                  <td>{err.severity}</td>
+                  <td>{renderLookupAction(err)}</td>
                 </tr>
               ))}
             </tbody>
           </table>
+          <button
+            type="button"
+            disabled={Boolean(disabledReason(hasPermission, "import.validate")) || !jobId}
+            onClick={() => {
+              if (!jobId) return;
+              void (async () => {
+                try {
+                  await api.requestValidation(jobId);
+                  const rows = await api.listErrors(jobId);
+                  setErrors(Array.isArray(rows) ? rows : []);
+                  setLookupNotice((prev) =>
+                    prev ? `${prev} Validation refreshed.` : "Validation refreshed.",
+                  );
+                } catch (err) {
+                  reportError(err);
+                }
+              })();
+            }}
+          >
+            Re-validate
+          </button>{" "}
           <button type="button" onClick={() => navigate("preview", jobId)}>
             Continue to preview
           </button>
@@ -952,7 +1199,7 @@ export function ImportCenterApp(props: ImportCenterAppProps) {
       ) : null}
 
       {view === "preview" && job ? (
-        <section style={panel}>
+        <section className="forge-ic-panel">
           <h2>Preview</h2>
           <p>
             Preview values are policy-filtered by the server. Sensitive samples render as masked.
@@ -967,23 +1214,23 @@ export function ImportCenterApp(props: ImportCenterAppProps) {
           >
             Request preview
           </button>
-          <table style={tableStyle}>
+          <table className="forge-ic-table">
             <thead>
               <tr>
-                <th style={thtd}>Field</th>
-                <th style={thtd}>Sample</th>
+                <th>Field</th>
+                <th>Sample</th>
               </tr>
             </thead>
             <tbody>
               <tr>
-                <td style={thtd}>email</td>
-                <td style={thtd}>
+                <td>email</td>
+                <td>
                   <SensitiveValue value="j***@example.com" sensitive privileged={privileged} />
                 </td>
               </tr>
               <tr>
-                <td style={thtd}>password</td>
-                <td style={thtd}>
+                <td>password</td>
+                <td>
                   <SensitiveValue value="********" sensitive neverReturnable />
                 </td>
               </tr>
@@ -996,7 +1243,7 @@ export function ImportCenterApp(props: ImportCenterAppProps) {
       ) : null}
 
       {view === "duplicates" && job ? (
-        <section style={panel}>
+        <section className="forge-ic-panel">
           <h2>Duplicate review</h2>
           <p>No automatic merge action. Decisions are submitted to the server.</p>
           <button
@@ -1016,17 +1263,17 @@ export function ImportCenterApp(props: ImportCenterAppProps) {
             Load candidates
           </button>
           <ul>
-            {(duplicates as Array<{ id: string; confidence?: number; confidenceBand?: string }>).map(
-              (d) => (
-                <li key={d.id}>
-                  {d.id.slice(0, 8)}…{" "}
-                  <DuplicateConfidenceBadge
-                    confidence={Number(d.confidence ?? 0)}
-                    {...(d.confidenceBand ? { band: d.confidenceBand } : {})}
-                  />
-                </li>
-              ),
-            )}
+            {(
+              duplicates as Array<{ id: string; confidence?: number; confidenceBand?: string }>
+            ).map((d) => (
+              <li key={d.id}>
+                {d.id.slice(0, 8)}…{" "}
+                <DuplicateConfidenceBadge
+                  confidence={Number(d.confidence ?? 0)}
+                  {...(d.confidenceBand ? { band: d.confidenceBand } : {})}
+                />
+              </li>
+            ))}
           </ul>
           <button type="button" onClick={() => navigate("approval", jobId)}>
             Continue to approval
@@ -1035,7 +1282,7 @@ export function ImportCenterApp(props: ImportCenterAppProps) {
       ) : null}
 
       {view === "approval" && job ? (
-        <section style={panel}>
+        <section className="forge-ic-panel">
           <h2>Approval</h2>
           <ul>
             <li>Job: {job.displayName}</li>
@@ -1045,8 +1292,7 @@ export function ImportCenterApp(props: ImportCenterAppProps) {
             </li>
             <li>Status: {job.status}</li>
           </ul>
-          {quarantined ||
-          (malwareVerdict !== "CLEAN" && malwareVerdict !== "OVERRIDE_APPROVED") ? (
+          {quarantined || (malwareVerdict !== "CLEAN" && malwareVerdict !== "OVERRIDE_APPROVED") ? (
             <p role="alert">Approval is blocked until malware verdict is acceptable.</p>
           ) : (
             <button
@@ -1064,7 +1310,7 @@ export function ImportCenterApp(props: ImportCenterAppProps) {
       ) : null}
 
       {view === "execute" && job ? (
-        <section style={panel}>
+        <section className="forge-ic-panel">
           <h2>Execute confirmation</h2>
           <p>
             Execution uses the backend control plane. The browser does not enqueue rows or send file
@@ -1076,8 +1322,7 @@ export function ImportCenterApp(props: ImportCenterAppProps) {
           <button
             type="button"
             disabled={
-              Boolean(disabledReason(hasPermission, "import.execute")) ||
-              job.status !== "APPROVED"
+              Boolean(disabledReason(hasPermission, "import.execute")) || job.status !== "APPROVED"
             }
             onClick={() => void handleExecute()}
           >
@@ -1087,14 +1332,14 @@ export function ImportCenterApp(props: ImportCenterAppProps) {
       ) : null}
 
       {view === "execution" && job ? (
-        <section style={panel} aria-live="polite">
+        <section className="forge-ic-panel" aria-live="polite">
           <h2>Execution monitor</h2>
           <p>Status: {String(statusPayload?.status ?? job.status)}</p>
           <ImportProgressBar
             percent={Number(statusPayload?.progressPercent ?? job.progressPercent ?? 0)}
             label="Execution progress"
           />
-          <pre style={{ whiteSpace: "pre-wrap", fontSize: "0.8rem" }}>
+          <pre className="forge-ic-pre">
             {JSON.stringify(statusPayload?.rowCounts ?? {}, null, 2)}
           </pre>
           <button
@@ -1102,7 +1347,8 @@ export function ImportCenterApp(props: ImportCenterAppProps) {
             disabled={Boolean(disabledReason(hasPermission, "import.execute"))}
             onClick={() => {
               if (!jobId) return;
-              if (!window.confirm("Request cancellation? Completed rows may remain committed.")) return;
+              if (!window.confirm("Request cancellation? Completed rows may remain committed."))
+                return;
               void api.cancelExecution(jobId, {}).catch(reportError);
             }}
           >
@@ -1112,7 +1358,7 @@ export function ImportCenterApp(props: ImportCenterAppProps) {
       ) : null}
 
       {view === "results" && job ? (
-        <section style={panel}>
+        <section className="forge-ic-panel">
           <h2>Results</h2>
           <p>
             Final status: <ImportStatusBadge status={String(job.status)} />
@@ -1133,10 +1379,8 @@ export function ImportCenterApp(props: ImportCenterAppProps) {
           >
             Refresh results
           </button>
-          <pre style={{ whiteSpace: "pre-wrap", fontSize: "0.8rem" }}>
-            {JSON.stringify(resultsPayload ?? {}, null, 2)}
-          </pre>
-          <div style={{ display: "flex", flexWrap: "wrap", gap: "0.5rem" }}>
+          <pre className="forge-ic-pre">{JSON.stringify(resultsPayload ?? {}, null, 2)}</pre>
+          <div className="forge-ic-actions">
             <button type="button" onClick={() => void handleDownload("results", false)}>
               Download masked results
             </button>
@@ -1159,26 +1403,24 @@ export function ImportCenterApp(props: ImportCenterAppProps) {
               Request rollback
             </button>
           </div>
-          <p style={{ fontSize: "0.85rem", color: "#555" }}>
+          <p className="forge-ic-help">
             Rollback requests submit classification only. Full compensation is not implemented.
           </p>
           <h3>Errors</h3>
-          <table style={tableStyle}>
+          <table className="forge-ic-table">
             <thead>
               <tr>
-                {["Code", "Message", "Retry"].map((h) => (
-                  <th key={h} style={thtd}>
-                    {h}
-                  </th>
+                {["Code", "Message", "Actions"].map((h) => (
+                  <th key={h}>{h}</th>
                 ))}
               </tr>
             </thead>
             <tbody>
               {errors.map((err) => (
                 <tr key={err.id}>
-                  <td style={thtd}>{err.ruleCode}</td>
-                  <td style={thtd}>{err.message}</td>
-                  <td style={thtd}>
+                  <td>{err.ruleCode}</td>
+                  <td>{err.message}</td>
+                  <td>
                     <button
                       type="button"
                       disabled={Boolean(disabledReason(hasPermission, "import.error.reprocess"))}
@@ -1186,6 +1428,7 @@ export function ImportCenterApp(props: ImportCenterAppProps) {
                     >
                       Retry
                     </button>
+                    {renderLookupAction(err)}
                   </td>
                 </tr>
               ))}
@@ -1195,11 +1438,11 @@ export function ImportCenterApp(props: ImportCenterAppProps) {
       ) : null}
 
       {view === "profiles" ? (
-        <section style={panel}>
+        <section className="forge-ic-panel">
           <h2>Import profiles</h2>
           <p>
-            Profile management requires import.profile.manage. Selection uses published profiles from
-            the Import Platform API.
+            Profile management requires import.profile.manage. Selection uses published profiles
+            from the Import Platform API.
           </p>
           {!actionAllowed(hasPermission, "import.profile.manage") ? (
             <p role="status">Profile administration is hidden without import.profile.manage.</p>
@@ -1216,7 +1459,7 @@ export function ImportCenterApp(props: ImportCenterAppProps) {
       ) : null}
 
       {view === "templates" ? (
-        <section style={panel}>
+        <section className="forge-ic-panel">
           <h2>Templates</h2>
           {!actionAllowed(hasPermission, "import.template.manage") &&
           !actionAllowed(hasPermission, "import.view") ? (

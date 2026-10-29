@@ -33,7 +33,9 @@ describe("redactSourceManifest", () => {
     const result = redactSourceManifest(manifest);
     expect(result.blockedFieldIds).toContain("patient_ssn");
     expect(result.manifest.fields.find((f) => f.fieldId === "patient_ssn")?.included).toBe(false);
-    expect(result.manifest.fields.find((f) => f.fieldId === "patient_ssn")?.valuePreview).toBeUndefined();
+    expect(
+      result.manifest.fields.find((f) => f.fieldId === "patient_ssn")?.valuePreview,
+    ).toBeUndefined();
     expect(result.manifest.fields.find((f) => f.fieldId === "address")?.included).toBe(true);
     expect(JSON.stringify(result.auditSummary)).not.toContain("123-45-6789");
   });

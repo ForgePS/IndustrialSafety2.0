@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import { EmptyState } from "../primitives.js";
 
 /**
  * Permission gate for UI convenience. Backend authorization remains authoritative.
@@ -24,10 +25,5 @@ export function PermissionDenied({
   title?: string;
   description?: string;
 }) {
-  return (
-    <div role="alert" className="forge-alert forge-alert--danger">
-      <h2>{title}</h2>
-      <p>{description}</p>
-    </div>
-  );
+  return <EmptyState title={title} description={description} />;
 }

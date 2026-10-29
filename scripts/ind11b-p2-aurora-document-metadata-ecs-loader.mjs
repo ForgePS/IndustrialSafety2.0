@@ -21,9 +21,7 @@ const { S3Client, GetObjectCommand } = apiRequire("@aws-sdk/client-s3");
 const { SecretsManagerClient, GetSecretValueCommand } = apiRequire(
   "@aws-sdk/client-secrets-manager",
 );
-const dbRequire = createRequire(
-  "/app/apps/platform-api/node_modules/@forge/database/package.json",
-);
+const dbRequire = createRequire("/app/apps/platform-api/node_modules/@forge/database/package.json");
 const postgresMod = await import(pathToFileURL(dbRequire.resolve("postgres")).href);
 const postgres = postgresMod.default ?? postgresMod;
 
@@ -128,8 +126,9 @@ async function main() {
 
     if (mode === "dry-run") {
       const beforeDocs = Number(
-        (await sql`select count(*)::int as c from platform_documents where tenant_id = ${tenantId}::uuid`)[0]
-          ?.c ?? 0,
+        (
+          await sql`select count(*)::int as c from platform_documents where tenant_id = ${tenantId}::uuid`
+        )[0]?.c ?? 0,
       );
       const beforeVers = Number(
         (
@@ -329,8 +328,9 @@ async function main() {
     }
 
     const afterDocs = Number(
-      (await sql`select count(*)::int as c from platform_documents where tenant_id = ${tenantId}::uuid`)[0]
-        ?.c ?? 0,
+      (
+        await sql`select count(*)::int as c from platform_documents where tenant_id = ${tenantId}::uuid`
+      )[0]?.c ?? 0,
     );
     const afterVers = await sql`
       select availability_status, count(*)::int as c
@@ -341,7 +341,9 @@ async function main() {
     `;
 
     const result = {
-      ok: counts.error === 0 && afterDocs >= Math.min(rows.length, counts.documentsInserted + counts.documentsUpdated),
+      ok:
+        counts.error === 0 &&
+        afterDocs >= Math.min(rows.length, counts.documentsInserted + counts.documentsUpdated),
       phase: "PRODUCERS-P2-storage-aurora-metadata",
       mode,
       startedAt,

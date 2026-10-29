@@ -28,7 +28,11 @@ export { FxFieldHint } from "./FxFieldHint";
 export { FxRequiredIndicator } from "./FxRequiredIndicator";
 export { FxActionBar, FxStickyFooter } from "./FxActionBar";
 export { FxAutosaveIndicator, FxDraftIndicator } from "./FxAutosaveIndicator";
-export { FxFormLoading as FxLoading, FxFormEmpty as FxEmpty, FxFormError as FxError } from "./FxFormStates";
+export {
+  FxFormLoading as FxLoading,
+  FxFormEmpty as FxEmpty,
+  FxFormError as FxError,
+} from "./FxFormStates";
 export { registerForm, getForm, listForms } from "./FxFormRegistry";
 export { ensureFormsRegistered } from "./register-all";
 export { FormSectionBoundary } from "./FormSectionBoundary";

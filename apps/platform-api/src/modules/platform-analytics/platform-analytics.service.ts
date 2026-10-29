@@ -1,8 +1,5 @@
 import { Inject, Injectable } from "@nestjs/common";
-import {
-  type PlatformAnalyticsOverview,
-  platformAnalyticsOverviewSchema,
-} from "@forge/contracts";
+import { type PlatformAnalyticsOverview, platformAnalyticsOverviewSchema } from "@forge/contracts";
 import {
   auditEvents,
   customerOnboardingSessions,

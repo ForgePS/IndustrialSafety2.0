@@ -98,7 +98,12 @@ function NotificationsInner() {
       {loading ? <p className={styles.muted}>Loading…</p> : null}
 
       <div className={styles.actions} style={{ marginBottom: "1rem" }}>
-        <button className={styles.button} type="button" disabled={busy || unread === 0} onClick={() => void markAllRead()}>
+        <button
+          className={styles.button}
+          type="button"
+          disabled={busy || unread === 0}
+          onClick={() => void markAllRead()}
+        >
           Mark all read
         </button>
         <Link href="/studio/notification-templates">Studio · Notification templates</Link>

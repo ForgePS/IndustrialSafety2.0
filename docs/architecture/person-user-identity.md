@@ -7,10 +7,10 @@
 
 Three distinct concepts — never collapsed into one table ([ADR-013](../decisions/ADR-013-person-user-auth-identity.md)):
 
-| Concept | Meaning | Exists without login? |
-| --- | --- | --- |
-| **Person** | Real-world individual in domain data | Yes |
-| **User** | Tenant-scoped product principal (roles, membership) | No — requires a Person |
+| Concept                     | Meaning                                             | Exists without login?  |
+| --------------------------- | --------------------------------------------------- | ---------------------- |
+| **Person**                  | Real-world individual in domain data                | Yes                    |
+| **User**                    | Tenant-scoped product principal (roles, membership) | No — requires a Person |
 | **Authentication Identity** | External IdP subject (Cognito/OIDC) bound to a User | N/A — attaches to User |
 
 ```

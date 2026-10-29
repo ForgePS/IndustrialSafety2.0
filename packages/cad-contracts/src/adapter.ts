@@ -307,8 +307,5 @@ export interface CadAdapter {
   buildAcknowledgement(result: CadProcessingResult): CadAcknowledgement;
   testConnection(context: CadConnectionContext): Promise<CadHealthResult>;
   /** Optional: implemented by adapters that support POLLING / SYNTHETIC_SIMULATOR. */
-  pollMessages?(
-    context: CadConnectionContext,
-    cursor: CadPollCursor,
-  ): Promise<CadPollResult>;
+  pollMessages?(context: CadConnectionContext, cursor: CadPollCursor): Promise<CadPollResult>;
 }

@@ -33,19 +33,19 @@ Do **not**:
 
 ## Canonical Sneat theme (defaults)
 
-| Token | Value |
-| --- | --- |
-| Primary | `#696cff` |
-| Primary hover / dark | `#5f61e6` |
-| Secondary | `#8592a3` |
-| Success | `#71dd37` |
-| Info | `#03c3ec` |
-| Warning | `#ffab00` |
-| Danger | `#ff3e1d` |
-| Body background | `#f5f5f9` |
-| Body text | `#697a8d` |
-| Dark / navy | `#435971`, `#233446` |
-| Typography | Public Sans |
+| Token                | Value                |
+| -------------------- | -------------------- |
+| Primary              | `#696cff`            |
+| Primary hover / dark | `#5f61e6`            |
+| Secondary            | `#8592a3`            |
+| Success              | `#71dd37`            |
+| Info                 | `#03c3ec`            |
+| Warning              | `#ffab00`            |
+| Danger               | `#ff3e1d`            |
+| Body background      | `#f5f5f9`            |
+| Body text            | `#697a8d`            |
+| Dark / navy          | `#435971`, `#233446` |
+| Typography           | Public Sans          |
 
 These remain the default Forge Industrial application theme unless explicitly overridden by **tenant branding** (approved tokens only). Tenant overrides must not break accessibility or component semantics.
 
@@ -68,18 +68,18 @@ Do **not** restyle these to resemble Firebase.
 
 ## Parity interpretation
 
-| Finding | Interpretation |
-| --- | --- |
-| DS-01 Design system | ACCEPTED BY DESIGN |
-| BR-01 / BR-02 Brand colors | ACCEPTED BY DESIGN |
-| TY-01 Typography | ACCEPTED BY DESIGN |
-| SH-01 Shell structure | ACCEPTED BY DESIGN |
-| SH-02 Breakpoints | ACCEPTED if responsive validation passes |
-| IC-01 Icons (Boxicons) | ACCEPTED BY DESIGN |
-| LG-01 Demo mark | Remediable — replace with Forge branding |
-| DK-01 Dark mode | Remediable — full theme **or** hide toggle |
-| NV-01 Navbar stubs | Remediable — complete **or** hide |
-| ST-01 Settings | Remediable — connect **or** remove misleading controls |
+| Finding                    | Interpretation                                         |
+| -------------------------- | ------------------------------------------------------ |
+| DS-01 Design system        | ACCEPTED BY DESIGN                                     |
+| BR-01 / BR-02 Brand colors | ACCEPTED BY DESIGN                                     |
+| TY-01 Typography           | ACCEPTED BY DESIGN                                     |
+| SH-01 Shell structure      | ACCEPTED BY DESIGN                                     |
+| SH-02 Breakpoints          | ACCEPTED if responsive validation passes               |
+| IC-01 Icons (Boxicons)     | ACCEPTED BY DESIGN                                     |
+| LG-01 Demo mark            | Remediable — replace with Forge branding               |
+| DK-01 Dark mode            | Remediable — full theme **or** hide toggle             |
+| NV-01 Navbar stubs         | Remediable — complete **or** hide                      |
+| ST-01 Settings             | Remediable — connect **or** remove misleading controls |
 
 **DATA PARITY ≠ VISUAL PARITY.** Firebase remains the functional / data migration source where applicable. Sneat is the visual source of truth.
 

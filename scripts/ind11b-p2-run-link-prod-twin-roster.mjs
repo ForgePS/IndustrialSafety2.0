@@ -11,9 +11,7 @@ import path from "node:path";
 import { awsJson, awsText, runPlatformApiOneOff } from "./ecs-oneoff.mjs";
 
 const PROD_TWIN = "5da680d3-50f5-46ac-8b85-6cf454b6a0da";
-const EVID = path.resolve(
-  "docs/program/industrial-migration/ind-11/evidence/p2/02-cognito",
-);
+const EVID = path.resolve("docs/program/industrial-migration/ind-11/evidence/p2/02-cognito");
 const createResult = JSON.parse(
   fs.readFileSync(path.join(EVID, "cognito-create-staging-result.json"), "utf8"),
 );

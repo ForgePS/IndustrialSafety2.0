@@ -15,10 +15,7 @@ export const SENSITIVE_CLASSIFICATIONS = [
 export type SensitiveClassification = (typeof SENSITIVE_CLASSIFICATIONS)[number];
 
 /** Never returned in full, even with import.sensitive. */
-export const NEVER_UNMASK: ReadonlySet<SensitiveClassification> = new Set([
-  "SECRET",
-  "CREDENTIAL",
-]);
+export const NEVER_UNMASK: ReadonlySet<SensitiveClassification> = new Set(["SECRET", "CREDENTIAL"]);
 
 export type MaskingPolicy = {
   allowUnmask: boolean;
@@ -32,7 +29,10 @@ export type MaskingContext = {
 
 const NAME_HINTS: Array<{ pattern: RegExp; classification: SensitiveClassification }> = [
   { pattern: /(ssn|social.?security)/i, classification: "GOVERNMENT_IDENTIFIER" },
-  { pattern: /(password|passwd|secret|api.?key|access.?token|refresh.?token)/i, classification: "CREDENTIAL" },
+  {
+    pattern: /(password|passwd|secret|api.?key|access.?token|refresh.?token)/i,
+    classification: "CREDENTIAL",
+  },
   { pattern: /(dob|date.?of.?birth|birth.?date)/i, classification: "PERSONALLY_IDENTIFIABLE" },
   { pattern: /(email)/i, classification: "PERSONALLY_IDENTIFIABLE" },
   { pattern: /(phone|mobile|tel)/i, classification: "PERSONALLY_IDENTIFIABLE" },
@@ -139,7 +139,10 @@ export function sanitizeObject(value: unknown, context: MaskingContext): unknown
 }
 
 export interface ImportSensitiveDataMasker {
-  classifyField(fieldName: string, rules?: Record<string, SensitiveClassification>): SensitiveClassification;
+  classifyField(
+    fieldName: string,
+    rules?: Record<string, SensitiveClassification>,
+  ): SensitiveClassification;
   maskValue(
     value: unknown,
     classification: SensitiveClassification,

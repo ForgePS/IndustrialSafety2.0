@@ -89,15 +89,15 @@ These are first-class experiences:
 
 ## Design implications
 
-| Principle | Implication |
-| --- | --- |
-| Operational first | Dashboards and My Work prioritize attention and next action over dense data dumps |
-| Role driven | Navigation and home experiences are responsibility-based |
-| Record centered | Record framework is primary; forms and reports are secondary lenses |
-| Consistency | Component library and pattern library are mandatory |
-| Progressive disclosure | Summaries, drawers, and expandable sections are preferred over mega-pages |
-| Accessibility | Tokens, components, and patterns are designed with AA constraints from the start |
-| Multi-surface | Shell, navigation, and frameworks define desktop, tablet, and mobile behaviors |
+| Principle              | Implication                                                                       |
+| ---------------------- | --------------------------------------------------------------------------------- |
+| Operational first      | Dashboards and My Work prioritize attention and next action over dense data dumps |
+| Role driven            | Navigation and home experiences are responsibility-based                          |
+| Record centered        | Record framework is primary; forms and reports are secondary lenses               |
+| Consistency            | Component library and pattern library are mandatory                               |
+| Progressive disclosure | Summaries, drawers, and expandable sections are preferred over mega-pages         |
+| Accessibility          | Tokens, components, and patterns are designed with AA constraints from the start  |
+| Multi-surface          | Shell, navigation, and frameworks define desktop, tablet, and mobile behaviors    |
 
 ## Anti-patterns
 

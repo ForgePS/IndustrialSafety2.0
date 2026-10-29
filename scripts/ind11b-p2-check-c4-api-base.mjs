@@ -6,12 +6,8 @@ import path from "node:path";
 
 const SITE =
   process.env.FORGE_INDUSTRIAL_SITE_URL || "https://producers-rice-mill.forgepublicsafety.com/";
-const EXPECTED =
-  process.env.FORGE_API_BASE_EXPECTED || "https://api-dev.forgepublicsafety.com";
-const ALSO_OK = [
-  EXPECTED,
-  "https://d108fstxdv69bo.cloudfront.net",
-].filter(Boolean);
+const EXPECTED = process.env.FORGE_API_BASE_EXPECTED || "https://api-dev.forgepublicsafety.com";
+const ALSO_OK = [EXPECTED, "https://d108fstxdv69bo.cloudfront.net"].filter(Boolean);
 
 const html = await (await fetch(SITE)).text();
 const chunkPaths = [...html.matchAll(/\/_next\/static\/[^"' )]+/g)].map((m) => m[0]);
@@ -43,13 +39,15 @@ const out = {
   acceptedApiBases: ALSO_OK,
   chunksScanned: uniqueChunks.length,
   apiishUrls: urls,
-  note:
-    "localhost:4000 may appear as a compile-time fallback string; runtime uses NEXT_PUBLIC_API_URL.",
+  note: "localhost:4000 may appear as a compile-time fallback string; runtime uses NEXT_PUBLIC_API_URL.",
 };
 const evidDir = path.resolve(
   "docs/program/industrial-migration/ind-11/evidence/p2/01-tenant-infra",
 );
 fs.mkdirSync(evidDir, { recursive: true });
-fs.writeFileSync(path.join(evidDir, "c4-industrial-api-base.json"), `${JSON.stringify(out, null, 2)}\n`);
+fs.writeFileSync(
+  path.join(evidDir, "c4-industrial-api-base.json"),
+  `${JSON.stringify(out, null, 2)}\n`,
+);
 console.log(JSON.stringify(out, null, 2));
 process.exit(ok ? 0 : 1);

@@ -22,7 +22,11 @@ export abstract class BaseCadAdapter implements CadAdapter {
   abstract readonly manifest: CadAdapterManifest;
 
   validateConfiguration(configuration: unknown): CadConfigurationValidationResult {
-    if (configuration === null || typeof configuration !== "object" || Array.isArray(configuration)) {
+    if (
+      configuration === null ||
+      typeof configuration !== "object" ||
+      Array.isArray(configuration)
+    ) {
       return {
         valid: false,
         errors: [{ path: "$", message: "configuration must be an object" }],

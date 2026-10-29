@@ -16,10 +16,7 @@
     "adapterKey": "reference:generic:record@1",
     "syntheticDataOnly": true,
     "rowsPerRun": 500,
-    "comparison": [
-      50,
-      200
-    ]
+    "comparison": [50, 200]
   },
   "runs": [
     {
@@ -53,10 +50,7 @@
   "result": {
     "defaultBatchSize": 50,
     "maximumAllowedBatchSize": 500,
-    "recommendedRange": [
-      50,
-      250
-    ],
+    "recommendedRange": [50, 250],
     "decision": "Keep the default at 50. Both 50 and 200 completed without row errors. This bounded comparison does not authorize raising the maximum above 500.",
     "workerDurationDifferenceMs": 1502,
     "note": "The 200-row batch was faster in this single small-job sample, but one sample is not sufficient to optimize the default."

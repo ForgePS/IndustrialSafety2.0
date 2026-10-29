@@ -30,11 +30,14 @@ async function main() {
         phase2AcceptanceReport: existsSync(phase2Report)
           ? "docs/neris/phase-2-final-acceptance-report.md"
           : null,
-        isolationSpec: existsSync(isolationSpec) ? "apps/rms-web-e2e/tests/isolation.spec.ts" : null,
+        isolationSpec: existsSync(isolationSpec)
+          ? "apps/rms-web-e2e/tests/isolation.spec.ts"
+          : null,
         rlsVerifyScript: existsSync(rlsScript) ? "scripts/phase2-verify-rls.mjs" : null,
       },
       phase2Decision: existsSync(phase2Report)
-        ? (readFileSync(phase2Report, "utf8").match(/Decision:\s*\*?\*?([^*\n]+)/i)?.[1] || "see report")
+        ? readFileSync(phase2Report, "utf8").match(/Decision:\s*\*?\*?([^*\n]+)/i)?.[1] ||
+          "see report"
         : "report missing",
       expectedControls: [
         "FORCE RLS active",

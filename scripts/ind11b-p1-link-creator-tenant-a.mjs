@@ -25,7 +25,9 @@ const postgres = postgresMod.default ?? postgresMod;
 
 const TENANT_A =
   process.env.IMPORT_ACCEPTANCE_TENANT_A_ID?.trim() || "019faa15-e558-70b6-adcd-a510c3c995f4";
-const EMAIL = (process.env.FORGE_P1_LINK_EMAIL ?? "admin@forgepublicsafety.com").trim().toLowerCase();
+const EMAIL = (process.env.FORGE_P1_LINK_EMAIL ?? "admin@forgepublicsafety.com")
+  .trim()
+  .toLowerCase();
 const COGNITO_SUB = (process.env.FORGE_P1_LINK_COGNITO_SUB ?? "").trim();
 const ROLE_CODE = "IND3V_INDUSTRIAL_ADMIN";
 
@@ -94,9 +96,7 @@ async function main() {
       limit 1
     `;
     if (!role[0]) {
-      throw new Error(
-        `Role ${ROLE_CODE} missing on tenant A — re-run IND-3V persona seed first`,
-      );
+      throw new Error(`Role ${ROLE_CODE} missing on tenant A — re-run IND-3V persona seed first`);
     }
 
     // Prefer the existing Cognito-linked user so we can grant Tenant A
@@ -117,9 +117,7 @@ async function main() {
         from users where id = ${existingBySub[0].user_id}::uuid
       `;
       if (!user[0]) {
-        throw new Error(
-          `Cognito sub linked to missing user ${existingBySub[0].user_id}`,
-        );
+        throw new Error(`Cognito sub linked to missing user ${existingBySub[0].user_id}`);
       }
       userReuse = true;
     } else {
@@ -162,7 +160,8 @@ async function main() {
           ${id}::uuid, ${TENANT_A}::uuid, ${userId}::uuid, 'ACTIVE', ${makeDefault}, now(), now(), now()
         )
       `;
-      membership = await sql`select id::text as id, status from user_tenant_memberships where id = ${id}::uuid`;
+      membership =
+        await sql`select id::text as id, status from user_tenant_memberships where id = ${id}::uuid`;
       membershipCreated = true;
     } else if (membership[0].status !== "ACTIVE") {
       await sql`

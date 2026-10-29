@@ -12,48 +12,53 @@
 ## What shipped
 
 ### Shared packages
-| Package | Role |
-| --- | --- |
-| `@forge/ai-contracts` | Flags, entitlements, permissions, Zod schemas, provider interface |
-| `@forge/ai-policy` | Classification gate + anti-hallucination rules |
-| `@forge/ai-redaction` | Pre-provider redaction (never logs removed values) |
-| `@forge/ai-prompts` | Versioned prompt builder |
-| `@forge/ai-evaluation` | Deterministic schema / unsupported-claim validation |
-| `@forge/ai` | Provider registry, stub provider, source assembler, generation pipeline |
-| `@forge/ai-observability` | Metric names + safe emit helpers |
+
+| Package                   | Role                                                                    |
+| ------------------------- | ----------------------------------------------------------------------- |
+| `@forge/ai-contracts`     | Flags, entitlements, permissions, Zod schemas, provider interface       |
+| `@forge/ai-policy`        | Classification gate + anti-hallucination rules                          |
+| `@forge/ai-redaction`     | Pre-provider redaction (never logs removed values)                      |
+| `@forge/ai-prompts`       | Versioned prompt builder                                                |
+| `@forge/ai-evaluation`    | Deterministic schema / unsupported-claim validation                     |
+| `@forge/ai`               | Provider registry, stub provider, source assembler, generation pipeline |
+| `@forge/ai-observability` | Metric names + safe emit helpers                                        |
 
 ### Service surface
+
 - `apps/ai-narrative-api` — health entrypoint; dedicated ECS deferred
 - `apps/platform-api` `AiNarrativeModule` — versioned routes under `/api/v1/ai/*`
 - Creator Console **AI Management** nav + stub pages
 - RMS Narrative section: `AiNarrativeAssistantPanel` (hidden unless flags true)
 
 ### Database
+
 - Migration: `packages/database/drizzle/0020_ai_narrative_foundation.sql`
 - Tables: requests, sources, drafts, revisions, feedback, templates, template_versions, policies, usage, audit_events, provider_configurations, model_policies
 - RLS lists updated for tenant isolation
 
 ### Feature flags (all default **false**)
+
 `ai.narrative.enabled`, `.rms`, `.industrial`, `.academy`, `.rewrite`, `.quality_check`, `.voice_input`, `.sensitive_data`, `.analytics`
 
 **Not enabled** for Phase 4 synthetic tenant.
 
 ### Entitlements / modules
+
 - Module code `AI_NARRATIVE` on RMS / Industrial / Academy starter templates (not auto-entitled)
 - Entitlement codes: `RMS_AI_NARRATIVE`, `INDUSTRIAL_AI_NARRATIVE`, `ACADEMY_AI_NARRATIVE`
 
 ## Test results
 
-| Suite | Result |
-| --- | --- |
-| `@forge/ai-policy` unit | PASS (2) |
-| `@forge/ai-redaction` unit | PASS (1) |
-| `@forge/ai-evaluation` unit | PASS (2) |
-| `@forge/ai` unit (pipeline, assemble, lock) | PASS (4) |
-| `@forge/platform-api` typecheck | PASS |
-| `@forge/ai-narrative-api` typecheck | PASS |
-| `@forge/contracts` typecheck | PASS |
-| Full Phase 2/3/4 Playwright regression | **Not re-run in this session** — no Phase 4 CAD code paths modified; AI panel is flag-gated off. Re-run `@phase4` + chromium before enablement deploy. |
+| Suite                                       | Result                                                                                                                                                   |
+| ------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `@forge/ai-policy` unit                     | PASS (2)                                                                                                                                                 |
+| `@forge/ai-redaction` unit                  | PASS (1)                                                                                                                                                 |
+| `@forge/ai-evaluation` unit                 | PASS (2)                                                                                                                                                 |
+| `@forge/ai` unit (pipeline, assemble, lock) | PASS (4)                                                                                                                                                 |
+| `@forge/platform-api` typecheck             | PASS                                                                                                                                                     |
+| `@forge/ai-narrative-api` typecheck         | PASS                                                                                                                                                     |
+| `@forge/contracts` typecheck                | PASS                                                                                                                                                     |
+| Full Phase 2/3/4 Playwright regression      | **Not re-run in this session** — no Phase 4 CAD code paths modified; AI panel is flag-gated off. Re-run `@phase4` + chromium before enablement deploy.   |
 | Full AI E2E generate→accept→finalize matrix | **Deferred** until flags + policy + provider activated on a non-Phase-4 synthetic tenant. Foundation smoke spec added: `ai-narrative-foundation.spec.ts` |
 
 ## Security findings

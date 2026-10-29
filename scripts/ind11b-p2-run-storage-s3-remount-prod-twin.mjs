@@ -54,8 +54,7 @@ if (!fs.existsSync(APPROVAL)) fail(`Approval missing: ${APPROVAL}`);
 if (!fs.existsSync(AV_DECISION)) fail(`AV decision missing: ${AV_DECISION}`);
 
 const mapPath =
-  process.env.FORGE_P2_STORAGE_MAP?.trim() ||
-  path.join(EVID_DIR, "s3-map-staging-latest.json");
+  process.env.FORGE_P2_STORAGE_MAP?.trim() || path.join(EVID_DIR, "s3-map-staging-latest.json");
 if (!fs.existsSync(mapPath)) fail(`Map missing: ${mapPath}`);
 
 const concurrency = Math.max(
@@ -65,8 +64,7 @@ const concurrency = Math.max(
 const limitEnv = process.env.FORGE_P2_STORAGE_REMOUNT_LIMIT?.trim();
 const limit = limitEnv ? Math.max(0, Number(limitEnv)) : null;
 const offset = Math.max(0, Number(process.env.FORGE_P2_STORAGE_REMOUNT_OFFSET || 0));
-const skipExisting =
-  process.env.FORGE_P2_STORAGE_REMOUNT_SKIP_EXISTING?.trim() !== "false";
+const skipExisting = process.env.FORGE_P2_STORAGE_REMOUNT_SKIP_EXISTING?.trim() !== "false";
 
 function loadS3Sdk() {
   const candidates = [
@@ -111,7 +109,11 @@ async function mainSdk(mappings) {
       const h = await s3.send(new HeadObjectCommand({ Bucket: DEST_BUCKET, Key: key }));
       return { ok: true, size: Number(h.ContentLength ?? 0), etag: h.ETag || null };
     } catch (e) {
-      if (e?.$metadata?.httpStatusCode === 404 || e?.name === "NotFound" || e?.name === "NoSuchKey") {
+      if (
+        e?.$metadata?.httpStatusCode === 404 ||
+        e?.name === "NotFound" ||
+        e?.name === "NoSuchKey"
+      ) {
         return null;
       }
       throw e;
@@ -210,16 +212,7 @@ async function mainCli(mappings) {
         if (skipExisting) {
           const head = spawnSync(
             "aws",
-            [
-              "s3api",
-              "head-object",
-              "--bucket",
-              DEST_BUCKET,
-              "--key",
-              dstKey,
-              "--output",
-              "json",
-            ],
+            ["s3api", "head-object", "--bucket", DEST_BUCKET, "--key", dstKey, "--output", "json"],
             { encoding: "utf8", shell: true },
           );
           if (head.status === 0) {
@@ -313,7 +306,16 @@ async function reconcileProdTwin() {
   // CLI reconcile via s3api list (paginate once with --query sum is hard); use s3 ls recursive count
   const ls = spawnSync(
     "aws",
-    ["s3api", "list-objects-v2", "--bucket", DEST_BUCKET, "--prefix", `tenants/${PROD_TWIN_TENANT}/`, "--output", "json"],
+    [
+      "s3api",
+      "list-objects-v2",
+      "--bucket",
+      DEST_BUCKET,
+      "--prefix",
+      `tenants/${PROD_TWIN_TENANT}/`,
+      "--output",
+      "json",
+    ],
     { encoding: "utf8", shell: true, maxBuffer: 128 * 1024 * 1024 },
   );
   if (ls.status !== 0) throw new Error(ls.stderr || "list-objects failed");
@@ -434,7 +436,7 @@ async function main() {
   fs.writeFileSync(latest, `${JSON.stringify(result, null, 2)}\n`);
   fs.writeFileSync(objectsPath, `${JSON.stringify({ ok: result.ok, objects: objectLog })}\n`);
 
-  const expectedObjects = (offset === 0 && limit == null) ? map.mappings.length : mappings.length;
+  const expectedObjects = offset === 0 && limit == null ? map.mappings.length : mappings.length;
   const expectedBytes =
     offset === 0 && limit == null
       ? map.mappings.reduce((n, m) => n + (Number(m.size) || 0), 0)

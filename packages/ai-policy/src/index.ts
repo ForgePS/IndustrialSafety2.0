@@ -10,8 +10,7 @@ export type ClassificationGateInput = {
 };
 
 export type ClassificationGateResult =
-  | { allowed: true }
-  | { allowed: false; reasonCode: string; message: string };
+  { allowed: true } | { allowed: false; reasonCode: string; message: string };
 
 /**
  * Default policy: PUBLIC/INTERNAL permitted; CONFIDENTIAL requires tenant policy;

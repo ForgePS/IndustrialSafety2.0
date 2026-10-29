@@ -5,14 +5,14 @@
 
 Incident summary fields (existing only):
 
-| Field | Source |
-| --- | --- |
-| Incident number | `incidentNumber` |
-| Status | `status` |
-| Incident type | `primaryIncidentTypeCode` |
-| Incident date | `incidentDate` |
-| Alarm time | `alarmAt` |
-| Response district | `responseDistrict` |
-| Last modified | `updatedAt` |
+| Field             | Source                    |
+| ----------------- | ------------------------- |
+| Incident number   | `incidentNumber`          |
+| Status            | `status`                  |
+| Incident type     | `primaryIncidentTypeCode` |
+| Incident date     | `incidentDate`            |
+| Alarm time        | `alarmAt`                 |
+| Response district | `responseDistrict`        |
+| Last modified     | `updatedAt`               |
 
 No calculated unit counts or fabricated metrics.

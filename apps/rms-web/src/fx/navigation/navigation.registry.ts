@@ -140,5 +140,7 @@ export function findNavItemByPath(pathname: string): RmsNavigationItem | undefin
   if (exact) return exact;
   return RMS_NAVIGATION_REGISTRY.filter((item) => !item.exact && item.path !== "/")
     .sort((a, b) => b.path.length - a.path.length)
-    .find((item) => normalized === item.path || normalized.startsWith(item.path.replace(/\/$/, "")));
+    .find(
+      (item) => normalized === item.path || normalized.startsWith(item.path.replace(/\/$/, "")),
+    );
 }

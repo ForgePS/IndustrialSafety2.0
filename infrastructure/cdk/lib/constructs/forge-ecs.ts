@@ -27,10 +27,15 @@ const ASSET_EXCLUDES = [
   "**/dist",
   "**/.turbo",
   "**/cdk.out",
+  "**/.next",
+  "**/.next_*",
   ".git",
   "apps/academy-web",
   "apps/rms-web",
   "apps/creator-console",
+  "apps/industrial-web",
+  "apps/field-web",
+  "apps/tenant-admin",
   "docs",
   "migration",
   "tests",
@@ -57,6 +62,7 @@ export interface ForgeEcsProps {
   cadApplicationQueue: sqs.IQueue;
   cadPollingQueue: sqs.IQueue;
   cadRetentionQueue: sqs.IQueue;
+  reportingSchedulesQueue: sqs.IQueue;
   eventBus: events.IEventBus;
   documentsBucket: s3.IBucket;
   importsBucket: s3.IBucket;
@@ -68,6 +74,11 @@ export interface ForgeEcsProps {
   cognitoClientIds: string;
   cognitoDomain: string;
   browserOrigins: string[];
+  /**
+   * Host suffixes trusted as https browser origins (leading-dot form optional).
+   * Used so per-tenant vanity hosts do not each require an exact CORS redeploy.
+   */
+  browserOriginSuffixes?: string[];
   publicRmsUrl: string;
   publicCreatorUrl: string;
   /** Optional override; when omitted, set from ApiHttps CloudFront domain. */
@@ -151,8 +162,10 @@ export class ForgeEcs extends Construct {
       config,
       alb: this.alb,
       allowedBrowserOrigins: props.browserOrigins,
+      allowedBrowserOriginSuffixes: props.browserOriginSuffixes ?? [],
     });
-    const publicApiUrl = props.publicApiUrl ?? `https://${this.apiHttps.distribution.distributionDomainName}`;
+    const publicApiUrl =
+      props.publicApiUrl ?? `https://${this.apiHttps.distribution.distributionDomainName}`;
 
     if (props.enableWaf) {
       this.webAcl = new wafv2.CfnWebACL(this, "AlbWebAcl", {
@@ -189,6 +202,10 @@ export class ForgeEcs extends Construct {
               managedRuleGroupStatement: {
                 vendorName: "AWS",
                 name: "AWSManagedRulesCommonRuleSet",
+                ruleActionOverrides: [
+                  { name: "SizeRestrictions_BODY", actionToUse: { count: {} } },
+                  { name: "CrossSiteScripting_BODY", actionToUse: { count: {} } },
+                ],
               },
             },
             visibilityConfig: {
@@ -275,6 +292,7 @@ export class ForgeEcs extends Construct {
     props.cadApplicationQueue.grantSendMessages(apiTaskRole);
     props.cadPollingQueue.grantSendMessages(apiTaskRole);
     props.cadRetentionQueue.grantSendMessages(apiTaskRole);
+    props.reportingSchedulesQueue.grantSendMessages(apiTaskRole);
     apiTaskRole.addToPolicy(
       new iam.PolicyStatement({
         actions: ["secretsmanager:GetSecretValue"],
@@ -286,6 +304,51 @@ export class ForgeEcs extends Construct {
             arnFormat: cdk.ArnFormat.COLON_RESOURCE_NAME,
           }),
         ],
+      }),
+    );
+    apiTaskRole.addToPolicy(
+      new iam.PolicyStatement({
+        sid: "CognitoUserAdmin",
+        actions: [
+          "cognito-idp:AdminCreateUser",
+          "cognito-idp:AdminGetUser",
+          "cognito-idp:AdminResetUserPassword",
+          "cognito-idp:AdminDisableUser",
+          "cognito-idp:AdminEnableUser",
+          "cognito-idp:AdminDeleteUser",
+          "cognito-idp:AdminUserGlobalSignOut",
+        ],
+        resources: [
+          cdk.Stack.of(this).formatArn({
+            service: "cognito-idp",
+            resource: "userpool",
+            resourceName: props.cognitoUserPoolId,
+            arnFormat: cdk.ArnFormat.SLASH_RESOURCE_NAME,
+          }),
+        ],
+      }),
+    );
+    // Emergency Alerts: AWS End User Messaging SMS (Pinpoint SMS Voice v2).
+    apiTaskRole.addToPolicy(
+      new iam.PolicyStatement({
+        sid: "EmergencyAlertSmsSend",
+        actions: ["sms-voice:SendTextMessage"],
+        resources: ["*"],
+      }),
+    );
+    apiTaskRole.addToPolicy(
+      new iam.PolicyStatement({
+        sid: "SesSendEmail",
+        actions: ["ses:SendEmail", "ses:SendRawEmail"],
+        resources: ["*"],
+      }),
+    );
+    // Executive walkthrough narration (Amazon Polly generative Danielle / neural fallback).
+    apiTaskRole.addToPolicy(
+      new iam.PolicyStatement({
+        sid: "ExecutiveWalkthroughPolly",
+        actions: ["polly:SynthesizeSpeech"],
+        resources: ["*"],
       }),
     );
 
@@ -316,6 +379,7 @@ export class ForgeEcs extends Construct {
     props.cadApplicationQueue.grantConsumeMessages(workerTaskRole);
     props.cadPollingQueue.grantConsumeMessages(workerTaskRole);
     props.cadRetentionQueue.grantConsumeMessages(workerTaskRole);
+    props.reportingSchedulesQueue.grantConsumeMessages(workerTaskRole);
     props.cadIntakeQueue.grantSendMessages(workerTaskRole);
     props.cadNormalizationQueue.grantSendMessages(workerTaskRole);
     props.cadMatchingQueue.grantSendMessages(workerTaskRole);
@@ -334,10 +398,45 @@ export class ForgeEcs extends Construct {
     void props.platformApiRepo;
     void props.workerRepo;
 
+    const reportingSweepToken = new secretsmanager.Secret(this, "ReportingSweepToken", {
+      secretName: resourceName(config, "secrets", "reporting-sweep-token"),
+      description: "Shared token for reporting schedule run-due sweep (API + worker)",
+      generateSecretString: {
+        excludePunctuation: true,
+        passwordLength: 48,
+      },
+    });
+    reportingSweepToken.grantRead(apiExecutionRole);
+    reportingSweepToken.grantRead(workerExecutionRole);
+    reportingSweepToken.grantRead(apiTaskRole);
+    reportingSweepToken.grantRead(workerTaskRole);
+
+    // Externally managed: create/put the key via CLI before or after deploy.
+    // Creating it in CDK would fail if the secret already exists (ops may put the
+    // real Resend key ahead of Compute deploy).
+    const resendApiKey = secretsmanager.Secret.fromSecretNameV2(
+      this,
+      "ResendApiKey",
+      resourceName(config, "secrets", "resend-api-key"),
+    );
+    resendApiKey.grantRead(apiExecutionRole);
+    resendApiKey.grantRead(apiTaskRole);
+
+    // Externally managed: create/put via scripts/ensure-web-push-vapid-secret.mjs
+    const webPushVapid = secretsmanager.Secret.fromSecretNameV2(
+      this,
+      "WebPushVapid",
+      resourceName(config, "secrets", "web-push-vapid"),
+    );
+    webPushVapid.grantRead(apiExecutionRole);
+    webPushVapid.grantRead(apiTaskRole);
+
+    // Production Industrial traffic saturates 0.25 vCPU (ALB target times >1–5s).
+    // 1 vCPU / 2 GB keeps authenticated bootstrap responsive under concurrent load.
     const apiTaskDef = new ecs.FargateTaskDefinition(this, "ApiTaskDef", {
       family: resourceName(config, "ecs", "platform-api"),
-      cpu: 256,
-      memoryLimitMiB: 512,
+      cpu: 1024,
+      memoryLimitMiB: 2048,
       executionRole: apiExecutionRole,
       taskRole: apiTaskRole,
     });
@@ -375,14 +474,30 @@ export class ForgeEcs extends Construct {
         SQS_CAD_APPLICATION_QUEUE_URL: props.cadApplicationQueue.queueUrl,
         SQS_CAD_POLLING_QUEUE_URL: props.cadPollingQueue.queueUrl,
         SQS_CAD_RETENTION_QUEUE_URL: props.cadRetentionQueue.queueUrl,
+        SQS_REPORTING_SCHEDULES_QUEUE_URL: props.reportingSchedulesQueue.queueUrl,
+        FORGE_EMAIL_PROVIDER: "resend",
+        RESEND_FROM_ADDRESS: "noreply@forgepublicsafety.com",
+        // Kept for SES fallback / tooling that still reads this name.
+        SES_FROM_ADDRESS: "noreply@forgepublicsafety.com",
         COGNITO_USER_POOL_ID: props.cognitoUserPoolId,
         COGNITO_CLIENT_ID: props.cognitoClientIds,
         COGNITO_DOMAIN: props.cognitoDomain,
         CORS_ORIGINS: props.browserOrigins.join(","),
+        CORS_ORIGIN_SUFFIXES: (props.browserOriginSuffixes ?? []).join(","),
         PUBLIC_RMS_URL: props.publicRmsUrl,
         PUBLIC_CREATOR_URL: props.publicCreatorUrl,
         PUBLIC_ACADEMY_URL: props.publicRmsUrl,
         PUBLIC_API_URL: publicApiUrl,
+        IMPORT_MALWARE_PROVIDER_KEY: config.features.enableGuardDuty
+          ? "aws-guardduty-malware-protection"
+          : "reference-malware",
+      },
+      secrets: {
+        FORGE_REPORTING_SWEEP_TOKEN: ecs.Secret.fromSecretsManager(reportingSweepToken),
+        RESEND_API_KEY: ecs.Secret.fromSecretsManager(resendApiKey),
+        WEB_PUSH_VAPID_PUBLIC_KEY: ecs.Secret.fromSecretsManager(webPushVapid, "publicKey"),
+        WEB_PUSH_VAPID_PRIVATE_KEY: ecs.Secret.fromSecretsManager(webPushVapid, "privateKey"),
+        WEB_PUSH_VAPID_SUBJECT: ecs.Secret.fromSecretsManager(webPushVapid, "subject"),
       },
       healthCheck: {
         command: ["CMD-SHELL", "wget -qO- http://127.0.0.1:4000/health || exit 1"],
@@ -455,16 +570,13 @@ export class ForgeEcs extends Construct {
         SQS_CAD_APPLICATION_QUEUE_URL: props.cadApplicationQueue.queueUrl,
         SQS_CAD_POLLING_QUEUE_URL: props.cadPollingQueue.queueUrl,
         SQS_CAD_RETENTION_QUEUE_URL: props.cadRetentionQueue.queueUrl,
+        SQS_REPORTING_SCHEDULES_QUEUE_URL: props.reportingSchedulesQueue.queueUrl,
         // Development-only synthetic CAD tenant. Production must stay empty until
         // a real customer CAD connection is authorized (greenfield = skip ticks).
         CAD_POLLING_TENANT_IDS:
-          config.environmentName === "development"
-            ? "019f9e06-a0b2-75f4-9e0b-5ae9befd8193"
-            : "",
+          config.environmentName === "development" ? "019f9e06-a0b2-75f4-9e0b-5ae9befd8193" : "",
         CAD_RETENTION_TENANT_IDS:
-          config.environmentName === "development"
-            ? "019f9e06-a0b2-75f4-9e0b-5ae9befd8193"
-            : "",
+          config.environmentName === "development" ? "019f9e06-a0b2-75f4-9e0b-5ae9befd8193" : "",
         EVENT_BUS_NAME: props.eventBus.eventBusName,
         S3_DOCUMENT_BUCKET: props.documentsBucket.bucketName,
         S3_IMPORT_BUCKET: props.importsBucket.bucketName,
@@ -473,6 +585,12 @@ export class ForgeEcs extends Construct {
         PUBLIC_CREATOR_URL: props.publicCreatorUrl,
         PUBLIC_ACADEMY_URL: props.publicRmsUrl,
         PUBLIC_API_URL: publicApiUrl,
+        IMPORT_MALWARE_PROVIDER_KEY: config.features.enableGuardDuty
+          ? "aws-guardduty-malware-protection"
+          : "reference-malware",
+      },
+      secrets: {
+        FORGE_REPORTING_SWEEP_TOKEN: ecs.Secret.fromSecretsManager(reportingSweepToken),
       },
     });
 

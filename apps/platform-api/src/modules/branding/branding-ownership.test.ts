@@ -1,8 +1,5 @@
 import { describe, expect, it } from "vitest";
-import {
-  documentBelongsToTenant,
-  objectKeyBelongsToTenant,
-} from "@forge/contracts";
+import { documentBelongsToTenant, objectKeyBelongsToTenant } from "@forge/contracts";
 
 /**
  * Branding ownership matrix (MK-S14) — pure guards used by BrandingService.

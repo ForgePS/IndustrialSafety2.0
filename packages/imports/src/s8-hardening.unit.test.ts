@@ -46,14 +46,22 @@ describe("S8 production scanner guards", () => {
       }).ok,
     ).toBe(true);
   });
+
+  it("resolves empty provider key to reference", async () => {
+    const { resolveImportMalwareProviderKey, AWS_GUARDDUTY_MALWARE_PROVIDER_KEY } =
+      await import("./index.js");
+    expect(resolveImportMalwareProviderKey(undefined)).toBe("reference-malware");
+    expect(resolveImportMalwareProviderKey("  ")).toBe("reference-malware");
+    expect(resolveImportMalwareProviderKey(AWS_GUARDDUTY_MALWARE_PROVIDER_KEY)).toBe(
+      AWS_GUARDDUTY_MALWARE_PROVIDER_KEY,
+    );
+  });
 });
 
 describe("S8 stuck job detection", () => {
   it("flags SCANNING jobs older than threshold", () => {
     const now = new Date("2026-07-29T18:00:00.000Z");
-    const updatedAt = new Date(
-      now.getTime() - STUCK_JOB_THRESHOLDS_MS.SCANNING - 1_000,
-    );
+    const updatedAt = new Date(now.getTime() - STUCK_JOB_THRESHOLDS_MS.SCANNING - 1_000);
     expect(isStuckImportJob({ status: "SCANNING", updatedAt, now })).toBe(true);
     expect(
       isStuckImportJob({

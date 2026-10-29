@@ -4,12 +4,12 @@
 
 ## Automated
 
-| Suite | Coverage |
-| --- | --- |
-| `forms-flags.test.ts` | Default off / admin / env |
-| `FxFormRegistry.test.ts` | Register / duplicate |
-| `tables-flags.test.ts` | Default off / admin / session |
-| `FxTableRegistry.test.ts` | Register + column prefs |
+| Suite                     | Coverage                      |
+| ------------------------- | ----------------------------- |
+| `forms-flags.test.ts`     | Default off / admin / env     |
+| `FxFormRegistry.test.ts`  | Register / duplicate          |
+| `tables-flags.test.ts`    | Default off / admin / session |
+| `FxTableRegistry.test.ts` | Register + column prefs       |
 
 ## Manual
 

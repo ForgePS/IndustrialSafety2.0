@@ -5,18 +5,18 @@
 
 ## Exit criteria
 
-| Criterion | Status |
-| --- | --- |
-| All placeholder widgets replaced | ✓ Charts, map suite, weather suite |
-| Accessibility certification complete | ✓ `reference/accessibility-certification.md` |
-| Responsive certification complete | ✓ `reference/responsive-certification.md` |
-| Theme certification complete | ✓ `reference/theme-certification.md` |
-| Browser validation complete | ✓ `evidence/reports/browser-compatibility.md` |
-| Performance baseline documented | ✓ `evidence/reports/performance-baseline.md` |
-| Component certification complete | ✓ `43-component-certification.md` |
-| Evidence package complete | ✓ `docs/forge-experience/evidence/` |
-| Design System RC1 published | ✓ `VERSION.md` → v1.0.0-RC1 |
-| No production systems modified | ✓ Reference packages/app + docs only |
+| Criterion                            | Status                                        |
+| ------------------------------------ | --------------------------------------------- |
+| All placeholder widgets replaced     | ✓ Charts, map suite, weather suite            |
+| Accessibility certification complete | ✓ `reference/accessibility-certification.md`  |
+| Responsive certification complete    | ✓ `reference/responsive-certification.md`     |
+| Theme certification complete         | ✓ `reference/theme-certification.md`          |
+| Browser validation complete          | ✓ `evidence/reports/browser-compatibility.md` |
+| Performance baseline documented      | ✓ `evidence/reports/performance-baseline.md`  |
+| Component certification complete     | ✓ `43-component-certification.md`             |
+| Evidence package complete            | ✓ `docs/forge-experience/evidence/`           |
+| Design System RC1 published          | ✓ `VERSION.md` → v1.0.0-RC1                   |
+| No production systems modified       | ✓ Reference packages/app + docs only          |
 
 ## Open non-blocking findings
 

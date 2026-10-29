@@ -44,20 +44,29 @@ export const developmentConfig: ForgeEnvironmentConfig = validateEnvironmentConf
     api: "api-dev.forgepublicsafety.com",
     creator: "console-dev.forgepublicsafety.com",
     rms: "rms-dev.forgepublicsafety.com",
+    // Keeps existing Development Industrial CloudFront construct (no ACM alias until HTTPS edge).
+    industrial: "industrial-dev.forgepublicsafety.com",
   },
   cognito: {
     callbackUrls: [
       "http://localhost:3001/auth/callback/",
       "http://localhost:3002/auth/callback/",
       "http://localhost:3003/auth/callback/",
+      "http://localhost:3004/auth/callback/",
+      "http://localhost:3005/auth/callback/",
       // Deployed RMS CloudFront (Phase 2 acceptance). Update if distribution is replaced.
       "https://d3ud5uzwd9js2z.cloudfront.net/auth/callback/",
+      // Deployed Field CloudFront (Forge-Development-FieldFrontend).
+      "https://dr716wyn2h1dm.cloudfront.net/auth/callback/",
     ],
     logoutUrls: [
       "http://localhost:3001/",
       "http://localhost:3002/",
       "http://localhost:3003/",
+      "http://localhost:3004/",
+      "http://localhost:3005/",
       "https://d3ud5uzwd9js2z.cloudfront.net/",
+      "https://dr716wyn2h1dm.cloudfront.net/",
     ],
     selfSignUpEnabled: false,
   },

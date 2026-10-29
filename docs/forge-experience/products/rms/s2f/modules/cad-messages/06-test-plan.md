@@ -2,10 +2,10 @@
 
 ## Automated
 
-| Suite | Coverage |
-| --- | --- |
-| `module-flags.test.ts` | cadMessages ∧ tables matrix |
-| E2E scaffold | Module off → legacy; module+tables smoke |
+| Suite                  | Coverage                                 |
+| ---------------------- | ---------------------------------------- |
+| `module-flags.test.ts` | cadMessages ∧ tables matrix              |
+| E2E scaffold           | Module off → legacy; module+tables smoke |
 
 ## Manual / pilot
 

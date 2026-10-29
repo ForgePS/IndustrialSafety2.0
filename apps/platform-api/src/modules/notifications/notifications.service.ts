@@ -3,14 +3,10 @@ import {
   createNotificationInputSchema,
   EMAIL_TEMPLATE_KEYS,
   type CreateNotificationInput,
+  type EmailAttachment,
   type EmailMessage,
 } from "@forge/contracts";
-import {
-  createId,
-  type Database,
-  userNotifications,
-  withTenantTransaction,
-} from "@forge/database";
+import { createId, type Database, userNotifications, withTenantTransaction } from "@forge/database";
 import type { ForgePrincipal } from "@forge/tenant-context";
 import { and, desc, eq, isNull, sql } from "drizzle-orm";
 import { createLogger, logOperationalFailure } from "@forge/observability";
@@ -20,6 +16,8 @@ import {
   renderTemplate,
   type EmailProvider,
 } from "./email-provider.js";
+import { WebPushService } from "./web-push.service.js";
+import { isDemoTenant } from "../../common/demo-tenant.js";
 
 const emailLogger = createLogger({
   service: "platform-api-email",
@@ -65,23 +63,48 @@ const DEFAULT_EMAIL_BODIES: Record<
     htmlBody: "<p>{{detail}}</p>",
     textBody: "{{detail}}",
   },
+  workers_comp_weekly_status: {
+    subject: "{{subject}}",
+    htmlBody: "{{htmlBody}}",
+    textBody: "{{textBody}}",
+  },
+  reporting_schedule_delivery: {
+    subject: "{{subject}}",
+    htmlBody: "{{htmlBody}}",
+    textBody: "{{textBody}}",
+  },
+  sanitation_inspection_completed: {
+    subject: "{{subject}}",
+    htmlBody: "{{htmlBody}}",
+    textBody: "{{textBody}}",
+  },
+  workers_comp_form: {
+    subject: "{{subject}}",
+    htmlBody: "{{htmlBody}}",
+    textBody: "{{textBody}}",
+  },
+  observation_assigned: {
+    subject: "{{subject}}",
+    htmlBody: "{{htmlBody}}",
+    textBody: "{{textBody}}",
+  },
 };
 
 @Injectable()
 export class NotificationsService {
   private readonly email: EmailProvider;
 
-  constructor(@Inject(DATABASE) private readonly db: Database) {
+  constructor(
+    @Inject(DATABASE) private readonly db: Database,
+    private readonly webPush: WebPushService,
+  ) {
     this.email = createEmailProviderFromEnv();
   }
 
   async listForUser(tenantId: string, userId: string, limit = 50) {
     return withTenantTransaction(this.db, tenantId, async (tx) => {
       return tx.query.userNotifications.findMany({
-        where: and(
-          eq(userNotifications.tenantId, tenantId),
-          eq(userNotifications.userId, userId),
-        ),
+        where: and(eq(userNotifications.tenantId, tenantId), eq(userNotifications.userId, userId)),
         orderBy: [desc(userNotifications.createdAt)],
         limit: Math.min(Math.max(limit, 1), 100),
       });
@@ -140,6 +163,39 @@ export class NotificationsService {
     });
   }
 
+  /**
+   * Mark unread inbox rows of a given type whose metadataJson.threadId matches.
+   * Used when the user opens a messaging thread so bell notifications clear with read receipts.
+   */
+  async markUnreadByTypeAndThread(
+    tenantId: string,
+    userId: string,
+    type: string,
+    threadId: string,
+  ): Promise<number> {
+    const trimmedType = type.trim();
+    const trimmedThreadId = threadId.trim();
+    if (!trimmedType || !trimmedThreadId) return 0;
+
+    return withTenantTransaction(this.db, tenantId, async (tx) => {
+      const now = new Date();
+      const updated = await tx
+        .update(userNotifications)
+        .set({ readAt: now, updatedAt: now })
+        .where(
+          and(
+            eq(userNotifications.tenantId, tenantId),
+            eq(userNotifications.userId, userId),
+            eq(userNotifications.type, trimmedType),
+            isNull(userNotifications.readAt),
+            sql`${userNotifications.metadataJson}->>'threadId' = ${trimmedThreadId}`,
+          ),
+        )
+        .returning({ id: userNotifications.id });
+      return updated.length;
+    });
+  }
+
   async create(
     tenantId: string,
     input: unknown,
@@ -176,10 +232,7 @@ export class NotificationsService {
     });
 
     let emailResult = null;
-    if (
-      (data.destination === "EMAIL" || data.destination === "BOTH") &&
-      data.emailTo
-    ) {
+    if ((data.destination === "EMAIL" || data.destination === "BOTH") && data.emailTo) {
       emailResult = await this.sendTemplatedEmail({
         to: data.emailTo,
         templateKey: data.emailTemplateKey ?? "system_notification",
@@ -192,7 +245,18 @@ export class NotificationsService {
       });
     }
 
-    return { notification: row, email: emailResult };
+    let pushResult = null;
+    if (data.destination === "IN_APP" || data.destination === "BOTH") {
+      pushResult = await this.webPush
+        .sendToUser(tenantId, data.userId, {
+          title: data.title,
+          body: data.body,
+          href: data.href ?? "/alerts/",
+        })
+        .catch(() => ({ sent: 0, failed: 0 }));
+    }
+
+    return { notification: row, email: emailResult, push: pushResult };
   }
 
   async sendTemplatedEmail(input: {
@@ -200,7 +264,19 @@ export class NotificationsService {
     templateKey: (typeof EMAIL_TEMPLATE_KEYS)[number];
     tenantId?: string;
     vars?: Record<string, string>;
+    attachments?: EmailAttachment[];
   }) {
+    if (input.tenantId && (await isDemoTenant(this.db, input.tenantId))) {
+      emailLogger.info("Demo tenant email blocked", {
+        tenantId: input.tenantId,
+        templateKey: input.templateKey,
+      });
+      return {
+        accepted: true,
+        provider: "demo-blocked",
+        detail: "External email is disabled for demo tenants",
+      };
+    }
     const seeded = DEFAULT_EMAIL_BODIES[input.templateKey];
     const vars = input.vars ?? {};
     const message: EmailMessage = {
@@ -210,6 +286,7 @@ export class NotificationsService {
       textBody: renderTemplate(seeded.textBody, vars),
       templateKey: input.templateKey,
       ...(input.tenantId ? { tenantId: input.tenantId } : {}),
+      ...(input.attachments?.length ? { attachments: input.attachments } : {}),
     };
     const result = await this.email.send(message);
     if (!result.accepted) {

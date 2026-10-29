@@ -11,22 +11,22 @@
 
 ## API
 
-| Item | Detail |
-| --- | --- |
-| Route | `GET /api/v1/tenants/:tenantId/search?q=&types=&limitPerType=` |
-| Query | `q` (1–100), optional `types` CSV, optional `limitPerType` (1–25, default 8) |
-| Providers | `tenant`, `membership`, `facility`, `module` |
-| Authz | Per-provider permission gates (see below) |
-| Response | `{ groups: [{ type, label, hits: [{ id, title, subtitle?, href, tenantId? }] }] }` |
+| Item      | Detail                                                                             |
+| --------- | ---------------------------------------------------------------------------------- |
+| Route     | `GET /api/v1/tenants/:tenantId/search?q=&types=&limitPerType=`                     |
+| Query     | `q` (1–100), optional `types` CSV, optional `limitPerType` (1–25, default 8)       |
+| Providers | `tenant`, `membership`, `facility`, `module`                                       |
+| Authz     | Per-provider permission gates (see below)                                          |
+| Response  | `{ groups: [{ type, label, hits: [{ id, title, subtitle?, href, tenantId? }] }] }` |
 
 ### Provider permissions
 
-| Type | Permission |
-| --- | --- |
-| tenant | `platform.tenant.read` |
-| membership | `platform.membership.read` |
-| facility | `tenant.facilities.read` |
-| module | `platform.entitlement.manage` |
+| Type       | Permission                    |
+| ---------- | ----------------------------- |
+| tenant     | `platform.tenant.read`        |
+| membership | `platform.membership.read`    |
+| facility   | `tenant.facilities.read`      |
+| module     | `platform.entitlement.manage` |
 
 ## UI
 

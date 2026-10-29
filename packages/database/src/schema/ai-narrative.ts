@@ -30,9 +30,7 @@ export const aiProviderConfigurations = pgTable(
     createdAt: createdAtColumn,
     updatedAt: updatedAtColumn,
   },
-  (table) => [
-    index("ai_provider_configurations_tenant_idx").on(table.tenantId, table.product),
-  ],
+  (table) => [index("ai_provider_configurations_tenant_idx").on(table.tenantId, table.product)],
 );
 
 export const aiModelPolicies = pgTable(
@@ -53,7 +51,9 @@ export const aiModelPolicies = pgTable(
     createdAt: createdAtColumn,
     updatedAt: updatedAtColumn,
   },
-  (table) => [index("ai_model_policies_tenant_idx").on(table.tenantId, table.product, table.status)],
+  (table) => [
+    index("ai_model_policies_tenant_idx").on(table.tenantId, table.product, table.status),
+  ],
 );
 
 export const aiNarrativePolicies = pgTable(
@@ -75,7 +75,9 @@ export const aiNarrativePolicies = pgTable(
     createdAt: createdAtColumn,
     updatedAt: updatedAtColumn,
   },
-  (table) => [uniqueIndex("ai_narrative_policies_tenant_product_uidx").on(table.tenantId, table.product)],
+  (table) => [
+    uniqueIndex("ai_narrative_policies_tenant_product_uidx").on(table.tenantId, table.product),
+  ],
 );
 
 export const aiNarrativeTemplates = pgTable(
@@ -160,10 +162,7 @@ export const aiNarrativeRequests = pgTable(
       table.recordId,
     ),
     index("ai_narrative_requests_status_idx").on(table.tenantId, table.status, table.createdAt),
-    uniqueIndex("ai_narrative_requests_idempotency_uidx").on(
-      table.tenantId,
-      table.idempotencyKey,
-    ),
+    uniqueIndex("ai_narrative_requests_idempotency_uidx").on(table.tenantId, table.idempotencyKey),
   ],
 );
 
@@ -208,9 +207,7 @@ export const aiNarrativeDrafts = pgTable(
     version: integer("version").notNull().default(1),
     createdAt: createdAtColumn,
   },
-  (table) => [
-    index("ai_narrative_drafts_request_idx").on(table.requestId, table.version),
-  ],
+  (table) => [index("ai_narrative_drafts_request_idx").on(table.requestId, table.version)],
 );
 
 export const aiNarrativeRevisions = pgTable(
@@ -271,9 +268,7 @@ export const aiNarrativeUsage = pgTable(
     occurredAt: timestamp("occurred_at", { withTimezone: true }).notNull().defaultNow(),
     createdAt: createdAtColumn,
   },
-  (table) => [
-    index("ai_narrative_usage_tenant_time_idx").on(table.tenantId, table.occurredAt),
-  ],
+  (table) => [index("ai_narrative_usage_tenant_time_idx").on(table.tenantId, table.occurredAt)],
 );
 
 export const aiNarrativeAuditEvents = pgTable(

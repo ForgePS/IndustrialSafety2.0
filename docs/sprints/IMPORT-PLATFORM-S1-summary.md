@@ -23,15 +23,15 @@ Documented in architecture package:
 
 ## Migration result
 
-| Item | Value |
-| --- | --- |
-| Review | **SAFE_TO_APPLY** |
-| Checksum | `28d25b49406b9c248cedb8ef9a6ed4e017cb218d5003b6ac2609a2dd5c2d2054` |
-| Ledger | id `232`, hash **MATCH** |
-| Migrate image | `import-s1-live-20260728170110` / `sha256:194364b67ae9…` on TD `:31` |
-| Task ARN | `…/5c11901ac2d34a41aef9dbc86cecb0cc` |
-| Exit code | **0** |
-| Applied to Aurora | **YES** |
+| Item              | Value                                                                |
+| ----------------- | -------------------------------------------------------------------- |
+| Review            | **SAFE_TO_APPLY**                                                    |
+| Checksum          | `28d25b49406b9c248cedb8ef9a6ed4e017cb218d5003b6ac2609a2dd5c2d2054`   |
+| Ledger            | id `232`, hash **MATCH**                                             |
+| Migrate image     | `import-s1-live-20260728170110` / `sha256:194364b67ae9…` on TD `:31` |
+| Task ARN          | `…/5c11901ac2d34a41aef9dbc86cecb0cc`                                 |
+| Exit code         | **0**                                                                |
+| Applied to Aurora | **YES**                                                              |
 
 Apply report: [0022-import-platform-apply-report.md](../database/0022-import-platform-apply-report.md)
 
@@ -57,11 +57,11 @@ Report: [import-platform-authorization-report.md](../security/import-platform-au
 
 ## Application role security
 
-| Check | Result |
-| --- | --- |
-| `forge_app` superuser | false |
-| `forge_app` BYPASSRLS | false |
-| Cannot disable RLS | PASS |
+| Check                 | Result |
+| --------------------- | ------ |
+| `forge_app` superuser | false  |
+| `forge_app` BYPASSRLS | false  |
+| Cannot disable RLS    | PASS   |
 
 ## Secret integrity
 
@@ -73,25 +73,25 @@ Report: [import-platform-authorization-report.md](../security/import-platform-au
 
 ## Test totals
 
-| Suite | Passed | Failed | Skipped |
-| --- | --- | --- | --- |
-| `@forge/imports` unit | 7 | 0 | 0 |
-| `@forge/database` 0022 + perms unit | 6 | 0 | 0 |
-| `@forge/events` import events unit | 1 | 0 | 0 |
-| Live migrate | 1 | 0 | 0 |
-| Live permission seed | 1 (12 codes) | 0 | 0 |
-| Live acceptance seed | 1 | 0 | 0 |
-| Live catalog verify | 1 | 0 | 0 |
-| Live RLS matrix | 45 | 0 | 0 |
+| Suite                               | Passed       | Failed | Skipped |
+| ----------------------------------- | ------------ | ------ | ------- |
+| `@forge/imports` unit               | 7            | 0      | 0       |
+| `@forge/database` 0022 + perms unit | 6            | 0      | 0       |
+| `@forge/events` import events unit  | 1            | 0      | 0       |
+| Live migrate                        | 1            | 0      | 0       |
+| Live permission seed                | 1 (12 codes) | 0      | 0       |
+| Live acceptance seed                | 1            | 0      | 0       |
+| Live catalog verify                 | 1            | 0      | 0       |
+| Live RLS matrix                     | 45           | 0      | 0       |
 
 **S1:** 0 failed. 0 security tests skipped. API route matrix deferred by design (S2).
 
 ## Known limitations
 
-1. No Nest import APIs / presigned upload (S2).  
-2. No malware scanner wiring.  
-3. No Drizzle TS table definitions yet (SQL + live catalog).  
-4. Concurrent API TD churn during live bake (`:31` migrate / `:32` service observed); worker `:19` unchanged; no import product HTTP behavior.  
+1. No Nest import APIs / presigned upload (S2).
+2. No malware scanner wiring.
+3. No Drizzle TS table definitions yet (SQL + live catalog).
+4. Concurrent API TD churn during live bake (`:31` migrate / `:32` service observed); worker `:19` unchanged; no import product HTTP behavior.
 5. Phase 5 product import engine incomplete until later sprints.
 
 ## Rollback state

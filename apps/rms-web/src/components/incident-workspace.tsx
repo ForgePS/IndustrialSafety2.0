@@ -119,7 +119,9 @@ export function IncidentSectionNav({
             key={section}
             href={`/incidents/${incidentId}/?section=${section}`}
             className={
-              active ? `${shellStyles.sectionLink} ${shellStyles.sectionLinkActive}` : shellStyles.sectionLink
+              active
+                ? `${shellStyles.sectionLink} ${shellStyles.sectionLinkActive}`
+                : shellStyles.sectionLink
             }
             aria-current={active ? "page" : undefined}
             title={

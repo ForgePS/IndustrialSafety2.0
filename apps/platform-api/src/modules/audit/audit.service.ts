@@ -7,7 +7,7 @@ import {
   type DatabaseTransaction,
   withTenantTransaction,
 } from "@forge/database";
-import { eq, sql } from "drizzle-orm";
+import { and, eq, sql } from "drizzle-orm";
 import { DATABASE } from "../../tokens.js";
 
 @Injectable()
@@ -44,15 +44,20 @@ export class AuditService {
     return id;
   }
 
-  async list(tenantId: string, page = 1, pageSize = 25) {
+  async list(tenantId: string, page = 1, pageSize = 25, filters: { actorUserId?: string } = {}) {
     return withTenantTransaction(this.db, tenantId, async (tx) => {
+      const actorUserId = (filters.actorUserId ?? "").trim();
+      const whereClause = actorUserId
+        ? and(eq(auditEvents.tenantId, tenantId), eq(auditEvents.actorUserId, actorUserId))
+        : eq(auditEvents.tenantId, tenantId);
+
       const [countRow] = await tx
         .select({ count: sql<number>`count(*)::int` })
         .from(auditEvents)
-        .where(eq(auditEvents.tenantId, tenantId));
+        .where(whereClause);
       const total = countRow?.count ?? 0;
       const rows = await tx.query.auditEvents.findMany({
-        where: eq(auditEvents.tenantId, tenantId),
+        where: whereClause,
         orderBy: (t, { desc }) => [desc(t.occurredAt)],
         limit: pageSize,
         offset: (page - 1) * pageSize,
@@ -79,37 +84,42 @@ export class AuditService {
     },
     ids: { correlationId: string; requestId: string },
   ) {
-    return withTenantTransaction(this.db, tenantId, async (tx) => {
-      const rows = await tx.query.auditEvents.findMany({
-        where: eq(auditEvents.tenantId, tenantId),
-        orderBy: (t, { desc }) => [desc(t.occurredAt)],
-        limit: 200,
-      });
+    return withTenantTransaction(
+      this.db,
+      tenantId,
+      async (tx) => {
+        const rows = await tx.query.auditEvents.findMany({
+          where: eq(auditEvents.tenantId, tenantId),
+          orderBy: (t, { desc }) => [desc(t.occurredAt)],
+          limit: 200,
+        });
 
-      const exportId = createId();
-      await this.writeInTransaction(tx, {
-        id: exportId,
-        tenantId,
-        actorUserId: principal.userId,
-        actorPersonId: principal.personId,
-        actorType: "USER",
-        action: "audit.export.generated",
-        resourceType: "audit_export",
-        resourceId: exportId,
-        result: "SUCCESS",
-        riskLevel: "MEDIUM",
-        correlationId: ids.correlationId || principal.correlationId,
-        requestId: ids.requestId || principal.requestId,
-        metadata: { format: "json", count: rows.length },
-      });
+        const exportId = createId();
+        await this.writeInTransaction(tx, {
+          id: exportId,
+          tenantId,
+          actorUserId: principal.userId,
+          actorPersonId: principal.personId,
+          actorType: "USER",
+          action: "audit.export.generated",
+          resourceType: "audit_export",
+          resourceId: exportId,
+          result: "SUCCESS",
+          riskLevel: "MEDIUM",
+          correlationId: ids.correlationId || principal.correlationId,
+          requestId: ids.requestId || principal.requestId,
+          metadata: { format: "json", count: rows.length },
+        });
 
-      return {
-        format: "json" as const,
-        exportId,
-        exportedAt: new Date().toISOString(),
-        count: rows.length,
-        events: rows,
-      };
-    }, principal.userId);
+        return {
+          format: "json" as const,
+          exportId,
+          exportedAt: new Date().toISOString(),
+          count: rows.length,
+          events: rows,
+        };
+      },
+      principal.userId,
+    );
   }
 }

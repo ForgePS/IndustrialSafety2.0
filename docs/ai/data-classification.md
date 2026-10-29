@@ -5,12 +5,12 @@
 
 ## Levels
 
-| Level | AI default |
-| --- | --- |
-| PUBLIC | May be included in prompts |
-| INTERNAL | May be included in prompts |
-| CONFIDENTIAL | Requires tenant model policy allowance; preview may be redacted |
-| RESTRICTED | Blocked by default; multi-factor gate (policy + permission + confirmation + business purpose) |
+| Level        | AI default                                                                                    |
+| ------------ | --------------------------------------------------------------------------------------------- |
+| PUBLIC       | May be included in prompts                                                                    |
+| INTERNAL     | May be included in prompts                                                                    |
+| CONFIDENTIAL | Requires tenant model policy allowance; preview may be redacted                               |
+| RESTRICTED   | Blocked by default; multi-factor gate (policy + permission + confirmation + business purpose) |
 
 ## Source manifest
 

@@ -31,13 +31,10 @@ export const OPERATIONAL_SUBSCRIPTION_STATUSES = [
   "CANCELED",
 ] as const;
 
-export type OperationalSubscriptionStatus =
-  (typeof OPERATIONAL_SUBSCRIPTION_STATUSES)[number];
+export type OperationalSubscriptionStatus = (typeof OPERATIONAL_SUBSCRIPTION_STATUSES)[number];
 
 /** Map operational DB status → SaaS ADR-019 label. */
-export function toSaasSubscriptionStatus(
-  status: string,
-): SaasSubscriptionStatus | null {
+export function toSaasSubscriptionStatus(status: string): SaasSubscriptionStatus | null {
   switch (status) {
     case "TRIAL":
     case "ACTIVE":
@@ -104,36 +101,15 @@ export const BILLING_TYPES = [
 
 export type BillingType = (typeof BILLING_TYPES)[number];
 
-export const BILLING_FEE_TYPES = [
-  "IMPLEMENTATION",
-  "MIGRATION",
-  "SETUP",
-  "OTHER",
-] as const;
+export const BILLING_FEE_TYPES = ["IMPLEMENTATION", "MIGRATION", "SETUP", "OTHER"] as const;
 
 export type BillingFeeType = (typeof BILLING_FEE_TYPES)[number];
 
-export const BILLING_CONTRACT_STATUSES = [
-  "DRAFT",
-  "ACTIVE",
-  "EXPIRED",
-  "CANCELED",
-] as const;
+export const BILLING_CONTRACT_STATUSES = ["DRAFT", "ACTIVE", "EXPIRED", "CANCELED"] as const;
 
-export const BILLING_ORDER_STATUSES = [
-  "DRAFT",
-  "OPEN",
-  "FULFILLED",
-  "CANCELED",
-] as const;
+export const BILLING_ORDER_STATUSES = ["DRAFT", "OPEN", "FULFILLED", "CANCELED"] as const;
 
-export const BILLING_INVOICE_STATUSES = [
-  "DRAFT",
-  "OPEN",
-  "PAID",
-  "VOID",
-  "UNCOLLECTIBLE",
-] as const;
+export const BILLING_INVOICE_STATUSES = ["DRAFT", "OPEN", "PAID", "VOID", "UNCOLLECTIBLE"] as const;
 
 export const PRICE_INTERVALS = ["MONTHLY", "ANNUAL", "ONE_TIME", "USAGE"] as const;
 
@@ -230,3 +206,54 @@ export const createBillingFeeInputSchema = z.object({
   contractId: z.string().uuid().optional().nullable(),
   orderId: z.string().uuid().optional().nullable(),
 });
+
+export const PLAN_STATUSES = ["ACTIVE", "ARCHIVED"] as const;
+
+export const createSubscriptionPlanInputSchema = z.object({
+  code: z
+    .string()
+    .min(1)
+    .max(64)
+    .regex(/^[A-Z][A-Z0-9_]*$/, "Code must be uppercase letters, digits, and underscores"),
+  name: z.string().min(1).max(200),
+  billingInterval: z.enum(PRICE_INTERVALS),
+  basePriceCents: z.number().int().nonnegative().optional().nullable(),
+  currency: z.string().length(3).default("USD"),
+  status: z.enum(PLAN_STATUSES).default("ACTIVE"),
+  configurationJson: z.record(z.unknown()).optional(),
+});
+
+export const patchSubscriptionPlanInputSchema = createSubscriptionPlanInputSchema
+  .omit({ code: true })
+  .partial();
+
+export const createPlanPriceInputSchema = z.object({
+  code: z
+    .string()
+    .min(1)
+    .max(64)
+    .regex(/^[A-Z][A-Z0-9_]*$/, "Code must be uppercase letters, digits, and underscores"),
+  nickname: z.string().min(1).max(200),
+  interval: z.enum(PRICE_INTERVALS),
+  amountCents: z.number().int().nonnegative().optional().nullable(),
+  currency: z.string().length(3).default("USD"),
+  billingType: z.enum(BILLING_TYPES).default("MONTHLY"),
+  status: z.enum(PLAN_STATUSES).default("ACTIVE"),
+  configurationJson: z.record(z.unknown()).optional(),
+});
+
+export const patchPlanPriceInputSchema = createPlanPriceInputSchema.partial().omit({ code: true });
+
+export const createBillingInvoiceInputSchema = z.object({
+  status: z.enum(BILLING_INVOICE_STATUSES).default("OPEN"),
+  currency: z.string().length(3).default("USD"),
+  amountDueCents: z.number().int().nonnegative().default(0),
+  amountPaidCents: z.number().int().nonnegative().default(0),
+  externalInvoiceId: z.string().max(255).optional().nullable(),
+  hostedInvoiceUrl: z.string().url().max(2000).optional().nullable(),
+  subscriptionId: z.string().uuid().optional().nullable(),
+  orderId: z.string().uuid().optional().nullable(),
+  metadata: z.record(z.unknown()).optional(),
+});
+
+export const patchBillingInvoiceInputSchema = createBillingInvoiceInputSchema.partial();

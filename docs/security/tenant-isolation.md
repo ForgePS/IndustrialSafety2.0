@@ -9,14 +9,14 @@ On a shared database, a bug that omits `WHERE tenant_id = …` can leak rows acr
 
 ## Controls
 
-| Layer | Control |
-| --- | --- |
-| Auth | Cognito JWT or restricted local-only dev principal |
-| Tenant guard | Path `tenantId` must match principal (except platform admin) |
-| Authz | Permission + entitlement + subscription state |
-| DB session | `app.current_tenant_id` / `app.current_user_id` via `withTenantTransaction` |
-| RLS | `ENABLE` + `FORCE` on tenant-owned tables; missing GUC denies |
-| Audit | Mutations write tenant-scoped audit events |
+| Layer        | Control                                                                     |
+| ------------ | --------------------------------------------------------------------------- |
+| Auth         | Cognito JWT or restricted local-only dev principal                          |
+| Tenant guard | Path `tenantId` must match principal (except platform admin)                |
+| Authz        | Permission + entitlement + subscription state                               |
+| DB session   | `app.current_tenant_id` / `app.current_user_id` via `withTenantTransaction` |
+| RLS          | `ENABLE` + `FORCE` on tenant-owned tables; missing GUC denies               |
+| Audit        | Mutations write tenant-scoped audit events                                  |
 
 ## RLS policy shape
 

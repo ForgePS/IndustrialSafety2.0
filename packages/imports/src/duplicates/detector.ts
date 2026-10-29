@@ -1,10 +1,6 @@
 import type { DuplicateCandidate, DuplicateDetector, StagedRow } from "../interfaces.js";
 import type { ProductModuleRef } from "../types.js";
-import {
-  detectDuplicates,
-  DEFAULT_DUPLICATE_RULES,
-  type ExistingRecord,
-} from "./engine.js";
+import { detectDuplicates, DEFAULT_DUPLICATE_RULES, type ExistingRecord } from "./engine.js";
 
 /**
  * Adapter-facing detector. Callers supply existing entity snapshots;

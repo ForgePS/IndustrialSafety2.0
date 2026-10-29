@@ -227,11 +227,19 @@ function IntegrationsInner() {
                 </div>
                 <div className={styles.actions}>
                   {ep.enabled ? (
-                    <button type="button" onClick={() => void setEnabled(ep.id, false)} disabled={busy}>
+                    <button
+                      type="button"
+                      onClick={() => void setEnabled(ep.id, false)}
+                      disabled={busy}
+                    >
                       Disable
                     </button>
                   ) : (
-                    <button type="button" onClick={() => void setEnabled(ep.id, true)} disabled={busy}>
+                    <button
+                      type="button"
+                      onClick={() => void setEnabled(ep.id, true)}
+                      disabled={busy}
+                    >
                       Enable
                     </button>
                   )}

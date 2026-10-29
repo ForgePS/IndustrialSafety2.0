@@ -36,6 +36,7 @@ const ROLE_CODE = "IND3V_INDUSTRIAL_ADMIN";
 
 const MODULE_CODES = [
   "PERSONNEL",
+  "FIRST_AID",
   "EQUIPMENT",
   "LOCKOUT_TAGOUT",
   "TRAINING",
@@ -51,11 +52,13 @@ const MODULE_CODES = [
   "DOCUMENTS",
   "REPORTING",
   "IMPORT",
+  "FLEET",
 ];
 
 const FLAG_KEYS = [
   "industrial.enabled",
   "industrial.module.personnel.enabled",
+  "industrial.module.first_aid.enabled",
   "industrial.module.equipment.enabled",
   "industrial.module.loto.enabled",
   "industrial.module.training.enabled",
@@ -70,12 +73,15 @@ const FLAG_KEYS = [
   "industrial.module.emergency_response.enabled",
   "industrial.module.documents.enabled",
   "industrial.module.reporting.enabled",
+  "industrial.module.fleet.enabled",
 ];
 
 const ADMIN_PERMS = [
   "industrial.access",
   "industrial.personnel.view",
   "industrial.personnel.manage",
+  "industrial.first_aid.view",
+  "industrial.first_aid.manage",
   "industrial.training.view",
   "industrial.training.manage",
   "industrial.forms.view",
@@ -86,6 +92,8 @@ const ADMIN_PERMS = [
   "industrial.incidents.manage",
   "industrial.equipment.view",
   "industrial.equipment.manage",
+  "industrial.fleet.view",
+  "industrial.fleet.manage",
   "industrial.loto.view",
   "industrial.loto.manage",
   "industrial.loto.approve",
@@ -148,11 +156,15 @@ async function ensureRole(sql, tenantId) {
     role = await sql`select id::text as id from roles where id = ${id}::uuid`;
   }
   const roleId = role[0].id;
+  const missingFromCatalog = [];
   for (const code of ADMIN_PERMS) {
     const perm = await sql`
       select id::text as id from permissions where code = ${code} limit 1
     `;
-    if (!perm[0]) continue;
+    if (!perm[0]) {
+      missingFromCatalog.push(code);
+      continue;
+    }
     const existing = await sql`
       select 1 from role_permissions
       where role_id = ${roleId}::uuid and permission_id = ${perm[0].id}::uuid
@@ -164,6 +176,17 @@ async function ensureRole(sql, tenantId) {
         values (${roleId}::uuid, ${perm[0].id}::uuid, 'ALLOW', now())
       `;
     }
+  }
+
+  // Skipping an absent catalog row in silence produced a role named ADMIN that
+  // held manage on only three modules, which hid every Create/edit form in
+  // industrial-web with no error anywhere. Fail loudly: the platform permission
+  // seed (packages/database/src/seed.ts, ALL_PERMISSIONS) needs to run first.
+  if (missingFromCatalog.length > 0) {
+    throw new Error(
+      `Permission catalog is missing ${missingFromCatalog.length} code(s) required by ${ROLE_CODE}: ` +
+        `${missingFromCatalog.join(", ")}. Run the platform permission seed before this script.`,
+    );
   }
   return roleId;
 }
@@ -205,7 +228,8 @@ async function ensureAdminUser(sql, tenantId, tenantKey, roleId) {
         ${id}::uuid, ${tenantId}::uuid, ${userId}::uuid, 'ACTIVE', true, now(), now(), now()
       )
     `;
-    membership = await sql`select id::text as id, status from user_tenant_memberships where id = ${id}::uuid`;
+    membership =
+      await sql`select id::text as id, status from user_tenant_memberships where id = ${id}::uuid`;
     membershipCreated = true;
   } else if (membership[0].status !== "ACTIVE") {
     await sql`
@@ -240,7 +264,8 @@ async function entitle(sql, tenantId, membershipId, userId) {
   const product = await sql`
     select id::text as id from platform_products where code = 'FORGE_INDUSTRIAL' limit 1
   `;
-  if (!product[0]) throw new Error("FORGE_INDUSTRIAL product missing — run platform catalog seed first");
+  if (!product[0])
+    throw new Error("FORGE_INDUSTRIAL product missing — run platform catalog seed first");
 
   const tp = await sql`
     select id::text as id from tenant_products

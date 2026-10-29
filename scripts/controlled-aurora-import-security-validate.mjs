@@ -10,8 +10,11 @@ import { pathToFileURL } from "node:url";
 
 const envMod = await import(pathToFileURL("/app/packages/environment/dist/index.js").href);
 const { resolveDatabaseSecret, buildDatabaseUrl } = envMod;
-const postgresMod = await import(pathToFileURL("/app/node_modules/postgres/src/index.js").href).catch(
-  async () => import(pathToFileURL("/app/packages/database/node_modules/postgres/src/index.js").href),
+const postgresMod = await import(
+  pathToFileURL("/app/node_modules/postgres/src/index.js").href
+).catch(
+  async () =>
+    import(pathToFileURL("/app/packages/database/node_modules/postgres/src/index.js").href),
 );
 const postgres = postgresMod.default ?? postgresMod;
 
@@ -96,7 +99,11 @@ async function main() {
     const missing = REQUIRED_TABLES.filter((t) => !byName[t]);
     report.schema.requiredPresent = REQUIRED_TABLES.length - missing.length;
     report.schema.missing = missing;
-    cases.push({ name: "required_tables_present", pass: missing.length === 0, detail: missing.join(",") });
+    cases.push({
+      name: "required_tables_present",
+      pass: missing.length === 0,
+      detail: missing.join(","),
+    });
 
     const rlsOff = tables.filter((t) => !t.rls);
     cases.push({
@@ -118,7 +125,9 @@ async function main() {
     `;
     report.tenant.before = existing;
     const byId = existing.find((t) => t.id === PRODUCERS);
-    const byKey = existing.find((t) => t.tenant_key === "producers-rice-mill" || t.slug === "producers-rice-mill");
+    const byKey = existing.find(
+      (t) => t.tenant_key === "producers-rice-mill" || t.slug === "producers-rice-mill",
+    );
     if (byKey && byKey.id !== PRODUCERS) {
       fail("producers_tenant_exists_with_wrong_uuid", { found: byKey });
     }

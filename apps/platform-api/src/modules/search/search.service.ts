@@ -115,10 +115,7 @@ export class SearchService {
         .from(userTenantMemberships)
         .innerJoin(users, eq(users.id, userTenantMemberships.userId))
         .where(
-          and(
-            eq(userTenantMemberships.tenantId, tenantId),
-            ilike(users.primaryEmail, `%${q}%`),
-          ),
+          and(eq(userTenantMemberships.tenantId, tenantId), ilike(users.primaryEmail, `%${q}%`)),
         )
         .orderBy(users.primaryEmail)
         .limit(limit);
@@ -134,11 +131,7 @@ export class SearchService {
     });
   }
 
-  private async searchFacilities(
-    tenantId: string,
-    q: string,
-    limit: number,
-  ): Promise<SearchHit[]> {
+  private async searchFacilities(tenantId: string, q: string, limit: number): Promise<SearchHit[]> {
     return withTenantTransaction(this.db, tenantId, async (tx) => {
       const rows = await tx
         .select({
@@ -184,10 +177,7 @@ export class SearchService {
       .where(
         and(
           eq(platformModules.status, "ACTIVE"),
-          or(
-            ilike(platformModules.code, `%${q}%`),
-            ilike(platformModules.name, `%${q}%`),
-          ),
+          or(ilike(platformModules.code, `%${q}%`), ilike(platformModules.name, `%${q}%`)),
         ),
       )
       .orderBy(platformModules.code)

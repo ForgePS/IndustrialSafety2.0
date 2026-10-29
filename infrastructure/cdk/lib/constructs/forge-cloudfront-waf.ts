@@ -72,6 +72,12 @@ export class ForgeCloudFrontWaf extends Construct {
             managedRuleGroupStatement: {
               vendorName: "AWS",
               name: "AWSManagedRulesCommonRuleSet",
+              // Signatures and other JSON bodies exceed the managed 8 KB body
+              // inspection window; blocking those POSTs returns a raw 403.
+              ruleActionOverrides: [
+                { name: "SizeRestrictions_BODY", actionToUse: { count: {} } },
+                { name: "CrossSiteScripting_BODY", actionToUse: { count: {} } },
+              ],
             },
           },
           visibilityConfig: {
@@ -125,11 +131,15 @@ export class ForgeCloudFrontWaf extends Construct {
       config,
       webAcl: this.webAcl,
       destinationSuffix: "cloudfront",
+      // Development shares the production account; AWS::Logs::ResourcePolicy names
+      // are account-global and collide across ForgeFrontend stacks (see deploy-field.ts).
+      adoptExisting: config.environmentName === "development",
     });
 
     new cdk.CfnOutput(this, "CloudFrontWebAclArn", {
       value: this.webAclArn,
-      description: "CLOUDFRONT-scope WebACL ARN (attach via Distribution webAclId / AssociateDistributionWebACL)",
+      description:
+        "CLOUDFRONT-scope WebACL ARN (attach via Distribution webAclId / AssociateDistributionWebACL)",
     });
   }
 }

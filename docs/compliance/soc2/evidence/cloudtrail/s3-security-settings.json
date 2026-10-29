@@ -29,9 +29,7 @@
             },
             "BucketKeyEnabled": false,
             "BlockedEncryptionTypes": {
-              "EncryptionType": [
-                "SSE-C"
-              ]
+              "EncryptionType": ["SSE-C"]
             }
           }
         ]

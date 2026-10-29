@@ -45,7 +45,9 @@ export function ForgeDataTable<T extends { id: string }>({
   return (
     <div style={{ overflowX: "auto" }}>
       <table className="forge-table">
-        {caption ? <caption style={{ textAlign: "left", padding: "0.5rem 0" }}>{caption}</caption> : null}
+        {caption ? (
+          <caption style={{ textAlign: "left", padding: "0.5rem 0" }}>{caption}</caption>
+        ) : null}
         <thead>
           <tr>
             {columns.map((col) => (

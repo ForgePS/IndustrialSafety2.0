@@ -39,4 +39,30 @@ describe("branding-domain (MK-S14)", () => {
     });
     expect(parsed.shortName).toBe("Acme");
   });
+
+  it("picks theme logo with dark/light fallbacks", async () => {
+    const { pickThemeLogoUrl } = await import("./branding-domain.js");
+    expect(
+      pickThemeLogoUrl({
+        theme: "dark",
+        logoLightUrl: "https://cdn.example/light.png",
+        logoDarkUrl: "https://cdn.example/dark.png",
+      }),
+    ).toBe("https://cdn.example/dark.png");
+    expect(
+      pickThemeLogoUrl({
+        theme: "dark",
+        logoLightUrl: "https://cdn.example/light.png",
+        logoDarkUrl: "",
+      }),
+    ).toBe("https://cdn.example/light.png");
+    expect(
+      pickThemeLogoUrl({
+        theme: "light",
+        logoLightUrl: "",
+        logoDarkUrl: "https://cdn.example/dark.png",
+        fallbackUrl: "https://cdn.example/fallback.png",
+      }),
+    ).toBe("https://cdn.example/fallback.png");
+  });
 });

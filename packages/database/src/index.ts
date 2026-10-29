@@ -9,11 +9,14 @@ import * as schema from "./schema.js";
 export * from "./schema.js";
 export { createId } from "./ids.js";
 export * from "./identity-lookup.js";
+export { hashLegalContent, seedLegalAcknowledgments } from "./seed-legal-acknowledgments.js";
 export {
-  alterRolePassword,
-  ensureAppLoginRole,
-  redactCredentialError,
-} from "./safe-admin.js";
+  buildIndustrialDemoSeedPlan,
+  demoEmail,
+  demoPhone,
+  type DemoSeedPlan,
+} from "./demo-seed-plan.js";
+export { alterRolePassword, ensureAppLoginRole, redactCredentialError } from "./safe-admin.js";
 
 export type Database = ReturnType<typeof createDatabase>;
 
@@ -24,7 +27,9 @@ export type DatabaseTransaction = PgTransaction<
 >;
 
 export function createDatabase(connectionString: string) {
-  const client = postgres(connectionString, { max: 10 });
+  // Shell/home fan-out (~15 parallel GETs) + messaging polls starved at max:10.
+  // 20 per task × 3 API tasks stays well under Aurora capacity at min 4 ACU.
+  const client = postgres(connectionString, { max: 20 });
   return drizzle(client, { schema });
 }
 

@@ -1,15 +1,4 @@
-import {
-  Body,
-  Controller,
-  Get,
-  Param,
-  Patch,
-  Post,
-  Put,
-  Query,
-  Req,
-  Res,
-} from "@nestjs/common";
+import { Body, Controller, Get, Param, Patch, Post, Put, Query, Req, Res } from "@nestjs/common";
 import type { ForgePrincipal } from "@forge/tenant-context";
 import type { Response } from "express";
 import { ok } from "../../common/api-response.js";
@@ -213,14 +202,7 @@ export class ConfigurationController {
     @Req() req: RequestWithIds,
   ) {
     return ok(
-      await this.configuration.schedule(
-        tenantId,
-        namespace,
-        objectKey,
-        versionId,
-        body,
-        principal,
-      ),
+      await this.configuration.schedule(tenantId, namespace, objectKey, versionId, body, principal),
       getRequestIds(req),
     );
   }

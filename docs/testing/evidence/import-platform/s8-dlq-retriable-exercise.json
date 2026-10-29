@@ -1,49 +1,49 @@
 ﻿{
-    "defect":  "DEF-S8-012",
-    "environment":  "development",
-    "syntheticOnly":  true,
-    "currentBaseline":  {
-                            "apiTaskDefinition":  42,
-                            "workerTaskDefinition":  26
-                        },
-    "status":  "NOT_VERIFIED",
-    "reason":  "A real retriable message was inspected and dry-run replayed on the current baseline, but its three worker failures occurred before the current :26 task started; current-baseline retriable routing was not freshly forced.",
-    "observedMessage":  {
-                            "messageId":  "9215d619-4ba4-4d8f-a5f0-c3c818eb2752",
-                            "messageType":  "IMPORT_MALWARE_SCAN",
-                            "tenantId":  "019faa15-e558-70b6-adcd-a510c3c995f4",
-                            "correlationId":  "8941f894ac77e342cef64a1b2fbfe0f6",
-                            "mainQueueReceiveAttempts":  3,
-                            "failureClass":  "AccessDenied",
-                            "failedAction":  "sqs:SendMessage",
-                            "failureTimestamps":  [
-                                                      "2026-07-30T16:06:05.992Z",
-                                                      "2026-07-30T16:06:36.068Z",
-                                                      "2026-07-30T16:07:06.214Z"
-                                                  ],
-                            "dlqSourceArn":  "arn:aws:sqs:us-east-1:511343547817:forge-development-sqs-imports"
-                        },
-    "inspect":  {
-                    "executedAt":  "2026-07-30T17:46:52.562Z",
-                    "sanitized":  true,
-                    "bodyPrinted":  false,
-                    "observedDlqReceiveCount":  4,
-                    "exitCode":  0
-                },
-    "dryRunReplay":  {
-                         "executedAt":  "2026-07-30T17:47:25.228Z",
-                         "messageId":  "9215d619-4ba4-4d8f-a5f0-c3c818eb2752",
-                         "source":  "forge-development-sqs-imports-dlq",
-                         "destination":  "forge-development-sqs-imports",
-                         "mutationPerformed":  false,
-                         "exitCode":  0
-                     },
-    "cleanup":  {
-                    "deletedTargetMessage":  true,
-                    "remainingVisible":  3,
-                    "remainingInFlight":  0,
-                    "note":  "Deleted only the inspected synthetic message; pre-existing unrelated DLQ entries were not purged.",
-                    "targetObservedAfterDelete":  false
-                },
-    "appDatabaseSecretChanged":  false
+  "defect": "DEF-S8-012",
+  "environment": "development",
+  "syntheticOnly": true,
+  "currentBaseline": {
+    "apiTaskDefinition": 42,
+    "workerTaskDefinition": 26
+  },
+  "status": "NOT_VERIFIED",
+  "reason": "A real retriable message was inspected and dry-run replayed on the current baseline, but its three worker failures occurred before the current :26 task started; current-baseline retriable routing was not freshly forced.",
+  "observedMessage": {
+    "messageId": "9215d619-4ba4-4d8f-a5f0-c3c818eb2752",
+    "messageType": "IMPORT_MALWARE_SCAN",
+    "tenantId": "019faa15-e558-70b6-adcd-a510c3c995f4",
+    "correlationId": "8941f894ac77e342cef64a1b2fbfe0f6",
+    "mainQueueReceiveAttempts": 3,
+    "failureClass": "AccessDenied",
+    "failedAction": "sqs:SendMessage",
+    "failureTimestamps": [
+      "2026-07-30T16:06:05.992Z",
+      "2026-07-30T16:06:36.068Z",
+      "2026-07-30T16:07:06.214Z"
+    ],
+    "dlqSourceArn": "arn:aws:sqs:us-east-1:511343547817:forge-development-sqs-imports"
+  },
+  "inspect": {
+    "executedAt": "2026-07-30T17:46:52.562Z",
+    "sanitized": true,
+    "bodyPrinted": false,
+    "observedDlqReceiveCount": 4,
+    "exitCode": 0
+  },
+  "dryRunReplay": {
+    "executedAt": "2026-07-30T17:47:25.228Z",
+    "messageId": "9215d619-4ba4-4d8f-a5f0-c3c818eb2752",
+    "source": "forge-development-sqs-imports-dlq",
+    "destination": "forge-development-sqs-imports",
+    "mutationPerformed": false,
+    "exitCode": 0
+  },
+  "cleanup": {
+    "deletedTargetMessage": true,
+    "remainingVisible": 3,
+    "remainingInFlight": 0,
+    "note": "Deleted only the inspected synthetic message; pre-existing unrelated DLQ entries were not purged.",
+    "targetObservedAfterDelete": false
+  },
+  "appDatabaseSecretChanged": false
 }

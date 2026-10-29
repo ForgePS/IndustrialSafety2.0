@@ -3,9 +3,9 @@
 **Date:** 2026-07-30  
 **Code:** `apps/rms-web/src/fx/workspace/FxWorkspaceRegistry.ts`
 
-| ID | Record type | Title | Feature flag | Notes |
-| --- | --- | --- | --- | --- |
-| `rms-incident` | incident | Incident workspace | `fx.rms.workspace.enabled` | Reference implementation |
+| ID             | Record type | Title              | Feature flag               | Notes                    |
+| -------------- | ----------- | ------------------ | -------------------------- | ------------------------ |
+| `rms-incident` | incident    | Incident workspace | `fx.rms.workspace.enabled` | Reference implementation |
 
 Workspaces register via `registerWorkspace` / `ensureWorkspacesRegistered()`. Routing remains Next.js file routes; registry is metadata + authorization, not a router.
 

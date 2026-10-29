@@ -102,10 +102,7 @@ export class PersonsController {
     @Param("personId") personId: string,
     @Req() req: RequestWithIds,
   ) {
-    return ok(
-      await this.persons.listDuplicateCandidates(tenantId, personId),
-      getRequestIds(req),
-    );
+    return ok(await this.persons.listDuplicateCandidates(tenantId, personId), getRequestIds(req));
   }
 
   @Post(":personId/sensitive-identifiers")

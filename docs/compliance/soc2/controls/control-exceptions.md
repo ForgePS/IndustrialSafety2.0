@@ -6,9 +6,9 @@
 
 Track approved deviations from expected control operation.
 
-| Exception ID | Control ID | Description | Risk ID | Approved by | Start | End | Status |
-| --- | --- | --- | --- | --- | --- | --- | --- |
-| EX-000 | — | Template — no exceptions formally approved yet | — | — | — | — | — |
+| Exception ID | Control ID | Description                                    | Risk ID | Approved by | Start | End | Status |
+| ------------ | ---------- | ---------------------------------------------- | ------- | ----------- | ----- | --- | ------ |
+| EX-000       | —          | Template — no exceptions formally approved yet | —       | —           | —     | —   | —      |
 
 ### Known gaps tracked as risks (not yet formal exceptions)
 

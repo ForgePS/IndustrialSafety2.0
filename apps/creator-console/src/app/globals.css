@@ -1,0 +1,9 @@
+/*
+ * Creator Console on Sneat Pro (same static bundle as Industrial).
+ * Shared shell hardening lives in @forge/sneat/shell.css.
+ */
+@import "@forge/sneat/shell.css";
+
+@import "./creator-shell.css";
+@import "./sneat-compat.css";
+@import "./sneat-compat-overrides.css";

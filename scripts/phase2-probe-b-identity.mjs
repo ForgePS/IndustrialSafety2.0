@@ -43,7 +43,18 @@ spawnSync("aws", ["ecs", "wait", "tasks-stopped", "--cluster", cluster, "--tasks
 });
 const desc = spawnSync(
   "aws",
-  ["ecs", "describe-tasks", "--cluster", cluster, "--tasks", taskArn, "--query", "tasks[0].containers[0].exitCode", "--output", "text"],
+  [
+    "ecs",
+    "describe-tasks",
+    "--cluster",
+    cluster,
+    "--tasks",
+    taskArn,
+    "--query",
+    "tasks[0].containers[0].exitCode",
+    "--output",
+    "text",
+  ],
   { encoding: "utf8", shell: true },
 );
 console.log("exitCode", (desc.stdout || "").trim());

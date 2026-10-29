@@ -40,80 +40,90 @@ export class BrandingService {
 
   async put(tenantId: string, input: unknown, principal: ForgePrincipal) {
     const data = putTenantBrandingInputSchema.parse(input) as PutTenantBrandingInput;
-    return withTenantTransaction(this.db, tenantId, async (tx) => {
-      await this.assertOwnedDocumentRef(tx, tenantId, data.logoDocumentId ?? null);
-      await this.assertOwnedDocumentRef(tx, tenantId, data.iconDocumentId ?? null);
+    return withTenantTransaction(
+      this.db,
+      tenantId,
+      async (tx) => {
+        await this.assertOwnedDocumentRef(tx, tenantId, data.logoDocumentId ?? null);
+        await this.assertOwnedDocumentRef(tx, tenantId, data.logoDarkDocumentId ?? null);
+        await this.assertOwnedDocumentRef(tx, tenantId, data.iconDocumentId ?? null);
 
-      const existing = await tx.query.tenantBranding.findFirst({
-        where: eq(tenantBranding.tenantId, tenantId),
-      });
-      const now = new Date();
-      const patch = {
-        displayName: data.displayName,
-        shortName: data.shortName,
-        logoDocumentId: data.logoDocumentId,
-        iconDocumentId: data.iconDocumentId,
-        primaryColor: data.primaryColor,
-        secondaryColor: data.secondaryColor,
-        accentColor: data.accentColor,
-        ...(data.approvedColorsJson !== undefined
-          ? { approvedColorsJson: data.approvedColorsJson ?? [] }
-          : {}),
-        contactName: data.contactName,
-        contactPhone: data.contactPhone,
-        emailSenderName: data.emailSenderName,
-        supportEmail: data.supportEmail,
-        reportIdentity: data.reportIdentity,
-        documentFooter: data.documentFooter,
-        ...(data.customCssEnabled !== undefined
-          ? { customCssEnabled: data.customCssEnabled }
-          : {}),
-      };
+        const existing = await tx.query.tenantBranding.findFirst({
+          where: eq(tenantBranding.tenantId, tenantId),
+        });
+        const now = new Date();
+        const patch = {
+          displayName: data.displayName,
+          shortName: data.shortName,
+          logoDocumentId: data.logoDocumentId,
+          logoDarkDocumentId:
+            data.logoDarkDocumentId !== undefined
+              ? data.logoDarkDocumentId
+              : (existing?.logoDarkDocumentId ?? null),
+          iconDocumentId: data.iconDocumentId,
+          primaryColor: data.primaryColor,
+          secondaryColor: data.secondaryColor,
+          accentColor: data.accentColor,
+          ...(data.approvedColorsJson !== undefined
+            ? { approvedColorsJson: data.approvedColorsJson ?? [] }
+            : {}),
+          contactName: data.contactName,
+          contactPhone: data.contactPhone,
+          emailSenderName: data.emailSenderName,
+          supportEmail: data.supportEmail,
+          reportIdentity: data.reportIdentity,
+          documentFooter: data.documentFooter,
+          ...(data.customCssEnabled !== undefined
+            ? { customCssEnabled: data.customCssEnabled }
+            : {}),
+        };
 
-      let row;
-      if (existing) {
-        [row] = await tx
-          .update(tenantBranding)
-          .set({
-            ...patch,
-            recordVersion: sql`${tenantBranding.recordVersion} + 1`,
-            updatedAt: now,
-          })
-          .where(eq(tenantBranding.id, existing.id))
-          .returning();
-      } else {
-        [row] = await tx
-          .insert(tenantBranding)
-          .values({
-            id: createId(),
-            tenantId,
-            ...patch,
-            approvedColorsJson: data.approvedColorsJson ?? [],
-            customCssEnabled: data.customCssEnabled ?? false,
-            createdAt: now,
-            updatedAt: now,
-          })
-          .returning();
-      }
-      if (!row) {
-        throw new Error("Failed to upsert tenant branding");
-      }
-      await this.audit.writeInTransaction(tx, {
-        tenantId,
-        actorUserId: principal.userId,
-        actorPersonId: principal.personId,
-        actorType: "USER",
-        action: "branding.put",
-        resourceType: "tenant_branding",
-        resourceId: row.id,
-        result: "SUCCESS",
-        riskLevel: "LOW",
-        correlationId: principal.correlationId,
-        requestId: principal.requestId,
-        after: row,
-      });
-      return row;
-    }, principal.userId);
+        let row;
+        if (existing) {
+          [row] = await tx
+            .update(tenantBranding)
+            .set({
+              ...patch,
+              recordVersion: sql`${tenantBranding.recordVersion} + 1`,
+              updatedAt: now,
+            })
+            .where(eq(tenantBranding.id, existing.id))
+            .returning();
+        } else {
+          [row] = await tx
+            .insert(tenantBranding)
+            .values({
+              id: createId(),
+              tenantId,
+              ...patch,
+              approvedColorsJson: data.approvedColorsJson ?? [],
+              customCssEnabled: data.customCssEnabled ?? false,
+              createdAt: now,
+              updatedAt: now,
+            })
+            .returning();
+        }
+        if (!row) {
+          throw new Error("Failed to upsert tenant branding");
+        }
+        await this.audit.writeInTransaction(tx, {
+          tenantId,
+          actorUserId: principal.userId,
+          actorPersonId: principal.personId,
+          actorType: "USER",
+          action: "branding.put",
+          resourceType: "tenant_branding",
+          resourceId: row.id,
+          result: "SUCCESS",
+          riskLevel: "LOW",
+          correlationId: principal.correlationId,
+          requestId: principal.requestId,
+          after: row,
+        });
+        return row;
+      },
+      principal.userId,
+    );
   }
 
   async createAssetUpload(tenantId: string, input: unknown, principal: ForgePrincipal) {
@@ -125,41 +135,46 @@ export class BrandingService {
     const documentId = createId();
     const now = new Date();
 
-    await withTenantTransaction(this.db, tenantId, async (tx) => {
-      await tx.insert(forgeDocuments).values({
-        id: documentId,
-        tenantId,
-        originalFilename: data.filename,
-        storedFilename,
-        objectKey,
-        bucketName: this.storage.bucketName,
-        mimeType: data.mimeType,
-        fileSizeBytes: data.contentLength,
-        securityClassification: "INTERNAL",
-        malwareScanStatus: "PENDING",
-        retentionRule: "BRANDING_DEFAULT",
-        uploadStatus: "INITIALIZED",
-        source: "BRANDING",
-        uploadedByUserId: principal.userId,
-        createdAt: now,
-        updatedAt: now,
-      });
+    await withTenantTransaction(
+      this.db,
+      tenantId,
+      async (tx) => {
+        await tx.insert(forgeDocuments).values({
+          id: documentId,
+          tenantId,
+          originalFilename: data.filename,
+          storedFilename,
+          objectKey,
+          bucketName: this.storage.bucketName,
+          mimeType: data.mimeType,
+          fileSizeBytes: data.contentLength,
+          securityClassification: "INTERNAL",
+          malwareScanStatus: "PENDING",
+          retentionRule: "BRANDING_DEFAULT",
+          uploadStatus: "INITIALIZED",
+          source: "BRANDING",
+          uploadedByUserId: principal.userId,
+          createdAt: now,
+          updatedAt: now,
+        });
 
-      await this.audit.writeInTransaction(tx, {
-        tenantId,
-        actorUserId: principal.userId,
-        actorPersonId: principal.personId,
-        actorType: "USER",
-        action: "branding.asset.upload_initialized",
-        resourceType: "forge_document",
-        resourceId: documentId,
-        result: "SUCCESS",
-        riskLevel: "LOW",
-        correlationId: principal.correlationId,
-        requestId: principal.requestId,
-        after: { kind: data.kind, objectKey },
-      });
-    }, principal.userId);
+        await this.audit.writeInTransaction(tx, {
+          tenantId,
+          actorUserId: principal.userId,
+          actorPersonId: principal.personId,
+          actorType: "USER",
+          action: "branding.asset.upload_initialized",
+          resourceType: "forge_document",
+          resourceId: documentId,
+          result: "SUCCESS",
+          riskLevel: "LOW",
+          correlationId: principal.correlationId,
+          requestId: principal.requestId,
+          after: { kind: data.kind, objectKey },
+        });
+      },
+      principal.userId,
+    );
 
     const presign = await this.storage.createPresignedUploadUrl({
       objectKey,
@@ -177,59 +192,60 @@ export class BrandingService {
     };
   }
 
-  async createAssetDownloadUrl(
-    tenantId: string,
-    documentId: string,
-    principal: ForgePrincipal,
-  ) {
-    return withTenantTransaction(this.db, tenantId, async (tx) => {
-      const document = await tx.query.forgeDocuments.findFirst({
-        where: and(eq(forgeDocuments.id, documentId), eq(forgeDocuments.tenantId, tenantId)),
-      });
-      if (!document) {
-        throw new ForgeError("NOT_FOUND", "Branding asset document not found for tenant");
-      }
-      if (!documentBelongsToTenant(document.tenantId, tenantId)) {
-        throw new ForgeError("FORBIDDEN", "Document does not belong to the requested tenant");
-      }
-      if (!objectKeyBelongsToTenant(document.objectKey, tenantId)) {
-        throw new ForgeError("FORBIDDEN", "Object key does not belong to the requested tenant");
-      }
-      if (!document.objectKey.startsWith(brandingObjectKeyPrefix(tenantId))) {
-        throw new ForgeError("FORBIDDEN", "Document is not a branding asset for this tenant");
-      }
+  async createAssetDownloadUrl(tenantId: string, documentId: string, principal: ForgePrincipal) {
+    return withTenantTransaction(
+      this.db,
+      tenantId,
+      async (tx) => {
+        const document = await tx.query.forgeDocuments.findFirst({
+          where: and(eq(forgeDocuments.id, documentId), eq(forgeDocuments.tenantId, tenantId)),
+        });
+        if (!document) {
+          throw new ForgeError("NOT_FOUND", "Branding asset document not found for tenant");
+        }
+        if (!documentBelongsToTenant(document.tenantId, tenantId)) {
+          throw new ForgeError("FORBIDDEN", "Document does not belong to the requested tenant");
+        }
+        if (!objectKeyBelongsToTenant(document.objectKey, tenantId)) {
+          throw new ForgeError("FORBIDDEN", "Object key does not belong to the requested tenant");
+        }
+        if (!document.objectKey.startsWith(brandingObjectKeyPrefix(tenantId))) {
+          throw new ForgeError("FORBIDDEN", "Document is not a branding asset for this tenant");
+        }
 
-      const presign = await this.storage.createPresignedDownloadUrl({
-        objectKey: document.objectKey,
-        mimeType: document.mimeType,
-        filename: document.originalFilename,
-      });
-      this.storage.assertDownloadNotExpired(presign.expiresAt);
+        const presign = await this.storage.createPresignedDownloadUrl({
+          objectKey: document.objectKey,
+          mimeType: document.mimeType,
+          filename: document.originalFilename,
+        });
+        this.storage.assertDownloadNotExpired(presign.expiresAt);
 
-      await this.audit.writeInTransaction(tx, {
-        tenantId,
-        actorUserId: principal.userId,
-        actorPersonId: principal.personId,
-        actorType: "USER",
-        action: "branding.asset.download_requested",
-        resourceType: "forge_document",
-        resourceId: document.id,
-        result: "SUCCESS",
-        riskLevel: "LOW",
-        correlationId: principal.correlationId,
-        requestId: principal.requestId,
-        after: { expiresAt: presign.expiresAt },
-      });
+        await this.audit.writeInTransaction(tx, {
+          tenantId,
+          actorUserId: principal.userId,
+          actorPersonId: principal.personId,
+          actorType: "USER",
+          action: "branding.asset.download_requested",
+          resourceType: "forge_document",
+          resourceId: document.id,
+          result: "SUCCESS",
+          riskLevel: "LOW",
+          correlationId: principal.correlationId,
+          requestId: principal.requestId,
+          after: { expiresAt: presign.expiresAt },
+        });
 
-      return {
-        documentId: document.id,
-        downloadUrl: presign.downloadUrl,
-        expiresInSeconds: presign.expiresInSeconds,
-        expiresAt: presign.expiresAt,
-        mode: presign.mode,
-        mimeType: document.mimeType,
-      };
-    }, principal.userId);
+        return {
+          documentId: document.id,
+          downloadUrl: presign.downloadUrl,
+          expiresInSeconds: presign.expiresInSeconds,
+          expiresAt: presign.expiresAt,
+          mode: presign.mode,
+          mimeType: document.mimeType,
+        };
+      },
+      principal.userId,
+    );
   }
 
   private async assertOwnedDocumentRef(

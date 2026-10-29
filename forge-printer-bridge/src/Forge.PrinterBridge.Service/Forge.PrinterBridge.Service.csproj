@@ -1,0 +1,29 @@
+<Project Sdk="Microsoft.NET.Sdk.Worker">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0-windows</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <RootNamespace>Forge.PrinterBridge.Service</RootNamespace>
+    <AssemblyName>ForgePrinterBridge.Service</AssemblyName>
+    <OutputType>Exe</OutputType>
+    <UserSecretsId>forge-printer-bridge-service</UserSecretsId>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Extensions.Hosting" Version="8.0.1" />
+    <PackageReference Include="Microsoft.Extensions.Hosting.WindowsServices" Version="8.0.1" />
+    <PackageReference Include="Microsoft.Extensions.Http" Version="8.0.1" />
+  </ItemGroup>
+
+    <ItemGroup>
+    <ProjectReference Include="..\Forge.PrinterBridge.Bluetooth\Forge.PrinterBridge.Bluetooth.csproj" />
+    <ProjectReference Include="..\Forge.PrinterBridge.Cloud\Forge.PrinterBridge.Cloud.csproj" />
+    <ProjectReference Include="..\Forge.PrinterBridge.Core\Forge.PrinterBridge.Core.csproj" />
+    <ProjectReference Include="..\Forge.PrinterBridge.Diagnostics\Forge.PrinterBridge.Diagnostics.csproj" />
+    <ProjectReference Include="..\Forge.PrinterBridge.Security\Forge.PrinterBridge.Security.csproj" />
+    <ProjectReference Include="..\Forge.PrinterBridge.Shared\Forge.PrinterBridge.Shared.csproj" />
+    <ProjectReference Include="..\Forge.PrinterBridge.Windows\Forge.PrinterBridge.Windows.csproj" />
+  </ItemGroup>
+
+</Project>

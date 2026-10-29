@@ -1,7 +1,4 @@
-import type {
-  AiNarrativeProviderRequest,
-  AiNarrativeProviderResponse,
-} from "./schemas.js";
+import type { AiNarrativeProviderRequest, AiNarrativeProviderResponse } from "./schemas.js";
 
 /**
  * Provider abstraction — product modules must not call vendors directly.
@@ -10,9 +7,7 @@ import type {
  */
 export interface AiNarrativeProvider {
   readonly providerKey: string;
-  generateNarrative(
-    request: AiNarrativeProviderRequest,
-  ): Promise<AiNarrativeProviderResponse>;
+  generateNarrative(request: AiNarrativeProviderRequest): Promise<AiNarrativeProviderResponse>;
 }
 
 export type AiProviderSelectionContext = {

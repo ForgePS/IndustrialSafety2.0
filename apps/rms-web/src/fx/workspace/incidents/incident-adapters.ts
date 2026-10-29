@@ -1,9 +1,5 @@
 import type { IncidentDetail } from "@/lib/rms-api";
-import type {
-  WorkspaceRelatedItem,
-  WorkspaceSummaryItem,
-  WorkspaceTimelineItem,
-} from "../types";
+import type { WorkspaceRelatedItem, WorkspaceSummaryItem, WorkspaceTimelineItem } from "../types";
 
 function display(value: string | null | undefined, fallback = "—"): string {
   const trimmed = value?.trim();

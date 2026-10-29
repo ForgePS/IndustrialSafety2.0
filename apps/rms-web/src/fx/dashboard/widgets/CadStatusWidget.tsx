@@ -3,7 +3,11 @@
 import { useCallback, useEffect, useState } from "react";
 import { useAuth } from "@forge/web-kit";
 import { getCadOperationsSummary, type CadOperationsSummary } from "@/lib/rms-api";
-import { DashboardEmptyState, DashboardErrorState, DashboardLoadingState } from "../DashboardStates";
+import {
+  DashboardEmptyState,
+  DashboardErrorState,
+  DashboardLoadingState,
+} from "../DashboardStates";
 import type { DashboardWidgetComponentProps } from "../types";
 
 export function CadStatusWidget({ onRefreshRequest }: DashboardWidgetComponentProps) {
@@ -32,7 +36,9 @@ export function CadStatusWidget({ onRefreshRequest }: DashboardWidgetComponentPr
   }, [load, tick]);
 
   if (!me) {
-    return <DashboardEmptyState title="Sign in required" description="Sign in to view CAD status." />;
+    return (
+      <DashboardEmptyState title="Sign in required" description="Sign in to view CAD status." />
+    );
   }
   if (loading) return <DashboardLoadingState label="Loading CAD status" />;
   if (error) {
@@ -40,7 +46,11 @@ export function CadStatusWidget({ onRefreshRequest }: DashboardWidgetComponentPr
       <DashboardErrorState
         description={error}
         action={
-          <button type="button" className="fx-btn fx-btn--secondary" onClick={() => setTick((n) => n + 1)}>
+          <button
+            type="button"
+            className="fx-btn fx-btn--secondary"
+            onClick={() => setTick((n) => n + 1)}
+          >
             Retry
           </button>
         }
@@ -48,7 +58,12 @@ export function CadStatusWidget({ onRefreshRequest }: DashboardWidgetComponentPr
     );
   }
   if (!summary) {
-    return <DashboardEmptyState title="No CAD summary" description="CAD operations summary was not available." />;
+    return (
+      <DashboardEmptyState
+        title="No CAD summary"
+        description="CAD operations summary was not available."
+      />
+    );
   }
 
   return (

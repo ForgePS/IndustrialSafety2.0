@@ -1,30 +1,30 @@
 ﻿{
-    "cadIntakeDlqDepth":  0,
-    "appSecretLastChanged":  "2026-07-26T15:30:16.387000-05:00",
-    "phase4TenantUnchanged":  true,
-    "appSecretArn":  "arn:aws:secretsmanager:us-east-1:511343547817:secret:forge-development-secrets-database-app-SknUu5",
-    "environment":  "development",
-    "apiHealth":  "200 healthy",
-    "region":  "us-east-1",
-    "rmsUi":  "200",
-    "secretRotationPlanned":  false,
-    "date":  "2026-07-27T17:22:34.3132977-05:00",
-    "ecs":  {
-                "cluster":  "forge-development-ecs-platform",
-                "api":  {
-                            "taskDef":  "forge-development-ecs-platform-api:20",
-                            "desired":  1,
-                            "running":  1,
-                            "service":  "forge-development-ecs-platform-api",
-                            "image":  "511343547817.dkr.ecr.us-east-1.amazonaws.com/cdk-hnb659fds-container-assets-511343547817-us-east-1:a19aad61962a75e8f0e73e693745288fb906d42359421fd613e0b04dd000903b"
-                        },
-                "worker":  {
-                               "taskDef":  "forge-development-ecs-worker-service:19",
-                               "desired":  1,
-                               "running":  1,
-                               "service":  "forge-development-ecs-worker-service"
-                           }
-            },
-    "gitNote":  "Local .git has no commits; checkpoint recorded via this file + content hash",
-    "account":  "511343547817"
+  "cadIntakeDlqDepth": 0,
+  "appSecretLastChanged": "2026-07-26T15:30:16.387000-05:00",
+  "phase4TenantUnchanged": true,
+  "appSecretArn": "arn:aws:secretsmanager:us-east-1:511343547817:secret:forge-development-secrets-database-app-SknUu5",
+  "environment": "development",
+  "apiHealth": "200 healthy",
+  "region": "us-east-1",
+  "rmsUi": "200",
+  "secretRotationPlanned": false,
+  "date": "2026-07-27T17:22:34.3132977-05:00",
+  "ecs": {
+    "cluster": "forge-development-ecs-platform",
+    "api": {
+      "taskDef": "forge-development-ecs-platform-api:20",
+      "desired": 1,
+      "running": 1,
+      "service": "forge-development-ecs-platform-api",
+      "image": "511343547817.dkr.ecr.us-east-1.amazonaws.com/cdk-hnb659fds-container-assets-511343547817-us-east-1:a19aad61962a75e8f0e73e693745288fb906d42359421fd613e0b04dd000903b"
+    },
+    "worker": {
+      "taskDef": "forge-development-ecs-worker-service:19",
+      "desired": 1,
+      "running": 1,
+      "service": "forge-development-ecs-worker-service"
+    }
+  },
+  "gitNote": "Local .git has no commits; checkpoint recorded via this file + content hash",
+  "account": "511343547817"
 }

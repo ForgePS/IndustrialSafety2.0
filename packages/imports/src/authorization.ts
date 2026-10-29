@@ -35,7 +35,9 @@ export function assertImportPermission(
   }
 }
 
-export function importPermissionForAction(action: keyof typeof ACTION_PERMISSION): ImportPermissionCode {
+export function importPermissionForAction(
+  action: keyof typeof ACTION_PERMISSION,
+): ImportPermissionCode {
   return ACTION_PERMISSION[action]!;
 }
 
@@ -45,5 +47,7 @@ export function listImportPermissions(): readonly ImportPermissionCode[] {
 
 /** Tenant admins must not receive Creator-only platform grantables via import seeding. */
 export function tenantAdminImportPermissions(): readonly ImportPermissionCode[] {
-  return IMPORT_PERMISSIONS.filter((p) => p !== "import.sensitive" && p !== "import.template.manage");
+  return IMPORT_PERMISSIONS.filter(
+    (p) => p !== "import.sensitive" && p !== "import.template.manage",
+  );
 }

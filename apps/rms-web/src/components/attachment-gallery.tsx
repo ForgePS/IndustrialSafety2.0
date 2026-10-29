@@ -53,7 +53,10 @@ export function AttachmentGallery({
       const rows = await listAttachments(tenantId, incidentId);
       setItems(
         specialtySection
-          ? rows.filter((r) => (r as { specialtySection?: string }).specialtySection === specialtySection || true)
+          ? rows.filter(
+              (r) =>
+                (r as { specialtySection?: string }).specialtySection === specialtySection || true,
+            )
           : rows,
       );
       setStatus("ready");
@@ -78,7 +81,11 @@ export function AttachmentGallery({
         originalFilename: file.name,
         mimeType: file.type || "application/octet-stream",
         fileSizeBytes: file.size,
-        category: file.type.startsWith("image/") ? "SCENE_PHOTO" : file.type === "application/pdf" ? "PDF" : "OTHER",
+        category: file.type.startsWith("image/")
+          ? "SCENE_PHOTO"
+          : file.type === "application/pdf"
+            ? "PDF"
+            : "OTHER",
         specialtySection: specialtySection ?? null,
         source: "MOBILE_CAMERA",
       });
@@ -98,8 +105,8 @@ export function AttachmentGallery({
     <div className={styles.panel}>
       <h2>Attachments</h2>
       <p className={styles.muted}>
-        Photos and documents are stored privately. Uploads stay quarantined until malware scanning is
-        available — they are never shown as cleared by default.
+        Photos and documents are stored privately. Uploads stay quarantined until malware scanning
+        is available — they are never shown as cleared by default.
       </p>
       {status === "loading" ? <p className={styles.muted}>Loading…</p> : null}
       {error ? <p className={styles.error}>{error}</p> : null}

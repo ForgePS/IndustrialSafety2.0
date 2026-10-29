@@ -31,7 +31,10 @@ function safeFileName(name: string): string {
   return name.replace(/[^a-zA-Z0-9._-]+/g, "_");
 }
 
-export async function countCollection(db: Firestore, collectionPath: string): Promise<number | "UNKNOWN"> {
+export async function countCollection(
+  db: Firestore,
+  collectionPath: string,
+): Promise<number | "UNKNOWN"> {
   try {
     const agg = await db.collection(collectionPath).count().get();
     return agg.data().count;
@@ -48,7 +51,11 @@ export async function extractCollection(
   const firestoreDir = path.join(options.outDir, "firestore");
   mkdirSync(firestoreDir, { recursive: true });
   const outputFile = path.join(firestoreDir, `${safeFileName(collectionId)}.ndjson`);
-  const checkpointFile = path.join(options.outDir, ".checkpoints", `${safeFileName(collectionId)}.json`);
+  const checkpointFile = path.join(
+    options.outDir,
+    ".checkpoints",
+    `${safeFileName(collectionId)}.json`,
+  );
   mkdirSync(path.dirname(checkpointFile), { recursive: true });
 
   const sourceCount = await countCollection(db, collectionId);

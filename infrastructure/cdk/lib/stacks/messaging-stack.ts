@@ -36,6 +36,8 @@ export class MessagingStack extends cdk.Stack {
   readonly cadPollingDlq: sqs.Queue;
   readonly cadRetention: sqs.Queue;
   readonly cadRetentionDlq: sqs.Queue;
+  readonly reportingSchedules: sqs.Queue;
+  readonly reportingSchedulesDlq: sqs.Queue;
   readonly eventBus: events.EventBus;
   readonly importExecutionStateMachine?: ForgeImportExecutionStateMachine;
 
@@ -69,6 +71,8 @@ export class MessagingStack extends cdk.Stack {
     this.cadPollingDlq = this.queues.cadPollingDlq;
     this.cadRetention = this.queues.cadRetention;
     this.cadRetentionDlq = this.queues.cadRetentionDlq;
+    this.reportingSchedules = this.queues.reportingSchedules;
+    this.reportingSchedulesDlq = this.queues.reportingSchedulesDlq;
     this.eventBus = this.queues.eventBus;
 
     // S5: definition is deployment-ready. Keep inactive until EventBridge Pipe wiring is authorized.

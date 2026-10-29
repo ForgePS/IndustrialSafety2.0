@@ -9,6 +9,11 @@ export const EMAIL_TEMPLATE_KEYS = [
   "billing",
   "security",
   "system_notification",
+  "workers_comp_weekly_status",
+  "reporting_schedule_delivery",
+  "sanitation_inspection_completed",
+  "workers_comp_form",
+  "observation_assigned",
 ] as const;
 
 export type EmailTemplateKey = (typeof EMAIL_TEMPLATE_KEYS)[number];
@@ -35,6 +40,13 @@ export const createNotificationInputSchema = z.object({
 
 export type CreateNotificationInput = z.infer<typeof createNotificationInputSchema>;
 
+export type EmailAttachment = {
+  filename: string;
+  contentType: string;
+  /** Base64-encoded file bytes. */
+  contentBase64: string;
+};
+
 export type EmailMessage = {
   to: string;
   subject: string;
@@ -43,6 +55,7 @@ export type EmailMessage = {
   templateKey?: EmailTemplateKey;
   tenantId?: string;
   correlationId?: string;
+  attachments?: EmailAttachment[];
 };
 
 export type EmailSendResult = {

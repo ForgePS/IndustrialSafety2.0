@@ -1,12 +1,10 @@
 import { Inject, Injectable } from "@nestjs/common";
-import {
-  type Database,
-  withTenantTransaction,
-} from "@forge/database";
+import { type Database, withTenantTransaction } from "@forge/database";
 import { ForgeError } from "@forge/errors";
 import { DOMAIN_EVENT_TYPES } from "@forge/events";
 import {
   assertMalwareGate,
+  AliasColumnMapper,
   createImportJobSchema,
   createImportProfileSchema,
   getImportTemplate,
@@ -18,6 +16,7 @@ import {
   patchImportProfileSchema,
   putMappingsSchema,
   type ImportJobStatus,
+  type TargetSchema,
 } from "@forge/imports";
 import type { ForgePrincipal } from "@forge/tenant-context";
 import { DATABASE } from "../../tokens.js";
@@ -238,13 +237,9 @@ export class ImportsService {
             correlationId,
             data,
           });
-          const updated = await this.repo.updateJobStatus(
-            tx,
-            job,
-            next,
-            principal.userId,
-            { currentStage: "MAPPED" },
-          );
+          const updated = await this.repo.updateJobStatus(tx, job, next, principal.userId, {
+            currentStage: "MAPPED",
+          });
           await this.outbox.write(tx, {
             tenantId,
             aggregateType: "import_job",
@@ -319,8 +314,7 @@ export class ImportsService {
             throw new ForgeError("IMPORT_MAPPING_INVALID", "The mapping was not found.");
           }
           const remaining = await this.repo.countMappings(tx, tenantId, jobId);
-          const nextStatus =
-            remaining === 0 ? ("READY_FOR_MAPPING" as const) : ("MAPPED" as const);
+          const nextStatus = remaining === 0 ? ("READY_FOR_MAPPING" as const) : ("MAPPED" as const);
           const updated = await this.repo.updateJobStatus(tx, job, nextStatus, principal.userId);
           await this.outbox.write(tx, {
             tenantId,
@@ -344,11 +338,7 @@ export class ImportsService {
     principal: ForgePrincipal,
     jobId: string,
     correlationId: string,
-    action:
-      | "cancel"
-      | "submit_for_approval"
-      | "approve"
-      | "reject",
+    action: "cancel" | "submit_for_approval" | "approve" | "reject",
     auditAction: string,
     eventType: string,
   ) {
@@ -397,13 +387,7 @@ export class ImportsService {
               : action === "reject"
                 ? { approvedAt: null, approvedBy: null }
                 : {};
-          const row = await this.repo.updateJobStatus(
-            tx,
-            job,
-            next,
-            principal.userId,
-            extras,
-          );
+          const row = await this.repo.updateJobStatus(tx, job, next, principal.userId, extras);
           await this.outbox.write(tx, {
             tenantId,
             aggregateType: "import_job",
@@ -504,17 +488,11 @@ export class ImportsService {
           }
           // MK-S19 foundation: transition through validation gate when mappings exist.
           // Product row-rule workers remain domain adapters (LIM-IMP-006).
-          const updated = await this.repo.updateJobStatus(
-            tx,
-            job,
-            nextStatus,
-            principal.userId,
-            {
-              progressPercent: 100,
-              currentStage: "VALIDATION_FOUNDATION",
-              lastProgressAt: new Date(),
-            },
-          );
+          const updated = await this.repo.updateJobStatus(tx, job, nextStatus, principal.userId, {
+            progressPercent: 100,
+            currentStage: "VALIDATION_FOUNDATION",
+            lastProgressAt: new Date(),
+          });
           await this.outbox.write(tx, {
             tenantId,
             aggregateType: "import_job",
@@ -569,10 +547,7 @@ export class ImportsService {
           if (!job) {
             throw new ForgeError("IMPORT_JOB_NOT_FOUND", "The import job was not found.");
           }
-          const nextStatus = nextStatusForAction(
-            "request_preview",
-            job.status as ImportJobStatus,
-          );
+          const nextStatus = nextStatusForAction("request_preview", job.status as ImportJobStatus);
           const mappingCount = await this.repo.countMappings(tx, tenantId, jobId);
           if (mappingCount < 1) {
             throw new ForgeError(
@@ -580,17 +555,11 @@ export class ImportsService {
               "Mappings are required before requesting preview.",
             );
           }
-          const updated = await this.repo.updateJobStatus(
-            tx,
-            job,
-            nextStatus,
-            principal.userId,
-            {
-              progressPercent: 100,
-              currentStage: "PREVIEW_FOUNDATION",
-              lastProgressAt: new Date(),
-            },
-          );
+          const updated = await this.repo.updateJobStatus(tx, job, nextStatus, principal.userId, {
+            progressPercent: 100,
+            currentStage: "PREVIEW_FOUNDATION",
+            lastProgressAt: new Date(),
+          });
           await this.outbox.write(tx, {
             tenantId,
             aggregateType: "import_job",
@@ -872,5 +841,78 @@ export class ImportsService {
       throw new ForgeError("IMPORT_TEMPLATE_NOT_FOUND", "The import template was not found.");
     }
     return template;
+  }
+
+  async suggestMappings(principal: ForgePrincipal, jobId: string) {
+    const tenantId = this.requireTenant(principal);
+    return withTenantTransaction(
+      this.db,
+      tenantId,
+      async (tx) => {
+        const job = await this.repo.getJob(tx, tenantId, jobId);
+        if (!job) {
+          throw new ForgeError("IMPORT_JOB_NOT_FOUND", "The import job was not found.");
+        }
+
+        const file = await this.repo.getFileForJob(tx, tenantId, jobId);
+        const headersRaw = file?.detectedHeadersJson;
+        const detectedHeaders = Array.isArray(headersRaw)
+          ? headersRaw.filter((h): h is string => typeof h === "string")
+          : typeof headersRaw === "object" &&
+              headersRaw !== null &&
+              Array.isArray((headersRaw as { headers?: unknown }).headers)
+            ? (headersRaw as { headers: unknown[] }).headers.filter(
+                (h): h is string => typeof h === "string",
+              )
+            : [];
+
+        const templates = listImportTemplates({
+          productKey: job.productCode,
+          moduleKey: job.moduleCode,
+          recordCategory: job.recordType,
+        });
+        const template =
+          templates[0] ??
+          listImportTemplates({
+            productKey: job.productCode,
+            moduleKey: job.moduleCode,
+          })[0] ??
+          (job.productCode === "FORGE_INDUSTRIAL"
+            ? listImportTemplates({ productKey: "FORGE_INDUSTRIAL" }).find(
+                (t) => t.recordCategory === job.recordType || t.moduleKey === job.moduleCode,
+              )
+            : undefined);
+
+        if (!template) {
+          throw new ForgeError(
+            "IMPORT_TEMPLATE_NOT_FOUND",
+            "No import template found for this job's product/module/category.",
+          );
+        }
+
+        const schema: TargetSchema = {
+          ref: {
+            productCode: template.productKey,
+            moduleCode: template.moduleKey,
+            recordType: template.recordCategory,
+          },
+          fields: template.fields.map((field) => ({
+            field: field.fieldKey,
+            dataType: field.dataType,
+            required: field.required,
+          })),
+        };
+
+        const mapper = new AliasColumnMapper();
+        const mappings = await mapper.suggest(detectedHeaders, schema);
+        return {
+          jobId: job.id,
+          templateKey: template.templateKey,
+          detectedHeaders,
+          mappings,
+        };
+      },
+      principal.userId,
+    );
   }
 }

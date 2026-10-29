@@ -123,10 +123,7 @@ export class ImportsController {
     @Req() req: RequestWithIds,
   ) {
     const ids = getRequestIds(req);
-    return ok(
-      await this.duplicates.review(principal, duplicateId, body, ids.correlationId),
-      ids,
-    );
+    return ok(await this.duplicates.review(principal, duplicateId, body, ids.correlationId), ids);
   }
 
   @Post("duplicates/:duplicateId/approve")
@@ -139,10 +136,7 @@ export class ImportsController {
     @Req() req: RequestWithIds,
   ) {
     const ids = getRequestIds(req);
-    return ok(
-      await this.duplicates.approve(principal, duplicateId, body, ids.correlationId),
-      ids,
-    );
+    return ok(await this.duplicates.approve(principal, duplicateId, body, ids.correlationId), ids);
   }
 
   @Post("duplicates/:duplicateId/reject")
@@ -155,10 +149,7 @@ export class ImportsController {
     @Req() req: RequestWithIds,
   ) {
     const ids = getRequestIds(req);
-    return ok(
-      await this.duplicates.reject(principal, duplicateId, body, ids.correlationId),
-      ids,
-    );
+    return ok(await this.duplicates.reject(principal, duplicateId, body, ids.correlationId), ids);
   }
 
   @Post("zip/validate")
@@ -257,7 +248,10 @@ export class ImportsController {
     } catch (error) {
       const code = (error as { code?: string }).code;
       if (code === "IMPORT_INVALID_STATE_TRANSITION") {
-        return ok(await this.uploads.cancelIncludingUpload(principal, jobId, ids.correlationId), ids);
+        return ok(
+          await this.uploads.cancelIncludingUpload(principal, jobId, ids.correlationId),
+          ids,
+        );
       }
       throw error;
     }
@@ -452,10 +446,7 @@ export class ImportsController {
     @Principal() principal: ForgePrincipal,
     @Req() req: RequestWithIds,
   ) {
-    return ok(
-      await this.security.listScanEvents(principal, jobId, fileId),
-      getRequestIds(req),
-    );
+    return ok(await this.security.listScanEvents(principal, jobId, fileId), getRequestIds(req));
   }
 
   @Post("jobs/:jobId/files/:fileId/rescan")
@@ -543,6 +534,16 @@ export class ImportsController {
     @Req() req: RequestWithIds,
   ) {
     return ok(await this.imports.listMappings(principal, jobId), getRequestIds(req));
+  }
+
+  @Post("jobs/:jobId/suggest-mappings")
+  @RequirePermission("import.map")
+  async suggestMappings(
+    @Param("jobId") jobId: string,
+    @Principal() principal: ForgePrincipal,
+    @Req() req: RequestWithIds,
+  ) {
+    return ok(await this.imports.suggestMappings(principal, jobId), getRequestIds(req));
   }
 
   @Put("jobs/:jobId/mappings")
@@ -661,10 +662,7 @@ export class ImportsController {
         ids,
       );
     }
-    return ok(
-      await this.imports.patchProfile(principal, profileId, body, ids.correlationId),
-      ids,
-    );
+    return ok(await this.imports.patchProfile(principal, profileId, body, ids.correlationId), ids);
   }
 
   @Get("profiles/:profileId/versions")

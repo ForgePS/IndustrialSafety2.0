@@ -42,14 +42,8 @@
         "incident_analysis_type_files.type_deck_porch_material",
         "type_files_crr.type_deck_porch_material"
       ],
-      "type_duty": [
-        "incident_analysis_type_files.type_duty",
-        "incident_type_files.type_duty"
-      ],
-      "type_eaves": [
-        "incident_analysis_type_files.type_eaves",
-        "type_files_crr.type_eaves"
-      ],
+      "type_duty": ["incident_analysis_type_files.type_duty", "incident_type_files.type_duty"],
+      "type_eaves": ["incident_analysis_type_files.type_eaves", "type_files_crr.type_eaves"],
       "type_emerghaz_elec": [
         "incident_analysis_type_files.type_emerghaz_elec",
         "incident_type_files.type_emerghaz_elec"
@@ -86,19 +80,13 @@
         "incident_analysis_type_files.type_roof_material",
         "type_files_crr.type_roof_material"
       ],
-      "type_room": [
-        "incident_analysis_type_files.type_room",
-        "incident_type_files.type_room"
-      ],
+      "type_room": ["incident_analysis_type_files.type_room", "incident_type_files.type_room"],
       "type_vacancy": [
         "incident_analysis_type_files.type_vacancy",
         "shared_type_files.type_vacancy",
         "type_files_crr.type_vacancy"
       ],
-      "type_vents": [
-        "incident_analysis_type_files.type_vents",
-        "type_files_crr.type_vents"
-      ],
+      "type_vents": ["incident_analysis_type_files.type_vents", "type_files_crr.type_vents"],
       "type_window_panes": [
         "incident_analysis_type_files.type_window_panes",
         "type_files_crr.type_window_panes"
@@ -107,90 +95,43 @@
     "implementation_rule": "Resolve a field to the value-set source in its own NERIS package first. Preserve inactive historical values for display, but do not offer inactive values for new selections."
   },
   "index": {
-    "type_dept": [
-      "entity_type_files.type_dept"
-    ],
-    "type_disp_proto_fire": [
-      "entity_type_files.type_disp_proto_fire"
-    ],
-    "type_disp_proto_med": [
-      "entity_type_files.type_disp_proto_med"
-    ],
-    "type_pop_source": [
-      "entity_type_files.type_pop_source"
-    ],
-    "type_psap": [
-      "entity_type_files.type_psap"
-    ],
-    "type_psap_capa": [
-      "entity_type_files.type_psap_capa"
-    ],
-    "type_psap_disc": [
-      "entity_type_files.type_psap_disc"
-    ],
-    "type_psap_juris": [
-      "entity_type_files.type_psap_juris"
-    ],
+    "type_dept": ["entity_type_files.type_dept"],
+    "type_disp_proto_fire": ["entity_type_files.type_disp_proto_fire"],
+    "type_disp_proto_med": ["entity_type_files.type_disp_proto_med"],
+    "type_pop_source": ["entity_type_files.type_pop_source"],
+    "type_psap": ["entity_type_files.type_psap"],
+    "type_psap_capa": ["entity_type_files.type_psap_capa"],
+    "type_psap_disc": ["entity_type_files.type_psap_disc"],
+    "type_psap_juris": ["entity_type_files.type_psap_juris"],
     "type_action_tactic": [
       "health_and_safety_type_files.type_action_tactic",
       "incident_type_files.type_action_tactic"
     ],
-    "type_activity": [
-      "health_and_safety_type_files.type_activity"
-    ],
-    "type_assignment": [
-      "health_and_safety_type_files.type_assignment"
-    ],
-    "type_body_part_injured": [
-      "health_and_safety_type_files.type_body_part_injured"
-    ],
-    "type_disposition": [
-      "health_and_safety_type_files.type_disposition"
-    ],
-    "type_exposure": [
-      "health_and_safety_type_files.type_exposure"
-    ],
+    "type_activity": ["health_and_safety_type_files.type_activity"],
+    "type_assignment": ["health_and_safety_type_files.type_assignment"],
+    "type_body_part_injured": ["health_and_safety_type_files.type_body_part_injured"],
+    "type_disposition": ["health_and_safety_type_files.type_disposition"],
+    "type_exposure": ["health_and_safety_type_files.type_exposure"],
     "type_gender": [
       "health_and_safety_type_files.type_gender",
       "incident_analysis_type_files.type_gender",
       "incident_type_files.type_gender"
     ],
-    "type_injury": [
-      "health_and_safety_type_files.type_injury"
-    ],
-    "type_injury_cause": [
-      "health_and_safety_type_files.type_injury_cause"
-    ],
+    "type_injury": ["health_and_safety_type_files.type_injury"],
+    "type_injury_cause": ["health_and_safety_type_files.type_injury_cause"],
     "type_race": [
       "health_and_safety_type_files.type_race",
       "incident_analysis_type_files.type_race",
       "incident_type_files.type_race"
     ],
-    "type_service_type": [
-      "health_and_safety_type_files.type_service_type"
-    ],
-    "type_severity": [
-      "health_and_safety_type_files.type_severity"
-    ],
-    "type_shift": [
-      "health_and_safety_type_files.type_shift"
-    ],
-    "type_traumatic_event": [
-      "health_and_safety_type_files.type_traumatic_event"
-    ],
-    "type_aspect": [
-      "incident_analysis_type_files.type_aspect"
-    ],
-    "type_attached": [
-      "incident_analysis_type_files.type_attached",
-      "type_files_crr.type_attached"
-    ],
-    "type_battery_cell": [
-      "incident_analysis_type_files.type_battery_cell"
-    ],
-    "type_battery_chemistry": [
-      "incident_analysis_type_files.type_battery_chemistry"
-    ],
+    "type_service_type": ["health_and_safety_type_files.type_service_type"],
+    "type_severity": ["health_and_safety_type_files.type_severity"],
+    "type_shift": ["health_and_safety_type_files.type_shift"],
+    "type_traumatic_event": ["health_and_safety_type_files.type_traumatic_event"],
+    "type_aspect": ["incident_analysis_type_files.type_aspect"],
+    "type_attached": ["incident_analysis_type_files.type_attached", "type_files_crr.type_attached"],
+    "type_battery_cell": ["incident_analysis_type_files.type_battery_cell"],
+    "type_battery_chemistry": ["incident_analysis_type_files.type_battery_chemistry"],
     "type_casualty": [
       "incident_analysis_type_files.type_casualty",
       "incident_type_files.type_casualty"
@@ -199,19 +140,13 @@
       "incident_analysis_type_files.type_casualty_cause",
       "incident_type_files.type_casualty_cause"
     ],
-    "type_casualty_ppe": [
-      "incident_analysis_type_files.type_casualty_ppe"
-    ],
-    "type_casualty_timeline": [
-      "incident_analysis_type_files.type_casualty_timeline"
-    ],
+    "type_casualty_ppe": ["incident_analysis_type_files.type_casualty_ppe"],
+    "type_casualty_timeline": ["incident_analysis_type_files.type_casualty_timeline"],
     "type_construction": [
       "incident_analysis_type_files.type_construction",
       "type_files_crr.type_construction"
     ],
-    "type_contributing_hazards": [
-      "incident_analysis_type_files.type_contributing_hazards"
-    ],
+    "type_contributing_hazards": ["incident_analysis_type_files.type_contributing_hazards"],
     "type_deck_porch_grade": [
       "incident_analysis_type_files.type_deck_porch_grade",
       "type_files_crr.type_deck_porch_grade"
@@ -220,30 +155,16 @@
       "incident_analysis_type_files.type_deck_porch_material",
       "type_files_crr.type_deck_porch_material"
     ],
-    "type_dins_origin_location": [
-      "incident_analysis_type_files.type_dins_origin_location"
-    ],
-    "type_displace_cause": [
-      "incident_analysis_type_files.type_displace_cause"
-    ],
-    "type_distance_unit": [
-      "incident_analysis_type_files.type_distance_unit"
-    ],
-    "type_duty": [
-      "incident_analysis_type_files.type_duty",
-      "incident_type_files.type_duty"
-    ],
-    "type_eaves": [
-      "incident_analysis_type_files.type_eaves",
-      "type_files_crr.type_eaves"
-    ],
+    "type_dins_origin_location": ["incident_analysis_type_files.type_dins_origin_location"],
+    "type_displace_cause": ["incident_analysis_type_files.type_displace_cause"],
+    "type_distance_unit": ["incident_analysis_type_files.type_distance_unit"],
+    "type_duty": ["incident_analysis_type_files.type_duty", "incident_type_files.type_duty"],
+    "type_eaves": ["incident_analysis_type_files.type_eaves", "type_files_crr.type_eaves"],
     "type_emerghaz_elec": [
       "incident_analysis_type_files.type_emerghaz_elec",
       "incident_type_files.type_emerghaz_elec"
     ],
-    "type_emerghaz_suppression": [
-      "incident_analysis_type_files.type_emerghaz_suppression"
-    ],
+    "type_emerghaz_suppression": ["incident_analysis_type_files.type_emerghaz_suppression"],
     "type_exterior_finish": [
       "incident_analysis_type_files.type_exterior_finish",
       "type_files_crr.type_exterior_finish"
@@ -252,18 +173,10 @@
       "incident_analysis_type_files.type_fire_bldg_damage",
       "incident_type_files.type_fire_bldg_damage"
     ],
-    "type_fuel_arrangement": [
-      "incident_analysis_type_files.type_fuel_arrangement"
-    ],
-    "type_fuel_distribution": [
-      "incident_analysis_type_files.type_fuel_distribution"
-    ],
-    "type_fuel_size": [
-      "incident_analysis_type_files.type_fuel_size"
-    ],
-    "type_general_fire_cause": [
-      "incident_analysis_type_files.type_general_fire_cause"
-    ],
+    "type_fuel_arrangement": ["incident_analysis_type_files.type_fuel_arrangement"],
+    "type_fuel_distribution": ["incident_analysis_type_files.type_fuel_distribution"],
+    "type_fuel_size": ["incident_analysis_type_files.type_fuel_size"],
+    "type_general_fire_cause": ["incident_analysis_type_files.type_general_fire_cause"],
     "type_hazard_cause": [
       "incident_analysis_type_files.type_hazard_cause",
       "incident_type_files.type_hazard_cause"
@@ -280,220 +193,88 @@
       "incident_analysis_type_files.type_hazard_unit",
       "incident_type_files.type_hazard_unit"
     ],
-    "type_hazsit_type": [
-      "incident_analysis_type_files.type_hazsit_type"
-    ],
-    "type_human_factors": [
-      "incident_analysis_type_files.type_human_factors"
-    ],
-    "type_indoor_outdoor": [
-      "incident_analysis_type_files.type_indoor_outdoor"
-    ],
-    "type_intersectional_space": [
-      "incident_analysis_type_files.type_intersectional_space"
-    ],
+    "type_hazsit_type": ["incident_analysis_type_files.type_hazsit_type"],
+    "type_human_factors": ["incident_analysis_type_files.type_human_factors"],
+    "type_indoor_outdoor": ["incident_analysis_type_files.type_indoor_outdoor"],
+    "type_intersectional_space": ["incident_analysis_type_files.type_intersectional_space"],
     "type_job_classification": [
       "incident_analysis_type_files.type_job_classification",
       "incident_type_files.type_job_classification"
     ],
-    "type_outdoor_activities": [
-      "incident_analysis_type_files.type_outdoor_activities"
-    ],
-    "type_product_contribution": [
-      "incident_analysis_type_files.type_product_contribution"
-    ],
-    "type_rate_of_spread": [
-      "incident_analysis_type_files.type_rate_of_spread"
-    ],
-    "type_relative_position": [
-      "incident_analysis_type_files.type_relative_position"
-    ],
+    "type_outdoor_activities": ["incident_analysis_type_files.type_outdoor_activities"],
+    "type_product_contribution": ["incident_analysis_type_files.type_product_contribution"],
+    "type_rate_of_spread": ["incident_analysis_type_files.type_rate_of_spread"],
+    "type_relative_position": ["incident_analysis_type_files.type_relative_position"],
     "type_roof_material": [
       "incident_analysis_type_files.type_roof_material",
       "type_files_crr.type_roof_material"
     ],
-    "type_room": [
-      "incident_analysis_type_files.type_room",
-      "incident_type_files.type_room"
-    ],
+    "type_room": ["incident_analysis_type_files.type_room", "incident_type_files.type_room"],
     "type_vacancy": [
       "incident_analysis_type_files.type_vacancy",
       "shared_type_files.type_vacancy",
       "type_files_crr.type_vacancy"
     ],
-    "type_vehicle_type": [
-      "incident_analysis_type_files.type_vehicle_type"
-    ],
-    "type_vents": [
-      "incident_analysis_type_files.type_vents",
-      "type_files_crr.type_vents"
-    ],
-    "type_window_damage": [
-      "incident_analysis_type_files.type_window_damage"
-    ],
+    "type_vehicle_type": ["incident_analysis_type_files.type_vehicle_type"],
+    "type_vents": ["incident_analysis_type_files.type_vents", "type_files_crr.type_vents"],
+    "type_window_damage": ["incident_analysis_type_files.type_window_damage"],
     "type_window_panes": [
       "incident_analysis_type_files.type_window_panes",
       "type_files_crr.type_window_panes"
     ],
-    "type_aid": [
-      "incident_type_files.type_aid"
-    ],
-    "type_aid_direction": [
-      "incident_type_files.type_aid_direction"
-    ],
-    "type_aid_nonfd": [
-      "incident_type_files.type_aid_nonfd"
-    ],
-    "type_alarm_failure": [
-      "incident_type_files.type_alarm_failure"
-    ],
-    "type_alarm_fire": [
-      "incident_type_files.type_alarm_fire"
-    ],
-    "type_alarm_operation": [
-      "incident_type_files.type_alarm_operation"
-    ],
-    "type_alarm_other": [
-      "incident_type_files.type_alarm_other"
-    ],
-    "type_alarm_smoke": [
-      "incident_type_files.type_alarm_smoke"
-    ],
-    "type_casualty_action": [
-      "incident_type_files.type_casualty_action"
-    ],
-    "type_emerghaz_powergen": [
-      "incident_type_files.type_emerghaz_powergen"
-    ],
-    "type_emerghaz_pv": [
-      "incident_type_files.type_emerghaz_pv"
-    ],
-    "type_emerghaz_pv_ign": [
-      "incident_type_files.type_emerghaz_pv_ign"
-    ],
-    "type_exposure_item": [
-      "incident_type_files.type_exposure_item"
-    ],
-    "type_exposure_loc": [
-      "incident_type_files.type_exposure_loc"
-    ],
-    "type_fire_cause_in": [
-      "incident_type_files.type_fire_cause_in"
-    ],
-    "type_fire_cause_out": [
-      "incident_type_files.type_fire_cause_out"
-    ],
-    "type_fire_condition_arrival": [
-      "incident_type_files.type_fire_condition_arrival"
-    ],
-    "type_fire_invest": [
-      "incident_type_files.type_fire_invest"
-    ],
-    "type_fire_invest_need": [
-      "incident_type_files.type_fire_invest_need"
-    ],
-    "type_full_partial": [
-      "incident_type_files.type_full_partial"
-    ],
-    "type_hazard_disposition": [
-      "incident_type_files.type_hazard_disposition"
-    ],
-    "type_hazard_released_into": [
-      "incident_type_files.type_hazard_released_into"
-    ],
-    "type_incident": [
-      "incident_type_files.type_incident"
-    ],
-    "type_medical_patient_care": [
-      "incident_type_files.type_medical_patient_care"
-    ],
-    "type_medical_patient_status": [
-      "incident_type_files.type_medical_patient_status"
-    ],
-    "type_medical_transport": [
-      "incident_type_files.type_medical_transport"
-    ],
-    "type_noaction": [
-      "incident_type_files.type_noaction"
-    ],
-    "type_occupant_response": [
-      "incident_type_files.type_occupant_response"
-    ],
-    "type_rescue": [
-      "incident_type_files.type_rescue"
-    ],
-    "type_rescue_action": [
-      "incident_type_files.type_rescue_action"
-    ],
-    "type_rescue_impedance": [
-      "incident_type_files.type_rescue_impedance"
-    ],
-    "type_rescue_mode": [
-      "incident_type_files.type_rescue_mode"
-    ],
-    "type_rescue_path": [
-      "incident_type_files.type_rescue_path"
-    ],
-    "type_rr_presence": [
-      "incident_type_files.type_rr_presence"
-    ],
-    "type_source_target": [
-      "incident_type_files.type_source_target"
-    ],
-    "type_suppress_cooking": [
-      "incident_type_files.type_suppress_cooking"
-    ],
-    "type_suppress_fire": [
-      "incident_type_files.type_suppress_fire"
-    ],
-    "type_suppress_operation": [
-      "incident_type_files.type_suppress_operation"
-    ],
-    "type_water_supply": [
-      "incident_type_files.type_water_supply"
-    ],
-    "type_loc_sn_direction": [
-      "shared_type_files.type_loc_sn_direction"
-    ],
-    "type_loc_sn_pre_sep": [
-      "shared_type_files.type_loc_sn_pre_sep"
-    ],
-    "type_location_use": [
-      "shared_type_files.type_location_use"
-    ],
-    "type_alcohol_tobacco_drugs": [
-      "type_files_crr.type_alcohol_tobacco_drugs"
-    ],
-    "type_attached_material": [
-      "type_files_crr.type_attached_material"
-    ],
-    "type_foundation": [
-      "type_files_crr.type_foundation"
-    ],
-    "type_health_problems": [
-      "type_files_crr.type_health_problems"
-    ],
-    "type_hydrant_impediment": [
-      "type_files_crr.type_hydrant_impediment"
-    ],
-    "type_lot_units": [
-      "type_files_crr.type_lot_units"
-    ],
-    "type_nfpa_rating": [
-      "type_files_crr.type_nfpa_rating"
-    ],
-    "type_reason_not_engaged": [
-      "type_files_crr.type_reason_not_engaged"
-    ],
-    "type_services_referred": [
-      "type_files_crr.type_services_referred"
-    ],
-    "type_target_audience": [
-      "type_files_crr.type_target_audience"
-    ],
-    "type_zoning": [
-      "type_files_crr.type_zoning"
-    ]
+    "type_aid": ["incident_type_files.type_aid"],
+    "type_aid_direction": ["incident_type_files.type_aid_direction"],
+    "type_aid_nonfd": ["incident_type_files.type_aid_nonfd"],
+    "type_alarm_failure": ["incident_type_files.type_alarm_failure"],
+    "type_alarm_fire": ["incident_type_files.type_alarm_fire"],
+    "type_alarm_operation": ["incident_type_files.type_alarm_operation"],
+    "type_alarm_other": ["incident_type_files.type_alarm_other"],
+    "type_alarm_smoke": ["incident_type_files.type_alarm_smoke"],
+    "type_casualty_action": ["incident_type_files.type_casualty_action"],
+    "type_emerghaz_powergen": ["incident_type_files.type_emerghaz_powergen"],
+    "type_emerghaz_pv": ["incident_type_files.type_emerghaz_pv"],
+    "type_emerghaz_pv_ign": ["incident_type_files.type_emerghaz_pv_ign"],
+    "type_exposure_item": ["incident_type_files.type_exposure_item"],
+    "type_exposure_loc": ["incident_type_files.type_exposure_loc"],
+    "type_fire_cause_in": ["incident_type_files.type_fire_cause_in"],
+    "type_fire_cause_out": ["incident_type_files.type_fire_cause_out"],
+    "type_fire_condition_arrival": ["incident_type_files.type_fire_condition_arrival"],
+    "type_fire_invest": ["incident_type_files.type_fire_invest"],
+    "type_fire_invest_need": ["incident_type_files.type_fire_invest_need"],
+    "type_full_partial": ["incident_type_files.type_full_partial"],
+    "type_hazard_disposition": ["incident_type_files.type_hazard_disposition"],
+    "type_hazard_released_into": ["incident_type_files.type_hazard_released_into"],
+    "type_incident": ["incident_type_files.type_incident"],
+    "type_medical_patient_care": ["incident_type_files.type_medical_patient_care"],
+    "type_medical_patient_status": ["incident_type_files.type_medical_patient_status"],
+    "type_medical_transport": ["incident_type_files.type_medical_transport"],
+    "type_noaction": ["incident_type_files.type_noaction"],
+    "type_occupant_response": ["incident_type_files.type_occupant_response"],
+    "type_rescue": ["incident_type_files.type_rescue"],
+    "type_rescue_action": ["incident_type_files.type_rescue_action"],
+    "type_rescue_impedance": ["incident_type_files.type_rescue_impedance"],
+    "type_rescue_mode": ["incident_type_files.type_rescue_mode"],
+    "type_rescue_path": ["incident_type_files.type_rescue_path"],
+    "type_rr_presence": ["incident_type_files.type_rr_presence"],
+    "type_source_target": ["incident_type_files.type_source_target"],
+    "type_suppress_cooking": ["incident_type_files.type_suppress_cooking"],
+    "type_suppress_fire": ["incident_type_files.type_suppress_fire"],
+    "type_suppress_operation": ["incident_type_files.type_suppress_operation"],
+    "type_water_supply": ["incident_type_files.type_water_supply"],
+    "type_loc_sn_direction": ["shared_type_files.type_loc_sn_direction"],
+    "type_loc_sn_pre_sep": ["shared_type_files.type_loc_sn_pre_sep"],
+    "type_location_use": ["shared_type_files.type_location_use"],
+    "type_alcohol_tobacco_drugs": ["type_files_crr.type_alcohol_tobacco_drugs"],
+    "type_attached_material": ["type_files_crr.type_attached_material"],
+    "type_foundation": ["type_files_crr.type_foundation"],
+    "type_health_problems": ["type_files_crr.type_health_problems"],
+    "type_hydrant_impediment": ["type_files_crr.type_hydrant_impediment"],
+    "type_lot_units": ["type_files_crr.type_lot_units"],
+    "type_nfpa_rating": ["type_files_crr.type_nfpa_rating"],
+    "type_reason_not_engaged": ["type_files_crr.type_reason_not_engaged"],
+    "type_services_referred": ["type_files_crr.type_services_referred"],
+    "type_target_audience": ["type_files_crr.type_target_audience"],
+    "type_zoning": ["type_files_crr.type_zoning"]
   },
   "value_sets": [
     {

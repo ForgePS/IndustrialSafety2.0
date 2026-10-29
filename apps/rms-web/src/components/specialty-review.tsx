@@ -108,9 +108,7 @@ export function SpecialtyReviewPanel({
         canSpecialtyReview || canViewAudit
           ? listStatusHistory(tenantId, incidentId).catch(() => [])
           : Promise.resolve([]),
-        canViewAudit
-          ? listAuditEvents(tenantId, 1, 100).catch(() => [])
-          : Promise.resolve([]),
+        canViewAudit ? listAuditEvents(tenantId, 1, 100).catch(() => []) : Promise.resolve([]),
       ]);
       setDescriptor(nextDescriptor);
       setComments(commentRows);
@@ -133,13 +131,7 @@ export function SpecialtyReviewPanel({
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to load specialty review");
     }
-  }, [
-    tenantId,
-    incidentId,
-    canIncidentReview,
-    canSpecialtyReview,
-    canViewAudit,
-  ]);
+  }, [tenantId, incidentId, canIncidentReview, canSpecialtyReview, canViewAudit]);
 
   useEffect(() => {
     void load();
@@ -232,7 +224,9 @@ export function SpecialtyReviewPanel({
                   <strong>{group.label}</strong>
                   <span className={styles.muted} aria-label={`Status ${group.state}`}>
                     {group.state}
-                    {group.completionPercent != null ? ` · ${group.completionPercent}% complete` : ""}
+                    {group.completionPercent != null
+                      ? ` · ${group.completionPercent}% complete`
+                      : ""}
                     {group.hasBlockingGaps ? " · blocking gaps" : ""}
                   </span>
                 </div>
@@ -265,7 +259,8 @@ export function SpecialtyReviewPanel({
                         <ul>
                           {sectionIssues.map((issue, index) => (
                             <li key={`${group.sectionKey}-${index}`}>
-                              <span className={styles.muted}>[{issue.severity}]</span> {issue.message}{" "}
+                              <span className={styles.muted}>[{issue.severity}]</span>{" "}
+                              {issue.message}{" "}
                               {issue.technicalReference || issue.sectionKey || issue.fieldId ? (
                                 <Link
                                   href={`/incidents/${incidentId}/?section=${issue.sectionKey ?? group.sectionKey}${
@@ -443,8 +438,7 @@ export function SpecialtyReviewPanel({
                   specialtyRecordId: targetRecordId || null,
                   attachmentId: targetAttachmentId || null,
                   reviewerRole: reviewerRole || null,
-                  assignedToUserId:
-                    assignToOwner && reportOwnerUserId ? reportOwnerUserId : null,
+                  assignedToUserId: assignToOwner && reportOwnerUserId ? reportOwnerUserId : null,
                 });
                 setCommentBody("");
               }, "Comment added")
@@ -485,16 +479,18 @@ export function SpecialtyReviewPanel({
           {comments.map((comment) => (
             <li
               key={comment.id}
-              style={{ border: "1px solid var(--border, #ddd)", borderRadius: 8, padding: "0.75rem" }}
+              style={{
+                border: "1px solid var(--border, #ddd)",
+                borderRadius: 8,
+                padding: "0.75rem",
+              }}
             >
               <p style={{ margin: 0 }}>{comment.body}</p>
               <p className={styles.muted} style={{ margin: "0.35rem 0" }}>
                 Status: {comment.status ?? "OPEN"}
                 {comment.sectionKey ? ` · Section ${sectionLabel(comment.sectionKey)}` : ""}
                 {comment.fieldId ? " · Field" : ""}
-                {comment.specialtyRecordType
-                  ? ` · Record ${comment.specialtyRecordType}`
-                  : ""}
+                {comment.specialtyRecordType ? ` · Record ${comment.specialtyRecordType}` : ""}
                 {comment.attachmentId ? " · Attachment" : ""}
                 {comment.reviewerRole ? ` · ${comment.reviewerRole}` : ""}
                 {comment.assignedToUserId ? " · Assigned to reporting officer" : ""}
@@ -554,10 +550,8 @@ export function SpecialtyReviewPanel({
         <ul>
           {statusHistory.map((row) => (
             <li key={row.id}>
-              {(row.fromStatus ?? "—")} → {row.toStatus}{" "}
-              <span className={styles.muted}>
-                {new Date(row.createdAt).toLocaleString()}
-              </span>
+              {row.fromStatus ?? "—"} → {row.toStatus}{" "}
+              <span className={styles.muted}>{new Date(row.createdAt).toLocaleString()}</span>
             </li>
           ))}
         </ul>
@@ -573,7 +567,11 @@ export function SpecialtyReviewPanel({
           {auditRows.slice(0, 25).map((row) => (
             <li
               key={row.id}
-              style={{ border: "1px solid var(--border, #ddd)", borderRadius: 8, padding: "0.75rem" }}
+              style={{
+                border: "1px solid var(--border, #ddd)",
+                borderRadius: 8,
+                padding: "0.75rem",
+              }}
             >
               <strong>{row.action}</strong>{" "}
               <span className={styles.muted}>

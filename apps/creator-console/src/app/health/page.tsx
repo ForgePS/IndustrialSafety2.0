@@ -15,10 +15,7 @@ export default function HealthPage() {
     setLoading(true);
     setError(null);
     try {
-      const [healthResult, readyResult] = await Promise.allSettled([
-        fetchHealth(),
-        fetchReady(),
-      ]);
+      const [healthResult, readyResult] = await Promise.allSettled([fetchHealth(), fetchReady()]);
       if (healthResult.status === "fulfilled") {
         setHealth(healthResult.value);
       } else {

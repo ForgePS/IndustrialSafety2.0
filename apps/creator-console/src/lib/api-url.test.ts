@@ -29,7 +29,8 @@ describe("creator console development API domain", () => {
     expect(() =>
       assertAccessTokenShape(JSON.stringify({ keys: [{ kty: "RSA", kid: "x" }] })),
     ).toThrow(/JWKS/);
-  });
+    // Cold dynamic import transforms the @forge/web-kit graph; can exceed the 5s default under CI load.
+  }, 30_000);
 });
 
 describe("creator console built assets (when present)", () => {

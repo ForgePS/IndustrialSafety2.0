@@ -21,15 +21,15 @@ Non-CLEAN → `SCAN_FAILED`; no parse.
 
 ## Sensitive row policy
 
-| Control | Rule |
-| --- | --- |
-| Source | S3 only; no long-term unrestricted DB blob of full PII file |
-| `mapped_json` | Normalized; max 64 KiB per row |
-| `raw_json` | Optional truncated; prefer `raw_s3_key` |
-| Masking | Default API masks identifiers; `import.sensitive` required to unmask |
-| Retention | `retention_delete_at` set at commit/fail; cleanup job deletes eligible rows/objects |
-| Logs / metrics / audit | Never include full SSN/password/token; use `assertSafeEventPayload` patterns |
-| Audit | `ImportSensitiveFieldAccessed` when unmask path used |
+| Control                | Rule                                                                                |
+| ---------------------- | ----------------------------------------------------------------------------------- |
+| Source                 | S3 only; no long-term unrestricted DB blob of full PII file                         |
+| `mapped_json`          | Normalized; max 64 KiB per row                                                      |
+| `raw_json`             | Optional truncated; prefer `raw_s3_key`                                             |
+| Masking                | Default API masks identifiers; `import.sensitive` required to unmask                |
+| Retention              | `retention_delete_at` set at commit/fail; cleanup job deletes eligible rows/objects |
+| Logs / metrics / audit | Never include full SSN/password/token; use `assertSafeEventPayload` patterns        |
+| Audit                  | `ImportSensitiveFieldAccessed` when unmask path used                                |
 
 ## Rollback safety
 

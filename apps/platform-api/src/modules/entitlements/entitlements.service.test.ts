@@ -78,7 +78,10 @@ function createMocks() {
               return [productRow];
             }
             const existing = entitlementsByModuleId.get(lastResolvedModuleId);
-            const row = { ...(existing ?? { id: "tm-upd", moduleId: lastResolvedModuleId }), ...values };
+            const row = {
+              ...(existing ?? { id: "tm-upd", moduleId: lastResolvedModuleId }),
+              ...values,
+            };
             entitlementsByModuleId.set(lastResolvedModuleId, row);
             return [row];
           }),

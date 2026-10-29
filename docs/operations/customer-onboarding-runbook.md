@@ -12,12 +12,12 @@ HTTP handlers ship in Sprint 1E Wave 5. Until then, use API where available and 
 
 ## Customer types and templates
 
-| Customer type | Starter template | Product |
-| --- | --- | --- |
-| `INDUSTRIAL` | `INDUSTRIAL_STARTER` | `FORGE_INDUSTRIAL` |
-| `FIRE_DEPARTMENT` | `RMS_STARTER` | `FORGE_RMS` |
-| `FIRE_ACADEMY` | `ACADEMY_STARTER` | `FORGE_ACADEMY` |
-| `OTHER` | manual selection | varies |
+| Customer type     | Starter template     | Product            |
+| ----------------- | -------------------- | ------------------ |
+| `INDUSTRIAL`      | `INDUSTRIAL_STARTER` | `FORGE_INDUSTRIAL` |
+| `FIRE_DEPARTMENT` | `RMS_STARTER`        | `FORGE_RMS`        |
+| `FIRE_ACADEMY`    | `ACADEMY_STARTER`    | `FORGE_ACADEMY`    |
+| `OTHER`           | manual selection     | varies             |
 
 Templates configure entitlements and role templates only — not product module engines ([starter-templates.ts](../../packages/contracts/src/starter-templates.ts)).
 
@@ -55,13 +55,13 @@ The Creator Console cannot bypass this gate.
 
 ## Planned API (Contract v1)
 
-| Method | Path | Permission |
-| --- | --- | --- |
-| GET | `/api/v1/platform/onboarding/templates` | `platform.onboarding.manage` |
-| POST | `/api/v1/platform/onboarding/sessions` | `platform.onboarding.manage` |
-| GET | `/api/v1/platform/onboarding/sessions/:sessionId` | `platform.onboarding.manage` |
-| POST | `/api/v1/platform/onboarding/sessions/:sessionId/steps` | `platform.onboarding.manage` |
-| POST | `/api/v1/platform/onboarding/sessions/:sessionId/activate` | `platform.onboarding.manage` |
+| Method | Path                                                       | Permission                   |
+| ------ | ---------------------------------------------------------- | ---------------------------- |
+| GET    | `/api/v1/platform/onboarding/templates`                    | `platform.onboarding.manage` |
+| POST   | `/api/v1/platform/onboarding/sessions`                     | `platform.onboarding.manage` |
+| GET    | `/api/v1/platform/onboarding/sessions/:sessionId`          | `platform.onboarding.manage` |
+| POST   | `/api/v1/platform/onboarding/sessions/:sessionId/steps`    | `platform.onboarding.manage` |
+| POST   | `/api/v1/platform/onboarding/sessions/:sessionId/activate` | `platform.onboarding.manage` |
 
 CLI (Wave 5): `pnpm platform:onboard-tenant`
 

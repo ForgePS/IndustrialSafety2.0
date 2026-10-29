@@ -1,14 +1,10 @@
 import { expect, test } from "@playwright/test";
 import AxeBuilder from "@axe-core/playwright";
 
-const CREATOR =
-  process.env.CREATOR_BASE_URL ?? "https://ddztl9s33wu40.cloudfront.net";
-const TENANT_ADMIN =
-  process.env.TENANT_ADMIN_BASE_URL ?? "https://d1uxdl4szvsixc.cloudfront.net";
-const USER_ID =
-  process.env.FORGE_E2E_USER_ID ?? "c6d951ba-f79a-4d4d-97ab-0bc6a5fda697";
-const OPERATOR_ID =
-  process.env.FORGE_E2E_OPERATOR_ID ?? "c6d951ba-f79a-4d4d-97ab-0bc6a5fda697";
+const CREATOR = process.env.CREATOR_BASE_URL ?? "https://ddztl9s33wu40.cloudfront.net";
+const TENANT_ADMIN = process.env.TENANT_ADMIN_BASE_URL ?? "https://d1uxdl4szvsixc.cloudfront.net";
+const USER_ID = process.env.FORGE_E2E_USER_ID ?? "c6d951ba-f79a-4d4d-97ab-0bc6a5fda697";
+const OPERATOR_ID = process.env.FORGE_E2E_OPERATOR_ID ?? "c6d951ba-f79a-4d4d-97ab-0bc6a5fda697";
 const UNAUTHORIZED_ID =
   process.env.FORGE_E2E_UNAUTHORIZED_ID ?? "384092f1-a829-4005-b74f-37e8ce321b5a";
 const TENANT_A =
@@ -16,8 +12,7 @@ const TENANT_A =
   process.env.FORGE_E2E_TENANT_ID ??
   "019faa15-e558-70b6-adcd-a510c3c995f4";
 const TENANT_B =
-  process.env.IMPORT_ACCEPTANCE_TENANT_B_ID ??
-  "019faa15-e578-76bd-b269-038d23c03b5e";
+  process.env.IMPORT_ACCEPTANCE_TENANT_B_ID ?? "019faa15-e578-76bd-b269-038d23c03b5e";
 
 const CANARIES = [
   "S8-TEST-SSN-999-88-7777",
@@ -36,10 +31,7 @@ async function seedAuth(
   await page.goto(`${base}/`);
   await page.evaluate(
     ({ userId: uid, tenantId: tid }) => {
-      localStorage.setItem(
-        "forge-dev-principal",
-        JSON.stringify({ userId: uid, tenantId: tid }),
-      );
+      localStorage.setItem("forge-dev-principal", JSON.stringify({ userId: uid, tenantId: tid }));
     },
     { userId, tenantId },
   );
@@ -97,10 +89,7 @@ test.describe("Import Center S8 closeout — Creator Console", () => {
     const blockers = results.violations.filter((v) =>
       ["critical", "serious"].includes(v.impact ?? ""),
     );
-    expect(
-      blockers,
-      blockers.map((v) => `${v.id}:${v.impact}:${v.help}`).join(" | "),
-    ).toEqual([]);
+    expect(blockers, blockers.map((v) => `${v.id}:${v.impact}:${v.help}`).join(" | ")).toEqual([]);
   });
 
   test("browser persistence has no canary values or raw row dumps", async ({ page }) => {

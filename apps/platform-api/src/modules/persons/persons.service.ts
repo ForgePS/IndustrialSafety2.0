@@ -60,8 +60,8 @@ function buildDisplayName(input: {
   if (input.preferredName?.trim()) {
     return input.preferredName.trim();
   }
-  const parts = [input.firstName, input.middleName, input.lastName].filter(
-    (p): p is string => Boolean(p && String(p).trim()),
+  const parts = [input.firstName, input.middleName, input.lastName].filter((p): p is string =>
+    Boolean(p && String(p).trim()),
   );
   const base = parts.join(" ");
   return input.suffix ? `${base} ${input.suffix}` : base;
@@ -84,72 +84,77 @@ export class PersonsService {
 
   async create(tenantId: string, input: unknown, principal: ForgePrincipal) {
     const data = createPersonInputSchema.parse(input) as CreatePersonInput;
-    return withTenantTransaction(this.db, tenantId, async (tx) => {
-      const id = createId();
-      const forgePersonNumber = generateForgePersonNumber();
-      const displayName = buildDisplayName({
-        firstName: data.firstName,
-        lastName: data.lastName,
-        middleName: data.middleName ?? null,
-        suffix: data.suffix ?? null,
-        preferredName: data.preferredName ?? null,
-      });
-      const now = new Date();
-      const [row] = await tx
-        .insert(persons)
-        .values({
-          id,
-          tenantId,
-          forgePersonNumber,
+    return withTenantTransaction(
+      this.db,
+      tenantId,
+      async (tx) => {
+        const id = createId();
+        const forgePersonNumber = generateForgePersonNumber();
+        const displayName = buildDisplayName({
           firstName: data.firstName,
-          middleName: data.middleName,
           lastName: data.lastName,
-          suffix: data.suffix,
-          preferredName: data.preferredName,
-          displayName,
-          email: data.email,
-          phone: data.phone,
-          dateOfBirth: data.dateOfBirth,
-          recordSource: data.recordSource ?? "MANUAL",
-          status: "ACTIVE",
-          createdAt: now,
-          updatedAt: now,
-        })
-        .returning();
-      if (!row) {
-        throw new ForgeError("INTERNAL_ERROR", "Failed to create person");
-      }
+          middleName: data.middleName ?? null,
+          suffix: data.suffix ?? null,
+          preferredName: data.preferredName ?? null,
+        });
+        const now = new Date();
+        const [row] = await tx
+          .insert(persons)
+          .values({
+            id,
+            tenantId,
+            forgePersonNumber,
+            firstName: data.firstName,
+            middleName: data.middleName,
+            lastName: data.lastName,
+            suffix: data.suffix,
+            preferredName: data.preferredName,
+            displayName,
+            email: data.email,
+            phone: data.phone,
+            dateOfBirth: data.dateOfBirth,
+            recordSource: data.recordSource ?? "MANUAL",
+            status: "ACTIVE",
+            createdAt: now,
+            updatedAt: now,
+          })
+          .returning();
+        if (!row) {
+          throw new ForgeError("INTERNAL_ERROR", "Failed to create person");
+        }
 
-      await this.outbox.write(tx, {
-        tenantId,
-        aggregateType: "person",
-        aggregateId: id,
-        eventType: DOMAIN_EVENT_TYPES.PERSON_CREATED,
-        payload: {
-          personId: id,
+        await this.outbox.write(tx, {
           tenantId,
-          forgePersonNumber,
-          displayName,
-        },
-        correlationId: principal.correlationId,
-        actorUserId: principal.userId,
-      });
-      await this.audit.writeInTransaction(tx, {
-        tenantId,
-        actorUserId: principal.userId,
-        actorPersonId: principal.personId,
-        actorType: "USER",
-        action: "person.create",
-        resourceType: "person",
-        resourceId: id,
-        result: "SUCCESS",
-        riskLevel: "LOW",
-        correlationId: principal.correlationId,
-        requestId: principal.requestId,
-        after: row,
-      });
-      return row;
-    }, principal.userId);
+          aggregateType: "person",
+          aggregateId: id,
+          eventType: DOMAIN_EVENT_TYPES.PERSON_CREATED,
+          payload: {
+            personId: id,
+            tenantId,
+            forgePersonNumber,
+            displayName,
+          },
+          correlationId: principal.correlationId,
+          actorUserId: principal.userId,
+        });
+        await this.audit.writeInTransaction(tx, {
+          tenantId,
+          actorUserId: principal.userId,
+          actorPersonId: principal.personId,
+          actorType: "USER",
+          action: "person.create",
+          resourceType: "person",
+          resourceId: id,
+          result: "SUCCESS",
+          riskLevel: "LOW",
+          correlationId: principal.correlationId,
+          requestId: principal.requestId,
+          after: row,
+        });
+        return row;
+      },
+      principal.userId,
+    );
   }
 
   async list(tenantId: string, search?: string) {
@@ -198,72 +203,77 @@ export class PersonsService {
     expectedVersion: ExpectedVersion,
   ) {
     const data = patchSchema.parse(input);
-    return withTenantTransaction(this.db, tenantId, async (tx) => {
-      const before = await tx.query.persons.findFirst({
-        where: and(eq(persons.id, personId), eq(persons.tenantId, tenantId)),
-      });
-      if (!before) {
-        throw new ForgeError("NOT_FOUND", "Person not found");
-      }
-      const version = before.recordVersion;
-      if (expectedVersion !== "*" && version !== expectedVersion) {
-        throw concurrencyConflict({
-          tenantId,
-          resourceType: "person",
-          resourceId: personId,
-          expectedVersion,
-          actualVersion: version,
+    return withTenantTransaction(
+      this.db,
+      tenantId,
+      async (tx) => {
+        const before = await tx.query.persons.findFirst({
+          where: and(eq(persons.id, personId), eq(persons.tenantId, tenantId)),
         });
-      }
-      const displayName = buildDisplayName({
-        firstName: data.firstName ?? before.firstName,
-        lastName: data.lastName ?? before.lastName,
-        middleName: data.middleName !== undefined ? data.middleName : before.middleName,
-        suffix: data.suffix !== undefined ? data.suffix : before.suffix,
-        preferredName:
-          data.preferredName !== undefined ? data.preferredName : before.preferredName,
-      });
-      const [updated] = await tx
-        .update(persons)
-        .set({ ...data, displayName, recordVersion: version + 1, updatedAt: new Date() })
-        .where(and(eq(persons.id, personId), eq(persons.recordVersion, version)))
-        .returning();
-      if (!updated) {
-        throw concurrencyConflict({
-          tenantId,
-          resourceType: "person",
-          resourceId: personId,
-          expectedVersion,
-          actualVersion: null,
+        if (!before) {
+          throw new ForgeError("NOT_FOUND", "Person not found");
+        }
+        const version = before.recordVersion;
+        if (expectedVersion !== "*" && version !== expectedVersion) {
+          throw concurrencyConflict({
+            tenantId,
+            resourceType: "person",
+            resourceId: personId,
+            expectedVersion,
+            actualVersion: version,
+          });
+        }
+        const displayName = buildDisplayName({
+          firstName: data.firstName ?? before.firstName,
+          lastName: data.lastName ?? before.lastName,
+          middleName: data.middleName !== undefined ? data.middleName : before.middleName,
+          suffix: data.suffix !== undefined ? data.suffix : before.suffix,
+          preferredName:
+            data.preferredName !== undefined ? data.preferredName : before.preferredName,
         });
-      }
+        const [updated] = await tx
+          .update(persons)
+          .set({ ...data, displayName, recordVersion: version + 1, updatedAt: new Date() })
+          .where(and(eq(persons.id, personId), eq(persons.recordVersion, version)))
+          .returning();
+        if (!updated) {
+          throw concurrencyConflict({
+            tenantId,
+            resourceType: "person",
+            resourceId: personId,
+            expectedVersion,
+            actualVersion: null,
+          });
+        }
 
-      await this.outbox.write(tx, {
-        tenantId,
-        aggregateType: "person",
-        aggregateId: personId,
-        eventType: DOMAIN_EVENT_TYPES.PERSON_UPDATED,
-        payload: { personId, tenantId },
-        correlationId: principal.correlationId,
-        actorUserId: principal.userId,
-      });
-      await this.audit.writeInTransaction(tx, {
-        tenantId,
-        actorUserId: principal.userId,
-        actorPersonId: principal.personId,
-        actorType: "USER",
-        action: "person.update",
-        resourceType: "person",
-        resourceId: personId,
-        result: "SUCCESS",
-        riskLevel: "LOW",
-        correlationId: principal.correlationId,
-        requestId: principal.requestId,
-        before,
-        after: updated,
-      });
-      return updated;
-    }, principal.userId);
+        await this.outbox.write(tx, {
+          tenantId,
+          aggregateType: "person",
+          aggregateId: personId,
+          eventType: DOMAIN_EVENT_TYPES.PERSON_UPDATED,
+          payload: { personId, tenantId },
+          correlationId: principal.correlationId,
+          actorUserId: principal.userId,
+        });
+        await this.audit.writeInTransaction(tx, {
+          tenantId,
+          actorUserId: principal.userId,
+          actorPersonId: principal.personId,
+          actorType: "USER",
+          action: "person.update",
+          resourceType: "person",
+          resourceId: personId,
+          result: "SUCCESS",
+          riskLevel: "LOW",
+          correlationId: principal.correlationId,
+          requestId: principal.requestId,
+          before,
+          after: updated,
+        });
+        return updated;
+      },
+      principal.userId,
+    );
   }
 
   async archive(
@@ -272,54 +282,59 @@ export class PersonsService {
     principal: ForgePrincipal,
     expectedVersion: ExpectedVersion,
   ) {
-    return withTenantTransaction(this.db, tenantId, async (tx) => {
-      const before = await tx.query.persons.findFirst({
-        where: and(eq(persons.id, personId), eq(persons.tenantId, tenantId)),
-      });
-      if (!before) {
-        throw new ForgeError("NOT_FOUND", "Person not found");
-      }
-      const version = before.recordVersion;
-      if (expectedVersion !== "*" && version !== expectedVersion) {
-        throw concurrencyConflict({
-          tenantId,
-          resourceType: "person",
-          resourceId: personId,
-          expectedVersion,
-          actualVersion: version,
+    return withTenantTransaction(
+      this.db,
+      tenantId,
+      async (tx) => {
+        const before = await tx.query.persons.findFirst({
+          where: and(eq(persons.id, personId), eq(persons.tenantId, tenantId)),
         });
-      }
-      const now = new Date();
-      const [updated] = await tx
-        .update(persons)
-        .set({
-          status: "ARCHIVED",
-          archivedAt: now,
-          recordVersion: version + 1,
-          updatedAt: now,
-        })
-        .where(and(eq(persons.id, personId), eq(persons.recordVersion, version)))
-        .returning();
-      if (!updated) {
-        throw concurrencyConflict({
+        if (!before) {
+          throw new ForgeError("NOT_FOUND", "Person not found");
+        }
+        const version = before.recordVersion;
+        if (expectedVersion !== "*" && version !== expectedVersion) {
+          throw concurrencyConflict({
+            tenantId,
+            resourceType: "person",
+            resourceId: personId,
+            expectedVersion,
+            actualVersion: version,
+          });
+        }
+        const now = new Date();
+        const [updated] = await tx
+          .update(persons)
+          .set({
+            status: "ARCHIVED",
+            archivedAt: now,
+            recordVersion: version + 1,
+            updatedAt: now,
+          })
+          .where(and(eq(persons.id, personId), eq(persons.recordVersion, version)))
+          .returning();
+        if (!updated) {
+          throw concurrencyConflict({
+            tenantId,
+            resourceType: "person",
+            resourceId: personId,
+            expectedVersion,
+            actualVersion: null,
+          });
+        }
+        await this.outbox.write(tx, {
           tenantId,
-          resourceType: "person",
-          resourceId: personId,
-          expectedVersion,
-          actualVersion: null,
+          aggregateType: "person",
+          aggregateId: personId,
+          eventType: DOMAIN_EVENT_TYPES.PERSON_ARCHIVED,
+          payload: { personId, tenantId },
+          correlationId: principal.correlationId,
+          actorUserId: principal.userId,
         });
-      }
-      await this.outbox.write(tx, {
-        tenantId,
-        aggregateType: "person",
-        aggregateId: personId,
-        eventType: DOMAIN_EVENT_TYPES.PERSON_ARCHIVED,
-        payload: { personId, tenantId },
-        correlationId: principal.correlationId,
-        actorUserId: principal.userId,
-      });
-      return updated;
-    }, principal.userId);
+        return updated;
+      },
+      principal.userId,
+    );
   }
 
   async listDuplicateCandidates(tenantId: string, personId: string) {
@@ -341,68 +356,73 @@ export class PersonsService {
     if (data.sourcePersonId === data.targetPersonId) {
       throw new ForgeError("BAD_REQUEST", "Source and target person must differ");
     }
-    return withTenantTransaction(this.db, tenantId, async (tx) => {
-      const source = await tx.query.persons.findFirst({
-        where: and(eq(persons.id, data.sourcePersonId), eq(persons.tenantId, tenantId)),
-      });
-      const target = await tx.query.persons.findFirst({
-        where: and(eq(persons.id, data.targetPersonId), eq(persons.tenantId, tenantId)),
-      });
-      if (!source || !target) {
-        throw new ForgeError("NOT_FOUND", "Source or target person not found");
-      }
-      const now = new Date();
-      await tx
-        .update(persons)
-        .set({
-          status: "MERGED",
-          mergedIntoPersonId: target.id,
-          archivedAt: now,
-          updatedAt: now,
-        })
-        .where(eq(persons.id, source.id));
+    return withTenantTransaction(
+      this.db,
+      tenantId,
+      async (tx) => {
+        const source = await tx.query.persons.findFirst({
+          where: and(eq(persons.id, data.sourcePersonId), eq(persons.tenantId, tenantId)),
+        });
+        const target = await tx.query.persons.findFirst({
+          where: and(eq(persons.id, data.targetPersonId), eq(persons.tenantId, tenantId)),
+        });
+        if (!source || !target) {
+          throw new ForgeError("NOT_FOUND", "Source or target person not found");
+        }
+        const now = new Date();
+        await tx
+          .update(persons)
+          .set({
+            status: "MERGED",
+            mergedIntoPersonId: target.id,
+            archivedAt: now,
+            updatedAt: now,
+          })
+          .where(eq(persons.id, source.id));
 
-      const historyId = createId();
-      await tx.insert(personMergeHistory).values({
-        id: historyId,
-        tenantId,
-        sourcePersonId: source.id,
-        targetPersonId: target.id,
-        reason: data.reason,
-        fieldResolutionJson: {},
-        mergedByUserId: principal.userId,
-        mergedAt: now,
-      });
-
-      await this.outbox.write(tx, {
-        tenantId,
-        aggregateType: "person",
-        aggregateId: target.id,
-        eventType: DOMAIN_EVENT_TYPES.PERSON_MERGED,
-        payload: {
+        const historyId = createId();
+        await tx.insert(personMergeHistory).values({
+          id: historyId,
+          tenantId,
           sourcePersonId: source.id,
           targetPersonId: target.id,
+          reason: data.reason,
+          fieldResolutionJson: {},
+          mergedByUserId: principal.userId,
+          mergedAt: now,
+        });
+
+        await this.outbox.write(tx, {
           tenantId,
-        },
-        correlationId: principal.correlationId,
-        actorUserId: principal.userId,
-      });
-      await this.audit.writeInTransaction(tx, {
-        tenantId,
-        actorUserId: principal.userId,
-        actorPersonId: principal.personId,
-        actorType: "USER",
-        action: "person.merge",
-        resourceType: "person",
-        resourceId: target.id,
-        result: "SUCCESS",
-        riskLevel: "HIGH",
-        correlationId: principal.correlationId,
-        requestId: principal.requestId,
-        metadata: { sourcePersonId: source.id, targetPersonId: target.id },
-      });
-      return { historyId, sourcePersonId: source.id, targetPersonId: target.id };
-    }, principal.userId);
+          aggregateType: "person",
+          aggregateId: target.id,
+          eventType: DOMAIN_EVENT_TYPES.PERSON_MERGED,
+          payload: {
+            sourcePersonId: source.id,
+            targetPersonId: target.id,
+            tenantId,
+          },
+          correlationId: principal.correlationId,
+          actorUserId: principal.userId,
+        });
+        await this.audit.writeInTransaction(tx, {
+          tenantId,
+          actorUserId: principal.userId,
+          actorPersonId: principal.personId,
+          actorType: "USER",
+          action: "person.merge",
+          resourceType: "person",
+          resourceId: target.id,
+          result: "SUCCESS",
+          riskLevel: "HIGH",
+          correlationId: principal.correlationId,
+          requestId: principal.requestId,
+          metadata: { sourcePersonId: source.id, targetPersonId: target.id },
+        });
+        return { historyId, sourcePersonId: source.id, targetPersonId: target.id };
+      },
+      principal.userId,
+    );
   }
 
   async putSensitiveIdentifier(
@@ -412,65 +432,73 @@ export class PersonsService {
     principal: ForgePrincipal,
   ) {
     const data = sensitiveSchema.parse(input);
-    return withTenantTransaction(this.db, tenantId, async (tx) => {
-      const person = await tx.query.persons.findFirst({
-        where: and(eq(persons.id, personId), eq(persons.tenantId, tenantId)),
-      });
-      if (!person) {
-        throw new ForgeError("NOT_FOUND", "Person not found");
-      }
-      const encrypted = await this.sensitive.encrypt(data.value, {
-        tenantId,
-        personId,
-        dataType: data.dataType,
-      });
-      const fingerprint = this.sensitive.fingerprint(data.value, data.dataType);
-      const id = createId();
-      await tx
-        .insert(personSensitiveData)
-        .values({
-          id,
+    return withTenantTransaction(
+      this.db,
+      tenantId,
+      async (tx) => {
+        const person = await tx.query.persons.findFirst({
+          where: and(eq(persons.id, personId), eq(persons.tenantId, tenantId)),
+        });
+        if (!person) {
+          throw new ForgeError("NOT_FOUND", "Person not found");
+        }
+        const encrypted = await this.sensitive.encrypt(data.value, {
           tenantId,
           personId,
           dataType: data.dataType,
-          encryptedValue: JSON.stringify(encrypted),
-          valueFingerprint: fingerprint,
-          keyVersion: encrypted.keyVersion,
-          createdAt: new Date(),
-          updatedAt: new Date(),
-        })
-        .onConflictDoUpdate({
-          target: [personSensitiveData.personId, personSensitiveData.dataType],
-          set: {
+        });
+        const fingerprint = this.sensitive.fingerprint(data.value, data.dataType);
+        const id = createId();
+        await tx
+          .insert(personSensitiveData)
+          .values({
+            id,
+            tenantId,
+            personId,
+            dataType: data.dataType,
             encryptedValue: JSON.stringify(encrypted),
             valueFingerprint: fingerprint,
             keyVersion: encrypted.keyVersion,
+            createdAt: new Date(),
             updatedAt: new Date(),
+          })
+          .onConflictDoUpdate({
+            target: [personSensitiveData.personId, personSensitiveData.dataType],
+            set: {
+              encryptedValue: JSON.stringify(encrypted),
+              valueFingerprint: fingerprint,
+              keyVersion: encrypted.keyVersion,
+              updatedAt: new Date(),
+            },
+          });
+
+        await this.audit.writeInTransaction(tx, {
+          tenantId,
+          actorUserId: principal.userId,
+          actorPersonId: principal.personId,
+          actorType: "USER",
+          action: "person.sensitive_identifier.write",
+          resourceType: "person_sensitive_data",
+          resourceId: personId,
+          result: "SUCCESS",
+          riskLevel: "CRITICAL",
+          correlationId: principal.correlationId,
+          requestId: principal.requestId,
+          metadata: {
+            dataType: data.dataType,
+            masked: maskSensitiveValue(data.dataType, data.value),
           },
         });
 
-      await this.audit.writeInTransaction(tx, {
-        tenantId,
-        actorUserId: principal.userId,
-        actorPersonId: principal.personId,
-        actorType: "USER",
-        action: "person.sensitive_identifier.write",
-        resourceType: "person_sensitive_data",
-        resourceId: personId,
-        result: "SUCCESS",
-        riskLevel: "CRITICAL",
-        correlationId: principal.correlationId,
-        requestId: principal.requestId,
-        metadata: { dataType: data.dataType, masked: maskSensitiveValue(data.dataType, data.value) },
-      });
-
-      return {
-        personId,
-        dataType: data.dataType,
-        maskedValue: maskSensitiveValue(data.dataType, data.value),
-        keyVersion: encrypted.keyVersion,
-      };
-    }, principal.userId);
+        return {
+          personId,
+          dataType: data.dataType,
+          maskedValue: maskSensitiveValue(data.dataType, data.value),
+          keyVersion: encrypted.keyVersion,
+        };
+      },
+      principal.userId,
+    );
   }
 
   async getSensitiveIdentifier(
@@ -481,63 +509,68 @@ export class PersonsService {
     reveal: boolean,
     reason?: string,
   ) {
-    return withTenantTransaction(this.db, tenantId, async (tx) => {
-      const row = await tx.query.personSensitiveData.findFirst({
-        where: and(
-          eq(personSensitiveData.tenantId, tenantId),
-          eq(personSensitiveData.personId, personId),
-          eq(personSensitiveData.dataType, dataType),
-        ),
-      });
-      if (!row) {
-        throw new ForgeError("NOT_FOUND", "Sensitive identifier not found");
-      }
+    return withTenantTransaction(
+      this.db,
+      tenantId,
+      async (tx) => {
+        const row = await tx.query.personSensitiveData.findFirst({
+          where: and(
+            eq(personSensitiveData.tenantId, tenantId),
+            eq(personSensitiveData.personId, personId),
+            eq(personSensitiveData.dataType, dataType),
+          ),
+        });
+        if (!row) {
+          throw new ForgeError("NOT_FOUND", "Sensitive identifier not found");
+        }
 
-      const payload = JSON.parse(row.encryptedValue) as {
-        ciphertext: string;
-        keyVersion: string;
-        algorithm: "AES-256-GCM" | "AWS-KMS";
-      };
-      const plaintext = await this.sensitive.decrypt(payload, {
-        tenantId,
-        personId,
-        dataType,
-      });
+        const payload = JSON.parse(row.encryptedValue) as {
+          ciphertext: string;
+          keyVersion: string;
+          algorithm: "AES-256-GCM" | "AWS-KMS";
+        };
+        const plaintext = await this.sensitive.decrypt(payload, {
+          tenantId,
+          personId,
+          dataType,
+        });
 
-      await tx
-        .update(personSensitiveData)
-        .set({ lastAccessedAt: new Date() })
-        .where(eq(personSensitiveData.id, row.id));
+        await tx
+          .update(personSensitiveData)
+          .set({ lastAccessedAt: new Date() })
+          .where(eq(personSensitiveData.id, row.id));
 
-      const canReveal =
-        reveal &&
-        principal.permissions.has("platform.sensitive_data.read") &&
-        Boolean(reason?.trim());
+        const canReveal =
+          reveal &&
+          principal.permissions.has("platform.sensitive_data.read") &&
+          Boolean(reason?.trim());
 
-      await this.audit.writeInTransaction(tx, {
-        tenantId,
-        actorUserId: principal.userId,
-        actorPersonId: principal.personId,
-        actorType: "USER",
-        action: canReveal
-          ? "person.sensitive_identifier.reveal"
-          : "person.sensitive_identifier.read",
-        resourceType: "person_sensitive_data",
-        resourceId: personId,
-        result: "SUCCESS",
-        riskLevel: "CRITICAL",
-        correlationId: principal.correlationId,
-        requestId: principal.requestId,
-        metadata: { dataType, reason: reason ?? null, revealed: canReveal },
-      });
+        await this.audit.writeInTransaction(tx, {
+          tenantId,
+          actorUserId: principal.userId,
+          actorPersonId: principal.personId,
+          actorType: "USER",
+          action: canReveal
+            ? "person.sensitive_identifier.reveal"
+            : "person.sensitive_identifier.read",
+          resourceType: "person_sensitive_data",
+          resourceId: personId,
+          result: "SUCCESS",
+          riskLevel: "CRITICAL",
+          correlationId: principal.correlationId,
+          requestId: principal.requestId,
+          metadata: { dataType, reason: reason ?? null, revealed: canReveal },
+        });
 
-      return {
-        personId,
-        dataType,
-        maskedValue: maskSensitiveValue(dataType, plaintext),
-        value: canReveal ? plaintext : undefined,
-        keyVersion: row.keyVersion,
-      };
-    }, principal.userId);
+        return {
+          personId,
+          dataType,
+          maskedValue: maskSensitiveValue(dataType, plaintext),
+          value: canReveal ? plaintext : undefined,
+          keyVersion: row.keyVersion,
+        };
+      },
+      principal.userId,
+    );
   }
 }

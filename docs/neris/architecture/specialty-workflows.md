@@ -20,13 +20,13 @@ Field-level visibility and requiredness remain the job of the NERIS condition en
 
 ## Evaluation inputs
 
-| Input | Source |
-| --- | --- |
-| `availableModuleKeys` | Published schema modules for the incident version |
-| `classificationSignals` | Primary + secondary incident type codes |
-| `fieldValuesByKey` | Live incident field values |
-| `notApplicableSectionKeys` | `neris_incident_sections` with status `NOT_APPLICABLE` |
-| `forcedActiveSectionKeys` | Manually activated specialty sections |
+| Input                       | Source                                                                                             |
+| --------------------------- | -------------------------------------------------------------------------------------------------- |
+| `availableModuleKeys`       | Published schema modules for the incident version                                                  |
+| `classificationSignals`     | Primary + secondary incident type codes                                                            |
+| `fieldValuesByKey`          | Live incident field values                                                                         |
+| `notApplicableSectionKeys`  | `neris_incident_sections` with status `NOT_APPLICABLE`                                             |
+| `forcedActiveSectionKeys`   | Manually activated specialty sections                                                              |
 | `specialtyWorkflowsEnabled` | Feature flag `rms.neris.specialty_workflows.enabled` (default **false**; tenant override required) |
 
 ## Activation rules
@@ -35,13 +35,13 @@ Rules are declarative composites (`classificationSignals`, `fieldKeySignals`, `a
 
 ## States
 
-| State | Meaning |
-| --- | --- |
-| `HIDDEN` | Not shown in nav; modules not rendered |
-| `OPTIONAL` | Available to add; not in nav until activated |
-| `REQUIRED` | Activated by rules; cannot be marked N/A |
-| `ACTIVE` | Shown (manual add or optional activation) |
-| `NOT_APPLICABLE` | User marked N/A; values preserved |
+| State            | Meaning                                      |
+| ---------------- | -------------------------------------------- |
+| `HIDDEN`         | Not shown in nav; modules not rendered       |
+| `OPTIONAL`       | Available to add; not in nav until activated |
+| `REQUIRED`       | Activated by rules; cannot be marked N/A     |
+| `ACTIVE`         | Shown (manual add or optional activation)    |
+| `NOT_APPLICABLE` | User marked N/A; values preserved            |
 
 ## Form descriptor integration
 
@@ -54,9 +54,9 @@ Rules are declarative composites (`classificationSignals`, `fieldKeySignals`, `a
 
 ## API
 
-| Method | Path | Behavior |
-| --- | --- | --- |
-| `GET` | `…/form-descriptor` | Live specialty evaluation |
+| Method | Path                   | Behavior                                                      |
+| ------ | ---------------------- | ------------------------------------------------------------- |
+| `GET`  | `…/form-descriptor`    | Live specialty evaluation                                     |
 | `POST` | `…/specialty-sections` | `ACTIVATE` \| `MARK_NOT_APPLICABLE` \| `CLEAR_NOT_APPLICABLE` |
 
 `MARK_NOT_APPLICABLE` is rejected for groups that disallow N/A. Field values are never deleted when a section is hidden or marked N/A.

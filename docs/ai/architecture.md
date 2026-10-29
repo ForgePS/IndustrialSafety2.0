@@ -10,23 +10,23 @@ Shared drafting aid for narrative text across RMS, Industrial, and Academy. The 
 
 ## Package layout
 
-| Package | Role |
-| --- | --- |
-| `@forge/ai-contracts` | Schemas, enums, permissions, provider interface |
-| `@forge/ai-policy` | Classification gates, anti-hallucination rules, user warning |
-| `@forge/ai-redaction` | Source-field blocking and redaction before provider calls |
-| `@forge/ai-prompts` | System/user prompt construction |
-| `@forge/ai-evaluation` | Deterministic response validation (schema + claim heuristics) |
-| `@forge/ai` | Provider registry and stub provider |
-| `@forge/ai-observability` | Safe metrics and structured logging helpers |
+| Package                   | Role                                                          |
+| ------------------------- | ------------------------------------------------------------- |
+| `@forge/ai-contracts`     | Schemas, enums, permissions, provider interface               |
+| `@forge/ai-policy`        | Classification gates, anti-hallucination rules, user warning  |
+| `@forge/ai-redaction`     | Source-field blocking and redaction before provider calls     |
+| `@forge/ai-prompts`       | System/user prompt construction                               |
+| `@forge/ai-evaluation`    | Deterministic response validation (schema + claim heuristics) |
+| `@forge/ai`               | Provider registry and stub provider                           |
+| `@forge/ai-observability` | Safe metrics and structured logging helpers                   |
 
 Product modules must not import provider SDKs. They call HTTP APIs or use `@forge/ai` through policy-selected providers.
 
 ## Runtime surfaces
 
-| Surface | Role |
-| --- | --- |
-| `apps/platform-api` | HTTP routes under `/api/v1/ai/*` |
+| Surface                 | Role                                             |
+| ----------------------- | ------------------------------------------------ |
+| `apps/platform-api`     | HTTP routes under `/api/v1/ai/*`                 |
 | `apps/ai-narrative-api` | Health entrypoint; future dedicated compute home |
 
 Routes are hosted on `platform-api` so Phase 4 CAD/ECS surfaces are unchanged.

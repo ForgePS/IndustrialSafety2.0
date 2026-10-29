@@ -18,33 +18,38 @@ export class SupportActionsService {
     principal: ForgePrincipal,
   ) {
     const id = createId();
-    return withTenantTransaction(this.db, tenantId, async (tx) => {
-      await this.audit.writeInTransaction(tx, {
-        id,
-        tenantId,
-        actorUserId: principal.userId,
-        actorPersonId: principal.personId,
-        actorType: "USER",
-        action: "support.action",
-        resourceType: "support_action",
-        resourceId: id,
-        result: "SUCCESS",
-        riskLevel: "HIGH",
-        correlationId: principal.correlationId,
-        requestId: principal.requestId,
-        metadata: {
+    return withTenantTransaction(
+      this.db,
+      tenantId,
+      async (tx) => {
+        await this.audit.writeInTransaction(tx, {
+          id,
+          tenantId,
+          actorUserId: principal.userId,
+          actorPersonId: principal.personId,
+          actorType: "USER",
+          action: "support.action",
+          resourceType: "support_action",
+          resourceId: id,
+          result: "SUCCESS",
+          riskLevel: "HIGH",
+          correlationId: principal.correlationId,
+          requestId: principal.requestId,
+          metadata: {
+            actionType: input.actionType,
+            summary: input.summary,
+            ...(input.metadata ?? {}),
+          },
+        });
+        return {
+          id,
+          tenantId,
           actionType: input.actionType,
           summary: input.summary,
-          ...(input.metadata ?? {}),
-        },
-      });
-      return {
-        id,
-        tenantId,
-        actionType: input.actionType,
-        summary: input.summary,
-        occurredAt: new Date().toISOString(),
-      };
-    }, principal.userId);
+          occurredAt: new Date().toISOString(),
+        };
+      },
+      principal.userId,
+    );
   }
 }

@@ -6,15 +6,10 @@ import { setETag } from "../../common/concurrency.js";
 import { Idempotent } from "../../common/idempotent.decorator.js";
 import { getRequestIds, type RequestWithIds } from "../../common/request-ids.js";
 import { Principal } from "../auth-context/principal.decorator.js";
-import {
-  RequireAnyPermission,
-} from "../auth-context/require-permission.decorator.js";
+import { RequireAnyPermission } from "../auth-context/require-permission.decorator.js";
 import { BrandingService } from "./branding.service.js";
 
-const BRANDING_WRITE = [
-  "platform.configuration.update",
-  "tenant.configuration.update",
-] as const;
+const BRANDING_WRITE = ["platform.configuration.update", "tenant.configuration.update"] as const;
 
 @Controller("api/v1/tenants/:tenantId/branding")
 export class BrandingController {

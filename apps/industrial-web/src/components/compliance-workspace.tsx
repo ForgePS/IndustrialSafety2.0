@@ -3,27 +3,13 @@
 import { useEffect, useState, type FormEvent } from "react";
 import { ApiError, apiGet, apiSend, useAuth } from "@forge/web-kit";
 import { ModuleUnavailable } from "@/components/module-unavailable";
-import {
-  COMPLIANCE_MODULE_CONFIG,
-  type Ind6ComplianceModule,
-} from "@/lib/compliance-modules";
+import { useIndustrialModuleGate } from "@/hooks/use-industrial-module-gate";
+import { COMPLIANCE_MODULE_CONFIG, type Ind6ComplianceModule } from "@/lib/compliance-modules";
 
 type ListResponse = {
   items: Array<Record<string, unknown>>;
   page: number;
   pageSize: number;
-};
-
-type BootstrapModule = {
-  code: string;
-  awsEnabled: boolean;
-  available: boolean;
-  migrationStatus: string;
-};
-
-type Bootstrap = {
-  industrialEnabled: boolean;
-  modules: BootstrapModule[];
 };
 
 export function ComplianceWorkspace({
@@ -39,11 +25,12 @@ export function ComplianceWorkspace({
   const canView = permissions.has(cfg.viewPerm) || permissions.has("industrial.admin");
   const canManage = permissions.has(cfg.managePerm) || permissions.has("industrial.admin");
   const canViewSensitive =
-    !cfg.sensitivePerm ||
-    permissions.has(cfg.sensitivePerm) ||
-    permissions.has("industrial.admin");
+    !cfg.sensitivePerm || permissions.has(cfg.sensitivePerm) || permissions.has("industrial.admin");
+  const { modEntry, explicitlyDisabled, awsReady } = useIndustrialModuleGate({
+    moduleCode: cfg.code,
+    canView,
+  });
 
-  const [bootstrap, setBootstrap] = useState<Bootstrap | null>(null);
   const [items, setItems] = useState<Array<Record<string, unknown>>>([]);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [detail, setDetail] = useState<Record<string, unknown> | null>(null);
@@ -57,27 +44,6 @@ export function ComplianceWorkspace({
   const [locationText, setLocationText] = useState("");
   const [workerName, setWorkerName] = useState("");
   const [incidentId, setIncidentId] = useState("");
-
-  const modEntry = bootstrap?.modules.find((m) => m.code === cfg.code);
-  const awsReady =
-    Boolean(bootstrap?.industrialEnabled) && Boolean(modEntry?.awsEnabled) && canView;
-
-  useEffect(() => {
-    let cancelled = false;
-    (async () => {
-      try {
-        const boot = await apiGet<Bootstrap>("/api/v1/industrial/bootstrap");
-        if (!cancelled) setBootstrap(boot);
-      } catch (e) {
-        if (!cancelled) {
-          setError(e instanceof ApiError ? e.message : "Failed to load module bootstrap");
-        }
-      }
-    })();
-    return () => {
-      cancelled = true;
-    };
-  }, []);
 
   async function loadList(search = q, st = status, cat = category) {
     setLoading(true);
@@ -132,21 +98,12 @@ export function ComplianceWorkspace({
     );
   }
 
-  if (bootstrap && !awsReady) {
+  if (explicitlyDisabled) {
     return (
       <ModuleUnavailable
         moduleName={moduleName}
         status={modEntry?.migrationStatus ?? "MIGRATION_IN_PROGRESS"}
       />
-    );
-  }
-
-  if (!bootstrap) {
-    return (
-      <section className="ind-state" role="status" aria-live="polite">
-        <h1>{moduleName}</h1>
-        <p>Checking module availability…</p>
-      </section>
     );
   }
 
@@ -192,7 +149,13 @@ export function ComplianceWorkspace({
       setIncidentId("");
       await loadList();
     } catch (err) {
-      setError(err instanceof ApiError ? err.message : err instanceof Error ? err.message : "Create failed");
+      setError(
+        err instanceof ApiError
+          ? err.message
+          : err instanceof Error
+            ? err.message
+            : "Create failed",
+      );
     } finally {
       setCreating(false);
     }
@@ -303,9 +266,7 @@ export function ComplianceWorkspace({
                   <td>
                     <span data-status={String(row.status ?? "")}>{String(row.status ?? "—")}</span>
                   </td>
-                  <td>
-                    {row.updatedAt ? new Date(String(row.updatedAt)).toLocaleString() : "—"}
-                  </td>
+                  <td>{row.updatedAt ? new Date(String(row.updatedAt)).toLocaleString() : "—"}</td>
                   <td>
                     <button type="button" onClick={() => void loadDetail(String(row.id))}>
                       Open

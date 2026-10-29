@@ -6,56 +6,21 @@ import { PlatformPageGate } from "@/components/platform-page-gate";
 import { TenantRequired } from "@/components/tenant-required";
 import { useAuth } from "@/hooks/use-auth";
 import { tenantQuery, useTenantId } from "@/hooks/use-tenant-id";
-import { apiGet, apiSend, toIfMatch } from "@/lib/api";
+import {
+  apiSend,
+  createBillingContract,
+  createBillingFee,
+  createBillingInvoice,
+  getBillingOverview,
+  patchBillingInvoice,
+  toIfMatch,
+  type BillingInvoice,
+  type BillingOverview,
+} from "@/lib/api";
 import styles from "../page.module.css";
 
-type Overview = {
-  customer: {
-    id: string;
-    displayName: string;
-    billingEmail: string | null;
-    recordVersion: number;
-  } | null;
-  subscription: {
-    id: string;
-    status: string;
-    planCode: string | null;
-    planName: string | null;
-    billingInterval: string | null;
-    billingType?: string;
-  } | null;
-  contracts: Array<{
-    id: string;
-    name: string;
-    status: string;
-    billingType: string;
-    startsOn: string | null;
-    endsOn: string | null;
-    renewalOn: string | null;
-    setupFeeCents: number | null;
-    notes: string | null;
-    pricingJson: {
-      overrideAmountCents?: number;
-      currency?: string;
-      modules?: Array<{ moduleCode: string; amountCents: number }>;
-    };
-    recordVersion: number;
-  }>;
-  invoices: Array<{
-    id: string;
-    status: string;
-    amountDueCents: number;
-    amountPaidCents: number;
-    currency: string;
-    hostedInvoiceUrl: string | null;
-    createdAt: string;
-  }>;
-  entitlements: {
-    products: Array<{ productCode: string; productName: string; status: string }>;
-    modules: Array<{ moduleCode: string; moduleName: string; status: string }>;
-  };
-  paymentPortal: { available: boolean; url: string | null; message: string };
-};
+const INVOICE_STATUSES = ["DRAFT", "OPEN", "PAID", "VOID", "UNCOLLECTIBLE"] as const;
+const FEE_TYPES = ["IMPLEMENTATION", "MIGRATION", "SETUP", "OTHER"] as const;
 
 function BillingInner() {
   const tenantId = useTenantId();
@@ -63,7 +28,7 @@ function BillingInner() {
   const canManage = hasPermission("platform.entitlement.manage");
   const canRead = canManage || hasPermission("tenant.billing.read");
 
-  const [overview, setOverview] = useState<Overview | null>(null);
+  const [overview, setOverview] = useState<BillingOverview | null>(null);
   const [loading, setLoading] = useState(Boolean(tenantId));
   const [error, setError] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
@@ -79,12 +44,23 @@ function BillingInner() {
   const [overrideCents, setOverrideCents] = useState("");
   const [modulePricing, setModulePricing] = useState("");
 
+  const [invoiceStatus, setInvoiceStatus] = useState<(typeof INVOICE_STATUSES)[number]>("OPEN");
+  const [invoiceDue, setInvoiceDue] = useState("");
+  const [invoicePaid, setInvoicePaid] = useState("0");
+  const [invoiceUrl, setInvoiceUrl] = useState("");
+  const [editInvoice, setEditInvoice] = useState<BillingInvoice | null>(null);
+
+  const [feeType, setFeeType] = useState<(typeof FEE_TYPES)[number]>("IMPLEMENTATION");
+  const [feeAmount, setFeeAmount] = useState("");
+  const [feeDescription, setFeeDescription] = useState("");
+  const [feeContractId, setFeeContractId] = useState("");
+
   const load = useCallback(async () => {
     if (!tenantId || !canRead) return;
     setLoading(true);
     setError(null);
     try {
-      const data = await apiGet<Overview>(`/api/v1/tenants/${tenantId}/billing/overview`);
+      const data = await getBillingOverview(tenantId);
       setOverview(data);
       setContactEmail(data.customer?.billingEmail ?? "");
     } catch (err) {
@@ -105,11 +81,9 @@ function BillingInner() {
     setMessage(null);
     setError(null);
     try {
-      await apiSend(
-        `/api/v1/tenants/${tenantId}/billing/customers`,
-        "POST",
-        { billingEmail: contactEmail || null },
-      );
+      await apiSend(`/api/v1/tenants/${tenantId}/billing/customers`, "POST", {
+        billingEmail: contactEmail || null,
+      });
       if (overview?.customer) {
         await apiSend(
           `/api/v1/tenants/${tenantId}/billing/customers`,
@@ -118,7 +92,7 @@ function BillingInner() {
           { ifMatch: toIfMatch(overview.customer.recordVersion) },
         );
       }
-      setMessage("Billing contact saved (audited).");
+      setMessage("Billing contact saved.");
       await load();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to save contact");
@@ -140,14 +114,11 @@ function BillingInner() {
         .filter(Boolean)
         .map((line) => {
           const [moduleCode, amount] = line.split(/[,=:]/).map((p) => p.trim());
-          return {
-            moduleCode: moduleCode || "",
-            amountCents: Number(amount || 0),
-          };
+          return { moduleCode: moduleCode || "", amountCents: Number(amount || 0) };
         })
         .filter((row) => row.moduleCode);
 
-      await apiSend(`/api/v1/tenants/${tenantId}/billing/contracts`, "POST", {
+      await createBillingContract(tenantId, {
         name: contractName,
         status: "ACTIVE",
         billingType: "MANUAL_ENTERPRISE_CONTRACT",
@@ -162,10 +133,86 @@ function BillingInner() {
           ...(modules.length ? { modules } : {}),
         },
       });
-      setMessage("Manual contract created (audited).");
+      setMessage("Contract created.");
       await load();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to create contract");
+    } finally {
+      setSubmitting(false);
+    }
+  }
+
+  async function onCreateInvoice(event: FormEvent) {
+    event.preventDefault();
+    if (!tenantId || !canManage) return;
+    setSubmitting(true);
+    setError(null);
+    setMessage(null);
+    try {
+      await createBillingInvoice(tenantId, {
+        status: invoiceStatus,
+        amountDueCents: Math.round(Number(invoiceDue || 0) * 100),
+        amountPaidCents: Math.round(Number(invoicePaid || 0) * 100),
+        hostedInvoiceUrl: invoiceUrl.trim() || null,
+      });
+      setInvoiceDue("");
+      setInvoiceUrl("");
+      setMessage("Invoice recorded.");
+      await load();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to create invoice");
+    } finally {
+      setSubmitting(false);
+    }
+  }
+
+  async function onSaveInvoice(event: FormEvent) {
+    event.preventDefault();
+    if (!tenantId || !editInvoice || !canManage) return;
+    setSubmitting(true);
+    setError(null);
+    setMessage(null);
+    try {
+      await patchBillingInvoice(
+        tenantId,
+        editInvoice.id,
+        {
+          status: editInvoice.status,
+          amountDueCents: editInvoice.amountDueCents,
+          amountPaidCents: editInvoice.amountPaidCents,
+          hostedInvoiceUrl: editInvoice.hostedInvoiceUrl,
+        },
+        toIfMatch(editInvoice.recordVersion),
+      );
+      setEditInvoice(null);
+      setMessage("Invoice updated.");
+      await load();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to update invoice");
+    } finally {
+      setSubmitting(false);
+    }
+  }
+
+  async function onCreateFee(event: FormEvent) {
+    event.preventDefault();
+    if (!tenantId || !canManage) return;
+    setSubmitting(true);
+    setError(null);
+    setMessage(null);
+    try {
+      await createBillingFee(tenantId, {
+        feeType,
+        amountCents: Math.round(Number(feeAmount || 0) * 100),
+        description: feeDescription.trim() || null,
+        contractId: feeContractId.trim() || null,
+      });
+      setFeeAmount("");
+      setFeeDescription("");
+      setMessage("Fee line added.");
+      await load();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to create fee");
     } finally {
       setSubmitting(false);
     }
@@ -180,14 +227,16 @@ function BillingInner() {
     );
   }
 
+  const q = tenantQuery(tenantId);
+
   return (
     <section className={styles.page}>
       <h1>Billing</h1>
       <p className={styles.lead}>
         Tenant commercial overview · <span className={styles.mono}>{tenantId}</span> ·{" "}
-        <Link href={`/subscriptions${tenantQuery(tenantId)}`}>Subscriptions</Link> ·{" "}
-        <Link href={`/entitlements${tenantQuery(tenantId)}`}>Entitlements</Link> ·{" "}
-        <Link href={`/audit${tenantQuery(tenantId)}`}>Audit</Link>
+        <Link href={`/subscriptions${q}`}>Subscriptions</Link> ·{" "}
+        <Link href={`/contracts${q}`}>Contracts</Link> ·{" "}
+        <Link href={`/customer-modules${q}`}>Company modules</Link>
       </p>
 
       {!canRead ? (
@@ -196,7 +245,7 @@ function BillingInner() {
         </p>
       ) : null}
       {error ? <p className={styles.error}>{error}</p> : null}
-      {message ? <p className={styles.muted}>{message}</p> : null}
+      {message ? <p className={styles.success}>{message}</p> : null}
       {loading ? <p className={styles.muted}>Loading…</p> : null}
 
       {overview ? (
@@ -207,86 +256,281 @@ function BillingInner() {
               <dt>Subscription status</dt>
               <dd>{overview.subscription?.status ?? "None"}</dd>
               <dt>Current plan</dt>
-              <dd>
-                {overview.subscription?.planName ?? overview.subscription?.planCode ?? "—"}
-                {overview.subscription?.billingInterval
-                  ? ` · ${overview.subscription.billingInterval}`
-                  : ""}
-              </dd>
+              <dd>{overview.subscription?.planName ?? overview.subscription?.planCode ?? "—"}</dd>
               <dt>Billing contact</dt>
               <dd>{overview.customer?.billingEmail ?? "—"}</dd>
-              <dt>Payment portal</dt>
-              <dd>
-                {overview.paymentPortal.available && overview.paymentPortal.url ? (
-                  <a href={overview.paymentPortal.url} target="_blank" rel="noreferrer">
-                    Open portal / invoice
-                  </a>
-                ) : (
-                  overview.paymentPortal.message
-                )}
-              </dd>
             </dl>
           </div>
 
           <div className={styles.panel}>
-            <h2>Products & modules</h2>
-            <p className={styles.muted}>
-              Products:{" "}
-              {overview.entitlements.products
-                .map((p) => `${p.productCode} (${p.status})`)
-                .join(", ") || "None"}
-            </p>
-            <p className={styles.muted}>
-              Modules:{" "}
-              {overview.entitlements.modules
-                .map((m) => `${m.moduleCode} (${m.status})`)
-                .join(", ") || "None"}
-            </p>
-          </div>
-
-          <div className={styles.panel}>
-            <h2>Invoice history</h2>
+            <h2>Invoices</h2>
             {overview.invoices.length === 0 ? (
               <p className={styles.muted}>No invoices recorded.</p>
             ) : (
-              <ul>
-                {overview.invoices.map((inv) => (
-                  <li key={inv.id}>
-                    {inv.status} · {(inv.amountDueCents / 100).toFixed(2)} {inv.currency}
-                    {inv.hostedInvoiceUrl ? (
-                      <>
-                        {" "}
-                        ·{" "}
-                        <a href={inv.hostedInvoiceUrl} target="_blank" rel="noreferrer">
-                          link
-                        </a>
-                      </>
-                    ) : null}
-                  </li>
-                ))}
-              </ul>
+              <table className={styles.table}>
+                <thead>
+                  <tr>
+                    <th>Status</th>
+                    <th>Due</th>
+                    <th>Paid</th>
+                    <th>Link</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {overview.invoices.map((inv) => (
+                    <tr key={inv.id}>
+                      <td>{inv.status}</td>
+                      <td>
+                        {(inv.amountDueCents / 100).toFixed(2)} {inv.currency}
+                      </td>
+                      <td>
+                        {(inv.amountPaidCents / 100).toFixed(2)} {inv.currency}
+                      </td>
+                      <td>
+                        {inv.hostedInvoiceUrl ? (
+                          <a href={inv.hostedInvoiceUrl} target="_blank" rel="noreferrer">
+                            Open
+                          </a>
+                        ) : (
+                          "—"
+                        )}
+                      </td>
+                      <td>
+                        {canManage ? (
+                          <button
+                            type="button"
+                            className={styles.buttonSecondary}
+                            onClick={() => setEditInvoice(inv)}
+                          >
+                            Edit
+                          </button>
+                        ) : (
+                          "—"
+                        )}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
             )}
+
+            {canManage ? (
+              <form className={styles.form} onSubmit={onCreateInvoice}>
+                <h3>Record invoice</h3>
+                <div className={styles.formRow}>
+                  <label htmlFor="invoice-status">Status</label>
+                  <select
+                    id="invoice-status"
+                    value={invoiceStatus}
+                    onChange={(e) =>
+                      setInvoiceStatus(e.target.value as (typeof INVOICE_STATUSES)[number])
+                    }
+                  >
+                    {INVOICE_STATUSES.map((value) => (
+                      <option key={value} value={value}>
+                        {value}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div className={styles.formRow}>
+                  <label htmlFor="invoice-due">Amount due (USD)</label>
+                  <input
+                    id="invoice-due"
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    value={invoiceDue}
+                    onChange={(e) => setInvoiceDue(e.target.value)}
+                  />
+                </div>
+                <div className={styles.formRow}>
+                  <label htmlFor="invoice-paid">Amount paid (USD)</label>
+                  <input
+                    id="invoice-paid"
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    value={invoicePaid}
+                    onChange={(e) => setInvoicePaid(e.target.value)}
+                  />
+                </div>
+                <div className={styles.formRow}>
+                  <label htmlFor="invoice-url">Hosted invoice URL</label>
+                  <input
+                    id="invoice-url"
+                    type="url"
+                    value={invoiceUrl}
+                    onChange={(e) => setInvoiceUrl(e.target.value)}
+                  />
+                </div>
+                <div className={styles.actions}>
+                  <button className={styles.button} type="submit" disabled={submitting}>
+                    Record invoice
+                  </button>
+                </div>
+              </form>
+            ) : null}
+
+            {editInvoice && canManage ? (
+              <form className={styles.form} onSubmit={onSaveInvoice}>
+                <h3>Edit invoice</h3>
+                <div className={styles.formRow}>
+                  <label htmlFor="edit-invoice-status">Status</label>
+                  <select
+                    id="edit-invoice-status"
+                    value={editInvoice.status}
+                    onChange={(e) => setEditInvoice({ ...editInvoice, status: e.target.value })}
+                  >
+                    {INVOICE_STATUSES.map((value) => (
+                      <option key={value} value={value}>
+                        {value}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div className={styles.formRow}>
+                  <label htmlFor="edit-invoice-due">Amount due (cents)</label>
+                  <input
+                    id="edit-invoice-due"
+                    type="number"
+                    min="0"
+                    value={editInvoice.amountDueCents}
+                    onChange={(e) =>
+                      setEditInvoice({
+                        ...editInvoice,
+                        amountDueCents: Number(e.target.value),
+                      })
+                    }
+                  />
+                </div>
+                <div className={styles.formRow}>
+                  <label htmlFor="edit-invoice-paid">Amount paid (cents)</label>
+                  <input
+                    id="edit-invoice-paid"
+                    type="number"
+                    min="0"
+                    value={editInvoice.amountPaidCents}
+                    onChange={(e) =>
+                      setEditInvoice({
+                        ...editInvoice,
+                        amountPaidCents: Number(e.target.value),
+                      })
+                    }
+                  />
+                </div>
+                <div className={styles.formRow}>
+                  <label htmlFor="edit-invoice-url">Hosted URL</label>
+                  <input
+                    id="edit-invoice-url"
+                    value={editInvoice.hostedInvoiceUrl ?? ""}
+                    onChange={(e) =>
+                      setEditInvoice({
+                        ...editInvoice,
+                        hostedInvoiceUrl: e.target.value || null,
+                      })
+                    }
+                  />
+                </div>
+                <div className={styles.actions}>
+                  <button className={styles.button} type="submit" disabled={submitting}>
+                    Save invoice
+                  </button>
+                  <button
+                    type="button"
+                    className={styles.buttonSecondary}
+                    onClick={() => setEditInvoice(null)}
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </form>
+            ) : null}
           </div>
 
           <div className={styles.panel}>
-            <h2>Contracts</h2>
-            {overview.contracts.length === 0 ? (
-              <p className={styles.muted}>No contracts yet.</p>
+            <h2>Implementation & migration fees</h2>
+            {overview.fees.length === 0 ? (
+              <p className={styles.muted}>No fee lines recorded.</p>
             ) : (
-              <ul>
-                {overview.contracts.map((c) => (
-                  <li key={c.id}>
-                    <strong>{c.name}</strong> · {c.status} · {c.billingType}
-                    {c.renewalOn ? ` · renews ${c.renewalOn}` : ""}
-                    {c.setupFeeCents != null ? ` · setup $${(c.setupFeeCents / 100).toFixed(2)}` : ""}
-                    {c.pricingJson?.overrideAmountCents != null
-                      ? ` · override $${(c.pricingJson.overrideAmountCents / 100).toFixed(2)}`
-                      : ""}
-                    {c.notes ? ` · ${c.notes}` : ""}
-                  </li>
-                ))}
-              </ul>
+              <table className={styles.table}>
+                <thead>
+                  <tr>
+                    <th>Type</th>
+                    <th>Amount</th>
+                    <th>Description</th>
+                    <th>Contract</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {overview.fees.map((fee) => (
+                    <tr key={fee.id}>
+                      <td>{fee.feeType}</td>
+                      <td>
+                        {(fee.amountCents / 100).toFixed(2)} {fee.currency}
+                      </td>
+                      <td>{fee.description ?? "—"}</td>
+                      <td className={styles.mono}>{fee.contractId ?? "—"}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
             )}
+
+            {canManage ? (
+              <form className={styles.form} onSubmit={onCreateFee}>
+                <h3>Add fee line</h3>
+                <div className={styles.formRow}>
+                  <label htmlFor="fee-type">Fee type</label>
+                  <select
+                    id="fee-type"
+                    value={feeType}
+                    onChange={(e) => setFeeType(e.target.value as (typeof FEE_TYPES)[number])}
+                  >
+                    {FEE_TYPES.map((value) => (
+                      <option key={value} value={value}>
+                        {value}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div className={styles.formRow}>
+                  <label htmlFor="fee-amount">Amount (USD)</label>
+                  <input
+                    id="fee-amount"
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    required
+                    value={feeAmount}
+                    onChange={(e) => setFeeAmount(e.target.value)}
+                  />
+                </div>
+                <div className={styles.formRow}>
+                  <label htmlFor="fee-description">Description</label>
+                  <input
+                    id="fee-description"
+                    value={feeDescription}
+                    onChange={(e) => setFeeDescription(e.target.value)}
+                  />
+                </div>
+                <div className={styles.formRow}>
+                  <label htmlFor="fee-contract">Contract ID (optional)</label>
+                  <input
+                    id="fee-contract"
+                    value={feeContractId}
+                    onChange={(e) => setFeeContractId(e.target.value)}
+                    placeholder="UUID"
+                  />
+                </div>
+                <div className={styles.actions}>
+                  <button className={styles.button} type="submit" disabled={submitting}>
+                    Add fee
+                  </button>
+                </div>
+              </form>
+            ) : null}
           </div>
 
           {canManage ? (
@@ -294,67 +538,101 @@ function BillingInner() {
               <div className={styles.panel}>
                 <h2>Billing contact</h2>
                 <form onSubmit={saveContact} className={styles.form}>
-                  <label>
-                    Email
+                  <div className={styles.formRow}>
+                    <label htmlFor="billing-email">Email</label>
                     <input
+                      id="billing-email"
                       value={contactEmail}
                       onChange={(e) => setContactEmail(e.target.value)}
                       type="email"
                     />
-                  </label>
-                  <button type="submit" disabled={submitting}>
-                    Save contact
-                  </button>
+                  </div>
+                  <div className={styles.actions}>
+                    <button className={styles.button} type="submit" disabled={submitting}>
+                      Save contact
+                    </button>
+                  </div>
                 </form>
               </div>
 
               <div className={styles.panel}>
                 <h2>Manual enterprise contract</h2>
                 <form onSubmit={createContract} className={styles.form}>
-                  <label>
-                    Name
-                    <input value={contractName} onChange={(e) => setContractName(e.target.value)} required />
-                  </label>
-                  <label>
-                    Starts on
-                    <input type="date" value={startsOn} onChange={(e) => setStartsOn(e.target.value)} />
-                  </label>
-                  <label>
-                    Ends on
-                    <input type="date" value={endsOn} onChange={(e) => setEndsOn(e.target.value)} />
-                  </label>
-                  <label>
-                    Renewal date
-                    <input type="date" value={renewalOn} onChange={(e) => setRenewalOn(e.target.value)} />
-                  </label>
-                  <label>
-                    Setup fee (cents)
-                    <input value={setupFeeCents} onChange={(e) => setSetupFeeCents(e.target.value)} />
-                  </label>
-                  <label>
-                    Pricing override (cents)
+                  <div className={styles.formRow}>
+                    <label htmlFor="contract-name">Name</label>
                     <input
+                      id="contract-name"
+                      value={contractName}
+                      onChange={(e) => setContractName(e.target.value)}
+                      required
+                    />
+                  </div>
+                  <div className={styles.formRow}>
+                    <label htmlFor="contract-starts">Starts on</label>
+                    <input
+                      id="contract-starts"
+                      type="date"
+                      value={startsOn}
+                      onChange={(e) => setStartsOn(e.target.value)}
+                    />
+                  </div>
+                  <div className={styles.formRow}>
+                    <label htmlFor="contract-ends">Ends on</label>
+                    <input
+                      id="contract-ends"
+                      type="date"
+                      value={endsOn}
+                      onChange={(e) => setEndsOn(e.target.value)}
+                    />
+                  </div>
+                  <div className={styles.formRow}>
+                    <label htmlFor="contract-renewal">Renewal date</label>
+                    <input
+                      id="contract-renewal"
+                      type="date"
+                      value={renewalOn}
+                      onChange={(e) => setRenewalOn(e.target.value)}
+                    />
+                  </div>
+                  <div className={styles.formRow}>
+                    <label htmlFor="contract-setup">Setup fee (cents)</label>
+                    <input
+                      id="contract-setup"
+                      value={setupFeeCents}
+                      onChange={(e) => setSetupFeeCents(e.target.value)}
+                    />
+                  </div>
+                  <div className={styles.formRow}>
+                    <label htmlFor="contract-override">Pricing override (cents)</label>
+                    <input
+                      id="contract-override"
                       value={overrideCents}
                       onChange={(e) => setOverrideCents(e.target.value)}
-                      placeholder="optional"
                     />
-                  </label>
-                  <label>
-                    Module pricing (one per line: CODE,cents)
+                  </div>
+                  <div className={styles.formRow}>
+                    <label htmlFor="contract-modules">Module pricing (CODE,cents per line)</label>
                     <textarea
+                      id="contract-modules"
                       value={modulePricing}
                       onChange={(e) => setModulePricing(e.target.value)}
                       rows={3}
-                      placeholder="LOTO,1500"
                     />
-                  </label>
-                  <label>
-                    Notes
-                    <textarea value={notes} onChange={(e) => setNotes(e.target.value)} rows={3} />
-                  </label>
-                  <button type="submit" disabled={submitting}>
-                    Create contract
-                  </button>
+                  </div>
+                  <div className={styles.formRow}>
+                    <label htmlFor="contract-notes">Notes</label>
+                    <textarea
+                      id="contract-notes"
+                      value={notes}
+                      onChange={(e) => setNotes(e.target.value)}
+                      rows={3}
+                    />
+                  </div>
+                  <div className={styles.actions}>
+                    <button className={styles.button} type="submit" disabled={submitting}>
+                      Create contract
+                    </button>
+                  </div>
                 </form>
               </div>
             </>
@@ -371,7 +649,13 @@ export default function BillingPage() {
       title="Billing"
       anyOf={["platform.entitlement.manage", "tenant.billing.read"]}
     >
-      <Suspense fallback={<section className={styles.page}><p>Loading…</p></section>}>
+      <Suspense
+        fallback={
+          <section className={styles.page}>
+            <p>Loading…</p>
+          </section>
+        }
+      >
         <BillingInner />
       </Suspense>
     </PlatformPageGate>

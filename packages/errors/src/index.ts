@@ -70,8 +70,14 @@ export type ForgeErrorCode =
   | "IMPORT_ARTIFACT_EXPIRED"
   | "IMPORT_CROSS_TENANT_DENIED"
   | "IMPORT_SCANNER_PROVIDER_UNAVAILABLE"
-  | "IMPORT_SCANNER_RESPONSE_INVALID";
-
+  | "IMPORT_SCANNER_RESPONSE_INVALID"
+  | "LEGAL_ACKNOWLEDGMENT_REQUIRED"
+  | "LEGAL_DOCUMENT_NOT_FOUND"
+  | "LEGAL_DOCUMENT_VERSION_STALE"
+  | "ACKNOWLEDGMENT_ALREADY_RECORDED"
+  | "ACKNOWLEDGMENT_NOT_AUTHORIZED"
+  | "TENANT_POLICY_NOT_AUTHORIZED"
+  | "ATTESTATION_REQUIRED";
 
 export class ForgeError extends Error {
   readonly code: ForgeErrorCode;
@@ -82,7 +88,12 @@ export class ForgeError extends Error {
   constructor(
     code: ForgeErrorCode,
     message: string,
-    options?: { statusCode?: number; details?: unknown[]; cause?: unknown; exposeMessage?: boolean },
+    options?: {
+      statusCode?: number;
+      details?: unknown[];
+      cause?: unknown;
+      exposeMessage?: boolean;
+    },
   ) {
     super(message, options?.cause ? { cause: options.cause } : undefined);
     this.name = "ForgeError";
@@ -142,6 +153,10 @@ function defaultStatus(code: ForgeErrorCode): number {
     case "IMPORT_SENSITIVE_ACCESS_DENIED":
     case "IMPORT_ARTIFACT_ACCESS_DENIED":
     case "IMPORT_CROSS_TENANT_DENIED":
+    case "LEGAL_ACKNOWLEDGMENT_REQUIRED":
+    case "ACKNOWLEDGMENT_NOT_AUTHORIZED":
+    case "TENANT_POLICY_NOT_AUTHORIZED":
+    case "ATTESTATION_REQUIRED":
       return 403;
     case "NOT_FOUND":
     case "IMPORT_JOB_NOT_FOUND":
@@ -154,6 +169,7 @@ function defaultStatus(code: ForgeErrorCode): number {
     case "IMPORT_BATCH_NOT_FOUND":
     case "IMPORT_ROW_ERROR_NOT_FOUND":
     case "IMPORT_ARTIFACT_EXPIRED":
+    case "LEGAL_DOCUMENT_NOT_FOUND":
       return 404;
     case "CONFLICT":
     case "IDEMPOTENCY_CONFLICT":
@@ -167,6 +183,8 @@ function defaultStatus(code: ForgeErrorCode): number {
     case "IMPORT_EXECUTION_LOCK_HELD":
     case "IMPORT_ADAPTER_MISSING":
     case "IMPORT_SCANNER_PROVIDER_UNAVAILABLE":
+    case "ACKNOWLEDGMENT_ALREADY_RECORDED":
+    case "LEGAL_DOCUMENT_VERSION_STALE":
       return 409;
     case "PRECONDITION_FAILED":
       return 412;
@@ -180,5 +198,13 @@ function defaultStatus(code: ForgeErrorCode): number {
 }
 
 export function isForgeError(error: unknown): error is ForgeError {
-  return error instanceof ForgeError;
+  if (error instanceof ForgeError) return true;
+  // Duck-type across duplicate @forge/errors package instances (Nest/webpack).
+  if (!error || typeof error !== "object") return false;
+  const candidate = error as { name?: unknown; code?: unknown; statusCode?: unknown };
+  return (
+    candidate.name === "ForgeError" &&
+    typeof candidate.code === "string" &&
+    typeof candidate.statusCode === "number"
+  );
 }

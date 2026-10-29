@@ -67,12 +67,12 @@ Runtime app secret evidence **ACCEPTED**. Tenant isolation indexed to Phase 2 ac
 
 ## 22–25. Register status
 
-| Item | Status |
-| --- | --- |
-| R-002 | **CLOSED** |
-| CC-LOG-01 | **Operating** |
-| GAP-001 / GAP-002 | **CLOSED** |
-| CMP-001 | Retired |
+| Item              | Status        |
+| ----------------- | ------------- |
+| R-002             | **CLOSED**    |
+| CC-LOG-01         | **Operating** |
+| GAP-001 / GAP-002 | **CLOSED**    |
+| CMP-001           | Retired       |
 
 ## 26–27. Tests / deployment
 
@@ -88,12 +88,12 @@ Modest CloudTrail cost increase. SNS subscribers still placeholder. Open operati
 
 ## 32. Recommended SOC 2 Phase 2
 
-1. First quarterly access review with REMOVE/REDUCE decisions  
-2. Incident response tabletop  
-3. Backup restore drill  
-4. Subscribe security SNS to on-call  
-5. Resolve Data stack app-secret drift (GAP-009)  
-6. External readiness assessor when ready  
+1. First quarterly access review with REMOVE/REDUCE decisions
+2. Incident response tabletop
+3. Backup restore drill
+4. Subscribe security SNS to on-call
+5. Resolve Data stack app-secret drift (GAP-009)
+6. External readiness assessor when ready
 
 ## 33. NERIS Phase 3
 
@@ -107,7 +107,7 @@ Modest CloudTrail cost increase. SNS subscribers still placeholder. Open operati
 
 ### Revision history
 
-| Version | Date | Change |
-| --- | --- | --- |
-| 0.1 | 2026-07-26 | Phase 1 completion report (pending management) |
-| 0.2 | 2026-07-26 | Management approval + policy/evidence acceptance — COMPLETE |
+| Version | Date       | Change                                                      |
+| ------- | ---------- | ----------------------------------------------------------- |
+| 0.1     | 2026-07-26 | Phase 1 completion report (pending management)              |
+| 0.2     | 2026-07-26 | Management approval + policy/evidence acceptance — COMPLETE |

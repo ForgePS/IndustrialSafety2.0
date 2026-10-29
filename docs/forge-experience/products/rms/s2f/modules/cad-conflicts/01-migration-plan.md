@@ -2,8 +2,8 @@
 
 ## Composition
 
-| Surface | FX when | Compatibility |
-| --- | --- | --- |
+| Surface                               | FX when                          | Compatibility         |
+| ------------------------------------- | -------------------------------- | --------------------- |
 | Open conflicts list + resolve actions | `module.cadConflicts` ∧ `tables` | Legacy `styles.table` |
 
 ## Foundations used

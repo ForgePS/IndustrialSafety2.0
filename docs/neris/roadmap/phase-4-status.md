@@ -6,12 +6,12 @@
 
 ## Phase summary
 
-| Phase | Name | Status |
-| --- | --- | --- |
-| Phase 1–3 | Schema / shell / specialty | COMPLETE / ACCEPTED (eng) |
-| GAP-009 | App secret reconciliation | RECONCILED |
-| Phase 4 | CAD / hybrid / ops | **ACCEPTED (eng)** — 4A–4F complete |
-| Phase 5 | — | NOT AUTHORIZED |
+| Phase     | Name                       | Status                              |
+| --------- | -------------------------- | ----------------------------------- |
+| Phase 1–3 | Schema / shell / specialty | COMPLETE / ACCEPTED (eng)           |
+| GAP-009   | App secret reconciliation  | RECONCILED                          |
+| Phase 4   | CAD / hybrid / ops         | **ACCEPTED (eng)** — 4A–4F complete |
+| Phase 5   | —                          | NOT AUTHORIZED                      |
 
 SOC 2 remains a **readiness program** only.
 
@@ -31,12 +31,12 @@ SOC 2 remains a **readiness program** only.
 
 ## Increment tracker
 
-| Increment | Status |
-| --- | --- |
-| Plan | **DONE** |
-| 4A Contracts/schema/flags | **DONE** |
-| 4B Webhook/queues/normalize | **DONE** |
-| 4C Matching/links/conflicts/provenance | **DONE** |
-| 4D Ops UI / mapping admin | **DONE** |
-| 4E Simulator/polling/observability | **DONE** |
-| 4F Deploy + Cognito scenarios | **DONE / ACCEPTED (eng)** |
+| Increment                              | Status                    |
+| -------------------------------------- | ------------------------- |
+| Plan                                   | **DONE**                  |
+| 4A Contracts/schema/flags              | **DONE**                  |
+| 4B Webhook/queues/normalize            | **DONE**                  |
+| 4C Matching/links/conflicts/provenance | **DONE**                  |
+| 4D Ops UI / mapping admin              | **DONE**                  |
+| 4E Simulator/polling/observability     | **DONE**                  |
+| 4F Deploy + Cognito scenarios          | **DONE / ACCEPTED (eng)** |

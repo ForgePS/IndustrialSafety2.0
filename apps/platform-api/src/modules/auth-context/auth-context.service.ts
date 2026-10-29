@@ -45,6 +45,23 @@ import { CognitoAdminService } from "../cognito/cognito-admin.service.js";
 
 const PLATFORM_SUPER_ADMIN = "PLATFORM_SUPER_ADMIN";
 
+/** Consider a user online when they have API activity within this window. */
+export const PRESENCE_ONLINE_MS = 3 * 60 * 1000;
+/** Do not write last_activity_at more often than this. */
+const PRESENCE_TOUCH_THROTTLE_MS = 60 * 1000;
+
+/** True when last API activity falls within the online window. */
+export function isOnlineFromActivity(
+  lastActivityAt: Date | string | null | undefined,
+  nowMs = Date.now(),
+): boolean {
+  if (!lastActivityAt) return false;
+  const t =
+    lastActivityAt instanceof Date ? lastActivityAt.getTime() : new Date(lastActivityAt).getTime();
+  if (Number.isNaN(t)) return false;
+  return nowMs - t < PRESENCE_ONLINE_MS;
+}
+
 export type AuthAccessMode = "MEMBER" | "PLATFORM_ADMIN_SUPPORT";
 
 @Injectable()
@@ -98,11 +115,7 @@ export class AuthContextService {
       userId = identity.userId;
       tenantHint = identity.tenantId;
       tokenIssuedAtMs = typeof claims.iat === "number" ? claims.iat * 1000 : null;
-    } else if (
-      this.env.APP_ENV === "local" ||
-      this.env.APP_ENV === "development" ||
-      this.env.APP_ENV === "testing"
-    ) {
+    } else if (this.allowsDevPrincipalHeader()) {
       const raw =
         req.header("x-forge-dev-principal") ??
         req.header("x-forge-dev-user") ??
@@ -144,6 +157,13 @@ export class AuthContextService {
       throw new ForgeError("UNAUTHORIZED", "Session has been revoked");
     }
 
+    // Fire-and-forget presence + login touch — never block auth on these writes.
+    void this.touchPresence(user.tenantId, user.id, {
+      previousActivityAt: user.lastActivityAt ?? null,
+      previousLoginAt: user.lastLoginAt ?? null,
+      tokenIssuedAtMs,
+    });
+
     const routeTenantId =
       (req.params?.tenantId as string | undefined) ??
       req.header("x-tenant-id")?.trim() ??
@@ -155,7 +175,9 @@ export class AuthContextService {
 
     const access = await this.resolveTenantAccess(userId!, routeTenantId);
 
-    const homeTenantId = access?.tenantId ?? user.tenantId;
+    // Always evaluate platform-admin authority from the user's home tenant.
+    // Membership in a customer tenant must not replace home PLATFORM_SUPER_ADMIN.
+    const homeTenantId = user.tenantId;
     const permissionBundle = await this.loadPermissions(homeTenantId, userId!);
     const isSuper =
       permissionBundle.roleCodes.has(PLATFORM_SUPER_ADMIN) ||
@@ -253,8 +275,7 @@ export class AuthContextService {
         membershipId: row.membershipId,
         membershipStatus: row.membershipStatus,
         isDefaultTenant: row.isDefaultTenant,
-        selectable:
-          isMembershipStatusActive(row.membershipStatus) && tenantSession.canAuthenticate,
+        selectable: isMembershipStatusActive(row.membershipStatus) && tenantSession.canAuthenticate,
         accessMode: "MEMBER" as AuthAccessMode,
       };
     });
@@ -328,7 +349,10 @@ export class AuthContextService {
       permissionCodes = permissions.permissionCodes;
     } else if (access && isMembershipStatusActive(access.status) && principal.isPlatformAdmin) {
       const membershipPermissions = await this.loadPermissions(tenantId, principal.userId);
-      permissionCodes = new Set([...principal.permissions, ...membershipPermissions.permissionCodes]);
+      permissionCodes = new Set([
+        ...principal.permissions,
+        ...membershipPermissions.permissionCodes,
+      ]);
     }
 
     const entitlements = await this.loadEntitlements(tenantId, access?.membershipId ?? null, {
@@ -343,30 +367,35 @@ export class AuthContextService {
           : "MEMBER";
 
     if (principal.isPlatformAdmin) {
-      await withTenantTransaction(this.db, tenantId, async (tx) => {
-        await this.audit.writeInTransaction(tx, {
-          tenantId,
-          actorUserId: principal.userId,
-          actorPersonId: principal.personId,
-          actorType: "USER",
-          action: "PLATFORM_ADMIN_TENANT_ACCESS_STARTED",
-          resourceType: "tenant",
-          resourceId: tenantId,
-          result: "SUCCESS",
-          riskLevel: "HIGH",
-          correlationId: principal.correlationId,
-          requestId: principal.requestId,
-          after: {
-            platformRole: "PLATFORM_SUPER_ADMIN",
-            platformAdmin: true,
-            targetTenantId: tenantId,
-            targetProduct: options?.productCode ?? null,
-            reason: options?.reason ?? "select-tenant",
-            accessMode: resolvedAccessMode,
-            membershipId: access?.membershipId ?? null,
-          },
-        });
-      }, principal.userId);
+      await withTenantTransaction(
+        this.db,
+        tenantId,
+        async (tx) => {
+          await this.audit.writeInTransaction(tx, {
+            tenantId,
+            actorUserId: principal.userId,
+            actorPersonId: principal.personId,
+            actorType: "USER",
+            action: "PLATFORM_ADMIN_TENANT_ACCESS_STARTED",
+            resourceType: "tenant",
+            resourceId: tenantId,
+            result: "SUCCESS",
+            riskLevel: "HIGH",
+            correlationId: principal.correlationId,
+            requestId: principal.requestId,
+            after: {
+              platformRole: "PLATFORM_SUPER_ADMIN",
+              platformAdmin: true,
+              targetTenantId: tenantId,
+              targetProduct: options?.productCode ?? null,
+              reason: options?.reason ?? "select-tenant",
+              accessMode: resolvedAccessMode,
+              membershipId: access?.membershipId ?? null,
+            },
+          });
+        },
+        principal.userId,
+      );
     }
 
     const summaryPrincipal: ForgePrincipal = {
@@ -402,6 +431,7 @@ export class AuthContextService {
           .set({
             sessionsRevokedAt: now,
             sessionVersion: current.sessionVersion + 1,
+            lastActivityAt: null,
             updatedAt: now,
           })
           .where(eq(users.id, principal.userId))
@@ -475,73 +505,78 @@ export class AuthContextService {
   }
 
   private async loadPermissions(tenantId: string, userId: string) {
-    return withTenantTransaction(this.db, tenantId, async (tx) => {
-      const membership = await tx.query.userTenantMemberships.findFirst({
-        where: and(
-          eq(userTenantMemberships.tenantId, tenantId),
-          eq(userTenantMemberships.userId, userId),
-          eq(userTenantMemberships.status, "ACTIVE"),
-        ),
-      });
+    return withTenantTransaction(
+      this.db,
+      tenantId,
+      async (tx) => {
+        const membership = await tx.query.userTenantMemberships.findFirst({
+          where: and(
+            eq(userTenantMemberships.tenantId, tenantId),
+            eq(userTenantMemberships.userId, userId),
+            eq(userTenantMemberships.status, "ACTIVE"),
+          ),
+        });
 
-      let roleRows: Array<{ roleId: string; roleCode: string }> = [];
-      if (membership) {
-        roleRows = await tx
-          .select({
-            roleId: membershipRoleAssignments.roleId,
-            roleCode: roles.code,
-          })
-          .from(membershipRoleAssignments)
-          .innerJoin(roles, eq(roles.id, membershipRoleAssignments.roleId))
-          .where(
-            and(
-              eq(membershipRoleAssignments.membershipId, membership.id),
-              eq(membershipRoleAssignments.status, "ACTIVE"),
-              isNull(membershipRoleAssignments.revokedAt),
-            ),
+        let roleRows: Array<{ roleId: string; roleCode: string }> = [];
+        if (membership) {
+          roleRows = await tx
+            .select({
+              roleId: membershipRoleAssignments.roleId,
+              roleCode: roles.code,
+            })
+            .from(membershipRoleAssignments)
+            .innerJoin(roles, eq(roles.id, membershipRoleAssignments.roleId))
+            .where(
+              and(
+                eq(membershipRoleAssignments.membershipId, membership.id),
+                eq(membershipRoleAssignments.status, "ACTIVE"),
+                isNull(membershipRoleAssignments.revokedAt),
+              ),
+            );
+        } else {
+          // Fall back to the Sprint 1D user_role_assignments projection.
+          roleRows = await tx
+            .select({
+              roleId: userRoleAssignments.roleId,
+              roleCode: roles.code,
+            })
+            .from(userRoleAssignments)
+            .innerJoin(roles, eq(roles.id, userRoleAssignments.roleId))
+            .where(
+              and(
+                eq(userRoleAssignments.tenantId, tenantId),
+                eq(userRoleAssignments.userId, userId),
+                isNull(userRoleAssignments.revokedAt),
+              ),
+            );
+        }
+
+        const roleCodes = new Set(roleRows.map((a) => a.roleCode));
+        const roleIds = roleRows.map((a) => a.roleId);
+        let permissionCodes = new Set<string>();
+
+        if (roleIds.length > 0) {
+          const perms = await tx
+            .select({
+              code: permissions.code,
+              effect: rolePermissions.effect,
+            })
+            .from(rolePermissions)
+            .innerJoin(permissions, eq(permissions.id, rolePermissions.permissionId))
+            .where(inArray(rolePermissions.roleId, roleIds));
+
+          permissionCodes = resolveEffectivePermissionCodes(
+            perms.map((p) => ({
+              code: p.code,
+              effect: p.effect === "DENY" ? "DENY" : "ALLOW",
+            })),
           );
-      } else {
-        // Fall back to the Sprint 1D user_role_assignments projection.
-        roleRows = await tx
-          .select({
-            roleId: userRoleAssignments.roleId,
-            roleCode: roles.code,
-          })
-          .from(userRoleAssignments)
-          .innerJoin(roles, eq(roles.id, userRoleAssignments.roleId))
-          .where(
-            and(
-              eq(userRoleAssignments.tenantId, tenantId),
-              eq(userRoleAssignments.userId, userId),
-              isNull(userRoleAssignments.revokedAt),
-            ),
-          );
-      }
+        }
 
-      const roleCodes = new Set(roleRows.map((a) => a.roleCode));
-      const roleIds = roleRows.map((a) => a.roleId);
-      let permissionCodes = new Set<string>();
-
-      if (roleIds.length > 0) {
-        const perms = await tx
-          .select({
-            code: permissions.code,
-            effect: rolePermissions.effect,
-          })
-          .from(rolePermissions)
-          .innerJoin(permissions, eq(permissions.id, rolePermissions.permissionId))
-          .where(inArray(rolePermissions.roleId, roleIds));
-
-        permissionCodes = resolveEffectivePermissionCodes(
-          perms.map((p) => ({
-            code: p.code,
-            effect: p.effect === "DENY" ? "DENY" : "ALLOW",
-          })),
-        );
-      }
-
-      return { roleCodes, permissionCodes };
-    }, userId);
+        return { roleCodes, permissionCodes };
+      },
+      userId,
+    );
   }
 
   private async loadEntitlements(
@@ -666,6 +701,74 @@ export class AuthContextService {
 
       return { products, modules };
     });
+  }
+
+  /**
+   * Throttled presence write so messaging can show who is currently in the Platform.
+   * Also records lastLoginAt when a new Cognito access token is seen (or first activity).
+   * Failures are ignored — auth must not depend on presence.
+   */
+  private async touchPresence(
+    homeTenantId: string,
+    userId: string,
+    opts: {
+      previousActivityAt: Date | null;
+      previousLoginAt: Date | null;
+      tokenIssuedAtMs: number | null;
+    },
+  ): Promise<void> {
+    const now = Date.now();
+    const activityStale =
+      !opts.previousActivityAt ||
+      now - opts.previousActivityAt.getTime() >= PRESENCE_TOUCH_THROTTLE_MS;
+    const loginNeedsUpdate =
+      opts.tokenIssuedAtMs != null
+        ? !opts.previousLoginAt || opts.previousLoginAt.getTime() < opts.tokenIssuedAtMs
+        : !opts.previousLoginAt && activityStale;
+    if (!activityStale && !loginNeedsUpdate) {
+      return;
+    }
+    try {
+      await withTenantTransaction(
+        this.db,
+        homeTenantId,
+        async (tx) => {
+          const patch: {
+            lastActivityAt?: Date;
+            lastLoginAt?: Date;
+            updatedAt: Date;
+          } = { updatedAt: new Date(now) };
+          if (activityStale) {
+            patch.lastActivityAt = new Date(now);
+          }
+          if (loginNeedsUpdate) {
+            patch.lastLoginAt = new Date(opts.tokenIssuedAtMs != null ? opts.tokenIssuedAtMs : now);
+          }
+          await tx.update(users).set(patch).where(eq(users.id, userId));
+        },
+        userId,
+      );
+    } catch {
+      // Presence is best-effort.
+    }
+  }
+
+  /**
+   * Dev principal headers are for local CI and explicit break-glass only.
+   * Hosted `APP_ENV=development` (e.g. api-dev) must NOT accept them unless
+   * `FORGE_ALLOW_DEV_PRINCIPAL=true` is set deliberately.
+   */
+  private allowsDevPrincipalHeader(): boolean {
+    if (this.env.APP_ENV === "local" || this.env.APP_ENV === "testing") {
+      return true;
+    }
+    if (
+      (this.env.APP_ENV === "development" || this.env.APP_ENV === "govcloud-development") &&
+      process.env.FORGE_ALLOW_DEV_PRINCIPAL === "true"
+    ) {
+      return true;
+    }
+    return false;
   }
 
   /**

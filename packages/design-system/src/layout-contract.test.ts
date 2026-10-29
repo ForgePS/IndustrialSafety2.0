@@ -8,7 +8,10 @@ const css = readFileSync(join(root, "src/styles.css"), "utf8");
 
 describe("CREATOR-UX-REPAIR layout CSS contract", () => {
   it("does not style checkboxes as full-width text fields", () => {
-    expect(css).toContain('label > input:not([type="checkbox"]):not([type="radio"])');
+    // Labels may carry a :not(...) exclusion (e.g. topbar controls); the checkbox/radio guard must stay.
+    expect(css).toMatch(
+      /label(?::not\([^)]*\))?\s*>\s*input:not\(\[type="checkbox"\]\):not\(\[type="radio"\]\)/,
+    );
     expect(css).not.toMatch(/label\s*>\s*input\s*,/);
     expect(css).toContain(".forge-checkbox-row");
     expect(css).toContain(".forge-page");

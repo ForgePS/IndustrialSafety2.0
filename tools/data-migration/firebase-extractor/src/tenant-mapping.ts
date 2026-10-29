@@ -1,11 +1,7 @@
 /** Tenant key classification for extraction metadata (no auto-normalization of aliases). */
 
 export type TenantClass =
-  | "CUSTOMER"
-  | "PLATFORM_DEFAULT"
-  | "GLOBAL_TEMPLATE"
-  | "LEGACY_ALIAS"
-  | "UNKNOWN";
+  "CUSTOMER" | "PLATFORM_DEFAULT" | "GLOBAL_TEMPLATE" | "LEGACY_ALIAS" | "UNKNOWN";
 
 export type TenantMapping = {
   sourceTenantKey: string;
@@ -19,7 +15,8 @@ export const TENANT_MAPPINGS: Record<string, TenantMapping> = {
     sourceTenantKey: "business-1782553339499",
     classification: "CUSTOMER",
     canonicalTenantKey: "business-1782553339499",
-    notes: "Primary Producers customer business; organizations/{id} and platformBusinesses/{id} match",
+    notes:
+      "Primary Producers customer business; organizations/{id} and platformBusinesses/{id} match",
   },
   "business-forge-default": {
     sourceTenantKey: "business-forge-default",

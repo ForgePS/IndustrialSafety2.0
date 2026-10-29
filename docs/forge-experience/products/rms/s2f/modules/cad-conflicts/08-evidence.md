@@ -1,11 +1,11 @@
 # S2F-5 CAD Conflicts — Evidence
 
-| Item | Status |
-| --- | --- |
-| Baseline inventory | `00-baseline.md` |
-| Resolver unit tests | Pass |
-| Screenshots | Sanitized placeholders under `../../evidence/screenshots/` |
-| Conflict payloads / PII | Avoid capturing sensitive CAD field values in screenshots |
+| Item                    | Status                                                     |
+| ----------------------- | ---------------------------------------------------------- |
+| Baseline inventory      | `00-baseline.md`                                           |
+| Resolver unit tests     | Pass                                                       |
+| Screenshots             | Sanitized placeholders under `../../evidence/screenshots/` |
+| Conflict payloads / PII | Avoid capturing sensitive CAD field values in screenshots  |
 
 Local enable:
 

@@ -114,9 +114,7 @@ function AuditInner() {
       <div className={styles.panel}>
         <h2>Recent events</h2>
         {loading ? <p className={styles.muted}>Loading…</p> : null}
-        {!loading && events.length === 0 ? (
-          <p className={styles.muted}>No audit events.</p>
-        ) : null}
+        {!loading && events.length === 0 ? <p className={styles.muted}>No audit events.</p> : null}
         {events.length > 0 ? (
           <table className={styles.table}>
             <thead>

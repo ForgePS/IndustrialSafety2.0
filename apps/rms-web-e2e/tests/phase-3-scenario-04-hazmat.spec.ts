@@ -1,10 +1,6 @@
 import { test, expect } from "../src/fixtures/index.js";
 import { apiRequest, readTenantId } from "../src/helpers/api.js";
-import {
-  getSecondaryCredentials,
-  hasSecondaryCredentials,
-  REQUIRE_SECONDARY,
-} from "../src/env.js";
+import { getSecondaryCredentials, hasSecondaryCredentials, REQUIRE_SECONDARY } from "../src/env.js";
 import { ensureAuthenticated } from "../src/helpers/navigation.js";
 import { e2eRunId } from "../src/helpers/test-data.js";
 import {

@@ -59,7 +59,7 @@ describe("Environment Cost Profiles", () => {
 
   it("applies Production knobs without auto-pause", () => {
     expect(productionConfig.costProfile).toBe("production");
-    expect(productionConfig.database.serverlessMinCapacity).toBeGreaterThanOrEqual(2);
+    expect(productionConfig.database.serverlessMinCapacity).toBeGreaterThanOrEqual(4);
     expect(productionConfig.database.deletionProtection).toBe(true);
     expect(productionConfig.database.multiAz).toBe(true);
     expect(COST_PROFILES.production.approximateMonthlyCost).toBe("Sized by workload");

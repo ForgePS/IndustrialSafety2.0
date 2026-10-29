@@ -50,3 +50,50 @@ export function assertAccessTokenShape(token: string): string {
   }
   return trimmed;
 }
+
+/**
+ * Absolute expiry time (ms since epoch) from the JWT `exp` claim, or null when
+ * the token is missing / not a readable compact JWT.
+ */
+export function getAccessTokenExpiresAtMs(token: string | null | undefined): number | null {
+  if (!token?.trim()) return null;
+  const parts = token.trim().split(".");
+  if (parts.length !== 3) return null;
+  try {
+    const payloadJson = atob(parts[1]!.replace(/-/g, "+").replace(/_/g, "/"));
+    const payload = JSON.parse(payloadJson) as { exp?: unknown };
+    const exp = typeof payload.exp === "number" ? payload.exp : Number(payload.exp);
+    if (!Number.isFinite(exp)) return null;
+    return exp * 1000;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * True when the compact JWT `exp` claim is missing, unreadable, or within
+ * `skewSeconds` of expiry (default 60s). Non-JWT values are treated as expired.
+ */
+export function isAccessTokenExpiredOrNearExpiry(
+  token: string | null | undefined,
+  skewSeconds = 60,
+  nowMs = Date.now(),
+): boolean {
+  const expiresAt = getAccessTokenExpiresAtMs(token);
+  if (expiresAt == null) return true;
+  return expiresAt <= nowMs + skewSeconds * 1000;
+}
+
+/**
+ * Milliseconds until the token is considered near-expiry. Returns 0 when already
+ * near/expired, or null when expiry cannot be read.
+ */
+export function msUntilAccessTokenNearExpiry(
+  token: string | null | undefined,
+  skewSeconds = 60,
+  nowMs = Date.now(),
+): number | null {
+  const expiresAt = getAccessTokenExpiresAtMs(token);
+  if (expiresAt == null) return null;
+  return Math.max(0, expiresAt - skewSeconds * 1000 - nowMs);
+}

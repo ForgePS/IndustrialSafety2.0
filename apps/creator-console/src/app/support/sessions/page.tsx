@@ -16,8 +16,8 @@ function SupportSessionsInner() {
         subtitle="Open an audited support session to help a customer without using AWS Console."
       />
       <Alert tone="info">
-        Support sessions must be audited with customer, product, and reason. A live session API is not
-        connected yet — do not use informal workarounds for customer access.
+        Support sessions must be audited with customer, product, and reason. A live session API is
+        not connected yet — do not use informal workarounds for customer access.
       </Alert>
       <div className={styles.panel}>
         <FormSection title="Open Support Session">
@@ -53,8 +53,8 @@ function SupportSessionsInner() {
           </FormField>
         </FormSection>
         <ComingLater>
-          Start Session is unavailable until the support-session API and banner are wired. Use customer
-          Open Application with platform-admin audited access where already provided.
+          Start Session is unavailable until the support-session API and banner are wired. Use
+          customer Open Application with platform-admin audited access where already provided.
         </ComingLater>
       </div>
     </section>

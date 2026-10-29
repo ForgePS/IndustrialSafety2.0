@@ -35,12 +35,12 @@ describe("entitlement-domain", () => {
         now,
       ),
     ).toBe(true);
-    expect(
-      isModuleEntitlementWithinWindow({ endsAt: "2026-08-01T00:00:00.000Z" }, now),
-    ).toBe(false);
-    expect(
-      isModuleEntitlementWithinWindow({ startsAt: "2026-08-11T00:00:00.000Z" }, now),
-    ).toBe(false);
+    expect(isModuleEntitlementWithinWindow({ endsAt: "2026-08-01T00:00:00.000Z" }, now)).toBe(
+      false,
+    );
+    expect(isModuleEntitlementWithinWindow({ startsAt: "2026-08-11T00:00:00.000Z" }, now)).toBe(
+      false,
+    );
   });
 
   it("recognizes platform product codes", () => {

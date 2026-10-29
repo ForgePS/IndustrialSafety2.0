@@ -3,11 +3,12 @@
 import { configureApiClient, getApiBaseUrl } from "@forge/web-kit";
 
 const allowDevPrincipal = process.env.NEXT_PUBLIC_ALLOW_DEV_PRINCIPAL === "true";
+// Empty string is valid: same-origin relative `/api/...` via CloudFront proxy.
 const configuredApiUrl = process.env.NEXT_PUBLIC_API_URL;
 
-if (!configuredApiUrl) {
+if (configuredApiUrl === undefined) {
   throw new Error(
-    "NEXT_PUBLIC_API_URL is required. Set it for local development or resolve it via sync-static-site for deployed builds.",
+    "NEXT_PUBLIC_API_URL is required. Set it for local development or resolve it via sync-static-site for deployed builds (empty string = same-origin /api proxy).",
   );
 }
 

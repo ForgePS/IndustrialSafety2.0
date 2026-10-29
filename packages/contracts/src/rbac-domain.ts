@@ -78,6 +78,20 @@ export const TENANT_OWNER_PERMISSIONS = [
   "import.rollback",
   "import.profile.manage",
   "import.error.reprocess",
+  // Print Manager — tenant admins/owners can register bridges and manage printers
+  "industrial.printer.view",
+  "industrial.printer.print",
+  "industrial.printer.quick_print",
+  "industrial.printer.reprint",
+  "industrial.printer.cancel",
+  "industrial.printer.manage",
+  "industrial.printer.manage_defaults",
+  "industrial.printer.manage_media",
+  "industrial.printer.manage_templates",
+  "industrial.printer.manage_bridge",
+  "industrial.printer.pair_bluetooth",
+  "industrial.printer.view_logs",
+  "industrial.printer.run_diagnostics",
 ] as const;
 
 /** Tenant admin: same core SaaS surface as owner for MK-S4 (no billing-owner split yet). */
@@ -108,8 +122,7 @@ export const SAAS_PERSONA_TO_ROLE_TEMPLATE = {
   viewer: "READ_ONLY_USER",
 } as const satisfies Record<SaasRolePersona, string>;
 
-export type SaasPersonaRoleTemplateCode =
-  (typeof SAAS_PERSONA_TO_ROLE_TEMPLATE)[SaasRolePersona];
+export type SaasPersonaRoleTemplateCode = (typeof SAAS_PERSONA_TO_ROLE_TEMPLATE)[SaasRolePersona];
 
 export const SAAS_PERSONA_PERMISSIONS = {
   owner: TENANT_OWNER_PERMISSIONS,
@@ -127,7 +140,9 @@ export function resolveSaasRolePersona(value: string): SaasRolePersona | null {
   return isSaasRolePersona(normalized) ? normalized : null;
 }
 
-export function roleTemplateCodeForSaasPersona(persona: SaasRolePersona): SaasPersonaRoleTemplateCode {
+export function roleTemplateCodeForSaasPersona(
+  persona: SaasRolePersona,
+): SaasPersonaRoleTemplateCode {
   return SAAS_PERSONA_TO_ROLE_TEMPLATE[persona];
 }
 
@@ -135,7 +150,10 @@ export function permissionsForSaasPersona(persona: SaasRolePersona): readonly st
   return SAAS_PERSONA_PERMISSIONS[persona];
 }
 
-export function saasPersonaHasPermission(persona: SaasRolePersona, permissionCode: string): boolean {
+export function saasPersonaHasPermission(
+  persona: SaasRolePersona,
+  permissionCode: string,
+): boolean {
   return (SAAS_PERSONA_PERMISSIONS[persona] as readonly string[]).includes(permissionCode);
 }
 

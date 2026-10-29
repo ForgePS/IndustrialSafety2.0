@@ -10,15 +10,15 @@ Browser acceptance tests for **Forge RMS Phase 2** against a deployed environmen
 
 ## Environment variables
 
-| Variable | Required | Description |
-| --- | --- | --- |
-| `E2E_BASE_URL` | Yes (deployed) | RMS CloudFront HTTPS URL, e.g. `https://d3ud5uzwd9js2z.cloudfront.net` |
-| `E2E_API_URL` | Yes (deployed) | Platform API HTTPS URL (CloudFront or ALB) |
-| `E2E_COGNITO_USERNAME` | Yes | Cognito user for Hosted UI login |
-| `E2E_COGNITO_PASSWORD` | Yes | Cognito password |
-| `E2E_STORAGE_STATE` | No | Path to reuse saved auth storage state (default: `.auth/storage-state.json`) |
-| `E2E_COGNITO_USERNAME_2` | Required for isolation | Second tenant user for cross-tenant isolation tests |
-| `E2E_COGNITO_PASSWORD_2` | Required for isolation | Second tenant password |
+| Variable                 | Required               | Description                                                                  |
+| ------------------------ | ---------------------- | ---------------------------------------------------------------------------- |
+| `E2E_BASE_URL`           | Yes (deployed)         | RMS CloudFront HTTPS URL, e.g. `https://d3ud5uzwd9js2z.cloudfront.net`       |
+| `E2E_API_URL`            | Yes (deployed)         | Platform API HTTPS URL (CloudFront or ALB)                                   |
+| `E2E_COGNITO_USERNAME`   | Yes                    | Cognito user for Hosted UI login                                             |
+| `E2E_COGNITO_PASSWORD`   | Yes                    | Cognito password                                                             |
+| `E2E_STORAGE_STATE`      | No                     | Path to reuse saved auth storage state (default: `.auth/storage-state.json`) |
+| `E2E_COGNITO_USERNAME_2` | Required for isolation | Second tenant user for cross-tenant isolation tests                          |
+| `E2E_COGNITO_PASSWORD_2` | Required for isolation | Second tenant password                                                       |
 
 **Never commit credentials.** Use a local `.env` file (gitignored) or CI secrets.
 
@@ -56,14 +56,14 @@ pnpm --filter @forge/rms-web-e2e test:ui
 
 ## Specs
 
-| File | Coverage |
-| --- | --- |
-| `tests/cognito-login.spec.ts` | Cognito Hosted UI login → tenant select or home (`@smoke`) |
+| File                            | Coverage                                                                                |
+| ------------------------------- | --------------------------------------------------------------------------------------- |
+| `tests/cognito-login.spec.ts`   | Cognito Hosted UI login → tenant select or home (`@smoke`)                              |
 | `tests/manual-incident.spec.ts` | Create manual incident, overview station/shift, optional unit/classification (`@smoke`) |
-| `tests/autosave.spec.ts` | Autosave indicator, refresh persistence, dual-context conflict (`@smoke`) |
-| `tests/review-workflow.spec.ts` | Submit → return → correct → resubmit → approve → finalize → edit blocked |
-| `tests/isolation.spec.ts` | Cross-tenant UI + API isolation; fails if secondary credentials missing (`@smoke`) |
-| `tests/mobile.spec.ts` | 375×812 home + incidents smoke (`@smoke`) |
+| `tests/autosave.spec.ts`        | Autosave indicator, refresh persistence, dual-context conflict (`@smoke`)               |
+| `tests/review-workflow.spec.ts` | Submit → return → correct → resubmit → approve → finalize → edit blocked                |
+| `tests/isolation.spec.ts`       | Cross-tenant UI + API isolation; fails if secondary credentials missing (`@smoke`)      |
+| `tests/mobile.spec.ts`          | 375×812 home + incidents smoke (`@smoke`)                                               |
 
 Tests **skip gracefully** when `E2E_COGNITO_USERNAME` is unset (local CI without secrets).
 

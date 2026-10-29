@@ -9,12 +9,12 @@
 
 ## Catalog
 
-| Code | Name |
-| --- | --- |
-| `FORGE_ACADEMY` | Forge Academy |
-| `FORGE_RMS` | Forge RMS |
+| Code               | Name                    |
+| ------------------ | ----------------------- |
+| `FORGE_ACADEMY`    | Forge Academy           |
+| `FORGE_RMS`        | Forge RMS               |
 | `FORGE_INDUSTRIAL` | Forge Industrial Safety |
-| `FORGE_CREATOR` | Forge Creator |
+| `FORGE_CREATOR`    | Forge Creator           |
 
 Modules belong to products (`platform_modules.product_id`). Seeded via starter templates / seed.
 

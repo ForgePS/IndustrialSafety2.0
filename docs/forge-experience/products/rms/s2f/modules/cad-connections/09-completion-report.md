@@ -4,7 +4,7 @@
 **Product:** Forge RMS  
 **Module flag:** `fx.rms.module.cadConnections.enabled` (default **false**)  
 **Foundation dependencies:** `fx.rms.forms.enabled`, `fx.rms.tables.enabled`  
-**Gate:** FX-S2F-4  
+**Gate:** FX-S2F-4
 
 ## Decision requested
 
@@ -16,9 +16,9 @@ Alternates: `APPROVE WITH CONDITIONS` · `RETURN FOR CORRECTION`
 
 ### Suggested conditions
 
-1. Capture sanitized desktop/tablet screenshots before tenant enablement.  
-2. Keep module flag default-off.  
-3. Confirm secrets remain unddisplayed in FX and legacy modes.  
+1. Capture sanitized desktop/tablet screenshots before tenant enablement.
+2. Keep module flag default-off.
+3. Confirm secrets remain unddisplayed in FX and legacy modes.
 4. Do not begin S2F-5 CAD Conflicts until this checkpoint is accepted.
 
 ## Executive summary
@@ -31,30 +31,30 @@ Migrated: `/cad/connections/` create form + connections table only.
 
 ## Routes migrated
 
-| Route | Status |
-| --- | --- |
-| `/cad/connections/` | Yes |
+| Route               | Status |
+| ------------------- | ------ |
+| `/cad/connections/` | Yes    |
 
 ## Routes deferred
 
-| Route / capability | Reason |
-| --- | --- |
-| Edit / archive / delete UI | Not present in live rms-web |
-| `/cad/conflicts/` | S2F-5 |
-| `/cad/messages/` | Separate module (S2F-3) |
-| `/cad/operations/` | Separate operations summary |
+| Route / capability                 | Reason                               |
+| ---------------------------------- | ------------------------------------ |
+| Edit / archive / delete UI         | Not present in live rms-web          |
+| `/cad/conflicts/`                  | S2F-5                                |
+| `/cad/messages/`                   | Separate module (S2F-3)              |
+| `/cad/operations/`                 | Separate operations summary          |
 | Credential / secrets management UI | Explicitly out of presentation scope |
 
 ## Feature-flag behavior
 
-| Combo | Result |
-| --- | --- |
-| Module off | Legacy form + legacy table |
-| Module on + forms off + tables off | Legacy compat both |
-| Module on + forms on + tables off | FX form + legacy table |
-| Module on + forms off + tables on | Legacy form + FX table |
-| Module on + forms + tables | FX form + FX table |
-| Forms/tables on + module off | Legacy (module gates) |
+| Combo                              | Result                     |
+| ---------------------------------- | -------------------------- |
+| Module off                         | Legacy form + legacy table |
+| Module on + forms off + tables off | Legacy compat both         |
+| Module on + forms on + tables off  | FX form + legacy table     |
+| Module on + forms off + tables on  | Legacy form + FX table     |
+| Module on + forms + tables         | FX form + FX table         |
+| Forms/tables on + module off       | Legacy (module gates)      |
 
 ## Component inventory
 
@@ -66,13 +66,13 @@ Legacy HTML form and table retained for rollback / module-off.
 
 ## Create / list / action parity
 
-| Concern | Result |
-| --- | --- |
-| Create name field + fixed synthetic payload | Pass |
-| List columns | Pass |
-| Test / Enable / Disable | Pass |
-| Status / health exact API strings | Pass |
-| Secrets never displayed | Pass |
+| Concern                                     | Result |
+| ------------------------------------------- | ------ |
+| Create name field + fixed synthetic payload | Pass   |
+| List columns                                | Pass   |
+| Test / Enable / Disable                     | Pass   |
+| Status / health exact API strings           | Pass   |
+| Secrets never displayed                     | Pass   |
 
 ## Archive or delete parity
 
@@ -112,18 +112,18 @@ Module off → legacy; other modules unaffected.
 
 ## Defects
 
-| Sev | Count |
-| --- | --- |
-| P0 | 0 |
-| P1 | 0 |
-| P3 | Screenshots pending |
+| Sev | Count               |
+| --- | ------------------- |
+| P0  | 0                   |
+| P1  | 0                   |
+| P3  | Screenshots pending |
 
 ## Risks
 
-| ID | Notes |
-| --- | --- |
+| ID        | Notes                                                                                                                       |
+| --------- | --------------------------------------------------------------------------------------------------------------------------- |
 | R-S2F-009 | S2E foundation-only FX path replaced by module∧foundation — intentional strangler; foundations alone no longer FX this page |
-| R-S2F-010 | No archive/delete/edit in live UI — accepted N/A |
+| R-S2F-010 | No archive/delete/edit in live UI — accepted N/A                                                                            |
 
 ## Evidence index
 
@@ -131,11 +131,11 @@ Module off → legacy; other modules unaffected.
 
 ## Production changes
 
-| Area | Changed? |
-| --- | --- |
-| Default UX | **No** (flag off) |
-| CAD ingest / APIs / secrets / permissions | **No** |
-| Code behind flag | Yes |
+| Area                                      | Changed?          |
+| ----------------------------------------- | ----------------- |
+| Default UX                                | **No** (flag off) |
+| CAD ingest / APIs / secrets / permissions | **No**            |
+| Code behind flag                          | Yes               |
 
 ## Recommendation
 

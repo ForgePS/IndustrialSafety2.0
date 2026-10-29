@@ -29,6 +29,8 @@ export const tenants = pgTable(
     timezone: varchar("timezone", { length: 64 }).notNull().default("America/Chicago"),
     defaultLocale: varchar("default_locale", { length: 16 }).notNull().default("en-US"),
     dataRegion: varchar("data_region", { length: 32 }).notNull().default("us-east-1"),
+    /** When true, external SMS/email/alerts/DOT/print side effects are blocked. */
+    isDemoTenant: boolean("is_demo_tenant").notNull().default(false),
     suspensionReason: text("suspension_reason"),
     suspendedAt: timestamp("suspended_at", { withTimezone: true }),
     archivedAt: timestamp("archived_at", { withTimezone: true }),
@@ -98,6 +100,7 @@ export const tenantBranding = pgTable(
     displayName: varchar("display_name", { length: 200 }),
     shortName: varchar("short_name", { length: 80 }),
     logoDocumentId: uuid("logo_document_id"),
+    logoDarkDocumentId: uuid("logo_dark_document_id"),
     iconDocumentId: uuid("icon_document_id"),
     primaryColor: varchar("primary_color", { length: 32 }),
     secondaryColor: varchar("secondary_color", { length: 32 }),

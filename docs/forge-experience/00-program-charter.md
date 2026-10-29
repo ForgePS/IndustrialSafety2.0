@@ -29,24 +29,24 @@ Forge Experience is the shared platform standard that defines how every Forge pr
 
 Design Forge Experience as the single source of truth for:
 
-| Domain | Ownership |
-| --- | --- |
-| User experience | FX |
-| Design standards | FX |
-| Navigation | FX |
-| Components | FX |
-| Dashboards | FX |
-| Workspaces | FX |
-| Accessibility | FX |
-| Mobile experience | FX |
-| Workflow standards | FX |
-| Record standards | FX |
-| Reporting standards | FX |
-| Forms standards | FX |
-| Notifications | FX |
-| Search | FX |
-| User interaction | FX |
-| Branding | FX |
+| Domain              | Ownership |
+| ------------------- | --------- |
+| User experience     | FX        |
+| Design standards    | FX        |
+| Navigation          | FX        |
+| Components          | FX        |
+| Dashboards          | FX        |
+| Workspaces          | FX        |
+| Accessibility       | FX        |
+| Mobile experience   | FX        |
+| Workflow standards  | FX        |
+| Record standards    | FX        |
+| Reporting standards | FX        |
+| Forms standards     | FX        |
+| Notifications       | FX        |
+| Search              | FX        |
+| User interaction    | FX        |
+| Branding            | FX        |
 
 Every Forge product shall inherit these standards.
 

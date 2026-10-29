@@ -154,11 +154,7 @@ export {
   createFacilityInputSchema,
   patchFacilityInputSchema,
 } from "./tenant-domain.js";
-export type {
-  TenantStatus,
-  CreateFacilityInput,
-  PatchFacilityInput,
-} from "./tenant-domain.js";
+export type { TenantStatus, CreateFacilityInput, PatchFacilityInput } from "./tenant-domain.js";
 
 export {
   BRANDING_ASSET_KINDS,
@@ -167,6 +163,7 @@ export {
   documentBelongsToTenant,
   isSignedAccessExpired,
   objectKeyBelongsToTenant,
+  pickThemeLogoUrl,
   putTenantBrandingInputSchema,
   type BrandingAssetKind,
   type BrandingAssetUploadInput,
@@ -234,6 +231,7 @@ export {
   NOTIFICATION_PRIORITIES,
   createNotificationInputSchema,
   type CreateNotificationInput,
+  type EmailAttachment,
   type EmailMessage,
   type EmailSendResult,
   type EmailTemplateKey,
@@ -332,9 +330,7 @@ export const setMembershipFacilityScopeInputSchema = z.object({
   facilityIds: z.array(z.string().uuid()).max(100),
 });
 
-export type SetMembershipFacilityScopeInput = z.infer<
-  typeof setMembershipFacilityScopeInputSchema
->;
+export type SetMembershipFacilityScopeInput = z.infer<typeof setMembershipFacilityScopeInputSchema>;
 
 // ---------------------------------------------------------------------------
 // Memberships (ADR-021)
@@ -348,10 +344,7 @@ export {
   isMembershipStatusActive,
   membershipStatusBlocksTenantSelection,
 } from "./membership-domain.js";
-export type {
-  MembershipStatus,
-  SaasMembershipStatusAlias,
-} from "./membership-domain.js";
+export type { MembershipStatus, SaasMembershipStatusAlias } from "./membership-domain.js";
 
 // ---------------------------------------------------------------------------
 // RBAC (FORGE-SAAS MK-S4)
@@ -482,11 +475,14 @@ export const ONBOARDING_STEPS = [
   { number: 6, key: "CONFIGURE_SUBSCRIPTION", label: "Configure subscription" },
   { number: 7, key: "CONFIGURE_LOCATIONS", label: "Configure locations" },
   { number: 8, key: "CONFIGURE_ORG_LOOKUPS", label: "Configure organization setup" },
-  { number: 9, key: "CONFIGURE_BRANDING", label: "Configure branding" },
-  { number: 10, key: "CREATE_PRIMARY_ADMINISTRATOR", label: "Create primary administrator" },
-  { number: 11, key: "SEND_INVITATION", label: "Send invitation" },
-  { number: 12, key: "REVIEW_CONFIGURATION", label: "Review configuration" },
-  { number: 13, key: "ACTIVATE_TENANT", label: "Activate company" },
+  { number: 9, key: "CONFIGURE_DATA_IMPORT", label: "Import company data" },
+  { number: 10, key: "CONFIGURE_DOCUMENTS", label: "Upload company documents" },
+  { number: 11, key: "CONFIGURE_BRANDING", label: "Configure branding" },
+  { number: 12, key: "CONFIGURE_BUSINESS_SETTINGS", label: "Configure business settings" },
+  { number: 13, key: "CREATE_PRIMARY_ADMINISTRATOR", label: "Create primary administrator" },
+  { number: 14, key: "SEND_INVITATION", label: "Send invitation" },
+  { number: 15, key: "REVIEW_CONFIGURATION", label: "Review configuration" },
+  { number: 16, key: "ACTIVATE_TENANT", label: "Activate company" },
 ] as const;
 
 export type OnboardingStepKey = (typeof ONBOARDING_STEPS)[number]["key"];
@@ -527,6 +523,13 @@ export {
   createBillingFeeInputSchema,
   patchBillingContractInputSchema,
   patchBillingCustomerInputSchema,
+  PLAN_STATUSES,
+  createSubscriptionPlanInputSchema,
+  patchSubscriptionPlanInputSchema,
+  createPlanPriceInputSchema,
+  patchPlanPriceInputSchema,
+  createBillingInvoiceInputSchema,
+  patchBillingInvoiceInputSchema,
 } from "./billing-domain.js";
 export type {
   SaasSubscriptionStatus,
@@ -633,6 +636,11 @@ import {
   INDUSTRIAL_AI_NARRATIVE_PERMISSIONS,
 } from "@forge/ai-contracts";
 import { INDUSTRIAL_PERMISSIONS as _INDUSTRIAL_PERMISSIONS } from "./industrial.js";
+import { INDUSTRIAL_MODULE_PAGE_PERMISSIONS as _INDUSTRIAL_MODULE_PAGE_PERMISSIONS } from "./industrial-module-pages.js";
+import { FIELD_PERMISSIONS as _FIELD_PERMISSIONS } from "./field.js";
+import { HELPDESK_PERMISSIONS as _HELPDESK_PERMISSIONS } from "./helpdesk.js";
+export * from "./helpdesk.js";
+export * from "./emergency-sms-consent.js";
 
 export {
   INDUSTRIAL_PRODUCT_CODE,
@@ -648,13 +656,238 @@ export {
   type IndustrialModuleRegistryEntry,
 } from "./industrial.js";
 
+export {
+  INDUSTRIAL_MODULE_ROLE_ACCESS,
+  industrialModuleManagedPermissionCodes,
+  industrialModuleNavPermissionOk,
+  industrialModuleRoleAccess,
+  industrialModulesWithRoleAccess,
+  mergePermissionCodesWithModules,
+  moduleCodesFromPermissionCodes,
+  type IndustrialModuleRoleAccess,
+} from "./industrial-module-permissions.js";
 
-/** All seeded permission codes (platform + RMS + industrial + product AI + import). */
+export {
+  INDUSTRIAL_MODULE_PAGE_CATALOGS,
+  INDUSTRIAL_MODULE_PAGE_PERMISSIONS,
+  enabledPageIdsFromPermissionCodes,
+  filterModulePages,
+  industrialModulePageCatalog,
+  isIndustrialModulePagePermission,
+  managePermissionForModuleDomain,
+  mergePermissionCodesWithModulePages,
+  moduleCodeFromPagePermission,
+  modulePagePermissionOk,
+  pagePermissionCode,
+  pagePermissionCodesForModule,
+  type IndustrialModulePage,
+  type IndustrialModulePageCatalog,
+} from "./industrial-module-pages.js";
+
+export {
+  INDUSTRIAL_DASHBOARD_ATTENTION_SOURCES,
+  filterIndustrialDashboardAttentionItems,
+  industrialDashboardAttentionAllowed,
+  industrialDashboardAttentionSource,
+  type IndustrialDashboardAttentionSource,
+} from "./industrial-dashboard-attention.js";
+
+export {
+  PrinterConnectionType,
+  PrinterTransportType,
+  ForgePrintMode,
+  PrintJobStatus,
+  BridgeStatus,
+  BRADY_I4311_DPI,
+  inchesToPixels,
+  printerCapabilitiesSchema,
+  printLabelLayoutSchema,
+  createPrintJobInputSchema,
+  previewPrintJobInputSchema,
+  createPrintBatchItemSchema,
+  createPrintBatchInputSchema,
+  registerDirectBluetoothPrinterInputSchema,
+  upsertPrinterProfileInputSchema,
+  createMediaProfileInputSchema,
+  patchMediaProfileInputSchema,
+  createBridgePairingInputSchema,
+  consumeBridgePairingInputSchema,
+  bridgeHeartbeatInputSchema,
+  bridgePrinterUpsertSchema,
+  printJobStatusUpdateSchema,
+  reprintJobInputSchema,
+  PRINT_REPRINT_REASONS,
+  PrinterGroupStrategy,
+  printRouteConditionsSchema,
+  printRouteActionSchema,
+  createPrinterGroupInputSchema,
+  patchPrinterGroupInputSchema,
+  createPrintRoutingRuleInputSchema,
+  patchPrintRoutingRuleInputSchema,
+  resolvePrintRouteInputSchema,
+  PrintManagerPrinterHealth,
+  classifyPrintManagerPrinterHealth,
+  PRINT_MANAGER_QUEUED_STATUSES,
+  PRINT_MANAGER_PRINTING_STATUSES,
+  PRINT_MANAGER_SUCCESS_STATUSES,
+  LabelTemplateVersionStatus,
+  labelTemplateFieldInputSchema,
+  labelTemplateLayoutSchema,
+  createLabelTemplateInputSchema,
+  patchLabelTemplateInputSchema,
+  patchLabelTemplateVersionInputSchema,
+  previewLabelTemplateInputSchema,
+  exportLabelTemplateZplInputSchema,
+  labelTemplateElementSchema,
+  labelTemplateElementTypeSchema,
+  PrintSupplyType,
+  PrintSupplyAlertLevel,
+  createPrintSupplyInputSchema,
+  patchPrintSupplyInputSchema,
+  replacePrintSupplyInputSchema,
+  printAnalyticsQuerySchema,
+  type PrinterCapabilities,
+  type PrintLabelLayout,
+  type CreatePrintJobInput,
+  type PreviewPrintJobInput,
+  type CreatePrintBatchItem,
+  type CreatePrintBatchInput,
+  type RegisterDirectBluetoothPrinterInput,
+  type UpsertPrinterProfileInput,
+  type CreateMediaProfileInput,
+  type PatchMediaProfileInput,
+  type CreateBridgePairingInput,
+  type ConsumeBridgePairingInput,
+  type BridgeHeartbeatInput,
+  type BridgePrinterUpsert,
+  type PrintJobStatusUpdate,
+  type ReprintJobInput,
+  type PrintReprintReason,
+  type CreatePrinterGroupInput,
+  type PatchPrinterGroupInput,
+  type CreatePrintRoutingRuleInput,
+  type PatchPrintRoutingRuleInput,
+  type ResolvePrintRouteInput,
+  type PrintRouteConditions,
+  type PrintRouteAction,
+  type LabelTemplateFieldInput,
+  type LabelTemplateLayout,
+  type CreateLabelTemplateInput,
+  type PatchLabelTemplateInput,
+  type PatchLabelTemplateVersionInput,
+  type PreviewLabelTemplateInput,
+  type ExportLabelTemplateZplInput,
+  type LabelTemplateElement,
+  type LabelTemplateElementType,
+  type CreatePrintSupplyInput,
+  type PatchPrintSupplyInput,
+  type ReplacePrintSupplyInput,
+  type PrintAnalyticsQuery,
+} from "./industrial-print.js";
+
+export {
+  EXECUTIVE_WALKTHROUGH_PRESENTATION_ID,
+  EXECUTIVE_WALKTHROUGH_TENANT_KEY,
+  EXECUTIVE_WALKTHROUGH_SESSION_KEY,
+  EXECUTIVE_WALKTHROUGH_SESSION_EVENT,
+  EXECUTIVE_WALKTHROUGH_MAX_RUNTIME_MS,
+  EXECUTIVE_WALKTHROUGH_WARN_RUNTIME_MS,
+  EXECUTIVE_WALKTHROUGH_STEPS,
+  EXECUTIVE_WALKTHROUGH_DEFAULT_TITLE,
+  EXECUTIVE_WALKTHROUGH_DEFAULT_FILENAME,
+  EXECUTIVE_WALKTHROUGH_VOICE_DIRECTION,
+  estimateWalkthroughRuntimeMs,
+  type WalkthroughAction,
+  type WalkthroughStep,
+} from "./executive-walkthrough.js";
+
+export {
+  INDUSTRIAL_PLATFORM_WALKTHROUGH_ID,
+  INDUSTRIAL_DEMO_TENANT_SLUG,
+  INDUSTRIAL_DEMO_COMPANY_NAME,
+  INDUSTRIAL_DEMO_TENANT_KEYS,
+  isIndustrialDemoTenantKey,
+  WALKTHROUGH_STUDIO_SESSION_KEY,
+  WALKTHROUGH_STUDIO_SESSION_EVENT,
+  WALKTHROUGH_TARGET_RUNTIME_MIN_MS,
+  WALKTHROUGH_TARGET_RUNTIME_MAX_MS,
+  WALKTHROUGH_RUNTIME_GREEN_MS,
+  WALKTHROUGH_RUNTIME_YELLOW_MS,
+  WALKTHROUGH_RUNTIME_ORANGE_MS,
+  WALKTHROUGH_RUNTIME_MAX_MS,
+  WALKTHROUGH_DEFAULT_WPM,
+  WALKTHROUGH_SPEED_MIN,
+  WALKTHROUGH_SPEED_MAX,
+  WALKTHROUGH_SPEED_DEFAULT,
+  WALKTHROUGH_TRANSITION_MS_DEFAULT,
+  WALKTHROUGH_DEFAULT_VOICE_STYLE,
+  WALKTHROUGH_VOICE_PROFILES,
+  DEFAULT_WALKTHROUGH_VOICE_PROFILE_ID,
+  WALKTHROUGH_STUDIO_PERMISSIONS,
+  INDUSTRIAL_PLATFORM_WALKTHROUGH_CHAPTERS,
+  INDUSTRIAL_PLATFORM_WALKTHROUGH,
+  INDUSTRIAL_PLATFORM_WALKTHROUGH_FILENAME_PREFIX,
+  DEMO_SEED_TARGETS,
+  DEMO_LOCATIONS,
+  DEMO_DIVISIONS,
+  flattenWalkthroughScenes,
+  estimateWalkthroughStudioRuntimeMs,
+  getWalkthroughRuntimeStatus,
+  estimateNarrationDurationMs,
+  formatWalkthroughRuntime,
+  buildWalkthroughMp4Filename,
+  type WalkthroughRuntimeStatus,
+  type WalkthroughStatus,
+  type WalkthroughExportStatus,
+  type WalkthroughCaptionMode,
+  type WalkthroughTransitionType,
+  type WalkthroughNarrationProvider,
+  type WalkthroughVoiceGender,
+  type WalkthroughVoiceProfile,
+  type WalkthroughEngineAction,
+  type WalkthroughScene,
+  type WalkthroughChapter,
+  type WalkthroughDefinition,
+  type WalkthroughStudioPermission,
+} from "./walkthrough-studio.js";
+
+export {
+  INDUSTRIAL_REPORTING_PERMISSIONS,
+  REPORT_EXPORT_FORMATS,
+  REPORT_DEFINITION_ORIGINS,
+  REPORT_SYNC_ROW_LIMIT,
+  SAFETY_DIRECTOR_RECIPIENT_MARKER,
+  reportRunInputSchema,
+  reportExportInputSchema,
+  createSavedReportInputSchema,
+  patchSavedReportInputSchema,
+  createReportScheduleInputSchema,
+  patchReportScheduleInputSchema,
+  type IndustrialReportingPermission,
+  type ReportExportFormat,
+  type ReportRunInput,
+  type ReportExportInput,
+  type CreateSavedReportInput,
+  type CreateReportScheduleInput,
+} from "./reporting-domain.js";
+
+export {
+  FIELD_PRODUCT_SURFACE,
+  FIELD_PERMISSIONS,
+  FIELD_EMPLOYEE_PERMISSIONS,
+  FIELD_SUPERVISOR_PERMISSIONS,
+  type FieldPermission,
+} from "./field.js";
+
+/** All seeded permission codes (platform + RMS + industrial + field + product AI + import). */
 export const ALL_PERMISSIONS = [
   ...PLATFORM_PERMISSIONS,
   ...IMPORT_PERMISSIONS,
   ..._RMS_PERMISSIONS,
   ..._INDUSTRIAL_PERMISSIONS,
+  ..._INDUSTRIAL_MODULE_PAGE_PERMISSIONS,
+  ..._FIELD_PERMISSIONS,
+  ..._HELPDESK_PERMISSIONS,
   ...INDUSTRIAL_AI_NARRATIVE_PERMISSIONS,
   ...ACADEMY_AI_NARRATIVE_PERMISSIONS,
 ] as const;

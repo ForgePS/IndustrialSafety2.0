@@ -27,18 +27,8 @@ test.describe("Phase 3 scenario 5 — alarm and impaired sprinkler @phase3", () 
     await promoteToInProgress(page, incidentId, runId);
     await setPrimaryType(page, tenantId!, incidentId, "FALSE_ALARM");
 
-    const alarmAct = await activateSpecialtySection(
-      page,
-      tenantId!,
-      incidentId,
-      "ALARM_DETECTION",
-    );
-    const protAct = await activateSpecialtySection(
-      page,
-      tenantId!,
-      incidentId,
-      "FIRE_PROTECTION",
-    );
+    const alarmAct = await activateSpecialtySection(page, tenantId!, incidentId, "ALARM_DETECTION");
+    const protAct = await activateSpecialtySection(page, tenantId!, incidentId, "FIRE_PROTECTION");
     expect([200, 201], alarmAct.body).toContain(alarmAct.status);
     expect([200, 201], protAct.body).toContain(protAct.status);
 

@@ -108,8 +108,7 @@ export class OfflineCache {
       this.store.removeItem(storageKey);
       return null;
     }
-    const wrongScope =
-      entry.tenantId !== this.scope.tenantId || entry.userId !== this.scope.userId;
+    const wrongScope = entry.tenantId !== this.scope.tenantId || entry.userId !== this.scope.userId;
     if (wrongScope || entry.expiresAt <= now) {
       this.store.removeItem(storageKey);
       return null;

@@ -60,8 +60,7 @@ export function parseEventBridgeSqsBody(body: string): InboundDomainEvent {
   }
 
   const id = asNonEmptyString(detail.id);
-  const type =
-    asNonEmptyString(detail.type) ?? asNonEmptyString(envelope["detail-type"]);
+  const type = asNonEmptyString(detail.type) ?? asNonEmptyString(envelope["detail-type"]);
   const correlationId = asNonEmptyString(detail.correlationId);
   const aggregateType = asNonEmptyString(detail.aggregateType);
   const aggregateId = asNonEmptyString(detail.aggregateId);

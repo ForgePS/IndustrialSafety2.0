@@ -72,8 +72,7 @@ function MigrationDetailInner() {
     permissionAck: false,
   });
 
-  const canCutover =
-    Boolean(me?.isPlatformAdmin) || hasPermission("platform.tenant.read");
+  const canCutover = Boolean(me?.isPlatformAdmin) || hasPermission("platform.tenant.read");
 
   useEffect(() => {
     let cancelled = false;
@@ -159,13 +158,7 @@ function MigrationDetailInner() {
           <ForgeMetricCard label="Users pending" value={detail.users.pending} />
         </ForgeMetricGrid>
 
-        <div
-          style={{
-            display: "grid",
-            gap: "1rem",
-            gridTemplateColumns: "repeat(auto-fit, minmax(16rem, 1fr))",
-          }}
-        >
+        <div className="forge-detail-grid">
           <Card title="Reconciliation">
             <table>
               <thead>
@@ -267,11 +260,7 @@ function MigrationDetailInner() {
             ) : null}
 
             <div style={{ marginTop: "1.25rem" }}>
-              <Button
-                variant="danger"
-                disabled={!gateReady}
-                onClick={() => setCutoverStep(1)}
-              >
+              <Button variant="danger" disabled={!gateReady} onClick={() => setCutoverStep(1)}>
                 Launch Customer
               </Button>
             </div>

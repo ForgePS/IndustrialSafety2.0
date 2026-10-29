@@ -13,6 +13,7 @@ import {
   serializeJobFilters,
   setCachedJobs,
   ALL_IMPORT_FIXTURES,
+  parseMissingOrgLookupHint,
 } from "./index.js";
 
 describe("import state router", () => {
@@ -92,5 +93,18 @@ describe("fixtures", () => {
     expect(ALL_IMPORT_FIXTURES.masked.ssn).toContain("***");
     expect(ALL_IMPORT_FIXTURES.neverReturnable.password).toBe("********");
     expect(ALL_IMPORT_FIXTURES.quarantined.status).toBe("QUARANTINED");
+  });
+});
+
+describe("missing org lookup hints", () => {
+  it("parses unknown department and position messages", () => {
+    expect(parseMissingOrgLookupHint("Unknown department: Maintenance")).toEqual({
+      kind: "department",
+      name: "Maintenance",
+    });
+    expect(parseMissingOrgLookupHint('missing position named "Supervisor"')).toEqual({
+      kind: "position",
+      name: "Supervisor",
+    });
   });
 });

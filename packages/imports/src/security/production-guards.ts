@@ -5,6 +5,9 @@
 
 export const REFERENCE_MALWARE_PROVIDER_KEY = "reference-malware" as const;
 
+/** GuardDuty Malware Protection for S3 — production-grade provider key. */
+export const AWS_GUARDDUTY_MALWARE_PROVIDER_KEY = "aws-guardduty-malware-protection" as const;
+
 /** Environments where untrusted file imports require a production-grade scanner. */
 export const PRODUCTION_LIKE_APP_ENVS = new Set([
   "staging",
@@ -22,6 +25,16 @@ export function isReferenceMalwareProvider(providerKey: string | null | undefine
   return providerKey === REFERENCE_MALWARE_PROVIDER_KEY;
 }
 
+export function isProductionGradeMalwareProvider(providerKey: string | null | undefined): boolean {
+  return providerKey === AWS_GUARDDUTY_MALWARE_PROVIDER_KEY;
+}
+
+/** Resolve configured provider; empty/missing → reference (dev default). */
+export function resolveImportMalwareProviderKey(value: string | null | undefined): string {
+  const trimmed = value?.trim();
+  return trimmed && trimmed.length > 0 ? trimmed : REFERENCE_MALWARE_PROVIDER_KEY;
+}
+
 /**
  * Fail closed: reference scanner is blocked in production-like environments.
  * There is no administrator bypass.
@@ -30,10 +43,7 @@ export function assertScannerAllowedForEnvironment(input: {
   appEnv: string;
   providerKey: string;
 }): { ok: true } | { ok: false; code: "IMPORT_SCANNER_PROVIDER_UNAVAILABLE"; message: string } {
-  if (
-    isProductionLikeAppEnv(input.appEnv) &&
-    isReferenceMalwareProvider(input.providerKey)
-  ) {
+  if (isProductionLikeAppEnv(input.appEnv) && isReferenceMalwareProvider(input.providerKey)) {
     return {
       ok: false,
       code: "IMPORT_SCANNER_PROVIDER_UNAVAILABLE",
@@ -51,12 +61,7 @@ export function assertScannerAllowedForEnvironment(input: {
  * to CANCELLED (or remains PROCESSING until safe cancel boundary).
  */
 export type StuckImportJobState =
-  | "SCANNING"
-  | "VALIDATING"
-  | "READY_FOR_PREVIEW"
-  | "QUEUED"
-  | "PROCESSING"
-  | "ROLLBACK_PENDING";
+  "SCANNING" | "VALIDATING" | "READY_FOR_PREVIEW" | "QUEUED" | "PROCESSING" | "ROLLBACK_PENDING";
 
 export const STUCK_JOB_THRESHOLDS_MS: Record<StuckImportJobState, number> = {
   SCANNING: 15 * 60_000,
@@ -74,8 +79,7 @@ export function isStuckImportJob(input: {
 }): boolean {
   const threshold = STUCK_JOB_THRESHOLDS_MS[input.status as StuckImportJobState];
   if (!threshold) return false;
-  const updated =
-    input.updatedAt instanceof Date ? input.updatedAt : new Date(input.updatedAt);
+  const updated = input.updatedAt instanceof Date ? input.updatedAt : new Date(input.updatedAt);
   const now = input.now ?? new Date();
   return now.getTime() - updated.getTime() >= threshold;
 }

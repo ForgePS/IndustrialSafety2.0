@@ -40,6 +40,7 @@
     "deploy:rms-web": "node scripts/sync-static-site.mjs --app rms",
     "deploy:tenant-admin": "node scripts/sync-static-site.mjs --app tenantadmin",
     "deploy:industrial-web": "node scripts/sync-static-site.mjs --app industrial",
+    "deploy:field-web": "node scripts/sync-static-site.mjs --app field",
     "db:up": "docker compose up -d postgres",
     "db:down": "docker compose down",
     "db:reset": "docker compose down -v && docker compose up -d postgres",
@@ -58,7 +59,12 @@
     "neris:import-schema": "pnpm --filter @forge/database neris:import-schema",
     "worker:enable:development": "node scripts/worker-scale.mjs enable development",
     "worker:disable:development": "node scripts/worker-scale.mjs disable development",
-    "audit:deps": "pnpm audit --prod"
+    "audit:deps": "pnpm audit --prod",
+    "training:uat": "node scripts/run-local-training-uat.mjs",
+    "training:view": "node scripts/view-local-training-uat.mjs",
+    "training:dev": "pnpm --filter @forge/industrial-web clean && pnpm --filter @forge/industrial-web dev",
+    "training:api": "node scripts/run-local-training-api.mjs",
+    "training:import-database": "node scripts/run-ecs-import-training-database.mjs"
   },
   "devDependencies": {
     "@eslint/js": "^9.29.0",

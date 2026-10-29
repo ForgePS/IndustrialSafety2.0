@@ -22,7 +22,9 @@ export const organizations = pgTable(
     organizationTypeId: uuid("organization_type_id")
       .notNull()
       .references(() => organizationTypes.id),
-    parentOrganizationId: uuid("parent_organization_id").references((): AnyPgColumn => organizations.id),
+    parentOrganizationId: uuid("parent_organization_id").references(
+      (): AnyPgColumn => organizations.id,
+    ),
     externalKey: varchar("external_key", { length: 128 }),
     slug: varchar("slug", { length: 100 }).notNull(),
     legalName: varchar("legal_name", { length: 300 }).notNull(),

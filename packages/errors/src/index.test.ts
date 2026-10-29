@@ -7,4 +7,17 @@ describe("ForgeError", () => {
     expect(err.statusCode).toBe(403);
     expect(isForgeError(err)).toBe(true);
   });
+
+  it("duck-types ForgeError across package copies", () => {
+    const foreign = Object.assign(new Error("No active access to the requested tenant"), {
+      name: "ForgeError",
+      code: "FORBIDDEN",
+      statusCode: 403,
+      details: [],
+      exposeMessage: true,
+    });
+    expect(isForgeError(foreign)).toBe(true);
+    expect(isForgeError(new Error("nope"))).toBe(false);
+    expect(isForgeError(null)).toBe(false);
+  });
 });

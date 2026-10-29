@@ -6,30 +6,30 @@
 
 ## Deployed worker
 
-| Item | Value |
-| --- | --- |
-| Image tag | `import-s8-patch-20260730113557` |
-| Task definition | `:26` |
-| CPU / memory | 256 / 512 |
-| Path | API → SQS → ECS worker (`RETAIN_SQS_ECS_WORKER_PATH`) |
+| Item            | Value                                                 |
+| --------------- | ----------------------------------------------------- |
+| Image tag       | `import-s8-patch-20260730113557`                      |
+| Task definition | `:26`                                                 |
+| CPU / memory    | 256 / 512                                             |
+| Path            | API → SQS → ECS worker (`RETAIN_SQS_ECS_WORKER_PATH`) |
 
 ## Expected recovery design
 
 Documented in `docs/operations/import-worker-recovery.md`:
 
-- Visibility timeout redelivery  
-- Lock expiry  
-- Journal idempotency for committed batches  
-- No delete-message “unstick”  
+- Visibility timeout redelivery
+- Lock expiry
+- Journal idempotency for committed batches
+- No delete-message “unstick”
 
 ## Controlled drill results
 
-| Scenario | Status |
-| --- | --- |
-| Stop running worker task; resume processing | **VERIFIED** — ECS replaced task `b8220...af25` with `d2da1...0b18` |
-| Crash loop / desired count restore | **VERIFIED** — service returned to desired/running/pending `1/1/0` on `:26` |
-| Stale lock reclaim | **VERIFIED** — synthetic expired lock was reacquired by worker `ip-10-20-2-131.ec2.internal`, the job completed, and the terminal lock was cleared |
-| Visibility expiry redelivery without duplicate commits | **NOT_VERIFIED** |
+| Scenario                                               | Status                                                                                                                                             |
+| ------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Stop running worker task; resume processing            | **VERIFIED** — ECS replaced task `b8220...af25` with `d2da1...0b18`                                                                                |
+| Crash loop / desired count restore                     | **VERIFIED** — service returned to desired/running/pending `1/1/0` on `:26`                                                                        |
+| Stale lock reclaim                                     | **VERIFIED** — synthetic expired lock was reacquired by worker `ip-10-20-2-131.ec2.internal`, the job completed, and the terminal lock was cleared |
+| Visibility expiry redelivery without duplicate commits | **NOT_VERIFIED**                                                                                                                                   |
 
 The post-recovery authenticated synthetic workflow completed with 2 successful rows, 0 failed rows,
 default adapter selection, and no format-detection replay.
@@ -56,6 +56,6 @@ Evidence:
 
 ## Related
 
-- Gap GAP-040 / DEF-S8-010  
-- DEF-S8-013 stale-lock recovery  
+- Gap GAP-040 / DEF-S8-010
+- DEF-S8-013 stale-lock recovery
 - Aurora writer: aurora-postgresql serverless (capacity claims **NOT_VERIFIED**)

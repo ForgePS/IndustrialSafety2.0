@@ -59,7 +59,10 @@ function inferOwnership(objectPath: string): {
 
 export function mapStorageInventory(csvPath: string, outDir: string) {
   mkdirSync(outDir, { recursive: true });
-  const lines = readFileSync(csvPath, "utf8").replace(/^\uFEFF/, "").split(/\r?\n/).filter(Boolean);
+  const lines = readFileSync(csvPath, "utf8")
+    .replace(/^\uFEFF/, "")
+    .split(/\r?\n/)
+    .filter(Boolean);
   const counts: Record<string, number> = {};
   const outPath = path.join(outDir, "storage-target-map.ndjson");
   const rows: string[] = [];
@@ -88,7 +91,10 @@ export function mapStorageInventory(csvPath: string, outDir: string) {
     sha256: createHash("sha256").update(readFileSync(outPath)).digest("hex"),
     stagedPrefix: "s3://forge-production-imports-511343547817-us-east-1/storage/source/",
   };
-  writeFileSync(path.join(outDir, "storage-target-map.summary.json"), `${JSON.stringify(summary, null, 2)}\n`);
+  writeFileSync(
+    path.join(outDir, "storage-target-map.summary.json"),
+    `${JSON.stringify(summary, null, 2)}\n`,
+  );
   return summary;
 }
 

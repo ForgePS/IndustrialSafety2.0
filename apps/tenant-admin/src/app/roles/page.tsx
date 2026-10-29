@@ -95,7 +95,12 @@ function RolesInner() {
           <form className={styles.form} onSubmit={onAssign}>
             <div className={styles.formRow}>
               <label htmlFor="userId">User</label>
-              <select id="userId" value={userId} onChange={(e) => setUserId(e.target.value)} required>
+              <select
+                id="userId"
+                value={userId}
+                onChange={(e) => setUserId(e.target.value)}
+                required
+              >
                 {users.map((u) => (
                   <option key={u.id} value={u.id}>
                     {u.primaryEmail} ({u.status})
@@ -105,7 +110,12 @@ function RolesInner() {
             </div>
             <div className={styles.formRow}>
               <label htmlFor="roleId">Role</label>
-              <select id="roleId" value={roleId} onChange={(e) => setRoleId(e.target.value)} required>
+              <select
+                id="roleId"
+                value={roleId}
+                onChange={(e) => setRoleId(e.target.value)}
+                required
+              >
                 {roles.map((r) => (
                   <option key={r.id} value={r.id}>
                     {r.code} — {r.name}
@@ -114,7 +124,11 @@ function RolesInner() {
               </select>
             </div>
             <div className={styles.actions}>
-              <button className={styles.button} type="submit" disabled={submitting || !users.length}>
+              <button
+                className={styles.button}
+                type="submit"
+                disabled={submitting || !users.length}
+              >
                 {submitting ? "Assigning…" : "Assign"}
               </button>
             </div>

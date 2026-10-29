@@ -15,6 +15,7 @@ import { FrontendStack } from "../lib/stacks/frontend-stack.js";
 import { BackupStack } from "../lib/stacks/backup-stack.js";
 import { AuditStack } from "../lib/stacks/audit-stack.js";
 import { AlertingStack } from "../lib/stacks/alerting-stack.js";
+import { ImportMalwareStack } from "../lib/stacks/import-malware-stack.js";
 import { PRODUCTION_PRE_CUTOVER_SPA_ORIGINS } from "../lib/config/production-spa-origins.js";
 
 const app = new cdk.App();
@@ -55,6 +56,15 @@ const data = new DataStack(app, "ForgeData", {
   storageKey: security.storageKey,
 });
 
+const importMalware = config.features.enableGuardDuty
+  ? new ImportMalwareStack(app, "ForgeImportMalware", {
+      config,
+      env,
+      importsBucket: data.importsBucket,
+      storageKey: security.storageKey,
+    })
+  : undefined;
+
 const observability = new ObservabilityStack(app, "ForgeObservability", {
   config,
   env,
@@ -85,6 +95,12 @@ const publicProducersIndustrialUrl = isProduction
   ? undefined
   : process.env.FORGE_PUBLIC_PRODUCERS_INDUSTRIAL_URL ||
     "https://producers-rice-mill.forgepublicsafety.com";
+/**
+ * First-party host zone for per-tenant vanity SPAs. Exact CloudFront default
+ * domains stay in browserOrigins; this suffix covers tenant hosts under our zone
+ * so each new vanity hostname does not require an API CORS redeploy.
+ */
+const browserOriginSuffixes = [".forgepublicsafety.com", ".forgeindustrialsafety.com"];
 /** CloudFront origins retained until customer DNS cutover (explicit CORS allowlist). */
 const legacyCloudFrontOrigins = isProduction
   ? [...PRODUCTION_PRE_CUTOVER_SPA_ORIGINS]
@@ -93,6 +109,7 @@ const legacyCloudFrontOrigins = isProduction
       "https://ddztl9s33wu40.cloudfront.net",
       "https://d1uxdl4szvsixc.cloudfront.net",
       "https://d2ed3566n8x2gi.cloudfront.net",
+      "https://dr716wyn2h1dm.cloudfront.net",
     ];
 const cognitoDomain = `forge-${config.environmentName}-${config.account.slice(-6)}.auth.${config.region}.amazoncognito.com`;
 
@@ -117,6 +134,7 @@ const compute = new ComputeStack(app, "ForgeCompute", {
   cadApplicationQueue: messaging.cadApplication,
   cadPollingQueue: messaging.cadPolling,
   cadRetentionQueue: messaging.cadRetention,
+  reportingSchedulesQueue: messaging.reportingSchedules,
   eventBus: messaging.eventBus,
   documentsBucket: data.documentsBucket,
   importsBucket: data.importsBucket,
@@ -139,6 +157,7 @@ const compute = new ComputeStack(app, "ForgeCompute", {
     publicProducersIndustrialUrl,
     ...legacyCloudFrontOrigins,
   ].filter((u): u is string => Boolean(u)),
+  browserOriginSuffixes,
   publicRmsUrl,
   publicCreatorUrl,
 });
@@ -162,6 +181,7 @@ new MonitoringStack(app, "ForgeMonitoring", {
   cadApplicationDlq: messaging.cadApplicationDlq,
   cadPollingDlq: messaging.cadPollingDlq,
   cadRetentionDlq: messaging.cadRetentionDlq,
+  reportingSchedulesDlq: messaging.reportingSchedulesDlq,
   apiCloudFrontDistributionId: compute.ecs.apiHttps.distribution.distributionId,
   rmsCloudFrontDistributionId: isProduction ? undefined : "E2LZJLH664YX70",
   alarmTopic: alerting.opsTopic,
@@ -196,6 +216,10 @@ new FrontendStack(app, "ForgeFrontend", {
 
 data.addStackDependency(network);
 data.addStackDependency(security);
+if (importMalware) {
+  importMalware.addDependency(data);
+  importMalware.addDependency(security);
+}
 messaging.addStackDependency(security);
 observability.addStackDependency(security);
 alerting.addStackDependency(security);

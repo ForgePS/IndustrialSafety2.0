@@ -12,12 +12,12 @@
 
 ## Classification of incidents
 
-| Class | Examples |
-| --- | --- |
+| Class         | Examples                                                           |
+| ------------- | ------------------------------------------------------------------ |
 | Data exposure | Restricted field reached a provider; narrative logged in cleartext |
-| Integrity | Hallucinated content accepted without review; policy bypass |
-| Availability | Provider outage, quota exhaustion storms, latency SLOs breached |
-| Abuse | Prompt injection attempting to exfiltrate other-tenant data |
+| Integrity     | Hallucinated content accepted without review; policy bypass        |
+| Availability  | Provider outage, quota exhaustion storms, latency SLOs breached    |
+| Abuse         | Prompt injection attempting to exfiltrate other-tenant data        |
 
 ## Investigation checklist
 

@@ -9,15 +9,15 @@
 
 ## Changes
 
-| Area | Hardening |
-| --- | --- |
-| Tenant identity | `resolveActiveTenantId` + `syncTenantIdInUrl` on switch |
-| Fetch races | generation/abort guards on notifications, audit, members |
-| Notifications | unread-count on mount; list only when menu opens |
-| Audit | honest `total` from API + page controls |
-| Members | client pagination (25/page) + clear-on-switch |
-| Navigation | memoized group filter |
-| Bundle | `next/dynamic` for Config Studio namespaces |
+| Area            | Hardening                                                |
+| --------------- | -------------------------------------------------------- |
+| Tenant identity | `resolveActiveTenantId` + `syncTenantIdInUrl` on switch  |
+| Fetch races     | generation/abort guards on notifications, audit, members |
+| Notifications   | unread-count on mount; list only when menu opens         |
+| Audit           | honest `total` from API + page controls                  |
+| Members         | client pagination (25/page) + clear-on-switch            |
+| Navigation      | memoized group filter                                    |
+| Bundle          | `next/dynamic` for Config Studio namespaces              |
 
 ## Helpers
 

@@ -25,28 +25,28 @@ Implementation source: NestJS controllers in `apps/platform-api/src/modules/` an
 
 ## Allowed changes within v1 (non-breaking)
 
-| Change | Example |
-| --- | --- |
-| New optional JSON fields on responses | Add `lastLoginAt` to user summary |
-| New endpoints under `/api/v1` | Onboarding session routes (Wave 5) |
-| New enum values on fields documented as open | New `INVITATION_STATUSES` terminal reason |
-| New permission codes (additive catalog) | Future product permissions |
-| New domain event types with new `.v1` suffix strings | `platform.membership.expired.v1` |
-| New query parameters with defaults | `sort` on a list endpoint |
-| Pagination metadata additions | Cursor token alongside page numbers |
+| Change                                               | Example                                   |
+| ---------------------------------------------------- | ----------------------------------------- |
+| New optional JSON fields on responses                | Add `lastLoginAt` to user summary         |
+| New endpoints under `/api/v1`                        | Onboarding session routes (Wave 5)        |
+| New enum values on fields documented as open         | New `INVITATION_STATUSES` terminal reason |
+| New permission codes (additive catalog)              | Future product permissions                |
+| New domain event types with new `.v1` suffix strings | `platform.membership.expired.v1`          |
+| New query parameters with defaults                   | `sort` on a list endpoint                 |
+| Pagination metadata additions                        | Cursor token alongside page numbers       |
 
 Clients should ignore unknown JSON fields and tolerate new enum values on open fields.
 
 ## Changes that require `/api/v2`
 
-| Change | Example |
-| --- | --- |
-| Remove or rename a response field | Rename `recordVersion` |
-| Tighten validation on existing fields | Reject previously accepted slug |
-| Change default behavior | Silent auto-activate on create |
+| Change                                      | Example                                     |
+| ------------------------------------------- | ------------------------------------------- |
+| Remove or rename a response field           | Rename `recordVersion`                      |
+| Tighten validation on existing fields       | Reject previously accepted slug             |
+| Change default behavior                     | Silent auto-activate on create              |
 | Change error code for an existing condition | Map stale version to `409` instead of `412` |
-| Remove an endpoint | Drop legacy user invite path |
-| Change authentication scheme | Non-Cognito primary auth |
+| Remove an endpoint                          | Drop legacy user invite path                |
+| Change authentication scheme                | Non-Cognito primary auth                    |
 
 ## Domain events vs HTTP API
 
@@ -70,14 +70,14 @@ No v2 work is in scope for Sprint 1E.
 
 ## Documentation maintenance
 
-| Artifact | Update trigger |
-| --- | --- |
-| `platform-contract-v1.md` | Any v1-visible behavior change |
-| `platform-openapi-v1.yaml` | Route or schema change |
-| `platform-events-v1.md` | New or changed event types |
-| `platform-permissions-v1.md` | New permission codes |
-| `platform-errors-v1.md` | New `ForgeErrorCode` values |
-| This policy | Versioning rule change only |
+| Artifact                     | Update trigger                 |
+| ---------------------------- | ------------------------------ |
+| `platform-contract-v1.md`    | Any v1-visible behavior change |
+| `platform-openapi-v1.yaml`   | Route or schema change         |
+| `platform-events-v1.md`      | New or changed event types     |
+| `platform-permissions-v1.md` | New permission codes           |
+| `platform-errors-v1.md`      | New `ForgeErrorCode` values    |
+| This policy                  | Versioning rule change only    |
 
 Wave 10 deploy verification updates `docs/sprints/SPRINT-1E-summary.md` and `docs/project-status.md`; this policy file changes only when the rules themselves change.
 

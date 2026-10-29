@@ -28,7 +28,10 @@ export function StatusBadge({
 export function LoadingState({ label = "Loading…" }: { label?: string }) {
   return (
     <div className="forge-loading-state" role="status" aria-live="polite">
-      <span className="forge-skeleton" style={{ width: "1.25rem", height: "1.25rem", borderRadius: "50%" }} />
+      <span
+        className="forge-skeleton"
+        style={{ width: "1.25rem", height: "1.25rem", borderRadius: "50%" }}
+      />
       <span>{label}</span>
     </div>
   );
@@ -57,7 +60,9 @@ export function Tabs({
             role="tab"
             aria-selected={value === item.id}
             disabled={item.disabled}
-            className={["forge-tabs__tab", value === item.id ? "is-active" : ""].filter(Boolean).join(" ")}
+            className={["forge-tabs__tab", value === item.id ? "is-active" : ""]
+              .filter(Boolean)
+              .join(" ")}
             onClick={() => onChange(item.id)}
           >
             {item.label}
@@ -150,7 +155,12 @@ export function Drawer({
   if (!open) return null;
   return (
     <div className="forge-drawer-root" role="presentation">
-      <button type="button" className="forge-drawer-backdrop" aria-label="Close drawer" onClick={onClose} />
+      <button
+        type="button"
+        className="forge-drawer-backdrop"
+        aria-label="Close drawer"
+        onClick={onClose}
+      />
       <aside
         className={`forge-drawer forge-drawer--${side}`}
         role="dialog"
@@ -198,7 +208,12 @@ export function ConfirmationDialog({
   if (!open) return null;
   return (
     <div className="forge-dialog-backdrop" role="presentation">
-      <button type="button" className="forge-dialog-backdrop__hit" aria-label="Close dialog" onClick={onCancel} />
+      <button
+        type="button"
+        className="forge-dialog-backdrop__hit"
+        aria-label="Close dialog"
+        onClick={onCancel}
+      />
       <div className="forge-dialog" role="alertdialog" aria-modal="true" aria-labelledby={titleId}>
         <h2 id={titleId} className="forge-dialog__title">
           {title}

@@ -1,14 +1,14 @@
 # Change Management Policy
 
-| Field | Value |
-| --- | --- |
-| Document ID | SOC2-POL-005 |
-| Version | 0.1 |
-| Status | APPROVED |
-| Owner | Engineering Lead |
-| Approver | Jeremy Powell, Founder, Forge Public Safety |
-| Effective date | 2026-07-26 |
-| Next review date | 2027-07-26 |
+| Field            | Value                                       |
+| ---------------- | ------------------------------------------- |
+| Document ID      | SOC2-POL-005                                |
+| Version          | 0.1                                         |
+| Status           | APPROVED                                    |
+| Owner            | Engineering Lead                            |
+| Approver         | Jeremy Powell, Founder, Forge Public Safety |
+| Effective date   | 2026-07-26                                  |
+| Next review date | 2027-07-26                                  |
 
 ## Purpose
 
@@ -39,16 +39,14 @@ Applies to the Forge Public Safety system boundary documented in `docs/complianc
 9. Exceptions require documented approval, residual risk, compensating control, and expiry per Exception Management Policy.
 10. Control owners maintain evidence per the control matrix and testing plan.
 
-
-
 ## Roles and responsibilities
 
-| Role | Responsibility |
-| --- | --- |
+| Role                    | Responsibility                                                                 |
+| ----------------------- | ------------------------------------------------------------------------------ |
 | Jeremy Powell (Founder) | Policy approval; High/Critical risk acceptance; claims restriction enforcement |
-| Engineering Lead | Operational ownership of this policy |
-| Engineering Lead | Ensure engineering practices implement requirements |
-| All personnel | Follow policy; report violations and incidents |
+| Engineering Lead        | Operational ownership of this policy                                           |
+| Engineering Lead        | Ensure engineering practices implement requirements                            |
+| All personnel           | Follow policy; report violations and incidents                                 |
 
 ## Exceptions
 
@@ -74,7 +72,7 @@ See `docs/compliance/soc2/procedures/` for operating procedures mapped to access
 
 ## Revision history
 
-| Version | Date | Change |
-| --- | --- | --- |
-| 0.1 | 2026-07-26 | Phase 1 draft — PENDING_APPROVAL |
-| 0.1 | 2026-07-26 | Approved by Jeremy Powell |
+| Version | Date       | Change                           |
+| ------- | ---------- | -------------------------------- |
+| 0.1     | 2026-07-26 | Phase 1 draft — PENDING_APPROVAL |
+| 0.1     | 2026-07-26 | Approved by Jeremy Powell        |

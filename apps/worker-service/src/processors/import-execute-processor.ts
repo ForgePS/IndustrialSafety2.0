@@ -33,6 +33,13 @@ import {
 } from "@forge/imports";
 import { createLogger } from "@forge/observability";
 import { and, asc, eq, inArray, sql } from "drizzle-orm";
+import { IndustrialDepartmentAdapter } from "../adapters/industrial-department-adapter.js";
+import { IndustrialEmploymentTypeAdapter } from "../adapters/industrial-employment-type-adapter.js";
+import { IndustrialFleetAdapter } from "../adapters/industrial-fleet-adapter.js";
+import { IndustrialPersonnelAdapter } from "../adapters/industrial-personnel-adapter.js";
+import { IndustrialPositionAdapter } from "../adapters/industrial-position-adapter.js";
+import { IndustrialSiteAdapter } from "../adapters/industrial-site-adapter.js";
+import { IndustrialTrainingAdapter } from "../adapters/industrial-training-adapter.js";
 import { emitEmfMetric } from "../metrics.js";
 
 export type ImportExecuteOutcome = "completed" | "retry" | "rejected";
@@ -44,6 +51,13 @@ function workerId(): string {
 function createDefaultRegistry(): ImportAdapterRegistry {
   const registry = new ImportAdapterRegistry();
   registry.register(new ReferenceImportAdapter("reference:generic:record@1"));
+  registry.register(new IndustrialPersonnelAdapter());
+  registry.register(new IndustrialFleetAdapter());
+  registry.register(new IndustrialSiteAdapter());
+  registry.register(new IndustrialDepartmentAdapter());
+  registry.register(new IndustrialPositionAdapter());
+  registry.register(new IndustrialEmploymentTypeAdapter());
+  registry.register(new IndustrialTrainingAdapter());
   return registry;
 }
 
@@ -114,7 +128,10 @@ export async function processImportExecuteJob(input: {
       }
 
       const file = await tx.query.importFiles.findFirst({
-        where: and(eq(importFiles.tenantId, message.tenantId), eq(importFiles.jobId, message.jobId)),
+        where: and(
+          eq(importFiles.tenantId, message.tenantId),
+          eq(importFiles.jobId, message.jobId),
+        ),
       });
       if (!file) {
         logger.warn("import execute missing file", { jobId: message.jobId });
@@ -245,7 +262,9 @@ export async function processImportExecuteJob(input: {
           const [total] = await tx
             .select({ value: sql<number>`count(*)::int` })
             .from(importRows)
-            .where(and(eq(importRows.tenantId, message.tenantId), eq(importRows.jobId, message.jobId)));
+            .where(
+              and(eq(importRows.tenantId, message.tenantId), eq(importRows.jobId, message.jobId)),
+            );
           return { done: true as const, total: Number(total?.value ?? 0), job: fresh };
         }
 
@@ -533,7 +552,16 @@ export async function processImportExecuteJob(input: {
       });
     }
 
-    await finalizeSuccess(db, message, job, adapter, counts, rollbackSummary, processed, batchNumber);
+    await finalizeSuccess(
+      db,
+      message,
+      job,
+      adapter,
+      counts,
+      rollbackSummary,
+      processed,
+      batchNumber,
+    );
     return "completed";
   } catch (error) {
     logger.error("import execute failed", {

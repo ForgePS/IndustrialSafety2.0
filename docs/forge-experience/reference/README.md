@@ -6,18 +6,18 @@
 
 ## What was built
 
-| Path | Role |
-| --- | --- |
-| `apps/forge-experience-reference` | Living reference app (port 3010) |
-| `packages/fx-design-tokens` | Token CSS + theme helpers |
-| `packages/fx-ui` | Shared UI primitives |
-| `packages/fx-layouts` | Shell, dashboard, workspace layouts |
-| `packages/fx-hooks` | Theme, responsive, selection, dialogs, offline demo |
-| `packages/fx-icons` | Minimal icons |
-| `packages/fx-patterns` | Create/Delete patterns |
-| `packages/fx-utils` | `cn` helper |
-| `storybook/` | Storybook placeholder config |
-| `docs/forge-experience/39–42` | Governance, readiness, gaps, migration |
+| Path                              | Role                                                |
+| --------------------------------- | --------------------------------------------------- |
+| `apps/forge-experience-reference` | Living reference app (port 3010)                    |
+| `packages/fx-design-tokens`       | Token CSS + theme helpers                           |
+| `packages/fx-ui`                  | Shared UI primitives                                |
+| `packages/fx-layouts`             | Shell, dashboard, workspace layouts                 |
+| `packages/fx-hooks`               | Theme, responsive, selection, dialogs, offline demo |
+| `packages/fx-icons`               | Minimal icons                                       |
+| `packages/fx-patterns`            | Create/Delete patterns                              |
+| `packages/fx-utils`               | `cn` helper                                         |
+| `storybook/`                      | Storybook placeholder config                        |
+| `docs/forge-experience/39–42`     | Governance, readiness, gaps, migration              |
 
 ## Run locally
 
@@ -41,6 +41,6 @@ Open `http://localhost:3010`.
 
 ## Validation logs
 
-- [a11y-validation-log.md](./a11y-validation-log.md)  
-- [responsive-validation-log.md](./responsive-validation-log.md)  
-- [theme-validation-log.md](./theme-validation-log.md)  
+- [a11y-validation-log.md](./a11y-validation-log.md)
+- [responsive-validation-log.md](./responsive-validation-log.md)
+- [theme-validation-log.md](./theme-validation-log.md)

@@ -10,33 +10,33 @@
 
 Pursue a **practical path** to AWS exposure for Producers **without** IND-13 full cutover:
 
-| Phase | Model | Firebase | AWS | Authorization posture |
-| --- | --- | --- | --- | --- |
-| **P1** | AWS pilot / Firebase SoT | Writable SoT | Shadow / validation (dev→staging) | Development writes OK under IND-11B gates; **no** production Aurora SoT flip |
-| **P2** | AWS primary for Producers only | Fallback / read-oriented | Day-to-day ops for Producers | Requires **separate written auth** (prod tenant, Cognito, files, tenant flags) |
-| **Later** | IND-13 cutover | Decommission schedule | SoT for all Industrial | Fail-closed until IND-12 gates green |
+| Phase     | Model                          | Firebase                 | AWS                               | Authorization posture                                                          |
+| --------- | ------------------------------ | ------------------------ | --------------------------------- | ------------------------------------------------------------------------------ |
+| **P1**    | AWS pilot / Firebase SoT       | Writable SoT             | Shadow / validation (dev→staging) | Development writes OK under IND-11B gates; **no** production Aurora SoT flip   |
+| **P2**    | AWS primary for Producers only | Fallback / read-oriented | Day-to-day ops for Producers      | Requires **separate written auth** (prod tenant, Cognito, files, tenant flags) |
+| **Later** | IND-13 cutover                 | Decommission schedule    | SoT for all Industrial            | Fail-closed until IND-12 gates green                                           |
 
 **Rejected for now:** true dual-write (mutual writable sync). Too high conflict/audit risk.
 
 ## Binding identity map (wave-1)
 
-| Firebase org | AWS tenant (current) | Role |
-| --- | --- | --- |
-| `business-1782553339499` (Producers Rice Mill) | `019faa15-e558-70b6-adcd-a510c3c995f4` (`import-acceptance-tenant-a`) | P1 target |
-| `business-forge-default` | `019faa15-e578-76bd-b269-038d23c03b5e` (`import-acceptance-tenant-b`) | Control / non-Producers sample |
+| Firebase org                                   | AWS tenant (current)                                                  | Role                           |
+| ---------------------------------------------- | --------------------------------------------------------------------- | ------------------------------ |
+| `business-1782553339499` (Producers Rice Mill) | `019faa15-e558-70b6-adcd-a510c3c995f4` (`import-acceptance-tenant-a`) | P1 target                      |
+| `business-forge-default`                       | `019faa15-e578-76bd-b269-038d23c03b5e` (`import-acceptance-tenant-b`) | Control / non-Producers sample |
 
 P2 may promote Producers to a **dedicated production-bound tenant** (not acceptance) — decision deferred until P1 acceptance criteria pass.
 
 ## Write / read rules (P1)
 
-| Surface | Authority |
-| --- | --- |
-| Firebase Industrial app | **SoT for all production writes** |
-| AWS Industrial (`industrial-web` + API) | Validation, UX, reporting against imported snapshot; treat as **non-authoritative** |
-| Freshness | Periodic re-extract / NONPRODUCTION_LOAD refresh into development (and later staging) under IND-11B flags |
-| Cognito | Dev/acceptance personas only in P1 — **no** production Firebase Auth→Cognito import until P2 auth |
-| Storage / files | Firebase remains; no Storage→S3 until authorized |
-| Feature flags | Prefer **tenant override ON** for Producers acceptance tenant only; global Industrial flags stay OFF |
+| Surface                                 | Authority                                                                                                 |
+| --------------------------------------- | --------------------------------------------------------------------------------------------------------- |
+| Firebase Industrial app                 | **SoT for all production writes**                                                                         |
+| AWS Industrial (`industrial-web` + API) | Validation, UX, reporting against imported snapshot; treat as **non-authoritative**                       |
+| Freshness                               | Periodic re-extract / NONPRODUCTION_LOAD refresh into development (and later staging) under IND-11B flags |
+| Cognito                                 | Dev/acceptance personas only in P1 — **no** production Firebase Auth→Cognito import until P2 auth         |
+| Storage / files                         | Firebase remains; no Storage→S3 until authorized                                                          |
+| Feature flags                           | Prefer **tenant override ON** for Producers acceptance tenant only; global Industrial flags stay OFF      |
 
 ## P1 success criteria
 
@@ -59,10 +59,10 @@ Sequenced execution plan (draft, unauthorized until signed): [`56-producers-p2-e
 
 ## Explicitly still fail-closed
 
-- Production Aurora load as SoT  
-- Full IND-13 cutover / DNS flip for all tenants  
-- True dual-write sync  
-- RMS / Academy  
+- Production Aurora load as SoT
+- Full IND-13 cutover / DNS flip for all tenants
+- True dual-write sync
+- RMS / Academy
 - Casual apply of drafts **0028 / 0029**
 
 ## Immediate next actions (P1)

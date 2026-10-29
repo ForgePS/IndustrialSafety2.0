@@ -74,69 +74,77 @@ export class NerisConfigurationOverlayService {
       if (!version) throw new ForgeError("NOT_FOUND", "Schema version not found");
     }
 
-    return withTenantTransaction(this.db, tenantId, async (tx) => {
-      const [existing] = await tx
-        .select()
-        .from(tenantNerisConfiguration)
-        .where(eq(tenantNerisConfiguration.tenantId, tenantId))
-        .limit(1);
-      const now = new Date();
-      let row;
-      if (existing) {
-        [row] = await tx
-          .update(tenantNerisConfiguration)
-          .set({
-            schemaVersionId: data.schemaVersionId === undefined ? existing.schemaVersionId : data.schemaVersionId,
-            operatingMode: data.operatingMode ?? existing.operatingMode,
-            status: data.status ?? existing.status,
-            recordVersion: existing.recordVersion + 1,
-            updatedByUserId: principal.userId,
-            updatedAt: now,
-          })
-          .where(eq(tenantNerisConfiguration.id, existing.id))
-          .returning();
-      } else {
-        [row] = await tx
-          .insert(tenantNerisConfiguration)
-          .values({
-            id: createId(),
-            tenantId,
-            schemaVersionId: data.schemaVersionId ?? null,
-            operatingMode: data.operatingMode ?? "MANUAL_ONLY",
-            status: data.status ?? "ACTIVE",
-            createdByUserId: principal.userId,
-            updatedByUserId: principal.userId,
-            createdAt: now,
-            updatedAt: now,
-          })
-          .returning();
-      }
+    return withTenantTransaction(
+      this.db,
+      tenantId,
+      async (tx) => {
+        const [existing] = await tx
+          .select()
+          .from(tenantNerisConfiguration)
+          .where(eq(tenantNerisConfiguration.tenantId, tenantId))
+          .limit(1);
+        const now = new Date();
+        let row;
+        if (existing) {
+          [row] = await tx
+            .update(tenantNerisConfiguration)
+            .set({
+              schemaVersionId:
+                data.schemaVersionId === undefined
+                  ? existing.schemaVersionId
+                  : data.schemaVersionId,
+              operatingMode: data.operatingMode ?? existing.operatingMode,
+              status: data.status ?? existing.status,
+              recordVersion: existing.recordVersion + 1,
+              updatedByUserId: principal.userId,
+              updatedAt: now,
+            })
+            .where(eq(tenantNerisConfiguration.id, existing.id))
+            .returning();
+        } else {
+          [row] = await tx
+            .insert(tenantNerisConfiguration)
+            .values({
+              id: createId(),
+              tenantId,
+              schemaVersionId: data.schemaVersionId ?? null,
+              operatingMode: data.operatingMode ?? "MANUAL_ONLY",
+              status: data.status ?? "ACTIVE",
+              createdByUserId: principal.userId,
+              updatedByUserId: principal.userId,
+              createdAt: now,
+              updatedAt: now,
+            })
+            .returning();
+        }
 
-      await this.outbox.write(tx, {
-        tenantId,
-        aggregateType: "tenant_neris_configuration",
-        aggregateId: row!.id,
-        eventType: DOMAIN_EVENT_TYPES.NERIS_OVERLAY_UPDATED,
-        payload: { tenantId, configurationId: row!.id, kind: "configuration" },
-        correlationId: principal.correlationId,
-        actorUserId: principal.userId,
-      });
-      await this.audit.writeInTransaction(tx, {
-        tenantId,
-        actorUserId: principal.userId,
-        actorPersonId: principal.personId,
-        actorType: "USER",
-        action: "neris.overlay.configuration.upsert",
-        resourceType: "tenant_neris_configuration",
-        resourceId: row!.id,
-        result: "SUCCESS",
-        riskLevel: "LOW",
-        correlationId: principal.correlationId,
-        requestId: principal.requestId,
-        after: row,
-      });
-      return row!;
-    }, principal.userId);
+        await this.outbox.write(tx, {
+          tenantId,
+          aggregateType: "tenant_neris_configuration",
+          aggregateId: row!.id,
+          eventType: DOMAIN_EVENT_TYPES.NERIS_OVERLAY_UPDATED,
+          payload: { tenantId, configurationId: row!.id, kind: "configuration" },
+          correlationId: principal.correlationId,
+          actorUserId: principal.userId,
+        });
+        await this.audit.writeInTransaction(tx, {
+          tenantId,
+          actorUserId: principal.userId,
+          actorPersonId: principal.personId,
+          actorType: "USER",
+          action: "neris.overlay.configuration.upsert",
+          resourceType: "tenant_neris_configuration",
+          resourceId: row!.id,
+          result: "SUCCESS",
+          riskLevel: "LOW",
+          correlationId: principal.correlationId,
+          requestId: principal.requestId,
+          after: row,
+        });
+        return row!;
+      },
+      principal.userId,
+    );
   }
 
   async listFieldOverlays(tenantId: string) {
@@ -169,89 +177,100 @@ export class NerisConfigurationOverlayService {
       .limit(1);
     if (!field) throw new ForgeError("NOT_FOUND", "NERIS field not found");
 
-    return withTenantTransaction(this.db, tenantId, async (tx) => {
-      const config = await this.ensureConfiguration(tx, tenantId, principal);
-      const [existing] = await tx
-        .select()
-        .from(tenantNerisFieldOverlays)
-        .where(
-          and(
-            eq(tenantNerisFieldOverlays.tenantId, tenantId),
-            eq(tenantNerisFieldOverlays.fieldId, data.fieldId),
-          ),
-        )
-        .limit(1);
-      const now = new Date();
-      let row;
-      if (existing) {
-        [row] = await tx
-          .update(tenantNerisFieldOverlays)
-          .set({
-            displayLabel: data.displayLabel === undefined ? existing.displayLabel : data.displayLabel,
-            helpText: data.helpText === undefined ? existing.helpText : data.helpText,
-            localAlias: data.localAlias === undefined ? existing.localAlias : data.localAlias,
-            displayOrder: data.displayOrder === undefined ? existing.displayOrder : data.displayOrder,
-            favorite: data.favorite ?? existing.favorite,
-            optionalVisible:
-              data.optionalVisible === undefined ? existing.optionalVisible : data.optionalVisible,
-            safeDefaultJson:
-              data.safeDefaultJson === undefined ? existing.safeDefaultJson : data.safeDefaultJson,
-            localValidationJson:
-              data.localValidationJson === undefined
-                ? existing.localValidationJson
-                : data.localValidationJson,
-            recordVersion: existing.recordVersion + 1,
-            updatedAt: now,
-          })
-          .where(eq(tenantNerisFieldOverlays.id, existing.id))
-          .returning();
-      } else {
-        [row] = await tx
-          .insert(tenantNerisFieldOverlays)
-          .values({
-            id: createId(),
-            tenantId,
-            configurationId: config.id,
-            fieldId: data.fieldId,
-            displayLabel: data.displayLabel ?? null,
-            helpText: data.helpText ?? null,
-            localAlias: data.localAlias ?? null,
-            displayOrder: data.displayOrder ?? null,
-            favorite: data.favorite ?? false,
-            optionalVisible: data.optionalVisible ?? null,
-            safeDefaultJson: data.safeDefaultJson ?? null,
-            localValidationJson: data.localValidationJson ?? null,
-            createdAt: now,
-            updatedAt: now,
-          })
-          .returning();
-      }
+    return withTenantTransaction(
+      this.db,
+      tenantId,
+      async (tx) => {
+        const config = await this.ensureConfiguration(tx, tenantId, principal);
+        const [existing] = await tx
+          .select()
+          .from(tenantNerisFieldOverlays)
+          .where(
+            and(
+              eq(tenantNerisFieldOverlays.tenantId, tenantId),
+              eq(tenantNerisFieldOverlays.fieldId, data.fieldId),
+            ),
+          )
+          .limit(1);
+        const now = new Date();
+        let row;
+        if (existing) {
+          [row] = await tx
+            .update(tenantNerisFieldOverlays)
+            .set({
+              displayLabel:
+                data.displayLabel === undefined ? existing.displayLabel : data.displayLabel,
+              helpText: data.helpText === undefined ? existing.helpText : data.helpText,
+              localAlias: data.localAlias === undefined ? existing.localAlias : data.localAlias,
+              displayOrder:
+                data.displayOrder === undefined ? existing.displayOrder : data.displayOrder,
+              favorite: data.favorite ?? existing.favorite,
+              optionalVisible:
+                data.optionalVisible === undefined
+                  ? existing.optionalVisible
+                  : data.optionalVisible,
+              safeDefaultJson:
+                data.safeDefaultJson === undefined
+                  ? existing.safeDefaultJson
+                  : data.safeDefaultJson,
+              localValidationJson:
+                data.localValidationJson === undefined
+                  ? existing.localValidationJson
+                  : data.localValidationJson,
+              recordVersion: existing.recordVersion + 1,
+              updatedAt: now,
+            })
+            .where(eq(tenantNerisFieldOverlays.id, existing.id))
+            .returning();
+        } else {
+          [row] = await tx
+            .insert(tenantNerisFieldOverlays)
+            .values({
+              id: createId(),
+              tenantId,
+              configurationId: config.id,
+              fieldId: data.fieldId,
+              displayLabel: data.displayLabel ?? null,
+              helpText: data.helpText ?? null,
+              localAlias: data.localAlias ?? null,
+              displayOrder: data.displayOrder ?? null,
+              favorite: data.favorite ?? false,
+              optionalVisible: data.optionalVisible ?? null,
+              safeDefaultJson: data.safeDefaultJson ?? null,
+              localValidationJson: data.localValidationJson ?? null,
+              createdAt: now,
+              updatedAt: now,
+            })
+            .returning();
+        }
 
-      await this.outbox.write(tx, {
-        tenantId,
-        aggregateType: "tenant_neris_field_overlay",
-        aggregateId: row!.id,
-        eventType: DOMAIN_EVENT_TYPES.NERIS_OVERLAY_UPDATED,
-        payload: { tenantId, fieldId: data.fieldId, kind: "field_overlay" },
-        correlationId: principal.correlationId,
-        actorUserId: principal.userId,
-      });
-      await this.audit.writeInTransaction(tx, {
-        tenantId,
-        actorUserId: principal.userId,
-        actorPersonId: principal.personId,
-        actorType: "USER",
-        action: "neris.overlay.field.upsert",
-        resourceType: "tenant_neris_field_overlay",
-        resourceId: row!.id,
-        result: "SUCCESS",
-        riskLevel: "LOW",
-        correlationId: principal.correlationId,
-        requestId: principal.requestId,
-        after: row,
-      });
-      return row!;
-    }, principal.userId);
+        await this.outbox.write(tx, {
+          tenantId,
+          aggregateType: "tenant_neris_field_overlay",
+          aggregateId: row!.id,
+          eventType: DOMAIN_EVENT_TYPES.NERIS_OVERLAY_UPDATED,
+          payload: { tenantId, fieldId: data.fieldId, kind: "field_overlay" },
+          correlationId: principal.correlationId,
+          actorUserId: principal.userId,
+        });
+        await this.audit.writeInTransaction(tx, {
+          tenantId,
+          actorUserId: principal.userId,
+          actorPersonId: principal.personId,
+          actorType: "USER",
+          action: "neris.overlay.field.upsert",
+          resourceType: "tenant_neris_field_overlay",
+          resourceId: row!.id,
+          result: "SUCCESS",
+          riskLevel: "LOW",
+          correlationId: principal.correlationId,
+          requestId: principal.requestId,
+          after: row,
+        });
+        return row!;
+      },
+      principal.userId,
+    );
   }
 
   async upsertValueOverlay(tenantId: string, input: unknown, principal: ForgePrincipal) {
@@ -263,61 +282,67 @@ export class NerisConfigurationOverlayService {
       );
     }
 
-    return withTenantTransaction(this.db, tenantId, async (tx) => {
-      const config = await this.ensureConfiguration(tx, tenantId, principal);
-      const [existing] = await tx
-        .select()
-        .from(tenantNerisValueOverlays)
-        .where(
-          and(
-            eq(tenantNerisValueOverlays.tenantId, tenantId),
-            eq(tenantNerisValueOverlays.valueOptionId, data.valueOptionId),
-          ),
-        )
-        .limit(1);
-      const now = new Date();
-      let row;
-      if (existing) {
-        [row] = await tx
-          .update(tenantNerisValueOverlays)
-          .set({
-            localAlias: data.localAlias === undefined ? existing.localAlias : data.localAlias,
-            displayOrder: data.displayOrder === undefined ? existing.displayOrder : data.displayOrder,
-            favorite: data.favorite ?? existing.favorite,
-            notes: data.notes === undefined ? existing.notes : data.notes,
-            recordVersion: existing.recordVersion + 1,
-            updatedAt: now,
-          })
-          .where(eq(tenantNerisValueOverlays.id, existing.id))
-          .returning();
-      } else {
-        [row] = await tx
-          .insert(tenantNerisValueOverlays)
-          .values({
-            id: createId(),
-            tenantId,
-            configurationId: config.id,
-            valueOptionId: data.valueOptionId,
-            localAlias: data.localAlias ?? null,
-            displayOrder: data.displayOrder ?? null,
-            favorite: data.favorite ?? false,
-            notes: data.notes ?? null,
-            createdAt: now,
-            updatedAt: now,
-          })
-          .returning();
-      }
-      await this.outbox.write(tx, {
-        tenantId,
-        aggregateType: "tenant_neris_value_overlay",
-        aggregateId: row!.id,
-        eventType: DOMAIN_EVENT_TYPES.NERIS_OVERLAY_UPDATED,
-        payload: { tenantId, valueOptionId: data.valueOptionId, kind: "value_overlay" },
-        correlationId: principal.correlationId,
-        actorUserId: principal.userId,
-      });
-      return row!;
-    }, principal.userId);
+    return withTenantTransaction(
+      this.db,
+      tenantId,
+      async (tx) => {
+        const config = await this.ensureConfiguration(tx, tenantId, principal);
+        const [existing] = await tx
+          .select()
+          .from(tenantNerisValueOverlays)
+          .where(
+            and(
+              eq(tenantNerisValueOverlays.tenantId, tenantId),
+              eq(tenantNerisValueOverlays.valueOptionId, data.valueOptionId),
+            ),
+          )
+          .limit(1);
+        const now = new Date();
+        let row;
+        if (existing) {
+          [row] = await tx
+            .update(tenantNerisValueOverlays)
+            .set({
+              localAlias: data.localAlias === undefined ? existing.localAlias : data.localAlias,
+              displayOrder:
+                data.displayOrder === undefined ? existing.displayOrder : data.displayOrder,
+              favorite: data.favorite ?? existing.favorite,
+              notes: data.notes === undefined ? existing.notes : data.notes,
+              recordVersion: existing.recordVersion + 1,
+              updatedAt: now,
+            })
+            .where(eq(tenantNerisValueOverlays.id, existing.id))
+            .returning();
+        } else {
+          [row] = await tx
+            .insert(tenantNerisValueOverlays)
+            .values({
+              id: createId(),
+              tenantId,
+              configurationId: config.id,
+              valueOptionId: data.valueOptionId,
+              localAlias: data.localAlias ?? null,
+              displayOrder: data.displayOrder ?? null,
+              favorite: data.favorite ?? false,
+              notes: data.notes ?? null,
+              createdAt: now,
+              updatedAt: now,
+            })
+            .returning();
+        }
+        await this.outbox.write(tx, {
+          tenantId,
+          aggregateType: "tenant_neris_value_overlay",
+          aggregateId: row!.id,
+          eventType: DOMAIN_EVENT_TYPES.NERIS_OVERLAY_UPDATED,
+          payload: { tenantId, valueOptionId: data.valueOptionId, kind: "value_overlay" },
+          correlationId: principal.correlationId,
+          actorUserId: principal.userId,
+        });
+        return row!;
+      },
+      principal.userId,
+    );
   }
 
   private async ensureConfiguration(

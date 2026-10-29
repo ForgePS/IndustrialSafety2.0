@@ -40,6 +40,17 @@ describe("offline data classification", () => {
     expect(policy.offlineClass).toBe("OFFLINE_REQUIRED");
     expect(policy.queueMutations).toBe(false);
   });
+  it("allows offline sanitation inspection capture with queued mutations", () => {
+    const policy = classifyDomain("industrial.sanitation");
+    expect(policy.offlineClass).toBe("USEFUL");
+    expect(policy.queueMutations).toBe(true);
+  });
+
+  it("caches sanitation templates read-only offline", () => {
+    const policy = classifyDomain("industrial.sanitation.templates");
+    expect(policy.offlineClass).toBe("OFFLINE_REQUIRED");
+    expect(policy.queueMutations).toBe(false);
+  });
 });
 
 describe("offline cache", () => {
@@ -93,11 +104,23 @@ describe("mutation queue", () => {
   it("queues inspection mutations and replays oldest first", () => {
     const queue = new MutationQueue(scopeA, memoryStore());
     queue.enqueue(
-      { id: "m2", domain: "industrial.inspections", operation: "create", payload: {}, correlationId: "c2" },
+      {
+        id: "m2",
+        domain: "industrial.inspections",
+        operation: "create",
+        payload: {},
+        correlationId: "c2",
+      },
       200,
     );
     queue.enqueue(
-      { id: "m1", domain: "industrial.inspections", operation: "create", payload: {}, correlationId: "c1" },
+      {
+        id: "m1",
+        domain: "industrial.inspections",
+        operation: "create",
+        payload: {},
+        correlationId: "c1",
+      },
       100,
     );
     expect(queue.pending().map((item) => item.id)).toEqual(["m1", "m2"]);

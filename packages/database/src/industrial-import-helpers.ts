@@ -9,8 +9,7 @@ export const PACKAGE_TENANT_ID = "5da680d3-50f5-46ac-8b85-6cf454b6a0da";
 export const PRODUCTION_TENANT_ID = "019ff7d0-c20f-7659-81e4-c0cd68e23262";
 export const AUTHORIZED_TENANT_IDS = new Set([PACKAGE_TENANT_ID, PRODUCTION_TENANT_ID]);
 
-const UUID_RE =
-  /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 export type IdMapIndex = {
   bySourceId: Map<string, string>;
@@ -89,6 +88,23 @@ export function storageKeyFromAttachmentData(
   }
   const fileName = unwrapValue(data.fileName ?? data.name);
   return `import/attachments/${targetId}/${String(fileName ?? "file")}`;
+}
+
+/**
+ * Canonical documents-bucket key for Producers imports.
+ * Never persist Firebase-relative `business-*` paths after promotion.
+ */
+export function promoteStorageKeyForLiveTenant(
+  raw: string,
+  liveTenantId: string = PRODUCTION_TENANT_ID,
+  firebaseBusinessId = "business-1782553339499",
+): string {
+  let key = String(raw || "").trim();
+  if (!key) return key;
+  if (key.startsWith(`tenants/${liveTenantId}/`)) return key;
+  key = key.split(firebaseBusinessId).join(liveTenantId);
+  if (!key.startsWith("tenants/")) key = `tenants/${liveTenantId}/${key}`;
+  return key;
 }
 
 export function indexLogicalId(

@@ -71,6 +71,8 @@ export const forgeEnvironmentConfigSchema = z
         api: z.string().optional(),
         industrial: z.string().optional(),
         tenantAdmin: z.string().optional(),
+        /** Forge Field mobile PWA hostname (optional until DNS cutover). */
+        field: z.string().optional(),
         /** Verified SES sending domain (no secrets). */
         ses: z.string().optional(),
       })
@@ -112,6 +114,8 @@ export const forgeEnvironmentConfigSchema = z
       enableRmsHosting: z.boolean().default(true),
       /** CloudFront + S3 static hosting for Tenant Admin (Configuration Platform). */
       enableTenantAdminHosting: z.boolean().default(true),
+      /** CloudFront + S3 static hosting for Forge Field mobile PWA. */
+      enableFieldHosting: z.boolean().default(false),
       monthlyBudgetUsd: z.number().positive().optional(),
       /** Budget alert thresholds as percentages of monthlyBudgetUsd. */
       budgetAlertThresholds: z.array(z.number().positive()).default([50, 80, 100, 120]),
@@ -166,7 +170,8 @@ export const forgeEnvironmentConfigSchema = z
           ctx.addIssue({
             code: z.ZodIssueCode.custom,
             path: ["cognito"],
-            message: "Production Cognito URLs must be HTTPS production hosts (no example.com / localhost)",
+            message:
+              "Production Cognito URLs must be HTTPS production hosts (no example.com / localhost)",
           });
           break;
         }
@@ -184,7 +189,10 @@ export const forgeEnvironmentConfigSchema = z
         message: "database.serverlessMinCapacity must be 0 (auto-pause) or at least 0.5 ACU",
       });
     }
-    if (value.database.autoPauseMinutes !== undefined && value.database.serverlessMinCapacity !== 0) {
+    if (
+      value.database.autoPauseMinutes !== undefined &&
+      value.database.serverlessMinCapacity !== 0
+    ) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
         message: "database.autoPauseMinutes requires serverlessMinCapacity of 0",
@@ -213,8 +221,7 @@ export const forgeEnvironmentConfigSchema = z
       if (!hasCert && !hasDns) {
         ctx.addIssue({
           code: z.ZodIssueCode.custom,
-          message:
-            "edge.enableHttps requires certificateArn or hostedZoneId with apiHostname",
+          message: "edge.enableHttps requires certificateArn or hostedZoneId with apiHostname",
           path: ["edge"],
         });
       }

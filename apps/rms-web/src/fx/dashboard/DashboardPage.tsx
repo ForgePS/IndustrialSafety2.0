@@ -4,7 +4,11 @@ import { useEffect, useMemo, useState } from "react";
 import { FxButton } from "@forge/fx-ui";
 import { useAuth, useFeatureFlags } from "@forge/web-kit";
 import { RMS_FEATURE_FLAGS } from "@/lib/constants";
-import { loadDashboardPreferences, mergePreferences, saveDashboardPreferences } from "./DashboardPreferences";
+import {
+  loadDashboardPreferences,
+  mergePreferences,
+  saveDashboardPreferences,
+} from "./DashboardPreferences";
 import { listDashboardWidgets } from "./DashboardRegistry";
 import { DashboardGrid, DashboardWidget } from "./DashboardWidget";
 import { DashboardEmptyState } from "./DashboardStates";
@@ -83,7 +87,9 @@ export function DashboardPage() {
         <header className="rms-fx-dashboard__header">
           <div>
             <h1 className="rms-fx-dashboard__title">Operations dashboard</h1>
-            <p className="rms-fx-dashboard__lead">Sign in and select a tenant to load operational widgets.</p>
+            <p className="rms-fx-dashboard__lead">
+              Sign in and select a tenant to load operational widgets.
+            </p>
           </div>
         </header>
         <DashboardEmptyState title="Authentication required" description="Sign in to continue." />
@@ -97,8 +103,8 @@ export function DashboardPage() {
         <div>
           <h1 className="rms-fx-dashboard__title">Operations dashboard</h1>
           <p className="rms-fx-dashboard__lead">
-            Presentation of existing RMS operational data. Metrics come from current APIs only — nothing is
-            fabricated.
+            Presentation of existing RMS operational data. Metrics come from current APIs only —
+            nothing is fabricated.
           </p>
         </div>
         <FxButton tone="secondary" onClick={resetPreferences}>
@@ -116,7 +122,7 @@ export function DashboardPage() {
           {visible.map((widget) => {
             const Component = widget.component;
             const footer = FOOTER_LINKS[widget.id];
-              return (
+            return (
               <DashboardWidget
                 key={widget.id}
                 title={widget.title}

@@ -2,7 +2,12 @@ export type ApiAuthConfig =
   | { type: "none" }
   | { type: "bearer"; tokenRef: string }
   | { type: "api_key"; headerName: string; secretRef: string }
-  | { type: "oauth2_client_credentials"; tokenUrl: string; clientIdRef: string; clientSecretRef: string };
+  | {
+      type: "oauth2_client_credentials";
+      tokenUrl: string;
+      clientIdRef: string;
+      clientSecretRef: string;
+    };
 
 export type ApiPaginationConfig =
   | { type: "none" }
@@ -65,7 +70,11 @@ function isHttpsUrl(value: string): boolean {
 export function validateApiImportSourceConfig(raw: unknown): ApiImportValidationResult {
   const details: string[] = [];
   if (!raw || typeof raw !== "object" || Array.isArray(raw)) {
-    return { ok: false, code: "IMPORT_API_CONFIG_INVALID", message: "API source config must be an object" };
+    return {
+      ok: false,
+      code: "IMPORT_API_CONFIG_INVALID",
+      message: "API source config must be an object",
+    };
   }
   const cfg = raw as Record<string, unknown>;
   if (typeof cfg.baseUrl !== "string" || !isHttpsUrl(cfg.baseUrl)) {
@@ -144,10 +153,7 @@ export function computeRetryDelayMs(
   retry: ApiRetryConfig,
   jitterFactor = 0,
 ): number {
-  const exp = Math.min(
-    retry.maxDelayMs,
-    retry.baseDelayMs * 2 ** Math.max(0, attempt - 1),
-  );
+  const exp = Math.min(retry.maxDelayMs, retry.baseDelayMs * 2 ** Math.max(0, attempt - 1));
   const jitter = Math.max(0, Math.min(1, jitterFactor));
   return Math.round(exp * (1 - jitter * 0.2));
 }
@@ -170,7 +176,10 @@ export function buildApiPageRequest(input: ApiFetchPageRequest): {
 } {
   const url = new URL(input.config.path, `${input.config.baseUrl}/`);
   if (input.config.pagination.type === "offset") {
-    url.searchParams.set(input.config.pagination.limitParam, String(input.config.pagination.pageSize));
+    url.searchParams.set(
+      input.config.pagination.limitParam,
+      String(input.config.pagination.pageSize),
+    );
     url.searchParams.set(input.config.pagination.offsetParam, String(input.offset ?? 0));
   } else if (input.config.pagination.type === "cursor" && input.pageToken) {
     url.searchParams.set(input.config.pagination.cursorParam, input.pageToken);
@@ -186,10 +195,7 @@ export function buildApiPageRequest(input: ApiFetchPageRequest): {
   };
 }
 
-export function extractRecordsFromApiPayload(
-  payload: unknown,
-  recordsPath: string,
-): unknown[] {
+export function extractRecordsFromApiPayload(payload: unknown, recordsPath: string): unknown[] {
   if (!recordsPath || recordsPath === "$" || recordsPath === ".") {
     return Array.isArray(payload) ? payload : [];
   }

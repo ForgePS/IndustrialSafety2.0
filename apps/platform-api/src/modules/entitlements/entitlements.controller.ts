@@ -45,12 +45,7 @@ export class EntitlementsController {
     @Principal() principal: ForgePrincipal,
     @Req() req: RequestWithIds,
   ) {
-    const data = await this.entitlements.putProductModules(
-      tenantId,
-      productCode,
-      body,
-      principal,
-    );
+    const data = await this.entitlements.putProductModules(tenantId, productCode, body, principal);
     return ok(data, getRequestIds(req));
   }
 

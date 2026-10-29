@@ -12,10 +12,10 @@
 
 ## Severity
 
-| Depth / age | Severity |
-| --- | --- |
-| 1–10 messages, age &lt; 1h | SEV-3 |
-| Sustained growth or age &gt; 1h | SEV-2 |
+| Depth / age                       | Severity                  |
+| --------------------------------- | ------------------------- |
+| 1–10 messages, age &lt; 1h        | SEV-3                     |
+| Sustained growth or age &gt; 1h   | SEV-2                     |
 | Security / malware poison pattern | SEV-1 (escalate security) |
 
 ## Required permissions

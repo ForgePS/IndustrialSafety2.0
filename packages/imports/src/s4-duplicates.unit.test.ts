@@ -13,7 +13,12 @@ describe("S4 duplicate engine", () => {
   it("scores exact externalId as HIGH UPDATE", () => {
     const results = detectDuplicates({
       incoming: [{ sourceRowKey: "r1", fields: { externalId: "A-1", name: "Ada" } }],
-      existing: [{ entityId: "019f9c33-288e-7171-8d94-b76c4a4658b6", fields: { externalId: "A-1", name: "Ada Lovelace" } }],
+      existing: [
+        {
+          entityId: "019f9c33-288e-7171-8d94-b76c4a4658b6",
+          fields: { externalId: "A-1", name: "Ada Lovelace" },
+        },
+      ],
       rules: DEFAULT_DUPLICATE_RULES,
     });
     expect(results).toHaveLength(1);
@@ -151,6 +156,13 @@ describe("S4 API import framework", () => {
     expect(extractRecordsFromApiPayload({ data: { items: [{ id: 1 }] } }, "data.items")).toEqual([
       { id: 1 },
     ]);
-    expect(computeRetryDelayMs(1, { maxAttempts: 3, baseDelayMs: 100, maxDelayMs: 1000, retryOnStatus: [429] })).toBe(100);
+    expect(
+      computeRetryDelayMs(1, {
+        maxAttempts: 3,
+        baseDelayMs: 100,
+        maxDelayMs: 1000,
+        retryOnStatus: [429],
+      }),
+    ).toBe(100);
   });
 });

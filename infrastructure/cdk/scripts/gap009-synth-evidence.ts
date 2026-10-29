@@ -21,10 +21,7 @@ const data = new DataStack(app, "ForgeData", {
 const template = Template.fromStack(data);
 const json = template.toJSON();
 fs.mkdirSync(outDir, { recursive: true });
-fs.writeFileSync(
-  `${outDir}/Forge-Development-Data.template.json`,
-  JSON.stringify(json, null, 2),
-);
+fs.writeFileSync(`${outDir}/Forge-Development-Data.template.json`, JSON.stringify(json, null, 2));
 const secrets = Object.entries(json.Resources ?? {}).filter(([, r]) =>
   String((r as { Type?: string }).Type ?? "").includes("Secret"),
 );

@@ -40,24 +40,24 @@ Create/use a seeded or manually inserted user with `PLATFORM_SUPER_ADMIN` (or `C
 
 ## Suggested smoke path
 
-1. `POST /api/v1/platform/tenants` — create tenant  
-2. Activate tenant; create subscription / entitlements as needed  
-3. Create organization → person → user invitation  
-4. Assign role; `GET /api/v1/auth/me`  
-5. `POST /api/v1/authorization/check`  
-6. Write configuration/branding; list audit events  
+1. `POST /api/v1/platform/tenants` — create tenant
+2. Activate tenant; create subscription / entitlements as needed
+3. Create organization → person → user invitation
+4. Assign role; `GET /api/v1/auth/me`
+5. `POST /api/v1/authorization/check`
+6. Write configuration/branding; list audit events
 7. Confirm `outbox_events` rows; run worker and verify publish (EventBridge or local failure/retry behavior)
 
 ## Automated tests (exist in repo)
 
-| Area | Path |
-| --- | --- |
-| Tenant isolation (integration) | `packages/database/src/tenant-isolation.integration.test.ts` |
-| Authorization evaluate | `apps/platform-api/src/modules/authorization/authorization.evaluate.test.ts` |
-| Tenants service | `apps/platform-api/src/modules/tenants/tenants.service.test.ts` |
-| Health | `apps/platform-api/src/health.test.ts` |
-| Packages | `authorization`, `audit`, `events`, `tenant-context`, `errors`, `security`, `observability`, `validation`, … |
-| Worker | `apps/worker-service/src/job.test.ts` |
+| Area                           | Path                                                                                                         |
+| ------------------------------ | ------------------------------------------------------------------------------------------------------------ |
+| Tenant isolation (integration) | `packages/database/src/tenant-isolation.integration.test.ts`                                                 |
+| Authorization evaluate         | `apps/platform-api/src/modules/authorization/authorization.evaluate.test.ts`                                 |
+| Tenants service                | `apps/platform-api/src/modules/tenants/tenants.service.test.ts`                                              |
+| Health                         | `apps/platform-api/src/health.test.ts`                                                                       |
+| Packages                       | `authorization`, `audit`, `events`, `tenant-context`, `errors`, `security`, `observability`, `validation`, … |
+| Worker                         | `apps/worker-service/src/job.test.ts`                                                                        |
 
 Run package/app filters as needed, e.g.:
 

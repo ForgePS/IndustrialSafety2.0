@@ -56,6 +56,8 @@ export class ForgeQueues extends Construct {
   readonly cadPollingDlq: sqs.Queue;
   readonly cadRetention: sqs.Queue;
   readonly cadRetentionDlq: sqs.Queue;
+  readonly reportingSchedules: sqs.Queue;
+  readonly reportingSchedulesDlq: sqs.Queue;
   readonly eventBus: events.EventBus;
 
   constructor(scope: Construct, id: string, props: ForgeQueuesProps) {
@@ -102,6 +104,10 @@ export class ForgeQueues extends Construct {
     this.cadRetention = cadRetention.queue;
     this.cadRetentionDlq = cadRetention.dlq;
 
+    const reportingSchedules = queuePair(this, config, encryptionKey, "reporting-schedules");
+    this.reportingSchedules = reportingSchedules.queue;
+    this.reportingSchedulesDlq = reportingSchedules.dlq;
+
     this.eventBus = new events.EventBus(this, "DomainEvents", {
       eventBusName: resourceName(config, "events", "domain"),
     });
@@ -142,6 +148,19 @@ export class ForgeQueues extends Construct {
       new targets.SqsQueue(this.cadRetention, {
         message: events.RuleTargetInput.fromObject({
           type: "cad.retention.run.v1",
+        }),
+      }),
+    );
+
+    const reportingSchedulesRule = new events.Rule(this, "ReportingSchedulesRunDue", {
+      ruleName: resourceName(config, "events", "reporting-schedules"),
+      description: "Enqueue reporting schedule run-due sweeps hourly for worker consumption",
+      schedule: events.Schedule.cron({ minute: "5" }),
+    });
+    reportingSchedulesRule.addTarget(
+      new targets.SqsQueue(this.reportingSchedules, {
+        message: events.RuleTargetInput.fromObject({
+          type: "reporting.schedules.run_due.v1",
         }),
       }),
     );

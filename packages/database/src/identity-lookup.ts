@@ -190,3 +190,38 @@ export async function lookupCadConnection(
       }
     : null;
 }
+
+export interface ResolvedTenantDomain {
+  domainId: string;
+  tenantId: string;
+  domain: string;
+  domainType: string;
+  verificationStatus: string;
+}
+
+/** Resolve tenant by verified vanity hostname without tenant GUC (ADR-029). */
+export async function lookupTenantByDomain(
+  db: IdentityLookupExecutor,
+  domain: string,
+): Promise<ResolvedTenantDomain | null> {
+  const normalized = domain.trim().toLowerCase();
+  if (!normalized) return null;
+  const rows = asRows<{
+    domain_id: string;
+    tenant_id: string;
+    domain: string;
+    domain_type: string;
+    verification_status: string;
+  }>(await db.execute(sql`select * from forge_lookup_tenant_domain(${normalized})`));
+
+  const row = rows[0];
+  return row
+    ? {
+        domainId: row.domain_id,
+        tenantId: row.tenant_id,
+        domain: row.domain,
+        domainType: row.domain_type,
+        verificationStatus: row.verification_status,
+      }
+    : null;
+}

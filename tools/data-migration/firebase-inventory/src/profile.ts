@@ -38,10 +38,7 @@ export function classifyFirestoreValue(value: unknown): ObservedType {
       if ("_nanoseconds" in v || "nanoseconds" in v) return "timestamp";
     }
     // GeoPoint
-    if (
-      ("latitude" in v && "longitude" in v) ||
-      ("_latitude" in v && "_longitude" in v)
-    ) {
+    if (("latitude" in v && "longitude" in v) || ("_latitude" in v && "_longitude" in v)) {
       return "geopoint";
     }
     // DocumentReference
@@ -69,10 +66,14 @@ export function flattenFields(
     const fieldName = prefix ? `${prefix}.${key}` : key;
     const type = classifyFirestoreValue(value);
     out.push({ fieldName, type, nested: depth > 0 });
-    if (type === "map" && depth < 2 && value && typeof value === "object" && !Array.isArray(value)) {
-      out.push(
-        ...flattenFields(value as Record<string, unknown>, fieldName, depth + 1),
-      );
+    if (
+      type === "map" &&
+      depth < 2 &&
+      value &&
+      typeof value === "object" &&
+      !Array.isArray(value)
+    ) {
+      out.push(...flattenFields(value as Record<string, unknown>, fieldName, depth + 1));
     }
   }
   return out;
@@ -93,13 +94,8 @@ export function detectTenantKeys(fieldNames: string[]): string[] {
   return TENANT_KEY_CANDIDATES.filter((k) => set.has(k));
 }
 
-export function mergeFieldProfiles(
-  docs: Array<Record<string, unknown>>,
-): FieldProfile[] {
-  const stats = new Map<
-    string,
-    { types: Set<ObservedType>; seen: number; nested: boolean }
-  >();
+export function mergeFieldProfiles(docs: Array<Record<string, unknown>>): FieldProfile[] {
+  const stats = new Map<string, { types: Set<ObservedType>; seen: number; nested: boolean }>();
   for (const doc of docs) {
     const fields = flattenFields(doc);
     const seenKeys = new Set<string>();

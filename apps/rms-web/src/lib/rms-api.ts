@@ -254,7 +254,10 @@ export function listIncidents(
   return apiGetResult<IncidentSummary[]>(`${tenantBase(tenantId)}/neris/incidents`, { query });
 }
 
-export function getIncident(tenantId: string, incidentId: string): Promise<ApiResult<IncidentDetail>> {
+export function getIncident(
+  tenantId: string,
+  incidentId: string,
+): Promise<ApiResult<IncidentDetail>> {
   return apiGetResult<IncidentDetail>(`${tenantBase(tenantId)}/neris/incidents/${incidentId}`);
 }
 
@@ -314,7 +317,10 @@ export async function postSpecialtySection(
   );
 }
 
-export function getNarrative(tenantId: string, incidentId: string): Promise<NarrativePayload | null> {
+export function getNarrative(
+  tenantId: string,
+  incidentId: string,
+): Promise<NarrativePayload | null> {
   return apiGet<NarrativePayload | null>(
     `${tenantBase(tenantId)}/neris/incidents/${incidentId}/narrative`,
   );
@@ -369,10 +375,14 @@ export function returnIncident(
   reason: string,
   comments: Array<{ sectionKey?: string; fieldId?: string; body: string }>,
 ): Promise<IncidentDetail> {
-  return apiSend<IncidentDetail>(`${tenantBase(tenantId)}/neris/incidents/${incidentId}/return`, "POST", {
-    reason,
-    comments,
-  });
+  return apiSend<IncidentDetail>(
+    `${tenantBase(tenantId)}/neris/incidents/${incidentId}/return`,
+    "POST",
+    {
+      reason,
+      comments,
+    },
+  );
 }
 
 export function approveIncident(tenantId: string, incidentId: string): Promise<IncidentDetail> {
@@ -511,7 +521,9 @@ export type FieldOverlay = {
   localValidationJson: unknown;
 };
 
-export function getTenantNerisConfiguration(tenantId: string): Promise<TenantNerisConfiguration | null> {
+export function getTenantNerisConfiguration(
+  tenantId: string,
+): Promise<TenantNerisConfiguration | null> {
   return apiGet<TenantNerisConfiguration | null>(`${tenantBase(tenantId)}/neris/configuration`);
 }
 
@@ -519,7 +531,11 @@ export function putTenantNerisConfiguration(
   tenantId: string,
   payload: Record<string, unknown>,
 ): Promise<TenantNerisConfiguration> {
-  return apiSend<TenantNerisConfiguration>(`${tenantBase(tenantId)}/neris/configuration`, "PUT", payload);
+  return apiSend<TenantNerisConfiguration>(
+    `${tenantBase(tenantId)}/neris/configuration`,
+    "PUT",
+    payload,
+  );
 }
 
 export function listFieldOverlays(tenantId: string): Promise<FieldOverlay[]> {
@@ -605,7 +621,10 @@ function mapLookupRow(kind: string, row: Record<string, unknown>): LookupRow {
   }
 }
 
-export function getPersonnelDetail(tenantId: string, personnelId: string): Promise<Record<string, unknown>> {
+export function getPersonnelDetail(
+  tenantId: string,
+  personnelId: string,
+): Promise<Record<string, unknown>> {
   return apiGet<Record<string, unknown>>(`${tenantBase(tenantId)}/rms/personnel/${personnelId}`);
 }
 
@@ -613,11 +632,17 @@ export function getUnitDetail(tenantId: string, unitId: string): Promise<UnitDet
   return apiGet<UnitDetail>(`${tenantBase(tenantId)}/rms/units/${unitId}`);
 }
 
-export function getApparatusDetail(tenantId: string, apparatusId: string): Promise<ApparatusDetail> {
+export function getApparatusDetail(
+  tenantId: string,
+  apparatusId: string,
+): Promise<ApparatusDetail> {
   return apiGet<ApparatusDetail>(`${tenantBase(tenantId)}/rms/apparatus/${apparatusId}`);
 }
 
-export function getOccupancyDetail(tenantId: string, occupancyId: string): Promise<OccupancyDetail> {
+export function getOccupancyDetail(
+  tenantId: string,
+  occupancyId: string,
+): Promise<OccupancyDetail> {
   return apiGet<OccupancyDetail>(`${tenantBase(tenantId)}/rms/occupancies/${occupancyId}`);
 }
 
@@ -880,14 +905,20 @@ export function createCadConnection(
   return apiSend<CadConnection>(`${tenantBase(tenantId)}/cad/connections`, "POST", payload);
 }
 
-export function enableCadConnection(tenantId: string, connectionId: string): Promise<CadConnection> {
+export function enableCadConnection(
+  tenantId: string,
+  connectionId: string,
+): Promise<CadConnection> {
   return apiSend<CadConnection>(
     `${tenantBase(tenantId)}/cad/connections/${connectionId}/enable`,
     "POST",
   );
 }
 
-export function disableCadConnection(tenantId: string, connectionId: string): Promise<CadConnection> {
+export function disableCadConnection(
+  tenantId: string,
+  connectionId: string,
+): Promise<CadConnection> {
   return apiSend<CadConnection>(
     `${tenantBase(tenantId)}/cad/connections/${connectionId}/disable`,
     "POST",

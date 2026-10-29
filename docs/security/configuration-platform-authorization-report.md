@@ -7,17 +7,17 @@
 
 ## Live 7-persona matrix (`config-authz-matrix.mjs`)
 
-| Persona | Cases | Result |
-| --- | --- | --- |
-| Forge Creator (platform admin) | catalog / draft / publish | PASS |
-| Platform Support | catalog / draft / publish / security allow | PASS |
-| Tenant Administrator | branding allow / security deny | PASS (`ta.security_deny` → 403) |
-| Configuration Manager | draft allow / security deny | PASS |
-| Read-only Auditor | catalog+list allow / draft deny | PASS |
-| Standard user | catalog deny | PASS |
-| Update-only | draft allow / publish deny | PASS |
-| Publish-only | draft deny / catalog allow | PASS |
-| Unauthenticated | 401 | PASS |
+| Persona                        | Cases                                      | Result                          |
+| ------------------------------ | ------------------------------------------ | ------------------------------- |
+| Forge Creator (platform admin) | catalog / draft / publish                  | PASS                            |
+| Platform Support               | catalog / draft / publish / security allow | PASS                            |
+| Tenant Administrator           | branding allow / security deny             | PASS (`ta.security_deny` → 403) |
+| Configuration Manager          | draft allow / security deny                | PASS                            |
+| Read-only Auditor              | catalog+list allow / draft deny            | PASS                            |
+| Standard user                  | catalog deny                               | PASS                            |
+| Update-only                    | draft allow / publish deny                 | PASS                            |
+| Publish-only                   | draft deny / catalog allow                 | PASS                            |
+| Unauthenticated                | 401                                        | PASS                            |
 
 `CONFIG_TENANT_ADMIN` remaining permission codes after remediation:
 
@@ -31,26 +31,26 @@
 
 ## Permission independence
 
-| Rule | Status |
-| --- | --- |
-| Tenant Admin cannot use platform.configuration.* | PASS (live deny on security NS after remediation) |
-| Tenant Admin cannot modify `security` | PASS (`ta.security_deny` 403) |
-| Configuration Manager cannot modify `security` | PASS |
-| Read-only cannot mutate | PASS |
-| Update ≠ publish | PASS (update_only / publish_only) |
-| Denials use standard error contract | PASS (403/401) |
-| Dry-run import (no persistence) | PASS (`dry_run_import` in matrix) |
-| API enforcement | PASS (Nest `@RequireAnyPermission` + service asserts) |
-| Audit | PASS (draft/publish/schedule/archive/rollback write audit) |
-| UI visibility | PASS (catalog `tenantAdminEditable` flags; Tenant Admin allowlist routes) |
+| Rule                                             | Status                                                                    |
+| ------------------------------------------------ | ------------------------------------------------------------------------- |
+| Tenant Admin cannot use platform.configuration.* | PASS (live deny on security NS after remediation)                         |
+| Tenant Admin cannot modify `security`            | PASS (`ta.security_deny` 403)                                             |
+| Configuration Manager cannot modify `security`   | PASS                                                                      |
+| Read-only cannot mutate                          | PASS                                                                      |
+| Update ≠ publish                                 | PASS (update_only / publish_only)                                         |
+| Denials use standard error contract              | PASS (403/401)                                                            |
+| Dry-run import (no persistence)                  | PASS (`dry_run_import` in matrix)                                         |
+| API enforcement                                  | PASS (Nest `@RequireAnyPermission` + service asserts)                     |
+| Audit                                            | PASS (draft/publish/schedule/archive/rollback write audit)                |
+| UI visibility                                    | PASS (catalog `tenantAdminEditable` flags; Tenant Admin allowlist routes) |
 
 ## Totals
 
-| Metric | Value |
-| --- | --- |
-| Cases | **22** |
-| Passed | **22** |
-| Failed | **0** |
-| Skipped | **0** |
+| Metric  | Value  |
+| ------- | ------ |
+| Cases   | **22** |
+| Passed  | **22** |
+| Failed  | **0**  |
+| Skipped | **0**  |
 
 **Verdict:** PASS (full seeded matrix). Prior failure `ta.security_deny` (actual 201) cleared by removing platform configuration permissions from `CONFIG_TENANT_ADMIN`.

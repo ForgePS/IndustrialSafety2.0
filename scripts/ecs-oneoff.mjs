@@ -30,7 +30,15 @@ export function awsText(args) {
 }
 
 export function runPlatformApiOneOff(command, label, options = {}) {
-  const envName = process.env.FORGE_ENV?.trim() || "development";
+  // Prefer explicit option (scripts that pass --env), then FORGE_ENV, then development.
+  const envName =
+    (typeof options.forgeEnvironment === "string" && options.forgeEnvironment.trim()) ||
+    process.env.FORGE_ENV?.trim() ||
+    "development";
+  if (envName !== "development" && envName !== "production") {
+    throw new Error(`Unsupported forge environment: ${envName}`);
+  }
+  process.env.FORGE_ENV = envName;
   const isProduction = envName === "production";
   const stackName = isProduction ? "Forge-Production-Compute" : "Forge-Development-Compute";
   const service = isProduction
@@ -49,7 +57,12 @@ export function runPlatformApiOneOff(command, label, options = {}) {
   const serviceObj = desc.services?.[0];
   if (!serviceObj) throw new Error("platform-api service not found");
 
-  const taskDef = serviceObj.taskDefinition;
+  // A migration that ships in a new image must run before the service switches
+  // traffic to that image. Allow callers to run against a newly registered task
+  // definition while retaining the live service's network configuration.
+  const taskDef =
+    (typeof options.taskDefinition === "string" && options.taskDefinition.trim()) ||
+    serviceObj.taskDefinition;
   const subnets = serviceObj.networkConfiguration.awsvpcConfiguration.subnets;
   const securityGroups = serviceObj.networkConfiguration.awsvpcConfiguration.securityGroups;
 

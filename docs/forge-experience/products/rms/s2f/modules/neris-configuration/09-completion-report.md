@@ -4,7 +4,7 @@
 **Product:** Forge RMS  
 **Module flag:** `fx.rms.module.nerisConfiguration.enabled` (default **false**)  
 **Foundation dependencies:** `fx.rms.forms.enabled`  
-**Gate:** FX-S2F-6  
+**Gate:** FX-S2F-6
 
 ## Decision requested
 
@@ -16,9 +16,9 @@ Alternates: `APPROVE WITH CONDITIONS` · `RETURN FOR CORRECTION`
 
 ### Suggested conditions
 
-1. Capture sanitized desktop/tablet screenshots before tenant enablement.  
-2. Keep module flag default-off.  
-3. Manually verify operating-mode and field-overlay save payloads on a non-prod tenant.  
+1. Capture sanitized desktop/tablet screenshots before tenant enablement.
+2. Keep module flag default-off.
+3. Manually verify operating-mode and field-overlay save payloads on a non-prod tenant.
 4. Do not begin S2F-7 Administration / Utilities until this checkpoint is accepted.
 
 ## Executive summary
@@ -31,30 +31,30 @@ Migrated: `/configuration/` operating mode panel + field overlays form only.
 
 ## Routes migrated
 
-| Route | Status |
-| --- | --- |
-| `/configuration/` | Yes |
+| Route             | Status |
+| ----------------- | ------ |
+| `/configuration/` | Yes    |
 
 ## Deferred / N/A items
 
-| Capability | Disposition |
-| --- | --- |
-| Organization / agency identifiers | N/A — not in live UI |
-| Export / transmission configuration | N/A |
-| Official code mapping editor | N/A — read-only by design |
-| Incident/response/personnel/apparatus defaults | N/A |
-| Validation-rule editor | N/A |
-| Cancel / reset / import / export / audit | N/A |
-| Administration / Utilities | S2F-7 (not authorized) |
+| Capability                                     | Disposition               |
+| ---------------------------------------------- | ------------------------- |
+| Organization / agency identifiers              | N/A — not in live UI      |
+| Export / transmission configuration            | N/A                       |
+| Official code mapping editor                   | N/A — read-only by design |
+| Incident/response/personnel/apparatus defaults | N/A                       |
+| Validation-rule editor                         | N/A                       |
+| Cancel / reset / import / export / audit       | N/A                       |
+| Administration / Utilities                     | S2F-7 (not authorized)    |
 
 ## Feature-flag behavior
 
-| Combo | Result |
-| --- | --- |
-| Module off | Legacy forms |
+| Combo                 | Result        |
+| --------------------- | ------------- |
+| Module off            | Legacy forms  |
 | Module on + forms off | Legacy compat |
-| Module on + forms on | FX forms |
-| Forms on + module off | Legacy |
+| Module on + forms on  | FX forms      |
+| Forms on + module off | Legacy        |
 
 ## Component inventory
 
@@ -94,18 +94,18 @@ Module off → legacy; other modules unaffected.
 
 ## Defects
 
-| Sev | Count |
-| --- | --- |
-| P0 | 0 |
-| P1 | 0 |
-| P3 | Screenshots pending |
+| Sev | Count               |
+| --- | ------------------- |
+| P0  | 0                   |
+| P1  | 0                   |
+| P3  | Screenshots pending |
 
 ## Risks
 
-| ID | Notes |
-| --- | --- |
+| ID        | Notes                                                                                  |
+| --------- | -------------------------------------------------------------------------------------- |
 | R-S2F-013 | Planning docs imply broader NERIS settings than live UI — migrated verified scope only |
-| R-S2F-014 | Operating mode save always posts `MANUAL_ONLY` — preserved legacy behavior |
+| R-S2F-014 | Operating mode save always posts `MANUAL_ONLY` — preserved legacy behavior             |
 
 ## Evidence index
 
@@ -113,11 +113,11 @@ Module off → legacy; other modules unaffected.
 
 ## Production changes
 
-| Area | Changed? |
-| --- | --- |
-| Default UX | **No** (flag off) |
-| NERIS export / mapping / validation / APIs | **No** |
-| Code behind flag | Yes |
+| Area                                       | Changed?          |
+| ------------------------------------------ | ----------------- |
+| Default UX                                 | **No** (flag off) |
+| NERIS export / mapping / validation / APIs | **No**            |
+| Code behind flag                           | Yes               |
 
 ## Recommendation
 

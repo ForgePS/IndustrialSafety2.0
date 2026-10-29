@@ -6,18 +6,18 @@
 
 ## Suite matrix
 
-| Suite | Scope |
-| --- | --- |
-| Unit | `@forge/imports` formats, validation rules, duplicate scoring, transforms |
-| Integration | DB staging + RLS with harness |
-| API | platform-api import module contract tests |
-| RLS | FORCE policies; cross-tenant deny |
-| Tenant isolation | API 403/empty across tenants |
-| Duplicate | Create/Update/Skip/Reject/Merge Review paths |
-| Rollback | Safe rollback + blocked unsafe cases |
-| Performance | Large CSV batch throughput / memory bounds |
-| Playwright | Import Center happy path Creator + Tenant Admin |
-| Accessibility | axe + keyboard wizard |
+| Suite            | Scope                                                                     |
+| ---------------- | ------------------------------------------------------------------------- |
+| Unit             | `@forge/imports` formats, validation rules, duplicate scoring, transforms |
+| Integration      | DB staging + RLS with harness                                             |
+| API              | platform-api import module contract tests                                 |
+| RLS              | FORCE policies; cross-tenant deny                                         |
+| Tenant isolation | API 403/empty across tenants                                              |
+| Duplicate        | Create/Update/Skip/Reject/Merge Review paths                              |
+| Rollback         | Safe rollback + blocked unsafe cases                                      |
+| Performance      | Large CSV batch throughput / memory bounds                                |
+| Playwright       | Import Center happy path Creator + Tenant Admin                           |
+| Accessibility    | axe + keyboard wizard                                                     |
 
 ## Evidence location (future)
 

@@ -4,7 +4,7 @@
 **Product:** Forge RMS  
 **Module flag:** `fx.rms.module.cadMessages.enabled` (default **false**)  
 **Foundation dependencies:** `fx.rms.tables.enabled`  
-**Gate:** FX-S2F-3  
+**Gate:** FX-S2F-3
 
 ## Decision requested
 
@@ -16,9 +16,9 @@ Alternates: `APPROVE WITH CONDITIONS` · `RETURN FOR CORRECTION`
 
 ### Suggested conditions
 
-1. Capture sanitized desktop/tablet screenshots before tenant enablement.  
-2. Keep module flag default-off.  
-3. Do not treat `/cad/operations/` as in-scope until separately authorized.  
+1. Capture sanitized desktop/tablet screenshots before tenant enablement.
+2. Keep module flag default-off.
+3. Do not treat `/cad/operations/` as in-scope until separately authorized.
 4. Do not begin S2F-4 CAD Connections until this checkpoint is accepted.
 
 ## Executive summary
@@ -31,27 +31,27 @@ Migrated: `/cad/messages/` metadata table only.
 
 ## Routes migrated
 
-| Route | Status |
-| --- | --- |
-| `/cad/messages/` | Yes |
+| Route            | Status |
+| ---------------- | ------ |
+| `/cad/messages/` | Yes    |
 
 ## Routes deferred
 
-| Route / capability | Reason |
-| --- | --- |
-| Activity feed | Not present in rms-web |
-| `/cad/operations/` | Separate operations summary |
-| Message detail / retry / search | Not present |
-| Connections / Conflicts | Later S2F phases |
+| Route / capability              | Reason                      |
+| ------------------------------- | --------------------------- |
+| Activity feed                   | Not present in rms-web      |
+| `/cad/operations/`              | Separate operations summary |
+| Message detail / retry / search | Not present                 |
+| Connections / Conflicts         | Later S2F phases            |
 
 ## Feature-flag behavior
 
-| Combo | Result |
-| --- | --- |
-| Module off | Legacy |
+| Combo                  | Result        |
+| ---------------------- | ------------- |
+| Module off             | Legacy        |
 | Module on + tables off | Legacy compat |
-| Module on + tables on | FX table |
-| Tables on + module off | Legacy |
+| Module on + tables on  | FX table      |
+| Tables on + module off | Legacy        |
 
 ## Component inventory
 
@@ -111,17 +111,17 @@ Module off → legacy; other modules unaffected.
 
 ## Defects
 
-| Sev | Count |
-| --- | --- |
-| P0 | 0 |
-| P1 | 0 |
-| P3 | Screenshots pending; “Activity” planning name vs live list discrepancy documented |
+| Sev | Count                                                                             |
+| --- | --------------------------------------------------------------------------------- |
+| P0  | 0                                                                                 |
+| P1  | 0                                                                                 |
+| P3  | Screenshots pending; “Activity” planning name vs live list discrepancy documented |
 
 ## Risks
 
-| ID | Notes |
-| --- | --- |
-| R-S2F-007 | No activity feed — planning/live gap accepted |
+| ID        | Notes                                                 |
+| --------- | ----------------------------------------------------- |
+| R-S2F-007 | No activity feed — planning/live gap accepted         |
 | R-S2F-008 | Operations page not under cadMessages flag — deferred |
 
 ## Evidence index
@@ -130,11 +130,11 @@ Module off → legacy; other modules unaffected.
 
 ## Production changes
 
-| Area | Changed? |
-| --- | --- |
-| Default UX | **No** (flag off) |
-| CAD ingest / APIs / permissions | **No** |
-| Code behind flag | Yes |
+| Area                            | Changed?          |
+| ------------------------------- | ----------------- |
+| Default UX                      | **No** (flag off) |
+| CAD ingest / APIs / permissions | **No**            |
+| Code behind flag                | Yes               |
 
 ## Recommendation
 

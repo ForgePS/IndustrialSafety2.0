@@ -89,11 +89,23 @@ export function ShellInner({ children }: { children: React.ReactNode }) {
           <ForgeShellState state="loading" title="Loading session…" />
         ) : me ? (
           <>
-            <p style={{ margin: 0, color: "var(--forge-color-muted)", fontSize: "var(--forge-text-xs)" }}>
+            <p
+              style={{
+                margin: 0,
+                color: "var(--forge-color-muted)",
+                fontSize: "var(--forge-text-xs)",
+              }}
+            >
               Signed in
             </p>
             <p style={{ margin: "0.15rem 0 0.5rem", fontWeight: 600 }}>{me.userId.slice(0, 8)}…</p>
-            <p style={{ margin: 0, color: "var(--forge-color-muted)", fontSize: "var(--forge-text-xs)" }}>
+            <p
+              style={{
+                margin: 0,
+                color: "var(--forge-color-muted)",
+                fontSize: "var(--forge-text-xs)",
+              }}
+            >
               Tenant
             </p>
             <p style={{ margin: "0.15rem 0 0", fontWeight: 600 }}>{activeTenantLabel}</p>
@@ -101,7 +113,11 @@ export function ShellInner({ children }: { children: React.ReactNode }) {
         ) : error ? (
           <p className={styles.authError}>{error}</p>
         ) : (
-          <ForgeShellState state="empty" title="Not signed in" description="Sign in to administer this tenant." />
+          <ForgeShellState
+            state="empty"
+            title="Not signed in"
+            description="Sign in to administer this tenant."
+          />
         )
       }
       topbarCenter={<span>Tenant Admin · {activeTenantLabel}</span>}

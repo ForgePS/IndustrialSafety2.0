@@ -11,36 +11,36 @@ Allow RMS to adopt FX presentation without rewriting auth, flags, or domain APIs
 
 ### RmsFxFlagBridge
 
-- Input: platform effective feature flags  
-- Output: `{ fxShell, fxNav, fxIncidents, … }` booleans  
-- Default: all FX flags false / missing → legacy UI  
+- Input: platform effective feature flags
+- Output: `{ fxShell, fxNav, fxIncidents, … }` booleans
+- Default: all FX flags false / missing → legacy UI
 
 ### RmsNavAdapter
 
-- Input: current hardcoded groups + flags (+ optional Config Studio nav when DEC-S2-005 decides)  
-- Output: `FxNavItem[]` for `FxAppShell`  
+- Input: current hardcoded groups + flags (+ optional Config Studio nav when DEC-S2-005 decides)
+- Output: `FxNavItem[]` for `FxAppShell`
 
 ### RmsAuthSessionAdapter
 
-- Pass-through of `@forge/web-kit` `useAuth()` into shell slots  
-- **No** auth behavior changes  
+- Pass-through of `@forge/web-kit` `useAuth()` into shell slots
+- **No** auth behavior changes
 
 ### RmsListControlsAdapter
 
-- Wraps existing list experiences during S2E  
-- Retirement when FxTable parity accepted  
+- Wraps existing list experiences during S2E
+- Retirement when FxTable parity accepted
 
 ### RmsFeatureGateChrome
 
-- Maps disabled-flag state to `FxEmptyState` / `FxAlert` copy parity  
+- Maps disabled-flag state to `FxEmptyState` / `FxAlert` copy parity
 
 ### RmsIncidentWorkspaceAdapter (S2D)
 
-- Maps incident header/tabs/sections onto `FxWorkspaceLayout`  
-- Preserves `?section=` keys and specialty permission gates  
+- Maps incident header/tabs/sections onto `FxWorkspaceLayout`
+- Preserves `?section=` keys and specialty permission gates
 
 ## Non-goals
 
-- No new cross-module task DB  
-- No NERIS payload changes  
-- No schema migrations  
+- No new cross-module task DB
+- No NERIS payload changes
+- No schema migrations

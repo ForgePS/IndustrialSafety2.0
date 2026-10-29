@@ -1,14 +1,14 @@
 # Logging and Monitoring Policy
 
-| Field | Value |
-| --- | --- |
-| Document ID | SOC2-POL-006 |
-| Version | 0.1 |
-| Status | APPROVED |
-| Owner | AWS Infrastructure Owner |
-| Approver | Jeremy Powell, Founder, Forge Public Safety |
-| Effective date | 2026-07-26 |
-| Next review date | 2027-07-26 |
+| Field            | Value                                       |
+| ---------------- | ------------------------------------------- |
+| Document ID      | SOC2-POL-006                                |
+| Version          | 0.1                                         |
+| Status           | APPROVED                                    |
+| Owner            | AWS Infrastructure Owner                    |
+| Approver         | Jeremy Powell, Founder, Forge Public Safety |
+| Effective date   | 2026-07-26                                  |
+| Next review date | 2027-07-26                                  |
 
 ## Purpose
 
@@ -40,6 +40,7 @@ Applies to the Forge Public Safety system boundary documented in `docs/complianc
 10. Control owners maintain evidence per the control matrix and testing plan.
 
 ### Logging-specific requirements
+
 1. CloudTrail (when enabled) records multi-region management read/write events with log file validation and encrypted S3 delivery.
 2. CloudWatch retains security logs per environment retention configuration.
 3. Application audit events capture actor, action, tenant, and timestamp for sensitive operations.
@@ -48,12 +49,12 @@ Applies to the Forge Public Safety system boundary documented in `docs/complianc
 
 ## Roles and responsibilities
 
-| Role | Responsibility |
-| --- | --- |
-| Jeremy Powell (Founder) | Policy approval; High/Critical risk acceptance; claims restriction enforcement |
-| AWS Infrastructure Owner | Operational ownership of this policy |
-| Engineering Lead | Ensure engineering practices implement requirements |
-| All personnel | Follow policy; report violations and incidents |
+| Role                     | Responsibility                                                                 |
+| ------------------------ | ------------------------------------------------------------------------------ |
+| Jeremy Powell (Founder)  | Policy approval; High/Critical risk acceptance; claims restriction enforcement |
+| AWS Infrastructure Owner | Operational ownership of this policy                                           |
+| Engineering Lead         | Ensure engineering practices implement requirements                            |
+| All personnel            | Follow policy; report violations and incidents                                 |
 
 ## Exceptions
 
@@ -79,7 +80,7 @@ See `docs/compliance/soc2/procedures/` for operating procedures mapped to access
 
 ## Revision history
 
-| Version | Date | Change |
-| --- | --- | --- |
-| 0.1 | 2026-07-26 | Phase 1 draft — PENDING_APPROVAL |
-| 0.1 | 2026-07-26 | Approved by Jeremy Powell |
+| Version | Date       | Change                           |
+| ------- | ---------- | -------------------------------- |
+| 0.1     | 2026-07-26 | Phase 1 draft — PENDING_APPROVAL |
+| 0.1     | 2026-07-26 | Approved by Jeremy Powell        |

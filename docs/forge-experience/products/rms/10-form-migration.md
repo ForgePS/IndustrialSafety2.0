@@ -10,10 +10,10 @@
 
 ## Migrated behind flag
 
-| Form | Route | Framework |
-| --- | --- | --- |
-| New manual incident | `/incidents/new/` | `FxForm` + `FxDateField` / `FxTextarea` |
-| CAD connection create | `/cad/connections/` | `FxForm` + `FxTextField` |
+| Form                  | Route               | Framework                               |
+| --------------------- | ------------------- | --------------------------------------- |
+| New manual incident   | `/incidents/new/`   | `FxForm` + `FxDateField` / `FxTextarea` |
+| CAD connection create | `/cad/connections/` | `FxForm` + `FxTextField`                |
 
 ## Deferred (higher risk)
 

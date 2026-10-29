@@ -16,6 +16,7 @@ import { ObservabilityStack } from "../lib/stacks/observability-stack.js";
 import { BackupStack } from "../lib/stacks/backup-stack.js";
 import { AlertingStack } from "../lib/stacks/alerting-stack.js";
 import { IdentityStack } from "../lib/stacks/identity-stack.js";
+import { ImportMalwareStack } from "../lib/stacks/import-malware-stack.js";
 
 const app = new cdk.App();
 const config = resolveConfig();
@@ -48,6 +49,16 @@ const data = new DataStack(app, "ForgeData", {
   databaseSecurityGroup: network.securityGroups.databaseSg,
   storageKey: security.storageKey,
 });
+if (config.features.enableGuardDuty) {
+  const importMalware = new ImportMalwareStack(app, "ForgeImportMalware", {
+    config,
+    env,
+    importsBucket: data.importsBucket,
+    storageKey: security.storageKey,
+  });
+  importMalware.addDependency(data);
+  importMalware.addDependency(security);
+}
 new BackupStack(app, "ForgeBackup", {
   config,
   env,

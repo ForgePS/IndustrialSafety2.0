@@ -86,7 +86,9 @@ function FacilitiesInner() {
   return (
     <section className={styles.page}>
       <h1>Facilities</h1>
-      <p className={styles.lead}>Tenant facilities (SQL API). Studio remains available for config docs.</p>
+      <p className={styles.lead}>
+        Tenant facilities (SQL API). Studio remains available for config docs.
+      </p>
 
       {!canRead ? <p className={styles.error}>Missing facilities read permission.</p> : null}
       {error ? <p className={styles.error}>{error}</p> : null}

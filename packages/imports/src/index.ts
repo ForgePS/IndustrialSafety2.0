@@ -66,6 +66,9 @@ export {
   FAILURE_CLASSES,
   ROLLBACK_CLASSIFICATIONS,
   adapterRegistryKey,
+  resolveImportAdapterKey,
+  AUTHORIZED_IMPORT_ADAPTER_KEYS,
+  REFERENCE_IMPORT_ADAPTER_KEY,
   ImportAdapterRegistry,
   type FailureClass,
   type RollbackClassification,
@@ -130,10 +133,7 @@ export {
   type LockAcquisition,
 } from "./execution/engine.js";
 
-export {
-  IMPORT_EXECUTION_ASL,
-  IMPORT_EXECUTION_SFN_STATUS,
-} from "./execution/step-functions.js";
+export { IMPORT_EXECUTION_ASL, IMPORT_EXECUTION_SFN_STATUS } from "./execution/step-functions.js";
 
 export {
   MALWARE_VERDICTS,
@@ -142,6 +142,8 @@ export {
   isQuarantineVerdict,
   isFailClosedVerdict,
   DEFAULT_SCAN_TIMEOUT_MS,
+  DEFAULT_SCAN_POLL_INTERVAL_MS,
+  DEFAULT_MAX_SCAN_ATTEMPTS,
   DEFAULT_MAX_RESCANS,
   EICAR_SHA256,
   type MalwareVerdict,
@@ -156,9 +158,12 @@ export { ReferenceMalwareScanner, contentSha256 } from "./security/reference-sca
 
 export {
   REFERENCE_MALWARE_PROVIDER_KEY,
+  AWS_GUARDDUTY_MALWARE_PROVIDER_KEY,
   PRODUCTION_LIKE_APP_ENVS,
   isProductionLikeAppEnv,
   isReferenceMalwareProvider,
+  isProductionGradeMalwareProvider,
+  resolveImportMalwareProviderKey,
   assertScannerAllowedForEnvironment,
   STUCK_JOB_THRESHOLDS_MS,
   isStuckImportJob,
@@ -256,10 +261,7 @@ export {
   type ImportUploadDetectMessage,
 } from "./messages.js";
 
-export {
-  detectImportFormat,
-  type FormatDetectionResult,
-} from "./formats/detect.js";
+export { detectImportFormat, type FormatDetectionResult } from "./formats/detect.js";
 
 export {
   IMPORT_TEMPLATES,
@@ -296,10 +298,7 @@ export type {
 
 export { StubFileDetector, StructureFileDetector } from "./formats/detector.js";
 export { StubValidator } from "./validation/validator.js";
-export {
-  StubDuplicateDetector,
-  ConfigurableDuplicateDetector,
-} from "./duplicates/detector.js";
+export { StubDuplicateDetector, ConfigurableDuplicateDetector } from "./duplicates/detector.js";
 export {
   detectDuplicates,
   buildMergeCandidate,
@@ -324,6 +323,7 @@ export {
 } from "./duplicates/engine.js";
 export {
   validateZipMigrationBundle,
+  isUnsafeZipEntryPath,
   parseZipManifest,
   type ZipManifest,
   type ZipManifestEntry,
@@ -360,11 +360,14 @@ export {
   type ResolveDuplicateInput,
   type PatchImportProfileS4Input,
 } from "./s4-dto.js";
+export { StubColumnMapper, StubPreviewGenerator, StubProgressReporter } from "./pipeline/stubs.js";
 export {
-  StubColumnMapper,
-  StubPreviewGenerator,
-  StubProgressReporter,
-} from "./pipeline/stubs.js";
+  AliasColumnMapper,
+  COLUMN_ALIAS_GROUPS,
+  mappingStatus,
+  resolveAliasTarget,
+} from "./pipeline/column-mapper.js";
+export { SchemaRowValidator, summarizeValidation } from "./validation/schema-validator.js";
 export {
   StubSchemaLoader,
   StubTransformer,

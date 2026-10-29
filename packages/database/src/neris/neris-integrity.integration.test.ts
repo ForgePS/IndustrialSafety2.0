@@ -117,9 +117,7 @@ describe("NERIS schema foundation integrity", () => {
     const active = await adminDb
       .select()
       .from(nerisValueOptions)
-      .where(
-        and(eq(nerisValueOptions.valueSetId, set!.id), eq(nerisValueOptions.active, true)),
-      );
+      .where(and(eq(nerisValueOptions.valueSetId, set!.id), eq(nerisValueOptions.active, true)));
     expect(active.find((row) => row.id === option!.id)).toBeUndefined();
 
     const historical = await adminDb
@@ -194,8 +192,12 @@ describe("NERIS schema foundation integrity", () => {
     );
     expect(seenByA.some((row) => row.displayLabel === "Tenant A only")).toBe(true);
 
-    await adminDb.delete(tenantNerisFieldOverlays).where(eq(tenantNerisFieldOverlays.tenantId, tenantA));
-    await adminDb.delete(tenantNerisConfiguration).where(eq(tenantNerisConfiguration.tenantId, tenantA));
+    await adminDb
+      .delete(tenantNerisFieldOverlays)
+      .where(eq(tenantNerisFieldOverlays.tenantId, tenantA));
+    await adminDb
+      .delete(tenantNerisConfiguration)
+      .where(eq(tenantNerisConfiguration.tenantId, tenantA));
     await adminDb.delete(tenants).where(eq(tenants.id, tenantA));
     await adminDb.delete(tenants).where(eq(tenants.id, tenantB));
   });

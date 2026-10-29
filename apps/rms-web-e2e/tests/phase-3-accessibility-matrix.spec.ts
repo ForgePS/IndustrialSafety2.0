@@ -2,10 +2,7 @@ import { test, expect } from "../src/fixtures/index.js";
 import { readTenantId } from "../src/helpers/api.js";
 import { openIncidentSection } from "../src/helpers/navigation.js";
 import { e2eRunId } from "../src/helpers/test-data.js";
-import {
-  activateSpecialtySection,
-  createStructureFireIncident,
-} from "../src/helpers/specialty.js";
+import { activateSpecialtySection, createStructureFireIncident } from "../src/helpers/specialty.js";
 
 /**
  * Deployed specialty accessibility checks (keyboard + structure).
@@ -20,12 +17,7 @@ test.describe("Phase 3 specialty accessibility matrix @phase3", () => {
     const runId = e2eRunId();
     const tenantId = await readTenantId(page);
     expect(tenantId).toBeTruthy();
-    const incidentId = await createStructureFireIncident(
-      page,
-      tenantId!,
-      runId,
-      "a11y specialty",
-    );
+    const incidentId = await createStructureFireIncident(page, tenantId!, runId, "a11y specialty");
     await activateSpecialtySection(page, tenantId!, incidentId, "EXPOSURES");
     await activateSpecialtySection(page, tenantId!, incidentId, "CIVILIAN_CASUALTIES");
 
@@ -60,7 +52,9 @@ test.describe("Phase 3 specialty accessibility matrix @phase3", () => {
     await page.evaluate(() => {
       document.documentElement.style.zoom = "200%";
     });
-    await expect(page.getByRole("heading", { name: /officer review|specialty review/i }).first()).toBeVisible();
+    await expect(
+      page.getByRole("heading", { name: /officer review|specialty review/i }).first(),
+    ).toBeVisible();
     await page.evaluate(() => {
       document.documentElement.style.zoom = "100%";
     });

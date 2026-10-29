@@ -88,12 +88,7 @@ export class ImportDuplicatesService {
     };
   }
 
-  async stageRows(
-    principal: ForgePrincipal,
-    jobId: string,
-    body: unknown,
-    correlationId: string,
-  ) {
+  async stageRows(principal: ForgePrincipal, jobId: string, body: unknown, correlationId: string) {
     const tenantId = this.requireTenant(principal);
     const data = stageImportRowsSchema.parse(body);
     return withTenantTransaction(
@@ -181,12 +176,7 @@ export class ImportDuplicatesService {
     );
   }
 
-  async detect(
-    principal: ForgePrincipal,
-    jobId: string,
-    body: unknown,
-    correlationId: string,
-  ) {
+  async detect(principal: ForgePrincipal, jobId: string, body: unknown, correlationId: string) {
     const tenantId = this.requireTenant(principal);
     const data = detectDuplicatesSchema.parse(body) as DetectDuplicatesInput;
     return withTenantTransaction(
@@ -210,14 +200,10 @@ export class ImportDuplicatesService {
         }
 
         let rules: Partial<DuplicateRulesConfig> | undefined = data.rules as
-          | Partial<DuplicateRulesConfig>
-          | undefined;
+          Partial<DuplicateRulesConfig> | undefined;
         if (job.profileId) {
           const profile = await tx.query.importProfiles.findFirst({
-            where: and(
-              eq(importProfiles.tenantId, tenantId),
-              eq(importProfiles.id, job.profileId),
-            ),
+            where: and(eq(importProfiles.tenantId, tenantId), eq(importProfiles.id, job.profileId)),
           });
           if (profile?.duplicateRulesJson && Object.keys(profile.duplicateRulesJson).length > 0) {
             rules = {
@@ -453,10 +439,12 @@ export class ImportDuplicatesService {
           .set({
             reviewStatus: nextReview,
             candidateStatus:
-              nextReview === "APPROVED" || nextReview === "REJECTED" ? "RESOLVED" : row.candidateStatus,
+              nextReview === "APPROVED" || nextReview === "REJECTED"
+                ? "RESOLVED"
+                : row.candidateStatus,
             resolvedAction:
               nextReview === "APPROVED"
-                ? resolvedAction ?? row.recommendedAction
+                ? (resolvedAction ?? row.recommendedAction)
                 : nextReview === "REJECTED"
                   ? "REJECT"
                   : row.resolvedAction,
@@ -567,14 +555,14 @@ export class ImportDuplicatesService {
         });
         if (!job) throw new ForgeError("IMPORT_JOB_NOT_FOUND", "The import job was not found.");
         const file = await tx.query.importFiles.findFirst({
-          where: and(
-            eq(importFiles.tenantId, tenantId),
-            eq(importFiles.jobId, data.jobId),
-          ),
+          where: and(eq(importFiles.tenantId, tenantId), eq(importFiles.jobId, data.jobId)),
         });
         if (!file) throw new ForgeError("IMPORT_FILE_NOT_FOUND", "The import file was not found.");
         if (file.uploadStatus !== "COMPLETED") {
-          throw new ForgeError("IMPORT_UPLOAD_INVALID", "Upload must be completed before ZIP validation.");
+          throw new ForgeError(
+            "IMPORT_UPLOAD_INVALID",
+            "Upload must be completed before ZIP validation.",
+          );
         }
 
         const object = await this.s3.send(
@@ -612,10 +600,7 @@ export class ImportDuplicatesService {
         });
 
         if (!result.ok) {
-          throw new ForgeError(
-            result.code as never,
-            result.message,
-          );
+          throw new ForgeError(result.code as never, result.message);
         }
         return {
           jobId: data.jobId,
