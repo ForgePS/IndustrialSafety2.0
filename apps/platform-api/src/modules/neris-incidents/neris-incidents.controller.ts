@@ -94,6 +94,16 @@ export class NerisIncidentsController {
     return ok(data, getRequestIds(req));
   }
 
+  @Get(":incidentId/field-values")
+  @RequirePermission("rms.neris.incident.view")
+  async fieldValues(
+    @Param("tenantId") tenantId: string,
+    @Param("incidentId") incidentId: string,
+    @Req() req: RequestWithIds,
+  ) {
+    return ok(await this.incidents.listFieldValues(tenantId, incidentId), getRequestIds(req));
+  }
+
   @Patch(":incidentId/field-values")
   @RequirePermission("rms.neris.incident.edit")
   async batchFieldValues(

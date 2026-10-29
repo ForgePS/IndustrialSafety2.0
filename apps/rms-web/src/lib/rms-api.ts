@@ -234,6 +234,25 @@ export type IncidentPersonnelAssignment = {
   recordVersion: number;
 };
 
+export type IncidentFieldValue = {
+  id: string;
+  incidentId: string;
+  fieldId: string;
+  sectionKey: string;
+  repeatableItemId: string | null;
+  valueText: string | null;
+  valueNumber: string | null;
+  valueBoolean: boolean | null;
+  valueTimestamp: string | null;
+  valueOptionId: string | null;
+  valueJson: unknown;
+  prefillSource: string | null;
+  userConfirmed: boolean;
+  recordVersion: number;
+  createdAt: string;
+  updatedAt: string;
+};
+
 export type PrefillCandidate = {
   fieldKey: string;
   sectionKey: string;
@@ -284,13 +303,22 @@ export function patchIncident(
   );
 }
 
+export function listFieldValues(
+  tenantId: string,
+  incidentId: string,
+): Promise<ApiResult<IncidentFieldValue[]>> {
+  return apiGetResult<IncidentFieldValue[]>(
+    `${tenantBase(tenantId)}/neris/incidents/${incidentId}/field-values`,
+  );
+}
+
 export function batchFieldValues(
   tenantId: string,
   incidentId: string,
   values: Array<Record<string, unknown>>,
   recordVersion: number,
-): Promise<ApiResult<{ incident: IncidentDetail; upserted: number }>> {
-  return apiSendResult<{ incident: IncidentDetail; upserted: number }>(
+): Promise<ApiResult<{ incident: IncidentDetail; values: IncidentFieldValue[] }>> {
+  return apiSendResult<{ incident: IncidentDetail; values: IncidentFieldValue[] }>(
     `${tenantBase(tenantId)}/neris/incidents/${incidentId}/field-values`,
     "PATCH",
     { values },

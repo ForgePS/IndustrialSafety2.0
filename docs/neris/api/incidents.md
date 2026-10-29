@@ -107,3 +107,13 @@ Resources: `stations`, `shifts`, `apparatus`, `units`, `personnel`, `rosters`, `
 | `POST`/`PATCH`/`DELETE` | `rms.masterdata.manage` | Create idempotent; patch/delete require `If-Match` |
 
 Rosters additionally expose `POST /rosters/{rosterId}/assignments` and `DELETE /rosters/{rosterId}/assignments/{assignmentId}`.
+
+## Read incident field values
+
+`GET /api/v1/tenants/:tenantId/neris/incidents/:incidentId/field-values`
+
+Requires `rms.neris.incident.view`.
+
+Returns stored field-value rows for the incident, including typed values, repeatable item identity, prefill source, user-confirmed state, record version, and timestamps.
+
+This endpoint supports form resume and rehydration of CAD/prefill values.

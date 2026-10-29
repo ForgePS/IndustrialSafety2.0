@@ -251,4 +251,59 @@ describe("NERIS Phase 2 incidents API", () => {
       .expect(200);
     expect(units.body.data).toHaveLength(1);
   });
+
+  it("reads persisted incident field values with prefill metadata", async () => {
+    const tenant = await harness.createTenant({ moduleCodes: ["CORE", "PERSONNEL", "NERIS"] });
+    const user = await createIncidentUser(tenant.tenantId);
+    await enableIncidentFlags(tenant.tenantId, user.userId);
+    const api = harness.api(user.userId, tenant.tenantId);
+
+    const created = await api
+      .post(`/api/v1/tenants/${tenant.tenantId}/neris/incidents`)
+      .set("Idempotency-Key", createId())
+      .send({ incidentDate: "2026-09-30", dispatchDescription: "CAD prefill read test" })
+      .expect(200);
+
+    const incidentId = created.body.data.id as string;
+    const descriptor = await api
+      .get(`/api/v1/tenants/${tenant.tenantId}/neris/incidents/${incidentId}/form-descriptor`)
+      .expect(200);
+
+    const field = descriptor.body.data.modules
+      .flatMap((module: { sectionKey: string; fields: Array<{ fieldId: string }> }) =>
+        module.fields.map((item) => ({ ...item, sectionKey: module.sectionKey })),
+      )
+      .find((item: { fieldId?: string }) => Boolean(item.fieldId));
+
+    expect(field?.fieldId).toBeTruthy();
+
+    await api
+      .patch(`/api/v1/tenants/${tenant.tenantId}/neris/incidents/${incidentId}/field-values`)
+      .set("If-Match", `W/"${created.body.data.recordVersion}"`)
+      .send({
+        values: [
+          {
+            fieldId: field.fieldId,
+            sectionKey: field.sectionKey,
+            valueText: "CAD supplied value",
+            prefillSource: "CAD",
+            userConfirmed: false,
+          },
+        ],
+      })
+      .expect(200);
+
+    const read = await api
+      .get(`/api/v1/tenants/${tenant.tenantId}/neris/incidents/${incidentId}/field-values`)
+      .expect(200);
+
+    const row = read.body.data.find(
+      (item: { fieldId: string }) => item.fieldId === field.fieldId,
+    );
+    expect(row).toBeTruthy();
+    expect(row.valueText).toBe("CAD supplied value");
+    expect(row.prefillSource).toBe("CAD");
+    expect(row.userConfirmed).toBe(false);
+  });
+
 });
