@@ -8137,7 +8137,7 @@ export class IndustrialDomainService {
         .where(
           and(
             eq(industrialTrainingRecords.tenantId, principal.tenantId),
-            eq(industrialTrainingRecords.personnelId, id),
+            eq(industrialTrainingRecords.personnelId, recordId),
             isNull(industrialTrainingRecords.archivedAt),
           ),
         )
