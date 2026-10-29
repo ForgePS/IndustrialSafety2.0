@@ -9,10 +9,7 @@ import {
   extractBodyLocationsFromPayload,
   parseBodyLocations,
 } from "@/lib/incident-body-map";
-import {
-  parseIncidentAttachments,
-  type IncidentAttachment,
-} from "@/lib/incident-attachments";
+import { parseIncidentAttachments, type IncidentAttachment } from "@/lib/incident-attachments";
 import {
   EMPTY_MEDICAL_REFUSAL_ACKNOWLEDGMENT,
   medicalRefusalAcknowledgmentHasContent,
@@ -48,10 +45,7 @@ export type IncidentCategory =
   | "automotive";
 
 export type IncidentProcessTab =
-  | "incident-workflow"
-  | "evaluation-checklist"
-  | "root-cause-analysis"
-  | "body-map";
+  "incident-workflow" | "evaluation-checklist" | "root-cause-analysis" | "body-map";
 
 export type IncidentWorkspaceTab = IncidentCategory | IncidentProcessTab;
 
@@ -76,7 +70,8 @@ export const INCIDENT_TYPE_TABS: ReadonlyArray<{
   {
     id: "medical-refusals",
     label: "Medical Refusals",
-    description: "Record when an EMPLOYEE declines offered medical treatment or evaluation, including the Treatment Refusal Acknowledgment.",
+    description:
+      "Record when an EMPLOYEE declines offered medical treatment or evaluation, including the Treatment Refusal Acknowledgment.",
   },
   {
     id: "drug-alcohol",
@@ -87,12 +82,14 @@ export const INCIDENT_TYPE_TABS: ReadonlyArray<{
   {
     id: "property-damage",
     label: "Property Damage",
-    description: "Document damage to company or client property, equipment, materials, and structures.",
+    description:
+      "Document damage to company or client property, equipment, materials, and structures.",
   },
   {
     id: "automotive",
     label: "Automotive",
-    description: "Report fleet and vehicle incidents including collisions, damage, and roadside events.",
+    description:
+      "Report fleet and vehicle incidents including collisions, damage, and roadside events.",
   },
 ];
 
@@ -516,7 +513,9 @@ function parseLifecycle(raw: unknown): IncidentLifecycleData | null {
     })
     .filter((s): s is IncidentLifecycleStep => s !== null);
   if (steps.length === 0) return null;
-  const currentStage = String(r.currentStage ?? steps[0]?.stageId ?? "identification") as IncidentLifecycleStageId;
+  const currentStage = String(
+    r.currentStage ?? steps[0]?.stageId ?? "identification",
+  ) as IncidentLifecycleStageId;
   return {
     currentStage: INCIDENT_LIFECYCLE_STAGES.some((s) => s.id === currentStage)
       ? currentStage
@@ -630,9 +629,7 @@ export function toIncidentRecord(row: unknown): IncidentRecord | null {
   const community = text("community") || firstText(r, ["Community"]);
   const division = text("division") || firstText(r, ["Division"]);
   const location =
-    text("location") ||
-    text("site") ||
-    firstText(r, ["IncidentLocationName", "LocationDetail"]);
+    text("location") || text("site") || firstText(r, ["IncidentLocationName", "LocationDetail"]);
   const locationDetail = text("locationDetail") || firstText(r, ["LocationDetail"]);
   const departmentName = text("departmentName") || firstText(r, ["DepartmentName", "department"]);
   const siteId = text("siteId");
@@ -653,29 +650,22 @@ export function toIncidentRecord(row: unknown): IncidentRecord | null {
   const treatmentCity = text("treatmentCity") || firstText(r, ["facilityCity", "TreatmentCity"]);
   const treatmentState =
     text("treatmentState") || firstText(r, ["facilityState", "TreatmentState"]);
-  const treatmentZip =
-    text("treatmentZip") || firstText(r, ["facilityZip", "TreatmentZip"]);
+  const treatmentZip = text("treatmentZip") || firstText(r, ["facilityZip", "TreatmentZip"]);
   const treatedInEr = parseIncidentYesNo(r.treatedInEr ?? r.emergencyRoom);
   const hospitalizedOvernight = parseIncidentYesNo(
     r.hospitalizedOvernight ?? r.hospitalized ?? r.inpatient,
   );
   const completedBy =
     text("completedBy") || firstText(r, ["CompletedBy", "submittedBy", "SubmittedBy"]);
-  const reportedByTitle =
-    text("reportedByTitle") || firstText(r, ["ReportedByTitle"]);
-  const reportedByPhone =
-    text("reportedByPhone") || firstText(r, ["ReportedByPhone"]);
-  const reportedByDateRaw =
-    text("reportedByDate") || firstText(r, ["ReportedByDate"]);
+  const reportedByTitle = text("reportedByTitle") || firstText(r, ["ReportedByTitle"]);
+  const reportedByPhone = text("reportedByPhone") || firstText(r, ["ReportedByPhone"]);
+  const reportedByDateRaw = text("reportedByDate") || firstText(r, ["ReportedByDate"]);
   const reportedByDate = /^\d{4}-\d{2}-\d{2}/.test(reportedByDateRaw)
     ? reportedByDateRaw.slice(0, 10)
     : formatIncidentHireDateForInput(reportedByDateRaw);
-  const completedByTitle =
-    text("completedByTitle") || firstText(r, ["CompletedByTitle", "Title"]);
+  const completedByTitle = text("completedByTitle") || firstText(r, ["CompletedByTitle", "Title"]);
   const completedByPhone =
-    text("completedByPhone") ||
-    firstText(r, ["CompletedByPhone", "Phone"]) ||
-    reportedByPhone;
+    text("completedByPhone") || firstText(r, ["CompletedByPhone", "Phone"]) || reportedByPhone;
   const completedByDateRaw =
     text("completedByDate") || firstText(r, ["CompletedByDate", "reportDate", "submittedAt"]);
   const completedByDate = /^\d{4}-\d{2}-\d{2}/.test(completedByDateRaw)
@@ -745,9 +735,7 @@ export function toIncidentRecord(row: unknown): IncidentRecord | null {
     departmentId,
     locationDetail,
     hireDate: /^\d{4}-\d{2}-\d{2}/.test(hireDate) ? hireDate.slice(0, 10) : hireDate,
-    dateOfBirth: /^\d{4}-\d{2}-\d{2}/.test(dateOfBirth)
-      ? dateOfBirth.slice(0, 10)
-      : dateOfBirth,
+    dateOfBirth: /^\d{4}-\d{2}-\d{2}/.test(dateOfBirth) ? dateOfBirth.slice(0, 10) : dateOfBirth,
     shiftStartTime,
     physicianName,
     treatmentFacility,
@@ -757,8 +745,7 @@ export function toIncidentRecord(row: unknown): IncidentRecord | null {
     treatmentZip,
     treatedInEr,
     hospitalizedOvernight,
-    completedBy:
-      completedBy || text("reportedBy") || firstText(r, ["SubmittedBy", "Person"]),
+    completedBy: completedBy || text("reportedBy") || firstText(r, ["SubmittedBy", "Person"]),
     completedByTitle,
     completedByPhone,
     completedByDate,
@@ -816,8 +803,7 @@ export function incidentReportDetailRows(
     },
     {
       label: "Treated in emergency room",
-      value:
-        incident.treatedInEr === true ? "Yes" : incident.treatedInEr === false ? "No" : "",
+      value: incident.treatedInEr === true ? "Yes" : incident.treatedInEr === false ? "No" : "",
     },
     {
       label: "Hospitalized overnight",
@@ -843,21 +829,16 @@ export function incidentReportDetailRows(
   ];
   const multipleConsents = incident.drugAlcoholConsents.length > 1;
   for (const [index, da] of incident.drugAlcoholConsents.entries()) {
-    const prefix = multipleConsents
-      ? `D&A (${da.employeeName || `employee ${index + 1}`})`
-      : "D&A";
-    rows.push(
-      ...(multipleConsents ? [] : [{ label: "D&A employee", value: da.employeeName }]),
-      { label: `${prefix} testing required`, value: da.testingRequired ? "Yes" : "No" },
-    );
+    const prefix = multipleConsents ? `D&A (${da.employeeName || `employee ${index + 1}`})` : "D&A";
+    rows.push(...(multipleConsents ? [] : [{ label: "D&A employee", value: da.employeeName }]), {
+      label: `${prefix} testing required`,
+      value: da.testingRequired ? "Yes" : "No",
+    });
     if (!da.testingRequired) continue;
     rows.push(
       {
         label: `${prefix} reason`,
-        value:
-          da.reason === "other"
-            ? da.reasonOther || "Other"
-            : da.reason.replace(/-/g, " "),
+        value: da.reason === "other" ? da.reasonOther || "Other" : da.reason.replace(/-/g, " "),
       },
       { label: `${prefix} consent signed`, value: da.employeeSignature ? "Yes" : "" },
       { label: `${prefix} test status`, value: da.testStatus.replace(/-/g, " ") },
@@ -921,10 +902,7 @@ export function incidentWorkspaceHref(
 }
 
 /** Deep link into the Incidents module for a specific report. */
-export function incidentReportHref(incident: {
-  id: string;
-  category?: string | null;
-}): string {
+export function incidentReportHref(incident: { id: string; category?: string | null }): string {
   const parsed = parseIncidentWorkspaceTab(incident.category ?? null);
   const tab = isIncidentCategoryTab(parsed) ? parsed : "injuries";
   const params = new URLSearchParams({
@@ -1120,8 +1098,7 @@ export function incidentRecordToCreateFormState(
   defaultReporter = "",
 ): IncidentCreateFormState {
   const corrective =
-    incident.workDayDetails.trim() &&
-    incident.workDayDetails.trim() !== incident.description.trim()
+    incident.workDayDetails.trim() && incident.workDayDetails.trim() !== incident.description.trim()
       ? incident.workDayDetails
       : incident.workDayDetails.trim();
   const dateOccurred =
@@ -1149,8 +1126,7 @@ export function incidentRecordToCreateFormState(
     reportedByTitle: incident.reportedByTitle,
     reportedByPhone: incident.reportedByPhone,
     reportedByDate:
-      formatIncidentHireDateForInput(incident.reportedByDate) ||
-      dateOccurred.slice(0, 10),
+      formatIncidentHireDateForInput(incident.reportedByDate) || dateOccurred.slice(0, 10),
     dateOccurred,
     status: incident.status || "open",
     personAffected: incident.personAffected,
@@ -1294,7 +1270,13 @@ export function normalizeIncidentShiftStartTime(value?: string | null): string {
     let hour = Number(withAmPm[1]);
     const minute = Number(withAmPm[2]);
     const amPm = withAmPm[3]!.toUpperCase();
-    if (!Number.isFinite(hour) || !Number.isFinite(minute) || hour < 1 || hour > 12 || minute > 59) {
+    if (
+      !Number.isFinite(hour) ||
+      !Number.isFinite(minute) ||
+      hour < 1 ||
+      hour > 12 ||
+      minute > 59
+    ) {
       return "";
     }
     if (amPm === "AM") {
@@ -1480,12 +1462,7 @@ export function resolveIncidentTitleLocation(
   const composed = composeIncidentTitleLocation(extras.departmentLabel, form.community);
   if (composed) return composed;
   // No department and no area — fall back, but never prefer site over division.
-  return firstUsefulLocation(
-    form.division,
-    form.locationDetail,
-    form.location,
-    extras.siteLabel,
-  );
+  return firstUsefulLocation(form.division, form.locationDetail, form.location, extras.siteLabel);
 }
 
 /**
@@ -1669,8 +1646,7 @@ export function buildIncidentCreatePayload(
         };
 
   const locations = parseBodyLocations([...bodyLocations]);
-  const bodyLegacy =
-    locations.length > 0 ? bodyLocationsToLegacyFields(locations) : null;
+  const bodyLegacy = locations.length > 0 ? bodyLocationsToLegacyFields(locations) : null;
   const titleLocation = resolveIncidentTitleLocation(normalized, {
     ...(extras.siteLabel ? { siteLabel: extras.siteLabel } : {}),
     ...(extras.departmentLabel ? { departmentLabel: extras.departmentLabel } : {}),
@@ -1718,9 +1694,7 @@ export function buildIncidentCreatePayload(
     personnelId: (normalized.personnelId ?? "").trim(),
     ...(normalized.division.trim() ? { division: normalized.division.trim() } : {}),
     ...(normalized.community.trim() ? { community: normalized.community.trim() } : {}),
-    ...(normalized.witnessNames.trim()
-      ? { witnessNames: normalized.witnessNames.trim() }
-      : {}),
+    ...(normalized.witnessNames.trim() ? { witnessNames: normalized.witnessNames.trim() } : {}),
     ...(normalized.correctiveActions.trim()
       ? {
           correctiveActions: normalized.correctiveActions.trim(),
@@ -1737,16 +1711,12 @@ export function buildIncidentCreatePayload(
         }
       : { workersCompRelevant: false, workersCompNotes: "" }),
     ...(normalized.departmentId ? { departmentId: normalized.departmentId } : {}),
-    ...(extras.departmentLabel?.trim()
-      ? { departmentName: extras.departmentLabel.trim() }
-      : {}),
+    ...(extras.departmentLabel?.trim() ? { departmentName: extras.departmentLabel.trim() } : {}),
     ...(normalized.locationDetail.trim()
       ? { locationDetail: normalized.locationDetail.trim() }
       : {}),
     ...(normalized.hireDate?.trim() ? { hireDate: normalized.hireDate.trim() } : {}),
-    ...(normalized.dateOfBirth?.trim()
-      ? { dateOfBirth: normalized.dateOfBirth.trim() }
-      : {}),
+    ...(normalized.dateOfBirth?.trim() ? { dateOfBirth: normalized.dateOfBirth.trim() } : {}),
     ...(normalizeIncidentShiftStartTime(normalized.shiftStartTime)
       ? { shiftStartTime: normalizeIncidentShiftStartTime(normalized.shiftStartTime) }
       : { shiftStartTime: "" }),
@@ -1959,7 +1929,10 @@ export function createDefaultRootCauseAnalysis(incident?: IncidentRecord): RootC
 }
 
 function clipWhyText(text: string, max = 120): string {
-  const clean = text.trim().replace(/\s+/g, " ").replace(/[.?!]+$/, "");
+  const clean = text
+    .trim()
+    .replace(/\s+/g, " ")
+    .replace(/[.?!]+$/, "");
   return clean.length > max ? `${clean.slice(0, max - 1).trimEnd()}…` : clean;
 }
 
@@ -2003,9 +1976,7 @@ export function ensureRootCauseAnalysis(incident: IncidentRecord): RootCauseAnal
       correctiveActions: rca.correctiveActions.length
         ? rca.correctiveActions.map((a) => ({ ...a }))
         : [emptyCorrectiveAction()],
-      participantsInvolved: rca.participantsInvolved.length
-        ? [...rca.participantsInvolved]
-        : [""],
+      participantsInvolved: rca.participantsInvolved.length ? [...rca.participantsInvolved] : [""],
     };
   }
   return createDefaultRootCauseAnalysis(incident);
@@ -2064,7 +2035,10 @@ export function compareIncidentsNumerically(a: IncidentRecord, b: IncidentRecord
   if (dateA && dateB && dateA !== dateB) return dateA < dateB ? -1 : 1;
   if (dateA && !dateB) return -1;
   if (!dateA && dateB) return 1;
-  const titleCmp = a.title.localeCompare(b.title, undefined, { numeric: true, sensitivity: "base" });
+  const titleCmp = a.title.localeCompare(b.title, undefined, {
+    numeric: true,
+    sensitivity: "base",
+  });
   if (titleCmp !== 0) return titleCmp;
   return a.id.localeCompare(b.id);
 }
@@ -2099,7 +2073,10 @@ export function compareIncidentsByDate(
     const ascending = dateA < dateB ? -1 : 1;
     return sort === "oldest" ? ascending : -ascending;
   }
-  const titleCmp = a.title.localeCompare(b.title, undefined, { numeric: true, sensitivity: "base" });
+  const titleCmp = a.title.localeCompare(b.title, undefined, {
+    numeric: true,
+    sensitivity: "base",
+  });
   if (titleCmp !== 0) return sort === "oldest" ? titleCmp : -titleCmp;
   return sort === "oldest" ? a.id.localeCompare(b.id) : b.id.localeCompare(a.id);
 }
@@ -2124,10 +2101,7 @@ export type IncidentYearGroup = {
 
 /** Count undated rows in a filtered year-group list. */
 export function countUndatedIncidents(groups: readonly IncidentYearGroup[]): number {
-  return groups.reduce(
-    (sum, group) => sum + (group.year == null ? group.items.length : 0),
-    0,
-  );
+  return groups.reduce((sum, group) => sum + (group.year == null ? group.items.length : 0), 0);
 }
 
 /**

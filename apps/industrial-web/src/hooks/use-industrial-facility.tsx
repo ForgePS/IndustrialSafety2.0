@@ -1,6 +1,14 @@
 "use client";
 
-import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useState,
+  type ReactNode,
+} from "react";
 import { apiGet } from "@forge/web-kit";
 import { filterDepartmentsForSite } from "@/lib/personnel-assignment";
 import {
@@ -73,7 +81,9 @@ export function useIndustrialFacilityState(
         ]);
         if (cancelled) return;
         const storedFacility =
-          typeof window !== "undefined" ? window.localStorage.getItem(facilityStorageKey(tenantId)) : null;
+          typeof window !== "undefined"
+            ? window.localStorage.getItem(facilityStorageKey(tenantId))
+            : null;
         const nextFacility = pickActiveFacilityId(options, storedFacility);
         const nextDepartments = normalizeDepartmentOptions(deptRows);
         const storedDepartment =
@@ -138,7 +148,10 @@ export function useIndustrialFacilityState(
 
   useEffect(() => {
     if (!tenantId || !enabled) return;
-    if (!departmentsForFacility.some((row) => row.id === departmentId) && departmentId !== ALL_DEPARTMENTS_ID) {
+    if (
+      !departmentsForFacility.some((row) => row.id === departmentId) &&
+      departmentId !== ALL_DEPARTMENTS_ID
+    ) {
       setDepartmentIdState(ALL_DEPARTMENTS_ID);
       if (typeof window !== "undefined") {
         window.localStorage.setItem(departmentStorageKey(tenantId, facilityId), ALL_DEPARTMENTS_ID);
@@ -230,7 +243,9 @@ export function IndustrialFacilityProvider({
   children: ReactNode;
 }) {
   return (
-    <IndustrialFacilityContext.Provider value={value}>{children}</IndustrialFacilityContext.Provider>
+    <IndustrialFacilityContext.Provider value={value}>
+      {children}
+    </IndustrialFacilityContext.Provider>
   );
 }
 

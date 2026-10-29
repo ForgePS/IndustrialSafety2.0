@@ -7,12 +7,7 @@ type PrinterStatusChipProps = {
   transport?: string | null;
 };
 
-export function PrinterStatusChip({
-  ready,
-  connected,
-  online,
-  transport,
-}: PrinterStatusChipProps) {
+export function PrinterStatusChip({ ready, connected, online, transport }: PrinterStatusChipProps) {
   let label = "Offline";
   let tone: "success" | "warning" | "muted" | "info" = "muted";
   if (ready) {
@@ -29,7 +24,10 @@ export function PrinterStatusChip({
   const isBt =
     String(transport ?? "")
       .toUpperCase()
-      .includes("BLUETOOTH") || String(transport ?? "").toUpperCase().includes("BRADY");
+      .includes("BLUETOOTH") ||
+    String(transport ?? "")
+      .toUpperCase()
+      .includes("BRADY");
 
   return (
     <span className={`ff-chip ff-chip--${tone}`} title={transport ?? undefined}>

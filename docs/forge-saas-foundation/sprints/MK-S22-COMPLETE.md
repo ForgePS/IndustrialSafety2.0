@@ -30,12 +30,12 @@ Local Postgres/Docker unavailable in the sprint agent environment. Offline scena
 
 ## Verification
 
-| Check | Result |
-| --- | --- |
+| Check                   | Result                     |
+| ----------------------- | -------------------------- |
 | lifecycle scenario unit | PASS (run at sprint close) |
-| platform-api typecheck | PASS (run at sprint close) |
-| lifecycle e2e | AUTHED / DB-GATED |
-| Production operations | NONE |
+| platform-api typecheck  | PASS (run at sprint close) |
+| lifecycle e2e           | AUTHED / DB-GATED          |
+| Production operations   | NONE                       |
 
 ## Next sprint
 

@@ -88,7 +88,9 @@ export function defaultAssignmentFilters(): AssignmentRosterFilters {
   };
 }
 
-export function buildPersonnelMetaMap(people: readonly RosterPerson[]): Map<string, PersonnelAssignmentMeta> {
+export function buildPersonnelMetaMap(
+  people: readonly RosterPerson[],
+): Map<string, PersonnelAssignmentMeta> {
   const map = new Map<string, PersonnelAssignmentMeta>();
   for (const person of people) {
     const meta: PersonnelAssignmentMeta = {
@@ -223,7 +225,8 @@ export function filterAssignmentPersonnelRow(
 
   if (filters.siteId && locationKey(row, meta) !== filters.siteId) return false;
   if (filters.divisionName && orgKey(meta?.divisionName) !== filters.divisionName) return false;
-  if (filters.departmentName && orgKey(meta?.departmentName) !== filters.departmentName) return false;
+  if (filters.departmentName && orgKey(meta?.departmentName) !== filters.departmentName)
+    return false;
   if (filters.groupId && !(row.groupIds ?? []).includes(filters.groupId)) return false;
   if (filters.personnelId && row.personnelId !== filters.personnelId) return false;
   if (filters.status && row.status.toUpperCase() !== filters.status.toUpperCase()) return false;

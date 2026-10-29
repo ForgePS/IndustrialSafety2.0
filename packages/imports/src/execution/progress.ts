@@ -92,5 +92,8 @@ export const MIN_EXECUTION_BATCH_SIZE = 1;
 
 export function resolveBatchSize(requested?: number): number {
   if (requested == null || Number.isNaN(requested)) return DEFAULT_EXECUTION_BATCH_SIZE;
-  return Math.min(MAX_EXECUTION_BATCH_SIZE, Math.max(MIN_EXECUTION_BATCH_SIZE, Math.floor(requested)));
+  return Math.min(
+    MAX_EXECUTION_BATCH_SIZE,
+    Math.max(MIN_EXECUTION_BATCH_SIZE, Math.floor(requested)),
+  );
 }

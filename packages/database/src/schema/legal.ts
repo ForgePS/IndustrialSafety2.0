@@ -69,10 +69,7 @@ export const legalDocumentVersions = pgTable(
       table.legalDocumentId,
       table.versionNumber,
     ),
-    index("legal_document_versions_status_effective_idx").on(
-      table.status,
-      table.effectiveAt,
-    ),
+    index("legal_document_versions_status_effective_idx").on(table.status, table.effectiveAt),
     index("legal_document_versions_tenant_idx").on(table.tenantId),
   ],
 );
@@ -201,9 +198,7 @@ export const attestationTemplates = pgTable(
     createdAt: createdAtColumn,
     updatedAt: updatedAtColumn,
   },
-  (table) => [
-    index("attestation_templates_product_module_idx").on(table.product, table.module),
-  ],
+  (table) => [index("attestation_templates_product_module_idx").on(table.product, table.module)],
 );
 
 export const attestationTemplateVersions = pgTable(
@@ -244,7 +239,9 @@ export const transactionAttestations = pgTable(
       .notNull()
       .references(() => users.id),
     personnelId: uuid("personnel_id"),
-    attestationTemplateId: uuid("attestation_template_id").references(() => attestationTemplates.id),
+    attestationTemplateId: uuid("attestation_template_id").references(
+      () => attestationTemplates.id,
+    ),
     attestationVersion: varchar("attestation_version", { length: 64 }).notNull(),
     attestationText: text("attestation_text").notNull(),
     attestationHash: varchar("attestation_hash", { length: 64 }).notNull(),

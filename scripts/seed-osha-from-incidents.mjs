@@ -75,16 +75,22 @@ function unwrapPayload(raw) {
 function isInjury(payload) {
   const cat = asText(payload.category || payload.incidentCategory).toLowerCase();
   if (cat === "injuries" || cat === "injury") return true;
-  if (!cat && (payload.oshaRecordable != null || payload.workersComp || payload.workersCompIncident)) {
+  if (
+    !cat &&
+    (payload.oshaRecordable != null || payload.workersComp || payload.workersCompIncident)
+  ) {
     return true;
   }
   return false;
 }
 
 function normalizeRecordability(raw) {
-  const text = asText(raw).toUpperCase().replace(/[\s-]+/g, "_");
+  const text = asText(raw)
+    .toUpperCase()
+    .replace(/[\s-]+/g, "_");
   if (text === "RECORDABLE" || text === "YES") return "RECORDABLE";
-  if (text === "NOT_RECORDABLE" || text === "NON_RECORDABLE" || text === "NO") return "NOT_RECORDABLE";
+  if (text === "NOT_RECORDABLE" || text === "NON_RECORDABLE" || text === "NO")
+    return "NOT_RECORDABLE";
   if (text === "PRIVACY_CASE" || text === "PRIVACY") return "PRIVACY_CASE";
   if (text === "PENDING" || text === "UNDETERMINED" || !text) return "PENDING";
   return "PENDING";
@@ -140,7 +146,10 @@ function buildCasePayload({
       asText(merged.employeeName) ||
       "OSHA case",
     incidentTitle:
-      asText(existing.incidentTitle) || asText(incidentTitle) || asText(incidentPayload.title) || "",
+      asText(existing.incidentTitle) ||
+      asText(incidentTitle) ||
+      asText(incidentPayload.title) ||
+      "",
     employeeName:
       asText(existing.employeeName) ||
       asText(merged.employeeName) ||

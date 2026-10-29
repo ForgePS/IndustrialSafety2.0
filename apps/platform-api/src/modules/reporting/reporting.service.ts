@@ -53,7 +53,11 @@ import {
   type ReportAdapterSources,
   type ReportRunResult,
 } from "./reporting-adapters.js";
-import { getReportDataset, getReportDatasetFields, listReportDatasets } from "./reporting-registry.js";
+import {
+  getReportDataset,
+  getReportDatasetFields,
+  listReportDatasets,
+} from "./reporting-registry.js";
 import { BUILTIN_REPORTS, builtinByKey } from "./reporting-catalog.js";
 import {
   computeNextCronRun,
@@ -239,58 +243,64 @@ export class ReportingService {
     monthStart.setUTCDate(1);
     monthStart.setUTCHours(0, 0, 0, 0);
 
-    return withTenantTransaction(this.db, tenantId, async (tx) => {
-      const [saved] = await tx
-        .select({ count: sql<number>`count(*)::int` })
-        .from(reportDefinitions)
-        .where(
-          and(
-            eq(reportDefinitions.tenantId, tenantId),
-            eq(reportDefinitions.origin, "saved"),
-            isNull(reportDefinitions.deletedAt),
-          ),
-        );
-      const [scheduled] = await tx
-        .select({ count: sql<number>`count(*)::int` })
-        .from(reportSchedules)
-        .where(
-          and(eq(reportSchedules.tenantId, tenantId), isNull(reportSchedules.deletedAt)),
-        );
-      const [runsThisMonth] = await tx
-        .select({ count: sql<number>`count(*)::int` })
-        .from(reportExecutions)
-        .where(
-          and(
-            eq(reportExecutions.tenantId, tenantId),
-            gte(reportExecutions.createdAt, monthStart),
-          ),
-        );
-      const [recentExports] = await tx
-        .select({ count: sql<number>`count(*)::int` })
-        .from(reportExports)
-        .where(eq(reportExports.tenantId, tenantId));
-      const [favorites] = await tx
-        .select({ count: sql<number>`count(*)::int` })
-        .from(reportFavorites)
-        .where(
-          and(eq(reportFavorites.tenantId, tenantId), eq(reportFavorites.userId, principal.userId)),
-        );
+    return withTenantTransaction(
+      this.db,
+      tenantId,
+      async (tx) => {
+        const [saved] = await tx
+          .select({ count: sql<number>`count(*)::int` })
+          .from(reportDefinitions)
+          .where(
+            and(
+              eq(reportDefinitions.tenantId, tenantId),
+              eq(reportDefinitions.origin, "saved"),
+              isNull(reportDefinitions.deletedAt),
+            ),
+          );
+        const [scheduled] = await tx
+          .select({ count: sql<number>`count(*)::int` })
+          .from(reportSchedules)
+          .where(and(eq(reportSchedules.tenantId, tenantId), isNull(reportSchedules.deletedAt)));
+        const [runsThisMonth] = await tx
+          .select({ count: sql<number>`count(*)::int` })
+          .from(reportExecutions)
+          .where(
+            and(
+              eq(reportExecutions.tenantId, tenantId),
+              gte(reportExecutions.createdAt, monthStart),
+            ),
+          );
+        const [recentExports] = await tx
+          .select({ count: sql<number>`count(*)::int` })
+          .from(reportExports)
+          .where(eq(reportExports.tenantId, tenantId));
+        const [favorites] = await tx
+          .select({ count: sql<number>`count(*)::int` })
+          .from(reportFavorites)
+          .where(
+            and(
+              eq(reportFavorites.tenantId, tenantId),
+              eq(reportFavorites.userId, principal.userId),
+            ),
+          );
 
-      const complianceBuiltinCount = BUILTIN_REPORTS.filter(
-        (r) => r.reportType === "compliance",
-      ).length;
-      const libraryCount = BUILTIN_REPORTS.length + (saved?.count ?? 0);
+        const complianceBuiltinCount = BUILTIN_REPORTS.filter(
+          (r) => r.reportType === "compliance",
+        ).length;
+        const libraryCount = BUILTIN_REPORTS.length + (saved?.count ?? 0);
 
-      return {
-        savedReports: saved?.count ?? 0,
-        scheduled: scheduled?.count ?? 0,
-        runsThisMonth: runsThisMonth?.count ?? 0,
-        complianceBuiltinCount,
-        recentExports: recentExports?.count ?? 0,
-        libraryCount,
-        favorites: favorites?.count ?? 0,
-      };
-    }, principal.userId);
+        return {
+          savedReports: saved?.count ?? 0,
+          scheduled: scheduled?.count ?? 0,
+          runsThisMonth: runsThisMonth?.count ?? 0,
+          complianceBuiltinCount,
+          recentExports: recentExports?.count ?? 0,
+          libraryCount,
+          favorites: favorites?.count ?? 0,
+        };
+      },
+      principal.userId,
+    );
   }
 
   async listReports(
@@ -486,7 +496,13 @@ export class ReportingService {
 
     const started = Date.now();
     const { result, definitionId } = await this.resolveAndRun(principal, key, parsed.data);
-    return this.persistExecution(principal, result, definitionId, parsed.data, Date.now() - started);
+    return this.persistExecution(
+      principal,
+      result,
+      definitionId,
+      parsed.data,
+      Date.now() - started,
+    );
   }
 
   private async persistExecution(
@@ -571,7 +587,7 @@ export class ReportingService {
     const large = contentBase64.length > INLINE_MAX_CHARS;
 
     let artifactObjectKey: string | null = null;
-    let artifactInline: string | null = large ? null : contentBase64;
+    const artifactInline: string | null = large ? null : contentBase64;
     let jobId: string | null = null;
     let storage: "INLINE" | "S3" = "INLINE";
 
@@ -598,9 +614,7 @@ export class ReportingService {
       }
     }
 
-    const expiresAt = large
-      ? new Date(Date.now() + EXPORT_DOWNLOAD_TTL_SECONDS * 1000 * 24)
-      : null;
+    const expiresAt = large ? new Date(Date.now() + EXPORT_DOWNLOAD_TTL_SECONDS * 1000 * 24) : null;
 
     await withTenantTransaction(
       this.db,
@@ -670,9 +684,7 @@ export class ReportingService {
       principal.userId,
     );
 
-    const downloadUrl = large
-      ? `/api/v1/reporting/exports/${exportId}/download`
-      : null;
+    const downloadUrl = large ? `/api/v1/reporting/exports/${exportId}/download` : null;
 
     return {
       exportId,
@@ -1056,7 +1068,10 @@ export class ReportingService {
           .from(reportSchedules)
           .leftJoin(reportDefinitions, eq(reportDefinitions.id, reportSchedules.reportDefinitionId))
           .where(
-            and(eq(reportSchedules.tenantId, principal.tenantId), isNull(reportSchedules.deletedAt)),
+            and(
+              eq(reportSchedules.tenantId, principal.tenantId),
+              isNull(reportSchedules.deletedAt),
+            ),
           )
           .orderBy(desc(reportSchedules.createdAt))
           .limit(200);
@@ -1193,9 +1208,7 @@ export class ReportingService {
           .update(reportSchedules)
           .set({
             ...(input.name !== undefined ? { name: input.name } : {}),
-            ...(input.cronExpression !== undefined
-              ? { cronExpression: input.cronExpression }
-              : {}),
+            ...(input.cronExpression !== undefined ? { cronExpression: input.cronExpression } : {}),
             ...(input.timezone !== undefined ? { timezone: input.timezone ?? "UTC" } : {}),
             ...(input.format !== undefined ? { format: input.format } : {}),
             ...(input.enabled !== undefined ? { enabled: input.enabled } : {}),
@@ -1263,10 +1276,7 @@ export class ReportingService {
     }
     const input = parsed.data;
     if (!input.sharedWithUserId && !input.sharedWithRoleId) {
-      throw new ForgeError(
-        "VALIDATION_FAILED",
-        "sharedWithUserId or sharedWithRoleId is required",
-      );
+      throw new ForgeError("VALIDATION_FAILED", "sharedWithUserId or sharedWithRoleId is required");
     }
     const id = createId();
 
@@ -1386,9 +1396,9 @@ export class ReportingService {
         const runInput = resolveRelativeDateRange(
           reportRunInputSchema.parse(schedule.runInputJson ?? {}),
         );
-        const format = (["csv", "xlsx", "pdf"].includes(schedule.format)
-          ? schedule.format
-          : "csv") as ReportExportFormat;
+        const format = (
+          ["csv", "xlsx", "pdf"].includes(schedule.format) ? schedule.format : "csv"
+        ) as ReportExportFormat;
 
         const exported = await this.exportReport(principal, schedule.reportDefinitionId, {
           ...runInput,
@@ -1520,10 +1530,7 @@ export class ReportingService {
    * Platform sweep: find tenants with due enabled schedules (bypass RLS), then
    * run each tenant's due schedules under a synthetic platform principal.
    */
-  async runDueSchedulesSweep(options?: {
-    correlationId?: string;
-    requestId?: string;
-  }) {
+  async runDueSchedulesSweep(options?: { correlationId?: string; requestId?: string }) {
     const now = new Date();
     const correlationId = options?.correlationId ?? createId();
     const requestId = options?.requestId ?? createId();
@@ -1683,7 +1690,10 @@ export class ReportingService {
       return { mode: "none", accepted: 0, results: [] };
     }
     if (!this.industrialDomain) {
-      throw new ForgeError("INTERNAL_ERROR", "Workers' Comp weekly status delivery is not available");
+      throw new ForgeError(
+        "INTERNAL_ERROR",
+        "Workers' Comp weekly status delivery is not available",
+      );
     }
     const outcome = await this.industrialDomain.sendWorkersCompWeeklyStatus(principal, {
       recipients: recipients.map((r) => r.email),
@@ -1714,96 +1724,96 @@ export class ReportingService {
         this.db,
         actor.tenantId,
         async (tx) => {
-        const [row] = await tx
-          .select({
-            id: tenantSettings.id,
-            valueJson: tenantSettings.valueJson,
-            updatedByUserId: tenantSettings.updatedByUserId,
-          })
-          .from(tenantSettings)
-          .where(
-            and(
-              eq(tenantSettings.tenantId, actor.tenantId),
-              eq(tenantSettings.namespace, WC_WEEKLY_STATUS_SETTINGS_NAMESPACE),
-              eq(tenantSettings.settingKey, WC_WEEKLY_STATUS_SETTINGS_KEY),
-            ),
-          )
-          .limit(1);
-        if (!row) return undefined;
-        const settings = parseWorkersCompWeeklyStatusSettings(row.valueJson);
-        if (!settings.enabled) return undefined;
+          const [row] = await tx
+            .select({
+              id: tenantSettings.id,
+              valueJson: tenantSettings.valueJson,
+              updatedByUserId: tenantSettings.updatedByUserId,
+            })
+            .from(tenantSettings)
+            .where(
+              and(
+                eq(tenantSettings.tenantId, actor.tenantId),
+                eq(tenantSettings.namespace, WC_WEEKLY_STATUS_SETTINGS_NAMESPACE),
+                eq(tenantSettings.settingKey, WC_WEEKLY_STATUS_SETTINGS_KEY),
+              ),
+            )
+            .limit(1);
+          if (!row) return undefined;
+          const settings = parseWorkersCompWeeklyStatusSettings(row.valueJson);
+          if (!settings.enabled) return undefined;
 
-        const [existing] = await tx
-          .select({ id: reportSchedules.id })
-          .from(reportSchedules)
-          .innerJoin(
-            reportDefinitions,
-            eq(reportDefinitions.id, reportSchedules.reportDefinitionId),
-          )
-          .where(
-            and(
-              eq(reportSchedules.tenantId, actor.tenantId),
-              isNull(reportSchedules.deletedAt),
-              eq(reportDefinitions.sourceKey, WC_WEEKLY_STATUS_REPORT_KEY),
-            ),
-          )
-          .limit(1);
+          const [existing] = await tx
+            .select({ id: reportSchedules.id })
+            .from(reportSchedules)
+            .innerJoin(
+              reportDefinitions,
+              eq(reportDefinitions.id, reportSchedules.reportDefinitionId),
+            )
+            .where(
+              and(
+                eq(reportSchedules.tenantId, actor.tenantId),
+                isNull(reportSchedules.deletedAt),
+                eq(reportDefinitions.sourceKey, WC_WEEKLY_STATUS_REPORT_KEY),
+              ),
+            )
+            .limit(1);
 
-        let createdId: string | null = null;
-        if (!existing) {
-          const actorUserId = row.updatedByUserId ?? actor.userId;
-          const meta = builtinByKey(WC_WEEKLY_STATUS_REPORT_KEY);
-          const definitionId = createId();
-          await tx.insert(reportDefinitions).values({
-            id: definitionId,
-            tenantId: actor.tenantId,
-            reportKey: null,
-            name: meta?.name ?? "Workers' Comp Weekly Status",
-            description: meta?.description ?? null,
-            origin: "saved",
-            category: meta?.category ?? "WorkersComp",
-            moduleCode: meta?.module ?? "Workers' Comp",
-            reportType: meta?.reportType ?? "operational",
-            sourceKey: WC_WEEKLY_STATUS_REPORT_KEY,
-            payloadJson: {},
-            status: "ACTIVE",
-            createdByUserId: actorUserId,
-            updatedByUserId: actorUserId,
-          });
-          createdId = createId();
-          await tx.insert(reportSchedules).values({
-            id: createdId,
-            tenantId: actor.tenantId,
-            reportDefinitionId: definitionId,
-            name: meta?.name ?? "Workers' Comp Weekly Status",
-            cronExpression: WC_WEEKLY_STATUS_DEFAULT_CRON,
-            timezone: "America/Chicago",
-            format: "pdf",
-            enabled: true,
-            runInputJson: {},
-            nextRunAt: computeNextCronRun(WC_WEEKLY_STATUS_DEFAULT_CRON),
-            createdByUserId: actorUserId,
-          });
-          for (const email of settings.recipients) {
-            await tx.insert(reportRecipients).values({
-              id: createId(),
+          let createdId: string | null = null;
+          if (!existing) {
+            const actorUserId = row.updatedByUserId ?? actor.userId;
+            const meta = builtinByKey(WC_WEEKLY_STATUS_REPORT_KEY);
+            const definitionId = createId();
+            await tx.insert(reportDefinitions).values({
+              id: definitionId,
               tenantId: actor.tenantId,
-              scheduleId: createdId,
-              email,
-              name: null,
+              reportKey: null,
+              name: meta?.name ?? "Workers' Comp Weekly Status",
+              description: meta?.description ?? null,
+              origin: "saved",
+              category: meta?.category ?? "WorkersComp",
+              moduleCode: meta?.module ?? "Workers' Comp",
+              reportType: meta?.reportType ?? "operational",
+              sourceKey: WC_WEEKLY_STATUS_REPORT_KEY,
+              payloadJson: {},
+              status: "ACTIVE",
+              createdByUserId: actorUserId,
+              updatedByUserId: actorUserId,
             });
+            createdId = createId();
+            await tx.insert(reportSchedules).values({
+              id: createdId,
+              tenantId: actor.tenantId,
+              reportDefinitionId: definitionId,
+              name: meta?.name ?? "Workers' Comp Weekly Status",
+              cronExpression: WC_WEEKLY_STATUS_DEFAULT_CRON,
+              timezone: "America/Chicago",
+              format: "pdf",
+              enabled: true,
+              runInputJson: {},
+              nextRunAt: computeNextCronRun(WC_WEEKLY_STATUS_DEFAULT_CRON),
+              createdByUserId: actorUserId,
+            });
+            for (const email of settings.recipients) {
+              await tx.insert(reportRecipients).values({
+                id: createId(),
+                tenantId: actor.tenantId,
+                scheduleId: createdId,
+                email,
+                name: null,
+              });
+            }
           }
-        }
 
-        await tx
-          .update(tenantSettings)
-          .set({
-            valueJson: { ...settings, enabled: false },
-            recordVersion: sql`${tenantSettings.recordVersion} + 1`,
-            updatedAt: new Date(),
-          })
-          .where(eq(tenantSettings.id, row.id));
-        return createdId ?? existing?.id ?? null;
+          await tx
+            .update(tenantSettings)
+            .set({
+              valueJson: { ...settings, enabled: false },
+              recordVersion: sql`${tenantSettings.recordVersion} + 1`,
+              updatedAt: new Date(),
+            })
+            .where(eq(tenantSettings.id, row.id));
+          return createdId ?? existing?.id ?? null;
         },
         actor.userId,
       );

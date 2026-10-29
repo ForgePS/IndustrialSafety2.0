@@ -73,18 +73,19 @@ REMAINING CONDITIONS:
 - Full Nest E2E security suite still recommended
 - Ensure admin roles include industrial.legal.* for compliance UI
 ```
+
 ## Deliverables map
 
-| Area | Location |
-| --- | --- |
-| Docs | `docs/legal-acknowledgments/` |
-| Schema | `packages/database/src/schema/legal.ts` |
-| Migration | `packages/database/drizzle/0052_legal_acknowledgments_s1.sql` |
-| Seed | `packages/database/src/seed-legal-acknowledgments.ts` |
-| API | `apps/platform-api/src/modules/legal/` |
-| Gate UI | `apps/industrial-web/src/app/legal/acknowledge/page.tsx` |
-| Profile | `apps/industrial-web/src/app/profile/legal/page.tsx` |
-| Admin | `apps/industrial-web/src/app/settings/compliance/page.tsx` |
+| Area           | Location                                                               |
+| -------------- | ---------------------------------------------------------------------- |
+| Docs           | `docs/legal-acknowledgments/`                                          |
+| Schema         | `packages/database/src/schema/legal.ts`                                |
+| Migration      | `packages/database/drizzle/0052_legal_acknowledgments_s1.sql`          |
+| Seed           | `packages/database/src/seed-legal-acknowledgments.ts`                  |
+| API            | `apps/platform-api/src/modules/legal/`                                 |
+| Gate UI        | `apps/industrial-web/src/app/legal/acknowledge/page.tsx`               |
+| Profile        | `apps/industrial-web/src/app/profile/legal/page.tsx`                   |
+| Admin          | `apps/industrial-web/src/app/settings/compliance/page.tsx`             |
 | Attestation UI | `apps/industrial-web/src/components/transaction-attestation-panel.tsx` |
 
 ## Rollback

@@ -154,11 +154,7 @@ export {
   createFacilityInputSchema,
   patchFacilityInputSchema,
 } from "./tenant-domain.js";
-export type {
-  TenantStatus,
-  CreateFacilityInput,
-  PatchFacilityInput,
-} from "./tenant-domain.js";
+export type { TenantStatus, CreateFacilityInput, PatchFacilityInput } from "./tenant-domain.js";
 
 export {
   BRANDING_ASSET_KINDS,
@@ -334,9 +330,7 @@ export const setMembershipFacilityScopeInputSchema = z.object({
   facilityIds: z.array(z.string().uuid()).max(100),
 });
 
-export type SetMembershipFacilityScopeInput = z.infer<
-  typeof setMembershipFacilityScopeInputSchema
->;
+export type SetMembershipFacilityScopeInput = z.infer<typeof setMembershipFacilityScopeInputSchema>;
 
 // ---------------------------------------------------------------------------
 // Memberships (ADR-021)
@@ -350,10 +344,7 @@ export {
   isMembershipStatusActive,
   membershipStatusBlocksTenantSelection,
 } from "./membership-domain.js";
-export type {
-  MembershipStatus,
-  SaasMembershipStatusAlias,
-} from "./membership-domain.js";
+export type { MembershipStatus, SaasMembershipStatusAlias } from "./membership-domain.js";
 
 // ---------------------------------------------------------------------------
 // RBAC (FORGE-SAAS MK-S4)
@@ -887,7 +878,6 @@ export {
   FIELD_SUPERVISOR_PERMISSIONS,
   type FieldPermission,
 } from "./field.js";
-
 
 /** All seeded permission codes (platform + RMS + industrial + field + product AI + import). */
 export const ALL_PERMISSIONS = [

@@ -60,7 +60,9 @@ test.describe("Phase 3 specialty mobile matrix @phase3", () => {
       await activateSpecialtySection(page, tenantId!, incidentId, "FIRE_PROTECTION");
 
       await openIncidentSection(page, incidentId, "REVIEW");
-      await expect(page.getByRole("heading", { name: /officer review|specialty review/i }).first()).toBeVisible({
+      await expect(
+        page.getByRole("heading", { name: /officer review|specialty review/i }).first(),
+      ).toBeVisible({
         timeout: 20_000,
       });
       await assertNoHorizontalScroll(page);

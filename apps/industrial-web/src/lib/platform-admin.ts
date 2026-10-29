@@ -7,19 +7,22 @@ import { apiGet, apiGetResult, apiSend } from "@forge/web-kit";
 
 import { canAccessUserManagement } from "@/lib/user-management";
 
-export type AuthLike = {
-  isPlatformAdmin?: boolean;
-  permissions?: readonly string[];
-  activeProducts?: readonly string[];
-  tenantId?: string | null;
-  /** Active tenant is a synthetic demo environment (forge-platform). */
-  isDemoTenant?: boolean;
-  tenants?: ReadonlyArray<{
-    tenantId: string;
-    slug: string;
-    isDemoTenant?: boolean;
-  }>;
-} | null | undefined;
+export type AuthLike =
+  | {
+      isPlatformAdmin?: boolean;
+      permissions?: readonly string[];
+      activeProducts?: readonly string[];
+      tenantId?: string | null;
+      /** Active tenant is a synthetic demo environment (forge-platform). */
+      isDemoTenant?: boolean;
+      tenants?: ReadonlyArray<{
+        tenantId: string;
+        slug: string;
+        isDemoTenant?: boolean;
+      }>;
+    }
+  | null
+  | undefined;
 
 /** Walkthrough Studio / Executive Walkthrough — Forge Platform demo tenants only. */
 export function isWalkthroughEligibleTenant(me: AuthLike): boolean {
@@ -39,7 +42,11 @@ export function hasAnyPermission(me: AuthLike, codes: string[]): boolean {
 }
 
 export function canReadAuditLog(me: AuthLike): boolean {
-  return hasAnyPermission(me, ["platform.audit.read", "industrial.admin", "platform.membership.manage"]);
+  return hasAnyPermission(me, [
+    "platform.audit.read",
+    "industrial.admin",
+    "platform.membership.manage",
+  ]);
 }
 
 export function canManageTrainingPortalQr(me: AuthLike): boolean {
@@ -133,7 +140,11 @@ export function canPublishConfiguration(me: AuthLike): boolean {
 }
 
 export function canReadInvitations(me: AuthLike): boolean {
-  return hasAnyPermission(me, ["platform.invitation.read", "platform.invitation.manage", "platform.user.invite"]);
+  return hasAnyPermission(me, [
+    "platform.invitation.read",
+    "platform.invitation.manage",
+    "platform.user.invite",
+  ]);
 }
 
 export function canManageInvitations(me: AuthLike): boolean {
@@ -155,7 +166,10 @@ export type InvitationRow = {
   updatedAt: string;
 };
 
-export async function listInvitations(tenantId: string, query?: { status?: string; email?: string }) {
+export async function listInvitations(
+  tenantId: string,
+  query?: { status?: string; email?: string },
+) {
   const params = new URLSearchParams({ tenantId });
   if (query?.status) params.set("status", query.status);
   if (query?.email) params.set("email", query.email);
@@ -193,16 +207,13 @@ export async function listAuditEvents(
   tenantId: string,
   query: { page: number; pageSize: number; actorUserId?: string },
 ): Promise<{ events: AuditEventRow[]; total: number }> {
-  const result = await apiGetResult<AuditEventRow[]>(
-    `/api/v1/tenants/${tenantId}/audit-events`,
-    {
-      query: {
-        page: String(query.page),
-        pageSize: String(query.pageSize),
-        ...(query.actorUserId ? { actorUserId: query.actorUserId } : {}),
-      },
+  const result = await apiGetResult<AuditEventRow[]>(`/api/v1/tenants/${tenantId}/audit-events`, {
+    query: {
+      page: String(query.page),
+      pageSize: String(query.pageSize),
+      ...(query.actorUserId ? { actorUserId: query.actorUserId } : {}),
     },
-  );
+  });
   return {
     events: Array.isArray(result.data) ? result.data : [],
     total: result.meta?.pagination?.total ?? result.data.length,

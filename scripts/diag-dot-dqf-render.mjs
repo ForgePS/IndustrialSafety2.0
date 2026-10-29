@@ -102,7 +102,9 @@ function isDotDqfDriverRecord(row) {
   if (/\bdrv-\d{4}-\d+\b/.test(hay)) return true;
   if (/dqf\s*import/.test(hay)) return true;
   if (/dot-compliance\/[^/]+\/drivers\/drv-/.test(hay)) return true;
-  const cat = String(row.category ?? "").trim().toLowerCase();
+  const cat = String(row.category ?? "")
+    .trim()
+    .toLowerCase();
   if (cat.includes("dqf")) return true;
   if (row.dqf === true) return true;
   return false;
@@ -124,11 +126,15 @@ function dotRecordCategory(row) {
   }
   if (isDotCompanyDriverSource(row)) return "other";
   if (isDotDqfDriverRecord(row)) return "drivers";
-  const cat = String(row.category ?? "").trim().toLowerCase();
+  const cat = String(row.category ?? "")
+    .trim()
+    .toLowerCase();
   if (cat.includes("driver") || cat.includes("dqf")) return "drivers";
   if (cat.includes("vehicle")) return "vehicles";
   if (cat.includes("company")) return "company";
-  const collection = String(row.sourceCollection ?? row.sourcePath ?? row.source_collection ?? "").toLowerCase();
+  const collection = String(
+    row.sourceCollection ?? row.sourcePath ?? row.source_collection ?? "",
+  ).toLowerCase();
   if (collection.includes("dqf")) return "drivers";
   if (collection.includes("driver") && !collection.includes("companyvehicle")) return "drivers";
   if (collection.includes("vehicle")) return "vehicles";
@@ -153,7 +159,10 @@ function normalizeDotPersonName(value) {
     .replace(/[.'"]/g, "")
     .replace(/\s+/g, " ");
   if (!cleaned.includes(",")) return cleaned;
-  const parts = cleaned.split(",").map((part) => part.trim()).filter((part) => part !== "");
+  const parts = cleaned
+    .split(",")
+    .map((part) => part.trim())
+    .filter((part) => part !== "");
   if (parts.length < 2) return cleaned.replace(/,/g, " ").replace(/\s+/g, " ").trim();
   return `${parts.slice(1).join(" ")} ${parts[0]}`.replace(/\s+/g, " ").trim();
 }
@@ -195,7 +204,9 @@ function groupDotProfileMembers(rows) {
   for (const [id, row] of byId) {
     const pid = String(row.personnelId ?? "").trim();
     if (pid) add(`pid:${pid}`, id);
-    const employee = String(row.employeeNumber ?? "").trim().toLowerCase();
+    const employee = String(row.employeeNumber ?? "")
+      .trim()
+      .toLowerCase();
     if (employee) add(`emp:${employee}`, id);
     if (isDotPersonRecord(row)) {
       const name = normalizeDotPersonName(dotDisplayName(row));
@@ -286,7 +297,9 @@ try {
 
   const badPersonnel = mapped.filter((row) => {
     const pid = String(row.personnelId ?? "").trim();
-    return pid && !/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(pid);
+    return (
+      pid && !/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(pid)
+    );
   });
 
   const hugeFields = [];

@@ -2,8 +2,8 @@
 
 ## Composition
 
-| Surface | FX when | Compatibility |
-| --- | --- | --- |
+| Surface               | FX when                         | Compatibility         |
+| --------------------- | ------------------------------- | --------------------- |
 | Message metadata list | `module.cadMessages` ∧ `tables` | Legacy `styles.table` |
 
 ## Foundations used

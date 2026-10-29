@@ -52,9 +52,7 @@ export class ForgeEdgeTls extends Construct {
       new route53.ARecord(this, "ApiAlias", {
         zone,
         recordName: edge.apiHostname,
-        target: route53.RecordTarget.fromAlias(
-          new route53_targets.LoadBalancerTarget(props.alb),
-        ),
+        target: route53.RecordTarget.fromAlias(new route53_targets.LoadBalancerTarget(props.alb)),
       });
     } else {
       throw new Error("edge.enableHttps requires certificateArn or hostedZoneId with apiHostname");

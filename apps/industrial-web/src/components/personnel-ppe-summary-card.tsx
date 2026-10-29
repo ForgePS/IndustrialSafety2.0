@@ -2,10 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { ApiError, apiGet } from "@forge/web-kit";
-import {
-  EMPTY_PERSONNEL_PPE_SUMMARY,
-  type PersonnelPpeSummary,
-} from "@/lib/personnel-ppe";
+import { EMPTY_PERSONNEL_PPE_SUMMARY, type PersonnelPpeSummary } from "@/lib/personnel-ppe";
 
 function Stat({
   label,
@@ -102,7 +99,9 @@ export function PersonnelPpeSummaryCard({ enabled }: { enabled: boolean }) {
             <Stat
               label="Glasses expiring soon"
               value={summary.prescriptionGlassesExpiringSoon}
-              {...(summary.prescriptionGlassesExpiringSoon > 0 ? { alert: "warning" as const } : {})}
+              {...(summary.prescriptionGlassesExpiringSoon > 0
+                ? { alert: "warning" as const }
+                : {})}
             />
             <Stat
               label="Footwear expiring soon"

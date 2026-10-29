@@ -1,5 +1,9 @@
 import { describe, expect, it } from "vitest";
-import { decodeTextBuffer, repairUtf8Mojibake, sanitizeTrainingImportText } from "./training-import-text.js";
+import {
+  decodeTextBuffer,
+  repairUtf8Mojibake,
+  sanitizeTrainingImportText,
+} from "./training-import-text.js";
 
 describe("decodeTextBuffer", () => {
   it("decodes UTF-8 with BOM", () => {
@@ -8,7 +12,11 @@ describe("decodeTextBuffer", () => {
   });
 
   it("decodes Windows-1252 CSV with smart punctuation", () => {
-    const buffer = Buffer.from([...Buffer.from("What is LOTO", "ascii"), 0x97, ...Buffer.from("required?", "ascii")]);
+    const buffer = Buffer.from([
+      ...Buffer.from("What is LOTO", "ascii"),
+      0x97,
+      ...Buffer.from("required?", "ascii"),
+    ]);
     expect(decodeTextBuffer(buffer)).toContain("—");
     expect(decodeTextBuffer(buffer)).not.toContain("\uFFFD");
   });

@@ -57,7 +57,9 @@ export function DvirReportSummaryTable({
             <th scope="col">Defects</th>
             <th scope="col">Defect summary</th>
             <th scope="col">DRIVER</th>
-            <th scope="col" className="text-end">Actions</th>
+            <th scope="col" className="text-end">
+              Actions
+            </th>
           </tr>
         </thead>
         <tbody>
@@ -92,10 +94,7 @@ export function DvirReportSummaryTable({
                       </button>
                     ) : null}
                     {id ? (
-                      <Link
-                        className="btn btn-sm btn-outline-secondary"
-                        href={dotFileHref(id)}
-                      >
+                      <Link className="btn btn-sm btn-outline-secondary" href={dotFileHref(id)}>
                         View
                       </Link>
                     ) : null}

@@ -64,9 +64,7 @@ export const rmsShifts = pgTable(
     deletedAt: timestamp("deleted_at", { withTimezone: true }),
     deletedByUserId: uuid("deleted_by_user_id"),
   },
-  (table) => [
-    uniqueIndex("rms_shifts_tenant_code_uidx").on(table.tenantId, table.code),
-  ],
+  (table) => [uniqueIndex("rms_shifts_tenant_code_uidx").on(table.tenantId, table.code)],
 );
 
 export const rmsApparatus = pgTable(
@@ -208,7 +206,10 @@ export const rmsRosterAssignments = pgTable(
     updatedAt: updatedAtColumn,
   },
   (table) => [
-    uniqueIndex("rms_roster_assignments_roster_personnel_uidx").on(table.rosterId, table.personnelId),
+    uniqueIndex("rms_roster_assignments_roster_personnel_uidx").on(
+      table.rosterId,
+      table.personnelId,
+    ),
     index("rms_roster_assignments_unit_idx").on(table.unitId),
   ],
 );

@@ -20,10 +20,7 @@ export type IndustrialBootstrap = {
  * Permissions open the module immediately. Bootstrap is only an Advanced
  * kill-switch and must not add an RTT before list/data loads.
  */
-export function useIndustrialModuleGate(opts: {
-  moduleCode: string;
-  canView: boolean;
-}) {
+export function useIndustrialModuleGate(opts: { moduleCode: string; canView: boolean }) {
   const { me } = useAuth();
   const [bootstrap, setBootstrap] = useState<IndustrialBootstrap | null>(null);
 
@@ -45,8 +42,7 @@ export function useIndustrialModuleGate(opts: {
 
   const modEntry = bootstrap?.modules.find((m) => m.code === opts.moduleCode);
   const explicitlyDisabled =
-    bootstrap != null &&
-    (bootstrap.industrialEnabled === false || modEntry?.awsEnabled === false);
+    bootstrap != null && (bootstrap.industrialEnabled === false || modEntry?.awsEnabled === false);
   const awsReady = Boolean(opts.canView && !explicitlyDisabled);
 
   return { bootstrap, modEntry, explicitlyDisabled, awsReady };

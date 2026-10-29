@@ -233,10 +233,7 @@ function toInsert(row) {
   const reportedAt = parseReportDate(row.reportDateTime) || parseReportDate(row.IncidentSubmitted);
   const createdAt = occurredAt || reportedAt || new Date();
   const description =
-    str(row.IncidentDescription) ||
-    str(row.WorkDayDetails) ||
-    str(row.InjuryTypeDesc) ||
-    "";
+    str(row.IncidentDescription) || str(row.WorkDayDetails) || str(row.InjuryTypeDesc) || "";
 
   const payload = {
     ...row,
@@ -298,9 +295,7 @@ try {
         or source_payload->'sourceImport'->>'system' = ${SOURCE_SYSTEM}
       )
   `;
-  const existingIds = new Set(
-    existing.map((r) => String(r.doc_id ?? "").trim()).filter(Boolean),
-  );
+  const existingIds = new Set(existing.map((r) => String(r.doc_id ?? "").trim()).filter(Boolean));
 
   const planned = [];
   const skipped = [];

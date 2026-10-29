@@ -42,7 +42,6 @@ import { industrialModuleRoleAccess, isIndustrialModulePagePermission } from "@f
 import {
   catalogsForSelectedModules,
   enabledPageIdsFromPermissionCodes,
-  filterModulePages,
   mergePermissionCodesWithModulePages,
 } from "@/lib/module-page-permissions";
 
@@ -157,10 +156,7 @@ export function RolesPermissionsWorkspace() {
       return (access?.defaultGrantPermissions ?? []).some((code) => catalogCodes.has(code));
     });
   }, [catalogCodes]);
-  const permissionRows = useMemo(
-    () => toPermissionDirectory(roles, catalog),
-    [roles, catalog],
-  );
+  const permissionRows = useMemo(() => toPermissionDirectory(roles, catalog), [roles, catalog]);
   const filteredPermissions = useMemo(
     () => filterPermissionDirectory(permissionRows, query),
     [permissionRows, query],
@@ -170,7 +166,9 @@ export function RolesPermissionsWorkspace() {
     [filteredPermissions, page, pageSize],
   );
   const unassignedCatalog = useMemo(() => {
-    const used = new Set(permissionRows.filter((row) => row.assignedRoles.length > 0).map((row) => row.code));
+    const used = new Set(
+      permissionRows.filter((row) => row.assignedRoles.length > 0).map((row) => row.code),
+    );
     return assignable.filter((row) => !used.has(row.code));
   }, [assignable, permissionRows]);
 
@@ -255,10 +253,7 @@ export function RolesPermissionsWorkspace() {
     setEditModules(moduleCodesFromPermissionCodes(nextPerms));
   }
 
-  const editPageCatalogs = useMemo(
-    () => catalogsForSelectedModules(editModules),
-    [editModules],
-  );
+  const editPageCatalogs = useMemo(() => catalogsForSelectedModules(editModules), [editModules]);
 
   const assignableWithoutPages = useMemo(
     () => assignable.filter((perm) => !isIndustrialModulePagePermission(perm.code)),
@@ -425,9 +420,7 @@ export function RolesPermissionsWorkspace() {
     return (
       <div className="alert alert-warning" role="alert">
         <h4 className="alert-heading">Roles and permissions</h4>
-        <p className="mb-0">
-          This section is limited to Admin, Super Admin, and Creator.
-        </p>
+        <p className="mb-0">This section is limited to Admin, Super Admin, and Creator.</p>
       </div>
     );
   }
@@ -445,15 +438,22 @@ export function RolesPermissionsWorkspace() {
 
       {canViewAsRole ? (
         <div className="alert alert-info mb-4" role="status">
-          <strong>View as role</strong> applies that role&apos;s permissions to navigation and screens
-          for this browser tab. API authorization still uses your Creator session — use Exit in the
-          header when finished.
+          <strong>View as role</strong> applies that role&apos;s permissions to navigation and
+          screens for this browser tab. API authorization still uses your Creator session — use Exit
+          in the header when finished.
         </div>
       ) : null}
       {error ? (
-        <div className="alert alert-danger d-flex flex-wrap align-items-center gap-3 mb-4" role="alert">
+        <div
+          className="alert alert-danger d-flex flex-wrap align-items-center gap-3 mb-4"
+          role="alert"
+        >
           <span className="flex-grow-1">{error}</span>
-          <button type="button" className="btn btn-sm btn-outline-danger" onClick={() => void load()}>
+          <button
+            type="button"
+            className="btn btn-sm btn-outline-danger"
+            onClick={() => void load()}
+          >
             Retry
           </button>
         </div>
@@ -471,7 +471,11 @@ export function RolesPermissionsWorkspace() {
             <div className="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
               <p className="text-muted small mb-0">{roles.length} roles on this tenant</p>
               {canAssign ? (
-                <button type="button" className="btn btn-sm btn-primary" onClick={() => setShowAddRole(true)}>
+                <button
+                  type="button"
+                  className="btn btn-sm btn-primary"
+                  onClick={() => setShowAddRole(true)}
+                >
                   <i className="bx bx-plus me-1" />
                   Add Role
                 </button>
@@ -482,7 +486,11 @@ export function RolesPermissionsWorkspace() {
               <form className="card mb-4" onSubmit={(event) => void onCreateRole(event)}>
                 <div className="card-header d-flex justify-content-between align-items-center">
                   <h6 className="mb-0">Add role</h6>
-                  <button type="button" className="btn-close" onClick={() => setShowAddRole(false)} />
+                  <button
+                    type="button"
+                    className="btn-close"
+                    onClick={() => setShowAddRole(false)}
+                  />
                 </div>
                 <div className="card-body row g-3">
                   <div className="col-md-6">
@@ -511,7 +519,11 @@ export function RolesPermissionsWorkspace() {
                   </div>
                 </div>
                 <div className="card-footer d-flex justify-content-end gap-2">
-                  <button type="button" className="btn btn-outline-secondary" onClick={() => setShowAddRole(false)}>
+                  <button
+                    type="button"
+                    className="btn btn-outline-secondary"
+                    onClick={() => setShowAddRole(false)}
+                  >
                     Cancel
                   </button>
                   <button type="submit" className="btn btn-primary" disabled={busyId === "role"}>
@@ -576,8 +588,8 @@ export function RolesPermissionsWorkspace() {
                           emptyMessage="No module permissions are available in the catalog yet."
                         />
                         <div className="form-text mb-3">
-                          Choose which Industrial modules this role can open. Each module grants view
-                          access; refine pages below, then manage and specialty permissions.
+                          Choose which Industrial modules this role can open. Each module grants
+                          view access; refine pages below, then manage and specialty permissions.
                         </div>
                         {editPageCatalogs.length > 0 ? (
                           <div className="mb-3">
@@ -588,7 +600,10 @@ export function RolesPermissionsWorkspace() {
                             <div className="d-flex flex-column gap-3">
                               {editPageCatalogs.map((modCatalog) => {
                                 const enabledIds = new Set(
-                                  enabledPageIdsFromPermissionCodes(modCatalog.moduleCode, editPerms),
+                                  enabledPageIdsFromPermissionCodes(
+                                    modCatalog.moduleCode,
+                                    editPerms,
+                                  ),
                                 );
                                 const moduleName =
                                   moduleOptions.find((mod) => mod.code === modCatalog.moduleCode)
@@ -639,7 +654,9 @@ export function RolesPermissionsWorkspace() {
                         <AdminSearchMultiSelect
                           id="edit-role-permissions"
                           label="Permissions"
-                          value={editPerms.filter((code) => !isIndustrialModulePagePermission(code))}
+                          value={editPerms.filter(
+                            (code) => !isIndustrialModulePagePermission(code),
+                          )}
                           onChange={(next) => {
                             const pages = editPerms.filter((code) =>
                               isIndustrialModulePagePermission(code),
@@ -658,7 +675,11 @@ export function RolesPermissionsWorkspace() {
                   </div>
                 </div>
                 <div className="card-footer d-flex justify-content-end gap-2">
-                  <button type="button" className="btn btn-outline-secondary" onClick={closeRoleEditor}>
+                  <button
+                    type="button"
+                    className="btn btn-outline-secondary"
+                    onClick={closeRoleEditor}
+                  >
                     Cancel
                   </button>
                   <button
@@ -683,11 +704,15 @@ export function RolesPermissionsWorkspace() {
                         <div className="d-flex justify-content-between align-items-start gap-2">
                           <div>
                             <h6 className="mb-1">{role.name}</h6>
-                            <span className={`badge ${adminLabelToneClass(roleChipTone(role.code, role.name))}`}>
+                            <span
+                              className={`badge ${adminLabelToneClass(roleChipTone(role.code, role.name))}`}
+                            >
                               {role.code}
                             </span>
                           </div>
-                          <span className={`badge ${role.status === "INACTIVE" ? "bg-label-secondary" : "bg-label-success"}`}>
+                          <span
+                            className={`badge ${role.status === "INACTIVE" ? "bg-label-secondary" : "bg-label-success"}`}
+                          >
                             {role.status ?? "ACTIVE"}
                           </span>
                         </div>
@@ -695,9 +720,11 @@ export function RolesPermissionsWorkspace() {
                           {role.description?.trim() || "No description yet."}
                         </p>
                         <p className="text-muted small mb-0">
-                          {moduleCodesFromPermissionCodes(
-                            (role.permissions ?? []).map((perm) => perm.code),
-                          ).length}{" "}
+                          {
+                            moduleCodesFromPermissionCodes(
+                              (role.permissions ?? []).map((perm) => perm.code),
+                            ).length
+                          }{" "}
                           modules · {(role.permissions ?? []).length} permissions
                           {role.isSystemManaged ? " · system" : ""}
                         </p>
@@ -830,7 +857,11 @@ export function RolesPermissionsWorkspace() {
               <form className="card mb-4" onSubmit={(event) => void onSavePermissionRoles(event)}>
                 <div className="card-header d-flex justify-content-between align-items-center">
                   <h6 className="mb-0">Edit {editingPermission.name}</h6>
-                  <button type="button" className="btn-close" onClick={() => setEditingPermission(null)} />
+                  <button
+                    type="button"
+                    className="btn-close"
+                    onClick={() => setEditingPermission(null)}
+                  />
                 </div>
                 <div className="card-body">
                   <p className="text-muted small">{editingPermission.code}</p>
@@ -937,7 +968,10 @@ export function RolesPermissionsWorkspace() {
                             ) : (
                               <div className="d-flex flex-wrap gap-1">
                                 {row.assignedRoles.map((role) => (
-                                  <span key={role.id} className={`badge ${adminLabelToneClass(role.tone)}`}>
+                                  <span
+                                    key={role.id}
+                                    className={`badge ${adminLabelToneClass(role.tone)}`}
+                                  >
                                     {role.name}
                                   </span>
                                 ))}

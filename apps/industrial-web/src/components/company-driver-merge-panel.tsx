@@ -166,10 +166,14 @@ export function CompanyDriverMergePanel({ driver, canManage, onMerged }: Props) 
         </p>
 
         {error ? (
-          <div className="alert alert-danger py-2 small" role="alert">{error}</div>
+          <div className="alert alert-danger py-2 small" role="alert">
+            {error}
+          </div>
         ) : null}
         {success ? (
-          <div className="alert alert-success py-2 small" role="status">{success}</div>
+          <div className="alert alert-success py-2 small" role="status">
+            {success}
+          </div>
         ) : null}
 
         <div className="row g-3">
@@ -188,7 +192,9 @@ export function CompanyDriverMergePanel({ driver, canManage, onMerged }: Props) 
               disabled={busy}
             />
             {searching ? (
-              <p className="text-muted small mt-1 mb-0" role="status">Searching…</p>
+              <p className="text-muted small mt-1 mb-0" role="status">
+                Searching…
+              </p>
             ) : null}
             {hits.length > 0 ? (
               <ul className="list-group list-group-flush mt-2 border rounded">
@@ -254,10 +260,8 @@ export function CompanyDriverMergePanel({ driver, canManage, onMerged }: Props) 
                   {personNameDisplay(previewName.firstName)}{" "}
                   {personNameDisplay(previewName.lastName)}
                 </span>
-                {driver.employeeNumber ? (
-                  <> (EMPLOYEE {driver.employeeNumber})</>
-                ) : null}{" "}
-                and marks them as a company DRIVER.
+                {driver.employeeNumber ? <> (EMPLOYEE {driver.employeeNumber})</> : null} and marks
+                them as a company DRIVER.
               </p>
               <button
                 type="button"

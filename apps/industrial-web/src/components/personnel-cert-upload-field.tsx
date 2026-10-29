@@ -8,10 +8,7 @@ import {
   putPresignedCertUpload,
   type PersonnelCertKind,
 } from "@/lib/personnel-cert-upload";
-import {
-  compressImageToUploadFile,
-  imageCompressErrorMessage,
-} from "@/lib/compress-image";
+import { compressImageToUploadFile, imageCompressErrorMessage } from "@/lib/compress-image";
 import { useImageCrop } from "@/hooks/use-image-crop";
 
 type UploadInit = {
@@ -65,7 +62,9 @@ export function PersonnelCertUploadField({
         maxBytes: MAX_PERSONNEL_CERT_BYTES,
       });
       if (prepared.size <= 0 || prepared.size > MAX_PERSONNEL_CERT_BYTES) {
-        setError(`File must be between 1 byte and ${Math.round(MAX_PERSONNEL_CERT_BYTES / (1024 * 1024))} MB.`);
+        setError(
+          `File must be between 1 byte and ${Math.round(MAX_PERSONNEL_CERT_BYTES / (1024 * 1024))} MB.`,
+        );
         return;
       }
       const mimeType = guessPersonnelCertMime(prepared);

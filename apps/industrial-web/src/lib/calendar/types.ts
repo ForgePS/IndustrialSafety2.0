@@ -31,7 +31,9 @@ export const CALENDAR_WIDGET_VIEWS: readonly CalendarWidgetView[] = [
   "month",
 ] as const;
 
-export function isCalendarWidgetView(value: string | undefined | null): value is CalendarWidgetView {
+export function isCalendarWidgetView(
+  value: string | undefined | null,
+): value is CalendarWidgetView {
   return value === "today" || value === "3-day" || value === "week" || value === "month";
 }
 

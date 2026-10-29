@@ -6,12 +6,7 @@ import {
   type EmailAttachment,
   type EmailMessage,
 } from "@forge/contracts";
-import {
-  createId,
-  type Database,
-  userNotifications,
-  withTenantTransaction,
-} from "@forge/database";
+import { createId, type Database, userNotifications, withTenantTransaction } from "@forge/database";
 import type { ForgePrincipal } from "@forge/tenant-context";
 import { and, desc, eq, isNull, sql } from "drizzle-orm";
 import { createLogger, logOperationalFailure } from "@forge/observability";
@@ -83,6 +78,11 @@ const DEFAULT_EMAIL_BODIES: Record<
     htmlBody: "{{htmlBody}}",
     textBody: "{{textBody}}",
   },
+  workers_comp_form: {
+    subject: "{{subject}}",
+    htmlBody: "{{htmlBody}}",
+    textBody: "{{textBody}}",
+  },
   observation_assigned: {
     subject: "{{subject}}",
     htmlBody: "{{htmlBody}}",
@@ -104,10 +104,7 @@ export class NotificationsService {
   async listForUser(tenantId: string, userId: string, limit = 50) {
     return withTenantTransaction(this.db, tenantId, async (tx) => {
       return tx.query.userNotifications.findMany({
-        where: and(
-          eq(userNotifications.tenantId, tenantId),
-          eq(userNotifications.userId, userId),
-        ),
+        where: and(eq(userNotifications.tenantId, tenantId), eq(userNotifications.userId, userId)),
         orderBy: [desc(userNotifications.createdAt)],
         limit: Math.min(Math.max(limit, 1), 100),
       });
@@ -235,10 +232,7 @@ export class NotificationsService {
     });
 
     let emailResult = null;
-    if (
-      (data.destination === "EMAIL" || data.destination === "BOTH") &&
-      data.emailTo
-    ) {
+    if ((data.destination === "EMAIL" || data.destination === "BOTH") && data.emailTo) {
       emailResult = await this.sendTemplatedEmail({
         to: data.emailTo,
         templateKey: data.emailTemplateKey ?? "system_notification",

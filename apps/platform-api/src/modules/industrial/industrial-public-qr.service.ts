@@ -34,7 +34,12 @@ import type { RequestWithIds } from "../../common/request-ids.js";
 import { DATABASE } from "../../tokens.js";
 import { AuthContextService } from "../auth-context/auth-context.service.js";
 import { IndustrialDomainService } from "./industrial-domain.service.js";
-import { defaultQrActionConfigFlags, inspectionFrequencyLabel, parseQrActionConfig, qrActionConfigEnabled } from "./qr-action-config.js";
+import {
+  defaultQrActionConfigFlags,
+  inspectionFrequencyLabel,
+  parseQrActionConfig,
+  qrActionConfigEnabled,
+} from "./qr-action-config.js";
 import {
   createQrIssueCorrectiveAction,
   isQrAssetTargetType,
@@ -49,10 +54,7 @@ import {
   maskSmsPhone,
   normalizeSmsPhone,
 } from "./sms-signup.js";
-import {
-  employeeNumberWhereClause,
-  pickPreferredPersonnelMatch,
-} from "./employee-number.js";
+import { employeeNumberWhereClause, pickPreferredPersonnelMatch } from "./employee-number.js";
 import {
   buildScanActions,
   filterScanActionsForViewer,
@@ -172,11 +174,11 @@ export class IndustrialPublicQrService {
       where id = ${tenantId}::uuid
       limit 1
     `);
-    const tenantRow = (Array.isArray(tenantRows)
-      ? tenantRows[0]
-      : (tenantRows as { rows?: Array<Record<string, unknown>> }).rows?.[0]) as
-      | Record<string, unknown>
-      | undefined;
+    const tenantRow = (
+      Array.isArray(tenantRows)
+        ? tenantRows[0]
+        : (tenantRows as { rows?: Array<Record<string, unknown>> }).rows?.[0]
+    ) as Record<string, unknown> | undefined;
 
     const brandingRows = await tx.execute(sql`
       select cv.payload_json as payload
@@ -187,11 +189,11 @@ export class IndustrialPublicQrService {
         and co.object_key = 'default'
       limit 1
     `);
-    const brandingPayloadRaw = (Array.isArray(brandingRows)
-      ? brandingRows[0]
-      : (brandingRows as { rows?: Array<{ payload?: unknown }> }).rows?.[0]) as
-      | { payload?: unknown }
-      | undefined;
+    const brandingPayloadRaw = (
+      Array.isArray(brandingRows)
+        ? brandingRows[0]
+        : (brandingRows as { rows?: Array<{ payload?: unknown }> }).rows?.[0]
+    ) as { payload?: unknown } | undefined;
     const payload =
       brandingPayloadRaw?.payload && typeof brandingPayloadRaw.payload === "object"
         ? (brandingPayloadRaw.payload as Record<string, unknown>)
@@ -213,7 +215,9 @@ export class IndustrialPublicQrService {
     targetId: string | null | undefined,
     accessMode: string,
   ): Promise<AssetSummary | null> {
-    const type = String(targetType ?? "").trim().toUpperCase();
+    const type = String(targetType ?? "")
+      .trim()
+      .toUpperCase();
     const id = String(targetId ?? "").trim();
     if (!type || !id) return null;
 
@@ -297,7 +301,7 @@ export class IndustrialPublicQrService {
       }
       return {
         label,
-        sublabel: limited ? null : row.vin ?? row.licensePlate,
+        sublabel: limited ? null : (row.vin ?? row.licensePlate),
         status: row.status,
         locationName: row.locationName,
         outOfService,
@@ -314,7 +318,11 @@ export class IndustrialPublicQrService {
         .select()
         .from(industrialSites)
         .where(
-          and(eq(industrialSites.id, id), eq(industrialSites.tenantId, tenantId), isNull(industrialSites.archivedAt)),
+          and(
+            eq(industrialSites.id, id),
+            eq(industrialSites.tenantId, tenantId),
+            isNull(industrialSites.archivedAt),
+          ),
         )
         .limit(1);
       if (!row) return null;
@@ -474,13 +482,17 @@ export class IndustrialPublicQrService {
       if (!row) throw new ForgeError("NOT_FOUND", "QR link not found");
 
       let link = row;
-      const targetType = String(link.targetType ?? "").trim().toUpperCase();
+      const targetType = String(link.targetType ?? "")
+        .trim()
+        .toUpperCase();
       if (isPublicRequiredQrTarget(targetType) && !isPublicQrAccessMode(link.accessMode)) {
         const before = normalizeQrAccessMode(link.accessMode);
         const now = new Date();
         const nextConfig = {
           ...defaultQrActionConfigFlags(),
-          ...(typeof link.actionConfig === "object" && link.actionConfig && !Array.isArray(link.actionConfig)
+          ...(typeof link.actionConfig === "object" &&
+          link.actionConfig &&
+          !Array.isArray(link.actionConfig)
             ? (link.actionConfig as Record<string, unknown>)
             : {}),
           reportIssue: true,
@@ -559,7 +571,8 @@ export class IndustrialPublicQrService {
         targetId: link.targetId,
         requiresEmployeeNumber:
           accessMode === "EMPLOYEE_NUMBER" || accessMode === "AUTHENTICATED_RECORD",
-        requiresSignIn: accessMode === "AUTHENTICATED_ONLY" || accessMode === "AUTHENTICATED_RECORD",
+        requiresSignIn:
+          accessMode === "AUTHENTICATED_ONLY" || accessMode === "AUTHENTICATED_RECORD",
         publicLimited: isPublicQrAccessMode(accessMode),
         tenantKey: branding.tenantKey,
         companyName: branding.companyName,
@@ -591,7 +604,8 @@ export class IndustrialPublicQrService {
       if (!link) throw new ForgeError("NOT_FOUND", "QR link not found");
 
       const clause = employeeNumberWhereClause(normalized);
-      if (!clause) throw new ForgeError("NOT_FOUND", "Employee number not found for this organization.");
+      if (!clause)
+        throw new ForgeError("NOT_FOUND", "Employee number not found for this organization.");
 
       const candidates = await tx
         .select({
@@ -924,7 +938,9 @@ export class IndustrialPublicQrService {
     const { tokenHash, tenantId } = await this.resolveToken(token);
     const employeeNumber = String(body.employeeNumber ?? "").trim();
     const lastName = String(body.lastName ?? "").trim();
-    const signatureName = String(body.signatureName ?? "").trim().slice(0, 300);
+    const signatureName = String(body.signatureName ?? "")
+      .trim()
+      .slice(0, 300);
     if (!employeeNumber || !lastName) {
       throw new ForgeError("VALIDATION_FAILED", "Employee number and last name are required.");
     }
@@ -1019,7 +1035,9 @@ export class IndustrialPublicQrService {
 
       const firstName =
         String(person.firstName ?? "").trim() ||
-        String(person.displayName ?? "").trim().split(/\s+/)[0] ||
+        String(person.displayName ?? "")
+          .trim()
+          .split(/\s+/)[0] ||
         null;
       return {
         matched: true as const,
@@ -1053,7 +1071,9 @@ export class IndustrialPublicQrService {
     const permissions = await this.resolveViewerPermissions(body.req, tenantId);
     return withTenantTransaction(this.db, tenantId, async (tx) => {
       const link = await this.loadActiveLink(tx, tenantId, tokenHash);
-      const targetType = String(link.targetType ?? "").trim().toUpperCase();
+      const targetType = String(link.targetType ?? "")
+        .trim()
+        .toUpperCase();
       const targetId = String(link.targetId ?? "").trim();
       if (!targetType || !targetId) {
         throw new ForgeError("VALIDATION_FAILED", "This QR link is not assigned to an asset.");
@@ -1164,7 +1184,8 @@ export class IndustrialPublicQrService {
         const label = frequency
           ? inspectionFrequencyLabel(frequency as "DAILY" | "WEEKLY" | "MONTHLY")
           : "Inspection";
-        const failed = String(row.status ?? "").toUpperCase() === "COMPLETED" &&
+        const failed =
+          String(row.status ?? "").toUpperCase() === "COMPLETED" &&
           Array.isArray(payload.items) &&
           (payload.items as Array<{ answer?: string }>).some((item) => item.answer === "NO");
         entries.push({
@@ -1174,8 +1195,7 @@ export class IndustrialPublicQrService {
           title: `${label} — ${failed ? "FAIL" : row.status === "COMPLETED" ? "PASS" : row.status}`,
           subtitle: row.title,
           status: row.status,
-          actorName:
-            typeof payload.responsibleName === "string" ? payload.responsibleName : null,
+          actorName: typeof payload.responsibleName === "string" ? payload.responsibleName : null,
         });
       }
 
@@ -1194,7 +1214,7 @@ export class IndustrialPublicQrService {
           actorName:
             typeof payload.reporterName === "string"
               ? payload.reporterName
-              : row.ownerName ?? null,
+              : (row.ownerName ?? null),
         });
       }
 
@@ -1214,8 +1234,7 @@ export class IndustrialPublicQrService {
               : typeof details.notes === "string"
                 ? details.notes
                 : null,
-          actorName:
-            typeof details.personnelName === "string" ? details.personnelName : null,
+          actorName: typeof details.personnelName === "string" ? details.personnelName : null,
         });
       }
 
@@ -1245,10 +1264,7 @@ export class IndustrialPublicQrService {
     });
   }
 
-  async reportIssue(
-    token: string,
-    body: Record<string, unknown>,
-  ) {
+  async reportIssue(token: string, body: Record<string, unknown>) {
     const { tokenHash, tenantId } = await this.resolveToken(token);
     const employeeNumber = String(body.employeeNumber ?? "").trim();
     const description = String(body.description ?? "").trim();
@@ -1273,13 +1289,13 @@ export class IndustrialPublicQrService {
       const title =
         String(body.title ?? "").trim() ||
         `Issue reported for ${link.label ?? link.displayCode ?? "asset"}`;
-      const priority = String(body.priority ?? "MEDIUM").trim().toUpperCase();
+      const priority = String(body.priority ?? "MEDIUM")
+        .trim()
+        .toUpperCase();
       const category = String(body.category ?? "").trim() || null;
       const immediateHazard = body.immediateHazard === true || body.immediateHazard === "true";
       const markOutOfService =
-        body.outOfService === true ||
-        body.outOfService === "true" ||
-        immediateHazard;
+        body.outOfService === true || body.outOfService === "true" || immediateHazard;
       const appBaseUrl =
         typeof body.appBaseUrl === "string" && body.appBaseUrl.trim()
           ? body.appBaseUrl.trim()
@@ -1397,10 +1413,15 @@ export class IndustrialPublicQrService {
     return withTenantTransaction(this.db, tenantId, async (tx) => {
       const link = await this.loadActiveLink(tx, tenantId, tokenHash);
       const person = await this.verifyEmployeeInTx(tx, tenantId, employeeNumber);
-      const targetType = String(link.targetType ?? "").trim().toUpperCase();
+      const targetType = String(link.targetType ?? "")
+        .trim()
+        .toUpperCase();
       const targetId = String(link.targetId ?? "").trim();
       if (!targetType || !targetId || !isQrAssetTargetType(targetType)) {
-        throw new ForgeError("VALIDATION_FAILED", "Out of service is only supported for equipment assets.");
+        throw new ForgeError(
+          "VALIDATION_FAILED",
+          "Out of service is only supported for equipment assets.",
+        );
       }
 
       const result = await markQrAssetOutOfService(tx, {
@@ -1431,10 +1452,15 @@ export class IndustrialPublicQrService {
     return withTenantTransaction(this.db, tenantId, async (tx) => {
       const link = await this.loadActiveLink(tx, tenantId, tokenHash);
       const person = await this.verifyEmployeeInTx(tx, tenantId, employeeNumber);
-      const targetType = String(link.targetType ?? "").trim().toUpperCase();
+      const targetType = String(link.targetType ?? "")
+        .trim()
+        .toUpperCase();
       const targetId = String(link.targetId ?? "").trim();
       if (!targetType || !targetId || !isQrAssetTargetType(targetType)) {
-        throw new ForgeError("VALIDATION_FAILED", "Return to service is only supported for equipment assets.");
+        throw new ForgeError(
+          "VALIDATION_FAILED",
+          "Return to service is only supported for equipment assets.",
+        );
       }
 
       const result = await returnQrAssetToService(tx, {

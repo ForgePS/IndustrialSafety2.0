@@ -167,7 +167,12 @@ function CadConnectionsInner() {
             <FxTable
               caption="CAD connections"
               loading={loading}
-              empty={<FxTableEmpty title="No CAD connections." description="Create a draft connection above." />}
+              empty={
+                <FxTableEmpty
+                  title="No CAD connections."
+                  description="Create a draft connection above."
+                />
+              }
               rows={items}
               rowKey={(row) => row.id}
               columns={[

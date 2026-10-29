@@ -12,12 +12,12 @@ Migrate Forge RMS presentation to shared FX packages while preserving production
 
 ## Ownership
 
-| Concern | Owner |
-| --- | --- |
-| Shared presentation / interaction | Forge Experience (`@forge/fx-*`) |
-| Business logic, APIs, NERIS, CAD, authZ | Forge RMS / Platform API |
-| Feature flags / entitlements | Platform feature-flag & entitlement services |
-| Creator Console / Tenant Admin | Out of scope (do not replace) |
+| Concern                                 | Owner                                        |
+| --------------------------------------- | -------------------------------------------- |
+| Shared presentation / interaction       | Forge Experience (`@forge/fx-*`)             |
+| Business logic, APIs, NERIS, CAD, authZ | Forge RMS / Platform API                     |
+| Feature flags / entitlements            | Platform feature-flag & entitlement services |
+| Creator Console / Tenant Admin          | Out of scope (do not replace)                |
 
 ## Authorized packages
 
@@ -31,15 +31,15 @@ Controlled, incremental, reversible, tested, evidence-based (strangler pattern).
 
 ## Phase gates
 
-| Gate | Focus | Visible production change |
-| --- | --- | --- |
-| FX-S2A | Inventory & compatibility | **No** |
-| FX-S2B | Shell & navigation | Flagged only after S2A approval |
-| FX-S2C | Dashboards | Flagged |
-| FX-S2D | Record workspaces | Flagged |
-| FX-S2E | Forms & tables | Flagged |
-| FX-S2F | Operational modules | Flagged |
-| FX-S2G | Stabilization & legacy retirement | After acceptance |
+| Gate   | Focus                             | Visible production change       |
+| ------ | --------------------------------- | ------------------------------- |
+| FX-S2A | Inventory & compatibility         | **No**                          |
+| FX-S2B | Shell & navigation                | Flagged only after S2A approval |
+| FX-S2C | Dashboards                        | Flagged                         |
+| FX-S2D | Record workspaces                 | Flagged                         |
+| FX-S2E | Forms & tables                    | Flagged                         |
+| FX-S2F | Operational modules               | Flagged                         |
+| FX-S2G | Stabilization & legacy retirement | After acceptance                |
 
 ## Hard restrictions (summary)
 

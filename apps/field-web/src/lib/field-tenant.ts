@@ -1,10 +1,15 @@
 /**
  * Detect the platform home tenant (no customer LOTO / industrial data).
  */
-export function isPlatformHomeTenant(tenant: {
-  slug?: string | null;
-  displayName?: string | null;
-} | null | undefined): boolean {
+export function isPlatformHomeTenant(
+  tenant:
+    | {
+        slug?: string | null;
+        displayName?: string | null;
+      }
+    | null
+    | undefined,
+): boolean {
   if (!tenant) return false;
   const slug = String(tenant.slug ?? "")
     .trim()

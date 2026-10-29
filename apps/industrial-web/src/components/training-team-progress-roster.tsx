@@ -47,7 +47,11 @@ export function TrainingTeamProgressRoster({
   const [filters, setFilters] = useState<TeamRosterFilters>(defaultFilters);
 
   const options = useMemo(
-    () => buildTeamRosterFilterOptions(roster, groups.map((g) => ({ id: g.id, name: g.name }))),
+    () =>
+      buildTeamRosterFilterOptions(
+        roster,
+        groups.map((g) => ({ id: g.id, name: g.name })),
+      ),
     [roster, groups],
   );
 
@@ -58,8 +62,10 @@ export function TrainingTeamProgressRoster({
       ...filters,
       personnelId: "",
     });
-    return buildTeamRosterFilterOptions(scoped, groups.map((g) => ({ id: g.id, name: g.name })))
-      .employees;
+    return buildTeamRosterFilterOptions(
+      scoped,
+      groups.map((g) => ({ id: g.id, name: g.name })),
+    ).employees;
   }, [roster, filters, groups]);
 
   function updateFilter<K extends keyof TeamRosterFilters>(key: K, value: TeamRosterFilters[K]) {

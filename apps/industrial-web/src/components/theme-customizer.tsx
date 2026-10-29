@@ -171,7 +171,9 @@ export function ThemeCustomizer() {
               onClick={reset}
             >
               <i className="bx bx-reset bx-sm" aria-hidden="true" />
-              {dirty ? <span className="ind-theme-customizer__dirty-dot" aria-hidden="true" /> : null}
+              {dirty ? (
+                <span className="ind-theme-customizer__dirty-dot" aria-hidden="true" />
+              ) : null}
             </button>
             <button
               type="button"

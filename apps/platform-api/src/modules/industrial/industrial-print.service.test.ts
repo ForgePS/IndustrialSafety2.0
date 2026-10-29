@@ -1,10 +1,12 @@
 import { describe, expect, it } from "vitest";
-import { BRADY_I4311_DPI, ForgePrintMode, inchesToPixels, classifyPrintManagerPrinterHealth } from "@forge/contracts";
-import { ForgeError } from "@forge/errors";
 import {
-  DEFAULT_HEIGHT_IN,
-  DEFAULT_WIDTH_IN,
-} from "./industrial-label-renderer.service.js";
+  BRADY_I4311_DPI,
+  ForgePrintMode,
+  inchesToPixels,
+  classifyPrintManagerPrinterHealth,
+} from "@forge/contracts";
+import { ForgeError } from "@forge/errors";
+import { DEFAULT_HEIGHT_IN, DEFAULT_WIDTH_IN } from "./industrial-label-renderer.service.js";
 import {
   computeBatchStatusFromCounters,
   defaultTransportForConnection,
@@ -172,18 +174,18 @@ describe("Phase 3 direct Bluetooth / batch / failover helpers", () => {
   });
 
   it("shapes batch counters into PRINTING / COMPLETED / PARTIAL / FAILED", () => {
-    expect(
-      computeBatchStatusFromCounters({ totalJobs: 3, completedJobs: 1, failedJobs: 0 }),
-    ).toBe("PRINTING");
-    expect(
-      computeBatchStatusFromCounters({ totalJobs: 3, completedJobs: 3, failedJobs: 0 }),
-    ).toBe("COMPLETED");
-    expect(
-      computeBatchStatusFromCounters({ totalJobs: 3, completedJobs: 2, failedJobs: 1 }),
-    ).toBe("PARTIAL");
-    expect(
-      computeBatchStatusFromCounters({ totalJobs: 2, completedJobs: 0, failedJobs: 2 }),
-    ).toBe("FAILED");
+    expect(computeBatchStatusFromCounters({ totalJobs: 3, completedJobs: 1, failedJobs: 0 })).toBe(
+      "PRINTING",
+    );
+    expect(computeBatchStatusFromCounters({ totalJobs: 3, completedJobs: 3, failedJobs: 0 })).toBe(
+      "COMPLETED",
+    );
+    expect(computeBatchStatusFromCounters({ totalJobs: 3, completedJobs: 2, failedJobs: 1 })).toBe(
+      "PARTIAL",
+    );
+    expect(computeBatchStatusFromCounters({ totalJobs: 2, completedJobs: 0, failedJobs: 2 })).toBe(
+      "FAILED",
+    );
   });
 
   it("requires acceptFailover before switching to fallback printer", () => {

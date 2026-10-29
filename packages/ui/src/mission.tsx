@@ -10,14 +10,23 @@ export type TimelineItem = {
   tone?: "neutral" | "success" | "warning" | "danger" | "info";
 };
 
-export function ActivityTimeline({ items, emptyLabel = "No activity yet." }: { items: TimelineItem[]; emptyLabel?: string }) {
+export function ActivityTimeline({
+  items,
+  emptyLabel = "No activity yet.",
+}: {
+  items: TimelineItem[];
+  emptyLabel?: string;
+}) {
   if (!items.length) {
     return <p className="forge-muted">{emptyLabel}</p>;
   }
   return (
     <ol className="forge-timeline">
       {items.map((item) => (
-        <li key={item.id} className={`forge-timeline__item forge-timeline__item--${item.tone ?? "neutral"}`}>
+        <li
+          key={item.id}
+          className={`forge-timeline__item forge-timeline__item--${item.tone ?? "neutral"}`}
+        >
           <div className="forge-timeline__marker" aria-hidden />
           <div className="forge-timeline__content">
             <p className="forge-timeline__title">{item.title}</p>
@@ -32,13 +41,7 @@ export function ActivityTimeline({ items, emptyLabel = "No activity yet." }: { i
 
 export const AuditTimeline = ActivityTimeline;
 
-export function UserAvatar({
-  name,
-  size = "md",
-}: {
-  name: string;
-  size?: "sm" | "md" | "lg";
-}) {
+export function UserAvatar({ name, size = "md" }: { name: string; size?: "sm" | "md" | "lg" }) {
   const initials = name
     .split(/\s+/)
     .filter(Boolean)
@@ -107,7 +110,11 @@ export function MultiSelect({
         {options.map((opt) => {
           const checked = value.includes(opt.value);
           return (
-            <label key={opt.value} className="forge-multiselect__option" htmlFor={`${id}-${opt.value}`}>
+            <label
+              key={opt.value}
+              className="forge-multiselect__option"
+              htmlFor={`${id}-${opt.value}`}
+            >
               <input
                 id={`${id}-${opt.value}`}
                 type="checkbox"
@@ -245,7 +252,6 @@ export function ForgeAssetUploader({
       >
         {previewUrl ? (
           <div style={{ display: "flex", gap: "1rem", alignItems: "center", flexWrap: "wrap" }}>
-            {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src={previewUrl}
               alt="Upload preview"
@@ -260,11 +266,20 @@ export function ForgeAssetUploader({
               ) : null}
             </div>
             <div style={{ display: "flex", gap: "0.5rem" }}>
-              <label className="forge-button forge-button--secondary" htmlFor={id} style={{ cursor: "pointer" }}>
+              <label
+                className="forge-button forge-button--secondary"
+                htmlFor={id}
+                style={{ cursor: "pointer" }}
+              >
                 Replace
               </label>
               {onRemove ? (
-                <button type="button" className="forge-button forge-button--secondary" onClick={onRemove} disabled={disabled}>
+                <button
+                  type="button"
+                  className="forge-button forge-button--secondary"
+                  onClick={onRemove}
+                  disabled={disabled}
+                >
                   Remove
                 </button>
               ) : null}
@@ -276,7 +291,11 @@ export function ForgeAssetUploader({
             <p className="forge-muted" style={{ margin: "0.35rem 0 0.75rem" }}>
               or
             </p>
-            <label className="forge-button" htmlFor={id} style={{ cursor: disabled ? "not-allowed" : "pointer" }}>
+            <label
+              className="forge-button"
+              htmlFor={id}
+              style={{ cursor: disabled ? "not-allowed" : "pointer" }}
+            >
               Browse files
             </label>
           </div>
@@ -296,7 +315,11 @@ export function ForgeAssetUploader({
         </p>
       ) : null}
       {localError || error ? (
-        <p className="forge-form-field__error" role="alert" style={{ color: "var(--forge-color-danger, #c53030)" }}>
+        <p
+          className="forge-form-field__error"
+          role="alert"
+          style={{ color: "var(--forge-color-danger, #c53030)" }}
+        >
           {localError ?? error}
         </p>
       ) : null}

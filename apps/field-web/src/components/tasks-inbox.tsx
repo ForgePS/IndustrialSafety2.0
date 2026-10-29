@@ -121,7 +121,12 @@ export function TasksInbox() {
             {org?.selection.locationName ? ` · ${org.selection.locationName}` : ""}
           </p>
         </div>
-        <button type="button" className="ff-icon-btn" aria-label="Refresh" onClick={() => void refresh()}>
+        <button
+          type="button"
+          className="ff-icon-btn"
+          aria-label="Refresh"
+          onClick={() => void refresh()}
+        >
           ↻
         </button>
       </header>

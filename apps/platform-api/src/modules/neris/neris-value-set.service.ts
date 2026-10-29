@@ -58,14 +58,14 @@ export class NerisValueSetService {
       const byName = await this.db
         .select()
         .from(nerisValueSets)
-        .where(and(eq(nerisValueSets.schemaVersionId, versionId), eq(nerisValueSets.name, sourceKey)));
+        .where(
+          and(eq(nerisValueSets.schemaVersionId, versionId), eq(nerisValueSets.name, sourceKey)),
+        );
       if (byName.length === 1) return byName[0]!;
       if (byName.length > 1) {
-        throw new ForgeError(
-          "CONFLICT",
-          "Ambiguous value-set name; use namespaced source_key",
-          { details: [{ sourceKey, matches: byName.map((r) => r.sourceKey) }] },
-        );
+        throw new ForgeError("CONFLICT", "Ambiguous value-set name; use namespaced source_key", {
+          details: [{ sourceKey, matches: byName.map((r) => r.sourceKey) }],
+        });
       }
       throw new ForgeError("NOT_FOUND", `Value set not found: ${sourceKey}`);
     }
@@ -103,10 +103,7 @@ export class NerisValueSetService {
       .orderBy(asc(nerisValueOptions.ordinal))
       .limit(pageSize)
       .offset(offset);
-    const totalRows = await this.db
-      .select({ total: count() })
-      .from(nerisValueOptions)
-      .where(where);
+    const totalRows = await this.db.select({ total: count() }).from(nerisValueOptions).where(where);
     return { items, page, pageSize, total: totalRows[0]?.total ?? 0, activeOnly };
   }
 

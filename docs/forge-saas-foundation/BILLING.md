@@ -19,18 +19,18 @@ Closeout note (MK-S24): live Stripe Customer Portal and live SES-adjacent dunnin
 
 ## Logical models
 
-| Model | Storage |
-| --- | --- |
-| Billing customer | `billing_customers` (1:1 tenant) |
-| Plan | `subscription_plans` (existing) |
-| Price | `prices` |
-| Subscription | `subscriptions` (+ `billing_type`, `billing_customer_id`, `seat_quantity`) |
-| Subscription item | `subscription_items` |
-| Invoice metadata | `billing_invoices` |
-| Order / order item | `billing_orders`, `billing_order_items` |
-| Contract | `billing_contracts` |
-| Implementation / migration fee | `billing_fee_lines` (`IMPLEMENTATION`, `MIGRATION`, …) |
-| Billing event | `billing_provider_events` (+ local `subscription_events`) |
+| Model                          | Storage                                                                    |
+| ------------------------------ | -------------------------------------------------------------------------- |
+| Billing customer               | `billing_customers` (1:1 tenant)                                           |
+| Plan                           | `subscription_plans` (existing)                                            |
+| Price                          | `prices`                                                                   |
+| Subscription                   | `subscriptions` (+ `billing_type`, `billing_customer_id`, `seat_quantity`) |
+| Subscription item              | `subscription_items`                                                       |
+| Invoice metadata               | `billing_invoices`                                                         |
+| Order / order item             | `billing_orders`, `billing_order_items`                                    |
+| Contract                       | `billing_contracts`                                                        |
+| Implementation / migration fee | `billing_fee_lines` (`IMPLEMENTATION`, `MIGRATION`, …)                     |
+| Billing event                  | `billing_provider_events` (+ local `subscription_events`)                  |
 
 Migration: `packages/database/drizzle/0030_mk_s9_billing_domain.sql` (not applied to production in this sprint).
 
@@ -47,24 +47,24 @@ Operational DB statuses (`TRIAL`, `ACTIVE`, `GRACE`, `SUSPENDED`, `CANCELED`) ma
 
 ## APIs
 
-| Method | Path | Permission |
-| --- | --- | --- |
-| GET | `/api/v1/tenants/:tenantId/billing/overview` | `platform.entitlement.manage` **or** `tenant.billing.read` |
-| GET | `/api/v1/tenants/:tenantId/billing/customers` | read |
-| POST/PATCH | `/api/v1/tenants/:tenantId/billing/customers` | manage (PATCH audited) |
-| GET/POST | `/api/v1/tenants/:tenantId/billing/contracts` | read / manage |
-| PATCH | `/api/v1/tenants/:tenantId/billing/contracts/:id` | manage (dates, fees, notes, `pricingJson`) |
-| POST | `/api/v1/tenants/:tenantId/billing/fees` | manage |
-| POST | `/api/v1/tenants/:tenantId/billing/orders` | manage |
-| GET/POST | `/api/v1/tenants/:tenantId/billing/invoices` | read / manage |
-| POST | `/api/v1/platform/billing/webhooks/:provider` | manage |
+| Method     | Path                                              | Permission                                                 |
+| ---------- | ------------------------------------------------- | ---------------------------------------------------------- |
+| GET        | `/api/v1/tenants/:tenantId/billing/overview`      | `platform.entitlement.manage` **or** `tenant.billing.read` |
+| GET        | `/api/v1/tenants/:tenantId/billing/customers`     | read                                                       |
+| POST/PATCH | `/api/v1/tenants/:tenantId/billing/customers`     | manage (PATCH audited)                                     |
+| GET/POST   | `/api/v1/tenants/:tenantId/billing/contracts`     | read / manage                                              |
+| PATCH      | `/api/v1/tenants/:tenantId/billing/contracts/:id` | manage (dates, fees, notes, `pricingJson`)                 |
+| POST       | `/api/v1/tenants/:tenantId/billing/fees`          | manage                                                     |
+| POST       | `/api/v1/tenants/:tenantId/billing/orders`        | manage                                                     |
+| GET/POST   | `/api/v1/tenants/:tenantId/billing/invoices`      | read / manage                                              |
+| POST       | `/api/v1/platform/billing/webhooks/:provider`     | manage                                                     |
 
 ## UX (MK-S10)
 
-| App | Route | Role |
-| --- | --- | --- |
-| Creator Console | `/billing` | Overview + manual contract editor + contact |
-| Tenant Admin | `/billing` | Read-only overview; portal stub unless `hostedInvoiceUrl` |
+| App             | Route      | Role                                                      |
+| --------------- | ---------- | --------------------------------------------------------- |
+| Creator Console | `/billing` | Overview + manual contract editor + contact               |
+| Tenant Admin    | `/billing` | Read-only overview; portal stub unless `hostedInvoiceUrl` |
 
 Contract `pricing_json` holds pricing override + per-module amounts. Live Stripe Customer Portal remains deferred (BACKLOG-003).
 
@@ -80,11 +80,11 @@ Contract `pricing_json` holds pricing override + per-module amounts. Live Stripe
 
 ## Providers
 
-| Code | Notes |
-| --- | --- |
-| `NONE` | Default; no PSP |
-| `STUB` | Local/dev webhook testing |
-| `MANUAL` | Enterprise contract path |
+| Code     | Notes                                                  |
+| -------- | ------------------------------------------------------ |
+| `NONE`   | Default; no PSP                                        |
+| `STUB`   | Local/dev webhook testing                              |
+| `MANUAL` | Enterprise contract path                               |
 | `STRIPE` | Reserved — live adapter **not** in MK-S9 (BACKLOG-003) |
 
 ## Out of scope

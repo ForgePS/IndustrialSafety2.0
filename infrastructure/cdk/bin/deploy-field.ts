@@ -40,8 +40,18 @@ class FieldFrontendStack extends cdk.Stack {
     });
 
     const field = new ForgeFieldHosting(this, "Field", { config });
-    exportValue(this, "ForgeFrontend-FieldDomain", field.distribution.distributionDomainName, "Field Web CloudFront domain");
-    exportValue(this, "ForgeFrontend-FieldBucket", field.bucket.bucketName, "Field Web origin bucket");
+    exportValue(
+      this,
+      "ForgeFrontend-FieldDomain",
+      field.distribution.distributionDomainName,
+      "Field Web CloudFront domain",
+    );
+    exportValue(
+      this,
+      "ForgeFrontend-FieldBucket",
+      field.bucket.bucketName,
+      "Field Web origin bucket",
+    );
     exportValue(
       this,
       "ForgeFrontend-FieldDistributionId",

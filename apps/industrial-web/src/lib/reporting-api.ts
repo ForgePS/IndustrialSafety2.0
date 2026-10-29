@@ -263,15 +263,8 @@ export function chartSeriesFromResult(
   return series.length ? series : null;
 }
 
-export async function runReport(
-  key: string,
-  body: ReportRunFields = {},
-): Promise<ReportRunResult> {
-  return apiSend<ReportRunResult>(
-    `${BASE}/reports/${encodeURIComponent(key)}/run`,
-    "POST",
-    body,
-  );
+export async function runReport(key: string, body: ReportRunFields = {}): Promise<ReportRunResult> {
+  return apiSend<ReportRunResult>(`${BASE}/reports/${encodeURIComponent(key)}/run`, "POST", body);
 }
 
 export async function exportReport(
@@ -305,7 +298,9 @@ export async function deleteSavedReport(id: string): Promise<{ id: string; delet
   return apiSend(`${BASE}/reports/${encodeURIComponent(id)}`, "DELETE");
 }
 
-export async function favoriteReport(key: string): Promise<{ reportKey: string; favorited: boolean }> {
+export async function favoriteReport(
+  key: string,
+): Promise<{ reportKey: string; favorited: boolean }> {
   return apiSend(`${BASE}/reports/${encodeURIComponent(key)}/favorite`, "POST", {});
 }
 

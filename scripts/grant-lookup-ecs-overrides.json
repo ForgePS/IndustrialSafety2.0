@@ -1,1 +1,8 @@
-{"containerOverrides":[{"name":"platform-api","command":["node","/app/packages/database/dist/grant-lookup-ecs.js"]}]}
+{
+  "containerOverrides": [
+    {
+      "name": "platform-api",
+      "command": ["node", "/app/packages/database/dist/grant-lookup-ecs.js"]
+    }
+  ]
+}

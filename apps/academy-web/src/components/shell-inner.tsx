@@ -19,7 +19,13 @@ export function ShellInner({ children }: { children: React.ReactNode }) {
       activePath={pathname}
       envBanner={<EnvironmentBanner environment={appEnv} />}
       topbarCenter={<span>Academy · foundation shell</span>}
-      renderLink={({ href, className, children: linkChildren, "aria-current": ariaCurrent, onClick }) => {
+      renderLink={({
+        href,
+        className,
+        children: linkChildren,
+        "aria-current": ariaCurrent,
+        onClick,
+      }) => {
         const props: {
           href: string;
           className?: string;

@@ -30,11 +30,7 @@ function toggleService(
 }
 
 /** Medical Evaluation / Treatment Refusal Acknowledgment fields. */
-export function MedicalRefusalAcknowledgmentForm({
-  value,
-  onChange,
-  disabled = false,
-}: Props) {
+export function MedicalRefusalAcknowledgmentForm({ value, onChange, disabled = false }: Props) {
   function patch(partial: Partial<MedicalRefusalAcknowledgment>) {
     onChange({ ...value, ...partial });
   }

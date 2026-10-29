@@ -100,13 +100,7 @@ export class BillingController {
     @Res({ passthrough: true }) res: Response,
   ) {
     const expected = requireIfMatch(req, "billing_contract");
-    const data = await this.billing.patchContract(
-      tenantId,
-      contractId,
-      body,
-      principal,
-      expected,
-    );
+    const data = await this.billing.patchContract(tenantId, contractId, body, principal, expected);
     setETag(res, data.recordVersion);
     return ok(data, getRequestIds(req));
   }
@@ -180,13 +174,7 @@ export class BillingController {
     @Res({ passthrough: true }) res: Response,
   ) {
     const expected = requireIfMatch(req, "billing_invoice");
-    const data = await this.billing.patchInvoice(
-      tenantId,
-      invoiceId,
-      body,
-      principal,
-      expected,
-    );
+    const data = await this.billing.patchInvoice(tenantId, invoiceId, body, principal, expected);
     setETag(res, data.recordVersion);
     return ok(data, getRequestIds(req));
   }

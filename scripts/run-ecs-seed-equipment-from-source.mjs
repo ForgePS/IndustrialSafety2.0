@@ -116,5 +116,7 @@ try {
 }
 
 console.log(logs);
-console.log(JSON.stringify({ taskArn, exitCode, apply: APPLY, limit: LIMIT, forgeEnv: FORGE_ENV }, null, 2));
+console.log(
+  JSON.stringify({ taskArn, exitCode, apply: APPLY, limit: LIMIT, forgeEnv: FORGE_ENV }, null, 2),
+);
 if (exitCode !== 0) process.exit(typeof exitCode === "number" ? exitCode : 1);

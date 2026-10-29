@@ -1,8 +1,5 @@
 import { describe, expect, it } from "vitest";
-import {
-  isActivePersonnelStatus,
-  normalizePersonnelStatus,
-} from "./personnel-status.js";
+import { isActivePersonnelStatus, normalizePersonnelStatus } from "./personnel-status.js";
 
 describe("personnel-status", () => {
   it("treats mixed-case active values as active", () => {

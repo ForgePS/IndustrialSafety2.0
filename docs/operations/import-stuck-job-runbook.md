@@ -5,14 +5,14 @@
 
 ## Monitored states and thresholds
 
-| Status | Threshold |
-| --- | --- |
-| SCANNING | 15 minutes |
-| VALIDATING | 30 minutes |
+| Status            | Threshold  |
+| ----------------- | ---------- |
+| SCANNING          | 15 minutes |
+| VALIDATING        | 30 minutes |
 | READY_FOR_PREVIEW | 30 minutes |
-| QUEUED | 30 minutes |
-| PROCESSING | 2 hours |
-| ROLLBACK_PENDING | 24 hours |
+| QUEUED            | 30 minutes |
+| PROCESSING        | 2 hours    |
+| ROLLBACK_PENDING  | 24 hours   |
 
 Note: `PREVIEW_GENERATING` and `CANCELLATION_REQUESTED` are not discrete shared job statuses; preview waits use `READY_FOR_PREVIEW`, and cancel transitions to `CANCELLED` at a safe boundary while leaving `PROCESSING` until then.
 

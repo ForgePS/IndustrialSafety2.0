@@ -24,7 +24,10 @@ const td = JSON.parse(r.stdout).taskDefinition;
 const env = td.containerDefinitions[0].environment || [];
 const cognito = env.find((e) => e.name === "COGNITO_CLIENT_ID");
 const industrial = "3rls9835j4qs3jmchb3uh7ketm";
-const ids = (cognito?.value || "").split(",").map((s) => s.trim()).filter(Boolean);
+const ids = (cognito?.value || "")
+  .split(",")
+  .map((s) => s.trim())
+  .filter(Boolean);
 console.log(
   JSON.stringify(
     {

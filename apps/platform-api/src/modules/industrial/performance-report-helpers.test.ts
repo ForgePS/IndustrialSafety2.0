@@ -31,7 +31,13 @@ const dir = buildOrgDirectory({
   ],
   personnel: [
     { id: "p1", siteId: null, departmentId: DEPT_SHIP, departmentName: null, divisionName: null },
-    { id: "p2", siteId: SITE_A, departmentId: null, departmentName: "packaging", divisionName: null },
+    {
+      id: "p2",
+      siteId: SITE_A,
+      departmentId: null,
+      departmentName: "packaging",
+      divisionName: null,
+    },
   ],
 });
 
@@ -69,12 +75,12 @@ describe("normalizePerformanceRequest", () => {
   });
 
   it("rejects reversed or oversized ranges", () => {
-    expect(() => normalizePerformanceRequest({ from: "2026-05-01", to: "2026-04-01" }, now)).toThrow(
-      PerformanceRequestError,
-    );
-    expect(() => normalizePerformanceRequest({ from: "2020-01-01", to: "2026-01-01" }, now)).toThrow(
-      PerformanceRequestError,
-    );
+    expect(() =>
+      normalizePerformanceRequest({ from: "2026-05-01", to: "2026-04-01" }, now),
+    ).toThrow(PerformanceRequestError);
+    expect(() =>
+      normalizePerformanceRequest({ from: "2020-01-01", to: "2026-01-01" }, now),
+    ).toThrow(PerformanceRequestError);
   });
 });
 
@@ -97,12 +103,23 @@ describe("dates and statuses", () => {
 describe("resolveOrgUnit", () => {
   it("derives location and division from the department", () => {
     const unit = resolveOrgUnit(dir, { departmentId: DEPT_PACK });
-    expect(unit).toMatchObject({ siteId: SITE_A, siteName: "Plant A", division: "Operations", departmentName: "Packaging" });
+    expect(unit).toMatchObject({
+      siteId: SITE_A,
+      siteName: "Plant A",
+      division: "Operations",
+      departmentName: "Packaging",
+    });
   });
 
   it("falls back to the employee's department (by id or name)", () => {
-    expect(resolveOrgUnit(dir, { personnelId: "p1" })).toMatchObject({ siteId: SITE_B, division: "Logistics" });
-    expect(resolveOrgUnit(dir, { personnelId: "p2" })).toMatchObject({ departmentId: DEPT_PACK, siteId: SITE_A });
+    expect(resolveOrgUnit(dir, { personnelId: "p1" })).toMatchObject({
+      siteId: SITE_B,
+      division: "Logistics",
+    });
+    expect(resolveOrgUnit(dir, { personnelId: "p2" })).toMatchObject({
+      departmentId: DEPT_PACK,
+      siteId: SITE_A,
+    });
   });
 
   it("buckets unknown records as unassigned", () => {
@@ -117,7 +134,11 @@ describe("resolveOrgUnit", () => {
 
 describe("accumulation", () => {
   it("groups, filters, and derives section metrics", () => {
-    const acc = new PerformanceAccumulator(dir, "site", { siteIds: [], divisions: [], departmentIds: [] });
+    const acc = new PerformanceAccumulator(dir, "site", {
+      siteIds: [],
+      divisions: [],
+      departmentIds: [],
+    });
     const a = acc.unit({ departmentId: DEPT_PACK });
     const b = acc.unit({ siteId: SITE_B });
     acc.add("_org", a, "headcount", 10);
@@ -166,15 +187,34 @@ describe("hours", () => {
   });
 
   it("estimates from headcount when 300A hours are missing", () => {
-    const result = siteHoursForPeriod({ from: "2026-01-01", to: "2026-12-31", headcount: 10, annualHours: () => null });
+    const result = siteHoursForPeriod({
+      from: "2026-01-01",
+      to: "2026-12-31",
+      headcount: 10,
+      annualHours: () => null,
+    });
     expect(result).toEqual({ hours: 20_000, estimated: true });
   });
 });
 
 describe("scores", () => {
   it("matches the dashboard Safety Index", () => {
-    expect(computeSafetyIndex({ openIncidents: 0, totalIncidents: 0, inspectionCount: 0, trainingCount: 0 })).toBe(100);
-    expect(computeSafetyIndex({ openIncidents: 2, totalIncidents: 4, inspectionCount: 3, trainingCount: 1 })).toBe(81);
+    expect(
+      computeSafetyIndex({
+        openIncidents: 0,
+        totalIncidents: 0,
+        inspectionCount: 0,
+        trainingCount: 0,
+      }),
+    ).toBe(100);
+    expect(
+      computeSafetyIndex({
+        openIncidents: 2,
+        totalIncidents: 4,
+        inspectionCount: 3,
+        trainingCount: 1,
+      }),
+    ).toBe(81);
   });
 
   it("matches the employee profile score weights", () => {

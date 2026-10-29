@@ -81,70 +81,75 @@ export class SubscriptionsService {
 
   async create(tenantId: string, input: unknown, principal: ForgePrincipal) {
     const data = createSchema.parse(input);
-    return withTenantTransaction(this.db, tenantId, async (tx) => {
-      const plan = await tx.query.subscriptionPlans.findFirst({
-        where: eq(subscriptionPlans.code, data.planCode),
-      });
-      if (!plan) {
-        throw new ForgeError("NOT_FOUND", "Subscription plan not found");
-      }
-      const now = new Date();
-      const periodEnd = new Date(now.getTime() + data.periodDays * 86400_000);
-      const id = createId();
-      const [row] = await tx
-        .insert(subscriptions)
-        .values({
-          id,
+    return withTenantTransaction(
+      this.db,
+      tenantId,
+      async (tx) => {
+        const plan = await tx.query.subscriptionPlans.findFirst({
+          where: eq(subscriptionPlans.code, data.planCode),
+        });
+        if (!plan) {
+          throw new ForgeError("NOT_FOUND", "Subscription plan not found");
+        }
+        const now = new Date();
+        const periodEnd = new Date(now.getTime() + data.periodDays * 86400_000);
+        const id = createId();
+        const [row] = await tx
+          .insert(subscriptions)
+          .values({
+            id,
+            tenantId,
+            planId: plan.id,
+            status: data.status,
+            billingProvider: data.billingProvider,
+            startsAt: now,
+            currentPeriodStart: now,
+            currentPeriodEnd: periodEnd,
+            createdAt: now,
+            updatedAt: now,
+          })
+          .returning();
+        if (!row) {
+          throw new ForgeError("INTERNAL_ERROR", "Failed to create subscription");
+        }
+
+        await tx.insert(subscriptionEvents).values({
+          id: createId(),
           tenantId,
-          planId: plan.id,
-          status: data.status,
-          billingProvider: data.billingProvider,
-          startsAt: now,
-          currentPeriodStart: now,
-          currentPeriodEnd: periodEnd,
+          subscriptionId: id,
+          eventType: "subscription.created",
+          payloadJson: { planCode: data.planCode, status: data.status },
+          occurredAt: now,
           createdAt: now,
-          updatedAt: now,
-        })
-        .returning();
-      if (!row) {
-        throw new ForgeError("INTERNAL_ERROR", "Failed to create subscription");
-      }
+        });
 
-      await tx.insert(subscriptionEvents).values({
-        id: createId(),
-        tenantId,
-        subscriptionId: id,
-        eventType: "subscription.created",
-        payloadJson: { planCode: data.planCode, status: data.status },
-        occurredAt: now,
-        createdAt: now,
-      });
-
-      await this.outbox.write(tx, {
-        tenantId,
-        aggregateType: "subscription",
-        aggregateId: id,
-        eventType: DOMAIN_EVENT_TYPES.SUBSCRIPTION_CHANGED,
-        payload: { subscriptionId: id, tenantId, status: data.status, planCode: data.planCode },
-        correlationId: principal.correlationId,
-        actorUserId: principal.userId,
-      });
-      await this.audit.writeInTransaction(tx, {
-        tenantId,
-        actorUserId: principal.userId,
-        actorPersonId: principal.personId,
-        actorType: "USER",
-        action: "subscription.create",
-        resourceType: "subscription",
-        resourceId: id,
-        result: "SUCCESS",
-        riskLevel: "HIGH",
-        correlationId: principal.correlationId,
-        requestId: principal.requestId,
-        after: row,
-      });
-      return enrichSubscription(row, plan);
-    }, principal.userId);
+        await this.outbox.write(tx, {
+          tenantId,
+          aggregateType: "subscription",
+          aggregateId: id,
+          eventType: DOMAIN_EVENT_TYPES.SUBSCRIPTION_CHANGED,
+          payload: { subscriptionId: id, tenantId, status: data.status, planCode: data.planCode },
+          correlationId: principal.correlationId,
+          actorUserId: principal.userId,
+        });
+        await this.audit.writeInTransaction(tx, {
+          tenantId,
+          actorUserId: principal.userId,
+          actorPersonId: principal.personId,
+          actorType: "USER",
+          action: "subscription.create",
+          resourceType: "subscription",
+          resourceId: id,
+          result: "SUCCESS",
+          riskLevel: "HIGH",
+          correlationId: principal.correlationId,
+          requestId: principal.requestId,
+          after: row,
+        });
+        return enrichSubscription(row, plan);
+      },
+      principal.userId,
+    );
   }
 
   async list(tenantId: string) {
@@ -192,53 +197,55 @@ export class SubscriptionsService {
     expectedVersion: ExpectedVersion,
   ) {
     const data = patchSchema.parse(input);
-    return withTenantTransaction(this.db, tenantId, async (tx) => {
-      const before = await tx.query.subscriptions.findFirst({
-        where: and(eq(subscriptions.id, subscriptionId), eq(subscriptions.tenantId, tenantId)),
-      });
-      if (!before) {
-        throw new ForgeError("NOT_FOUND", "Subscription not found");
-      }
-      const version = before.recordVersion;
-      if (expectedVersion !== "*" && version !== expectedVersion) {
-        throw concurrencyConflict({
-          tenantId,
-          resourceType: "subscription",
-          resourceId: subscriptionId,
-          expectedVersion,
-          actualVersion: version,
+    return withTenantTransaction(
+      this.db,
+      tenantId,
+      async (tx) => {
+        const before = await tx.query.subscriptions.findFirst({
+          where: and(eq(subscriptions.id, subscriptionId), eq(subscriptions.tenantId, tenantId)),
         });
-      }
-      const [updated] = await tx
-        .update(subscriptions)
-        .set({ ...data, recordVersion: version + 1, updatedAt: new Date() })
-        .where(
-          and(
-            eq(subscriptions.id, subscriptionId),
-            eq(subscriptions.recordVersion, version),
-          ),
-        )
-        .returning();
-      if (!updated) {
-        throw concurrencyConflict({
+        if (!before) {
+          throw new ForgeError("NOT_FOUND", "Subscription not found");
+        }
+        const version = before.recordVersion;
+        if (expectedVersion !== "*" && version !== expectedVersion) {
+          throw concurrencyConflict({
+            tenantId,
+            resourceType: "subscription",
+            resourceId: subscriptionId,
+            expectedVersion,
+            actualVersion: version,
+          });
+        }
+        const [updated] = await tx
+          .update(subscriptions)
+          .set({ ...data, recordVersion: version + 1, updatedAt: new Date() })
+          .where(
+            and(eq(subscriptions.id, subscriptionId), eq(subscriptions.recordVersion, version)),
+          )
+          .returning();
+        if (!updated) {
+          throw concurrencyConflict({
+            tenantId,
+            resourceType: "subscription",
+            resourceId: subscriptionId,
+            expectedVersion,
+            actualVersion: null,
+          });
+        }
+        await this.outbox.write(tx, {
           tenantId,
-          resourceType: "subscription",
-          resourceId: subscriptionId,
-          expectedVersion,
-          actualVersion: null,
+          aggregateType: "subscription",
+          aggregateId: subscriptionId,
+          eventType: DOMAIN_EVENT_TYPES.SUBSCRIPTION_CHANGED,
+          payload: { subscriptionId, tenantId, status: updated.status },
+          correlationId: principal.correlationId,
+          actorUserId: principal.userId,
         });
-      }
-      await this.outbox.write(tx, {
-        tenantId,
-        aggregateType: "subscription",
-        aggregateId: subscriptionId,
-        eventType: DOMAIN_EVENT_TYPES.SUBSCRIPTION_CHANGED,
-        payload: { subscriptionId, tenantId, status: updated.status },
-        correlationId: principal.correlationId,
-        actorUserId: principal.userId,
-      });
-      return updated;
-    }, principal.userId);
+        return updated;
+      },
+      principal.userId,
+    );
   }
 
   async suspend(
@@ -247,59 +254,61 @@ export class SubscriptionsService {
     principal: ForgePrincipal,
     expectedVersion: ExpectedVersion,
   ) {
-    return withTenantTransaction(this.db, tenantId, async (tx) => {
-      const before = await tx.query.subscriptions.findFirst({
-        where: and(eq(subscriptions.id, subscriptionId), eq(subscriptions.tenantId, tenantId)),
-      });
-      if (!before) {
-        throw new ForgeError("NOT_FOUND", "Subscription not found");
-      }
-      const version = before.recordVersion;
-      if (expectedVersion !== "*" && version !== expectedVersion) {
-        throw concurrencyConflict({
-          tenantId,
-          resourceType: "subscription",
-          resourceId: subscriptionId,
-          expectedVersion,
-          actualVersion: version,
+    return withTenantTransaction(
+      this.db,
+      tenantId,
+      async (tx) => {
+        const before = await tx.query.subscriptions.findFirst({
+          where: and(eq(subscriptions.id, subscriptionId), eq(subscriptions.tenantId, tenantId)),
         });
-      }
-      const now = new Date();
-      const [updated] = await tx
-        .update(subscriptions)
-        .set({
-          status: "SUSPENDED",
-          suspendedAt: now,
-          recordVersion: version + 1,
-          updatedAt: now,
-        })
-        .where(
-          and(
-            eq(subscriptions.id, subscriptionId),
-            eq(subscriptions.recordVersion, version),
-          ),
-        )
-        .returning();
-      if (!updated) {
-        throw concurrencyConflict({
+        if (!before) {
+          throw new ForgeError("NOT_FOUND", "Subscription not found");
+        }
+        const version = before.recordVersion;
+        if (expectedVersion !== "*" && version !== expectedVersion) {
+          throw concurrencyConflict({
+            tenantId,
+            resourceType: "subscription",
+            resourceId: subscriptionId,
+            expectedVersion,
+            actualVersion: version,
+          });
+        }
+        const now = new Date();
+        const [updated] = await tx
+          .update(subscriptions)
+          .set({
+            status: "SUSPENDED",
+            suspendedAt: now,
+            recordVersion: version + 1,
+            updatedAt: now,
+          })
+          .where(
+            and(eq(subscriptions.id, subscriptionId), eq(subscriptions.recordVersion, version)),
+          )
+          .returning();
+        if (!updated) {
+          throw concurrencyConflict({
+            tenantId,
+            resourceType: "subscription",
+            resourceId: subscriptionId,
+            expectedVersion,
+            actualVersion: null,
+          });
+        }
+        await this.outbox.write(tx, {
           tenantId,
-          resourceType: "subscription",
-          resourceId: subscriptionId,
-          expectedVersion,
-          actualVersion: null,
+          aggregateType: "subscription",
+          aggregateId: subscriptionId,
+          eventType: DOMAIN_EVENT_TYPES.SUBSCRIPTION_CHANGED,
+          payload: { subscriptionId, tenantId, status: "SUSPENDED" },
+          correlationId: principal.correlationId,
+          actorUserId: principal.userId,
         });
-      }
-      await this.outbox.write(tx, {
-        tenantId,
-        aggregateType: "subscription",
-        aggregateId: subscriptionId,
-        eventType: DOMAIN_EVENT_TYPES.SUBSCRIPTION_CHANGED,
-        payload: { subscriptionId, tenantId, status: "SUSPENDED" },
-        correlationId: principal.correlationId,
-        actorUserId: principal.userId,
-      });
-      return updated;
-    }, principal.userId);
+        return updated;
+      },
+      principal.userId,
+    );
   }
 
   async reactivate(
@@ -308,57 +317,59 @@ export class SubscriptionsService {
     principal: ForgePrincipal,
     expectedVersion: ExpectedVersion,
   ) {
-    return withTenantTransaction(this.db, tenantId, async (tx) => {
-      const before = await tx.query.subscriptions.findFirst({
-        where: and(eq(subscriptions.id, subscriptionId), eq(subscriptions.tenantId, tenantId)),
-      });
-      if (!before) {
-        throw new ForgeError("NOT_FOUND", "Subscription not found");
-      }
-      const version = before.recordVersion;
-      if (expectedVersion !== "*" && version !== expectedVersion) {
-        throw concurrencyConflict({
-          tenantId,
-          resourceType: "subscription",
-          resourceId: subscriptionId,
-          expectedVersion,
-          actualVersion: version,
+    return withTenantTransaction(
+      this.db,
+      tenantId,
+      async (tx) => {
+        const before = await tx.query.subscriptions.findFirst({
+          where: and(eq(subscriptions.id, subscriptionId), eq(subscriptions.tenantId, tenantId)),
         });
-      }
-      const [updated] = await tx
-        .update(subscriptions)
-        .set({
-          status: "ACTIVE",
-          suspendedAt: null,
-          recordVersion: version + 1,
-          updatedAt: new Date(),
-        })
-        .where(
-          and(
-            eq(subscriptions.id, subscriptionId),
-            eq(subscriptions.recordVersion, version),
-          ),
-        )
-        .returning();
-      if (!updated) {
-        throw concurrencyConflict({
+        if (!before) {
+          throw new ForgeError("NOT_FOUND", "Subscription not found");
+        }
+        const version = before.recordVersion;
+        if (expectedVersion !== "*" && version !== expectedVersion) {
+          throw concurrencyConflict({
+            tenantId,
+            resourceType: "subscription",
+            resourceId: subscriptionId,
+            expectedVersion,
+            actualVersion: version,
+          });
+        }
+        const [updated] = await tx
+          .update(subscriptions)
+          .set({
+            status: "ACTIVE",
+            suspendedAt: null,
+            recordVersion: version + 1,
+            updatedAt: new Date(),
+          })
+          .where(
+            and(eq(subscriptions.id, subscriptionId), eq(subscriptions.recordVersion, version)),
+          )
+          .returning();
+        if (!updated) {
+          throw concurrencyConflict({
+            tenantId,
+            resourceType: "subscription",
+            resourceId: subscriptionId,
+            expectedVersion,
+            actualVersion: null,
+          });
+        }
+        await this.outbox.write(tx, {
           tenantId,
-          resourceType: "subscription",
-          resourceId: subscriptionId,
-          expectedVersion,
-          actualVersion: null,
+          aggregateType: "subscription",
+          aggregateId: subscriptionId,
+          eventType: DOMAIN_EVENT_TYPES.SUBSCRIPTION_CHANGED,
+          payload: { subscriptionId, tenantId, status: "ACTIVE" },
+          correlationId: principal.correlationId,
+          actorUserId: principal.userId,
         });
-      }
-      await this.outbox.write(tx, {
-        tenantId,
-        aggregateType: "subscription",
-        aggregateId: subscriptionId,
-        eventType: DOMAIN_EVENT_TYPES.SUBSCRIPTION_CHANGED,
-        payload: { subscriptionId, tenantId, status: "ACTIVE" },
-        correlationId: principal.correlationId,
-        actorUserId: principal.userId,
-      });
-      return updated;
-    }, principal.userId);
+        return updated;
+      },
+      principal.userId,
+    );
   }
 }

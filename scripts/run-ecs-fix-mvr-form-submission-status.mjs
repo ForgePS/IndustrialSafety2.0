@@ -60,14 +60,7 @@ spawnSync("aws", ["ecs", "wait", "tasks-stopped", "--cluster", cluster, "--tasks
   shell: true,
 });
 
-const tasks = awsJson([
-  "ecs",
-  "describe-tasks",
-  "--cluster",
-  cluster,
-  "--tasks",
-  taskArn,
-]);
+const tasks = awsJson(["ecs", "describe-tasks", "--cluster", cluster, "--tasks", taskArn]);
 const exitCode = tasks.tasks?.[0]?.containers?.[0]?.exitCode;
 console.log(JSON.stringify({ cluster, taskArn, exitCode, logGroup: LOG_GROUP }, null, 2));
 process.exit(typeof exitCode === "number" ? exitCode : 1);

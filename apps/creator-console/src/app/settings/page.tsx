@@ -2,7 +2,14 @@
 
 import Link from "next/link";
 import { Suspense } from "react";
-import { ComingLater, ForgeModuleGrid, ForgePageHeader, LoadingState, ModuleCard, type ForgeLinkRender } from "@forge/ui";
+import {
+  ComingLater,
+  ForgeModuleGrid,
+  ForgePageHeader,
+  LoadingState,
+  ModuleCard,
+  type ForgeLinkRender,
+} from "@forge/ui";
 import { PlatformPageGate } from "@/components/platform-page-gate";
 import { useAuth } from "@/hooks/use-auth";
 import { tenantQuery, useTenantId } from "@/hooks/use-tenant-id";
@@ -64,7 +71,11 @@ function SettingsInner() {
           <ModuleCard
             name="Tenant profile"
             meta="tenant_profile namespace"
-            href={tenantId ? `/studio/tenant-profile${tenantQuery(tenantId)}` : "/studio/tenant-profile/"}
+            href={
+              tenantId
+                ? `/studio/tenant-profile${tenantQuery(tenantId)}`
+                : "/studio/tenant-profile/"
+            }
             renderLink={renderLink}
             disabled={!tenantId}
             {...(!tenantId ? { disabledReason: "Select a tenant first" } : {})}
@@ -80,7 +91,8 @@ function SettingsInner() {
         </ForgeModuleGrid>
         {!tenantId ? (
           <p className={styles.muted} style={{ marginTop: "0.75rem" }}>
-            <Link href="/select-tenant/">Select tenant</Link> or open a customer to enable Studio links.
+            <Link href="/select-tenant/">Select tenant</Link> or open a customer to enable Studio
+            links.
           </p>
         ) : null}
       </div>

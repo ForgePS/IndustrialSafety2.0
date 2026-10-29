@@ -51,10 +51,21 @@ export const FIELD_PRIMARY_NAV: readonly FieldPrimaryNavItem[] = [
 ] as const;
 
 /** Extra tablet rail links (not in phone bottom bar). */
-export const FIELD_TABLET_EXTRA_NAV: readonly { href: string; label: string; match: (path: string) => boolean }[] =
-  [
-    { href: "/report/", label: "Report", match: (path) => path.startsWith("/report") },
-    { href: "/sanitation/", label: "Sanitation", match: (path) => path.startsWith("/sanitation") },
-    { href: "/more/loto/", label: "LOTO", match: (path) => path.startsWith("/more/loto") || path.startsWith("/loto") },
-    { href: "/more/emergency/", label: "Emergency", match: (path) => path.startsWith("/more/emergency") },
-  ];
+export const FIELD_TABLET_EXTRA_NAV: readonly {
+  href: string;
+  label: string;
+  match: (path: string) => boolean;
+}[] = [
+  { href: "/report/", label: "Report", match: (path) => path.startsWith("/report") },
+  { href: "/sanitation/", label: "Sanitation", match: (path) => path.startsWith("/sanitation") },
+  {
+    href: "/more/loto/",
+    label: "LOTO",
+    match: (path) => path.startsWith("/more/loto") || path.startsWith("/loto"),
+  },
+  {
+    href: "/more/emergency/",
+    label: "Emergency",
+    match: (path) => path.startsWith("/more/emergency"),
+  },
+];

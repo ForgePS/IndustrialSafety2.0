@@ -6,15 +6,15 @@
 
 ### Shared contract
 
-| Section | Spec |
-| --- | --- |
-| Permissions | Mask or omit restricted fields; never leak via tooltips |
-| Accessibility | Tables use headers; critical charts need text alternatives; status/priority never color-only |
-| Keyboard | Row activation Enter; overflow menus arrow-navigable |
-| Screen reader | Announce loading/empty; badge text included in name |
-| Responsive | Card transform or horizontal scroll patterns for tables on phone |
-| Anti-patterns | Spreadsheet-as-app; color-only status |
-| Future extension points | Safe column/render registries without forking Table |
+| Section                 | Spec                                                                                         |
+| ----------------------- | -------------------------------------------------------------------------------------------- |
+| Permissions             | Mask or omit restricted fields; never leak via tooltips                                      |
+| Accessibility           | Tables use headers; critical charts need text alternatives; status/priority never color-only |
+| Keyboard                | Row activation Enter; overflow menus arrow-navigable                                         |
+| Screen reader           | Announce loading/empty; badge text included in name                                          |
+| Responsive              | Card transform or horizontal scroll patterns for tables on phone                             |
+| Anti-patterns           | Spreadsheet-as-app; color-only status                                                        |
+| Future extension points | Safe column/render registries without forking Table                                          |
 
 ---
 

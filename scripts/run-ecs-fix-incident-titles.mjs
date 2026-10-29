@@ -78,33 +78,17 @@ console.log(JSON.stringify({ cluster, taskArn, apply: APPLY === "1" }, null, 2))
 
 const wait = spawnSync(
   "aws",
-  [
-    "ecs",
-    "wait",
-    "tasks-stopped",
-    "--cluster",
-    cluster,
-    "--tasks",
-    taskArn,
-  ],
+  ["ecs", "wait", "tasks-stopped", "--cluster", cluster, "--tasks", taskArn],
   { encoding: "utf8", shell: true },
 );
 if (wait.status !== 0) {
   console.error(wait.stderr || wait.stdout);
 }
 
-const logs = spawnSync(
-  "aws",
-  [
-    "logs",
-    "tail",
-    LOG_GROUP,
-    "--since",
-    "15m",
-    "--format",
-    "short",
-  ],
-  { encoding: "utf8", shell: true, maxBuffer: 10 * 1024 * 1024 },
-);
+const logs = spawnSync("aws", ["logs", "tail", LOG_GROUP, "--since", "15m", "--format", "short"], {
+  encoding: "utf8",
+  shell: true,
+  maxBuffer: 10 * 1024 * 1024,
+});
 if (logs.stdout) console.log(logs.stdout);
 if (logs.status !== 0) console.error(logs.stderr || "");

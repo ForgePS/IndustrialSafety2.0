@@ -1,9 +1,6 @@
 import "reflect-metadata";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import {
-  HELPDESK_CUSTOMER_PERMISSIONS,
-  HELPDESK_SUPPORT_PERMISSIONS,
-} from "@forge/contracts";
+import { HELPDESK_CUSTOMER_PERMISSIONS, HELPDESK_SUPPORT_PERMISSIONS } from "@forge/contracts";
 import type { ForgePrincipal } from "@forge/tenant-context";
 import {
   REQUIRE_PERMISSION_KEY,
@@ -40,9 +37,13 @@ vi.mock("@forge/database", async () => {
   const actual = await vi.importActual<typeof import("@forge/database")>("@forge/database");
   return {
     ...actual,
-    withTenantTransaction: async (_db: unknown, _tenantId: string, fn: (tx: unknown) => Promise<unknown>) =>
+    withTenantTransaction: async (
+      _db: unknown,
+      _tenantId: string,
+      fn: (tx: unknown) => Promise<unknown>,
+    ) => fn(txMock),
+    withBypassRlsTransaction: async (_db: unknown, fn: (tx: unknown) => Promise<unknown>) =>
       fn(txMock),
-    withBypassRlsTransaction: async (_db: unknown, fn: (tx: unknown) => Promise<unknown>) => fn(txMock),
   };
 });
 
@@ -53,7 +54,10 @@ const USER_A = "11111111-1111-4111-8111-111111111111";
 const USER_B = "22222222-2222-4222-8222-222222222222";
 const TICKET = "cccccccc-cccc-4ccc-8ccc-cccccccccccc";
 
-function principal(perms: readonly string[], overrides: Partial<ForgePrincipal> = {}): ForgePrincipal {
+function principal(
+  perms: readonly string[],
+  overrides: Partial<ForgePrincipal> = {},
+): ForgePrincipal {
   return {
     authenticationIdentityId: "auth-1",
     userId: USER_A,
@@ -109,7 +113,10 @@ describe("helpdesk route permissions", () => {
     for (const m of supportRoutes) {
       const allowed = meta(m).anyOf ?? [];
       for (const code of allowed) {
-        expect(HELPDESK_CUSTOMER_PERMISSIONS as readonly string[], `${m} accepts ${code}`).not.toContain(code);
+        expect(
+          HELPDESK_CUSTOMER_PERMISSIONS as readonly string[],
+          `${m} accepts ${code}`,
+        ).not.toContain(code);
         expect(HELPDESK_SUPPORT_PERMISSIONS as readonly string[]).toContain(code);
       }
     }
@@ -125,15 +132,25 @@ describe("helpdesk service authorization", () => {
     const svc = service();
     await expect(svc.supportSummary(CUSTOMER)).rejects.toMatchObject({ code: "FORBIDDEN" });
     await expect(svc.supportList(CUSTOMER, {})).rejects.toMatchObject({ code: "FORBIDDEN" });
-    await expect(svc.supportTicketDetail(CUSTOMER, TICKET)).rejects.toMatchObject({ code: "FORBIDDEN" });
-    await expect(svc.supportReply(CUSTOMER, TICKET, { body: "hi" })).rejects.toMatchObject({ code: "FORBIDDEN" });
-    await expect(svc.supportInternalNote(CUSTOMER, TICKET, { body: "secret" })).rejects.toMatchObject({
+    await expect(svc.supportTicketDetail(CUSTOMER, TICKET)).rejects.toMatchObject({
       code: "FORBIDDEN",
     });
-    await expect(svc.supportAssign(CUSTOMER, TICKET, { assigneeUserId: null })).rejects.toMatchObject({
+    await expect(svc.supportReply(CUSTOMER, TICKET, { body: "hi" })).rejects.toMatchObject({
       code: "FORBIDDEN",
     });
-    await expect(svc.supportChangeStatus(CUSTOMER, TICKET, { status: "RESOLVED" })).rejects.toMatchObject({
+    await expect(
+      svc.supportInternalNote(CUSTOMER, TICKET, { body: "secret" }),
+    ).rejects.toMatchObject({
+      code: "FORBIDDEN",
+    });
+    await expect(
+      svc.supportAssign(CUSTOMER, TICKET, { assigneeUserId: null }),
+    ).rejects.toMatchObject({
+      code: "FORBIDDEN",
+    });
+    await expect(
+      svc.supportChangeStatus(CUSTOMER, TICKET, { status: "RESOLVED" }),
+    ).rejects.toMatchObject({
       code: "FORBIDDEN",
     });
     await expect(svc.supportAgents(CUSTOMER)).rejects.toMatchObject({ code: "FORBIDDEN" });
@@ -151,22 +168,28 @@ describe("helpdesk service authorization", () => {
   });
 
   it("hides another user's ticket from a customer without company-wide access", async () => {
-    selectRows = [{ id: TICKET, tenantId: TENANT_A, requesterUserId: USER_B, status: "NEW", recordVersion: 1 }];
+    selectRows = [
+      { id: TICKET, tenantId: TENANT_A, requesterUserId: USER_B, status: "NEW", recordVersion: 1 },
+    ];
     const svc = service();
     await expect(svc.getMyTicket(CUSTOMER, TICKET)).rejects.toMatchObject({ code: "NOT_FOUND" });
     await expect(svc.customerReply(CUSTOMER, TICKET, { body: "hello" })).rejects.toMatchObject({
       code: "NOT_FOUND",
     });
-    await expect(svc.attachmentDownload(CUSTOMER, "customer", TICKET, TICKET)).rejects.toMatchObject({
+    await expect(
+      svc.attachmentDownload(CUSTOMER, "customer", TICKET, TICKET),
+    ).rejects.toMatchObject({
       code: "NOT_FOUND",
     });
   });
 
   it("does not let a customer use support mode for attachments", async () => {
     const svc = service();
-    await expect(svc.attachmentDownload(CUSTOMER, "support", TICKET, TICKET)).rejects.toMatchObject({
-      code: "FORBIDDEN",
-    });
+    await expect(svc.attachmentDownload(CUSTOMER, "support", TICKET, TICKET)).rejects.toMatchObject(
+      {
+        code: "FORBIDDEN",
+      },
+    );
     await expect(
       svc.createAttachmentUpload(CUSTOMER, "support", TICKET, {
         filename: "a.png",
@@ -189,7 +212,15 @@ describe("helpdesk service authorization", () => {
   });
 
   it("does not allow a customer to reply on a closed ticket", async () => {
-    selectRows = [{ id: TICKET, tenantId: TENANT_A, requesterUserId: USER_A, status: "CLOSED", recordVersion: 1 }];
+    selectRows = [
+      {
+        id: TICKET,
+        tenantId: TENANT_A,
+        requesterUserId: USER_A,
+        status: "CLOSED",
+        recordVersion: 1,
+      },
+    ];
     const svc = service();
     await expect(svc.customerReply(CUSTOMER, TICKET, { body: "hello" })).rejects.toMatchObject({
       code: "VALIDATION_FAILED",

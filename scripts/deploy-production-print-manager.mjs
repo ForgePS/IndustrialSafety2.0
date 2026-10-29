@@ -29,7 +29,10 @@ const skipConsole = process.argv.includes("--skip-console");
 const skipMigrate = process.argv.includes("--skip-migrate");
 const skipSeed = process.argv.includes("--skip-seed");
 const localOnly = process.argv.includes("--local-only");
-const stamp = new Date().toISOString().replace(/[-:TZ.]/g, "").slice(0, 14);
+const stamp = new Date()
+  .toISOString()
+  .replace(/[-:TZ.]/g, "")
+  .slice(0, 14);
 const tag = process.env.DEPLOY_TAG || `print-mgr-${stamp}`;
 
 function sh(cmd, opts = {}) {
@@ -150,7 +153,9 @@ if (!skipWeb) {
   } catch {
     /* ignore */
   }
-  sh(`node scripts/sync-static-site.mjs --app industrial --environment production --full-invalidate`);
+  sh(
+    `node scripts/sync-static-site.mjs --app industrial --environment production --full-invalidate`,
+  );
 }
 
 if (!skipConsole) {

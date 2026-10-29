@@ -35,7 +35,8 @@ async function loadContractsRegistry() {
   for (const p of candidates) {
     try {
       const mod = await import(pathToFileURL(p).href);
-      if (mod?.INDUSTRIAL_MODULE_REGISTRY) return { path: p, registry: mod.INDUSTRIAL_MODULE_REGISTRY };
+      if (mod?.INDUSTRIAL_MODULE_REGISTRY)
+        return { path: p, registry: mod.INDUSTRIAL_MODULE_REGISTRY };
     } catch {
       /* try next */
     }

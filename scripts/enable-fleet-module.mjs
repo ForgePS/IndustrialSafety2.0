@@ -131,7 +131,16 @@ async function main() {
     }
 
     if (!APPLY && mod.id === "00000000-0000-0000-0000-000000000000") {
-      console.log(JSON.stringify({ ...reportBase, note: "Dry-run: FLEET module missing from catalog; APPLY will create it." }, null, 2));
+      console.log(
+        JSON.stringify(
+          {
+            ...reportBase,
+            note: "Dry-run: FLEET module missing from catalog; APPLY will create it.",
+          },
+          null,
+          2,
+        ),
+      );
       return;
     }
 
@@ -196,7 +205,8 @@ async function main() {
       if (!mma) {
         membershipGranted += 1;
         if (APPLY) {
-          if (!grantActor) throw new Error("No actor user for membership_module_access.granted_by_user_id");
+          if (!grantActor)
+            throw new Error("No actor user for membership_module_access.granted_by_user_id");
           await sql`
             insert into membership_module_access (
               id, tenant_id, membership_id, module_id, status, granted_by_user_id, created_at, updated_at

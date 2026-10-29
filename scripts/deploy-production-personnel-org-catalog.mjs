@@ -57,7 +57,9 @@ sh(
   `aws ecs update-service --cluster ${CLUSTER} --service ${API_SERVICE} --task-definition ${apiReg.taskDefinitionArn} --force-new-deployment`,
 );
 sh(`aws ecs wait services-stable --cluster ${CLUSTER} --services ${API_SERVICE}`);
-sh(`node scripts/run-ecs-migrate.mjs --env production --task-definition ${apiReg.taskDefinitionArn}`);
+sh(
+  `node scripts/run-ecs-migrate.mjs --env production --task-definition ${apiReg.taskDefinitionArn}`,
+);
 process.env.NODE_ENV = "production";
 sh(`node scripts/sync-static-site.mjs --app industrial --environment production`);
 console.log(

@@ -41,14 +41,30 @@ export const FALLBACK_INSPECTION_TEMPLATE: InspectionTemplate = {
   name: "General area inspection",
   source: "builtin",
   items: [
-    { id: "housekeeping", label: "Work area is clean and free of slip/trip hazards", section: "Housekeeping" },
+    {
+      id: "housekeeping",
+      label: "Work area is clean and free of slip/trip hazards",
+      section: "Housekeeping",
+    },
     { id: "exits", label: "Emergency exits and aisles are clear", section: "Emergency" },
-    { id: "extinguishers", label: "Fire extinguishers are accessible and inspected", section: "Emergency" },
+    {
+      id: "extinguishers",
+      label: "Fire extinguishers are accessible and inspected",
+      section: "Emergency",
+    },
     { id: "ppe", label: "Required PPE is available and in use", section: "PPE" },
     { id: "guards", label: "Machine guards are in place where required", section: "Equipment" },
     { id: "chemicals", label: "Chemicals are labeled and stored correctly", section: "Chemical" },
-    { id: "electrical", label: "Electrical panels and cords are in safe condition", section: "Electrical" },
-    { id: "first-aid", label: "First aid supplies are stocked and accessible", section: "Emergency" },
+    {
+      id: "electrical",
+      label: "Electrical panels and cords are in safe condition",
+      section: "Electrical",
+    },
+    {
+      id: "first-aid",
+      label: "First aid supplies are stocked and accessible",
+      section: "Emergency",
+    },
   ],
 };
 
@@ -69,9 +85,7 @@ export function canCompleteInspection(items: readonly InspectionRunItem[]): {
   if (items.some((item) => item.answer == null)) {
     return { ok: false, reason: "Answer every checklist item before completing." };
   }
-  const missingNotes = items.filter(
-    (item) => item.answer === "NO" && !(item.notes ?? "").trim(),
-  );
+  const missingNotes = items.filter((item) => item.answer === "NO" && !(item.notes ?? "").trim());
   if (missingNotes.length > 0) {
     return {
       ok: false,
@@ -89,7 +103,9 @@ export function deficiencyCount(items: readonly InspectionRunItem[]): number {
   return items.filter((item) => item.answer === "NO").length;
 }
 
-export function isCriticalInspectionItem(item: Pick<InspectionTemplateItem, "critical" | "label" | "section">): boolean {
+export function isCriticalInspectionItem(
+  item: Pick<InspectionTemplateItem, "critical" | "label" | "section">,
+): boolean {
   if (item.critical === true) return true;
   if (/\bcritical\b/i.test(item.label)) return true;
   if (item.section && /\bcritical\b/i.test(item.section)) return true;
@@ -199,7 +215,11 @@ export function normalizeTemplateRow(row: Record<string, unknown>): InspectionTe
         const r = asRecord(entry);
         if (!r) return null;
         const label =
-          textOf(r.label) || textOf(r.text) || textOf(r.question) || textOf(r.title) || textOf(r.name);
+          textOf(r.label) ||
+          textOf(r.text) ||
+          textOf(r.question) ||
+          textOf(r.title) ||
+          textOf(r.name);
         if (!label) return null;
         const section = textOf(r.section) || textOf(r.category) || undefined;
         const item: InspectionTemplateItem = {
@@ -332,17 +352,27 @@ export function inspectionDueAt(record: InspectionListRecord): string | null {
 
 export function inspectionLocationId(record: InspectionListRecord): string | null {
   const payload = payloadOf(record);
-  return textOf(record.locationId) || textOf(record.siteId) || textOf(payload.siteId) || textOf(payload.locationId) || null;
+  return (
+    textOf(record.locationId) ||
+    textOf(record.siteId) ||
+    textOf(payload.siteId) ||
+    textOf(payload.locationId) ||
+    null
+  );
 }
 
 export function inspectionLocationName(record: InspectionListRecord): string | null {
   const payload = payloadOf(record);
-  return textOf(record.locationName) || textOf(payload.locationName) || textOf(payload.siteName) || null;
+  return (
+    textOf(record.locationName) || textOf(payload.locationName) || textOf(payload.siteName) || null
+  );
 }
 
 export function inspectionDivisionName(record: InspectionListRecord): string | null {
   const payload = payloadOf(record);
-  return textOf(record.divisionName) || textOf(payload.divisionName) || textOf(payload.division) || null;
+  return (
+    textOf(record.divisionName) || textOf(payload.divisionName) || textOf(payload.division) || null
+  );
 }
 
 export function isInspectionCompleted(status: string | null | undefined): boolean {
@@ -365,10 +395,17 @@ export function filterInspectionsForHub(
     const d = new Date(due);
     if (Number.isNaN(d.getTime())) return false;
     const sod = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
-    const eod = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59, 999).getTime();
+    const eod = new Date(
+      now.getFullYear(),
+      now.getMonth(),
+      now.getDate(),
+      23,
+      59,
+      59,
+      999,
+    ).getTime();
     const t = d.getTime();
-    const bucket =
-      t < now.getTime() ? "overdue" : t >= sod && t <= eod ? "dueToday" : "upcoming";
+    const bucket = t < now.getTime() ? "overdue" : t >= sod && t <= eod ? "dueToday" : "upcoming";
     if (tab === "overdue") return bucket === "overdue";
     if (tab === "dueToday") return bucket === "dueToday" || bucket === "overdue";
     if (tab === "upcoming") return bucket === "upcoming";
@@ -413,7 +450,9 @@ export function inspectionToWorkItem(record: InspectionListRecord): {
   const findings = deficiencyCount(
     parseInspectionItems(payload.items ?? record.sourcePayload?.items),
   );
-  const critical = criticalDeficiencyCount(parseInspectionItems(payload.items ?? record.sourcePayload?.items));
+  const critical = criticalDeficiencyCount(
+    parseInspectionItems(payload.items ?? record.sourcePayload?.items),
+  );
   return {
     kind: "inspection",
     id: record.id,
@@ -433,4 +472,3 @@ export function inspectionToWorkItem(record: InspectionListRecord): {
     departmentName: textOf(payload.departmentName) || null,
   };
 }
-

@@ -16,11 +16,11 @@ Phase 3 specialty workflows completed limitation closeout on the preserved Forge
 
 ## 2. Phase decision
 
-| Decision | Selected |
-| --- | --- |
-| **ACCEPTED** | **Yes — engineering evidence gates met** |
-| ACCEPTED_WITH_LIMITATIONS | No — scenarios 2–9 and matrices closed |
-| INCOMPLETE | No |
+| Decision                  | Selected                                 |
+| ------------------------- | ---------------------------------------- |
+| **ACCEPTED**              | **Yes — engineering evidence gates met** |
+| ACCEPTED_WITH_LIMITATIONS | No — scenarios 2–9 and matrices closed   |
+| INCOMPLETE                | No                                       |
 
 **Engineering gates satisfied:** scenarios 1–10 PASS; attachment, cross-tenant, restricted casualty, finalization, and feature-disabled tests PASS; no Critical/Serious a11y findings in deployed specialty suite; Playwright required tests zero skips/failures; Phase 2 regression PASS; API/RMS healthy after testing.
 
@@ -55,53 +55,53 @@ All 14 groups remain implemented in `@forge/neris`. Deployed Cognito scenarios e
 
 ## 6. Dynamic activation results
 
-| Check | Result |
-| --- | --- |
-| Flag off → empty specialty workflows (tenant B) | **PASS** (scenario 10) |
-| Flag on → structure fire activates specialty | **PASS** (scenario 1) |
-| Classification change preserves data / restores workflow | **PASS** (scenario 6) |
-| Form-descriptor fail-closed (`?? false`) | Deployed |
+| Check                                                    | Result                 |
+| -------------------------------------------------------- | ---------------------- |
+| Flag off → empty specialty workflows (tenant B)          | **PASS** (scenario 10) |
+| Flag on → structure fire activates specialty             | **PASS** (scenario 1)  |
+| Classification change preserves data / restores workflow | **PASS** (scenario 6)  |
+| Form-descriptor fail-closed (`?? false`)                 | Deployed               |
 
 ---
 
 ## 7. Specialty-review results
 
-| Check | Result |
-| --- | --- |
-| Specialty review panel on REVIEW (tenant A) | **PASS** |
-| Safety Officer / Hazmat / Prevention section approvals | **PASS** (scenarios 3–5) |
-| Casualty sections permission-gated + masked list | **PASS** (scenarios 2, 3, 7) |
+| Check                                                  | Result                       |
+| ------------------------------------------------------ | ---------------------------- |
+| Specialty review panel on REVIEW (tenant A)            | **PASS**                     |
+| Safety Officer / Hazmat / Prevention section approvals | **PASS** (scenarios 3–5)     |
+| Casualty sections permission-gated + masked list       | **PASS** (scenarios 2, 3, 7) |
 
 ---
 
 ## 8. Repeatable-record results
 
-| Type | Result |
-| --- | --- |
-| Exposures (scenario 1) | **PASS** |
-| Civilian casualties (scenario 2) | **PASS** |
-| Fire-service casualties (scenario 3) | **PASS** |
+| Type                                      | Result   |
+| ----------------------------------------- | -------- |
+| Exposures (scenario 1)                    | **PASS** |
+| Civilian casualties (scenario 2)          | **PASS** |
+| Fire-service casualties (scenario 3)      | **PASS** |
 | Hazmat substances/containers (scenario 4) | **PASS** |
-| Alarm + protection systems (scenario 5) | **PASS** |
+| Alarm + protection systems (scenario 5)   | **PASS** |
 
 ---
 
 ## 9. Attachment results
 
-| Item | Status |
-| --- | --- |
-| JPEG / PNG / PDF happy path | **PASS** |
-| Unsupported / oversized / empty / invalid MIME | **PASS** (rejected) |
-| Filenames with `..` `/` `\` | **PASS** (edge 403 or sanitized key) |
-| Interrupted upload never CLEARED | **PASS** |
-| Invalid checksum / duplicate complete | **PASS** |
-| Expired/corrupted pre-signed PUT | **PASS** (rejected) |
-| Unauthorized / cross-tenant | **PASS** |
-| Archived/finalized mutation denial | **PASS** |
-| Quarantine never shown as CLEARED | **PASS** |
-| Raw S3 not public / tenant-scoped keys | **PASS** |
-| Attachment binary not in API JSON | **PASS** |
-| Malware clearing service | **LIMITATION** — quarantine-only scanner remains |
+| Item                                           | Status                                           |
+| ---------------------------------------------- | ------------------------------------------------ |
+| JPEG / PNG / PDF happy path                    | **PASS**                                         |
+| Unsupported / oversized / empty / invalid MIME | **PASS** (rejected)                              |
+| Filenames with `..` `/` `\`                    | **PASS** (edge 403 or sanitized key)             |
+| Interrupted upload never CLEARED               | **PASS**                                         |
+| Invalid checksum / duplicate complete          | **PASS**                                         |
+| Expired/corrupted pre-signed PUT               | **PASS** (rejected)                              |
+| Unauthorized / cross-tenant                    | **PASS**                                         |
+| Archived/finalized mutation denial             | **PASS**                                         |
+| Quarantine never shown as CLEARED              | **PASS**                                         |
+| Raw S3 not public / tenant-scoped keys         | **PASS**                                         |
+| Attachment binary not in API JSON              | **PASS**                                         |
+| Malware clearing service                       | **LIMITATION** — quarantine-only scanner remains |
 
 ---
 
@@ -113,10 +113,10 @@ Implemented and seeded. Specialty permissions on synthetic admin. Feature flag: 
 
 ## 16. Database migrations
 
-| Migration | Aurora |
-| --- | --- |
+| Migration                      | Aurora                  |
+| ------------------------------ | ----------------------- |
 | `0011_neris_specialty_records` | **Applied** (preserved) |
-| `0012_neris_specialty_review` | **Applied** (preserved) |
+| `0012_neris_specialty_review`  | **Applied** (preserved) |
 
 Runtime remains **`forge_app`**. FORCE RLS remains enabled (schema migrations). App secret **not** regenerated this closeout. **GAP-009** remains open — Data stack not deployed.
 
@@ -124,71 +124,71 @@ Runtime remains **`forge_app`**. FORCE RLS remains enabled (schema migrations). 
 
 ## 17–18. API / RMS Web
 
-| Item | Result |
-| --- | --- |
-| API task definition | `forge-development-ecs-platform-api:16` (preserved) |
-| API health (post-test) | **200** healthy |
-| RMS URL | https://d3ud5uzwd9js2z.cloudfront.net **200** |
-| CloudFront / Compute | Unchanged this closeout (tests only) |
+| Item                   | Result                                              |
+| ---------------------- | --------------------------------------------------- |
+| API task definition    | `forge-development-ecs-platform-api:16` (preserved) |
+| API health (post-test) | **200** healthy                                     |
+| RMS URL                | https://d3ud5uzwd9js2z.cloudfront.net **200**       |
+| CloudFront / Compute   | Unchanged this closeout (tests only)                |
 
 ---
 
 ## 19–24. Tests
 
-| Suite | Result |
-| --- | --- |
-| Playwright `@phase3` | **20 passed, 0 failed, 0 skipped** (~8.9m) |
-| Playwright full regression | **34 passed, 0 failed, 0 skipped** (~10.4m) |
-| No `.only` / no disabled security tests | Confirmed for required suites |
+| Suite                                   | Result                                      |
+| --------------------------------------- | ------------------------------------------- |
+| Playwright `@phase3`                    | **20 passed, 0 failed, 0 skipped** (~8.9m)  |
+| Playwright full regression              | **34 passed, 0 failed, 0 skipped** (~10.4m) |
+| No `.only` / no disabled security tests | Confirmed for required suites               |
 
 ### Playwright totals by scenario / matrix
 
-| Suite | Tests | Result |
-| --- | --- | --- |
-| Scenario 1 (structure fire exposures) | 1 | PASS |
-| Scenario 2 (civilian casualty) | 1 | PASS |
-| Scenario 3 (fire-service casualty) | 1 | PASS |
-| Scenario 4 (hazmat) | 1 | PASS |
-| Scenario 5 (alarm/sprinkler) | 1 | PASS |
-| Scenario 6 (classification change) | 1 | PASS |
-| Scenario 7 (unauthorized casualty) | 1 | PASS |
-| Scenario 8 (cross-tenant attachments) | 1 | PASS |
-| Scenario 9 (finalized specialty edits) | 1 | PASS |
-| Scenario 10 (feature-disabled tenant) | 1 | PASS |
-| Specialty review smoke | 1 | PASS |
-| Attachment matrix | 1 | PASS |
-| Mobile matrix (6 viewports + dialogs) | 7 | PASS |
-| Accessibility matrix | 1 | PASS |
-| Phase 2 regression (non-@phase3) | 14 | PASS |
+| Suite                                  | Tests | Result |
+| -------------------------------------- | ----- | ------ |
+| Scenario 1 (structure fire exposures)  | 1     | PASS   |
+| Scenario 2 (civilian casualty)         | 1     | PASS   |
+| Scenario 3 (fire-service casualty)     | 1     | PASS   |
+| Scenario 4 (hazmat)                    | 1     | PASS   |
+| Scenario 5 (alarm/sprinkler)           | 1     | PASS   |
+| Scenario 6 (classification change)     | 1     | PASS   |
+| Scenario 7 (unauthorized casualty)     | 1     | PASS   |
+| Scenario 8 (cross-tenant attachments)  | 1     | PASS   |
+| Scenario 9 (finalized specialty edits) | 1     | PASS   |
+| Scenario 10 (feature-disabled tenant)  | 1     | PASS   |
+| Specialty review smoke                 | 1     | PASS   |
+| Attachment matrix                      | 1     | PASS   |
+| Mobile matrix (6 viewports + dialogs)  | 7     | PASS   |
+| Accessibility matrix                   | 1     | PASS   |
+| Phase 2 regression (non-@phase3)       | 14    | PASS   |
 
 ---
 
 ## 25. Ten-scenario matrix
 
-| # | Scenario | Deployed result |
-| --- | --- | --- |
-| 1 | Structure fire + two exposures | **PASS** |
-| 2 | Civilian casualty | **PASS** |
-| 3 | Firefighter injury | **PASS** |
-| 4 | Hazmat release | **PASS** |
-| 5 | Alarm + impaired sprinkler | **PASS** |
-| 6 | Classification changed after entry | **PASS** |
-| 7 | Unauthorized casualty access | **PASS** |
-| 8 | Cross-tenant attachment access | **PASS** |
-| 9 | Finalized specialty-record edit | **PASS** |
-| 10 | Feature-disabled tenant | **PASS** |
+| #   | Scenario                           | Deployed result |
+| --- | ---------------------------------- | --------------- |
+| 1   | Structure fire + two exposures     | **PASS**        |
+| 2   | Civilian casualty                  | **PASS**        |
+| 3   | Firefighter injury                 | **PASS**        |
+| 4   | Hazmat release                     | **PASS**        |
+| 5   | Alarm + impaired sprinkler         | **PASS**        |
+| 6   | Classification changed after entry | **PASS**        |
+| 7   | Unauthorized casualty access       | **PASS**        |
+| 8   | Cross-tenant attachment access     | **PASS**        |
+| 9   | Finalized specialty-record edit    | **PASS**        |
+| 10  | Feature-disabled tenant            | **PASS**        |
 
 ---
 
 ## 26–27. Mobile / accessibility
 
-| Check | Result |
-| --- | --- |
-| Specialty mobile matrix (390×844, 844×390, 768×1024, 1024×768, 1366×768, 1920×1080) | **PASS** |
-| No horizontal overflow / touch targets / rotation context | **PASS** |
-| Specialty accessibility (keyboard focus, headings, labels, Escape, 200% zoom) | **PASS** |
-| Critical / Serious a11y findings | **None observed** in deployed specialty suite |
-| Medium / Minor | See §35 — track owners/dates |
+| Check                                                                               | Result                                        |
+| ----------------------------------------------------------------------------------- | --------------------------------------------- |
+| Specialty mobile matrix (390×844, 844×390, 768×1024, 1024×768, 1366×768, 1920×1080) | **PASS**                                      |
+| No horizontal overflow / touch targets / rotation context                           | **PASS**                                      |
+| Specialty accessibility (keyboard focus, headings, labels, Escape, 200% zoom)       | **PASS**                                      |
+| Critical / Serious a11y findings                                                    | **None observed** in deployed specialty suite |
+| Medium / Minor                                                                      | See §35 — track owners/dates                  |
 
 ---
 
@@ -200,36 +200,36 @@ Phase 2 Cognito Playwright regression included in the **34/34** run: isolation (
 
 ## 15b. RLS and permission verification (closeout)
 
-| Check | Result |
-| --- | --- |
-| Tenant A read denial against Tenant B resources | **PASS** (scenarios 7–8 + isolation) |
-| Tenant A write denial against Tenant B | **PASS** |
-| Missing / invalid / swapped tenant context | **PASS** |
-| Restricted casualty read/write denial (cross-tenant) | **PASS** |
-| Attachment access denial | **PASS** |
-| Specialty review permission enforcement | **PASS** (section approvals + review UI) |
-| Creator vs tenant separation | **PASS** (token tenant binding) |
-| Feature-disabled tenant API denial | **PASS** (scenario 10) |
-| Finalization locking | **PASS** (scenarios 2–5, 9 + review workflow) |
-| Runtime DB role `forge_app` | **PASS** (preserved task secret ARN; no regenerate) |
-| FORCE RLS enabled | **PASS** (migration-enforced; no Data changes) |
+| Check                                                | Result                                              |
+| ---------------------------------------------------- | --------------------------------------------------- |
+| Tenant A read denial against Tenant B resources      | **PASS** (scenarios 7–8 + isolation)                |
+| Tenant A write denial against Tenant B               | **PASS**                                            |
+| Missing / invalid / swapped tenant context           | **PASS**                                            |
+| Restricted casualty read/write denial (cross-tenant) | **PASS**                                            |
+| Attachment access denial                             | **PASS**                                            |
+| Specialty review permission enforcement              | **PASS** (section approvals + review UI)            |
+| Creator vs tenant separation                         | **PASS** (token tenant binding)                     |
+| Feature-disabled tenant API denial                   | **PASS** (scenario 10)                              |
+| Finalization locking                                 | **PASS** (scenarios 2–5, 9 + review workflow)       |
+| Runtime DB role `forge_app`                          | **PASS** (preserved task secret ARN; no regenerate) |
+| FORCE RLS enabled                                    | **PASS** (migration-enforced; no Data changes)      |
 
 ---
 
 ## 30–32. HTTPS / CloudWatch / CloudTrail
 
-| Check | Result |
-| --- | --- |
-| AWS account / region | **511343547817** / **us-east-1** (verified `sts get-caller-identity`) |
-| API health | **PASS** — HTTP **200** `{"status":"healthy",...}` (sampled **2026-07-27T10:24:45Z**) |
-| RMS CloudFront | **PASS** — HTTP **200** (same sample window) |
-| ECS API task | **PASS** — `forge-development-ecs-platform-api:16`, running **1/1**, container **HEALTHY**, deployment COMPLETED, failedTasks **0** |
-| Runtime DB secret reference | **PASS** — task env `DATABASE_SECRET_ARN` → `arn:aws:secretsmanager:us-east-1:511343547817:secret:forge-development-secrets-database-app` |
-| App secret LastChangedDate | **Unchanged** — `2026-07-26T15:30:16-05:00` (not regenerated) |
-| CloudTrail `forge-development-cloudtrail-management` | **PASS** — `IsLogging=true`; LatestDeliveryTime **2026-07-27T05:21:35-05:00** |
-| CloudWatch `forge-development-alarm-*` | **PASS** for API/ECS/DB/5xx family — see note for SSO directory alarm |
-| Unexpected ECS failures | **None** — no STOPPED tasks for API service; latest event steady state **2026-07-27T02:28:26-05:00** |
-| Unexpected API 5xx increase | **None** — `forge-development-alarm-api-5xx` and `forge-development-alarm-api-cf-5xx` remain **OK** |
+| Check                                                | Result                                                                                                                                    |
+| ---------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------- |
+| AWS account / region                                 | **511343547817** / **us-east-1** (verified `sts get-caller-identity`)                                                                     |
+| API health                                           | **PASS** — HTTP **200** `{"status":"healthy",...}` (sampled **2026-07-27T10:24:45Z**)                                                     |
+| RMS CloudFront                                       | **PASS** — HTTP **200** (same sample window)                                                                                              |
+| ECS API task                                         | **PASS** — `forge-development-ecs-platform-api:16`, running **1/1**, container **HEALTHY**, deployment COMPLETED, failedTasks **0**       |
+| Runtime DB secret reference                          | **PASS** — task env `DATABASE_SECRET_ARN` → `arn:aws:secretsmanager:us-east-1:511343547817:secret:forge-development-secrets-database-app` |
+| App secret LastChangedDate                           | **Unchanged** — `2026-07-26T15:30:16-05:00` (not regenerated)                                                                             |
+| CloudTrail `forge-development-cloudtrail-management` | **PASS** — `IsLogging=true`; LatestDeliveryTime **2026-07-27T05:21:35-05:00**                                                             |
+| CloudWatch `forge-development-alarm-*`               | **PASS** for API/ECS/DB/5xx family — see note for SSO directory alarm                                                                     |
+| Unexpected ECS failures                              | **None** — no STOPPED tasks for API service; latest event steady state **2026-07-27T02:28:26-05:00**                                      |
+| Unexpected API 5xx increase                          | **None** — `forge-development-alarm-api-5xx` and `forge-development-alarm-api-cf-5xx` remain **OK**                                       |
 
 **Fresh evidence note (SSO re-sample):** After refreshing `forge-dev` SSO, operational baseline re-verified **2026-07-27 ~05:24 CDT / 10:24 UTC**. No stacks deployed; Data stack not touched; secrets not replaced.
 
@@ -239,13 +239,13 @@ Phase 2 Cognito Playwright regression included in the **34/34** run: isolation (
 
 ## 33. Deployment results
 
-| Stack / action | Result |
-| --- | --- |
-| `Forge-Development-Data` | **Not deployed** (GAP-009 protected) |
-| Compute / API `:16` | **Preserved** (no redeploy this closeout) |
-| Migrations `0011`/`0012` | **Preserved** |
-| Feature flag | Default false; synthetic tenant A only |
-| App secret | **Not replaced** |
+| Stack / action           | Result                                    |
+| ------------------------ | ----------------------------------------- |
+| `Forge-Development-Data` | **Not deployed** (GAP-009 protected)      |
+| Compute / API `:16`      | **Preserved** (no redeploy this closeout) |
+| Migrations `0011`/`0012` | **Preserved**                             |
+| Feature flag             | Default false; synthetic tenant A only    |
+| App secret               | **Not replaced**                          |
 
 ---
 
@@ -269,11 +269,11 @@ Test-only synthetic traffic; no new long-lived stacks. Quarantined attachment ob
 
 ## 36. Open risks
 
-| Risk | Severity | Notes |
-| --- | --- | --- |
-| GAP-009 Data CDK drift | Medium | Keep `--exclusively` for Compute until import |
-| Quarantine-only attachments | Medium | Operational labeling required |
-| SSO directory-change alarm noise | Low | Expected on operator SSO refresh; correlate before escalating |
+| Risk                             | Severity | Notes                                                         |
+| -------------------------------- | -------- | ------------------------------------------------------------- |
+| GAP-009 Data CDK drift           | Medium   | Keep `--exclusively` for Compute until import                 |
+| Quarantine-only attachments      | Medium   | Operational labeling required                                 |
+| SSO directory-change alarm noise | Low      | Expected on operator SSO refresh; correlate before escalating |
 
 ---
 
@@ -287,11 +287,11 @@ Do **not** start Phase 4 until product signs this report. Phase 4 candidates rem
 
 Retain human decision blank until signed. Engineering recommendation: **ACCEPTED** for development use of specialty workflows on `rms-synthetic-fd` only.
 
-| Role | Name | Date | Decision | Notes |
-| --- | --- | --- | --- | --- |
-| Product owner | Jeremy Powell, Founder, Forge Public Safety | | | Sign to confirm ACCEPTED (or reject / retain WITH_LIMITATIONS) |
-| Engineering lead | | | | |
-| Security reviewer | | | | |
+| Role              | Name                                        | Date | Decision | Notes                                                          |
+| ----------------- | ------------------------------------------- | ---- | -------- | -------------------------------------------------------------- |
+| Product owner     | Jeremy Powell, Founder, Forge Public Safety |      |          | Sign to confirm ACCEPTED (or reject / retain WITH_LIMITATIONS) |
+| Engineering lead  |                                             |      |          |                                                                |
+| Security reviewer |                                             |      |          |                                                                |
 
 **Do not forge approval.** Product status for human acceptance remains unsigned until Jeremy Powell completes this table.
 

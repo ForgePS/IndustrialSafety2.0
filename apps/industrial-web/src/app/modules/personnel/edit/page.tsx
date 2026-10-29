@@ -32,9 +32,8 @@ function EditPersonInner() {
 
   const [initialValues, setInitialValues] = useState<PersonnelFormValues | null>(null);
   const [displayLabel, setDisplayLabel] = useState("Person");
-  const [companyDriverMvr, setCompanyDriverMvr] = useState<ReturnType<
-    typeof parseCompanyDriverMvrSnapshot
-  >>(null);
+  const [companyDriverMvr, setCompanyDriverMvr] =
+    useState<ReturnType<typeof parseCompanyDriverMvrSnapshot>>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 

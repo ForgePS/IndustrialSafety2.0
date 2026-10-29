@@ -4,11 +4,11 @@ Officer review is gated by `rms.neris.officer_review.enabled` and permissions `r
 
 ## Roles
 
-| Actor | Typical permissions |
-| --- | --- |
-| Firefighter / reporter | `create`, `edit`, `submit_review` |
-| Officer / reviewer | `review`, `approve`, `return` |
-| Admin | `finalize`, `void`, `archive`, audit view |
+| Actor                  | Typical permissions                       |
+| ---------------------- | ----------------------------------------- |
+| Firefighter / reporter | `create`, `edit`, `submit_review`         |
+| Officer / reviewer     | `review`, `approve`, `return`             |
+| Admin                  | `finalize`, `void`, `archive`, audit view |
 
 Exact grants come from RMS starter role templates seeded in `@forge/contracts`.
 
@@ -49,13 +49,13 @@ Reviewable statuses constant: `READY_FOR_REVIEW`, `SUBMITTED_FOR_REVIEW`, `RETUR
 
 ## API endpoints
 
-| Method | Path | Target status |
-| --- | --- | --- |
-| `POST` | `…/submit-for-review` | `SUBMITTED_FOR_REVIEW` |
-| `POST` | `…/return` | `RETURNED_FOR_CORRECTION` |
-| `POST` | `…/approve` | `APPROVED` |
-| `POST` | `…/finalize` | `FINALIZED` |
-| `GET/POST` | `…/review-comments` | — |
+| Method     | Path                  | Target status             |
+| ---------- | --------------------- | ------------------------- |
+| `POST`     | `…/submit-for-review` | `SUBMITTED_FOR_REVIEW`    |
+| `POST`     | `…/return`            | `RETURNED_FOR_CORRECTION` |
+| `POST`     | `…/approve`           | `APPROVED`                |
+| `POST`     | `…/finalize`          | `FINALIZED`               |
+| `GET/POST` | `…/review-comments`   | —                         |
 
 Full list: [Incidents API](../api/incidents.md).
 

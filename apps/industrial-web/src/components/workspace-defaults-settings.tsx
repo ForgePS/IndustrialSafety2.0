@@ -62,10 +62,7 @@ export function WorkspaceDefaultsSettings() {
     [entitled, me],
   );
 
-  const available = useMemo(
-    () => nav.filter((n) => n.available && n.code !== "CORE"),
-    [nav],
-  );
+  const available = useMemo(() => nav.filter((n) => n.available && n.code !== "CORE"), [nav]);
 
   const registry = useMemo(
     () =>

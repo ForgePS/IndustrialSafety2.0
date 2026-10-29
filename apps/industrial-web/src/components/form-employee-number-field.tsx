@@ -55,12 +55,8 @@ async function lookupPersonnelByEmployeeNumber(raw: string): Promise<PersonnelHi
     const res = await apiGet<ListResponse>("/api/v1/industrial/personnel", {
       query: { q: emp, pageSize: "25" },
     });
-    const items = (res.items ?? [])
-      .map(mapHit)
-      .filter((row): row is PersonnelHit => row != null);
-    const exact = items.find(
-      (row) => canonicalEmployeeNumber(row.employeeNumber) === emp,
-    );
+    const items = (res.items ?? []).map(mapHit).filter((row): row is PersonnelHit => row != null);
+    const exact = items.find((row) => canonicalEmployeeNumber(row.employeeNumber) === emp);
     return exact ?? null;
   } catch (err) {
     if (err instanceof ApiError) return null;

@@ -80,7 +80,8 @@ function parseTemplateRow(raw: unknown, index: number): ParsedFormTemplate | nul
   ).trim();
   if (!sourceDocumentId) return null;
 
-  const sourceCollection = String(rec.sourceCollection ?? "formTemplates").trim() || "formTemplates";
+  const sourceCollection =
+    String(rec.sourceCollection ?? "formTemplates").trim() || "formTemplates";
   const title = String(data.name ?? data.title ?? rec.title ?? rec.name ?? "Form").trim() || "Form";
   const formKey = String(data.seedKey ?? data.category ?? data.formKey ?? title)
     .trim()
@@ -112,17 +113,23 @@ function parseSubmissionRow(raw: unknown, index: number): ParsedFormSubmission |
   const nested = unwrapJsonRecord(rec.data);
   const data = Object.keys(nested).length > 0 ? nested : rec;
 
-  const sourceDocumentId = String(rec.sourceDocumentId ?? data.id ?? `import-submission-${index + 1}`).trim();
+  const sourceDocumentId = String(
+    rec.sourceDocumentId ?? data.id ?? `import-submission-${index + 1}`,
+  ).trim();
   if (!sourceDocumentId) return null;
 
-  const sourceCollection = String(rec.sourceCollection ?? "formSubmissions").trim() || "formSubmissions";
+  const sourceCollection =
+    String(rec.sourceCollection ?? "formSubmissions").trim() || "formSubmissions";
   const templateLinkId = String(
     data.templateId ?? data.formTemplateId ?? data.formDefinitionId ?? "",
   ).trim();
   const title =
     String(data.templateName ?? data.title ?? data.name ?? "Form submission").trim() ||
     "Form submission";
-  const status = String(data.status ?? "SUBMITTED").trim().toUpperCase() || "SUBMITTED";
+  const status =
+    String(data.status ?? "SUBMITTED")
+      .trim()
+      .toUpperCase() || "SUBMITTED";
   const submittedRaw = data.submittedAt ?? data.createdAt ?? null;
   const submittedAt =
     submittedRaw != null && !Number.isNaN(new Date(String(submittedRaw)).getTime())

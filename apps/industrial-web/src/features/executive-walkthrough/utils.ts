@@ -48,9 +48,7 @@ export function formatWalkthroughClock(ms: number): string {
   return `${m}:${String(s).padStart(2, "0")}`;
 }
 
-export function projectedRuntimeWarning(
-  projectedRuntimeMs: number,
-): string | null {
+export function projectedRuntimeWarning(projectedRuntimeMs: number): string | null {
   if (projectedRuntimeMs <= EXECUTIVE_WALKTHROUGH_WARN_RUNTIME_MS) return null;
   return `Projected runtime ${formatWalkthroughClock(projectedRuntimeMs)} exceeds 9:30. Shorten narration or disable scenes before export.`;
 }
@@ -127,7 +125,7 @@ export async function waitForWalkthroughSceneReady(input: {
 
 export function sanitizeExportFilename(name: string): string {
   return name
-    .replace(/[^\w.\-]+/g, "_")
+    .replace(/[^\w.-]+/g, "_")
     .replace(/_+/g, "_")
     .replace(/^\.+/, "")
     .slice(0, 180);

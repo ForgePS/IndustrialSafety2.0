@@ -17,6 +17,6 @@ Issue / ticket → Pull request → CI gates → Review approval → Merge → D
 Templates → `templates/`  
 Sample packs → `../evidence/change/`
 
-Related controls: **CC-CHG-01..03**, **CC-CI-***  
+Related controls: **CC-CHG-01..03**, **CC-CI-***
 
 Formalize the written procedure without replacing the working GitHub + CI controls.

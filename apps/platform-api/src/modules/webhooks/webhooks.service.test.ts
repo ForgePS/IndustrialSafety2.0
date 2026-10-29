@@ -29,9 +29,12 @@ describe("WebhooksService (MK-S15)", () => {
     vi.clearAllMocks();
     endpoint = null;
     delivery = null;
-    service = new WebhooksService({} as never, {
-      writeInTransaction: vi.fn(async () => "audit-1"),
-    } as never);
+    service = new WebhooksService(
+      {} as never,
+      {
+        writeInTransaction: vi.fn(async () => "audit-1"),
+      } as never,
+    );
     service.setHttpPosterForTests(async ({ body, signatureHeader }) => {
       const ok = verifyWebhookSignature(body, signatureHeader, String(endpoint?.signingSecret));
       return { ok, status: ok ? 200 : 401, bodyPreview: ok ? "ok" : "bad sig" };
@@ -107,7 +110,10 @@ describe("WebhooksService (MK-S15)", () => {
           set: (patch: Record<string, unknown>) => ({
             where: () => ({
               returning: async () => {
-                if (endpoint && ("enabled" in patch || "name" in patch || "signingSecret" in patch)) {
+                if (
+                  endpoint &&
+                  ("enabled" in patch || "name" in patch || "signingSecret" in patch)
+                ) {
                   endpoint = { ...endpoint, ...patch };
                   return [endpoint];
                 }
@@ -176,12 +182,7 @@ describe("WebhooksService (MK-S15)", () => {
       },
       principal,
     );
-    await service.patchEndpoint(
-      "tenant-1",
-      String(created.id),
-      { enabled: false },
-      principal,
-    );
+    await service.patchEndpoint("tenant-1", String(created.id), { enabled: false }, principal);
 
     await expect(
       service.createDelivery(

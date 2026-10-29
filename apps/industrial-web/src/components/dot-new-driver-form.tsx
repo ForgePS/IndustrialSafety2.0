@@ -114,8 +114,14 @@ export function DotNewDriverForm({ tenantSlug, onCancel, onCreated }: Props) {
   }, [companyDefault, company]);
 
   const sites = catalogs?.sites ?? [];
-  const divisionEntries: DivisionOption[] = catalogs?.divisionEntries ?? [];
-  const departments: LookupOption[] = catalogs?.departments ?? [];
+  const divisionEntries: DivisionOption[] = useMemo(
+    () => catalogs?.divisionEntries ?? [],
+    [catalogs?.divisionEntries],
+  );
+  const departments: LookupOption[] = useMemo(
+    () => catalogs?.departments ?? [],
+    [catalogs?.departments],
+  );
 
   const divisionsForSite = useMemo(
     () =>
@@ -148,8 +154,7 @@ export function DotNewDriverForm({ tenantSlug, onCancel, onCreated }: Props) {
 
   const driverName = joinDriverName(firstName, middleInitial, lastName);
   const siteLabel = sites.find((site) => site.id === siteId)?.label ?? "";
-  const departmentLabel =
-    departmentsForSite.find((row) => row.id === departmentId)?.label ?? "";
+  const departmentLabel = departmentsForSite.find((row) => row.id === departmentId)?.label ?? "";
   const locationDepartment =
     details.locationDepartment?.trim() ||
     [siteLabel, divisionName, departmentLabel].filter(Boolean).join(" / ");
@@ -270,7 +275,12 @@ export function DotNewDriverForm({ tenantSlug, onCancel, onCreated }: Props) {
     <form className="card border shadow-none mb-4" onSubmit={(e) => void onSubmit(e)}>
       <div className="card-header d-flex flex-wrap justify-content-between align-items-center gap-2">
         <h5 className="card-title mb-0">New driver (DQF)</h5>
-        <button type="button" className="btn btn-sm btn-outline-secondary" onClick={onCancel} disabled={busy}>
+        <button
+          type="button"
+          className="btn btn-sm btn-outline-secondary"
+          onClick={onCancel}
+          disabled={busy}
+        >
           Cancel
         </button>
       </div>
@@ -530,7 +540,12 @@ export function DotNewDriverForm({ tenantSlug, onCancel, onCreated }: Props) {
           <button type="submit" className="btn btn-primary" disabled={busy}>
             {busy ? "Creating…" : "Create Record"}
           </button>
-          <button type="button" className="btn btn-outline-secondary" onClick={onCancel} disabled={busy}>
+          <button
+            type="button"
+            className="btn btn-outline-secondary"
+            onClick={onCancel}
+            disabled={busy}
+          >
             Cancel
           </button>
         </div>

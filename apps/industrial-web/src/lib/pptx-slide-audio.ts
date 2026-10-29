@@ -215,7 +215,12 @@ export async function extractPptxSlideAudio(
       if (usedIds.size > 0 && !explicitlyLinked && !isStrictAudioType && !looksAudio) {
         continue;
       }
-      if (usedIds.size === 0 && !looksAudio && !isStrictAudioType && !mimeForMediaPath(rel.target)) {
+      if (
+        usedIds.size === 0 &&
+        !looksAudio &&
+        !isStrictAudioType &&
+        !mimeForMediaPath(rel.target)
+      ) {
         continue;
       }
 

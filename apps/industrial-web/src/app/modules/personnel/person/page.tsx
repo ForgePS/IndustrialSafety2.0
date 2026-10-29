@@ -127,9 +127,7 @@ function PersonnelFileInner() {
     };
   }, [me?.tenantId]);
 
-  const isArchived = Boolean(
-    record?.archivedAt && String(record.archivedAt).trim() !== "",
-  );
+  const isArchived = Boolean(record?.archivedAt && String(record.archivedAt).trim() !== "");
 
   async function archivePerson() {
     if (!id || !canManage || busy) return;
@@ -202,12 +200,13 @@ function PersonnelFileInner() {
     : [];
   const signature = record ? personnelSignature(record) : null;
   const siteName = record
-    ? resolvePersonnelLocationLabel(record, (siteId) => resolveLookupLabel(lookups, "sites", siteId))
+    ? resolvePersonnelLocationLabel(record, (siteId) =>
+        resolveLookupLabel(lookups, "sites", siteId),
+      )
     : undefined;
   const mvrAudits = record ? parseMvrAuditHistory(record.mvrAuditHistory) : [];
   const licenseCopies = record ? personnelLicenseCopies(record) : { front: null, back: null };
-  const needsLicenseCopies =
-    person?.isDotDriver === true || record?.requiresLicenseCopies === true;
+  const needsLicenseCopies = person?.isDotDriver === true || record?.requiresLicenseCopies === true;
   const companyDriverMvr = record ? parseCompanyDriverMvrSnapshot(record.companyDriverMvr) : null;
   const linkedDotRecordId =
     record && typeof record.dotRecordId === "string" && isIndustrialRecordUuid(record.dotRecordId)
@@ -292,7 +291,10 @@ function PersonnelFileInner() {
               {busy ? "Restoring…" : "Restore to roster"}
             </button>
           ) : null}
-          <Link className="btn btn-outline-secondary" href={isArchived ? ARCHIVED_ROSTER_HREF : ROSTER_HREF}>
+          <Link
+            className="btn btn-outline-secondary"
+            href={isArchived ? ARCHIVED_ROSTER_HREF : ROSTER_HREF}
+          >
             <i className="bx bx-arrow-back me-1" aria-hidden="true" />
             Back to directory
           </Link>

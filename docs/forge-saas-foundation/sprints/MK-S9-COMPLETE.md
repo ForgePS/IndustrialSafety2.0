@@ -31,12 +31,12 @@ Provider-neutral billing architecture: logical models, billing types, status nor
 
 ## Verification
 
-| Check | Result |
-| --- | --- |
+| Check                    | Result   |
+| ------------------------ | -------- |
 | contracts billing-domain | 3 passed |
-| billing service unit | 6 passed |
-| platform-api typecheck | PASS |
-| Production operations | NONE |
+| billing service unit     | 6 passed |
+| platform-api typecheck   | PASS     |
+| Production operations    | NONE     |
 
 ## Next sprint
 

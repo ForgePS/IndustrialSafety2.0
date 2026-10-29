@@ -211,9 +211,7 @@ export class AcknowledgmentService {
         })
         .from(legalDocumentVersions)
         .innerJoin(legalDocuments, eq(legalDocuments.id, legalDocumentVersions.legalDocumentId))
-        .where(
-          and(eq(legalDocuments.id, documentId), eq(legalDocumentVersions.id, versionId)),
-        )
+        .where(and(eq(legalDocuments.id, documentId), eq(legalDocumentVersions.id, versionId)))
         .limit(1);
       const found = row[0];
       if (!found) {

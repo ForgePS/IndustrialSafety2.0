@@ -30,12 +30,12 @@ Anything outside this statement is **out of scope** unless listed in an approved
 
 ## 3. In-scope products and modules
 
-| Product / module | Boundary notes |
-| --- | --- |
-| Creator Console | Tenant/user administration UI (static hosting + API) |
-| RMS Web | Records Management System UI and related API surfaces |
-| NERIS Phase 1 | Ingestion / schema foundation already in production path |
-| NERIS Phase 2 | Accepted incident / RMS integration surfaces |
+| Product / module         | Boundary notes                                             |
+| ------------------------ | ---------------------------------------------------------- |
+| Creator Console          | Tenant/user administration UI (static hosting + API)       |
+| RMS Web                  | Records Management System UI and related API surfaces      |
+| NERIS Phase 1            | Ingestion / schema foundation already in production path   |
+| NERIS Phase 2            | Accepted incident / RMS integration surfaces               |
 | Shared platform services | AuthN/Z, tenancy, audit, messaging, storage, compute, data |
 
 **Explicitly deferred (not in this readiness sprint as delivery work):** NERIS Phase 3 and later product expansions. Future modules must inherit this control foundation when brought in-scope.
@@ -83,12 +83,12 @@ See [`in-scope-services.md`](in-scope-services.md) for the full inventory. Summa
 
 ## 6. Organizational boundary
 
-| Role | Responsibility relative to system |
-| --- | --- |
-| Forge engineering | Design, implement, operate in-scope controls |
-| Forge product / leadership | Scope approval, risk acceptance, customer commitments |
-| AWS (subservice) | Underlying IaaS/PaaS controls per AWS SOC reports |
-| Agency customers | Endpoint security, user provisioning requests, acceptable use |
+| Role                       | Responsibility relative to system                             |
+| -------------------------- | ------------------------------------------------------------- |
+| Forge engineering          | Design, implement, operate in-scope controls                  |
+| Forge product / leadership | Scope approval, risk acceptance, customer commitments         |
+| AWS (subservice)           | Underlying IaaS/PaaS controls per AWS SOC reports             |
+| Agency customers           | Endpoint security, user provisioning requests, acceptable use |
 
 Customer on-premises systems, agency CAD integrations not hosted by Forge, and end-user devices are **outside** the Forge system boundary.
 
@@ -103,8 +103,8 @@ Customer on-premises systems, agency CAD integrations not hosted by Forge, and e
 
 ## 8. Approval
 
-| Approver | Role | Date | Signature |
-| --- | --- | --- | --- |
-| _TBD_ | Engineering lead | | |
-| _TBD_ | Product / executive sponsor | | |
-| _TBD_ | Compliance / security owner | | |
+| Approver | Role                        | Date | Signature |
+| -------- | --------------------------- | ---- | --------- |
+| _TBD_    | Engineering lead            |      |           |
+| _TBD_    | Product / executive sponsor |      |           |
+| _TBD_    | Compliance / security owner |      |           |

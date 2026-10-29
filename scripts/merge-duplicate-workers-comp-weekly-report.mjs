@@ -59,7 +59,8 @@ function asObject(value) {
 
 function pickText(...values) {
   for (const value of values) {
-    const text = typeof value === "string" ? value.trim() : value == null ? "" : String(value).trim();
+    const text =
+      typeof value === "string" ? value.trim() : value == null ? "" : String(value).trim();
     if (text) return text;
   }
   return "";
@@ -68,7 +69,8 @@ function pickText(...values) {
 function pickMaxNumber(...values) {
   let max = null;
   for (const value of values) {
-    const n = typeof value === "number" ? value : value == null || value === "" ? NaN : Number(value);
+    const n =
+      typeof value === "number" ? value : value == null || value === "" ? NaN : Number(value);
     if (!Number.isFinite(n)) continue;
     if (max == null || n > max) max = n;
   }
@@ -76,7 +78,9 @@ function pickMaxNumber(...values) {
 }
 
 function isOpenStatus(status) {
-  const s = String(status || "").trim().toUpperCase();
+  const s = String(status || "")
+    .trim()
+    .toUpperCase();
   return s === "OPEN" || s === "ACTIVE" || s === "RESTRICTED" || s === "LOST_TIME" || s === "DRAFT";
 }
 
@@ -138,7 +142,10 @@ function mergeSourcePayload(keeper, duplicates, claimSummary) {
   const all = [keeper, ...duplicates];
   const payloads = all.map(payloadOf);
   const base = { ...payloads[0] };
-  base.workerName = pickText(...payloads.map((p) => p.workerName), ...all.map((r) => r.worker_name));
+  base.workerName = pickText(
+    ...payloads.map((p) => p.workerName),
+    ...all.map((r) => r.worker_name),
+  );
   base.locationText = pickText(...payloads.map((p) => p.locationText));
   base.oshaCaseId = pickText(...payloads.map((p) => p.oshaCaseId));
   if (payloads.some((p) => p.oshaRecordable === true)) base.oshaRecordable = true;
@@ -225,7 +232,9 @@ try {
       .replace(/\s+/g, " ");
     if (!nameKey) continue;
     const claimKey = String(row.claim_key || "").trim();
-    const doiKey = String(row.injury_date || "").trim().slice(0, 10);
+    const doiKey = String(row.injury_date || "")
+      .trim()
+      .slice(0, 10);
     let groupKey;
     if (claimKey && claimKey !== "PENDING") {
       groupKey = `claim:${nameKey}||${claimKey}`;
@@ -275,8 +284,9 @@ try {
       ...duplicates.map((r) => r.restricted_days),
     );
     const status =
-      pickText(...[keeper, ...duplicates].filter((r) => isOpenStatus(r.status)).map((r) => r.status)) ||
-      keeper.status;
+      pickText(
+        ...[keeper, ...duplicates].filter((r) => isOpenStatus(r.status)).map((r) => r.status),
+      ) || keeper.status;
 
     report.casesKept += 1;
     report.casesArchived += duplicates.length;

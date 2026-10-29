@@ -151,8 +151,8 @@ export function FirstAidAddCertificationCard({ canManage, onAssigned }: Props) {
           <div>
             <h6 className="mb-1">Add certification</h6>
             <p className="text-muted small mb-0">
-              Search for an employee, set CPR / First Aid expiry dates, upload copies, and link
-              them to that personnel file.
+              Search for an employee, set CPR / First Aid expiry dates, upload copies, and link them
+              to that personnel file.
             </p>
           </div>
           {!open ? (
@@ -246,10 +246,14 @@ export function FirstAidAddCertificationCard({ canManage, onAssigned }: Props) {
                               <div>
                                 <span className="fw-medium">{name}</span>
                                 {hit.employeeNumber ? (
-                                  <span className="text-muted small ms-2">{hit.employeeNumber}</span>
+                                  <span className="text-muted small ms-2">
+                                    {hit.employeeNumber}
+                                  </span>
                                 ) : null}
                                 {hit.status ? (
-                                  <span className="badge bg-label-secondary ms-2">{hit.status}</span>
+                                  <span className="badge bg-label-secondary ms-2">
+                                    {hit.status}
+                                  </span>
                                 ) : null}
                               </div>
                               <button
@@ -357,4 +361,3 @@ export function FirstAidAddCertificationCard({ canManage, onAssigned }: Props) {
     </div>
   );
 }
-

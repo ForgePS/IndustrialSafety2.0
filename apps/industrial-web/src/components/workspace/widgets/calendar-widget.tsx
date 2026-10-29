@@ -147,7 +147,10 @@ function MonthBody({
       </div>
       <div className="forge-ws-cal-month mb-2" role="grid" aria-label="Month">
         {["S", "M", "T", "W", "T", "F", "S"].map((label, index) => (
-          <div key={`${label}-${index}`} className="forge-ws-cal-month-head text-muted small text-center">
+          <div
+            key={`${label}-${index}`}
+            className="forge-ws-cal-month-head text-muted small text-center"
+          >
             {label}
           </div>
         ))}
@@ -173,7 +176,9 @@ function MonthBody({
               aria-label={`${formatDayLabel(day)}${count ? `, ${count} events` : ""}`}
               onClick={() => onSelect(day)}
             >
-              <span className={isToday && !isSelected ? "fw-bold" : undefined}>{day.getDate()}</span>
+              <span className={isToday && !isSelected ? "fw-bold" : undefined}>
+                {day.getDate()}
+              </span>
               {count > 0 ? <span className="forge-ws-cal-dot" aria-hidden="true" /> : null}
             </button>
           );
@@ -236,7 +241,12 @@ function AgendaForView({
 /**
  * Live Calendar workspace widget — today / 3-day / week / month.
  */
-export function CalendarWorkspaceWidget({ size, view: viewProp, onViewChange, moduleRoute }: Props) {
+export function CalendarWorkspaceWidget({
+  size,
+  view: viewProp,
+  onViewChange,
+  moduleRoute,
+}: Props) {
   const view: CalendarWidgetView = isCalendarWidgetView(viewProp) ? viewProp : "3-day";
   const { status, error, events, refresh } = useCalendarWidgetData(view, true);
   const [selectedDay, setSelectedDay] = useState(() => startOfDay(new Date()));
@@ -274,7 +284,11 @@ export function CalendarWorkspaceWidget({ size, view: viewProp, onViewChange, mo
           <div>
             <p className="text-danger small mb-2">{error ?? "Unable to load schedule."}</p>
             <div className="d-flex flex-wrap gap-2">
-              <button type="button" className="btn btn-sm btn-outline-secondary" onClick={() => void refresh()}>
+              <button
+                type="button"
+                className="btn btn-sm btn-outline-secondary"
+                onClick={() => void refresh()}
+              >
                 Try Again
               </button>
               <Link href={moduleRoute} className="btn btn-sm btn-outline-primary">
@@ -284,15 +298,13 @@ export function CalendarWorkspaceWidget({ size, view: viewProp, onViewChange, mo
           </div>
         ) : null}
 
-        {status === "loaded" || status === "empty"
-          ? view === "month"
-            ? (
-                <MonthBody events={events} selected={selectedDay} onSelect={setSelectedDay} />
-              )
-            : (
-                <AgendaForView view={view} events={events} maxPerDay={maxPerDay} />
-              )
-          : null}
+        {status === "loaded" || status === "empty" ? (
+          view === "month" ? (
+            <MonthBody events={events} selected={selectedDay} onSelect={setSelectedDay} />
+          ) : (
+            <AgendaForView view={view} events={events} maxPerDay={maxPerDay} />
+          )
+        ) : null}
       </div>
 
       <div className="d-flex flex-wrap align-items-center justify-content-between gap-2 mt-2 pt-2 border-top">

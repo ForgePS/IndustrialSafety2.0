@@ -154,10 +154,7 @@ export function buildIndustrialNavigation(input: {
 
     const awsEnabled = deploymentOk && printingOk;
     const available =
-      hasPerms &&
-      implementationStatus === "AVAILABLE" &&
-      customerEnabled &&
-      awsEnabled;
+      hasPerms && implementationStatus === "AVAILABLE" && customerEnabled && awsEnabled;
 
     return {
       code: entry.code,
@@ -179,9 +176,7 @@ export function buildIndustrialNavigation(input: {
   const available = items.filter((item) => item.available);
   // When Print Manager is on, prefer the hub and hide legacy System Tools duplicates.
   if (available.some((item) => item.code === "PRINT_MANAGER")) {
-    return available.filter(
-      (item) => item.code !== "PRINT_QUEUE" && item.code !== "PRINT_HISTORY",
-    );
+    return available.filter((item) => item.code !== "PRINT_QUEUE" && item.code !== "PRINT_HISTORY");
   }
   return available;
 }

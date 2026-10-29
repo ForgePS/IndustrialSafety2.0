@@ -1,8 +1,15 @@
-import type { DashboardPreferencesState, DashboardWidgetDefinition, WidgetPreference, WidgetSize } from "./types";
+import type {
+  DashboardPreferencesState,
+  DashboardWidgetDefinition,
+  WidgetPreference,
+  WidgetSize,
+} from "./types";
 
 const STORAGE_KEY = "fx.rms.dashboard.preferences.v1";
 
-export function defaultPreferences(widgets: DashboardWidgetDefinition[]): DashboardPreferencesState {
+export function defaultPreferences(
+  widgets: DashboardWidgetDefinition[],
+): DashboardPreferencesState {
   return {
     version: 1,
     widgets: widgets.map((widget) => ({

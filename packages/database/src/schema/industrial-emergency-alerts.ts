@@ -85,10 +85,7 @@ export const industrialEmergencyAlertVersions = pgTable(
     createdAt: createdAtColumn,
   },
   (table) => [
-    uniqueIndex("industrial_emergency_alert_versions_uidx").on(
-      table.alertId,
-      table.versionNumber,
-    ),
+    uniqueIndex("industrial_emergency_alert_versions_uidx").on(table.alertId, table.versionNumber),
     index("industrial_emergency_alert_versions_tenant_idx").on(table.tenantId, table.alertId),
   ],
 );
@@ -182,9 +179,7 @@ export const industrialEmergencyAlertDeliveries = pgTable(
     alertId: uuid("alert_id")
       .notNull()
       .references(() => industrialEmergencyAlerts.id),
-    alertVersionId: uuid("alert_version_id").references(
-      () => industrialEmergencyAlertVersions.id,
-    ),
+    alertVersionId: uuid("alert_version_id").references(() => industrialEmergencyAlertVersions.id),
     recipientId: uuid("recipient_id").references(() => industrialEmergencyAlertRecipients.id),
     channel: varchar("channel", { length: 32 }).notNull(),
     provider: varchar("provider", { length: 64 }),
@@ -207,10 +202,7 @@ export const industrialEmergencyAlertDeliveries = pgTable(
       table.channel,
       table.status,
     ),
-    index("industrial_emergency_alert_deliveries_tenant_idx").on(
-      table.tenantId,
-      table.createdAt,
-    ),
+    index("industrial_emergency_alert_deliveries_tenant_idx").on(table.tenantId, table.createdAt),
   ],
 );
 
@@ -306,9 +298,7 @@ export const industrialEmergencyAlertSettings = pgTable(
     createdAt: createdAtColumn,
     updatedAt: updatedAtColumn,
   },
-  (table) => [
-    uniqueIndex("industrial_emergency_alert_settings_tenant_uidx").on(table.tenantId),
-  ],
+  (table) => [uniqueIndex("industrial_emergency_alert_settings_tenant_uidx").on(table.tenantId)],
 );
 
 export const industrialEmergencyAlertAuditLogs = pgTable(
@@ -375,9 +365,6 @@ export const industrialEmergencyAlertGroupMembers = pgTable(
       table.groupId,
       table.personnelId,
     ),
-    index("industrial_emergency_alert_group_members_tenant_idx").on(
-      table.tenantId,
-      table.groupId,
-    ),
+    index("industrial_emergency_alert_group_members_tenant_idx").on(table.tenantId, table.groupId),
   ],
 );

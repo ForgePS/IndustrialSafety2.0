@@ -38,71 +38,67 @@ export const DOT_TABS: ReadonlyArray<{ id: DotTabId; label: string }> = [
   { id: "reports", label: "Reports" },
 ];
 
-export const DOT_TAB_META: Record<
-  DotTabId,
-  { label: string; description: string; icon: string }
-> = {
-  dashboard: {
-    label: "Dashboard",
-    description: "Compliance score, open items, and quick links by record type.",
-    icon: "bx-grid-alt",
-  },
-  drivers: {
-    label: "DRIVERS (DQF)",
-    description: "DRIVER Qualification Files — licenses, MVR, medical cards, and related documents.",
-    icon: "bx-user",
-  },
-  vehicles: {
-    label: "Vehicles",
-    description: "Vehicle registrations, inspections, and fleet DOT documentation.",
-    icon: "bx-car",
-  },
-  dvirs: {
-    label: "DVIRs",
-    description: "DRIVER Vehicle Inspection Reports — pre-trip, post-trip, and defect follow-up.",
-    icon: "bx-clipboard",
-  },
-  roadside: {
-    label: "Roadside",
-    description: "Roadside inspection results, violations, and out-of-service items.",
-    icon: "bx-map",
-  },
-  accidents: {
-    label: "Accidents",
-    description: "DOT-recordable accidents, crash reports, and related follow-up.",
-    icon: "bx-error",
-  },
-  "drug-alcohol": {
-    label: "Drug & Alcohol",
-    description: "Drug and alcohol testing, clearings, and DAPM program records.",
-    icon: "bx-plus-medical",
-  },
-  company: {
-    label: "Company",
-    description: "Company-level DOT policies, registrations, and program files.",
-    icon: "bx-buildings",
-  },
-  other: {
-    label: "Other",
-    description: "Records that do not match a standard DOT category.",
-    icon: "bx-folder",
-  },
-  reports: {
-    label: "Reports",
-    description:
-      "Export DQF document status across the DRIVER roster — missing, expired, expiring, and copy-on-file.",
-    icon: "bx-export",
-  },
-};
+export const DOT_TAB_META: Record<DotTabId, { label: string; description: string; icon: string }> =
+  {
+    dashboard: {
+      label: "Dashboard",
+      description: "Compliance score, open items, and quick links by record type.",
+      icon: "bx-grid-alt",
+    },
+    drivers: {
+      label: "DRIVERS (DQF)",
+      description:
+        "DRIVER Qualification Files — licenses, MVR, medical cards, and related documents.",
+      icon: "bx-user",
+    },
+    vehicles: {
+      label: "Vehicles",
+      description: "Vehicle registrations, inspections, and fleet DOT documentation.",
+      icon: "bx-car",
+    },
+    dvirs: {
+      label: "DVIRs",
+      description: "DRIVER Vehicle Inspection Reports — pre-trip, post-trip, and defect follow-up.",
+      icon: "bx-clipboard",
+    },
+    roadside: {
+      label: "Roadside",
+      description: "Roadside inspection results, violations, and out-of-service items.",
+      icon: "bx-map",
+    },
+    accidents: {
+      label: "Accidents",
+      description: "DOT-recordable accidents, crash reports, and related follow-up.",
+      icon: "bx-error",
+    },
+    "drug-alcohol": {
+      label: "Drug & Alcohol",
+      description: "Drug and alcohol testing, clearings, and DAPM program records.",
+      icon: "bx-plus-medical",
+    },
+    company: {
+      label: "Company",
+      description: "Company-level DOT policies, registrations, and program files.",
+      icon: "bx-buildings",
+    },
+    other: {
+      label: "Other",
+      description: "Records that do not match a standard DOT category.",
+      icon: "bx-folder",
+    },
+    reports: {
+      label: "Reports",
+      description:
+        "Export DQF document status across the DRIVER roster — missing, expired, expiring, and copy-on-file.",
+      icon: "bx-export",
+    },
+  };
 
 export const DOT_API = "/api/v1/industrial/dot";
 export const DOT_LIST_HREF = "/modules/dot-compliance/";
 
 /** DOT file for one record. Ids stay in the query string (static export). */
-export function dotFileHref(
-  id: string,
-  opts?: { focus?: string; edit?: boolean },
-): string {
+export function dotFileHref(id: string, opts?: { focus?: string; edit?: boolean }): string {
   const params = new URLSearchParams({ id });
   if (opts?.focus?.trim()) params.set("focus", opts.focus.trim());
   if (opts?.edit) params.set("edit", "1");
@@ -163,7 +159,9 @@ export function isDotDqfDriverRecord(row: Record<string, unknown>): boolean {
   if (/\bdrv-\d{4}-\d+\b/.test(hay)) return true;
   if (/dqf\s*import/.test(hay)) return true;
   if (/dot-compliance\/[^/]+\/drivers\/drv-/.test(hay)) return true;
-  const cat = String(row.category ?? "").trim().toLowerCase();
+  const cat = String(row.category ?? "")
+    .trim()
+    .toLowerCase();
   if (cat.includes("dqf")) return true;
   if (row.dqf === true) return true;
   return false;
@@ -191,7 +189,9 @@ export function dotRecordCategory(row: Record<string, unknown>): DotCategory {
 
   if (isDotDqfDriverRecord(row)) return "drivers";
 
-  const cat = String(row.category ?? "").trim().toLowerCase();
+  const cat = String(row.category ?? "")
+    .trim()
+    .toLowerCase();
   if (cat.includes("driver") || cat.includes("dqf")) return "other";
   if (cat.includes("vehicle")) return "vehicles";
   if (cat.includes("company")) return "company";
@@ -273,7 +273,10 @@ export function normalizeDotPersonName(value: string): string {
     .replace(/[.'"]/g, "")
     .replace(/\s+/g, " ");
   if (!cleaned.includes(",")) return cleaned;
-  const parts = cleaned.split(",").map((part) => part.trim()).filter((part) => part !== "");
+  const parts = cleaned
+    .split(",")
+    .map((part) => part.trim())
+    .filter((part) => part !== "");
   if (parts.length < 2) return cleaned.replace(/,/g, " ").replace(/\s+/g, " ").trim();
   return `${parts.slice(1).join(" ")} ${parts[0]!}`.replace(/\s+/g, " ").trim();
 }
@@ -288,9 +291,7 @@ function safeUnicodeNormalize(value: string): string {
 
 /** True when an id is a Postgres uuid (personnel / module record deep link). */
 export function isIndustrialRecordUuid(value: string): boolean {
-  return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(
-    value.trim(),
-  );
+  return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(value.trim());
 }
 
 function isFilledDotValue(value: unknown): boolean {
@@ -350,7 +351,9 @@ export function groupDotProfileMembers(
   for (const [id, row] of byId) {
     const pid = dotPersonnelId(row);
     if (pid) add(`pid:${pid}`, id);
-    const employee = String(row.employeeNumber ?? "").trim().toLowerCase();
+    const employee = String(row.employeeNumber ?? "")
+      .trim()
+      .toLowerCase();
     if (employee) add(`emp:${employee}`, id);
     if (isDotPersonRecord(row)) {
       const name = normalizeDotPersonName(dotDisplayName(row));
@@ -571,13 +574,7 @@ function formatDotListDate(value: unknown): string {
 /** e.g. "DQF Import · 8/11/2025 · Due 8/4/2026" */
 export function dotDriverSourceMeta(row: Record<string, unknown>): string {
   const parts: string[] = [];
-  const hay = [
-    row.seededFrom,
-    row.sourceSystem,
-    row.sourceCollection,
-    row.sourcePath,
-    row.title,
-  ]
+  const hay = [row.seededFrom, row.sourceSystem, row.sourceCollection, row.sourcePath, row.title]
     .map((value) => String(value ?? ""))
     .join(" ");
   if (/dqf\s*import/i.test(hay) || row.dqf === true || isDotDqfDriverRecord(row)) {
@@ -656,7 +653,10 @@ function firstWord(value: string): string {
 }
 
 function lastWord(value: string): string {
-  const words = value.trim().split(/\s+/).filter((w) => w !== "");
+  const words = value
+    .trim()
+    .split(/\s+/)
+    .filter((w) => w !== "");
   return words.length === 0 ? "" : words[words.length - 1]!;
 }
 
@@ -666,10 +666,7 @@ function collate(a: string, b: string): number {
 
 /** Name used for A–Z sorts: driver/worker first, then title (personnel-style). */
 export function dotSortName(row: Record<string, unknown>): string {
-  return (
-    dotWorkerName(row) ||
-    String(row.displayName ?? row.name ?? row.title ?? "").trim()
-  );
+  return dotWorkerName(row) || String(row.displayName ?? row.name ?? row.title ?? "").trim();
 }
 
 function dotNameParts(row: Record<string, unknown>): { first: string; last: string } {
@@ -722,12 +719,14 @@ export function filterDotRecords(
   const q = (opts.q ?? "").trim().toLowerCase();
   const status = (opts.status ?? "").trim().toUpperCase();
   const source =
-    opts.tab === "drivers"
-      ? collapseDotDriverProfiles(filterDotDqfDriverRows(rows))
-      : rows;
+    opts.tab === "drivers" ? collapseDotDriverProfiles(filterDotDqfDriverRows(rows)) : rows;
 
   const filtered = source.filter((row) => {
-    if (isDotCategoryTab(opts.tab) && opts.tab !== "drivers" && dotRecordCategory(row) !== opts.tab) {
+    if (
+      isDotCategoryTab(opts.tab) &&
+      opts.tab !== "drivers" &&
+      dotRecordCategory(row) !== opts.tab
+    ) {
       return false;
     }
     if (status && String(row.status ?? "").toUpperCase() !== status) return false;

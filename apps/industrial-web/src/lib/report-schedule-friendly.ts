@@ -118,9 +118,7 @@ export function describeCronExpression(cronExpression: string, timezone?: string
   const hourCentral = Number.isFinite(utcHour) ? utcHourToCentralHour(utcHour) : 8;
   const timeLabel = `${formatCentralHour(hourCentral)} US Central`;
   const tzNote =
-    timezone && timezone !== "UTC" && timezone !== REPORT_SCHEDULE_TIMEZONE
-      ? ` (${timezone})`
-      : "";
+    timezone && timezone !== "UTC" && timezone !== REPORT_SCHEDULE_TIMEZONE ? ` (${timezone})` : "";
 
   if (dom === "1" && (dow === "*" || dow === "?")) {
     return `Monthly on the 1st at ${timeLabel}${tzNote}`;
@@ -156,10 +154,13 @@ export function formatNextRun(iso: string | null | undefined): string {
   });
 }
 
-export const HOUR_OPTIONS: { value: number; label: string }[] = Array.from({ length: 24 }, (_, h) => ({
-  value: h,
-  label: formatCentralHour(h),
-}));
+export const HOUR_OPTIONS: { value: number; label: string }[] = Array.from(
+  { length: 24 },
+  (_, h) => ({
+    value: h,
+    label: formatCentralHour(h),
+  }),
+);
 
 export const WEEKDAY_OPTIONS: { value: number; label: string }[] = WEEKDAY_LABELS.map(
   (label, value) => ({ value, label }),

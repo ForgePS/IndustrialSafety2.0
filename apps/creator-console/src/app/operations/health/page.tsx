@@ -2,11 +2,7 @@
 
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
-import {
-  ForgePageHeader,
-  ForgeStatusCard,
-  LoadingState,
-} from "@forge/ui";
+import { ForgePageHeader, ForgeStatusCard, LoadingState } from "@forge/ui";
 import { PlatformPageGate } from "@/components/platform-page-gate";
 import { fetchHealth, fetchReady, type HealthPayload, type ReadyPayload } from "@/lib/api";
 import styles from "../../page.module.css";
@@ -44,8 +40,7 @@ function OperationsHealthInner() {
   }, [load]);
 
   const apiOk =
-    health != null &&
-    ["ok", "healthy", "up"].includes(String(health.status).toLowerCase());
+    health != null && ["ok", "healthy", "up"].includes(String(health.status).toLowerCase());
   const dbOk = ready?.checks.database === true;
 
   return (
@@ -82,10 +77,18 @@ function OperationsHealthInner() {
       </div>
 
       <p className={styles.linkRow}>
-        <button type="button" className="forge-btn forge-btn--outline" onClick={() => setShowTechnical((v) => !v)}>
+        <button
+          type="button"
+          className="forge-btn forge-btn--outline"
+          onClick={() => setShowTechnical((v) => !v)}
+        >
           {showTechnical ? "Hide technical details" : "View technical details"}
         </button>
-        <button type="button" className="forge-btn forge-btn--secondary" onClick={() => void load()}>
+        <button
+          type="button"
+          className="forge-btn forge-btn--secondary"
+          onClick={() => void load()}
+        >
           Refresh
         </button>
         <Link href="/email/">Email service</Link>

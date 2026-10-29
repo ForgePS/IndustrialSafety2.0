@@ -100,9 +100,9 @@ describe("personnel-ppe", () => {
     expect(person?.glassesIssuedDate).toBe("2026-01-10");
     expect(person?.glassesExpiresDate).toBe("2027-01-10");
     expect(person?.footwearClass).toBe("CLASS_1");
-    expect(
-      formatPpeExtraPairSummary(person!.glassesExtra),
-    ).toBe("Approved by Pat Manager on 2026-03-02 — Lens scratch");
+    expect(formatPpeExtraPairSummary(person!.glassesExtra)).toBe(
+      "Approved by Pat Manager on 2026-03-02 — Lens scratch",
+    );
     expect(filterPpeAllowancePeople([person!], "extra-pair")).toHaveLength(1);
     expect(filterPpeAllowancePeople([person!], "expiring")).toHaveLength(0);
   });

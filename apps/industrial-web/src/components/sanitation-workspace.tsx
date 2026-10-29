@@ -28,13 +28,8 @@ import {
   pestDevicePrintFieldValues,
   sanitationLocationPrintFieldValues,
 } from "@/lib/module-print-fields";
-import {
-  filterDepartmentsForSite,
-} from "@/lib/personnel-assignment";
-import {
-  compressImageToDataUrl,
-  imageCompressErrorMessage,
-} from "@/lib/compress-image";
+import { filterDepartmentsForSite } from "@/lib/personnel-assignment";
+import { compressImageToDataUrl, imageCompressErrorMessage } from "@/lib/compress-image";
 import {
   SANITATION_TABS,
   SANITATION_TOGGLEABLE_TABS,
@@ -66,7 +61,6 @@ import { canManageSanitationSubmodules } from "@/lib/platform-admin";
 import { filterModulePages } from "@/lib/module-page-permissions";
 
 const API = "/api/v1/industrial/sanitation";
-
 
 type Row = Record<string, unknown> & { id: string };
 
@@ -153,13 +147,7 @@ function asRowArray(value: unknown): Row[] {
     const obj = value as Record<string, unknown>;
     if (Array.isArray(obj.items)) return obj.items as Row[];
     // Aging buckets historically returned as { d0_7, d8_14, ... }
-    if (
-      "d0_7" in obj ||
-      "d8_14" in obj ||
-      "d15_30" in obj ||
-      "d31_60" in obj ||
-      "d60plus" in obj
-    ) {
+    if ("d0_7" in obj || "d8_14" in obj || "d15_30" in obj || "d31_60" in obj || "d60plus" in obj) {
       return [
         { id: "d0_7", label: "0-7 days", bucket: "d0_7", count: Number(obj.d0_7 ?? 0) },
         { id: "d8_14", label: "8-14 days", bucket: "d8_14", count: Number(obj.d8_14 ?? 0) },
@@ -186,10 +174,7 @@ function fmtDate(value: unknown): string {
   return Number.isNaN(d.getTime()) ? String(value) : d.toLocaleString();
 }
 
-function siteQuery(
-  siteId: string,
-  extras?: { departmentId?: string },
-): Record<string, string> {
+function siteQuery(siteId: string, extras?: { departmentId?: string }): Record<string, string> {
   const q: Record<string, string> = {};
   if (siteId) q.siteId = siteId;
   const departmentId = extras?.departmentId?.trim();
@@ -249,10 +234,7 @@ function toggleMulti(list: string[], value: string): string[] {
   return list.includes(value) ? list.filter((v) => v !== value) : [...list, value];
 }
 
-function barRows(
-  items: unknown,
-  labelKeys: string[],
-): Array<{ label: string; value: number }> {
+function barRows(items: unknown, labelKeys: string[]): Array<{ label: string; value: number }> {
   const rows = asRowArray(items);
   if (!rows.length) return [];
   return rows.map((item) => {
@@ -426,7 +408,7 @@ export function SanitationWorkspace({ moduleName }: { moduleName: string }) {
 
   // Start / run inspection
   const [startTemplateId, setStartTemplateId] = useState("");
-  const [startLocationId, setStartLocationId] = useState("");
+  const [startLocationId] = useState("");
   const [startTitle, setStartTitle] = useState("");
   const [activeInspection, setActiveInspection] = useState<Row | null>(null);
   const [responses, setResponses] = useState<Record<string, ResponseEntry>>({});
@@ -578,10 +560,7 @@ export function SanitationWorkspace({ moduleName }: { moduleName: string }) {
 
   const runSections = useMemo(() => sectionsFromTemplate(activeTemplate), [activeTemplate]);
 
-  const runQuestions = useMemo(
-    () => runSections.flatMap((s) => s.questions ?? []),
-    [runSections],
-  );
+  const runQuestions = useMemo(() => runSections.flatMap((s) => s.questions ?? []), [runSections]);
 
   const runProgress = useMemo(() => {
     if (!runQuestions.length) return 0;
@@ -594,9 +573,7 @@ export function SanitationWorkspace({ moduleName }: { moduleName: string }) {
 
   const awaitingVerification = useMemo(
     () =>
-      cleaningTasks.filter(
-        (t) => String(t.status ?? "").toUpperCase() === "AWAITING_VERIFICATION",
-      ),
+      cleaningTasks.filter((t) => String(t.status ?? "").toUpperCase() === "AWAITING_VERIFICATION"),
     [cleaningTasks],
   );
 
@@ -608,8 +585,7 @@ export function SanitationWorkspace({ moduleName }: { moduleName: string }) {
   }, [findings, findingSeverity]);
 
   const preopTemplates = useMemo(
-    () =>
-      templates.filter((t) => String(t.category ?? "").toUpperCase() === "PREOP"),
+    () => templates.filter((t) => String(t.category ?? "").toUpperCase() === "PREOP"),
     [templates],
   );
 
@@ -821,13 +797,9 @@ export function SanitationWorkspace({ moduleName }: { moduleName: string }) {
     setProfiles(items);
     const match = siteId ? items.find((p) => p.siteId === siteId) : items[0];
     if (match) {
-      setProfileTypes(
-        Array.isArray(match.facilityTypes) ? (match.facilityTypes as string[]) : [],
-      );
+      setProfileTypes(Array.isArray(match.facilityTypes) ? (match.facilityTypes as string[]) : []);
       setProfileFrameworks(
-        Array.isArray(match.complianceFrameworks)
-          ? (match.complianceFrameworks as string[])
-          : [],
+        Array.isArray(match.complianceFrameworks) ? (match.complianceFrameworks as string[]) : [],
       );
       setProfileDustThreshold(String(match.dustActionThresholdInches ?? "0.125"));
       setProfilePriorityHk(Boolean(match.priorityHousekeepingEnabled));
@@ -902,7 +874,10 @@ export function SanitationWorkspace({ moduleName }: { moduleName: string }) {
   }, [siteId]);
 
   const loadVerifications = useCallback(async () => {
-    const data = await softGet<{ items?: Row[] } | Row[]>(`${API}/verifications`, siteQuery(siteId));
+    const data = await softGet<{ items?: Row[] } | Row[]>(
+      `${API}/verifications`,
+      siteQuery(siteId),
+    );
     setVerifications(data ? asItems(data as { items?: Row[] }) : []);
   }, [siteId]);
 
@@ -1121,10 +1096,7 @@ export function SanitationWorkspace({ moduleName }: { moduleName: string }) {
           }
         }
         setDraftRestored(true);
-      } else if (
-        draft?.responses &&
-        Object.keys(next).length === 0
-      ) {
+      } else if (draft?.responses && Object.keys(next).length === 0) {
         for (const [key, val] of Object.entries(draft.responses)) {
           if (val && typeof val === "object") {
             next[key] = val as ResponseEntry;
@@ -1159,11 +1131,7 @@ export function SanitationWorkspace({ moduleName }: { moduleName: string }) {
       return;
     }
     await withBusy(async () => {
-      await apiSend(
-        `${API}/inspections/${encodeURIComponent(inspectionId)}/delete`,
-        "POST",
-        {},
-      );
+      await apiSend(`${API}/inspections/${encodeURIComponent(inspectionId)}/delete`, "POST", {});
       clearSanitationDraft(inspectionId);
       if (String(activeInspection?.id ?? "") === inspectionId) {
         setActiveInspection(null);
@@ -1235,9 +1203,7 @@ export function SanitationWorkspace({ moduleName }: { moduleName: string }) {
         ...(prevEntry?.dustDepth != null ? { dustDepth: prevEntry.dustDepth } : {}),
         ...(prevEntry?.dustUnit != null ? { dustUnit: prevEntry.dustUnit } : {}),
         ...(prevEntry?.photos != null ? { photos: prevEntry.photos } : {}),
-        ...((label ?? prevEntry?.label) != null
-          ? { label: label ?? prevEntry?.label }
-          : {}),
+        ...((label ?? prevEntry?.label) != null ? { label: label ?? prevEntry?.label } : {}),
         ...((severity ?? prevEntry?.severity) != null
           ? { severity: severity ?? prevEntry?.severity }
           : {}),
@@ -1347,11 +1313,6 @@ export function SanitationWorkspace({ moduleName }: { moduleName: string }) {
     });
   }
 
-  async function addQuestionPhoto(questionId: string, file: File | null) {
-    if (!file) return;
-    await addQuestionPhotos(questionId, [file]);
-  }
-
   async function postDustFromQuestion(questionId: string) {
     if (!activeInspection || !canInspect) return;
     const entry = responses[questionId];
@@ -1382,19 +1343,24 @@ export function SanitationWorkspace({ moduleName }: { moduleName: string }) {
 
   async function saveResponses() {
     if (!activeInspection || !canInspect) return;
-    await withBusy(async () => {
-      if (typeof window !== "undefined" && !navigator.onLine) {
+    await withBusy(
+      async () => {
+        if (typeof window !== "undefined" && !navigator.onLine) {
+          saveSanitationDraft(activeInspection.id, responses);
+          return;
+        }
+        const updated = await apiSend<Row>(
+          `${API}/inspections/${encodeURIComponent(activeInspection.id)}/responses`,
+          "POST",
+          { responsesJson: responses },
+        );
+        setActiveInspection(updated);
         saveSanitationDraft(activeInspection.id, responses);
-        return;
-      }
-      const updated = await apiSend<Row>(
-        `${API}/inspections/${encodeURIComponent(activeInspection.id)}/responses`,
-        "POST",
-        { responsesJson: responses },
-      );
-      setActiveInspection(updated);
-      saveSanitationDraft(activeInspection.id, responses);
-    }, typeof window !== "undefined" && !navigator.onLine ? "Draft saved locally" : "Responses saved");
+      },
+      typeof window !== "undefined" && !navigator.onLine
+        ? "Draft saved locally"
+        : "Responses saved",
+    );
   }
 
   async function completeInspection() {
@@ -1474,9 +1440,7 @@ export function SanitationWorkspace({ moduleName }: { moduleName: string }) {
         {},
       );
       await Promise.all([loadCleaning(), loadMss(), loadDashboard()]);
-      const n = Array.isArray(result?.created)
-        ? result.created.length
-        : Number(result?.count ?? 0);
+      const n = Array.isArray(result?.created) ? result.created.length : Number(result?.count ?? 0);
       setSuccess(`Generated ${n} cleaning task(s)`);
     });
   }
@@ -1502,9 +1466,7 @@ export function SanitationWorkspace({ moduleName }: { moduleName: string }) {
             ...cleaningBeforePhotos,
           ],
           afterPhotosJson: [
-            ...(cleaningAfterNote.trim()
-              ? [{ note: cleaningAfterNote.trim(), kind: "NOTE" }]
-              : []),
+            ...(cleaningAfterNote.trim() ? [{ note: cleaningAfterNote.trim(), kind: "NOTE" }] : []),
             ...cleaningAfterPhotos,
           ],
           cleanerSignatureJson: cleaningSignature.trim()
@@ -1765,10 +1727,7 @@ export function SanitationWorkspace({ moduleName }: { moduleName: string }) {
     }, "Template created");
   }
 
-  async function addCleaningPhoto(
-    kind: "before" | "after",
-    file: File | null,
-  ) {
+  async function addCleaningPhoto(kind: "before" | "after", file: File | null) {
     if (!file) return;
     try {
       const dataUrl = await compressImageToDataUrl(file, 900_000);
@@ -1868,10 +1827,7 @@ export function SanitationWorkspace({ moduleName }: { moduleName: string }) {
     }, "Location created");
   }
 
-  async function ensureSanitationLocationForArea(area: {
-    id: string;
-    label: string;
-  }) {
+  async function ensureSanitationLocationForArea(area: { id: string; label: string }) {
     if (!canManage) return;
     if (!siteId) {
       setError("Select a Location first.");
@@ -1898,12 +1854,15 @@ export function SanitationWorkspace({ moduleName }: { moduleName: string }) {
 
   async function updateLocationDepartment(locationId: string, nextDepartmentId: string) {
     if (!canManage) return;
-    await withBusy(async () => {
-      await apiSend(`${API}/locations/${locationId}`, "PATCH", {
-        departmentId: nextDepartmentId || null,
-      });
-      await loadZonesAndLocations();
-    }, nextDepartmentId ? "Area updated" : "Area cleared");
+    await withBusy(
+      async () => {
+        await apiSend(`${API}/locations/${locationId}`, "PATCH", {
+          departmentId: nextDepartmentId || null,
+        });
+        await loadZonesAndLocations();
+      },
+      nextDepartmentId ? "Area updated" : "Area cleared",
+    );
   }
 
   async function createPestDevice(ev: FormEvent) {
@@ -2075,7 +2034,11 @@ export function SanitationWorkspace({ moduleName }: { moduleName: string }) {
             }
             tone="success"
           />
-          <KpiCard label="Inspections today" value={dashboard?.todayInspections ?? 0} tone="primary" />
+          <KpiCard
+            label="Inspections today"
+            value={dashboard?.todayInspections ?? 0}
+            tone="primary"
+          />
           <KpiCard
             label="Critical findings"
             value={dashboard?.openCriticalFindings ?? 0}
@@ -2107,32 +2070,63 @@ export function SanitationWorkspace({ moduleName }: { moduleName: string }) {
             <KpiCard label="Scorecard open findings" value={String(scorecard.openFindings)} />
           ) : null}
           {scorecard?.mssOnTimePercent != null ? (
-            <KpiCard label="Scorecard MSS on-time" value={`${String(scorecard.mssOnTimePercent)}%`} />
+            <KpiCard
+              label="Scorecard MSS on-time"
+              value={`${String(scorecard.mssOnTimePercent)}%`}
+            />
           ) : null}
         </div>
 
         <div className="d-flex flex-wrap gap-2">
           {canInspect ? (
-            <button type="button" className="btn btn-sm btn-primary" onClick={() => setTab("start")}>
+            <button
+              type="button"
+              className="btn btn-sm btn-primary"
+              onClick={() => setTab("start")}
+            >
               Start inspection
             </button>
           ) : null}
-          <button type="button" className="btn btn-sm btn-outline-primary" onClick={() => setTab("preop")}>
+          <button
+            type="button"
+            className="btn btn-sm btn-outline-primary"
+            onClick={() => setTab("preop")}
+          >
             Pre-op
           </button>
-          <button type="button" className="btn btn-sm btn-outline-primary" onClick={() => setTab("dust")}>
+          <button
+            type="button"
+            className="btn btn-sm btn-outline-primary"
+            onClick={() => setTab("dust")}
+          >
             Record dust
           </button>
-          <button type="button" className="btn btn-sm btn-outline-primary" onClick={() => setTab("spills")}>
+          <button
+            type="button"
+            className="btn btn-sm btn-outline-primary"
+            onClick={() => setTab("spills")}
+          >
             Report spill
           </button>
-          <button type="button" className="btn btn-sm btn-outline-primary" onClick={() => setTab("cleaning")}>
+          <button
+            type="button"
+            className="btn btn-sm btn-outline-primary"
+            onClick={() => setTab("cleaning")}
+          >
             Cleaning tasks
           </button>
-          <button type="button" className="btn btn-sm btn-outline-primary" onClick={() => setTab("analytics")}>
+          <button
+            type="button"
+            className="btn btn-sm btn-outline-primary"
+            onClick={() => setTab("analytics")}
+          >
             Analytics
           </button>
-          <button type="button" className="btn btn-sm btn-outline-primary" onClick={() => setTab("concerns")}>
+          <button
+            type="button"
+            className="btn btn-sm btn-outline-primary"
+            onClick={() => setTab("concerns")}
+          >
             Report concern
           </button>
         </div>
@@ -2215,10 +2209,7 @@ export function SanitationWorkspace({ moduleName }: { moduleName: string }) {
                   if (aging.length === 0) {
                     return <p className="text-muted small mb-0">No CA aging buckets.</p>;
                   }
-                  const max = Math.max(
-                    1,
-                    ...aging.map((b) => Number(b.count ?? b.value ?? 0)),
-                  );
+                  const max = Math.max(1, ...aging.map((b) => Number(b.count ?? b.value ?? 0)));
                   return (
                     <div className="d-flex flex-column gap-2">
                       {aging.map((bucket, idx) => {
@@ -2320,7 +2311,11 @@ export function SanitationWorkspace({ moduleName }: { moduleName: string }) {
             <div className="card h-100">
               <div className="card-header d-flex justify-content-between">
                 <h6 className="mb-0">Open critical / major</h6>
-                <button type="button" className="btn btn-sm btn-link" onClick={() => setTab("findings")}>
+                <button
+                  type="button"
+                  className="btn btn-sm btn-link"
+                  onClick={() => setTab("findings")}
+                >
                   View all
                 </button>
               </div>
@@ -2334,7 +2329,9 @@ export function SanitationWorkspace({ moduleName }: { moduleName: string }) {
                         <tr key={f.id}>
                           <td>
                             <div>{String(f.title ?? "Finding")}</div>
-                            <span className={`badge ${severityBadgeClass(String(f.severity ?? ""))}`}>
+                            <span
+                              className={`badge ${severityBadgeClass(String(f.severity ?? ""))}`}
+                            >
                               {String(f.severity ?? "—")}
                             </span>
                           </td>
@@ -2367,7 +2364,9 @@ export function SanitationWorkspace({ moduleName }: { moduleName: string }) {
                       (dashboard?.recentInspections ?? []).map((row) => (
                         <tr key={row.id}>
                           <td>
-                            <div className="small text-muted">{String(row.inspectionNumber ?? "")}</div>
+                            <div className="small text-muted">
+                              {String(row.inspectionNumber ?? "")}
+                            </div>
                             <div>{String(row.title ?? "—")}</div>
                             <span className={`badge ${statusBadgeClass(String(row.status ?? ""))}`}>
                               {String(row.status ?? "—")}
@@ -2390,18 +2389,21 @@ export function SanitationWorkspace({ moduleName }: { moduleName: string }) {
       "severity",
       "label",
     ]);
-    const dustTrend = barRows(
-      analytics?.dustTrend ?? analytics?.dustAccumulationTrend,
-      ["label", "date", "days"],
-    );
-    const mssTrend = barRows(
-      analytics?.mssTrend ?? analytics?.mssCompletionTrend,
-      ["label", "date", "weekStart"],
-    );
-    const scoreTrend = barRows(
-      analytics?.scoreTrend ?? analytics?.inspectionScoreTrend,
-      ["label", "date", "weekStart"],
-    );
+    const dustTrend = barRows(analytics?.dustTrend ?? analytics?.dustAccumulationTrend, [
+      "label",
+      "date",
+      "days",
+    ]);
+    const mssTrend = barRows(analytics?.mssTrend ?? analytics?.mssCompletionTrend, [
+      "label",
+      "date",
+      "weekStart",
+    ]);
+    const scoreTrend = barRows(analytics?.scoreTrend ?? analytics?.inspectionScoreTrend, [
+      "label",
+      "date",
+      "weekStart",
+    ]);
     const insights = insightRows(analytics?.smartInsights);
     panel = (
       <div className="d-flex flex-column gap-3">
@@ -2504,8 +2506,7 @@ export function SanitationWorkspace({ moduleName }: { moduleName: string }) {
               style={{
                 minHeight: 420,
                 cursor: placingLocationId ? "crosshair" : "default",
-                background:
-                  "linear-gradient(145deg, #e8eef5 0%, #d5e4d0 45%, #f0ebe3 100%)",
+                background: "linear-gradient(145deg, #e8eef5 0%, #d5e4d0 45%, #f0ebe3 100%)",
               }}
               onClick={(ev) => void placeLocationOnMap(ev)}
               role="presentation"
@@ -2586,10 +2587,12 @@ export function SanitationWorkspace({ moduleName }: { moduleName: string }) {
                       {String(heatMapPopover.name ?? heatMapPopover.deviceNumber ?? "Point")}
                     </div>
                     <div className="small text-muted mb-1">
-                      Status: {String(heatMapPopover.sanitationStatus ?? heatMapPopover.status ?? "—")}
+                      Status:{" "}
+                      {String(heatMapPopover.sanitationStatus ?? heatMapPopover.status ?? "—")}
                     </div>
                     <div className="small">
-                      Findings: {String(heatMapPopover.findingsCount ?? heatMapPopover.openFindings ?? "—")}
+                      Findings:{" "}
+                      {String(heatMapPopover.findingsCount ?? heatMapPopover.openFindings ?? "—")}
                     </div>
                     <div className="small">
                       Dust alerts: {String(heatMapPopover.dustAlerts ?? "—")}
@@ -2650,7 +2653,11 @@ export function SanitationWorkspace({ moduleName }: { moduleName: string }) {
         <div className="card-header d-flex justify-content-between align-items-center">
           <h5 className="card-title mb-0">Inspections</h5>
           {canInspect ? (
-            <button type="button" className="btn btn-sm btn-primary" onClick={() => setTab("start")}>
+            <button
+              type="button"
+              className="btn btn-sm btn-primary"
+              onClick={() => setTab("start")}
+            >
               Start new
             </button>
           ) : null}
@@ -2675,61 +2682,58 @@ export function SanitationWorkspace({ moduleName }: { moduleName: string }) {
               ) : (
                 inspections.map((row) => {
                   const status = String(row.status ?? "").toUpperCase();
-                  const canDeleteRow =
-                    canInspect && status !== "COMPLETED" && !row.completedAt;
+                  const canDeleteRow = canInspect && status !== "COMPLETED" && !row.completedAt;
                   return (
-                  <tr key={row.id}>
-                    <td>{String(row.inspectionNumber ?? "—")}</td>
-                    <td>{String(row.title ?? "—")}</td>
-                    <td>{String(row.inspectionType ?? "—")}</td>
-                    <td>
-                      <span className={`badge ${statusBadgeClass(String(row.status ?? ""))}`}>
-                        {String(row.status ?? "—")}
-                      </span>
-                    </td>
-                    <td>
-                      {row.scorePercent != null ? `${String(row.scorePercent)}%` : "—"}
-                    </td>
-                    <td>{fmtDate(row.completedAt)}</td>
-                    <td className="text-end text-nowrap">
-                      <button
-                        type="button"
-                        className="btn btn-sm btn-outline-primary"
-                        onClick={() => void openInspection(row.id)}
-                      >
-                        Open
-                      </button>
-                      {canReport && status === "COMPLETED" ? (
+                    <tr key={row.id}>
+                      <td>{String(row.inspectionNumber ?? "—")}</td>
+                      <td>{String(row.title ?? "—")}</td>
+                      <td>{String(row.inspectionType ?? "—")}</td>
+                      <td>
+                        <span className={`badge ${statusBadgeClass(String(row.status ?? ""))}`}>
+                          {String(row.status ?? "—")}
+                        </span>
+                      </td>
+                      <td>{row.scorePercent != null ? `${String(row.scorePercent)}%` : "—"}</td>
+                      <td>{fmtDate(row.completedAt)}</td>
+                      <td className="text-end text-nowrap">
                         <button
                           type="button"
-                          className="btn btn-sm btn-outline-secondary ms-1"
-                          onClick={() =>
-                            setEmailPdfTarget({
-                              id: row.id,
-                              label: String(row.inspectionNumber ?? row.title ?? "Inspection"),
-                            })
-                          }
+                          className="btn btn-sm btn-outline-primary"
+                          onClick={() => void openInspection(row.id)}
                         >
-                          Email PDF
+                          Open
                         </button>
-                      ) : null}
-                      {canDeleteRow ? (
-                        <button
-                          type="button"
-                          className="btn btn-sm btn-outline-danger ms-1"
-                          disabled={busy}
-                          onClick={() =>
-                            void deleteInspection(
-                              row.id,
-                              String(row.inspectionNumber ?? row.title ?? ""),
-                            )
-                          }
-                        >
-                          Delete
-                        </button>
-                      ) : null}
-                    </td>
-                  </tr>
+                        {canReport && status === "COMPLETED" ? (
+                          <button
+                            type="button"
+                            className="btn btn-sm btn-outline-secondary ms-1"
+                            onClick={() =>
+                              setEmailPdfTarget({
+                                id: row.id,
+                                label: String(row.inspectionNumber ?? row.title ?? "Inspection"),
+                              })
+                            }
+                          >
+                            Email PDF
+                          </button>
+                        ) : null}
+                        {canDeleteRow ? (
+                          <button
+                            type="button"
+                            className="btn btn-sm btn-outline-danger ms-1"
+                            disabled={busy}
+                            onClick={() =>
+                              void deleteInspection(
+                                row.id,
+                                String(row.inspectionNumber ?? row.title ?? ""),
+                              )
+                            }
+                          >
+                            Delete
+                          </button>
+                        ) : null}
+                      </td>
+                    </tr>
                   );
                 })
               )}
@@ -2848,8 +2852,7 @@ export function SanitationWorkspace({ moduleName }: { moduleName: string }) {
           <div className="card-body">
             <p className="text-muted small">
               Start a PREOP inspection. After completion, disposition is shown as{" "}
-              <strong>RELEASED_FOR_PRODUCTION</strong> or{" "}
-              <strong>FAILED_PRODUCTION_HOLD</strong>.
+              <strong>RELEASED_FOR_PRODUCTION</strong> or <strong>FAILED_PRODUCTION_HOLD</strong>.
             </p>
             {preopTemplates.length === 0 ? (
               <div className="alert alert-info mb-0">
@@ -2885,10 +2888,9 @@ export function SanitationWorkspace({ moduleName }: { moduleName: string }) {
                           const title = buildInspectionTitle(t.name ?? "Pre-Op");
                           autoTitleRef.current = title;
                           setStartTitle(title);
-                          void startInspection(
-                            { preventDefault() {} } as FormEvent,
-                            { inspectionType: "PREOP" },
-                          );
+                          void startInspection({ preventDefault() {} } as FormEvent, {
+                            inspectionType: "PREOP",
+                          });
                         }}
                       >
                         Start PREOP
@@ -2927,14 +2929,20 @@ export function SanitationWorkspace({ moduleName }: { moduleName: string }) {
     const runCompleted = String(activeInspection?.status ?? "").toUpperCase() === "COMPLETED";
     const disposition =
       String(activeInspection?.inspectionType ?? "").toUpperCase() === "PREOP"
-        ? preopDisposition(completeResult?.complianceStatus ?? String(activeInspection?.complianceStatus ?? ""))
+        ? preopDisposition(
+            completeResult?.complianceStatus ?? String(activeInspection?.complianceStatus ?? ""),
+          )
         : null;
     panel = (
       <div className="d-flex flex-column gap-3">
         {!activeInspection ? (
           <div className="alert alert-info mb-0">
             No active inspection.{" "}
-            <button type="button" className="btn btn-sm btn-primary ms-2" onClick={() => setTab("start")}>
+            <button
+              type="button"
+              className="btn btn-sm btn-primary ms-2"
+              onClick={() => setTab("start")}
+            >
               Start one
             </button>{" "}
             or open from the Inspections list.
@@ -2958,7 +2966,7 @@ export function SanitationWorkspace({ moduleName }: { moduleName: string }) {
                 <div className="d-flex flex-wrap justify-content-between gap-3 align-items-start">
                   <div className="d-flex gap-3 align-items-start">
                     {formLogoSrc ? (
-                      // eslint-disable-next-line @next/next/no-img-element
+                      // Plain <img> on purpose: static export, so next/image optimization is unavailable.
                       <img
                         src={formLogoSrc}
                         alt={formLogo?.label || tenantLabel}
@@ -2968,10 +2976,14 @@ export function SanitationWorkspace({ moduleName }: { moduleName: string }) {
                       <div className="fw-semibold">{tenantLabel}</div>
                     )}
                     <div>
-                      <div className="text-muted small">{String(activeInspection.inspectionNumber ?? "")}</div>
+                      <div className="text-muted small">
+                        {String(activeInspection.inspectionNumber ?? "")}
+                      </div>
                       <h5 className="mb-1">{String(activeInspection.title ?? "Inspection")}</h5>
                       <div className="small text-muted mb-1">{tenantLabel}</div>
-                      <span className={`badge ${statusBadgeClass(String(activeInspection.status ?? ""))}`}>
+                      <span
+                        className={`badge ${statusBadgeClass(String(activeInspection.status ?? ""))}`}
+                      >
                         {String(activeInspection.status ?? "—")}
                       </span>
                       {String(activeInspection.inspectionType ?? "") ? (
@@ -3004,9 +3016,7 @@ export function SanitationWorkspace({ moduleName }: { moduleName: string }) {
                             void deleteInspection(
                               activeInspection.id,
                               String(
-                                activeInspection.inspectionNumber ??
-                                  activeInspection.title ??
-                                  "",
+                                activeInspection.inspectionNumber ?? activeInspection.title ?? "",
                               ),
                             )
                           }
@@ -3057,11 +3067,11 @@ export function SanitationWorkspace({ moduleName }: { moduleName: string }) {
                     : "alert-warning"
                 }`}
               >
-                {disposition ? (
-                  <div className="fs-5 fw-semibold mb-1">{disposition}</div>
-                ) : null}
+                {disposition ? <div className="fs-5 fw-semibold mb-1">{disposition}</div> : null}
                 <div className="fw-semibold">
-                  Result: {completeResult?.complianceStatus ?? String(activeInspection.complianceStatus ?? "—")}
+                  Result:{" "}
+                  {completeResult?.complianceStatus ??
+                    String(activeInspection.complianceStatus ?? "—")}
                   {(completeResult?.scorePercent ?? activeInspection.scorePercent) != null
                     ? ` (${String(completeResult?.scorePercent ?? activeInspection.scorePercent)}%)`
                     : ""}
@@ -3070,7 +3080,9 @@ export function SanitationWorkspace({ moduleName }: { moduleName: string }) {
                   <ul className="mb-0 mt-2">
                     {(completeResult?.findings ?? []).map((f) => (
                       <li key={f.id}>
-                        <span className={`badge me-1 ${severityBadgeClass(String(f.severity ?? ""))}`}>
+                        <span
+                          className={`badge me-1 ${severityBadgeClass(String(f.severity ?? ""))}`}
+                        >
                           {String(f.severity ?? "")}
                         </span>
                         {String(f.title ?? "")}
@@ -3099,10 +3111,7 @@ export function SanitationWorkspace({ moduleName }: { moduleName: string }) {
                     const photoCount = entry?.photos?.length ?? 0;
                     const hasNotes = Boolean(String(entry?.notes ?? "").trim());
                     return (
-                      <div
-                        key={q.id}
-                        className={`border rounded ${isNo ? "border-danger" : ""}`}
-                      >
+                      <div key={q.id} className={`border rounded ${isNo ? "border-danger" : ""}`}>
                         <div className="sanitation-checklist-item__row">
                           <button
                             type="button"
@@ -3187,7 +3196,10 @@ export function SanitationWorkspace({ moduleName }: { moduleName: string }) {
                             {q.measurementRequired ? (
                               <div className="row g-2 mb-2">
                                 <div className="col-md-4">
-                                  <label className="form-label small" htmlFor={`dust-depth-${q.id}`}>
+                                  <label
+                                    className="form-label small"
+                                    htmlFor={`dust-depth-${q.id}`}
+                                  >
                                     Dust depth
                                   </label>
                                   <input
@@ -3281,7 +3293,7 @@ export function SanitationWorkspace({ moduleName }: { moduleName: string }) {
                               <div className="d-flex flex-wrap gap-2 mb-2">
                                 {(entry?.photos ?? []).map((p) => (
                                   <div key={p.id} className="position-relative">
-                                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                                    {/* Plain <img> on purpose: static export, so next/image optimization is unavailable. */}
                                     <img
                                       src={p.dataUrl}
                                       alt={p.fileName}
@@ -4205,7 +4217,7 @@ export function SanitationWorkspace({ moduleName }: { moduleName: string }) {
                       </td>
                       <td>{fmtDate(row.reportedAt)}</td>
                       <td>
-                        {(canClean || canManage) ? (
+                        {canClean || canManage ? (
                           <div className="d-flex flex-wrap gap-1">
                             {SPILL_STATUS_ACTIONS.map((status) => (
                               <button
@@ -4237,9 +4249,9 @@ export function SanitationWorkspace({ moduleName }: { moduleName: string }) {
       <div className="d-flex flex-column gap-3">
         {siteCascade}
         <div className="alert alert-secondary mb-0" role="status">
-          Areas &amp; Locations follow your org hierarchy: <strong>Location → Division → Area</strong>.
-          Manage Areas under Settings → Dropdown lists. Add a sanitation place so the Area can appear on
-          the heat map and in inspections.
+          Areas &amp; Locations follow your org hierarchy:{" "}
+          <strong>Location → Division → Area</strong>. Manage Areas under Settings → Dropdown lists.
+          Add a sanitation place so the Area can appear on the heat map and in inspections.
         </div>
         <div className="row g-3">
           <div className="col-lg-5">
@@ -4586,7 +4598,9 @@ export function SanitationWorkspace({ moduleName }: { moduleName: string }) {
                                 module="SANITATION"
                                 recordType="pest_device"
                                 recordId={String(d.id)}
-                                fieldValues={pestDevicePrintFieldValues(d as Record<string, unknown>)}
+                                fieldValues={pestDevicePrintFieldValues(
+                                  d as Record<string, unknown>,
+                                )}
                                 onPrepare={async () => {
                                   const result = await apiSend<Row>(
                                     `${API}/pest-devices/${encodeURIComponent(String(d.id))}/qr`,
@@ -4932,7 +4946,12 @@ export function SanitationWorkspace({ moduleName }: { moduleName: string }) {
                   <div className="d-flex flex-column gap-2">
                     {(
                       [
-                        ["airEquipment", airEquipment, setAirEquipment, "Equipment status confirmed"],
+                        [
+                          "airEquipment",
+                          airEquipment,
+                          setAirEquipment,
+                          "Equipment status confirmed",
+                        ],
                         ["airIgnition", airIgnition, setAirIgnition, "Ignition sources addressed"],
                         [
                           "airOtherIgnition",
@@ -5401,7 +5420,10 @@ export function SanitationWorkspace({ moduleName }: { moduleName: string }) {
               </div>
             </div>
             <hr />
-            <form className="row g-3 align-items-end" onSubmit={(ev) => void generateAuditPackage(ev)}>
+            <form
+              className="row g-3 align-items-end"
+              onSubmit={(ev) => void generateAuditPackage(ev)}
+            >
               <div className="col-md-4">
                 <label className="form-label" htmlFor="audit-from">
                   From
@@ -5439,19 +5461,19 @@ export function SanitationWorkspace({ moduleName }: { moduleName: string }) {
             <h5 className="card-title mb-0">CSV exports</h5>
           </div>
           <div className="card-body d-flex flex-wrap gap-2">
-            {(["inspections", "findings", "dust", "mss", "cleaning", "pest", "spills"] as const).map(
-              (kind) => (
-                <button
-                  key={kind}
-                  type="button"
-                  className="btn btn-sm btn-outline-secondary"
-                  disabled={busy}
-                  onClick={() => void exportCsv(kind)}
-                >
-                  Export {kind}
-                </button>
-              ),
-            )}
+            {(
+              ["inspections", "findings", "dust", "mss", "cleaning", "pest", "spills"] as const
+            ).map((kind) => (
+              <button
+                key={kind}
+                type="button"
+                className="btn btn-sm btn-outline-secondary"
+                disabled={busy}
+                onClick={() => void exportCsv(kind)}
+              >
+                Export {kind}
+              </button>
+            ))}
           </div>
           <div className="card-footer">
             <Link href="/reporting/library/?q=sanitation" className="btn btn-sm btn-link px-0">
@@ -5520,7 +5542,9 @@ export function SanitationWorkspace({ moduleName }: { moduleName: string }) {
           </div>
           <div className="card-body">
             {!siteId ? (
-              <div className="alert alert-warning">Select a site to upsert its facility profile.</div>
+              <div className="alert alert-warning">
+                Select a site to upsert its facility profile.
+              </div>
             ) : null}
             <div className="mb-3">
               <div className="form-label">Facility types</div>
@@ -5696,9 +5720,9 @@ export function SanitationWorkspace({ moduleName }: { moduleName: string }) {
           </div>
           <div className="card-body border-top">
             <p className="small text-muted mb-0">
-              Builtin catalog includes {BUILTIN_SANITATION_TEMPLATES.length} templates (daily,
-              dust, GMP, pest, pre-op, and more). Ensure builtin posts them for this tenant when
-              empty or incomplete.
+              Builtin catalog includes {BUILTIN_SANITATION_TEMPLATES.length} templates (daily, dust,
+              GMP, pest, pre-op, and more). Ensure builtin posts them for this tenant when empty or
+              incomplete.
             </p>
           </div>
         </div>
@@ -5818,18 +5842,18 @@ export function SanitationWorkspace({ moduleName }: { moduleName: string }) {
           <div className="card-body">
             <h6>OSHA grain dust housekeeping</h6>
             <p>
-              Priority housekeeping areas (for example floors within 35 ft of inside bucket elevators)
-              generally use a <strong>1/8 inch (0.125 in)</strong> fugitive dust action level under
-              OSHA 29 CFR 1910.272(j). Facility profiles can override the threshold via{" "}
+              Priority housekeeping areas (for example floors within 35 ft of inside bucket
+              elevators) generally use a <strong>1/8 inch (0.125 in)</strong> fugitive dust action
+              level under OSHA 29 CFR 1910.272(j). Facility profiles can override the threshold via{" "}
               <code>dustActionThresholdInches</code>. Record measurements on the Dust tab;
               exceedances raise a CRITICAL_DUST_HOUSEKEEPING_ALERT and open a finding.
             </p>
             <h6>Offline authoring</h6>
             <p>
               Sanitation inspections and dust/spill reports are classified as offline-useful.
-              Checklist responses autosave to{" "}
-              <code>forge.sanitation.draft.{"{inspectionId}"}</code> when offline and sync when
-              connectivity returns. Templates are offline-required for mill checklist work.
+              Checklist responses autosave to <code>forge.sanitation.draft.{"{inspectionId}"}</code>{" "}
+              when offline and sync when connectivity returns. Templates are offline-required for
+              mill checklist work.
             </p>
             <h6>Compressed air controls</h6>
             <p>
@@ -5859,9 +5883,7 @@ export function SanitationWorkspace({ moduleName }: { moduleName: string }) {
                 Corrective actions — critical/major findings and dust exceedances create linked CA
                 records.
               </li>
-              <li>
-                QR — locations and pest devices can generate tokens for field scan workflows.
-              </li>
+              <li>QR — locations and pest devices can generate tokens for field scan workflows.</li>
             </ul>
           </div>
         </div>

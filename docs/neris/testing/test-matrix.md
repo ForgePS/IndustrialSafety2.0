@@ -4,38 +4,38 @@ Phase 2 extends Phase 1 coverage with incident shell, concurrency, RLS, and rms-
 
 ## Test layers
 
-| Layer | Location | Scope |
-| --- | --- | --- |
-| Unit | `packages/neris`, platform-api services | Numbering, state machine, condition evaluation |
-| Integration | `packages/database` | RLS cross-tenant, integrity |
-| API e2e | `apps/platform-api/src/*.e2e.test.ts` | Incident CRUD, workflow, If-Match |
-| rms-web | `apps/rms-web/src/**/*.test.tsx` | Accessibility (axe), helpers |
-| web-kit | `packages/web-kit` | API client envelope / ETag |
+| Layer       | Location                                | Scope                                          |
+| ----------- | --------------------------------------- | ---------------------------------------------- |
+| Unit        | `packages/neris`, platform-api services | Numbering, state machine, condition evaluation |
+| Integration | `packages/database`                     | RLS cross-tenant, integrity                    |
+| API e2e     | `apps/platform-api/src/*.e2e.test.ts`   | Incident CRUD, workflow, If-Match              |
+| rms-web     | `apps/rms-web/src/**/*.test.tsx`        | Accessibility (axe), helpers                   |
+| web-kit     | `packages/web-kit`                      | API client envelope / ETag                     |
 
 ## Critical scenarios (directive §21)
 
-| # | Scenario | Expected |
-| --- | --- | --- |
-| 1 | Tenant A cannot read/write Tenant B incidents | 403 / empty under RLS |
-| 2 | FORCE RLS blocks cross-tenant via `forge_app` | Integration test pass |
-| 3 | Concurrent incident creates | Distinct numbers (ADR-033) |
-| 4 | Stale `If-Match` on PATCH | 412 + no silent overwrite |
-| 5 | Missing `If-Match` on PATCH | 428 |
-| 6 | Duplicate `Idempotency-Key` on create | Same incident returned |
-| 7 | User-confirmed prefill not overwritten | Conflict surfaced |
-| 8 | Blocking validation gates submit | 400 until resolved |
-| 9 | Return for correction preserves data | Status + comments only |
-| 10 | Finalize locks protected fields | Subsequent edit rejected |
-| 11 | Void requires reason + permission | Audit row written |
-| 12 | Official codes immutable via overlay API | 400 on mutation attempt |
-| 13 | Condition-driven module visibility | Descriptor matches engine |
-| 14 | Hidden field values preserved | Values retained when re-shown |
-| 15 | Timestamp correction audit | Original + corrected stored |
-| 16 | Duplicate detection advisory | No auto-merge |
-| 17 | Schema snapshot at create | Pinned version readable |
-| 18 | Configuration snapshot at submit/finalize | Append-only rows |
-| 19 | Phase 1 import warnings traceability | 108 warnings classified, not deleted |
-| 20 | rms-web keyboard / mobile layout smoke | axe + responsive checks |
+| #   | Scenario                                      | Expected                             |
+| --- | --------------------------------------------- | ------------------------------------ |
+| 1   | Tenant A cannot read/write Tenant B incidents | 403 / empty under RLS                |
+| 2   | FORCE RLS blocks cross-tenant via `forge_app` | Integration test pass                |
+| 3   | Concurrent incident creates                   | Distinct numbers (ADR-033)           |
+| 4   | Stale `If-Match` on PATCH                     | 412 + no silent overwrite            |
+| 5   | Missing `If-Match` on PATCH                   | 428                                  |
+| 6   | Duplicate `Idempotency-Key` on create         | Same incident returned               |
+| 7   | User-confirmed prefill not overwritten        | Conflict surfaced                    |
+| 8   | Blocking validation gates submit              | 400 until resolved                   |
+| 9   | Return for correction preserves data          | Status + comments only               |
+| 10  | Finalize locks protected fields               | Subsequent edit rejected             |
+| 11  | Void requires reason + permission             | Audit row written                    |
+| 12  | Official codes immutable via overlay API      | 400 on mutation attempt              |
+| 13  | Condition-driven module visibility            | Descriptor matches engine            |
+| 14  | Hidden field values preserved                 | Values retained when re-shown        |
+| 15  | Timestamp correction audit                    | Original + corrected stored          |
+| 16  | Duplicate detection advisory                  | No auto-merge                        |
+| 17  | Schema snapshot at create                     | Pinned version readable              |
+| 18  | Configuration snapshot at submit/finalize     | Append-only rows                     |
+| 19  | Phase 1 import warnings traceability          | 108 warnings classified, not deleted |
+| 20  | rms-web keyboard / mobile layout smoke        | axe + responsive checks              |
 
 ## Phase 1 warning classification
 

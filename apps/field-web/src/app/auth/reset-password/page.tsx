@@ -6,8 +6,7 @@ import { useSearchParams } from "next/navigation";
 import { CognitoOAuthError, confirmCognitoPasswordReset } from "@forge/web-kit";
 import { FieldLogo } from "@/components/field-logo";
 
-const PASSWORD_HINT =
-  "At least 12 characters, with uppercase, lowercase, a number, and a symbol.";
+const PASSWORD_HINT = "At least 12 characters, with uppercase, lowercase, a number, and a symbol.";
 
 function passwordMeetsPolicy(password: string): boolean {
   return (
@@ -57,7 +56,9 @@ function ResetPasswordInner() {
       });
       setDone(true);
     } catch (err) {
-      setError(err instanceof CognitoOAuthError || err instanceof Error ? err.message : "Reset failed");
+      setError(
+        err instanceof CognitoOAuthError || err instanceof Error ? err.message : "Reset failed",
+      );
     } finally {
       setBusy(false);
     }

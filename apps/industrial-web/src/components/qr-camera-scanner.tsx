@@ -55,9 +55,13 @@ export function QrCameraScanner({ onToken, onError }: Props) {
 
   useEffect(() => {
     if (!active) return;
-    const detectorCtor = (globalThis as { BarcodeDetector?: new (opts: { formats: string[] }) => {
-      detect: (source: ImageBitmapSource) => Promise<Array<{ rawValue?: string }>>;
-    } }).BarcodeDetector;
+    const detectorCtor = (
+      globalThis as {
+        BarcodeDetector?: new (opts: { formats: string[] }) => {
+          detect: (source: ImageBitmapSource) => Promise<Array<{ rawValue?: string }>>;
+        };
+      }
+    ).BarcodeDetector;
     if (!detectorCtor) return;
 
     const detector = new detectorCtor({ formats: ["qr_code"] });
@@ -98,7 +102,8 @@ export function QrCameraScanner({ onToken, onError }: Props) {
       <div className="card-body">
         <h6 className="mb-2">Scan QR code</h6>
         <p className="small text-muted mb-3">
-          Point your camera at a Forge QR sticker, or paste the scan link if the camera is unavailable.
+          Point your camera at a Forge QR sticker, or paste the scan link if the camera is
+          unavailable.
         </p>
         {active ? (
           <div className="mb-3">
@@ -109,7 +114,11 @@ export function QrCameraScanner({ onToken, onError }: Props) {
               playsInline
               muted
             />
-            <button type="button" className="btn btn-sm btn-outline-secondary mt-2" onClick={stopCamera}>
+            <button
+              type="button"
+              className="btn btn-sm btn-outline-secondary mt-2"
+              onClick={stopCamera}
+            >
               Stop camera
             </button>
           </div>
@@ -125,7 +134,9 @@ export function QrCameraScanner({ onToken, onError }: Props) {
         )}
         <div className="row g-2 align-items-end">
           <div className="col-md-8">
-            <label className="form-label small" htmlFor="scan-manual-token">Manual entry</label>
+            <label className="form-label small" htmlFor="scan-manual-token">
+              Manual entry
+            </label>
             <input
               id="scan-manual-token"
               className="form-control form-control-sm"
@@ -135,7 +146,11 @@ export function QrCameraScanner({ onToken, onError }: Props) {
             />
           </div>
           <div className="col-md-4">
-            <button type="button" className="btn btn-outline-primary btn-sm w-100" onClick={submitManual}>
+            <button
+              type="button"
+              className="btn btn-outline-primary btn-sm w-100"
+              onClick={submitManual}
+            >
               Go
             </button>
           </div>

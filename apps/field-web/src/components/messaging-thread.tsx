@@ -1,19 +1,15 @@
 "use client";
 
-import {
-  Suspense,
-  useCallback,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-  type FormEvent,
-} from "react";
+import { Suspense, useCallback, useEffect, useMemo, useRef, useState, type FormEvent } from "react";
 import { useParams } from "next/navigation";
 import { ApiError, useAuth } from "@forge/web-kit";
 import { EmptyState, ErrorState, LoadingState } from "@/components/field-states";
 import { useFieldPermissions } from "@/components/field-permissions-provider";
-import { fieldMessagingApi, isFieldMessagingImage, loadFieldMessagingAttachmentObjectUrl } from "@/lib/messaging-api";
+import {
+  fieldMessagingApi,
+  isFieldMessagingImage,
+  loadFieldMessagingAttachmentObjectUrl,
+} from "@/lib/messaging-api";
 import {
   annotateMessageClusters,
   displayPersonName,
@@ -116,10 +112,7 @@ function MessagingThreadInner() {
   }, [thread?.messages?.length]);
 
   const title = useMemo(
-    () =>
-      thread
-        ? messagingThreadTitleDisplay(thread, me?.userId)
-        : "Conversation",
+    () => (thread ? messagingThreadTitleDisplay(thread, me?.userId) : "Conversation"),
     [thread, me?.userId],
   );
 
@@ -144,7 +137,11 @@ function MessagingThreadInner() {
       });
       setThread((prev) =>
         prev
-          ? { ...prev, messages: [...(prev.messages ?? []), message], lastMessageAt: message.createdAt }
+          ? {
+              ...prev,
+              messages: [...(prev.messages ?? []), message],
+              lastMessageAt: message.createdAt,
+            }
           : prev,
       );
       pollSinceRef.current = message.createdAt;
@@ -169,10 +166,7 @@ function MessagingThreadInner() {
 
   if (!threadId || threadId === "placeholder") {
     return (
-      <EmptyState
-        title="Conversation not found"
-        message="Open Messages and pick a conversation."
-      />
+      <EmptyState title="Conversation not found" message="Open Messages and pick a conversation." />
     );
   }
 
@@ -203,19 +197,13 @@ function MessagingThreadInner() {
             ref={scrollRef}
             onScroll={(event) => {
               const el = event.currentTarget;
-              stickToBottomRef.current =
-                el.scrollHeight - el.scrollTop - el.clientHeight < 80;
+              stickToBottomRef.current = el.scrollHeight - el.scrollTop - el.clientHeight < 80;
             }}
           >
             {clustered.length === 0 ? (
-              <EmptyState
-                title="No messages yet"
-                message="Say hello to start the conversation."
-              />
+              <EmptyState title="No messages yet" message="Say hello to start the conversation." />
             ) : (
-              clustered.map((message) => (
-                <MessageBubble key={message.id} message={message} />
-              ))
+              clustered.map((message) => <MessageBubble key={message.id} message={message} />)
             )}
           </div>
           {error ? <p className="ff-msg-send-error">{error}</p> : null}
@@ -273,7 +261,11 @@ function MessagingThreadInner() {
             {pendingImage ? (
               <p className="ff-msg-pending-photo">
                 {pendingImage.name || "Photo"} ready.{" "}
-                <button type="button" className="ff-btn ff-btn-secondary" onClick={() => setPendingImage(null)}>
+                <button
+                  type="button"
+                  className="ff-btn ff-btn-secondary"
+                  onClick={() => setPendingImage(null)}
+                >
                   Remove
                 </button>
               </p>
@@ -381,7 +373,6 @@ function FieldAttachmentPreview({ attachment }: { attachment: MessagingAttachmen
 
   if (isImage && imageUrl) {
     return (
-      // eslint-disable-next-line @next/next/no-img-element
       <img
         className="ff-msg-bubble-image"
         src={imageUrl}

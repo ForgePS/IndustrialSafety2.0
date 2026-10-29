@@ -73,8 +73,11 @@ describe("presentation containment contracts", () => {
 
 describe("MP4 / export cross-tenant denial pattern", () => {
   it("object lookup must be tenant-scoped before signed download", () => {
-    const findExport = (tenantId: string, exportId: string, rows: Array<{ tenantId: string; id: string }>) =>
-      rows.find((row) => row.tenantId === tenantId && row.id === exportId) ?? null;
+    const findExport = (
+      tenantId: string,
+      exportId: string,
+      rows: Array<{ tenantId: string; id: string }>,
+    ) => rows.find((row) => row.tenantId === tenantId && row.id === exportId) ?? null;
 
     const rows = [
       { tenantId: "tenant-a", id: "mp4-1" },

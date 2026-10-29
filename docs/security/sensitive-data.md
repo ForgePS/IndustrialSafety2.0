@@ -16,10 +16,10 @@ Sensitive attributes (SSN, bank details, government ids, etc.) are:
 
 `SensitiveDataService` (`apps/platform-api/src/common/sensitive-data.service.ts`):
 
-| Environment | Encryption |
-| --- | --- |
-| `local` / `development` / `testing` | AES-256-GCM with `SENSITIVE_DATA_LOCAL_KEY` (base64 32 bytes) or fixed local fallback |
-| Other | AWS KMS `Encrypt`/`Decrypt` with `KMS_SENSITIVE_DATA_KEY_ARN` and encryption context (`tenantId`, `personId`, `dataType`); AES-GCM fallback only if KMS unavailable |
+| Environment                         | Encryption                                                                                                                                                          |
+| ----------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `local` / `development` / `testing` | AES-256-GCM with `SENSITIVE_DATA_LOCAL_KEY` (base64 32 bytes) or fixed local fallback                                                                               |
+| Other                               | AWS KMS `Encrypt`/`Decrypt` with `KMS_SENSITIVE_DATA_KEY_ARN` and encryption context (`tenantId`, `personId`, `dataType`); AES-GCM fallback only if KMS unavailable |
 
 Ciphertext JSON (algorithm, key version, ciphertext) is persisted in `encrypted_value`.
 
@@ -27,10 +27,10 @@ Ciphertext JSON (algorithm, key version, ciphertext) is persisted in `encrypted_
 
 Under `api/v1/tenants/:tenantId/persons/:personId`:
 
-| Method | Path | Notes |
-| --- | --- | --- |
-| POST | `/sensitive-identifiers` | Encrypt + upsert by type |
-| GET | `/sensitive-identifiers/:type` | Decrypt for authorized callers |
+| Method | Path                           | Notes                          |
+| ------ | ------------------------------ | ------------------------------ |
+| POST   | `/sensitive-identifiers`       | Encrypt + upsert by type       |
+| GET    | `/sensitive-identifiers/:type` | Decrypt for authorized callers |
 
 List/search person APIs return non-sensitive fields only by default.
 

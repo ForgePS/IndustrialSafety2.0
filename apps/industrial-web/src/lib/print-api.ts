@@ -349,21 +349,8 @@ export const PRINT_TERMINAL_STATUSES = new Set([
 ]);
 
 export const PRINT_QUEUE_TABS = {
-  printing: [
-    "PRINTING",
-    "SPOOLING",
-    "TRANSMITTING",
-    "DELIVERING",
-    "RECEIVED",
-    "VALIDATING",
-  ],
-  waiting: [
-    "CREATED",
-    "RENDERING",
-    "QUEUED",
-    "BRIDGE_ASSIGNED",
-    "WAITING_FOR_PRINTER",
-  ],
+  printing: ["PRINTING", "SPOOLING", "TRANSMITTING", "DELIVERING", "RECEIVED", "VALIDATING"],
+  waiting: ["CREATED", "RENDERING", "QUEUED", "BRIDGE_ASSIGNED", "WAITING_FOR_PRINTER"],
   completed: ["COMPLETED", "SENT_TO_PRINTER"],
   failed: ["FAILED", "CANCELLED", "EXPIRED", "PRINT_RESULT_UNKNOWN"],
 } as const;
@@ -455,11 +442,7 @@ export async function updatePrinterBridge(
     status?: "ONLINE" | "OFFLINE" | "PAIRING" | "DISABLED";
   },
 ): Promise<PrinterBridge> {
-  return apiSend<PrinterBridge>(
-    `${BASE}/printer-bridges/${encodeURIComponent(id)}`,
-    "PATCH",
-    body,
-  );
+  return apiSend<PrinterBridge>(`${BASE}/printer-bridges/${encodeURIComponent(id)}`, "PATCH", body);
 }
 
 export async function deletePrinterBridge(id: string): Promise<unknown> {
@@ -497,9 +480,14 @@ export async function updatePrinter(
 }
 
 export async function testPrinter(id: string): Promise<PrintJob> {
-  return apiSend<PrintJob>(`${BASE}/printers/${encodeURIComponent(id)}/test`, "POST", {}, {
-    idempotencyKey: createIdempotencyKey("printer-test"),
-  });
+  return apiSend<PrintJob>(
+    `${BASE}/printers/${encodeURIComponent(id)}/test`,
+    "POST",
+    {},
+    {
+      idempotencyKey: createIdempotencyKey("printer-test"),
+    },
+  );
 }
 
 export async function reconnectPrinter(id: string): Promise<ForgePrinter & { message?: string }> {
@@ -512,9 +500,14 @@ export async function reconnectPrinter(id: string): Promise<ForgePrinter & { mes
 }
 
 export async function forgetBluetoothPrinter(id: string): Promise<ForgePrinter> {
-  return apiSend<ForgePrinter>(`${BASE}/printers/${encodeURIComponent(id)}/forget`, "POST", {}, {
-    idempotencyKey: createIdempotencyKey("printer-forget"),
-  });
+  return apiSend<ForgePrinter>(
+    `${BASE}/printers/${encodeURIComponent(id)}/forget`,
+    "POST",
+    {},
+    {
+      idempotencyKey: createIdempotencyKey("printer-forget"),
+    },
+  );
 }
 
 export async function createPrintJob(body: CreatePrintJobBody): Promise<PrintJob> {
@@ -691,9 +684,7 @@ export type PrintManagerSummary = {
     empty: number;
     total: number;
   };
-  liveQueue: Array<
-    PrintJob & { printerName?: string | null; bridgeName?: string | null }
-  >;
+  liveQueue: Array<PrintJob & { printerName?: string | null; bridgeName?: string | null }>;
   printerHealth: Array<{
     id: string;
     name: string;
@@ -1048,9 +1039,7 @@ export async function deletePrinterGroup(id: string): Promise<{ id: string }> {
 }
 
 export async function listPrintRoutingRules(): Promise<PrintRoutingRule[]> {
-  const data = await apiGet<{ items: PrintRoutingRule[] }>(
-    `${BASE}/print-manager/routing-rules`,
-  );
+  const data = await apiGet<{ items: PrintRoutingRule[] }>(`${BASE}/print-manager/routing-rules`);
   return data.items ?? [];
 }
 
@@ -1184,11 +1173,7 @@ export async function patchLabelTemplate(
   id: string,
   body: { name?: string; category?: string; description?: string | null; enabled?: boolean },
 ): Promise<LabelTemplate> {
-  return apiSend<LabelTemplate>(
-    `${BASE}/label-templates/${encodeURIComponent(id)}`,
-    "PATCH",
-    body,
-  );
+  return apiSend<LabelTemplate>(`${BASE}/label-templates/${encodeURIComponent(id)}`, "PATCH", body);
 }
 
 export async function createLabelTemplateDraft(id: string): Promise<LabelTemplate> {
@@ -1309,21 +1294,23 @@ export async function cancelPrintJob(id: string): Promise<PrintJob> {
 }
 
 export async function retryPrintJob(id: string): Promise<PrintJob> {
-  return apiSend<PrintJob>(`${BASE}/print-jobs/${encodeURIComponent(id)}/retry`, "POST", {}, {
-    idempotencyKey: createIdempotencyKey("print-retry"),
-  });
+  return apiSend<PrintJob>(
+    `${BASE}/print-jobs/${encodeURIComponent(id)}/retry`,
+    "POST",
+    {},
+    {
+      idempotencyKey: createIdempotencyKey("print-retry"),
+    },
+  );
 }
 
 export async function reprintPrintJob(
   id: string,
   body: { reason: string; copies?: number },
 ): Promise<PrintJob> {
-  return apiSend<PrintJob>(
-    `${BASE}/print-jobs/${encodeURIComponent(id)}/reprint`,
-    "POST",
-    body,
-    { idempotencyKey: createIdempotencyKey("print-reprint") },
-  );
+  return apiSend<PrintJob>(`${BASE}/print-jobs/${encodeURIComponent(id)}/reprint`, "POST", body, {
+    idempotencyKey: createIdempotencyKey("print-reprint"),
+  });
 }
 
 /** Poll a print job until it reaches a terminal status or the abort signal fires. */

@@ -21,8 +21,7 @@ const IMPORTS_BUCKET =
 const LOG_GROUP = process.env.FORGE_API_LOG_GROUP || "/forge/production/platform-api";
 
 const JSON_LOCAL =
-  process.env.MANAGER_DEPARTMENTS_JSON_LOCAL ||
-  path.resolve(".tmp-xlsx/manager-departments.json");
+  process.env.MANAGER_DEPARTMENTS_JSON_LOCAL || path.resolve(".tmp-xlsx/manager-departments.json");
 const SCRIPT_LOCAL = path.resolve("scripts/seed-manager-departments.mjs");
 
 if (TENANT_KEY !== "producers-rice-mill") {

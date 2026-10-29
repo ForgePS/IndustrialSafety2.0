@@ -68,11 +68,7 @@ function pickDateFields(profiles: FieldProfile[]): string[] {
 
 function pickRefFields(profiles: FieldProfile[]): string[] {
   return profiles
-    .filter(
-      (p) =>
-        p.observedTypes.includes("reference") ||
-        /(Id|Ref|ids)$/i.test(p.fieldName),
-    )
+    .filter((p) => p.observedTypes.includes("reference") || /(Id|Ref|ids)$/i.test(p.fieldName))
     .map((p) => p.fieldName);
 }
 
@@ -95,7 +91,8 @@ function classifyDelta(dateFields: string[]): {
   const hasUpdated = dateFields.some((f) => /updated|modified|lastUpdated/i.test(f));
   const hasCreated = dateFields.some((f) => /created/i.test(f));
   if (hasUpdated) return { deltaClass: "DELTA_SAFE", deltaNotes: "updatedAt-like field present" };
-  if (hasCreated) return { deltaClass: "PARTIAL", deltaNotes: "createdAt only; no reliable updatedAt" };
+  if (hasCreated)
+    return { deltaClass: "PARTIAL", deltaNotes: "createdAt only; no reliable updatedAt" };
   return { deltaClass: "DELTA_UNSAFE", deltaNotes: "no reliable modification timestamp" };
 }
 
@@ -169,7 +166,9 @@ export async function inventoryRootCollections(db: Firestore): Promise<{
 export async function discoverBusinessIds(
   db: Firestore,
   collections: CollectionInventory[],
-): Promise<Array<{ sourceTenantId: string; collectionsPresent: string[]; sampleFacilityHints: number }>> {
+): Promise<
+  Array<{ sourceTenantId: string; collectionsPresent: string[]; sampleFacilityHints: number }>
+> {
   const byBusiness = new Map<string, Set<string>>();
 
   for (const col of collections) {

@@ -45,7 +45,8 @@ function norm(v) {
 async function main() {
   const sql = postgres(await resolveDatabaseUrl(process.env.DATABASE_SECRET_ARN), { max: 1 });
   try {
-    const [tenant] = await sql`select id::text as id from tenants where tenant_key = ${TENANT_KEY} limit 1`;
+    const [tenant] =
+      await sql`select id::text as id from tenants where tenant_key = ${TENANT_KEY} limit 1`;
     const out = [];
     for (const name of NAMES) {
       const key = norm(name);
@@ -111,9 +112,18 @@ async function main() {
       from industrial_personnel
       where tenant_id = ${tenant.id}::uuid and archived_at is null
     `;
-    console.log(JSON.stringify({ activeDqfApprox: activeDqf[0].n, dotFlags: flags[0].dot_flags, checks: out }, null, 2));
+    console.log(
+      JSON.stringify(
+        { activeDqfApprox: activeDqf[0].n, dotFlags: flags[0].dot_flags, checks: out },
+        null,
+        2,
+      ),
+    );
   } finally {
     await sql.end({ timeout: 5 });
   }
 }
-main().catch((e) => { console.error(e); process.exit(1); });
+main().catch((e) => {
+  console.error(e);
+  process.exit(1);
+});

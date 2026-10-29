@@ -11,7 +11,10 @@ import path from "node:path";
 
 const ACCOUNT = "511343547817";
 const REGION = "us-east-1";
-const stamp = new Date().toISOString().replace(/[-:TZ.]/g, "").slice(0, 14);
+const stamp = new Date()
+  .toISOString()
+  .replace(/[-:TZ.]/g, "")
+  .slice(0, 14);
 const tag = process.env.DEPLOY_TAG || `loto-dept-${stamp}`;
 
 process.env.AWS_PROFILE = process.env.AWS_PROFILE ?? "forge-dev";
@@ -129,11 +132,18 @@ robocopyOk(
   path.join(buildRoot, "packages"),
   "/E /XD node_modules dist .turbo /NFL /NDL /NJH /NJS /nc /ns /np",
 );
-for (const file of ["package.json", "pnpm-workspace.yaml", "pnpm-lock.yaml", "tsconfig.base.json"]) {
+for (const file of [
+  "package.json",
+  "pnpm-workspace.yaml",
+  "pnpm-lock.yaml",
+  "tsconfig.base.json",
+]) {
   const src = path.join(repo, file);
   if (fs.existsSync(src)) fs.copyFileSync(src, path.join(buildRoot, file));
 }
-sh(`cmd /c mklink /J "${path.join(buildRoot, "node_modules")}" "${path.join(repo, "node_modules")}"`);
+sh(
+  `cmd /c mklink /J "${path.join(buildRoot, "node_modules")}" "${path.join(repo, "node_modules")}"`,
+);
 sh(
   `cmd /c mklink /J "${path.join(buildRoot, "apps", "field-web", "node_modules")}" "${path.join(repo, "apps", "field-web", "node_modules")}"`,
 );

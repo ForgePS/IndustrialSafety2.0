@@ -34,12 +34,12 @@ Tenants stay `PROVISIONING` until onboarding activation checks pass; default fac
 
 ## Verification
 
-| Check | Result |
-| --- | --- |
-| contracts onboarding-domain | 3 passed |
-| tenants + onboarding unit | 14 passed |
-| platform-api typecheck | PASS |
-| Production operations | NONE |
+| Check                       | Result    |
+| --------------------------- | --------- |
+| contracts onboarding-domain | 3 passed  |
+| tenants + onboarding unit   | 14 passed |
+| platform-api typecheck      | PASS      |
+| Production operations       | NONE      |
 
 ## Next sprint
 

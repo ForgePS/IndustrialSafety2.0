@@ -25,7 +25,11 @@ export function paginate<T>(items: T[], page: number, pageSize: number): T[] {
   return items.slice(start, start + pageSize);
 }
 
-export function filterBySearch<T>(items: T[], search: string, keys: Array<(item: T) => string>): T[] {
+export function filterBySearch<T>(
+  items: T[],
+  search: string,
+  keys: Array<(item: T) => string>,
+): T[] {
   const needle = search.trim().toLowerCase();
   if (!needle) return items;
   return items.filter((item) => keys.some((key) => key(item).toLowerCase().includes(needle)));
@@ -52,7 +56,11 @@ export function totalPages(total: number, pageSize: number): number {
   return Math.max(1, Math.ceil(total / pageSize));
 }
 
-export function pageRange(page: number, pageSize: number, total: number): { from: number; to: number } {
+export function pageRange(
+  page: number,
+  pageSize: number,
+  total: number,
+): { from: number; to: number } {
   if (total === 0) return { from: 0, to: 0 };
   return {
     from: (page - 1) * pageSize + 1,
@@ -60,7 +68,9 @@ export function pageRange(page: number, pageSize: number, total: number): { from
   };
 }
 
-export function buildListQuery(state: Pick<ServerListQuery, "page" | "pageSize" | "search" | "filter">): Record<string, string> {
+export function buildListQuery(
+  state: Pick<ServerListQuery, "page" | "pageSize" | "search" | "filter">,
+): Record<string, string> {
   const query: Record<string, string> = {
     page: String(state.page),
     pageSize: String(state.pageSize),
@@ -74,10 +84,7 @@ export function buildListQuery(state: Pick<ServerListQuery, "page" | "pageSize" 
   return query;
 }
 
-export function useServerListControls(options?: {
-  pageSize?: number;
-  defaultSort?: string;
-}) {
+export function useServerListControls(options?: { pageSize?: number; defaultSort?: string }) {
   const pageSize = options?.pageSize ?? 25;
   const [page, setPage] = useState(1);
   const [search, setSearch] = useState("");

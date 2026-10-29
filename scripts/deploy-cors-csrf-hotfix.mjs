@@ -13,7 +13,10 @@ const CLUSTER = "forge-production-ecs-platform";
 const SERVICE = "forge-production-ecs-platform-api";
 const ECR = `${ACCOUNT}.dkr.ecr.${REGION}.amazonaws.com/forge-production-ecr-platformapi`;
 const TD_FILE = ".forge-td-prod-api-cors-csrf.json";
-const stamp = new Date().toISOString().replace(/[-:TZ.]/g, "").slice(0, 14);
+const stamp = new Date()
+  .toISOString()
+  .replace(/[-:TZ.]/g, "")
+  .slice(0, 14);
 const tag = process.env.DEPLOY_TAG || `cors-csrf-fix-${stamp}`;
 const root = path.join(path.dirname(fileURLToPath(import.meta.url)), "..");
 
@@ -40,10 +43,7 @@ sh(
 );
 
 // Bust any stale layer identity
-fs.appendFileSync(
-  path.join(root, "apps/platform-api/src/main.ts"),
-  `\n// cors-csrf-bust ${tag}\n`,
-);
+fs.appendFileSync(path.join(root, "apps/platform-api/src/main.ts"), `\n// cors-csrf-bust ${tag}\n`);
 
 sh(`docker build --no-cache -f apps/platform-api/Dockerfile -t forge-platform-api:${tag} .`);
 

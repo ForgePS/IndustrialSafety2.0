@@ -2,13 +2,7 @@
 
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
-import {
-  EmptyState,
-  ErrorState,
-  ForgePageHeader,
-  LoadingState,
-  StatusBadge,
-} from "@forge/ui";
+import { EmptyState, ErrorState, ForgePageHeader, LoadingState, StatusBadge } from "@forge/ui";
 import { PlatformPageGate } from "@/components/platform-page-gate";
 import { tenantDetailHref } from "@/hooks/use-tenant-id";
 import { apiGet } from "@/lib/api";

@@ -78,8 +78,7 @@ function NewLotoInner() {
     const siteName = org.locations.find((loc) => loc.id === siteId)?.name ?? "";
     const divisionName = org.selection.divisionName;
     const departmentId = org.selection.departmentId;
-    const departmentName =
-      org.departments.find((dept) => dept.id === departmentId)?.name ?? "";
+    const departmentName = org.departments.find((dept) => dept.id === departmentId)?.name ?? "";
     setOrgValue({
       siteId,
       siteName,
@@ -211,7 +210,9 @@ function NewLotoInner() {
     return (
       <>
         <h1 className="ff-page-title">{editId ? "Edit LOTO" : "Add Procedure"}</h1>
-        <p className="ff-page-body">You do not have permission to create or edit lockout procedures.</p>
+        <p className="ff-page-body">
+          You do not have permission to create or edit lockout procedures.
+        </p>
       </>
     );
   }
@@ -274,7 +275,11 @@ function NewLotoInner() {
         </div>
 
         {steps.map((step, index) => (
-          <section key={`step-${index}`} className="ff-section" aria-label={`Isolation step ${index + 1}`}>
+          <section
+            key={`step-${index}`}
+            className="ff-section"
+            aria-label={`Isolation step ${index + 1}`}
+          >
             <h2 className="ff-section-title">Isolation {index + 1}</h2>
             <div className="ff-field">
               <label htmlFor={`loto-energy-${index}`}>Energy</label>
@@ -368,7 +373,9 @@ function NewLotoInner() {
                 onChange={(ev) => updateStep(index, { customDescription: ev.target.value })}
                 placeholder="Used on QR label prints when selected"
               />
-              <p className="ff-meta">Shown on Brady Print Label when selected — not on the printable sheet.</p>
+              <p className="ff-meta">
+                Shown on Brady Print Label when selected — not on the printable sheet.
+              </p>
             </div>
             {steps.length > 1 ? (
               <button
@@ -434,7 +441,12 @@ function NewLotoInner() {
 
         <div className="ff-action-grid">
           {!editId ? (
-            <button type="button" className="ff-btn" disabled={busy} onClick={() => void submit(true)}>
+            <button
+              type="button"
+              className="ff-btn"
+              disabled={busy}
+              onClick={() => void submit(true)}
+            >
               Save and start lockout
             </button>
           ) : null}

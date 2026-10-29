@@ -15,7 +15,10 @@ function FormDetailInner() {
 
   if (!formId || formId === "placeholder") {
     return (
-      <EmptyState title="Missing form" message="Scan a Form QR or open a form from the Forms list." />
+      <EmptyState
+        title="Missing form"
+        message="Scan a Form QR or open a form from the Forms list."
+      />
     );
   }
 

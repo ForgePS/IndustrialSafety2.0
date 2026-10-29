@@ -21,9 +21,7 @@ import {
 } from "@/lib/unsaved-changes";
 
 type PendingLeave =
-  | { kind: "href"; href: string }
-  | { kind: "back" }
-  | { kind: "action"; run: () => void };
+  { kind: "href"; href: string } | { kind: "back" } | { kind: "action"; run: () => void };
 
 type UnsavedChangesApi = {
   isDirty: boolean;

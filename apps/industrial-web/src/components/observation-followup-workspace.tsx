@@ -80,7 +80,10 @@ function FollowUpForm({ token }: { token: string }) {
         const data = await apiGet<FollowUpView>(apiPath(token));
         if (!cancelled) applyView(data);
       } catch (e) {
-        if (!cancelled) setError(e instanceof ApiError ? e.message : "This follow-up link is invalid or has expired.");
+        if (!cancelled)
+          setError(
+            e instanceof ApiError ? e.message : "This follow-up link is invalid or has expired.",
+          );
       } finally {
         if (!cancelled) setLoading(false);
       }
@@ -120,8 +123,15 @@ function FollowUpForm({ token }: { token: string }) {
 
   const closed = view ? view.status === "CLOSED" || view.status === "ARCHIVED" : false;
   const savedFollowUp = view ? mapObservationFollowUp(view.followUp) : null;
-  const where = view ? [view.siteName, view.departmentName, view.area].filter(Boolean).join(" · ") : "";
-  const people = view ? view.peopleObserved.map((p) => p.name).filter(Boolean).join(", ") : "";
+  const where = view
+    ? [view.siteName, view.departmentName, view.area].filter(Boolean).join(" · ")
+    : "";
+  const people = view
+    ? view.peopleObserved
+        .map((p) => p.name)
+        .filter(Boolean)
+        .join(", ")
+    : "";
   const showFault = Boolean(view?.canMarkFault) && (view?.peopleObserved.length ?? 0) > 0;
 
   return (
@@ -147,20 +157,31 @@ function FollowUpForm({ token }: { token: string }) {
                   <div className="d-flex flex-wrap gap-2 align-items-center mb-2">
                     <span className="fw-medium">{view.title}</span>
                     {observationTypeOption(view.observationType) ? (
-                      <span className={`badge bg-label-${observationTypeOption(view.observationType)!.tone}`}>
+                      <span
+                        className={`badge bg-label-${observationTypeOption(view.observationType)!.tone}`}
+                      >
                         {observationTypeOption(view.observationType)!.label}
                       </span>
                     ) : null}
                     {observationRiskOption(view.riskLevel) ? (
-                      <span className={`badge bg-label-${observationRiskOption(view.riskLevel)!.tone}`}>
+                      <span
+                        className={`badge bg-label-${observationRiskOption(view.riskLevel)!.tone}`}
+                      >
                         {observationRiskOption(view.riskLevel)!.label} risk
                       </span>
                     ) : null}
                   </div>
-                  {view.description ? <p className="mb-3" style={{ whiteSpace: "pre-wrap" }}>{view.description}</p> : null}
+                  {view.description ? (
+                    <p className="mb-3" style={{ whiteSpace: "pre-wrap" }}>
+                      {view.description}
+                    </p>
+                  ) : null}
                   <div className="row g-2 small">
                     <Detail label="Category" value={view.category} />
-                    <Detail label="Observed" value={view.observedAt ? formatObservedAt(view.observedAt) : ""} />
+                    <Detail
+                      label="Observed"
+                      value={view.observedAt ? formatObservedAt(view.observedAt) : ""}
+                    />
                     <Detail label="Location" value={where} />
                     <Detail label="People observed" value={people} />
                     <Detail label="Immediate action taken" value={view.immediateActions} />
@@ -200,7 +221,10 @@ function FollowUpForm({ token }: { token: string }) {
                 <div className="alert alert-success mb-0" role="status">
                   This observation is closed
                   {savedFollowUp?.completedByName ? ` by ${savedFollowUp.completedByName}` : ""}
-                  {savedFollowUp?.completedAt ? ` on ${formatObservedAt(savedFollowUp.completedAt)}` : ""}. Thank you.
+                  {savedFollowUp?.completedAt
+                    ? ` on ${formatObservedAt(savedFollowUp.completedAt)}`
+                    : ""}
+                  . Thank you.
                   {savedFollowUp?.correctiveAction ? (
                     <div className="mt-2 small">
                       <strong>Corrective action:</strong> {savedFollowUp.correctiveAction}
@@ -221,7 +245,8 @@ function FollowUpForm({ token }: { token: string }) {
                     <div className="mb-4">
                       <span className="form-label d-block">Who was at fault?</span>
                       <p className="text-muted small mb-2">
-                        Mark a person only when their own actions caused this. It lowers their safety score.
+                        Mark a person only when their own actions caused this. It lowers their
+                        safety score.
                       </p>
                       {view!.peopleObserved.map((p, idx) => (
                         <div key={p.key} className="form-check form-switch">
@@ -231,7 +256,9 @@ function FollowUpForm({ token }: { token: string }) {
                             className="form-check-input"
                             checked={Boolean(fault[p.key])}
                             disabled={busy !== null}
-                            onChange={(e) => setFault((prev) => ({ ...prev, [p.key]: e.target.checked }))}
+                            onChange={(e) =>
+                              setFault((prev) => ({ ...prev, [p.key]: e.target.checked }))
+                            }
                           />
                           <label className="form-check-label" htmlFor={`public-fault-${idx}`}>
                             {p.name}

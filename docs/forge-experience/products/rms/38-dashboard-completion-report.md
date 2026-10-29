@@ -3,7 +3,7 @@
 **Date:** 2026-07-30  
 **Product:** Forge RMS  
 **Reference standard:** Forge Experience Design System v1.0.0-RC1  
-**Gate:** FX-S2C  
+**Gate:** FX-S2C
 
 ## Decision requested
 
@@ -15,8 +15,8 @@ Alternates: `APPROVE WITH CONDITIONS` · `RETURN FOR CORRECTION`
 
 ### Suggested conditions
 
-1. Capture desktop/tablet/mobile + theme screenshots in `evidence/s2c/screenshots/` before any tenant enablement.  
-2. Keep `fx.rms.dashboard.enabled` default-off until internal non-prod validation.  
+1. Capture desktop/tablet/mobile + theme screenshots in `evidence/s2c/screenshots/` before any tenant enablement.
+2. Keep `fx.rms.dashboard.enabled` default-off until internal non-prod validation.
 3. Do not begin forms/tables until S2E is separately authorized.
 
 ## Summary
@@ -45,18 +45,18 @@ Flag off → `LegacyHomeDashboard`. Unit-tested resolver. Route `/` unchanged.
 
 ## Defects
 
-| Severity | Count |
-| --- | --- |
-| P0 | 0 |
-| P1 | 0 |
-| P3 | Screenshot package pending pilot process |
+| Severity | Count                                    |
+| -------- | ---------------------------------------- |
+| P0       | 0                                        |
+| P1       | 0                                        |
+| P3       | Screenshot package pending pilot process |
 
 ## Risks
 
-| ID | Notes |
-| --- | --- |
+| ID       | Notes                                                                                  |
+| -------- | -------------------------------------------------------------------------------------- |
 | R-S2-013 | Review queue widget filters client-side (same as legacy review page) — accepted parity |
-| R-S2-014 | Notifications widget intentionally non-operational — honest empty |
+| R-S2-014 | Notifications widget intentionally non-operational — honest empty                      |
 
 ## Evidence index
 
@@ -64,12 +64,12 @@ Flag off → `LegacyHomeDashboard`. Unit-tested resolver. Route `/` unchanged.
 
 ## Production changes
 
-| Area | Changed? |
-| --- | --- |
-| Default `/` UX | **No** (flag off) |
-| APIs / DB / auth / NERIS / CAD | **No** |
-| Seed flag definition | Yes — default false |
-| Code behind flag | Yes |
+| Area                           | Changed?            |
+| ------------------------------ | ------------------- |
+| Default `/` UX                 | **No** (flag off)   |
+| APIs / DB / auth / NERIS / CAD | **No**              |
+| Seed flag definition           | Yes — default false |
+| Code behind flag               | Yes                 |
 
 ## Recommended next step
 

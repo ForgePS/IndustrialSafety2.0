@@ -59,7 +59,11 @@ export class CadWebhookService {
       return reject(413, "REJECTED_VALIDATION", input.correlationId, "Payload too large");
     }
     const contentType = (input.contentType ?? "").toLowerCase();
-    if (contentType && !contentType.includes("application/json") && !contentType.includes("+json")) {
+    if (
+      contentType &&
+      !contentType.includes("application/json") &&
+      !contentType.includes("+json")
+    ) {
       return reject(415, "REJECTED_VALIDATION", input.correlationId, "Unsupported content type");
     }
 
@@ -184,68 +188,64 @@ export class CadWebhookService {
       );
     }
 
-    const insertResult = await withTenantTransaction(
-      this.db,
-      connection.tenantId,
-      async (tx) => {
-        const existing = await tx.query.cadRawMessages.findFirst({
-          where: and(
-            eq(cadRawMessages.tenantId, connection.tenantId),
-            eq(cadRawMessages.cadConnectionId, connection.connectionId),
-            eq(cadRawMessages.idempotencyKey, idempotencyKey),
-          ),
-        });
-        if (existing) {
-          return { duplicate: true as const, id: existing.id };
-        }
+    const insertResult = await withTenantTransaction(this.db, connection.tenantId, async (tx) => {
+      const existing = await tx.query.cadRawMessages.findFirst({
+        where: and(
+          eq(cadRawMessages.tenantId, connection.tenantId),
+          eq(cadRawMessages.cadConnectionId, connection.connectionId),
+          eq(cadRawMessages.idempotencyKey, idempotencyKey),
+        ),
+      });
+      if (existing) {
+        return { duplicate: true as const, id: existing.id };
+      }
 
-        await tx.insert(cadRawMessages).values({
-          id: rawMessageId,
-          tenantId: connection.tenantId,
-          cadConnectionId: connection.connectionId,
-          receivedAt,
-          transportType: "HTTPS_WEBHOOK",
-          sourceMessageId,
-          contentType: contentType || "application/json",
-          payloadStorageType,
-          payloadS3Bucket,
-          payloadS3Key,
-          inlinePayloadEncrypted: inlinePayload,
-          payloadHash,
+      await tx.insert(cadRawMessages).values({
+        id: rawMessageId,
+        tenantId: connection.tenantId,
+        cadConnectionId: connection.connectionId,
+        receivedAt,
+        transportType: "HTTPS_WEBHOOK",
+        sourceMessageId,
+        contentType: contentType || "application/json",
+        payloadStorageType,
+        payloadS3Bucket,
+        payloadS3Key,
+        inlinePayloadEncrypted: inlinePayload,
+        payloadHash,
+        payloadSizeBytes: input.rawBody.byteLength,
+        idempotencyKey,
+        authenticationStatus: "VALID",
+        signatureValid: true,
+        processingStatus: "PERSISTED",
+        acknowledgementStatus: "ACCEPTED",
+        acknowledgedAt: new Date(),
+        correlationId: input.correlationId,
+      });
+
+      await this.audit.writeInTransaction(tx, {
+        id: createId(),
+        tenantId: connection.tenantId,
+        actorUserId: null,
+        actorPersonId: null,
+        actorType: "SERVICE",
+        action: CAD_AUDIT_ACTIONS.MESSAGE_RECEIVED,
+        resourceType: "cad_raw_message",
+        resourceId: rawMessageId,
+        result: "SUCCESS",
+        riskLevel: "MEDIUM",
+        correlationId: input.correlationId,
+        requestId: input.requestId,
+        metadata: {
+          connectionId: connection.connectionId,
           payloadSizeBytes: input.rawBody.byteLength,
-          idempotencyKey,
-          authenticationStatus: "VALID",
-          signatureValid: true,
-          processingStatus: "PERSISTED",
-          acknowledgementStatus: "ACCEPTED",
-          acknowledgedAt: new Date(),
-          correlationId: input.correlationId,
-        });
+          payloadHash,
+          // Never include raw payload
+        },
+      });
 
-        await this.audit.writeInTransaction(tx, {
-          id: createId(),
-          tenantId: connection.tenantId,
-          actorUserId: null,
-          actorPersonId: null,
-          actorType: "SERVICE",
-          action: CAD_AUDIT_ACTIONS.MESSAGE_RECEIVED,
-          resourceType: "cad_raw_message",
-          resourceId: rawMessageId,
-          result: "SUCCESS",
-          riskLevel: "MEDIUM",
-          correlationId: input.correlationId,
-          requestId: input.requestId,
-          metadata: {
-            connectionId: connection.connectionId,
-            payloadSizeBytes: input.rawBody.byteLength,
-            payloadHash,
-            // Never include raw payload
-          },
-        });
-
-        return { duplicate: false as const, id: rawMessageId };
-      },
-    );
+      return { duplicate: false as const, id: rawMessageId };
+    });
 
     if (insertResult.duplicate) {
       return {
@@ -339,9 +339,7 @@ export class CadWebhookService {
       return {};
     }
     try {
-      const result = await this.secrets.send(
-        new GetSecretValueCommand({ SecretId: secretArn }),
-      );
+      const result = await this.secrets.send(new GetSecretValueCommand({ SecretId: secretArn }));
       const raw = result.SecretString ?? "";
       const parsed = JSON.parse(raw) as { keys?: Record<string, string> } | string;
       if (typeof parsed === "string") {

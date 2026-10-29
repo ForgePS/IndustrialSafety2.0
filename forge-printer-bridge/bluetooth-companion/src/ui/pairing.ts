@@ -21,7 +21,7 @@ export function renderConnectedScreen(
     status?: string;
     name?: string;
     batteryLevelPercentage?: number | null;
-  }
+  },
 ): void {
   const battery =
     typeof info.batteryLevelPercentage === "number"
@@ -43,11 +43,7 @@ export function renderConnectedScreen(
   `;
 }
 
-export function renderStatusScreen(
-  root: HTMLElement,
-  status: string,
-  detail?: string
-): void {
+export function renderStatusScreen(root: HTMLElement, status: string, detail?: string): void {
   root.innerHTML = `
     <section class="screen status" aria-labelledby="status-title">
       <h1 id="status-title">Printer status</h1>

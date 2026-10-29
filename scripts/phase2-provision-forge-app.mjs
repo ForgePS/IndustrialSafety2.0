@@ -44,7 +44,16 @@ const adminSecretArn = envPairs.find((e) => e.name === "DATABASE_SECRET_ARN")?.v
 if (!adminSecretArn) throw new Error("DATABASE_SECRET_ARN missing on API task");
 
 const adminSecret = JSON.parse(
-  sh(["secretsmanager", "get-secret-value", "--secret-id", adminSecretArn, "--query", "SecretString", "--output", "text"]),
+  sh([
+    "secretsmanager",
+    "get-secret-value",
+    "--secret-id",
+    adminSecretArn,
+    "--query",
+    "SecretString",
+    "--output",
+    "text",
+  ]),
 );
 
 const password = randomBytes(24).toString("base64url");
@@ -81,11 +90,11 @@ const { taskArn } = runPlatformApiOneOff(
   "provision-forge-app-role",
 );
 console.log("Waiting for forge_app ALTER ROLE…");
-spawnSync(
-  "aws",
-  ["ecs", "wait", "tasks-stopped", "--cluster", cluster, "--tasks", taskArn],
-  { encoding: "utf8", shell: true, stdio: "inherit" },
-);
+spawnSync("aws", ["ecs", "wait", "tasks-stopped", "--cluster", cluster, "--tasks", taskArn], {
+  encoding: "utf8",
+  shell: true,
+  stdio: "inherit",
+});
 
 const taskResult = awsJson([
   "ecs",
@@ -105,7 +114,16 @@ if (taskResult !== 0) {
 // Upsert app secret (do not print SecretString).
 let appSecretArn;
 try {
-  sh(["secretsmanager", "describe-secret", "--secret-id", appSecretName, "--query", "ARN", "--output", "text"]);
+  sh([
+    "secretsmanager",
+    "describe-secret",
+    "--secret-id",
+    appSecretName,
+    "--query",
+    "ARN",
+    "--output",
+    "text",
+  ]);
   sh([
     "secretsmanager",
     "put-secret-value",
@@ -126,16 +144,19 @@ try {
   ]).trim();
 } catch {
   const created = JSON.parse(
-    sh([
-      "secretsmanager",
-      "create-secret",
-      "--name",
-      appSecretName,
-      "--description",
-      "Aurora forge_app runtime credentials for API and worker",
-      "--secret-string",
-      JSON.stringify(appSecretPayload),
-    ], { shell: false }),
+    sh(
+      [
+        "secretsmanager",
+        "create-secret",
+        "--name",
+        appSecretName,
+        "--description",
+        "Aurora forge_app runtime credentials for API and worker",
+        "--secret-string",
+        JSON.stringify(appSecretPayload),
+      ],
+      { shell: false },
+    ),
   );
   appSecretArn = created.ARN;
 }

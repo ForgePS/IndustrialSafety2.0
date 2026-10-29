@@ -57,44 +57,49 @@ export class IncidentAssignmentsService {
     principal: ForgePrincipal,
   ) {
     const data = createIncidentUnitInputSchema.parse(input);
-    return withTenantTransaction(this.db, tenantId, async (tx) => {
-      await this.requireEditableIncident(tx, tenantId, incidentId);
-      await this.requireMasterUnit(tx, tenantId, data.unitId);
+    return withTenantTransaction(
+      this.db,
+      tenantId,
+      async (tx) => {
+        await this.requireEditableIncident(tx, tenantId, incidentId);
+        await this.requireMasterUnit(tx, tenantId, data.unitId);
 
-      const existing = await tx.query.nerisIncidentUnits.findFirst({
-        where: and(
-          eq(nerisIncidentUnits.incidentId, incidentId),
-          eq(nerisIncidentUnits.unitId, data.unitId),
-          isNull(nerisIncidentUnits.deletedAt),
-        ),
-      });
-      if (existing) {
-        throw new ForgeError("CONFLICT", "Unit already assigned to incident");
-      }
+        const existing = await tx.query.nerisIncidentUnits.findFirst({
+          where: and(
+            eq(nerisIncidentUnits.incidentId, incidentId),
+            eq(nerisIncidentUnits.unitId, data.unitId),
+            isNull(nerisIncidentUnits.deletedAt),
+          ),
+        });
+        if (existing) {
+          throw new ForgeError("CONFLICT", "Unit already assigned to incident");
+        }
 
-      const now = new Date();
-      const [row] = await tx
-        .insert(nerisIncidentUnits)
-        .values({
-          id: createId(),
-          tenantId,
-          incidentId,
-          unitId: data.unitId,
-          isPrimary: data.isPrimary,
-          unitRole: data.unitRole,
-          dispatchedAt: data.dispatchedAt ? new Date(data.dispatchedAt) : null,
-          enRouteAt: data.enRouteAt ? new Date(data.enRouteAt) : null,
-          arrivedAt: data.arrivedAt ? new Date(data.arrivedAt) : null,
-          clearedAt: data.clearedAt ? new Date(data.clearedAt) : null,
-          createdByUserId: principal.userId,
-          updatedByUserId: principal.userId,
-          createdAt: now,
-          updatedAt: now,
-        })
-        .returning();
-      if (!row) throw new ForgeError("INTERNAL_ERROR", "Failed to assign unit");
-      return row;
-    }, principal.userId);
+        const now = new Date();
+        const [row] = await tx
+          .insert(nerisIncidentUnits)
+          .values({
+            id: createId(),
+            tenantId,
+            incidentId,
+            unitId: data.unitId,
+            isPrimary: data.isPrimary,
+            unitRole: data.unitRole,
+            dispatchedAt: data.dispatchedAt ? new Date(data.dispatchedAt) : null,
+            enRouteAt: data.enRouteAt ? new Date(data.enRouteAt) : null,
+            arrivedAt: data.arrivedAt ? new Date(data.arrivedAt) : null,
+            clearedAt: data.clearedAt ? new Date(data.clearedAt) : null,
+            createdByUserId: principal.userId,
+            updatedByUserId: principal.userId,
+            createdAt: now,
+            updatedAt: now,
+          })
+          .returning();
+        if (!row) throw new ForgeError("INTERNAL_ERROR", "Failed to assign unit");
+        return row;
+      },
+      principal.userId,
+    );
   }
 
   async patchUnit(
@@ -106,55 +111,60 @@ export class IncidentAssignmentsService {
     expected: ExpectedVersion,
   ) {
     const data = patchIncidentUnitInputSchema.parse(input);
-    return withTenantTransaction(this.db, tenantId, async (tx) => {
-      await this.requireEditableIncident(tx, tenantId, incidentId);
-      const [before] = await tx
-        .select()
-        .from(nerisIncidentUnits)
-        .where(
-          and(
-            eq(nerisIncidentUnits.id, assignmentId),
-            eq(nerisIncidentUnits.tenantId, tenantId),
-            eq(nerisIncidentUnits.incidentId, incidentId),
-            isNull(nerisIncidentUnits.deletedAt),
-          ),
-        )
-        .limit(1);
-      if (!before) throw new ForgeError("NOT_FOUND", "Incident unit assignment not found");
-      if (expected !== "*" && before.recordVersion !== expected) {
-        throw concurrencyConflict({
-          tenantId,
-          resourceType: "neris_incident_unit",
-          resourceId: assignmentId,
-          expectedVersion: expected,
-          actualVersion: before.recordVersion,
-        });
-      }
+    return withTenantTransaction(
+      this.db,
+      tenantId,
+      async (tx) => {
+        await this.requireEditableIncident(tx, tenantId, incidentId);
+        const [before] = await tx
+          .select()
+          .from(nerisIncidentUnits)
+          .where(
+            and(
+              eq(nerisIncidentUnits.id, assignmentId),
+              eq(nerisIncidentUnits.tenantId, tenantId),
+              eq(nerisIncidentUnits.incidentId, incidentId),
+              isNull(nerisIncidentUnits.deletedAt),
+            ),
+          )
+          .limit(1);
+        if (!before) throw new ForgeError("NOT_FOUND", "Incident unit assignment not found");
+        if (expected !== "*" && before.recordVersion !== expected) {
+          throw concurrencyConflict({
+            tenantId,
+            resourceType: "neris_incident_unit",
+            resourceId: assignmentId,
+            expectedVersion: expected,
+            actualVersion: before.recordVersion,
+          });
+        }
 
-      const [updated] = await tx
-        .update(nerisIncidentUnits)
-        .set({
-          ...(data.isPrimary !== undefined ? { isPrimary: data.isPrimary } : {}),
-          ...(data.unitRole !== undefined ? { unitRole: data.unitRole } : {}),
-          ...(data.dispatchedAt !== undefined
-            ? { dispatchedAt: data.dispatchedAt ? new Date(data.dispatchedAt) : null }
-            : {}),
-          ...(data.enRouteAt !== undefined
-            ? { enRouteAt: data.enRouteAt ? new Date(data.enRouteAt) : null }
-            : {}),
-          ...(data.arrivedAt !== undefined
-            ? { arrivedAt: data.arrivedAt ? new Date(data.arrivedAt) : null }
-            : {}),
-          ...(data.clearedAt !== undefined
-            ? { clearedAt: data.clearedAt ? new Date(data.clearedAt) : null }
-            : {}),
-          updatedByUserId: principal.userId,
-          updatedAt: new Date(),
-        })
-        .where(eq(nerisIncidentUnits.id, assignmentId))
-        .returning();
-      return updated!;
-    }, principal.userId);
+        const [updated] = await tx
+          .update(nerisIncidentUnits)
+          .set({
+            ...(data.isPrimary !== undefined ? { isPrimary: data.isPrimary } : {}),
+            ...(data.unitRole !== undefined ? { unitRole: data.unitRole } : {}),
+            ...(data.dispatchedAt !== undefined
+              ? { dispatchedAt: data.dispatchedAt ? new Date(data.dispatchedAt) : null }
+              : {}),
+            ...(data.enRouteAt !== undefined
+              ? { enRouteAt: data.enRouteAt ? new Date(data.enRouteAt) : null }
+              : {}),
+            ...(data.arrivedAt !== undefined
+              ? { arrivedAt: data.arrivedAt ? new Date(data.arrivedAt) : null }
+              : {}),
+            ...(data.clearedAt !== undefined
+              ? { clearedAt: data.clearedAt ? new Date(data.clearedAt) : null }
+              : {}),
+            updatedByUserId: principal.userId,
+            updatedAt: new Date(),
+          })
+          .where(eq(nerisIncidentUnits.id, assignmentId))
+          .returning();
+        return updated!;
+      },
+      principal.userId,
+    );
   }
 
   async deleteUnit(
@@ -164,38 +174,43 @@ export class IncidentAssignmentsService {
     principal: ForgePrincipal,
     expected: ExpectedVersion,
   ) {
-    return withTenantTransaction(this.db, tenantId, async (tx) => {
-      await this.requireEditableIncident(tx, tenantId, incidentId);
-      const [before] = await tx
-        .select()
-        .from(nerisIncidentUnits)
-        .where(
-          and(
-            eq(nerisIncidentUnits.id, assignmentId),
-            eq(nerisIncidentUnits.tenantId, tenantId),
-            eq(nerisIncidentUnits.incidentId, incidentId),
-            isNull(nerisIncidentUnits.deletedAt),
-          ),
-        )
-        .limit(1);
-      if (!before) throw new ForgeError("NOT_FOUND", "Incident unit assignment not found");
-      if (expected !== "*" && before.recordVersion !== expected) {
-        throw concurrencyConflict({
-          tenantId,
-          resourceType: "neris_incident_unit",
-          resourceId: assignmentId,
-          expectedVersion: expected,
-          actualVersion: before.recordVersion,
-        });
-      }
+    return withTenantTransaction(
+      this.db,
+      tenantId,
+      async (tx) => {
+        await this.requireEditableIncident(tx, tenantId, incidentId);
+        const [before] = await tx
+          .select()
+          .from(nerisIncidentUnits)
+          .where(
+            and(
+              eq(nerisIncidentUnits.id, assignmentId),
+              eq(nerisIncidentUnits.tenantId, tenantId),
+              eq(nerisIncidentUnits.incidentId, incidentId),
+              isNull(nerisIncidentUnits.deletedAt),
+            ),
+          )
+          .limit(1);
+        if (!before) throw new ForgeError("NOT_FOUND", "Incident unit assignment not found");
+        if (expected !== "*" && before.recordVersion !== expected) {
+          throw concurrencyConflict({
+            tenantId,
+            resourceType: "neris_incident_unit",
+            resourceId: assignmentId,
+            expectedVersion: expected,
+            actualVersion: before.recordVersion,
+          });
+        }
 
-      const now = new Date();
-      await tx
-        .update(nerisIncidentUnits)
-        .set({ deletedAt: now, updatedByUserId: principal.userId, updatedAt: now })
-        .where(eq(nerisIncidentUnits.id, assignmentId));
-      return { deleted: true, assignmentId };
-    }, principal.userId);
+        const now = new Date();
+        await tx
+          .update(nerisIncidentUnits)
+          .set({ deletedAt: now, updatedByUserId: principal.userId, updatedAt: now })
+          .where(eq(nerisIncidentUnits.id, assignmentId));
+        return { deleted: true, assignmentId };
+      },
+      principal.userId,
+    );
   }
 
   async listPersonnel(tenantId: string, incidentId: string) {
@@ -221,59 +236,67 @@ export class IncidentAssignmentsService {
     principal: ForgePrincipal,
   ) {
     const data = createIncidentPersonnelInputSchema.parse(input);
-    return withTenantTransaction(this.db, tenantId, async (tx) => {
-      await this.requireEditableIncident(tx, tenantId, incidentId);
-      await this.requireMasterPersonnel(tx, tenantId, data.personnelId);
+    return withTenantTransaction(
+      this.db,
+      tenantId,
+      async (tx) => {
+        await this.requireEditableIncident(tx, tenantId, incidentId);
+        await this.requireMasterPersonnel(tx, tenantId, data.personnelId);
 
-      if (data.unitAssignmentId) {
-        const unitAssignment = await tx.query.nerisIncidentUnits.findFirst({
+        if (data.unitAssignmentId) {
+          const unitAssignment = await tx.query.nerisIncidentUnits.findFirst({
+            where: and(
+              eq(nerisIncidentUnits.id, data.unitAssignmentId),
+              eq(nerisIncidentUnits.incidentId, incidentId),
+              eq(nerisIncidentUnits.tenantId, tenantId),
+              isNull(nerisIncidentUnits.deletedAt),
+            ),
+          });
+          if (!unitAssignment) {
+            throw new ForgeError(
+              "BAD_REQUEST",
+              "unitAssignmentId does not belong to this incident",
+            );
+          }
+        }
+
+        const existing = await tx.query.nerisIncidentPersonnel.findFirst({
           where: and(
-            eq(nerisIncidentUnits.id, data.unitAssignmentId),
-            eq(nerisIncidentUnits.incidentId, incidentId),
-            eq(nerisIncidentUnits.tenantId, tenantId),
-            isNull(nerisIncidentUnits.deletedAt),
+            eq(nerisIncidentPersonnel.incidentId, incidentId),
+            eq(nerisIncidentPersonnel.personnelId, data.personnelId),
+            isNull(nerisIncidentPersonnel.deletedAt),
           ),
         });
-        if (!unitAssignment) {
-          throw new ForgeError("BAD_REQUEST", "unitAssignmentId does not belong to this incident");
+        if (existing) {
+          throw new ForgeError("CONFLICT", "Personnel already assigned to incident");
         }
-      }
 
-      const existing = await tx.query.nerisIncidentPersonnel.findFirst({
-        where: and(
-          eq(nerisIncidentPersonnel.incidentId, incidentId),
-          eq(nerisIncidentPersonnel.personnelId, data.personnelId),
-          isNull(nerisIncidentPersonnel.deletedAt),
-        ),
-      });
-      if (existing) {
-        throw new ForgeError("CONFLICT", "Personnel already assigned to incident");
-      }
-
-      const now = new Date();
-      const [row] = await tx
-        .insert(nerisIncidentPersonnel)
-        .values({
-          id: createId(),
-          tenantId,
-          incidentId,
-          personnelId: data.personnelId,
-          unitAssignmentId: data.unitAssignmentId,
-          role: data.role,
-          rank: data.rank,
-          primaryAction: data.primaryAction,
-          exposureInvolved: data.exposureInvolved,
-          isIncidentCommander: data.isIncidentCommander,
-          isReportingOfficer: data.isReportingOfficer,
-          createdByUserId: principal.userId,
-          updatedByUserId: principal.userId,
-          createdAt: now,
-          updatedAt: now,
-        })
-        .returning();
-      if (!row) throw new ForgeError("INTERNAL_ERROR", "Failed to assign personnel");
-      return row;
-    }, principal.userId);
+        const now = new Date();
+        const [row] = await tx
+          .insert(nerisIncidentPersonnel)
+          .values({
+            id: createId(),
+            tenantId,
+            incidentId,
+            personnelId: data.personnelId,
+            unitAssignmentId: data.unitAssignmentId,
+            role: data.role,
+            rank: data.rank,
+            primaryAction: data.primaryAction,
+            exposureInvolved: data.exposureInvolved,
+            isIncidentCommander: data.isIncidentCommander,
+            isReportingOfficer: data.isReportingOfficer,
+            createdByUserId: principal.userId,
+            updatedByUserId: principal.userId,
+            createdAt: now,
+            updatedAt: now,
+          })
+          .returning();
+        if (!row) throw new ForgeError("INTERNAL_ERROR", "Failed to assign personnel");
+        return row;
+      },
+      principal.userId,
+    );
   }
 
   async patchPersonnel(
@@ -285,70 +308,78 @@ export class IncidentAssignmentsService {
     expected: ExpectedVersion,
   ) {
     const data = patchIncidentPersonnelInputSchema.parse(input);
-    return withTenantTransaction(this.db, tenantId, async (tx) => {
-      await this.requireEditableIncident(tx, tenantId, incidentId);
-      const [before] = await tx
-        .select()
-        .from(nerisIncidentPersonnel)
-        .where(
-          and(
-            eq(nerisIncidentPersonnel.id, assignmentId),
-            eq(nerisIncidentPersonnel.tenantId, tenantId),
-            eq(nerisIncidentPersonnel.incidentId, incidentId),
-            isNull(nerisIncidentPersonnel.deletedAt),
-          ),
-        )
-        .limit(1);
-      if (!before) throw new ForgeError("NOT_FOUND", "Incident personnel assignment not found");
-      if (expected !== "*" && before.recordVersion !== expected) {
-        throw concurrencyConflict({
-          tenantId,
-          resourceType: "neris_incident_personnel",
-          resourceId: assignmentId,
-          expectedVersion: expected,
-          actualVersion: before.recordVersion,
-        });
-      }
-
-      if (data.unitAssignmentId) {
-        const unitAssignment = await tx.query.nerisIncidentUnits.findFirst({
-          where: and(
-            eq(nerisIncidentUnits.id, data.unitAssignmentId),
-            eq(nerisIncidentUnits.incidentId, incidentId),
-            eq(nerisIncidentUnits.tenantId, tenantId),
-            isNull(nerisIncidentUnits.deletedAt),
-          ),
-        });
-        if (!unitAssignment) {
-          throw new ForgeError("BAD_REQUEST", "unitAssignmentId does not belong to this incident");
+    return withTenantTransaction(
+      this.db,
+      tenantId,
+      async (tx) => {
+        await this.requireEditableIncident(tx, tenantId, incidentId);
+        const [before] = await tx
+          .select()
+          .from(nerisIncidentPersonnel)
+          .where(
+            and(
+              eq(nerisIncidentPersonnel.id, assignmentId),
+              eq(nerisIncidentPersonnel.tenantId, tenantId),
+              eq(nerisIncidentPersonnel.incidentId, incidentId),
+              isNull(nerisIncidentPersonnel.deletedAt),
+            ),
+          )
+          .limit(1);
+        if (!before) throw new ForgeError("NOT_FOUND", "Incident personnel assignment not found");
+        if (expected !== "*" && before.recordVersion !== expected) {
+          throw concurrencyConflict({
+            tenantId,
+            resourceType: "neris_incident_personnel",
+            resourceId: assignmentId,
+            expectedVersion: expected,
+            actualVersion: before.recordVersion,
+          });
         }
-      }
 
-      const [updated] = await tx
-        .update(nerisIncidentPersonnel)
-        .set({
-          ...(data.unitAssignmentId !== undefined
-            ? { unitAssignmentId: data.unitAssignmentId }
-            : {}),
-          ...(data.role !== undefined ? { role: data.role } : {}),
-          ...(data.rank !== undefined ? { rank: data.rank } : {}),
-          ...(data.primaryAction !== undefined ? { primaryAction: data.primaryAction } : {}),
-          ...(data.exposureInvolved !== undefined
-            ? { exposureInvolved: data.exposureInvolved }
-            : {}),
-          ...(data.isIncidentCommander !== undefined
-            ? { isIncidentCommander: data.isIncidentCommander }
-            : {}),
-          ...(data.isReportingOfficer !== undefined
-            ? { isReportingOfficer: data.isReportingOfficer }
-            : {}),
-          updatedByUserId: principal.userId,
-          updatedAt: new Date(),
-        })
-        .where(eq(nerisIncidentPersonnel.id, assignmentId))
-        .returning();
-      return updated!;
-    }, principal.userId);
+        if (data.unitAssignmentId) {
+          const unitAssignment = await tx.query.nerisIncidentUnits.findFirst({
+            where: and(
+              eq(nerisIncidentUnits.id, data.unitAssignmentId),
+              eq(nerisIncidentUnits.incidentId, incidentId),
+              eq(nerisIncidentUnits.tenantId, tenantId),
+              isNull(nerisIncidentUnits.deletedAt),
+            ),
+          });
+          if (!unitAssignment) {
+            throw new ForgeError(
+              "BAD_REQUEST",
+              "unitAssignmentId does not belong to this incident",
+            );
+          }
+        }
+
+        const [updated] = await tx
+          .update(nerisIncidentPersonnel)
+          .set({
+            ...(data.unitAssignmentId !== undefined
+              ? { unitAssignmentId: data.unitAssignmentId }
+              : {}),
+            ...(data.role !== undefined ? { role: data.role } : {}),
+            ...(data.rank !== undefined ? { rank: data.rank } : {}),
+            ...(data.primaryAction !== undefined ? { primaryAction: data.primaryAction } : {}),
+            ...(data.exposureInvolved !== undefined
+              ? { exposureInvolved: data.exposureInvolved }
+              : {}),
+            ...(data.isIncidentCommander !== undefined
+              ? { isIncidentCommander: data.isIncidentCommander }
+              : {}),
+            ...(data.isReportingOfficer !== undefined
+              ? { isReportingOfficer: data.isReportingOfficer }
+              : {}),
+            updatedByUserId: principal.userId,
+            updatedAt: new Date(),
+          })
+          .where(eq(nerisIncidentPersonnel.id, assignmentId))
+          .returning();
+        return updated!;
+      },
+      principal.userId,
+    );
   }
 
   async deletePersonnel(
@@ -358,38 +389,43 @@ export class IncidentAssignmentsService {
     principal: ForgePrincipal,
     expected: ExpectedVersion,
   ) {
-    return withTenantTransaction(this.db, tenantId, async (tx) => {
-      await this.requireEditableIncident(tx, tenantId, incidentId);
-      const [before] = await tx
-        .select()
-        .from(nerisIncidentPersonnel)
-        .where(
-          and(
-            eq(nerisIncidentPersonnel.id, assignmentId),
-            eq(nerisIncidentPersonnel.tenantId, tenantId),
-            eq(nerisIncidentPersonnel.incidentId, incidentId),
-            isNull(nerisIncidentPersonnel.deletedAt),
-          ),
-        )
-        .limit(1);
-      if (!before) throw new ForgeError("NOT_FOUND", "Incident personnel assignment not found");
-      if (expected !== "*" && before.recordVersion !== expected) {
-        throw concurrencyConflict({
-          tenantId,
-          resourceType: "neris_incident_personnel",
-          resourceId: assignmentId,
-          expectedVersion: expected,
-          actualVersion: before.recordVersion,
-        });
-      }
+    return withTenantTransaction(
+      this.db,
+      tenantId,
+      async (tx) => {
+        await this.requireEditableIncident(tx, tenantId, incidentId);
+        const [before] = await tx
+          .select()
+          .from(nerisIncidentPersonnel)
+          .where(
+            and(
+              eq(nerisIncidentPersonnel.id, assignmentId),
+              eq(nerisIncidentPersonnel.tenantId, tenantId),
+              eq(nerisIncidentPersonnel.incidentId, incidentId),
+              isNull(nerisIncidentPersonnel.deletedAt),
+            ),
+          )
+          .limit(1);
+        if (!before) throw new ForgeError("NOT_FOUND", "Incident personnel assignment not found");
+        if (expected !== "*" && before.recordVersion !== expected) {
+          throw concurrencyConflict({
+            tenantId,
+            resourceType: "neris_incident_personnel",
+            resourceId: assignmentId,
+            expectedVersion: expected,
+            actualVersion: before.recordVersion,
+          });
+        }
 
-      const now = new Date();
-      await tx
-        .update(nerisIncidentPersonnel)
-        .set({ deletedAt: now, updatedByUserId: principal.userId, updatedAt: now })
-        .where(eq(nerisIncidentPersonnel.id, assignmentId));
-      return { deleted: true, assignmentId };
-    }, principal.userId);
+        const now = new Date();
+        await tx
+          .update(nerisIncidentPersonnel)
+          .set({ deletedAt: now, updatedByUserId: principal.userId, updatedAt: now })
+          .where(eq(nerisIncidentPersonnel.id, assignmentId));
+        return { deleted: true, assignmentId };
+      },
+      principal.userId,
+    );
   }
 
   async getPrefill(tenantId: string, incidentId: string, query: unknown) {
@@ -435,9 +471,9 @@ export class IncidentAssignmentsService {
     incidentId: string,
   ) {
     const incident = await this.requireIncident(tx, tenantId, incidentId);
-    this.stateMachine.assertEditable(incident.status as Parameters<
-      IncidentStateMachineService["assertEditable"]
-    >[0]);
+    this.stateMachine.assertEditable(
+      incident.status as Parameters<IncidentStateMachineService["assertEditable"]>[0],
+    );
     return incident;
   }
 

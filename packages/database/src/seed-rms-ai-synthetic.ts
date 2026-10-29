@@ -550,10 +550,7 @@ async function ensureEntitlements(
     .select()
     .from(userTenantMemberships)
     .where(
-      and(
-        eq(userTenantMemberships.tenantId, tenantId),
-        eq(userTenantMemberships.status, "ACTIVE"),
-      ),
+      and(eq(userTenantMemberships.tenantId, tenantId), eq(userTenantMemberships.status, "ACTIVE")),
     )
     .limit(1);
   if (!membership || !actorUserId) return;
@@ -714,8 +711,7 @@ async function main(): Promise<void> {
 }
 
 const isDirect =
-  process.argv[1] &&
-  pathToFileURL(path.resolve(process.argv[1])).href === import.meta.url;
+  process.argv[1] && pathToFileURL(path.resolve(process.argv[1])).href === import.meta.url;
 
 if (
   isDirect ||

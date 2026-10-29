@@ -77,14 +77,7 @@ export type FormDefinitionField = {
 function collectFieldArrays(root: unknown): unknown[] {
   const rec = unwrapJsonRecord(root);
   if (Object.keys(rec).length === 0) return [];
-  const buckets = [
-    rec.fields,
-    rec.questions,
-    rec.formFields,
-    rec.items,
-    rec.elements,
-    rec.schema,
-  ];
+  const buckets = [rec.fields, rec.questions, rec.formFields, rec.items, rec.elements, rec.schema];
   const out: unknown[] = [];
   for (const bucket of buckets) {
     if (Array.isArray(bucket)) out.push(...bucket);
@@ -125,12 +118,7 @@ export function extractFormDefinitionFields(
   definition: Record<string, unknown> | null | undefined,
 ): FormDefinitionField[] {
   if (!definition) return [];
-  const sources = [
-    definition.schemaJson,
-    definition.schema,
-    definition.sourcePayload,
-    definition,
-  ];
+  const sources = [definition.schemaJson, definition.schema, definition.sourcePayload, definition];
   const seen = new Set<string>();
   const fields: FormDefinitionField[] = [];
   for (const source of sources) {
@@ -281,13 +269,9 @@ export function buildFormSubmissionPrintableHtml(input: {
   const blank = Boolean(input.blank);
   const title = escapeHtml(input.title || "Form submission");
   const company = escapeHtml(
-    input.branding.reportIdentity?.trim() ||
-      input.branding.companyName?.trim() ||
-      "Company",
+    input.branding.reportIdentity?.trim() || input.branding.companyName?.trim() || "Company",
   );
-  const footer = escapeHtml(
-    input.branding.documentFooter?.trim() || company,
-  );
+  const footer = escapeHtml(input.branding.documentFooter?.trim() || company);
   const logo = input.branding.logoUrl?.trim()
     ? `<img class="logo" src="${escapeHtml(input.branding.logoUrl.trim())}" alt="${company} logo" />`
     : "";

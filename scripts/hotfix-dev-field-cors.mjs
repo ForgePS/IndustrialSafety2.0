@@ -37,7 +37,10 @@ const container = td.containerDefinitions[0];
 const env = container.environment ?? [];
 const cors = env.find((e) => e.name === "CORS_ORIGINS");
 if (!cors) throw new Error("CORS_ORIGINS missing on task def");
-const origins = cors.value.split(",").map((s) => s.trim()).filter(Boolean);
+const origins = cors.value
+  .split(",")
+  .map((s) => s.trim())
+  .filter(Boolean);
 if (!origins.includes(NEW_ORIGIN)) {
   origins.push(NEW_ORIGIN);
   cors.value = origins.join(",");

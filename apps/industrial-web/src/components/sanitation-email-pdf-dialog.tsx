@@ -150,7 +150,10 @@ export function SanitationEmailPdfDialog({
                   {selected.map((id) => {
                     const person = byId.get(id);
                     return (
-                      <span key={id} className="badge bg-label-primary d-inline-flex align-items-center gap-1">
+                      <span
+                        key={id}
+                        className="badge bg-label-primary d-inline-flex align-items-center gap-1"
+                      >
                         {person?.name ?? id}
                         <button
                           type="button"
@@ -181,7 +184,9 @@ export function SanitationEmailPdfDialog({
                   <div className="p-3 text-muted small">Loading people…</div>
                 ) : filtered.length === 0 ? (
                   <div className="p-3 text-muted small">
-                    {recipients.length ? "No one matches that search." : "No personnel have an email address on file."}
+                    {recipients.length
+                      ? "No one matches that search."
+                      : "No personnel have an email address on file."}
                   </div>
                 ) : (
                   <ul className="list-group list-group-flush">
@@ -204,7 +209,9 @@ export function SanitationEmailPdfDialog({
                               <span className="text-muted small">{person.email}</span>
                               {person.jobTitle || person.departmentName ? (
                                 <span className="d-block text-muted small">
-                                  {[person.jobTitle, person.departmentName].filter(Boolean).join(" · ")}
+                                  {[person.jobTitle, person.departmentName]
+                                    .filter(Boolean)
+                                    .join(" · ")}
                                 </span>
                               ) : null}
                             </label>
@@ -235,7 +242,12 @@ export function SanitationEmailPdfDialog({
               />
             </div>
             <div className="modal-footer">
-              <button type="button" className="btn btn-outline-secondary" disabled={sending} onClick={onClose}>
+              <button
+                type="button"
+                className="btn btn-outline-secondary"
+                disabled={sending}
+                onClick={onClose}
+              >
                 {result?.sent ? "Done" : "Cancel"}
               </button>
               <button

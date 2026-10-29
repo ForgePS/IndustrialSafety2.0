@@ -119,7 +119,9 @@ try {
 
   const stuttgartMilling = depts.filter(
     (d) =>
-      String(d.site_name ?? "").toLowerCase().includes("stuttgart") &&
+      String(d.site_name ?? "")
+        .toLowerCase()
+        .includes("stuttgart") &&
       String(d.division_name ?? "").toLowerCase() === "stuttgart milling operations",
   );
 
@@ -134,7 +136,9 @@ try {
       }),
   );
   for (const d of stuttgartMilling) console.log("SM " + JSON.stringify(show(d)));
-  exactDupes.forEach((l, i) => l.forEach((d) => console.log(`EXACT${i} ` + JSON.stringify(show(d)))));
+  exactDupes.forEach((l, i) =>
+    l.forEach((d) => console.log(`EXACT${i} ` + JSON.stringify(show(d)))),
+  );
   nearDupes.forEach((l, i) => l.forEach((d) => console.log(`NEAR${i} ` + JSON.stringify(show(d)))));
 } finally {
   await sql.end({ timeout: 5 });

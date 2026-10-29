@@ -10,13 +10,10 @@ import fs from "node:fs";
 import path from "node:path";
 import { awsJson, awsText, runPlatformApiOneOff } from "./ecs-oneoff.mjs";
 
-const EVID_DIR = path.resolve(
-  "docs/program/industrial-migration/ind-11/evidence/p2/03-storage",
-);
+const EVID_DIR = path.resolve("docs/program/industrial-migration/ind-11/evidence/p2/03-storage");
 const APPROVAL = path.join(EVID_DIR, "APPROVE-PRODUCERS-STORAGE-COPY-PROD-TWIN.md");
 const MAP_LOCAL =
-  process.env.FORGE_P2_STORAGE_MAP?.trim() ||
-  path.join(EVID_DIR, "s3-map-staging-latest.json");
+  process.env.FORGE_P2_STORAGE_MAP?.trim() || path.join(EVID_DIR, "s3-map-staging-latest.json");
 const LOADER_LOCAL = path.resolve("scripts/ind11b-p2-run-storage-s3-remount-prod-twin.mjs");
 const BUCKET =
   process.env.FORGE_IND11B_IMPORTS_BUCKET || "forge-development-imports-511343547817-us-east-1";
@@ -141,14 +138,7 @@ const taskId = taskArn.split("/").pop();
 
 // Pull artifacts
 const outPrefix = `${PREFIX}/out/`;
-const listed = awsJson([
-  "s3api",
-  "list-objects-v2",
-  "--bucket",
-  BUCKET,
-  "--prefix",
-  outPrefix,
-]);
+const listed = awsJson(["s3api", "list-objects-v2", "--bucket", BUCKET, "--prefix", outPrefix]);
 const downloaded = [];
 for (const obj of listed.Contents || []) {
   const base = path.basename(obj.Key);
@@ -187,7 +177,9 @@ const summary = {
   downloaded,
   resultCounts: result?.counts || null,
   reconcile: fs.existsSync(path.join(EVID_DIR, "s3-remount-prod-twin-reconcile.json"))
-    ? JSON.parse(fs.readFileSync(path.join(EVID_DIR, "s3-remount-prod-twin-reconcile.json"), "utf8"))
+    ? JSON.parse(
+        fs.readFileSync(path.join(EVID_DIR, "s3-remount-prod-twin-reconcile.json"), "utf8"),
+      )
     : null,
   logTail: msg.slice(-8000),
 };

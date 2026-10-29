@@ -4,19 +4,19 @@
 
 Controlled Firebase → AWS delta applied and verified.
 
-| Gate | Result |
-| --- | --- |
-| SOURCE_WATERMARK_IDENTIFIED | PASS |
-| SOURCE_DRIFT_QUANTIFIED | PASS |
-| DELTA_MANIFEST / package | PASS |
-| DELTA_DRY_RUN | PASS |
-| DELTA_APPLY | PASS |
-| DELTA_IDEMPOTENCY | PASS |
-| SECURITY REGRESSION | PASS |
-| MODULE UAT | PASS |
-| FIREBASE_AUTHORITATIVE | YES |
-| FIREBASE_WRITE_FREEZE | **NOT RUN** |
-| CUSTOMER_CUTOVER | **NOT RUN** |
+| Gate                        | Result      |
+| --------------------------- | ----------- |
+| SOURCE_WATERMARK_IDENTIFIED | PASS        |
+| SOURCE_DRIFT_QUANTIFIED     | PASS        |
+| DELTA_MANIFEST / package    | PASS        |
+| DELTA_DRY_RUN               | PASS        |
+| DELTA_APPLY                 | PASS        |
+| DELTA_IDEMPOTENCY           | PASS        |
+| SECURITY REGRESSION         | PASS        |
+| MODULE UAT                  | PASS        |
+| FIREBASE_AUTHORITATIVE      | YES         |
+| FIREBASE_WRITE_FREEZE       | **NOT RUN** |
+| CUSTOMER_CUTOVER            | **NOT RUN** |
 
 ## Next authorized sprint (not started)
 

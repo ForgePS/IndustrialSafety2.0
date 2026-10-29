@@ -1,5 +1,10 @@
 import { test, expect } from "../src/fixtures/index.js";
-import { apiRequest, readTenantId, listIncidents, incidentIdsFromList } from "../src/helpers/api.js";
+import {
+  apiRequest,
+  readTenantId,
+  listIncidents,
+  incidentIdsFromList,
+} from "../src/helpers/api.js";
 import {
   createSyntheticCadConnection,
   expectOkStatus,
@@ -67,9 +72,7 @@ test.describe("Phase 4 deterministic CAD reprocess @phase4 @cad", () => {
       },
     });
     const rawMessageId = String(send.rawMessageId);
-    expect(rawMessageId).toMatch(
-      /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i,
-    );
+    expect(rawMessageId).toMatch(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i);
 
     const created = await waitForCadMessage(
       page,
@@ -119,8 +122,7 @@ test.describe("Phase 4 deterministic CAD reprocess @phase4 @cad", () => {
       page,
       tenantId!,
       (row) =>
-        row.id === rawMessageId &&
-        (row.processingAttempts ?? 0) >= firstBody.processingAttempts,
+        row.id === rawMessageId && (row.processingAttempts ?? 0) >= firstBody.processingAttempts,
       60_000,
     );
     expect(afterFirst.payloadHash).toBe(originalHash);
@@ -144,8 +146,7 @@ test.describe("Phase 4 deterministic CAD reprocess @phase4 @cad", () => {
       page,
       tenantId!,
       (row) =>
-        row.id === rawMessageId &&
-        (row.processingAttempts ?? 0) >= secondBody.processingAttempts,
+        row.id === rawMessageId && (row.processingAttempts ?? 0) >= secondBody.processingAttempts,
       60_000,
     );
     expect(afterSecond.payloadHash).toBe(originalHash);
@@ -171,14 +172,16 @@ test.describe("Phase 4 deterministic CAD reprocess @phase4 @cad", () => {
     );
     expect(reprocessAudit, "reprocess audit event required").toBeTruthy();
 
-    const unauth = await page.context().request.fetch(
-      `${getApiUrl()}/api/v1/tenants/${tenantId}/cad/messages/${rawMessageId}/reprocess`,
-      {
-        method: "POST",
-        headers: { "Content-Type": "application/json", Accept: "application/json" },
-        data: JSON.stringify({ reason: "missing bearer must fail" }),
-      },
-    );
+    const unauth = await page
+      .context()
+      .request.fetch(
+        `${getApiUrl()}/api/v1/tenants/${tenantId}/cad/messages/${rawMessageId}/reprocess`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json", Accept: "application/json" },
+          data: JSON.stringify({ reason: "missing bearer must fail" }),
+        },
+      );
     expect([401, 403]).toContain(unauth.status());
 
     const secondary = getSecondaryCredentials();

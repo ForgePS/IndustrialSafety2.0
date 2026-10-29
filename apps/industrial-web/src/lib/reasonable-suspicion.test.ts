@@ -1,5 +1,9 @@
 import { describe, expect, it } from "vitest";
-import { buildIncidentCreatePayload, emptyIncidentCreateForm, toIncidentRecord } from "./incidents-module";
+import {
+  buildIncidentCreatePayload,
+  emptyIncidentCreateForm,
+  toIncidentRecord,
+} from "./incidents-module";
 import { drugAlcoholValidationMessage, newDrugAlcoholConsent } from "./drug-alcohol-incident";
 import {
   cloneEmptyReasonableSuspicion,
@@ -28,13 +32,19 @@ describe("reasonable-suspicion", () => {
     const empty = cloneEmptyReasonableSuspicion();
     expect(reasonableSuspicionHasContent(empty)).toBe(false);
     expect(reasonableSuspicionValidationMessage(empty)).toMatch(/date and time/i);
+    expect(reasonableSuspicionValidationMessage({ ...complete(), indicators: [] })).toMatch(
+      /observed sign/i,
+    );
     expect(
-      reasonableSuspicionValidationMessage({ ...complete(), indicators: [] }),
-    ).toMatch(/observed sign/i);
-    expect(
-      reasonableSuspicionValidationMessage({ ...complete(), indicators: [], indicatorsOther: "Smell of solvent" }),
+      reasonableSuspicionValidationMessage({
+        ...complete(),
+        indicators: [],
+        indicatorsOther: "Smell of solvent",
+      }),
     ).toBeNull();
-    expect(reasonableSuspicionValidationMessage({ ...complete(), dotCovered: null })).toMatch(/DOT/);
+    expect(reasonableSuspicionValidationMessage({ ...complete(), dotCovered: null })).toMatch(
+      /DOT/,
+    );
     expect(reasonableSuspicionValidationMessage({ ...complete(), observerSignature: "" })).toMatch(
       /sign/i,
     );

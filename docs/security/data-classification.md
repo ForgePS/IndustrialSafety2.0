@@ -5,12 +5,12 @@
 
 ## Levels
 
-| Level | Definition | Examples |
-| --- | --- | --- |
-| PUBLIC | Intended for unrestricted disclosure | Published marketing copy, public FOIA-cleared summaries |
-| INTERNAL | Business data not for public release | Tenant configuration, non-sensitive operational metadata |
-| CONFIDENTIAL | Harmful if disclosed; limited need-to-know | Incident narratives, investigation notes, contact details |
-| RESTRICTED | Regulated or high-impact identity/financial/health data | SSN, bank/routing, full DOB, credentials, certain medical identifiers |
+| Level        | Definition                                              | Examples                                                              |
+| ------------ | ------------------------------------------------------- | --------------------------------------------------------------------- |
+| PUBLIC       | Intended for unrestricted disclosure                    | Published marketing copy, public FOIA-cleared summaries               |
+| INTERNAL     | Business data not for public release                    | Tenant configuration, non-sensitive operational metadata              |
+| CONFIDENTIAL | Harmful if disclosed; limited need-to-know              | Incident narratives, investigation notes, contact details             |
+| RESTRICTED   | Regulated or high-impact identity/financial/health data | SSN, bank/routing, full DOB, credentials, certain medical identifiers |
 
 ## Handling rules
 

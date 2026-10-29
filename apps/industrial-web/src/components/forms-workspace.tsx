@@ -14,10 +14,7 @@ import { FormBuilderModal, type FormBuilderModalMode } from "@/components/form-b
 import { FormEmployeeNumberField } from "@/components/form-employee-number-field";
 import { FormViewModal } from "@/components/form-view-modal";
 import { YearSelectDateInput } from "@/components/year-select-date-input";
-import {
-  duplicateFormFieldsForCopy,
-  duplicateFormTitle,
-} from "@/lib/form-builder";
+import { duplicateFormFieldsForCopy, duplicateFormTitle } from "@/lib/form-builder";
 import { useProfileSignature } from "@/hooks/use-profile-signature";
 import { useIndustrialFacility } from "@/hooks/use-industrial-facility";
 import { useIndustrialModuleGate } from "@/hooks/use-industrial-module-gate";
@@ -184,7 +181,8 @@ function renderFillField(
           </small>
         ) : signatoryKind && unsigned ? (
           <small className="text-muted d-block mt-1">
-            Optional for now — save the form and send a sign link, or the {signatoryKind === "supervisor" ? "supervisor" : "Safety Director"} can sign later.
+            Optional for now — save the form and send a sign link, or the{" "}
+            {signatoryKind === "supervisor" ? "supervisor" : "Safety Director"} can sign later.
           </small>
         ) : null}
         {canRequestSignLink && unsigned && signatoryKind ? (
@@ -412,7 +410,9 @@ function renderFillField(
         onChange={(ev) => set(ev.target.value)}
       />
       {deferRequired && field.type === "date" ? (
-        <small className="text-muted d-block mt-1">Optional until the related signature is added.</small>
+        <small className="text-muted d-block mt-1">
+          Optional until the related signature is added.
+        </small>
       ) : null}
     </div>
   );
@@ -456,7 +456,11 @@ export function FormsWorkspace({ moduleName }: { moduleName: string }) {
   );
   useEffect(() => {
     setTab((current) =>
-      ensureActiveModuleTab(current, visibleTabs.map((t) => t.id), "library"),
+      ensureActiveModuleTab(
+        current,
+        visibleTabs.map((t) => t.id),
+        "library",
+      ),
     );
   }, [visibleTabs]);
   const [definitions, setDefinitions] = useState<Array<Record<string, unknown>>>([]);
@@ -513,10 +517,7 @@ export function FormsWorkspace({ moduleName }: { moduleName: string }) {
     () => (selectedForm ? extractFormFields(selectedForm) : []),
     [selectedForm],
   );
-  const hasDeferredSignatures = useMemo(
-    () => hasDeferredSignatoryFields(fillFields),
-    [fillFields],
-  );
+  const hasDeferredSignatures = useMemo(() => hasDeferredSignatoryFields(fillFields), [fillFields]);
   const editingSubmission = useMemo(
     () =>
       editingSubmissionId
@@ -609,8 +610,7 @@ export function FormsWorkspace({ moduleName }: { moduleName: string }) {
       const formId = next.form === undefined ? selectedFormId : next.form;
       if (formId) params.set("form", formId);
       else params.delete("form");
-      const submissionId =
-        next.submission === undefined ? selectedSubmissionId : next.submission;
+      const submissionId = next.submission === undefined ? selectedSubmissionId : next.submission;
       if (submissionId) params.set("submission", submissionId);
       else params.delete("submission");
       if (subjectPersonnelId) params.set("personnel", subjectPersonnelId);
@@ -645,26 +645,29 @@ export function FormsWorkspace({ moduleName }: { moduleName: string }) {
   }, []);
 
   /** List payloads omit schemaJson — hydrate from detail when Fill/View/Builder needs fields. */
-  const ensureFormSchema = useCallback(async (formId: string) => {
-    const existing = definitions.find((row) => String(row.id) === formId);
-    const schema = existing?.schemaJson;
-    if (schema && typeof schema === "object" && !Array.isArray(schema)) {
-      const fields = (schema as { fields?: unknown }).fields;
-      const questions = (schema as { questions?: unknown }).questions;
-      if (Array.isArray(fields) || Array.isArray(questions)) return existing!;
-    }
-    const full = await apiGet<Record<string, unknown>>(
-      `${FORMS_API}/${encodeURIComponent(formId)}`,
-    );
-    setDefinitions((prev) => {
-      const index = prev.findIndex((row) => String(row.id) === formId);
-      if (index < 0) return [...prev, full];
-      const next = [...prev];
-      next[index] = { ...next[index], ...full };
-      return next;
-    });
-    return full;
-  }, [definitions]);
+  const ensureFormSchema = useCallback(
+    async (formId: string) => {
+      const existing = definitions.find((row) => String(row.id) === formId);
+      const schema = existing?.schemaJson;
+      if (schema && typeof schema === "object" && !Array.isArray(schema)) {
+        const fields = (schema as { fields?: unknown }).fields;
+        const questions = (schema as { questions?: unknown }).questions;
+        if (Array.isArray(fields) || Array.isArray(questions)) return existing!;
+      }
+      const full = await apiGet<Record<string, unknown>>(
+        `${FORMS_API}/${encodeURIComponent(formId)}`,
+      );
+      setDefinitions((prev) => {
+        const index = prev.findIndex((row) => String(row.id) === formId);
+        if (index < 0) return [...prev, full];
+        const next = [...prev];
+        next[index] = { ...next[index], ...full };
+        return next;
+      });
+      return full;
+    },
+    [definitions],
+  );
 
   useEffect(() => {
     if (!canView) {
@@ -702,9 +705,7 @@ export function FormsWorkspace({ moduleName }: { moduleName: string }) {
     if (row) {
       deepLinkFetchAttempted.current = null;
       const formId = String(row.formDefinitionId ?? selectedFormId ?? "");
-      const form = formId
-        ? (definitions.find((def) => String(def.id) === formId) ?? null)
-        : null;
+      const form = formId ? (definitions.find((def) => String(def.id) === formId) ?? null) : null;
       if (formId && selectedFormId !== formId) setSelectedFormId(formId);
       setAnswers((prev) =>
         Object.keys(prev).length > 0
@@ -725,9 +726,7 @@ export function FormsWorkspace({ moduleName }: { moduleName: string }) {
         );
         if (cancelled) return;
         setSubmissions((prev) =>
-          prev.some((item) => String(item.id) === String(fetched.id))
-            ? prev
-            : [fetched, ...prev],
+          prev.some((item) => String(item.id) === String(fetched.id)) ? prev : [fetched, ...prev],
         );
         const formId = String(fetched.formDefinitionId ?? selectedFormId ?? "");
         if (formId) setSelectedFormId(formId);
@@ -812,11 +811,7 @@ export function FormsWorkspace({ moduleName }: { moduleName: string }) {
       mode,
       formId: mode === "edit" && formId ? formId : null,
       title:
-        mode === "duplicate"
-          ? duplicateFormTitle(baseTitle)
-          : mode === "create"
-            ? ""
-            : baseTitle,
+        mode === "duplicate" ? duplicateFormTitle(baseTitle) : mode === "create" ? "" : baseTitle,
       category: category === "Uncategorized" ? "" : category,
       fields:
         mode === "duplicate"
@@ -866,9 +861,7 @@ export function FormsWorkspace({ moduleName }: { moduleName: string }) {
   function openSubmission(id: string) {
     const row = submissions.find((item) => String(item.id) === id);
     const formId = row ? String(row.formDefinitionId ?? "") : "";
-    const form = formId
-      ? (definitions.find((def) => String(def.id) === formId) ?? null)
-      : null;
+    const form = formId ? (definitions.find((def) => String(def.id) === formId) ?? null) : null;
     setSelectedSubmissionId(id);
     setEditingSubmissionId(id);
     if (formId) setSelectedFormId(formId);
@@ -1114,14 +1107,13 @@ export function FormsWorkspace({ moduleName }: { moduleName: string }) {
           ...(importFormTitle.trim() ? { title: importFormTitle.trim() } : {}),
           ...(importFormCategory.trim() ? { category: importFormCategory.trim() } : {}),
         };
-        const summary =
-          lower.endsWith(".pdf")
-            ? await importFormChecklistFile({
-                filename: file.name,
-                contentBase64: await readFileAsBase64(file),
-                ...overrides,
-              })
-            : await importChecklistUploadFile(file, overrides);
+        const summary = lower.endsWith(".pdf")
+          ? await importFormChecklistFile({
+              filename: file.name,
+              contentBase64: await readFileAsBase64(file),
+              ...overrides,
+            })
+          : await importChecklistUploadFile(file, overrides);
         setImportSummary(summary);
         setImportNotice(
           `Imported ${summary.definitionsUpserted} checklist template(s) with Yes / No / N/A items.`,
@@ -1258,8 +1250,7 @@ export function FormsWorkspace({ moduleName }: { moduleName: string }) {
       {canSignEhsDirector
         ? (() => {
             const pending = submissions.filter(
-              (row) =>
-                String(row.status ?? "").toUpperCase() === FORM_STATUS_PENDING_SIGNATURE,
+              (row) => String(row.status ?? "").toUpperCase() === FORM_STATUS_PENDING_SIGNATURE,
             );
             if (pending.length === 0) return null;
             return (
@@ -1438,9 +1429,16 @@ export function FormsWorkspace({ moduleName }: { moduleName: string }) {
         />
 
         {error ? (
-          <div className="alert alert-danger d-flex flex-wrap align-items-center gap-3" role="alert">
+          <div
+            className="alert alert-danger d-flex flex-wrap align-items-center gap-3"
+            role="alert"
+          >
             <span className="flex-grow-1">{error}</span>
-            <button type="button" className="btn btn-sm btn-outline-danger" onClick={() => void loadAll()}>
+            <button
+              type="button"
+              className="btn btn-sm btn-outline-danger"
+              onClick={() => void loadAll()}
+            >
               Retry
             </button>
           </div>
@@ -1453,7 +1451,10 @@ export function FormsWorkspace({ moduleName }: { moduleName: string }) {
                 Loading forms…
               </p>
             ) : filteredDefinitions.length === 0 ? (
-              <FormsEmptyState icon="bx-file" message="No forms yet. Create one below to start collecting submissions." />
+              <FormsEmptyState
+                icon="bx-file"
+                message="No forms yet. Create one below to start collecting submissions."
+              />
             ) : (
               <div className="table-responsive">
                 <table className="table table-hover mb-0">
@@ -1474,7 +1475,11 @@ export function FormsWorkspace({ moduleName }: { moduleName: string }) {
                       <Fragment key={group.type || "all"}>
                         {group.type ? (
                           <tr className="table-light">
-                            <th scope="rowgroup" colSpan={6} className="small text-uppercase text-muted">
+                            <th
+                              scope="rowgroup"
+                              colSpan={6}
+                              className="small text-uppercase text-muted"
+                            >
                               {group.type}
                               <span className="fw-normal ms-2">({group.items.length})</span>
                             </th>
@@ -1670,7 +1675,9 @@ export function FormsWorkspace({ moduleName }: { moduleName: string }) {
                         <button
                           type="button"
                           className="btn btn-sm btn-outline-primary"
-                          onClick={() => void openBuilderModal(String(selectedForm.id), "duplicate")}
+                          onClick={() =>
+                            void openBuilderModal(String(selectedForm.id), "duplicate")
+                          }
                         >
                           Duplicate &amp; edit
                         </button>
@@ -1704,9 +1711,9 @@ export function FormsWorkspace({ moduleName }: { moduleName: string }) {
                   </div>
                   <div className="card-body">
                     <p className="text-muted small mb-3">
-                      Upload Excel (.xlsx), CSV, or PDF to create a fillable Yes / No / N/A checklist
-                      (notes required when answered No). JSON imports are still supported for
-                      advanced templates.
+                      Upload Excel (.xlsx), CSV, or PDF to create a fillable Yes / No / N/A
+                      checklist (notes required when answered No). JSON imports are still supported
+                      for advanced templates.
                     </p>
                     <div className="row g-2 mb-3">
                       <div className="col-md-6">
@@ -1737,7 +1744,9 @@ export function FormsWorkspace({ moduleName }: { moduleName: string }) {
                       <button
                         type="button"
                         className="btn btn-sm btn-outline-secondary"
-                        onClick={() => downloadJsonFile("form-import-sample.json", SAMPLE_FORM_IMPORT_JSON)}
+                        onClick={() =>
+                          downloadJsonFile("form-import-sample.json", SAMPLE_FORM_IMPORT_JSON)
+                        }
                       >
                         Download sample JSON
                       </button>
@@ -1758,7 +1767,10 @@ export function FormsWorkspace({ moduleName }: { moduleName: string }) {
                         checked={importIncludeSubmissions}
                         onChange={(ev) => setImportIncludeSubmissions(ev.target.checked)}
                       />
-                      <label className="form-check-label small" htmlFor="import-include-submissions">
+                      <label
+                        className="form-check-label small"
+                        htmlFor="import-include-submissions"
+                      >
                         Also import <code>formSubmissions</code> from the file (historical answers)
                       </label>
                     </div>
@@ -1774,7 +1786,9 @@ export function FormsWorkspace({ moduleName }: { moduleName: string }) {
                         aria-label="Upload form file"
                       />
                       <span className="text-muted small">
-                        {importing ? "Importing…" : "Excel: Question column · PDF uses server import"}
+                        {importing
+                          ? "Importing…"
+                          : "Excel: Question column · PDF uses server import"}
                       </span>
                     </div>
                     {importNotice ? (
@@ -1833,8 +1847,7 @@ export function FormsWorkspace({ moduleName }: { moduleName: string }) {
                         ? "Complete the EMPLOYEE fields and submit. Supervisor and Safety Director signatures can be added later."
                         : "Complete the fields and submit to save this record."}
                   </p>
-                  {subjectPersonnelId ||
-                  Object.values(employeePersonnelByField).some(Boolean) ? (
+                  {subjectPersonnelId || Object.values(employeePersonnelByField).some(Boolean) ? (
                     <p className="text-muted small mb-0 mt-1">
                       This submission will attach to the selected personnel file.
                     </p>
@@ -1922,7 +1935,10 @@ export function FormsWorkspace({ moduleName }: { moduleName: string }) {
               )}
             </form>
           ) : (
-            <FormsEmptyState icon="bx-edit" message="Choose a form from the Forms tab to fill it out." />
+            <FormsEmptyState
+              icon="bx-edit"
+              message="Choose a form from the Forms tab to fill it out."
+            />
           )
         ) : null}
 
@@ -1957,7 +1973,11 @@ export function FormsWorkspace({ moduleName }: { moduleName: string }) {
                     <Fragment key={group.type || "all"}>
                       {group.type ? (
                         <tr className="table-light">
-                          <th scope="rowgroup" colSpan={5} className="small text-uppercase text-muted">
+                          <th
+                            scope="rowgroup"
+                            colSpan={5}
+                            className="small text-uppercase text-muted"
+                          >
                             {group.type}
                             <span className="fw-normal ms-2">({group.items.length})</span>
                           </th>

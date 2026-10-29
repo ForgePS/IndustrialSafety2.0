@@ -8,21 +8,21 @@ Identity and tenant come from the authenticated principal. Request bodies must n
 
 ## Jobs
 
-| Method | Path | Permission |
-| --- | --- | --- |
-| POST | `/jobs` | `import.upload` |
-| GET | `/jobs` | `import.view` |
-| GET | `/jobs/:jobId` | `import.view` |
-| PATCH | `/jobs/:jobId` | `import.upload` |
-| POST | `/jobs/:jobId/cancel` | `import.upload` or `import.approve` |
-| POST | `/jobs/:jobId/request-validation` | `import.validate` |
-| POST | `/jobs/:jobId/request-preview` | `import.preview` |
-| POST | `/jobs/:jobId/submit-for-approval` | `import.preview` |
-| POST | `/jobs/:jobId/approve` | `import.approve` |
-| POST | `/jobs/:jobId/reject` | `import.approve` |
-| GET | `/jobs/:jobId/mappings` | `import.view` |
-| PUT | `/jobs/:jobId/mappings` | `import.map` |
-| DELETE | `/jobs/:jobId/mappings/:mappingId` | `import.map` |
+| Method | Path                               | Permission                          |
+| ------ | ---------------------------------- | ----------------------------------- |
+| POST   | `/jobs`                            | `import.upload`                     |
+| GET    | `/jobs`                            | `import.view`                       |
+| GET    | `/jobs/:jobId`                     | `import.view`                       |
+| PATCH  | `/jobs/:jobId`                     | `import.upload`                     |
+| POST   | `/jobs/:jobId/cancel`              | `import.upload` or `import.approve` |
+| POST   | `/jobs/:jobId/request-validation`  | `import.validate`                   |
+| POST   | `/jobs/:jobId/request-preview`     | `import.preview`                    |
+| POST   | `/jobs/:jobId/submit-for-approval` | `import.preview`                    |
+| POST   | `/jobs/:jobId/approve`             | `import.approve`                    |
+| POST   | `/jobs/:jobId/reject`              | `import.approve`                    |
+| GET    | `/jobs/:jobId/mappings`            | `import.view`                       |
+| PUT    | `/jobs/:jobId/mappings`            | `import.map`                        |
+| DELETE | `/jobs/:jobId/mappings/:mappingId` | `import.map`                        |
 
 ### Create job body
 
@@ -36,21 +36,21 @@ Initial status: `READY_FOR_MAPPING`.
 
 ## Profiles
 
-| Method | Path | Permission |
-| --- | --- | --- |
-| POST | `/profiles` | `import.profile.manage` |
-| GET | `/profiles` | `import.view` |
-| GET | `/profiles/:profileId` | `import.view` |
-| PATCH | `/profiles/:profileId` | `import.profile.manage` |
-| POST | `/profiles/:profileId/archive` | `import.profile.manage` |
-| POST | `/profiles/:profileId/restore` | `import.profile.manage` |
+| Method | Path                           | Permission              |
+| ------ | ------------------------------ | ----------------------- |
+| POST   | `/profiles`                    | `import.profile.manage` |
+| GET    | `/profiles`                    | `import.view`           |
+| GET    | `/profiles/:profileId`         | `import.view`           |
+| PATCH  | `/profiles/:profileId`         | `import.profile.manage` |
+| POST   | `/profiles/:profileId/archive` | `import.profile.manage` |
+| POST   | `/profiles/:profileId/restore` | `import.profile.manage` |
 
 ## Templates
 
-| Method | Path | Permission |
-| --- | --- | --- |
-| GET | `/templates` | `import.view` |
-| GET | `/templates/:templateKey` | `import.view` |
+| Method | Path                      | Permission    |
+| ------ | ------------------------- | ------------- |
+| GET    | `/templates`              | `import.view` |
+| GET    | `/templates/:templateKey` | `import.view` |
 
 Returns metadata/schema contracts only (no file generation).
 

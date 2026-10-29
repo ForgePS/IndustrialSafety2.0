@@ -43,13 +43,13 @@ Cognito remains the sole IdP. Server-side session resolution is hardened and cov
 
 ## Verification
 
-| Check | Result |
-| --- | --- |
-| `@forge/auth` unit | 4 passed |
-| Auth security + guard unit | 10 passed |
-| `@forge/platform-api` unit | 61 passed |
-| Typecheck auth + platform-api | PASS |
-| Production operations | NONE |
+| Check                         | Result    |
+| ----------------------------- | --------- |
+| `@forge/auth` unit            | 4 passed  |
+| Auth security + guard unit    | 10 passed |
+| `@forge/platform-api` unit    | 61 passed |
+| Typecheck auth + platform-api | PASS      |
+| Production operations         | NONE      |
 
 ## Next sprint
 

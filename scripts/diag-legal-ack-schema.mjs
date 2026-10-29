@@ -36,9 +36,11 @@ async function main() {
     `;
     const journal = await sql`
       select * from drizzle.__drizzle_migrations order by created_at desc limit 15
-    `.catch(async () => {
-      return sql`select id, hash, created_at from drizzle.__drizzle_migrations order by created_at desc limit 15`;
-    }).catch(() => []);
+    `
+      .catch(async () => {
+        return sql`select id, hash, created_at from drizzle.__drizzle_migrations order by created_at desc limit 15`;
+      })
+      .catch(() => []);
 
     let probe = null;
     try {

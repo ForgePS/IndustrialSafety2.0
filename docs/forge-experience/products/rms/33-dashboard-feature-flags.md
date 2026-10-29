@@ -2,9 +2,9 @@
 
 **Date:** 2026-07-30
 
-| Flag | Default | Scope | Notes |
-| --- | --- | --- | --- |
-| `fx.rms.dashboard.enabled` | false | tenant / env / session override | Independent of shell/nav |
+| Flag                       | Default | Scope                           | Notes                    |
+| -------------------------- | ------- | ------------------------------- | ------------------------ |
+| `fx.rms.dashboard.enabled` | false   | tenant / env / session override | Independent of shell/nav |
 
 Resolver: `resolveRmsFxDashboardFlag` — platform-admin wildcard does **not** auto-enable.
 

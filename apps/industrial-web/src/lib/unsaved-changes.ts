@@ -14,8 +14,7 @@ const IGNORE_SELECTOR = [
   ".authentication-wrapper",
 ].join(",");
 
-const SAVE_LABEL_RE =
-  /\b(save|create|update|add|invite|submit|publish|send|confirm|record)\b/i;
+const SAVE_LABEL_RE = /\b(save|create|update|add|invite|submit|publish|send|confirm|record)\b/i;
 const FILTER_LABEL_RE = /\b(filter|search|clear)\b/i;
 
 export function notifyUnsavedChange(): void {

@@ -9,7 +9,9 @@ export type SeasonalLifecycleBadge = {
   kind: SeasonalLifecycleBadgeKind;
 };
 
-export function isSeasonalLifecycleEnabled(flags: Record<string, boolean> | null | undefined): boolean {
+export function isSeasonalLifecycleEnabled(
+  flags: Record<string, boolean> | null | undefined,
+): boolean {
   return Boolean(flags?.[SEASONAL_LIFECYCLE_FLAG]);
 }
 

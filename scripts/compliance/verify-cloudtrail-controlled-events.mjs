@@ -34,7 +34,14 @@ async function main() {
 
   const readOnly = runAws(["sts", "get-caller-identity"], args);
   const accessDenied = runAws(
-    ["s3api", "get-object", "--bucket", "forge-nonexistent-bucket-access-denied-test", "--key", "x"],
+    [
+      "s3api",
+      "get-object",
+      "--bucket",
+      "forge-nonexistent-bucket-access-denied-test",
+      "--key",
+      "x",
+    ],
     args,
   );
   const iamSim = runAws(

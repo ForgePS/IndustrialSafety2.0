@@ -116,7 +116,14 @@ export async function composeQrLinkStickerBlob(
       cursor += blockGap;
       ctx.fillStyle = "#111111";
       ctx.font = `bold ${descLabelSize}px Arial, Helvetica, sans-serif`;
-      drawCenteredLines(ctx, descLabelLines, width / 2, cursor + descLabelSize, descLabelSize, lineGap);
+      drawCenteredLines(
+        ctx,
+        descLabelLines,
+        width / 2,
+        cursor + descLabelSize,
+        descLabelSize,
+        lineGap,
+      );
       cursor += blockHeight(descLabelLines.length, descLabelSize, lineGap);
       if (descBodyLines.length > 0) {
         cursor += lineGap;

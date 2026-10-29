@@ -43,11 +43,7 @@ function encodeJpegDataUrl(bitmap: ImageBitmap, maxDim: number, quality: number)
   return canvas.toDataURL("image/jpeg", quality);
 }
 
-function canvasToBlob(
-  bitmap: ImageBitmap,
-  maxDim: number,
-  quality: number,
-): Promise<Blob> {
+function canvasToBlob(bitmap: ImageBitmap, maxDim: number, quality: number): Promise<Blob> {
   const scale = Math.min(1, maxDim / Math.max(bitmap.width, bitmap.height));
   const width = Math.max(1, Math.round(bitmap.width * scale));
   const height = Math.max(1, Math.round(bitmap.height * scale));
@@ -147,9 +143,7 @@ export async function compressImageToUploadFile(
   }
   if (isPdfFile(file) || !isLikelyImageFile(file)) {
     if (file.size > maxBytes) {
-      throw new Error(
-        `File must be ${Math.round(maxBytes / (1024 * 1024))} MB or smaller.`,
-      );
+      throw new Error(`File must be ${Math.round(maxBytes / (1024 * 1024))} MB or smaller.`);
     }
     return file;
   }
@@ -172,7 +166,10 @@ export async function compressImageToUploadFile(
     for (const step of IMAGE_COMPRESS_STEPS) {
       lastBlob = await canvasToBlob(bitmap, step.maxDim, step.quality);
       if (lastBlob.size <= targetBytes) break;
-      if (lastBlob.size <= maxBytes && step === IMAGE_COMPRESS_STEPS[IMAGE_COMPRESS_STEPS.length - 1]) {
+      if (
+        lastBlob.size <= maxBytes &&
+        step === IMAGE_COMPRESS_STEPS[IMAGE_COMPRESS_STEPS.length - 1]
+      ) {
         break;
       }
     }
@@ -190,7 +187,10 @@ export async function compressImageToUploadFile(
   }
 }
 
-export function imageCompressErrorMessage(err: unknown, fallback = "Unable to read that image."): string {
+export function imageCompressErrorMessage(
+  err: unknown,
+  fallback = "Unable to read that image.",
+): string {
   if (err instanceof Error) {
     if (err.message === "IMAGE_TOO_LARGE") {
       return "Image is too large after compression. Try a clearer, closer photo.";

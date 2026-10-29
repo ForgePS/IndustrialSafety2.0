@@ -23,16 +23,16 @@
 
 ## Triage checklist
 
-| Step | Action |
-| --- | --- |
-| 1 | Capture `requestId` and `correlationId` from the error body |
-| 2 | Confirm environment: production-like envs reject `x-forge-dev-principal` |
-| 3 | Check token expiry and clock skew on client |
-| 4 | Verify Cognito app client id matches deployed `COGNITO_CLIENT_ID` |
-| 5 | Query identity link: authentication_identities row for provider COGNITO + subject |
-| 6 | Check user status (DISABLED?) and `sessions_revoked_at` vs token `iat` |
-| 7 | Check membership status for requested tenant (must be ACTIVE) |
-| 8 | Check tenant status (ACTIVE for non-admin select-tenant) |
+| Step | Action                                                                            |
+| ---- | --------------------------------------------------------------------------------- |
+| 1    | Capture `requestId` and `correlationId` from the error body                       |
+| 2    | Confirm environment: production-like envs reject `x-forge-dev-principal`          |
+| 3    | Check token expiry and clock skew on client                                       |
+| 4    | Verify Cognito app client id matches deployed `COGNITO_CLIENT_ID`                 |
+| 5    | Query identity link: authentication_identities row for provider COGNITO + subject |
+| 6    | Check user status (DISABLED?) and `sessions_revoked_at` vs token `iat`            |
+| 7    | Check membership status for requested tenant (must be ACTIVE)                     |
+| 8    | Check tenant status (ACTIVE for non-admin select-tenant)                          |
 
 ## Common causes and fixes
 

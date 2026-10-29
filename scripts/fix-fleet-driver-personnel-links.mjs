@@ -63,7 +63,9 @@ function legacyKeys(payload) {
 }
 
 function normalizeEmployeeNumber(value) {
-  let s = String(value ?? "").trim().toUpperCase();
+  let s = String(value ?? "")
+    .trim()
+    .toUpperCase();
   if (!s) return "";
   s = s.replace(/^EMP[-_\s]*/i, "");
   if (/^\d+$/.test(s)) s = String(Number(s));

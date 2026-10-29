@@ -16,23 +16,41 @@ const TAB_ROOT_BACK: Record<string, BackTarget> = {
 
 const BACK_OVERRIDES: Array<{ test: (path: string) => boolean; target: BackTarget }> = [
   { test: (p) => p === "/training/", target: { href: "/tasks/", label: "My Work" } },
-  { test: (p) => /^\/training\/[^/]+\/$/.test(p), target: { href: "/training/", label: "My Training" } },
-  { test: (p) => p.startsWith("/report/") && p !== "/report/", target: { href: "/report/", label: "Report" } },
+  {
+    test: (p) => /^\/training\/[^/]+\/$/.test(p),
+    target: { href: "/training/", label: "My Training" },
+  },
+  {
+    test: (p) => p.startsWith("/report/") && p !== "/report/",
+    target: { href: "/report/", label: "Report" },
+  },
   {
     test: (p) => p.startsWith("/more/loto/") && p !== "/more/loto/",
     target: { href: "/more/loto/", label: "LOTO" },
   },
   { test: (p) => p.startsWith("/more/") && p !== "/more/", target: { href: "/me/", label: "Me" } },
-  { test: (p) => p.startsWith("/scan/sanitation-"), target: { href: "/sanitation/", label: "Sanitation" } },
-  { test: (p) => p.startsWith("/scan/") && p !== "/scan/", target: { href: "/scan/", label: "Scan" } },
-  { test: (p) => p.startsWith("/tasks/") && p !== "/tasks/", target: { href: "/tasks/", label: "My Work" } },
+  {
+    test: (p) => p.startsWith("/scan/sanitation-"),
+    target: { href: "/sanitation/", label: "Sanitation" },
+  },
+  {
+    test: (p) => p.startsWith("/scan/") && p !== "/scan/",
+    target: { href: "/scan/", label: "Scan" },
+  },
+  {
+    test: (p) => p.startsWith("/tasks/") && p !== "/tasks/",
+    target: { href: "/tasks/", label: "My Work" },
+  },
   { test: (p) => p.startsWith("/corrective/"), target: { href: "/tasks/", label: "My Work" } },
   { test: (p) => p.startsWith("/equipment/"), target: { href: "/scan/", label: "Scan" } },
   { test: (p) => p.startsWith("/loto/"), target: { href: "/more/loto/", label: "LOTO" } },
   { test: (p) => p.startsWith("/location/"), target: { href: "/scan/", label: "Scan" } },
   { test: (p) => p.startsWith("/forms/"), target: { href: "/scan/", label: "Scan" } },
   { test: (p) => p.startsWith("/jsa/") && p !== "/jsa/", target: { href: "/jsa/", label: "JSA" } },
-  { test: (p) => p === "/jsa/" || p === "/workflows/", target: { href: "/workflows/", label: "Workflows" } },
+  {
+    test: (p) => p === "/jsa/" || p === "/workflows/",
+    target: { href: "/workflows/", label: "Workflows" },
+  },
   { test: (p) => p.startsWith("/workflows/"), target: { href: "/me/", label: "Me" } },
   { test: (p) => p === "/messaging/", target: { href: "/me/", label: "Me" } },
   { test: (p) => p.startsWith("/messaging/"), target: { href: "/messaging/", label: "Messages" } },

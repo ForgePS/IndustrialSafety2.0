@@ -154,7 +154,9 @@ try {
     const emp = normalizeEmp(empRaw);
     const name =
       asText(row.title) ||
-      asText(payload.driverName || payload.workerName || payload.displayName || payload.personnelName);
+      asText(
+        payload.driverName || payload.workerName || payload.displayName || payload.personnelName,
+      );
     const nameKey = normalizePersonKey(name);
     const cdl = asText(payload.cdlNumber || payload.licenseNumber || payload.details?.cdlNumber);
 
@@ -195,7 +197,8 @@ try {
   const withoutPid = drivers.filter((d) => !d.personnelId).length;
   const withEmp = drivers.filter((d) => d.empRaw).length;
   const empWouldMatch = drivers.filter(
-    (d) => !d.personnelId && (d.matchHow === "employee_normalized" || d.matchHow === "employee_raw"),
+    (d) =>
+      !d.personnelId && (d.matchHow === "employee_normalized" || d.matchHow === "employee_raw"),
   ).length;
   const nameWouldMatch = drivers.filter(
     (d) => !d.personnelId && (d.matchHow === "name_key" || d.matchHow === "name_full"),
@@ -204,8 +207,9 @@ try {
 
   const workbookish = drivers.filter(
     (d) =>
-      String(d.sourceCollection || "").toLowerCase().includes("dqf") ||
-      String(d.sourceCollection || "").toLowerCase() === "dqfworkbookimport",
+      String(d.sourceCollection || "")
+        .toLowerCase()
+        .includes("dqf") || String(d.sourceCollection || "").toLowerCase() === "dqfworkbookimport",
   );
 
   console.log(

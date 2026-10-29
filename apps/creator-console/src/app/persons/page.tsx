@@ -130,9 +130,7 @@ function PersonsInner() {
       <div className={styles.panel}>
         <h2>Persons</h2>
         {loading ? <p className={styles.muted}>Loading…</p> : null}
-        {!loading && items.length === 0 ? (
-          <p className={styles.muted}>No persons yet.</p>
-        ) : null}
+        {!loading && items.length === 0 ? <p className={styles.muted}>No persons yet.</p> : null}
         {items.length > 0 ? (
           <table className={styles.table}>
             <thead>

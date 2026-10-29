@@ -30,11 +30,7 @@ import { z } from "zod";
 import { DATABASE } from "../../tokens.js";
 import { AuditService } from "../audit/audit.service.js";
 import { OutboxService } from "../outbox/outbox.service.js";
-import {
-  CONFIG_METRICS,
-  emitConfigMetric,
-  isRlsDenialError,
-} from "./configuration-metrics.js";
+import { CONFIG_METRICS, emitConfigMetric, isRlsDenialError } from "./configuration-metrics.js";
 
 const putSchema = z.object({
   value: z.unknown(),
@@ -174,10 +170,7 @@ export class ConfigurationService {
   async listNamespace(tenantId: string, namespace: string) {
     return withTenantTransaction(this.db, tenantId, async (tx) => {
       return tx.query.tenantSettings.findMany({
-        where: and(
-          eq(tenantSettings.tenantId, tenantId),
-          eq(tenantSettings.namespace, namespace),
-        ),
+        where: and(eq(tenantSettings.tenantId, tenantId), eq(tenantSettings.namespace, namespace)),
       });
     });
   }
@@ -190,75 +183,80 @@ export class ConfigurationService {
     principal: ForgePrincipal,
   ) {
     const data = putSchema.parse(input);
-    return withTenantTransaction(this.db, tenantId, async (tx) => {
-      const existing = await tx.query.tenantSettings.findFirst({
-        where: and(
-          eq(tenantSettings.tenantId, tenantId),
-          eq(tenantSettings.namespace, namespace),
-          eq(tenantSettings.settingKey, key),
-        ),
-      });
-      const now = new Date();
-      let row;
-      if (existing) {
-        [row] = await tx
-          .update(tenantSettings)
-          .set({
-            valueJson: data.value as object,
-            isSensitive: data.isSensitive ?? existing.isSensitive,
-            schemaVersion: data.schemaVersion ?? existing.schemaVersion,
-            recordVersion: sql`${tenantSettings.recordVersion} + 1`,
-            updatedAt: now,
-            updatedByUserId: principal.userId,
-          })
-          .where(eq(tenantSettings.id, existing.id))
-          .returning();
-      } else {
-        [row] = await tx
-          .insert(tenantSettings)
-          .values({
-            id: createId(),
-            tenantId,
-            namespace,
-            settingKey: key,
-            valueJson: data.value as object,
-            schemaVersion: data.schemaVersion ?? 1,
-            isSensitive: data.isSensitive ?? false,
-            createdAt: now,
-            updatedAt: now,
-            updatedByUserId: principal.userId,
-          })
-          .returning();
-      }
-      if (!row) {
-        throw new ForgeError("INTERNAL_ERROR", "Failed to upsert tenant setting");
-      }
+    return withTenantTransaction(
+      this.db,
+      tenantId,
+      async (tx) => {
+        const existing = await tx.query.tenantSettings.findFirst({
+          where: and(
+            eq(tenantSettings.tenantId, tenantId),
+            eq(tenantSettings.namespace, namespace),
+            eq(tenantSettings.settingKey, key),
+          ),
+        });
+        const now = new Date();
+        let row;
+        if (existing) {
+          [row] = await tx
+            .update(tenantSettings)
+            .set({
+              valueJson: data.value as object,
+              isSensitive: data.isSensitive ?? existing.isSensitive,
+              schemaVersion: data.schemaVersion ?? existing.schemaVersion,
+              recordVersion: sql`${tenantSettings.recordVersion} + 1`,
+              updatedAt: now,
+              updatedByUserId: principal.userId,
+            })
+            .where(eq(tenantSettings.id, existing.id))
+            .returning();
+        } else {
+          [row] = await tx
+            .insert(tenantSettings)
+            .values({
+              id: createId(),
+              tenantId,
+              namespace,
+              settingKey: key,
+              valueJson: data.value as object,
+              schemaVersion: data.schemaVersion ?? 1,
+              isSensitive: data.isSensitive ?? false,
+              createdAt: now,
+              updatedAt: now,
+              updatedByUserId: principal.userId,
+            })
+            .returning();
+        }
+        if (!row) {
+          throw new ForgeError("INTERNAL_ERROR", "Failed to upsert tenant setting");
+        }
 
-      await this.outbox.write(tx, {
-        tenantId,
-        aggregateType: "tenant_setting",
-        aggregateId: row.id,
-        eventType: DOMAIN_EVENT_TYPES.CONFIGURATION_CHANGED,
-        payload: { tenantId, namespace, key },
-        correlationId: principal.correlationId,
-        actorUserId: principal.userId,
-      });
-      await this.audit.writeInTransaction(tx, {
-        tenantId,
-        actorUserId: principal.userId,
-        actorPersonId: principal.personId,
-        actorType: "USER",
-        action: "configuration.put",
-        resourceType: "tenant_setting",
-        resourceId: row.id,
-        result: "SUCCESS",
-        riskLevel: "MEDIUM",
-        correlationId: principal.correlationId,
-        requestId: principal.requestId,
-        after: row.isSensitive ? { namespace, key, isSensitive: true } : row,
-      });
-      return row;
-    }, principal.userId);
+        await this.outbox.write(tx, {
+          tenantId,
+          aggregateType: "tenant_setting",
+          aggregateId: row.id,
+          eventType: DOMAIN_EVENT_TYPES.CONFIGURATION_CHANGED,
+          payload: { tenantId, namespace, key },
+          correlationId: principal.correlationId,
+          actorUserId: principal.userId,
+        });
+        await this.audit.writeInTransaction(tx, {
+          tenantId,
+          actorUserId: principal.userId,
+          actorPersonId: principal.personId,
+          actorType: "USER",
+          action: "configuration.put",
+          resourceType: "tenant_setting",
+          resourceId: row.id,
+          result: "SUCCESS",
+          riskLevel: "MEDIUM",
+          correlationId: principal.correlationId,
+          requestId: principal.requestId,
+          after: row.isSensitive ? { namespace, key, isSensitive: true } : row,
+        });
+        return row;
+      },
+      principal.userId,
+    );
   }
 
   listCatalog() {
@@ -290,8 +288,7 @@ export class ConfigurationService {
     const created: string[] = [];
     for (const namespace of CONFIG_NAMESPACES) {
       const isCreator =
-        principal.isPlatformAdmin ||
-        principal.permissions.has("platform.configuration.update");
+        principal.isPlatformAdmin || principal.permissions.has("platform.configuration.update");
       if (!isCreator && !TENANT_ADMIN_NAMESPACES.includes(namespace)) continue;
       const existing = await this.listStudioObjects(tenantId, namespace, principal);
       if (existing.items.length > 0) continue;
@@ -336,76 +333,81 @@ export class ConfigurationService {
     const now = new Date();
 
     try {
-    return await withTenantTransaction(this.db, tenantId, async (tx) => {
-      let object = await tx.query.configObjects.findFirst({
-        where: and(
-          eq(configObjects.tenantId, tenantId),
-          eq(configObjects.namespace, ns),
-          eq(configObjects.objectKey, input.objectKey),
-        ),
-      });
-      if (!object) {
-        const objectId = createId();
-        [object] = await tx
-          .insert(configObjects)
-          .values({
-            id: objectId,
-            tenantId,
-            namespace: ns,
-            objectKey: input.objectKey,
-            displayName: input.displayName ?? CONFIG_NAMESPACE_LABELS[ns],
-            createdAt: now,
-            updatedAt: now,
-          })
-          .returning();
-      }
-      if (!object) {
-        throw new ForgeError("INTERNAL_ERROR", "Failed to create config object");
-      }
-
-      const latest = await tx.query.configVersions.findFirst({
-        where: eq(configVersions.objectId, object.id),
-        orderBy: [desc(configVersions.version)],
-      });
-      const nextVersion = (latest?.version ?? 0) + 1;
-      const versionId = createId();
-      const [version] = await tx
-        .insert(configVersions)
-        .values({
-          id: versionId,
-          tenantId,
-          objectId: object.id,
-          version: nextVersion,
-          state: "DRAFT",
-          payloadJson: payload as object,
-          contentHash,
-          changeSummary: input.changeSummary ?? null,
-          createdByUserId: principal.userId,
-          createdAt: now,
-          updatedAt: now,
-        })
-        .returning();
-      if (!version) {
-        throw new ForgeError("INTERNAL_ERROR", "Failed to create draft version");
-      }
-
-      await this.audit.writeInTransaction(tx, {
+      return await withTenantTransaction(
+        this.db,
         tenantId,
-        actorUserId: principal.userId,
-        actorPersonId: principal.personId,
-        actorType: "USER",
-        action: "configuration.draft.create",
-        resourceType: "config_version",
-        resourceId: version.id,
-        result: "SUCCESS",
-        riskLevel: "MEDIUM",
-        correlationId: principal.correlationId,
-        requestId: principal.requestId,
-        after: { namespace: ns, objectKey: object.objectKey, version: version.version },
-      });
+        async (tx) => {
+          let object = await tx.query.configObjects.findFirst({
+            where: and(
+              eq(configObjects.tenantId, tenantId),
+              eq(configObjects.namespace, ns),
+              eq(configObjects.objectKey, input.objectKey),
+            ),
+          });
+          if (!object) {
+            const objectId = createId();
+            [object] = await tx
+              .insert(configObjects)
+              .values({
+                id: objectId,
+                tenantId,
+                namespace: ns,
+                objectKey: input.objectKey,
+                displayName: input.displayName ?? CONFIG_NAMESPACE_LABELS[ns],
+                createdAt: now,
+                updatedAt: now,
+              })
+              .returning();
+          }
+          if (!object) {
+            throw new ForgeError("INTERNAL_ERROR", "Failed to create config object");
+          }
 
-      return { object, version };
-    }, principal.userId);
+          const latest = await tx.query.configVersions.findFirst({
+            where: eq(configVersions.objectId, object.id),
+            orderBy: [desc(configVersions.version)],
+          });
+          const nextVersion = (latest?.version ?? 0) + 1;
+          const versionId = createId();
+          const [version] = await tx
+            .insert(configVersions)
+            .values({
+              id: versionId,
+              tenantId,
+              objectId: object.id,
+              version: nextVersion,
+              state: "DRAFT",
+              payloadJson: payload as object,
+              contentHash,
+              changeSummary: input.changeSummary ?? null,
+              createdByUserId: principal.userId,
+              createdAt: now,
+              updatedAt: now,
+            })
+            .returning();
+          if (!version) {
+            throw new ForgeError("INTERNAL_ERROR", "Failed to create draft version");
+          }
+
+          await this.audit.writeInTransaction(tx, {
+            tenantId,
+            actorUserId: principal.userId,
+            actorPersonId: principal.personId,
+            actorType: "USER",
+            action: "configuration.draft.create",
+            resourceType: "config_version",
+            resourceId: version.id,
+            result: "SUCCESS",
+            riskLevel: "MEDIUM",
+            correlationId: principal.correlationId,
+            requestId: principal.requestId,
+            after: { namespace: ns, objectKey: object.objectKey, version: version.version },
+          });
+
+          return { object, version };
+        },
+        principal.userId,
+      );
     } catch (error) {
       rethrowConfigDbError(error);
     }
@@ -469,53 +471,55 @@ export class ConfigurationService {
     const contentHash = hashConfigPayload(payload);
     const now = new Date();
 
-    return withTenantTransaction(this.db, tenantId, async (tx) => {
-      const object = await this.requireObject(tx, tenantId, ns, objectKey);
-      const version = await tx.query.configVersions.findFirst({
-        where: and(
-          eq(configVersions.id, versionId),
-          eq(configVersions.objectId, object.id),
-        ),
-      });
-      if (!version) {
-        throw new ForgeError("NOT_FOUND", "Config version not found");
-      }
-      if (version.state !== "DRAFT") {
-        throw new ForgeError("CONFLICT", "Only DRAFT versions can be patched");
-      }
-      if (input.displayName) {
-        await tx
-          .update(configObjects)
-          .set({ displayName: input.displayName, updatedAt: now })
-          .where(eq(configObjects.id, object.id));
-      }
-      const [updated] = await tx
-        .update(configVersions)
-        .set({
-          payloadJson: payload as object,
-          contentHash,
-          changeSummary: input.changeSummary ?? version.changeSummary,
-          updatedAt: now,
-          recordVersion: sql`${configVersions.recordVersion} + 1`,
-        })
-        .where(eq(configVersions.id, version.id))
-        .returning();
-      await this.audit.writeInTransaction(tx, {
-        tenantId,
-        actorUserId: principal.userId,
-        actorPersonId: principal.personId,
-        actorType: "USER",
-        action: "configuration.draft.patch",
-        resourceType: "config_version",
-        resourceId: version.id,
-        result: "SUCCESS",
-        riskLevel: "MEDIUM",
-        correlationId: principal.correlationId,
-        requestId: principal.requestId,
-        after: { contentHash },
-      });
-      return { object, version: updated };
-    }, principal.userId);
+    return withTenantTransaction(
+      this.db,
+      tenantId,
+      async (tx) => {
+        const object = await this.requireObject(tx, tenantId, ns, objectKey);
+        const version = await tx.query.configVersions.findFirst({
+          where: and(eq(configVersions.id, versionId), eq(configVersions.objectId, object.id)),
+        });
+        if (!version) {
+          throw new ForgeError("NOT_FOUND", "Config version not found");
+        }
+        if (version.state !== "DRAFT") {
+          throw new ForgeError("CONFLICT", "Only DRAFT versions can be patched");
+        }
+        if (input.displayName) {
+          await tx
+            .update(configObjects)
+            .set({ displayName: input.displayName, updatedAt: now })
+            .where(eq(configObjects.id, object.id));
+        }
+        const [updated] = await tx
+          .update(configVersions)
+          .set({
+            payloadJson: payload as object,
+            contentHash,
+            changeSummary: input.changeSummary ?? version.changeSummary,
+            updatedAt: now,
+            recordVersion: sql`${configVersions.recordVersion} + 1`,
+          })
+          .where(eq(configVersions.id, version.id))
+          .returning();
+        await this.audit.writeInTransaction(tx, {
+          tenantId,
+          actorUserId: principal.userId,
+          actorPersonId: principal.personId,
+          actorType: "USER",
+          action: "configuration.draft.patch",
+          resourceType: "config_version",
+          resourceId: version.id,
+          result: "SUCCESS",
+          riskLevel: "MEDIUM",
+          correlationId: principal.correlationId,
+          requestId: principal.requestId,
+          after: { contentHash },
+        });
+        return { object, version: updated };
+      },
+      principal.userId,
+    );
   }
 
   async publish(
@@ -533,78 +537,83 @@ export class ConfigurationService {
     const now = new Date();
 
     try {
-    return await withTenantTransaction(this.db, tenantId, async (tx) => {
-      const object = await this.requireObject(tx, tenantId, ns, objectKey);
-      const version = await this.requireVersion(tx, tenantId, object.id, versionId);
-      if (version.state !== "DRAFT" && version.state !== "SCHEDULED") {
-        throw new ForgeError("CONFLICT", "Only DRAFT or SCHEDULED versions can be published");
-      }
-      assertTransition(version.state as ConfigVersionState, "PUBLISHED");
-
-      const currentPublished = await tx.query.configVersions.findFirst({
-        where: and(
-          eq(configVersions.objectId, object.id),
-          eq(configVersions.state, "PUBLISHED"),
-        ),
-      });
-      if (currentPublished) {
-        await tx
-          .update(configVersions)
-          .set({
-            state: "SUPERSEDED",
-            effectiveTo: now,
-            updatedAt: now,
-          })
-          .where(eq(configVersions.id, currentPublished.id));
-      }
-
-      const [published] = await tx
-        .update(configVersions)
-        .set({
-          state: "PUBLISHED",
-          publishedAt: now,
-          effectiveFrom: version.effectiveFrom ?? now,
-          publishedByUserId: principal.userId,
-          supersedesVersionId: currentPublished?.id ?? null,
-          updatedAt: now,
-        })
-        .where(eq(configVersions.id, version.id))
-        .returning();
-
-      await tx
-        .update(configObjects)
-        .set({
-          currentPublishedVersionId: version.id,
-          updatedAt: now,
-          recordVersion: sql`${configObjects.recordVersion} + 1`,
-        })
-        .where(eq(configObjects.id, object.id));
-
-      await this.outbox.write(tx, {
+      return await withTenantTransaction(
+        this.db,
         tenantId,
-        aggregateType: "config_object",
-        aggregateId: object.id,
-        eventType: DOMAIN_EVENT_TYPES.CONFIGURATION_VERSION_PUBLISHED,
-        payload: { tenantId, namespace: ns, objectKey, versionId: version.id },
-        correlationId: principal.correlationId,
-        actorUserId: principal.userId,
-      });
-      await this.audit.writeInTransaction(tx, {
-        tenantId,
-        actorUserId: principal.userId,
-        actorPersonId: principal.personId,
-        actorType: "USER",
-        action: "configuration.publish",
-        resourceType: "config_version",
-        resourceId: version.id,
-        result: "SUCCESS",
-        riskLevel: "HIGH",
-        correlationId: principal.correlationId,
-        requestId: principal.requestId,
-        after: { state: "PUBLISHED", supersedes: currentPublished?.id ?? null },
-      });
-      return { object, version: published };
-    }, principal.userId);
+        async (tx) => {
+          const object = await this.requireObject(tx, tenantId, ns, objectKey);
+          const version = await this.requireVersion(tx, tenantId, object.id, versionId);
+          if (version.state !== "DRAFT" && version.state !== "SCHEDULED") {
+            throw new ForgeError("CONFLICT", "Only DRAFT or SCHEDULED versions can be published");
+          }
+          assertTransition(version.state as ConfigVersionState, "PUBLISHED");
+
+          const currentPublished = await tx.query.configVersions.findFirst({
+            where: and(
+              eq(configVersions.objectId, object.id),
+              eq(configVersions.state, "PUBLISHED"),
+            ),
+          });
+          if (currentPublished) {
+            await tx
+              .update(configVersions)
+              .set({
+                state: "SUPERSEDED",
+                effectiveTo: now,
+                updatedAt: now,
+              })
+              .where(eq(configVersions.id, currentPublished.id));
+          }
+
+          const [published] = await tx
+            .update(configVersions)
+            .set({
+              state: "PUBLISHED",
+              publishedAt: now,
+              effectiveFrom: version.effectiveFrom ?? now,
+              publishedByUserId: principal.userId,
+              supersedesVersionId: currentPublished?.id ?? null,
+              updatedAt: now,
+            })
+            .where(eq(configVersions.id, version.id))
+            .returning();
+
+          await tx
+            .update(configObjects)
+            .set({
+              currentPublishedVersionId: version.id,
+              updatedAt: now,
+              recordVersion: sql`${configObjects.recordVersion} + 1`,
+            })
+            .where(eq(configObjects.id, object.id));
+
+          await this.outbox.write(tx, {
+            tenantId,
+            aggregateType: "config_object",
+            aggregateId: object.id,
+            eventType: DOMAIN_EVENT_TYPES.CONFIGURATION_VERSION_PUBLISHED,
+            payload: { tenantId, namespace: ns, objectKey, versionId: version.id },
+            correlationId: principal.correlationId,
+            actorUserId: principal.userId,
+          });
+          await this.audit.writeInTransaction(tx, {
+            tenantId,
+            actorUserId: principal.userId,
+            actorPersonId: principal.personId,
+            actorType: "USER",
+            action: "configuration.publish",
+            resourceType: "config_version",
+            resourceId: version.id,
+            result: "SUCCESS",
+            riskLevel: "HIGH",
+            correlationId: principal.correlationId,
+            requestId: principal.requestId,
+            after: { state: "PUBLISHED", supersedes: currentPublished?.id ?? null },
+          });
+          return { object, version: published };
+        },
+        principal.userId,
+      );
     } catch (error) {
       if (!(error instanceof ForgeError && error.code === "FORBIDDEN")) {
         emitConfigMetric(CONFIG_METRICS.PublishFailures);
@@ -643,49 +652,54 @@ export class ConfigurationService {
     }
     const now = new Date();
 
-    return withTenantTransaction(this.db, tenantId, async (tx) => {
-      const object = await this.requireObject(tx, tenantId, ns, objectKey);
-      const version = await this.requireVersion(tx, tenantId, object.id, versionId);
-      if (version.state !== "DRAFT") {
-        throw new ForgeError("CONFLICT", "Only DRAFT versions can be scheduled");
-      }
-      assertTransition("DRAFT", "SCHEDULED");
-      const [scheduled] = await tx
-        .update(configVersions)
-        .set({
-          state: "SCHEDULED",
-          scheduledFor: effectiveFrom,
-          effectiveFrom,
-          changeSummary: input.changeSummary ?? version.changeSummary,
-          updatedAt: now,
-        })
-        .where(eq(configVersions.id, version.id))
-        .returning();
-      await this.outbox.write(tx, {
-        tenantId,
-        aggregateType: "config_object",
-        aggregateId: object.id,
-        eventType: DOMAIN_EVENT_TYPES.CONFIGURATION_VERSION_SCHEDULED,
-        payload: { tenantId, namespace: ns, objectKey, versionId, effectiveFrom },
-        correlationId: principal.correlationId,
-        actorUserId: principal.userId,
-      });
-      await this.audit.writeInTransaction(tx, {
-        tenantId,
-        actorUserId: principal.userId,
-        actorPersonId: principal.personId,
-        actorType: "USER",
-        action: "configuration.schedule",
-        resourceType: "config_version",
-        resourceId: version.id,
-        result: "SUCCESS",
-        riskLevel: "HIGH",
-        correlationId: principal.correlationId,
-        requestId: principal.requestId,
-        after: { state: "SCHEDULED", effectiveFrom },
-      });
-      return { object, version: scheduled };
-    }, principal.userId);
+    return withTenantTransaction(
+      this.db,
+      tenantId,
+      async (tx) => {
+        const object = await this.requireObject(tx, tenantId, ns, objectKey);
+        const version = await this.requireVersion(tx, tenantId, object.id, versionId);
+        if (version.state !== "DRAFT") {
+          throw new ForgeError("CONFLICT", "Only DRAFT versions can be scheduled");
+        }
+        assertTransition("DRAFT", "SCHEDULED");
+        const [scheduled] = await tx
+          .update(configVersions)
+          .set({
+            state: "SCHEDULED",
+            scheduledFor: effectiveFrom,
+            effectiveFrom,
+            changeSummary: input.changeSummary ?? version.changeSummary,
+            updatedAt: now,
+          })
+          .where(eq(configVersions.id, version.id))
+          .returning();
+        await this.outbox.write(tx, {
+          tenantId,
+          aggregateType: "config_object",
+          aggregateId: object.id,
+          eventType: DOMAIN_EVENT_TYPES.CONFIGURATION_VERSION_SCHEDULED,
+          payload: { tenantId, namespace: ns, objectKey, versionId, effectiveFrom },
+          correlationId: principal.correlationId,
+          actorUserId: principal.userId,
+        });
+        await this.audit.writeInTransaction(tx, {
+          tenantId,
+          actorUserId: principal.userId,
+          actorPersonId: principal.personId,
+          actorType: "USER",
+          action: "configuration.schedule",
+          resourceType: "config_version",
+          resourceId: version.id,
+          result: "SUCCESS",
+          riskLevel: "HIGH",
+          correlationId: principal.correlationId,
+          requestId: principal.requestId,
+          after: { state: "SCHEDULED", effectiveFrom },
+        });
+        return { object, version: scheduled };
+      },
+      principal.userId,
+    );
   }
 
   async archive(
@@ -702,50 +716,55 @@ export class ConfigurationService {
     assertNamespacePublishAccess(principal, ns);
     const now = new Date();
 
-    return withTenantTransaction(this.db, tenantId, async (tx) => {
-      const object = await this.requireObject(tx, tenantId, ns, objectKey);
-      const version = await this.requireVersion(tx, tenantId, object.id, versionId);
-      assertTransition(version.state as ConfigVersionState, "ARCHIVED");
-      const [archived] = await tx
-        .update(configVersions)
-        .set({
-          state: "ARCHIVED",
-          effectiveTo: now,
-          updatedAt: now,
-        })
-        .where(eq(configVersions.id, version.id))
-        .returning();
-      if (object.currentPublishedVersionId === version.id) {
-        await tx
-          .update(configObjects)
-          .set({ currentPublishedVersionId: null, updatedAt: now })
-          .where(eq(configObjects.id, object.id));
-      }
-      await this.outbox.write(tx, {
-        tenantId,
-        aggregateType: "config_object",
-        aggregateId: object.id,
-        eventType: DOMAIN_EVENT_TYPES.CONFIGURATION_VERSION_ARCHIVED,
-        payload: { tenantId, namespace: ns, objectKey, versionId },
-        correlationId: principal.correlationId,
-        actorUserId: principal.userId,
-      });
-      await this.audit.writeInTransaction(tx, {
-        tenantId,
-        actorUserId: principal.userId,
-        actorPersonId: principal.personId,
-        actorType: "USER",
-        action: "configuration.archive",
-        resourceType: "config_version",
-        resourceId: version.id,
-        result: "SUCCESS",
-        riskLevel: "HIGH",
-        correlationId: principal.correlationId,
-        requestId: principal.requestId,
-        after: { state: "ARCHIVED" },
-      });
-      return { object, version: archived };
-    }, principal.userId);
+    return withTenantTransaction(
+      this.db,
+      tenantId,
+      async (tx) => {
+        const object = await this.requireObject(tx, tenantId, ns, objectKey);
+        const version = await this.requireVersion(tx, tenantId, object.id, versionId);
+        assertTransition(version.state as ConfigVersionState, "ARCHIVED");
+        const [archived] = await tx
+          .update(configVersions)
+          .set({
+            state: "ARCHIVED",
+            effectiveTo: now,
+            updatedAt: now,
+          })
+          .where(eq(configVersions.id, version.id))
+          .returning();
+        if (object.currentPublishedVersionId === version.id) {
+          await tx
+            .update(configObjects)
+            .set({ currentPublishedVersionId: null, updatedAt: now })
+            .where(eq(configObjects.id, object.id));
+        }
+        await this.outbox.write(tx, {
+          tenantId,
+          aggregateType: "config_object",
+          aggregateId: object.id,
+          eventType: DOMAIN_EVENT_TYPES.CONFIGURATION_VERSION_ARCHIVED,
+          payload: { tenantId, namespace: ns, objectKey, versionId },
+          correlationId: principal.correlationId,
+          actorUserId: principal.userId,
+        });
+        await this.audit.writeInTransaction(tx, {
+          tenantId,
+          actorUserId: principal.userId,
+          actorPersonId: principal.personId,
+          actorType: "USER",
+          action: "configuration.archive",
+          resourceType: "config_version",
+          resourceId: version.id,
+          result: "SUCCESS",
+          riskLevel: "HIGH",
+          correlationId: principal.correlationId,
+          requestId: principal.requestId,
+          after: { state: "ARCHIVED" },
+        });
+        return { object, version: archived };
+      },
+      principal.userId,
+    );
   }
 
   async rollback(
@@ -762,73 +781,82 @@ export class ConfigurationService {
     assertNamespacePublishAccess(principal, ns);
 
     try {
-    const { version: source } = await this.getVersion(
-      tenantId,
-      namespace,
-      objectKey,
-      versionId,
-      principal,
-    );
-    if (source.state !== "SUPERSEDED" && source.state !== "ARCHIVED" && source.state !== "PUBLISHED") {
-      emitConfigMetric(CONFIG_METRICS.ValidationFailures);
-      throw new ForgeError(
-        "VALIDATION_FAILED",
-        "Rollback source must be PUBLISHED, SUPERSEDED, or ARCHIVED",
-      );
-    }
-
-    const draft = await this.createDraft(
-      tenantId,
-      namespace,
-      {
+      const { version: source } = await this.getVersion(
+        tenantId,
+        namespace,
         objectKey,
-        payload: source.payloadJson,
-        changeSummary: `Rollback clone of version ${source.version}`,
-      },
-      principal,
-      { allowPublishPrincipal: true },
-    );
-    const published = await this.publish(
-      tenantId,
-      namespace,
-      objectKey,
-      draft.version.id,
-      principal,
-    );
+        versionId,
+        principal,
+      );
+      if (
+        source.state !== "SUPERSEDED" &&
+        source.state !== "ARCHIVED" &&
+        source.state !== "PUBLISHED"
+      ) {
+        emitConfigMetric(CONFIG_METRICS.ValidationFailures);
+        throw new ForgeError(
+          "VALIDATION_FAILED",
+          "Rollback source must be PUBLISHED, SUPERSEDED, or ARCHIVED",
+        );
+      }
 
-    await withTenantTransaction(this.db, tenantId, async (tx) => {
-      await this.outbox.write(tx, {
+      const draft = await this.createDraft(
         tenantId,
-        aggregateType: "config_object",
-        aggregateId: published.object.id,
-        eventType: DOMAIN_EVENT_TYPES.CONFIGURATION_VERSION_ROLLED_BACK,
-        payload: {
-          tenantId,
-          namespace: ns,
+        namespace,
+        {
           objectKey,
-          fromVersionId: versionId,
-          toVersionId: published.version!.id,
+          payload: source.payloadJson,
+          changeSummary: `Rollback clone of version ${source.version}`,
         },
-        correlationId: principal.correlationId,
-        actorUserId: principal.userId,
-      });
-      await this.audit.writeInTransaction(tx, {
+        principal,
+        { allowPublishPrincipal: true },
+      );
+      const published = await this.publish(
         tenantId,
-        actorUserId: principal.userId,
-        actorPersonId: principal.personId,
-        actorType: "USER",
-        action: "configuration.rollback",
-        resourceType: "config_version",
-        resourceId: published.version!.id,
-        result: "SUCCESS",
-        riskLevel: "HIGH",
-        correlationId: principal.correlationId,
-        requestId: principal.requestId,
-        after: { fromVersionId: versionId, toVersionId: published.version!.id },
-      });
-    }, principal.userId);
+        namespace,
+        objectKey,
+        draft.version.id,
+        principal,
+      );
 
-    return published;
+      await withTenantTransaction(
+        this.db,
+        tenantId,
+        async (tx) => {
+          await this.outbox.write(tx, {
+            tenantId,
+            aggregateType: "config_object",
+            aggregateId: published.object.id,
+            eventType: DOMAIN_EVENT_TYPES.CONFIGURATION_VERSION_ROLLED_BACK,
+            payload: {
+              tenantId,
+              namespace: ns,
+              objectKey,
+              fromVersionId: versionId,
+              toVersionId: published.version!.id,
+            },
+            correlationId: principal.correlationId,
+            actorUserId: principal.userId,
+          });
+          await this.audit.writeInTransaction(tx, {
+            tenantId,
+            actorUserId: principal.userId,
+            actorPersonId: principal.personId,
+            actorType: "USER",
+            action: "configuration.rollback",
+            resourceType: "config_version",
+            resourceId: published.version!.id,
+            result: "SUCCESS",
+            riskLevel: "HIGH",
+            correlationId: principal.correlationId,
+            requestId: principal.requestId,
+            after: { fromVersionId: versionId, toVersionId: published.version!.id },
+          });
+        },
+        principal.userId,
+      );
+
+      return published;
     } catch (error) {
       if (!(error instanceof ForgeError && error.code === "FORBIDDEN")) {
         emitConfigMetric(CONFIG_METRICS.RollbackFailures);

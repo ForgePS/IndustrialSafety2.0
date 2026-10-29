@@ -206,9 +206,7 @@ export function SafetySupplyRequestPublicWorkspace() {
     setCart((prev) => {
       const existing = prev.find((l) => l.key === key);
       if (existing) {
-        return prev.map((l) =>
-          l.key === key ? { ...l, quantity: l.quantity + 1 } : l,
-        );
+        return prev.map((l) => (l.key === key ? { ...l, quantity: l.quantity + 1 } : l));
       }
       return [
         ...prev,
@@ -307,7 +305,10 @@ export function SafetySupplyRequestPublicWorkspace() {
         </div>
         <ul className="list-group mb-3">
           {confirmation.items.map((line, idx) => (
-            <li key={`${line.name}-${idx}`} className="list-group-item d-flex justify-content-between">
+            <li
+              key={`${line.name}-${idx}`}
+              className="list-group-item d-flex justify-content-between"
+            >
               <span>{line.name}</span>
               <span>× {line.quantity}</span>
             </li>
@@ -360,8 +361,11 @@ export function SafetySupplyRequestPublicWorkspace() {
           <div className="card-body">
             {station.config.allowContractors ? (
               <div className="mb-3">
-                <label className="form-label">I am a</label>
+                <label className="form-label" htmlFor="supply-req-i-am-a">
+                  I am a
+                </label>
                 <select
+                  id="supply-req-i-am-a"
                   className="form-select form-select-lg"
                   value={requestorType}
                   onChange={(e) => setRequestorType(e.target.value)}
@@ -458,8 +462,11 @@ export function SafetySupplyRequestPublicWorkspace() {
                 }}
               >
                 <div className="mb-3">
-                  <label className="form-label">Name *</label>
+                  <label className="form-label" htmlFor="supply-req-name">
+                    Name *
+                  </label>
                   <input
+                    id="supply-req-name"
                     className="form-control form-control-lg"
                     value={contractorName}
                     onChange={(e) => setContractorName(e.target.value)}
@@ -467,8 +474,11 @@ export function SafetySupplyRequestPublicWorkspace() {
                   />
                 </div>
                 <div className="mb-3">
-                  <label className="form-label">Company</label>
+                  <label className="form-label" htmlFor="supply-req-company">
+                    Company
+                  </label>
                   <input
+                    id="supply-req-company"
                     className="form-control form-control-lg"
                     value={contractorCompany}
                     onChange={(e) => setContractorCompany(e.target.value)}
@@ -483,9 +493,7 @@ export function SafetySupplyRequestPublicWorkspace() {
         </section>
       ) : (
         <>
-          {employeeLabel ? (
-            <div className="alert alert-light border">{employeeLabel}</div>
-          ) : null}
+          {employeeLabel ? <div className="alert alert-light border">{employeeLabel}</div> : null}
 
           <div className="mb-3">
             <input
@@ -534,9 +542,7 @@ export function SafetySupplyRequestPublicWorkspace() {
                             : item.availability === "LOW"
                               ? "Low Stock"
                               : "Available"}
-                          {item.quantityAvailable != null
-                            ? ` · ${item.quantityAvailable}`
-                            : ""}
+                          {item.quantityAvailable != null ? ` · ${item.quantityAvailable}` : ""}
                         </span>
                       ) : null}
                     </div>
@@ -586,16 +592,22 @@ export function SafetySupplyRequestPublicWorkspace() {
               ) : (
                 <div className="card card-body">
                   <div className="mb-2">
-                    <label className="form-label">Item name</label>
+                    <label className="form-label" htmlFor="supply-req-item-name">
+                      Item name
+                    </label>
                     <input
+                      id="supply-req-item-name"
                       className="form-control"
                       value={customName}
                       onChange={(e) => setCustomName(e.target.value)}
                     />
                   </div>
                   <div className="mb-2">
-                    <label className="form-label">Quantity</label>
+                    <label className="form-label" htmlFor="supply-req-quantity">
+                      Quantity
+                    </label>
                     <input
+                      id="supply-req-quantity"
                       className="form-control"
                       type="number"
                       min={1}
@@ -604,8 +616,11 @@ export function SafetySupplyRequestPublicWorkspace() {
                     />
                   </div>
                   <div className="mb-2">
-                    <label className="form-label">Description</label>
+                    <label className="form-label" htmlFor="supply-req-description">
+                      Description
+                    </label>
                     <textarea
+                      id="supply-req-description"
                       className="form-control"
                       rows={2}
                       value={customDesc}
@@ -706,8 +721,11 @@ export function SafetySupplyRequestPublicWorkspace() {
             <div className="card-body">
               {station.config.allowUrgent ? (
                 <div className="mb-3">
-                  <label className="form-label">Priority</label>
+                  <label className="form-label" htmlFor="supply-req-priority">
+                    Priority
+                  </label>
                   <select
+                    id="supply-req-priority"
                     className="form-select"
                     value={priority}
                     onChange={(e) => setPriority(e.target.value)}
@@ -718,16 +736,19 @@ export function SafetySupplyRequestPublicWorkspace() {
                   </select>
                   {priority === "URGENT" ? (
                     <div className="form-text">
-                      Urgent requests should be used when the requested safety supply is required
-                      to safely perform assigned work.
+                      Urgent requests should be used when the requested safety supply is required to
+                      safely perform assigned work.
                     </div>
                   ) : null}
                 </div>
               ) : null}
               {station.config.allowNotes ? (
                 <div className="mb-3">
-                  <label className="form-label">Reason / Additional Information</label>
+                  <label className="form-label" htmlFor="supply-req-reason-additional-information">
+                    Reason / Additional Information
+                  </label>
                   <textarea
+                    id="supply-req-reason-additional-information"
                     className="form-control"
                     rows={3}
                     value={notes}

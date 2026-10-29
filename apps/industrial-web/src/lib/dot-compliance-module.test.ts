@@ -76,19 +76,37 @@ describe("dot-compliance-module", () => {
 
   it("applies personnel-style name sort after filtering", () => {
     const rows = [
-      { id: "c", title: "Cody Alvarez", workerName: "Cody Alvarez", category: "drivers", dqf: true, status: "OPEN" },
-      { id: "a", title: "aaron Tucker", workerName: "aaron Tucker", category: "drivers", dqf: true, status: "OPEN" },
-      { id: "b", title: "Bea Nguyen", workerName: "Bea Nguyen", category: "vehicles", status: "OPEN" },
+      {
+        id: "c",
+        title: "Cody Alvarez",
+        workerName: "Cody Alvarez",
+        category: "drivers",
+        dqf: true,
+        status: "OPEN",
+      },
+      {
+        id: "a",
+        title: "aaron Tucker",
+        workerName: "aaron Tucker",
+        category: "drivers",
+        dqf: true,
+        status: "OPEN",
+      },
+      {
+        id: "b",
+        title: "Bea Nguyen",
+        workerName: "Bea Nguyen",
+        category: "vehicles",
+        status: "OPEN",
+      },
     ];
     expect(filterDotRecords(rows, { tab: "drivers", sort: "firstName" }).map((r) => r.id)).toEqual([
       "a",
       "c",
     ]);
-    expect(filterDotRecords(rows, { tab: "dashboard", sort: "lastName" }).map((r) => r.id)).toEqual([
-      "c",
-      "b",
-      "a",
-    ]);
+    expect(filterDotRecords(rows, { tab: "dashboard", sort: "lastName" }).map((r) => r.id)).toEqual(
+      ["c", "b", "a"],
+    );
   });
 
   it("treats closed statuses as not open", () => {
@@ -141,8 +159,23 @@ describe("dot-compliance-module", () => {
 
   it("combines duplicate driver names into one profile", () => {
     const rows = [
-      { id: "d2", category: "drivers", dqf: true, workerName: "JOHN SMITH", status: "OPEN", licenseNumber: "A1" },
-      { id: "d1", category: "drivers", dqf: true, title: "Smith, John", workerName: "Smith, John", status: "ACTIVE", employeeNumber: "88" },
+      {
+        id: "d2",
+        category: "drivers",
+        dqf: true,
+        workerName: "JOHN SMITH",
+        status: "OPEN",
+        licenseNumber: "A1",
+      },
+      {
+        id: "d1",
+        category: "drivers",
+        dqf: true,
+        title: "Smith, John",
+        workerName: "Smith, John",
+        status: "ACTIVE",
+        employeeNumber: "88",
+      },
       { id: "v1", category: "vehicles", title: "Unit 12", workerName: "John Smith" },
     ];
     const drivers = collapseDotDriverProfiles(rows);
@@ -165,8 +198,22 @@ describe("dot-compliance-module", () => {
 
   it("merges filled fields from older and newer duplicate rows", () => {
     const merged = mergeDotProfileRecords([
-      { id: "a", category: "drivers", dqf: true, workerName: "Ada Byron", licenseNumber: "L1", updatedAt: "2024-01-01" },
-      { id: "b", category: "drivers", dqf: true, workerName: "Ada Byron", initialMvrDate: "2025-06-01", updatedAt: "2025-01-01" },
+      {
+        id: "a",
+        category: "drivers",
+        dqf: true,
+        workerName: "Ada Byron",
+        licenseNumber: "L1",
+        updatedAt: "2024-01-01",
+      },
+      {
+        id: "b",
+        category: "drivers",
+        dqf: true,
+        workerName: "Ada Byron",
+        initialMvrDate: "2025-06-01",
+        updatedAt: "2025-01-01",
+      },
     ]);
     expect(merged.licenseNumber).toBe("L1");
     expect(merged.initialMvrDate).toBe("2025-06-01");

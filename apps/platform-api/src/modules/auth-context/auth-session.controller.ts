@@ -166,10 +166,7 @@ export class AuthSessionController {
 
   @Post("refresh")
   @Public()
-  async refresh(
-    @Req() req: RequestWithIds,
-    @Res({ passthrough: true }) res: Response,
-  ) {
+  async refresh(@Req() req: RequestWithIds, @Res({ passthrough: true }) res: Response) {
     // SameSite=Strict cookie + trusted Origin/Referer are sufficient. Field/Industrial
     // reach the API through a CloudFront→API CloudFront hop where request Host is the
     // API domain, so "same-origin" CSRF skips never matched and stale localStorage CSRF
@@ -247,11 +244,7 @@ export class AuthSessionController {
     return raw;
   }
 
-  private setSessionCookie(
-    req: RequestWithIds,
-    res: Response,
-    tokens: AuthSessionTokens,
-  ): void {
+  private setSessionCookie(req: RequestWithIds, res: Response, tokens: AuthSessionTokens): void {
     const hints = requestProtocolAndHost(req);
     const cookieName = sessionCookieName(hints);
     res.setHeader(

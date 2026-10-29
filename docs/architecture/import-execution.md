@@ -20,11 +20,11 @@ Detail: `docs/architecture/import-platform/IMPORT_QUEUE_MESSAGE_CONTRACT.md`
 
 `ImportSqsConsumer` routes:
 
-| Message | Processor |
-| --- | --- |
-| `import.upload.detect.v1` | Format detection |
-| `IMPORT_MALWARE_SCAN` | Malware scan (`schemaVersion: "1"`) |
-| `IMPORT_EXECUTE` | Execution commit |
+| Message                   | Processor                           |
+| ------------------------- | ----------------------------------- |
+| `import.upload.detect.v1` | Format detection                    |
+| `IMPORT_MALWARE_SCAN`     | Malware scan (`schemaVersion: "1"`) |
+| `IMPORT_EXECUTE`          | Execution commit                    |
 
 ### Execute steps
 
@@ -39,30 +39,30 @@ Detail: `docs/architecture/import-platform/IMPORT_QUEUE_MESSAGE_CONTRACT.md`
 
 ## Batch sizing
 
-| Constant | Value |
-| --- | --- |
-| Default | 50 |
-| Min | 1 |
-| Max | 500 |
+| Constant          | Value  |
+| ----------------- | ------ |
+| Default           | 50     |
+| Min               | 1      |
+| Max               | 500    |
 | Recommended range | 50–250 |
 
 Rationale: balance Aurora transaction duration, lock hold time, and retry granularity. Cap prevents oversized transactions under concurrent tenants.
 
 ## Failure classes
 
-| Class | Behavior |
-| --- | --- |
-| RETRIABLE | Visibility / redelivery; after `maxReceiveCount` (3) → DLQ |
-| NON_RETRIABLE_ROW | Persist `import_row_errors`; continue |
-| NON_RETRIABLE_JOB / SECURITY | Mark FAILED / quarantine path; do not blind-replay |
+| Class                        | Behavior                                                   |
+| ---------------------------- | ---------------------------------------------------------- |
+| RETRIABLE                    | Visibility / redelivery; after `maxReceiveCount` (3) → DLQ |
+| NON_RETRIABLE_ROW            | Persist `import_row_errors`; continue                      |
+| NON_RETRIABLE_JOB / SECURITY | Mark FAILED / quarantine path; do not blind-replay         |
 
 Idempotency: execution journal prevents duplicate commits on redelivery.
 
 ## Cancellation
 
-| State | Behavior |
-| --- | --- |
-| QUEUED | Cancel → `CANCELLED` promptly |
+| State      | Behavior                                                                              |
+| ---------- | ------------------------------------------------------------------------------------- |
+| QUEUED     | Cancel → `CANCELLED` promptly                                                         |
 | PROCESSING | `cancellationRequested`; worker stops between records; partial finalize → `CANCELLED` |
 
 See `docs/operations/import-cancellation-runbook.md`.

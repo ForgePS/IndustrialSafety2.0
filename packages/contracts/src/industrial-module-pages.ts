@@ -180,13 +180,9 @@ export const INDUSTRIAL_MODULE_PAGE_CATALOGS: readonly IndustrialModulePageCatal
   ]),
 ] as const;
 
-const BY_MODULE = new Map(
-  INDUSTRIAL_MODULE_PAGE_CATALOGS.map((row) => [row.moduleCode, row]),
-);
+const BY_MODULE = new Map(INDUSTRIAL_MODULE_PAGE_CATALOGS.map((row) => [row.moduleCode, row]));
 
-const BY_DOMAIN = new Map(
-  INDUSTRIAL_MODULE_PAGE_CATALOGS.map((row) => [row.domain, row]),
-);
+const BY_DOMAIN = new Map(INDUSTRIAL_MODULE_PAGE_CATALOGS.map((row) => [row.domain, row]));
 
 /** All page permission codes for seeding catalogs. */
 export const INDUSTRIAL_MODULE_PAGE_PERMISSIONS: readonly string[] =
@@ -316,9 +312,7 @@ export function mergePermissionCodesWithModulePages(input: {
   if (!row) return [...input.currentPermissionCodes].sort();
 
   const modulePageCodes = new Set(pagePermissionCodesForModule(input.moduleCode));
-  const next = new Set(
-    input.currentPermissionCodes.filter((code) => !modulePageCodes.has(code)),
-  );
+  const next = new Set(input.currentPermissionCodes.filter((code) => !modulePageCodes.has(code)));
 
   const enabled = new Set(input.enabledPageIds);
   for (const page of row.pages) {

@@ -43,11 +43,7 @@ export class ForgeDatabase extends Construct {
     const appSecretName = resourceName(config, "secrets", "database-app");
     if (config.database.importExistingAppSecret) {
       // Strategy A (GAP-009): reference existing secret by name — no create/replace.
-      this.appSecret = secretsmanager.Secret.fromSecretNameV2(
-        this,
-        "AppDbSecret",
-        appSecretName,
-      );
+      this.appSecret = secretsmanager.Secret.fromSecretNameV2(this, "AppDbSecret", appSecretName);
     } else {
       this.appSecret = new secretsmanager.Secret(this, "AppDbSecret", {
         secretName: appSecretName,

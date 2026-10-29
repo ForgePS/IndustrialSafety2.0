@@ -9,13 +9,13 @@ Platform core is the shared foundation every Forge product builds on: multi-tena
 
 ## Runtime layout
 
-| Component | Role |
-| --- | --- |
-| `apps/platform-api` | NestJS HTTP API (`/api/v1`, plus `/health` `/ready`) |
-| `apps/worker-service` | Outbox poller → EventBridge publisher |
-| `apps/creator-console` | Next.js admin UI for platform operators |
-| `packages/database` | Drizzle schema, migrations, RLS helpers, seed |
-| Shared packages | `contracts`, `auth`, `authorization`, `tenant-context`, `events`, `audit`, `errors`, `validation`, `security`, `configuration`, `observability`, `environment` |
+| Component              | Role                                                                                                                                                           |
+| ---------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `apps/platform-api`    | NestJS HTTP API (`/api/v1`, plus `/health` `/ready`)                                                                                                           |
+| `apps/worker-service`  | Outbox poller → EventBridge publisher                                                                                                                          |
+| `apps/creator-console` | Next.js admin UI for platform operators                                                                                                                        |
+| `packages/database`    | Drizzle schema, migrations, RLS helpers, seed                                                                                                                  |
+| Shared packages        | `contracts`, `auth`, `authorization`, `tenant-context`, `events`, `audit`, `errors`, `validation`, `security`, `configuration`, `observability`, `environment` |
 
 ## NestJS modules (Sprint 1D)
 

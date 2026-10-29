@@ -70,8 +70,7 @@ function LocationInner() {
   const title =
     kind === "division" ? "Division" : kind === "department" ? "Department" : "Location";
   const displayName = knownName || id;
-  const gate = (featureId: string) =>
-    isFieldFeatureModuleEnabled(activeModules, featureId, opts);
+  const gate = (featureId: string) => isFieldFeatureModuleEnabled(activeModules, featureId, opts);
 
   const actions = [
     {

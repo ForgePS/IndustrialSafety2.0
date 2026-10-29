@@ -439,7 +439,11 @@ function buildRow(
   const fkCollections: Record<string, string[]> = {
     case_id: ["industrial_workers_comp_cases", "workersCompCases", "workers_comp_cases"],
     qr_link_id: ["qr_links", "qrLinks"],
-    template_id: ["platform_ehs_audit_templates", "ehsAuditTemplates", "industrial_form_definitions"],
+    template_id: [
+      "platform_ehs_audit_templates",
+      "ehsAuditTemplates",
+      "industrial_form_definitions",
+    ],
     site_id: ["industrial_sites", "sites"],
     department_id: ["industrial_departments", "departments"],
     equipment_id: ["industrial_equipment", "equipment", "assets"],
@@ -594,7 +598,11 @@ function buildRow(
       );
       continue;
     }
-    if (col.name === "template_json" || col.name === "metadata" || col.name === "restricted_payload") {
+    if (
+      col.name === "template_json" ||
+      col.name === "metadata" ||
+      col.name === "restricted_payload"
+    ) {
       row[col.name] = JSON.stringify(data);
       continue;
     }
@@ -651,9 +659,7 @@ async function upsertBatch(
       // Per-row columns — do not borrow keys from rows[0] (would NULL out missing defaults).
       const colNames = Object.keys(row).filter((c) => columns.some((col) => col.name === c));
       const hasUpdatedAt = colNames.includes("updated_at");
-      const values = colNames.map((c) => row[c] ?? null) as Array<
-        string | number | boolean | null
-      >;
+      const values = colNames.map((c) => row[c] ?? null) as Array<string | number | boolean | null>;
       const placeholders = colNames.map((c, i) => {
         const col = columns.find((x) => x.name === c)!;
         if (col.udtName === "uuid") return `$${i + 1}::uuid`;
@@ -813,19 +819,15 @@ async function loadIdMapIndex(packageDir: string): Promise<IdMapIndex> {
   // Also index logical business IDs present on transformed records (e.g. forge_tmpl_*).
   const files = await readdir(packageDir);
   for (const file of files) {
-    if (!file.endsWith(".ndjson") || file.startsWith("excluded") || file === "id-map.ndjson") continue;
+    if (!file.endsWith(".ndjson") || file.startsWith("excluded") || file === "id-map.ndjson")
+      continue;
     const entity = file.replace(/\.ndjson$/, "");
     for await (const raw of readNdjson(path.join(packageDir, file))) {
       const rec = raw as ImportRecord;
       if (!rec.targetId || !isUuid(rec.targetId)) continue;
       const logicalId = unwrapValue(rec.data?.id);
       if (typeof logicalId === "string" && logicalId) {
-        indexLogicalId(
-          { bySourceId, byCollectionAndSourceId },
-          entity,
-          logicalId,
-          rec.targetId,
-        );
+        indexLogicalId({ bySourceId, byCollectionAndSourceId }, entity, logicalId, rec.targetId);
       }
     }
   }
@@ -1070,7 +1072,8 @@ async function main(): Promise<void> {
       mode,
       tenantId,
       packageTenantId: PACKAGE_TENANT_ID,
-      tenantRemapApplied: tenantIdRequested === PACKAGE_TENANT_ID || tenantId === PRODUCTION_TENANT_ID,
+      tenantRemapApplied:
+        tenantIdRequested === PACKAGE_TENANT_ID || tenantId === PRODUCTION_TENANT_ID,
       gitSha,
       packageUri,
       startedAt,
@@ -1079,7 +1082,9 @@ async function main(): Promise<void> {
   );
 
   const packageDir = await downloadImportPackage(packageUri);
-  const files = (await readdir(packageDir)).filter((f) => f.endsWith(".ndjson") || f === "manifest.json");
+  const files = (await readdir(packageDir)).filter(
+    (f) => f.endsWith(".ndjson") || f === "manifest.json",
+  );
 
   let excludedFileCount = 0;
   let excludedLineCount = 0;

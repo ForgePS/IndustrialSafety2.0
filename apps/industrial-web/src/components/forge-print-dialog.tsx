@@ -93,20 +93,12 @@ export type ForgePrintDialogProps = {
   items?: ForgePrintDialogBatchItem[] | undefined;
 };
 
-type Phase =
-  | "form"
-  | "submitting"
-  | "polling"
-  | "failover"
-  | "success"
-  | "error";
+type Phase = "form" | "submitting" | "polling" | "failover" | "success" | "error";
 
 function isUuid(value: string | undefined | null): value is string {
   return Boolean(
     value &&
-      /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(
-        value,
-      ),
+    /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value),
   );
 }
 
@@ -310,10 +302,7 @@ export function ForgePrintDialog({
     });
   }
 
-  const selected = useMemo(
-    () => printers.find((p) => p.id === printerId),
-    [printers, printerId],
-  );
+  const selected = useMemo(() => printers.find((p) => p.id === printerId), [printers, printerId]);
   const selectedIsBluetooth = isBluetoothPrinter(selected);
   const selectedIsDirect = isDirectBluetoothPrinter(selected);
   const selectedBluetoothDisconnected =
@@ -327,12 +316,7 @@ export function ForgePrintDialog({
   const mediaProfileId = stockId.startsWith("media:") ? stockId.slice("media:".length) : "";
 
   const title = useMemo(() => {
-    return (
-      fieldValues.title ||
-      fieldValues.Title ||
-      fieldValues.name ||
-      defaultTitle
-    ).trim();
+    return (fieldValues.title || fieldValues.Title || fieldValues.name || defaultTitle).trim();
   }, [defaultTitle, fieldValues]);
 
   const fieldValuesFingerprint = useMemo(
@@ -487,7 +471,7 @@ export function ForgePrintDialog({
     } catch (err) {
       setLoadError(err instanceof ApiError ? err.message : "Could not load printers.");
     }
-  }, [canView, locationId, divisionId, applyPrinterProfile]);
+  }, [canView, locationId, divisionId, applyPrinterProfile, applyStockSelection]);
 
   useEffect(() => {
     if (!open) {
@@ -533,7 +517,7 @@ export function ForgePrintDialog({
     const fromProps = matchBuiltinStock(w, h);
     const initialStock = fromProps ?? lastStock ?? "builtin:4x4";
     if (initialStock.startsWith("builtin:") || initialStock === "custom") {
-      setStockId(initialStock === "custom" ? fromProps ?? "builtin:4x4" : initialStock);
+      setStockId(initialStock === "custom" ? (fromProps ?? "builtin:4x4") : initialStock);
       const builtin = BUILTIN_STOCK.find((s) => s.id === (fromProps ?? initialStock));
       if (builtin && !fromProps) {
         setLabelWidthIn(builtin.widthInches);
@@ -553,7 +537,14 @@ export function ForgePrintDialog({
       if (!RESERVED_FIELD_KEYS.has(k)) defaults[k] = false;
     }
     setIncludedFields(defaults);
-  }, [open, widthInchesProp, heightInchesProp, recordId, fieldValuesFingerprint, stableFieldValues]);
+  }, [
+    open,
+    widthInchesProp,
+    heightInchesProp,
+    recordId,
+    fieldValuesFingerprint,
+    stableFieldValues,
+  ]);
 
   useEffect(() => {
     if (!open) return;
@@ -724,7 +715,9 @@ export function ForgePrintDialog({
       setProgressText(null);
       if (err instanceof DOMException && err.name === "AbortError") throw err;
       setErrorMessage(
-        err instanceof ApiError || err instanceof Error ? err.message : "Batch direct print failed.",
+        err instanceof ApiError || err instanceof Error
+          ? err.message
+          : "Batch direct print failed.",
       );
       setPhase("error");
     }
@@ -768,8 +761,7 @@ export function ForgePrintDialog({
 
     const failoverOpts = opts?.acceptFailover ? { acceptFailover: true as const } : {};
     const printMode = selectedIsDirect ? ("DIRECT_BLUETOOTH" as const) : ("BRIDGE" as const);
-    const layoutBody =
-      Object.keys(layoutOpts).length > 0 ? { layout: layoutOpts } : {};
+    const layoutBody = Object.keys(layoutOpts).length > 0 ? { layout: layoutOpts } : {};
     const safeFieldValues = Object.fromEntries(
       Object.entries(activeFieldValues)
         .filter(
@@ -1128,7 +1120,7 @@ export function ForgePrintDialog({
                         <p className="text-danger small mb-0">{previewError}</p>
                       ) : null}
                       {previewUrl ? (
-                        // eslint-disable-next-line @next/next/no-img-element
+                        // Plain <img> on purpose: static export, so next/image optimization is unavailable.
                         <img
                           src={previewUrl}
                           alt="Label preview"
@@ -1566,9 +1558,8 @@ export function ForgePrintDialog({
                                     setTemplateId(id);
                                     const t = templates.find((x) => x.id === id);
                                     const ver =
-                                      t?.versions?.find(
-                                        (v) => v.version === t.publishedVersion,
-                                      ) ?? t?.versions?.[0];
+                                      t?.versions?.find((v) => v.version === t.publishedVersion) ??
+                                      t?.versions?.[0];
                                     if (ver) {
                                       onCustomSizeChange(ver.widthInches, ver.heightInches);
                                       if (ver.dpi > 0) setDpi(ver.dpi);
@@ -1598,8 +1589,8 @@ export function ForgePrintDialog({
                       : progressText
                         ? progressText
                         : selectedIsDirect
-                        ? `Printing via Direct Bluetooth… (${String(job?.status ?? "RENDERING").replace(/_/g, " ")})`
-                        : `Waiting for printer bridge… (${String(job?.status ?? "QUEUED").replace(/_/g, " ")})`}
+                          ? `Printing via Direct Bluetooth… (${String(job?.status ?? "RENDERING").replace(/_/g, " ")})`
+                          : `Waiting for printer bridge… (${String(job?.status ?? "QUEUED").replace(/_/g, " ")})`}
                   </p>
                 ) : null}
               </>

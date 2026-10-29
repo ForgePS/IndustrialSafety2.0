@@ -13,11 +13,7 @@ export { FxWorkspaceActions } from "./FxWorkspaceActions";
 export { FxWorkspaceLoading } from "./FxWorkspaceLoading";
 export { FxWorkspaceEmpty } from "./FxWorkspaceEmpty";
 export { FxWorkspaceError } from "./FxWorkspaceError";
-export {
-  registerWorkspace,
-  getWorkspace,
-  listWorkspaces,
-} from "./FxWorkspaceRegistry";
+export { registerWorkspace, getWorkspace, listWorkspaces } from "./FxWorkspaceRegistry";
 export { isWorkspaceAuthorized, filterAuthorizedTabs } from "./WorkspacePermissions";
 export { RMS_FX_WORKSPACE_FLAG, resolveRmsFxWorkspaceFlag } from "./workspace-flags";
 export { useRmsFxWorkspaceFlag } from "./use-workspace-flag";

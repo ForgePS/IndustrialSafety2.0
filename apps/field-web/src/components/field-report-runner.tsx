@@ -229,9 +229,7 @@ export function FieldReportRunner({ reportType }: { reportType: FieldReportType 
         </h1>
         <EmptyState
           title={
-            queuedOffline
-              ? "Will sync when you are back online"
-              : "Sent to Forge Industrial Safety"
+            queuedOffline ? "Will sync when you are back online" : "Sent to Forge Industrial Safety"
           }
           message={
             queuedOffline
@@ -246,7 +244,11 @@ export function FieldReportRunner({ reportType }: { reportType: FieldReportType 
           <button type="button" className="ff-btn" onClick={() => router.push("/")}>
             Home
           </button>
-          <button type="button" className="ff-btn ff-btn-secondary" onClick={() => router.push("/report/")}>
+          <button
+            type="button"
+            className="ff-btn ff-btn-secondary"
+            onClick={() => router.push("/report/")}
+          >
             Report another
           </button>
         </div>
@@ -384,8 +386,7 @@ export function FieldReportRunner({ reportType }: { reportType: FieldReportType 
               <option value="">Select department</option>
               {org.departments
                 .filter(
-                  (d) =>
-                    !draft.locationId || !d.locationId || d.locationId === draft.locationId,
+                  (d) => !draft.locationId || !d.locationId || d.locationId === draft.locationId,
                 )
                 .map((dep) => (
                   <option key={dep.id} value={dep.id}>
@@ -612,7 +613,10 @@ export function FieldReportRunner({ reportType }: { reportType: FieldReportType 
       {step === "photos" ? (
         <section className="ff-section">
           <h2 className="ff-section-title">Photos</h2>
-          <label className="ff-btn ff-btn-secondary" style={{ display: "block", textAlign: "center" }}>
+          <label
+            className="ff-btn ff-btn-secondary"
+            style={{ display: "block", textAlign: "center" }}
+          >
             Add photo
             <input
               type="file"

@@ -1,9 +1,9 @@
 export function isCognitoConfigured(): boolean {
   return Boolean(
     process.env.NEXT_PUBLIC_COGNITO_DOMAIN &&
-      process.env.NEXT_PUBLIC_COGNITO_CLIENT_ID &&
-      process.env.NEXT_PUBLIC_COGNITO_USER_POOL_ID &&
-      process.env.NEXT_PUBLIC_APP_URL,
+    process.env.NEXT_PUBLIC_COGNITO_CLIENT_ID &&
+    process.env.NEXT_PUBLIC_COGNITO_USER_POOL_ID &&
+    process.env.NEXT_PUBLIC_APP_URL,
   );
 }
 

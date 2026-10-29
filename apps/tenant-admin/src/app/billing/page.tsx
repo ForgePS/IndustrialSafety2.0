@@ -78,9 +78,7 @@ function BillingInner() {
                 ? ` · ${overview.subscription.billingInterval}`
                 : ""}
             </p>
-            <p className={styles.muted}>
-              Contact: {overview.customer?.billingEmail ?? "Not set"}
-            </p>
+            <p className={styles.muted}>Contact: {overview.customer?.billingEmail ?? "Not set"}</p>
             <p>
               Payment portal:{" "}
               {overview.paymentPortal.available && overview.paymentPortal.url ? (
@@ -155,10 +153,7 @@ function BillingInner() {
 
 export default function TenantBillingPage() {
   return (
-    <TenantPageGate
-      title="Billing"
-      anyOf={["tenant.billing.read", "platform.entitlement.manage"]}
-    >
+    <TenantPageGate title="Billing" anyOf={["tenant.billing.read", "platform.entitlement.manage"]}>
       <Suspense fallback={<p className={styles.muted}>Loading…</p>}>
         <BillingInner />
       </Suspense>

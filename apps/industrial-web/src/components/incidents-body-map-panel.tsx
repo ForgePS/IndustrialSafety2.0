@@ -32,9 +32,7 @@ const HEAT_LEGEND: ReadonlyArray<{ tone: string; label: string }> = [
   { tone: "danger", label: "Higher" },
 ];
 
-type PopupFocus =
-  | { type: "region"; regionId: string }
-  | { type: "osha"; oshaPart: string };
+type PopupFocus = { type: "region"; regionId: string } | { type: "osha"; oshaPart: string };
 
 type Props = {
   incidents: IncidentRecord[];
@@ -102,9 +100,15 @@ export function IncidentsBodyMapPanel({
     [incidents, selectedId],
   );
 
-  const counts = useMemo(() => aggregateBodyLocations(scopedIncidents, regions), [scopedIncidents, regions]);
+  const counts = useMemo(
+    () => aggregateBodyLocations(scopedIncidents, regions),
+    [scopedIncidents, regions],
+  );
   const maxCount = useMemo(() => maxRegionCount(counts), [counts]);
-  const partRanking = useMemo(() => aggregateByOshaPart(scopedIncidents, regions), [scopedIncidents, regions]);
+  const partRanking = useMemo(
+    () => aggregateByOshaPart(scopedIncidents, regions),
+    [scopedIncidents, regions],
+  );
   const mappedIncidents = useMemo(
     () => scopedIncidents.filter((incident) => incident.bodyLocations.length > 0).length,
     [scopedIncidents],
@@ -190,8 +194,7 @@ export function IncidentsBodyMapPanel({
     }
   }
 
-  const periodLabel =
-    yearScope === "ytd" ? `${new Date().getFullYear()} YTD` : String(yearScope);
+  const periodLabel = yearScope === "ytd" ? `${new Date().getFullYear()} YTD` : String(yearScope);
 
   const yearPicker = (
     <div style={{ minWidth: "9rem" }}>
@@ -353,11 +356,7 @@ export function IncidentsBodyMapPanel({
   const incidentPopup =
     popup && !editing ? (
       <>
-        <div
-          className="modal-backdrop fade show"
-          onClick={closePopup}
-          aria-hidden="true"
-        />
+        <div className="modal-backdrop fade show" onClick={closePopup} aria-hidden="true" />
         <div
           className="modal fade show d-block"
           tabIndex={-1}

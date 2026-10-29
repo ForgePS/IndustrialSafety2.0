@@ -1,10 +1,7 @@
 "use client";
 
 import { Suspense, useCallback, useEffect, useMemo, useState } from "react";
-import {
-  FORGE_PLATFORMS,
-  catalogAvailabilityLabel,
-} from "@forge/contracts";
+import { FORGE_PLATFORMS, catalogAvailabilityLabel } from "@forge/contracts";
 import {
   EmptyState,
   ErrorState,
@@ -211,9 +208,7 @@ function ModulesInner() {
                       <button
                         type="button"
                         className="forge-btn forge-btn--secondary"
-                        onClick={() =>
-                          setAdvancedId((cur) => (cur === row.id ? null : row.id))
-                        }
+                        onClick={() => setAdvancedId((cur) => (cur === row.id ? null : row.id))}
                       >
                         {advancedId === row.id ? "Hide details" : "Advanced details"}
                       </button>

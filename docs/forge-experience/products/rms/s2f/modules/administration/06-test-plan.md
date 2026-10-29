@@ -2,10 +2,10 @@
 
 ## Automated
 
-| Suite | Coverage |
-| --- | --- |
-| `module-flags.test.ts` | administration ∧ tables; utilities module-only |
-| E2E scaffold | Module off → legacy; admin+tables / utilities smoke |
+| Suite                  | Coverage                                            |
+| ---------------------- | --------------------------------------------------- |
+| `module-flags.test.ts` | administration ∧ tables; utilities module-only      |
+| E2E scaffold           | Module off → legacy; admin+tables / utilities smoke |
 
 ## Manual / pilot
 

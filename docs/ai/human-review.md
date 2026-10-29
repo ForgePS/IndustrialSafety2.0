@@ -4,23 +4,23 @@
 
 ## Lifecycle
 
-| Status | Meaning |
-| --- | --- |
-| PENDING → VALIDATING → REDACTING → GENERATING → VALIDATING_RESPONSE | Pipeline |
-| READY_FOR_REVIEW | Draft available; labeled `AI DRAFT — NOT REVIEWED` |
-| ACCEPTED | Human accepted (full or partial) |
-| REJECTED | Human rejected with reason |
-| FAILED / CANCELLED / EXPIRED | Terminal non-accept paths |
+| Status                                                              | Meaning                                            |
+| ------------------------------------------------------------------- | -------------------------------------------------- |
+| PENDING → VALIDATING → REDACTING → GENERATING → VALIDATING_RESPONSE | Pipeline                                           |
+| READY_FOR_REVIEW                                                    | Draft available; labeled `AI DRAFT — NOT REVIEWED` |
+| ACCEPTED                                                            | Human accepted (full or partial)                   |
+| REJECTED                                                            | Human rejected with reason                         |
+| FAILED / CANCELLED / EXPIRED                                        | Terminal non-accept paths                          |
 
 ## Review actions
 
-| Action | Route | Permission |
-| --- | --- | --- |
-| Accept all | `POST .../narratives/:requestId/accept` | `ai.narrative.accept` (or product accept) |
-| Partial accept | `POST .../narratives/:requestId/partial-accept` | same as accept |
-| Reject | `POST .../narratives/:requestId/reject` | `ai.narrative.reject` |
-| Regenerate | `POST .../narratives/:requestId/regenerate` | generate or rewrite |
-| History | `GET .../narratives/:requestId/history` | `ai.narrative.use` |
+| Action         | Route                                           | Permission                                |
+| -------------- | ----------------------------------------------- | ----------------------------------------- |
+| Accept all     | `POST .../narratives/:requestId/accept`         | `ai.narrative.accept` (or product accept) |
+| Partial accept | `POST .../narratives/:requestId/partial-accept` | same as accept                            |
+| Reject         | `POST .../narratives/:requestId/reject`         | `ai.narrative.reject`                     |
+| Regenerate     | `POST .../narratives/:requestId/regenerate`     | generate or rewrite                       |
+| History        | `GET .../narratives/:requestId/history`         | `ai.narrative.use`                        |
 
 Accept body selects draft id, mode (`ACCEPT_ALL` / `PARTIAL`), optional sections, and optional insert-into-record. Reject requires a reason.
 

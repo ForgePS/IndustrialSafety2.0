@@ -13,12 +13,10 @@ const fxTables = process.env.NEXT_PUBLIC_FX_RMS_TABLES_ENABLED === "true";
 const fxModuleIncidents = process.env.NEXT_PUBLIC_FX_RMS_MODULE_INCIDENTS_ENABLED === "true";
 const fxModuleIncidentReview =
   process.env.NEXT_PUBLIC_FX_RMS_MODULE_INCIDENT_REVIEW_ENABLED === "true";
-const fxModuleCadMessages =
-  process.env.NEXT_PUBLIC_FX_RMS_MODULE_CAD_MESSAGES_ENABLED === "true";
+const fxModuleCadMessages = process.env.NEXT_PUBLIC_FX_RMS_MODULE_CAD_MESSAGES_ENABLED === "true";
 const fxModuleCadConnections =
   process.env.NEXT_PUBLIC_FX_RMS_MODULE_CAD_CONNECTIONS_ENABLED === "true";
-const fxModuleCadConflicts =
-  process.env.NEXT_PUBLIC_FX_RMS_MODULE_CAD_CONFLICTS_ENABLED === "true";
+const fxModuleCadConflicts = process.env.NEXT_PUBLIC_FX_RMS_MODULE_CAD_CONFLICTS_ENABLED === "true";
 const fxModuleNerisConfiguration =
   process.env.NEXT_PUBLIC_FX_RMS_MODULE_NERIS_CONFIGURATION_ENABLED === "true";
 const fxModuleAdministration =
@@ -233,7 +231,9 @@ test.describe("FX-S2 route smoke (legacy default)", () => {
   for (const route of routes) {
     test(`loads ${route}`, async ({ page }) => {
       const response = await page.goto(route);
-      expect(response?.ok() || response?.status() === 304 || response?.status() === 200).toBeTruthy();
+      expect(
+        response?.ok() || response?.status() === 304 || response?.status() === 200,
+      ).toBeTruthy();
       await expect(page.locator("main")).toBeVisible();
     });
   }

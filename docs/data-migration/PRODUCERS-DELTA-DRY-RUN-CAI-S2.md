@@ -8,32 +8,32 @@
 
 ## Watermarks
 
-| Field | Value |
-| --- | --- |
+| Field                    | Value                      |
+| ------------------------ | -------------------------- |
 | CAI_S1R_SOURCE_WATERMARK | `2026-08-12T18:32:38.948Z` |
-| CAI_S2_SOURCE_WATERMARK | `2026-08-14T12:42:07.147Z` |
+| CAI_S2_SOURCE_WATERMARK  | `2026-08-14T12:42:07.147Z` |
 
 ## Taxonomy
 
-| Class | Count |
-| --- | ---: |
-| INSERTED (planned) | 48 |
+| Class                      | Count |
+| -------------------------- | ----: |
+| INSERTED (planned)         |    48 |
 | UPDATED / SKIPPED_EXISTING | 38110 |
-| EXCLUDE_APPROVED | 142 |
-| WARNING_EXPLAINED | 3995 |
-| ERROR_UNEXPLAINED | **0** |
-| FATAL | **0** |
-| SKIP_MISSING_PARENT (QR) | 2576 |
-| SKIP_NON_PRODUCERS | 1419 |
+| EXCLUDE_APPROVED           |   142 |
+| WARNING_EXPLAINED          |  3995 |
+| ERROR_UNEXPLAINED          | **0** |
+| FATAL                      | **0** |
+| SKIP_MISSING_PARENT (QR)   |  2576 |
+| SKIP_NON_PRODUCERS         |  1419 |
 
 ## Gate results
 
-| Gate | Result |
-| --- | --- |
-| DELTA_ERROR_COUNT | **0** |
-| DELTA_UNEXPLAINED_SKIP_COUNT | **0** |
-| DELTA_AMBIGUOUS | **0** |
-| FABRICATED_VEHICLES | **0** |
+| Gate                         | Result |
+| ---------------------------- | ------ |
+| DELTA_ERROR_COUNT            | **0**  |
+| DELTA_UNEXPLAINED_SKIP_COUNT | **0**  |
+| DELTA_AMBIGUOUS              | **0**  |
+| FABRICATED_VEHICLES          | **0**  |
 
 ## Notes
 
@@ -45,11 +45,11 @@
 
 ## File delta (pre-apply)
 
-| Metric | Count |
-| --- | ---: |
-| DELTA_FILES_NEW | 0 |
-| DELTA_FILES_REUSED | 2 |
-| DELTA_FILES_FAILED | 0 |
+| Metric             | Count |
+| ------------------ | ----: |
+| DELTA_FILES_NEW    |     0 |
+| DELTA_FILES_REUSED |     2 |
+| DELTA_FILES_FAILED |     0 |
 
 ## Verdict
 

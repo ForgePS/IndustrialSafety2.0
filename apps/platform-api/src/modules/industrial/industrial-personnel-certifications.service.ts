@@ -83,7 +83,9 @@ export class IndustrialPersonnelCertificationsService {
     const tenantId = this.tenant(principal);
     const kind = this.parseKind(body.kind);
     const filename = String(body.filename ?? "").trim();
-    const mimeType = String(body.mimeType ?? "").trim().toLowerCase();
+    const mimeType = String(body.mimeType ?? "")
+      .trim()
+      .toLowerCase();
     const contentLength = Number(body.contentLength ?? 0);
     const personnelId = String(body.personnelId ?? "").trim();
 
@@ -115,40 +117,45 @@ export class IndustrialPersonnelCertificationsService {
     const documentId = createId();
     const now = new Date();
 
-    await withTenantTransaction(this.db, tenantId, async (tx) => {
-      if (personnelId) {
-        const [person] = await tx
-          .select({ id: industrialPersonnel.id })
-          .from(industrialPersonnel)
-          .where(
-            and(
-              eq(industrialPersonnel.id, personnelId),
-              eq(industrialPersonnel.tenantId, tenantId),
-            ),
-          )
-          .limit(1);
-        if (!person) throw new ForgeError("NOT_FOUND", "Personnel not found");
-      }
+    await withTenantTransaction(
+      this.db,
+      tenantId,
+      async (tx) => {
+        if (personnelId) {
+          const [person] = await tx
+            .select({ id: industrialPersonnel.id })
+            .from(industrialPersonnel)
+            .where(
+              and(
+                eq(industrialPersonnel.id, personnelId),
+                eq(industrialPersonnel.tenantId, tenantId),
+              ),
+            )
+            .limit(1);
+          if (!person) throw new ForgeError("NOT_FOUND", "Personnel not found");
+        }
 
-      await tx.insert(forgeDocuments).values({
-        id: documentId,
-        tenantId,
-        originalFilename: filename,
-        storedFilename,
-        objectKey,
-        bucketName: this.storage.bucketName,
-        mimeType,
-        fileSizeBytes: contentLength,
-        securityClassification: "INTERNAL",
-        malwareScanStatus: "PENDING",
-        retentionRule: "PERSONNEL_CERT_DEFAULT",
-        uploadStatus: "INITIALIZED",
-        source: "INDUSTRIAL_PERSONNEL_CERT",
-        uploadedByUserId: principal.userId,
-        createdAt: now,
-        updatedAt: now,
-      });
-    }, principal.userId);
+        await tx.insert(forgeDocuments).values({
+          id: documentId,
+          tenantId,
+          originalFilename: filename,
+          storedFilename,
+          objectKey,
+          bucketName: this.storage.bucketName,
+          mimeType,
+          fileSizeBytes: contentLength,
+          securityClassification: "INTERNAL",
+          malwareScanStatus: "PENDING",
+          retentionRule: "PERSONNEL_CERT_DEFAULT",
+          uploadStatus: "INITIALIZED",
+          source: "INDUSTRIAL_PERSONNEL_CERT",
+          uploadedByUserId: principal.userId,
+          createdAt: now,
+          updatedAt: now,
+        });
+      },
+      principal.userId,
+    );
 
     const presign = await this.storage.createPresignedUploadUrl({
       objectKey,
@@ -184,58 +191,66 @@ export class IndustrialPersonnelCertificationsService {
       throw new ForgeError("VALIDATION_FAILED", "personnelId must be a UUID");
     }
 
-    return withTenantTransaction(this.db, tenantId, async (tx) => {
-      const document = await tx.query.forgeDocuments.findFirst({
-        where: and(eq(forgeDocuments.id, documentId), eq(forgeDocuments.tenantId, tenantId)),
-      });
-      if (!document) throw new ForgeError("NOT_FOUND", "Document not found");
-      if (!documentBelongsToTenant(document.tenantId, tenantId)) {
-        throw new ForgeError("FORBIDDEN", "Document does not belong to the requested tenant");
-      }
-      if (!objectKeyBelongsToTenant(document.objectKey, tenantId)) {
-        throw new ForgeError("FORBIDDEN", "Object key does not belong to the requested tenant");
-      }
-      if (document.source !== "INDUSTRIAL_PERSONNEL_CERT") {
-        throw new ForgeError("VALIDATION_FAILED", "Document is not a personnel certification upload");
-      }
+    return withTenantTransaction(
+      this.db,
+      tenantId,
+      async (tx) => {
+        const document = await tx.query.forgeDocuments.findFirst({
+          where: and(eq(forgeDocuments.id, documentId), eq(forgeDocuments.tenantId, tenantId)),
+        });
+        if (!document) throw new ForgeError("NOT_FOUND", "Document not found");
+        if (!documentBelongsToTenant(document.tenantId, tenantId)) {
+          throw new ForgeError("FORBIDDEN", "Document does not belong to the requested tenant");
+        }
+        if (!objectKeyBelongsToTenant(document.objectKey, tenantId)) {
+          throw new ForgeError("FORBIDDEN", "Object key does not belong to the requested tenant");
+        }
+        if (document.source !== "INDUSTRIAL_PERSONNEL_CERT") {
+          throw new ForgeError(
+            "VALIDATION_FAILED",
+            "Document is not a personnel certification upload",
+          );
+        }
 
-      await this.storage.assertObjectExists(document.objectKey);
+        await this.storage.assertObjectExists(document.objectKey);
 
-      const now = new Date();
-      await tx
-        .update(forgeDocuments)
-        .set({ uploadStatus: "COMPLETE", uploadedAt: now, updatedAt: now })
-        .where(eq(forgeDocuments.id, document.id));
-
-      if (personnelId) {
-        const column = personnelCertColumn(kind);
-        const [person] = await tx
-          .select({ id: industrialPersonnel.id })
-          .from(industrialPersonnel)
-          .where(
-            and(
-              eq(industrialPersonnel.id, personnelId),
-              eq(industrialPersonnel.tenantId, tenantId),
-            ),
-          )
-          .limit(1);
-        if (!person) throw new ForgeError("NOT_FOUND", "Personnel not found");
+        const now = new Date();
         await tx
-          .update(industrialPersonnel)
-          .set({ [column]: documentId, updatedAt: now } as never)
-          .where(eq(industrialPersonnel.id, personnelId));
-      }
+          .update(forgeDocuments)
+          .set({ uploadStatus: "COMPLETE", uploadedAt: now, updatedAt: now })
+          .where(eq(forgeDocuments.id, document.id));
 
-      return {
-        documentId: document.id,
-        kind,
-        originalFilename: document.originalFilename,
-        mimeType: document.mimeType,
-        fileSizeBytes: document.fileSizeBytes,
-        uploadStatus: "COMPLETE",
-        ...(personnelId ? { personnelId } : {}),
-      };
-    }, principal.userId);
+        if (personnelId) {
+          const column = personnelCertColumn(kind);
+          const [person] = await tx
+            .select({ id: industrialPersonnel.id })
+            .from(industrialPersonnel)
+            .where(
+              and(
+                eq(industrialPersonnel.id, personnelId),
+                eq(industrialPersonnel.tenantId, tenantId),
+              ),
+            )
+            .limit(1);
+          if (!person) throw new ForgeError("NOT_FOUND", "Personnel not found");
+          await tx
+            .update(industrialPersonnel)
+            .set({ [column]: documentId, updatedAt: now } as never)
+            .where(eq(industrialPersonnel.id, personnelId));
+        }
+
+        return {
+          documentId: document.id,
+          kind,
+          originalFilename: document.originalFilename,
+          mimeType: document.mimeType,
+          fileSizeBytes: document.fileSizeBytes,
+          uploadStatus: "COMPLETE",
+          ...(personnelId ? { personnelId } : {}),
+        };
+      },
+      principal.userId,
+    );
   }
 
   /**
@@ -260,7 +275,10 @@ export class IndustrialPersonnelCertificationsService {
     }
 
     const hasCprDate = Object.prototype.hasOwnProperty.call(body, "cprCertificationExpiresDate");
-    const hasFaDate = Object.prototype.hasOwnProperty.call(body, "firstAidCertificationExpiresDate");
+    const hasFaDate = Object.prototype.hasOwnProperty.call(
+      body,
+      "firstAidCertificationExpiresDate",
+    );
     const hasCprDoc = Object.prototype.hasOwnProperty.call(body, "cprCertificationDocumentId");
     const hasFaDoc = Object.prototype.hasOwnProperty.call(body, "firstAidCertificationDocumentId");
     const hasTracks = Object.prototype.hasOwnProperty.call(body, "tracksFirstAid");
@@ -273,72 +291,86 @@ export class IndustrialPersonnelCertificationsService {
     }
 
     const cprExpires = hasCprDate ? optionalCertDate(body.cprCertificationExpiresDate) : undefined;
-    const faExpires = hasFaDate ? optionalCertDate(body.firstAidCertificationExpiresDate) : undefined;
-    const cprDocId = hasCprDoc ? optionalCertDocumentId(body.cprCertificationDocumentId) : undefined;
-    const faDocId = hasFaDoc ? optionalCertDocumentId(body.firstAidCertificationDocumentId) : undefined;
+    const faExpires = hasFaDate
+      ? optionalCertDate(body.firstAidCertificationExpiresDate)
+      : undefined;
+    const cprDocId = hasCprDoc
+      ? optionalCertDocumentId(body.cprCertificationDocumentId)
+      : undefined;
+    const faDocId = hasFaDoc
+      ? optionalCertDocumentId(body.firstAidCertificationDocumentId)
+      : undefined;
 
-    return withTenantTransaction(this.db, tenantId, async (tx) => {
-      const [person] = await tx
-        .select({
-          id: industrialPersonnel.id,
-          displayName: industrialPersonnel.displayName,
-          tracksFirstAid: industrialPersonnel.tracksFirstAid,
-          cprCertificationExpiresDate: industrialPersonnel.cprCertificationExpiresDate,
-          firstAidCertificationExpiresDate: industrialPersonnel.firstAidCertificationExpiresDate,
-          cprCertificationDocumentId: industrialPersonnel.cprCertificationDocumentId,
-          firstAidCertificationDocumentId: industrialPersonnel.firstAidCertificationDocumentId,
-        })
-        .from(industrialPersonnel)
-        .where(
-          and(eq(industrialPersonnel.id, personnelId), eq(industrialPersonnel.tenantId, tenantId)),
-        )
-        .limit(1);
-      if (!person) throw new ForgeError("NOT_FOUND", "Personnel not found");
+    return withTenantTransaction(
+      this.db,
+      tenantId,
+      async (tx) => {
+        const [person] = await tx
+          .select({
+            id: industrialPersonnel.id,
+            displayName: industrialPersonnel.displayName,
+            tracksFirstAid: industrialPersonnel.tracksFirstAid,
+            cprCertificationExpiresDate: industrialPersonnel.cprCertificationExpiresDate,
+            firstAidCertificationExpiresDate: industrialPersonnel.firstAidCertificationExpiresDate,
+            cprCertificationDocumentId: industrialPersonnel.cprCertificationDocumentId,
+            firstAidCertificationDocumentId: industrialPersonnel.firstAidCertificationDocumentId,
+          })
+          .from(industrialPersonnel)
+          .where(
+            and(
+              eq(industrialPersonnel.id, personnelId),
+              eq(industrialPersonnel.tenantId, tenantId),
+            ),
+          )
+          .limit(1);
+        if (!person) throw new ForgeError("NOT_FOUND", "Personnel not found");
 
-      if (cprDocId) await this.assertCompleteCertDocument(tx, tenantId, cprDocId);
-      if (faDocId) await this.assertCompleteCertDocument(tx, tenantId, faDocId);
+        if (cprDocId) await this.assertCompleteCertDocument(tx, tenantId, cprDocId);
+        if (faDocId) await this.assertCompleteCertDocument(tx, tenantId, faDocId);
 
-      const now = new Date();
-      const patch: Record<string, unknown> = { updatedAt: now };
-      if (hasTracks) {
-        patch.tracksFirstAid = Boolean(body.tracksFirstAid);
-      } else if (cprExpires || faExpires || cprDocId || faDocId) {
-        // Linking a cert implies the person should appear on the First Aid roster.
-        patch.tracksFirstAid = true;
-      }
-      if (cprExpires !== undefined) patch.cprCertificationExpiresDate = cprExpires;
-      if (faExpires !== undefined) patch.firstAidCertificationExpiresDate = faExpires;
-      if (cprDocId !== undefined) patch.cprCertificationDocumentId = cprDocId;
-      if (faDocId !== undefined) patch.firstAidCertificationDocumentId = faDocId;
+        const now = new Date();
+        const patch: Record<string, unknown> = { updatedAt: now };
+        if (hasTracks) {
+          patch.tracksFirstAid = Boolean(body.tracksFirstAid);
+        } else if (cprExpires || faExpires || cprDocId || faDocId) {
+          // Linking a cert implies the person should appear on the First Aid roster.
+          patch.tracksFirstAid = true;
+        }
+        if (cprExpires !== undefined) patch.cprCertificationExpiresDate = cprExpires;
+        if (faExpires !== undefined) patch.firstAidCertificationExpiresDate = faExpires;
+        if (cprDocId !== undefined) patch.cprCertificationDocumentId = cprDocId;
+        if (faDocId !== undefined) patch.firstAidCertificationDocumentId = faDocId;
 
-      const [row] = await tx
-        .update(industrialPersonnel)
-        .set(patch as never)
-        .where(eq(industrialPersonnel.id, personnelId))
-        .returning({
-          id: industrialPersonnel.id,
-          displayName: industrialPersonnel.displayName,
-          tracksFirstAid: industrialPersonnel.tracksFirstAid,
-          cprCertificationExpiresDate: industrialPersonnel.cprCertificationExpiresDate,
-          firstAidCertificationExpiresDate: industrialPersonnel.firstAidCertificationExpiresDate,
-          cprCertificationDocumentId: industrialPersonnel.cprCertificationDocumentId,
-          firstAidCertificationDocumentId: industrialPersonnel.firstAidCertificationDocumentId,
-        });
+        const [row] = await tx
+          .update(industrialPersonnel)
+          .set(patch as never)
+          .where(eq(industrialPersonnel.id, personnelId))
+          .returning({
+            id: industrialPersonnel.id,
+            displayName: industrialPersonnel.displayName,
+            tracksFirstAid: industrialPersonnel.tracksFirstAid,
+            cprCertificationExpiresDate: industrialPersonnel.cprCertificationExpiresDate,
+            firstAidCertificationExpiresDate: industrialPersonnel.firstAidCertificationExpiresDate,
+            cprCertificationDocumentId: industrialPersonnel.cprCertificationDocumentId,
+            firstAidCertificationDocumentId: industrialPersonnel.firstAidCertificationDocumentId,
+          });
 
-      return {
-        personnelId: row!.id,
-        displayName: row!.displayName,
-        tracksFirstAid: Boolean(row!.tracksFirstAid),
-        cprCertificationExpiresDate: row!.cprCertificationExpiresDate
-          ? String(row!.cprCertificationExpiresDate).slice(0, 10)
-          : null,
-        firstAidCertificationExpiresDate: row!.firstAidCertificationExpiresDate
-          ? String(row!.firstAidCertificationExpiresDate).slice(0, 10)
-          : null,
-        cprCertificationDocumentId: row!.cprCertificationDocumentId ?? null,
-        firstAidCertificationDocumentId: row!.firstAidCertificationDocumentId ?? null,
-      };
-    }, principal.userId);
+        return {
+          personnelId: row!.id,
+          displayName: row!.displayName,
+          tracksFirstAid: Boolean(row!.tracksFirstAid),
+          cprCertificationExpiresDate: row!.cprCertificationExpiresDate
+            ? String(row!.cprCertificationExpiresDate).slice(0, 10)
+            : null,
+          firstAidCertificationExpiresDate: row!.firstAidCertificationExpiresDate
+            ? String(row!.firstAidCertificationExpiresDate).slice(0, 10)
+            : null,
+          cprCertificationDocumentId: row!.cprCertificationDocumentId ?? null,
+          firstAidCertificationDocumentId: row!.firstAidCertificationDocumentId ?? null,
+        };
+      },
+      principal.userId,
+    );
   }
 
   private async assertCompleteCertDocument(
@@ -363,11 +395,7 @@ export class IndustrialPersonnelCertificationsService {
     }
   }
 
-  async createDownloadUrl(
-    principal: ForgePrincipal,
-    personnelId: string,
-    kindRaw: string,
-  ) {
+  async createDownloadUrl(principal: ForgePrincipal, personnelId: string, kindRaw: string) {
     const tenantId = this.tenant(principal);
     const kind = this.parseKind(kindRaw);
     if (!UUID_PATTERN.test(personnelId)) {
@@ -410,7 +438,8 @@ export class IndustrialPersonnelCertificationsService {
     );
 
     await this.storage.assertObjectExists(document.objectKey);
-    const inline = document.mimeType.startsWith("image/") || document.mimeType === "application/pdf";
+    const inline =
+      document.mimeType.startsWith("image/") || document.mimeType === "application/pdf";
     const presign = await this.storage.createPresignedDownloadUrl({
       objectKey: document.objectKey,
       mimeType: document.mimeType,

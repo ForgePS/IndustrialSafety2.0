@@ -9,35 +9,35 @@
 
 ## Apply taxonomy
 
-| Class | Count |
-| --- | ---: |
-| INSERTED | 25 |
+| Class                      | Count |
+| -------------------------- | ----: |
+| INSERTED                   |    25 |
 | UPDATED / SKIPPED_EXISTING | 38110 |
-| EXCLUDE_APPROVED | 142 |
-| WARNING_EXPLAINED | 3995 |
-| ERROR_UNEXPLAINED | **0** |
-| FATAL | **0** |
-| SKIP_MISSING_PARENT | 2576 |
-| SKIP_NON_PRODUCERS | 1419 |
-| FABRICATED_VEHICLES | 0 |
+| EXCLUDE_APPROVED           |   142 |
+| WARNING_EXPLAINED          |  3995 |
+| ERROR_UNEXPLAINED          | **0** |
+| FATAL                      | **0** |
+| SKIP_MISSING_PARENT        |  2576 |
+| SKIP_NON_PRODUCERS         |  1419 |
+| FABRICATED_VEHICLES        |     0 |
 
 ## Business row apply (authoritative)
 
-| Entity | Inserted | Updated |
-| --- | ---: | ---: |
-| industrial_qr_link_scan_events | 5 | 46 |
-| industrial_history_records | 18 | 25307 |
-| Operational LOTO / QR / etc. | 0 new | included in UPDATED set |
+| Entity                         | Inserted |                 Updated |
+| ------------------------------ | -------: | ----------------------: |
+| industrial_qr_link_scan_events |        5 |                      46 |
+| industrial_history_records     |       18 |                   25307 |
+| Operational LOTO / QR / etc.   |    0 new | included in UPDATED set |
 
 ## Dry-run vs apply reconciliation
 
-| Metric | Dry-run | Apply | Notes |
-| --- | ---: | ---: | --- |
-| Scan event inserts | 5 | 5 | Match |
-| History inserts | 18 | 18 | Match |
-| id-map taxonomy inserts | 25 | 2 | Bookkeeping counter variance |
-| id-map row count delta | — | +25 (42260→42285) | Actual map growth matches dry-run planned maps |
-| ERROR / FATAL | 0 | 0 | Match |
+| Metric                  | Dry-run |             Apply | Notes                                          |
+| ----------------------- | ------: | ----------------: | ---------------------------------------------- |
+| Scan event inserts      |       5 |                 5 | Match                                          |
+| History inserts         |      18 |                18 | Match                                          |
+| id-map taxonomy inserts |      25 |                 2 | Bookkeeping counter variance                   |
+| id-map row count delta  |       — | +25 (42260→42285) | Actual map growth matches dry-run planned maps |
+| ERROR / FATAL           |       0 |                 0 | Match                                          |
 
 **APPLY_UNEXPLAINED (business): 0**  
 Taxonomy `INSERTED` differs because dry-run over-counts id-map insert events; Aurora id-map cardinality confirms +25 maps as planned.
@@ -46,11 +46,11 @@ Taxonomy `INSERTED` differs because dry-run over-counts id-map insert events; Au
 
 Second apply of the same package (`cai-s2-delta-idempotency-20260814T125600Z`):
 
-| Metric | Result |
-| --- | --- |
-| INSERTED | **0** |
-| ERROR_UNEXPLAINED | **0** |
-| FATAL | **0** |
+| Metric            | Result   |
+| ----------------- | -------- |
+| INSERTED          | **0**    |
+| ERROR_UNEXPLAINED | **0**    |
+| FATAL             | **0**    |
 | DELTA_IDEMPOTENCY | **PASS** |
 
 ## Attachment keys

@@ -90,233 +90,255 @@ export class BillingService {
 
   async ensureCustomer(tenantId: string, input: unknown, principal: ForgePrincipal) {
     const data = createBillingCustomerInputSchema.parse(input ?? {});
-    return withTenantTransaction(this.db, tenantId, async (tx) => {
-      const existing = await tx.query.billingCustomers.findFirst({
-        where: eq(billingCustomers.tenantId, tenantId),
-      });
-      if (existing) {
-        return existing;
-      }
-      const now = new Date();
-      const id = createId();
-      const [row] = await tx
-        .insert(billingCustomers)
-        .values({
-          id,
+    return withTenantTransaction(
+      this.db,
+      tenantId,
+      async (tx) => {
+        const existing = await tx.query.billingCustomers.findFirst({
+          where: eq(billingCustomers.tenantId, tenantId),
+        });
+        if (existing) {
+          return existing;
+        }
+        const now = new Date();
+        const id = createId();
+        const [row] = await tx
+          .insert(billingCustomers)
+          .values({
+            id,
+            tenantId,
+            displayName: data.displayName ?? `Tenant ${tenantId.slice(0, 8)}`,
+            billingEmail: data.billingEmail ?? null,
+            billingProvider: data.billingProvider,
+            externalCustomerId: data.externalCustomerId ?? null,
+            status: "ACTIVE",
+            createdAt: now,
+            updatedAt: now,
+          })
+          .returning();
+        if (!row) {
+          throw new ForgeError("INTERNAL_ERROR", "Failed to create billing customer");
+        }
+        await this.audit.writeInTransaction(tx, {
           tenantId,
-          displayName: data.displayName ?? `Tenant ${tenantId.slice(0, 8)}`,
-          billingEmail: data.billingEmail ?? null,
-          billingProvider: data.billingProvider,
-          externalCustomerId: data.externalCustomerId ?? null,
-          status: "ACTIVE",
-          createdAt: now,
-          updatedAt: now,
-        })
-        .returning();
-      if (!row) {
-        throw new ForgeError("INTERNAL_ERROR", "Failed to create billing customer");
-      }
-      await this.audit.writeInTransaction(tx, {
-        tenantId,
-        actorUserId: principal.userId,
-        actorPersonId: principal.personId,
-        actorType: "USER",
-        action: "billing.customer.create",
-        resourceType: "billing_customer",
-        resourceId: id,
-        result: "SUCCESS",
-        riskLevel: "MEDIUM",
-        correlationId: principal.correlationId,
-        requestId: principal.requestId,
-        after: row,
-      });
-      return row;
-    }, principal.userId);
+          actorUserId: principal.userId,
+          actorPersonId: principal.personId,
+          actorType: "USER",
+          action: "billing.customer.create",
+          resourceType: "billing_customer",
+          resourceId: id,
+          result: "SUCCESS",
+          riskLevel: "MEDIUM",
+          correlationId: principal.correlationId,
+          requestId: principal.requestId,
+          after: row,
+        });
+        return row;
+      },
+      principal.userId,
+    );
   }
 
   async createContract(tenantId: string, input: unknown, principal: ForgePrincipal) {
     const data = createBillingContractInputSchema.parse(input);
     const customer = await this.ensureCustomer(tenantId, {}, principal);
-    return withTenantTransaction(this.db, tenantId, async (tx) => {
-      const now = new Date();
-      const id = createId();
-      const [row] = await tx
-        .insert(billingContracts)
-        .values({
-          id,
+    return withTenantTransaction(
+      this.db,
+      tenantId,
+      async (tx) => {
+        const now = new Date();
+        const id = createId();
+        const [row] = await tx
+          .insert(billingContracts)
+          .values({
+            id,
+            tenantId,
+            billingCustomerId: customer.id,
+            name: data.name,
+            status: data.status,
+            billingType: data.billingType,
+            startsOn: data.startsOn ?? null,
+            endsOn: data.endsOn ?? null,
+            renewalOn: data.renewalOn ?? null,
+            setupFeeCents: data.setupFeeCents ?? null,
+            notes: data.notes ?? null,
+            pricingJson: data.pricingJson ?? {},
+            createdAt: now,
+            updatedAt: now,
+          })
+          .returning();
+        if (!row) {
+          throw new ForgeError("INTERNAL_ERROR", "Failed to create billing contract");
+        }
+        await this.outbox.write(tx, {
           tenantId,
-          billingCustomerId: customer.id,
-          name: data.name,
-          status: data.status,
-          billingType: data.billingType,
-          startsOn: data.startsOn ?? null,
-          endsOn: data.endsOn ?? null,
-          renewalOn: data.renewalOn ?? null,
-          setupFeeCents: data.setupFeeCents ?? null,
-          notes: data.notes ?? null,
-          pricingJson: data.pricingJson ?? {},
-          createdAt: now,
-          updatedAt: now,
-        })
-        .returning();
-      if (!row) {
-        throw new ForgeError("INTERNAL_ERROR", "Failed to create billing contract");
-      }
-      await this.outbox.write(tx, {
-        tenantId,
-        aggregateType: "billing_contract",
-        aggregateId: id,
-        eventType: DOMAIN_EVENT_TYPES.BILLING_CONTRACT_CHANGED,
-        payload: { contractId: id, status: data.status, billingType: data.billingType },
-        correlationId: principal.correlationId,
-        actorUserId: principal.userId,
-      });
-      await this.audit.writeInTransaction(tx, {
-        tenantId,
-        actorUserId: principal.userId,
-        actorPersonId: principal.personId,
-        actorType: "USER",
-        action: "billing.contract.create",
-        resourceType: "billing_contract",
-        resourceId: id,
-        result: "SUCCESS",
-        riskLevel: "HIGH",
-        correlationId: principal.correlationId,
-        requestId: principal.requestId,
-        after: row,
-      });
-      return row;
-    }, principal.userId);
+          aggregateType: "billing_contract",
+          aggregateId: id,
+          eventType: DOMAIN_EVENT_TYPES.BILLING_CONTRACT_CHANGED,
+          payload: { contractId: id, status: data.status, billingType: data.billingType },
+          correlationId: principal.correlationId,
+          actorUserId: principal.userId,
+        });
+        await this.audit.writeInTransaction(tx, {
+          tenantId,
+          actorUserId: principal.userId,
+          actorPersonId: principal.personId,
+          actorType: "USER",
+          action: "billing.contract.create",
+          resourceType: "billing_contract",
+          resourceId: id,
+          result: "SUCCESS",
+          riskLevel: "HIGH",
+          correlationId: principal.correlationId,
+          requestId: principal.requestId,
+          after: row,
+        });
+        return row;
+      },
+      principal.userId,
+    );
   }
 
   async addFeeLine(tenantId: string, input: unknown, principal: ForgePrincipal) {
     const data = createBillingFeeInputSchema.parse(input);
-    return withTenantTransaction(this.db, tenantId, async (tx) => {
-      const id = createId();
-      const [row] = await tx
-        .insert(billingFeeLines)
-        .values({
-          id,
+    return withTenantTransaction(
+      this.db,
+      tenantId,
+      async (tx) => {
+        const id = createId();
+        const [row] = await tx
+          .insert(billingFeeLines)
+          .values({
+            id,
+            tenantId,
+            contractId: data.contractId ?? null,
+            orderId: data.orderId ?? null,
+            feeType: data.feeType,
+            amountCents: data.amountCents,
+            currency: data.currency,
+            description: data.description ?? null,
+            createdAt: new Date(),
+          })
+          .returning();
+        if (!row) {
+          throw new ForgeError("INTERNAL_ERROR", "Failed to create fee line");
+        }
+        await this.audit.writeInTransaction(tx, {
           tenantId,
-          contractId: data.contractId ?? null,
-          orderId: data.orderId ?? null,
-          feeType: data.feeType,
-          amountCents: data.amountCents,
-          currency: data.currency,
-          description: data.description ?? null,
-          createdAt: new Date(),
-        })
-        .returning();
-      if (!row) {
-        throw new ForgeError("INTERNAL_ERROR", "Failed to create fee line");
-      }
-      await this.audit.writeInTransaction(tx, {
-        tenantId,
-        actorUserId: principal.userId,
-        actorPersonId: principal.personId,
-        actorType: "USER",
-        action: "billing.fee.create",
-        resourceType: "billing_fee_line",
-        resourceId: id,
-        result: "SUCCESS",
-        riskLevel: "MEDIUM",
-        correlationId: principal.correlationId,
-        requestId: principal.requestId,
-        after: row,
-      });
-      return row;
-    }, principal.userId);
+          actorUserId: principal.userId,
+          actorPersonId: principal.personId,
+          actorType: "USER",
+          action: "billing.fee.create",
+          resourceType: "billing_fee_line",
+          resourceId: id,
+          result: "SUCCESS",
+          riskLevel: "MEDIUM",
+          correlationId: principal.correlationId,
+          requestId: principal.requestId,
+          after: row,
+        });
+        return row;
+      },
+      principal.userId,
+    );
   }
 
   async createOrder(tenantId: string, input: unknown, principal: ForgePrincipal) {
     const data = orderSchema.parse(input);
     const customer = await this.ensureCustomer(tenantId, {}, principal);
-    const total = data.items.reduce(
-      (sum, item) => sum + item.quantity * item.unitAmountCents,
-      0,
+    const total = data.items.reduce((sum, item) => sum + item.quantity * item.unitAmountCents, 0);
+    return withTenantTransaction(
+      this.db,
+      tenantId,
+      async (tx) => {
+        const now = new Date();
+        const orderId = createId();
+        const [order] = await tx
+          .insert(billingOrders)
+          .values({
+            id: orderId,
+            tenantId,
+            billingCustomerId: customer.id,
+            contractId: data.contractId ?? null,
+            status: data.status,
+            currency: data.currency,
+            totalCents: total,
+            metadataJson: {},
+            createdAt: now,
+            updatedAt: now,
+          })
+          .returning();
+        if (!order) {
+          throw new ForgeError("INTERNAL_ERROR", "Failed to create order");
+        }
+        for (const item of data.items) {
+          await tx.insert(billingOrderItems).values({
+            id: createId(),
+            tenantId,
+            orderId,
+            description: item.description,
+            quantity: item.quantity,
+            unitAmountCents: item.unitAmountCents,
+            billingType: item.billingType,
+            metadataJson: {},
+            createdAt: now,
+          });
+        }
+        return order;
+      },
+      principal.userId,
     );
-    return withTenantTransaction(this.db, tenantId, async (tx) => {
-      const now = new Date();
-      const orderId = createId();
-      const [order] = await tx
-        .insert(billingOrders)
-        .values({
-          id: orderId,
-          tenantId,
-          billingCustomerId: customer.id,
-          contractId: data.contractId ?? null,
-          status: data.status,
-          currency: data.currency,
-          totalCents: total,
-          metadataJson: {},
-          createdAt: now,
-          updatedAt: now,
-        })
-        .returning();
-      if (!order) {
-        throw new ForgeError("INTERNAL_ERROR", "Failed to create order");
-      }
-      for (const item of data.items) {
-        await tx.insert(billingOrderItems).values({
-          id: createId(),
-          tenantId,
-          orderId,
-          description: item.description,
-          quantity: item.quantity,
-          unitAmountCents: item.unitAmountCents,
-          billingType: item.billingType,
-          metadataJson: {},
-          createdAt: now,
-        });
-      }
-      return order;
-    }, principal.userId);
   }
 
   async recordInvoiceMetadata(tenantId: string, input: unknown, principal: ForgePrincipal) {
     const data = createBillingInvoiceInputSchema.parse(input);
     const customer = await this.ensureCustomer(tenantId, {}, principal);
-    return withTenantTransaction(this.db, tenantId, async (tx) => {
-      const now = new Date();
-      const id = createId();
-      const [row] = await tx
-        .insert(billingInvoices)
-        .values({
-          id,
+    return withTenantTransaction(
+      this.db,
+      tenantId,
+      async (tx) => {
+        const now = new Date();
+        const id = createId();
+        const [row] = await tx
+          .insert(billingInvoices)
+          .values({
+            id,
+            tenantId,
+            billingCustomerId: customer.id,
+            subscriptionId: data.subscriptionId ?? null,
+            orderId: data.orderId ?? null,
+            status: data.status,
+            currency: data.currency,
+            amountDueCents: data.amountDueCents,
+            amountPaidCents: data.amountPaidCents,
+            externalInvoiceId: data.externalInvoiceId ?? null,
+            hostedInvoiceUrl: data.hostedInvoiceUrl ?? null,
+            metadataJson: data.metadata ?? {},
+            createdAt: now,
+            updatedAt: now,
+          })
+          .returning();
+        if (!row) {
+          throw new ForgeError("INTERNAL_ERROR", "Failed to record invoice metadata");
+        }
+        await this.audit.writeInTransaction(tx, {
           tenantId,
-          billingCustomerId: customer.id,
-          subscriptionId: data.subscriptionId ?? null,
-          orderId: data.orderId ?? null,
-          status: data.status,
-          currency: data.currency,
-          amountDueCents: data.amountDueCents,
-          amountPaidCents: data.amountPaidCents,
-          externalInvoiceId: data.externalInvoiceId ?? null,
-          hostedInvoiceUrl: data.hostedInvoiceUrl ?? null,
-          metadataJson: data.metadata ?? {},
-          createdAt: now,
-          updatedAt: now,
-        })
-        .returning();
-      if (!row) {
-        throw new ForgeError("INTERNAL_ERROR", "Failed to record invoice metadata");
-      }
-      await this.audit.writeInTransaction(tx, {
-        tenantId,
-        actorUserId: principal.userId,
-        actorPersonId: principal.personId,
-        actorType: "USER",
-        action: "billing.invoice.record",
-        resourceType: "billing_invoice",
-        resourceId: id,
-        result: "SUCCESS",
-        riskLevel: "MEDIUM",
-        correlationId: principal.correlationId,
-        requestId: principal.requestId,
-        after: row,
-      });
-      return row;
-    }, principal.userId);
+          actorUserId: principal.userId,
+          actorPersonId: principal.personId,
+          actorType: "USER",
+          action: "billing.invoice.record",
+          resourceType: "billing_invoice",
+          resourceId: id,
+          result: "SUCCESS",
+          riskLevel: "MEDIUM",
+          correlationId: principal.correlationId,
+          requestId: principal.requestId,
+          after: row,
+        });
+        return row;
+      },
+      principal.userId,
+    );
   }
 
   async listContracts(tenantId: string) {
@@ -346,64 +368,69 @@ export class BillingService {
     expectedVersion: number | "*",
   ) {
     const data = patchBillingCustomerInputSchema.parse(input);
-    return withTenantTransaction(this.db, tenantId, async (tx) => {
-      const before = await tx.query.billingCustomers.findFirst({
-        where: eq(billingCustomers.tenantId, tenantId),
-      });
-      if (!before) {
-        throw new ForgeError("NOT_FOUND", "Billing customer not found");
-      }
-      const version = before.recordVersion;
-      if (expectedVersion !== "*" && version !== expectedVersion) {
-        throw concurrencyConflict({
-          tenantId,
-          resourceType: "billing_customer",
-          resourceId: before.id,
-          expectedVersion,
-          actualVersion: version,
+    return withTenantTransaction(
+      this.db,
+      tenantId,
+      async (tx) => {
+        const before = await tx.query.billingCustomers.findFirst({
+          where: eq(billingCustomers.tenantId, tenantId),
         });
-      }
-      const [row] = await tx
-        .update(billingCustomers)
-        .set({
-          ...(data.displayName !== undefined ? { displayName: data.displayName } : {}),
-          ...(data.billingEmail !== undefined ? { billingEmail: data.billingEmail } : {}),
-          ...(data.externalCustomerId !== undefined
-            ? { externalCustomerId: data.externalCustomerId }
-            : {}),
-          recordVersion: version + 1,
-          updatedAt: new Date(),
-        })
-        .where(
-          and(eq(billingCustomers.id, before.id), eq(billingCustomers.recordVersion, version)),
-        )
-        .returning();
-      if (!row) {
-        throw concurrencyConflict({
+        if (!before) {
+          throw new ForgeError("NOT_FOUND", "Billing customer not found");
+        }
+        const version = before.recordVersion;
+        if (expectedVersion !== "*" && version !== expectedVersion) {
+          throw concurrencyConflict({
+            tenantId,
+            resourceType: "billing_customer",
+            resourceId: before.id,
+            expectedVersion,
+            actualVersion: version,
+          });
+        }
+        const [row] = await tx
+          .update(billingCustomers)
+          .set({
+            ...(data.displayName !== undefined ? { displayName: data.displayName } : {}),
+            ...(data.billingEmail !== undefined ? { billingEmail: data.billingEmail } : {}),
+            ...(data.externalCustomerId !== undefined
+              ? { externalCustomerId: data.externalCustomerId }
+              : {}),
+            recordVersion: version + 1,
+            updatedAt: new Date(),
+          })
+          .where(
+            and(eq(billingCustomers.id, before.id), eq(billingCustomers.recordVersion, version)),
+          )
+          .returning();
+        if (!row) {
+          throw concurrencyConflict({
+            tenantId,
+            resourceType: "billing_customer",
+            resourceId: before.id,
+            expectedVersion,
+            actualVersion: null,
+          });
+        }
+        await this.audit.writeInTransaction(tx, {
           tenantId,
+          actorUserId: principal.userId,
+          actorPersonId: principal.personId,
+          actorType: "USER",
+          action: "billing.customer.update",
           resourceType: "billing_customer",
-          resourceId: before.id,
-          expectedVersion,
-          actualVersion: null,
+          resourceId: row.id,
+          result: "SUCCESS",
+          riskLevel: "MEDIUM",
+          correlationId: principal.correlationId,
+          requestId: principal.requestId,
+          before,
+          after: row,
         });
-      }
-      await this.audit.writeInTransaction(tx, {
-        tenantId,
-        actorUserId: principal.userId,
-        actorPersonId: principal.personId,
-        actorType: "USER",
-        action: "billing.customer.update",
-        resourceType: "billing_customer",
-        resourceId: row.id,
-        result: "SUCCESS",
-        riskLevel: "MEDIUM",
-        correlationId: principal.correlationId,
-        requestId: principal.requestId,
-        before,
-        after: row,
-      });
-      return row;
-    }, principal.userId);
+        return row;
+      },
+      principal.userId,
+    );
   }
 
   async listInvoices(tenantId: string) {
@@ -432,68 +459,77 @@ export class BillingService {
     expectedVersion: number | "*",
   ) {
     const data = patchBillingInvoiceInputSchema.parse(input);
-    return withTenantTransaction(this.db, tenantId, async (tx) => {
-      const before = await tx.query.billingInvoices.findFirst({
-        where: and(eq(billingInvoices.id, invoiceId), eq(billingInvoices.tenantId, tenantId)),
-      });
-      if (!before) {
-        throw new ForgeError("NOT_FOUND", "Billing invoice not found");
-      }
-      const version = before.recordVersion;
-      if (expectedVersion !== "*" && version !== expectedVersion) {
-        throw concurrencyConflict({
+    return withTenantTransaction(
+      this.db,
+      tenantId,
+      async (tx) => {
+        const before = await tx.query.billingInvoices.findFirst({
+          where: and(eq(billingInvoices.id, invoiceId), eq(billingInvoices.tenantId, tenantId)),
+        });
+        if (!before) {
+          throw new ForgeError("NOT_FOUND", "Billing invoice not found");
+        }
+        const version = before.recordVersion;
+        if (expectedVersion !== "*" && version !== expectedVersion) {
+          throw concurrencyConflict({
+            tenantId,
+            resourceType: "billing_invoice",
+            resourceId: invoiceId,
+            expectedVersion,
+            actualVersion: version,
+          });
+        }
+        const [row] = await tx
+          .update(billingInvoices)
+          .set({
+            ...(data.status !== undefined ? { status: data.status } : {}),
+            ...(data.currency !== undefined ? { currency: data.currency } : {}),
+            ...(data.amountDueCents !== undefined ? { amountDueCents: data.amountDueCents } : {}),
+            ...(data.amountPaidCents !== undefined
+              ? { amountPaidCents: data.amountPaidCents }
+              : {}),
+            ...(data.externalInvoiceId !== undefined
+              ? { externalInvoiceId: data.externalInvoiceId }
+              : {}),
+            ...(data.hostedInvoiceUrl !== undefined
+              ? { hostedInvoiceUrl: data.hostedInvoiceUrl }
+              : {}),
+            ...(data.subscriptionId !== undefined ? { subscriptionId: data.subscriptionId } : {}),
+            ...(data.orderId !== undefined ? { orderId: data.orderId } : {}),
+            ...(data.metadata !== undefined ? { metadataJson: data.metadata ?? {} } : {}),
+            recordVersion: version + 1,
+            updatedAt: new Date(),
+          })
+          .where(and(eq(billingInvoices.id, invoiceId), eq(billingInvoices.recordVersion, version)))
+          .returning();
+        if (!row) {
+          throw concurrencyConflict({
+            tenantId,
+            resourceType: "billing_invoice",
+            resourceId: invoiceId,
+            expectedVersion,
+            actualVersion: null,
+          });
+        }
+        await this.audit.writeInTransaction(tx, {
           tenantId,
+          actorUserId: principal.userId,
+          actorPersonId: principal.personId,
+          actorType: "USER",
+          action: "billing.invoice.update",
           resourceType: "billing_invoice",
           resourceId: invoiceId,
-          expectedVersion,
-          actualVersion: version,
+          result: "SUCCESS",
+          riskLevel: "MEDIUM",
+          correlationId: principal.correlationId,
+          requestId: principal.requestId,
+          before,
+          after: row,
         });
-      }
-      const [row] = await tx
-        .update(billingInvoices)
-        .set({
-          ...(data.status !== undefined ? { status: data.status } : {}),
-          ...(data.currency !== undefined ? { currency: data.currency } : {}),
-          ...(data.amountDueCents !== undefined ? { amountDueCents: data.amountDueCents } : {}),
-          ...(data.amountPaidCents !== undefined ? { amountPaidCents: data.amountPaidCents } : {}),
-          ...(data.externalInvoiceId !== undefined
-            ? { externalInvoiceId: data.externalInvoiceId }
-            : {}),
-          ...(data.hostedInvoiceUrl !== undefined ? { hostedInvoiceUrl: data.hostedInvoiceUrl } : {}),
-          ...(data.subscriptionId !== undefined ? { subscriptionId: data.subscriptionId } : {}),
-          ...(data.orderId !== undefined ? { orderId: data.orderId } : {}),
-          ...(data.metadata !== undefined ? { metadataJson: data.metadata ?? {} } : {}),
-          recordVersion: version + 1,
-          updatedAt: new Date(),
-        })
-        .where(and(eq(billingInvoices.id, invoiceId), eq(billingInvoices.recordVersion, version)))
-        .returning();
-      if (!row) {
-        throw concurrencyConflict({
-          tenantId,
-          resourceType: "billing_invoice",
-          resourceId: invoiceId,
-          expectedVersion,
-          actualVersion: null,
-        });
-      }
-      await this.audit.writeInTransaction(tx, {
-        tenantId,
-        actorUserId: principal.userId,
-        actorPersonId: principal.personId,
-        actorType: "USER",
-        action: "billing.invoice.update",
-        resourceType: "billing_invoice",
-        resourceId: invoiceId,
-        result: "SUCCESS",
-        riskLevel: "MEDIUM",
-        correlationId: principal.correlationId,
-        requestId: principal.requestId,
-        before,
-        after: row,
-      });
-      return row;
-    }, principal.userId);
+        return row;
+      },
+      principal.userId,
+    );
   }
 
   async patchContract(
@@ -504,77 +540,82 @@ export class BillingService {
     expectedVersion: number | "*",
   ) {
     const data = patchBillingContractInputSchema.parse(input);
-    return withTenantTransaction(this.db, tenantId, async (tx) => {
-      const before = await tx.query.billingContracts.findFirst({
-        where: and(eq(billingContracts.id, contractId), eq(billingContracts.tenantId, tenantId)),
-      });
-      if (!before) {
-        throw new ForgeError("NOT_FOUND", "Billing contract not found");
-      }
-      const version = before.recordVersion;
-      if (expectedVersion !== "*" && version !== expectedVersion) {
-        throw concurrencyConflict({
+    return withTenantTransaction(
+      this.db,
+      tenantId,
+      async (tx) => {
+        const before = await tx.query.billingContracts.findFirst({
+          where: and(eq(billingContracts.id, contractId), eq(billingContracts.tenantId, tenantId)),
+        });
+        if (!before) {
+          throw new ForgeError("NOT_FOUND", "Billing contract not found");
+        }
+        const version = before.recordVersion;
+        if (expectedVersion !== "*" && version !== expectedVersion) {
+          throw concurrencyConflict({
+            tenantId,
+            resourceType: "billing_contract",
+            resourceId: contractId,
+            expectedVersion,
+            actualVersion: version,
+          });
+        }
+        const [row] = await tx
+          .update(billingContracts)
+          .set({
+            ...(data.name !== undefined ? { name: data.name } : {}),
+            ...(data.status !== undefined ? { status: data.status } : {}),
+            ...(data.billingType !== undefined ? { billingType: data.billingType } : {}),
+            ...(data.startsOn !== undefined ? { startsOn: data.startsOn } : {}),
+            ...(data.endsOn !== undefined ? { endsOn: data.endsOn } : {}),
+            ...(data.renewalOn !== undefined ? { renewalOn: data.renewalOn } : {}),
+            ...(data.setupFeeCents !== undefined ? { setupFeeCents: data.setupFeeCents } : {}),
+            ...(data.notes !== undefined ? { notes: data.notes } : {}),
+            ...(data.pricingJson !== undefined ? { pricingJson: data.pricingJson ?? {} } : {}),
+            recordVersion: version + 1,
+            updatedAt: new Date(),
+          })
+          .where(
+            and(eq(billingContracts.id, contractId), eq(billingContracts.recordVersion, version)),
+          )
+          .returning();
+        if (!row) {
+          throw concurrencyConflict({
+            tenantId,
+            resourceType: "billing_contract",
+            resourceId: contractId,
+            expectedVersion,
+            actualVersion: null,
+          });
+        }
+        await this.outbox.write(tx, {
           tenantId,
+          aggregateType: "billing_contract",
+          aggregateId: contractId,
+          eventType: DOMAIN_EVENT_TYPES.BILLING_CONTRACT_CHANGED,
+          payload: { contractId, status: row.status },
+          correlationId: principal.correlationId,
+          actorUserId: principal.userId,
+        });
+        await this.audit.writeInTransaction(tx, {
+          tenantId,
+          actorUserId: principal.userId,
+          actorPersonId: principal.personId,
+          actorType: "USER",
+          action: "billing.contract.update",
           resourceType: "billing_contract",
           resourceId: contractId,
-          expectedVersion,
-          actualVersion: version,
+          result: "SUCCESS",
+          riskLevel: "HIGH",
+          correlationId: principal.correlationId,
+          requestId: principal.requestId,
+          before,
+          after: row,
         });
-      }
-      const [row] = await tx
-        .update(billingContracts)
-        .set({
-          ...(data.name !== undefined ? { name: data.name } : {}),
-          ...(data.status !== undefined ? { status: data.status } : {}),
-          ...(data.billingType !== undefined ? { billingType: data.billingType } : {}),
-          ...(data.startsOn !== undefined ? { startsOn: data.startsOn } : {}),
-          ...(data.endsOn !== undefined ? { endsOn: data.endsOn } : {}),
-          ...(data.renewalOn !== undefined ? { renewalOn: data.renewalOn } : {}),
-          ...(data.setupFeeCents !== undefined ? { setupFeeCents: data.setupFeeCents } : {}),
-          ...(data.notes !== undefined ? { notes: data.notes } : {}),
-          ...(data.pricingJson !== undefined ? { pricingJson: data.pricingJson ?? {} } : {}),
-          recordVersion: version + 1,
-          updatedAt: new Date(),
-        })
-        .where(
-          and(eq(billingContracts.id, contractId), eq(billingContracts.recordVersion, version)),
-        )
-        .returning();
-      if (!row) {
-        throw concurrencyConflict({
-          tenantId,
-          resourceType: "billing_contract",
-          resourceId: contractId,
-          expectedVersion,
-          actualVersion: null,
-        });
-      }
-      await this.outbox.write(tx, {
-        tenantId,
-        aggregateType: "billing_contract",
-        aggregateId: contractId,
-        eventType: DOMAIN_EVENT_TYPES.BILLING_CONTRACT_CHANGED,
-        payload: { contractId, status: row.status },
-        correlationId: principal.correlationId,
-        actorUserId: principal.userId,
-      });
-      await this.audit.writeInTransaction(tx, {
-        tenantId,
-        actorUserId: principal.userId,
-        actorPersonId: principal.personId,
-        actorType: "USER",
-        action: "billing.contract.update",
-        resourceType: "billing_contract",
-        resourceId: contractId,
-        result: "SUCCESS",
-        riskLevel: "HIGH",
-        correlationId: principal.correlationId,
-        requestId: principal.requestId,
-        before,
-        after: row,
-      });
-      return row;
-    }, principal.userId);
+        return row;
+      },
+      principal.userId,
+    );
   }
 
   async getOverview(tenantId: string, principal: ForgePrincipal) {
@@ -660,46 +701,55 @@ export class BillingService {
     const tenantId = envelope.tenantId;
     const now = new Date();
 
-    const receipt = await withTenantTransaction(this.db, tenantId, async (tx) => {
-      const existing = await tx.query.billingProviderEvents.findFirst({
-        where: and(
-          eq(billingProviderEvents.provider, input.provider),
-          eq(billingProviderEvents.externalEventId, envelope.eventId),
-        ),
-      });
-      if (existing) {
-        return { duplicate: true as const, row: existing };
-      }
-      const id = createId();
-      const [row] = await tx
-        .insert(billingProviderEvents)
-        .values({
-          id,
+    const receipt = await withTenantTransaction(
+      this.db,
+      tenantId,
+      async (tx) => {
+        const existing = await tx.query.billingProviderEvents.findFirst({
+          where: and(
+            eq(billingProviderEvents.provider, input.provider),
+            eq(billingProviderEvents.externalEventId, envelope.eventId),
+          ),
+        });
+        if (existing) {
+          return { duplicate: true as const, row: existing };
+        }
+        const id = createId();
+        const [row] = await tx
+          .insert(billingProviderEvents)
+          .values({
+            id,
+            tenantId,
+            provider: input.provider,
+            externalEventId: envelope.eventId,
+            eventType: envelope.eventType,
+            status: "RECEIVED",
+            signatureValid: true,
+            payloadJson: envelope,
+            receivedAt: now,
+            createdAt: now,
+          })
+          .returning();
+        if (!row) {
+          throw new ForgeError("INTERNAL_ERROR", "Failed to record provider event");
+        }
+        await this.outbox.write(tx, {
           tenantId,
-          provider: input.provider,
-          externalEventId: envelope.eventId,
-          eventType: envelope.eventType,
-          status: "RECEIVED",
-          signatureValid: true,
-          payloadJson: envelope,
-          receivedAt: now,
-          createdAt: now,
-        })
-        .returning();
-      if (!row) {
-        throw new ForgeError("INTERNAL_ERROR", "Failed to record provider event");
-      }
-      await this.outbox.write(tx, {
-        tenantId,
-        aggregateType: "billing_provider_event",
-        aggregateId: id,
-        eventType: DOMAIN_EVENT_TYPES.BILLING_PROVIDER_EVENT_RECEIVED,
-        payload: { provider: input.provider, externalEventId: envelope.eventId, eventType: envelope.eventType },
-        correlationId: input.principal.correlationId,
-        actorUserId: input.principal.userId,
-      });
-      return { duplicate: false as const, row };
-    }, input.principal.userId);
+          aggregateType: "billing_provider_event",
+          aggregateId: id,
+          eventType: DOMAIN_EVENT_TYPES.BILLING_PROVIDER_EVENT_RECEIVED,
+          payload: {
+            provider: input.provider,
+            externalEventId: envelope.eventId,
+            eventType: envelope.eventType,
+          },
+          correlationId: input.principal.correlationId,
+          actorUserId: input.principal.userId,
+        });
+        return { duplicate: false as const, row };
+      },
+      input.principal.userId,
+    );
 
     if (receipt.duplicate) {
       return {
@@ -712,12 +762,17 @@ export class BillingService {
 
     try {
       const applied = await this.applyProviderEvent(envelope, input.principal);
-      await withTenantTransaction(this.db, tenantId, async (tx) => {
-        await tx
-          .update(billingProviderEvents)
-          .set({ status: "PROCESSED", processedAt: new Date(), processingError: null })
-          .where(eq(billingProviderEvents.id, receipt.row.id));
-      }, input.principal.userId);
+      await withTenantTransaction(
+        this.db,
+        tenantId,
+        async (tx) => {
+          await tx
+            .update(billingProviderEvents)
+            .set({ status: "PROCESSED", processedAt: new Date(), processingError: null })
+            .where(eq(billingProviderEvents.id, receipt.row.id));
+        },
+        input.principal.userId,
+      );
       return {
         duplicate: false,
         event: { ...receipt.row, status: "PROCESSED" },
@@ -726,12 +781,17 @@ export class BillingService {
       };
     } catch (err) {
       const processingError = err instanceof Error ? err.message : "Processing failed";
-      await withTenantTransaction(this.db, tenantId, async (tx) => {
-        await tx
-          .update(billingProviderEvents)
-          .set({ status: "FAILED", processedAt: new Date(), processingError })
-          .where(eq(billingProviderEvents.id, receipt.row.id));
-      }, input.principal.userId);
+      await withTenantTransaction(
+        this.db,
+        tenantId,
+        async (tx) => {
+          await tx
+            .update(billingProviderEvents)
+            .set({ status: "FAILED", processedAt: new Date(), processingError })
+            .where(eq(billingProviderEvents.id, receipt.row.id));
+        },
+        input.principal.userId,
+      );
       throw err;
     }
   }

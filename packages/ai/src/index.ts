@@ -52,7 +52,9 @@ export class StubAiNarrativeProvider implements AiNarrativeProvider {
   ): Promise<AiNarrativeProviderResponse> {
     const included = request.sourceManifest.fields.filter((f) => f.included && !f.redacted);
     const missingInformation = included
-      .filter((f) => !f.valuePreview || f.valuePreview.trim() === "" || f.valuePreview === "[missing]")
+      .filter(
+        (f) => !f.valuePreview || f.valuePreview.trim() === "" || f.valuePreview === "[missing]",
+      )
       .map((f) => `Missing authorized field: ${f.label} (${f.fieldId})`);
 
     const byCategory = new Map<string, string[]>();

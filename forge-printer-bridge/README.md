@@ -70,17 +70,17 @@ Tray assembly / exe name: **`ForgePrinterBridge.Tray`** / `ForgePrinterBridge.Tr
 
 ## Install paths (spec)
 
-| Purpose | Path |
-|--------|------|
-| Binaries | `C:\Program Files\Forge Public Safety\Printer Bridge\` |
-| App data | `C:\ProgramData\Forge Public Safety\Printer Bridge\` |
-| Config | `...\Config\` |
-| Queue / SQLite | `...\Queue\bridge.db` |
-| Cache | `...\Cache\` |
-| Logs | `...\Logs\` |
-| Diagnostics | `...\Diagnostics\` |
-| Updates | `...\Updates\` |
-| Bluetooth | `...\Bluetooth\` |
+| Purpose        | Path                                                   |
+| -------------- | ------------------------------------------------------ |
+| Binaries       | `C:\Program Files\Forge Public Safety\Printer Bridge\` |
+| App data       | `C:\ProgramData\Forge Public Safety\Printer Bridge\`   |
+| Config         | `...\Config\`                                          |
+| Queue / SQLite | `...\Queue\bridge.db`                                  |
+| Cache          | `...\Cache\`                                           |
+| Logs           | `...\Logs\`                                            |
+| Diagnostics    | `...\Diagnostics\`                                     |
+| Updates        | `...\Updates\`                                         |
+| Bluetooth      | `...\Bluetooth\`                                       |
 
 Credentials are stored with **Windows DPAPI** (`credentials.dpapi`), not plain JSON.
 
@@ -131,18 +131,18 @@ Override with environment variables using standard .NET configuration, or place 
 
 ## Phase 1 vs Phase 2
 
-| Capability | Phase 1 | Phase 2 |
-|------------|---------|---------|
-| Windows Service + tray | Yes | — |
-| Printer discovery (System.Printing) | Yes | — |
-| Spooler printing | Yes | — |
-| Cloud WSS + heartbeat | Yes | — |
-| Artifact download + SHA-256 | Yes | — |
-| Job idempotency | Yes | — |
-| DPAPI credentials | Yes | — |
-| Bluetooth companion / Brady Web SDK | Docs only | Yes (`Forge.PrinterBridge.Bluetooth`) |
-| `WAITING_FOR_PRINTER` on BLE out-of-range | — | Yes |
-| Transport router | Spooler only | Spooler + Bluetooth |
+| Capability                                | Phase 1      | Phase 2                               |
+| ----------------------------------------- | ------------ | ------------------------------------- |
+| Windows Service + tray                    | Yes          | —                                     |
+| Printer discovery (System.Printing)       | Yes          | —                                     |
+| Spooler printing                          | Yes          | —                                     |
+| Cloud WSS + heartbeat                     | Yes          | —                                     |
+| Artifact download + SHA-256               | Yes          | —                                     |
+| Job idempotency                           | Yes          | —                                     |
+| DPAPI credentials                         | Yes          | —                                     |
+| Bluetooth companion / Brady Web SDK       | Docs only    | Yes (`Forge.PrinterBridge.Bluetooth`) |
+| `WAITING_FOR_PRINTER` on BLE out-of-range | —            | Yes                                   |
+| Transport router                          | Spooler only | Spooler + Bluetooth                   |
 
 See [docs/PHASE1.md](docs/PHASE1.md) and [docs/PHASE2.md](docs/PHASE2.md).
 

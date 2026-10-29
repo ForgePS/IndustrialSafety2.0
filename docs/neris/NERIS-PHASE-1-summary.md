@@ -14,11 +14,13 @@
 ## Delivered
 
 ### Package `@forge/neris`
+
 - Registries: `packages/neris/registries/neris_field_registry.json`, `neris_value_sets.json`
 - `RuleNode` types + `evaluateRule` + `parseConditionExpression` (structured or `NEEDS_REVIEW` prose)
 - Expected counts: **39 modules / 682 fields / 147 value sets / 1,537 options**
 
 ### Database
+
 - Schema: `packages/database/src/schema/neris.ts`
 - Migrations: `0007_neris_schema_foundation`, `0008_neris_field_ordinal_unique`
 - Tenant overlay tables on FORCE RLS (`tenant_neris_*`)
@@ -26,48 +28,50 @@
 - Seed: RMS module `NERIS`; flags `rms.neris.registry.enabled` (default true), `rms.neris.schema_browser.enabled` (default false)
 
 ### platform-api (`NerisModule`)
-| Service | Role |
-| --- | --- |
-| `NerisSchemaRegistryService` | Packages, versions, modules, fields, conditions, mappings, imports |
-| `NerisValueSetService` | Namespaced value sets, options (active-only for new), hierarchy |
-| `NerisConditionEngine` | Evaluate stored rule trees (no eval) |
-| `NerisConfigurationOverlayService` | Tenant overlays only; rejects official key/code mutation |
-| `NerisSchemaValidationService` | Integrity + validation results |
-| `NerisAccessService` | Feature-flag gates (schema browser / registry) |
+
+| Service                            | Role                                                               |
+| ---------------------------------- | ------------------------------------------------------------------ |
+| `NerisSchemaRegistryService`       | Packages, versions, modules, fields, conditions, mappings, imports |
+| `NerisValueSetService`             | Namespaced value sets, options (active-only for new), hierarchy    |
+| `NerisConditionEngine`             | Evaluate stored rule trees (no eval)                               |
+| `NerisConfigurationOverlayService` | Tenant overlays only; rejects official key/code mutation           |
+| `NerisSchemaValidationService`     | Integrity + validation results                                     |
+| `NerisAccessService`               | Feature-flag gates (schema browser / registry)                     |
 
 Permissions: `platform.neris.schema.read|import`, `platform.neris.overlay.read|manage` (import is creator-only).
 
 Events: `neris.schema.version.published.v1`, `neris.overlay.updated.v1`.
 
 ### Creator Console
+
 Nav group **NERIS Schema** with pages under `/neris/*` (packages, versions, modules, fields, value-sets, conditions, mappings, validation). Gated by `platform.neris.schema.read` + `rms.neris.schema_browser.enabled` (platform admin bypass). Official codes are read-only in UI.
 
 ## Local verification (exact)
 
-| Step | Result |
-| --- | --- |
-| Local migrate `0007`/`0008` | OK |
-| `pnpm neris:import-schema` (1st) | `IMPORTED_PUBLISHED` — 39 / 682 / 147 / 1537; validation warnings 108; errors 0 |
-| `pnpm neris:import-schema` (2nd) | `SKIPPED_IDENTICAL` — same counts |
-| `@forge/neris` unit tests | **10 passed** |
-| NERIS integrity + RLS (`test:neris`) | **5 passed** |
-| NERIS API e2e (`neris.e2e.test.ts`) | **5 passed** |
-| Creator Console typecheck + `next build` | OK (NERIS routes exported) |
-| `@forge/platform-api` build / lint | OK |
-| `@forge/database` lint | OK |
+| Step                                     | Result                                                                          |
+| ---------------------------------------- | ------------------------------------------------------------------------------- |
+| Local migrate `0007`/`0008`              | OK                                                                              |
+| `pnpm neris:import-schema` (1st)         | `IMPORTED_PUBLISHED` — 39 / 682 / 147 / 1537; validation warnings 108; errors 0 |
+| `pnpm neris:import-schema` (2nd)         | `SKIPPED_IDENTICAL` — same counts                                               |
+| `@forge/neris` unit tests                | **10 passed**                                                                   |
+| NERIS integrity + RLS (`test:neris`)     | **5 passed**                                                                    |
+| NERIS API e2e (`neris.e2e.test.ts`)      | **5 passed**                                                                    |
+| Creator Console typecheck + `next build` | OK (NERIS routes exported)                                                      |
+| `@forge/platform-api` build / lint       | OK                                                                              |
+| `@forge/database` lint                   | OK                                                                              |
 
 Checksum: `f3e3f6d307904aa124cd52f1040a0645451e2fdcbbef17f17750091cfb1dd00d`
 
 ## Development Aurora verification
 
-| Step | Result |
-| --- | --- |
-| `cdk deploy ForgeCompute` (task def `:8`) | OK |
-| Aurora migrate ECS (`migrate-ecs.js`) | exit 0 |
-| Aurora seed ECS (`seed.js`) | exit 0 |
-| NERIS import ECS (1st) | exit 0 — `IMPORTED_PUBLISHED` 39/682/147/1537; warnings 108 |
-| NERIS import ECS (2nd) | exit 0 — `SKIPPED_IDENTICAL` 39/682/147/1537 |
-| `pnpm smoke:development` `/health` | OK |
+| Step                                      | Result                                                      |
+| ----------------------------------------- | ----------------------------------------------------------- |
+| `cdk deploy ForgeCompute` (task def `:8`) | OK                                                          |
+| Aurora migrate ECS (`migrate-ecs.js`)     | exit 0                                                      |
+| Aurora seed ECS (`seed.js`)               | exit 0                                                      |
+| NERIS import ECS (1st)                    | exit 0 — `IMPORTED_PUBLISHED` 39/682/147/1537; warnings 108 |
+| NERIS import ECS (2nd)                    | exit 0 — `SKIPPED_IDENTICAL` 39/682/147/1537                |
+| `pnpm smoke:development` `/health`        | OK                                                          |
 
 Scripts: `scripts/run-ecs-migrate.mjs`, `scripts/run-ecs-seed.mjs`, `scripts/run-ecs-neris-import.mjs` (Windows-safe `file://` overrides via `scripts/ecs-oneoff.mjs`).
 

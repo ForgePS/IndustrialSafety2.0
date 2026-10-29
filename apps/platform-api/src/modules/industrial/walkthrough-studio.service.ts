@@ -37,7 +37,10 @@ import { and, desc, eq, inArray, or, sql } from "drizzle-orm";
 import { createHash, randomBytes } from "node:crypto";
 import { z } from "zod";
 import { DATABASE } from "../../tokens.js";
-import { assertTenantAllowedForDemoSeed, assertWalkthroughTenantAllowed } from "../../common/demo-tenant.js";
+import {
+  assertTenantAllowedForDemoSeed,
+  assertWalkthroughTenantAllowed,
+} from "../../common/demo-tenant.js";
 import { AuditService } from "../audit/audit.service.js";
 import { IndustrialExecutiveWalkthroughService } from "./industrial-executive-walkthrough.service.js";
 import { IndustrialDemoSeedService } from "./industrial-demo-seed.service.js";
@@ -177,8 +180,10 @@ export class WalkthroughStudioService {
       }
     }
     if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) return {};
-    const out: Record<string, { narrationText?: string; durationMs?: number; voiceSpeed?: number }> =
-      {};
+    const out: Record<
+      string,
+      { narrationText?: string; durationMs?: number; voiceSpeed?: number }
+    > = {};
     for (const [key, value] of Object.entries(parsed as Record<string, unknown>)) {
       if (!key || !value || typeof value !== "object" || Array.isArray(value)) continue;
       const row = value as Record<string, unknown>;
@@ -338,9 +343,7 @@ export class WalkthroughStudioService {
   }
 
   private isUuid(value: string): boolean {
-    return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(
-      value,
-    );
+    return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(value);
   }
 
   private async findTenantWalkthrough(tenantId: string, walkthroughId: string) {
@@ -371,7 +374,7 @@ export class WalkthroughStudioService {
     } catch {
       settingsVoiceId = null;
     }
-    let voice =
+    const voice =
       (settingsVoiceId
         ? WALKTHROUGH_VOICE_PROFILES.find((v) => v.providerVoiceId === settingsVoiceId)
         : undefined) ??
@@ -437,8 +440,7 @@ export class WalkthroughStudioService {
         ...scene,
         narrationEstimateMs: narrationMs,
         availablePauseMs,
-        tightness:
-          availablePauseMs < 0 ? "red" : availablePauseMs < 2_000 ? "yellow" : "green",
+        tightness: availablePauseMs < 0 ? "red" : availablePauseMs < 2_000 ? "yellow" : "green",
       };
     });
 
@@ -463,126 +465,128 @@ export class WalkthroughStudioService {
 
   async updateSceneNarration(principal: ForgePrincipal, body: unknown) {
     await assertWalkthroughTenantAllowed(this.db, principal.tenantId);
-    this.assertAny(principal, [
-      "industrial.walkthrough.narration.edit",
-      ...MANAGE,
-    ]);
+    this.assertAny(principal, ["industrial.walkthrough.narration.edit", ...MANAGE]);
     const patch = scenePatchSchema.parse(body ?? {});
 
-    const settingsId = await withTenantTransaction(this.db, principal.tenantId, async (tx) => {
-      let settings = await tx.query.industrialExecutiveWalkthroughSettings.findFirst({
-        where: eq(industrialExecutiveWalkthroughSettings.tenantId, principal.tenantId),
-      });
-      // Walkthrough Studio can load before Presentation settings are ever opened.
-      if (!settings) {
-        const preferredVoice = process.env.POLLY_VOICE_ID?.trim() || "Stephen";
-        const id = createId();
-        const now = new Date();
-        const inserted = await tx
-          .insert(industrialExecutiveWalkthroughSettings)
-          .values({
-            id,
-            tenantId: principal.tenantId,
-            enabled: true,
-            voiceId: preferredVoice,
-            narrationSpeed: 100,
-            captionsDefault: true,
-            includeIntro: true,
-            includeOutro: true,
-            exportResolution: "1080p",
-            retentionDays: null,
-            closingText: null,
-            sceneOverrides: {},
-            metadata: {},
-            createdAt: now,
-            updatedAt: now,
-          })
-          .returning();
-        settings = inserted[0];
+    const settingsId = await withTenantTransaction(
+      this.db,
+      principal.tenantId,
+      async (tx) => {
+        let settings = await tx.query.industrialExecutiveWalkthroughSettings.findFirst({
+          where: eq(industrialExecutiveWalkthroughSettings.tenantId, principal.tenantId),
+        });
+        // Walkthrough Studio can load before Presentation settings are ever opened.
         if (!settings) {
+          const preferredVoice = process.env.POLLY_VOICE_ID?.trim() || "Stephen";
+          const id = createId();
+          const now = new Date();
+          const inserted = await tx
+            .insert(industrialExecutiveWalkthroughSettings)
+            .values({
+              id,
+              tenantId: principal.tenantId,
+              enabled: true,
+              voiceId: preferredVoice,
+              narrationSpeed: 100,
+              captionsDefault: true,
+              includeIntro: true,
+              includeOutro: true,
+              exportResolution: "1080p",
+              retentionDays: null,
+              closingText: null,
+              sceneOverrides: {},
+              metadata: {},
+              createdAt: now,
+              updatedAt: now,
+            })
+            .returning();
+          settings = inserted[0];
+          if (!settings) {
+            throw new ForgeError(
+              "INTERNAL_ERROR",
+              "Unable to create presentation settings for scene timing.",
+              { exposeMessage: true },
+            );
+          }
+        }
+        const overrides = this.normalizeSceneOverrides(settings.sceneOverrides) as Record<
+          string,
+          Record<string, unknown>
+        >;
+        const prior =
+          overrides[patch.sceneKey] && typeof overrides[patch.sceneKey] === "object"
+            ? { ...overrides[patch.sceneKey] }
+            : {};
+        overrides[patch.sceneKey] = {
+          ...prior,
+          ...(patch.narrationText != null ? { narrationText: patch.narrationText } : {}),
+          ...(patch.durationMs != null ? { durationMs: patch.durationMs } : {}),
+          ...(patch.voiceSpeed != null ? { voiceSpeed: Math.round(patch.voiceSpeed * 100) } : {}),
+        };
+        // Plain JSON clone avoids drizzle/jsonb proxy quirks that can drop nested writes.
+        const sceneOverrides = JSON.parse(JSON.stringify(overrides)) as Record<string, unknown>;
+        const updated = await tx
+          .update(industrialExecutiveWalkthroughSettings)
+          .set({ sceneOverrides, updatedAt: new Date() })
+          .where(eq(industrialExecutiveWalkthroughSettings.id, settings.id))
+          .returning({
+            id: industrialExecutiveWalkthroughSettings.id,
+            sceneOverrides: industrialExecutiveWalkthroughSettings.sceneOverrides,
+          });
+        const row = updated[0];
+        if (!row) {
+          throw new ForgeError("INTERNAL_ERROR", "Unable to save scene narration overrides.", {
+            exposeMessage: true,
+          });
+        }
+        const verified = this.normalizeSceneOverrides(row.sceneOverrides);
+        const savedScene = verified[patch.sceneKey];
+        if (patch.narrationText != null && savedScene?.narrationText !== patch.narrationText) {
+          this.logger.error(
+            `Scene narration write mismatch tenant=${principal.tenantId} scene=${patch.sceneKey}`,
+          );
           throw new ForgeError(
             "INTERNAL_ERROR",
-            "Unable to create presentation settings for scene timing.",
+            "Narration script did not persist. Please try saving again.",
             { exposeMessage: true },
           );
         }
-      }
-      const overrides = this.normalizeSceneOverrides(settings.sceneOverrides) as Record<
-        string,
-        Record<string, unknown>
-      >;
-      const prior =
-        overrides[patch.sceneKey] && typeof overrides[patch.sceneKey] === "object"
-          ? { ...overrides[patch.sceneKey] }
-          : {};
-      overrides[patch.sceneKey] = {
-        ...prior,
-        ...(patch.narrationText != null ? { narrationText: patch.narrationText } : {}),
-        ...(patch.durationMs != null ? { durationMs: patch.durationMs } : {}),
-        ...(patch.voiceSpeed != null ? { voiceSpeed: Math.round(patch.voiceSpeed * 100) } : {}),
-      };
-      // Plain JSON clone avoids drizzle/jsonb proxy quirks that can drop nested writes.
-      const sceneOverrides = JSON.parse(JSON.stringify(overrides)) as Record<string, unknown>;
-      const updated = await tx
-        .update(industrialExecutiveWalkthroughSettings)
-        .set({ sceneOverrides, updatedAt: new Date() })
-        .where(eq(industrialExecutiveWalkthroughSettings.id, settings.id))
-        .returning({
-          id: industrialExecutiveWalkthroughSettings.id,
-          sceneOverrides: industrialExecutiveWalkthroughSettings.sceneOverrides,
-        });
-      const row = updated[0];
-      if (!row) {
-        throw new ForgeError(
-          "INTERNAL_ERROR",
-          "Unable to save scene narration overrides.",
-          { exposeMessage: true },
+        if (patch.durationMs != null && savedScene?.durationMs !== patch.durationMs) {
+          this.logger.error(
+            `Scene duration write mismatch tenant=${principal.tenantId} scene=${patch.sceneKey}`,
+          );
+          throw new ForgeError(
+            "INTERNAL_ERROR",
+            "Scene timing did not persist. Please try saving again.",
+            { exposeMessage: true },
+          );
+        }
+        this.logger.log(
+          `Saved scene override tenant=${principal.tenantId} scene=${patch.sceneKey} keys=${Object.keys(verified).join(",")}`,
         );
-      }
-      const verified = this.normalizeSceneOverrides(row.sceneOverrides);
-      const savedScene = verified[patch.sceneKey];
-      if (
-        patch.narrationText != null &&
-        savedScene?.narrationText !== patch.narrationText
-      ) {
-        this.logger.error(
-          `Scene narration write mismatch tenant=${principal.tenantId} scene=${patch.sceneKey}`,
-        );
-        throw new ForgeError(
-          "INTERNAL_ERROR",
-          "Narration script did not persist. Please try saving again.",
-          { exposeMessage: true },
-        );
-      }
-      if (patch.durationMs != null && savedScene?.durationMs !== patch.durationMs) {
-        this.logger.error(
-          `Scene duration write mismatch tenant=${principal.tenantId} scene=${patch.sceneKey}`,
-        );
-        throw new ForgeError(
-          "INTERNAL_ERROR",
-          "Scene timing did not persist. Please try saving again.",
-          { exposeMessage: true },
-        );
-      }
-      this.logger.log(
-        `Saved scene override tenant=${principal.tenantId} scene=${patch.sceneKey} keys=${Object.keys(verified).join(",")}`,
-      );
-      return settings.id;
-    }, principal.userId);
+        return settings.id;
+      },
+      principal.userId,
+    );
 
     // Audit after commit so a bad audit row cannot roll back the pause save.
     try {
-      await withTenantTransaction(this.db, principal.tenantId, async (tx) => {
-        await this.audit.writeInTransaction(tx, {
-          ...auditBase(principal),
-          correlationId: principal.correlationId || "walkthrough-studio",
-          requestId: principal.requestId || "walkthrough-studio",
-          action: "walkthrough.scene.narration.update",
-          resourceType: "executive_walkthrough_settings",
-          resourceId: settingsId,
-          after: { ...patch, settingsId },
-        });
-      }, principal.userId);
+      await withTenantTransaction(
+        this.db,
+        principal.tenantId,
+        async (tx) => {
+          await this.audit.writeInTransaction(tx, {
+            ...auditBase(principal),
+            correlationId: principal.correlationId || "walkthrough-studio",
+            requestId: principal.requestId || "walkthrough-studio",
+            action: "walkthrough.scene.narration.update",
+            resourceType: "executive_walkthrough_settings",
+            resourceId: settingsId,
+            after: { ...patch, settingsId },
+          });
+        },
+        principal.userId,
+      );
     } catch (err) {
       this.logger.warn(
         `Walkthrough scene timing saved but audit write failed: ${
@@ -692,9 +696,7 @@ export class WalkthroughStudioService {
       voiceId: voice.providerVoiceId,
     });
     const asset =
-      ensured.assets?.find((a) => a.sceneId === "introduction") ??
-      ensured.assets?.[0] ??
-      null;
+      ensured.assets?.find((a) => a.sceneId === "introduction") ?? ensured.assets?.[0] ?? null;
 
     return {
       voice,
@@ -707,10 +709,7 @@ export class WalkthroughStudioService {
 
   async getDemoEnvironment(principal: ForgePrincipal) {
     await assertWalkthroughTenantAllowed(this.db, principal.tenantId);
-    this.assertAny(principal, [
-      "industrial.walkthrough.demo.manage",
-      ...VIEW,
-    ]);
+    this.assertAny(principal, ["industrial.walkthrough.demo.manage", ...VIEW]);
     const tenantRows = await this.db
       .select()
       .from(tenants)
@@ -768,15 +767,20 @@ export class WalkthroughStudioService {
       .update(tenants)
       .set({ isDemoTenant: enabled, updatedAt: new Date() })
       .where(eq(tenants.id, principal.tenantId));
-    await withTenantTransaction(this.db, principal.tenantId, async (tx) => {
-      await this.audit.writeInTransaction(tx, {
-        ...auditBase(principal),
-        action: enabled ? "walkthrough.demo.enable" : "walkthrough.demo.disable",
-        resourceType: "tenant",
-        resourceId: principal.tenantId,
-        riskLevel: "MEDIUM",
-      });
-    }, principal.userId);
+    await withTenantTransaction(
+      this.db,
+      principal.tenantId,
+      async (tx) => {
+        await this.audit.writeInTransaction(tx, {
+          ...auditBase(principal),
+          action: enabled ? "walkthrough.demo.enable" : "walkthrough.demo.disable",
+          resourceType: "tenant",
+          resourceId: principal.tenantId,
+          riskLevel: "MEDIUM",
+        });
+      },
+      principal.userId,
+    );
     return this.getDemoEnvironment(principal);
   }
 
@@ -795,41 +799,46 @@ export class WalkthroughStudioService {
       );
     }
 
-    await withTenantTransaction(this.db, principal.tenantId, async (tx) => {
-      const id = createId();
-      await tx.insert(demoSeedVersions).values({
-        id,
-        tenantId: principal.tenantId,
-        seedKey: "default",
-        version: `reset-${new Date().toISOString().slice(0, 19)}`,
-        snapshotJson: {
-          targets: DEMO_SEED_TARGETS,
-          locations: DEMO_LOCATIONS,
-          divisions: DEMO_DIVISIONS,
-          companyName: INDUSTRIAL_DEMO_COMPANY_NAME,
-          tenantSlug: INDUSTRIAL_DEMO_TENANT_SLUG,
-          note: "Deterministic demo reset checkpoint. Module data restore hooks run via demo.seed.apply.",
-        },
-        isActive: true,
-        seededAt: new Date(),
-      });
-      await tx
-        .update(demoSeedVersions)
-        .set({ isActive: false, updatedAt: new Date() })
-        .where(
-          and(
-            eq(demoSeedVersions.tenantId, principal.tenantId),
-            sql`${demoSeedVersions.id} <> ${id}::uuid`,
-          ),
-        );
-      await this.audit.writeInTransaction(tx, {
-        ...auditBase(principal),
-        action: "walkthrough.demo.reset",
-        resourceType: "tenant",
-        resourceId: principal.tenantId,
-        riskLevel: "HIGH",
-      });
-    }, principal.userId);
+    await withTenantTransaction(
+      this.db,
+      principal.tenantId,
+      async (tx) => {
+        const id = createId();
+        await tx.insert(demoSeedVersions).values({
+          id,
+          tenantId: principal.tenantId,
+          seedKey: "default",
+          version: `reset-${new Date().toISOString().slice(0, 19)}`,
+          snapshotJson: {
+            targets: DEMO_SEED_TARGETS,
+            locations: DEMO_LOCATIONS,
+            divisions: DEMO_DIVISIONS,
+            companyName: INDUSTRIAL_DEMO_COMPANY_NAME,
+            tenantSlug: INDUSTRIAL_DEMO_TENANT_SLUG,
+            note: "Deterministic demo reset checkpoint. Module data restore hooks run via demo.seed.apply.",
+          },
+          isActive: true,
+          seededAt: new Date(),
+        });
+        await tx
+          .update(demoSeedVersions)
+          .set({ isActive: false, updatedAt: new Date() })
+          .where(
+            and(
+              eq(demoSeedVersions.tenantId, principal.tenantId),
+              sql`${demoSeedVersions.id} <> ${id}::uuid`,
+            ),
+          );
+        await this.audit.writeInTransaction(tx, {
+          ...auditBase(principal),
+          action: "walkthrough.demo.reset",
+          resourceType: "tenant",
+          resourceId: principal.tenantId,
+          riskLevel: "HIGH",
+        });
+      },
+      principal.userId,
+    );
 
     this.logger.log(`Demo reset requested for tenant ${principal.tenantId}`);
 
@@ -867,9 +876,7 @@ export class WalkthroughStudioService {
     const publicToken = randomBytes(6).toString("hex").toUpperCase().slice(0, 8);
     const rawSecret = randomBytes(24).toString("hex");
     const tokenHash = createHash("sha256").update(rawSecret).digest("hex");
-    const pinHash = input.pin
-      ? createHash("sha256").update(input.pin).digest("hex")
-      : null;
+    const pinHash = input.pin ? createHash("sha256").update(input.pin).digest("hex") : null;
 
     const id = createId();
     await withTenantTransaction(this.db, principal.tenantId, async (tx) => {
@@ -938,33 +945,38 @@ export class WalkthroughStudioService {
   async revokeShareLink(principal: ForgePrincipal, shareLinkId: string) {
     this.assertAny(principal, SHARE);
     const wt = await this.ensureDefaultWalkthrough(principal);
-    const updated = await withTenantTransaction(this.db, principal.tenantId, async (tx) => {
-      const [row] = await tx
-        .select()
-        .from(walkthroughShareLinks)
-        .where(
-          and(
-            eq(walkthroughShareLinks.id, shareLinkId),
-            eq(walkthroughShareLinks.tenantId, principal.tenantId),
-            eq(walkthroughShareLinks.walkthroughId, wt.id),
-          ),
-        )
-        .limit(1);
-      if (!row) throw new ForgeError("NOT_FOUND", "Share link not found");
-      if (row.isRevoked) return row;
-      await tx
-        .update(walkthroughShareLinks)
-        .set({ isRevoked: true, updatedAt: new Date() })
-        .where(eq(walkthroughShareLinks.id, row.id));
-      await this.audit.writeInTransaction(tx, {
-        ...auditBase(principal),
-        action: "walkthrough.share.revoke",
-        resourceType: "walkthrough_share_link",
-        resourceId: row.id,
-        riskLevel: "MEDIUM",
-      });
-      return { ...row, isRevoked: true };
-    }, principal.userId);
+    const updated = await withTenantTransaction(
+      this.db,
+      principal.tenantId,
+      async (tx) => {
+        const [row] = await tx
+          .select()
+          .from(walkthroughShareLinks)
+          .where(
+            and(
+              eq(walkthroughShareLinks.id, shareLinkId),
+              eq(walkthroughShareLinks.tenantId, principal.tenantId),
+              eq(walkthroughShareLinks.walkthroughId, wt.id),
+            ),
+          )
+          .limit(1);
+        if (!row) throw new ForgeError("NOT_FOUND", "Share link not found");
+        if (row.isRevoked) return row;
+        await tx
+          .update(walkthroughShareLinks)
+          .set({ isRevoked: true, updatedAt: new Date() })
+          .where(eq(walkthroughShareLinks.id, row.id));
+        await this.audit.writeInTransaction(tx, {
+          ...auditBase(principal),
+          action: "walkthrough.share.revoke",
+          resourceType: "walkthrough_share_link",
+          resourceId: row.id,
+          riskLevel: "MEDIUM",
+        });
+        return { ...row, isRevoked: true };
+      },
+      principal.userId,
+    );
 
     return {
       id: updated.id,
@@ -1130,9 +1142,7 @@ export class WalkthroughStudioService {
         .orderBy(desc(walkthroughVideoExports.createdAt))
         .limit(50);
 
-      const jobIds = rows
-        .map((r) => r.exportJobId)
-        .filter((id): id is string => Boolean(id));
+      const jobIds = rows.map((r) => r.exportJobId).filter((id): id is string => Boolean(id));
       const jobs =
         jobIds.length === 0
           ? []
@@ -1175,9 +1185,7 @@ export class WalkthroughStudioService {
             status: nextStatus,
             storageKey: job.artifactObjectKey ?? row.storageKey,
             fileSizeBytes:
-              typeof result.fileSizeBytes === "number"
-                ? result.fileSizeBytes
-                : row.fileSizeBytes,
+              typeof result.fileSizeBytes === "number" ? result.fileSizeBytes : row.fileSizeBytes,
             durationMs,
             errorMessage: job.failure ?? row.errorMessage,
             completedAt:

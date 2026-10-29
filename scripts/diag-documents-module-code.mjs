@@ -46,7 +46,9 @@ async function main() {
       where t.tenant_key = 'producers-rice-mill'
         and (lower(pm.code) like '%doc%' or pm.code = 'DOCUMENTS')
     `;
-    console.log(JSON.stringify({ ok: true, phase: "DIAG-DOCUMENTS-CODE", catalog, tenantDocs }, null, 2));
+    console.log(
+      JSON.stringify({ ok: true, phase: "DIAG-DOCUMENTS-CODE", catalog, tenantDocs }, null, 2),
+    );
   } finally {
     await sql.end({ timeout: 5 });
   }

@@ -1,11 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import {
-  ForgeBreadcrumbs,
-  ForgePageHeader,
-  ForgeShellState,
-} from "@forge/ui";
+import { ForgeBreadcrumbs, ForgePageHeader, ForgeShellState } from "@forge/ui";
 import { useAuth } from "@/hooks/use-auth";
 
 export default function TenantAdminProfilePage() {

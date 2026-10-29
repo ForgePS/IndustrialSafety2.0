@@ -40,7 +40,12 @@ const idk = (s) => `s8-cp-${s}-${crypto.randomUUID()}`;
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
 async function main() {
-  const evidence = { startedAt: new Date().toISOString(), path: "control-plane", steps: [], ok: false };
+  const evidence = {
+    startedAt: new Date().toISOString(),
+    path: "control-plane",
+    steps: [],
+    ok: false,
+  };
   const op = PERSONAS.operator.userId;
   const appr = PERSONAS.approver.userId;
   const exec = PERSONAS.executor.userId;
@@ -61,7 +66,11 @@ async function main() {
       requestedMode: "UPSERT",
     },
   });
-  evidence.steps.push({ step: "create", status: create.status, data: create.json?.data ?? create.json });
+  evidence.steps.push({
+    step: "create",
+    status: create.status,
+    data: create.json?.data ?? create.json,
+  });
   if (create.status >= 300) throw new Error(`create ${create.status}`);
   const jobId = create.json.data.id;
   evidence.jobId = jobId;
@@ -103,12 +112,22 @@ async function main() {
     idempotencyKey: idk("stage"),
     body: {
       rows: [
-        { sourceRowKey: `S8-${runId}-001`, mapped: { externalId: `S8-${runId}-001`, firstName: "Ada", lastName: "Lovelace" } },
-        { sourceRowKey: `S8-${runId}-002`, mapped: { externalId: `S8-${runId}-002`, firstName: "Grace", lastName: "Hopper" } },
+        {
+          sourceRowKey: `S8-${runId}-001`,
+          mapped: { externalId: `S8-${runId}-001`, firstName: "Ada", lastName: "Lovelace" },
+        },
+        {
+          sourceRowKey: `S8-${runId}-002`,
+          mapped: { externalId: `S8-${runId}-002`, firstName: "Grace", lastName: "Hopper" },
+        },
       ],
     },
   });
-  evidence.steps.push({ step: "stage", status: stage.status, data: stage.json?.data ?? stage.json });
+  evidence.steps.push({
+    step: "stage",
+    status: stage.status,
+    data: stage.json?.data ?? stage.json,
+  });
   if (stage.status >= 300) throw new Error(`stage ${stage.status}`);
 
   const execute = await api("POST", `/api/v1/imports/jobs/${jobId}/execute`, {
@@ -116,7 +135,11 @@ async function main() {
     idempotencyKey: idk("execute"),
     body: { batchSize: 50, adapterKey: "reference:generic:record@1" },
   });
-  evidence.steps.push({ step: "execute", status: execute.status, data: execute.json?.data ?? execute.json });
+  evidence.steps.push({
+    step: "execute",
+    status: execute.status,
+    data: execute.json?.data ?? execute.json,
+  });
   if (execute.status >= 300) throw new Error(`execute ${execute.status}`);
 
   let status = null;
@@ -144,7 +167,11 @@ async function main() {
     idempotencyKey: idk("rollback"),
     body: { reason: "S8 control-plane rollback classification" },
   });
-  evidence.steps.push({ step: "rollback-request", status: rb.status, data: rb.json?.data ?? rb.json });
+  evidence.steps.push({
+    step: "rollback-request",
+    status: rb.status,
+    data: rb.json?.data ?? rb.json,
+  });
   evidence.ok = ["COMPLETED", "COMPLETED_WITH_ERRORS"].includes(status);
   evidence.completedAt = new Date().toISOString();
   fs.mkdirSync("docs/testing/evidence/import-platform", { recursive: true });

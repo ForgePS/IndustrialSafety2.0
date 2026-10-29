@@ -18,10 +18,14 @@ const IMPORTS_BUCKET =
 const script = "purge-test-observation.mjs";
 const key = `maintenance/purge-test-observation/${new Date().toISOString().replace(/[:.]/g, "-")}/${script}`;
 
-const up = spawnSync("aws", ["s3", "cp", path.resolve("scripts", script), `s3://${IMPORTS_BUCKET}/${key}`], {
-  encoding: "utf8",
-  shell: true,
-});
+const up = spawnSync(
+  "aws",
+  ["s3", "cp", path.resolve("scripts", script), `s3://${IMPORTS_BUCKET}/${key}`],
+  {
+    encoding: "utf8",
+    shell: true,
+  },
+);
 if (up.status !== 0) {
   console.error(up.stderr || up.stdout);
   process.exit(1);

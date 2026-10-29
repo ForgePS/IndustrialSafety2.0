@@ -4,7 +4,7 @@
 **Product:** Forge RMS  
 **Module flag:** `fx.rms.module.cadConflicts.enabled` (default **false**)  
 **Foundation dependencies:** `fx.rms.tables.enabled`  
-**Gate:** FX-S2F-5  
+**Gate:** FX-S2F-5
 
 ## Decision requested
 
@@ -16,9 +16,9 @@ Alternates: `APPROVE WITH CONDITIONS` · `RETURN FOR CORRECTION`
 
 ### Suggested conditions
 
-1. Capture sanitized desktop/tablet screenshots before tenant enablement.  
-2. Keep module flag default-off.  
-3. Manually exercise Keep Forge / Use CAD / Escalate on a non-prod tenant.  
+1. Capture sanitized desktop/tablet screenshots before tenant enablement.
+2. Keep module flag default-off.
+3. Manually exercise Keep Forge / Use CAD / Escalate on a non-prod tenant.
 4. Do not begin S2F-6 NERIS Configuration until this checkpoint is accepted.
 
 ## Executive summary
@@ -31,28 +31,28 @@ Migrated: `/cad/conflicts/` OPEN list + resolve row actions only.
 
 ## Routes migrated
 
-| Route | Status |
-| --- | --- |
-| `/cad/conflicts/` | Yes |
+| Route             | Status |
+| ----------------- | ------ |
+| `/cad/conflicts/` | Yes    |
 
 ## Routes deferred
 
-| Route / capability | Reason |
-| --- | --- |
-| Conflict detail | Not present in live rms-web |
-| Search / filter / sort / pagination UI | Not present |
-| Closed / historical conflicts view | Not present |
-| `/cad/operations/` | Separate page |
-| NERIS Configuration | S2F-6 (not authorized) |
+| Route / capability                     | Reason                      |
+| -------------------------------------- | --------------------------- |
+| Conflict detail                        | Not present in live rms-web |
+| Search / filter / sort / pagination UI | Not present                 |
+| Closed / historical conflicts view     | Not present                 |
+| `/cad/operations/`                     | Separate page               |
+| NERIS Configuration                    | S2F-6 (not authorized)      |
 
 ## Feature-flag behavior
 
-| Combo | Result |
-| --- | --- |
-| Module off | Legacy |
+| Combo                  | Result        |
+| ---------------------- | ------------- |
+| Module off             | Legacy        |
 | Module on + tables off | Legacy compat |
-| Module on + tables on | FX table |
-| Tables on + module off | Legacy |
+| Module on + tables on  | FX table      |
+| Tables on + module off | Legacy        |
 
 ## Component inventory
 
@@ -104,17 +104,17 @@ Module off → legacy; other modules unaffected.
 
 ## Defects
 
-| Sev | Count |
-| --- | --- |
-| P0 | 0 |
-| P1 | 0 |
-| P3 | Screenshots pending |
+| Sev | Count               |
+| --- | ------------------- |
+| P0  | 0                   |
+| P1  | 0                   |
+| P3  | Screenshots pending |
 
 ## Risks
 
-| ID | Notes |
-| --- | --- |
-| R-S2F-011 | No detail/filter UI in live app — planning items deferred/N/A |
+| ID        | Notes                                                                  |
+| --------- | ---------------------------------------------------------------------- |
+| R-S2F-011 | No detail/filter UI in live app — planning items deferred/N/A          |
 | R-S2F-012 | Resolve is irreversible operator action — presentation only; same APIs |
 
 ## Evidence index
@@ -123,11 +123,11 @@ Module off → legacy; other modules unaffected.
 
 ## Production changes
 
-| Area | Changed? |
-| --- | --- |
-| Default UX | **No** (flag off) |
-| CAD ingest / conflict detection / APIs / permissions | **No** |
-| Code behind flag | Yes |
+| Area                                                 | Changed?          |
+| ---------------------------------------------------- | ----------------- |
+| Default UX                                           | **No** (flag off) |
+| CAD ingest / conflict detection / APIs / permissions | **No**            |
+| Code behind flag                                     | Yes               |
 
 ## Recommendation
 

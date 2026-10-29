@@ -43,7 +43,9 @@ export function buildExecutionResultSummary(
   const completed = input.completedAt ? Date.parse(input.completedAt) : NaN;
   const durationMs =
     input.durationMs ??
-    (Number.isFinite(started) && Number.isFinite(completed) ? Math.max(0, completed - started) : null);
+    (Number.isFinite(started) && Number.isFinite(completed)
+      ? Math.max(0, completed - started)
+      : null);
   return {
     ...input,
     durationMs,

@@ -33,10 +33,18 @@ describe("normalizeDisciplinaryActionInput", () => {
 
   it("rejects unknown types and missing reason", () => {
     expect(() =>
-      normalizeDisciplinaryActionInput({ actionType: "nope", actionDate: "2026-01-01", reason: "x" }),
+      normalizeDisciplinaryActionInput({
+        actionType: "nope",
+        actionDate: "2026-01-01",
+        reason: "x",
+      }),
     ).toThrow(/actionType/);
     expect(() =>
-      normalizeDisciplinaryActionInput({ actionType: "COACHING", actionDate: "2026-01-01", reason: " " }),
+      normalizeDisciplinaryActionInput({
+        actionType: "COACHING",
+        actionDate: "2026-01-01",
+        reason: " ",
+      }),
     ).toThrow(/reason/);
   });
 

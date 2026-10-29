@@ -8,7 +8,11 @@ import { UnsavedChangesProvider, useUnsavedChanges } from "@/components/unsaved-
 import { BodyRegionsProvider } from "@/hooks/use-body-regions";
 import { EnvironmentBanner } from "@forge/ui";
 import { INDUSTRIAL_PRODUCT_CODE } from "@forge/contracts";
-import { buildIndustrialNavigation, featureFlagForModule, isComingSoonModule } from "@/lib/navigation";
+import {
+  buildIndustrialNavigation,
+  featureFlagForModule,
+  isComingSoonModule,
+} from "@/lib/navigation";
 import { NetworkStatusBanner } from "@/lib/offline/network-status";
 import { ThemeModeToggle, useIndustrialThemeMode } from "@/components/theme-mode-toggle";
 import { ThemeCustomizer } from "@/components/theme-customizer";
@@ -62,7 +66,11 @@ function routeIsActive(pathname: string | null | undefined, route: string): bool
 }
 
 /** Like routeIsActive, but yields to a more specific nav route (e.g. /help-desk/support under /help-desk). */
-function navItemIsActive(pathname: string | null | undefined, route: string, routes: string[]): boolean {
+function navItemIsActive(
+  pathname: string | null | undefined,
+  route: string,
+  routes: string[],
+): boolean {
   if (!routeIsActive(pathname, route)) return false;
   const target = normalizeAppPath(route);
   return !routes.some((other) => {
@@ -82,9 +90,7 @@ function readStoredOpenGroups(): Record<string, boolean> {
     const raw = window.localStorage.getItem(NAV_GROUPS_STORAGE_KEY);
     if (!raw) return {};
     const parsed = JSON.parse(raw) as Record<string, unknown>;
-    return Object.fromEntries(
-      Object.entries(parsed).map(([key, value]) => [key, value === true]),
-    );
+    return Object.fromEntries(Object.entries(parsed).map(([key, value]) => [key, value === true]));
   } catch {
     return {};
   }
@@ -131,7 +137,9 @@ function BrandLockup({
     </>
   );
 
-  const linkClassName = showFullLogo ? "app-brand-link app-brand-link--full-logo" : "app-brand-link";
+  const linkClassName = showFullLogo
+    ? "app-brand-link app-brand-link--full-logo"
+    : "app-brand-link";
 
   if (href) {
     return (
@@ -235,8 +243,18 @@ function ShellBody({ children }: { children: ReactNode }) {
   const { confirmLeave } = useUnsavedChanges();
   const pathname = usePathname();
   const router = useRouter();
-  const { me, loading, error, logout, chooseTenant, hasPermission, hasProduct, refresh, rolePreview, exitRolePreview } =
-    useAuth();
+  const {
+    me,
+    loading,
+    error,
+    logout,
+    chooseTenant,
+    hasPermission,
+    hasProduct,
+    refresh,
+    rolePreview,
+    exitRolePreview,
+  } = useAuth();
   const {
     productDisplayName,
     appShortName,
@@ -248,12 +266,7 @@ function ShellBody({ children }: { children: ReactNode }) {
     secondaryColor,
     accentColor,
   } = useTenantBranding();
-  const {
-    login,
-    primaryColor: loginPrimaryColor,
-    hostTenantId,
-    loadingHost,
-  } = useLoginBranding();
+  const { login, primaryColor: loginPrimaryColor, hostTenantId, loadingHost } = useLoginBranding();
   const themeMode = useIndustrialThemeMode();
   const [templateSettings, setTemplateSettings] =
     useState<IndustrialTemplateSettings>(DEFAULT_TEMPLATE_SETTINGS);
@@ -321,9 +334,7 @@ function ShellBody({ children }: { children: ReactNode }) {
   // Role preview uses the selected role's permissions (no platform-admin bypass).
   const entitled = hasProduct(INDUSTRIAL_PRODUCT_CODE);
   const hasAccess = Boolean(
-    me &&
-      tenantId &&
-      (adminSupport ? hasIndustrialAccess : entitled && hasIndustrialAccess),
+    me && tenantId && (adminSupport ? hasIndustrialAccess : entitled && hasIndustrialAccess),
   );
 
   const exitRolePreviewButton =
@@ -383,9 +394,7 @@ function ShellBody({ children }: { children: ReactNode }) {
     let preferredTenantId = hostTenantId;
     if (!preferredTenantId && me.isDemoTenant && !keepDemo) {
       const isCustomerTenant = (t: { slug: string; isDemoTenant?: boolean }) =>
-        !t.isDemoTenant &&
-        t.slug !== "forge-platform" &&
-        t.slug !== "forge-industrial-demo";
+        !t.isDemoTenant && t.slug !== "forge-platform" && t.slug !== "forge-industrial-demo";
       // Prefer an explicit Producers match; otherwise first non-demo selectable.
       preferredTenantId =
         me.tenants.find(
@@ -616,8 +625,7 @@ function ShellBody({ children }: { children: ReactNode }) {
     if (!navGroupKey) return;
     const groupList = navGroupKey.split("|");
     const path = normalizeAppPath(pathname);
-    const activeGroup =
-      nav.find((item) => routeIsActive(pathname, item.route))?.group ?? null;
+    const activeGroup = nav.find((item) => routeIsActive(pathname, item.route))?.group ?? null;
 
     setOpenGroups((prev) => {
       let next = prev;
@@ -629,14 +637,14 @@ function ShellBody({ children }: { children: ReactNode }) {
           if (typeof next[group] !== "boolean") next[group] = false;
         }
       }
-    // Only auto-expand when the route changes — never fight a user collapse click.
-    if (activeGroup && lastAutoOpenPath.current !== path) {
-      lastAutoOpenPath.current = path;
-      next = { ...next };
-      for (const g of groupList) {
-        next[g] = g === activeGroup;
+      // Only auto-expand when the route changes — never fight a user collapse click.
+      if (activeGroup && lastAutoOpenPath.current !== path) {
+        lastAutoOpenPath.current = path;
+        next = { ...next };
+        for (const g of groupList) {
+          next[g] = g === activeGroup;
+        }
       }
-    }
       return next;
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps -- navGroupKey stands in for groups/nav
@@ -686,12 +694,7 @@ function ShellBody({ children }: { children: ReactNode }) {
 
   if (!me) {
     return (
-      <GateCard
-        title={login.headline}
-        body={login.body}
-        centerText
-        {...gateBrand}
-      >
+      <GateCard title={login.headline} body={login.body} centerText {...gateBrand}>
         {error ? (
           <div className="alert alert-warning" role="alert">
             <div>{error}</div>
@@ -800,9 +803,7 @@ function ShellBody({ children }: { children: ReactNode }) {
   }
 
   if (!entitled && !adminSupport) {
-    const alternates = me.tenants.filter(
-      (t) => t.selectable && t.tenantId !== me.tenantId,
-    );
+    const alternates = me.tenants.filter((t) => t.selectable && t.tenantId !== me.tenantId);
     return (
       <GateCard
         title={rolePreview ? "Role preview: product not entitled" : "Product not entitled"}
@@ -858,9 +859,7 @@ function ShellBody({ children }: { children: ReactNode }) {
               key={t.tenantId}
               type="button"
               className="btn btn-outline-primary"
-              onClick={() =>
-                void chooseTenant(t.tenantId)
-              }
+              onClick={() => void chooseTenant(t.tenantId)}
             >
               {t.displayName}
             </button>
@@ -1036,359 +1035,375 @@ function ShellBody({ children }: { children: ReactNode }) {
 
   return (
     <IndustrialFacilityProvider value={facility}>
-    <div className={shellWrapperClass} style={brandStyle}>
-      <div className="layout-container">
-        <aside
-          id="layout-menu"
-          className={`layout-menu menu-vertical menu bg-menu-theme${isHorizontalLayout ? " ind-horizontal-drawer" : ""}`}
-        >
-          <div className="app-brand">
-            <BrandLockup
-              href="/"
-              label={navLogo?.label || appShortName}
-              primaryColor={primaryColor || "#696cff"}
-              onClick={() => setMenuOpen(false)}
-              {...(navLogo?.src ? { logoUrl: navLogo.src } : logoUrl ? { logoUrl } : {})}
-            />
-            <button
-              type="button"
-              className={desktopMenuCloseClass}
-              aria-label="Close menu"
-              aria-expanded={menuOpen}
-              aria-controls="layout-menu"
-              onClick={() => setMenuOpen(false)}
-            >
-              <i className="bx bx-chevron-left bx-sm align-middle" />
-            </button>
-          </div>
-
-          <div className="menu-inner-shadow" />
-          {verticalMenuItems}
-        </aside>
-
-        <div className="layout-page">
-          <nav className={navbarClass} id="layout-navbar">
-            <div className={menuToggleClass}>
+      <div className={shellWrapperClass} style={brandStyle}>
+        <div className="layout-container">
+          <aside
+            id="layout-menu"
+            className={`layout-menu menu-vertical menu bg-menu-theme${isHorizontalLayout ? " ind-horizontal-drawer" : ""}`}
+          >
+            <div className="app-brand">
+              <BrandLockup
+                href="/"
+                label={navLogo?.label || appShortName}
+                primaryColor={primaryColor || "#696cff"}
+                onClick={() => setMenuOpen(false)}
+                {...(navLogo?.src ? { logoUrl: navLogo.src } : logoUrl ? { logoUrl } : {})}
+              />
               <button
                 type="button"
-                className="nav-item nav-link px-0 me-xl-4 btn btn-link"
-                aria-label={menuOpen ? "Close menu" : "Open menu"}
+                className={desktopMenuCloseClass}
+                aria-label="Close menu"
                 aria-expanded={menuOpen}
                 aria-controls="layout-menu"
-                onClick={() => setMenuOpen((open) => !open)}
+                onClick={() => setMenuOpen(false)}
               >
-                <i className="bx bx-menu bx-sm" aria-hidden="true" />
+                <i className="bx bx-chevron-left bx-sm align-middle" />
               </button>
             </div>
 
-            {isHorizontalLayout ? (
-              <div className="navbar-nav align-items-center me-auto d-none d-xl-flex">
-                <BrandLockup
-                  href="/"
-                  label={navLogo?.label || appShortName}
-                  primaryColor={primaryColor || "#696cff"}
-                  textClassName="app-brand-text demo menu-text fw-bolder ms-2"
-                  {...(navLogo?.src ? { logoUrl: navLogo.src } : logoUrl ? { logoUrl } : {})}
-                />
-              </div>
-            ) : null}
+            <div className="menu-inner-shadow" />
+            {verticalMenuItems}
+          </aside>
 
-            <div className="navbar-nav-right ind-navbar-toolbar d-flex align-items-center gap-2 w-100" id="navbar-collapse">
-              <div className="ind-navbar-toolbar__start d-flex align-items-center gap-2 min-w-0">
-                {normalizeAppPath(pathname) !== "/" ? (
-                  <button
-                    type="button"
-                    className="btn btn-sm btn-outline-secondary flex-shrink-0"
-                    aria-label="Go back to previous page"
-                    onClick={() =>
-                      confirmLeave(() => {
-                        if (typeof window !== "undefined" && window.history.length > 1) {
-                          router.back();
-                        } else {
-                          router.push("/");
-                        }
-                      })
-                    }
-                  >
-                    <i className="bx bx-arrow-back" aria-hidden="true" />
-                    <span className="ind-navbar-back-label ms-1">Back</span>
-                  </button>
-                ) : null}
-                {rolePreview ? (
-                  <span
-                    className="badge bg-label-info ind-navbar-admin-badge d-inline-flex align-items-center gap-2"
-                    title={`UI preview as ${rolePreview.roleName}. API calls still use your Creator session.`}
-                  >
-                    <span className="ind-navbar-admin-badge__full">
-                      Viewing as role: {rolePreview.roleName}
-                    </span>
-                    <span className="ind-navbar-admin-badge__short">As {rolePreview.roleName}</span>
+          <div className="layout-page">
+            <nav className={navbarClass} id="layout-navbar">
+              <div className={menuToggleClass}>
+                <button
+                  type="button"
+                  className="nav-item nav-link px-0 me-xl-4 btn btn-link"
+                  aria-label={menuOpen ? "Close menu" : "Open menu"}
+                  aria-expanded={menuOpen}
+                  aria-controls="layout-menu"
+                  onClick={() => setMenuOpen((open) => !open)}
+                >
+                  <i className="bx bx-menu bx-sm" aria-hidden="true" />
+                </button>
+              </div>
+
+              {isHorizontalLayout ? (
+                <div className="navbar-nav align-items-center me-auto d-none d-xl-flex">
+                  <BrandLockup
+                    href="/"
+                    label={navLogo?.label || appShortName}
+                    primaryColor={primaryColor || "#696cff"}
+                    textClassName="app-brand-text demo menu-text fw-bolder ms-2"
+                    {...(navLogo?.src ? { logoUrl: navLogo.src } : logoUrl ? { logoUrl } : {})}
+                  />
+                </div>
+              ) : null}
+
+              <div
+                className="navbar-nav-right ind-navbar-toolbar d-flex align-items-center gap-2 w-100"
+                id="navbar-collapse"
+              >
+                <div className="ind-navbar-toolbar__start d-flex align-items-center gap-2 min-w-0">
+                  {normalizeAppPath(pathname) !== "/" ? (
                     <button
                       type="button"
-                      className="btn btn-sm btn-outline-info py-0 px-1"
-                      onClick={() => {
-                        exitRolePreview();
-                        router.push("/settings/roles/");
-                      }}
+                      className="btn btn-sm btn-outline-secondary flex-shrink-0"
+                      aria-label="Go back to previous page"
+                      onClick={() =>
+                        confirmLeave(() => {
+                          if (typeof window !== "undefined" && window.history.length > 1) {
+                            router.back();
+                          } else {
+                            router.push("/");
+                          }
+                        })
+                      }
                     >
-                      Exit
+                      <i className="bx bx-arrow-back" aria-hidden="true" />
+                      <span className="ind-navbar-back-label ms-1">Back</span>
                     </button>
-                  </span>
-                ) : adminSupport ? (
-                  <span
-                    className="badge bg-label-warning ind-navbar-admin-badge"
-                    title={
-                      tenantProductEntitled
-                        ? `Platform administrative support context — viewing ${tenantLabel}`
-                        : `Platform administrative support context — viewing ${tenantLabel} · Product not enabled for this customer`
-                    }
-                  >
-                    <span className="ind-navbar-admin-badge__full">
-                      Platform Admin · Viewing: {tenantLabel}
-                      {!tenantProductEntitled ? " · Product not enabled" : ""}
-                    </span>
-                    <span className="ind-navbar-admin-badge__short">Admin · {tenantLabel}</span>
-                  </span>
-                ) : null}
-                <label className="nav-item ind-tenant-switcher mb-0">
-                  <i className="bx bx-buildings flex-shrink-0" aria-hidden="true" />
-                  <span className="ind-tenant-switcher__label">Tenant</span>
-                  {selectableTenants.length > 1 ? (
-                    <select
-                      className="form-select form-select-sm"
-                      aria-label="Switch tenant"
-                      value={me.tenantId ?? ""}
-                      disabled={tenantSwitching}
-                      onChange={(event) => {
-                        const nextTenantId = event.target.value;
-                        confirmLeave(() => void onTenantChange(nextTenantId));
-                      }}
+                  ) : null}
+                  {rolePreview ? (
+                    <span
+                      className="badge bg-label-info ind-navbar-admin-badge d-inline-flex align-items-center gap-2"
+                      title={`UI preview as ${rolePreview.roleName}. API calls still use your Creator session.`}
                     >
-                      {selectableTenants.map((t) => (
-                        <option key={t.tenantId} value={t.tenantId}>
-                          {t.displayName}
-                        </option>
-                      ))}
-                    </select>
-                  ) : (
-                    <span className="text-muted small text-truncate" title={tenantLabel}>
-                      {tenantLabel}
+                      <span className="ind-navbar-admin-badge__full">
+                        Viewing as role: {rolePreview.roleName}
+                      </span>
+                      <span className="ind-navbar-admin-badge__short">
+                        As {rolePreview.roleName}
+                      </span>
+                      <button
+                        type="button"
+                        className="btn btn-sm btn-outline-info py-0 px-1"
+                        onClick={() => {
+                          exitRolePreview();
+                          router.push("/settings/roles/");
+                        }}
+                      >
+                        Exit
+                      </button>
                     </span>
-                  )}
-                  {tenantSwitching ? (
-                    <span className="text-muted small flex-shrink-0" role="status">
-                      Switching…
+                  ) : adminSupport ? (
+                    <span
+                      className="badge bg-label-warning ind-navbar-admin-badge"
+                      title={
+                        tenantProductEntitled
+                          ? `Platform administrative support context — viewing ${tenantLabel}`
+                          : `Platform administrative support context — viewing ${tenantLabel} · Product not enabled for this customer`
+                      }
+                    >
+                      <span className="ind-navbar-admin-badge__full">
+                        Platform Admin · Viewing: {tenantLabel}
+                        {!tenantProductEntitled ? " · Product not enabled" : ""}
+                      </span>
+                      <span className="ind-navbar-admin-badge__short">Admin · {tenantLabel}</span>
                     </span>
                   ) : null}
-                </label>
-                {error && me ? (
-                  <div className="alert alert-warning py-1 px-2 mb-0 small" role="alert">
-                    {error}
-                  </div>
-                ) : null}
-                {facility.facilities.length > 0 ? (
-                  <label className="nav-item ind-tenant-switcher mb-0">
-                    <i className="bx bx-map flex-shrink-0" aria-hidden="true" />
-                    <span className="ind-tenant-switcher__label">Location</span>
-                    <select
-                      className="form-select form-select-sm"
-                      aria-label="Active location"
-                      value={facility.facilityId}
-                      onChange={(event) => facility.setFacilityId(event.target.value)}
-                    >
-                      {facility.facilities.length > 1 ? (
-                        <option value={ALL_FACILITIES_ID}>All locations</option>
-                      ) : null}
-                      {facility.facilities.map((row) => (
-                        <option key={row.id} value={row.id}>
-                          {row.name}
-                        </option>
-                      ))}
-                    </select>
-                  </label>
-                ) : null}
-                {isLotoScopeRoute(pathname) && facility.departmentsForFacility.length > 0 ? (
                   <label className="nav-item ind-tenant-switcher mb-0">
                     <i className="bx bx-buildings flex-shrink-0" aria-hidden="true" />
-                    <span className="ind-tenant-switcher__label">Department</span>
-                    <select
-                      className="form-select form-select-sm"
-                      aria-label="Active department"
-                      value={facility.departmentId}
-                      onChange={(event) => facility.setDepartmentId(event.target.value)}
-                    >
-                      <option value={ALL_DEPARTMENTS_ID}>All departments</option>
-                      {facility.departmentsForFacility.map((row) => (
-                        <option key={row.id} value={row.id}>
-                          {row.name}
-                        </option>
-                      ))}
-                    </select>
+                    <span className="ind-tenant-switcher__label">Tenant</span>
+                    {selectableTenants.length > 1 ? (
+                      <select
+                        className="form-select form-select-sm"
+                        aria-label="Switch tenant"
+                        value={me.tenantId ?? ""}
+                        disabled={tenantSwitching}
+                        onChange={(event) => {
+                          const nextTenantId = event.target.value;
+                          confirmLeave(() => void onTenantChange(nextTenantId));
+                        }}
+                      >
+                        {selectableTenants.map((t) => (
+                          <option key={t.tenantId} value={t.tenantId}>
+                            {t.displayName}
+                          </option>
+                        ))}
+                      </select>
+                    ) : (
+                      <span className="text-muted small text-truncate" title={tenantLabel}>
+                        {tenantLabel}
+                      </span>
+                    )}
+                    {tenantSwitching ? (
+                      <span className="text-muted small flex-shrink-0" role="status">
+                        Switching…
+                      </span>
+                    ) : null}
                   </label>
-                ) : null}
-              </div>
-              <ul className="navbar-nav ind-navbar-toolbar__end flex-row align-items-center ms-auto flex-nowrap gap-1 min-w-0">
-                {me?.isDemoTenant && !hostTenantId ? (
-                  <li className="nav-item d-flex align-items-center">
-                    <span className="forge-demo-env-badge forge-demo-env-badge--navbar">
-                      DEMO ENVIRONMENT
-                    </span>
-                  </li>
-                ) : null}
-                <IndustrialMessagingNavButton />
-                <IndustrialNotificationMenu />
-                <li className="nav-item d-flex align-items-center gap-2 flex-nowrap min-w-0">
-                  <Link
-                    href="/settings/"
-                    className="btn btn-sm btn-outline-secondary text-decoration-none flex-shrink-0"
-                    title="Settings"
-                    aria-label="Settings"
-                  >
-                    <i className="bx bx-cog d-xl-none" aria-hidden="true" />
-                    <span className="ind-navbar-end-label d-none d-xl-inline">Settings</span>
-                  </Link>
-                  <ThemeModeToggle openCustomizer />
-                  <Link
-                    href="/profile/"
-                    className="nav-link px-0 text-body fw-semibold text-decoration-none ind-navbar-profile-link"
-                    aria-label={welcomeLabel === "My profile" ? "Open my profile" : welcomeLabel}
-                    title={welcomeLabel}
-                  >
-                    {welcomeLabel}
-                  </Link>
-                  <button
-                    type="button"
-                    className="btn btn-sm btn-outline-secondary flex-shrink-0"
-                    title="Sign out"
-                    aria-label="Sign out"
-                    onClick={() => confirmLeave(() => void signOut())}
-                  >
-                    <i className="bx bx-log-out d-xl-none" aria-hidden="true" />
-                    <span className="ind-navbar-end-label d-none d-xl-inline">Sign out</span>
-                  </button>
-                </li>
-              </ul>
-            </div>
-          </nav>
-
-          {isHorizontalLayout ? (
-            <div className="ind-horizontal-nav d-none d-xl-block bg-menu-theme">
-              <div className={contentContainerClass}>
-                <ul className="ind-horizontal-nav__list">
-                  <li className={routeIsActive(pathname, "/") ? "is-active" : undefined}>
-                    <Link href="/" className="ind-horizontal-nav__link">
-                      <i className="bx bx-home-circle" aria-hidden="true" />
-                      <span>Dashboard</span>
+                  {error && me ? (
+                    <div className="alert alert-warning py-1 px-2 mb-0 small" role="alert">
+                      {error}
+                    </div>
+                  ) : null}
+                  {facility.facilities.length > 0 ? (
+                    <label className="nav-item ind-tenant-switcher mb-0">
+                      <i className="bx bx-map flex-shrink-0" aria-hidden="true" />
+                      <span className="ind-tenant-switcher__label">Location</span>
+                      <select
+                        className="form-select form-select-sm"
+                        aria-label="Active location"
+                        value={facility.facilityId}
+                        onChange={(event) => facility.setFacilityId(event.target.value)}
+                      >
+                        {facility.facilities.length > 1 ? (
+                          <option value={ALL_FACILITIES_ID}>All locations</option>
+                        ) : null}
+                        {facility.facilities.map((row) => (
+                          <option key={row.id} value={row.id}>
+                            {row.name}
+                          </option>
+                        ))}
+                      </select>
+                    </label>
+                  ) : null}
+                  {isLotoScopeRoute(pathname) && facility.departmentsForFacility.length > 0 ? (
+                    <label className="nav-item ind-tenant-switcher mb-0">
+                      <i className="bx bx-buildings flex-shrink-0" aria-hidden="true" />
+                      <span className="ind-tenant-switcher__label">Department</span>
+                      <select
+                        className="form-select form-select-sm"
+                        aria-label="Active department"
+                        value={facility.departmentId}
+                        onChange={(event) => facility.setDepartmentId(event.target.value)}
+                      >
+                        <option value={ALL_DEPARTMENTS_ID}>All departments</option>
+                        {facility.departmentsForFacility.map((row) => (
+                          <option key={row.id} value={row.id}>
+                            {row.name}
+                          </option>
+                        ))}
+                      </select>
+                    </label>
+                  ) : null}
+                </div>
+                <ul className="navbar-nav ind-navbar-toolbar__end flex-row align-items-center ms-auto flex-nowrap gap-1 min-w-0">
+                  {me?.isDemoTenant && !hostTenantId ? (
+                    <li className="nav-item d-flex align-items-center">
+                      <span className="forge-demo-env-badge forge-demo-env-badge--navbar">
+                        DEMO ENVIRONMENT
+                      </span>
+                    </li>
+                  ) : null}
+                  <IndustrialMessagingNavButton />
+                  <IndustrialNotificationMenu />
+                  <li className="nav-item d-flex align-items-center gap-2 flex-nowrap min-w-0">
+                    <Link
+                      href="/settings/"
+                      className="btn btn-sm btn-outline-secondary text-decoration-none flex-shrink-0"
+                      title="Settings"
+                      aria-label="Settings"
+                    >
+                      <i className="bx bx-cog d-xl-none" aria-hidden="true" />
+                      <span className="ind-navbar-end-label d-none d-xl-inline">Settings</span>
                     </Link>
-                  </li>
-                  <li
-                    className={
-                      pathname === "/modules/analytics" || pathname === "/modules/analytics/"
-                        ? "is-active"
-                        : undefined
-                    }
-                  >
-                    <Link href="/modules/analytics/" className="ind-horizontal-nav__link">
-                      <i className="bx bx-bar-chart-alt-2" aria-hidden="true" />
-                      <span>Analytics</span>
+                    <ThemeModeToggle openCustomizer />
+                    <Link
+                      href="/profile/"
+                      className="nav-link px-0 text-body fw-semibold text-decoration-none ind-navbar-profile-link"
+                      aria-label={welcomeLabel === "My profile" ? "Open my profile" : welcomeLabel}
+                      title={welcomeLabel}
+                    >
+                      {welcomeLabel}
                     </Link>
-                  </li>
-                  {groups
-                    .filter((group) => group !== "Dashboard")
-                    .map((group) => {
-                      const items = nav.filter((item) => item.group === group && item.available);
-                      if (items.length === 0) return null;
-                      const groupHasActive = items.some((item) =>
-                        routeIsActive(pathname, item.route),
-                      );
-                      return (
-                        <li
-                          key={`hgrp-${group}`}
-                          className={`ind-horizontal-nav__group${groupHasActive ? " is-active" : ""}`}
-                        >
-                          <button type="button" className="ind-horizontal-nav__link" aria-haspopup="true">
-                            <i className={`bx ${iconForModule("", group)}`} aria-hidden="true" />
-                            <span>{group}</span>
-                            <i className="bx bx-chevron-down ind-horizontal-nav__caret" aria-hidden="true" />
-                          </button>
-                          <ul className="ind-horizontal-nav__submenu" role="menu">
-                            {items.map((item) => {
-                              const active = navItemIsActive(pathname, item.route, navRoutes);
-                              const comingSoon = isComingSoonModule(item.code);
-                              return (
-                                <li key={item.code} role="none">
-                                  <Link
-                                    href={item.route}
-                                    className={`ind-horizontal-nav__sublink${active ? " is-active" : ""}`}
-                                    role="menuitem"
-                                    aria-current={active ? "page" : undefined}
-                                    title={comingSoon ? `${item.name} (Coming soon)` : item.name}
-                                  >
-                                    {comingSoon ? (
-                                      <ComingSoonNavIcon />
-                                    ) : (
-                                      <i
-                                        className={`bx ${iconForModule(item.code, item.group)}`}
-                                        aria-hidden="true"
-                                      />
-                                    )}
-                                    <span>{item.name}</span>
-                                  </Link>
-                                </li>
-                              );
-                            })}
-                          </ul>
-                        </li>
-                      );
-                    })}
-                  <li className={routeIsActive(pathname, "/my-training/") ? "is-active" : undefined}>
-                    <Link href="/my-training/" className="ind-horizontal-nav__link">
-                      <i className="bx bx-book-reader" aria-hidden="true" />
-                      <span>My Training</span>
-                    </Link>
-                  </li>
-                  <li className={routeIsActive(pathname, "/profile/") ? "is-active" : undefined}>
-                    <Link href="/profile/" className="ind-horizontal-nav__link">
-                      <i className="bx bx-user" aria-hidden="true" />
-                      <span>My profile</span>
-                    </Link>
+                    <button
+                      type="button"
+                      className="btn btn-sm btn-outline-secondary flex-shrink-0"
+                      title="Sign out"
+                      aria-label="Sign out"
+                      onClick={() => confirmLeave(() => void signOut())}
+                    >
+                      <i className="bx bx-log-out d-xl-none" aria-hidden="true" />
+                      <span className="ind-navbar-end-label d-none d-xl-inline">Sign out</span>
+                    </button>
                   </li>
                 </ul>
               </div>
-            </div>
-          ) : null}
+            </nav>
 
-          <div className="content-wrapper">
-            <NetworkStatusBanner />
-            <div className={`${contentContainerClass} flex-grow-1 container-p-y ind-content-pad`}>
-              <div className="ind-content">{children}</div>
-            </div>
-            <footer className="content-footer footer bg-footer-theme">
-              <div className={`${contentContainerClass} d-flex flex-wrap justify-content-between py-2 flex-md-row flex-column`}>
-                <div className="mb-2 mb-md-0 small text-muted">
-                  © {new Date().getFullYear()} Forge Industrial Safety, a division of Forge Public
-                  Safety
+            {isHorizontalLayout ? (
+              <div className="ind-horizontal-nav d-none d-xl-block bg-menu-theme">
+                <div className={contentContainerClass}>
+                  <ul className="ind-horizontal-nav__list">
+                    <li className={routeIsActive(pathname, "/") ? "is-active" : undefined}>
+                      <Link href="/" className="ind-horizontal-nav__link">
+                        <i className="bx bx-home-circle" aria-hidden="true" />
+                        <span>Dashboard</span>
+                      </Link>
+                    </li>
+                    <li
+                      className={
+                        pathname === "/modules/analytics" || pathname === "/modules/analytics/"
+                          ? "is-active"
+                          : undefined
+                      }
+                    >
+                      <Link href="/modules/analytics/" className="ind-horizontal-nav__link">
+                        <i className="bx bx-bar-chart-alt-2" aria-hidden="true" />
+                        <span>Analytics</span>
+                      </Link>
+                    </li>
+                    {groups
+                      .filter((group) => group !== "Dashboard")
+                      .map((group) => {
+                        const items = nav.filter((item) => item.group === group && item.available);
+                        if (items.length === 0) return null;
+                        const groupHasActive = items.some((item) =>
+                          routeIsActive(pathname, item.route),
+                        );
+                        return (
+                          <li
+                            key={`hgrp-${group}`}
+                            className={`ind-horizontal-nav__group${groupHasActive ? " is-active" : ""}`}
+                          >
+                            <button
+                              type="button"
+                              className="ind-horizontal-nav__link"
+                              aria-haspopup="true"
+                            >
+                              <i className={`bx ${iconForModule("", group)}`} aria-hidden="true" />
+                              <span>{group}</span>
+                              <i
+                                className="bx bx-chevron-down ind-horizontal-nav__caret"
+                                aria-hidden="true"
+                              />
+                            </button>
+                            <ul className="ind-horizontal-nav__submenu" role="menu">
+                              {items.map((item) => {
+                                const active = navItemIsActive(pathname, item.route, navRoutes);
+                                const comingSoon = isComingSoonModule(item.code);
+                                return (
+                                  <li key={item.code} role="none">
+                                    <Link
+                                      href={item.route}
+                                      className={`ind-horizontal-nav__sublink${active ? " is-active" : ""}`}
+                                      role="menuitem"
+                                      aria-current={active ? "page" : undefined}
+                                      title={comingSoon ? `${item.name} (Coming soon)` : item.name}
+                                    >
+                                      {comingSoon ? (
+                                        <ComingSoonNavIcon />
+                                      ) : (
+                                        <i
+                                          className={`bx ${iconForModule(item.code, item.group)}`}
+                                          aria-hidden="true"
+                                        />
+                                      )}
+                                      <span>{item.name}</span>
+                                    </Link>
+                                  </li>
+                                );
+                              })}
+                            </ul>
+                          </li>
+                        );
+                      })}
+                    <li
+                      className={routeIsActive(pathname, "/my-training/") ? "is-active" : undefined}
+                    >
+                      <Link href="/my-training/" className="ind-horizontal-nav__link">
+                        <i className="bx bx-book-reader" aria-hidden="true" />
+                        <span>My Training</span>
+                      </Link>
+                    </li>
+                    <li className={routeIsActive(pathname, "/profile/") ? "is-active" : undefined}>
+                      <Link href="/profile/" className="ind-horizontal-nav__link">
+                        <i className="bx bx-user" aria-hidden="true" />
+                        <span>My profile</span>
+                      </Link>
+                    </li>
+                  </ul>
                 </div>
               </div>
-            </footer>
+            ) : null}
+
+            <div className="content-wrapper">
+              <NetworkStatusBanner />
+              <div className={`${contentContainerClass} flex-grow-1 container-p-y ind-content-pad`}>
+                <div className="ind-content">{children}</div>
+              </div>
+              <footer className="content-footer footer bg-footer-theme">
+                <div
+                  className={`${contentContainerClass} d-flex flex-wrap justify-content-between py-2 flex-md-row flex-column`}
+                >
+                  <div className="mb-2 mb-md-0 small text-muted">
+                    © {new Date().getFullYear()} Forge Industrial Safety, a division of Forge Public
+                    Safety
+                  </div>
+                </div>
+              </footer>
+            </div>
           </div>
         </div>
+
+        <MessagingPopout />
+        <ThemeCustomizer />
+
+        {menuOpen ? (
+          <button
+            type="button"
+            className="layout-overlay layout-menu-toggle"
+            aria-label="Close navigation"
+            onClick={() => setMenuOpen(false)}
+          />
+        ) : (
+          <div className="layout-overlay layout-menu-toggle" aria-hidden="true" />
+        )}
       </div>
-
-      <MessagingPopout />
-      <ThemeCustomizer />
-
-      {menuOpen ? (
-        <button
-          type="button"
-          className="layout-overlay layout-menu-toggle"
-          aria-label="Close navigation"
-          onClick={() => setMenuOpen(false)}
-        />
-      ) : (
-        <div className="layout-overlay layout-menu-toggle" aria-hidden="true" />
-      )}
-    </div>
     </IndustrialFacilityProvider>
   );
 }

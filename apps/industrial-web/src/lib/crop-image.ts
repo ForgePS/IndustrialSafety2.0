@@ -31,8 +31,8 @@ export function clampCropRect(
   const maxH = Math.max(1, imageHeight);
   let width = Math.min(Math.max(minSize, crop.width), maxW);
   let height = Math.min(Math.max(minSize, crop.height), maxH);
-  let x = Math.min(Math.max(0, crop.x), Math.max(0, maxW - width));
-  let y = Math.min(Math.max(0, crop.y), Math.max(0, maxH - height));
+  const x = Math.min(Math.max(0, crop.x), Math.max(0, maxW - width));
+  const y = Math.min(Math.max(0, crop.y), Math.max(0, maxH - height));
   width = Math.min(width, maxW - x);
   height = Math.min(height, maxH - y);
   return {
@@ -122,13 +122,14 @@ export async function cropImageFile(
 ): Promise<File> {
   const maxDim = options?.maxDim ?? 2400;
   const quality = options?.quality ?? 0.92;
-  const objectUrl =
-    typeof source === "string"
-      ? source
-      : URL.createObjectURL(source);
+  const objectUrl = typeof source === "string" ? source : URL.createObjectURL(source);
   try {
     const img = await loadHtmlImage(objectUrl);
-    const safe = clampCropRect(crop, img.naturalWidth || img.width, img.naturalHeight || img.height);
+    const safe = clampCropRect(
+      crop,
+      img.naturalWidth || img.width,
+      img.naturalHeight || img.height,
+    );
     const scale = Math.min(1, maxDim / Math.max(safe.width, safe.height));
     const outW = Math.max(1, Math.round(safe.width * scale));
     const outH = Math.max(1, Math.round(safe.height * scale));
@@ -137,17 +138,7 @@ export async function cropImageFile(
     canvas.height = outH;
     const ctx = canvas.getContext("2d");
     if (!ctx) throw new Error("Unable to crop image");
-    ctx.drawImage(
-      img,
-      safe.x,
-      safe.y,
-      safe.width,
-      safe.height,
-      0,
-      0,
-      outW,
-      outH,
-    );
+    ctx.drawImage(img, safe.x, safe.y, safe.width, safe.height, 0, 0, outW, outH);
     const blob = await new Promise<Blob>((resolve, reject) => {
       canvas.toBlob(
         (next) => {

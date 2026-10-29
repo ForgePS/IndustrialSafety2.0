@@ -39,13 +39,13 @@ flowchart TB
 
 ## Key decisions (ADRs)
 
-| ADR | Topic |
-| --- | --- |
-| [ADR-031](../../architecture/adr/ADR-031-neris-field-storage.md) | Typed EAV field storage |
-| [ADR-032](../../architecture/adr/ADR-032-schema-config-snapshots.md) | Schema + configuration snapshots |
+| ADR                                                                        | Topic                             |
+| -------------------------------------------------------------------------- | --------------------------------- |
+| [ADR-031](../../architecture/adr/ADR-031-neris-field-storage.md)           | Typed EAV field storage           |
+| [ADR-032](../../architecture/adr/ADR-032-schema-config-snapshots.md)       | Schema + configuration snapshots  |
 | [ADR-033](../../architecture/adr/ADR-033-incident-numbering-for-update.md) | Incident numbering (`FOR UPDATE`) |
-| [ADR-034](../../architecture/adr/ADR-034-effective-form-descriptor.md) | Effective form descriptor |
-| [ADR-035](../../architecture/adr/ADR-035-autosave-concurrency-if-match.md) | Autosave + If-Match concurrency |
+| [ADR-034](../../architecture/adr/ADR-034-effective-form-descriptor.md)     | Effective form descriptor         |
+| [ADR-035](../../architecture/adr/ADR-035-autosave-concurrency-if-match.md) | Autosave + If-Match concurrency   |
 
 Phase 1 registry decision: [ADR-030](../../decisions/ADR-030-neris-schema-registry-overlays.md).
 

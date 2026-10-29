@@ -41,8 +41,7 @@ export const QR_AUDIT_EVENT_TYPES = [
 export type QrAuditEventType = (typeof QR_AUDIT_EVENT_TYPES)[number];
 
 /** Accept RFC 4122/9562 UUIDs including Forge createId() UUIDv7 values. */
-const UUID_RE =
-  /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 export function hashPublicToken(token: string): string {
   return createHash("sha256").update(token).digest("hex");
@@ -58,7 +57,9 @@ export function isValidPublicToken(token: string): boolean {
 }
 
 export function assertQrLinkStatus(status: string): QrLinkStatus {
-  const normalized = String(status ?? "").trim().toUpperCase();
+  const normalized = String(status ?? "")
+    .trim()
+    .toUpperCase();
   if (!QR_LINK_STATUSES.includes(normalized as QrLinkStatus)) {
     throw new Error(`Invalid QR link status: ${status}`);
   }
@@ -104,7 +105,12 @@ export function resolveQrAccessModeForTarget(
   targetType: string | null | undefined,
   requestedMode: string | null | undefined,
 ): QrAccessMode {
-  if (String(targetType ?? "").trim().toUpperCase() === "EMERGENCY_SMS_SIGNUP") return "PUBLIC_FORM_ONLY";
+  if (
+    String(targetType ?? "")
+      .trim()
+      .toUpperCase() === "EMERGENCY_SMS_SIGNUP"
+  )
+    return "PUBLIC_FORM_ONLY";
   if (isPublicRequiredQrTarget(targetType)) return "PUBLIC_ACTION";
   return normalizeQrAccessMode(requestedMode);
 }

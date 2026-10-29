@@ -110,8 +110,7 @@ export function TenantPrintHealthPanel({ tenantId }: { tenantId: string }) {
     Boolean(me?.isPlatformAdmin) ||
     hasPermission("platform.tenant.read") ||
     hasPermission("platform.entitlement.manage");
-  const canEntitle =
-    Boolean(me?.isPlatformAdmin) || hasPermission("platform.entitlement.manage");
+  const canEntitle = Boolean(me?.isPlatformAdmin) || hasPermission("platform.entitlement.manage");
   const canFlags = Boolean(me?.isPlatformAdmin) || hasPermission("platform.feature.manage");
 
   const [health, setHealth] = useState<CreatorPrintHealth | null>(null);
@@ -286,10 +285,7 @@ export function TenantPrintHealthPanel({ tenantId }: { tenantId: string }) {
               value={health.bridges.offline}
               tone={health.bridges.offline > 0 ? "danger" : "neutral"}
             />
-            <Stat
-              label="Jobs MTD"
-              value={health.usage.jobs}
-            />
+            <Stat label="Jobs MTD" value={health.usage.jobs} />
             <Stat label="Labels MTD" value={health.usage.labelsPrinted} />
             <Stat
               label="Failure rate MTD"

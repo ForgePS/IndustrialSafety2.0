@@ -69,12 +69,10 @@ export function AiNarrativeAssistantPanel({
 
   const canUse = hasPermission("ai.narrative.use");
   const canGenerate =
-    hasPermission("ai.narrative.generate") ||
-    hasPermission("rms.incident.ai_narrative.generate");
+    hasPermission("ai.narrative.generate") || hasPermission("rms.incident.ai_narrative.generate");
   const canRewrite = hasPermission("ai.narrative.rewrite");
   const canAccept =
-    hasPermission("ai.narrative.accept") ||
-    hasPermission("rms.incident.ai_narrative.accept");
+    hasPermission("ai.narrative.accept") || hasPermission("rms.incident.ai_narrative.accept");
   const canReject = hasPermission("ai.narrative.reject");
 
   const availableModes = useMemo(() => {
@@ -126,24 +124,21 @@ export function AiNarrativeAssistantPanel({
   );
   const sourceFields = bundle?.sources[0]?.manifestJson?.fields ?? [];
 
-  const run = useCallback(
-    async (fn: () => Promise<AiNarrativeBundle>) => {
-      setBusy(true);
-      setError(null);
-      try {
-        const next = await fn();
-        setBundle(next);
-        setHistory(null);
-        return next;
-      } catch (err) {
-        setError(err instanceof Error ? err.message : "AI request failed");
-        return null;
-      } finally {
-        setBusy(false);
-      }
-    },
-    [],
-  );
+  const run = useCallback(async (fn: () => Promise<AiNarrativeBundle>) => {
+    setBusy(true);
+    setError(null);
+    try {
+      const next = await fn();
+      setBundle(next);
+      setHistory(null);
+      return next;
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "AI request failed");
+      return null;
+    } finally {
+      setBusy(false);
+    }
+  }, []);
 
   async function handleGenerate() {
     if (!acknowledged) {
@@ -302,7 +297,9 @@ export function AiNarrativeAssistantPanel({
               <button
                 type="button"
                 className={styles.buttonSecondary}
-                disabled={busy || (!canRewrite && !canGenerate && !canUse) || !existingNarrative?.trim()}
+                disabled={
+                  busy || (!canRewrite && !canGenerate && !canUse) || !existingNarrative?.trim()
+                }
                 onClick={() => void handleImprove()}
               >
                 Improve
@@ -334,16 +331,34 @@ export function AiNarrativeAssistantPanel({
           </div>
 
           <div className={styles.actions}>
-            <button type="button" className={styles.buttonSecondary} onClick={() => setShowSources((v) => !v)}>
+            <button
+              type="button"
+              className={styles.buttonSecondary}
+              onClick={() => setShowSources((v) => !v)}
+            >
               {showSources ? "Hide" : "Show"} source review
             </button>
-            <button type="button" className={styles.buttonSecondary} onClick={() => setShowCompare((v) => !v)}>
+            <button
+              type="button"
+              className={styles.buttonSecondary}
+              onClick={() => setShowCompare((v) => !v)}
+            >
               {showCompare ? "Hide" : "Compare"}
             </button>
-            <button type="button" className={styles.buttonSecondary} disabled={busy || locked} onClick={() => void handleRegenerate()}>
+            <button
+              type="button"
+              className={styles.buttonSecondary}
+              disabled={busy || locked}
+              onClick={() => void handleRegenerate()}
+            >
               Regenerate
             </button>
-            <button type="button" className={styles.buttonSecondary} disabled={busy} onClick={() => void handleHistory()}>
+            <button
+              type="button"
+              className={styles.buttonSecondary}
+              disabled={busy}
+              onClick={() => void handleHistory()}
+            >
               History
             </button>
           </div>
@@ -357,8 +372,7 @@ export function AiNarrativeAssistantPanel({
                 <ul>
                   {sourceFields.map((field) => (
                     <li key={field.fieldId}>
-                      {field.label} ({field.category})
-                      {field.included ? "" : " — excluded"}
+                      {field.label} ({field.category}){field.included ? "" : " — excluded"}
                       {field.redacted ? " — redacted" : ""}
                       {field.valuePreview ? `: ${field.valuePreview}` : ""}
                     </li>
@@ -425,7 +439,12 @@ export function AiNarrativeAssistantPanel({
             <>
               <div className={styles.actions}>
                 {canAccept ? (
-                  <button type="button" className={styles.button} disabled={busy} onClick={() => void handleAccept(false)}>
+                  <button
+                    type="button"
+                    className={styles.button}
+                    disabled={busy}
+                    onClick={() => void handleAccept(false)}
+                  >
                     Accept
                   </button>
                 ) : null}
@@ -441,7 +460,12 @@ export function AiNarrativeAssistantPanel({
                       placeholder="Why is this draft unsuitable?"
                     />
                   </div>
-                  <button type="button" className={styles.buttonSecondary} disabled={busy} onClick={() => void handleReject()}>
+                  <button
+                    type="button"
+                    className={styles.buttonSecondary}
+                    disabled={busy}
+                    onClick={() => void handleReject()}
+                  >
                     Reject
                   </button>
                 </>

@@ -4,7 +4,7 @@
 **Sprint:** DM-S1  
 **Status:** PASS WITH CONDITIONS  
 **Source project:** `forge-industrial-safety` only  
-**Date:** 2026-08-12  
+**Date:** 2026-08-12
 
 ## Scope honored
 
@@ -16,29 +16,29 @@
 
 ## Native Firestore export
 
-| Field | Value |
-| --- | --- |
-| EXPORT_OPERATION | `projects/forge-industrial-safety/databases/(default)/operations/ASBjMTA5NDdmZDQ3NjAtMmU5OS0xYTI0LWE0ZDktYWFjNzI2N2IkGnNlbmlsZXBpcAkKMxI` |
-| EXPORT_PREFIX | `gs://forge-industrial-safety-firestore-migration-20260811/dm-s1-native-20260812T182856Z` |
-| STARTED_AT | 2026-08-12T18:29:01.261773Z |
-| COMPLETED_AT | 2026-08-12T18:29:11.411557Z |
-| STATUS | SUCCESSFUL |
-| Progress documents | 42277 |
+| Field              | Value                                                                                                                                     |
+| ------------------ | ----------------------------------------------------------------------------------------------------------------------------------------- |
+| EXPORT_OPERATION   | `projects/forge-industrial-safety/databases/(default)/operations/ASBjMTA5NDdmZDQ3NjAtMmU5OS0xYTI0LWE0ZDktYWFjNzI2N2IkGnNlbmlsZXBpcAkKMxI` |
+| EXPORT_PREFIX      | `gs://forge-industrial-safety-firestore-migration-20260811/dm-s1-native-20260812T182856Z`                                                 |
+| STARTED_AT         | 2026-08-12T18:29:01.261773Z                                                                                                               |
+| COMPLETED_AT       | 2026-08-12T18:29:11.411557Z                                                                                                               |
+| STATUS             | SUCCESSFUL                                                                                                                                |
+| Progress documents | 42277                                                                                                                                     |
 
 ## Logical extraction
 
-| Metric | Value |
-| --- | ---: |
-| Root collections | 80 |
-| Root SOURCE_COUNT (live agg) | 42265 |
-| Root EXTRACTED_COUNT | 42265 |
-| Root DIFFERENCE | 0 |
-| Subcollection rows extracted | 12 (`equipmentMigrationBatches/rows`) |
-| Package total Firestore lines | 42277 |
-| Auth users extracted | 10 |
-| Storage objects manifested | 9303 |
-| Storage bytes manifested | 16568761846 (~15.43 GiB) |
-| Package location | `.tmp-data-migration/dm-s1/migration-package/` (gitignored) |
+| Metric                        |                                                       Value |
+| ----------------------------- | ----------------------------------------------------------: |
+| Root collections              |                                                          80 |
+| Root SOURCE_COUNT (live agg)  |                                                       42265 |
+| Root EXTRACTED_COUNT          |                                                       42265 |
+| Root DIFFERENCE               |                                                           0 |
+| Subcollection rows extracted  |                       12 (`equipmentMigrationBatches/rows`) |
+| Package total Firestore lines |                                                       42277 |
+| Auth users extracted          |                                                          10 |
+| Storage objects manifested    |                                                        9303 |
+| Storage bytes manifested      |                                    16568761846 (~15.43 GiB) |
+| Package location              | `.tmp-data-migration/dm-s1/migration-package/` (gitignored) |
 
 DM-S0 baseline root documents: **42265** (unchanged vs DM-S1 live root agg). Native export document progress **42277** includes nested docs consistent with subcollection rows.
 
@@ -69,7 +69,7 @@ See `DM-S1-TARGET-SCHEMA-CONTRACT.md`.
 ## Conditions / blockers for later import
 
 1. Tip industrial DDL package not present through `0038`
-2. TARGET_SCHEMA_GAP: lotoLibraries/lotoRecords, scan_*, correctiveActionRecords, WC medical satellites, companyVehicleDrivers*
+2. TARGET_SCHEMA_GAP: lotoLibraries/lotoRecords, scan__, correctiveActionRecords, WC medical satellites, companyVehicleDrivers_
 3. LEGACY_ALIAS tenant `"Producers Rice Mill"` not auto-normalized
 4. GLOBAL templates must stay PLATFORM_GLOBAL
 5. Soft facility display-name mismatches require resolution table

@@ -2,7 +2,6 @@ import { createHash, randomBytes } from "node:crypto";
 import { Inject, Injectable } from "@nestjs/common";
 import {
   createId,
-  industrialPersonnel,
   industrialTrainingAccessLinks,
   industrialTrainingAssignmentAssignees,
   industrialTrainingAssignments,
@@ -137,11 +136,11 @@ export class IndustrialPublicTrainingService {
       where id = ${tenantId}::uuid
       limit 1
     `);
-    const tenantRow = (Array.isArray(tenantRows)
-      ? tenantRows[0]
-      : (tenantRows as { rows?: Array<Record<string, unknown>> }).rows?.[0]) as
-      | Record<string, unknown>
-      | undefined;
+    const tenantRow = (
+      Array.isArray(tenantRows)
+        ? tenantRows[0]
+        : (tenantRows as { rows?: Array<Record<string, unknown>> }).rows?.[0]
+    ) as Record<string, unknown> | undefined;
 
     const brandingRows = await tx.execute(sql`
       select cv.payload_json as payload
@@ -152,11 +151,11 @@ export class IndustrialPublicTrainingService {
         and co.object_key = 'default'
       limit 1
     `);
-    const brandingPayloadRaw = (Array.isArray(brandingRows)
-      ? brandingRows[0]
-      : (brandingRows as { rows?: Array<{ payload?: unknown }> }).rows?.[0]) as
-      | { payload?: unknown }
-      | undefined;
+    const brandingPayloadRaw = (
+      Array.isArray(brandingRows)
+        ? brandingRows[0]
+        : (brandingRows as { rows?: Array<{ payload?: unknown }> }).rows?.[0]
+    ) as { payload?: unknown } | undefined;
     const payload =
       brandingPayloadRaw?.payload && typeof brandingPayloadRaw.payload === "object"
         ? (brandingPayloadRaw.payload as Record<string, unknown>)
@@ -188,11 +187,11 @@ export class IndustrialPublicTrainingService {
         and archived_at is null
       limit 1
     `);
-    const person = (Array.isArray(personRows)
-      ? personRows[0]
-      : (personRows as { rows?: Array<Record<string, unknown>> }).rows?.[0]) as
-      | Record<string, unknown>
-      | undefined;
+    const person = (
+      Array.isArray(personRows)
+        ? personRows[0]
+        : (personRows as { rows?: Array<Record<string, unknown>> }).rows?.[0]
+    ) as Record<string, unknown> | undefined;
     const displayName =
       String(person?.display_name ?? "").trim() ||
       [person?.first_name, person?.last_name].filter(Boolean).join(" ").trim() ||
@@ -209,13 +208,14 @@ export class IndustrialPublicTrainingService {
       passingPercent: assignment.passingPercent,
       title: assignment.title,
       description: assignment.description,
-      sourceTitle: (
-        await tx
-          .select({ title: industrialTrainingSources.title })
-          .from(industrialTrainingSources)
-          .where(eq(industrialTrainingSources.id, assignment.sourceId))
-          .limit(1)
-      )[0]?.title ?? "Training",
+      sourceTitle:
+        (
+          await tx
+            .select({ title: industrialTrainingSources.title })
+            .from(industrialTrainingSources)
+            .where(eq(industrialTrainingSources.id, assignment.sourceId))
+            .limit(1)
+        )[0]?.title ?? "Training",
     };
   }
 
@@ -546,7 +546,11 @@ export class IndustrialPublicTrainingService {
   }
 
   async logoutSessionByToken(token: string, sessionToken: string) {
-    const learner = await this.resolvePublicLearner(token, { sessionToken }, { touchSession: false });
+    const learner = await this.resolvePublicLearner(
+      token,
+      { sessionToken },
+      { touchSession: false },
+    );
     const now = new Date();
     await withTenantTransaction(this.db, learner.tenantId, async (tx) => {
       if (!learner.sessionId) return;
@@ -592,11 +596,7 @@ export class IndustrialPublicTrainingService {
     attemptId: string,
   ) {
     const learner = await this.resolvePublicLearner(token, credentials);
-    return this.training.nextQuestionPublic(
-      learner.tenantId,
-      learner.employeeNumber,
-      attemptId,
-    );
+    return this.training.nextQuestionPublic(learner.tenantId, learner.employeeNumber, attemptId);
   }
 
   async answerByToken(
@@ -614,17 +614,9 @@ export class IndustrialPublicTrainingService {
     );
   }
 
-  async resultsByToken(
-    token: string,
-    credentials: PublicTrainingCredentials,
-    attemptId: string,
-  ) {
+  async resultsByToken(token: string, credentials: PublicTrainingCredentials, attemptId: string) {
     const learner = await this.resolvePublicLearner(token, credentials);
-    return this.training.getResultsPublic(
-      learner.tenantId,
-      learner.employeeNumber,
-      attemptId,
-    );
+    return this.training.getResultsPublic(learner.tenantId, learner.employeeNumber, attemptId);
   }
 
   private async resolveAccessLinkByToken(token: string) {
@@ -667,11 +659,7 @@ export class IndustrialPublicTrainingService {
     });
   }
 
-  async verifyAccessLinkEmployee(
-    token: string,
-    employeeNumber: string,
-    clientBucket?: string,
-  ) {
+  async verifyAccessLinkEmployee(token: string, employeeNumber: string, clientBucket?: string) {
     const { tokenHash, tenantId } = await this.resolveAccessLinkByToken(token);
     const normalized = String(employeeNumber ?? "").trim();
     if (!normalized) throw new ForgeError("VALIDATION_FAILED", "employeeNumber is required");
@@ -694,7 +682,10 @@ export class IndustrialPublicTrainingService {
 
         const portalConfig = await this.lms.readPortalTenantConfig(tx, tenantId);
         if (!portalConfig.portalEnabled) {
-          throw new ForgeError("FORBIDDEN", "Company training portal is disabled for this organization.");
+          throw new ForgeError(
+            "FORBIDDEN",
+            "Company training portal is disabled for this organization.",
+          );
         }
 
         const person = (await findPersonnelByEmployeeNumber(tx, tenantId, normalized)) ?? null;
@@ -830,11 +821,7 @@ export class IndustrialPublicTrainingService {
     return this.lms.listEmployeeAssignments(learner.tenantId, learner.employeeNumber);
   }
 
-  async getCoursePlayer(
-    token: string,
-    sessionToken: string,
-    assignmentId: string,
-  ) {
+  async getCoursePlayer(token: string, sessionToken: string, assignmentId: string) {
     const learner = await this.resolvePublicAccessLearner(token, sessionToken);
     return withTenantTransaction(this.db, learner.tenantId, async (tx) => {
       const [assignment] = await tx
@@ -977,22 +964,14 @@ export class IndustrialPublicTrainingService {
 
   async getMaterialContentForLearner(token: string, sessionToken: string, materialId: string) {
     const accessTokenHash = await this.resolvePublicTokenHash(token);
-    const learner = await this.resolvePublicLearner(
-      token,
-      { sessionToken },
-      { accessTokenHash },
-    );
+    const learner = await this.resolvePublicLearner(token, { sessionToken }, { accessTokenHash });
     await this.assertLearnerMaterialAccess(learner, materialId);
     return this.training.getMaterialContentByTenant(learner.tenantId, materialId);
   }
 
   async getMaterialViewUrlForLearner(token: string, sessionToken: string, materialId: string) {
     const accessTokenHash = await this.resolvePublicTokenHash(token);
-    const learner = await this.resolvePublicLearner(
-      token,
-      { sessionToken },
-      { accessTokenHash },
-    );
+    const learner = await this.resolvePublicLearner(token, { sessionToken }, { accessTokenHash });
     await this.assertLearnerMaterialAccess(learner, materialId);
     return this.training.createMaterialViewUrlByTenant(learner.tenantId, materialId);
   }
@@ -1110,17 +1089,16 @@ export class IndustrialPublicTrainingService {
 
   private async resolvePublicAccessLearner(token: string, sessionToken: string) {
     const { tokenHash } = await this.resolveAccessLinkByToken(token);
-    return this.resolvePublicLearner(
-      token,
-      { sessionToken },
-      { accessTokenHash: tokenHash },
-    );
+    return this.resolvePublicLearner(token, { sessionToken }, { accessTokenHash: tokenHash });
   }
 
   async getAccessTrainingReport(token: string, sessionToken: string) {
     const learner = await this.resolvePublicAccessLearner(token, sessionToken);
     if (!learner.personnelId) {
-      throw new ForgeError("VALIDATION_FAILED", "Training report is not available for this session");
+      throw new ForgeError(
+        "VALIDATION_FAILED",
+        "Training report is not available for this session",
+      );
     }
     return this.lms.getPersonnelTrainingReportPrintable(learner.tenantId, learner.personnelId);
   }
@@ -1128,25 +1106,23 @@ export class IndustrialPublicTrainingService {
   async getAccessTrainingHistory(token: string, sessionToken: string) {
     const learner = await this.resolvePublicAccessLearner(token, sessionToken);
     if (!learner.personnelId) {
-      throw new ForgeError("VALIDATION_FAILED", "Training history is not available for this session");
+      throw new ForgeError(
+        "VALIDATION_FAILED",
+        "Training history is not available for this session",
+      );
     }
     return this.lms.listPersonnelTrainingHistory(learner.tenantId, learner.personnelId);
   }
 
-  async getAccessCompletionPrintable(
-    token: string,
-    sessionToken: string,
-    completionId: string,
-  ) {
+  async getAccessCompletionPrintable(token: string, sessionToken: string, completionId: string) {
     const learner = await this.resolvePublicAccessLearner(token, sessionToken);
     if (!learner.personnelId) {
-      throw new ForgeError("VALIDATION_FAILED", "Completion print is not available for this session");
+      throw new ForgeError(
+        "VALIDATION_FAILED",
+        "Completion print is not available for this session",
+      );
     }
-    return this.lms.getCompletionPrintable(
-      learner.tenantId,
-      learner.personnelId,
-      completionId,
-    );
+    return this.lms.getCompletionPrintable(learner.tenantId, learner.personnelId, completionId);
   }
 
   async getAccessAttemptPrintable(token: string, sessionToken: string, attemptId: string) {

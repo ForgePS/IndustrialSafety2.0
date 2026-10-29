@@ -4,19 +4,13 @@ import { canEditMyProfile, profileInitials, profileWelcomeName } from "./my-prof
 describe("canEditMyProfile", () => {
   it("allows the signed-in user to edit their own profile", () => {
     expect(canEditMyProfile({ userId: "u1", permissions: ["industrial.access"] })).toBe(true);
-    expect(
-      canEditMyProfile({ userId: "u1", permissions: ["industrial.access"] }, "u1"),
-    ).toBe(true);
+    expect(canEditMyProfile({ userId: "u1", permissions: ["industrial.access"] }, "u1")).toBe(true);
   });
 
   it("allows Super Admin, Creator, and Tenant Admin to edit another user", () => {
     expect(canEditMyProfile({ userId: "admin", isPlatformAdmin: true }, "u2")).toBe(true);
-    expect(
-      canEditMyProfile({ userId: "c1", activeProducts: ["FORGE_CREATOR"] }, "u2"),
-    ).toBe(true);
-    expect(
-      canEditMyProfile({ userId: "a1", permissions: ["industrial.admin"] }, "u2"),
-    ).toBe(true);
+    expect(canEditMyProfile({ userId: "c1", activeProducts: ["FORGE_CREATOR"] }, "u2")).toBe(true);
+    expect(canEditMyProfile({ userId: "a1", permissions: ["industrial.admin"] }, "u2")).toBe(true);
   });
 
   it("blocks operators from editing someone else", () => {

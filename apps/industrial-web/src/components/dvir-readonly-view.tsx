@@ -21,8 +21,7 @@ type Props = {
 export function DvirReadonlyView({ row, publicToken, onBack }: Props) {
   const reportItems = resolveDvirReportItems(row);
   const noItems = reportItems.filter((item) => item.answer === "NO");
-  const trip =
-    String(row.tripType).toUpperCase() === "POST_TRIP" ? "POST_TRIP" : "PRE_TRIP";
+  const trip = String(row.tripType).toUpperCase() === "POST_TRIP" ? "POST_TRIP" : "PRE_TRIP";
   const defects = dvirDefectSummary(row);
   const recordId = String(row.id ?? "");
 

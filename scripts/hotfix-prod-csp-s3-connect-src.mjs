@@ -57,7 +57,12 @@ function withS3ConnectSrc(csp) {
   const next = parts.map((part) => {
     if (!/^connect-src\b/i.test(part)) return part;
     found = true;
-    const tokens = new Set(part.replace(/^connect-src\s+/i, "").split(/\s+/).filter(Boolean));
+    const tokens = new Set(
+      part
+        .replace(/^connect-src\s+/i, "")
+        .split(/\s+/)
+        .filter(Boolean),
+    );
     for (const host of S3_CONNECT) tokens.add(host);
     return `connect-src ${[...tokens].join(" ")}`;
   });
@@ -108,8 +113,7 @@ function patchDistribution(label, distId) {
   const rhpCfg = structuredClone(rhpRaw.ResponseHeadersPolicy.ResponseHeadersPolicyConfig);
   delete rhpCfg.ResponseHeadersPolicyId;
 
-  const current =
-    rhpCfg.SecurityHeadersConfig?.ContentSecurityPolicy?.ContentSecurityPolicy ?? "";
+  const current = rhpCfg.SecurityHeadersConfig?.ContentSecurityPolicy?.ContentSecurityPolicy ?? "";
   if (!current) throw new Error(`${label}: empty CSP on policy ${rhpId}`);
 
   const before = parseConnectSrc(current);

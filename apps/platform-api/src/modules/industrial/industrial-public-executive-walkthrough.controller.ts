@@ -10,10 +10,7 @@ export class IndustrialPublicExecutiveWalkthroughController {
 
   @Public()
   @Get("render/:token")
-  async resolveRender(
-    @Param("token") token: string,
-    @Req() req: RequestWithIds,
-  ) {
+  async resolveRender(@Param("token") token: string, @Req() req: RequestWithIds) {
     return ok(await this.walkthrough.resolvePublicRenderToken(token), getRequestIds(req));
   }
 }

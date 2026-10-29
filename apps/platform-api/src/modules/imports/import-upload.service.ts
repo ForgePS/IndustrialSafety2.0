@@ -1,8 +1,5 @@
 import { Inject, Injectable } from "@nestjs/common";
-import {
-  type Database,
-  withTenantTransaction,
-} from "@forge/database";
+import { type Database, withTenantTransaction } from "@forge/database";
 import { ForgeError } from "@forge/errors";
 import { DOMAIN_EVENT_TYPES } from "@forge/events";
 import {
@@ -316,11 +313,7 @@ export class ImportUploadService {
     }
   }
 
-  async getPartUrls(
-    principal: ForgePrincipal,
-    jobId: string,
-    body: unknown,
-  ) {
+  async getPartUrls(principal: ForgePrincipal, jobId: string, body: unknown) {
     const tenantId = this.requireTenant(principal);
     const data = importUploadPartsSchema.parse(body);
     return withTenantTransaction(
@@ -336,12 +329,7 @@ export class ImportUploadService {
         if (!["INITIALIZED", "UPLOADING"].includes(file.uploadStatus)) {
           throw new ForgeError("IMPORT_UPLOAD_INVALID", "Upload is not accepting parts.");
         }
-        await this.repo.updateFile(
-          tx,
-          file,
-          { uploadStatus: "UPLOADING" },
-          principal.userId,
-        );
+        await this.repo.updateFile(tx, file, { uploadStatus: "UPLOADING" }, principal.userId);
         const parts = [];
         for (const partNumber of data.partNumbers) {
           parts.push(
@@ -376,12 +364,16 @@ export class ImportUploadService {
           if (!job) throw new ForgeError("IMPORT_JOB_NOT_FOUND", "The import job was not found.");
           assertS3Transition("upload_complete", job.status as ImportJobStatus);
           const file = await this.repo.getFileForJob(tx, tenantId, jobId);
-          if (!file) throw new ForgeError("IMPORT_FILE_NOT_FOUND", "The import file was not found.");
+          if (!file)
+            throw new ForgeError("IMPORT_FILE_NOT_FOUND", "The import file was not found.");
           if (file.uploadStatus === "COMPLETED") {
             return { job: mapImportJob(job), file: mapImportFile(file), enqueued: false };
           }
           if (!["INITIALIZED", "UPLOADING"].includes(file.uploadStatus)) {
-            throw new ForgeError("IMPORT_UPLOAD_INVALID", `Upload status '${file.uploadStatus}' cannot be completed.`);
+            throw new ForgeError(
+              "IMPORT_UPLOAD_INVALID",
+              `Upload status '${file.uploadStatus}' cannot be completed.`,
+            );
           }
 
           if (file.multipartUploadId) {
@@ -407,7 +399,11 @@ export class ImportUploadService {
               "Uploaded object was not found in the imports bucket.",
             );
           }
-          if (head.contentLength != null && file.byteSize != null && head.contentLength !== file.byteSize) {
+          if (
+            head.contentLength != null &&
+            file.byteSize != null &&
+            head.contentLength !== file.byteSize
+          ) {
             throw new ForgeError(
               "IMPORT_UPLOAD_INVALID",
               `Uploaded object size ${head.contentLength} does not match declared ${file.byteSize}.`,
@@ -420,10 +416,17 @@ export class ImportUploadService {
             file.clientChecksumSha256 &&
             data.checksumSha256.toLowerCase() !== file.clientChecksumSha256.toLowerCase()
           ) {
-            throw new ForgeError("IMPORT_CHECKSUM_MISMATCH", "Checksum does not match initialized upload.");
+            throw new ForgeError(
+              "IMPORT_CHECKSUM_MISMATCH",
+              "Checksum does not match initialized upload.",
+            );
           }
           if (checksum) {
-            const duplicate = await this.repo.findCompletedByContentHash(tx, tenantId, checksum.toLowerCase());
+            const duplicate = await this.repo.findCompletedByContentHash(
+              tx,
+              tenantId,
+              checksum.toLowerCase(),
+            );
             if (duplicate && duplicate.id !== file.id) {
               throw new ForgeError(
                 "IMPORT_DUPLICATE_CONTENT",
@@ -551,11 +554,7 @@ export class ImportUploadService {
     }
   }
 
-  async abortUpload(
-    principal: ForgePrincipal,
-    jobId: string,
-    correlationId: string,
-  ) {
+  async abortUpload(principal: ForgePrincipal, jobId: string, correlationId: string) {
     const tenantId = this.requireTenant(principal);
     try {
       return await withTenantTransaction(
@@ -565,7 +564,8 @@ export class ImportUploadService {
           const job = await this.repo.getJob(tx, tenantId, jobId);
           if (!job) throw new ForgeError("IMPORT_JOB_NOT_FOUND", "The import job was not found.");
           const file = await this.repo.getFileForJob(tx, tenantId, jobId);
-          if (!file) throw new ForgeError("IMPORT_FILE_NOT_FOUND", "The import file was not found.");
+          if (!file)
+            throw new ForgeError("IMPORT_FILE_NOT_FOUND", "The import file was not found.");
           if (file.multipartUploadId && ["INITIALIZED", "UPLOADING"].includes(file.uploadStatus)) {
             try {
               await this.storage.abortMultipartUpload({
@@ -576,23 +576,17 @@ export class ImportUploadService {
               // Best-effort abort; continue cancelling job state.
             }
           }
-          const next = nextStatusForS3Action(
-            "cancel_upload",
-            job.status as ImportJobStatus,
-          );
+          const next = nextStatusForS3Action("cancel_upload", job.status as ImportJobStatus);
           const updatedFile = await this.repo.updateFile(
             tx,
             file,
             { uploadStatus: "ABORTED", uploadProgressPercent: 0 },
             principal.userId,
           );
-          const updatedJob = await this.repo.updateJobStatus(
-            tx,
-            job,
-            next,
-            principal.userId,
-            { currentStage: "CANCELLED", errorSummary: "Upload aborted" },
-          );
+          const updatedJob = await this.repo.updateJobStatus(tx, job, next, principal.userId, {
+            currentStage: "CANCELLED",
+            errorSummary: "Upload aborted",
+          });
           await this.outbox.write(tx, {
             tenantId,
             aggregateType: "import_job",
@@ -705,11 +699,7 @@ export class ImportUploadService {
   }
 
   /** Extends job cancel to cover upload-stage statuses. */
-  async cancelIncludingUpload(
-    principal: ForgePrincipal,
-    jobId: string,
-    correlationId: string,
-  ) {
+  async cancelIncludingUpload(principal: ForgePrincipal, jobId: string, correlationId: string) {
     const tenantId = this.requireTenant(principal);
     try {
       return await withTenantTransaction(
@@ -734,12 +724,7 @@ export class ImportUploadService {
             }
           }
           if (file && ["INITIALIZED", "UPLOADING", "COMPLETED"].includes(file.uploadStatus)) {
-            await this.repo.updateFile(
-              tx,
-              file,
-              { uploadStatus: "CANCELLED" },
-              principal.userId,
-            );
+            await this.repo.updateFile(tx, file, { uploadStatus: "CANCELLED" }, principal.userId);
           }
           const next = nextStatusForAction("cancel", job.status as ImportJobStatus);
           const updated = await this.repo.updateJobStatus(tx, job, next, principal.userId, {

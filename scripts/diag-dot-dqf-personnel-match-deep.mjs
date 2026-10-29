@@ -128,7 +128,8 @@ try {
   for (const p of people) {
     if (p.archived_at) continue;
     const emp = normalizeEmp(p.employee_number);
-    if (emp) byEmpNorm.set(emp, { id: p.id, displayName: p.display_name, empRaw: p.employee_number });
+    if (emp)
+      byEmpNorm.set(emp, { id: p.id, displayName: p.display_name, empRaw: p.employee_number });
     const nk = normalizePersonKey(p.display_name);
     if (nk) byName.set(nk, { id: p.id, displayName: p.display_name, empRaw: p.employee_number });
   }
@@ -200,8 +201,9 @@ try {
           .filter((r) => !r.wouldMatchEmp && !r.wouldMatchName)
           .map((r) => ({ title: r.title, empRaw: r.empRaw, sourceCollection: r.sourceCollection })),
         workbookWouldLinkViaEmp: unlinkedWorkbook.filter((r) => r.wouldMatchEmp).length,
-        workbookWouldLinkViaName: unlinkedWorkbook.filter((r) => !r.wouldMatchEmp && r.wouldMatchName)
-          .length,
+        workbookWouldLinkViaName: unlinkedWorkbook.filter(
+          (r) => !r.wouldMatchEmp && r.wouldMatchName,
+        ).length,
       },
       null,
       2,

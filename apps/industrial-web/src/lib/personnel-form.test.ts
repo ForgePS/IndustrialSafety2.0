@@ -175,6 +175,11 @@ describe("Add Person form model", () => {
       "phone",
       "companyEmail",
       "companyPhone",
+      "street",
+      "city",
+      "state",
+      "zip",
+      "gender",
     ]);
   });
 
@@ -263,15 +268,15 @@ describe("validatePersonnelForm", () => {
   });
 
   it("treats whitespace as missing", () => {
-    expect(validatePersonnelForm({ status: "Active", firstName: "   ", lastName: "Bogy" })).toEqual([
-      "First name",
-    ]);
+    expect(validatePersonnelForm({ status: "Active", firstName: "   ", lastName: "Bogy" })).toEqual(
+      ["First name"],
+    );
   });
 
   it("passes once status and both names are present", () => {
-    expect(
-      validatePersonnelForm({ status: "Active", firstName: "Tim", lastName: "Bogy" }),
-    ).toEqual([]);
+    expect(validatePersonnelForm({ status: "Active", firstName: "Tim", lastName: "Bogy" })).toEqual(
+      [],
+    );
   });
 });
 
@@ -368,9 +373,7 @@ describe("buildPersonnelPayload", () => {
   it("omits the driver flag unless ticked, letting the column default apply", () => {
     expect(buildPersonnelPayload({})).not.toHaveProperty("isCompanyDriver");
     expect(buildPersonnelPayload({})).not.toHaveProperty("isDotDriver");
-    expect(buildPersonnelPayload({ isCompanyDriver: false })).not.toHaveProperty(
-      "isCompanyDriver",
-    );
+    expect(buildPersonnelPayload({ isCompanyDriver: false })).not.toHaveProperty("isCompanyDriver");
     expect(buildPersonnelPayload({ isDotDriver: false })).not.toHaveProperty("isDotDriver");
     expect(buildPersonnelPayload({ isCompanyDriver: true }).isCompanyDriver).toBe(true);
     expect(buildPersonnelPayload({ isDotDriver: true }).isDotDriver).toBe(true);
@@ -579,9 +582,7 @@ describe("lookupPath", () => {
   });
 
   it("uses the tenant-scoped API for departments and positions", () => {
-    expect(lookupPath("departments", "t-1")).toBe(
-      "/api/v1/tenants/t-1/industrial/departments",
-    );
+    expect(lookupPath("departments", "t-1")).toBe("/api/v1/tenants/t-1/industrial/departments");
     expect(lookupPath("positions", "t-1")).toBe("/api/v1/tenants/t-1/industrial/positions");
   });
 

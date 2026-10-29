@@ -62,8 +62,7 @@ export function FieldPhotoMarkupGate({
             hasMarkup: true,
             markupDocument: document as MarkupDocument,
             fileName:
-              pending.original.fileName.replace(/(\.[^.]+)?$/, "-marked$1") ||
-              "photo-marked.jpg",
+              pending.original.fileName.replace(/(\.[^.]+)?$/, "-marked$1") || "photo-marked.jpg",
           };
           setEditing(false);
           onSaveWithMarkup(marked);
@@ -96,7 +95,12 @@ export function FieldPhotoMarkupGate({
           borderBottom: "1px solid #1f2937",
         }}
       >
-        <button type="button" className="ff-btn ff-btn-secondary" onClick={onCancel} style={{ minHeight: 44 }}>
+        <button
+          type="button"
+          className="ff-btn ff-btn-secondary"
+          onClick={onCancel}
+          style={{ minHeight: 44 }}
+        >
           Retake
         </button>
         <strong style={{ flex: 1, color: "#f9fafb", textAlign: "center" }}>Use this photo?</strong>
@@ -112,15 +116,19 @@ export function FieldPhotoMarkupGate({
           minHeight: 0,
         }}
       >
-        {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           src={pending.original.dataUrl}
-          alt="Captured photo"
+          alt="Capture preview"
           style={{ maxWidth: "100%", maxHeight: "100%", objectFit: "contain", borderRadius: 8 }}
         />
       </div>
       <div style={{ display: "flex", flexDirection: "column", gap: 10, padding: 14 }}>
-        <button type="button" className="ff-btn" style={{ minHeight: 48 }} onClick={() => setEditing(true)}>
+        <button
+          type="button"
+          className="ff-btn"
+          style={{ minHeight: 48 }}
+          onClick={() => setEditing(true)}
+        >
           Add Markup
         </button>
         <button

@@ -34,12 +34,7 @@ export type CadMatchEvaluationInput = {
   hybridMode?: boolean;
 };
 
-function haversineMeters(
-  lat1: number,
-  lon1: number,
-  lat2: number,
-  lon2: number,
-): number {
+function haversineMeters(lat1: number, lon1: number, lat2: number, lon2: number): number {
   const toRad = (d: number) => (d * Math.PI) / 180;
   const R = 6371000;
   const dLat = toRad(lat2 - lat1);
@@ -144,7 +139,11 @@ export function evaluateCadMatch(input: CadMatchEvaluationInput): CadMatchDecisi
       }
     }
 
-    if (addressMatch && eventCallType && candidate.primaryIncidentTypeCode?.toLowerCase() === eventCallType) {
+    if (
+      addressMatch &&
+      eventCallType &&
+      candidate.primaryIncidentTypeCode?.toLowerCase() === eventCallType
+    ) {
       score = Math.max(score, scores.matchingAddressAndCallType);
       signals.push("address_and_call_type");
     }

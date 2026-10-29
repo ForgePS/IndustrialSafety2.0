@@ -51,7 +51,8 @@ async function resolveDatabaseUrl(secretArn) {
 }
 
 function permMeta(code) {
-  if (code.endsWith("medical.manage")) return { name: "Workers' Comp medical manage", sensitive: true };
+  if (code.endsWith("medical.manage"))
+    return { name: "Workers' Comp medical manage", sensitive: true };
   if (code.endsWith("medical.view")) return { name: "Workers' Comp medical view", sensitive: true };
   if (code.endsWith("manage")) return { name: "Workers' Comp manage", sensitive: false };
   return { name: "Workers' Comp view", sensitive: false };

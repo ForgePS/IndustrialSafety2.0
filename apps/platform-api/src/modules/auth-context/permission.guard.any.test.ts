@@ -21,9 +21,9 @@ function principal(perms: string[]): ForgePrincipal {
 describe("specialty reviewer permission sets", () => {
   it("allows review-comment access via specialty.review without incident.review", () => {
     const p = principal(["rms.neris.specialty.review", "rms.neris.incident.view"]);
-    expect(
-      hasAnyPermission(p, ["rms.neris.incident.review", "rms.neris.specialty.review"]),
-    ).toBe(true);
+    expect(hasAnyPermission(p, ["rms.neris.incident.review", "rms.neris.specialty.review"])).toBe(
+      true,
+    );
     expect(hasAnyPermission(p, ["rms.neris.incident.review"])).toBe(false);
   });
 

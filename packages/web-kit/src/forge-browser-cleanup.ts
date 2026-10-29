@@ -62,7 +62,11 @@ export async function runForgeBrowserCleanup(
       // Best-effort — never block logout / tenant switch.
     }
   });
-  await withTimeout(Promise.all(pending).then(() => undefined), timeoutMs, undefined);
+  await withTimeout(
+    Promise.all(pending).then(() => undefined),
+    timeoutMs,
+    undefined,
+  );
 }
 
 /** Test helper: drop all handlers. */

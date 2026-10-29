@@ -1,12 +1,6 @@
 import { z } from "zod";
-import {
-  RMS_CAD_PERMISSIONS,
-  RMS_CAD_RESTRICTED_PERMISSIONS,
-} from "@forge/cad-contracts";
-import {
-  AI_NARRATIVE_PERMISSIONS,
-  RMS_AI_NARRATIVE_PERMISSIONS,
-} from "@forge/ai-contracts";
+import { RMS_CAD_PERMISSIONS, RMS_CAD_RESTRICTED_PERMISSIONS } from "@forge/cad-contracts";
+import { AI_NARRATIVE_PERMISSIONS, RMS_AI_NARRATIVE_PERMISSIONS } from "@forge/ai-contracts";
 
 /** Tenant-scoped RMS / NERIS incident permissions (Phase 2/3/4). Not creator-only. */
 export const RMS_PERMISSIONS = [
@@ -318,7 +312,11 @@ export const initializeAttachmentUploadInputSchema = z.object({
   caption: z.string().max(2000).optional().nullable(),
   originalFilename: z.string().min(1).max(500),
   mimeType: z.string().min(1).max(255),
-  fileSizeBytes: z.number().int().positive().max(50 * 1024 * 1024),
+  fileSizeBytes: z
+    .number()
+    .int()
+    .positive()
+    .max(50 * 1024 * 1024),
   checksumSha256: z
     .string()
     .regex(/^[a-fA-F0-9]{64}$/)
@@ -326,9 +324,7 @@ export const initializeAttachmentUploadInputSchema = z.object({
     .nullable(),
   captureAt: z.string().datetime().optional().nullable(),
   source: z.enum(["RMS_WEB", "MOBILE_CAMERA", "IMPORT"]).default("RMS_WEB"),
-  securityClassification: z
-    .enum(["INTERNAL", "RESTRICTED", "PUBLIC_SAFETY"])
-    .default("INTERNAL"),
+  securityClassification: z.enum(["INTERNAL", "RESTRICTED", "PUBLIC_SAFETY"]).default("INTERNAL"),
 });
 
 export const completeAttachmentUploadInputSchema = z.object({

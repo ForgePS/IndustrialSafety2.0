@@ -13,11 +13,7 @@ export type SpecialtyRecordKind =
   | "alarm-systems"
   | "protection-systems";
 
-function collectionPath(
-  tenantId: string,
-  incidentId: string,
-  kind: SpecialtyRecordKind,
-): string {
+function collectionPath(tenantId: string, incidentId: string, kind: SpecialtyRecordKind): string {
   return `${tenantBase(tenantId)}/neris/incidents/${incidentId}/${kind}`;
 }
 

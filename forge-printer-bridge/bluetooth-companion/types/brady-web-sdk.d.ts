@@ -7,30 +7,19 @@
  * connected and may remain undefined for unsupported models.
  */
 declare module "brady-web-sdk" {
-  export type BradyPrinterUpdatesCallback = (
-    mostRecentUpdates: string[] | null
-  ) => void;
+  export type BradyPrinterUpdatesCallback = (mostRecentUpdates: string[] | null) => void;
 
   export default class BradySdk {
-    constructor(
-      callback: BradyPrinterUpdatesCallback,
-      collectAnalytics?: boolean
-    );
+    constructor(callback: BradyPrinterUpdatesCallback, collectAnalytics?: boolean);
 
     /** Opens Web Bluetooth discovery / reconnect. Returns ownership device id or null. */
-    showDiscoveredBleDevices(
-      ownershipIdOrNull: string | null
-    ): Promise<string | null>;
+    showDiscoveredBleDevices(ownershipIdOrNull: string | null): Promise<string | null>;
 
     isConnected(): boolean;
     getConnectionErrorMessage(): string;
     isSupportedBrowser(): Promise<boolean>;
 
-    printBitmap(
-      bitmap: HTMLImageElement,
-      xOffset?: number,
-      yOffset?: number
-    ): Promise<boolean>;
+    printBitmap(bitmap: HTMLImageElement, xOffset?: number, yOffset?: number): Promise<boolean>;
 
     setCopies(copies: number): void;
     disconnect(): Promise<boolean>;

@@ -8,7 +8,15 @@ export type {
   StrokePreset,
 } from "./types.js";
 
-export { SAFETY_COLORS, DEFAULT_MARKUP_COLOR, STROKE_PRESETS, STROKE_WIDTHS, FONT_SIZES, TEXT_QUICK_STYLES, HIGHLIGHT_DEFAULT } from "./colors.js";
+export {
+  SAFETY_COLORS,
+  DEFAULT_MARKUP_COLOR,
+  STROKE_PRESETS,
+  STROKE_WIDTHS,
+  FONT_SIZES,
+  TEXT_QUICK_STYLES,
+  HIGHLIGHT_DEFAULT,
+} from "./colors.js";
 export { createAnnotationId, clampUnit, clamp } from "./ids.js";
 export { normalizeAnnotations, normalizeMarkupDocument, createEmptyDocument } from "./normalize.js";
 export { HistoryManager } from "./history.js";

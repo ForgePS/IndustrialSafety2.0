@@ -25,11 +25,7 @@ export function widgetMinHeight(size: WidgetSize): string {
   return `calc(${rows} * 140px)`;
 }
 
-export function clampWidgetSize(
-  size: WidgetSize,
-  min: WidgetSize,
-  max: WidgetSize,
-): WidgetSize {
+export function clampWidgetSize(size: WidgetSize, min: WidgetSize, max: WidgetSize): WidgetSize {
   const order: WidgetSize[] = ["1x1", "2x1", "2x2", "3x2", "4x2"];
   const index = order.indexOf(size);
   const minIndex = order.indexOf(min);

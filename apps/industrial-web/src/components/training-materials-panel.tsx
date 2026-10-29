@@ -1,7 +1,11 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import type { TrainingMaterial, TrainingMaterialTopic, TrainingSource } from "@/features/training/types";
+import type {
+  TrainingMaterial,
+  TrainingMaterialTopic,
+  TrainingSource,
+} from "@/features/training/types";
 import {
   TRAINING_MATERIAL_TOPICS,
   canViewInApp,
@@ -46,7 +50,8 @@ export function TrainingMaterialsPanel({
     return materials.filter((m) => {
       if (topicFilter !== "ALL" && m.category !== topicFilter) return false;
       if (!q) return true;
-      const hay = `${m.title} ${m.description ?? ""} ${m.originalFilename} ${materialTopicLabel(m.category)} ${materialMediaLabel(materialMediaKind(m))}`.toLowerCase();
+      const hay =
+        `${m.title} ${m.description ?? ""} ${m.originalFilename} ${materialTopicLabel(m.category)} ${materialMediaLabel(materialMediaKind(m))}`.toLowerCase();
       return hay.includes(q);
     });
   }, [materials, query, topicFilter]);
@@ -151,9 +156,7 @@ export function TrainingMaterialsPanel({
                           className="form-select form-select-sm mt-1"
                           value={material.sourceId ?? ""}
                           disabled={busy}
-                          onChange={(e) =>
-                            onLinkSource(material, e.target.value.trim() || null)
-                          }
+                          onChange={(e) => onLinkSource(material, e.target.value.trim() || null)}
                         >
                           <option value="">None</option>
                           {linkableSources.map((source) => (
@@ -167,8 +170,7 @@ export function TrainingMaterialsPanel({
                     ) : material.sourceId ? (
                       <span className="badge bg-label-info align-self-start">
                         Linked to{" "}
-                        {linkableSources.find((s) => s.id === material.sourceId)?.title ??
-                          "course"}
+                        {linkableSources.find((s) => s.id === material.sourceId)?.title ?? "course"}
                       </span>
                     ) : null}
                     {canManage && onUpdateCategory ? (

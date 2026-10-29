@@ -7,20 +7,13 @@
 import { apiGet, apiSend } from "@forge/web-kit";
 import { FLEET_ASSET_STATUS_OPTIONS, FLEET_ASSET_TYPE_OPTIONS } from "./fleet";
 import { INCIDENT_SEVERITY_OPTIONS, INCIDENT_STATUS_OPTIONS } from "./incidents-module";
-import {
-  PERSONNEL_STATUS_OPTIONS,
-  SAFETY_FOOTWEAR_CLASS_OPTIONS,
-} from "./personnel-form";
+import { PERSONNEL_STATUS_OPTIONS, SAFETY_FOOTWEAR_CLASS_OPTIONS } from "./personnel-form";
 import { loadIndustrialSiteCatalog } from "./industrial-facility";
 import { WC_WORK_STATUS_OPTIONS } from "./workers-comp-module";
 import type { DivisionOption } from "./personnel-assignment";
 
 export type OrgCatalogKind =
-  | "sites"
-  | "departments"
-  | "positions"
-  | "employment-types"
-  | "divisions";
+  "sites" | "departments" | "positions" | "employment-types" | "divisions";
 
 export type OrgCatalogDefinition = {
   kind: OrgCatalogKind;
@@ -111,7 +104,11 @@ function labelFromRow(row: Record<string, unknown>): string {
 
 function rowsFromApi(payload: unknown): unknown[] {
   if (Array.isArray(payload)) return payload;
-  if (payload && typeof payload === "object" && Array.isArray((payload as { items?: unknown[] }).items)) {
+  if (
+    payload &&
+    typeof payload === "object" &&
+    Array.isArray((payload as { items?: unknown[] }).items)
+  ) {
     return (payload as { items: unknown[] }).items;
   }
   return [];
@@ -122,7 +119,12 @@ function mapOrgRows(payload: unknown): OrgCatalogRow[] {
   for (const row of rowsFromApi(payload)) {
     if (typeof row !== "object" || row === null) continue;
     const record = row as Record<string, unknown>;
-    const id = typeof record.id === "string" ? record.id : typeof record.name === "string" ? record.name : "";
+    const id =
+      typeof record.id === "string"
+        ? record.id
+        : typeof record.name === "string"
+          ? record.name
+          : "";
     if (!id) continue;
     const entry: OrgCatalogRow = {
       id,
@@ -447,17 +449,12 @@ export const FIXED_INDUSTRIAL_PICKLISTS: readonly FixedPicklistEntry[] = [
     label: "Safety Supplies location type",
     description:
       "Storage location types used when creating Safety Supplies locations. Editable under Safety Supplies → Settings.",
-    options: [
-      "SUPPLY_ROOM",
-      "WAREHOUSE",
-      "CABINET",
-      "VEHICLE",
-      "JOB_SITE",
-      "OTHER",
-    ].map((value) => ({
-      value,
-      label: value.replace(/_/g, " "),
-    })),
+    options: ["SUPPLY_ROOM", "WAREHOUSE", "CABINET", "VEHICLE", "JOB_SITE", "OTHER"].map(
+      (value) => ({
+        value,
+        label: value.replace(/_/g, " "),
+      }),
+    ),
   },
   {
     key: "workers_comp_work_status",

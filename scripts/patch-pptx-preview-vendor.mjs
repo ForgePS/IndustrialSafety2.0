@@ -3,7 +3,10 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 const root = path.join(path.dirname(fileURLToPath(import.meta.url)), "..");
-const source = path.join(root, "apps/industrial-web/node_modules/pptx-preview/dist/pptx-preview.es.js");
+const source = path.join(
+  root,
+  "apps/industrial-web/node_modules/pptx-preview/dist/pptx-preview.es.js",
+);
 const fallback = "C:/Temp/package/dist/pptx-preview.es.js";
 const target = path.join(root, "apps/industrial-web/src/vendor/pptx-preview.es.js");
 

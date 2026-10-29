@@ -35,8 +35,7 @@ process.env.FORGE_ENV = forgeEnvironment;
 
 const adminSecretName = `forge-${forgeEnvironment}-secrets-database`;
 const importsBucket =
-  process.env.FORGE_IMPORTS_BUCKET ||
-  `forge-${forgeEnvironment}-imports-511343547817-us-east-1`;
+  process.env.FORGE_IMPORTS_BUCKET || `forge-${forgeEnvironment}-imports-511343547817-us-east-1`;
 const logGroup = `/forge/${forgeEnvironment}/platform-api`;
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -77,7 +76,10 @@ const adminSecretArn = awsText([
   "ARN",
 ]);
 
-if (!adminSecretArn.includes(`forge-${forgeEnvironment}-`) || adminSecretArn.includes("database-app")) {
+if (
+  !adminSecretArn.includes(`forge-${forgeEnvironment}-`) ||
+  adminSecretArn.includes("database-app")
+) {
   throw new Error(`Refusing non-admin secret ARN: ${adminSecretArn}`);
 }
 
@@ -176,5 +178,7 @@ const text = (JSON.parse(logs.stdout || "{}").events || []).map((e) => e.message
 console.log(text);
 
 const code = String(exitCode.stdout || "").trim();
-console.log(`\npush-subscriptions migration exitCode=${code} environment=${forgeEnvironment} apply=${APPLY}`);
+console.log(
+  `\npush-subscriptions migration exitCode=${code} environment=${forgeEnvironment} apply=${APPLY}`,
+);
 process.exit(code === "0" ? 0 : 1);

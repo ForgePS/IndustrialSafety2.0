@@ -128,7 +128,10 @@ export async function processImportExecuteJob(input: {
       }
 
       const file = await tx.query.importFiles.findFirst({
-        where: and(eq(importFiles.tenantId, message.tenantId), eq(importFiles.jobId, message.jobId)),
+        where: and(
+          eq(importFiles.tenantId, message.tenantId),
+          eq(importFiles.jobId, message.jobId),
+        ),
       });
       if (!file) {
         logger.warn("import execute missing file", { jobId: message.jobId });
@@ -259,7 +262,9 @@ export async function processImportExecuteJob(input: {
           const [total] = await tx
             .select({ value: sql<number>`count(*)::int` })
             .from(importRows)
-            .where(and(eq(importRows.tenantId, message.tenantId), eq(importRows.jobId, message.jobId)));
+            .where(
+              and(eq(importRows.tenantId, message.tenantId), eq(importRows.jobId, message.jobId)),
+            );
           return { done: true as const, total: Number(total?.value ?? 0), job: fresh };
         }
 
@@ -547,7 +552,16 @@ export async function processImportExecuteJob(input: {
       });
     }
 
-    await finalizeSuccess(db, message, job, adapter, counts, rollbackSummary, processed, batchNumber);
+    await finalizeSuccess(
+      db,
+      message,
+      job,
+      adapter,
+      counts,
+      rollbackSummary,
+      processed,
+      batchNumber,
+    );
     return "completed";
   } catch (error) {
     logger.error("import execute failed", {

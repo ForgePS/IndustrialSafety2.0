@@ -7,19 +7,19 @@
 
 ## Deployed environment
 
-| Item | Value |
-| --- | --- |
-| Aurora | aurora-postgresql serverless writer |
-| Worker | CPU 256 / memory 512 (TD `:26`, desired count 1) |
-| API | TD `:42` |
-| Path | Authenticated API → S3 → SQS → ECS worker → Aurora |
+| Item   | Value                                              |
+| ------ | -------------------------------------------------- |
+| Aurora | aurora-postgresql serverless writer                |
+| Worker | CPU 256 / memory 512 (TD `:26`, desired count 1)   |
+| API    | TD `:42`                                           |
+| Path   | Authenticated API → S3 → SQS → ECS worker → Aurora |
 
 ## Executed live evidence
 
-| Test | Batch | Result |
-| --- | --- | --- |
-| 500 synthetic rows | 50 | **COMPLETED** — worker 11,718 ms; workflow wall 21,994 ms; 500/500 successful |
-| 5,000 synthetic rows | 50 | **COMPLETED** — worker 115,881 ms; workflow wall 165,291 ms; 5,000/5,000 successful |
+| Test                 | Batch | Result                                                                              |
+| -------------------- | ----- | ----------------------------------------------------------------------------------- |
+| 500 synthetic rows   | 50    | **COMPLETED** — worker 11,718 ms; workflow wall 21,994 ms; 500/500 successful       |
+| 5,000 synthetic rows | 50    | **COMPLETED** — worker 115,881 ms; workflow wall 165,291 ms; 5,000/5,000 successful |
 
 Evidence: `docs/testing/evidence/import-platform/s8-aurora-perf-matrix.json`.
 
@@ -29,45 +29,45 @@ One earlier 500-row run was excluded because revision `:25` was still draining d
 
 ## S8 batch recommendation (code)
 
-| Parameter | Value |
-| --- | --- |
-| Default | **50** |
-| Minimum | 1 |
-| Maximum | **500** |
-| Recommended range | 50–250 |
+| Parameter         | Value   |
+| ----------------- | ------- |
+| Default           | **50**  |
+| Minimum           | 1       |
+| Maximum           | **500** |
+| Recommended range | 50–250  |
 
 ## Aurora multi-size matrix
 
-| Size (rows) | Tenants | Batch | Env | Status |
-| --- | --- | --- | --- | --- |
-| 500 | 1 | 50 | Aurora development | **VERIFIED** |
-| 5,000 | 1 | 50 | Aurora development | **VERIFIED** |
-| 5,000 | 3 | 50 | Aurora development | **NOT_VERIFIED** |
-| 25,000 | 1 | 50–250 | Aurora development | **NOT_VERIFIED** |
-| 50,000 | 1 | 50–250 | Aurora development | **NOT_VERIFIED** |
-| 100_000 | 1 | 50–250 | Aurora non-prod | **NOT_VERIFIED** — do not claim pass |
-| 250_000 | 1+ | TBD | Aurora non-prod | **NOT_VERIFIED** — do not claim pass |
+| Size (rows) | Tenants | Batch  | Env                | Status                               |
+| ----------- | ------- | ------ | ------------------ | ------------------------------------ |
+| 500         | 1       | 50     | Aurora development | **VERIFIED**                         |
+| 5,000       | 1       | 50     | Aurora development | **VERIFIED**                         |
+| 5,000       | 3       | 50     | Aurora development | **NOT_VERIFIED**                     |
+| 25,000      | 1       | 50–250 | Aurora development | **NOT_VERIFIED**                     |
+| 50,000      | 1       | 50–250 | Aurora development | **NOT_VERIFIED**                     |
+| 100_000     | 1       | 50–250 | Aurora non-prod    | **NOT_VERIFIED** — do not claim pass |
+| 250_000     | 1+      | TBD    | Aurora non-prod    | **NOT_VERIFIED** — do not claim pass |
 
 ### Remaining protocol
 
-1. Repeat at 25k and 100k only in a scheduled non-production load window.  
-2. Record queue age, DLQ, Aurora lock waits, and ACU scaling alongside CPU/connections.  
-3. Define stop thresholds because the 5k smoke already reached CPU saturation.  
-4. Confirm journal idempotency on redelivery sample.  
+1. Repeat at 25k and 100k only in a scheduled non-production load window.
+2. Record queue age, DLQ, Aurora lock waits, and ACU scaling alongside CPU/connections.
+3. Define stop thresholds because the 5k smoke already reached CPU saturation.
+4. Confirm journal idempotency on redelivery sample.
 5. Attach artifacts under `docs/testing/evidence/import-platform/`.
 
 ## Queue / worker baselines (config — not throughput guarantees)
 
-| Setting | Value |
-| --- | --- |
-| Visibility timeout | 300 s |
-| maxReceiveCount | 3 |
-| Backlog alarm | ≥ 100 visible |
+| Setting            | Value         |
+| ------------------ | ------------- |
+| Visibility timeout | 300 s         |
+| maxReceiveCount    | 3             |
+| Backlog alarm      | ≥ 100 visible |
 
 ## Related
 
-- LIM-IMP-003 (OPEN)  
-- `docs/testing/import-platform-s8-batch-sizing.md`  
+- LIM-IMP-003 (OPEN)
+- `docs/testing/import-platform-s8-batch-sizing.md`
 - `docs/testing/import-platform-s8-concurrency.md`
 
 ## Adjacent defects

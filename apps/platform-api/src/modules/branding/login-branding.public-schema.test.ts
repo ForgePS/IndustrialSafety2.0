@@ -1,7 +1,5 @@
 import { describe, expect, it } from "vitest";
-import {
-  publicLoginBrandingSchema,
-} from "./login-branding.public-schema.js";
+import { publicLoginBrandingSchema } from "./login-branding.public-schema.js";
 
 describe("publicLoginBrandingSchema (FIS-L01)", () => {
   const valid = {

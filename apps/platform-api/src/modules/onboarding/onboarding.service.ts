@@ -311,8 +311,7 @@ export class OnboardingService {
         });
 
         for (const step of resolvedSteps) {
-          const autoComplete =
-            step.key === "CREATE_TENANT" || step.key === "SELECT_CUSTOMER_TYPE";
+          const autoComplete = step.key === "CREATE_TENANT" || step.key === "SELECT_CUSTOMER_TYPE";
           const status: StepStatus = autoComplete ? "COMPLETED" : "PENDING";
           await tx.insert(customerOnboardingSteps).values({
             id: createId(),
@@ -476,7 +475,8 @@ export class OnboardingService {
             throw new ForgeError("BAD_REQUEST", "At least one module must be selected");
           }
           for (const moduleCode of moduleCodes) {
-            const isCore = template?.modules.find((mod) => mod.code === moduleCode)?.isCore ?? false;
+            const isCore =
+              template?.modules.find((mod) => mod.code === moduleCode)?.isCore ?? false;
             await this.entitlements.putModule(
               tenantId,
               moduleCode,
@@ -658,9 +658,7 @@ export class OnboardingService {
                     if (existing[0]) continue;
                     let departmentId: string | undefined;
                     if (position.departmentName) {
-                      departmentId = departmentIdsByName.get(
-                        position.departmentName.toLowerCase(),
-                      );
+                      departmentId = departmentIdsByName.get(position.departmentName.toLowerCase());
                       if (!departmentId) {
                         const deptRows = await tx
                           .select()
@@ -927,7 +925,12 @@ export class OnboardingService {
         if (!current) {
           throw new ForgeError("NOT_FOUND", "Onboarding session not found");
         }
-        const version = this.assertSessionVersion(current.recordVersion, expectedVersion, tenantId, sessionId);
+        const version = this.assertSessionVersion(
+          current.recordVersion,
+          expectedVersion,
+          tenantId,
+          sessionId,
+        );
 
         const stepRow = steps.find((step) => step.stepKey === parsed.stepKey);
         if (!stepRow) {
@@ -1001,7 +1004,12 @@ export class OnboardingService {
     principal: ForgePrincipal,
     expectedVersion: ExpectedVersion,
     tenantIdHint?: string,
-  ): Promise<OnboardingSessionView & { activationErrors: ActivationError[]; tenant: Awaited<ReturnType<TenantsService["getById"]>> }> {
+  ): Promise<
+    OnboardingSessionView & {
+      activationErrors: ActivationError[];
+      tenant: Awaited<ReturnType<TenantsService["getById"]>>;
+    }
+  > {
     const resolved = await this.resolveSession(sessionId, tenantIdHint);
     const { session, steps } = resolved;
     const tenantId = session.tenantId;
@@ -1080,7 +1088,12 @@ export class OnboardingService {
         if (!current) {
           throw new ForgeError("NOT_FOUND", "Onboarding session not found");
         }
-        const version = this.assertSessionVersion(current.recordVersion, expectedVersion, tenantId, sessionId);
+        const version = this.assertSessionVersion(
+          current.recordVersion,
+          expectedVersion,
+          tenantId,
+          sessionId,
+        );
 
         const [updatedSession] = await tx
           .update(customerOnboardingSessions)
@@ -1279,53 +1292,58 @@ export class OnboardingService {
     principal: ForgePrincipal,
     sessionData: OnboardingSessionData,
   ): Promise<{ id: string; created: boolean }> {
-    return withTenantTransaction(this.db, tenantId, async (tx) => {
-      const existing = await tx.query.facilities.findFirst({
-        where: eq(facilities.tenantId, tenantId),
-      });
-      if (existing) {
-        return { id: existing.id, created: false };
-      }
-      const byKey = await tx.query.facilities.findFirst({
-        where: and(
-          eq(facilities.tenantId, tenantId),
-          eq(facilities.facilityKey, DEFAULT_ONBOARDING_FACILITY.facilityKey),
-        ),
-      });
-      if (byKey) {
-        return { id: byKey.id, created: false };
-      }
-      const now = new Date();
-      const id = createId();
-      await tx.insert(facilities).values({
-        id,
-        tenantId,
-        organizationId: sessionData.primaryOrganizationId ?? null,
-        facilityKey: DEFAULT_ONBOARDING_FACILITY.facilityKey,
-        name: DEFAULT_ONBOARDING_FACILITY.name,
-        facilityType: DEFAULT_ONBOARDING_FACILITY.facilityType,
-        status: "ACTIVE",
-        createdAt: now,
-        updatedAt: now,
-        createdByUserId: principal.userId,
-        updatedByUserId: principal.userId,
-      });
-      await this.audit.writeInTransaction(tx, {
-        tenantId,
-        actorUserId: principal.userId,
-        actorPersonId: principal.personId,
-        actorType: "USER",
-        action: "facility.create",
-        resourceType: "facility",
-        resourceId: id,
-        result: "SUCCESS",
-        riskLevel: "LOW",
-        correlationId: principal.correlationId,
-        requestId: principal.requestId,
-        after: { facilityKey: DEFAULT_ONBOARDING_FACILITY.facilityKey, source: "onboarding" },
-      });
-      return { id, created: true };
-    }, principal.userId);
+    return withTenantTransaction(
+      this.db,
+      tenantId,
+      async (tx) => {
+        const existing = await tx.query.facilities.findFirst({
+          where: eq(facilities.tenantId, tenantId),
+        });
+        if (existing) {
+          return { id: existing.id, created: false };
+        }
+        const byKey = await tx.query.facilities.findFirst({
+          where: and(
+            eq(facilities.tenantId, tenantId),
+            eq(facilities.facilityKey, DEFAULT_ONBOARDING_FACILITY.facilityKey),
+          ),
+        });
+        if (byKey) {
+          return { id: byKey.id, created: false };
+        }
+        const now = new Date();
+        const id = createId();
+        await tx.insert(facilities).values({
+          id,
+          tenantId,
+          organizationId: sessionData.primaryOrganizationId ?? null,
+          facilityKey: DEFAULT_ONBOARDING_FACILITY.facilityKey,
+          name: DEFAULT_ONBOARDING_FACILITY.name,
+          facilityType: DEFAULT_ONBOARDING_FACILITY.facilityType,
+          status: "ACTIVE",
+          createdAt: now,
+          updatedAt: now,
+          createdByUserId: principal.userId,
+          updatedByUserId: principal.userId,
+        });
+        await this.audit.writeInTransaction(tx, {
+          tenantId,
+          actorUserId: principal.userId,
+          actorPersonId: principal.personId,
+          actorType: "USER",
+          action: "facility.create",
+          resourceType: "facility",
+          resourceId: id,
+          result: "SUCCESS",
+          riskLevel: "LOW",
+          correlationId: principal.correlationId,
+          requestId: principal.requestId,
+          after: { facilityKey: DEFAULT_ONBOARDING_FACILITY.facilityKey, source: "onboarding" },
+        });
+        return { id, created: true };
+      },
+      principal.userId,
+    );
   }
 
   listTemplates() {
@@ -1560,12 +1578,15 @@ export class OnboardingService {
     if (session.templateCode) {
       return findStarterTemplate(session.templateCode) ?? null;
     }
-    return findStarterTemplateForCustomerType(
-      session.customerType as StarterTemplate["customerType"],
-    ) ?? null;
+    return (
+      findStarterTemplateForCustomerType(session.customerType as StarterTemplate["customerType"]) ??
+      null
+    );
   }
 
-  private readSessionData(session: typeof customerOnboardingSessions.$inferSelect): OnboardingSessionData {
+  private readSessionData(
+    session: typeof customerOnboardingSessions.$inferSelect,
+  ): OnboardingSessionData {
     return (session.sessionDataJson ?? {}) as OnboardingSessionData;
   }
 

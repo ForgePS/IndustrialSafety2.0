@@ -81,10 +81,16 @@ export class IncidentFormDescriptorService {
       .orderBy(asc(nerisFields.ordinal));
 
     const fieldOverlays = await withTenantTransaction(this.db, tenantId, async (tx) =>
-      tx.select().from(tenantNerisFieldOverlays).where(eq(tenantNerisFieldOverlays.tenantId, tenantId)),
+      tx
+        .select()
+        .from(tenantNerisFieldOverlays)
+        .where(eq(tenantNerisFieldOverlays.tenantId, tenantId)),
     );
     const valueOverlays = await withTenantTransaction(this.db, tenantId, async (tx) =>
-      tx.select().from(tenantNerisValueOverlays).where(eq(tenantNerisValueOverlays.tenantId, tenantId)),
+      tx
+        .select()
+        .from(tenantNerisValueOverlays)
+        .where(eq(tenantNerisValueOverlays.tenantId, tenantId)),
     );
 
     const conditionRows = await this.db
@@ -115,7 +121,9 @@ export class IncidentFormDescriptorService {
 
     const activeSpecialtyKeys = new Set(
       specialty.groups
-        .filter((g) => g.state === "REQUIRED" || g.state === "ACTIVE" || g.state === "NOT_APPLICABLE")
+        .filter(
+          (g) => g.state === "REQUIRED" || g.state === "ACTIVE" || g.state === "NOT_APPLICABLE",
+        )
         .map((g) => g.sectionKey),
     );
 
@@ -182,7 +190,8 @@ export class IncidentFormDescriptorService {
         requiredFieldCount: requiredFields.length,
         filledRequiredFieldCount: filledRequired.length,
         completionPercent,
-        hasBlockingGaps: requiredFields.length > filledRequired.length && group.state === "REQUIRED",
+        hasBlockingGaps:
+          requiredFields.length > filledRequired.length && group.state === "REQUIRED",
       };
     });
 
@@ -217,10 +226,16 @@ export class IncidentFormDescriptorService {
   async buildConfigurationSnapshot(tenantId: string) {
     const config = await this.configuration.getConfiguration(tenantId);
     const fieldOverlays = await withTenantTransaction(this.db, tenantId, async (tx) =>
-      tx.select().from(tenantNerisFieldOverlays).where(eq(tenantNerisFieldOverlays.tenantId, tenantId)),
+      tx
+        .select()
+        .from(tenantNerisFieldOverlays)
+        .where(eq(tenantNerisFieldOverlays.tenantId, tenantId)),
     );
     const valueOverlays = await withTenantTransaction(this.db, tenantId, async (tx) =>
-      tx.select().from(tenantNerisValueOverlays).where(eq(tenantNerisValueOverlays.tenantId, tenantId)),
+      tx
+        .select()
+        .from(tenantNerisValueOverlays)
+        .where(eq(tenantNerisValueOverlays.tenantId, tenantId)),
     );
     return {
       configuration: config,

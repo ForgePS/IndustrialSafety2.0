@@ -396,7 +396,7 @@ function resolveRmsBuildEnv(environment) {
 
   delete buildEnv.NEXT_PUBLIC_ALLOW_DEV_PRINCIPAL;
 
-  assertProductionFrontendConfig('rms', buildEnv, environment);
+  assertProductionFrontendConfig("rms", buildEnv, environment);
   return buildEnv;
 }
 
@@ -511,17 +511,17 @@ function resolveIndustrialBuildEnv(environment) {
     } else if (environment === "development") {
       buildEnv.NEXT_PUBLIC_COGNITO_DOMAIN =
         "forge-development-547817.auth.us-east-1.amazoncognito.com";
-      console.log(`Resolved NEXT_PUBLIC_COGNITO_DOMAIN=${buildEnv.NEXT_PUBLIC_COGNITO_DOMAIN} (canonical)`);
-    } else {
-      console.warn(
-        "Missing NEXT_PUBLIC_COGNITO_DOMAIN — set FORGE_COGNITO_DOMAIN.",
+      console.log(
+        `Resolved NEXT_PUBLIC_COGNITO_DOMAIN=${buildEnv.NEXT_PUBLIC_COGNITO_DOMAIN} (canonical)`,
       );
+    } else {
+      console.warn("Missing NEXT_PUBLIC_COGNITO_DOMAIN — set FORGE_COGNITO_DOMAIN.");
     }
   }
 
   delete buildEnv.NEXT_PUBLIC_ALLOW_DEV_PRINCIPAL;
 
-  assertProductionFrontendConfig('industrial', buildEnv, environment);
+  assertProductionFrontendConfig("industrial", buildEnv, environment);
   return buildEnv;
 }
 
@@ -616,7 +616,9 @@ function resolveFieldBuildEnv(environment) {
     } else if (environment === "development") {
       buildEnv.NEXT_PUBLIC_COGNITO_DOMAIN =
         "forge-development-547817.auth.us-east-1.amazoncognito.com";
-      console.log(`Resolved NEXT_PUBLIC_COGNITO_DOMAIN=${buildEnv.NEXT_PUBLIC_COGNITO_DOMAIN} (canonical)`);
+      console.log(
+        `Resolved NEXT_PUBLIC_COGNITO_DOMAIN=${buildEnv.NEXT_PUBLIC_COGNITO_DOMAIN} (canonical)`,
+      );
     } else {
       console.warn("Missing NEXT_PUBLIC_COGNITO_DOMAIN — set FORGE_COGNITO_DOMAIN.");
     }
@@ -631,7 +633,10 @@ function resolveFieldBuildEnv(environment) {
 function prepareIndustrialWindowsBuildDir(appRoot, buildEnv) {
   if (process.platform !== "win32") return buildEnv;
   if (!buildEnv || typeof buildEnv !== "object") return buildEnv ?? {};
-  const stamp = new Date().toISOString().replace(/[-:TZ.]/g, "").slice(0, 14);
+  const stamp = new Date()
+    .toISOString()
+    .replace(/[-:TZ.]/g, "")
+    .slice(0, 14);
   const defaultNext = path.join(appRoot, ".next");
   let defaultNextCleared = !existsSync(defaultNext);
   if (existsSync(defaultNext)) {
@@ -796,7 +801,8 @@ function resolveConsoleBuildEnv(environment) {
       process.env.FORGE_COGNITO_DOMAIN;
     if (domain) {
       buildEnv.NEXT_PUBLIC_COGNITO_DOMAIN = String(domain)
-        .replace(/^https?:\/\//i, "").replace(/\/$/, "");
+        .replace(/^https?:\/\//i, "")
+        .replace(/\/$/, "");
       console.log(`Resolved NEXT_PUBLIC_COGNITO_DOMAIN=${buildEnv.NEXT_PUBLIC_COGNITO_DOMAIN}`);
     } else {
       console.warn(
@@ -805,7 +811,8 @@ function resolveConsoleBuildEnv(environment) {
     }
   } else {
     buildEnv.NEXT_PUBLIC_COGNITO_DOMAIN = String(buildEnv.NEXT_PUBLIC_COGNITO_DOMAIN)
-      .replace(/^https?:\/\//i, "").replace(/\/$/, "");
+      .replace(/^https?:\/\//i, "")
+      .replace(/\/$/, "");
   }
 
   // Development browser E2E uses forge-dev-principal from localStorage (no ALLOW flag required).
@@ -814,7 +821,6 @@ function resolveConsoleBuildEnv(environment) {
   assertProductionFrontendConfig("console", buildEnv, environment);
   return buildEnv;
 }
-
 
 const { app, skipBuild, environment, fullInvalidate } = parseArgs(process.argv.slice(2));
 const appConfig = APPS[app];
@@ -850,22 +856,16 @@ if (!skipBuild) {
       renameSync(localEnvPath, localEnvBackup);
       console.log("Temporarily moved .env.local aside for Field production bake");
     } catch (error) {
-      console.warn(
-        `Could not move .env.local: ${error instanceof Error ? error.message : error}`,
-      );
+      console.warn(`Could not move .env.local: ${error instanceof Error ? error.message : error}`);
     }
   }
   try {
-    const buildResult = spawnSync(
-      "pnpm",
-      ["--filter", appConfig.packageName, "build"],
-      {
-        cwd: repoRoot,
-        env: { ...process.env, ...preparedBuildEnv, NODE_ENV: "production" },
-        stdio: "inherit",
-        shell: process.platform === "win32",
-      },
-    );
+    const buildResult = spawnSync("pnpm", ["--filter", appConfig.packageName, "build"], {
+      cwd: repoRoot,
+      env: { ...process.env, ...preparedBuildEnv, NODE_ENV: "production" },
+      stdio: "inherit",
+      shell: process.platform === "win32",
+    });
     if (app === "industrial" || app === "field") {
       outPath = promoteIndustrialExport(appRoot, preparedBuildEnv);
     }
@@ -919,15 +919,11 @@ function assertProductionArtifactProvenance(appName, artifactRoot, envName, buil
     String(buildEnv?.NEXT_PUBLIC_COGNITO_USER_POOL_ID ?? "").trim(),
   ].filter(Boolean);
   if (sameOriginApi) {
-    console.log(
-      `PRODUCTION_ARTIFACT_PROVENANCE: accepting same-origin API proxy for ${appName}`,
-    );
+    console.log(`PRODUCTION_ARTIFACT_PROVENANCE: accepting same-origin API proxy for ${appName}`);
   }
-  const forbidden =
-    /forge-development|creator-dev\.forgepublicsafety|firebaseapp\.com|\.web\.app/i;
+  const forbidden = /forge-development|creator-dev\.forgepublicsafety|firebaseapp\.com|\.web\.app/i;
   /** Strip known third-party production hosts before the Forge-dev forbid scan. */
-  const stripVendorAllowlist = (text) =>
-    text.replace(/sdk-web-prod\.firebaseapp\.com/gi, "");
+  const stripVendorAllowlist = (text) => text.replace(/sdk-web-prod\.firebaseapp\.com/gi, "");
   const hits = [];
   let joined = "";
   const walk = (dir) => {
@@ -980,9 +976,7 @@ function assertProductionArtifactProvenance(appName, artifactRoot, envName, buil
     for (const marker of missingMarkers) {
       console.error(`  missing baked config marker: ${marker}`);
     }
-    throw new Error(
-      `[${appName}] production artifact missing required production config markers`,
-    );
+    throw new Error(`[${appName}] production artifact missing required production config markers`);
   }
   if (hits.length) {
     console.error("PRODUCTION_ARTIFACT_PROVENANCE=FAIL");
@@ -998,10 +992,7 @@ function assertProductionArtifactProvenance(appName, artifactRoot, envName, buil
 
 const provenanceBuildEnv = resolveProvenanceBuildEnv(app, environment);
 
-if (
-  provenanceBuildEnv &&
-  (environment === "production" || environment === "govcloud-production")
-) {
+if (provenanceBuildEnv && (environment === "production" || environment === "govcloud-production")) {
   assertProductionArtifactProvenance(app, outPath, environment, provenanceBuildEnv);
 }
 

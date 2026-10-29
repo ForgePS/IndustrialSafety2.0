@@ -70,7 +70,13 @@ export async function seedRmsSyntheticTenantB(options?: { databaseUrl?: string }
         .from(users)
         .where(and(eq(users.tenantId, existing.id), eq(users.primaryEmail, adminEmail)))
         .limit(1);
-      return { ok: true, skipped: true, tenantId: existing.id, tenantKey, adminUserId: admin?.id ?? null };
+      return {
+        ok: true,
+        skipped: true,
+        tenantId: existing.id,
+        tenantKey,
+        adminUserId: admin?.id ?? null,
+      };
     }
 
     const tenantId = createId();
@@ -135,7 +141,12 @@ export async function seedRmsSyntheticTenantB(options?: { databaseUrl?: string }
       .select({ module: platformModules })
       .from(platformModules)
       .innerJoin(platformProducts, eq(platformProducts.id, platformModules.productId))
-      .where(and(eq(platformProducts.code, "FORGE_RMS"), inArray(platformModules.code, [...RMS_MODULES])));
+      .where(
+        and(
+          eq(platformProducts.code, "FORGE_RMS"),
+          inArray(platformModules.code, [...RMS_MODULES]),
+        ),
+      );
 
     for (const row of moduleRows) {
       await db.insert(tenantModuleEntitlements).values({
@@ -341,7 +352,16 @@ export async function seedRmsSyntheticTenantB(options?: { databaseUrl?: string }
       updatedAt: now,
     });
 
-    return { ok: true, skipped: false, tenantId, tenantKey, adminUserId, adminEmail, stationId, unitId };
+    return {
+      ok: true,
+      skipped: false,
+      tenantId,
+      tenantKey,
+      adminUserId,
+      adminEmail,
+      stationId,
+      unitId,
+    };
   } finally {
     await client.end({ timeout: 5 });
   }

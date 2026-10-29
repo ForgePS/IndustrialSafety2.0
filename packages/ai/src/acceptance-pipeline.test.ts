@@ -111,9 +111,7 @@ describe("AI Narrative acceptance — pipeline (stub)", () => {
     const manifest = acceptanceFacts();
     const redacted = redactSourceManifest(manifest);
     expect(redacted.blockedFieldIds).toContain("patient_ssn");
-    expect(
-      redacted.manifest.fields.find((f) => f.fieldId === "patient_ssn")?.included,
-    ).toBe(false);
+    expect(redacted.manifest.fields.find((f) => f.fieldId === "patient_ssn")?.included).toBe(false);
 
     const result = await runNarrativeGenerationPipeline({
       request: {
@@ -150,9 +148,9 @@ describe("AI Narrative acceptance — pipeline (stub)", () => {
     expect(result.structured.missingInformation.some((m) => /water supply/i.test(m))).toBe(true);
     expect(result.structured.conflicts.some((c) => /location/i.test(c))).toBe(true);
     expect(result.structured.narrative).not.toMatch(/000-00-0000/);
-    expect(result.structured.unsupportedClaims.every((c) => !/000-00-0000|John Smith/i.test(c))).toBe(
-      true,
-    );
+    expect(
+      result.structured.unsupportedClaims.every((c) => !/000-00-0000|John Smith/i.test(c)),
+    ).toBe(true);
     // Soft proper-noun heuristics may surface label tokens; they must not invent people/places.
     expect(result.structured.narrative).not.toMatch(/\bJohn\b|\bSmith\b/);
   });

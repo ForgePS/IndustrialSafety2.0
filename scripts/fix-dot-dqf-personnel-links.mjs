@@ -262,9 +262,7 @@ try {
           title: row.title,
           emp:
             asText(
-              payload.employeeNumber ??
-                payload.employee_number ??
-                payload.details?.employeeNumber,
+              payload.employeeNumber ?? payload.employee_number ?? payload.details?.employeeNumber,
             ) || null,
           cdl: asText(payload.cdlNumber || payload.licenseNumber) || null,
           sourceCollection: row.source_collection,

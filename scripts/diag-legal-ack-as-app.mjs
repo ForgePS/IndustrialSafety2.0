@@ -28,7 +28,8 @@ async function secretUrl(secretId) {
 async function runAs(label, url) {
   const sql = postgres(url, { max: 1 });
   try {
-    const who = await sql`select current_user as user, current_setting('app.current_tenant_id', true) as tenant`;
+    const who =
+      await sql`select current_user as user, current_setting('app.current_tenant_id', true) as tenant`;
     let setTenant = null;
     try {
       await sql`select set_config('app.current_tenant_id', ${TENANT_ID}, true)`;

@@ -7,7 +7,15 @@ import { RolesPermissionsSettingsCard } from "@/components/roles-permissions-wor
 import { UserManagementSettingsCard } from "@/components/user-management-workspace";
 import { UserActivitySettingsCard } from "@/components/user-activity-workspace";
 import { canAccessUserManagement } from "@/lib/user-management";
-import { canReadAuditLog, canManageDropdowns, canManageCompanyModules, canManageTrainingPortalQr, canManageConfiguration, canAccessExecutiveWalkthrough, hasAnyPermission } from "@/lib/platform-admin";
+import {
+  canReadAuditLog,
+  canManageDropdowns,
+  canManageCompanyModules,
+  canManageTrainingPortalQr,
+  canManageConfiguration,
+  canAccessExecutiveWalkthrough,
+  hasAnyPermission,
+} from "@/lib/platform-admin";
 
 export default function IndustrialSettingsPage() {
   const { me } = useAuth();
@@ -169,24 +177,24 @@ export default function IndustrialSettingsPage() {
                 <Link href="/settings/users/">Invite users</Link> and assign a starter role.
               </li>
               <li>
-                Review <Link href="/settings/roles/">roles &amp; permissions</Link> before granting admin
-                access.
+                Review <Link href="/settings/roles/">roles &amp; permissions</Link> before granting
+                admin access.
               </li>
               <li>
-                Customize <Link href="/settings/dropdowns/">dropdown lists</Link> so forms match your
-                organization.
+                Customize <Link href="/settings/dropdowns/">dropdown lists</Link> so forms match
+                your organization.
               </li>
               <li>
-                Use <Link href="/settings/modules/">company modules</Link> to turn programs on only when
-                your team is ready.
+                Use <Link href="/settings/modules/">company modules</Link> to turn programs on only
+                when your team is ready.
               </li>
             </ol>
           </div>
         </div>
       ) : (
         <div className="alert alert-secondary mb-0" role="status">
-          Platform administration is limited to tenant admins. Contact your administrator if you need
-          access to users, roles, or configuration.
+          Platform administration is limited to tenant admins. Contact your administrator if you
+          need access to users, roles, or configuration.
         </div>
       )}
     </>

@@ -24,14 +24,7 @@ function awsJson(args) {
   return JSON.parse(r.stdout);
 }
 
-const got = awsJson([
-  "cloudfront",
-  "get-distribution-config",
-  "--id",
-  DIST_ID,
-  "--output",
-  "json",
-]);
+const got = awsJson(["cloudfront", "get-distribution-config", "--id", DIST_ID, "--output", "json"]);
 const etag = got.ETag;
 const cfg = got.DistributionConfig;
 

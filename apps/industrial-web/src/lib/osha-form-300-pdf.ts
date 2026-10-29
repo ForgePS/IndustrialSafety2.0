@@ -80,7 +80,11 @@ function fillRow(form: PDFForm, row: number, caseRow: OshaCase) {
   const [month = "", day = ""] = md.includes("/") ? md.split("/") : ["", ""];
 
   setText(form, `Case No. ${row}`, caseRow.caseNumber || String(row));
-  setText(form, `Employee's Name ${row}`, displayEmployeeName(caseRow) === "—" ? "" : displayEmployeeName(caseRow));
+  setText(
+    form,
+    `Employee's Name ${row}`,
+    displayEmployeeName(caseRow) === "—" ? "" : displayEmployeeName(caseRow),
+  );
   setText(form, `Job Title ${row}`, caseRow.jobTitle);
   setText(form, `Date of injury or Illness month ${row}`, month);
   setText(form, `Date of injury or illness day ${row}`, day);

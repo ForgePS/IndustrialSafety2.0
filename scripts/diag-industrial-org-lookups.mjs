@@ -66,10 +66,7 @@ async function main() {
       ["departments", "industrial_departments"],
       ["positions", "industrial_positions"],
     ]) {
-      const [selectableCount, totalCount] = await Promise.all([
-        selectable(table),
-        total(table),
-      ]);
+      const [selectableCount, totalCount] = await Promise.all([selectable(table), total(table)]);
       report.catalogs[label] = {
         selectable: selectableCount,
         total: totalCount,
@@ -87,7 +84,9 @@ async function main() {
     `;
     report.personnelRows = personnel[0].n;
 
-    console.log(JSON.stringify({ ok: true, phase: "DIAG-INDUSTRIAL-ORG-LOOKUPS", report }, null, 2));
+    console.log(
+      JSON.stringify({ ok: true, phase: "DIAG-INDUSTRIAL-ORG-LOOKUPS", report }, null, 2),
+    );
   } finally {
     await sql.end({ timeout: 5 });
   }

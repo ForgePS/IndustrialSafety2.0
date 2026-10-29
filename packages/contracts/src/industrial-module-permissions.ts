@@ -81,9 +81,7 @@ export const INDUSTRIAL_MODULE_ROLE_ACCESS: readonly IndustrialModuleRoleAccess[
 
 const BY_CODE = new Map(INDUSTRIAL_MODULE_ROLE_ACCESS.map((row) => [row.code, row]));
 
-export function industrialModuleRoleAccess(
-  code: string,
-): IndustrialModuleRoleAccess | undefined {
+export function industrialModuleRoleAccess(code: string): IndustrialModuleRoleAccess | undefined {
   return BY_CODE.get(code);
 }
 
@@ -98,9 +96,7 @@ export function industrialModuleManagedPermissionCodes(): string[] {
   return [...out].sort();
 }
 
-export function moduleCodesFromPermissionCodes(
-  permissionCodes: readonly string[],
-): string[] {
+export function moduleCodesFromPermissionCodes(permissionCodes: readonly string[]): string[] {
   const perms = new Set(permissionCodes);
   if (perms.has("industrial.admin")) {
     return INDUSTRIAL_MODULE_ROLE_ACCESS.map((row) => row.code);
@@ -158,9 +154,7 @@ export function mergePermissionCodesWithModules(input: {
     if (pageCodes.length === 0) continue;
 
     const newlySelected = !previousSelected.has(row.code);
-    const existingPages = input.currentPermissionCodes.filter((code) =>
-      pageCodes.includes(code),
-    );
+    const existingPages = input.currentPermissionCodes.filter((code) => pageCodes.includes(code));
 
     if (newlySelected) {
       for (const code of pageCodes) fromModules.add(code);

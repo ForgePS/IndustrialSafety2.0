@@ -37,11 +37,7 @@ export type LabelPrintResult = {
 
 /** Browser print via existing sticker popup (primary path). */
 export async function browserPrintAdapter(request: LabelPrintRequest): Promise<LabelPrintResult> {
-  await printQrLinkSticker(
-    request.stickerObjectUrl,
-    request.label,
-    request.stickerBlob ?? null,
-  );
+  await printQrLinkSticker(request.stickerObjectUrl, request.label, request.stickerBlob ?? null);
   return { adapter: "browser", ok: true };
 }
 
@@ -87,8 +83,7 @@ export async function bridgeAdapter(request: LabelPrintRequest): Promise<LabelPr
     return {
       adapter: "bridge",
       ok: false,
-      message:
-        "Printer bridge is not configured. Select a printer or use browser print.",
+      message: "Printer bridge is not configured. Select a printer or use browser print.",
     };
   }
 
@@ -103,11 +98,7 @@ export async function bridgeAdapter(request: LabelPrintRequest): Promise<LabelPr
 
   if (direct) {
     const { printJobViaDirectBluetooth } = await import("@/lib/direct-print");
-    const result = await printJobViaDirectBluetooth(
-      created.id,
-      printer,
-      request.copies ?? 1,
-    );
+    const result = await printJobViaDirectBluetooth(created.id, printer, request.copies ?? 1);
     return {
       adapter: "bridge",
       ok: result.ok,
@@ -125,8 +116,7 @@ export async function bridgeAdapter(request: LabelPrintRequest): Promise<LabelPr
       ok: true,
       jobId: finalJob.id,
       status,
-      message:
-        status === "SENT_TO_PRINTER" ? "Sent to Printer" : "Label Sent Successfully",
+      message: status === "SENT_TO_PRINTER" ? "Sent to Printer" : "Label Sent Successfully",
     };
   }
   return {
@@ -156,8 +146,7 @@ export async function bradyAdapter(request: LabelPrintRequest): Promise<LabelPri
     adapter: "brady",
     ok: false,
     message:
-      result.message ??
-      "Brady printer is not configured. Use browser print or download PNG.",
+      result.message ?? "Brady printer is not configured. Use browser print or download PNG.",
     ...(result.jobId ? { jobId: result.jobId } : {}),
     ...(result.status ? { status: result.status } : {}),
   };

@@ -1,10 +1,6 @@
 import { getApiBaseUrl } from "./api-client.js";
 import { recordUserActivity } from "./idle-timeout.js";
-import {
-  getCsrfToken,
-  setBearerToken,
-  setCsrfToken,
-} from "./auth-storage.js";
+import { getCsrfToken, setBearerToken, setCsrfToken } from "./auth-storage.js";
 
 export { getCsrfToken, setCsrfToken, clearCsrfToken } from "./auth-storage.js";
 
@@ -150,10 +146,7 @@ async function parseSessionAuthResponse(res: Response): Promise<SessionAuthRespo
     throw new CognitoOAuthError(`Session request failed (${res.status})`);
   }
 
-  if (
-    body.data &&
-    ("refreshToken" in body.data || "refresh_token" in body.data)
-  ) {
+  if (body.data && ("refreshToken" in body.data || "refresh_token" in body.data)) {
     throw new CognitoOAuthError("Session response must not include a refresh token");
   }
 
@@ -237,9 +230,9 @@ export async function exchangeCodeForTokens(code: string): Promise<CognitoTokenR
  * Refresh via HttpOnly session cookie + CSRF header when available.
  * Same-origin Field/Industrial /api proxy may refresh with cookie alone after PWA wipe.
  */
-export async function refreshAccessToken(
-  options?: { signal?: AbortSignal },
-): Promise<CognitoTokenResponse | null> {
+export async function refreshAccessToken(options?: {
+  signal?: AbortSignal;
+}): Promise<CognitoTokenResponse | null> {
   requireBrowser();
 
   const csrf = getCsrfToken();
@@ -272,9 +265,7 @@ export async function refreshAccessToken(
  * Required after bootstrap timeouts — clearAuthStorage cannot remove HttpOnly cookies,
  * so a stuck refresh would otherwise loop forever on every reload.
  */
-export async function clearBrowserSessionCookie(
-  options?: { signal?: AbortSignal },
-): Promise<void> {
+export async function clearBrowserSessionCookie(options?: { signal?: AbortSignal }): Promise<void> {
   if (typeof window === "undefined") return;
   const csrf = getCsrfToken();
   const headers: Record<string, string> = {
@@ -396,4 +387,3 @@ export async function confirmCognitoPasswordReset(input: {
     Password: input.newPassword,
   });
 }
-

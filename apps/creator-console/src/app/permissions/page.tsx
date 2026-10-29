@@ -2,12 +2,7 @@
 
 import Link from "next/link";
 import { Suspense, useCallback, useEffect, useMemo, useState } from "react";
-import {
-  filterBySearch,
-  ListControls,
-  paginate,
-  sortByField,
-} from "@/components/list-controls";
+import { filterBySearch, ListControls, paginate, sortByField } from "@/components/list-controls";
 import { TenantRequired } from "@/components/tenant-required";
 import { useAuth } from "@/hooks/use-auth";
 import { tenantQuery, useTenantId } from "@/hooks/use-tenant-id";

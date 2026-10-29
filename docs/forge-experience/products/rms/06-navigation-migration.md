@@ -7,27 +7,27 @@
 
 ## Implementation
 
-| Artifact | Path |
-| --- | --- |
+| Artifact | Path                                                    |
+| -------- | ------------------------------------------------------- |
 | Registry | `apps/rms-web/src/fx/navigation/navigation.registry.ts` |
-| Adapter | `apps/rms-web/src/fx/navigation/navigation.adapter.ts` |
-| Flags | `fx.rms.navigation.enabled` (requires shell) |
+| Adapter  | `apps/rms-web/src/fx/navigation/navigation.adapter.ts`  |
+| Flags    | `fx.rms.navigation.enabled` (requires shell)            |
 
 ## Groups (live routes only)
 
-- Home  
-- Incidents (list, create, review)  
-- CAD (operations, conflicts, messages, connections, unmapped, mappings)  
-- NERIS (configuration)  
+- Home
+- Incidents (list, create, review)
+- CAD (operations, conflicts, messages, connections, unmapped, mappings)
+- NERIS (configuration)
 - Session (sign-in / switch tenant)
 
 No Personnel, Fleet, Prevention, Training, or Scheduling groups.
 
 ## Behavior
 
-- Product feature flags still gate capability items  
-- Secondary nav shows sibling items in the active group when FX nav is on  
-- Invalid combo `nav && !shell` forces legacy  
+- Product feature flags still gate capability items
+- Secondary nav shows sibling items in the active group when FX nav is on
+- Invalid combo `nav && !shell` forces legacy
 
 ## Exit criteria
 

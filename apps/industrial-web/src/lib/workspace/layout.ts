@@ -1,6 +1,11 @@
 import { readDashboardQuickLinkCodes } from "@/lib/dashboard-quick-links";
 import { clampWorkspaceSize, isWorkspaceWidgetSize } from "./sizing";
-import type { WorkspaceLayoutItem, WorkspaceLayoutState, WorkspaceModuleDefinition, WorkspaceWidgetSize } from "./types";
+import type {
+  WorkspaceLayoutItem,
+  WorkspaceLayoutState,
+  WorkspaceModuleDefinition,
+  WorkspaceWidgetSize,
+} from "./types";
 
 export const WORKSPACE_LAYOUT_STORAGE_KEY = "forge-ind-workspace-layout-v1";
 
@@ -26,9 +31,7 @@ function normalizeItem(
   const size: WorkspaceWidgetSize = isWorkspaceWidgetSize(sizeRaw) ? sizeRaw : "compact";
   const supported = definition?.supportedSizes ?? (["compact"] as WorkspaceWidgetSize[]);
   const defaultView =
-    typeof row.defaultView === "string"
-      ? row.defaultView
-      : definition?.defaultView;
+    typeof row.defaultView === "string" ? row.defaultView : definition?.defaultView;
 
   return {
     moduleKey,
@@ -211,14 +214,18 @@ export function loadWorkspaceLayout(
   const migrated = migrateFromQuickLinks(tenantId, userId, registry);
   if (migrated) {
     const resolved = resolveWorkspaceLayout(migrated, registry);
-    const enforced = options?.policies ? enforcePoliciesInline(resolved, options.policies) : resolved;
+    const enforced = options?.policies
+      ? enforcePoliciesInline(resolved, options.policies)
+      : resolved;
     writeWorkspaceLayout(tenantId, userId, enforced);
     return enforced;
   }
 
   if (options?.tenantDefaults) {
     const resolved = resolveWorkspaceLayout(options.tenantDefaults, registry);
-    const enforced = options?.policies ? enforcePoliciesInline(resolved, options.policies) : resolved;
+    const enforced = options?.policies
+      ? enforcePoliciesInline(resolved, options.policies)
+      : resolved;
     writeWorkspaceLayout(tenantId, userId, enforced);
     return enforced;
   }
@@ -350,10 +357,6 @@ export function moveWorkspaceItem(
   return reorderWorkspaceItems(state, [...next, ...hidden]);
 }
 
-export function visibleWorkspaceItems(
-  state: WorkspaceLayoutState,
-): WorkspaceLayoutItem[] {
-  return state.items
-    .filter((item) => item.isVisible)
-    .sort((a, b) => a.sortOrder - b.sortOrder);
+export function visibleWorkspaceItems(state: WorkspaceLayoutState): WorkspaceLayoutItem[] {
+  return state.items.filter((item) => item.isVisible).sort((a, b) => a.sortOrder - b.sortOrder);
 }

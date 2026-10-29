@@ -21,7 +21,10 @@ const WORKER_ECR = `${ACCOUNT}.dkr.ecr.${REGION}.amazonaws.com/forge-production-
 
 const withWorker = process.argv.includes("--with-worker");
 const registerOnly = process.argv.includes("--register-only");
-const stamp = new Date().toISOString().replace(/[-:TZ.]/g, "").slice(0, 14);
+const stamp = new Date()
+  .toISOString()
+  .replace(/[-:TZ.]/g, "")
+  .slice(0, 14);
 const tag = `onboarding-closeout-${stamp}`;
 
 function sh(cmd, opts = {}) {

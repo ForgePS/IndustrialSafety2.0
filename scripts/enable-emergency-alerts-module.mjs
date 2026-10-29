@@ -126,7 +126,11 @@ async function main() {
         mod = { id: "00000000-0000-0000-0000-000000000000", code: MODULE_CODE };
       }
     } else {
-      report.actions.push({ step: "platform_module", action: "unchanged", catalogS2: hasCatalogS2 });
+      report.actions.push({
+        step: "platform_module",
+        action: "unchanged",
+        catalogS2: hasCatalogS2,
+      });
       if (APPLY) {
         if (hasCatalogS2) {
           await sql`

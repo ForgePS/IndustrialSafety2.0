@@ -49,11 +49,27 @@ const ATTENTION: DemoTile[] = [
 ];
 
 const MODULES: Array<{ title: string; blurb: string; icon: string }> = [
-  { title: "Safety & Incidents", blurb: "Report, investigate, and close the loop.", icon: "bx-error" },
-  { title: "Lockout / Tagout", blurb: "Equipment procedures and active lockouts.", icon: "bx-lock-alt" },
-  { title: "Emergency Alert SMS", blurb: "Notify the right people in seconds.", icon: "bx-message" },
+  {
+    title: "Safety & Incidents",
+    blurb: "Report, investigate, and close the loop.",
+    icon: "bx-error",
+  },
+  {
+    title: "Lockout / Tagout",
+    blurb: "Equipment procedures and active lockouts.",
+    icon: "bx-lock-alt",
+  },
+  {
+    title: "Emergency Alert SMS",
+    blurb: "Notify the right people in seconds.",
+    icon: "bx-message",
+  },
   { title: "Fleet Tracking", blurb: "Vehicles, assignments, and renewals.", icon: "bx-car" },
-  { title: "CDL Qualifications", blurb: "Department of Transportation driver files and documents.", icon: "bx-id-card" },
+  {
+    title: "CDL Qualifications",
+    blurb: "Department of Transportation driver files and documents.",
+    icon: "bx-id-card",
+  },
   { title: "Company Drivers", blurb: "MVR, license, and insurance roster.", icon: "bx-user-check" },
   {
     title: "PPE Tracking",
@@ -69,7 +85,10 @@ const MODULES: Array<{ title: string; blurb: string; icon: string }> = [
  */
 export function WalkthroughDemoDashboard() {
   return (
-    <div className="ind-content ind-dashboard exec-walkthrough-demo-dash" data-walkthrough="executive-dashboard">
+    <div
+      className="ind-content ind-dashboard exec-walkthrough-demo-dash"
+      data-walkthrough="executive-dashboard"
+    >
       <div className="d-flex flex-wrap justify-content-between align-items-start gap-3 mb-4">
         <div className="min-w-0">
           <p className="text-uppercase text-muted small mb-1">Producers Rice Mill</p>
@@ -109,7 +128,9 @@ export function WalkthroughDemoDashboard() {
       <div className="card border-0 shadow-none mb-4">
         <div className="card-body">
           <h5 className="mb-1">Safety index</h5>
-          <p className="text-muted small mb-3">Trailing 12 months across Producers Rice Mill sites</p>
+          <p className="text-muted small mb-3">
+            Trailing 12 months across Producers Rice Mill sites
+          </p>
           <div className="d-flex flex-wrap align-items-end gap-4">
             <div>
               <p className="display-5 mb-0 text-success">92</p>

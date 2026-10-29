@@ -164,7 +164,8 @@ export class ForgeEcs extends Construct {
       allowedBrowserOrigins: props.browserOrigins,
       allowedBrowserOriginSuffixes: props.browserOriginSuffixes ?? [],
     });
-    const publicApiUrl = props.publicApiUrl ?? `https://${this.apiHttps.distribution.distributionDomainName}`;
+    const publicApiUrl =
+      props.publicApiUrl ?? `https://${this.apiHttps.distribution.distributionDomainName}`;
 
     if (props.enableWaf) {
       this.webAcl = new wafv2.CfnWebACL(this, "AlbWebAcl", {
@@ -573,13 +574,9 @@ export class ForgeEcs extends Construct {
         // Development-only synthetic CAD tenant. Production must stay empty until
         // a real customer CAD connection is authorized (greenfield = skip ticks).
         CAD_POLLING_TENANT_IDS:
-          config.environmentName === "development"
-            ? "019f9e06-a0b2-75f4-9e0b-5ae9befd8193"
-            : "",
+          config.environmentName === "development" ? "019f9e06-a0b2-75f4-9e0b-5ae9befd8193" : "",
         CAD_RETENTION_TENANT_IDS:
-          config.environmentName === "development"
-            ? "019f9e06-a0b2-75f4-9e0b-5ae9befd8193"
-            : "",
+          config.environmentName === "development" ? "019f9e06-a0b2-75f4-9e0b-5ae9befd8193" : "",
         EVENT_BUS_NAME: props.eventBus.eventBusName,
         S3_DOCUMENT_BUCKET: props.documentsBucket.bucketName,
         S3_IMPORT_BUCKET: props.importsBucket.bucketName,

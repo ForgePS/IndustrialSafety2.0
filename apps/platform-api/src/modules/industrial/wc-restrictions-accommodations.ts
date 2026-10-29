@@ -122,25 +122,23 @@ export function parseWorkersCompAccommodationsPayload(
   };
 }
 
-export function accommodationsPayloadHasContent(
-  value: WorkersCompAccommodationsPayload,
-): boolean {
+export function accommodationsPayloadHasContent(value: WorkersCompAccommodationsPayload): boolean {
   return Boolean(
     value.standWalk ||
-      value.sit ||
-      value.liftingLevel ||
-      value.injurySides.length ||
-      value.injuryParts.length ||
-      value.injuryOther ||
-      value.upperExtremities.length ||
-      value.pushPullLimitLbs ||
-      value.lowerExtremities.length ||
-      value.transitionalNotApplicable ||
-      value.transitionalHours ||
-      value.transitionalWeeks ||
-      value.transitionalAbleRemaining ||
-      value.transitionalEffectiveDate ||
-      value.notes.trim(),
+    value.sit ||
+    value.liftingLevel ||
+    value.injurySides.length ||
+    value.injuryParts.length ||
+    value.injuryOther ||
+    value.upperExtremities.length ||
+    value.pushPullLimitLbs ||
+    value.lowerExtremities.length ||
+    value.transitionalNotApplicable ||
+    value.transitionalHours ||
+    value.transitionalWeeks ||
+    value.transitionalAbleRemaining ||
+    value.transitionalEffectiveDate ||
+    value.notes.trim(),
   );
 }
 

@@ -41,7 +41,8 @@ async function main() {
         )
       order by column_name
     `;
-    const tenant = await sql`select id::text as id from tenants where tenant_key = ${TENANT_KEY} limit 1`;
+    const tenant =
+      await sql`select id::text as id from tenants where tenant_key = ${TENANT_KEY} limit 1`;
     const tenantId = tenant[0]?.id;
     let sample = null;
     let count = null;
@@ -70,7 +71,9 @@ async function main() {
       order by created_at desc
       limit 5
     `;
-    console.log(JSON.stringify({ cols, tracked: count?.[0]?.n, sample: sample?.[0], migrations }, null, 2));
+    console.log(
+      JSON.stringify({ cols, tracked: count?.[0]?.n, sample: sample?.[0], migrations }, null, 2),
+    );
   } finally {
     await sql.end({ timeout: 5 });
   }

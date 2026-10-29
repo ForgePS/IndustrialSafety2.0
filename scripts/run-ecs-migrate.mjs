@@ -17,8 +17,7 @@ const args = process.argv.slice(2);
 const envIndex = args.indexOf("--env");
 const forgeEnvironment = envIndex === -1 ? null : args[envIndex + 1];
 const taskDefinitionIndex = args.indexOf("--task-definition");
-const taskDefinition =
-  taskDefinitionIndex === -1 ? null : args[taskDefinitionIndex + 1];
+const taskDefinition = taskDefinitionIndex === -1 ? null : args[taskDefinitionIndex + 1];
 
 if (!forgeEnvironment) {
   console.error("Usage: node scripts/run-ecs-migrate.mjs --env <development|production>");

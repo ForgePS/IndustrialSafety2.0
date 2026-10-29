@@ -89,7 +89,9 @@ export function WalkthroughExportDialog({ contentVersion, onClose, latestExport 
   }
 
   const matchingLatest =
-    latestExport && latestExport.contentVersion === contentVersion && latestExport.status === "completed"
+    latestExport &&
+    latestExport.contentVersion === contentVersion &&
+    latestExport.status === "completed"
       ? latestExport
       : null;
 
@@ -117,7 +119,11 @@ export function WalkthroughExportDialog({ contentVersion, onClose, latestExport 
                 >
                   Download Latest MP4
                 </button>
-                <button type="button" className="btn btn-sm btn-outline-primary" onClick={() => void generate()}>
+                <button
+                  type="button"
+                  className="btn btn-sm btn-outline-primary"
+                  onClick={() => void generate()}
+                >
                   Generate New MP4
                 </button>
               </div>
@@ -134,12 +140,22 @@ export function WalkthroughExportDialog({ contentVersion, onClose, latestExport 
                 </div>
               ) : null}
               <div className="col-12">
-                <label className="form-label">Video title</label>
-                <input className="form-control" value={title} onChange={(e) => setTitle(e.target.value)} />
+                <label className="form-label" htmlFor="ew-export-video-title">
+                  Video title
+                </label>
+                <input
+                  id="ew-export-video-title"
+                  className="form-control"
+                  value={title}
+                  onChange={(e) => setTitle(e.target.value)}
+                />
               </div>
               <div className="col-md-6">
-                <label className="form-label">Quality</label>
+                <label className="form-label" htmlFor="ew-export-quality">
+                  Quality
+                </label>
                 <select
+                  id="ew-export-quality"
                   className="form-select"
                   value={resolution}
                   onChange={(e) => setResolution(e.target.value as "1080p" | "720p")}
@@ -222,7 +238,12 @@ export function WalkthroughExportDialog({ contentVersion, onClose, latestExport 
               </div>
               {job.status === "completed" ? (
                 <div className="d-flex flex-wrap gap-2">
-                  <button type="button" className="btn btn-primary" disabled={busy} onClick={() => void download()}>
+                  <button
+                    type="button"
+                    className="btn btn-primary"
+                    disabled={busy}
+                    onClick={() => void download()}
+                  >
                     Download MP4
                   </button>
                   <button
@@ -235,7 +256,11 @@ export function WalkthroughExportDialog({ contentVersion, onClose, latestExport 
                   >
                     Copy Download Link
                   </button>
-                  <button type="button" className="btn btn-outline-primary" onClick={() => void generate()}>
+                  <button
+                    type="button"
+                    className="btn btn-outline-primary"
+                    onClick={() => void generate()}
+                  >
                     Generate Again
                   </button>
                 </div>
@@ -248,7 +273,12 @@ export function WalkthroughExportDialog({ contentVersion, onClose, latestExport 
             Close
           </button>
           {!job || job.status === "failed" ? (
-            <button type="button" className="btn btn-primary" disabled={busy} onClick={() => void generate()}>
+            <button
+              type="button"
+              className="btn btn-primary"
+              disabled={busy}
+              onClick={() => void generate()}
+            >
               {busy ? "Starting…" : "Generate MP4"}
             </button>
           ) : null}

@@ -82,10 +82,7 @@ function parsePreviewValues(raw: string): Record<string, string> {
 
 export function PrintManagerTemplatesPanel() {
   const { hasAnyPermission } = useAuth();
-  const canManage = hasAnyPermission([
-    "industrial.printer.manage_templates",
-    "industrial.admin",
-  ]);
+  const canManage = hasAnyPermission(["industrial.printer.manage_templates", "industrial.admin"]);
   const canPrint = hasAnyPermission(["industrial.printer.print", "industrial.admin"]);
 
   const [templates, setTemplates] = useState<LabelTemplate[]>([]);
@@ -501,7 +498,9 @@ export function PrintManagerTemplatesPanel() {
                           <div>{t.name}</div>
                           <div className="small text-muted font-monospace">{t.code}</div>
                           <div className="small">
-                            {t.publishedVersion != null ? `pub v${t.publishedVersion}` : "unpublished"}
+                            {t.publishedVersion != null
+                              ? `pub v${t.publishedVersion}`
+                              : "unpublished"}
                             {t.draftVersion != null ? ` · draft v${t.draftVersion}` : ""}
                           </div>
                         </td>
@@ -669,7 +668,17 @@ export function PrintManagerTemplatesPanel() {
                             key={el.id}
                             className={`list-group-item list-group-item-action py-2 ${selectedElId === el.id ? "active" : ""}`}
                             style={{ cursor: "pointer" }}
+                            // eslint-disable-next-line jsx-a11y/no-noninteractive-element-to-interactive-role -- keeps the Bootstrap ul/li list-group markup and styling unchanged
+                            role="button"
+                            tabIndex={0}
+                            aria-pressed={selectedElId === el.id}
                             onClick={() => setSelectedElId(el.id)}
+                            onKeyDown={(event) => {
+                              if (event.key === "Enter" || event.key === " ") {
+                                event.preventDefault();
+                                setSelectedElId(el.id);
+                              }
+                            }}
                           >
                             <div className="small fw-semibold">{el.type}</div>
                             <div className="small opacity-75 text-truncate">
@@ -698,8 +707,14 @@ export function PrintManagerTemplatesPanel() {
                             </div>
                           ))}
                           <div className="col-12">
-                            <label className="form-label small mb-0">Content / binding</label>
+                            <label
+                              className="form-label small mb-0"
+                              htmlFor="pm-tpl-el-content-binding"
+                            >
+                              Content / binding
+                            </label>
                             <input
+                              id="pm-tpl-el-content-binding"
                               className="form-control form-control-sm"
                               value={selectedEl.content ?? ""}
                               onChange={(e) => updateSelected({ content: e.target.value })}
@@ -707,8 +722,14 @@ export function PrintManagerTemplatesPanel() {
                           </div>
                           {selectedEl.type === "dynamicText" ? (
                             <div className="col-12">
-                              <label className="form-label small mb-0">Field key</label>
+                              <label
+                                className="form-label small mb-0"
+                                htmlFor="pm-tpl-el-field-key"
+                              >
+                                Field key
+                              </label>
                               <input
+                                id="pm-tpl-el-field-key"
                                 className="form-control form-control-sm"
                                 value={selectedEl.fieldKey ?? ""}
                                 onChange={(e) => updateSelected({ fieldKey: e.target.value })}
@@ -717,8 +738,11 @@ export function PrintManagerTemplatesPanel() {
                           ) : null}
                           {(selectedEl.type === "text" || selectedEl.type === "dynamicText") && (
                             <div className="col-6">
-                              <label className="form-label small mb-0">Font pt</label>
+                              <label className="form-label small mb-0" htmlFor="pm-tpl-el-font-pt">
+                                Font pt
+                              </label>
                               <input
+                                id="pm-tpl-el-font-pt"
                                 type="number"
                                 className="form-control form-control-sm"
                                 value={selectedEl.fontSizePt ?? 12}
@@ -761,7 +785,7 @@ export function PrintManagerTemplatesPanel() {
                       style={{ maxHeight: 420 }}
                     >
                       {preview ? (
-                        // eslint-disable-next-line @next/next/no-img-element
+                        // Plain <img> on purpose: static export, so next/image optimization is unavailable.
                         <img
                           src={
                             preview.previewDataUrl.startsWith("data:")

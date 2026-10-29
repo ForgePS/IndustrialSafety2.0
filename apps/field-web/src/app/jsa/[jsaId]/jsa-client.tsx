@@ -55,9 +55,7 @@ export function JsaClient() {
 
   const alreadyAcked = useMemo(
     () =>
-      record
-        ? hasPersonAcknowledged(record, profile?.personnelId, profile?.displayName)
-        : false,
+      record ? hasPersonAcknowledged(record, profile?.personnelId, profile?.displayName) : false,
     [record, profile?.personnelId, profile?.displayName],
   );
 
@@ -121,9 +119,15 @@ export function JsaClient() {
       <p className="ff-brand-mark">JSA</p>
       <h1 className="ff-page-title">{record.title || "Job Safety Analysis"}</h1>
       <p className="ff-meta">
-        {[recordText(record, "divisionName", "division"), recordText(record, "location", "locationName"), recordText(record, "departmentName", "department")]
+        {[
+          recordText(record, "divisionName", "division"),
+          recordText(record, "location", "locationName"),
+          recordText(record, "departmentName", "department"),
+        ]
           .filter(Boolean)
-          .join(" · ") || record.status || "ACTIVE"}
+          .join(" · ") ||
+          record.status ||
+          "ACTIVE"}
       </p>
 
       {recordText(record, "task", "description") ? (
@@ -197,7 +201,10 @@ export function JsaClient() {
       ) : null}
 
       {alreadyAcked ? (
-        <EmptyState title="You acknowledged this JSA" message="You are cleared to proceed with the briefed controls." />
+        <EmptyState
+          title="You acknowledged this JSA"
+          message="You are cleared to proceed with the briefed controls."
+        />
       ) : can("field.jsa.execute") || can("field.access") ? (
         <section className="ff-section">
           <h2 className="ff-section-title">Crew acknowledgment</h2>
@@ -216,7 +223,11 @@ export function JsaClient() {
         </section>
       ) : null}
 
-      <button type="button" className="ff-btn ff-btn-secondary" onClick={() => router.push("/jsa/")}>
+      <button
+        type="button"
+        className="ff-btn ff-btn-secondary"
+        onClick={() => router.push("/jsa/")}
+      >
         Back to JSAs
       </button>
     </>

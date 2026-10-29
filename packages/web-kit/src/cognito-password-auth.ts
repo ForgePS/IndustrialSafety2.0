@@ -57,10 +57,7 @@ type SessionPasswordBody = {
   error?: { message?: string };
 };
 
-async function postSessionPassword(
-  path: string,
-  body: Record<string, unknown>,
-): Promise<void> {
+async function postSessionPassword(path: string, body: Record<string, unknown>): Promise<void> {
   requireBrowser();
   const response = await fetch(sessionApiUrl(path), {
     method: "POST",
@@ -80,9 +77,7 @@ async function postSessionPassword(
   }
 
   if (!response.ok) {
-    throw new CognitoOAuthError(
-      passwordAuthErrorMessage(payload.error?.message, response.status),
-    );
+    throw new CognitoOAuthError(passwordAuthErrorMessage(payload.error?.message, response.status));
   }
 
   const data = payload.data;
@@ -183,4 +178,3 @@ export async function completeMfaChallenge(input: {
     delivery: input.delivery,
   });
 }
-

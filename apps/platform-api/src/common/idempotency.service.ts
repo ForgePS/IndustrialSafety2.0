@@ -1,6 +1,11 @@
 import { createHash } from "node:crypto";
 import { Inject, Injectable } from "@nestjs/common";
-import { createId, idempotencyRecords, withTenantTransaction, type Database } from "@forge/database";
+import {
+  createId,
+  idempotencyRecords,
+  withTenantTransaction,
+  type Database,
+} from "@forge/database";
 import { and, eq, lt } from "drizzle-orm";
 import { DATABASE } from "../tokens.js";
 
@@ -85,7 +90,8 @@ export class IdempotencyService {
           return { outcome: "REQUEST_MISMATCH" } as const;
         }
 
-        const isExpired = existing.status === "EXPIRED" || existing.expiresAt.getTime() <= now.getTime();
+        const isExpired =
+          existing.status === "EXPIRED" || existing.expiresAt.getTime() <= now.getTime();
 
         if (existing.status === "COMPLETED" && !isExpired) {
           return {

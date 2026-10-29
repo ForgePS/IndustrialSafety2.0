@@ -5,6 +5,7 @@
 Creator Console **SaaS platform analytics only**.
 
 Does **not**:
+
 - Replace industrial / product analytics (`industrial-analytics`, industrial dashboard)
 - Expose tenant PII (emails, persons, audit before/after payloads)
 - Deploy or migrate production
@@ -17,6 +18,7 @@ Permission: platform.analytics.read  (creator-only)
 ```
 
 Returns aggregates:
+
 - tenants (total + by status, active/trial/suspended)
 - users (membership totals / active / suspended)
 - products (catalog active + active tenant assignments)

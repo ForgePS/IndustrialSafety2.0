@@ -81,7 +81,13 @@ try {
       status: r.status,
       sourceSystem: r.source_system,
       wc: pick(wc, ["locationText", "site", "bodyParts", "bodyLocations"]),
-      wcIntake: pick(intake, ["exactLocation", "bodyParts", "bodyPart", "injuryLocation", "location"]),
+      wcIntake: pick(intake, [
+        "exactLocation",
+        "bodyParts",
+        "bodyPart",
+        "injuryLocation",
+        "location",
+      ]),
       wcClaim: pick(claim, ["bodyParts", "location"]),
       claimSummaryBodyParts: unwrap(r.claim_summary).bodyParts ?? null,
       incident: pick(inc, [

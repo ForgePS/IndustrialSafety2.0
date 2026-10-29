@@ -23,6 +23,7 @@ async function main(): Promise<void> {
     const rows = await client`
       SELECT to_regclass('public.auth_browser_sessions') AS table_name
     `;
+    // eslint-disable-next-line no-console -- CLI output for ECS one-off
     console.info(
       JSON.stringify({
         status: "applied",

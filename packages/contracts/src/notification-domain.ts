@@ -12,6 +12,7 @@ export const EMAIL_TEMPLATE_KEYS = [
   "workers_comp_weekly_status",
   "reporting_schedule_delivery",
   "sanitation_inspection_completed",
+  "workers_comp_form",
   "observation_assigned",
 ] as const;
 

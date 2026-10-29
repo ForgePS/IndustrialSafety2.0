@@ -1,8 +1,5 @@
 import { Inject, Injectable } from "@nestjs/common";
-import {
-  INDUSTRIAL_MODULE_REGISTRY,
-  INDUSTRIAL_PRODUCT_CODE,
-} from "@forge/contracts";
+import { INDUSTRIAL_MODULE_REGISTRY, INDUSTRIAL_PRODUCT_CODE } from "@forge/contracts";
 import { ForgeError } from "@forge/errors";
 import type { ForgePrincipal } from "@forge/tenant-context";
 import { FeatureFlagsService } from "../feature-flags/feature-flags.service.js";
@@ -50,10 +47,7 @@ export class IndustrialBootstrapService {
     // off; an unset/default-off definition must NOT hide an entitled module, or
     // navigation flickers (modules appear then vanish once bootstrap resolves).
     const flagState = new Map(
-      effective.map((f) => [
-        f.key,
-        { value: Boolean(f.value), overridden: Boolean(f.overridden) },
-      ]),
+      effective.map((f) => [f.key, { value: Boolean(f.value), overridden: Boolean(f.overridden) }]),
     );
     const deploymentEnabled = (key: string): boolean => {
       const rec = flagState.get(key);

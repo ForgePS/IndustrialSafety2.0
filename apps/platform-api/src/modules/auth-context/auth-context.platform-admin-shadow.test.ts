@@ -60,9 +60,14 @@ function createService() {
   } as never;
 
   const cognito = { enabled: false, globalSignOut: vi.fn() };
-  return new AuthContextService(db, env, cognito as never, {
-    writeInTransaction: vi.fn(async () => "audit-1"),
-  } as never);
+  return new AuthContextService(
+    db,
+    env,
+    cognito as never,
+    {
+      writeInTransaction: vi.fn(async () => "audit-1"),
+    } as never,
+  );
 }
 
 function request(headers: Record<string, string | undefined>) {

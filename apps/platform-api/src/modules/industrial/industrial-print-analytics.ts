@@ -13,7 +13,9 @@ export function computePrintRetryRate(totalJobs: number, retriedJobs: number): n
 }
 
 export function averageMs(samples: Array<number | null | undefined>): number | null {
-  const vals = samples.filter((n): n is number => typeof n === "number" && Number.isFinite(n) && n >= 0);
+  const vals = samples.filter(
+    (n): n is number => typeof n === "number" && Number.isFinite(n) && n >= 0,
+  );
   if (!vals.length) return null;
   return Math.round(vals.reduce((a, b) => a + b, 0) / vals.length);
 }

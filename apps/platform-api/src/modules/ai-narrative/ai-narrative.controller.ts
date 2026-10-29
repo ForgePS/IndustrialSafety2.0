@@ -1,13 +1,4 @@
-import {
-  Body,
-  Controller,
-  Get,
-  Param,
-  Patch,
-  Post,
-  Query,
-  Req,
-} from "@nestjs/common";
+import { Body, Controller, Get, Param, Patch, Post, Query, Req } from "@nestjs/common";
 import type { ForgePrincipal } from "@forge/tenant-context";
 import { ok } from "../../common/api-response.js";
 import { getRequestIds, type RequestWithIds } from "../../common/request-ids.js";
@@ -23,10 +14,7 @@ export class AiNarrativeController {
   constructor(private readonly narratives: AiNarrativeService) {}
 
   @Post("api/v1/ai/narratives")
-  @RequireAnyPermission([
-    "ai.narrative.generate",
-    "rms.incident.ai_narrative.generate",
-  ])
+  @RequireAnyPermission(["ai.narrative.generate", "rms.incident.ai_narrative.generate"])
   async create(
     @Body() body: unknown,
     @Principal() principal: ForgePrincipal,
@@ -34,12 +22,7 @@ export class AiNarrativeController {
   ) {
     const ids = getRequestIds(req);
     return ok(
-      await this.narratives.create(
-        principal.tenantId,
-        principal,
-        body,
-        ids.correlationId,
-      ),
+      await this.narratives.create(principal.tenantId, principal, body, ids.correlationId),
       ids,
     );
   }
@@ -71,21 +54,13 @@ export class AiNarrativeController {
   ) {
     const ids = getRequestIds(req);
     return ok(
-      await this.narratives.regenerate(
-        principal.tenantId,
-        requestId,
-        principal,
-        ids.correlationId,
-      ),
+      await this.narratives.regenerate(principal.tenantId, requestId, principal, ids.correlationId),
       ids,
     );
   }
 
   @Post("api/v1/ai/narratives/:requestId/accept")
-  @RequireAnyPermission([
-    "ai.narrative.accept",
-    "rms.incident.ai_narrative.accept",
-  ])
+  @RequireAnyPermission(["ai.narrative.accept", "rms.incident.ai_narrative.accept"])
   async accept(
     @Param("requestId") requestId: string,
     @Body() body: unknown,
@@ -106,10 +81,7 @@ export class AiNarrativeController {
   }
 
   @Post("api/v1/ai/narratives/:requestId/partial-accept")
-  @RequireAnyPermission([
-    "ai.narrative.accept",
-    "rms.incident.ai_narrative.accept",
-  ])
+  @RequireAnyPermission(["ai.narrative.accept", "rms.incident.ai_narrative.accept"])
   async partialAccept(
     @Param("requestId") requestId: string,
     @Body() body: unknown,
@@ -280,7 +252,11 @@ export class AiNarrativeController {
   }
 
   @Get("api/v1/ai/models")
-  @RequireAnyPermission(["platform.ai.narrative.manage", "platform.ai.provider.manage", "platform.ai.usage.view"])
+  @RequireAnyPermission([
+    "platform.ai.narrative.manage",
+    "platform.ai.provider.manage",
+    "platform.ai.usage.view",
+  ])
   async models(
     @Query("tenantId") queryTenantId: string | undefined,
     @Principal() principal: ForgePrincipal,
@@ -330,7 +306,11 @@ export class AiNarrativeController {
   }
 
   @Get("api/v1/ai/providers")
-  @RequireAnyPermission(["platform.ai.narrative.manage", "platform.ai.provider.manage", "platform.ai.usage.view"])
+  @RequireAnyPermission([
+    "platform.ai.narrative.manage",
+    "platform.ai.provider.manage",
+    "platform.ai.usage.view",
+  ])
   async providers(
     @Query("tenantId") queryTenantId: string | undefined,
     @Principal() principal: ForgePrincipal,

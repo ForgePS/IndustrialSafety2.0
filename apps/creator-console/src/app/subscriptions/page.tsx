@@ -3,12 +3,7 @@
 import Link from "next/link";
 import { Suspense, useCallback, useEffect, useMemo, useState, type FormEvent } from "react";
 import { ConfirmDialog } from "@/components/confirm-dialog";
-import {
-  filterBySearch,
-  ListControls,
-  paginate,
-  sortByField,
-} from "@/components/list-controls";
+import { filterBySearch, ListControls, paginate, sortByField } from "@/components/list-controls";
 import { PlatformPageGate } from "@/components/platform-page-gate";
 import { TenantRequired } from "@/components/tenant-required";
 import { useAuth } from "@/hooks/use-auth";
@@ -206,8 +201,7 @@ function SubscriptionsInner() {
       <h1>Subscriptions</h1>
       <p className={styles.lead}>
         Tenant <span className={styles.mono}>{tenantId}</span> ·{" "}
-        <Link href={`/plans/`}>Plans & pricing</Link> ·{" "}
-        <Link href={`/billing${q}`}>Billing</Link> ·{" "}
+        <Link href={`/plans/`}>Plans & pricing</Link> · <Link href={`/billing${q}`}>Billing</Link> ·{" "}
         <Link href={`/customer-modules${q}`}>Company modules</Link>
       </p>
 
@@ -259,7 +253,11 @@ function SubscriptionsInner() {
               />
             </div>
             <div className={styles.actions}>
-              <button className={styles.button} type="submit" disabled={submitting || plans.length === 0}>
+              <button
+                className={styles.button}
+                type="submit"
+                disabled={submitting || plans.length === 0}
+              >
                 {submitting ? "Creating…" : "Create subscription"}
               </button>
             </div>

@@ -2,11 +2,11 @@
 
 ## Package unit tests
 
-| Package | Focus |
-| --- | --- |
-| `@forge/ai-policy` | Classification gates, restricted confirmation paths |
-| `@forge/ai-redaction` | Block/redact patterns; audit summary safety |
-| `@forge/ai-evaluation` | Schema parse, unsupported-claim heuristics |
+| Package                | Focus                                               |
+| ---------------------- | --------------------------------------------------- |
+| `@forge/ai-policy`     | Classification gates, restricted confirmation paths |
+| `@forge/ai-redaction`  | Block/redact patterns; audit summary safety         |
+| `@forge/ai-evaluation` | Schema parse, unsupported-claim heuristics          |
 
 Run via workspace filters, e.g. `pnpm --filter @forge/ai-policy test`.
 

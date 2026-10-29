@@ -3,7 +3,12 @@ import { spawn } from "node:child_process";
 import { mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { DeleteObjectCommand, GetObjectCommand, PutObjectCommand, S3Client } from "@aws-sdk/client-s3";
+import {
+  DeleteObjectCommand,
+  GetObjectCommand,
+  PutObjectCommand,
+  S3Client,
+} from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { Inject, Injectable, Logger } from "@nestjs/common";
 import {
@@ -29,13 +34,7 @@ import { IndustrialExecutiveWalkthroughNarrationService } from "./industrial-exe
 import { PRESIGN_EXPIRES_SECONDS } from "../neris-incidents/document-storage.service.js";
 
 export type WalkthroughJobStatus =
-  | "queued"
-  | "preparing"
-  | "rendering"
-  | "encoding"
-  | "uploading"
-  | "completed"
-  | "failed";
+  "queued" | "preparing" | "rendering" | "encoding" | "uploading" | "completed" | "failed";
 
 /** Alias matching frontend WalkthroughExportStatus naming. */
 export type WalkthroughPipelineStatus = WalkthroughJobStatus;
@@ -82,10 +81,7 @@ export class IndustrialExecutiveWalkthroughRenderService {
   }
 
   private industrialWebBaseUrl(): string {
-    return (
-      process.env.INDUSTRIAL_WEB_BASE_URL?.replace(/\/$/, "") ||
-      "http://127.0.0.1:3004"
-    );
+    return process.env.INDUSTRIAL_WEB_BASE_URL?.replace(/\/$/, "") || "http://127.0.0.1:3004";
   }
 
   private ffmpegBin(): string {
@@ -100,17 +96,22 @@ export class IndustrialExecutiveWalkthroughRenderService {
     const token = generatePublicToken();
     const tokenHash = hashPublicToken(token);
     const expiresAt = new Date(Date.now() + 30 * 60 * 1000);
-    await withTenantTransaction(this.db, input.tenantId, async (tx) => {
-      await tx.insert(industrialExecutiveWalkthroughRenderTokens).values({
-        id: createId(),
-        tenantId: input.tenantId,
-        exportJobId: input.exportJobId,
-        tokenHash,
-        expiresAt,
-        createdByUserId: input.userId ?? null,
-        createdAt: new Date(),
-      });
-    }, input.userId ?? undefined);
+    await withTenantTransaction(
+      this.db,
+      input.tenantId,
+      async (tx) => {
+        await tx.insert(industrialExecutiveWalkthroughRenderTokens).values({
+          id: createId(),
+          tenantId: input.tenantId,
+          exportJobId: input.exportJobId,
+          tokenHash,
+          expiresAt,
+          createdByUserId: input.userId ?? null,
+          createdAt: new Date(),
+        });
+      },
+      input.userId ?? undefined,
+    );
     return token;
   }
 
@@ -159,10 +160,7 @@ export class IndustrialExecutiveWalkthroughRenderService {
         throw new ForgeError("FORBIDDEN", "Render token is invalid or expired");
       }
       const job = await tx.query.platformJobs.findFirst({
-        where: and(
-          eq(platformJobs.id, tokenRow.exportJobId),
-          eq(platformJobs.tenantId, tenantId),
-        ),
+        where: and(eq(platformJobs.id, tokenRow.exportJobId), eq(platformJobs.tenantId, tenantId)),
       });
       const resultJson = (job?.resultJson ?? {}) as Record<string, unknown>;
       return {
@@ -284,8 +282,7 @@ export class IndustrialExecutiveWalkthroughRenderService {
         captionCues: options.burnCaptions
           ? narrationSteps.map((step) => ({
               text: String(step.narrationText ?? step.title ?? step.id).trim(),
-              durationMs:
-                assets.find((a) => a.sceneId === step.id)?.durationMs ?? step.durationMs,
+              durationMs: assets.find((a) => a.sceneId === step.id)?.durationMs ?? step.durationMs,
             }))
           : [],
       });
@@ -317,66 +314,79 @@ export class IndustrialExecutiveWalkthroughRenderService {
         ),
       );
 
-      await withTenantTransaction(this.db, tenantId, async (tx) => {
-        await tx
-          .update(platformJobs)
-          .set({
-            status: "SUCCEEDED",
-            progress: 100,
-            completedAt: new Date(),
-            artifactObjectKey: objectKey,
-            artifactContentType: "video/mp4",
-            artifactFilename: EXECUTIVE_WALKTHROUGH_DEFAULT_FILENAME,
-            artifactExpiresAt: new Date(Date.now() + 90 * 24 * 60 * 60 * 1000),
-            resultJson: {
-              kind: "executive-walkthrough",
-              walkthroughStatus: "completed",
-              presentationId: EXECUTIVE_WALKTHROUGH_PRESENTATION_ID,
-              contentVersion: options.contentVersion,
-              videoTitle: options.videoTitle,
-              resolution: options.resolution,
-              includeNarration: options.includeNarration,
-              burnCaptions: options.burnCaptions,
-              includeIntro: options.includeIntro,
-              includeOutro: options.includeOutro,
-              durationSeconds,
-              usedFallback,
-            },
-            updatedAt: new Date(),
-          })
-          .where(and(eq(platformJobs.id, jobId), eq(platformJobs.tenantId, tenantId)));
-      }, principal.userId);
+      await withTenantTransaction(
+        this.db,
+        tenantId,
+        async (tx) => {
+          await tx
+            .update(platformJobs)
+            .set({
+              status: "SUCCEEDED",
+              progress: 100,
+              completedAt: new Date(),
+              artifactObjectKey: objectKey,
+              artifactContentType: "video/mp4",
+              artifactFilename: EXECUTIVE_WALKTHROUGH_DEFAULT_FILENAME,
+              artifactExpiresAt: new Date(Date.now() + 90 * 24 * 60 * 60 * 1000),
+              resultJson: {
+                kind: "executive-walkthrough",
+                walkthroughStatus: "completed",
+                presentationId: EXECUTIVE_WALKTHROUGH_PRESENTATION_ID,
+                contentVersion: options.contentVersion,
+                videoTitle: options.videoTitle,
+                resolution: options.resolution,
+                includeNarration: options.includeNarration,
+                burnCaptions: options.burnCaptions,
+                includeIntro: options.includeIntro,
+                includeOutro: options.includeOutro,
+                durationSeconds,
+                usedFallback,
+              },
+              updatedAt: new Date(),
+            })
+            .where(and(eq(platformJobs.id, jobId), eq(platformJobs.tenantId, tenantId)));
+        },
+        principal.userId,
+      );
     } catch (error) {
       const message = error instanceof Error ? error.message : "Export failed";
       this.logger.error(`Executive walkthrough export failed job=${jobId}: ${message}`);
-      await withTenantTransaction(this.db, tenantId, async (tx) => {
-        await tx
-          .update(platformJobs)
-          .set({
-            status: "FAILED",
-            progress: 100,
-            completedAt: new Date(),
-            failure: message.slice(0, 2000),
-            resultJson: {
-              kind: "executive-walkthrough",
-              walkthroughStatus: "failed",
-              contentVersion: options.contentVersion,
-              videoTitle: options.videoTitle,
-              resolution: options.resolution,
-              includeNarration: options.includeNarration,
-              burnCaptions: options.burnCaptions,
-              errorMessage: message.slice(0, 500),
-            },
-            updatedAt: new Date(),
-          })
-          .where(and(eq(platformJobs.id, jobId), eq(platformJobs.tenantId, tenantId)));
-      }, principal.userId);
+      await withTenantTransaction(
+        this.db,
+        tenantId,
+        async (tx) => {
+          await tx
+            .update(platformJobs)
+            .set({
+              status: "FAILED",
+              progress: 100,
+              completedAt: new Date(),
+              failure: message.slice(0, 2000),
+              resultJson: {
+                kind: "executive-walkthrough",
+                walkthroughStatus: "failed",
+                contentVersion: options.contentVersion,
+                videoTitle: options.videoTitle,
+                resolution: options.resolution,
+                includeNarration: options.includeNarration,
+                burnCaptions: options.burnCaptions,
+                errorMessage: message.slice(0, 500),
+              },
+              updatedAt: new Date(),
+            })
+            .where(and(eq(platformJobs.id, jobId), eq(platformJobs.tenantId, tenantId)));
+        },
+        principal.userId,
+      );
     } finally {
       await rm(workDir, { recursive: true, force: true }).catch(() => undefined);
     }
   }
 
-  async createDownloadUrl(objectKey: string, filename: string): Promise<{
+  async createDownloadUrl(
+    objectKey: string,
+    filename: string,
+  ): Promise<{
     downloadUrl: string;
     expiresAt: string;
     expiresInSeconds: number;
@@ -412,26 +422,31 @@ export class IndustrialExecutiveWalkthroughRenderService {
       userId?: string | null;
     },
   ) {
-    await withTenantTransaction(this.db, tenantId, async (tx) => {
-      const existing = await tx.query.platformJobs.findFirst({
-        where: and(eq(platformJobs.id, jobId), eq(platformJobs.tenantId, tenantId)),
-      });
-      const prev = (existing?.resultJson ?? {}) as Record<string, unknown>;
-      await tx
-        .update(platformJobs)
-        .set({
-          ...(patch.status ? { status: patch.status } : {}),
-          progress: patch.progress,
-          startedAt: existing?.startedAt ?? new Date(),
-          resultJson: {
-            ...prev,
-            kind: "executive-walkthrough",
-            walkthroughStatus: patch.walkthroughStatus,
-          },
-          updatedAt: new Date(),
-        })
-        .where(and(eq(platformJobs.id, jobId), eq(platformJobs.tenantId, tenantId)));
-    }, patch.userId ?? undefined);
+    await withTenantTransaction(
+      this.db,
+      tenantId,
+      async (tx) => {
+        const existing = await tx.query.platformJobs.findFirst({
+          where: and(eq(platformJobs.id, jobId), eq(platformJobs.tenantId, tenantId)),
+        });
+        const prev = (existing?.resultJson ?? {}) as Record<string, unknown>;
+        await tx
+          .update(platformJobs)
+          .set({
+            ...(patch.status ? { status: patch.status } : {}),
+            progress: patch.progress,
+            startedAt: existing?.startedAt ?? new Date(),
+            resultJson: {
+              ...prev,
+              kind: "executive-walkthrough",
+              walkthroughStatus: patch.walkthroughStatus,
+            },
+            updatedAt: new Date(),
+          })
+          .where(and(eq(platformJobs.id, jobId), eq(platformJobs.tenantId, tenantId)));
+      },
+      patch.userId ?? undefined,
+    );
   }
 
   /**
@@ -601,15 +616,7 @@ export class IndustrialExecutiveWalkthroughRenderService {
       if (videoFilter) args.push("-vf", videoFilter);
       args.push("-c:v", "libx264", "-an");
     }
-    args.push(
-      "-pix_fmt",
-      "yuv420p",
-      "-movflags",
-      "+faststart",
-      "-r",
-      "30",
-      input.outputPath,
-    );
+    args.push("-pix_fmt", "yuv420p", "-movflags", "+faststart", "-r", "30", input.outputPath);
     await runCommand(this.ffmpegBin(), args);
   }
 }

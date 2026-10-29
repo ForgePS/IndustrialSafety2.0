@@ -27,13 +27,13 @@ Creator-only SaaS platform analytics overview API and UI. Industrial/product ana
 
 ## Verification
 
-| Check | Result |
-| --- | --- |
+| Check                             | Result   |
+| --------------------------------- | -------- |
 | contracts platform-analytics unit | 1 passed |
-| platform-api analytics unit | 1 passed |
-| platform-api typecheck | PASS |
-| creator-console typecheck | PASS |
-| Production operations | NONE |
+| platform-api analytics unit       | 1 passed |
+| platform-api typecheck            | PASS     |
+| creator-console typecheck         | PASS     |
+| Production operations             | NONE     |
 
 ## Next sprint
 

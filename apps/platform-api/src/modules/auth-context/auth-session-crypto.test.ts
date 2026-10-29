@@ -14,10 +14,7 @@ describe("auth-session-crypto", () => {
   });
 
   it("round-trips refresh token encryption", () => {
-    const key = resolveAuthSessionEncryptionKey(
-      "local",
-      Buffer.alloc(32, 7).toString("base64"),
-    );
+    const key = resolveAuthSessionEncryptionKey("local", Buffer.alloc(32, 7).toString("base64"));
     const encrypted = encryptRefreshToken("cognito-refresh-secret", key);
     expect(encrypted.ciphertextBase64).not.toContain("cognito-refresh-secret");
     expect(decryptRefreshToken(encrypted, key)).toBe("cognito-refresh-secret");

@@ -143,10 +143,7 @@ export function dotDqfPatchFromDetails(
 }
 
 /** Patch a single DQF field without resending the whole worksheet. */
-export function dotDqfPatchForField(
-  fieldId: string,
-  value: string,
-): Record<string, unknown> {
+export function dotDqfPatchForField(fieldId: string, value: string): Record<string, unknown> {
   const slimmed = slimDetailValue(fieldId, value);
   return {
     category: "drivers",

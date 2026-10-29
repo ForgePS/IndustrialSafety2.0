@@ -19,9 +19,7 @@ const STAGING_KEY = "producers-rice-mill-staging";
 const BUCKET =
   process.env.FORGE_IND11B_IMPORTS_BUCKET || "forge-development-imports-511343547817-us-east-1";
 const LOCAL_SRC = path.resolve(".tmp-p4/s3");
-const EVID_DIR = path.resolve(
-  "docs/program/industrial-migration/ind-11/evidence/p2/04-parity",
-);
+const EVID_DIR = path.resolve("docs/program/industrial-migration/ind-11/evidence/p2/04-parity");
 const APPROVAL = path.join(EVID_DIR, "APPROVE-PRODUCERS-PHASE4-LOAD.md");
 const stamp = new Date().toISOString().replace(/[:.]/g, "-");
 const PREFIX = `ind11b/p4-staging/${stamp}`;

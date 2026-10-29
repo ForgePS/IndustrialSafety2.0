@@ -32,7 +32,10 @@ type MatrixRow = {
 function cellClass(cell: MatrixCell | null) {
   if (!cell) return "bg-light text-muted";
   if (cell.status === "PASSED") return "bg-success text-white";
-  if (cell.status === "OVERDUE" || (cell.dueAt && new Date(cell.dueAt) < new Date() && cell.status !== "PASSED")) {
+  if (
+    cell.status === "OVERDUE" ||
+    (cell.dueAt && new Date(cell.dueAt) < new Date() && cell.status !== "PASSED")
+  ) {
     return "bg-danger text-white";
   }
   if (cell.status === "IN_PROGRESS" || cell.status === "FAILED") return "bg-warning";
@@ -83,15 +86,19 @@ export function TrainingComplianceMatrixPanel() {
 
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
-    const siteLabel =
-      orgCatalogs.sites.find((s) => s.id === siteFilter)?.label ?? siteFilter;
+    const siteLabel = orgCatalogs.sites.find((s) => s.id === siteFilter)?.label ?? siteFilter;
     return rows.filter((row) => {
       if (siteFilter && row.siteName !== siteLabel && row.siteName !== siteFilter) return false;
-      if (deptNameFilter && row.departmentName !== deptNameFilter && row.departmentName !== deptFilter) {
+      if (
+        deptNameFilter &&
+        row.departmentName !== deptNameFilter &&
+        row.departmentName !== deptFilter
+      ) {
         return false;
       }
       if (!q) return true;
-      const hay = `${row.displayName} ${row.employeeNumber ?? ""} ${row.jobTitle ?? ""}`.toLowerCase();
+      const hay =
+        `${row.displayName} ${row.employeeNumber ?? ""} ${row.jobTitle ?? ""}`.toLowerCase();
       return hay.includes(q);
     });
   }, [rows, siteFilter, deptFilter, deptNameFilter, search, orgCatalogs.sites]);
@@ -177,7 +184,12 @@ export function TrainingComplianceMatrixPanel() {
             }}
           />
         </div>
-        <button type="button" className="btn btn-sm btn-outline-secondary" disabled={busy} onClick={() => void load()}>
+        <button
+          type="button"
+          className="btn btn-sm btn-outline-secondary"
+          disabled={busy}
+          onClick={() => void load()}
+        >
           Refresh
         </button>
         <button
@@ -216,7 +228,11 @@ export function TrainingComplianceMatrixPanel() {
                 {courses.map((c) => {
                   const cell = row.cells[c.sourceId] ?? null;
                   return (
-                    <td key={c.sourceId} className={`text-center small ${cellClass(cell)}`} title={cell?.assignmentTitle}>
+                    <td
+                      key={c.sourceId}
+                      className={`text-center small ${cellClass(cell)}`}
+                      title={cell?.assignmentTitle}
+                    >
                       {cellLabel(cell)}
                     </td>
                   );

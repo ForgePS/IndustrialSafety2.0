@@ -143,8 +143,7 @@ export class IndustrialTrainingAdapter implements ImportRecordAdapter {
     const completedAt =
       parseDate(mapped.completed_at) ?? parseDate(mapped.completedAt) ?? new Date();
     const expiresAt = parseDate(mapped.expires_at) ?? parseDate(mapped.expiresAt);
-    const courseCode =
-      asOptionalString(mapped.course_code) ?? asOptionalString(mapped.courseCode);
+    const courseCode = asOptionalString(mapped.course_code) ?? asOptionalString(mapped.courseCode);
     const instructorName =
       asOptionalString(mapped.instructor_name) ?? asOptionalString(mapped.instructorName);
     const notes = asOptionalString(mapped.notes);
@@ -159,7 +158,10 @@ export class IndustrialTrainingAdapter implements ImportRecordAdapter {
     try {
       return await withTenantTransaction(db, context.tenantId, async (tx) => {
         const personnelRows = await tx
-          .select({ id: industrialPersonnel.id, employeeNumber: industrialPersonnel.employeeNumber })
+          .select({
+            id: industrialPersonnel.id,
+            employeeNumber: industrialPersonnel.employeeNumber,
+          })
           .from(industrialPersonnel)
           .where(
             and(

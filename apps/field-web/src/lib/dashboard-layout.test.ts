@@ -32,7 +32,13 @@ describe("dashboard-layout", () => {
   it("shows LOTO when the user has Industrial LOTO view", () => {
     expect(
       canUseDashboardCard(
-        { id: "more-loto", label: "LOTO", href: "/more/loto/", permission: "field.loto.execute", source: "more" },
+        {
+          id: "more-loto",
+          label: "LOTO",
+          href: "/more/loto/",
+          permission: "field.loto.execute",
+          source: "more",
+        },
         ["industrial.loto.view"],
       ),
     ).toBe(true);

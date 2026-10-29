@@ -4,11 +4,7 @@
  */
 
 export type TenantClass =
-  | "CUSTOMER"
-  | "PLATFORM_DEFAULT"
-  | "GLOBAL_TEMPLATE"
-  | "LEGACY_ALIAS"
-  | "UNKNOWN";
+  "CUSTOMER" | "PLATFORM_DEFAULT" | "GLOBAL_TEMPLATE" | "LEGACY_ALIAS" | "UNKNOWN";
 
 export type AwsTenantBinding = {
   sourceTenantKey: string;

@@ -1,8 +1,5 @@
 import { describe, expect, it } from "vitest";
-import {
-  buildWorkersCompPrintableHtml,
-  workersCompPrintTitle,
-} from "./workers-comp-print.js";
+import { buildWorkersCompPrintableHtml, workersCompPrintTitle } from "./workers-comp-print.js";
 
 describe("workers-comp-print", () => {
   it("builds claim title from claim number and worker", () => {

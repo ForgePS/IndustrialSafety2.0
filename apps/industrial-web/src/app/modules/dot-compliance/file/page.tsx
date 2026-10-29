@@ -32,7 +32,11 @@ import { formatApiErrorMessage } from "@/lib/api-error";
 import { personFileHref, rosterInitials } from "@/lib/personnel-directory";
 import { DotDqfWorksheet } from "@/components/dot-dqf-worksheet";
 import { DotFileEditor } from "@/components/dot-file-editor";
-import { dotDqfDetailsFromRecord, dotDqfPatchForField, dotDqfPatchFromDetails } from "@/lib/dot-dqf-record";
+import {
+  dotDqfDetailsFromRecord,
+  dotDqfPatchForField,
+  dotDqfPatchFromDetails,
+} from "@/lib/dot-dqf-record";
 import { buildDqfFormIdMap } from "@/lib/dot-dqf-form-links";
 import { FORMS_API } from "@/lib/forms-module";
 
@@ -71,8 +75,7 @@ function DotFileInner() {
     permissions.has("industrial.dot.view") ||
     permissions.has("industrial.admin") ||
     permissions.has("industrial.access");
-  const canManage =
-    permissions.has("industrial.dot.manage") || permissions.has("industrial.admin");
+  const canManage = permissions.has("industrial.dot.manage") || permissions.has("industrial.admin");
   const canViewSensitive =
     permissions.has("industrial.dot.view_sensitive") || permissions.has("industrial.admin");
 
@@ -96,9 +99,7 @@ function DotFileInner() {
     setLoading(true);
     setError(null);
     try {
-      const data = await apiGet<Record<string, unknown>>(
-        `${DOT_API}/${encodeURIComponent(id)}`,
-      );
+      const data = await apiGet<Record<string, unknown>>(`${DOT_API}/${encodeURIComponent(id)}`);
       // Do not crawl the entire DOT list for related rows — that multiplies full-table
       // API scans and made the file page unusable as record counts grew. Detail payload
       // is enough for the worksheet; related links can be added via a dedicated API later.
@@ -339,8 +340,8 @@ function DotFileInner() {
               </p>
               {isDvirRecord(record) ? (
                 <p className="text-muted small mb-3">
-                  Submitted DVIRs cannot be edited. Use Print or certify follow-up signatures from DOT
-                  DVIRs.
+                  Submitted DVIRs cannot be edited. Use Print or certify follow-up signatures from
+                  DOT DVIRs.
                 </p>
               ) : null}
               <div className="d-flex flex-wrap gap-2">
@@ -414,8 +415,8 @@ function DotFileInner() {
               <div className="card-body">
                 {mergedProfile ? (
                   <p className="text-muted small mb-3">
-                    This profile combines multiple DOT files. Changes here apply only to the file you
-                    opened, not other combined records.
+                    This profile combines multiple DOT files. Changes here apply only to the file
+                    you opened, not other combined records.
                   </p>
                 ) : null}
                 <DotDqfWorksheet
@@ -533,7 +534,9 @@ function DotFileInner() {
                         </td>
                         <td>{categoryLabel(dotRecordCategory(row))}</td>
                         <td>
-                          <span className={`badge ${dotStatusBadgeClass(String(row.status ?? ""))}`}>
+                          <span
+                            className={`badge ${dotStatusBadgeClass(String(row.status ?? ""))}`}
+                          >
                             {String(row.status ?? "—")}
                           </span>
                         </td>

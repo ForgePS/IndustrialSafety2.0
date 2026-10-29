@@ -106,10 +106,7 @@ export function resolveTrainingVideoPlaybackMime(input: {
   return "video/mp4";
 }
 
-export function canInlinePreview(
-  mimeType?: string | null,
-  filename?: string | null,
-): boolean {
+export function canInlinePreview(mimeType?: string | null, filename?: string | null): boolean {
   const mime = (mimeType ?? "").toLowerCase();
   if (mime.startsWith("image/") || mime === "application/pdf") return true;
   return isTrainingVideoFile({ mimeType, filename });
@@ -159,9 +156,7 @@ export const fieldTrainingApi = {
     }>("/api/v1/industrial/training/quizzes", "POST", { assignmentId }),
 
   nextQuestion: (attemptId: string) =>
-    apiGet<QuizNext>(
-      `/api/v1/industrial/training/attempts/${encodeURIComponent(attemptId)}/next`,
-    ),
+    apiGet<QuizNext>(`/api/v1/industrial/training/attempts/${encodeURIComponent(attemptId)}/next`),
 
   answer: (attemptId: string, questionId: string, selectedIndex: number) =>
     apiSend<QuizAnswerResult>(

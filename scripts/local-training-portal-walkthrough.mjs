@@ -83,11 +83,18 @@ async function main() {
   const employeeNumber = "10452";
   const assignmentTitle = "Annual Lockout/Tagout Training";
 
-  log("1. Access link context", await api("GET", `/api/v1/public/training/access/${encodeURIComponent(token)}`));
+  log(
+    "1. Access link context",
+    await api("GET", `/api/v1/public/training/access/${encodeURIComponent(token)}`),
+  );
 
-  const verified = await api("POST", `/api/v1/public/training/access/${encodeURIComponent(token)}/verify`, {
-    employeeNumber,
-  });
+  const verified = await api(
+    "POST",
+    `/api/v1/public/training/access/${encodeURIComponent(token)}/verify`,
+    {
+      employeeNumber,
+    },
+  );
   log("2. Verify employee", {
     displayName: verified.displayName,
     employeeNumber: verified.employeeNumber,
@@ -120,7 +127,10 @@ async function main() {
       quizAvailable: completed.length >= course.sections.length,
     });
   }
-  log("4. Progress saved", { sectionsCompleted: course.sections?.length ?? 0, quizAvailable: true });
+  log("4. Progress saved", {
+    sectionsCompleted: course.sections?.length ?? 0,
+    quizAvailable: true,
+  });
 
   const fail = await answerQuiz(token, sessionToken, assignment.assignmentId, null, [0, 0, 0]);
   log("5. Attempt #1 (intentional fail)", {

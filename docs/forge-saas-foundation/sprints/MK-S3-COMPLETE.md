@@ -36,13 +36,13 @@ Authoritative membership (`user_tenant_memberships`) gates tenant selection. Saa
 
 ## Verification
 
-| Check | Result |
-| --- | --- |
-| contracts unit | 8 passed |
-| web-kit unit | 16 passed |
-| platform-api unit | 67 passed |
-| typecheck contracts/web-kit/platform-api | PASS |
-| Production operations | NONE |
+| Check                                    | Result    |
+| ---------------------------------------- | --------- |
+| contracts unit                           | 8 passed  |
+| web-kit unit                             | 16 passed |
+| platform-api unit                        | 67 passed |
+| typecheck contracts/web-kit/platform-api | PASS      |
+| Production operations                    | NONE      |
 
 ## Next sprint
 

@@ -7,16 +7,16 @@
 
 ## Completed
 
-| Slice | Focus | Status |
-| --- | --- | --- |
-| FX-S0–S1.5 | Foundation + RC1 | **DONE** |
-| FX-S2A–S2E | Inventory → forms/tables | **DONE** |
-| FX-S2F-1 | Incidents | Checkpoint |
-| FX-S2F-2 | Incident Review | Checkpoint |
-| FX-S2F-3 | CAD Messages | **Checkpoint submitted** |
+| Slice      | Focus                    | Status                   |
+| ---------- | ------------------------ | ------------------------ |
+| FX-S0–S1.5 | Foundation + RC1         | **DONE**                 |
+| FX-S2A–S2E | Inventory → forms/tables | **DONE**                 |
+| FX-S2F-1   | Incidents                | Checkpoint               |
+| FX-S2F-2   | Incident Review          | Checkpoint               |
+| FX-S2F-3   | CAD Messages             | **Checkpoint submitted** |
 
 ## Next
 
-1. Accept [CAD Messages checkpoint](./products/rms/s2f/modules/cad-messages/09-completion-report.md)  
-2. FX-S2F-4 CAD Connections (only after acceptance)  
-3. Later S2F modules → S2G stabilization/pilot  
+1. Accept [CAD Messages checkpoint](./products/rms/s2f/modules/cad-messages/09-completion-report.md)
+2. FX-S2F-4 CAD Connections (only after acceptance)
+3. Later S2F modules → S2G stabilization/pilot

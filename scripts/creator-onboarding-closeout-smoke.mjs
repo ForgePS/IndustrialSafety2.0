@@ -45,7 +45,9 @@ for (const route of routes) {
   if (!ok) failed = true;
 }
 
-console.log(failed ? "ONBOARDING_CLOSEOUT_ROUTE_SMOKE=FAIL" : "ONBOARDING_CLOSEOUT_ROUTE_SMOKE=PASS");
+console.log(
+  failed ? "ONBOARDING_CLOSEOUT_ROUTE_SMOKE=FAIL" : "ONBOARDING_CLOSEOUT_ROUTE_SMOKE=PASS",
+);
 console.log(
   "FULL_E2E_ONBOARDING=CONDITION (authenticated setup-center/import/activate flow requires secured test user)",
 );

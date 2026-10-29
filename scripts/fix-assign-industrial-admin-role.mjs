@@ -98,7 +98,8 @@ async function main() {
         and m.status = 'ACTIVE'
       limit 1
     `;
-    if (!membership[0]) throw new Error(`no ACTIVE membership for ${TARGET_EMAIL} in ${TENANT_KEY}`);
+    if (!membership[0])
+      throw new Error(`no ACTIVE membership for ${TARGET_EMAIL} in ${TENANT_KEY}`);
     const { membership_id: membershipId, user_id: userId } = membership[0];
     report.membershipId = membershipId;
     report.userId = userId;

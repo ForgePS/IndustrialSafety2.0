@@ -147,12 +147,22 @@ function OverviewInner() {
               <dd>{data.flags["ai.narrative.rms.enabled"] ? "On" : "Off"}</dd>
             </dl>
             {canSuspend && !data.suspended ? (
-              <button type="button" className={styles.button} disabled={busy} onClick={() => void suspendTenant()}>
+              <button
+                type="button"
+                className={styles.button}
+                disabled={busy}
+                onClick={() => void suspendTenant()}
+              >
                 Suspend tenant AI
               </button>
             ) : null}
             {canSuspend && data.suspended ? (
-              <button type="button" className={styles.button} disabled={busy} onClick={() => void unsuspendTenant()}>
+              <button
+                type="button"
+                className={styles.button}
+                disabled={busy}
+                onClick={() => void unsuspendTenant()}
+              >
                 Unsuspend tenant AI
               </button>
             ) : null}
@@ -211,7 +221,13 @@ function OverviewInner() {
 
 export default function AiManagementOverviewPage() {
   return (
-    <Suspense fallback={<main className={styles.page}><p className={styles.muted}>Loading…</p></main>}>
+    <Suspense
+      fallback={
+        <main className={styles.page}>
+          <p className={styles.muted}>Loading…</p>
+        </main>
+      }
+    >
       <OverviewInner />
     </Suspense>
   );

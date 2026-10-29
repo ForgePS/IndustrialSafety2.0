@@ -4,7 +4,7 @@ import type { PrinterInfoPayload } from "../../services/protocol";
 
 export type BradySdkUpdateListener = (
   printer: PrinterInfoPayload | null,
-  mostRecentUpdates: string[] | null
+  mostRecentUpdates: string[] | null,
 ) => void;
 
 /**
@@ -65,9 +65,7 @@ export class BradySdkAdapter {
    * Brady Web SDK 3.3.0 returns boolean success and stores the ownership id in
    * localStorage (`ownershipID`). Pass a saved id by writing that key first.
    */
-  async showDiscoveredBleDevices(
-    ownershipIdOrNull: string | null
-  ): Promise<string | null> {
+  async showDiscoveredBleDevices(ownershipIdOrNull: string | null): Promise<string | null> {
     if (ownershipIdOrNull) {
       localStorage.setItem("ownershipID", ownershipIdOrNull);
     }
@@ -82,11 +80,7 @@ export class BradySdkAdapter {
     return stored;
   }
 
-  async printBitmap(
-    img: HTMLImageElement,
-    xOffset = 0,
-    yOffset = 0
-  ): Promise<boolean> {
+  async printBitmap(img: HTMLImageElement, xOffset = 0, yOffset = 0): Promise<boolean> {
     return this.getSdk().printBitmap(img, xOffset, yOffset);
   }
 
@@ -101,9 +95,7 @@ export class BradySdkAdapter {
 
   getPrinterInfo(): PrinterInfoPayload | null {
     if (!this.sdk || !this.sdk.isConnected()) {
-      return this.sdk
-        ? BradyPrinterMapper.toPrinterInfo(this.sdk, this.ownershipDeviceId)
-        : null;
+      return this.sdk ? BradyPrinterMapper.toPrinterInfo(this.sdk, this.ownershipDeviceId) : null;
     }
     return BradyPrinterMapper.toPrinterInfo(this.sdk, this.ownershipDeviceId);
   }

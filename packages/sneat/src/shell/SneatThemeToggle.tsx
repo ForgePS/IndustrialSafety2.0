@@ -66,7 +66,12 @@ export function SneatThemeToggle({ className = "" }: { className?: string }) {
   const { mode, ready, toggleThemeMode } = useSneatThemeMode();
   if (!ready) {
     return (
-      <button type="button" className={`btn btn-sm btn-icon btn-outline-secondary ${className}`.trim()} disabled aria-label="Theme">
+      <button
+        type="button"
+        className={`btn btn-sm btn-icon btn-outline-secondary ${className}`.trim()}
+        disabled
+        aria-label="Theme"
+      >
         <i className="icon-base bx bx-moon" />
       </button>
     );

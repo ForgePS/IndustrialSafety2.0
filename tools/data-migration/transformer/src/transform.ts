@@ -1,9 +1,21 @@
 import { createHash } from "node:crypto";
-import { createReadStream, createWriteStream, existsSync, mkdirSync, readFileSync, readdirSync, writeFileSync } from "node:fs";
+import {
+  createReadStream,
+  createWriteStream,
+  existsSync,
+  mkdirSync,
+  readFileSync,
+  readdirSync,
+  writeFileSync,
+} from "node:fs";
 import { createInterface } from "node:readline";
 import path from "node:path";
 import { normalizeFirestoreValue } from "./firestore-types.js";
-import { MATRIX_BY_COLLECTION, assertMatrixComplete, TARGET_SCHEMA_GAPS } from "./source-target-matrix.js";
+import {
+  MATRIX_BY_COLLECTION,
+  assertMatrixComplete,
+  TARGET_SCHEMA_GAPS,
+} from "./source-target-matrix.js";
 import { isCustomerImportTenant, resolveAwsTenant } from "./tenant-map.js";
 import type { ExtractedRecord, GateCounts, IdMapEntry, TransformError } from "./types.js";
 
@@ -21,7 +33,13 @@ function pickEffectiveTenantKey(rec: ExtractedRecord): string | null {
     return id;
   }
   const data = rec.data ?? {};
-  for (const key of ["businessId", "organizationId", "companyId", "tenantId", "primaryBusinessId"] as const) {
+  for (const key of [
+    "businessId",
+    "organizationId",
+    "companyId",
+    "tenantId",
+    "primaryBusinessId",
+  ] as const) {
     const v = data[key];
     if (typeof v === "string" && v.trim()) return v.trim();
   }
@@ -55,7 +73,10 @@ function deterministicTargetId(sourceCollection: string, sourceDocumentId: strin
 }
 
 async function* readNdjson(filePath: string): AsyncGenerator<ExtractedRecord> {
-  const rl = createInterface({ input: createReadStream(filePath, { encoding: "utf8" }), crlfDelay: Infinity });
+  const rl = createInterface({
+    input: createReadStream(filePath, { encoding: "utf8" }),
+    crlfDelay: Infinity,
+  });
   for await (const line of rl) {
     const trimmed = line.trim();
     if (!trimmed) continue;
@@ -97,7 +118,10 @@ export async function runTransform(options: TransformOptions): Promise<Transform
   const recordCounts: Record<string, number> = {};
   const seenTargetKeys = new Set<string>();
   const idMap: IdMapEntry[] = [];
-  const writers = new Map<string, { stream: ReturnType<typeof createWriteStream>; count: number }>();
+  const writers = new Map<
+    string,
+    { stream: ReturnType<typeof createWriteStream>; count: number }
+  >();
   const siteIdsByTenant = new Map<string, Set<string>>();
   const personnelIdsByTenant = new Map<string, Set<string>>();
   let sourceDocumentCount = 0;
@@ -123,7 +147,9 @@ export async function runTransform(options: TransformOptions): Promise<Transform
     transformedRecordCount += 1;
   };
 
-  const ndjsonFiles = readdirSync(firestoreDir).filter((f) => f.endsWith(".ndjson")).sort();
+  const ndjsonFiles = readdirSync(firestoreDir)
+    .filter((f) => f.endsWith(".ndjson"))
+    .sort();
   const rootCollections = ndjsonFiles.map((f) => f.replace(/\.ndjson$/, ""));
   const unknownMappings = assertMatrixComplete(rootCollections);
 
@@ -260,7 +286,11 @@ export async function runTransform(options: TransformOptions): Promise<Transform
             continue;
           }
           // Required parent missing only for READY transform domains that require facility
-          if (["incidents", "inspectionRecords", "assetRecords", "personnelRecords"].includes(collection)) {
+          if (
+            ["incidents", "inspectionRecords", "assetRecords", "personnelRecords"].includes(
+              collection,
+            )
+          ) {
             gates.REQUIRED_PARENT_MISSING += 1;
             errors.push({
               severity: "FATAL",
@@ -321,9 +351,15 @@ export async function runTransform(options: TransformOptions): Promise<Transform
 
   // id-map + errors
   const idMapPath = path.join(awsImportDir, "id-map.ndjson");
-  writeFileSync(idMapPath, idMap.map((e) => JSON.stringify(e)).join("\n") + (idMap.length ? "\n" : ""));
+  writeFileSync(
+    idMapPath,
+    idMap.map((e) => JSON.stringify(e)).join("\n") + (idMap.length ? "\n" : ""),
+  );
   const errorsPath = path.join(awsImportDir, "errors.ndjson");
-  writeFileSync(errorsPath, errors.map((e) => JSON.stringify(e)).join("\n") + (errors.length ? "\n" : ""));
+  writeFileSync(
+    errorsPath,
+    errors.map((e) => JSON.stringify(e)).join("\n") + (errors.length ? "\n" : ""),
+  );
 
   const fileChecksums: Record<string, string> = {};
   for (const f of readdirSync(awsImportDir)) {

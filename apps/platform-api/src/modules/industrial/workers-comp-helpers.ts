@@ -172,10 +172,7 @@ export function hydrateWorkersCompFromSource(input: {
   })();
 
   const workerName =
-    asText(payload.workerName) ||
-    asText(employee.employeeName) ||
-    asText(employee.name) ||
-    "";
+    asText(payload.workerName) || asText(employee.employeeName) || asText(employee.name) || "";
   const dateOfBirth =
     asText(payload.dateOfBirth).slice(0, 10) ||
     asText(employee.dateOfBirth).slice(0, 10) ||
@@ -205,15 +202,9 @@ export function hydrateWorkersCompFromSource(input: {
         ? "FEMALE"
         : "";
   const locationText =
-    asText(payload.locationText) ||
-    asText(intake.exactLocation) ||
-    asText(payload.site) ||
-    "";
+    asText(payload.locationText) || asText(intake.exactLocation) || asText(payload.site) || "";
   const notes =
-    asText(payload.notes) ||
-    asText(intake.injuryNarrative) ||
-    asText(claim.notes) ||
-    "";
+    asText(payload.notes) || asText(intake.injuryNarrative) || asText(claim.notes) || "";
 
   const reportedRaw =
     asText(intake.incidentDate) ||
@@ -245,8 +236,7 @@ export function hydrateWorkersCompFromSource(input: {
         }
       : null;
 
-  const firebasePersonnelId =
-    asText(payload.personnelId) || asText(employee.personnelId) || "";
+  const firebasePersonnelId = asText(payload.personnelId) || asText(employee.personnelId) || "";
 
   const sourcePayload: Record<string, unknown> = {
     ...payload,
@@ -484,9 +474,7 @@ export function parseWorkersCompWeeklyStatusSettings(
 ): WorkersCompWeeklyStatusSettings {
   const obj = asRecord(raw) ?? {};
   const lastSent =
-    typeof obj.lastSentAt === "string" && obj.lastSentAt.trim()
-      ? obj.lastSentAt.trim()
-      : null;
+    typeof obj.lastSentAt === "string" && obj.lastSentAt.trim() ? obj.lastSentAt.trim() : null;
   return {
     enabled: obj.enabled === true || obj.enabled === "true" || obj.enabled === 1,
     recipients: normalizeEmailRecipients(obj.recipients),
@@ -564,7 +552,10 @@ const BODY_PART_QUALIFIERS = new Set(
  * ("Back dock", "Head office") are not body parts.
  */
 export function looksLikeBodyPartText(value: unknown): boolean {
-  const tokens = asText(value).toLowerCase().split(/[^a-z]+/).filter(Boolean);
+  const tokens = asText(value)
+    .toLowerCase()
+    .split(/[^a-z]+/)
+    .filter(Boolean);
   if (tokens.length === 0) return false;
   let hasBodyWord = false;
   for (const token of tokens) {
@@ -699,7 +690,9 @@ const WC_SEVERITY_LABELS: Record<string, { name: string; osha: string }> = {
 
 /** Severity as a lowercase key (e.g. "Lost Time" → "lost_time"). */
 export function wcSeverityKey(raw: unknown): string {
-  return asText(raw).toLowerCase().replace(/[\s-]+/g, "_");
+  return asText(raw)
+    .toLowerCase()
+    .replace(/[\s-]+/g, "_");
 }
 
 /** Severity name + OSHA classification; unknown legacy values pass through as the name. */
@@ -784,7 +777,9 @@ export function buildWorkersCompWeeklyStatusEmail(input: {
     `Generated ${when}`,
     `Week of ${weekOf}`,
     `Open cases: ${openCount}`,
-    missingWeekly > 0 ? `Missing weekly notes: ${missingWeekly}` : "All open cases have weekly notes",
+    missingWeekly > 0
+      ? `Missing weekly notes: ${missingWeekly}`
+      : "All open cases have weekly notes",
     "",
   ];
   const htmlRows: string[] = [];
@@ -996,7 +991,9 @@ export function deriveOshaOutcomeFromWorkersComp(input: {
   severity?: string;
   caseOutcome?: string | null;
 }): "DEATH" | "DAYS_AWAY" | "JOB_TRANSFER_RESTRICTION" | "OTHER_RECORDABLE" {
-  const explicit = asText(input.caseOutcome).toUpperCase().replace(/[\s-]+/g, "_");
+  const explicit = asText(input.caseOutcome)
+    .toUpperCase()
+    .replace(/[\s-]+/g, "_");
   if (
     explicit === "DEATH" ||
     explicit === "DAYS_AWAY" ||
@@ -1035,9 +1032,7 @@ export function oshaPayloadFromWorkersComp(input: {
 }): Record<string, unknown> {
   const injuryDate = asText(input.claimSummary.dateOfInjury).slice(0, 10);
   const description =
-    asText(input.claimSummary.bodyParts) ||
-    asText(input.claimSummary.notes) ||
-    asText(input.notes);
+    asText(input.claimSummary.bodyParts) || asText(input.claimSummary.notes) || asText(input.notes);
   const outcome = deriveOshaOutcomeFromWorkersComp({
     daysAway: input.daysAway,
     restrictedDays: input.restrictedDays,

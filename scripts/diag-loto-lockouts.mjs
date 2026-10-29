@@ -29,17 +29,21 @@ function unwrap(raw) {
   return {};
 }
 
-const sql = postgres(await (async () => {
-  const client = new SecretsManagerClient({ region: process.env.AWS_REGION || "us-east-1" });
-  const res = await client.send(
-    new GetSecretValueCommand({ SecretId: process.env.DATABASE_SECRET_ARN }),
-  );
-  const raw = JSON.parse(res.SecretString);
-  return `postgresql://${encodeURIComponent(raw.username)}:${encodeURIComponent(raw.password)}@${raw.host ?? raw.hostname}:${raw.port ?? 5432}/${raw.dbname ?? raw.database}`;
-})(), { max: 1 });
+const sql = postgres(
+  await (async () => {
+    const client = new SecretsManagerClient({ region: process.env.AWS_REGION || "us-east-1" });
+    const res = await client.send(
+      new GetSecretValueCommand({ SecretId: process.env.DATABASE_SECRET_ARN }),
+    );
+    const raw = JSON.parse(res.SecretString);
+    return `postgresql://${encodeURIComponent(raw.username)}:${encodeURIComponent(raw.password)}@${raw.host ?? raw.hostname}:${raw.port ?? 5432}/${raw.dbname ?? raw.database}`;
+  })(),
+  { max: 1 },
+);
 
 try {
-  const [tenant] = await sql`select id::text as id from tenants where tenant_key='producers-rice-mill'`;
+  const [tenant] =
+    await sql`select id::text as id from tenants where tenant_key='producers-rice-mill'`;
   const [counts] = await sql`
     select
       count(*)::int as total,
@@ -79,7 +83,8 @@ try {
         sourceDocumentId: row.source_document_id,
         sourceCollection: row.source_collection,
         payloadKeys: Object.keys(p).slice(0, 50),
-        hasAppliedLocks: Array.isArray(p.appliedLocks) || Array.isArray(p.lockItems) || Array.isArray(p.items),
+        hasAppliedLocks:
+          Array.isArray(p.appliedLocks) || Array.isArray(p.lockItems) || Array.isArray(p.items),
         appliedLocksLen: Array.isArray(p.appliedLocks)
           ? p.appliedLocks.length
           : Array.isArray(p.lockItems)

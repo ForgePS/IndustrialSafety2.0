@@ -64,7 +64,10 @@ function toIsoDate(value: unknown): string | null {
   return text;
 }
 
-function classifyDue(dueAt: string | null, now: Date): "overdue" | "dueNow" | "dueToday" | "upcoming" | "none" {
+function classifyDue(
+  dueAt: string | null,
+  now: Date,
+): "overdue" | "dueNow" | "dueToday" | "upcoming" | "none" {
   if (!dueAt) return "none";
   const due = new Date(dueAt);
   if (Number.isNaN(due.getTime())) return "none";
@@ -110,7 +113,10 @@ export class IndustrialMyWorkService {
           .select({ id: industrialSites.id, name: industrialSites.name })
           .from(industrialSites)
           .where(
-            and(eq(industrialSites.tenantId, principal.tenantId), isNull(industrialSites.archivedAt)),
+            and(
+              eq(industrialSites.tenantId, principal.tenantId),
+              isNull(industrialSites.archivedAt),
+            ),
           );
         for (const site of siteRows) {
           siteNameById.set(site.id, site.name);
@@ -185,9 +191,9 @@ export class IndustrialMyWorkService {
             row.sourcePayload && typeof row.sourcePayload === "object"
               ? (row.sourcePayload as Record<string, unknown>)
               : {};
-          const priority =
-            typeof payload.priority === "string" ? payload.priority : null;
-          const locationId = row.siteId ?? (typeof payload.siteId === "string" ? payload.siteId : null);
+          const priority = typeof payload.priority === "string" ? payload.priority : null;
+          const locationId =
+            row.siteId ?? (typeof payload.siteId === "string" ? payload.siteId : null);
           const locationName =
             (locationId ? siteNameById.get(locationId) : null) ??
             (typeof payload.locationName === "string" ? payload.locationName : null);

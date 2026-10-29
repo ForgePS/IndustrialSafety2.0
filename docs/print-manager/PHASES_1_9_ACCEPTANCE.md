@@ -4,17 +4,17 @@ Acceptance checklist against `Forge_Print_Manager_Cursor_Build.md` (§160) using
 
 ## Phase coverage
 
-| Phase | Surface | Status |
-|------|---------|--------|
-| 1 | Print Manager hub (Dashboard / Queue / Printers / Bridges / History) | Done |
-| 2 | Windows bridge registration, publish gate, spooler path | Done — see `forge-printer-bridge/docs/PHASE2_ACCEPTANCE.md` |
-| 3 | Groups, routing rules, failover events | Done — migration `0097` |
-| 4 | Label templates (DRAFT / PUBLISHED / ARCHIVED), version pin on jobs | Done |
-| 5 | ELEMENTS layout, Code 128, ZPL export, Brady PNG, test print | Done |
-| 6 | Batches, stop-on-fail, fleet multi-select print | Done |
-| 7 | Supplies burn-down + analytics endpoints/UI | Done — migration `0098` |
-| 8 | Module `ForgePrintButton` wiring | Done |
-| 9 | Creator print health / feature toggles | Done |
+| Phase | Surface                                                              | Status                                                      |
+| ----- | -------------------------------------------------------------------- | ----------------------------------------------------------- |
+| 1     | Print Manager hub (Dashboard / Queue / Printers / Bridges / History) | Done                                                        |
+| 2     | Windows bridge registration, publish gate, spooler path              | Done — see `forge-printer-bridge/docs/PHASE2_ACCEPTANCE.md` |
+| 3     | Groups, routing rules, failover events                               | Done — migration `0097`                                     |
+| 4     | Label templates (DRAFT / PUBLISHED / ARCHIVED), version pin on jobs  | Done                                                        |
+| 5     | ELEMENTS layout, Code 128, ZPL export, Brady PNG, test print         | Done                                                        |
+| 6     | Batches, stop-on-fail, fleet multi-select print                      | Done                                                        |
+| 7     | Supplies burn-down + analytics endpoints/UI                          | Done — migration `0098`                                     |
+| 8     | Module `ForgePrintButton` wiring                                     | Done                                                        |
+| 9     | Creator print health / feature toggles                               | Done                                                        |
 
 ## §160 acceptance mapping
 
@@ -38,11 +38,11 @@ Acceptance checklist against `Forge_Print_Manager_Cursor_Build.md` (§160) using
 
 Default **ON** unless an explicit tenant override sets the flag to `false` (same rule as industrial bootstrap).
 
-| Key | Gates |
-|-----|--------|
-| `forge.printing.batch.enabled` | `createPrintBatch` |
+| Key                                | Gates                                            |
+| ---------------------------------- | ------------------------------------------------ |
+| `forge.printing.batch.enabled`     | `createPrintBatch`                               |
 | `forge.printing.analytics.enabled` | analytics summary / volume / failures / printers |
-| `forge.printing.supplies.enabled` | supply list / create / patch / replace / delete |
+| `forge.printing.supplies.enabled`  | supply list / create / patch / replace / delete  |
 
 Creator can toggle these from the Printing tab. Platform seed must include `forge.printing.*` definitions (`packages/database/src/seed.ts`).
 

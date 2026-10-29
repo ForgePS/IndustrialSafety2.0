@@ -122,7 +122,12 @@ export class RmsMasterDataService {
     return this.patchResource(tenantId, "rms_station", rmsStations, id, data, principal, expected);
   }
 
-  async deleteStation(tenantId: string, id: string, principal: ForgePrincipal, expected: ExpectedVersion) {
+  async deleteStation(
+    tenantId: string,
+    id: string,
+    principal: ForgePrincipal,
+    expected: ExpectedVersion,
+  ) {
     return this.softDelete(tenantId, "rms_station", rmsStations, id, principal, expected);
   }
 
@@ -160,7 +165,12 @@ export class RmsMasterDataService {
     return this.patchResource(tenantId, "rms_shift", rmsShifts, id, data, principal, expected);
   }
 
-  async deleteShift(tenantId: string, id: string, principal: ForgePrincipal, expected: ExpectedVersion) {
+  async deleteShift(
+    tenantId: string,
+    id: string,
+    principal: ForgePrincipal,
+    expected: ExpectedVersion,
+  ) {
     return this.softDelete(tenantId, "rms_shift", rmsShifts, id, principal, expected);
   }
 
@@ -201,7 +211,15 @@ export class RmsMasterDataService {
     expected: ExpectedVersion,
   ) {
     const data = patchFromCreate(createApparatusInputSchema).parse(input);
-    return this.patchResource(tenantId, "rms_apparatus", rmsApparatus, id, data, principal, expected);
+    return this.patchResource(
+      tenantId,
+      "rms_apparatus",
+      rmsApparatus,
+      id,
+      data,
+      principal,
+      expected,
+    );
   }
 
   async deleteApparatus(
@@ -230,11 +248,7 @@ export class RmsMasterDataService {
   async listUnits(tenantId: string, query: unknown) {
     const { page, pageSize, search } = pageQuerySchema.parse(query ?? {});
     return this.listResource(tenantId, rmsUnits, page, pageSize, search, (q) =>
-      or(
-        ilike(rmsUnits.unitNumber, q),
-        ilike(rmsUnits.callSign, q),
-        ilike(rmsUnits.unitType, q),
-      ),
+      or(ilike(rmsUnits.unitNumber, q), ilike(rmsUnits.callSign, q), ilike(rmsUnits.unitType, q)),
     );
   }
 
@@ -253,7 +267,12 @@ export class RmsMasterDataService {
     return this.patchResource(tenantId, "rms_unit", rmsUnits, id, data, principal, expected);
   }
 
-  async deleteUnit(tenantId: string, id: string, principal: ForgePrincipal, expected: ExpectedVersion) {
+  async deleteUnit(
+    tenantId: string,
+    id: string,
+    principal: ForgePrincipal,
+    expected: ExpectedVersion,
+  ) {
     return this.softDelete(tenantId, "rms_unit", rmsUnits, id, principal, expected);
   }
 
@@ -291,7 +310,15 @@ export class RmsMasterDataService {
     expected: ExpectedVersion,
   ) {
     const data = patchFromCreate(createRmsPersonnelInputSchema).parse(input);
-    return this.patchResource(tenantId, "rms_personnel", rmsPersonnel, id, data, principal, expected);
+    return this.patchResource(
+      tenantId,
+      "rms_personnel",
+      rmsPersonnel,
+      id,
+      data,
+      principal,
+      expected,
+    );
   }
 
   async deletePersonnel(
@@ -420,28 +447,33 @@ export class RmsMasterDataService {
 
   async createRoster(tenantId: string, input: unknown, principal: ForgePrincipal) {
     const data = rosterCreateSchema.parse(input);
-    return withTenantTransaction(this.db, tenantId, async (tx) => {
-      const id = createId();
-      const now = new Date();
-      const [row] = await tx
-        .insert(rmsDailyRosters)
-        .values({
-          id,
-          tenantId,
-          rosterDate: data.rosterDate,
-          shiftId: data.shiftId,
-          stationId: data.stationId,
-          status: data.status,
-          createdByUserId: principal.userId,
-          updatedByUserId: principal.userId,
-          createdAt: now,
-          updatedAt: now,
-        })
-        .returning();
-      if (!row) throw new ForgeError("INTERNAL_ERROR", "Failed to create roster");
-      await this.emitMasterDataUpdated(tx, tenantId, "rms_roster", id, principal, "create");
-      return row;
-    }, principal.userId);
+    return withTenantTransaction(
+      this.db,
+      tenantId,
+      async (tx) => {
+        const id = createId();
+        const now = new Date();
+        const [row] = await tx
+          .insert(rmsDailyRosters)
+          .values({
+            id,
+            tenantId,
+            rosterDate: data.rosterDate,
+            shiftId: data.shiftId,
+            stationId: data.stationId,
+            status: data.status,
+            createdByUserId: principal.userId,
+            updatedByUserId: principal.userId,
+            createdAt: now,
+            updatedAt: now,
+          })
+          .returning();
+        if (!row) throw new ForgeError("INTERNAL_ERROR", "Failed to create roster");
+        await this.emitMasterDataUpdated(tx, tenantId, "rms_roster", id, principal, "create");
+        return row;
+      },
+      principal.userId,
+    );
   }
 
   async listRosters(tenantId: string, query: unknown) {
@@ -481,57 +513,79 @@ export class RmsMasterDataService {
     principal: ForgePrincipal,
   ) {
     const data = rosterAssignmentSchema.parse(input);
-    return withTenantTransaction(this.db, tenantId, async (tx) => {
-      const roster = await tx.query.rmsDailyRosters.findFirst({
-        where: and(eq(rmsDailyRosters.id, rosterId), eq(rmsDailyRosters.tenantId, tenantId)),
-      });
-      if (!roster) throw new ForgeError("NOT_FOUND", "Roster not found");
-      const id = createId();
-      const now = new Date();
-      const [row] = await tx
-        .insert(rmsRosterAssignments)
-        .values({
-          id,
+    return withTenantTransaction(
+      this.db,
+      tenantId,
+      async (tx) => {
+        const roster = await tx.query.rmsDailyRosters.findFirst({
+          where: and(eq(rmsDailyRosters.id, rosterId), eq(rmsDailyRosters.tenantId, tenantId)),
+        });
+        if (!roster) throw new ForgeError("NOT_FOUND", "Roster not found");
+        const id = createId();
+        const now = new Date();
+        const [row] = await tx
+          .insert(rmsRosterAssignments)
+          .values({
+            id,
+            tenantId,
+            rosterId,
+            personnelId: data.personnelId,
+            unitId: data.unitId,
+            assignmentRole: data.assignmentRole,
+            isOfficer: data.isOfficer,
+            incidentCommanderEligible: data.incidentCommanderEligible,
+            createdByUserId: principal.userId,
+            updatedByUserId: principal.userId,
+            createdAt: now,
+            updatedAt: now,
+          })
+          .returning();
+        if (!row) throw new ForgeError("INTERNAL_ERROR", "Failed to create roster assignment");
+        await this.emitMasterDataUpdated(
+          tx,
           tenantId,
-          rosterId,
-          personnelId: data.personnelId,
-          unitId: data.unitId,
-          assignmentRole: data.assignmentRole,
-          isOfficer: data.isOfficer,
-          incidentCommanderEligible: data.incidentCommanderEligible,
-          createdByUserId: principal.userId,
-          updatedByUserId: principal.userId,
-          createdAt: now,
-          updatedAt: now,
-        })
-        .returning();
-      if (!row) throw new ForgeError("INTERNAL_ERROR", "Failed to create roster assignment");
-      await this.emitMasterDataUpdated(tx, tenantId, "rms_roster_assignment", id, principal, "create");
-      return row;
-    }, principal.userId);
+          "rms_roster_assignment",
+          id,
+          principal,
+          "create",
+        );
+        return row;
+      },
+      principal.userId,
+    );
   }
 
-  async removeRosterAssignment(tenantId: string, rosterId: string, assignmentId: string, principal: ForgePrincipal) {
-    return withTenantTransaction(this.db, tenantId, async (tx) => {
-      const assignment = await tx.query.rmsRosterAssignments.findFirst({
-        where: and(
-          eq(rmsRosterAssignments.id, assignmentId),
-          eq(rmsRosterAssignments.rosterId, rosterId),
-          eq(rmsRosterAssignments.tenantId, tenantId),
-        ),
-      });
-      if (!assignment) throw new ForgeError("NOT_FOUND", "Roster assignment not found");
-      await tx.delete(rmsRosterAssignments).where(eq(rmsRosterAssignments.id, assignmentId));
-      await this.emitMasterDataUpdated(
-        tx,
-        tenantId,
-        "rms_roster_assignment",
-        assignmentId,
-        principal,
-        "delete",
-      );
-      return { deleted: true, assignmentId };
-    }, principal.userId);
+  async removeRosterAssignment(
+    tenantId: string,
+    rosterId: string,
+    assignmentId: string,
+    principal: ForgePrincipal,
+  ) {
+    return withTenantTransaction(
+      this.db,
+      tenantId,
+      async (tx) => {
+        const assignment = await tx.query.rmsRosterAssignments.findFirst({
+          where: and(
+            eq(rmsRosterAssignments.id, assignmentId),
+            eq(rmsRosterAssignments.rosterId, rosterId),
+            eq(rmsRosterAssignments.tenantId, tenantId),
+          ),
+        });
+        if (!assignment) throw new ForgeError("NOT_FOUND", "Roster assignment not found");
+        await tx.delete(rmsRosterAssignments).where(eq(rmsRosterAssignments.id, assignmentId));
+        await this.emitMasterDataUpdated(
+          tx,
+          tenantId,
+          "rms_roster_assignment",
+          assignmentId,
+          principal,
+          "delete",
+        );
+        return { deleted: true, assignmentId };
+      },
+      principal.userId,
+    );
   }
 
   // --- shared helpers ---
@@ -544,25 +598,30 @@ export class RmsMasterDataService {
     principal: ForgePrincipal,
     values: T,
   ) {
-    return withTenantTransaction(this.db, tenantId, async (tx) => {
-      const id = createId();
-      const now = new Date();
-      const [row] = await tx
-        .insert(table)
-        .values({
-          id,
-          tenantId,
-          ...values,
-          createdByUserId: principal.userId,
-          updatedByUserId: principal.userId,
-          createdAt: now,
-          updatedAt: now,
-        } as never)
-        .returning();
-      if (!row) throw new ForgeError("INTERNAL_ERROR", `Failed to create ${resourceType}`);
-      await this.emitMasterDataUpdated(tx, tenantId, resourceType, id, principal, "create", row);
-      return row;
-    }, principal.userId);
+    return withTenantTransaction(
+      this.db,
+      tenantId,
+      async (tx) => {
+        const id = createId();
+        const now = new Date();
+        const [row] = await tx
+          .insert(table)
+          .values({
+            id,
+            tenantId,
+            ...values,
+            createdByUserId: principal.userId,
+            updatedByUserId: principal.userId,
+            createdAt: now,
+            updatedAt: now,
+          } as never)
+          .returning();
+        if (!row) throw new ForgeError("INTERNAL_ERROR", `Failed to create ${resourceType}`);
+        await this.emitMasterDataUpdated(tx, tenantId, resourceType, id, principal, "create", row);
+        return row;
+      },
+      principal.userId,
+    );
   }
 
   private async listResource(
@@ -586,7 +645,12 @@ export class RmsMasterDataService {
     });
   }
 
-  private async getResource(tenantId: string, table: RmsResourceTable, id: string, resourceType: string) {
+  private async getResource(
+    tenantId: string,
+    table: RmsResourceTable,
+    id: string,
+    resourceType: string,
+  ) {
     return withTenantTransaction(this.db, tenantId, async (tx) => {
       const [row] = await tx
         .select()
@@ -607,45 +671,59 @@ export class RmsMasterDataService {
     principal: ForgePrincipal,
     expected: ExpectedVersion,
   ) {
-    return withTenantTransaction(this.db, tenantId, async (tx) => {
-      const [before] = await tx
-        .select()
-        .from(table)
-        .where(and(eq(table.id, id), eq(table.tenantId, tenantId), isNull(table.deletedAt)))
-        .limit(1);
-      if (!before) throw new ForgeError("NOT_FOUND", `${resourceType} not found`);
-      const version = (before as RmsResourceRow).recordVersion;
-      if (expected !== "*" && version !== expected) {
-        throw concurrencyConflict({
+    return withTenantTransaction(
+      this.db,
+      tenantId,
+      async (tx) => {
+        const [before] = await tx
+          .select()
+          .from(table)
+          .where(and(eq(table.id, id), eq(table.tenantId, tenantId), isNull(table.deletedAt)))
+          .limit(1);
+        if (!before) throw new ForgeError("NOT_FOUND", `${resourceType} not found`);
+        const version = (before as RmsResourceRow).recordVersion;
+        if (expected !== "*" && version !== expected) {
+          throw concurrencyConflict({
+            tenantId,
+            resourceType,
+            resourceId: id,
+            expectedVersion: expected,
+            actualVersion: version,
+          });
+        }
+        const [updated] = await tx
+          .update(table)
+          .set({
+            ...data,
+            recordVersion: version + 1,
+            updatedByUserId: principal.userId,
+            updatedAt: new Date(),
+          } as never)
+          .where(and(eq(table.id, id), eq(table.recordVersion, version)))
+          .returning();
+        if (!updated) {
+          throw concurrencyConflict({
+            tenantId,
+            resourceType,
+            resourceId: id,
+            expectedVersion: expected,
+            actualVersion: null,
+          });
+        }
+        await this.emitMasterDataUpdated(
+          tx,
           tenantId,
           resourceType,
-          resourceId: id,
-          expectedVersion: expected,
-          actualVersion: version,
-        });
-      }
-      const [updated] = await tx
-        .update(table)
-        .set({
-          ...data,
-          recordVersion: version + 1,
-          updatedByUserId: principal.userId,
-          updatedAt: new Date(),
-        } as never)
-        .where(and(eq(table.id, id), eq(table.recordVersion, version)))
-        .returning();
-      if (!updated) {
-        throw concurrencyConflict({
-          tenantId,
-          resourceType,
-          resourceId: id,
-          expectedVersion: expected,
-          actualVersion: null,
-        });
-      }
-      await this.emitMasterDataUpdated(tx, tenantId, resourceType, id, principal, "update", updated, before);
-      return updated;
-    }, principal.userId);
+          id,
+          principal,
+          "update",
+          updated,
+          before,
+        );
+        return updated;
+      },
+      principal.userId,
+    );
   }
 
   private async softDelete(
@@ -656,47 +734,61 @@ export class RmsMasterDataService {
     principal: ForgePrincipal,
     expected: ExpectedVersion,
   ) {
-    return withTenantTransaction(this.db, tenantId, async (tx) => {
-      const [before] = await tx
-        .select()
-        .from(table)
-        .where(and(eq(table.id, id), eq(table.tenantId, tenantId), isNull(table.deletedAt)))
-        .limit(1);
-      if (!before) throw new ForgeError("NOT_FOUND", `${resourceType} not found`);
-      const version = (before as RmsResourceRow).recordVersion;
-      if (expected !== "*" && version !== expected) {
-        throw concurrencyConflict({
+    return withTenantTransaction(
+      this.db,
+      tenantId,
+      async (tx) => {
+        const [before] = await tx
+          .select()
+          .from(table)
+          .where(and(eq(table.id, id), eq(table.tenantId, tenantId), isNull(table.deletedAt)))
+          .limit(1);
+        if (!before) throw new ForgeError("NOT_FOUND", `${resourceType} not found`);
+        const version = (before as RmsResourceRow).recordVersion;
+        if (expected !== "*" && version !== expected) {
+          throw concurrencyConflict({
+            tenantId,
+            resourceType,
+            resourceId: id,
+            expectedVersion: expected,
+            actualVersion: version,
+          });
+        }
+        const now = new Date();
+        const [updated] = await tx
+          .update(table)
+          .set({
+            deletedAt: now,
+            deletedByUserId: principal.userId,
+            recordVersion: version + 1,
+            updatedByUserId: principal.userId,
+            updatedAt: now,
+          } as never)
+          .where(and(eq(table.id, id), eq(table.recordVersion, version)))
+          .returning();
+        if (!updated) {
+          throw concurrencyConflict({
+            tenantId,
+            resourceType,
+            resourceId: id,
+            expectedVersion: expected,
+            actualVersion: null,
+          });
+        }
+        await this.emitMasterDataUpdated(
+          tx,
           tenantId,
           resourceType,
-          resourceId: id,
-          expectedVersion: expected,
-          actualVersion: version,
-        });
-      }
-      const now = new Date();
-      const [updated] = await tx
-        .update(table)
-        .set({
-          deletedAt: now,
-          deletedByUserId: principal.userId,
-          recordVersion: version + 1,
-          updatedByUserId: principal.userId,
-          updatedAt: now,
-        } as never)
-        .where(and(eq(table.id, id), eq(table.recordVersion, version)))
-        .returning();
-      if (!updated) {
-        throw concurrencyConflict({
-          tenantId,
-          resourceType,
-          resourceId: id,
-          expectedVersion: expected,
-          actualVersion: null,
-        });
-      }
-      await this.emitMasterDataUpdated(tx, tenantId, resourceType, id, principal, "delete", updated, before);
-      return updated;
-    }, principal.userId);
+          id,
+          principal,
+          "delete",
+          updated,
+          before,
+        );
+        return updated;
+      },
+      principal.userId,
+    );
   }
 
   private async emitMasterDataUpdated(

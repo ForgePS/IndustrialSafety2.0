@@ -12,10 +12,7 @@ export class PublicBrandingController {
   @Get("api/v1/public/login-branding")
   @Public()
   @Header("Cache-Control", "public, max-age=60")
-  async loginBrandingByHost(
-    @Query("host") host: string | undefined,
-    @Req() req: RequestWithIds,
-  ) {
+  async loginBrandingByHost(@Query("host") host: string | undefined, @Req() req: RequestWithIds) {
     const data = await this.loginBranding.byHost(host);
     return ok(data, getRequestIds(req));
   }

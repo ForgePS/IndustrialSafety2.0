@@ -17,9 +17,11 @@ const CLUSTER = "forge-production-ecs-platform";
 const API_SERVICE = "forge-production-ecs-platform-api";
 const API_ECR = `${ACCOUNT}.dkr.ecr.${REGION}.amazonaws.com/forge-production-ecr-platformapi`;
 
-const skipWeb =
-  process.argv.includes("--skip-web") || process.argv.includes("--api-only");
-const stamp = new Date().toISOString().replace(/[-:TZ.]/g, "").slice(0, 14);
+const skipWeb = process.argv.includes("--skip-web") || process.argv.includes("--api-only");
+const stamp = new Date()
+  .toISOString()
+  .replace(/[-:TZ.]/g, "")
+  .slice(0, 14);
 const tag = process.env.DEPLOY_TAG || `wc-carrier-crud-${stamp}`;
 
 function sh(cmd, opts = {}) {

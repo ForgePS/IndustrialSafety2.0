@@ -6,10 +6,10 @@
 
 ## Services
 
-| Service | Role |
-| --- | --- |
-| `worker-service` (outbox) | Polls `outbox_events`, publishes to EventBridge |
-| Integration worker (ECS) | Consumes SQS, runs typed handlers with `event_processing_records` dedup |
+| Service                   | Role                                                                    |
+| ------------------------- | ----------------------------------------------------------------------- |
+| `worker-service` (outbox) | Polls `outbox_events`, publishes to EventBridge                         |
+| Integration worker (ECS)  | Consumes SQS, runs typed handlers with `event_processing_records` dedup |
 
 Development steady state: worker desired count **0** for cost control. Enable temporarily for pipeline proof.
 
@@ -23,13 +23,13 @@ Development steady state: worker desired count **0** for cost control. Enable te
 
 ## Outbox publisher triage
 
-| Step | Action |
-| --- | --- |
-| 1 | Count pending outbox rows (tenant-scoped query via admin session) |
-| 2 | Check worker ECS service desired/running count |
-| 3 | Inspect worker logs for EventBridge `AccessDenied` or network errors |
-| 4 | Verify `EVENT_BUS_NAME` / `EVENTBRIDGE_BUS_NAME` and `AWS_REGION` |
-| 5 | Confirm `DATABASE_URL` reachable from worker task |
+| Step | Action                                                               |
+| ---- | -------------------------------------------------------------------- |
+| 1    | Count pending outbox rows (tenant-scoped query via admin session)    |
+| 2    | Check worker ECS service desired/running count                       |
+| 3    | Inspect worker logs for EventBridge `AccessDenied` or network errors |
+| 4    | Verify `EVENT_BUS_NAME` / `EVENTBRIDGE_BUS_NAME` and `AWS_REGION`    |
+| 5    | Confirm `DATABASE_URL` reachable from worker task                    |
 
 ### Outbox behavior
 
@@ -62,13 +62,13 @@ pnpm worker:disable:development
 
 ## Integration worker triage
 
-| Step | Action |
-| --- | --- |
-| 1 | Check SQS approximate message count and DLQ depth |
-| 2 | Inspect worker logs for handler exceptions |
-| 3 | Verify handler registered for event `type` |
-| 4 | Check `event_processing_records` for stuck IN_PROGRESS rows |
-| 5 | Confirm event includes valid `tenantId` for tenant handlers |
+| Step | Action                                                      |
+| ---- | ----------------------------------------------------------- |
+| 1    | Check SQS approximate message count and DLQ depth           |
+| 2    | Inspect worker logs for handler exceptions                  |
+| 3    | Verify handler registered for event `type`                  |
+| 4    | Check `event_processing_records` for stuck IN_PROGRESS rows |
+| 5    | Confirm event includes valid `tenantId` for tenant handlers |
 
 Handlers must run inside `withTenantTransaction`. Malformed or tenantless events go to DLQ ([ADR-024](../decisions/ADR-024-event-processing-idempotency.md)).
 

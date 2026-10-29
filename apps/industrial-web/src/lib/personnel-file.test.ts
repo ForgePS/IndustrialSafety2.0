@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import {
   buildPersonnelFile,
   formatFileDate,
@@ -35,12 +35,12 @@ describe("buildPersonnelFile", () => {
   });
 
   it("uses free-text site/department from roster imports when FKs are blank", () => {
-    expect(
-      groupById({ site: "GREENVILLE", department: "GREENVILLE" }, "assignment")?.rows,
-    ).toEqual([
-      { label: "Location", value: "GREENVILLE", wide: false },
-      { label: "Department", value: "GREENVILLE", wide: false },
-    ]);
+    expect(groupById({ site: "GREENVILLE", department: "GREENVILLE" }, "assignment")?.rows).toEqual(
+      [
+        { label: "Location", value: "GREENVILLE", wide: false },
+        { label: "Department", value: "GREENVILLE", wide: false },
+      ],
+    );
   });
 
   it("reads legacy roster location keys on the personnel file", () => {
@@ -89,7 +89,14 @@ describe("buildPersonnelFile", () => {
     });
   });
 
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
   it("shows PPE allowance fields when set", () => {
+    // Expiry labels are relative to today; pin the clock so the test does not age out.
+    vi.useFakeTimers({ toFake: ["Date"] });
+    vi.setSystemTime(new Date("2026-08-15T12:00:00Z"));
     expect(
       groupById(
         {
@@ -140,7 +147,9 @@ describe("buildPersonnelFile", () => {
   });
 
   it("drops the notes section when it holds only import provenance", () => {
-    expect(groupById({ notes: "Synced from employee roster (roster.xlsx)." }, "notes")).toBeUndefined();
+    expect(
+      groupById({ notes: "Synced from employee roster (roster.xlsx)." }, "notes"),
+    ).toBeUndefined();
   });
 });
 

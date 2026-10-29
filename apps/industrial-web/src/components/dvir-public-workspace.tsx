@@ -57,13 +57,21 @@ type DvirContext = {
 type PublicScreen = "hub" | "pre" | "post" | "history" | "view";
 
 function parseTripQuery(raw: string | null): DvirTripType | null {
-  const value = String(raw ?? "").trim().toUpperCase();
+  const value = String(raw ?? "")
+    .trim()
+    .toUpperCase();
   if (value === "POST_TRIP" || value === "POST") return "POST_TRIP";
   if (value === "PRE_TRIP" || value === "PRE") return "PRE_TRIP";
   return null;
 }
 
-function DvirPublicForm({ token, initialTrip }: { token: string; initialTrip: DvirTripType | null }) {
+function DvirPublicForm({
+  token,
+  initialTrip,
+}: {
+  token: string;
+  initialTrip: DvirTripType | null;
+}) {
   const [context, setContext] = useState<DvirContext | null>(null);
   // Open the inspection form immediately — drivers should not land on a menu after scanning.
   const [screen, setScreen] = useState<PublicScreen>(() =>
@@ -205,15 +213,11 @@ function DvirPublicForm({ token, initialTrip }: { token: string; initialTrip: Dv
     setBusy(true);
     setError(null);
     try {
-      await apiSend(
-        `/api/v1/public/dvir/${encodeURIComponent(token)}/driver-review`,
-        "POST",
-        {
-          dvirId: activeReviewId,
-          driverReviewSignatureDataUrl: reviewSig,
-          driverReviewSignedAt: isoFromLocalDateString(reviewSigDate),
-        },
-      );
+      await apiSend(`/api/v1/public/dvir/${encodeURIComponent(token)}/driver-review`, "POST", {
+        dvirId: activeReviewId,
+        driverReviewSignatureDataUrl: reviewSig,
+        driverReviewSignedAt: isoFromLocalDateString(reviewSigDate),
+      });
       setReviewDone(true);
       setReviewSig("");
       await loadContext();
@@ -263,7 +267,9 @@ function DvirPublicForm({ token, initialTrip }: { token: string; initialTrip: Dv
                   <div className="fw-semibold">{context.truckNumber}</div>
                   {context.siteName ? <div className="small">{context.siteName}</div> : null}
                   {context.outOfService ? (
-                    <div className="small text-danger mt-1">This unit is marked out of service.</div>
+                    <div className="small text-danger mt-1">
+                      This unit is marked out of service.
+                    </div>
                   ) : null}
                 </div>
               ) : null}
@@ -341,8 +347,8 @@ function DvirPublicForm({ token, initialTrip }: { token: string; initialTrip: Dv
                   <div className="fw-semibold">{resultTitle ?? "DVIR"} submitted. Thank you.</div>
                   {hadDefects ? (
                     <p className="small mb-0 mt-2">
-                      Defects were reported. A mechanic must certify repairs in DOT Compliance. After
-                      that, return to this QR link to sign DRIVER review below.
+                      Defects were reported. A mechanic must certify repairs in DOT Compliance.
+                      After that, return to this QR link to sign DRIVER review below.
                     </p>
                   ) : null}
                   <button
@@ -370,8 +376,8 @@ function DvirPublicForm({ token, initialTrip }: { token: string; initialTrip: Dv
                   </div>
                   <div className="card-body">
                     <p className="text-muted small mb-3">
-                      Mechanic certification is complete. Sign below to acknowledge defect disposition
-                      before operating this vehicle.
+                      Mechanic certification is complete. Sign below to acknowledge defect
+                      disposition before operating this vehicle.
                     </p>
                     {pendingReviews.length > 1 ? (
                       <div className="mb-3">

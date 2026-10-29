@@ -31,9 +31,7 @@ export function resolveAuthSessionEncryptionKey(appEnv: string, envValue?: strin
 
   const allowInsecure = appEnv === "local" || appEnv === "testing";
   if (!allowInsecure) {
-    throw new Error(
-      `${KEY_ENV} must be set to a base64-encoded 32-byte key outside local/testing`,
-    );
+    throw new Error(`${KEY_ENV} must be set to a base64-encoded 32-byte key outside local/testing`);
   }
 
   if (!warnedMissingKey) {
@@ -62,10 +60,7 @@ export function encryptRefreshToken(plaintext: string, key: Buffer): EncryptedRe
   };
 }
 
-export function decryptRefreshToken(
-  encrypted: EncryptedRefreshToken,
-  key: Buffer,
-): string {
+export function decryptRefreshToken(encrypted: EncryptedRefreshToken, key: Buffer): string {
   const blob = Buffer.from(encrypted.ciphertextBase64, "base64");
   if (blob.length < 17) {
     throw new Error("Invalid refresh token ciphertext");

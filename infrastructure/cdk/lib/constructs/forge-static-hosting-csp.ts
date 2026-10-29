@@ -29,10 +29,7 @@ export function cognitoConnectSrcExtras(input: {
   region: string;
 }): string[] {
   const cognitoHost = `forge-${input.environmentName}-${input.account.slice(-6)}.auth.${input.region}.amazoncognito.com`;
-  return [
-    `https://${cognitoHost}`,
-    `https://cognito-idp.${input.region}.amazonaws.com`,
-  ];
+  return [`https://${cognitoHost}`, `https://cognito-idp.${input.region}.amazonaws.com`];
 }
 
 /**
@@ -106,15 +103,16 @@ export function buildLegacyHostRedirectSnippet(
   const pairs = (redirects ?? [])
     .map((r) => ({
       from: r.from.trim().toLowerCase(),
-      to: r.to.trim().toLowerCase().replace(/^https?:\/\//i, ""),
+      to: r.to
+        .trim()
+        .toLowerCase()
+        .replace(/^https?:\/\//i, ""),
     }))
     .filter((r) => r.from && r.to && r.from !== r.to);
   if (pairs.length === 0) return "";
 
   const mapEntries = pairs.map((r) => `    '${r.from}': '${r.to}'`).join(",\n");
-  const stripKeysObject = LEGACY_REDIRECT_STRIP_QUERY_PARAMS.map(
-    (k) => ` '${k}': true`,
-  ).join(",");
+  const stripKeysObject = LEGACY_REDIRECT_STRIP_QUERY_PARAMS.map((k) => ` '${k}': true`).join(",");
 
   return `
   // FIS-L02: permanent redirect for legacy vanity hosts (aliases kept via cf-alias scripts).

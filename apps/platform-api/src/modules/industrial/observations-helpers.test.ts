@@ -129,7 +129,10 @@ describe("observations helpers", () => {
   });
 
   it("parses recipient lists and detects assignee changes", () => {
-    expect(normalizeObservationRecipients("a@x.com; b@x.com, a@x.com bad")).toEqual(["a@x.com", "b@x.com"]);
+    expect(normalizeObservationRecipients("a@x.com; b@x.com, a@x.com bad")).toEqual([
+      "a@x.com",
+      "b@x.com",
+    ]);
     expect(normalizeObservationRecipients(undefined)).toEqual([]);
     expect(observationAssigneeKey({ assignedToPersonnelId: "p1", assignedToName: "A" })).toBe(
       observationAssigneeKey({ assignedToPersonnelId: "p1", assignedToName: "Renamed" }),
@@ -138,9 +141,16 @@ describe("observations helpers", () => {
   });
 
   it("caps the email log", () => {
-    const entry = { to: ["a@x.com"], sentAt: "t", sentByUserId: null, sentByName: "Me", accepted: true };
+    const entry = {
+      to: ["a@x.com"],
+      sentAt: "t",
+      sentByUserId: null,
+      sentByName: "Me",
+      accepted: true,
+    };
     let payload: Record<string, unknown> = {};
-    for (let i = 0; i < 60; i += 1) payload = { emailLog: appendObservationEmailLog(payload, entry) };
+    for (let i = 0; i < 60; i += 1)
+      payload = { emailLog: appendObservationEmailLog(payload, entry) };
     expect((payload.emailLog as unknown[]).length).toBe(50);
   });
 
@@ -169,7 +179,9 @@ describe("observations helpers", () => {
     expect(email.htmlBody).toContain("2 attached");
     expect(email.htmlBody).toContain("Open</td>");
     expect(email.textBody).toContain("Please follow up");
-    expect(email.textBody).toContain("https://acme.forgeindustrialsafety.com/modules/observations/?id=1");
+    expect(email.textBody).toContain(
+      "https://acme.forgeindustrialsafety.com/modules/observations/?id=1",
+    );
   });
 
   it("puts the no-login follow-up form first when a follow-up link is given", () => {
@@ -197,10 +209,13 @@ describe("observations helpers", () => {
     const payload = { followUpTokens: addObservationFollowUpToken({}, hash, now) };
     expect(observationFollowUpTokenValid(payload, hash, now)).toBe(true);
     expect(observationFollowUpTokenValid(payload, "other", now)).toBe(false);
-    expect(observationFollowUpTokenValid(payload, hash, new Date("2026-06-01T00:00:00Z"))).toBe(false);
+    expect(observationFollowUpTokenValid(payload, hash, new Date("2026-06-01T00:00:00Z"))).toBe(
+      false,
+    );
 
     let many: Record<string, unknown> = {};
-    for (let i = 0; i < 15; i += 1) many = { followUpTokens: addObservationFollowUpToken(many, `h${i}`, now) };
+    for (let i = 0; i < 15; i += 1)
+      many = { followUpTokens: addObservationFollowUpToken(many, `h${i}`, now) };
     expect((many.followUpTokens as unknown[]).length).toBe(10);
   });
 
@@ -216,11 +231,14 @@ describe("observations helpers", () => {
     expect(observedPersonAtFault({ ...bob!, atFault: true }, "GOOD_CATCH")).toBe(false);
     expect(observedPersonAtFault({ ...bob!, atFault: true }, "NEAR_MISS")).toBe(true);
 
-    const toggled = applyObservedPeopleFault([jane!, bob!], [
-      { key: "p1", atFault: true },
-      { key: observedPersonKey(bob!), atFault: false },
-      { key: "missing", atFault: true },
-    ]);
+    const toggled = applyObservedPeopleFault(
+      [jane!, bob!],
+      [
+        { key: "p1", atFault: true },
+        { key: observedPersonKey(bob!), atFault: false },
+        { key: "missing", atFault: true },
+      ],
+    );
     expect(toggled.map((p) => p.atFault)).toEqual([true, false]);
   });
 
@@ -237,18 +255,42 @@ describe("observations helpers", () => {
       positiveCount: 8,
       now,
     });
-    expect(fresh).toMatchObject({ deduction: 14, credit: 5, unsafeCount: 3, unsafeOpen: 2, daysClean: 2, recoveryStep: 0 });
+    expect(fresh).toMatchObject({
+      deduction: 14,
+      credit: 5,
+      unsafeCount: 3,
+      unsafeOpen: 2,
+      daysClean: 2,
+      recoveryStep: 0,
+    });
 
     const one = [{ riskLevel: "high", status: "OPEN", at: daysAgo(45) }];
     expect(computeObservationScoreImpact({ unsafe: one, positiveCount: 0, now })).toMatchObject({
       deduction: 4,
       recoveryStep: 1,
     });
-    expect(computeObservationScoreImpact({ unsafe: [{ ...one[0]!, at: daysAgo(70) }], positiveCount: 0, now }).deduction).toBe(2);
-    expect(computeObservationScoreImpact({ unsafe: [{ ...one[0]!, at: daysAgo(95) }], positiveCount: 0, now }).deduction).toBe(0);
+    expect(
+      computeObservationScoreImpact({
+        unsafe: [{ ...one[0]!, at: daysAgo(70) }],
+        positiveCount: 0,
+        now,
+      }).deduction,
+    ).toBe(2);
+    expect(
+      computeObservationScoreImpact({
+        unsafe: [{ ...one[0]!, at: daysAgo(95) }],
+        positiveCount: 0,
+        now,
+      }).deduction,
+    ).toBe(0);
     // A newer incident restarts the clean-time clock.
     expect(
-      computeObservationScoreImpact({ unsafe: [{ ...one[0]!, at: daysAgo(95) }], positiveCount: 0, incidentDates: [daysAgo(3)], now }),
+      computeObservationScoreImpact({
+        unsafe: [{ ...one[0]!, at: daysAgo(95) }],
+        positiveCount: 0,
+        incidentDates: [daysAgo(3)],
+        now,
+      }),
     ).toMatchObject({ deduction: 6, daysClean: 3, recoveryStep: 0 });
   });
 
@@ -269,7 +311,11 @@ describe("observations helpers", () => {
     expect(observationFollowUpMissing(first)).toMatch(/date/i);
 
     const merged = normalizeObservationFollowUp(
-      { completedDate: "2026-01-02", completedByName: "Pat", signatureDataUrl: "data:image/png;base64,S" },
+      {
+        completedDate: "2026-01-02",
+        completedByName: "Pat",
+        signatureDataUrl: "data:image/png;base64,S",
+      },
       { ...first, savedAt: "2026-01-01T00:00:00Z" },
     );
     expect(merged.correctiveAction).toBe("Coached on glasses");

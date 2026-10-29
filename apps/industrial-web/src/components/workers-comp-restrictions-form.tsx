@@ -41,8 +41,8 @@ export function WorkersCompRestrictionsForm({
   return (
     <div className="wc-restrictions-form">
       <p className="small text-muted mb-3">
-        During the workday, injured worker may: (notate all pertinent instructions for
-        restrictions, including Part A, B &amp; C as applicable.)
+        During the workday, injured worker may: (notate all pertinent instructions for restrictions,
+        including Part A, B &amp; C as applicable.)
       </p>
 
       <div className="mb-4">
@@ -90,6 +90,7 @@ export function WorkersCompRestrictionsForm({
         </div>
         <div className="d-flex flex-column gap-2">
           {WC_LIFTING_OPTIONS.map((opt) => (
+            // eslint-disable-next-line jsx-a11y/label-has-associated-control -- wraps its radio; text is in nested spans deeper than the rule scans
             <label key={opt.id} className="form-check">
               <input
                 type="radio"
@@ -180,9 +181,7 @@ export function WorkersCompRestrictionsForm({
                     }
                   />
                   <span className="form-check-label">
-                    {opt.id === "limit-push-pull"
-                      ? "Limiting Push/Pull activities to"
-                      : opt.label}
+                    {opt.id === "limit-push-pull" ? "Limiting Push/Pull activities to" : opt.label}
                   </span>
                 </label>
                 {opt.id === "limit-push-pull" ? (
@@ -321,9 +320,7 @@ export function WorkersCompRestrictionsForm({
                           className="form-control form-control-sm"
                           value={selected ? value.transitionalEffectiveDate : ""}
                           disabled={disabled || !selected}
-                          onChange={(e) =>
-                            patch({ transitionalEffectiveDate: e.target.value })
-                          }
+                          onChange={(e) => patch({ transitionalEffectiveDate: e.target.value })}
                         />
                       </td>
                     </tr>
@@ -337,8 +334,8 @@ export function WorkersCompRestrictionsForm({
 
       <div>
         <label className="form-label fw-semibold" htmlFor={radio("restriction-notes")}>
-          Notes (or Other Functional Limitations or Modifications necessary in the Injured
-          Workers Employment)
+          Notes (or Other Functional Limitations or Modifications necessary in the Injured Workers
+          Employment)
         </label>
         <textarea
           id={radio("restriction-notes")}

@@ -6,10 +6,7 @@ import type BradySdk from "brady-web-sdk";
  * Maps documented BradySdk instance properties into Forge printer payloads.
  */
 export class BradyPrinterMapper {
-  static toPrinterInfo(
-    sdk: BradySdk,
-    ownershipDeviceId?: string | null
-  ): PrinterInfoPayload {
+  static toPrinterInfo(sdk: BradySdk, ownershipDeviceId?: string | null): PrinterInfoPayload {
     const model = sdk.printerModel ?? undefined;
     const name = sdk.printerName ?? model ?? "Brady Bluetooth Printer";
 
@@ -21,9 +18,7 @@ export class BradyPrinterMapper {
       status: sdk.status ?? undefined,
       dpi: typeof sdk.dotsPerInch === "number" ? sdk.dotsPerInch : 300,
       batteryLevelPercentage:
-        typeof sdk.batteryLevelPercentage === "number"
-          ? sdk.batteryLevelPercentage
-          : null,
+        typeof sdk.batteryLevelPercentage === "number" ? sdk.batteryLevelPercentage : null,
       supplyName: sdk.supplyName ?? null,
       isSupplyValid: sdk.isSupplyValid ?? null,
       isRibbonValid: sdk.isRibbonValid ?? null,

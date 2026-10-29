@@ -155,10 +155,7 @@ function ReportingBuilderInner() {
     if (fields.length) run.fields = fields;
     if (relativeDateRange) {
       run.relativeDateRange = relativeDateRange as
-        | "last_7_days"
-        | "last_30_days"
-        | "this_month"
-        | "prior_month";
+        "last_7_days" | "last_30_days" | "this_month" | "prior_month";
     }
     if (groupBy) run.groupBy = groupBy;
     if (aggregateCount && groupBy) run.aggregate = "count";
@@ -207,19 +204,14 @@ function ReportingBuilderInner() {
         description: description.trim() || null,
         sourceKey,
         category: sourceMeta && "category" in sourceMeta ? sourceMeta.category : null,
-        moduleCode:
-          sourceMeta && "module" in sourceMeta
-            ? sourceMeta.module
-            : null,
+        moduleCode: sourceMeta && "module" in sourceMeta ? sourceMeta.module : null,
         payloadJson,
         origin: saveAsTemplate ? "template" : "saved",
       });
       setSavedId(created.id);
       setSavedAsTemplate(saveAsTemplate);
       setMessage(
-        saveAsTemplate
-          ? `Template “${created.name}” saved.`
-          : `Report “${created.name}” saved.`,
+        saveAsTemplate ? `Template “${created.name}” saved.` : `Report “${created.name}” saved.`,
       );
       setSelectedFields([]);
       setExtraFields("");
@@ -328,7 +320,9 @@ function ReportingBuilderInner() {
 
           {step === 1 ? (
             <div>
-              <p className="small text-muted mb-2">Select fields to include when running this report.</p>
+              <p className="small text-muted mb-2">
+                Select fields to include when running this report.
+              </p>
               <div className="row g-2 mb-3">
                 {fieldOptions.map((field) => (
                   <div key={field.key} className="col-md-4">

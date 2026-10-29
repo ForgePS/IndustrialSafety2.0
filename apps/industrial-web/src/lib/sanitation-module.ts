@@ -32,7 +32,9 @@ export const SANITATION_TABS = [
 export type SanitationTabId = (typeof SANITATION_TABS)[number]["id"];
 
 /** Settings stays available so Admin / Creator can re-enable other tabs. */
-export const SANITATION_ALWAYS_ON_TAB_IDS = ["settings"] as const satisfies readonly SanitationTabId[];
+export const SANITATION_ALWAYS_ON_TAB_IDS = [
+  "settings",
+] as const satisfies readonly SanitationTabId[];
 
 export const SANITATION_TOGGLEABLE_TABS = SANITATION_TABS.filter(
   (tab) => !(SANITATION_ALWAYS_ON_TAB_IDS as readonly string[]).includes(tab.id),
@@ -139,10 +141,30 @@ export const CONCERN_TYPES = [
 ] as const;
 
 export const DEFAULT_ZONE_DEFS = [
-  { code: "Z1", name: "Zone 1 — Direct product/food-contact surfaces", isFoodContact: true, sortOrder: 10 },
-  { code: "Z2", name: "Zone 2 — Adjacent to product-contact surfaces", isFoodContact: false, sortOrder: 20 },
-  { code: "Z3", name: "Zone 3 — Processing non-product-contact", isFoodContact: false, sortOrder: 30 },
-  { code: "Z4", name: "Zone 4 — Warehouses, grounds, exterior", isFoodContact: false, sortOrder: 40 },
+  {
+    code: "Z1",
+    name: "Zone 1 — Direct product/food-contact surfaces",
+    isFoodContact: true,
+    sortOrder: 10,
+  },
+  {
+    code: "Z2",
+    name: "Zone 2 — Adjacent to product-contact surfaces",
+    isFoodContact: false,
+    sortOrder: 20,
+  },
+  {
+    code: "Z3",
+    name: "Zone 3 — Processing non-product-contact",
+    isFoodContact: false,
+    sortOrder: 30,
+  },
+  {
+    code: "Z4",
+    name: "Zone 4 — Warehouses, grounds, exterior",
+    isFoodContact: false,
+    sortOrder: 40,
+  },
 ] as const;
 
 export type SanitationQuestion = {
@@ -363,11 +385,35 @@ export const BUILTIN_SANITATION_TEMPLATES: SanitationTemplateDef[] = [
         id: "surfaces",
         title: "Dust Accumulation Surfaces",
         questions: [
-          { id: "d1", label: "Floors — fugitive grain dust controlled?", riskLevel: "CRITICAL", regulationRef: "OSHA 29 CFR 1910.272(j)", measurementRequired: true },
-          { id: "d2", label: "Beams, rafters, ledges free of heavy accumulation?", riskLevel: "MAJOR", photoRequired: true },
-          { id: "d3", label: "Motors, bearings, and cable trays free of dust?", riskLevel: "MAJOR" },
-          { id: "d4", label: "Conveyors and transfer points sealed / no dust leaks?", riskLevel: "CRITICAL", autoFail: true },
-          { id: "d5", label: "Dust collectors operating and free of abnormal buildup?", riskLevel: "MAJOR" },
+          {
+            id: "d1",
+            label: "Floors — fugitive grain dust controlled?",
+            riskLevel: "CRITICAL",
+            regulationRef: "OSHA 29 CFR 1910.272(j)",
+            measurementRequired: true,
+          },
+          {
+            id: "d2",
+            label: "Beams, rafters, ledges free of heavy accumulation?",
+            riskLevel: "MAJOR",
+            photoRequired: true,
+          },
+          {
+            id: "d3",
+            label: "Motors, bearings, and cable trays free of dust?",
+            riskLevel: "MAJOR",
+          },
+          {
+            id: "d4",
+            label: "Conveyors and transfer points sealed / no dust leaks?",
+            riskLevel: "CRITICAL",
+            autoFail: true,
+          },
+          {
+            id: "d5",
+            label: "Dust collectors operating and free of abnormal buildup?",
+            riskLevel: "MAJOR",
+          },
         ],
       },
     ],
@@ -382,9 +428,28 @@ export const BUILTIN_SANITATION_TEMPLATES: SanitationTemplateDef[] = [
         id: "priority",
         title: "Priority Housekeeping Areas",
         questions: [
-          { id: "p1", label: "Floor areas within 35 ft of inside bucket elevators ≤ 1/8 in dust?", riskLevel: "CRITICAL", regulationRef: "OSHA 29 CFR 1910.272(j)", measurementRequired: true, autoFail: true },
-          { id: "p2", label: "Floors of enclosed grinding equipment areas ≤ 1/8 in dust?", riskLevel: "CRITICAL", measurementRequired: true, autoFail: true },
-          { id: "p3", label: "Floors of enclosed indoor grain dryer areas ≤ 1/8 in dust?", riskLevel: "CRITICAL", measurementRequired: true, autoFail: true },
+          {
+            id: "p1",
+            label: "Floor areas within 35 ft of inside bucket elevators ≤ 1/8 in dust?",
+            riskLevel: "CRITICAL",
+            regulationRef: "OSHA 29 CFR 1910.272(j)",
+            measurementRequired: true,
+            autoFail: true,
+          },
+          {
+            id: "p2",
+            label: "Floors of enclosed grinding equipment areas ≤ 1/8 in dust?",
+            riskLevel: "CRITICAL",
+            measurementRequired: true,
+            autoFail: true,
+          },
+          {
+            id: "p3",
+            label: "Floors of enclosed indoor grain dryer areas ≤ 1/8 in dust?",
+            riskLevel: "CRITICAL",
+            measurementRequired: true,
+            autoFail: true,
+          },
         ],
       },
     ],
@@ -398,9 +463,17 @@ export const BUILTIN_SANITATION_TEMPLATES: SanitationTemplateDef[] = [
         id: "rice",
         title: "Rice Mill Sanitation",
         questions: [
-          { id: "r1", label: "Milling equipment free of residue and foreign material?", riskLevel: "MAJOR" },
+          {
+            id: "r1",
+            label: "Milling equipment free of residue and foreign material?",
+            riskLevel: "MAJOR",
+          },
           { id: "r2", label: "Packaging area sanitary and pest-free?", riskLevel: "MAJOR" },
-          { id: "r3", label: "Allergen / product changeover controls followed?", riskLevel: "CRITICAL" },
+          {
+            id: "r3",
+            label: "Allergen / product changeover controls followed?",
+            riskLevel: "CRITICAL",
+          },
         ],
       },
     ],
@@ -414,8 +487,17 @@ export const BUILTIN_SANITATION_TEMPLATES: SanitationTemplateDef[] = [
         id: "gmp",
         title: "Employee GMP",
         questions: [
-          { id: "g1", label: "Appropriate clothing and hygiene practices observed?", riskLevel: "MAJOR", regulationRef: "FDA 21 CFR Part 117" },
-          { id: "g2", label: "No jewelry / personal items in production areas?", riskLevel: "MINOR" },
+          {
+            id: "g1",
+            label: "Appropriate clothing and hygiene practices observed?",
+            riskLevel: "MAJOR",
+            regulationRef: "FDA 21 CFR Part 117",
+          },
+          {
+            id: "g2",
+            label: "No jewelry / personal items in production areas?",
+            riskLevel: "MINOR",
+          },
           { id: "g3", label: "Handwashing stations stocked and used?", riskLevel: "MAJOR" },
           { id: "g4", label: "No food/drink/tobacco in restricted areas?", riskLevel: "MAJOR" },
         ],
@@ -432,8 +514,17 @@ export const BUILTIN_SANITATION_TEMPLATES: SanitationTemplateDef[] = [
         title: "Warehouse",
         questions: [
           { id: "w1", label: "Storage areas clean and organized?", riskLevel: "MINOR" },
-          { id: "w2", label: "Product off floor / away from walls as required?", riskLevel: "MAJOR" },
-          { id: "w3", label: "No pest evidence in storage?", riskLevel: "CRITICAL", photoRequired: true },
+          {
+            id: "w2",
+            label: "Product off floor / away from walls as required?",
+            riskLevel: "MAJOR",
+          },
+          {
+            id: "w3",
+            label: "No pest evidence in storage?",
+            riskLevel: "CRITICAL",
+            photoRequired: true,
+          },
         ],
       },
     ],
@@ -447,7 +538,12 @@ export const BUILTIN_SANITATION_TEMPLATES: SanitationTemplateDef[] = [
         id: "grounds",
         title: "Plant Grounds",
         questions: [
-          { id: "gr1", label: "Grass/weeds controlled; no pest harborage?", riskLevel: "MAJOR", regulationRef: "FDA 21 CFR Part 117" },
+          {
+            id: "gr1",
+            label: "Grass/weeds controlled; no pest harborage?",
+            riskLevel: "MAJOR",
+            regulationRef: "FDA 21 CFR Part 117",
+          },
           { id: "gr2", label: "Standing water and drainage acceptable?", riskLevel: "MAJOR" },
           { id: "gr3", label: "Waste / scrap / litter controlled?", riskLevel: "MINOR" },
           { id: "gr4", label: "Outside storage neat and protected?", riskLevel: "MINOR" },
@@ -464,7 +560,13 @@ export const BUILTIN_SANITATION_TEMPLATES: SanitationTemplateDef[] = [
         id: "pest",
         title: "Pest Activity",
         questions: [
-          { id: "pe1", label: "No rodent activity or droppings?", riskLevel: "CRITICAL", regulationRef: "FDA 21 CFR Part 117", photoRequired: true },
+          {
+            id: "pe1",
+            label: "No rodent activity or droppings?",
+            riskLevel: "CRITICAL",
+            regulationRef: "FDA 21 CFR Part 117",
+            photoRequired: true,
+          },
           { id: "pe2", label: "No insect or bird evidence in food areas?", riskLevel: "CRITICAL" },
           { id: "pe3", label: "Entry points sealed; screens/doors intact?", riskLevel: "MAJOR" },
           { id: "pe4", label: "Pest devices inspected and serviceable?", riskLevel: "MINOR" },
@@ -483,7 +585,11 @@ export const BUILTIN_SANITATION_TEMPLATES: SanitationTemplateDef[] = [
         questions: [
           { id: "eq1", label: "Food-contact surfaces clean and undamaged?", riskLevel: "CRITICAL" },
           { id: "eq2", label: "No corrosion, damage, or foreign material?", riskLevel: "MAJOR" },
-          { id: "eq3", label: "Guards, covers, and panels properly installed?", riskLevel: "MAJOR" },
+          {
+            id: "eq3",
+            label: "Guards, covers, and panels properly installed?",
+            riskLevel: "MAJOR",
+          },
         ],
       },
     ],
@@ -497,11 +603,31 @@ export const BUILTIN_SANITATION_TEMPLATES: SanitationTemplateDef[] = [
         id: "preop",
         title: "Pre-Op Release",
         questions: [
-          { id: "po1", label: "Equipment clean — no previous product residue?", riskLevel: "CRITICAL", autoFail: true },
-          { id: "po2", label: "No chemical residue on food-contact surfaces?", riskLevel: "CRITICAL", autoFail: true },
-          { id: "po3", label: "No pest evidence or foreign material?", riskLevel: "CRITICAL", autoFail: true },
+          {
+            id: "po1",
+            label: "Equipment clean — no previous product residue?",
+            riskLevel: "CRITICAL",
+            autoFail: true,
+          },
+          {
+            id: "po2",
+            label: "No chemical residue on food-contact surfaces?",
+            riskLevel: "CRITICAL",
+            autoFail: true,
+          },
+          {
+            id: "po3",
+            label: "No pest evidence or foreign material?",
+            riskLevel: "CRITICAL",
+            autoFail: true,
+          },
           { id: "po4", label: "Tools, rags, and maintenance debris removed?", riskLevel: "MAJOR" },
-          { id: "po5", label: "Area acceptable for production release?", riskLevel: "CRITICAL", autoFail: true },
+          {
+            id: "po5",
+            label: "Area acceptable for production release?",
+            riskLevel: "CRITICAL",
+            autoFail: true,
+          },
         ],
       },
     ],
@@ -515,8 +641,17 @@ export const BUILTIN_SANITATION_TEMPLATES: SanitationTemplateDef[] = [
         id: "postm",
         title: "Post-Maintenance",
         questions: [
-          { id: "pm1", label: "Tools, hardware, and metal debris removed?", riskLevel: "CRITICAL", autoFail: true },
-          { id: "pm2", label: "No grease, lubricant, welding, or grinding residue?", riskLevel: "CRITICAL" },
+          {
+            id: "pm1",
+            label: "Tools, hardware, and metal debris removed?",
+            riskLevel: "CRITICAL",
+            autoFail: true,
+          },
+          {
+            id: "pm2",
+            label: "No grease, lubricant, welding, or grinding residue?",
+            riskLevel: "CRITICAL",
+          },
           { id: "pm3", label: "Guards replaced; area cleanliness verified?", riskLevel: "MAJOR" },
         ],
       },
@@ -531,9 +666,18 @@ export const BUILTIN_SANITATION_TEMPLATES: SanitationTemplateDef[] = [
         id: "chem",
         title: "Chemical Sanitation Controls",
         questions: [
-          { id: "c1", label: "Chemicals properly labeled with SDS available?", riskLevel: "MAJOR", regulationRef: "FDA 21 CFR Part 117" },
+          {
+            id: "c1",
+            label: "Chemicals properly labeled with SDS available?",
+            riskLevel: "MAJOR",
+            regulationRef: "FDA 21 CFR Part 117",
+          },
           { id: "c2", label: "Approved chemicals only; segregation correct?", riskLevel: "MAJOR" },
-          { id: "c3", label: "Secondary containers labeled; no damaged containers?", riskLevel: "MINOR" },
+          {
+            id: "c3",
+            label: "Secondary containers labeled; no damaged containers?",
+            riskLevel: "MINOR",
+          },
           { id: "c4", label: "Concentrations correct where checked?", riskLevel: "MAJOR" },
         ],
       },
@@ -549,7 +693,11 @@ export const BUILTIN_SANITATION_TEMPLATES: SanitationTemplateDef[] = [
         title: "Waste",
         questions: [
           { id: "wa1", label: "Trash and product waste controlled?", riskLevel: "MINOR" },
-          { id: "wa2", label: "Dumpsters / disposal areas clean; lids closed?", riskLevel: "MAJOR" },
+          {
+            id: "wa2",
+            label: "Dumpsters / disposal areas clean; lids closed?",
+            riskLevel: "MAJOR",
+          },
           { id: "wa3", label: "No overflowing containers or pest attraction?", riskLevel: "MAJOR" },
         ],
       },
@@ -564,7 +712,12 @@ export const BUILTIN_SANITATION_TEMPLATES: SanitationTemplateDef[] = [
         id: "rest",
         title: "Sanitary Facilities",
         questions: [
-          { id: "re1", label: "Restrooms clean; soap and towels available?", riskLevel: "MAJOR", regulationRef: "FDA 21 CFR Part 117" },
+          {
+            id: "re1",
+            label: "Restrooms clean; soap and towels available?",
+            riskLevel: "MAJOR",
+            regulationRef: "FDA 21 CFR Part 117",
+          },
           { id: "re2", label: "Handwashing, plumbing, and drainage adequate?", riskLevel: "MAJOR" },
           { id: "re3", label: "Sewage and wastewater controlled?", riskLevel: "CRITICAL" },
         ],
@@ -581,8 +734,16 @@ export const BUILTIN_SANITATION_TEMPLATES: SanitationTemplateDef[] = [
         title: "MSS Verification",
         questions: [
           { id: "mv1", label: "Scheduled MSS tasks completed on time?", riskLevel: "MAJOR" },
-          { id: "mv2", label: "Cleaning documentation complete with signatures?", riskLevel: "MINOR" },
-          { id: "mv3", label: "Verification performed independent of cleaner where required?", riskLevel: "MAJOR" },
+          {
+            id: "mv2",
+            label: "Cleaning documentation complete with signatures?",
+            riskLevel: "MINOR",
+          },
+          {
+            id: "mv3",
+            label: "Verification performed independent of cleaner where required?",
+            riskLevel: "MAJOR",
+          },
         ],
       },
     ],
@@ -597,7 +758,11 @@ export const BUILTIN_SANITATION_TEMPLATES: SanitationTemplateDef[] = [
         title: "Spill Cleanup",
         questions: [
           { id: "sv1", label: "Spill fully removed; area dry and safe?", riskLevel: "MAJOR" },
-          { id: "sv2", label: "Root cause addressed or maintenance requested?", riskLevel: "MAJOR" },
+          {
+            id: "sv2",
+            label: "Root cause addressed or maintenance requested?",
+            riskLevel: "MAJOR",
+          },
           { id: "sv3", label: "No residual slip or dust hazard?", riskLevel: "CRITICAL" },
         ],
       },
@@ -629,10 +794,28 @@ export const BUILTIN_SANITATION_TEMPLATES: SanitationTemplateDef[] = [
         id: "emission",
         title: "Emission Sources",
         questions: [
-          { id: "em1", label: "Spouting / bucket elevator casing sealed (no holes)?", riskLevel: "CRITICAL", photoRequired: true },
-          { id: "em2", label: "Conveyor transfer points, seals, and gaskets intact?", riskLevel: "MAJOR" },
-          { id: "em3", label: "Dust hoods, flanges, and inspection doors secure?", riskLevel: "MAJOR" },
-          { id: "em4", label: "No active dust or grain leakage requiring maintenance?", riskLevel: "CRITICAL", autoFail: true },
+          {
+            id: "em1",
+            label: "Spouting / bucket elevator casing sealed (no holes)?",
+            riskLevel: "CRITICAL",
+            photoRequired: true,
+          },
+          {
+            id: "em2",
+            label: "Conveyor transfer points, seals, and gaskets intact?",
+            riskLevel: "MAJOR",
+          },
+          {
+            id: "em3",
+            label: "Dust hoods, flanges, and inspection doors secure?",
+            riskLevel: "MAJOR",
+          },
+          {
+            id: "em4",
+            label: "No active dust or grain leakage requiring maintenance?",
+            riskLevel: "CRITICAL",
+            autoFail: true,
+          },
         ],
       },
     ],
@@ -648,10 +831,28 @@ export const BUILTIN_SANITATION_TEMPLATES: SanitationTemplateDef[] = [
         id: "binsilo",
         title: "Bin / Silo (authorized methods only)",
         questions: [
-          { id: "bs1", label: "Inspection method documented (external / camera / opening / authorized entry)?", riskLevel: "CRITICAL" },
-          { id: "bs2", label: "No bridging, mold, or excessive moisture observed?", riskLevel: "MAJOR" },
-          { id: "bs3", label: "No pest evidence or foreign material?", riskLevel: "CRITICAL", photoRequired: true },
-          { id: "bs4", label: "Confined space / LOTO permits followed where entry occurred?", riskLevel: "CRITICAL", autoFail: true },
+          {
+            id: "bs1",
+            label: "Inspection method documented (external / camera / opening / authorized entry)?",
+            riskLevel: "CRITICAL",
+          },
+          {
+            id: "bs2",
+            label: "No bridging, mold, or excessive moisture observed?",
+            riskLevel: "MAJOR",
+          },
+          {
+            id: "bs3",
+            label: "No pest evidence or foreign material?",
+            riskLevel: "CRITICAL",
+            photoRequired: true,
+          },
+          {
+            id: "bs4",
+            label: "Confined space / LOTO permits followed where entry occurred?",
+            riskLevel: "CRITICAL",
+            autoFail: true,
+          },
         ],
       },
     ],
@@ -662,11 +863,14 @@ export type InspectionAnswer = "PASS" | "FAIL" | "NA" | "YES" | "NO" | "";
 
 export function statusBadgeClass(status: string | null | undefined): string {
   const s = String(status ?? "").toUpperCase();
-  if (["PASS", "VERIFIED", "CLOSED", "APPROVED", "COMPLETED", "GOOD"].includes(s)) return "bg-label-success";
-  if (["CRITICAL", "CRITICAL_FAIL", "FAIL", "FAILED_VERIFICATION", "DENIED"].includes(s)) return "bg-label-danger";
+  if (["PASS", "VERIFIED", "CLOSED", "APPROVED", "COMPLETED", "GOOD"].includes(s))
+    return "bg-label-success";
+  if (["CRITICAL", "CRITICAL_FAIL", "FAIL", "FAILED_VERIFICATION", "DENIED"].includes(s))
+    return "bg-label-danger";
   if (["MAJOR", "OVERDUE", "RECLEAN_REQUIRED", "AWAITING_VERIFICATION", "CONDITIONAL"].includes(s))
     return "bg-label-warning";
-  if (["IN_PROGRESS", "ASSIGNED", "REQUESTED", "OPEN", "ACTIVE"].includes(s)) return "bg-label-primary";
+  if (["IN_PROGRESS", "ASSIGNED", "REQUESTED", "OPEN", "ACTIVE"].includes(s))
+    return "bg-label-primary";
   return "bg-label-secondary";
 }
 
@@ -687,10 +891,7 @@ export function mmToInches(mm: number): number {
   return mm / 25.4;
 }
 
-export function exceedsDustActionLevel(
-  depthInches: number,
-  thresholdInches = 0.125,
-): boolean {
+export function exceedsDustActionLevel(depthInches: number, thresholdInches = 0.125): boolean {
   return depthInches > thresholdInches;
 }
 
@@ -729,13 +930,15 @@ export const REGULATORY_LIBRARY_STATIC = [
   {
     code: "FDA-117",
     citation: "FDA 21 CFR Part 117",
-    title: "Current good manufacturing practice, hazard analysis, and risk-based preventive controls for human food",
+    title:
+      "Current good manufacturing practice, hazard analysis, and risk-based preventive controls for human food",
     topic: "Sanitation, pest control, environmental monitoring",
   },
   {
     code: "FDA-507",
     citation: "FDA 21 CFR Part 507",
-    title: "Current good manufacturing practice, hazard analysis, and risk-based preventive controls for food for animals",
+    title:
+      "Current good manufacturing practice, hazard analysis, and risk-based preventive controls for food for animals",
     topic: "Animal food sanitation and pest control",
   },
   {
@@ -776,7 +979,11 @@ export const SPILL_STATUS_ACTIONS = [
   "CLOSED",
 ] as const;
 
-export function downloadText(filename: string, text: string, mime = "text/plain;charset=utf-8"): void {
+export function downloadText(
+  filename: string,
+  text: string,
+  mime = "text/plain;charset=utf-8",
+): void {
   if (typeof window === "undefined") return;
   const blob = new Blob([text], { type: mime });
   const url = URL.createObjectURL(blob);

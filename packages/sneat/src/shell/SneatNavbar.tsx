@@ -6,7 +6,10 @@ function NavbarRightItems({ children }: { children: ReactNode }) {
   return (
     <ul className="navbar-nav flex-row align-items-center ms-auto flex-shrink-0 gap-2">
       {items.map((child, index) => (
-        <li key={isValidElement(child) && child.key != null ? child.key : index} className="nav-item d-flex align-items-center">
+        <li
+          key={isValidElement(child) && child.key != null ? child.key : index}
+          className="nav-item d-flex align-items-center"
+        >
           {child}
         </li>
       ))}
@@ -45,7 +48,10 @@ export function SneatNavbar({
         </button>
       </div>
 
-      <div className="navbar-nav-right d-flex align-items-center flex-wrap gap-2 w-100" id="navbar-collapse">
+      <div
+        className="navbar-nav-right d-flex align-items-center flex-wrap gap-2 w-100"
+        id="navbar-collapse"
+      >
         {left || center ? (
           <div className="navbar-nav align-items-center flex-grow-1 min-w-0 gap-2 flex-wrap">
             {left}

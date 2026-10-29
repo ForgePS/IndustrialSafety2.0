@@ -142,12 +142,18 @@ export const industrialSupplyItems = pgTable(
     model: varchar("model", { length: 120 }),
     inventoryType: varchar("inventory_type", { length: 64 }).notNull().default("CONSUMABLE"),
     unitOfMeasure: varchar("unit_of_measure", { length: 64 }).notNull().default("EA"),
-    packageQuantity: numeric("package_quantity", { precision: 14, scale: 4 }).notNull().default("1"),
+    packageQuantity: numeric("package_quantity", { precision: 14, scale: 4 })
+      .notNull()
+      .default("1"),
     status: varchar("status", { length: 64 }).notNull().default("ACTIVE"),
-    minimumQuantity: numeric("minimum_quantity", { precision: 14, scale: 4 }).notNull().default("0"),
+    minimumQuantity: numeric("minimum_quantity", { precision: 14, scale: 4 })
+      .notNull()
+      .default("0"),
     maximumQuantity: numeric("maximum_quantity", { precision: 14, scale: 4 }),
     reorderPoint: numeric("reorder_point", { precision: 14, scale: 4 }).notNull().default("0"),
-    reorderQuantity: numeric("reorder_quantity", { precision: 14, scale: 4 }).notNull().default("0"),
+    reorderQuantity: numeric("reorder_quantity", { precision: 14, scale: 4 })
+      .notNull()
+      .default("0"),
     safetyStock: numeric("safety_stock", { precision: 14, scale: 4 }).notNull().default("0"),
     averageMonthlyUsage: numeric("average_monthly_usage", { precision: 14, scale: 4 })
       .notNull()
@@ -495,7 +501,9 @@ export const industrialSupplyEmployeeAssignments = pgTable(
     lotId: uuid("lot_id").references(() => industrialSupplyLots.id),
     quantity: numeric("quantity", { precision: 14, scale: 4 }).notNull().default("1"),
     sizeLabel: varchar("size_label", { length: 64 }),
-    issueDate: date("issue_date").notNull().default(sql`CURRENT_DATE`),
+    issueDate: date("issue_date")
+      .notNull()
+      .default(sql`CURRENT_DATE`),
     issuedBy: uuid("issued_by"),
     condition: varchar("condition", { length: 64 }).notNull().default("GOOD"),
     replacementDueDate: date("replacement_due_date"),
@@ -595,7 +603,9 @@ export const industrialSupplyInspections = pgTable(
     inspectionType: varchar("inspection_type", { length: 64 }).notNull().default("PERIODIC"),
     inspectorUserId: uuid("inspector_user_id"),
     inspectorPersonnelId: uuid("inspector_personnel_id"),
-    inspectionDate: date("inspection_date").notNull().default(sql`CURRENT_DATE`),
+    inspectionDate: date("inspection_date")
+      .notNull()
+      .default(sql`CURRENT_DATE`),
     condition: varchar("condition", { length: 64 }),
     result: varchar("result", { length: 32 }).notNull().default("PASS"),
     deficiencies: text("deficiencies"),
@@ -708,7 +718,9 @@ export const industrialSupplyRequestItems = pgTable(
     quantityReserved: numeric("quantity_reserved", { precision: 14, scale: 4 })
       .notNull()
       .default("0"),
-    quantityApproved: numeric("quantity_approved", { precision: 14, scale: 4 }).notNull().default("0"),
+    quantityApproved: numeric("quantity_approved", { precision: 14, scale: 4 })
+      .notNull()
+      .default("0"),
     quantityIssued: numeric("quantity_issued", { precision: 14, scale: 4 }).notNull().default("0"),
     quantityBackordered: numeric("quantity_backordered", { precision: 14, scale: 4 })
       .notNull()
@@ -873,7 +885,9 @@ export const industrialSupplyPurchaseOrders = pgTable(
     vendorId: uuid("vendor_id")
       .notNull()
       .references(() => industrialSupplyVendors.id),
-    orderDate: date("order_date").notNull().default(sql`CURRENT_DATE`),
+    orderDate: date("order_date")
+      .notNull()
+      .default(sql`CURRENT_DATE`),
     requestedBy: uuid("requested_by"),
     approvedBy: uuid("approved_by"),
     siteId: uuid("site_id"),
@@ -918,9 +932,7 @@ export const industrialSupplyPurchaseOrderItems = pgTable(
     createdAt: createdAtColumn,
     updatedAt: updatedAtColumn,
   },
-  (t) => [
-    index("industrial_supply_purchase_order_items_po_idx").on(t.tenantId, t.purchaseOrderId),
-  ],
+  (t) => [index("industrial_supply_purchase_order_items_po_idx").on(t.tenantId, t.purchaseOrderId)],
 );
 
 export const industrialSupplyReceipts = pgTable(
@@ -956,10 +968,14 @@ export const industrialSupplyReorderRules = pgTable(
       .notNull()
       .references(() => industrialSupplyItems.id),
     locationId: uuid("location_id").references(() => industrialSupplyLocations.id),
-    minimumQuantity: numeric("minimum_quantity", { precision: 14, scale: 4 }).notNull().default("0"),
+    minimumQuantity: numeric("minimum_quantity", { precision: 14, scale: 4 })
+      .notNull()
+      .default("0"),
     maximumQuantity: numeric("maximum_quantity", { precision: 14, scale: 4 }),
     reorderPoint: numeric("reorder_point", { precision: 14, scale: 4 }).notNull().default("0"),
-    reorderQuantity: numeric("reorder_quantity", { precision: 14, scale: 4 }).notNull().default("0"),
+    reorderQuantity: numeric("reorder_quantity", { precision: 14, scale: 4 })
+      .notNull()
+      .default("0"),
     preferredVendorId: uuid("preferred_vendor_id").references(() => industrialSupplyVendors.id),
     active: boolean("active").notNull().default(true),
     createdAt: createdAtColumn,

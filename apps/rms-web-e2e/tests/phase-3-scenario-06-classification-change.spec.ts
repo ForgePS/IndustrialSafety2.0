@@ -78,9 +78,9 @@ test.describe("Phase 3 scenario 6 — classification change @phase3", () => {
       `/api/v1/tenants/${tenantId}/neris/incidents/${incidentId}/exposures`,
     );
     expect(listAfter.status).toBe(200);
-    const rows = unwrapData<Array<{ id: string; addressLine1?: string; damageDescription?: string }>>(
-      listAfter.json,
-    );
+    const rows = unwrapData<
+      Array<{ id: string; addressLine1?: string; damageDescription?: string }>
+    >(listAfter.json);
     const preserved = (Array.isArray(rows) ? rows : []).find((r) => r.id === exposureRow.id);
     expect(preserved?.addressLine1).toContain(runId);
     expect(preserved?.damageDescription).toContain(runId);
@@ -136,10 +136,12 @@ test.describe("Phase 3 scenario 6 — classification change @phase3", () => {
       "GET",
       `/api/v1/tenants/${tenantId}/neris/incidents/${incidentId}/exposures`,
     );
-    const restoredRows = unwrapData<Array<{ id: string; addressLine1?: string }>>(listRestored.json);
-    expect((Array.isArray(restoredRows) ? restoredRows : []).some((r) => r.id === exposureRow.id)).toBe(
-      true,
+    const restoredRows = unwrapData<Array<{ id: string; addressLine1?: string }>>(
+      listRestored.json,
     );
+    expect(
+      (Array.isArray(restoredRows) ? restoredRows : []).some((r) => r.id === exposureRow.id),
+    ).toBe(true);
 
     void afterActive;
   });

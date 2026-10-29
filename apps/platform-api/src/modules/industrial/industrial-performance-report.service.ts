@@ -154,7 +154,8 @@ export class IndustrialPerformanceReportService {
     try {
       req = normalizePerformanceRequest(body ?? {});
     } catch (err) {
-      if (err instanceof PerformanceRequestError) throw new ForgeError("VALIDATION_FAILED", err.message);
+      if (err instanceof PerformanceRequestError)
+        throw new ForgeError("VALIDATION_FAILED", err.message);
       throw err;
     }
     const omitted: Array<{ id: PerformanceSectionId; title: string; reason: string }> = [];
@@ -190,7 +191,11 @@ export class IndustrialPerformanceReportService {
 
     const [sites, departments, personnel] = await Promise.all([
       tx
-        .select({ id: industrialSites.id, name: industrialSites.name, sourcePayload: industrialSites.sourcePayload })
+        .select({
+          id: industrialSites.id,
+          name: industrialSites.name,
+          sourcePayload: industrialSites.sourcePayload,
+        })
         .from(industrialSites)
         .where(and(eq(industrialSites.tenantId, tenantId), isNull(industrialSites.archivedAt))),
       tx
@@ -201,7 +206,12 @@ export class IndustrialPerformanceReportService {
           divisionName: industrialDepartments.divisionName,
         })
         .from(industrialDepartments)
-        .where(and(eq(industrialDepartments.tenantId, tenantId), isNull(industrialDepartments.archivedAt))),
+        .where(
+          and(
+            eq(industrialDepartments.tenantId, tenantId),
+            isNull(industrialDepartments.archivedAt),
+          ),
+        ),
       tx
         .select({
           id: industrialPersonnel.id,
@@ -215,7 +225,9 @@ export class IndustrialPerformanceReportService {
           divisionName: industrialPersonnel.divisionName,
         })
         .from(industrialPersonnel)
-        .where(and(eq(industrialPersonnel.tenantId, tenantId), isNull(industrialPersonnel.archivedAt))),
+        .where(
+          and(eq(industrialPersonnel.tenantId, tenantId), isNull(industrialPersonnel.archivedAt)),
+        ),
     ]);
 
     const dir = buildOrgDirectory({ sites, departments, personnel });
@@ -275,11 +287,14 @@ export class IndustrialPerformanceReportService {
           ]),
         })
         .from(industrialIncidents)
-        .where(and(eq(industrialIncidents.tenantId, tenantId), isNull(industrialIncidents.archivedAt)));
+        .where(
+          and(eq(industrialIncidents.tenantId, tenantId), isNull(industrialIncidents.archivedAt)),
+        );
       for (const row of rows) {
         const p = row.p ?? {};
         const occurred = day(p.dateOccurred) ?? day(p.IncidentDateTime) ?? day(row.createdAt);
-        const personnelId = str(p.personnelId) || idByName.get(str(p.personAffected).toLowerCase()) || null;
+        const personnelId =
+          str(p.personnelId) || idByName.get(str(p.personAffected).toLowerCase()) || null;
         const open = !isClosedStatus(row.status);
         if (inPeriod(occurred, period)) {
           const unit = acc.unit({
@@ -304,7 +319,12 @@ export class IndustrialPerformanceReportService {
         const s = statsFor(personnelId);
         if (s) {
           const status = row.status.toLowerCase();
-          if (status.includes("open") || status === "active" || status === "in_progress" || status === "in progress") {
+          if (
+            status.includes("open") ||
+            status === "active" ||
+            status === "in_progress" ||
+            status === "in progress"
+          ) {
             s.openIncidents += 1;
           }
           if (p.oshaRecordable || p.recordable) s.recordableIncidents += 1;
@@ -326,7 +346,9 @@ export class IndustrialPerformanceReportService {
           sourcePayload: industrialOshaCases.sourcePayload,
         })
         .from(industrialOshaCases)
-        .where(and(eq(industrialOshaCases.tenantId, tenantId), isNull(industrialOshaCases.archivedAt)));
+        .where(
+          and(eq(industrialOshaCases.tenantId, tenantId), isNull(industrialOshaCases.archivedAt)),
+        );
       for (const row of rows) {
         const c = hydrateOshaFromSource({
           title: row.title,
@@ -345,7 +367,8 @@ export class IndustrialPerformanceReportService {
         });
         acc.add("osha", unit, "recordable");
         if (c.caseOutcome === "DAYS_AWAY") acc.add("osha", unit, "daysAwayCases");
-        else if (c.caseOutcome === "JOB_TRANSFER_RESTRICTION") acc.add("osha", unit, "transferCases");
+        else if (c.caseOutcome === "JOB_TRANSFER_RESTRICTION")
+          acc.add("osha", unit, "transferCases");
         else if (c.caseOutcome !== "DEATH") acc.add("osha", unit, "otherCases");
         acc.add("osha", unit, "daysAway", c.daysAway ?? 0);
         acc.add("osha", unit, "restrictedDays", c.restrictedDays ?? 0);
@@ -368,17 +391,26 @@ export class IndustrialPerformanceReportService {
         })
         .from(industrialWorkersCompCases)
         .where(
-          and(eq(industrialWorkersCompCases.tenantId, tenantId), isNull(industrialWorkersCompCases.archivedAt)),
+          and(
+            eq(industrialWorkersCompCases.tenantId, tenantId),
+            isNull(industrialWorkersCompCases.archivedAt),
+          ),
         );
       for (const row of rows) {
         const openNow = isOpenWcStatus(row.status);
         if (has("workers_comp")) {
-          const unit = acc.unit({ siteId: row.siteId, departmentId: row.departmentId, personnelId: row.personnelId });
+          const unit = acc.unit({
+            siteId: row.siteId,
+            departmentId: row.departmentId,
+            personnelId: row.personnelId,
+          });
           const status = row.status.trim().toUpperCase();
           if (inPeriod(day(row.reportedAt ?? row.createdAt), period)) {
             acc.add("workers_comp", unit, "opened");
-            if ((row.daysAway ?? 0) > 0 || status === "LOST_TIME") acc.add("workers_comp", unit, "lostTime");
-            if ((row.restrictedDays ?? 0) > 0 || status === "RESTRICTED") acc.add("workers_comp", unit, "restricted");
+            if ((row.daysAway ?? 0) > 0 || status === "LOST_TIME")
+              acc.add("workers_comp", unit, "lostTime");
+            if ((row.restrictedDays ?? 0) > 0 || status === "RESTRICTED")
+              acc.add("workers_comp", unit, "restricted");
             acc.add("workers_comp", unit, "daysAway", row.daysAway ?? 0);
             acc.add("workers_comp", unit, "restrictedDays", row.restrictedDays ?? 0);
           }
@@ -409,7 +441,12 @@ export class IndustrialPerformanceReportService {
           ]),
         })
         .from(industrialObservations)
-        .where(and(eq(industrialObservations.tenantId, tenantId), isNull(industrialObservations.archivedAt)));
+        .where(
+          and(
+            eq(industrialObservations.tenantId, tenantId),
+            isNull(industrialObservations.archivedAt),
+          ),
+        );
       for (const row of rows) {
         const p = row.p ?? {};
         const status = normalizeObservationStatus(row.status);
@@ -463,7 +500,12 @@ export class IndustrialPerformanceReportService {
           p: payloadPick(industrialInspections.sourcePayload, ["departmentName"]),
         })
         .from(industrialInspections)
-        .where(and(eq(industrialInspections.tenantId, tenantId), isNull(industrialInspections.archivedAt)));
+        .where(
+          and(
+            eq(industrialInspections.tenantId, tenantId),
+            isNull(industrialInspections.archivedAt),
+          ),
+        );
       for (const row of rows) {
         const unit = acc.unit({
           siteId: row.siteId,
@@ -496,7 +538,12 @@ export class IndustrialPerformanceReportService {
             expiresAt: industrialTrainingRecords.expiresAt,
           })
           .from(industrialTrainingRecords)
-          .where(and(eq(industrialTrainingRecords.tenantId, tenantId), isNull(industrialTrainingRecords.archivedAt))),
+          .where(
+            and(
+              eq(industrialTrainingRecords.tenantId, tenantId),
+              isNull(industrialTrainingRecords.archivedAt),
+            ),
+          ),
         tx
           .select({
             personnelId: industrialTrainingAssignmentAssignees.personnelId,
@@ -507,7 +554,10 @@ export class IndustrialPerformanceReportService {
           .from(industrialTrainingAssignmentAssignees)
           .innerJoin(
             industrialTrainingAssignments,
-            eq(industrialTrainingAssignmentAssignees.assignmentId, industrialTrainingAssignments.id),
+            eq(
+              industrialTrainingAssignmentAssignees.assignmentId,
+              industrialTrainingAssignments.id,
+            ),
           )
           .where(
             and(
@@ -520,7 +570,11 @@ export class IndustrialPerformanceReportService {
       const latestCert = new Map<string, { expiresAt: Date; unit: ResolvedOrgUnit | null }>();
       for (const r of records) {
         if (r.personnelId && !activeIds.has(r.personnelId)) continue;
-        const unit = acc.unit({ siteId: r.siteId, departmentId: r.departmentId, personnelId: r.personnelId });
+        const unit = acc.unit({
+          siteId: r.siteId,
+          departmentId: r.departmentId,
+          personnelId: r.personnelId,
+        });
         const status = r.status.toLowerCase();
         const completed = status.includes("complete") || Boolean(r.completedAt);
         if (inPeriod(day(r.completedAt), period)) {
@@ -530,12 +584,14 @@ export class IndustrialPerformanceReportService {
         if (r.expiresAt) {
           const key = `${r.personnelId ?? r.id}|${(r.courseName || r.title || "").trim().toLowerCase()}`;
           const prev = latestCert.get(key);
-          if (!prev || prev.expiresAt < r.expiresAt) latestCert.set(key, { expiresAt: r.expiresAt, unit });
+          if (!prev || prev.expiresAt < r.expiresAt)
+            latestCert.set(key, { expiresAt: r.expiresAt, unit });
         }
         const s = statsFor(r.personnelId);
         if (s) {
           if (completed) s.completedTraining += 1;
-          const inProgress = status.includes("progress") || status === "active" || status === "enrolled";
+          const inProgress =
+            status.includes("progress") || status === "active" || status === "enrolled";
           if (inProgress && r.expiresAt && r.expiresAt < now) s.overdueTraining += 1;
         }
       }
@@ -549,14 +605,16 @@ export class IndustrialPerformanceReportService {
         if (!a.personnelId || !activeIds.has(a.personnelId)) continue;
         const unit = personUnit.get(a.personnelId) ?? null;
         const passed = a.status === "PASSED";
-        const open = a.status === "NOT_STARTED" || a.status === "IN_PROGRESS" || a.status === "FAILED";
+        const open =
+          a.status === "NOT_STARTED" || a.status === "IN_PROGRESS" || a.status === "FAILED";
         const overdue = open && Boolean(a.dueAt && a.dueAt < now);
         if (has("training")) {
           acc.add("training", unit, "_assigneesTotal");
           if (passed) acc.add("training", unit, "_assigneesPassed");
           if (overdue) acc.add("training", unit, "overdue");
           else if (open) acc.add("training", unit, "openAssignments");
-          if (passed && inPeriod(day(a.completedAt), period)) acc.add("training", unit, "completions");
+          if (passed && inPeriod(day(a.completedAt), period))
+            acc.add("training", unit, "completions");
         }
         if (has("safety_score") && passed && inPeriod(day(a.completedAt), period)) {
           acc.add("safety_score", unit, "_training");
@@ -579,11 +637,17 @@ export class IndustrialPerformanceReportService {
           dueDate: industrialCorrectiveActions.dueDate,
           completedAt: industrialCorrectiveActions.completedAt,
           createdAt: industrialCorrectiveActions.createdAt,
-          p: payloadPick(industrialCorrectiveActions.sourcePayload, ["departmentId", "departmentName"]),
+          p: payloadPick(industrialCorrectiveActions.sourcePayload, [
+            "departmentId",
+            "departmentName",
+          ]),
         })
         .from(industrialCorrectiveActions)
         .where(
-          and(eq(industrialCorrectiveActions.tenantId, tenantId), isNull(industrialCorrectiveActions.archivedAt)),
+          and(
+            eq(industrialCorrectiveActions.tenantId, tenantId),
+            isNull(industrialCorrectiveActions.archivedAt),
+          ),
         );
       for (const row of rows) {
         const unit = acc.unit({
@@ -655,7 +719,10 @@ export class IndustrialPerformanceReportService {
     if (scoring) {
       const [dot, forklift, confined, drivers] = await Promise.all([
         tx
-          .select({ personnelId: industrialDotComplianceRecords.personnelId, status: industrialDotComplianceRecords.status })
+          .select({
+            personnelId: industrialDotComplianceRecords.personnelId,
+            status: industrialDotComplianceRecords.status,
+          })
           .from(industrialDotComplianceRecords)
           .where(
             and(
@@ -664,9 +731,17 @@ export class IndustrialPerformanceReportService {
             ),
           ),
         tx
-          .select({ personnelId: industrialForkliftRecords.personnelId, status: industrialForkliftRecords.status })
+          .select({
+            personnelId: industrialForkliftRecords.personnelId,
+            status: industrialForkliftRecords.status,
+          })
           .from(industrialForkliftRecords)
-          .where(and(eq(industrialForkliftRecords.tenantId, tenantId), isNull(industrialForkliftRecords.archivedAt))),
+          .where(
+            and(
+              eq(industrialForkliftRecords.tenantId, tenantId),
+              isNull(industrialForkliftRecords.archivedAt),
+            ),
+          ),
         tx
           .select({
             personnelId: industrialConfinedSpaceRecords.personnelId,
@@ -680,9 +755,17 @@ export class IndustrialPerformanceReportService {
             ),
           ),
         tx
-          .select({ personnelId: industrialFleetDrivers.personnelId, status: industrialFleetDrivers.status })
+          .select({
+            personnelId: industrialFleetDrivers.personnelId,
+            status: industrialFleetDrivers.status,
+          })
           .from(industrialFleetDrivers)
-          .where(and(eq(industrialFleetDrivers.tenantId, tenantId), isNull(industrialFleetDrivers.archivedAt))),
+          .where(
+            and(
+              eq(industrialFleetDrivers.tenantId, tenantId),
+              isNull(industrialFleetDrivers.archivedAt),
+            ),
+          ),
       ]);
       for (const q of [...dot, ...forklift, ...confined, ...drivers]) {
         const s = statsFor(q.personnelId);
@@ -704,11 +787,24 @@ export class IndustrialPerformanceReportService {
             createdAt: industrialLotoRecords.createdAt,
           })
           .from(industrialLotoRecords)
-          .where(and(eq(industrialLotoRecords.tenantId, tenantId), isNull(industrialLotoRecords.archivedAt))),
+          .where(
+            and(
+              eq(industrialLotoRecords.tenantId, tenantId),
+              isNull(industrialLotoRecords.archivedAt),
+            ),
+          ),
         tx
-          .select({ siteId: industrialLotoProcedures.siteId, status: industrialLotoProcedures.status })
+          .select({
+            siteId: industrialLotoProcedures.siteId,
+            status: industrialLotoProcedures.status,
+          })
           .from(industrialLotoProcedures)
-          .where(and(eq(industrialLotoProcedures.tenantId, tenantId), isNull(industrialLotoProcedures.archivedAt))),
+          .where(
+            and(
+              eq(industrialLotoProcedures.tenantId, tenantId),
+              isNull(industrialLotoProcedures.archivedAt),
+            ),
+          ),
       ]);
       for (const r of records) {
         const unit = acc.unit({ siteId: r.siteId });
@@ -757,7 +853,10 @@ export class IndustrialPerformanceReportService {
           })
           .from(industrialSanitationFindings)
           .where(
-            and(eq(industrialSanitationFindings.tenantId, tenantId), isNull(industrialSanitationFindings.archivedAt)),
+            and(
+              eq(industrialSanitationFindings.tenantId, tenantId),
+              isNull(industrialSanitationFindings.archivedAt),
+            ),
           ),
         tx
           .select({
@@ -778,7 +877,11 @@ export class IndustrialPerformanceReportService {
       const zone = (id: string | null) => (id ? (zoneName.get(id) ?? "") : "");
       for (const i of inspections) {
         if (!inPeriod(day(i.completedAt), period)) continue;
-        const unit = acc.unit({ siteId: i.siteId, departmentId: i.departmentId, area: zone(i.zoneId) });
+        const unit = acc.unit({
+          siteId: i.siteId,
+          departmentId: i.departmentId,
+          area: zone(i.zoneId),
+        });
         acc.add("sanitation", unit, "inspections");
         if (typeof i.scorePercent === "number" && Number.isFinite(i.scorePercent)) {
           acc.add("sanitation", unit, "_scoreSum", i.scorePercent);
@@ -794,8 +897,13 @@ export class IndustrialPerformanceReportService {
         if (!isClosedStatus(f.status)) acc.add("sanitation", unit, "openFindings");
       }
       for (const t of tasks) {
-        if (isClosedStatus(t.status) || /skip/i.test(t.status) || !t.dueAt || t.dueAt >= now) continue;
-        acc.add("sanitation", acc.unit({ siteId: t.siteId, area: zone(t.zoneId) }), "overdueCleaning");
+        if (isClosedStatus(t.status) || /skip/i.test(t.status) || !t.dueAt || t.dueAt >= now)
+          continue;
+        acc.add(
+          "sanitation",
+          acc.unit({ siteId: t.siteId, area: zone(t.zoneId) }),
+          "overdueCleaning",
+        );
       }
     }
 
@@ -826,12 +934,23 @@ export class IndustrialPerformanceReportService {
             dispositionStatus: industrialFleetVehicles.dispositionStatus,
           })
           .from(industrialFleetVehicles)
-          .where(and(eq(industrialFleetVehicles.tenantId, tenantId), isNull(industrialFleetVehicles.archivedAt))),
+          .where(
+            and(
+              eq(industrialFleetVehicles.tenantId, tenantId),
+              isNull(industrialFleetVehicles.archivedAt),
+            ),
+          ),
       ]);
       for (const r of dotRows) {
-        const unit = acc.unit({ siteId: r.siteId, departmentId: r.departmentId, personnelId: r.personnelId });
-        if (inPeriod(day(r.recordDate ?? r.createdAt), period)) acc.add("fleet_dot", unit, "dotRecords");
-        if (/open|pend|expir|overdue|non|fail|violation|due/i.test(r.status)) acc.add("fleet_dot", unit, "dotOpen");
+        const unit = acc.unit({
+          siteId: r.siteId,
+          departmentId: r.departmentId,
+          personnelId: r.personnelId,
+        });
+        if (inPeriod(day(r.recordDate ?? r.createdAt), period))
+          acc.add("fleet_dot", unit, "dotRecords");
+        if (/open|pend|expir|overdue|non|fail|violation|due/i.test(r.status))
+          acc.add("fleet_dot", unit, "dotOpen");
       }
       for (const v of vehicles) {
         if (v.status.trim().toUpperCase() !== "ACTIVE" || str(v.dispositionStatus)) continue;
@@ -844,7 +963,11 @@ export class IndustrialPerformanceReportService {
     // ------------------------------------------------------------ JSAs
     if (has("jsas")) {
       const rows = await tx
-        .select({ siteId: industrialJsas.siteId, status: industrialJsas.status, createdAt: industrialJsas.createdAt })
+        .select({
+          siteId: industrialJsas.siteId,
+          status: industrialJsas.status,
+          createdAt: industrialJsas.createdAt,
+        })
         .from(industrialJsas)
         .where(and(eq(industrialJsas.tenantId, tenantId), isNull(industrialJsas.archivedAt)));
       for (const r of rows) {
@@ -899,7 +1022,9 @@ export class IndustrialPerformanceReportService {
           positiveObservations: s.positiveCount,
           unsafeObservations: s.unsafeCount,
           activeDisciplinePoints: canDiscipline
-            ? s.discipline.filter((r) => isDisciplineCounting(r, now)).reduce((sum, r) => sum + disciplinePoints(r), 0)
+            ? s.discipline
+                .filter((r) => isDisciplineCounting(r, now))
+                .reduce((sum, r) => sum + disciplinePoints(r), 0)
             : null,
           group: orgGroupKey(unit, req.groupBy),
         });
@@ -915,7 +1040,9 @@ export class IndustrialPerformanceReportService {
           ...rankEmployeesByGroup(rankRows, req.employeeLimit),
           notes: [
             "Scores use the employee profile safety score formula, based on records linked to the employee or matching their exact name.",
-            ...(req.groupBy === "area" ? ["Employees are not assigned to areas, so rankings appear under \"No area\"."] : []),
+            ...(req.groupBy === "area"
+              ? ['Employees are not assigned to areas, so rankings appear under "No area".']
+              : []),
           ],
         }
       : null;
@@ -962,7 +1089,9 @@ export class IndustrialPerformanceReportService {
       }
       notes.push(
         `Rates use ${req.hoursWorked.toLocaleString("en-US")} hours worked entered for this report` +
-          (req.groupBy === "site" && sites.length <= 1 ? "." : ", allocated to each group by headcount."),
+          (req.groupBy === "site" && sites.length <= 1
+            ? "."
+            : ", allocated to each group by headcount."),
       );
       return notes;
     }
@@ -981,7 +1110,8 @@ export class IndustrialPerformanceReportService {
         from: req.from,
         to: req.to,
         headcount,
-        annualHours: (year) => readOshaForm300AMetaFromSitePayload(site.sourcePayload, year, site.name).totalHoursWorked,
+        annualHours: (year) =>
+          readOshaForm300AMetaFromSitePayload(site.sourcePayload, year, site.name).totalHoursWorked,
       });
       if (result.hours <= 0) continue;
       if (result.estimated) estimated = true;
@@ -994,7 +1124,12 @@ export class IndustrialPerformanceReportService {
         !req.departmentIds.length &&
         (!req.siteIds.length || req.siteIds.includes(site.id))
       ) {
-        acc.addToGroup("osha", { key: site.id, label: site.name.trim() || "Unnamed location" }, "hoursWorked", result.hours);
+        acc.addToGroup(
+          "osha",
+          { key: site.id, label: site.name.trim() || "Unnamed location" },
+          "hoursWorked",
+          result.hours,
+        );
       }
     }
     const noSiteEstimate = (ESTIMATED_HOURS_PER_EMPLOYEE_YEAR * periodDays(req.from, req.to)) / 365;
@@ -1004,13 +1139,17 @@ export class IndustrialPerformanceReportService {
       if (unit.siteId === null) estimated = true;
       acc.add("osha", unit, "hoursWorked", share);
     }
-    if (fromForm300A) notes.push("Hours worked come from each location's OSHA Form 300A totals, prorated to the period.");
+    if (fromForm300A)
+      notes.push(
+        "Hours worked come from each location's OSHA Form 300A totals, prorated to the period.",
+      );
     if (estimated) {
       notes.push(
         "Where Form 300A hours are missing, hours are estimated at 2,000 hours per active employee per year. Enter hours worked when running the report for exact rates.",
       );
     }
-    if (req.groupBy !== "site") notes.push("Location hours are allocated to each group by headcount.");
+    if (req.groupBy !== "site")
+      notes.push("Location hours are allocated to each group by headcount.");
     return notes;
   }
 }

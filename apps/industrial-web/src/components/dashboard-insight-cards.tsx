@@ -72,9 +72,7 @@ function IncidentTrendChart({ points }: { points: AnalyticsTrendPoint[] }) {
     () =>
       points.map((p, i) => {
         const x =
-          points.length === 1
-            ? pad.left + plotW / 2
-            : pad.left + (i / (points.length - 1)) * plotW;
+          points.length === 1 ? pad.left + plotW / 2 : pad.left + (i / (points.length - 1)) * plotW;
         const y = pad.top + plotH - (p.count / max) * plotH;
         return { x, y, ...p, label: monthAxisLabel(p.month) };
       }),
@@ -143,7 +141,11 @@ function IncidentTrendChart({ points }: { points: AnalyticsTrendPoint[] }) {
           />
         ))}
 
-        <path className="ind-dash-area__fill" d={areaPath} fill={`url(#ind-trend-fill-${gradId})`} />
+        <path
+          className="ind-dash-area__fill"
+          d={areaPath}
+          fill={`url(#ind-trend-fill-${gradId})`}
+        />
         <path className="ind-dash-area__line" d={linePath} />
 
         {last ? (
@@ -200,10 +202,7 @@ function IncidentTrendChart({ points }: { points: AnalyticsTrendPoint[] }) {
       ) : null}
 
       {active ? (
-        <div
-          className="ind-dash-area__axis-chip"
-          style={{ left: `${(active.x / width) * 100}%` }}
-        >
+        <div className="ind-dash-area__axis-chip" style={{ left: `${(active.x / width) * 100}%` }}>
           {active.label}
         </div>
       ) : null}
@@ -231,7 +230,10 @@ export function IncidentTrendCard({
             <h5 className="mb-1">Incident Trend</h5>
             <p className="text-muted small mb-0">{formatRangeLabel(dateStart, dateEnd)}</p>
           </div>
-          <Link className="small text-primary fw-semibold text-decoration-none" href="/modules/incidents/">
+          <Link
+            className="small text-primary fw-semibold text-decoration-none"
+            href="/modules/incidents/"
+          >
             View incidents →
           </Link>
         </div>
@@ -289,8 +291,7 @@ export function SafetyIndexCard({
 }) {
   const [period, setPeriod] = useState<SafetyIndexPeriod>("6m");
   const view = safetyIndexView(report, period);
-  const departmentScores =
-    report && period === report.preset ? report.departmentScores : [];
+  const departmentScores = report && period === report.preset ? report.departmentScores : [];
   const topDepartments = departmentScores.slice(0, 5);
 
   return (
@@ -351,10 +352,7 @@ export function SafetyIndexCard({
           <div className="mt-3">
             <div className="d-flex justify-content-between align-items-center mb-2">
               <h6 className="mb-0 small text-uppercase text-muted">By department</h6>
-              <Link
-                href="/modules/analytics/?tab=overview"
-                className="small text-decoration-none"
-              >
+              <Link href="/modules/analytics/?tab=overview" className="small text-decoration-none">
                 View all
               </Link>
             </div>
@@ -407,7 +405,10 @@ export function TaskSchedulerCard({ tasks }: { tasks: DashboardTask[] }) {
             <h5 className="mb-1">Task Scheduler</h5>
             <p className="text-muted small mb-0">Assigned work, acknowledgments, and deadlines.</p>
           </div>
-          <Link className="small text-success fw-semibold text-decoration-none" href="/modules/tasks/">
+          <Link
+            className="small text-success fw-semibold text-decoration-none"
+            href="/modules/tasks/"
+          >
             View all tasks →
           </Link>
         </div>

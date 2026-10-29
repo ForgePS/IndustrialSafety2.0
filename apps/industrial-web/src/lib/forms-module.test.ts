@@ -72,12 +72,7 @@ describe("forms-module", () => {
 
   it("falls back to default operational fields", () => {
     const fields = extractFormFields({ title: "Blank template" });
-    expect(fields.map((f) => f.id)).toEqual([
-      "submittedBy",
-      "location",
-      "recordDate",
-      "notes",
-    ]);
+    expect(fields.map((f) => f.id)).toEqual(["submittedBy", "location", "recordDate", "notes"]);
   });
 
   it("hardcodes PRM MVR policy into the Policy & Employee Agreement field", () => {
@@ -130,10 +125,7 @@ describe("hydrateFormAnswers / buildFormAnswersPayload", () => {
 
   it("hydrates stored answers into fill-form strings", () => {
     expect(
-      hydrateFormAnswers(
-        { notes: "Hello", ack: true, sig: "data:image/png;base64,AAA" },
-        fields,
-      ),
+      hydrateFormAnswers({ notes: "Hello", ack: true, sig: "data:image/png;base64,AAA" }, fields),
     ).toEqual({
       notes: "Hello",
       ack: "true",
@@ -157,7 +149,9 @@ describe("hydrateFormAnswers / buildFormAnswersPayload", () => {
   it("maps employee number field type and links subject keys in answers payload", () => {
     const fields = extractFormFields({
       schemaJson: {
-        fields: [{ id: "employeeNumber", label: "Employee #", type: "employeeNumber", required: true }],
+        fields: [
+          { id: "employeeNumber", label: "Employee #", type: "employeeNumber", required: true },
+        ],
       },
     });
     expect(fields[0]?.type).toBe("employeeNumber");

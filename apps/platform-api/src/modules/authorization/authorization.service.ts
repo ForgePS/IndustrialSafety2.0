@@ -1,8 +1,5 @@
 import { Inject, Injectable } from "@nestjs/common";
-import {
-  evaluateAuthorization,
-  type AuthorizationDecision,
-} from "@forge/authorization";
+import { evaluateAuthorization, type AuthorizationDecision } from "@forge/authorization";
 import { isCreatorOnlyPermission } from "@forge/contracts";
 import {
   createId,
@@ -78,43 +75,48 @@ export class AuthorizationService {
 
   async createRole(tenantId: string, input: unknown, principal: ForgePrincipal) {
     const data = createRoleSchema.parse(input);
-    return withTenantTransaction(this.db, tenantId, async (tx) => {
-      const id = createId();
-      const now = new Date();
-      const [row] = await tx
-        .insert(roles)
-        .values({
-          id,
+    return withTenantTransaction(
+      this.db,
+      tenantId,
+      async (tx) => {
+        const id = createId();
+        const now = new Date();
+        const [row] = await tx
+          .insert(roles)
+          .values({
+            id,
+            tenantId,
+            organizationId: data.organizationId,
+            code: data.code,
+            name: data.name,
+            description: data.description,
+            status: "ACTIVE",
+            isSystemManaged: false,
+            createdAt: now,
+            updatedAt: now,
+          })
+          .returning();
+        if (!row) {
+          throw new ForgeError("INTERNAL_ERROR", "Failed to create role");
+        }
+        await this.audit.writeInTransaction(tx, {
           tenantId,
-          organizationId: data.organizationId,
-          code: data.code,
-          name: data.name,
-          description: data.description,
-          status: "ACTIVE",
-          isSystemManaged: false,
-          createdAt: now,
-          updatedAt: now,
-        })
-        .returning();
-      if (!row) {
-        throw new ForgeError("INTERNAL_ERROR", "Failed to create role");
-      }
-      await this.audit.writeInTransaction(tx, {
-        tenantId,
-        actorUserId: principal.userId,
-        actorPersonId: principal.personId,
-        actorType: "USER",
-        action: "role.create",
-        resourceType: "role",
-        resourceId: id,
-        result: "SUCCESS",
-        riskLevel: "MEDIUM",
-        correlationId: principal.correlationId,
-        requestId: principal.requestId,
-        after: row,
-      });
-      return row;
-    }, principal.userId);
+          actorUserId: principal.userId,
+          actorPersonId: principal.personId,
+          actorType: "USER",
+          action: "role.create",
+          resourceType: "role",
+          resourceId: id,
+          result: "SUCCESS",
+          riskLevel: "MEDIUM",
+          correlationId: principal.correlationId,
+          requestId: principal.requestId,
+          after: row,
+        });
+        return row;
+      },
+      principal.userId,
+    );
   }
 
   async listRoles(tenantId: string) {
@@ -181,56 +183,61 @@ export class AuthorizationService {
     expectedVersion: ExpectedVersion,
   ) {
     const data = patchRoleSchema.parse(input);
-    return withTenantTransaction(this.db, tenantId, async (tx) => {
-      const before = await tx.query.roles.findFirst({
-        where: and(eq(roles.id, roleId), eq(roles.tenantId, tenantId)),
-      });
-      if (!before) {
-        throw new ForgeError("NOT_FOUND", "Role not found");
-      }
-      if (before.isSystemManaged) {
-        throw new ForgeError("FORBIDDEN", "System-managed roles cannot be modified");
-      }
-      const version = before.recordVersion;
-      if (expectedVersion !== "*" && version !== expectedVersion) {
-        throw concurrencyConflict({
+    return withTenantTransaction(
+      this.db,
+      tenantId,
+      async (tx) => {
+        const before = await tx.query.roles.findFirst({
+          where: and(eq(roles.id, roleId), eq(roles.tenantId, tenantId)),
+        });
+        if (!before) {
+          throw new ForgeError("NOT_FOUND", "Role not found");
+        }
+        if (before.isSystemManaged) {
+          throw new ForgeError("FORBIDDEN", "System-managed roles cannot be modified");
+        }
+        const version = before.recordVersion;
+        if (expectedVersion !== "*" && version !== expectedVersion) {
+          throw concurrencyConflict({
+            tenantId,
+            resourceType: "role",
+            resourceId: roleId,
+            expectedVersion,
+            actualVersion: version,
+          });
+        }
+        const [updated] = await tx
+          .update(roles)
+          .set({ ...data, recordVersion: version + 1, updatedAt: new Date() })
+          .where(and(eq(roles.id, roleId), eq(roles.recordVersion, version)))
+          .returning();
+        if (!updated) {
+          throw concurrencyConflict({
+            tenantId,
+            resourceType: "role",
+            resourceId: roleId,
+            expectedVersion,
+            actualVersion: null,
+          });
+        }
+        await this.audit.writeInTransaction(tx, {
           tenantId,
+          actorUserId: principal.userId,
+          actorPersonId: principal.personId,
+          actorType: "USER",
+          action: "role.update",
           resourceType: "role",
           resourceId: roleId,
-          expectedVersion,
-          actualVersion: version,
+          result: "SUCCESS",
+          riskLevel: "MEDIUM",
+          correlationId: principal.correlationId,
+          requestId: principal.requestId,
+          after: updated,
         });
-      }
-      const [updated] = await tx
-        .update(roles)
-        .set({ ...data, recordVersion: version + 1, updatedAt: new Date() })
-        .where(and(eq(roles.id, roleId), eq(roles.recordVersion, version)))
-        .returning();
-      if (!updated) {
-        throw concurrencyConflict({
-          tenantId,
-          resourceType: "role",
-          resourceId: roleId,
-          expectedVersion,
-          actualVersion: null,
-        });
-      }
-      await this.audit.writeInTransaction(tx, {
-        tenantId,
-        actorUserId: principal.userId,
-        actorPersonId: principal.personId,
-        actorType: "USER",
-        action: "role.update",
-        resourceType: "role",
-        resourceId: roleId,
-        result: "SUCCESS",
-        riskLevel: "MEDIUM",
-        correlationId: principal.correlationId,
-        requestId: principal.requestId,
-        after: updated,
-      });
-      return updated;
-    }, principal.userId);
+        return updated;
+      },
+      principal.userId,
+    );
   }
 
   async setRolePermissions(
@@ -241,138 +248,140 @@ export class AuthorizationService {
     expectedVersion: ExpectedVersion,
   ) {
     const data = setPermissionsSchema.parse(input);
-    return withTenantTransaction(this.db, tenantId, async (tx) => {
-      const role = await tx.query.roles.findFirst({
-        where: and(eq(roles.id, roleId), eq(roles.tenantId, tenantId)),
-      });
-      if (!role) {
-        throw new ForgeError("NOT_FOUND", "Role not found");
-      }
-      if (role.isSystemManaged) {
-        throw new ForgeError(
-          "FORBIDDEN",
-          "System-managed role permissions cannot be modified",
-        );
-      }
-      this.assertPermissionCodesAssignable(principal, data.permissionCodes);
-      const version = role.recordVersion;
-      if (expectedVersion !== "*" && version !== expectedVersion) {
-        throw concurrencyConflict({
-          tenantId,
-          resourceType: "role",
-          resourceId: roleId,
-          expectedVersion,
-          actualVersion: version,
+    return withTenantTransaction(
+      this.db,
+      tenantId,
+      async (tx) => {
+        const role = await tx.query.roles.findFirst({
+          where: and(eq(roles.id, roleId), eq(roles.tenantId, tenantId)),
         });
-      }
-      await tx.delete(rolePermissions).where(eq(rolePermissions.roleId, roleId));
-      if (data.permissionCodes.length > 0) {
-        const permRows = await tx.query.permissions.findMany({
-          where: inArray(permissions.code, data.permissionCodes),
-        });
-        if (permRows.length !== data.permissionCodes.length) {
-          throw new ForgeError("BAD_REQUEST", "One or more permission codes are invalid");
+        if (!role) {
+          throw new ForgeError("NOT_FOUND", "Role not found");
         }
-        await tx.insert(rolePermissions).values(
-          permRows.map((p) => ({
-            roleId,
-            permissionId: p.id,
-            effect: "ALLOW" as const,
-            createdAt: new Date(),
-          })),
-        );
-      }
-      // Permission sets are versioned through their parent role's recordVersion.
-      const [updated] = await tx
-        .update(roles)
-        .set({ recordVersion: version + 1, updatedAt: new Date() })
-        .where(and(eq(roles.id, roleId), eq(roles.recordVersion, version)))
-        .returning();
-      if (!updated) {
-        throw concurrencyConflict({
+        if (role.isSystemManaged) {
+          throw new ForgeError("FORBIDDEN", "System-managed role permissions cannot be modified");
+        }
+        this.assertPermissionCodesAssignable(principal, data.permissionCodes);
+        const version = role.recordVersion;
+        if (expectedVersion !== "*" && version !== expectedVersion) {
+          throw concurrencyConflict({
+            tenantId,
+            resourceType: "role",
+            resourceId: roleId,
+            expectedVersion,
+            actualVersion: version,
+          });
+        }
+        await tx.delete(rolePermissions).where(eq(rolePermissions.roleId, roleId));
+        if (data.permissionCodes.length > 0) {
+          const permRows = await tx.query.permissions.findMany({
+            where: inArray(permissions.code, data.permissionCodes),
+          });
+          if (permRows.length !== data.permissionCodes.length) {
+            throw new ForgeError("BAD_REQUEST", "One or more permission codes are invalid");
+          }
+          await tx.insert(rolePermissions).values(
+            permRows.map((p) => ({
+              roleId,
+              permissionId: p.id,
+              effect: "ALLOW" as const,
+              createdAt: new Date(),
+            })),
+          );
+        }
+        // Permission sets are versioned through their parent role's recordVersion.
+        const [updated] = await tx
+          .update(roles)
+          .set({ recordVersion: version + 1, updatedAt: new Date() })
+          .where(and(eq(roles.id, roleId), eq(roles.recordVersion, version)))
+          .returning();
+        if (!updated) {
+          throw concurrencyConflict({
+            tenantId,
+            resourceType: "role",
+            resourceId: roleId,
+            expectedVersion,
+            actualVersion: null,
+          });
+        }
+        await this.audit.writeInTransaction(tx, {
           tenantId,
+          actorUserId: principal.userId,
+          actorPersonId: principal.personId,
+          actorType: "USER",
+          action: "role.permissions.set",
           resourceType: "role",
           resourceId: roleId,
-          expectedVersion,
-          actualVersion: null,
+          result: "SUCCESS",
+          riskLevel: "HIGH",
+          correlationId: principal.correlationId,
+          requestId: principal.requestId,
+          after: { permissionCodes: data.permissionCodes },
         });
-      }
-      await this.audit.writeInTransaction(tx, {
-        tenantId,
-        actorUserId: principal.userId,
-        actorPersonId: principal.personId,
-        actorType: "USER",
-        action: "role.permissions.set",
-        resourceType: "role",
-        resourceId: roleId,
-        result: "SUCCESS",
-        riskLevel: "HIGH",
-        correlationId: principal.correlationId,
-        requestId: principal.requestId,
-        after: { permissionCodes: data.permissionCodes },
-      });
-      return {
-        ...updated,
-        permissions: data.permissionCodes.map((code) => ({ code, effect: "ALLOW" })),
-      };
-    }, principal.userId);
+        return {
+          ...updated,
+          permissions: data.permissionCodes.map((code) => ({ code, effect: "ALLOW" })),
+        };
+      },
+      principal.userId,
+    );
   }
 
-  async assignRole(
-    tenantId: string,
-    userId: string,
-    input: unknown,
-    principal: ForgePrincipal,
-  ) {
+  async assignRole(tenantId: string, userId: string, input: unknown, principal: ForgePrincipal) {
     const data = assignRoleSchema.parse(input);
-    return withTenantTransaction(this.db, tenantId, async (tx) => {
-      const role = await tx.query.roles.findFirst({
-        where: and(eq(roles.id, data.roleId), eq(roles.tenantId, tenantId)),
-      });
-      if (!role) {
-        throw new ForgeError("NOT_FOUND", "Role not found");
-      }
-      await this.assertRoleAssignable(tx, principal, data.roleId);
-      const id = createId();
-      const [row] = await tx
-        .insert(userRoleAssignments)
-        .values({
-          id,
-          tenantId,
-          userId,
-          roleId: data.roleId,
-          organizationId: data.organizationId,
-          grantedByUserId: principal.userId,
-          reason: data.reason,
-          createdAt: new Date(),
-        })
-        .returning();
+    return withTenantTransaction(
+      this.db,
+      tenantId,
+      async (tx) => {
+        const role = await tx.query.roles.findFirst({
+          where: and(eq(roles.id, data.roleId), eq(roles.tenantId, tenantId)),
+        });
+        if (!role) {
+          throw new ForgeError("NOT_FOUND", "Role not found");
+        }
+        await this.assertRoleAssignable(tx, principal, data.roleId);
+        const id = createId();
+        const [row] = await tx
+          .insert(userRoleAssignments)
+          .values({
+            id,
+            tenantId,
+            userId,
+            roleId: data.roleId,
+            organizationId: data.organizationId,
+            grantedByUserId: principal.userId,
+            reason: data.reason,
+            createdAt: new Date(),
+          })
+          .returning();
 
-      await this.outbox.write(tx, {
-        tenantId,
-        aggregateType: "user_role_assignment",
-        aggregateId: id,
-        eventType: DOMAIN_EVENT_TYPES.ROLE_ASSIGNED,
-        payload: { assignmentId: id, userId, roleId: data.roleId, tenantId },
-        correlationId: principal.correlationId,
-        actorUserId: principal.userId,
-      });
-      await this.audit.writeInTransaction(tx, {
-        tenantId,
-        actorUserId: principal.userId,
-        actorPersonId: principal.personId,
-        actorType: "USER",
-        action: "role.assign",
-        resourceType: "user_role_assignment",
-        resourceId: id,
-        result: "SUCCESS",
-        riskLevel: "HIGH",
-        correlationId: principal.correlationId,
-        requestId: principal.requestId,
-        after: row,
-      });
-      return row;
-    }, principal.userId);
+        await this.outbox.write(tx, {
+          tenantId,
+          aggregateType: "user_role_assignment",
+          aggregateId: id,
+          eventType: DOMAIN_EVENT_TYPES.ROLE_ASSIGNED,
+          payload: { assignmentId: id, userId, roleId: data.roleId, tenantId },
+          correlationId: principal.correlationId,
+          actorUserId: principal.userId,
+        });
+        await this.audit.writeInTransaction(tx, {
+          tenantId,
+          actorUserId: principal.userId,
+          actorPersonId: principal.personId,
+          actorType: "USER",
+          action: "role.assign",
+          resourceType: "user_role_assignment",
+          resourceId: id,
+          result: "SUCCESS",
+          riskLevel: "HIGH",
+          correlationId: principal.correlationId,
+          requestId: principal.requestId,
+          after: row,
+        });
+        return row;
+      },
+      principal.userId,
+    );
   }
 
   async revokeRole(
@@ -381,36 +390,41 @@ export class AuthorizationService {
     assignmentId: string,
     principal: ForgePrincipal,
   ) {
-    return withTenantTransaction(this.db, tenantId, async (tx) => {
-      const [updated] = await tx
-        .update(userRoleAssignments)
-        .set({
-          revokedAt: new Date(),
-          revokedByUserId: principal.userId,
-        })
-        .where(
-          and(
-            eq(userRoleAssignments.id, assignmentId),
-            eq(userRoleAssignments.tenantId, tenantId),
-            eq(userRoleAssignments.userId, userId),
-            isNull(userRoleAssignments.revokedAt),
-          ),
-        )
-        .returning();
-      if (!updated) {
-        throw new ForgeError("NOT_FOUND", "Role assignment not found");
-      }
-      await this.outbox.write(tx, {
-        tenantId,
-        aggregateType: "user_role_assignment",
-        aggregateId: assignmentId,
-        eventType: DOMAIN_EVENT_TYPES.ROLE_REVOKED,
-        payload: { assignmentId, userId, tenantId },
-        correlationId: principal.correlationId,
-        actorUserId: principal.userId,
-      });
-      return updated;
-    }, principal.userId);
+    return withTenantTransaction(
+      this.db,
+      tenantId,
+      async (tx) => {
+        const [updated] = await tx
+          .update(userRoleAssignments)
+          .set({
+            revokedAt: new Date(),
+            revokedByUserId: principal.userId,
+          })
+          .where(
+            and(
+              eq(userRoleAssignments.id, assignmentId),
+              eq(userRoleAssignments.tenantId, tenantId),
+              eq(userRoleAssignments.userId, userId),
+              isNull(userRoleAssignments.revokedAt),
+            ),
+          )
+          .returning();
+        if (!updated) {
+          throw new ForgeError("NOT_FOUND", "Role assignment not found");
+        }
+        await this.outbox.write(tx, {
+          tenantId,
+          aggregateType: "user_role_assignment",
+          aggregateId: assignmentId,
+          eventType: DOMAIN_EVENT_TYPES.ROLE_REVOKED,
+          payload: { assignmentId, userId, tenantId },
+          correlationId: principal.correlationId,
+          actorUserId: principal.userId,
+        });
+        return updated;
+      },
+      principal.userId,
+    );
   }
 
   async check(input: unknown, principal: ForgePrincipal): Promise<AuthorizationDecision> {
@@ -444,10 +458,7 @@ export class AuthorizationService {
         );
       }
       if (!principal.isPlatformAdmin && !principal.permissions.has(code)) {
-        throw new ForgeError(
-          "FORBIDDEN",
-          "Cannot assign a permission the caller does not hold",
-        );
+        throw new ForgeError("FORBIDDEN", "Cannot assign a permission the caller does not hold");
       }
     }
   }

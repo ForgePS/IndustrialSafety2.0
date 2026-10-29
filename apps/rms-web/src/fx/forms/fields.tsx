@@ -62,7 +62,15 @@ export function FxTextField(props: Chrome & InputHTMLAttributes<HTMLInputElement
         disabled={disabled}
         readOnly={readOnly}
         required={required}
-        {...pickAria({ id, error, hint: props.hint, description: props.description, helpText: props.helpText, warning, success })}
+        {...pickAria({
+          id,
+          error,
+          hint: props.hint,
+          description: props.description,
+          helpText: props.helpText,
+          warning,
+          success,
+        })}
         {...rest}
       />
     </FxField>
@@ -115,8 +123,18 @@ export function FxCheckbox(
   props: Chrome & InputHTMLAttributes<HTMLInputElement> & { checkboxLabel?: string },
 ) {
   const chrome = pickChrome(props);
-  const { id, required, disabled, readOnly, error, warning, success, checkboxLabel, label, ...rest } =
-    props;
+  const {
+    id,
+    required,
+    disabled,
+    readOnly,
+    error,
+    warning,
+    success,
+    checkboxLabel,
+    label,
+    ...rest
+  } = props;
   return (
     <FxField {...chrome}>
       <label className="rms-fx-field__check">
@@ -161,7 +179,11 @@ export function FxRadioGroup({
 }) {
   return (
     <FxField {...pickChrome(chrome)}>
-      <div role="radiogroup" aria-labelledby={`${chrome.id}-label`} className="rms-fx-field__radios">
+      <div
+        role="radiogroup"
+        aria-labelledby={`${chrome.id}-label`}
+        className="rms-fx-field__radios"
+      >
         <span id={`${chrome.id}-label`} className="rms-fx-sr-only">
           {chrome.label}
         </span>
@@ -263,7 +285,12 @@ export function FxImageUpload(props: Chrome & InputHTMLAttributes<HTMLInputEleme
 
 export function FxSignature(props: Chrome & { onClear?: () => void }) {
   const { id, label, disabled, onClear: _onClear, ...rest } = props;
-  const chrome = pickChrome({ id, label, ...rest, ...(disabled !== undefined ? { disabled } : {}) });
+  const chrome = pickChrome({
+    id,
+    label,
+    ...rest,
+    ...(disabled !== undefined ? { disabled } : {}),
+  });
   return (
     <FxField {...chrome}>
       <canvas

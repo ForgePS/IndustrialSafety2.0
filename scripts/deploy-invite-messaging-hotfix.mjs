@@ -19,7 +19,10 @@ const SERVICE = "forge-production-ecs-platform-api";
 const ECR = `${ACCOUNT}.dkr.ecr.${REGION}.amazonaws.com/forge-production-ecr-platformapi`;
 const TD_FILE = ".forge-td-prod-api-invite-msg.json";
 const skipWait = process.argv.includes("--skip-wait");
-const stamp = new Date().toISOString().replace(/[-:TZ.]/g, "").slice(0, 14);
+const stamp = new Date()
+  .toISOString()
+  .replace(/[-:TZ.]/g, "")
+  .slice(0, 14);
 const tag = process.env.DEPLOY_TAG || `invite-msg-${stamp}`;
 const root = path.join(path.dirname(fileURLToPath(import.meta.url)), "..");
 

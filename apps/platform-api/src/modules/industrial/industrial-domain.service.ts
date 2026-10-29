@@ -66,7 +66,20 @@ import {
 import { ForgeError } from "@forge/errors";
 import type { ForgePrincipal } from "@forge/tenant-context";
 import { createHash, randomBytes } from "node:crypto";
-import { and, desc, eq, gte, ilike, inArray, isNotNull, isNull, lt, lte, or, sql } from "drizzle-orm";
+import {
+  and,
+  desc,
+  eq,
+  gte,
+  ilike,
+  inArray,
+  isNotNull,
+  isNull,
+  lt,
+  lte,
+  or,
+  sql,
+} from "drizzle-orm";
 import {
   documentBelongsToTenant,
   EMERGENCY_SMS_CONSENT_TEXT,
@@ -118,10 +131,7 @@ import {
   parseFormCatalogImportPayload,
   type FormCatalogImportSummary,
 } from "./form-catalog-import.js";
-import {
-  checklistToFormTemplate,
-  parseChecklistFile,
-} from "./form-checklist-import.js";
+import { checklistToFormTemplate, parseChecklistFile } from "./form-checklist-import.js";
 import { isProducersMvrConsentForm } from "./producers-mvr-policy.js";
 import {
   COMPANY_DRIVER_MVR_CONSENT_NOTIFICATION_TYPE,
@@ -144,10 +154,7 @@ import { buildDvirDayPrintableHtml, buildDvirPrintableHtml } from "./dvir-print.
 import { buildIncidentPrintableHtml } from "./incident-print.js";
 import { buildRcaPrintableHtml, normalizeRcaForPrint } from "./rca-print.js";
 import { buildLotoPrintableHtml } from "./loto-print.js";
-import {
-  buildWorkersCompPrintableHtml,
-  workersCompPrintTitle,
-} from "./workers-comp-print.js";
+import { buildWorkersCompPrintableHtml, workersCompPrintTitle } from "./workers-comp-print.js";
 import { ensureCompanyDriverRosterEntry } from "./company-driver-roster.js";
 import { normalizePersonnelStatus, personnelStatusMatches } from "./personnel-status.js";
 import { assertDemoAllowsDotExternal } from "../../common/demo-tenant.js";
@@ -394,7 +401,6 @@ const PERSONNEL_BOOLEAN_FIELDS = [
 ] as const;
 
 type PersonnelTextField = (typeof PERSONNEL_TEXT_FIELDS)[number];
-type PersonnelBooleanField = (typeof PERSONNEL_BOOLEAN_FIELDS)[number];
 
 /** The pre-0043 form posted `department`; keep accepting it as `departmentName`. */
 const PERSONNEL_FIELD_ALIASES: Partial<Record<PersonnelTextField, string>> = {
@@ -412,10 +418,7 @@ function toBoolean(value: unknown): boolean {
 }
 
 /** Empty string must not be written to uuid columns — Postgres rejects `''`. */
-function optionalUuid(
-  value: unknown,
-  fallback: string | null | undefined,
-): string | null {
+function optionalUuid(value: unknown, fallback: string | null | undefined): string | null {
   if (value === undefined) return fallback ?? null;
   if (value == null) return null;
   const text = String(value).trim();
@@ -563,18 +566,18 @@ export class IndustrialDomainService {
     tenantId: string,
     values: Record<string, unknown>,
   ): Promise<void> {
-    if (!Boolean(values.isDotDriver)) return;
+    if (!values.isDotDriver) return;
     const tenantRows = await tx.execute(sql`
       select tenant_key::text as tenant_key
       from tenants
       where id = ${tenantId}::uuid
       limit 1
     `);
-    const tenantRow = (Array.isArray(tenantRows)
-      ? tenantRows[0]
-      : (tenantRows as { rows?: Array<Record<string, unknown>> }).rows?.[0]) as
-      | Record<string, unknown>
-      | undefined;
+    const tenantRow = (
+      Array.isArray(tenantRows)
+        ? tenantRows[0]
+        : (tenantRows as { rows?: Array<Record<string, unknown>> }).rows?.[0]
+    ) as Record<string, unknown> | undefined;
     if (String(tenantRow?.tenant_key ?? "").trim() !== "producers-rice-mill") return;
     values.isCompanyDriver = true;
   }
@@ -592,10 +595,7 @@ export class IndustrialDomainService {
       const raw = readPersonnelText(body, field);
       if (raw === undefined) {
         const existingValue = existing[field] ?? null;
-        if (
-          (PERSONNEL_DATE_FIELDS as readonly string[]).includes(field) &&
-          existingValue != null
-        ) {
+        if ((PERSONNEL_DATE_FIELDS as readonly string[]).includes(field) && existingValue != null) {
           values[field] = optionalDate(existingValue);
         } else {
           values[field] = existingValue;
@@ -614,8 +614,7 @@ export class IndustrialDomainService {
       values[field] = text === "" ? null : text;
     }
     for (const field of PERSONNEL_BOOLEAN_FIELDS) {
-      values[field] =
-        body[field] === undefined ? Boolean(existing[field]) : toBoolean(body[field]);
+      values[field] = body[field] === undefined ? Boolean(existing[field]) : toBoolean(body[field]);
     }
     return values;
   }
@@ -635,7 +634,7 @@ export class IndustrialDomainService {
     values.smsAuthorizedByUserId =
       typeof row.smsAuthorizedByUserId === "string" && row.smsAuthorizedByUserId.trim()
         ? row.smsAuthorizedByUserId.trim()
-        : row.smsAuthorizedByUserId ?? null;
+        : (row.smsAuthorizedByUserId ?? null);
     values.smsOptedOutAt = this.toIsoOrNull(row.smsOptedOutAt);
     values.smsAuthorized = Boolean(values.smsAuthorizedAt) && !values.smsOptedOutAt;
     return values;
@@ -784,16 +783,17 @@ export class IndustrialDomainService {
     providedName: string | null | undefined,
   ): Promise<string | null> {
     const provided =
-      typeof providedName === "string" && providedName.trim() !== ""
-        ? providedName.trim()
-        : null;
+      typeof providedName === "string" && providedName.trim() !== "" ? providedName.trim() : null;
     if (provided) return provided;
     if (!departmentId) return null;
     const [dept] = await tx
       .select({ name: industrialDepartments.name })
       .from(industrialDepartments)
       .where(
-        and(eq(industrialDepartments.id, departmentId), eq(industrialDepartments.tenantId, tenantId)),
+        and(
+          eq(industrialDepartments.id, departmentId),
+          eq(industrialDepartments.tenantId, tenantId),
+        ),
       )
       .limit(1);
     const name = typeof dept?.name === "string" ? dept.name.trim() : "";
@@ -1127,8 +1127,7 @@ export class IndustrialDomainService {
     const resolvedPersonnelId = this.resolvePersonnelIdFromDriverRow(
       {
         personnelId: row.personnelId ?? null,
-        employeeNumber:
-          typeof payload.employeeNumber === "string" ? payload.employeeNumber : null,
+        employeeNumber: typeof payload.employeeNumber === "string" ? payload.employeeNumber : null,
       },
       payload,
       personnelLinkIndex,
@@ -1250,7 +1249,9 @@ export class IndustrialDomainService {
     if (/\bdrv-\d{4}-\d+\b/.test(hay)) return true;
     if (/dqf\s*import/.test(hay) || collection.includes("dqf")) return true;
     if (/dot-compliance\/[^/]+\/drivers\/drv-/.test(hay)) return true;
-    const cat = String(payload.category ?? "").trim().toLowerCase();
+    const cat = String(payload.category ?? "")
+      .trim()
+      .toLowerCase();
     if (cat.includes("dqf")) return true;
     if (payload.dqf === true) return true;
     if (cat === "drivers" || cat.includes("driver")) return true;
@@ -1269,11 +1270,11 @@ export class IndustrialDomainService {
       where id = ${tenantId}::uuid
       limit 1
     `);
-    const tenantRow = (Array.isArray(tenantRows)
-      ? tenantRows[0]
-      : (tenantRows as { rows?: Array<Record<string, unknown>> }).rows?.[0]) as
-      | Record<string, unknown>
-      | undefined;
+    const tenantRow = (
+      Array.isArray(tenantRows)
+        ? tenantRows[0]
+        : (tenantRows as { rows?: Array<Record<string, unknown>> }).rows?.[0]
+    ) as Record<string, unknown> | undefined;
     const tenantKey = String(tenantRow?.tenant_key ?? "").trim();
     const ensureCompanyDriver = tenantKey === "producers-rice-mill";
 
@@ -1884,7 +1885,9 @@ export class IndustrialDomainService {
       const documentId = String(entry.documentId ?? "").trim();
       if (!UUID_PATTERN.test(documentId)) return null;
       return {
-        name: String(entry.name ?? entry.fileName ?? entry.originalFilename ?? "License copy").trim(),
+        name: String(
+          entry.name ?? entry.fileName ?? entry.originalFilename ?? "License copy",
+        ).trim(),
         fileName: String(entry.fileName ?? entry.name ?? "license.jpg").trim(),
         documentId,
         contentType: String(entry.contentType ?? entry.mimeType ?? "image/jpeg").trim(),
@@ -1898,8 +1901,7 @@ export class IndustrialDomainService {
       extractUpload(dotPayload.driversLicenseCopy) ??
       extractUpload(dotPayload.driversLicenseFront);
     const back =
-      extractUpload(dotPayload.licenseBackUpload) ??
-      extractUpload(dotPayload.driversLicenseBack);
+      extractUpload(dotPayload.licenseBackUpload) ?? extractUpload(dotPayload.driversLicenseBack);
     if (!front && !back) return;
 
     const payload = this.unwrapSourcePayload(person.sourcePayload);
@@ -2448,7 +2450,8 @@ export class IndustrialDomainService {
             return this.mapListItem({
               ...base,
               extra: {
-                siteId: "siteId" in r ? ((r as { siteId?: string | null }).siteId ?? null) : undefined,
+                siteId:
+                  "siteId" in r ? ((r as { siteId?: string | null }).siteId ?? null) : undefined,
                 ...("schemaJson" in r
                   ? {
                       schemaJson: (r as { schemaJson?: unknown }).schemaJson ?? {},
@@ -2525,11 +2528,7 @@ export class IndustrialDomainService {
               payload,
             )
           ) {
-            await this.markPersonnelDotDriverFromDqf(
-              tx,
-              principal.tenantId,
-              resolvedPersonnelId,
-            );
+            await this.markPersonnelDotDriverFromDqf(tx, principal.tenantId, resolvedPersonnelId);
           }
         }
         // Never call loadPersonnelLinkIndex / enrichDotListItem on detail — both
@@ -2619,11 +2618,7 @@ export class IndustrialDomainService {
               ? (body as Record<string, unknown>)
               : {};
           for (const raw of this.employeeNumberCandidatesFromPayload(payloadBody)) {
-            const match = await findPersonnelByEmployeeNumber(
-              tx,
-              principal.tenantId,
-              raw,
-            );
+            const match = await findPersonnelByEmployeeNumber(tx, principal.tenantId, raw);
             if (match) {
               personnelId = match.id;
               break;
@@ -2658,8 +2653,7 @@ export class IndustrialDomainService {
         ).trim();
         const dueRaw = String(body.dueDate ?? body.deadlineDate ?? "").trim();
         const dueDate = /^\d{4}-\d{2}-\d{2}/.test(dueRaw) ? dueRaw.slice(0, 10) : "";
-        let assigneeName =
-          typeof body.assigneeName === "string" ? body.assigneeName.trim() : "";
+        let assigneeName = typeof body.assigneeName === "string" ? body.assigneeName.trim() : "";
         if (assigneePersonnelId) {
           const [person] = await tx
             .select({
@@ -2936,10 +2930,7 @@ export class IndustrialDomainService {
     ) {
       return;
     }
-    throw new ForgeError(
-      "FORBIDDEN",
-      "Only an EHS Director or Creator can delete incidents.",
-    );
+    throw new ForgeError("FORBIDDEN", "Only an EHS Director or Creator can delete incidents.");
   }
 
   private assertCanDeleteForms(principal: ForgePrincipal) {
@@ -2952,10 +2943,7 @@ export class IndustrialDomainService {
     ) {
       return;
     }
-    throw new ForgeError(
-      "FORBIDDEN",
-      "Only a Tenant Admin or Creator can delete forms.",
-    );
+    throw new ForgeError("FORBIDDEN", "Only a Tenant Admin or Creator can delete forms.");
   }
 
   private assertCanDeleteInspections(principal: ForgePrincipal) {
@@ -2968,10 +2956,7 @@ export class IndustrialDomainService {
     ) {
       return;
     }
-    throw new ForgeError(
-      "FORBIDDEN",
-      "Only a Tenant Admin or Creator can delete inspections.",
-    );
+    throw new ForgeError("FORBIDDEN", "Only a Tenant Admin or Creator can delete inspections.");
   }
 
   private mapFormSubmission(row: {
@@ -3013,7 +2998,9 @@ export class IndustrialDomainService {
     definitionCache: Map<string, typeof industrialFormDefinitions.$inferSelect | undefined>,
   ): Promise<typeof industrialFormSubmissions.$inferSelect> {
     if (
-      String(row.status ?? "").trim().toUpperCase() !== FORM_STATUS_PENDING_SIGNATURE ||
+      String(row.status ?? "")
+        .trim()
+        .toUpperCase() !== FORM_STATUS_PENDING_SIGNATURE ||
       !row.formDefinitionId
     ) {
       return row;
@@ -3138,11 +3125,7 @@ export class IndustrialDomainService {
 
     const prepared = await withTenantTransaction(this.db, principal.tenantId, async (tx) => {
       if (!personnelId) {
-        personnelId = await this.resolvePersonnelIdFromFormAnswers(
-          tx,
-          principal.tenantId,
-          answers,
-        );
+        personnelId = await this.resolvePersonnelIdFromFormAnswers(tx, principal.tenantId, answers);
       }
       const [definition] = await tx
         .select()
@@ -3175,9 +3158,7 @@ export class IndustrialDomainService {
       const status = resolveFormSubmissionStatus(
         fields,
         normalizedAnswers,
-        missingDeferred.length > 0
-          ? FORM_STATUS_PENDING_SIGNATURE
-          : requestedStatus || "SUBMITTED",
+        missingDeferred.length > 0 ? FORM_STATUS_PENDING_SIGNATURE : requestedStatus || "SUBMITTED",
       );
 
       const now = new Date();
@@ -3432,10 +3413,7 @@ export class IndustrialDomainService {
     const title = String(body.title ?? "").trim() || parsed.title;
     const category = String(body.category ?? "").trim() || parsed.category || null;
     const sourceDocumentId = `file-${createHash("sha256").update(buffer).digest("hex").slice(0, 32)}`;
-    const template = checklistToFormTemplate(
-      { ...parsed, title, category },
-      sourceDocumentId,
-    );
+    const template = checklistToFormTemplate({ ...parsed, title, category }, sourceDocumentId);
 
     return this.importFormCatalog(principal, {
       formTemplates: [template],
@@ -3443,11 +3421,7 @@ export class IndustrialDomainService {
     });
   }
 
-  async updateFormSubmission(
-    principal: ForgePrincipal,
-    id: string,
-    body: Record<string, unknown>,
-  ) {
+  async updateFormSubmission(principal: ForgePrincipal, id: string, body: Record<string, unknown>) {
     const recordId = this.assertRecordId(id);
     const prepared = await withTenantTransaction(this.db, principal.tenantId, async (tx) => {
       const [existing] = await tx
@@ -3524,11 +3498,7 @@ export class IndustrialDomainService {
             ? prevPayload.personnelId
             : null;
       if (!personnelId) {
-        personnelId = await this.resolvePersonnelIdFromFormAnswers(
-          tx,
-          principal.tenantId,
-          answers,
-        );
+        personnelId = await this.resolvePersonnelIdFromFormAnswers(tx, principal.tenantId, answers);
       }
       if (personnelId && !answers.personnelId) {
         answers = { ...answers, personnelId };
@@ -3573,9 +3543,7 @@ export class IndustrialDomainService {
       await this.notifySafetyDirectorsOfPendingSignature(principal, {
         submissionId: String(prepared.row.id),
         formDefinitionId: String(prepared.definition?.id ?? prepared.row.formDefinitionId ?? ""),
-        title: String(
-          prepared.mapped.title ?? prepared.definition?.title ?? "Form",
-        ),
+        title: String(prepared.mapped.title ?? prepared.definition?.title ?? "Form"),
         missingLabels: prepared.missingEhs.map((field) => field.label),
       });
     }
@@ -3682,11 +3650,7 @@ export class IndustrialDomainService {
     });
   }
 
-  async updateFormDefinition(
-    principal: ForgePrincipal,
-    id: string,
-    body: Record<string, unknown>,
-  ) {
+  async updateFormDefinition(principal: ForgePrincipal, id: string, body: Record<string, unknown>) {
     const recordId = this.assertRecordId(id);
     return withTenantTransaction(this.db, principal.tenantId, async (tx) => {
       const [existing] = await tx
@@ -3776,11 +3740,11 @@ export class IndustrialDomainService {
       where id = ${tenantId}::uuid
       limit 1
     `);
-    const tenantRow = (Array.isArray(tenantRows)
-      ? tenantRows[0]
-      : (tenantRows as { rows?: Array<Record<string, unknown>> }).rows?.[0]) as
-      | Record<string, unknown>
-      | undefined;
+    const tenantRow = (
+      Array.isArray(tenantRows)
+        ? tenantRows[0]
+        : (tenantRows as { rows?: Array<Record<string, unknown>> }).rows?.[0]
+    ) as Record<string, unknown> | undefined;
 
     const brandingRows = await tx.execute(sql`
       select cv.payload_json as payload
@@ -3791,11 +3755,11 @@ export class IndustrialDomainService {
         and co.object_key = 'default'
       limit 1
     `);
-    const brandingPayloadRaw = (Array.isArray(brandingRows)
-      ? brandingRows[0]
-      : (brandingRows as { rows?: Array<{ payload?: unknown }> }).rows?.[0]) as
-      | { payload?: unknown }
-      | undefined;
+    const brandingPayloadRaw = (
+      Array.isArray(brandingRows)
+        ? brandingRows[0]
+        : (brandingRows as { rows?: Array<{ payload?: unknown }> }).rows?.[0]
+    ) as { payload?: unknown } | undefined;
     const brandingPayload = unwrapJsonRecord(brandingPayloadRaw?.payload);
 
     const tenantKey = String(tenantRow?.tenant_key ?? "").trim();
@@ -4084,10 +4048,7 @@ export class IndustrialDomainService {
     return `/modules/forms/?${params.toString()}`;
   }
 
-  async listFormSignatoryRecipients(
-    principal: ForgePrincipal,
-    kindRaw: string | undefined,
-  ) {
+  async listFormSignatoryRecipients(principal: ForgePrincipal, kindRaw: string | undefined) {
     const kind = (kindRaw ?? "supervisor").trim().toLowerCase();
     if (kind !== "supervisor" && kind !== "ehs_director") {
       throw new ForgeError("VALIDATION_FAILED", "Choose supervisor or ehs_director recipients.");
@@ -4150,11 +4111,7 @@ export class IndustrialDomainService {
    * Email / notify a supervisor (or Safety Director) with a deep link to open
    * and sign a saved form submission remotely.
    */
-  async requestFormSignature(
-    principal: ForgePrincipal,
-    id: string,
-    body: Record<string, unknown>,
-  ) {
+  async requestFormSignature(principal: ForgePrincipal, id: string, body: Record<string, unknown>) {
     const recordId = this.assertRecordId(id);
     const kindRaw = String(body.signatoryKind ?? body.kind ?? "supervisor")
       .trim()
@@ -4234,7 +4191,11 @@ export class IndustrialDomainService {
           .where(and(eq(users.id, recipientUserId), eq(users.tenantId, principal.tenantId)))
           .limit(1);
         if (!userRow) throw new ForgeError("NOT_FOUND", "Recipient user was not found.");
-        recipientEmail = recipientEmail || String(userRow.email ?? "").trim().toLowerCase();
+        recipientEmail =
+          recipientEmail ||
+          String(userRow.email ?? "")
+            .trim()
+            .toLowerCase();
       } else if (recipientEmail) {
         const [userRow] = await tx
           .select({ id: users.id, email: users.primaryEmail })
@@ -4264,7 +4225,9 @@ export class IndustrialDomainService {
         href,
         absoluteUrl: `${appBase}${href}`,
         title: String(existing.title ?? definition?.title ?? "Form"),
-        fieldLabel: target.label || (kind === "supervisor" ? "Supervisor signature" : "EHS Director signature"),
+        fieldLabel:
+          target.label ||
+          (kind === "supervisor" ? "Supervisor signature" : "EHS Director signature"),
         fieldId: target.id,
         recipientUserId: recipientUserId || null,
         recipientEmail: recipientEmail || null,
@@ -4382,7 +4345,9 @@ export class IndustrialDomainService {
           const label = String(rec.label ?? rec.title ?? rec.name ?? id).trim();
           if (!id || seen.has(id)) continue;
           seen.add(id);
-          const type = String(rec.type ?? "").trim().toLowerCase();
+          const type = String(rec.type ?? "")
+            .trim()
+            .toLowerCase();
           const content = String(
             rec.content ?? rec.body ?? rec.html ?? rec.placeholder ?? rec.text ?? "",
           ).trim();
@@ -4593,7 +4558,10 @@ export class IndustrialDomainService {
     else if (actionKey === "reopen") nextStatus = "DRAFT";
     else if (actionKey === "close") nextStatus = "CLOSED";
     else {
-      throw new ForgeError("VALIDATION_FAILED", "That action is not supported for LOTO procedures.");
+      throw new ForgeError(
+        "VALIDATION_FAILED",
+        "That action is not supported for LOTO procedures.",
+      );
     }
 
     const recordId = this.assertRecordId(id);
@@ -4648,9 +4616,7 @@ export class IndustrialDomainService {
       }
 
       const prevPayload = this.unwrapSourcePayload(existing.sourcePayload);
-      const actorName =
-        String(principal.userId ?? "").trim() ||
-        "EHS Director";
+      const actorName = String(principal.userId ?? "").trim() || "EHS Director";
       const nextPayload: Record<string, unknown> = { ...prevPayload };
 
       // Do not merge arbitrary body keys into payload for workflow actions.
@@ -4725,16 +4691,21 @@ export class IndustrialDomainService {
   }
 
   async getObservationsSettings(principal: ForgePrincipal) {
-    return withTenantTransaction(this.db, principal.tenantId, async (tx) => {
-      const existing = await tx.query.tenantSettings.findFirst({
-        where: and(
-          eq(tenantSettings.tenantId, principal.tenantId),
-          eq(tenantSettings.namespace, OBSERVATIONS_SETTINGS_NAMESPACE),
-          eq(tenantSettings.settingKey, OBSERVATIONS_SETTINGS_KEY),
-        ),
-      });
-      return parseObservationsSettings(existing?.valueJson);
-    }, principal.userId);
+    return withTenantTransaction(
+      this.db,
+      principal.tenantId,
+      async (tx) => {
+        const existing = await tx.query.tenantSettings.findFirst({
+          where: and(
+            eq(tenantSettings.tenantId, principal.tenantId),
+            eq(tenantSettings.namespace, OBSERVATIONS_SETTINGS_NAMESPACE),
+            eq(tenantSettings.settingKey, OBSERVATIONS_SETTINGS_KEY),
+          ),
+        });
+        return parseObservationsSettings(existing?.valueJson);
+      },
+      principal.userId,
+    );
   }
 
   async patchObservationsSettings(principal: ForgePrincipal, body: Record<string, unknown>) {
@@ -4742,41 +4713,46 @@ export class IndustrialDomainService {
       throw new ForgeError("VALIDATION_FAILED", "categories must be a list of names");
     }
     const next = { categories: normalizeObservationCategories(body.categories) };
-    return withTenantTransaction(this.db, principal.tenantId, async (tx) => {
-      const existing = await tx.query.tenantSettings.findFirst({
-        where: and(
-          eq(tenantSettings.tenantId, principal.tenantId),
-          eq(tenantSettings.namespace, OBSERVATIONS_SETTINGS_NAMESPACE),
-          eq(tenantSettings.settingKey, OBSERVATIONS_SETTINGS_KEY),
-        ),
-      });
-      const now = new Date();
-      if (existing) {
-        await tx
-          .update(tenantSettings)
-          .set({
+    return withTenantTransaction(
+      this.db,
+      principal.tenantId,
+      async (tx) => {
+        const existing = await tx.query.tenantSettings.findFirst({
+          where: and(
+            eq(tenantSettings.tenantId, principal.tenantId),
+            eq(tenantSettings.namespace, OBSERVATIONS_SETTINGS_NAMESPACE),
+            eq(tenantSettings.settingKey, OBSERVATIONS_SETTINGS_KEY),
+          ),
+        });
+        const now = new Date();
+        if (existing) {
+          await tx
+            .update(tenantSettings)
+            .set({
+              valueJson: next,
+              recordVersion: sql`${tenantSettings.recordVersion} + 1`,
+              updatedAt: now,
+              updatedByUserId: principal.userId,
+            })
+            .where(eq(tenantSettings.id, existing.id));
+        } else {
+          await tx.insert(tenantSettings).values({
+            id: createId(),
+            tenantId: principal.tenantId,
+            namespace: OBSERVATIONS_SETTINGS_NAMESPACE,
+            settingKey: OBSERVATIONS_SETTINGS_KEY,
             valueJson: next,
-            recordVersion: sql`${tenantSettings.recordVersion} + 1`,
+            schemaVersion: 1,
+            isSensitive: false,
+            createdAt: now,
             updatedAt: now,
             updatedByUserId: principal.userId,
-          })
-          .where(eq(tenantSettings.id, existing.id));
-      } else {
-        await tx.insert(tenantSettings).values({
-          id: createId(),
-          tenantId: principal.tenantId,
-          namespace: OBSERVATIONS_SETTINGS_NAMESPACE,
-          settingKey: OBSERVATIONS_SETTINGS_KEY,
-          valueJson: next,
-          schemaVersion: 1,
-          isSensitive: false,
-          createdAt: now,
-          updatedAt: now,
-          updatedByUserId: principal.userId,
-        });
-      }
-      return next;
-    }, principal.userId);
+          });
+        }
+        return next;
+      },
+      principal.userId,
+    );
   }
 
   async createObservation(principal: ForgePrincipal, body: Record<string, unknown>) {
@@ -4791,9 +4767,14 @@ export class IndustrialDomainService {
     if (!payload.reportedBy && principal.userId) {
       payload.reportedBy = await this.principalDisplayName(principal);
     }
-    await withTenantTransaction(this.db, principal.tenantId, async (tx) => {
-      await this.resolveObservationAssignee(tx, principal.tenantId, payload, true);
-    }, principal.userId);
+    await withTenantTransaction(
+      this.db,
+      principal.tenantId,
+      async (tx) => {
+        await this.resolveObservationAssignee(tx, principal.tenantId, payload, true);
+      },
+      principal.userId,
+    );
     if (payload.assignedToPersonnelId || payload.assignedToName) {
       payload.assignedAt = new Date().toISOString();
       payload.assignedByUserId = principal.userId ?? null;
@@ -4825,7 +4806,10 @@ export class IndustrialDomainService {
           })
           .from(industrialDepartments)
           .where(
-            and(eq(industrialDepartments.id, departmentId), eq(industrialDepartments.tenantId, tenantId)),
+            and(
+              eq(industrialDepartments.id, departmentId),
+              eq(industrialDepartments.tenantId, tenantId),
+            ),
           )
           .limit(1);
         if (dept && (dept.contactPersonnelId || dept.contactName)) {
@@ -4845,13 +4829,17 @@ export class IndustrialDomainService {
         companyEmail: industrialPersonnel.companyEmail,
       })
       .from(industrialPersonnel)
-      .where(and(eq(industrialPersonnel.id, personnelId), eq(industrialPersonnel.tenantId, tenantId)))
+      .where(
+        and(eq(industrialPersonnel.id, personnelId), eq(industrialPersonnel.tenantId, tenantId)),
+      )
       .limit(1);
     if (!person) return;
     if (!text(payload.assignedToName)) payload.assignedToName = person.displayName;
     if (!text(payload.assignedToEmail)) {
       payload.assignedToEmail =
-        normalizeObservationEmail(person.companyEmail) ?? normalizeObservationEmail(person.email) ?? "";
+        normalizeObservationEmail(person.companyEmail) ??
+        normalizeObservationEmail(person.email) ??
+        "";
     }
   }
 
@@ -4860,24 +4848,29 @@ export class IndustrialDomainService {
       throw new ForgeError("INTERNAL_ERROR", "Email notifications are not configured");
     }
     const recordId = this.assertRecordId(id);
-    const loaded = await withTenantTransaction(this.db, principal.tenantId, async (tx) => {
-      const [row] = await tx
-        .select()
-        .from(industrialObservations)
-        .where(
-          and(
-            eq(industrialObservations.id, recordId),
-            eq(industrialObservations.tenantId, principal.tenantId),
-          ),
-        )
-        .limit(1);
-      if (!row) throw new ForgeError("NOT_FOUND", "Observation not found");
-      return {
-        row,
-        payload: this.unwrapSourcePayload(row.sourcePayload),
-        tenantName: await this.tenantDisplayName(tx, principal.tenantId),
-      };
-    }, principal.userId);
+    const loaded = await withTenantTransaction(
+      this.db,
+      principal.tenantId,
+      async (tx) => {
+        const [row] = await tx
+          .select()
+          .from(industrialObservations)
+          .where(
+            and(
+              eq(industrialObservations.id, recordId),
+              eq(industrialObservations.tenantId, principal.tenantId),
+            ),
+          )
+          .limit(1);
+        if (!row) throw new ForgeError("NOT_FOUND", "Observation not found");
+        return {
+          row,
+          payload: this.unwrapSourcePayload(row.sourcePayload),
+          tenantName: await this.tenantDisplayName(tx, principal.tenantId),
+        };
+      },
+      principal.userId,
+    );
 
     const recipients =
       body.to !== undefined
@@ -4892,7 +4885,9 @@ export class IndustrialDomainService {
 
     const requestedBase = typeof body.appBaseUrl === "string" ? body.appBaseUrl.trim() : "";
     const baseUrl = this.industrialAppBaseUrl(
-      /^https:\/\/[a-z0-9-]+\.forgeindustrialsafety\.com\/?$/i.test(requestedBase) ? requestedBase : null,
+      /^https:\/\/[a-z0-9-]+\.forgeindustrialsafety\.com\/?$/i.test(requestedBase)
+        ? requestedBase
+        : null,
     );
     let timeZone: string | undefined;
     if (typeof body.timeZone === "string" && body.timeZone.trim()) {
@@ -4933,59 +4928,72 @@ export class IndustrialDomainService {
           tenantId: principal.tenantId,
           vars: { subject: email.subject, htmlBody: email.htmlBody, textBody: email.textBody },
         });
-        results.push({ to, accepted: result.accepted, ...(result.detail ? { detail: result.detail } : {}) });
+        results.push({
+          to,
+          accepted: result.accepted,
+          ...(result.detail ? { detail: result.detail } : {}),
+        });
       } catch (err) {
-        results.push({ to, accepted: false, detail: err instanceof Error ? err.message : String(err) });
+        results.push({
+          to,
+          accepted: false,
+          detail: err instanceof Error ? err.message : String(err),
+        });
       }
     }
     const accepted = results.filter((r) => r.accepted).map((r) => r.to);
     const now = new Date();
 
-    const record = await withTenantTransaction(this.db, principal.tenantId, async (tx) => {
-      const [current] = await tx
-        .select()
-        .from(industrialObservations)
-        .where(
-          and(
-            eq(industrialObservations.id, recordId),
-            eq(industrialObservations.tenantId, principal.tenantId),
-          ),
-        )
-        .limit(1);
-      if (!current) throw new ForgeError("NOT_FOUND", "Observation not found");
-      const payload = this.unwrapSourcePayload(current.sourcePayload);
-      const next: Record<string, unknown> = {
-        ...payload,
-        emailLog: appendObservationEmailLog(payload, {
-          to: recipients,
-          sentAt: now.toISOString(),
-          sentByUserId: principal.userId ?? null,
-          sentByName: senderName,
-          accepted: accepted.length > 0,
-        }),
-      };
-      if (accepted.length > 0) {
-        next.lastEmailedAt = now.toISOString();
-        next.lastEmailedTo = accepted;
-        if (followUpToken) {
-          next.followUpTokens = addObservationFollowUpToken(payload, followUpToken.hash, now);
+    const record = await withTenantTransaction(
+      this.db,
+      principal.tenantId,
+      async (tx) => {
+        const [current] = await tx
+          .select()
+          .from(industrialObservations)
+          .where(
+            and(
+              eq(industrialObservations.id, recordId),
+              eq(industrialObservations.tenantId, principal.tenantId),
+            ),
+          )
+          .limit(1);
+        if (!current) throw new ForgeError("NOT_FOUND", "Observation not found");
+        const payload = this.unwrapSourcePayload(current.sourcePayload);
+        const next: Record<string, unknown> = {
+          ...payload,
+          emailLog: appendObservationEmailLog(payload, {
+            to: recipients,
+            sentAt: now.toISOString(),
+            sentByUserId: principal.userId ?? null,
+            sentByName: senderName,
+            accepted: accepted.length > 0,
+          }),
+        };
+        if (accepted.length > 0) {
+          next.lastEmailedAt = now.toISOString();
+          next.lastEmailedTo = accepted;
+          if (followUpToken) {
+            next.followUpTokens = addObservationFollowUpToken(payload, followUpToken.hash, now);
+          }
         }
-      }
-      const [row] = await tx
-        .update(industrialObservations)
-        .set({ sourcePayload: next, updatedAt: now })
-        .where(eq(industrialObservations.id, current.id))
-        .returning();
-      return this.mapListItem({
-        id: row!.id,
-        title: row!.title,
-        status: row!.status,
-        createdAt: row!.createdAt,
-        updatedAt: row!.updatedAt,
-        sourcePayload: row!.sourcePayload,
-        extra: { siteId: row!.siteId ?? null },
-      });
-    }, principal.userId);
+        const [row] = await tx
+          .update(industrialObservations)
+          .set({ sourcePayload: next, updatedAt: now })
+          .where(eq(industrialObservations.id, current.id))
+          .returning();
+        return this.mapListItem({
+          id: row!.id,
+          title: row!.title,
+          status: row!.status,
+          createdAt: row!.createdAt,
+          updatedAt: row!.updatedAt,
+          sourcePayload: row!.sourcePayload,
+          extra: { siteId: row!.siteId ?? null },
+        });
+      },
+      principal.userId,
+    );
 
     if (accepted.length === 0) {
       const detail =
@@ -5003,15 +5011,19 @@ export class IndustrialDomainService {
       where id = ${tenantId}::uuid
       limit 1
     `);
-    const tenantRow = (Array.isArray(tenantRows)
-      ? tenantRows[0]
-      : (tenantRows as { rows?: Array<Record<string, unknown>> }).rows?.[0]) as
-      | { name?: string }
-      | undefined;
+    const tenantRow = (
+      Array.isArray(tenantRows)
+        ? tenantRows[0]
+        : (tenantRows as { rows?: Array<Record<string, unknown>> }).rows?.[0]
+    ) as { name?: string } | undefined;
     return String(tenantRow?.name ?? "").trim() || "your organization";
   }
 
-  private async findObservationByFollowUpToken(tx: DatabaseTransaction, tenantId: string, hash: string) {
+  private async findObservationByFollowUpToken(
+    tx: DatabaseTransaction,
+    tenantId: string,
+    hash: string,
+  ) {
     const obs = industrialObservations;
     const [row] = await tx
       .select()
@@ -5067,10 +5079,12 @@ export class IndustrialDomainService {
 
   async getObservationFollowUpByToken(token: string) {
     const parsed = parseObservationFollowUpToken(token);
-    if (!parsed) throw new ForgeError("NOT_FOUND", "This follow-up link is invalid or has expired.");
+    if (!parsed)
+      throw new ForgeError("NOT_FOUND", "This follow-up link is invalid or has expired.");
     return withTenantTransaction(this.db, parsed.tenantId, async (tx) => {
       const found = await this.findObservationByFollowUpToken(tx, parsed.tenantId, parsed.hash);
-      if (!found) throw new ForgeError("NOT_FOUND", "This follow-up link is invalid or has expired.");
+      if (!found)
+        throw new ForgeError("NOT_FOUND", "This follow-up link is invalid or has expired.");
       return this.observationFollowUpView(
         found.row,
         found.payload,
@@ -5081,11 +5095,13 @@ export class IndustrialDomainService {
 
   async submitObservationFollowUpByToken(token: string, body: Record<string, unknown>) {
     const parsed = parseObservationFollowUpToken(token);
-    if (!parsed) throw new ForgeError("NOT_FOUND", "This follow-up link is invalid or has expired.");
+    if (!parsed)
+      throw new ForgeError("NOT_FOUND", "This follow-up link is invalid or has expired.");
     const complete = String(body.action ?? "").toLowerCase() === "complete";
     return withTenantTransaction(this.db, parsed.tenantId, async (tx) => {
       const found = await this.findObservationByFollowUpToken(tx, parsed.tenantId, parsed.hash);
-      if (!found) throw new ForgeError("NOT_FOUND", "This follow-up link is invalid or has expired.");
+      if (!found)
+        throw new ForgeError("NOT_FOUND", "This follow-up link is invalid or has expired.");
       const { row, payload } = found;
       const status = normalizeObservationStatus(row.status);
       if (status === "CLOSED" || status === "ARCHIVED") {
@@ -5117,7 +5133,12 @@ export class IndustrialDomainService {
       const [updated] = await tx
         .update(industrialObservations)
         .set({ status: nextStatus, sourcePayload: next, updatedAt: now })
-        .where(and(eq(industrialObservations.id, row.id), eq(industrialObservations.tenantId, parsed.tenantId)))
+        .where(
+          and(
+            eq(industrialObservations.id, row.id),
+            eq(industrialObservations.tenantId, parsed.tenantId),
+          ),
+        )
         .returning();
       return this.observationFollowUpView(
         updated!,
@@ -5129,110 +5150,120 @@ export class IndustrialDomainService {
 
   private async principalDisplayName(principal: ForgePrincipal): Promise<string> {
     if (!principal.userId) return "";
-    return withTenantTransaction(this.db, principal.tenantId, async (tx) => {
-      const [row] = await tx
-        .select({
-          email: users.primaryEmail,
-          username: users.username,
-          displayName: persons.displayName,
-          firstName: persons.firstName,
-          lastName: persons.lastName,
-        })
-        .from(users)
-        .leftJoin(persons, eq(persons.id, users.personId))
-        .where(and(eq(users.id, principal.userId!), eq(users.tenantId, principal.tenantId)))
-        .limit(1);
-      if (!row) return "";
-      const full = [row.firstName, row.lastName].filter(Boolean).join(" ").trim();
-      return (row.displayName ?? "").trim() || full || (row.username ?? "").trim() || row.email;
-    }, principal.userId);
+    return withTenantTransaction(
+      this.db,
+      principal.tenantId,
+      async (tx) => {
+        const [row] = await tx
+          .select({
+            email: users.primaryEmail,
+            username: users.username,
+            displayName: persons.displayName,
+            firstName: persons.firstName,
+            lastName: persons.lastName,
+          })
+          .from(users)
+          .leftJoin(persons, eq(persons.id, users.personId))
+          .where(and(eq(users.id, principal.userId!), eq(users.tenantId, principal.tenantId)))
+          .limit(1);
+        if (!row) return "";
+        const full = [row.firstName, row.lastName].filter(Boolean).join(" ").trim();
+        return (row.displayName ?? "").trim() || full || (row.username ?? "").trim() || row.email;
+      },
+      principal.userId,
+    );
   }
 
   async updateObservation(principal: ForgePrincipal, id: string, body: Record<string, unknown>) {
     const recordId = this.assertRecordId(id);
-    return withTenantTransaction(this.db, principal.tenantId, async (tx) => {
-      const [existing] = await tx
-        .select()
-        .from(industrialObservations)
-        .where(
-          and(
-            eq(industrialObservations.id, recordId),
-            eq(industrialObservations.tenantId, principal.tenantId),
-          ),
-        )
-        .limit(1);
-      if (!existing) throw new ForgeError("NOT_FOUND", "Observation not found");
+    return withTenantTransaction(
+      this.db,
+      principal.tenantId,
+      async (tx) => {
+        const [existing] = await tx
+          .select()
+          .from(industrialObservations)
+          .where(
+            and(
+              eq(industrialObservations.id, recordId),
+              eq(industrialObservations.tenantId, principal.tenantId),
+            ),
+          )
+          .limit(1);
+        if (!existing) throw new ForgeError("NOT_FOUND", "Observation not found");
 
-      const now = new Date();
-      const prev = this.unwrapSourcePayload(existing.sourcePayload);
-      const fields = observationFieldsFromBody(body);
-      const prevStatus = normalizeObservationStatus(existing.status);
-      let status =
-        body.status !== undefined ? normalizeObservationStatus(body.status) : prevStatus;
-      const next: Record<string, unknown> = {
-        ...prev,
-        ...fields,
-        updatedByUserId: principal.userId ?? null,
-      };
-      if (body.followUp !== undefined || body.completeFollowUp === true) {
-        const followUp = normalizeObservationFollowUp(body.followUp, prev.followUp);
-        if (body.completeFollowUp === true) {
-          const missing = observationFollowUpMissing(followUp);
-          if (missing) throw new ForgeError("VALIDATION_FAILED", missing);
-          followUp.completedAt = now.toISOString();
-          followUp.completedVia = "forge";
-          status = "CLOSED";
-          next.closedByName = followUp.completedByName;
-        } else {
-          followUp.savedAt = now.toISOString();
+        const now = new Date();
+        const prev = this.unwrapSourcePayload(existing.sourcePayload);
+        const fields = observationFieldsFromBody(body);
+        const prevStatus = normalizeObservationStatus(existing.status);
+        let status =
+          body.status !== undefined ? normalizeObservationStatus(body.status) : prevStatus;
+        const next: Record<string, unknown> = {
+          ...prev,
+          ...fields,
+          updatedByUserId: principal.userId ?? null,
+        };
+        if (body.followUp !== undefined || body.completeFollowUp === true) {
+          const followUp = normalizeObservationFollowUp(body.followUp, prev.followUp);
+          if (body.completeFollowUp === true) {
+            const missing = observationFollowUpMissing(followUp);
+            if (missing) throw new ForgeError("VALIDATION_FAILED", missing);
+            followUp.completedAt = now.toISOString();
+            followUp.completedVia = "forge";
+            status = "CLOSED";
+            next.closedByName = followUp.completedByName;
+          } else {
+            followUp.savedAt = now.toISOString();
+          }
+          next.followUp = followUp;
         }
-        next.followUp = followUp;
-      }
-      next.status = status;
-      if (status === "CLOSED" && prevStatus !== "CLOSED") {
-        next.closedAt = now.toISOString();
-        next.closedByUserId = principal.userId ?? null;
-      }
-      if (fields.assignedToPersonnelId !== undefined && !next.assignedToEmail) {
-        await this.resolveObservationAssignee(tx, principal.tenantId, next, false);
-      }
-      if (observationAssigneeKey(next) !== observationAssigneeKey(prev)) {
-        const assigned = Boolean(next.assignedToPersonnelId || next.assignedToName);
-        next.assignedAt = assigned ? now.toISOString() : null;
-        next.assignedByUserId = assigned ? (principal.userId ?? null) : null;
-      }
-      // Re-title from the edited fields unless the caller sets one explicitly.
-      next.title = buildObservationTitle({ ...next, title: body.title });
-      const siteId =
-        fields.siteId !== undefined ? (fields.siteId as string | null) : existing.siteId;
+        next.status = status;
+        if (status === "CLOSED" && prevStatus !== "CLOSED") {
+          next.closedAt = now.toISOString();
+          next.closedByUserId = principal.userId ?? null;
+        }
+        if (fields.assignedToPersonnelId !== undefined && !next.assignedToEmail) {
+          await this.resolveObservationAssignee(tx, principal.tenantId, next, false);
+        }
+        if (observationAssigneeKey(next) !== observationAssigneeKey(prev)) {
+          const assigned = Boolean(next.assignedToPersonnelId || next.assignedToName);
+          next.assignedAt = assigned ? now.toISOString() : null;
+          next.assignedByUserId = assigned ? (principal.userId ?? null) : null;
+        }
+        // Re-title from the edited fields unless the caller sets one explicitly.
+        next.title = buildObservationTitle({ ...next, title: body.title });
+        const siteId =
+          fields.siteId !== undefined ? (fields.siteId as string | null) : existing.siteId;
 
-      const [row] = await tx
-        .update(industrialObservations)
-        .set({
-          title: next.title as string,
-          status,
-          siteId: siteId && UUID_PATTERN.test(siteId) ? siteId : null,
-          sourcePayload: next,
-          updatedAt: now,
-        })
-        .where(
-          and(
-            eq(industrialObservations.id, recordId),
-            eq(industrialObservations.tenantId, principal.tenantId),
-          ),
-        )
-        .returning();
-      if (!row) throw new ForgeError("NOT_FOUND", "Observation not found");
-      return this.mapListItem({
-        id: row.id,
-        title: row.title,
-        status: row.status,
-        createdAt: row.createdAt,
-        updatedAt: row.updatedAt,
-        sourcePayload: row.sourcePayload,
-        extra: { siteId: row.siteId ?? null },
-      });
-    }, principal.userId);
+        const [row] = await tx
+          .update(industrialObservations)
+          .set({
+            title: next.title as string,
+            status,
+            siteId: siteId && UUID_PATTERN.test(siteId) ? siteId : null,
+            sourcePayload: next,
+            updatedAt: now,
+          })
+          .where(
+            and(
+              eq(industrialObservations.id, recordId),
+              eq(industrialObservations.tenantId, principal.tenantId),
+            ),
+          )
+          .returning();
+        if (!row) throw new ForgeError("NOT_FOUND", "Observation not found");
+        return this.mapListItem({
+          id: row.id,
+          title: row.title,
+          status: row.status,
+          createdAt: row.createdAt,
+          updatedAt: row.updatedAt,
+          sourcePayload: row.sourcePayload,
+          extra: { siteId: row.siteId ?? null },
+        });
+      },
+      principal.userId,
+    );
   }
   listJsas(p: ForgePrincipal, q: ListQuery) {
     return this.listModule(p, "jsas", q);
@@ -5360,7 +5391,8 @@ export class IndustrialDomainService {
         };
         const steps = Array.isArray(lifecycle.steps) ? lifecycle.steps : [];
         const allComplete =
-          steps.length > 0 && steps.every((s) => String(s.status ?? "").toLowerCase() === "complete");
+          steps.length > 0 &&
+          steps.every((s) => String(s.status ?? "").toLowerCase() === "complete");
         if (allComplete || lifecycle.currentStage === "closure") {
           patch.status = "closed";
         } else if (steps.some((s) => String(s.status ?? "").toLowerCase() === "in-progress")) {
@@ -5573,7 +5605,9 @@ export class IndustrialDomainService {
           summary.propertyDamage += 1;
         else if (category === "automotive" || category === "vehicle") summary.automotive += 1;
 
-        const status = String(row.status ?? "").trim().toLowerCase();
+        const status = String(row.status ?? "")
+          .trim()
+          .toLowerCase();
         if (status === "open" || status === "active") summary.open += 1;
         let inWorkflow = false;
         if (
@@ -5608,119 +5642,123 @@ export class IndustrialDomainService {
   }
 
   async createInspection(principal: ForgePrincipal, body: Record<string, unknown>) {
-    return withTenantTransaction(this.db, principal.tenantId, async (tx) => {
-      const departmentId = body.departmentId ? String(body.departmentId) : null;
-      let departmentName =
-        typeof body.departmentName === "string" ? body.departmentName.trim() : "";
-      let contactPersonnelId: string | null =
-        typeof body.responsiblePersonnelId === "string" && body.responsiblePersonnelId
-          ? body.responsiblePersonnelId
-          : null;
-      let contactName =
-        typeof body.responsibleName === "string" ? body.responsibleName.trim() : "";
+    return withTenantTransaction(
+      this.db,
+      principal.tenantId,
+      async (tx) => {
+        const departmentId = body.departmentId ? String(body.departmentId) : null;
+        let departmentName =
+          typeof body.departmentName === "string" ? body.departmentName.trim() : "";
+        let contactPersonnelId: string | null =
+          typeof body.responsiblePersonnelId === "string" && body.responsiblePersonnelId
+            ? body.responsiblePersonnelId
+            : null;
+        let contactName =
+          typeof body.responsibleName === "string" ? body.responsibleName.trim() : "";
 
-      if (departmentId) {
-        const [dept] = await tx
-          .select()
-          .from(industrialDepartments)
-          .where(
-            and(
-              eq(industrialDepartments.id, departmentId),
-              eq(industrialDepartments.tenantId, principal.tenantId),
-            ),
-          )
-          .limit(1);
-        if (dept) {
-          departmentName = departmentName || dept.name;
-          if (!contactPersonnelId && dept.contactPersonnelId) {
-            contactPersonnelId = dept.contactPersonnelId;
-          }
-          if (!contactName) {
-            contactName = dept.contactName ?? "";
-          }
-          if (contactPersonnelId && !contactName) {
-            const [person] = await tx
-              .select({
-                displayName: industrialPersonnel.displayName,
-              })
-              .from(industrialPersonnel)
-              .where(
-                and(
-                  eq(industrialPersonnel.id, contactPersonnelId),
-                  eq(industrialPersonnel.tenantId, principal.tenantId),
-                ),
-              )
-              .limit(1);
-            contactName = person?.displayName ?? contactName;
+        if (departmentId) {
+          const [dept] = await tx
+            .select()
+            .from(industrialDepartments)
+            .where(
+              and(
+                eq(industrialDepartments.id, departmentId),
+                eq(industrialDepartments.tenantId, principal.tenantId),
+              ),
+            )
+            .limit(1);
+          if (dept) {
+            departmentName = departmentName || dept.name;
+            if (!contactPersonnelId && dept.contactPersonnelId) {
+              contactPersonnelId = dept.contactPersonnelId;
+            }
+            if (!contactName) {
+              contactName = dept.contactName ?? "";
+            }
+            if (contactPersonnelId && !contactName) {
+              const [person] = await tx
+                .select({
+                  displayName: industrialPersonnel.displayName,
+                })
+                .from(industrialPersonnel)
+                .where(
+                  and(
+                    eq(industrialPersonnel.id, contactPersonnelId),
+                    eq(industrialPersonnel.tenantId, principal.tenantId),
+                  ),
+                )
+                .limit(1);
+              contactName = person?.displayName ?? contactName;
+            }
           }
         }
-      }
 
-      const templates = await this.loadInspectionTemplatesInTx(tx, principal.tenantId);
-      const templateId = body.templateId ? String(body.templateId) : null;
-      const template =
-        templates.find((t) => t.id === templateId) ??
-        (departmentName
-          ? templates.find(
-              (t) =>
-                t.departmentHint &&
-                t.departmentHint.toLowerCase().includes(departmentName.toLowerCase()),
-            )
-          : undefined) ??
-        templates[0] ??
-        FALLBACK_INSPECTION_TEMPLATE;
+        const templates = await this.loadInspectionTemplatesInTx(tx, principal.tenantId);
+        const templateId = body.templateId ? String(body.templateId) : null;
+        const template =
+          templates.find((t) => t.id === templateId) ??
+          (departmentName
+            ? templates.find(
+                (t) =>
+                  t.departmentHint &&
+                  t.departmentHint.toLowerCase().includes(departmentName.toLowerCase()),
+              )
+            : undefined) ??
+          templates[0] ??
+          FALLBACK_INSPECTION_TEMPLATE;
 
-      const titleRaw = typeof body.title === "string" ? body.title.trim() : "";
-      const bodyDivision =
-        typeof body.divisionName === "string" ? body.divisionName.trim() : "";
-      const title =
-        titleRaw ||
-        defaultInspectionTitle({
-          divisionName: bodyDivision,
-          departmentName: departmentName || template.name,
-        });
-      const inspectionDate =
-        typeof body.inspectionDate === "string" && body.inspectionDate.trim()
-          ? body.inspectionDate.trim()
-          : new Date().toISOString().slice(0, 10);
-      const items =
-        Array.isArray(body.items) && body.items.length > 0
-          ? parseRunItems(body.items)
-          : itemsFromTemplate(template);
+        const titleRaw = typeof body.title === "string" ? body.title.trim() : "";
+        const bodyDivision = typeof body.divisionName === "string" ? body.divisionName.trim() : "";
+        const title =
+          titleRaw ||
+          defaultInspectionTitle({
+            divisionName: bodyDivision,
+            departmentName: departmentName || template.name,
+          });
+        const inspectionDate =
+          typeof body.inspectionDate === "string" && body.inspectionDate.trim()
+            ? body.inspectionDate.trim()
+            : new Date().toISOString().slice(0, 10);
+        const items =
+          Array.isArray(body.items) && body.items.length > 0
+            ? parseRunItems(body.items)
+            : itemsFromTemplate(template);
 
-      const now = new Date();
-      const id = createId();
-      const sourcePayload = {
-        ...body,
-        title,
-        inspectionDate,
-        departmentId,
-        departmentName,
-        templateId: template.id,
-        templateName: template.name,
-        responsiblePersonnelId: contactPersonnelId,
-        responsibleName: contactName,
-        items,
-      };
-      const [row] = await tx
-        .insert(industrialInspections)
-        .values({
-          id,
-          tenantId: principal.tenantId,
-          siteId: body.siteId ? String(body.siteId) : null,
-          departmentId,
+        const now = new Date();
+        const id = createId();
+        const sourcePayload = {
+          ...body,
           title,
-          status: String(body.status ?? "IN_PROGRESS"),
-          templateId: template.id === FALLBACK_INSPECTION_TEMPLATE.id ? null : template.id,
-          inspectionType: typeof body.inspectionType === "string" ? body.inspectionType : "AREA",
-          sourceSystem: "FORGE",
-          sourcePayload,
-          createdAt: now,
-          updatedAt: now,
-        } as never)
-        .returning();
-      return this.mapInspectionRow(row!);
-    }, principal.userId);
+          inspectionDate,
+          departmentId,
+          departmentName,
+          templateId: template.id,
+          templateName: template.name,
+          responsiblePersonnelId: contactPersonnelId,
+          responsibleName: contactName,
+          items,
+        };
+        const [row] = await tx
+          .insert(industrialInspections)
+          .values({
+            id,
+            tenantId: principal.tenantId,
+            siteId: body.siteId ? String(body.siteId) : null,
+            departmentId,
+            title,
+            status: String(body.status ?? "IN_PROGRESS"),
+            templateId: template.id === FALLBACK_INSPECTION_TEMPLATE.id ? null : template.id,
+            inspectionType: typeof body.inspectionType === "string" ? body.inspectionType : "AREA",
+            sourceSystem: "FORGE",
+            sourcePayload,
+            createdAt: now,
+            updatedAt: now,
+          } as never)
+          .returning();
+        return this.mapInspectionRow(row!);
+      },
+      principal.userId,
+    );
   }
 
   getIncident(p: ForgePrincipal, id: string) {
@@ -5729,71 +5767,74 @@ export class IndustrialDomainService {
 
   async getIncidentDetailed(principal: ForgePrincipal, id: string) {
     const recordId = this.assertRecordId(id);
-    return withTenantTransaction(this.db, principal.tenantId, async (tx) => {
-      const [row] = await tx
-        .select()
-        .from(industrialIncidents)
-        .where(
-          and(
-            eq(industrialIncidents.id, recordId),
-            eq(industrialIncidents.tenantId, principal.tenantId),
-            isNull(industrialIncidents.archivedAt),
-          ),
-        )
-        .limit(1);
-      if (!row) throw new ForgeError("NOT_FOUND", "Record not found");
+    return withTenantTransaction(
+      this.db,
+      principal.tenantId,
+      async (tx) => {
+        const [row] = await tx
+          .select()
+          .from(industrialIncidents)
+          .where(
+            and(
+              eq(industrialIncidents.id, recordId),
+              eq(industrialIncidents.tenantId, principal.tenantId),
+              isNull(industrialIncidents.archivedAt),
+            ),
+          )
+          .limit(1);
+        if (!row) throw new ForgeError("NOT_FOUND", "Record not found");
 
-      const [linkedWc] = await tx
-        .select({ id: industrialWorkersCompCases.id })
-        .from(industrialWorkersCompCases)
-        .where(
-          and(
-            eq(industrialWorkersCompCases.tenantId, principal.tenantId),
-            eq(industrialWorkersCompCases.incidentId, recordId),
-            isNull(industrialWorkersCompCases.archivedAt),
-          ),
-        )
-        .orderBy(desc(industrialWorkersCompCases.updatedAt))
-        .limit(1);
+        const [linkedWc] = await tx
+          .select({ id: industrialWorkersCompCases.id })
+          .from(industrialWorkersCompCases)
+          .where(
+            and(
+              eq(industrialWorkersCompCases.tenantId, principal.tenantId),
+              eq(industrialWorkersCompCases.incidentId, recordId),
+              isNull(industrialWorkersCompCases.archivedAt),
+            ),
+          )
+          .orderBy(desc(industrialWorkersCompCases.updatedAt))
+          .limit(1);
 
-      let linkedOshaCaseId: string | undefined;
-      const oshaRows = await tx
-        .select({
-          id: industrialOshaCases.id,
-          sourcePayload: industrialOshaCases.sourcePayload,
-        })
-        .from(industrialOshaCases)
-        .where(
-          and(
-            eq(industrialOshaCases.tenantId, principal.tenantId),
-            isNull(industrialOshaCases.archivedAt),
-          ),
-        )
-        .orderBy(desc(industrialOshaCases.updatedAt));
-      for (const osha of oshaRows) {
-        const payload = this.unwrapSourcePayload(osha.sourcePayload);
-        if (String(payload.incidentId ?? "").trim() === recordId) {
-          linkedOshaCaseId = osha.id;
-          break;
+        let linkedOshaCaseId: string | undefined;
+        const oshaRows = await tx
+          .select({
+            id: industrialOshaCases.id,
+            sourcePayload: industrialOshaCases.sourcePayload,
+          })
+          .from(industrialOshaCases)
+          .where(
+            and(
+              eq(industrialOshaCases.tenantId, principal.tenantId),
+              isNull(industrialOshaCases.archivedAt),
+            ),
+          )
+          .orderBy(desc(industrialOshaCases.updatedAt));
+        for (const osha of oshaRows) {
+          const payload = this.unwrapSourcePayload(osha.sourcePayload);
+          if (String(payload.incidentId ?? "").trim() === recordId) {
+            linkedOshaCaseId = osha.id;
+            break;
+          }
         }
-      }
 
-      return this.mapListItem({
-        id: row.id,
-        title: row.title,
-        status: row.status,
-        createdAt: row.createdAt,
-        updatedAt: row.updatedAt,
-        sourcePayload: this.unwrapSourcePayload(row.sourcePayload),
-        extra: {
-          siteId: row.siteId,
-          ...(linkedWc
-            ? { workersCompCaseId: linkedWc.id, workersCompRelevant: true }
-            : {}),
-          ...(linkedOshaCaseId ? { oshaCaseId: linkedOshaCaseId } : {}),
-        },
-      });
-    }, principal.userId);
+        return this.mapListItem({
+          id: row.id,
+          title: row.title,
+          status: row.status,
+          createdAt: row.createdAt,
+          updatedAt: row.updatedAt,
+          sourcePayload: this.unwrapSourcePayload(row.sourcePayload),
+          extra: {
+            siteId: row.siteId,
+            ...(linkedWc ? { workersCompCaseId: linkedWc.id, workersCompRelevant: true } : {}),
+            ...(linkedOshaCaseId ? { oshaCaseId: linkedOshaCaseId } : {}),
+          },
+        });
+      },
+      principal.userId,
+    );
   }
 
   getInspection(p: ForgePrincipal, id: string) {
@@ -5801,53 +5842,65 @@ export class IndustrialDomainService {
   }
 
   async listDepartments(principal: ForgePrincipal) {
-    return withTenantTransaction(this.db, principal.tenantId, async (tx) => {
-      const rows = await tx
-        .select()
-        .from(industrialDepartments)
-        .where(
-          and(
-            eq(industrialDepartments.tenantId, principal.tenantId),
-            isNull(industrialDepartments.archivedAt),
-          ),
-        )
-        .orderBy(industrialDepartments.name)
-        .limit(500);
-      return rows.map((row) => ({
-        id: row.id,
-        name: row.name,
-        siteId: row.siteId,
-        divisionName: row.divisionName,
-        status: row.status,
-        contactPersonnelId: row.contactPersonnelId,
-        contactName: row.contactName,
-        contactEmail: row.contactEmail,
-      }));
-    }, principal.userId);
+    return withTenantTransaction(
+      this.db,
+      principal.tenantId,
+      async (tx) => {
+        const rows = await tx
+          .select()
+          .from(industrialDepartments)
+          .where(
+            and(
+              eq(industrialDepartments.tenantId, principal.tenantId),
+              isNull(industrialDepartments.archivedAt),
+            ),
+          )
+          .orderBy(industrialDepartments.name)
+          .limit(500);
+        return rows.map((row) => ({
+          id: row.id,
+          name: row.name,
+          siteId: row.siteId,
+          divisionName: row.divisionName,
+          status: row.status,
+          contactPersonnelId: row.contactPersonnelId,
+          contactName: row.contactName,
+          contactEmail: row.contactEmail,
+        }));
+      },
+      principal.userId,
+    );
   }
 
   async listInspectionTemplates(principal: ForgePrincipal, query: ListQuery = {}) {
-    return withTenantTransaction(this.db, principal.tenantId, async (tx) => {
-      const templates = await this.loadInspectionTemplatesInTx(tx, principal.tenantId);
-      const departmentId = query.departmentId?.trim();
-      if (!departmentId) return templates;
-      const [dept] = await tx
-        .select({ name: industrialDepartments.name })
-        .from(industrialDepartments)
-        .where(
-          and(
-            eq(industrialDepartments.id, departmentId),
-            eq(industrialDepartments.tenantId, principal.tenantId),
-          ),
-        )
-        .limit(1);
-      if (!dept) return templates;
-      const name = dept.name.toLowerCase();
-      const preferred = templates.filter(
-        (t) => t.departmentHint && t.departmentHint.toLowerCase().includes(name),
-      );
-      return preferred.length > 0 ? [...preferred, ...templates.filter((t) => !preferred.includes(t))] : templates;
-    }, principal.userId);
+    return withTenantTransaction(
+      this.db,
+      principal.tenantId,
+      async (tx) => {
+        const templates = await this.loadInspectionTemplatesInTx(tx, principal.tenantId);
+        const departmentId = query.departmentId?.trim();
+        if (!departmentId) return templates;
+        const [dept] = await tx
+          .select({ name: industrialDepartments.name })
+          .from(industrialDepartments)
+          .where(
+            and(
+              eq(industrialDepartments.id, departmentId),
+              eq(industrialDepartments.tenantId, principal.tenantId),
+            ),
+          )
+          .limit(1);
+        if (!dept) return templates;
+        const name = dept.name.toLowerCase();
+        const preferred = templates.filter(
+          (t) => t.departmentHint && t.departmentHint.toLowerCase().includes(name),
+        );
+        return preferred.length > 0
+          ? [...preferred, ...templates.filter((t) => !preferred.includes(t))]
+          : templates;
+      },
+      principal.userId,
+    );
   }
 
   /**
@@ -5931,7 +5984,9 @@ export class IndustrialDomainService {
         }),
       );
       parsedTitle =
-        String(body.title ?? body.name ?? "").trim() || filename.replace(/\.[^.]+$/, "") || "Imported inspection";
+        String(body.title ?? body.name ?? "").trim() ||
+        filename.replace(/\.[^.]+$/, "") ||
+        "Imported inspection";
       if (!sourceDocumentId) {
         sourceDocumentId = `manual-${createHash("sha256")
           .update(JSON.stringify(items))
@@ -5971,44 +6026,78 @@ export class IndustrialDomainService {
       return { template: previewTemplate, created: false, updated: false, itemCount: items.length };
     }
 
-    return withTenantTransaction(this.db, principal.tenantId, async (tx) => {
-      const now = new Date();
-      const [existing] = await tx
-        .select()
-        .from(industrialInspections)
-        .where(
-          and(
-            eq(industrialInspections.tenantId, principal.tenantId),
-            eq(industrialInspections.sourceCollection, "inspectionTemplates"),
-            eq(industrialInspections.sourceDocumentId, sourceDocumentId),
-            isNull(industrialInspections.archivedAt),
-          ),
-        )
-        .limit(1);
+    return withTenantTransaction(
+      this.db,
+      principal.tenantId,
+      async (tx) => {
+        const now = new Date();
+        const [existing] = await tx
+          .select()
+          .from(industrialInspections)
+          .where(
+            and(
+              eq(industrialInspections.tenantId, principal.tenantId),
+              eq(industrialInspections.sourceCollection, "inspectionTemplates"),
+              eq(industrialInspections.sourceDocumentId, sourceDocumentId),
+              isNull(industrialInspections.archivedAt),
+            ),
+          )
+          .limit(1);
 
-      const sourcePayload = {
-        isTemplate: true,
-        title,
-        name: title,
-        templateName: title,
-        departmentHint,
-        items,
-        importedFrom: filename || null,
-        importedAt: now.toISOString(),
-      };
+        const sourcePayload = {
+          isTemplate: true,
+          title,
+          name: title,
+          templateName: title,
+          departmentHint,
+          items,
+          importedFrom: filename || null,
+          importedAt: now.toISOString(),
+        };
 
-      if (existing) {
+        if (existing) {
+          const [row] = await tx
+            .update(industrialInspections)
+            .set({
+              title,
+              status: "TEMPLATE",
+              inspectionType: "TEMPLATE",
+              sourcePayload,
+              sourcePath: filename || existing.sourcePath,
+              updatedAt: now,
+            } as never)
+            .where(eq(industrialInspections.id, existing.id))
+            .returning();
+          const template = templateFromLegacyRow({
+            id: row!.id,
+            title: row!.title,
+            source: "imported",
+            sourcePayload: row!.sourcePayload,
+            departmentHint,
+          });
+          if (!template) {
+            throw new ForgeError("VALIDATION_FAILED", "Imported template had no usable items");
+          }
+          return { template, created: false, updated: true, itemCount: template.items.length };
+        }
+
+        const id = createId();
         const [row] = await tx
-          .update(industrialInspections)
-          .set({
+          .insert(industrialInspections)
+          .values({
+            id,
+            tenantId: principal.tenantId,
             title,
             status: "TEMPLATE",
             inspectionType: "TEMPLATE",
+            sourceSystem: "FORGE",
+            sourceCollection: "inspectionTemplates",
+            sourceDocumentId,
+            sourcePath: filename || null,
             sourcePayload,
-            sourcePath: filename || existing.sourcePath,
+            createdAt: now,
             updatedAt: now,
           } as never)
-          .where(eq(industrialInspections.id, existing.id))
           .returning();
         const template = templateFromLegacyRow({
           id: row!.id,
@@ -6020,39 +6109,10 @@ export class IndustrialDomainService {
         if (!template) {
           throw new ForgeError("VALIDATION_FAILED", "Imported template had no usable items");
         }
-        return { template, created: false, updated: true, itemCount: template.items.length };
-      }
-
-      const id = createId();
-      const [row] = await tx
-        .insert(industrialInspections)
-        .values({
-          id,
-          tenantId: principal.tenantId,
-          title,
-          status: "TEMPLATE",
-          inspectionType: "TEMPLATE",
-          sourceSystem: "FORGE",
-          sourceCollection: "inspectionTemplates",
-          sourceDocumentId,
-          sourcePath: filename || null,
-          sourcePayload,
-          createdAt: now,
-          updatedAt: now,
-        } as never)
-        .returning();
-      const template = templateFromLegacyRow({
-        id: row!.id,
-        title: row!.title,
-        source: "imported",
-        sourcePayload: row!.sourcePayload,
-        departmentHint,
-      });
-      if (!template) {
-        throw new ForgeError("VALIDATION_FAILED", "Imported template had no usable items");
-      }
-      return { template, created: true, updated: false, itemCount: template.items.length };
-    }, principal.userId);
+        return { template, created: true, updated: false, itemCount: template.items.length };
+      },
+      principal.userId,
+    );
   }
 
   async renameInspectionTemplate(
@@ -6064,195 +6124,206 @@ export class IndustrialDomainService {
     if (recordId === FALLBACK_INSPECTION_TEMPLATE.id) {
       throw new ForgeError("VALIDATION_FAILED", "The built-in template name cannot be changed");
     }
-    const name = cleanInspectionTemplateName(
-      String(body.name ?? body.title ?? "").trim(),
-    );
+    const name = cleanInspectionTemplateName(String(body.name ?? body.title ?? "").trim());
     if (!name) throw new ForgeError("VALIDATION_FAILED", "Template name is required");
     if (name.length > 500) {
       throw new ForgeError("VALIDATION_FAILED", "Template name is too long (500 characters max)");
     }
 
-    return withTenantTransaction(this.db, principal.tenantId, async (tx) => {
-      const now = new Date();
+    return withTenantTransaction(
+      this.db,
+      principal.tenantId,
+      async (tx) => {
+        const now = new Date();
 
-      const [insp] = await tx
-        .select()
-        .from(industrialInspections)
-        .where(
-          and(
-            eq(industrialInspections.id, recordId),
-            eq(industrialInspections.tenantId, principal.tenantId),
-            isNull(industrialInspections.archivedAt),
-            or(
-              eq(industrialInspections.sourceCollection, "inspectionTemplates"),
-              eq(industrialInspections.inspectionType, "TEMPLATE"),
-              sql`coalesce(${industrialInspections.sourcePayload}->>'isTemplate','') = 'true'`,
+        const [insp] = await tx
+          .select()
+          .from(industrialInspections)
+          .where(
+            and(
+              eq(industrialInspections.id, recordId),
+              eq(industrialInspections.tenantId, principal.tenantId),
+              isNull(industrialInspections.archivedAt),
+              or(
+                eq(industrialInspections.sourceCollection, "inspectionTemplates"),
+                eq(industrialInspections.inspectionType, "TEMPLATE"),
+                sql`coalesce(${industrialInspections.sourcePayload}->>'isTemplate','') = 'true'`,
+              ),
             ),
-          ),
-        )
-        .limit(1);
-      if (insp) {
-        const payload = this.unwrapSourcePayload(insp.sourcePayload);
-        const sourcePayload = {
-          ...payload,
-          isTemplate: true,
-          title: name,
-          name,
-          templateName: name,
-        };
-        const [row] = await tx
-          .update(industrialInspections)
-          .set({
+          )
+          .limit(1);
+        if (insp) {
+          const payload = this.unwrapSourcePayload(insp.sourcePayload);
+          const sourcePayload = {
+            ...payload,
+            isTemplate: true,
             title: name,
-            sourcePayload,
-            updatedAt: now,
-          } as never)
-          .where(eq(industrialInspections.id, insp.id))
-          .returning();
-        const template = templateFromLegacyRow({
-          id: row!.id,
-          title: row!.title,
-          source: "imported",
-          sourcePayload: row!.sourcePayload,
-        });
-        if (!template) throw new ForgeError("VALIDATION_FAILED", "Template has no checklist items");
-        return template;
-      }
-
-      const [form] = await tx
-        .select()
-        .from(industrialFormDefinitions)
-        .where(
-          and(
-            eq(industrialFormDefinitions.id, recordId),
-            eq(industrialFormDefinitions.tenantId, principal.tenantId),
-            isNull(industrialFormDefinitions.archivedAt),
-          ),
-        )
-        .limit(1);
-      if (form) {
-        const payload = this.unwrapSourcePayload(form.sourcePayload);
-        const [row] = await tx
-          .update(industrialFormDefinitions)
-          .set({
-            title: name,
-            sourcePayload: { ...payload, title: name, name },
-            updatedAt: now,
-          } as never)
-          .where(eq(industrialFormDefinitions.id, form.id))
-          .returning();
-        const template = templateFromLegacyRow({
-          id: row!.id,
-          title: row!.title,
-          name: row!.title,
-          source: "imported",
-          schemaJson: row!.schemaJson,
-          sourcePayload: row!.sourcePayload,
-        });
-        if (!template) throw new ForgeError("VALIDATION_FAILED", "Template has no checklist items");
-        return template;
-      }
-
-      const [ehs] = await tx
-        .select()
-        .from(platformEhsAuditTemplates)
-        .where(
-          and(
-            eq(platformEhsAuditTemplates.id, recordId),
-            eq(platformEhsAuditTemplates.tenantId, principal.tenantId),
-          ),
-        )
-        .limit(1);
-      if (ehs) {
-        const [row] = await tx
-          .update(platformEhsAuditTemplates)
-          .set({
             name,
-            updatedAt: now,
-          } as never)
-          .where(eq(platformEhsAuditTemplates.id, ehs.id))
-          .returning();
-        const template = templateFromLegacyRow({
-          id: row!.id,
-          name: row!.name,
-          source: "ehs",
-          templateJson: row!.templateJson,
-          sourcePayload: row!.sourcePayload,
-        });
-        if (!template) throw new ForgeError("VALIDATION_FAILED", "Template has no checklist items");
-        return template;
-      }
+            templateName: name,
+          };
+          const [row] = await tx
+            .update(industrialInspections)
+            .set({
+              title: name,
+              sourcePayload,
+              updatedAt: now,
+            } as never)
+            .where(eq(industrialInspections.id, insp.id))
+            .returning();
+          const template = templateFromLegacyRow({
+            id: row!.id,
+            title: row!.title,
+            source: "imported",
+            sourcePayload: row!.sourcePayload,
+          });
+          if (!template)
+            throw new ForgeError("VALIDATION_FAILED", "Template has no checklist items");
+          return template;
+        }
 
-      throw new ForgeError(
-        "NOT_FOUND",
-        "Template not found, or this template cannot be renamed for your company",
-      );
-    }, principal.userId);
+        const [form] = await tx
+          .select()
+          .from(industrialFormDefinitions)
+          .where(
+            and(
+              eq(industrialFormDefinitions.id, recordId),
+              eq(industrialFormDefinitions.tenantId, principal.tenantId),
+              isNull(industrialFormDefinitions.archivedAt),
+            ),
+          )
+          .limit(1);
+        if (form) {
+          const payload = this.unwrapSourcePayload(form.sourcePayload);
+          const [row] = await tx
+            .update(industrialFormDefinitions)
+            .set({
+              title: name,
+              sourcePayload: { ...payload, title: name, name },
+              updatedAt: now,
+            } as never)
+            .where(eq(industrialFormDefinitions.id, form.id))
+            .returning();
+          const template = templateFromLegacyRow({
+            id: row!.id,
+            title: row!.title,
+            name: row!.title,
+            source: "imported",
+            schemaJson: row!.schemaJson,
+            sourcePayload: row!.sourcePayload,
+          });
+          if (!template)
+            throw new ForgeError("VALIDATION_FAILED", "Template has no checklist items");
+          return template;
+        }
+
+        const [ehs] = await tx
+          .select()
+          .from(platformEhsAuditTemplates)
+          .where(
+            and(
+              eq(platformEhsAuditTemplates.id, recordId),
+              eq(platformEhsAuditTemplates.tenantId, principal.tenantId),
+            ),
+          )
+          .limit(1);
+        if (ehs) {
+          const [row] = await tx
+            .update(platformEhsAuditTemplates)
+            .set({
+              name,
+              updatedAt: now,
+            } as never)
+            .where(eq(platformEhsAuditTemplates.id, ehs.id))
+            .returning();
+          const template = templateFromLegacyRow({
+            id: row!.id,
+            name: row!.name,
+            source: "ehs",
+            templateJson: row!.templateJson,
+            sourcePayload: row!.sourcePayload,
+          });
+          if (!template)
+            throw new ForgeError("VALIDATION_FAILED", "Template has no checklist items");
+          return template;
+        }
+
+        throw new ForgeError(
+          "NOT_FOUND",
+          "Template not found, or this template cannot be renamed for your company",
+        );
+      },
+      principal.userId,
+    );
   }
 
   async updateInspection(principal: ForgePrincipal, id: string, body: Record<string, unknown>) {
     const recordId = this.assertRecordId(id);
-    return withTenantTransaction(this.db, principal.tenantId, async (tx) => {
-      const [existing] = await tx
-        .select()
-        .from(industrialInspections)
-        .where(
-          and(
-            eq(industrialInspections.id, recordId),
-            eq(industrialInspections.tenantId, principal.tenantId),
-            isNull(industrialInspections.archivedAt),
-          ),
-        )
-        .limit(1);
-      if (!existing) throw new ForgeError("NOT_FOUND", "Inspection not found");
+    return withTenantTransaction(
+      this.db,
+      principal.tenantId,
+      async (tx) => {
+        const [existing] = await tx
+          .select()
+          .from(industrialInspections)
+          .where(
+            and(
+              eq(industrialInspections.id, recordId),
+              eq(industrialInspections.tenantId, principal.tenantId),
+              isNull(industrialInspections.archivedAt),
+            ),
+          )
+          .limit(1);
+        if (!existing) throw new ForgeError("NOT_FOUND", "Inspection not found");
 
-      const payload = this.unwrapSourcePayload(existing.sourcePayload);
-      const nextPayload: Record<string, unknown> = { ...payload };
-      for (const key of [
-        "inspectionDate",
-        "departmentId",
-        "departmentName",
-        "templateId",
-        "templateName",
-        "responsiblePersonnelId",
-        "responsibleName",
-        "items",
-        "signature",
-        "signatureName",
-        "divisionName",
-        "locationName",
-        "locationId",
-      ] as const) {
-        if (body[key] !== undefined) nextPayload[key] = body[key];
-      }
+        const payload = this.unwrapSourcePayload(existing.sourcePayload);
+        const nextPayload: Record<string, unknown> = { ...payload };
+        for (const key of [
+          "inspectionDate",
+          "departmentId",
+          "departmentName",
+          "templateId",
+          "templateName",
+          "responsiblePersonnelId",
+          "responsibleName",
+          "items",
+          "signature",
+          "signatureName",
+          "divisionName",
+          "locationName",
+          "locationId",
+        ] as const) {
+          if (body[key] !== undefined) nextPayload[key] = body[key];
+        }
 
-      const now = new Date();
-      const patch: Record<string, unknown> = {
-        sourcePayload: nextPayload,
-        updatedAt: now,
-      };
-      if (typeof body.title === "string" && body.title.trim()) {
-        patch.title = body.title.trim();
-        nextPayload.title = body.title.trim();
-      }
-      if (typeof body.status === "string" && body.status.trim()) {
-        patch.status = body.status.trim();
-      }
-      if (body.departmentId !== undefined) {
-        patch.departmentId = body.departmentId ? String(body.departmentId) : null;
-      }
-      if (body.templateId !== undefined) {
-        const tid = body.templateId ? String(body.templateId) : null;
-        patch.templateId = tid === FALLBACK_INSPECTION_TEMPLATE.id ? null : tid;
-      }
+        const now = new Date();
+        const patch: Record<string, unknown> = {
+          sourcePayload: nextPayload,
+          updatedAt: now,
+        };
+        if (typeof body.title === "string" && body.title.trim()) {
+          patch.title = body.title.trim();
+          nextPayload.title = body.title.trim();
+        }
+        if (typeof body.status === "string" && body.status.trim()) {
+          patch.status = body.status.trim();
+        }
+        if (body.departmentId !== undefined) {
+          patch.departmentId = body.departmentId ? String(body.departmentId) : null;
+        }
+        if (body.templateId !== undefined) {
+          const tid = body.templateId ? String(body.templateId) : null;
+          patch.templateId = tid === FALLBACK_INSPECTION_TEMPLATE.id ? null : tid;
+        }
 
-      const [row] = await tx
-        .update(industrialInspections)
-        .set(patch as never)
-        .where(eq(industrialInspections.id, recordId))
-        .returning();
-      return this.mapInspectionRow(row!);
-    }, principal.userId);
+        const [row] = await tx
+          .update(industrialInspections)
+          .set(patch as never)
+          .where(eq(industrialInspections.id, recordId))
+          .returning();
+        return this.mapInspectionRow(row!);
+      },
+      principal.userId,
+    );
   }
 
   /**
@@ -6266,60 +6337,69 @@ export class IndustrialDomainService {
       throw new ForgeError("INTERNAL_ERROR", "Audit service is not configured");
     }
 
-    return withTenantTransaction(this.db, principal.tenantId, async (tx) => {
-      const [existing] = await tx
-        .select()
-        .from(industrialInspections)
-        .where(
-          and(
-            eq(industrialInspections.id, recordId),
-            eq(industrialInspections.tenantId, principal.tenantId),
-            isNull(industrialInspections.archivedAt),
-          ),
-        )
-        .limit(1);
-      if (!existing) throw new ForgeError("NOT_FOUND", "Inspection not found");
+    return withTenantTransaction(
+      this.db,
+      principal.tenantId,
+      async (tx) => {
+        const [existing] = await tx
+          .select()
+          .from(industrialInspections)
+          .where(
+            and(
+              eq(industrialInspections.id, recordId),
+              eq(industrialInspections.tenantId, principal.tenantId),
+              isNull(industrialInspections.archivedAt),
+            ),
+          )
+          .limit(1);
+        if (!existing) throw new ForgeError("NOT_FOUND", "Inspection not found");
 
-      const before = this.mapInspectionRow(existing);
-      const now = new Date();
-      const [row] = await tx
-        .update(industrialInspections)
-        .set({
-          archivedAt: now,
-          status: "DELETED",
-          updatedAt: now,
-        })
-        .where(eq(industrialInspections.id, recordId))
-        .returning();
-      if (!row) throw new ForgeError("INTERNAL_ERROR", "Failed to delete inspection");
+        const before = this.mapInspectionRow(existing);
+        const now = new Date();
+        const [row] = await tx
+          .update(industrialInspections)
+          .set({
+            archivedAt: now,
+            status: "DELETED",
+            updatedAt: now,
+          })
+          .where(eq(industrialInspections.id, recordId))
+          .returning();
+        if (!row) throw new ForgeError("INTERNAL_ERROR", "Failed to delete inspection");
 
-      const after = this.mapInspectionRow(row);
-      await this.audit!.writeInTransaction(tx, {
-        tenantId: principal.tenantId,
-        actorUserId: principal.userId,
-        actorPersonId: principal.personId,
-        actorType: "USER",
-        action: "industrial.inspections.delete",
-        resourceType: "industrial_inspections",
-        resourceId: recordId,
-        result: "SUCCESS",
-        riskLevel: "HIGH",
-        correlationId: "",
-        requestId: "",
-        before,
-        after,
-        metadata: {
-          module: "INSPECTIONS",
-          reason: "admin_delete",
-          title: String(existing.title ?? ""),
-          previousStatus: String(existing.status ?? ""),
-        },
-      });
-      return after;
-    }, principal.userId);
+        const after = this.mapInspectionRow(row);
+        await this.audit!.writeInTransaction(tx, {
+          tenantId: principal.tenantId,
+          actorUserId: principal.userId,
+          actorPersonId: principal.personId,
+          actorType: "USER",
+          action: "industrial.inspections.delete",
+          resourceType: "industrial_inspections",
+          resourceId: recordId,
+          result: "SUCCESS",
+          riskLevel: "HIGH",
+          correlationId: "",
+          requestId: "",
+          before,
+          after,
+          metadata: {
+            module: "INSPECTIONS",
+            reason: "admin_delete",
+            title: String(existing.title ?? ""),
+            previousStatus: String(existing.status ?? ""),
+          },
+        });
+        return after;
+      },
+      principal.userId,
+    );
   }
 
-  async completeInspection(principal: ForgePrincipal, id: string, body: Record<string, unknown> = {}) {
+  async completeInspection(
+    principal: ForgePrincipal,
+    id: string,
+    body: Record<string, unknown> = {},
+  ) {
     const recordId = this.assertRecordId(id);
     const appBase =
       (typeof body.appBaseUrl === "string" && body.appBaseUrl.trim()) ||
@@ -6327,144 +6407,149 @@ export class IndustrialDomainService {
       process.env.NEXT_PUBLIC_APP_URL ||
       "https://producersrice.forgeindustrialsafety.com";
 
-    return withTenantTransaction(this.db, principal.tenantId, async (tx) => {
-      const [existing] = await tx
-        .select()
-        .from(industrialInspections)
-        .where(
-          and(
-            eq(industrialInspections.id, recordId),
-            eq(industrialInspections.tenantId, principal.tenantId),
-            isNull(industrialInspections.archivedAt),
-          ),
-        )
-        .limit(1);
-      if (!existing) throw new ForgeError("NOT_FOUND", "Inspection not found");
+    return withTenantTransaction(
+      this.db,
+      principal.tenantId,
+      async (tx) => {
+        const [existing] = await tx
+          .select()
+          .from(industrialInspections)
+          .where(
+            and(
+              eq(industrialInspections.id, recordId),
+              eq(industrialInspections.tenantId, principal.tenantId),
+              isNull(industrialInspections.archivedAt),
+            ),
+          )
+          .limit(1);
+        if (!existing) throw new ForgeError("NOT_FOUND", "Inspection not found");
 
-      const payload = this.unwrapSourcePayload(existing.sourcePayload);
-      const items = parseRunItems(body.items ?? payload.items);
-      try {
-        assertCanComplete(items);
-      } catch (e) {
-        throw new ForgeError("VALIDATION_FAILED", e instanceof Error ? e.message : "Cannot complete");
-      }
-
-      const responsiblePersonnelId =
-        (typeof payload.responsiblePersonnelId === "string" && payload.responsiblePersonnelId) ||
-        null;
-      const responsibleName =
-        (typeof payload.responsibleName === "string" && payload.responsibleName) || "";
-
-      const now = new Date();
-      const nextItems: InspectionRunItem[] = [];
-      for (const item of items) {
-        if (item.answer !== "NO") {
-          nextItems.push(item);
-          continue;
-        }
-        if (item.correctiveActionId) {
-          nextItems.push(item);
-          continue;
+        const payload = this.unwrapSourcePayload(existing.sourcePayload);
+        const items = parseRunItems(body.items ?? payload.items);
+        try {
+          assertCanComplete(items);
+        } catch (e) {
+          throw new ForgeError(
+            "VALIDATION_FAILED",
+            e instanceof Error ? e.message : "Cannot complete",
+          );
         }
 
-        const token = randomBytes(24).toString("base64url");
-        const tokenHash = createHash("sha256").update(token).digest("hex");
-        const caId = createId();
-        const expires = new Date(now.getTime() + 90 * 24 * 60 * 60 * 1000);
-        await tx.insert(industrialCorrectiveActions).values({
-          id: caId,
-          tenantId: principal.tenantId,
-          siteId: existing.siteId,
-          parentEntityType: "INSPECTION",
-          parentEntityId: recordId,
-          title: `Inspection finding: ${item.label}`.slice(0, 500),
-          description: item.notes ?? "",
-          finding: item.notes ?? item.label,
-          requiredAction: "Correct the finding and close out with evidence.",
-          status: "OPEN",
-          assignedPersonnelId: responsiblePersonnelId,
-          ownerName: responsibleName || null,
-          evidenceNotes: null,
-          closeoutTokenHash: tokenHash,
-          closeoutTokenExpiresAt: expires,
-          sourceSystem: "FORGE",
-          sourcePayload: {
-            inspectionId: recordId,
-            inspectionItemId: item.id,
-            inspectionTitle: existing.title,
-            photos: item.photos ?? [],
-          },
-          createdAt: now,
-          updatedAt: now,
-        } as never);
+        const responsiblePersonnelId =
+          (typeof payload.responsiblePersonnelId === "string" && payload.responsiblePersonnelId) ||
+          null;
+        const responsibleName =
+          (typeof payload.responsibleName === "string" && payload.responsibleName) || "";
 
-        // Query token: industrial-web is a static export; path tokens need a
-        // CloudFront rewrite (same pattern as /incidents/placeholder).
-        const closeoutUrl = `${appBase.replace(/\/$/, "")}/closeout/?token=${encodeURIComponent(token)}`;
-        nextItems.push({
-          ...item,
-          correctiveActionId: caId,
-          closeoutUrl,
-          closeoutToken: token,
-        });
-      }
+        const now = new Date();
+        const nextItems: InspectionRunItem[] = [];
+        for (const item of items) {
+          if (item.answer !== "NO") {
+            nextItems.push(item);
+            continue;
+          }
+          if (item.correctiveActionId) {
+            nextItems.push(item);
+            continue;
+          }
 
-      const targetType = String(payload.targetType ?? "").trim().toUpperCase();
-      const targetId = String(payload.targetId ?? "").trim();
-      const qrLinkId = String(payload.qrLinkId ?? "").trim();
-      const failedItems = nextItems.filter((item) => item.answer === "NO");
-      let assetOutOfService = false;
-      let outOfServiceReason: string | null = null;
-      if (
-        failedItems.length > 0 &&
-        targetType &&
-        targetId &&
-        isQrAssetTargetType(targetType)
-      ) {
-        outOfServiceReason =
-          failedItems.length === 1
-            ? `Failed inspection: ${failedItems[0]?.label ?? existing.title}`
-            : `Failed inspection (${failedItems.length} findings): ${existing.title}`;
-        await markQrAssetOutOfService(tx, {
-          tenantId: principal.tenantId,
-          targetType,
-          targetId,
-          reason: outOfServiceReason.slice(0, 500),
-          personnelId: responsiblePersonnelId,
-          personnelName: responsibleName || null,
-          qrLinkId: qrLinkId || null,
-          source: payload.qrScanSource ? "QR_INSPECTION" : "INSPECTION",
-        });
-        assetOutOfService = true;
-      }
+          const token = randomBytes(24).toString("base64url");
+          const tokenHash = createHash("sha256").update(token).digest("hex");
+          const caId = createId();
+          const expires = new Date(now.getTime() + 90 * 24 * 60 * 60 * 1000);
+          await tx.insert(industrialCorrectiveActions).values({
+            id: caId,
+            tenantId: principal.tenantId,
+            siteId: existing.siteId,
+            parentEntityType: "INSPECTION",
+            parentEntityId: recordId,
+            title: `Inspection finding: ${item.label}`.slice(0, 500),
+            description: item.notes ?? "",
+            finding: item.notes ?? item.label,
+            requiredAction: "Correct the finding and close out with evidence.",
+            status: "OPEN",
+            assignedPersonnelId: responsiblePersonnelId,
+            ownerName: responsibleName || null,
+            evidenceNotes: null,
+            closeoutTokenHash: tokenHash,
+            closeoutTokenExpiresAt: expires,
+            sourceSystem: "FORGE",
+            sourcePayload: {
+              inspectionId: recordId,
+              inspectionItemId: item.id,
+              inspectionTitle: existing.title,
+              photos: item.photos ?? [],
+            },
+            createdAt: now,
+            updatedAt: now,
+          } as never);
 
-      const nextPayload = {
-        ...payload,
-        items: nextItems,
-        completedAt: now.toISOString(),
-        assetOutOfService,
-        outOfServiceReason,
-        signature: typeof body.signature === "string" ? body.signature : payload.signature,
-        signatureName:
-          typeof body.signatureName === "string" ? body.signatureName : payload.signatureName,
-      };
-      const [row] = await tx
-        .update(industrialInspections)
-        .set({
-          status: "COMPLETED",
-          completedAt: now,
-          sourcePayload: nextPayload,
-          updatedAt: now,
-        } as never)
-        .where(eq(industrialInspections.id, recordId))
-        .returning();
+          // Query token: industrial-web is a static export; path tokens need a
+          // CloudFront rewrite (same pattern as /incidents/placeholder).
+          const closeoutUrl = `${appBase.replace(/\/$/, "")}/closeout/?token=${encodeURIComponent(token)}`;
+          nextItems.push({
+            ...item,
+            correctiveActionId: caId,
+            closeoutUrl,
+            closeoutToken: token,
+          });
+        }
 
-      return {
-        ...this.mapInspectionRow(row!),
-        assetOutOfService,
-        outOfServiceReason,
-      };
-    }, principal.userId);
+        const targetType = String(payload.targetType ?? "")
+          .trim()
+          .toUpperCase();
+        const targetId = String(payload.targetId ?? "").trim();
+        const qrLinkId = String(payload.qrLinkId ?? "").trim();
+        const failedItems = nextItems.filter((item) => item.answer === "NO");
+        let assetOutOfService = false;
+        let outOfServiceReason: string | null = null;
+        if (failedItems.length > 0 && targetType && targetId && isQrAssetTargetType(targetType)) {
+          outOfServiceReason =
+            failedItems.length === 1
+              ? `Failed inspection: ${failedItems[0]?.label ?? existing.title}`
+              : `Failed inspection (${failedItems.length} findings): ${existing.title}`;
+          await markQrAssetOutOfService(tx, {
+            tenantId: principal.tenantId,
+            targetType,
+            targetId,
+            reason: outOfServiceReason.slice(0, 500),
+            personnelId: responsiblePersonnelId,
+            personnelName: responsibleName || null,
+            qrLinkId: qrLinkId || null,
+            source: payload.qrScanSource ? "QR_INSPECTION" : "INSPECTION",
+          });
+          assetOutOfService = true;
+        }
+
+        const nextPayload = {
+          ...payload,
+          items: nextItems,
+          completedAt: now.toISOString(),
+          assetOutOfService,
+          outOfServiceReason,
+          signature: typeof body.signature === "string" ? body.signature : payload.signature,
+          signatureName:
+            typeof body.signatureName === "string" ? body.signatureName : payload.signatureName,
+        };
+        const [row] = await tx
+          .update(industrialInspections)
+          .set({
+            status: "COMPLETED",
+            completedAt: now,
+            sourcePayload: nextPayload,
+            updatedAt: now,
+          } as never)
+          .where(eq(industrialInspections.id, recordId))
+          .returning();
+
+        return {
+          ...this.mapInspectionRow(row!),
+          assetOutOfService,
+          outOfServiceReason,
+        };
+      },
+      principal.userId,
+    );
   }
 
   private async resolveCloseoutTenantId(tokenHash: string): Promise<string | null> {
@@ -6528,7 +6613,10 @@ export class IndustrialDomainService {
         .where(eq(industrialCorrectiveActions.closeoutTokenHash, tokenHash))
         .limit(1);
       if (!existing) throw new ForgeError("NOT_FOUND", "Close-out link not found");
-      if (existing.closeoutTokenExpiresAt && existing.closeoutTokenExpiresAt.getTime() < Date.now()) {
+      if (
+        existing.closeoutTokenExpiresAt &&
+        existing.closeoutTokenExpiresAt.getTime() < Date.now()
+      ) {
         throw new ForgeError("BAD_REQUEST", "Close-out link has expired");
       }
       if (String(existing.status).toUpperCase() === "COMPLETED") {
@@ -6593,11 +6681,11 @@ export class IndustrialDomainService {
       where id = ${tenantId}::uuid
       limit 1
     `);
-    const tenantRow = (Array.isArray(tenantRows)
-      ? tenantRows[0]
-      : (tenantRows as { rows?: Array<Record<string, unknown>> }).rows?.[0]) as
-      | Record<string, unknown>
-      | undefined;
+    const tenantRow = (
+      Array.isArray(tenantRows)
+        ? tenantRows[0]
+        : (tenantRows as { rows?: Array<Record<string, unknown>> }).rows?.[0]
+    ) as Record<string, unknown> | undefined;
 
     const brandingRows = await tx.execute(sql`
       select cv.payload_json as payload
@@ -6608,11 +6696,11 @@ export class IndustrialDomainService {
         and co.object_key = 'default'
       limit 1
     `);
-    const brandingPayloadRaw = (Array.isArray(brandingRows)
-      ? brandingRows[0]
-      : (brandingRows as { rows?: Array<{ payload?: unknown }> }).rows?.[0]) as
-      | { payload?: unknown }
-      | undefined;
+    const brandingPayloadRaw = (
+      Array.isArray(brandingRows)
+        ? brandingRows[0]
+        : (brandingRows as { rows?: Array<{ payload?: unknown }> }).rows?.[0]
+    ) as { payload?: unknown } | undefined;
     const brandingPayload = unwrapJsonRecord(brandingPayloadRaw?.payload);
 
     const tenantKey = String(tenantRow?.tenant_key ?? "").trim() || null;
@@ -6676,7 +6764,10 @@ export class IndustrialDomainService {
             ),
           ),
         )
-        .orderBy(desc(industrialDotComplianceRecords.recordDate), desc(industrialDotComplianceRecords.updatedAt))
+        .orderBy(
+          desc(industrialDotComplianceRecords.recordDate),
+          desc(industrialDotComplianceRecords.updatedAt),
+        )
         .limit(pageSize)
         .offset(offset);
 
@@ -6731,13 +6822,11 @@ export class IndustrialDomainService {
     });
   }
 
-  async dvirDayPrintable(
-    principal: ForgePrincipal,
-    vehicleId: string,
-    inspectionDate: string,
-  ) {
+  async dvirDayPrintable(principal: ForgePrincipal, vehicleId: string, inspectionDate: string) {
     const id = this.assertRecordId(vehicleId);
-    const date = String(inspectionDate ?? "").trim().slice(0, 10);
+    const date = String(inspectionDate ?? "")
+      .trim()
+      .slice(0, 10);
     if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) {
       throw new ForgeError("VALIDATION_FAILED", "Inspection date must be YYYY-MM-DD.");
     }
@@ -6841,7 +6930,10 @@ export class IndustrialDomainService {
             ),
           ),
         )
-        .orderBy(desc(industrialDotComplianceRecords.recordDate), desc(industrialDotComplianceRecords.updatedAt))
+        .orderBy(
+          desc(industrialDotComplianceRecords.recordDate),
+          desc(industrialDotComplianceRecords.updatedAt),
+        )
         .limit(100);
 
       return {
@@ -6912,7 +7004,9 @@ export class IndustrialDomainService {
 
   async dvirDayPrintableByToken(token: string, inspectionDate: string) {
     const { tokenHash, tenantId } = await this.resolveDvirVehicleByToken(token);
-    const date = String(inspectionDate ?? "").trim().slice(0, 10);
+    const date = String(inspectionDate ?? "")
+      .trim()
+      .slice(0, 10);
     if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) {
       throw new ForgeError("VALIDATION_FAILED", "Inspection date must be YYYY-MM-DD.");
     }
@@ -7162,10 +7256,7 @@ export class IndustrialDomainService {
 
       const payload = this.unwrapDotPayload(existing.sourcePayload);
       if (!payloadNeedsDriverReview(payload)) {
-        throw new ForgeError(
-          "VALIDATION_FAILED",
-          "This DVIR is not waiting for driver review.",
-        );
+        throw new ForgeError("VALIDATION_FAILED", "This DVIR is not waiting for driver review.");
       }
 
       const now = new Date();
@@ -7248,12 +7339,7 @@ export class IndustrialDomainService {
 
       for (const [key, value] of Object.entries(body)) {
         if (reserved.has(key) || value === undefined) continue;
-        if (
-          key === "details" &&
-          value &&
-          typeof value === "object" &&
-          !Array.isArray(value)
-        ) {
+        if (key === "details" && value && typeof value === "object" && !Array.isArray(value)) {
           const existingDetails =
             nextPayload.details &&
             typeof nextPayload.details === "object" &&
@@ -7403,8 +7489,7 @@ export class IndustrialDomainService {
     if (!tenantId) throw new ForgeError("NOT_FOUND", "DVIR link not found");
 
     const now = new Date();
-    const signedAt =
-      parseOptionalSignedAt(body, "driverSignedAt") ?? now.toISOString();
+    const signedAt = parseOptionalSignedAt(body, "driverSignedAt") ?? now.toISOString();
     const defectCount = parsed.truckDefects.length + parsed.trailerDefects.length;
     const status = dvirStatusForDefects(defectCount);
     const title = dvirTitle(parsed.tripType, parsed.truckNumber);
@@ -7473,7 +7558,9 @@ export class IndustrialDomainService {
 
   async certifyDvir(principal: ForgePrincipal, id: string, body: Record<string, unknown>) {
     const recordId = this.assertRecordId(id);
-    const action = String(body.action ?? "mechanic").trim().toLowerCase();
+    const action = String(body.action ?? "mechanic")
+      .trim()
+      .toLowerCase();
 
     return withTenantTransaction(this.db, principal.tenantId, async (tx) => {
       const [existing] = await tx
@@ -7533,9 +7620,7 @@ export class IndustrialDomainService {
             "Mechanic certification is required before driver review.",
           );
         }
-        const driverReviewSignatureDataUrl = String(
-          body.driverReviewSignatureDataUrl ?? "",
-        ).trim();
+        const driverReviewSignatureDataUrl = String(body.driverReviewSignatureDataUrl ?? "").trim();
         if (!driverReviewSignatureDataUrl.startsWith("data:image/")) {
           throw new ForgeError("VALIDATION_FAILED", "Driver review signature is required.");
         }
@@ -7578,38 +7663,43 @@ export class IndustrialDomainService {
     body: Record<string, unknown> = {},
   ) {
     const recordId = this.assertRecordId(id);
-    return withTenantTransaction(this.db, principal.tenantId, async (tx) => {
-      const [existing] = await tx
-        .select()
-        .from(industrialCorrectiveActions)
-        .where(
-          and(
-            eq(industrialCorrectiveActions.id, recordId),
-            eq(industrialCorrectiveActions.tenantId, principal.tenantId),
-            isNull(industrialCorrectiveActions.archivedAt),
-          ),
-        )
-        .limit(1);
-      if (!existing) throw new ForgeError("NOT_FOUND", "Corrective action not found");
-      const notes =
-        typeof body.notes === "string" && body.notes.trim()
-          ? body.notes.trim()
-          : existing.evidenceNotes;
-      const now = new Date();
-      const [row] = await tx
-        .update(industrialCorrectiveActions)
-        .set({
-          status: "COMPLETED",
-          completedAt: now,
-          evidenceNotes: notes,
-          closeoutCompletedByName:
-            typeof body.completedByName === "string" ? body.completedByName : null,
-          updatedAt: now,
-        } as never)
-        .where(eq(industrialCorrectiveActions.id, recordId))
-        .returning();
-      return row;
-    }, principal.userId);
+    return withTenantTransaction(
+      this.db,
+      principal.tenantId,
+      async (tx) => {
+        const [existing] = await tx
+          .select()
+          .from(industrialCorrectiveActions)
+          .where(
+            and(
+              eq(industrialCorrectiveActions.id, recordId),
+              eq(industrialCorrectiveActions.tenantId, principal.tenantId),
+              isNull(industrialCorrectiveActions.archivedAt),
+            ),
+          )
+          .limit(1);
+        if (!existing) throw new ForgeError("NOT_FOUND", "Corrective action not found");
+        const notes =
+          typeof body.notes === "string" && body.notes.trim()
+            ? body.notes.trim()
+            : existing.evidenceNotes;
+        const now = new Date();
+        const [row] = await tx
+          .update(industrialCorrectiveActions)
+          .set({
+            status: "COMPLETED",
+            completedAt: now,
+            evidenceNotes: notes,
+            closeoutCompletedByName:
+              typeof body.completedByName === "string" ? body.completedByName : null,
+            updatedAt: now,
+          } as never)
+          .where(eq(industrialCorrectiveActions.id, recordId))
+          .returning();
+        return row;
+      },
+      principal.userId,
+    );
   }
 
   async updateDepartmentContact(
@@ -7618,54 +7708,52 @@ export class IndustrialDomainService {
     body: Record<string, unknown>,
   ) {
     const id = this.assertRecordId(departmentId);
-    return withTenantTransaction(this.db, principal.tenantId, async (tx) => {
-      const contactPersonnelId = body.contactPersonnelId
-        ? String(body.contactPersonnelId)
-        : null;
-      let contactName =
-        typeof body.contactName === "string" ? body.contactName.trim() : "";
-      let contactEmail =
-        typeof body.contactEmail === "string" ? body.contactEmail.trim() : "";
-      if (contactPersonnelId) {
-        const [person] = await tx
-          .select()
-          .from(industrialPersonnel)
+    return withTenantTransaction(
+      this.db,
+      principal.tenantId,
+      async (tx) => {
+        const contactPersonnelId = body.contactPersonnelId ? String(body.contactPersonnelId) : null;
+        let contactName = typeof body.contactName === "string" ? body.contactName.trim() : "";
+        let contactEmail = typeof body.contactEmail === "string" ? body.contactEmail.trim() : "";
+        if (contactPersonnelId) {
+          const [person] = await tx
+            .select()
+            .from(industrialPersonnel)
+            .where(
+              and(
+                eq(industrialPersonnel.id, contactPersonnelId),
+                eq(industrialPersonnel.tenantId, principal.tenantId),
+              ),
+            )
+            .limit(1);
+          if (person) {
+            contactName = contactName || person.displayName;
+            contactEmail = contactEmail || person.email || person.companyEmail || "";
+          }
+        }
+        const [row] = await tx
+          .update(industrialDepartments)
+          .set({
+            contactPersonnelId,
+            contactName: contactName || null,
+            contactEmail: contactEmail || null,
+            updatedAt: new Date(),
+          } as never)
           .where(
             and(
-              eq(industrialPersonnel.id, contactPersonnelId),
-              eq(industrialPersonnel.tenantId, principal.tenantId),
+              eq(industrialDepartments.id, id),
+              eq(industrialDepartments.tenantId, principal.tenantId),
             ),
           )
-          .limit(1);
-        if (person) {
-          contactName = contactName || person.displayName;
-          contactEmail = contactEmail || person.email || person.companyEmail || "";
-        }
-      }
-      const [row] = await tx
-        .update(industrialDepartments)
-        .set({
-          contactPersonnelId,
-          contactName: contactName || null,
-          contactEmail: contactEmail || null,
-          updatedAt: new Date(),
-        } as never)
-        .where(
-          and(
-            eq(industrialDepartments.id, id),
-            eq(industrialDepartments.tenantId, principal.tenantId),
-          ),
-        )
-        .returning();
-      if (!row) throw new ForgeError("NOT_FOUND", "Department not found");
-      return row;
-    }, principal.userId);
+          .returning();
+        if (!row) throw new ForgeError("NOT_FOUND", "Department not found");
+        return row;
+      },
+      principal.userId,
+    );
   }
 
-  async createInspectionAttachment(
-    principal: ForgePrincipal,
-    body: Record<string, unknown>,
-  ) {
+  async createInspectionAttachment(principal: ForgePrincipal, body: Record<string, unknown>) {
     const entityType = String(body.entityType ?? "INSPECTION_ITEM");
     const entityId = body.entityId ? String(body.entityId) : null;
     const fileName = String(body.fileName ?? body.originalFilename ?? "photo.jpg");
@@ -7848,9 +7936,7 @@ export class IndustrialDomainService {
       query.isCompanyDriver === "1" ||
       query.scope === "company-drivers";
     const ppeTrackedOnly =
-      query.ppeTracked === "true" ||
-      query.ppeTracked === "1" ||
-      query.scope === "ppe-allowance";
+      query.ppeTracked === "true" || query.ppeTracked === "1" || query.scope === "ppe-allowance";
     const firstAidTrackedOnly =
       query.firstAidTracked === "true" ||
       query.firstAidTracked === "1" ||
@@ -8051,7 +8137,7 @@ export class IndustrialDomainService {
         .where(
           and(
             eq(industrialTrainingRecords.tenantId, principal.tenantId),
-            eq(industrialTrainingRecords.personnelId, id),
+            eq(industrialTrainingRecords.personnelId, recordId),
             isNull(industrialTrainingRecords.archivedAt),
           ),
         )
@@ -8108,9 +8194,7 @@ export class IndustrialDomainService {
       const driverPayload = linkedDriver
         ? this.unwrapSourcePayload(linkedDriver.sourcePayload)
         : null;
-      const dotPayload = linkedDot
-        ? this.unwrapSourcePayload(linkedDot.sourcePayload)
-        : null;
+      const dotPayload = linkedDot ? this.unwrapSourcePayload(linkedDot.sourcePayload) : null;
       const licenseProjection = await this.resolveLicenseDownloadUrls(
         tx,
         principal.tenantId,
@@ -8136,7 +8220,9 @@ export class IndustrialDomainService {
         rows
           .map((row) => {
             const documentId = String(row.documentId ?? "").trim();
-            const name = String(row.name ?? row.fileName ?? row.originalFilename ?? "Document").trim();
+            const name = String(
+              row.name ?? row.fileName ?? row.originalFilename ?? "Document",
+            ).trim();
             const uploadedAt = String(row.uploadedAt ?? "").trim();
             const contentType = String(row.contentType ?? row.mimeType ?? "").trim();
             if (!documentId && !name) return null;
@@ -8151,8 +8237,12 @@ export class IndustrialDomainService {
       const companyDriverMvr = driverPayload
         ? {
             status: String(driverPayload.status ?? linkedDriver?.status ?? "").trim(),
-            initialMvrDate: String(driverPayload.initialMvrDate ?? linkedDriver?.initialMvrDate ?? "").trim(),
-            lastMvrDate: String(driverPayload.lastMvrDate ?? linkedDriver?.lastMvrDate ?? "").trim(),
+            initialMvrDate: String(
+              driverPayload.initialMvrDate ?? linkedDriver?.initialMvrDate ?? "",
+            ).trim(),
+            lastMvrDate: String(
+              driverPayload.lastMvrDate ?? linkedDriver?.lastMvrDate ?? "",
+            ).trim(),
             mvrReleaseDate: String(driverPayload.mvrReleaseDate ?? "").trim(),
             mvrUploadCount: mvrUploads.length,
             mvrReleaseUploadCount: mvrReleaseUploads.length,
@@ -8254,9 +8344,7 @@ export class IndustrialDomainService {
       const payloadMatchSql = (sourcePayload: any) => {
         const textBits = [
           sql`${sourcePayload}::text ilike ${`%${recordId}%`}`,
-          ...(employeeNumber
-            ? [sql`${sourcePayload}::text ilike ${`%${employeeNumber}%`}`]
-            : []),
+          ...(employeeNumber ? [sql`${sourcePayload}::text ilike ${`%${employeeNumber}%`}`] : []),
           ...(displayName.length >= 3
             ? [sql`${sourcePayload}::text ilike ${`%${displayName}%`}`]
             : []),
@@ -8308,175 +8396,186 @@ export class IndustrialDomainService {
         return sorted[0] ?? null;
       };
 
-      const [incidents, observations, training, trainingAssignments, submissions, templates, workersComp, fleetDrivers, dot, forklifts, confined] =
-        await Promise.all([
-          tx
-            .select()
-            .from(industrialIncidents)
-            .where(
-              and(
-                eq(industrialIncidents.tenantId, principal.tenantId),
-                isNull(industrialIncidents.archivedAt),
-                payloadMatchSql(industrialIncidents.sourcePayload),
-              ),
-            )
-            .orderBy(desc(industrialIncidents.updatedAt))
-            .limit(50),
-          tx
-            .select({
-              id: industrialObservations.id,
-              title: industrialObservations.title,
-              status: industrialObservations.status,
-              createdAt: industrialObservations.createdAt,
-              updatedAt: industrialObservations.updatedAt,
-              sourcePayload: sql<unknown>`case when jsonb_typeof(${industrialObservations.sourcePayload}) = 'object'
+      const [
+        incidents,
+        observations,
+        training,
+        trainingAssignments,
+        submissions,
+        templates,
+        workersComp,
+        fleetDrivers,
+        dot,
+        forklifts,
+        confined,
+      ] = await Promise.all([
+        tx
+          .select()
+          .from(industrialIncidents)
+          .where(
+            and(
+              eq(industrialIncidents.tenantId, principal.tenantId),
+              isNull(industrialIncidents.archivedAt),
+              payloadMatchSql(industrialIncidents.sourcePayload),
+            ),
+          )
+          .orderBy(desc(industrialIncidents.updatedAt))
+          .limit(50),
+        tx
+          .select({
+            id: industrialObservations.id,
+            title: industrialObservations.title,
+            status: industrialObservations.status,
+            createdAt: industrialObservations.createdAt,
+            updatedAt: industrialObservations.updatedAt,
+            sourcePayload: sql<unknown>`case when jsonb_typeof(${industrialObservations.sourcePayload}) = 'object'
                 then ${industrialObservations.sourcePayload} - 'photos' - 'followUp' - 'followUpTokens' - 'emailLog'
                 else ${industrialObservations.sourcePayload} end`,
-            })
-            .from(industrialObservations)
-            .where(
-              and(
-                eq(industrialObservations.tenantId, principal.tenantId),
-                isNull(industrialObservations.archivedAt),
-                payloadMatchSql(industrialObservations.sourcePayload),
-              ),
-            )
-            .orderBy(desc(industrialObservations.updatedAt))
-            .limit(50),
-          tx
-            .select()
-            .from(industrialTrainingRecords)
-            .where(
-              and(
-                eq(industrialTrainingRecords.tenantId, principal.tenantId),
-                isNull(industrialTrainingRecords.archivedAt),
-                or(
-                  eq(industrialTrainingRecords.personnelId, recordId),
-                  payloadMatchSql(industrialTrainingRecords.sourcePayload),
-                )!,
-              ),
-            )
-            .orderBy(desc(industrialTrainingRecords.updatedAt))
-            .limit(50),
-          tx
-            .select({
-              id: industrialTrainingAssignmentAssignees.id,
-              status: industrialTrainingAssignmentAssignees.status,
-              bestPercent: industrialTrainingAssignmentAssignees.bestPercent,
-              completedAt: industrialTrainingAssignmentAssignees.completedAt,
-              updatedAt: industrialTrainingAssignmentAssignees.updatedAt,
-              assignmentId: industrialTrainingAssignmentAssignees.assignmentId,
-              title: industrialTrainingAssignments.title,
-              dueAt: industrialTrainingAssignments.dueAt,
-            })
-            .from(industrialTrainingAssignmentAssignees)
-            .innerJoin(
-              industrialTrainingAssignments,
-              eq(
-                industrialTrainingAssignmentAssignees.assignmentId,
-                industrialTrainingAssignments.id,
-              ),
-            )
-            .where(
-              and(
-                eq(industrialTrainingAssignmentAssignees.tenantId, principal.tenantId),
-                eq(industrialTrainingAssignmentAssignees.personnelId, recordId),
-                isNull(industrialTrainingAssignments.archivedAt),
-                eq(industrialTrainingAssignments.status, "ACTIVE"),
-              ),
-            )
-            .orderBy(desc(industrialTrainingAssignmentAssignees.updatedAt))
-            .limit(50),
-          tx
-            .select()
-            .from(industrialFormSubmissions)
-            .where(
-              and(
-                eq(industrialFormSubmissions.tenantId, principal.tenantId),
-                isNull(industrialFormSubmissions.archivedAt),
-              ),
-            )
-            .orderBy(desc(industrialFormSubmissions.updatedAt))
-            .limit(200),
-          Promise.resolve(
-            [] as Array<{
-              id: string;
-              title: string | null;
-              status: string;
-              updatedAt: Date;
-            }>,
-          ),
-          tx
-            .select()
-            .from(industrialWorkersCompCases)
-            .where(
-              and(
-                eq(industrialWorkersCompCases.tenantId, principal.tenantId),
-                isNull(industrialWorkersCompCases.archivedAt),
-                or(
-                  eq(industrialWorkersCompCases.personnelId, recordId),
-                  payloadMatchSql(industrialWorkersCompCases.sourcePayload),
-                )!,
-              ),
-            )
-            .limit(50),
-          tx
-            .select()
-            .from(industrialFleetDrivers)
-            .where(
-              and(
-                eq(industrialFleetDrivers.tenantId, principal.tenantId),
-                isNull(industrialFleetDrivers.archivedAt),
-                or(
-                  eq(industrialFleetDrivers.personnelId, recordId),
-                  payloadMatchSql(industrialFleetDrivers.sourcePayload),
-                )!,
-              ),
-            )
-            .limit(25),
-          tx
-            .select()
-            .from(industrialDotComplianceRecords)
-            .where(
-              and(
-                eq(industrialDotComplianceRecords.tenantId, principal.tenantId),
-                isNull(industrialDotComplianceRecords.archivedAt),
-                or(
-                  eq(industrialDotComplianceRecords.personnelId, recordId),
-                  payloadMatchSql(industrialDotComplianceRecords.sourcePayload),
-                )!,
-              ),
-            )
-            .limit(50),
-          tx
-            .select()
-            .from(industrialForkliftRecords)
-            .where(
-              and(
-                eq(industrialForkliftRecords.tenantId, principal.tenantId),
-                isNull(industrialForkliftRecords.archivedAt),
-                or(
-                  eq(industrialForkliftRecords.personnelId, recordId),
-                  payloadMatchSql(industrialForkliftRecords.sourcePayload),
-                )!,
-              ),
-            )
-            .limit(50),
-          tx
-            .select()
-            .from(industrialConfinedSpaceRecords)
-            .where(
-              and(
-                eq(industrialConfinedSpaceRecords.tenantId, principal.tenantId),
-                isNull(industrialConfinedSpaceRecords.archivedAt),
-                or(
-                  eq(industrialConfinedSpaceRecords.personnelId, recordId),
-                  payloadMatchSql(industrialConfinedSpaceRecords.sourcePayload),
-                )!,
-              ),
-            )
-            .limit(50),
-        ]);
+          })
+          .from(industrialObservations)
+          .where(
+            and(
+              eq(industrialObservations.tenantId, principal.tenantId),
+              isNull(industrialObservations.archivedAt),
+              payloadMatchSql(industrialObservations.sourcePayload),
+            ),
+          )
+          .orderBy(desc(industrialObservations.updatedAt))
+          .limit(50),
+        tx
+          .select()
+          .from(industrialTrainingRecords)
+          .where(
+            and(
+              eq(industrialTrainingRecords.tenantId, principal.tenantId),
+              isNull(industrialTrainingRecords.archivedAt),
+              or(
+                eq(industrialTrainingRecords.personnelId, recordId),
+                payloadMatchSql(industrialTrainingRecords.sourcePayload),
+              )!,
+            ),
+          )
+          .orderBy(desc(industrialTrainingRecords.updatedAt))
+          .limit(50),
+        tx
+          .select({
+            id: industrialTrainingAssignmentAssignees.id,
+            status: industrialTrainingAssignmentAssignees.status,
+            bestPercent: industrialTrainingAssignmentAssignees.bestPercent,
+            completedAt: industrialTrainingAssignmentAssignees.completedAt,
+            updatedAt: industrialTrainingAssignmentAssignees.updatedAt,
+            assignmentId: industrialTrainingAssignmentAssignees.assignmentId,
+            title: industrialTrainingAssignments.title,
+            dueAt: industrialTrainingAssignments.dueAt,
+          })
+          .from(industrialTrainingAssignmentAssignees)
+          .innerJoin(
+            industrialTrainingAssignments,
+            eq(
+              industrialTrainingAssignmentAssignees.assignmentId,
+              industrialTrainingAssignments.id,
+            ),
+          )
+          .where(
+            and(
+              eq(industrialTrainingAssignmentAssignees.tenantId, principal.tenantId),
+              eq(industrialTrainingAssignmentAssignees.personnelId, recordId),
+              isNull(industrialTrainingAssignments.archivedAt),
+              eq(industrialTrainingAssignments.status, "ACTIVE"),
+            ),
+          )
+          .orderBy(desc(industrialTrainingAssignmentAssignees.updatedAt))
+          .limit(50),
+        tx
+          .select()
+          .from(industrialFormSubmissions)
+          .where(
+            and(
+              eq(industrialFormSubmissions.tenantId, principal.tenantId),
+              isNull(industrialFormSubmissions.archivedAt),
+            ),
+          )
+          .orderBy(desc(industrialFormSubmissions.updatedAt))
+          .limit(200),
+        Promise.resolve(
+          [] as Array<{
+            id: string;
+            title: string | null;
+            status: string;
+            updatedAt: Date;
+          }>,
+        ),
+        tx
+          .select()
+          .from(industrialWorkersCompCases)
+          .where(
+            and(
+              eq(industrialWorkersCompCases.tenantId, principal.tenantId),
+              isNull(industrialWorkersCompCases.archivedAt),
+              or(
+                eq(industrialWorkersCompCases.personnelId, recordId),
+                payloadMatchSql(industrialWorkersCompCases.sourcePayload),
+              )!,
+            ),
+          )
+          .limit(50),
+        tx
+          .select()
+          .from(industrialFleetDrivers)
+          .where(
+            and(
+              eq(industrialFleetDrivers.tenantId, principal.tenantId),
+              isNull(industrialFleetDrivers.archivedAt),
+              or(
+                eq(industrialFleetDrivers.personnelId, recordId),
+                payloadMatchSql(industrialFleetDrivers.sourcePayload),
+              )!,
+            ),
+          )
+          .limit(25),
+        tx
+          .select()
+          .from(industrialDotComplianceRecords)
+          .where(
+            and(
+              eq(industrialDotComplianceRecords.tenantId, principal.tenantId),
+              isNull(industrialDotComplianceRecords.archivedAt),
+              or(
+                eq(industrialDotComplianceRecords.personnelId, recordId),
+                payloadMatchSql(industrialDotComplianceRecords.sourcePayload),
+              )!,
+            ),
+          )
+          .limit(50),
+        tx
+          .select()
+          .from(industrialForkliftRecords)
+          .where(
+            and(
+              eq(industrialForkliftRecords.tenantId, principal.tenantId),
+              isNull(industrialForkliftRecords.archivedAt),
+              or(
+                eq(industrialForkliftRecords.personnelId, recordId),
+                payloadMatchSql(industrialForkliftRecords.sourcePayload),
+              )!,
+            ),
+          )
+          .limit(50),
+        tx
+          .select()
+          .from(industrialConfinedSpaceRecords)
+          .where(
+            and(
+              eq(industrialConfinedSpaceRecords.tenantId, principal.tenantId),
+              isNull(industrialConfinedSpaceRecords.archivedAt),
+              or(
+                eq(industrialConfinedSpaceRecords.personnelId, recordId),
+                payloadMatchSql(industrialConfinedSpaceRecords.sourcePayload),
+              )!,
+            ),
+          )
+          .limit(50),
+      ]);
 
       const incidentItems = incidents.map((r) => {
         const payload =
@@ -8534,15 +8633,20 @@ export class IndustrialDomainService {
       for (const r of observations) {
         const payload = this.unwrapSourcePayload(r.sourcePayload);
         const me = normalizeObservedPeople(payload.peopleObserved).find((p) =>
-          p.personnelId ? p.personnelId === recordId : Boolean(nameKey) && p.name.toLowerCase() === nameKey,
+          p.personnelId
+            ? p.personnelId === recordId
+            : Boolean(nameKey) && p.name.toLowerCase() === nameKey,
         );
-        const at = (typeof payload.observedAt === "string" && payload.observedAt) || r.createdAt.toISOString();
+        const at =
+          (typeof payload.observedAt === "string" && payload.observedAt) ||
+          r.createdAt.toISOString();
         if (isPositiveObservationType(payload.observationType)) {
           if (me) positiveObservationCount += 1;
         } else if (me && observedPersonAtFault(me, payload.observationType)) {
           unsafeAtFault.push({ riskLevel: payload.riskLevel, status: r.status, at });
         }
-        const reporter = typeof payload.reportedBy === "string" ? payload.reportedBy.trim().toLowerCase() : "";
+        const reporter =
+          typeof payload.reportedBy === "string" ? payload.reportedBy.trim().toLowerCase() : "";
         if (nameKey && reporter === nameKey && !me) positiveObservationCount += 1;
       }
 
@@ -8674,7 +8778,9 @@ export class IndustrialDomainService {
           inProgressTraining.some((p) => p.id === t.id) &&
           isPast(t.expiresAt?.toISOString() ?? null),
       );
-      const overdueAssignments = openAssignments.filter((t) => isPast(t.dueAt?.toISOString() ?? null));
+      const overdueAssignments = openAssignments.filter((t) =>
+        isPast(t.dueAt?.toISOString() ?? null),
+      );
       const certificates = training.filter((t) => Boolean(t.completedAt) || Boolean(t.expiresAt));
       const expiringCertificates = certificates.filter((t) =>
         expiringSoon(t.expiresAt?.toISOString() ?? null),
@@ -8736,10 +8842,10 @@ export class IndustrialDomainService {
         },
         qualifications: {
           total: qualificationItems.length,
-          active: qualificationItems.filter((i) => !i.status.toLowerCase().includes("expir")).length,
-          expiringSoon: qualificationItems.filter((i) =>
-            i.status.toLowerCase().includes("expir"),
-          ).length,
+          active: qualificationItems.filter((i) => !i.status.toLowerCase().includes("expir"))
+            .length,
+          expiringSoon: qualificationItems.filter((i) => i.status.toLowerCase().includes("expir"))
+            .length,
           expired: qualificationItems.filter((i) => i.status.toLowerCase() === "expired").length,
           items: qualificationItems,
         },
@@ -8926,26 +9032,38 @@ export class IndustrialDomainService {
     body: Record<string, unknown>,
   ) {
     const input = normalizeDisciplinaryActionInput(body);
-    return withTenantTransaction(this.db, principal.tenantId, async (tx) => {
-      const recordId = await this.resolvePersonnelRecordId(principal, personnelId, tx);
-      const now = new Date();
-      const [row] = await tx
-        .insert(industrialPersonnelDisciplinaryActions)
-        .values({
-          id: createId(),
-          tenantId: principal.tenantId,
-          personnelId: recordId,
-          ...input,
-          status: "ACTIVE",
-          createdByUserId: principal.userId,
-          createdAt: now,
-          updatedAt: now,
-        })
-        .returning();
-      const mapped = this.mapDisciplinaryAction(row!);
-      await this.auditDiscipline(tx, principal, "industrial.personnel.discipline.create", row!.id, null, mapped);
-      return mapped;
-    }, principal.userId);
+    return withTenantTransaction(
+      this.db,
+      principal.tenantId,
+      async (tx) => {
+        const recordId = await this.resolvePersonnelRecordId(principal, personnelId, tx);
+        const now = new Date();
+        const [row] = await tx
+          .insert(industrialPersonnelDisciplinaryActions)
+          .values({
+            id: createId(),
+            tenantId: principal.tenantId,
+            personnelId: recordId,
+            ...input,
+            status: "ACTIVE",
+            createdByUserId: principal.userId,
+            createdAt: now,
+            updatedAt: now,
+          })
+          .returning();
+        const mapped = this.mapDisciplinaryAction(row!);
+        await this.auditDiscipline(
+          tx,
+          principal,
+          "industrial.personnel.discipline.create",
+          row!.id,
+          null,
+          mapped,
+        );
+        return mapped;
+      },
+      principal.userId,
+    );
   }
 
   async updatePersonnelDisciplinaryAction(
@@ -8954,29 +9072,37 @@ export class IndustrialDomainService {
     actionId: string,
     body: Record<string, unknown>,
   ) {
-    return withTenantTransaction(this.db, principal.tenantId, async (tx) => {
-      const recordId = await this.resolvePersonnelRecordId(principal, personnelId, tx);
-      const existing = await this.loadDisciplinaryAction(tx, principal, recordId, actionId);
-      if (existing.status !== "ACTIVE") {
-        throw new ForgeError("VALIDATION_FAILED", "Rescinded actions cannot be edited");
-      }
-      const input = normalizeDisciplinaryActionInput(body, this.disciplinaryActionAsInput(existing));
-      const [row] = await tx
-        .update(industrialPersonnelDisciplinaryActions)
-        .set({ ...input, updatedAt: new Date() })
-        .where(eq(industrialPersonnelDisciplinaryActions.id, existing.id))
-        .returning();
-      const mapped = this.mapDisciplinaryAction(row!);
-      await this.auditDiscipline(
-        tx,
-        principal,
-        "industrial.personnel.discipline.update",
-        existing.id,
-        this.mapDisciplinaryAction(existing),
-        mapped,
-      );
-      return mapped;
-    }, principal.userId);
+    return withTenantTransaction(
+      this.db,
+      principal.tenantId,
+      async (tx) => {
+        const recordId = await this.resolvePersonnelRecordId(principal, personnelId, tx);
+        const existing = await this.loadDisciplinaryAction(tx, principal, recordId, actionId);
+        if (existing.status !== "ACTIVE") {
+          throw new ForgeError("VALIDATION_FAILED", "Rescinded actions cannot be edited");
+        }
+        const input = normalizeDisciplinaryActionInput(
+          body,
+          this.disciplinaryActionAsInput(existing),
+        );
+        const [row] = await tx
+          .update(industrialPersonnelDisciplinaryActions)
+          .set({ ...input, updatedAt: new Date() })
+          .where(eq(industrialPersonnelDisciplinaryActions.id, existing.id))
+          .returning();
+        const mapped = this.mapDisciplinaryAction(row!);
+        await this.auditDiscipline(
+          tx,
+          principal,
+          "industrial.personnel.discipline.update",
+          existing.id,
+          this.mapDisciplinaryAction(existing),
+          mapped,
+        );
+        return mapped;
+      },
+      principal.userId,
+    );
   }
 
   async rescindPersonnelDisciplinaryAction(
@@ -8989,35 +9115,40 @@ export class IndustrialDomainService {
     if (!reason) {
       throw new ForgeError("VALIDATION_FAILED", "A reason for rescinding is required");
     }
-    return withTenantTransaction(this.db, principal.tenantId, async (tx) => {
-      const recordId = await this.resolvePersonnelRecordId(principal, personnelId, tx);
-      const existing = await this.loadDisciplinaryAction(tx, principal, recordId, actionId);
-      if (existing.status === "RESCINDED") {
-        return this.mapDisciplinaryAction(existing);
-      }
-      const now = new Date();
-      const [row] = await tx
-        .update(industrialPersonnelDisciplinaryActions)
-        .set({
-          status: "RESCINDED",
-          rescindedAt: now,
-          rescindedReason: reason.slice(0, 4000),
-          rescindedByUserId: principal.userId,
-          updatedAt: now,
-        })
-        .where(eq(industrialPersonnelDisciplinaryActions.id, existing.id))
-        .returning();
-      const mapped = this.mapDisciplinaryAction(row!);
-      await this.auditDiscipline(
-        tx,
-        principal,
-        "industrial.personnel.discipline.rescind",
-        existing.id,
-        this.mapDisciplinaryAction(existing),
-        mapped,
-      );
-      return mapped;
-    }, principal.userId);
+    return withTenantTransaction(
+      this.db,
+      principal.tenantId,
+      async (tx) => {
+        const recordId = await this.resolvePersonnelRecordId(principal, personnelId, tx);
+        const existing = await this.loadDisciplinaryAction(tx, principal, recordId, actionId);
+        if (existing.status === "RESCINDED") {
+          return this.mapDisciplinaryAction(existing);
+        }
+        const now = new Date();
+        const [row] = await tx
+          .update(industrialPersonnelDisciplinaryActions)
+          .set({
+            status: "RESCINDED",
+            rescindedAt: now,
+            rescindedReason: reason.slice(0, 4000),
+            rescindedByUserId: principal.userId,
+            updatedAt: now,
+          })
+          .where(eq(industrialPersonnelDisciplinaryActions.id, existing.id))
+          .returning();
+        const mapped = this.mapDisciplinaryAction(row!);
+        await this.auditDiscipline(
+          tx,
+          principal,
+          "industrial.personnel.discipline.rescind",
+          existing.id,
+          this.mapDisciplinaryAction(existing),
+          mapped,
+        );
+        return mapped;
+      },
+      principal.userId,
+    );
   }
 
   async createPersonnel(principal: ForgePrincipal, body: Record<string, unknown>) {
@@ -9026,8 +9157,7 @@ export class IndustrialDomainService {
     if (!firstName || !lastName) {
       throw new ForgeError("VALIDATION_FAILED", "First name and last name are required.");
     }
-    const displayName =
-      String(body.displayName ?? "").trim() || `${firstName} ${lastName}`.trim();
+    const displayName = String(body.displayName ?? "").trim() || `${firstName} ${lastName}`.trim();
     const status = normalizePersonnelStatus(String(body.status ?? "ACTIVE"));
     const mapped = await withTenantTransaction(this.db, principal.tenantId, async (tx) => {
       const now = new Date();
@@ -9072,7 +9202,7 @@ export class IndustrialDomainService {
           updatedAt: now,
         } as never)
         .returning();
-      if (Boolean(insertValues.isCompanyDriver)) {
+      if (insertValues.isCompanyDriver) {
         await ensureCompanyDriverRosterEntry(tx, principal.tenantId, {
           personnelId: row!.id,
           driverName: displayName,
@@ -9174,9 +9304,7 @@ export class IndustrialDomainService {
               ? this.normalizeEmployeeNumberInput(body.employeeNumber)
               : existing.employeeNumber,
           status:
-            body.status != null
-              ? normalizePersonnelStatus(String(body.status))
-              : existing.status,
+            body.status != null ? normalizePersonnelStatus(String(body.status)) : existing.status,
           siteId: optionalUuid(body.siteId, existing.siteId),
           departmentId,
           positionId: optionalUuid(body.positionId, existing.positionId),
@@ -9194,7 +9322,7 @@ export class IndustrialDomainService {
         .where(eq(industrialPersonnel.id, recordId))
         .returning();
 
-      if (Boolean(updateValues.isCompanyDriver)) {
+      if (updateValues.isCompanyDriver) {
         await ensureCompanyDriverRosterEntry(tx, principal.tenantId, {
           personnelId: recordId,
           driverName: displayName,
@@ -9203,18 +9331,11 @@ export class IndustrialDomainService {
           seededFrom: "personnel_is_company_driver",
         });
       } else {
-        await this.syncCompanyDriverRosterForPersonnel(
-          tx,
-          principal.tenantId,
-          recordId,
-          false,
-        );
+        await this.syncCompanyDriverRosterForPersonnel(tx, principal.tenantId, recordId, false);
       }
 
       const nextIsDotDriver = Boolean(updateValues.isDotDriver);
-      const wasDotDriver = Boolean(
-        (existing as { isDotDriver?: boolean | null }).isDotDriver,
-      );
+      const wasDotDriver = Boolean((existing as { isDotDriver?: boolean | null }).isDotDriver);
       if (personInactiveForDqf) {
         await this.syncLinkedDotDqfArchiveForPersonnel(
           tx,
@@ -9392,156 +9513,171 @@ export class IndustrialDomainService {
    */
   async authorizePersonnelSms(principal: ForgePrincipal, id: string) {
     const recordId = this.assertRecordId(id);
-    return withTenantTransaction(this.db, principal.tenantId, async (tx) => {
-      const [existing] = await tx
-        .select()
-        .from(industrialPersonnel)
-        .where(
-          and(
-            eq(industrialPersonnel.id, recordId),
-            eq(industrialPersonnel.tenantId, principal.tenantId),
-          ),
-        )
-        .limit(1);
-      if (!existing) throw new ForgeError("NOT_FOUND", "Personnel not found");
-      const phone = String(existing.phone ?? "").trim();
-      if (!phone) {
-        throw new ForgeError(
-          "VALIDATION_FAILED",
-          "Add a phone number on the personnel file before authorizing SMS. That phone is the SMS Notification number.",
-        );
-      }
-      const digits = phone.replace(/\D/g, "");
-      const normalized =
-        digits.length === 11 && digits.startsWith("1") ? digits.slice(1) : digits;
-      if (normalized.length < 10) {
-        throw new ForgeError(
-          "VALIDATION_FAILED",
-          "The personnel phone number is not a valid SMS Notification number.",
-        );
-      }
-      const now = new Date();
-      const [row] = await tx
-        .update(industrialPersonnel)
-        .set({
-          smsAuthorizedAt: now,
-          smsAuthorizedByUserId: principal.userId,
-          smsOptedOutAt: null,
-          updatedAt: now,
-        })
-        .where(eq(industrialPersonnel.id, recordId))
-        .returning();
-      await tx.insert(industrialPersonnelSmsConsents).values({
-        id: createId(),
-        tenantId: principal.tenantId,
-        personnelId: recordId,
-        action: "AUTHORIZED",
-        method: "ADMIN",
-        phoneNumber: phone,
-        consentText: EMERGENCY_SMS_CONSENT_TEXT,
-        consentVersion: EMERGENCY_SMS_CONSENT_VERSION,
-        employeeNumber: existing.employeeNumber ?? null,
-        actorUserId: principal.userId,
-        createdAt: now,
-      });
-      return this.mapListItem({
-        id: row!.id,
-        displayName: row!.displayName,
-        status: row!.status,
-        createdAt: row!.createdAt,
-        updatedAt: row!.updatedAt,
-        sourcePayload: row!.sourcePayload,
-        extra: this.personnelReadValues(row as unknown as Record<string, unknown>),
-      });
-    }, principal.userId);
+    return withTenantTransaction(
+      this.db,
+      principal.tenantId,
+      async (tx) => {
+        const [existing] = await tx
+          .select()
+          .from(industrialPersonnel)
+          .where(
+            and(
+              eq(industrialPersonnel.id, recordId),
+              eq(industrialPersonnel.tenantId, principal.tenantId),
+            ),
+          )
+          .limit(1);
+        if (!existing) throw new ForgeError("NOT_FOUND", "Personnel not found");
+        const phone = String(existing.phone ?? "").trim();
+        if (!phone) {
+          throw new ForgeError(
+            "VALIDATION_FAILED",
+            "Add a phone number on the personnel file before authorizing SMS. That phone is the SMS Notification number.",
+          );
+        }
+        const digits = phone.replace(/\D/g, "");
+        const normalized =
+          digits.length === 11 && digits.startsWith("1") ? digits.slice(1) : digits;
+        if (normalized.length < 10) {
+          throw new ForgeError(
+            "VALIDATION_FAILED",
+            "The personnel phone number is not a valid SMS Notification number.",
+          );
+        }
+        const now = new Date();
+        const [row] = await tx
+          .update(industrialPersonnel)
+          .set({
+            smsAuthorizedAt: now,
+            smsAuthorizedByUserId: principal.userId,
+            smsOptedOutAt: null,
+            updatedAt: now,
+          })
+          .where(eq(industrialPersonnel.id, recordId))
+          .returning();
+        await tx.insert(industrialPersonnelSmsConsents).values({
+          id: createId(),
+          tenantId: principal.tenantId,
+          personnelId: recordId,
+          action: "AUTHORIZED",
+          method: "ADMIN",
+          phoneNumber: phone,
+          consentText: EMERGENCY_SMS_CONSENT_TEXT,
+          consentVersion: EMERGENCY_SMS_CONSENT_VERSION,
+          employeeNumber: existing.employeeNumber ?? null,
+          actorUserId: principal.userId,
+          createdAt: now,
+        });
+        return this.mapListItem({
+          id: row!.id,
+          displayName: row!.displayName,
+          status: row!.status,
+          createdAt: row!.createdAt,
+          updatedAt: row!.updatedAt,
+          sourcePayload: row!.sourcePayload,
+          extra: this.personnelReadValues(row as unknown as Record<string, unknown>),
+        });
+      },
+      principal.userId,
+    );
   }
 
   /** Clear SMS authorization (admin revoke). Does not change the phone number. */
   async revokePersonnelSmsAuthorization(principal: ForgePrincipal, id: string) {
     const recordId = this.assertRecordId(id);
-    return withTenantTransaction(this.db, principal.tenantId, async (tx) => {
-      const [existing] = await tx
-        .select()
-        .from(industrialPersonnel)
-        .where(
-          and(
-            eq(industrialPersonnel.id, recordId),
-            eq(industrialPersonnel.tenantId, principal.tenantId),
-          ),
-        )
-        .limit(1);
-      if (!existing) throw new ForgeError("NOT_FOUND", "Personnel not found");
-      const now = new Date();
-      const [row] = await tx
-        .update(industrialPersonnel)
-        .set({
-          smsAuthorizedAt: null,
-          smsAuthorizedByUserId: null,
-          updatedAt: now,
-        })
-        .where(eq(industrialPersonnel.id, recordId))
-        .returning();
-      await tx.insert(industrialPersonnelSmsConsents).values({
-        id: createId(),
-        tenantId: principal.tenantId,
-        personnelId: recordId,
-        action: "REVOKED",
-        method: "ADMIN",
-        phoneNumber: String(existing.phone ?? "").trim() || null,
-        employeeNumber: existing.employeeNumber ?? null,
-        actorUserId: principal.userId,
-        createdAt: now,
-      });
-      return this.mapListItem({
-        id: row!.id,
-        displayName: row!.displayName,
-        status: row!.status,
-        createdAt: row!.createdAt,
-        updatedAt: row!.updatedAt,
-        sourcePayload: row!.sourcePayload,
-        extra: this.personnelReadValues(row as unknown as Record<string, unknown>),
-      });
-    }, principal.userId);
+    return withTenantTransaction(
+      this.db,
+      principal.tenantId,
+      async (tx) => {
+        const [existing] = await tx
+          .select()
+          .from(industrialPersonnel)
+          .where(
+            and(
+              eq(industrialPersonnel.id, recordId),
+              eq(industrialPersonnel.tenantId, principal.tenantId),
+            ),
+          )
+          .limit(1);
+        if (!existing) throw new ForgeError("NOT_FOUND", "Personnel not found");
+        const now = new Date();
+        const [row] = await tx
+          .update(industrialPersonnel)
+          .set({
+            smsAuthorizedAt: null,
+            smsAuthorizedByUserId: null,
+            updatedAt: now,
+          })
+          .where(eq(industrialPersonnel.id, recordId))
+          .returning();
+        await tx.insert(industrialPersonnelSmsConsents).values({
+          id: createId(),
+          tenantId: principal.tenantId,
+          personnelId: recordId,
+          action: "REVOKED",
+          method: "ADMIN",
+          phoneNumber: String(existing.phone ?? "").trim() || null,
+          employeeNumber: existing.employeeNumber ?? null,
+          actorUserId: principal.userId,
+          createdAt: now,
+        });
+        return this.mapListItem({
+          id: row!.id,
+          displayName: row!.displayName,
+          status: row!.status,
+          createdAt: row!.createdAt,
+          updatedAt: row!.updatedAt,
+          sourcePayload: row!.sourcePayload,
+          extra: this.personnelReadValues(row as unknown as Record<string, unknown>),
+        });
+      },
+      principal.userId,
+    );
   }
 
   /** Signed Emergency Alerts SMS consent history for one personnel file, newest first. */
   async listPersonnelSmsConsents(principal: ForgePrincipal, id: string) {
     const recordId = this.assertRecordId(id);
-    return withTenantTransaction(this.db, principal.tenantId, async (tx) => {
-      const rows = await tx
-        .select({
-          id: industrialPersonnelSmsConsents.id,
-          action: industrialPersonnelSmsConsents.action,
-          method: industrialPersonnelSmsConsents.method,
-          phoneNumber: industrialPersonnelSmsConsents.phoneNumber,
-          previousPhoneNumber: industrialPersonnelSmsConsents.previousPhoneNumber,
-          consentText: industrialPersonnelSmsConsents.consentText,
-          consentVersion: industrialPersonnelSmsConsents.consentVersion,
-          signatureName: industrialPersonnelSmsConsents.signatureName,
-          employeeNumber: industrialPersonnelSmsConsents.employeeNumber,
-          qrLinkId: industrialPersonnelSmsConsents.qrLinkId,
-          ipAddress: industrialPersonnelSmsConsents.ipAddress,
-          userAgent: industrialPersonnelSmsConsents.userAgent,
-          createdAt: industrialPersonnelSmsConsents.createdAt,
-          actorEmail: users.primaryEmail,
-        })
-        .from(industrialPersonnelSmsConsents)
-        .leftJoin(users, eq(users.id, industrialPersonnelSmsConsents.actorUserId))
-        .where(
-          and(
-            eq(industrialPersonnelSmsConsents.tenantId, principal.tenantId),
-            eq(industrialPersonnelSmsConsents.personnelId, recordId),
-          ),
-        )
-        .orderBy(desc(industrialPersonnelSmsConsents.createdAt))
-        .limit(200);
-      return {
-        items: rows.map((r) => ({
-          ...r,
-          createdAt: r.createdAt.toISOString(),
-        })),
-      };
-    }, principal.userId);
+    return withTenantTransaction(
+      this.db,
+      principal.tenantId,
+      async (tx) => {
+        const rows = await tx
+          .select({
+            id: industrialPersonnelSmsConsents.id,
+            action: industrialPersonnelSmsConsents.action,
+            method: industrialPersonnelSmsConsents.method,
+            phoneNumber: industrialPersonnelSmsConsents.phoneNumber,
+            previousPhoneNumber: industrialPersonnelSmsConsents.previousPhoneNumber,
+            consentText: industrialPersonnelSmsConsents.consentText,
+            consentVersion: industrialPersonnelSmsConsents.consentVersion,
+            signatureName: industrialPersonnelSmsConsents.signatureName,
+            employeeNumber: industrialPersonnelSmsConsents.employeeNumber,
+            qrLinkId: industrialPersonnelSmsConsents.qrLinkId,
+            ipAddress: industrialPersonnelSmsConsents.ipAddress,
+            userAgent: industrialPersonnelSmsConsents.userAgent,
+            createdAt: industrialPersonnelSmsConsents.createdAt,
+            actorEmail: users.primaryEmail,
+          })
+          .from(industrialPersonnelSmsConsents)
+          .leftJoin(users, eq(users.id, industrialPersonnelSmsConsents.actorUserId))
+          .where(
+            and(
+              eq(industrialPersonnelSmsConsents.tenantId, principal.tenantId),
+              eq(industrialPersonnelSmsConsents.personnelId, recordId),
+            ),
+          )
+          .orderBy(desc(industrialPersonnelSmsConsents.createdAt))
+          .limit(200);
+        return {
+          items: rows.map((r) => ({
+            ...r,
+            createdAt: r.createdAt.toISOString(),
+          })),
+        };
+      },
+      principal.userId,
+    );
   }
 
   async archivePersonnel(principal: ForgePrincipal, id: string) {
@@ -9665,9 +9801,7 @@ export class IndustrialDomainService {
       payload.licenseExpiryDate ?? payload.licenseExpiry ?? payload.license_expiry_date ?? "",
     ).trim();
     const personnelName = String(row.personnelName ?? payload.personnelName ?? "").trim();
-    const employeeNumber = String(
-      row.employeeNumber ?? payload.employeeNumber ?? "",
-    ).trim();
+    const employeeNumber = String(row.employeeNumber ?? payload.employeeNumber ?? "").trim();
     const driverStatus = String(payload.status ?? row.status ?? "").trim();
     const mvrUploads = this.uploadList(payload.mvrUploads);
     const mvrReleaseUploads = this.uploadList(payload.mvrReleaseUploads);
@@ -9870,10 +10004,7 @@ export class IndustrialDomainService {
    * Start (or return) the annual 10% MVR sample for a calendar year.
    * Idempotent for the year unless forceRedraw is true.
    */
-  async startCompanyDriverMvrSample(
-    principal: ForgePrincipal,
-    body: Record<string, unknown> = {},
-  ) {
+  async startCompanyDriverMvrSample(principal: ForgePrincipal, body: Record<string, unknown> = {}) {
     const yearRaw = Number(body.year);
     const year =
       Number.isFinite(yearRaw) && yearRaw >= 2000
@@ -9882,112 +10013,117 @@ export class IndustrialDomainService {
     const forceRedraw = body.force === true || body.forceRedraw === true;
     const selectedAt = new Date().toISOString();
 
-    return withTenantTransaction(this.db, principal.tenantId, async (tx) => {
-      const rows = await tx
-        .select()
-        .from(industrialFleetDrivers)
-        .where(
-          and(
-            eq(industrialFleetDrivers.tenantId, principal.tenantId),
-            isNull(industrialFleetDrivers.archivedAt),
-          ),
-        );
+    return withTenantTransaction(
+      this.db,
+      principal.tenantId,
+      async (tx) => {
+        const rows = await tx
+          .select()
+          .from(industrialFleetDrivers)
+          .where(
+            and(
+              eq(industrialFleetDrivers.tenantId, principal.tenantId),
+              isNull(industrialFleetDrivers.archivedAt),
+            ),
+          );
 
-      const mapped = rows.map((row) => {
-        const payload = this.unwrapSourcePayload(row.sourcePayload);
-        const sampleYear = Number(payload.sampleYear);
-        return {
-          id: row.id,
-          status: String(payload.status ?? row.status ?? "").trim(),
-          sampleYear: Number.isFinite(sampleYear) && sampleYear > 0 ? sampleYear : null,
-          row,
-          payload,
-        };
-      });
+        const mapped = rows.map((row) => {
+          const payload = this.unwrapSourcePayload(row.sourcePayload);
+          const sampleYear = Number(payload.sampleYear);
+          return {
+            id: row.id,
+            status: String(payload.status ?? row.status ?? "").trim(),
+            sampleYear: Number.isFinite(sampleYear) && sampleYear > 0 ? sampleYear : null,
+            row,
+            payload,
+          };
+        });
 
-      const existingIds = mapped
-        .filter((item) => item.sampleYear === year)
-        .map((item) => item.id);
-      let selectedIds = existingIds;
-      if (forceRedraw || existingIds.length === 0) {
-        if (forceRedraw && existingIds.length > 0) {
-          for (const item of mapped.filter((row) => row.sampleYear === year)) {
-            const nextPayload = { ...item.payload };
-            delete nextPayload.sampleYear;
-            delete nextPayload.sampleSelectedAt;
-            delete nextPayload.sampleCompletedAt;
+        const existingIds = mapped
+          .filter((item) => item.sampleYear === year)
+          .map((item) => item.id);
+        let selectedIds = existingIds;
+        if (forceRedraw || existingIds.length === 0) {
+          if (forceRedraw && existingIds.length > 0) {
+            for (const item of mapped.filter((row) => row.sampleYear === year)) {
+              const nextPayload = { ...item.payload };
+              delete nextPayload.sampleYear;
+              delete nextPayload.sampleSelectedAt;
+              delete nextPayload.sampleCompletedAt;
+              await tx
+                .update(industrialFleetDrivers)
+                .set({
+                  sourcePayload: nextPayload,
+                  updatedAt: new Date(),
+                } as never)
+                .where(eq(industrialFleetDrivers.id, item.id));
+              item.sampleYear = null;
+              item.payload = nextPayload;
+            }
+          }
+          selectedIds = selectMvrSampleIds(
+            mapped.map((item) => ({
+              id: item.id,
+              status: item.status,
+              sampleYear: item.sampleYear,
+            })),
+            year,
+          );
+          for (const id of selectedIds) {
+            const item = mapped.find((row) => row.id === id);
+            if (!item) continue;
+            const nextPayload = {
+              ...item.payload,
+              sampleYear: year,
+              sampleSelectedAt: selectedAt,
+              sampleCompletedAt: "",
+            };
             await tx
               .update(industrialFleetDrivers)
               .set({
                 sourcePayload: nextPayload,
                 updatedAt: new Date(),
               } as never)
-              .where(eq(industrialFleetDrivers.id, item.id));
-            item.sampleYear = null;
-            item.payload = nextPayload;
+              .where(eq(industrialFleetDrivers.id, id));
           }
         }
-        selectedIds = selectMvrSampleIds(
-          mapped.map((item) => ({
-            id: item.id,
-            status: item.status,
-            sampleYear: item.sampleYear,
-          })),
-          year,
-        );
-        for (const id of selectedIds) {
-          const item = mapped.find((row) => row.id === id);
-          if (!item) continue;
-          const nextPayload = {
-            ...item.payload,
-            sampleYear: year,
-            sampleSelectedAt: selectedAt,
-            sampleCompletedAt: "",
-          };
+
+        const [settings] = await tx
+          .select()
+          .from(industrialFleetDriverSettings)
+          .where(eq(industrialFleetDriverSettings.tenantId, principal.tenantId))
+          .limit(1);
+        if (settings) {
           await tx
-            .update(industrialFleetDrivers)
+            .update(industrialFleetDriverSettings)
             .set({
-              sourcePayload: nextPayload,
+              lastSampleYear: year,
               updatedAt: new Date(),
             } as never)
-            .where(eq(industrialFleetDrivers.id, id));
-        }
-      }
-
-      const [settings] = await tx
-        .select()
-        .from(industrialFleetDriverSettings)
-        .where(eq(industrialFleetDriverSettings.tenantId, principal.tenantId))
-        .limit(1);
-      if (settings) {
-        await tx
-          .update(industrialFleetDriverSettings)
-          .set({
+            .where(eq(industrialFleetDriverSettings.id, settings.id));
+        } else {
+          await tx.insert(industrialFleetDriverSettings).values({
+            id: createId(),
+            tenantId: principal.tenantId,
             lastSampleYear: year,
+            emailOnRemoval: false,
+            settings: {},
+            sourceSystem: "FORGE",
+            sourcePayload: {},
+            createdAt: new Date(),
             updatedAt: new Date(),
-          } as never)
-          .where(eq(industrialFleetDriverSettings.id, settings.id));
-      } else {
-        await tx.insert(industrialFleetDriverSettings).values({
-          id: createId(),
-          tenantId: principal.tenantId,
-          lastSampleYear: year,
-          emailOnRemoval: false,
-          settings: {},
-          sourceSystem: "FORGE",
-          sourcePayload: {},
-          createdAt: new Date(),
-          updatedAt: new Date(),
-        } as never);
-      }
+          } as never);
+        }
 
-      return {
-        year,
-        selectedCount: selectedIds.length,
-        redrawn: forceRedraw || existingIds.length === 0,
-        selectedIds,
-      };
-    }, principal.userId);
+        return {
+          year,
+          selectedCount: selectedIds.length,
+          redrawn: forceRedraw || existingIds.length === 0,
+          selectedIds,
+        };
+      },
+      principal.userId,
+    );
   }
 
   /** Mark a sampled driver as MVR-audited for their sample year; append history on driver + personnel. */
@@ -10004,90 +10140,95 @@ export class IndustrialDomainService {
         : "Auditor";
     const auditedAt = new Date().toISOString();
 
-    return withTenantTransaction(this.db, principal.tenantId, async (tx) => {
-      const [existing] = await tx
-        .select()
-        .from(industrialFleetDrivers)
-        .where(
-          and(
-            eq(industrialFleetDrivers.id, recordId),
-            eq(industrialFleetDrivers.tenantId, principal.tenantId),
-            isNull(industrialFleetDrivers.archivedAt),
-          ),
-        )
-        .limit(1);
-      if (!existing) throw new ForgeError("NOT_FOUND", "Company driver not found");
-
-      const payload = this.unwrapSourcePayload(existing.sourcePayload);
-      const sampleYear = Number(payload.sampleYear);
-      if (!Number.isFinite(sampleYear) || sampleYear <= 0) {
-        throw new ForgeError("VALIDATION_FAILED", "This driver is not in the current MVR sample");
-      }
-
-      const entry = {
-        year: sampleYear,
-        auditedAt,
-        auditedByName,
-        driverId: recordId,
-        notes,
-      };
-      const nextPayload = {
-        ...payload,
-        sampleCompletedAt: auditedAt,
-        lastMvrDate: auditedAt.slice(0, 10),
-        mvrAuditHistory: appendMvrAuditEntry(payload.mvrAuditHistory, entry),
-      };
-
-      const [row] = await tx
-        .update(industrialFleetDrivers)
-        .set({
-          lastMvrDate: auditedAt.slice(0, 10),
-          sourcePayload: nextPayload,
-          updatedAt: new Date(),
-        } as never)
-        .where(eq(industrialFleetDrivers.id, recordId))
-        .returning();
-
-      const personnelId =
-        existing.personnelId ??
-        (typeof payload.personnelId === "string" && payload.personnelId
-          ? payload.personnelId
-          : null);
-      if (personnelId) {
-        const [person] = await tx
+    return withTenantTransaction(
+      this.db,
+      principal.tenantId,
+      async (tx) => {
+        const [existing] = await tx
           .select()
-          .from(industrialPersonnel)
+          .from(industrialFleetDrivers)
           .where(
             and(
-              eq(industrialPersonnel.id, personnelId),
-              eq(industrialPersonnel.tenantId, principal.tenantId),
+              eq(industrialFleetDrivers.id, recordId),
+              eq(industrialFleetDrivers.tenantId, principal.tenantId),
+              isNull(industrialFleetDrivers.archivedAt),
             ),
           )
           .limit(1);
-        if (person) {
-          const personPayload = this.unwrapSourcePayload(person.sourcePayload);
-          await tx
-            .update(industrialPersonnel)
-            .set({
-              sourcePayload: {
-                ...personPayload,
-                lastMvrDate: auditedAt.slice(0, 10),
-                mvrAuditHistory: appendMvrAuditEntry(personPayload.mvrAuditHistory, entry),
-              },
-              updatedAt: new Date(),
-            } as never)
-            .where(eq(industrialPersonnel.id, personnelId));
-        }
-      }
+        if (!existing) throw new ForgeError("NOT_FOUND", "Company driver not found");
 
-      return {
-        id: row!.id,
-        sampleYear,
-        sampleCompletedAt: auditedAt,
-        mvrAuditHistory: parseMvrAuditHistory(nextPayload.mvrAuditHistory),
-        personnelId,
-      };
-    }, principal.userId);
+        const payload = this.unwrapSourcePayload(existing.sourcePayload);
+        const sampleYear = Number(payload.sampleYear);
+        if (!Number.isFinite(sampleYear) || sampleYear <= 0) {
+          throw new ForgeError("VALIDATION_FAILED", "This driver is not in the current MVR sample");
+        }
+
+        const entry = {
+          year: sampleYear,
+          auditedAt,
+          auditedByName,
+          driverId: recordId,
+          notes,
+        };
+        const nextPayload = {
+          ...payload,
+          sampleCompletedAt: auditedAt,
+          lastMvrDate: auditedAt.slice(0, 10),
+          mvrAuditHistory: appendMvrAuditEntry(payload.mvrAuditHistory, entry),
+        };
+
+        const [row] = await tx
+          .update(industrialFleetDrivers)
+          .set({
+            lastMvrDate: auditedAt.slice(0, 10),
+            sourcePayload: nextPayload,
+            updatedAt: new Date(),
+          } as never)
+          .where(eq(industrialFleetDrivers.id, recordId))
+          .returning();
+
+        const personnelId =
+          existing.personnelId ??
+          (typeof payload.personnelId === "string" && payload.personnelId
+            ? payload.personnelId
+            : null);
+        if (personnelId) {
+          const [person] = await tx
+            .select()
+            .from(industrialPersonnel)
+            .where(
+              and(
+                eq(industrialPersonnel.id, personnelId),
+                eq(industrialPersonnel.tenantId, principal.tenantId),
+              ),
+            )
+            .limit(1);
+          if (person) {
+            const personPayload = this.unwrapSourcePayload(person.sourcePayload);
+            await tx
+              .update(industrialPersonnel)
+              .set({
+                sourcePayload: {
+                  ...personPayload,
+                  lastMvrDate: auditedAt.slice(0, 10),
+                  mvrAuditHistory: appendMvrAuditEntry(personPayload.mvrAuditHistory, entry),
+                },
+                updatedAt: new Date(),
+              } as never)
+              .where(eq(industrialPersonnel.id, personnelId));
+          }
+        }
+
+        return {
+          id: row!.id,
+          sampleYear,
+          sampleCompletedAt: auditedAt,
+          mvrAuditHistory: parseMvrAuditHistory(nextPayload.mvrAuditHistory),
+          personnelId,
+        };
+      },
+      principal.userId,
+    );
   }
 
   /**
@@ -10641,9 +10782,7 @@ export class IndustrialDomainService {
       });
       const hasChildren =
         energySources.length > 0 || isolationPoints.length > 0 || steps.length > 0;
-      const derived = hasChildren
-        ? null
-        : this.deriveLotoProcedureChildrenFromPayload(payload);
+      const derived = hasChildren ? null : this.deriveLotoProcedureChildrenFromPayload(payload);
       return {
         ...mapped,
         energySources: hasChildren ? energySources : derived!.energySources,
@@ -11046,8 +11185,7 @@ export class IndustrialDomainService {
       processLine: textOf(payload.processLine) || areaName,
       equipmentName,
       equipmentTypeName,
-      equipmentTypeNameSnapshot:
-        textOf(payload.equipmentTypeNameSnapshot) || equipmentTypeName,
+      equipmentTypeNameSnapshot: textOf(payload.equipmentTypeNameSnapshot) || equipmentTypeName,
       equipmentExternalId,
       scope,
       notes,
@@ -11055,9 +11193,7 @@ export class IndustrialDomainService {
       attachments,
       tags,
       equipmentImageUrl:
-        textOf(payload.equipmentImageUrl) ||
-        textOf(payload.equipmentImageStorageKey) ||
-        null,
+        textOf(payload.equipmentImageUrl) || textOf(payload.equipmentImageStorageKey) || null,
       equipmentImageCaption: textOf(payload.equipmentImageCaption) || null,
       equipmentImageFileName: textOf(payload.equipmentImageFileName) || null,
       equipmentImageAnnotations: Array.isArray(payload.equipmentImageAnnotations)
@@ -11164,54 +11300,49 @@ export class IndustrialDomainService {
       ).trim();
       const descriptionCode = String(row.descriptionCode ?? row.code ?? "").trim();
       const customDescription = String(row.customDescription ?? row.customText ?? "").trim();
-      const energyType =
-        String(
-          row.energySourceName ??
-            row.energyType ??
-            row.energySource ??
-            nested.name ??
-            nested.energySourceName ??
-            nested.type ??
-            descriptionCode ??
-            "",
-        ).trim();
-      const magnitude =
-        String(
-          row.energyMagnitude ??
-            row.magnitude ??
-            nested.magnitude ??
-            nested.energyMagnitude ??
-            (descriptionCode && descriptionCode !== energyType ? descriptionCode : "") ??
-            "",
-        ).trim();
-      const description =
-        String(
-          row.energyNotes ??
-            row.description ??
-            nested.description ??
-            nested.notes ??
-            customDescription ??
-            "",
-        ).trim();
-      const locationDescription =
-        String(
-          row.isolationLocationText ??
-            row.locationDescription ??
-            row.location ??
-            isolation.locationText ??
-            isolation.locationDescription ??
-            customDescription ??
-            "",
-        ).trim();
-      const isolationMethod =
-        String(
-          row.isolationAction ??
-            row.isolationMethod ??
-            row.method ??
-            isolation.action ??
-            isolation.method ??
-            "",
-        ).trim();
+      const energyType = String(
+        row.energySourceName ??
+          row.energyType ??
+          row.energySource ??
+          nested.name ??
+          nested.energySourceName ??
+          nested.type ??
+          descriptionCode ??
+          "",
+      ).trim();
+      const magnitude = String(
+        row.energyMagnitude ??
+          row.magnitude ??
+          nested.magnitude ??
+          nested.energyMagnitude ??
+          (descriptionCode && descriptionCode !== energyType ? descriptionCode : "") ??
+          "",
+      ).trim();
+      const description = String(
+        row.energyNotes ??
+          row.description ??
+          nested.description ??
+          nested.notes ??
+          customDescription ??
+          "",
+      ).trim();
+      const locationDescription = String(
+        row.isolationLocationText ??
+          row.locationDescription ??
+          row.location ??
+          isolation.locationText ??
+          isolation.locationDescription ??
+          customDescription ??
+          "",
+      ).trim();
+      const isolationMethod = String(
+        row.isolationAction ??
+          row.isolationMethod ??
+          row.method ??
+          isolation.action ??
+          isolation.method ??
+          "",
+      ).trim();
       const label =
         String(
           row.lockoutDeviceName ??
@@ -11244,7 +11375,8 @@ export class IndustrialDomainService {
           .filter(Boolean)
           .join(" ");
       const stepPhase = String(row.stepPhase ?? row.phase ?? "ISOLATION").trim() || "ISOLATION";
-      const stepNumber = Number(row.stepNumber ?? row.order ?? row.sortOrder ?? index + 1) || index + 1;
+      const stepNumber =
+        Number(row.stepNumber ?? row.order ?? row.sortOrder ?? index + 1) || index + 1;
       const usable =
         energyType || instruction || label || locationDescription || verificationMethod;
       if (!usable) continue;
@@ -11292,9 +11424,7 @@ export class IndustrialDomainService {
       }
     }
 
-    steps.sort(
-      (a, b) => Number(a.stepNumber ?? 0) - Number(b.stepNumber ?? 0),
-    );
+    steps.sort((a, b) => Number(a.stepNumber ?? 0) - Number(b.stepNumber ?? 0));
     steps.forEach((step, i) => {
       step.stepNumber = i + 1;
     });
@@ -11334,19 +11464,16 @@ export class IndustrialDomainService {
           authorizedEmployee:
             String(payload.authorizedEmployee ?? payload.workerName ?? "").trim() || null,
           affectedEmployees:
-            String(payload.affectedEmployees ?? payload.affectedEmployeeNames ?? "").trim() ||
-            null,
+            String(payload.affectedEmployees ?? payload.affectedEmployeeNames ?? "").trim() || null,
           equipmentName:
             String(
               payload.equipmentName ?? payload.equipmentUnit ?? details.equipmentName ?? "",
             ).trim() || null,
           lockTagId: String(payload.lockTagId ?? "").trim() || null,
           tryStartRequired: payload.tryStartRequired ?? details.tryStartRequired ?? null,
-          zeroEnergyConfirmed:
-            payload.zeroEnergyConfirmed ?? details.zeroEnergyConfirmed ?? null,
+          zeroEnergyConfirmed: payload.zeroEnergyConfirmed ?? details.zeroEnergyConfirmed ?? null,
           tryStartCompleted: payload.tryStartCompleted ?? details.tryStartCompleted ?? null,
-          restorationComplete:
-            payload.restorationComplete ?? details.restorationComplete ?? null,
+          restorationComplete: payload.restorationComplete ?? details.restorationComplete ?? null,
         },
       }),
       energySources: items.energySources,
@@ -11583,8 +11710,9 @@ export class IndustrialDomainService {
           energyIds.push(energyId);
         }
         const isolationLabel =
-          String(row.lockoutDeviceName ?? row.isolationLocationText ?? row.label ?? energyType).trim() ||
-          `Point ${index + 1}`;
+          String(
+            row.lockoutDeviceName ?? row.isolationLocationText ?? row.label ?? energyType,
+          ).trim() || `Point ${index + 1}`;
         const isolationId = createId();
         await tx.insert(industrialLotoIsolationPoints).values({
           id: isolationId,
@@ -11592,7 +11720,8 @@ export class IndustrialDomainService {
           procedureId,
           energySourceId: energyId,
           label: isolationLabel,
-          locationDescription: String(row.isolationLocationText ?? row.locationDescription ?? "").trim() || null,
+          locationDescription:
+            String(row.isolationLocationText ?? row.locationDescription ?? "").trim() || null,
           isolationMethod: String(row.isolationAction ?? row.isolationMethod ?? "").trim() || null,
           sortOrder: index,
           sourceSystem: "FORGE",
@@ -11600,8 +11729,10 @@ export class IndustrialDomainService {
           createdAt: now,
           updatedAt: now,
         });
-          const instruction =
-          String(row.printedProcedureDescription ?? row.printedDescription ?? row.instruction ?? "").trim() ||
+        const instruction =
+          String(
+            row.printedProcedureDescription ?? row.printedDescription ?? row.instruction ?? "",
+          ).trim() ||
           [
             energyType && `Isolate ${energyType}`,
             row.energyMagnitude && `(${String(row.energyMagnitude)})`,
@@ -11774,8 +11905,9 @@ export class IndustrialDomainService {
         energyIds.push(energyId);
       }
       const isolationLabel =
-        String(row.lockoutDeviceName ?? row.isolationLocationText ?? row.label ?? energyType).trim() ||
-        `Point ${index + 1}`;
+        String(
+          row.lockoutDeviceName ?? row.isolationLocationText ?? row.label ?? energyType,
+        ).trim() || `Point ${index + 1}`;
       const isolationId = createId();
       await tx.insert(industrialLotoIsolationPoints).values({
         id: isolationId,
@@ -11793,7 +11925,9 @@ export class IndustrialDomainService {
         updatedAt: now,
       });
       const instruction =
-        String(row.printedProcedureDescription ?? row.printedDescription ?? row.instruction ?? "").trim() ||
+        String(
+          row.printedProcedureDescription ?? row.printedDescription ?? row.instruction ?? "",
+        ).trim() ||
         [
           energyType && `Isolate ${energyType}`,
           row.energyMagnitude && `(${String(row.energyMagnitude)})`,
@@ -11886,8 +12020,7 @@ export class IndustrialDomainService {
         if (equipmentName) nextPayload.equipmentUnit = equipmentName;
       }
       if (body.scope !== undefined) {
-        nextPayload.scope =
-          typeof body.scope === "string" ? body.scope.trim() : "";
+        nextPayload.scope = typeof body.scope === "string" ? body.scope.trim() : "";
       }
       if (body.areaName !== undefined) {
         const areaName = String(body.areaName ?? "").trim();
@@ -11910,7 +12043,8 @@ export class IndustrialDomainService {
         patch.title = equipmentName ? `${equipmentName} LOTO` : existing.title;
       }
       if (body.procedureNumber !== undefined) {
-        patch.procedureNumber = String(body.procedureNumber ?? "").trim() || existing.procedureNumber;
+        patch.procedureNumber =
+          String(body.procedureNumber ?? "").trim() || existing.procedureNumber;
       }
       if (body.revision !== undefined) {
         patch.revision = String(body.revision ?? "").trim() || existing.revision;
@@ -11944,11 +12078,18 @@ export class IndustrialDomainService {
     return this.getLotoDetail(principal, recordId);
   }
 
-  async issueLotoLockout(principal: ForgePrincipal, procedureId: string, body: Record<string, unknown>) {
+  async issueLotoLockout(
+    principal: ForgePrincipal,
+    procedureId: string,
+    body: Record<string, unknown>,
+  ) {
     const recordId = this.assertRecordId(procedureId);
     const authorizedEmployee = String(body.authorizedEmployee ?? body.workerName ?? "").trim();
     if (!authorizedEmployee) {
-      throw new ForgeError("VALIDATION_FAILED", "Authorized employee is required to issue a lockout.");
+      throw new ForgeError(
+        "VALIDATION_FAILED",
+        "Authorized employee is required to issue a lockout.",
+      );
     }
     return withTenantTransaction(this.db, principal.tenantId, async (tx) => {
       const [proc] = await tx
@@ -12068,7 +12209,11 @@ export class IndustrialDomainService {
   ) {
     const recordId = this.assertRecordId(lockoutId);
     const next =
-      action === "verify" ? "VERIFIED" : action === "close" ? "CLOSED" : String(body.status ?? "").trim();
+      action === "verify"
+        ? "VERIFIED"
+        : action === "close"
+          ? "CLOSED"
+          : String(body.status ?? "").trim();
     if (!next) {
       throw new ForgeError("VALIDATION_FAILED", "That lockout action is not supported.");
     }
@@ -12092,7 +12237,10 @@ export class IndustrialDomainService {
       }
       if (action === "verify") {
         if (body.zeroEnergyConfirmed !== true && body.zeroEnergyConfirmed !== "true") {
-          throw new ForgeError("VALIDATION_FAILED", "Confirm zero-energy verification before continuing.");
+          throw new ForgeError(
+            "VALIDATION_FAILED",
+            "Confirm zero-energy verification before continuing.",
+          );
         }
       }
       const now = new Date();
@@ -12112,7 +12260,8 @@ export class IndustrialDomainService {
               ? {
                   verifiedAt: now.toISOString(),
                   verifiedByUserId: principal.userId,
-                  tryStartCompleted: body.tryStartCompleted === true || body.tryStartCompleted === "true",
+                  tryStartCompleted:
+                    body.tryStartCompleted === true || body.tryStartCompleted === "true",
                   zeroEnergyConfirmed: true,
                 }
               : {}),
@@ -12134,8 +12283,7 @@ export class IndustrialDomainService {
   async lotoPrintable(principal: ForgePrincipal, id: string) {
     const detail = await this.getLotoDetail(principal, id);
     const procedure = (detail as Record<string, unknown>).procedure as
-      | Record<string, unknown>
-      | undefined;
+      Record<string, unknown> | undefined;
     const equipmentLabel =
       String(
         (detail as Record<string, unknown>).equipmentName ??
@@ -12150,9 +12298,7 @@ export class IndustrialDomainService {
         const qr = await this.qr.resolveLotoProcedureQrPng(principal, id, {
           label: equipmentLabel,
           appBaseUrl:
-            process.env.FORGE_INDUSTRIAL_APP_URL ||
-            process.env.NEXT_PUBLIC_APP_URL ||
-            null,
+            process.env.FORGE_INDUSTRIAL_APP_URL || process.env.NEXT_PUBLIC_APP_URL || null,
         });
         qrImageDataUrl = qr?.dataUrl ?? null;
       } catch {
@@ -12270,7 +12416,7 @@ export class IndustrialDomainService {
       departmentId: row.departmentId,
       reportedAt: hydrated.reportedAt
         ? new Date(`${hydrated.reportedAt}T12:00:00.000Z`).toISOString()
-        : row.reportedAt?.toISOString() ?? null,
+        : (row.reportedAt?.toISOString() ?? null),
       daysAway: hydrated.daysAway ?? row.daysAway,
       restrictedDays: hydrated.restrictedDays ?? row.restrictedDays,
       claimSummary,
@@ -12305,194 +12451,202 @@ export class IndustrialDomainService {
     const personnelId = (query.personnelId ?? "").trim();
     const incidentId = (query.incidentId ?? "").trim();
     const canMedical = this.canViewWcMedical(principal);
-    return withTenantTransaction(this.db, principal.tenantId, async (tx) => {
-      const conditions = [
-        eq(industrialWorkersCompCases.tenantId, principal.tenantId),
-        isNull(industrialWorkersCompCases.archivedAt),
-      ];
-      if (status) conditions.push(eq(industrialWorkersCompCases.status, status));
-      if (personnelId && UUID_PATTERN.test(personnelId)) {
-        conditions.push(eq(industrialWorkersCompCases.personnelId, personnelId));
-      }
-      if (incidentId && UUID_PATTERN.test(incidentId)) {
-        conditions.push(eq(industrialWorkersCompCases.incidentId, incidentId));
-      }
-      if (q) {
-        const pattern = `%${q}%`;
-        conditions.push(
-          or(
-            ilike(industrialWorkersCompCases.caseNumber, pattern),
-            ilike(industrialWorkersCompCases.status, pattern),
-            ilike(industrialPersonnel.displayName, pattern),
-            sql`coalesce(${industrialWorkersCompCases.claimSummary}->>'claimNumber','') ILIKE ${pattern}`,
-            sql`coalesce(${industrialWorkersCompCases.sourcePayload}->>'workerName','') ILIKE ${pattern}`,
-            sql`coalesce(${industrialWorkersCompCases.sourcePayload}->>'notes','') ILIKE ${pattern}`,
-            sql`coalesce(${industrialWorkersCompCases.claimSummary}->>'notes','') ILIKE ${pattern}`,
-          )!,
+    return withTenantTransaction(
+      this.db,
+      principal.tenantId,
+      async (tx) => {
+        const conditions = [
+          eq(industrialWorkersCompCases.tenantId, principal.tenantId),
+          isNull(industrialWorkersCompCases.archivedAt),
+        ];
+        if (status) conditions.push(eq(industrialWorkersCompCases.status, status));
+        if (personnelId && UUID_PATTERN.test(personnelId)) {
+          conditions.push(eq(industrialWorkersCompCases.personnelId, personnelId));
+        }
+        if (incidentId && UUID_PATTERN.test(incidentId)) {
+          conditions.push(eq(industrialWorkersCompCases.incidentId, incidentId));
+        }
+        if (q) {
+          const pattern = `%${q}%`;
+          conditions.push(
+            or(
+              ilike(industrialWorkersCompCases.caseNumber, pattern),
+              ilike(industrialWorkersCompCases.status, pattern),
+              ilike(industrialPersonnel.displayName, pattern),
+              sql`coalesce(${industrialWorkersCompCases.claimSummary}->>'claimNumber','') ILIKE ${pattern}`,
+              sql`coalesce(${industrialWorkersCompCases.sourcePayload}->>'workerName','') ILIKE ${pattern}`,
+              sql`coalesce(${industrialWorkersCompCases.sourcePayload}->>'notes','') ILIKE ${pattern}`,
+              sql`coalesce(${industrialWorkersCompCases.claimSummary}->>'notes','') ILIKE ${pattern}`,
+            )!,
+          );
+        }
+        const items = await tx
+          .select({
+            case: industrialWorkersCompCases,
+            personnelName: industrialPersonnel.displayName,
+          })
+          .from(industrialWorkersCompCases)
+          .leftJoin(
+            industrialPersonnel,
+            eq(industrialPersonnel.id, industrialWorkersCompCases.personnelId),
+          )
+          .where(and(...conditions))
+          .orderBy(
+            sql`case when upper(${industrialWorkersCompCases.status}) in ('OPEN','ACTIVE','RESTRICTED','LOST_TIME','DRAFT') then 0 else 1 end`,
+            desc(industrialWorkersCompCases.updatedAt),
+          )
+          .limit(pageSize)
+          .offset(offset);
+
+        const mapped = items.map(({ case: row, personnelName }) =>
+          this.mapWorkersCompCase(row, {
+            workerName: personnelName ?? "",
+            medicalAllowed: canMedical,
+          }),
         );
-      }
-      const items = await tx
-        .select({
-          case: industrialWorkersCompCases,
-          personnelName: industrialPersonnel.displayName,
-        })
-        .from(industrialWorkersCompCases)
-        .leftJoin(
-          industrialPersonnel,
-          eq(industrialPersonnel.id, industrialWorkersCompCases.personnelId),
-        )
-        .where(and(...conditions))
-        .orderBy(
-          sql`case when upper(${industrialWorkersCompCases.status}) in ('OPEN','ACTIVE','RESTRICTED','LOST_TIME','DRAFT') then 0 else 1 end`,
-          desc(industrialWorkersCompCases.updatedAt),
-        )
-        .limit(pageSize)
-        .offset(offset);
 
-      const mapped = items.map(({ case: row, personnelName }) =>
-        this.mapWorkersCompCase(row, {
-          workerName: personnelName ?? "",
-          medicalAllowed: canMedical,
-        }),
-      );
-
-      const allOpen = mapped.filter((item) => isOpenWcStatus(item.status));
-      return {
-        page,
-        pageSize,
-        summary: {
-          total: mapped.length,
-          open: allOpen.length,
-          restricted: allOpen.filter((i) => wcSeverityKey(i.severity) === "restricted").length,
-          lostTime: allOpen.filter(
-            (i) => wcSeverityKey(i.severity) === "lost_time" || (i.daysAway ?? 0) > 0,
-          ).length,
-          closed: mapped.filter((i) => i.status.toUpperCase() === "CLOSED").length,
-        },
-        items: mapped,
-      };
-    }, principal.userId);
+        const allOpen = mapped.filter((item) => isOpenWcStatus(item.status));
+        return {
+          page,
+          pageSize,
+          summary: {
+            total: mapped.length,
+            open: allOpen.length,
+            restricted: allOpen.filter((i) => wcSeverityKey(i.severity) === "restricted").length,
+            lostTime: allOpen.filter(
+              (i) => wcSeverityKey(i.severity) === "lost_time" || (i.daysAway ?? 0) > 0,
+            ).length,
+            closed: mapped.filter((i) => i.status.toUpperCase() === "CLOSED").length,
+          },
+          items: mapped,
+        };
+      },
+      principal.userId,
+    );
   }
 
   async getWorkersComp(principal: ForgePrincipal, id: string) {
     const canMedical = this.canViewWcMedical(principal);
     const recordId = this.assertRecordId(id);
-    return withTenantTransaction(this.db, principal.tenantId, async (tx) => {
-      if (canMedical) await this.enableWcMedicalAccess(tx);
-      const [joined] = await tx
-        .select({
-          case: industrialWorkersCompCases,
-          personnelName: industrialPersonnel.displayName,
-        })
-        .from(industrialWorkersCompCases)
-        .leftJoin(
-          industrialPersonnel,
-          eq(industrialPersonnel.id, industrialWorkersCompCases.personnelId),
-        )
-        .where(
-          and(
-            eq(industrialWorkersCompCases.id, recordId),
-            eq(industrialWorkersCompCases.tenantId, principal.tenantId),
-          ),
-        )
-        .limit(1);
-      if (!joined) throw new ForgeError("NOT_FOUND", "Workers compensation case not found");
-
-      const workStatus = await tx
-        .select()
-        .from(industrialWorkersCompWorkStatusPeriods)
-        .where(
-          and(
-            eq(industrialWorkersCompWorkStatusPeriods.tenantId, principal.tenantId),
-            eq(industrialWorkersCompWorkStatusPeriods.caseId, recordId),
-            isNull(industrialWorkersCompWorkStatusPeriods.archivedAt),
-          ),
-        )
-        .orderBy(desc(industrialWorkersCompWorkStatusPeriods.updatedAt))
-        .limit(100);
-
-      const restrictions = await tx
-        .select()
-        .from(industrialWorkersCompRestrictions)
-        .where(
-          and(
-            eq(industrialWorkersCompRestrictions.tenantId, principal.tenantId),
-            eq(industrialWorkersCompRestrictions.caseId, recordId),
-            isNull(industrialWorkersCompRestrictions.archivedAt),
-          ),
-        )
-        .orderBy(desc(industrialWorkersCompRestrictions.updatedAt))
-        .limit(100);
-
-      let medical: unknown[] = [];
-      if (canMedical) {
-        const medicalRows = await tx
-          .select()
-          .from(industrialWorkersCompMedicalEncounters)
+    return withTenantTransaction(
+      this.db,
+      principal.tenantId,
+      async (tx) => {
+        if (canMedical) await this.enableWcMedicalAccess(tx);
+        const [joined] = await tx
+          .select({
+            case: industrialWorkersCompCases,
+            personnelName: industrialPersonnel.displayName,
+          })
+          .from(industrialWorkersCompCases)
+          .leftJoin(
+            industrialPersonnel,
+            eq(industrialPersonnel.id, industrialWorkersCompCases.personnelId),
+          )
           .where(
             and(
-              eq(industrialWorkersCompMedicalEncounters.tenantId, principal.tenantId),
-              eq(industrialWorkersCompMedicalEncounters.caseId, recordId),
-              isNull(industrialWorkersCompMedicalEncounters.archivedAt),
+              eq(industrialWorkersCompCases.id, recordId),
+              eq(industrialWorkersCompCases.tenantId, principal.tenantId),
             ),
           )
-          .orderBy(desc(industrialWorkersCompMedicalEncounters.createdAt))
-          .limit(200);
-        medical = medicalRows.map((row) => this.mapMedicalEncounter(row, principal));
-      }
+          .limit(1);
+        if (!joined) throw new ForgeError("NOT_FOUND", "Workers compensation case not found");
 
-      return this.mapWorkersCompCase(joined.case, {
-        workerName: joined.personnelName ?? "",
-        medicalAllowed: canMedical,
-        medical: canMedical ? medical : undefined,
-        medicalDeniedReason: canMedical
-          ? undefined
-          : "You don't have permission to view medical details for this case.",
-        workStatus: workStatus.map((r) => {
-          const createdByUserId =
-            r.createdByUserId ??
-            (() => {
-              const payload = this.unwrapSourcePayload(r.sourcePayload);
-              return typeof payload.createdByUserId === "string" ? payload.createdByUserId : null;
-            })();
-          return {
-            id: r.id,
-            status: r.status,
-            startDate: r.startDate,
-            endDate: r.endDate,
-            notes: r.notes,
-            createdByUserId,
-            canEditNotes: canEditWorkersCompAuthoredNote({
-              isPlatformAdmin: principal.isPlatformAdmin,
-              permissions: principal.permissions,
-              userId: principal.userId,
+        const workStatus = await tx
+          .select()
+          .from(industrialWorkersCompWorkStatusPeriods)
+          .where(
+            and(
+              eq(industrialWorkersCompWorkStatusPeriods.tenantId, principal.tenantId),
+              eq(industrialWorkersCompWorkStatusPeriods.caseId, recordId),
+              isNull(industrialWorkersCompWorkStatusPeriods.archivedAt),
+            ),
+          )
+          .orderBy(desc(industrialWorkersCompWorkStatusPeriods.updatedAt))
+          .limit(100);
+
+        const restrictions = await tx
+          .select()
+          .from(industrialWorkersCompRestrictions)
+          .where(
+            and(
+              eq(industrialWorkersCompRestrictions.tenantId, principal.tenantId),
+              eq(industrialWorkersCompRestrictions.caseId, recordId),
+              isNull(industrialWorkersCompRestrictions.archivedAt),
+            ),
+          )
+          .orderBy(desc(industrialWorkersCompRestrictions.updatedAt))
+          .limit(100);
+
+        let medical: unknown[] = [];
+        if (canMedical) {
+          const medicalRows = await tx
+            .select()
+            .from(industrialWorkersCompMedicalEncounters)
+            .where(
+              and(
+                eq(industrialWorkersCompMedicalEncounters.tenantId, principal.tenantId),
+                eq(industrialWorkersCompMedicalEncounters.caseId, recordId),
+                isNull(industrialWorkersCompMedicalEncounters.archivedAt),
+              ),
+            )
+            .orderBy(desc(industrialWorkersCompMedicalEncounters.createdAt))
+            .limit(200);
+          medical = medicalRows.map((row) => this.mapMedicalEncounter(row, principal));
+        }
+
+        return this.mapWorkersCompCase(joined.case, {
+          workerName: joined.personnelName ?? "",
+          medicalAllowed: canMedical,
+          medical: canMedical ? medical : undefined,
+          medicalDeniedReason: canMedical
+            ? undefined
+            : "You don't have permission to view medical details for this case.",
+          workStatus: workStatus.map((r) => {
+            const createdByUserId =
+              r.createdByUserId ??
+              (() => {
+                const payload = this.unwrapSourcePayload(r.sourcePayload);
+                return typeof payload.createdByUserId === "string" ? payload.createdByUserId : null;
+              })();
+            return {
+              id: r.id,
+              status: r.status,
+              startDate: r.startDate,
+              endDate: r.endDate,
+              notes: r.notes,
               createdByUserId,
-              canManageResource:
-                principal.isPlatformAdmin ||
-                principal.permissions.has("industrial.admin") ||
-                principal.permissions.has("industrial.workers_comp.manage"),
-            }),
-            createdAt: r.createdAt.toISOString(),
-            updatedAt: r.updatedAt.toISOString(),
-          };
-        }),
-        restrictions: restrictions.map((r) => {
-          const accommodations = readAccommodationsFromSourcePayload(r.sourcePayload);
-          return {
-            id: r.id,
-            description: r.description,
-            startDate: r.startDate,
-            endDate: r.endDate,
-            status: r.status,
-            ...(accommodationsPayloadHasContent(accommodations)
-              ? { accommodations }
-              : {}),
-            createdAt: r.createdAt.toISOString(),
-            updatedAt: r.updatedAt.toISOString(),
-          };
-        }),
-      });
-    }, principal.userId);
+              canEditNotes: canEditWorkersCompAuthoredNote({
+                isPlatformAdmin: principal.isPlatformAdmin,
+                permissions: principal.permissions,
+                userId: principal.userId,
+                createdByUserId,
+                canManageResource:
+                  principal.isPlatformAdmin ||
+                  principal.permissions.has("industrial.admin") ||
+                  principal.permissions.has("industrial.workers_comp.manage"),
+              }),
+              createdAt: r.createdAt.toISOString(),
+              updatedAt: r.updatedAt.toISOString(),
+            };
+          }),
+          restrictions: restrictions.map((r) => {
+            const accommodations = readAccommodationsFromSourcePayload(r.sourcePayload);
+            return {
+              id: r.id,
+              description: r.description,
+              startDate: r.startDate,
+              endDate: r.endDate,
+              status: r.status,
+              ...(accommodationsPayloadHasContent(accommodations) ? { accommodations } : {}),
+              createdAt: r.createdAt.toISOString(),
+              updatedAt: r.updatedAt.toISOString(),
+            };
+          }),
+        });
+      },
+      principal.userId,
+    );
   }
 
   /** Printable HTML packet: WC claim + linked incident + status / restrictions / medical. */
@@ -12540,248 +12694,251 @@ export class IndustrialDomainService {
   }
 
   async createWorkersComp(principal: ForgePrincipal, body: Record<string, unknown>) {
-    return withTenantTransaction(this.db, principal.tenantId, async (tx) => {
-      const now = new Date();
-      let personnelId =
-        typeof body.personnelId === "string" && UUID_PATTERN.test(body.personnelId)
-          ? body.personnelId
-          : null;
-      const incidentId =
-        typeof body.incidentId === "string" && UUID_PATTERN.test(body.incidentId)
-          ? body.incidentId
-          : null;
-      const siteId =
-        typeof body.siteId === "string" && UUID_PATTERN.test(body.siteId) ? body.siteId : null;
-      const departmentId =
-        typeof body.departmentId === "string" && UUID_PATTERN.test(body.departmentId)
-          ? body.departmentId
-          : null;
+    return withTenantTransaction(
+      this.db,
+      principal.tenantId,
+      async (tx) => {
+        const now = new Date();
+        let personnelId =
+          typeof body.personnelId === "string" && UUID_PATTERN.test(body.personnelId)
+            ? body.personnelId
+            : null;
+        const incidentId =
+          typeof body.incidentId === "string" && UUID_PATTERN.test(body.incidentId)
+            ? body.incidentId
+            : null;
+        const siteId =
+          typeof body.siteId === "string" && UUID_PATTERN.test(body.siteId) ? body.siteId : null;
+        const departmentId =
+          typeof body.departmentId === "string" && UUID_PATTERN.test(body.departmentId)
+            ? body.departmentId
+            : null;
 
-      // Serialize case creation per tenant so concurrent submits cannot both insert.
-      await tx.execute(
-        sql`select pg_advisory_xact_lock(hashtext(${`industrial-wc-create:${principal.tenantId}`}))`,
-      );
+        // Serialize case creation per tenant so concurrent submits cannot both insert.
+        await tx.execute(
+          sql`select pg_advisory_xact_lock(hashtext(${`industrial-wc-create:${principal.tenantId}`}))`,
+        );
 
-      // Opening from an incident should reuse the existing case when present.
-      if (incidentId) {
-        const [existing] = await tx
-          .select()
-          .from(industrialWorkersCompCases)
-          .where(
-            and(
-              eq(industrialWorkersCompCases.tenantId, principal.tenantId),
-              eq(industrialWorkersCompCases.incidentId, incidentId),
-              isNull(industrialWorkersCompCases.archivedAt),
-            ),
-          )
-          .orderBy(desc(industrialWorkersCompCases.updatedAt))
-          .limit(1);
-        if (existing) {
-          await this.linkWorkersCompCaseToIncident(
-            tx,
-            principal.tenantId,
-            incidentId,
-            existing.id,
-            now,
-          );
-          return this.mapWorkersCompCase(existing);
+        // Opening from an incident should reuse the existing case when present.
+        if (incidentId) {
+          const [existing] = await tx
+            .select()
+            .from(industrialWorkersCompCases)
+            .where(
+              and(
+                eq(industrialWorkersCompCases.tenantId, principal.tenantId),
+                eq(industrialWorkersCompCases.incidentId, incidentId),
+                isNull(industrialWorkersCompCases.archivedAt),
+              ),
+            )
+            .orderBy(desc(industrialWorkersCompCases.updatedAt))
+            .limit(1);
+          if (existing) {
+            await this.linkWorkersCompCaseToIncident(
+              tx,
+              principal.tenantId,
+              incidentId,
+              existing.id,
+              now,
+            );
+            return this.mapWorkersCompCase(existing);
+          }
         }
-      }
 
-      const workerNameHint = String(body.workerName ?? body.personnelName ?? "").trim();
-      if (!personnelId && workerNameHint) {
-        const [match] = await tx
-          .select({ id: industrialPersonnel.id })
-          .from(industrialPersonnel)
-          .where(
-            and(
-              eq(industrialPersonnel.tenantId, principal.tenantId),
-              isNull(industrialPersonnel.archivedAt),
-              ilike(industrialPersonnel.displayName, workerNameHint),
-            ),
-          )
-          .limit(1);
-        if (match) personnelId = match.id;
-      }
+        const workerNameHint = String(body.workerName ?? body.personnelName ?? "").trim();
+        if (!personnelId && workerNameHint) {
+          const [match] = await tx
+            .select({ id: industrialPersonnel.id })
+            .from(industrialPersonnel)
+            .where(
+              and(
+                eq(industrialPersonnel.tenantId, principal.tenantId),
+                isNull(industrialPersonnel.archivedAt),
+                ilike(industrialPersonnel.displayName, workerNameHint),
+              ),
+            )
+            .limit(1);
+          if (match) personnelId = match.id;
+        }
 
-      const claimSummaryRaw = parseWorkersCompClaimSummary(body.claimSummary ?? body);
-      // Claim # stays empty until entered manually (insurance assignment). Do not auto-generate.
-      const caseNumber = resolveWorkersCompCaseNumber(body);
-      const claimSummary = syncWorkersCompClaimNumber(caseNumber, claimSummaryRaw);
-      const reportedAtRaw = body.reportedAt ?? body.dateOfInjury ?? claimSummary.dateOfInjury;
-      const reportedAt =
-        typeof reportedAtRaw === "string" && reportedAtRaw.trim()
-          ? new Date(reportedAtRaw)
-          : now;
+        const claimSummaryRaw = parseWorkersCompClaimSummary(body.claimSummary ?? body);
+        // Claim # stays empty until entered manually (insurance assignment). Do not auto-generate.
+        const caseNumber = resolveWorkersCompCaseNumber(body);
+        const claimSummary = syncWorkersCompClaimNumber(caseNumber, claimSummaryRaw);
+        const reportedAtRaw = body.reportedAt ?? body.dateOfInjury ?? claimSummary.dateOfInjury;
+        const reportedAt =
+          typeof reportedAtRaw === "string" && reportedAtRaw.trim() ? new Date(reportedAtRaw) : now;
 
-      // Same worker + same date of injury is the same claim: reuse the open case instead of inserting.
-      const injuryDateKey = workersCompInjuryDateKey(
-        claimSummary.dateOfInjury,
-        Number.isNaN(reportedAt.getTime()) ? now : reportedAt,
-      );
-      let workerKey = normalizeWorkersCompWorkerKey(workerNameHint);
-      if (!workerKey && personnelId) {
-        const [person] = await tx
-          .select({ displayName: industrialPersonnel.displayName })
-          .from(industrialPersonnel)
-          .where(
-            and(
-              eq(industrialPersonnel.id, personnelId),
-              eq(industrialPersonnel.tenantId, principal.tenantId),
-            ),
-          )
-          .limit(1);
-        workerKey = normalizeWorkersCompWorkerKey(person?.displayName);
-      }
-      if (injuryDateKey && (workerKey || personnelId)) {
-        const injuryDateExpr = sql`left(coalesce(
+        // Same worker + same date of injury is the same claim: reuse the open case instead of inserting.
+        const injuryDateKey = workersCompInjuryDateKey(
+          claimSummary.dateOfInjury,
+          Number.isNaN(reportedAt.getTime()) ? now : reportedAt,
+        );
+        let workerKey = normalizeWorkersCompWorkerKey(workerNameHint);
+        if (!workerKey && personnelId) {
+          const [person] = await tx
+            .select({ displayName: industrialPersonnel.displayName })
+            .from(industrialPersonnel)
+            .where(
+              and(
+                eq(industrialPersonnel.id, personnelId),
+                eq(industrialPersonnel.tenantId, principal.tenantId),
+              ),
+            )
+            .limit(1);
+          workerKey = normalizeWorkersCompWorkerKey(person?.displayName);
+        }
+        if (injuryDateKey && (workerKey || personnelId)) {
+          const injuryDateExpr = sql`left(coalesce(
           nullif(trim(${industrialWorkersCompCases.claimSummary}->>'dateOfInjury'), ''),
           nullif(trim(${industrialWorkersCompCases.sourcePayload}->'intake'->>'incidentDate'), ''),
           nullif(trim(${industrialWorkersCompCases.sourcePayload}->'claim'->>'dateOfInjury'), ''),
           to_char((${industrialWorkersCompCases.reportedAt} at time zone 'UTC')::date, 'YYYY-MM-DD')
         ), 10)`;
-        const workerExpr = sql`lower(regexp_replace(trim(coalesce(
+          const workerExpr = sql`lower(regexp_replace(trim(coalesce(
           nullif(trim(${industrialPersonnel.displayName}), ''),
           nullif(trim(${industrialWorkersCompCases.sourcePayload}->>'workerName'), ''),
           ''
         )), '[[:space:]]+', ' ', 'g'))`;
-        const workerMatches = [
-          ...(personnelId ? [eq(industrialWorkersCompCases.personnelId, personnelId)] : []),
-          ...(workerKey ? [sql`${workerExpr} = ${workerKey}`] : []),
-        ];
-        const [duplicate] = await tx
-          .select({
-            case: industrialWorkersCompCases,
-            personnelName: industrialPersonnel.displayName,
-          })
-          .from(industrialWorkersCompCases)
-          .leftJoin(
-            industrialPersonnel,
-            eq(industrialPersonnel.id, industrialWorkersCompCases.personnelId),
-          )
-          .where(
-            and(
-              eq(industrialWorkersCompCases.tenantId, principal.tenantId),
-              isNull(industrialWorkersCompCases.archivedAt),
-              sql`${injuryDateExpr} = ${injuryDateKey}`,
-              or(...workerMatches)!,
-            ),
-          )
-          .orderBy(
-            sql`case when upper(${industrialWorkersCompCases.status}) in ('OPEN','ACTIVE','RESTRICTED','LOST_TIME','DRAFT') then 0 else 1 end`,
-            industrialWorkersCompCases.createdAt,
-          )
-          .limit(1);
-        if (duplicate) {
-          let existing = duplicate.case;
-          if (incidentId) {
-            if (!existing.incidentId) {
-              const [relinked] = await tx
-                .update(industrialWorkersCompCases)
-                .set({ incidentId, updatedAt: now })
-                .where(eq(industrialWorkersCompCases.id, existing.id))
-                .returning();
-              if (relinked) existing = relinked;
+          const workerMatches = [
+            ...(personnelId ? [eq(industrialWorkersCompCases.personnelId, personnelId)] : []),
+            ...(workerKey ? [sql`${workerExpr} = ${workerKey}`] : []),
+          ];
+          const [duplicate] = await tx
+            .select({
+              case: industrialWorkersCompCases,
+              personnelName: industrialPersonnel.displayName,
+            })
+            .from(industrialWorkersCompCases)
+            .leftJoin(
+              industrialPersonnel,
+              eq(industrialPersonnel.id, industrialWorkersCompCases.personnelId),
+            )
+            .where(
+              and(
+                eq(industrialWorkersCompCases.tenantId, principal.tenantId),
+                isNull(industrialWorkersCompCases.archivedAt),
+                sql`${injuryDateExpr} = ${injuryDateKey}`,
+                or(...workerMatches)!,
+              ),
+            )
+            .orderBy(
+              sql`case when upper(${industrialWorkersCompCases.status}) in ('OPEN','ACTIVE','RESTRICTED','LOST_TIME','DRAFT') then 0 else 1 end`,
+              industrialWorkersCompCases.createdAt,
+            )
+            .limit(1);
+          if (duplicate) {
+            let existing = duplicate.case;
+            if (incidentId) {
+              if (!existing.incidentId) {
+                const [relinked] = await tx
+                  .update(industrialWorkersCompCases)
+                  .set({ incidentId, updatedAt: now })
+                  .where(eq(industrialWorkersCompCases.id, existing.id))
+                  .returning();
+                if (relinked) existing = relinked;
+              }
+              await this.linkWorkersCompCaseToIncident(
+                tx,
+                principal.tenantId,
+                incidentId,
+                existing.id,
+                now,
+              );
             }
-            await this.linkWorkersCompCaseToIncident(tx, principal.tenantId, incidentId, existing.id, now);
+            return this.mapWorkersCompCase(existing, { workerName: duplicate.personnelName ?? "" });
           }
-          return this.mapWorkersCompCase(existing, { workerName: duplicate.personnelName ?? "" });
         }
-      }
 
-      let dateOfBirth = optionalDate(body.dateOfBirth) ?? "";
-      let street = String(body.street ?? "").trim();
-      let city = String(body.city ?? "").trim();
-      let state = String(body.state ?? "").trim();
-      let zip = String(body.zip ?? body.zipCode ?? "").trim();
-      let gender = normalizeWorkersCompGender(body.gender ?? body.sex);
-      if (personnelId) {
-        const [person] = await tx
-          .select({
-            dateOfBirth: industrialPersonnel.dateOfBirth,
-            street: industrialPersonnel.street,
-            city: industrialPersonnel.city,
-            state: industrialPersonnel.state,
-            zip: industrialPersonnel.zip,
-            gender: industrialPersonnel.gender,
-          })
-          .from(industrialPersonnel)
-          .where(
-            and(
-              eq(industrialPersonnel.id, personnelId),
-              eq(industrialPersonnel.tenantId, principal.tenantId),
-            ),
-          )
-          .limit(1);
-        if (!dateOfBirth) {
-          dateOfBirth = person?.dateOfBirth ? String(person.dateOfBirth).slice(0, 10) : "";
+        let dateOfBirth = optionalDate(body.dateOfBirth) ?? "";
+        let street = String(body.street ?? "").trim();
+        let city = String(body.city ?? "").trim();
+        let state = String(body.state ?? "").trim();
+        let zip = String(body.zip ?? body.zipCode ?? "").trim();
+        let gender = normalizeWorkersCompGender(body.gender ?? body.sex);
+        if (personnelId) {
+          const [person] = await tx
+            .select({
+              dateOfBirth: industrialPersonnel.dateOfBirth,
+              street: industrialPersonnel.street,
+              city: industrialPersonnel.city,
+              state: industrialPersonnel.state,
+              zip: industrialPersonnel.zip,
+              gender: industrialPersonnel.gender,
+            })
+            .from(industrialPersonnel)
+            .where(
+              and(
+                eq(industrialPersonnel.id, personnelId),
+                eq(industrialPersonnel.tenantId, principal.tenantId),
+              ),
+            )
+            .limit(1);
           if (!dateOfBirth) {
-            const [driver] = await tx
-              .select({ dateOfBirth: industrialFleetDrivers.dateOfBirth })
-              .from(industrialFleetDrivers)
-              .where(
-                and(
-                  eq(industrialFleetDrivers.tenantId, principal.tenantId),
-                  eq(industrialFleetDrivers.personnelId, personnelId),
-                  isNull(industrialFleetDrivers.archivedAt),
-                ),
-              )
-              .limit(1);
-            dateOfBirth = driver?.dateOfBirth ? String(driver.dateOfBirth).slice(0, 10) : "";
+            dateOfBirth = person?.dateOfBirth ? String(person.dateOfBirth).slice(0, 10) : "";
+            if (!dateOfBirth) {
+              const [driver] = await tx
+                .select({ dateOfBirth: industrialFleetDrivers.dateOfBirth })
+                .from(industrialFleetDrivers)
+                .where(
+                  and(
+                    eq(industrialFleetDrivers.tenantId, principal.tenantId),
+                    eq(industrialFleetDrivers.personnelId, personnelId),
+                    isNull(industrialFleetDrivers.archivedAt),
+                  ),
+                )
+                .limit(1);
+              dateOfBirth = driver?.dateOfBirth ? String(driver.dateOfBirth).slice(0, 10) : "";
+            }
           }
+          if (!street) street = person?.street?.trim() || "";
+          if (!city) city = person?.city?.trim() || "";
+          if (!state) state = person?.state?.trim() || "";
+          if (!zip) zip = person?.zip?.trim() || "";
+          if (!gender) gender = normalizeWorkersCompGender(person?.gender);
         }
-        if (!street) street = person?.street?.trim() || "";
-        if (!city) city = person?.city?.trim() || "";
-        if (!state) state = person?.state?.trim() || "";
-        if (!zip) zip = person?.zip?.trim() || "";
-        if (!gender) gender = normalizeWorkersCompGender(person?.gender);
-      }
-      const [row] = await tx
-        .insert(industrialWorkersCompCases)
-        .values({
-          id: createId(),
-          tenantId: principal.tenantId,
-          caseNumber,
-          personnelId,
-          incidentId,
-          siteId,
-          departmentId,
-          status: normalizeWcCaseStatus(body.status),
-          severity: body.severity ? String(body.severity) : null,
-          workflowStage: body.workflowStage ? String(body.workflowStage) : "INTAKE",
-          reportedAt: Number.isNaN(reportedAt.getTime()) ? now : reportedAt,
-          daysAway: body.daysAway != null ? Number(body.daysAway) || 0 : null,
-          restrictedDays: body.restrictedDays != null ? Number(body.restrictedDays) || 0 : null,
-          claimSummary,
-          sourceSystem: "FORGE",
-          sourcePayload: {
-            workerName: body.workerName ?? body.personnelName ?? "",
-            locationText: body.locationText ?? "",
-            notes: body.notes ?? "",
-            category: body.category ?? "cases",
-            ...(dateOfBirth ? { dateOfBirth } : {}),
-            ...(street ? { street } : {}),
-            ...(city ? { city } : {}),
-            ...(state ? { state } : {}),
-            ...(zip ? { zip } : {}),
-            ...(gender ? { gender } : {}),
-          },
-          createdAt: now,
-          updatedAt: now,
-        })
-        .returning();
+        const [row] = await tx
+          .insert(industrialWorkersCompCases)
+          .values({
+            id: createId(),
+            tenantId: principal.tenantId,
+            caseNumber,
+            personnelId,
+            incidentId,
+            siteId,
+            departmentId,
+            status: normalizeWcCaseStatus(body.status),
+            severity: body.severity ? String(body.severity) : null,
+            workflowStage: body.workflowStage ? String(body.workflowStage) : "INTAKE",
+            reportedAt: Number.isNaN(reportedAt.getTime()) ? now : reportedAt,
+            daysAway: body.daysAway != null ? Number(body.daysAway) || 0 : null,
+            restrictedDays: body.restrictedDays != null ? Number(body.restrictedDays) || 0 : null,
+            claimSummary,
+            sourceSystem: "FORGE",
+            sourcePayload: {
+              workerName: body.workerName ?? body.personnelName ?? "",
+              locationText: body.locationText ?? "",
+              notes: body.notes ?? "",
+              category: body.category ?? "cases",
+              ...(dateOfBirth ? { dateOfBirth } : {}),
+              ...(street ? { street } : {}),
+              ...(city ? { city } : {}),
+              ...(state ? { state } : {}),
+              ...(zip ? { zip } : {}),
+              ...(gender ? { gender } : {}),
+            },
+            createdAt: now,
+            updatedAt: now,
+          })
+          .returning();
 
-      if (incidentId && row) {
-        await this.linkWorkersCompCaseToIncident(
-          tx,
-          principal.tenantId,
-          incidentId,
-          row.id,
-          now,
-        );
-      }
-      return this.mapWorkersCompCase(row!);
-    }, principal.userId);
+        if (incidentId && row) {
+          await this.linkWorkersCompCaseToIncident(tx, principal.tenantId, incidentId, row.id, now);
+        }
+        return this.mapWorkersCompCase(row!);
+      },
+      principal.userId,
+    );
   }
 
   /**
@@ -12832,268 +12989,273 @@ export class IndustrialDomainService {
       throw new ForgeError("FORBIDDEN", "Missing industrial.workers_comp.medical.view");
     }
     const recordId = this.assertRecordId(caseId);
-    return withTenantTransaction(this.db, principal.tenantId, async (tx) => {
-      await this.enableWcMedicalAccess(tx);
-      await this.assertWcCase(tx, principal.tenantId, recordId);
-      const rows = await tx
-        .select()
-        .from(industrialWorkersCompMedicalEncounters)
-        .where(
-          and(
-            eq(industrialWorkersCompMedicalEncounters.tenantId, principal.tenantId),
-            eq(industrialWorkersCompMedicalEncounters.caseId, recordId),
-            isNull(industrialWorkersCompMedicalEncounters.archivedAt),
-          ),
-        )
-        .orderBy(desc(industrialWorkersCompMedicalEncounters.createdAt))
-        .limit(100);
-      return { items: rows.map((row) => this.mapMedicalEncounter(row, principal)) };
-    }, principal.userId);
-  }
-
-  async updateWorkersComp(
-    principal: ForgePrincipal,
-    id: string,
-    body: Record<string, unknown>,
-  ) {
-    const recordId = this.assertRecordId(id);
-    return withTenantTransaction(this.db, principal.tenantId, async (tx) => {
-      const [existing] = await tx
-        .select()
-        .from(industrialWorkersCompCases)
-        .where(
-          and(
-            eq(industrialWorkersCompCases.id, recordId),
-            eq(industrialWorkersCompCases.tenantId, principal.tenantId),
-            isNull(industrialWorkersCompCases.archivedAt),
-          ),
-        )
-        .limit(1);
-      if (!existing) throw new ForgeError("NOT_FOUND", "Workers compensation case not found");
-
-      const payload = this.unwrapSourcePayload(existing.sourcePayload);
-      const priorOsha = parseWorkersCompOshaLinkage(payload);
-      const claimSummaryMerged = mergeWorkersCompClaimSummary(
-        existing.claimSummary,
-        body.claimSummary ?? body,
-      );
-      const caseNumber =
-        resolveWorkersCompCaseNumber(body, existing.caseNumber) ?? existing.caseNumber;
-      const claimSummary = syncWorkersCompClaimNumber(caseNumber, claimSummaryMerged);
-      const existingClaim = asRecord(payload.claim) ?? {};
-
-      const oshaRecordable =
-        body.oshaRecordable !== undefined
-          ? body.oshaRecordable === true ||
-            body.oshaRecordable === "true" ||
-            body.oshaRecordable === 1 ||
-            body.oshaRecordable === "1"
-          : priorOsha.oshaRecordable;
-      const oshaPrivacyCase =
-        body.oshaPrivacyCase !== undefined
-          ? body.oshaPrivacyCase === true ||
-            body.oshaPrivacyCase === "true" ||
-            body.oshaPrivacyCase === 1 ||
-            body.oshaPrivacyCase === "1"
-          : priorOsha.oshaPrivacyCase;
-      const oshaJobTitle =
-        body.oshaJobTitle !== undefined
-          ? String(body.oshaJobTitle ?? "").trim()
-          : priorOsha.oshaJobTitle;
-      const oshaIllnessCategory =
-        body.oshaIllnessCategory !== undefined
-          ? String(body.oshaIllnessCategory ?? "").trim() || "1"
-          : priorOsha.oshaIllnessCategory;
-      const oshaCaseOutcome =
-        body.oshaCaseOutcome !== undefined
-          ? String(body.oshaCaseOutcome ?? "").trim()
-          : priorOsha.oshaCaseOutcome;
-
-      const nextPayload: Record<string, unknown> = {
-        ...payload,
-        ...(body.workerName != null ? { workerName: String(body.workerName) } : {}),
-        ...(body.locationText != null ? { locationText: String(body.locationText) } : {}),
-        ...(body.notes != null ? { notes: String(body.notes) } : {}),
-        // Hydrate reads source workflowStage before the column; keep them in sync so saves stick.
-        ...(body.workflowStage != null && String(body.workflowStage).trim()
-          ? { workflowStage: String(body.workflowStage).trim() }
-          : {}),
-        ...(body.dateOfBirth !== undefined
-          ? { dateOfBirth: optionalDate(body.dateOfBirth) ?? "" }
-          : {}),
-        ...(body.street !== undefined ? { street: String(body.street ?? "").trim() } : {}),
-        ...(body.city !== undefined ? { city: String(body.city ?? "").trim() } : {}),
-        ...(body.state !== undefined ? { state: String(body.state ?? "").trim() } : {}),
-        ...(body.zip !== undefined || body.zipCode !== undefined
-          ? { zip: String(body.zip ?? body.zipCode ?? "").trim() }
-          : {}),
-        ...(body.gender !== undefined || body.sex !== undefined
-          ? { gender: normalizeWorkersCompGender(body.gender ?? body.sex) }
-          : {}),
-        // Keep source claim in sync with claim_summary so hydrate cannot revert saves.
-        claim: {
-          ...existingClaim,
-          ...claimSummary,
-        },
-        oshaRecordable,
-        oshaPrivacyCase,
-        oshaJobTitle,
-        oshaIllnessCategory,
-        oshaCaseOutcome,
-        oshaCaseId: priorOsha.oshaCaseId,
-      };
-
-      const nextPersonnelId =
-        body.personnelId !== undefined
-          ? typeof body.personnelId === "string" && UUID_PATTERN.test(body.personnelId)
-            ? body.personnelId
-            : null
-          : existing.personnelId;
-      if (nextPersonnelId) {
-        const needsDob = !String(nextPayload.dateOfBirth ?? "").trim();
-        const needsStreet = !String(nextPayload.street ?? "").trim();
-        const needsCity = !String(nextPayload.city ?? "").trim();
-        const needsState = !String(nextPayload.state ?? "").trim();
-        const needsZip = !String(nextPayload.zip ?? "").trim();
-        const needsGender = !String(nextPayload.gender ?? "").trim();
-        if (needsDob || needsStreet || needsCity || needsState || needsZip || needsGender) {
-          const [person] = await tx
-            .select({
-              dateOfBirth: industrialPersonnel.dateOfBirth,
-              street: industrialPersonnel.street,
-              city: industrialPersonnel.city,
-              state: industrialPersonnel.state,
-              zip: industrialPersonnel.zip,
-              gender: industrialPersonnel.gender,
-            })
-            .from(industrialPersonnel)
-            .where(
-              and(
-                eq(industrialPersonnel.id, nextPersonnelId),
-                eq(industrialPersonnel.tenantId, principal.tenantId),
-              ),
-            )
-            .limit(1);
-          if (person) {
-            if (needsDob && person.dateOfBirth) {
-              nextPayload.dateOfBirth = String(person.dateOfBirth).slice(0, 10);
-            }
-            if (needsStreet && person.street?.trim()) nextPayload.street = person.street.trim();
-            if (needsCity && person.city?.trim()) nextPayload.city = person.city.trim();
-            if (needsState && person.state?.trim()) nextPayload.state = person.state.trim();
-            if (needsZip && person.zip?.trim()) nextPayload.zip = person.zip.trim();
-            if (needsGender) {
-              const fromPerson = normalizeWorkersCompGender(person.gender);
-              if (fromPerson) nextPayload.gender = fromPerson;
-            }
-          }
-        }
-      }
-
-      const reportedAt =
-        body.reportedAt != null && String(body.reportedAt).trim()
-          ? new Date(String(body.reportedAt))
-          : existing.reportedAt;
-
-      const [row] = await tx
-        .update(industrialWorkersCompCases)
-        .set({
-          caseNumber,
-          status: normalizeWcCaseStatus(body.status != null ? body.status : existing.status),
-          severity: body.severity != null ? String(body.severity) || null : existing.severity,
-          workflowStage:
-            body.workflowStage != null
-              ? String(body.workflowStage) || null
-              : existing.workflowStage,
-          personnelId:
-            body.personnelId !== undefined
-              ? typeof body.personnelId === "string" && UUID_PATTERN.test(body.personnelId)
-                ? body.personnelId
-                : null
-              : existing.personnelId,
-          incidentId:
-            body.incidentId !== undefined
-              ? typeof body.incidentId === "string" && UUID_PATTERN.test(body.incidentId)
-                ? body.incidentId
-                : null
-              : existing.incidentId,
-          siteId:
-            body.siteId !== undefined
-              ? typeof body.siteId === "string" && UUID_PATTERN.test(body.siteId)
-                ? body.siteId
-                : null
-              : existing.siteId,
-          departmentId:
-            body.departmentId !== undefined
-              ? typeof body.departmentId === "string" && UUID_PATTERN.test(body.departmentId)
-                ? body.departmentId
-                : null
-              : existing.departmentId,
-          reportedAt:
-            reportedAt && !Number.isNaN(reportedAt.getTime()) ? reportedAt : existing.reportedAt,
-          daysAway:
-            body.daysAway !== undefined ? Number(body.daysAway) || 0 : existing.daysAway,
-          restrictedDays:
-            body.restrictedDays !== undefined
-              ? Number(body.restrictedDays) || 0
-              : existing.restrictedDays,
-          claimSummary,
-          sourcePayload: nextPayload,
-          updatedAt: new Date(),
-        } as never)
-        .where(eq(industrialWorkersCompCases.id, recordId))
-        .returning();
-
-      const mapped = this.mapWorkersCompCase(row!);
-      const nextIncidentId = mapped.incidentId?.trim() || "";
-      const prevIncidentId = existing.incidentId?.trim() || "";
-      if (nextIncidentId && UUID_PATTERN.test(nextIncidentId)) {
-        await this.linkWorkersCompCaseToIncident(
-          tx,
-          principal.tenantId,
-          nextIncidentId,
-          recordId,
-          new Date(),
-        );
-      }
-      if (
-        prevIncidentId &&
-        UUID_PATTERN.test(prevIncidentId) &&
-        prevIncidentId !== nextIncidentId
-      ) {
-        const [prevIncident] = await tx
+    return withTenantTransaction(
+      this.db,
+      principal.tenantId,
+      async (tx) => {
+        await this.enableWcMedicalAccess(tx);
+        await this.assertWcCase(tx, principal.tenantId, recordId);
+        const rows = await tx
           .select()
-          .from(industrialIncidents)
+          .from(industrialWorkersCompMedicalEncounters)
           .where(
             and(
-              eq(industrialIncidents.id, prevIncidentId),
-              eq(industrialIncidents.tenantId, principal.tenantId),
-              isNull(industrialIncidents.archivedAt),
+              eq(industrialWorkersCompMedicalEncounters.tenantId, principal.tenantId),
+              eq(industrialWorkersCompMedicalEncounters.caseId, recordId),
+              isNull(industrialWorkersCompMedicalEncounters.archivedAt),
+            ),
+          )
+          .orderBy(desc(industrialWorkersCompMedicalEncounters.createdAt))
+          .limit(100);
+        return { items: rows.map((row) => this.mapMedicalEncounter(row, principal)) };
+      },
+      principal.userId,
+    );
+  }
+
+  async updateWorkersComp(principal: ForgePrincipal, id: string, body: Record<string, unknown>) {
+    const recordId = this.assertRecordId(id);
+    return withTenantTransaction(
+      this.db,
+      principal.tenantId,
+      async (tx) => {
+        const [existing] = await tx
+          .select()
+          .from(industrialWorkersCompCases)
+          .where(
+            and(
+              eq(industrialWorkersCompCases.id, recordId),
+              eq(industrialWorkersCompCases.tenantId, principal.tenantId),
+              isNull(industrialWorkersCompCases.archivedAt),
             ),
           )
           .limit(1);
-        if (prevIncident) {
-          const prevPayload = this.unwrapSourcePayload(prevIncident.sourcePayload);
-          if (String(prevPayload.workersCompCaseId ?? "").trim() === recordId) {
-            const { workersCompCaseId: _removed, ...rest } = prevPayload;
-            await tx
-              .update(industrialIncidents)
-              .set({
-                sourcePayload: rest,
-                updatedAt: new Date(),
+        if (!existing) throw new ForgeError("NOT_FOUND", "Workers compensation case not found");
+
+        const payload = this.unwrapSourcePayload(existing.sourcePayload);
+        const priorOsha = parseWorkersCompOshaLinkage(payload);
+        const claimSummaryMerged = mergeWorkersCompClaimSummary(
+          existing.claimSummary,
+          body.claimSummary ?? body,
+        );
+        const caseNumber =
+          resolveWorkersCompCaseNumber(body, existing.caseNumber) ?? existing.caseNumber;
+        const claimSummary = syncWorkersCompClaimNumber(caseNumber, claimSummaryMerged);
+        const existingClaim = asRecord(payload.claim) ?? {};
+
+        const oshaRecordable =
+          body.oshaRecordable !== undefined
+            ? body.oshaRecordable === true ||
+              body.oshaRecordable === "true" ||
+              body.oshaRecordable === 1 ||
+              body.oshaRecordable === "1"
+            : priorOsha.oshaRecordable;
+        const oshaPrivacyCase =
+          body.oshaPrivacyCase !== undefined
+            ? body.oshaPrivacyCase === true ||
+              body.oshaPrivacyCase === "true" ||
+              body.oshaPrivacyCase === 1 ||
+              body.oshaPrivacyCase === "1"
+            : priorOsha.oshaPrivacyCase;
+        const oshaJobTitle =
+          body.oshaJobTitle !== undefined
+            ? String(body.oshaJobTitle ?? "").trim()
+            : priorOsha.oshaJobTitle;
+        const oshaIllnessCategory =
+          body.oshaIllnessCategory !== undefined
+            ? String(body.oshaIllnessCategory ?? "").trim() || "1"
+            : priorOsha.oshaIllnessCategory;
+        const oshaCaseOutcome =
+          body.oshaCaseOutcome !== undefined
+            ? String(body.oshaCaseOutcome ?? "").trim()
+            : priorOsha.oshaCaseOutcome;
+
+        const nextPayload: Record<string, unknown> = {
+          ...payload,
+          ...(body.workerName != null ? { workerName: String(body.workerName) } : {}),
+          ...(body.locationText != null ? { locationText: String(body.locationText) } : {}),
+          ...(body.notes != null ? { notes: String(body.notes) } : {}),
+          // Hydrate reads source workflowStage before the column; keep them in sync so saves stick.
+          ...(body.workflowStage != null && String(body.workflowStage).trim()
+            ? { workflowStage: String(body.workflowStage).trim() }
+            : {}),
+          ...(body.dateOfBirth !== undefined
+            ? { dateOfBirth: optionalDate(body.dateOfBirth) ?? "" }
+            : {}),
+          ...(body.street !== undefined ? { street: String(body.street ?? "").trim() } : {}),
+          ...(body.city !== undefined ? { city: String(body.city ?? "").trim() } : {}),
+          ...(body.state !== undefined ? { state: String(body.state ?? "").trim() } : {}),
+          ...(body.zip !== undefined || body.zipCode !== undefined
+            ? { zip: String(body.zip ?? body.zipCode ?? "").trim() }
+            : {}),
+          ...(body.gender !== undefined || body.sex !== undefined
+            ? { gender: normalizeWorkersCompGender(body.gender ?? body.sex) }
+            : {}),
+          // Keep source claim in sync with claim_summary so hydrate cannot revert saves.
+          claim: {
+            ...existingClaim,
+            ...claimSummary,
+          },
+          oshaRecordable,
+          oshaPrivacyCase,
+          oshaJobTitle,
+          oshaIllnessCategory,
+          oshaCaseOutcome,
+          oshaCaseId: priorOsha.oshaCaseId,
+        };
+
+        const nextPersonnelId =
+          body.personnelId !== undefined
+            ? typeof body.personnelId === "string" && UUID_PATTERN.test(body.personnelId)
+              ? body.personnelId
+              : null
+            : existing.personnelId;
+        if (nextPersonnelId) {
+          const needsDob = !String(nextPayload.dateOfBirth ?? "").trim();
+          const needsStreet = !String(nextPayload.street ?? "").trim();
+          const needsCity = !String(nextPayload.city ?? "").trim();
+          const needsState = !String(nextPayload.state ?? "").trim();
+          const needsZip = !String(nextPayload.zip ?? "").trim();
+          const needsGender = !String(nextPayload.gender ?? "").trim();
+          if (needsDob || needsStreet || needsCity || needsState || needsZip || needsGender) {
+            const [person] = await tx
+              .select({
+                dateOfBirth: industrialPersonnel.dateOfBirth,
+                street: industrialPersonnel.street,
+                city: industrialPersonnel.city,
+                state: industrialPersonnel.state,
+                zip: industrialPersonnel.zip,
+                gender: industrialPersonnel.gender,
               })
-              .where(eq(industrialIncidents.id, prevIncidentId));
+              .from(industrialPersonnel)
+              .where(
+                and(
+                  eq(industrialPersonnel.id, nextPersonnelId),
+                  eq(industrialPersonnel.tenantId, principal.tenantId),
+                ),
+              )
+              .limit(1);
+            if (person) {
+              if (needsDob && person.dateOfBirth) {
+                nextPayload.dateOfBirth = String(person.dateOfBirth).slice(0, 10);
+              }
+              if (needsStreet && person.street?.trim()) nextPayload.street = person.street.trim();
+              if (needsCity && person.city?.trim()) nextPayload.city = person.city.trim();
+              if (needsState && person.state?.trim()) nextPayload.state = person.state.trim();
+              if (needsZip && person.zip?.trim()) nextPayload.zip = person.zip.trim();
+              if (needsGender) {
+                const fromPerson = normalizeWorkersCompGender(person.gender);
+                if (fromPerson) nextPayload.gender = fromPerson;
+              }
+            }
           }
         }
-      }
 
-      const synced = await this.syncOshaFromWorkersCompCase(tx, principal, {
-        caseId: recordId,
-        mapped,
-        sourcePayload: this.unwrapSourcePayload(row!.sourcePayload),
-      });
-      return synced;
-    }, principal.userId);
+        const reportedAt =
+          body.reportedAt != null && String(body.reportedAt).trim()
+            ? new Date(String(body.reportedAt))
+            : existing.reportedAt;
+
+        const [row] = await tx
+          .update(industrialWorkersCompCases)
+          .set({
+            caseNumber,
+            status: normalizeWcCaseStatus(body.status != null ? body.status : existing.status),
+            severity: body.severity != null ? String(body.severity) || null : existing.severity,
+            workflowStage:
+              body.workflowStage != null
+                ? String(body.workflowStage) || null
+                : existing.workflowStage,
+            personnelId:
+              body.personnelId !== undefined
+                ? typeof body.personnelId === "string" && UUID_PATTERN.test(body.personnelId)
+                  ? body.personnelId
+                  : null
+                : existing.personnelId,
+            incidentId:
+              body.incidentId !== undefined
+                ? typeof body.incidentId === "string" && UUID_PATTERN.test(body.incidentId)
+                  ? body.incidentId
+                  : null
+                : existing.incidentId,
+            siteId:
+              body.siteId !== undefined
+                ? typeof body.siteId === "string" && UUID_PATTERN.test(body.siteId)
+                  ? body.siteId
+                  : null
+                : existing.siteId,
+            departmentId:
+              body.departmentId !== undefined
+                ? typeof body.departmentId === "string" && UUID_PATTERN.test(body.departmentId)
+                  ? body.departmentId
+                  : null
+                : existing.departmentId,
+            reportedAt:
+              reportedAt && !Number.isNaN(reportedAt.getTime()) ? reportedAt : existing.reportedAt,
+            daysAway: body.daysAway !== undefined ? Number(body.daysAway) || 0 : existing.daysAway,
+            restrictedDays:
+              body.restrictedDays !== undefined
+                ? Number(body.restrictedDays) || 0
+                : existing.restrictedDays,
+            claimSummary,
+            sourcePayload: nextPayload,
+            updatedAt: new Date(),
+          } as never)
+          .where(eq(industrialWorkersCompCases.id, recordId))
+          .returning();
+
+        const mapped = this.mapWorkersCompCase(row!);
+        const nextIncidentId = mapped.incidentId?.trim() || "";
+        const prevIncidentId = existing.incidentId?.trim() || "";
+        if (nextIncidentId && UUID_PATTERN.test(nextIncidentId)) {
+          await this.linkWorkersCompCaseToIncident(
+            tx,
+            principal.tenantId,
+            nextIncidentId,
+            recordId,
+            new Date(),
+          );
+        }
+        if (
+          prevIncidentId &&
+          UUID_PATTERN.test(prevIncidentId) &&
+          prevIncidentId !== nextIncidentId
+        ) {
+          const [prevIncident] = await tx
+            .select()
+            .from(industrialIncidents)
+            .where(
+              and(
+                eq(industrialIncidents.id, prevIncidentId),
+                eq(industrialIncidents.tenantId, principal.tenantId),
+                isNull(industrialIncidents.archivedAt),
+              ),
+            )
+            .limit(1);
+          if (prevIncident) {
+            const prevPayload = this.unwrapSourcePayload(prevIncident.sourcePayload);
+            if (String(prevPayload.workersCompCaseId ?? "").trim() === recordId) {
+              const { workersCompCaseId: _removed, ...rest } = prevPayload;
+              await tx
+                .update(industrialIncidents)
+                .set({
+                  sourcePayload: rest,
+                  updatedAt: new Date(),
+                })
+                .where(eq(industrialIncidents.id, prevIncidentId));
+            }
+          }
+        }
+
+        const synced = await this.syncOshaFromWorkersCompCase(tx, principal, {
+          caseId: recordId,
+          mapped,
+          sourcePayload: this.unwrapSourcePayload(row!.sourcePayload),
+        });
+        return synced;
+      },
+      principal.userId,
+    );
   }
 
   /**
@@ -13360,45 +13522,55 @@ export class IndustrialDomainService {
 
   async archiveWorkersComp(principal: ForgePrincipal, id: string) {
     const recordId = this.assertRecordId(id);
-    return withTenantTransaction(this.db, principal.tenantId, async (tx) => {
-      const now = new Date();
-      const [row] = await tx
-        .update(industrialWorkersCompCases)
-        .set({
-          status: "ARCHIVED",
-          archivedAt: now,
-          updatedAt: now,
-        })
-        .where(
-          and(
-            eq(industrialWorkersCompCases.id, recordId),
-            eq(industrialWorkersCompCases.tenantId, principal.tenantId),
-            isNull(industrialWorkersCompCases.archivedAt),
-          ),
-        )
-        .returning();
-      if (!row) throw new ForgeError("NOT_FOUND", "Workers compensation case not found");
-      return this.mapWorkersCompCase(row);
-    }, principal.userId);
+    return withTenantTransaction(
+      this.db,
+      principal.tenantId,
+      async (tx) => {
+        const now = new Date();
+        const [row] = await tx
+          .update(industrialWorkersCompCases)
+          .set({
+            status: "ARCHIVED",
+            archivedAt: now,
+            updatedAt: now,
+          })
+          .where(
+            and(
+              eq(industrialWorkersCompCases.id, recordId),
+              eq(industrialWorkersCompCases.tenantId, principal.tenantId),
+              isNull(industrialWorkersCompCases.archivedAt),
+            ),
+          )
+          .returning();
+        if (!row) throw new ForgeError("NOT_FOUND", "Workers compensation case not found");
+        return this.mapWorkersCompCase(row);
+      },
+      principal.userId,
+    );
   }
 
   async listWorkersCompCarriers(principal: ForgePrincipal) {
-    return withTenantTransaction(this.db, principal.tenantId, async (tx) => {
-      const rows = await tx
-        .select()
-        .from(industrialWorkersCompCarriers)
-        .where(
-          and(
-            eq(industrialWorkersCompCarriers.tenantId, principal.tenantId),
-            isNull(industrialWorkersCompCarriers.archivedAt),
-          ),
-        )
-        .orderBy(industrialWorkersCompCarriers.name)
-        .limit(200);
-      return {
-        items: rows.map((r) => this.mapWorkersCompCarrier(r)),
-      };
-    }, principal.userId);
+    return withTenantTransaction(
+      this.db,
+      principal.tenantId,
+      async (tx) => {
+        const rows = await tx
+          .select()
+          .from(industrialWorkersCompCarriers)
+          .where(
+            and(
+              eq(industrialWorkersCompCarriers.tenantId, principal.tenantId),
+              isNull(industrialWorkersCompCarriers.archivedAt),
+            ),
+          )
+          .orderBy(industrialWorkersCompCarriers.name)
+          .limit(200);
+        return {
+          items: rows.map((r) => this.mapWorkersCompCarrier(r)),
+        };
+      },
+      principal.userId,
+    );
   }
 
   async createWorkersCompCarrier(principal: ForgePrincipal, body: Record<string, unknown>) {
@@ -13407,32 +13579,37 @@ export class IndustrialDomainService {
     }
     const name = String(body.name ?? "").trim();
     if (!name) throw new ForgeError("VALIDATION_FAILED", "Carrier name is required");
-    return withTenantTransaction(this.db, principal.tenantId, async (tx) => {
-      const now = new Date();
-      const contact =
-        body.contact && typeof body.contact === "object" && !Array.isArray(body.contact)
-          ? body.contact
-          : {
-              phone: body.phone ?? "",
-              email: body.email ?? "",
-              adjuster: body.adjuster ?? "",
-            };
-      const [row] = await tx
-        .insert(industrialWorkersCompCarriers)
-        .values({
-          id: createId(),
-          tenantId: principal.tenantId,
-          name,
-          status: String(body.status ?? "ACTIVE"),
-          contact,
-          sourceSystem: "FORGE",
-          sourcePayload: body,
-          createdAt: now,
-          updatedAt: now,
-        })
-        .returning();
-      return this.mapWorkersCompCarrier(row!);
-    }, principal.userId);
+    return withTenantTransaction(
+      this.db,
+      principal.tenantId,
+      async (tx) => {
+        const now = new Date();
+        const contact =
+          body.contact && typeof body.contact === "object" && !Array.isArray(body.contact)
+            ? body.contact
+            : {
+                phone: body.phone ?? "",
+                email: body.email ?? "",
+                adjuster: body.adjuster ?? "",
+              };
+        const [row] = await tx
+          .insert(industrialWorkersCompCarriers)
+          .values({
+            id: createId(),
+            tenantId: principal.tenantId,
+            name,
+            status: String(body.status ?? "ACTIVE"),
+            contact,
+            sourceSystem: "FORGE",
+            sourcePayload: body,
+            createdAt: now,
+            updatedAt: now,
+          })
+          .returning();
+        return this.mapWorkersCompCarrier(row!);
+      },
+      principal.userId,
+    );
   }
 
   async updateWorkersCompCarrier(
@@ -13444,61 +13621,69 @@ export class IndustrialDomainService {
       throw new ForgeError("FORBIDDEN", "Only Industrial admins can manage the carrier catalog");
     }
     const recordId = this.assertRecordId(carrierId);
-    return withTenantTransaction(this.db, principal.tenantId, async (tx) => {
-      const [existing] = await tx
-        .select()
-        .from(industrialWorkersCompCarriers)
-        .where(
-          and(
-            eq(industrialWorkersCompCarriers.id, recordId),
-            eq(industrialWorkersCompCarriers.tenantId, principal.tenantId),
-            isNull(industrialWorkersCompCarriers.archivedAt),
-          ),
-        )
-        .limit(1);
-      if (!existing) throw new ForgeError("NOT_FOUND", "Carrier not found");
+    return withTenantTransaction(
+      this.db,
+      principal.tenantId,
+      async (tx) => {
+        const [existing] = await tx
+          .select()
+          .from(industrialWorkersCompCarriers)
+          .where(
+            and(
+              eq(industrialWorkersCompCarriers.id, recordId),
+              eq(industrialWorkersCompCarriers.tenantId, principal.tenantId),
+              isNull(industrialWorkersCompCarriers.archivedAt),
+            ),
+          )
+          .limit(1);
+        if (!existing) throw new ForgeError("NOT_FOUND", "Carrier not found");
 
-      const existingContact =
-        existing.contact && typeof existing.contact === "object" && !Array.isArray(existing.contact)
-          ? (existing.contact as Record<string, unknown>)
-          : {};
-      const nextContact =
-        body.contact && typeof body.contact === "object" && !Array.isArray(body.contact)
-          ? (body.contact as Record<string, unknown>)
-          : {
-              ...existingContact,
-              ...(body.phone !== undefined ? { phone: String(body.phone ?? "") } : {}),
-              ...(body.email !== undefined ? { email: String(body.email ?? "") } : {}),
-              ...(body.adjuster !== undefined ? { adjuster: String(body.adjuster ?? "") } : {}),
-            };
+        const existingContact =
+          existing.contact &&
+          typeof existing.contact === "object" &&
+          !Array.isArray(existing.contact)
+            ? (existing.contact as Record<string, unknown>)
+            : {};
+        const nextContact =
+          body.contact && typeof body.contact === "object" && !Array.isArray(body.contact)
+            ? (body.contact as Record<string, unknown>)
+            : {
+                ...existingContact,
+                ...(body.phone !== undefined ? { phone: String(body.phone ?? "") } : {}),
+                ...(body.email !== undefined ? { email: String(body.email ?? "") } : {}),
+                ...(body.adjuster !== undefined ? { adjuster: String(body.adjuster ?? "") } : {}),
+              };
 
-      const name =
-        body.name !== undefined ? String(body.name ?? "").trim() : existing.name;
-      if (!name) throw new ForgeError("VALIDATION_FAILED", "Carrier name is required");
+        const name = body.name !== undefined ? String(body.name ?? "").trim() : existing.name;
+        if (!name) throw new ForgeError("VALIDATION_FAILED", "Carrier name is required");
 
-      let status = existing.status;
-      if (body.status !== undefined) {
-        const raw = String(body.status ?? "").trim().toUpperCase();
-        if (raw !== "ACTIVE" && raw !== "INACTIVE") {
-          throw new ForgeError("VALIDATION_FAILED", "Carrier status must be ACTIVE or INACTIVE");
+        let status = existing.status;
+        if (body.status !== undefined) {
+          const raw = String(body.status ?? "")
+            .trim()
+            .toUpperCase();
+          if (raw !== "ACTIVE" && raw !== "INACTIVE") {
+            throw new ForgeError("VALIDATION_FAILED", "Carrier status must be ACTIVE or INACTIVE");
+          }
+          status = raw;
         }
-        status = raw;
-      }
 
-      const now = new Date();
-      const [row] = await tx
-        .update(industrialWorkersCompCarriers)
-        .set({
-          name,
-          status,
-          contact: nextContact,
-          updatedAt: now,
-        })
-        .where(eq(industrialWorkersCompCarriers.id, recordId))
-        .returning();
-      if (!row) throw new ForgeError("NOT_FOUND", "Carrier not found");
-      return this.mapWorkersCompCarrier(row);
-    }, principal.userId);
+        const now = new Date();
+        const [row] = await tx
+          .update(industrialWorkersCompCarriers)
+          .set({
+            name,
+            status,
+            contact: nextContact,
+            updatedAt: now,
+          })
+          .where(eq(industrialWorkersCompCarriers.id, recordId))
+          .returning();
+        if (!row) throw new ForgeError("NOT_FOUND", "Carrier not found");
+        return this.mapWorkersCompCarrier(row);
+      },
+      principal.userId,
+    );
   }
 
   async archiveWorkersCompCarrier(principal: ForgePrincipal, carrierId: string) {
@@ -13506,26 +13691,31 @@ export class IndustrialDomainService {
       throw new ForgeError("FORBIDDEN", "Only Industrial admins can manage the carrier catalog");
     }
     const recordId = this.assertRecordId(carrierId);
-    return withTenantTransaction(this.db, principal.tenantId, async (tx) => {
-      const now = new Date();
-      const [row] = await tx
-        .update(industrialWorkersCompCarriers)
-        .set({
-          status: "INACTIVE",
-          archivedAt: now,
-          updatedAt: now,
-        })
-        .where(
-          and(
-            eq(industrialWorkersCompCarriers.id, recordId),
-            eq(industrialWorkersCompCarriers.tenantId, principal.tenantId),
-            isNull(industrialWorkersCompCarriers.archivedAt),
-          ),
-        )
-        .returning();
-      if (!row) throw new ForgeError("NOT_FOUND", "Carrier not found");
-      return this.mapWorkersCompCarrier(row);
-    }, principal.userId);
+    return withTenantTransaction(
+      this.db,
+      principal.tenantId,
+      async (tx) => {
+        const now = new Date();
+        const [row] = await tx
+          .update(industrialWorkersCompCarriers)
+          .set({
+            status: "INACTIVE",
+            archivedAt: now,
+            updatedAt: now,
+          })
+          .where(
+            and(
+              eq(industrialWorkersCompCarriers.id, recordId),
+              eq(industrialWorkersCompCarriers.tenantId, principal.tenantId),
+              isNull(industrialWorkersCompCarriers.archivedAt),
+            ),
+          )
+          .returning();
+        if (!row) throw new ForgeError("NOT_FOUND", "Carrier not found");
+        return this.mapWorkersCompCarrier(row);
+      },
+      principal.userId,
+    );
   }
 
   private mapWorkersCompCarrier(row: typeof industrialWorkersCompCarriers.$inferSelect) {
@@ -13540,198 +13730,210 @@ export class IndustrialDomainService {
   }
 
   async getWorkersCompSettings(principal: ForgePrincipal) {
-    return withTenantTransaction(this.db, principal.tenantId, async (tx) => {
-      const existing = await tx.query.tenantSettings.findFirst({
-        where: and(
-          eq(tenantSettings.tenantId, principal.tenantId),
-          eq(tenantSettings.namespace, WC_WEEKLY_STATUS_NAMESPACE),
-          eq(tenantSettings.settingKey, WC_WEEKLY_STATUS_SETTING_KEY),
-        ),
-      });
-      return parseWorkersCompWeeklyStatusSettings(existing?.valueJson);
-    }, principal.userId);
+    return withTenantTransaction(
+      this.db,
+      principal.tenantId,
+      async (tx) => {
+        const existing = await tx.query.tenantSettings.findFirst({
+          where: and(
+            eq(tenantSettings.tenantId, principal.tenantId),
+            eq(tenantSettings.namespace, WC_WEEKLY_STATUS_NAMESPACE),
+            eq(tenantSettings.settingKey, WC_WEEKLY_STATUS_SETTING_KEY),
+          ),
+        });
+        return parseWorkersCompWeeklyStatusSettings(existing?.valueJson);
+      },
+      principal.userId,
+    );
   }
 
   async patchWorkersCompSettings(principal: ForgePrincipal, body: Record<string, unknown>) {
-    return withTenantTransaction(this.db, principal.tenantId, async (tx) => {
-      const existing = await tx.query.tenantSettings.findFirst({
-        where: and(
-          eq(tenantSettings.tenantId, principal.tenantId),
-          eq(tenantSettings.namespace, WC_WEEKLY_STATUS_NAMESPACE),
-          eq(tenantSettings.settingKey, WC_WEEKLY_STATUS_SETTING_KEY),
-        ),
-      });
-      const prev = parseWorkersCompWeeklyStatusSettings(existing?.valueJson);
-      const next: WorkersCompWeeklyStatusSettings = {
-        enabled:
-          body.enabled !== undefined
-            ? body.enabled === true || body.enabled === "true" || body.enabled === 1
-            : prev.enabled,
-        recipients:
-          body.recipients !== undefined
-            ? normalizeEmailRecipients(body.recipients)
-            : prev.recipients,
-        lastSentAt: prev.lastSentAt,
-      };
+    return withTenantTransaction(
+      this.db,
+      principal.tenantId,
+      async (tx) => {
+        const existing = await tx.query.tenantSettings.findFirst({
+          where: and(
+            eq(tenantSettings.tenantId, principal.tenantId),
+            eq(tenantSettings.namespace, WC_WEEKLY_STATUS_NAMESPACE),
+            eq(tenantSettings.settingKey, WC_WEEKLY_STATUS_SETTING_KEY),
+          ),
+        });
+        const prev = parseWorkersCompWeeklyStatusSettings(existing?.valueJson);
+        const next: WorkersCompWeeklyStatusSettings = {
+          enabled:
+            body.enabled !== undefined
+              ? body.enabled === true || body.enabled === "true" || body.enabled === 1
+              : prev.enabled,
+          recipients:
+            body.recipients !== undefined
+              ? normalizeEmailRecipients(body.recipients)
+              : prev.recipients,
+          lastSentAt: prev.lastSentAt,
+        };
 
-      if (body.addRecipient !== undefined) {
-        const added = normalizeEmailAddress(body.addRecipient);
-        if (!added) {
-          throw new ForgeError("VALIDATION_FAILED", "Enter a valid email address");
+        if (body.addRecipient !== undefined) {
+          const added = normalizeEmailAddress(body.addRecipient);
+          if (!added) {
+            throw new ForgeError("VALIDATION_FAILED", "Enter a valid email address");
+          }
+          if (!next.recipients.includes(added)) next.recipients = [...next.recipients, added];
         }
-        if (!next.recipients.includes(added)) next.recipients = [...next.recipients, added];
-      }
-      if (body.removeRecipient !== undefined) {
-        const removed = normalizeEmailAddress(body.removeRecipient);
-        if (removed) {
-          next.recipients = next.recipients.filter((email) => email !== removed);
+        if (body.removeRecipient !== undefined) {
+          const removed = normalizeEmailAddress(body.removeRecipient);
+          if (removed) {
+            next.recipients = next.recipients.filter((email) => email !== removed);
+          }
         }
-      }
 
-      const now = new Date();
-      if (existing) {
-        await tx
-          .update(tenantSettings)
-          .set({
+        const now = new Date();
+        if (existing) {
+          await tx
+            .update(tenantSettings)
+            .set({
+              valueJson: next,
+              recordVersion: sql`${tenantSettings.recordVersion} + 1`,
+              updatedAt: now,
+              updatedByUserId: principal.userId,
+            })
+            .where(eq(tenantSettings.id, existing.id));
+        } else {
+          await tx.insert(tenantSettings).values({
+            id: createId(),
+            tenantId: principal.tenantId,
+            namespace: WC_WEEKLY_STATUS_NAMESPACE,
+            settingKey: WC_WEEKLY_STATUS_SETTING_KEY,
             valueJson: next,
-            recordVersion: sql`${tenantSettings.recordVersion} + 1`,
+            schemaVersion: 1,
+            isSensitive: false,
+            createdAt: now,
             updatedAt: now,
             updatedByUserId: principal.userId,
-          })
-          .where(eq(tenantSettings.id, existing.id));
-      } else {
-        await tx.insert(tenantSettings).values({
-          id: createId(),
-          tenantId: principal.tenantId,
-          namespace: WC_WEEKLY_STATUS_NAMESPACE,
-          settingKey: WC_WEEKLY_STATUS_SETTING_KEY,
-          valueJson: next,
-          schemaVersion: 1,
-          isSensitive: false,
-          createdAt: now,
-          updatedAt: now,
-          updatedByUserId: principal.userId,
-        });
-      }
-      return next;
-    }, principal.userId);
+          });
+        }
+        return next;
+      },
+      principal.userId,
+    );
   }
 
   /**
    * Open cases needing Thursday status notes for the given weekOf (defaults to current Thursday).
    */
-  async listWorkersCompWeeklyUpdates(
-    principal: ForgePrincipal,
-    query: ListQuery = {},
-  ) {
+  async listWorkersCompWeeklyUpdates(principal: ForgePrincipal, query: ListQuery = {}) {
     const weekOf = normalizeThursdayWeekOf(query.weekOf);
     const now = new Date();
-    return withTenantTransaction(this.db, principal.tenantId, async (tx) => {
-      const caseRows = await tx
-        .select({
-          case: industrialWorkersCompCases,
-          personnelName: industrialPersonnel.displayName,
-        })
-        .from(industrialWorkersCompCases)
-        .leftJoin(
-          industrialPersonnel,
-          eq(industrialPersonnel.id, industrialWorkersCompCases.personnelId),
-        )
-        .where(
-          and(
-            eq(industrialWorkersCompCases.tenantId, principal.tenantId),
-            isNull(industrialWorkersCompCases.archivedAt),
-            inArray(industrialWorkersCompCases.status, [
-              "OPEN",
-              "ACTIVE",
-              "RESTRICTED",
-              "LOST_TIME",
-              "DRAFT",
-            ]),
-          ),
-        )
-        .orderBy(desc(industrialWorkersCompCases.updatedAt))
-        .limit(2000);
+    return withTenantTransaction(
+      this.db,
+      principal.tenantId,
+      async (tx) => {
+        const caseRows = await tx
+          .select({
+            case: industrialWorkersCompCases,
+            personnelName: industrialPersonnel.displayName,
+          })
+          .from(industrialWorkersCompCases)
+          .leftJoin(
+            industrialPersonnel,
+            eq(industrialPersonnel.id, industrialWorkersCompCases.personnelId),
+          )
+          .where(
+            and(
+              eq(industrialWorkersCompCases.tenantId, principal.tenantId),
+              isNull(industrialWorkersCompCases.archivedAt),
+              inArray(industrialWorkersCompCases.status, [
+                "OPEN",
+                "ACTIVE",
+                "RESTRICTED",
+                "LOST_TIME",
+                "DRAFT",
+              ]),
+            ),
+          )
+          .orderBy(desc(industrialWorkersCompCases.updatedAt))
+          .limit(2000);
 
-      const openMapped = caseRows
-        .map(({ case: row, personnelName }) =>
-          this.mapWorkersCompCase(row, { workerName: personnelName ?? "" }),
-        )
-        .filter((item) => isOpenWcStatus(String(item.status ?? "")));
+        const openMapped = caseRows
+          .map(({ case: row, personnelName }) =>
+            this.mapWorkersCompCase(row, { workerName: personnelName ?? "" }),
+          )
+          .filter((item) => isOpenWcStatus(String(item.status ?? "")));
 
-      const caseIds = openMapped.map((item) => item.id);
-      const updateRows =
-        caseIds.length > 0
-          ? await tx
-              .select()
-              .from(industrialWorkersCompWeeklyUpdates)
-              .where(
-                and(
-                  eq(industrialWorkersCompWeeklyUpdates.tenantId, principal.tenantId),
-                  isNull(industrialWorkersCompWeeklyUpdates.archivedAt),
-                  inArray(industrialWorkersCompWeeklyUpdates.caseId, caseIds),
-                ),
-              )
-          : [];
+        const caseIds = openMapped.map((item) => item.id);
+        const updateRows =
+          caseIds.length > 0
+            ? await tx
+                .select()
+                .from(industrialWorkersCompWeeklyUpdates)
+                .where(
+                  and(
+                    eq(industrialWorkersCompWeeklyUpdates.tenantId, principal.tenantId),
+                    isNull(industrialWorkersCompWeeklyUpdates.archivedAt),
+                    inArray(industrialWorkersCompWeeklyUpdates.caseId, caseIds),
+                  ),
+                )
+            : [];
 
-      const thisWeekByCase = new Map<string, (typeof updateRows)[number]>();
-      const latestByCase = new Map<string, (typeof updateRows)[number]>();
-      for (const row of updateRows) {
-        const week = String(row.weekOf ?? "").slice(0, 10);
-        if (week === weekOf) thisWeekByCase.set(row.caseId, row);
-        const prev = latestByCase.get(row.caseId);
-        if (!prev || String(row.weekOf) > String(prev.weekOf)) {
-          latestByCase.set(row.caseId, row);
+        const thisWeekByCase = new Map<string, (typeof updateRows)[number]>();
+        const latestByCase = new Map<string, (typeof updateRows)[number]>();
+        for (const row of updateRows) {
+          const week = String(row.weekOf ?? "").slice(0, 10);
+          if (week === weekOf) thisWeekByCase.set(row.caseId, row);
+          const prev = latestByCase.get(row.caseId);
+          if (!prev || String(row.weekOf) > String(prev.weekOf)) {
+            latestByCase.set(row.caseId, row);
+          }
         }
-      }
 
-      const items = openMapped.map((item) => {
-        const thisWeek = thisWeekByCase.get(item.id);
-        const latest = latestByCase.get(item.id);
-        const hasUpdate = Boolean(thisWeek?.notes?.trim());
-        const status = weeklyUpdateRowStatus(weekOf, hasUpdate, now);
-        const claim =
-          item.caseNumber ||
-          (item.claimSummary && typeof item.claimSummary === "object"
-            ? String((item.claimSummary as { claimNumber?: string }).claimNumber ?? "")
-            : "") ||
-          "Pending";
+        const items = openMapped.map((item) => {
+          const thisWeek = thisWeekByCase.get(item.id);
+          const latest = latestByCase.get(item.id);
+          const hasUpdate = Boolean(thisWeek?.notes?.trim());
+          const status = weeklyUpdateRowStatus(weekOf, hasUpdate, now);
+          const claim =
+            item.caseNumber ||
+            (item.claimSummary && typeof item.claimSummary === "object"
+              ? String((item.claimSummary as { claimNumber?: string }).claimNumber ?? "")
+              : "") ||
+            "Pending";
+          return {
+            caseId: item.id,
+            workerName: String(item.workerName ?? item.title ?? "").trim() || "Unknown",
+            caseNumber: item.caseNumber ?? null,
+            claimNumber: claim,
+            caseStatus: item.status,
+            weekOf,
+            notes: thisWeek?.notes?.trim() ?? "",
+            updateId: thisWeek?.id ?? null,
+            updatedAt: thisWeek?.updatedAt?.toISOString() ?? null,
+            priorNotes: latest && latest.weekOf !== weekOf ? (latest.notes?.trim() ?? "") : "",
+            priorWeekOf:
+              latest && String(latest.weekOf).slice(0, 10) !== weekOf
+                ? String(latest.weekOf).slice(0, 10)
+                : null,
+            needsUpdate: !hasUpdate,
+            status,
+          };
+        });
+
+        const complete = items.filter((i) => i.status === "complete").length;
+        const due = items.filter((i) => i.status === "due").length;
+        const overdue = items.filter((i) => i.status === "overdue").length;
+
         return {
-          caseId: item.id,
-          workerName: String(item.workerName ?? item.title ?? "").trim() || "Unknown",
-          caseNumber: item.caseNumber ?? null,
-          claimNumber: claim,
-          caseStatus: item.status,
           weekOf,
-          notes: thisWeek?.notes?.trim() ?? "",
-          updateId: thisWeek?.id ?? null,
-          updatedAt: thisWeek?.updatedAt?.toISOString() ?? null,
-          priorNotes: latest && latest.weekOf !== weekOf ? latest.notes?.trim() ?? "" : "",
-          priorWeekOf:
-            latest && String(latest.weekOf).slice(0, 10) !== weekOf
-              ? String(latest.weekOf).slice(0, 10)
-              : null,
-          needsUpdate: !hasUpdate,
-          status,
+          summary: {
+            total: items.length,
+            complete,
+            due,
+            overdue,
+            remaining: due + overdue,
+          },
+          items,
         };
-      });
-
-      const complete = items.filter((i) => i.status === "complete").length;
-      const due = items.filter((i) => i.status === "due").length;
-      const overdue = items.filter((i) => i.status === "overdue").length;
-
-      return {
-        weekOf,
-        summary: {
-          total: items.length,
-          complete,
-          due,
-          overdue,
-          remaining: due + overdue,
-        },
-        items,
-      };
-    }, principal.userId);
+      },
+      principal.userId,
+    );
   }
 
   /** Upsert Thursday status note for one open case; syncs case sourcePayload.notes. */
@@ -13748,112 +13950,113 @@ export class IndustrialDomainService {
     }
     const now = new Date();
 
-    return withTenantTransaction(this.db, principal.tenantId, async (tx) => {
-      const [existingCase] = await tx
-        .select()
-        .from(industrialWorkersCompCases)
-        .where(
-          and(
-            eq(industrialWorkersCompCases.id, recordId),
-            eq(industrialWorkersCompCases.tenantId, principal.tenantId),
-            isNull(industrialWorkersCompCases.archivedAt),
-          ),
-        )
-        .limit(1);
-      if (!existingCase) {
-        throw new ForgeError("NOT_FOUND", "Workers compensation case not found");
-      }
-      if (!isOpenWcStatus(existingCase.status)) {
-        throw new ForgeError(
-          "VALIDATION_FAILED",
-          "Weekly updates are only required for open cases",
-        );
-      }
+    return withTenantTransaction(
+      this.db,
+      principal.tenantId,
+      async (tx) => {
+        const [existingCase] = await tx
+          .select()
+          .from(industrialWorkersCompCases)
+          .where(
+            and(
+              eq(industrialWorkersCompCases.id, recordId),
+              eq(industrialWorkersCompCases.tenantId, principal.tenantId),
+              isNull(industrialWorkersCompCases.archivedAt),
+            ),
+          )
+          .limit(1);
+        if (!existingCase) {
+          throw new ForgeError("NOT_FOUND", "Workers compensation case not found");
+        }
+        if (!isOpenWcStatus(existingCase.status)) {
+          throw new ForgeError(
+            "VALIDATION_FAILED",
+            "Weekly updates are only required for open cases",
+          );
+        }
 
-      const [existingUpdate] = await tx
-        .select()
-        .from(industrialWorkersCompWeeklyUpdates)
-        .where(
-          and(
-            eq(industrialWorkersCompWeeklyUpdates.tenantId, principal.tenantId),
-            eq(industrialWorkersCompWeeklyUpdates.caseId, recordId),
-            eq(industrialWorkersCompWeeklyUpdates.weekOf, weekOf),
-            isNull(industrialWorkersCompWeeklyUpdates.archivedAt),
-          ),
-        )
-        .limit(1);
+        const [existingUpdate] = await tx
+          .select()
+          .from(industrialWorkersCompWeeklyUpdates)
+          .where(
+            and(
+              eq(industrialWorkersCompWeeklyUpdates.tenantId, principal.tenantId),
+              eq(industrialWorkersCompWeeklyUpdates.caseId, recordId),
+              eq(industrialWorkersCompWeeklyUpdates.weekOf, weekOf),
+              isNull(industrialWorkersCompWeeklyUpdates.archivedAt),
+            ),
+          )
+          .limit(1);
 
-      let updateRow: typeof industrialWorkersCompWeeklyUpdates.$inferSelect;
-      if (existingUpdate) {
-        const [row] = await tx
-          .update(industrialWorkersCompWeeklyUpdates)
-          .set({
-            notes,
-            updatedAt: now,
-            sourcePayload: {
-              ...this.unwrapSourcePayload(existingUpdate.sourcePayload),
+        let updateRow: typeof industrialWorkersCompWeeklyUpdates.$inferSelect;
+        if (existingUpdate) {
+          const [row] = await tx
+            .update(industrialWorkersCompWeeklyUpdates)
+            .set({
+              notes,
+              updatedAt: now,
+              sourcePayload: {
+                ...this.unwrapSourcePayload(existingUpdate.sourcePayload),
+                weekOf,
+              },
+            })
+            .where(eq(industrialWorkersCompWeeklyUpdates.id, existingUpdate.id))
+            .returning();
+          updateRow = row!;
+        } else {
+          const [row] = await tx
+            .insert(industrialWorkersCompWeeklyUpdates)
+            .values({
+              id: createId(),
+              tenantId: principal.tenantId,
+              caseId: recordId,
               weekOf,
-            },
-          })
-          .where(eq(industrialWorkersCompWeeklyUpdates.id, existingUpdate.id))
-          .returning();
-        updateRow = row!;
-      } else {
-        const [row] = await tx
-          .insert(industrialWorkersCompWeeklyUpdates)
-          .values({
-            id: createId(),
-            tenantId: principal.tenantId,
-            caseId: recordId,
-            weekOf,
-            notes,
-            createdByUserId: principal.userId,
-            sourceSystem: "FORGE",
-            sourcePayload: { weekOf },
-            createdAt: now,
+              notes,
+              createdByUserId: principal.userId,
+              sourceSystem: "FORGE",
+              sourcePayload: { weekOf },
+              createdAt: now,
+              updatedAt: now,
+            })
+            .returning();
+          updateRow = row!;
+        }
+
+        const payload = this.unwrapSourcePayload(existingCase.sourcePayload);
+        await tx
+          .update(industrialWorkersCompCases)
+          .set({
+            sourcePayload: { ...payload, notes },
             updatedAt: now,
           })
-          .returning();
-        updateRow = row!;
-      }
+          .where(eq(industrialWorkersCompCases.id, recordId));
 
-      const payload = this.unwrapSourcePayload(existingCase.sourcePayload);
-      await tx
-        .update(industrialWorkersCompCases)
-        .set({
-          sourcePayload: { ...payload, notes },
-          updatedAt: now,
-        })
-        .where(eq(industrialWorkersCompCases.id, recordId));
-
-      const status = weeklyUpdateRowStatus(weekOf, true, now);
-      return {
-        id: updateRow.id,
-        caseId: recordId,
-        weekOf,
-        notes: updateRow.notes,
-        updatedAt: updateRow.updatedAt.toISOString(),
-        status,
-        needsUpdate: false,
-      };
-    }, principal.userId);
+        const status = weeklyUpdateRowStatus(weekOf, true, now);
+        return {
+          id: updateRow.id,
+          caseId: recordId,
+          weekOf,
+          notes: updateRow.notes,
+          updatedAt: updateRow.updatedAt.toISOString(),
+          status,
+          needsUpdate: false,
+        };
+      },
+      principal.userId,
+    );
   }
 
   /**
    * Send weekly open-case status email to configured recipients.
    * Manual "Send now" from Settings; same payload will back a scheduled job.
    */
-  async sendWorkersCompWeeklyStatus(
-    principal: ForgePrincipal,
-    body: Record<string, unknown> = {},
-  ) {
+  async sendWorkersCompWeeklyStatus(principal: ForgePrincipal, body: Record<string, unknown> = {}) {
     if (!this.notifications) {
       throw new ForgeError("INTERNAL_ERROR", "Email notifications are not configured");
     }
 
-    const overrideRecipients = body.recipients !== undefined
-      ? normalizeEmailRecipients(body.recipients)
-      : null;
+    const overrideRecipients =
+      body.recipients !== undefined ? normalizeEmailRecipients(body.recipients) : null;
 
     const { settings, tenantName, cases, weekOf } = await this.loadWorkersCompWeeklyStatus(
       principal,
@@ -13899,10 +14102,7 @@ export class IndustrialDomainService {
       const firstDetail =
         results.map((r) => r.detail).find((d) => typeof d === "string" && d.trim()) ??
         "Email provider did not accept any messages";
-      throw new ForgeError(
-        "INTERNAL_ERROR",
-        `Failed to send weekly status email: ${firstDetail}`,
-      );
+      throw new ForgeError("INTERNAL_ERROR", `Failed to send weekly status email: ${firstDetail}`);
     }
 
     const now = new Date();
@@ -13910,39 +14110,44 @@ export class IndustrialDomainService {
       ...settings,
       lastSentAt: now.toISOString(),
     };
-    await withTenantTransaction(this.db, principal.tenantId, async (tx) => {
-      const existing = await tx.query.tenantSettings.findFirst({
-        where: and(
-          eq(tenantSettings.tenantId, principal.tenantId),
-          eq(tenantSettings.namespace, WC_WEEKLY_STATUS_NAMESPACE),
-          eq(tenantSettings.settingKey, WC_WEEKLY_STATUS_SETTING_KEY),
-        ),
-      });
-      if (existing) {
-        await tx
-          .update(tenantSettings)
-          .set({
+    await withTenantTransaction(
+      this.db,
+      principal.tenantId,
+      async (tx) => {
+        const existing = await tx.query.tenantSettings.findFirst({
+          where: and(
+            eq(tenantSettings.tenantId, principal.tenantId),
+            eq(tenantSettings.namespace, WC_WEEKLY_STATUS_NAMESPACE),
+            eq(tenantSettings.settingKey, WC_WEEKLY_STATUS_SETTING_KEY),
+          ),
+        });
+        if (existing) {
+          await tx
+            .update(tenantSettings)
+            .set({
+              valueJson: next,
+              recordVersion: sql`${tenantSettings.recordVersion} + 1`,
+              updatedAt: now,
+              updatedByUserId: principal.userId,
+            })
+            .where(eq(tenantSettings.id, existing.id));
+        } else {
+          await tx.insert(tenantSettings).values({
+            id: createId(),
+            tenantId: principal.tenantId,
+            namespace: WC_WEEKLY_STATUS_NAMESPACE,
+            settingKey: WC_WEEKLY_STATUS_SETTING_KEY,
             valueJson: next,
-            recordVersion: sql`${tenantSettings.recordVersion} + 1`,
+            schemaVersion: 1,
+            isSensitive: false,
+            createdAt: now,
             updatedAt: now,
             updatedByUserId: principal.userId,
-          })
-          .where(eq(tenantSettings.id, existing.id));
-      } else {
-        await tx.insert(tenantSettings).values({
-          id: createId(),
-          tenantId: principal.tenantId,
-          namespace: WC_WEEKLY_STATUS_NAMESPACE,
-          settingKey: WC_WEEKLY_STATUS_SETTING_KEY,
-          valueJson: next,
-          schemaVersion: 1,
-          isSensitive: false,
-          createdAt: now,
-          updatedAt: now,
-          updatedByUserId: principal.userId,
-        });
-      }
-    }, principal.userId);
+          });
+        }
+      },
+      principal.userId,
+    );
     settings.lastSentAt = next.lastSentAt;
 
     return {
@@ -14007,12 +14212,13 @@ export class IndustrialDomainService {
           where id = ${principal.tenantId}::uuid
           limit 1
         `);
-        const tenantRow = (Array.isArray(tenantRows)
-          ? tenantRows[0]
-          : (tenantRows as { rows?: Array<Record<string, unknown>> }).rows?.[0]) as
-          | { name?: string }
-          | undefined;
-        const tenantName = String(tenantRow?.name ?? "your organization").trim() || "your organization";
+        const tenantRow = (
+          Array.isArray(tenantRows)
+            ? tenantRows[0]
+            : (tenantRows as { rows?: Array<Record<string, unknown>> }).rows?.[0]
+        ) as { name?: string } | undefined;
+        const tenantName =
+          String(tenantRow?.name ?? "your organization").trim() || "your organization";
 
         const rows = await tx
           .select({
@@ -14088,33 +14294,39 @@ export class IndustrialDomainService {
                 )
             : [];
         const narrativeByIncident = new Map(
-          incidentRows.map((row) => [row.id, incidentNarrativeFromPayload(row.sourcePayload)] as const),
+          incidentRows.map(
+            (row) => [row.id, incidentNarrativeFromPayload(row.sourcePayload)] as const,
+          ),
         );
         const incidentById = new Map(incidentRows.map((row) => [row.id, row] as const));
 
-        const cases = sortWorkersCompWeeklyStatusCases(casesMapped.map((item) => {
-          const weeklyNotes = weeklyByCase.get(item.id) ?? "";
-          const caseRow = caseRowById.get(item.id);
-          const incidentNarrative =
-            (caseRow?.incidentId ? narrativeByIncident.get(caseRow.incidentId) : "") ||
-            incidentNarrativeFromPayload(caseRow?.sourcePayload);
-          const linkedIncident = caseRow?.incidentId ? incidentById.get(caseRow.incidentId) : undefined;
-          return {
-            ...item,
-            locationText: resolveWorkersCompReportLocation({
-              locationText: item.locationText,
-              claimBodyParts: item.claimSummary?.bodyParts,
-              incidentPayload: linkedIncident?.sourcePayload,
-              incidentTitle: linkedIncident?.title,
-              casePayload: caseRow?.sourcePayload,
-            }),
-            weekOf,
-            weeklyNotes,
-            notes: weeklyNotes || String(item.notes ?? "").trim(),
-            weeklyUpdateStatus: weeklyUpdateRowStatus(weekOf, Boolean(weeklyNotes)),
-            incidentNarrative,
-          };
-        }));
+        const cases = sortWorkersCompWeeklyStatusCases(
+          casesMapped.map((item) => {
+            const weeklyNotes = weeklyByCase.get(item.id) ?? "";
+            const caseRow = caseRowById.get(item.id);
+            const incidentNarrative =
+              (caseRow?.incidentId ? narrativeByIncident.get(caseRow.incidentId) : "") ||
+              incidentNarrativeFromPayload(caseRow?.sourcePayload);
+            const linkedIncident = caseRow?.incidentId
+              ? incidentById.get(caseRow.incidentId)
+              : undefined;
+            return {
+              ...item,
+              locationText: resolveWorkersCompReportLocation({
+                locationText: item.locationText,
+                claimBodyParts: item.claimSummary?.bodyParts,
+                incidentPayload: linkedIncident?.sourcePayload,
+                incidentTitle: linkedIncident?.title,
+                casePayload: caseRow?.sourcePayload,
+              }),
+              weekOf,
+              weeklyNotes,
+              notes: weeklyNotes || String(item.notes ?? "").trim(),
+              weeklyUpdateStatus: weeklyUpdateRowStatus(weekOf, Boolean(weeklyNotes)),
+              incidentNarrative,
+            };
+          }),
+        );
 
         return { settings, tenantName, cases, weekOf };
       },
@@ -14130,42 +14342,47 @@ export class IndustrialDomainService {
     const recordId = this.assertRecordId(caseId);
     const status = String(body.status ?? "").trim();
     if (!status) throw new ForgeError("VALIDATION_FAILED", "Work status is required");
-    return withTenantTransaction(this.db, principal.tenantId, async (tx) => {
-      await this.assertWcCase(tx, principal.tenantId, recordId);
-      const now = new Date();
-      const sourcePayload = {
-        ...body,
-        createdByUserId: principal.userId,
-      };
-      const [row] = await tx
-        .insert(industrialWorkersCompWorkStatusPeriods)
-        .values({
-          id: createId(),
-          tenantId: principal.tenantId,
-          caseId: recordId,
-          status,
-          startDate: body.startDate ? String(body.startDate).slice(0, 10) : null,
-          endDate: body.endDate ? String(body.endDate).slice(0, 10) : null,
-          notes: body.notes ? String(body.notes) : null,
+    return withTenantTransaction(
+      this.db,
+      principal.tenantId,
+      async (tx) => {
+        await this.assertWcCase(tx, principal.tenantId, recordId);
+        const now = new Date();
+        const sourcePayload = {
+          ...body,
           createdByUserId: principal.userId,
-          sourceSystem: "FORGE",
-          sourcePayload,
-          createdAt: now,
-          updatedAt: now,
-        })
-        .returning();
-      return {
-        id: row!.id,
-        status: row!.status,
-        startDate: row!.startDate,
-        endDate: row!.endDate,
-        notes: row!.notes,
-        createdByUserId: row!.createdByUserId,
-        canEditNotes: true,
-        createdAt: row!.createdAt.toISOString(),
-        updatedAt: row!.updatedAt.toISOString(),
-      };
-    }, principal.userId);
+        };
+        const [row] = await tx
+          .insert(industrialWorkersCompWorkStatusPeriods)
+          .values({
+            id: createId(),
+            tenantId: principal.tenantId,
+            caseId: recordId,
+            status,
+            startDate: body.startDate ? String(body.startDate).slice(0, 10) : null,
+            endDate: body.endDate ? String(body.endDate).slice(0, 10) : null,
+            notes: body.notes ? String(body.notes) : null,
+            createdByUserId: principal.userId,
+            sourceSystem: "FORGE",
+            sourcePayload,
+            createdAt: now,
+            updatedAt: now,
+          })
+          .returning();
+        return {
+          id: row!.id,
+          status: row!.status,
+          startDate: row!.startDate,
+          endDate: row!.endDate,
+          notes: row!.notes,
+          createdByUserId: row!.createdByUserId,
+          canEditNotes: true,
+          createdAt: row!.createdAt.toISOString(),
+          updatedAt: row!.updatedAt.toISOString(),
+        };
+      },
+      principal.userId,
+    );
   }
 
   async updateWorkersCompWorkStatus(
@@ -14176,93 +14393,103 @@ export class IndustrialDomainService {
   ) {
     const recordId = this.assertRecordId(caseId);
     const id = this.assertRecordId(periodId);
-    return withTenantTransaction(this.db, principal.tenantId, async (tx) => {
-      const [existing] = await tx
-        .select()
-        .from(industrialWorkersCompWorkStatusPeriods)
-        .where(
-          and(
-            eq(industrialWorkersCompWorkStatusPeriods.id, id),
-            eq(industrialWorkersCompWorkStatusPeriods.caseId, recordId),
-            eq(industrialWorkersCompWorkStatusPeriods.tenantId, principal.tenantId),
-            isNull(industrialWorkersCompWorkStatusPeriods.archivedAt),
-          ),
-        )
-        .limit(1);
-      if (!existing) throw new ForgeError("NOT_FOUND", "Work status period not found");
+    return withTenantTransaction(
+      this.db,
+      principal.tenantId,
+      async (tx) => {
+        const [existing] = await tx
+          .select()
+          .from(industrialWorkersCompWorkStatusPeriods)
+          .where(
+            and(
+              eq(industrialWorkersCompWorkStatusPeriods.id, id),
+              eq(industrialWorkersCompWorkStatusPeriods.caseId, recordId),
+              eq(industrialWorkersCompWorkStatusPeriods.tenantId, principal.tenantId),
+              isNull(industrialWorkersCompWorkStatusPeriods.archivedAt),
+            ),
+          )
+          .limit(1);
+        if (!existing) throw new ForgeError("NOT_FOUND", "Work status period not found");
 
-      const createdByUserId =
-        existing.createdByUserId ??
-        (() => {
-          const payload = this.unwrapSourcePayload(existing.sourcePayload);
-          return typeof payload.createdByUserId === "string" ? payload.createdByUserId : null;
-        })();
-      const canManageResource =
-        principal.isPlatformAdmin ||
-        principal.permissions.has("industrial.admin") ||
-        principal.permissions.has("industrial.workers_comp.manage");
-      if (
-        !canEditWorkersCompAuthoredNote({
-          isPlatformAdmin: principal.isPlatformAdmin,
-          permissions: principal.permissions,
-          userId: principal.userId,
-          createdByUserId,
-          canManageResource,
-        })
-      ) {
-        throw new ForgeError("FORBIDDEN", "Only the user who wrote this note can edit it");
-      }
+        const createdByUserId =
+          existing.createdByUserId ??
+          (() => {
+            const payload = this.unwrapSourcePayload(existing.sourcePayload);
+            return typeof payload.createdByUserId === "string" ? payload.createdByUserId : null;
+          })();
+        const canManageResource =
+          principal.isPlatformAdmin ||
+          principal.permissions.has("industrial.admin") ||
+          principal.permissions.has("industrial.workers_comp.manage");
+        if (
+          !canEditWorkersCompAuthoredNote({
+            isPlatformAdmin: principal.isPlatformAdmin,
+            permissions: principal.permissions,
+            userId: principal.userId,
+            createdByUserId,
+            canManageResource,
+          })
+        ) {
+          throw new ForgeError("FORBIDDEN", "Only the user who wrote this note can edit it");
+        }
 
-      const [row] = await tx
-        .update(industrialWorkersCompWorkStatusPeriods)
-        .set({
-          ...(body.status != null ? { status: String(body.status) } : {}),
-          ...(body.startDate !== undefined
-            ? { startDate: body.startDate ? String(body.startDate).slice(0, 10) : null }
-            : {}),
-          ...(body.endDate !== undefined
-            ? { endDate: body.endDate ? String(body.endDate).slice(0, 10) : null }
-            : {}),
-          ...(body.notes !== undefined ? { notes: body.notes ? String(body.notes) : null } : {}),
-          updatedAt: new Date(),
-        } as never)
-        .where(eq(industrialWorkersCompWorkStatusPeriods.id, id))
-        .returning();
-      if (!row) throw new ForgeError("NOT_FOUND", "Work status period not found");
-      return {
-        id: row.id,
-        status: row.status,
-        startDate: row.startDate,
-        endDate: row.endDate,
-        notes: row.notes,
-        createdByUserId: row.createdByUserId ?? createdByUserId,
-        canEditNotes: true,
-        createdAt: row.createdAt.toISOString(),
-        updatedAt: row.updatedAt.toISOString(),
-      };
-    }, principal.userId);
+        const [row] = await tx
+          .update(industrialWorkersCompWorkStatusPeriods)
+          .set({
+            ...(body.status != null ? { status: String(body.status) } : {}),
+            ...(body.startDate !== undefined
+              ? { startDate: body.startDate ? String(body.startDate).slice(0, 10) : null }
+              : {}),
+            ...(body.endDate !== undefined
+              ? { endDate: body.endDate ? String(body.endDate).slice(0, 10) : null }
+              : {}),
+            ...(body.notes !== undefined ? { notes: body.notes ? String(body.notes) : null } : {}),
+            updatedAt: new Date(),
+          } as never)
+          .where(eq(industrialWorkersCompWorkStatusPeriods.id, id))
+          .returning();
+        if (!row) throw new ForgeError("NOT_FOUND", "Work status period not found");
+        return {
+          id: row.id,
+          status: row.status,
+          startDate: row.startDate,
+          endDate: row.endDate,
+          notes: row.notes,
+          createdByUserId: row.createdByUserId ?? createdByUserId,
+          canEditNotes: true,
+          createdAt: row.createdAt.toISOString(),
+          updatedAt: row.updatedAt.toISOString(),
+        };
+      },
+      principal.userId,
+    );
   }
 
   async archiveWorkersCompWorkStatus(principal: ForgePrincipal, caseId: string, periodId: string) {
     const recordId = this.assertRecordId(caseId);
     const id = this.assertRecordId(periodId);
-    return withTenantTransaction(this.db, principal.tenantId, async (tx) => {
-      const now = new Date();
-      const [row] = await tx
-        .update(industrialWorkersCompWorkStatusPeriods)
-        .set({ archivedAt: now, updatedAt: now })
-        .where(
-          and(
-            eq(industrialWorkersCompWorkStatusPeriods.id, id),
-            eq(industrialWorkersCompWorkStatusPeriods.caseId, recordId),
-            eq(industrialWorkersCompWorkStatusPeriods.tenantId, principal.tenantId),
-            isNull(industrialWorkersCompWorkStatusPeriods.archivedAt),
-          ),
-        )
-        .returning();
-      if (!row) throw new ForgeError("NOT_FOUND", "Work status period not found");
-      return { id: row.id, archived: true };
-    }, principal.userId);
+    return withTenantTransaction(
+      this.db,
+      principal.tenantId,
+      async (tx) => {
+        const now = new Date();
+        const [row] = await tx
+          .update(industrialWorkersCompWorkStatusPeriods)
+          .set({ archivedAt: now, updatedAt: now })
+          .where(
+            and(
+              eq(industrialWorkersCompWorkStatusPeriods.id, id),
+              eq(industrialWorkersCompWorkStatusPeriods.caseId, recordId),
+              eq(industrialWorkersCompWorkStatusPeriods.tenantId, principal.tenantId),
+              isNull(industrialWorkersCompWorkStatusPeriods.archivedAt),
+            ),
+          )
+          .returning();
+        if (!row) throw new ForgeError("NOT_FOUND", "Work status period not found");
+        return { id: row.id, archived: true };
+      },
+      principal.userId,
+    );
   }
 
   async createWorkersCompRestriction(
@@ -14271,9 +14498,7 @@ export class IndustrialDomainService {
     body: Record<string, unknown>,
   ) {
     const recordId = this.assertRecordId(caseId);
-    const accommodations = parseWorkersCompAccommodationsPayload(
-      body.accommodations ?? body,
-    );
+    const accommodations = parseWorkersCompAccommodationsPayload(body.accommodations ?? body);
     const description =
       String(body.description ?? "").trim() ||
       (accommodationsPayloadHasContent(accommodations)
@@ -14285,38 +14510,43 @@ export class IndustrialDomainService {
         "Enter work accommodations or a restriction description",
       );
     }
-    return withTenantTransaction(this.db, principal.tenantId, async (tx) => {
-      await this.assertWcCase(tx, principal.tenantId, recordId);
-      const now = new Date();
-      const [row] = await tx
-        .insert(industrialWorkersCompRestrictions)
-        .values({
-          id: createId(),
-          tenantId: principal.tenantId,
-          caseId: recordId,
-          description,
-          startDate: body.startDate ? String(body.startDate).slice(0, 10) : null,
-          endDate: body.endDate ? String(body.endDate).slice(0, 10) : null,
-          status: String(body.status ?? "ACTIVE"),
-          sourceSystem: "FORGE",
-          sourcePayload: {
-            accommodations,
-          },
-          createdAt: now,
-          updatedAt: now,
-        })
-        .returning();
-      return {
-        id: row!.id,
-        description: row!.description,
-        startDate: row!.startDate,
-        endDate: row!.endDate,
-        status: row!.status,
-        accommodations,
-        createdAt: row!.createdAt.toISOString(),
-        updatedAt: row!.updatedAt.toISOString(),
-      };
-    }, principal.userId);
+    return withTenantTransaction(
+      this.db,
+      principal.tenantId,
+      async (tx) => {
+        await this.assertWcCase(tx, principal.tenantId, recordId);
+        const now = new Date();
+        const [row] = await tx
+          .insert(industrialWorkersCompRestrictions)
+          .values({
+            id: createId(),
+            tenantId: principal.tenantId,
+            caseId: recordId,
+            description,
+            startDate: body.startDate ? String(body.startDate).slice(0, 10) : null,
+            endDate: body.endDate ? String(body.endDate).slice(0, 10) : null,
+            status: String(body.status ?? "ACTIVE"),
+            sourceSystem: "FORGE",
+            sourcePayload: {
+              accommodations,
+            },
+            createdAt: now,
+            updatedAt: now,
+          })
+          .returning();
+        return {
+          id: row!.id,
+          description: row!.description,
+          startDate: row!.startDate,
+          endDate: row!.endDate,
+          status: row!.status,
+          accommodations,
+          createdAt: row!.createdAt.toISOString(),
+          updatedAt: row!.updatedAt.toISOString(),
+        };
+      },
+      principal.userId,
+    );
   }
 
   async updateWorkersCompRestriction(
@@ -14327,79 +14557,83 @@ export class IndustrialDomainService {
   ) {
     const recordId = this.assertRecordId(caseId);
     const id = this.assertRecordId(restrictionId);
-    return withTenantTransaction(this.db, principal.tenantId, async (tx) => {
-      const [existing] = await tx
-        .select()
-        .from(industrialWorkersCompRestrictions)
-        .where(
-          and(
-            eq(industrialWorkersCompRestrictions.id, id),
-            eq(industrialWorkersCompRestrictions.caseId, recordId),
-            eq(industrialWorkersCompRestrictions.tenantId, principal.tenantId),
-            isNull(industrialWorkersCompRestrictions.archivedAt),
-          ),
-        )
-        .limit(1);
-      if (!existing) throw new ForgeError("NOT_FOUND", "Restriction not found");
+    return withTenantTransaction(
+      this.db,
+      principal.tenantId,
+      async (tx) => {
+        const [existing] = await tx
+          .select()
+          .from(industrialWorkersCompRestrictions)
+          .where(
+            and(
+              eq(industrialWorkersCompRestrictions.id, id),
+              eq(industrialWorkersCompRestrictions.caseId, recordId),
+              eq(industrialWorkersCompRestrictions.tenantId, principal.tenantId),
+              isNull(industrialWorkersCompRestrictions.archivedAt),
+            ),
+          )
+          .limit(1);
+        if (!existing) throw new ForgeError("NOT_FOUND", "Restriction not found");
 
-      const prevPayload =
-        existing.sourcePayload &&
-        typeof existing.sourcePayload === "object" &&
-        !Array.isArray(existing.sourcePayload)
-          ? (existing.sourcePayload as Record<string, unknown>)
-          : {};
-      const accommodations =
-        body.accommodations !== undefined
-          ? parseWorkersCompAccommodationsPayload(body.accommodations)
-          : readAccommodationsFromSourcePayload(existing.sourcePayload);
-      const nextDescription =
-        body.description !== undefined
-          ? body.description
-            ? String(body.description)
-            : null
-          : body.accommodations !== undefined &&
-              accommodationsPayloadHasContent(accommodations)
-            ? summarizeWorkersCompAccommodationsPayload(accommodations)
-            : existing.description;
+        const prevPayload =
+          existing.sourcePayload &&
+          typeof existing.sourcePayload === "object" &&
+          !Array.isArray(existing.sourcePayload)
+            ? (existing.sourcePayload as Record<string, unknown>)
+            : {};
+        const accommodations =
+          body.accommodations !== undefined
+            ? parseWorkersCompAccommodationsPayload(body.accommodations)
+            : readAccommodationsFromSourcePayload(existing.sourcePayload);
+        const nextDescription =
+          body.description !== undefined
+            ? body.description
+              ? String(body.description)
+              : null
+            : body.accommodations !== undefined && accommodationsPayloadHasContent(accommodations)
+              ? summarizeWorkersCompAccommodationsPayload(accommodations)
+              : existing.description;
 
-      const [row] = await tx
-        .update(industrialWorkersCompRestrictions)
-        .set({
-          description: nextDescription,
-          ...(body.startDate !== undefined
-            ? { startDate: body.startDate ? String(body.startDate).slice(0, 10) : null }
-            : {}),
-          ...(body.endDate !== undefined
-            ? { endDate: body.endDate ? String(body.endDate).slice(0, 10) : null }
-            : {}),
-          ...(body.status != null ? { status: String(body.status) } : {}),
-          sourcePayload: {
-            ...prevPayload,
-            accommodations,
-          },
-          updatedAt: new Date(),
-        } as never)
-        .where(
-          and(
-            eq(industrialWorkersCompRestrictions.id, id),
-            eq(industrialWorkersCompRestrictions.caseId, recordId),
-            eq(industrialWorkersCompRestrictions.tenantId, principal.tenantId),
-            isNull(industrialWorkersCompRestrictions.archivedAt),
-          ),
-        )
-        .returning();
-      if (!row) throw new ForgeError("NOT_FOUND", "Restriction not found");
-      return {
-        id: row.id,
-        description: row.description,
-        startDate: row.startDate,
-        endDate: row.endDate,
-        status: row.status,
-        accommodations,
-        createdAt: row.createdAt.toISOString(),
-        updatedAt: row.updatedAt.toISOString(),
-      };
-    }, principal.userId);
+        const [row] = await tx
+          .update(industrialWorkersCompRestrictions)
+          .set({
+            description: nextDescription,
+            ...(body.startDate !== undefined
+              ? { startDate: body.startDate ? String(body.startDate).slice(0, 10) : null }
+              : {}),
+            ...(body.endDate !== undefined
+              ? { endDate: body.endDate ? String(body.endDate).slice(0, 10) : null }
+              : {}),
+            ...(body.status != null ? { status: String(body.status) } : {}),
+            sourcePayload: {
+              ...prevPayload,
+              accommodations,
+            },
+            updatedAt: new Date(),
+          } as never)
+          .where(
+            and(
+              eq(industrialWorkersCompRestrictions.id, id),
+              eq(industrialWorkersCompRestrictions.caseId, recordId),
+              eq(industrialWorkersCompRestrictions.tenantId, principal.tenantId),
+              isNull(industrialWorkersCompRestrictions.archivedAt),
+            ),
+          )
+          .returning();
+        if (!row) throw new ForgeError("NOT_FOUND", "Restriction not found");
+        return {
+          id: row.id,
+          description: row.description,
+          startDate: row.startDate,
+          endDate: row.endDate,
+          status: row.status,
+          accommodations,
+          createdAt: row.createdAt.toISOString(),
+          updatedAt: row.updatedAt.toISOString(),
+        };
+      },
+      principal.userId,
+    );
   }
 
   async archiveWorkersCompRestriction(
@@ -14409,23 +14643,28 @@ export class IndustrialDomainService {
   ) {
     const recordId = this.assertRecordId(caseId);
     const id = this.assertRecordId(restrictionId);
-    return withTenantTransaction(this.db, principal.tenantId, async (tx) => {
-      const now = new Date();
-      const [row] = await tx
-        .update(industrialWorkersCompRestrictions)
-        .set({ archivedAt: now, updatedAt: now })
-        .where(
-          and(
-            eq(industrialWorkersCompRestrictions.id, id),
-            eq(industrialWorkersCompRestrictions.caseId, recordId),
-            eq(industrialWorkersCompRestrictions.tenantId, principal.tenantId),
-            isNull(industrialWorkersCompRestrictions.archivedAt),
-          ),
-        )
-        .returning();
-      if (!row) throw new ForgeError("NOT_FOUND", "Restriction not found");
-      return { id: row.id, archived: true };
-    }, principal.userId);
+    return withTenantTransaction(
+      this.db,
+      principal.tenantId,
+      async (tx) => {
+        const now = new Date();
+        const [row] = await tx
+          .update(industrialWorkersCompRestrictions)
+          .set({ archivedAt: now, updatedAt: now })
+          .where(
+            and(
+              eq(industrialWorkersCompRestrictions.id, id),
+              eq(industrialWorkersCompRestrictions.caseId, recordId),
+              eq(industrialWorkersCompRestrictions.tenantId, principal.tenantId),
+              isNull(industrialWorkersCompRestrictions.archivedAt),
+            ),
+          )
+          .returning();
+        if (!row) throw new ForgeError("NOT_FOUND", "Restriction not found");
+        return { id: row.id, archived: true };
+      },
+      principal.userId,
+    );
   }
 
   async createWorkersCompMedical(
@@ -14437,121 +14676,97 @@ export class IndustrialDomainService {
       throw new ForgeError("FORBIDDEN", "Missing industrial.workers_comp.medical.manage");
     }
     const recordId = this.assertRecordId(caseId);
-    return withTenantTransaction(this.db, principal.tenantId, async (tx) => {
-      await this.enableWcMedicalAccess(tx);
-      await this.assertWcCase(tx, principal.tenantId, recordId);
-      const now = new Date();
-      const appointmentDate = body.appointmentDate
-        ? String(body.appointmentDate).slice(0, 10)
-        : null;
-      const accommodations = parseWorkersCompAccommodationsPayload(body.accommodations);
-      const hasAccommodations = accommodationsPayloadHasContent(accommodations);
-      const workStatusRaw =
-        body.workStatus && typeof body.workStatus === "object" && !Array.isArray(body.workStatus)
-          ? (body.workStatus as Record<string, unknown>)
+    return withTenantTransaction(
+      this.db,
+      principal.tenantId,
+      async (tx) => {
+        await this.enableWcMedicalAccess(tx);
+        await this.assertWcCase(tx, principal.tenantId, recordId);
+        const now = new Date();
+        const appointmentDate = body.appointmentDate
+          ? String(body.appointmentDate).slice(0, 10)
           : null;
-      const workStatusStatus = workStatusRaw
-        ? String(workStatusRaw.status ?? "").trim()
-        : "";
-      const workStatusStart = workStatusRaw?.startDate
-        ? String(workStatusRaw.startDate).slice(0, 10)
-        : appointmentDate;
-      const workStatusEnd = workStatusRaw?.endDate
-        ? String(workStatusRaw.endDate).slice(0, 10)
-        : body.endDate
-          ? String(body.endDate).slice(0, 10)
-          : null;
-      const workStatusNotes = workStatusRaw?.notes ? String(workStatusRaw.notes) : null;
-      const restrictionStart = body.startDate
-        ? String(body.startDate).slice(0, 10)
-        : appointmentDate;
-      const restrictionEnd = body.endDate ? String(body.endDate).slice(0, 10) : workStatusEnd;
+        const accommodations = parseWorkersCompAccommodationsPayload(body.accommodations);
+        const hasAccommodations = accommodationsPayloadHasContent(accommodations);
+        const workStatusRaw =
+          body.workStatus && typeof body.workStatus === "object" && !Array.isArray(body.workStatus)
+            ? (body.workStatus as Record<string, unknown>)
+            : null;
+        const workStatusStatus = workStatusRaw ? String(workStatusRaw.status ?? "").trim() : "";
+        const workStatusStart = workStatusRaw?.startDate
+          ? String(workStatusRaw.startDate).slice(0, 10)
+          : appointmentDate;
+        const workStatusEnd = workStatusRaw?.endDate
+          ? String(workStatusRaw.endDate).slice(0, 10)
+          : body.endDate
+            ? String(body.endDate).slice(0, 10)
+            : null;
+        const workStatusNotes = workStatusRaw?.notes ? String(workStatusRaw.notes) : null;
+        const restrictionStart = body.startDate
+          ? String(body.startDate).slice(0, 10)
+          : appointmentDate;
+        const restrictionEnd = body.endDate ? String(body.endDate).slice(0, 10) : workStatusEnd;
 
-      const medicalId = createId();
-      let restrictionId: string | null = null;
-      let workStatusPeriodId: string | null = null;
+        const medicalId = createId();
+        let restrictionId: string | null = null;
+        let workStatusPeriodId: string | null = null;
 
-      if (hasAccommodations) {
-        restrictionId = createId();
-        const description = summarizeWorkersCompAccommodationsPayload(accommodations);
-        await tx.insert(industrialWorkersCompRestrictions).values({
-          id: restrictionId,
-          tenantId: principal.tenantId,
-          caseId: recordId,
-          description,
-          startDate: restrictionStart,
-          endDate: restrictionEnd,
-          status: "ACTIVE",
-          sourceSystem: "FORGE",
-          sourcePayload: {
-            accommodations,
-            medicalEncounterId: medicalId,
-          },
-          createdAt: now,
-          updatedAt: now,
-        });
-      }
+        if (hasAccommodations) {
+          restrictionId = createId();
+          const description = summarizeWorkersCompAccommodationsPayload(accommodations);
+          await tx.insert(industrialWorkersCompRestrictions).values({
+            id: restrictionId,
+            tenantId: principal.tenantId,
+            caseId: recordId,
+            description,
+            startDate: restrictionStart,
+            endDate: restrictionEnd,
+            status: "ACTIVE",
+            sourceSystem: "FORGE",
+            sourcePayload: {
+              accommodations,
+              medicalEncounterId: medicalId,
+            },
+            createdAt: now,
+            updatedAt: now,
+          });
+        }
 
-      if (workStatusStatus) {
-        workStatusPeriodId = createId();
-        await tx.insert(industrialWorkersCompWorkStatusPeriods).values({
-          id: workStatusPeriodId,
-          tenantId: principal.tenantId,
-          caseId: recordId,
-          status: workStatusStatus,
-          startDate: workStatusStart,
-          endDate: workStatusEnd,
-          notes: workStatusNotes,
-          createdByUserId: principal.userId,
-          sourceSystem: "FORGE",
-          sourcePayload: {
+        if (workStatusStatus) {
+          workStatusPeriodId = createId();
+          await tx.insert(industrialWorkersCompWorkStatusPeriods).values({
+            id: workStatusPeriodId,
+            tenantId: principal.tenantId,
+            caseId: recordId,
             status: workStatusStatus,
             startDate: workStatusStart,
             endDate: workStatusEnd,
             notes: workStatusNotes,
-            medicalEncounterId: medicalId,
             createdByUserId: principal.userId,
-          },
-          createdAt: now,
-          updatedAt: now,
-        });
-      }
+            sourceSystem: "FORGE",
+            sourcePayload: {
+              status: workStatusStatus,
+              startDate: workStatusStart,
+              endDate: workStatusEnd,
+              notes: workStatusNotes,
+              medicalEncounterId: medicalId,
+              createdByUserId: principal.userId,
+            },
+            createdAt: now,
+            updatedAt: now,
+          });
+        }
 
-      const visitWorkStatus = workStatusStatus
-        ? {
-            status: workStatusStatus,
-            startDate: workStatusStart,
-            endDate: workStatusEnd,
-            notes: workStatusNotes,
-          }
-        : null;
+        const visitWorkStatus = workStatusStatus
+          ? {
+              status: workStatusStatus,
+              startDate: workStatusStart,
+              endDate: workStatusEnd,
+              notes: workStatusNotes,
+            }
+          : null;
 
-      const sourcePayload = {
-        appointmentDate,
-        provider: body.provider ? String(body.provider) : null,
-        providerSpecialty: body.providerSpecialty ? String(body.providerSpecialty) : null,
-        diagnosis: body.diagnosis ? String(body.diagnosis) : null,
-        treatment: body.treatment ? String(body.treatment) : null,
-        medication: body.medication ? String(body.medication) : null,
-        examFindings: body.examFindings ? String(body.examFindings) : null,
-        assessment: body.assessment ? String(body.assessment) : null,
-        symptoms: body.symptoms ? String(body.symptoms) : null,
-        notes: body.notes ? String(body.notes) : null,
-        ...(hasAccommodations ? { accommodations } : {}),
-        ...(visitWorkStatus ? { workStatus: visitWorkStatus } : {}),
-        ...(restrictionId ? { restrictionId } : {}),
-        ...(workStatusPeriodId ? { workStatusPeriodId } : {}),
-        startDate: restrictionStart,
-        endDate: restrictionEnd,
-        createdByUserId: principal.userId,
-      };
-
-      const [row] = await tx
-        .insert(industrialWorkersCompMedicalEncounters)
-        .values({
-          id: medicalId,
-          tenantId: principal.tenantId,
-          caseId: recordId,
+        const sourcePayload = {
           appointmentDate,
           provider: body.provider ? String(body.provider) : null,
           providerSpecialty: body.providerSpecialty ? String(body.providerSpecialty) : null,
@@ -14562,25 +14777,52 @@ export class IndustrialDomainService {
           assessment: body.assessment ? String(body.assessment) : null,
           symptoms: body.symptoms ? String(body.symptoms) : null,
           notes: body.notes ? String(body.notes) : null,
-          restrictedPayload: {},
+          ...(hasAccommodations ? { accommodations } : {}),
+          ...(visitWorkStatus ? { workStatus: visitWorkStatus } : {}),
+          ...(restrictionId ? { restrictionId } : {}),
+          ...(workStatusPeriodId ? { workStatusPeriodId } : {}),
+          startDate: restrictionStart,
+          endDate: restrictionEnd,
           createdByUserId: principal.userId,
-          sourceSystem: "FORGE",
-          sourcePayload,
-          createdAt: now,
-          updatedAt: now,
-        })
-        .returning();
-      await tx
-        .update(industrialWorkersCompCases)
-        .set({ updatedAt: now } as never)
-        .where(
-          and(
-            eq(industrialWorkersCompCases.id, recordId),
-            eq(industrialWorkersCompCases.tenantId, principal.tenantId),
-          ),
-        );
-      return this.mapMedicalEncounter(row!, principal);
-    }, principal.userId);
+        };
+
+        const [row] = await tx
+          .insert(industrialWorkersCompMedicalEncounters)
+          .values({
+            id: medicalId,
+            tenantId: principal.tenantId,
+            caseId: recordId,
+            appointmentDate,
+            provider: body.provider ? String(body.provider) : null,
+            providerSpecialty: body.providerSpecialty ? String(body.providerSpecialty) : null,
+            diagnosis: body.diagnosis ? String(body.diagnosis) : null,
+            treatment: body.treatment ? String(body.treatment) : null,
+            medication: body.medication ? String(body.medication) : null,
+            examFindings: body.examFindings ? String(body.examFindings) : null,
+            assessment: body.assessment ? String(body.assessment) : null,
+            symptoms: body.symptoms ? String(body.symptoms) : null,
+            notes: body.notes ? String(body.notes) : null,
+            restrictedPayload: {},
+            createdByUserId: principal.userId,
+            sourceSystem: "FORGE",
+            sourcePayload,
+            createdAt: now,
+            updatedAt: now,
+          })
+          .returning();
+        await tx
+          .update(industrialWorkersCompCases)
+          .set({ updatedAt: now } as never)
+          .where(
+            and(
+              eq(industrialWorkersCompCases.id, recordId),
+              eq(industrialWorkersCompCases.tenantId, principal.tenantId),
+            ),
+          );
+        return this.mapMedicalEncounter(row!, principal);
+      },
+      principal.userId,
+    );
   }
 
   async updateWorkersCompMedical(
@@ -14594,277 +14836,284 @@ export class IndustrialDomainService {
     }
     const recordId = this.assertRecordId(caseId);
     const id = this.assertRecordId(encounterId);
-    return withTenantTransaction(this.db, principal.tenantId, async (tx) => {
-      await this.enableWcMedicalAccess(tx);
-      const [existing] = await tx
-        .select()
-        .from(industrialWorkersCompMedicalEncounters)
-        .where(
-          and(
-            eq(industrialWorkersCompMedicalEncounters.id, id),
-            eq(industrialWorkersCompMedicalEncounters.caseId, recordId),
-            eq(industrialWorkersCompMedicalEncounters.tenantId, principal.tenantId),
-            isNull(industrialWorkersCompMedicalEncounters.archivedAt),
-          ),
-        )
-        .limit(1);
-      if (!existing) throw new ForgeError("NOT_FOUND", "Medical encounter not found");
+    return withTenantTransaction(
+      this.db,
+      principal.tenantId,
+      async (tx) => {
+        await this.enableWcMedicalAccess(tx);
+        const [existing] = await tx
+          .select()
+          .from(industrialWorkersCompMedicalEncounters)
+          .where(
+            and(
+              eq(industrialWorkersCompMedicalEncounters.id, id),
+              eq(industrialWorkersCompMedicalEncounters.caseId, recordId),
+              eq(industrialWorkersCompMedicalEncounters.tenantId, principal.tenantId),
+              isNull(industrialWorkersCompMedicalEncounters.archivedAt),
+            ),
+          )
+          .limit(1);
+        if (!existing) throw new ForgeError("NOT_FOUND", "Medical encounter not found");
 
-      const createdByUserId =
-        existing.createdByUserId ??
-        (() => {
-          const payload = this.unwrapSourcePayload(existing.sourcePayload);
-          return typeof payload.createdByUserId === "string" ? payload.createdByUserId : null;
-        })();
-      if (
-        !canEditWorkersCompAuthoredNote({
-          isPlatformAdmin: principal.isPlatformAdmin,
-          permissions: principal.permissions,
-          userId: principal.userId,
-          createdByUserId,
-          canManageResource: this.canManageWcMedical(principal),
-        })
-      ) {
-        throw new ForgeError("FORBIDDEN", "Only the user who wrote this note can edit it");
-      }
+        const createdByUserId =
+          existing.createdByUserId ??
+          (() => {
+            const payload = this.unwrapSourcePayload(existing.sourcePayload);
+            return typeof payload.createdByUserId === "string" ? payload.createdByUserId : null;
+          })();
+        if (
+          !canEditWorkersCompAuthoredNote({
+            isPlatformAdmin: principal.isPlatformAdmin,
+            permissions: principal.permissions,
+            userId: principal.userId,
+            createdByUserId,
+            canManageResource: this.canManageWcMedical(principal),
+          })
+        ) {
+          throw new ForgeError("FORBIDDEN", "Only the user who wrote this note can edit it");
+        }
 
-      const prevPayload = this.unwrapSourcePayload(existing.sourcePayload);
-      const accommodations =
-        body.accommodations !== undefined
-          ? parseWorkersCompAccommodationsPayload(body.accommodations)
-          : readAccommodationsFromSourcePayload(prevPayload);
-      const hasAccommodations = accommodationsPayloadHasContent(accommodations);
-      const workStatusRaw =
-        body.workStatus !== undefined
-          ? body.workStatus && typeof body.workStatus === "object" && !Array.isArray(body.workStatus)
-            ? (body.workStatus as Record<string, unknown>)
-            : null
-          : prevPayload.workStatus &&
-              typeof prevPayload.workStatus === "object" &&
-              !Array.isArray(prevPayload.workStatus)
-            ? (prevPayload.workStatus as Record<string, unknown>)
+        const prevPayload = this.unwrapSourcePayload(existing.sourcePayload);
+        const accommodations =
+          body.accommodations !== undefined
+            ? parseWorkersCompAccommodationsPayload(body.accommodations)
+            : readAccommodationsFromSourcePayload(prevPayload);
+        const hasAccommodations = accommodationsPayloadHasContent(accommodations);
+        const workStatusRaw =
+          body.workStatus !== undefined
+            ? body.workStatus &&
+              typeof body.workStatus === "object" &&
+              !Array.isArray(body.workStatus)
+              ? (body.workStatus as Record<string, unknown>)
+              : null
+            : prevPayload.workStatus &&
+                typeof prevPayload.workStatus === "object" &&
+                !Array.isArray(prevPayload.workStatus)
+              ? (prevPayload.workStatus as Record<string, unknown>)
+              : null;
+        const visitWorkStatus =
+          workStatusRaw && String(workStatusRaw.status ?? "").trim()
+            ? {
+                status: String(workStatusRaw.status).trim(),
+                startDate: workStatusRaw.startDate
+                  ? String(workStatusRaw.startDate).slice(0, 10)
+                  : null,
+                endDate: workStatusRaw.endDate ? String(workStatusRaw.endDate).slice(0, 10) : null,
+                notes: workStatusRaw.notes ? String(workStatusRaw.notes) : null,
+              }
             : null;
-      const visitWorkStatus =
-        workStatusRaw && String(workStatusRaw.status ?? "").trim()
-          ? {
-              status: String(workStatusRaw.status).trim(),
-              startDate: workStatusRaw.startDate
-                ? String(workStatusRaw.startDate).slice(0, 10)
-                : null,
-              endDate: workStatusRaw.endDate ? String(workStatusRaw.endDate).slice(0, 10) : null,
-              notes: workStatusRaw.notes ? String(workStatusRaw.notes) : null,
-            }
-          : null;
 
-      const nextAppointmentDate =
-        body.appointmentDate !== undefined
-          ? body.appointmentDate
-            ? String(body.appointmentDate).slice(0, 10)
-            : null
-          : existing.appointmentDate;
-      const nextProvider =
-        body.provider !== undefined
-          ? body.provider
-            ? String(body.provider)
-            : null
-          : existing.provider;
-      const nextSpecialty =
-        body.providerSpecialty !== undefined
-          ? body.providerSpecialty
-            ? String(body.providerSpecialty)
-            : null
-          : existing.providerSpecialty;
-      const nextDiagnosis =
-        body.diagnosis !== undefined
-          ? body.diagnosis
-            ? String(body.diagnosis)
-            : null
-          : existing.diagnosis;
-      const nextTreatment =
-        body.treatment !== undefined
-          ? body.treatment
-            ? String(body.treatment)
-            : null
-          : existing.treatment;
-      const nextMedication =
-        body.medication !== undefined
-          ? body.medication
-            ? String(body.medication)
-            : null
-          : existing.medication;
-      const nextNotes =
-        body.notes !== undefined ? (body.notes ? String(body.notes) : null) : existing.notes;
+        const nextAppointmentDate =
+          body.appointmentDate !== undefined
+            ? body.appointmentDate
+              ? String(body.appointmentDate).slice(0, 10)
+              : null
+            : existing.appointmentDate;
+        const nextProvider =
+          body.provider !== undefined
+            ? body.provider
+              ? String(body.provider)
+              : null
+            : existing.provider;
+        const nextSpecialty =
+          body.providerSpecialty !== undefined
+            ? body.providerSpecialty
+              ? String(body.providerSpecialty)
+              : null
+            : existing.providerSpecialty;
+        const nextDiagnosis =
+          body.diagnosis !== undefined
+            ? body.diagnosis
+              ? String(body.diagnosis)
+              : null
+            : existing.diagnosis;
+        const nextTreatment =
+          body.treatment !== undefined
+            ? body.treatment
+              ? String(body.treatment)
+              : null
+            : existing.treatment;
+        const nextMedication =
+          body.medication !== undefined
+            ? body.medication
+              ? String(body.medication)
+              : null
+            : existing.medication;
+        const nextNotes =
+          body.notes !== undefined ? (body.notes ? String(body.notes) : null) : existing.notes;
 
-      const nextPayload: Record<string, unknown> = {
-        ...prevPayload,
-        appointmentDate: nextAppointmentDate,
-        provider: nextProvider,
-        providerSpecialty: nextSpecialty,
-        diagnosis: nextDiagnosis,
-        treatment: nextTreatment,
-        medication: nextMedication,
-        notes: nextNotes,
-        createdByUserId: createdByUserId ?? prevPayload.createdByUserId,
-      };
-      if (body.accommodations !== undefined) {
-        if (hasAccommodations) nextPayload.accommodations = accommodations;
-        else delete nextPayload.accommodations;
-      }
-      if (body.workStatus !== undefined) {
-        if (visitWorkStatus) nextPayload.workStatus = visitWorkStatus;
-        else delete nextPayload.workStatus;
-      }
-
-      let restrictionId =
-        typeof prevPayload.restrictionId === "string" ? prevPayload.restrictionId : null;
-      let workStatusPeriodId =
-        typeof prevPayload.workStatusPeriodId === "string"
-          ? prevPayload.workStatusPeriodId
-          : null;
-      const now = new Date();
-      const visitStartDate =
-        (typeof body.startDate === "string" && body.startDate
-          ? String(body.startDate).slice(0, 10)
-          : null) ??
-        nextAppointmentDate ??
-        visitWorkStatus?.startDate ??
-        null;
-      const visitEndDate =
-        (typeof body.endDate === "string" && body.endDate
-          ? String(body.endDate).slice(0, 10)
-          : null) ??
-        visitWorkStatus?.endDate ??
-        null;
-
-      if (body.accommodations !== undefined && hasAccommodations) {
-        const description = summarizeWorkersCompAccommodationsPayload(accommodations);
-        if (restrictionId) {
-          await tx
-            .update(industrialWorkersCompRestrictions)
-            .set({
-              description,
-              startDate: visitStartDate,
-              endDate: visitEndDate,
-              sourcePayload: {
-                accommodations,
-                medicalEncounterId: id,
-              },
-              updatedAt: now,
-            } as never)
-            .where(
-              and(
-                eq(industrialWorkersCompRestrictions.id, restrictionId),
-                eq(industrialWorkersCompRestrictions.caseId, recordId),
-                eq(industrialWorkersCompRestrictions.tenantId, principal.tenantId),
-                isNull(industrialWorkersCompRestrictions.archivedAt),
-              ),
-            );
-        } else {
-          restrictionId = createId();
-          await tx.insert(industrialWorkersCompRestrictions).values({
-            id: restrictionId,
-            tenantId: principal.tenantId,
-            caseId: recordId,
-            description,
-            startDate: visitStartDate,
-            endDate: visitEndDate,
-            status: "ACTIVE",
-            sourceSystem: "FORGE",
-            sourcePayload: {
-              accommodations,
-              medicalEncounterId: id,
-            },
-            createdAt: now,
-            updatedAt: now,
-          });
-          nextPayload.restrictionId = restrictionId;
-        }
-      }
-
-      if (visitWorkStatus && body.workStatus !== undefined) {
-        if (workStatusPeriodId) {
-          await tx
-            .update(industrialWorkersCompWorkStatusPeriods)
-            .set({
-              status: visitWorkStatus.status,
-              startDate: visitWorkStatus.startDate,
-              endDate: visitWorkStatus.endDate,
-              notes: visitWorkStatus.notes,
-              sourcePayload: {
-                ...visitWorkStatus,
-                medicalEncounterId: id,
-                createdByUserId,
-              },
-              updatedAt: now,
-            } as never)
-            .where(
-              and(
-                eq(industrialWorkersCompWorkStatusPeriods.id, workStatusPeriodId),
-                eq(industrialWorkersCompWorkStatusPeriods.caseId, recordId),
-                eq(industrialWorkersCompWorkStatusPeriods.tenantId, principal.tenantId),
-                isNull(industrialWorkersCompWorkStatusPeriods.archivedAt),
-              ),
-            );
-        } else {
-          workStatusPeriodId = createId();
-          await tx.insert(industrialWorkersCompWorkStatusPeriods).values({
-            id: workStatusPeriodId,
-            tenantId: principal.tenantId,
-            caseId: recordId,
-            status: visitWorkStatus.status,
-            startDate: visitWorkStatus.startDate,
-            endDate: visitWorkStatus.endDate,
-            notes: visitWorkStatus.notes,
-            createdByUserId: principal.userId,
-            sourceSystem: "FORGE",
-            sourcePayload: {
-              ...visitWorkStatus,
-              medicalEncounterId: id,
-              createdByUserId: principal.userId,
-            },
-            createdAt: now,
-            updatedAt: now,
-          });
-          nextPayload.workStatusPeriodId = workStatusPeriodId;
-        }
-      }
-
-      const [row] = await tx
-        .update(industrialWorkersCompMedicalEncounters)
-        .set({
+        const nextPayload: Record<string, unknown> = {
+          ...prevPayload,
           appointmentDate: nextAppointmentDate,
           provider: nextProvider,
           providerSpecialty: nextSpecialty,
           diagnosis: nextDiagnosis,
           treatment: nextTreatment,
           medication: nextMedication,
-          ...(body.examFindings !== undefined
-            ? { examFindings: body.examFindings ? String(body.examFindings) : null }
-            : {}),
-          ...(body.assessment !== undefined
-            ? { assessment: body.assessment ? String(body.assessment) : null }
-            : {}),
-          ...(body.symptoms !== undefined
-            ? { symptoms: body.symptoms ? String(body.symptoms) : null }
-            : {}),
           notes: nextNotes,
-          sourcePayload: nextPayload,
-          updatedAt: now,
-        } as never)
-        .where(eq(industrialWorkersCompMedicalEncounters.id, id))
-        .returning();
-      if (!row) throw new ForgeError("NOT_FOUND", "Medical encounter not found");
-      await tx
-        .update(industrialWorkersCompCases)
-        .set({ updatedAt: now } as never)
-        .where(
-          and(
-            eq(industrialWorkersCompCases.id, recordId),
-            eq(industrialWorkersCompCases.tenantId, principal.tenantId),
-          ),
-        );
-      return this.mapMedicalEncounter(row, principal);
-    }, principal.userId);
+          createdByUserId: createdByUserId ?? prevPayload.createdByUserId,
+        };
+        if (body.accommodations !== undefined) {
+          if (hasAccommodations) nextPayload.accommodations = accommodations;
+          else delete nextPayload.accommodations;
+        }
+        if (body.workStatus !== undefined) {
+          if (visitWorkStatus) nextPayload.workStatus = visitWorkStatus;
+          else delete nextPayload.workStatus;
+        }
+
+        let restrictionId =
+          typeof prevPayload.restrictionId === "string" ? prevPayload.restrictionId : null;
+        let workStatusPeriodId =
+          typeof prevPayload.workStatusPeriodId === "string"
+            ? prevPayload.workStatusPeriodId
+            : null;
+        const now = new Date();
+        const visitStartDate =
+          (typeof body.startDate === "string" && body.startDate
+            ? String(body.startDate).slice(0, 10)
+            : null) ??
+          nextAppointmentDate ??
+          visitWorkStatus?.startDate ??
+          null;
+        const visitEndDate =
+          (typeof body.endDate === "string" && body.endDate
+            ? String(body.endDate).slice(0, 10)
+            : null) ??
+          visitWorkStatus?.endDate ??
+          null;
+
+        if (body.accommodations !== undefined && hasAccommodations) {
+          const description = summarizeWorkersCompAccommodationsPayload(accommodations);
+          if (restrictionId) {
+            await tx
+              .update(industrialWorkersCompRestrictions)
+              .set({
+                description,
+                startDate: visitStartDate,
+                endDate: visitEndDate,
+                sourcePayload: {
+                  accommodations,
+                  medicalEncounterId: id,
+                },
+                updatedAt: now,
+              } as never)
+              .where(
+                and(
+                  eq(industrialWorkersCompRestrictions.id, restrictionId),
+                  eq(industrialWorkersCompRestrictions.caseId, recordId),
+                  eq(industrialWorkersCompRestrictions.tenantId, principal.tenantId),
+                  isNull(industrialWorkersCompRestrictions.archivedAt),
+                ),
+              );
+          } else {
+            restrictionId = createId();
+            await tx.insert(industrialWorkersCompRestrictions).values({
+              id: restrictionId,
+              tenantId: principal.tenantId,
+              caseId: recordId,
+              description,
+              startDate: visitStartDate,
+              endDate: visitEndDate,
+              status: "ACTIVE",
+              sourceSystem: "FORGE",
+              sourcePayload: {
+                accommodations,
+                medicalEncounterId: id,
+              },
+              createdAt: now,
+              updatedAt: now,
+            });
+            nextPayload.restrictionId = restrictionId;
+          }
+        }
+
+        if (visitWorkStatus && body.workStatus !== undefined) {
+          if (workStatusPeriodId) {
+            await tx
+              .update(industrialWorkersCompWorkStatusPeriods)
+              .set({
+                status: visitWorkStatus.status,
+                startDate: visitWorkStatus.startDate,
+                endDate: visitWorkStatus.endDate,
+                notes: visitWorkStatus.notes,
+                sourcePayload: {
+                  ...visitWorkStatus,
+                  medicalEncounterId: id,
+                  createdByUserId,
+                },
+                updatedAt: now,
+              } as never)
+              .where(
+                and(
+                  eq(industrialWorkersCompWorkStatusPeriods.id, workStatusPeriodId),
+                  eq(industrialWorkersCompWorkStatusPeriods.caseId, recordId),
+                  eq(industrialWorkersCompWorkStatusPeriods.tenantId, principal.tenantId),
+                  isNull(industrialWorkersCompWorkStatusPeriods.archivedAt),
+                ),
+              );
+          } else {
+            workStatusPeriodId = createId();
+            await tx.insert(industrialWorkersCompWorkStatusPeriods).values({
+              id: workStatusPeriodId,
+              tenantId: principal.tenantId,
+              caseId: recordId,
+              status: visitWorkStatus.status,
+              startDate: visitWorkStatus.startDate,
+              endDate: visitWorkStatus.endDate,
+              notes: visitWorkStatus.notes,
+              createdByUserId: principal.userId,
+              sourceSystem: "FORGE",
+              sourcePayload: {
+                ...visitWorkStatus,
+                medicalEncounterId: id,
+                createdByUserId: principal.userId,
+              },
+              createdAt: now,
+              updatedAt: now,
+            });
+            nextPayload.workStatusPeriodId = workStatusPeriodId;
+          }
+        }
+
+        const [row] = await tx
+          .update(industrialWorkersCompMedicalEncounters)
+          .set({
+            appointmentDate: nextAppointmentDate,
+            provider: nextProvider,
+            providerSpecialty: nextSpecialty,
+            diagnosis: nextDiagnosis,
+            treatment: nextTreatment,
+            medication: nextMedication,
+            ...(body.examFindings !== undefined
+              ? { examFindings: body.examFindings ? String(body.examFindings) : null }
+              : {}),
+            ...(body.assessment !== undefined
+              ? { assessment: body.assessment ? String(body.assessment) : null }
+              : {}),
+            ...(body.symptoms !== undefined
+              ? { symptoms: body.symptoms ? String(body.symptoms) : null }
+              : {}),
+            notes: nextNotes,
+            sourcePayload: nextPayload,
+            updatedAt: now,
+          } as never)
+          .where(eq(industrialWorkersCompMedicalEncounters.id, id))
+          .returning();
+        if (!row) throw new ForgeError("NOT_FOUND", "Medical encounter not found");
+        await tx
+          .update(industrialWorkersCompCases)
+          .set({ updatedAt: now } as never)
+          .where(
+            and(
+              eq(industrialWorkersCompCases.id, recordId),
+              eq(industrialWorkersCompCases.tenantId, principal.tenantId),
+            ),
+          );
+        return this.mapMedicalEncounter(row, principal);
+      },
+      principal.userId,
+    );
   }
 
   private mapMedicalEncounter(
@@ -14887,7 +15136,9 @@ export class IndustrialDomainService {
     const accommodations = readAccommodationsFromSourcePayload(payload);
     const hasAccommodations = accommodationsPayloadHasContent(accommodations);
     const workStatusRaw =
-      payload.workStatus && typeof payload.workStatus === "object" && !Array.isArray(payload.workStatus)
+      payload.workStatus &&
+      typeof payload.workStatus === "object" &&
+      !Array.isArray(payload.workStatus)
         ? (payload.workStatus as Record<string, unknown>)
         : null;
     const workStatus =
@@ -15055,9 +15306,7 @@ export class IndustrialDomainService {
           : {};
 
       const title =
-        body.title !== undefined
-          ? String(body.title ?? "").trim()
-          : (existing.title?.trim() ?? "");
+        body.title !== undefined ? String(body.title ?? "").trim() : (existing.title?.trim() ?? "");
       if (!title) {
         throw new ForgeError("VALIDATION_FAILED", "Please provide a title for this task.");
       }
@@ -15139,10 +15388,7 @@ export class IndustrialDomainService {
           updatedAt: now,
         })
         .where(
-          and(
-            eq(industrialTasks.id, recordId),
-            eq(industrialTasks.tenantId, principal.tenantId),
-          ),
+          and(eq(industrialTasks.id, recordId), eq(industrialTasks.tenantId, principal.tenantId)),
         )
         .returning();
 
@@ -15167,10 +15413,7 @@ export class IndustrialDomainService {
       };
     });
 
-    if (
-      result.nextAssigneeId &&
-      result.nextAssigneeId !== result.previousAssigneeId
-    ) {
+    if (result.nextAssigneeId && result.nextAssigneeId !== result.previousAssigneeId) {
       await this.notifyTaskAssigned(principal, {
         taskId: recordId,
         title: String((result.mapped as { title?: string }).title ?? "Task"),
@@ -15225,9 +15468,7 @@ export class IndustrialDomainService {
           body,
           priority: "HIGH",
           destination: email ? "BOTH" : "IN_APP",
-          ...(email
-            ? { emailTo: email, emailTemplateKey: "system_notification" as const }
-            : {}),
+          ...(email ? { emailTo: email, emailTemplateKey: "system_notification" as const } : {}),
           href: `/modules/tasks/`,
           metadataJson: {
             taskId: input.taskId,
@@ -15252,7 +15493,10 @@ export class IndustrialDomainService {
       })
       .from(industrialFleetDrivers)
       .where(
-        and(eq(industrialFleetDrivers.tenantId, tenantId), isNull(industrialFleetDrivers.archivedAt)),
+        and(
+          eq(industrialFleetDrivers.tenantId, tenantId),
+          isNull(industrialFleetDrivers.archivedAt),
+        ),
       );
     let count = 0;
     for (const row of rows) {
@@ -15343,7 +15587,11 @@ export class IndustrialDomainService {
           .limit(1);
         if (existing) return null;
 
-        const formHref = await this.resolveMvrConsentFormFillHref(tx, principal.tenantId, personnelId);
+        const formHref = await this.resolveMvrConsentFormFillHref(
+          tx,
+          principal.tenantId,
+          personnelId,
+        );
         return { login, href: formHref };
       });
       if (!prepared) return;
@@ -15379,9 +15627,18 @@ export class IndustrialDomainService {
       companyEmail?: string | null;
     },
   ): Promise<{ userId: string; email: string } | null> {
-    const usable = (row: { id: string; email: string | null; status: string; disabledAt: Date | null }) => {
+    const usable = (row: {
+      id: string;
+      email: string | null;
+      status: string;
+      disabledAt: Date | null;
+    }) => {
       if (row.disabledAt) return false;
-      return String(row.status ?? "").trim().toUpperCase() !== "DISABLED";
+      return (
+        String(row.status ?? "")
+          .trim()
+          .toUpperCase() !== "DISABLED"
+      );
     };
     const authId = String(person.userAuthId ?? "").trim();
     if (authId && UUID_PATTERN.test(authId)) {
@@ -15396,11 +15653,20 @@ export class IndustrialDomainService {
         .where(and(eq(users.id, authId), eq(users.tenantId, tenantId)))
         .limit(1);
       if (byId && usable(byId)) {
-        return { userId: byId.id, email: String(byId.email ?? "").trim().toLowerCase() };
+        return {
+          userId: byId.id,
+          email: String(byId.email ?? "")
+            .trim()
+            .toLowerCase(),
+        };
       }
     }
     const emails = [person.companyEmail, person.email]
-      .map((value) => String(value ?? "").trim().toLowerCase())
+      .map((value) =>
+        String(value ?? "")
+          .trim()
+          .toLowerCase(),
+      )
       .filter(Boolean);
     for (const email of emails) {
       const [byEmail] = await tx
@@ -15414,7 +15680,12 @@ export class IndustrialDomainService {
         .where(and(eq(users.tenantId, tenantId), sql`lower(${users.primaryEmail}) = ${email}`))
         .limit(1);
       if (byEmail && usable(byEmail)) {
-        return { userId: byEmail.id, email: String(byEmail.email ?? "").trim().toLowerCase() };
+        return {
+          userId: byEmail.id,
+          email: String(byEmail.email ?? "")
+            .trim()
+            .toLowerCase(),
+        };
       }
     }
     return null;
@@ -15680,7 +15951,10 @@ export class IndustrialDomainService {
           ? (async () => {
               const weekOf = normalizeThursdayWeekOf(undefined);
               const openCases = await tx
-                .select({ id: industrialWorkersCompCases.id, status: industrialWorkersCompCases.status })
+                .select({
+                  id: industrialWorkersCompCases.id,
+                  status: industrialWorkersCompCases.status,
+                })
                 .from(industrialWorkersCompCases)
                 .where(
                   and(
@@ -15739,11 +16013,7 @@ export class IndustrialDomainService {
       const attention = INDUSTRIAL_DASHBOARD_ATTENTION_SOURCES.filter((source) => {
         if (!attentionAllowed(source.moduleCode)) return false;
         if (source.key === "workersCompWeeklyUpdates") {
-          return modulePagePermissionOk(
-            "WORKERS_COMP",
-            "weekly-updates",
-            principal.permissions,
-          );
+          return modulePagePermissionOk("WORKERS_COMP", "weekly-updates", principal.permissions);
         }
         return true;
       }).map((source) => ({
@@ -15885,7 +16155,11 @@ export class IndustrialDomainService {
         return rows.map((r) => ({ label: r.label, count: r.count }));
       };
 
-      const buildWindow = async (days: number, id: "threeMonth" | "sixMonth" | "oneYear", label: string) => {
+      const buildWindow = async (
+        days: number,
+        id: "threeMonth" | "sixMonth" | "oneYear",
+        label: string,
+      ) => {
         const since = new Date(end.getTime() - days * 24 * 60 * 60 * 1000);
         const [
           incidents,
@@ -15931,7 +16205,10 @@ export class IndustrialDomainService {
         return {
           id,
           label,
-          dateRange: { start: since.toISOString().slice(0, 10), end: end.toISOString().slice(0, 10) },
+          dateRange: {
+            start: since.toISOString().slice(0, 10),
+            end: end.toISOString().slice(0, 10),
+          },
           incidents,
           inspections,
           observations,
@@ -15959,8 +16236,7 @@ export class IndustrialDomainService {
         buildWindow(365, "oneYear", "Last 12 Months"),
       ]);
 
-      const active =
-        rangeDays === 90 ? threeMonth : rangeDays === 365 ? oneYear : sixMonth;
+      const active = rangeDays === 90 ? threeMonth : rangeDays === 365 ? oneYear : sixMonth;
 
       const [
         incidentTrend,
@@ -15999,11 +16275,31 @@ export class IndustrialDomainService {
       const dotCompliance = active.dot.complianceScore;
 
       const activityByModule = [
-        { label: "Incidents", key: "incidents", count: active.incidents, href: "/modules/incidents/" },
-        { label: "Inspections", key: "inspections", count: active.inspections, href: "/modules/inspections/" },
-        { label: "Observations", key: "observations", count: active.observations, href: "/modules/observations/" },
+        {
+          label: "Incidents",
+          key: "incidents",
+          count: active.incidents,
+          href: "/modules/incidents/",
+        },
+        {
+          label: "Inspections",
+          key: "inspections",
+          count: active.inspections,
+          href: "/modules/inspections/",
+        },
+        {
+          label: "Observations",
+          key: "observations",
+          count: active.observations,
+          href: "/modules/observations/",
+        },
         { label: "Forms", key: "forms", count: active.formSubmissions, href: "/modules/forms/" },
-        { label: "Training", key: "training", count: active.trainingCompletions, href: "/modules/training/" },
+        {
+          label: "Training",
+          key: "training",
+          count: active.trainingCompletions,
+          href: "/modules/training/",
+        },
         { label: "JSAs", key: "jsas", count: active.jsas, href: "/modules/jsas/" },
         {
           label: "Enterprise",
@@ -16023,17 +16319,24 @@ export class IndustrialDomainService {
 
       const insights: string[] = [];
       if (active.openIncidents === 0) insights.push("No open incidents in this period.");
-      else insights.push(`${active.openIncidents} open incident${active.openIncidents === 1 ? "" : "s"} need attention.`);
+      else
+        insights.push(
+          `${active.openIncidents} open incident${active.openIncidents === 1 ? "" : "s"} need attention.`,
+        );
       if (active.enterpriseActivity > 0) {
-        insights.push(`${active.enterpriseActivity} enterprise program records across ${enterpriseKeys.length} modules.`);
+        insights.push(
+          `${active.enterpriseActivity} enterprise program records across ${enterpriseKeys.length} modules.`,
+        );
       }
       if (mostActive && mostActive.count > 0) {
         insights.push(`Most active module: ${mostActive.label} (${mostActive.count}).`);
       }
       if (active.observations === 0) insights.push("No observations recorded in this period.");
-      if (dotTotal > 0) insights.push(`DOT compliance score ${dotCompliance}% (${dotOpen} open items).`);
+      if (dotTotal > 0)
+        insights.push(`DOT compliance score ${dotCompliance}% (${dotOpen} open items).`);
       if (departmentScores.length > 0) {
-        const weakest = departmentScores.find((d) => d.departmentId !== null) ?? departmentScores[0];
+        const weakest =
+          departmentScores.find((d) => d.departmentId !== null) ?? departmentScores[0];
         if (weakest && weakest.safetyScore < active.safetyScore) {
           insights.push(
             `Lowest department score: ${weakest.departmentName} (${weakest.safetyScore}, grade ${weakest.safetyGrade}).`,
@@ -16234,10 +16537,15 @@ export class IndustrialDomainService {
       return buckets.get(unassignedKey)!;
     };
 
-    const resolveDeptKey = (departmentId: string | null | undefined, departmentName: string | null | undefined) => {
+    const resolveDeptKey = (
+      departmentId: string | null | undefined,
+      departmentName: string | null | undefined,
+    ) => {
       const id = String(departmentId ?? "").trim();
       if (id && buckets.has(id)) return id;
-      const name = String(departmentName ?? "").trim().toLowerCase();
+      const name = String(departmentName ?? "")
+        .trim()
+        .toLowerCase();
       if (name && nameToId.has(name)) return nameToId.get(name)!;
       return unassignedKey;
     };
@@ -16433,7 +16741,10 @@ export class IndustrialDomainService {
           incidentDates: bucket.incidentDates,
         });
         const safetyScore = Math.round(
-          Math.min(Math.max(baseScore - observationImpact.deduction + observationImpact.credit, 0), 100),
+          Math.min(
+            Math.max(baseScore - observationImpact.deduction + observationImpact.credit, 0),
+            100,
+          ),
         );
         return {
           departmentId: bucket.departmentId,
@@ -16448,7 +16759,8 @@ export class IndustrialDomainService {
           observations: observationImpact.unsafeCount + observationImpact.positiveCount,
           unsafeObservations: observationImpact.unsafeCount,
           openUnsafeObservations: observationImpact.unsafeOpen,
-          observationPoints: Math.round((observationImpact.credit - observationImpact.deduction) * 10) / 10,
+          observationPoints:
+            Math.round((observationImpact.credit - observationImpact.deduction) * 10) / 10,
           daysClean: observationImpact.daysClean,
         };
       })
@@ -16499,12 +16811,15 @@ export class IndustrialDomainService {
     };
   }
 
-  private incidentFieldsForOsha(row: {
-    id: string;
-    title: string | null;
-    siteId: string | null;
-    sourcePayload: unknown;
-  }, personnel?: Record<string, unknown> | null) {
+  private incidentFieldsForOsha(
+    row: {
+      id: string;
+      title: string | null;
+      siteId: string | null;
+      sourcePayload: unknown;
+    },
+    personnel?: Record<string, unknown> | null,
+  ) {
     const payload = this.unwrapSourcePayload(row.sourcePayload);
     const seeded = seedForm301FieldsFromIncident({
       incidentId: row.id,
@@ -16553,13 +16868,10 @@ export class IndustrialDomainService {
     const street =
       (row.street && String(row.street).trim()) ||
       String(payload.street ?? payload.address ?? "").trim();
-    const city =
-      (row.city && String(row.city).trim()) || String(payload.city ?? "").trim();
-    const state =
-      (row.state && String(row.state).trim()) || String(payload.state ?? "").trim();
+    const city = (row.city && String(row.city).trim()) || String(payload.city ?? "").trim();
+    const state = (row.state && String(row.state).trim()) || String(payload.state ?? "").trim();
     const zip =
-      (row.zip && String(row.zip).trim()) ||
-      String(payload.zip ?? payload.zipCode ?? "").trim();
+      (row.zip && String(row.zip).trim()) || String(payload.zip ?? payload.zipCode ?? "").trim();
     const gender =
       normalizeWorkersCompGender(row.gender) ||
       normalizeWorkersCompGender(payload.gender ?? payload.sex);
@@ -16571,10 +16883,14 @@ export class IndustrialDomainService {
       lastName: row.lastName,
       dateOfBirth: row.dateOfBirth
         ? String(row.dateOfBirth).slice(0, 10)
-        : String(payload.dateOfBirth ?? "").trim().slice(0, 10),
+        : String(payload.dateOfBirth ?? "")
+            .trim()
+            .slice(0, 10),
       hireDate: row.hireDate
         ? String(row.hireDate).slice(0, 10)
-        : String(payload.hireDate ?? "").trim().slice(0, 10),
+        : String(payload.hireDate ?? "")
+            .trim()
+            .slice(0, 10),
       jobTitle: row.jobTitle ?? String(payload.jobTitle ?? "").trim(),
       phone: row.phone ?? String(payload.phone ?? "").trim(),
       companyPhone: row.companyPhone ?? String(payload.companyPhone ?? "").trim(),
@@ -16679,10 +16995,7 @@ export class IndustrialDomainService {
           siteName: industrialSites.name,
         })
         .from(industrialOshaCases)
-        .leftJoin(
-          industrialPersonnel,
-          eq(industrialPersonnel.id, industrialOshaCases.personnelId),
-        )
+        .leftJoin(industrialPersonnel, eq(industrialPersonnel.id, industrialOshaCases.personnelId))
         .leftJoin(industrialSites, eq(industrialSites.id, industrialOshaCases.siteId))
         .where(
           and(
@@ -16807,10 +17120,7 @@ export class IndustrialDomainService {
           siteName: industrialSites.name,
         })
         .from(industrialOshaCases)
-        .leftJoin(
-          industrialPersonnel,
-          eq(industrialPersonnel.id, industrialOshaCases.personnelId),
-        )
+        .leftJoin(industrialPersonnel, eq(industrialPersonnel.id, industrialOshaCases.personnelId))
         .leftJoin(industrialSites, eq(industrialSites.id, industrialOshaCases.siteId))
         .where(
           and(
@@ -16947,10 +17257,7 @@ export class IndustrialDomainService {
           siteName: industrialSites.name,
         })
         .from(industrialOshaCases)
-        .leftJoin(
-          industrialPersonnel,
-          eq(industrialPersonnel.id, industrialOshaCases.personnelId),
-        )
+        .leftJoin(industrialPersonnel, eq(industrialPersonnel.id, industrialOshaCases.personnelId))
         .leftJoin(industrialSites, eq(industrialSites.id, industrialOshaCases.siteId))
         .where(
           and(
@@ -17327,9 +17634,6 @@ export class IndustrialDomainService {
       .select()
       .from(industrialSites)
       .where(and(eq(industrialSites.tenantId, tenantId), isNull(industrialSites.archivedAt)));
-    return (
-      sites.find((s) => s.name.trim().toLowerCase() === establishment) ??
-      null
-    );
+    return sites.find((s) => s.name.trim().toLowerCase() === establishment) ?? null;
   }
 }

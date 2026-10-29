@@ -140,7 +140,13 @@ try {
       after: { settings: settingsAfter, walkthroughs: wtUpdated },
     });
   }
-  console.log(JSON.stringify({ ok: true, apply: APPLY, voiceId: VOICE_ID, profileId: PROFILE_ID, results }, null, 2));
+  console.log(
+    JSON.stringify(
+      { ok: true, apply: APPLY, voiceId: VOICE_ID, profileId: PROFILE_ID, results },
+      null,
+      2,
+    ),
+  );
 } finally {
   await sql.end({ timeout: 5 });
 }

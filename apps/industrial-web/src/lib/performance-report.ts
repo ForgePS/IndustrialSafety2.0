@@ -51,7 +51,9 @@ export const PERFORMANCE_SECTION_OPTIONS: ReadonlyArray<{
   { id: "jsas", label: "Job safety analyses", hint: "JSAs created, pending" },
 ];
 
-export const ALL_PERFORMANCE_SECTIONS: PerformanceSectionId[] = PERFORMANCE_SECTION_OPTIONS.map((s) => s.id);
+export const ALL_PERFORMANCE_SECTIONS: PerformanceSectionId[] = PERFORMANCE_SECTION_OPTIONS.map(
+  (s) => s.id,
+);
 
 export type PerformancePeriodPreset =
   | "this_month"
@@ -63,7 +65,10 @@ export type PerformancePeriodPreset =
   | "last_12_months"
   | "custom";
 
-export const PERFORMANCE_PERIOD_OPTIONS: ReadonlyArray<{ id: PerformancePeriodPreset; label: string }> = [
+export const PERFORMANCE_PERIOD_OPTIONS: ReadonlyArray<{
+  id: PerformancePeriodPreset;
+  label: string;
+}> = [
   { id: "this_month", label: "This month" },
   { id: "last_month", label: "Last month" },
   { id: "this_quarter", label: "This quarter" },
@@ -128,7 +133,9 @@ export function performanceFormError(form: PerformanceReportForm): string | null
   return null;
 }
 
-export function buildPerformanceReportRequest(form: PerformanceReportForm): Record<string, unknown> {
+export function buildPerformanceReportRequest(
+  form: PerformanceReportForm,
+): Record<string, unknown> {
   const hours = Number(form.hoursWorked.replace(/,/g, "").trim());
   return {
     from: form.from,
@@ -159,11 +166,17 @@ function catalogRows(payload: unknown): Obj[] {
 
 const isActiveRow = (r: Obj) => !text(r.status) || text(r.status).toUpperCase() === "ACTIVE";
 
-export function parsePerformanceOrgOptions(sitesRaw: unknown, departmentsRaw: unknown): PerformanceOrgOptions {
+export function parsePerformanceOrgOptions(
+  sitesRaw: unknown,
+  departmentsRaw: unknown,
+): PerformanceOrgOptions {
   const byName = (a: { name: string }, b: { name: string }) => a.name.localeCompare(b.name);
   const sites = catalogRows(sitesRaw)
     .filter(isActiveRow)
-    .map((r) => ({ id: text(r.id).trim(), name: text(r.name).trim() || text(r.siteKey).trim() || "Unnamed location" }))
+    .map((r) => ({
+      id: text(r.id).trim(),
+      name: text(r.name).trim() || text(r.siteKey).trim() || "Unnamed location",
+    }))
     .filter((s) => s.id)
     .sort(byName);
   const departments = catalogRows(departmentsRaw)
@@ -245,7 +258,8 @@ export type PerformanceReport = {
 };
 
 type Obj = Record<string, unknown>;
-const obj = (v: unknown): Obj | null => (v && typeof v === "object" && !Array.isArray(v) ? (v as Obj) : null);
+const obj = (v: unknown): Obj | null =>
+  v && typeof v === "object" && !Array.isArray(v) ? (v as Obj) : null;
 const text = (v: unknown) => (typeof v === "string" ? v : v == null ? "" : String(v));
 const num = (v: unknown) => (typeof v === "number" && Number.isFinite(v) ? v : 0);
 const numOrNull = (v: unknown) => (typeof v === "number" && Number.isFinite(v) ? v : null);
@@ -256,9 +270,16 @@ const FORMATS: PerformanceMetricFormat[] = ["count", "percent", "rate", "score",
 function parseMetric(raw: unknown): PerformanceMetric | null {
   const m = obj(raw);
   if (!m || !text(m.key)) return null;
-  const format = FORMATS.includes(m.format as PerformanceMetricFormat) ? (m.format as PerformanceMetricFormat) : "count";
+  const format = FORMATS.includes(m.format as PerformanceMetricFormat)
+    ? (m.format as PerformanceMetricFormat)
+    : "count";
   const better = m.better === "higher" || m.better === "lower" ? m.better : undefined;
-  return { key: text(m.key), label: text(m.label) || text(m.key), format, ...(better ? { better } : {}) };
+  return {
+    key: text(m.key),
+    label: text(m.label) || text(m.key),
+    format,
+    ...(better ? { better } : {}),
+  };
 }
 
 function parseValues(raw: unknown): PerformanceValues {
@@ -271,7 +292,9 @@ function parseTable(raw: unknown): PerformanceTable {
   const t = obj(raw) ?? {};
   return {
     title: text(t.title),
-    metrics: list(t.metrics).map(parseMetric).filter((m): m is PerformanceMetric => m !== null),
+    metrics: list(t.metrics)
+      .map(parseMetric)
+      .filter((m): m is PerformanceMetric => m !== null),
     totals: parseValues(t.totals),
     rows: list(t.rows).map((r) => {
       const row = obj(r) ?? {};
@@ -367,7 +390,10 @@ export function performanceGrade(score: number | null): string {
   return "F";
 }
 
-export function formatPerformanceValue(value: number | null | undefined, format: PerformanceMetricFormat): string {
+export function formatPerformanceValue(
+  value: number | null | undefined,
+  format: PerformanceMetricFormat,
+): string {
   if (value === null || value === undefined || !Number.isFinite(value)) return "-";
   switch (format) {
     case "percent":
@@ -421,8 +447,14 @@ function worstKeys(table: PerformanceTable, metric: PerformanceMetric): Set<stri
     .map((r) => ({ key: r.key, v: r.values[metric.key] }))
     .filter((x): x is { key: string; v: number } => typeof x.v === "number");
   if (values.length < 2) return new Set();
-  const worst = metric.better === "higher" ? Math.min(...values.map((x) => x.v)) : Math.max(...values.map((x) => x.v));
-  const best = metric.better === "higher" ? Math.max(...values.map((x) => x.v)) : Math.min(...values.map((x) => x.v));
+  const worst =
+    metric.better === "higher"
+      ? Math.min(...values.map((x) => x.v))
+      : Math.max(...values.map((x) => x.v));
+  const best =
+    metric.better === "higher"
+      ? Math.max(...values.map((x) => x.v))
+      : Math.min(...values.map((x) => x.v));
   if (worst === best || (metric.better === "lower" && worst === 0)) return new Set();
   return new Set(values.filter((x) => x.v === worst).map((x) => x.key));
 }
@@ -452,7 +484,10 @@ function tableHtml(table: PerformanceTable, groupLabel: string): string {
         )
         .join("");
       const total = `<tr class="total"><th scope="row">Organization total</th>${metrics
-        .map((m) => `<td class="num">${esc(formatPerformanceValue(table.totals[m.key], m.format))}</td>`)
+        .map(
+          (m) =>
+            `<td class="num">${esc(formatPerformanceValue(table.totals[m.key], m.format))}</td>`,
+        )
         .join("")}</tr>`;
       return `<table><thead><tr><th>${esc(groupLabel)}</th>${head}</tr></thead><tbody>${body}</tbody><tfoot>${total}</tfoot></table>`;
     })
@@ -539,7 +574,9 @@ export function buildPerformanceReportHtml(
   const scope = [
     report.filters.sites.length ? `Locations: ${report.filters.sites.join(", ")}` : "",
     report.filters.divisions.length ? `Divisions: ${report.filters.divisions.join(", ")}` : "",
-    report.filters.departments.length ? `Departments: ${report.filters.departments.join(", ")}` : "",
+    report.filters.departments.length
+      ? `Departments: ${report.filters.departments.join(", ")}`
+      : "",
   ].filter(Boolean);
   const generated = report.generatedAt ? new Date(report.generatedAt) : new Date();
   const logo =
@@ -548,7 +585,9 @@ export function buildPerformanceReportHtml(
       : "";
   const overviewTiles: PerformanceTable = {
     ...report.overview,
-    metrics: report.overview.metrics.filter((m) => m.key !== "headcount" || report.overview.totals.headcount),
+    metrics: report.overview.metrics.filter(
+      (m) => m.key !== "headcount" || report.overview.totals.headcount,
+    ),
   };
   const sections = report.sections
     .map(

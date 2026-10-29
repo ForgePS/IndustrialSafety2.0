@@ -71,9 +71,21 @@ describe("resolveWorkspaceLayout", () => {
       {
         version: 1,
         items: [
-          { moduleKey: "TASKS", sortOrder: 0, size: "large", isVisible: true, defaultView: "today" },
+          {
+            moduleKey: "TASKS",
+            sortOrder: 0,
+            size: "large",
+            isVisible: true,
+            defaultView: "today",
+          },
           { moduleKey: "GONE", sortOrder: 1, size: "compact", isVisible: true },
-          { moduleKey: "CALENDAR", sortOrder: 2, size: "full", isVisible: true, defaultView: "week" },
+          {
+            moduleKey: "CALENDAR",
+            sortOrder: 2,
+            size: "full",
+            isVisible: true,
+            defaultView: "week",
+          },
         ],
       },
       registry(),
@@ -104,7 +116,12 @@ describe("resolveWorkspaceLayout", () => {
 describe("layout mutations", () => {
   it("updates size and view", () => {
     const base = defaultWorkspaceLayout(registry());
-    const next = updateWorkspaceItem(base, "CALENDAR", { size: "large", defaultView: "month" }, registry());
+    const next = updateWorkspaceItem(
+      base,
+      "CALENDAR",
+      { size: "large", defaultView: "month" },
+      registry(),
+    );
     const item = next.items.find((i) => i.moduleKey === "CALENDAR");
     expect(item?.size).toBe("large");
     expect(item?.defaultView).toBe("month");

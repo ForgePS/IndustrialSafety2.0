@@ -10,11 +10,7 @@ import { IndustrialSanitationService } from "./industrial-sanitation.service.js"
 const ENTITLEMENT = { productCode: "FORGE_INDUSTRIAL" as const };
 type ListQuery = Record<string, string | undefined>;
 
-const VIEW = [
-  "industrial.sanitation.view",
-  "industrial.access",
-  "industrial.admin",
-] as const;
+const VIEW = ["industrial.sanitation.view", "industrial.access", "industrial.admin"] as const;
 const MANAGE = ["industrial.sanitation.manage", "industrial.admin"] as const;
 const INSPECT = [
   "industrial.sanitation.inspect",
@@ -105,10 +101,7 @@ export class IndustrialSanitationController {
 
   @Get("regulatory-library")
   @RequireAnyPermission([...VIEW], { requiresEntitlement: ENTITLEMENT })
-  async regulatoryLibrary(
-    @Principal() principal: ForgePrincipal,
-    @Req() req: RequestWithIds,
-  ) {
+  async regulatoryLibrary(@Principal() principal: ForgePrincipal, @Req() req: RequestWithIds) {
     return ok(await this.sanitation.listRegulatoryLibrary(principal), getRequestIds(req));
   }
 
@@ -242,10 +235,7 @@ export class IndustrialSanitationController {
     @Body() body: Record<string, unknown>,
     @Req() req: RequestWithIds,
   ) {
-    return ok(
-      await this.sanitation.updateLocation(principal, id, body ?? {}),
-      getRequestIds(req),
-    );
+    return ok(await this.sanitation.updateLocation(principal, id, body ?? {}), getRequestIds(req));
   }
 
   @Post("locations/:id/archive")
@@ -302,10 +292,7 @@ export class IndustrialSanitationController {
 
   @Post("templates/ensure-builtin")
   @RequireAnyPermission([...MANAGE], { requiresEntitlement: ENTITLEMENT })
-  async ensureBuiltinTemplates(
-    @Principal() principal: ForgePrincipal,
-    @Req() req: RequestWithIds,
-  ) {
+  async ensureBuiltinTemplates(@Principal() principal: ForgePrincipal, @Req() req: RequestWithIds) {
     return ok(await this.sanitation.ensureBuiltinTemplates(principal), getRequestIds(req));
   }
 
@@ -593,10 +580,7 @@ export class IndustrialSanitationController {
     @Body() body: Record<string, unknown>,
     @Req() req: RequestWithIds,
   ) {
-    return ok(
-      await this.sanitation.createCleaningTask(principal, body ?? {}),
-      getRequestIds(req),
-    );
+    return ok(await this.sanitation.createCleaningTask(principal, body ?? {}), getRequestIds(req));
   }
 
   @Patch("cleaning-tasks/:id/status")
@@ -648,10 +632,7 @@ export class IndustrialSanitationController {
     @Body() body: Record<string, unknown>,
     @Req() req: RequestWithIds,
   ) {
-    return ok(
-      await this.sanitation.createVerification(principal, body ?? {}),
-      getRequestIds(req),
-    );
+    return ok(await this.sanitation.createVerification(principal, body ?? {}), getRequestIds(req));
   }
 
   // ── Spills ───────────────────────────────────────────────────────────────
@@ -760,10 +741,7 @@ export class IndustrialSanitationController {
     @Body() body: Record<string, unknown>,
     @Req() req: RequestWithIds,
   ) {
-    return ok(
-      await this.sanitation.createPestFinding(principal, body ?? {}),
-      getRequestIds(req),
-    );
+    return ok(await this.sanitation.createPestFinding(principal, body ?? {}), getRequestIds(req));
   }
 
   // ── Chemicals ────────────────────────────────────────────────────────────
@@ -797,10 +775,7 @@ export class IndustrialSanitationController {
     @Body() body: Record<string, unknown>,
     @Req() req: RequestWithIds,
   ) {
-    return ok(
-      await this.sanitation.updateChemical(principal, id, body ?? {}),
-      getRequestIds(req),
-    );
+    return ok(await this.sanitation.updateChemical(principal, id, body ?? {}), getRequestIds(req));
   }
 
   // ── Environmental samples ────────────────────────────────────────────────
@@ -812,10 +787,7 @@ export class IndustrialSanitationController {
     @Query() query: ListQuery,
     @Req() req: RequestWithIds,
   ) {
-    return ok(
-      await this.sanitation.listEnvironmentalSamples(principal, query),
-      getRequestIds(req),
-    );
+    return ok(await this.sanitation.listEnvironmentalSamples(principal, query), getRequestIds(req));
   }
 
   @Post("environmental-samples")
@@ -921,10 +893,7 @@ export class IndustrialSanitationController {
     @Param("id") id: string,
     @Req() req: RequestWithIds,
   ) {
-    return ok(
-      await this.sanitation.verifyCompressedAirRequest(principal, id),
-      getRequestIds(req),
-    );
+    return ok(await this.sanitation.verifyCompressedAirRequest(principal, id), getRequestIds(req));
   }
 
   // ── Concerns ─────────────────────────────────────────────────────────────
@@ -965,9 +934,6 @@ export class IndustrialSanitationController {
     @Body() body: Record<string, unknown>,
     @Req() req: RequestWithIds,
   ) {
-    return ok(
-      await this.sanitation.updateUiSettings(principal, body ?? {}),
-      getRequestIds(req),
-    );
+    return ok(await this.sanitation.updateUiSettings(principal, body ?? {}), getRequestIds(req));
   }
 }

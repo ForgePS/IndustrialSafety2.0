@@ -109,7 +109,9 @@ export function SneatVerticalMenu({
               ) : (
                 <span className="app-brand-logo demo">
                   <span className="avatar avatar-sm">
-                    <span className="avatar-initial rounded bg-primary">{brand.slice(0, 2).toUpperCase()}</span>
+                    <span className="avatar-initial rounded bg-primary">
+                      {brand.slice(0, 2).toUpperCase()}
+                    </span>
                   </span>
                 </span>
               )}

@@ -31,7 +31,9 @@ describe("personnel profile analytics helpers", () => {
     );
     expect(describeObservationImpact({ ...impact, unsafeCount: 0, credit: 0 })).toBeNull();
     const base = emptyPersonnelProfileAnalytics("p1");
-    expect(computeSafetyScore({ ...base, observations: { ...base.observations, scoreImpact: impact } })).toBe(98);
+    expect(
+      computeSafetyScore({ ...base, observations: { ...base.observations, scoreImpact: impact } }),
+    ).toBe(98);
   });
 
   it("deducts active disciplinary actions from the score", () => {

@@ -14,9 +14,7 @@ const args = process.argv.slice(2);
 const envIndex = args.indexOf("--env");
 const taskDefinitionIndex = args.indexOf("--task-definition");
 const forgeEnvironment =
-  (envIndex === -1 ? null : args[envIndex + 1]) ||
-  process.env.FORGE_ENV?.trim() ||
-  "development";
+  (envIndex === -1 ? null : args[envIndex + 1]) || process.env.FORGE_ENV?.trim() || "development";
 const taskDefinition =
   (taskDefinitionIndex === -1 ? null : args[taskDefinitionIndex + 1]) ||
   process.env.FORGE_ECS_TASK_DEFINITION?.trim() ||

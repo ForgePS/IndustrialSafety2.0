@@ -115,7 +115,10 @@ const ADMIN_GRANTS = INDUSTRIAL_PERMISSIONS.filter(
 const OPERATOR_ELEVATION = ["industrial.personnel.manage"];
 
 function titleFor(code) {
-  const body = code.replace(/^industrial\./, "").replace(/\./g, " ").replace(/_/g, " ");
+  const body = code
+    .replace(/^industrial\./, "")
+    .replace(/\./g, " ")
+    .replace(/_/g, " ");
   return `Industrial ${body}`;
 }
 

@@ -82,7 +82,13 @@ for (const row of rows) {
   updates.push({ id: row.id, stem, choices });
 }
 
-console.log(JSON.stringify({ tenantKey: TENANT_KEY, matched: rows.length, toUpdate: updates.length, apply: APPLY }, null, 2));
+console.log(
+  JSON.stringify(
+    { tenantKey: TENANT_KEY, matched: rows.length, toUpdate: updates.length, apply: APPLY },
+    null,
+    2,
+  ),
+);
 for (const row of updates) {
   console.log(`- ${row.id}: ${row.stem.slice(0, 120)}`);
 }

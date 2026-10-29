@@ -60,10 +60,7 @@ export function CompanyModulesSettings() {
     return [...map.entries()];
   }, [data]);
 
-  const enabledCount = useMemo(
-    () => (data?.modules ?? []).filter((m) => m.enabled).length,
-    [data],
-  );
+  const enabledCount = useMemo(() => (data?.modules ?? []).filter((m) => m.enabled).length, [data]);
 
   async function toggleModule(row: CompanyModuleRow) {
     if (!row.toggleable || busyCode) return;
@@ -111,8 +108,8 @@ export function CompanyModulesSettings() {
         <p className="settings-admin-sidebar__eyebrow mb-2">Platform admin</p>
         <h1 className="h4 mb-1">Company modules</h1>
         <p className="text-muted mb-0">
-          Turn modules on when your team is ready to use them. Unchecked modules stay hidden from the
-          navigation until you enable them.
+          Turn modules on when your team is ready to use them. Unchecked modules stay hidden from
+          the navigation until you enable them.
         </p>
       </div>
 
@@ -131,8 +128,8 @@ export function CompanyModulesSettings() {
 
       {!loading && data && !data.productEntitled ? (
         <div className="alert alert-warning" role="status">
-          Forge Industrial is not entitled for this company yet. Contact Forge support before enabling
-          modules.
+          Forge Industrial is not entitled for this company yet. Contact Forge support before
+          enabling modules.
         </div>
       ) : null}
 
@@ -169,7 +166,9 @@ export function CompanyModulesSettings() {
                             type="checkbox"
                             role="switch"
                             checked={row.enabled}
-                            disabled={!row.toggleable || !data.productEntitled || busyCode === row.code}
+                            disabled={
+                              !row.toggleable || !data.productEntitled || busyCode === row.code
+                            }
                             onChange={() => void toggleModule(row)}
                             aria-label={`${row.enabled ? "Disable" : "Enable"} ${row.name}`}
                           />

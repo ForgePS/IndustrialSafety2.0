@@ -1,10 +1,7 @@
 import { createHash, randomUUID } from "node:crypto";
 import { Inject, Injectable } from "@nestjs/common";
 import { SendMessageCommand, SQSClient } from "@aws-sdk/client-sqs";
-import {
-  CAD_AUDIT_ACTIONS,
-  CAD_FEATURE_FLAGS,
-} from "@forge/cad-contracts";
+import { CAD_AUDIT_ACTIONS, CAD_FEATURE_FLAGS } from "@forge/cad-contracts";
 import {
   buildCadSimulatorPayload,
   listCadSimulatorScenarios,
@@ -118,7 +115,13 @@ export class CadSimulatorService {
         correlationId,
         requestId: principal.requestId,
       });
-      await this.writeHealthLog(tenantId, connection.id, "SIMULATOR", "HEALTHY", "Simulator webhook send");
+      await this.writeHealthLog(
+        tenantId,
+        connection.id,
+        "SIMULATOR",
+        "HEALTHY",
+        "Simulator webhook send",
+      );
       return {
         delivery: "WEBHOOK",
         scenarioId: data.scenarioId,
@@ -136,47 +139,52 @@ export class CadSimulatorService {
     const payloadHash = createHash("sha256").update(bodyBuf).digest("hex");
     const now = new Date();
 
-    await withTenantTransaction(this.db, tenantId, async (tx) => {
-      await tx.insert(cadRawMessages).values({
-        id: rawMessageId,
-        tenantId,
-        cadConnectionId: connection.id,
-        receivedAt: now,
-        transportType: "SYNTHETIC_SIMULATOR",
-        sourceMessageId:
-          typeof payload.sourceMessageId === "string" ? payload.sourceMessageId : null,
-        sourceIncidentId:
-          typeof payload.sourceIncidentId === "string" ? payload.sourceIncidentId : null,
-        contentType: "application/json",
-        processingStatus: "PERSISTED",
-        authenticationStatus: "VALID",
-        signatureValid: true,
-        payloadSizeBytes: bodyBuf.byteLength,
-        payloadHash,
-        payloadStorageType: "INLINE_ENCRYPTED",
-        inlinePayloadEncrypted: bodyBuf,
-        idempotencyKey: `sim:${rawMessageId}`,
-        acknowledgementStatus: "ACCEPTED",
-        acknowledgedAt: now,
-        correlationId,
-        createdAt: now,
-      });
+    await withTenantTransaction(
+      this.db,
+      tenantId,
+      async (tx) => {
+        await tx.insert(cadRawMessages).values({
+          id: rawMessageId,
+          tenantId,
+          cadConnectionId: connection.id,
+          receivedAt: now,
+          transportType: "SYNTHETIC_SIMULATOR",
+          sourceMessageId:
+            typeof payload.sourceMessageId === "string" ? payload.sourceMessageId : null,
+          sourceIncidentId:
+            typeof payload.sourceIncidentId === "string" ? payload.sourceIncidentId : null,
+          contentType: "application/json",
+          processingStatus: "PERSISTED",
+          authenticationStatus: "VALID",
+          signatureValid: true,
+          payloadSizeBytes: bodyBuf.byteLength,
+          payloadHash,
+          payloadStorageType: "INLINE_ENCRYPTED",
+          inlinePayloadEncrypted: bodyBuf,
+          idempotencyKey: `sim:${rawMessageId}`,
+          acknowledgementStatus: "ACCEPTED",
+          acknowledgedAt: now,
+          correlationId,
+          createdAt: now,
+        });
 
-      await this.audit.writeInTransaction(tx, {
-        tenantId,
-        actorUserId: principal.userId,
-        actorPersonId: principal.personId,
-        actorType: "USER",
-        action: CAD_AUDIT_ACTIONS.MESSAGE_RECEIVED,
-        resourceType: "cad_raw_message",
-        resourceId: rawMessageId,
-        result: "SUCCESS",
-        riskLevel: "MEDIUM",
-        correlationId,
-        requestId: principal.requestId,
-        after: { delivery: "DIRECT_QUEUE", scenarioId: data.scenarioId },
-      });
-    }, principal.userId);
+        await this.audit.writeInTransaction(tx, {
+          tenantId,
+          actorUserId: principal.userId,
+          actorPersonId: principal.personId,
+          actorType: "USER",
+          action: CAD_AUDIT_ACTIONS.MESSAGE_RECEIVED,
+          resourceType: "cad_raw_message",
+          resourceId: rawMessageId,
+          result: "SUCCESS",
+          riskLevel: "MEDIUM",
+          correlationId,
+          requestId: principal.requestId,
+          after: { delivery: "DIRECT_QUEUE", scenarioId: data.scenarioId },
+        });
+      },
+      principal.userId,
+    );
 
     const queueUrl = this.env.SQS_CAD_INTAKE_QUEUE_URL;
     if (queueUrl) {
@@ -201,7 +209,13 @@ export class CadSimulatorService {
       });
     }
 
-    await this.writeHealthLog(tenantId, connection.id, "SIMULATOR", "HEALTHY", "Simulator direct queue send");
+    await this.writeHealthLog(
+      tenantId,
+      connection.id,
+      "SIMULATOR",
+      "HEALTHY",
+      "Simulator direct queue send",
+    );
     return {
       delivery: "DIRECT_QUEUE",
       scenarioId: data.scenarioId,
@@ -217,173 +231,197 @@ export class CadSimulatorService {
   async quarantineMessage(tenantId: string, body: unknown, principal: ForgePrincipal) {
     await this.assertSimulatorEnabled(tenantId);
     const data = quarantineSchema.parse(body);
-    return withTenantTransaction(this.db, tenantId, async (tx) => {
-      const row = await tx.query.cadRawMessages.findFirst({
-        where: and(eq(cadRawMessages.tenantId, tenantId), eq(cadRawMessages.id, data.rawMessageId)),
-      });
-      if (!row) throw new ForgeError("NOT_FOUND", "CAD message not found");
+    return withTenantTransaction(
+      this.db,
+      tenantId,
+      async (tx) => {
+        const row = await tx.query.cadRawMessages.findFirst({
+          where: and(
+            eq(cadRawMessages.tenantId, tenantId),
+            eq(cadRawMessages.id, data.rawMessageId),
+          ),
+        });
+        if (!row) throw new ForgeError("NOT_FOUND", "CAD message not found");
 
-      const [updated] = await tx
-        .update(cadRawMessages)
-        .set({
-          processingStatus: "QUARANTINED",
-          currentProcessingStage: "QUARANTINE",
-          lastProcessingErrorCode: "SYNTHETIC_QUARANTINE",
-          lastProcessingErrorSummary: data.reason,
-          quarantinedAt: new Date(),
-        })
-        .where(eq(cadRawMessages.id, data.rawMessageId))
-        .returning({
-          id: cadRawMessages.id,
-          processingStatus: cadRawMessages.processingStatus,
-          processingAttempts: cadRawMessages.processingAttempts,
-          payloadHash: cadRawMessages.payloadHash,
-          sourceMessageId: cadRawMessages.sourceMessageId,
-          correlationId: cadRawMessages.correlationId,
+        const [updated] = await tx
+          .update(cadRawMessages)
+          .set({
+            processingStatus: "QUARANTINED",
+            currentProcessingStage: "QUARANTINE",
+            lastProcessingErrorCode: "SYNTHETIC_QUARANTINE",
+            lastProcessingErrorSummary: data.reason,
+            quarantinedAt: new Date(),
+          })
+          .where(eq(cadRawMessages.id, data.rawMessageId))
+          .returning({
+            id: cadRawMessages.id,
+            processingStatus: cadRawMessages.processingStatus,
+            processingAttempts: cadRawMessages.processingAttempts,
+            payloadHash: cadRawMessages.payloadHash,
+            sourceMessageId: cadRawMessages.sourceMessageId,
+            correlationId: cadRawMessages.correlationId,
+          });
+
+        await this.audit.writeInTransaction(tx, {
+          tenantId,
+          actorUserId: principal.userId,
+          actorPersonId: principal.personId,
+          actorType: "USER",
+          action: CAD_AUDIT_ACTIONS.MESSAGE_QUARANTINED,
+          resourceType: "cad_raw_message",
+          resourceId: data.rawMessageId,
+          result: "SUCCESS",
+          riskLevel: "HIGH",
+          correlationId: principal.correlationId,
+          requestId: principal.requestId,
+          after: { reason: data.reason, processingStatus: "QUARANTINED" },
         });
 
-      await this.audit.writeInTransaction(tx, {
-        tenantId,
-        actorUserId: principal.userId,
-        actorPersonId: principal.personId,
-        actorType: "USER",
-        action: CAD_AUDIT_ACTIONS.MESSAGE_QUARANTINED,
-        resourceType: "cad_raw_message",
-        resourceId: data.rawMessageId,
-        result: "SUCCESS",
-        riskLevel: "HIGH",
-        correlationId: principal.correlationId,
-        requestId: principal.requestId,
-        after: { reason: data.reason, processingStatus: "QUARANTINED" },
-      });
-
-      return updated;
-    }, principal.userId);
+        return updated;
+      },
+      principal.userId,
+    );
   }
 
   async startOutage(tenantId: string, body: unknown, principal: ForgePrincipal) {
     await this.assertSimulatorEnabled(tenantId);
     const data = outageSchema.parse(body);
-    return withTenantTransaction(this.db, tenantId, async (tx) => {
-      const connection = await tx.query.cadConnections.findFirst({
-        where: and(eq(cadConnections.tenantId, tenantId), eq(cadConnections.id, data.connectionId)),
-      });
-      if (!connection || connection.archivedAt) {
-        throw new ForgeError("NOT_FOUND", "CAD connection not found");
-      }
+    return withTenantTransaction(
+      this.db,
+      tenantId,
+      async (tx) => {
+        const connection = await tx.query.cadConnections.findFirst({
+          where: and(
+            eq(cadConnections.tenantId, tenantId),
+            eq(cadConnections.id, data.connectionId),
+          ),
+        });
+        if (!connection || connection.archivedAt) {
+          throw new ForgeError("NOT_FOUND", "CAD connection not found");
+        }
 
-      const id = createId();
-      const now = new Date();
-      await tx.insert(cadConnectionOutages).values({
-        id,
-        tenantId,
-        cadConnectionId: connection.id,
-        status: "ACTIVE",
-        reason: data.reason,
-        startedAt: now,
-        startedByUserId: principal.userId,
-        source: "SIMULATOR",
-        createdAt: now,
-        updatedAt: now,
-      });
-
-      const [updated] = await tx
-        .update(cadConnections)
-        .set({
-          status: "DEGRADED",
-          healthStatus: "DEGRADED",
-          lastErrorSummary: data.reason,
-          updatedByUserId: principal.userId,
-          recordVersion: connection.recordVersion + 1,
+        const id = createId();
+        const now = new Date();
+        await tx.insert(cadConnectionOutages).values({
+          id,
+          tenantId,
+          cadConnectionId: connection.id,
+          status: "ACTIVE",
+          reason: data.reason,
+          startedAt: now,
+          startedByUserId: principal.userId,
+          source: "SIMULATOR",
+          createdAt: now,
           updatedAt: now,
-        })
-        .where(eq(cadConnections.id, connection.id))
-        .returning();
+        });
 
-      await this.audit.writeInTransaction(tx, {
-        tenantId,
-        actorUserId: principal.userId,
-        actorPersonId: principal.personId,
-        actorType: "USER",
-        action: CAD_AUDIT_ACTIONS.FALLBACK_STARTED,
-        resourceType: "cad_connection_outage",
-        resourceId: id,
-        result: "SUCCESS",
-        riskLevel: "HIGH",
-        correlationId: principal.correlationId,
-        requestId: principal.requestId,
-        after: { reason: data.reason },
-      });
+        const [updated] = await tx
+          .update(cadConnections)
+          .set({
+            status: "DEGRADED",
+            healthStatus: "DEGRADED",
+            lastErrorSummary: data.reason,
+            updatedByUserId: principal.userId,
+            recordVersion: connection.recordVersion + 1,
+            updatedAt: now,
+          })
+          .where(eq(cadConnections.id, connection.id))
+          .returning();
 
-      return { outageId: id, connection: sanitize(updated!) };
-    }, principal.userId);
+        await this.audit.writeInTransaction(tx, {
+          tenantId,
+          actorUserId: principal.userId,
+          actorPersonId: principal.personId,
+          actorType: "USER",
+          action: CAD_AUDIT_ACTIONS.FALLBACK_STARTED,
+          resourceType: "cad_connection_outage",
+          resourceId: id,
+          result: "SUCCESS",
+          riskLevel: "HIGH",
+          correlationId: principal.correlationId,
+          requestId: principal.requestId,
+          after: { reason: data.reason },
+        });
+
+        return { outageId: id, connection: sanitize(updated!) };
+      },
+      principal.userId,
+    );
   }
 
   async recoverOutage(tenantId: string, body: unknown, principal: ForgePrincipal) {
     await this.assertSimulatorEnabled(tenantId);
     const data = outageSchema.parse(body);
-    return withTenantTransaction(this.db, tenantId, async (tx) => {
-      const connection = await tx.query.cadConnections.findFirst({
-        where: and(eq(cadConnections.tenantId, tenantId), eq(cadConnections.id, data.connectionId)),
-      });
-      if (!connection || connection.archivedAt) {
-        throw new ForgeError("NOT_FOUND", "CAD connection not found");
-      }
+    return withTenantTransaction(
+      this.db,
+      tenantId,
+      async (tx) => {
+        const connection = await tx.query.cadConnections.findFirst({
+          where: and(
+            eq(cadConnections.tenantId, tenantId),
+            eq(cadConnections.id, data.connectionId),
+          ),
+        });
+        if (!connection || connection.archivedAt) {
+          throw new ForgeError("NOT_FOUND", "CAD connection not found");
+        }
 
-      const active = await tx.query.cadConnectionOutages.findFirst({
-        where: and(
-          eq(cadConnectionOutages.tenantId, tenantId),
-          eq(cadConnectionOutages.cadConnectionId, connection.id),
-          eq(cadConnectionOutages.status, "ACTIVE"),
-        ),
-        orderBy: (t, { desc: d }) => [d(t.startedAt)],
-      });
+        const active = await tx.query.cadConnectionOutages.findFirst({
+          where: and(
+            eq(cadConnectionOutages.tenantId, tenantId),
+            eq(cadConnectionOutages.cadConnectionId, connection.id),
+            eq(cadConnectionOutages.status, "ACTIVE"),
+          ),
+          orderBy: (t, { desc: d }) => [d(t.startedAt)],
+        });
 
-      const now = new Date();
-      if (active) {
-        await tx
-          .update(cadConnectionOutages)
+        const now = new Date();
+        if (active) {
+          await tx
+            .update(cadConnectionOutages)
+            .set({
+              status: "ENDED",
+              endedAt: now,
+              endedByUserId: principal.userId,
+              recordVersion: active.recordVersion + 1,
+              updatedAt: now,
+            })
+            .where(eq(cadConnectionOutages.id, active.id));
+        }
+
+        const [updated] = await tx
+          .update(cadConnections)
           .set({
-            status: "ENDED",
-            endedAt: now,
-            endedByUserId: principal.userId,
-            recordVersion: active.recordVersion + 1,
+            status: connection.enabledAt ? "ACTIVE" : "TESTING",
+            healthStatus: "HEALTHY",
+            lastErrorSummary: null,
+            lastSuccessAt: now,
+            updatedByUserId: principal.userId,
+            recordVersion: connection.recordVersion + 1,
             updatedAt: now,
           })
-          .where(eq(cadConnectionOutages.id, active.id));
-      }
+          .where(eq(cadConnections.id, connection.id))
+          .returning();
 
-      const [updated] = await tx
-        .update(cadConnections)
-        .set({
-          status: connection.enabledAt ? "ACTIVE" : "TESTING",
-          healthStatus: "HEALTHY",
-          lastErrorSummary: null,
-          lastSuccessAt: now,
-          updatedByUserId: principal.userId,
-          recordVersion: connection.recordVersion + 1,
-          updatedAt: now,
-        })
-        .where(eq(cadConnections.id, connection.id))
-        .returning();
+        await this.audit.writeInTransaction(tx, {
+          tenantId,
+          actorUserId: principal.userId,
+          actorPersonId: principal.personId,
+          actorType: "USER",
+          action: CAD_AUDIT_ACTIONS.FALLBACK_ENDED,
+          resourceType: "cad_connection_outage",
+          resourceId: active?.id ?? connection.id,
+          result: "SUCCESS",
+          riskLevel: "HIGH",
+          correlationId: principal.correlationId,
+          requestId: principal.requestId,
+          after: { reason: data.reason },
+        });
 
-      await this.audit.writeInTransaction(tx, {
-        tenantId,
-        actorUserId: principal.userId,
-        actorPersonId: principal.personId,
-        actorType: "USER",
-        action: CAD_AUDIT_ACTIONS.FALLBACK_ENDED,
-        resourceType: "cad_connection_outage",
-        resourceId: active?.id ?? connection.id,
-        result: "SUCCESS",
-        riskLevel: "HIGH",
-        correlationId: principal.correlationId,
-        requestId: principal.requestId,
-        after: { reason: data.reason },
-      });
-
-      return { recovered: true, connection: sanitize(updated!) };
-    }, principal.userId);
+        return { recovered: true, connection: sanitize(updated!) };
+      },
+      principal.userId,
+    );
   }
 
   async listOutages(tenantId: string) {
@@ -468,7 +506,11 @@ function resolveLocalSecret(overridesJson: string, publicId: string): string | n
 }
 
 function sanitize<T extends Record<string, unknown>>(row: T) {
-  const { credentialsSecretArn: _c, webhookSecretArn: _w, ...rest } = row as T & {
+  const {
+    credentialsSecretArn: _c,
+    webhookSecretArn: _w,
+    ...rest
+  } = row as T & {
     credentialsSecretArn?: string | null;
     webhookSecretArn?: string | null;
   };

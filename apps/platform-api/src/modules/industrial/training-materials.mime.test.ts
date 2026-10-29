@@ -29,8 +29,8 @@ describe("isTrainingVideoFile", () => {
     expect(
       resolveTrainingVideoPlaybackMime({ mimeType: "video/quicktime", filename: "clip.mov" }),
     ).toBe("video/mp4");
-    expect(
-      resolveTrainingVideoPlaybackMime({ mimeType: "video/webm", filename: "x.webm" }),
-    ).toBe("video/webm");
+    expect(resolveTrainingVideoPlaybackMime({ mimeType: "video/webm", filename: "x.webm" })).toBe(
+      "video/webm",
+    );
   });
 });

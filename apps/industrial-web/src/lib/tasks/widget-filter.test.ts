@@ -1,6 +1,11 @@
 import { describe, expect, it } from "vitest";
 import type { WorkspaceTask } from "./types";
-import { filterTasksForWidgetView, isDueThisWeek, isDueToday, summarizeTasks } from "./widget-filter";
+import {
+  filterTasksForWidgetView,
+  isDueThisWeek,
+  isDueToday,
+  summarizeTasks,
+} from "./widget-filter";
 
 function task(partial: Partial<WorkspaceTask> & { id: string; title: string }): WorkspaceTask {
   return {

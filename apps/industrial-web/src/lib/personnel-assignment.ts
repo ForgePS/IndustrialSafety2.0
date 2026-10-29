@@ -46,10 +46,7 @@ export function suggestSupervisor(
         m.siteId === siteId &&
         m.departmentId === departmentId,
     )
-    .sort(
-      (a, b) =>
-        b.count - a.count || a.supervisorName.localeCompare(b.supervisorName),
-    );
+    .sort((a, b) => b.count - a.count || a.supervisorName.localeCompare(b.supervisorName));
 
   return matches[0]?.supervisorName ?? null;
 }
@@ -74,8 +71,7 @@ export function buildAssignmentOptions(
     const divisionName = typeof row.divisionName === "string" ? row.divisionName.trim() : "";
     if (divisionName !== "") divisions.add(divisionName);
 
-    const supervisorName =
-      typeof row.supervisorName === "string" ? row.supervisorName.trim() : "";
+    const supervisorName = typeof row.supervisorName === "string" ? row.supervisorName.trim() : "";
     if (divisionName === "" || supervisorName === "") continue;
 
     const siteId = typeof row.siteId === "string" && row.siteId !== "" ? row.siteId : null;
@@ -163,9 +159,7 @@ export function filterDivisionsForSite(
 ): DivisionOption[] {
   if (!siteId) return [...divisions];
   const includeUnscoped = options?.includeUnscoped !== false;
-  return divisions.filter(
-    (d) => d.siteId === siteId || (includeUnscoped && !d.siteId),
-  );
+  return divisions.filter((d) => d.siteId === siteId || (includeUnscoped && !d.siteId));
 }
 
 /**

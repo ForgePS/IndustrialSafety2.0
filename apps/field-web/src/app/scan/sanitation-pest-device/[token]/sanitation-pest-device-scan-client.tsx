@@ -49,7 +49,12 @@ export function SanitationPestDeviceScanClient() {
       {data ? (
         <>
           <p className="ff-page-body">
-            {[data.device?.deviceType, data.device?.status, data.device?.building, data.device?.area]
+            {[
+              data.device?.deviceType,
+              data.device?.status,
+              data.device?.building,
+              data.device?.area,
+            ]
               .filter(Boolean)
               .join(" · ")}
           </p>

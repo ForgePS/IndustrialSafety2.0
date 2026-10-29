@@ -117,10 +117,7 @@ function expiryStatus(state: DotExpiryState, onFile: boolean): DqfDocumentStatus
   return "missing";
 }
 
-function licenseCell(
-  details: Record<string, string>,
-  today?: string,
-): DqfComplianceDocumentCell {
+function licenseCell(details: Record<string, string>, today?: string): DqfComplianceDocumentCell {
   const date = details.cdlExpiry?.trim() ?? "";
   const copyOnFile = hasCopy(details.driversLicenseCopy);
   const onFile = hasDate(date) || copyOnFile;
@@ -153,8 +150,11 @@ function worksheetCell(
   const copyOnFile = fields.copyId ? hasCopy(details[fields.copyId]) : false;
   const date =
     key === "mvrAnnual"
-      ? details.mvrAnnual?.trim() || String(record.nextMvrDueDate ?? "").trim().slice(0, 10)
-      : details[fields.dateId]?.trim() ?? "";
+      ? details.mvrAnnual?.trim() ||
+        String(record.nextMvrDueDate ?? "")
+          .trim()
+          .slice(0, 10)
+      : (details[fields.dateId]?.trim() ?? "");
   const onFile = isWorksheetDocumentOnFile(details, key);
 
   if (key === "medicalCert" || key === "mvrAnnual") {
@@ -197,7 +197,10 @@ function driverSeverity(documents: readonly DqfComplianceDocumentCell[]): DqfDri
   return "ok";
 }
 
-function driverDisplayName(record: Record<string, unknown>, details: Record<string, string>): string {
+function driverDisplayName(
+  record: Record<string, unknown>,
+  details: Record<string, string>,
+): string {
   return (
     dotWorkerName(record) ||
     dotRecordTitle(record) ||
@@ -227,8 +230,7 @@ export function buildDqfComplianceReport(
     return {
       recordId: String(record.id ?? ""),
       driverName: driverDisplayName(record, details),
-      employeeNumber:
-        details.employeeNumber?.trim() || String(record.employeeNumber ?? "").trim(),
+      employeeNumber: details.employeeNumber?.trim() || String(record.employeeNumber ?? "").trim(),
       location: details.locationDepartment?.trim() || dotLocationText(record),
       severity: driverSeverity(documents),
       documents,
@@ -264,10 +266,12 @@ export function buildDqfComplianceReport(
   };
 }
 
-export function formatDqfComplianceStats(report: Pick<
-  DqfComplianceReport,
-  "drivers" | "critical" | "warning" | "missing" | "expired" | "expiringSoon"
->): string {
+export function formatDqfComplianceStats(
+  report: Pick<
+    DqfComplianceReport,
+    "drivers" | "critical" | "warning" | "missing" | "expired" | "expiringSoon"
+  >,
+): string {
   return [
     `${report.drivers} drivers`,
     `${report.critical} critical`,
@@ -327,14 +331,7 @@ export function buildDqfComplianceCsv(report: DqfComplianceReport): string {
       return cell.copyOnFile ? "Yes" : "No";
     });
     lines.push(
-      [
-        row.driverName,
-        row.employeeNumber,
-        row.location,
-        row.severity,
-        ...statusCells,
-        ...copyCells,
-      ]
+      [row.driverName, row.employeeNumber, row.location, row.severity, ...statusCells, ...copyCells]
         .map(escapeCsv)
         .join(","),
     );

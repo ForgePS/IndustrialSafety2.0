@@ -9,10 +9,7 @@ import { ModuleWorkspaceHeader } from "@/components/module-workspace-header";
 import { ForgePrintButton } from "@/components/forge-print-button";
 import { Form300AEditor } from "@/components/osha/form-300a-editor";
 import { Form300APrint } from "@/components/osha/form-300a-print";
-import {
-  OshaCaseEditor,
-  type OshaCaseEditorSave,
-} from "@/components/osha/osha-case-editor";
+import { OshaCaseEditor, type OshaCaseEditorSave } from "@/components/osha/osha-case-editor";
 import { oshaCasePrintFieldValues } from "@/lib/module-print-fields";
 import {
   buildForm300Csv,
@@ -52,7 +49,6 @@ type ListResponse = {
   pageSize: number;
   total?: number;
 };
-
 
 type InjuryIncident = {
   id: string;
@@ -461,9 +457,16 @@ export function OshaWorkspace({ moduleName }: { moduleName: string }) {
       />
 
       {error ? (
-        <div className="alert alert-danger d-flex flex-wrap align-items-center gap-3 mb-4" role="alert">
+        <div
+          className="alert alert-danger d-flex flex-wrap align-items-center gap-3 mb-4"
+          role="alert"
+        >
           <span className="flex-grow-1">{error}</span>
-          <button type="button" className="btn btn-sm btn-outline-danger" onClick={() => void loadCases()}>
+          <button
+            type="button"
+            className="btn btn-sm btn-outline-danger"
+            onClick={() => void loadCases()}
+          >
             Retry
           </button>
         </div>
@@ -542,8 +545,8 @@ export function OshaWorkspace({ moduleName }: { moduleName: string }) {
           </div>
           <p className="text-muted small mb-0 mt-3">
             {summary.recordable + summary.privacy} recordable / privacy case(s) in {year}.
-            {summary.pending > 0 ? ` ${summary.pending} pending review.` : ""}{" "}
-            {logCases.length} on Form 300 log.
+            {summary.pending > 0 ? ` ${summary.pending} pending review.` : ""} {logCases.length} on
+            Form 300 log.
           </p>
         </div>
       </div>
@@ -679,7 +682,9 @@ export function OshaWorkspace({ moduleName }: { moduleName: string }) {
                           module="OSHA"
                           recordType="osha_case"
                           recordId={row.id}
-                          fieldValues={oshaCasePrintFieldValues(row as unknown as Record<string, unknown>)}
+                          fieldValues={oshaCasePrintFieldValues(
+                            row as unknown as Record<string, unknown>,
+                          )}
                         />
                         <button
                           type="button"
@@ -736,8 +741,7 @@ export function OshaWorkspace({ moduleName }: { moduleName: string }) {
                 ...form300AMeta,
                 year,
                 establishmentName:
-                  form300AMeta.establishmentName ||
-                  (establishment === "all" ? "" : establishment),
+                  form300AMeta.establishmentName || (establishment === "all" ? "" : establishment),
               }}
             />
           </div>

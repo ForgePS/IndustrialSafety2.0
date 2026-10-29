@@ -39,8 +39,7 @@ const XLSX = resolveXlsx();
 const defaultSource =
   "C:/Users/jerem/OneDrive/Forge Public Safety/Industrial Safety/DQF Files.xlsx";
 const source = process.argv[2] ?? defaultSource;
-const output =
-  process.argv[3] ?? path.join(repoRoot, ".tmp", "dqf-drivers.json");
+const output = process.argv[3] ?? path.join(repoRoot, ".tmp", "dqf-drivers.json");
 
 function clean(value) {
   return String(value ?? "")
@@ -112,7 +111,8 @@ function parseDqfDate(raw) {
   const monthNum = Number(month);
   const dayNum = Number(day);
   let yearNum = Number(yearPart);
-  if (!Number.isFinite(monthNum) || !Number.isFinite(dayNum) || !Number.isFinite(yearNum)) return "";
+  if (!Number.isFinite(monthNum) || !Number.isFinite(dayNum) || !Number.isFinite(yearNum))
+    return "";
   if (yearPart.length === 2) yearNum += yearNum >= 70 ? 1900 : 2000;
 
   const iso = `${String(yearNum).padStart(4, "0")}-${String(monthNum).padStart(2, "0")}-${String(dayNum).padStart(2, "0")}`;
@@ -170,7 +170,9 @@ function rowToDriver(row) {
     if (value) details[fieldId] = value;
   }
 
-  const cdlExpiryNote = clean(row[4]).match(/\(([^)]+)\)/)?.[1]?.trim();
+  const cdlExpiryNote = clean(row[4])
+    .match(/\(([^)]+)\)/)?.[1]
+    ?.trim();
   if (cdlExpiryNote) {
     const existing = details.driverRestrictions?.trim();
     details.driverRestrictions = existing ? `${existing}; ${cdlExpiryNote}` : cdlExpiryNote;

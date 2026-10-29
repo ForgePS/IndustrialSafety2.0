@@ -14,9 +14,7 @@ const BUCKET =
 const PREFIX = `ind11b/p2-doc-probe/${new Date().toISOString().replace(/[:.]/g, "-")}`;
 const key = `${PREFIX}/probe-document-metadata.mjs`;
 const local = path.resolve("scripts/ind11b-p2-probe-document-metadata.mjs");
-const EVID_DIR = path.resolve(
-  "docs/program/industrial-migration/ind-11/evidence/p2/03-storage",
-);
+const EVID_DIR = path.resolve("docs/program/industrial-migration/ind-11/evidence/p2/03-storage");
 
 function fail(msg, code = 2) {
   console.error(JSON.stringify({ ok: false, error: msg }));
@@ -143,10 +141,28 @@ const evidence = {
 };
 fs.writeFileSync(outPath, JSON.stringify(evidence, null, 2));
 fs.writeFileSync(latest, JSON.stringify(evidence, null, 2));
-console.log(JSON.stringify({ written: outPath, exitCode, ok: evidence.ok, summary: parsed && {
-  tables: parsed.tables,
-  staging: parsed.staging,
-  tenantA: { platform_documents: parsed.tenantA?.platform_documents, versions_by_status: parsed.tenantA?.versions_by_status, equipment_doc_links: parsed.tenantA?.equipment_doc_links },
-  prodTwin: { platform_documents: parsed.prodTwin?.platform_documents, versions_by_status: parsed.prodTwin?.versions_by_status },
-} }, null, 2));
+console.log(
+  JSON.stringify(
+    {
+      written: outPath,
+      exitCode,
+      ok: evidence.ok,
+      summary: parsed && {
+        tables: parsed.tables,
+        staging: parsed.staging,
+        tenantA: {
+          platform_documents: parsed.tenantA?.platform_documents,
+          versions_by_status: parsed.tenantA?.versions_by_status,
+          equipment_doc_links: parsed.tenantA?.equipment_doc_links,
+        },
+        prodTwin: {
+          platform_documents: parsed.prodTwin?.platform_documents,
+          versions_by_status: parsed.prodTwin?.versions_by_status,
+        },
+      },
+    },
+    null,
+    2,
+  ),
+);
 if (!evidence.ok) process.exit(1);

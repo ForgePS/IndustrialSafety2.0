@@ -26,7 +26,14 @@ fs.writeFileSync(tmp, JSON.stringify(config));
 
 spawnSync(
   "aws",
-  ["s3api", "put-bucket-cors", "--bucket", BUCKET, "--cors-configuration", `file://${tmp.replace(/\\/g, "/")}`],
+  [
+    "s3api",
+    "put-bucket-cors",
+    "--bucket",
+    BUCKET,
+    "--cors-configuration",
+    `file://${tmp.replace(/\\/g, "/")}`,
+  ],
   { encoding: "utf8", shell: true, stdio: "inherit" },
 );
 

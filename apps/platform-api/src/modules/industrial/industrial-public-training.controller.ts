@@ -9,159 +9,98 @@ import { Public } from "../auth-context/public.decorator.js";
 
 import { IndustrialPublicTrainingService } from "./industrial-public-training.service.js";
 
-
-
 function publicTrainingCredentials(body: Record<string, unknown>) {
-
   const sessionToken = String(body.sessionToken ?? "").trim();
 
   const employeeNumber = String(body.employeeNumber ?? "").trim();
 
   return {
-
     ...(sessionToken ? { sessionToken } : {}),
 
     ...(employeeNumber ? { employeeNumber } : {}),
-
   };
-
 }
 
-
-
 @Controller("api/v1/public")
-
 export class IndustrialPublicTrainingController {
-
   constructor(private readonly publicTraining: IndustrialPublicTrainingService) {}
 
-
-
   @Get("training/:token")
-
   @Public()
-
   async getAssignment(@Param("token") token: string, @Req() req: RequestWithIds) {
-
     return ok(await this.publicTraining.getAssignmentContextByToken(token), getRequestIds(req));
-
   }
 
-
-
   @Post("training/:token/verify")
-
   @Public()
-
   async verifyAssignee(
-
     @Param("token") token: string,
 
     @Body() body: Record<string, unknown>,
 
     @Req() req: RequestWithIds,
-
   ) {
-
     return ok(
-
       await this.publicTraining.verifyAssigneeByToken(token, String(body.employeeNumber ?? "")),
 
       getRequestIds(req),
-
     );
-
   }
 
-
-
   @Post("training/:token/session/resume")
-
   @Public()
-
   async resumeSession(
-
     @Param("token") token: string,
 
     @Body() body: Record<string, unknown>,
 
     @Req() req: RequestWithIds,
-
   ) {
-
     return ok(
-
       await this.publicTraining.resumeSessionByToken(token, String(body.sessionToken ?? "")),
 
       getRequestIds(req),
-
     );
-
   }
 
-
-
   @Post("training/:token/session/logout")
-
   @Public()
-
   async logoutSession(
-
     @Param("token") token: string,
 
     @Body() body: Record<string, unknown>,
 
     @Req() req: RequestWithIds,
-
   ) {
-
     return ok(
-
       await this.publicTraining.logoutSessionByToken(token, String(body.sessionToken ?? "")),
 
       getRequestIds(req),
-
     );
-
   }
 
-
-
   @Post("training/:token/quizzes")
-
   @Public()
-
   async startQuiz(
-
     @Param("token") token: string,
 
     @Body() body: Record<string, unknown>,
 
     @Req() req: RequestWithIds,
-
   ) {
-
     return ok(
-
       await this.publicTraining.startQuizByToken(token, {
         ...publicTrainingCredentials(body),
         ...(body.assignmentId ? { assignmentId: String(body.assignmentId) } : {}),
       }),
 
       getRequestIds(req),
-
     );
-
   }
 
-
-
   @Post("training/:token/attempts/:attemptId/next")
-
   @Public()
-
   async nextQuestion(
-
     @Param("token") token: string,
 
     @Param("attemptId") attemptId: string,
@@ -169,35 +108,23 @@ export class IndustrialPublicTrainingController {
     @Body() body: Record<string, unknown>,
 
     @Req() req: RequestWithIds,
-
   ) {
-
     return ok(
-
       await this.publicTraining.nextQuestionByToken(
-
         token,
 
         publicTrainingCredentials(body),
 
         attemptId,
-
       ),
 
       getRequestIds(req),
-
     );
-
   }
 
-
-
   @Post("training/:token/attempts/:attemptId/answer")
-
   @Public()
-
   async answer(
-
     @Param("token") token: string,
 
     @Param("attemptId") attemptId: string,
@@ -205,13 +132,9 @@ export class IndustrialPublicTrainingController {
     @Body() body: Record<string, unknown>,
 
     @Req() req: RequestWithIds,
-
   ) {
-
     return ok(
-
       await this.publicTraining.answerByToken(
-
         token,
 
         publicTrainingCredentials(body),
@@ -219,29 +142,19 @@ export class IndustrialPublicTrainingController {
         attemptId,
 
         {
-
           ...(body.questionId != null ? { questionId: String(body.questionId) } : {}),
 
           ...(body.selectedIndex != null ? { selectedIndex: Number(body.selectedIndex) } : {}),
-
         },
-
       ),
 
       getRequestIds(req),
-
     );
-
   }
 
-
-
   @Post("training/:token/attempts/:attemptId/results")
-
   @Public()
-
   async results(
-
     @Param("token") token: string,
 
     @Param("attemptId") attemptId: string,
@@ -249,25 +162,18 @@ export class IndustrialPublicTrainingController {
     @Body() body: Record<string, unknown>,
 
     @Req() req: RequestWithIds,
-
   ) {
-
     return ok(
-
       await this.publicTraining.resultsByToken(
-
         token,
 
         publicTrainingCredentials(body),
 
         attemptId,
-
       ),
 
       getRequestIds(req),
-
     );
-
   }
 
   @Get("training/access/:token")
@@ -328,14 +234,10 @@ export class IndustrialPublicTrainingController {
     @Req() req: RequestWithIds,
   ) {
     return ok(
-      await this.publicTraining.acknowledgeCourseByAccess(
-        token,
-        String(body.sessionToken ?? ""),
-        {
-          assignmentId: String(body.assignmentId ?? ""),
-          acknowledgementText: String(body.acknowledgementText ?? ""),
-        },
-      ),
+      await this.publicTraining.acknowledgeCourseByAccess(token, String(body.sessionToken ?? ""), {
+        assignmentId: String(body.assignmentId ?? ""),
+        acknowledgementText: String(body.acknowledgementText ?? ""),
+      }),
       getRequestIds(req),
     );
   }
@@ -411,7 +313,10 @@ export class IndustrialPublicTrainingController {
       materialId,
     );
     const safeName =
-      file.filename.replace(/"/g, "").replace(/[^\w.\-() ]+/g, "_").slice(0, 180) || "download";
+      file.filename
+        .replace(/"/g, "")
+        .replace(/[^\w.\-() ]+/g, "_")
+        .slice(0, 180) || "download";
     res.setHeader("Content-Type", file.contentType);
     res.setHeader("Content-Disposition", `${file.disposition}; filename="${safeName}"`);
     if (file.contentLength) {
@@ -468,7 +373,10 @@ export class IndustrialPublicTrainingController {
   ) {
     const file = await this.publicTraining.streamMaterialOfficeView(materialId, token);
     const safeName =
-      file.filename.replace(/"/g, "").replace(/[^\w.\-() ]+/g, "_").slice(0, 180) || "download";
+      file.filename
+        .replace(/"/g, "")
+        .replace(/[^\w.\-() ]+/g, "_")
+        .slice(0, 180) || "download";
     res.setHeader("Content-Type", file.contentType);
     res.setHeader("Content-Disposition", `inline; filename="${safeName}"`);
     if (file.contentLength) {
@@ -486,10 +394,7 @@ export class IndustrialPublicTrainingController {
   ) {
     const file = await this.publicTraining.getAccessTrainingReport(token, sessionToken);
     res.setHeader("Content-Type", file.contentType);
-    res.setHeader(
-      "Content-Disposition",
-      `inline; filename="${file.filename.replace(/"/g, "")}"`,
-    );
+    res.setHeader("Content-Disposition", `inline; filename="${file.filename.replace(/"/g, "")}"`);
     res.send(file.html);
   }
 
@@ -507,10 +412,7 @@ export class IndustrialPublicTrainingController {
       completionId,
     );
     res.setHeader("Content-Type", file.contentType);
-    res.setHeader(
-      "Content-Disposition",
-      `inline; filename="${file.filename.replace(/"/g, "")}"`,
-    );
+    res.setHeader("Content-Disposition", `inline; filename="${file.filename.replace(/"/g, "")}"`);
     res.send(file.html);
   }
 
@@ -522,15 +424,13 @@ export class IndustrialPublicTrainingController {
     @Query("sessionToken") sessionToken: string,
     @Res() res: Response,
   ) {
-    const file = await this.publicTraining.getAccessAttemptPrintable(token, sessionToken, attemptId);
-    res.setHeader("Content-Type", file.contentType);
-    res.setHeader(
-      "Content-Disposition",
-      `inline; filename="${file.filename.replace(/"/g, "")}"`,
+    const file = await this.publicTraining.getAccessAttemptPrintable(
+      token,
+      sessionToken,
+      attemptId,
     );
+    res.setHeader("Content-Type", file.contentType);
+    res.setHeader("Content-Disposition", `inline; filename="${file.filename.replace(/"/g, "")}"`);
     res.send(file.html);
   }
-
 }
-
-

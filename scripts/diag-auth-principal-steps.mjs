@@ -61,7 +61,8 @@ try {
 }
 
 const adminArn = process.env.DATABASE_SECRET_ARN?.trim();
-const databaseUrl = process.env.DATABASE_URL?.trim() || (adminArn ? await resolveDatabaseUrl(adminArn) : "");
+const databaseUrl =
+  process.env.DATABASE_URL?.trim() || (adminArn ? await resolveDatabaseUrl(adminArn) : "");
 if (!databaseUrl) {
   report.steps.push({ step: "db", ok: false, error: "no DATABASE_URL/SECRET" });
   console.log(JSON.stringify({ ok: false, report }, null, 2));
@@ -89,8 +90,7 @@ try {
   if (row) {
     const tokenIssuedAtMs = typeof claims.iat === "number" ? claims.iat * 1000 : null;
     const revokedAt = row.sessions_revoked_at ? new Date(row.sessions_revoked_at).getTime() : null;
-    const revoked =
-      revokedAt != null && tokenIssuedAtMs != null && tokenIssuedAtMs < revokedAt;
+    const revoked = revokedAt != null && tokenIssuedAtMs != null && tokenIssuedAtMs < revokedAt;
     report.steps.push({
       step: "revokeCheck",
       ok: !revoked,
@@ -124,7 +124,9 @@ try {
     step: "sql",
     ok: false,
     error: String(e?.message || e),
-    stack: String(e?.stack || "").split("\n").slice(0, 6),
+    stack: String(e?.stack || "")
+      .split("\n")
+      .slice(0, 6),
   });
 } finally {
   await sql.end({ timeout: 5 });

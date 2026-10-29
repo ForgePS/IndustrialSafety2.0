@@ -76,8 +76,7 @@ export function PersonnelDirectory({
   // Permissions are enough to open the roster. Bootstrap is only an Advanced
   // kill-switch and must never crash or block a migrated Personnel tenant.
   const explicitlyDisabled =
-    bootstrap != null &&
-    (bootstrap.industrialEnabled === false || modEntry?.awsEnabled === false);
+    bootstrap != null && (bootstrap.industrialEnabled === false || modEntry?.awsEnabled === false);
   const awsReady = Boolean(canView && !explicitlyDisabled);
 
   useEffect(() => {
@@ -235,10 +234,7 @@ export function PersonnelDirectory({
 
   if (explicitlyDisabled) {
     return (
-      <ModuleUnavailable
-        moduleName={moduleName}
-        status={modEntry?.migrationStatus ?? "DISABLED"}
-      />
+      <ModuleUnavailable moduleName={moduleName} status={modEntry?.migrationStatus ?? "DISABLED"} />
     );
   }
 
@@ -268,7 +264,8 @@ export function PersonnelDirectory({
           ) : null}
           {!loading && rosterTotal > people.length ? (
             <p className="text-muted small mb-0">
-              Loaded {people.length} of {rosterTotal} records — refresh or contact support if this persists.
+              Loaded {people.length} of {rosterTotal} records — refresh or contact support if this
+              persists.
             </p>
           ) : null}
         </div>

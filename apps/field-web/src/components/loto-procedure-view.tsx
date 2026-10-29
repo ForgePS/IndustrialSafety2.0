@@ -1,9 +1,6 @@
 "use client";
 
-import {
-  isDisplayableLotoImageUrl,
-  type FieldLotoProcedureDisplay,
-} from "@/lib/loto";
+import { isDisplayableLotoImageUrl, type FieldLotoProcedureDisplay } from "@/lib/loto";
 
 export function LotoProcedureView({ display }: { display: FieldLotoProcedureDisplay }) {
   const meta = [
@@ -35,7 +32,6 @@ export function LotoProcedureView({ display }: { display: FieldLotoProcedureDisp
       {isDisplayableLotoImageUrl(display.equipmentImageUrl) ? (
         <section className="ff-section" aria-label="Equipment photo">
           <h2 className="ff-section-title">Equipment photo</h2>
-          {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src={display.equipmentImageUrl}
             alt={display.equipmentImageCaption || display.equipmentName || "Equipment"}
@@ -47,9 +43,7 @@ export function LotoProcedureView({ display }: { display: FieldLotoProcedureDisp
         </section>
       ) : null}
 
-      {display.tags.length > 0 ? (
-        <p className="ff-meta">{display.tags.join(" · ")}</p>
-      ) : null}
+      {display.tags.length > 0 ? <p className="ff-meta">{display.tags.join(" · ")}</p> : null}
 
       <section className="ff-section">
         <h2 className="ff-section-title">Energy sources</h2>

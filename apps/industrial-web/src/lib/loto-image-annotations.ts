@@ -41,10 +41,7 @@ export function normalizeLotoImageArrows(raw: unknown): LotoImageArrow[] {
     const dx = x2 - x1;
     const dy = y2 - y1;
     if (dx * dx + dy * dy < 0.00005) continue;
-    const id =
-      typeof row.id === "string" && row.id.trim()
-        ? row.id.trim()
-        : `arrow-${index}`;
+    const id = typeof row.id === "string" && row.id.trim() ? row.id.trim() : `arrow-${index}`;
     arrows.push({
       id,
       x1: clampUnit(x1),

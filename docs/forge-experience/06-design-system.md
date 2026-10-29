@@ -10,13 +10,13 @@ Every component inherits from this design system. All visual values come from [d
 
 Every design standard below includes:
 
-1. Purpose  
-2. Behavior  
-3. Variants  
-4. Accessibility  
-5. Responsive behavior  
-6. Examples  
-7. Anti-patterns  
+1. Purpose
+2. Behavior
+3. Variants
+4. Accessibility
+5. Responsive behavior
+6. Examples
+7. Anti-patterns
 
 ---
 

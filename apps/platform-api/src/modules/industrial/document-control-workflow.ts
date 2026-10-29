@@ -59,7 +59,10 @@ export function canObsoleteDocument(docStatus: string): boolean {
   return docStatus === DOC_WORKFLOW.PUBLISHED || docStatus === DOC_WORKFLOW.IN_REVIEW;
 }
 
-export function isReviewOverdue(reviewDueAt: Date | string | null | undefined, now = new Date()): boolean {
+export function isReviewOverdue(
+  reviewDueAt: Date | string | null | undefined,
+  now = new Date(),
+): boolean {
   if (!reviewDueAt) return false;
   const due = reviewDueAt instanceof Date ? reviewDueAt : new Date(reviewDueAt);
   if (Number.isNaN(due.getTime())) return false;

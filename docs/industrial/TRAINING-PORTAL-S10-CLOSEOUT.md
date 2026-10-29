@@ -112,10 +112,10 @@ Question-level stats from attempt `answers` jsonb: presented count, correct/inco
 
 ## TESTS
 
-| Suite | Passed | Failed | Skipped |
-|-------|--------|--------|---------|
-| `industrial-api-contract.test.ts` | 9 | 0 | 0 |
-| `training-public.test.ts` | 3 | 0 | 0 |
+| Suite                             | Passed | Failed | Skipped |
+| --------------------------------- | ------ | ------ | ------- |
+| `industrial-api-contract.test.ts` | 9      | 0      | 0       |
+| `training-public.test.ts`         | 3      | 0      | 0       |
 
 Integration/UAT tests skipped: dev DB migration baseline failure prevents applying 0063 locally
 

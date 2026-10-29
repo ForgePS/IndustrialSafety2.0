@@ -25,7 +25,8 @@ export type SpecialtyWorkflowGroupId =
   | "RISK_REDUCTION"
   | "INCIDENT_ANALYSIS";
 
-export type SpecialtySectionState = "HIDDEN" | "OPTIONAL" | "REQUIRED" | "ACTIVE" | "NOT_APPLICABLE";
+export type SpecialtySectionState =
+  "HIDDEN" | "OPTIONAL" | "REQUIRED" | "ACTIVE" | "NOT_APPLICABLE";
 
 export type SpecialtyActivationRule =
   | { type: "always" }
@@ -344,7 +345,10 @@ export interface SpecialtyWorkflowEvaluationResult {
 
 function normalizeSignal(value: unknown): string {
   if (value == null) return "";
-  return String(value).trim().toUpperCase().replace(/[\s-]+/g, "_");
+  return String(value)
+    .trim()
+    .toUpperCase()
+    .replace(/[\s-]+/g, "_");
 }
 
 function collectValueSignals(fieldValuesByKey: Record<string, unknown>): string[] {
@@ -477,12 +481,8 @@ export function evaluateSpecialtyWorkflows(
   const presentModules = new Set(input.availableModuleKeys.map((k) => k.toLowerCase()));
   const classification = input.classificationSignals.map(normalizeSignal).filter(Boolean);
   const fieldSignals = collectValueSignals(input.fieldValuesByKey);
-  const notApplicable = new Set(
-    (input.notApplicableSectionKeys ?? []).map((k) => k.toUpperCase()),
-  );
-  const forcedActive = new Set(
-    (input.forcedActiveSectionKeys ?? []).map((k) => k.toUpperCase()),
-  );
+  const notApplicable = new Set((input.notApplicableSectionKeys ?? []).map((k) => k.toUpperCase()));
+  const forcedActive = new Set((input.forcedActiveSectionKeys ?? []).map((k) => k.toUpperCase()));
 
   const groups: EvaluatedSpecialtyWorkflowGroup[] = SPECIALTY_WORKFLOW_GROUPS.map((def) => {
     const presentModuleKeys = def.moduleKeys.filter((k) => presentModules.has(k.toLowerCase()));
@@ -531,9 +531,7 @@ export function evaluateSpecialtyWorkflows(
   // Nav shows activated specialty sections only. OPTIONAL groups remain in
   // `groups` for an "Add section" picker without dumping every NERIS module.
   const visibleSpecialty = groups
-    .filter(
-      (g) => g.state === "REQUIRED" || g.state === "ACTIVE" || g.state === "NOT_APPLICABLE",
-    )
+    .filter((g) => g.state === "REQUIRED" || g.state === "ACTIVE" || g.state === "NOT_APPLICABLE")
     .map((g) => g.sectionKey);
 
   // Recommended navigation order from Phase 3 directive.

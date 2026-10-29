@@ -10,14 +10,7 @@ import { personNameDisplay } from "@/lib/person-name-display";
 export const USER_MANAGEMENT_PAGE_SIZES = [7, 10, 25, 50] as const;
 export const DEFAULT_USER_PAGE_SIZE = 7;
 
-const AVATAR_TONES = [
-  "primary",
-  "success",
-  "info",
-  "warning",
-  "danger",
-  "secondary",
-] as const;
+const AVATAR_TONES = ["primary", "success", "info", "warning", "danger", "secondary"] as const;
 
 export type UserManagementRole = {
   roleCode: string;
@@ -85,11 +78,14 @@ export type UserManagementStats = {
   pending: number;
 };
 
-type AuthLike = {
-  isPlatformAdmin?: boolean;
-  permissions?: readonly string[];
-  activeProducts?: readonly string[];
-} | null | undefined;
+type AuthLike =
+  | {
+      isPlatformAdmin?: boolean;
+      permissions?: readonly string[];
+      activeProducts?: readonly string[];
+    }
+  | null
+  | undefined;
 
 function str(value: unknown): string {
   return typeof value === "string" ? value.trim() : "";
@@ -124,18 +120,14 @@ export function canManageUserManagement(me: AuthLike): boolean {
   if (!me) return false;
   if (me.isPlatformAdmin) return true;
   const permissions = new Set(me.permissions ?? []);
-  return (
-    permissions.has("platform.membership.manage") || permissions.has("industrial.admin")
-  );
+  return permissions.has("platform.membership.manage") || permissions.has("industrial.admin");
 }
 
 export function canInviteUsers(me: AuthLike): boolean {
   if (!me) return false;
   if (me.isPlatformAdmin) return true;
   const permissions = new Set(me.permissions ?? []);
-  return (
-    permissions.has("platform.invitation.manage") || permissions.has("platform.user.invite")
-  );
+  return permissions.has("platform.invitation.manage") || permissions.has("platform.user.invite");
 }
 
 export function canSendPasswordReset(me: AuthLike): boolean {
@@ -152,7 +144,8 @@ export function userDisplayName(row: {
   const fromPerson = [str(row.firstName), str(row.lastName)].filter(Boolean).join(" ");
   const fromEmail = emailLocalPart(str(row.email));
   return (
-    personNameDisplay(str(row.displayName) || fromPerson || str(row.username) || fromEmail) || "User"
+    personNameDisplay(str(row.displayName) || fromPerson || str(row.username) || fromEmail) ||
+    "User"
   );
 }
 
@@ -173,12 +166,7 @@ export function isPendingUser(row: {
 }): boolean {
   const membership = str(row.membershipStatus || row.status).toUpperCase();
   const user = str(row.userStatus).toUpperCase();
-  return (
-    membership === "PENDING" ||
-    user === "INVITED" ||
-    user === "PENDING" ||
-    membership === ""
-  );
+  return membership === "PENDING" || user === "INVITED" || user === "PENDING" || membership === "";
 }
 
 export function toDirectoryUser(
@@ -288,9 +276,7 @@ export function filterDirectoryUsers(
   const trimmed = query.trim();
   if (trimmed === "") return [...users];
   const strict = users.filter((user) => matchesUserQuery(user, trimmed));
-  return strict.length > 0
-    ? strict
-    : users.filter((user) => matchesUserQuery(user, trimmed, true));
+  return strict.length > 0 ? strict : users.filter((user) => matchesUserQuery(user, trimmed, true));
 }
 
 export function paginateDirectoryUsers(
@@ -324,9 +310,7 @@ export function directoryUsersCsv(users: readonly DirectoryUser[]): string {
     user.roles.map((role) => role.roleName || role.roleCode).join("; "),
   ]);
   return [header, ...rows]
-    .map((cols) =>
-      cols.map((value) => `"${String(value).replaceAll('"', '""')}"`).join(","),
-    )
+    .map((cols) => cols.map((value) => `"${String(value).replaceAll('"', '""')}"`).join(","))
     .join("\n");
 }
 

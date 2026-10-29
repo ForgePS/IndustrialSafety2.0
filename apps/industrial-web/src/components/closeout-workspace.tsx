@@ -138,7 +138,11 @@ function CloseoutForm({ token }: { token: string }) {
               style={{ maxHeight: 280 }}
             />
             <div className="d-flex flex-wrap gap-2">
-              <button type="button" className="btn btn-primary" onClick={() => setMarkupStep("edit")}>
+              <button
+                type="button"
+                className="btn btn-primary"
+                onClick={() => setMarkupStep("edit")}
+              >
                 Add Markup
               </button>
               <button
@@ -308,7 +312,11 @@ function CloseoutForm({ token }: { token: string }) {
                       </button>
                     ) : null}
                   </div>
-                  <button type="submit" className="btn btn-primary" disabled={busy || !notes.trim()}>
+                  <button
+                    type="submit"
+                    className="btn btn-primary"
+                    disabled={busy || !notes.trim()}
+                  >
                     Submit close-out
                   </button>
                 </form>

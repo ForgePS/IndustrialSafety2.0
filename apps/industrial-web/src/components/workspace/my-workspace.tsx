@@ -75,10 +75,7 @@ export function MyWorkspace({
     [moduleSignature, iconForCode],
   );
 
-  const moduleByCode = useMemo(
-    () => new Map(modules.map((mod) => [mod.code, mod])),
-    [modules],
-  );
+  const moduleByCode = useMemo(() => new Map(modules.map((mod) => [mod.code, mod])), [modules]);
 
   const roleCodes = useMemo(
     () => inferWorkspaceRoleCodes(permissions, isPlatformAdmin),
@@ -282,7 +279,10 @@ export function MyWorkspace({
       ) : null}
 
       {confirmReset ? (
-        <div className="alert alert-warning d-flex flex-wrap align-items-center justify-content-between gap-2 mb-3" role="status">
+        <div
+          className="alert alert-warning d-flex flex-wrap align-items-center justify-content-between gap-2 mb-3"
+          role="status"
+        >
           <span className="small mb-0">
             Reset workspace to your company default layout? This will remove your custom sizes,
             positions, and views.
@@ -316,10 +316,7 @@ export function MyWorkspace({
             const canHide = canUserHideModule(item.moduleKey, policies);
             const canResize = canUserResizeModule(item.moduleKey, effectiveDefaults);
             return (
-              <div
-                key={item.moduleKey}
-                className={`forge-ws-cell forge-ws-span-${span}`}
-              >
+              <div key={item.moduleKey} className={`forge-ws-cell forge-ws-span-${span}`}>
                 <WorkspaceCard
                   definition={definition}
                   item={item}
@@ -348,7 +345,8 @@ export function MyWorkspace({
                   }}
                   onDragOver={(overKey) => {
                     const fromKey = dragKeyRef.current;
-                    if (!fromKey || fromKey === overKey || dragOverKeyRef.current === overKey) return;
+                    if (!fromKey || fromKey === overKey || dragOverKeyRef.current === overKey)
+                      return;
                     dragOverKeyRef.current = overKey;
                     persist((prev) => {
                       const keys = visibleWorkspaceItems(prev).map((v) => v.moduleKey);

@@ -95,20 +95,15 @@ export function OrgLocationCascade({
     if (!siteId) return [];
     if (showDivision) {
       if (!divisionName.trim()) return [];
-      return filterDepartmentsForSiteDivision(
-        departments,
-        siteId,
-        divisionName,
-        { includeUnscoped: false },
-      );
+      return filterDepartmentsForSiteDivision(departments, siteId, divisionName, {
+        includeUnscoped: false,
+      });
     }
     return filterDepartmentsForSite(departments, siteId, filterOpts);
   }, [departments, divisionName, filterOpts, showDivision, siteId]);
 
   useEffect(() => {
-    if (
-      shouldRetainDepartmentSelection(value.departmentId, departments, departmentsForCascade)
-    ) {
+    if (shouldRetainDepartmentSelection(value.departmentId, departments, departmentsForCascade)) {
       return;
     }
     onChange({
@@ -130,9 +125,7 @@ export function OrgLocationCascade({
       });
       return;
     }
-    if (
-      shouldRetainDivisionSelection(value.divisionName, divisionEntries, divisionsForSite)
-    ) {
+    if (shouldRetainDivisionSelection(value.divisionName, divisionEntries, divisionsForSite)) {
       return;
     }
     onChange({
@@ -149,8 +142,7 @@ export function OrgLocationCascade({
   const departmentId = `${idPrefix}-department`;
   const locationLocked = disabled || loading;
   const divisionLocked = locationLocked || !siteId;
-  const departmentLocked =
-    locationLocked || !siteId || (showDivision && !divisionName.trim());
+  const departmentLocked = locationLocked || !siteId || (showDivision && !divisionName.trim());
 
   return (
     <>
@@ -199,11 +191,7 @@ export function OrgLocationCascade({
               : filterDepartmentsForSite(departments, nextSiteId, filterOpts);
             const keepDept =
               Boolean(nextDivision || !showDivision) &&
-              shouldRetainDepartmentSelection(
-                value.departmentId,
-                departments,
-                nextDepts,
-              );
+              shouldRetainDepartmentSelection(value.departmentId, departments, nextDepts);
             onChange({
               siteId: nextSiteId,
               siteName: match?.label ?? "",
@@ -213,17 +201,13 @@ export function OrgLocationCascade({
             });
           }}
         >
-          <option value="">
-            {loading ? "Loading locations…" : locationEmptyLabel}
-          </option>
+          <option value="">{loading ? "Loading locations…" : locationEmptyLabel}</option>
           {sites.map((site) => (
             <option key={site.id} value={site.id}>
               {site.label}
             </option>
           ))}
-          {siteId &&
-          value.siteName &&
-          !sites.some((site) => site.id === siteId) ? (
+          {siteId && value.siteName && !sites.some((site) => site.id === siteId) ? (
             <option value={siteId}>{value.siteName}</option>
           ) : null}
         </select>
@@ -239,9 +223,7 @@ export function OrgLocationCascade({
             className={selectClass}
             required={required && Boolean(siteId)}
             disabled={divisionLocked}
-            title={
-              !siteId ? "Select a location before choosing a division" : undefined
-            }
+            title={!siteId ? "Select a location before choosing a division" : undefined}
             value={divisionLocked ? "" : value.divisionName}
             onChange={(ev) => {
               const nextDivision = ev.target.value;
@@ -282,10 +264,7 @@ export function OrgLocationCascade({
             </option>
             {!divisionLocked
               ? divisionsForSite.map((division) => (
-                  <option
-                    key={`${division.siteId ?? ""}:${division.name}`}
-                    value={division.name}
-                  >
+                  <option key={`${division.siteId ?? ""}:${division.name}`} value={division.name}>
                     {division.name}
                   </option>
                 ))
@@ -293,8 +272,7 @@ export function OrgLocationCascade({
             {!divisionLocked &&
             value.divisionName &&
             !divisionsForSite.some(
-              (division) =>
-                division.name.toLowerCase() === value.divisionName.trim().toLowerCase(),
+              (division) => division.name.toLowerCase() === value.divisionName.trim().toLowerCase(),
             ) ? (
               <option value={value.divisionName}>{value.divisionName}</option>
             ) : null}
@@ -338,7 +316,7 @@ export function OrgLocationCascade({
                 ? "Select location first"
                 : showDivision && !divisionName.trim()
                   ? "Select division first"
-                    : departmentEmptyLabel
+                  : departmentEmptyLabel
                     ? departmentEmptyLabel
                     : size === "sm"
                       ? `All ${departmentLabel.toLowerCase()}s`
@@ -360,9 +338,7 @@ export function OrgLocationCascade({
               <option value={value.departmentId}>{value.departmentName}</option>
             ) : null}
           </select>
-          {!departmentLocked &&
-          departmentsForCascade.length === 0 &&
-          departments.length > 0 ? (
+          {!departmentLocked && departmentsForCascade.length === 0 && departments.length > 0 ? (
             <div className="form-text">
               No {departmentLabel.toLowerCase()}s linked to this{" "}
               {showDivision ? "division" : "location"} yet. Add them under Settings → Dropdown

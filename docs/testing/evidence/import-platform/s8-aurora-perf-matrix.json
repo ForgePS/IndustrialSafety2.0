@@ -90,11 +90,7 @@
     "reason": "Excluded from the matrix because it was claimed while worker revision 25 was draining during deployment overlap. The service later stabilized on revision 26."
   },
   "remainingGap": {
-    "untestedRows": [
-      25000,
-      100000,
-      250000
-    ],
+    "untestedRows": [25000, 100000, 250000],
     "reason": "Not attempted in this bounded session. No result is claimed above 5,000 rows."
   }
 }

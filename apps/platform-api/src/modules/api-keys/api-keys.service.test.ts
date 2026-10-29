@@ -28,9 +28,12 @@ describe("ApiKeysService (MK-S15)", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     inserted = null;
-    service = new ApiKeysService({} as never, {
-      writeInTransaction: vi.fn(async () => "audit-1"),
-    } as never);
+    service = new ApiKeysService(
+      {} as never,
+      {
+        writeInTransaction: vi.fn(async () => "audit-1"),
+      } as never,
+    );
     withTenantTransaction.mockImplementation(async (_db, _tid, fn) =>
       fn({
         insert: () => ({

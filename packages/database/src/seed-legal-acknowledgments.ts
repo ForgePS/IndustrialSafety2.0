@@ -164,7 +164,9 @@ export async function seedLegalAcknowledgments(db: SeedDb): Promise<void> {
   const tmplExisting = await db
     .select({ id: attestationTemplates.id })
     .from(attestationTemplates)
-    .where(and(eq(attestationTemplates.templateKey, templateKey), isNull(attestationTemplates.tenantId)))
+    .where(
+      and(eq(attestationTemplates.templateKey, templateKey), isNull(attestationTemplates.tenantId)),
+    )
     .limit(1);
   let templateId = tmplExisting[0]?.id;
   if (!templateId) {

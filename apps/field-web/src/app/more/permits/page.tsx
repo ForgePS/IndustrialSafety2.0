@@ -26,7 +26,7 @@ function PermitsInner() {
   const types = useMemo(() => enabledPermitTypes(moduleEnabled), [moduleEnabled]);
   const requested = parsePermitType(search.get("type"));
   const [activeType, setActiveType] = useState<PermitTypeId | null>(
-    requested && types.some((t) => t.id === requested) ? requested : types[0]?.id ?? null,
+    requested && types.some((t) => t.id === requested) ? requested : (types[0]?.id ?? null),
   );
   const [rows, setRows] = useState<SafetyRecord[]>([]);
   const [selected, setSelected] = useState<SafetyRecord | null>(null);
@@ -152,20 +152,40 @@ function PermitsInner() {
           <section className="ff-section">
             <h2 className="ff-section-title">Atmospheric reading</h2>
             <div className="ff-field">
-            <label htmlFor="permit-o2">O₂ %</label>
-              <input id="permit-o2" className="ff-input" value={o2} onChange={(e) => setO2(e.target.value)} />
+              <label htmlFor="permit-o2">O₂ %</label>
+              <input
+                id="permit-o2"
+                className="ff-input"
+                value={o2}
+                onChange={(e) => setO2(e.target.value)}
+              />
             </div>
             <div className="ff-field">
               <label htmlFor="permit-lel">LEL %</label>
-              <input id="permit-lel" className="ff-input" value={lel} onChange={(e) => setLel(e.target.value)} />
+              <input
+                id="permit-lel"
+                className="ff-input"
+                value={lel}
+                onChange={(e) => setLel(e.target.value)}
+              />
             </div>
             <div className="ff-field">
               <label htmlFor="permit-h2s">H₂S ppm</label>
-              <input id="permit-h2s" className="ff-input" value={h2s} onChange={(e) => setH2s(e.target.value)} />
+              <input
+                id="permit-h2s"
+                className="ff-input"
+                value={h2s}
+                onChange={(e) => setH2s(e.target.value)}
+              />
             </div>
             <div className="ff-field">
               <label htmlFor="permit-co">CO ppm</label>
-              <input id="permit-co" className="ff-input" value={co} onChange={(e) => setCo(e.target.value)} />
+              <input
+                id="permit-co"
+                className="ff-input"
+                value={co}
+                onChange={(e) => setCo(e.target.value)}
+              />
             </div>
             {readings.length > 0 ? (
               <p className="ff-meta">{readings.length} prior reading(s) on file</p>

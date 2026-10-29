@@ -4,7 +4,11 @@ import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 import { useAuth } from "@forge/web-kit";
 import { getCadOperationsSummary } from "@/lib/rms-api";
-import { DashboardEmptyState, DashboardErrorState, DashboardLoadingState } from "../DashboardStates";
+import {
+  DashboardEmptyState,
+  DashboardErrorState,
+  DashboardLoadingState,
+} from "../DashboardStates";
 import type { DashboardWidgetComponentProps } from "../types";
 
 export function CadConflictsWidget({ onRefreshRequest }: DashboardWidgetComponentProps) {
@@ -34,7 +38,9 @@ export function CadConflictsWidget({ onRefreshRequest }: DashboardWidgetComponen
   }, [load, tick]);
 
   if (!me) {
-    return <DashboardEmptyState title="Sign in required" description="Sign in to view CAD conflicts." />;
+    return (
+      <DashboardEmptyState title="Sign in required" description="Sign in to view CAD conflicts." />
+    );
   }
   if (loading) return <DashboardLoadingState label="Loading conflicts" />;
   if (error) {
@@ -42,7 +48,11 @@ export function CadConflictsWidget({ onRefreshRequest }: DashboardWidgetComponen
       <DashboardErrorState
         description={error}
         action={
-          <button type="button" className="fx-btn fx-btn--secondary" onClick={() => setTick((n) => n + 1)}>
+          <button
+            type="button"
+            className="fx-btn fx-btn--secondary"
+            onClick={() => setTick((n) => n + 1)}
+          >
             Retry
           </button>
         }

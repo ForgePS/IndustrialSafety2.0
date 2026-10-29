@@ -153,9 +153,7 @@ export function applyTemplateSettings(settings: IndustrialTemplateSettings): voi
   }
   root.setAttribute(
     "data-template",
-    settings.layout === "horizontal"
-      ? "horizontal-menu-template"
-      : "vertical-menu-template",
+    settings.layout === "horizontal" ? "horizontal-menu-template" : "vertical-menu-template",
   );
 
   const effectivePrimary = settings.primaryColor;

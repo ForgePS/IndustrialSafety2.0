@@ -10,7 +10,10 @@ const REGION = "us-east-1";
 const CLUSTER = "forge-production-ecs-platform";
 const API_SERVICE = "forge-production-ecs-platform-api";
 const API_ECR = `${ACCOUNT}.dkr.ecr.${REGION}.amazonaws.com/forge-production-ecr-platformapi`;
-const stamp = new Date().toISOString().replace(/[-:TZ.]/g, "").slice(0, 14);
+const stamp = new Date()
+  .toISOString()
+  .replace(/[-:TZ.]/g, "")
+  .slice(0, 14);
 const tag = process.env.DEPLOY_TAG || `dash-attention-${stamp}`;
 const skipWeb = process.argv.includes("--skip-web");
 
@@ -86,7 +89,9 @@ if (!skipWeb) {
   } catch {
     /* ignore */
   }
-  sh(`node scripts/sync-static-site.mjs --app industrial --environment production --full-invalidate`);
+  sh(
+    `node scripts/sync-static-site.mjs --app industrial --environment production --full-invalidate`,
+  );
 }
 
 console.log(

@@ -108,7 +108,9 @@ export function SupportConsoleWorkspace() {
   if (!config.capabilities.isSupportAgent) {
     return (
       <div>
-        <div className="alert alert-warning mb-0">The support console is only available to Forge Support staff.</div>
+        <div className="alert alert-warning mb-0">
+          The support console is only available to Forge Support staff.
+        </div>
       </div>
     );
   }
@@ -180,8 +182,21 @@ function SupportDashboard({
     setLoading(true);
     setError("");
     try {
-      const params = new URLSearchParams({ queue, sort, page: String(page), pageSize: String(pageSize) });
-      const filters: Record<string, string> = { q, priority, status, requestType, productArea, assigneeUserId: assignee, tagId };
+      const params = new URLSearchParams({
+        queue,
+        sort,
+        page: String(page),
+        pageSize: String(pageSize),
+      });
+      const filters: Record<string, string> = {
+        q,
+        priority,
+        status,
+        requestType,
+        productArea,
+        assigneeUserId: assignee,
+        tagId,
+      };
       for (const [k, v] of Object.entries(filters)) if (v) params.set(k, v);
       const [s, list] = await Promise.all([
         apiGet<SupportSummary>(`${SUPPORT_API}/summary`),
@@ -206,19 +221,32 @@ function SupportDashboard({
     setPage(1);
   };
 
-  const cards: Array<{ label: string; value: number | undefined; tone: string; queue?: QueueId }> = [
-    { label: "Open", value: summary?.open, tone: "primary", queue: "open" },
-    { label: "Critical", value: summary?.critical, tone: "danger", queue: "critical" },
-    { label: "High", value: summary?.high, tone: "warning", queue: "high" },
-    { label: "Unassigned", value: summary?.unassigned, tone: "info", queue: "unassigned" },
-    { label: "Assigned to me", value: summary?.mine, tone: "primary", queue: "mine" },
-    { label: "Waiting on customer", value: summary?.waitingOnCustomer, tone: "secondary", queue: "waiting_customer" },
-    { label: "Waiting on Forge", value: summary?.waitingOnForge, tone: "dark", queue: "waiting_forge" },
-    { label: "New today", value: summary?.newToday, tone: "info" },
-    { label: "Resolved today", value: summary?.resolvedToday, tone: "success" },
-  ];
+  const cards: Array<{ label: string; value: number | undefined; tone: string; queue?: QueueId }> =
+    [
+      { label: "Open", value: summary?.open, tone: "primary", queue: "open" },
+      { label: "Critical", value: summary?.critical, tone: "danger", queue: "critical" },
+      { label: "High", value: summary?.high, tone: "warning", queue: "high" },
+      { label: "Unassigned", value: summary?.unassigned, tone: "info", queue: "unassigned" },
+      { label: "Assigned to me", value: summary?.mine, tone: "primary", queue: "mine" },
+      {
+        label: "Waiting on customer",
+        value: summary?.waitingOnCustomer,
+        tone: "secondary",
+        queue: "waiting_customer",
+      },
+      {
+        label: "Waiting on Forge",
+        value: summary?.waitingOnForge,
+        tone: "dark",
+        queue: "waiting_forge",
+      },
+      { label: "New today", value: summary?.newToday, tone: "info" },
+      { label: "Resolved today", value: summary?.resolvedToday, tone: "success" },
+    ];
   const pages = Math.max(1, Math.ceil(total / pageSize));
-  const hasFilters = Boolean(q || priority || status || requestType || productArea || assignee || tagId);
+  const hasFilters = Boolean(
+    q || priority || status || requestType || productArea || assignee || tagId,
+  );
 
   return (
     <>
@@ -283,7 +311,15 @@ function SupportDashboard({
               />
             </div>
             <div className="col-6 col-md-4 col-lg-2">
-              <select className="form-select" aria-label="Priority" value={priority} onChange={(e) => { setPriority(e.target.value); setPage(1); }}>
+              <select
+                className="form-select"
+                aria-label="Priority"
+                value={priority}
+                onChange={(e) => {
+                  setPriority(e.target.value);
+                  setPage(1);
+                }}
+              >
                 <option value="">Any priority</option>
                 {HELPDESK_PRIORITIES.map((p) => (
                   <option key={p} value={p}>
@@ -293,7 +329,15 @@ function SupportDashboard({
               </select>
             </div>
             <div className="col-6 col-md-4 col-lg-2">
-              <select className="form-select" aria-label="Status" value={status} onChange={(e) => { setStatus(e.target.value); setPage(1); }}>
+              <select
+                className="form-select"
+                aria-label="Status"
+                value={status}
+                onChange={(e) => {
+                  setStatus(e.target.value);
+                  setPage(1);
+                }}
+              >
                 <option value="">Any status</option>
                 {HELPDESK_TICKET_STATUSES.map((s) => (
                   <option key={s} value={s}>
@@ -303,7 +347,15 @@ function SupportDashboard({
               </select>
             </div>
             <div className="col-6 col-md-4 col-lg-2">
-              <select className="form-select" aria-label="Request type" value={requestType} onChange={(e) => { setRequestType(e.target.value); setPage(1); }}>
+              <select
+                className="form-select"
+                aria-label="Request type"
+                value={requestType}
+                onChange={(e) => {
+                  setRequestType(e.target.value);
+                  setPage(1);
+                }}
+              >
                 <option value="">Any request type</option>
                 {config.requestTypes.map((r) => (
                   <option key={r.code} value={r.code}>
@@ -313,7 +365,15 @@ function SupportDashboard({
               </select>
             </div>
             <div className="col-6 col-md-4 col-lg-2">
-              <select className="form-select" aria-label="Product area" value={productArea} onChange={(e) => { setProductArea(e.target.value); setPage(1); }}>
+              <select
+                className="form-select"
+                aria-label="Product area"
+                value={productArea}
+                onChange={(e) => {
+                  setProductArea(e.target.value);
+                  setPage(1);
+                }}
+              >
                 <option value="">Any area</option>
                 {config.productAreas.map((a) => (
                   <option key={a.code} value={a.code}>
@@ -323,7 +383,15 @@ function SupportDashboard({
               </select>
             </div>
             <div className="col-6 col-md-4 col-lg-3">
-              <select className="form-select" aria-label="Assignee" value={assignee} onChange={(e) => { setAssignee(e.target.value); setPage(1); }}>
+              <select
+                className="form-select"
+                aria-label="Assignee"
+                value={assignee}
+                onChange={(e) => {
+                  setAssignee(e.target.value);
+                  setPage(1);
+                }}
+              >
                 <option value="">Any assignee</option>
                 {agents.map((a) => (
                   <option key={a.userId} value={a.userId}>
@@ -333,7 +401,15 @@ function SupportDashboard({
               </select>
             </div>
             <div className="col-6 col-md-4 col-lg-3">
-              <select className="form-select" aria-label="Tag" value={tagId} onChange={(e) => { setTagId(e.target.value); setPage(1); }}>
+              <select
+                className="form-select"
+                aria-label="Tag"
+                value={tagId}
+                onChange={(e) => {
+                  setTagId(e.target.value);
+                  setPage(1);
+                }}
+              >
                 <option value="">Any tag</option>
                 {tags.map((t) => (
                   <option key={t.id} value={t.id}>
@@ -343,7 +419,15 @@ function SupportDashboard({
               </select>
             </div>
             <div className="col-6 col-md-4 col-lg-3">
-              <select className="form-select" aria-label="Sort" value={sort} onChange={(e) => { setSort(e.target.value); setPage(1); }}>
+              <select
+                className="form-select"
+                aria-label="Sort"
+                value={sort}
+                onChange={(e) => {
+                  setSort(e.target.value);
+                  setPage(1);
+                }}
+              >
                 <option value="priority">Priority, then oldest</option>
                 <option value="newest">Newest first</option>
                 <option value="oldest">Oldest first</option>
@@ -408,7 +492,11 @@ function SupportDashboard({
                   </td>
                   <td className="small">
                     <div>{optionLabel(config.requestTypes, t.requestType)}</div>
-                    {t.productArea ? <div className="text-muted">{optionLabel(config.productAreas, t.productArea)}</div> : null}
+                    {t.productArea ? (
+                      <div className="text-muted">
+                        {optionLabel(config.productAreas, t.productArea)}
+                      </div>
+                    ) : null}
                   </td>
                   <td>
                     <TicketPriorityBadge priority={t.priority} />
@@ -416,7 +504,9 @@ function SupportDashboard({
                   <td>
                     <TicketStatusBadge status={t.status} />
                   </td>
-                  <td className="text-nowrap small">{t.assignedUserName ?? <span className="text-muted">Unassigned</span>}</td>
+                  <td className="text-nowrap small">
+                    {t.assignedUserName ?? <span className="text-muted">Unassigned</span>}
+                  </td>
                   <td className="text-nowrap small">{formatDateTime(t.createdAt)}</td>
                   <td className="text-nowrap small">{formatAge(t.createdAt)}</td>
                 </tr>
@@ -437,13 +527,23 @@ function SupportDashboard({
           </span>
           {pages > 1 ? (
             <div className="d-flex align-items-center gap-2">
-              <button type="button" className="btn btn-sm btn-outline-secondary" disabled={page <= 1} onClick={() => setPage(page - 1)}>
+              <button
+                type="button"
+                className="btn btn-sm btn-outline-secondary"
+                disabled={page <= 1}
+                onClick={() => setPage(page - 1)}
+              >
                 Previous
               </button>
               <span className="small text-muted">
                 Page {page} of {pages}
               </span>
-              <button type="button" className="btn btn-sm btn-outline-secondary" disabled={page >= pages} onClick={() => setPage(page + 1)}>
+              <button
+                type="button"
+                className="btn btn-sm btn-outline-secondary"
+                disabled={page >= pages}
+                onClick={() => setPage(page + 1)}
+              >
                 Next
               </button>
             </div>
@@ -521,7 +621,9 @@ function SupportTicketWorkspace({
       return true;
     } catch (err) {
       if (err instanceof ApiError && err.code === "CONFLICT") {
-        setActionError("Someone else updated this ticket. It has been reloaded; please review and try again.");
+        setActionError(
+          "Someone else updated this ticket. It has been reloaded; please review and try again.",
+        );
         await load();
       } else {
         setActionError(errorText(err, fallback));
@@ -551,24 +653,29 @@ function SupportTicketWorkspace({
     const internal = mode === "internal";
     const text = body.trim();
     const pending = files;
-    await run(async () => {
-      if (text) {
-        if (internal) await apiSend(`${base}/internal-note`, "POST", { body: text });
-        else await apiSend(`${base}/reply`, "POST", { body: text, nextStatus: nextStatus || null });
-        setBody("");
-        setNextStatus("");
-      }
-      const failed: File[] = [];
-      for (const f of pending) {
-        try {
-          await uploadTicketAttachment(base, f, internal);
-        } catch {
-          failed.push(f);
+    await run(
+      async () => {
+        if (text) {
+          if (internal) await apiSend(`${base}/internal-note`, "POST", { body: text });
+          else
+            await apiSend(`${base}/reply`, "POST", { body: text, nextStatus: nextStatus || null });
+          setBody("");
+          setNextStatus("");
         }
-      }
-      setFiles(failed);
-      if (failed.length) throw new Error(`These files did not upload: ${failed.map((f) => f.name).join(", ")}`);
-    }, internal ? "Could not save the internal note" : "Could not send the reply");
+        const failed: File[] = [];
+        for (const f of pending) {
+          try {
+            await uploadTicketAttachment(base, f, internal);
+          } catch {
+            failed.push(f);
+          }
+        }
+        setFiles(failed);
+        if (failed.length)
+          throw new Error(`These files did not upload: ${failed.map((f) => f.name).join(", ")}`);
+      },
+      internal ? "Could not save the internal note" : "Could not send the reply",
+    );
   };
 
   if (loading && !detail) return <p className="text-muted mb-0">Loading ticket…</p>;
@@ -604,7 +711,9 @@ function SupportTicketWorkspace({
           <div className="d-flex flex-wrap gap-2 align-items-center">
             <TicketStatusBadge status={t.status} />
             <TicketPriorityBadge priority={t.priority} />
-            {t.disposition ? <span className="badge bg-label-dark">{dispositionLabel(t.disposition)}</span> : null}
+            {t.disposition ? (
+              <span className="badge bg-label-dark">{dispositionLabel(t.disposition)}</span>
+            ) : null}
             {detail.tags.map((tag) => (
               <span key={tag.id} className="badge bg-label-secondary">
                 {tag.label}
@@ -616,7 +725,12 @@ function SupportTicketWorkspace({
       {actionError ? (
         <div className="alert alert-danger alert-dismissible" role="alert">
           {actionError}
-          <button type="button" className="btn-close" aria-label="Dismiss" onClick={() => setActionError("")} />
+          <button
+            type="button"
+            className="btn-close"
+            aria-label="Dismiss"
+            onClick={() => setActionError("")}
+          />
         </div>
       ) : null}
 
@@ -648,13 +762,21 @@ function SupportTicketWorkspace({
                   </>
                 ) : null}
                 <dt className="text-muted fw-normal">Customer-reported severity</dt>
-                <dd>{t.customerReportedSeverity ? priorityLabel(t.customerReportedSeverity) : "Not provided"}</dd>
+                <dd>
+                  {t.customerReportedSeverity
+                    ? priorityLabel(t.customerReportedSeverity)
+                    : "Not provided"}
+                </dd>
                 <dt className="text-muted fw-normal">Source</dt>
                 <dd>{t.source}</dd>
                 <dt className="text-muted fw-normal">Created</dt>
-                <dd>{formatDateTime(t.createdAt)} ({formatAge(t.createdAt)} ago)</dd>
+                <dd>
+                  {formatDateTime(t.createdAt)} ({formatAge(t.createdAt)} ago)
+                </dd>
                 <dt className="text-muted fw-normal">First response</dt>
-                <dd className="mb-0">{t.firstResponseAt ? formatDateTime(t.firstResponseAt) : "Not yet"}</dd>
+                <dd className="mb-0">
+                  {t.firstResponseAt ? formatDateTime(t.firstResponseAt) : "Not yet"}
+                </dd>
               </dl>
             </div>
           </div>
@@ -671,7 +793,9 @@ function SupportTicketWorkspace({
                   ))}
                 </dl>
               ) : (
-                <p className="small text-muted mb-0">The customer did not include technical details.</p>
+                <p className="small text-muted mb-0">
+                  The customer did not include technical details.
+                </p>
               )}
             </div>
           </div>
@@ -690,13 +814,20 @@ function SupportTicketWorkspace({
                 events={detail.events}
                 supportView
                 onOpenAttachment={(a) => {
-                  openTicketAttachment(base, a.id).catch((err) => setActionError(errorText(err, "Could not open the file")));
+                  openTicketAttachment(base, a.id).catch((err) =>
+                    setActionError(errorText(err, "Could not open the file")),
+                  );
                 }}
                 {...(caps.canRespond
                   ? {
                       onDeleteAttachment: (a) => {
-                        if (!window.confirm(`Remove ${a.originalFilename} from this ticket?`)) return;
-                        void run(() => apiSend(`${base}/attachments/${encodeURIComponent(a.id)}`, "DELETE"), "Could not remove the file");
+                        if (!window.confirm(`Remove ${a.originalFilename} from this ticket?`))
+                          return;
+                        void run(
+                          () =>
+                            apiSend(`${base}/attachments/${encodeURIComponent(a.id)}`, "DELETE"),
+                          "Could not remove the file",
+                        );
                       },
                     }
                   : {})}
@@ -735,7 +866,9 @@ function SupportTicketWorkspace({
                 </div>
               </div>
               <div className={`card-body pt-3 ${isInternal ? "bg-label-warning" : ""}`}>
-                <p className={`small fw-semibold mb-2 ${isInternal ? "text-warning" : "text-primary"}`}>
+                <p
+                  className={`small fw-semibold mb-2 ${isInternal ? "text-warning" : "text-primary"}`}
+                >
                   {isInternal ? (
                     <>
                       <i className="bx bx-lock-alt me-1" />
@@ -753,14 +886,23 @@ function SupportTicketWorkspace({
                   rows={5}
                   maxLength={20000}
                   aria-label={isInternal ? "Internal note" : "Reply to customer"}
-                  placeholder={isInternal ? "Notes for the support team" : "Write your reply to the customer"}
+                  placeholder={
+                    isInternal ? "Notes for the support team" : "Write your reply to the customer"
+                  }
                   value={body}
                   onChange={(e) => setBody(e.target.value)}
                   disabled={busy}
                 />
-                <AttachmentPicker files={files} onChange={setFiles} disabled={busy} idPrefix="hd-support" />
+                <AttachmentPicker
+                  files={files}
+                  onChange={setFiles}
+                  disabled={busy}
+                  idPrefix="hd-support"
+                />
                 {isInternal && files.length ? (
-                  <p className="small text-warning mb-0">These files will be internal and hidden from the customer.</p>
+                  <p className="small text-warning mb-0">
+                    These files will be internal and hidden from the customer.
+                  </p>
                 ) : null}
                 <div className="d-flex flex-wrap justify-content-end align-items-center gap-2 mt-2">
                   {!isInternal && caps.canChangeStatus && detail.allowedStatuses.length ? (
@@ -869,7 +1011,11 @@ function SupportTicketWorkspace({
                 disabled={busy || !caps.canChangePriority}
                 onChange={(e) =>
                   void run(
-                    () => apiSend(`${base}/priority`, "POST", { priority: e.target.value, expectedVersion: t.recordVersion }),
+                    () =>
+                      apiSend(`${base}/priority`, "POST", {
+                        priority: e.target.value,
+                        expectedVersion: t.recordVersion,
+                      }),
                     "Could not change the priority",
                   )
                 }
@@ -893,14 +1039,17 @@ function SupportTicketWorkspace({
                 disabled={busy || !caps.canAssign}
                 onChange={(e) =>
                   void run(
-                    () => apiSend(`${base}/assign`, "POST", { assigneeUserId: e.target.value || null }),
+                    () =>
+                      apiSend(`${base}/assign`, "POST", { assigneeUserId: e.target.value || null }),
                     "Could not assign the ticket",
                   )
                 }
               >
                 <option value="">Unassigned</option>
                 {t.assignedUserId && !agents.some((a) => a.userId === t.assignedUserId) ? (
-                  <option value={t.assignedUserId}>{t.assignedUserName ?? "Current assignee"}</option>
+                  <option value={t.assignedUserId}>
+                    {t.assignedUserName ?? "Current assignee"}
+                  </option>
                 ) : null}
                 {agents.map((a) => (
                   <option key={a.userId} value={a.userId}>
@@ -914,7 +1063,10 @@ function SupportTicketWorkspace({
                   className="btn btn-sm btn-outline-primary w-100"
                   disabled={busy}
                   onClick={() =>
-                    void run(() => apiSend(`${base}/assign`, "POST", { assigneeUserId: me.userId }), "Could not assign the ticket")
+                    void run(
+                      () => apiSend(`${base}/assign`, "POST", { assigneeUserId: me.userId }),
+                      "Could not assign the ticket",
+                    )
                   }
                 >
                   <i className="bx bx-user-check me-1" />
@@ -930,7 +1082,10 @@ function SupportTicketWorkspace({
               <div className="d-flex flex-wrap gap-1 mb-2">
                 {detail.tags.length ? (
                   detail.tags.map((tag) => (
-                    <span key={tag.id} className="badge bg-label-secondary d-inline-flex align-items-center gap-1">
+                    <span
+                      key={tag.id}
+                      className="badge bg-label-secondary d-inline-flex align-items-center gap-1"
+                    >
                       {tag.label}
                       {caps.canManageWatchers ? (
                         <button
@@ -938,7 +1093,12 @@ function SupportTicketWorkspace({
                           className="btn btn-link p-0 text-reset"
                           aria-label={`Remove tag ${tag.label}`}
                           disabled={busy}
-                          onClick={() => void run(() => apiSend(`${base}/tags`, "POST", { remove: [tag.id] }), "Could not remove the tag")}
+                          onClick={() =>
+                            void run(
+                              () => apiSend(`${base}/tags`, "POST", { remove: [tag.id] }),
+                              "Could not remove the tag",
+                            )
+                          }
                         >
                           <i className="bx bx-x" />
                         </button>
@@ -956,7 +1116,10 @@ function SupportTicketWorkspace({
                     e.preventDefault();
                     const label = newTag.trim();
                     if (!label) return;
-                    void run(() => apiSend(`${base}/tags`, "POST", { add: [label] }), "Could not add the tag").then((ok) => {
+                    void run(
+                      () => apiSend(`${base}/tags`, "POST", { add: [label] }),
+                      "Could not add the tag",
+                    ).then((ok) => {
                       if (ok) {
                         setNewTag("");
                         onTagsChanged();
@@ -978,7 +1141,11 @@ function SupportTicketWorkspace({
                       <option key={tag.id} value={tag.label} />
                     ))}
                   </datalist>
-                  <button type="submit" className="btn btn-outline-primary" disabled={busy || !newTag.trim()}>
+                  <button
+                    type="submit"
+                    className="btn btn-outline-primary"
+                    disabled={busy || !newTag.trim()}
+                  >
                     Add
                   </button>
                 </form>
@@ -1002,7 +1169,10 @@ function SupportTicketWorkspace({
                           aria-label={`Remove watcher ${w.name}`}
                           disabled={busy}
                           onClick={() =>
-                            void run(() => apiSend(`${base}/watchers`, "POST", { remove: [w.userId] }), "Could not remove the watcher")
+                            void run(
+                              () => apiSend(`${base}/watchers`, "POST", { remove: [w.userId] }),
+                              "Could not remove the watcher",
+                            )
                           }
                         >
                           <i className="bx bx-x" />
@@ -1037,9 +1207,10 @@ function SupportTicketWorkspace({
                     className="btn btn-outline-primary"
                     disabled={busy || !watcherToAdd}
                     onClick={() =>
-                      void run(() => apiSend(`${base}/watchers`, "POST", { add: [watcherToAdd] }), "Could not add the watcher").then(
-                        (ok) => ok && setWatcherToAdd(""),
-                      )
+                      void run(
+                        () => apiSend(`${base}/watchers`, "POST", { add: [watcherToAdd] }),
+                        "Could not add the watcher",
+                      ).then((ok) => ok && setWatcherToAdd(""))
                     }
                   >
                     Add

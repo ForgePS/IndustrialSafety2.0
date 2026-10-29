@@ -390,7 +390,11 @@ export function SafetySuppliesWorkspace({ moduleName }: { moduleName: string }) 
   );
   useEffect(() => {
     setTab((current) =>
-      ensureActiveModuleTab(current, visibleTabs.map((t) => t.id), "dashboard"),
+      ensureActiveModuleTab(
+        current,
+        visibleTabs.map((t) => t.id),
+        "dashboard",
+      ),
     );
   }, [tab, visibleTabs]);
   const [deepLinkRequestId, setDeepLinkRequestId] = useState<string | null>(null);
@@ -524,9 +528,7 @@ export function SafetySuppliesWorkspace({ moduleName }: { moduleName: string }) 
         apiGet<ListResponse<SupplyCategory>>("/api/v1/industrial/supplies/categories"),
         apiGet<SupplySettings>("/api/v1/industrial/supplies/settings").catch(() => null),
         loadOrgFilterCatalogs(tenantId || undefined).catch(() => null),
-        apiGet<RequestAnalytics>("/api/v1/industrial/supplies/request-analytics").catch(
-          () => null,
-        ),
+        apiGet<RequestAnalytics>("/api/v1/industrial/supplies/request-analytics").catch(() => null),
       ]);
     setDashboard(dash);
     setRequestAnalytics(analyticsRes);
@@ -558,91 +560,86 @@ export function SafetySuppliesWorkspace({ moduleName }: { moduleName: string }) 
     }
   }, [tenantId]);
 
-  const loadTabData = useCallback(
-    async (active: TabId) => {
-      if (active === "inventory") {
-        const res = await apiGet<ListResponse<InventoryRow>>(
-          "/api/v1/industrial/supplies/inventory",
-          { query: LIST_QUERY },
-        );
-        setInventory(res.items ?? []);
-      } else if (active === "ppe") {
-        const res = await apiGet<ListResponse<PpeAssignment>>("/api/v1/industrial/supplies/ppe", {
+  const loadTabData = useCallback(async (active: TabId) => {
+    if (active === "inventory") {
+      const res = await apiGet<ListResponse<InventoryRow>>(
+        "/api/v1/industrial/supplies/inventory",
+        { query: LIST_QUERY },
+      );
+      setInventory(res.items ?? []);
+    } else if (active === "ppe") {
+      const res = await apiGet<ListResponse<PpeAssignment>>("/api/v1/industrial/supplies/ppe", {
+        query: LIST_QUERY,
+      });
+      setPpe(res.items ?? []);
+    } else if (active === "requests") {
+      const [res, invRes] = await Promise.all([
+        apiGet<ListResponse<SupplyRequest>>("/api/v1/industrial/supplies/requests", {
           query: LIST_QUERY,
-        });
-        setPpe(res.items ?? []);
-      } else if (active === "requests") {
-        const [res, invRes] = await Promise.all([
-          apiGet<ListResponse<SupplyRequest>>("/api/v1/industrial/supplies/requests", {
-            query: LIST_QUERY,
-          }),
-          apiGet<ListResponse<InventoryRow>>("/api/v1/industrial/supplies/inventory", {
-            query: LIST_QUERY,
-          }),
-        ]);
-        setRequests(res.items ?? []);
-        setInventory(invRes.items ?? []);
-      } else if (active === "qr-stations") {
-        /* stations panel loads itself */
-      } else if (active === "vendors") {
-        const res = await apiGet<ListResponse<SupplyVendor>>(
-          "/api/v1/industrial/supplies/vendors",
-          { query: LIST_QUERY },
-        );
-        setVendors(res.items ?? []);
-      } else if (active === "purchase-orders") {
-        const [poRes, vendorRes] = await Promise.all([
-          apiGet<ListResponse<PurchaseOrder>>("/api/v1/industrial/supplies/purchase-orders", {
-            query: LIST_QUERY,
-          }),
-          apiGet<ListResponse<SupplyVendor>>("/api/v1/industrial/supplies/vendors", {
-            query: LIST_QUERY,
-          }),
-        ]);
-        setPurchaseOrders(poRes.items ?? []);
-        setVendors(vendorRes.items ?? []);
-      } else if (active === "reorder") {
-        const res = await apiGet<{ items: ReorderRow[] }>("/api/v1/industrial/supplies/reorder");
-        setReorder(res.items ?? []);
-      } else if (active === "expiring") {
-        const res = await apiGet<ListResponse<ExpiringLot>>(
-          "/api/v1/industrial/supplies/expiring",
-          { query: { ...LIST_QUERY, days: "90" } },
-        );
-        setExpiring(res.items ?? []);
-      } else if (active === "kits") {
-        const res = await apiGet<ListResponse<SupplyKit>>("/api/v1/industrial/supplies/kits", {
+        }),
+        apiGet<ListResponse<InventoryRow>>("/api/v1/industrial/supplies/inventory", {
           query: LIST_QUERY,
-        });
-        setKits(res.items ?? []);
-      } else if (active === "transactions") {
-        const res = await apiGet<ListResponse<SupplyTransaction>>(
-          "/api/v1/industrial/supplies/transactions",
-          { query: LIST_QUERY },
-        );
-        setTransactions(res.items ?? []);
-      } else if (active === "settings") {
-        const next = await apiGet<SupplySettings>("/api/v1/industrial/supplies/settings");
-        setSettings(next);
-        setLocationForm((prev) => ({
-          ...prev,
-          locationType: defaultLocationTypeFromSettings(next),
-        }));
-        setTransferForm((prev) => ({
-          ...prev,
-          sourceLocationId:
-            prev.sourceLocationId ||
-            String(next.settings?.defaultSourceLocationId ?? "").trim() ||
-            "",
-          destinationLocationId:
-            prev.destinationLocationId ||
-            String(next.settings?.defaultDestinationLocationId ?? "").trim() ||
-            "",
-        }));
-      }
-    },
-    [],
-  );
+        }),
+      ]);
+      setRequests(res.items ?? []);
+      setInventory(invRes.items ?? []);
+    } else if (active === "qr-stations") {
+      /* stations panel loads itself */
+    } else if (active === "vendors") {
+      const res = await apiGet<ListResponse<SupplyVendor>>("/api/v1/industrial/supplies/vendors", {
+        query: LIST_QUERY,
+      });
+      setVendors(res.items ?? []);
+    } else if (active === "purchase-orders") {
+      const [poRes, vendorRes] = await Promise.all([
+        apiGet<ListResponse<PurchaseOrder>>("/api/v1/industrial/supplies/purchase-orders", {
+          query: LIST_QUERY,
+        }),
+        apiGet<ListResponse<SupplyVendor>>("/api/v1/industrial/supplies/vendors", {
+          query: LIST_QUERY,
+        }),
+      ]);
+      setPurchaseOrders(poRes.items ?? []);
+      setVendors(vendorRes.items ?? []);
+    } else if (active === "reorder") {
+      const res = await apiGet<{ items: ReorderRow[] }>("/api/v1/industrial/supplies/reorder");
+      setReorder(res.items ?? []);
+    } else if (active === "expiring") {
+      const res = await apiGet<ListResponse<ExpiringLot>>("/api/v1/industrial/supplies/expiring", {
+        query: { ...LIST_QUERY, days: "90" },
+      });
+      setExpiring(res.items ?? []);
+    } else if (active === "kits") {
+      const res = await apiGet<ListResponse<SupplyKit>>("/api/v1/industrial/supplies/kits", {
+        query: LIST_QUERY,
+      });
+      setKits(res.items ?? []);
+    } else if (active === "transactions") {
+      const res = await apiGet<ListResponse<SupplyTransaction>>(
+        "/api/v1/industrial/supplies/transactions",
+        { query: LIST_QUERY },
+      );
+      setTransactions(res.items ?? []);
+    } else if (active === "settings") {
+      const next = await apiGet<SupplySettings>("/api/v1/industrial/supplies/settings");
+      setSettings(next);
+      setLocationForm((prev) => ({
+        ...prev,
+        locationType: defaultLocationTypeFromSettings(next),
+      }));
+      setTransferForm((prev) => ({
+        ...prev,
+        sourceLocationId:
+          prev.sourceLocationId ||
+          String(next.settings?.defaultSourceLocationId ?? "").trim() ||
+          "",
+        destinationLocationId:
+          prev.destinationLocationId ||
+          String(next.settings?.defaultDestinationLocationId ?? "").trim() ||
+          "",
+      }));
+    }
+  }, []);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -678,14 +675,14 @@ export function SafetySuppliesWorkspace({ moduleName }: { moduleName: string }) 
     const q = inventorySearch.trim().toLowerCase();
     if (!q) return inventory;
     return inventory.filter((row) => {
-      const hay = `${row.itemName} ${row.itemNumber ?? ""} ${row.locationName} ${row.locationCode ?? ""}`.toLowerCase();
+      const hay =
+        `${row.itemName} ${row.itemNumber ?? ""} ${row.locationName} ${row.locationCode ?? ""}`.toLowerCase();
       return hay.includes(q);
     });
   }, [inventory, inventorySearch]);
 
   const divisionOptions = useMemo(
-    () =>
-      divisionsForLocationCascade(orgDivisionEntries, orgDepartments, orgSiteId || undefined),
+    () => divisionsForLocationCascade(orgDivisionEntries, orgDepartments, orgSiteId || undefined),
     [orgDivisionEntries, orgDepartments, orgSiteId],
   );
 
@@ -720,9 +717,7 @@ export function SafetySuppliesWorkspace({ moduleName }: { moduleName: string }) 
 
   const visibleLocations = useMemo(
     () =>
-      locations.filter(
-        (loc) => !/^prm/i.test(loc.name.trim()) && !/^prm/i.test(loc.code.trim()),
-      ),
+      locations.filter((loc) => !/^prm/i.test(loc.name.trim()) && !/^prm/i.test(loc.code.trim())),
     [locations],
   );
 
@@ -736,14 +731,9 @@ export function SafetySuppliesWorkspace({ moduleName }: { moduleName: string }) 
 
   const issuedByLabel = useMemo(() => me?.userId ?? "", [me?.userId]);
 
-  function setOrgCascade(patch: {
-    siteId?: string;
-    divisionName?: string;
-    departmentId?: string;
-  }) {
+  function setOrgCascade(patch: { siteId?: string; divisionName?: string; departmentId?: string }) {
     const nextSite = patch.siteId !== undefined ? patch.siteId : orgSiteId;
-    const nextDivision =
-      patch.divisionName !== undefined ? patch.divisionName : orgDivisionName;
+    const nextDivision = patch.divisionName !== undefined ? patch.divisionName : orgDivisionName;
     let nextDept = patch.departmentId !== undefined ? patch.departmentId : orgDepartmentId;
     if (patch.siteId !== undefined || patch.divisionName !== undefined) {
       const stillValid = filterDepartmentsForSiteDivision(
@@ -904,7 +894,13 @@ export function SafetySuppliesWorkspace({ moduleName }: { moduleName: string }) 
         URL.revokeObjectURL(stickerUrl);
       }
     } catch (err) {
-      setError(err instanceof ApiError ? err.message : err instanceof Error ? err.message : "QR print failed");
+      setError(
+        err instanceof ApiError
+          ? err.message
+          : err instanceof Error
+            ? err.message
+            : "QR print failed",
+      );
     } finally {
       setQrPrintingId(null);
     }
@@ -913,33 +909,36 @@ export function SafetySuppliesWorkspace({ moduleName }: { moduleName: string }) 
   async function saveLocation(e: FormEvent) {
     e.preventDefault();
     if (editingLocationId && !canManageLocations) return;
-    await runAction(async () => {
-      const payload = {
-        code: locationForm.code.trim(),
-        name: locationForm.name.trim(),
-        locationType: locationForm.locationType,
-        siteId: locationForm.siteId || null,
-      };
-      if (editingLocationId) {
-        await apiSend(
-          `/api/v1/industrial/supplies/locations/${encodeURIComponent(editingLocationId)}`,
-          "PATCH",
-          payload,
-        );
-      } else {
-        await apiSend("/api/v1/industrial/supplies/locations", "POST", {
-          ...payload,
-          siteId: locationForm.siteId || undefined,
+    await runAction(
+      async () => {
+        const payload = {
+          code: locationForm.code.trim(),
+          name: locationForm.name.trim(),
+          locationType: locationForm.locationType,
+          siteId: locationForm.siteId || null,
+        };
+        if (editingLocationId) {
+          await apiSend(
+            `/api/v1/industrial/supplies/locations/${encodeURIComponent(editingLocationId)}`,
+            "PATCH",
+            payload,
+          );
+        } else {
+          await apiSend("/api/v1/industrial/supplies/locations", "POST", {
+            ...payload,
+            siteId: locationForm.siteId || undefined,
+          });
+        }
+        setLocationForm({
+          code: "",
+          name: "",
+          locationType: defaultLocationTypeFromSettings(settings),
+          siteId: "",
         });
-      }
-      setLocationForm({
-        code: "",
-        name: "",
-        locationType: defaultLocationTypeFromSettings(settings),
-        siteId: "",
-      });
-      setEditingLocationId(null);
-    }, editingLocationId ? "Location updated" : "Location created");
+        setEditingLocationId(null);
+      },
+      editingLocationId ? "Location updated" : "Location created",
+    );
   }
 
   function beginEditLocation(loc: SupplyLocation) {
@@ -1035,8 +1034,7 @@ export function SafetySuppliesWorkspace({ moduleName }: { moduleName: string }) 
     const recipientSignatureDataUrl = issueForm.recipientSignatureDataUrl.trim();
     const recipientId = issueForm.personnelId.trim();
     const departmentId = issueForm.departmentId || orgDepartmentId;
-    const departmentName =
-      orgDepartments.find((d) => d.id === departmentId)?.label ?? "";
+    const departmentName = orgDepartments.find((d) => d.id === departmentId)?.label ?? "";
 
     if (!recipientName) {
       setError("Enter the recipient’s printed name.");
@@ -1253,22 +1251,6 @@ export function SafetySuppliesWorkspace({ moduleName }: { moduleName: string }) 
     }, "Request submitted");
   }
 
-  async function approveRequest(id: string) {
-    await runAction(async () => {
-      await apiSend(`/api/v1/industrial/supplies/requests/${id}/approve`, "POST", {
-        locationId: approveLocationId || undefined,
-      });
-    }, "Request approved");
-  }
-
-  async function fulfillRequest(id: string) {
-    await runAction(async () => {
-      await apiSend(`/api/v1/industrial/supplies/requests/${id}/fulfill`, "POST", {
-        locationId: approveLocationId || undefined,
-      });
-    }, "Request fulfilled");
-  }
-
   async function createVendor(e: FormEvent) {
     e.preventDefault();
     await runAction(async () => {
@@ -1366,9 +1348,7 @@ export function SafetySuppliesWorkspace({ moduleName }: { moduleName: string }) 
     }, "Settings saved");
   }
 
-  function updateSettingsExtras(
-    patch: Partial<NonNullable<SupplySettings["settings"]>>,
-  ) {
+  function updateSettingsExtras(patch: Partial<NonNullable<SupplySettings["settings"]>>) {
     if (!settings) return;
     setSettings({
       ...settings,
@@ -1424,9 +1404,7 @@ export function SafetySuppliesWorkspace({ moduleName }: { moduleName: string }) 
     return list.map((loc) => (
       <option key={loc.id} value={loc.id}>
         {loc.name} ({loc.code})
-        {loc.siteId && siteNameById.get(loc.siteId)
-          ? ` — ${siteNameById.get(loc.siteId)}`
-          : ""}
+        {loc.siteId && siteNameById.get(loc.siteId) ? ` — ${siteNameById.get(loc.siteId)}` : ""}
       </option>
     ));
   }
@@ -1550,7 +1528,10 @@ export function SafetySuppliesWorkspace({ moduleName }: { moduleName: string }) 
             <KpiCard label="Expired" value={dashboard?.expiredItems ?? 0} />
             <KpiCard label="Pending requests" value={dashboard?.pendingRequests ?? 0} />
             <KpiCard label="Open POs" value={dashboard?.openPurchaseOrders ?? 0} />
-            <KpiCard label="Received this month" value={dashboard?.suppliesReceivedThisMonth ?? 0} />
+            <KpiCard
+              label="Received this month"
+              value={dashboard?.suppliesReceivedThisMonth ?? 0}
+            />
             <KpiCard label="Issued this month" value={dashboard?.suppliesIssuedThisMonth ?? 0} />
             <KpiCard label="Adjustments" value={dashboard?.inventoryAdjustments ?? 0} />
             <KpiCard label="Damaged equipment" value={dashboard?.damagedEquipment ?? 0} />
@@ -1879,16 +1860,12 @@ export function SafetySuppliesWorkspace({ moduleName }: { moduleName: string }) 
                             <code>{loc.code}</code>
                           </td>
                           <td>{loc.name}</td>
-                          <td>
-                            {loc.siteId
-                              ? (siteNameById.get(loc.siteId) ?? loc.siteId)
-                              : "—"}
-                          </td>
+                          <td>{loc.siteId ? (siteNameById.get(loc.siteId) ?? loc.siteId) : "—"}</td>
                           <td>{loc.locationType}</td>
                           <td>{loc.status ?? "ACTIVE"}</td>
                           {canManageLocations ? (
                             <td className="text-end text-nowrap">
-                              {(canPrinterPrint || canQrPrint) ? (
+                              {canPrinterPrint || canQrPrint ? (
                                 <button
                                   type="button"
                                   className="btn btn-sm btn-primary me-1"
@@ -1926,10 +1903,7 @@ export function SafetySuppliesWorkspace({ moduleName }: { moduleName: string }) 
                       ))}
                       {visibleLocations.length === 0 ? (
                         <tr>
-                          <td
-                            colSpan={canManageLocations ? 6 : 5}
-                            className="text-muted"
-                          >
+                          <td colSpan={canManageLocations ? 6 : 5} className="text-muted">
                             No locations yet.
                           </td>
                         </tr>
@@ -2186,9 +2160,7 @@ export function SafetySuppliesWorkspace({ moduleName }: { moduleName: string }) 
                     id="iss-recipient"
                     className="form-control"
                     value={issueForm.recipientName}
-                    onChange={(e) =>
-                      setIssueForm({ ...issueForm, recipientName: e.target.value })
-                    }
+                    onChange={(e) => setIssueForm({ ...issueForm, recipientName: e.target.value })}
                     placeholder="Print the recipient’s full name"
                     required
                   />
@@ -2436,9 +2408,7 @@ export function SafetySuppliesWorkspace({ moduleName }: { moduleName: string }) 
                         id="ppe-recipient"
                         className="form-control"
                         value={ppeForm.recipientName}
-                        onChange={(e) =>
-                          setPpeForm({ ...ppeForm, recipientName: e.target.value })
-                        }
+                        onChange={(e) => setPpeForm({ ...ppeForm, recipientName: e.target.value })}
                         placeholder="Print the recipient’s full name"
                         required
                       />
@@ -2847,9 +2817,7 @@ export function SafetySuppliesWorkspace({ moduleName }: { moduleName: string }) 
                         id="po-ship"
                         className="form-select"
                         value={poForm.shipToLocationId}
-                        onChange={(e) =>
-                          setPoForm({ ...poForm, shipToLocationId: e.target.value })
-                        }
+                        onChange={(e) => setPoForm({ ...poForm, shipToLocationId: e.target.value })}
                       >
                         <option value="">None</option>
                         {locationOptions()}
@@ -3185,9 +3153,8 @@ export function SafetySuppliesWorkspace({ moduleName }: { moduleName: string }) 
         {tab === "reports" ? (
           <>
             <div className="alert alert-info mb-3" role="status">
-              Use the{" "}
-              <a href="/reporting/library/?q=supplies">Reporting Center</a> for exports, or turn on
-              the monthly department email under{" "}
+              Use the <a href="/reporting/library/?q=supplies">Reporting Center</a> for exports, or
+              turn on the monthly department email under{" "}
               <button
                 type="button"
                 className="btn btn-link p-0 align-baseline"
@@ -3530,265 +3497,268 @@ export function SafetySuppliesWorkspace({ moduleName }: { moduleName: string }) 
                   </div>
                 </div>
 
-              <div className="col-md-6">
-                <h6>QR / Labels</h6>
-                <div className="form-check mb-2">
-                  <input
-                    id="auto-qr"
-                    className="form-check-input"
-                    type="checkbox"
-                    checked={settings.autoCreateQrOnItemCreate}
-                    onChange={(e) =>
-                      setSettings({ ...settings, autoCreateQrOnItemCreate: e.target.checked })
-                    }
-                  />
-                  <label className="form-check-label" htmlFor="auto-qr">
-                    Auto-create QR when item created
-                  </label>
-                </div>
-                <div className="mb-2">
-                  <label className="form-label" htmlFor="label-type">
-                    Default label type
-                  </label>
-                  <select
-                    id="label-type"
-                    className="form-select"
-                    value={settings.defaultLabelType}
-                    onChange={(e) =>
-                      setSettings({ ...settings, defaultLabelType: e.target.value })
-                    }
-                  >
-                    <option value="SMALL_INVENTORY">Small inventory label</option>
-                    <option value="EQUIPMENT">Equipment label</option>
-                  </select>
-                </div>
-              </div>
-
-              <div className="col-md-6">
-                <h6>Notifications</h6>
-                <p className="text-muted small">
-                  Dashboard (in-app) alerts for supply request workflow. Email/SMS remain off until
-                  configured.
-                </p>
-                {(
-                  [
-                    ["requestSubmittedInApp", "New request submitted"],
-                    ["requestUrgentInApp", "Urgent request submitted"],
-                    ["requestAssignedInApp", "Request assigned"],
-                    ["requestApprovedInApp", "Request approved"],
-                    ["requestDeniedInApp", "Request denied"],
-                    ["requestReadyInApp", "Ready for pickup"],
-                    ["requestFulfilledInApp", "Request fulfilled"],
-                  ] as const
-                ).map(([key, label]) => (
-                  <div className="form-check mb-2" key={key}>
+                <div className="col-md-6">
+                  <h6>QR / Labels</h6>
+                  <div className="form-check mb-2">
                     <input
-                      id={`notif-${key}`}
+                      id="auto-qr"
+                      className="form-check-input"
+                      type="checkbox"
+                      checked={settings.autoCreateQrOnItemCreate}
+                      onChange={(e) =>
+                        setSettings({ ...settings, autoCreateQrOnItemCreate: e.target.checked })
+                      }
+                    />
+                    <label className="form-check-label" htmlFor="auto-qr">
+                      Auto-create QR when item created
+                    </label>
+                  </div>
+                  <div className="mb-2">
+                    <label className="form-label" htmlFor="label-type">
+                      Default label type
+                    </label>
+                    <select
+                      id="label-type"
+                      className="form-select"
+                      value={settings.defaultLabelType}
+                      onChange={(e) =>
+                        setSettings({ ...settings, defaultLabelType: e.target.value })
+                      }
+                    >
+                      <option value="SMALL_INVENTORY">Small inventory label</option>
+                      <option value="EQUIPMENT">Equipment label</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div className="col-md-6">
+                  <h6>Notifications</h6>
+                  <p className="text-muted small">
+                    Dashboard (in-app) alerts for supply request workflow. Email/SMS remain off
+                    until configured.
+                  </p>
+                  {(
+                    [
+                      ["requestSubmittedInApp", "New request submitted"],
+                      ["requestUrgentInApp", "Urgent request submitted"],
+                      ["requestAssignedInApp", "Request assigned"],
+                      ["requestApprovedInApp", "Request approved"],
+                      ["requestDeniedInApp", "Request denied"],
+                      ["requestReadyInApp", "Ready for pickup"],
+                      ["requestFulfilledInApp", "Request fulfilled"],
+                    ] as const
+                  ).map(([key, label]) => (
+                    <div className="form-check mb-2" key={key}>
+                      <input
+                        id={`notif-${key}`}
+                        className="form-check-input"
+                        type="checkbox"
+                        checked={Boolean(
+                          settings.settings?.notifications?.[key] ??
+                          (key === "requestSubmittedInApp" || key === "requestUrgentInApp"),
+                        )}
+                        onChange={(e) =>
+                          updateSettingsExtras({
+                            notifications: {
+                              ...(settings.settings?.notifications ?? {}),
+                              [key]: e.target.checked,
+                            },
+                          })
+                        }
+                      />
+                      <label className="form-check-label" htmlFor={`notif-${key}`}>
+                        {label}
+                      </label>
+                    </div>
+                  ))}
+                  <div className="form-check mb-2">
+                    <input
+                      id="notif-email"
+                      className="form-check-input"
+                      type="checkbox"
+                      checked={Boolean(settings.settings?.notifications?.emailEnabled)}
+                      disabled
+                      onChange={() => undefined}
+                    />
+                    <label className="form-check-label" htmlFor="notif-email">
+                      Email notifications (not available yet)
+                    </label>
+                  </div>
+                  <div className="form-check mb-2">
+                    <input
+                      id="notif-sms"
+                      className="form-check-input"
+                      type="checkbox"
+                      checked={Boolean(settings.settings?.notifications?.smsEnabled)}
+                      disabled
+                      onChange={() => undefined}
+                    />
+                    <label className="form-check-label" htmlFor="notif-sms">
+                      SMS notifications (not available yet)
+                    </label>
+                  </div>
+                  <hr className="my-3" />
+                  <h6>Monthly department report</h6>
+                  <p className="text-muted small">
+                    On the 1st of each month at 8:00 AM Central, email last month’s issued and
+                    transferred quantities by department to everyone with the Safety Director role.
+                    Those people need a real email address on their user profile.
+                  </p>
+                  <div className="form-check mb-2">
+                    <input
+                      id="monthly-dept-email"
                       className="form-check-input"
                       type="checkbox"
                       checked={Boolean(
-                        settings.settings?.notifications?.[key] ??
-                          (key === "requestSubmittedInApp" || key === "requestUrgentInApp"),
+                        settings.settings?.monthlyDepartmentUsageEmailToSafetyDirectors,
                       )}
                       onChange={(e) =>
                         updateSettingsExtras({
-                          notifications: {
-                            ...(settings.settings?.notifications ?? {}),
-                            [key]: e.target.checked,
-                          },
+                          monthlyDepartmentUsageEmailToSafetyDirectors: e.target.checked,
                         })
                       }
                     />
-                    <label className="form-check-label" htmlFor={`notif-${key}`}>
-                      {label}
+                    <label className="form-check-label" htmlFor="monthly-dept-email">
+                      Email Safety Directors a monthly department usage report
                     </label>
                   </div>
-                ))}
-                <div className="form-check mb-2">
-                  <input
-                    id="notif-email"
-                    className="form-check-input"
-                    type="checkbox"
-                    checked={Boolean(settings.settings?.notifications?.emailEnabled)}
-                    disabled
-                    onChange={() => undefined}
-                  />
-                  <label className="form-check-label" htmlFor="notif-email">
-                    Email notifications (not available yet)
-                  </label>
-                </div>
-                <div className="form-check mb-2">
-                  <input
-                    id="notif-sms"
-                    className="form-check-input"
-                    type="checkbox"
-                    checked={Boolean(settings.settings?.notifications?.smsEnabled)}
-                    disabled
-                    onChange={() => undefined}
-                  />
-                  <label className="form-check-label" htmlFor="notif-sms">
-                    SMS notifications (not available yet)
-                  </label>
-                </div>
-                <hr className="my-3" />
-                <h6>Monthly department report</h6>
-                <p className="text-muted small">
-                  On the 1st of each month at 8:00 AM Central, email last month’s issued and
-                  transferred quantities by department to everyone with the Safety Director role.
-                  Those people need a real email address on their user profile.
-                </p>
-                <div className="form-check mb-2">
-                  <input
-                    id="monthly-dept-email"
-                    className="form-check-input"
-                    type="checkbox"
-                    checked={Boolean(
-                      settings.settings?.monthlyDepartmentUsageEmailToSafetyDirectors,
-                    )}
-                    onChange={(e) =>
-                      updateSettingsExtras({
-                        monthlyDepartmentUsageEmailToSafetyDirectors: e.target.checked,
-                      })
-                    }
-                  />
-                  <label className="form-check-label" htmlFor="monthly-dept-email">
-                    Email Safety Directors a monthly department usage report
-                  </label>
-                </div>
-                {settings.settings?.monthlyDepartmentUsageScheduleId ? (
-                  <p className="small text-muted mb-0">
-                    This monthly email is on. You can review it under{" "}
-                    <a href="/reporting/scheduled/">Reporting → Scheduled</a>.
-                  </p>
-                ) : null}
-              </div>
-
-              <div className="col-12">
-                <hr className="my-2" />
-                <h6 className="mb-3">Location dropdowns</h6>
-                <div className="row g-3">
-                  <div className="col-lg-6">
-                    <label className="form-label" htmlFor="settings-location-types">
-                      Location types
-                    </label>
-                    <p className="text-muted small mb-2">
-                      Options shown when creating storage locations.
+                  {settings.settings?.monthlyDepartmentUsageScheduleId ? (
+                    <p className="small text-muted mb-0">
+                      This monthly email is on. You can review it under{" "}
+                      <a href="/reporting/scheduled/">Reporting → Scheduled</a>.
                     </p>
-                    <ul className="list-group mb-2" id="settings-location-types">
-                      {locationTypesFromSettings(settings).map((type) => (
-                        <li
-                          key={type}
-                          className="list-group-item d-flex justify-content-between align-items-center"
-                        >
-                          <span>{type.replace(/_/g, " ")}</span>
-                          <button
-                            type="button"
-                            className="btn btn-sm btn-outline-danger"
-                            onClick={() => removeLocationTypeOption(type)}
-                            disabled={locationTypesFromSettings(settings).length <= 1}
-                          >
-                            Remove
-                          </button>
-                        </li>
-                      ))}
-                    </ul>
-                    <div className="input-group">
-                      <input
-                        className="form-control"
-                        placeholder="New location type"
-                        value={newLocationType}
-                        onChange={(e) => setNewLocationType(e.target.value)}
-                        onKeyDown={(e) => {
-                          if (e.key === "Enter") {
-                            e.preventDefault();
-                            addLocationTypeOption();
-                          }
-                        }}
-                      />
-                      <button
-                        type="button"
-                        className="btn btn-outline-primary"
-                        onClick={addLocationTypeOption}
-                        disabled={!newLocationType.trim()}
-                      >
-                        Add
-                      </button>
-                    </div>
-                    <div className="mt-3">
-                      <label className="form-label" htmlFor="settings-default-location-type">
-                        Default location type
-                      </label>
-                      <select
-                        id="settings-default-location-type"
-                        className="form-select"
-                        value={defaultLocationTypeFromSettings(settings)}
-                        onChange={(e) =>
-                          updateSettingsExtras({ defaultLocationType: e.target.value })
-                        }
-                      >
-                        {locationTypesFromSettings(settings).map((type) => (
-                          <option key={type} value={type}>
-                            {type.replace(/_/g, " ")}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-                  </div>
+                  ) : null}
+                </div>
 
-                  <div className="col-lg-6">
-                    <div className="mb-3">
-                      <label className="form-label" htmlFor="settings-default-source-location">
-                        Default source location
+                <div className="col-12">
+                  <hr className="my-2" />
+                  <h6 className="mb-3">Location dropdowns</h6>
+                  <div className="row g-3">
+                    <div className="col-lg-6">
+                      <label className="form-label" htmlFor="settings-location-types">
+                        Location types
                       </label>
                       <p className="text-muted small mb-2">
-                        Prefills the Transfer form source location.
+                        Options shown when creating storage locations.
                       </p>
-                      <select
-                        id="settings-default-source-location"
-                        className="form-select"
-                        value={String(settings.settings?.defaultSourceLocationId ?? "")}
-                        onChange={(e) =>
-                          updateSettingsExtras({
-                            defaultSourceLocationId: e.target.value || null,
-                          })
-                        }
-                      >
-                        <option value="">None</option>
-                        {locationOptions()}
-                      </select>
+                      <ul className="list-group mb-2" id="settings-location-types">
+                        {locationTypesFromSettings(settings).map((type) => (
+                          <li
+                            key={type}
+                            className="list-group-item d-flex justify-content-between align-items-center"
+                          >
+                            <span>{type.replace(/_/g, " ")}</span>
+                            <button
+                              type="button"
+                              className="btn btn-sm btn-outline-danger"
+                              onClick={() => removeLocationTypeOption(type)}
+                              disabled={locationTypesFromSettings(settings).length <= 1}
+                            >
+                              Remove
+                            </button>
+                          </li>
+                        ))}
+                      </ul>
+                      <div className="input-group">
+                        <input
+                          className="form-control"
+                          placeholder="New location type"
+                          value={newLocationType}
+                          onChange={(e) => setNewLocationType(e.target.value)}
+                          onKeyDown={(e) => {
+                            if (e.key === "Enter") {
+                              e.preventDefault();
+                              addLocationTypeOption();
+                            }
+                          }}
+                        />
+                        <button
+                          type="button"
+                          className="btn btn-outline-primary"
+                          onClick={addLocationTypeOption}
+                          disabled={!newLocationType.trim()}
+                        >
+                          Add
+                        </button>
+                      </div>
+                      <div className="mt-3">
+                        <label className="form-label" htmlFor="settings-default-location-type">
+                          Default location type
+                        </label>
+                        <select
+                          id="settings-default-location-type"
+                          className="form-select"
+                          value={defaultLocationTypeFromSettings(settings)}
+                          onChange={(e) =>
+                            updateSettingsExtras({ defaultLocationType: e.target.value })
+                          }
+                        >
+                          {locationTypesFromSettings(settings).map((type) => (
+                            <option key={type} value={type}>
+                              {type.replace(/_/g, " ")}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
                     </div>
-                    <div className="mb-3">
-                      <label className="form-label" htmlFor="settings-default-destination-location">
-                        Default destination location
-                      </label>
-                      <p className="text-muted small mb-2">
-                        Prefills the Transfer form destination location.
-                      </p>
-                      <select
-                        id="settings-default-destination-location"
-                        className="form-select"
-                        value={String(settings.settings?.defaultDestinationLocationId ?? "")}
-                        onChange={(e) =>
-                          updateSettingsExtras({
-                            defaultDestinationLocationId: e.target.value || null,
-                          })
-                        }
-                      >
-                        <option value="">None</option>
-                        {locationOptions()}
-                      </select>
+
+                    <div className="col-lg-6">
+                      <div className="mb-3">
+                        <label className="form-label" htmlFor="settings-default-source-location">
+                          Default source location
+                        </label>
+                        <p className="text-muted small mb-2">
+                          Prefills the Transfer form source location.
+                        </p>
+                        <select
+                          id="settings-default-source-location"
+                          className="form-select"
+                          value={String(settings.settings?.defaultSourceLocationId ?? "")}
+                          onChange={(e) =>
+                            updateSettingsExtras({
+                              defaultSourceLocationId: e.target.value || null,
+                            })
+                          }
+                        >
+                          <option value="">None</option>
+                          {locationOptions()}
+                        </select>
+                      </div>
+                      <div className="mb-3">
+                        <label
+                          className="form-label"
+                          htmlFor="settings-default-destination-location"
+                        >
+                          Default destination location
+                        </label>
+                        <p className="text-muted small mb-2">
+                          Prefills the Transfer form destination location.
+                        </p>
+                        <select
+                          id="settings-default-destination-location"
+                          className="form-select"
+                          value={String(settings.settings?.defaultDestinationLocationId ?? "")}
+                          onChange={(e) =>
+                            updateSettingsExtras({
+                              defaultDestinationLocationId: e.target.value || null,
+                            })
+                          }
+                        >
+                          <option value="">None</option>
+                          {locationOptions()}
+                        </select>
+                      </div>
                     </div>
                   </div>
                 </div>
               </div>
             </div>
-          </div>
-          <div className="card-footer">
-            <button type="submit" className="btn btn-primary" disabled={saving}>
-              {saving ? "Saving…" : "Save settings"}
-            </button>
-          </div>
-        </form>
+            <div className="card-footer">
+              <button type="submit" className="btn btn-primary" disabled={saving}>
+                {saving ? "Saving…" : "Save settings"}
+              </button>
+            </div>
+          </form>
         ) : null}
       </ModuleWorkspaceTabs>
 

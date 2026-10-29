@@ -28,7 +28,11 @@ const APPLY = process.env.APPLY === "1" || process.env.APPLY === "true";
 const ALLOWED = new Set(["producers-rice-mill"]);
 const MODULE_CODE = "EQUIPMENT";
 const FLAG_KEY = "industrial.module.equipment.enabled";
-const PERM_CODES = ["industrial.equipment.view", "industrial.equipment.manage", "industrial.access"];
+const PERM_CODES = [
+  "industrial.equipment.view",
+  "industrial.equipment.manage",
+  "industrial.access",
+];
 
 if (!ALLOWED.has(TENANT_KEY)) {
   throw new Error(`Refusing tenant ${TENANT_KEY}; allowed: ${[...ALLOWED].join(", ")}`);
@@ -216,7 +220,8 @@ async function main() {
       if (!mma) {
         membershipGranted += 1;
         if (APPLY) {
-          if (!grantActor) throw new Error("No actor user for membership_module_access.granted_by_user_id");
+          if (!grantActor)
+            throw new Error("No actor user for membership_module_access.granted_by_user_id");
           await sql`
             insert into membership_module_access (
               id, tenant_id, membership_id, module_id, status, granted_by_user_id, created_at, updated_at

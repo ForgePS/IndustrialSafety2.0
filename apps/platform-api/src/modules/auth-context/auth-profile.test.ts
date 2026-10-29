@@ -1,9 +1,5 @@
 import { describe, expect, it } from "vitest";
-import {
-  buildAuthProfileDisplayName,
-  canEditAuthProfile,
-  dateOnly,
-} from "./auth-profile.js";
+import { buildAuthProfileDisplayName, canEditAuthProfile, dateOnly } from "./auth-profile.js";
 
 const USER = "11111111-1111-4111-8111-111111111111";
 const OTHER = "22222222-2222-4222-8222-222222222222";
@@ -25,17 +21,13 @@ function principal(overrides?: {
 describe("canEditAuthProfile", () => {
   it("allows the signed-in user to edit their own profile", () => {
     expect(canEditAuthProfile(principal(), USER)).toBe(true);
-    expect(
-      canEditAuthProfile(principal({ permissions: ["industrial.access"] }), USER),
-    ).toBe(true);
+    expect(canEditAuthProfile(principal({ permissions: ["industrial.access"] }), USER)).toBe(true);
   });
 
   it("allows Super Admin, Creator, and Tenant Admin to edit another user", () => {
     expect(canEditAuthProfile(principal({ isPlatformAdmin: true }), OTHER)).toBe(true);
     expect(canEditAuthProfile(principal({ products: ["FORGE_CREATOR"] }), OTHER)).toBe(true);
-    expect(
-      canEditAuthProfile(principal({ permissions: ["industrial.admin"] }), OTHER),
-    ).toBe(true);
+    expect(canEditAuthProfile(principal({ permissions: ["industrial.admin"] }), OTHER)).toBe(true);
     expect(
       canEditAuthProfile(principal({ permissions: ["platform.membership.manage"] }), OTHER),
     ).toBe(true);
@@ -43,7 +35,10 @@ describe("canEditAuthProfile", () => {
 
   it("blocks operators from editing someone else", () => {
     expect(
-      canEditAuthProfile(principal({ permissions: ["industrial.access", "industrial.personnel.view"] }), OTHER),
+      canEditAuthProfile(
+        principal({ permissions: ["industrial.access", "industrial.personnel.view"] }),
+        OTHER,
+      ),
     ).toBe(false);
   });
 });

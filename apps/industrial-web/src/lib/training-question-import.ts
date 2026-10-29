@@ -119,9 +119,12 @@ function repairUtf8Mojibake(text: string): string {
   if (!text) return "";
   let current = text;
   for (let pass = 0; pass < 2; pass += 1) {
-    if (!/[\u00C0-\u00FF]|â|Ã|Â|[\u0080-\u009F]/.test(current) && !current.includes("\uFFFD")) break;
+    if (!/[\u00C0-\u00FF]|â|Ã|Â|[\u0080-\u009F]/.test(current) && !current.includes("\uFFFD"))
+      break;
     try {
-      const repaired = new TextDecoder("utf-8", { fatal: false }).decode(encodeWindows1252(current));
+      const repaired = new TextDecoder("utf-8", { fatal: false }).decode(
+        encodeWindows1252(current),
+      );
       if (repaired && !repaired.includes("\uFFFD")) current = repaired;
     } catch {
       // ignore
@@ -163,7 +166,11 @@ function letterToIndex(value: string): number | null {
   return letter.charCodeAt(0) - 65;
 }
 
-function normalizeQuestion(row: Record<string, unknown>, index: number, chapterLabel: string): QuestionImportRow {
+function normalizeQuestion(
+  row: Record<string, unknown>,
+  index: number,
+  chapterLabel: string,
+): QuestionImportRow {
   const stem = asText(row.stem ?? row.question ?? row.prompt);
   if (!stem) {
     throw new Error(`${chapterLabel}: question ${index + 1} is missing stem`);
@@ -319,7 +326,9 @@ export function parseQuestionImportCsv(text: string): QuestionImportPayload {
     throw new Error('CSV header must include a "correctIndex" or "correct" column');
   }
   if (!choiceIndices.length && choicesIdx === -1) {
-    throw new Error('CSV header must include choice columns (choice1, choice2, …) or a "choices" column');
+    throw new Error(
+      'CSV header must include choice columns (choice1, choice2, …) or a "choices" column',
+    );
   }
 
   const byChapter = new Map<string, QuestionImportChapter>();

@@ -19,10 +19,7 @@ import { concurrencyConflict } from "../../common/concurrency.js";
 import { DATABASE } from "../../tokens.js";
 import { AuditService } from "../audit/audit.service.js";
 import { DocumentStorageService } from "./document-storage.service.js";
-import {
-  MALWARE_SCANNER,
-  type MalwareScanner,
-} from "./malware-scan.interface.js";
+import { MALWARE_SCANNER, type MalwareScanner } from "./malware-scan.interface.js";
 import { NerisIncidentsAccessService } from "./neris-incidents-access.service.js";
 import { IncidentStateMachineService } from "./incident-state-machine.service.js";
 
@@ -216,7 +213,14 @@ export class IncidentAttachmentsService {
           ),
         )
         .returning();
-      if (!updatedDoc) throw concurrencyConflict({ tenantId, resourceType: "forge_document", resourceId: document.id, expectedVersion: document.recordVersion, actualVersion: null });
+      if (!updatedDoc)
+        throw concurrencyConflict({
+          tenantId,
+          resourceType: "forge_document",
+          resourceId: document.id,
+          expectedVersion: document.recordVersion,
+          actualVersion: null,
+        });
 
       await this.audit.writeInTransaction(tx, {
         tenantId,
@@ -258,12 +262,7 @@ export class IncidentAttachmentsService {
     });
   }
 
-  async get(
-    tenantId: string,
-    incidentId: string,
-    attachmentId: string,
-    principal: ForgePrincipal,
-  ) {
+  async get(tenantId: string, incidentId: string, attachmentId: string, principal: ForgePrincipal) {
     await this.access.assertSpecialtyWorkflowsEnabled(principal);
     return withTenantTransaction(this.db, tenantId, async (tx) => {
       const row = await this.requireAttachment(tx, tenantId, incidentId, attachmentId);
@@ -286,7 +285,13 @@ export class IncidentAttachmentsService {
       this.stateMachine.assertEditable(incident.status as never);
       const { attachment } = await this.requireAttachment(tx, tenantId, incidentId, attachmentId);
       if (attachment.recordVersion !== expectedVersion) {
-        throw concurrencyConflict({ tenantId, resourceType: "neris_incident_attachment", resourceId: attachmentId, expectedVersion: expectedVersion, actualVersion: attachment.recordVersion });
+        throw concurrencyConflict({
+          tenantId,
+          resourceType: "neris_incident_attachment",
+          resourceId: attachmentId,
+          expectedVersion: expectedVersion,
+          actualVersion: attachment.recordVersion,
+        });
       }
       const [updated] = await tx
         .update(nerisIncidentAttachments)
@@ -327,7 +332,13 @@ export class IncidentAttachmentsService {
         attachmentId,
       );
       if (attachment.recordVersion !== expectedVersion) {
-        throw concurrencyConflict({ tenantId, resourceType: "neris_incident_attachment", resourceId: attachmentId, expectedVersion: expectedVersion, actualVersion: attachment.recordVersion });
+        throw concurrencyConflict({
+          tenantId,
+          resourceType: "neris_incident_attachment",
+          resourceId: attachmentId,
+          expectedVersion: expectedVersion,
+          actualVersion: attachment.recordVersion,
+        });
       }
       const now = new Date();
       const [updated] = await tx

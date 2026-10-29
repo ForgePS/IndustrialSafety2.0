@@ -12,7 +12,9 @@ export default function TrainingPage() {
   return (
     <>
       <h1 className="ff-page-title">My Training</h1>
-      <p className="ff-page-body">Assigned courses appear here. Full viewer and quizzes land in FIELD-S3.</p>
+      <p className="ff-page-body">
+        Assigned courses appear here. Full viewer and quizzes land in FIELD-S3.
+      </p>
       {loading ? <p className="ff-page-body">Loading…</p> : null}
       {error ? (
         <p className="ff-error" role="alert">
@@ -32,7 +34,11 @@ export default function TrainingPage() {
           <TaskCard key={item.id} item={item} />
         ))}
       </div>
-      <button type="button" className="ff-btn ff-btn-secondary" onClick={() => router.push("/more/records/")}>
+      <button
+        type="button"
+        className="ff-btn ff-btn-secondary"
+        onClick={() => router.push("/more/records/")}
+      >
         View transcript
       </button>
     </>

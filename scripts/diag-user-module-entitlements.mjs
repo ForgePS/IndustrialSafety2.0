@@ -147,7 +147,9 @@ async function main() {
       });
     }
 
-    console.log(JSON.stringify({ ok: true, phase: "DIAG-USER-MODULE-ENTITLEMENTS", report }, null, 2));
+    console.log(
+      JSON.stringify({ ok: true, phase: "DIAG-USER-MODULE-ENTITLEMENTS", report }, null, 2),
+    );
   } finally {
     await sql.end({ timeout: 5 });
   }

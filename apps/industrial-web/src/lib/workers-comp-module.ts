@@ -128,10 +128,7 @@ export const WC_MODULE_TABS: ReadonlyArray<{ id: WcModuleTab; label: string }> =
   { id: "settings", label: "Settings" },
 ] as const;
 
-export const WC_MODULE_TAB_META: Record<
-  WcModuleTab,
-  { label: string; description: string }
-> = {
+export const WC_MODULE_TAB_META: Record<WcModuleTab, { label: string; description: string }> = {
   dashboard: {
     label: "Dashboard",
     description: "Live KPIs, trends, and action panels for workers' compensation cases.",
@@ -142,8 +139,7 @@ export const WC_MODULE_TAB_META: Record<
   },
   "weekly-updates": {
     label: "Weekly updates",
-    description:
-      "Required Thursday status notes for every open workers' compensation case.",
+    description: "Required Thursday status notes for every open workers' compensation case.",
   },
   employees: {
     label: "EMPLOYEES",
@@ -186,7 +182,8 @@ export const WC_MODULE_TAB_META: Record<
 
 /** Active claim tabs. Legacy `work-status` / `restrictions` remain for dead panel
  *  branches until those sections are fully folded into Overview. */
-export type WcDetailTab = "overview" | "medical" | "carrier" | "work-status" | "restrictions";
+export type WcDetailTab =
+  "overview" | "medical" | "carrier" | "forms" | "work-status" | "restrictions";
 
 export type WcNextActionPriority = "HIGH" | "MEDIUM" | "LOW";
 
@@ -324,8 +321,7 @@ export function workersCompCarrierContact(carrier: Pick<WorkersCompCarrier, "con
   phone: string;
   email: string;
 } {
-  const contact =
-    carrier.contact && typeof carrier.contact === "object" ? carrier.contact : {};
+  const contact = carrier.contact && typeof carrier.contact === "object" ? carrier.contact : {};
   return {
     phone: typeof contact.phone === "string" ? contact.phone : "",
     email: typeof contact.email === "string" ? contact.email : "",
@@ -831,7 +827,8 @@ export function toWorkersCompWeeklyUpdatesPayload(raw: unknown): WorkersCompWeek
     .filter((item): item is WorkersCompWeeklyUpdateRow => item != null);
 
   const weekOf = asText(row.weekOf).slice(0, 10) || thursdayWeekOf();
-  const complete = Number(summaryRaw.complete) || items.filter((i) => i.status === "complete").length;
+  const complete =
+    Number(summaryRaw.complete) || items.filter((i) => i.status === "complete").length;
   const due = Number(summaryRaw.due) || items.filter((i) => i.status === "due").length;
   const overdue = Number(summaryRaw.overdue) || items.filter((i) => i.status === "overdue").length;
   return {
@@ -852,7 +849,7 @@ export function parseWcDetailTab(raw: string | null): WcDetailTab {
   if (raw === "work-status" || raw === "restrictions") {
     return "overview";
   }
-  if (raw === "medical" || raw === "carrier" || raw === "overview") {
+  if (raw === "medical" || raw === "carrier" || raw === "forms" || raw === "overview") {
     return raw;
   }
   return "overview";
@@ -878,13 +875,10 @@ export function isOpenWorkersCompStatus(status: string): boolean {
 }
 
 function caseSortDate(c: WorkersCompCase): string {
-  return (
-    c.claimSummary.dateOfInjury ||
-    c.reportedAt ||
-    c.updatedAt ||
-    c.createdAt ||
-    ""
-  ).slice(0, 10);
+  return (c.claimSummary.dateOfInjury || c.reportedAt || c.updatedAt || c.createdAt || "").slice(
+    0,
+    10,
+  );
 }
 
 /**
@@ -920,7 +914,9 @@ export function formatWcDueDate(iso: string | null): string {
   return formatDisplayDate(iso);
 }
 
-export function wcClaimNumber(c: Pick<WorkersCompCase, "caseNumber" | "claimSummary" | "id">): string {
+export function wcClaimNumber(
+  c: Pick<WorkersCompCase, "caseNumber" | "claimSummary" | "id">,
+): string {
   return c.caseNumber || c.claimSummary.claimNumber || "Pending";
 }
 
@@ -928,7 +924,10 @@ export function wcClaimNumber(c: Pick<WorkersCompCase, "caseNumber" | "claimSumm
 export function workersCompPrintFilename(
   c: Pick<WorkersCompCase, "caseNumber" | "claimSummary" | "workerName" | "id">,
 ): string {
-  const claim = wcClaimNumber(c).replace(/[^\w.-]+/g, "_").slice(0, 40) || "claim";
+  const claim =
+    wcClaimNumber(c)
+      .replace(/[^\w.-]+/g, "_")
+      .slice(0, 40) || "claim";
   const worker = (c.workerName || "worker").replace(/[^\w.-]+/g, "_").slice(0, 40);
   return `workers-comp-${claim}-${worker}.html`;
 }

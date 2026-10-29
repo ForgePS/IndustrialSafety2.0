@@ -50,12 +50,14 @@ const PRINT_CSS = `
   }
 `;
 
-function printShell(title: string, bodyHtml: string, branding?: { companyName?: string | null; logoUrl?: string | null }): string {
+function printShell(
+  title: string,
+  bodyHtml: string,
+  branding?: { companyName?: string | null; logoUrl?: string | null },
+): string {
   const company = plain(branding?.companyName);
   const logo = plain(branding?.logoUrl);
-  const logoHtml = logo
-    ? `<img class="logo" src="${escapeSanitationHtml(logo)}" alt="" />`
-    : "";
+  const logoHtml = logo ? `<img class="logo" src="${escapeSanitationHtml(logo)}" alt="" />` : "";
   return `<!doctype html><html lang="en"><head><meta charset="utf-8" />
 <title>${escapeSanitationHtml(title)}</title>
 <style>${PRINT_CSS}</style></head><body>
@@ -84,10 +86,7 @@ function tableHtml(headers: string[], rows: unknown[][]): string {
   return `<table><thead><tr>${headers
     .map((h) => `<th>${escapeSanitationHtml(h)}</th>`)
     .join("")}</tr></thead><tbody>${rows
-    .map(
-      (row) =>
-        `<tr>${row.map((c) => `<td>${cell(c)}</td>`).join("")}</tr>`,
-    )
+    .map((row) => `<tr>${row.map((c) => `<td>${cell(c)}</td>`).join("")}</tr>`)
     .join("")}</tbody></table>`;
 }
 
@@ -97,9 +96,7 @@ export function buildSanitationInspectionPrintableHtml(
   branding?: { companyName?: string | null; logoUrl?: string | null },
 ): string {
   const title =
-    plain(inspection.title) ||
-    plain(inspection.inspectionNumber) ||
-    "Sanitation inspection";
+    plain(inspection.title) || plain(inspection.inspectionNumber) || "Sanitation inspection";
   const meta = metaGrid([
     { label: "Inspection #", value: plain(inspection.inspectionNumber) },
     { label: "Type", value: plain(inspection.inspectionType) },
@@ -229,10 +226,7 @@ export function buildSanitationInspectionPrintableHtml(
 ${tableHtml(["Item", "Result", "Notes", "Photos", "Photo note"], responseRows)}
 ${photosSection ? `<h2>Photo evidence</h2>${photosSection}` : ""}
 <h2>Findings (${findings.length})</h2>
-${tableHtml(
-  ["Number", "Severity", "Category", "Title", "Status", "Recurring"],
-  findingRows,
-)}
+${tableHtml(["Number", "Severity", "Category", "Title", "Status", "Recurring"], findingRows)}
 ${signatureHtml}`;
   return printShell(title, body, branding);
 }
@@ -318,13 +312,7 @@ ${tableHtml(
 <h2>Pest findings</h2>
 ${tableHtml(
   ["Category", "Species", "Activity", "Status", "Observed"],
-  pestFindings.map((r) => [
-    r.pestCategory,
-    r.pestSpecies,
-    r.activityLevel,
-    r.status,
-    r.observedAt,
-  ]),
+  pestFindings.map((r) => [r.pestCategory, r.pestSpecies, r.activityLevel, r.status, r.observedAt]),
 )}
 <h2>Cleaning tasks</h2>
 ${tableHtml(
@@ -339,12 +327,7 @@ ${tableHtml(
 <h2>Chemicals</h2>
 ${tableHtml(
   ["Name", "Manufacturer", "Status", "Food contact"],
-  chemicals.map((r) => [
-    r.name,
-    r.manufacturer,
-    r.status,
-    r.foodContactApproved ? "YES" : "NO",
-  ]),
+  chemicals.map((r) => [r.name, r.manufacturer, r.status, r.foodContactApproved ? "YES" : "NO"]),
 )}`;
 
   return printShell(

@@ -2,10 +2,7 @@
 
 import { useState } from "react";
 import { ApiError, apiGet } from "@forge/web-kit";
-import {
-  certCopyFromRecord,
-  type PersonnelCertKind,
-} from "@/lib/personnel-cert-upload";
+import { certCopyFromRecord, type PersonnelCertKind } from "@/lib/personnel-cert-upload";
 
 type DownloadResponse = { downloadUrl: string; originalFilename?: string };
 
@@ -80,8 +77,7 @@ export function PersonnelFirstAidCertCopiesCard({
   record: Record<string, unknown>;
 }) {
   const hasAny =
-    Boolean(certCopyFromRecord(record, "CPR")) ||
-    Boolean(certCopyFromRecord(record, "FIRST_AID"));
+    Boolean(certCopyFromRecord(record, "CPR")) || Boolean(certCopyFromRecord(record, "FIRST_AID"));
 
   return (
     <div className="card mb-4 mt-4" aria-labelledby="personnel-first-aid-copies-title">

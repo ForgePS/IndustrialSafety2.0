@@ -3,10 +3,7 @@
 import { useEffect, useState } from "react";
 import { apiGet, useAuth } from "@forge/web-kit";
 import { pickThemeLogoUrl } from "@forge/contracts";
-import {
-  useIndustrialThemeMode,
-  type IndustrialThemeMode,
-} from "@/components/theme-mode-toggle";
+import { useIndustrialThemeMode, type IndustrialThemeMode } from "@/components/theme-mode-toggle";
 import { sameOriginBrandingLogoUrl } from "@/lib/branding-logo-url";
 
 export type TenantBranding = {

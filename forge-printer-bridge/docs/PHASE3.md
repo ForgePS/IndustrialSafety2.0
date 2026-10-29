@@ -2,14 +2,14 @@
 
 ## Scope delivered
 
-| Item | Where |
-|------|--------|
-| Direct Forge Web Bluetooth | industrial-web Brady Web SDK client + `POST /printers/direct-bluetooth` |
-| Direct Field Bluetooth | field-web `/more/print` + equipment Print Label |
-| Batch + sequential printing | `POST /print-batches` + ForgePrintDialog multi-item mode |
-| Failover | Printer profile `fallbackPrinterId` + UI confirm (`acceptFailover`) |
-| Advanced media profiles | CRUD `/printer-media-profiles` + dialog select + bridges admin |
-| Advanced printer health | Health columns, `GET .../health`, `POST .../diagnostics` |
+| Item                        | Where                                                                   |
+| --------------------------- | ----------------------------------------------------------------------- |
+| Direct Forge Web Bluetooth  | industrial-web Brady Web SDK client + `POST /printers/direct-bluetooth` |
+| Direct Field Bluetooth      | field-web `/more/print` + equipment Print Label                         |
+| Batch + sequential printing | `POST /print-batches` + ForgePrintDialog multi-item mode                |
+| Failover                    | Printer profile `fallbackPrinterId` + UI confirm (`acceptFailover`)     |
+| Advanced media profiles     | CRUD `/printer-media-profiles` + dialog select + bridges admin          |
+| Advanced printer health     | Health columns, `GET .../health`, `POST .../diagnostics`                |
 
 ## Migration
 

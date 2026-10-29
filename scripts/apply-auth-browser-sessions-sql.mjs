@@ -12,18 +12,12 @@
 import { readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
-import {
-  GetSecretValueCommand,
-  SecretsManagerClient,
-} from "@aws-sdk/client-secrets-manager";
+import { GetSecretValueCommand, SecretsManagerClient } from "@aws-sdk/client-secrets-manager";
 import postgres from "postgres";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const repoRoot = join(__dirname, "..");
-const sqlPath = join(
-  repoRoot,
-  "packages/database/drizzle/0105_auth_browser_sessions_s1.sql",
-);
+const sqlPath = join(repoRoot, "packages/database/drizzle/0105_auth_browser_sessions_s1.sql");
 
 const secretArn = process.env.DATABASE_SECRET_ARN?.trim();
 if (!secretArn) {

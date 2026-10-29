@@ -134,7 +134,10 @@ export async function sharePortalQrAndUrl(input: {
 
   if (typeof navigator.share === "function") {
     const shareData: ShareData = { title: input.title ?? TRAINING_PORTAL_HEADING, text };
-    if (typeof navigator.canShare === "function" && navigator.canShare({ ...shareData, files: [file] })) {
+    if (
+      typeof navigator.canShare === "function" &&
+      navigator.canShare({ ...shareData, files: [file] })
+    ) {
       try {
         await navigator.share({ ...shareData, files: [file] });
         return "shared";
@@ -156,9 +159,7 @@ export async function sharePortalQrAndUrl(input: {
 }
 
 /** PNG card with the Company Training Portal heading and QR code (no URL). */
-export async function buildTrainingPortalQrCardBlob(input: {
-  qrImageSrc: string;
-}): Promise<Blob> {
+export async function buildTrainingPortalQrCardBlob(input: { qrImageSrc: string }): Promise<Blob> {
   return buildPortalShareCardBlob({
     qrImageSrc: input.qrImageSrc,
     url: "",
@@ -180,9 +181,7 @@ export async function downloadTrainingPortalQrPng(input: {
 }
 
 /** Opens a print dialog for the Company Training Portal QR card. */
-export async function printTrainingPortalQr(input: {
-  qrImageSrc: string;
-}): Promise<string | null> {
+export async function printTrainingPortalQr(input: { qrImageSrc: string }): Promise<string | null> {
   if (typeof window === "undefined") return "Browser only";
   try {
     const blob = await buildTrainingPortalQrCardBlob(input);

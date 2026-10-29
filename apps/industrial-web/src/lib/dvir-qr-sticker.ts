@@ -219,12 +219,7 @@ export async function composeDvirQrStickerBlob(
     if (!ctx) throw new Error("Canvas is not available.");
 
     ctx.font = `bold ${assetSize}px Arial, Helvetica, sans-serif`;
-    const assetLines = stickerTextLines(
-      ctx,
-      assetName.trim() || "Vehicle",
-      maxTextWidth,
-      2,
-    );
+    const assetLines = stickerTextLines(ctx, assetName.trim() || "Vehicle", maxTextWidth, 2);
 
     let vinLines: string[] = [];
     if (vinText) {
@@ -232,8 +227,7 @@ export async function composeDvirQrStickerBlob(
       vinLines = stickerTextLines(ctx, `VIN: ${vinText}`, maxTextWidth, 2);
     }
 
-    const assetBlock =
-      assetLines.length * assetSize + Math.max(0, assetLines.length - 1) * lineGap;
+    const assetBlock = assetLines.length * assetSize + Math.max(0, assetLines.length - 1) * lineGap;
     const vinBlock =
       vinLines.length > 0
         ? vinLines.length * vinSize + Math.max(0, vinLines.length - 1) * lineGap + blockGap

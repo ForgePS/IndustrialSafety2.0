@@ -35,13 +35,7 @@ const outFile = path.join(dir, "dom.html");
 try {
   const result = spawnSync(
     browser,
-    [
-      "--headless=new",
-      "--disable-gpu",
-      "--virtual-time-budget=15000",
-      "--dump-dom",
-      urlArg,
-    ],
+    ["--headless=new", "--disable-gpu", "--virtual-time-budget=15000", "--dump-dom", urlArg],
     { encoding: "utf8", maxBuffer: 20 * 1024 * 1024 },
   );
   if (result.status !== 0) {
@@ -55,8 +49,7 @@ try {
     noLoadingSession: !dom.includes("Loading session"),
     noCheckingPermissions: !dom.includes("Checking permissions"),
     noFacilityUnavailable: !dom.includes("Facility selector unavailable"),
-    showsUnauthenticated:
-      dom.includes("Not signed in") || dom.includes("Sign in required"),
+    showsUnauthenticated: dom.includes("Not signed in") || dom.includes("Sign in required"),
     hasSignInCta: /Sign [Ii]n/.test(dom),
   };
 

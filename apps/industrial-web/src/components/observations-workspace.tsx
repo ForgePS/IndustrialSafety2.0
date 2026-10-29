@@ -93,7 +93,9 @@ export function ObservationsWorkspace({ moduleName }: { moduleName: string }) {
   const { query: facilityQuery } = useIndustrialFacility();
   const permissions = new Set(me?.permissions ?? []);
   const canView =
-    permissions.has(VIEW_PERM) || permissions.has(MANAGE_PERM) || permissions.has("industrial.admin");
+    permissions.has(VIEW_PERM) ||
+    permissions.has(MANAGE_PERM) ||
+    permissions.has("industrial.admin");
   const canManage = permissions.has(MANAGE_PERM) || permissions.has("industrial.admin");
   const canSetDepartmentSupervisor = DEPARTMENT_CONTACT_PERMS.some((p) => permissions.has(p));
   const { modEntry, explicitlyDisabled, awsReady } = useIndustrialModuleGate({
@@ -115,7 +117,9 @@ export function ObservationsWorkspace({ moduleName }: { moduleName: string }) {
   const [categoryFilter, setCategoryFilter] = useState("");
   const [assigneeFilter, setAssigneeFilter] = useState("");
 
-  const [editor, setEditor] = useState<{ mode: "create" } | { mode: "edit"; id: string } | null>(null);
+  const [editor, setEditor] = useState<{ mode: "create" } | { mode: "edit"; id: string } | null>(
+    null,
+  );
   const [notice, setNotice] = useState<{ tone: "success" | "warning"; text: string } | null>(null);
 
   const loadList = useCallback(async () => {
@@ -193,7 +197,8 @@ export function ObservationsWorkspace({ moduleName }: { moduleName: string }) {
       } else if (riskFilter && row.riskLevel !== riskFilter) {
         return false;
       }
-      if (categoryFilter && row.category.toLowerCase() !== categoryFilter.toLowerCase()) return false;
+      if (categoryFilter && row.category.toLowerCase() !== categoryFilter.toLowerCase())
+        return false;
       if (assigneeFilter === UNASSIGNED) {
         if (row.assignedToName) return false;
       } else if (assigneeFilter && row.assignedToName !== assigneeFilter) {
@@ -277,7 +282,12 @@ export function ObservationsWorkspace({ moduleName }: { moduleName: string }) {
       {notice ? (
         <div className={`alert alert-${notice.tone} d-flex align-items-center gap-3`} role="status">
           <span className="flex-grow-1">{notice.text}</span>
-          <button type="button" className="btn-close" aria-label="Dismiss" onClick={() => setNotice(null)} />
+          <button
+            type="button"
+            className="btn-close"
+            aria-label="Dismiss"
+            onClick={() => setNotice(null)}
+          />
         </div>
       ) : null}
 
@@ -291,8 +301,20 @@ export function ObservationsWorkspace({ moduleName }: { moduleName: string }) {
         <>
           <div className="row g-3 mb-4">
             {[
-              { label: "Open", value: summary.open, icon: "bx-error-circle", tone: "warning", status: "OPEN" as StatusFilter },
-              { label: "In progress", value: summary.inProgress, icon: "bx-loader-circle", tone: "info", status: "IN_PROGRESS" as StatusFilter },
+              {
+                label: "Open",
+                value: summary.open,
+                icon: "bx-error-circle",
+                tone: "warning",
+                status: "OPEN" as StatusFilter,
+              },
+              {
+                label: "In progress",
+                value: summary.inProgress,
+                icon: "bx-loader-circle",
+                tone: "info",
+                status: "IN_PROGRESS" as StatusFilter,
+              },
               {
                 label: "High / critical risk (open)",
                 value: summary.highRisk,
@@ -478,9 +500,16 @@ export function ObservationsWorkspace({ moduleName }: { moduleName: string }) {
           </div>
 
           {error ? (
-            <div className="alert alert-danger d-flex flex-wrap align-items-center gap-3" role="alert">
+            <div
+              className="alert alert-danger d-flex flex-wrap align-items-center gap-3"
+              role="alert"
+            >
               <span className="flex-grow-1">{error}</span>
-              <button type="button" className="btn btn-sm btn-outline-danger" onClick={() => void loadList()}>
+              <button
+                type="button"
+                className="btn btn-sm btn-outline-danger"
+                onClick={() => void loadList()}
+              >
                 Retry
               </button>
             </div>
@@ -494,7 +523,9 @@ export function ObservationsWorkspace({ moduleName }: { moduleName: string }) {
             <div className="card border shadow-none">
               <div className="card-body">
                 <p className="text-muted mb-0">
-                  {items.length === 0 ? "No observations recorded yet." : "No observations match these filters."}
+                  {items.length === 0
+                    ? "No observations recorded yet."
+                    : "No observations match these filters."}
                 </p>
               </div>
             </div>
@@ -520,7 +551,9 @@ export function ObservationsWorkspace({ moduleName }: { moduleName: string }) {
                       const risk = observationRiskOption(row.riskLevel);
                       const status = observationStatusOption(row.status);
                       const site = row.siteName || siteLabelById.get(row.siteId) || "";
-                      const where = [site, row.departmentName, row.area].filter(Boolean).join(" · ");
+                      const where = [site, row.departmentName, row.area]
+                        .filter(Boolean)
+                        .join(" · ");
                       return (
                         <tr
                           key={row.id}
@@ -534,8 +567,16 @@ export function ObservationsWorkspace({ moduleName }: { moduleName: string }) {
                             }
                           }}
                         >
-                          <td className="text-nowrap small">{formatObservedAt(row.observedAt || row.createdAt)}</td>
-                          <td>{type ? <Badge tone={type.tone}>{type.label}</Badge> : <span className="text-muted">-</span>}</td>
+                          <td className="text-nowrap small">
+                            {formatObservedAt(row.observedAt || row.createdAt)}
+                          </td>
+                          <td>
+                            {type ? (
+                              <Badge tone={type.tone}>{type.label}</Badge>
+                            ) : (
+                              <span className="text-muted">-</span>
+                            )}
+                          </td>
                           <td>{row.category || <span className="text-muted">-</span>}</td>
                           <td style={{ maxWidth: 360 }}>
                             <div className="text-truncate">{row.description || row.title}</div>
@@ -546,10 +587,16 @@ export function ObservationsWorkspace({ moduleName }: { moduleName: string }) {
                                   {row.peopleObserved.length}
                                 </span>
                               ) : null}
-                              {row.peopleObserved.some((p) => observedPersonAtFault(p, row.observationType)) ? (
+                              {row.peopleObserved.some((p) =>
+                                observedPersonAtFault(p, row.observationType),
+                              ) ? (
                                 <span className="text-danger">
-                                  {row.peopleObserved.filter((p) => observedPersonAtFault(p, row.observationType)).length} at
-                                  fault
+                                  {
+                                    row.peopleObserved.filter((p) =>
+                                      observedPersonAtFault(p, row.observationType),
+                                    ).length
+                                  }{" "}
+                                  at fault
                                 </span>
                               ) : null}
                               {row.photoCount > 0 ? (
@@ -561,12 +608,23 @@ export function ObservationsWorkspace({ moduleName }: { moduleName: string }) {
                               {row.reportedBy ? <span>By {row.reportedBy}</span> : null}
                             </div>
                           </td>
-                          <td className="small">{where || <span className="text-muted">-</span>}</td>
-                          <td>{risk ? <Badge tone={risk.tone}>{risk.label}</Badge> : <span className="text-muted">-</span>}</td>
+                          <td className="small">
+                            {where || <span className="text-muted">-</span>}
+                          </td>
+                          <td>
+                            {risk ? (
+                              <Badge tone={risk.tone}>{risk.label}</Badge>
+                            ) : (
+                              <span className="text-muted">-</span>
+                            )}
+                          </td>
                           <td className="small">
                             {row.assignedToName || <span className="text-muted">Unassigned</span>}
                             {row.lastEmailedAt ? (
-                              <div className="text-muted" title={`Emailed ${formatObservedAt(row.lastEmailedAt)}`}>
+                              <div
+                                className="text-muted"
+                                title={`Emailed ${formatObservedAt(row.lastEmailedAt)}`}
+                              >
                                 <i className="bx bx-envelope me-1" />
                                 Emailed
                               </div>
@@ -655,7 +713,8 @@ function ObservationEditor({
   const [followUp, setFollowUp] = useState<ObservationFollowUp>(() => emptyObservationFollowUp());
   const [followUpDirty, setFollowUpDirty] = useState(false);
   const readOnly = !canManage;
-  const followUpOpen = !isCreate && record !== null && record.status !== "CLOSED" && record.status !== "ARCHIVED";
+  const followUpOpen =
+    !isCreate && record !== null && record.status !== "CLOSED" && record.status !== "ARCHIVED";
 
   const departmentById = useMemo(
     () => new Map(lookups.departments.map((d) => [d.id, d])),
@@ -687,11 +746,15 @@ function ObservationEditor({
     setDeptBusy(true);
     setError(null);
     try {
-      await apiSend(`/api/v1/industrial/departments/${encodeURIComponent(department.id)}/contact`, "PATCH", {
-        contactPersonnelId: form.assignedToPersonnelId || null,
-        contactName: form.assignedToName.trim(),
-        contactEmail: form.assignedToEmail.trim(),
-      });
+      await apiSend(
+        `/api/v1/industrial/departments/${encodeURIComponent(department.id)}/contact`,
+        "PATCH",
+        {
+          contactPersonnelId: form.assignedToPersonnelId || null,
+          contactName: form.assignedToName.trim(),
+          contactEmail: form.assignedToEmail.trim(),
+        },
+      );
       await lookups.reload();
     } catch (e) {
       setError(e instanceof ApiError ? e.message : "Could not update the department supervisor");
@@ -743,10 +806,15 @@ function ObservationEditor({
     if (!trimmed && !personnelId) return;
     setForm((prev) => {
       const dup = prev.peopleObserved.some((p) =>
-        personnelId ? p.personnelId === personnelId : !p.personnelId && p.name.toLowerCase() === trimmed.toLowerCase(),
+        personnelId
+          ? p.personnelId === personnelId
+          : !p.personnelId && p.name.toLowerCase() === trimmed.toLowerCase(),
       );
       if (dup) return prev;
-      return { ...prev, peopleObserved: [...prev.peopleObserved, { personnelId, name: trimmed || "Unnamed" }] };
+      return {
+        ...prev,
+        peopleObserved: [...prev.peopleObserved, { personnelId, name: trimmed || "Unnamed" }],
+      };
     });
   }
 
@@ -763,7 +831,8 @@ function ObservationEditor({
       const added: ObservationPhoto[] = [];
       for (const file of Array.from(files).slice(0, room)) {
         const dataUrl = await compressImageToDataUrl(file, PHOTO_MAX_LENGTH);
-        if (!dataUrl.startsWith("data:image/")) throw new Error("Only image files can be attached.");
+        if (!dataUrl.startsWith("data:image/"))
+          throw new Error("Only image files can be attached.");
         added.push({
           id: newPhotoId(),
           fileName: file.name || "photo.jpg",
@@ -772,7 +841,8 @@ function ObservationEditor({
         });
       }
       setForm((prev) => ({ ...prev, photos: [...prev.photos, ...added] }));
-      if (files.length > room) setError(`Only the first ${room} photo(s) were added (limit ${MAX_PHOTOS}).`);
+      if (files.length > room)
+        setError(`Only the first ${room} photo(s) were added (limit ${MAX_PHOTOS}).`);
     } catch (e) {
       setError(imageCompressErrorMessage(e));
     } finally {
@@ -858,7 +928,8 @@ function ObservationEditor({
 
   const typeHelp = observationTypeOption(form.observationType)?.help;
   const riskHelp = observationRiskOption(form.riskLevel)?.help;
-  const canMarkFault = Boolean(form.observationType) && !isPositiveObservationType(form.observationType);
+  const canMarkFault =
+    Boolean(form.observationType) && !isPositiveObservationType(form.observationType);
   const categoryChoices = observationCategoryOptions(categories, form.category);
   const title = isCreate ? "New observation" : readOnly ? "Observation" : "Edit observation";
 
@@ -886,7 +957,13 @@ function ObservationEditor({
                   </p>
                 ) : null}
               </div>
-              <button type="button" className="btn-close" aria-label="Close" onClick={onClose} disabled={saving} />
+              <button
+                type="button"
+                className="btn-close"
+                aria-label="Close"
+                onClick={onClose}
+                disabled={saving}
+              />
             </div>
             <div className="modal-body">
               {loading ? (
@@ -899,7 +976,11 @@ function ObservationEditor({
                     <span className="form-label d-block">
                       Observation type <span className="text-danger">*</span>
                     </span>
-                    <div className="d-flex flex-wrap gap-2" role="radiogroup" aria-label="Observation type">
+                    <div
+                      className="d-flex flex-wrap gap-2"
+                      role="radiogroup"
+                      aria-label="Observation type"
+                    >
                       {OBSERVATION_TYPE_OPTIONS.map((o) => {
                         const selected = form.observationType === o.value;
                         return (
@@ -998,9 +1079,13 @@ function ObservationEditor({
                           const merged = { ...prev, ...next };
                           if (next.departmentId === prev.departmentId) return merged;
                           // Follow the department's supervisor unless someone else was picked by hand.
-                          const prevSupervisor = departmentSupervisor(departmentById.get(prev.departmentId));
+                          const prevSupervisor = departmentSupervisor(
+                            departmentById.get(prev.departmentId),
+                          );
                           if (!sameAssignee(prev, prevSupervisor)) return merged;
-                          const nextSupervisor = departmentSupervisor(departmentById.get(next.departmentId));
+                          const nextSupervisor = departmentSupervisor(
+                            departmentById.get(next.departmentId),
+                          );
                           return {
                             ...merged,
                             assignedToPersonnelId: nextSupervisor?.personnelId ?? "",
@@ -1036,7 +1121,11 @@ function ObservationEditor({
                         {department?.label} supervisor: <strong>{supervisor.name}</strong>
                         {supervisor.email ? ` (${supervisor.email})` : ""}
                       </span>
-                      <button type="button" className="btn btn-sm btn-info" onClick={() => assign(supervisor)}>
+                      <button
+                        type="button"
+                        className="btn btn-sm btn-info"
+                        onClick={() => assign(supervisor)}
+                      >
                         Assign to {supervisor.name}
                       </button>
                     </div>
@@ -1053,7 +1142,9 @@ function ObservationEditor({
                           disabled={deptBusy}
                           onClick={() => void makeDepartmentSupervisor()}
                         >
-                          {deptBusy ? "Saving…" : `Make ${form.assignedToName || "them"} the ${department.label} supervisor`}
+                          {deptBusy
+                            ? "Saving…"
+                            : `Make ${form.assignedToName || "them"} the ${department.label} supervisor`}
                         </button>
                       ) : null}
                     </div>
@@ -1069,10 +1160,18 @@ function ObservationEditor({
                         allowUnlinkedText
                         placeholder="Search employees, or type a name"
                         onUnlinkedTextChange={(value) =>
-                          setForm((prev) => ({ ...prev, assignedToPersonnelId: "", assignedToName: value }))
+                          setForm((prev) => ({
+                            ...prev,
+                            assignedToPersonnelId: "",
+                            assignedToName: value,
+                          }))
                         }
                         onLinkedChange={(sel) =>
-                          assign(sel ? { personnelId: sel.personnelId, name: sel.displayName, email: "" } : null)
+                          assign(
+                            sel
+                              ? { personnelId: sel.personnelId, name: sel.displayName, email: "" }
+                              : null,
+                          )
                         }
                       />
                     </div>
@@ -1104,7 +1203,8 @@ function ObservationEditor({
                         onChange={(e) => setEmailOnSave(e.target.checked)}
                       />
                       <label className="form-check-label" htmlFor="obs-email-on-save">
-                        Email this observation to {form.assignedToName || "the supervisor"} when I save
+                        Email this observation to {form.assignedToName || "the supervisor"} when I
+                        save
                       </label>
                     </div>
                   ) : null}
@@ -1180,7 +1280,9 @@ function ObservationEditor({
                             key={`${p.personnelId ?? "name"}-${p.name}-${idx}`}
                             className="d-flex align-items-center gap-2 border rounded px-2 py-1 mb-2"
                           >
-                            <i className={`bx ${p.personnelId ? "bx-id-card" : "bx-user"} text-muted`} />
+                            <i
+                              className={`bx ${p.personnelId ? "bx-id-card" : "bx-user"} text-muted`}
+                            />
                             <span className="me-auto">{p.name}</span>
                             {canMarkFault ? (
                               <div className="form-check form-switch mb-0">
@@ -1309,7 +1411,11 @@ function ObservationEditor({
                   </h6>
                   <div className="d-flex flex-wrap gap-2 mb-2">
                     {form.photos.map((photo) => (
-                      <div key={photo.id} className="position-relative border rounded overflow-hidden" style={{ width: 112, height: 112 }}>
+                      <div
+                        key={photo.id}
+                        className="position-relative border rounded overflow-hidden"
+                        style={{ width: 112, height: 112 }}
+                      >
                         <button
                           type="button"
                           className="p-0 border-0 bg-transparent w-100 h-100"
@@ -1343,7 +1449,12 @@ function ObservationEditor({
                     {!readOnly && form.photos.length < MAX_PHOTOS ? (
                       <label
                         className="border rounded d-flex flex-column align-items-center justify-content-center text-muted"
-                        style={{ width: 112, height: 112, cursor: "pointer", borderStyle: "dashed" }}
+                        style={{
+                          width: 112,
+                          height: 112,
+                          cursor: "pointer",
+                          borderStyle: "dashed",
+                        }}
                       >
                         <i className="bx bx-camera fs-3" />
                         <span className="small">{photoBusy ? "Adding…" : "Add photos"}</span>
@@ -1375,18 +1486,22 @@ function ObservationEditor({
                     {record.followUp.completedAt ? (
                       <Badge tone="success">
                         Completed {formatObservedAt(record.followUp.completedAt)}
-                        {record.followUp.completedVia === "supervisor-link" ? " via email link" : ""}
+                        {record.followUp.completedVia === "supervisor-link"
+                          ? " via email link"
+                          : ""}
                       </Badge>
                     ) : record.followUp.savedAt ? (
-                      <Badge tone="info">In progress · saved {formatObservedAt(record.followUp.savedAt)}</Badge>
+                      <Badge tone="info">
+                        In progress · saved {formatObservedAt(record.followUp.savedAt)}
+                      </Badge>
                     ) : (
                       <Badge tone="secondary">Not started</Badge>
                     )}
                   </div>
                   {followUpOpen ? (
                     <p className="text-muted small">
-                      The assigned supervisor can fill this in from the emailed link (no login), or you can
-                      complete it here.
+                      The assigned supervisor can fill this in from the emailed link (no login), or
+                      you can complete it here.
                     </p>
                   ) : null}
                   {followUpOpen || record.followUp.completedAt || record.followUp.savedAt ? (
@@ -1398,7 +1513,9 @@ function ObservationEditor({
                       onError={setError}
                     />
                   ) : (
-                    <p className="text-muted small mb-0">No follow-up was recorded before this observation was closed.</p>
+                    <p className="text-muted small mb-0">
+                      No follow-up was recorded before this observation was closed.
+                    </p>
                   )}
                 </section>
               ) : null}
@@ -1409,7 +1526,12 @@ function ObservationEditor({
                   {error}
                 </div>
               ) : null}
-              <button type="button" className="btn btn-outline-secondary" onClick={onClose} disabled={saving}>
+              <button
+                type="button"
+                className="btn btn-outline-secondary"
+                onClick={onClose}
+                disabled={saving}
+              >
                 {readOnly ? "Close" : "Cancel"}
               </button>
               {!readOnly && followUpOpen ? (
@@ -1423,7 +1545,11 @@ function ObservationEditor({
                 </button>
               ) : null}
               {!readOnly ? (
-                <button type="submit" className="btn btn-primary" disabled={saving || loading || photoBusy}>
+                <button
+                  type="submit"
+                  className="btn btn-primary"
+                  disabled={saving || loading || photoBusy}
+                >
                   {saving ? "Saving…" : isCreate ? "Save observation" : "Save changes"}
                 </button>
               ) : null}
@@ -1479,7 +1605,10 @@ function EmailPanel({
     setSending(true);
     setStatus(null);
     try {
-      const result = await sendObservationEmail(recordId, { to: recipients, message: message.trim() });
+      const result = await sendObservationEmail(recordId, {
+        to: recipients,
+        message: message.trim(),
+      });
       setStatus({ tone: "success", text: `Sent to ${result.sentTo.join(", ")}.` });
       onSent(result);
     } catch (e) {
@@ -1524,10 +1653,20 @@ function EmailPanel({
         </p>
       ) : null}
       <div className="d-flex flex-wrap align-items-center gap-2 mt-2">
-        <button type="button" className="btn btn-sm btn-primary" disabled={sending} onClick={() => void send()}>
+        <button
+          type="button"
+          className="btn btn-sm btn-primary"
+          disabled={sending}
+          onClick={() => void send()}
+        >
           {sending ? "Sending…" : "Send email"}
         </button>
-        <button type="button" className="btn btn-sm btn-outline-secondary" disabled={sending} onClick={onCancel}>
+        <button
+          type="button"
+          className="btn btn-sm btn-outline-secondary"
+          disabled={sending}
+          onClick={onCancel}
+        >
           Cancel
         </button>
         {status ? (
@@ -1584,9 +1723,13 @@ function CategoriesPanel({
     setSaving(true);
     setMessage(null);
     try {
-      const data = await apiSend<{ categories: string[] }>(`${OBSERVATIONS_API}/settings`, "PATCH", {
-        categories: draft,
-      });
+      const data = await apiSend<{ categories: string[] }>(
+        `${OBSERVATIONS_API}/settings`,
+        "PATCH",
+        {
+          categories: draft,
+        },
+      );
       const saved = Array.isArray(data?.categories) ? data.categories : draft;
       onSaved(saved);
       setMessage({ tone: "success", text: "Categories saved." });
@@ -1602,8 +1745,8 @@ function CategoriesPanel({
       <div className="card-header">
         <h6 className="card-title mb-1">Observation categories</h6>
         <p className="text-muted small mb-0">
-          These are the choices in the Category dropdown. Removing a category does not change observations
-          that already use it.
+          These are the choices in the Category dropdown. Removing a category does not change
+          observations that already use it.
         </p>
       </div>
       <div className="card-body">
@@ -1665,12 +1808,22 @@ function CategoriesPanel({
                   }
                 }}
               />
-              <button type="button" className="btn btn-outline-primary" disabled={!newName.trim() || saving} onClick={add}>
+              <button
+                type="button"
+                className="btn btn-outline-primary"
+                disabled={!newName.trim() || saving}
+                onClick={add}
+              >
                 Add
               </button>
             </div>
             <div className="d-flex flex-wrap align-items-center gap-2">
-              <button type="button" className="btn btn-primary" disabled={!dirty || saving} onClick={() => void save()}>
+              <button
+                type="button"
+                className="btn btn-primary"
+                disabled={!dirty || saving}
+                onClick={() => void save()}
+              >
                 {saving ? "Saving…" : "Save categories"}
               </button>
               <button

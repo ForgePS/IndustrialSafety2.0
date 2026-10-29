@@ -33,7 +33,13 @@ const csp = cfg.SecurityHeadersConfig?.ContentSecurityPolicy?.ContentSecurityPol
 const updatedCsp = upsertMediaSrc(csp);
 
 if (updatedCsp === csp) {
-  console.log(JSON.stringify({ ok: true, policyId, message: "media-src https: already present", csp }, null, 2));
+  console.log(
+    JSON.stringify(
+      { ok: true, policyId, message: "media-src https: already present", csp },
+      null,
+      2,
+    ),
+  );
   process.exit(0);
 }
 

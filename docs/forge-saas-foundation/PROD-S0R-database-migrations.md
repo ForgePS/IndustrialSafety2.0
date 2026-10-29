@@ -6,11 +6,11 @@
 
 ## Versions
 
-| Field | Value |
-| --- | --- |
-| CURRENT_PROD_SCHEMA_VERSION | `none` / empty cluster (no drizzle `__drizzle_migrations` applied) |
-| TARGET_SCHEMA_VERSION | `0038_mk_s21_security_hardening` (journal idx 38 on remediation line) |
-| PENDING_MIGRATIONS | Full ordered set `0000` → `0038` under `packages/database/drizzle` |
+| Field                       | Value                                                                 |
+| --------------------------- | --------------------------------------------------------------------- |
+| CURRENT_PROD_SCHEMA_VERSION | `none` / empty cluster (no drizzle `__drizzle_migrations` applied)    |
+| TARGET_SCHEMA_VERSION       | `0038_mk_s21_security_hardening` (journal idx 38 on remediation line) |
+| PENDING_MIGRATIONS          | Full ordered set `0000` → `0038` under `packages/database/drizzle`    |
 
 ## Planned PROD-S1 migration sequence
 

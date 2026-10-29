@@ -7,10 +7,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const evidenceDir = path.join(
-  __dirname,
-  "../docs/testing/evidence/config-final-acceptance",
-);
+const evidenceDir = path.join(__dirname, "../docs/testing/evidence/config-final-acceptance");
 mkdirSync(evidenceDir, { recursive: true });
 
 const BASE = process.env.FORGE_API_BASE ?? "https://d108fstxdv69bo.cloudfront.net";
@@ -175,11 +172,10 @@ async function validateNamespace(ns) {
           ? { ...payload, terms: { ...payload.terms, personnel: "Members" } }
           : payload;
 
-    const patch = await req(
-      "PATCH",
-      `${base}/${objectKey}/versions/${version.id}`,
-      { payload: patchedPayload, changeSummary: "release patch" },
-    );
+    const patch = await req("PATCH", `${base}/${objectKey}/versions/${version.id}`, {
+      payload: patchedPayload,
+      changeSummary: "release patch",
+    });
     result.steps.update = { status: patch.status, pass: okStatus(patch.status) };
 
     const publish = await req(
@@ -207,11 +203,10 @@ async function validateNamespace(ns) {
     result.steps.compare = { status: compare.status, pass: okStatus(compare.status) };
 
     const future = new Date(Date.now() + 120_000).toISOString();
-    const schedule = await req(
-      "POST",
-      `${base}/${objectKey}/versions/${v2.id}/schedule`,
-      { effectiveFrom: future, changeSummary: "scheduled" },
-    );
+    const schedule = await req("POST", `${base}/${objectKey}/versions/${v2.id}/schedule`, {
+      effectiveFrom: future,
+      changeSummary: "scheduled",
+    });
     result.steps.schedule = { status: schedule.status, pass: okStatus(schedule.status) };
 
     const activate = await req(

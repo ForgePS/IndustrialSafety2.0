@@ -238,7 +238,11 @@ function DashboardInner() {
         tone: "danger",
       });
     }
-    if (health && String(health.status).toLowerCase() !== "ok" && String(health.status).toLowerCase() !== "healthy") {
+    if (
+      health &&
+      String(health.status).toLowerCase() !== "ok" &&
+      String(health.status).toLowerCase() !== "healthy"
+    ) {
       items.push({
         id: "api",
         title: "Platform API reported an issue",
@@ -268,8 +272,7 @@ function DashboardInner() {
     }) ?? [];
 
   const apiHealthy =
-    health != null &&
-    ["ok", "healthy", "up"].includes(String(health.status).toLowerCase());
+    health != null && ["ok", "healthy", "up"].includes(String(health.status).toLowerCase());
   const dbHealthy = ready?.checks.database === true;
 
   return (
@@ -348,7 +351,10 @@ function DashboardInner() {
         />
         <ForgeMetricCard
           label="Active users"
-          value={metricOrUnavailable(overview?.users.activeMemberships, loading || overviewUnavailable)}
+          value={metricOrUnavailable(
+            overview?.users.activeMemberships,
+            loading || overviewUnavailable,
+          )}
           {...(overviewUnavailable ? { hint: "Analytics overview unavailable" } : {})}
         />
         <ForgeMetricCard
@@ -366,10 +372,7 @@ function DashboardInner() {
           label="Pending invitations"
           value={metricOrUnavailable(pendingInvites, loading)}
         />
-        <ForgeMetricCard
-          label="Background jobs"
-          value={metricOrUnavailable(importJobs, loading)}
-        />
+        <ForgeMetricCard label="Background jobs" value={metricOrUnavailable(importJobs, loading)} />
         <ForgeMetricCard
           label="Monthly / annual revenue"
           value={null}
@@ -461,7 +464,9 @@ function DashboardInner() {
                         </StatusBadge>
                       </td>
                       <td>
-                        {row.updatedAt ? new Date(row.updatedAt).toLocaleString() : unavailableLabel()}
+                        {row.updatedAt
+                          ? new Date(row.updatedAt).toLocaleString()
+                          : unavailableLabel()}
                       </td>
                       <td>
                         <div className="d-flex flex-wrap gap-2">
@@ -565,7 +570,9 @@ function DashboardInner() {
                             </StatusBadge>
                           </td>
                           <td>
-                            {row.progressPercent == null ? unavailableLabel() : `${row.progressPercent}%`}
+                            {row.progressPercent == null
+                              ? unavailableLabel()
+                              : `${row.progressPercent}%`}
                           </td>
                         </tr>
                       ))}

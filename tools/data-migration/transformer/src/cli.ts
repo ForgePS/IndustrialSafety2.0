@@ -8,7 +8,11 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { randomUUID } from "node:crypto";
 import { runTransform, TOOL_VERSION } from "./transform.js";
-import { SOURCE_TARGET_MATRIX, TARGET_SCHEMA_GAPS, TARGET_MISSING } from "./source-target-matrix.js";
+import {
+  SOURCE_TARGET_MATRIX,
+  TARGET_SCHEMA_GAPS,
+  TARGET_MISSING,
+} from "./source-target-matrix.js";
 import { AUTHORITATIVE_CUSTOMER_AWS_TENANT } from "./tenant-map.js";
 import { dryValidateImportPackage } from "./dry-validate.js";
 
@@ -41,13 +45,9 @@ async function main(): Promise<void> {
   const args = parseArgs(process.argv.slice(2));
   const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../../../..");
   const resolveFromRepo = (p: string) => (path.isAbsolute(p) ? p : path.resolve(repoRoot, p));
-  const inputDir = resolveFromRepo(
-    args.input ?? ".tmp-data-migration/dm-s1/migration-package",
-  );
+  const inputDir = resolveFromRepo(args.input ?? ".tmp-data-migration/dm-s1/migration-package");
   const runId = `dm-s2-${new Date().toISOString().replace(/[:.]/g, "-")}-${randomUUID().slice(0, 8)}`;
-  const outputDir = resolveFromRepo(
-    args.output ?? path.join(".tmp-data-migration/dm-s2", runId),
-  );
+  const outputDir = resolveFromRepo(args.output ?? path.join(".tmp-data-migration/dm-s2", runId));
 
   if (!existsSync(inputDir)) {
     throw new Error(`Input package not found: ${inputDir}`);
@@ -129,7 +129,10 @@ async function main(): Promise<void> {
     PACKAGE_MANIFEST: result.packageManifestPath,
   };
 
-  writeFileSync(path.join(outputDir, "import-readiness.json"), `${JSON.stringify(readiness, null, 2)}\n`);
+  writeFileSync(
+    path.join(outputDir, "import-readiness.json"),
+    `${JSON.stringify(readiness, null, 2)}\n`,
+  );
   process.stdout.write(`${JSON.stringify({ phase: "COMPLETE", readiness }, null, 2)}\n`);
 
   const hardFail =

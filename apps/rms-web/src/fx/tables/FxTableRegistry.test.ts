@@ -1,10 +1,5 @@
 import { beforeEach, describe, expect, it } from "vitest";
-import {
-  clearTableRegistryForTests,
-  getTable,
-  listTables,
-  registerTable,
-} from "./FxTableRegistry";
+import { clearTableRegistryForTests, getTable, listTables, registerTable } from "./FxTableRegistry";
 import { loadColumnPreferences, saveColumnPreferences } from "./FxColumnManager";
 import { RMS_FX_TABLES_FLAG } from "./tables-flags";
 

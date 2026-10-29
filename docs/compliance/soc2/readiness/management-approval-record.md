@@ -8,7 +8,7 @@
 
 > This record is prepared for human approval. **Do not treat any section as approved** until Jeremy Powell (or a formally delegated approver) records an explicit Decision of `APPROVED` with date and signature/initials in the table below. Git commits are not approval.
 
-**Approver (required):** Jeremy Powell — Founder, Forge Public Safety  
+**Approver (required):** Jeremy Powell — Founder, Forge Public Safety
 
 **Next review date (proposed):** 2027-01-26 (or after material system-boundary change)
 
@@ -29,7 +29,6 @@ For each Approval ID row:
 
 ### APR-001 — SOC 2 system boundary
 
-
 | Field            | Value                        |
 | ---------------- | ---------------------------- |
 | Approval ID      | APR-001                      |
@@ -43,9 +42,7 @@ For each Approval ID row:
 | Exceptions       |                              |
 | Next review date | 2027-01-26                   |
 
-
 ### APR-002 — Included services
-
 
 | Field            | Value                        |
 | ---------------- | ---------------------------- |
@@ -60,9 +57,7 @@ For each Approval ID row:
 | Exceptions       |                              |
 | Next review date | 2027-01-26                   |
 
-
 ### APR-003 — Excluded services
-
 
 | Field            | Value                            |
 | ---------------- | -------------------------------- |
@@ -77,9 +72,7 @@ For each Approval ID row:
 | Exceptions       | NERIS Phase 3 remains excluded   |
 | Next review date | 2027-01-26                       |
 
-
 ### APR-004 — Included environments
-
 
 | Field            | Value                                                                                                          |
 | ---------------- | -------------------------------------------------------------------------------------------------------------- |
@@ -94,9 +87,7 @@ For each Approval ID row:
 | Exceptions       |                                                                                                                |
 | Next review date | 2027-01-26                                                                                                     |
 
-
 ### APR-005 — Trust Services Category decisions
-
 
 | Field            | Value                                                                                                                                                                                                                                 |
 | ---------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -111,9 +102,7 @@ For each Approval ID row:
 | Exceptions       |                                                                                                                                                                                                                                       |
 | Next review date | 2027-01-26                                                                                                                                                                                                                            |
 
-
 ### APR-006 — Risk methodology
-
 
 | Field            | Value                                 |
 | ---------------- | ------------------------------------- |
@@ -128,26 +117,22 @@ For each Approval ID row:
 | Exceptions       |                                       |
 | Next review date | 2027-01-26                            |
 
-
 ### APR-007 — Data classification model
 
-
-| Field            | Value                                                      |
-| ---------------- | ---------------------------------------------------------- |
-| Approval ID      | APR-007                                                    |
-| Document         | `policies/data-classification-policy.md` (SOC2-POL-009)    |
-| Document version | 0.1                                                        |
-| Approver         | Jeremy Powell                                              |
-| Approver role    | Founder, Forge Public Safety                               |
-| Decision         | `APPROVED`                                                 |
-| Date             | 7/26/2026                                                  |
+| Field            | Value                                                    |
+| ---------------- | -------------------------------------------------------- |
+| Approval ID      | APR-007                                                  |
+| Document         | `policies/data-classification-policy.md` (SOC2-POL-009)  |
+| Document version | 0.1                                                      |
+| Approver         | Jeremy Powell                                            |
+| Approver role    | Founder, Forge Public Safety                             |
+| Decision         | `APPROVED`                                               |
+| Date             | 7/26/2026                                                |
 | Conditions       | Data classification policy APPROVED effective 2026-07-26 |
-| Exceptions       |                                                            |
-| Next review date | 2027-01-26                                                 |
-
+| Exceptions       |                                                          |
+| Next review date | 2027-01-26                                               |
 
 ### APR-008 — Control ownership model
-
 
 | Field            | Value                                                                       |
 | ---------------- | --------------------------------------------------------------------------- |
@@ -162,9 +147,7 @@ For each Approval ID row:
 | Exceptions       |                                                                             |
 | Next review date | 2027-01-26                                                                  |
 
-
 ### APR-009 — Claims restriction
-
 
 | Field            | Value                                                                                                                                                                                            |
 | ---------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
@@ -179,9 +162,7 @@ For each Approval ID row:
 | Exceptions       | None                                                                                                                                                                                             |
 | Next review date | 2027-01-26                                                                                                                                                                                       |
 
-
 ### APR-010 — Phase 1 infrastructure authorization (CloudTrail)
-
 
 | Field            | Value                                                                                                                                                                                                                                                               |
 | ---------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -196,11 +177,9 @@ For each Approval ID row:
 | Exceptions       | Org-delegated CloudTrail deferred                                                                                                                                                                                                                                   |
 | Next review date | 2027-01-26                                                                                                                                                                                                                                                          |
 
-
 ---
 
 ## Blanket signature block (optional once all rows approved)
-
 
 | Field                | Value                        |
 | -------------------- | ---------------------------- |
@@ -210,15 +189,11 @@ For each Approval ID row:
 | Signature / initials | JP                           |
 | Date                 | 7/26/2026                    |
 
-
 ---
 
 ## Revision history
 
-
-| Version | Date       | Change                                                       |
-| ------- | ---------- | ------------------------------------------------------------ |
-| 0.1     | 2026-07-26 | Initial Phase 1 approval packet prepared for human signature |
+| Version | Date       | Change                                                         |
+| ------- | ---------- | -------------------------------------------------------------- |
+| 0.1     | 2026-07-26 | Initial Phase 1 approval packet prepared for human signature   |
 | 0.2     | 2026-07-26 | Approved by Jeremy Powell (APR-001–010 + blanket signature JP) |
-
-

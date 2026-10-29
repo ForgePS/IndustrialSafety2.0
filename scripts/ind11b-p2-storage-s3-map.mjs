@@ -15,9 +15,7 @@ import path from "node:path";
 import crypto from "node:crypto";
 
 const BUSINESS_ID = "business-1782553339499";
-const EVID_DIR = path.resolve(
-  "docs/program/industrial-migration/ind-11/evidence/p2/03-storage",
-);
+const EVID_DIR = path.resolve("docs/program/industrial-migration/ind-11/evidence/p2/03-storage");
 const DEST_BUCKET = "forge-development-documents-511343547817-us-east-1";
 
 const TENANTS = {
@@ -100,14 +98,8 @@ function main() {
   for (const o of inv.objects) {
     const sourcePath = o.path;
     const documentId = uuidFromString(`forge-p2-doc:${BUSINESS_ID}:${sourcePath}`);
-    const versionSeed =
-      o.generation ||
-      o.md5Hash ||
-      o.crc32c ||
-      `size-${o.size}`;
-    const versionId = uuidFromString(
-      `forge-p2-ver:${BUSINESS_ID}:${sourcePath}:${versionSeed}`,
-    );
+    const versionSeed = o.generation || o.md5Hash || o.crc32c || `size-${o.size}`;
+    const versionId = uuidFromString(`forge-p2-ver:${BUSINESS_ID}:${sourcePath}:${versionSeed}`);
     const filename = safeFilename(o.filename || sourcePath);
     const s3Key = buildTargetKey(tenant.tenantId, documentId, versionId, filename);
 
@@ -154,7 +146,8 @@ function main() {
       tenantId: tenant.tenantId,
       destBucket: DEST_BUCKET,
       keyConvention: "tenants/{tenantId}/documents/{documentId}/{versionId}/{filename}",
-      idStrategy: "sha256-derived UUID v5-style from businessId+sourcePath (+generation/md5 for version)",
+      idStrategy:
+        "sha256-derived UUID v5-style from businessId+sourcePath (+generation/md5 for version)",
     },
     decision: {
       m1: "Map staging first; prod-twin reuses documentId/versionId with tenant UUID swapped in key prefix",

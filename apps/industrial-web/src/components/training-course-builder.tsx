@@ -7,7 +7,12 @@ import {
   TRAINING_MATERIAL_ACCEPT,
   uploadTrainingMaterialFile,
 } from "@/features/training/materials";
-import type { TrainingGroup, TrainingMaterial, TrainingSource, TrainingSourceFolder } from "@/features/training/types";
+import type {
+  TrainingGroup,
+  TrainingMaterial,
+  TrainingSource,
+  TrainingSourceFolder,
+} from "@/features/training/types";
 import {
   downloadQuestionImportCsvTemplate,
   downloadQuestionImportTemplate,
@@ -221,7 +226,12 @@ export function TrainingCourseBuilder(props: Props) {
     >
       <div className="card-header d-flex flex-wrap justify-content-between align-items-center gap-2">
         <h6 className="mb-0">{title}</h6>
-        <button type="button" className="btn-close" aria-label="Close course builder" onClick={onClose} />
+        <button
+          type="button"
+          className="btn-close"
+          aria-label="Close course builder"
+          onClick={onClose}
+        />
       </div>
       <div className="card-body d-flex flex-column gap-4">
         <section aria-labelledby="course-builder-details-heading">
@@ -322,7 +332,8 @@ export function TrainingCourseBuilder(props: Props) {
             Study materials
           </h6>
           <p className="text-muted small mb-3">
-            Upload presentations, PDFs, videos, and other reference files learners review before the quiz.
+            Upload presentations, PDFs, videos, and other reference files learners review before the
+            quiz.
           </p>
           {isCreate ? (
             <>
@@ -487,7 +498,12 @@ export function TrainingCourseBuilder(props: Props) {
               ) : null}
             </>
           )}
-          <button type="button" className="btn btn-outline-secondary" disabled={disabled} onClick={onClose}>
+          <button
+            type="button"
+            className="btn btn-outline-secondary"
+            disabled={disabled}
+            onClick={onClose}
+          >
             Close
           </button>
         </div>

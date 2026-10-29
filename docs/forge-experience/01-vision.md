@@ -48,14 +48,14 @@ It must **not** feel like:
 
 ## North-star outcomes
 
-| Outcome | Meaning |
-| --- | --- |
-| Instant literacy | A user trained on one Forge product can operate another without UX retraining |
-| Role clarity | Users work from responsibilities, not database collections |
-| Record gravity | Work orbits operational records, not forms-as-apps |
-| Attention discipline | Screens answer what is happening, what needs attention, and what to do next |
-| Inclusive operation | WCAG 2.2 AA is a baseline, not an afterthought |
-| Device parity | Desktop, tablet, mobile, and large dashboard displays are first-class |
+| Outcome              | Meaning                                                                       |
+| -------------------- | ----------------------------------------------------------------------------- |
+| Instant literacy     | A user trained on one Forge product can operate another without UX retraining |
+| Role clarity         | Users work from responsibilities, not database collections                    |
+| Record gravity       | Work orbits operational records, not forms-as-apps                            |
+| Attention discipline | Screens answer what is happening, what needs attention, and what to do next   |
+| Inclusive operation  | WCAG 2.2 AA is a baseline, not an afterthought                                |
+| Device parity        | Desktop, tablet, mobile, and large dashboard displays are first-class         |
 
 ## Permanent role
 

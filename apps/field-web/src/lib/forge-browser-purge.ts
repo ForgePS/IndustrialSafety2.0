@@ -77,9 +77,7 @@ export async function purgeFieldForgeBrowserState(
 
   // Unregister SW on logout only — tenant switch should not force a full PWA reinstall mid-session.
   const swUnregistered =
-    reason === "logout"
-      ? await unregisterServiceWorkersByScriptMatch(FIELD_SW_SCRIPT_MARKERS)
-      : 0;
+    reason === "logout" ? await unregisterServiceWorkersByScriptMatch(FIELD_SW_SCRIPT_MARKERS) : 0;
 
   return {
     offlineKeys,

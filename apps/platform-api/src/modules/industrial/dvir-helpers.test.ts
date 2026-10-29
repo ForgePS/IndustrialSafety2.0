@@ -73,12 +73,19 @@ function allYesItems(overrides?: Record<string, { answer: "YES" | "NO" | "NA"; n
     return {
       id,
       label: id,
-      section: id.startsWith("trailer") ||
-        ["coupling-chains", "coupling-king-pin", "doors", "hitch", "landing-gear", "roof", "tarpaulin"].includes(
-          id,
-        )
-        ? "trailer"
-        : "truck",
+      section:
+        id.startsWith("trailer") ||
+        [
+          "coupling-chains",
+          "coupling-king-pin",
+          "doors",
+          "hitch",
+          "landing-gear",
+          "roof",
+          "tarpaulin",
+        ].includes(id)
+          ? "trailer"
+          : "truck",
       answer: override?.answer ?? ("YES" as const),
       notes: override?.notes ?? "",
     };

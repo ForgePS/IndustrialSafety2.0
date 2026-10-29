@@ -7,7 +7,7 @@
 **Presentation Blocker:** Conditional until redeployed  
 **Affected Component:** `apps/platform-api` public scan QR (`IndustrialPublicQrController` / `IndustrialPublicQrService` / `scan-actions.ts`)  
 **Affected Tenant/Role:** Any tenant with an active public QR token (includes Producers Rice Mill if QR links are in use)  
-**OWASP Category:** A01 Broken Access Control  
+**OWASP Category:** A01 Broken Access Control
 
 ### Summary
 
@@ -15,16 +15,16 @@ Unauthenticated `@Public()` endpoints `POST /api/v1/public/scan/:token/actions` 
 
 ### Evidence
 
-- File/configuration: `apps/platform-api/src/modules/industrial/industrial-public-qr.controller.ts` lines 43–51, 64–73  
-- Service builds permission Set from body: `industrial-public-qr.service.ts` lines 719–726, 827–856  
-- Action filter honors client perms / admin: `scan-actions.ts` lines 491–493  
+- File/configuration: `apps/platform-api/src/modules/industrial/industrial-public-qr.controller.ts` lines 43–51, 64–73
+- Service builds permission Set from body: `industrial-public-qr.service.ts` lines 719–726, 827–856
+- Action filter honors client perms / admin: `scan-actions.ts` lines 491–493
 - Discovery: [Explore XSS files CORS secrets](a3dcb3ec-37e4-421e-aa50-931618ee6d29)
 
 ### Exploit Conditions
 
-1. Knowledge of a valid public QR token for a target asset/link  
-2. HTTP POST with fabricated `permissions` array (e.g. `["industrial.admin"]`)  
-3. No authenticated Forge session required  
+1. Knowledge of a valid public QR token for a target asset/link
+2. HTTP POST with fabricated `permissions` array (e.g. `["industrial.admin"]`)
+3. No authenticated Forge session required
 
 ### Business Impact
 
@@ -32,9 +32,9 @@ Unauthorized disclosure of asset inspection/corrective history and elevation of 
 
 ### Recommended Remediation
 
-1. Ignore client `permissions` on public routes; derive capability only from server-side link config, verified employee number, and/or short-lived public session tokens minted after identify.  
-2. Add regression tests that POST admin permissions and expect forbidden/unchanged action sets.  
-3. Review other `industrial-public-*` controllers for the same pattern.  
+1. Ignore client `permissions` on public routes; derive capability only from server-side link config, verified employee number, and/or short-lived public session tokens minted after identify.
+2. Add regression tests that POST admin permissions and expect forbidden/unchanged action sets.
+3. Review other `industrial-public-*` controllers for the same pattern.
 
 ### Verification Test
 
@@ -53,7 +53,7 @@ Industrial API owners — before any live Producers presentation that demonstrat
 **Presentation Blocker:** Contained — post-deploy probe returns Bearer required on api-dev  
 **Affected Component:** `apps/platform-api` AuthContextService; `https://api-dev.forgepublicsafety.com`  
 **Affected Tenant/Role:** Any tenant/user ID known to the attacker on the development environment  
-**OWASP Category:** A07 Identification and Authentication Failures  
+**OWASP Category:** A07 Identification and Authentication Failures
 
 ### Summary
 
@@ -61,15 +61,15 @@ When `APP_ENV` is `development`, the API authenticates callers using the `x-forg
 
 ### Evidence
 
-- File/configuration: `apps/platform-api/src/modules/auth-context/auth-context.service.ts` lines 120–147  
-- Live: `GET https://api-dev.forgepublicsafety.com/health` → `"environment":"development"`  
-- Live: `GET /api/v1/auth/me` with valid JSON principal, no Authorization → `401` `"User not found"` (proves principal path, not Bearer-only rejection)  
-- Contrast: production returns `"Authorization Bearer token required"` for the same header  
+- File/configuration: `apps/platform-api/src/modules/auth-context/auth-context.service.ts` lines 120–147
+- Live: `GET https://api-dev.forgepublicsafety.com/health` → `"environment":"development"`
+- Live: `GET /api/v1/auth/me` with valid JSON principal, no Authorization → `401` `"User not found"` (proves principal path, not Bearer-only rejection)
+- Contrast: production returns `"Authorization Bearer token required"` for the same header
 
 ### Exploit Conditions
 
-1. Network reachability to `api-dev.forgepublicsafety.com`  
-2. Knowledge of a valid `userId` and `tenantId` in that environment  
+1. Network reachability to `api-dev.forgepublicsafety.com`
+2. Knowledge of a valid `userId` and `tenantId` in that environment
 
 ### Business Impact
 
@@ -77,9 +77,9 @@ Full account impersonation on the development environment without password/MFA/C
 
 ### Recommended Remediation
 
-1. Fail closed for internet-facing APIs: only allow the header when `APP_ENV=local` (or behind an explicit break-glass secret / IP allowlist).  
-2. Confirm UAT (if separate) uses Cognito-only.  
-3. Rotate any development credentials that may have been exercised via this path.  
+1. Fail closed for internet-facing APIs: only allow the header when `APP_ENV=local` (or behind an explicit break-glass secret / IP allowlist).
+2. Confirm UAT (if separate) uses Cognito-only.
+3. Rotate any development credentials that may have been exercised via this path.
 
 ### Verification Test
 
@@ -98,7 +98,7 @@ Platform API owners — before any live Producers presentation.
 **Presentation Blocker:** Conditional (elevates any XSS to session theft)  
 **Affected Component:** `packages/web-kit/src/auth-storage.ts`  
 **Affected Tenant/Role:** All browser users  
-**OWASP Category:** A02 Cryptographic Failures / A07  
+**OWASP Category:** A02 Cryptographic Failures / A07
 
 ### Summary
 
@@ -106,7 +106,7 @@ Cognito access and refresh tokens are persisted under `forge-bearer-token` and `
 
 ### Evidence
 
-- File: `packages/web-kit/src/auth-storage.ts` lines 3–67, 125–130  
+- File: `packages/web-kit/src/auth-storage.ts` lines 3–67, 125–130
 
 ### Exploit Conditions
 
@@ -137,7 +137,7 @@ Web platform — post-presentation hardening acceptable if CSP/XSS gates held; s
 **Presentation Blocker:** Conditional (pending reachability)  
 **Affected Component:** pnpm workspace production dependency graph  
 **Affected Tenant/Role:** Potentially API/worker/frontend depending on package  
-**OWASP Category:** A06 Vulnerable and Outdated Components  
+**OWASP Category:** A06 Vulnerable and Outdated Components
 
 ### Summary
 
@@ -145,8 +145,8 @@ Web platform — post-presentation hardening acceptable if CSP/XSS gates held; s
 
 ### Evidence
 
-- Command: `pnpm audit --prod`  
-- Evidence file: `evidence/pnpm-audit-prod.txt` (partial)  
+- Command: `pnpm audit --prod`
+- Evidence file: `evidence/pnpm-audit-prod.txt` (partial)
 
 ### Exploit Conditions
 
@@ -177,7 +177,7 @@ Platform maintainers — within 7 days for Critical reachability triage.
 **Presentation Blocker:** No (defense-in-depth)  
 **Affected Component:** CloudFront response headers on Industrial / Producers vanity  
 **Affected Tenant/Role:** All browser users  
-**OWASP Category:** A05 Security Misconfiguration  
+**OWASP Category:** A05 Security Misconfiguration
 
 ### Summary
 
@@ -185,7 +185,7 @@ Live CSP includes `script-src 'self' 'unsafe-inline'`, reducing XSS containment.
 
 ### Evidence
 
-- `curl -I https://industrial.forgepublicsafety.com` / `producersrice.forgepublicsafety.com`  
+- `curl -I https://industrial.forgepublicsafety.com` / `producersrice.forgepublicsafety.com`
 
 ### Exploit Conditions
 
@@ -216,7 +216,7 @@ Infra / frontend — backlog with urgency after XSS sink review.
 **Presentation Blocker:** No  
 **Affected Component:** `apps/industrial-web/src/app/legal/acknowledge/page.tsx`  
 **Affected Tenant/Role:** Users viewing legal docs  
-**OWASP Category:** A03 Injection (XSS)  
+**OWASP Category:** A03 Injection (XSS)
 
 ### Summary
 
@@ -224,7 +224,7 @@ Infra / frontend — backlog with urgency after XSS sink review.
 
 ### Evidence
 
-- Lines ~161–164 in `legal/acknowledge/page.tsx`  
+- Lines ~161–164 in `legal/acknowledge/page.tsx`
 
 ### Exploit Conditions
 
@@ -255,7 +255,7 @@ Industrial web — near-term.
 **Presentation Blocker:** No  
 **Affected Component:** `auth-context.platform-admin-shadow.test.ts` / AuthContextService  
 **Affected Tenant/Role:** Platform super-admin with customer membership  
-**OWASP Category:** A01 Broken Access Control  
+**OWASP Category:** A01 Broken Access Control
 
 ### Summary
 
@@ -263,8 +263,8 @@ Industrial web — near-term.
 
 ### Evidence
 
-- Fix: `auth-context.service.ts` (`homeTenantId = user.tenantId`)  
-- Vitest: `auth-context.platform-admin-shadow.test.ts` now passes  
+- Fix: `auth-context.service.ts` (`homeTenantId = user.tenantId`)
+- Vitest: `auth-context.platform-admin-shadow.test.ts` now passes
 
 ### Exploit Conditions
 
@@ -295,7 +295,7 @@ Auth owners — mitigated pending deploy.
 **Presentation Blocker:** No  
 **Affected Component:** platform-api / Express  
 **Affected Tenant/Role:** All API clients  
-**OWASP Category:** A05  
+**OWASP Category:** A05
 
 ### Summary
 
@@ -303,7 +303,7 @@ Production API responses include `X-Powered-By: Express`.
 
 ### Evidence
 
-- Live response headers on `/api/v1/auth/me`  
+- Live response headers on `/api/v1/auth/me`
 
 ### Exploit Conditions
 
@@ -334,7 +334,7 @@ Backlog.
 **Presentation Blocker:** No  
 **Affected Component:** Production platform-api  
 **Affected Tenant/Role:** N/A  
-**OWASP Category:** A07  
+**OWASP Category:** A07
 
 ### Summary
 
@@ -342,11 +342,11 @@ Production API rejects missing Authorization and does not honor `x-forge-dev-pri
 
 ### Evidence
 
-- Live probes in `evidence/rg03-rg04-cors.txt` and Node probes  
+- Live probes in `evidence/rg03-rg04-cors.txt` and Node probes
 
 ### Exploit Conditions
 
-N/A  
+N/A
 
 ### Business Impact
 
@@ -373,7 +373,7 @@ Ops — continuous.
 **Presentation Blocker:** No  
 **Affected Component:** platform-api CORS  
 **Affected Tenant/Role:** N/A  
-**OWASP Category:** A05  
+**OWASP Category:** A05
 
 ### Summary
 
@@ -381,7 +381,7 @@ Request with `Origin: https://evil.example` received 401 without `Access-Control
 
 ### Evidence
 
-- `evidence/rg03-rg04-cors.txt`  
+- `evidence/rg03-rg04-cors.txt`
 
 ### Recommended Remediation
 
@@ -400,7 +400,7 @@ Ops — continuous.
 **Presentation Blocker:** No  
 **Affected Component:** `apps/field-web` shell logout vs `clearAllOfflineData`  
 **Affected Tenant/Role:** Field users on shared tablets  
-**OWASP Category:** A01 / A04  
+**OWASP Category:** A01 / A04
 
 ### Summary
 
@@ -408,8 +408,8 @@ Industrial shell clears offline data on sign-out; Field shell logout does not ca
 
 ### Evidence
 
-- Field shell logout: `apps/field-web/src/components/field-shell.tsx` (~167)  
-- Clear helper: `apps/field-web/src/lib/offline/cache.ts` (~122)  
+- Field shell logout: `apps/field-web/src/components/field-shell.tsx` (~167)
+- Clear helper: `apps/field-web/src/lib/offline/cache.ts` (~122)
 - Discovery: [Explore XSS files CORS secrets](a3dcb3ec-37e4-421e-aa50-931618ee6d29)
 
 ### Exploit Conditions
@@ -441,7 +441,7 @@ Field web — before Field-inclusive demos.
 **Presentation Blocker:** No  
 **Affected Component:** `packages/imports/src/formats/zip.ts`  
 **Affected Tenant/Role:** Import operators  
-**OWASP Category:** A01 / A03  
+**OWASP Category:** A01 / A03
 
 ### Summary
 
@@ -449,7 +449,7 @@ ZIP migration inventory validates extensions but does not reject path-traversal 
 
 ### Evidence
 
-- `packages/imports/src/formats/zip.ts` (~44–64, 114–218)  
+- `packages/imports/src/formats/zip.ts` (~44–64, 114–218)
 - Discovery: [Explore XSS files CORS secrets](a3dcb3ec-37e4-421e-aa50-931618ee6d29)
 
 ### Exploit Conditions

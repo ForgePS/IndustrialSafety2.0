@@ -268,11 +268,7 @@ function metricEntries(bag: Record<string, number> | undefined): Array<[string, 
   return Object.entries(bag ?? {}).sort((a, b) => b[1] - a[1]);
 }
 
-export function SeasonalWorkforceWorkspace({
-  onGoToRoster,
-}: {
-  onGoToRoster?: () => void;
-}) {
+export function SeasonalWorkforceWorkspace({ onGoToRoster }: { onGoToRoster?: () => void }) {
   const { me } = useAuth();
   const permissions = new Set(me?.permissions ?? []);
   const canView =
@@ -342,7 +338,10 @@ export function SeasonalWorkforceWorkspace({
     expectedEndDate: "",
     ...emptyAssignment,
   });
-  const [assignmentForm, setAssignmentForm] = useState({ ...emptyAssignment, assignmentStatus: "UNASSIGNED" });
+  const [assignmentForm, setAssignmentForm] = useState({
+    ...emptyAssignment,
+    assignmentStatus: "UNASSIGNED",
+  });
   const [ftStatus, setFtStatus] = useState<(typeof FT_STATUSES)[number]>("RECOMMENDED");
   const [ftNotes, setFtNotes] = useState("");
   const [convertForm, setConvertForm] = useState({
@@ -353,8 +352,7 @@ export function SeasonalWorkforceWorkspace({
   const [confirm, setConfirm] = useState<ConfirmKind>(null);
   const [confirmBusy, setConfirmBusy] = useState(false);
 
-  const seasonalEnabled =
-    bootstrap == null ? true : isSeasonalLifecycleEnabled(bootstrap.flags);
+  const seasonalEnabled = bootstrap == null ? true : isSeasonalLifecycleEnabled(bootstrap.flags);
   const ready = Boolean(awsReady && seasonalEnabled);
 
   const loadSeasons = useCallback(async () => {
@@ -473,8 +471,9 @@ export function SeasonalWorkforceWorkspace({
         shiftName: String(eng.shiftName ?? ""),
       });
       setFtStatus(
-        (String(eng.fullTimeConsiderationStatus ?? "NOT_EVALUATED") as (typeof FT_STATUSES)[number]) ||
-          "NOT_EVALUATED",
+        (String(
+          eng.fullTimeConsiderationStatus ?? "NOT_EVALUATED",
+        ) as (typeof FT_STATUSES)[number]) || "NOT_EVALUATED",
       );
     } catch (e) {
       setError(e instanceof ApiError ? e.message : "Failed to load lifecycle");
@@ -580,7 +579,13 @@ export function SeasonalWorkforceWorkspace({
         instructorName: opt(sessionForm.instructorName),
         status: "SCHEDULED",
       });
-      setSessionForm((f) => ({ ...f, name: "", location: "", sessionDate: "", instructorName: "" }));
+      setSessionForm((f) => ({
+        ...f,
+        name: "",
+        location: "",
+        sessionDate: "",
+        instructorName: "",
+      }));
       await loadOrientation(seasonId);
     } catch (err) {
       setError(err instanceof ApiError ? err.message : "Create session failed");
@@ -868,7 +873,11 @@ export function SeasonalWorkforceWorkspace({
       </div>
 
       {canManage ? (
-        <form className="card mb-3" onSubmit={(e) => void onCreateSeason(e)} aria-label="Create season">
+        <form
+          className="card mb-3"
+          onSubmit={(e) => void onCreateSeason(e)}
+          aria-label="Create season"
+        >
           <div className="card-header">
             <h5 className="card-title mb-0">Create season</h5>
           </div>
@@ -1093,7 +1102,11 @@ export function SeasonalWorkforceWorkspace({
                       Returning worker (optional)
                     </legend>
                     <div className="row g-3 align-items-end">
-                      <FormField label="Search existing personnel" htmlFor="prehire-search" className="col-lg-6">
+                      <FormField
+                        label="Search existing personnel"
+                        htmlFor="prehire-search"
+                        className="col-lg-6"
+                      >
                         <input
                           id="prehire-search"
                           className="form-control"
@@ -1127,7 +1140,10 @@ export function SeasonalWorkforceWorkspace({
                                   f.firstName || String(hit.displayName ?? "").split(" ")[0] || "",
                                 lastName:
                                   f.lastName ||
-                                  String(hit.displayName ?? "").split(" ").slice(1).join(" ") ||
+                                  String(hit.displayName ?? "")
+                                    .split(" ")
+                                    .slice(1)
+                                    .join(" ") ||
                                   "",
                               }))
                             }
@@ -1138,7 +1154,11 @@ export function SeasonalWorkforceWorkspace({
                         ))}
                       </div>
                     ) : null}
-                    <FormField label="Existing personnel ID" htmlFor="prehire-existing" className="col-12 mt-3">
+                    <FormField
+                      label="Existing personnel ID"
+                      htmlFor="prehire-existing"
+                      className="col-12 mt-3"
+                    >
                       <input
                         id="prehire-existing"
                         className="form-control"
@@ -1155,7 +1175,9 @@ export function SeasonalWorkforceWorkspace({
                 </div>
               </form>
             ) : (
-              <p className="text-muted mb-0">Pre-hire intake requires industrial.personnel.manage.</p>
+              <p className="text-muted mb-0">
+                Pre-hire intake requires industrial.personnel.manage.
+              </p>
             )}
           </div>
         ) : null}
@@ -1239,7 +1261,11 @@ export function SeasonalWorkforceWorkspace({
                       />
                     </FormField>
                   </div>
-                  <button type="submit" className="btn btn-primary mt-3" disabled={!sessionForm.templateId}>
+                  <button
+                    type="submit"
+                    className="btn btn-primary mt-3"
+                    disabled={!sessionForm.templateId}
+                  >
                     Create session
                   </button>
                 </div>
@@ -1307,7 +1333,11 @@ export function SeasonalWorkforceWorkspace({
                 <div className="card-body">
                   {canManage ? (
                     <div className="row g-2 align-items-end mb-3">
-                      <FormField label="Add attendee (personnel ID)" htmlFor="session-attendee" className="col-lg-6">
+                      <FormField
+                        label="Add attendee (personnel ID)"
+                        htmlFor="session-attendee"
+                        className="col-lg-6"
+                      >
                         <input
                           id="session-attendee"
                           className="form-control"
@@ -1316,7 +1346,11 @@ export function SeasonalWorkforceWorkspace({
                         />
                       </FormField>
                       <div className="col-lg-auto">
-                        <button type="button" className="btn btn-outline-primary" onClick={() => void addAttendee()}>
+                        <button
+                          type="button"
+                          className="btn btn-outline-primary"
+                          onClick={() => void addAttendee()}
+                        >
                           Add
                         </button>
                       </div>

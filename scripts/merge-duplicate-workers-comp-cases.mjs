@@ -34,8 +34,7 @@ const APPLY = process.env.APPLY === "1" || process.env.APPLY === "true";
 const LIMIT_GROUPS = Number(process.env.LIMIT_GROUPS || 0) || 0;
 const ALLOWED = new Set(["producers-rice-mill"]);
 const MERGE_RUN_ID =
-  process.env.MERGE_RUN_ID ||
-  `merge-dup-wc-${new Date().toISOString().replace(/[:.]/g, "-")}`;
+  process.env.MERGE_RUN_ID || `merge-dup-wc-${new Date().toISOString().replace(/[:.]/g, "-")}`;
 
 if (!ALLOWED.has(TENANT_KEY)) {
   throw new Error(`Refusing tenant ${TENANT_KEY}; allowed: ${[...ALLOWED].join(", ")}`);
@@ -67,7 +66,8 @@ function asObject(value) {
 
 function pickText(...values) {
   for (const value of values) {
-    const text = typeof value === "string" ? value.trim() : value == null ? "" : String(value).trim();
+    const text =
+      typeof value === "string" ? value.trim() : value == null ? "" : String(value).trim();
     if (text) return text;
   }
   return "";
@@ -76,7 +76,8 @@ function pickText(...values) {
 function pickMaxNumber(...values) {
   let max = null;
   for (const value of values) {
-    const n = typeof value === "number" ? value : value == null || value === "" ? NaN : Number(value);
+    const n =
+      typeof value === "number" ? value : value == null || value === "" ? NaN : Number(value);
     if (!Number.isFinite(n)) continue;
     if (max == null || n > max) max = n;
   }
@@ -84,7 +85,9 @@ function pickMaxNumber(...values) {
 }
 
 function isOpenStatus(status) {
-  const s = String(status || "").trim().toUpperCase();
+  const s = String(status || "")
+    .trim()
+    .toUpperCase();
   return s === "OPEN" || s === "ACTIVE" || s === "RESTRICTED" || s === "LOST_TIME" || s === "DRAFT";
 }
 
@@ -165,7 +168,9 @@ function mergeSourcePayload(keeper, duplicates, claimSummary) {
   base.claim = { ...asObject(base.claim), ...claimSummary };
   base.intake = {
     ...asObject(base.intake),
-    incidentDate: claimSummary.dateOfInjury || pickText(...payloads.map((p) => asObject(p.intake).incidentDate)),
+    incidentDate:
+      claimSummary.dateOfInjury ||
+      pickText(...payloads.map((p) => asObject(p.intake).incidentDate)),
   };
   base.mergedDuplicateIds = duplicates.map((row) => row.id);
   base.mergeRunId = MERGE_RUN_ID;
@@ -243,7 +248,9 @@ try {
       .trim()
       .toLowerCase()
       .replace(/\s+/g, " ");
-    const doiKey = String(row.injury_date || "").trim().slice(0, 10);
+    const doiKey = String(row.injury_date || "")
+      .trim()
+      .slice(0, 10);
     if (!nameKey || !doiKey || !/^\d{4}-\d{2}-\d{2}$/.test(doiKey)) continue;
     const key = `${nameKey}||${doiKey}`;
     if (!groupsMap.has(key)) groupsMap.set(key, []);
@@ -293,8 +300,9 @@ try {
     );
     const status = isOpenStatus(keeper.status)
       ? keeper.status
-      : pickText(...[keeper, ...duplicates].filter((r) => isOpenStatus(r.status)).map((r) => r.status)) ||
-        keeper.status;
+      : pickText(
+          ...[keeper, ...duplicates].filter((r) => isOpenStatus(r.status)).map((r) => r.status),
+        ) || keeper.status;
 
     report.casesKept += 1;
     report.casesArchived += duplicates.length;

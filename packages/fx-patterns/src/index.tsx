@@ -37,8 +37,8 @@ export function DeleteRecordPattern({
         }
       >
         <p>
-          This will delete <strong>{recordTitle}</strong>. This action cannot be undone in the reference
-          prototype.
+          This will delete <strong>{recordTitle}</strong>. This action cannot be undone in the
+          reference prototype.
         </p>
       </FxDialog>
     </>

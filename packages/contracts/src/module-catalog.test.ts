@@ -9,12 +9,7 @@ import {
 
 describe("MODULE-CATALOG-S2 contract", () => {
   it("defines customer platforms plus internal Creator", () => {
-    expect(FORGE_PLATFORMS.map((p) => p.key)).toEqual([
-      "INDUSTRIAL",
-      "RMS",
-      "ACADEMY",
-      "CREATOR",
-    ]);
+    expect(FORGE_PLATFORMS.map((p) => p.key)).toEqual(["INDUSTRIAL", "RMS", "ACADEMY", "CREATOR"]);
     expect(FORGE_PLATFORMS.find((p) => p.key === "CREATOR")?.customerAssignable).toBe(false);
   });
 

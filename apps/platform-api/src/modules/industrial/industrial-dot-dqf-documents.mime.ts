@@ -17,9 +17,10 @@ export function isAllowedDotDqfDocumentMime(mimeType: string): boolean {
 }
 
 export function dotDqfDocumentObjectKeyPrefix(tenantId: string, fieldId: string): string {
-  const safeField = fieldId
-    .trim()
-    .replace(/[^a-zA-Z0-9._-]+/g, "_")
-    .slice(0, 80) || "document";
+  const safeField =
+    fieldId
+      .trim()
+      .replace(/[^a-zA-Z0-9._-]+/g, "_")
+      .slice(0, 80) || "document";
   return `tenants/${tenantId}/dot/dqf/${safeField}/`;
 }

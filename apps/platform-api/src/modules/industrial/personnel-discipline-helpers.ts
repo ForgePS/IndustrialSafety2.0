@@ -69,7 +69,9 @@ function parseIsoDate(value: unknown, field: string): string {
 }
 
 export function disciplinaryActionType(code: unknown) {
-  const normalized = String(code ?? "").trim().toUpperCase();
+  const normalized = String(code ?? "")
+    .trim()
+    .toUpperCase();
   return DISCIPLINARY_ACTION_TYPES.find((t) => t.code === normalized) ?? null;
 }
 
@@ -119,7 +121,9 @@ export function normalizeDisciplinaryActionInput(
 
   const categoryRaw =
     body.category !== undefined
-      ? String(body.category ?? "").trim().toUpperCase()
+      ? String(body.category ?? "")
+          .trim()
+          .toUpperCase()
       : (existing?.category ?? "SAFETY");
   const category = DISCIPLINARY_CATEGORIES.find((c) => c === categoryRaw);
   if (!category) {

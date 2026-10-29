@@ -103,16 +103,21 @@ export class IndustrialExecutiveWalkthroughNarrationService {
       if (!text) continue;
 
       const hash = textHash(text);
-      const existing = await withTenantTransaction(this.db, tenantId, async (tx) => {
-        return tx.query.industrialExecutiveWalkthroughNarration.findFirst({
-          where: and(
-            eq(industrialExecutiveWalkthroughNarration.tenantId, tenantId),
-            eq(industrialExecutiveWalkthroughNarration.sceneId, step.id),
-            eq(industrialExecutiveWalkthroughNarration.contentVersion, contentVersion),
-            eq(industrialExecutiveWalkthroughNarration.voiceId, resolvedVoice),
-          ),
-        });
-      }, principal.userId);
+      const existing = await withTenantTransaction(
+        this.db,
+        tenantId,
+        async (tx) => {
+          return tx.query.industrialExecutiveWalkthroughNarration.findFirst({
+            where: and(
+              eq(industrialExecutiveWalkthroughNarration.tenantId, tenantId),
+              eq(industrialExecutiveWalkthroughNarration.sceneId, step.id),
+              eq(industrialExecutiveWalkthroughNarration.contentVersion, contentVersion),
+              eq(industrialExecutiveWalkthroughNarration.voiceId, resolvedVoice),
+            ),
+          });
+        },
+        principal.userId,
+      );
 
       if (existing && existing.textHash === hash) {
         const downloadUrl = await this.presignDownload(existing.storageKey, existing.contentType);
@@ -146,36 +151,41 @@ export class IndustrialExecutiveWalkthroughNarrationService {
 
       const now = new Date();
       const rowId = existing?.id ?? createId();
-      await withTenantTransaction(this.db, tenantId, async (tx) => {
-        if (existing) {
-          await tx
-            .update(industrialExecutiveWalkthroughNarration)
-            .set({
+      await withTenantTransaction(
+        this.db,
+        tenantId,
+        async (tx) => {
+          if (existing) {
+            await tx
+              .update(industrialExecutiveWalkthroughNarration)
+              .set({
+                textHash: hash,
+                durationMs: synthesized.durationMs,
+                storageBucket: this.narrationBucket(),
+                storageKey: key,
+                contentType: synthesized.contentType,
+                updatedAt: now,
+              })
+              .where(eq(industrialExecutiveWalkthroughNarration.id, existing.id));
+          } else {
+            await tx.insert(industrialExecutiveWalkthroughNarration).values({
+              id: rowId,
+              tenantId,
+              sceneId: step.id,
+              contentVersion,
+              voiceId: resolvedVoice,
               textHash: hash,
               durationMs: synthesized.durationMs,
               storageBucket: this.narrationBucket(),
               storageKey: key,
               contentType: synthesized.contentType,
+              createdAt: now,
               updatedAt: now,
-            })
-            .where(eq(industrialExecutiveWalkthroughNarration.id, existing.id));
-        } else {
-          await tx.insert(industrialExecutiveWalkthroughNarration).values({
-            id: rowId,
-            tenantId,
-            sceneId: step.id,
-            contentVersion,
-            voiceId: resolvedVoice,
-            textHash: hash,
-            durationMs: synthesized.durationMs,
-            storageBucket: this.narrationBucket(),
-            storageKey: key,
-            contentType: synthesized.contentType,
-            createdAt: now,
-            updatedAt: now,
-          });
-        }
-      }, principal.userId);
+            });
+          }
+        },
+        principal.userId,
+      );
 
       this.logger.log(
         `Narration cached scene=${step.id} version=${contentVersion.slice(0, 8)} engine=${synthesized.engine}`,

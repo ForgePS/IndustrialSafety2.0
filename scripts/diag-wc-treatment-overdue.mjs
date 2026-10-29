@@ -61,7 +61,8 @@ if (!secretArn) throw new Error("DATABASE_SECRET_ARN is required");
 const sql = postgres(await resolveDatabaseUrl(secretArn), { max: 1 });
 
 try {
-  const [tenant] = await sql`select id::text as id from tenants where tenant_key = ${TENANT_KEY} limit 1`;
+  const [tenant] =
+    await sql`select id::text as id from tenants where tenant_key = ${TENANT_KEY} limit 1`;
   if (!tenant?.id) throw new Error(`Tenant not found: ${TENANT_KEY}`);
 
   const rows = await sql`
@@ -90,25 +91,37 @@ try {
       .trim()
       .toLowerCase()
       .replace(/[\s-]+/g, "_");
-    const daysAway = r.days_away ?? (Number.isFinite(Number(payload.daysAway)) ? Number(payload.daysAway) : null);
-    const claimNo = r.case_number || r.claim_summary?.claimNumber || payload.claim?.claimNumber || payload.caseNumber || "";
+    const daysAway =
+      r.days_away ?? (Number.isFinite(Number(payload.daysAway)) ? Number(payload.daysAway) : null);
+    const claimNo =
+      r.case_number ||
+      r.claim_summary?.claimNumber ||
+      payload.claim?.claimNumber ||
+      payload.caseNumber ||
+      "";
     const reportedRaw =
       String(intake.incidentDate || intake.reportedDate || "") ||
       (r.reported_at ? new Date(r.reported_at).toISOString() : "");
     const base = (reportedRaw || new Date(r.created_at).toISOString()).slice(0, 10);
-    const next = payload.nextAction && typeof payload.nextAction === "object" ? payload.nextAction : null;
+    const next =
+      payload.nextAction && typeof payload.nextAction === "object" ? payload.nextAction : null;
 
     const fired = [];
     const add = (key, due) => fired.push({ rule: key, due, overdue: due < today });
     if (next && (next.label || next.dueDate)) {
-      add(`source-next: ${next.label || "Follow-up required"}`, String(next.dueDate || "").slice(0, 10) || addDays(base, 7));
+      add(
+        `source-next: ${next.label || "Follow-up required"}`,
+        String(next.dueDate || "").slice(0, 10) || addDays(base, 7),
+      );
     } else {
       if (!claimNo) add("claim-number-missing", addDays(base, 3));
-      if (status === "RESTRICTED" || severity === "restricted") add("rtw (status/severity restricted)", addDays(base, 14));
+      if (status === "RESTRICTED" || severity === "restricted")
+        add("rtw (status/severity restricted)", addDays(base, 14));
       if (status === "LOST_TIME" || severity === "lost_time" || (daysAway != null && daysAway > 0))
         add("lost-time", addDays(base, 7));
     }
-    for (const f of fired) if (f.overdue) ruleCounts[f.rule.split(":")[0]] = (ruleCounts[f.rule.split(":")[0]] || 0) + 1;
+    for (const f of fired)
+      if (f.overdue) ruleCounts[f.rule.split(":")[0]] = (ruleCounts[f.rule.split(":")[0]] || 0) + 1;
     out.push({
       worker: r.worker_name,
       status,

@@ -10,9 +10,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { awsJson, awsText, runPlatformApiOneOff } from "./ecs-oneoff.mjs";
 
-const EVID_DIR = path.resolve(
-  "docs/program/industrial-migration/ind-11/evidence/p2/04-parity",
-);
+const EVID_DIR = path.resolve("docs/program/industrial-migration/ind-11/evidence/p2/04-parity");
 const APPROVAL = path.join(EVID_DIR, "APPROVE-PRODUCERS-PHASE4-LOAD.md");
 const LOADER_LOCAL = path.resolve("scripts/ind11b-p2-phase4-rls-ecs-loader.mjs");
 const BUCKET =
@@ -122,7 +120,10 @@ const evidence = {
   logExcerpt: String(logs).slice(0, 40000),
 };
 fs.mkdirSync(EVID_DIR, { recursive: true });
-fs.writeFileSync(path.join(EVID_DIR, "rls-isolation-result.json"), `${JSON.stringify(evidence, null, 2)}\n`);
+fs.writeFileSync(
+  path.join(EVID_DIR, "rls-isolation-result.json"),
+  `${JSON.stringify(evidence, null, 2)}\n`,
+);
 fs.writeFileSync(
   path.join(EVID_DIR, "rls-isolation-result-latest.json"),
   `${JSON.stringify(evidence, null, 2)}\n`,

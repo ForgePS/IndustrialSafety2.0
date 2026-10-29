@@ -99,12 +99,16 @@ try {
     const signature = Object.keys(payload).sort().slice(0, 12).join(",") || "(empty)";
     keySignatures.set(signature, (keySignatures.get(signature) || 0) + 1);
 
-    const emp = String(row.employee_number ?? "").trim().toLowerCase();
+    const emp = String(row.employee_number ?? "")
+      .trim()
+      .toLowerCase();
     if (emp) {
       if (!byEmp.has(emp)) byEmp.set(emp, []);
       byEmp.get(emp).push(row);
     }
-    const name = String(row.display_name ?? "").trim().toLowerCase();
+    const name = String(row.display_name ?? "")
+      .trim()
+      .toLowerCase();
     if (name) {
       if (!byName.has(name)) byName.set(name, []);
       byName.get(name).push(row);

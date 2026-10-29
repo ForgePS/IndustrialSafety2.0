@@ -1,7 +1,4 @@
-import {
-  normalizeLotoImageArrows,
-  type LotoImageArrow,
-} from "@/lib/loto-image-annotations";
+import { normalizeLotoImageArrows, type LotoImageArrow } from "@/lib/loto-image-annotations";
 import { isDisplayableLotoImageUrl } from "@/lib/loto-clipboard-images";
 
 export type { LotoImageArrow } from "@/lib/loto-image-annotations";
@@ -49,7 +46,8 @@ export function parseLotoEnergyLetter(
 ): LotoEnergyLetter | null {
   const code = typeof descriptionCode === "string" ? descriptionCode.trim().toUpperCase() : "";
   if (code) {
-    const fromCode = code.match(/^(CG)(?=[\s\-_0-9]|$)/) || code.match(/^([EPHWGMT]|C)(?=[\s\-_0-9]|$)/);
+    const fromCode =
+      code.match(/^(CG)(?=[\s\-_0-9]|$)/) || code.match(/^([EPHWGMT]|C)(?=[\s\-_0-9]|$)/);
     if (fromCode?.[1] === "CG") return "CG";
     if (fromCode?.[1]) return fromCode[1] as LotoEnergyLetter;
   }
@@ -154,7 +152,10 @@ export function lotoStatusLabel(status: string): string {
   if (key === "NEEDS_CORRECTION") return "Needs correction";
   if (key === "APPROVED") return "Active";
   if (!key) return "Unknown";
-  return key.replaceAll("_", " ").toLowerCase().replace(/^\w/, (c) => c.toUpperCase());
+  return key
+    .replaceAll("_", " ")
+    .toLowerCase()
+    .replace(/^\w/, (c) => c.toUpperCase());
 }
 
 export function lotoPhaseBadgeClass(phase: string): string {
@@ -231,9 +232,7 @@ export function lotoProcedureEquipmentName(row: Record<string, unknown>): string
  */
 export function lotoProcedureSiteName(row: Record<string, unknown>): string {
   const type =
-    text(row.equipmentTypeName) ||
-    text(row.equipmentTypeNameSnapshot) ||
-    text(row.equipmentType);
+    text(row.equipmentTypeName) || text(row.equipmentTypeNameSnapshot) || text(row.equipmentType);
   const candidates = [
     text(row.siteName),
     text(row.siteNameSnapshot),
@@ -254,9 +253,7 @@ export function lotoProcedureSiteName(row: Record<string, unknown>): string {
  */
 export function lotoProcedureAreaName(row: Record<string, unknown>): string {
   const type =
-    text(row.equipmentTypeName) ||
-    text(row.equipmentTypeNameSnapshot) ||
-    text(row.equipmentType);
+    text(row.equipmentTypeName) || text(row.equipmentTypeNameSnapshot) || text(row.equipmentType);
   const candidates = [
     text(row.areaName),
     text(row.areaNameSnapshot),
@@ -362,9 +359,9 @@ export function emptyLotoPhotoForm(partial?: Partial<LotoPhotoForm>): LotoPhotoF
 function photoHasContent(photo: LotoPhotoForm): boolean {
   return Boolean(
     photo.imageUrl.trim() ||
-      photo.previewUrl.trim() ||
-      photo.fileName.trim() ||
-      photo.annotations.length > 0,
+    photo.previewUrl.trim() ||
+    photo.fileName.trim() ||
+    photo.annotations.length > 0,
   );
 }
 
@@ -471,17 +468,12 @@ export function syncEquipmentLegacyPhotoFields(
     equipmentImagePreviewUrl: primary?.previewUrl ?? "",
     equipmentImageAnnotations: primary?.annotations ?? [],
     equipmentImageCaption:
-      form.equipmentImageCaption.trim() ||
-      primary?.caption ||
-      primary?.fileName ||
-      "",
+      form.equipmentImageCaption.trim() || primary?.caption || primary?.fileName || "",
   };
 }
 
 /** Serialize photo forms for create/update payloads (keeps legacy single fields separately). */
-export function lotoPhotoFormsToPayload(
-  photos: LotoPhotoForm[],
-): Array<Record<string, unknown>> {
+export function lotoPhotoFormsToPayload(photos: LotoPhotoForm[]): Array<Record<string, unknown>> {
   return photos
     .filter(photoHasContent)
     .slice(0, LOTO_MAX_PHOTOS_PER_SLOT)
@@ -499,12 +491,15 @@ export type LotoPhotoDisplay = {
   caption: string;
 };
 
-export function lotoPhotosToDisplay(raw: unknown, legacy?: {
-  imageUrl?: unknown;
-  fileName?: unknown;
-  annotations?: unknown;
-  caption?: unknown;
-}): LotoPhotoDisplay[] {
+export function lotoPhotosToDisplay(
+  raw: unknown,
+  legacy?: {
+    imageUrl?: unknown;
+    fileName?: unknown;
+    annotations?: unknown;
+    caption?: unknown;
+  },
+): LotoPhotoDisplay[] {
   return normalizeLotoPhotoForms(raw, legacy)
     .filter((photo) => photo.imageUrl.trim())
     .map((photo) => ({
@@ -909,15 +904,15 @@ function buildPrintedDescription(step: LotoStepForm): string {
 }
 
 /** Map API procedure detail into the shared create/edit form. */
-export function lotoProcedureFormFromDetail(detail: Record<string, unknown>): LotoProcedureFormState {
+export function lotoProcedureFormFromDetail(
+  detail: Record<string, unknown>,
+): LotoProcedureFormState {
   const procedure = asRecord(detail.procedure ?? detail);
   const equipmentName = lotoProcedureEquipmentName(procedure);
   const areaName = lotoProcedureAreaName(procedure);
   const rawSteps = Array.isArray(detail.steps) ? detail.steps : [];
   const payloadSteps = Array.isArray(procedure.steps) ? procedure.steps : [];
-  const isolationSteps = rawSteps
-    .map((raw) => asRecord(raw))
-    .filter((row) => !row.isVerification);
+  const isolationSteps = rawSteps.map((raw) => asRecord(raw)).filter((row) => !row.isVerification);
 
   let steps: LotoStepForm[] = isolationSteps.map((row) => {
     const payload = asRecord(row.sourcePayload);
@@ -931,18 +926,14 @@ export function lotoProcedureFormFromDetail(detail: Record<string, unknown>): Lo
       );
     return {
       energySourceName:
-        text(payload.energySourceName) ||
-        text(payload.energyType) ||
-        text(row.energyType) ||
-        "",
+        text(payload.energySourceName) || text(payload.energyType) || text(row.energyType) || "",
       energyMagnitude:
         text(payload.energyMagnitude) || text(payload.magnitude) || text(row.magnitude),
       isolationLocationText:
         text(payload.isolationLocationText) ||
         text(payload.locationDescription) ||
         text(row.locationDescription),
-      lockoutDeviceName:
-        text(payload.lockoutDeviceName) || text(payload.label) || text(row.label),
+      lockoutDeviceName: text(payload.lockoutDeviceName) || text(payload.label) || text(row.label),
       isolationAction:
         text(payload.isolationAction) || text(payload.isolationMethod) || text(row.isolationMethod),
       verificationMethodName: verifyRow
@@ -974,8 +965,7 @@ export function lotoProcedureFormFromDetail(detail: Record<string, unknown>): Lo
       return {
         energySourceName: text(row.energySourceName) || text(row.energyType),
         energyMagnitude: text(row.energyMagnitude) || text(row.magnitude),
-        isolationLocationText:
-          text(row.isolationLocationText) || text(row.locationDescription),
+        isolationLocationText: text(row.isolationLocationText) || text(row.locationDescription),
         lockoutDeviceName: text(row.lockoutDeviceName) || text(row.label),
         isolationAction: text(row.isolationAction) || text(row.isolationMethod),
         verificationMethodName: text(row.verificationMethodName),
@@ -1007,10 +997,8 @@ export function lotoProcedureFormFromDetail(detail: Record<string, unknown>): Lo
     equipmentName: equipmentName === "—" ? "" : equipmentName,
     equipmentId: text(procedure.equipmentId) || text(detail.equipmentId),
     equipmentExternalId:
-      lotoProcedureEquipmentExternalId(procedure) ||
-      lotoProcedureEquipmentExternalId(detail),
-    equipmentTypeName:
-      lotoProcedureEquipmentType(procedure) || lotoProcedureEquipmentType(detail),
+      lotoProcedureEquipmentExternalId(procedure) || lotoProcedureEquipmentExternalId(detail),
+    equipmentTypeName: lotoProcedureEquipmentType(procedure) || lotoProcedureEquipmentType(detail),
     siteId: text(procedure.siteId) || text(detail.siteId),
     siteName:
       lotoProcedureSiteName(procedure) !== "—"
@@ -1048,9 +1036,8 @@ export function lotoProcedureFormFromDetail(detail: Record<string, unknown>): Lo
     precautions: notesToPrecautions(detail.notes ?? procedure.notes),
     steps,
     restorationLabel:
-      lotoNormalizeRestorationChecks(
-        detail.restorationChecks ?? procedure.restorationChecks,
-      )[0]?.label || "Guards replaced / personnel clear",
+      lotoNormalizeRestorationChecks(detail.restorationChecks ?? procedure.restorationChecks)[0]
+        ?.label || "Guards replaced / personnel clear",
     ...(() => {
       const sourcePayload = asRecord(procedure.source_payload ?? procedure.sourcePayload);
       const detailPayload = asRecord(detail.source_payload ?? detail.sourcePayload);
@@ -1066,8 +1053,7 @@ export function lotoProcedureFormFromDetail(detail: Record<string, unknown>): Lo
         text(detail.equipmentImageCaption) ||
         text(sourcePayload.equipmentImageCaption);
       const equipmentImageFileName =
-        text(procedure.equipmentImageFileName) ||
-        text(sourcePayload.equipmentImageFileName);
+        text(procedure.equipmentImageFileName) || text(sourcePayload.equipmentImageFileName);
       const equipmentImageAnnotations = normalizeLotoImageArrows(
         procedure.equipmentImageAnnotations ??
           detail.equipmentImageAnnotations ??
@@ -1101,7 +1087,9 @@ export function lotoProcedureFormFromDetail(detail: Record<string, unknown>): Lo
     printScopeStatement:
       plainText(procedure.printScopeStatement) ||
       plainText(detail.printScopeStatement) ||
-      plainText(asRecord(procedure.source_payload ?? procedure.sourcePayload).printScopeStatement) ||
+      plainText(
+        asRecord(procedure.source_payload ?? procedure.sourcePayload).printScopeStatement,
+      ) ||
       LOTO_DEFAULT_PRINT_SCOPE,
     printEnforcement:
       plainText(procedure.printEnforcement) ||
@@ -1124,7 +1112,9 @@ export function lotoProcedureFormFromDetail(detail: Record<string, unknown>): Lo
 }
 
 /** Build create/update API payload from the shared form. */
-export function lotoProcedurePayloadFromForm(form: LotoProcedureFormState): Record<string, unknown> {
+export function lotoProcedurePayloadFromForm(
+  form: LotoProcedureFormState,
+): Record<string, unknown> {
   const equipmentName = form.equipmentName.trim();
   const title = form.title.trim() || (equipmentName ? `${equipmentName} LOTO` : "");
   const today = new Date().toISOString().slice(0, 10);
@@ -1188,7 +1178,14 @@ export function lotoProcedurePayloadFromForm(form: LotoProcedureFormState): Reco
       };
     }),
     restorationChecks: form.restorationLabel.trim()
-      ? [{ sortOrder: 0, checkKey: "clearance", label: form.restorationLabel.trim(), completed: false }]
+      ? [
+          {
+            sortOrder: 0,
+            checkKey: "clearance",
+            label: form.restorationLabel.trim(),
+            completed: false,
+          },
+        ]
       : [],
     ...(() => {
       const synced = syncEquipmentLegacyPhotoFields(form);
@@ -1324,12 +1321,7 @@ export function lotoProcedureEquipmentType(row: Record<string, unknown>): string
 }
 
 export function lotoProcedureEquipmentExternalId(row: Record<string, unknown>): string {
-  return (
-    text(row.equipmentExternalId) ||
-    text(row.equipmentNumber) ||
-    text(row.assetTag) ||
-    ""
-  );
+  return text(row.equipmentExternalId) || text(row.equipmentNumber) || text(row.assetTag) || "";
 }
 
 export function lotoNormalizeNotes(raw: unknown): LotoNoteItem[] {
@@ -1345,7 +1337,11 @@ export function lotoNormalizeNotes(raw: unknown): LotoNoteItem[] {
     }
     const row = asRecord(item);
     const body =
-      text(row.text) || text(row.body) || text(row.note) || text(row.content) || text(row.shortName);
+      text(row.text) ||
+      text(row.body) ||
+      text(row.note) ||
+      text(row.content) ||
+      text(row.shortName);
     if (!body) continue;
     notes.push({
       id: text(row.id) || `note-${i}`,
@@ -1412,7 +1408,8 @@ function mapEnergyRows(rows: unknown[]): LotoEnergyItem[] {
     const description = text(item.description) || text(item.energyNotes);
     return {
       id: text(item.id) || `energy-${i}`,
-      energyType: text(item.energyType) || text(item.type) || text(item.energySourceName) || "Energy",
+      energyType:
+        text(item.energyType) || text(item.type) || text(item.energySourceName) || "Energy",
       magnitude: magnitude || (!magnitude && description ? description : ""),
       description: magnitude ? description : "",
     };
@@ -1424,7 +1421,11 @@ function mapIsolationRows(rows: unknown[]): LotoIsolationItem[] {
     const item = asRecord(raw);
     return {
       id: text(item.id) || `iso-${i}`,
-      label: text(item.label) || text(item.name) || text(item.lockoutDeviceName) || `Isolation point ${i + 1}`,
+      label:
+        text(item.label) ||
+        text(item.name) ||
+        text(item.lockoutDeviceName) ||
+        `Isolation point ${i + 1}`,
       locationDescription:
         text(item.locationDescription) ||
         text(item.isolationLocationText) ||
@@ -1497,7 +1498,11 @@ export function deriveProcedureItemsFromPayloadSteps(rawSteps: unknown[]): LotoL
   for (const [i, raw] of rawSteps.entries()) {
     const row = asRecord(raw);
     // Already-normalized control steps (from child tables) — keep as-is.
-    if (text(row.instruction) && (text(row.stepPhase) || row.isVerification != null) && !text(row.energySourceName)) {
+    if (
+      text(row.instruction) &&
+      (text(row.stepPhase) || row.isVerification != null) &&
+      !text(row.energySourceName)
+    ) {
       const nested = asRecord(row.sourcePayload ?? row.source_payload);
       steps.push({
         id: text(row.id) || `step-${i}`,
@@ -1527,14 +1532,21 @@ export function deriveProcedureItemsFromPayloadSteps(rawSteps: unknown[]): LotoL
     }
     const customDescription = text(row.customDescription) || text(row.customText);
     const energyType =
-      text(row.energySourceName) || text(row.energyType) || text(row.energySource) || text(row.descriptionCode);
+      text(row.energySourceName) ||
+      text(row.energyType) ||
+      text(row.energySource) ||
+      text(row.descriptionCode);
     const magnitude = text(row.energyMagnitude) || text(row.magnitude) || text(row.descriptionCode);
     const description = text(row.energyNotes) || customDescription || text(row.description);
     const location =
       text(row.isolationLocationText) || text(row.locationDescription) || text(row.location);
     const method = text(row.isolationAction) || text(row.isolationMethod) || text(row.method);
     const label =
-      text(row.lockoutDeviceName) || text(row.label) || text(row.deviceName) || energyType || `Point ${i + 1}`;
+      text(row.lockoutDeviceName) ||
+      text(row.label) ||
+      text(row.deviceName) ||
+      energyType ||
+      `Point ${i + 1}`;
     const printed = text(row.printedProcedureDescription) || text(row.printedDescription);
     const instruction =
       text(row.instruction) ||
@@ -1625,10 +1637,7 @@ function mergeStepPhotosFromPayload(
 
   return steps.map((step, index) => {
     if (step.stepImages.some((p) => isDisplayableLotoImageUrl(p.imageUrl))) return step;
-    const photos =
-      byNumber.get(step.stepNumber) ??
-      byNumber.get(-(index + 1)) ??
-      null;
+    const photos = byNumber.get(step.stepNumber) ?? byNumber.get(-(index + 1)) ?? null;
     if (!photos) return step;
     return {
       ...step,
@@ -1678,16 +1687,12 @@ export function extractProcedureDisplay(
 
   return {
     equipmentName: lotoProcedureEquipmentName(procedure) || lotoProcedureEquipmentName(source),
-    equipmentTypeName:
-      lotoProcedureEquipmentType(procedure) || lotoProcedureEquipmentType(source),
+    equipmentTypeName: lotoProcedureEquipmentType(procedure) || lotoProcedureEquipmentType(source),
     equipmentExternalId:
-      lotoProcedureEquipmentExternalId(procedure) ||
-      lotoProcedureEquipmentExternalId(source),
+      lotoProcedureEquipmentExternalId(procedure) || lotoProcedureEquipmentExternalId(source),
     siteName: lotoProcedureSiteName(procedure) || lotoProcedureSiteName(source),
-    departmentName:
-      lotoProcedureDepartmentName(procedure) || lotoProcedureDepartmentName(source),
-    divisionName:
-      lotoProcedureDivisionName(procedure) || lotoProcedureDivisionName(source),
+    departmentName: lotoProcedureDepartmentName(procedure) || lotoProcedureDepartmentName(source),
+    divisionName: lotoProcedureDivisionName(procedure) || lotoProcedureDivisionName(source),
     areaName: lotoProcedureAreaName(procedure) || lotoProcedureAreaName(source),
     procedureNumber: text(procedure.procedureNumber) || text(source.procedureNumber),
     revision: text(procedure.revision) || text(source.revision) || "1",
@@ -1714,12 +1719,9 @@ export function extractProcedureDisplay(
             text(procedure.equipmentImageStorageKey) ||
             text(source.equipmentImageUrl) ||
             text(source.equipmentImageStorageKey),
-          fileName:
-            text(procedure.equipmentImageFileName) || text(source.equipmentImageFileName),
-          annotations:
-            procedure.equipmentImageAnnotations ?? source.equipmentImageAnnotations,
-          caption:
-            text(procedure.equipmentImageCaption) || text(source.equipmentImageCaption),
+          fileName: text(procedure.equipmentImageFileName) || text(source.equipmentImageFileName),
+          annotations: procedure.equipmentImageAnnotations ?? source.equipmentImageAnnotations,
+          caption: text(procedure.equipmentImageCaption) || text(source.equipmentImageCaption),
         },
       );
       const primary = equipmentImages[0];
@@ -1743,7 +1745,9 @@ export function extractProcedureDisplay(
       plainText(procedure.reviewReturnedAt) ||
       plainText(source.reviewReturnedAt),
     reviewReturnedByName:
-      plainText(asRecord(procedure.source_payload ?? procedure.sourcePayload).reviewReturnedByName) ||
+      plainText(
+        asRecord(procedure.source_payload ?? procedure.sourcePayload).reviewReturnedByName,
+      ) ||
       plainText(procedure.reviewReturnedByName) ||
       plainText(source.reviewReturnedByName),
     notes: lotoNormalizeNotes(source.notes ?? procedure.notes),
@@ -1762,7 +1766,9 @@ export function extractProcedureDisplay(
  * Pull energy sources, isolation points, and control steps off a lockout row.
  * Prefers explicit arrays (issued from a procedure), then Firebase `details`.
  */
-export function extractLockoutItems(row: Record<string, unknown> | null | undefined): LotoLockoutItems {
+export function extractLockoutItems(
+  row: Record<string, unknown> | null | undefined,
+): LotoLockoutItems {
   const source = row ?? {};
   const details = asRecord(source.details);
 
@@ -1773,7 +1779,10 @@ export function extractLockoutItems(row: Record<string, unknown> | null | undefi
     const listed = text(details.energySources || details.energyTypes);
     const primary = text(details.primaryEnergyType);
     const types = listed
-      ? listed.split(/[,/|]/).map((part) => part.trim()).filter(Boolean)
+      ? listed
+          .split(/[,/|]/)
+          .map((part) => part.trim())
+          .filter(Boolean)
       : primary
         ? [primary]
         : [];
@@ -1796,7 +1805,10 @@ export function extractLockoutItems(row: Record<string, unknown> | null | undefi
         .map((line) => line.trim())
         .filter(Boolean)
         .map((line, i) => {
-          const parts = line.split("|").map((part) => part.trim()).filter(Boolean);
+          const parts = line
+            .split("|")
+            .map((part) => part.trim())
+            .filter(Boolean);
           return {
             id: `iso-${i}`,
             label: parts[0] || `Isolation point ${i + 1}`,
@@ -1874,9 +1886,7 @@ export function extractLockoutItems(row: Record<string, unknown> | null | undefi
 
 export function lockoutAuthorizedEmployee(row: Record<string, unknown>): string {
   return (
-    text(row.authorizedEmployee) ||
-    text(row.workerName) ||
-    text(asRecord(row.details).preparedBy)
+    text(row.authorizedEmployee) || text(row.workerName) || text(asRecord(row.details).preparedBy)
   );
 }
 

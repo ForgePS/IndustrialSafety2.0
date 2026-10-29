@@ -91,7 +91,7 @@ function usePrefillFields(
       ...current,
       [key]: {
         value,
-        prefillSource: confirmed ? "MANUAL" : current[key]?.prefillSource ?? "MANUAL",
+        prefillSource: confirmed ? "MANUAL" : (current[key]?.prefillSource ?? "MANUAL"),
         userConfirmed: confirmed,
       },
     }));
@@ -165,7 +165,9 @@ export function OverviewAssignmentSection({
       );
       onIncidentChange(result.data);
       setStation(option);
-      const candidates = await getPrefillCandidates(tenantId, incident.id, { stationId: option.id });
+      const candidates = await getPrefillCandidates(tenantId, incident.id, {
+        stationId: option.id,
+      });
       await applyCandidates(candidates, { response_district: "", station_timezone: "" });
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to assign station");
@@ -232,7 +234,11 @@ export function OverviewAssignmentSection({
 
   return (
     <div className={styles.form}>
-      {error ? <p className={styles.error} role="alert">{error}</p> : null}
+      {error ? (
+        <p className={styles.error} role="alert">
+          {error}
+        </p>
+      ) : null}
       {busy ? <p className={styles.fieldHelp}>Updating assignment…</p> : null}
       <SearchableSelect
         label="Station"
@@ -289,9 +295,9 @@ export function LocationAssignmentSection({
   onIncidentChange: (incident: IncidentDetail) => void;
 }) {
   const [occupancy, setOccupancy] = useState<LookupRow | null>(null);
-  const [occupancyDetail, setOccupancyDetail] = useState<Awaited<ReturnType<typeof getOccupancyDetail>> | null>(
-    null,
-  );
+  const [occupancyDetail, setOccupancyDetail] = useState<Awaited<
+    ReturnType<typeof getOccupancyDetail>
+  > | null>(null);
   const [prefillSummary, setPrefillSummary] = useState<PrefillCandidate[]>([]);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -339,7 +345,11 @@ export function LocationAssignmentSection({
 
   return (
     <div className={styles.form}>
-      {error ? <p className={styles.error} role="alert">{error}</p> : null}
+      {error ? (
+        <p className={styles.error} role="alert">
+          {error}
+        </p>
+      ) : null}
       {busy ? <p className={styles.fieldHelp}>Loading occupancy…</p> : null}
       <SearchableSelect
         label="Occupancy"
@@ -368,7 +378,8 @@ export function LocationAssignmentSection({
       <div className={styles.formRow}>
         <label htmlFor="location-name">Location name</label>
         <div className={styles.prefillFieldRow}>
-          {fields.location_name?.prefillSource && fields.location_name.prefillSource !== "MANUAL" ? (
+          {fields.location_name?.prefillSource &&
+          fields.location_name.prefillSource !== "MANUAL" ? (
             <PrefillBadge source={fields.location_name.prefillSource} />
           ) : null}
           <input
@@ -381,7 +392,8 @@ export function LocationAssignmentSection({
       <div className={styles.formRow}>
         <label htmlFor="address-line1">Address line 1</label>
         <div className={styles.prefillFieldRow}>
-          {fields.address_line1?.prefillSource && fields.address_line1.prefillSource !== "MANUAL" ? (
+          {fields.address_line1?.prefillSource &&
+          fields.address_line1.prefillSource !== "MANUAL" ? (
             <PrefillBadge source={fields.address_line1.prefillSource} />
           ) : null}
           <input
@@ -412,7 +424,9 @@ export function UnitsPersonnelSection({
   const [units, setUnits] = useState<IncidentUnitAssignment[]>([]);
   const [personnel, setPersonnel] = useState<IncidentPersonnelAssignment[]>([]);
   const [selectedUnit, setSelectedUnit] = useState<LookupRow | null>(null);
-  const [unitDetail, setUnitDetail] = useState<Awaited<ReturnType<typeof getUnitDetail>> | null>(null);
+  const [unitDetail, setUnitDetail] = useState<Awaited<ReturnType<typeof getUnitDetail>> | null>(
+    null,
+  );
   const [apparatus, setApparatus] = useState<ApparatusDetail | null>(null);
   const [rosterRows, setRosterRows] = useState<LookupRow[]>([]);
   const [selectedPersonnelId, setSelectedPersonnelId] = useState<string>("");
@@ -570,7 +584,11 @@ export function UnitsPersonnelSection({
 
   return (
     <div className={styles.form}>
-      {error ? <p className={styles.error} role="alert">{error}</p> : null}
+      {error ? (
+        <p className={styles.error} role="alert">
+          {error}
+        </p>
+      ) : null}
       {!stationId ? (
         <p className={styles.warning}>Select a station on Overview to filter available units.</p>
       ) : null}
@@ -628,7 +646,9 @@ export function UnitsPersonnelSection({
 
       <h3>Personnel from daily roster</h3>
       {!stationId || !shiftId ? (
-        <p className={styles.warning}>Select station and shift on Overview to load the daily roster.</p>
+        <p className={styles.warning}>
+          Select station and shift on Overview to load the daily roster.
+        </p>
       ) : rosterRows.length === 0 ? (
         <p className={styles.muted}>No roster entries for {rosterDate}.</p>
       ) : (

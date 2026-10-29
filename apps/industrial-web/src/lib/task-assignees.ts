@@ -43,10 +43,7 @@ export function isSafetyOrEhsOrgAssignment(
  * catalog name is Safety/EHS (covers list rows that only store the FK).
  */
 export function isSafetyOrEhsStaffPerson(
-  person: Pick<
-    TaskAssigneePerson,
-    "departmentName" | "divisionName" | "jobTitle" | "departmentId"
-  >,
+  person: Pick<TaskAssigneePerson, "departmentName" | "divisionName" | "jobTitle" | "departmentId">,
   ehsDepartmentIds?: ReadonlySet<string>,
 ): boolean {
   if (isSafetyOrEhsOrgAssignment(person)) return true;
@@ -84,7 +81,6 @@ export function filterTaskAssigneePersonnel<T extends TaskAssigneePerson>(
     [...(opts.alwaysIncludeIds ?? [])].map((id) => String(id ?? "").trim()).filter(Boolean),
   );
   return people.filter(
-    (person) =>
-      keep.has(person.id) || isSafetyOrEhsStaffPerson(person, opts.ehsDepartmentIds),
+    (person) => keep.has(person.id) || isSafetyOrEhsStaffPerson(person, opts.ehsDepartmentIds),
   );
 }

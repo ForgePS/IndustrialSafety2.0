@@ -23,7 +23,10 @@ export function isTrainingMaterialTopic(value: string): value is TrainingMateria
   return TOPIC_SET.has(value);
 }
 
-export function normalizeTrainingMaterialTopic(raw: unknown, fallback: TrainingMaterialTopic = "GENERAL"): string {
+export function normalizeTrainingMaterialTopic(
+  raw: unknown,
+  fallback: TrainingMaterialTopic = "GENERAL",
+): string {
   const value = String(raw ?? fallback)
     .trim()
     .toUpperCase()

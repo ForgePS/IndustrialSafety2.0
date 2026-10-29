@@ -44,14 +44,22 @@ function bootstrapIdentity(): {
 }
 
 export async function runBootstrapAdmin(): Promise<void> {
-  const { cognitoSub: COGNITO_SUB, email: EMAIL, firstName: FIRST_NAME, lastName: LAST_NAME } =
-    bootstrapIdentity();
+  const {
+    cognitoSub: COGNITO_SUB,
+    email: EMAIL,
+    firstName: FIRST_NAME,
+    lastName: LAST_NAME,
+  } = bootstrapIdentity();
   const env = await loadEnvironmentAsync({ ...LOCAL_PLACEHOLDER_ENV, ...process.env });
   const client = postgres(env.DATABASE_URL, { max: 1 });
   const db = drizzle(client, { schema });
   const now = new Date();
 
-  let [tenant] = await db.select().from(tenants).where(eq(tenants.tenantKey, "forge-platform")).limit(1);
+  let [tenant] = await db
+    .select()
+    .from(tenants)
+    .where(eq(tenants.tenantKey, "forge-platform"))
+    .limit(1);
   if (!tenant) {
     const tenantId = createId();
     await db.insert(tenants).values({
@@ -206,7 +214,9 @@ export async function runBootstrapAdmin(): Promise<void> {
         .onConflictDoNothing();
     }
     // Ensure creator permissions exist even if template rows are incomplete.
-    const allPerms = await db.select({ id: permissions.id, code: permissions.code }).from(permissions);
+    const allPerms = await db
+      .select({ id: permissions.id, code: permissions.code })
+      .from(permissions);
     for (const perm of allPerms) {
       if (perm.code.startsWith("platform.")) {
         await db

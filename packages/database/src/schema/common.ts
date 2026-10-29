@@ -1,9 +1,13 @@
 import { integer, timestamp } from "drizzle-orm/pg-core";
 
 /** Shared timestamptz columns. App may set explicitly; DB default is now(). */
-export const createdAtColumn = timestamp("created_at", { withTimezone: true }).defaultNow().notNull();
+export const createdAtColumn = timestamp("created_at", { withTimezone: true })
+  .defaultNow()
+  .notNull();
 
-export const updatedAtColumn = timestamp("updated_at", { withTimezone: true }).defaultNow().notNull();
+export const updatedAtColumn = timestamp("updated_at", { withTimezone: true })
+  .defaultNow()
+  .notNull();
 
 /**
  * Optimistic concurrency counter (ADR-023). Incremented in the same UPDATE that

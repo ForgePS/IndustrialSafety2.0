@@ -39,7 +39,9 @@ describe("rms-web accessibility", () => {
     );
     expect(screen.getByRole("combobox", { name: /station/i })).toBeTruthy();
     const results = await axe(container);
-    expect(results.violations.filter((v) => v.impact === "critical" || v.impact === "serious")).toEqual([]);
+    expect(
+      results.violations.filter((v) => v.impact === "critical" || v.impact === "serious"),
+    ).toEqual([]);
   });
 
   it("conflict dialog has titled modal semantics", async () => {
@@ -54,7 +56,9 @@ describe("rms-web accessibility", () => {
     );
     expect(screen.getByRole("dialog", { name: /edit conflict/i })).toBeTruthy();
     const results = await axe(container);
-    expect(results.violations.filter((v) => v.impact === "critical" || v.impact === "serious")).toEqual([]);
+    expect(
+      results.violations.filter((v) => v.impact === "critical" || v.impact === "serious"),
+    ).toEqual([]);
   });
 
   it("incident header and section nav are accessible", async () => {
@@ -75,7 +79,9 @@ describe("rms-web accessibility", () => {
     );
     expect(screen.getByRole("navigation", { name: /incident sections/i })).toBeTruthy();
     const results = await axe(container);
-    expect(results.violations.filter((v) => v.impact === "critical" || v.impact === "serious")).toEqual([]);
+    expect(
+      results.violations.filter((v) => v.impact === "critical" || v.impact === "serious"),
+    ).toEqual([]);
   });
 
   it("autosave indicator announces save states", () => {

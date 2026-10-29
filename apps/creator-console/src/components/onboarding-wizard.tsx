@@ -13,11 +13,7 @@ import {
   useToast,
 } from "@forge/ui";
 import { catalogModulesForSeed } from "@forge/contracts";
-import {
-  createImportApi,
-  createLookupViaTransport,
-  ImportCenterApp,
-} from "@forge/import-center";
+import { createImportApi, createLookupViaTransport, ImportCenterApp } from "@forge/import-center";
 import {
   apiGet,
   apiSend,
@@ -165,11 +161,7 @@ function emptyLookup(name = ""): LookupDraft {
   return { name, description: "", active: true };
 }
 
-export function OnboardingWizard({
-  initialSessionId,
-}: {
-  initialSessionId?: string | undefined;
-}) {
+export function OnboardingWizard({ initialSessionId }: { initialSessionId?: string | undefined }) {
   const toast = useToast();
   const { hasPermission } = useAuth();
   const [view, setView] = useState<OnboardingSessionView | null>(null);
@@ -183,7 +175,8 @@ export function OnboardingWizard({
   // Start form
   const [displayName, setDisplayName] = useState("");
   const [legalName, setLegalName] = useState("");
-  const [customerType, setCustomerType] = useState<(typeof COMPANY_TYPES)[number]["value"]>("INDUSTRIAL");
+  const [customerType, setCustomerType] =
+    useState<(typeof COMPANY_TYPES)[number]["value"]>("INDUSTRIAL");
   const [timezone, setTimezone] = useState("America/Chicago");
   const [slug, setSlug] = useState("");
   const [slugTouched, setSlugTouched] = useState(false);
@@ -317,7 +310,9 @@ export function OnboardingWizard({
         const result = await onboardingGetSession(initialSessionId);
         applyView(result.data, result.etag);
       } catch (err) {
-        setError(humanizeForgeError(err instanceof Error ? err.message : "Could not load onboarding."));
+        setError(
+          humanizeForgeError(err instanceof Error ? err.message : "Could not load onboarding."),
+        );
       } finally {
         setBusy(false);
       }
@@ -348,8 +343,8 @@ export function OnboardingWizard({
     const roles = view?.template?.roles ?? [];
     return roles.map((role) => {
       const friendly =
-        BUSINESS_ROLES.find((item) => item.match.test(role.code) || item.match.test(role.name))?.label ??
-        role.name;
+        BUSINESS_ROLES.find((item) => item.match.test(role.code) || item.match.test(role.name))
+          ?.label ?? role.name;
       return { code: role.code, label: friendly };
     });
   }, [view]);
@@ -387,7 +382,9 @@ export function OnboardingWizard({
       toast.push("Company draft created", "success");
     } catch (err) {
       setSaveState("error");
-      setError(humanizeForgeError(err instanceof Error ? err.message : "Could not create company."));
+      setError(
+        humanizeForgeError(err instanceof Error ? err.message : "Could not create company."),
+      );
     } finally {
       setBusy(false);
     }
@@ -408,7 +405,9 @@ export function OnboardingWizard({
       toast.push("Progress saved", "success");
     } catch (err) {
       setSaveState("error");
-      setError(humanizeForgeError(err instanceof Error ? err.message : "Could not save this step."));
+      setError(
+        humanizeForgeError(err instanceof Error ? err.message : "Could not save this step."),
+      );
     } finally {
       setBusy(false);
     }
@@ -532,8 +531,8 @@ export function OnboardingWizard({
         <div className="card mb-4">
           <div className="card-body">
             <Alert tone="success">
-              Administrators can sign in with their invitation email. Continue setup anytime from the
-              company page.
+              Administrators can sign in with their invitation email. Continue setup anytime from
+              the company page.
             </Alert>
             <div className="d-flex flex-wrap gap-2 mt-3">
               <Link className="btn btn-primary" href={tenantDetailHref(activatedTenantId)}>
@@ -617,40 +616,48 @@ export function OnboardingWizard({
                     ))}
                   </select>
                 </FormField>
-            <FormField label="Time zone" htmlFor="timezone">
-              <select
-                id="timezone"
-                className="form-select"
-                value={timezone}
-                onChange={(e) => setTimezone(e.target.value)}
-              >
-                {US_TIMEZONES.map((tz) => (
-                  <option key={tz.value} value={tz.value}>
-                    {tz.label}
-                  </option>
-                ))}
-              </select>
-            </FormField>
-            <FormField label="Web address" htmlFor="slug" hint="Used for the customer portal address. Forge fills this in for you.">
-              <input
-                id="slug"
-                className="form-control"
-                value={slug}
-                onChange={(e) => {
-                  setSlugTouched(true);
-                  setSlug(normalizeSlug(e.target.value));
-                }}
-              />
-            </FormField>
-          </FormSection>
-          <div className="d-flex flex-wrap gap-2">
-            <button className="btn btn-primary" type="submit" disabled={busy || !displayName.trim()}>
-              {busy ? "Saving…" : "Start setup"}
-            </button>
-            <Link className="btn btn-outline-secondary" href="/onboarding/">
-              Cancel
-            </Link>
-          </div>
+                <FormField label="Time zone" htmlFor="timezone">
+                  <select
+                    id="timezone"
+                    className="form-select"
+                    value={timezone}
+                    onChange={(e) => setTimezone(e.target.value)}
+                  >
+                    {US_TIMEZONES.map((tz) => (
+                      <option key={tz.value} value={tz.value}>
+                        {tz.label}
+                      </option>
+                    ))}
+                  </select>
+                </FormField>
+                <FormField
+                  label="Web address"
+                  htmlFor="slug"
+                  hint="Used for the customer portal address. Forge fills this in for you."
+                >
+                  <input
+                    id="slug"
+                    className="form-control"
+                    value={slug}
+                    onChange={(e) => {
+                      setSlugTouched(true);
+                      setSlug(normalizeSlug(e.target.value));
+                    }}
+                  />
+                </FormField>
+              </FormSection>
+              <div className="d-flex flex-wrap gap-2">
+                <button
+                  className="btn btn-primary"
+                  type="submit"
+                  disabled={busy || !displayName.trim()}
+                >
+                  {busy ? "Saving…" : "Start setup"}
+                </button>
+                <Link className="btn btn-outline-secondary" href="/onboarding/">
+                  Cancel
+                </Link>
+              </div>
             </form>
           </div>
         </div>
@@ -669,8 +676,18 @@ export function OnboardingWizard({
         title={displayName || "Company setup"}
         subtitle={`Step ${stepIndex + 1} of ${wizardSteps.length || 1} · ${progressPct}% complete`}
       />
-      <div style={{ display: "flex", gap: "0.75rem", alignItems: "center", flexWrap: "wrap", marginBottom: "1rem" }}>
-        <StatusBadge tone={saveState === "error" ? "danger" : saveState === "saved" ? "success" : "neutral"}>
+      <div
+        style={{
+          display: "flex",
+          gap: "0.75rem",
+          alignItems: "center",
+          flexWrap: "wrap",
+          marginBottom: "1rem",
+        }}
+      >
+        <StatusBadge
+          tone={saveState === "error" ? "danger" : saveState === "saved" ? "success" : "neutral"}
+        >
           {saveState === "saving"
             ? "Saving…"
             : saveState === "saved"
@@ -679,7 +696,9 @@ export function OnboardingWizard({
                 ? "Unable to save — Retry"
                 : "Ready"}
         </StatusBadge>
-        {view ? <StatusBadge tone="info">{view.session.status.replace(/_/g, " ")}</StatusBadge> : null}
+        {view ? (
+          <StatusBadge tone="info">{view.session.status.replace(/_/g, " ")}</StatusBadge>
+        ) : null}
       </div>
       <ForgeStepper
         steps={wizardSteps.map((s) => ({ id: s.id, label: s.label }))}
@@ -693,15 +712,32 @@ export function OnboardingWizard({
 
       {activeStepKey === "CREATE_PRIMARY_ORGANIZATION" ? (
         <FormSection title="Organization">
-          <p className="text-muted">This is the main organization under the company (usually the same name).</p>
+          <p className="text-muted">
+            This is the main organization under the company (usually the same name).
+          </p>
           <FormField label="Organization name" htmlFor="orgDisplay">
-            <input id="orgDisplay" className="form-control" value={orgDisplayName} onChange={(e) => setOrgDisplayName(e.target.value)} />
+            <input
+              id="orgDisplay"
+              className="form-control"
+              value={orgDisplayName}
+              onChange={(e) => setOrgDisplayName(e.target.value)}
+            />
           </FormField>
           <FormField label="Legal name" htmlFor="orgLegal">
-            <input id="orgLegal" className="form-control" value={orgLegalName} onChange={(e) => setOrgLegalName(e.target.value)} />
+            <input
+              id="orgLegal"
+              className="form-control"
+              value={orgLegalName}
+              onChange={(e) => setOrgLegalName(e.target.value)}
+            />
           </FormField>
           <FormField label="Short code" htmlFor="orgSlug">
-            <input id="orgSlug" className="form-control" value={orgSlug} onChange={(e) => setOrgSlug(normalizeSlug(e.target.value))} />
+            <input
+              id="orgSlug"
+              className="form-control"
+              value={orgSlug}
+              onChange={(e) => setOrgSlug(normalizeSlug(e.target.value))}
+            />
           </FormField>
           <button
             className="btn btn-primary"
@@ -770,7 +806,9 @@ export function OnboardingWizard({
 
       {activeStepKey === "SELECT_MODULES" ? (
         <FormSection title="Modules">
-          <p className="text-muted">Turn modules on or off. Included package modules start enabled.</p>
+          <p className="text-muted">
+            Turn modules on or off. Included package modules start enabled.
+          </p>
           <div style={{ display: "grid", gap: "0.5rem", maxHeight: 360, overflow: "auto" }}>
             {moduleOptions.map((mod) => {
               const checked = selectedModules.includes(mod.code);
@@ -823,7 +861,9 @@ export function OnboardingWizard({
             className="btn btn-primary"
             type="button"
             disabled={busy}
-            onClick={() => void completeCurrent({ waiveSubscription: true, status: "TRIAL", periodDays: 30 })}
+            onClick={() =>
+              void completeCurrent({ waiveSubscription: true, status: "TRIAL", periodDays: 30 })
+            }
             style={{ marginTop: "1rem" }}
           >
             Save and continue
@@ -834,7 +874,14 @@ export function OnboardingWizard({
       {activeStepKey === "CONFIGURE_LOCATIONS" ? (
         <FormSection title="Locations">
           {locations.map((loc, index) => (
-            <div key={index} style={{ borderTop: "1px solid #e2e8f0", paddingTop: "0.75rem", marginTop: "0.75rem" }}>
+            <div
+              key={index}
+              style={{
+                borderTop: "1px solid #e2e8f0",
+                paddingTop: "0.75rem",
+                marginTop: "0.75rem",
+              }}
+            >
               <FormField label="Location name" htmlFor={`loc-name-${index}`}>
                 <input
                   id={`loc-name-${index}`}
@@ -854,7 +901,9 @@ export function OnboardingWizard({
                   value={loc.addressLine1}
                   onChange={(e) =>
                     setLocations((prev) =>
-                      prev.map((row, i) => (i === index ? { ...row, addressLine1: e.target.value } : row)),
+                      prev.map((row, i) =>
+                        i === index ? { ...row, addressLine1: e.target.value } : row,
+                      ),
                     )
                   }
                 />
@@ -867,7 +916,9 @@ export function OnboardingWizard({
                     value={loc.city}
                     onChange={(e) =>
                       setLocations((prev) =>
-                        prev.map((row, i) => (i === index ? { ...row, city: e.target.value } : row)),
+                        prev.map((row, i) =>
+                          i === index ? { ...row, city: e.target.value } : row,
+                        ),
                       )
                     }
                   />
@@ -879,7 +930,9 @@ export function OnboardingWizard({
                     value={loc.stateProvince}
                     onChange={(e) =>
                       setLocations((prev) =>
-                        prev.map((row, i) => (i === index ? { ...row, stateProvince: e.target.value } : row)),
+                        prev.map((row, i) =>
+                          i === index ? { ...row, stateProvince: e.target.value } : row,
+                        ),
                       )
                     }
                   />
@@ -891,7 +944,9 @@ export function OnboardingWizard({
                     value={loc.postalCode}
                     onChange={(e) =>
                       setLocations((prev) =>
-                        prev.map((row, i) => (i === index ? { ...row, postalCode: e.target.value } : row)),
+                        prev.map((row, i) =>
+                          i === index ? { ...row, postalCode: e.target.value } : row,
+                        ),
                       )
                     }
                   />
@@ -950,14 +1005,18 @@ export function OnboardingWizard({
       {activeStepKey === "CONFIGURE_ORG_LOOKUPS" ? (
         <FormSection title="Organization">
           <p className="text-muted">
-            Add departments, positions, and employment types. You can refine these later from Setup Center.
+            Add departments, positions, and employment types. You can refine these later from Setup
+            Center.
           </p>
 
           <div style={{ marginTop: "1rem" }}>
             <h3 style={{ margin: "0 0 0.5rem", fontSize: "1rem" }}>Departments</h3>
             <ul className={styles.list}>
               {departments.map((row, index) => (
-                <li key={`dept-${index}`} style={{ display: "flex", gap: "0.5rem", alignItems: "center" }}>
+                <li
+                  key={`dept-${index}`}
+                  style={{ display: "flex", gap: "0.5rem", alignItems: "center" }}
+                >
                   <span>
                     {row.name}
                     {row.description ? ` — ${row.description}` : ""}
@@ -1025,7 +1084,10 @@ export function OnboardingWizard({
             <h3 style={{ margin: "0 0 0.5rem", fontSize: "1rem" }}>Positions</h3>
             <ul className={styles.list}>
               {positions.map((row, index) => (
-                <li key={`pos-${index}`} style={{ display: "flex", gap: "0.5rem", alignItems: "center" }}>
+                <li
+                  key={`pos-${index}`}
+                  style={{ display: "flex", gap: "0.5rem", alignItems: "center" }}
+                >
                   <span>
                     {row.name}
                     {row.departmentName ? ` · ${row.departmentName}` : ""}
@@ -1096,7 +1158,9 @@ export function OnboardingWizard({
                       ...(posDraft.description?.trim()
                         ? { description: posDraft.description.trim() }
                         : {}),
-                      ...(posDraft.departmentName ? { departmentName: posDraft.departmentName } : {}),
+                      ...(posDraft.departmentName
+                        ? { departmentName: posDraft.departmentName }
+                        : {}),
                       active: posDraft.active !== false,
                     },
                   ]);
@@ -1112,7 +1176,10 @@ export function OnboardingWizard({
             <h3 style={{ margin: "0 0 0.5rem", fontSize: "1rem" }}>Employment types</h3>
             <ul className={styles.list}>
               {employmentTypes.map((row, index) => (
-                <li key={`emp-${index}`} style={{ display: "flex", gap: "0.5rem", alignItems: "center" }}>
+                <li
+                  key={`emp-${index}`}
+                  style={{ display: "flex", gap: "0.5rem", alignItems: "center" }}
+                >
                   <span>
                     {row.name}
                     {row.description ? ` — ${row.description}` : ""}
@@ -1213,8 +1280,8 @@ export function OnboardingWizard({
       {activeStepKey === "CONFIGURE_DATA_IMPORT" ? (
         <FormSection title="Data import">
           <p className="text-muted">
-            Import Personnel (XLSX/CSV) and Fleet without leaving onboarding. You can skip and finish imports later
-            from Setup Center.
+            Import Personnel (XLSX/CSV) and Fleet without leaving onboarding. You can skip and
+            finish imports later from Setup Center.
           </p>
           {view?.session.tenantId ? (
             <div style={{ marginTop: "1rem", marginBottom: "1rem" }}>
@@ -1236,9 +1303,7 @@ export function OnboardingWizard({
               className="btn btn-primary"
               type="button"
               disabled={busy}
-              onClick={() =>
-                void completeCurrent({ personnelImported: true, fleetImported: true })
-              }
+              onClick={() => void completeCurrent({ personnelImported: true, fleetImported: true })}
             >
               Continue — imports done
             </button>
@@ -1256,7 +1321,9 @@ export function OnboardingWizard({
 
       {activeStepKey === "CONFIGURE_DOCUMENTS" ? (
         <FormSection title="Company documents">
-          <p className="text-muted">Upload PDF, Word, Excel, or image files for company policies and handbooks.</p>
+          <p className="text-muted">
+            Upload PDF, Word, Excel, or image files for company policies and handbooks.
+          </p>
           <ForgeAssetUploader
             id="company-documents"
             label="COMPANY DOCUMENTS"
@@ -1269,7 +1336,15 @@ export function OnboardingWizard({
           {companyDocs.length ? (
             <ul className={styles.list} style={{ marginTop: "1rem" }}>
               {companyDocs.map((doc) => (
-                <li key={doc.id} style={{ display: "flex", gap: "0.75rem", alignItems: "center", flexWrap: "wrap" }}>
+                <li
+                  key={doc.id}
+                  style={{
+                    display: "flex",
+                    gap: "0.75rem",
+                    alignItems: "center",
+                    flexWrap: "wrap",
+                  }}
+                >
                   <span>
                     <strong>{doc.title}</strong> · {doc.filename} · {formatBytes(doc.size)}
                   </span>
@@ -1323,10 +1398,20 @@ export function OnboardingWizard({
             }}
           />
           <FormField label="Primary color" htmlFor="primaryColor">
-            <input id="primaryColor" type="color" value={primaryColor} onChange={(e) => setPrimaryColor(e.target.value)} />
+            <input
+              id="primaryColor"
+              type="color"
+              value={primaryColor}
+              onChange={(e) => setPrimaryColor(e.target.value)}
+            />
           </FormField>
           <FormField label="Secondary color" htmlFor="secondaryColor">
-            <input id="secondaryColor" type="color" value={secondaryColor} onChange={(e) => setSecondaryColor(e.target.value)} />
+            <input
+              id="secondaryColor"
+              type="color"
+              value={secondaryColor}
+              onChange={(e) => setSecondaryColor(e.target.value)}
+            />
           </FormField>
           <FormField label="Support email" htmlFor="supportEmail">
             <input
@@ -1390,14 +1475,20 @@ export function OnboardingWizard({
               id="biz-emp-id"
               className="form-control"
               value={businessSettings.employeeIdFormat}
-              onChange={(e) => setBusinessSettings((s) => ({ ...s, employeeIdFormat: e.target.value }))}
+              onChange={(e) =>
+                setBusinessSettings((s) => ({ ...s, employeeIdFormat: e.target.value }))
+              }
             />
           </FormField>
-          <label style={{ display: "flex", gap: "0.5rem", alignItems: "center", marginTop: "0.5rem" }}>
+          <label
+            style={{ display: "flex", gap: "0.5rem", alignItems: "center", marginTop: "0.5rem" }}
+          >
             <input
               type="checkbox"
               checked={businessSettings.emailNotifications}
-              onChange={(e) => setBusinessSettings((s) => ({ ...s, emailNotifications: e.target.checked }))}
+              onChange={(e) =>
+                setBusinessSettings((s) => ({ ...s, emailNotifications: e.target.checked }))
+              }
             />
             Email notifications
           </label>
@@ -1405,7 +1496,9 @@ export function OnboardingWizard({
             <input
               type="checkbox"
               checked={businessSettings.mobileAccess}
-              onChange={(e) => setBusinessSettings((s) => ({ ...s, mobileAccess: e.target.checked }))}
+              onChange={(e) =>
+                setBusinessSettings((s) => ({ ...s, mobileAccess: e.target.checked }))
+              }
             />
             Mobile access
           </label>
@@ -1413,7 +1506,9 @@ export function OnboardingWizard({
             <input
               type="checkbox"
               checked={businessSettings.employeePortal}
-              onChange={(e) => setBusinessSettings((s) => ({ ...s, employeePortal: e.target.checked }))}
+              onChange={(e) =>
+                setBusinessSettings((s) => ({ ...s, employeePortal: e.target.checked }))
+              }
             />
             Employee portal
           </label>
@@ -1424,7 +1519,9 @@ export function OnboardingWizard({
                   id="biz-inc"
                   className="form-control"
                   value={businessSettings.incidentNumbering}
-                  onChange={(e) => setBusinessSettings((s) => ({ ...s, incidentNumbering: e.target.value }))}
+                  onChange={(e) =>
+                    setBusinessSettings((s) => ({ ...s, incidentNumbering: e.target.value }))
+                  }
                 />
               </FormField>
               <FormField label="Inspection numbering prefix" htmlFor="biz-insp">
@@ -1432,7 +1529,9 @@ export function OnboardingWizard({
                   id="biz-insp"
                   className="form-control"
                   value={businessSettings.inspectionNumbering}
-                  onChange={(e) => setBusinessSettings((s) => ({ ...s, inspectionNumbering: e.target.value }))}
+                  onChange={(e) =>
+                    setBusinessSettings((s) => ({ ...s, inspectionNumbering: e.target.value }))
+                  }
                 />
               </FormField>
               <FormField label="Fleet numbering prefix" htmlFor="biz-fleet">
@@ -1440,7 +1539,9 @@ export function OnboardingWizard({
                   id="biz-fleet"
                   className="form-control"
                   value={businessSettings.fleetNumbering}
-                  onChange={(e) => setBusinessSettings((s) => ({ ...s, fleetNumbering: e.target.value }))}
+                  onChange={(e) =>
+                    setBusinessSettings((s) => ({ ...s, fleetNumbering: e.target.value }))
+                  }
                 />
               </FormField>
             </div>
@@ -1476,13 +1577,29 @@ export function OnboardingWizard({
       {activeStepKey === "CREATE_PRIMARY_ADMINISTRATOR" ? (
         <FormSection title="Primary administrator">
           <FormField label="First name" htmlFor="adminFirst">
-            <input id="adminFirst" className="form-control" value={adminFirst} onChange={(e) => setAdminFirst(e.target.value)} />
+            <input
+              id="adminFirst"
+              className="form-control"
+              value={adminFirst}
+              onChange={(e) => setAdminFirst(e.target.value)}
+            />
           </FormField>
           <FormField label="Last name" htmlFor="adminLast">
-            <input id="adminLast" className="form-control" value={adminLast} onChange={(e) => setAdminLast(e.target.value)} />
+            <input
+              id="adminLast"
+              className="form-control"
+              value={adminLast}
+              onChange={(e) => setAdminLast(e.target.value)}
+            />
           </FormField>
           <FormField label="Email" htmlFor="adminEmail">
-            <input id="adminEmail" className="form-control" type="email" value={adminEmail} onChange={(e) => setAdminEmail(e.target.value)} />
+            <input
+              id="adminEmail"
+              className="form-control"
+              type="email"
+              value={adminEmail}
+              onChange={(e) => setAdminEmail(e.target.value)}
+            />
           </FormField>
           <FormField label="Role" htmlFor="adminRole">
             <select
@@ -1519,11 +1636,16 @@ export function OnboardingWizard({
       {activeStepKey === "SEND_INVITATION" ? (
         <FormSection title="Send invitation">
           <label style={{ display: "flex", gap: "0.5rem", alignItems: "center" }}>
-            <input type="checkbox" checked={sendInviteNow} onChange={(e) => setSendInviteNow(e.target.checked)} />
+            <input
+              type="checkbox"
+              checked={sendInviteNow}
+              onChange={(e) => setSendInviteNow(e.target.checked)}
+            />
             Send invitation now
           </label>
           <p className="text-muted">
-            If unchecked, Forge still creates the invitation and you can send it when the company is activated.
+            If unchecked, Forge still creates the invitation and you can send it when the company is
+            activated.
           </p>
           <button
             className="btn btn-primary"
@@ -1540,7 +1662,9 @@ export function OnboardingWizard({
         <FormSection title="Review & activate">
           <ul className={styles.list}>
             <li>Company information — Complete</li>
-            <li>Products — {selectedProducts.map(productDisplayName).join(", ") || "Configured"}</li>
+            <li>
+              Products — {selectedProducts.map(productDisplayName).join(", ") || "Configured"}
+            </li>
             <li>Modules — {selectedModules.length} enabled</li>
             <li>Locations — {locations.filter((l) => l.name.trim()).length} configured</li>
             <li>Departments — {departments.length} configured</li>
@@ -1550,15 +1674,24 @@ export function OnboardingWizard({
             <li>Logo — {logoDocumentId ? "Uploaded" : "Optional / defaults applied"}</li>
           </ul>
           <Alert tone="info">
-            Activation prepares the company, turns on selected products and modules, invites the administrator, and
-            creates default settings. You can import spreadsheets afterward from Data Import.
+            Activation prepares the company, turns on selected products and modules, invites the
+            administrator, and creates default settings. You can import spreadsheets afterward from
+            Data Import.
           </Alert>
           <div className="d-flex flex-wrap gap-2" style={{ marginTop: "1rem" }}>
-            <button className="btn btn-primary" type="button" disabled={busy} onClick={() => void activateCompany()}>
+            <button
+              className="btn btn-primary"
+              type="button"
+              disabled={busy}
+              onClick={() => void activateCompany()}
+            >
               {busy ? "Activating…" : "Activate company"}
             </button>
             {view ? (
-              <Link className="btn btn-outline-secondary" href={`/setup-center/?tenantId=${view.session.tenantId}`}>
+              <Link
+                className="btn btn-outline-secondary"
+                href={`/setup-center/?tenantId=${view.session.tenantId}`}
+              >
                 Open Setup Center
               </Link>
             ) : null}

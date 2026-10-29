@@ -36,8 +36,7 @@ function equipmentSiteLocation(
   item: Record<string, unknown>,
   siteNameById?: Map<string, string>,
 ): string {
-  const fromId =
-    item.siteId && siteNameById ? siteNameById.get(String(item.siteId)) ?? "" : "";
+  const fromId = item.siteId && siteNameById ? (siteNameById.get(String(item.siteId)) ?? "") : "";
   return textOf(fromId || item.siteName || item.locationName);
 }
 
@@ -496,7 +495,7 @@ export function EquipmentWorkspace({ moduleName }: { moduleName: string }) {
       ) : null}
 
       {selected ? (
-        // eslint-disable-next-line jsx-a11y/no-noninteractive-element-interactions, jsx-a11y/click-events-have-key-events
+        // eslint-disable-next-line jsx-a11y/no-noninteractive-element-interactions
         <div
           className="modal fade show d-block"
           tabIndex={-1}
@@ -545,10 +544,7 @@ export function EquipmentWorkspace({ moduleName }: { moduleName: string }) {
               <div className="modal-body">
                 <div className="row g-3 mb-4">
                   <DetailField label="Asset tag" value={equipmentAssetTag(selected)} />
-                  <DetailField
-                    label="Type"
-                    value={selected.equipmentType || selected.category}
-                  />
+                  <DetailField label="Type" value={selected.equipmentType || selected.category} />
                   <DetailField label="Status" value={selected.status} />
                   <DetailField
                     label="Location"
@@ -593,10 +589,7 @@ export function EquipmentWorkspace({ moduleName }: { moduleName: string }) {
                     {!qrBusy && qrLinksForAsset.length > 0 ? (
                       <ul className="list-unstyled mb-0">
                         {qrLinksForAsset.map((link) => (
-                          <li
-                            key={link.id}
-                            className="mb-2 d-flex justify-content-between gap-2"
-                          >
+                          <li key={link.id} className="mb-2 d-flex justify-content-between gap-2">
                             <div>
                               <div className="fw-semibold">{link.name}</div>
                               <div className="small text-muted">
@@ -648,4 +641,3 @@ export function EquipmentWorkspace({ moduleName }: { moduleName: string }) {
     </section>
   );
 }
-

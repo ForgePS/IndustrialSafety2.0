@@ -149,7 +149,13 @@ try {
   };
 
   if (!APPLY) {
-    console.log(JSON.stringify({ ...report, note: "Set APPLY=1 to delete FORGE_DEMO rows and clear is_demo_tenant." }, null, 2));
+    console.log(
+      JSON.stringify(
+        { ...report, note: "Set APPLY=1 to delete FORGE_DEMO rows and clear is_demo_tenant." },
+        null,
+        2,
+      ),
+    );
     process.exit(0);
   }
 

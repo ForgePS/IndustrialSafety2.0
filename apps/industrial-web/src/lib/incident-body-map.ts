@@ -57,41 +57,319 @@ export const BODY_VIEWS: ReadonlyArray<{ id: BodyView; label: string }> = [
 
 export const BODY_REGIONS: readonly BodyRegion[] = [
   // ---- Front view (worker's right = viewer's left) ----
-  { id: "head-front", part: "Head", oshaPart: "Head", view: "front", top: 3.1, left: 35.9, width: 33.7, height: 10.3 },
-  { id: "face-front", part: "Face / eyes", oshaPart: "Face", view: "front", top: 12.8, left: 37.4, width: 29, height: 13.3 },
-  { id: "neck-front", part: "Neck", oshaPart: "Neck", view: "front", top: 25.5, left: 43.3, width: 17.7, height: 4.7 },
-  { id: "right-shoulder-front", part: "Right shoulder", oshaPart: "Shoulder", view: "front", top: 26.9, left: 30.1, width: 13.9, height: 7.5 },
-  { id: "left-shoulder-front", part: "Left shoulder", oshaPart: "Shoulder", view: "front", top: 27.2, left: 59.1, width: 13.9, height: 7.5 },
-  { id: "chest-front", part: "Chest", oshaPart: "Chest", view: "front", top: 29.6, left: 36.2, width: 31.2, height: 12.8 },
-  { id: "abdomen-front", part: "Abdomen", oshaPart: "Abdomen", view: "front", top: 42.4, left: 35.2, width: 34.1, height: 9.4 },
-  { id: "right-arm-front", part: "Right arm", oshaPart: "Arm", view: "front", top: 29.7, left: 20.5, width: 13.7, height: 24.8 },
-  { id: "left-arm-front", part: "Left arm", oshaPart: "Arm", view: "front", top: 29.5, left: 69.3, width: 13.4, height: 24.8 },
-  { id: "right-hand-front", part: "Right hand / wrist", oshaPart: "Hand", view: "front", top: 54.1, left: 19.1, width: 10.1, height: 9.4 },
-  { id: "left-hand-front", part: "Left hand / wrist", oshaPart: "Hand", view: "front", top: 54.1, left: 74.2, width: 10.1, height: 9.4 },
-  { id: "hips-front", part: "Hips / groin", oshaPart: "Hip", view: "front", top: 51.3, left: 35.2, width: 34, height: 10.4 },
-  { id: "right-leg-front", part: "Right leg", oshaPart: "Leg", view: "front", top: 60.9, left: 35.5, width: 14.2, height: 27.5 },
-  { id: "left-leg-front", part: "Left leg", oshaPart: "Leg", view: "front", top: 61.4, left: 56, width: 12.9, height: 25.9 },
-  { id: "right-foot-front", part: "Right foot / ankle", oshaPart: "Foot", view: "front", top: 88.3, left: 28.5, width: 18.8, height: 7.4 },
-  { id: "left-foot-front", part: "Left foot / ankle", oshaPart: "Foot", view: "front", top: 87.4, left: 56.2, width: 20.7, height: 8.9 },
+  {
+    id: "head-front",
+    part: "Head",
+    oshaPart: "Head",
+    view: "front",
+    top: 3.1,
+    left: 35.9,
+    width: 33.7,
+    height: 10.3,
+  },
+  {
+    id: "face-front",
+    part: "Face / eyes",
+    oshaPart: "Face",
+    view: "front",
+    top: 12.8,
+    left: 37.4,
+    width: 29,
+    height: 13.3,
+  },
+  {
+    id: "neck-front",
+    part: "Neck",
+    oshaPart: "Neck",
+    view: "front",
+    top: 25.5,
+    left: 43.3,
+    width: 17.7,
+    height: 4.7,
+  },
+  {
+    id: "right-shoulder-front",
+    part: "Right shoulder",
+    oshaPart: "Shoulder",
+    view: "front",
+    top: 26.9,
+    left: 30.1,
+    width: 13.9,
+    height: 7.5,
+  },
+  {
+    id: "left-shoulder-front",
+    part: "Left shoulder",
+    oshaPart: "Shoulder",
+    view: "front",
+    top: 27.2,
+    left: 59.1,
+    width: 13.9,
+    height: 7.5,
+  },
+  {
+    id: "chest-front",
+    part: "Chest",
+    oshaPart: "Chest",
+    view: "front",
+    top: 29.6,
+    left: 36.2,
+    width: 31.2,
+    height: 12.8,
+  },
+  {
+    id: "abdomen-front",
+    part: "Abdomen",
+    oshaPart: "Abdomen",
+    view: "front",
+    top: 42.4,
+    left: 35.2,
+    width: 34.1,
+    height: 9.4,
+  },
+  {
+    id: "right-arm-front",
+    part: "Right arm",
+    oshaPart: "Arm",
+    view: "front",
+    top: 29.7,
+    left: 20.5,
+    width: 13.7,
+    height: 24.8,
+  },
+  {
+    id: "left-arm-front",
+    part: "Left arm",
+    oshaPart: "Arm",
+    view: "front",
+    top: 29.5,
+    left: 69.3,
+    width: 13.4,
+    height: 24.8,
+  },
+  {
+    id: "right-hand-front",
+    part: "Right hand / wrist",
+    oshaPart: "Hand",
+    view: "front",
+    top: 54.1,
+    left: 19.1,
+    width: 10.1,
+    height: 9.4,
+  },
+  {
+    id: "left-hand-front",
+    part: "Left hand / wrist",
+    oshaPart: "Hand",
+    view: "front",
+    top: 54.1,
+    left: 74.2,
+    width: 10.1,
+    height: 9.4,
+  },
+  {
+    id: "hips-front",
+    part: "Hips / groin",
+    oshaPart: "Hip",
+    view: "front",
+    top: 51.3,
+    left: 35.2,
+    width: 34,
+    height: 10.4,
+  },
+  {
+    id: "right-leg-front",
+    part: "Right leg",
+    oshaPart: "Leg",
+    view: "front",
+    top: 60.9,
+    left: 35.5,
+    width: 14.2,
+    height: 27.5,
+  },
+  {
+    id: "left-leg-front",
+    part: "Left leg",
+    oshaPart: "Leg",
+    view: "front",
+    top: 61.4,
+    left: 56,
+    width: 12.9,
+    height: 25.9,
+  },
+  {
+    id: "right-foot-front",
+    part: "Right foot / ankle",
+    oshaPart: "Foot",
+    view: "front",
+    top: 88.3,
+    left: 28.5,
+    width: 18.8,
+    height: 7.4,
+  },
+  {
+    id: "left-foot-front",
+    part: "Left foot / ankle",
+    oshaPart: "Foot",
+    view: "front",
+    top: 87.4,
+    left: 56.2,
+    width: 20.7,
+    height: 8.9,
+  },
 
   // ---- Back view (worker's right = viewer's right) ----
-  { id: "head-back", part: "Head (back)", oshaPart: "Head", view: "back", top: 2.3, left: 33.1, width: 29.2, height: 20.6 },
-  { id: "neck-back", part: "Neck (back)", oshaPart: "Neck", view: "back", top: 22.3, left: 38.5, width: 17.8, height: 4.7 },
-  { id: "left-shoulder-back", part: "Left shoulder", oshaPart: "Shoulder", view: "back", top: 23.7, left: 24.6, width: 14, height: 7.5 },
-  { id: "right-shoulder-back", part: "Right shoulder", oshaPart: "Shoulder", view: "back", top: 24.8, left: 55.8, width: 14, height: 7.5 },
-  { id: "upper-back", part: "Upper back", oshaPart: "Back", view: "back", top: 26.6, left: 28.5, width: 36.4, height: 18 },
-  { id: "lower-back", part: "Lower back", oshaPart: "Back", view: "back", top: 44.5, left: 30.2, width: 33.9, height: 10.5 },
-  { id: "left-arm-back", part: "Left arm", oshaPart: "Arm", view: "back", top: 28, left: 14.6, width: 14.7, height: 26.1 },
-  { id: "right-arm-back", part: "Right arm", oshaPart: "Arm", view: "back", top: 28.6, left: 65.1, width: 14.7, height: 26.1 },
-  { id: "left-hand-back", part: "Left hand / wrist", oshaPart: "Hand", view: "back", top: 54.2, left: 15, width: 10.2, height: 9.4 },
-  { id: "right-hand-back", part: "Right hand / wrist", oshaPart: "Hand", view: "back", top: 54.2, left: 69.9, width: 10.2, height: 9.4 },
-  { id: "buttocks-back", part: "Buttocks", oshaPart: "Hip", view: "back", top: 54.5, left: 30.2, width: 34.4, height: 8.7 },
-  { id: "left-leg-back", part: "Left leg", oshaPart: "Leg", view: "back", top: 63.5, left: 28.9, width: 14, height: 24.9 },
-  { id: "right-leg-back", part: "Right leg", oshaPart: "Leg", view: "back", top: 63.5, left: 50.9, width: 13.7, height: 25.3 },
-  { id: "left-foot-back", part: "Left foot / ankle", oshaPart: "Foot", view: "back", top: 88.3, left: 20.7, width: 22.1, height: 8.1 },
-  { id: "right-foot-back", part: "Right foot / ankle", oshaPart: "Foot", view: "back", top: 88.7, left: 50.9, width: 21.2, height: 7.6 },
+  {
+    id: "head-back",
+    part: "Head (back)",
+    oshaPart: "Head",
+    view: "back",
+    top: 2.3,
+    left: 33.1,
+    width: 29.2,
+    height: 20.6,
+  },
+  {
+    id: "neck-back",
+    part: "Neck (back)",
+    oshaPart: "Neck",
+    view: "back",
+    top: 22.3,
+    left: 38.5,
+    width: 17.8,
+    height: 4.7,
+  },
+  {
+    id: "left-shoulder-back",
+    part: "Left shoulder",
+    oshaPart: "Shoulder",
+    view: "back",
+    top: 23.7,
+    left: 24.6,
+    width: 14,
+    height: 7.5,
+  },
+  {
+    id: "right-shoulder-back",
+    part: "Right shoulder",
+    oshaPart: "Shoulder",
+    view: "back",
+    top: 24.8,
+    left: 55.8,
+    width: 14,
+    height: 7.5,
+  },
+  {
+    id: "upper-back",
+    part: "Upper back",
+    oshaPart: "Back",
+    view: "back",
+    top: 26.6,
+    left: 28.5,
+    width: 36.4,
+    height: 18,
+  },
+  {
+    id: "lower-back",
+    part: "Lower back",
+    oshaPart: "Back",
+    view: "back",
+    top: 44.5,
+    left: 30.2,
+    width: 33.9,
+    height: 10.5,
+  },
+  {
+    id: "left-arm-back",
+    part: "Left arm",
+    oshaPart: "Arm",
+    view: "back",
+    top: 28,
+    left: 14.6,
+    width: 14.7,
+    height: 26.1,
+  },
+  {
+    id: "right-arm-back",
+    part: "Right arm",
+    oshaPart: "Arm",
+    view: "back",
+    top: 28.6,
+    left: 65.1,
+    width: 14.7,
+    height: 26.1,
+  },
+  {
+    id: "left-hand-back",
+    part: "Left hand / wrist",
+    oshaPart: "Hand",
+    view: "back",
+    top: 54.2,
+    left: 15,
+    width: 10.2,
+    height: 9.4,
+  },
+  {
+    id: "right-hand-back",
+    part: "Right hand / wrist",
+    oshaPart: "Hand",
+    view: "back",
+    top: 54.2,
+    left: 69.9,
+    width: 10.2,
+    height: 9.4,
+  },
+  {
+    id: "buttocks-back",
+    part: "Buttocks",
+    oshaPart: "Hip",
+    view: "back",
+    top: 54.5,
+    left: 30.2,
+    width: 34.4,
+    height: 8.7,
+  },
+  {
+    id: "left-leg-back",
+    part: "Left leg",
+    oshaPart: "Leg",
+    view: "back",
+    top: 63.5,
+    left: 28.9,
+    width: 14,
+    height: 24.9,
+  },
+  {
+    id: "right-leg-back",
+    part: "Right leg",
+    oshaPart: "Leg",
+    view: "back",
+    top: 63.5,
+    left: 50.9,
+    width: 13.7,
+    height: 25.3,
+  },
+  {
+    id: "left-foot-back",
+    part: "Left foot / ankle",
+    oshaPart: "Foot",
+    view: "back",
+    top: 88.3,
+    left: 20.7,
+    width: 22.1,
+    height: 8.1,
+  },
+  {
+    id: "right-foot-back",
+    part: "Right foot / ankle",
+    oshaPart: "Foot",
+    view: "back",
+    top: 88.7,
+    left: 50.9,
+    width: 21.2,
+    height: 7.6,
+  },
 ];
-
 
 function indexRegions(regions: readonly BodyRegion[]): Map<string, BodyRegion> {
   return new Map(regions.map((region) => [region.id, region]));
@@ -184,7 +462,10 @@ function collectRawTokens(raw: unknown): string[] {
         /* fall through */
       }
     }
-    return trimmed.split(/[,;/|]+/).map((part) => part.trim()).filter(Boolean);
+    return trimmed
+      .split(/[,;/|]+/)
+      .map((part) => part.trim())
+      .filter(Boolean);
   }
   if (Array.isArray(raw)) {
     const out: string[] = [];
@@ -361,7 +642,10 @@ export function aggregateBodyLocations(
 ): Map<string, number> {
   const counts = new Map<string, number>();
   for (const incident of incidents) {
-    for (const id of parseBodyLocations(incident.bodyLocations ? [...incident.bodyLocations] : [], regions)) {
+    for (const id of parseBodyLocations(
+      incident.bodyLocations ? [...incident.bodyLocations] : [],
+      regions,
+    )) {
       counts.set(id, (counts.get(id) ?? 0) + 1);
     }
   }
@@ -377,7 +661,10 @@ export function aggregateByOshaPart(
   const byPart = new Map<string, number>();
   for (const incident of incidents) {
     const parts = new Set<string>();
-    for (const id of parseBodyLocations(incident.bodyLocations ? [...incident.bodyLocations] : [], regions)) {
+    for (const id of parseBodyLocations(
+      incident.bodyLocations ? [...incident.bodyLocations] : [],
+      regions,
+    )) {
       const region = byId.get(id);
       if (region) parts.add(region.oshaPart);
     }
@@ -504,14 +791,19 @@ export function bodyMapArrowPlacement(region: BodyRegion): {
 }
 
 /** Incidents that mark this exact region (or the same part label on the other view). */
-export function filterIncidentsByBodyRegion<
-  T extends { bodyLocations?: readonly string[] },
->(incidents: readonly T[], regionId: string, regions: readonly BodyRegion[] = BODY_REGIONS): T[] {
+export function filterIncidentsByBodyRegion<T extends { bodyLocations?: readonly string[] }>(
+  incidents: readonly T[],
+  regionId: string,
+  regions: readonly BodyRegion[] = BODY_REGIONS,
+): T[] {
   const byId = indexRegions(regions);
   const target = byId.get(regionId);
   if (!target) return [];
   return incidents.filter((incident) => {
-    const ids = parseBodyLocations(incident.bodyLocations ? [...incident.bodyLocations] : [], regions);
+    const ids = parseBodyLocations(
+      incident.bodyLocations ? [...incident.bodyLocations] : [],
+      regions,
+    );
     return ids.some((id) => {
       if (id === regionId) return true;
       const region = byId.get(id);
@@ -521,14 +813,19 @@ export function filterIncidentsByBodyRegion<
 }
 
 /** Incidents that mark any region in the given OSHA body-part group. */
-export function filterIncidentsByOshaPart<
-  T extends { bodyLocations?: readonly string[] },
->(incidents: readonly T[], oshaPart: string, regions: readonly BodyRegion[] = BODY_REGIONS): T[] {
+export function filterIncidentsByOshaPart<T extends { bodyLocations?: readonly string[] }>(
+  incidents: readonly T[],
+  oshaPart: string,
+  regions: readonly BodyRegion[] = BODY_REGIONS,
+): T[] {
   const byId = indexRegions(regions);
   const target = oshaPart.trim().toLowerCase();
   if (!target) return [];
   return incidents.filter((incident) => {
-    const ids = parseBodyLocations(incident.bodyLocations ? [...incident.bodyLocations] : [], regions);
+    const ids = parseBodyLocations(
+      incident.bodyLocations ? [...incident.bodyLocations] : [],
+      regions,
+    );
     return ids.some((id) => byId.get(id)?.oshaPart.toLowerCase() === target);
   });
 }

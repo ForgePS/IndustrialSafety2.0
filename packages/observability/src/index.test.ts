@@ -1,9 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
-import {
-  createLogger,
-  logOperationalFailure,
-  OBSERVABILITY_ERROR_CATEGORIES,
-} from "./index.js";
+import { createLogger, logOperationalFailure, OBSERVABILITY_ERROR_CATEGORIES } from "./index.js";
 
 describe("observability (MK-S16)", () => {
   it("lists error categories including authz/webhook/email/job", () => {

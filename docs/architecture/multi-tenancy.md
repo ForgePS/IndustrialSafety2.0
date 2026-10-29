@@ -15,12 +15,12 @@ Forge uses a **shared database with logical tenant isolation** ([ADR-012](../dec
 
 Managed via `api/v1/platform/tenants`:
 
-| Status path | Meaning |
-| --- | --- |
-| Create | Provision tenant record + related bootstrap data |
-| Activate | Tenant becomes operationally usable |
-| Suspend | Product APIs denied; auth may continue for status/billing ([ADR-019](../decisions/ADR-019-tenant-subscription-shutdown.md)) |
-| Archive | Soft end-of-life; data retained pending retention policy |
+| Status path | Meaning                                                                                                                     |
+| ----------- | --------------------------------------------------------------------------------------------------------------------------- |
+| Create      | Provision tenant record + related bootstrap data                                                                            |
+| Activate    | Tenant becomes operationally usable                                                                                         |
+| Suspend     | Product APIs denied; auth may continue for status/billing ([ADR-019](../decisions/ADR-019-tenant-subscription-shutdown.md)) |
+| Archive     | Soft end-of-life; data retained pending retention policy                                                                    |
 
 Supporting tenant resources: domains, settings, branding, organizations, persons, users, roles, subscriptions, entitlements, configuration, audit.
 
@@ -45,10 +45,10 @@ Local/dev bypass: `x-forge-dev-principal` when `APP_ENV` is `local` | `developme
 
 ## Platform vs tenant scope
 
-| Scope | Examples |
-| --- | --- |
-| Platform | Tenant CRUD, product/module catalog, global feature definitions |
-| Tenant | Orgs, persons, users, roles, entitlements, config, branding, audit |
+| Scope    | Examples                                                           |
+| -------- | ------------------------------------------------------------------ |
+| Platform | Tenant CRUD, product/module catalog, global feature definitions    |
+| Tenant   | Orgs, persons, users, roles, entitlements, config, branding, audit |
 
 Platform admins (`isPlatformAdmin`) may operate across tenants; still use explicit tenant context for tenant-owned writes.
 

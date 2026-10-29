@@ -26,9 +26,7 @@ describe("form-signatory (web)", () => {
     expect(
       principalCanSignEhsDirector([{ roleCode: "INDUSTRIAL_EMPLOYEE", roleName: "Employee" }]),
     ).toBe(false);
-    expect(
-      isSafetyDirectorRole({ roleCode: "EHS_DIRECTOR", roleName: "EHS Director" }),
-    ).toBe(true);
+    expect(isSafetyDirectorRole({ roleCode: "EHS_DIRECTOR", roleName: "EHS Director" })).toBe(true);
     expect(
       principalCanSignEhsDirector([{ roleCode: "EHS_DIRECTOR", roleName: "EHS Director" }]),
     ).toBe(true);
@@ -236,9 +234,7 @@ describe("form-signatory (web)", () => {
         createdByUserId: "u2",
       }),
     ).toBe(false);
-    expect(
-      taskCreatedByUserId({ createdByUserId: "author-1", title: "Task" }),
-    ).toBe("author-1");
+    expect(taskCreatedByUserId({ createdByUserId: "author-1", title: "Task" })).toBe("author-1");
     expect(taskCreatedByUserId({ createdById: "author-2" })).toBe("author-2");
     expect(taskCreatedByUserId({})).toBeNull();
   });

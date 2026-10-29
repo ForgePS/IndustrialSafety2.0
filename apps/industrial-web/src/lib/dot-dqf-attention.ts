@@ -5,10 +5,7 @@ import {
   dotRecordTitle,
   dotWorkerName,
 } from "./dot-compliance-module";
-import {
-  type CompanyVehicleDriver,
-  driversWithLicenseIssues,
-} from "./company-vehicle-drivers";
+import { type CompanyVehicleDriver, driversWithLicenseIssues } from "./company-vehicle-drivers";
 import { companyDriverMvrConsentOnFile } from "./company-driver-mvr-requirements";
 import {
   DQF_WORKSHEET_DOCUMENT_ORDER,
@@ -155,14 +152,12 @@ function isActiveDqfDriver(
   record: Record<string, unknown>,
 ): boolean {
   const employment = details.employmentStatus?.trim().toLowerCase() ?? "";
-  if (
-    employment === "terminated" ||
-    employment === "inactive" ||
-    employment === "archived"
-  ) {
+  if (employment === "terminated" || employment === "inactive" || employment === "archived") {
     return false;
   }
-  const status = String(record.status ?? "").trim().toUpperCase();
+  const status = String(record.status ?? "")
+    .trim()
+    .toUpperCase();
   if (status === "TERMINATED" || status === "ARCHIVED" || status === "INACTIVE") {
     return false;
   }
@@ -205,24 +200,17 @@ export function worksheetDocumentFields(key: string): WorksheetDocFields {
 }
 
 /** True when National Registry verification is satisfied by fields and/or an upload. */
-export function isMedicalExaminerNationalRegistryOnFile(
-  details: Record<string, string>,
-): boolean {
+export function isMedicalExaminerNationalRegistryOnFile(details: Record<string, string>): boolean {
   if (hasDqfFile(details.medicalExaminerNationalRegistryVerificationCopy)) return true;
   if (hasDqfDate(details.medicalExaminerNationalRegistryVerification)) return true;
-  if (
-    details.medicalExaminerNationalRegistryVerificationStatus?.trim().toLowerCase() === "yes"
-  ) {
+  if (details.medicalExaminerNationalRegistryVerificationStatus?.trim().toLowerCase() === "yes") {
     return true;
   }
   if (details.medicalExaminerRegistrationNumber?.trim()) return true;
   return false;
 }
 
-export function isWorksheetDocumentOnFile(
-  details: Record<string, string>,
-  key: string,
-): boolean {
+export function isWorksheetDocumentOnFile(details: Record<string, string>, key: string): boolean {
   if (key === "medicalExaminerNationalRegistryVerification") {
     return isMedicalExaminerNationalRegistryOnFile(details);
   }
@@ -292,7 +280,8 @@ export function missingDqfDocumentItems(
           : key === "dqfReview"
             ? "DQF Review"
             : dotDqfField(fields.dateId).label;
-    const fieldId = fields.copyId && !hasDqfFile(details[fields.copyId]) ? fields.copyId : fields.dateId;
+    const fieldId =
+      fields.copyId && !hasDqfFile(details[fields.copyId]) ? fields.copyId : fields.dateId;
     if (!missing.some((item) => item.fieldId === fieldId)) {
       missing.push({ label, fieldId });
     }
@@ -346,7 +335,10 @@ const TRACKED_EXPIRY_FIELDS: Array<{
   },
 ];
 
-function driverDisplayName(record: Record<string, unknown>, details: Record<string, string>): string {
+function driverDisplayName(
+  record: Record<string, unknown>,
+  details: Record<string, string>,
+): string {
   return (
     dotWorkerName(record) ||
     dotRecordTitle(record) ||
@@ -443,7 +435,10 @@ function licenseAttentionPersonKey(issue: DotAttentionIssue): string {
   return issue.personnelId?.trim() || issue.recordId;
 }
 
-function countAttentionIssues(issues: readonly DotAttentionIssue[], kind: DotAttentionKind): number {
+function countAttentionIssues(
+  issues: readonly DotAttentionIssue[],
+  kind: DotAttentionKind,
+): number {
   return issues.filter((issue) => issue.kind === kind).length;
 }
 
@@ -475,16 +470,11 @@ export function buildFleetAttentionIssues(
 
   for (const { driver, kind, reason } of driversWithLicenseIssues(drivers, today)) {
     const attentionKind: DotAttentionKind =
-      kind === "missing"
-        ? "missingLicenseExpiry"
-        : kind === "expired"
-          ? "expired"
-          : "expiring";
+      kind === "missing" ? "missingLicenseExpiry" : kind === "expired" ? "expired" : "expiring";
     const issue: DotAttentionIssue = {
       kind: attentionKind,
       recordId: driver.id,
-      driverName:
-        driver.personnelName.trim() || driver.employeeNumber.trim() || driver.id,
+      driverName: driver.personnelName.trim() || driver.employeeNumber.trim() || driver.id,
       reason,
       fieldId: "cdlExpiry",
       source: "fleet",
@@ -499,8 +489,7 @@ export function buildFleetAttentionIssues(
     const issue: DotAttentionIssue = {
       kind: "pendingMvr",
       recordId: driver.id,
-      driverName:
-        driver.personnelName.trim() || driver.employeeNumber.trim() || driver.id,
+      driverName: driver.personnelName.trim() || driver.employeeNumber.trim() || driver.id,
       reason: "Pending initial MVR",
       fieldId: "mvrReleaseForm",
       source: "fleet",
@@ -522,8 +511,7 @@ export function buildFleetAttentionIssues(
     const issue: DotAttentionIssue = {
       kind: "missingMvrConsent",
       recordId: driver.id,
-      driverName:
-        driver.personnelName.trim() || driver.employeeNumber.trim() || driver.id,
+      driverName: driver.personnelName.trim() || driver.employeeNumber.trim() || driver.id,
       reason: "Missing MVR Consent form",
       fieldId: "mvrReleaseForm",
       source: "fleet",
@@ -774,9 +762,7 @@ export function formatDriverListAttentionLine(
       const ago = daysAgoLabel(dateMatch[1], today);
       const label = primary.reason.replace(/\s+\d{4}-\d{2}-\d{2}.*/, "").trim();
       const onDate = new Date(`${dateMatch[1]}T12:00:00`).toLocaleDateString();
-      text = ago
-        ? `${label} expired on ${onDate} (${ago})`
-        : `${label} expired on ${onDate}`;
+      text = ago ? `${label} expired on ${onDate} (${ago})` : `${label} expired on ${onDate}`;
     }
   } else if (primary.kind === "expiring") {
     const dateMatch = primary.reason.match(/(\d{4}-\d{2}-\d{2})/);

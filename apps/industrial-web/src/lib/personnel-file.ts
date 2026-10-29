@@ -29,10 +29,7 @@ export type PersonnelFileGroup = {
   rows: PersonnelFileRow[];
 };
 
-export type LookupLabelResolver = (
-  source: PersonnelLookupSource,
-  id: string,
-) => string | undefined;
+export type LookupLabelResolver = (source: PersonnelLookupSource, id: string) => string | undefined;
 
 function str(value: unknown): string {
   return typeof value === "string" ? value.trim() : "";
@@ -150,9 +147,7 @@ export function buildPersonnelFile(
 
   for (const section of PERSONNEL_FORM_SECTIONS) {
     const rows = section.columns
-      ? section.columns.flatMap((column) =>
-          rowsFor(column.fields, record, resolve, column.title),
-        )
+      ? section.columns.flatMap((column) => rowsFor(column.fields, record, resolve, column.title))
       : rowsFor(section.fields ?? [], record, resolve);
     if (rows.length === 0) continue;
     groups.push({

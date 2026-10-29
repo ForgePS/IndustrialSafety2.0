@@ -15,7 +15,11 @@ export type SafetyIndexView = {
 };
 
 /** Dashboard date range like "Feb 19, 2026 – Aug 19, 2026". */
-export function formatInsightDateRange(start: string, end: string, fallback = "Last 6 months"): string {
+export function formatInsightDateRange(
+  start: string,
+  end: string,
+  fallback = "Last 6 months",
+): string {
   const fmt = (iso: string) => {
     if (!iso) return "";
     const d = new Date(`${iso.slice(0, 10)}T12:00:00`);

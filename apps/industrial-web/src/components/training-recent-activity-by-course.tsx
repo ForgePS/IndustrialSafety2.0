@@ -37,7 +37,11 @@ export function TrainingRecentActivityByCourse({
   const [expandedCourseId, setExpandedCourseId] = useState<string | null>(null);
 
   if (!groups.length) {
-    return <p className="text-muted mb-0">No assignment activity yet. Create an assignment to get started.</p>;
+    return (
+      <p className="text-muted mb-0">
+        No assignment activity yet. Create an assignment to get started.
+      </p>
+    );
   }
 
   return (
@@ -81,11 +85,16 @@ export function TrainingRecentActivityByCourse({
                     </thead>
                     <tbody>
                       {group.rows.map((row) => (
-                        <tr key={`${row.assignmentId}-${row.personnelId ?? row.userId ?? row.assigneeId}`}>
+                        <tr
+                          key={`${row.assignmentId}-${row.personnelId ?? row.userId ?? row.assigneeId}`}
+                        >
                           <td>{row.employeeNumber ?? "—"}</td>
                           <td>
                             {row.personnelId ? (
-                              <a href={personFileHref(row.personnelId)} className="text-decoration-none">
+                              <a
+                                href={personFileHref(row.personnelId)}
+                                className="text-decoration-none"
+                              >
                                 {personNameDisplay(row.userLabel)}
                               </a>
                             ) : (

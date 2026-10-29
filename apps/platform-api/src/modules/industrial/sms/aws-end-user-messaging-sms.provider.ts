@@ -110,7 +110,9 @@ function sanitizeContext(
   const out: Record<string, string> = {};
   for (const [key, value] of Object.entries(context)) {
     const k = key.trim().slice(0, 100);
-    const v = String(value ?? "").trim().slice(0, 800);
+    const v = String(value ?? "")
+      .trim()
+      .slice(0, 800);
     if (!k || !v || /\s/.test(k)) continue;
     out[k] = v;
     if (Object.keys(out).length >= 5) break;

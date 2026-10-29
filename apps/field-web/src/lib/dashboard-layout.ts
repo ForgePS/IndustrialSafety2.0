@@ -4,11 +4,7 @@ import {
   FIELD_DASHBOARD_CATALOG,
   type DashboardCard,
 } from "@/lib/dashboard-cards";
-import {
-  hasFieldAccess,
-  hasFieldPermission,
-  type FieldAuthOpts,
-} from "@/lib/field-permissions";
+import { hasFieldAccess, hasFieldPermission, type FieldAuthOpts } from "@/lib/field-permissions";
 import { isFieldFeatureModuleEnabled } from "@/lib/field-modules";
 
 const STORAGE_KEY = "forge.field.dashboard.v1";
@@ -36,7 +32,9 @@ export function canUseDashboardCard(
   }
   // More-section links (no permission) stay available to every signed-in user.
   if (!card.permission) return true;
-  return hasFieldPermission(permissions, card.permission, opts) || hasFieldAccess(permissions, opts);
+  return (
+    hasFieldPermission(permissions, card.permission, opts) || hasFieldAccess(permissions, opts)
+  );
 }
 
 export function normalizePinnedIds(raw: unknown): string[] {
@@ -98,7 +96,11 @@ export function listAddableCards(
   );
 }
 
-export function movePinnedId(ids: readonly string[], id: string, direction: "up" | "down"): string[] {
+export function movePinnedId(
+  ids: readonly string[],
+  id: string,
+  direction: "up" | "down",
+): string[] {
   const next = [...ids];
   const index = next.indexOf(id);
   if (index < 0) return next;

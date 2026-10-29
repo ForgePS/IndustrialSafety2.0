@@ -25,12 +25,12 @@ Aligned to the system boundary in `../scope/system-boundary.md`.
 
 ## 3. Cadence
 
-| Activity | Frequency |
-| --- | --- |
-| Full risk assessment refresh | At least annually |
-| Triggered reassessment | Material architecture change, major incident, new product module in-scope, significant vendor change |
-| Risk register review | Quarterly |
-| Risk acceptance expiry review | Per acceptance end date (default ≤ 12 months) |
+| Activity                      | Frequency                                                                                            |
+| ----------------------------- | ---------------------------------------------------------------------------------------------------- |
+| Full risk assessment refresh  | At least annually                                                                                    |
+| Triggered reassessment        | Material architecture change, major incident, new product module in-scope, significant vendor change |
+| Risk register review          | Quarterly                                                                                            |
+| Risk acceptance expiry review | Per acceptance end date (default ≤ 12 months)                                                        |
 
 ---
 
@@ -38,33 +38,33 @@ Aligned to the system boundary in `../scope/system-boundary.md`.
 
 ### Likelihood (1–5)
 
-| Score | Meaning |
-| --- | --- |
-| 1 | Rare — not expected in 24 months |
-| 2 | Unlikely |
-| 3 | Possible — may occur within 12–24 months |
-| 4 | Likely |
-| 5 | Almost certain / continuous exposure |
+| Score | Meaning                                  |
+| ----- | ---------------------------------------- |
+| 1     | Rare — not expected in 24 months         |
+| 2     | Unlikely                                 |
+| 3     | Possible — may occur within 12–24 months |
+| 4     | Likely                                   |
+| 5     | Almost certain / continuous exposure     |
 
 ### Impact (1–5)
 
-| Score | Confidentiality | Availability | Integrity / trust |
-| --- | --- | --- | --- |
-| 1 | Negligible | Brief cosmetic outage | No customer impact |
-| 2 | Limited internal | Degraded non-critical | Minor data issue, correctable |
-| 3 | Single-tenant exposure risk | Partial service outage | Incorrect records requiring remediation |
-| 4 | Multi-tenant or sensitive disclosure | Major outage | Systemic incorrect processing |
-| 5 | Broad breach / regulatory crisis | Prolonged platform failure | Loss of public trust / safety impact |
+| Score | Confidentiality                      | Availability               | Integrity / trust                       |
+| ----- | ------------------------------------ | -------------------------- | --------------------------------------- |
+| 1     | Negligible                           | Brief cosmetic outage      | No customer impact                      |
+| 2     | Limited internal                     | Degraded non-critical      | Minor data issue, correctable           |
+| 3     | Single-tenant exposure risk          | Partial service outage     | Incorrect records requiring remediation |
+| 4     | Multi-tenant or sensitive disclosure | Major outage               | Systemic incorrect processing           |
+| 5     | Broad breach / regulatory crisis     | Prolonged platform failure | Loss of public trust / safety impact    |
 
 ### Risk score
 
 `Score = Likelihood × Impact` (range 1–25)
 
-| Score | Rating | Default treatment expectation |
-| --- | --- | --- |
-| 1–4 | Low | Monitor |
-| 5–9 | Medium | Mitigate or accept with owner |
-| 10–16 | High | Mitigate with timeline |
+| Score | Rating   | Default treatment expectation                |
+| ----- | -------- | -------------------------------------------- |
+| 1–4   | Low      | Monitor                                      |
+| 5–9   | Medium   | Mitigate or accept with owner                |
+| 10–16 | High     | Mitigate with timeline                       |
 | 17–25 | Critical | Immediate mitigation or executive acceptance |
 
 ---
@@ -86,12 +86,12 @@ Each Medium+ risk must map to one or more control IDs in `../controls/control-ma
 
 ## 7. Participants
 
-| Role | Responsibility |
-| --- | --- |
-| Risk owner (interim: Eng lead) | Maintain registers |
-| Control owners | Confirm control operation |
-| Executive sponsor | Accept High/Critical residual risk |
-| All engineers | Report new threats/assets |
+| Role                           | Responsibility                     |
+| ------------------------------ | ---------------------------------- |
+| Risk owner (interim: Eng lead) | Maintain registers                 |
+| Control owners                 | Confirm control operation          |
+| Executive sponsor              | Accept High/Critical residual risk |
+| All engineers                  | Report new threats/assets          |
 
 ---
 

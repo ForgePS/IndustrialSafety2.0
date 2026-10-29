@@ -30,18 +30,24 @@ describe("IncidentStateMachineService", () => {
 
   it("allows draft to in_progress and void transitions", () => {
     expect(() => sm.assertTransition("DRAFT", "IN_PROGRESS", principal([]))).not.toThrow();
-    expect(() => sm.assertTransition("DRAFT", "VOIDED", principal(["rms.neris.incident.void"]))).not.toThrow();
+    expect(() =>
+      sm.assertTransition("DRAFT", "VOIDED", principal(["rms.neris.incident.void"])),
+    ).not.toThrow();
   });
 
   it("blocks invalid transitions", () => {
-    expect(() => sm.assertTransition("DRAFT", "APPROVED", principal([]))).toThrow(/Cannot transition/);
-    expect(() => sm.assertTransition("FINALIZED", "DRAFT", principal([]))).toThrow(/Cannot transition/);
+    expect(() => sm.assertTransition("DRAFT", "APPROVED", principal([]))).toThrow(
+      /Cannot transition/,
+    );
+    expect(() => sm.assertTransition("FINALIZED", "DRAFT", principal([]))).toThrow(
+      /Cannot transition/,
+    );
   });
 
   it("requires permissions for workflow targets", () => {
-    expect(() =>
-      sm.assertTransition("SUBMITTED_FOR_REVIEW", "APPROVED", principal([])),
-    ).toThrow(/Missing permission/);
+    expect(() => sm.assertTransition("SUBMITTED_FOR_REVIEW", "APPROVED", principal([]))).toThrow(
+      /Missing permission/,
+    );
     expect(() =>
       sm.assertTransition(
         "SUBMITTED_FOR_REVIEW",

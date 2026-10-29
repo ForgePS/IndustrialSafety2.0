@@ -80,12 +80,7 @@ export class OrganizationsController {
     @Res({ passthrough: true }) res: Response,
   ) {
     const expected = requireIfMatch(req, "organization");
-    const data = await this.organizations.archive(
-      tenantId,
-      organizationId,
-      principal,
-      expected,
-    );
+    const data = await this.organizations.archive(tenantId, organizationId, principal, expected);
     setETag(res, data.recordVersion);
     return ok(data, getRequestIds(req));
   }

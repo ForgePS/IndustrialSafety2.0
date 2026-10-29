@@ -41,9 +41,7 @@ function parseFileList(raw: unknown): CompanyDriverMvrFile[] {
     .filter((row): row is CompanyDriverMvrFile => row != null);
 }
 
-export function parseCompanyDriverMvrSnapshot(
-  value: unknown,
-): CompanyDriverMvrSnapshot | null {
+export function parseCompanyDriverMvrSnapshot(value: unknown): CompanyDriverMvrSnapshot | null {
   if (!value || typeof value !== "object") return null;
   const row = value as Record<string, unknown>;
   const mvrFiles = parseFileList(row.mvrFiles);
@@ -53,8 +51,7 @@ export function parseCompanyDriverMvrSnapshot(
     initialMvrDate: typeof row.initialMvrDate === "string" ? row.initialMvrDate.trim() : "",
     lastMvrDate: typeof row.lastMvrDate === "string" ? row.lastMvrDate.trim() : "",
     mvrReleaseDate: typeof row.mvrReleaseDate === "string" ? row.mvrReleaseDate.trim() : "",
-    mvrUploadCount:
-      typeof row.mvrUploadCount === "number" ? row.mvrUploadCount : mvrFiles.length,
+    mvrUploadCount: typeof row.mvrUploadCount === "number" ? row.mvrUploadCount : mvrFiles.length,
     mvrReleaseUploadCount:
       typeof row.mvrReleaseUploadCount === "number"
         ? row.mvrReleaseUploadCount
@@ -64,7 +61,9 @@ export function parseCompanyDriverMvrSnapshot(
   };
 }
 
-export function companyDriverMvrOnFile(snapshot: CompanyDriverMvrSnapshot | null | undefined): boolean {
+export function companyDriverMvrOnFile(
+  snapshot: CompanyDriverMvrSnapshot | null | undefined,
+): boolean {
   if (!snapshot) return false;
   return (
     (snapshot.mvrUploadCount ?? 0) > 0 ||

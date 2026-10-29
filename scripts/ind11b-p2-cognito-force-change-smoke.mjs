@@ -16,9 +16,7 @@ import { randomBytes } from "node:crypto";
 const POOL = "us-east-1_VYjUFLXG4";
 const CLIENT = "3rls9835j4qs3jmchb3uh7ketm";
 const REGION = "us-east-1";
-const EVID = path.resolve(
-  "docs/program/industrial-migration/ind-11/evidence/p2/02-cognito",
-);
+const EVID = path.resolve("docs/program/industrial-migration/ind-11/evidence/p2/02-cognito");
 const TARGETS = ["safetyadmin@producersrice.com", "jlackie@producersrice.com"];
 
 const secretDir = path.join(os.homedir(), ".forge", "producers-p2");
@@ -76,7 +74,10 @@ async function forceChange(email) {
     };
   }
 
-  if (init.ChallengeName !== ChallengeNameType.NEW_PASSWORD_REQUIRED && init.ChallengeName !== "NEW_PASSWORD_REQUIRED") {
+  if (
+    init.ChallengeName !== ChallengeNameType.NEW_PASSWORD_REQUIRED &&
+    init.ChallengeName !== "NEW_PASSWORD_REQUIRED"
+  ) {
     return {
       email,
       ok: false,
@@ -163,6 +164,9 @@ const evidence = {
   results,
   note: "Passwords never written to evidence; browser OAuth smoke follows separately.",
 };
-fs.writeFileSync(path.join(EVID, "login-smoke-force-change.json"), `${JSON.stringify(evidence, null, 2)}\n`);
+fs.writeFileSync(
+  path.join(EVID, "login-smoke-force-change.json"),
+  `${JSON.stringify(evidence, null, 2)}\n`,
+);
 console.log(JSON.stringify({ ok: evidence.ok, results: evidence.results }, null, 2));
 process.exit(evidence.ok ? 0 : 1);

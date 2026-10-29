@@ -31,10 +31,7 @@ export type OnboardingStepDefinition = {
 };
 
 /** Steps that may never be skipped by product/template overrides. */
-export const REQUIRED_ONBOARDING_STEP_KEYS = [
-  "CREATE_TENANT",
-  "ACTIVATE_TENANT",
-] as const;
+export const REQUIRED_ONBOARDING_STEP_KEYS = ["CREATE_TENANT", "ACTIVATE_TENANT"] as const;
 
 export type OnboardingStepOverrides = {
   /** Step keys to mark SKIPPED at session start (must not include required keys). */
@@ -52,8 +49,7 @@ export const ONBOARDING_ACTIVATION_ERROR_CODES = [
   "FACILITY_MISSING",
 ] as const;
 
-export type OnboardingActivationErrorCode =
-  (typeof ONBOARDING_ACTIVATION_ERROR_CODES)[number];
+export type OnboardingActivationErrorCode = (typeof ONBOARDING_ACTIVATION_ERROR_CODES)[number];
 
 /**
  * Resolve ordered onboarding steps for a product/template.
@@ -65,8 +61,7 @@ export function resolveOnboardingSteps(
 ): OnboardingStepDefinition[] {
   const skip = new Set(
     (overrides?.skipStepKeys ?? []).filter(
-      (key) =>
-        !(REQUIRED_ONBOARDING_STEP_KEYS as readonly string[]).includes(key),
+      (key) => !(REQUIRED_ONBOARDING_STEP_KEYS as readonly string[]).includes(key),
     ),
   );
   const kept = base.filter((step) => !skip.has(step.key));

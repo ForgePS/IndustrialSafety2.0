@@ -124,14 +124,14 @@ function pick(row, keys) {
 
 function mapRow(sheet, row) {
   const defaults = SHEET_DEFAULTS[sheet] || { assetType: "FLEET_VEHICLE", status: "ACTIVE" };
-  const vin = str(pick(row, ["VIN Number", "VIN", "vin"])).toUpperCase().replace(/[\s-]/g, "") || null;
+  const vin =
+    str(pick(row, ["VIN Number", "VIN", "vin"]))
+      .toUpperCase()
+      .replace(/[\s-]/g, "") || null;
   const model = str(pick(row, ["Model", "model"]));
   const insured = asBool(pick(row, ["Insured?", "Insured", "insured"]));
   const fringe = asBool(pick(row, ["not on vehicle fringe SS"]));
-  const commuteRaw = pick(row, [
-    "driving vehicles to/from work - email to Kent 1/7/26",
-    "commute",
-  ]);
+  const commuteRaw = pick(row, ["driving vehicles to/from work - email to Kent 1/7/26", "commute"]);
   const form2290 = pick(row, [2290, "2290"]);
   const irp = pick(row, ["IRP", "irp"]);
   const ren = pick(row, ["Ren Date", "renewal_date"]);
@@ -141,7 +141,9 @@ function mapRow(sheet, row) {
   }
   return {
     sheet,
-    sourceDocumentId: vin || `${sheet}:${str(pick(row, ["Year"]))}:${str(pick(row, ["Make"]))}:${model}:${str(pick(row, ["License"]))}`,
+    sourceDocumentId:
+      vin ||
+      `${sheet}:${str(pick(row, ["Year"]))}:${str(pick(row, ["Make"]))}:${model}:${str(pick(row, ["License"]))}`,
     assetType: inferAssetType(sheet, model),
     status: defaults.status,
     year: asInt(pick(row, ["Year", "year"])),
@@ -162,15 +164,18 @@ function mapRow(sheet, row) {
     mileage: asInt(pick(row, ["Mileage", "mileage"])),
     notOnVehicleFringeSs: fringe,
     vehicleFringe: fringe,
-    commuteUseStatus: commuteRaw != null && str(commuteRaw) ? "YES" : sheet === "Fleet" ? "UNKNOWN" : null,
+    commuteUseStatus:
+      commuteRaw != null && str(commuteRaw) ? "YES" : sheet === "Fleet" ? "UNKNOWN" : null,
     commuteUseNotes: commuteRaw != null ? str(commuteRaw) || null : null,
-    form2290Status: form2290 != null && str(form2290) ? "FILED" : sheet.includes("Truck") ? "UNKNOWN" : null,
+    form2290Status:
+      form2290 != null && str(form2290) ? "FILED" : sheet.includes("Truck") ? "UNKNOWN" : null,
     form2290Notes: form2290 != null ? str(form2290) || null : null,
     irpStatus: irp != null && str(irp) ? "FILED" : sheet.includes("Truck") ? "UNKNOWN" : null,
     irpNotes: irp != null ? str(irp) || null : null,
     notes: notesParts.filter(Boolean).join(" | ") || null,
     dispositionStatus: defaults.status === "REMOVED" ? "REMOVED" : null,
-    dispositionNotes: defaults.status === "REMOVED" ? notesParts.filter(Boolean).join(" | ") || null : null,
+    dispositionNotes:
+      defaults.status === "REMOVED" ? notesParts.filter(Boolean).join(" | ") || null : null,
     sourcePayload: { sheet, ...row },
   };
 }

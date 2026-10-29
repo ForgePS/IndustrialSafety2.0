@@ -79,12 +79,7 @@ export class SubscriptionsController {
     @Res({ passthrough: true }) res: Response,
   ) {
     const expected = requireIfMatch(req, "subscription");
-    const data = await this.subscriptions.suspend(
-      tenantId,
-      subscriptionId,
-      principal,
-      expected,
-    );
+    const data = await this.subscriptions.suspend(tenantId, subscriptionId, principal, expected);
     setETag(res, data.recordVersion);
     return ok(data, getRequestIds(req));
   }
@@ -99,12 +94,7 @@ export class SubscriptionsController {
     @Res({ passthrough: true }) res: Response,
   ) {
     const expected = requireIfMatch(req, "subscription");
-    const data = await this.subscriptions.reactivate(
-      tenantId,
-      subscriptionId,
-      principal,
-      expected,
-    );
+    const data = await this.subscriptions.reactivate(tenantId, subscriptionId, principal, expected);
     setETag(res, data.recordVersion);
     return ok(data, getRequestIds(req));
   }

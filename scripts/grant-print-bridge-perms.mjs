@@ -75,9 +75,7 @@ async function main() {
     const targetRoles =
       industrialAdminRoles.length > 0
         ? industrialAdminRoles
-        : roles.filter((r) =>
-            /admin|owner|super|manager|safety/i.test(`${r.code} ${r.name}`),
-          );
+        : roles.filter((r) => /admin|owner|super|manager|safety/i.test(`${r.code} ${r.name}`));
 
     const permRows = await sql`
       select id::text, code from permissions where code = any(${PERMS})

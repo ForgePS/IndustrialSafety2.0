@@ -1,6 +1,4 @@
-import type {
-  ForgeBluetoothErrorCode,
-} from "../../services/protocol";
+import type { ForgeBluetoothErrorCode } from "../../services/protocol";
 
 export interface MappedBradyError {
   code: ForgeBluetoothErrorCode;
@@ -24,22 +22,14 @@ export class BradyErrorMapper {
       };
     }
 
-    if (
-      lower.includes("permission") ||
-      lower.includes("not allowed") ||
-      lower.includes("denied")
-    ) {
+    if (lower.includes("permission") || lower.includes("not allowed") || lower.includes("denied")) {
       return {
         code: "BLUETOOTH_PERMISSION_REQUIRED",
         message: msg,
       };
     }
 
-    if (
-      lower.includes("cancel") ||
-      lower.includes("user gesture") ||
-      lower.includes("chooser")
-    ) {
+    if (lower.includes("cancel") || lower.includes("user gesture") || lower.includes("chooser")) {
       return {
         code: "BLUETOOTH_USER_CANCELLED",
         message: msg,
@@ -71,7 +61,8 @@ export class BradyErrorMapper {
     isRibbonValid?: boolean | null;
     status?: string | null;
   }): MappedBradyError | null {
-    const combined = `${input.messageTitle ?? ""} ${input.message ?? ""} ${input.status ?? ""}`.toLowerCase();
+    const combined =
+      `${input.messageTitle ?? ""} ${input.message ?? ""} ${input.status ?? ""}`.toLowerCase();
 
     if (
       input.isSupplyValid === false ||

@@ -17,7 +17,11 @@ const postgresMod = await import(pathToFileURL(dbRequire.resolve("postgres")).hr
 const postgres = postgresMod.default ?? postgresMod;
 
 const TENANT_KEY = (process.env.TENANT_KEY || "forge-platform").trim();
-const DOCUMENTS_BUCKET = (process.env.DOCUMENTS_BUCKET || process.env.FORGE_DOCUMENTS_BUCKET || "").trim();
+const DOCUMENTS_BUCKET = (
+  process.env.DOCUMENTS_BUCKET ||
+  process.env.FORGE_DOCUMENTS_BUCKET ||
+  ""
+).trim();
 
 async function resolveDatabaseUrl(secretArn) {
   const region = process.env.AWS_REGION || "us-east-1";
@@ -75,10 +79,7 @@ async function main() {
       limit 25
     `;
 
-    const bucketGuess =
-      DOCUMENTS_BUCKET ||
-      rows.find((r) => r.bucket_name)?.bucket_name ||
-      "";
+    const bucketGuess = DOCUMENTS_BUCKET || rows.find((r) => r.bucket_name)?.bucket_name || "";
 
     const checked = [];
     for (const row of rows) {

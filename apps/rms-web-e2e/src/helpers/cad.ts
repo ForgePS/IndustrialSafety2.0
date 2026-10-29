@@ -93,10 +93,7 @@ export async function simulatorSend(
   return unwrapData<Record<string, unknown>>(send.json);
 }
 
-export async function listCadMessages(
-  page: Page,
-  tenantId: string,
-): Promise<CadRawMessageMeta[]> {
+export async function listCadMessages(page: Page, tenantId: string): Promise<CadRawMessageMeta[]> {
   const res = await apiRequest(page, "GET", `/api/v1/tenants/${tenantId}/cad/messages`);
   expect(res.status).toBe(200);
   return unwrapData<CadRawMessageMeta[]>(res.json);
@@ -148,7 +145,11 @@ export async function getCadConflict(
   tenantId: string,
   conflictId: string,
 ): Promise<CadConflict> {
-  const res = await apiRequest(page, "GET", `/api/v1/tenants/${tenantId}/cad/conflicts/${conflictId}`);
+  const res = await apiRequest(
+    page,
+    "GET",
+    `/api/v1/tenants/${tenantId}/cad/conflicts/${conflictId}`,
+  );
   expectOkStatus(res.status, "get conflict");
   return unwrapData<CadConflict>(res.json);
 }
@@ -157,12 +158,23 @@ export async function listAuditEvents(
   page: Page,
   tenantId: string,
 ): Promise<Array<{ action?: string; resourceId?: string; result?: string }>> {
-  const res = await apiRequest(page, "GET", `/api/v1/tenants/${tenantId}/audit-events?pageSize=200`);
+  const res = await apiRequest(
+    page,
+    "GET",
+    `/api/v1/tenants/${tenantId}/audit-events?pageSize=200`,
+  );
   expect([200, 201]).toContain(res.status);
   const data = unwrapData<unknown>(res.json);
-  if (Array.isArray(data)) return data as Array<{ action?: string; resourceId?: string; result?: string }>;
-  if (data && typeof data === "object" && "items" in data && Array.isArray((data as { items: unknown }).items)) {
-    return (data as { items: Array<{ action?: string; resourceId?: string; result?: string }> }).items;
+  if (Array.isArray(data))
+    return data as Array<{ action?: string; resourceId?: string; result?: string }>;
+  if (
+    data &&
+    typeof data === "object" &&
+    "items" in data &&
+    Array.isArray((data as { items: unknown }).items)
+  ) {
+    return (data as { items: Array<{ action?: string; resourceId?: string; result?: string }> })
+      .items;
   }
   return [];
 }

@@ -20,8 +20,7 @@ import { IndustrialDomainService } from "./industrial-domain.service.js";
 type ListQuery = Record<string, string | undefined>;
 
 /** Accept RFC 4122/9562 UUIDs including Forge createId() UUIDv7 values. */
-const UUID_RE =
-  /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
 function asOptionalUuid(value: unknown): string | null {
   const raw = String(value ?? "").trim();
@@ -95,7 +94,11 @@ export class IndustrialTasksExtrasService {
   private async assertTask(tenantId: string, taskId: string) {
     const [task] = await withTenantTransaction(this.db, tenantId, async (tx) => {
       return tx
-        .select({ id: industrialTasks.id, title: industrialTasks.title, dueDate: industrialTasks.dueDate })
+        .select({
+          id: industrialTasks.id,
+          title: industrialTasks.title,
+          dueDate: industrialTasks.dueDate,
+        })
         .from(industrialTasks)
         .where(
           and(
@@ -320,7 +323,10 @@ export class IndustrialTasksExtrasService {
         .select({ max: sql<number>`coalesce(max(${industrialTaskSubtasks.sortOrder}), -1)` })
         .from(industrialTaskSubtasks)
         .where(
-          and(eq(industrialTaskSubtasks.tenantId, tenantId), eq(industrialTaskSubtasks.taskId, taskId)),
+          and(
+            eq(industrialTaskSubtasks.tenantId, tenantId),
+            eq(industrialTaskSubtasks.taskId, taskId),
+          ),
         );
       const [row] = await tx
         .insert(industrialTaskSubtasks)
@@ -377,15 +383,22 @@ export class IndustrialTasksExtrasService {
       const [row] = await tx
         .update(industrialTaskSubtasks)
         .set(patch)
-        .where(and(eq(industrialTaskSubtasks.id, subId), eq(industrialTaskSubtasks.tenantId, tenantId)))
+        .where(
+          and(eq(industrialTaskSubtasks.id, subId), eq(industrialTaskSubtasks.tenantId, tenantId)),
+        )
         .returning();
       return row;
     });
     if (!updated) throw new ForgeError("INTERNAL_ERROR", "Failed to update subtask");
     if (body.isDone !== undefined) {
-      await this.recordActivity(principal, taskId, body.isDone ? "subtask.done" : "subtask.undone", {
-        subtaskId: subId,
-      });
+      await this.recordActivity(
+        principal,
+        taskId,
+        body.isDone ? "subtask.done" : "subtask.undone",
+        {
+          subtaskId: subId,
+        },
+      );
     }
     return mapItem(updated);
   }
@@ -413,7 +426,9 @@ export class IndustrialTasksExtrasService {
       await tx
         .update(industrialTaskSubtasks)
         .set({ archivedAt: now, updatedAt: now })
-        .where(and(eq(industrialTaskSubtasks.id, subId), eq(industrialTaskSubtasks.tenantId, tenantId)));
+        .where(
+          and(eq(industrialTaskSubtasks.id, subId), eq(industrialTaskSubtasks.tenantId, tenantId)),
+        );
     });
     await this.recordActivity(principal, taskId, "subtask.archived", { subtaskId: subId });
     return { id: subId, archived: true };
@@ -435,12 +450,19 @@ export class IndustrialTasksExtrasService {
             isNull(industrialTaskChecklistItems.archivedAt),
           ),
         )
-        .orderBy(asc(industrialTaskChecklistItems.sortOrder), asc(industrialTaskChecklistItems.createdAt));
+        .orderBy(
+          asc(industrialTaskChecklistItems.sortOrder),
+          asc(industrialTaskChecklistItems.createdAt),
+        );
     });
     return { items: rows.map(mapItem) };
   }
 
-  async createChecklistItem(principal: ForgePrincipal, taskIdRaw: string, body: Record<string, unknown>) {
+  async createChecklistItem(
+    principal: ForgePrincipal,
+    taskIdRaw: string,
+    body: Record<string, unknown>,
+  ) {
     const tenantId = this.tenant(principal);
     const taskId = asOptionalUuid(taskIdRaw);
     if (!taskId) throw new ForgeError("VALIDATION_FAILED", "Task id is required");
@@ -528,9 +550,14 @@ export class IndustrialTasksExtrasService {
     });
     if (!updated) throw new ForgeError("INTERNAL_ERROR", "Failed to update checklist item");
     if (body.isDone !== undefined) {
-      await this.recordActivity(principal, taskId, body.isDone ? "checklist.done" : "checklist.undone", {
-        itemId,
-      });
+      await this.recordActivity(
+        principal,
+        taskId,
+        body.isDone ? "checklist.done" : "checklist.undone",
+        {
+          itemId,
+        },
+      );
     }
     return mapItem(updated);
   }
@@ -579,7 +606,10 @@ export class IndustrialTasksExtrasService {
         .select()
         .from(industrialTaskActivity)
         .where(
-          and(eq(industrialTaskActivity.tenantId, tenantId), eq(industrialTaskActivity.taskId, taskId)),
+          and(
+            eq(industrialTaskActivity.tenantId, tenantId),
+            eq(industrialTaskActivity.taskId, taskId),
+          ),
         )
         .orderBy(desc(industrialTaskActivity.createdAt))
         .limit(100);
@@ -595,7 +625,11 @@ export class IndustrialTasksExtrasService {
     };
   }
 
-  async createTaskReminders(principal: ForgePrincipal, taskIdRaw: string, body: Record<string, unknown>) {
+  async createTaskReminders(
+    principal: ForgePrincipal,
+    taskIdRaw: string,
+    body: Record<string, unknown>,
+  ) {
     const tenantId = this.tenant(principal);
     const taskId = asOptionalUuid(taskIdRaw);
     if (!taskId) throw new ForgeError("VALIDATION_FAILED", "Task id is required");
@@ -640,7 +674,10 @@ export class IndustrialTasksExtrasService {
       return rows;
     });
 
-    await this.recordActivity(principal, taskId, "reminder.created", { count: created.length, offsets: unique });
+    await this.recordActivity(principal, taskId, "reminder.created", {
+      count: created.length,
+      offsets: unique,
+    });
     return {
       items: created.map((r) => ({
         id: r.id,
@@ -659,6 +696,11 @@ export class IndustrialTasksExtrasService {
       this.listChecklist(principal, taskId),
       this.listActivity(principal, taskId),
     ]);
-    return { taskId, subtasks: subtasks.items, checklist: checklist.items, activity: activity.items };
+    return {
+      taskId,
+      subtasks: subtasks.items,
+      checklist: checklist.items,
+      activity: activity.items,
+    };
   }
 }

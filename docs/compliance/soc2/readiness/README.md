@@ -4,13 +4,13 @@ Artifacts preparing Forge for an independent readiness assessment and eventual C
 
 ## Intended contents
 
-| Artifact | Purpose |
-| --- | --- |
-| `checklists/` | Pre-assessment checklists by TSC category |
+| Artifact                 | Purpose                                                               |
+| ------------------------ | --------------------------------------------------------------------- |
+| `checklists/`            | Pre-assessment checklists by TSC category                             |
 | System description draft | Future customer/auditor-facing description (not for marketing claims) |
-| Gap closure tracker | Links to risk register material gaps |
-| Evidence index | Pointers into `../evidence/` for a sample period |
-| CPA engagement notes | Questions, inclusive vs carve-out method, period of interest |
+| Gap closure tracker      | Links to risk register material gaps                                  |
+| Evidence index           | Pointers into `../evidence/` for a sample period                      |
+| CPA engagement notes     | Questions, inclusive vs carve-out method, period of interest          |
 
 ## Explicit non-goals
 

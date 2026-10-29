@@ -8,7 +8,11 @@ import {
   TRAINING_MATERIAL_ACCEPT,
   uploadTrainingMaterialFile,
 } from "@/features/training/materials";
-import type { TrainingMaterial, TrainingSource, TrainingSourceFolder } from "@/features/training/types";
+import type {
+  TrainingMaterial,
+  TrainingSource,
+  TrainingSourceFolder,
+} from "@/features/training/types";
 import { TrainingQuestionImportPanel } from "@/components/training-question-import-panel";
 
 type Props = {
@@ -115,7 +119,8 @@ export function TrainingSourceMaterials({
 
   async function deleteFolder(folder: TrainingSourceFolder) {
     if (!canManage) return;
-    if (!window.confirm(`Delete folder "${folder.name}"? Materials will move to Uncategorized.`)) return;
+    if (!window.confirm(`Delete folder "${folder.name}"? Materials will move to Uncategorized.`))
+      return;
     onError(null);
     try {
       await trainingApi.updateSourceFolder(folder.id, { status: "ARCHIVED" });
@@ -204,7 +209,11 @@ export function TrainingSourceMaterials({
             onChange={(e) => setNewFolderName(e.target.value)}
             disabled={busy}
           />
-          <button type="submit" className="btn btn-sm btn-outline-primary" disabled={busy || !newFolderName.trim()}>
+          <button
+            type="submit"
+            className="btn btn-sm btn-outline-primary"
+            disabled={busy || !newFolderName.trim()}
+          >
             Add folder
           </button>
         </form>
@@ -222,7 +231,10 @@ export function TrainingSourceMaterials({
       />
       <div className="d-flex flex-column gap-2">
         {grouped.map((group) => (
-          <div key={group.folderId ?? "uncategorized"} className="border rounded p-2 bg-light-subtle">
+          <div
+            key={group.folderId ?? "uncategorized"}
+            className="border rounded p-2 bg-light-subtle"
+          >
             <div className="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-1">
               <span className="small fw-semibold">{group.label}</span>
               {canManage && showUploadButtons ? (

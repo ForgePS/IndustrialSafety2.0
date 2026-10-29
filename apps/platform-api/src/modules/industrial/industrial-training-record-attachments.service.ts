@@ -53,7 +53,8 @@ export function readTrainingRecordAttachments(payload: unknown): TrainingRecordA
     if (!UUID_PATTERN.test(documentId)) continue;
     const fileName =
       String(row.fileName ?? row.originalFilename ?? row.name ?? "").trim() || "Attachment";
-    const contentType = String(row.contentType ?? row.mimeType ?? "").trim() || "application/octet-stream";
+    const contentType =
+      String(row.contentType ?? row.mimeType ?? "").trim() || "application/octet-stream";
     const uploadedAt = String(row.uploadedAt ?? "").trim() || new Date(0).toISOString();
     out.push({ documentId, fileName, contentType, uploadedAt });
   }
@@ -84,7 +85,9 @@ export class IndustrialTrainingRecordAttachmentsService {
     const tenantId = this.tenant(principal);
     const id = String(recordId ?? "").trim();
     const filename = String(body.filename ?? "").trim();
-    const mimeType = String(body.mimeType ?? "").trim().toLowerCase();
+    const mimeType = String(body.mimeType ?? "")
+      .trim()
+      .toLowerCase();
     const contentLength = Number(body.contentLength ?? 0);
 
     if (!UUID_PATTERN.test(id)) {
@@ -114,39 +117,44 @@ export class IndustrialTrainingRecordAttachmentsService {
     const documentId = createId();
     const now = new Date();
 
-    await withTenantTransaction(this.db, tenantId, async (tx) => {
-      const [record] = await tx
-        .select({ id: industrialTrainingRecords.id })
-        .from(industrialTrainingRecords)
-        .where(
-          and(
-            eq(industrialTrainingRecords.id, id),
-            eq(industrialTrainingRecords.tenantId, tenantId),
-            isNull(industrialTrainingRecords.archivedAt),
-          ),
-        )
-        .limit(1);
-      if (!record) throw new ForgeError("NOT_FOUND", "Training record not found");
+    await withTenantTransaction(
+      this.db,
+      tenantId,
+      async (tx) => {
+        const [record] = await tx
+          .select({ id: industrialTrainingRecords.id })
+          .from(industrialTrainingRecords)
+          .where(
+            and(
+              eq(industrialTrainingRecords.id, id),
+              eq(industrialTrainingRecords.tenantId, tenantId),
+              isNull(industrialTrainingRecords.archivedAt),
+            ),
+          )
+          .limit(1);
+        if (!record) throw new ForgeError("NOT_FOUND", "Training record not found");
 
-      await tx.insert(forgeDocuments).values({
-        id: documentId,
-        tenantId,
-        originalFilename: filename,
-        storedFilename,
-        objectKey,
-        bucketName: this.storage.bucketName,
-        mimeType,
-        fileSizeBytes: contentLength,
-        securityClassification: "INTERNAL",
-        malwareScanStatus: "PENDING",
-        retentionRule: "TRAINING_RECORD_ATTACHMENT_DEFAULT",
-        uploadStatus: "INITIALIZED",
-        source: TRAINING_RECORD_ATTACHMENT_SOURCE,
-        uploadedByUserId: principal.userId,
-        createdAt: now,
-        updatedAt: now,
-      });
-    }, principal.userId);
+        await tx.insert(forgeDocuments).values({
+          id: documentId,
+          tenantId,
+          originalFilename: filename,
+          storedFilename,
+          objectKey,
+          bucketName: this.storage.bucketName,
+          mimeType,
+          fileSizeBytes: contentLength,
+          securityClassification: "INTERNAL",
+          malwareScanStatus: "PENDING",
+          retentionRule: "TRAINING_RECORD_ATTACHMENT_DEFAULT",
+          uploadStatus: "INITIALIZED",
+          source: TRAINING_RECORD_ATTACHMENT_SOURCE,
+          uploadedByUserId: principal.userId,
+          createdAt: now,
+          updatedAt: now,
+        });
+      },
+      principal.userId,
+    );
 
     const presign = await this.storage.createPresignedUploadUrl({
       objectKey,
@@ -166,11 +174,7 @@ export class IndustrialTrainingRecordAttachmentsService {
     };
   }
 
-  async completeUpload(
-    principal: ForgePrincipal,
-    recordId: string,
-    body: { documentId?: string },
-  ) {
+  async completeUpload(principal: ForgePrincipal, recordId: string, body: { documentId?: string }) {
     const tenantId = this.tenant(principal);
     const id = String(recordId ?? "").trim();
     const documentId = String(body.documentId ?? "").trim();
@@ -186,81 +190,89 @@ export class IndustrialTrainingRecordAttachmentsService {
       );
     }
 
-    return withTenantTransaction(this.db, tenantId, async (tx) => {
-      const [record] = await tx
-        .select()
-        .from(industrialTrainingRecords)
-        .where(
-          and(
-            eq(industrialTrainingRecords.id, id),
-            eq(industrialTrainingRecords.tenantId, tenantId),
-            isNull(industrialTrainingRecords.archivedAt),
-          ),
-        )
-        .limit(1);
-      if (!record) throw new ForgeError("NOT_FOUND", "Training record not found");
+    return withTenantTransaction(
+      this.db,
+      tenantId,
+      async (tx) => {
+        const [record] = await tx
+          .select()
+          .from(industrialTrainingRecords)
+          .where(
+            and(
+              eq(industrialTrainingRecords.id, id),
+              eq(industrialTrainingRecords.tenantId, tenantId),
+              isNull(industrialTrainingRecords.archivedAt),
+            ),
+          )
+          .limit(1);
+        if (!record) throw new ForgeError("NOT_FOUND", "Training record not found");
 
-      const document = await tx.query.forgeDocuments.findFirst({
-        where: and(eq(forgeDocuments.id, documentId), eq(forgeDocuments.tenantId, tenantId)),
-      });
-      if (!document) throw new ForgeError("NOT_FOUND", "Document not found");
-      if (!documentBelongsToTenant(document.tenantId, tenantId)) {
-        throw new ForgeError("FORBIDDEN", "Document does not belong to the requested tenant");
-      }
-      if (!objectKeyBelongsToTenant(document.objectKey, tenantId)) {
-        throw new ForgeError("FORBIDDEN", "Object key does not belong to the requested tenant");
-      }
-      if (document.source !== TRAINING_RECORD_ATTACHMENT_SOURCE) {
-        throw new ForgeError("VALIDATION_FAILED", "Document is not a training record attachment");
-      }
-      const expectedPrefix = trainingRecordAttachmentObjectKeyPrefix(tenantId, id);
-      if (!document.objectKey.startsWith(expectedPrefix)) {
-        throw new ForgeError("VALIDATION_FAILED", "Document does not belong to this training record");
-      }
+        const document = await tx.query.forgeDocuments.findFirst({
+          where: and(eq(forgeDocuments.id, documentId), eq(forgeDocuments.tenantId, tenantId)),
+        });
+        if (!document) throw new ForgeError("NOT_FOUND", "Document not found");
+        if (!documentBelongsToTenant(document.tenantId, tenantId)) {
+          throw new ForgeError("FORBIDDEN", "Document does not belong to the requested tenant");
+        }
+        if (!objectKeyBelongsToTenant(document.objectKey, tenantId)) {
+          throw new ForgeError("FORBIDDEN", "Object key does not belong to the requested tenant");
+        }
+        if (document.source !== TRAINING_RECORD_ATTACHMENT_SOURCE) {
+          throw new ForgeError("VALIDATION_FAILED", "Document is not a training record attachment");
+        }
+        const expectedPrefix = trainingRecordAttachmentObjectKeyPrefix(tenantId, id);
+        if (!document.objectKey.startsWith(expectedPrefix)) {
+          throw new ForgeError(
+            "VALIDATION_FAILED",
+            "Document does not belong to this training record",
+          );
+        }
 
-      await this.storage.assertObjectExists(document.objectKey);
+        await this.storage.assertObjectExists(document.objectKey);
 
-      const now = new Date();
-      await tx
-        .update(forgeDocuments)
-        .set({
-          uploadStatus: "COMPLETE",
-          uploadedAt: now,
-          updatedAt: now,
-        })
-        .where(and(eq(forgeDocuments.id, documentId), eq(forgeDocuments.tenantId, tenantId)));
+        const now = new Date();
+        await tx
+          .update(forgeDocuments)
+          .set({
+            uploadStatus: "COMPLETE",
+            uploadedAt: now,
+            updatedAt: now,
+          })
+          .where(and(eq(forgeDocuments.id, documentId), eq(forgeDocuments.tenantId, tenantId)));
 
-      const payload = unwrapPayload(record.sourcePayload);
-      const uploads = readTrainingRecordAttachments(payload);
-      if (!uploads.some((row) => row.documentId === document.id)) {
-        uploads.push({
+        const payload = unwrapPayload(record.sourcePayload);
+        const uploads = readTrainingRecordAttachments(payload);
+        if (!uploads.some((row) => row.documentId === document.id)) {
+          uploads.push({
+            documentId: document.id,
+            fileName: document.originalFilename,
+            contentType: document.mimeType,
+            uploadedAt: now.toISOString(),
+          });
+        }
+
+        const [updated] = await tx
+          .update(industrialTrainingRecords)
+          .set({
+            sourcePayload: {
+              ...payload,
+              certificateUploads: uploads,
+            },
+            updatedAt: now,
+          })
+          .where(eq(industrialTrainingRecords.id, id))
+          .returning();
+
+        return {
+          recordId: id,
           documentId: document.id,
           fileName: document.originalFilename,
-          contentType: document.mimeType,
-          uploadedAt: now.toISOString(),
-        });
-      }
-
-      const [updated] = await tx
-        .update(industrialTrainingRecords)
-        .set({
-          sourcePayload: {
-            ...payload,
-            certificateUploads: uploads,
-          },
-          updatedAt: now,
-        })
-        .where(eq(industrialTrainingRecords.id, id))
-        .returning();
-
-      return {
-        recordId: id,
-        documentId: document.id,
-        fileName: document.originalFilename,
-        attachments: uploads,
-        record: updated,
-      };
-    }, principal.userId);
+          attachments: uploads,
+          record: updated,
+        };
+      },
+      principal.userId,
+    );
   }
 
   async createDownloadUrl(principal: ForgePrincipal, recordId: string, documentId: string) {
@@ -271,54 +283,60 @@ export class IndustrialTrainingRecordAttachmentsService {
       throw new ForgeError("VALIDATION_FAILED", "recordId and documentId must be UUIDs");
     }
 
-    return withTenantTransaction(this.db, tenantId, async (tx) => {
-      const [record] = await tx
-        .select({
-          id: industrialTrainingRecords.id,
-          sourcePayload: industrialTrainingRecords.sourcePayload,
-        })
-        .from(industrialTrainingRecords)
-        .where(
-          and(
-            eq(industrialTrainingRecords.id, id),
-            eq(industrialTrainingRecords.tenantId, tenantId),
-            isNull(industrialTrainingRecords.archivedAt),
-          ),
-        )
-        .limit(1);
-      if (!record) throw new ForgeError("NOT_FOUND", "Training record not found");
+    return withTenantTransaction(
+      this.db,
+      tenantId,
+      async (tx) => {
+        const [record] = await tx
+          .select({
+            id: industrialTrainingRecords.id,
+            sourcePayload: industrialTrainingRecords.sourcePayload,
+          })
+          .from(industrialTrainingRecords)
+          .where(
+            and(
+              eq(industrialTrainingRecords.id, id),
+              eq(industrialTrainingRecords.tenantId, tenantId),
+              isNull(industrialTrainingRecords.archivedAt),
+            ),
+          )
+          .limit(1);
+        if (!record) throw new ForgeError("NOT_FOUND", "Training record not found");
 
-      const attachments = readTrainingRecordAttachments(record.sourcePayload);
-      if (!attachments.some((row) => row.documentId === docId)) {
-        throw new ForgeError("NOT_FOUND", "Attachment not found on this training record");
-      }
+        const attachments = readTrainingRecordAttachments(record.sourcePayload);
+        if (!attachments.some((row) => row.documentId === docId)) {
+          throw new ForgeError("NOT_FOUND", "Attachment not found on this training record");
+        }
 
-      const document = await tx.query.forgeDocuments.findFirst({
-        where: and(eq(forgeDocuments.id, docId), eq(forgeDocuments.tenantId, tenantId)),
-      });
-      if (!document) throw new ForgeError("NOT_FOUND", "Document not found");
-      if (document.source !== TRAINING_RECORD_ATTACHMENT_SOURCE) {
-        throw new ForgeError("VALIDATION_FAILED", "Document is not a training record attachment");
-      }
+        const document = await tx.query.forgeDocuments.findFirst({
+          where: and(eq(forgeDocuments.id, docId), eq(forgeDocuments.tenantId, tenantId)),
+        });
+        if (!document) throw new ForgeError("NOT_FOUND", "Document not found");
+        if (document.source !== TRAINING_RECORD_ATTACHMENT_SOURCE) {
+          throw new ForgeError("VALIDATION_FAILED", "Document is not a training record attachment");
+        }
 
-      const inline = document.mimeType.startsWith("image/") || document.mimeType === "application/pdf";
-      const download = await this.storage.createPresignedDownloadUrl({
-        objectKey: document.objectKey,
-        mimeType: document.mimeType,
-        filename: document.originalFilename,
-        inline,
-      });
+        const inline =
+          document.mimeType.startsWith("image/") || document.mimeType === "application/pdf";
+        const download = await this.storage.createPresignedDownloadUrl({
+          objectKey: document.objectKey,
+          mimeType: document.mimeType,
+          filename: document.originalFilename,
+          inline,
+        });
 
-      return {
-        documentId: document.id,
-        fileName: document.originalFilename,
-        mimeType: document.mimeType,
-        downloadUrl: download.downloadUrl,
-        expiresInSeconds: download.expiresInSeconds,
-        expiresAt: download.expiresAt,
-        mode: download.mode,
-      };
-    }, principal.userId);
+        return {
+          documentId: document.id,
+          fileName: document.originalFilename,
+          mimeType: document.mimeType,
+          downloadUrl: download.downloadUrl,
+          expiresInSeconds: download.expiresInSeconds,
+          expiresAt: download.expiresAt,
+          mode: download.mode,
+        };
+      },
+      principal.userId,
+    );
   }
 
   async deleteAttachment(principal: ForgePrincipal, recordId: string, documentId: string) {
@@ -329,73 +347,81 @@ export class IndustrialTrainingRecordAttachmentsService {
       throw new ForgeError("VALIDATION_FAILED", "recordId and documentId must be UUIDs");
     }
 
-    return withTenantTransaction(this.db, tenantId, async (tx) => {
-      const [record] = await tx
-        .select()
-        .from(industrialTrainingRecords)
-        .where(
-          and(
-            eq(industrialTrainingRecords.id, id),
-            eq(industrialTrainingRecords.tenantId, tenantId),
-            isNull(industrialTrainingRecords.archivedAt),
-          ),
-        )
-        .limit(1);
-      if (!record) throw new ForgeError("NOT_FOUND", "Training record not found");
+    return withTenantTransaction(
+      this.db,
+      tenantId,
+      async (tx) => {
+        const [record] = await tx
+          .select()
+          .from(industrialTrainingRecords)
+          .where(
+            and(
+              eq(industrialTrainingRecords.id, id),
+              eq(industrialTrainingRecords.tenantId, tenantId),
+              isNull(industrialTrainingRecords.archivedAt),
+            ),
+          )
+          .limit(1);
+        if (!record) throw new ForgeError("NOT_FOUND", "Training record not found");
 
-      const payload = unwrapPayload(record.sourcePayload);
-      const existing = readTrainingRecordAttachments(payload);
-      if (!existing.some((row) => row.documentId === docId)) {
-        throw new ForgeError("NOT_FOUND", "Attachment not found on this training record");
-      }
+        const payload = unwrapPayload(record.sourcePayload);
+        const existing = readTrainingRecordAttachments(payload);
+        if (!existing.some((row) => row.documentId === docId)) {
+          throw new ForgeError("NOT_FOUND", "Attachment not found on this training record");
+        }
 
-      const document = await tx.query.forgeDocuments.findFirst({
-        where: and(eq(forgeDocuments.id, docId), eq(forgeDocuments.tenantId, tenantId)),
-      });
-      if (!document) throw new ForgeError("NOT_FOUND", "Document not found");
-      if (!documentBelongsToTenant(document.tenantId, tenantId)) {
-        throw new ForgeError("FORBIDDEN", "Document does not belong to the requested tenant");
-      }
-      if (!objectKeyBelongsToTenant(document.objectKey, tenantId)) {
-        throw new ForgeError("FORBIDDEN", "Object key does not belong to the requested tenant");
-      }
-      if (document.source !== TRAINING_RECORD_ATTACHMENT_SOURCE) {
-        throw new ForgeError("VALIDATION_FAILED", "Document is not a training record attachment");
-      }
-      const expectedPrefix = trainingRecordAttachmentObjectKeyPrefix(tenantId, id);
-      if (!document.objectKey.startsWith(expectedPrefix)) {
-        throw new ForgeError("VALIDATION_FAILED", "Document does not belong to this training record");
-      }
+        const document = await tx.query.forgeDocuments.findFirst({
+          where: and(eq(forgeDocuments.id, docId), eq(forgeDocuments.tenantId, tenantId)),
+        });
+        if (!document) throw new ForgeError("NOT_FOUND", "Document not found");
+        if (!documentBelongsToTenant(document.tenantId, tenantId)) {
+          throw new ForgeError("FORBIDDEN", "Document does not belong to the requested tenant");
+        }
+        if (!objectKeyBelongsToTenant(document.objectKey, tenantId)) {
+          throw new ForgeError("FORBIDDEN", "Object key does not belong to the requested tenant");
+        }
+        if (document.source !== TRAINING_RECORD_ATTACHMENT_SOURCE) {
+          throw new ForgeError("VALIDATION_FAILED", "Document is not a training record attachment");
+        }
+        const expectedPrefix = trainingRecordAttachmentObjectKeyPrefix(tenantId, id);
+        if (!document.objectKey.startsWith(expectedPrefix)) {
+          throw new ForgeError(
+            "VALIDATION_FAILED",
+            "Document does not belong to this training record",
+          );
+        }
 
-      const now = new Date();
-      const remaining = existing.filter((row) => row.documentId !== docId);
+        const now = new Date();
+        const remaining = existing.filter((row) => row.documentId !== docId);
 
-      await tx
-        .update(forgeDocuments)
-        .set({
-          archivedAt: now,
-          archivedByUserId: principal.userId,
-          recordVersion: document.recordVersion + 1,
-          updatedAt: now,
-        })
-        .where(and(eq(forgeDocuments.id, docId), eq(forgeDocuments.tenantId, tenantId)));
+        await tx
+          .update(forgeDocuments)
+          .set({
+            archivedAt: now,
+            archivedByUserId: principal.userId,
+            recordVersion: document.recordVersion + 1,
+            updatedAt: now,
+          })
+          .where(and(eq(forgeDocuments.id, docId), eq(forgeDocuments.tenantId, tenantId)));
 
-      await tx
-        .update(industrialTrainingRecords)
-        .set({
-          sourcePayload: {
-            ...payload,
-            certificateUploads: remaining,
-          },
-          updatedAt: now,
-        })
-        .where(eq(industrialTrainingRecords.id, id));
+        await tx
+          .update(industrialTrainingRecords)
+          .set({
+            sourcePayload: {
+              ...payload,
+              certificateUploads: remaining,
+            },
+            updatedAt: now,
+          })
+          .where(eq(industrialTrainingRecords.id, id));
 
-      return {
-        recordId: id,
-        documentId: docId,
-        attachments: remaining,
-      };
-    }, principal.userId);
+        return {
+          recordId: id,
+          documentId: docId,
+          attachments: remaining,
+        };
+      },
+      principal.userId,
+    );
   }
 }

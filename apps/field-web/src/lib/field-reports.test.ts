@@ -32,20 +32,16 @@ describe("field reports", () => {
   it("maps categories for incidents and near misses", () => {
     expect(resolveIncidentCategory(draft({ type: "near-miss" }))).toBe("near-misses");
     expect(resolveIncidentCategory(draft({ type: "security" }))).toBe("property-damage");
-    expect(
-      resolveIncidentCategory(draft({ type: "incident", injuryIllness: "yes" })),
-    ).toBe("injuries");
+    expect(resolveIncidentCategory(draft({ type: "incident", injuryIllness: "yes" }))).toBe(
+      "injuries",
+    );
   });
 
   it("validates required fields", () => {
     expect(validateReportDraft(draft({ whatHappened: "" })).ok).toBe(false);
-    expect(validateReportDraft(draft({ type: "observation", observationKind: "" })).ok).toBe(
-      false,
-    );
+    expect(validateReportDraft(draft({ type: "observation", observationKind: "" })).ok).toBe(false);
     expect(
-      validateReportDraft(
-        draft({ type: "incident", injuryIllness: "yes", bodyAreas: [] }),
-      ).ok,
+      validateReportDraft(draft({ type: "incident", injuryIllness: "yes", bodyAreas: [] })).ok,
     ).toBe(false);
     expect(validateReportDraft(draft({ type: "hazard", hazardLevel: "high" })).ok).toBe(true);
   });

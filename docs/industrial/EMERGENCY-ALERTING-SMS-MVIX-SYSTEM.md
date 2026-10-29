@@ -2296,10 +2296,10 @@ Create interface:
 
 ```ts
 interface DigitalSignageAlertProvider {
-  sendAlert(alert: Alert, targets: DisplayTarget[]): Promise<ProviderResult>
-  updateAlert(alert: Alert, targets: DisplayTarget[]): Promise<ProviderResult>
-  clearAlert(alert: Alert, targets: DisplayTarget[]): Promise<ProviderResult>
-  testConnection(): Promise<ProviderHealth>
+  sendAlert(alert: Alert, targets: DisplayTarget[]): Promise<ProviderResult>;
+  updateAlert(alert: Alert, targets: DisplayTarget[]): Promise<ProviderResult>;
+  clearAlert(alert: Alert, targets: DisplayTarget[]): Promise<ProviderResult>;
+  testConnection(): Promise<ProviderHealth>;
 }
 ```
 

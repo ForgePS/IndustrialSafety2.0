@@ -294,10 +294,7 @@ export function CompanyDriversDirectory() {
           </p>
         </div>
         {mvrFormId && canFillForms ? (
-          <Link
-            className="btn btn-primary"
-            href={producersMvrConsentFormFillHref(mvrFormId)}
-          >
+          <Link className="btn btn-primary" href={producersMvrConsentFormFillHref(mvrFormId)}>
             <i className="bx bx-edit-alt me-1" aria-hidden="true" />
             {mvrFormTitle}
           </Link>
@@ -307,9 +304,7 @@ export function CompanyDriversDirectory() {
       <div className="card mb-3">
         <div className="card-body d-flex flex-wrap gap-2">
           <span className="badge bg-label-success">On insurance: {summary.onInsurance}</span>
-          <span
-            className={`badge ${isProducersRiceMill ? "bg-label-pink" : "bg-label-warning"}`}
-          >
+          <span className={`badge ${isProducersRiceMill ? "bg-label-pink" : "bg-label-warning"}`}>
             Pending MVR: {summary.pendingMvr}
           </span>
           {missingConsentCount > 0 ? (
@@ -405,9 +400,7 @@ export function CompanyDriversDirectory() {
                 </div>
               </button>
               <div className="d-flex flex-wrap gap-2 mt-2">
-                <span className="badge bg-label-secondary">
-                  MVR on file: {summary.mvrOnFile}
-                </span>
+                <span className="badge bg-label-secondary">MVR on file: {summary.mvrOnFile}</span>
                 <span className="badge bg-label-secondary">
                   Signed MVR release: {summary.mvrReleaseOnFile}
                 </span>
@@ -515,12 +508,8 @@ export function CompanyDriversDirectory() {
               ) : (
                 <div className="d-flex flex-wrap gap-2 mb-2">
                   <span className="badge bg-label-secondary">Year {summary.sampleYear}</span>
-                  <span className="badge bg-label-primary">
-                    Selected: {summary.sampleSelected}
-                  </span>
-                  <span className="badge bg-label-success">
-                    Audited: {summary.sampleCompleted}
-                  </span>
+                  <span className="badge bg-label-primary">Selected: {summary.sampleSelected}</span>
+                  <span className="badge bg-label-success">Audited: {summary.sampleCompleted}</span>
                   <span className="badge bg-label-warning">
                     Outstanding: {Math.max(0, summary.sampleSelected - summary.sampleCompleted)}
                   </span>
@@ -593,7 +582,9 @@ export function CompanyDriversDirectory() {
                                 <span className="fw-medium">{name}</span>
                               )}
                               {driver.employeeNumber ? (
-                                <span className="text-muted small ms-2">{driver.employeeNumber}</span>
+                                <span className="text-muted small ms-2">
+                                  {driver.employeeNumber}
+                                </span>
                               ) : null}
                               <span
                                 className={`badge ms-2 ${audited ? "bg-label-success" : "bg-label-warning"}`}
@@ -829,7 +820,10 @@ export function CompanyDriversDirectory() {
                             {mvrFormId && canFillForms && driver.personnelId ? (
                               <Link
                                 className="btn btn-sm btn-outline-primary"
-                                href={producersMvrConsentFormFillHref(mvrFormId, driver.personnelId)}
+                                href={producersMvrConsentFormFillHref(
+                                  mvrFormId,
+                                  driver.personnelId,
+                                )}
                               >
                                 MVR form
                               </Link>

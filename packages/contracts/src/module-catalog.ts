@@ -9,27 +9,16 @@
  * not appear as ordinary customer toggles.
  */
 
-import {
-  INDUSTRIAL_MODULE_REGISTRY,
-  type IndustrialImplementationStatus,
-} from "./industrial.js";
+import { INDUSTRIAL_MODULE_REGISTRY, type IndustrialImplementationStatus } from "./industrial.js";
 import { z } from "zod";
 
 export type ForgePlatformKey = "INDUSTRIAL" | "RMS" | "ACADEMY" | "CREATOR";
 
 export type ModuleClassification =
-  | "CUSTOMER_MODULE"
-  | "PLATFORM_CORE"
-  | "INTERNAL_TOOL"
-  | "SHARED_SERVICE";
+  "CUSTOMER_MODULE" | "PLATFORM_CORE" | "INTERNAL_TOOL" | "SHARED_SERVICE";
 
 export type CatalogImplementationStatus =
-  | "READY"
-  | "IN_DEVELOPMENT"
-  | "MIGRATING"
-  | "COMING_SOON"
-  | "RETIRED"
-  | "UNAVAILABLE";
+  "READY" | "IN_DEVELOPMENT" | "MIGRATING" | "COMING_SOON" | "RETIRED" | "UNAVAILABLE";
 
 export type ForgePlatformDefinition = {
   key: ForgePlatformKey;
@@ -482,9 +471,7 @@ export function findCatalogModule(
   productCode: string,
   moduleCode: string,
 ): ForgeModuleCatalogEntry | undefined {
-  return FORGE_MODULE_CATALOG.find(
-    (m) => m.productCode === productCode && m.code === moduleCode,
-  );
+  return FORGE_MODULE_CATALOG.find((m) => m.productCode === productCode && m.code === moduleCode);
 }
 
 /** Seed/template shape for platform_modules rows. */

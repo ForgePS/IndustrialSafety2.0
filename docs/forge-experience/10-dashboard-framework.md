@@ -8,10 +8,10 @@ Every Forge product inherits the **same** dashboard framework.
 
 ## Ownership rule
 
-| Layer | Owner |
-| --- | --- |
+| Layer                                              | Owner                |
+| -------------------------------------------------- | -------------------- |
 | Presentation, layout, widget chrome, interactivity | **Forge Experience** |
-| Queries, metrics, domain meaning, business rules | **Product** |
+| Queries, metrics, domain meaning, business rules   | **Product**          |
 
 Dashboard widgets shall **never** contain product-specific logic.  
 Products supply the data. Forge Experience supplies the presentation.
@@ -31,8 +31,8 @@ Configuration changes presentation availability only. Authorization and entitlem
 
 Every widget supports:
 
-- **Movable** — user or admin layout placement within FX grid rules  
-- **Collapsible** — progressive disclosure of dense content  
+- **Movable** — user or admin layout placement within FX grid rules
+- **Collapsible** — progressive disclosure of dense content
 - **Optionally resizable** — within approved size presets (not free-form chaos)
 
 Widgets use FX data components (Metric Card, Chart, Map, etc.) and design tokens only.
@@ -47,14 +47,14 @@ Widgets use FX data components (Metric Card, Chart, Map, etc.) and design tokens
 
 **Displays:**
 
-- KPIs  
-- Compliance  
-- Staffing  
-- Readiness  
-- Budget metrics  
-- Critical alerts  
-- Recent activity  
-- Trend analysis  
+- KPIs
+- Compliance
+- Staffing
+- Readiness
+- Budget metrics
+- Critical alerts
+- Recent activity
+- Trend analysis
 
 **Tone:** Situational awareness and decision support — not task triage dumps.
 
@@ -64,14 +64,14 @@ Widgets use FX data components (Metric Card, Chart, Map, etc.) and design tokens
 
 **Displays:**
 
-- Current assignments  
-- Work queues  
-- Inspections  
-- Today’s schedule  
-- Pending reviews  
-- Open incidents  
-- Active classes  
-- Equipment status  
+- Current assignments
+- Work queues
+- Inspections
+- Today’s schedule
+- Pending reviews
+- Open incidents
+- Active classes
+- Equipment status
 
 **Tone:** What is happening, what needs attention, what to do next.
 
@@ -81,15 +81,15 @@ Widgets use FX data components (Metric Card, Chart, Map, etc.) and design tokens
 
 **Displays:**
 
-- My Work  
-- My schedule  
-- Notifications  
-- Training  
-- Tasks  
-- Approvals  
-- Recent activity  
-- Favorites  
-- Upcoming deadlines  
+- My Work
+- My schedule
+- Notifications
+- Training
+- Tasks
+- Approvals
+- Recent activity
+- Favorites
+- Upcoming deadlines
 
 **Tone:** Individual responsibilities and attention.
 
@@ -105,28 +105,28 @@ Products register module dashboards; they do not invent alternate dashboard shel
 
 ## Layout and density
 
-- Built on `ResponsiveGrid` and dashboard breakpoint rules  
-- Operations Display: larger tiles, fewer chrome distractions  
-- Phone: stacked single column; collapsible widgets preferred  
-- Empty / loading / error states required for every widget slot  
+- Built on `ResponsiveGrid` and dashboard breakpoint rules
+- Operations Display: larger tiles, fewer chrome distractions
+- Phone: stacked single column; collapsible widgets preferred
+- Empty / loading / error states required for every widget slot
 
 ## Accessibility
 
-- Widget titles as headings  
-- Charts/maps provide text alternatives when critical  
-- Keyboard reorder (when layout editing is enabled) must be operable without drag-only  
-- Status and priority never color-only  
+- Widget titles as headings
+- Charts/maps provide text alternatives when critical
+- Keyboard reorder (when layout editing is enabled) must be operable without drag-only
+- Status and priority never color-only
 
 ## Anti-patterns
 
-- Embedding product business rules inside widget components  
-- One-off dashboard chrome per product  
-- Non-collapsible walls of charts  
-- Widgets that navigate via schema names (“Collections”, “Tables”)  
+- Embedding product business rules inside widget components
+- One-off dashboard chrome per product
+- Non-collapsible walls of charts
+- Widgets that navigate via schema names (“Collections”, “Tables”)
 
 ## Related
 
-- [components/dashboard-widgets.md](./components/dashboard-widgets.md)  
-- [10 companion: Design System Cards/Charts](./06-design-system.md)  
-- [12-my-work-framework.md](./12-my-work-framework.md)  
-- [08-application-shell.md](./08-application-shell.md)  
+- [components/dashboard-widgets.md](./components/dashboard-widgets.md)
+- [10 companion: Design System Cards/Charts](./06-design-system.md)
+- [12-my-work-framework.md](./12-my-work-framework.md)
+- [08-application-shell.md](./08-application-shell.md)

@@ -16,10 +16,7 @@ export const INDUSTRIAL_DEMO_COMPANY_NAME = "Forge Demo Manufacturing" as const;
  * Walkthrough Studio Enable Demo / Reset Demo. Customer tenants (e.g.
  * producers-rice-mill) must never be marked demo or seeded via these paths.
  */
-export const INDUSTRIAL_DEMO_TENANT_KEYS = [
-  "forge-platform",
-  INDUSTRIAL_DEMO_TENANT_SLUG,
-] as const;
+export const INDUSTRIAL_DEMO_TENANT_KEYS = ["forge-platform", INDUSTRIAL_DEMO_TENANT_SLUG] as const;
 
 export type IndustrialDemoTenantKey = (typeof INDUSTRIAL_DEMO_TENANT_KEYS)[number];
 
@@ -298,9 +295,7 @@ export const WALKTHROUGH_STUDIO_PERMISSIONS = [
 
 export type WalkthroughStudioPermission = (typeof WALKTHROUGH_STUDIO_PERMISSIONS)[number];
 
-function scene(
-  partial: WalkthroughScene & { chapterTitle?: never },
-): WalkthroughScene {
+function scene(partial: WalkthroughScene & { chapterTitle?: never }): WalkthroughScene {
   return {
     skipIfUnavailable: true,
     transitionType: "direct",
@@ -351,7 +346,12 @@ export const INDUSTRIAL_PLATFORM_WALKTHROUGH_CHAPTERS: readonly WalkthroughChapt
           "The Analytics module is the Safety Intelligence Center for the platform. It brings together live safety scores, period comparisons, incident and inspection trends, department performance, and injury hotspots so leaders can see what is improving and where attention is still needed.",
         actions: [
           { type: "navigate", route: "/modules/analytics/" },
-          { type: "focus", target: "analytics-sic", label: "Safety Intelligence Center", durationMs: 7_000 },
+          {
+            type: "focus",
+            target: "analytics-sic",
+            label: "Safety Intelligence Center",
+            durationMs: 7_000,
+          },
           { type: "highlight", target: "analytics-sic", durationMs: 12_000 },
         ],
       }),
@@ -377,7 +377,12 @@ export const INDUSTRIAL_PLATFORM_WALKTHROUGH_CHAPTERS: readonly WalkthroughChapt
         actions: [
           { type: "navigate", route: "/modules/personnel/" },
           { type: "cursorMove", target: "personnel-overview", durationMs: 800 },
-          { type: "focus", target: "personnel-overview", label: "Employee directory", durationMs: 8_000 },
+          {
+            type: "focus",
+            target: "personnel-overview",
+            label: "Employee directory",
+            durationMs: 8_000,
+          },
           { type: "highlight", target: "personnel-overview", durationMs: 14_000 },
         ],
       }),
@@ -401,7 +406,12 @@ export const INDUSTRIAL_PLATFORM_WALKTHROUGH_CHAPTERS: readonly WalkthroughChapt
           "The Training module handles both company-wide and employee-specific training. Administrators can build courses, assign required training by employee, department, division, or location, monitor completion, track scores, manage recurring requirements, and quickly identify overdue or upcoming training from the same system.",
         actions: [
           { type: "navigate", route: "/modules/training/" },
-          { type: "focus", target: "training-admin", label: "Training dashboard", durationMs: 8_000 },
+          {
+            type: "focus",
+            target: "training-admin",
+            label: "Training dashboard",
+            durationMs: 8_000,
+          },
           { type: "highlight", target: "training-admin", durationMs: 14_000 },
         ],
       }),
@@ -425,7 +435,12 @@ export const INDUSTRIAL_PLATFORM_WALKTHROUGH_CHAPTERS: readonly WalkthroughChapt
           "Employees receive a much simpler experience through My Training. They can immediately see what has been assigned, what is due, begin available courses, review completed training, and access their individual training transcript without navigating the administrative side of Forge.",
         actions: [
           { type: "navigate", route: "/my-training/" },
-          { type: "focus", target: "employee-my-training", label: "My Training", durationMs: 6_000 },
+          {
+            type: "focus",
+            target: "employee-my-training",
+            label: "My Training",
+            durationMs: 6_000,
+          },
           { type: "highlight", target: "employee-my-training", durationMs: 12_000 },
         ],
       }),
@@ -450,7 +465,12 @@ export const INDUSTRIAL_PLATFORM_WALKTHROUGH_CHAPTERS: readonly WalkthroughChapt
           "Incident Management creates one structured location for documenting workplace events. Forge can capture the initial report, people involved, injury information, photographs, investigations, contributing factors, corrective actions, and follow-up activity while maintaining a complete history of the event.",
         actions: [
           { type: "navigate", route: "/modules/incidents/" },
-          { type: "focus", target: "safety-incidents", label: "Incident dashboard", durationMs: 10_000 },
+          {
+            type: "focus",
+            target: "safety-incidents",
+            label: "Incident dashboard",
+            durationMs: 10_000,
+          },
           { type: "highlight", target: "safety-incidents", durationMs: 16_000 },
         ],
       }),
@@ -475,7 +495,12 @@ export const INDUSTRIAL_PLATFORM_WALKTHROUGH_CHAPTERS: readonly WalkthroughChapt
           "The OSHA section connects compliance reporting directly to the underlying incident information. Authorized safety personnel can review recordability decisions, maintain the OSHA 300 Log, manage the supporting information needed for OSHA 301 reporting, prepare the 300A annual summary, and reduce duplicate data entry.",
         actions: [
           { type: "navigate", route: "/modules/osha/" },
-          { type: "focus", target: "osha-dashboard", label: "Automatic OSHA Recordkeeping", durationMs: 8_000 },
+          {
+            type: "focus",
+            target: "osha-dashboard",
+            label: "Automatic OSHA Recordkeeping",
+            durationMs: 8_000,
+          },
           { type: "highlight", target: "osha-dashboard", durationMs: 8_000 },
           { type: "highlight", target: "osha-300-log", durationMs: 7_000 },
           { type: "highlight", target: "osha-300a", durationMs: 7_000 },
@@ -501,7 +526,12 @@ export const INDUSTRIAL_PLATFORM_WALKTHROUGH_CHAPTERS: readonly WalkthroughChapt
           "Workers Compensation extends the incident workflow into claim management. The safety team can track claim status, related incidents, documentation, medical or work restrictions where authorized, important dates, communications, and follow-up activity without creating a completely separate tracking process.",
         actions: [
           { type: "navigate", route: "/modules/workers-comp/" },
-          { type: "focus", target: "workers-comp-overview", label: "Claims dashboard", durationMs: 8_000 },
+          {
+            type: "focus",
+            target: "workers-comp-overview",
+            label: "Claims dashboard",
+            durationMs: 8_000,
+          },
           { type: "highlight", target: "workers-comp-overview", durationMs: 14_000 },
         ],
       }),
@@ -525,7 +555,12 @@ export const INDUSTRIAL_PLATFORM_WALKTHROUGH_CHAPTERS: readonly WalkthroughChapt
           "Forge Inspections allows organizations to standardize inspections across locations and operations. Teams can build reusable inspection templates, schedule recurring inspections, complete them from mobile devices, document deficiencies with photographs, assign corrective actions, and track unresolved findings to completion.",
         actions: [
           { type: "navigate", route: "/modules/inspections/" },
-          { type: "focus", target: "safety-inspections", label: "Inspection dashboard", durationMs: 8_000 },
+          {
+            type: "focus",
+            target: "safety-inspections",
+            label: "Inspection dashboard",
+            durationMs: 8_000,
+          },
           { type: "highlight", target: "safety-inspections", durationMs: 14_000 },
         ],
       }),
@@ -573,7 +608,12 @@ export const INDUSTRIAL_PLATFORM_WALKTHROUGH_CHAPTERS: readonly WalkthroughChapt
           "Assets and Equipment provides a central record for safety equipment, machinery, tools, and other trackable assets. Each asset can maintain identifying information, location, inspections, maintenance history, documentation, employee assignments, and its own QR-enabled record.",
         actions: [
           { type: "navigate", route: "/modules/equipment/" },
-          { type: "focus", target: "equipment-overview", label: "Equipment directory", durationMs: 7_000 },
+          {
+            type: "focus",
+            target: "equipment-overview",
+            label: "Equipment directory",
+            durationMs: 7_000,
+          },
           { type: "highlight", target: "equipment-overview", durationMs: 12_000 },
         ],
       }),
@@ -621,7 +661,12 @@ export const INDUSTRIAL_PLATFORM_WALKTHROUGH_CHAPTERS: readonly WalkthroughChapt
           "Safety Supplies combines inventory management with employee requests. Administrators can monitor available quantities and minimum stock levels while employees can request needed safety supplies through Forge or by scanning a location-specific QR code.",
         actions: [
           { type: "navigate", route: "/modules/safety-supplies/" },
-          { type: "focus", target: "safety-supplies-overview", label: "Inventory", durationMs: 6_000 },
+          {
+            type: "focus",
+            target: "safety-supplies-overview",
+            label: "Inventory",
+            durationMs: 6_000,
+          },
           { type: "highlight", target: "safety-supplies-overview", durationMs: 12_000 },
         ],
       }),
@@ -717,7 +762,12 @@ export const INDUSTRIAL_PLATFORM_WALKTHROUGH_CHAPTERS: readonly WalkthroughChapt
           "The Forge Calendar brings upcoming safety activity together visually. Training, inspections, tasks, meetings, deadlines, and other scheduled activity can be displayed without maintaining separate calendars throughout the organization.",
         actions: [
           { type: "navigate", route: "/modules/calendar/" },
-          { type: "focus", target: "calendar-overview", label: "Upcoming events", durationMs: 6_000 },
+          {
+            type: "focus",
+            target: "calendar-overview",
+            label: "Upcoming events",
+            durationMs: 6_000,
+          },
           { type: "highlight", target: "calendar-overview", durationMs: 10_000 },
         ],
       }),
@@ -765,7 +815,12 @@ export const INDUSTRIAL_PLATFORM_WALKTHROUGH_CHAPTERS: readonly WalkthroughChapt
           "Built-in Messaging keeps operational communication closer to the work itself. Employees can communicate individually or through approved groups while conversations and relevant Forge information remain accessible from the same platform.",
         actions: [
           { type: "navigate", route: "/modules/messaging/" },
-          { type: "focus", target: "messaging-overview", label: "Conversations", durationMs: 6_000 },
+          {
+            type: "focus",
+            target: "messaging-overview",
+            label: "Conversations",
+            durationMs: 6_000,
+          },
           { type: "highlight", target: "messaging-overview", durationMs: 10_000 },
         ],
       }),
@@ -789,7 +844,12 @@ export const INDUSTRIAL_PLATFORM_WALKTHROUGH_CHAPTERS: readonly WalkthroughChapt
           "Reporting complements Analytics with filterable dashboards, charts, and exportable reports. Authorized users can dig into incidents, inspections, training, compliance, equipment, fleet, and corrective actions when they need a shareable operational view.",
         actions: [
           { type: "navigate", route: "/reporting/" },
-          { type: "focus", target: "reporting-center", label: "Reporting dashboard", durationMs: 7_000 },
+          {
+            type: "focus",
+            target: "reporting-center",
+            label: "Reporting dashboard",
+            durationMs: 7_000,
+          },
           { type: "highlight", target: "reporting-center", durationMs: 11_000 },
         ],
       }),
@@ -865,7 +925,10 @@ export function flattenWalkthroughScenes(
 }
 
 export function estimateWalkthroughStudioRuntimeMs(
-  scenes: readonly Pick<WalkthroughScene, "durationMs" | "pauseBeforeMs" | "pauseAfterMs" | "transitionDurationMs">[] = flattenWalkthroughScenes(),
+  scenes: readonly Pick<
+    WalkthroughScene,
+    "durationMs" | "pauseBeforeMs" | "pauseAfterMs" | "transitionDurationMs"
+  >[] = flattenWalkthroughScenes(),
 ): number {
   return scenes.reduce((sum, s) => {
     return (
@@ -891,7 +954,10 @@ export function estimateNarrationDurationMs(
   speed: number = WALKTHROUGH_SPEED_DEFAULT,
 ): number {
   const words = text.trim().split(/\s+/).filter(Boolean).length;
-  const effectiveWpm = Math.max(1, wordsPerMinute * Math.max(WALKTHROUGH_SPEED_MIN, Math.min(WALKTHROUGH_SPEED_MAX, speed)));
+  const effectiveWpm = Math.max(
+    1,
+    wordsPerMinute * Math.max(WALKTHROUGH_SPEED_MIN, Math.min(WALKTHROUGH_SPEED_MAX, speed)),
+  );
   return Math.round((words / effectiveWpm) * 60_000);
 }
 

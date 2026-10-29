@@ -65,8 +65,7 @@ export function TrainingAssignmentRunner({ assignmentId }: { assignmentId: strin
         );
       } else if (a.sourceId) {
         const mats = await fieldTrainingApi.listMaterials(a.sourceId);
-        const preferred =
-          mats.items.find((m) => isTrainingVideoFile(m)) ?? mats.items[0] ?? null;
+        const preferred = mats.items.find((m) => isTrainingVideoFile(m)) ?? mats.items[0] ?? null;
         setMaterial(preferred);
       }
       setStep("overview");
@@ -148,11 +147,7 @@ export function TrainingAssignmentRunner({ assignmentId }: { assignmentId: strin
     setBusy(true);
     setError(null);
     try {
-      const answer = await fieldTrainingApi.answer(
-        attemptId,
-        next.question.id,
-        selectedIndex,
-      );
+      const answer = await fieldTrainingApi.answer(attemptId, next.question.id, selectedIndex);
       if (next.feedbackEnabled !== false) {
         setFeedback({ ...answer, selectedIndex });
         setStep("feedback");
@@ -277,7 +272,12 @@ export function TrainingAssignmentRunner({ assignmentId }: { assignmentId: strin
           <p className="ff-page-body">Review the material and try again when you are ready.</p>
         )}
         {!passed ? (
-          <button type="button" className="ff-btn" disabled={busy} onClick={() => void retake("same")}>
+          <button
+            type="button"
+            className="ff-btn"
+            disabled={busy}
+            onClick={() => void retake("same")}
+          >
             Retake quiz
           </button>
         ) : null}
@@ -291,7 +291,11 @@ export function TrainingAssignmentRunner({ assignmentId }: { assignmentId: strin
             Retake missed questions
           </button>
         ) : null}
-        <button type="button" className="ff-btn ff-btn-secondary" onClick={() => router.push("/training/")}>
+        <button
+          type="button"
+          className="ff-btn ff-btn-secondary"
+          onClick={() => router.push("/training/")}
+        >
           Done
         </button>
         <button
@@ -312,7 +316,12 @@ export function TrainingAssignmentRunner({ assignmentId }: { assignmentId: strin
         <h1 className="ff-page-title">{feedback.correct ? "Correct" : "Incorrect"}</h1>
         <p className="ff-page-body">{next.question.stem}</p>
         {feedback.explanation ? <p className="ff-meta">{feedback.explanation}</p> : null}
-        <button type="button" className="ff-btn" disabled={busy} onClick={() => void continueAfterFeedback()}>
+        <button
+          type="button"
+          className="ff-btn"
+          disabled={busy}
+          onClick={() => void continueAfterFeedback()}
+        >
           {feedback.done ? "See results" : "Next"}
         </button>
       </>
@@ -371,7 +380,11 @@ export function TrainingAssignmentRunner({ assignmentId }: { assignmentId: strin
         <h1 className="ff-page-title">{assignment.title}</h1>
         <p className="ff-page-body">Review the material, then acknowledge to unlock the quiz.</p>
         {materialUrl && inline && mime.startsWith("image/") ? (
-          <img src={materialUrl} alt={material?.title || "Training material"} className="ff-material-frame" />
+          <img
+            src={materialUrl}
+            alt={material?.title || "Training material"}
+            className="ff-material-frame"
+          />
         ) : null}
         {materialUrl && inline && mime === "application/pdf" ? (
           <iframe title="Training PDF" src={materialUrl} className="ff-material-frame" />
@@ -416,7 +429,11 @@ export function TrainingAssignmentRunner({ assignmentId }: { assignmentId: strin
         >
           Start quiz
         </button>
-        <button type="button" className="ff-btn ff-btn-secondary" onClick={() => setStep("overview")}>
+        <button
+          type="button"
+          className="ff-btn ff-btn-secondary"
+          onClick={() => setStep("overview")}
+        >
           Back
         </button>
       </>
@@ -460,7 +477,12 @@ export function TrainingAssignmentRunner({ assignmentId }: { assignmentId: strin
         </p>
       ) : (
         <>
-          <button type="button" className="ff-btn" disabled={busy} onClick={() => void openMaterial()}>
+          <button
+            type="button"
+            className="ff-btn"
+            disabled={busy}
+            onClick={() => void openMaterial()}
+          >
             {material ? "Review material" : "Start quiz"}
           </button>
           {material ? (

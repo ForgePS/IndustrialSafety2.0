@@ -1,13 +1,13 @@
 # Support access expiration
 
-| Field | Value |
-| --- | --- |
-| Document ID | SOC2-PROC-018 |
-| Version | 0.1 |
-| Status | APPROVED |
-| Owner | Identity and Access Management Owner |
-| Approver | Jeremy Powell, Founder, Forge Public Safety |
-| Related policy | See policies mapped in control matrix |
+| Field          | Value                                       |
+| -------------- | ------------------------------------------- |
+| Document ID    | SOC2-PROC-018                               |
+| Version        | 0.1                                         |
+| Status         | APPROVED                                    |
+| Owner          | Identity and Access Management Owner        |
+| Approver       | Jeremy Powell, Founder, Forge Public Safety |
+| Related policy | See policies mapped in control matrix       |
 
 ## Trigger
 
@@ -28,11 +28,11 @@ Identity and Access Management Owner
 
 ## Required approvals
 
-| Situation | Approver |
-| --- | --- |
-| Standard execution | Operational owner (Identity and Access Management Owner) |
+| Situation              | Approver                                                            |
+| ---------------------- | ------------------------------------------------------------------- |
+| Standard execution     | Operational owner (Identity and Access Management Owner)            |
 | Privileged / High risk | Jeremy Powell (Founder) or designated Security and Compliance Owner |
-| Emergency path | Incident Response Lead with post-approval within 1 business day |
+| Emergency path         | Incident Response Lead with post-approval within 1 business day     |
 
 ## Exact steps
 
@@ -76,7 +76,7 @@ If blocked > timing SLA, escalate to Engineering Lead, then Jeremy Powell for Hi
 
 ## Revision history
 
-| Version | Date | Change |
-| --- | --- | --- |
-| 0.1 | 2026-07-26 | Phase 1 draft — PENDING_APPROVAL |
-| 0.1 | 2026-07-26 | Approved by Jeremy Powell |
+| Version | Date       | Change                           |
+| ------- | ---------- | -------------------------------- |
+| 0.1     | 2026-07-26 | Phase 1 draft — PENDING_APPROVAL |
+| 0.1     | 2026-07-26 | Approved by Jeremy Powell        |

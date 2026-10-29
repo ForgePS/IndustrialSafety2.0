@@ -67,7 +67,9 @@ export function looksLikeImageUrl(value: string): boolean {
 export function imageUrlFromClipboardEvent(event: ClipboardEvent): string | null {
   const data = event.clipboardData;
   if (!data) return null;
-  const uri = (data.getData("text/uri-list") || "").split(/\r?\n/).find((line) => looksLikeImageUrl(line));
+  const uri = (data.getData("text/uri-list") || "")
+    .split(/\r?\n/)
+    .find((line) => looksLikeImageUrl(line));
   if (uri) return uri.trim();
   const plain = (data.getData("text/plain") || "").trim();
   if (looksLikeImageUrl(plain)) return plain;
@@ -91,7 +93,9 @@ export async function fileFromImageUrl(url: string): Promise<File> {
 
 export async function readImagesFromClipboard(): Promise<File[]> {
   if (!navigator.clipboard?.read) {
-    throw new Error("Clipboard paste is not available in this browser. Use Ctrl+V in the photo box.");
+    throw new Error(
+      "Clipboard paste is not available in this browser. Use Ctrl+V in the photo box.",
+    );
   }
   const items = await navigator.clipboard.read();
   const files: File[] = [];

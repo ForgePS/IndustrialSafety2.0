@@ -158,16 +158,20 @@ function SetupCenterInner() {
   }, [load]);
 
   const items = useMemo<ChecklistItem[]>(() => {
-    const products = entitlements?.products?.filter((p) => p.status === "ENABLED" || p.status === "ACTIVE") ?? [];
-    const modules = entitlements?.modules?.filter((m) => m.status === "ENABLED" || m.status === "ACTIVE") ?? [];
+    const products =
+      entitlements?.products?.filter((p) => p.status === "ENABLED" || p.status === "ACTIVE") ?? [];
+    const modules =
+      entitlements?.modules?.filter((m) => m.status === "ENABLED" || m.status === "ACTIVE") ?? [];
     const admins = members;
     const logoUploaded = Boolean(branding?.logoDocumentId);
     const brandingConfigured = Boolean(
-      branding && (branding.primaryColor || branding.secondaryColor || branding.supportEmail || logoUploaded),
+      branding &&
+      (branding.primaryColor || branding.secondaryColor || branding.supportEmail || logoUploaded),
     );
     const sessionData = session?.session.sessionDataJson ?? {};
     const personnelImported =
-      personnelCount > 0 || Boolean((sessionData as { personnelImported?: boolean }).personnelImported);
+      personnelCount > 0 ||
+      Boolean((sessionData as { personnelImported?: boolean }).personnelImported);
     const fleetImported =
       fleetCount > 0 || Boolean((sessionData as { fleetImported?: boolean }).fleetImported);
     const activated = tenant?.status === "ACTIVE";
@@ -275,7 +279,7 @@ function SetupCenterInner() {
         id: "activation",
         label: "Activation",
         tier: "Required",
-        statusLabel: activated ? "Complete" : tenant?.status ?? "Pending",
+        statusLabel: activated ? "Complete" : (tenant?.status ?? "Pending"),
         done: activated,
       },
     ];
@@ -329,11 +333,15 @@ function SetupCenterInner() {
 
       <div className={styles.panel} style={{ marginBottom: "1rem" }}>
         <div style={{ display: "flex", gap: "0.75rem", alignItems: "center", flexWrap: "wrap" }}>
-          <StatusBadge tone={progressPct >= 100 ? "success" : progressPct >= 50 ? "info" : "neutral"}>
+          <StatusBadge
+            tone={progressPct >= 100 ? "success" : progressPct >= 50 ? "info" : "neutral"}
+          >
             {progressPct}% complete
           </StatusBadge>
           {tenant ? (
-            <StatusBadge tone={tenant.status === "ACTIVE" ? "success" : "info"}>{tenant.status}</StatusBadge>
+            <StatusBadge tone={tenant.status === "ACTIVE" ? "success" : "info"}>
+              {tenant.status}
+            </StatusBadge>
           ) : null}
           {session ? <StatusBadge tone="info">Onboarding open</StatusBadge> : null}
         </div>
@@ -355,14 +363,20 @@ function SetupCenterInner() {
                 <td>
                   <StatusBadge
                     tone={
-                      item.tier === "Required" ? "danger" : item.tier === "Recommended" ? "info" : "neutral"
+                      item.tier === "Required"
+                        ? "danger"
+                        : item.tier === "Recommended"
+                          ? "info"
+                          : "neutral"
                     }
                   >
                     {item.tier}
                   </StatusBadge>
                 </td>
                 <td>
-                  <StatusBadge tone={item.done ? "success" : "neutral"}>{item.statusLabel}</StatusBadge>
+                  <StatusBadge tone={item.done ? "success" : "neutral"}>
+                    {item.statusLabel}
+                  </StatusBadge>
                 </td>
               </tr>
             ))}
@@ -374,10 +388,16 @@ function SetupCenterInner() {
         <Link className={styles.button} href={continueHref}>
           {ctaLabel} →
         </Link>
-        <Link className={styles.buttonSecondary} href={`/tenant-detail/?tenantId=${encodeURIComponent(tenantId)}`}>
+        <Link
+          className={styles.buttonSecondary}
+          href={`/tenant-detail/?tenantId=${encodeURIComponent(tenantId)}`}
+        >
           Company detail
         </Link>
-        <Link className={styles.buttonSecondary} href={`/imports/?tenantId=${encodeURIComponent(tenantId)}`}>
+        <Link
+          className={styles.buttonSecondary}
+          href={`/imports/?tenantId=${encodeURIComponent(tenantId)}`}
+        >
           Data import
         </Link>
       </div>

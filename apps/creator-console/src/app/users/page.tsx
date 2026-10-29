@@ -144,9 +144,7 @@ function UsersInner() {
       <div className={styles.panel}>
         <h2>Users</h2>
         {loading ? <p className={styles.muted}>Loading…</p> : null}
-        {!loading && items.length === 0 ? (
-          <p className={styles.muted}>No users yet.</p>
-        ) : null}
+        {!loading && items.length === 0 ? <p className={styles.muted}>No users yet.</p> : null}
         {items.length > 0 ? (
           <table className={styles.table}>
             <thead>
@@ -176,10 +174,7 @@ function UsersInner() {
 
 export default function UsersPage() {
   return (
-    <PlatformPageGate
-      title="Users"
-      anyOf={["platform.user.invite", "platform.invitation.manage"]}
-    >
+    <PlatformPageGate title="Users" anyOf={["platform.user.invite", "platform.invitation.manage"]}>
       <Suspense fallback={<p className={styles.muted}>Loading…</p>}>
         <UsersInner />
       </Suspense>

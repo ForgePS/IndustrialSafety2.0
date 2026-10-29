@@ -16,7 +16,9 @@ function MyForgeInner() {
   const { me } = useAuth();
   const { profile, loading } = useFieldProfile();
   const { featureEnabled } = useFieldPermissions();
-  const section = String(search.get("section") ?? "").trim().toLowerCase();
+  const section = String(search.get("section") ?? "")
+    .trim()
+    .toLowerCase();
   const activeTenant = me?.tenants?.find((t) => t.tenantId === me.tenantId);
 
   const sections = useMemo(

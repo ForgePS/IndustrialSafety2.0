@@ -35,8 +35,7 @@ function selectRadio(form: PDFForm, name: string, option: string | null) {
 
 function fillForm301(form: PDFForm, caseRow: OshaCase) {
   const filled = autofillForm301FromForm300(caseRow);
-  const employee =
-    displayEmployeeName(filled) === "—" ? "" : displayEmployeeName(filled);
+  const employee = displayEmployeeName(filled) === "—" ? "" : displayEmployeeName(filled);
 
   setText(form, "301 Completed by", filled.completedBy);
   setText(form, "301 Title", filled.completedByTitle);

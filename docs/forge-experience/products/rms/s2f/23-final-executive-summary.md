@@ -2,7 +2,7 @@
 
 **Program:** Forge Experience — Forge RMS  
 **Gate:** FX-S2F complete (functional migration + stabilization)  
-**Date:** 2026-07-31  
+**Date:** 2026-07-31
 
 ## Overview
 
@@ -26,10 +26,10 @@ Legacy markup paths remain on every migrated route. Specialty review, login, CAD
 
 ## Remaining limitations
 
-- Manual a11y / responsive / screenshot evidence incomplete  
-- Performance not laboratory-measured  
-- S2F-4 connection validation conditions still apply before enabling that module  
-- Login intentionally not FX-migrated  
+- Manual a11y / responsive / screenshot evidence incomplete
+- Performance not laboratory-measured
+- S2F-4 connection validation conditions still apply before enabling that module
+- Login intentionally not FX-migrated
 
 ## Recommendation
 

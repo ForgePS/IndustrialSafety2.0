@@ -26,20 +26,20 @@ Full list: see `IMPORT_WORKFLOW.md`.
 
 ## Permissions (explicit, unscoped names)
 
-| Code | Capability |
-| --- | --- |
-| `import.view` | Read jobs, status, results (non-sensitive) |
-| `import.upload` | Create job / register file / obtain upload URL |
-| `import.map` | Edit column mappings |
-| `import.validate` | Run validation |
-| `import.preview` | Generate preview |
-| `import.approve` | Approve for execution |
-| `import.execute` | Queue / run commit |
-| `import.rollback` | Request rollback |
-| `import.profile.manage` | Manage import profile snapshots |
-| `import.template.manage` | Manage downloadable templates |
-| `import.error.reprocess` | Reprocess rejected rows |
-| `import.sensitive` | View unmasked sensitive field values |
+| Code                     | Capability                                     |
+| ------------------------ | ---------------------------------------------- |
+| `import.view`            | Read jobs, status, results (non-sensitive)     |
+| `import.upload`          | Create job / register file / obtain upload URL |
+| `import.map`             | Edit column mappings                           |
+| `import.validate`        | Run validation                                 |
+| `import.preview`         | Generate preview                               |
+| `import.approve`         | Approve for execution                          |
+| `import.execute`         | Queue / run commit                             |
+| `import.rollback`        | Request rollback                               |
+| `import.profile.manage`  | Manage import profile snapshots                |
+| `import.template.manage` | Manage downloadable templates                  |
+| `import.error.reprocess` | Reprocess rejected rows                        |
+| `import.sensitive`       | View unmasked sensitive field values           |
 
 Tenant administrators **cannot** grant Platform Creator-only permissions (`isCreatorOnlyPermission`). Scope (platform vs tenant principal) is resolved by membership/role assignment, **not** by encoding `platform.` / `tenant.` into import permission names.
 
@@ -62,12 +62,12 @@ No Academy / RMS / Industrial adapter implementations in S1.
 
 ## Rollback safety classifications
 
-| Class | Meaning | Allowed |
-| --- | --- | --- |
-| `SAFE` | All committed entities still exclusively owned by this job; no downstream side effects | Auto / API rollback |
-| `CONDITIONAL` | Some entities mutated after import or referenced | Manual review; may partial-rollback |
-| `UNSAFE` | External side effects, merges, or irreversible publishes | `ROLLBACK_REFUSED` |
-| `EXPIRED` | Past retention / legal hold window | `ROLLBACK_REFUSED` |
+| Class         | Meaning                                                                                | Allowed                             |
+| ------------- | -------------------------------------------------------------------------------------- | ----------------------------------- |
+| `SAFE`        | All committed entities still exclusively owned by this job; no downstream side effects | Auto / API rollback                 |
+| `CONDITIONAL` | Some entities mutated after import or referenced                                       | Manual review; may partial-rollback |
+| `UNSAFE`      | External side effects, merges, or irreversible publishes                               | `ROLLBACK_REFUSED`                  |
+| `EXPIRED`     | Past retention / legal hold window                                                     | `ROLLBACK_REFUSED`                  |
 
 ## Sensitive row storage and retention
 
@@ -85,12 +85,12 @@ No Academy / RMS / Industrial adapter implementations in S1.
 
 ## Idempotency
 
-| Layer | Key | Constraint |
-| --- | --- | --- |
-| API | `Idempotency-Key` header | Platform idempotency records |
-| Job | `import_jobs.idempotency_key` | UNIQUE `(tenant_id, idempotency_key)` |
-| Batch | `import_batches.idempotency_key` | UNIQUE `(tenant_id, job_id, idempotency_key)` |
-| Row op | `import_rows.operation_key` | UNIQUE `(tenant_id, job_id, operation_key)` |
+| Layer  | Key                              | Constraint                                    |
+| ------ | -------------------------------- | --------------------------------------------- |
+| API    | `Idempotency-Key` header         | Platform idempotency records                  |
+| Job    | `import_jobs.idempotency_key`    | UNIQUE `(tenant_id, idempotency_key)`         |
+| Batch  | `import_batches.idempotency_key` | UNIQUE `(tenant_id, job_id, idempotency_key)` |
+| Row op | `import_rows.operation_key`      | UNIQUE `(tenant_id, job_id, operation_key)`   |
 
 Retries return the original result; they must not double-commit.
 

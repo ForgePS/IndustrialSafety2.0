@@ -1691,10 +1691,7 @@ export class IndustrialSafetySuppliesService {
         permissions: principal.permissions,
       })
     ) {
-      throw new ForgeError(
-        "FORBIDDEN",
-        "Only an Admin or Creator can delete safety supply items.",
-      );
+      throw new ForgeError("FORBIDDEN", "Only an Admin or Creator can delete safety supply items.");
     }
 
     const tenantId = this.tenant(principal);
@@ -2584,7 +2581,9 @@ export class IndustrialSafetySuppliesService {
         await tx
           .update(industrialSupplyLots)
           .set({ locationId: destinationLocationId, updatedAt: now })
-          .where(and(eq(industrialSupplyLots.id, lotId), eq(industrialSupplyLots.tenantId, tenantId)));
+          .where(
+            and(eq(industrialSupplyLots.id, lotId), eq(industrialSupplyLots.tenantId, tenantId)),
+          );
       }
       if (serialId) {
         await tx
@@ -2676,13 +2675,7 @@ export class IndustrialSafetySuppliesService {
       await this.requireItem(tx, tenantId, itemId);
       await this.requireLocation(tx, tenantId, locationId);
       const variantId = asOptionalString(body.variantId);
-      const inv = await this.getOrCreateInventoryRow(
-        tx,
-        tenantId,
-        itemId,
-        locationId,
-        variantId,
-      );
+      const inv = await this.getOrCreateInventoryRow(tx, tenantId, itemId, locationId, variantId);
       const delta = newQuantity - this.num(inv.quantityOnHand);
 
       const result = await this.applyQtyChange(tx, {
@@ -2754,7 +2747,11 @@ export class IndustrialSafetySuppliesService {
         .offset(offset);
 
       return {
-        items: rows.map((r) => ({ ...r.assignment, itemName: r.itemName, itemNumber: r.itemNumber })),
+        items: rows.map((r) => ({
+          ...r.assignment,
+          itemName: r.itemName,
+          itemNumber: r.itemNumber,
+        })),
         page,
         pageSize,
         total: countRow?.count ?? 0,
@@ -2866,11 +2863,7 @@ export class IndustrialSafetySuppliesService {
     });
   }
 
-  async returnPpe(
-    principal: ForgePrincipal,
-    assignmentId: string,
-    body: Record<string, unknown>,
-  ) {
+  async returnPpe(principal: ForgePrincipal, assignmentId: string, body: Record<string, unknown>) {
     const tenantId = this.tenant(principal);
     const condition = asString(body.condition);
     const disposition = asString(body.disposition, "RETURN_TO_STOCK") || "RETURN_TO_STOCK";
@@ -3049,13 +3042,7 @@ export class IndustrialSafetySuppliesService {
       }
 
       const variantId = asOptionalString(body.variantId);
-      const inv = await this.getOrCreateInventoryRow(
-        tx,
-        tenantId,
-        itemId,
-        locationId,
-        variantId,
-      );
+      const inv = await this.getOrCreateInventoryRow(tx, tenantId, itemId, locationId, variantId);
       const expected = this.num(inv.quantityOnHand);
       const actual = this.num(body.actualQuantity);
       const variance = actual - expected;
@@ -3121,7 +3108,11 @@ export class IndustrialSafetySuppliesService {
     });
   }
 
-  async submitCount(principal: ForgePrincipal, countId: string, body: Record<string, unknown> = {}) {
+  async submitCount(
+    principal: ForgePrincipal,
+    countId: string,
+    body: Record<string, unknown> = {},
+  ) {
     const tenantId = this.tenant(principal);
     return withTenantTransaction(this.db, tenantId, async (tx) => {
       const [count] = await tx
@@ -3382,76 +3373,81 @@ export class IndustrialSafetySuppliesService {
       throw new ForgeError("VALIDATION_FAILED", "At least one request line is required");
     }
 
-    return withTenantTransaction(this.db, tenantId, async (tx) => {
-      const now = new Date();
-      const [req] = await tx
-        .insert(industrialSupplyRequests)
-        .values({
-          id: createId(),
-          tenantId,
-          requestNumber: await this.nextSupplyRequestNumber(tx, tenantId),
-          siteId: asOptionalString(body.siteId),
-          source: asString(body.source, "ADMIN_CREATED") || "ADMIN_CREATED",
-          priority: asString(body.priority, "ROUTINE") || "ROUTINE",
-          personnelId: asOptionalString(body.personnelId),
-          departmentId: asOptionalString(body.departmentId),
-          locationId: asOptionalString(body.locationId),
-          neededBy: asOptionalDate(body.neededBy),
-          reason: asOptionalString(body.reason),
-          notes: asOptionalString(body.notes),
-          status: "SUBMITTED",
-          submittedAt: now,
-          createdBy: principal.userId,
-          createdAt: now,
-          updatedAt: now,
-        })
-        .returning();
+    return withTenantTransaction(
+      this.db,
+      tenantId,
+      async (tx) => {
+        const now = new Date();
+        const [req] = await tx
+          .insert(industrialSupplyRequests)
+          .values({
+            id: createId(),
+            tenantId,
+            requestNumber: await this.nextSupplyRequestNumber(tx, tenantId),
+            siteId: asOptionalString(body.siteId),
+            source: asString(body.source, "ADMIN_CREATED") || "ADMIN_CREATED",
+            priority: asString(body.priority, "ROUTINE") || "ROUTINE",
+            personnelId: asOptionalString(body.personnelId),
+            departmentId: asOptionalString(body.departmentId),
+            locationId: asOptionalString(body.locationId),
+            neededBy: asOptionalDate(body.neededBy),
+            reason: asOptionalString(body.reason),
+            notes: asOptionalString(body.notes),
+            status: "SUBMITTED",
+            submittedAt: now,
+            createdBy: principal.userId,
+            createdAt: now,
+            updatedAt: now,
+          })
+          .returning();
 
-      for (const raw of items) {
-        const line = (raw ?? {}) as Record<string, unknown>;
-        const itemId = asString(line.itemId);
-        const qty = this.num(line.quantity ?? line.quantityRequested);
-        if (!itemId || !(qty > 0)) continue;
-        await this.requireItem(tx, tenantId, itemId);
-        await tx.insert(industrialSupplyRequestItems).values({
-          id: createId(),
+        for (const raw of items) {
+          const line = (raw ?? {}) as Record<string, unknown>;
+          const itemId = asString(line.itemId);
+          const qty = this.num(line.quantity ?? line.quantityRequested);
+          if (!itemId || !(qty > 0)) continue;
+          await this.requireItem(tx, tenantId, itemId);
+          await tx.insert(industrialSupplyRequestItems).values({
+            id: createId(),
+            tenantId,
+            requestId: req!.id,
+            itemId,
+            variantId: asOptionalString(line.variantId),
+            quantityRequested: asQtyString(qty),
+            quantityApproved: "0",
+            quantityReserved: "0",
+            quantityIssued: "0",
+            createdAt: now,
+          });
+        }
+
+        await this.writeRequestEvent(tx, {
           tenantId,
           requestId: req!.id,
-          itemId,
-          variantId: asOptionalString(line.variantId),
-          quantityRequested: asQtyString(qty),
-          quantityApproved: "0",
-          quantityReserved: "0",
-          quantityIssued: "0",
-          createdAt: now,
+          eventType: "REQUEST_CREATED",
+          newStatus: "SUBMITTED",
+          userId: principal.userId,
+          personnelId: req!.personnelId,
+          metadata: {
+            source: req!.source,
+            siteId: req!.siteId,
+            priority: req!.priority,
+          },
         });
-      }
 
-      await this.writeRequestEvent(tx, {
-        tenantId,
-        requestId: req!.id,
-        eventType: "REQUEST_CREATED",
-        newStatus: "SUBMITTED",
-        userId: principal.userId,
-        personnelId: req!.personnelId,
-        metadata: {
-          source: req!.source,
-          siteId: req!.siteId,
-          priority: req!.priority,
-        },
-      });
+        await this.writeDomainAudit(tx, {
+          tenantId,
+          actorUserId: principal.userId,
+          action: "CREATE",
+          resourceType: "supply_request",
+          resourceId: req!.id,
+          newValue: { requestNumber: req!.requestNumber },
+        });
 
-      await this.writeDomainAudit(tx, {
-        tenantId,
-        actorUserId: principal.userId,
-        action: "CREATE",
-        resourceType: "supply_request",
-        resourceId: req!.id,
-        newValue: { requestNumber: req!.requestNumber },
-      });
-
-      return req!;
-    }, principal.userId).then(async (req) => {
+        return req!;
+      },
+      principal.userId,
+    ).then(async (req) => {
       if (principal.userId) {
         await this.notifyRequestEvent({
           tenantId,
@@ -3476,143 +3472,154 @@ export class IndustrialSafetySuppliesService {
 
   async getRequest(principal: ForgePrincipal, requestId: string) {
     const tenantId = this.tenant(principal);
-    return withTenantTransaction(this.db, tenantId, async (tx) => {
-      const [request] = await tx
-        .select()
-        .from(industrialSupplyRequests)
-        .where(
-          and(
-            eq(industrialSupplyRequests.id, requestId),
-            eq(industrialSupplyRequests.tenantId, tenantId),
-            isNull(industrialSupplyRequests.archivedAt),
-          ),
-        )
-        .limit(1);
-      if (!request) throw new ForgeError("NOT_FOUND", "Supply request not found");
+    return withTenantTransaction(
+      this.db,
+      tenantId,
+      async (tx) => {
+        const [request] = await tx
+          .select()
+          .from(industrialSupplyRequests)
+          .where(
+            and(
+              eq(industrialSupplyRequests.id, requestId),
+              eq(industrialSupplyRequests.tenantId, tenantId),
+              isNull(industrialSupplyRequests.archivedAt),
+            ),
+          )
+          .limit(1);
+        if (!request) throw new ForgeError("NOT_FOUND", "Supply request not found");
 
-      const items = await tx
-        .select({
-          id: industrialSupplyRequestItems.id,
-          requestId: industrialSupplyRequestItems.requestId,
-          itemId: industrialSupplyRequestItems.itemId,
-          itemName: industrialSupplyItems.name,
-          variantId: industrialSupplyRequestItems.variantId,
-          quantityRequested: industrialSupplyRequestItems.quantityRequested,
-          quantityApproved: industrialSupplyRequestItems.quantityApproved,
-          quantityReserved: industrialSupplyRequestItems.quantityReserved,
-          quantityIssued: industrialSupplyRequestItems.quantityIssued,
-          quantityBackordered: industrialSupplyRequestItems.quantityBackordered,
-          status: industrialSupplyRequestItems.status,
-          customItem: industrialSupplyRequestItems.customItem,
-          customItemName: industrialSupplyRequestItems.customItemName,
-          customItemDescription: industrialSupplyRequestItems.customItemDescription,
-          denialReason: industrialSupplyRequestItems.denialReason,
-          notes: industrialSupplyRequestItems.notes,
-          backorderReason: industrialSupplyRequestItems.backorderReason,
-          expectedAvailabilityDate: industrialSupplyRequestItems.expectedAvailabilityDate,
-          createdAt: industrialSupplyRequestItems.createdAt,
-          updatedAt: industrialSupplyRequestItems.updatedAt,
-        })
-        .from(industrialSupplyRequestItems)
-        .leftJoin(
-          industrialSupplyItems,
-          eq(industrialSupplyItems.id, industrialSupplyRequestItems.itemId),
-        )
-        .where(
-          and(
-            eq(industrialSupplyRequestItems.tenantId, tenantId),
-            eq(industrialSupplyRequestItems.requestId, requestId),
-          ),
-        )
-        .orderBy(asc(industrialSupplyRequestItems.createdAt));
-      const events = await tx
-        .select()
-        .from(industrialSupplyRequestEvents)
-        .where(
-          and(
-            eq(industrialSupplyRequestEvents.tenantId, tenantId),
-            eq(industrialSupplyRequestEvents.requestId, requestId),
-          ),
-        )
-        .orderBy(asc(industrialSupplyRequestEvents.createdAt));
-      return { ...request, items, events };
-    }, principal.userId);
+        const items = await tx
+          .select({
+            id: industrialSupplyRequestItems.id,
+            requestId: industrialSupplyRequestItems.requestId,
+            itemId: industrialSupplyRequestItems.itemId,
+            itemName: industrialSupplyItems.name,
+            variantId: industrialSupplyRequestItems.variantId,
+            quantityRequested: industrialSupplyRequestItems.quantityRequested,
+            quantityApproved: industrialSupplyRequestItems.quantityApproved,
+            quantityReserved: industrialSupplyRequestItems.quantityReserved,
+            quantityIssued: industrialSupplyRequestItems.quantityIssued,
+            quantityBackordered: industrialSupplyRequestItems.quantityBackordered,
+            status: industrialSupplyRequestItems.status,
+            customItem: industrialSupplyRequestItems.customItem,
+            customItemName: industrialSupplyRequestItems.customItemName,
+            customItemDescription: industrialSupplyRequestItems.customItemDescription,
+            denialReason: industrialSupplyRequestItems.denialReason,
+            notes: industrialSupplyRequestItems.notes,
+            backorderReason: industrialSupplyRequestItems.backorderReason,
+            expectedAvailabilityDate: industrialSupplyRequestItems.expectedAvailabilityDate,
+            createdAt: industrialSupplyRequestItems.createdAt,
+            updatedAt: industrialSupplyRequestItems.updatedAt,
+          })
+          .from(industrialSupplyRequestItems)
+          .leftJoin(
+            industrialSupplyItems,
+            eq(industrialSupplyItems.id, industrialSupplyRequestItems.itemId),
+          )
+          .where(
+            and(
+              eq(industrialSupplyRequestItems.tenantId, tenantId),
+              eq(industrialSupplyRequestItems.requestId, requestId),
+            ),
+          )
+          .orderBy(asc(industrialSupplyRequestItems.createdAt));
+        const events = await tx
+          .select()
+          .from(industrialSupplyRequestEvents)
+          .where(
+            and(
+              eq(industrialSupplyRequestEvents.tenantId, tenantId),
+              eq(industrialSupplyRequestEvents.requestId, requestId),
+            ),
+          )
+          .orderBy(asc(industrialSupplyRequestEvents.createdAt));
+        return { ...request, items, events };
+      },
+      principal.userId,
+    );
   }
 
   async beginReview(principal: ForgePrincipal, requestId: string) {
     const tenantId = this.tenant(principal);
-    return withTenantTransaction(this.db, tenantId, async (tx) => {
-      const [request] = await tx
-        .select()
-        .from(industrialSupplyRequests)
-        .where(
-          and(
-            eq(industrialSupplyRequests.id, requestId),
-            eq(industrialSupplyRequests.tenantId, tenantId),
-            isNull(industrialSupplyRequests.archivedAt),
-          ),
-        )
-        .limit(1);
-      if (!request) throw new ForgeError("NOT_FOUND", "Supply request not found");
-      if (!["SUBMITTED", "PENDING"].includes(request.status)) {
-        throw new ForgeError("VALIDATION_FAILED", "Only submitted requests can begin review");
-      }
-      const now = new Date();
-      const [updated] = await tx
-        .update(industrialSupplyRequests)
-        .set({ status: "UNDER_REVIEW", reviewStartedAt: now, updatedAt: now })
-        .where(eq(industrialSupplyRequests.id, requestId))
-        .returning();
-      await this.writeRequestEvent(tx, {
-        tenantId,
-        requestId,
-        eventType: "REVIEW_STARTED",
-        previousStatus: request.status,
-        newStatus: "UNDER_REVIEW",
-        userId: principal.userId,
-      });
-      return updated!;
-    }, principal.userId);
+    return withTenantTransaction(
+      this.db,
+      tenantId,
+      async (tx) => {
+        const [request] = await tx
+          .select()
+          .from(industrialSupplyRequests)
+          .where(
+            and(
+              eq(industrialSupplyRequests.id, requestId),
+              eq(industrialSupplyRequests.tenantId, tenantId),
+              isNull(industrialSupplyRequests.archivedAt),
+            ),
+          )
+          .limit(1);
+        if (!request) throw new ForgeError("NOT_FOUND", "Supply request not found");
+        if (!["SUBMITTED", "PENDING"].includes(request.status)) {
+          throw new ForgeError("VALIDATION_FAILED", "Only submitted requests can begin review");
+        }
+        const now = new Date();
+        const [updated] = await tx
+          .update(industrialSupplyRequests)
+          .set({ status: "UNDER_REVIEW", reviewStartedAt: now, updatedAt: now })
+          .where(eq(industrialSupplyRequests.id, requestId))
+          .returning();
+        await this.writeRequestEvent(tx, {
+          tenantId,
+          requestId,
+          eventType: "REVIEW_STARTED",
+          previousStatus: request.status,
+          newStatus: "UNDER_REVIEW",
+          userId: principal.userId,
+        });
+        return updated!;
+      },
+      principal.userId,
+    );
   }
 
-  async denyRequest(
-    principal: ForgePrincipal,
-    requestId: string,
-    body: Record<string, unknown>,
-  ) {
+  async denyRequest(principal: ForgePrincipal, requestId: string, body: Record<string, unknown>) {
     const tenantId = this.tenant(principal);
     const denialReason = asOptionalString(body.denialReason ?? body.reason);
     if (!denialReason) throw new ForgeError("VALIDATION_FAILED", "Denial reason is required");
-    return withTenantTransaction(this.db, tenantId, async (tx) => {
-      const [request] = await tx
-        .select()
-        .from(industrialSupplyRequests)
-        .where(
-          and(
-            eq(industrialSupplyRequests.id, requestId),
-            eq(industrialSupplyRequests.tenantId, tenantId),
-            isNull(industrialSupplyRequests.archivedAt),
-          ),
-        )
-        .limit(1);
-      if (!request) throw new ForgeError("NOT_FOUND", "Supply request not found");
-      const now = new Date();
-      const [updated] = await tx
-        .update(industrialSupplyRequests)
-        .set({ status: "DENIED", denialReason, deniedAt: now, updatedAt: now })
-        .where(eq(industrialSupplyRequests.id, requestId))
-        .returning();
-      await this.writeRequestEvent(tx, {
-        tenantId,
-        requestId,
-        eventType: "REQUEST_DENIED",
-        previousStatus: request.status,
-        newStatus: "DENIED",
-        userId: principal.userId,
-        metadata: { denialReason },
-      });
-      return updated!;
-    }, principal.userId).then(async (updated) => {
+    return withTenantTransaction(
+      this.db,
+      tenantId,
+      async (tx) => {
+        const [request] = await tx
+          .select()
+          .from(industrialSupplyRequests)
+          .where(
+            and(
+              eq(industrialSupplyRequests.id, requestId),
+              eq(industrialSupplyRequests.tenantId, tenantId),
+              isNull(industrialSupplyRequests.archivedAt),
+            ),
+          )
+          .limit(1);
+        if (!request) throw new ForgeError("NOT_FOUND", "Supply request not found");
+        const now = new Date();
+        const [updated] = await tx
+          .update(industrialSupplyRequests)
+          .set({ status: "DENIED", denialReason, deniedAt: now, updatedAt: now })
+          .where(eq(industrialSupplyRequests.id, requestId))
+          .returning();
+        await this.writeRequestEvent(tx, {
+          tenantId,
+          requestId,
+          eventType: "REQUEST_DENIED",
+          previousStatus: request.status,
+          newStatus: "DENIED",
+          userId: principal.userId,
+          metadata: { denialReason },
+        });
+        return updated!;
+      },
+      principal.userId,
+    ).then(async (updated) => {
       await this.notifyRequestEvent({
         tenantId,
         requestId: updated.id,
@@ -3620,53 +3627,54 @@ export class IndustrialSafetySuppliesService {
         type: "industrial.supplies.request_denied",
         title: "Safety supply request denied",
         body: `${updated.requestNumber} was denied.`,
-        userIds: [updated.assignedUserId, principal.userId].filter(
-          (id): id is string => Boolean(id),
+        userIds: [updated.assignedUserId, principal.userId].filter((id): id is string =>
+          Boolean(id),
         ),
       });
       return updated;
     });
   }
 
-  async assignRequest(
-    principal: ForgePrincipal,
-    requestId: string,
-    body: Record<string, unknown>,
-  ) {
+  async assignRequest(principal: ForgePrincipal, requestId: string, body: Record<string, unknown>) {
     const tenantId = this.tenant(principal);
     const assignedUserId = asOptionalString(body.assignedUserId ?? body.userId);
     if (!assignedUserId) {
       throw new ForgeError("VALIDATION_FAILED", "Assigned user is required");
     }
-    return withTenantTransaction(this.db, tenantId, async (tx) => {
-      const [request] = await tx
-        .select()
-        .from(industrialSupplyRequests)
-        .where(
-          and(
-            eq(industrialSupplyRequests.id, requestId),
-            eq(industrialSupplyRequests.tenantId, tenantId),
-            isNull(industrialSupplyRequests.archivedAt),
-          ),
-        )
-        .limit(1);
-      if (!request) throw new ForgeError("NOT_FOUND", "Supply request not found");
-      const [updated] = await tx
-        .update(industrialSupplyRequests)
-        .set({ assignedUserId, updatedAt: new Date() })
-        .where(eq(industrialSupplyRequests.id, requestId))
-        .returning();
-      await this.writeRequestEvent(tx, {
-        tenantId,
-        requestId,
-        eventType: "REQUEST_ASSIGNED",
-        previousStatus: request.status,
-        newStatus: request.status,
-        userId: principal.userId,
-        metadata: { assignedUserId, previousAssignedUserId: request.assignedUserId },
-      });
-      return updated!;
-    }, principal.userId).then(async (updated) => {
+    return withTenantTransaction(
+      this.db,
+      tenantId,
+      async (tx) => {
+        const [request] = await tx
+          .select()
+          .from(industrialSupplyRequests)
+          .where(
+            and(
+              eq(industrialSupplyRequests.id, requestId),
+              eq(industrialSupplyRequests.tenantId, tenantId),
+              isNull(industrialSupplyRequests.archivedAt),
+            ),
+          )
+          .limit(1);
+        if (!request) throw new ForgeError("NOT_FOUND", "Supply request not found");
+        const [updated] = await tx
+          .update(industrialSupplyRequests)
+          .set({ assignedUserId, updatedAt: new Date() })
+          .where(eq(industrialSupplyRequests.id, requestId))
+          .returning();
+        await this.writeRequestEvent(tx, {
+          tenantId,
+          requestId,
+          eventType: "REQUEST_ASSIGNED",
+          previousStatus: request.status,
+          newStatus: request.status,
+          userId: principal.userId,
+          metadata: { assignedUserId, previousAssignedUserId: request.assignedUserId },
+        });
+        return updated!;
+      },
+      principal.userId,
+    ).then(async (updated) => {
       await this.notifyRequestEvent({
         tenantId,
         requestId: updated.id,
@@ -3686,114 +3694,128 @@ export class IndustrialSafetySuppliesService {
     body: Record<string, unknown>,
   ) {
     const tenantId = this.tenant(principal);
-    return withTenantTransaction(this.db, tenantId, async (tx) => {
-      const [request] = await tx
-        .select()
-        .from(industrialSupplyRequests)
-        .where(
-          and(
-            eq(industrialSupplyRequests.id, requestId),
-            eq(industrialSupplyRequests.tenantId, tenantId),
-            isNull(industrialSupplyRequests.archivedAt),
-          ),
-        )
-        .limit(1);
-      if (!request) throw new ForgeError("NOT_FOUND", "Supply request not found");
-      const now = new Date();
-      const lineUpdates = Array.isArray(body.items) ? body.items : [];
-      for (const raw of lineUpdates) {
-        const line = (raw ?? {}) as Record<string, unknown>;
-        const lineId = asString(line.id ?? line.requestItemId);
-        if (!lineId) continue;
-        const quantityBackordered = this.num(line.quantityBackordered ?? line.quantity);
-        await tx
-          .update(industrialSupplyRequestItems)
-          .set({
-            quantityBackordered: asQtyString(quantityBackordered),
-            status: "BACKORDERED",
-            backorderReason: asOptionalString(line.backorderReason ?? line.reason),
-            expectedAvailabilityDate: asOptionalDate(line.expectedAvailabilityDate),
-            updatedAt: now,
-          })
+    return withTenantTransaction(
+      this.db,
+      tenantId,
+      async (tx) => {
+        const [request] = await tx
+          .select()
+          .from(industrialSupplyRequests)
           .where(
             and(
-              eq(industrialSupplyRequestItems.id, lineId),
-              eq(industrialSupplyRequestItems.tenantId, tenantId),
-              eq(industrialSupplyRequestItems.requestId, requestId),
+              eq(industrialSupplyRequests.id, requestId),
+              eq(industrialSupplyRequests.tenantId, tenantId),
+              isNull(industrialSupplyRequests.archivedAt),
             ),
-          );
-      }
-      const [updated] = await tx
-        .update(industrialSupplyRequests)
-        .set({
-          status: "BACKORDERED",
-          internalNotes:
-            body.internalNotes === undefined
-              ? request.internalNotes
-              : asOptionalString(body.internalNotes),
-          employeeMessage:
-            body.employeeMessage === undefined
-              ? request.employeeMessage
-              : asOptionalString(body.employeeMessage),
-          updatedAt: now,
-        })
-        .where(eq(industrialSupplyRequests.id, requestId))
-        .returning();
-      await this.writeRequestEvent(tx, {
-        tenantId,
-        requestId,
-        eventType: "REQUEST_BACKORDERED",
-        previousStatus: request.status,
-        newStatus: "BACKORDERED",
-        userId: principal.userId,
-        metadata: { lineCount: lineUpdates.length },
-      });
-      return updated!;
-    }, principal.userId);
+          )
+          .limit(1);
+        if (!request) throw new ForgeError("NOT_FOUND", "Supply request not found");
+        const now = new Date();
+        const lineUpdates = Array.isArray(body.items) ? body.items : [];
+        for (const raw of lineUpdates) {
+          const line = (raw ?? {}) as Record<string, unknown>;
+          const lineId = asString(line.id ?? line.requestItemId);
+          if (!lineId) continue;
+          const quantityBackordered = this.num(line.quantityBackordered ?? line.quantity);
+          await tx
+            .update(industrialSupplyRequestItems)
+            .set({
+              quantityBackordered: asQtyString(quantityBackordered),
+              status: "BACKORDERED",
+              backorderReason: asOptionalString(line.backorderReason ?? line.reason),
+              expectedAvailabilityDate: asOptionalDate(line.expectedAvailabilityDate),
+              updatedAt: now,
+            })
+            .where(
+              and(
+                eq(industrialSupplyRequestItems.id, lineId),
+                eq(industrialSupplyRequestItems.tenantId, tenantId),
+                eq(industrialSupplyRequestItems.requestId, requestId),
+              ),
+            );
+        }
+        const [updated] = await tx
+          .update(industrialSupplyRequests)
+          .set({
+            status: "BACKORDERED",
+            internalNotes:
+              body.internalNotes === undefined
+                ? request.internalNotes
+                : asOptionalString(body.internalNotes),
+            employeeMessage:
+              body.employeeMessage === undefined
+                ? request.employeeMessage
+                : asOptionalString(body.employeeMessage),
+            updatedAt: now,
+          })
+          .where(eq(industrialSupplyRequests.id, requestId))
+          .returning();
+        await this.writeRequestEvent(tx, {
+          tenantId,
+          requestId,
+          eventType: "REQUEST_BACKORDERED",
+          previousStatus: request.status,
+          newStatus: "BACKORDERED",
+          userId: principal.userId,
+          metadata: { lineCount: lineUpdates.length },
+        });
+        return updated!;
+      },
+      principal.userId,
+    );
   }
 
-  async markReady(principal: ForgePrincipal, requestId: string, body: Record<string, unknown> = {}) {
+  async markReady(
+    principal: ForgePrincipal,
+    requestId: string,
+    body: Record<string, unknown> = {},
+  ) {
     const tenantId = this.tenant(principal);
-    return withTenantTransaction(this.db, tenantId, async (tx) => {
-      const [request] = await tx
-        .select()
-        .from(industrialSupplyRequests)
-        .where(
-          and(
-            eq(industrialSupplyRequests.id, requestId),
-            eq(industrialSupplyRequests.tenantId, tenantId),
-            isNull(industrialSupplyRequests.archivedAt),
-          ),
-        )
-        .limit(1);
-      if (!request) throw new ForgeError("NOT_FOUND", "Supply request not found");
-      if (!["APPROVED", "PARTIALLY_APPROVED"].includes(request.status)) {
-        throw new ForgeError("VALIDATION_FAILED", "Only approved requests can be marked ready");
-      }
-      const now = new Date();
-      const employeeMessage = asOptionalString(body.employeeMessage);
-      const [updated] = await tx
-        .update(industrialSupplyRequests)
-        .set({
-          status: "READY_FOR_PICKUP",
-          readyAt: now,
-          updatedAt: now,
-          ...(employeeMessage != null ? { employeeMessage } : {}),
-        })
-        .where(eq(industrialSupplyRequests.id, requestId))
-        .returning();
-      await this.writeRequestEvent(tx, {
-        tenantId,
-        requestId,
-        eventType: "REQUEST_READY",
-        previousStatus: request.status,
-        newStatus: "READY_FOR_PICKUP",
-        userId: principal.userId,
-      });
-      return updated!;
-    }, principal.userId).then(async (updated) => {
-      const recipients = [updated.assignedUserId, principal.userId].filter(
-        (id): id is string => Boolean(id),
+    return withTenantTransaction(
+      this.db,
+      tenantId,
+      async (tx) => {
+        const [request] = await tx
+          .select()
+          .from(industrialSupplyRequests)
+          .where(
+            and(
+              eq(industrialSupplyRequests.id, requestId),
+              eq(industrialSupplyRequests.tenantId, tenantId),
+              isNull(industrialSupplyRequests.archivedAt),
+            ),
+          )
+          .limit(1);
+        if (!request) throw new ForgeError("NOT_FOUND", "Supply request not found");
+        if (!["APPROVED", "PARTIALLY_APPROVED"].includes(request.status)) {
+          throw new ForgeError("VALIDATION_FAILED", "Only approved requests can be marked ready");
+        }
+        const now = new Date();
+        const employeeMessage = asOptionalString(body.employeeMessage);
+        const [updated] = await tx
+          .update(industrialSupplyRequests)
+          .set({
+            status: "READY_FOR_PICKUP",
+            readyAt: now,
+            updatedAt: now,
+            ...(employeeMessage != null ? { employeeMessage } : {}),
+          })
+          .where(eq(industrialSupplyRequests.id, requestId))
+          .returning();
+        await this.writeRequestEvent(tx, {
+          tenantId,
+          requestId,
+          eventType: "REQUEST_READY",
+          previousStatus: request.status,
+          newStatus: "READY_FOR_PICKUP",
+          userId: principal.userId,
+        });
+        return updated!;
+      },
+      principal.userId,
+    ).then(async (updated) => {
+      const recipients = [updated.assignedUserId, principal.userId].filter((id): id is string =>
+        Boolean(id),
       );
       await this.notifyRequestEvent({
         tenantId,
@@ -3808,213 +3830,225 @@ export class IndustrialSafetySuppliesService {
     });
   }
 
-  async cancelRequest(
-    principal: ForgePrincipal,
-    requestId: string,
-    body: Record<string, unknown>,
-  ) {
+  async cancelRequest(principal: ForgePrincipal, requestId: string, body: Record<string, unknown>) {
     const tenantId = this.tenant(principal);
     const reason = asOptionalString(body.reason ?? body.cancellationReason);
     if (!reason) throw new ForgeError("VALIDATION_FAILED", "Cancellation reason is required");
-    return withTenantTransaction(this.db, tenantId, async (tx) => {
-      const [request] = await tx
-        .select()
-        .from(industrialSupplyRequests)
-        .where(
-          and(
-            eq(industrialSupplyRequests.id, requestId),
-            eq(industrialSupplyRequests.tenantId, tenantId),
-            isNull(industrialSupplyRequests.archivedAt),
-          ),
-        )
-        .limit(1);
-      if (!request) throw new ForgeError("NOT_FOUND", "Supply request not found");
-      const now = new Date();
-      const [updated] = await tx
-        .update(industrialSupplyRequests)
-        .set({
-          status: "CANCELLED",
-          cancelledAt: now,
-          internalNotes: request.internalNotes
-            ? `${request.internalNotes}\nCancellation: ${reason}`
-            : `Cancellation: ${reason}`,
-          updatedAt: now,
-        })
-        .where(eq(industrialSupplyRequests.id, requestId))
-        .returning();
-      await this.writeRequestEvent(tx, {
-        tenantId,
-        requestId,
-        eventType: "REQUEST_CANCELLED",
-        previousStatus: request.status,
-        newStatus: "CANCELLED",
-        userId: principal.userId,
-        metadata: { reason },
-      });
-      return updated!;
-    }, principal.userId);
+    return withTenantTransaction(
+      this.db,
+      tenantId,
+      async (tx) => {
+        const [request] = await tx
+          .select()
+          .from(industrialSupplyRequests)
+          .where(
+            and(
+              eq(industrialSupplyRequests.id, requestId),
+              eq(industrialSupplyRequests.tenantId, tenantId),
+              isNull(industrialSupplyRequests.archivedAt),
+            ),
+          )
+          .limit(1);
+        if (!request) throw new ForgeError("NOT_FOUND", "Supply request not found");
+        const now = new Date();
+        const [updated] = await tx
+          .update(industrialSupplyRequests)
+          .set({
+            status: "CANCELLED",
+            cancelledAt: now,
+            internalNotes: request.internalNotes
+              ? `${request.internalNotes}\nCancellation: ${reason}`
+              : `Cancellation: ${reason}`,
+            updatedAt: now,
+          })
+          .where(eq(industrialSupplyRequests.id, requestId))
+          .returning();
+        await this.writeRequestEvent(tx, {
+          tenantId,
+          requestId,
+          eventType: "REQUEST_CANCELLED",
+          previousStatus: request.status,
+          newStatus: "CANCELLED",
+          userId: principal.userId,
+          metadata: { reason },
+        });
+        return updated!;
+      },
+      principal.userId,
+    );
   }
 
-  async approveRequest(principal: ForgePrincipal, requestId: string, body: Record<string, unknown> = {}) {
+  async approveRequest(
+    principal: ForgePrincipal,
+    requestId: string,
+    body: Record<string, unknown> = {},
+  ) {
     const tenantId = this.tenant(principal);
-    return withTenantTransaction(this.db, tenantId, async (tx) => {
-      const [req] = await tx
-        .select()
-        .from(industrialSupplyRequests)
-        .where(
-          and(
-            eq(industrialSupplyRequests.id, requestId),
-            eq(industrialSupplyRequests.tenantId, tenantId),
-            isNull(industrialSupplyRequests.archivedAt),
-          ),
-        )
-        .limit(1);
-      if (!req) throw new ForgeError("NOT_FOUND", "Supply request not found");
-      if (!["SUBMITTED", "PENDING", "UNDER_REVIEW"].includes(req.status)) {
-        throw new ForgeError("VALIDATION_FAILED", "Only submitted requests can be approved");
-      }
+    return withTenantTransaction(
+      this.db,
+      tenantId,
+      async (tx) => {
+        const [req] = await tx
+          .select()
+          .from(industrialSupplyRequests)
+          .where(
+            and(
+              eq(industrialSupplyRequests.id, requestId),
+              eq(industrialSupplyRequests.tenantId, tenantId),
+              isNull(industrialSupplyRequests.archivedAt),
+            ),
+          )
+          .limit(1);
+        if (!req) throw new ForgeError("NOT_FOUND", "Supply request not found");
+        if (!["SUBMITTED", "PENDING", "UNDER_REVIEW"].includes(req.status)) {
+          throw new ForgeError("VALIDATION_FAILED", "Only submitted requests can be approved");
+        }
 
-      const locationId = asOptionalString(body.locationId) ?? req.locationId;
-      if (!locationId) {
-        throw new ForgeError(
-          "VALIDATION_FAILED",
-          "A fulfill-from location is required to reserve stock",
-        );
-      }
-      await this.requireLocation(tx, tenantId, locationId);
-
-      const lines = await tx
-        .select()
-        .from(industrialSupplyRequestItems)
-        .where(
-          and(
-            eq(industrialSupplyRequestItems.tenantId, tenantId),
-            eq(industrialSupplyRequestItems.requestId, requestId),
-          ),
-        );
-
-      const now = new Date();
-      const requestedLineUpdates = Array.isArray(body.items)
-        ? (body.items as Array<Record<string, unknown>>)
-        : [];
-      for (const line of lines) {
-        const requestedUpdate = requestedLineUpdates.find((candidate) => {
-          const candidateId = asString(candidate.id ?? candidate.requestItemId);
-          const candidateItemId = asString(candidate.itemId);
-          return candidateId === line.id || (!!candidateItemId && candidateItemId === line.itemId);
-        });
-        const qty = requestedUpdate
-          ? this.num(requestedUpdate.quantityApproved ?? requestedUpdate.quantity)
-          : this.num(line.quantityRequested);
-        if (qty < 0 || qty > this.num(line.quantityRequested)) {
+        const locationId = asOptionalString(body.locationId) ?? req.locationId;
+        if (!locationId) {
           throw new ForgeError(
             "VALIDATION_FAILED",
-            "Approved quantity must be between zero and the requested quantity",
+            "A fulfill-from location is required to reserve stock",
           );
         }
-        if (!line.itemId) {
+        await this.requireLocation(tx, tenantId, locationId);
+
+        const lines = await tx
+          .select()
+          .from(industrialSupplyRequestItems)
+          .where(
+            and(
+              eq(industrialSupplyRequestItems.tenantId, tenantId),
+              eq(industrialSupplyRequestItems.requestId, requestId),
+            ),
+          );
+
+        const now = new Date();
+        const requestedLineUpdates = Array.isArray(body.items)
+          ? (body.items as Array<Record<string, unknown>>)
+          : [];
+        for (const line of lines) {
+          const requestedUpdate = requestedLineUpdates.find((candidate) => {
+            const candidateId = asString(candidate.id ?? candidate.requestItemId);
+            const candidateItemId = asString(candidate.itemId);
+            return (
+              candidateId === line.id || (!!candidateItemId && candidateItemId === line.itemId)
+            );
+          });
+          const qty = requestedUpdate
+            ? this.num(requestedUpdate.quantityApproved ?? requestedUpdate.quantity)
+            : this.num(line.quantityRequested);
+          if (qty < 0 || qty > this.num(line.quantityRequested)) {
+            throw new ForgeError(
+              "VALIDATION_FAILED",
+              "Approved quantity must be between zero and the requested quantity",
+            );
+          }
+          if (!line.itemId) {
+            await tx
+              .update(industrialSupplyRequestItems)
+              .set({
+                quantityApproved: asQtyString(qty),
+                status: qty > 0 ? "APPROVED" : "DENIED",
+                updatedAt: now,
+              })
+              .where(eq(industrialSupplyRequestItems.id, line.id));
+            continue;
+          }
+          if (!(qty > 0)) {
+            await tx
+              .update(industrialSupplyRequestItems)
+              .set({ quantityApproved: "0", status: "DENIED", updatedAt: now })
+              .where(eq(industrialSupplyRequestItems.id, line.id));
+            continue;
+          }
+          const inv = await this.getOrCreateInventoryRow(
+            tx,
+            tenantId,
+            line.itemId,
+            locationId,
+            line.variantId,
+          );
+          const available = this.num(inv.quantityAvailable);
+          if (available < qty) {
+            throw new ForgeError(
+              "VALIDATION_FAILED",
+              `Insufficient stock to reserve. Available quantity is ${available.toFixed(4)}.`,
+            );
+          }
+          const newReserved = this.num(inv.quantityReserved) + qty;
+          const newAvailable = this.num(inv.quantityOnHand) - newReserved;
+          await tx
+            .update(industrialSupplyLocationInventory)
+            .set({
+              quantityReserved: asQtyString(newReserved),
+              quantityAvailable: asQtyString(newAvailable),
+              updatedAt: now,
+            })
+            .where(eq(industrialSupplyLocationInventory.id, inv.id));
+
+          await tx.insert(industrialSupplyTransactions).values({
+            id: createId(),
+            tenantId,
+            itemId: line.itemId,
+            variantId: line.variantId,
+            transactionType: "RESERVE",
+            quantity: asQtyString(qty),
+            previousQuantity: asQtyString(inv.quantityOnHand),
+            newQuantity: asQtyString(inv.quantityOnHand),
+            sourceLocationId: locationId,
+            relatedRequestId: requestId,
+            reason: `Reserve for request ${req.requestNumber}`,
+            performedBy: principal.userId,
+            createdAt: now,
+          });
+
           await tx
             .update(industrialSupplyRequestItems)
             .set({
               quantityApproved: asQtyString(qty),
-              status: qty > 0 ? "APPROVED" : "DENIED",
+              quantityReserved: asQtyString(qty),
+              status: "APPROVED",
               updatedAt: now,
             })
             .where(eq(industrialSupplyRequestItems.id, line.id));
-          continue;
         }
-        if (!(qty > 0)) {
-          await tx
-            .update(industrialSupplyRequestItems)
-            .set({ quantityApproved: "0", status: "DENIED", updatedAt: now })
-            .where(eq(industrialSupplyRequestItems.id, line.id));
-          continue;
-        }
-        const inv = await this.getOrCreateInventoryRow(
-          tx,
-          tenantId,
-          line.itemId,
-          locationId,
-          line.variantId,
-        );
-        const available = this.num(inv.quantityAvailable);
-        if (available < qty) {
-          throw new ForgeError(
-            "VALIDATION_FAILED",
-            `Insufficient stock to reserve. Available quantity is ${available.toFixed(4)}.`,
-          );
-        }
-        const newReserved = this.num(inv.quantityReserved) + qty;
-        const newAvailable = this.num(inv.quantityOnHand) - newReserved;
-        await tx
-          .update(industrialSupplyLocationInventory)
+
+        const newStatus = asBool(body.partial, false) ? "PARTIALLY_APPROVED" : "APPROVED";
+        const [updated] = await tx
+          .update(industrialSupplyRequests)
           .set({
-            quantityReserved: asQtyString(newReserved),
-            quantityAvailable: asQtyString(newAvailable),
+            status: newStatus,
+            locationId,
+            approvedBy: principal.userId,
+            approvedAt: now,
             updatedAt: now,
           })
-          .where(eq(industrialSupplyLocationInventory.id, inv.id));
+          .where(eq(industrialSupplyRequests.id, requestId))
+          .returning();
 
-        await tx.insert(industrialSupplyTransactions).values({
-          id: createId(),
+        await this.writeRequestEvent(tx, {
           tenantId,
-          itemId: line.itemId,
-          variantId: line.variantId,
-          transactionType: "RESERVE",
-          quantity: asQtyString(qty),
-          previousQuantity: asQtyString(inv.quantityOnHand),
-          newQuantity: asQtyString(inv.quantityOnHand),
-          sourceLocationId: locationId,
-          relatedRequestId: requestId,
-          reason: `Reserve for request ${req.requestNumber}`,
-          performedBy: principal.userId,
-          createdAt: now,
+          requestId,
+          eventType: "REQUEST_APPROVED",
+          previousStatus: req.status,
+          newStatus,
+          userId: principal.userId,
+          metadata: { partial: newStatus === "PARTIALLY_APPROVED" },
         });
 
-        await tx
-          .update(industrialSupplyRequestItems)
-          .set({
-            quantityApproved: asQtyString(qty),
-            quantityReserved: asQtyString(qty),
-            status: "APPROVED",
-            updatedAt: now,
-          })
-          .where(eq(industrialSupplyRequestItems.id, line.id));
-      }
+        await this.writeDomainAudit(tx, {
+          tenantId,
+          actorUserId: principal.userId,
+          action: "APPROVE",
+          resourceType: "supply_request",
+          resourceId: requestId,
+        });
 
-      const newStatus = asBool(body.partial, false) ? "PARTIALLY_APPROVED" : "APPROVED";
-      const [updated] = await tx
-        .update(industrialSupplyRequests)
-        .set({
-          status: newStatus,
-          locationId,
-          approvedBy: principal.userId,
-          approvedAt: now,
-          updatedAt: now,
-        })
-        .where(eq(industrialSupplyRequests.id, requestId))
-        .returning();
-
-      await this.writeRequestEvent(tx, {
-        tenantId,
-        requestId,
-        eventType: "REQUEST_APPROVED",
-        previousStatus: req.status,
-        newStatus,
-        userId: principal.userId,
-        metadata: { partial: newStatus === "PARTIALLY_APPROVED" },
-      });
-
-      await this.writeDomainAudit(tx, {
-        tenantId,
-        actorUserId: principal.userId,
-        action: "APPROVE",
-        resourceType: "supply_request",
-        resourceId: requestId,
-      });
-
-      return updated!;
-    }, principal.userId).then(async (updated) => {
+        return updated!;
+      },
+      principal.userId,
+    ).then(async (updated) => {
       await this.notifyRequestEvent({
         tenantId,
         requestId: updated.id,
@@ -4022,130 +4056,144 @@ export class IndustrialSafetySuppliesService {
         type: "industrial.supplies.request_approved",
         title: "Safety supply request approved",
         body: `${updated.requestNumber} was approved.`,
-        userIds: [updated.assignedUserId, principal.userId].filter(
-          (id): id is string => Boolean(id),
+        userIds: [updated.assignedUserId, principal.userId].filter((id): id is string =>
+          Boolean(id),
         ),
       });
       return updated;
     });
   }
 
-  async fulfillRequest(principal: ForgePrincipal, requestId: string, body: Record<string, unknown> = {}) {
+  async fulfillRequest(
+    principal: ForgePrincipal,
+    requestId: string,
+    body: Record<string, unknown> = {},
+  ) {
     const tenantId = this.tenant(principal);
-    return withTenantTransaction(this.db, tenantId, async (tx) => {
-      const [req] = await tx
-        .select()
-        .from(industrialSupplyRequests)
-        .where(
-          and(
-            eq(industrialSupplyRequests.id, requestId),
-            eq(industrialSupplyRequests.tenantId, tenantId),
-            isNull(industrialSupplyRequests.archivedAt),
-          ),
-        )
-        .limit(1);
-      if (!req) throw new ForgeError("NOT_FOUND", "Supply request not found");
-      if (!["APPROVED", "PARTIALLY_APPROVED", "READY_FOR_PICKUP"].includes(req.status)) {
-        throw new ForgeError("VALIDATION_FAILED", "Only approved requests can be fulfilled");
-      }
-      const locationId = asOptionalString(body.locationId) ?? req.locationId;
-      if (!locationId) {
-        throw new ForgeError("VALIDATION_FAILED", "A location is required to fulfill the request");
-      }
+    return withTenantTransaction(
+      this.db,
+      tenantId,
+      async (tx) => {
+        const [req] = await tx
+          .select()
+          .from(industrialSupplyRequests)
+          .where(
+            and(
+              eq(industrialSupplyRequests.id, requestId),
+              eq(industrialSupplyRequests.tenantId, tenantId),
+              isNull(industrialSupplyRequests.archivedAt),
+            ),
+          )
+          .limit(1);
+        if (!req) throw new ForgeError("NOT_FOUND", "Supply request not found");
+        if (!["APPROVED", "PARTIALLY_APPROVED", "READY_FOR_PICKUP"].includes(req.status)) {
+          throw new ForgeError("VALIDATION_FAILED", "Only approved requests can be fulfilled");
+        }
+        const locationId = asOptionalString(body.locationId) ?? req.locationId;
+        if (!locationId) {
+          throw new ForgeError(
+            "VALIDATION_FAILED",
+            "A location is required to fulfill the request",
+          );
+        }
 
-      const lines = await tx
-        .select()
-        .from(industrialSupplyRequestItems)
-        .where(
-          and(
-            eq(industrialSupplyRequestItems.tenantId, tenantId),
-            eq(industrialSupplyRequestItems.requestId, requestId),
-          ),
-        );
+        const lines = await tx
+          .select()
+          .from(industrialSupplyRequestItems)
+          .where(
+            and(
+              eq(industrialSupplyRequestItems.tenantId, tenantId),
+              eq(industrialSupplyRequestItems.requestId, requestId),
+            ),
+          );
 
-      const now = new Date();
-      const requestedLineUpdates = Array.isArray(body.items)
-        ? (body.items as Array<Record<string, unknown>>)
-        : [];
-      for (const line of lines) {
-        const requestedUpdate = requestedLineUpdates.find((candidate) => {
-          const candidateId = asString(candidate.id ?? candidate.requestItemId);
-          const candidateItemId = asString(candidate.itemId);
-          return candidateId === line.id || (!!candidateItemId && candidateItemId === line.itemId);
-        });
-        const reserved = this.num(line.quantityReserved);
-        const qty = requestedUpdate
-          ? this.num(requestedUpdate.quantityIssued ?? requestedUpdate.quantity)
-          : reserved || this.num(line.quantityApproved) || this.num(line.quantityRequested);
-        if (!(qty > 0)) continue;
-        if (!line.itemId) {
+        const now = new Date();
+        const requestedLineUpdates = Array.isArray(body.items)
+          ? (body.items as Array<Record<string, unknown>>)
+          : [];
+        for (const line of lines) {
+          const requestedUpdate = requestedLineUpdates.find((candidate) => {
+            const candidateId = asString(candidate.id ?? candidate.requestItemId);
+            const candidateItemId = asString(candidate.itemId);
+            return (
+              candidateId === line.id || (!!candidateItemId && candidateItemId === line.itemId)
+            );
+          });
+          const reserved = this.num(line.quantityReserved);
+          const qty = requestedUpdate
+            ? this.num(requestedUpdate.quantityIssued ?? requestedUpdate.quantity)
+            : reserved || this.num(line.quantityApproved) || this.num(line.quantityRequested);
+          if (!(qty > 0)) continue;
+          if (!line.itemId) {
+            await tx
+              .update(industrialSupplyRequestItems)
+              .set({
+                quantityIssued: asQtyString(qty),
+                status: "FULFILLED",
+                updatedAt: now,
+              })
+              .where(eq(industrialSupplyRequestItems.id, line.id));
+            continue;
+          }
+          if (reserved > 0 && qty > reserved) {
+            throw new ForgeError(
+              "VALIDATION_FAILED",
+              "Issued quantity cannot exceed the reserved quantity",
+            );
+          }
+          await this.applyQtyChange(tx, {
+            tenantId,
+            itemId: line.itemId,
+            variantId: line.variantId,
+            locationId,
+            delta: -qty,
+            reservedDelta: -Math.min(reserved, qty),
+            transactionType: "ISSUE",
+            principal,
+            personnelId: req.personnelId,
+            relatedRequestId: requestId,
+            reason: `Fulfill request ${req.requestNumber} [SAFETY_SUPPLY_REQUEST_ISSUE]`,
+          });
           await tx
             .update(industrialSupplyRequestItems)
             .set({
-              quantityIssued: asQtyString(qty),
-              status: "FULFILLED",
+              quantityIssued: asQtyString(this.num(line.quantityIssued) + qty),
+              quantityReserved: asQtyString(Math.max(0, reserved - qty)),
+              status: asBool(body.partial, false) ? "PARTIALLY_FULFILLED" : "FULFILLED",
               updatedAt: now,
             })
             .where(eq(industrialSupplyRequestItems.id, line.id));
-          continue;
         }
-        if (reserved > 0 && qty > reserved) {
-          throw new ForgeError(
-            "VALIDATION_FAILED",
-            "Issued quantity cannot exceed the reserved quantity",
-          );
-        }
-        await this.applyQtyChange(tx, {
+
+        const newStatus = asBool(body.partial, false) ? "PARTIALLY_FULFILLED" : "FULFILLED";
+        const [updated] = await tx
+          .update(industrialSupplyRequests)
+          .set({ status: newStatus, fulfilledAt: now, updatedAt: now })
+          .where(eq(industrialSupplyRequests.id, requestId))
+          .returning();
+
+        await this.writeRequestEvent(tx, {
           tenantId,
-          itemId: line.itemId,
-          variantId: line.variantId,
-          locationId,
-          delta: -qty,
-          reservedDelta: -Math.min(reserved, qty),
-          transactionType: "ISSUE",
-          principal,
-          personnelId: req.personnelId,
-          relatedRequestId: requestId,
-          reason: `Fulfill request ${req.requestNumber} [SAFETY_SUPPLY_REQUEST_ISSUE]`,
+          requestId,
+          eventType: "REQUEST_FULFILLED",
+          previousStatus: req.status,
+          newStatus,
+          userId: principal.userId,
+          metadata: { partial: newStatus === "PARTIALLY_FULFILLED" },
         });
-        await tx
-          .update(industrialSupplyRequestItems)
-          .set({
-            quantityIssued: asQtyString(this.num(line.quantityIssued) + qty),
-            quantityReserved: asQtyString(Math.max(0, reserved - qty)),
-            status: asBool(body.partial, false) ? "PARTIALLY_FULFILLED" : "FULFILLED",
-            updatedAt: now,
-          })
-          .where(eq(industrialSupplyRequestItems.id, line.id));
-      }
 
-      const newStatus = asBool(body.partial, false) ? "PARTIALLY_FULFILLED" : "FULFILLED";
-      const [updated] = await tx
-        .update(industrialSupplyRequests)
-        .set({ status: newStatus, fulfilledAt: now, updatedAt: now })
-        .where(eq(industrialSupplyRequests.id, requestId))
-        .returning();
+        await this.writeDomainAudit(tx, {
+          tenantId,
+          actorUserId: principal.userId,
+          action: "FULFILL",
+          resourceType: "supply_request",
+          resourceId: requestId,
+        });
 
-      await this.writeRequestEvent(tx, {
-        tenantId,
-        requestId,
-        eventType: "REQUEST_FULFILLED",
-        previousStatus: req.status,
-        newStatus,
-        userId: principal.userId,
-        metadata: { partial: newStatus === "PARTIALLY_FULFILLED" },
-      });
-
-      await this.writeDomainAudit(tx, {
-        tenantId,
-        actorUserId: principal.userId,
-        action: "FULFILL",
-        resourceType: "supply_request",
-        resourceId: requestId,
-      });
-
-      return updated!;
-    }, principal.userId).then(async (updated) => {
+        return updated!;
+      },
+      principal.userId,
+    ).then(async (updated) => {
       await this.notifyRequestEvent({
         tenantId,
         requestId: updated.id,
@@ -4153,8 +4201,8 @@ export class IndustrialSafetySuppliesService {
         type: "industrial.supplies.request_fulfilled",
         title: "Safety supply request fulfilled",
         body: `${updated.requestNumber} was fulfilled.`,
-        userIds: [updated.assignedUserId, principal.userId].filter(
-          (id): id is string => Boolean(id),
+        userIds: [updated.assignedUserId, principal.userId].filter((id): id is string =>
+          Boolean(id),
         ),
       });
       return updated;
@@ -4176,7 +4224,10 @@ export class IndustrialSafetySuppliesService {
       if (q) {
         const like = `%${q}%`;
         filters.push(
-          or(ilike(industrialSupplyVendors.name, like), ilike(industrialSupplyVendors.vendorNumber, like))!,
+          or(
+            ilike(industrialSupplyVendors.name, like),
+            ilike(industrialSupplyVendors.vendorNumber, like),
+          )!,
         );
       }
       const where = and(...filters);
@@ -4328,7 +4379,10 @@ export class IndustrialSafetySuppliesService {
         });
       }
       if (lineValues.length === 0) {
-        throw new ForgeError("VALIDATION_FAILED", "At least one valid purchase order line is required");
+        throw new ForgeError(
+          "VALIDATION_FAILED",
+          "At least one valid purchase order line is required",
+        );
       }
 
       const taxAmount = this.num(body.taxAmount);
@@ -4889,10 +4943,14 @@ export class IndustrialSafetySuppliesService {
           );
         }
         if (dateFrom) {
-          filters.push(gte(industrialSupplyEmployeeAssignments.issueDate, dateFrom.toISOString().slice(0, 10)));
+          filters.push(
+            gte(industrialSupplyEmployeeAssignments.issueDate, dateFrom.toISOString().slice(0, 10)),
+          );
         }
         if (dateTo) {
-          filters.push(lte(industrialSupplyEmployeeAssignments.issueDate, dateTo.toISOString().slice(0, 10)));
+          filters.push(
+            lte(industrialSupplyEmployeeAssignments.issueDate, dateTo.toISOString().slice(0, 10)),
+          );
         }
         if (q) {
           filters.push(
@@ -4930,7 +4988,9 @@ export class IndustrialSafetySuppliesService {
             employeeNumber: industrialPersonnel.employeeNumber,
             departmentId: industrialPersonnel.departmentId,
             departmentName: industrialDepartments.name,
-            divisionName: sql<string | null>`coalesce(${industrialPersonnel.divisionName}, ${industrialDepartments.divisionName})`,
+            divisionName: sql<
+              string | null
+            >`coalesce(${industrialPersonnel.divisionName}, ${industrialDepartments.divisionName})`,
           })
           .from(industrialSupplyEmployeeAssignments)
           .innerJoin(
@@ -5082,9 +5142,7 @@ export class IndustrialSafetySuppliesService {
 
       const filters: SQL[] = [eq(industrialSupplyTransactions.tenantId, tenantId)];
       if (reportType === "usage") {
-        filters.push(
-          inArray(industrialSupplyTransactions.transactionType, ["ISSUE", "PPE_ISSUE"]),
-        );
+        filters.push(inArray(industrialSupplyTransactions.transactionType, ["ISSUE", "PPE_ISSUE"]));
       } else if (transactionType) {
         filters.push(eq(industrialSupplyTransactions.transactionType, transactionType));
       }
@@ -5252,7 +5310,9 @@ export class IndustrialSafetySuppliesService {
           destinationLocationName: destLoc.name,
           destinationLocationCode: destLoc.code,
           departmentName: industrialDepartments.name,
-          divisionName: sql<string | null>`coalesce(${industrialDepartments.divisionName}, ${industrialPersonnel.divisionName})`,
+          divisionName: sql<
+            string | null
+          >`coalesce(${industrialDepartments.divisionName}, ${industrialPersonnel.divisionName})`,
           personnelName: industrialPersonnel.displayName,
           employeeNumber: industrialPersonnel.employeeNumber,
         })

@@ -28,7 +28,9 @@ function slugId(label: string, index: number): string {
 
 function asCellText(value: unknown): string {
   if (value == null) return "";
-  return String(value).replace(/\u00a0/g, " ").trim();
+  return String(value)
+    .replace(/\u00a0/g, " ")
+    .trim();
 }
 
 function normalizeHeaderKey(key: string): string {
@@ -42,7 +44,9 @@ function normalizeHeaderKey(key: string): string {
 
 function headerIsAnswerColumn(key: string): boolean {
   const n = normalizeHeaderKey(key);
-  return n === "yes" || n === "no" || n === "na" || n === "notes" || n === "note" || n === "comments";
+  return (
+    n === "yes" || n === "no" || n === "na" || n === "notes" || n === "note" || n === "comments"
+  );
 }
 
 function headerIsQuestion(key: string): boolean {
@@ -140,7 +144,10 @@ function findQuestionColumnIndex(headers: string[]): number {
   return headers.findIndex((h) => h.trim() !== "" && !headerIsAnswerColumn(h));
 }
 
-export function parseChecklistCsv(text: string, defaultTitle = "Imported checklist"): ChecklistImportResult {
+export function parseChecklistCsv(
+  text: string,
+  defaultTitle = "Imported checklist",
+): ChecklistImportResult {
   const normalized = text.replace(/^\ufeff/, "");
   const lines = normalized
     .split(/\r?\n/)
@@ -269,7 +276,11 @@ export async function parseChecklistXlsxArrayBuffer(
 }
 
 export function checklistFileSourceId(file: File): string {
-  const stem = file.name.replace(/\.[^.]+$/, "").trim().toLowerCase().replace(/[^a-z0-9]+/g, "-");
+  const stem = file.name
+    .replace(/\.[^.]+$/, "")
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-");
   return `file-${stem || "checklist"}-${file.size}-${file.lastModified}`;
 }
 
@@ -307,7 +318,8 @@ export async function parseChecklistUploadFile(
   file: File,
   defaultTitle?: string,
 ): Promise<ChecklistImportResult> {
-  const stem = defaultTitle?.trim() || file.name.replace(/\.[^.]+$/, "").trim() || "Imported checklist";
+  const stem =
+    defaultTitle?.trim() || file.name.replace(/\.[^.]+$/, "").trim() || "Imported checklist";
   const lower = file.name.toLowerCase();
   if (lower.endsWith(".csv")) {
     return parseChecklistCsv(await file.text(), stem);

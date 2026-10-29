@@ -10,7 +10,10 @@ const REGION = "us-east-1";
 const CLUSTER = "forge-production-ecs-platform";
 const API_SERVICE = "forge-production-ecs-platform-api";
 const API_ECR = `${ACCOUNT}.dkr.ecr.${REGION}.amazonaws.com/forge-production-ecr-platformapi`;
-const stamp = new Date().toISOString().replace(/[-:TZ.]/g, "").slice(0, 14);
+const stamp = new Date()
+  .toISOString()
+  .replace(/[-:TZ.]/g, "")
+  .slice(0, 14);
 const tag = `modules-catalog-backfill-${stamp}`;
 
 function sh(cmd, opts = {}) {
@@ -63,4 +66,6 @@ sh(
   `aws ecs update-service --cluster ${CLUSTER} --service ${API_SERVICE} --task-definition ${apiReg.taskDefinitionArn} --force-new-deployment`,
 );
 sh(`aws ecs wait services-stable --cluster ${CLUSTER} --services ${API_SERVICE}`);
-console.log(JSON.stringify({ ok: true, tag, apiTaskDefinition: apiReg.taskDefinitionArn }, null, 2));
+console.log(
+  JSON.stringify({ ok: true, tag, apiTaskDefinition: apiReg.taskDefinitionArn }, null, 2),
+);

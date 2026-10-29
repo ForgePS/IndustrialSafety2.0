@@ -5,15 +5,15 @@
 
 ## Controls summary
 
-| Control | Behavior |
-| --- | --- |
-| Feature flags | All `ai.narrative.*` default false |
-| Permissions | Fine-grained `ai.narrative.*` and product-scoped codes |
-| Tenant isolation | Requests scoped by `tenantId`; RLS on AI tables |
-| Provider boundary | Product code never imports provider SDKs |
-| Sensitive data | Redacted/blocked before provider invocation |
-| Human review | Required; no auto-finalize, NERIS, or ePCR |
-| Audit | Request lifecycle actions recorded without raw restricted values |
+| Control           | Behavior                                                         |
+| ----------------- | ---------------------------------------------------------------- |
+| Feature flags     | All `ai.narrative.*` default false                               |
+| Permissions       | Fine-grained `ai.narrative.*` and product-scoped codes           |
+| Tenant isolation  | Requests scoped by `tenantId`; RLS on AI tables                  |
+| Provider boundary | Product code never imports provider SDKs                         |
+| Sensitive data    | Redacted/blocked before provider invocation                      |
+| Human review      | Required; no auto-finalize, NERIS, or ePCR                       |
+| Audit             | Request lifecycle actions recorded without raw restricted values |
 
 ## Authorization
 

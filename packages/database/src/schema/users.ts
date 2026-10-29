@@ -50,9 +50,7 @@ export const users = pgTable(
     createdAt: createdAtColumn,
     updatedAt: updatedAtColumn,
   },
-  (table) => [
-    uniqueIndex("users_tenant_email_uidx").on(table.tenantId, table.primaryEmail),
-  ],
+  (table) => [uniqueIndex("users_tenant_email_uidx").on(table.tenantId, table.primaryEmail)],
 );
 
 export const authenticationIdentities = pgTable(
@@ -179,7 +177,5 @@ export const userTenantAccess = pgTable(
     createdAt: createdAtColumn,
     updatedAt: updatedAtColumn,
   },
-  (table) => [
-    uniqueIndex("user_tenant_access_tenant_user_uidx").on(table.tenantId, table.userId),
-  ],
+  (table) => [uniqueIndex("user_tenant_access_tenant_user_uidx").on(table.tenantId, table.userId)],
 );

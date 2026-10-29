@@ -106,22 +106,16 @@ function resolveSeededModule(
     const byProduct = matches.find((m) => moduleProductId(m) === product.id);
     if (byProduct) return byProduct;
   }
-  const withExplicitCode = matches.find(
-    (m) => (m.productCode ?? m.product_code) === productCode,
-  );
+  const withExplicitCode = matches.find((m) => (m.productCode ?? m.product_code) === productCode);
   if (withExplicitCode) return withExplicitCode;
   if (matches.length === 1) return matches[0];
   return undefined;
 }
 
-function toCatalogModule(
-  row: RawCatalogModule,
-  productCode: string,
-): CatalogModule {
+function toCatalogModule(row: RawCatalogModule, productCode: string): CatalogModule {
   const meta = findCatalogModule(productCode, row.code);
   const isCore = moduleIsCore(row);
-  const classification =
-    meta?.classification ?? (isCore ? "PLATFORM_CORE" : "CUSTOMER_MODULE");
+  const classification = meta?.classification ?? (isCore ? "PLATFORM_CORE" : "CUSTOMER_MODULE");
   const implementationStatus = meta?.implementationStatus ?? "READY";
   const customerAssignable =
     meta?.customerAssignable ??
@@ -177,9 +171,7 @@ function buildProductModules(
     out.push(mapped);
   }
 
-  return out.sort(
-    (a, b) => a.category.localeCompare(b.category) || a.name.localeCompare(b.name),
-  );
+  return out.sort((a, b) => a.category.localeCompare(b.category) || a.name.localeCompare(b.name));
 }
 
 const CUSTOMER_PLATFORMS = FORGE_PLATFORMS.filter((p) => p.customerAssignable);
@@ -223,9 +215,9 @@ function CustomerModulesInner() {
         productParam &&
         entitlements.products.some((p) => p.productCode === productParam && isActive(p.status))
           ? productParam
-          : entitlements.products.find(
+          : (entitlements.products.find(
               (p) => isActive(p.status) && p.productCode !== "FORGE_CREATOR",
-            )?.productCode ?? "FORGE_INDUSTRIAL";
+            )?.productCode ?? "FORGE_INDUSTRIAL");
       setProductCode(activeProduct);
     } catch (err) {
       setError(err instanceof Error ? err.message : "We couldn't load products and modules.");
@@ -263,9 +255,7 @@ function CustomerModulesInner() {
     const next: Record<string, boolean> = {};
     for (const mod of productModules) {
       const ent = data.modules.find(
-        (m) =>
-          m.moduleCode === mod.code &&
-          (m.productCode ? m.productCode === productCode : true),
+        (m) => m.moduleCode === mod.code && (m.productCode ? m.productCode === productCode : true),
       );
       next[mod.code] = isActive(ent?.status);
     }
@@ -283,10 +273,7 @@ function CustomerModulesInner() {
     return map;
   }, [selectable]);
 
-  const enabledCount = useMemo(
-    () => Object.values(draft).filter(Boolean).length,
-    [draft],
-  );
+  const enabledCount = useMemo(() => Object.values(draft).filter(Boolean).length, [draft]);
   const readyCount = useMemo(
     () => productModules.filter((m) => m.implementationStatus === "READY").length,
     [productModules],
@@ -360,9 +347,7 @@ function CustomerModulesInner() {
         }
       }
       toast.push(
-        changes.length === 1
-          ? `${changes[0]!.name} updated`
-          : `${changes.length} modules updated`,
+        changes.length === 1 ? `${changes[0]!.name} updated` : `${changes.length} modules updated`,
         "success",
       );
       setDirty(false);
@@ -389,7 +374,10 @@ function CustomerModulesInner() {
   if (!tenantId) {
     return (
       <section className={styles.page}>
-        <ForgePageHeader title="Products & Modules" subtitle="Select a customer to manage access." />
+        <ForgePageHeader
+          title="Products & Modules"
+          subtitle="Select a customer to manage access."
+        />
         <TenantPicker
           targetPath="/customer-modules"
           description="Select a customer before managing products and modules."
@@ -449,9 +437,7 @@ function CustomerModulesInner() {
                   <strong>{p.name}</strong>
                   <span>{active ? "ACTIVE" : "NOT ENABLED"}</span>
                   <span className={localStyles.muted}>
-                    {active
-                      ? `${count} modules enabled`
-                      : "Enable product to assign modules"}
+                    {active ? `${count} modules enabled` : "Enable product to assign modules"}
                   </span>
                 </button>
               );

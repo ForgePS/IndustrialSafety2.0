@@ -112,7 +112,9 @@ export const HELPDESK_OPEN_STATUSES: readonly HelpdeskTicketStatus[] = [
 ];
 
 export function isHelpdeskStatus(value: unknown): value is HelpdeskTicketStatus {
-  return typeof value === "string" && (HELPDESK_TICKET_STATUSES as readonly string[]).includes(value);
+  return (
+    typeof value === "string" && (HELPDESK_TICKET_STATUSES as readonly string[]).includes(value)
+  );
 }
 
 export function isOpenHelpdeskStatus(status: string): boolean {
@@ -192,7 +194,8 @@ export const HELPDESK_PRIORITY_META: Record<
   P1_CRITICAL: {
     label: "P1 - Critical",
     short: "Critical",
-    description: "Production outage, data loss, security event, or core operations blocked with no workaround.",
+    description:
+      "Production outage, data loss, security event, or core operations blocked with no workaround.",
   },
   P2_HIGH: {
     label: "P2 - High",
@@ -257,7 +260,14 @@ export const HELPDESK_INDUSTRIAL_PRODUCT_AREAS = [
   { code: "OTHER", label: "Other" },
 ] as const;
 
-export const HELPDESK_SOURCES = ["WEB", "MOBILE", "ASK_FORGE", "EMAIL", "PHONE", "INTERNAL"] as const;
+export const HELPDESK_SOURCES = [
+  "WEB",
+  "MOBILE",
+  "ASK_FORGE",
+  "EMAIL",
+  "PHONE",
+  "INTERNAL",
+] as const;
 export type HelpdeskSource = (typeof HELPDESK_SOURCES)[number];
 
 export const HELPDESK_MESSAGE_TYPES = [
@@ -301,5 +311,7 @@ export const HELPDESK_ATTACHMENT_MIME_TYPES = [
 ] as const;
 
 export function isAllowedHelpdeskAttachmentMime(mimeType: string): boolean {
-  return (HELPDESK_ATTACHMENT_MIME_TYPES as readonly string[]).includes(mimeType.trim().toLowerCase());
+  return (HELPDESK_ATTACHMENT_MIME_TYPES as readonly string[]).includes(
+    mimeType.trim().toLowerCase(),
+  );
 }

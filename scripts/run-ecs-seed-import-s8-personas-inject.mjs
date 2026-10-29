@@ -46,8 +46,17 @@ const { cluster, taskArn } = runPlatformApiOneOff(
   },
 );
 
-console.log(JSON.stringify({ started: taskArn, cluster, bootstrapBytes: Buffer.byteLength(bootstrap, "utf8") }, null, 2));
-execSync(`aws ecs wait tasks-stopped --cluster ${cluster} --tasks ${taskArn}`, { stdio: "inherit", shell: true });
+console.log(
+  JSON.stringify(
+    { started: taskArn, cluster, bootstrapBytes: Buffer.byteLength(bootstrap, "utf8") },
+    null,
+    2,
+  ),
+);
+execSync(`aws ecs wait tasks-stopped --cluster ${cluster} --tasks ${taskArn}`, {
+  stdio: "inherit",
+  shell: true,
+});
 
 const desc = awsJson(["ecs", "describe-tasks", "--cluster", cluster, "--tasks", taskArn]);
 const task = desc.tasks?.[0];
@@ -59,18 +68,29 @@ const prefix = `platform-api/platform-api/${taskId}`;
 let messages = "";
 try {
   const streams = awsJson([
-    "logs", "describe-log-streams",
-    "--log-group-name", logGroup,
-    "--log-stream-name-prefix", prefix,
-    "--order-by", "LastEventTime", "--descending", "--max-items", "3",
+    "logs",
+    "describe-log-streams",
+    "--log-group-name",
+    logGroup,
+    "--log-stream-name-prefix",
+    prefix,
+    "--order-by",
+    "LastEventTime",
+    "--descending",
+    "--max-items",
+    "3",
   ]);
   const stream = streams.logStreams?.[0]?.logStreamName;
   if (stream) {
     const events = awsJson([
-      "logs", "get-log-events",
-      "--log-group-name", logGroup,
-      "--log-stream-name", stream,
-      "--limit", "100",
+      "logs",
+      "get-log-events",
+      "--log-group-name",
+      logGroup,
+      "--log-stream-name",
+      stream,
+      "--limit",
+      "100",
     ]);
     messages = (events.events ?? []).map((e) => e.message).join("\n");
   }

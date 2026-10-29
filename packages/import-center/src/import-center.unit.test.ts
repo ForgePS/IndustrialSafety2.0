@@ -102,7 +102,7 @@ describe("missing org lookup hints", () => {
       kind: "department",
       name: "Maintenance",
     });
-    expect(parseMissingOrgLookupHint("missing position named \"Supervisor\"")).toEqual({
+    expect(parseMissingOrgLookupHint('missing position named "Supervisor"')).toEqual({
       kind: "position",
       name: "Supervisor",
     });

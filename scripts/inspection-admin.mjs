@@ -74,10 +74,13 @@ try {
       order by coalesce(completed_at, updated_at) desc
       limit 25
     `;
-    console.log(JSON.stringify({ mode: MODE, sinceHours: SINCE_HOURS, sanitation, inspections }, null, 2));
+    console.log(
+      JSON.stringify({ mode: MODE, sinceHours: SINCE_HOURS, sanitation, inspections }, null, 2),
+    );
   } else if (MODE === "delete") {
     if (!/^[0-9a-f-]{36}$/i.test(INSPECTION_ID)) throw new Error("INSPECTION_ID required");
-    if (KIND !== "sanitation" && KIND !== "inspection") throw new Error("KIND must be sanitation or inspection");
+    if (KIND !== "sanitation" && KIND !== "inspection")
+      throw new Error("KIND must be sanitation or inspection");
     const report = { mode: MODE, kind: KIND, apply: APPLY, inspectionId: INSPECTION_ID };
 
     await sql.begin(async (tx) => {

@@ -35,7 +35,10 @@ export function ReportingAdminLayout({ children }: { children: React.ReactNode }
                               aria-disabled="true"
                               title="Coming soon"
                             >
-                              <i className={`bx ${item.icon} settings-admin-nav__icon`} aria-hidden />
+                              <i
+                                className={`bx ${item.icon} settings-admin-nav__icon`}
+                                aria-hidden
+                              />
                               <span>
                                 <span className="settings-admin-nav__label">
                                   {item.label}{" "}

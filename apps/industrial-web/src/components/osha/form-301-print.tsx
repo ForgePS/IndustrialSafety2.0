@@ -89,11 +89,7 @@ export function Form301Print({ caseRow }: Props) {
           </p>
           <p>
             <strong>{FORM_301.fields.gender}</strong>{" "}
-            {filled.gender === "MALE"
-              ? "Male"
-              : filled.gender === "FEMALE"
-                ? "Female"
-                : "—"}
+            {filled.gender === "MALE" ? "Male" : filled.gender === "FEMALE" ? "Female" : "—"}
           </p>
 
           <h2>{FORM_301.informationAboutPhysician}</h2>

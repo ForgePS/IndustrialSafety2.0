@@ -13,9 +13,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { awsJson, awsText, runPlatformApiOneOff } from "./ecs-oneoff.mjs";
 
-const EVID_DIR = path.resolve(
-  "docs/program/industrial-migration/ind-11/evidence/p2/04-parity",
-);
+const EVID_DIR = path.resolve("docs/program/industrial-migration/ind-11/evidence/p2/04-parity");
 const APPROVAL = path.join(EVID_DIR, "APPROVE-PRODUCERS-PHASE4-LOAD.md");
 const MANIFEST = path.join(EVID_DIR, "extract-freeze-manifest-latest.json");
 

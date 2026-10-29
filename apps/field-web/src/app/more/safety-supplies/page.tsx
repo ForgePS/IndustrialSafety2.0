@@ -148,7 +148,11 @@ function SafetySuppliesInner() {
   if (loading) return <LoadingState label="Loading safety supplies…" />;
   if (error && items.length === 0) {
     return (
-      <ErrorState title="Safety Supplies unavailable" message={error} onRetry={() => void refresh()} />
+      <ErrorState
+        title="Safety Supplies unavailable"
+        message={error}
+        onRetry={() => void refresh()}
+      />
     );
   }
 

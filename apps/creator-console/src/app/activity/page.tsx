@@ -36,7 +36,9 @@ function ActivityInner() {
           title: humanActivityTitle(event.action, event.resourceType, event.result),
           ...(event.tenantKey ? { detail: `Customer · ${event.tenantKey}` } : {}),
           at: new Date(event.occurredAt).toLocaleString(),
-          tone: event.result.toLowerCase().includes("fail") ? ("danger" as const) : ("neutral" as const),
+          tone: event.result.toLowerCase().includes("fail")
+            ? ("danger" as const)
+            : ("neutral" as const),
         })),
       );
     } catch (err) {
@@ -53,10 +55,7 @@ function ActivityInner() {
 
   return (
     <section className={styles.page}>
-      <ForgePageHeader
-        title="Activity"
-        subtitle="Recent platform activity in plain language."
-      />
+      <ForgePageHeader title="Activity" subtitle="Recent platform activity in plain language." />
       {error ? (
         <ErrorState
           title="Activity unavailable"
@@ -70,7 +69,10 @@ function ActivityInner() {
       ) : null}
       {loading ? <LoadingState label="Loading activity…" /> : null}
       {!loading && !error && items.length === 0 ? (
-        <EmptyState title="No recent activity" description="Actions across customers will appear here." />
+        <EmptyState
+          title="No recent activity"
+          description="Actions across customers will appear here."
+        />
       ) : null}
       {!loading && items.length > 0 ? <ActivityTimeline items={items} /> : null}
       <p className={styles.linkRow}>

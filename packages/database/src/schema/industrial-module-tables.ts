@@ -191,7 +191,11 @@ export const industrialTasks = pgTable(
   },
   (t) => [
     index("industrial_tasks_tenant_status_idx").on(t.tenantId, t.status),
-    uniqueIndex("industrial_tasks_source_uidx").on(t.tenantId, t.sourceCollection, t.sourceDocumentId),
+    uniqueIndex("industrial_tasks_source_uidx").on(
+      t.tenantId,
+      t.sourceCollection,
+      t.sourceDocumentId,
+    ),
   ],
 );
 

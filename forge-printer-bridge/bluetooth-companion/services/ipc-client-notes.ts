@@ -3,12 +3,7 @@
  * The companion is the pipe *server*; this module documents the client contract
  * for implementers and does not open TCP sockets.
  */
-import {
-  BLUETOOTH_NAMED_PIPE,
-  CompanionRequest,
-  CompanionResponse,
-  toJsonLine,
-} from "./protocol";
+import { BLUETOOTH_NAMED_PIPE, CompanionRequest, CompanionResponse, toJsonLine } from "./protocol";
 
 export { BLUETOOTH_NAMED_PIPE };
 

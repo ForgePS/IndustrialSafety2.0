@@ -78,7 +78,12 @@ export function InspectionsHub() {
             {org?.selection.divisionName ? ` · ${org.selection.divisionName}` : ""}
           </p>
         </div>
-        <button type="button" className="ff-icon-btn" aria-label="Refresh" onClick={() => void refresh()}>
+        <button
+          type="button"
+          className="ff-icon-btn"
+          aria-label="Refresh"
+          onClick={() => void refresh()}
+        >
           ↻
         </button>
       </header>

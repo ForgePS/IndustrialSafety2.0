@@ -18,7 +18,11 @@ import {
   toRosterPeople,
   type RosterPerson,
 } from "@/lib/personnel-directory";
-import { loadOrgFilterCatalogs, EMPTY_ORG_FILTER_CATALOGS, type LookupOption } from "@/lib/personnel-lookups";
+import {
+  loadOrgFilterCatalogs,
+  EMPTY_ORG_FILTER_CATALOGS,
+  type LookupOption,
+} from "@/lib/personnel-lookups";
 import type { DepartmentOption, DivisionOption } from "@/lib/personnel-assignment";
 import { OrgLocationCascade } from "@/components/org-location-cascade";
 import { personNameDisplay } from "@/lib/person-name-display";
@@ -71,9 +75,7 @@ function employeeNumbersForGroupMembers(
   roster: RosterPerson[],
 ): string[] {
   const byId = new Map(roster.map((person) => [person.id, person.employeeNumber.trim()]));
-  return memberPersonnelIds
-    .map((id) => byId.get(id) ?? "")
-    .filter((value) => Boolean(value));
+  return memberPersonnelIds.map((id) => byId.get(id) ?? "").filter((value) => Boolean(value));
 }
 
 function SectionHeader({
@@ -265,7 +267,9 @@ export function TrainingAgencyPanel({
   const [courseGroupFilter, setCourseGroupFilter] = useState("");
   const [courseListMode, setCourseListMode] = useState<"active" | "archived">("active");
   const [archivedSources, setArchivedSources] = useState<TrainingSource[]>([]);
-  const [foldersBySource, setFoldersBySource] = useState<Record<string, TrainingSourceFolder[]>>({});
+  const [foldersBySource, setFoldersBySource] = useState<Record<string, TrainingSourceFolder[]>>(
+    {},
+  );
   const [paperSourceId, setPaperSourceId] = useState("");
   const [paperAssignees, setPaperAssignees] = useState<string[]>([]);
   const [paperScoreMode, setPaperScoreMode] = useState<"shared" | "per">("shared");
@@ -293,10 +297,10 @@ export function TrainingAgencyPanel({
       const [groupRows, assignmentRows, summary, personnelRows, orgCatalogs] = await Promise.all([
         trainingApi.listGroups().catch(() => [] as TrainingGroup[]),
         trainingApi.listAssignments().catch(() => ({ items: [] as TrainingAssignment[] })),
-        canManage
-          ? trainingApi.teamSummary().catch(() => null)
-          : Promise.resolve(null),
-        trainingApi.listPersonnelRoster().catch(() => ({ items: [] as Array<Record<string, unknown>> })),
+        canManage ? trainingApi.teamSummary().catch(() => null) : Promise.resolve(null),
+        trainingApi
+          .listPersonnelRoster()
+          .catch(() => ({ items: [] as Array<Record<string, unknown>> })),
         loadOrgFilterCatalogs().catch(() => EMPTY_ORG_FILTER_CATALOGS),
       ]);
       setGroups(groupRows ?? []);
@@ -304,7 +308,9 @@ export function TrainingAgencyPanel({
       setTeamSummary(summary);
       setPersonnelRoster(
         sortRosterPeople(
-          toRosterPeople(personnelRows.items ?? []).filter((person) => person.employeeNumber.trim()),
+          toRosterPeople(personnelRows.items ?? []).filter((person) =>
+            person.employeeNumber.trim(),
+          ),
           "firstName",
         ),
       );
@@ -422,8 +428,12 @@ export function TrainingAgencyPanel({
         ? { description: assignmentForm.description.trim() }
         : {}),
       sourceId: assignmentForm.sourceId,
-      ...(assignmentForm.materialId ? { materialId: assignmentForm.materialId } : { materialId: null }),
-      ...(assignmentForm.dueAt ? { dueAt: new Date(assignmentForm.dueAt).toISOString() } : { dueAt: null }),
+      ...(assignmentForm.materialId
+        ? { materialId: assignmentForm.materialId }
+        : { materialId: null }),
+      ...(assignmentForm.dueAt
+        ? { dueAt: new Date(assignmentForm.dueAt).toISOString() }
+        : { dueAt: null }),
       passingPercent: assignmentForm.passingPercent,
       quizMode: assignmentForm.quizMode,
       optionCount: assignmentForm.optionCount,
@@ -690,9 +700,7 @@ export function TrainingAgencyPanel({
   const filteredGroups = groups.filter((g) =>
     g.name.toLowerCase().includes(query.trim().toLowerCase()),
   );
-  const linkedMaterials = materials.filter(
-    (m) => m.sourceId && m.status === "ACTIVE",
-  );
+  const linkedMaterials = materials.filter((m) => m.sourceId && m.status === "ACTIVE");
 
   if (section === "dashboard") {
     const totals = teamSummary?.totals;
@@ -729,7 +737,11 @@ export function TrainingAgencyPanel({
           title="Training dashboard"
           description="Facility-wide assignments, completion rates, and study activity. Click a status card to see who it applies to."
           actions={
-            <button type="button" className="btn btn-outline-primary btn-sm" onClick={() => void refreshAgency()}>
+            <button
+              type="button"
+              className="btn btn-outline-primary btn-sm"
+              onClick={() => void refreshAgency()}
+            >
               Refresh
             </button>
           }
@@ -840,7 +852,12 @@ export function TrainingAgencyPanel({
         ) : null}
         <div className="row g-3 mb-4">
           <div className="col-md-4">
-            <StatCard label="Published courses" value={publishedSources.length} icon="bx-book-content" tone="info" />
+            <StatCard
+              label="Published courses"
+              value={publishedSources.length}
+              icon="bx-book-content"
+              tone="info"
+            />
           </div>
           <div className="col-md-4">
             <StatCard label="Training groups" value={groups.length} icon="bx-collection" />
@@ -1060,7 +1077,9 @@ export function TrainingAgencyPanel({
               <button
                 type="button"
                 className="btn btn-primary btn-sm"
-                onClick={() => (showAssignmentForm ? closeAssignmentForm() : setShowAssignmentForm(true))}
+                onClick={() =>
+                  showAssignmentForm ? closeAssignmentForm() : setShowAssignmentForm(true)
+                }
               >
                 {showAssignmentForm ? "Cancel" : "New assignment"}
               </button>
@@ -1070,7 +1089,9 @@ export function TrainingAgencyPanel({
         {showAssignmentForm && canManage ? (
           <form className="card border mb-4" onSubmit={(e) => void saveAssignment(e)}>
             <div className="card-body">
-              <h6 className="mb-3">{editingAssignmentId ? "Edit assignment" : "Create assignment"}</h6>
+              <h6 className="mb-3">
+                {editingAssignmentId ? "Edit assignment" : "Create assignment"}
+              </h6>
               <div className="row g-3">
                 <div className="col-md-6">
                   <label className="form-label" htmlFor="assign-title">
@@ -1126,7 +1147,9 @@ export function TrainingAgencyPanel({
                     id="assign-material"
                     className="form-select"
                     value={assignmentForm.materialId}
-                    onChange={(e) => setAssignmentForm((p) => ({ ...p, materialId: e.target.value }))}
+                    onChange={(e) =>
+                      setAssignmentForm((p) => ({ ...p, materialId: e.target.value }))
+                    }
                     disabled={!assignmentForm.sourceId}
                   >
                     <option value="">None</option>
@@ -1253,7 +1276,9 @@ export function TrainingAgencyPanel({
                       );
                     })}
                     {!groups.length ? (
-                      <p className="text-muted small mb-0">Create groups first to assign by cohort.</p>
+                      <p className="text-muted small mb-0">
+                        Create groups first to assign by cohort.
+                      </p>
                     ) : null}
                   </div>
                 </div>
@@ -1266,7 +1291,9 @@ export function TrainingAgencyPanel({
                     className="form-control"
                     rows={2}
                     value={assignmentForm.description}
-                    onChange={(e) => setAssignmentForm((p) => ({ ...p, description: e.target.value }))}
+                    onChange={(e) =>
+                      setAssignmentForm((p) => ({ ...p, description: e.target.value }))
+                    }
                   />
                 </div>
                 <div className="col-12">
@@ -1279,7 +1306,8 @@ export function TrainingAgencyPanel({
                     <div className="border rounded p-3 bg-light">
                       <h6 className="mb-2">Bulk assign by rule</h6>
                       <p className="small text-muted mb-3">
-                        Add all matching active personnel to this assignment without picking them one by one.
+                        Add all matching active personnel to this assignment without picking them
+                        one by one.
                       </p>
                       <div className="row g-2 align-items-end">
                         <OrgLocationCascade
@@ -1356,7 +1384,9 @@ export function TrainingAgencyPanel({
                                   !bulkAssign.departmentId &&
                                   !bulkAssign.jobTitle.trim()
                                 ) {
-                                  onError("Choose a location, department, job title, or company-wide.");
+                                  onError(
+                                    "Choose a location, department, job title, or company-wide.",
+                                  );
                                   return;
                                 }
                                 setBusy(true);
@@ -1366,7 +1396,9 @@ export function TrainingAgencyPanel({
                                     ...(bulkAssign.companyWide
                                       ? { companyWide: true }
                                       : {
-                                          ...(bulkAssign.siteId ? { siteId: bulkAssign.siteId } : {}),
+                                          ...(bulkAssign.siteId
+                                            ? { siteId: bulkAssign.siteId }
+                                            : {}),
                                           ...(bulkAssign.departmentId
                                             ? { departmentId: bulkAssign.departmentId }
                                             : {}),
@@ -1674,7 +1706,9 @@ export function TrainingAgencyPanel({
             </div>
           </form>
         ) : (
-          <p className="text-muted">You need training manage permission to post paper quiz results.</p>
+          <p className="text-muted">
+            You need training manage permission to post paper quiz results.
+          </p>
         )}
 
         {paperPostSummary ? (
@@ -1717,7 +1751,11 @@ export function TrainingAgencyPanel({
           title="Team progress"
           description="Filter assignment activity by period, course, location, group, or employee."
           actions={
-            <button type="button" className="btn btn-outline-primary btn-sm" onClick={() => void refreshAgency()}>
+            <button
+              type="button"
+              className="btn btn-outline-primary btn-sm"
+              onClick={() => void refreshAgency()}
+            >
               Refresh
             </button>
           }
@@ -1752,9 +1790,7 @@ export function TrainingAgencyPanel({
             </tbody>
           </table>
         </div>
-        {!progress?.stats?.length ? (
-          <p className="text-muted">No quiz stats yet.</p>
-        ) : null}
+        {!progress?.stats?.length ? <p className="text-muted">No quiz stats yet.</p> : null}
       </>
     );
   }
@@ -1770,7 +1806,7 @@ export function TrainingAgencyPanel({
         .includes(q);
     });
     const editingSource = editingSourceId
-      ? sources.find((source) => source.id === editingSourceId) ?? null
+      ? (sources.find((source) => source.id === editingSourceId) ?? null)
       : null;
 
     return (
@@ -1792,7 +1828,11 @@ export function TrainingAgencyPanel({
                   {showSourceForm ? "Cancel" : "New course"}
                 </button>
               ) : null}
-              <button type="button" className="btn btn-outline-primary btn-sm" onClick={onOpenStudy}>
+              <button
+                type="button"
+                className="btn btn-outline-primary btn-sm"
+                onClick={onOpenStudy}
+              >
                 Company Training Portal
               </button>
             </div>
@@ -1932,11 +1972,14 @@ export function TrainingAgencyPanel({
                       ))}
                     </div>
                     <div className="text-muted small">
-                      {s.questionCount} questions · {linked.length} material{linked.length === 1 ? "" : "s"}
+                      {s.questionCount} questions · {linked.length} material
+                      {linked.length === 1 ? "" : "s"}
                       {s.edition ? ` · ${s.edition}` : ""}
                       {groupLabel ? ` · ${groupLabel}` : ""}
                     </div>
-                    {s.description ? <div className="text-muted small mt-1">{s.description}</div> : null}
+                    {s.description ? (
+                      <div className="text-muted small mt-1">{s.description}</div>
+                    ) : null}
                   </div>
                   {canManage ? (
                     <div className="d-flex flex-wrap gap-2">
@@ -2028,9 +2071,9 @@ export function TrainingAgencyPanel({
         </ul>
         {canManage ? (
           <p className="text-muted small mt-3 mb-0">
-            Use <strong>Build course</strong> to upload study materials (PDF, PowerPoint, video) and import quiz/test
-            questions (Excel, CSV, JSON, or PDF) in one workspace. Archive unused courses anytime; reactivate them from
-            the Archived list when needed
+            Use <strong>Build course</strong> to upload study materials (PDF, PowerPoint, video) and
+            import quiz/test questions (Excel, CSV, JSON, or PDF) in one workspace. Archive unused
+            courses anytime; reactivate them from the Archived list when needed
             {canPurgeCourses ? ", or permanently delete archived courses" : ""}.
           </p>
         ) : null}
@@ -2078,9 +2121,7 @@ function PersonnelGroupMemberPicker({
         if (divisionFilter && person.divisionName.trim() !== divisionFilter) return false;
         if (departmentFilter) {
           const deptLabel =
-            departmentNameFilter ||
-            departments.find((d) => d.id === departmentFilter)?.label ||
-            "";
+            departmentNameFilter || departments.find((d) => d.id === departmentFilter)?.label || "";
           const name = person.departmentName.trim();
           if (name !== deptLabel && name !== departmentFilter) return false;
         }
@@ -2159,8 +2200,8 @@ function PersonnelGroupMemberPicker({
       <div className="d-flex flex-wrap justify-content-between align-items-baseline gap-2 mb-2">
         <div className="form-label mb-0">Group membership</div>
         <div className="text-muted small">
-          <strong>{memberPeople.length}</strong> in group · <strong>{availablePeople.length}</strong>{" "}
-          available
+          <strong>{memberPeople.length}</strong> in group ·{" "}
+          <strong>{availablePeople.length}</strong> available
         </div>
       </div>
       <div className="row g-2 mb-2">
@@ -2234,7 +2275,9 @@ function PersonnelGroupMemberPicker({
                 </div>
               ))}
               {!availablePeople.length ? (
-                <p className="text-muted small mb-0 px-2 py-1">No available employees match these filters.</p>
+                <p className="text-muted small mb-0 px-2 py-1">
+                  No available employees match these filters.
+                </p>
               ) : null}
             </div>
           </div>
@@ -2373,9 +2416,7 @@ function PersonnelCheckboxList({
       if (divisionFilter && person.divisionName.trim() !== divisionFilter) return false;
       if (departmentFilter) {
         const deptLabel =
-          departmentNameFilter ||
-          departments.find((d) => d.id === departmentFilter)?.label ||
-          "";
+          departmentNameFilter || departments.find((d) => d.id === departmentFilter)?.label || "";
         const name = person.departmentName.trim();
         if (name !== deptLabel && name !== departmentFilter) return false;
       }
@@ -2400,9 +2441,7 @@ function PersonnelCheckboxList({
           {showCounts ? (
             <div className="text-muted small">
               <strong>{selectedCount}</strong> selected · <strong>{totalEmployees}</strong> total
-              {visiblePeople.length !== totalEmployees
-                ? ` · showing ${visiblePeople.length}`
-                : ""}
+              {visiblePeople.length !== totalEmployees ? ` · showing ${visiblePeople.length}` : ""}
             </div>
           ) : null}
         </div>
@@ -2445,8 +2484,7 @@ function PersonnelCheckboxList({
       </div>
       <div className="training-checkbox-panel" style={{ maxHeight: "12rem" }}>
         {visiblePeople.map((person) => {
-          const value =
-            valueKey === "employeeNumber" ? person.employeeNumber.trim() : person.id;
+          const value = valueKey === "employeeNumber" ? person.employeeNumber.trim() : person.id;
           if (valueKey === "employeeNumber" && !value) return null;
           const checked = selected.includes(value);
           return (
@@ -2469,7 +2507,9 @@ function PersonnelCheckboxList({
           );
         })}
         {!visiblePeople.length ? (
-          <p className="text-muted small mb-0">No active personnel loaded. Add people in Personnel first.</p>
+          <p className="text-muted small mb-0">
+            No active personnel loaded. Add people in Personnel first.
+          </p>
         ) : null}
       </div>
     </div>

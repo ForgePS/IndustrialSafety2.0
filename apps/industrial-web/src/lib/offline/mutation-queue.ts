@@ -13,12 +13,7 @@ const QUEUE_KEY_PREFIX = `${OFFLINE_CACHE_LIMITS.storagePrefix}:mutations`;
 const MAX_QUEUE_LENGTH = 50;
 export const MAX_MUTATION_ATTEMPTS = 5;
 
-export type QueuedMutationStatus =
-  | "PENDING"
-  | "IN_FLIGHT"
-  | "CONFLICT"
-  | "FAILED"
-  | "ABANDONED";
+export type QueuedMutationStatus = "PENDING" | "IN_FLIGHT" | "CONFLICT" | "FAILED" | "ABANDONED";
 
 export type QueuedMutation = {
   id: string;
@@ -50,7 +45,11 @@ export type EnqueueInput = {
 
 export type EnqueueResult =
   | { ok: true; mutation: QueuedMutation }
-  | { ok: false; code: "DOMAIN_NOT_QUEUEABLE" | "QUEUE_FULL" | "STORAGE_UNAVAILABLE"; reason: string };
+  | {
+      ok: false;
+      code: "DOMAIN_NOT_QUEUEABLE" | "QUEUE_FULL" | "STORAGE_UNAVAILABLE";
+      reason: string;
+    };
 
 function defaultStore(): CacheStore | null {
   if (typeof globalThis === "undefined") return null;
@@ -75,8 +74,7 @@ export class MutationQueue {
       const parsed = JSON.parse(raw) as QueuedMutation[];
       return Array.isArray(parsed)
         ? parsed.filter(
-            (item) =>
-              item.tenantId === this.scope.tenantId && item.userId === this.scope.userId,
+            (item) => item.tenantId === this.scope.tenantId && item.userId === this.scope.userId,
           )
         : [];
     } catch {

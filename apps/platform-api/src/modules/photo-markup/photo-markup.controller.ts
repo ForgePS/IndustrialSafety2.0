@@ -21,10 +21,7 @@ const PHOTO_WRITE = [
   "industrial.admin",
 ] as const;
 
-const PHOTO_RESTORE = [
-  "industrial.photo_markup.restore",
-  "industrial.admin",
-] as const;
+const PHOTO_RESTORE = ["industrial.photo_markup.restore", "industrial.admin"] as const;
 
 @Controller("api/v1/photos")
 export class PhotoMarkupController {
@@ -136,11 +133,7 @@ export class PhotoMarkupController {
     @Principal() principal: ForgePrincipal,
     @Req() req: RequestWithIds,
   ) {
-    const data = await this.photos.createRenderedDownloadUrl(
-      principal,
-      photoId,
-      revisionId,
-    );
+    const data = await this.photos.createRenderedDownloadUrl(principal, photoId, revisionId);
     return ok(data, getRequestIds(req));
   }
 }

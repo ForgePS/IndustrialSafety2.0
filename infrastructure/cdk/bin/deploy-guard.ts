@@ -87,7 +87,9 @@ export function assertDeployAllowed(input: DeployGuardInput = {}): DeployGuardRe
   });
 
   if (config.environmentName !== "production" && config.environmentName !== "govcloud-production") {
-    throw new DeployGuardError(`Resolved environmentName must be production (got ${config.environmentName})`);
+    throw new DeployGuardError(
+      `Resolved environmentName must be production (got ${config.environmentName})`,
+    );
   }
 
   for (const key of ["api", "creator", "rms", "industrial", "tenantAdmin"] as const) {
@@ -103,11 +105,11 @@ export function assertDeployAllowed(input: DeployGuardInput = {}): DeployGuardRe
   }
 
   const callerAccount =
-    input.callerIdentityAccount === undefined
-      ? readCallerAccount()
-      : input.callerIdentityAccount;
+    input.callerIdentityAccount === undefined ? readCallerAccount() : input.callerIdentityAccount;
   if (!callerAccount) {
-    throw new DeployGuardError("Unable to resolve AWS caller account (aws sts get-caller-identity)");
+    throw new DeployGuardError(
+      "Unable to resolve AWS caller account (aws sts get-caller-identity)",
+    );
   }
   if (callerAccount !== APPROVED_PRODUCTION_ACCOUNT) {
     throw new DeployGuardError(
@@ -126,7 +128,10 @@ export function assertDeployAllowed(input: DeployGuardInput = {}): DeployGuardRe
   if (resolved.environmentName === "development" || expectedPrefix.includes("Development")) {
     // intentional no-op; check stack naming expectation separately
   }
-  if (resolved.environmentName !== "production" && resolved.environmentName !== "govcloud-production") {
+  if (
+    resolved.environmentName !== "production" &&
+    resolved.environmentName !== "govcloud-production"
+  ) {
     throw new DeployGuardError(
       `Refusing deploy: FORGE_ENV resolves to ${resolved.environmentName}, not production`,
     );
@@ -134,9 +139,7 @@ export function assertDeployAllowed(input: DeployGuardInput = {}): DeployGuardRe
 
   if (requireClean) {
     const porcelain =
-      input.gitStatusPorcelain === undefined
-        ? readGitPorcelain()
-        : input.gitStatusPorcelain;
+      input.gitStatusPorcelain === undefined ? readGitPorcelain() : input.gitStatusPorcelain;
     if (porcelain.trim().length > 0) {
       throw new DeployGuardError(
         "Refusing production deploy with a dirty worktree (set FORGE_REQUIRE_CLEAN_WORKTREE=0 to override intentionally)",

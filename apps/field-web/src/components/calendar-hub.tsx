@@ -68,7 +68,8 @@ function CalendarInner() {
       setEvents(rows);
       if (focusId) {
         const fromList = rows.find(
-          (ev) => ev.id === focusId || ev.sourceEventId === focusId || ev.id.startsWith(`${focusId}:`),
+          (ev) =>
+            ev.id === focusId || ev.sourceEventId === focusId || ev.id.startsWith(`${focusId}:`),
         );
         if (fromList) {
           setSelected(fromList);
@@ -92,10 +93,7 @@ function CalendarInner() {
     void refresh();
   }, [refresh]);
 
-  const visible = useMemo(
-    () => filterEventsForLocation(events, locationId),
-    [events, locationId],
-  );
+  const visible = useMemo(() => filterEventsForLocation(events, locationId), [events, locationId]);
 
   const grouped = useMemo(() => {
     const days = daysForFieldCalendarView(view);
@@ -123,7 +121,9 @@ function CalendarInner() {
       setDescription("");
       setSelected(created);
       await refresh();
-      router.replace(`/calendar/?eventId=${encodeURIComponent(created.sourceEventId || created.id)}`);
+      router.replace(
+        `/calendar/?eventId=${encodeURIComponent(created.sourceEventId || created.id)}`,
+      );
     } catch (err) {
       setError(err instanceof ApiError ? err.message : "Could not create event");
     } finally {
@@ -289,10 +289,17 @@ function CalendarInner() {
       {!loading && !error ? (
         <div className="ff-task-list" style={{ marginTop: 12 }}>
           {grouped.every((g) => g.events.length === 0) ? (
-            <EmptyState title="No events in this range" message="Create an event or widen the view." />
+            <EmptyState
+              title="No events in this range"
+              message="Create an event or widen the view."
+            />
           ) : (
             grouped.map(({ day, events: dayEvents }) => (
-              <section key={day.toISOString()} className="ff-section" aria-label={formatDayLabel(day)}>
+              <section
+                key={day.toISOString()}
+                className="ff-section"
+                aria-label={formatDayLabel(day)}
+              >
                 <h2 className="ff-section-title">{formatDayLabel(day)}</h2>
                 {dayEvents.length === 0 ? (
                   <p className="ff-hint ff-hint--left">No events</p>

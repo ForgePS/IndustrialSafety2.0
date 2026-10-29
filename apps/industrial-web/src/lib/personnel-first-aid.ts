@@ -191,16 +191,8 @@ export function buildPersonnelFirstAidSummary(
   for (const row of rows) {
     if (!personTracksFirstAid(row)) continue;
     trackedCount += 1;
-    const cprStatus = firstAidExpiryStatus(
-      row.cprCertificationExpiresDate,
-      today,
-      warningDays,
-    );
-    const faStatus = firstAidExpiryStatus(
-      row.firstAidCertificationExpiresDate,
-      today,
-      warningDays,
-    );
+    const cprStatus = firstAidExpiryStatus(row.cprCertificationExpiresDate, today, warningDays);
+    const faStatus = firstAidExpiryStatus(row.firstAidCertificationExpiresDate, today, warningDays);
     if (cprStatus === "expiring_soon") cprExpiringSoon += 1;
     if (cprStatus === "expired") cprExpired += 1;
     if (faStatus === "expiring_soon") firstAidExpiringSoon += 1;

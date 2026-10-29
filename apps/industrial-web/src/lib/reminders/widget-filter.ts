@@ -37,7 +37,11 @@ export function isOverdueReminder(reminder: WorkspaceReminder, now: Date = new D
   if (!at) return false;
   if (isReminderPending(reminder.status) && at.getTime() < now.getTime()) return true;
   if (isReminderSent(reminder.status) && at.getTime() < startOfDay(now).getTime()) return true;
-  if (isReminderSent(reminder.status) && isRemindAtToday(reminder, now) && at.getTime() < now.getTime()) {
+  if (
+    isReminderSent(reminder.status) &&
+    isRemindAtToday(reminder, now) &&
+    at.getTime() < now.getTime()
+  ) {
     return true;
   }
   return false;
@@ -84,7 +88,10 @@ export function filterRemindersForWidgetView(
   return active;
 }
 
-export function summarizeReminders(reminders: readonly WorkspaceReminder[], now: Date = new Date()) {
+export function summarizeReminders(
+  reminders: readonly WorkspaceReminder[],
+  now: Date = new Date(),
+) {
   const active = reminders.filter((r) => !isReminderCancelled(r.status));
   const today = active.filter((r) => isRemindAtToday(r, now)).length;
   const upcoming = active.filter((r) => isUpcomingReminder(r, now)).length;

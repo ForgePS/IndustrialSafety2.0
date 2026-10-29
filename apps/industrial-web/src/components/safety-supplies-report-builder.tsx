@@ -94,9 +94,9 @@ export function SafetySuppliesReportBuilder({
           })),
         );
         setDivisions(
-          [...new Set((catalogs.divisions ?? []).map((d) => String(d).trim()).filter(Boolean))].sort(
-            (a, b) => a.localeCompare(b),
-          ),
+          [
+            ...new Set((catalogs.divisions ?? []).map((d) => String(d).trim()).filter(Boolean)),
+          ].sort((a, b) => a.localeCompare(b)),
         );
       } catch {
         if (!cancelled) {
@@ -159,9 +159,7 @@ export function SafetySuppliesReportBuilder({
   }, [filters, onError]);
 
   function toggleField(id: string) {
-    setSelectedFields((prev) =>
-      prev.includes(id) ? prev.filter((f) => f !== id) : [...prev, id],
-    );
+    setSelectedFields((prev) => (prev.includes(id) ? prev.filter((f) => f !== id) : [...prev, id]));
     setActiveTemplateId(null);
   }
 
@@ -179,9 +177,7 @@ export function SafetySuppliesReportBuilder({
     }
     setReportName(preset.name);
     setFilters(nextFilters);
-    setSelectedFields(
-      normalizeSuppliesReportFields(preset.fields, nextFilters.reportType),
-    );
+    setSelectedFields(normalizeSuppliesReportFields(preset.fields, nextFilters.reportType));
     setActiveTemplateId(null);
   }
 
@@ -256,8 +252,7 @@ export function SafetySuppliesReportBuilder({
     filters.reportType === "usage" ||
     filters.reportType === "ppe";
   const showTxnType = filters.reportType === "transactions";
-  const showLocation =
-    filters.reportType === "inventory" || filters.reportType === "expiring";
+  const showLocation = filters.reportType === "inventory" || filters.reportType === "expiring";
   const showSourceDest = filters.reportType === "transactions";
   const showOrg =
     filters.reportType === "transactions" ||
@@ -298,7 +293,11 @@ export function SafetySuppliesReportBuilder({
             >
               Export CSV
             </button>
-            <button type="button" className="btn btn-outline-secondary btn-sm" onClick={saveTemplate}>
+            <button
+              type="button"
+              className="btn btn-outline-secondary btn-sm"
+              onClick={saveTemplate}
+            >
               Save template
             </button>
           </div>
@@ -332,9 +331,7 @@ export function SafetySuppliesReportBuilder({
                 id="supplies-report-type"
                 className="form-select form-select-sm"
                 value={filters.reportType}
-                onChange={(e) =>
-                  patchFilters({ reportType: e.target.value as SuppliesReportType })
-                }
+                onChange={(e) => patchFilters({ reportType: e.target.value as SuppliesReportType })}
               >
                 {SUPPLIES_REPORT_TYPES.map((t) => (
                   <option key={t.id} value={t.id}>
@@ -753,9 +750,7 @@ export function SafetySuppliesReportBuilder({
               {rows.length === 0 ? (
                 <tr>
                   <td colSpan={Math.max(activeFields.length, 1)} className="text-muted">
-                    {loading
-                      ? "Running report…"
-                      : "No rows yet. Set filters and click Run report."}
+                    {loading ? "Running report…" : "No rows yet. Set filters and click Run report."}
                   </td>
                 </tr>
               ) : (

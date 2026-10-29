@@ -138,7 +138,9 @@ export function isEmergencyFeatureEnabled(
 }
 
 export function parseEmergencyCategory(raw: string | null | undefined): EmergencyCategoryId {
-  const value = String(raw ?? "").trim().toLowerCase();
+  const value = String(raw ?? "")
+    .trim()
+    .toLowerCase();
   const match = EMERGENCY_CATEGORIES.find((c) => c.id === value || c.apiCategory === value);
   return match?.id ?? "eap";
 }
@@ -181,7 +183,8 @@ export function filterEmergencyByTab(
   const keys = keywords[tab];
   if (!keys) return [...items];
   const matched = items.filter((row) => {
-    const blob = `${emergencyRecordTitle(row)} ${JSON.stringify(row.sourcePayload ?? {})}`.toLowerCase();
+    const blob =
+      `${emergencyRecordTitle(row)} ${JSON.stringify(row.sourcePayload ?? {})}`.toLowerCase();
     return keys.some((k) => blob.includes(k));
   });
   return matched.length > 0 ? matched : [...items];
@@ -192,10 +195,7 @@ export function isActiveEmergencyAlert(alert: FieldEmergencyAlert): boolean {
   return status === "ACTIVE" || status === "UPDATING";
 }
 
-export function alertAppliesToLocation(
-  alert: FieldEmergencyAlert,
-  locationId: string,
-): boolean {
+export function alertAppliesToLocation(alert: FieldEmergencyAlert, locationId: string): boolean {
   if (!locationId) return true;
   const audience = alert.audience;
   if (!audience || typeof audience !== "object") return true;
@@ -207,8 +207,7 @@ export function alertAppliesToLocation(
 }
 
 export function plantEmergencyNumber(settings: EmergencyAlertSettings | null | undefined): string {
-  const bag =
-    settings?.settings && typeof settings.settings === "object" ? settings.settings : {};
+  const bag = settings?.settings && typeof settings.settings === "object" ? settings.settings : {};
   const candidates = [
     bag.plantEmergencyNumber,
     bag.emergencyPhone,

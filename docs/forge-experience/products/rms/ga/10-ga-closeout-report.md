@@ -2,7 +2,7 @@
 
 **Date:** 2026-07-31  
 **Phase:** FX-P2  
-**Status:** **NOT COMPLETE — GA NOT STARTED**  
+**Status:** **NOT COMPLETE — GA NOT STARTED**
 
 ## Decision requested
 
@@ -18,14 +18,14 @@ GA documentation has been **prepared as drafts** only. Per FX-P2 rules, this pac
 
 ## Exit criteria status
 
-| Criterion | Met? |
-| --- | --- |
-| Pilot completed successfully | No |
+| Criterion                                             | Met?                |
+| ----------------------------------------------------- | ------------------- |
+| Pilot completed successfully                          | No                  |
 | Pilot recommendation `READY FOR GENERAL AVAILABILITY` | No (`EXTEND PILOT`) |
-| Executive approval for GA | No |
-| Feature flags approved for global enablement | No |
-| Rollback verified in live pilot | No |
-| Production monitoring active for FX pilot window | No |
+| Executive approval for GA                             | No                  |
+| Feature flags approved for global enablement          | No                  |
+| Rollback verified in live pilot                       | No                  |
+| Production monitoring active for FX pilot window      | No                  |
 
 ## Recommendation
 

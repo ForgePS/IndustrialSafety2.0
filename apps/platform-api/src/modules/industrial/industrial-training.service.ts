@@ -4,7 +4,6 @@ import {
   forgeDocuments,
   industrialPersonnel,
   industrialTrainingAttempts,
-  industrialTrainingAssignmentAssignees,
   industrialTrainingAssignments,
   industrialTrainingCompletions,
   industrialTrainingGroups,
@@ -43,12 +42,12 @@ import {
   resolveTrainingVideoPlaybackMime,
   trainingMaterialCategoryForMime,
 } from "./training-materials.mime.js";
-import { normalizeTrainingMaterialTopic, resolveMaterialTopic } from "./training-material-topics.js";
-import { buildPaperQuizPrintableHtml } from "./training-paper-quiz.js";
 import {
-  buildOfficeMaterialViewUrl,
-  issueOfficeViewToken,
-} from "./office-view-token.js";
+  normalizeTrainingMaterialTopic,
+  resolveMaterialTopic,
+} from "./training-material-topics.js";
+import { buildPaperQuizPrintableHtml } from "./training-paper-quiz.js";
+import { buildOfficeMaterialViewUrl, issueOfficeViewToken } from "./office-view-token.js";
 
 type DatabaseTransaction = Parameters<Parameters<Database["transaction"]>[0]>[0];
 import { unwrapJsonRecord } from "./form-print.js";
@@ -139,12 +138,12 @@ export class IndustrialTrainingService {
         order by 1
         limit 2000
       `);
-      const list = (Array.isArray(rows) ? rows : (rows as { rows?: unknown[] }).rows ?? []) as Array<{
+      const list = (
+        Array.isArray(rows) ? rows : ((rows as { rows?: unknown[] }).rows ?? [])
+      ) as Array<{
         course_name?: string | null;
       }>;
-      return list
-        .map((row) => String(row.course_name ?? "").trim())
-        .filter(Boolean);
+      return list.map((row) => String(row.course_name ?? "").trim()).filter(Boolean);
     });
   }
 
@@ -257,13 +256,19 @@ export class IndustrialTrainingService {
     const tenantId = this.tenant(principal);
     const title = String(body.title ?? "").trim();
     if (!title) throw new ForgeError("VALIDATION_FAILED", "title is required");
-    const result = String(body.result ?? "COMPLETED").trim().toUpperCase() || "COMPLETED";
+    const result =
+      String(body.result ?? "COMPLETED")
+        .trim()
+        .toUpperCase() || "COMPLETED";
     const scoreRaw = body.scorePercent;
     const scorePercent =
       scoreRaw == null || (typeof scoreRaw === "string" && !String(scoreRaw).trim())
         ? null
         : Number(scoreRaw);
-    if (scorePercent != null && (!Number.isFinite(scorePercent) || scorePercent < 0 || scorePercent > 100)) {
+    if (
+      scorePercent != null &&
+      (!Number.isFinite(scorePercent) || scorePercent < 0 || scorePercent > 100)
+    ) {
       throw new ForgeError("VALIDATION_FAILED", "scorePercent must be between 0 and 100");
     }
     const attemptRaw = body.attemptNumber;
@@ -423,7 +428,9 @@ export class IndustrialTrainingService {
 
       const result =
         body.result !== undefined
-          ? String(body.result ?? "").trim().toUpperCase() || "COMPLETED"
+          ? String(body.result ?? "")
+              .trim()
+              .toUpperCase() || "COMPLETED"
           : undefined;
 
       let personnelId = existing.personnelId;
@@ -463,9 +470,7 @@ export class IndustrialTrainingService {
           : {}),
         ...(body.notes !== undefined ? { notes: String(body.notes ?? "").trim() || null } : {}),
         ...(result !== undefined ? { result } : {}),
-        ...(scorePercent !== undefined
-          ? { scorePercent, percent: scorePercent }
-          : {}),
+        ...(scorePercent !== undefined ? { scorePercent, percent: scorePercent } : {}),
         ...(attemptNumber !== undefined ? { attemptNumber } : {}),
         personnelId,
         employeeNumber:
@@ -537,9 +542,8 @@ export class IndustrialTrainingService {
     );
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   private async resolveRecordPersonnelId(
-    tx: any,
+    tx: DatabaseTransaction,
     tenantId: string,
     body: { personnelId?: string; employeeNumber?: string },
   ) {
@@ -557,7 +561,8 @@ export class IndustrialTrainingService {
     const employeeNumber = body.employeeNumber?.trim();
     if (employeeNumber) {
       const person = await findPersonnelByEmployeeNumber(tx, tenantId, employeeNumber);
-      if (!person) throw new ForgeError("VALIDATION_FAILED", `Employee number not found: ${employeeNumber}`);
+      if (!person)
+        throw new ForgeError("VALIDATION_FAILED", `Employee number not found: ${employeeNumber}`);
       return person.id;
     }
     return null;
@@ -656,12 +661,18 @@ export class IndustrialTrainingService {
     });
   }
 
-  async listSources(principal: ForgePrincipal, query: ListQuery, opts?: { publishedOnly?: boolean }) {
+  async listSources(
+    principal: ForgePrincipal,
+    query: ListQuery,
+    opts?: { publishedOnly?: boolean },
+  ) {
     const tenantId = this.tenant(principal);
     const { page, pageSize, offset } = pageParams(query);
     const publishedOnly = opts?.publishedOnly === true;
     const filterGroupId = query.groupId?.trim() || "";
-    const archivedMode = String(query.archived ?? "").trim().toLowerCase();
+    const archivedMode = String(query.archived ?? "")
+      .trim()
+      .toLowerCase();
     return withTenantTransaction(this.db, tenantId, async (tx) => {
       const conds = [eq(industrialTrainingSources.tenantId, tenantId)];
       if (archivedMode === "true" || archivedMode === "1" || archivedMode === "only") {
@@ -791,9 +802,12 @@ export class IndustrialTrainingService {
           title: body.title?.trim() || existing.title,
           edition: body.edition !== undefined ? body.edition?.trim() || null : existing.edition,
           description:
-            body.description !== undefined ? body.description?.trim() || null : existing.description,
+            body.description !== undefined
+              ? body.description?.trim() || null
+              : existing.description,
           status: status || existing.status,
-          publishedAt: status === "PUBLISHED" ? now : status === "DRAFT" ? null : existing.publishedAt,
+          publishedAt:
+            status === "PUBLISHED" ? now : status === "DRAFT" ? null : existing.publishedAt,
           updatedAt: now,
         })
         .where(eq(industrialTrainingSources.id, sourceId))
@@ -1120,9 +1134,12 @@ export class IndustrialTrainingService {
   ) {
     const tenantId = this.tenant(principal);
     const stem = String(body.stem ?? "").trim();
-    const choices = Array.isArray(body.choices) ? body.choices.map((c) => String(c).trim()).filter(Boolean) : [];
+    const choices = Array.isArray(body.choices)
+      ? body.choices.map((c) => String(c).trim()).filter(Boolean)
+      : [];
     if (!stem) throw new ForgeError("VALIDATION_FAILED", "stem is required");
-    if (choices.length < 2) throw new ForgeError("VALIDATION_FAILED", "at least 2 choices required");
+    if (choices.length < 2)
+      throw new ForgeError("VALIDATION_FAILED", "at least 2 choices required");
     const correctIndex = Number(body.correctIndex ?? 0);
     if (!Number.isInteger(correctIndex) || correctIndex < 0 || correctIndex >= choices.length) {
       throw new ForgeError("VALIDATION_FAILED", "correctIndex out of range");
@@ -1173,9 +1190,8 @@ export class IndustrialTrainingService {
     },
   ) {
     const tenantId = this.tenant(principal);
-    const defaultStatus = String(body.defaultStatus ?? "DRAFT").toUpperCase() === "PUBLISHED"
-      ? "PUBLISHED"
-      : "DRAFT";
+    const defaultStatus =
+      String(body.defaultStatus ?? "DRAFT").toUpperCase() === "PUBLISHED" ? "PUBLISHED" : "DRAFT";
     const incoming = flattenImportQuestions({
       chapters: body.chapters ?? [],
     } as QuestionImportPayload);
@@ -1213,7 +1229,9 @@ export class IndustrialTrainingService {
           explanation: raw.explanation
             ? sanitizeTrainingImportText(String(raw.explanation)).trim() || null
             : null,
-          pageRef: raw.pageRef ? sanitizeTrainingImportText(String(raw.pageRef)).trim() || null : null,
+          pageRef: raw.pageRef
+            ? sanitizeTrainingImportText(String(raw.pageRef)).trim() || null
+            : null,
           difficulty: raw.difficulty
             ? sanitizeTrainingImportText(String(raw.difficulty)).trim() || "MEDIUM"
             : "MEDIUM",
@@ -1238,7 +1256,9 @@ export class IndustrialTrainingService {
       defaultStatus?: string;
     },
   ) {
-    const filename = String(body.filename ?? "").trim().toLowerCase();
+    const filename = String(body.filename ?? "")
+      .trim()
+      .toLowerCase();
     const contentBase64 = String(body.contentBase64 ?? "").trim();
     if (!filename) throw new ForgeError("VALIDATION_FAILED", "filename is required");
     if (!contentBase64) throw new ForgeError("VALIDATION_FAILED", "contentBase64 is required");
@@ -1334,7 +1354,8 @@ export class IndustrialTrainingService {
         : (existing.choices as string[]);
       const correctIndex =
         body.correctIndex !== undefined ? Number(body.correctIndex) : existing.correctIndex;
-      if (choices.length < 2) throw new ForgeError("VALIDATION_FAILED", "at least 2 choices required");
+      if (choices.length < 2)
+        throw new ForgeError("VALIDATION_FAILED", "at least 2 choices required");
       if (!Number.isInteger(correctIndex) || correctIndex < 0 || correctIndex >= choices.length) {
         throw new ForgeError("VALIDATION_FAILED", "correctIndex out of range");
       }
@@ -1346,7 +1367,9 @@ export class IndustrialTrainingService {
           choices,
           correctIndex,
           explanation:
-            body.explanation !== undefined ? body.explanation?.trim() || null : existing.explanation,
+            body.explanation !== undefined
+              ? body.explanation?.trim() || null
+              : existing.explanation,
           pageRef: body.pageRef !== undefined ? body.pageRef?.trim() || null : existing.pageRef,
           difficulty: body.difficulty?.trim() || existing.difficulty,
           status: body.status?.trim() || existing.status,
@@ -1564,7 +1587,9 @@ export class IndustrialTrainingService {
         );
         // Prefer never-answered, then previously incorrect
         const unanswered = pool.filter((id) => !answered.has(id));
-        const incorrect = answers.filter((a) => !a.correct && !mastered.has(a.questionId)).map((a) => a.questionId);
+        const incorrect = answers
+          .filter((a) => !a.correct && !mastered.has(a.questionId))
+          .map((a) => a.questionId);
         nextId = unanswered[0] ?? incorrect[0] ?? pool[0];
         if (!nextId) {
           return { done: true, attempt };
@@ -1668,7 +1693,10 @@ export class IndustrialTrainingService {
       else answers.push(row);
 
       const mastery = {
-        remaining: [...((attempt.masteryState as { remaining?: string[] })?.remaining ?? (attempt.questionIds as string[]))],
+        remaining: [
+          ...((attempt.masteryState as { remaining?: string[] })?.remaining ??
+            (attempt.questionIds as string[])),
+        ],
         mastered: [...((attempt.masteryState as { mastered?: string[] })?.mastered ?? [])],
       };
       if (correct && !mastery.mastered.includes(questionId)) {
@@ -1681,8 +1709,10 @@ export class IndustrialTrainingService {
       if (quiz.mode === "STANDARD") nextIndex = attempt.currentIndex + 1;
 
       const adaptiveDone =
-        quiz.mode === "ADAPTIVE" && mastery.mastered.length >= (attempt.questionIds as string[]).length;
-      const standardDone = quiz.mode === "STANDARD" && nextIndex >= (attempt.questionIds as string[]).length;
+        quiz.mode === "ADAPTIVE" &&
+        mastery.mastered.length >= (attempt.questionIds as string[]).length;
+      const standardDone =
+        quiz.mode === "STANDARD" && nextIndex >= (attempt.questionIds as string[]).length;
       const done = adaptiveDone || standardDone;
 
       const now = new Date();
@@ -1694,7 +1724,9 @@ export class IndustrialTrainingService {
           currentIndex: nextIndex,
           scoreCorrect,
           scoreTotal:
-            quiz.mode === "ADAPTIVE" ? (attempt.questionIds as string[]).length : attempt.scoreTotal,
+            quiz.mode === "ADAPTIVE"
+              ? (attempt.questionIds as string[]).length
+              : attempt.scoreTotal,
           status: done ? "COMPLETED" : "IN_PROGRESS",
           completedAt: done ? now : null,
           updatedAt: now,
@@ -1957,9 +1989,8 @@ export class IndustrialTrainingService {
       .where(eq(industrialTrainingSources.id, sourceId));
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   private async updateStats(
-    tx: any,
+    tx: DatabaseTransaction,
     tenantId: string,
     userId: string,
     sourceId: string,
@@ -1995,7 +2026,7 @@ export class IndustrialTrainingService {
     }
     const attemptCount = existing.attemptCount + 1;
     const prevAvg = Number(existing.avgScore ?? 0);
-    const avgScore = (((prevAvg * existing.attemptCount) + pct) / attemptCount).toFixed(2);
+    const avgScore = ((prevAvg * existing.attemptCount + pct) / attemptCount).toFixed(2);
     await tx
       .update(industrialTrainingUserStats)
       .set({
@@ -2032,9 +2063,7 @@ export class IndustrialTrainingService {
         conds.push(eq(industrialTrainingMaterials.visibility, "PUBLISHED"));
       } else {
         // Managers see processing / failed uploads; learners (publishedOnly) only see ready videos.
-        conds.push(
-          inArray(industrialTrainingMaterials.status, ["ACTIVE", "PROCESSING", "FAILED"]),
-        );
+        conds.push(inArray(industrialTrainingMaterials.status, ["ACTIVE", "PROCESSING", "FAILED"]));
       }
       if (query.category?.trim()) {
         conds.push(eq(industrialTrainingMaterials.category, query.category.trim().toUpperCase()));
@@ -2103,11 +2132,17 @@ export class IndustrialTrainingService {
     const tenantId = this.tenant(principal);
     const title = String(body.title ?? "").trim();
     const filename = String(body.filename ?? "").trim();
-    const mimeType = String(body.mimeType ?? "").trim().toLowerCase();
+    const mimeType = String(body.mimeType ?? "")
+      .trim()
+      .toLowerCase();
     const contentLength = Number(body.contentLength ?? 0);
     if (!title) throw new ForgeError("VALIDATION_FAILED", "title is required");
     if (!filename) throw new ForgeError("VALIDATION_FAILED", "filename is required");
-    if (!Number.isFinite(contentLength) || contentLength <= 0 || contentLength > MAX_MATERIAL_BYTES) {
+    if (
+      !Number.isFinite(contentLength) ||
+      contentLength <= 0 ||
+      contentLength > MAX_MATERIAL_BYTES
+    ) {
       throw new ForgeError(
         "VALIDATION_FAILED",
         `contentLength must be between 1 and ${MAX_MATERIAL_BYTES} bytes`,
@@ -2148,7 +2183,10 @@ export class IndustrialTrainingService {
           throw new ForgeError("VALIDATION_FAILED", "sourceId is required when folderId is set");
         }
         if (folder.sourceId !== sourceId) {
-          throw new ForgeError("VALIDATION_FAILED", "folderId does not belong to the selected source");
+          throw new ForgeError(
+            "VALIDATION_FAILED",
+            "folderId does not belong to the selected source",
+          );
         }
       }
 
@@ -2314,7 +2352,10 @@ export class IndustrialTrainingService {
           filename: material.originalFilename,
         })
       ) {
-        throw new ForgeError("VALIDATION_FAILED", "Only video materials can be optimized for tablets");
+        throw new ForgeError(
+          "VALIDATION_FAILED",
+          "Only video materials can be optimized for tablets",
+        );
       }
       const document = await tx.query.forgeDocuments.findFirst({
         where: and(
@@ -2363,7 +2404,7 @@ export class IndustrialTrainingService {
           mimeType: document.mimeType ?? material.mimeType,
           filename: material.originalFilename,
         })
-      : document.mimeType ?? material.mimeType;
+      : (document.mimeType ?? material.mimeType);
 
     await this.storage.assertObjectExists(document.objectKey);
 
@@ -2429,7 +2470,7 @@ export class IndustrialTrainingService {
           mimeType: document.mimeType ?? material.mimeType,
           filename: material.originalFilename,
         })
-      : document.mimeType ?? material.mimeType;
+      : (document.mimeType ?? material.mimeType);
 
     const presign = await this.storage.createPresignedDownloadUrl({
       objectKey: document.objectKey,
@@ -2490,7 +2531,7 @@ export class IndustrialTrainingService {
             mimeType: body.contentType ?? document.mimeType ?? material.mimeType,
             filename: material.originalFilename,
           })
-        : body.contentType ?? document.mimeType ?? "application/octet-stream";
+        : (body.contentType ?? document.mimeType ?? "application/octet-stream");
       return {
         body: body.body,
         contentType,
@@ -2669,8 +2710,7 @@ export class IndustrialTrainingService {
       }
       if (body.folderId !== undefined) {
         const folderId = body.folderId ? String(body.folderId).trim() : null;
-        const effectiveSourceId =
-          patch.sourceId !== undefined ? patch.sourceId : material.sourceId;
+        const effectiveSourceId = patch.sourceId !== undefined ? patch.sourceId : material.sourceId;
         if (folderId) {
           const folder = await this.requireSourceFolder(tx, tenantId, folderId);
           if (!effectiveSourceId || folder.sourceId !== effectiveSourceId) {
@@ -2758,7 +2798,8 @@ export class IndustrialTrainingService {
         assignmentId,
         normalized,
       );
-      if (!assignee) throw new ForgeError("FORBIDDEN", "Employee number is not assigned to this training");
+      if (!assignee)
+        throw new ForgeError("FORBIDDEN", "Employee number is not assigned to this training");
       if (assignee.status === "PASSED") {
         throw new ForgeError("VALIDATION_FAILED", "Assignment already completed");
       }
@@ -2890,7 +2931,9 @@ export class IndustrialTrainingService {
           (id) => !mastered.has(id),
         );
         const unanswered = pool.filter((id) => !answered.has(id));
-        const incorrect = answers.filter((a) => !a.correct && !mastered.has(a.questionId)).map((a) => a.questionId);
+        const incorrect = answers
+          .filter((a) => !a.correct && !mastered.has(a.questionId))
+          .map((a) => a.questionId);
         nextId = unanswered[0] ?? incorrect[0] ?? pool[0];
         if (!nextId) return { done: true, attempt };
       } else {
@@ -2991,7 +3034,10 @@ export class IndustrialTrainingService {
       else answers.push(row);
 
       const mastery = {
-        remaining: [...((attempt.masteryState as { remaining?: string[] })?.remaining ?? (attempt.questionIds as string[]))],
+        remaining: [
+          ...((attempt.masteryState as { remaining?: string[] })?.remaining ??
+            (attempt.questionIds as string[])),
+        ],
         mastered: [...((attempt.masteryState as { mastered?: string[] })?.mastered ?? [])],
       };
       if (correct && !mastery.mastered.includes(questionId)) {
@@ -3004,8 +3050,10 @@ export class IndustrialTrainingService {
       if (quiz.mode === "STANDARD") nextIndex = attempt.currentIndex + 1;
 
       const adaptiveDone =
-        quiz.mode === "ADAPTIVE" && mastery.mastered.length >= (attempt.questionIds as string[]).length;
-      const standardDone = quiz.mode === "STANDARD" && nextIndex >= (attempt.questionIds as string[]).length;
+        quiz.mode === "ADAPTIVE" &&
+        mastery.mastered.length >= (attempt.questionIds as string[]).length;
+      const standardDone =
+        quiz.mode === "STANDARD" && nextIndex >= (attempt.questionIds as string[]).length;
       const done = adaptiveDone || standardDone;
 
       const now = new Date();
@@ -3017,7 +3065,9 @@ export class IndustrialTrainingService {
           currentIndex: nextIndex,
           scoreCorrect,
           scoreTotal:
-            quiz.mode === "ADAPTIVE" ? (attempt.questionIds as string[]).length : attempt.scoreTotal,
+            quiz.mode === "ADAPTIVE"
+              ? (attempt.questionIds as string[]).length
+              : attempt.scoreTotal,
           status: done ? "COMPLETED" : "IN_PROGRESS",
           completedAt: done ? now : null,
           updatedAt: now,
@@ -3100,9 +3150,8 @@ export class IndustrialTrainingService {
     });
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   private async requireAttemptForEmployee(
-    tx: any,
+    tx: DatabaseTransaction,
     tenantId: string,
     attemptId: string,
     employeeNumber: string,
@@ -3155,11 +3204,11 @@ export class IndustrialTrainingService {
         where id = ${tenantId}::uuid
         limit 1
       `);
-      const tenantRow = (Array.isArray(tenantRows)
-        ? tenantRows[0]
-        : (tenantRows as { rows?: Array<Record<string, unknown>> }).rows?.[0]) as
-        | Record<string, unknown>
-        | undefined;
+      const tenantRow = (
+        Array.isArray(tenantRows)
+          ? tenantRows[0]
+          : (tenantRows as { rows?: Array<Record<string, unknown>> }).rows?.[0]
+      ) as Record<string, unknown> | undefined;
 
       const brandingRows = await tx.execute(sql`
         select cv.payload_json as payload
@@ -3170,11 +3219,11 @@ export class IndustrialTrainingService {
           and co.object_key = 'default'
         limit 1
       `);
-      const brandingPayloadRaw = (Array.isArray(brandingRows)
-        ? brandingRows[0]
-        : (brandingRows as { rows?: Array<{ payload?: unknown }> }).rows?.[0]) as
-        | { payload?: unknown }
-        | undefined;
+      const brandingPayloadRaw = (
+        Array.isArray(brandingRows)
+          ? brandingRows[0]
+          : (brandingRows as { rows?: Array<{ payload?: unknown }> }).rows?.[0]
+      ) as { payload?: unknown } | undefined;
       const brandingPayload = unwrapJsonRecord(brandingPayloadRaw?.payload);
       const tenantKey = String(tenantRow?.tenant_key ?? "").trim();
       const companyName =
@@ -3207,13 +3256,13 @@ export class IndustrialTrainingService {
         })),
       });
 
-      const slug = source.title
-        .toLowerCase()
-        .replace(/[^a-z0-9]+/g, "-")
-        .replace(/^-|-$/g, "")
-        .slice(0, 60) || "quiz";
-      const filename =
-        variant === "key" ? `${slug}-answer-key.html` : `${slug}-paper-quiz.html`;
+      const slug =
+        source.title
+          .toLowerCase()
+          .replace(/[^a-z0-9]+/g, "-")
+          .replace(/^-|-$/g, "")
+          .slice(0, 60) || "quiz";
+      const filename = variant === "key" ? `${slug}-answer-key.html` : `${slug}-paper-quiz.html`;
 
       return { html, filename, contentType: "text/html; charset=utf-8" };
     });

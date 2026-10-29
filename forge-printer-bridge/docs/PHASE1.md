@@ -24,14 +24,14 @@ Phase 1 delivers the always-on Windows bridge for USB / Ethernet / Wi-Fi printer
 
 ## Key types
 
-| Area | Type |
-|------|------|
-| Transport contract | `IPrinterTransport` (spec §58) |
-| Spooler impl | `WindowsSpoolerTransport` |
-| Discovery | `WindowsPrinterDiscovery` + `VirtualPrinterFilter` |
-| Idempotency | `JobIdempotencyService` + `completed_jobs` table |
-| Cloud | `CloudConnectionClient` |
-| Secrets | `DpapiCredentialStore` |
+| Area               | Type                                               |
+| ------------------ | -------------------------------------------------- |
+| Transport contract | `IPrinterTransport` (spec §58)                     |
+| Spooler impl       | `WindowsSpoolerTransport`                          |
+| Discovery          | `WindowsPrinterDiscovery` + `VirtualPrinterFilter` |
+| Idempotency        | `JobIdempotencyService` + `completed_jobs` table   |
+| Cloud              | `CloudConnectionClient`                            |
+| Secrets            | `DpapiCredentialStore`                             |
 
 ## Acceptance focus (Phase 1)
 

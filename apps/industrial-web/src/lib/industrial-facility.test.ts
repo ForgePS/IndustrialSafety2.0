@@ -47,9 +47,9 @@ describe("industrial-facility", () => {
   it("matches roster rows by site id or location label", () => {
     const options = [{ id: "s1", name: "PRM Greenville MS" }];
     expect(matchesFacilitySelection({ siteId: "s1" }, "s1", options)).toBe(true);
-    expect(matchesFacilitySelection({ siteId: "other", siteLabel: "PRM Greenville MS" }, "s1", options)).toBe(
-      true,
-    );
+    expect(
+      matchesFacilitySelection({ siteId: "other", siteLabel: "PRM Greenville MS" }, "s1", options),
+    ).toBe(true);
     expect(matchesFacilitySelection({ siteId: "other" }, "s1", options)).toBe(false);
     expect(matchesFacilitySelection({ siteId: "other" }, ALL_FACILITIES_ID, options)).toBe(true);
   });

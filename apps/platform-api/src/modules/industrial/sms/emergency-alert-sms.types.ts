@@ -4,9 +4,7 @@ export const SMS_PROVIDER_AWS = "AWS_END_USER_MESSAGING" as const;
 export const SMS_PROVIDER_STUB = "STUB" as const;
 
 export type EmergencyAlertSmsProviderName =
-  | typeof SMS_PROVIDER_AWS
-  | typeof SMS_PROVIDER_STUB
-  | string;
+  typeof SMS_PROVIDER_AWS | typeof SMS_PROVIDER_STUB | string;
 
 export type SmsMessageType = "TRANSACTIONAL" | "PROMOTIONAL";
 

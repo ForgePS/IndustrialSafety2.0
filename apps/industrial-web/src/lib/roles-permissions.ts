@@ -61,11 +61,14 @@ export type PermissionDirectoryRow = {
   assignedRoles: RoleChip[];
 };
 
-type AuthLike = {
-  isPlatformAdmin?: boolean;
-  permissions?: readonly string[];
-  activeProducts?: readonly string[];
-} | null | undefined;
+type AuthLike =
+  | {
+      isPlatformAdmin?: boolean;
+      permissions?: readonly string[];
+      activeProducts?: readonly string[];
+    }
+  | null
+  | undefined;
 
 function str(value: unknown): string {
   return typeof value === "string" ? value.trim() : "";

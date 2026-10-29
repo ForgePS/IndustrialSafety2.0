@@ -129,8 +129,7 @@ export class IndustrialPersonnelAdapter implements ImportRecordAdapter {
       asOptionalString(mapped.employee_number) ?? asOptionalString(mapped.employeeNumber);
     const email = asOptionalString(mapped.email);
     const phone = asOptionalString(mapped.phone);
-    const firstNameRaw =
-      asOptionalString(mapped.first_name) ?? asOptionalString(mapped.firstName);
+    const firstNameRaw = asOptionalString(mapped.first_name) ?? asOptionalString(mapped.firstName);
     const lastNameRaw = asOptionalString(mapped.last_name) ?? asOptionalString(mapped.lastName);
     let firstName = firstNameRaw;
     let lastName = lastNameRaw;
@@ -149,8 +148,7 @@ export class IndustrialPersonnelAdapter implements ImportRecordAdapter {
     const positionIdInput =
       asOptionalString(mapped.position_id) ?? asOptionalString(mapped.positionId);
     const employmentTypeIdInput =
-      asOptionalString(mapped.employment_type_id) ??
-      asOptionalString(mapped.employmentTypeId);
+      asOptionalString(mapped.employment_type_id) ?? asOptionalString(mapped.employmentTypeId);
     const departmentName = asOptionalString(mapped.department);
     const positionName = asOptionalString(mapped.position);
     const employmentTypeName =
@@ -215,10 +213,10 @@ export class IndustrialPersonnelAdapter implements ImportRecordAdapter {
               employmentTypeId,
               sourceSystem: "FORGE",
               sourcePayload: {
-              ...mapped,
-              importJobId: context.jobId,
-              ...(locationName ? { location: locationName } : {}),
-            },
+                ...mapped,
+                importJobId: context.jobId,
+                ...(locationName ? { location: locationName } : {}),
+              },
               updatedAt: now,
             })
             .where(eq(industrialPersonnel.id, existing.id))

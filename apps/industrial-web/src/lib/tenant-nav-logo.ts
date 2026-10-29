@@ -51,8 +51,7 @@ export function bundledNavLogoForTenant(
   if (!hay.trim()) return null;
   for (const row of BUNDLED) {
     if (!row.test.test(hay)) continue;
-    const src =
-      theme === "dark" ? row.srcDark?.trim() || row.srcLight : row.srcLight;
+    const src = theme === "dark" ? row.srcDark?.trim() || row.srcLight : row.srcLight;
     return { src, label: row.label };
   }
   return null;

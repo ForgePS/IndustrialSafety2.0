@@ -33,8 +33,7 @@ function Inner() {
     hasPermission("ai.narrative.manage_templates") ||
     hasPermission("platform.ai.narrative.manage");
   const canManage =
-    hasPermission("ai.narrative.manage_templates") ||
-    hasPermission("platform.ai.narrative.manage");
+    hasPermission("ai.narrative.manage_templates") || hasPermission("platform.ai.narrative.manage");
   const [items, setItems] = useState<TemplateRow[]>([]);
   const [note, setNote] = useState<string | undefined>();
   const [loading, setLoading] = useState(Boolean(tenantId));
@@ -183,7 +182,12 @@ function Inner() {
             </div>
             <div className={styles.formRow}>
               <label htmlFor="tpl-name">Name</label>
-              <input id="tpl-name" value={name} onChange={(e) => setName(e.target.value)} required />
+              <input
+                id="tpl-name"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                required
+              />
             </div>
             <div className={styles.formRow}>
               <label htmlFor="tpl-system">System prompt</label>
@@ -217,7 +221,13 @@ function Inner() {
 
 export default function Page() {
   return (
-    <Suspense fallback={<main className={styles.page}><p className={styles.muted}>Loading…</p></main>}>
+    <Suspense
+      fallback={
+        <main className={styles.page}>
+          <p className={styles.muted}>Loading…</p>
+        </main>
+      }
+    >
       <Inner />
     </Suspense>
   );

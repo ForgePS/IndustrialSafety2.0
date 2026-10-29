@@ -88,7 +88,11 @@ export function EmergencyAlertsWorkspace({ moduleName }: { moduleName: string })
   );
   useEffect(() => {
     setTab((current) =>
-      ensureActiveModuleTab(current, visibleTabs.map((t) => t.id), "dashboard"),
+      ensureActiveModuleTab(
+        current,
+        visibleTabs.map((t) => t.id),
+        "dashboard",
+      ),
     );
   }, [visibleTabs]);
   const [error, setError] = useState("");
@@ -132,7 +136,12 @@ export function EmergencyAlertsWorkspace({ moduleName }: { moduleName: string })
   const [groupMembers, setGroupMembers] = useState<EmergencyAlertGroupMember[]>([]);
   const [memberSearchQ, setMemberSearchQ] = useState("");
   const [memberSearchHits, setMemberSearchHits] = useState<
-    Array<{ id: string; displayName: string; employeeNumber?: string | null; status?: string | null }>
+    Array<{
+      id: string;
+      displayName: string;
+      employeeNumber?: string | null;
+      status?: string | null;
+    }>
   >([]);
   const [memberSearchBusy, setMemberSearchBusy] = useState(false);
 
@@ -148,7 +157,9 @@ export function EmergencyAlertsWorkspace({ moduleName }: { moduleName: string })
   }
 
   const loadDashboard = useCallback(async () => {
-    setDashboard(await apiGet<EmergencyAlertDashboard>("/api/v1/industrial/emergency-alerts/dashboard"));
+    setDashboard(
+      await apiGet<EmergencyAlertDashboard>("/api/v1/industrial/emergency-alerts/dashboard"),
+    );
   }, []);
 
   const loadAlerts = useCallback(async (status: string) => {
@@ -180,9 +191,13 @@ export function EmergencyAlertsWorkspace({ moduleName }: { moduleName: string })
     setPreviewLoading(true);
     try {
       setPreview(
-        await apiSend<AudiencePreview>("/api/v1/industrial/emergency-alerts/audience/preview", "POST", {
-          audience: aud,
-        }),
+        await apiSend<AudiencePreview>(
+          "/api/v1/industrial/emergency-alerts/audience/preview",
+          "POST",
+          {
+            audience: aud,
+          },
+        ),
       );
     } catch {
       setPreview(null);
@@ -249,7 +264,12 @@ export function EmergencyAlertsWorkspace({ moduleName }: { moduleName: string })
       setError("Check the confirmation box before sending.");
       return;
     }
-    if (audienceScope === "TARGETED" && !locationIds.length && !departmentIds.length && !groupIds.length) {
+    if (
+      audienceScope === "TARGETED" &&
+      !locationIds.length &&
+      !departmentIds.length &&
+      !groupIds.length
+    ) {
       setError("Select at least one location, department, or group — or choose entire tenant.");
       return;
     }
@@ -295,9 +315,13 @@ export function EmergencyAlertsWorkspace({ moduleName }: { moduleName: string })
     if (!window.confirm("Issue ALL CLEAR to the original audience?")) return;
     setError("");
     try {
-      await apiSend(`/api/v1/industrial/emergency-alerts/${encodeURIComponent(id)}/all-clear`, "POST", {
-        message: "All clear. Resume normal operations.",
-      });
+      await apiSend(
+        `/api/v1/industrial/emergency-alerts/${encodeURIComponent(id)}/all-clear`,
+        "POST",
+        {
+          message: "All clear. Resume normal operations.",
+        },
+      );
       await refresh();
     } catch (err) {
       setError(err instanceof ApiError ? err.message : "Unable to issue all clear");
@@ -622,13 +646,25 @@ export function EmergencyAlertsWorkspace({ moduleName }: { moduleName: string })
         <button type="button" className="btn btn-danger" onClick={() => setTab("compose")}>
           Send Emergency Alert
         </button>
-        <button type="button" className="btn btn-outline-secondary btn-sm" onClick={() => setTab("history")}>
+        <button
+          type="button"
+          className="btn btn-outline-secondary btn-sm"
+          onClick={() => setTab("history")}
+        >
           Alert History
         </button>
-        <button type="button" className="btn btn-outline-secondary btn-sm" onClick={() => setTab("templates")}>
+        <button
+          type="button"
+          className="btn btn-outline-secondary btn-sm"
+          onClick={() => setTab("templates")}
+        >
           Manage Templates
         </button>
-        <button type="button" className="btn btn-outline-secondary btn-sm" onClick={() => setTab("groups")}>
+        <button
+          type="button"
+          className="btn btn-outline-secondary btn-sm"
+          onClick={() => setTab("groups")}
+        >
           Alert Groups
         </button>
       </div>
@@ -895,7 +931,10 @@ export function EmergencyAlertsWorkspace({ moduleName }: { moduleName: string })
                   {audienceScope === "TARGETED" ? (
                     <div className="row g-3 mb-3">
                       <div className="col-md-4">
-                        <div className="border rounded p-2" style={{ maxHeight: 180, overflow: "auto" }}>
+                        <div
+                          className="border rounded p-2"
+                          style={{ maxHeight: 180, overflow: "auto" }}
+                        >
                           <div className="fw-semibold small mb-2">Locations</div>
                           {(targets?.sites ?? []).length === 0 ? (
                             <p className="text-muted small mb-0">No sites found.</p>
@@ -918,14 +957,15 @@ export function EmergencyAlertsWorkspace({ moduleName }: { moduleName: string })
                         </div>
                       </div>
                       <div className="col-md-4">
-                        <div className="border rounded p-2" style={{ maxHeight: 180, overflow: "auto" }}>
+                        <div
+                          className="border rounded p-2"
+                          style={{ maxHeight: 180, overflow: "auto" }}
+                        >
                           <div className="fw-semibold small mb-2">Departments</div>
                           {(targets?.departments ?? [])
                             .filter(
                               (d) =>
-                                !locationIds.length ||
-                                !d.siteId ||
-                                locationIds.includes(d.siteId),
+                                !locationIds.length || !d.siteId || locationIds.includes(d.siteId),
                             )
                             .map((d) => (
                               <div className="form-check" key={d.id}>
@@ -944,7 +984,10 @@ export function EmergencyAlertsWorkspace({ moduleName }: { moduleName: string })
                         </div>
                       </div>
                       <div className="col-md-4">
-                        <div className="border rounded p-2" style={{ maxHeight: 180, overflow: "auto" }}>
+                        <div
+                          className="border rounded p-2"
+                          style={{ maxHeight: 180, overflow: "auto" }}
+                        >
                           <div className="fw-semibold small mb-2">Alert groups</div>
                           {(targets?.groups ?? []).length === 0 ? (
                             <p className="text-muted small mb-0">
@@ -987,7 +1030,9 @@ export function EmergencyAlertsWorkspace({ moduleName }: { moduleName: string })
                         </div>
                         <div className="col-6 col-md-3">Forge users: {preview.forgeUsers}</div>
                         <div className="col-6 col-md-3">Excluded: {preview.excluded}</div>
-                        <div className="col-6 col-md-3">Mvix locations: {preview.mvixLocations}</div>
+                        <div className="col-6 col-md-3">
+                          Mvix locations: {preview.mvixLocations}
+                        </div>
                         {preview.exclusions.length ? (
                           <div className="col-12 text-muted">
                             Exclusions:{" "}
@@ -1251,7 +1296,11 @@ export function EmergencyAlertsWorkspace({ moduleName }: { moduleName: string })
                     <div className="form-label">Channels</div>
                     <div className="d-flex flex-wrap gap-3">
                       {EMERGENCY_ALERT_CHANNELS.map((ch) => (
-                        <label key={ch.id} className="form-check mb-0" htmlFor={`ea-tpl-ch-${ch.id}`}>
+                        <label
+                          key={ch.id}
+                          className="form-check mb-0"
+                          htmlFor={`ea-tpl-ch-${ch.id}`}
+                        >
                           <input
                             id={`ea-tpl-ch-${ch.id}`}
                             type="checkbox"
@@ -1380,7 +1429,9 @@ export function EmergencyAlertsWorkspace({ moduleName }: { moduleName: string })
           <div className="col-lg-5">
             <div className="card border shadow-none">
               <div className="card-header d-flex flex-wrap align-items-center justify-content-between gap-2">
-                <h6 className="mb-0">{editingGroupId ? "Edit alert group" : "Create alert group"}</h6>
+                <h6 className="mb-0">
+                  {editingGroupId ? "Edit alert group" : "Create alert group"}
+                </h6>
                 {editingGroupId ? (
                   <button
                     type="button"
@@ -1560,11 +1611,7 @@ export function EmergencyAlertsWorkspace({ moduleName }: { moduleName: string })
                     </div>
                   ) : null}
                   <button type="submit" className="btn btn-primary btn-sm" disabled={groupBusy}>
-                    {groupBusy
-                      ? "Saving…"
-                      : editingGroupId
-                        ? "Update group"
-                        : "Save group"}
+                    {groupBusy ? "Saving…" : editingGroupId ? "Update group" : "Save group"}
                   </button>
                 </form>
               </div>
@@ -1594,8 +1641,7 @@ export function EmergencyAlertsWorkspace({ moduleName }: { moduleName: string })
                       >
                         <div>
                           <div className="fw-semibold">
-                            {g.name}{" "}
-                            <span className="badge bg-secondary">{g.groupType}</span>
+                            {g.name} <span className="badge bg-secondary">{g.groupType}</span>
                             {!g.enabled ? (
                               <span className="badge bg-warning ms-1">disabled</span>
                             ) : null}

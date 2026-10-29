@@ -20,7 +20,9 @@ const APPLY = args.includes("--apply") ? "1" : "0";
 const ALLOW_PRODUCTION = args.includes("--allow-production") ? "1" : "0";
 
 if (!["development", "production"].includes(forgeEnvironment)) {
-  console.error("Usage: node scripts/run-ecs-apply-legal-acknowledgments-s1.mjs --env <development|production> [--apply]");
+  console.error(
+    "Usage: node scripts/run-ecs-apply-legal-acknowledgments-s1.mjs --env <development|production> [--apply]",
+  );
   process.exit(1);
 }
 if (forgeEnvironment === "production" && ALLOW_PRODUCTION !== "1") {
@@ -32,14 +34,20 @@ process.env.FORGE_ENV = forgeEnvironment;
 
 const adminSecretName = `forge-${forgeEnvironment}-secrets-database`;
 const importsBucket =
-  process.env.FORGE_IMPORTS_BUCKET ||
-  `forge-${forgeEnvironment}-imports-511343547817-us-east-1`;
+  process.env.FORGE_IMPORTS_BUCKET || `forge-${forgeEnvironment}-imports-511343547817-us-east-1`;
 const logGroup = `/forge/${forgeEnvironment}/platform-api`;
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const localScript = path.join(__dirname, "apply-legal-acknowledgments-s1.mjs");
 const ddl = readFileSync(
-  path.join(__dirname, "..", "packages", "database", "drizzle", "0052_legal_acknowledgments_s1.sql"),
+  path.join(
+    __dirname,
+    "..",
+    "packages",
+    "database",
+    "drizzle",
+    "0052_legal_acknowledgments_s1.sql",
+  ),
   "utf8",
 );
 
@@ -50,7 +58,14 @@ const sqlKey = `${prefix}/0052_legal_acknowledgments_s1.sql`;
 for (const [local, key] of [
   [localScript, scriptKey],
   [
-    path.join(__dirname, "..", "packages", "database", "drizzle", "0052_legal_acknowledgments_s1.sql"),
+    path.join(
+      __dirname,
+      "..",
+      "packages",
+      "database",
+      "drizzle",
+      "0052_legal_acknowledgments_s1.sql",
+    ),
     sqlKey,
   ],
 ]) {
@@ -73,7 +88,10 @@ const adminSecretArn = awsText([
   "ARN",
 ]);
 
-if (!adminSecretArn.includes(`forge-${forgeEnvironment}-`) || adminSecretArn.includes("database-app")) {
+if (
+  !adminSecretArn.includes(`forge-${forgeEnvironment}-`) ||
+  adminSecretArn.includes("database-app")
+) {
   throw new Error(`Refusing non-admin secret ARN: ${adminSecretArn}`);
 }
 

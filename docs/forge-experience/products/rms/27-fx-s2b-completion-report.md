@@ -3,7 +3,7 @@
 **Date:** 2026-07-30  
 **Product:** Forge RMS (`apps/rms-web`)  
 **Reference standard:** Forge Experience Design System `v1.0.0-RC1`  
-**Gate:** FX-S2B  
+**Gate:** FX-S2B
 
 ## Decision requested
 
@@ -15,8 +15,8 @@ Alternates: `APPROVE WITH CONDITIONS` · `RETURN FOR CORRECTION`
 
 ### Suggested conditions
 
-1. Capture pilot screenshots under `evidence/s2b/screenshots/` before any tenant enablement.  
-2. Keep FX flags default-off until internal non-prod tenant validation completes.  
+1. Capture pilot screenshots under `evidence/s2b/screenshots/` before any tenant enablement.
+2. Keep FX flags default-off until internal non-prod tenant validation completes.
 3. Do not begin workspace migration until S2C/S2D separately authorized.
 
 ## Summary
@@ -29,13 +29,13 @@ FX application shell and navigation are implemented behind `fx.rms.shell.enabled
 
 ## Implemented scope
 
-- `RmsShellBoundary` / `RmsFxShell` / `RmsLegacyShellAdapter`  
-- Navigation registry + adapters (live routes only)  
-- Breadcrumbs, identity, environment, entry points (honest Search / My Work / Notifications)  
-- Mobile nav disclosure with focus trap  
-- Theme switcher (light / dark / high-contrast)  
-- Unit tests + Playwright matrix scaffolding  
-- Feature flag definitions seeded default-off  
+- `RmsShellBoundary` / `RmsFxShell` / `RmsLegacyShellAdapter`
+- Navigation registry + adapters (live routes only)
+- Breadcrumbs, identity, environment, entry points (honest Search / My Work / Notifications)
+- Mobile nav disclosure with focus trap
+- Theme switcher (light / dark / high-contrast)
+- Unit tests + Playwright matrix scaffolding
+- Feature flag definitions seeded default-off
 
 ## Route validation
 
@@ -47,12 +47,12 @@ Soft-auth preserved; nav uses product flags; backend authZ unchanged. See `16-pe
 
 ## Feature-flag validation
 
-| Case | Result |
-| --- | --- |
-| Default off → legacy | Pass (unit) |
-| Shell only | Pass |
-| Shell + nav | Pass |
-| Nav without shell | Rejected → legacy |
+| Case                    | Result            |
+| ----------------------- | ----------------- |
+| Default off → legacy    | Pass (unit)       |
+| Shell only              | Pass              |
+| Shell + nav             | Pass              |
+| Nav without shell       | Rejected → legacy |
 | Platform admin wildcard | Does not force FX |
 
 ## Accessibility results
@@ -73,12 +73,12 @@ Disable flags → legacy adapter. Unit-tested resolver; URL/session preserved by
 
 ## Defects
 
-| Severity | Count |
-| --- | --- |
-| P0 | 0 |
-| P1 | 0 |
-| P2 | 0 open migration blockers |
-| P3 | Screenshot package pending pilot (process) |
+| Severity | Count                                      |
+| -------- | ------------------------------------------ |
+| P0       | 0                                          |
+| P1       | 0                                          |
+| P2       | 0 open migration blockers                  |
+| P3       | Screenshot package pending pilot (process) |
 
 ## Risks
 
@@ -90,12 +90,12 @@ Updated in `22-risk-register.md` (R-S2-005/007/011 mitigated).
 
 ## Production changes
 
-| Area | Changed? |
-| --- | --- |
-| Visible default UX | **No** (flags off) |
-| NERIS / CAD / auth / APIs / DB schemas | **No** |
-| Seed feature definitions | Yes — default false only |
-| Code available behind flags | Yes |
+| Area                                   | Changed?                 |
+| -------------------------------------- | ------------------------ |
+| Visible default UX                     | **No** (flags off)       |
+| NERIS / CAD / auth / APIs / DB schemas | **No**                   |
+| Seed feature definitions               | Yes — default false only |
+| Code available behind flags            | Yes                      |
 
 ## Recommended next step
 

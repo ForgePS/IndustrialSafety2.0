@@ -37,9 +37,7 @@ export const forgeDocuments = pgTable(
     securityClassification: varchar("security_classification", { length: 40 })
       .notNull()
       .default("INTERNAL"),
-    malwareScanStatus: varchar("malware_scan_status", { length: 40 })
-      .notNull()
-      .default("PENDING"),
+    malwareScanStatus: varchar("malware_scan_status", { length: 40 }).notNull().default("PENDING"),
     malwareScanDetail: text("malware_scan_detail"),
     retentionRule: varchar("retention_rule", { length: 80 }).notNull().default("INCIDENT_DEFAULT"),
     uploadStatus: varchar("upload_status", { length: 40 }).notNull().default("INITIALIZED"),
@@ -507,9 +505,7 @@ export const nerisIncidentExposureSequences = pgTable(
     createdAt: createdAtColumn,
     updatedAt: updatedAtColumn,
   },
-  (table) => [
-    uniqueIndex("neris_incident_exposure_sequences_incident_uidx").on(table.incidentId),
-  ],
+  (table) => [uniqueIndex("neris_incident_exposure_sequences_incident_uidx").on(table.incidentId)],
 );
 
 /** Soft-typed casualty access audit (no restricted payload). */

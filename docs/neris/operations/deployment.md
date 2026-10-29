@@ -4,10 +4,10 @@ Static SPAs are deployed separately from the API ECS service so UI releases do n
 
 ## Infrastructure
 
-| App | CDK construct | Config flag | Bucket pattern |
-| --- | --- | --- | --- |
+| App             | CDK construct                                | Config flag                     | Bucket pattern                           |
+| --------------- | -------------------------------------------- | ------------------------------- | ---------------------------------------- |
 | Creator Console | `ForgeConsoleHosting` → `ForgeStaticHosting` | `features.enableConsoleHosting` | `forge-{env}-console-{account}-{region}` |
-| RMS Web | `ForgeRmsHosting` → `ForgeStaticHosting` | `features.enableRmsHosting` | `forge-{env}-rms-{account}-{region}` |
+| RMS Web         | `ForgeRmsHosting` → `ForgeStaticHosting`     | `features.enableRmsHosting`     | `forge-{env}-rms-{account}-{region}`     |
 
 Both use private S3 + CloudFront OAC, secure response headers, and SPA 403/404 → `/index.html` rewrites ([ADR-026](../../decisions/ADR-026-creator-console-hosting.md) pattern).
 
@@ -15,14 +15,14 @@ Stack: `ForgeFrontend` (`infrastructure/cdk/lib/stacks/frontend-stack.ts`).
 
 CloudFormation exports (when enabled):
 
-| Export | Purpose |
-| --- | --- |
-| `ForgeFrontend-ConsoleDomain` | Console CloudFront domain |
-| `ForgeFrontend-ConsoleBucket` | Console S3 bucket |
-| `ForgeFrontend-ConsoleDistributionId` | Cache invalidation |
-| `ForgeFrontend-RmsDomain` | RMS CloudFront domain |
-| `ForgeFrontend-RmsBucket` | RMS S3 bucket |
-| `ForgeFrontend-RmsDistributionId` | Cache invalidation |
+| Export                                | Purpose                   |
+| ------------------------------------- | ------------------------- |
+| `ForgeFrontend-ConsoleDomain`         | Console CloudFront domain |
+| `ForgeFrontend-ConsoleBucket`         | Console S3 bucket         |
+| `ForgeFrontend-ConsoleDistributionId` | Cache invalidation        |
+| `ForgeFrontend-RmsDomain`             | RMS CloudFront domain     |
+| `ForgeFrontend-RmsBucket`             | RMS S3 bucket             |
+| `ForgeFrontend-RmsDistributionId`     | Cache invalidation        |
 
 ## Deploy sequence (development)
 
@@ -34,13 +34,13 @@ CloudFormation exports (when enabled):
 
 `scripts/sync-static-site.mjs --app rms` passes these into the Next static export (unless already set in the shell):
 
-| Build env | Source export / fallback |
-| --- | --- |
-| `NEXT_PUBLIC_API_URL` | `ForgeCompute-ApiHttpsDomain` → `https://{domain}` |
-| `NEXT_PUBLIC_APP_URL` | `ForgeFrontend-RmsDomain` → `https://{domain}` |
-| `NEXT_PUBLIC_COGNITO_USER_POOL_ID` | `ForgeIdentity-UserPoolId` |
-| `NEXT_PUBLIC_COGNITO_CLIENT_ID` | `ForgeIdentity-RmsClientId` (planned) or `FORGE_RMS_COGNITO_CLIENT_ID` |
-| `NEXT_PUBLIC_COGNITO_DOMAIN` | `ForgeIdentity-CognitoDomain` (planned) or `FORGE_COGNITO_DOMAIN` |
+| Build env                          | Source export / fallback                                               |
+| ---------------------------------- | ---------------------------------------------------------------------- |
+| `NEXT_PUBLIC_API_URL`              | `ForgeCompute-ApiHttpsDomain` → `https://{domain}`                     |
+| `NEXT_PUBLIC_APP_URL`              | `ForgeFrontend-RmsDomain` → `https://{domain}`                         |
+| `NEXT_PUBLIC_COGNITO_USER_POOL_ID` | `ForgeIdentity-UserPoolId`                                             |
+| `NEXT_PUBLIC_COGNITO_CLIENT_ID`    | `ForgeIdentity-RmsClientId` (planned) or `FORGE_RMS_COGNITO_CLIENT_ID` |
+| `NEXT_PUBLIC_COGNITO_DOMAIN`       | `ForgeIdentity-CognitoDomain` (planned) or `FORGE_COGNITO_DOMAIN`      |
 
 Deployed builds must **not** set `NEXT_PUBLIC_ALLOW_DEV_PRINCIPAL`. Local dev may set `NEXT_PUBLIC_ALLOW_DEV_PRINCIPAL=true` plus optional `NEXT_PUBLIC_DEV_PRINCIPAL` for the dev-principal form.
 

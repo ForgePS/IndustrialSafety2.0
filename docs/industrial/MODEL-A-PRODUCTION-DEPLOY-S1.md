@@ -10,17 +10,20 @@
 **Industrial FE:** production S3 sync + CloudFront invalidation `IC3OCNP9BSNM8MXXNTCJ7JJNLQ`
 
 ## Smoke
-| Check | Result |
-|-------|--------|
-| `GET /health` (API) | 200 |
-| `GET https://industrial.forgepublicsafety.com/` | 200 |
-| Unauth `GET /api/v1/industrial/readiness` | 401 (route present) |
+
+| Check                                           | Result              |
+| ----------------------------------------------- | ------------------- |
+| `GET /health` (API)                             | 200                 |
+| `GET https://industrial.forgepublicsafety.com/` | 200                 |
+| Unauth `GET /api/v1/industrial/readiness`       | 401 (route present) |
 
 ## Scope completed
+
 1. platform-api image build/push + ECS roll to `:20`
 2. industrial-web static production sync
 3. Public smoke above
 
 ## Out of scope / next
+
 - Full authenticated UAT journeys (login as tenant user)
 - Messaging / seasonal DDL (still CONDITION from completion sprint)

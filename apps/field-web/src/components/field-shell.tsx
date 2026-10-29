@@ -222,10 +222,10 @@ function FieldShellBody({ children }: { children: ReactNode }) {
   }
 
   const activeTenant = me.tenants?.find((t) => t.tenantId === me.tenantId);
-  const tenantName =
-    activeTenant?.displayName || branding.tenantDisplayName || branding.brandLabel;
+  const tenantName = activeTenant?.displayName || branding.tenantDisplayName || branding.brandLabel;
   const tenantLogoUrl = (me.tenantId ? tenantBrandingLogoUrl : "") || branding.logoUrl;
-  const showOrgBar = pathname === "/" || pathname.startsWith("/tasks") || pathname.startsWith("/me");
+  const showOrgBar =
+    pathname === "/" || pathname.startsWith("/tasks") || pathname.startsWith("/me");
 
   return (
     <FieldOrgProvider tenantName={tenantName}>

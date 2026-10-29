@@ -96,8 +96,11 @@ export function PrintManagerAnalyticsPanel() {
 
       <div className="d-flex flex-wrap gap-2 align-items-end mb-3">
         <div>
-          <label className="form-label small mb-1">From</label>
+          <label className="form-label small mb-1" htmlFor="pm-analytics-from">
+            From
+          </label>
           <input
+            id="pm-analytics-from"
             type="datetime-local"
             className="form-control form-control-sm"
             value={from.slice(0, 16)}
@@ -105,8 +108,11 @@ export function PrintManagerAnalyticsPanel() {
           />
         </div>
         <div>
-          <label className="form-label small mb-1">To</label>
+          <label className="form-label small mb-1" htmlFor="pm-analytics-to">
+            To
+          </label>
           <input
+            id="pm-analytics-to"
             type="datetime-local"
             className="form-control form-control-sm"
             value={to.slice(0, 16)}
@@ -114,8 +120,11 @@ export function PrintManagerAnalyticsPanel() {
           />
         </div>
         <div>
-          <label className="form-label small mb-1">Module</label>
+          <label className="form-label small mb-1" htmlFor="pm-analytics-module">
+            Module
+          </label>
           <input
+            id="pm-analytics-module"
             type="text"
             className="form-control form-control-sm"
             placeholder="All modules"
@@ -182,9 +191,7 @@ export function PrintManagerAnalyticsPanel() {
               <div className="card border shadow-none">
                 <div className="card-body py-3">
                   <div className="text-muted small text-uppercase">Avg queue</div>
-                  <div className="fs-4 fw-semibold">
-                    {formatMs(summary.totals.averageQueueMs)}
-                  </div>
+                  <div className="fs-4 fw-semibold">{formatMs(summary.totals.averageQueueMs)}</div>
                 </div>
               </div>
             </div>
@@ -192,9 +199,7 @@ export function PrintManagerAnalyticsPanel() {
               <div className="card border shadow-none">
                 <div className="card-body py-3">
                   <div className="text-muted small text-uppercase">Avg print</div>
-                  <div className="fs-4 fw-semibold">
-                    {formatMs(summary.totals.averagePrintMs)}
-                  </div>
+                  <div className="fs-4 fw-semibold">{formatMs(summary.totals.averagePrintMs)}</div>
                 </div>
               </div>
             </div>
@@ -339,7 +344,10 @@ export function PrintManagerAnalyticsPanel() {
                             <td className="small">{formatAdminDate(f.createdAt)}</td>
                             <td>{f.printerName || "—"}</td>
                             <td className="font-monospace small">{f.errorCode || "—"}</td>
-                            <td className="small text-muted text-truncate" style={{ maxWidth: 180 }}>
+                            <td
+                              className="small text-muted text-truncate"
+                              style={{ maxWidth: 180 }}
+                            >
                               {f.errorMessage || "—"}
                             </td>
                           </tr>

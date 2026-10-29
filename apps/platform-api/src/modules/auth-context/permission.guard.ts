@@ -42,10 +42,8 @@ export class PermissionGuard implements CanActivate {
       throw new ForgeError("UNAUTHORIZED", "Authentication required");
     }
 
-    const resourceTenantId =
-      (request.params?.tenantId as string | undefined) ?? principal.tenantId;
-    const resourceOrganizationId =
-      (request.params?.organizationId as string | undefined) ?? null;
+    const resourceTenantId = (request.params?.tenantId as string | undefined) ?? principal.tenantId;
+    const resourceOrganizationId = (request.params?.organizationId as string | undefined) ?? null;
 
     const operational = await this.authContext.getTenantOperationalState(resourceTenantId);
     const permissionCodes =
@@ -69,8 +67,7 @@ export class PermissionGuard implements CanActivate {
         tenantOperationalState: operational,
         roleEffects: [{ effect: "ALLOW", organizationId: null }],
         ...(meta.requiresEntitlement ? { requiresEntitlement: meta.requiresEntitlement } : {}),
-        allowWhenSuspended:
-          meta.allowWhenSuspended ?? permissionCode.startsWith("platform.tenant"),
+        allowWhenSuspended: meta.allowWhenSuspended ?? permissionCode.startsWith("platform.tenant"),
       });
       if (decision.allowed) {
         return true;

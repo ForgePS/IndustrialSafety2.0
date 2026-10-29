@@ -66,7 +66,7 @@ export const FORM_300A = {
   subtitle: "Summary of Work-Related Injuries and Illnesses",
   instructions: [
     "All establishments covered by Part 1904 must complete this Summary page, even if no work-related injuries or illnesses occurred during the year. Remember to review the Log to verify that the entries are complete and accurate before completing this summary.",
-    "Using the Log, count the individual entries you made for each category. Then write the totals below, making sure you've added the entries from every page of the Log. If you had no cases, write \"0.\"",
+    'Using the Log, count the individual entries you made for each category. Then write the totals below, making sure you\'ve added the entries from every page of the Log. If you had no cases, write "0."',
     "Employees, former employees, and their representatives have the right to review the OSHA Form 300 in its entirety. They also have limited access to the OSHA Form 301 or its equivalent. See 29 CFR Part 1904.35, in OSHA's recordkeeping rule, for further details on the access provisions for these forms.",
   ],
   numberOfCases: "Number of Cases",
@@ -75,10 +75,10 @@ export const FORM_300A = {
   totalNumberOf: "(M)",
   establishmentInformation: "Establishment information",
   employmentInformation: "Employment information",
-  employmentNote: "(If you don't have these figures, see the Worksheet on the next page to estimate.)",
+  employmentNote:
+    "(If you don't have these figures, see the Worksheet on the next page to estimate.)",
   signHere: "Sign here",
-  falsifyWarning:
-    "Knowingly falsifying this document may result in a fine.",
+  falsifyWarning: "Knowingly falsifying this document may result in a fine.",
   certification:
     "I certify that I have examined this document and that to the best of my knowledge the entries are true, accurate, and complete.",
   postNotice:
@@ -145,16 +145,16 @@ export const FORM_301 = {
     timeCannotBeDetermined: "Check if time cannot be determined",
     activityBefore: "14) What was the employee doing just before the incident occurred?",
     activityBeforeHelp:
-      "Describe the activity, as well as the tools, equipment, or material the employee was using. Be specific. Examples: \"climbing a ladder while carrying roofing materials\"; \"spraying chlorine from hand sprayer\"; \"daily computer key-entry.\"",
+      'Describe the activity, as well as the tools, equipment, or material the employee was using. Be specific. Examples: "climbing a ladder while carrying roofing materials"; "spraying chlorine from hand sprayer"; "daily computer key-entry."',
     whatHappened: "15) What happened?",
     whatHappenedHelp:
-      "Tell us how the injury occurred. Examples: \"When ladder slipped on wet floor, worker fell 20 feet\"; \"Worker was sprayed with chlorine when gasket broke during replacement\"; \"Worker developed soreness in wrist over time.\"",
+      'Tell us how the injury occurred. Examples: "When ladder slipped on wet floor, worker fell 20 feet"; "Worker was sprayed with chlorine when gasket broke during replacement"; "Worker developed soreness in wrist over time."',
     injuryOrIllness: "16) What was the injury or illness?",
     injuryOrIllnessHelp:
-      "Tell us the part of the body that was affected and how it was affected; be more specific than \"hurt,\" \"pain,\" or sore.\" Examples: \"strained back\"; \"chemical burn, hand\"; \"carpal tunnel syndrome.\"",
+      'Tell us the part of the body that was affected and how it was affected; be more specific than "hurt," "pain," or sore." Examples: "strained back"; "chemical burn, hand"; "carpal tunnel syndrome."',
     objectOrSubstance: "17) What object or substance directly harmed the employee?",
     objectOrSubstanceHelp:
-      "Examples: \"concrete floor\"; \"chlorine\"; \"radial arm saw.\" If this question does not apply to the incident, leave it blank.",
+      'Examples: "concrete floor"; "chlorine"; "radial arm saw." If this question does not apply to the incident, leave it blank.',
     dateOfDeath: "18) If the employee died, when did death occur? Date of death",
   },
   publicBurden:

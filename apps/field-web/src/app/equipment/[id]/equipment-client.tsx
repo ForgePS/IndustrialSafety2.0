@@ -155,8 +155,7 @@ function EquipmentInner() {
       : kind === "forklift" || forklift
         ? "Forklift"
         : "Equipment";
-  const targetType =
-    kind === "vehicle" || kind === "forklift" || vehicle ? "VEHICLE" : "EQUIPMENT";
+  const targetType = kind === "vehicle" || kind === "forklift" || vehicle ? "VEHICLE" : "EQUIPMENT";
 
   if (!id || id === "placeholder") {
     return (
@@ -169,7 +168,9 @@ function EquipmentInner() {
 
   if (loading) return <LoadingState label="Loading profile…" />;
   if (error) {
-    return <ErrorState title="Profile unavailable" message={error} onRetry={() => router.refresh()} />;
+    return (
+      <ErrorState title="Profile unavailable" message={error} onRetry={() => router.refresh()} />
+    );
   }
 
   return (
@@ -251,9 +252,7 @@ function EquipmentInner() {
               name: title,
               id: equipment.equipmentNumber || id,
               status: String(equipment.status ?? ""),
-              description: String(
-                (equipment as { description?: string | null }).description ?? "",
-              ),
+              description: String((equipment as { description?: string | null }).description ?? ""),
               type: equipment.equipmentType || "",
             }}
           />
@@ -331,9 +330,7 @@ function EquipmentInner() {
           type="button"
           className="ff-action-tile"
           onClick={() =>
-            router.push(
-              `/equipment/${encodeURIComponent(id)}/?kind=${kind}&tab=history`,
-            )
+            router.push(`/equipment/${encodeURIComponent(id)}/?kind=${kind}&tab=history`)
           }
         >
           View history

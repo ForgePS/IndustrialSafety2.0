@@ -91,7 +91,8 @@ try {
   for (const row of osha) {
     const p = unwrap(row.source_payload);
     if (p.awsIncidentId) linked.add(String(p.awsIncidentId));
-    if (p.incidentId && /^[0-9a-f-]{36}$/i.test(String(p.incidentId))) linked.add(String(p.incidentId));
+    if (p.incidentId && /^[0-9a-f-]{36}$/i.test(String(p.incidentId)))
+      linked.add(String(p.incidentId));
   }
 
   let openable = 0;

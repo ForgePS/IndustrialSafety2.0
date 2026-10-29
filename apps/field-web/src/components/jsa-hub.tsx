@@ -57,7 +57,12 @@ export function JsaHub() {
           </h1>
           <p className="ff-meta">Acknowledge assigned analyses before work</p>
         </div>
-        <button type="button" className="ff-icon-btn" aria-label="Refresh" onClick={() => void refresh()}>
+        <button
+          type="button"
+          className="ff-icon-btn"
+          aria-label="Refresh"
+          onClick={() => void refresh()}
+        >
           ↻
         </button>
       </header>
@@ -66,7 +71,10 @@ export function JsaHub() {
       {error ? <ErrorState message={error} onRetry={() => void refresh()} /> : null}
 
       {!loading && !error && rows.length === 0 ? (
-        <EmptyState title="No JSAs yet" message="Assigned JSAs from Forge Industrial Safety will appear here." />
+        <EmptyState
+          title="No JSAs yet"
+          message="Assigned JSAs from Forge Industrial Safety will appear here."
+        />
       ) : null}
 
       {!loading && !error && rows.length > 0 ? (

@@ -60,7 +60,10 @@ export class IndustrialTasksExtrasController {
     @Body() body: Record<string, unknown>,
     @Req() req: RequestWithIds,
   ) {
-    return ok(await this.extras.updateSubtask(principal, id, subId, body ?? {}), getRequestIds(req));
+    return ok(
+      await this.extras.updateSubtask(principal, id, subId, body ?? {}),
+      getRequestIds(req),
+    );
   }
 
   @Post(":id/subtasks/:subId/archive")

@@ -4,12 +4,12 @@
 
 ## Automated
 
-| Suite | Coverage |
-| --- | --- |
-| `workspace-flags.test.ts` | Default off, admin wildcard ignore, env/session overrides |
-| `FxWorkspaceRegistry.test.ts` | Register, duplicate guard, tab permission filter |
-| `incident-adapters.test.ts` | Summary/timeline/related from existing fields only |
-| `fx-s2-regression.scaffold.spec.ts` | Workspace flag matrix scaffold |
+| Suite                               | Coverage                                                  |
+| ----------------------------------- | --------------------------------------------------------- |
+| `workspace-flags.test.ts`           | Default off, admin wildcard ignore, env/session overrides |
+| `FxWorkspaceRegistry.test.ts`       | Register, duplicate guard, tab permission filter          |
+| `incident-adapters.test.ts`         | Summary/timeline/related from existing fields only        |
+| `fx-s2-regression.scaffold.spec.ts` | Workspace flag matrix scaffold                            |
 
 ## Manual
 

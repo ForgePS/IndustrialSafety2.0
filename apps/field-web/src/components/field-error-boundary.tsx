@@ -29,8 +29,8 @@ export class FieldErrorBoundary extends Component<Props, State> {
       <div className="ff-gate-message" role="alert">
         <h1 className="ff-page-title">Something went wrong</h1>
         <p className="ff-page-body">
-          {FIELD_PRODUCT_NAME} hit an unexpected error. Your offline queue is still on this
-          device — reload to continue.
+          {FIELD_PRODUCT_NAME} hit an unexpected error. Your offline queue is still on this device —
+          reload to continue.
         </p>
         <p className="ff-hint ff-hint--left">{this.state.error.message || "Unknown error"}</p>
         <button

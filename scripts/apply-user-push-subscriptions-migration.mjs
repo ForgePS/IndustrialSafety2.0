@@ -38,9 +38,11 @@ const defaultLocalSql = path.join(
 const MIG = {
   tag: "0094_user_push_subscriptions_s1",
   when: 1790179600000,
-  path: process.env.SQL_0094_PATH || (existsSync("/tmp/0094_user_push_subscriptions_s1.sql")
-    ? "/tmp/0094_user_push_subscriptions_s1.sql"
-    : defaultLocalSql),
+  path:
+    process.env.SQL_0094_PATH ||
+    (existsSync("/tmp/0094_user_push_subscriptions_s1.sql")
+      ? "/tmp/0094_user_push_subscriptions_s1.sql"
+      : defaultLocalSql),
   probeTable: "user_push_subscriptions",
 };
 
@@ -69,7 +71,9 @@ async function resolveDatabaseUrl() {
 
 function loadPostgres() {
   if (existsSync("/app/apps/platform-api/node_modules/@forge/database/package.json")) {
-    const dbRequire = createRequire("/app/apps/platform-api/node_modules/@forge/database/package.json");
+    const dbRequire = createRequire(
+      "/app/apps/platform-api/node_modules/@forge/database/package.json",
+    );
     return import(pathToFileURL(dbRequire.resolve("postgres")).href).then((m) => m.default ?? m);
   }
   const dbRequire = createRequire(
@@ -79,7 +83,9 @@ function loadPostgres() {
 }
 
 function hashSql(content) {
-  return createHash("sha256").update(String(content).replace(/\r\n/g, "\n").trim(), "utf8").digest("hex");
+  return createHash("sha256")
+    .update(String(content).replace(/\r\n/g, "\n").trim(), "utf8")
+    .digest("hex");
 }
 
 const url = await resolveDatabaseUrl();

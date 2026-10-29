@@ -28,7 +28,10 @@ const FROM_ADDRESS = "noreply@forgepublicsafety.com";
 
 const registerOnly = process.argv.includes("--register-only");
 const skipBuild = process.argv.includes("--skip-build");
-const stamp = new Date().toISOString().replace(/[-:TZ.]/g, "").slice(0, 14);
+const stamp = new Date()
+  .toISOString()
+  .replace(/[-:TZ.]/g, "")
+  .slice(0, 14);
 const tag = `resend-email-${stamp}`;
 
 function sh(cmd, opts = {}) {

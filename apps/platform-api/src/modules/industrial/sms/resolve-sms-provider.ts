@@ -6,10 +6,7 @@ import type {
   EmergencyAlertSmsProviderName,
   SmsMessageType,
 } from "./emergency-alert-sms.types.js";
-import {
-  SMS_PROVIDER_AWS,
-  SMS_PROVIDER_STUB,
-} from "./emergency-alert-sms.types.js";
+import { SMS_PROVIDER_AWS, SMS_PROVIDER_STUB } from "./emergency-alert-sms.types.js";
 import { createStubSmsProvider } from "./stub-sms.provider.js";
 
 type SettingsRow = {
@@ -99,9 +96,7 @@ export function resolveEmergencyAlertSmsConfig(
       : {};
 
   const providerRaw =
-    asTrimmed(settings?.smsProvider) ||
-    asTrimmed(env.SMS_DEFAULT_PROVIDER) ||
-    SMS_PROVIDER_STUB;
+    asTrimmed(settings?.smsProvider) || asTrimmed(env.SMS_DEFAULT_PROVIDER) || SMS_PROVIDER_STUB;
   const provider = providerRaw.toUpperCase() as EmergencyAlertSmsProviderName;
 
   const originationIdentity =
@@ -111,9 +106,7 @@ export function resolveEmergencyAlertSmsConfig(
     null;
 
   const configurationSetName =
-    asTrimmed(bag.configurationSetName) ||
-    asTrimmed(env.SMS_CONFIGURATION_SET_NAME) ||
-    null;
+    asTrimmed(bag.configurationSetName) || asTrimmed(env.SMS_CONFIGURATION_SET_NAME) || null;
 
   const region =
     asTrimmed(bag.region) || asTrimmed(env.SMS_REGION) || env.AWS_REGION || "us-east-1";
@@ -134,9 +127,7 @@ export function resolveEmergencyAlertSmsConfig(
     dryRun: asBool(bag.dryRun, asBool(env.SMS_DRY_RUN, false)),
     maxPrice: asTrimmed(bag.maxPrice) || asTrimmed(env.SMS_MAX_PRICE) || null,
     protectConfigurationId:
-      asTrimmed(bag.protectConfigurationId) ||
-      asTrimmed(env.SMS_PROTECT_CONFIGURATION_ID) ||
-      null,
+      asTrimmed(bag.protectConfigurationId) || asTrimmed(env.SMS_PROTECT_CONFIGURATION_ID) || null,
     concurrency,
   };
 }

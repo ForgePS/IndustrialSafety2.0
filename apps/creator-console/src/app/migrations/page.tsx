@@ -61,7 +61,10 @@ function MigrationsInner() {
       validation: countBy(rows, (r) => r.status === "VALIDATION_REQUIRED"),
       failed: countBy(rows, (r) => r.status === "FAILED"),
       completed: countBy(rows, (r) => r.status === "COMPLETE"),
-      cutoverPending: countBy(rows, (r) => r.status === "VALIDATION_REQUIRED" || r.status === "READY"),
+      cutoverPending: countBy(
+        rows,
+        (r) => r.status === "VALIDATION_REQUIRED" || r.status === "READY",
+      ),
     };
   }, [loading, rows]);
 
@@ -103,7 +106,9 @@ function MigrationsInner() {
             id: "tenant",
             header: "Customer",
             cell: (row) => (
-              <Link href={`/migrations/detail/?id=${encodeURIComponent(row.id)}`}>{row.tenantDisplayName}</Link>
+              <Link href={`/migrations/detail/?id=${encodeURIComponent(row.id)}`}>
+                {row.tenantDisplayName}
+              </Link>
             ),
           },
           {

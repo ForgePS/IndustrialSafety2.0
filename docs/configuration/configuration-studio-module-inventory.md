@@ -7,8 +7,8 @@
 
 Classification: all modules remain **OPERATIONAL_GENERIC_EDITOR** (JSON lifecycle editor + live API). No OPERATIONAL_RICH_BUILDER. No PLACEHOLDER. No mock-only data observed.
 
-| # | Module | Namespace | Live lifecycle* | Classification |
-| --- | --- | --- | --- | --- |
+| #    | Module             | Namespace         | Live lifecycle*                                                                       | Classification             |
+| ---- | ------------------ | ----------------- | ------------------------------------------------------------------------------------- | -------------------------- |
 | 1–27 | All Studio modules | all 27 namespaces | load/create/update/publish/compare/schedule/activate/rollback/archive/version history | OPERATIONAL_GENERIC_EDITOR |
 
 \*Permissions exercised via Forge Creator principal; audit via API `audit_events` writes.

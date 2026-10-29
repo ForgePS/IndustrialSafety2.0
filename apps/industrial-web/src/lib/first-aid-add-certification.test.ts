@@ -19,15 +19,13 @@ describe("validateFirstAidAddCertification", () => {
   });
 
   it("requires a cert field", () => {
-    expect(
-      validateFirstAidAddCertification({ ...base, tracksFirstAid: true }),
-    ).toMatch(/Add a CPR/);
+    expect(validateFirstAidAddCertification({ ...base, tracksFirstAid: true })).toMatch(
+      /Add a CPR/,
+    );
   });
 
   it("accepts expiry-only or copy-only", () => {
-    expect(
-      validateFirstAidAddCertification({ ...base, cprExpiresDate: "2027-01-15" }),
-    ).toBeNull();
+    expect(validateFirstAidAddCertification({ ...base, cprExpiresDate: "2027-01-15" })).toBeNull();
     expect(
       validateFirstAidAddCertification({
         ...base,
@@ -53,4 +51,3 @@ describe("buildFirstAidAssignPayload", () => {
     });
   });
 });
-

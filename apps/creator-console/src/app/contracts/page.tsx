@@ -39,10 +39,10 @@ function ContractsInner() {
   const [submitting, setSubmitting] = useState(false);
 
   const [createName, setCreateName] = useState("Enterprise agreement");
-  const [createStatus, setCreateStatus] =
-    useState<(typeof CONTRACT_STATUSES)[number]>("ACTIVE");
-  const [createBillingType, setCreateBillingType] =
-    useState<(typeof BILLING_TYPES)[number]>("MANUAL_ENTERPRISE_CONTRACT");
+  const [createStatus, setCreateStatus] = useState<(typeof CONTRACT_STATUSES)[number]>("ACTIVE");
+  const [createBillingType, setCreateBillingType] = useState<(typeof BILLING_TYPES)[number]>(
+    "MANUAL_ENTERPRISE_CONTRACT",
+  );
   const [createStartsOn, setCreateStartsOn] = useState("");
   const [createEndsOn, setCreateEndsOn] = useState("");
   const [createRenewalOn, setCreateRenewalOn] = useState("");
@@ -300,9 +300,7 @@ function ContractsInner() {
                   <td>{row.endsOn ?? "—"}</td>
                   <td>{row.renewalOn ?? "—"}</td>
                   <td>
-                    {row.setupFeeCents != null
-                      ? `$${(row.setupFeeCents / 100).toFixed(2)}`
-                      : "—"}
+                    {row.setupFeeCents != null ? `$${(row.setupFeeCents / 100).toFixed(2)}` : "—"}
                   </td>
                   <td>
                     {canManage ? (
@@ -356,9 +354,7 @@ function ContractsInner() {
               <select
                 id="edit-contract-type"
                 value={editContract.billingType}
-                onChange={(e) =>
-                  setEditContract({ ...editContract, billingType: e.target.value })
-                }
+                onChange={(e) => setEditContract({ ...editContract, billingType: e.target.value })}
               >
                 {BILLING_TYPES.map((value) => (
                   <option key={value} value={value}>

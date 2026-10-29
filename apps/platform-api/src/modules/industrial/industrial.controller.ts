@@ -128,9 +128,7 @@ export class IndustrialController {
     }
     if (body.siteId !== undefined) {
       input.siteId =
-        typeof body.siteId === "string" && body.siteId.trim() !== ""
-          ? body.siteId.trim()
-          : null;
+        typeof body.siteId === "string" && body.siteId.trim() !== "" ? body.siteId.trim() : null;
     }
     if (body.divisionName !== undefined) {
       input.divisionName =
@@ -277,10 +275,7 @@ export class IndustrialController {
     @Req() req: RequestWithIds,
   ) {
     const kind = String(body.kind ?? "") as
-      | "division"
-      | "department"
-      | "position"
-      | "employment_type";
+      "division" | "department" | "position" | "employment_type";
     if (
       kind !== "division" &&
       kind !== "department" &&
@@ -330,11 +325,7 @@ export class IndustrialController {
           : null
         : undefined;
     if (body.archive === true || body.remove === true) {
-      const data = await this.industrial.removePersonnelDivision(
-        tenantId,
-        fromName,
-        fromSiteId,
-      );
+      const data = await this.industrial.removePersonnelDivision(tenantId, fromName, fromSiteId);
       return ok(data, getRequestIds(req));
     }
     const nextSiteId =

@@ -22,9 +22,7 @@ const ACCOUNT = "511343547817";
 const TMP = path.join(process.cwd(), `.forge-prod-console-cf-${Date.now()}.json`);
 
 function awsJson(args) {
-  return JSON.parse(
-    execFileSync("aws", [...args, "--output", "json"], { encoding: "utf8" }),
-  );
+  return JSON.parse(execFileSync("aws", [...args, "--output", "json"], { encoding: "utf8" }));
 }
 
 function awsText(args) {

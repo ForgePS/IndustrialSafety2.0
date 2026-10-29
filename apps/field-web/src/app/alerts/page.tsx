@@ -75,10 +75,7 @@ export default function AlertsPage() {
     [alerts, locationId],
   );
 
-  const unreadNotes = useMemo(
-    () => notifications.filter((n) => !n.readAt),
-    [notifications],
-  );
+  const unreadNotes = useMemo(() => notifications.filter((n) => !n.readAt), [notifications]);
 
   const notificationGroups = useMemo(
     () =>
@@ -138,9 +135,7 @@ export default function AlertsPage() {
                 type="button"
                 className="ff-task-card"
                 onClick={() =>
-                  router.push(
-                    `/more/emergency/?id=${encodeURIComponent(alert.id)}&kind=alert`,
-                  )
+                  router.push(`/more/emergency/?id=${encodeURIComponent(alert.id)}&kind=alert`)
                 }
               >
                 <div className="ff-task-card-body">
@@ -193,7 +188,11 @@ export default function AlertsPage() {
             <div className="ff-alerts-groups">
               {notificationGroups.map((group) =>
                 group.isPerson ? (
-                  <div key={group.key} className="ff-alerts-thread" aria-label={`Messages from ${group.label}`}>
+                  <div
+                    key={group.key}
+                    className="ff-alerts-thread"
+                    aria-label={`Messages from ${group.label}`}
+                  >
                     {group.items.map((note) => {
                       const body = fieldNotificationCardTitle(note, { underPersonHeader: true });
                       const time = formatAlertTime(note.createdAt);
@@ -260,11 +259,11 @@ export default function AlertsPage() {
                             {note.readAt ? "Read" : "Unread"}
                             {note.priority ? ` · ${note.priority}` : ""}
                           </span>
-                          <span className="ff-task-title">
-                            {fieldNotificationCardTitle(note)}
-                          </span>
+                          <span className="ff-task-title">{fieldNotificationCardTitle(note)}</span>
                           <span className="ff-meta">
-                            {[note.body, formatAlertTime(note.createdAt)].filter(Boolean).join(" · ")}
+                            {[note.body, formatAlertTime(note.createdAt)]
+                              .filter(Boolean)
+                              .join(" · ")}
                           </span>
                         </div>
                       </button>

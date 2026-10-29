@@ -8,13 +8,7 @@ import styles from "../app/page.module.css";
 
 const SCHEMA_BROWSER_FLAG = "rms.neris.schema_browser.enabled";
 
-export function NerisSchemaGate({
-  title,
-  children,
-}: {
-  title: string;
-  children: ReactNode;
-}) {
+export function NerisSchemaGate({ title, children }: { title: string; children: ReactNode }) {
   const { hasPermission, me } = useAuth();
   const canRead = hasPermission("platform.neris.schema.read");
   const isPlatformAdmin = Boolean(me?.isPlatformAdmin);
@@ -73,8 +67,8 @@ export function NerisSchemaGate({
           {flagError ? ` ${flagError}` : ""}
         </p>
         <p>
-          Platform administrators can enable the flag under Feature flags, or sign in as a
-          creator principal.
+          Platform administrators can enable the flag under Feature flags, or sign in as a creator
+          principal.
         </p>
       </section>
     );
@@ -116,7 +110,14 @@ export function NerisPageShell({
   children: ReactNode;
 }) {
   return (
-    <Suspense fallback={<section className={styles.page}><h1>{title}</h1><p>Loading…</p></section>}>
+    <Suspense
+      fallback={
+        <section className={styles.page}>
+          <h1>{title}</h1>
+          <p>Loading…</p>
+        </section>
+      }
+    >
       <NerisSchemaGate title={title}>
         <section className={styles.page}>
           <h1>{title}</h1>

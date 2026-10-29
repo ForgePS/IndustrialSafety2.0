@@ -20,10 +20,7 @@ export function getCompanionApi(): CompanionPreloadApi {
   return api;
 }
 
-export function publishStatus(
-  status: BluetoothStatus,
-  printer?: PrinterInfoPayload | null
-): void {
+export function publishStatus(status: BluetoothStatus, printer?: PrinterInfoPayload | null): void {
   const api = tryGetCompanionApi();
   if (!api) return;
   api.reportStatus(status, printer);

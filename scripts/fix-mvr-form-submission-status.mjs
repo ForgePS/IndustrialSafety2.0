@@ -25,11 +25,8 @@ const mvrMod = await import(
   pathToFileURL("/app/apps/platform-api/dist/modules/industrial/producers-mvr-policy.js").href
 );
 
-const {
-  FORM_STATUS_PENDING_SIGNATURE,
-  hasDeferredSignatoryFields,
-  resolveFormSubmissionStatus,
-} = signatoryMod;
+const { FORM_STATUS_PENDING_SIGNATURE, hasDeferredSignatoryFields, resolveFormSubmissionStatus } =
+  signatoryMod;
 const { extractFormDefinitionFields, resolveFormAnswers } = formPrintMod;
 const { isProducersMvrConsentForm } = mvrMod;
 

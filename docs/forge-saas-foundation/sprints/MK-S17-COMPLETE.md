@@ -28,13 +28,13 @@ Hardened Creator Console and Tenant Admin against stale tenant paint races, dupl
 
 ## Verification
 
-| Check | Result |
-| --- | --- |
-| platform-api typecheck | PASS |
-| tenant-admin typecheck | PASS |
-| creator-console typecheck | PASS |
+| Check                      | Result   |
+| -------------------------- | -------- |
+| platform-api typecheck     | PASS     |
+| tenant-admin typecheck     | PASS     |
+| creator-console typecheck  | PASS     |
 | web-kit tenant-scoped unit | 4 passed |
-| Production operations | NONE |
+| Production operations      | NONE     |
 
 ## Next sprint
 

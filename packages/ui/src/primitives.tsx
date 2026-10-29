@@ -1,4 +1,10 @@
-import type { ButtonHTMLAttributes, InputHTMLAttributes, ReactNode, SelectHTMLAttributes, TextareaHTMLAttributes } from "react";
+import type {
+  ButtonHTMLAttributes,
+  InputHTMLAttributes,
+  ReactNode,
+  SelectHTMLAttributes,
+  TextareaHTMLAttributes,
+} from "react";
 
 export function Button({
   children,
@@ -18,7 +24,11 @@ export function Button({
           ? "forge-btn forge-btn--outline"
           : "forge-btn";
   return (
-    <button type="button" className={[variantClass, className].filter(Boolean).join(" ")} {...props}>
+    <button
+      type="button"
+      className={[variantClass, className].filter(Boolean).join(" ")}
+      {...props}
+    >
       {children}
     </button>
   );
@@ -85,14 +95,13 @@ export function Checkbox({
   id: string;
 }) {
   return (
-    <label
-      htmlFor={id}
-      className={["forge-checkbox-row", className].filter(Boolean).join(" ")}
-    >
+    <label htmlFor={id} className={["forge-checkbox-row", className].filter(Boolean).join(" ")}>
       <input id={id} type="checkbox" {...props} />
       <span className="forge-checkbox-row__body">
         <span className="forge-checkbox-row__label">{label}</span>
-        {description ? <span className="forge-checkbox-row__description">{description}</span> : null}
+        {description ? (
+          <span className="forge-checkbox-row__description">{description}</span>
+        ) : null}
       </span>
     </label>
   );
@@ -262,5 +271,7 @@ export function ForgeSkeleton({
   height?: string;
   width?: string;
 }) {
-  return <span className="forge-skeleton" style={{ display: "block", height, width }} aria-hidden />;
+  return (
+    <span className="forge-skeleton" style={{ display: "block", height, width }} aria-hidden />
+  );
 }

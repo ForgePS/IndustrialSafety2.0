@@ -119,8 +119,7 @@ export class ForgeStaticHosting extends Construct {
         customHeaders: [
           {
             header: "Permissions-Policy",
-            value:
-              props.permissionsPolicy ?? "camera=(), microphone=(), geolocation=()",
+            value: props.permissionsPolicy ?? "camera=(), microphone=(), geolocation=()",
             override: true,
           },
           {

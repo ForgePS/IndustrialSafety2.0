@@ -23,8 +23,7 @@ const IMPORTS_BUCKET =
 const LOG_GROUP = process.env.FORGE_API_LOG_GROUP || "/forge/production/platform-api";
 
 const JSON_LOCAL =
-  process.env.SAFETY_INCIDENTS_JSON_LOCAL ||
-  path.resolve(".tmp-xlsx/safety-incidents.json");
+  process.env.SAFETY_INCIDENTS_JSON_LOCAL || path.resolve(".tmp-xlsx/safety-incidents.json");
 const SCRIPT_LOCAL = path.resolve("scripts/seed-safety-incidents-detail.mjs");
 
 const prefix = `seed/safety-incidents-detail/${new Date().toISOString().replace(/[:.]/g, "-")}`;

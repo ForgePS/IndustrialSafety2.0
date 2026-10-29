@@ -4,7 +4,8 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { ApiConflictError, ApiError } from "@forge/web-kit";
 import styles from "../app/page.module.css";
 
-export type AutosaveStatus = "idle" | "dirty" | "saving" | "saved" | "error" | "offline" | "conflict";
+export type AutosaveStatus =
+  "idle" | "dirty" | "saving" | "saved" | "error" | "offline" | "conflict";
 
 const DEFAULT_DELAY_MS = 2000;
 const DEFAULT_MAX_WAIT_MS = 10000;
@@ -217,7 +218,7 @@ export function AutosaveIndicator({
             ? "Offline — changes queued"
             : status === "conflict"
               ? "Save conflict"
-              : error ?? "Save failed";
+              : (error ?? "Save failed");
 
   return (
     <span className={className} aria-live="polite">

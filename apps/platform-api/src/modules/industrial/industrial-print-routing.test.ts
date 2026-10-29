@@ -28,7 +28,10 @@ describe("print routing helpers", () => {
       }),
     ).toBe(false);
     expect(
-      routingRuleMatches({ ...rule, enabled: false }, { locationId: "loc-1", module: "LOCKOUT_TAGOUT" }),
+      routingRuleMatches(
+        { ...rule, enabled: false },
+        { locationId: "loc-1", module: "LOCKOUT_TAGOUT" },
+      ),
     ).toBe(false);
   });
 

@@ -24,20 +24,10 @@ function awsJson(args) {
   return JSON.parse(out);
 }
 
-const current = awsJson([
-  "cloudfront",
-  "get-response-headers-policy",
-  "--id",
-  POLICY_ID,
-]);
+const current = awsJson(["cloudfront", "get-response-headers-policy", "--id", POLICY_ID]);
 const etag = current.ETag;
 const cfg = current.ResponseHeadersPolicy.ResponseHeadersPolicyConfig;
-const items = [
-  ...new Set([
-    ...(cfg.CorsConfig.AccessControlAllowOrigins.Items ?? []),
-    ...EXTRA,
-  ]),
-];
+const items = [...new Set([...(cfg.CorsConfig.AccessControlAllowOrigins.Items ?? []), ...EXTRA])];
 cfg.CorsConfig.AccessControlAllowOrigins.Items = items;
 cfg.CorsConfig.AccessControlAllowOrigins.Quantity = items.length;
 

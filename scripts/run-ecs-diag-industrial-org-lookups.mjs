@@ -98,4 +98,3 @@ try {
 console.log(logs);
 console.log(JSON.stringify({ taskArn, exitCode }, null, 2));
 process.exit(exitCode === 0 ? 0 : 1);
-

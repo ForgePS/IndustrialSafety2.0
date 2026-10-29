@@ -70,7 +70,10 @@ async function main() {
     report.beforeOverride = overrideBefore ?? null;
 
     if (!APPLY) {
-      report.actions.push({ step: "dry_run", action: "would_set_default_and_tenant_override_false" });
+      report.actions.push({
+        step: "dry_run",
+        action: "would_set_default_and_tenant_override_false",
+      });
       console.log(JSON.stringify(report, null, 2));
       return;
     }

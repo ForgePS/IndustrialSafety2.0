@@ -43,26 +43,12 @@ for (const role of roles) {
 
 const regs = execFileSync(
   "aws",
-  [
-    "pinpoint-sms-voice-v2",
-    "describe-registrations",
-    "--region",
-    "us-east-1",
-    "--output",
-    "json",
-  ],
+  ["pinpoint-sms-voice-v2", "describe-registrations", "--region", "us-east-1", "--output", "json"],
   { encoding: "utf8" },
 );
 const phones = execFileSync(
   "aws",
-  [
-    "pinpoint-sms-voice-v2",
-    "describe-phone-numbers",
-    "--region",
-    "us-east-1",
-    "--output",
-    "json",
-  ],
+  ["pinpoint-sms-voice-v2", "describe-phone-numbers", "--region", "us-east-1", "--output", "json"],
   { encoding: "utf8" },
 );
 console.log("registrations", regs.trim());

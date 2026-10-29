@@ -65,23 +65,6 @@ const TABS = [
   { id: "contacts" as const, label: "Dept contacts" },
 ];
 
-function fileToDataUrl(file: File): Promise<InspectionPhoto> {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onerror = () => reject(new Error("Failed to read photo"));
-    reader.onload = () => {
-      const dataUrl = String(reader.result ?? "");
-      resolve({
-        id: `p-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
-        fileName: file.name || "photo.jpg",
-        contentType: file.type || "image/jpeg",
-        dataUrl,
-      });
-    };
-    reader.readAsDataURL(file);
-  });
-}
-
 async function compressImageFile(file: File): Promise<InspectionPhoto> {
   const dataUrl = await compressImageToDataUrl(file, DEFAULT_MAX_DATA_URL_LENGTH);
   return {
@@ -124,7 +107,13 @@ export function InspectionsWorkspace({ moduleName }: { moduleName: string }) {
     [me?.permissions],
   );
   useEffect(() => {
-    setTab((current) => ensureActiveModuleTab(current, visibleTabs.map((t) => t.id), "list"));
+    setTab((current) =>
+      ensureActiveModuleTab(
+        current,
+        visibleTabs.map((t) => t.id),
+        "list",
+      ),
+    );
   }, [visibleTabs]);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
@@ -182,10 +171,12 @@ export function InspectionsWorkspace({ moduleName }: { moduleName: string }) {
     const data = await apiGet<{ items?: InspectionRow[] }>("/api/v1/industrial/inspections", {
       query: { page: "1", pageSize: "100" },
     });
-    setRows((data.items ?? []).filter((row) => {
-      const payload = (row.sourcePayload as Record<string, unknown> | undefined) ?? row;
-      return payload.isTemplate !== true && row.inspectionType !== "TEMPLATE";
-    }));
+    setRows(
+      (data.items ?? []).filter((row) => {
+        const payload = (row.sourcePayload as Record<string, unknown> | undefined) ?? row;
+        return payload.isTemplate !== true && row.inspectionType !== "TEMPLATE";
+      }),
+    );
   }, []);
 
   const refreshLookups = useCallback(async () => {
@@ -328,7 +319,9 @@ export function InspectionsWorkspace({ moduleName }: { moduleName: string }) {
     setBusy(true);
     setError(null);
     try {
-      const row = await apiGet<InspectionRow>(`/api/v1/industrial/inspections/${encodeURIComponent(id)}`);
+      const row = await apiGet<InspectionRow>(
+        `/api/v1/industrial/inspections/${encodeURIComponent(id)}`,
+      );
       const run = parseInspectionRun(row as Record<string, unknown>);
       setSelectedId(id);
       setTitle(String(row.title ?? run.templateName ?? ""));
@@ -468,7 +461,9 @@ export function InspectionsWorkspace({ moduleName }: { moduleName: string }) {
     try {
       const updated = await renameInspectionTemplate(templateId, name);
       setTemplates((prev) =>
-        dedupeInspectionTemplates(prev.map((t) => (t.id === templateId ? { ...t, name: updated.name } : t))),
+        dedupeInspectionTemplates(
+          prev.map((t) => (t.id === templateId ? { ...t, name: updated.name } : t)),
+        ),
       );
       setTemplateUploadPreview((prev) =>
         prev?.id === templateId ? { ...prev, name: updated.name } : prev,
@@ -563,7 +558,8 @@ export function InspectionsWorkspace({ moduleName }: { moduleName: string }) {
             ...item,
             answer: item.answer ?? "NO",
             photos: [...(item.photos ?? []), ...photos],
-            notes: item.notes || `Photo evidence attached (${photos.map((p) => p.fileName).join(", ")})`,
+            notes:
+              item.notes || `Photo evidence attached (${photos.map((p) => p.fileName).join(", ")})`,
           }
         : item,
     );
@@ -634,10 +630,14 @@ export function InspectionsWorkspace({ moduleName }: { moduleName: string }) {
     if (notes == null) return;
     setBusy(true);
     try {
-      await apiSend(`/api/v1/industrial/corrective-actions/${encodeURIComponent(id)}/complete`, "POST", {
-        notes,
-        completedByName: "Inspector",
-      });
+      await apiSend(
+        `/api/v1/industrial/corrective-actions/${encodeURIComponent(id)}/complete`,
+        "POST",
+        {
+          notes,
+          completedByName: "Inspector",
+        },
+      );
       await refreshLookups();
     } catch (e) {
       setError(e instanceof ApiError ? e.message : "Failed to close item");
@@ -651,10 +651,14 @@ export function InspectionsWorkspace({ moduleName }: { moduleName: string }) {
     setBusy(true);
     try {
       const person = personnel.find((p) => p.id === personnelId);
-      await apiSend(`/api/v1/industrial/departments/${encodeURIComponent(dept.id)}/contact`, "PATCH", {
-        contactPersonnelId: personnelId || null,
-        contactName: person?.displayName || "",
-      });
+      await apiSend(
+        `/api/v1/industrial/departments/${encodeURIComponent(dept.id)}/contact`,
+        "PATCH",
+        {
+          contactPersonnelId: personnelId || null,
+          contactName: person?.displayName || "",
+        },
+      );
       await refreshLookups();
     } catch (e) {
       setError(e instanceof ApiError ? e.message : "Failed to save department contact");
@@ -698,13 +702,22 @@ export function InspectionsWorkspace({ moduleName }: { moduleName: string }) {
         </div>
       ) : null}
 
-      <ModuleWorkspaceTabs tabs={visibleTabs} active={tab} onChange={setTab} ariaLabel="Inspections sections">
+      <ModuleWorkspaceTabs
+        tabs={visibleTabs}
+        active={tab}
+        onChange={setTab}
+        ariaLabel="Inspections sections"
+      >
         {tab === "list" ? (
           <div className="card">
             <div className="card-header d-flex justify-content-between align-items-center">
               <h5 className="card-title mb-0">Recent inspections</h5>
               {canManage ? (
-                <button type="button" className="btn btn-sm btn-primary" onClick={() => setTab("start")}>
+                <button
+                  type="button"
+                  className="btn btn-sm btn-primary"
+                  onClick={() => setTab("start")}
+                >
                   Start inspection
                 </button>
               ) : null}
@@ -754,7 +767,9 @@ export function InspectionsWorkspace({ moduleName }: { moduleName: string }) {
                                   const closeout = row.closeoutUrl;
                                   return inspectionPrintFieldValues(
                                     row,
-                                    typeof closeout === "string" ? { closeoutUrl: closeout } : undefined,
+                                    typeof closeout === "string"
+                                      ? { closeoutUrl: closeout }
+                                      : undefined,
                                   );
                                 })()}
                               />
@@ -771,10 +786,7 @@ export function InspectionsWorkspace({ moduleName }: { moduleName: string }) {
                                   className="btn btn-sm btn-outline-danger"
                                   disabled={deletingId === row.id}
                                   onClick={() =>
-                                    void deleteInspection(
-                                      row.id,
-                                      String(row.title ?? "Inspection"),
-                                    )
+                                    void deleteInspection(row.id, String(row.title ?? "Inspection"))
                                   }
                                 >
                                   {deletingId === row.id ? "Deleting…" : "Delete"}
@@ -801,8 +813,8 @@ export function InspectionsWorkspace({ moduleName }: { moduleName: string }) {
                 </div>
                 <div className="card-body">
                   <p className="text-muted small">
-                    Upload an Excel, CSV, or PDF checklist. Forge turns each question into a Yes / No /
-                    N/A digital inspection you can run from Start.
+                    Upload an Excel, CSV, or PDF checklist. Forge turns each question into a Yes /
+                    No / N/A digital inspection you can run from Start.
                   </p>
                   <div className="mb-3">
                     <label className="form-label" htmlFor="insp-template-title">
@@ -839,7 +851,9 @@ export function InspectionsWorkspace({ moduleName }: { moduleName: string }) {
                     </div>
                   </div>
                   {!canManage ? (
-                    <p className="text-muted small mb-0">You need manage permission to upload templates.</p>
+                    <p className="text-muted small mb-0">
+                      You need manage permission to upload templates.
+                    </p>
                   ) : null}
                   {templateUploadNotice ? (
                     <div className="alert alert-success py-2 mb-0" role="status">
@@ -901,13 +915,16 @@ export function InspectionsWorkspace({ moduleName }: { moduleName: string }) {
                                       if (ev.key === "Escape") cancelRenameTemplate();
                                     }}
                                     disabled={renamingTemplateId === t.id}
+                                    // eslint-disable-next-line jsx-a11y/no-autofocus -- inline rename field opened by the user's click; focus must move into the field
                                     autoFocus
                                     aria-label="Template name"
                                   />
                                   <button
                                     type="button"
                                     className="btn btn-sm btn-primary"
-                                    disabled={renamingTemplateId === t.id || !editingTemplateName.trim()}
+                                    disabled={
+                                      renamingTemplateId === t.id || !editingTemplateName.trim()
+                                    }
                                     onClick={() => void saveRenameTemplate(t.id)}
                                   >
                                     {renamingTemplateId === t.id ? "Saving…" : "Save"}
@@ -1202,7 +1219,10 @@ export function InspectionsWorkspace({ moduleName }: { moduleName: string }) {
                                 <div className="card" key={item.id}>
                                   <div className="card-body py-3">
                                     <div className="d-flex flex-wrap align-items-start justify-content-between gap-3">
-                                      <div className="fw-medium flex-grow-1 pe-lg-3" style={{ minWidth: 0 }}>
+                                      <div
+                                        className="fw-medium flex-grow-1 pe-lg-3"
+                                        style={{ minWidth: 0 }}
+                                      >
                                         {item.label}
                                         {item.answer === "NO" ? (
                                           <div className="mt-2">
@@ -1223,7 +1243,9 @@ export function InspectionsWorkspace({ moduleName }: { moduleName: string }) {
                                                 onClick={() => openFindingNotes(item.id)}
                                               >
                                                 <span className="text-danger fw-semibold">No</span>
-                                                <span className="text-muted"> — {(item.notes ?? "").slice(0, 120)}
+                                                <span className="text-muted">
+                                                  {" "}
+                                                  — {(item.notes ?? "").slice(0, 120)}
                                                   {(item.notes ?? "").length > 120 ? "…" : ""}
                                                 </span>
                                               </button>
@@ -1252,7 +1274,11 @@ export function InspectionsWorkspace({ moduleName }: { moduleName: string }) {
                                             disabled={!canManage}
                                             onClick={() => setAnswer(item.id, answer)}
                                           >
-                                            {answer === "YES" ? "Yes" : answer === "NO" ? "No" : "N/A"}
+                                            {answer === "YES"
+                                              ? "Yes"
+                                              : answer === "NO"
+                                                ? "No"
+                                                : "N/A"}
                                           </button>
                                         ))}
                                       </div>
@@ -1276,7 +1302,11 @@ export function InspectionsWorkspace({ moduleName }: { moduleName: string }) {
           <div className="card">
             <div className="card-header d-flex justify-content-between align-items-center">
               <h5 className="card-title mb-0">No findings report</h5>
-              <button type="button" className="btn btn-sm btn-outline-secondary" onClick={() => window.print()}>
+              <button
+                type="button"
+                className="btn btn-sm btn-outline-secondary"
+                onClick={() => window.print()}
+              >
                 Print
               </button>
             </div>
@@ -1313,7 +1343,10 @@ export function InspectionsWorkspace({ moduleName }: { moduleName: string }) {
                           >
                             Copy close-out link
                           </button>
-                          <Link className="btn btn-sm btn-outline-secondary" href={item.closeoutUrl}>
+                          <Link
+                            className="btn btn-sm btn-outline-secondary"
+                            href={item.closeoutUrl}
+                          >
                             Open close-out
                           </Link>
                         </div>
@@ -1354,7 +1387,9 @@ export function InspectionsWorkspace({ moduleName }: { moduleName: string }) {
                         <td>{String(row.title ?? "—")}</td>
                         <td>{String(row.ownerName ?? "—")}</td>
                         <td>
-                          <span className="badge bg-label-warning">{String(row.status ?? "OPEN")}</span>
+                          <span className="badge bg-label-warning">
+                            {String(row.status ?? "OPEN")}
+                          </span>
                         </td>
                         <td className="text-end">
                           {canManage ? (
@@ -1422,7 +1457,7 @@ export function InspectionsWorkspace({ moduleName }: { moduleName: string }) {
       </ModuleWorkspaceTabs>
 
       {notesModalItem && canManage ? (
-        // eslint-disable-next-line jsx-a11y/no-noninteractive-element-interactions, jsx-a11y/click-events-have-key-events
+        // eslint-disable-next-line jsx-a11y/no-noninteractive-element-interactions
         <div
           className="modal fade show d-block"
           tabIndex={-1}
@@ -1529,7 +1564,11 @@ export function InspectionsWorkspace({ moduleName }: { moduleName: string }) {
                 )}
               </div>
               <div className="modal-footer">
-                <button type="button" className="btn btn-outline-secondary" onClick={cancelNoFinding}>
+                <button
+                  type="button"
+                  className="btn btn-outline-secondary"
+                  onClick={cancelNoFinding}
+                >
                   Cancel (clear No)
                 </button>
                 <button

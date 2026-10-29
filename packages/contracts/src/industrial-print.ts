@@ -9,7 +9,8 @@ export const PrinterConnectionType = {
   WIFI: "WIFI",
   BLUETOOTH_BLE: "BLUETOOTH_BLE",
 } as const;
-export type PrinterConnectionType = (typeof PrinterConnectionType)[keyof typeof PrinterConnectionType];
+export type PrinterConnectionType =
+  (typeof PrinterConnectionType)[keyof typeof PrinterConnectionType];
 
 export const PrinterTransportType = {
   WINDOWS_SPOOLER: "WINDOWS_SPOOLER",
@@ -118,8 +119,7 @@ export const PrinterGroupStrategy = {
   FIRST_AVAILABLE: "FIRST_AVAILABLE",
   MANUAL: "MANUAL",
 } as const;
-export type PrinterGroupStrategy =
-  (typeof PrinterGroupStrategy)[keyof typeof PrinterGroupStrategy];
+export type PrinterGroupStrategy = (typeof PrinterGroupStrategy)[keyof typeof PrinterGroupStrategy];
 
 export const printRouteConditionsSchema = z.object({
   locationId: z.string().uuid().nullable().optional(),
@@ -170,10 +170,9 @@ export const createPrintRoutingRuleInputSchema = z.object({
   priority: z.number().int().min(0).max(10000).default(100),
   enabled: z.boolean().optional(),
   conditions: printRouteConditionsSchema.default({}),
-  action: printRouteActionSchema.refine(
-    (a) => Boolean(a.printerId || a.printerGroupId),
-    { message: "Action requires printerId or printerGroupId" },
-  ),
+  action: printRouteActionSchema.refine((a) => Boolean(a.printerId || a.printerGroupId), {
+    message: "Action requires printerId or printerGroupId",
+  }),
 });
 export type CreatePrintRoutingRuleInput = z.infer<typeof createPrintRoutingRuleInputSchema>;
 
@@ -631,4 +630,3 @@ export const printAnalyticsQuerySchema = z.object({
   bridgeId: z.string().uuid().optional(),
 });
 export type PrintAnalyticsQuery = z.infer<typeof printAnalyticsQuerySchema>;
-

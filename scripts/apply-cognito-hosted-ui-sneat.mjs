@@ -38,11 +38,13 @@ function awsText(args) {
   if (result.status !== 0) {
     throw new Error(result.stderr || result.stdout || "aws command failed");
   }
-  return result.stdout
-    .replace(/\r/g, "")
-    .split("\n")
-    .map((line) => line.trim())
-    .find((line) => line.length > 0 && line !== "None") ?? "";
+  return (
+    result.stdout
+      .replace(/\r/g, "")
+      .split("\n")
+      .map((line) => line.trim())
+      .find((line) => line.length > 0 && line !== "None") ?? ""
+  );
 }
 
 function resolveUserPoolId() {

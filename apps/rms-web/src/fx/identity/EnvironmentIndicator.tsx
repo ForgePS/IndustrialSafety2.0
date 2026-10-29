@@ -2,18 +2,15 @@ export type RmsEnvironmentKind = "development" | "test" | "staging" | "productio
 
 export function classifyEnvironment(raw: string | undefined): RmsEnvironmentKind {
   const value = (raw ?? "").toLowerCase();
-  if (!value || value === "local" || value === "dev" || value === "development") return "development";
+  if (!value || value === "local" || value === "dev" || value === "development")
+    return "development";
   if (value === "test" || value === "testing") return "test";
   if (value === "staging" || value === "stage") return "staging";
   if (value === "production" || value === "prod") return "production";
   return "unknown";
 }
 
-export function EnvironmentIndicator({
-  environment,
-}: {
-  environment: string | undefined;
-}) {
+export function EnvironmentIndicator({ environment }: { environment: string | undefined }) {
   const kind = classifyEnvironment(environment);
   if (kind === "production") {
     return (

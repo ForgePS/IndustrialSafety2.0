@@ -72,8 +72,10 @@
   --fx-color-priority-high: var(--fx-color-warning-500);
   --fx-color-priority-critical: var(--fx-color-danger-500);
 
-  --fx-font-sans: "Public Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
-  --fx-font-display: "Public Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+  --fx-font-sans:
+    "Public Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+  --fx-font-display:
+    "Public Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
   --fx-font-mono: "SFMono-Regular", Menlo, Monaco, Consolas, ui-monospace, monospace;
 
   --fx-space-4: 4px;

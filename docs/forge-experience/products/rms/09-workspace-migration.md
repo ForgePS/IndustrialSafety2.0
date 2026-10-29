@@ -8,20 +8,20 @@
 
 **Incident workspace** — the only high-risk record workspace present in `rms-web`.
 
-| Decision | Outcome |
-| --- | --- |
+| Decision                       | Outcome                                    |
+| ------------------------------ | ------------------------------------------ |
 | Incident as first FX workspace | **Selected** — Personnel UI does not exist |
 
 ## Implementation
 
-| Item | Value |
-| --- | --- |
-| Flag | `fx.rms.workspace.enabled` (default **false**, independent of shell/nav/dashboard) |
-| Framework | `apps/rms-web/src/fx/workspace/` |
-| Chrome | `FxWorkspaceLayout` + section panels with error isolation |
-| Registry | `FxWorkspaceRegistry` — Incident registered as `rms-incident` |
-| Deep links | Unchanged: `/incidents/{id}/?section=` |
-| Rollback | Flag off → legacy `IncidentWorkspaceLayout` |
+| Item       | Value                                                                              |
+| ---------- | ---------------------------------------------------------------------------------- |
+| Flag       | `fx.rms.workspace.enabled` (default **false**, independent of shell/nav/dashboard) |
+| Framework  | `apps/rms-web/src/fx/workspace/`                                                   |
+| Chrome     | `FxWorkspaceLayout` + section panels with error isolation                          |
+| Registry   | `FxWorkspaceRegistry` — Incident registered as `rms-incident`                      |
+| Deep links | Unchanged: `/incidents/{id}/?section=`                                             |
+| Rollback   | Flag off → legacy `IncidentWorkspaceLayout`                                        |
 
 ## Preserve
 

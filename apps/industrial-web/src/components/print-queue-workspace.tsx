@@ -299,10 +299,13 @@ export function PrintQueueWorkspace({
                 filtered.map((job) => {
                   const printer = job.printerId ? printerMap.get(job.printerId) : undefined;
                   const status = String(job.status ?? "").toUpperCase();
-                  const active =
-                    !["COMPLETED", "SENT_TO_PRINTER", "FAILED", "CANCELLED", "EXPIRED"].includes(
-                      status,
-                    );
+                  const active = ![
+                    "COMPLETED",
+                    "SENT_TO_PRINTER",
+                    "FAILED",
+                    "CANCELLED",
+                    "EXPIRED",
+                  ].includes(status);
                   return (
                     <tr key={job.id}>
                       <td>
@@ -354,8 +357,7 @@ export function PrintQueueWorkspace({
                               label: "Reprint",
                               icon: "bx-printer",
                               hidden:
-                                !canReprint ||
-                                !["COMPLETED", "SENT_TO_PRINTER"].includes(status),
+                                !canReprint || !["COMPLETED", "SENT_TO_PRINTER"].includes(status),
                               onClick: () => void onReprint(job),
                             },
                             {
@@ -379,6 +381,7 @@ export function PrintQueueWorkspace({
       </div>
 
       {viewJob ? (
+        // eslint-disable-next-line jsx-a11y/no-noninteractive-element-interactions -- backdrop click-to-close, same as the other Forge modals; Escape is handled by onKeyDown
         <div
           className="modal fade show d-block"
           tabIndex={-1}
@@ -438,6 +441,7 @@ export function PrintQueueWorkspace({
       ) : null}
 
       {errorJob ? (
+        // eslint-disable-next-line jsx-a11y/no-noninteractive-element-interactions -- backdrop click-to-close, same as the other Forge modals; Escape is handled by onKeyDown
         <div
           className="modal fade show d-block"
           tabIndex={-1}

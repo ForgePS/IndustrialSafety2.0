@@ -1,12 +1,4 @@
-import {
-  Body,
-  Controller,
-  Get,
-  Param,
-  Patch,
-  Post,
-  Req,
-} from "@nestjs/common";
+import { Body, Controller, Get, Param, Patch, Post, Req } from "@nestjs/common";
 import type { ForgePrincipal } from "@forge/tenant-context";
 import { ok } from "../../common/api-response.js";
 import { getRequestIds, type RequestWithIds } from "../../common/request-ids.js";
@@ -20,10 +12,7 @@ export class CadConnectionsController {
 
   @Get("api/v1/tenants/:tenantId/cad/operations/summary")
   @RequirePermission("rms.cad.operations.view")
-  async operationsSummary(
-    @Param("tenantId") tenantId: string,
-    @Req() req: RequestWithIds,
-  ) {
+  async operationsSummary(@Param("tenantId") tenantId: string, @Req() req: RequestWithIds) {
     return ok(await this.connections.operationsSummary(tenantId), getRequestIds(req));
   }
 
@@ -234,9 +223,6 @@ export class CadConnectionsController {
     @Param("incidentId") incidentId: string,
     @Req() req: RequestWithIds,
   ) {
-    return ok(
-      await this.connections.incidentCadStatus(tenantId, incidentId),
-      getRequestIds(req),
-    );
+    return ok(await this.connections.incidentCadStatus(tenantId, incidentId), getRequestIds(req));
   }
 }

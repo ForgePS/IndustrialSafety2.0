@@ -10,7 +10,14 @@
  */
 import { createHash } from "node:crypto";
 import { execFileSync } from "node:child_process";
-import { readFileSync, writeFileSync, unlinkSync, existsSync, readdirSync, statSync } from "node:fs";
+import {
+  readFileSync,
+  writeFileSync,
+  unlinkSync,
+  existsSync,
+  readdirSync,
+  statSync,
+} from "node:fs";
 import path from "node:path";
 
 const POLICY_ID = process.env.FORGE_INDUSTRIAL_CF_RHP_ID || "879e0836-ba6e-4ae1-b854-4e276d41a8bd";
@@ -80,9 +87,13 @@ const baseCsp = [
 ].join("; ");
 
 const full = JSON.parse(
-  execFileSync("aws", ["cloudfront", "get-response-headers-policy", "--id", POLICY_ID, "--output", "json"], {
-    encoding: "utf8",
-  }),
+  execFileSync(
+    "aws",
+    ["cloudfront", "get-response-headers-policy", "--id", POLICY_ID, "--output", "json"],
+    {
+      encoding: "utf8",
+    },
+  ),
 );
 const etag = full.ETag;
 const cfg = full.ResponseHeadersPolicy.ResponseHeadersPolicyConfig;

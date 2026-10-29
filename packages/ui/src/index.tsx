@@ -93,7 +93,10 @@ export { ForgeAppShell as AppShell } from "./shell/ForgeAppShell.js";
 export { ForgeSidebar as Sidebar } from "./shell/ForgeSidebar.js";
 export { ForgeTopbar as Topbar } from "./shell/ForgeTopbar.js";
 export { ForgeBreadcrumbs as Breadcrumbs } from "./shell/ForgeBreadcrumbs.js";
-export { ForgePageHeader as PageHeader, ForgePageActions as PageActions } from "./shell/ForgePageHeader.js";
+export {
+  ForgePageHeader as PageHeader,
+  ForgePageActions as PageActions,
+} from "./shell/ForgePageHeader.js";
 export {
   ForgePage as Page,
   ForgePageBody as PageBody,

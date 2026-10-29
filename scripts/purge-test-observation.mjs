@@ -34,7 +34,8 @@ async function resolveDatabaseUrl(secretArn) {
 const sql = postgres(await resolveDatabaseUrl(process.env.DATABASE_SECRET_ARN), { max: 1 });
 try {
   if (!APPLY) {
-    if (!/^\d{4}-\d{2}-\d{2}$/.test(DATE)) throw new Error("DATE=YYYY-MM-DD required for a dry run");
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(DATE))
+      throw new Error("DATE=YYYY-MM-DD required for a dry run");
     const rows = await sql`
       select o.id::text as id, t.tenant_key, o.title, o.status,
         o.created_at, o.source_payload ->> 'observedAt' as observed_at,
@@ -51,7 +52,9 @@ try {
          )
       order by o.created_at desc
     `;
-    console.log(JSON.stringify({ ok: true, apply: false, date: DATE, count: rows.length, rows }, null, 2));
+    console.log(
+      JSON.stringify({ ok: true, apply: false, date: DATE, count: rows.length, rows }, null, 2),
+    );
     process.exit(0);
   }
 

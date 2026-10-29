@@ -380,12 +380,12 @@ export function OpsModuleWorkspace({
                         <td key={col.key}>{formatColumnValue(row[col.key], col.type)}</td>
                       ))}
                       <td>
-                        <span className="badge bg-label-secondary">{String(row.status ?? "—")}</span>
+                        <span className="badge bg-label-secondary">
+                          {String(row.status ?? "—")}
+                        </span>
                       </td>
                       <td className="text-muted">
-                        {row.updatedAt
-                          ? new Date(String(row.updatedAt)).toLocaleString()
-                          : "—"}
+                        {row.updatedAt ? new Date(String(row.updatedAt)).toLocaleString() : "—"}
                       </td>
                       {cfg.completePath ? (
                         <td className="text-end">
@@ -516,7 +516,9 @@ export function OpsModuleWorkspace({
                     className="form-control form-control-sm"
                     type="date"
                     value={form.completedAt ?? ""}
-                    onChange={(ev) => setForm((prev) => ({ ...prev, completedAt: ev.target.value }))}
+                    onChange={(ev) =>
+                      setForm((prev) => ({ ...prev, completedAt: ev.target.value }))
+                    }
                   />
                 </div>
                 <div className="col-md-3">
@@ -552,7 +554,9 @@ export function OpsModuleWorkspace({
                     className="form-control form-control-sm"
                     required
                     value={form.personnelIds ?? ""}
-                    onChange={(ev) => setForm((prev) => ({ ...prev, personnelIds: ev.target.value }))}
+                    onChange={(ev) =>
+                      setForm((prev) => ({ ...prev, personnelIds: ev.target.value }))
+                    }
                     placeholder="Paste multiple personnel IDs"
                   />
                 </div>
@@ -566,7 +570,6 @@ export function OpsModuleWorkspace({
           </div>
         </div>
       ) : null}
-
     </section>
   );
 }

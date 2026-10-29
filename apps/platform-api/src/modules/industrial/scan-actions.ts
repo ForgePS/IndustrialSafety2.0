@@ -142,8 +142,7 @@ function addLinkedSafetyActions(
     });
   }
 
-  const jsaId =
-    input.actionConfig.jsaId || (input.targetType === "JSA" ? input.targetId : "");
+  const jsaId = input.actionConfig.jsaId || (input.targetType === "JSA" ? input.targetId : "");
   if (jsaId && qrActionConfigEnabled(input.actionConfig, "viewJsa", true)) {
     actions.push({
       id: "open_jsa",
@@ -158,8 +157,7 @@ function addLinkedSafetyActions(
   }
 
   const documentId =
-    input.actionConfig.documentId ||
-    (input.targetType === "DOCUMENT" ? input.targetId : "");
+    input.actionConfig.documentId || (input.targetType === "DOCUMENT" ? input.targetId : "");
   if (documentId && qrActionConfigEnabled(input.actionConfig, "viewDocuments", true)) {
     actions.push({
       id: "open_document",
@@ -245,7 +243,9 @@ export function buildScanActions(input: {
   /** Plaintext vehicle DVIR token for public `/dvir/{token}` stickers / scan actions. */
   dvirPublicToken?: string | null;
 }): ScanActionDef[] {
-  const targetType = String(input.targetType ?? "").trim().toUpperCase();
+  const targetType = String(input.targetType ?? "")
+    .trim()
+    .toUpperCase();
   const targetId = String(input.targetId ?? "").trim();
   const accessMode = String(input.accessMode ?? "AUTHENTICATED_ONLY")
     .trim()

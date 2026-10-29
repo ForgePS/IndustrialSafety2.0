@@ -98,7 +98,9 @@ export class ForgeCloudTrail extends Construct {
             {
               storageClass: s3.StorageClass.INFREQUENT_ACCESS,
               // Must be strictly less than expiration days (S3 requirement).
-              transitionAfter: cdk.Duration.days(Math.min(30, Math.max(1, config.retention.auditLogsDays - 1))),
+              transitionAfter: cdk.Duration.days(
+                Math.min(30, Math.max(1, config.retention.auditLogsDays - 1)),
+              ),
             },
           ],
           expiration: isProd
@@ -238,25 +240,26 @@ export class ForgeCloudTrail extends Construct {
       {
         id: "TrailStopped",
         name: "cloudtrail-stopped",
-        pattern: '{ ($.eventName = StopLogging) }',
+        pattern: "{ ($.eventName = StopLogging) }",
         description: "CloudTrail StopLogging",
       },
       {
         id: "TrailDeleted",
         name: "cloudtrail-deleted",
-        pattern: '{ ($.eventName = DeleteTrail) }',
+        pattern: "{ ($.eventName = DeleteTrail) }",
         description: "CloudTrail DeleteTrail",
       },
       {
         id: "TrailUpdated",
         name: "cloudtrail-updated",
-        pattern: '{ ($.eventName = UpdateTrail) || ($.eventName = StartLogging) }',
+        pattern: "{ ($.eventName = UpdateTrail) || ($.eventName = StartLogging) }",
         description: "CloudTrail configuration changed",
       },
       {
         id: "RootActivity",
         name: "root-activity",
-        pattern: '{ ($.userIdentity.type = "Root") && ($.userIdentity.invokedBy NOT EXISTS) && ($.eventType != "AwsServiceEvent") }',
+        pattern:
+          '{ ($.userIdentity.type = "Root") && ($.userIdentity.invokedBy NOT EXISTS) && ($.eventType != "AwsServiceEvent") }',
         description: "Root account activity",
       },
       {
@@ -269,70 +272,70 @@ export class ForgeCloudTrail extends Construct {
         id: "IamPolicyChanges",
         name: "iam-policy-changes",
         pattern:
-          '{ ($.eventName = DeleteGroupPolicy) || ($.eventName = DeleteRolePolicy) || ($.eventName = DeleteUserPolicy) || ($.eventName = PutGroupPolicy) || ($.eventName = PutRolePolicy) || ($.eventName = PutUserPolicy) || ($.eventName = CreatePolicy) || ($.eventName = DeletePolicy) || ($.eventName = CreatePolicyVersion) || ($.eventName = DeletePolicyVersion) || ($.eventName = AttachRolePolicy) || ($.eventName = DetachRolePolicy) || ($.eventName = AttachUserPolicy) || ($.eventName = DetachUserPolicy) || ($.eventName = AttachGroupPolicy) || ($.eventName = DetachGroupPolicy) }',
+          "{ ($.eventName = DeleteGroupPolicy) || ($.eventName = DeleteRolePolicy) || ($.eventName = DeleteUserPolicy) || ($.eventName = PutGroupPolicy) || ($.eventName = PutRolePolicy) || ($.eventName = PutUserPolicy) || ($.eventName = CreatePolicy) || ($.eventName = DeletePolicy) || ($.eventName = CreatePolicyVersion) || ($.eventName = DeletePolicyVersion) || ($.eventName = AttachRolePolicy) || ($.eventName = DetachRolePolicy) || ($.eventName = AttachUserPolicy) || ($.eventName = DetachUserPolicy) || ($.eventName = AttachGroupPolicy) || ($.eventName = DetachGroupPolicy) }",
         description: "IAM policy changes",
       },
       {
         id: "IamRoleChanges",
         name: "iam-role-changes",
         pattern:
-          '{ ($.eventName = CreateRole) || ($.eventName = DeleteRole) || ($.eventName = UpdateAssumeRolePolicy) }',
+          "{ ($.eventName = CreateRole) || ($.eventName = DeleteRole) || ($.eventName = UpdateAssumeRolePolicy) }",
         description: "IAM role changes",
       },
       {
         id: "KmsKeyChanges",
         name: "kms-key-changes",
         pattern:
-          '{ ($.eventSource = kms.amazonaws.com) && (($.eventName = DisableKey) || ($.eventName = ScheduleKeyDeletion) || ($.eventName = PutKeyPolicy)) }',
+          "{ ($.eventSource = kms.amazonaws.com) && (($.eventName = DisableKey) || ($.eventName = ScheduleKeyDeletion) || ($.eventName = PutKeyPolicy)) }",
         description: "KMS key disable / deletion / policy",
       },
       {
         id: "SecurityGroupChanges",
         name: "sg-changes",
         pattern:
-          '{ ($.eventName = AuthorizeSecurityGroupIngress) || ($.eventName = AuthorizeSecurityGroupEgress) || ($.eventName = RevokeSecurityGroupIngress) || ($.eventName = RevokeSecurityGroupEgress) || ($.eventName = CreateSecurityGroup) || ($.eventName = DeleteSecurityGroup) }',
+          "{ ($.eventName = AuthorizeSecurityGroupIngress) || ($.eventName = AuthorizeSecurityGroupEgress) || ($.eventName = RevokeSecurityGroupIngress) || ($.eventName = RevokeSecurityGroupEgress) || ($.eventName = CreateSecurityGroup) || ($.eventName = DeleteSecurityGroup) }",
         description: "Security group changes",
       },
       {
         id: "NaclChanges",
         name: "nacl-changes",
         pattern:
-          '{ ($.eventName = CreateNetworkAcl) || ($.eventName = CreateNetworkAclEntry) || ($.eventName = DeleteNetworkAcl) || ($.eventName = DeleteNetworkAclEntry) || ($.eventName = ReplaceNetworkAclEntry) || ($.eventName = ReplaceNetworkAclAssociation) }',
+          "{ ($.eventName = CreateNetworkAcl) || ($.eventName = CreateNetworkAclEntry) || ($.eventName = DeleteNetworkAcl) || ($.eventName = DeleteNetworkAclEntry) || ($.eventName = ReplaceNetworkAclEntry) || ($.eventName = ReplaceNetworkAclAssociation) }",
         description: "Network ACL changes",
       },
       {
         id: "RouteTableChanges",
         name: "route-table-changes",
         pattern:
-          '{ ($.eventName = CreateRoute) || ($.eventName = CreateRouteTable) || ($.eventName = ReplaceRoute) || ($.eventName = ReplaceRouteTableAssociation) || ($.eventName = DeleteRouteTable) || ($.eventName = DeleteRoute) || ($.eventName = DisassociateRouteTable) }',
+          "{ ($.eventName = CreateRoute) || ($.eventName = CreateRouteTable) || ($.eventName = ReplaceRoute) || ($.eventName = ReplaceRouteTableAssociation) || ($.eventName = DeleteRouteTable) || ($.eventName = DeleteRoute) || ($.eventName = DisassociateRouteTable) }",
         description: "Route table changes",
       },
       {
         id: "IgwChanges",
         name: "igw-changes",
         pattern:
-          '{ ($.eventName = CreateInternetGateway) || ($.eventName = AttachInternetGateway) || ($.eventName = DetachInternetGateway) || ($.eventName = DeleteInternetGateway) }',
+          "{ ($.eventName = CreateInternetGateway) || ($.eventName = AttachInternetGateway) || ($.eventName = DetachInternetGateway) || ($.eventName = DeleteInternetGateway) }",
         description: "Internet gateway changes",
       },
       {
         id: "S3BucketPolicyChanges",
         name: "s3-bucket-policy-changes",
         pattern:
-          '{ ($.eventSource = s3.amazonaws.com) && (($.eventName = PutBucketPolicy) || ($.eventName = DeleteBucketPolicy) || ($.eventName = PutBucketAcl) || ($.eventName = PutPublicAccessBlock)) }',
+          "{ ($.eventSource = s3.amazonaws.com) && (($.eventName = PutBucketPolicy) || ($.eventName = DeleteBucketPolicy) || ($.eventName = PutBucketAcl) || ($.eventName = PutPublicAccessBlock)) }",
         description: "S3 bucket policy / ACL / public access changes",
       },
       {
         id: "CwLogDeletion",
         name: "cw-log-deletion",
         pattern:
-          '{ ($.eventSource = logs.amazonaws.com) && (($.eventName = DeleteLogGroup) || ($.eventName = DeleteLogStream)) }',
+          "{ ($.eventSource = logs.amazonaws.com) && (($.eventName = DeleteLogGroup) || ($.eventName = DeleteLogStream)) }",
         description: "CloudWatch log deletion",
       },
       {
         id: "SecretsPolicyChanges",
         name: "secrets-policy-changes",
         pattern:
-          '{ ($.eventSource = secretsmanager.amazonaws.com) && (($.eventName = PutResourcePolicy) || ($.eventName = DeleteResourcePolicy) || ($.eventName = DeleteSecret)) }',
+          "{ ($.eventSource = secretsmanager.amazonaws.com) && (($.eventName = PutResourcePolicy) || ($.eventName = DeleteResourcePolicy) || ($.eventName = DeleteSecret)) }",
         description: "Secrets Manager policy / delete",
       },
       {
@@ -346,7 +349,7 @@ export class ForgeCloudTrail extends Construct {
         id: "SsoPrivilegeHint",
         name: "sso-directory-changes",
         pattern:
-          '{ ($.eventSource = sso.amazonaws.com) || ($.eventSource = sso-directory.amazonaws.com) || ($.eventSource = identitystore.amazonaws.com) }',
+          "{ ($.eventSource = sso.amazonaws.com) || ($.eventSource = sso-directory.amazonaws.com) || ($.eventSource = identitystore.amazonaws.com) }",
         description: "Identity Center / SSO API activity (visibility varies by event source)",
       },
     ];

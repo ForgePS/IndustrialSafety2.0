@@ -75,22 +75,12 @@ if (code.includes("producersrice.forgeindustrialsafety.com")) {
   if (!code.includes("var uri = request.uri;")) {
     throw new Error("Unexpected CF function shape — cannot insert redirect");
   }
-  code = code.replace(
-    "var uri = request.uri;",
-    `var uri = request.uri;${REDIRECT_SNIPPET}`,
-  );
+  code = code.replace("var uri = request.uri;", `var uri = request.uri;${REDIRECT_SNIPPET}`);
 }
 
 fs.writeFileSync(CODE_FILE, code);
 
-const desc = awsJson([
-  "cloudfront",
-  "describe-function",
-  "--name",
-  NAME,
-  "--output",
-  "json",
-]);
+const desc = awsJson(["cloudfront", "describe-function", "--name", NAME, "--output", "json"]);
 const etag = desc.ETag;
 
 const fnConfigPath = ".tmp-cffn-industrial-config.json";

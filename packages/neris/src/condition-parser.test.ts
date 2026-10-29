@@ -10,9 +10,7 @@ describe("parseConditionExpression", () => {
   });
 
   it("parses AND / OR / NOT without eval", () => {
-    const parsed = parseConditionExpression(
-      "structure_unit = TRUE & location_use = commercial",
-    );
+    const parsed = parseConditionExpression("structure_unit = TRUE & location_use = commercial");
     expect(parsed.status).toBe("PARSED");
     expect(parsed.rule && "all" in parsed.rule).toBe(true);
   });
@@ -66,7 +64,12 @@ describe("evaluateRule", () => {
         {
           all: [
             { field: "b", equals: true },
-            { any: [{ field: "a", contains: "STRUCTURE" }, { field: "c", lessThan: 1 }] },
+            {
+              any: [
+                { field: "a", contains: "STRUCTURE" },
+                { field: "c", lessThan: 1 },
+              ],
+            },
           ],
         },
         ctx,

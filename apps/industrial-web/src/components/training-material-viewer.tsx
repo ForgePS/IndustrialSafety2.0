@@ -85,9 +85,11 @@ function normalizePptxSlideChrome(host: HTMLElement | null) {
   host.querySelectorAll(".pptx-preview-slide-wrapper").forEach((node) => {
     (node as HTMLElement).style.setProperty("overflow", "visible", "important");
   });
-  host.querySelectorAll(".slide-master-wrapper, .slide-layout-wrapper, .slide-wrapper").forEach((node) => {
-    (node as HTMLElement).style.setProperty("overflow", "visible", "important");
-  });
+  host
+    .querySelectorAll(".slide-master-wrapper, .slide-layout-wrapper, .slide-wrapper")
+    .forEach((node) => {
+      (node as HTMLElement).style.setProperty("overflow", "visible", "important");
+    });
 }
 
 type PptxViewer = {
@@ -490,7 +492,15 @@ export function TrainingMaterialViewer({
         previewObjectUrlRef.current = null;
       }
     };
-  }, [material.id, material.mimeType, material.originalFilename, isPresentation, isPptx, stopSlideAudio, useOfficeViewer]);
+  }, [
+    material.id,
+    material.mimeType,
+    material.originalFilename,
+    isPresentation,
+    isPptx,
+    stopSlideAudio,
+    useOfficeViewer,
+  ]);
 
   useEffect(() => {
     if (!officeEmbedUrl) return;
@@ -530,7 +540,13 @@ export function TrainingMaterialViewer({
   }, [officeEmbedUrl]);
 
   useEffect(() => {
-    if (!pptxBuffer || officeEmbedUrl || !pptxHostRef.current || hostSize.width < 100 || hostSize.height < 100) {
+    if (
+      !pptxBuffer ||
+      officeEmbedUrl ||
+      !pptxHostRef.current ||
+      hostSize.width < 100 ||
+      hostSize.height < 100
+    ) {
       return;
     }
 
@@ -685,7 +701,11 @@ export function TrainingMaterialViewer({
     !loading && !officeEmbedUrl && slideCount > 0 ? (
       <div
         className={`training-pptx-controls d-flex flex-wrap align-items-center justify-content-between gap-2 px-3 py-2 border-top ${
-          useImmersivePptx && immersiveOpen ? "training-pptx-controls--immersive" : embedded ? "" : "bg-body"
+          useImmersivePptx && immersiveOpen
+            ? "training-pptx-controls--immersive"
+            : embedded
+              ? ""
+              : "bg-body"
         }`}
       >
         <button
@@ -720,7 +740,11 @@ export function TrainingMaterialViewer({
     !loading && slideAudioReady ? (
       <div
         className={`training-pptx-audio-controls d-flex flex-wrap align-items-center gap-2 px-3 py-2 border-top ${
-          useImmersivePptx && immersiveOpen ? "training-pptx-controls--immersive" : embedded ? "" : "bg-body"
+          useImmersivePptx && immersiveOpen
+            ? "training-pptx-controls--immersive"
+            : embedded
+              ? ""
+              : "bg-body"
         }`}
       >
         <button
@@ -740,7 +764,10 @@ export function TrainingMaterialViewer({
             setAudioMuted((prev) => !prev);
           }}
         >
-          <i className={`bx ${audioMuted ? "bx-volume-mute" : "bx-volume-full"} me-1`} aria-hidden="true" />
+          <i
+            className={`bx ${audioMuted ? "bx-volume-mute" : "bx-volume-full"} me-1`}
+            aria-hidden="true"
+          />
           {audioMuted ? "Unmute" : "Mute"}
         </button>
         <span className="text-muted small">
@@ -893,35 +920,41 @@ export function TrainingMaterialViewer({
 
   return (
     <div className={embedded ? "mb-3" : "card border mb-4"}>
-      <div className={embedded ? "mb-2" : "card-header d-flex flex-wrap justify-content-between align-items-center gap-2"}>
+      <div
+        className={
+          embedded
+            ? "mb-2"
+            : "card-header d-flex flex-wrap justify-content-between align-items-center gap-2"
+        }
+      >
         <span className={embedded ? "fw-semibold d-block mb-2" : "fw-semibold text-truncate"}>
           {material.title}
         </span>
         {!embedded ? (
-        <div className="d-flex flex-wrap gap-2">
-          {onTakeQuiz ? (
-            <button
-              type="button"
-              className="btn btn-sm btn-primary"
-              onClick={() => onTakeQuiz(material)}
-            >
-              Take quiz
+          <div className="d-flex flex-wrap gap-2">
+            {onTakeQuiz ? (
+              <button
+                type="button"
+                className="btn btn-sm btn-primary"
+                onClick={() => onTakeQuiz(material)}
+              >
+                Take quiz
+              </button>
+            ) : null}
+            {onDelete ? (
+              <button
+                type="button"
+                className="btn btn-sm btn-outline-danger"
+                disabled={deleteBusy}
+                onClick={() => onDelete(material)}
+              >
+                Delete
+              </button>
+            ) : null}
+            <button type="button" className="btn btn-sm btn-outline-secondary" onClick={onClose}>
+              Close
             </button>
-          ) : null}
-          {onDelete ? (
-            <button
-              type="button"
-              className="btn btn-sm btn-outline-danger"
-              disabled={deleteBusy}
-              onClick={() => onDelete(material)}
-            >
-              Delete
-            </button>
-          ) : null}
-          <button type="button" className="btn btn-sm btn-outline-secondary" onClick={onClose}>
-            Close
-          </button>
-        </div>
+          </div>
         ) : null}
       </div>
       <div className={embedded ? "position-relative" : "card-body p-0 position-relative"}>
@@ -937,6 +970,7 @@ export function TrainingMaterialViewer({
         ) : null}
         {isPresentation && isPptx ? pptxStage : null}
         {!isPresentation && previewUrl && isVideo ? (
+          // eslint-disable-next-line jsx-a11y/media-has-caption -- customer-uploaded training videos; no caption files exist to attach
           <video
             key={previewUrl}
             className="w-100"
@@ -978,7 +1012,9 @@ export function TrainingMaterialViewer({
       {isPresentation && isPptx && !error && !loading && slideCount > 1 ? (
         <div className={embedded ? "text-muted small mt-2" : "card-footer text-muted small"}>
           Use Previous and Next, or the left and right arrow keys, to move through the deck.
-          {slideAudioReady ? " Slides with narration advance automatically 3 seconds after audio finishes." : ""}
+          {slideAudioReady
+            ? " Slides with narration advance automatically 3 seconds after audio finishes."
+            : ""}
           {!embedded && onTakeQuiz ? " When you're finished reviewing, click Take quiz." : null}
         </div>
       ) : null}

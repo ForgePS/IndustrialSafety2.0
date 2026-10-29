@@ -21,7 +21,9 @@ export type LabelElement = {
   fill?: boolean;
 };
 
-export function parseLayoutElements(layout: Record<string, unknown> | null | undefined): LabelElement[] {
+export function parseLayoutElements(
+  layout: Record<string, unknown> | null | undefined,
+): LabelElement[] {
   const raw = layout?.elements;
   if (!Array.isArray(raw)) return [];
   const out: LabelElement[] = [];
@@ -50,10 +52,7 @@ export function parseLayoutElements(layout: Record<string, unknown> | null | und
   return out;
 }
 
-export function resolveElementContent(
-  el: LabelElement,
-  values: Record<string, string>,
-): string {
+export function resolveElementContent(el: LabelElement, values: Record<string, string>): string {
   if (el.type === "dynamicText" && el.fieldKey) {
     const key = el.fieldKey.trim();
     const fromField = values[key] ?? "";
@@ -122,7 +121,9 @@ export function elementsToZpl(input: {
       const barH = Math.max(10, h - (el.showHumanReadable === false ? 0 : Math.round(h * 0.25)));
       // ^BY module width, ratio, height
       const module = Math.max(1, Math.min(5, Math.round(w / Math.max(20, content.length * 11))));
-      lines.push(`^FO${x},${y}^BY${module},2,${barH}^BCN,${barH},${el.showHumanReadable === false ? "N" : "Y"},N,N^FD${escapeZpl(content)}^FS`);
+      lines.push(
+        `^FO${x},${y}^BY${module},2,${barH}^BCN,${barH},${el.showHumanReadable === false ? "N" : "Y"},N,N^FD${escapeZpl(content)}^FS`,
+      );
       continue;
     }
 
@@ -138,10 +139,13 @@ export function elementsToZpl(input: {
 
 function escapeZpl(value: string): string {
   // ZPL field data: strip control chars; caret/tilde are command markers.
-  return String(value ?? "")
-    .replace(/[\x00-\x1f]/g, " ")
-    .replace(/\^/g, " ")
-    .replace(/~/g, " ");
+  return (
+    String(value ?? "")
+      // eslint-disable-next-line no-control-regex -- intentionally strips control chars from ZPL field data
+      .replace(/[\x00-\x1f]/g, " ")
+      .replace(/\^/g, " ")
+      .replace(/~/g, " ")
+  );
 }
 
 export function defaultElementsLayout(): {

@@ -28,13 +28,13 @@ export default function DemoIndustrialPage() {
   const scenes = useMemo(() => flattenWalkthroughScenes(), []);
   const activeVoice =
     WALKTHROUGH_VOICE_PROFILES.find((v) => v.id === voiceProfileId) ??
-    WALKTHROUGH_VOICE_PROFILES.find((v) => v.id === INDUSTRIAL_PLATFORM_WALKTHROUGH.defaultVoiceProfileId) ??
+    WALKTHROUGH_VOICE_PROFILES.find(
+      (v) => v.id === INDUSTRIAL_PLATFORM_WALKTHROUGH.defaultVoiceProfileId,
+    ) ??
     WALKTHROUGH_VOICE_PROFILES[0]!;
 
   useEffect(() => {
-    void walkthroughStudioApi
-      .trackEvent({ eventType: "walkthrough_start" })
-      .catch(() => undefined);
+    void walkthroughStudioApi.trackEvent({ eventType: "walkthrough_start" }).catch(() => undefined);
   }, []);
 
   useEffect(() => {
@@ -110,8 +110,7 @@ export default function DemoIndustrialPage() {
 
   const step = walkthrough.step;
   const stepIndex = walkthrough.stepIndex;
-  const progressPct =
-    scenes.length > 0 ? Math.round(((stepIndex + 1) / scenes.length) * 100) : 0;
+  const progressPct = scenes.length > 0 ? Math.round(((stepIndex + 1) / scenes.length) * 100) : 0;
   const stepTitle =
     step && "title" in step && typeof step.title === "string"
       ? step.title
@@ -137,7 +136,11 @@ export default function DemoIndustrialPage() {
             </Link>
             {!walkthrough.session?.active ? (
               <>
-                <button type="button" className="btn btn-primary btn-sm" onClick={() => startWalkthrough()}>
+                <button
+                  type="button"
+                  className="btn btn-primary btn-sm"
+                  onClick={() => startWalkthrough()}
+                >
                   Play walkthrough
                 </button>
                 <button
@@ -161,8 +164,11 @@ export default function DemoIndustrialPage() {
           {!presentationMode ? (
             <div className="row g-3 align-items-end mb-2">
               <div className="col-12 col-md-4">
-                <label className="form-label">Voice</label>
+                <label className="form-label" htmlFor="demo-ind-voice">
+                  Voice
+                </label>
                 <select
+                  id="demo-ind-voice"
                   className="form-select"
                   value={voiceProfileId}
                   disabled={Boolean(walkthrough.session?.active)}
@@ -180,25 +186,53 @@ export default function DemoIndustrialPage() {
           <div className="d-flex flex-wrap gap-2">
             {walkthrough.session?.active ? (
               <>
-                <button type="button" className="btn btn-primary btn-sm" onClick={() => walkthrough.play()}>
+                <button
+                  type="button"
+                  className="btn btn-primary btn-sm"
+                  onClick={() => walkthrough.play()}
+                >
                   Play
                 </button>
-                <button type="button" className="btn btn-outline-secondary btn-sm" onClick={() => walkthrough.pause()}>
+                <button
+                  type="button"
+                  className="btn btn-outline-secondary btn-sm"
+                  onClick={() => walkthrough.pause()}
+                >
                   Pause
                 </button>
-                <button type="button" className="btn btn-outline-secondary btn-sm" onClick={() => walkthrough.previous()}>
+                <button
+                  type="button"
+                  className="btn btn-outline-secondary btn-sm"
+                  onClick={() => walkthrough.previous()}
+                >
                   Previous
                 </button>
-                <button type="button" className="btn btn-outline-secondary btn-sm" onClick={() => walkthrough.next()}>
+                <button
+                  type="button"
+                  className="btn btn-outline-secondary btn-sm"
+                  onClick={() => walkthrough.next()}
+                >
                   Next
                 </button>
-                <button type="button" className="btn btn-outline-secondary btn-sm" onClick={() => walkthrough.restart()}>
+                <button
+                  type="button"
+                  className="btn btn-outline-secondary btn-sm"
+                  onClick={() => walkthrough.restart()}
+                >
                   Restart
                 </button>
-                <button type="button" className="btn btn-outline-secondary btn-sm" onClick={() => walkthrough.toggleMute()}>
+                <button
+                  type="button"
+                  className="btn btn-outline-secondary btn-sm"
+                  onClick={() => walkthrough.toggleMute()}
+                >
                   {walkthrough.session.muted ? "Unmute" : "Mute"}
                 </button>
-                <button type="button" className="btn btn-outline-secondary btn-sm" onClick={() => walkthrough.toggleCaptions()}>
+                <button
+                  type="button"
+                  className="btn btn-outline-secondary btn-sm"
+                  onClick={() => walkthrough.toggleCaptions()}
+                >
                   Captions
                 </button>
                 <button
@@ -262,7 +296,11 @@ export default function DemoIndustrialPage() {
         <div className="card mb-3">
           <div className="card-header d-flex justify-content-between">
             <h6 className="mb-0">Chapters</h6>
-            <button type="button" className="btn btn-sm btn-link" onClick={() => setChaptersOpen(false)}>
+            <button
+              type="button"
+              className="btn btn-sm btn-link"
+              onClick={() => setChaptersOpen(false)}
+            >
               Close
             </button>
           </div>
@@ -298,8 +336,14 @@ export default function DemoIndustrialPage() {
 
       {exploreMode && !walkthrough.session?.active ? (
         <div className="alert alert-info d-flex justify-content-between align-items-center flex-wrap gap-2">
-          <span>Explore mode is active inside the demo tenant. Production records are not written.</span>
-          <button type="button" className="btn btn-sm btn-primary" onClick={() => startWalkthrough()}>
+          <span>
+            Explore mode is active inside the demo tenant. Production records are not written.
+          </span>
+          <button
+            type="button"
+            className="btn btn-sm btn-primary"
+            onClick={() => startWalkthrough()}
+          >
             Return to Walkthrough
           </button>
         </div>
@@ -310,8 +354,8 @@ export default function DemoIndustrialPage() {
           <div className="card-body">
             <h5 className="mb-2">{INDUSTRIAL_PLATFORM_WALKTHROUGH.tagline}</h5>
             <p className="mb-3">
-              Signed in as {me?.userId ?? "demo viewer"}. Use Play to run the automated module tour with
-              narration, or Explore Forge to navigate the demo tenant yourself.
+              Signed in as {me?.userId ?? "demo viewer"}. Use Play to run the automated module tour
+              with narration, or Explore Forge to navigate the demo tenant yourself.
             </p>
             <div className="row g-2">
               {chapters.slice(0, 8).map((chapter) => (

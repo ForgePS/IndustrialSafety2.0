@@ -25,18 +25,18 @@ flowchart LR
 
 ## Sprint breakdown
 
-| Sprint | Focus | This architecture stop |
-| --- | --- | --- |
-| **S0** | Architecture docs, draft `0022`, API contracts, `@forge/imports` skeleton, support docs | **COMPLETE (this package)** |
-| **S1** | Finalize/apply `0022`, FORCE RLS, permission seed, isolation tests, audit defs | After architecture approval |
-| **S2** | Nest import APIs + control plane (presigned upload deferred if scoped separately) | After S1 |
-| **S3** | Engine CSV/XLSX/JSON + upload/storage orchestration | After S2 |
-| **S4** | Duplicates + ZIP/API sources | After S3 |
-| **S5** | Worker + Step Functions wiring | After S4 |
-| **S6** | Malware wiring + masking exports | After S5 |
-| **S7** | Import Center UI (Creator + Tenant Admin) | After APIs stable |
-| **S8** | DoD hardening (Playwright, a11y, ops) | After S7 |
-| **S9+** | Product adapters (Academy / RMS / Industrial) | After shared DoD |
+| Sprint  | Focus                                                                                   | This architecture stop      |
+| ------- | --------------------------------------------------------------------------------------- | --------------------------- |
+| **S0**  | Architecture docs, draft `0022`, API contracts, `@forge/imports` skeleton, support docs | **COMPLETE (this package)** |
+| **S1**  | Finalize/apply `0022`, FORCE RLS, permission seed, isolation tests, audit defs          | After architecture approval |
+| **S2**  | Nest import APIs + control plane (presigned upload deferred if scoped separately)       | After S1                    |
+| **S3**  | Engine CSV/XLSX/JSON + upload/storage orchestration                                     | After S2                    |
+| **S4**  | Duplicates + ZIP/API sources                                                            | After S3                    |
+| **S5**  | Worker + Step Functions wiring                                                          | After S4                    |
+| **S6**  | Malware wiring + masking exports                                                        | After S5                    |
+| **S7**  | Import Center UI (Creator + Tenant Admin)                                               | After APIs stable           |
+| **S8**  | DoD hardening (Playwright, a11y, ops)                                                   | After S7                    |
+| **S9+** | Product adapters (Academy / RMS / Industrial)                                           | After shared DoD            |
 
 ## S0 exit criteria (this delivery)
 

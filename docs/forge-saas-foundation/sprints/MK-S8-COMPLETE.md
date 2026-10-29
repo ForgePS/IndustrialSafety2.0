@@ -30,13 +30,13 @@ Multi-track application-shell chrome parity and required shell states without re
 
 ## Verification
 
-| Check | Result |
-| --- | --- |
-| `@forge/ui` unit | 6 passed |
-| `@forge/ui` typecheck/build | PASS |
-| creator-console typecheck | PASS |
-| tenant-admin typecheck | PASS |
-| Production operations | NONE |
+| Check                       | Result   |
+| --------------------------- | -------- |
+| `@forge/ui` unit            | 6 passed |
+| `@forge/ui` typecheck/build | PASS     |
+| creator-console typecheck   | PASS     |
+| tenant-admin typecheck      | PASS     |
+| Production operations       | NONE     |
 
 ## Next sprint
 

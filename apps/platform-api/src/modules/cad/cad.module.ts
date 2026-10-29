@@ -17,17 +17,7 @@ import { CadWebhookService } from "./cad-webhook.service.js";
     CadConnectionsController,
     CadSimulatorController,
   ],
-  providers: [
-    CadWebhookService,
-    CadConflictsService,
-    CadConnectionsService,
-    CadSimulatorService,
-  ],
-  exports: [
-    CadWebhookService,
-    CadConflictsService,
-    CadConnectionsService,
-    CadSimulatorService,
-  ],
+  providers: [CadWebhookService, CadConflictsService, CadConnectionsService, CadSimulatorService],
+  exports: [CadWebhookService, CadConflictsService, CadConnectionsService, CadSimulatorService],
 })
 export class CadModule {}

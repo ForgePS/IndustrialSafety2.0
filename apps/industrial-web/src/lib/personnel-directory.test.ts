@@ -211,7 +211,12 @@ describe("matchesRosterQuery", () => {
   });
 
   it("does not match the middle of a name unless widened", () => {
-    const brandon = { ...base, displayName: "Brandon D Bratchie", firstName: "Brandon", lastName: "Bratchie" };
+    const brandon = {
+      ...base,
+      displayName: "Brandon D Bratchie",
+      firstName: "Brandon",
+      lastName: "Bratchie",
+    };
     expect(matchesRosterQuery(brandon, "don")).toBe(false);
     expect(matchesRosterQuery(brandon, "don", undefined, true)).toBe(true);
   });

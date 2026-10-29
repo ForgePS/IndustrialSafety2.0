@@ -49,11 +49,7 @@ export class TenantsService {
    * UPDATE's WHERE clause so a concurrent writer cannot slip in between the
    * read and the write.
    */
-  private assertVersion(
-    tenantId: string,
-    current: number,
-    expected: ExpectedVersion,
-  ): number {
+  private assertVersion(tenantId: string, current: number, expected: ExpectedVersion): number {
     if (expected !== "*" && current !== expected) {
       throw concurrencyConflict({
         tenantId,
@@ -170,49 +166,54 @@ export class TenantsService {
     expectedVersion: ExpectedVersion,
   ) {
     const data = patchTenantSchema.parse(input);
-    return withTenantTransaction(this.db, tenantId, async (tx) => {
-      const before = await tx.query.tenants.findFirst({ where: eq(tenants.id, tenantId) });
-      if (!before) {
-        throw new ForgeError("NOT_FOUND", "Tenant not found");
-      }
-      const version = this.assertVersion(tenantId, before.recordVersion, expectedVersion);
-      const [updated] = await tx
-        .update(tenants)
-        .set({
-          ...data,
-          recordVersion: version + 1,
-          updatedAt: new Date(),
-          updatedByUserId: principal.userId,
-        })
-        .where(and(eq(tenants.id, tenantId), eq(tenants.recordVersion, version)))
-        .returning();
-      if (!updated) {
-        throw concurrencyConflict({
+    return withTenantTransaction(
+      this.db,
+      tenantId,
+      async (tx) => {
+        const before = await tx.query.tenants.findFirst({ where: eq(tenants.id, tenantId) });
+        if (!before) {
+          throw new ForgeError("NOT_FOUND", "Tenant not found");
+        }
+        const version = this.assertVersion(tenantId, before.recordVersion, expectedVersion);
+        const [updated] = await tx
+          .update(tenants)
+          .set({
+            ...data,
+            recordVersion: version + 1,
+            updatedAt: new Date(),
+            updatedByUserId: principal.userId,
+          })
+          .where(and(eq(tenants.id, tenantId), eq(tenants.recordVersion, version)))
+          .returning();
+        if (!updated) {
+          throw concurrencyConflict({
+            tenantId,
+            resourceType: "tenant",
+            resourceId: tenantId,
+            expectedVersion,
+            actualVersion: null,
+          });
+        }
+
+        await this.audit.writeInTransaction(tx, {
           tenantId,
+          actorUserId: principal.userId,
+          actorPersonId: principal.personId,
+          actorType: "USER",
+          action: "tenant.update",
           resourceType: "tenant",
           resourceId: tenantId,
-          expectedVersion,
-          actualVersion: null,
+          result: "SUCCESS",
+          riskLevel: "LOW",
+          correlationId: principal.correlationId,
+          requestId: principal.requestId,
+          before,
+          after: updated,
         });
-      }
-
-      await this.audit.writeInTransaction(tx, {
-        tenantId,
-        actorUserId: principal.userId,
-        actorPersonId: principal.personId,
-        actorType: "USER",
-        action: "tenant.update",
-        resourceType: "tenant",
-        resourceId: tenantId,
-        result: "SUCCESS",
-        riskLevel: "LOW",
-        correlationId: principal.correlationId,
-        requestId: principal.requestId,
-        before,
-        after: updated,
-      });
-      return updated;
-    }, principal.userId);
+        return updated;
+      },
+      principal.userId,
+    );
   }
 
   private async transition(
@@ -228,67 +229,72 @@ export class TenantsService {
       metadata?: Record<string, unknown>;
     },
   ) {
-    return withTenantTransaction(this.db, tenantId, async (tx) => {
-      const before = await tx.query.tenants.findFirst({ where: eq(tenants.id, tenantId) });
-      if (!before) {
-        throw new ForgeError("NOT_FOUND", "Tenant not found");
-      }
-      this.assertTransition(before.status, nextStatus);
-      const version = this.assertVersion(tenantId, before.recordVersion, expectedVersion);
-      const now = new Date();
-      const [updated] = await tx
-        .update(tenants)
-        .set({
-          status: nextStatus,
-          recordVersion: version + 1,
-          updatedAt: now,
-          updatedByUserId: principal.userId,
-          ...(options.extras ?? {}),
-        })
-        .where(and(eq(tenants.id, tenantId), eq(tenants.recordVersion, version)))
-        .returning();
-      if (!updated) {
-        throw concurrencyConflict({
+    return withTenantTransaction(
+      this.db,
+      tenantId,
+      async (tx) => {
+        const before = await tx.query.tenants.findFirst({ where: eq(tenants.id, tenantId) });
+        if (!before) {
+          throw new ForgeError("NOT_FOUND", "Tenant not found");
+        }
+        this.assertTransition(before.status, nextStatus);
+        const version = this.assertVersion(tenantId, before.recordVersion, expectedVersion);
+        const now = new Date();
+        const [updated] = await tx
+          .update(tenants)
+          .set({
+            status: nextStatus,
+            recordVersion: version + 1,
+            updatedAt: now,
+            updatedByUserId: principal.userId,
+            ...(options.extras ?? {}),
+          })
+          .where(and(eq(tenants.id, tenantId), eq(tenants.recordVersion, version)))
+          .returning();
+        if (!updated) {
+          throw concurrencyConflict({
+            tenantId,
+            resourceType: "tenant",
+            resourceId: tenantId,
+            expectedVersion,
+            actualVersion: null,
+          });
+        }
+
+        await this.outbox.write(tx, {
           tenantId,
+          aggregateType: "tenant",
+          aggregateId: tenantId,
+          eventType: options.eventType,
+          payload: {
+            tenantId,
+            previousStatus: before.status,
+            status: nextStatus,
+            ...(options.metadata ?? {}),
+          },
+          correlationId: principal.correlationId,
+          actorUserId: principal.userId,
+        });
+        await this.audit.writeInTransaction(tx, {
+          tenantId,
+          actorUserId: principal.userId,
+          actorPersonId: principal.personId,
+          actorType: "USER",
+          action: options.auditAction,
           resourceType: "tenant",
           resourceId: tenantId,
-          expectedVersion,
-          actualVersion: null,
+          result: "SUCCESS",
+          riskLevel: options.riskLevel,
+          correlationId: principal.correlationId,
+          requestId: principal.requestId,
+          before,
+          after: updated,
+          ...(options.metadata ? { metadata: options.metadata } : {}),
         });
-      }
-
-      await this.outbox.write(tx, {
-        tenantId,
-        aggregateType: "tenant",
-        aggregateId: tenantId,
-        eventType: options.eventType,
-        payload: {
-          tenantId,
-          previousStatus: before.status,
-          status: nextStatus,
-          ...(options.metadata ?? {}),
-        },
-        correlationId: principal.correlationId,
-        actorUserId: principal.userId,
-      });
-      await this.audit.writeInTransaction(tx, {
-        tenantId,
-        actorUserId: principal.userId,
-        actorPersonId: principal.personId,
-        actorType: "USER",
-        action: options.auditAction,
-        resourceType: "tenant",
-        resourceId: tenantId,
-        result: "SUCCESS",
-        riskLevel: options.riskLevel,
-        correlationId: principal.correlationId,
-        requestId: principal.requestId,
-        before,
-        after: updated,
-        ...(options.metadata ? { metadata: options.metadata } : {}),
-      });
-      return updated;
-    }, principal.userId);
+        return updated;
+      },
+      principal.userId,
+    );
   }
 
   async activate(

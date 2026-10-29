@@ -46,7 +46,11 @@ export const fieldReportApi = {
           : "incident";
 
     if (metaApi === "incident") {
-      if (!acceptsQueuedMutations("industrial.incidents") && typeof navigator !== "undefined" && !navigator.onLine) {
+      if (
+        !acceptsQueuedMutations("industrial.incidents") &&
+        typeof navigator !== "undefined" &&
+        !navigator.onLine
+      ) {
         throw new Error("Incident reports require a network connection.");
       }
       const created = await fieldReportApi.createIncident(

@@ -10,7 +10,10 @@ const REGION = "us-east-1";
 const CLUSTER = "forge-production-ecs-platform";
 const API_SERVICE = "forge-production-ecs-platform-api";
 const API_ECR = `${ACCOUNT}.dkr.ecr.${REGION}.amazonaws.com/forge-production-ecr-platformapi`;
-const stamp = new Date().toISOString().replace(/[-:TZ.]/g, "").slice(0, 14);
+const stamp = new Date()
+  .toISOString()
+  .replace(/[-:TZ.]/g, "")
+  .slice(0, 14);
 const tag = `training-source-groups-${stamp}`;
 
 function sh(cmd, opts = {}) {
@@ -60,7 +63,9 @@ const apiReg = JSON.parse(
   shOut(`aws ecs register-task-definition --cli-input-json file://${apiPath} --output json`),
 ).taskDefinition;
 
-sh(`node scripts/run-ecs-migrate.mjs --env production --task-definition ${apiReg.taskDefinitionArn}`);
+sh(
+  `node scripts/run-ecs-migrate.mjs --env production --task-definition ${apiReg.taskDefinitionArn}`,
+);
 
 sh(
   `aws ecs update-service --cluster ${CLUSTER} --service ${API_SERVICE} --task-definition ${apiReg.taskDefinitionArn} --force-new-deployment`,
@@ -74,4 +79,6 @@ try {
 }
 process.env.NODE_ENV = "production";
 sh(`node scripts/sync-static-site.mjs --app industrial --environment production`);
-console.log(JSON.stringify({ ok: true, tag, apiTaskDefinition: apiReg.taskDefinitionArn }, null, 2));
+console.log(
+  JSON.stringify({ ok: true, tag, apiTaskDefinition: apiReg.taskDefinitionArn }, null, 2),
+);

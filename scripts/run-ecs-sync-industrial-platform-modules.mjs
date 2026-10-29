@@ -177,4 +177,10 @@ const { cluster, taskArn } = runPlatformApiOneOff(
   },
 );
 
-console.log(JSON.stringify({ ok: true, apply: APPLY === "1", cluster, taskArn, logGroup: LOG_GROUP }, null, 2));
+console.log(
+  JSON.stringify(
+    { ok: true, apply: APPLY === "1", cluster, taskArn, logGroup: LOG_GROUP },
+    null,
+    2,
+  ),
+);

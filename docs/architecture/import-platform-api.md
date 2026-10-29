@@ -17,17 +17,17 @@ Provide a product-neutral NestJS control plane for import jobs, profiles, mappin
 
 ## Reused platform frameworks
 
-| Concern | Existing mechanism |
-| --- | --- |
-| Auth | `AuthGuard` + `x-forge-dev-principal` / Cognito |
-| Permissions | `@RequirePermission` / `@RequireAnyPermission` + `PermissionGuard` |
-| Tenant + RLS | `withTenantTransaction` (`SET LOCAL app.current_tenant_id/user_id`) |
-| Idempotency | `@Idempotent` + `IdempotencyInterceptor` (ADR-022) |
-| Audit | `AuditService.writeInTransaction` |
-| Domain events | `OutboxService.write` |
-| Correlation | `getRequestIds` / request middleware |
-| Validation | Zod schemas in `@forge/imports` |
-| Errors | `ForgeError` + `GlobalExceptionFilter` |
+| Concern       | Existing mechanism                                                  |
+| ------------- | ------------------------------------------------------------------- |
+| Auth          | `AuthGuard` + `x-forge-dev-principal` / Cognito                     |
+| Permissions   | `@RequirePermission` / `@RequireAnyPermission` + `PermissionGuard`  |
+| Tenant + RLS  | `withTenantTransaction` (`SET LOCAL app.current_tenant_id/user_id`) |
+| Idempotency   | `@Idempotent` + `IdempotencyInterceptor` (ADR-022)                  |
+| Audit         | `AuditService.writeInTransaction`                                   |
+| Domain events | `OutboxService.write`                                               |
+| Correlation   | `getRequestIds` / request middleware                                |
+| Validation    | Zod schemas in `@forge/imports`                                     |
+| Errors        | `ForgeError` + `GlobalExceptionFilter`                              |
 
 ## S2 initial job state
 

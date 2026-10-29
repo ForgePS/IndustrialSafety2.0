@@ -22,9 +22,9 @@ import {
 
 describe("workers-comp-module", () => {
   it("parses claim summary", () => {
-    expect(parseWorkersCompClaimSummary({ claimNumber: " C1 ", dateOfInjury: "2026-01-02" })).toEqual(
-      expect.objectContaining({ claimNumber: "C1", dateOfInjury: "2026-01-02" }),
-    );
+    expect(
+      parseWorkersCompClaimSummary({ claimNumber: " C1 ", dateOfInjury: "2026-01-02" }),
+    ).toEqual(expect.objectContaining({ claimNumber: "C1", dateOfInjury: "2026-01-02" }));
   });
 
   it("maps case records and syncs claim number to case number", () => {
@@ -79,7 +79,9 @@ describe("workers-comp-module", () => {
   });
 
   it("maps summary tiles input", () => {
-    expect(toWorkersCompSummary({ total: 4, open: 2, restricted: 1, lostTime: 1, closed: 0 })).toEqual({
+    expect(
+      toWorkersCompSummary({ total: 4, open: 2, restricted: 1, lostTime: 1, closed: 0 }),
+    ).toEqual({
       total: 4,
       open: 2,
       restricted: 1,

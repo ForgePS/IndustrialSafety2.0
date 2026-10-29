@@ -406,7 +406,8 @@ async function entitle(sql, tenantId, membershipId, userId) {
   const product = await sql`
     select id::text as id from platform_products where code = 'FORGE_INDUSTRIAL' limit 1
   `;
-  if (!product[0]) throw new Error("FORGE_INDUSTRIAL product missing — run platform catalog seed first");
+  if (!product[0])
+    throw new Error("FORGE_INDUSTRIAL product missing — run platform catalog seed first");
 
   const tp = await sql`
     select id::text as id from tenant_products

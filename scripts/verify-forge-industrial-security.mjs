@@ -65,7 +65,8 @@ check(
   "CSP connect-src must not be bare https:",
 );
 
-const branding = read("apps/platform-api/src/modules/branding/login-branding.public-schema.ts") ?? "";
+const branding =
+  read("apps/platform-api/src/modules/branding/login-branding.public-schema.ts") ?? "";
 const brandingDtoShape = branding.replace(/\/\*[\s\S]*?\*\//g, "").replace(/\/\/.*$/gm, "");
 check(
   "FIS-L01-no-tenantId",
@@ -78,7 +79,8 @@ check(
 const staticHosting = read("infrastructure/cdk/lib/constructs/forge-static-hosting.ts") ?? "";
 check(
   "FIS-L02-legacy-redirect",
-  staticHosting.includes("legacyRedirect") || staticHosting.includes("buildLegacyHostRedirectSnippet"),
+  staticHosting.includes("legacyRedirect") ||
+    staticHosting.includes("buildLegacyHostRedirectSnippet"),
   "Legacy host redirect snippet wired into static hosting",
 );
 
@@ -86,11 +88,7 @@ const matrixPath = "apps/platform-api/src/modules/industrial/industrial-authz-ma
 const matrix = read(matrixPath);
 check(
   "RG-authz-matrix",
-  Boolean(
-    matrix &&
-      matrix.includes("PermissionGuard") &&
-      matrix.includes("authorization matrix"),
-  ),
+  Boolean(matrix && matrix.includes("PermissionGuard") && matrix.includes("authorization matrix")),
   "Synthetic industrial authz HTTP matrix test present",
 );
 
@@ -140,5 +138,7 @@ for (const row of results) {
   if (row.status === "FAIL") failed += 1;
 }
 
-console.log(`\n${results.length} checks, ${failed} FAIL, ${results.filter((r) => r.status === "REVIEW").length} REVIEW`);
+console.log(
+  `\n${results.length} checks, ${failed} FAIL, ${results.filter((r) => r.status === "REVIEW").length} REVIEW`,
+);
 process.exit(failed > 0 ? 1 : 0);

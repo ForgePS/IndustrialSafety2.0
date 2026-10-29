@@ -31,13 +31,13 @@ In-app notification inbox (model, API, UI) and provider-neutral email abstractio
 
 ## Verification
 
-| Check | Result |
-| --- | --- |
-| contracts/database/configuration/ui build | PASS |
-| platform-api / creator / tenant-admin typecheck | PASS |
-| email-provider unit tests | 4 passed |
-| contracts unit tests | 29 passed |
-| Production operations | NONE |
+| Check                                           | Result    |
+| ----------------------------------------------- | --------- |
+| contracts/database/configuration/ui build       | PASS      |
+| platform-api / creator / tenant-admin typecheck | PASS      |
+| email-provider unit tests                       | 4 passed  |
+| contracts unit tests                            | 29 passed |
+| Production operations                           | NONE      |
 
 ## Next sprint
 

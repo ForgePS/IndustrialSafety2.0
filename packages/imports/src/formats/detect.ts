@@ -3,8 +3,7 @@ import type { DetectedFileMeta } from "../interfaces.js";
 import type { ImportFormat } from "../types.js";
 
 export type FormatDetectionResult =
-  | { ok: true; meta: DetectedFileMeta }
-  | { ok: false; code: string; message: string };
+  { ok: true; meta: DetectedFileMeta } | { ok: false; code: string; message: string };
 
 function sha256Hex(bytes: Uint8Array): string {
   return createHash("sha256").update(bytes).digest("hex");
@@ -36,11 +35,7 @@ function detectCsv(bytes: Uint8Array, _fileName: string): FormatDetectionResult 
   if (!firstLine) {
     return { ok: false, code: "IMPORT_FORMAT_INVALID", message: "CSV has no header row" };
   }
-  const delimiter = firstLine.includes("\t")
-    ? "\t"
-    : firstLine.includes(";")
-      ? ";"
-      : ",";
+  const delimiter = firstLine.includes("\t") ? "\t" : firstLine.includes(";") ? ";" : ",";
   const headers = firstLine.split(delimiter).map((h) => h.trim().replace(/^"|"$/g, ""));
   if (headers.length < 1 || headers.every((h) => !h)) {
     return { ok: false, code: "IMPORT_FORMAT_INVALID", message: "CSV headers are empty" };
@@ -86,7 +81,10 @@ function detectJson(bytes: Uint8Array): FormatDetectionResult {
       };
     }
     headers = Object.keys(first as Record<string, unknown>);
-  } else if ("records" in (parsed as object) && Array.isArray((parsed as { records: unknown }).records)) {
+  } else if (
+    "records" in (parsed as object) &&
+    Array.isArray((parsed as { records: unknown }).records)
+  ) {
     const records = (parsed as { records: unknown[] }).records;
     const first = records[0];
     if (first && typeof first === "object" && !Array.isArray(first)) {

@@ -28,11 +28,11 @@ node scripts/ind11b-p1-api-smoke-tenant-a.mjs
 
 ## UI smoke (static)
 
-| URL | Result |
-| --- | --- |
+| URL                   | Result                                   |
+| --------------------- | ---------------------------------------- |
 | `/modules/equipment/` | **EquipmentWorkspace** (not placeholder) |
-| `/modules/loto/` | **LotoWorkspace** |
-| `/modules/personnel/` | **PersonnelWorkspace** |
+| `/modules/loto/`      | **LotoWorkspace**                        |
+| `/modules/personnel/` | **PersonnelWorkspace**                   |
 
 Live UI: https://d2ed3566n8x2gi.cloudfront.net/  
 Evidence HTML under `evidence/wave3/smoke-*.html`.
@@ -52,20 +52,20 @@ Evidence HTML under `evidence/wave3/smoke-*.html`.
 
 After web-kit tenant stickiness deploy (invalidation `ICQM3QXKQAX9ONOZV56BEXJYKB`):
 
-| Step | Result |
-| --- | --- |
+| Step                           | Result                                                      |
+| ------------------------------ | ----------------------------------------------------------- |
 | Cognito session on home tenant | Not entitled gate + **Import Acceptance Tenant A** switcher |
-| Persist Tenant A + reload | Dashboard: Tenant A, full industrial nav |
-| `/modules/personnel/` | Roster rows (Producers names) |
-| `/modules/equipment/` | Assets (e.g. 201 Diverter Valve) |
-| `/modules/loto/` | Procedures (e.g. LOTO-CON-2026-0012) |
-| `/modules/training/` | Workspace OK |
-| `/modules/forms/` | Workspace OK (ACTIVE rows) |
-| `/modules/inspections/` | Workspace OK (DRAFT rows) |
-| `/modules/incidents/` | Workspace OK (OPEN rows) |
-| `/modules/qr-links/` | Workspace OK |
-| `/modules/confined-space/` | Workspace OK |
-| `/modules/hot-work/` | Workspace OK (sample DRAFT) |
+| Persist Tenant A + reload      | Dashboard: Tenant A, full industrial nav                    |
+| `/modules/personnel/`          | Roster rows (Producers names)                               |
+| `/modules/equipment/`          | Assets (e.g. 201 Diverter Valve)                            |
+| `/modules/loto/`               | Procedures (e.g. LOTO-CON-2026-0012)                        |
+| `/modules/training/`           | Workspace OK                                                |
+| `/modules/forms/`              | Workspace OK (ACTIVE rows)                                  |
+| `/modules/inspections/`        | Workspace OK (DRAFT rows)                                   |
+| `/modules/incidents/`          | Workspace OK (OPEN rows)                                    |
+| `/modules/qr-links/`           | Workspace OK                                                |
+| `/modules/confined-space/`     | Workspace OK                                                |
+| `/modules/hot-work/`           | Workspace OK (sample DRAFT)                                 |
 
 Evidence: `evidence/wave3/browser-smoke-extra-modules.json`.
 

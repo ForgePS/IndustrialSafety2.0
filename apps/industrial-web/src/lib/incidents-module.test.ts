@@ -321,9 +321,7 @@ describe("incidents module helpers", () => {
 
     const blank = emptyIncidentCreateForm("Reporter");
     expect(blank.dateOccurred).toMatch(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/);
-    expect(blank.title).toBe(
-      suggestIncidentTitle({ dateOccurred: blank.dateOccurred }),
-    );
+    expect(blank.title).toBe(suggestIncidentTitle({ dateOccurred: blank.dateOccurred }));
     expect(blank.title.startsWith(formatIncidentTitleDate(blank.dateOccurred))).toBe(true);
     expect(blank.reportedBy).toBe("Reporter");
 
@@ -559,9 +557,7 @@ describe("incidents module helpers", () => {
       personAffected: "Jane Doe",
       personnelId: "pers-123",
     });
-    expect(
-      incidentRecordToCreateFormState(linked!).personnelId,
-    ).toBe("pers-123");
+    expect(incidentRecordToCreateFormState(linked!).personnelId).toBe("pers-123");
   });
 
   it("builds a safe printable download filename", () => {
@@ -611,10 +607,7 @@ describe("incidents module helpers", () => {
     const sorted = sortIncidentsNumerically([newerSameYear, undated, priorYear, older]);
     expect(sorted.map((row) => row.id)).toEqual(["c", "a", "b", "d"]);
 
-    const newest = sortIncidentsByDate(
-      [newerSameYear, undated, priorYear, older],
-      "newest",
-    );
+    const newest = sortIncidentsByDate([newerSameYear, undated, priorYear, older], "newest");
     expect(newest.map((row) => row.id)).toEqual(["b", "a", "c", "d"]);
 
     const groupsNewest = groupIncidentsByYear(newest, "newest");

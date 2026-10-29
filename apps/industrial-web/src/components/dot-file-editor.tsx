@@ -46,7 +46,14 @@ function FieldInput({
   let control: ReactNode;
   if (fieldKey === "conditionSatisfactory") {
     control = (
-      <select id={id} name={fieldKey} className="form-select" disabled={disabled} value={value} onChange={common.onChange}>
+      <select
+        id={id}
+        name={fieldKey}
+        className="form-select"
+        disabled={disabled}
+        value={value}
+        onChange={common.onChange}
+      >
         <option value="">—</option>
         <option value="true">Yes</option>
         <option value="false">No</option>
@@ -61,7 +68,14 @@ function FieldInput({
       optionValues.push(current);
     }
     control = (
-      <select id={id} name={fieldKey} className="form-select" disabled={disabled} value={value} onChange={common.onChange}>
+      <select
+        id={id}
+        name={fieldKey}
+        className="form-select"
+        disabled={disabled}
+        value={value}
+        onChange={common.onChange}
+      >
         <option value="">—</option>
         {optionValues.map((option) => (
           <option key={option} value={option}>
@@ -98,10 +112,20 @@ export function DotFileEditor({
       <div className="card-header d-flex flex-wrap align-items-center justify-content-between gap-2">
         <h6 className="card-title mb-0">Edit DOT file</h6>
         <div className="d-flex flex-wrap gap-2">
-          <button type="button" className="btn btn-sm btn-primary" disabled={saving} onClick={onSave}>
+          <button
+            type="button"
+            className="btn btn-sm btn-primary"
+            disabled={saving}
+            onClick={onSave}
+          >
             {saving ? "Saving…" : "Save changes"}
           </button>
-          <button type="button" className="btn btn-sm btn-outline-secondary" disabled={saving} onClick={onCancel}>
+          <button
+            type="button"
+            className="btn btn-sm btn-outline-secondary"
+            disabled={saving}
+            onClick={onCancel}
+          >
             Cancel
           </button>
         </div>
@@ -109,8 +133,8 @@ export function DotFileEditor({
       <div className="card-body">
         {mergedProfile ? (
           <p className="text-muted small mb-3">
-            This profile combines multiple DOT files. Changes here apply only to the file you opened,
-            not other combined records.
+            This profile combines multiple DOT files. Changes here apply only to the file you
+            opened, not other combined records.
           </p>
         ) : null}
         {sections.map((section) => (

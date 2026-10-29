@@ -7,27 +7,27 @@
 
 ## Contents
 
-| Artifact | Location |
-| --- | --- |
+| Artifact                    | Location                                      |
+| --------------------------- | --------------------------------------------- |
 | Accessibility certification | `../reference/accessibility-certification.md` |
-| Responsive certification | `../reference/responsive-certification.md` |
-| Theme certification | `../reference/theme-certification.md` |
-| Performance baseline | `reports/performance-baseline.md` |
-| Browser compatibility | `reports/browser-compatibility.md` |
-| Component certification | `../43-component-certification.md` |
-| Design system version | `../VERSION.md` |
-| Screenshots | `screenshots/` |
-| Certification summary | `CERTIFICATION-SUMMARY.md` (this folder) |
-| Component checklist | `reports/component-checklist.md` |
+| Responsive certification    | `../reference/responsive-certification.md`    |
+| Theme certification         | `../reference/theme-certification.md`         |
+| Performance baseline        | `reports/performance-baseline.md`             |
+| Browser compatibility       | `reports/browser-compatibility.md`            |
+| Component certification     | `../43-component-certification.md`            |
+| Design system version       | `../VERSION.md`                               |
+| Screenshots                 | `screenshots/`                                |
+| Certification summary       | `CERTIFICATION-SUMMARY.md` (this folder)      |
+| Component checklist         | `reports/component-checklist.md`              |
 
 ## Screenshots
 
-| File | Description |
-| --- | --- |
-| `screenshots/fx-s15-dashboard-light.png` | Dashboard — light theme |
-| `screenshots/fx-s15-dashboard-dark.png` | Dashboard — dark theme |
+| File                                             | Description               |
+| ------------------------------------------------ | ------------------------- |
+| `screenshots/fx-s15-dashboard-light.png`         | Dashboard — light theme   |
+| `screenshots/fx-s15-dashboard-dark.png`          | Dashboard — dark theme    |
 | `screenshots/fx-s15-dashboard-high-contrast.png` | Dashboard — high contrast |
-| `screenshots/fx-s15-dashboard-mobile-375.png` | Dashboard — ~375px width |
+| `screenshots/fx-s15-dashboard-mobile-375.png`    | Dashboard — ~375px width  |
 
 ## Integrity statement
 

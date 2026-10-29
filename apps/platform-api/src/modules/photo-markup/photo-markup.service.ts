@@ -324,11 +324,7 @@ export class PhotoMarkupService {
     });
   }
 
-  async createRenderedDownloadUrl(
-    principal: ForgePrincipal,
-    photoId: string,
-    revisionId: string,
-  ) {
+  async createRenderedDownloadUrl(principal: ForgePrincipal, photoId: string, revisionId: string) {
     const tenantId = requireTenant(principal);
     const revision = await this.getRevision(principal, photoId, revisionId);
     if (!revision.renderedDocumentId) {

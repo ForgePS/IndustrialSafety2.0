@@ -260,6 +260,9 @@ jobs:
         run: pnpm install --frozen-lockfile
       - name: Build workspace
         run: pnpm build
+        env:
+          # Static exports require it to be set; empty string = same-origin /api proxy.
+          NEXT_PUBLIC_API_URL: ""
       - name: Prepare databases
         run: |
           PGPASSWORD=forge_local_only psql -h localhost -U forge -d forge_platform_local -c "CREATE DATABASE forge_platform_test;"
@@ -300,6 +303,9 @@ jobs:
         run: pnpm install --frozen-lockfile
       - name: Build
         run: pnpm build
+        env:
+          # Static exports require it to be set; empty string = same-origin /api proxy.
+          NEXT_PUBLIC_API_URL: ""
 
   cdk-synth:
     runs-on: ubuntu-latest

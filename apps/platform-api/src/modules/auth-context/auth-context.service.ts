@@ -57,9 +57,7 @@ export function isOnlineFromActivity(
 ): boolean {
   if (!lastActivityAt) return false;
   const t =
-    lastActivityAt instanceof Date
-      ? lastActivityAt.getTime()
-      : new Date(lastActivityAt).getTime();
+    lastActivityAt instanceof Date ? lastActivityAt.getTime() : new Date(lastActivityAt).getTime();
   if (Number.isNaN(t)) return false;
   return nowMs - t < PRESENCE_ONLINE_MS;
 }
@@ -277,8 +275,7 @@ export class AuthContextService {
         membershipId: row.membershipId,
         membershipStatus: row.membershipStatus,
         isDefaultTenant: row.isDefaultTenant,
-        selectable:
-          isMembershipStatusActive(row.membershipStatus) && tenantSession.canAuthenticate,
+        selectable: isMembershipStatusActive(row.membershipStatus) && tenantSession.canAuthenticate,
         accessMode: "MEMBER" as AuthAccessMode,
       };
     });
@@ -352,7 +349,10 @@ export class AuthContextService {
       permissionCodes = permissions.permissionCodes;
     } else if (access && isMembershipStatusActive(access.status) && principal.isPlatformAdmin) {
       const membershipPermissions = await this.loadPermissions(tenantId, principal.userId);
-      permissionCodes = new Set([...principal.permissions, ...membershipPermissions.permissionCodes]);
+      permissionCodes = new Set([
+        ...principal.permissions,
+        ...membershipPermissions.permissionCodes,
+      ]);
     }
 
     const entitlements = await this.loadEntitlements(tenantId, access?.membershipId ?? null, {
@@ -367,30 +367,35 @@ export class AuthContextService {
           : "MEMBER";
 
     if (principal.isPlatformAdmin) {
-      await withTenantTransaction(this.db, tenantId, async (tx) => {
-        await this.audit.writeInTransaction(tx, {
-          tenantId,
-          actorUserId: principal.userId,
-          actorPersonId: principal.personId,
-          actorType: "USER",
-          action: "PLATFORM_ADMIN_TENANT_ACCESS_STARTED",
-          resourceType: "tenant",
-          resourceId: tenantId,
-          result: "SUCCESS",
-          riskLevel: "HIGH",
-          correlationId: principal.correlationId,
-          requestId: principal.requestId,
-          after: {
-            platformRole: "PLATFORM_SUPER_ADMIN",
-            platformAdmin: true,
-            targetTenantId: tenantId,
-            targetProduct: options?.productCode ?? null,
-            reason: options?.reason ?? "select-tenant",
-            accessMode: resolvedAccessMode,
-            membershipId: access?.membershipId ?? null,
-          },
-        });
-      }, principal.userId);
+      await withTenantTransaction(
+        this.db,
+        tenantId,
+        async (tx) => {
+          await this.audit.writeInTransaction(tx, {
+            tenantId,
+            actorUserId: principal.userId,
+            actorPersonId: principal.personId,
+            actorType: "USER",
+            action: "PLATFORM_ADMIN_TENANT_ACCESS_STARTED",
+            resourceType: "tenant",
+            resourceId: tenantId,
+            result: "SUCCESS",
+            riskLevel: "HIGH",
+            correlationId: principal.correlationId,
+            requestId: principal.requestId,
+            after: {
+              platformRole: "PLATFORM_SUPER_ADMIN",
+              platformAdmin: true,
+              targetTenantId: tenantId,
+              targetProduct: options?.productCode ?? null,
+              reason: options?.reason ?? "select-tenant",
+              accessMode: resolvedAccessMode,
+              membershipId: access?.membershipId ?? null,
+            },
+          });
+        },
+        principal.userId,
+      );
     }
 
     const summaryPrincipal: ForgePrincipal = {
@@ -500,73 +505,78 @@ export class AuthContextService {
   }
 
   private async loadPermissions(tenantId: string, userId: string) {
-    return withTenantTransaction(this.db, tenantId, async (tx) => {
-      const membership = await tx.query.userTenantMemberships.findFirst({
-        where: and(
-          eq(userTenantMemberships.tenantId, tenantId),
-          eq(userTenantMemberships.userId, userId),
-          eq(userTenantMemberships.status, "ACTIVE"),
-        ),
-      });
+    return withTenantTransaction(
+      this.db,
+      tenantId,
+      async (tx) => {
+        const membership = await tx.query.userTenantMemberships.findFirst({
+          where: and(
+            eq(userTenantMemberships.tenantId, tenantId),
+            eq(userTenantMemberships.userId, userId),
+            eq(userTenantMemberships.status, "ACTIVE"),
+          ),
+        });
 
-      let roleRows: Array<{ roleId: string; roleCode: string }> = [];
-      if (membership) {
-        roleRows = await tx
-          .select({
-            roleId: membershipRoleAssignments.roleId,
-            roleCode: roles.code,
-          })
-          .from(membershipRoleAssignments)
-          .innerJoin(roles, eq(roles.id, membershipRoleAssignments.roleId))
-          .where(
-            and(
-              eq(membershipRoleAssignments.membershipId, membership.id),
-              eq(membershipRoleAssignments.status, "ACTIVE"),
-              isNull(membershipRoleAssignments.revokedAt),
-            ),
+        let roleRows: Array<{ roleId: string; roleCode: string }> = [];
+        if (membership) {
+          roleRows = await tx
+            .select({
+              roleId: membershipRoleAssignments.roleId,
+              roleCode: roles.code,
+            })
+            .from(membershipRoleAssignments)
+            .innerJoin(roles, eq(roles.id, membershipRoleAssignments.roleId))
+            .where(
+              and(
+                eq(membershipRoleAssignments.membershipId, membership.id),
+                eq(membershipRoleAssignments.status, "ACTIVE"),
+                isNull(membershipRoleAssignments.revokedAt),
+              ),
+            );
+        } else {
+          // Fall back to the Sprint 1D user_role_assignments projection.
+          roleRows = await tx
+            .select({
+              roleId: userRoleAssignments.roleId,
+              roleCode: roles.code,
+            })
+            .from(userRoleAssignments)
+            .innerJoin(roles, eq(roles.id, userRoleAssignments.roleId))
+            .where(
+              and(
+                eq(userRoleAssignments.tenantId, tenantId),
+                eq(userRoleAssignments.userId, userId),
+                isNull(userRoleAssignments.revokedAt),
+              ),
+            );
+        }
+
+        const roleCodes = new Set(roleRows.map((a) => a.roleCode));
+        const roleIds = roleRows.map((a) => a.roleId);
+        let permissionCodes = new Set<string>();
+
+        if (roleIds.length > 0) {
+          const perms = await tx
+            .select({
+              code: permissions.code,
+              effect: rolePermissions.effect,
+            })
+            .from(rolePermissions)
+            .innerJoin(permissions, eq(permissions.id, rolePermissions.permissionId))
+            .where(inArray(rolePermissions.roleId, roleIds));
+
+          permissionCodes = resolveEffectivePermissionCodes(
+            perms.map((p) => ({
+              code: p.code,
+              effect: p.effect === "DENY" ? "DENY" : "ALLOW",
+            })),
           );
-      } else {
-        // Fall back to the Sprint 1D user_role_assignments projection.
-        roleRows = await tx
-          .select({
-            roleId: userRoleAssignments.roleId,
-            roleCode: roles.code,
-          })
-          .from(userRoleAssignments)
-          .innerJoin(roles, eq(roles.id, userRoleAssignments.roleId))
-          .where(
-            and(
-              eq(userRoleAssignments.tenantId, tenantId),
-              eq(userRoleAssignments.userId, userId),
-              isNull(userRoleAssignments.revokedAt),
-            ),
-          );
-      }
+        }
 
-      const roleCodes = new Set(roleRows.map((a) => a.roleCode));
-      const roleIds = roleRows.map((a) => a.roleId);
-      let permissionCodes = new Set<string>();
-
-      if (roleIds.length > 0) {
-        const perms = await tx
-          .select({
-            code: permissions.code,
-            effect: rolePermissions.effect,
-          })
-          .from(rolePermissions)
-          .innerJoin(permissions, eq(permissions.id, rolePermissions.permissionId))
-          .where(inArray(rolePermissions.roleId, roleIds));
-
-        permissionCodes = resolveEffectivePermissionCodes(
-          perms.map((p) => ({
-            code: p.code,
-            effect: p.effect === "DENY" ? "DENY" : "ALLOW",
-          })),
-        );
-      }
-
-      return { roleCodes, permissionCodes };
-    }, userId);
+        return { roleCodes, permissionCodes };
+      },
+      userId,
+    );
   }
 
   private async loadEntitlements(
@@ -732,9 +742,7 @@ export class AuthContextService {
             patch.lastActivityAt = new Date(now);
           }
           if (loginNeedsUpdate) {
-            patch.lastLoginAt = new Date(
-              opts.tokenIssuedAtMs != null ? opts.tokenIssuedAtMs : now,
-            );
+            patch.lastLoginAt = new Date(opts.tokenIssuedAtMs != null ? opts.tokenIssuedAtMs : now);
           }
           await tx.update(users).set(patch).where(eq(users.id, userId));
         },
