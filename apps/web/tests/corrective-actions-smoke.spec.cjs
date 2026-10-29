@@ -86,7 +86,7 @@ async function createCapa(page, title) {
   await page.locator('select[name="assigned_personnel_id"]').selectOption({
     label: 'Forge Demo User (EMP-0001)'
   })
-  await page.locator('select[name="location_id"]').selectOption({ label: 'Demo Location (DEMO)' })
+  await page.locator('select[name="location_id"]').selectOption({ label: 'Cypress Bend Main Plant (CBM)' })
   await page.locator('input[name="due_at"]').fill('2026-10-15T12:00')
   await page.locator('textarea[name="immediate_containment"]').fill(
     'Machine removed from service and access restricted pending permanent correction.'

@@ -36,13 +36,13 @@ test('admin manages departments and positions and records personnel parity data'
   await expect(page.getByTestId('department-row-Milling')).toBeVisible()
 
   await page.locator('#department-name').fill(department)
-  await page.locator('#department-location').selectOption({ label: 'Demo Location (DEMO)' })
+  await page.locator('#department-location').selectOption({ label: 'Cypress Bend Main Plant (CBM)' })
   await page.getByRole('button', { name: 'Add Department' }).click()
   await expect(page.getByTestId(`department-row-${department}`)).toBeVisible({ timeout: 30000 })
 
   // Same name at the same Location is refused with a readable message.
   await page.locator('#department-name').fill(department.toLowerCase())
-  await page.locator('#department-location').selectOption({ label: 'Demo Location (DEMO)' })
+  await page.locator('#department-location').selectOption({ label: 'Cypress Bend Main Plant (CBM)' })
   await page.getByRole('button', { name: 'Add Department' }).click()
   await expect(page.getByText(/An active department with this name already exists here/)).toBeVisible({ timeout: 30000 })
 
@@ -61,7 +61,7 @@ test('admin manages departments and positions and records personnel parity data'
   await page.locator('#employment_status').selectOption('active')
   await page.locator('#employment_type').selectOption('seasonal')
   await page.locator('#hire_date').fill('2026-03-02')
-  await page.locator('#location_id').selectOption({ label: 'Demo Location (DEMO)' })
+  await page.locator('#location_id').selectOption({ label: 'Cypress Bend Main Plant (CBM)' })
   await page.locator('#department_id').selectOption({ label: department })
   await page.locator('#position_id').selectOption({ label: position })
   await page.locator('#is_dot_driver').click()

@@ -127,7 +127,7 @@ test.describe('NX-02R JSA execution', () => {
     await activateJsaViaWorkflow(page)
 
     await selectByLabelHint(page.locator('#execution-lead'), /NX Crew Lead/i)
-    await selectByLabelHint(page.locator('#execution-location'), /Demo Location/i)
+    await selectByLabelHint(page.locator('#execution-location'), /Cypress Bend Main Plant/i)
     const notes = page.locator('#execution-notes')
     if (await notes.isVisible().catch(() => false)) {
       await notes.fill('NX-02R field execution.')
@@ -169,7 +169,7 @@ test.describe('NX-02R JSA execution', () => {
       await page.goto(jsaUrl, { waitUntil: 'networkidle' })
       await page.waitForTimeout(400)
       await selectByLabelHint(page.locator('#execution-lead'), /NX Crew Lead/i)
-      await selectByLabelHint(page.locator('#execution-location'), /Demo Location/i)
+      await selectByLabelHint(page.locator('#execution-location'), /Cypress Bend Main Plant/i)
 
       let retargeted = 0
       await page.route(

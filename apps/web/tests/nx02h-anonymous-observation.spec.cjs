@@ -51,7 +51,7 @@ test.describe('NX-02H anonymous observation identity', () => {
     }
     await selectByLabelHint(
       page.locator('select[name="location_id"], #observation-location_id').first(),
-      /Demo Location/i
+      /Cypress Bend Main Plant/i
     )
 
     await page.getByRole('button', { name: /Save Observation/i }).click()

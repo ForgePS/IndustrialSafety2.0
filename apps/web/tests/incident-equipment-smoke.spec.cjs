@@ -19,7 +19,7 @@ async function createDraftIncident(page, summary) {
 
   await page.getByLabel('Incident Type').selectOption({ label: 'Near Miss' })
   await page.getByLabel('Severity').selectOption({ label: 'Moderate' })
-  await page.getByLabel('Location').selectOption({ label: 'Demo Location (DEMO)' })
+  await page.getByLabel('Location').selectOption({ label: 'Cypress Bend Main Plant (CBM)' })
   await page.getByLabel('Date & Time').fill('2026-09-20T10:30')
   await page.getByLabel('Summary').fill(summary)
 

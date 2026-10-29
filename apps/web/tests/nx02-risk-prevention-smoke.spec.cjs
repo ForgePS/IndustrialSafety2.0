@@ -91,7 +91,7 @@ async function createObservation(page, title) {
 
   const location = page.locator('select[name="location_id"]')
   if (await location.isVisible().catch(() => false)) {
-    await selectOptionByLabelRegex(location, /Demo Location/i)
+    await selectOptionByLabelRegex(location, /Cypress Bend Main Plant/i)
   }
 
   const createPost = waitForPost(page, /\/observations(\/|$)/i)
@@ -186,7 +186,7 @@ test('NX-02 risk prevention observation, risk, JSA, and tenant isolation smoke',
   }
   const jsaLocation = page.locator('select[name="location_id"]')
   if (await jsaLocation.isVisible().catch(() => false)) {
-    await selectOptionByLabelRegex(jsaLocation, /Demo Location/i)
+    await selectOptionByLabelRegex(jsaLocation, /Cypress Bend Main Plant/i)
   }
 
   const jsaPost = waitForPost(page, /\/jsas(\/|$)/i)

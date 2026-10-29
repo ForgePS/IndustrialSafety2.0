@@ -127,7 +127,7 @@ async function main() {
       'GET',
       '/rest/v1/locations?id=eq.' + LOC_A + '&organization_id=eq.' + ORG_A + '&select=id'
     )
-    assert(Array.isArray(data) && data.length === 1, 'Demo Location must exist for ALLOW path')
+    assert(Array.isArray(data) && data.length === 1, 'Cypress Bend Main Plant must exist for ALLOW path')
     console.log('  valid Tenant A in-scope location ALLOW candidate')
   }
 

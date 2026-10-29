@@ -38,7 +38,7 @@ async function createOpenCapaWithoutPlan(page, title) {
   await page.locator('select[name="assigned_personnel_id"]').selectOption({
     label: 'Forge Demo User (EMP-0001)'
   })
-  await page.locator('select[name="location_id"]').selectOption({ label: 'Demo Location (DEMO)' })
+  await page.locator('select[name="location_id"]').selectOption({ label: 'Cypress Bend Main Plant (CBM)' })
   await page.locator('input[name="due_at"]').fill('2026-11-01T09:00')
   await page.locator('textarea[name="immediate_containment"]').fill('Isolate equipment pending plan.')
   await page.locator('textarea[name="root_cause"]').fill('Inspection gap identified in R3 fixture.')
@@ -64,7 +64,7 @@ async function createCapaWithPlan(page, title) {
   await page.locator('select[name="assigned_personnel_id"]').selectOption({
     label: 'Forge Demo User (EMP-0001)'
   })
-  await page.locator('select[name="location_id"]').selectOption({ label: 'Demo Location (DEMO)' })
+  await page.locator('select[name="location_id"]').selectOption({ label: 'Cypress Bend Main Plant (CBM)' })
   await page.locator('input[name="due_at"]').fill('2026-11-02T10:00')
   await page.locator('textarea[name="immediate_containment"]').fill('Containment for R3 lifecycle.')
   await page.locator('textarea[name="root_cause"]').fill('Root cause for R3 lifecycle fixture.')
