@@ -1,9 +1,3 @@
--- Seed-only helpers live in a scratch schema, not session temp objects: the Supabase CLI does not
--- guarantee one database session per seed file, so temp tables and pg_temp functions can vanish
--- between statements. Dropped at the end of this file.
-drop schema if exists demo_seed_20 cascade;
-create schema demo_seed_20;
-
 -- =============================================================================
 -- Demo plant: Cypress Bend Rice Mill — Risk & Prevention modules.
 --   Observations (~3 months of plant-floor reporting, two anonymous)
@@ -28,31 +22,12 @@ create schema demo_seed_20;
 -- ---------------------------------------------------------------------------
 -- Session helpers (temporary; dropped at the end of this file)
 -- ---------------------------------------------------------------------------
-create or replace function demo_seed_20.f62_id(p text) returns uuid
-language sql immutable as $$ select ('62000000-0000-4000-8000-' || lpad(p, 12, '0'))::uuid $$;
 
 -- Person by roster number (0 = the seeded "Forge Demo User" personnel record).
-create or replace function demo_seed_20.f62_p(nn integer) returns uuid
-language sql immutable as $$
-  select case when nn is null then null
-              when nn = 0 then '20000000-0000-4000-8000-000000000600'::uuid
-              else ('60000000-0000-4000-8000-0000000030' || lpad(nn::text, 2, '0'))::uuid end
-$$;
 
 -- Auth user: 'U' = demo user (user@forge2.local), anything else = admin (Company Owner).
-create or replace function demo_seed_20.f62_u(code text) returns uuid
-language sql immutable as $$
-  select case when code is null then null
-              when code = 'U' then '20000000-0000-4000-8000-000000000002'::uuid
-              else '20000000-0000-4000-8000-000000000001'::uuid end
-$$;
 
 -- Plant-local (America/Chicago) wall-clock time, d days ago (negative d = in the future).
-create or replace function demo_seed_20.f62_ts(d integer, t text) returns timestamptz
-language sql stable as $$
-  select ((date_trunc('day', now() at time zone 'America/Chicago') - make_interval(days => d))
-          + t::interval) at time zone 'America/Chicago'
-$$;
 
 -- ---------------------------------------------------------------------------
 -- Tenant risk matrix: what ensureTenantDefaultRiskMatrix() creates the first time a risk is
@@ -113,34 +88,6 @@ where c.organization_id is null and c.matrix_key = 'forge.core.5x5' and c.versio
   and not exists (select 1 from public.forge_risk_matrix_cells where risk_matrix_id = demo_seed_20.f62_id('1'));
 
 -- Scoring against the tenant default matrix (same lookup the app's calculateRisk() does).
-create or replace function demo_seed_20.f62_matrix() returns uuid
-language sql stable as $$
-  select id from public.forge_risk_matrices
-  where organization_id = '20000000-0000-4000-8000-000000000100' and is_default and is_active
-  order by version desc limit 1
-$$;
-
-create or replace function demo_seed_20.f62_matrix_version() returns integer
-language sql stable as $$ select version from public.forge_risk_matrices where id = demo_seed_20.f62_matrix() $$;
-
-create or replace function demo_seed_20.f62_score(lk text, sk text) returns integer
-language sql stable as $$
-  select c.score
-  from public.forge_risk_matrix_cells c
-  join public.forge_risk_likelihood_levels l on l.id = c.likelihood_level_id
-  join public.forge_risk_severity_levels s on s.id = c.severity_level_id
-  where c.risk_matrix_id = demo_seed_20.f62_matrix() and l.level_key = lk and s.level_key = sk
-$$;
-
-create or replace function demo_seed_20.f62_band(lk text, sk text) returns text
-language sql stable as $$
-  select b.band_key
-  from public.forge_risk_matrix_cells c
-  join public.forge_risk_likelihood_levels l on l.id = c.likelihood_level_id
-  join public.forge_risk_severity_levels s on s.id = c.severity_level_id
-  join public.forge_risk_bands b on b.id = c.risk_band_id
-  where c.risk_matrix_id = demo_seed_20.f62_matrix() and l.level_key = lk and s.level_key = sk
-$$;
 
 -- =============================================================================
 -- OBSERVATIONS
@@ -257,7 +204,6 @@ from (values (7), (14)) as o(n)
 join public.forge_observations ob on ob.id = demo_seed_20.f62_id('10' || lpad(o.n::text, 2, '0'));
 
 -- Observation lifecycle transitions (observations.lifecycle).
-create table demo_seed_20.f62_obs_tx (n integer, seq integer, tkey text, at timestamptz, actor text, comment text);
 insert into demo_seed_20.f62_obs_tx (n, seq, tkey, at, actor, comment) values
   (1, 1, 'submit', demo_seed_20.f62_ts(86, '07:06'), 'A', null),
   (1, 2, 'begin_review', demo_seed_20.f62_ts(85, '09:15'), 'A', null),
@@ -311,7 +257,6 @@ insert into demo_seed_20.f62_obs_tx (n, seq, tkey, at, actor, comment) values
   (16, 1, 'submit', demo_seed_20.f62_ts(7, '07:31'), 'A', null),
   (17, 1, 'submit', demo_seed_20.f62_ts(4, '10:26'), 'U', null);
 
-alter table demo_seed_20.f62_obs_tx add column from_s text, add column to_s text;
 update demo_seed_20.f62_obs_tx set
   from_s = case tkey when 'submit' then 'draft' when 'begin_review' then 'submitted'
                      when 'require_action' then 'review' when 'no_action' then 'review'
@@ -565,7 +510,6 @@ from (values
 join public.forge_risks r on r.id = demo_seed_20.f62_id('20' || lpad(v.r::text, 2, '0'));
 
 -- Risk lifecycle transitions (risk_register.lifecycle, NX-02H model).
-create table demo_seed_20.f62_risk_tx (n integer, seq integer, tkey text, at timestamptz, comment text);
 insert into demo_seed_20.f62_risk_tx (n, seq, tkey, at, comment) values
   (1, 1, 'submit_assessment', demo_seed_20.f62_ts(88, '10:00'), null),
   (1, 2, 'submit_for_review', demo_seed_20.f62_ts(87, '14:00'), null),
@@ -594,7 +538,6 @@ insert into demo_seed_20.f62_risk_tx (n, seq, tkey, at, comment) values
   (10, 3, 'activate', demo_seed_20.f62_ts(87, '10:00'), null),
   (10, 4, 'close', demo_seed_20.f62_ts(30, '11:00'), 'Bin fumigation is now done only by a licensed contract applicator under the contractor safety program. Plant employees no longer handle phosphine; contractor oversight is covered by the contractor management procedure.');
 
-alter table demo_seed_20.f62_risk_tx add column from_s text, add column to_s text;
 update demo_seed_20.f62_risk_tx set
   from_s = case tkey when 'submit_assessment' then 'draft' when 'submit_for_review' then 'assessment'
                      when 'activate' then 'review' else 'active' end,
@@ -762,10 +705,6 @@ from (values
 
 -- Steps, hazards and controls. One row per hazard (hazard null = step with no hazard yet).
 -- controls: 'type|title' entries.
-create table demo_seed_20.f62_jsa_haz (
-  j integer, s integer, step_title text, step_desc text, h integer, hazard text, cat text,
-  lk text, sk text, rlk text, rsk text, controls text[]
-);
 insert into demo_seed_20.f62_jsa_haz values
   -- J1 bucket elevator boot
   (1, 1, 'Stop feed and run the leg empty', 'Close the feed gate upstream and let the leg run until the up-leg is empty before stopping.', 1,
@@ -936,7 +875,6 @@ from (
 join public.forge_jsas j on j.id = demo_seed_20.f62_id('30' || lpad(p.j::text, 2, '0'));
 
 -- JSA lifecycle transitions (jsa.lifecycle; activation via forge_activate_jsa_revision).
-create table demo_seed_20.f62_jsa_tx (j integer, seq integer, tkey text, from_s text, to_s text, at timestamptz, comment text);
 insert into demo_seed_20.f62_jsa_tx values
   (1, 1, 'submit', 'draft', 'in_review', demo_seed_20.f62_ts(75, '15:00'), null),
   (1, 2, 'approve', 'in_review', 'approved', demo_seed_20.f62_ts(73, '09:00'), null),
@@ -1025,10 +963,6 @@ from (
 -- =============================================================================
 -- JSA executions (crew briefings)
 -- =============================================================================
-create table demo_seed_20.f62_exec (
-  e integer, j integer, created_at timestamptz, minutes integer, final_status text,
-  lead integer, crew integer[], notes text, stop_reason text
-);
 insert into demo_seed_20.f62_exec values
   (1, 2, demo_seed_20.f62_ts(62, '06:30'), 310, 'completed', 13, array[15, 14], 'Bin 4 cleanout after load-out; sweep auger removed for repair.', null),
   (2, 1, demo_seed_20.f62_ts(60, '13:00'), 130, 'completed', 10, array[11, 5], 'Leg 1 boot choked after wet paddy from inbound truck 14.', null),
@@ -1211,9 +1145,6 @@ do update set next_value = greatest(public.forge_jsa_execution_sequences.next_va
 -- ---------------------------------------------------------------------------
 -- Clean up session helpers.
 -- ---------------------------------------------------------------------------
-drop table if exists demo_seed_20.f62_obs_tx, demo_seed_20.f62_risk_tx, demo_seed_20.f62_jsa_haz, demo_seed_20.f62_jsa_tx, demo_seed_20.f62_exec;
 drop function if exists demo_seed_20.f62_score(text, text), demo_seed_20.f62_band(text, text),
   demo_seed_20.f62_matrix_version(), demo_seed_20.f62_matrix(), demo_seed_20.f62_ts(integer, text),
   demo_seed_20.f62_u(text), demo_seed_20.f62_p(integer), demo_seed_20.f62_id(text);
-
-drop schema if exists demo_seed_20 cascade;

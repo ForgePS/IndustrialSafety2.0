@@ -1,9 +1,3 @@
--- Seed-only helpers live in a scratch schema, not session temp objects: the Supabase CLI does not
--- guarantee one database session per seed file, so temp tables and pg_temp functions can vanish
--- between statements. Dropped at the end of this file.
-drop schema if exists demo_seed_30 cascade;
-create schema demo_seed_30;
-
 -- =============================================================================
 -- Demo plant: Cypress Bend Rice Mill — Incidents, Inspections, Tasks and the
 -- Corrective Actions (CAPA) register. Loaded after seed.sql and 10_cypress_bend_plant.sql.
@@ -32,20 +26,6 @@ create schema demo_seed_30;
 -- =============================================================================
 
 -- Local plant time helpers (America/Chicago). cb_at(d, t) = d days ago at local time t.
-create or replace function demo_seed_30.cb_at(p_days integer, p_time time)
-returns timestamptz language sql stable as $$
-  select ((((now() at time zone 'America/Chicago')::date - p_days) + p_time) at time zone 'America/Chicago')
-$$;
-
-create or replace function demo_seed_30.cb_day(p_days integer)
-returns date language sql stable as $$
-  select (now() at time zone 'America/Chicago')::date - p_days
-$$;
-
-create or replace function demo_seed_30.cb_p(p_n integer)
-returns uuid language sql immutable as $$
-  select ('60000000-0000-4000-8000-0000000030' || lpad(p_n::text, 2, '0'))::uuid
-$$;
 
 -- =============================================================================
 -- INCIDENTS
@@ -755,38 +735,6 @@ on conflict (id) do nothing;
 -- CORRECTIVE ACTIONS (CAPA) with their linked Tasks
 -- =============================================================================
 
-create table demo_seed_30.cb_capa (
-  ord integer,
-  id uuid,
-  task_id uuid,
-  title text,
-  description text,
-  action_type text,
-  severity text,
-  initial_status text,
-  source_type text,
-  source_id uuid,
-  source_link_type text,
-  person uuid,
-  created_at timestamptz,
-  due_at timestamptz,
-  immediate_containment text,
-  root_cause text,
-  action_plan text,
-  preventive_action text,
-  verification_due_at timestamptz,
-  effectiveness_review_due_at timestamptz
-);
-
-create table demo_seed_30.cb_capa_step (
-  capa_id uuid,
-  step integer,
-  to_status text,
-  at timestamptz,
-  note text,
-  verification_result text
-);
-
 insert into demo_seed_30.cb_capa values
   (1,'63000000-0000-4000-8000-000000004001','63000000-0000-4000-8000-000000005001',
    'Clear and mark main aisle at bagging warehouse',
@@ -1279,8 +1227,3 @@ insert into public.forge_task_comments (organization_id, task_id, comment, creat
 values
   ('20000000-0000-4000-8000-000000000100','20000000-0000-4000-8000-000000001301','Backup alarm replaced and tested in the shop. Truck is still tagged out until the operator confirms it on a pre-shift check.','20000000-0000-4000-8000-000000000001', demo_seed_30.cb_at(3,'15:30')),
   ('20000000-0000-4000-8000-000000000100','63000000-0000-4000-8000-000000005106','On hold: waiting on the anchor manufacturer''s inspection criteria for the older davit bases.','20000000-0000-4000-8000-000000000001', demo_seed_30.cb_at(6,'09:30'));
-
-drop table demo_seed_30.cb_capa_step;
-drop table demo_seed_30.cb_capa;
-
-drop schema if exists demo_seed_30 cascade;
