@@ -27,6 +27,8 @@ import {
 import { createLogger } from "@forge/observability";
 import { and, desc, eq, gte, inArray, isNull, sql } from "drizzle-orm";
 import { createHash } from "node:crypto";
+import { applyCadAssignments } from "./cad-assignment-application.js";
+import { applyCadNerisDispatchFields } from "./cad-neris-field-application.js";
 
 export type CadMatchJob = {
   type: "cad.normalized.ready.v1";
@@ -375,6 +377,20 @@ export async function processCadMatchJob(input: {
         normalizedEventId: normalized.id,
         event,
         createMode: decision.outcome === "CREATE_NEW",
+      });
+
+      await applyCadNerisDispatchFields(tx, {
+        tenantId: input.job.tenantId,
+        incidentId,
+        event,
+      });
+
+      await applyCadAssignments(tx, {
+        tenantId: input.job.tenantId,
+        incidentId,
+        connectionId: input.job.connectionId,
+        rawMessageId: raw.id,
+        event,
       });
 
       if (linkId) {
