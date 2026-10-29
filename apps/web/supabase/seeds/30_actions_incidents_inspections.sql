@@ -755,7 +755,7 @@ on conflict (id) do nothing;
 -- CORRECTIVE ACTIONS (CAPA) with their linked Tasks
 -- =============================================================================
 
-create table cb_capa (
+create table demo_seed_30.cb_capa (
   ord integer,
   id uuid,
   task_id uuid,
@@ -778,7 +778,7 @@ create table cb_capa (
   effectiveness_review_due_at timestamptz
 );
 
-create table cb_capa_step (
+create table demo_seed_30.cb_capa_step (
   capa_id uuid,
   step integer,
   to_status text,
@@ -787,7 +787,7 @@ create table cb_capa_step (
   verification_result text
 );
 
-insert into cb_capa values
+insert into demo_seed_30.cb_capa values
   (1,'63000000-0000-4000-8000-000000004001','63000000-0000-4000-8000-000000005001',
    'Clear and mark main aisle at bagging warehouse',
    'Monthly walkthrough found bagged product staged in the main warehouse aisle near dock door 4, narrowing the walkway to about 30 inches. Same area as the dock door 4 forklift near miss.',
@@ -906,7 +906,7 @@ insert into cb_capa values
    demo_seed_30.cb_at(1,'09:00'), demo_seed_30.cb_at(-2,'16:00'),
    null, null, null, null, null, null);
 
-insert into cb_capa_step values
+insert into demo_seed_30.cb_capa_step values
   ('63000000-0000-4000-8000-000000004003',1,'pending_verification', demo_seed_30.cb_at(2,'14:30'), null, null),
 
   ('63000000-0000-4000-8000-000000004004',1,'pending_verification', demo_seed_30.cb_at(33,'11:00'), null, null),
@@ -947,7 +947,7 @@ select c.id, '20000000-0000-4000-8000-000000000100'::uuid, 'SEED-CA-' || c.ord, 
        c.immediate_containment, true, c.root_cause, c.action_plan, c.preventive_action, c.due_at,
        c.verification_due_at, c.effectiveness_review_due_at, 1,
        '20000000-0000-4000-8000-000000000001'::uuid, '20000000-0000-4000-8000-000000000001'::uuid, c.created_at, c.created_at
-from cb_capa c
+from demo_seed_30.cb_capa c
 left join public.forge_personnel p on p.id = c.person
 on conflict (id) do nothing;
 
@@ -963,13 +963,13 @@ select c.task_id, ca.organization_id, 'SEED-TASK-C' || c.ord, ca.title, coalesce
        ca.assigned_personnel_id, ca.assigned_user_id, ca.location_id, ca.division_id, ca.due_at,
        'corrective_action', ca.id::text, null, true, true,
        ca.created_by, ca.created_by, ca.created_at, ca.created_at
-from cb_capa c
+from demo_seed_30.cb_capa c
 join public.forge_corrective_actions ca on ca.id = c.id
 on conflict (id) do nothing;
 
 update public.forge_corrective_actions ca
 set linked_task_id = c.task_id
-from cb_capa c
+from demo_seed_30.cb_capa c
 where ca.id = c.id;
 
 -- Task numbers (TASK-NNNNNN) and CAPA numbers (CA-NNNNNN) in creation order.
@@ -989,7 +989,7 @@ where t.id = r.id;
 with ranked as (
   select id, row_number() over (order by created_at, id) as rn
   from public.forge_corrective_actions
-  where id in (select id from cb_capa)
+  where id in (select id from demo_seed_30.cb_capa)
 )
 update public.forge_corrective_actions ca
 set action_number = 'CA-' || lpad(r.rn::text, 6, '0')
@@ -1018,12 +1018,12 @@ set source_reference = coalesce(
   (select i.incident_number from public.forge_incidents i where ca.source_type = 'incident' and i.id::text = ca.source_id),
   (select ins.inspection_number from public.forge_inspection_findings f join public.forge_inspections ins on ins.id = f.inspection_id
     where ca.source_type = 'inspection' and f.id::text = ca.source_id))
-where ca.id in (select id from cb_capa);
+where ca.id in (select id from demo_seed_30.cb_capa);
 
 update public.forge_tasks t
 set source_reference = ca.action_number
 from public.forge_corrective_actions ca
-where t.source_type = 'corrective_action' and t.source_id = ca.id::text and ca.id in (select id from cb_capa);
+where t.source_type = 'corrective_action' and t.source_id = ca.id::text and ca.id in (select id from demo_seed_30.cb_capa);
 
 update public.forge_tasks t
 set source_reference = i.incident_number
@@ -1057,7 +1057,7 @@ begin
     raise exception 'corrective_actions.lifecycle workflow definition missing';
   end if;
 
-  for c in select * from cb_capa order by created_at loop
+  for c in select * from demo_seed_30.cb_capa order by created_at loop
     select action_number into v_action_number from public.forge_corrective_actions where id = c.id;
     select task_number into v_task_number from public.forge_tasks where id = c.task_id;
 
@@ -1085,7 +1085,7 @@ begin
 
     v_from := c.initial_status;
 
-    for s in select * from cb_capa_step where capa_id = c.id order by step loop
+    for s in select * from demo_seed_30.cb_capa_step where capa_id = c.id order by step loop
       v_key := case v_from || '>' || s.to_status
         when 'open>in_progress' then 'start_work'
         when 'open>pending_verification' then 'submit_for_verification'
@@ -1224,13 +1224,13 @@ values
 insert into public.forge_corrective_action_activity (organization_id, corrective_action_id, activity_type, message, actor_user_id, created_at)
 select organization_id, corrective_action_id, 'comment_added', 'Comment added.', created_by, created_at
 from public.forge_corrective_action_comments
-where corrective_action_id in (select id from cb_capa);
+where corrective_action_id in (select id from demo_seed_30.cb_capa);
 
 -- Source records point at the CAPAs they generated (record links, as the observation flow creates them).
 insert into public.forge_record_links (organization_id, source_resource_type, source_resource_id, target_resource_type, target_resource_id, relationship_type, created_by, created_at)
 select '20000000-0000-4000-8000-000000000100'::uuid, c.source_link_type, c.source_id, 'corrective_action', c.id, 'generated_capa',
        '20000000-0000-4000-8000-000000000001'::uuid, c.created_at
-from cb_capa c
+from demo_seed_30.cb_capa c
 where c.source_link_type is not null
 on conflict do nothing;
 
@@ -1238,7 +1238,7 @@ insert into public.forge_record_activity (organization_id, resource_type, resour
 select l.organization_id, l.source_resource_type, l.source_resource_id, 'record_link_created', 'Linked to corrective_action record.', l.created_by,
        jsonb_build_object('link_id', l.id, 'target_resource_id', l.target_resource_id, 'relationship_type', l.relationship_type), l.created_at
 from public.forge_record_links l
-where l.relationship_type = 'generated_capa' and l.target_resource_id in (select id from cb_capa);
+where l.relationship_type = 'generated_capa' and l.target_resource_id in (select id from demo_seed_30.cb_capa);
 
 -- The forklift alarm task corrects the pre-shift finding.
 insert into public.forge_record_links (organization_id, source_resource_type, source_resource_id, target_resource_type, target_resource_id, relationship_type, created_by, created_at)
@@ -1280,7 +1280,7 @@ values
   ('20000000-0000-4000-8000-000000000100','20000000-0000-4000-8000-000000001301','Backup alarm replaced and tested in the shop. Truck is still tagged out until the operator confirms it on a pre-shift check.','20000000-0000-4000-8000-000000000001', demo_seed_30.cb_at(3,'15:30')),
   ('20000000-0000-4000-8000-000000000100','63000000-0000-4000-8000-000000005106','On hold: waiting on the anchor manufacturer''s inspection criteria for the older davit bases.','20000000-0000-4000-8000-000000000001', demo_seed_30.cb_at(6,'09:30'));
 
-drop table cb_capa_step;
-drop table cb_capa;
+drop table demo_seed_30.cb_capa_step;
+drop table demo_seed_30.cb_capa;
 
 drop schema if exists demo_seed_30 cascade;

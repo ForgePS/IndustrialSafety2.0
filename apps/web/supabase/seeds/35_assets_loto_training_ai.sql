@@ -740,7 +740,7 @@ on conflict (id) do nothing;
 -- Training records. ckey: course; p: personnel suffix (00 = Forge Demo User); asg/due: assignment age and due offset
 -- (null = no assignment, e.g. records imported from paper at Forge setup); comp: completion age (null = still open).
 drop table if exists demo_seed_35.cb_training_rows;
-create table cb_training_rows as
+create table demo_seed_35.cb_training_rows as
 select
   v.n, v.ckey, c.id as course_id, c.validity_months,
   case when v.p = '00' then '20000000-0000-4000-8000-000000000600'::uuid
@@ -836,7 +836,7 @@ select
     else null end,
   (current_date - t.asg) + time '07:30',
   coalesce(least(now(), now() - t.comp::interval + interval '5 minutes'), (current_date - t.asg) + time '07:30')
-from cb_training_rows t
+from demo_seed_35.cb_training_rows t
 where t.asg is not null
 on conflict (id) do nothing;
 
@@ -864,7 +864,7 @@ select
        else now() - t.comp::interval + interval '2 hours' end,
   case when t.comp::interval > interval '88 days' then now() - interval '85 days 3 hours'
        else least(now() - interval '1 hour', now() - t.comp::interval + interval '1 day') end
-from cb_training_rows t
+from demo_seed_35.cb_training_rows t
 where t.comp is not null
 on conflict (id) do nothing;
 

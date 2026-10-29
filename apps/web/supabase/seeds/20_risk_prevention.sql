@@ -257,8 +257,8 @@ from (values (7), (14)) as o(n)
 join public.forge_observations ob on ob.id = demo_seed_20.f62_id('10' || lpad(o.n::text, 2, '0'));
 
 -- Observation lifecycle transitions (observations.lifecycle).
-create table f62_obs_tx (n integer, seq integer, tkey text, at timestamptz, actor text, comment text);
-insert into f62_obs_tx (n, seq, tkey, at, actor, comment) values
+create table demo_seed_20.f62_obs_tx (n integer, seq integer, tkey text, at timestamptz, actor text, comment text);
+insert into demo_seed_20.f62_obs_tx (n, seq, tkey, at, actor, comment) values
   (1, 1, 'submit', demo_seed_20.f62_ts(86, '07:06'), 'A', null),
   (1, 2, 'begin_review', demo_seed_20.f62_ts(85, '09:15'), 'A', null),
   (1, 3, 'require_action', demo_seed_20.f62_ts(85, '10:30'), 'A', 'Add motor tops in the hull grinder room to the high-level dust cleaning route.'),
@@ -311,8 +311,8 @@ insert into f62_obs_tx (n, seq, tkey, at, actor, comment) values
   (16, 1, 'submit', demo_seed_20.f62_ts(7, '07:31'), 'A', null),
   (17, 1, 'submit', demo_seed_20.f62_ts(4, '10:26'), 'U', null);
 
-alter table f62_obs_tx add column from_s text, add column to_s text;
-update f62_obs_tx set
+alter table demo_seed_20.f62_obs_tx add column from_s text, add column to_s text;
+update demo_seed_20.f62_obs_tx set
   from_s = case tkey when 'submit' then 'draft' when 'begin_review' then 'submitted'
                      when 'require_action' then 'review' when 'no_action' then 'review'
                      when 'close_from_action' then 'action_required' when 'close_no_action' then 'no_action' end,
@@ -344,7 +344,7 @@ from (
          max(t.comment) filter (where t.to_s = 'closed') as closure,
          max(t.at) as last_at,
          demo_seed_20.f62_u((array_agg(t.actor order by t.seq desc))[1]) as last_actor
-  from f62_obs_tx t group by t.n
+  from demo_seed_20.f62_obs_tx t group by t.n
 ) s
 where o.id = demo_seed_20.f62_id('10' || lpad(s.n::text, 2, '0'));
 
@@ -357,7 +357,7 @@ select demo_seed_20.f62_id('11' || lpad(s.n::text, 2, '0')), '20000000-0000-4000
        case when s.to_s = 'closed' then s.last_at end, s.first_at, s.last_at
 from (
   select n, min(at) as first_at, max(at) as last_at, (array_agg(to_s order by seq desc))[1] as to_s
-  from f62_obs_tx group by n
+  from demo_seed_20.f62_obs_tx group by n
 ) s
 cross join lateral (
   select id from public.forge_workflow_definitions
@@ -380,9 +380,9 @@ select demo_seed_20.f62_id('701' || lpad(t.n::text, 2, '0') || lpad(t.seq::text,
             else '{"adapter":"observation_atomic"}'::jsonb end,
        t.at
 from (
-  select n, seq, tkey, at, actor, comment, from_s, to_s from f62_obs_tx
+  select n, seq, tkey, at, actor, comment, from_s, to_s from demo_seed_20.f62_obs_tx
   union all
-  select n, 0, null, at, actor, null, null, null from f62_obs_tx where seq = 1
+  select n, 0, null, at, actor, null, null, null from demo_seed_20.f62_obs_tx where seq = 1
 ) t;
 
 insert into public.forge_observation_activity (organization_id, observation_id, activity_type, message, actor_user_id, metadata, created_at)
@@ -396,7 +396,7 @@ select '20000000-0000-4000-8000-000000000100', demo_seed_20.f62_id('10' || lpad(
        demo_seed_20.f62_u(t.actor),
        jsonb_build_object('event_id', demo_seed_20.f62_id('701' || lpad(t.n::text, 2, '0') || lpad(t.seq::text, 2, '0')), 'transition_key', t.tkey),
        t.at
-from f62_obs_tx t
+from demo_seed_20.f62_obs_tx t
 order by 7;
 
 insert into public.forge_record_activity (organization_id, resource_type, resource_id, activity_type, message, actor_user_id, metadata, created_at)
@@ -404,7 +404,7 @@ select '20000000-0000-4000-8000-000000000100', 'observation', demo_seed_20.f62_i
        'workflow_transition', 'Workflow transitioned to ' || t.to_s || '.', demo_seed_20.f62_u(t.actor),
        jsonb_build_object('event_id', demo_seed_20.f62_id('701' || lpad(t.n::text, 2, '0') || lpad(t.seq::text, 2, '0')), 'transition_key', t.tkey),
        t.at
-from f62_obs_tx t
+from demo_seed_20.f62_obs_tx t
 order by t.at;
 
 -- =============================================================================
@@ -565,8 +565,8 @@ from (values
 join public.forge_risks r on r.id = demo_seed_20.f62_id('20' || lpad(v.r::text, 2, '0'));
 
 -- Risk lifecycle transitions (risk_register.lifecycle, NX-02H model).
-create table f62_risk_tx (n integer, seq integer, tkey text, at timestamptz, comment text);
-insert into f62_risk_tx (n, seq, tkey, at, comment) values
+create table demo_seed_20.f62_risk_tx (n integer, seq integer, tkey text, at timestamptz, comment text);
+insert into demo_seed_20.f62_risk_tx (n, seq, tkey, at, comment) values
   (1, 1, 'submit_assessment', demo_seed_20.f62_ts(88, '10:00'), null),
   (1, 2, 'submit_for_review', demo_seed_20.f62_ts(87, '14:00'), null),
   (1, 3, 'activate', demo_seed_20.f62_ts(85, '16:00'), null),
@@ -594,8 +594,8 @@ insert into f62_risk_tx (n, seq, tkey, at, comment) values
   (10, 3, 'activate', demo_seed_20.f62_ts(87, '10:00'), null),
   (10, 4, 'close', demo_seed_20.f62_ts(30, '11:00'), 'Bin fumigation is now done only by a licensed contract applicator under the contractor safety program. Plant employees no longer handle phosphine; contractor oversight is covered by the contractor management procedure.');
 
-alter table f62_risk_tx add column from_s text, add column to_s text;
-update f62_risk_tx set
+alter table demo_seed_20.f62_risk_tx add column from_s text, add column to_s text;
+update demo_seed_20.f62_risk_tx set
   from_s = case tkey when 'submit_assessment' then 'draft' when 'submit_for_review' then 'assessment'
                      when 'activate' then 'review' else 'active' end,
   to_s = case tkey when 'submit_assessment' then 'assessment' when 'submit_for_review' then 'review'
@@ -616,7 +616,7 @@ from (
   select n, (array_agg(to_s order by seq desc))[1] as to_s, count(*) as cnt, max(at) as last_at,
          max(at) filter (where to_s = 'closed') as closed_at,
          max(comment) filter (where to_s = 'closed') as closure
-  from f62_risk_tx group by n
+  from demo_seed_20.f62_risk_tx group by n
 ) s
 where r.id = demo_seed_20.f62_id('20' || lpad(s.n::text, 2, '0'));
 
@@ -629,7 +629,7 @@ select demo_seed_20.f62_id('24' || lpad(s.n::text, 2, '0')), '20000000-0000-4000
        case when s.to_s = 'closed' then s.last_at end, s.first_at, s.last_at
 from (
   select n, min(at) as first_at, max(at) as last_at, (array_agg(to_s order by seq desc))[1] as to_s
-  from f62_risk_tx group by n
+  from demo_seed_20.f62_risk_tx group by n
 ) s
 cross join lateral (
   select id from public.forge_workflow_definitions
@@ -652,9 +652,9 @@ select demo_seed_20.f62_id('702' || lpad(t.n::text, 2, '0') || lpad(t.seq::text,
             else '{"adapter":"risk_atomic"}'::jsonb end,
        t.at
 from (
-  select n, seq, tkey, at, comment, from_s, to_s from f62_risk_tx
+  select n, seq, tkey, at, comment, from_s, to_s from demo_seed_20.f62_risk_tx
   union all
-  select n, 0, null, at, null, null, null from f62_risk_tx where seq = 1
+  select n, 0, null, at, null, null, null from demo_seed_20.f62_risk_tx where seq = 1
 ) t;
 
 insert into public.forge_risk_activity (organization_id, risk_id, activity_type, message, actor_user_id, metadata, created_at)
@@ -698,7 +698,7 @@ from (
          'Risk transitioned from ' || t.from_s || ' to ' || t.to_s || '.',
          jsonb_build_object('event_id', demo_seed_20.f62_id('702' || lpad(t.n::text, 2, '0') || lpad(t.seq::text, 2, '0')), 'transition_key', t.tkey),
          t.at
-  from f62_risk_tx t
+  from demo_seed_20.f62_risk_tx t
 ) a
 order by a.created_at;
 
@@ -707,7 +707,7 @@ select '20000000-0000-4000-8000-000000000100', 'risk_register', demo_seed_20.f62
        'workflow_transition', 'Workflow transitioned to ' || t.to_s || '.', demo_seed_20.f62_u('A'),
        jsonb_build_object('event_id', demo_seed_20.f62_id('702' || lpad(t.n::text, 2, '0') || lpad(t.seq::text, 2, '0')), 'transition_key', t.tkey),
        t.at
-from f62_risk_tx t
+from demo_seed_20.f62_risk_tx t
 order by t.at;
 
 -- =============================================================================
@@ -762,11 +762,11 @@ from (values
 
 -- Steps, hazards and controls. One row per hazard (hazard null = step with no hazard yet).
 -- controls: 'type|title' entries.
-create table f62_jsa_haz (
+create table demo_seed_20.f62_jsa_haz (
   j integer, s integer, step_title text, step_desc text, h integer, hazard text, cat text,
   lk text, sk text, rlk text, rsk text, controls text[]
 );
-insert into f62_jsa_haz values
+insert into demo_seed_20.f62_jsa_haz values
   -- J1 bucket elevator boot
   (1, 1, 'Stop feed and run the leg empty', 'Close the feed gate upstream and let the leg run until the up-leg is empty before stopping.', 1,
    'Grain surge into the boot when feed restarts', 'physical', 'possible', 'moderate', 'unlikely', 'minor',
@@ -873,11 +873,11 @@ insert into f62_jsa_haz values
   (8, 3, 'Install new rolls and set the gap', 'Fit new rolls and set the roll gap with the feeler gauge.', null, null, null, null, null, null, null, null);
 
 -- J3 (bin entry v2) starts as a copy of v1 (forge_create_jsa_revision), then adds the revised controls.
-insert into f62_jsa_haz
-select 3, s, step_title, step_desc, h, hazard, cat, lk, sk, rlk, rsk, controls from f62_jsa_haz where j = 2;
-update f62_jsa_haz set controls = controls || array['engineering|Continuous 4-gas monitor worn by the entrant']
+insert into demo_seed_20.f62_jsa_haz
+select 3, s, step_title, step_desc, h, hazard, cat, lk, sk, rlk, rsk, controls from demo_seed_20.f62_jsa_haz where j = 2;
+update demo_seed_20.f62_jsa_haz set controls = controls || array['engineering|Continuous 4-gas monitor worn by the entrant']
 where j = 3 and s = 1;
-update f62_jsa_haz set controls = controls || array['administrative|Second attendant at the roof hatch for every entry']
+update demo_seed_20.f62_jsa_haz set controls = controls || array['administrative|Second attendant at the roof hatch for every entry']
 where j = 3 and s = 4;
 
 insert into public.forge_jsa_steps (id, organization_id, jsa_id, step_number, title, description, sort_order, created_by, created_at, updated_at)
@@ -885,7 +885,7 @@ select distinct on (h.j, h.s)
        demo_seed_20.f62_id('31' || lpad(h.j::text, 2, '0') || lpad(h.s::text, 2, '0') || '0'),
        '20000000-0000-4000-8000-000000000100', j.id, h.s, h.step_title, h.step_desc, h.s * 10, demo_seed_20.f62_u('A'),
        j.created_at + make_interval(mins => 5 + h.s * 3), j.created_at + make_interval(mins => 5 + h.s * 3)
-from f62_jsa_haz h
+from demo_seed_20.f62_jsa_haz h
 join public.forge_jsas j on j.id = demo_seed_20.f62_id('30' || lpad(h.j::text, 2, '0'))
 order by h.j, h.s;
 
@@ -901,7 +901,7 @@ select demo_seed_20.f62_id('32' || lpad(h.j::text, 2, '0') || lpad(h.s::text, 2,
        h.rlk, h.rsk, demo_seed_20.f62_score(h.rlk, h.rsk), demo_seed_20.f62_band(h.rlk, h.rsk),
        h.h * 10, demo_seed_20.f62_u('A'),
        j.created_at + make_interval(mins => 30 + h.s * 4 + h.h), j.created_at + make_interval(mins => 30 + h.s * 4 + h.h)
-from f62_jsa_haz h
+from demo_seed_20.f62_jsa_haz h
 join public.forge_jsas j on j.id = demo_seed_20.f62_id('30' || lpad(h.j::text, 2, '0'))
 where h.hazard is not null;
 
@@ -911,7 +911,7 @@ select demo_seed_20.f62_id('33' || lpad(h.j::text, 2, '0') || lpad(h.s::text, 2,
        demo_seed_20.f62_id('32' || lpad(h.j::text, 2, '0') || lpad(h.s::text, 2, '0') || h.h::text),
        split_part(c.entry, '|', 1), split_part(c.entry, '|', 2), c.ord * 10, demo_seed_20.f62_u('A'),
        j.created_at + make_interval(mins => 60 + h.s * 4 + h.h + c.ord::int), j.created_at + make_interval(mins => 60 + h.s * 4 + h.h + c.ord::int)
-from f62_jsa_haz h
+from demo_seed_20.f62_jsa_haz h
 join public.forge_jsas j on j.id = demo_seed_20.f62_id('30' || lpad(h.j::text, 2, '0'))
 cross join lateral unnest(h.controls) with ordinality as c(entry, ord)
 where h.hazard is not null;
@@ -936,8 +936,8 @@ from (
 join public.forge_jsas j on j.id = demo_seed_20.f62_id('30' || lpad(p.j::text, 2, '0'));
 
 -- JSA lifecycle transitions (jsa.lifecycle; activation via forge_activate_jsa_revision).
-create table f62_jsa_tx (j integer, seq integer, tkey text, from_s text, to_s text, at timestamptz, comment text);
-insert into f62_jsa_tx values
+create table demo_seed_20.f62_jsa_tx (j integer, seq integer, tkey text, from_s text, to_s text, at timestamptz, comment text);
+insert into demo_seed_20.f62_jsa_tx values
   (1, 1, 'submit', 'draft', 'in_review', demo_seed_20.f62_ts(75, '15:00'), null),
   (1, 2, 'approve', 'in_review', 'approved', demo_seed_20.f62_ts(73, '09:00'), null),
   (1, 3, 'activate', 'approved', 'active', demo_seed_20.f62_ts(72, '07:00'), null),
@@ -971,7 +971,7 @@ from (
   select j, (array_agg(to_s order by seq desc))[1] as to_s, count(*) as cnt, max(at) as last_at,
          max(at) filter (where tkey = 'approve') as approved_at,
          max(at) filter (where tkey = 'activate') as activated_at
-  from f62_jsa_tx group by j
+  from demo_seed_20.f62_jsa_tx group by j
 ) s
 where j.id = demo_seed_20.f62_id('30' || lpad(s.j::text, 2, '0'));
 
@@ -994,7 +994,7 @@ select demo_seed_20.f62_id('36' || lpad(s.j::text, 2, '0')), '20000000-0000-4000
        case when s.to_s in ('retired', 'superseded') then s.last_at end, s.first_at, s.last_at
 from (
   select j, min(at) as first_at, max(at) as last_at, (array_agg(to_s order by seq desc))[1] as to_s
-  from f62_jsa_tx group by j
+  from demo_seed_20.f62_jsa_tx group by j
 ) s
 cross join lateral (
   select id from public.forge_workflow_definitions
@@ -1017,19 +1017,19 @@ select demo_seed_20.f62_id('703' || lpad(t.j::text, 2, '0') || lpad(t.seq::text,
             else '{"adapter":"jsa_atomic"}'::jsonb end,
        t.at
 from (
-  select j, seq, tkey, from_s, to_s, at, comment from f62_jsa_tx
+  select j, seq, tkey, from_s, to_s, at, comment from demo_seed_20.f62_jsa_tx
   union all
-  select j, 0, null, null, null, at, null from f62_jsa_tx where seq = 1
+  select j, 0, null, null, null, at, null from demo_seed_20.f62_jsa_tx where seq = 1
 ) t;
 
 -- =============================================================================
 -- JSA executions (crew briefings)
 -- =============================================================================
-create table f62_exec (
+create table demo_seed_20.f62_exec (
   e integer, j integer, created_at timestamptz, minutes integer, final_status text,
   lead integer, crew integer[], notes text, stop_reason text
 );
-insert into f62_exec values
+insert into demo_seed_20.f62_exec values
   (1, 2, demo_seed_20.f62_ts(62, '06:30'), 310, 'completed', 13, array[15, 14], 'Bin 4 cleanout after load-out; sweep auger removed for repair.', null),
   (2, 1, demo_seed_20.f62_ts(60, '13:00'), 130, 'completed', 10, array[11, 5], 'Leg 1 boot choked after wet paddy from inbound truck 14.', null),
   (3, 7, demo_seed_20.f62_ts(55, '09:00'), 45, 'completed', 21, array[20], 'Thread jam on bagging line 1 sewing head.', null),
@@ -1052,7 +1052,7 @@ select demo_seed_20.f62_id('40' || lpad(x.e::text, 2, '0')), '20000000-0000-4000
        'JSAEX-' || extract(year from x.created_at)::int || '-' || lpad(x.e::text, 6, '0'),
        'planned', '20000000-0000-4000-8000-000000000300', demo_seed_20.f62_p(x.lead), x.notes, demo_seed_20.f62_u('A'),
        x.created_at, x.created_at
-from f62_exec x;
+from demo_seed_20.f62_exec x;
 
 -- Crew (inserted while planned, as the crew-window trigger requires).
 insert into public.forge_jsa_execution_participants (
@@ -1063,9 +1063,9 @@ select demo_seed_20.f62_id('41' || lpad(m.e::text, 2, '0') || lpad(m.ord::text, 
        (select auth_user_id from public.forge_personnel where id = demo_seed_20.f62_p(m.person)),
        m.role, true, m.created_at
 from (
-  select x.e, x.lead as person, 'lead' as role, 0::bigint as ord, x.created_at from f62_exec x
+  select x.e, x.lead as person, 'lead' as role, 0::bigint as ord, x.created_at from demo_seed_20.f62_exec x
   union all
-  select x.e, c.person, 'crew', c.ord, x.created_at from f62_exec x
+  select x.e, c.person, 'crew', c.ord, x.created_at from demo_seed_20.f62_exec x
   cross join lateral unnest(x.crew) with ordinality as c(person, ord)
 ) m;
 
@@ -1082,12 +1082,12 @@ set status = x.final_status,
     updated_at = case when x.final_status = 'planned' then x.created_at
                       when x.final_status = 'active' then x.created_at + interval '35 minutes'
                       else x.created_at + make_interval(mins => x.minutes) end
-from f62_exec x
+from demo_seed_20.f62_exec x
 where e.id = demo_seed_20.f62_id('40' || lpad(x.e::text, 2, '0'));
 
 update public.forge_jsa_execution_participants p
 set acknowledged_at = x.created_at + make_interval(mins => 20 + (right(p.id::text, 2))::int)
-from f62_exec x
+from demo_seed_20.f62_exec x
 where p.execution_id = demo_seed_20.f62_id('40' || lpad(x.e::text, 2, '0'))
   and x.final_status <> 'planned';
 
@@ -1124,7 +1124,7 @@ from (
          'JSA transitioned from ' || t.from_s || ' to ' || t.to_s || '.',
          jsonb_build_object('event_id', demo_seed_20.f62_id('703' || lpad(t.j::text, 2, '0') || lpad(t.seq::text, 2, '0')), 'transition_key', t.tkey),
          t.at
-  from f62_jsa_tx t
+  from demo_seed_20.f62_jsa_tx t
   union all
   select e.organization_id, e.jsa_id, 'execution_planned', 'Execution ' || e.execution_number || ' planned.',
          jsonb_build_object('execution_id', e.id), e.created_at
@@ -1139,7 +1139,7 @@ from (
          'Execution ' || e.execution_number || ' moved from ' || st.from_status || ' to ' || st.to_status || '.',
          jsonb_build_object('execution_id', e.id, 'from_status', st.from_status, 'to_status', st.to_status), st.at
   from public.forge_jsa_executions e
-  join f62_exec x on e.id = demo_seed_20.f62_id('40' || lpad(x.e::text, 2, '0'))
+  join demo_seed_20.f62_exec x on e.id = demo_seed_20.f62_id('40' || lpad(x.e::text, 2, '0'))
   cross join lateral (values
     ('planned', 'briefing', x.created_at + interval '15 minutes', 1),
     ('briefing', 'active', x.created_at + interval '35 minutes', 2),
@@ -1154,7 +1154,7 @@ select '20000000-0000-4000-8000-000000000100', 'jsa', demo_seed_20.f62_id('30' |
        'workflow_transition', 'Workflow transitioned to ' || t.to_s || '.', demo_seed_20.f62_u('A'),
        jsonb_build_object('event_id', demo_seed_20.f62_id('703' || lpad(t.j::text, 2, '0') || lpad(t.seq::text, 2, '0')), 'transition_key', t.tkey),
        t.at
-from f62_jsa_tx t
+from demo_seed_20.f62_jsa_tx t
 order by t.at;
 
 -- =============================================================================
@@ -1211,7 +1211,7 @@ do update set next_value = greatest(public.forge_jsa_execution_sequences.next_va
 -- ---------------------------------------------------------------------------
 -- Clean up session helpers.
 -- ---------------------------------------------------------------------------
-drop table if exists f62_obs_tx, f62_risk_tx, f62_jsa_haz, f62_jsa_tx, f62_exec;
+drop table if exists demo_seed_20.f62_obs_tx, demo_seed_20.f62_risk_tx, demo_seed_20.f62_jsa_haz, demo_seed_20.f62_jsa_tx, demo_seed_20.f62_exec;
 drop function if exists demo_seed_20.f62_score(text, text), demo_seed_20.f62_band(text, text),
   demo_seed_20.f62_matrix_version(), demo_seed_20.f62_matrix(), demo_seed_20.f62_ts(integer, text),
   demo_seed_20.f62_u(text), demo_seed_20.f62_p(integer), demo_seed_20.f62_id(text);

@@ -1,3 +1,5 @@
+-- Dates use the plant's local day (America/Chicago), like 30_actions_incidents_inspections.sql, so
+-- injury dates match its incidents even when UTC has already rolled over to tomorrow.
 -- Seed-only helpers live in a scratch schema, not session temp objects: the Supabase CLI does not
 -- guarantee one database session per seed file, so temp tables and pg_temp functions can vanish
 -- between statements. Dropped at the end of this file.
@@ -28,7 +30,7 @@ create schema demo_seed_40;
 -- Helpers (session only).
 create or replace function demo_seed_40.cb_ts(p_days_ago integer, p_time text)
 returns timestamptz language sql stable as $$
-  select ((current_date - p_days_ago) + p_time::time) at time zone 'America/Chicago'
+  select (((now() at time zone 'America/Chicago')::date - p_days_ago) + p_time::time) at time zone 'America/Chicago'
 $$;
 
 create or replace function demo_seed_40.cb_id(p_suffix integer)
@@ -45,7 +47,7 @@ language sql stable as $$
     coalesce(sum(d) filter (where work_status = 'restricted'), 0)::integer
   from (
     select p.work_status,
-      greatest(0, least(coalesce(p.end_date, current_date), current_date) - greatest(p.start_date, c.injury_date + 1) + 1) as d
+      greatest(0, least(coalesce(p.end_date, (now() at time zone 'America/Chicago')::date), (now() at time zone 'America/Chicago')::date) - greatest(p.start_date, c.injury_date + 1) + 1) as d
     from public.forge_wc_work_status_periods p
     join public.forge_wc_cases c on c.id = p.case_id
     where p.case_id = p_case_id and p.work_status in ('off_work', 'restricted')
@@ -142,8 +144,8 @@ with c(id, person, name, injury_ago, reported_ago, status, stage, severity, body
    'Follow-up clinic visit, then decide OSHA recordability', 3, 'high', null)
 ),
 numbered as (
-  select c.*, (current_date - injury_ago) as injury_date,
-         row_number() over (partition by extract(year from current_date - injury_ago) order by injury_ago desc) as seq
+  select c.*, ((now() at time zone 'America/Chicago')::date - injury_ago) as injury_date,
+         row_number() over (partition by extract(year from (now() at time zone 'America/Chicago')::date - injury_ago) order by injury_ago desc) as seq
   from c
 )
 insert into public.forge_wc_cases (
@@ -158,12 +160,12 @@ select
   'WC-' || extract(year from n.injury_date)::text || '-' || lpad(n.seq::text, 4, '0'),
   null, ('60000000-0000-4000-8000-00000000' || n.person)::uuid, n.name,
   '20000000-0000-4000-8000-000000000300', '20000000-0000-4000-8000-000000000200',
-  n.injury_date, current_date - n.reported_ago, n.status, n.stage, n.severity,
+  n.injury_date, (now() at time zone 'America/Chicago')::date - n.reported_ago, n.status, n.stage, n.severity,
   case when n.claim is not null then demo_seed_40.cb_id(201) end, false, n.claim,
   case when n.claim is not null then 'Pamela Reyes' end,
   case when n.claim is not null then '501-555-0182' end,
   case when n.claim is not null then 'pamela.reyes@lowerdeltamutual.example' end,
-  n.body, n.notes, n.na_label, current_date + n.na_due, n.na_priority,
+  n.body, n.notes, n.na_label, (now() at time zone 'America/Chicago')::date + n.na_due, n.na_priority,
   case when n.closed_ago is not null then demo_seed_40.cb_ts(n.closed_ago, '15:20') end,
   case when n.closed_ago is not null then '20000000-0000-4000-8000-000000000001'::uuid end,
   '20000000-0000-4000-8000-000000000001', '20000000-0000-4000-8000-000000000001',
@@ -182,7 +184,7 @@ set next_value = greatest(public.forge_wc_case_sequences.next_value, excluded.ne
 -- Work status periods (drive days away / restricted).
 insert into public.forge_wc_work_status_periods (id, organization_id, case_id, work_status, start_date, end_date, notes, created_by, updated_by, created_at)
 select demo_seed_40.cb_id(v.id), '20000000-0000-4000-8000-000000000100', demo_seed_40.cb_id(v.case_n), v.status,
-       current_date - v.start_ago, current_date - v.end_ago, v.notes,
+       (now() at time zone 'America/Chicago')::date - v.start_ago, (now() at time zone 'America/Chicago')::date - v.end_ago, v.notes,
        '20000000-0000-4000-8000-000000000001', '20000000-0000-4000-8000-000000000001', demo_seed_40.cb_ts(v.start_ago, '16:10')
 from (values
   (401, 301, 'full_duty', 78, 63, 'Returned to his regular job after the clinic visit.'),
@@ -202,11 +204,11 @@ insert into public.forge_wc_restrictions (
   upper_extremity, push_pull_limit_lbs, lower_extremity, transitional_hours_per_day, description, created_by, updated_by, created_at
 )
 values
-  (demo_seed_40.cb_id(501), '20000000-0000-4000-8000-000000000100', demo_seed_40.cb_id(303), current_date - 51, current_date - 34, 'lifted',
+  (demo_seed_40.cb_id(501), '20000000-0000-4000-8000-000000000100', demo_seed_40.cb_id(303), (now() at time zone 'America/Chicago')::date - 51, (now() at time zone 'America/Chicago')::date - 34, 'lifted',
    '6-8', 'unlimited', 'light', array['no-lift-floor-waist'], 25, array['no-stooping-bending'], 8,
    'Light duty in the mill control room and sample station: grading samples, logbook and walk-down checks. No shoveling, no bag handling.',
    '20000000-0000-4000-8000-000000000001', '20000000-0000-4000-8000-000000000001', demo_seed_40.cb_ts(51, '08:30')),
-  (demo_seed_40.cb_id(502), '20000000-0000-4000-8000-000000000100', demo_seed_40.cb_id(305), current_date - 14, null, 'active',
+  (demo_seed_40.cb_id(502), '20000000-0000-4000-8000-000000000100', demo_seed_40.cb_id(305), (now() at time zone 'America/Chicago')::date - 14, null, 'active',
    '1-4', 'unlimited', 'sedentary', array[]::text[], null, array['no-foot-pedal','no-ladders','no-squatting-kneeling'], 8,
    'Seated work in the shipping office: bill of lading prep, scale ticket reconciliation and bag label printing. No forklift or pallet jack. Walking boot on at all times.',
    '20000000-0000-4000-8000-000000000001', '20000000-0000-4000-8000-000000000001', demo_seed_40.cb_ts(14, '07:45'))
@@ -216,9 +218,9 @@ insert into public.forge_wc_medical_encounters (
   id, organization_id, case_id, encounter_date, provider_name, provider_specialty, facility, symptoms, exam_findings,
   diagnosis, assessment, treatment, medication, notes, next_appointment_date, created_by, updated_by, created_at
 )
-select demo_seed_40.cb_id(v.id), '20000000-0000-4000-8000-000000000100', demo_seed_40.cb_id(v.case_n), current_date - v.ago,
+select demo_seed_40.cb_id(v.id), '20000000-0000-4000-8000-000000000100', demo_seed_40.cb_id(v.case_n), (now() at time zone 'America/Chicago')::date - v.ago,
        v.provider, v.specialty, v.facility, v.symptoms, v.findings, v.diagnosis, v.assessment, v.treatment, v.medication, v.notes,
-       current_date - v.next_ago, '20000000-0000-4000-8000-000000000001', '20000000-0000-4000-8000-000000000001', demo_seed_40.cb_ts(v.ago, '17:30')
+       (now() at time zone 'America/Chicago')::date - v.next_ago, '20000000-0000-4000-8000-000000000001', '20000000-0000-4000-8000-000000000001', demo_seed_40.cb_ts(v.ago, '17:30')
 from (values
   (601, 301, 78, 'Dr. Alan Whitfield', 'Occupational medicine', 'Delta OccuCare Clinic, DeWitt', 'Bleeding cut to left forearm.',
    '4 cm laceration, clean edges, no tendon involvement.', 'Laceration of left forearm', 'Simple repair.', 'Six sutures; tetanus booster.', null,
@@ -275,16 +277,16 @@ with notes(case_n, k, note) as (
   (305, 3, 'Seated duty going well; boot still on. Next ortho visit this coming week.')
 ),
 weeks as (
-  select c.id as case_id, c.injury_date, coalesce(c.closed_at::date, current_date) as last_day, n as case_n,
+  select c.id as case_id, c.injury_date, coalesce(c.closed_at::date, (now() at time zone 'America/Chicago')::date) as last_day, n as case_n,
          t.week_of, row_number() over (partition by c.id order by t.week_of) as k
   from (values (301), (302), (303), (304), (305)) as cases(n)
   join public.forge_wc_cases c on c.id = demo_seed_40.cb_id(cases.n)
   cross join lateral (
-    select (current_date + (4 - extract(dow from current_date))::integer) - 7 * g as week_of
+    select ((now() at time zone 'America/Chicago')::date + (4 - extract(dow from (now() at time zone 'America/Chicago')::date))::integer) - 7 * g as week_of
     from generate_series(0, 20) g
   ) t
   where t.week_of >= c.injury_date
-    and t.week_of <= coalesce(c.closed_at::date, current_date)
+    and t.week_of <= coalesce(c.closed_at::date, (now() at time zone 'America/Chicago')::date)
 )
 insert into public.forge_wc_weekly_updates (id, organization_id, case_id, week_of, notes, created_by, updated_by, created_at)
 select demo_seed_40.cb_id(700 + (w.case_n - 300) * 10 + w.k::integer), '20000000-0000-4000-8000-000000000100', w.case_id, w.week_of,
@@ -293,8 +295,8 @@ select demo_seed_40.cb_id(700 + (w.case_n - 300) * 10 + w.k::integer), '20000000
        (w.week_of + time '14:30') at time zone 'America/Chicago'
 from weeks w
 left join notes n on n.case_n = w.case_n and n.k = w.k
-where not (w.case_n = 304 and w.week_of = (current_date + (4 - extract(dow from current_date))::integer)
-                                          - case when extract(dow from current_date) >= 4 then 0 else 7 end)
+where not (w.case_n = 304 and w.week_of = ((now() at time zone 'America/Chicago')::date + (4 - extract(dow from (now() at time zone 'America/Chicago')::date))::integer)
+                                          - case when extract(dow from (now() at time zone 'America/Chicago')::date) >= 4 then 0 else 7 end)
   and (w.week_of + time '14:30') at time zone 'America/Chicago' < now()
 on conflict (id) do nothing;
 
@@ -312,7 +314,7 @@ from public.forge_wc_cases where id between demo_seed_40.cb_id(301) and demo_see
 union all
 select p.organization_id, p.case_id, 'work_status',
        'Work status: ' || case p.work_status when 'full_duty' then 'Full duty' when 'restricted' then 'Restricted / transitional duty' else 'Off work (lost time)' end
-         || ' from ' || p.start_date || case when p.end_date is not null and p.end_date < current_date then ' to ' || p.end_date else '' end || '.',
+         || ' from ' || p.start_date || case when p.end_date is not null and p.end_date < (now() at time zone 'America/Chicago')::date then ' to ' || p.end_date else '' end || '.',
        '20000000-0000-4000-8000-000000000001', p.created_at
 from public.forge_wc_work_status_periods p where p.case_id between demo_seed_40.cb_id(301) and demo_seed_40.cb_id(306)
 union all
@@ -389,8 +391,8 @@ with c(id, person, name, job_title, injury_ago, began, happened, place, descr, r
    'Right wrist strain; clinic advised ice and over-the-counter ibuprofen. Follow-up visit scheduled.', 'Sticking hopper slide gate', 'open', null)
 ),
 numbered as (
-  select c.*, (current_date - injury_ago) as injury_date,
-         row_number() over (partition by extract(year from current_date - injury_ago) order by injury_ago desc) as seq
+  select c.*, ((now() at time zone 'America/Chicago')::date - injury_ago) as injury_date,
+         row_number() over (partition by extract(year from (now() at time zone 'America/Chicago')::date - injury_ago) order by injury_ago desc) as seq
   from c
 )
 insert into public.forge_osha_cases (
@@ -414,7 +416,7 @@ select
   n.physician, n.facility, n.street, n.city, case when n.facility is not null then 'AR' end, n.zip,
   case when n.facility is not null then n.er end, case when n.facility is not null then false end,
   n.began::time, n.happened::time, n.activity, n.what, n.injury, n.object,
-  'Marcus Bell', 'Safety Coordinator', '870-555-0102', current_date - n.injury_ago + 1,
+  'Marcus Bell', 'Safety Coordinator', '870-555-0102', (now() at time zone 'America/Chicago')::date - n.injury_ago + 1,
   n.status,
   case when n.closed_ago is not null then demo_seed_40.cb_ts(n.closed_ago, '10:30') end,
   case when n.closed_ago is not null then '20000000-0000-4000-8000-000000000001'::uuid end,
@@ -449,15 +451,15 @@ select
   '20000000-0000-4000-8000-000000000001', '20000000-0000-4000-8000-000000000001',
   ((v.injury_date + 1) + time '09:00') at time zone 'America/Chicago'
 from (values
-  (111, (extract(year from current_date)::integer - 1)::text || '-001', '3011', 'Travis Guidry', 'Maintenance Technician',
-   make_date(extract(year from current_date)::integer - 1, 6, 17), 'Screw conveyor SC-2, rough rice cleaning',
+  (111, (extract(year from (now() at time zone 'America/Chicago')::date)::integer - 1)::text || '-001', '3011', 'Travis Guidry', 'Maintenance Technician',
+   make_date(extract(year from (now() at time zone 'America/Chicago')::date)::integer - 1, 6, 17), 'Screw conveyor SC-2, rough rice cleaning',
    'Fractured left ring finger', 'job_transfer_restriction', 0, 21,
    'Dr. Alan Whitfield', 'Delta OccuCare Clinic', '410 Court Street', 'DeWitt', '72042', false, '06:00', '11:25',
    'Reinstalling the drive guard on screw conveyor SC-2 after replacing a bearing.',
    'The guard slipped while he was aligning the bolt holes and pinched his left ring finger against the conveyor frame.',
    'Non-displaced fracture of the left ring finger; splint and restricted duty.', 'Conveyor drive guard and frame', 45),
-  (112, (extract(year from current_date)::integer - 1)::text || '-002', '3015', 'Darnell Hayes', 'Dryer Operator',
-   make_date(extract(year from current_date)::integer - 1, 9, 9), 'Dryer No. 2 burner housing, Drying & Storage',
+  (112, (extract(year from (now() at time zone 'America/Chicago')::date)::integer - 1)::text || '-002', '3015', 'Darnell Hayes', 'Dryer Operator',
+   make_date(extract(year from (now() at time zone 'America/Chicago')::date)::integer - 1, 9, 9), 'Dryer No. 2 burner housing, Drying & Storage',
    'Second-degree burn, right forearm', 'days_away', 3, 5,
    'Dr. Priya Raman', 'Bayou Meto Regional Hospital', '1600 Hospital Drive', 'Stuttgart', '72160', true, '18:00', '21:40',
    'Checking the burner flame on dryer No. 2 through the inspection port.',
@@ -509,7 +511,7 @@ insert into public.forge_osha_establishment_years (
   annual_average_employees, total_hours_worked, status, created_by, updated_by, created_at
 )
 values (
-  demo_seed_40.cb_id(151), '20000000-0000-4000-8000-000000000100', '20000000-0000-4000-8000-000000000300', extract(year from current_date)::integer,
+  demo_seed_40.cb_id(151), '20000000-0000-4000-8000-000000000100', '20000000-0000-4000-8000-000000000300', extract(year from (now() at time zone 'America/Chicago')::date)::integer,
   'Cypress Bend Main Plant', '2200 Levee Road', 'DeWitt', 'AR', '72042', 'Rice milling', '311212',
   68, 118400, 'draft', '20000000-0000-4000-8000-000000000001', '20000000-0000-4000-8000-000000000001', now() - interval '41 days'
 )
@@ -533,8 +535,8 @@ select
   coalesce(t.respiratory_conditions, 0), coalesce(t.poisonings, 0), coalesce(t.hearing_loss, 0), coalesce(t.other_illnesses, 0),
   '20000000-0000-4000-8000-000000000001', '20000000-0000-4000-8000-000000000001',
   (y.cert_date - 9 + time '08:00') at time zone 'America/Chicago'
-from (select extract(year from current_date)::integer - 1 as yr,
-             least(make_date(extract(year from current_date)::integer, 1, 28), current_date) as cert_date) y
+from (select extract(year from (now() at time zone 'America/Chicago')::date)::integer - 1 as yr,
+             least(make_date(extract(year from (now() at time zone 'America/Chicago')::date)::integer, 1, 28), (now() at time zone 'America/Chicago')::date) as cert_date) y
 left join lateral public.forge_osha_300a_totals('20000000-0000-4000-8000-000000000100', y.yr, array['20000000-0000-4000-8000-000000000300'::uuid]) t on true
 on conflict (organization_id, location_id, year) do nothing;
 
@@ -645,13 +647,13 @@ insert into public.forge_training_course_versions (id, organization_id, course_i
 values
   (demo_seed_40.cb_id(1101), '20000000-0000-4000-8000-000000000100', demo_seed_40.cb_id(1001), 1, '2026 program', 'draft', 80, null, 3, true,
    'I will not enter a bin without a signed entry permit, a locked-out unloading auger, a tested atmosphere and an attendant outside.',
-   current_date - 80, '20000000-0000-4000-8000-000000000001', '20000000-0000-4000-8000-000000000001', now() - interval '86 days'),
+   (now() at time zone 'America/Chicago')::date - 80, '20000000-0000-4000-8000-000000000001', '20000000-0000-4000-8000-000000000001', now() - interval '86 days'),
   (demo_seed_40.cb_id(1102), '20000000-0000-4000-8000-000000000100', demo_seed_40.cb_id(1002), 1, null, 'draft', 70, null, null, false, null,
-   current_date - 86, '20000000-0000-4000-8000-000000000001', '20000000-0000-4000-8000-000000000001', now() - interval '88 days'),
+   (now() at time zone 'America/Chicago')::date - 86, '20000000-0000-4000-8000-000000000001', '20000000-0000-4000-8000-000000000001', now() - interval '88 days'),
   (demo_seed_40.cb_id(1103), '20000000-0000-4000-8000-000000000100', demo_seed_40.cb_id(1002), 2, 'Adds hot work controls', 'draft', 70, null, null, false, null,
-   current_date - 40, '20000000-0000-4000-8000-000000000001', '20000000-0000-4000-8000-000000000001', now() - interval '42 days'),
+   (now() at time zone 'America/Chicago')::date - 40, '20000000-0000-4000-8000-000000000001', '20000000-0000-4000-8000-000000000001', now() - interval '42 days'),
   (demo_seed_40.cb_id(1104), '20000000-0000-4000-8000-000000000100', demo_seed_40.cb_id(1003), 1, null, 'draft', 70, null, null, false, null,
-   current_date - 36, '20000000-0000-4000-8000-000000000001', '20000000-0000-4000-8000-000000000001', now() - interval '38 days')
+   (now() at time zone 'America/Chicago')::date - 36, '20000000-0000-4000-8000-000000000001', '20000000-0000-4000-8000-000000000001', now() - interval '38 days')
 on conflict (id) do nothing;
 
 insert into public.forge_training_sections (id, organization_id, version_id, title, body, sort_order, is_required, estimated_minutes, created_at)
@@ -779,7 +781,7 @@ on conflict do nothing;
 -- Assignments from the group requirements (final status set by the results below).
 insert into public.forge_training_assignments (id, organization_id, course_id, personnel_id, status, assigned_at, due_date, assigned_by, notes, created_at, updated_at)
 select demo_seed_40.cb_id(v.id), '20000000-0000-4000-8000-000000000100', demo_seed_40.cb_id(v.course_n), ('60000000-0000-4000-8000-00000000' || v.person)::uuid,
-       'assigned', demo_seed_40.cb_ts(v.assigned_ago, '09:05'), current_date + v.due_in, '20000000-0000-4000-8000-000000000001',
+       'assigned', demo_seed_40.cb_ts(v.assigned_ago, '09:05'), (now() at time zone 'America/Chicago')::date + v.due_in, '20000000-0000-4000-8000-000000000001',
        'Assigned from training group requirements.', demo_seed_40.cb_ts(v.assigned_ago, '09:05'), demo_seed_40.cb_ts(v.assigned_ago, '09:05')
 from (values
   (1501,1001,'3013',78,-48),(1502,1001,'3015',78,-48),(1503,1001,'3010',78,-48),(1504,1001,'3011',78,-48),(1505,1001,'3003',78,-48),(1506,1001,'3014',66,-36),
@@ -890,7 +892,7 @@ declare
   v_assignment public.forge_training_assignments;
   v_version public.forge_training_course_versions;
   v_course public.forge_training_courses;
-  v_on timestamptz := (current_date - p_days_ago)::timestamptz;
+  v_on timestamptz := ((now() at time zone 'America/Chicago')::date - p_days_ago)::timestamptz;
   v_admin uuid := '20000000-0000-4000-8000-000000000001';
 begin
   if exists (select 1 from public.forge_training_attempts where id = demo_seed_40.cb_id(p_attempt)) then return; end if;
