@@ -71,7 +71,10 @@ function locationLabel(row: TeamActivityRow): string {
   return row.siteName?.trim() || "Unassigned";
 }
 
-export function filterTeamRoster(rows: TeamActivityRow[], filters: TeamRosterFilters): TeamActivityRow[] {
+export function filterTeamRoster(
+  rows: TeamActivityRow[],
+  filters: TeamRosterFilters,
+): TeamActivityRow[] {
   const year = filters.year.trim() ? Number(filters.year) : null;
   const month = filters.month.trim() ? Number(filters.month) : null;
 

@@ -49,7 +49,11 @@ export const fieldPushApi = {
 };
 
 export async function subscribeFieldPush(): Promise<{ ok: true } | { ok: false; reason: string }> {
-  if (typeof window === "undefined" || !("serviceWorker" in navigator) || !("PushManager" in window)) {
+  if (
+    typeof window === "undefined" ||
+    !("serviceWorker" in navigator) ||
+    !("PushManager" in window)
+  ) {
     return { ok: false, reason: "Push is not supported in this browser." };
   }
   const vapid = await fieldPushApi.getVapid();

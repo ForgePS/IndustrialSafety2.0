@@ -13,10 +13,10 @@ S8 closed production ambiguity for the malware scanner (**Outcome B** — block 
 
 ## Decisions
 
-| Decision | Outcome | ADR |
-| --- | --- | --- |
+| Decision         | Outcome                                                     | ADR                                                             |
+| ---------------- | ----------------------------------------------------------- | --------------------------------------------------------------- |
 | Malware provider | **B — production imports blocked** until production scanner | `docs/decisions/import-malware-provider-production-decision.md` |
-| Step Functions | **B — SQS/worker remains production path** | `docs/decisions/import-step-functions-production-decision.md` |
+| Step Functions   | **B — SQS/worker remains production path**                  | `docs/decisions/import-step-functions-production-decision.md`   |
 
 ## Files created (high level)
 
@@ -40,15 +40,15 @@ S8 closed production ambiguity for the malware scanner (**Outcome B** — block 
 
 ## Image tags / task definitions
 
-| Component | Prior | S8 deployed |
-| --- | --- | --- |
-| Tag | `import-s6-20260729202056` | `import-s8-20260729182259` |
-| API | `:39` | **`:40`** |
-| Worker | `:24` | **`:25`** |
-| API digest | S6 | `sha256:f86fef9e8be4969f88e72d201323f07286d504cb097f7b575e59ea309d77935b` |
-| Worker digest | S6 | `sha256:e4472318107466d4ad4a40032d73a8aaa81b338fa8e262ad4b74e19578def557` |
-| Frontend | S7 | Console `I8UZZFUXPH6FL4IJ8FUO0G9T2V` / Tenant Admin `IAH6SN8BJR1LDYH66PSIDNGEAC` |
-| App secret | unchanged | unchanged `2026-07-26T15:30:16.387000-05:00` |
+| Component     | Prior                      | S8 deployed                                                                      |
+| ------------- | -------------------------- | -------------------------------------------------------------------------------- |
+| Tag           | `import-s6-20260729202056` | `import-s8-20260729182259`                                                       |
+| API           | `:39`                      | **`:40`**                                                                        |
+| Worker        | `:24`                      | **`:25`**                                                                        |
+| API digest    | S6                         | `sha256:f86fef9e8be4969f88e72d201323f07286d504cb097f7b575e59ea309d77935b`        |
+| Worker digest | S6                         | `sha256:e4472318107466d4ad4a40032d73a8aaa81b338fa8e262ad4b74e19578def557`        |
+| Frontend      | S7                         | Console `I8UZZFUXPH6FL4IJ8FUO0G9T2V` / Tenant Admin `IAH6SN8BJR1LDYH66PSIDNGEAC` |
+| App secret    | unchanged                  | unchanged `2026-07-26T15:30:16.387000-05:00`                                     |
 
 ## Deploy evidence
 

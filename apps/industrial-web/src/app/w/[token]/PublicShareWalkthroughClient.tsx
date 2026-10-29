@@ -160,11 +160,13 @@ export default function PublicShareWalkthroughClient() {
     );
   }
 
-  const progressPct =
-    scenes.length > 0 ? Math.round(((sceneIndex + 1) / scenes.length) * 100) : 0;
+  const progressPct = scenes.length > 0 ? Math.round(((sceneIndex + 1) / scenes.length) * 100) : 0;
 
   return (
-    <div className="container-xxl flex-grow-1 container-p-y" data-walkthrough-id="public-share-viewer">
+    <div
+      className="container-xxl flex-grow-1 container-p-y"
+      data-walkthrough-id="public-share-viewer"
+    >
       <div className="d-flex flex-wrap justify-content-between align-items-start gap-3 mb-3">
         <div>
           <span className="badge bg-warning text-dark mb-2">DEMO ENVIRONMENT</span>
@@ -196,11 +198,19 @@ export default function PublicShareWalkthroughClient() {
                   Start presentation
                 </button>
                 {playing ? (
-                  <button type="button" className="btn btn-outline-secondary" onClick={() => setPlaying(false)}>
+                  <button
+                    type="button"
+                    className="btn btn-outline-secondary"
+                    onClick={() => setPlaying(false)}
+                  >
                     Pause
                   </button>
                 ) : sceneIndex > 0 ? (
-                  <button type="button" className="btn btn-outline-primary" onClick={() => setPlaying(true)}>
+                  <button
+                    type="button"
+                    className="btn btn-outline-primary"
+                    onClick={() => setPlaying(true)}
+                  >
                     Resume
                   </button>
                 ) : null}
@@ -217,7 +227,8 @@ export default function PublicShareWalkthroughClient() {
             ) : null}
             {share.allowVideoDownload ? (
               <span className="align-self-center small text-muted">
-                Video download is enabled for this share. Request the latest MP4 from the host tenant.
+                Video download is enabled for this share. Request the latest MP4 from the host
+                tenant.
               </span>
             ) : null}
           </div>
@@ -276,8 +287,9 @@ export default function PublicShareWalkthroughClient() {
                 className="list-group-item list-group-item-action d-flex justify-content-between align-items-center"
                 disabled={!share.allowChapterNavigation && !share.allowInteractive}
                 onClick={() => {
-                  const first = INDUSTRIAL_PLATFORM_WALKTHROUGH.chapters.find((c) => c.id === chapter.id)
-                    ?.scenes[0];
+                  const first = INDUSTRIAL_PLATFORM_WALKTHROUGH.chapters.find(
+                    (c) => c.id === chapter.id,
+                  )?.scenes[0];
                   if (!first) return;
                   const idx = scenes.findIndex((s) => s.id === first.id);
                   if (idx >= 0) {

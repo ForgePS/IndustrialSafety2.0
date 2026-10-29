@@ -1,10 +1,5 @@
 import { test, expect } from "../src/fixtures/index.js";
-import {
-  apiRequest,
-  getIncident,
-  patchIncidentRaw,
-  readTenantId,
-} from "../src/helpers/api.js";
+import { apiRequest, getIncident, patchIncidentRaw, readTenantId } from "../src/helpers/api.js";
 import {
   createSyntheticCadConnection,
   getCadConflict,
@@ -202,18 +197,20 @@ test.describe("Phase 4 deterministic KEEP_FORGE conflict @phase4 @cad-hybrid", (
       await context.close();
     }
 
-    const unauth = await page.context().request.fetch(
-      `${getApiUrl()}/api/v1/tenants/${tenantId}/cad/conflicts/${openConflict.id}/resolve`,
-      {
-        method: "POST",
-        headers: { "Content-Type": "application/json", Accept: "application/json" },
-        data: JSON.stringify({
-          resolutionAction: "KEEP_FORGE",
-          resolutionReason: "missing bearer must fail",
-          recordVersion: after.recordVersion,
-        }),
-      },
-    );
+    const unauth = await page
+      .context()
+      .request.fetch(
+        `${getApiUrl()}/api/v1/tenants/${tenantId}/cad/conflicts/${openConflict.id}/resolve`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json", Accept: "application/json" },
+          data: JSON.stringify({
+            resolutionAction: "KEEP_FORGE",
+            resolutionReason: "missing bearer must fail",
+            recordVersion: after.recordVersion,
+          }),
+        },
+      );
     expect([401, 403]).toContain(unauth.status());
   });
 });

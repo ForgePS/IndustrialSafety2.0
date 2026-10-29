@@ -6,12 +6,12 @@
 
 ## Deployed
 
-| Stack | Notes |
-| --- | --- |
-| ForgeMessaging | CAD intake/normalization/matching/application/polling/retention queues + schedules |
-| ForgeCompute | API + worker images; worker `desiredCount=1`; CAD queue env + tenant allowlists |
-| ForgeMonitoring | CAD DLQ alarms (`--exclusively`) |
-| ForgeData | **Unintended dependency update** during Compute deploy (TaggingAspect metadata). App secret **unchanged**. Prefer `cdk deploy ForgeCompute --exclusively` going forward. |
+| Stack           | Notes                                                                                                                                                                    |
+| --------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| ForgeMessaging  | CAD intake/normalization/matching/application/polling/retention queues + schedules                                                                                       |
+| ForgeCompute    | API + worker images; worker `desiredCount=1`; CAD queue env + tenant allowlists                                                                                          |
+| ForgeMonitoring | CAD DLQ alarms (`--exclusively`)                                                                                                                                         |
+| ForgeData       | **Unintended dependency update** during Compute deploy (TaggingAspect metadata). App secret **unchanged**. Prefer `cdk deploy ForgeCompute --exclusively` going forward. |
 
 ## Data / flags
 
@@ -28,13 +28,13 @@
 
 ## Safety checks
 
-| Check | Result |
-| --- | --- |
-| App secret ARN suffix | `…SknUu5` |
+| Check                        | Result                                  |
+| ---------------------------- | --------------------------------------- |
+| App secret ARN suffix        | `…SknUu5`                               |
 | App secret `LastChangedDate` | `2026-07-26T15:30:16-05:00` (unchanged) |
-| API `/health` | 200 |
-| RMS origin | 200 |
-| FORCE RLS | Not weakened |
+| API `/health`                | 200                                     |
+| RMS origin                   | 200                                     |
+| FORCE RLS                    | Not weakened                            |
 
 ## Cognito e2e
 

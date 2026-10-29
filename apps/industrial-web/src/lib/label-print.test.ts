@@ -8,17 +8,12 @@ const getPrinter = vi.fn();
 const printJobViaDirectBluetooth = vi.fn();
 
 vi.mock("@/lib/print-api", () => ({
-  createPrintJob: (...args: unknown[]) =>
-    (createPrintJob as (...a: unknown[]) => unknown)(...args),
-  listPrinters: (...args: unknown[]) =>
-    (listPrinters as (...a: unknown[]) => unknown)(...args),
+  createPrintJob: (...args: unknown[]) => (createPrintJob as (...a: unknown[]) => unknown)(...args),
+  listPrinters: (...args: unknown[]) => (listPrinters as (...a: unknown[]) => unknown)(...args),
   pollPrintJobUntilTerminal: (...args: unknown[]) =>
     (pollPrintJobUntilTerminal as (...a: unknown[]) => unknown)(...args),
   getPrinter: (...args: unknown[]) => (getPrinter as (...a: unknown[]) => unknown)(...args),
-  isDirectBluetoothPrinter: (printer: {
-    bridgeId: string | null;
-    transportType?: string | null;
-  }) =>
+  isDirectBluetoothPrinter: (printer: { bridgeId: string | null; transportType?: string | null }) =>
     !printer.bridgeId &&
     String(printer.transportType ?? "").toUpperCase() === "BRADY_WEB_BLUETOOTH",
 }));

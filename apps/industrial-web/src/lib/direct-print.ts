@@ -70,11 +70,8 @@ export async function printJobViaDirectBluetooth(
   printer: Pick<ForgePrinter, "bluetoothSavedId" | "id">,
   copies = 1,
 ): Promise<DirectPrintResult> {
-  const {
-    isDirectBluetoothSupported,
-    ensureDirectBradyConnected,
-    printPngViaDirectBluetooth,
-  } = await loadBradyPrint();
+  const { isDirectBluetoothSupported, ensureDirectBradyConnected, printPngViaDirectBluetooth } =
+    await loadBradyPrint();
   const supported = await isDirectBluetoothSupported();
   if (!supported) {
     return failUnsupported(

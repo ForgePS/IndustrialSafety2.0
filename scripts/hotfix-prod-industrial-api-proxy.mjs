@@ -23,7 +23,10 @@ const TMP = path.join(process.cwd(), `.forge-prod-industrial-api-proxy-${Date.no
 
 function awsJson(args) {
   return JSON.parse(
-    execFileSync("aws", [...args, "--output", "json"], { encoding: "utf8", maxBuffer: 20 * 1024 * 1024 }),
+    execFileSync("aws", [...args, "--output", "json"], {
+      encoding: "utf8",
+      maxBuffer: 20 * 1024 * 1024,
+    }),
   );
 }
 

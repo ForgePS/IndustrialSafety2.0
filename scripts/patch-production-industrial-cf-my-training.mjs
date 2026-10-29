@@ -57,7 +57,9 @@ function main() {
     ),
   );
 
-  console.log(JSON.stringify({ ok: true, functionName: FUNCTION_NAME, etag: publish.ETag }, null, 2));
+  console.log(
+    JSON.stringify({ ok: true, functionName: FUNCTION_NAME, etag: publish.ETag }, null, 2),
+  );
 }
 
 main();

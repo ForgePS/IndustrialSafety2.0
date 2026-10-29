@@ -21,11 +21,7 @@ export function LegacyNavigationBridge({
               pathname === item.path ||
               (!item.exact && pathname.startsWith(item.path.replace(/\/$/, "")));
             return (
-              <Link
-                key={item.id}
-                href={item.path}
-                aria-current={active ? "page" : undefined}
-              >
+              <Link key={item.id} href={item.path} aria-current={active ? "page" : undefined}>
                 {item.label}
               </Link>
             );

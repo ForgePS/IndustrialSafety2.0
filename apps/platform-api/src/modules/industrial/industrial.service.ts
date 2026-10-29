@@ -49,8 +49,7 @@ export function normalizePersonnelDivisionCatalog(raw: unknown): PersonnelDivisi
     out.push({ name, siteId });
   }
   return out.sort(
-    (a, b) =>
-      a.name.localeCompare(b.name) || (a.siteId ?? "").localeCompare(b.siteId ?? ""),
+    (a, b) => a.name.localeCompare(b.name) || (a.siteId ?? "").localeCompare(b.siteId ?? ""),
   );
 }
 
@@ -155,7 +154,10 @@ export class IndustrialService {
         .select()
         .from(industrialDepartments)
         .where(
-          and(eq(industrialDepartments.tenantId, tenantId), isNull(industrialDepartments.archivedAt)),
+          and(
+            eq(industrialDepartments.tenantId, tenantId),
+            isNull(industrialDepartments.archivedAt),
+          ),
         )
         .orderBy(desc(industrialDepartments.updatedAt));
     });
@@ -174,10 +176,7 @@ export class IndustrialService {
     return withTenantTransaction(this.db, tenantId, async (tx) => {
       if (input.siteId) {
         const site = await tx.query.industrialSites.findFirst({
-          where: and(
-            eq(industrialSites.id, input.siteId),
-            eq(industrialSites.tenantId, tenantId),
-          ),
+          where: and(eq(industrialSites.id, input.siteId), eq(industrialSites.tenantId, tenantId)),
         });
         if (!site) throw new ForgeError("NOT_FOUND", "Site not found");
       }
@@ -224,10 +223,7 @@ export class IndustrialService {
     departmentId: string,
     input: { name?: string; siteId?: string | null; divisionName?: string | null },
   ) {
-    const name =
-      input.name !== undefined
-        ? input.name.trim()
-        : undefined;
+    const name = input.name !== undefined ? input.name.trim() : undefined;
     if (name !== undefined && !name) {
       throw new ForgeError("VALIDATION_FAILED", "name is required");
     }
@@ -245,10 +241,7 @@ export class IndustrialService {
       if (!existing) throw new ForgeError("NOT_FOUND", "Department not found");
       if (input.siteId) {
         const site = await tx.query.industrialSites.findFirst({
-          where: and(
-            eq(industrialSites.id, input.siteId),
-            eq(industrialSites.tenantId, tenantId),
-          ),
+          where: and(eq(industrialSites.id, input.siteId), eq(industrialSites.tenantId, tenantId)),
         });
         if (!site) throw new ForgeError("NOT_FOUND", "Site not found");
       }
@@ -302,15 +295,11 @@ export class IndustrialService {
   async addPersonnelDivision(tenantId: string, name: string, siteId?: string | null) {
     const trimmed = name.trim();
     if (!trimmed) throw new ForgeError("VALIDATION_FAILED", "name is required");
-    const scopedSiteId =
-      typeof siteId === "string" && siteId.trim() !== "" ? siteId.trim() : null;
+    const scopedSiteId = typeof siteId === "string" && siteId.trim() !== "" ? siteId.trim() : null;
     return withTenantTransaction(this.db, tenantId, async (tx) => {
       if (scopedSiteId) {
         const site = await tx.query.industrialSites.findFirst({
-          where: and(
-            eq(industrialSites.id, scopedSiteId),
-            eq(industrialSites.tenantId, tenantId),
-          ),
+          where: and(eq(industrialSites.id, scopedSiteId), eq(industrialSites.tenantId, tenantId)),
         });
         if (!site) throw new ForgeError("NOT_FOUND", "Site not found");
       }
@@ -325,8 +314,7 @@ export class IndustrialService {
       const current = normalizePersonnelDivisionCatalog(existing?.valueJson);
       const lower = trimmed.toLowerCase();
       const already = current.some(
-        (entry) =>
-          entry.name.toLowerCase() === lower && (entry.siteId ?? null) === scopedSiteId,
+        (entry) => entry.name.toLowerCase() === lower && (entry.siteId ?? null) === scopedSiteId,
       );
       const list = already
         ? current
@@ -386,10 +374,7 @@ export class IndustrialService {
     return withTenantTransaction(this.db, tenantId, async (tx) => {
       if (nextSiteId) {
         const site = await tx.query.industrialSites.findFirst({
-          where: and(
-            eq(industrialSites.id, nextSiteId),
-            eq(industrialSites.tenantId, tenantId),
-          ),
+          where: and(eq(industrialSites.id, nextSiteId), eq(industrialSites.tenantId, tenantId)),
         });
         if (!site) throw new ForgeError("NOT_FOUND", "Site not found");
       }
@@ -423,8 +408,7 @@ export class IndustrialService {
       const next = [...list];
       next[idx] = { name: to, siteId: resolvedSiteId };
       next.sort(
-        (a, b) =>
-          a.name.localeCompare(b.name) || (a.siteId ?? "").localeCompare(b.siteId ?? ""),
+        (a, b) => a.name.localeCompare(b.name) || (a.siteId ?? "").localeCompare(b.siteId ?? ""),
       );
       await tx
         .update(tenantSettings)
@@ -438,11 +422,7 @@ export class IndustrialService {
     });
   }
 
-  async removePersonnelDivision(
-    tenantId: string,
-    name: string,
-    siteId?: string | null,
-  ) {
+  async removePersonnelDivision(tenantId: string, name: string, siteId?: string | null) {
     const trimmed = name.trim();
     if (!trimmed) throw new ForgeError("VALIDATION_FAILED", "name is required");
     const scopedSiteId =
@@ -620,10 +600,7 @@ export class IndustrialService {
     });
   }
 
-  async createEmploymentType(
-    tenantId: string,
-    input: { name: string; description?: string },
-  ) {
+  async createEmploymentType(tenantId: string, input: { name: string; description?: string }) {
     const name = input.name?.trim();
     if (!name) throw new ForgeError("VALIDATION_FAILED", "name is required");
     return withTenantTransaction(this.db, tenantId, async (tx) => {
@@ -679,11 +656,7 @@ export class IndustrialService {
     });
   }
 
-  async updateEmploymentType(
-    tenantId: string,
-    employmentTypeId: string,
-    input: { name: string },
-  ) {
+  async updateEmploymentType(tenantId: string, employmentTypeId: string, input: { name: string }) {
     const name = input.name?.trim();
     if (!name) throw new ForgeError("VALIDATION_FAILED", "name is required");
     return withTenantTransaction(this.db, tenantId, async (tx) => {
@@ -931,7 +904,10 @@ export class IndustrialService {
     });
   }
 
-  async saveBodyMapConfig(tenantId: string, rawRegions: unknown): Promise<{
+  async saveBodyMapConfig(
+    tenantId: string,
+    rawRegions: unknown,
+  ): Promise<{
     regions: IncidentBodyRegion[];
     isCustom: boolean;
     updatedAt: string;

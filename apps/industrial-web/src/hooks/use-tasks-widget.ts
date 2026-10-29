@@ -38,7 +38,10 @@ function resolveView(view: string | undefined): TasksWidgetView {
  * Loads tasks for a workspace widget view via the existing tasks API.
  * today/week filter client-side from the active list; other views use API `view`.
  */
-export function useTasksWidgetData(viewProp: string | undefined, enabled: boolean): TasksWidgetData {
+export function useTasksWidgetData(
+  viewProp: string | undefined,
+  enabled: boolean,
+): TasksWidgetData {
   const view = resolveView(viewProp);
   const [allActive, setAllActive] = useState<WorkspaceTask[]>([]);
   const [viewItems, setViewItems] = useState<WorkspaceTask[]>([]);

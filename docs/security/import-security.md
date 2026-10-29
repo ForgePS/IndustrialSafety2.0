@@ -6,16 +6,16 @@
 
 ## Summary controls
 
-| Control | Status at architecture stop |
-| --- | --- |
-| FORCE RLS on import_* tables | Designed in `0022` (not applied yet) |
-| Permission model | `platform.import.*` / `tenant.import.*` specified |
-| Short-lived upload URLs | Specified |
-| Encrypted S3 | Existing imports bucket pattern |
-| Malware scan gate | Architected (scanner wiring later) |
-| Cross-tenant rejection | Validation rule `cross_tenant` |
-| Audit + correlation IDs | Required on mutating APIs |
-| Sensitive identifier masking | Required in preview/export without entitlement |
+| Control                      | Status at architecture stop                       |
+| ---------------------------- | ------------------------------------------------- |
+| FORCE RLS on import_* tables | Designed in `0022` (not applied yet)              |
+| Permission model             | `platform.import.*` / `tenant.import.*` specified |
+| Short-lived upload URLs      | Specified                                         |
+| Encrypted S3                 | Existing imports bucket pattern                   |
+| Malware scan gate            | Architected (scanner wiring later)                |
+| Cross-tenant rejection       | Validation rule `cross_tenant`                    |
+| Audit + correlation IDs      | Required on mutating APIs                         |
+| Sensitive identifier masking | Required in preview/export without entitlement    |
 
 ## Permissions (to seed in implementation sprint)
 

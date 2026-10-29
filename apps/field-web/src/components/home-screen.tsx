@@ -10,15 +10,8 @@ import { useFieldPermissions } from "@/components/field-permissions-provider";
 import { useUnreadNotificationCount, useMyWork } from "@/hooks/use-my-work";
 import type { FieldProfile } from "@/hooks/use-field-profile";
 import { firstNameFromDisplay, timeOfDayGreeting } from "@/lib/greeting";
-import {
-  buildHomeStatusCards,
-  HOME_QUICK_ACTIONS,
-  todayWorkItems,
-} from "@/lib/home-status";
-import {
-  filterTasksForDivision,
-  filterTasksForLocation,
-} from "@/lib/my-work";
+import { buildHomeStatusCards, HOME_QUICK_ACTIONS, todayWorkItems } from "@/lib/home-status";
+import { filterTasksForDivision, filterTasksForLocation } from "@/lib/my-work";
 
 export function HomeScreen({
   profile,
@@ -166,7 +159,10 @@ export function HomeScreen({
           </button>
         </div>
         {todayItems.length === 0 && !loading ? (
-          <EmptyState title="You're caught up" message="No assigned work needs attention right now." />
+          <EmptyState
+            title="You're caught up"
+            message="No assigned work needs attention right now."
+          />
         ) : (
           <div className="ff-task-list">
             {todayItems.map((item) => (
@@ -176,11 +172,7 @@ export function HomeScreen({
         )}
       </section>
 
-      <DashboardShortcuts
-        permissions={permissions}
-        activeModules={activeModules}
-        {...opts}
-      />
+      <DashboardShortcuts permissions={permissions} activeModules={activeModules} {...opts} />
 
       {recent.length > 0 ? (
         <section className="ff-section" aria-labelledby="recent-heading">

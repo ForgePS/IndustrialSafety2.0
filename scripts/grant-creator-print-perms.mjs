@@ -126,9 +126,7 @@ async function main() {
       order by t.tenant_key, r.code
     `;
 
-    console.log(
-      JSON.stringify({ applied: true, roleInserts, templateInserts, after }, null, 2),
-    );
+    console.log(JSON.stringify({ applied: true, roleInserts, templateInserts, after }, null, 2));
   } finally {
     await sql.end({ timeout: 5 });
   }

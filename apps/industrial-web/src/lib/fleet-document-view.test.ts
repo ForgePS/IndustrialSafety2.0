@@ -1,9 +1,5 @@
 import { describe, expect, it } from "vitest";
-import {
-  dataUrlToBlob,
-  isFleetImageMime,
-  isFleetPdfMime,
-} from "./fleet-document-view";
+import { dataUrlToBlob, isFleetImageMime, isFleetPdfMime } from "./fleet-document-view";
 
 describe("fleet-document-view", () => {
   it("converts base64 image data URLs to blobs", () => {

@@ -77,8 +77,7 @@ export const REASONABLE_SUSPICION_TRANSPORT_OPTIONS = [
 export type ReasonableSuspicionIndicatorId =
   (typeof REASONABLE_SUSPICION_INDICATOR_GROUPS)[number]["options"][number]["id"];
 export type ReasonableSuspicionTransportId =
-  | (typeof REASONABLE_SUSPICION_TRANSPORT_OPTIONS)[number]["id"]
-  | "";
+  (typeof REASONABLE_SUSPICION_TRANSPORT_OPTIONS)[number]["id"] | "";
 
 export type ReasonableSuspicionObservation = {
   observedAt: string;
@@ -149,7 +148,9 @@ function asFlag(value: unknown): boolean {
 
 function asYesNo(value: unknown): boolean | null {
   if (value === true || value === false) return value;
-  const text = String(value ?? "").trim().toLowerCase();
+  const text = String(value ?? "")
+    .trim()
+    .toLowerCase();
   if (text === "true" || text === "yes") return true;
   if (text === "false" || text === "no") return false;
   return null;
@@ -197,19 +198,19 @@ export function parseReasonableSuspicion(raw: unknown): ReasonableSuspicionObser
 export function reasonableSuspicionHasContent(value: ReasonableSuspicionObservation): boolean {
   return Boolean(
     value.observedAt ||
-      value.indicators.length ||
-      value.indicatorsOther ||
-      value.observationNarrative.trim() ||
-      value.dotCovered !== null ||
-      value.observerName ||
-      value.observerTitle ||
-      value.observerTrained ||
-      value.observerSignature.trim() ||
-      value.secondObserverName ||
-      value.removedFromDuty ||
-      value.transportation ||
-      value.employeeStatement.trim() ||
-      value.followUpNotes.trim(),
+    value.indicators.length ||
+    value.indicatorsOther ||
+    value.observationNarrative.trim() ||
+    value.dotCovered !== null ||
+    value.observerName ||
+    value.observerTitle ||
+    value.observerTrained ||
+    value.observerSignature.trim() ||
+    value.secondObserverName ||
+    value.removedFromDuty ||
+    value.transportation ||
+    value.employeeStatement.trim() ||
+    value.followUpNotes.trim(),
   );
 }
 
@@ -329,7 +330,7 @@ export function formatReasonableSuspicionDetailLines(
       value:
         value.transportation === "other" && value.transportationOther
           ? value.transportationOther
-          : option?.label ?? value.transportation,
+          : (option?.label ?? value.transportation),
     });
   }
   if (value.employeeStatement.trim()) {

@@ -72,21 +72,22 @@ const { cluster, taskArn } = runPlatformApiOneOff(
 
 console.log(JSON.stringify({ cluster, taskArn, apply: APPLY === "1" }, null, 2));
 
-spawnSync(
-  "aws",
-  ["ecs", "wait", "tasks-stopped", "--cluster", cluster, "--tasks", taskArn],
-  { encoding: "utf8", shell: true },
-);
+spawnSync("aws", ["ecs", "wait", "tasks-stopped", "--cluster", cluster, "--tasks", taskArn], {
+  encoding: "utf8",
+  shell: true,
+});
 
-const logs = spawnSync(
-  "aws",
-  ["logs", "tail", LOG_GROUP, "--since", "15m", "--format", "short"],
-  { encoding: "utf8", shell: true, maxBuffer: 10 * 1024 * 1024 },
-);
+const logs = spawnSync("aws", ["logs", "tail", LOG_GROUP, "--since", "15m", "--format", "short"], {
+  encoding: "utf8",
+  shell: true,
+  maxBuffer: 10 * 1024 * 1024,
+});
 if (logs.stdout) {
-  const lines = logs.stdout.split(/\r?\n/).filter((line) =>
-    /wouldUpdate|updated|sample|Don Baity|Oscar|slash|Dry-run|apply|oshaCases/.test(line),
-  );
+  const lines = logs.stdout
+    .split(/\r?\n/)
+    .filter((line) =>
+      /wouldUpdate|updated|sample|Don Baity|Oscar|slash|Dry-run|apply|oshaCases/.test(line),
+    );
   console.log(lines.join("\n"));
   const idx = logs.stdout.lastIndexOf('"oshaCases"');
   if (idx >= 0) console.log(logs.stdout.slice(idx, idx + 2200));

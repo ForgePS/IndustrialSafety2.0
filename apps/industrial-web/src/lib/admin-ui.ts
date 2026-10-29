@@ -1,11 +1,5 @@
 /** Explicit Sneat label-tone classes (safe for dynamic styling). */
-export type AdminLabelTone =
-  | "primary"
-  | "success"
-  | "info"
-  | "warning"
-  | "danger"
-  | "secondary";
+export type AdminLabelTone = "primary" | "success" | "info" | "warning" | "danger" | "secondary";
 
 const LABEL_TONE_CLASS: Record<AdminLabelTone, string> = {
   primary: "bg-label-primary",

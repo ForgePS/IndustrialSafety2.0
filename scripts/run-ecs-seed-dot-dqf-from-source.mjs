@@ -26,11 +26,9 @@ const IMPORTS_BUCKET =
   process.env.FORGE_IMPORTS_BUCKET || "forge-production-imports-511343547817-us-east-1";
 const LOG_GROUP = process.env.FORGE_API_LOG_GROUP || "/forge/production/platform-api";
 
-const DEFAULT_XLSX =
-  "C:/Users/jerem/OneDrive/Forge Public Safety/Industrial Safety/DQF Files.xlsx";
+const DEFAULT_XLSX = "C:/Users/jerem/OneDrive/Forge Public Safety/Industrial Safety/DQF Files.xlsx";
 const XLSX_LOCAL = process.env.DQF_XLSX_LOCAL || DEFAULT_XLSX;
-const JSON_LOCAL =
-  process.env.DQF_DRIVERS_JSON_LOCAL || path.resolve(".tmp/dqf-drivers.json");
+const JSON_LOCAL = process.env.DQF_DRIVERS_JSON_LOCAL || path.resolve(".tmp/dqf-drivers.json");
 const SCRIPT_LOCAL = path.resolve("scripts/seed-dot-dqf-from-source.mjs");
 const PARSE_SCRIPT = path.resolve("scripts/parse-dqf-xlsx.mjs");
 
@@ -45,11 +43,10 @@ if (!existsSync(JSON_LOCAL)) {
     console.error("Set DQF_XLSX_LOCAL or DQF_DRIVERS_JSON_LOCAL");
     process.exit(1);
   }
-  const parse = spawnSync(
-    process.execPath,
-    [PARSE_SCRIPT, XLSX_LOCAL, JSON_LOCAL],
-    { encoding: "utf8", shell: true },
-  );
+  const parse = spawnSync(process.execPath, [PARSE_SCRIPT, XLSX_LOCAL, JSON_LOCAL], {
+    encoding: "utf8",
+    shell: true,
+  });
   if (parse.status !== 0) {
     console.error(parse.stderr || parse.stdout);
     process.exit(parse.status ?? 1);

@@ -135,7 +135,6 @@ export function MarkupCanvas({
             pinchRef.current = null;
           }}
         >
-          {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src={imageSrc}
             alt=""

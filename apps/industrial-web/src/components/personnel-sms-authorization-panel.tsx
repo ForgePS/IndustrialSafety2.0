@@ -61,15 +61,18 @@ export function PersonnelSmsAuthorizationPanel({
   }, [loadConsents]);
 
   function printConsent(item: PersonnelSmsConsentRecord) {
-    const personName = String(localRecord.displayName ?? localRecord.name ?? "").trim() || "Employee";
-    const message = openPrintableHtmlPopup(buildSmsConsentPrintableHtml(item, { personName }), false);
+    const personName =
+      String(localRecord.displayName ?? localRecord.name ?? "").trim() || "Employee";
+    const message = openPrintableHtmlPopup(
+      buildSmsConsentPrintableHtml(item, { personName }),
+      false,
+    );
     if (message) setError(message);
   }
 
   const state: PersonnelSmsAuthorization = parsePersonnelSmsAuthorization(localRecord);
   const status = smsAuthorizationStatusLabel(state);
-  const displayNumber =
-    formatSmsNotificationDisplay(state.smsNotificationNumber) || "Not on file";
+  const displayNumber = formatSmsNotificationDisplay(state.smsNotificationNumber) || "Not on file";
 
   function applyRecord(next: Record<string, unknown>) {
     setLocalRecord(next);
@@ -90,7 +93,9 @@ export function PersonnelSmsAuthorizationPanel({
       setConsentChecked(false);
       void loadConsents();
     } catch (e) {
-      setError(formatApiErrorMessage(e, e instanceof ApiError ? e.message : "Could not authorize SMS"));
+      setError(
+        formatApiErrorMessage(e, e instanceof ApiError ? e.message : "Could not authorize SMS"),
+      );
     } finally {
       setBusy(null);
     }
@@ -166,9 +171,7 @@ export function PersonnelSmsAuthorizationPanel({
           <div className="col-md-6 mb-2">
             <dt className="text-muted small text-uppercase fw-normal">Authorized</dt>
             <dd className="mb-0">
-              {state.smsAuthorizedAt
-                ? new Date(state.smsAuthorizedAt).toLocaleString()
-                : "—"}
+              {state.smsAuthorizedAt ? new Date(state.smsAuthorizedAt).toLocaleString() : "—"}
             </dd>
           </div>
         </dl>
@@ -276,7 +279,9 @@ export function PersonnelSmsAuthorizationPanel({
                         <td>
                           <span
                             className={`badge ${
-                              item.action === "AUTHORIZED" ? "bg-label-success" : "bg-label-secondary"
+                              item.action === "AUTHORIZED"
+                                ? "bg-label-success"
+                                : "bg-label-secondary"
                             }`}
                           >
                             {item.action === "AUTHORIZED" ? "Authorized" : "Revoked"}
@@ -293,7 +298,7 @@ export function PersonnelSmsAuthorizationPanel({
                         </td>
                         <td>
                           {item.signatureName ??
-                            (item.method === "ADMIN" ? item.actorEmail ?? "Admin" : "—")}
+                            (item.method === "ADMIN" ? (item.actorEmail ?? "Admin") : "—")}
                         </td>
                         <td className="text-end">
                           <button

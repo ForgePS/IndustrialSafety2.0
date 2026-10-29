@@ -1,12 +1,4 @@
-import {
-  app,
-  BrowserWindow,
-  ipcMain,
-  session,
-  Tray,
-  Menu,
-  nativeImage,
-} from "electron";
+import { app, BrowserWindow, ipcMain, session, Tray, Menu, nativeImage } from "electron";
 import * as fs from "fs";
 import * as path from "path";
 import { NamedPipeServer } from "./named-pipe-server";
@@ -119,39 +111,34 @@ function createWindow(): BrowserWindow {
    * Brady SDK still calls navigator.bluetooth.requestDevice internally via
    * showDiscoveredBleDevices — we must select a deviceId here.
    */
-  win.webContents.on(
-    "select-bluetooth-device",
-    (event, deviceList, callback) => {
-      event.preventDefault();
-      pendingBluetoothSelect = callback;
+  win.webContents.on("select-bluetooth-device", (event, deviceList, callback) => {
+    event.preventDefault();
+    pendingBluetoothSelect = callback;
 
-      const devices = deviceList.map((d) => ({
-        deviceId: d.deviceId,
-        deviceName: d.deviceName || "Unknown Brady printer",
-      }));
+    const devices = deviceList.map((d) => ({
+      deviceId: d.deviceId,
+      deviceName: d.deviceName || "Unknown Brady printer",
+    }));
 
-      win.webContents.send("bluetooth:device-list", devices);
+    win.webContents.send("bluetooth:device-list", devices);
 
-      if (autoSelectFirstBluetooth && devices.length > 0) {
-        const preferred = preferredBluetoothDeviceName
-          ? devices.find((d) =>
-              d.deviceName
-                .toLowerCase()
-                .includes(preferredBluetoothDeviceName!.toLowerCase())
-            )
-          : undefined;
-        const chosen = preferred ?? devices[0];
-        callback(chosen.deviceId);
-        pendingBluetoothSelect = null;
-        return;
-      }
-
-      // Keep scanning until renderer selects or cancel.
-      if (devices.length === 0) {
-        // Electron continues discovery while callback is held.
-      }
+    if (autoSelectFirstBluetooth && devices.length > 0) {
+      const preferred = preferredBluetoothDeviceName
+        ? devices.find((d) =>
+            d.deviceName.toLowerCase().includes(preferredBluetoothDeviceName!.toLowerCase()),
+          )
+        : undefined;
+      const chosen = preferred ?? devices[0];
+      callback(chosen.deviceId);
+      pendingBluetoothSelect = null;
+      return;
     }
-  );
+
+    // Keep scanning until renderer selects or cancel.
+    if (devices.length === 0) {
+      // Electron continues discovery while callback is held.
+    }
+  });
 
   return win;
 }
@@ -159,27 +146,19 @@ function createWindow(): BrowserWindow {
 function setupBluetoothPermissions(): void {
   // Electron's Permission union may omit "bluetooth" depending on typings;
   // runtime still receives bluetooth permission prompts for Web Bluetooth.
-  session.defaultSession.setPermissionRequestHandler(
-    (_webContents, permission, callback) => {
-      const name = String(permission);
-      if (
-        name === "bluetooth" ||
-        name === "clipboard-read" ||
-        name === "media"
-      ) {
-        callback(true);
-        return;
-      }
-      callback(false);
+  session.defaultSession.setPermissionRequestHandler((_webContents, permission, callback) => {
+    const name = String(permission);
+    if (name === "bluetooth" || name === "clipboard-read" || name === "media") {
+      callback(true);
+      return;
     }
-  );
+    callback(false);
+  });
 
-  session.defaultSession.setPermissionCheckHandler(
-    (_webContents, permission) => {
-      const name = String(permission);
-      return name === "bluetooth" || name === "clipboard-sanitized-write";
-    }
-  );
+  session.defaultSession.setPermissionCheckHandler((_webContents, permission) => {
+    const name = String(permission);
+    return name === "bluetooth" || name === "clipboard-sanitized-write";
+  });
 }
 
 function createTray(): void {
@@ -221,9 +200,7 @@ function createTray(): void {
   });
 }
 
-function forwardPipeRequest(
-  request: CompanionRequest
-): Promise<CompanionResponse> {
+function forwardPipeRequest(request: CompanionRequest): Promise<CompanionResponse> {
   if (!mainWindow || mainWindow.webContents.isDestroyed()) {
     return Promise.resolve({
       type: "ERROR",
@@ -236,11 +213,7 @@ function forwardPipeRequest(
   const correlationId = `${Date.now()}-${Math.random().toString(16).slice(2)}`;
 
   // PRINT / CONNECT / DISCOVER need Web Bluetooth user-gesture-friendly UI focus.
-  if (
-    request.type === "PRINT" ||
-    request.type === "CONNECT" ||
-    request.type === "DISCOVER"
-  ) {
+  if (request.type === "PRINT" || request.type === "CONNECT" || request.type === "DISCOVER") {
     mainWindow.show();
   }
 
@@ -268,9 +241,7 @@ function forwardPipeRequest(
   });
 }
 
-async function handlePipeRequest(
-  request: CompanionRequest
-): Promise<CompanionResponse> {
+async function handlePipeRequest(request: CompanionRequest): Promise<CompanionResponse> {
   switch (request.type) {
     case "HEARTBEAT":
       return {
@@ -302,50 +273,41 @@ function registerIpc(): void {
     clearPairingFile();
   });
 
-  ipcMain.handle(
-    "artifact:readDataUrl",
-    async (_event, artifactPath: string) => {
-      if (!artifactPath || typeof artifactPath !== "string") {
-        throw new Error("artifactPath is required");
-      }
-      // Only allow local absolute paths (Forge service drops under ProgramData/Cache).
-      if (!path.isAbsolute(artifactPath)) {
-        throw new Error("artifactPath must be an absolute local path");
-      }
-      const data = await fs.promises.readFile(artifactPath);
-      const ext = path.extname(artifactPath).toLowerCase();
-      const mime =
-        ext === ".jpg" || ext === ".jpeg"
-          ? "image/jpeg"
-          : ext === ".gif"
-            ? "image/gif"
-            : ext === ".bmp"
-              ? "image/bmp"
-              : "image/png";
-      return `data:${mime};base64,${data.toString("base64")}`;
+  ipcMain.handle("artifact:readDataUrl", async (_event, artifactPath: string) => {
+    if (!artifactPath || typeof artifactPath !== "string") {
+      throw new Error("artifactPath is required");
     }
-  );
+    // Only allow local absolute paths (Forge service drops under ProgramData/Cache).
+    if (!path.isAbsolute(artifactPath)) {
+      throw new Error("artifactPath must be an absolute local path");
+    }
+    const data = await fs.promises.readFile(artifactPath);
+    const ext = path.extname(artifactPath).toLowerCase();
+    const mime =
+      ext === ".jpg" || ext === ".jpeg"
+        ? "image/jpeg"
+        : ext === ".gif"
+          ? "image/gif"
+          : ext === ".bmp"
+            ? "image/bmp"
+            : "image/png";
+    return `data:${mime};base64,${data.toString("base64")}`;
+  });
 
   ipcMain.on(
     "companion:pipe-response",
-    (
-      _event,
-      payload: { correlationId: string; response: CompanionResponse }
-    ) => {
+    (_event, payload: { correlationId: string; response: CompanionResponse }) => {
       const pending = pendingPipeResponses.get(payload.correlationId);
       if (!pending) return;
       clearTimeout(pending.timer);
       pendingPipeResponses.delete(payload.correlationId);
       pending.resolve(payload.response);
-    }
+    },
   );
 
   ipcMain.on(
     "companion:status",
-    (
-      _event,
-      payload: { status: BluetoothStatus; printer?: PrinterInfoPayload | null }
-    ) => {
+    (_event, payload: { status: BluetoothStatus; printer?: PrinterInfoPayload | null }) => {
       latestStatus = payload.status;
       latestPrinter = payload.printer ?? null;
       pipeServer?.broadcast({
@@ -353,7 +315,7 @@ function registerIpc(): void {
         status: latestStatus,
         printer: latestPrinter,
       });
-    }
+    },
   );
 
   ipcMain.on("bluetooth:select-device", (_event, deviceId: string | null) => {
@@ -392,10 +354,7 @@ if (!gotLock) {
     try {
       await pipeServer.start(BLUETOOTH_NAMED_PIPE);
     } catch (err) {
-      console.error(
-        `[named-pipe] Failed to listen on ${BLUETOOTH_NAMED_PIPE}:`,
-        err
-      );
+      console.error(`[named-pipe] Failed to listen on ${BLUETOOTH_NAMED_PIPE}:`, err);
     }
   });
 

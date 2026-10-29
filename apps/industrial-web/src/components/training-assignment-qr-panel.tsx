@@ -55,7 +55,9 @@ export function TrainingAssignmentQrPanel({
         const blob = decodeBase64ToBlob(image.dataBase64, image.contentType || "image/png");
         setQrImageHref(URL.createObjectURL(blob));
       }
-      setNotice("Assignment QR issued. Post or share the link so assignees can enter their EMPLOYEE number.");
+      setNotice(
+        "Assignment QR issued. Post or share the link so assignees can enter their EMPLOYEE number.",
+      );
     } catch (err) {
       setError(formatApiErrorMessage(err, "Failed to issue assignment QR"));
     } finally {
@@ -152,7 +154,11 @@ export function TrainingAssignmentQrPanel({
             style={{ maxWidth: "12rem" }}
           />
           <div className="mt-2">
-            <a className="btn btn-sm btn-outline-secondary" href={qrImageHref} download={`training-qr-${assignmentId}.png`}>
+            <a
+              className="btn btn-sm btn-outline-secondary"
+              href={qrImageHref}
+              download={`training-qr-${assignmentId}.png`}
+            >
               Download QR image
             </a>
           </div>

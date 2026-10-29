@@ -35,7 +35,15 @@ export function resolveReportPhotos(
   if (preference === "original") {
     const src = original || marked;
     return src
-      ? [{ src, label: "Original", kind: "original", ...(name ? { fileName: name } : {}), ...(caption ? { caption } : {}) }]
+      ? [
+          {
+            src,
+            label: "Original",
+            kind: "original",
+            ...(name ? { fileName: name } : {}),
+            ...(caption ? { caption } : {}),
+          },
+        ]
       : [];
   }
 
@@ -100,7 +108,11 @@ export function reportPhotosHtml(
   photos: readonly ReportPhotoSource[],
   preference: ReportPhotoPreference = "marked_if_available",
   escapeHtml: (value: string) => string = (v) =>
-    v.replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;").replaceAll('"', "&quot;"),
+    v
+      .replaceAll("&", "&amp;")
+      .replaceAll("<", "&lt;")
+      .replaceAll(">", "&gt;")
+      .replaceAll('"', "&quot;"),
 ): string {
   const blocks: string[] = [];
   photos.forEach((photo, index) => {

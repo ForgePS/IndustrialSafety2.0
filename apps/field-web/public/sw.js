@@ -48,7 +48,10 @@ function isCacheableShellResponse(request, response) {
 
 self.addEventListener("install", (event) => {
   event.waitUntil(
-    caches.open(SHELL_CACHE).then((cache) => cacheShellUrls(cache)).then(() => self.skipWaiting()),
+    caches
+      .open(SHELL_CACHE)
+      .then((cache) => cacheShellUrls(cache))
+      .then(() => self.skipWaiting()),
   );
 });
 
@@ -56,7 +59,9 @@ self.addEventListener("activate", (event) => {
   event.waitUntil(
     caches
       .keys()
-      .then((keys) => Promise.all(keys.filter((key) => key !== SHELL_CACHE).map((key) => caches.delete(key))))
+      .then((keys) =>
+        Promise.all(keys.filter((key) => key !== SHELL_CACHE).map((key) => caches.delete(key))),
+      )
       .then(() => self.clients.claim()),
   );
 });

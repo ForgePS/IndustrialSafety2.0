@@ -40,9 +40,7 @@ export function LotoProcedureWorkflowActions({
   const showActivate = (canEdit || canApprove) && lotoCanActivateDirect(status);
   const showSubmit = canEdit && lotoCanSubmitForReview(status);
   const showEhsActions = canApprove && lotoCanEhsReview(status);
-  const submitLabel = lotoIsNeedsCorrection(status)
-    ? "Resubmit for review"
-    : "Submit for review";
+  const submitLabel = lotoIsNeedsCorrection(status) ? "Resubmit for review" : "Submit for review";
   const activateLabel = lotoIsNeedsCorrection(status) ? "Activate after corrections" : "Activate";
 
   function openSendBack() {
@@ -65,7 +63,12 @@ export function LotoProcedureWorkflowActions({
     <>
       <div className="ff-action-grid">
         {canEdit && onEdit ? (
-          <button type="button" className="ff-btn ff-btn-secondary" disabled={busy} onClick={onEdit}>
+          <button
+            type="button"
+            className="ff-btn ff-btn-secondary"
+            disabled={busy}
+            onClick={onEdit}
+          >
             Edit
           </button>
         ) : null}
@@ -122,6 +125,7 @@ export function LotoProcedureWorkflowActions({
       ) : null}
 
       {sendBackOpen ? (
+        // eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-noninteractive-element-interactions -- backdrop click-to-dismiss is a pointer convenience; keyboard users close via the dialog's buttons
         <div
           role="dialog"
           aria-modal="true"
@@ -138,6 +142,7 @@ export function LotoProcedureWorkflowActions({
           }}
           onClick={() => setSendBackOpen(false)}
         >
+          {/* eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions -- only stops clicks inside the dialog reaching the click-to-dismiss backdrop; not a control */}
           <div
             style={{
               background: "var(--ff-surface, #fff)",

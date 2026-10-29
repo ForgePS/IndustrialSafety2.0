@@ -15,13 +15,10 @@ const REGION = "us-east-1";
 const API = process.env.FORGE_API_BASE || "https://api-dev.forgepublicsafety.com";
 const STAGING = "0882c865-59c2-49a6-ab88-ce6ca89be30c";
 const PROD_TWIN = "5da680d3-50f5-46ac-8b85-6cf454b6a0da";
-const TENANT =
-  process.env.FORGE_P2_SMOKE_TENANT?.trim() || STAGING;
+const TENANT = process.env.FORGE_P2_SMOKE_TENANT?.trim() || STAGING;
 const EVIDENCE_NAME =
   TENANT === PROD_TWIN ? "login-smoke-prod-twin.json" : "login-smoke-staging.json";
-const EVID = path.resolve(
-  "docs/program/industrial-migration/ind-11/evidence/p2/02-cognito",
-);
+const EVID = path.resolve("docs/program/industrial-migration/ind-11/evidence/p2/02-cognito");
 const TARGETS = ["safetyadmin@producersrice.com", "jlackie@producersrice.com"];
 
 const secretDir = path.join(os.homedir(), ".forge", "producers-p2");
@@ -30,7 +27,9 @@ const smokeFiles = fs
   .filter((f) => f.startsWith("staging-smoke-passwords-") && f.endsWith(".json"))
   .sort();
 if (!smokeFiles.length) {
-  console.error(JSON.stringify({ ok: false, error: "No smoke password file — run force-change first" }));
+  console.error(
+    JSON.stringify({ ok: false, error: "No smoke password file — run force-change first" }),
+  );
   process.exit(2);
 }
 const secrets = JSON.parse(fs.readFileSync(path.join(secretDir, smokeFiles.at(-1)), "utf8"));
@@ -98,12 +97,7 @@ for (const email of TARGETS) {
   try {
     const { accessToken } = await tokensFor(email);
     const me = await apiCall("auth_me", accessToken, "/api/v1/auth/me", TENANT);
-    const boot = await apiCall(
-      "bootstrap",
-      accessToken,
-      "/api/v1/industrial/bootstrap",
-      TENANT,
-    );
+    const boot = await apiCall("bootstrap", accessToken, "/api/v1/industrial/bootstrap", TENANT);
     results.push({
       email,
       ok: me.pass && boot.pass,

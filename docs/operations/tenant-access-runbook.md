@@ -13,25 +13,25 @@
 
 ## Access model
 
-| Layer | Rule |
-| --- | --- |
-| Membership | Only `ACTIVE` grants access ([ADR-021](../decisions/ADR-021-tenant-membership-model.md)) |
-| Tenant status | Tenant must be `ACTIVE` for normal users |
-| Subscription | Writable states: `ACTIVE`, `PAYMENT_DUE`, `GRACE_PERIOD` |
-| Entitlements | Membership product/module access intersected with tenant entitlements |
-| RLS | `SET LOCAL app.current_tenant_id` on every tenant transaction |
-| Platform admin | May bypass some operational blocks; still uses tenant context for data |
+| Layer          | Rule                                                                                     |
+| -------------- | ---------------------------------------------------------------------------------------- |
+| Membership     | Only `ACTIVE` grants access ([ADR-021](../decisions/ADR-021-tenant-membership-model.md)) |
+| Tenant status  | Tenant must be `ACTIVE` for normal users                                                 |
+| Subscription   | Writable states: `ACTIVE`, `PAYMENT_DUE`, `GRACE_PERIOD`                                 |
+| Entitlements   | Membership product/module access intersected with tenant entitlements                    |
+| RLS            | `SET LOCAL app.current_tenant_id` on every tenant transaction                            |
+| Platform admin | May bypass some operational blocks; still uses tenant context for data                   |
 
 ## Triage checklist
 
-| Step | Action |
-| --- | --- |
-| 1 | `GET /api/v1/auth/me` — inspect `tenants[]` and `selectable` |
-| 2 | `GET /api/v1/tenants/:tenantId/memberships?userId=<uuid>` |
-| 3 | Check membership status and history (`.../history`) |
-| 4 | Check tenant status (`GET /api/v1/platform/tenants/:tenantId`) |
-| 5 | Check current subscription (`GET .../subscriptions/current`) |
-| 6 | Verify `:tenantId` in URL matches selected tenant |
+| Step | Action                                                         |
+| ---- | -------------------------------------------------------------- |
+| 1    | `GET /api/v1/auth/me` — inspect `tenants[]` and `selectable`   |
+| 2    | `GET /api/v1/tenants/:tenantId/memberships?userId=<uuid>`      |
+| 3    | Check membership status and history (`.../history`)            |
+| 4    | Check tenant status (`GET /api/v1/platform/tenants/:tenantId`) |
+| 5    | Check current subscription (`GET .../subscriptions/current`)   |
+| 6    | Verify `:tenantId` in URL matches selected tenant              |
 
 ## Procedures
 

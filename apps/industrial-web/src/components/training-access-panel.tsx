@@ -112,7 +112,12 @@ export function TrainingAccessPanel() {
     <div className="card">
       <div className="card-header d-flex justify-content-between align-items-center">
         <h6 className="mb-0">Training portal QR</h6>
-        <button type="button" className="btn btn-sm btn-outline-primary" disabled={busy} onClick={() => void load()}>
+        <button
+          type="button"
+          className="btn btn-sm btn-outline-primary"
+          disabled={busy}
+          onClick={() => void load()}
+        >
           Refresh
         </button>
       </div>
@@ -121,8 +126,8 @@ export function TrainingAccessPanel() {
         {notice ? <div className="alert alert-success">{notice}</div> : null}
 
         <p className="small text-muted mb-3">
-          Employees sign in with the <strong>employee number</strong> on their personnel record. Assign
-          training before they use the portal.
+          Employees sign in with the <strong>employee number</strong> on their personnel record.
+          Assign training before they use the portal.
         </p>
 
         {busy && !portal ? (
@@ -132,13 +137,23 @@ export function TrainingAccessPanel() {
         ) : portal?.configured && qrImageHref ? (
           <div className="text-center border rounded p-4 bg-body">
             <h5 className="mb-3">{TRAINING_PORTAL_HEADING}</h5>
-            <img src={qrImageHref} alt="Training portal QR code" className="img-fluid mb-3" style={{ maxWidth: 280 }} />
+            <img
+              src={qrImageHref}
+              alt="Training portal QR code"
+              className="img-fluid mb-3"
+              style={{ maxWidth: 280 }}
+            />
             <div className="mb-3">
               <label className="form-label small mb-1" htmlFor="training-portal-url">
                 Portal URL
               </label>
               <div className="input-group input-group-sm mx-auto" style={{ maxWidth: "32rem" }}>
-                <input id="training-portal-url" className="form-control" readOnly value={portal.url} />
+                <input
+                  id="training-portal-url"
+                  className="form-control"
+                  readOnly
+                  value={portal.url}
+                />
                 <button
                   type="button"
                   className="btn btn-outline-secondary"
@@ -154,10 +169,20 @@ export function TrainingAccessPanel() {
               </div>
             </div>
             <div className="d-flex flex-wrap justify-content-center gap-2">
-              <button type="button" className="btn btn-sm btn-primary" disabled={busy} onClick={() => void onDownloadPng()}>
+              <button
+                type="button"
+                className="btn btn-sm btn-primary"
+                disabled={busy}
+                onClick={() => void onDownloadPng()}
+              >
                 Download PNG
               </button>
-              <button type="button" className="btn btn-sm btn-outline-primary" disabled={busy} onClick={() => void onPrint()}>
+              <button
+                type="button"
+                className="btn btn-sm btn-outline-primary"
+                disabled={busy}
+                onClick={() => void onPrint()}
+              >
                 Print
               </button>
               {portal.configured ? (
@@ -203,7 +228,8 @@ export function TrainingAccessPanel() {
         {canManagePortal ? (
           <p className="small text-muted mt-3 mb-0">
             To create, re-issue, or revoke the portal QR, use{" "}
-            <Link href="/settings/training-portal/">Settings → Training portal QR</Link> (admin only).
+            <Link href="/settings/training-portal/">Settings → Training portal QR</Link> (admin
+            only).
           </p>
         ) : null}
       </div>

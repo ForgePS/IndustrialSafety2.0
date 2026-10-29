@@ -1,7 +1,4 @@
-import {
-  INDUSTRIAL_PRODUCT_CODE,
-  type FieldPermission,
-} from "@forge/contracts";
+import { INDUSTRIAL_PRODUCT_CODE, type FieldPermission } from "@forge/contracts";
 
 export type FieldAuthOpts = {
   isPlatformAdmin?: boolean;
@@ -52,10 +49,7 @@ const FIELD_PERMISSION_ALIASES: Record<FieldPermission, readonly string[]> = {
     "industrial.sanitation.manage",
     "industrial.sanitation.view",
   ],
-  "field.sanitation.clean": [
-    "industrial.sanitation.clean",
-    "industrial.sanitation.manage",
-  ],
+  "field.sanitation.clean": ["industrial.sanitation.clean", "industrial.sanitation.manage"],
 };
 
 /** Same gates Industrial API uses to list/view LOTO. */
@@ -82,10 +76,15 @@ const LOTO_EXECUTE_CODES = [
   "industrial.admin",
 ] as const;
 
-export function fieldAuthOpts(me: {
-  isPlatformAdmin?: boolean;
-  activeProducts?: readonly string[];
-} | null | undefined): FieldAuthOpts {
+export function fieldAuthOpts(
+  me:
+    | {
+        isPlatformAdmin?: boolean;
+        activeProducts?: readonly string[];
+      }
+    | null
+    | undefined,
+): FieldAuthOpts {
   return {
     isPlatformAdmin: Boolean(me?.isPlatformAdmin),
     activeProducts: me?.activeProducts ?? [],

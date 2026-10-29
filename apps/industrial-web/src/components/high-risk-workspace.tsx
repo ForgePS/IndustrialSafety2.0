@@ -4,10 +4,7 @@ import { useEffect, useState, type FormEvent } from "react";
 import { ApiError, apiGet, apiSend, useAuth } from "@forge/web-kit";
 import { ModuleUnavailable } from "@/components/module-unavailable";
 import { useIndustrialModuleGate } from "@/hooks/use-industrial-module-gate";
-import {
-  HIGH_RISK_MODULE_CONFIG,
-  type Ind5HighRiskModule,
-} from "@/lib/high-risk-modules";
+import { HIGH_RISK_MODULE_CONFIG, type Ind5HighRiskModule } from "@/lib/high-risk-modules";
 
 type ListResponse = {
   items: Array<Record<string, unknown>>;
@@ -136,11 +133,7 @@ export function HighRiskWorkspace({
   async function transition(action: "submit" | "approve" | "close" | "archive") {
     if (!selectedId) return;
     const allowed =
-      action === "approve"
-        ? canApprove
-        : action === "close"
-          ? canManage || canApprove
-          : canManage;
+      action === "approve" ? canApprove : action === "close" ? canManage || canApprove : canManage;
     if (!allowed) return;
     setError(null);
     try {
@@ -232,9 +225,7 @@ export function HighRiskWorkspace({
                   <td>
                     <span data-status={String(row.status ?? "")}>{String(row.status ?? "—")}</span>
                   </td>
-                  <td>
-                    {row.updatedAt ? new Date(String(row.updatedAt)).toLocaleString() : "—"}
-                  </td>
+                  <td>{row.updatedAt ? new Date(String(row.updatedAt)).toLocaleString() : "—"}</td>
                   <td>
                     <button type="button" onClick={() => void loadDetail(String(row.id))}>
                       Open
@@ -278,7 +269,8 @@ export function HighRiskWorkspace({
           </div>
           {Array.isArray(detail.assignments) && (detail.assignments as unknown[]).length > 0 ? (
             <p className="ind-muted">
-              Assignments: {(detail.assignments as Array<{ roleKey?: string }>).map((a) => a.roleKey).join(", ")}
+              Assignments:{" "}
+              {(detail.assignments as Array<{ roleKey?: string }>).map((a) => a.roleKey).join(", ")}
             </p>
           ) : null}
           {Array.isArray(detail.readings) && (detail.readings as unknown[]).length > 0 ? (
@@ -290,7 +282,11 @@ export function HighRiskWorkspace({
       ) : null}
 
       {canManage ? (
-        <form className="ind-ops-create" onSubmit={(e) => void onCreate(e)} aria-label="Create record">
+        <form
+          className="ind-ops-create"
+          onSubmit={(e) => void onCreate(e)}
+          aria-label="Create record"
+        >
           <h2>Create</h2>
           <label>
             Title
@@ -335,8 +331,8 @@ export function HighRiskWorkspace({
       )}
 
       <p className="ind-muted" role="note">
-        Field UX targets tablet completion. Hosted Playwright remains pending nonproduction web hosting.
-        Optional Equipment/LOTO links are validated server-side when provided.
+        Field UX targets tablet completion. Hosted Playwright remains pending nonproduction web
+        hosting. Optional Equipment/LOTO links are validated server-side when provided.
       </p>
     </section>
   );

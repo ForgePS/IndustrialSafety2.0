@@ -85,9 +85,7 @@ for (const environment of envs) {
       FORGE_SAME_ORIGIN_API: "1",
       NEXT_PUBLIC_API_URL: "",
       NEXT_PUBLIC_APP_URL: appUrlByEnv[environment],
-      ...Object.fromEntries(
-        Object.entries(cognito).filter(([, v]) => Boolean(v)),
-      ),
+      ...Object.fromEntries(Object.entries(cognito).filter(([, v]) => Boolean(v))),
     },
   });
 }

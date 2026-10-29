@@ -133,7 +133,12 @@ export function TenantPicker({
               </tbody>
             </table>
           </div>
-          <Pagination page={page} pageSize={PAGE_SIZE} total={filtered.length} onPageChange={setPage} />
+          <Pagination
+            page={page}
+            pageSize={PAGE_SIZE}
+            total={filtered.length}
+            onPageChange={setPage}
+          />
         </>
       ) : null}
     </>

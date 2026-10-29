@@ -71,7 +71,12 @@ async function main() {
       order by name
     `;
     summary.matched = rows.length;
-    summary.locations = rows.map((r) => ({ id: r.id, code: r.code, name: r.name, status: r.status }));
+    summary.locations = rows.map((r) => ({
+      id: r.id,
+      code: r.code,
+      name: r.name,
+      status: r.status,
+    }));
 
     if (APPLY && rows.length > 0) {
       const ids = rows.map((r) => r.id);

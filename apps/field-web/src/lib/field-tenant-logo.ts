@@ -76,10 +76,7 @@ export function fieldTenantLogoFor(opts: {
   const bundled = bundledFieldTenantLogo(opts.slug, opts.displayName, theme);
   if (bundled) return bundled;
 
-  const light =
-    opts.logoLightUrl?.trim() ||
-    opts.brandingLogoUrl?.trim() ||
-    "";
+  const light = opts.logoLightUrl?.trim() || opts.brandingLogoUrl?.trim() || "";
   if (light && !isGenericTenantLogo(light)) {
     return { src: light, label };
   }

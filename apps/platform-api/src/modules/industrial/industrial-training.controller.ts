@@ -1,4 +1,16 @@
-import { Body, Controller, Delete, Get, Param, Patch, Post, Put, Query, Req, Res } from "@nestjs/common";
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Param,
+  Patch,
+  Post,
+  Put,
+  Query,
+  Req,
+  Res,
+} from "@nestjs/common";
 import type { ForgePrincipal } from "@forge/tenant-context";
 import type { Response } from "express";
 import { ok } from "../../common/api-response.js";
@@ -111,10 +123,7 @@ export class IndustrialTrainingController {
   @RequireAnyPermission(["industrial.training.view", "industrial.admin"], {
     requiresEntitlement: ENTITLEMENT,
   })
-  async listRecordCourseNames(
-    @Principal() principal: ForgePrincipal,
-    @Req() req: RequestWithIds,
-  ) {
+  async listRecordCourseNames(@Principal() principal: ForgePrincipal, @Req() req: RequestWithIds) {
     const names = await this.training.listRecordCourseNames(principal);
     return ok(names, getRequestIds(req), {
       page: 1,
@@ -184,11 +193,7 @@ export class IndustrialTrainingController {
 
   @Post("records/:recordId/attachments/upload-url")
   @RequireAnyPermission(
-    [
-      "industrial.training.manage",
-      "industrial.personnel.manage",
-      "industrial.admin",
-    ],
+    ["industrial.training.manage", "industrial.personnel.manage", "industrial.admin"],
     { requiresEntitlement: ENTITLEMENT },
   )
   @Idempotent({ resourceType: "industrial_training_record_attachment" })
@@ -212,11 +217,7 @@ export class IndustrialTrainingController {
 
   @Post("records/:recordId/attachments/complete")
   @RequireAnyPermission(
-    [
-      "industrial.training.manage",
-      "industrial.personnel.manage",
-      "industrial.admin",
-    ],
+    ["industrial.training.manage", "industrial.personnel.manage", "industrial.admin"],
     { requiresEntitlement: ENTITLEMENT },
   )
   @Idempotent({ resourceType: "industrial_training_record_attachment_complete" })
@@ -247,11 +248,7 @@ export class IndustrialTrainingController {
 
   @Get("records/:recordId/attachments/:documentId/download-url")
   @RequireAnyPermission(
-    [
-      ...TRAINING_VIEW,
-      "industrial.personnel.view",
-      "industrial.personnel.manage",
-    ],
+    [...TRAINING_VIEW, "industrial.personnel.view", "industrial.personnel.manage"],
     { requiresEntitlement: ENTITLEMENT },
   )
   async recordAttachmentDownloadUrl(
@@ -268,11 +265,7 @@ export class IndustrialTrainingController {
 
   @Delete("records/:recordId/attachments/:documentId")
   @RequireAnyPermission(
-    [
-      "industrial.training.manage",
-      "industrial.personnel.manage",
-      "industrial.admin",
-    ],
+    ["industrial.training.manage", "industrial.personnel.manage", "industrial.admin"],
     { requiresEntitlement: ENTITLEMENT },
   )
   async deleteRecordAttachment(
@@ -316,12 +309,15 @@ export class IndustrialTrainingController {
     @Req() req: RequestWithIds,
   ) {
     return ok(
-      await this.training.createSource(principal, body as {
-        title?: string;
-        edition?: string;
-        description?: string;
-        groupIds?: string[];
-      }),
+      await this.training.createSource(
+        principal,
+        body as {
+          title?: string;
+          edition?: string;
+          description?: string;
+          groupIds?: string[];
+        },
+      ),
       getRequestIds(req),
     );
   }
@@ -349,13 +345,17 @@ export class IndustrialTrainingController {
     @Req() req: RequestWithIds,
   ) {
     return ok(
-      await this.training.updateSource(principal, sourceId, body as {
-        title?: string;
-        edition?: string;
-        description?: string;
-        status?: string;
-        groupIds?: string[];
-      }),
+      await this.training.updateSource(
+        principal,
+        sourceId,
+        body as {
+          title?: string;
+          edition?: string;
+          description?: string;
+          status?: string;
+          groupIds?: string[];
+        },
+      ),
       getRequestIds(req),
     );
   }
@@ -790,10 +790,7 @@ export class IndustrialTrainingController {
     @Param("materialId") materialId: string,
     @Req() req: RequestWithIds,
   ) {
-    return ok(
-      await this.training.createMaterialViewUrl(principal, materialId),
-      getRequestIds(req),
-    );
+    return ok(await this.training.createMaterialViewUrl(principal, materialId), getRequestIds(req));
   }
 
   @Get("materials/:materialId/content")
@@ -806,12 +803,13 @@ export class IndustrialTrainingController {
     @Res() res: Response,
   ) {
     const file = await this.training.getMaterialContent(principal, materialId);
-    const safeName = file.filename.replace(/"/g, "").replace(/[^\w.\-() ]+/g, "_").slice(0, 180) || "download";
+    const safeName =
+      file.filename
+        .replace(/"/g, "")
+        .replace(/[^\w.\-() ]+/g, "_")
+        .slice(0, 180) || "download";
     res.setHeader("Content-Type", file.contentType);
-    res.setHeader(
-      "Content-Disposition",
-      `${file.disposition}; filename="${safeName}"`,
-    );
+    res.setHeader("Content-Disposition", `${file.disposition}; filename="${safeName}"`);
     if (file.contentLength) {
       res.setHeader("Content-Length", String(file.contentLength));
     }
@@ -874,12 +872,15 @@ export class IndustrialTrainingController {
     @Req() req: RequestWithIds,
   ) {
     return ok(
-      await this.assignments.createGroup(principal, body as {
-        name?: string;
-        description?: string;
-        memberUserIds?: string[];
-        memberPersonnelIds?: string[];
-      }),
+      await this.assignments.createGroup(
+        principal,
+        body as {
+          name?: string;
+          description?: string;
+          memberUserIds?: string[];
+          memberPersonnelIds?: string[];
+        },
+      ),
       getRequestIds(req),
     );
   }
@@ -895,12 +896,16 @@ export class IndustrialTrainingController {
     @Req() req: RequestWithIds,
   ) {
     return ok(
-      await this.assignments.updateGroup(principal, groupId, body as {
-        name?: string;
-        description?: string | null;
-        memberUserIds?: string[];
-        memberPersonnelIds?: string[];
-      }),
+      await this.assignments.updateGroup(
+        principal,
+        groupId,
+        body as {
+          name?: string;
+          description?: string | null;
+          memberUserIds?: string[];
+          memberPersonnelIds?: string[];
+        },
+      ),
       getRequestIds(req),
     );
   }
@@ -951,7 +956,10 @@ export class IndustrialTrainingController {
     @Body() body: Record<string, unknown>,
     @Req() req: RequestWithIds,
   ) {
-    return ok(await this.assignments.createAssignment(principal, body as { title?: string }), getRequestIds(req));
+    return ok(
+      await this.assignments.createAssignment(principal, body as { title?: string }),
+      getRequestIds(req),
+    );
   }
 
   @Patch("assignments/:assignmentId")
@@ -965,9 +973,13 @@ export class IndustrialTrainingController {
     @Req() req: RequestWithIds,
   ) {
     return ok(
-      await this.assignments.updateAssignment(principal, assignmentId, body as {
-        title?: string;
-      }),
+      await this.assignments.updateAssignment(
+        principal,
+        assignmentId,
+        body as {
+          title?: string;
+        },
+      ),
       getRequestIds(req),
     );
   }
@@ -981,7 +993,10 @@ export class IndustrialTrainingController {
     @Param("assignmentId") assignmentId: string,
     @Req() req: RequestWithIds,
   ) {
-    return ok(await this.assignments.archiveAssignment(principal, assignmentId), getRequestIds(req));
+    return ok(
+      await this.assignments.archiveAssignment(principal, assignmentId),
+      getRequestIds(req),
+    );
   }
 
   @Delete("assignments/:assignmentId/assignees/:assigneeId")
@@ -1041,7 +1056,10 @@ export class IndustrialTrainingController {
     @Param("assignmentId") assignmentId: string,
     @Req() req: RequestWithIds,
   ) {
-    return ok(await this.assignments.revokeAssignmentQr(principal, assignmentId), getRequestIds(req));
+    return ok(
+      await this.assignments.revokeAssignmentQr(principal, assignmentId),
+      getRequestIds(req),
+    );
   }
 
   @Get("team-summary")
@@ -1070,9 +1088,7 @@ export class IndustrialTrainingController {
     @Query("appBaseUrl") appBaseUrlQuery: string | undefined,
     @Req() req: RequestWithIds,
   ) {
-    const appBaseUrl = String(
-      appBaseUrlQuery ?? process.env.FORGE_INDUSTRIAL_APP_URL ?? "",
-    ).trim();
+    const appBaseUrl = String(appBaseUrlQuery ?? process.env.FORGE_INDUSTRIAL_APP_URL ?? "").trim();
     if (!appBaseUrl) throw new Error("appBaseUrl is required");
     return ok(await this.lms.getPortalQrDisplay(principal, appBaseUrl), getRequestIds(req));
   }
@@ -1177,7 +1193,10 @@ export class IndustrialTrainingController {
     @Body() body: Record<string, unknown>,
     @Req() req: RequestWithIds,
   ) {
-    return ok(await this.lms.upsertSection(principal, versionId, body as never), getRequestIds(req));
+    return ok(
+      await this.lms.upsertSection(principal, versionId, body as never),
+      getRequestIds(req),
+    );
   }
 
   @Post("assignments/:assignmentId/bulk-assign")
@@ -1256,10 +1275,7 @@ export class IndustrialTrainingController {
     const variant = String(variantRaw ?? "trainee").toLowerCase() === "key" ? "key" : "trainee";
     const file = await this.training.getPaperQuizPrintable(principal, sourceId, variant);
     res.setHeader("Content-Type", file.contentType);
-    res.setHeader(
-      "Content-Disposition",
-      `inline; filename="${file.filename.replace(/"/g, "")}"`,
-    );
+    res.setHeader("Content-Disposition", `inline; filename="${file.filename.replace(/"/g, "")}"`);
     res.send(file.html);
   }
 
@@ -1275,9 +1291,13 @@ export class IndustrialTrainingController {
     @Req() req: RequestWithIds,
   ) {
     return ok(
-      await this.assignments.applyPaperResultsForSource(principal, sourceId, body as {
-        results?: Array<{ employeeNumber?: string; percent?: number }>;
-      }),
+      await this.assignments.applyPaperResultsForSource(
+        principal,
+        sourceId,
+        body as {
+          results?: Array<{ employeeNumber?: string; percent?: number }>;
+        },
+      ),
       getRequestIds(req),
     );
   }
@@ -1294,9 +1314,13 @@ export class IndustrialTrainingController {
     @Req() req: RequestWithIds,
   ) {
     return ok(
-      await this.assignments.applyPaperResults(principal, assignmentId, body as {
-        results?: Array<{ employeeNumber?: string; percent?: number }>;
-      }),
+      await this.assignments.applyPaperResults(
+        principal,
+        assignmentId,
+        body as {
+          results?: Array<{ employeeNumber?: string; percent?: number }>;
+        },
+      ),
       getRequestIds(req),
     );
   }
@@ -1324,34 +1348,22 @@ export class IndustrialTrainingController {
 
   @Get("me")
   @RequireAnyPermission([...TRAINING_SELF], { requiresEntitlement: ENTITLEMENT })
-  async myTraining(
-    @Principal() principal: ForgePrincipal,
-    @Req() req: RequestWithIds,
-  ) {
+  async myTraining(@Principal() principal: ForgePrincipal, @Req() req: RequestWithIds) {
     return ok(await this.lms.getMyTraining(principal), getRequestIds(req));
   }
 
   @Get("me/history")
   @RequireAnyPermission([...TRAINING_SELF], { requiresEntitlement: ENTITLEMENT })
-  async myTrainingHistory(
-    @Principal() principal: ForgePrincipal,
-    @Req() req: RequestWithIds,
-  ) {
+  async myTrainingHistory(@Principal() principal: ForgePrincipal, @Req() req: RequestWithIds) {
     return ok(await this.lms.getMyTrainingHistory(principal), getRequestIds(req));
   }
 
   @Get("me/report")
   @RequireAnyPermission([...TRAINING_SELF], { requiresEntitlement: ENTITLEMENT })
-  async myTrainingReport(
-    @Principal() principal: ForgePrincipal,
-    @Res() res: Response,
-  ) {
+  async myTrainingReport(@Principal() principal: ForgePrincipal, @Res() res: Response) {
     const file = await this.lms.getMyTrainingReportPrintable(principal);
     res.setHeader("Content-Type", file.contentType);
-    res.setHeader(
-      "Content-Disposition",
-      `inline; filename="${file.filename.replace(/"/g, "")}"`,
-    );
+    res.setHeader("Content-Disposition", `inline; filename="${file.filename.replace(/"/g, "")}"`);
     res.send(file.html);
   }
 
@@ -1364,10 +1376,7 @@ export class IndustrialTrainingController {
   ) {
     const file = await this.lms.getMyCompletionPrintable(principal, completionId);
     res.setHeader("Content-Type", file.contentType);
-    res.setHeader(
-      "Content-Disposition",
-      `inline; filename="${file.filename.replace(/"/g, "")}"`,
-    );
+    res.setHeader("Content-Disposition", `inline; filename="${file.filename.replace(/"/g, "")}"`);
     res.send(file.html);
   }
 
@@ -1380,10 +1389,7 @@ export class IndustrialTrainingController {
   ) {
     const file = await this.lms.getMyTrainingRecordPrintable(principal, recordId);
     res.setHeader("Content-Type", file.contentType);
-    res.setHeader(
-      "Content-Disposition",
-      `inline; filename="${file.filename.replace(/"/g, "")}"`,
-    );
+    res.setHeader("Content-Disposition", `inline; filename="${file.filename.replace(/"/g, "")}"`);
     res.send(file.html);
   }
 
@@ -1402,7 +1408,10 @@ export class IndustrialTrainingController {
     const tenantId = principal.tenantId?.trim();
     if (!tenantId) throw new Error("tenant required");
     await this.lms.assertCanAccessPersonnelTraining(principal, personnelId);
-    return ok(await this.lms.listPersonnelTrainingHistory(tenantId, personnelId), getRequestIds(req));
+    return ok(
+      await this.lms.listPersonnelTrainingHistory(tenantId, personnelId),
+      getRequestIds(req),
+    );
   }
 
   @Get("personnel/:personnelId/report")
@@ -1419,10 +1428,7 @@ export class IndustrialTrainingController {
     await this.lms.assertCanAccessPersonnelTraining(principal, personnelId);
     const file = await this.lms.getPersonnelTrainingReportPrintable(tenantId, personnelId);
     res.setHeader("Content-Type", file.contentType);
-    res.setHeader(
-      "Content-Disposition",
-      `inline; filename="${file.filename.replace(/"/g, "")}"`,
-    );
+    res.setHeader("Content-Disposition", `inline; filename="${file.filename.replace(/"/g, "")}"`);
     res.send(file.html);
   }
 
@@ -1441,20 +1447,13 @@ export class IndustrialTrainingController {
     await this.lms.assertCanAccessPersonnelTraining(principal, personnelId);
     const file = await this.lms.getCompletionPrintable(tenantId, personnelId, completionId);
     res.setHeader("Content-Type", file.contentType);
-    res.setHeader(
-      "Content-Disposition",
-      `inline; filename="${file.filename.replace(/"/g, "")}"`,
-    );
+    res.setHeader("Content-Disposition", `inline; filename="${file.filename.replace(/"/g, "")}"`);
     res.send(file.html);
   }
 
   @Get("personnel/:personnelId/records/:recordId/printable")
   @RequireAnyPermission(
-    [
-      ...TRAINING_SELF,
-      "industrial.personnel.view",
-      "industrial.personnel.manage",
-    ],
+    [...TRAINING_SELF, "industrial.personnel.view", "industrial.personnel.manage"],
     { requiresEntitlement: ENTITLEMENT },
   )
   async personnelTrainingRecordPrintable(
@@ -1468,10 +1467,7 @@ export class IndustrialTrainingController {
     await this.lms.assertCanAccessPersonnelTraining(principal, personnelId);
     const file = await this.lms.getTrainingRecordPrintable(tenantId, personnelId, recordId);
     res.setHeader("Content-Type", file.contentType);
-    res.setHeader(
-      "Content-Disposition",
-      `inline; filename="${file.filename.replace(/"/g, "")}"`,
-    );
+    res.setHeader("Content-Disposition", `inline; filename="${file.filename.replace(/"/g, "")}"`);
     res.send(file.html);
   }
 
@@ -1491,10 +1487,7 @@ export class IndustrialTrainingController {
       allowAnyInTenant: true,
     });
     res.setHeader("Content-Type", file.contentType);
-    res.setHeader(
-      "Content-Disposition",
-      `inline; filename="${file.filename.replace(/"/g, "")}"`,
-    );
+    res.setHeader("Content-Disposition", `inline; filename="${file.filename.replace(/"/g, "")}"`);
     res.send(file.html);
   }
 }

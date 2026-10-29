@@ -23,15 +23,15 @@ Deliver the **Forge Bluetooth Printer Companion** Electron app that:
 
 ## Capabilities (§7) — i4311 BLE
 
-| Capability | Value | Notes |
-|------------|-------|-------|
-| print | true | |
-| bitmapPrint | true | `printBitmap(HTMLImageElement)` |
-| multipleCopies | true | `setCopies(n)` |
-| cut | false | SDK cut is M211/M511; not advertised for i4311 BLE |
-| feed | false | SDK feed is M211/M511; not advertised for i4311 BLE |
-| batteryStatus | true | when `batteryLevelPercentage` available |
-| dpi | [300] | i4311 profile |
+| Capability     | Value | Notes                                               |
+| -------------- | ----- | --------------------------------------------------- |
+| print          | true  |                                                     |
+| bitmapPrint    | true  | `printBitmap(HTMLImageElement)`                     |
+| multipleCopies | true  | `setCopies(n)`                                      |
+| cut            | false | SDK cut is M211/M511; not advertised for i4311 BLE  |
+| feed           | false | SDK feed is M211/M511; not advertised for i4311 BLE |
+| batteryStatus  | true  | when `batteryLevelPercentage` available             |
+| dpi            | [300] | i4311 profile                                       |
 
 ## IPC examples
 

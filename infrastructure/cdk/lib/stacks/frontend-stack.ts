@@ -74,12 +74,7 @@ export class FrontendStack extends cdk.Stack {
         this.rms.distribution.distributionDomainName,
         "RMS Web CloudFront domain",
       );
-      exportValue(
-        this,
-        `${id}-RmsBucket`,
-        this.rms.bucket.bucketName,
-        "RMS Web origin bucket",
-      );
+      exportValue(this, `${id}-RmsBucket`, this.rms.bucket.bucketName, "RMS Web origin bucket");
       exportValue(
         this,
         `${id}-RmsDistributionId`,

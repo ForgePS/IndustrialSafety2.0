@@ -67,11 +67,7 @@ export const FLEET_COMPLIANCE_DOCUMENT_TYPES = [
 ] as const;
 
 /** Document types shown under Maintenance Documents / Other. */
-export const FLEET_OTHER_DOCUMENT_TYPES = [
-  "MAINTENANCE",
-  "INSPECTION",
-  "OTHER",
-] as const;
+export const FLEET_OTHER_DOCUMENT_TYPES = ["MAINTENANCE", "INSPECTION", "OTHER"] as const;
 
 export const FLEET_MAINTENANCE_TYPES = [
   "PM",
@@ -131,10 +127,7 @@ export function fleetAssetLabel(item: Record<string, unknown> | null | undefined
   const plate = String(item.licensePlate ?? "").trim();
   const number = String(item.assetNumber ?? "").trim();
   return (
-    [year, make, model].filter(Boolean).join(" ") ||
-    number ||
-    plate ||
-    String(item.id ?? "Asset")
+    [year, make, model].filter(Boolean).join(" ") || number || plate || String(item.id ?? "Asset")
   );
 }
 
@@ -159,7 +152,9 @@ export function fleetAssetPrintQrUrl(
   }
 }
 
-export function fleetAssetIsDotRegulated(item: Record<string, unknown> | null | undefined): boolean {
+export function fleetAssetIsDotRegulated(
+  item: Record<string, unknown> | null | undefined,
+): boolean {
   return item?.dotRegulated === true || item?.dotRegulated === "true";
 }
 
@@ -223,9 +218,7 @@ export function fleetAssetPrintFieldValues(
   if (type) values.type = type;
   const qr =
     (typeof opts?.qrPayload === "string" && opts.qrPayload.trim()) ||
-    (!fleetAssetIsDotRegulated(item)
-      ? fleetAssetPrintQrUrl(item, opts?.appBaseUrl)
-      : undefined);
+    (!fleetAssetIsDotRegulated(item) ? fleetAssetPrintQrUrl(item, opts?.appBaseUrl) : undefined);
   if (qr) {
     values.qr = qr;
     values.qrPayload = qr;

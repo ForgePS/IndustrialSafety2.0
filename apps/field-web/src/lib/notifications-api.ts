@@ -21,9 +21,7 @@ export type FieldNotificationPersonGroup = {
   items: FieldNotification[];
 };
 
-function metadataRecord(
-  metadata: FieldNotification["metadataJson"],
-): Record<string, unknown> {
+function metadataRecord(metadata: FieldNotification["metadataJson"]): Record<string, unknown> {
   if (!metadata) return {};
   if (typeof metadata === "string") {
     try {
@@ -52,8 +50,7 @@ export function personGroupForNotification(note: FieldNotification): {
 } {
   const meta = metadataRecord(note.metadataJson);
   const senderUserId = String(meta.senderUserId ?? "").trim();
-  const senderName =
-    String(meta.senderName ?? "").trim() || senderNameFromTitle(note.title) || "";
+  const senderName = String(meta.senderName ?? "").trim() || senderNameFromTitle(note.title) || "";
   const isMessaging =
     String(note.type ?? "").includes("messaging") ||
     Boolean(senderUserId) ||
@@ -160,7 +157,11 @@ const NOTIFICATIONS_API = "/api/v1/industrial/my-notifications";
 
 function asItems<T>(payload: unknown): T[] {
   if (Array.isArray(payload)) return payload as T[];
-  if (payload && typeof payload === "object" && Array.isArray((payload as { items?: unknown }).items)) {
+  if (
+    payload &&
+    typeof payload === "object" &&
+    Array.isArray((payload as { items?: unknown }).items)
+  ) {
     return ((payload as { items: T[] }).items ?? []) as T[];
   }
   return [];

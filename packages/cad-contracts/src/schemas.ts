@@ -53,11 +53,9 @@ export const createCadConnectionInputSchema = z.object({
 
 export type CreateCadConnectionInput = z.infer<typeof createCadConnectionInputSchema>;
 
-export const patchCadConnectionInputSchema = createCadConnectionInputSchema
-  .partial()
-  .extend({
-    recordVersion: z.number().int().positive(),
-    status: cadConnectionStatusSchema.optional(),
-  });
+export const patchCadConnectionInputSchema = createCadConnectionInputSchema.partial().extend({
+  recordVersion: z.number().int().positive(),
+  status: cadConnectionStatusSchema.optional(),
+});
 
 export type PatchCadConnectionInput = z.infer<typeof patchCadConnectionInputSchema>;

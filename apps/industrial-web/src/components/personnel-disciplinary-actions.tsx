@@ -246,7 +246,9 @@ export function PersonnelDisciplinaryActions({ personnelId, canManage, onChanged
       await load();
     } catch (e) {
       setError(
-        e instanceof ApiError ? e.message : imageCompressErrorMessage(e, "Unable to upload that file."),
+        e instanceof ApiError
+          ? e.message
+          : imageCompressErrorMessage(e, "Unable to upload that file."),
       );
     } finally {
       setUploadingId(null);
@@ -270,12 +272,19 @@ export function PersonnelDisciplinaryActions({ personnelId, canManage, onChanged
     }
   }
 
-  async function deleteAttachment(action: DisciplinaryAction, documentId: string, fileName: string) {
+  async function deleteAttachment(
+    action: DisciplinaryAction,
+    documentId: string,
+    fileName: string,
+  ) {
     if (!window.confirm(`Remove “${fileName}” from this disciplinary action?`)) return;
     setDeletingDocId(documentId);
     setError(null);
     try {
-      await apiSend(`${actionBase(action)}/attachments/${encodeURIComponent(documentId)}`, "DELETE");
+      await apiSend(
+        `${actionBase(action)}/attachments/${encodeURIComponent(documentId)}`,
+        "DELETE",
+      );
       await load();
     } catch (e) {
       setError(e instanceof ApiError ? e.message : "Could not remove attachment");
@@ -370,8 +379,8 @@ export function PersonnelDisciplinaryActions({ personnelId, canManage, onChanged
         <div className="card-body pt-0" id="personnel-discipline-content">
           <p className="text-muted small">
             Each action deducts a set number of points from this person&apos;s safety score for{" "}
-            {DISCIPLINE_ACTIVE_MONTHS} months from the action date. Rescinded or expired actions stay
-            on file but no longer count.
+            {DISCIPLINE_ACTIVE_MONTHS} months from the action date. Rescinded or expired actions
+            stay on file but no longer count.
           </p>
           {error ? (
             <div className="alert alert-warning py-2" role="alert">
@@ -388,7 +397,9 @@ export function PersonnelDisciplinaryActions({ personnelId, canManage, onChanged
 
           {canManage && formOpen ? (
             <form className="border rounded p-3 mb-3" onSubmit={(e) => void submit(e)}>
-              <h6 className="mb-3">{editingId ? "Edit disciplinary action" : "New disciplinary action"}</h6>
+              <h6 className="mb-3">
+                {editingId ? "Edit disciplinary action" : "New disciplinary action"}
+              </h6>
               <div className="row g-3">
                 <div className="col-md-4">
                   <label className="form-label" htmlFor="discipline-type">
@@ -442,7 +453,8 @@ export function PersonnelDisciplinaryActions({ personnelId, canManage, onChanged
                     Deducts <strong>{formPoints} points</strong> from the safety score
                     {formCountsUntil ? (
                       <>
-                        {" "}until <strong>{formCountsUntil}</strong>
+                        {" "}
+                        until <strong>{formCountsUntil}</strong>
                       </>
                     ) : null}{" "}
                     ({DISCIPLINE_ACTIVE_MONTHS} months from the date of action).
@@ -498,7 +510,10 @@ export function PersonnelDisciplinaryActions({ personnelId, canManage, onChanged
                     {pendingFiles.length > 0 ? (
                       <ul className="list-unstyled small mt-2 mb-0">
                         {pendingFiles.map((file, index) => (
-                          <li key={`${file.name}-${index}`} className="d-flex align-items-center gap-2">
+                          <li
+                            key={`${file.name}-${index}`}
+                            className="d-flex align-items-center gap-2"
+                          >
                             <i className="bx bx-file" aria-hidden="true" />
                             <span className="text-truncate">{file.name}</span>
                             <button
@@ -562,7 +577,9 @@ export function PersonnelDisciplinaryActions({ personnelId, canManage, onChanged
                       </div>
                       <div
                         className={
-                          action.status === "RESCINDED" ? "text-decoration-line-through text-muted" : ""
+                          action.status === "RESCINDED"
+                            ? "text-decoration-line-through text-muted"
+                            : ""
                         }
                       >
                         {action.reason}

@@ -1,14 +1,6 @@
 import { Injectable } from "@nestjs/common";
-import {
-  assertSafeEventPayload,
-  createDomainEvent,
-  type DomainEventType,
-} from "@forge/events";
-import {
-  createId,
-  outboxEvents,
-  type DatabaseTransaction,
-} from "@forge/database";
+import { assertSafeEventPayload, createDomainEvent, type DomainEventType } from "@forge/events";
+import { createId, outboxEvents, type DatabaseTransaction } from "@forge/database";
 
 export interface WriteOutboxInput {
   tenantId: string | null;

@@ -34,9 +34,12 @@ function normalize(name) {
 function scorePersonForDept(person, deptName) {
   const dept = normalize(deptName);
   const hay = normalize(
-    [person.display_name, person.supervisor_name, person.position_name, person.department_name].join(
-      " ",
-    ),
+    [
+      person.display_name,
+      person.supervisor_name,
+      person.position_name,
+      person.department_name,
+    ].join(" "),
   );
   let score = 0;
   if (person.department_name && normalize(person.department_name) === dept) score += 5;
@@ -128,7 +131,10 @@ async function main() {
         {
           tenantKey: TENANT_KEY,
           apply: APPLY,
-          fingerprint: createHash("sha1").update(JSON.stringify(proposals)).digest("hex").slice(0, 12),
+          fingerprint: createHash("sha1")
+            .update(JSON.stringify(proposals))
+            .digest("hex")
+            .slice(0, 12),
           proposals,
         },
         null,

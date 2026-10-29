@@ -1,11 +1,4 @@
-import {
-  index,
-  pgTable,
-  timestamp,
-  uniqueIndex,
-  uuid,
-  varchar,
-} from "drizzle-orm/pg-core";
+import { index, pgTable, timestamp, uniqueIndex, uuid, varchar } from "drizzle-orm/pg-core";
 import { createdAtColumn, recordVersionColumn, updatedAtColumn } from "./common.js";
 import { organizations } from "./organizations.js";
 import { tenants } from "./tenants.js";

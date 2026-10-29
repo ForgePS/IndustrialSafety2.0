@@ -38,13 +38,13 @@ Until an independent CPA examination is complete and a report is issued, public 
 
 ## Initial Trust Services Categories
 
-| Category | Initial posture | Detail |
-| --- | --- | --- |
-| **Security** | **In scope** | Required foundation |
-| **Availability** | **In scope** | Public safety SaaS continuity expectations |
-| **Confidentiality** | **In scope** | Multi-tenant public-safety operational data |
-| **Processing Integrity** | **Evaluate / likely deferred** | See [`scope/trust-services-category-decision.md`](scope/trust-services-category-decision.md) |
-| **Privacy** | **Evaluate / deferred pending counsel** | PII exists; formal Privacy criteria need legal/auditor guidance |
+| Category                 | Initial posture                         | Detail                                                                                       |
+| ------------------------ | --------------------------------------- | -------------------------------------------------------------------------------------------- |
+| **Security**             | **In scope**                            | Required foundation                                                                          |
+| **Availability**         | **In scope**                            | Public safety SaaS continuity expectations                                                   |
+| **Confidentiality**      | **In scope**                            | Multi-tenant public-safety operational data                                                  |
+| **Processing Integrity** | **Evaluate / likely deferred**          | See [`scope/trust-services-category-decision.md`](scope/trust-services-category-decision.md) |
+| **Privacy**              | **Evaluate / deferred pending counsel** | PII exists; formal Privacy criteria need legal/auditor guidance                              |
 
 Do not expand categories without updating the category decision record and re-baselining scope.
 
@@ -84,38 +84,38 @@ docs/compliance/soc2/
 
 ## Sprint sequencing (high level)
 
-| Phase | Focus | Gate |
-| --- | --- | --- |
-| **0 — Structure** | This tree + scope/risk/controls skeletons | Complete before infra/app change |
-| **1 — Gap closure** | CloudTrail and other material gaps; policy drafts | Control owners assigned |
-| **2 — Procedures** | Runbooks mapped to controls; access/change cadences | Procedures approved |
-| **3 — Evidence automation** | Scripts / CI artifacts into `evidence/` | Sample period dry-run |
-| **4 — Readiness package** | Self-assessment + CPA engagement prep | External readiness review |
+| Phase                       | Focus                                               | Gate                             |
+| --------------------------- | --------------------------------------------------- | -------------------------------- |
+| **0 — Structure**           | This tree + scope/risk/controls skeletons           | Complete before infra/app change |
+| **1 — Gap closure**         | CloudTrail and other material gaps; policy drafts   | Control owners assigned          |
+| **2 — Procedures**          | Runbooks mapped to controls; access/change cadences | Procedures approved              |
+| **3 — Evidence automation** | Scripts / CI artifacts into `evidence/`             | Sample period dry-run            |
+| **4 — Readiness package**   | Self-assessment + CPA engagement prep               | External readiness review        |
 
 ---
 
 ## Related Forge references (existing)
 
-| Topic | Path |
-| --- | --- |
+| Topic                  | Path                                                           |
+| ---------------------- | -------------------------------------------------------------- |
 | Tenant isolation / RLS | `docs/security/tenant-isolation.md`, ADR-012, ADR-014, ADR-029 |
-| Authorization | `docs/architecture/authorization.md`, ADR-015 |
-| Audit logging | `docs/security/audit-logging.md` |
-| Encryption | `docs/security/encryption-design.md`, ADR-018 |
-| IAM | `docs/security/iam-design.md` |
-| Network | `docs/security/network-security-design.md` |
-| Development data | `docs/security/development-data-policy.md` |
-| Security gaps | `docs/discovery/security-gap-analysis.md` |
-| Infra inventory | `docs/operations/development-infrastructure-inventory.md` |
-| Phase 2 acceptance | `docs/neris/phase-2-final-acceptance-report.md` |
+| Authorization          | `docs/architecture/authorization.md`, ADR-015                  |
+| Audit logging          | `docs/security/audit-logging.md`                               |
+| Encryption             | `docs/security/encryption-design.md`, ADR-018                  |
+| IAM                    | `docs/security/iam-design.md`                                  |
+| Network                | `docs/security/network-security-design.md`                     |
+| Development data       | `docs/security/development-data-policy.md`                     |
+| Security gaps          | `docs/discovery/security-gap-analysis.md`                      |
+| Infra inventory        | `docs/operations/development-infrastructure-inventory.md`      |
+| Phase 2 acceptance     | `docs/neris/phase-2-final-acceptance-report.md`                |
 
 ---
 
 ## Document control
 
-| Field | Value |
-| --- | --- |
-| Owner | Engineering lead (interim) — assign Compliance owner |
-| Classification | Internal — Compliance |
-| Review cadence | Quarterly, and after material system changes |
-| Next action | Complete Phase 0 scope/risk/controls drafts; assign control owners |
+| Field          | Value                                                              |
+| -------------- | ------------------------------------------------------------------ |
+| Owner          | Engineering lead (interim) — assign Compliance owner               |
+| Classification | Internal — Compliance                                              |
+| Review cadence | Quarterly, and after material system changes                       |
+| Next action    | Complete Phase 0 scope/risk/controls drafts; assign control owners |

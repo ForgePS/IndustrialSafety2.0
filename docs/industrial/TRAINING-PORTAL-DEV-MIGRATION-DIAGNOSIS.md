@@ -13,22 +13,22 @@ Production is healthy at **0061** (0062/0063 pending) and was **not modified** d
 
 ### Ledger (development)
 
-| Metric | Value |
-|--------|-------|
+| Metric                  | Value                                      |
+| ----------------------- | ------------------------------------------ |
 | Applied journal entries | 0–28 (`0000` … `0028_mk_s1_tenant_domain`) |
-| Missing | `0029` … `0063` (35 migrations) |
-| High-water `created_at` | `1754800000000` |
+| Missing                 | `0029` … `0063` (35 migrations)            |
+| High-water `created_at` | `1754800000000`                            |
 
 ### Schema drift (`industrial_sites`)
 
 Development `industrial_sites` is **not** the 0040 Model A table:
 
-| Expected (0040) | Present on dev |
-|-----------------|----------------|
-| `site_key` | **missing** — has `site_code` instead |
-| `timezone`, address columns | **missing** |
-| `source_payload` jsonb | **missing** — has `custom_fields_json` |
-| — | `migration_batch_id`, `created_by`, `record_version`, … (import-era columns) |
+| Expected (0040)             | Present on dev                                                               |
+| --------------------------- | ---------------------------------------------------------------------------- |
+| `site_key`                  | **missing** — has `site_code` instead                                        |
+| `timezone`, address columns | **missing**                                                                  |
+| `source_payload` jsonb      | **missing** — has `custom_fields_json`                                       |
+| —                           | `migration_batch_id`, `created_by`, `record_version`, … (import-era columns) |
 
 Indexes on dev: `industrial_sites_pkey`, `industrial_sites_tenant_source_uidx`  
 0040 expects: `industrial_sites_tenant_key_uidx` on `site_key` → **fails when migrate runs 0040**
@@ -93,19 +93,19 @@ node scripts/run-local-training-uat.mjs
 
 ## Diagnostic scripts added
 
-| Script | Purpose |
-|--------|---------|
-| `scripts/audit-migration-state.mjs --env development` | Ledger vs journal |
-| `scripts/audit-dev-training-schema.mjs` | Training/LMS table presence |
-| `scripts/diag-dev-industrial-sites-drift.mjs` | `industrial_sites` column/index drift |
-| `scripts/run-local-training-uat.mjs` | One-shot local demo + UAT seed + verify |
-| `scripts/verify-local-training-uat.mjs` | Assert John Smith / LOTO seed rows |
+| Script                                                | Purpose                                 |
+| ----------------------------------------------------- | --------------------------------------- |
+| `scripts/audit-migration-state.mjs --env development` | Ledger vs journal                       |
+| `scripts/audit-dev-training-schema.mjs`               | Training/LMS table presence             |
+| `scripts/diag-dev-industrial-sites-drift.mjs`         | `industrial_sites` column/index drift   |
+| `scripts/run-local-training-uat.mjs`                  | One-shot local demo + UAT seed + verify |
+| `scripts/verify-local-training-uat.mjs`               | Assert John Smith / LOTO seed rows      |
 
 ## Decision
 
-| Environment | Action now |
-|-------------|------------|
-| **Production** | No changes (0062 already applied earlier; 0063 wait for auth) |
-| **Development Aurora** | Needs Path A restore/alignment before ECS migrate |
-| **Local Docker** | Path B — recommended immediate UAT |
-| **LMS code** | Ready; commit when UAT passes |
+| Environment            | Action now                                                    |
+| ---------------------- | ------------------------------------------------------------- |
+| **Production**         | No changes (0062 already applied earlier; 0063 wait for auth) |
+| **Development Aurora** | Needs Path A restore/alignment before ECS migrate             |
+| **Local Docker**       | Path B — recommended immediate UAT                            |
+| **LMS code**           | Ready; commit when UAT passes                                 |

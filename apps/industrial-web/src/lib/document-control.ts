@@ -3,11 +3,7 @@ import { apiGet, apiSend } from "@forge/web-kit";
 export const DOCUMENTS_API = "/api/v1/industrial/documents";
 
 export type DocumentControlTab =
-  | "library"
-  | "document"
-  | "approvals"
-  | "acknowledgments"
-  | "reviews";
+  "library" | "document" | "approvals" | "acknowledgments" | "reviews";
 
 export const DOCUMENT_CONTROL_TABS: ReadonlyArray<{ id: DocumentControlTab; label: string }> = [
   { id: "library", label: "Library" },
@@ -98,7 +94,11 @@ export async function obsoleteControlledDocument(id: string) {
   return apiSend(`${DOCUMENTS_API}/${encodeURIComponent(id)}/obsolete`, "POST", {});
 }
 
-export async function uploadControlledVersion(documentId: string, file: File, changeSummary?: string) {
+export async function uploadControlledVersion(
+  documentId: string,
+  file: File,
+  changeSummary?: string,
+) {
   const init = await apiSend<{
     versionId: string;
     uploadUrl: string;

@@ -1,11 +1,6 @@
 import { z } from "zod";
 
-export const SEARCH_ENTITY_TYPES = [
-  "tenant",
-  "membership",
-  "facility",
-  "module",
-] as const;
+export const SEARCH_ENTITY_TYPES = ["tenant", "membership", "facility", "module"] as const;
 
 export type SearchEntityType = (typeof SEARCH_ENTITY_TYPES)[number];
 

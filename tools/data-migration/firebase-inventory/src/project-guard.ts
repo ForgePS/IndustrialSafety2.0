@@ -10,7 +10,9 @@ export class ProjectGuardError extends Error {
   }
 }
 
-export function assertAuthorizedProject(actual: string | undefined | null): asserts actual is typeof EXPECTED_PROJECT {
+export function assertAuthorizedProject(
+  actual: string | undefined | null,
+): asserts actual is typeof EXPECTED_PROJECT {
   const normalized = (actual ?? "").trim();
   if (normalized !== EXPECTED_PROJECT) {
     throw new ProjectGuardError(normalized);

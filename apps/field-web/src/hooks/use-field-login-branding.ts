@@ -46,9 +46,10 @@ const BUNDLED_HOST_TENANT: Readonly<Record<string, string>> = {
 
 function apiBase(): string {
   // Empty NEXT_PUBLIC_API_URL → same-origin `/api` (CloudFront proxy).
-  return (process.env.NEXT_PUBLIC_API_URL !== undefined
-    ? process.env.NEXT_PUBLIC_API_URL
-    : "http://localhost:4000"
+  return (
+    process.env.NEXT_PUBLIC_API_URL !== undefined
+      ? process.env.NEXT_PUBLIC_API_URL
+      : "http://localhost:4000"
   ).replace(/\/$/, "");
 }
 

@@ -62,7 +62,11 @@ export function verifyOfficeViewToken(
   }
 }
 
-export function buildOfficeMaterialViewUrl(publicApiUrl: string, materialId: string, token: string): string {
+export function buildOfficeMaterialViewUrl(
+  publicApiUrl: string,
+  materialId: string,
+  token: string,
+): string {
   const base = publicApiUrl.replace(/\/$/, "");
   return `${base}/api/v1/public/training/materials/${encodeURIComponent(materialId)}/office-view?token=${encodeURIComponent(token)}`;
 }

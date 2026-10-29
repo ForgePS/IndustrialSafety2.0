@@ -100,9 +100,7 @@ describe("pptx slide audio helpers", () => {
   });
 
   it("detects audio markers in slide XML", () => {
-    expect(slideLooksLikeItHasAudio("<p:audio><a:audioFile r:link=\"rId2\"/></p:audio>")).toBe(
-      true,
-    );
+    expect(slideLooksLikeItHasAudio('<p:audio><a:audioFile r:link="rId2"/></p:audio>')).toBe(true);
     expect(slideLooksLikeItHasAudio("<p:sp><p:txBody>Hello</p:txBody></p:sp>")).toBe(false);
   });
 

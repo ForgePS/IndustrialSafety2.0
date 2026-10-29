@@ -35,10 +35,7 @@ import {
 } from "@/lib/personnel-lookups";
 import { resolvePersonnelLocationLabel } from "@/lib/personnel-file";
 import { matchSiteIdByLabel } from "@/lib/industrial-facility";
-import {
-  EMPLOYEE_NUMBER_PREFIX,
-  sanitizeEmployeeNumberDigitsInput,
-} from "@/lib/employee-number";
+import { EMPLOYEE_NUMBER_PREFIX, sanitizeEmployeeNumberDigitsInput } from "@/lib/employee-number";
 import { nextPpeExpiresDate } from "@/lib/personnel-ppe";
 import { type CompanyDriverMvrSnapshot } from "@/lib/company-driver-mvr-requirements";
 
@@ -137,14 +134,16 @@ export function PersonnelPersonForm({
     setValues((prev) => ({ ...prev, siteId: matched }));
   }, [lookups.sites, siteId, siteName]);
 
-  const departmentsForSite = useMemo(
-    () => lookups.departments,
-    [lookups.departments],
-  );
+  const departmentsForSite = useMemo(() => lookups.departments, [lookups.departments]);
 
   useEffect(() => {
     if (!assignmentTouched.current) return;
-    const next = suggestSupervisor(assignment.supervisors, divisionName, effectiveSiteId, departmentId);
+    const next = suggestSupervisor(
+      assignment.supervisors,
+      divisionName,
+      effectiveSiteId,
+      departmentId,
+    );
     setValues((prev) => {
       const current = typeof prev.supervisorName === "string" ? prev.supervisorName : "";
       if ((next ?? "") === current) return prev;
@@ -160,11 +159,7 @@ export function PersonnelPersonForm({
     }
     setValues((prev) => {
       const next: PersonnelFormValues = { ...prev, [name]: value };
-      if (
-        typeof value === "string" &&
-        name.endsWith("IssuedDate") &&
-        value.trim() !== ""
-      ) {
+      if (typeof value === "string" && name.endsWith("IssuedDate") && value.trim() !== "") {
         const expiresKey = name.replace(/IssuedDate$/, "ExpiresDate");
         const currentExpires =
           typeof prev[expiresKey] === "string" ? (prev[expiresKey] as string).trim() : "";
@@ -227,8 +222,7 @@ export function PersonnelPersonForm({
     }
   }
 
-  const departmentWaitingOnSite =
-    lookups.sites.length > 0 && !effectiveSiteId;
+  const departmentWaitingOnSite = lookups.sites.length > 0 && !effectiveSiteId;
 
   async function handleSubmit(ev: FormEvent) {
     ev.preventDefault();
@@ -356,8 +350,7 @@ export function PersonnelPersonForm({
 
     if (field.type === "file" && field.fileKind) {
       const filenameKey = field.filenameField ?? `${field.name}Filename`;
-      const filename =
-        typeof values[filenameKey] === "string" ? String(values[filenameKey]) : "";
+      const filename = typeof values[filenameKey] === "string" ? String(values[filenameKey]) : "";
       return (
         <div className={colClass} key={field.name}>
           <PersonnelCertUploadField
@@ -398,9 +391,7 @@ export function PersonnelPersonForm({
             {field.name === "divisionName" ? (
               <option value="">{empty ? "None available" : "Select division"}</option>
             ) : null}
-            {field.name === "safetyFootwearClass" ? (
-              <option value="">Not tracked</option>
-            ) : null}
+            {field.name === "safetyFootwearClass" ? <option value="">Not tracked</option> : null}
             {options.map((o) => (
               <option key={o.value} value={o.value}>
                 {o.label}
@@ -423,18 +414,12 @@ export function PersonnelPersonForm({
     if (field.type === "lookup") {
       const isDepartment = field.source === "departments";
       const waitingOnSite = isDepartment && departmentWaitingOnSite;
-      const options =
-        isDepartment
-          ? departmentsForSite
-          : field.source
-            ? lookups[field.source]
-            : [];
+      const options = isDepartment ? departmentsForSite : field.source ? lookups[field.source] : [];
 
       const useDepartmentFreeText =
         isDepartment && !waitingOnSite && departmentsForSite.length === 0;
       const useFreeText =
-        field.nameField &&
-        (useDepartmentFreeText || (!isDepartment && options.length === 0));
+        field.nameField && (useDepartmentFreeText || (!isDepartment && options.length === 0));
 
       if (useFreeText) {
         const nameKey = field.nameField!;
@@ -603,7 +588,12 @@ export function PersonnelPersonForm({
   const summaryRows: Array<{ label: string; value: string }> = [
     { label: "Name", value: displayName || "—" },
     { label: "Status", value: (typeof values.status === "string" && values.status) || "—" },
-    { label: "Location", value: resolvePersonnelLocationLabel(values, (id) => resolveLookupLabel(lookups, "sites", id)) || "—" },
+    {
+      label: "Location",
+      value:
+        resolvePersonnelLocationLabel(values, (id) => resolveLookupLabel(lookups, "sites", id)) ||
+        "—",
+    },
     { label: "Division", value: divisionName || "—" },
     {
       label: "Department",

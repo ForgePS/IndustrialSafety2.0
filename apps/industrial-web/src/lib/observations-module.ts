@@ -55,9 +55,24 @@ export const OBSERVATION_STATUS_OPTIONS: ReadonlyArray<ObservationOption> = [
 ];
 
 export const OBSERVATION_RISK_OPTIONS: ReadonlyArray<ObservationOption> = [
-  { value: "low", label: "Low", help: "Unlikely to cause harm; fix when convenient.", tone: "success" },
-  { value: "medium", label: "Medium", help: "Could cause a minor injury; fix soon.", tone: "warning" },
-  { value: "high", label: "High", help: "Could cause a serious injury; fix today.", tone: "danger" },
+  {
+    value: "low",
+    label: "Low",
+    help: "Unlikely to cause harm; fix when convenient.",
+    tone: "success",
+  },
+  {
+    value: "medium",
+    label: "Medium",
+    help: "Could cause a minor injury; fix soon.",
+    tone: "warning",
+  },
+  {
+    value: "high",
+    label: "High",
+    help: "Could cause a serious injury; fix today.",
+    tone: "danger",
+  },
   {
     value: "critical",
     label: "Critical",
@@ -107,14 +122,18 @@ function optionFor(options: ReadonlyArray<ObservationOption>, value: string) {
 }
 
 export function normalizeObservationType(raw: unknown): string {
-  const key = text(raw).toUpperCase().replace(/[\s-]+/g, "_");
+  const key = text(raw)
+    .toUpperCase()
+    .replace(/[\s-]+/g, "_");
   if (!key) return "";
   const mapped = LEGACY_TYPES[key] ?? key;
   return optionFor(OBSERVATION_TYPE_OPTIONS, mapped) ? mapped : "";
 }
 
 export function normalizeObservationStatus(raw: unknown): string {
-  const key = text(raw).toUpperCase().replace(/[\s-]+/g, "_");
+  const key = text(raw)
+    .toUpperCase()
+    .replace(/[\s-]+/g, "_");
   const mapped = LEGACY_STATUSES[key] ?? key;
   return optionFor(OBSERVATION_STATUS_OPTIONS, mapped) ? mapped : "OPEN";
 }
@@ -319,7 +338,11 @@ export type ObservationAssignee = { personnelId: string; name: string; email: st
 /** The department contact acts as its supervisor; null when none is set. */
 export function departmentSupervisor(
   dept:
-    | { contactPersonnelId?: string | null; contactName?: string | null; contactEmail?: string | null }
+    | {
+        contactPersonnelId?: string | null;
+        contactName?: string | null;
+        contactEmail?: string | null;
+      }
     | null
     | undefined,
 ): ObservationAssignee | null {
@@ -335,7 +358,8 @@ export function sameAssignee(
   who: ObservationAssignee | null,
 ): boolean {
   if (!who) return !form.assignedToPersonnelId && !form.assignedToName.trim();
-  if (who.personnelId || form.assignedToPersonnelId) return who.personnelId === form.assignedToPersonnelId;
+  if (who.personnelId || form.assignedToPersonnelId)
+    return who.personnelId === form.assignedToPersonnelId;
   return who.name.toLowerCase() === form.assignedToName.trim().toLowerCase();
 }
 
@@ -366,7 +390,9 @@ function photos(raw: unknown): ObservationPhoto[] {
   if (!Array.isArray(raw)) return [];
   return raw.filter(
     (p): p is ObservationPhoto =>
-      Boolean(p) && typeof p === "object" && text((p as ObservationPhoto).dataUrl).startsWith("data:image/"),
+      Boolean(p) &&
+      typeof p === "object" &&
+      text((p as ObservationPhoto).dataUrl).startsWith("data:image/"),
   );
 }
 
@@ -399,7 +425,9 @@ export function mapObservationRecord(row: Record<string, unknown>): ObservationR
     assignedToEmail: text(row.assignedToEmail),
     assignedAt: text(row.assignedAt),
     lastEmailedAt: text(row.lastEmailedAt),
-    lastEmailedTo: Array.isArray(row.lastEmailedTo) ? row.lastEmailedTo.map(text).filter(Boolean) : [],
+    lastEmailedTo: Array.isArray(row.lastEmailedTo)
+      ? row.lastEmailedTo.map(text).filter(Boolean)
+      : [],
     followUp,
     followUpCompletedAt: text(row.followUpCompletedAt) || followUp.completedAt,
     followUpSavedAt: text(row.followUpSavedAt) || followUp.savedAt,
@@ -440,7 +468,10 @@ export function toDateTimeLocal(value: string | Date | null | undefined): string
   return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
 }
 
-export function emptyObservationForm(reportedBy = "", now: Date = new Date()): ObservationFormState {
+export function emptyObservationForm(
+  reportedBy = "",
+  now: Date = new Date(),
+): ObservationFormState {
   return {
     observationType: "",
     category: "",

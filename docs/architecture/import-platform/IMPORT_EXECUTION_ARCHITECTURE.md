@@ -2,15 +2,15 @@
 
 ## Relationship
 
-| Layer | Role |
-| --- | --- |
-| API | Control plane (`execute`, `cancel`, `status`, `results`, batches, errors, rollback-request) |
-| SQS (`forge-{env}-sqs-imports`) | Execution trigger (`IMPORT_EXECUTE` v1) |
-| Step Functions | Orchestration definition (ASL + CDK) — **DEFINITION_COMPLETE_DEPLOYMENT_PENDING** |
-| ECS worker | Import processing (polls SQS; upload detect + execute) |
-| Adapters | Product record operations via registry (reference adapter only in S5) |
-| PostgreSQL | Durable job/row/batch/audit/rollback journal |
-| S3 | Source files and large artifacts |
+| Layer                           | Role                                                                                        |
+| ------------------------------- | ------------------------------------------------------------------------------------------- |
+| API                             | Control plane (`execute`, `cancel`, `status`, `results`, batches, errors, rollback-request) |
+| SQS (`forge-{env}-sqs-imports`) | Execution trigger (`IMPORT_EXECUTE` v1)                                                     |
+| Step Functions                  | Orchestration definition (ASL + CDK) — **DEFINITION_COMPLETE_DEPLOYMENT_PENDING**           |
+| ECS worker                      | Import processing (polls SQS; upload detect + execute)                                      |
+| Adapters                        | Product record operations via registry (reference adapter only in S5)                       |
+| PostgreSQL                      | Durable job/row/batch/audit/rollback journal                                                |
+| S3                              | Source files and large artifacts                                                            |
 
 ## State transitions (execution)
 

@@ -60,16 +60,17 @@ export function ForgePhotoMarkupEditor({
   useEffect(() => {
     recoveredRef.current = false;
     const draft = loadMarkupSessionDraft(imageSrc, photoId);
-    if (draft?.annotations.length && !initialAnnotations?.length && !initialDocument?.annotations?.length) {
+    if (
+      draft?.annotations.length &&
+      !initialAnnotations?.length &&
+      !initialDocument?.annotations?.length
+    ) {
       editor.reset(draft.annotations, draft.document);
       setDraftNotice("Recovered unsaved photo markup.");
       recoveredRef.current = true;
       return;
     }
-    editor.reset(
-      initialAnnotations ?? initialDocument?.annotations ?? [],
-      initialDocument,
-    );
+    editor.reset(initialAnnotations ?? initialDocument?.annotations ?? [], initialDocument);
     // eslint-disable-next-line react-hooks/exhaustive-deps -- reset only when source image/revision changes
   }, [imageSrc, photoId]);
 
@@ -116,7 +117,10 @@ export function ForgePhotoMarkupEditor({
         editor.undo();
         return;
       }
-      if ((meta && event.key.toLowerCase() === "y") || (meta && event.shiftKey && event.key.toLowerCase() === "z")) {
+      if (
+        (meta && event.key.toLowerCase() === "y") ||
+        (meta && event.shiftKey && event.key.toLowerCase() === "z")
+      ) {
         event.preventDefault();
         editor.redo();
         return;
@@ -135,13 +139,17 @@ export function ForgePhotoMarkupEditor({
         return;
       }
       if (event.key === "Delete" || event.key === "Backspace") {
-        if (document.activeElement?.tagName === "INPUT" || document.activeElement?.tagName === "TEXTAREA") {
+        if (
+          document.activeElement?.tagName === "INPUT" ||
+          document.activeElement?.tagName === "TEXTAREA"
+        ) {
           return;
         }
         editor.deleteSelected();
         return;
       }
-      if (event.target instanceof HTMLInputElement || event.target instanceof HTMLTextAreaElement) return;
+      if (event.target instanceof HTMLInputElement || event.target instanceof HTMLTextAreaElement)
+        return;
       const map: Record<string, typeof editor.tool> = {
         v: "select",
         p: "pen",
@@ -206,7 +214,17 @@ export function ForgePhotoMarkupEditor({
     } finally {
       setSaving(false);
     }
-  }, [editor.annotations, editor.crop, editor.rotation, editor.flipX, editor.flipY, imageSrc, onSave, photoId, saving]);
+  }, [
+    editor.annotations,
+    editor.crop,
+    editor.rotation,
+    editor.flipX,
+    editor.flipY,
+    imageSrc,
+    onSave,
+    photoId,
+    saving,
+  ]);
 
   const drawing = editor.tool !== "select" && editor.tool !== "eraser";
 
@@ -229,14 +247,29 @@ export function ForgePhotoMarkupEditor({
           </button>
         ) : null}
         <strong style={{ flex: 1, fontSize: 15 }}>{title}</strong>
-        <button type="button" onClick={editor.undo} disabled={!editor.canUndo || readOnly} style={btnSecondary}>
+        <button
+          type="button"
+          onClick={editor.undo}
+          disabled={!editor.canUndo || readOnly}
+          style={btnSecondary}
+        >
           Undo
         </button>
-        <button type="button" onClick={editor.redo} disabled={!editor.canRedo || readOnly} style={btnSecondary}>
+        <button
+          type="button"
+          onClick={editor.redo}
+          disabled={!editor.canRedo || readOnly}
+          style={btnSecondary}
+        >
           Redo
         </button>
         {onSave ? (
-          <button type="button" onClick={() => void handleSave()} disabled={saving || readOnly} style={btnPrimary}>
+          <button
+            type="button"
+            onClick={() => void handleSave()}
+            disabled={saving || readOnly}
+            style={btnPrimary}
+          >
             {saving ? "Saving…" : "Save"}
           </button>
         ) : null}
@@ -263,7 +296,16 @@ export function ForgePhotoMarkupEditor({
           />
         ) : null}
 
-        <div style={{ flex: 1, minWidth: 0, display: "flex", flexDirection: "column", minHeight: 0, position: "relative" }}>
+        <div
+          style={{
+            flex: 1,
+            minWidth: 0,
+            display: "flex",
+            flexDirection: "column",
+            minHeight: 0,
+            position: "relative",
+          }}
+        >
           <MarkupCanvas
             imageSrc={imageSrc}
             annotations={editor.visibleAnnotations}
@@ -316,7 +358,9 @@ export function ForgePhotoMarkupEditor({
                 Width
                 <select
                   value={editor.strokePreset}
-                  onChange={(e) => editor.setStrokePreset(e.target.value as typeof editor.strokePreset)}
+                  onChange={(e) =>
+                    editor.setStrokePreset(e.target.value as typeof editor.strokePreset)
+                  }
                   style={{ minHeight: 36 }}
                 >
                   {STROKE_PRESETS.map((p) => (
@@ -326,24 +370,54 @@ export function ForgePhotoMarkupEditor({
                   ))}
                 </select>
               </label>
-              <button type="button" onClick={editor.rotateLeft} disabled={readOnly} style={btnSecondary}>
+              <button
+                type="button"
+                onClick={editor.rotateLeft}
+                disabled={readOnly}
+                style={btnSecondary}
+              >
                 Rotate left
               </button>
-              <button type="button" onClick={editor.rotateRight} disabled={readOnly} style={btnSecondary}>
+              <button
+                type="button"
+                onClick={editor.rotateRight}
+                disabled={readOnly}
+                style={btnSecondary}
+              >
                 Rotate right
               </button>
-              <button type="button" onClick={editor.toggleFlipX} disabled={readOnly} style={btnSecondary}>
+              <button
+                type="button"
+                onClick={editor.toggleFlipX}
+                disabled={readOnly}
+                style={btnSecondary}
+              >
                 Flip H
               </button>
-              <button type="button" onClick={editor.toggleFlipY} disabled={readOnly} style={btnSecondary}>
+              <button
+                type="button"
+                onClick={editor.toggleFlipY}
+                disabled={readOnly}
+                style={btnSecondary}
+              >
                 Flip V
               </button>
               {editor.crop ? (
-                <button type="button" onClick={editor.clearCrop} disabled={readOnly} style={btnSecondary}>
+                <button
+                  type="button"
+                  onClick={editor.clearCrop}
+                  disabled={readOnly}
+                  style={btnSecondary}
+                >
                   Clear crop
                 </button>
               ) : null}
-              <button type="button" onClick={editor.deleteSelected} disabled={!editor.selectedId} style={btnSecondary}>
+              <button
+                type="button"
+                onClick={editor.deleteSelected}
+                disabled={!editor.selectedId}
+                style={btnSecondary}
+              >
                 Delete
               </button>
               <button
@@ -358,14 +432,33 @@ export function ForgePhotoMarkupEditor({
               >
                 Clear all
               </button>
-              <button type="button" onClick={editor.bringForward} disabled={!editor.selectedId} style={btnSecondary}>
+              <button
+                type="button"
+                onClick={editor.bringForward}
+                disabled={!editor.selectedId}
+                style={btnSecondary}
+              >
                 Forward
               </button>
-              <button type="button" onClick={editor.sendBackward} disabled={!editor.selectedId} style={btnSecondary}>
+              <button
+                type="button"
+                onClick={editor.sendBackward}
+                disabled={!editor.selectedId}
+                style={btnSecondary}
+              >
                 Backward
               </button>
               {editor.selected?.type === "text" ? (
-                <label style={{ display: "inline-flex", alignItems: "center", gap: 6, fontSize: 12, flex: 1, minWidth: 160 }}>
+                <label
+                  style={{
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: 6,
+                    fontSize: 12,
+                    flex: 1,
+                    minWidth: 160,
+                  }}
+                >
                   Text
                   <input
                     value={textDraft}
@@ -421,7 +514,10 @@ export function ForgePhotoMarkupEditor({
             style={btnSecondary}
             onClick={() => {
               clearMarkupSessionDraft(imageSrc, photoId);
-              editor.reset(initialAnnotations ?? initialDocument?.annotations ?? [], initialDocument);
+              editor.reset(
+                initialAnnotations ?? initialDocument?.annotations ?? [],
+                initialDocument,
+              );
               setDraftNotice(null);
             }}
           >
@@ -433,7 +529,10 @@ export function ForgePhotoMarkupEditor({
         </div>
       ) : null}
       {error ? (
-        <div role="alert" style={{ padding: "8px 12px", background: "#fef2f2", color: "#991b1b", fontSize: 13 }}>
+        <div
+          role="alert"
+          style={{ padding: "8px 12px", background: "#fef2f2", color: "#991b1b", fontSize: 13 }}
+        >
           {error} Your local draft has been retained.
         </div>
       ) : null}
@@ -442,7 +541,10 @@ export function ForgePhotoMarkupEditor({
 
   if (embedded) {
     return (
-      <div className={className} style={{ display: "flex", flexDirection: "column", minHeight: 420, ...style }}>
+      <div
+        className={className}
+        style={{ display: "flex", flexDirection: "column", minHeight: 420, ...style }}
+      >
         {chrome}
       </div>
     );

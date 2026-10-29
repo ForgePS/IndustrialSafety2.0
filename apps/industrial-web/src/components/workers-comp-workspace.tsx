@@ -95,7 +95,9 @@ type ListResponse = {
   summary?: unknown;
 };
 
-function incidentSelectLabel(incident: Pick<IncidentRecord, "title" | "dateOccurred" | "personAffected">): string {
+function incidentSelectLabel(
+  incident: Pick<IncidentRecord, "title" | "dateOccurred" | "personAffected">,
+): string {
   const title = incident.title.trim();
   if (title) return title;
   const date = (incident.dateOccurred || "").slice(0, 10);
@@ -119,8 +121,12 @@ export function WorkersCompWorkspace({ moduleName }: { moduleName: string }) {
     permissions.has("industrial.workers_comp.manage") || permissions.has("industrial.admin");
   const canAdminCarriers = permissions.has("industrial.admin");
   // Producers paper forms (injury guidelines, HIPAA authorization); the API enforces this too.
-  const activeTenant = me?.tenants?.find((tenant) => tenant.tenantId === me.tenantId) ?? me?.tenants?.[0];
-  const hasProducersForms = isProducersRiceMillTenant(activeTenant?.slug, activeTenant?.displayName);
+  const activeTenant =
+    me?.tenants?.find((tenant) => tenant.tenantId === me.tenantId) ?? me?.tenants?.[0];
+  const hasProducersForms = isProducersRiceMillTenant(
+    activeTenant?.slug,
+    activeTenant?.displayName,
+  );
   const canViewOsha =
     permissions.has("industrial.osha.view") ||
     permissions.has("industrial.admin") ||
@@ -520,9 +526,7 @@ export function WorkersCompWorkspace({ moduleName }: { moduleName: string }) {
     setSaving(true);
     setError(null);
     try {
-      const nextDetail = detail.oshaRecordable
-        ? detail
-        : { ...detail, oshaRecordable: true };
+      const nextDetail = detail.oshaRecordable ? detail : { ...detail, oshaRecordable: true };
       if (!detail.oshaRecordable) setDetail(nextDetail);
       // Persist with recordable forced on (state update may not have flushed).
       const updated = await apiSend<WorkersCompCase>(
@@ -757,10 +761,7 @@ export function WorkersCompWorkspace({ moduleName }: { moduleName: string }) {
     setError(null);
     try {
       const visitStart =
-        medicalForm.appointmentDate ||
-        restrictionForm.startDate ||
-        workStatusForm.startDate ||
-        "";
+        medicalForm.appointmentDate || restrictionForm.startDate || workStatusForm.startDate || "";
       const visitEnd = restrictionForm.endDate || workStatusForm.endDate || "";
       const payload = {
         ...medicalForm,
@@ -862,7 +863,10 @@ export function WorkersCompWorkspace({ moduleName }: { moduleName: string }) {
     if (weeklySchedule) {
       const markers = (weeklySchedule.recipients ?? []).filter((r) => !r.email.includes("@"));
       await patchSchedule(weeklySchedule.id, {
-        recipients: [...next.map((email) => ({ email })), ...markers.map((r) => ({ email: r.email }))],
+        recipients: [
+          ...next.map((email) => ({ email })),
+          ...markers.map((r) => ({ email: r.email })),
+        ],
       });
       await loadWeeklySettings();
       return;
@@ -1108,7 +1112,9 @@ export function WorkersCompWorkspace({ moduleName }: { moduleName: string }) {
                     {overdueActionCount > 0 ? (
                       <>
                         {" · "}
-                        <span className="text-danger fw-semibold">{overdueActionCount} overdue</span>
+                        <span className="text-danger fw-semibold">
+                          {overdueActionCount} overdue
+                        </span>
                       </>
                     ) : null}
                   </span>
@@ -1288,7 +1294,10 @@ export function WorkersCompWorkspace({ moduleName }: { moduleName: string }) {
                             {weeklyUpdateStatusLabel(item.status)}
                           </span>
                           {item.priorWeekOf && item.priorNotes ? (
-                            <div className="text-muted small mt-1 text-truncate" style={{ maxWidth: "12rem" }}>
+                            <div
+                              className="text-muted small mt-1 text-truncate"
+                              style={{ maxWidth: "12rem" }}
+                            >
                               Prior ({formatWcDueDate(item.priorWeekOf)}): {item.priorNotes}
                             </div>
                           ) : null}
@@ -1624,7 +1633,7 @@ export function WorkersCompWorkspace({ moduleName }: { moduleName: string }) {
 
             <div className="card border shadow-none">
               <div className="card-header bg-transparent border-bottom d-flex flex-wrap gap-2 align-items-center justify-content-between py-3">
-                    <div className="d-flex flex-wrap gap-2 ms-auto">
+                <div className="d-flex flex-wrap gap-2 ms-auto">
                   <input
                     className="form-control form-control-sm"
                     style={{ minWidth: 180 }}
@@ -1698,7 +1707,9 @@ export function WorkersCompWorkspace({ moduleName }: { moduleName: string }) {
                           </td>
                           <td>{wcClaimNumber(c)}</td>
                           <td>
-                            <span className={`badge ${wcStatusBadgeClass(c.status)}`}>{c.status}</span>
+                            <span className={`badge ${wcStatusBadgeClass(c.status)}`}>
+                              {c.status}
+                            </span>
                           </td>
                           <td>{c.updatedAt.slice(0, 10)}</td>
                           <td className="text-end">
@@ -1799,497 +1810,501 @@ export function WorkersCompWorkspace({ moduleName }: { moduleName: string }) {
                       .concat(hasProducersForms ? [["forms", "Forms"]] : [])
                       .concat(canAdminCarriers ? [["carrier", "Carriers"]] : [])
                       .map(([id, label]) => (
-                      <li className="nav-item" key={id}>
-                        <button
-                          type="button"
-                          className={`nav-link ${detailTab === id ? "active" : ""}`}
-                          onClick={() => openCase(detail.id, id)}
-                        >
-                          {label}
-                        </button>
-                      </li>
-                    ))}
+                        <li className="nav-item" key={id}>
+                          <button
+                            type="button"
+                            className={`nav-link ${detailTab === id ? "active" : ""}`}
+                            onClick={() => openCase(detail.id, id)}
+                          >
+                            {label}
+                          </button>
+                        </li>
+                      ))}
                   </ul>
                 </div>
               </div>
 
               {detailTab === "overview" ? (
                 <>
-                <div className="card">
-                  <div className="card-body">
-                    <form id="wc-overview-form" className="row g-3" onSubmit={onSaveOverview}>
-                      <div className="col-md-4">
-                        <label className="form-label" htmlFor="wc-field-10">
-                          Status
-                        </label>
-                        <select
-                          id="wc-field-10"
-                          className="form-select"
-                          value={detail.status}
-                          disabled={!canManage}
-                          onChange={(e) => setDetail({ ...detail, status: e.target.value })}
-                        >
-                          {wcCaseStatusOptions(detail.status).map((o) => (
-                            <option key={o.value} value={o.value}>
-                              {o.label}
-                            </option>
-                          ))}
-                        </select>
-                      </div>
-                      <div className="col-md-4">
-                        <label className="form-label" htmlFor="wc-field-11">
-                          Workflow stage
-                        </label>
-                        <select
-                          id="wc-field-11"
-                          className="form-select"
-                          value={detail.workflowStage || "INTAKE"}
-                          disabled={!canManage}
-                          onChange={(e) => setDetail({ ...detail, workflowStage: e.target.value })}
-                        >
-                          {WC_WORKFLOW_STAGES.map((s) => (
-                            <option key={s} value={s}>
-                              {wcEnumLabel(s)}
-                            </option>
-                          ))}
-                        </select>
-                      </div>
-                      <div className="col-md-4">
-                        <label className="form-label" htmlFor="wc-field-12">
-                          Severity
-                        </label>
-                        <select
-                          id="wc-field-12"
-                          className="form-select"
-                          value={wcNormalizeSeverity(detail.severity)}
-                          disabled={!canManage}
-                          onChange={(e) => setDetail({ ...detail, severity: e.target.value })}
-                        >
-                          {!wcNormalizeSeverity(detail.severity) ? (
-                            <option value="">Select severity</option>
+                  <div className="card">
+                    <div className="card-body">
+                      <form id="wc-overview-form" className="row g-3" onSubmit={onSaveOverview}>
+                        <div className="col-md-4">
+                          <label className="form-label" htmlFor="wc-field-10">
+                            Status
+                          </label>
+                          <select
+                            id="wc-field-10"
+                            className="form-select"
+                            value={detail.status}
+                            disabled={!canManage}
+                            onChange={(e) => setDetail({ ...detail, status: e.target.value })}
+                          >
+                            {wcCaseStatusOptions(detail.status).map((o) => (
+                              <option key={o.value} value={o.value}>
+                                {o.label}
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+                        <div className="col-md-4">
+                          <label className="form-label" htmlFor="wc-field-11">
+                            Workflow stage
+                          </label>
+                          <select
+                            id="wc-field-11"
+                            className="form-select"
+                            value={detail.workflowStage || "INTAKE"}
+                            disabled={!canManage}
+                            onChange={(e) =>
+                              setDetail({ ...detail, workflowStage: e.target.value })
+                            }
+                          >
+                            {WC_WORKFLOW_STAGES.map((s) => (
+                              <option key={s} value={s}>
+                                {wcEnumLabel(s)}
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+                        <div className="col-md-4">
+                          <label className="form-label" htmlFor="wc-field-12">
+                            Severity
+                          </label>
+                          <select
+                            id="wc-field-12"
+                            className="form-select"
+                            value={wcNormalizeSeverity(detail.severity)}
+                            disabled={!canManage}
+                            onChange={(e) => setDetail({ ...detail, severity: e.target.value })}
+                          >
+                            {!wcNormalizeSeverity(detail.severity) ? (
+                              <option value="">Select severity</option>
+                            ) : null}
+                            {wcSeverityOptions(detail.severity).map((o) => (
+                              <option key={o.value} value={o.value}>
+                                {o.label}
+                              </option>
+                            ))}
+                          </select>
+                          {wcSeverityHelp(detail.severity) ? (
+                            <div className="form-text">{wcSeverityHelp(detail.severity)}</div>
                           ) : null}
-                          {wcSeverityOptions(detail.severity).map((o) => (
-                            <option key={o.value} value={o.value}>
-                              {o.label}
-                            </option>
-                          ))}
-                        </select>
-                        {wcSeverityHelp(detail.severity) ? (
-                          <div className="form-text">{wcSeverityHelp(detail.severity)}</div>
-                        ) : null}
-                      </div>
-                      <div className="col-md-4">
-                        <label className="form-label" htmlFor="wc-field-13">
-                          Claim #
-                        </label>
-                        <input
-                          id="wc-field-13"
-                          className="form-control"
-                          value={detail.caseNumber}
-                          disabled={!canManage}
-                          placeholder="Enter when received from insurance"
-                          onChange={(e) =>
-                            setDetail({
-                              ...detail,
-                              caseNumber: e.target.value,
-                              claimSummary: {
-                                ...detail.claimSummary,
-                                claimNumber: e.target.value,
-                              },
-                            })
-                          }
-                        />
-                      </div>
-                      <div className="col-md-4">
-                        <label className="form-label" htmlFor="wc-field-14">
-                          Carrier
-                        </label>
-                        <WorkersCompCarrierSelect
-                          id="wc-field-14"
-                          carriers={carriers}
-                          carrierId={detail.claimSummary.carrierId}
-                          carrierName={detail.claimSummary.carrierName}
-                          disabled={!canManage}
-                          onChange={(next) =>
-                            setDetail({
-                              ...detail,
-                              claimSummary: {
-                                ...detail.claimSummary,
-                                carrierId: next.carrierId,
-                                carrierName: next.carrierName,
-                              },
-                            })
-                          }
-                        />
-                      </div>
-                      <div className="col-md-4">
-                        <label className="form-label" htmlFor="wc-field-15">
-                          Adjuster
-                        </label>
-                        <input
-                          id="wc-field-15"
-                          className="form-control"
-                          value={detail.claimSummary.adjuster}
-                          disabled={!canManage}
-                          onChange={(e) =>
-                            setDetail({
-                              ...detail,
-                              claimSummary: { ...detail.claimSummary, adjuster: e.target.value },
-                            })
-                          }
-                        />
-                      </div>
-                      <div className="col-md-4">
-                        <label className="form-label" htmlFor="wc-field-16">
-                          Date of injury
-                        </label>
-                        <input
-                          id="wc-field-16"
-                          type="date"
-                          className="form-control"
-                          value={detail.claimSummary.dateOfInjury}
-                          disabled={!canManage}
-                          onChange={(e) =>
-                            setDetail({
-                              ...detail,
-                              claimSummary: { ...detail.claimSummary, dateOfInjury: e.target.value },
-                            })
-                          }
-                        />
-                      </div>
-                      <div className="col-md-4">
-                        <label className="form-label" htmlFor="wc-field-17">
-                          Days away
-                        </label>
-                        <input
-                          id="wc-field-17"
-                          type="number"
-                          className="form-control"
-                          value={detail.daysAway ?? ""}
-                          disabled={!canManage}
-                          onChange={(e) =>
-                            setDetail({
-                              ...detail,
-                              daysAway: e.target.value === "" ? null : Number(e.target.value),
-                            })
-                          }
-                        />
-                      </div>
-                      <div className="col-md-4">
-                        <label className="form-label" htmlFor="wc-field-18">
-                          Restricted days
-                        </label>
-                        <input
-                          id="wc-field-18"
-                          type="number"
-                          className="form-control"
-                          value={detail.restrictedDays ?? ""}
-                          disabled={!canManage}
-                          onChange={(e) =>
-                            setDetail({
-                              ...detail,
-                              restrictedDays: e.target.value === "" ? null : Number(e.target.value),
-                            })
-                          }
-                        />
-                      </div>
-                      <div className="col-md-6">
-                        <PersonnelSearchField
-                          id="wc-field-19"
-                          label="Linked employee"
-                          hint="Search Employee Profiles. Clears free-text worker name when unlinked."
-                          disabled={!canManage}
-                          personnelId={detail.personnelId ?? ""}
-                          displayName={detail.workerName}
-                          allowUnlinkedText
-                          onLinkedChange={(selection) => {
-                            if (!selection) {
+                        </div>
+                        <div className="col-md-4">
+                          <label className="form-label" htmlFor="wc-field-13">
+                            Claim #
+                          </label>
+                          <input
+                            id="wc-field-13"
+                            className="form-control"
+                            value={detail.caseNumber}
+                            disabled={!canManage}
+                            placeholder="Enter when received from insurance"
+                            onChange={(e) =>
+                              setDetail({
+                                ...detail,
+                                caseNumber: e.target.value,
+                                claimSummary: {
+                                  ...detail.claimSummary,
+                                  claimNumber: e.target.value,
+                                },
+                              })
+                            }
+                          />
+                        </div>
+                        <div className="col-md-4">
+                          <label className="form-label" htmlFor="wc-field-14">
+                            Carrier
+                          </label>
+                          <WorkersCompCarrierSelect
+                            id="wc-field-14"
+                            carriers={carriers}
+                            carrierId={detail.claimSummary.carrierId}
+                            carrierName={detail.claimSummary.carrierName}
+                            disabled={!canManage}
+                            onChange={(next) =>
+                              setDetail({
+                                ...detail,
+                                claimSummary: {
+                                  ...detail.claimSummary,
+                                  carrierId: next.carrierId,
+                                  carrierName: next.carrierName,
+                                },
+                              })
+                            }
+                          />
+                        </div>
+                        <div className="col-md-4">
+                          <label className="form-label" htmlFor="wc-field-15">
+                            Adjuster
+                          </label>
+                          <input
+                            id="wc-field-15"
+                            className="form-control"
+                            value={detail.claimSummary.adjuster}
+                            disabled={!canManage}
+                            onChange={(e) =>
+                              setDetail({
+                                ...detail,
+                                claimSummary: { ...detail.claimSummary, adjuster: e.target.value },
+                              })
+                            }
+                          />
+                        </div>
+                        <div className="col-md-4">
+                          <label className="form-label" htmlFor="wc-field-16">
+                            Date of injury
+                          </label>
+                          <input
+                            id="wc-field-16"
+                            type="date"
+                            className="form-control"
+                            value={detail.claimSummary.dateOfInjury}
+                            disabled={!canManage}
+                            onChange={(e) =>
+                              setDetail({
+                                ...detail,
+                                claimSummary: {
+                                  ...detail.claimSummary,
+                                  dateOfInjury: e.target.value,
+                                },
+                              })
+                            }
+                          />
+                        </div>
+                        <div className="col-md-4">
+                          <label className="form-label" htmlFor="wc-field-17">
+                            Days away
+                          </label>
+                          <input
+                            id="wc-field-17"
+                            type="number"
+                            className="form-control"
+                            value={detail.daysAway ?? ""}
+                            disabled={!canManage}
+                            onChange={(e) =>
+                              setDetail({
+                                ...detail,
+                                daysAway: e.target.value === "" ? null : Number(e.target.value),
+                              })
+                            }
+                          />
+                        </div>
+                        <div className="col-md-4">
+                          <label className="form-label" htmlFor="wc-field-18">
+                            Restricted days
+                          </label>
+                          <input
+                            id="wc-field-18"
+                            type="number"
+                            className="form-control"
+                            value={detail.restrictedDays ?? ""}
+                            disabled={!canManage}
+                            onChange={(e) =>
+                              setDetail({
+                                ...detail,
+                                restrictedDays:
+                                  e.target.value === "" ? null : Number(e.target.value),
+                              })
+                            }
+                          />
+                        </div>
+                        <div className="col-md-6">
+                          <PersonnelSearchField
+                            id="wc-field-19"
+                            label="Linked employee"
+                            hint="Search Employee Profiles. Clears free-text worker name when unlinked."
+                            disabled={!canManage}
+                            personnelId={detail.personnelId ?? ""}
+                            displayName={detail.workerName}
+                            allowUnlinkedText
+                            onLinkedChange={(selection) => {
+                              if (!selection) {
+                                setDetail({
+                                  ...detail,
+                                  personnelId: null,
+                                  workerName: "",
+                                  dateOfBirth: "",
+                                  street: "",
+                                  city: "",
+                                  state: "",
+                                  zip: "",
+                                  gender: "",
+                                });
+                                return;
+                              }
+                              setDetail({
+                                ...detail,
+                                personnelId: selection.personnelId,
+                                workerName: selection.displayName,
+                                dateOfBirth: selection.dateOfBirth || detail.dateOfBirth,
+                                street: selection.street || detail.street,
+                                city: selection.city || detail.city,
+                                state: selection.state || detail.state,
+                                zip: selection.zip || detail.zip,
+                                gender: selection.gender || detail.gender,
+                              });
+                            }}
+                            onUnlinkedTextChange={(value) =>
                               setDetail({
                                 ...detail,
                                 personnelId: null,
-                                workerName: "",
-                                dateOfBirth: "",
-                                street: "",
-                                city: "",
-                                state: "",
-                                zip: "",
-                                gender: "",
-                              });
-                              return;
+                                workerName: value,
+                              })
                             }
-                            setDetail({
-                              ...detail,
-                              personnelId: selection.personnelId,
-                              workerName: selection.displayName,
-                              dateOfBirth: selection.dateOfBirth || detail.dateOfBirth,
-                              street: selection.street || detail.street,
-                              city: selection.city || detail.city,
-                              state: selection.state || detail.state,
-                              zip: selection.zip || detail.zip,
-                              gender: selection.gender || detail.gender,
-                            });
-                          }}
-                          onUnlinkedTextChange={(value) =>
-                            setDetail({
-                              ...detail,
-                              personnelId: null,
-                              workerName: value,
-                            })
-                          }
-                        />
-                      </div>
-                      <div className="col-md-3">
-                        <label className="form-label" htmlFor="wc-field-dob-detail">
-                          Date of birth
-                        </label>
-                        <input
-                          id="wc-field-dob-detail"
-                          type="date"
-                          className="form-control"
-                          value={detail.dateOfBirth || ""}
-                          disabled={!canManage}
-                          onChange={(e) =>
-                            setDetail({ ...detail, dateOfBirth: e.target.value })
-                          }
-                        />
-                      </div>
-                      <div className="col-md-6">
-                        <label className="form-label" htmlFor="wc-field-street-detail">
-                          Street
-                        </label>
-                        <input
-                          id="wc-field-street-detail"
-                          className="form-control"
-                          value={detail.street || ""}
-                          disabled={!canManage}
-                          onChange={(e) => setDetail({ ...detail, street: e.target.value })}
-                        />
-                      </div>
-                      <div className="col-md-3">
-                        <label className="form-label" htmlFor="wc-field-city-detail">
-                          City
-                        </label>
-                        <input
-                          id="wc-field-city-detail"
-                          className="form-control"
-                          value={detail.city || ""}
-                          disabled={!canManage}
-                          onChange={(e) => setDetail({ ...detail, city: e.target.value })}
-                        />
-                      </div>
-                      <div className="col-md-1">
-                        <label className="form-label" htmlFor="wc-field-state-detail">
-                          State
-                        </label>
-                        <input
-                          id="wc-field-state-detail"
-                          className="form-control"
-                          value={detail.state || ""}
-                          disabled={!canManage}
-                          onChange={(e) => setDetail({ ...detail, state: e.target.value })}
-                        />
-                      </div>
-                      <div className="col-md-2">
-                        <label className="form-label" htmlFor="wc-field-zip-detail">
-                          ZIP
-                        </label>
-                        <input
-                          id="wc-field-zip-detail"
-                          className="form-control"
-                          value={detail.zip || ""}
-                          disabled={!canManage}
-                          onChange={(e) => setDetail({ ...detail, zip: e.target.value })}
-                        />
-                      </div>
-                      <div className="col-md-3">
-                        <label className="form-label" htmlFor="wc-field-sex-detail">
-                          Sex
-                        </label>
-                        <select
-                          id="wc-field-sex-detail"
-                          className="form-select"
-                          value={detail.gender || ""}
-                          disabled={!canManage}
-                          onChange={(e) => setDetail({ ...detail, gender: e.target.value })}
-                        >
-                          <option value="">—</option>
-                          <option value="MALE">Male</option>
-                          <option value="FEMALE">Female</option>
-                        </select>
-                      </div>
-                      <div className="col-md-3">
-                        <label className="form-label" htmlFor="wc-field-20">
-                          Linked incident
-                        </label>
-                        <select
-                          id="wc-field-20"
-                          className="form-select"
-                          value={detail.incidentId ?? ""}
-                          disabled={!canManage}
-                          onChange={(e) =>
-                            setDetail({ ...detail, incidentId: e.target.value || null })
-                          }
-                        >
-                          <option value="">— None —</option>
-                          {incidentOptions.map((incident) => (
-                            <option key={incident.id} value={incident.id}>
-                              {incidentSelectLabel(incident)}
-                            </option>
-                          ))}
-                          {detail.incidentId &&
-                          !incidentOptions.some((row) => row.id === detail.incidentId) ? (
-                            <option value={detail.incidentId}>
-                              Linked incident ({detail.incidentId.slice(0, 8)}…)
-                            </option>
-                          ) : null}
-                        </select>
-                      </div>
-                      <div className="col-12">
-                        <label className="form-label" htmlFor="wc-field-21">
-                          Body parts / claim notes
-                        </label>
-                        <textarea
-                          id="wc-field-21"
-                          className="form-control"
-                          rows={2}
-                          value={detail.claimSummary.bodyParts || detail.claimSummary.notes}
-                          disabled={!canManage}
-                          onChange={(e) =>
-                            setDetail({
-                              ...detail,
-                              claimSummary: {
-                                ...detail.claimSummary,
-                                bodyParts: e.target.value,
-                                notes: e.target.value,
-                              },
-                            })
-                          }
-                        />
-                      </div>
-                      <div className="col-12">
-                        <div className="border rounded p-3 bg-body-tertiary">
-                          <div className="form-check mb-2">
-                            <input
-                              id="wc-osha-recordable"
-                              className="form-check-input"
-                              type="checkbox"
-                              checked={detail.oshaRecordable}
-                              disabled={!canManage}
-                              onChange={(e) =>
-                                setDetail({
-                                  ...detail,
-                                  oshaRecordable: e.target.checked,
-                                  oshaPrivacyCase: e.target.checked
-                                    ? detail.oshaPrivacyCase
-                                    : false,
-                                })
-                              }
-                            />
-                            <label className="form-check-label" htmlFor="wc-osha-recordable">
-                              OSHA recordable — autofill Form 300 from this case
-                            </label>
-                          </div>
-                          {detail.oshaRecordable ? (
-                            <div className="row g-3">
-                              <div className="col-md-4">
-                                <div className="form-check mt-4">
+                          />
+                        </div>
+                        <div className="col-md-3">
+                          <label className="form-label" htmlFor="wc-field-dob-detail">
+                            Date of birth
+                          </label>
+                          <input
+                            id="wc-field-dob-detail"
+                            type="date"
+                            className="form-control"
+                            value={detail.dateOfBirth || ""}
+                            disabled={!canManage}
+                            onChange={(e) => setDetail({ ...detail, dateOfBirth: e.target.value })}
+                          />
+                        </div>
+                        <div className="col-md-6">
+                          <label className="form-label" htmlFor="wc-field-street-detail">
+                            Street
+                          </label>
+                          <input
+                            id="wc-field-street-detail"
+                            className="form-control"
+                            value={detail.street || ""}
+                            disabled={!canManage}
+                            onChange={(e) => setDetail({ ...detail, street: e.target.value })}
+                          />
+                        </div>
+                        <div className="col-md-3">
+                          <label className="form-label" htmlFor="wc-field-city-detail">
+                            City
+                          </label>
+                          <input
+                            id="wc-field-city-detail"
+                            className="form-control"
+                            value={detail.city || ""}
+                            disabled={!canManage}
+                            onChange={(e) => setDetail({ ...detail, city: e.target.value })}
+                          />
+                        </div>
+                        <div className="col-md-1">
+                          <label className="form-label" htmlFor="wc-field-state-detail">
+                            State
+                          </label>
+                          <input
+                            id="wc-field-state-detail"
+                            className="form-control"
+                            value={detail.state || ""}
+                            disabled={!canManage}
+                            onChange={(e) => setDetail({ ...detail, state: e.target.value })}
+                          />
+                        </div>
+                        <div className="col-md-2">
+                          <label className="form-label" htmlFor="wc-field-zip-detail">
+                            ZIP
+                          </label>
+                          <input
+                            id="wc-field-zip-detail"
+                            className="form-control"
+                            value={detail.zip || ""}
+                            disabled={!canManage}
+                            onChange={(e) => setDetail({ ...detail, zip: e.target.value })}
+                          />
+                        </div>
+                        <div className="col-md-3">
+                          <label className="form-label" htmlFor="wc-field-sex-detail">
+                            Sex
+                          </label>
+                          <select
+                            id="wc-field-sex-detail"
+                            className="form-select"
+                            value={detail.gender || ""}
+                            disabled={!canManage}
+                            onChange={(e) => setDetail({ ...detail, gender: e.target.value })}
+                          >
+                            <option value="">—</option>
+                            <option value="MALE">Male</option>
+                            <option value="FEMALE">Female</option>
+                          </select>
+                        </div>
+                        <div className="col-md-3">
+                          <label className="form-label" htmlFor="wc-field-20">
+                            Linked incident
+                          </label>
+                          <select
+                            id="wc-field-20"
+                            className="form-select"
+                            value={detail.incidentId ?? ""}
+                            disabled={!canManage}
+                            onChange={(e) =>
+                              setDetail({ ...detail, incidentId: e.target.value || null })
+                            }
+                          >
+                            <option value="">— None —</option>
+                            {incidentOptions.map((incident) => (
+                              <option key={incident.id} value={incident.id}>
+                                {incidentSelectLabel(incident)}
+                              </option>
+                            ))}
+                            {detail.incidentId &&
+                            !incidentOptions.some((row) => row.id === detail.incidentId) ? (
+                              <option value={detail.incidentId}>
+                                Linked incident ({detail.incidentId.slice(0, 8)}…)
+                              </option>
+                            ) : null}
+                          </select>
+                        </div>
+                        <div className="col-12">
+                          <label className="form-label" htmlFor="wc-field-21">
+                            Body parts / claim notes
+                          </label>
+                          <textarea
+                            id="wc-field-21"
+                            className="form-control"
+                            rows={2}
+                            value={detail.claimSummary.bodyParts || detail.claimSummary.notes}
+                            disabled={!canManage}
+                            onChange={(e) =>
+                              setDetail({
+                                ...detail,
+                                claimSummary: {
+                                  ...detail.claimSummary,
+                                  bodyParts: e.target.value,
+                                  notes: e.target.value,
+                                },
+                              })
+                            }
+                          />
+                        </div>
+                        <div className="col-12">
+                          <div className="border rounded p-3 bg-body-tertiary">
+                            <div className="form-check mb-2">
+                              <input
+                                id="wc-osha-recordable"
+                                className="form-check-input"
+                                type="checkbox"
+                                checked={detail.oshaRecordable}
+                                disabled={!canManage}
+                                onChange={(e) =>
+                                  setDetail({
+                                    ...detail,
+                                    oshaRecordable: e.target.checked,
+                                    oshaPrivacyCase: e.target.checked
+                                      ? detail.oshaPrivacyCase
+                                      : false,
+                                  })
+                                }
+                              />
+                              <label className="form-check-label" htmlFor="wc-osha-recordable">
+                                OSHA recordable — autofill Form 300 from this case
+                              </label>
+                            </div>
+                            {detail.oshaRecordable ? (
+                              <div className="row g-3">
+                                <div className="col-md-4">
+                                  <div className="form-check mt-4">
+                                    <input
+                                      id="wc-osha-privacy"
+                                      className="form-check-input"
+                                      type="checkbox"
+                                      checked={detail.oshaPrivacyCase}
+                                      disabled={!canManage}
+                                      onChange={(e) =>
+                                        setDetail({
+                                          ...detail,
+                                          oshaPrivacyCase: e.target.checked,
+                                        })
+                                      }
+                                    />
+                                    <label className="form-check-label" htmlFor="wc-osha-privacy">
+                                      Privacy case
+                                    </label>
+                                  </div>
+                                </div>
+                                <div className="col-md-4">
+                                  <label className="form-label" htmlFor="wc-osha-job">
+                                    Job title (Form 300 col C)
+                                  </label>
                                   <input
-                                    id="wc-osha-privacy"
-                                    className="form-check-input"
-                                    type="checkbox"
-                                    checked={detail.oshaPrivacyCase}
+                                    id="wc-osha-job"
+                                    className="form-control"
+                                    value={detail.oshaJobTitle}
+                                    disabled={!canManage}
+                                    onChange={(e) =>
+                                      setDetail({ ...detail, oshaJobTitle: e.target.value })
+                                    }
+                                  />
+                                </div>
+                                <div className="col-md-4">
+                                  <label className="form-label" htmlFor="wc-osha-illness">
+                                    Classification (M)
+                                  </label>
+                                  <select
+                                    id="wc-osha-illness"
+                                    className="form-select"
+                                    value={detail.oshaIllnessCategory || "1"}
                                     disabled={!canManage}
                                     onChange={(e) =>
                                       setDetail({
                                         ...detail,
-                                        oshaPrivacyCase: e.target.checked,
+                                        oshaIllnessCategory: e.target.value,
                                       })
                                     }
-                                  />
-                                  <label className="form-check-label" htmlFor="wc-osha-privacy">
-                                    Privacy case
-                                  </label>
+                                  >
+                                    <option value="1">(1) Injury</option>
+                                    <option value="2">(2) Skin disorder</option>
+                                    <option value="3">(3) Respiratory condition</option>
+                                    <option value="4">(4) Poisoning</option>
+                                    <option value="5">(5) Hearing loss</option>
+                                    <option value="6">(6) All other illnesses</option>
+                                  </select>
+                                </div>
+                                <div className="col-12">
+                                  <p className="small text-muted mb-0">
+                                    Outcome (G–J) is derived from days away / restricted days, then
+                                    severity (Lost Time, Restricted). Minor (first aid) cases are
+                                    not recordable. Requires a linked injury incident.{" "}
+                                    {detail.oshaCaseId ? (
+                                      <Link href="/modules/osha/">Open linked OSHA case</Link>
+                                    ) : (
+                                      "Continue creates or updates the OSHA Form 300 entry."
+                                    )}
+                                  </p>
                                 </div>
                               </div>
-                              <div className="col-md-4">
-                                <label className="form-label" htmlFor="wc-osha-job">
-                                  Job title (Form 300 col C)
-                                </label>
-                                <input
-                                  id="wc-osha-job"
-                                  className="form-control"
-                                  value={detail.oshaJobTitle}
-                                  disabled={!canManage}
-                                  onChange={(e) =>
-                                    setDetail({ ...detail, oshaJobTitle: e.target.value })
-                                  }
-                                />
-                              </div>
-                              <div className="col-md-4">
-                                <label className="form-label" htmlFor="wc-osha-illness">
-                                  Classification (M)
-                                </label>
-                                <select
-                                  id="wc-osha-illness"
-                                  className="form-select"
-                                  value={detail.oshaIllnessCategory || "1"}
-                                  disabled={!canManage}
-                                  onChange={(e) =>
-                                    setDetail({
-                                      ...detail,
-                                      oshaIllnessCategory: e.target.value,
-                                    })
-                                  }
-                                >
-                                  <option value="1">(1) Injury</option>
-                                  <option value="2">(2) Skin disorder</option>
-                                  <option value="3">(3) Respiratory condition</option>
-                                  <option value="4">(4) Poisoning</option>
-                                  <option value="5">(5) Hearing loss</option>
-                                  <option value="6">(6) All other illnesses</option>
-                                </select>
-                              </div>
-                              <div className="col-12">
-                                <p className="small text-muted mb-0">
-                                  Outcome (G–J) is derived from days away / restricted days, then
-                                  severity (Lost Time, Restricted). Minor (first aid) cases are not
-                                  recordable. Requires a linked injury incident.{" "}
-                                  {detail.oshaCaseId ? (
-                                    <Link href="/modules/osha/">Open linked OSHA case</Link>
-                                  ) : (
-                                    "Continue creates or updates the OSHA Form 300 entry."
-                                  )}
-                                </p>
-                              </div>
-                            </div>
-                          ) : null}
+                            ) : null}
+                          </div>
                         </div>
-                      </div>
-                    </form>
+                      </form>
+                    </div>
                   </div>
-                </div>
-                {canManage ? (
-                  <div className="d-flex flex-wrap gap-2 mt-3">
-                    <button
-                      type="submit"
-                      form="wc-overview-form"
-                      className="btn btn-primary"
-                      disabled={saving}
-                    >
-                      {saving ? "Saving…" : "Save & Close"}
-                    </button>
-                    {detail.oshaRecordable ? (
+                  {canManage ? (
+                    <div className="d-flex flex-wrap gap-2 mt-3">
                       <button
-                        type="button"
-                        className="btn btn-outline-primary"
+                        type="submit"
+                        form="wc-overview-form"
+                        className="btn btn-primary"
                         disabled={saving}
-                        onClick={() => void continueToOshaReport()}
                       >
-                        {saving ? "Saving…" : "Continue to OSHA report"}
+                        {saving ? "Saving…" : "Save & Close"}
                       </button>
-                    ) : null}
-                  </div>
-                ) : null}
+                      {detail.oshaRecordable ? (
+                        <button
+                          type="button"
+                          className="btn btn-outline-primary"
+                          disabled={saving}
+                          onClick={() => void continueToOshaReport()}
+                        >
+                          {saving ? "Saving…" : "Continue to OSHA report"}
+                        </button>
+                      ) : null}
+                    </div>
+                  ) : null}
                 </>
               ) : null}
 
@@ -2405,7 +2420,10 @@ export function WorkersCompWorkspace({ moduleName }: { moduleName: string }) {
                                 </p>
                                 <div className="row g-2 align-items-end">
                                   <div className="col-md-3">
-                                    <label className="form-label small text-muted mb-1" htmlFor="wc-med-ws">
+                                    <label
+                                      className="form-label small text-muted mb-1"
+                                      htmlFor="wc-med-ws"
+                                    >
                                       Status
                                     </label>
                                     <select
@@ -2425,27 +2443,38 @@ export function WorkersCompWorkspace({ moduleName }: { moduleName: string }) {
                                     </select>
                                   </div>
                                   <div className="col-md-2">
-                                    <label className="form-label small text-muted mb-1" htmlFor="wc-med-ws-start">
+                                    <label
+                                      className="form-label small text-muted mb-1"
+                                      htmlFor="wc-med-ws-start"
+                                    >
                                       Start
                                     </label>
                                     <input
                                       id="wc-med-ws-start"
                                       type="date"
                                       className="form-control"
-                                      value={workStatusForm.startDate || medicalForm.appointmentDate}
+                                      value={
+                                        workStatusForm.startDate || medicalForm.appointmentDate
+                                      }
                                       disabled={saving}
                                       onChange={(e) => {
                                         const startDate = e.target.value;
                                         setWorkStatusForm((f) => ({ ...f, startDate }));
                                         setRestrictionForm((f) => ({ ...f, startDate }));
                                         if (!medicalForm.appointmentDate) {
-                                          setMedicalForm((f) => ({ ...f, appointmentDate: startDate }));
+                                          setMedicalForm((f) => ({
+                                            ...f,
+                                            appointmentDate: startDate,
+                                          }));
                                         }
                                       }}
                                     />
                                   </div>
                                   <div className="col-md-2">
-                                    <label className="form-label small text-muted mb-1" htmlFor="wc-med-ws-end">
+                                    <label
+                                      className="form-label small text-muted mb-1"
+                                      htmlFor="wc-med-ws-end"
+                                    >
                                       End
                                     </label>
                                     <input
@@ -2462,7 +2491,10 @@ export function WorkersCompWorkspace({ moduleName }: { moduleName: string }) {
                                     />
                                   </div>
                                   <div className="col-md-5">
-                                    <label className="form-label small text-muted mb-1" htmlFor="wc-med-ws-notes">
+                                    <label
+                                      className="form-label small text-muted mb-1"
+                                      htmlFor="wc-med-ws-notes"
+                                    >
                                       Work status notes
                                     </label>
                                     <input
@@ -2499,11 +2531,7 @@ export function WorkersCompWorkspace({ moduleName }: { moduleName: string }) {
 
                             <div className="col-12 d-flex flex-wrap gap-2 align-items-center">
                               <button type="submit" className="btn btn-primary" disabled={saving}>
-                                {saving
-                                  ? "Saving…"
-                                  : editingMedicalId
-                                    ? "Save changes"
-                                    : "Save"}
+                                {saving ? "Saving…" : editingMedicalId ? "Save changes" : "Save"}
                               </button>
                               {editingMedicalId ? (
                                 <button
@@ -2542,7 +2570,9 @@ export function WorkersCompWorkspace({ moduleName }: { moduleName: string }) {
                                           {m.provider ? ` · ${m.provider}` : ""}
                                         </div>
                                         {m.providerSpecialty ? (
-                                          <div className="small text-muted">{m.providerSpecialty}</div>
+                                          <div className="small text-muted">
+                                            {m.providerSpecialty}
+                                          </div>
                                         ) : null}
                                       </div>
                                       {canMedicalManage ? (
@@ -2574,13 +2604,16 @@ export function WorkersCompWorkspace({ moduleName }: { moduleName: string }) {
                                     </div>
                                     <div className="row g-2 small mb-2">
                                       <div className="col-md-3">
-                                        <span className="text-muted">Diagnosis:</span> {m.diagnosis || "—"}
+                                        <span className="text-muted">Diagnosis:</span>{" "}
+                                        {m.diagnosis || "—"}
                                       </div>
                                       <div className="col-md-3">
-                                        <span className="text-muted">Treatment:</span> {m.treatment || "—"}
+                                        <span className="text-muted">Treatment:</span>{" "}
+                                        {m.treatment || "—"}
                                       </div>
                                       <div className="col-md-3">
-                                        <span className="text-muted">Medication:</span> {m.medication || "—"}
+                                        <span className="text-muted">Medication:</span>{" "}
+                                        {m.medication || "—"}
                                       </div>
                                       <div className="col-md-3">
                                         <span className="text-muted">Notes:</span>{" "}
@@ -2598,6 +2631,7 @@ export function WorkersCompWorkspace({ moduleName }: { moduleName: string }) {
                                           onChange={(e) =>
                                             setNoteEdit({ ...noteEdit, notes: e.target.value })
                                           }
+                                          // eslint-disable-next-line jsx-a11y/no-autofocus -- inline note editor opened by the user's click; focus must move into the field
                                           autoFocus
                                         />
                                         <div className="d-flex gap-1">
@@ -2627,7 +2661,8 @@ export function WorkersCompWorkspace({ moduleName }: { moduleName: string }) {
                                         <div className="small">
                                           {wcEnumLabel(m.workStatus.status)}
                                           {" · "}
-                                          {m.workStatus.startDate || "—"} → {m.workStatus.endDate || "open"}
+                                          {m.workStatus.startDate || "—"} →{" "}
+                                          {m.workStatus.endDate || "open"}
                                           {m.workStatus.notes ? ` · ${m.workStatus.notes}` : ""}
                                         </div>
                                       </div>
@@ -2660,7 +2695,9 @@ export function WorkersCompWorkspace({ moduleName }: { moduleName: string }) {
               {detailTab === "forms" && hasProducersForms ? (
                 <WorkersCompFormsPanel
                   caseId={detail.id}
-                  caseLabel={[wcClaimNumber(detail), personNameDisplay(detail.workerName, "")].filter(Boolean).join(" · ")}
+                  caseLabel={[wcClaimNumber(detail), personNameDisplay(detail.workerName, "")]
+                    .filter(Boolean)
+                    .join(" · ")}
                 />
               ) : null}
 
@@ -2743,33 +2780,35 @@ export function WorkersCompWorkspace({ moduleName }: { moduleName: string }) {
             <div className="table-responsive">
               <table className="table mb-0">
                 <thead>
+                  <tr>
+                    <th>EMPLOYEE</th>
+                    <th>Claim #</th>
+                    <th>Status</th>
+                    <th>Workflow</th>
+                    <th>Restricted days</th>
+                    <th />
+                  </tr>
+                </thead>
+                <tbody>
+                  {rtwCases.length === 0 ? (
                     <tr>
-                      <th>EMPLOYEE</th>
-                      <th>Claim #</th>
-                      <th>Status</th>
-                      <th>Workflow</th>
-                      <th>Restricted days</th>
-                      <th />
+                      <td colSpan={6} className="text-muted">
+                        No return-to-work cases in the queue.
+                      </td>
                     </tr>
-                  </thead>
-                  <tbody>
-                    {rtwCases.length === 0 ? (
-                      <tr>
-                        <td colSpan={6} className="text-muted">
-                          No return-to-work cases in the queue.
-                        </td>
-                      </tr>
-                    ) : (
-                      rtwCases.map((c) => (
-                        <tr key={c.id}>
-                          <td>
-                            <Link href={wcCaseHref(c.id)}>
-                              {personNameDisplay(c.workerName, "—")}
-                            </Link>
-                          </td>
-                          <td>{wcClaimNumber(c)}</td>
+                  ) : (
+                    rtwCases.map((c) => (
+                      <tr key={c.id}>
                         <td>
-                          <span className={`badge ${wcStatusBadgeClass(c.status)}`}>{wcEnumLabel(c.status)}</span>
+                          <Link href={wcCaseHref(c.id)}>
+                            {personNameDisplay(c.workerName, "—")}
+                          </Link>
+                        </td>
+                        <td>{wcClaimNumber(c)}</td>
+                        <td>
+                          <span className={`badge ${wcStatusBadgeClass(c.status)}`}>
+                            {wcEnumLabel(c.status)}
+                          </span>
                         </td>
                         <td>{wcEnumLabel(c.workflowStage) || "—"}</td>
                         <td>{c.restrictedDays ?? "—"}</td>
@@ -2797,8 +2836,7 @@ export function WorkersCompWorkspace({ moduleName }: { moduleName: string }) {
               <div className="d-flex flex-wrap gap-2 align-items-center justify-content-between mb-3">
                 <p className="text-muted mb-0">
                   Open a case to log doctor visits with clinical notes, work status, and
-                  restrictions. Active cases needing
-                  follow-up are listed below.
+                  restrictions. Active cases needing follow-up are listed below.
                 </p>
                 <input
                   className="form-control form-control-sm"
@@ -2820,8 +2858,8 @@ export function WorkersCompWorkspace({ moduleName }: { moduleName: string }) {
                     </tr>
                   </thead>
                   <tbody>
-                    {cases.filter((c) => c.status !== "CLOSED" && c.status !== "ARCHIVED").length ===
-                    0 ? (
+                    {cases.filter((c) => c.status !== "CLOSED" && c.status !== "ARCHIVED")
+                      .length === 0 ? (
                       <tr>
                         <td colSpan={4} className="text-muted">
                           No active cases.
@@ -3085,7 +3123,8 @@ export function WorkersCompWorkspace({ moduleName }: { moduleName: string }) {
                       {
                         key: WC_WEEKLY_STATUS_REPORT_KEY,
                         name: "Workers' Comp Weekly Status",
-                        description: "The weekly status email digest; schedule or edit it in Reports.",
+                        description:
+                          "The weekly status email digest; schedule or edit it in Reports.",
                       },
                       {
                         key: "workers_comp.open_cases",
@@ -3167,8 +3206,8 @@ export function WorkersCompWorkspace({ moduleName }: { moduleName: string }) {
                     workers&apos; compensation cases (worker, status, injury date, claim, carrier,
                     location, days away / restricted, and that week&apos;s Thursday update). Turn on
                     the weekly email to send it automatically (Fridays 7:00 AM Central by default),
-                    or send it now at any time. The schedule lives in Reports → Scheduled, where
-                    you can change the day, time, or recipients.
+                    or send it now at any time. The schedule lives in Reports → Scheduled, where you
+                    can change the day, time, or recipients.
                   </p>
                   <div className="form-check form-switch mb-2">
                     <input
@@ -3193,7 +3232,9 @@ export function WorkersCompWorkspace({ moduleName }: { moduleName: string }) {
                   </div>
                   <p className="small mb-3">
                     {weeklySchedule ? (
-                      <Link href={`/reporting/scheduled/?edit=${encodeURIComponent(weeklySchedule.id)}`}>
+                      <Link
+                        href={`/reporting/scheduled/?edit=${encodeURIComponent(weeklySchedule.id)}`}
+                      >
                         Edit schedule in Reports
                       </Link>
                     ) : (
@@ -3206,14 +3247,13 @@ export function WorkersCompWorkspace({ moduleName }: { moduleName: string }) {
                   <h6 className="mb-2">
                     Recipients
                     {weeklyRecipients.length > 0 ? (
-                      <span className="text-muted fw-normal">
-                        {" "}
-                        ({weeklyRecipients.length})
-                      </span>
+                      <span className="text-muted fw-normal"> ({weeklyRecipients.length})</span>
                     ) : null}
                   </h6>
                   {weeklyRecipients.length === 0 ? (
-                    <p className="text-muted small">No emails yet. Add recipients below before sending.</p>
+                    <p className="text-muted small">
+                      No emails yet. Add recipients below before sending.
+                    </p>
                   ) : (
                     <ul className="list-group mb-3">
                       {weeklyRecipients.map((email) => (
@@ -3238,7 +3278,10 @@ export function WorkersCompWorkspace({ moduleName }: { moduleName: string }) {
                   )}
 
                   {canManage ? (
-                    <form className="row g-2 align-items-end" onSubmit={(e) => void addWeeklyRecipient(e)}>
+                    <form
+                      className="row g-2 align-items-end"
+                      onSubmit={(e) => void addWeeklyRecipient(e)}
+                    >
                       <div className="col-12">
                         <label className="form-label" htmlFor="wc-weekly-email">
                           Add emails
@@ -3306,6 +3349,7 @@ export function WorkersCompWorkspace({ moduleName }: { moduleName: string }) {
                 </div>
                 {weeklyPreview ? (
                   <>
+                    {/* eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-noninteractive-element-interactions -- backdrop click-to-close, same as the other Forge modals; keyboard users close with the Close/Cancel button */}
                     <div
                       className="modal d-block"
                       tabIndex={-1}

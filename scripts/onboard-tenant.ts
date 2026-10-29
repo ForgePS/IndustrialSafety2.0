@@ -211,12 +211,7 @@ async function main(): Promise<void> {
 
     let activatedTenant = null;
     if (activate) {
-      const activation = await onboarding.activate(
-        sessionId,
-        principal,
-        recordVersion,
-        tenantId,
-      );
+      const activation = await onboarding.activate(sessionId, principal, recordVersion, tenantId);
       recordVersion = activation.session.recordVersion;
       activatedTenant = activation.tenant;
     }

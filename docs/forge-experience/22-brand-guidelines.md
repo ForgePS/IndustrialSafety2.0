@@ -8,46 +8,46 @@
 
 Forge branding must communicate:
 
-- Professional  
-- Reliable  
-- Operational  
-- Mission critical  
-- Modern  
-- Trusted  
-- Simple  
-- Clean  
+- Professional
+- Reliable
+- Operational
+- Mission critical
+- Modern
+- Trusted
+- Simple
+- Clean
 
 ## Avoid
 
-- Flashy graphics  
-- Gaming appearance  
-- Heavy gradients  
-- Large animations  
-- Distracting effects  
-- Consumer app styling  
-- Purple-neon “AI SaaS” clichés  
-- Playful stickers/badges over operational content  
+- Flashy graphics
+- Gaming appearance
+- Heavy gradients
+- Large animations
+- Distracting effects
+- Consumer app styling
+- Purple-neon “AI SaaS” clichés
+- Playful stickers/badges over operational content
 
 ## Visual direction
 
-| Attribute | Direction |
-| --- | --- |
-| Color | Steel / slate neutrals + restrained operational blue brand; semantic status colors for meaning |
-| Type | Clean humanist/industrial sans; clear hierarchy; no novelty fonts |
-| Imagery | Real operational context when needed; not stock lifestyle collage |
-| Motion | Minimal, purposeful (`motion.fast`/`normal`); respect reduced motion |
-| Chrome | Quiet surfaces; strong information hierarchy; Mission Control clarity |
+| Attribute | Direction                                                                                      |
+| --------- | ---------------------------------------------------------------------------------------------- |
+| Color     | Steel / slate neutrals + restrained operational blue brand; semantic status colors for meaning |
+| Type      | Clean humanist/industrial sans; clear hierarchy; no novelty fonts                              |
+| Imagery   | Real operational context when needed; not stock lifestyle collage                              |
+| Motion    | Minimal, purposeful (`motion.fast`/`normal`); respect reduced motion                           |
+| Chrome    | Quiet surfaces; strong information hierarchy; Mission Control clarity                          |
 
 ## Supported themes and surfaces
 
-| Mode | Use |
-| --- | --- |
-| Light theme | Default administrative and daylight field use |
-| Dark theme | Low-light ops centers and night shifts |
-| Large command displays | High contrast, larger type steps, simplified chrome |
-| Public displays | Read-only, distraction-free, large type |
-| Tablet use | Touch-first spacing, persistent critical actions |
-| Field use | Glove-friendly targets, offline indicators, high legibility |
+| Mode                   | Use                                                         |
+| ---------------------- | ----------------------------------------------------------- |
+| Light theme            | Default administrative and daylight field use               |
+| Dark theme             | Low-light ops centers and night shifts                      |
+| Large command displays | High contrast, larger type steps, simplified chrome         |
+| Public displays        | Read-only, distraction-free, large type                     |
+| Tablet use             | Touch-first spacing, persistent critical actions            |
+| Field use              | Glove-friendly targets, offline indicators, high legibility |
 
 Theme switching uses FX tokens (`data-fx-theme`). Products do not invent alternate brand palettes.
 

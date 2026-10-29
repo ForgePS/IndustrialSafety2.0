@@ -114,9 +114,7 @@ export function fieldHrefFromIndustrialPath(
     const alertId = params.get("alertId") || "";
     if (alertId || path.includes("alert")) {
       const id = alertId || recordId;
-      return id
-        ? `/more/emergency/?id=${encodeURIComponent(id)}&kind=alert`
-        : "/more/emergency/";
+      return id ? `/more/emergency/?id=${encodeURIComponent(id)}&kind=alert` : "/more/emergency/";
     }
     if (recordId) {
       const category = params.get("category") || "eap";
@@ -130,15 +128,11 @@ export function fieldHrefFromIndustrialPath(
   }
   if (path.startsWith("/modules/reminders") || path.startsWith("/reminders")) {
     const reminderId = params.get("reminderId") || params.get("id") || context.targetId || "";
-    return reminderId
-      ? `/reminders/?reminderId=${encodeURIComponent(reminderId)}`
-      : "/reminders/";
+    return reminderId ? `/reminders/?reminderId=${encodeURIComponent(reminderId)}` : "/reminders/";
   }
   if (path.startsWith("/modules/messaging") || path.startsWith("/messaging")) {
     const threadId = params.get("thread") || params.get("threadId") || context.targetId || "";
-    return threadId
-      ? `/messaging/${encodeURIComponent(threadId)}/`
-      : "/messaging/";
+    return threadId ? `/messaging/${encodeURIComponent(threadId)}/` : "/messaging/";
   }
   if (path.startsWith("/modules/tasks") || path.startsWith("/tasks")) {
     const taskId = params.get("taskId") || params.get("id") || context.targetId || "";
@@ -218,13 +212,9 @@ export function hubPathForTarget(targetType?: string | null, targetId?: string |
       return "/more/permits/?type=electrical-safety";
     case "EMERGENCY":
     case "EMERGENCY_ALERT":
-      return id
-        ? `/more/emergency/?id=${encodeURIComponent(id)}&kind=alert`
-        : "/more/emergency/";
+      return id ? `/more/emergency/?id=${encodeURIComponent(id)}&kind=alert` : "/more/emergency/";
     case "EMERGENCY_PROCEDURE":
-      return id
-        ? `/more/emergency/?id=${encodeURIComponent(id)}&category=eap`
-        : "/more/emergency/";
+      return id ? `/more/emergency/?id=${encodeURIComponent(id)}&category=eap` : "/more/emergency/";
     case "EMPLOYEE":
     case "PERSONNEL":
       return "/me/";

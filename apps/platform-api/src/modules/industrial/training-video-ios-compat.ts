@@ -8,11 +8,7 @@
  * - Transcode only for known-bad codecs/profiles (HEVC, Opus, Baseline@L3.1@1080p, …).
  */
 
-export const TRAINING_VIDEO_MIME_TYPES = new Set([
-  "video/mp4",
-  "video/webm",
-  "video/quicktime",
-]);
+export const TRAINING_VIDEO_MIME_TYPES = new Set(["video/mp4", "video/webm", "video/quicktime"]);
 
 export function isTrainingVideoMime(mimeType: string): boolean {
   return TRAINING_VIDEO_MIME_TYPES.has(mimeType.trim().toLowerCase());

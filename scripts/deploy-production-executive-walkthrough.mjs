@@ -25,7 +25,10 @@ const registerOnly = process.argv.includes("--register-only");
 const skipMigrate = process.argv.includes("--skip-migrate");
 const skipWeb = process.argv.includes("--skip-web");
 const webOnly = process.argv.includes("--web-only");
-const stamp = new Date().toISOString().replace(/[-:TZ.]/g, "").slice(0, 14);
+const stamp = new Date()
+  .toISOString()
+  .replace(/[-:TZ.]/g, "")
+  .slice(0, 14);
 const tag = `executive-walkthrough-${stamp}`;
 
 function sh(cmd, opts = {}) {
@@ -102,7 +105,9 @@ if (!webOnly) {
   }
 
   if (!registerOnly && !skipMigrate) {
-    sh(`node scripts/run-ecs-migrate.mjs --env production --task-definition ${apiReg.taskDefinitionArn}`);
+    sh(
+      `node scripts/run-ecs-migrate.mjs --env production --task-definition ${apiReg.taskDefinitionArn}`,
+    );
   }
 }
 
@@ -114,8 +119,7 @@ console.log(
   JSON.stringify(
     {
       environment: "production",
-      demoUrl:
-        "https://producersrice.forgepublicsafety.com/presentation/executive-walkthrough/",
+      demoUrl: "https://producersrice.forgepublicsafety.com/presentation/executive-walkthrough/",
       tag: webOnly ? null : tag,
       apiImage: webOnly ? null : `${API_ECR}:${tag}`,
       apiTaskDefinition: apiReg?.taskDefinitionArn ?? null,

@@ -27,11 +27,11 @@ Creator Console is oriented as the Forge SaaS control plane: required primary na
 
 ## Verification
 
-| Check | Result |
-| --- | --- |
-| platform-api typecheck | PASS |
-| creator-console typecheck | PASS |
-| Production operations | NONE |
+| Check                     | Result |
+| ------------------------- | ------ |
+| platform-api typecheck    | PASS   |
+| creator-console typecheck | PASS   |
+| Production operations     | NONE   |
 
 ## Next sprint
 

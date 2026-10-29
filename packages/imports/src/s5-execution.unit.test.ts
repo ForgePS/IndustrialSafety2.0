@@ -146,8 +146,8 @@ describe("S5 progress retry rollback helpers", () => {
     expect(jobClassification).toBe("MANUAL_REVIEW_REQUIRED");
     expect(isLockExpired(new Date(Date.now() - 1000))).toBe(true);
     expect(resolveBatchSize(9999)).toBe(500);
-    expect(journalIdempotencyKey({ tenantId: "t", jobId: "j", rowId: "r", adapterKey: "a" })).toContain(
-      "exec:",
-    );
+    expect(
+      journalIdempotencyKey({ tenantId: "t", jobId: "j", rowId: "r", adapterKey: "a" }),
+    ).toContain("exec:");
   });
 });

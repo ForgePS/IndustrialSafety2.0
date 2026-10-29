@@ -6,24 +6,24 @@
 
 ## Recommendation (`S8_BATCH_RECOMMENDATION`)
 
-| Parameter | Value |
-| --- | --- |
-| Default | **50** |
-| Minimum | 1 |
-| Maximum | **500** |
-| Recommended range | 50–250 |
+| Parameter         | Value   |
+| ----------------- | ------- |
+| Default           | **50**  |
+| Minimum           | 1       |
+| Maximum           | **500** |
+| Recommended range | 50–250  |
 
 Rationale (code): balance Aurora transaction duration, lock hold time, and retry granularity; cap oversized transactions under concurrent tenants.
 
 ## Evidence
 
-| Evidence | Status |
-| --- | --- |
-| Unit asserts default 50 / max 500 | **VERIFIED** (`s8-hardening.unit.test.ts`) |
-| 500 rows / batch 50 on Aurora | **VERIFIED** — COMPLETED, 500/500 successful, worker 11,718 ms |
-| 500 rows / batch 200 on Aurora | **VERIFIED** — COMPLETED, 500/500 successful, worker 10,216 ms |
+| Evidence                            | Status                                                          |
+| ----------------------------------- | --------------------------------------------------------------- |
+| Unit asserts default 50 / max 500   | **VERIFIED** (`s8-hardening.unit.test.ts`)                      |
+| 500 rows / batch 50 on Aurora       | **VERIFIED** — COMPLETED, 500/500 successful, worker 11,718 ms  |
+| 500 rows / batch 200 on Aurora      | **VERIFIED** — COMPLETED, 500/500 successful, worker 10,216 ms  |
 | Comparative runs at 100 / 250 / 500 | **NOT_VERIFIED** — not required for this bounded closeout smoke |
-| Raise max above 500 | **Not authorized** without controlled study |
+| Raise max above 500                 | **Not authorized** without controlled study                     |
 
 Evidence: `docs/testing/evidence/import-platform/s8-batch-size-live.json`.
 
@@ -33,5 +33,5 @@ Tune `batchSize` per execute request within min/max. Keep default **50**: batch 
 
 ## Related
 
-- Gap GAP-052  
+- Gap GAP-052
 - LIM-IMP-003

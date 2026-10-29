@@ -24,6 +24,7 @@ Creates its own simulator raw message, quarantines via approved synthetic path, 
 ### Conditional skip removal confirmation
 
 Removed from `phase-4-cad-acceptance.spec.ts`:
+
 - Early return when no CAD messages for reprocess
 - Early return when no OPEN conflict for KEEP_FORGE
 - Soft `test.skip(!hasSecondaryCredentials())` replaced with hard `expect(...).toBe(true)`
@@ -65,19 +66,19 @@ Officer review workflow re-verified via Cognito API-driven transitions in `revie
 
 ### Runtime results
 
-| Check | Result |
-| --- | --- |
-| Account | `511343547817` |
-| Region | `us-east-1` |
-| API HTTP | 200 (`https://d108fstxdv69bo.cloudfront.net`) |
-| RMS HTTP | 200 (`https://d3ud5uzwd9js2z.cloudfront.net`) |
-| Platform API task | `:20` healthy, desired/running **1/1** |
-| Worker task | `:19` healthy, desired/running **1/1** |
-| App secret ARN | `…database-app-SknUu5` **unchanged** |
-| App secret LastChangedDate | `2026-07-26T15:30:16-05:00` **unchanged** |
-| Runtime DB role | `forge_app` |
-| FORCE RLS | enabled |
-| CAD DLQ depths (post-closeout purge) | **0** on all CAD DLQs |
+| Check                                | Result                                        |
+| ------------------------------------ | --------------------------------------------- |
+| Account                              | `511343547817`                                |
+| Region                               | `us-east-1`                                   |
+| API HTTP                             | 200 (`https://d108fstxdv69bo.cloudfront.net`) |
+| RMS HTTP                             | 200 (`https://d3ud5uzwd9js2z.cloudfront.net`) |
+| Platform API task                    | `:20` healthy, desired/running **1/1**        |
+| Worker task                          | `:19` healthy, desired/running **1/1**        |
+| App secret ARN                       | `…database-app-SknUu5` **unchanged**          |
+| App secret LastChangedDate           | `2026-07-26T15:30:16-05:00` **unchanged**     |
+| Runtime DB role                      | `forge_app`                                   |
+| FORCE RLS                            | enabled                                       |
+| CAD DLQ depths (post-closeout purge) | **0** on all CAD DLQs                         |
 
 **Worker fix deployed in closeout:** process-wide `getSharedDatabase()` to stop per-job postgres.js pool leaks that had starved CAD intake/match during earlier runs. Error logging now serializes real error messages (previously masked as `Unknown error`).
 
@@ -104,12 +105,14 @@ Date: [actual approval date]
 Decision: [blank until approved]
 
 Approval scope:
+
 - Development environment
 - Synthetic tenant A
 - Synthetic CAD data
 - Continued Forge RMS development
 
 The approval does not authorize:
+
 - Production CAD onboarding
 - Production customer onboarding
 - Enabling CAD for additional tenants
@@ -131,17 +134,17 @@ The approval does not authorize:
 
 ## Runtime endpoints
 
-| Surface | URL |
-| --- | --- |
-| RMS | https://d3ud5uzwd9js2z.cloudfront.net |
-| API | https://d108fstxdv69bo.cloudfront.net |
+| Surface | URL                                   |
+| ------- | ------------------------------------- |
+| RMS     | https://d3ud5uzwd9js2z.cloudfront.net |
+| API     | https://d108fstxdv69bo.cloudfront.net |
 
 ## Tenants
 
-| Key | ID | CAD flags |
-| --- | --- | --- |
-| `rms-synthetic-fd` | `019f9e06-a0b2-75f4-9e0b-5ae9befd8193` | Enabled (all Phase 4 CAD flags) |
-| `rms-synthetic-fd-b` | isolation tenant B | Off |
+| Key                  | ID                                     | CAD flags                       |
+| -------------------- | -------------------------------------- | ------------------------------- |
+| `rms-synthetic-fd`   | `019f9e06-a0b2-75f4-9e0b-5ae9befd8193` | Enabled (all Phase 4 CAD flags) |
+| `rms-synthetic-fd-b` | isolation tenant B                     | Off                             |
 
 ## Secret / Data safety
 

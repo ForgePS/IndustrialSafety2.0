@@ -228,15 +228,16 @@ export async function resolveAudienceRecipients(
     .filter((id) => /^[0-9a-f-]{36}$/i.test(id));
   const emails = rows
     .flatMap((r) => [r.email, r.companyEmail])
-    .map((e) => String(e ?? "").trim().toLowerCase())
+    .map((e) =>
+      String(e ?? "")
+        .trim()
+        .toLowerCase(),
+    )
     .filter(Boolean);
 
   const userById = new Map<string, string>();
   if (authIds.length) {
-    const found = await tx
-      .select({ id: users.id })
-      .from(users)
-      .where(inArray(users.id, authIds));
+    const found = await tx.select({ id: users.id }).from(users).where(inArray(users.id, authIds));
     for (const u of found) userById.set(u.id, u.id);
   }
   const userByEmail = new Map<string, string>();
@@ -367,12 +368,7 @@ export async function countMvixLocationsForAudience(
     const [row] = await tx
       .select({ count: sql<number>`count(*)::int` })
       .from(industrialSites)
-      .where(
-        and(
-          eq(industrialSites.tenantId, tenantId),
-          isNull(industrialSites.archivedAt),
-        ),
-      );
+      .where(and(eq(industrialSites.tenantId, tenantId), isNull(industrialSites.archivedAt)));
     return row?.count ?? 0;
   }
   return audience.locationIds.length;

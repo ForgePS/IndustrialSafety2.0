@@ -34,8 +34,7 @@ const DEFAULT_CATEGORIES: Array<{ name: string; color: string; sortOrder: number
 ];
 
 /** Accept RFC 4122/9562 UUIDs including Forge createId() UUIDv7 values. */
-const UUID_RE =
-  /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
 function asOptionalUuid(value: unknown): string | null {
   const raw = String(value ?? "").trim();
@@ -62,7 +61,9 @@ function asDate(value: unknown, field: string): Date {
 }
 
 function asChannel(value: unknown): "IN_APP" | "EMAIL" | "BOTH" {
-  const raw = String(value ?? "IN_APP").trim().toUpperCase();
+  const raw = String(value ?? "IN_APP")
+    .trim()
+    .toUpperCase();
   if (raw === "EMAIL" || raw === "BOTH" || raw === "IN_APP") return raw;
   throw new ForgeError("VALIDATION_FAILED", "channel must be IN_APP, EMAIL, or BOTH");
 }
@@ -94,7 +95,10 @@ function asRecurrenceRule(value: unknown): string | null {
   if (raw === "DAILY" || raw === "WEEKLY" || raw === "MONTHLY") return `FREQ=${raw}`;
   const freq = raw.match(/FREQ=(DAILY|WEEKLY|MONTHLY)/)?.[1];
   if (freq) return `FREQ=${freq}`;
-  throw new ForgeError("VALIDATION_FAILED", "recurrenceRule must be NONE, DAILY, WEEKLY, or MONTHLY");
+  throw new ForgeError(
+    "VALIDATION_FAILED",
+    "recurrenceRule must be NONE, DAILY, WEEKLY, or MONTHLY",
+  );
 }
 
 function parseFreq(rule: string | null | undefined): "DAILY" | "WEEKLY" | "MONTHLY" | null {
@@ -136,9 +140,7 @@ function mapEvent(
   const endsAt = extras?.occurrenceEndsAt ?? row.endsAt;
   const seriesId = row.seriesId ?? (parseFreq(row.recurrenceRule) ? row.id : null);
   return {
-    id: extras?.isOccurrence
-      ? `${row.id}:${startsAt.toISOString()}`
-      : row.id,
+    id: extras?.isOccurrence ? `${row.id}:${startsAt.toISOString()}` : row.id,
     sourceEventId: row.id,
     title: row.title,
     description: row.description,
@@ -210,8 +212,7 @@ function expandRecurring(
   while (count < hardCap && items.length < cap) {
     if (until && cursor > until) break;
     const occEnd = new Date(cursor.getTime() + durationMs);
-    const inRange =
-      (!from || occEnd >= from) && (!to || cursor <= to);
+    const inRange = (!from || occEnd >= from) && (!to || cursor <= to);
     if (inRange) {
       items.push(
         mapEvent(row, {
@@ -291,7 +292,10 @@ export class IndustrialCalendarService {
             isNull(industrialCalendarCategories.archivedAt),
           ),
         )
-        .orderBy(asc(industrialCalendarCategories.sortOrder), asc(industrialCalendarCategories.name));
+        .orderBy(
+          asc(industrialCalendarCategories.sortOrder),
+          asc(industrialCalendarCategories.name),
+        );
     });
     return { items: rows.map(mapCategory) };
   }
@@ -438,7 +442,10 @@ export class IndustrialCalendarService {
       if (from && to) {
         conditions.push(
           or(
-            and(gte(industrialCalendarEvents.endsAt, from), lte(industrialCalendarEvents.startsAt, to)),
+            and(
+              gte(industrialCalendarEvents.endsAt, from),
+              lte(industrialCalendarEvents.startsAt, to),
+            ),
             and(
               sql`coalesce(${industrialCalendarEvents.recurrenceRule}, '') <> ''`,
               lte(industrialCalendarEvents.startsAt, to),
@@ -470,10 +477,12 @@ export class IndustrialCalendarService {
       return { rows: eventRows, categories: cats };
     });
 
-    const catMap = new Map(categories.map((c) => [c.id, { id: c.id, name: c.name, color: c.color }]));
+    const catMap = new Map(
+      categories.map((c) => [c.id, { id: c.id, name: c.name, color: c.color }]),
+    );
     const expanded: ReturnType<typeof mapEvent>[] = [];
     for (const row of rows) {
-      const cat = row.categoryId ? catMap.get(row.categoryId) ?? null : null;
+      const cat = row.categoryId ? (catMap.get(row.categoryId) ?? null) : null;
       for (const item of expandRecurring(row, from, to, cat, 200 - expanded.length)) {
         expanded.push(item);
         if (expanded.length >= 200) break;
@@ -680,7 +689,8 @@ export class IndustrialCalendarService {
       const patch: Partial<typeof industrialCalendarEvents.$inferInsert> = { updatedAt: now };
       if (body.title != null) patch.title = asRequiredString(body.title, "title");
       if (body.description !== undefined) {
-        patch.description = body.description == null ? null : String(body.description).trim() || null;
+        patch.description =
+          body.description == null ? null : String(body.description).trim() || null;
       }
       if (body.startsAt != null || body.startAt != null) {
         patch.startsAt = asDate(body.startsAt ?? body.startAt, "startsAt");
@@ -724,7 +734,8 @@ export class IndustrialCalendarService {
           patch.recurrenceCount = null;
         } else {
           const n = Number(body.recurrenceCount);
-          if (!Number.isFinite(n)) throw new ForgeError("VALIDATION_FAILED", "recurrenceCount is invalid");
+          if (!Number.isFinite(n))
+            throw new ForgeError("VALIDATION_FAILED", "recurrenceCount is invalid");
           patch.recurrenceCount = Math.max(1, Math.min(366, Math.round(n)));
         }
       }
@@ -982,7 +993,9 @@ export class IndustrialCalendarService {
   async listReminders(principal: ForgePrincipal, query: ListQuery) {
     const tenantId = this.tenant(principal);
     await this.processDueReminders(principal).catch((err) => {
-      this.logger.warn(`Reminder sweep failed: ${err instanceof Error ? err.message : String(err)}`);
+      this.logger.warn(
+        `Reminder sweep failed: ${err instanceof Error ? err.message : String(err)}`,
+      );
     });
 
     const status = query.status?.trim().toUpperCase() || null;
@@ -1176,9 +1189,7 @@ export class IndustrialCalendarService {
 
     let sent = 0;
     for (const reminder of due) {
-      const recipients = Array.isArray(reminder.recipientUserIds)
-        ? reminder.recipientUserIds
-        : [];
+      const recipients = Array.isArray(reminder.recipientUserIds) ? reminder.recipientUserIds : [];
       const userIds = recipients.length
         ? recipients
         : reminder.createdByUserId

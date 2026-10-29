@@ -1,47 +1,19 @@
 export type TrainingTab =
-
-  | "assignments"
-
-  | "library"
-
-  | "materials"
-
-  | "quiz"
-
-  | "progress"
-
-  | "records"
-
-  | "author";
-
-
+  "assignments" | "library" | "materials" | "quiz" | "progress" | "records" | "author";
 
 export type TrainingMaterialTopic =
-
   | "GENERAL"
-
   | "NEW_HIRE"
-
   | "SAFETY"
-
   | "LOTO"
-
   | "PPE"
-
   | "EMERGENCY"
-
   | "FLEET"
-
   | "EQUIPMENT"
-
   | "COMPLIANCE"
-
   | "REFRESHER";
 
-
-
 export type TrainingMaterial = {
-
   id: string;
 
   title: string;
@@ -69,13 +41,9 @@ export type TrainingMaterial = {
   createdAt?: string;
 
   updatedAt?: string;
-
 };
 
-
-
 export type TrainingSourceFolder = {
-
   id: string;
 
   sourceId: string;
@@ -87,13 +55,9 @@ export type TrainingSourceFolder = {
   createdAt?: string;
 
   updatedAt?: string;
-
 };
 
-
-
 export type TrainingSource = {
-
   id: string;
 
   title: string;
@@ -113,13 +77,9 @@ export type TrainingSource = {
   archivedAt?: string | null;
 
   updatedAt?: string;
-
 };
 
-
-
 export type TrainingQuestion = {
-
   id: string;
 
   sourceId: string;
@@ -137,13 +97,9 @@ export type TrainingQuestion = {
   difficulty?: string | null;
 
   status: string;
-
 };
 
-
-
 export type QuizSettings = {
-
   sourceId: string;
 
   mode: "STANDARD" | "ADAPTIVE";
@@ -155,13 +111,9 @@ export type QuizSettings = {
   timerSeconds: number | null;
 
   assignmentId?: string;
-
 };
 
-
-
 export type TrainingGroup = {
-
   id: string;
 
   name: string;
@@ -175,13 +127,9 @@ export type TrainingGroup = {
   memberPersonnelIds: string[];
 
   updatedAt?: string;
-
 };
 
-
-
 export type TrainingAssignment = {
-
   id: string;
 
   title: string;
@@ -219,7 +167,6 @@ export type TrainingAssignment = {
   myBestPercent?: number | null;
 
   assignees?: Array<{
-
     personnelId?: string | null;
 
     userId?: string | null;
@@ -231,19 +178,14 @@ export type TrainingAssignment = {
     status: string;
 
     bestPercent?: number | null;
-
   }>;
 
   createdAt?: string;
 
   updatedAt?: string;
-
 };
 
-
-
 export type TrainingPersonnelOption = {
-
   id: string;
 
   displayName: string;
@@ -253,15 +195,10 @@ export type TrainingPersonnelOption = {
   email: string;
 
   userAuthId: string;
-
 };
 
-
-
 export type TrainingTeamSummary = {
-
   totals: {
-
     assignments: number;
 
     assignees: number;
@@ -273,11 +210,9 @@ export type TrainingTeamSummary = {
     notStarted: number;
 
     overdue: number;
-
   };
 
   roster: Array<{
-
     assigneeId: string;
 
     assignmentId: string;
@@ -313,9 +248,5 @@ export type TrainingTeamSummary = {
     completedAt?: string | null;
 
     updatedAt?: string | null;
-
   }>;
-
 };
-
-

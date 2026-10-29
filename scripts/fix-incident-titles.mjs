@@ -116,9 +116,7 @@ function formatStamp(date) {
 function deriveTitle(rowTitle, payload) {
   const parsed = parseTitleParts(rowTitle);
   const personField =
-    asText(payload.personAffected) ||
-    asText(payload.PersonAffected) ||
-    asText(payload.Person);
+    asText(payload.personAffected) || asText(payload.PersonAffected) || asText(payload.Person);
   const hasDatedTitle = Boolean(parsed.dateOccurred);
   const payloadDate =
     asText(payload.dateOccurred) ||
@@ -146,10 +144,7 @@ function deriveTitle(rowTitle, payload) {
   );
 
   // Keep the title's own date when present so freeform historical stamps stay stable.
-  const occurred =
-    parseDate(parsed.dateOccurred) ||
-    parseDate(payloadDate) ||
-    new Date();
+  const occurred = parseDate(parsed.dateOccurred) || parseDate(payloadDate) || new Date();
   const stamp = formatStamp(occurred);
   return (location ? `${stamp}   ${name} - ${location}` : `${stamp}   ${name}`).slice(0, 500);
 }

@@ -179,7 +179,11 @@ export function FirstAidDirectory({ moduleName = "First Aid" }: { moduleName?: s
               autoComplete="off"
             />
             {query ? (
-              <button className="btn btn-outline-secondary" type="button" onClick={() => setQuery("")}>
+              <button
+                className="btn btn-outline-secondary"
+                type="button"
+                onClick={() => setQuery("")}
+              >
                 Clear
               </button>
             ) : null}
@@ -219,8 +223,8 @@ export function FirstAidDirectory({ moduleName = "First Aid" }: { moduleName?: s
       ) : visible.length === 0 ? (
         <div className="card">
           <div className="card-body text-center text-muted py-5">
-            No personnel match this First Aid view. Use Add certification above, or set CPR /
-            First Aid expiration dates on a personnel file.
+            No personnel match this First Aid view. Use Add certification above, or set CPR / First
+            Aid expiration dates on a personnel file.
           </div>
         </div>
       ) : (
@@ -270,7 +274,10 @@ export function FirstAidDirectory({ moduleName = "First Aid" }: { moduleName?: s
                             Edit
                           </Link>
                         ) : (
-                          <Link className="btn btn-sm btn-outline-secondary" href={personFileHref(person.id)}>
+                          <Link
+                            className="btn btn-sm btn-outline-secondary"
+                            href={personFileHref(person.id)}
+                          >
                             View
                           </Link>
                         )}

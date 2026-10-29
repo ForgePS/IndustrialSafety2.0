@@ -20,10 +20,7 @@ import type { ForgePrincipal } from "@forge/tenant-context";
 import { and, desc, eq, ilike, inArray, isNull, or, sql } from "drizzle-orm";
 import { DATABASE } from "../../tokens.js";
 import { NotificationsService } from "../notifications/notifications.service.js";
-import {
-  employeeNumberWhereClause,
-  pickPreferredPersonnelMatch,
-} from "./employee-number.js";
+import { employeeNumberWhereClause, pickPreferredPersonnelMatch } from "./employee-number.js";
 import { isActivePersonnelStatus } from "./personnel-status.js";
 import {
   openPortalToken,
@@ -226,58 +223,63 @@ export class IndustrialSupplyRequestQrService {
   async listStations(principal: ForgePrincipal, query: ListQuery = {}) {
     const tenantId = this.tenant(principal);
     const { page, pageSize, offset } = pageParams(query);
-    return withTenantTransaction(this.db, tenantId, async (tx) => {
-      const filters = [
-        eq(qrLinks.tenantId, tenantId),
-        eq(qrLinks.targetType, SUPPLY_REQUEST_STATION_TARGET),
-        isNull(qrLinks.archivedAt),
-      ];
-      if (query.status) filters.push(eq(qrLinks.status, query.status.trim()));
-      if (query.siteId) filters.push(eq(qrLinks.siteId, query.siteId.trim()));
-      const where = and(...filters);
-      const [countRow] = await tx
-        .select({ count: sql<number>`count(*)::int` })
-        .from(qrLinks)
-        .where(where);
-      const rows = await tx
-        .select()
-        .from(qrLinks)
-        .where(where)
-        .orderBy(desc(qrLinks.updatedAt))
-        .limit(pageSize)
-        .offset(offset);
+    return withTenantTransaction(
+      this.db,
+      tenantId,
+      async (tx) => {
+        const filters = [
+          eq(qrLinks.tenantId, tenantId),
+          eq(qrLinks.targetType, SUPPLY_REQUEST_STATION_TARGET),
+          isNull(qrLinks.archivedAt),
+        ];
+        if (query.status) filters.push(eq(qrLinks.status, query.status.trim()));
+        if (query.siteId) filters.push(eq(qrLinks.siteId, query.siteId.trim()));
+        const where = and(...filters);
+        const [countRow] = await tx
+          .select({ count: sql<number>`count(*)::int` })
+          .from(qrLinks)
+          .where(where);
+        const rows = await tx
+          .select()
+          .from(qrLinks)
+          .where(where)
+          .orderBy(desc(qrLinks.updatedAt))
+          .limit(pageSize)
+          .offset(offset);
 
-      const ids = rows.map((r) => r.id);
-      const requestCounts = new Map<string, number>();
-      if (ids.length > 0) {
-        const counts = await tx
-          .select({
-            qrLinkId: industrialSupplyRequests.qrLinkId,
-            count: sql<number>`count(*)::int`,
-          })
-          .from(industrialSupplyRequests)
-          .where(
-            and(
-              eq(industrialSupplyRequests.tenantId, tenantId),
-              isNull(industrialSupplyRequests.archivedAt),
-              inArray(industrialSupplyRequests.qrLinkId, ids),
-            ),
-          )
-          .groupBy(industrialSupplyRequests.qrLinkId);
-        for (const row of counts) {
-          if (row.qrLinkId) requestCounts.set(row.qrLinkId, row.count);
+        const ids = rows.map((r) => r.id);
+        const requestCounts = new Map<string, number>();
+        if (ids.length > 0) {
+          const counts = await tx
+            .select({
+              qrLinkId: industrialSupplyRequests.qrLinkId,
+              count: sql<number>`count(*)::int`,
+            })
+            .from(industrialSupplyRequests)
+            .where(
+              and(
+                eq(industrialSupplyRequests.tenantId, tenantId),
+                isNull(industrialSupplyRequests.archivedAt),
+                inArray(industrialSupplyRequests.qrLinkId, ids),
+              ),
+            )
+            .groupBy(industrialSupplyRequests.qrLinkId);
+          for (const row of counts) {
+            if (row.qrLinkId) requestCounts.set(row.qrLinkId, row.count);
+          }
         }
-      }
 
-      return {
-        items: rows.map((row) =>
-          this.mapStation(row, { requestCount: requestCounts.get(row.id) ?? 0 }),
-        ),
-        page,
-        pageSize,
-        total: countRow?.count ?? 0,
-      };
-    }, principal.userId);
+        return {
+          items: rows.map((row) =>
+            this.mapStation(row, { requestCount: requestCounts.get(row.id) ?? 0 }),
+          ),
+          page,
+          pageSize,
+          total: countRow?.count ?? 0,
+        };
+      },
+      principal.userId,
+    );
   }
 
   async createStation(principal: ForgePrincipal, body: Record<string, unknown>) {
@@ -296,269 +298,295 @@ export class IndustrialSupplyRequestQrService {
     const token = generatePublicToken();
     const tokenHash = hashPublicToken(token);
 
-    return withTenantTransaction(this.db, tenantId, async (tx) => {
-      const [site] = await tx
-        .select({ id: industrialSites.id, name: industrialSites.name })
-        .from(industrialSites)
-        .where(
-          and(
-            eq(industrialSites.id, siteId),
-            eq(industrialSites.tenantId, tenantId),
-            isNull(industrialSites.archivedAt),
-          ),
-        )
-        .limit(1);
-      if (!site) throw new ForgeError("NOT_FOUND", "Site not found");
-
-      if (locationId) {
-        const [loc] = await tx
-          .select({ id: industrialSupplyLocations.id })
-          .from(industrialSupplyLocations)
+    return withTenantTransaction(
+      this.db,
+      tenantId,
+      async (tx) => {
+        const [site] = await tx
+          .select({ id: industrialSites.id, name: industrialSites.name })
+          .from(industrialSites)
           .where(
             and(
-              eq(industrialSupplyLocations.id, locationId),
-              eq(industrialSupplyLocations.tenantId, tenantId),
-              isNull(industrialSupplyLocations.archivedAt),
+              eq(industrialSites.id, siteId),
+              eq(industrialSites.tenantId, tenantId),
+              isNull(industrialSites.archivedAt),
             ),
           )
           .limit(1);
-        if (!loc) throw new ForgeError("NOT_FOUND", "Supply location not found");
-      }
+        if (!site) throw new ForgeError("NOT_FOUND", "Site not found");
 
-      const id = createId();
-      const actionConfig = {
-        supplyRequestStation: {
-          ...config,
-          workArea,
-        },
-      };
-      const [row] = await tx
-        .insert(qrLinks)
-        .values({
-          id,
-          tenantId,
-          siteId,
-          departmentId,
-          label: name,
-          description,
-          displayCode: generateDisplayCode(),
-          status: "ACTIVE",
-          accessMode: "PUBLIC_ACTION",
-          targetType: SUPPLY_REQUEST_STATION_TARGET,
-          targetId: locationId,
-          tokenHash,
-          tokenIssuedAt: now,
-          actionConfig,
-          metadata: withSealedPortalToken({}, tenantId, token),
-          activatedAt: now,
-          createdByUserId: principal.userId ?? null,
-          createdAt: now,
-          updatedAt: now,
-        })
-        .returning();
+        if (locationId) {
+          const [loc] = await tx
+            .select({ id: industrialSupplyLocations.id })
+            .from(industrialSupplyLocations)
+            .where(
+              and(
+                eq(industrialSupplyLocations.id, locationId),
+                eq(industrialSupplyLocations.tenantId, tenantId),
+                isNull(industrialSupplyLocations.archivedAt),
+              ),
+            )
+            .limit(1);
+          if (!loc) throw new ForgeError("NOT_FOUND", "Supply location not found");
+        }
 
-      return this.mapStation(row!, { publicToken: token, requestCount: 0 });
-    }, principal.userId);
+        const id = createId();
+        const actionConfig = {
+          supplyRequestStation: {
+            ...config,
+            workArea,
+          },
+        };
+        const [row] = await tx
+          .insert(qrLinks)
+          .values({
+            id,
+            tenantId,
+            siteId,
+            departmentId,
+            label: name,
+            description,
+            displayCode: generateDisplayCode(),
+            status: "ACTIVE",
+            accessMode: "PUBLIC_ACTION",
+            targetType: SUPPLY_REQUEST_STATION_TARGET,
+            targetId: locationId,
+            tokenHash,
+            tokenIssuedAt: now,
+            actionConfig,
+            metadata: withSealedPortalToken({}, tenantId, token),
+            activatedAt: now,
+            createdByUserId: principal.userId ?? null,
+            createdAt: now,
+            updatedAt: now,
+          })
+          .returning();
+
+        return this.mapStation(row!, { publicToken: token, requestCount: 0 });
+      },
+      principal.userId,
+    );
   }
 
   async updateStation(principal: ForgePrincipal, id: string, body: Record<string, unknown>) {
     const tenantId = this.tenant(principal);
-    return withTenantTransaction(this.db, tenantId, async (tx) => {
-      const [existing] = await tx
-        .select()
-        .from(qrLinks)
-        .where(
-          and(
-            eq(qrLinks.id, id),
-            eq(qrLinks.tenantId, tenantId),
-            eq(qrLinks.targetType, SUPPLY_REQUEST_STATION_TARGET),
-            isNull(qrLinks.archivedAt),
-          ),
-        )
-        .limit(1);
-      if (!existing) throw new ForgeError("NOT_FOUND", "Supply request QR not found");
+    return withTenantTransaction(
+      this.db,
+      tenantId,
+      async (tx) => {
+        const [existing] = await tx
+          .select()
+          .from(qrLinks)
+          .where(
+            and(
+              eq(qrLinks.id, id),
+              eq(qrLinks.tenantId, tenantId),
+              eq(qrLinks.targetType, SUPPLY_REQUEST_STATION_TARGET),
+              isNull(qrLinks.archivedAt),
+            ),
+          )
+          .limit(1);
+        if (!existing) throw new ForgeError("NOT_FOUND", "Supply request QR not found");
 
-      const patch: Record<string, unknown> = { updatedAt: new Date() };
-      if (body.name !== undefined || body.label !== undefined) {
-        const name = asString(body.name || body.label);
-        if (!name) throw new ForgeError("VALIDATION_FAILED", "QR name is required");
-        patch.label = name;
-      }
-      if (body.description !== undefined) patch.description = asOptionalString(body.description);
-      if (body.siteId !== undefined) {
-        const siteId = asOptionalString(body.siteId);
-        if (!siteId) throw new ForgeError("VALIDATION_FAILED", "Site is required");
-        patch.siteId = siteId;
-      }
-      if (body.departmentId !== undefined) {
-        patch.departmentId = asOptionalString(body.departmentId);
-      }
-      if (body.locationId !== undefined || body.inventoryLocationId !== undefined) {
-        patch.targetId = asOptionalString(body.locationId ?? body.inventoryLocationId);
-      }
-      if (body.config !== undefined || body.workArea !== undefined) {
-        const prev = parseStationConfig(existing.actionConfig);
-        const next = parseStationConfig({
-          ...prev,
-          ...(typeof body.config === "object" && body.config ? body.config : {}),
-          workArea:
-            body.workArea !== undefined
-              ? asOptionalString(body.workArea)
-              : (existing.actionConfig as Record<string, unknown>)?.supplyRequestStation &&
-                  typeof (existing.actionConfig as Record<string, unknown>).supplyRequestStation ===
-                    "object"
-                ? asOptionalString(
-                    (
-                      (existing.actionConfig as Record<string, unknown>)
-                        .supplyRequestStation as Record<string, unknown>
-                    ).workArea,
-                  )
-                : null,
-        });
-        patch.actionConfig = { supplyRequestStation: next };
-      }
+        const patch: Record<string, unknown> = { updatedAt: new Date() };
+        if (body.name !== undefined || body.label !== undefined) {
+          const name = asString(body.name || body.label);
+          if (!name) throw new ForgeError("VALIDATION_FAILED", "QR name is required");
+          patch.label = name;
+        }
+        if (body.description !== undefined) patch.description = asOptionalString(body.description);
+        if (body.siteId !== undefined) {
+          const siteId = asOptionalString(body.siteId);
+          if (!siteId) throw new ForgeError("VALIDATION_FAILED", "Site is required");
+          patch.siteId = siteId;
+        }
+        if (body.departmentId !== undefined) {
+          patch.departmentId = asOptionalString(body.departmentId);
+        }
+        if (body.locationId !== undefined || body.inventoryLocationId !== undefined) {
+          patch.targetId = asOptionalString(body.locationId ?? body.inventoryLocationId);
+        }
+        if (body.config !== undefined || body.workArea !== undefined) {
+          const prev = parseStationConfig(existing.actionConfig);
+          const next = parseStationConfig({
+            ...prev,
+            ...(typeof body.config === "object" && body.config ? body.config : {}),
+            workArea:
+              body.workArea !== undefined
+                ? asOptionalString(body.workArea)
+                : (existing.actionConfig as Record<string, unknown>)?.supplyRequestStation &&
+                    typeof (existing.actionConfig as Record<string, unknown>)
+                      .supplyRequestStation === "object"
+                  ? asOptionalString(
+                      (
+                        (existing.actionConfig as Record<string, unknown>)
+                          .supplyRequestStation as Record<string, unknown>
+                      ).workArea,
+                    )
+                  : null,
+          });
+          patch.actionConfig = { supplyRequestStation: next };
+        }
 
-      const [row] = await tx
-        .update(qrLinks)
-        .set(patch)
-        .where(eq(qrLinks.id, id))
-        .returning();
-      return this.mapStation(row!);
-    }, principal.userId);
+        const [row] = await tx.update(qrLinks).set(patch).where(eq(qrLinks.id, id)).returning();
+        return this.mapStation(row!);
+      },
+      principal.userId,
+    );
   }
 
   async setStationStatus(principal: ForgePrincipal, id: string, status: "ACTIVE" | "INACTIVE") {
     const tenantId = this.tenant(principal);
-    return withTenantTransaction(this.db, tenantId, async (tx) => {
-      const now = new Date();
-      const [row] = await tx
-        .update(qrLinks)
-        .set({
-          status,
-          deactivatedAt: status === "INACTIVE" ? now : null,
-          activatedAt: status === "ACTIVE" ? now : undefined,
-          updatedAt: now,
-        })
-        .where(
-          and(
-            eq(qrLinks.id, id),
-            eq(qrLinks.tenantId, tenantId),
-            eq(qrLinks.targetType, SUPPLY_REQUEST_STATION_TARGET),
-            isNull(qrLinks.archivedAt),
-          ),
-        )
-        .returning();
-      if (!row) throw new ForgeError("NOT_FOUND", "Supply request QR not found");
-      return this.mapStation(row);
-    }, principal.userId);
+    return withTenantTransaction(
+      this.db,
+      tenantId,
+      async (tx) => {
+        const now = new Date();
+        const [row] = await tx
+          .update(qrLinks)
+          .set({
+            status,
+            deactivatedAt: status === "INACTIVE" ? now : null,
+            activatedAt: status === "ACTIVE" ? now : undefined,
+            updatedAt: now,
+          })
+          .where(
+            and(
+              eq(qrLinks.id, id),
+              eq(qrLinks.tenantId, tenantId),
+              eq(qrLinks.targetType, SUPPLY_REQUEST_STATION_TARGET),
+              isNull(qrLinks.archivedAt),
+            ),
+          )
+          .returning();
+        if (!row) throw new ForgeError("NOT_FOUND", "Supply request QR not found");
+        return this.mapStation(row);
+      },
+      principal.userId,
+    );
   }
 
   async regenerateStationToken(principal: ForgePrincipal, id: string) {
     const tenantId = this.tenant(principal);
-    return withTenantTransaction(this.db, tenantId, async (tx) => {
-      const [existing] = await tx
-        .select()
-        .from(qrLinks)
-        .where(
-          and(
-            eq(qrLinks.id, id),
-            eq(qrLinks.tenantId, tenantId),
-            eq(qrLinks.targetType, SUPPLY_REQUEST_STATION_TARGET),
-            isNull(qrLinks.archivedAt),
-          ),
-        )
-        .limit(1);
-      if (!existing) throw new ForgeError("NOT_FOUND", "Supply request QR not found");
-      const token = generatePublicToken();
-      const now = new Date();
-      const [row] = await tx
-        .update(qrLinks)
-        .set({
-          tokenHash: hashPublicToken(token),
-          tokenIssuedAt: now,
-          metadata: withSealedPortalToken(
-            withoutSealedPortalToken((existing.metadata ?? {}) as Record<string, unknown>),
-            tenantId,
-            token,
-          ),
-          updatedAt: now,
-        })
-        .where(eq(qrLinks.id, id))
-        .returning();
-      return this.mapStation(row!, { publicToken: token });
-    }, principal.userId);
+    return withTenantTransaction(
+      this.db,
+      tenantId,
+      async (tx) => {
+        const [existing] = await tx
+          .select()
+          .from(qrLinks)
+          .where(
+            and(
+              eq(qrLinks.id, id),
+              eq(qrLinks.tenantId, tenantId),
+              eq(qrLinks.targetType, SUPPLY_REQUEST_STATION_TARGET),
+              isNull(qrLinks.archivedAt),
+            ),
+          )
+          .limit(1);
+        if (!existing) throw new ForgeError("NOT_FOUND", "Supply request QR not found");
+        const token = generatePublicToken();
+        const now = new Date();
+        const [row] = await tx
+          .update(qrLinks)
+          .set({
+            tokenHash: hashPublicToken(token),
+            tokenIssuedAt: now,
+            metadata: withSealedPortalToken(
+              withoutSealedPortalToken((existing.metadata ?? {}) as Record<string, unknown>),
+              tenantId,
+              token,
+            ),
+            updatedAt: now,
+          })
+          .where(eq(qrLinks.id, id))
+          .returning();
+        return this.mapStation(row!, { publicToken: token });
+      },
+      principal.userId,
+    );
   }
 
   async archiveStation(principal: ForgePrincipal, id: string) {
     const tenantId = this.tenant(principal);
-    return withTenantTransaction(this.db, tenantId, async (tx) => {
-      const [countRow] = await tx
-        .select({ count: sql<number>`count(*)::int` })
-        .from(industrialSupplyRequests)
-        .where(
-          and(
-            eq(industrialSupplyRequests.tenantId, tenantId),
-            eq(industrialSupplyRequests.qrLinkId, id),
-            isNull(industrialSupplyRequests.archivedAt),
-          ),
-        );
-      if ((countRow?.count ?? 0) > 0) {
-        throw new ForgeError(
-          "CONFLICT",
-          "This QR has historical requests. Disable it instead of deleting.",
-        );
-      }
-      const now = new Date();
-      const [row] = await tx
-        .update(qrLinks)
-        .set({ archivedAt: now, status: "ARCHIVED", deactivatedAt: now, updatedAt: now })
-        .where(
-          and(
-            eq(qrLinks.id, id),
-            eq(qrLinks.tenantId, tenantId),
-            eq(qrLinks.targetType, SUPPLY_REQUEST_STATION_TARGET),
-            isNull(qrLinks.archivedAt),
-          ),
-        )
-        .returning();
-      if (!row) throw new ForgeError("NOT_FOUND", "Supply request QR not found");
-      return this.mapStation(row);
-    }, principal.userId);
+    return withTenantTransaction(
+      this.db,
+      tenantId,
+      async (tx) => {
+        const [countRow] = await tx
+          .select({ count: sql<number>`count(*)::int` })
+          .from(industrialSupplyRequests)
+          .where(
+            and(
+              eq(industrialSupplyRequests.tenantId, tenantId),
+              eq(industrialSupplyRequests.qrLinkId, id),
+              isNull(industrialSupplyRequests.archivedAt),
+            ),
+          );
+        if ((countRow?.count ?? 0) > 0) {
+          throw new ForgeError(
+            "CONFLICT",
+            "This QR has historical requests. Disable it instead of deleting.",
+          );
+        }
+        const now = new Date();
+        const [row] = await tx
+          .update(qrLinks)
+          .set({ archivedAt: now, status: "ARCHIVED", deactivatedAt: now, updatedAt: now })
+          .where(
+            and(
+              eq(qrLinks.id, id),
+              eq(qrLinks.tenantId, tenantId),
+              eq(qrLinks.targetType, SUPPLY_REQUEST_STATION_TARGET),
+              isNull(qrLinks.archivedAt),
+            ),
+          )
+          .returning();
+        if (!row) throw new ForgeError("NOT_FOUND", "Supply request QR not found");
+        return this.mapStation(row);
+      },
+      principal.userId,
+    );
   }
 
   async stationPng(principal: ForgePrincipal, id: string, appBaseUrl?: string) {
     const tenantId = this.tenant(principal);
-    return withTenantTransaction(this.db, tenantId, async (tx) => {
-      const [row] = await tx
-        .select()
-        .from(qrLinks)
-        .where(
-          and(
-            eq(qrLinks.id, id),
-            eq(qrLinks.tenantId, tenantId),
-            eq(qrLinks.targetType, SUPPLY_REQUEST_STATION_TARGET),
-            isNull(qrLinks.archivedAt),
-          ),
-        )
-        .limit(1);
-      if (!row) throw new ForgeError("NOT_FOUND", "Supply request QR not found");
-      const sealed = readSealedPortalToken((row.metadata ?? {}) as Record<string, unknown>);
-      const token = sealed ? openPortalToken(tenantId, sealed) : null;
-      if (!token) {
-        throw new ForgeError(
-          "VALIDATION_FAILED",
-          "No printable token available. Regenerate the QR token first.",
-        );
-      }
-      const url = this.requestPortalUrl(token, appBaseUrl);
-      const png = await qrCodePngBuffer(url, 512);
-      return {
-        pngBase64: png.toString("base64"),
-        publicUrl: url,
-        label: row.label,
-        siteId: row.siteId,
-      };
-    }, principal.userId);
+    return withTenantTransaction(
+      this.db,
+      tenantId,
+      async (tx) => {
+        const [row] = await tx
+          .select()
+          .from(qrLinks)
+          .where(
+            and(
+              eq(qrLinks.id, id),
+              eq(qrLinks.tenantId, tenantId),
+              eq(qrLinks.targetType, SUPPLY_REQUEST_STATION_TARGET),
+              isNull(qrLinks.archivedAt),
+            ),
+          )
+          .limit(1);
+        if (!row) throw new ForgeError("NOT_FOUND", "Supply request QR not found");
+        const sealed = readSealedPortalToken((row.metadata ?? {}) as Record<string, unknown>);
+        const token = sealed ? openPortalToken(tenantId, sealed) : null;
+        if (!token) {
+          throw new ForgeError(
+            "VALIDATION_FAILED",
+            "No printable token available. Regenerate the QR token first.",
+          );
+        }
+        const url = this.requestPortalUrl(token, appBaseUrl);
+        const png = await qrCodePngBuffer(url, 512);
+        return {
+          pngBase64: png.toString("base64"),
+          publicUrl: url,
+          label: row.label,
+          siteId: row.siteId,
+        };
+      },
+      principal.userId,
+    );
   }
 
   private async resolveTokenTenant(token: string): Promise<{
@@ -851,11 +879,9 @@ export class IndustrialSupplyRequestQrService {
           let quantityAvailable: number | null = null;
           if (config.inventoryVisibility === "EXACT") {
             quantityAvailable = qty ?? 0;
-            availability =
-              (qty ?? 0) <= 0 ? "OUT" : (qty ?? 0) <= 5 ? "LOW" : "AVAILABLE";
+            availability = (qty ?? 0) <= 0 ? "OUT" : (qty ?? 0) <= 5 ? "LOW" : "AVAILABLE";
           } else if (config.inventoryVisibility === "AVAILABILITY") {
-            availability =
-              (qty ?? 0) <= 0 ? "OUT" : (qty ?? 0) <= 5 ? "LOW" : "AVAILABLE";
+            availability = (qty ?? 0) <= 0 ? "OUT" : (qty ?? 0) <= 5 ? "LOW" : "AVAILABLE";
           }
           return {
             id: item.id,
@@ -964,7 +990,11 @@ export class IndustrialSupplyRequestQrService {
             .limit(1);
           if (!person) throw new ForgeError("VALIDATION_FAILED", "Employee not found");
         }
-      } else if (requestorType === "CONTRACTOR" || requestorType === "TEMPORARY" || requestorType === "VISITOR") {
+      } else if (
+        requestorType === "CONTRACTOR" ||
+        requestorType === "TEMPORARY" ||
+        requestorType === "VISITOR"
+      ) {
         if (!config.allowContractors) {
           throw new ForgeError("VALIDATION_FAILED", "Contractor requests are not enabled");
         }
@@ -1201,9 +1231,7 @@ export class IndustrialSupplyRequestQrService {
     if (recipients.size === 0) return;
 
     const urgent = input.priority === "URGENT";
-    const title = urgent
-      ? "URGENT Safety Supply Request"
-      : "New Safety Supply Request";
+    const title = urgent ? "URGENT Safety Supply Request" : "New Safety Supply Request";
     const body = `${input.requestNumber}: ${input.lineCount} item(s) requested.`;
     const href = `/modules/safety-supplies?tab=requests&id=${encodeURIComponent(input.requestId)}`;
 
@@ -1243,145 +1271,150 @@ export class IndustrialSupplyRequestQrService {
 
   async requestAnalytics(principal: ForgePrincipal) {
     const tenantId = this.tenant(principal);
-    return withTenantTransaction(this.db, tenantId, async (tx) => {
-      const openStatuses = [
-        "SUBMITTED",
-        "PENDING",
-        "UNDER_REVIEW",
-        "APPROVED",
-        "PARTIALLY_APPROVED",
-        "READY_FOR_PICKUP",
-        "PARTIALLY_FULFILLED",
-        "BACKORDERED",
-      ];
-      const [open] = await tx
-        .select({ count: sql<number>`count(*)::int` })
-        .from(industrialSupplyRequests)
-        .where(
-          and(
-            eq(industrialSupplyRequests.tenantId, tenantId),
-            isNull(industrialSupplyRequests.archivedAt),
-            inArrayStatus(openStatuses),
-          ),
-        );
-      const [urgent] = await tx
-        .select({ count: sql<number>`count(*)::int` })
-        .from(industrialSupplyRequests)
-        .where(
-          and(
-            eq(industrialSupplyRequests.tenantId, tenantId),
-            isNull(industrialSupplyRequests.archivedAt),
-            eq(industrialSupplyRequests.priority, "URGENT"),
-            inArrayStatus(openStatuses),
-          ),
-        );
-      const [ready] = await tx
-        .select({ count: sql<number>`count(*)::int` })
-        .from(industrialSupplyRequests)
-        .where(
-          and(
-            eq(industrialSupplyRequests.tenantId, tenantId),
-            isNull(industrialSupplyRequests.archivedAt),
-            eq(industrialSupplyRequests.status, "READY_FOR_PICKUP"),
-          ),
-        );
-      const startOfDay = new Date();
-      startOfDay.setHours(0, 0, 0, 0);
-      const [fulfilledToday] = await tx
-        .select({ count: sql<number>`count(*)::int` })
-        .from(industrialSupplyRequests)
-        .where(
-          and(
-            eq(industrialSupplyRequests.tenantId, tenantId),
-            isNull(industrialSupplyRequests.archivedAt),
-            eq(industrialSupplyRequests.status, "FULFILLED"),
-            sql`${industrialSupplyRequests.fulfilledAt} >= ${startOfDay}`,
-          ),
-        );
+    return withTenantTransaction(
+      this.db,
+      tenantId,
+      async (tx) => {
+        const openStatuses = [
+          "SUBMITTED",
+          "PENDING",
+          "UNDER_REVIEW",
+          "APPROVED",
+          "PARTIALLY_APPROVED",
+          "READY_FOR_PICKUP",
+          "PARTIALLY_FULFILLED",
+          "BACKORDERED",
+        ];
+        const [open] = await tx
+          .select({ count: sql<number>`count(*)::int` })
+          .from(industrialSupplyRequests)
+          .where(
+            and(
+              eq(industrialSupplyRequests.tenantId, tenantId),
+              isNull(industrialSupplyRequests.archivedAt),
+              inArrayStatus(openStatuses),
+            ),
+          );
+        const [urgent] = await tx
+          .select({ count: sql<number>`count(*)::int` })
+          .from(industrialSupplyRequests)
+          .where(
+            and(
+              eq(industrialSupplyRequests.tenantId, tenantId),
+              isNull(industrialSupplyRequests.archivedAt),
+              eq(industrialSupplyRequests.priority, "URGENT"),
+              inArrayStatus(openStatuses),
+            ),
+          );
+        const [ready] = await tx
+          .select({ count: sql<number>`count(*)::int` })
+          .from(industrialSupplyRequests)
+          .where(
+            and(
+              eq(industrialSupplyRequests.tenantId, tenantId),
+              isNull(industrialSupplyRequests.archivedAt),
+              eq(industrialSupplyRequests.status, "READY_FOR_PICKUP"),
+            ),
+          );
+        const startOfDay = new Date();
+        startOfDay.setHours(0, 0, 0, 0);
+        const [fulfilledToday] = await tx
+          .select({ count: sql<number>`count(*)::int` })
+          .from(industrialSupplyRequests)
+          .where(
+            and(
+              eq(industrialSupplyRequests.tenantId, tenantId),
+              isNull(industrialSupplyRequests.archivedAt),
+              eq(industrialSupplyRequests.status, "FULFILLED"),
+              sql`${industrialSupplyRequests.fulfilledAt} >= ${startOfDay}`,
+            ),
+          );
 
-      const stations = await tx
-        .select({
-          id: qrLinks.id,
-          label: qrLinks.label,
-          scanCount: qrLinks.scanCount,
-        })
-        .from(qrLinks)
-        .where(
-          and(
-            eq(qrLinks.tenantId, tenantId),
-            eq(qrLinks.targetType, SUPPLY_REQUEST_STATION_TARGET),
-            isNull(qrLinks.archivedAt),
-          ),
-        )
-        .orderBy(desc(qrLinks.scanCount))
-        .limit(10);
+        const stations = await tx
+          .select({
+            id: qrLinks.id,
+            label: qrLinks.label,
+            scanCount: qrLinks.scanCount,
+          })
+          .from(qrLinks)
+          .where(
+            and(
+              eq(qrLinks.tenantId, tenantId),
+              eq(qrLinks.targetType, SUPPLY_REQUEST_STATION_TARGET),
+              isNull(qrLinks.archivedAt),
+            ),
+          )
+          .orderBy(desc(qrLinks.scanCount))
+          .limit(10);
 
-      const stationIds = stations.map((s) => s.id);
-      const requestCounts =
-        stationIds.length === 0
-          ? []
-          : await tx
-              .select({
-                qrLinkId: industrialSupplyRequests.qrLinkId,
-                count: sql<number>`count(*)::int`,
-              })
-              .from(industrialSupplyRequests)
-              .where(
-                and(
-                  eq(industrialSupplyRequests.tenantId, tenantId),
-                  isNull(industrialSupplyRequests.archivedAt),
-                  inArray(industrialSupplyRequests.qrLinkId, stationIds),
-                ),
-              )
-              .groupBy(industrialSupplyRequests.qrLinkId);
+        const stationIds = stations.map((s) => s.id);
+        const requestCounts =
+          stationIds.length === 0
+            ? []
+            : await tx
+                .select({
+                  qrLinkId: industrialSupplyRequests.qrLinkId,
+                  count: sql<number>`count(*)::int`,
+                })
+                .from(industrialSupplyRequests)
+                .where(
+                  and(
+                    eq(industrialSupplyRequests.tenantId, tenantId),
+                    isNull(industrialSupplyRequests.archivedAt),
+                    inArray(industrialSupplyRequests.qrLinkId, stationIds),
+                  ),
+                )
+                .groupBy(industrialSupplyRequests.qrLinkId);
 
-      const countByStation = new Map(
-        requestCounts.map((row) => [row.qrLinkId as string, row.count ?? 0]),
-      );
-
-      const [scanAgg] = await tx
-        .select({
-          scans: sql<number>`coalesce(sum(${qrLinks.scanCount}), 0)::int`,
-        })
-        .from(qrLinks)
-        .where(
-          and(
-            eq(qrLinks.tenantId, tenantId),
-            eq(qrLinks.targetType, SUPPLY_REQUEST_STATION_TARGET),
-            isNull(qrLinks.archivedAt),
-          ),
+        const countByStation = new Map(
+          requestCounts.map((row) => [row.qrLinkId as string, row.count ?? 0]),
         );
 
-      const [qrReqAgg] = await tx
-        .select({ count: sql<number>`count(*)::int` })
-        .from(industrialSupplyRequests)
-        .where(
-          and(
-            eq(industrialSupplyRequests.tenantId, tenantId),
-            isNull(industrialSupplyRequests.archivedAt),
-            eq(industrialSupplyRequests.source, "QR_CODE"),
-          ),
-        );
+        const [scanAgg] = await tx
+          .select({
+            scans: sql<number>`coalesce(sum(${qrLinks.scanCount}), 0)::int`,
+          })
+          .from(qrLinks)
+          .where(
+            and(
+              eq(qrLinks.tenantId, tenantId),
+              eq(qrLinks.targetType, SUPPLY_REQUEST_STATION_TARGET),
+              isNull(qrLinks.archivedAt),
+            ),
+          );
 
-      const totalScans = scanAgg?.scans ?? 0;
-      const totalQrRequests = qrReqAgg?.count ?? 0;
+        const [qrReqAgg] = await tx
+          .select({ count: sql<number>`count(*)::int` })
+          .from(industrialSupplyRequests)
+          .where(
+            and(
+              eq(industrialSupplyRequests.tenantId, tenantId),
+              isNull(industrialSupplyRequests.archivedAt),
+              eq(industrialSupplyRequests.source, "QR_CODE"),
+            ),
+          );
 
-      return {
-        openRequests: open?.count ?? 0,
-        urgentRequests: urgent?.count ?? 0,
-        readyForPickup: ready?.count ?? 0,
-        fulfilledToday: fulfilledToday?.count ?? 0,
-        totalScans,
-        totalQrRequests,
-        conversionRate: totalScans > 0 ? totalQrRequests / totalScans : null,
-        topQrStations: stations.map((s) => ({
-          id: s.id,
-          name: s.label,
-          scanCount: s.scanCount,
-          requestCount: countByStation.get(s.id) ?? 0,
-        })),
-      };
-    }, principal.userId);
+        const totalScans = scanAgg?.scans ?? 0;
+        const totalQrRequests = qrReqAgg?.count ?? 0;
+
+        return {
+          openRequests: open?.count ?? 0,
+          urgentRequests: urgent?.count ?? 0,
+          readyForPickup: ready?.count ?? 0,
+          fulfilledToday: fulfilledToday?.count ?? 0,
+          totalScans,
+          totalQrRequests,
+          conversionRate: totalScans > 0 ? totalQrRequests / totalScans : null,
+          topQrStations: stations.map((s) => ({
+            id: s.id,
+            name: s.label,
+            scanCount: s.scanCount,
+            requestCount: countByStation.get(s.id) ?? 0,
+          })),
+        };
+      },
+      principal.userId,
+    );
   }
 }
 

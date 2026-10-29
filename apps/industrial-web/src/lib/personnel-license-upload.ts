@@ -88,7 +88,9 @@ export function licenseMimeFromUpload(raw: unknown): string | null {
   const row = Array.isArray(raw) ? raw[0] : raw;
   if (!row || typeof row !== "object" || Array.isArray(row)) return null;
   const entry = row as Record<string, unknown>;
-  const mime = String(entry.contentType ?? entry.mimeType ?? "").trim().toLowerCase();
+  const mime = String(entry.contentType ?? entry.mimeType ?? "")
+    .trim()
+    .toLowerCase();
   return mime || null;
 }
 

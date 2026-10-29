@@ -18,13 +18,7 @@ export type WalkthroughSessionState = {
 };
 
 export type WalkthroughExportStatus =
-  | "queued"
-  | "preparing"
-  | "rendering"
-  | "encoding"
-  | "uploading"
-  | "completed"
-  | "failed";
+  "queued" | "preparing" | "rendering" | "encoding" | "uploading" | "completed" | "failed";
 
 export type WalkthroughExport = {
   id: string;

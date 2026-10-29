@@ -115,7 +115,11 @@ describe("MK-S8 shell chrome", () => {
     expect(screen.getByText("Unauthorized")).toBeTruthy();
 
     rerender(
-      <ForgeShellState state="disabled_entitlement" title="Not entitled" description="Module off" />,
+      <ForgeShellState
+        state="disabled_entitlement"
+        title="Not entitled"
+        description="Module off"
+      />,
     );
     expect(screen.getByText("Not entitled")).toBeTruthy();
     expect(screen.getByText("Module off")).toBeTruthy();

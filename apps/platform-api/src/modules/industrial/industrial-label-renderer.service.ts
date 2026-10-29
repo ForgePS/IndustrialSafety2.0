@@ -8,10 +8,7 @@ import { createHash } from "node:crypto";
 import PDFDocument from "pdfkit";
 import { qrCodePngBuffer } from "./qr-svg.js";
 import { code128PngBuffer, code128Svg } from "./barcode-code128.js";
-import {
-  resolveElementContent,
-  type LabelElement,
-} from "./industrial-label-elements.js";
+import { resolveElementContent, type LabelElement } from "./industrial-label-elements.js";
 
 export type LabelRenderResult = {
   buffer: Buffer;
@@ -162,16 +159,15 @@ function buildPreviewSvg(opts: {
 }): string {
   const w = inchesToPixels(opts.widthInches, opts.dpi);
   const h = inchesToPixels(opts.heightInches, opts.dpi);
-  const pad = Math.max(
-    Math.round(opts.dpi * 0.12),
-    Math.round(Math.min(w, h) * 0.07),
-  );
+  const pad = Math.max(Math.round(opts.dpi * 0.12), Math.round(Math.min(w, h) * 0.07));
   const textMaxW = Math.max(24, w - pad * 2);
   const textScale = clampScale(opts.textScale);
   const qrScale = clampScale(opts.qrScale);
   const hasQr = Boolean(opts.qrDataUri);
   const font = "DejaVu Sans, Arial, Helvetica, sans-serif";
-  const brand = String(opts.brand ?? "").trim().toUpperCase();
+  const brand = String(opts.brand ?? "")
+    .trim()
+    .toUpperCase();
   const subtitle = String(opts.subtitle ?? "").trim();
   const caption = String(opts.caption ?? "").trim();
   const sourceLines = opts.lines.slice(0, 4);
@@ -225,14 +221,20 @@ function buildPreviewSvg(opts: {
     const brandH = brandRows.length > 0 ? rowStackH(brandRows, bSize, 2) + gapSm : 0;
     const titleH = rowStackH(titleRows, tSize, Math.round(tSize * 0.12));
     const subtitleH =
-      subtitleRows.length > 0 ? gapSm + rowStackH(subtitleRows, lSize, Math.round(lSize * 0.25)) : 0;
+      subtitleRows.length > 0
+        ? gapSm + rowStackH(subtitleRows, lSize, Math.round(lSize * 0.25))
+        : 0;
     const detailsH =
-      cappedDetails.length > 0 ? gapSm + rowStackH(cappedDetails, lSize, Math.round(lSize * 0.25)) : 0;
+      cappedDetails.length > 0
+        ? gapSm + rowStackH(cappedDetails, lSize, Math.round(lSize * 0.25))
+        : 0;
     const qrH = hasQr ? gapMd + qr : 0;
     const captionH =
       captionRows.length > 0 ? gapSm + rowStackH(captionRows, cSize, Math.round(cSize * 0.2)) : 0;
     const footerH =
-      cappedFooter.length > 0 ? gapMd + rowStackH(cappedFooter, fSize, Math.round(fSize * 0.45)) : 0;
+      cappedFooter.length > 0
+        ? gapMd + rowStackH(cappedFooter, fSize, Math.round(fSize * 0.45))
+        : 0;
     const contentH = brandH + titleH + subtitleH + detailsH + qrH + captionH + footerH;
     return {
       brandRows,
@@ -642,9 +644,7 @@ export class IndustrialLabelRendererService {
       if (type === "rectangle") {
         const stroke = Math.max(1, Math.round(((el.strokeWidthPt ?? 1) * dpi) / 72));
         if (el.fill) {
-          els.push(
-            `<rect x="${x}" y="${y}" width="${w}" height="${h}" fill="#111111"/>`,
-          );
+          els.push(`<rect x="${x}" y="${y}" width="${w}" height="${h}" fill="#111111"/>`);
         } else {
           els.push(
             `<rect x="${x}" y="${y}" width="${w}" height="${h}" fill="none" stroke="#111111" stroke-width="${stroke}"/>`,
@@ -702,10 +702,8 @@ export class IndustrialLabelRendererService {
       // text / dynamicText
       const fontPx = Math.max(8, Math.round(((el.fontSizePt ?? 12) * dpi) / 72));
       const weight = el.fontWeight === "bold" ? "700" : "400";
-      const anchor =
-        el.align === "center" ? "middle" : el.align === "right" ? "end" : "start";
-      const tx =
-        el.align === "center" ? x + w / 2 : el.align === "right" ? x + w : x;
+      const anchor = el.align === "center" ? "middle" : el.align === "right" ? "end" : "start";
+      const tx = el.align === "center" ? x + w / 2 : el.align === "right" ? x + w : x;
       const lines = wrapText(content, w, fontPx, el.fontWeight === "bold");
       let ty = y + fontPx;
       for (const line of lines) {
@@ -804,7 +802,10 @@ export class IndustrialLabelRendererService {
     }
 
     const text = stripHtmlFallback(html);
-    const lines = text.split(/\n+/).map((l) => l.trim()).filter(Boolean);
+    const lines = text
+      .split(/\n+/)
+      .map((l) => l.trim())
+      .filter(Boolean);
     const title = lines[0] || "Forge Label";
     const rest = lines.slice(1, 13);
     return this.renderLabel({

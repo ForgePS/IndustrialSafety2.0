@@ -17,9 +17,27 @@ import {
 } from "@/lib/reporting-api";
 
 const KPI_META = [
-  { id: "saved", label: "Saved reports", href: "/reporting/saved/", icon: "bx-bookmark", key: "savedReports" as const },
-  { id: "scheduled", label: "Scheduled", href: "/reporting/scheduled/", icon: "bx-calendar", key: "scheduled" as const },
-  { id: "runs", label: "Runs this month", href: "/reporting/history/", icon: "bx-play-circle", key: "runsThisMonth" as const },
+  {
+    id: "saved",
+    label: "Saved reports",
+    href: "/reporting/saved/",
+    icon: "bx-bookmark",
+    key: "savedReports" as const,
+  },
+  {
+    id: "scheduled",
+    label: "Scheduled",
+    href: "/reporting/scheduled/",
+    icon: "bx-calendar",
+    key: "scheduled" as const,
+  },
+  {
+    id: "runs",
+    label: "Runs this month",
+    href: "/reporting/history/",
+    icon: "bx-play-circle",
+    key: "runsThisMonth" as const,
+  },
   {
     id: "compliance",
     label: "Compliance",
@@ -27,8 +45,20 @@ const KPI_META = [
     icon: "bx-shield-quarter",
     key: "complianceBuiltinCount" as const,
   },
-  { id: "exports", label: "Recent exports", href: "/reporting/exports/", icon: "bx-export", key: "recentExports" as const },
-  { id: "library", label: "Library reports", href: "/reporting/library/", icon: "bx-library", key: "libraryCount" as const },
+  {
+    id: "exports",
+    label: "Recent exports",
+    href: "/reporting/exports/",
+    icon: "bx-export",
+    key: "recentExports" as const,
+  },
+  {
+    id: "library",
+    label: "Library reports",
+    href: "/reporting/library/",
+    icon: "bx-library",
+    key: "libraryCount" as const,
+  },
 ] as const;
 
 export default function ReportingOverviewPage() {
@@ -134,7 +164,9 @@ export default function ReportingOverviewPage() {
                   <span className="text-muted small">{card.label}</span>
                   <i className={`bx ${card.icon} text-muted`} aria-hidden />
                 </div>
-                <p className="display-6 mb-0 lh-1">{loading && !overview ? "…" : kpiValue(card.key)}</p>
+                <p className="display-6 mb-0 lh-1">
+                  {loading && !overview ? "…" : kpiValue(card.key)}
+                </p>
               </div>
             </Link>
           </div>
@@ -164,10 +196,15 @@ export default function ReportingOverviewPage() {
               ) : (
                 <ul className="list-unstyled mb-0">
                   {favorites.map((fav) => (
-                    <li key={fav.key} className="d-flex justify-content-between align-items-center py-2 border-bottom">
+                    <li
+                      key={fav.key}
+                      className="d-flex justify-content-between align-items-center py-2 border-bottom"
+                    >
                       <div>
                         <div className="fw-medium">{fav.name}</div>
-                        <div className="small text-muted">{fav.module ?? fav.category ?? fav.key}</div>
+                        <div className="small text-muted">
+                          {fav.module ?? fav.category ?? fav.key}
+                        </div>
                       </div>
                       <Link
                         href={`/reporting/library/?q=${encodeURIComponent(fav.name)}`}
@@ -199,7 +236,10 @@ export default function ReportingOverviewPage() {
               ) : (
                 <ul className="list-unstyled mb-0">
                   {recentRuns.map((run) => (
-                    <li key={run.id} className="d-flex justify-content-between align-items-center py-2 border-bottom">
+                    <li
+                      key={run.id}
+                      className="d-flex justify-content-between align-items-center py-2 border-bottom"
+                    >
                       <div>
                         <div className="fw-medium">{run.reportName}</div>
                         <div className="small text-muted">
@@ -263,7 +303,9 @@ export default function ReportingOverviewPage() {
           <div className="d-flex align-items-center justify-content-between mb-3">
             <div>
               <h2 className="h6 mb-1">Report library preview</h2>
-              <p className="text-muted small mb-0">Built-in and saved reports available to run and export.</p>
+              <p className="text-muted small mb-0">
+                Built-in and saved reports available to run and export.
+              </p>
             </div>
             <Link href="/reporting/library/" className="btn btn-sm btn-outline-primary">
               Open library

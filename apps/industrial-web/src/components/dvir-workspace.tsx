@@ -8,11 +8,7 @@ import { SignaturePad } from "@/components/signature-pad";
 import { FilterPanel } from "@/components/filter-panel";
 import { formatApiErrorMessage } from "@/lib/api-error";
 import { personNameDisplay } from "@/lib/person-name-display";
-import {
-  DOT_API,
-  dotFileHref,
-  dotStatusBadgeClass,
-} from "@/lib/dot-compliance-module";
+import { DOT_API, dotFileHref, dotStatusBadgeClass } from "@/lib/dot-compliance-module";
 import {
   buildDvirSubmitPayload,
   buildDvirTitle,
@@ -360,7 +356,11 @@ export function DvirWorkspace({
       <div>
         <div className="d-flex justify-content-between align-items-center mb-3">
           <h5 className="mb-0">New {tripTypeLabel(form.tripType)} DVIR</h5>
-          <button type="button" className="btn btn-sm btn-outline-secondary" onClick={() => setMode("list")}>
+          <button
+            type="button"
+            className="btn btn-sm btn-outline-secondary"
+            onClick={() => setMode("list")}
+          >
             Back to list
           </button>
         </div>
@@ -418,15 +418,19 @@ export function DvirWorkspace({
       <div>
         <div className="d-flex justify-content-between align-items-center mb-3">
           <h5 className="mb-0">Vehicle DVIR QR</h5>
-          <button type="button" className="btn btn-sm btn-outline-secondary" onClick={() => setMode("list")}>
+          <button
+            type="button"
+            className="btn btn-sm btn-outline-secondary"
+            onClick={() => setMode("list")}
+          >
             Back to list
           </button>
         </div>
         <div className="card border shadow-none">
           <div className="card-body">
             <p className="text-muted">
-              Issue a reusable QR sticker for a fleet unit. DRIVERS scan it to choose pre-trip, post-trip,
-              or view the 91-day submission history — no login required.
+              Issue a reusable QR sticker for a fleet unit. DRIVERS scan it to choose pre-trip,
+              post-trip, or view the 91-day submission history — no login required.
             </p>
             {error ? (
               <div className="alert alert-danger" role="alert">
@@ -455,7 +459,11 @@ export function DvirWorkspace({
                 </select>
               </div>
               <div className="col-md-4">
-                <button type="submit" className="btn btn-primary w-100" disabled={busy || !canManage}>
+                <button
+                  type="submit"
+                  className="btn btn-primary w-100"
+                  disabled={busy || !canManage}
+                >
                   {busy ? "Issuing…" : "Issue / rotate QR"}
                 </button>
               </div>
@@ -463,9 +471,7 @@ export function DvirWorkspace({
             {qrResult ? (
               <div className="mt-4 text-center">
                 <p className="fw-semibold mb-1">{qrResult.label}</p>
-                {qrResult.vin ? (
-                  <p className="text-muted small mb-2">VIN: {qrResult.vin}</p>
-                ) : null}
+                {qrResult.vin ? <p className="text-muted small mb-2">VIN: {qrResult.vin}</p> : null}
                 {qrResult.svgHref ? (
                   <img
                     src={qrResult.svgHref}
@@ -555,7 +561,10 @@ export function DvirWorkspace({
             >
               Print
             </button>
-            <Link className="btn btn-sm btn-outline-primary" href={dotFileHref(String(selected.id))}>
+            <Link
+              className="btn btn-sm btn-outline-primary"
+              href={dotFileHref(String(selected.id))}
+            >
               Open file
             </Link>
             {canManage ? (
@@ -568,7 +577,11 @@ export function DvirWorkspace({
                 Delete
               </button>
             ) : null}
-            <button type="button" className="btn btn-sm btn-outline-secondary" onClick={() => setMode("list")}>
+            <button
+              type="button"
+              className="btn btn-sm btn-outline-secondary"
+              onClick={() => setMode("list")}
+            >
               Back to list
             </button>
           </div>
@@ -592,7 +605,9 @@ export function DvirWorkspace({
                 <dt className="text-muted small">Trip</dt>
                 <dd className="mb-0">
                   {tripTypeLabel(
-                    String(selected.tripType).toUpperCase() === "POST_TRIP" ? "POST_TRIP" : "PRE_TRIP",
+                    String(selected.tripType).toUpperCase() === "POST_TRIP"
+                      ? "POST_TRIP"
+                      : "PRE_TRIP",
                   )}
                 </dd>
               </div>
@@ -619,10 +634,7 @@ export function DvirWorkspace({
               <div className="col-md-4 mb-2">
                 <dt className="text-muted small">DRIVER</dt>
                 <dd className="mb-0">
-                  {personNameDisplay(
-                    String(selected.workerName ?? selected.driverName ?? ""),
-                    "—",
-                  )}
+                  {personNameDisplay(String(selected.workerName ?? selected.driverName ?? ""), "—")}
                 </dd>
               </div>
             </dl>
@@ -635,12 +647,17 @@ export function DvirWorkspace({
                     <tr>
                       <th scope="col">Item</th>
                       <th scope="col">Notes</th>
-                      <th scope="col" className="text-end">Answer</th>
+                      <th scope="col" className="text-end">
+                        Answer
+                      </th>
                     </tr>
                   </thead>
                   <tbody>
                     {reportItems.map((item) => (
-                      <tr key={item.id} className={item.answer === "NO" ? "table-danger" : undefined}>
+                      <tr
+                        key={item.id}
+                        className={item.answer === "NO" ? "table-danger" : undefined}
+                      >
                         <td>{item.label}</td>
                         <td>{item.notes || "—"}</td>
                         <td className="text-end">{answerLabel(item.answer)}</td>
@@ -798,8 +815,8 @@ export function DvirWorkspace({
             </div>
             <div className="card-body">
               <p className="text-muted small">
-                DRIVER acknowledges that reported defects were corrected or need not be corrected for
-                safe operation.
+                DRIVER acknowledges that reported defects were corrected or need not be corrected
+                for safe operation.
               </p>
               <form onSubmit={(e) => void onDriverReview(e)}>
                 <div className="mb-3">
@@ -867,13 +884,25 @@ export function DvirWorkspace({
 
       {canManage ? (
         <div className="d-flex flex-wrap gap-2 mb-4">
-          <button type="button" className="btn btn-primary btn-sm" onClick={() => startCreate("PRE_TRIP")}>
+          <button
+            type="button"
+            className="btn btn-primary btn-sm"
+            onClick={() => startCreate("PRE_TRIP")}
+          >
             Start pre-trip
           </button>
-          <button type="button" className="btn btn-primary btn-sm" onClick={() => startCreate("POST_TRIP")}>
+          <button
+            type="button"
+            className="btn btn-primary btn-sm"
+            onClick={() => startCreate("POST_TRIP")}
+          >
             Start post-trip
           </button>
-          <button type="button" className="btn btn-outline-primary btn-sm" onClick={() => setMode("qr")}>
+          <button
+            type="button"
+            className="btn btn-outline-primary btn-sm"
+            onClick={() => setMode("qr")}
+          >
             <i className="bx bx-qr me-1" />
             Issue vehicle QR
           </button>
@@ -899,7 +928,9 @@ export function DvirWorkspace({
       <div className="card border shadow-none">
         {visible.length === 0 ? (
           <div className="card-body text-center py-5">
-            <p className="text-muted mb-0">No DVIRs yet. Start a pre-trip or post-trip inspection.</p>
+            <p className="text-muted mb-0">
+              No DVIRs yet. Start a pre-trip or post-trip inspection.
+            </p>
           </div>
         ) : (
           <div className="table-responsive text-nowrap">
@@ -914,7 +945,11 @@ export function DvirWorkspace({
                   <th scope="col">DRIVER</th>
                   <th scope="col">Follow-up</th>
                   <th scope="col">Status</th>
-                  {canManage ? <th scope="col" className="text-end">Actions</th> : null}
+                  {canManage ? (
+                    <th scope="col" className="text-end">
+                      Actions
+                    </th>
+                  ) : null}
                 </tr>
               </thead>
               <tbody>
@@ -922,11 +957,17 @@ export function DvirWorkspace({
                   const defects = dvirDefectSummary(row);
                   const followUp = dvirFollowUpStatus(row);
                   return (
-                    <tr key={String(row.id)} style={{ cursor: "pointer" }} onClick={() => openDetail(row)}>
+                    <tr
+                      key={String(row.id)}
+                      style={{ cursor: "pointer" }}
+                      onClick={() => openDetail(row)}
+                    >
                       <td className="text-muted">{dvirInspectionDate(row)}</td>
                       <td>
                         {tripTypeLabel(
-                          String(row.tripType).toUpperCase() === "POST_TRIP" ? "POST_TRIP" : "PRE_TRIP",
+                          String(row.tripType).toUpperCase() === "POST_TRIP"
+                            ? "POST_TRIP"
+                            : "PRE_TRIP",
                         )}
                       </td>
                       <td className="fw-semibold">{String(row.truckNumber ?? row.title ?? "—")}</td>

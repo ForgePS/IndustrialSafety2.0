@@ -134,7 +134,9 @@ export function stripHtmlToText(html: string): string {
 }
 
 export function layoutKind(layout: Record<string, unknown> | null | undefined): string {
-  const kind = String(layout?.kind ?? "").trim().toUpperCase();
+  const kind = String(layout?.kind ?? "")
+    .trim()
+    .toUpperCase();
   if (kind) return kind;
   if (Array.isArray(layout?.elements) && layout.elements.length > 0) return "ELEMENTS";
   if (typeof layout?.html === "string" && layout.html.trim()) return "HTML";

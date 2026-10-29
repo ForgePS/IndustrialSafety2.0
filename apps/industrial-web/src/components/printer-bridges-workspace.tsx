@@ -984,6 +984,7 @@ export function PrinterBridgesWorkspace() {
       ) : null}
 
       {pairOpen ? (
+        // eslint-disable-next-line jsx-a11y/no-noninteractive-element-interactions -- backdrop click-to-close, same as the other Forge modals; Escape is handled by onKeyDown
         <div
           className="modal fade show d-block"
           tabIndex={-1}
@@ -1108,9 +1109,9 @@ export function PrinterBridgesWorkspace() {
                       Open Printer Bridge on this PC
                     </button>
                     <p className="small text-muted mt-2 mb-0">
-                      If nothing opens, install the bridge under Program Files\Forge Public Safety\Printer
-                      Bridge, then look for the tray icon (Windows may hide it under the overflow{" "}
-                      <strong>^</strong>).
+                      If nothing opens, install the bridge under Program Files\Forge Public
+                      Safety\Printer Bridge, then look for the tray icon (Windows may hide it under
+                      the overflow <strong>^</strong>).
                     </p>
                   </div>
                 )}
@@ -1149,6 +1150,7 @@ export function PrinterBridgesWorkspace() {
       ) : null}
 
       {openBridge ? (
+        // eslint-disable-next-line jsx-a11y/no-noninteractive-element-interactions -- backdrop click-to-close, same as the other Forge modals; Escape is handled by onKeyDown
         <div
           className="modal fade show d-block"
           tabIndex={-1}
@@ -1226,6 +1228,7 @@ export function PrinterBridgesWorkspace() {
       ) : null}
 
       {renameId ? (
+        // eslint-disable-next-line jsx-a11y/no-noninteractive-element-interactions -- backdrop click-to-close, same as the other Forge modals; Escape is handled by onKeyDown
         <div
           className="modal fade show d-block"
           tabIndex={-1}

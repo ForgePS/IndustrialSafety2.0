@@ -1,4 +1,9 @@
-import { getActiveTenantId, getBearerToken, getDevPrincipal, getCsrfToken } from "./auth-storage.js";
+import {
+  getActiveTenantId,
+  getBearerToken,
+  getDevPrincipal,
+  getCsrfToken,
+} from "./auth-storage.js";
 import { isAccessTokenExpiredOrNearExpiry } from "./access-token.js";
 
 const FORGE_CSRF_HEADER = "x-forge-csrf";
@@ -196,7 +201,8 @@ async function parseResponse<T>(
   }
 
   if (res.status === 401 && hadAuthorization) {
-    const canRetry = options?.allowRefreshRetry !== false && Boolean(clientConfig.tryRefreshSession);
+    const canRetry =
+      options?.allowRefreshRetry !== false && Boolean(clientConfig.tryRefreshSession);
     if (canRetry) {
       // Do not forward the request AbortSignal into refresh — navigation/timeouts
       // must not cancel the shared session refresh for other callers.

@@ -56,9 +56,7 @@ function localFallbackConfig(apiMessage?: string): WalkthroughResolvedConfig {
         ? { secondarySelectors: [...step.secondarySelectors] }
         : {}),
       ...(step.requiredModule ? { requiredModule: step.requiredModule } : {}),
-      ...(step.skipIfUnavailable != null
-        ? { skipIfUnavailable: step.skipIfUnavailable }
-        : {}),
+      ...(step.skipIfUnavailable != null ? { skipIfUnavailable: step.skipIfUnavailable } : {}),
       narration: null,
     })),
     latestExport: null,
@@ -160,7 +158,10 @@ export function ExecutiveWalkthroughLaunch() {
   }, [authLoading, allowed, me?.legalAcknowledgments?.status, reloadToken]);
 
   const runtimeLabel = useMemo(
-    () => formatWalkthroughClock(config?.validation.projectedRuntimeMs ?? estimateWalkthroughRuntimeMs()),
+    () =>
+      formatWalkthroughClock(
+        config?.validation.projectedRuntimeMs ?? estimateWalkthroughRuntimeMs(),
+      ),
     [config],
   );
 
@@ -182,9 +183,7 @@ export function ExecutiveWalkthroughLaunch() {
     const href = `${gatePath}${gatePath.includes("?") ? "&" : "?"}next=${returnTo}`;
     return (
       <div className="alert alert-warning mb-0">
-        <p className="mb-2">
-          Required legal acknowledgments must be accepted before continuing.
-        </p>
+        <p className="mb-2">Required legal acknowledgments must be accepted before continuing.</p>
         <a className="btn btn-primary" href={href}>
           Review &amp; Acknowledge
         </a>
@@ -199,7 +198,7 @@ export function ExecutiveWalkthroughLaunch() {
       <div className="exec-walkthrough-launch-hero">
         {logoLightUrl.trim() && !logoFailed ? (
           <div className="exec-walkthrough-card-logo-wrap">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
+            {/* Plain <img> on purpose: static export, so next/image optimization is unavailable. */}
             <img
               className="exec-walkthrough-card-logo mb-0"
               src={logoLightUrl}
@@ -212,19 +211,17 @@ export function ExecutiveWalkthroughLaunch() {
         <h1 className="mb-3">Producers Rice Mill Demo Walkthrough</h1>
         <p className="exec-walkthrough-support mb-4">
           A narrated demo of the Producers Rice Mill Forge Industrial Safety platform. Watch online
-          in the live system or download an MP4. Pick a voice, then walk through Personnel, Training,
-          My Training, Incidents, OSHA, Workers Comp, Inspections, Department of Transportation,
-          Assets &amp; Equipment, Fleet,
-          Safety Supplies, Lockout/Tagout, Emergency Alerts, Tasks, Calendar, Reminders, Messaging,
-          Analytics, Reporting, and QR Management — target under ten minutes.
+          in the live system or download an MP4. Pick a voice, then walk through Personnel,
+          Training, My Training, Incidents, OSHA, Workers Comp, Inspections, Department of
+          Transportation, Assets &amp; Equipment, Fleet, Safety Supplies, Lockout/Tagout, Emergency
+          Alerts, Tasks, Calendar, Reminders, Messaging, Analytics, Reporting, and QR Management —
+          target under ten minutes.
         </p>
 
         {config?.validation.issues.some((i) => i.code === "local_preview") ? (
           <div className="alert alert-info py-2">
             <div className="d-flex flex-wrap justify-content-between gap-2 align-items-start">
-              <div>
-                {config.validation.issues.find((i) => i.code === "local_preview")?.message}
-              </div>
+              <div>{config.validation.issues.find((i) => i.code === "local_preview")?.message}</div>
               <button
                 type="button"
                 className="btn btn-sm btn-outline-primary"
@@ -314,8 +311,8 @@ export function ExecutiveWalkthroughLaunch() {
             ))}
           </select>
           <div className="form-text">
-            Select a voice before starting or downloading. The platform waits for each screen to load
-            before narration continues.
+            Select a voice before starting or downloading. The platform waits for each screen to
+            load before narration continues.
           </div>
         </div>
 
@@ -325,7 +322,9 @@ export function ExecutiveWalkthroughLaunch() {
             className="btn btn-primary"
             disabled={hardBlocked}
             onClick={() => {
-              void executiveWalkthroughApi.trackEvent("executive_walkthrough_started").catch(() => undefined);
+              void executiveWalkthroughApi
+                .trackEvent("executive_walkthrough_started")
+                .catch(() => undefined);
               ctrl.start({
                 mode: "interactive",
                 narrationEnabled: true,
@@ -392,7 +391,11 @@ export function ExecutiveWalkthroughLaunch() {
           >
             Captions {captions ? "On" : "Off"}
           </button>
-          <button type="button" className="btn btn-outline-primary" onClick={() => setExportOpen(true)}>
+          <button
+            type="button"
+            className="btn btn-outline-primary"
+            onClick={() => setExportOpen(true)}
+          >
             Download MP4
           </button>
           <Link href="/settings/presentation/" className="btn btn-outline-secondary">

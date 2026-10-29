@@ -52,9 +52,12 @@ function Inner() {
     setLoading(true);
     setError(null);
     try {
-      const result = await apiGet<{ items: ModelRow[]; catalog: CatalogRow[] }>("/api/v1/ai/models", {
-        query: { tenantId },
-      });
+      const result = await apiGet<{ items: ModelRow[]; catalog: CatalogRow[] }>(
+        "/api/v1/ai/models",
+        {
+          query: { tenantId },
+        },
+      );
       setItems(result.items);
       setCatalog(result.catalog ?? []);
     } catch (err) {
@@ -94,11 +97,9 @@ function Inner() {
     setBusy(true);
     setError(null);
     try {
-      await apiSend(
-        `/api/v1/ai/models/${id}?tenantId=${encodeURIComponent(tenantId)}`,
-        "PATCH",
-        { status },
-      );
+      await apiSend(`/api/v1/ai/models/${id}?tenantId=${encodeURIComponent(tenantId)}`, "PATCH", {
+        status,
+      });
       await load();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to update model policy");

@@ -79,8 +79,12 @@ export function buildSupplyIssueAcknowledgmentHtml(input: SupplyIssuePrintInput)
       : `<tr><td colspan="5" class="muted">No items listed.</td></tr>`;
 
   const metaBits = [
-    input.facilityName ? `<div><strong>Facility:</strong> ${escapeHtml(input.facilityName)}</div>` : "",
-    input.divisionName ? `<div><strong>Division:</strong> ${escapeHtml(input.divisionName)}</div>` : "",
+    input.facilityName
+      ? `<div><strong>Facility:</strong> ${escapeHtml(input.facilityName)}</div>`
+      : "",
+    input.divisionName
+      ? `<div><strong>Division:</strong> ${escapeHtml(input.divisionName)}</div>`
+      : "",
     input.departmentName
       ? `<div><strong>Department:</strong> ${escapeHtml(input.departmentName)}</div>`
       : "",

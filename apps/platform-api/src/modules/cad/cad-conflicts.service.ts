@@ -82,71 +82,70 @@ export class CadConflictsService {
     });
   }
 
-  async resolve(
-    tenantId: string,
-    conflictId: string,
-    body: unknown,
-    principal: ForgePrincipal,
-  ) {
+  async resolve(tenantId: string, conflictId: string, body: unknown, principal: ForgePrincipal) {
     await this.assertCadEnabled(tenantId);
     const data = resolveConflictSchema.parse(body);
-    return withTenantTransaction(this.db, tenantId, async (tx) => {
-      const row = await tx.query.cadConflicts.findFirst({
-        where: and(eq(cadConflicts.tenantId, tenantId), eq(cadConflicts.id, conflictId)),
-      });
-      if (!row) throw new ForgeError("NOT_FOUND", "CAD conflict not found");
-      if (row.recordVersion !== data.recordVersion) {
-        throw new ForgeError("CONFLICT", "Conflict record version mismatch");
-      }
-      if (row.status !== "OPEN" && row.status !== "ESCALATED") {
-        throw new ForgeError("BAD_REQUEST", "Conflict is already resolved");
-      }
+    return withTenantTransaction(
+      this.db,
+      tenantId,
+      async (tx) => {
+        const row = await tx.query.cadConflicts.findFirst({
+          where: and(eq(cadConflicts.tenantId, tenantId), eq(cadConflicts.id, conflictId)),
+        });
+        if (!row) throw new ForgeError("NOT_FOUND", "CAD conflict not found");
+        if (row.recordVersion !== data.recordVersion) {
+          throw new ForgeError("CONFLICT", "Conflict record version mismatch");
+        }
+        if (row.status !== "OPEN" && row.status !== "ESCALATED") {
+          throw new ForgeError("BAD_REQUEST", "Conflict is already resolved");
+        }
 
-      const needsReason =
-        data.resolutionAction === "IGNORE" ||
-        data.resolutionAction === "KEEP_FORGE" ||
-        data.resolutionAction === "UNLINK" ||
-        data.resolutionAction === "CREATE_NEW";
-      if (needsReason && !data.resolutionReason.trim()) {
-        throw new ForgeError("BAD_REQUEST", "Resolution reason is required");
-      }
+        const needsReason =
+          data.resolutionAction === "IGNORE" ||
+          data.resolutionAction === "KEEP_FORGE" ||
+          data.resolutionAction === "UNLINK" ||
+          data.resolutionAction === "CREATE_NEW";
+        if (needsReason && !data.resolutionReason.trim()) {
+          throw new ForgeError("BAD_REQUEST", "Resolution reason is required");
+        }
 
-      const [updated] = await tx
-        .update(cadConflicts)
-        .set({
-          status:
-            data.resolutionAction === "ESCALATE" ? "ESCALATED" : "MANUALLY_RESOLVED",
-          resolutionAction: data.resolutionAction,
-          resolutionReason: data.resolutionReason,
-          resolvedAt: data.resolutionAction === "ESCALATE" ? null : new Date(),
-          resolvedByUserId: principal.userId,
-          escalatedAt: data.resolutionAction === "ESCALATE" ? new Date() : row.escalatedAt,
-          recordVersion: row.recordVersion + 1,
-          updatedAt: new Date(),
-        })
-        .where(eq(cadConflicts.id, conflictId))
-        .returning();
+        const [updated] = await tx
+          .update(cadConflicts)
+          .set({
+            status: data.resolutionAction === "ESCALATE" ? "ESCALATED" : "MANUALLY_RESOLVED",
+            resolutionAction: data.resolutionAction,
+            resolutionReason: data.resolutionReason,
+            resolvedAt: data.resolutionAction === "ESCALATE" ? null : new Date(),
+            resolvedByUserId: principal.userId,
+            escalatedAt: data.resolutionAction === "ESCALATE" ? new Date() : row.escalatedAt,
+            recordVersion: row.recordVersion + 1,
+            updatedAt: new Date(),
+          })
+          .where(eq(cadConflicts.id, conflictId))
+          .returning();
 
-      await this.audit.writeInTransaction(tx, {
-        tenantId,
-        actorUserId: principal.userId,
-        actorPersonId: principal.personId,
-        actorType: "USER",
-        action:
-          data.resolutionAction === "ESCALATE"
-            ? CAD_AUDIT_ACTIONS.CONFLICT_ESCALATED
-            : CAD_AUDIT_ACTIONS.CONFLICT_RESOLVED,
-        resourceType: "cad_conflict",
-        resourceId: conflictId,
-        result: "SUCCESS",
-        riskLevel: "HIGH",
-        correlationId: principal.correlationId,
-        requestId: principal.requestId,
-        after: updated,
-      });
+        await this.audit.writeInTransaction(tx, {
+          tenantId,
+          actorUserId: principal.userId,
+          actorPersonId: principal.personId,
+          actorType: "USER",
+          action:
+            data.resolutionAction === "ESCALATE"
+              ? CAD_AUDIT_ACTIONS.CONFLICT_ESCALATED
+              : CAD_AUDIT_ACTIONS.CONFLICT_RESOLVED,
+          resourceType: "cad_conflict",
+          resourceId: conflictId,
+          result: "SUCCESS",
+          riskLevel: "HIGH",
+          correlationId: principal.correlationId,
+          requestId: principal.requestId,
+          after: updated,
+        });
 
-      return updated;
-    }, principal.userId);
+        return updated;
+      },
+      principal.userId,
+    );
   }
 
   async getIncidentLink(tenantId: string, incidentId: string) {
@@ -170,69 +169,74 @@ export class CadConflictsService {
   ) {
     await this.assertCadEnabled(tenantId);
     const data = linkSchema.parse(body);
-    return withTenantTransaction(this.db, tenantId, async (tx) => {
-      const incident = await tx.query.nerisIncidents.findFirst({
-        where: and(eq(nerisIncidents.tenantId, tenantId), eq(nerisIncidents.id, incidentId)),
-      });
-      if (!incident) throw new ForgeError("NOT_FOUND", "Incident not found");
-      if (incident.status === "FINALIZED") {
-        throw new ForgeError(
-          "FORBIDDEN",
-          "Finalized incidents cannot be linked without correction authority",
-        );
-      }
+    return withTenantTransaction(
+      this.db,
+      tenantId,
+      async (tx) => {
+        const incident = await tx.query.nerisIncidents.findFirst({
+          where: and(eq(nerisIncidents.tenantId, tenantId), eq(nerisIncidents.id, incidentId)),
+        });
+        if (!incident) throw new ForgeError("NOT_FOUND", "Incident not found");
+        if (incident.status === "FINALIZED") {
+          throw new ForgeError(
+            "FORBIDDEN",
+            "Finalized incidents cannot be linked without correction authority",
+          );
+        }
 
-      const duplicate = await tx.query.cadIncidentLinks.findFirst({
-        where: and(
-          eq(cadIncidentLinks.tenantId, tenantId),
-          eq(cadIncidentLinks.cadConnectionId, data.cadConnectionId),
-          eq(cadIncidentLinks.sourceIncidentId, data.sourceIncidentId),
-          inArray(cadIncidentLinks.linkStatus, ["ACTIVE", "SUSPENDED", "CONFLICT"]),
-        ),
-      });
-      if (duplicate && duplicate.incidentId !== incidentId) {
-        throw new ForgeError(
-          "CONFLICT",
-          "Source incident is already linked to another Forge incident",
-        );
-      }
+        const duplicate = await tx.query.cadIncidentLinks.findFirst({
+          where: and(
+            eq(cadIncidentLinks.tenantId, tenantId),
+            eq(cadIncidentLinks.cadConnectionId, data.cadConnectionId),
+            eq(cadIncidentLinks.sourceIncidentId, data.sourceIncidentId),
+            inArray(cadIncidentLinks.linkStatus, ["ACTIVE", "SUSPENDED", "CONFLICT"]),
+          ),
+        });
+        if (duplicate && duplicate.incidentId !== incidentId) {
+          throw new ForgeError(
+            "CONFLICT",
+            "Source incident is already linked to another Forge incident",
+          );
+        }
 
-      const id = createId();
-      const [link] = await tx
-        .insert(cadIncidentLinks)
-        .values({
-          id,
+        const id = createId();
+        const [link] = await tx
+          .insert(cadIncidentLinks)
+          .values({
+            id,
+            tenantId,
+            incidentId,
+            cadConnectionId: data.cadConnectionId,
+            sourceIncidentId: data.sourceIncidentId,
+            sourceIncidentNumber: data.sourceIncidentNumber ?? null,
+            linkStatus: "ACTIVE",
+            linkMethod: "MANUAL",
+            linkedByUserId: principal.userId,
+            matchDetailsJson: { reason: data.reason },
+            createdAt: new Date(),
+            updatedAt: new Date(),
+          })
+          .returning();
+
+        await this.audit.writeInTransaction(tx, {
           tenantId,
-          incidentId,
-          cadConnectionId: data.cadConnectionId,
-          sourceIncidentId: data.sourceIncidentId,
-          sourceIncidentNumber: data.sourceIncidentNumber ?? null,
-          linkStatus: "ACTIVE",
-          linkMethod: "MANUAL",
-          linkedByUserId: principal.userId,
-          matchDetailsJson: { reason: data.reason },
-          createdAt: new Date(),
-          updatedAt: new Date(),
-        })
-        .returning();
+          actorUserId: principal.userId,
+          actorPersonId: principal.personId,
+          actorType: "USER",
+          action: CAD_AUDIT_ACTIONS.INCIDENT_LINKED,
+          resourceType: "cad_incident_link",
+          resourceId: id,
+          result: "SUCCESS",
+          riskLevel: "HIGH",
+          correlationId: principal.correlationId,
+          requestId: principal.requestId,
+          after: link,
+        });
 
-      await this.audit.writeInTransaction(tx, {
-        tenantId,
-        actorUserId: principal.userId,
-        actorPersonId: principal.personId,
-        actorType: "USER",
-        action: CAD_AUDIT_ACTIONS.INCIDENT_LINKED,
-        resourceType: "cad_incident_link",
-        resourceId: id,
-        result: "SUCCESS",
-        riskLevel: "HIGH",
-        correlationId: principal.correlationId,
-        requestId: principal.requestId,
-        after: link,
-      });
-
-      return link;
-    }, principal.userId);
+        return link;
+      },
+      principal.userId,
+    );
   }
 
   async unlinkIncident(
@@ -250,47 +254,52 @@ export class CadConflictsService {
       })
       .parse(body);
 
-    return withTenantTransaction(this.db, tenantId, async (tx) => {
-      const link = await tx.query.cadIncidentLinks.findFirst({
-        where: and(
-          eq(cadIncidentLinks.tenantId, tenantId),
-          eq(cadIncidentLinks.incidentId, incidentId),
-          eq(cadIncidentLinks.id, data.cadIncidentLinkId),
-        ),
-      });
-      if (!link) throw new ForgeError("NOT_FOUND", "CAD link not found");
-      if (link.recordVersion !== data.recordVersion) {
-        throw new ForgeError("CONFLICT", "Link record version mismatch");
-      }
+    return withTenantTransaction(
+      this.db,
+      tenantId,
+      async (tx) => {
+        const link = await tx.query.cadIncidentLinks.findFirst({
+          where: and(
+            eq(cadIncidentLinks.tenantId, tenantId),
+            eq(cadIncidentLinks.incidentId, incidentId),
+            eq(cadIncidentLinks.id, data.cadIncidentLinkId),
+          ),
+        });
+        if (!link) throw new ForgeError("NOT_FOUND", "CAD link not found");
+        if (link.recordVersion !== data.recordVersion) {
+          throw new ForgeError("CONFLICT", "Link record version mismatch");
+        }
 
-      const [updated] = await tx
-        .update(cadIncidentLinks)
-        .set({
-          linkStatus: "UNLINKED",
-          manualOverrideReason: data.reason,
-          recordVersion: link.recordVersion + 1,
-          updatedAt: new Date(),
-        })
-        .where(eq(cadIncidentLinks.id, link.id))
-        .returning();
+        const [updated] = await tx
+          .update(cadIncidentLinks)
+          .set({
+            linkStatus: "UNLINKED",
+            manualOverrideReason: data.reason,
+            recordVersion: link.recordVersion + 1,
+            updatedAt: new Date(),
+          })
+          .where(eq(cadIncidentLinks.id, link.id))
+          .returning();
 
-      await this.audit.writeInTransaction(tx, {
-        tenantId,
-        actorUserId: principal.userId,
-        actorPersonId: principal.personId,
-        actorType: "USER",
-        action: CAD_AUDIT_ACTIONS.INCIDENT_UNLINKED,
-        resourceType: "cad_incident_link",
-        resourceId: link.id,
-        result: "SUCCESS",
-        riskLevel: "HIGH",
-        correlationId: principal.correlationId,
-        requestId: principal.requestId,
-        after: updated,
-      });
+        await this.audit.writeInTransaction(tx, {
+          tenantId,
+          actorUserId: principal.userId,
+          actorPersonId: principal.personId,
+          actorType: "USER",
+          action: CAD_AUDIT_ACTIONS.INCIDENT_UNLINKED,
+          resourceType: "cad_incident_link",
+          resourceId: link.id,
+          result: "SUCCESS",
+          riskLevel: "HIGH",
+          correlationId: principal.correlationId,
+          requestId: principal.requestId,
+          after: updated,
+        });
 
-      return updated;
-    }, principal.userId);
+        return updated;
+      },
+      principal.userId,
+    );
   }
 
   private async resolveFlag(tenantId: string, key: string): Promise<boolean> {

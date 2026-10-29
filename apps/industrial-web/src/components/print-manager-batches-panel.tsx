@@ -203,10 +203,7 @@ export function PrintManagerBatchesPanel() {
                   <div className="border rounded p-2">
                     <div className="text-muted small">Pending</div>
                     <div className="fs-5 fw-semibold">
-                      {Math.max(
-                        0,
-                        detail.totalJobs - detail.completedJobs - detail.failedJobs,
-                      )}
+                      {Math.max(0, detail.totalJobs - detail.completedJobs - detail.failedJobs)}
                     </div>
                   </div>
                 </div>

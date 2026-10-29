@@ -7,15 +7,15 @@ Legend: `[x]` done and connected to real persistence, `[ ]` not started or incom
 
 ## Where things live
 
-| Area | Location |
-| --- | --- |
-| Contracts (statuses, priorities, transitions, permissions) | `packages/contracts/src/helpdesk.ts` |
-| Schema | `packages/database/src/schema/helpdesk.ts` |
-| Migration (tables, RLS, permissions, starter content) | `packages/database/drizzle/0108_helpdesk_foundation_s1.sql` |
-| API module | `apps/platform-api/src/modules/helpdesk/` (`/api/v1/helpdesk/...`) |
-| Customer Help Center | `apps/industrial-web/src/app/help-desk/` and `components/helpdesk/help-center-workspace.tsx` |
-| Support Console | `apps/industrial-web/src/app/help-desk/support/` and `components/helpdesk/support-console-workspace.tsx` |
-| Demo seed (local/dev only) | `scripts/seed-helpdesk-demo.mjs` |
+| Area                                                       | Location                                                                                                 |
+| ---------------------------------------------------------- | -------------------------------------------------------------------------------------------------------- |
+| Contracts (statuses, priorities, transitions, permissions) | `packages/contracts/src/helpdesk.ts`                                                                     |
+| Schema                                                     | `packages/database/src/schema/helpdesk.ts`                                                               |
+| Migration (tables, RLS, permissions, starter content)      | `packages/database/drizzle/0108_helpdesk_foundation_s1.sql`                                              |
+| API module                                                 | `apps/platform-api/src/modules/helpdesk/` (`/api/v1/helpdesk/...`)                                       |
+| Customer Help Center                                       | `apps/industrial-web/src/app/help-desk/` and `components/helpdesk/help-center-workspace.tsx`             |
+| Support Console                                            | `apps/industrial-web/src/app/help-desk/support/` and `components/helpdesk/support-console-workspace.tsx` |
+| Demo seed (local/dev only)                                 | `scripts/seed-helpdesk-demo.mjs`                                                                         |
 
 ## HD-01 - Foundation
 
@@ -90,13 +90,13 @@ Legend: `[x]` done and connected to real persistence, `[ ]` not started or incom
 
 ## Verification log
 
-| Date | Check | Result |
-| --- | --- | --- |
-| 2026-10-08 | `platform-api` typecheck | Pass |
-| 2026-10-08 | Help Desk API unit tests (rules, access matrix) | 24 pass |
-| 2026-10-08 | Help Desk RLS integration tests (isolation, internal-note constraint, concurrent numbering) | 4 pass |
-| 2026-10-08 | Migration 0108 on a clean test database | Pass |
-| 2026-10-08 | `industrial-web` typecheck and lint on Help Desk files | Pass |
-| 2026-10-08 | Demo seed applied twice (idempotent replace) on test database | Pass |
-| 2026-10-08 | `industrial-web` production build (`/help-desk`, `/help-desk/support`) | Pass |
+| Date       | Check                                                                                            | Result   |
+| ---------- | ------------------------------------------------------------------------------------------------ | -------- |
+| 2026-10-08 | `platform-api` typecheck                                                                         | Pass     |
+| 2026-10-08 | Help Desk API unit tests (rules, access matrix)                                                  | 24 pass  |
+| 2026-10-08 | Help Desk RLS integration tests (isolation, internal-note constraint, concurrent numbering)      | 4 pass   |
+| 2026-10-08 | Migration 0108 on a clean test database                                                          | Pass     |
+| 2026-10-08 | `industrial-web` typecheck and lint on Help Desk files                                           | Pass     |
+| 2026-10-08 | Demo seed applied twice (idempotent replace) on test database                                    | Pass     |
+| 2026-10-08 | `industrial-web` production build (`/help-desk`, `/help-desk/support`)                           | Pass     |
 | 2026-10-08 | Production: migration 0108 applied, API task definition revision 466, web synced and invalidated | Deployed |

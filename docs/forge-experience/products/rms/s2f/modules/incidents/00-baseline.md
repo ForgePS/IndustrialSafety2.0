@@ -5,11 +5,11 @@
 
 ## Routes
 
-| Route | Purpose |
-| --- | --- |
-| `/incidents/` | List + search + pagination |
-| `/incidents/new/` | Manual intake create |
-| `/incidents/[id]/?section=` | Workspace / sections |
+| Route                       | Purpose                    |
+| --------------------------- | -------------------------- |
+| `/incidents/`               | List + search + pagination |
+| `/incidents/new/`           | Manual intake create       |
+| `/incidents/[id]/?section=` | Workspace / sections       |
 
 ## Product gates
 

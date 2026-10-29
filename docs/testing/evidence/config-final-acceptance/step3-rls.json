@@ -1,1 +1,15 @@
-{"ok":true,"currentUser":"forge_app","relForce":{"config_objects":{"rs":true,"force":true},"config_versions":{"rs":true,"force":true}},"tenantA":"019f9e06-a0b2-75f4-9e0b-5ae9befd8193","tenantB":"019fa5c5-6bd9-734c-ace5-76e0b8da28a0","countA":28,"leaked":[],"crossTenantInsertBlocked":true,"crossTenantVersionCount":0,"taskArn":"arn:aws:ecs:us-east-1:511343547817:task/forge-development-ecs-platform/540d0bef42094560946e3719576d1586"}
+{
+  "ok": true,
+  "currentUser": "forge_app",
+  "relForce": {
+    "config_objects": { "rs": true, "force": true },
+    "config_versions": { "rs": true, "force": true }
+  },
+  "tenantA": "019f9e06-a0b2-75f4-9e0b-5ae9befd8193",
+  "tenantB": "019fa5c5-6bd9-734c-ace5-76e0b8da28a0",
+  "countA": 28,
+  "leaked": [],
+  "crossTenantInsertBlocked": true,
+  "crossTenantVersionCount": 0,
+  "taskArn": "arn:aws:ecs:us-east-1:511343547817:task/forge-development-ecs-platform/540d0bef42094560946e3719576d1586"
+}

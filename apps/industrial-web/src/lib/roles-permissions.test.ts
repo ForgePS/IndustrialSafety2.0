@@ -79,9 +79,9 @@ describe("assignablePermissionCodes", () => {
   ];
 
   it("lets platform admins see the catalog and tenant admins only what they hold", () => {
-    expect(assignablePermissionCodes(catalog, { isPlatformAdmin: true, permissions: [] })).toHaveLength(
-      2,
-    );
+    expect(
+      assignablePermissionCodes(catalog, { isPlatformAdmin: true, permissions: [] }),
+    ).toHaveLength(2);
     expect(
       assignablePermissionCodes(catalog, {
         isPlatformAdmin: false,
@@ -95,9 +95,9 @@ describe("assignablePermissionCodes", () => {
     expect(canAssignRoles({ isPlatformAdmin: false, permissions: ["platform.role.assign"] })).toBe(
       true,
     );
-    expect(canAssignRoles({ isPlatformAdmin: false, permissions: ["platform.permission.read"] })).toBe(
-      false,
-    );
+    expect(
+      canAssignRoles({ isPlatformAdmin: false, permissions: ["platform.permission.read"] }),
+    ).toBe(false);
   });
 });
 

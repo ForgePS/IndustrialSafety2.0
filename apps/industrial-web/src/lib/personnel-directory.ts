@@ -51,8 +51,9 @@ export function toRosterPerson(row: Record<string, unknown>): RosterPerson | nul
 
   const first = str(row.preferredName) || str(row.firstName);
   const displayName =
-    personNameDisplay(str(row.displayName) || [first, str(row.lastName)].filter(Boolean).join(" ")) ||
-    id;
+    personNameDisplay(
+      str(row.displayName) || [first, str(row.lastName)].filter(Boolean).join(" "),
+    ) || id;
 
   return {
     id,

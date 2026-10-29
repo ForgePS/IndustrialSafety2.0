@@ -34,9 +34,7 @@ export const outboxEvents = pgTable(
     lastError: text("last_error"),
     createdAt: createdAtColumn,
   },
-  (table) => [
-    index("outbox_events_pending_poll_idx").on(table.status, table.availableAt),
-  ],
+  (table) => [index("outbox_events_pending_poll_idx").on(table.status, table.availableAt)],
 );
 
 /**

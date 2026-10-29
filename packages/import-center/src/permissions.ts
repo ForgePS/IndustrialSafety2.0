@@ -40,5 +40,8 @@ export const IMPORT_PERMISSION_MATRIX: ReadonlyArray<{
   { permission: "import.profile.manage", controls: "Create/archive profiles" },
   { permission: "import.template.manage", controls: "Template management" },
   { permission: "import.error.reprocess", controls: "Eligible row error retry" },
-  { permission: "import.sensitive", controls: "Privileged download request (server still masks secrets)" },
+  {
+    permission: "import.sensitive",
+    controls: "Privileged download request (server still masks secrets)",
+  },
 ];

@@ -87,8 +87,7 @@ export function useFieldTenantBranding() {
         if (cancelled) return;
 
         const configLight = payload.logoUrl?.trim() || payload.login?.logoUrl?.trim() || "";
-        const configDark =
-          payload.logoDarkUrl?.trim() || payload.login?.logoDarkUrl?.trim() || "";
+        const configDark = payload.logoDarkUrl?.trim() || payload.login?.logoDarkUrl?.trim() || "";
 
         setLogoLightUrl(light || configLight);
         setLogoDarkUrl(dark || configDark);
@@ -108,7 +107,12 @@ export function useFieldTenantBranding() {
   }, [me?.tenantId]);
 
   // Field chrome is dark — prefer dark logo, then light, then config fallback.
-  const logoUrl = logoDarkUrl || logoLightUrl || branding.login?.logoUrl?.trim() || branding.logoUrl?.trim() || "";
+  const logoUrl =
+    logoDarkUrl ||
+    logoLightUrl ||
+    branding.login?.logoUrl?.trim() ||
+    branding.logoUrl?.trim() ||
+    "";
 
   return { branding, loading, logoUrl, logoLightUrl, logoDarkUrl };
 }

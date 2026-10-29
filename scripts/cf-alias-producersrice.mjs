@@ -31,14 +31,7 @@ function awsJson(args) {
   return JSON.parse(r.stdout);
 }
 
-const got = awsJson([
-  "cloudfront",
-  "get-distribution-config",
-  "--id",
-  DIST_ID,
-  "--output",
-  "json",
-]);
+const got = awsJson(["cloudfront", "get-distribution-config", "--id", DIST_ID, "--output", "json"]);
 const etag = got.ETag;
 const cfg = got.DistributionConfig;
 
@@ -76,9 +69,10 @@ const note = {
   at: new Date().toISOString(),
   distributionId: DIST_ID,
   domainName: got.Distribution?.DomainName ?? cfg.Origins?.Items?.[0]?.DomainName,
-  aliasesAdded: NEW_ALIASES.filter((a) => !(got.DistributionConfig?.Aliases?.Items ?? []).includes(a)),
+  aliasesAdded: NEW_ALIASES.filter(
+    (a) => !(got.DistributionConfig?.Aliases?.Items ?? []).includes(a),
+  ),
   aliases,
-  note:
-    "Create CNAME at DNS owner: producersrice.forgeindustrialsafety.com -> CloudFront domain above. Apex forgeindustrialsafety.com stays marketing-only (do not alias to this distro).",
+  note: "Create CNAME at DNS owner: producersrice.forgeindustrialsafety.com -> CloudFront domain above. Apex forgeindustrialsafety.com stays marketing-only (do not alias to this distro).",
 };
 console.log(JSON.stringify(note, null, 2));

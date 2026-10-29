@@ -51,10 +51,7 @@ export function DropdownsWorkspace() {
     [],
   );
 
-  const sites = useMemo(
-    () => catalogs.find((row) => row.kind === "sites")?.rows ?? [],
-    [catalogs],
-  );
+  const sites = useMemo(() => catalogs.find((row) => row.kind === "sites")?.rows ?? [], [catalogs]);
   const departments = useMemo(
     () => catalogs.find((row) => row.kind === "departments")?.rows ?? [],
     [catalogs],
@@ -64,17 +61,11 @@ export function DropdownsWorkspace() {
     [catalogs],
   );
   const divisionsForNewSite = useMemo(
-    () =>
-      !newSiteId
-        ? []
-        : divisions.filter((row) => !row.siteId || row.siteId === newSiteId),
+    () => (!newSiteId ? [] : divisions.filter((row) => !row.siteId || row.siteId === newSiteId)),
     [divisions, newSiteId],
   );
   const divisionsForEditSite = useMemo(
-    () =>
-      !editSiteId
-        ? []
-        : divisions.filter((row) => !row.siteId || row.siteId === editSiteId),
+    () => (!editSiteId ? [] : divisions.filter((row) => !row.siteId || row.siteId === editSiteId)),
     [divisions, editSiteId],
   );
 
@@ -216,7 +207,9 @@ export function DropdownsWorkspace() {
     return (
       <div className="alert alert-warning" role="alert">
         <h4 className="alert-heading">Dropdown lists</h4>
-        <p className="mb-0">Admin access is required to manage company catalogs and dropdown lists.</p>
+        <p className="mb-0">
+          Admin access is required to manage company catalogs and dropdown lists.
+        </p>
       </div>
     );
   }
@@ -233,9 +226,9 @@ export function DropdownsWorkspace() {
       />
 
       <div className="alert alert-secondary mb-4" role="note">
-        Company catalogs power Add Person, incidents, LOTO, and other modules. Link each
-        department and division to a site so dropdowns only show values for that location.
-        Archiving hides a value from new forms without changing records that already use it.
+        Company catalogs power Add Person, incidents, LOTO, and other modules. Link each department
+        and division to a site so dropdowns only show values for that location. Archiving hides a
+        value from new forms without changing records that already use it.
       </div>
 
       {error ? (
@@ -246,7 +239,12 @@ export function DropdownsWorkspace() {
       {notice ? (
         <div className="alert alert-success d-flex align-items-center gap-2 mb-4" role="status">
           <span className="flex-grow-1">{notice}</span>
-          <button type="button" className="btn-close" aria-label="Dismiss" onClick={() => setNotice(null)} />
+          <button
+            type="button"
+            className="btn-close"
+            aria-label="Dismiss"
+            onClick={() => setNotice(null)}
+          />
         </div>
       ) : null}
 
@@ -333,7 +331,10 @@ export function DropdownsWorkspace() {
                                           row.label
                                         )}
                                       </td>
-                                      <td className="text-muted small" style={{ minWidth: "10rem" }}>
+                                      <td
+                                        className="text-muted small"
+                                        style={{ minWidth: "10rem" }}
+                                      >
                                         {editing && siteLinked ? (
                                           <div className="d-flex flex-column gap-1">
                                             <select
@@ -456,11 +457,7 @@ export function DropdownsWorkspace() {
                                               className="btn btn-sm btn-outline-danger"
                                               disabled={busy}
                                               onClick={() =>
-                                                void onArchive(
-                                                  definition.kind,
-                                                  row.id,
-                                                  row.label,
-                                                )
+                                                void onArchive(definition.kind, row.id, row.label)
                                               }
                                             >
                                               {definition.kind === "divisions"
@@ -595,8 +592,8 @@ export function DropdownsWorkspace() {
         ) : (
           <div className="d-flex flex-column gap-3">
             <p className="text-muted small mb-0">
-              These picklists are built into Industrial modules and shown here for reference.
-              Manage company-specific values on the Company catalogs tab.
+              These picklists are built into Industrial modules and shown here for reference. Manage
+              company-specific values on the Company catalogs tab.
             </p>
             {FIXED_INDUSTRIAL_PICKLISTS.map((picklist) => (
               <div className="card" key={picklist.key}>

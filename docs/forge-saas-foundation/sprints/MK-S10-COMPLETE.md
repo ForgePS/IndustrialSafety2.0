@@ -26,12 +26,12 @@ Creator and Tenant Admin billing surfaces sit on MK-S9 APIs: overview, invoices,
 
 ## Verification
 
-| Check | Result |
-| --- | --- |
-| contracts billing tests | 5 passed |
-| billing service unit | 6 passed |
-| platform-api / creator / tenant-admin typecheck | PASS |
-| Production operations | NONE |
+| Check                                           | Result   |
+| ----------------------------------------------- | -------- |
+| contracts billing tests                         | 5 passed |
+| billing service unit                            | 6 passed |
+| platform-api / creator / tenant-admin typecheck | PASS     |
+| Production operations                           | NONE     |
 
 ## Next sprint
 

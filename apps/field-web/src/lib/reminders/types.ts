@@ -19,7 +19,9 @@ export const FIELD_REMINDERS_VIEWS: readonly FieldRemindersView[] = [
   "all",
 ] as const;
 
-export function isFieldRemindersView(value: string | undefined | null): value is FieldRemindersView {
+export function isFieldRemindersView(
+  value: string | undefined | null,
+): value is FieldRemindersView {
   return (
     value === "today" ||
     value === "upcoming" ||

@@ -3,10 +3,7 @@
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 import { ApiError, apiGet, apiSend } from "@forge/web-kit";
-import {
-  OshaCaseEditor,
-  type OshaCaseEditorSave,
-} from "@/components/osha/osha-case-editor";
+import { OshaCaseEditor, type OshaCaseEditorSave } from "@/components/osha/osha-case-editor";
 import {
   buildForm301Pdf,
   fetchForm301Template,
@@ -46,7 +43,9 @@ export function OshaInlinePanel({
     setLoading(true);
     setError(null);
     try {
-      const raw = await apiGet<Record<string, unknown>>(`${OSHA_API}/${encodeURIComponent(caseId)}`);
+      const raw = await apiGet<Record<string, unknown>>(
+        `${OSHA_API}/${encodeURIComponent(caseId)}`,
+      );
       const mapped = toOshaCase(raw);
       if (!mapped.id) throw new Error("OSHA case not found");
       setCaseRow(mapped);

@@ -226,11 +226,15 @@ function LotoProcedureInner() {
     setBusy(true);
     setError(null);
     try {
-      await apiSend(`/api/v1/industrial/loto-records/${encodeURIComponent(lockoutId)}/${action}`, "POST", {
-        zeroEnergyConfirmed: zeroEnergy,
-        tryStartCompleted: tryStartDone,
-        restorationComplete: restorationDone,
-      });
+      await apiSend(
+        `/api/v1/industrial/loto-records/${encodeURIComponent(lockoutId)}/${action}`,
+        "POST",
+        {
+          zeroEnergyConfirmed: zeroEnergy,
+          tryStartCompleted: tryStartDone,
+          restorationComplete: restorationDone,
+        },
+      );
       setNotice(action === "verify" ? "Lockout verified." : "Lockout closed.");
       await load();
     } catch (err) {
@@ -345,157 +349,159 @@ function LotoProcedureInner() {
               onCancel={() => setEditing(false)}
             />
           ) : (
-          <article className="card mb-4">
-            <div className="card-header d-flex flex-wrap justify-content-between align-items-center gap-2">
-              <div>
-                <h6 className="card-title mb-1">
-                  {str(procedure.procedureNumber || detail?.procedureNumber)} —{" "}
-                  {str(procedure.title || detail?.title)}
-                </h6>
-                <span
-                  className={`badge ${lotoStatusBadgeClass(str(procedure.status || detail?.status))}`}
-                >
-                  {lotoStatusLabel(str(procedure.status || detail?.status))}
-                </span>
-              </div>
-              <LotoProcedureWorkflowActions
-                status={str(procedure.status || detail?.status)}
-                busy={busy}
-                canEdit={canEdit}
-                canApprove={canApprove}
-                onEdit={() => onStartEdit()}
-                onSubmitForReview={() => void transition("submit-review")}
-                onActivate={() => void transition("activate")}
-                onApprove={() => void transition("approve")}
-                onRequestChanges={(notes) =>
-                  void transition("request-changes", { reviewReturnNotes: notes })
-                }
-                extras={
-                  <>
-                    {canPrint ? (
-                      <button
-                        type="button"
-                        className="btn btn-sm btn-outline-secondary"
-                        onClick={() => void loadPrint()}
-                      >
-                        Print
-                      </button>
-                    ) : null}
-                    {detail ? (
-                      <ForgePrintButton
-                        module="LOCKOUT_TAGOUT"
-                        recordType="loto_procedure"
-                        recordId={id}
-                        className="btn btn-sm btn-outline-primary"
-                        fieldValues={lotoProcedurePrintFieldValues(
-                          detail,
-                          lotoProcedureEquipmentName(procedure),
-                        )}
-                        onPrepare={async () =>
-                          ensureLotoProcedurePrintQrPayload(detail, {
-                            canView: canQrView,
-                            canGenerate: canQrGenerate,
-                          })
-                        }
-                      />
-                    ) : null}
-                  </>
-                }
-              />
-            </div>
-            <div className="card-body">
-              {procedureDisplay ? <LotoProcedureDetailSections display={procedureDisplay} /> : null}
-
-              {canEdit && canIssueLockout(str(procedure.status || detail?.status)) ? (
-                <form className="border rounded p-3 mb-3" onSubmit={(e) => void issueLockout(e)}>
-                  <h6 className="mb-3">Issue lockout</h6>
-                  <div className="row g-3">
-                    <div className="col-md-4">
-                      <label className="form-label" htmlFor="loto-authorized">
-                        Authorized employee
-                      </label>
-                      <input
-                        id="loto-authorized"
-                        className="form-control"
-                        list="loto-personnel"
-                        required
-                        value={authorizedEmployee}
-                        onChange={(ev) => setAuthorizedEmployee(ev.target.value)}
-                      />
-                    </div>
-                    <div className="col-md-4">
-                      <label className="form-label" htmlFor="loto-affected">
-                        Affected employees
-                      </label>
-                      <input
-                        id="loto-affected"
-                        className="form-control"
-                        value={affectedEmployees}
-                        onChange={(ev) => setAffectedEmployees(ev.target.value)}
-                      />
-                    </div>
-                    <div className="col-md-4">
-                      <label className="form-label" htmlFor="loto-lock-tag">
-                        Lock / tag ID
-                      </label>
-                      <input
-                        id="loto-lock-tag"
-                        className="form-control"
-                        value={lockTagId}
-                        onChange={(ev) => setLockTagId(ev.target.value)}
-                      />
-                    </div>
-                    <div className="col-12">
-                      <div className="form-check">
-                        <input
-                          id="loto-try-start"
-                          className="form-check-input"
-                          type="checkbox"
-                          checked={tryStartRequired}
-                          onChange={(ev) => setTryStartRequired(ev.target.checked)}
+            <article className="card mb-4">
+              <div className="card-header d-flex flex-wrap justify-content-between align-items-center gap-2">
+                <div>
+                  <h6 className="card-title mb-1">
+                    {str(procedure.procedureNumber || detail?.procedureNumber)} —{" "}
+                    {str(procedure.title || detail?.title)}
+                  </h6>
+                  <span
+                    className={`badge ${lotoStatusBadgeClass(str(procedure.status || detail?.status))}`}
+                  >
+                    {lotoStatusLabel(str(procedure.status || detail?.status))}
+                  </span>
+                </div>
+                <LotoProcedureWorkflowActions
+                  status={str(procedure.status || detail?.status)}
+                  busy={busy}
+                  canEdit={canEdit}
+                  canApprove={canApprove}
+                  onEdit={() => onStartEdit()}
+                  onSubmitForReview={() => void transition("submit-review")}
+                  onActivate={() => void transition("activate")}
+                  onApprove={() => void transition("approve")}
+                  onRequestChanges={(notes) =>
+                    void transition("request-changes", { reviewReturnNotes: notes })
+                  }
+                  extras={
+                    <>
+                      {canPrint ? (
+                        <button
+                          type="button"
+                          className="btn btn-sm btn-outline-secondary"
+                          onClick={() => void loadPrint()}
+                        >
+                          Print
+                        </button>
+                      ) : null}
+                      {detail ? (
+                        <ForgePrintButton
+                          module="LOCKOUT_TAGOUT"
+                          recordType="loto_procedure"
+                          recordId={id}
+                          className="btn btn-sm btn-outline-primary"
+                          fieldValues={lotoProcedurePrintFieldValues(
+                            detail,
+                            lotoProcedureEquipmentName(procedure),
+                          )}
+                          onPrepare={async () =>
+                            ensureLotoProcedurePrintQrPayload(detail, {
+                              canView: canQrView,
+                              canGenerate: canQrGenerate,
+                            })
+                          }
                         />
-                        <label className="form-check-label" htmlFor="loto-try-start">
-                          Try-start / zero-energy test required before work
+                      ) : null}
+                    </>
+                  }
+                />
+              </div>
+              <div className="card-body">
+                {procedureDisplay ? (
+                  <LotoProcedureDetailSections display={procedureDisplay} />
+                ) : null}
+
+                {canEdit && canIssueLockout(str(procedure.status || detail?.status)) ? (
+                  <form className="border rounded p-3 mb-3" onSubmit={(e) => void issueLockout(e)}>
+                    <h6 className="mb-3">Issue lockout</h6>
+                    <div className="row g-3">
+                      <div className="col-md-4">
+                        <label className="form-label" htmlFor="loto-authorized">
+                          Authorized employee
                         </label>
+                        <input
+                          id="loto-authorized"
+                          className="form-control"
+                          list="loto-personnel"
+                          required
+                          value={authorizedEmployee}
+                          onChange={(ev) => setAuthorizedEmployee(ev.target.value)}
+                        />
+                      </div>
+                      <div className="col-md-4">
+                        <label className="form-label" htmlFor="loto-affected">
+                          Affected employees
+                        </label>
+                        <input
+                          id="loto-affected"
+                          className="form-control"
+                          value={affectedEmployees}
+                          onChange={(ev) => setAffectedEmployees(ev.target.value)}
+                        />
+                      </div>
+                      <div className="col-md-4">
+                        <label className="form-label" htmlFor="loto-lock-tag">
+                          Lock / tag ID
+                        </label>
+                        <input
+                          id="loto-lock-tag"
+                          className="form-control"
+                          value={lockTagId}
+                          onChange={(ev) => setLockTagId(ev.target.value)}
+                        />
+                      </div>
+                      <div className="col-12">
+                        <div className="form-check">
+                          <input
+                            id="loto-try-start"
+                            className="form-check-input"
+                            type="checkbox"
+                            checked={tryStartRequired}
+                            onChange={(ev) => setTryStartRequired(ev.target.checked)}
+                          />
+                          <label className="form-check-label" htmlFor="loto-try-start">
+                            Try-start / zero-energy test required before work
+                          </label>
+                        </div>
                       </div>
                     </div>
-                  </div>
-                  <datalist id="loto-personnel">
-                    {personnel.map((person) => (
-                      <option key={str(person.id)} value={personName(person)} />
-                    ))}
-                  </datalist>
-                  <button type="submit" className="btn btn-danger mt-3" disabled={busy}>
-                    Issue lockout
-                  </button>
-                </form>
-              ) : null}
-
-              {printHtml ? (
-                <div className="mb-3">
-                  <div className="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-2">
-                    <h6 className="mb-0">Printable preview</h6>
-                    <button
-                      type="button"
-                      className="btn btn-sm btn-primary"
-                      onClick={() => {
-                        const blocked = openPrintableHtmlPopup(printHtml, true);
-                        if (blocked) setError(blocked);
-                      }}
-                    >
-                      Print / Save as PDF
+                    <datalist id="loto-personnel">
+                      {personnel.map((person) => (
+                        <option key={str(person.id)} value={personName(person)} />
+                      ))}
+                    </datalist>
+                    <button type="submit" className="btn btn-danger mt-3" disabled={busy}>
+                      Issue lockout
                     </button>
+                  </form>
+                ) : null}
+
+                {printHtml ? (
+                  <div className="mb-3">
+                    <div className="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-2">
+                      <h6 className="mb-0">Printable preview</h6>
+                      <button
+                        type="button"
+                        className="btn btn-sm btn-primary"
+                        onClick={() => {
+                          const blocked = openPrintableHtmlPopup(printHtml, true);
+                          if (blocked) setError(blocked);
+                        }}
+                      >
+                        Print / Save as PDF
+                      </button>
+                    </div>
+                    <iframe
+                      title="LOTO printable"
+                      srcDoc={printHtml}
+                      className="w-100 border rounded"
+                      style={{ minHeight: 980, background: "#d8dbe0" }}
+                    />
                   </div>
-                  <iframe
-                    title="LOTO printable"
-                    srcDoc={printHtml}
-                    className="w-100 border rounded"
-                    style={{ minHeight: 980, background: "#d8dbe0" }}
-                  />
-                </div>
-              ) : null}
-            </div>
-          </article>
+                ) : null}
+              </div>
+            </article>
           )}
 
           {lockouts.length > 0 ? (
@@ -528,99 +534,112 @@ function LotoProcedureInner() {
                         );
                       })();
                       return (
-                      <tr key={lockoutId}>
-                        <td>
-                          {href ? (
-                            <Link href={href} className="fw-medium text-body">
-                              {str(row.title) || str(row.procedureNumber) || "Lockout"}
-                            </Link>
-                          ) : (
-                            <div className="fw-medium">{str(row.title) || str(row.procedureNumber)}</div>
-                          )}
-                          {itemCount > 0 ? (
-                            <small className="text-muted d-block">{itemCount} control items</small>
-                          ) : null}
-                        </td>
-                        <td>{personNameDisplay(lockoutAuthorizedEmployee(row), "—")}</td>
-                        <td>{str(row.affectedEmployees) || "—"}</td>
-                        <td>{str(row.lockTagId) || "—"}</td>
-                        <td>
-                          <span className={`badge ${lotoStatusBadgeClass(str(row.status))}`}>
-                            {lotoStatusLabel(str(row.status))}
-                          </span>
-                        </td>
-                        <td>
-                          <div className="d-flex flex-wrap gap-2 align-items-center">
+                        <tr key={lockoutId}>
+                          <td>
                             {href ? (
-                              <Link href={href} className="btn btn-sm btn-outline-primary">
-                                Open
+                              <Link href={href} className="fw-medium text-body">
+                                {str(row.title) || str(row.procedureNumber) || "Lockout"}
                               </Link>
+                            ) : (
+                              <div className="fw-medium">
+                                {str(row.title) || str(row.procedureNumber)}
+                              </div>
+                            )}
+                            {itemCount > 0 ? (
+                              <small className="text-muted d-block">
+                                {itemCount} control items
+                              </small>
                             ) : null}
-                            {str(row.status).toUpperCase() === "ISSUED" && canEdit ? (
-                              <>
-                                <div className="form-check mb-0">
-                                  <input
-                                    className="form-check-input"
-                                    type="checkbox"
-                                    id={`zero-${lockoutId}`}
-                                    checked={zeroEnergy}
-                                    onChange={(ev) => setZeroEnergy(ev.target.checked)}
-                                  />
-                                  <label className="form-check-label" htmlFor={`zero-${lockoutId}`}>
-                                    Zero energy
-                                  </label>
-                                </div>
-                                <div className="form-check mb-0">
-                                  <input
-                                    className="form-check-input"
-                                    type="checkbox"
-                                    id={`try-${lockoutId}`}
-                                    checked={tryStartDone}
-                                    onChange={(ev) => setTryStartDone(ev.target.checked)}
-                                  />
-                                  <label className="form-check-label" htmlFor={`try-${lockoutId}`}>
-                                    Try-start
-                                  </label>
-                                </div>
-                                <button
-                                  type="button"
-                                  className="btn btn-sm btn-warning"
-                                  disabled={busy || !zeroEnergy}
-                                  onClick={() => void lockoutAction(lockoutId, "verify")}
-                                >
-                                  Verify
-                                </button>
-                              </>
-                            ) : null}
-                            {(str(row.status).toUpperCase() === "ISSUED" ||
-                              str(row.status).toUpperCase() === "VERIFIED") &&
-                            canEdit ? (
-                              <>
-                                <div className="form-check mb-0">
-                                  <input
-                                    className="form-check-input"
-                                    type="checkbox"
-                                    id={`rest-${lockoutId}`}
-                                    checked={restorationDone}
-                                    onChange={(ev) => setRestorationDone(ev.target.checked)}
-                                  />
-                                  <label className="form-check-label" htmlFor={`rest-${lockoutId}`}>
-                                    Restored
-                                  </label>
-                                </div>
-                                <button
-                                  type="button"
-                                  className="btn btn-sm btn-outline-secondary"
-                                  disabled={busy || !restorationDone}
-                                  onClick={() => void lockoutAction(lockoutId, "close")}
-                                >
-                                  Close out
-                                </button>
-                              </>
-                            ) : null}
-                          </div>
-                        </td>
-                      </tr>
+                          </td>
+                          <td>{personNameDisplay(lockoutAuthorizedEmployee(row), "—")}</td>
+                          <td>{str(row.affectedEmployees) || "—"}</td>
+                          <td>{str(row.lockTagId) || "—"}</td>
+                          <td>
+                            <span className={`badge ${lotoStatusBadgeClass(str(row.status))}`}>
+                              {lotoStatusLabel(str(row.status))}
+                            </span>
+                          </td>
+                          <td>
+                            <div className="d-flex flex-wrap gap-2 align-items-center">
+                              {href ? (
+                                <Link href={href} className="btn btn-sm btn-outline-primary">
+                                  Open
+                                </Link>
+                              ) : null}
+                              {str(row.status).toUpperCase() === "ISSUED" && canEdit ? (
+                                <>
+                                  <div className="form-check mb-0">
+                                    <input
+                                      className="form-check-input"
+                                      type="checkbox"
+                                      id={`zero-${lockoutId}`}
+                                      checked={zeroEnergy}
+                                      onChange={(ev) => setZeroEnergy(ev.target.checked)}
+                                    />
+                                    <label
+                                      className="form-check-label"
+                                      htmlFor={`zero-${lockoutId}`}
+                                    >
+                                      Zero energy
+                                    </label>
+                                  </div>
+                                  <div className="form-check mb-0">
+                                    <input
+                                      className="form-check-input"
+                                      type="checkbox"
+                                      id={`try-${lockoutId}`}
+                                      checked={tryStartDone}
+                                      onChange={(ev) => setTryStartDone(ev.target.checked)}
+                                    />
+                                    <label
+                                      className="form-check-label"
+                                      htmlFor={`try-${lockoutId}`}
+                                    >
+                                      Try-start
+                                    </label>
+                                  </div>
+                                  <button
+                                    type="button"
+                                    className="btn btn-sm btn-warning"
+                                    disabled={busy || !zeroEnergy}
+                                    onClick={() => void lockoutAction(lockoutId, "verify")}
+                                  >
+                                    Verify
+                                  </button>
+                                </>
+                              ) : null}
+                              {(str(row.status).toUpperCase() === "ISSUED" ||
+                                str(row.status).toUpperCase() === "VERIFIED") &&
+                              canEdit ? (
+                                <>
+                                  <div className="form-check mb-0">
+                                    <input
+                                      className="form-check-input"
+                                      type="checkbox"
+                                      id={`rest-${lockoutId}`}
+                                      checked={restorationDone}
+                                      onChange={(ev) => setRestorationDone(ev.target.checked)}
+                                    />
+                                    <label
+                                      className="form-check-label"
+                                      htmlFor={`rest-${lockoutId}`}
+                                    >
+                                      Restored
+                                    </label>
+                                  </div>
+                                  <button
+                                    type="button"
+                                    className="btn btn-sm btn-outline-secondary"
+                                    disabled={busy || !restorationDone}
+                                    onClick={() => void lockoutAction(lockoutId, "close")}
+                                  >
+                                    Close out
+                                  </button>
+                                </>
+                              ) : null}
+                            </div>
+                          </td>
+                        </tr>
                       );
                     })}
                   </tbody>

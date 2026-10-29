@@ -16,17 +16,19 @@ export type LotoIssueBody = {
 };
 
 export const fieldLotoApi = {
-  listProcedures(query: {
-    q?: string;
-    status?: string;
-    equipmentId?: string;
-    siteId?: string;
-    siteName?: string;
-    departmentId?: string;
-    departmentName?: string;
-    page?: number;
-    pageSize?: number;
-  } = {}) {
+  listProcedures(
+    query: {
+      q?: string;
+      status?: string;
+      equipmentId?: string;
+      siteId?: string;
+      siteName?: string;
+      departmentId?: string;
+      departmentName?: string;
+      page?: number;
+      pageSize?: number;
+    } = {},
+  ) {
     const params: Record<string, string | undefined> = {
       page: String(query.page ?? 1),
       pageSize: String(query.pageSize ?? 100),
@@ -44,9 +46,7 @@ export const fieldLotoApi = {
   },
 
   getProcedure(id: string) {
-    return apiGet<Record<string, unknown>>(
-      `/api/v1/industrial/loto/${encodeURIComponent(id)}`,
-    );
+    return apiGet<Record<string, unknown>>(`/api/v1/industrial/loto/${encodeURIComponent(id)}`);
   },
 
   listLockouts(query: { status?: string; page?: number; pageSize?: number } = {}) {

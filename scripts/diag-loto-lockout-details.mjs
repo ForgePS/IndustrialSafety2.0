@@ -42,17 +42,21 @@ function findArrays(obj, prefix = "", depth = 0, out = []) {
   return out;
 }
 
-const sql = postgres(await (async () => {
-  const client = new SecretsManagerClient({ region: process.env.AWS_REGION || "us-east-1" });
-  const res = await client.send(
-    new GetSecretValueCommand({ SecretId: process.env.DATABASE_SECRET_ARN }),
-  );
-  const raw = JSON.parse(res.SecretString);
-  return `postgresql://${encodeURIComponent(raw.username)}:${encodeURIComponent(raw.password)}@${raw.host ?? raw.hostname}:${raw.port ?? 5432}/${raw.dbname ?? raw.database}`;
-})(), { max: 1 });
+const sql = postgres(
+  await (async () => {
+    const client = new SecretsManagerClient({ region: process.env.AWS_REGION || "us-east-1" });
+    const res = await client.send(
+      new GetSecretValueCommand({ SecretId: process.env.DATABASE_SECRET_ARN }),
+    );
+    const raw = JSON.parse(res.SecretString);
+    return `postgresql://${encodeURIComponent(raw.username)}:${encodeURIComponent(raw.password)}@${raw.host ?? raw.hostname}:${raw.port ?? 5432}/${raw.dbname ?? raw.database}`;
+  })(),
+  { max: 1 },
+);
 
 try {
-  const [tenant] = await sql`select id::text as id from tenants where tenant_key='producers-rice-mill'`;
+  const [tenant] =
+    await sql`select id::text as id from tenants where tenant_key='producers-rice-mill'`;
   const rows = await sql`
     select id::text as id, title, status, source_payload
     from industrial_loto_records

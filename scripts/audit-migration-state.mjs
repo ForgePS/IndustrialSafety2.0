@@ -133,7 +133,9 @@ const missing = [];
 for (const entry of journal.entries) {
   const applied = appliedWhen.has(String(entry.when));
   if (!applied) missing.push(entry.tag);
-  console.log(`  ${applied ? "APPLIED " : "MISSING "} ${String(entry.idx).padStart(4)} ${entry.tag}`);
+  console.log(
+    `  ${applied ? "APPLIED " : "MISSING "} ${String(entry.idx).padStart(4)} ${entry.tag}`,
+  );
 }
 
 console.log(`\nmissing tags: ${missing.length ? missing.join(", ") : "(none)"}`);

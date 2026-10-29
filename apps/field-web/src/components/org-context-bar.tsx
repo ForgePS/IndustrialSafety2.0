@@ -14,8 +14,16 @@ export function OrgContextBar({
   const org = useFieldOrgOptional();
   if (!org) return null;
 
-  const { selection, locations, divisions, departments, loading, setLocation, setDivision, setDepartment } =
-    org;
+  const {
+    selection,
+    locations,
+    divisions,
+    departments,
+    loading,
+    setLocation,
+    setDivision,
+    setDepartment,
+  } = org;
 
   const divisionOptions = divisions;
   const departmentOptions = departments.filter((d) => {
@@ -54,7 +62,9 @@ export function OrgContextBar({
           onChange={(e) => setDivision(e.target.value)}
           aria-label="Division"
         >
-          <option value="">{selection.locationId ? "All divisions" : "Select location first"}</option>
+          <option value="">
+            {selection.locationId ? "All divisions" : "Select location first"}
+          </option>
           {divisionOptions.map((name) => (
             <option key={name} value={name}>
               {name}
@@ -71,7 +81,9 @@ export function OrgContextBar({
           onChange={(e) => setDepartment(e.target.value)}
           aria-label="Department"
         >
-          <option value="">{selection.locationId ? "All departments" : "Select location first"}</option>
+          <option value="">
+            {selection.locationId ? "All departments" : "Select location first"}
+          </option>
           {departmentOptions.map((dept) => (
             <option key={dept.id} value={dept.id}>
               {dept.name}

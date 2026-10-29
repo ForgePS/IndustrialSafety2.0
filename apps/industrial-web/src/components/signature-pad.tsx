@@ -1,10 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useId, useRef, useState } from "react";
-import {
-  notifyUnsavedChange,
-  shouldTrackUnsavedField,
-} from "@/lib/unsaved-changes";
+import { notifyUnsavedChange, shouldTrackUnsavedField } from "@/lib/unsaved-changes";
 import { canImportProfileSignature } from "@/lib/profile-signature";
 
 /**

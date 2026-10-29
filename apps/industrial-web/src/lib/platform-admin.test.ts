@@ -42,9 +42,7 @@ describe("isWalkthroughEligibleTenant", () => {
 
 describe("canAccessExecutiveWalkthrough", () => {
   it("allows on Forge Platform demo tenant with grants", () => {
-    expect(canAccessExecutiveWalkthrough({ ...forgePlatformMe, isPlatformAdmin: true })).toBe(
-      true,
-    );
+    expect(canAccessExecutiveWalkthrough({ ...forgePlatformMe, isPlatformAdmin: true })).toBe(true);
     expect(
       canAccessExecutiveWalkthrough({
         ...forgePlatformMe,

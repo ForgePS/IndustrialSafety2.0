@@ -138,7 +138,8 @@ export class ForgeCloudFrontWaf extends Construct {
 
     new cdk.CfnOutput(this, "CloudFrontWebAclArn", {
       value: this.webAclArn,
-      description: "CLOUDFRONT-scope WebACL ARN (attach via Distribution webAclId / AssociateDistributionWebACL)",
+      description:
+        "CLOUDFRONT-scope WebACL ARN (attach via Distribution webAclId / AssociateDistributionWebACL)",
     });
   }
 }

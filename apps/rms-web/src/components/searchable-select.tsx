@@ -109,7 +109,8 @@ export function SearchableSelect({
     }
   }
 
-  const showEmpty = !loading && query.trim().length >= minSearchLength && options.length === 0 && !error;
+  const showEmpty =
+    !loading && query.trim().length >= minSearchLength && options.length === 0 && !error;
   const statusId = `${inputId}-status`;
 
   return (
@@ -168,11 +169,20 @@ export function SearchableSelect({
       {helpText ? <p className={styles.fieldHelp}>{helpText}</p> : null}
       <div id={statusId} aria-live="polite">
         {loading ? <p className={styles.fieldHelp}>Searching…</p> : null}
-        {error ? <p className={styles.error} role="alert">{error}</p> : null}
+        {error ? (
+          <p className={styles.error} role="alert">
+            {error}
+          </p>
+        ) : null}
         {showEmpty ? <p className={styles.fieldHelp}>No results. Try a different search.</p> : null}
       </div>
       {open && options.length > 0 ? (
-        <ul id={listboxId} role="listbox" className={styles.lookupList} aria-label={`${label} options`}>
+        <ul
+          id={listboxId}
+          role="listbox"
+          className={styles.lookupList}
+          aria-label={`${label} options`}
+        >
           {options.map((option, index) => (
             <li key={option.id} role="presentation">
               <button
@@ -186,7 +196,9 @@ export function SearchableSelect({
                 onClick={() => choose(option)}
               >
                 <strong>{option.label}</strong>
-                {option.subtitle ? <span className={styles.muted}> — {option.subtitle}</span> : null}
+                {option.subtitle ? (
+                  <span className={styles.muted}> — {option.subtitle}</span>
+                ) : null}
               </button>
             </li>
           ))}

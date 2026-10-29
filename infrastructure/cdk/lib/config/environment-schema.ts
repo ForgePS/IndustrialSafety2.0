@@ -170,7 +170,8 @@ export const forgeEnvironmentConfigSchema = z
           ctx.addIssue({
             code: z.ZodIssueCode.custom,
             path: ["cognito"],
-            message: "Production Cognito URLs must be HTTPS production hosts (no example.com / localhost)",
+            message:
+              "Production Cognito URLs must be HTTPS production hosts (no example.com / localhost)",
           });
           break;
         }
@@ -188,7 +189,10 @@ export const forgeEnvironmentConfigSchema = z
         message: "database.serverlessMinCapacity must be 0 (auto-pause) or at least 0.5 ACU",
       });
     }
-    if (value.database.autoPauseMinutes !== undefined && value.database.serverlessMinCapacity !== 0) {
+    if (
+      value.database.autoPauseMinutes !== undefined &&
+      value.database.serverlessMinCapacity !== 0
+    ) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
         message: "database.autoPauseMinutes requires serverlessMinCapacity of 0",
@@ -217,8 +221,7 @@ export const forgeEnvironmentConfigSchema = z
       if (!hasCert && !hasDns) {
         ctx.addIssue({
           code: z.ZodIssueCode.custom,
-          message:
-            "edge.enableHttps requires certificateArn or hostedZoneId with apiHostname",
+          message: "edge.enableHttps requires certificateArn or hostedZoneId with apiHostname",
           path: ["edge"],
         });
       }

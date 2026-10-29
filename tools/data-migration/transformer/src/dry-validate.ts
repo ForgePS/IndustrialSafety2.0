@@ -144,7 +144,10 @@ export function dryValidateImportPackage(packageDir: string): DryValidationResul
 
   const ddlText = (() => {
     const candidates = [
-      path.resolve(packageDir, "../../../../packages/database/drizzle/0040_industrial_domain_s1.sql"),
+      path.resolve(
+        packageDir,
+        "../../../../packages/database/drizzle/0040_industrial_domain_s1.sql",
+      ),
       path.resolve(packageDir, "../../../packages/database/drizzle/0040_industrial_domain_s1.sql"),
       path.resolve(process.cwd(), "packages/database/drizzle/0040_industrial_domain_s1.sql"),
     ];
@@ -171,7 +174,10 @@ export function dryValidateImportPackage(packageDir: string): DryValidationResul
     dispositionCounts,
   };
 
-  writeFileSync(path.join(packageDir, "dry-validation.json"), `${JSON.stringify(result, null, 2)}\n`);
+  writeFileSync(
+    path.join(packageDir, "dry-validation.json"),
+    `${JSON.stringify(result, null, 2)}\n`,
+  );
   return result;
 }
 

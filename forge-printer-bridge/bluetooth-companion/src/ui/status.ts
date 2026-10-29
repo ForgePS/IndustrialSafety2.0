@@ -4,7 +4,7 @@ import { renderStatusScreen } from "./pairing";
 export function updateStatusView(
   root: HTMLElement,
   status: BluetoothStatus,
-  printer: PrinterInfoPayload | null
+  printer: PrinterInfoPayload | null,
 ): void {
   const detail = printer
     ? [printer.displayName, printer.model, printer.messageTitle || printer.message]

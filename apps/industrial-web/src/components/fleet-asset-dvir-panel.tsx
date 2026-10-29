@@ -186,10 +186,7 @@ export function FleetAssetDvirPanel({
       <div className="card-header d-flex justify-content-between align-items-center flex-wrap gap-2">
         <h6 className="card-title mb-0">DVIR inspections</h6>
         {dotRegulated ? (
-          <Link
-            className="btn btn-sm btn-outline-primary"
-            href="/modules/dot-compliance?tab=dvirs"
-          >
+          <Link className="btn btn-sm btn-outline-primary" href="/modules/dot-compliance?tab=dvirs">
             Open DOT DVIRs
           </Link>
         ) : null}
@@ -203,127 +200,131 @@ export function FleetAssetDvirPanel({
           </div>
         ) : (
           <>
-        {error ? (
-          <div className="alert alert-danger" role="alert">
-            {error}
-          </div>
-        ) : null}
-        {notice ? (
-          <div className="alert alert-success" role="status">
-            {notice}
-          </div>
-        ) : null}
-        {loadError ? (
-          <div className="alert alert-warning" role="alert">
-            {loadError}
-          </div>
-        ) : null}
-
-        {canManageQr ? (
-          <div className="border rounded p-3 mb-4">
-            <p className="text-muted small mb-2">
-              Vehicle QR opens a menu: pre-trip, post-trip, or 91-day submission history. No login
-              required. Defect follow-up uses mechanic and DRIVER signatures in DOT Compliance.
-            </p>
-            <div className="d-flex flex-wrap gap-2 align-items-center">
-              <span className="badge bg-label-secondary">
-                QR {qrActive ? "active" : "not issued"}
-              </span>
-              <form className="d-inline" onSubmit={(e) => void onIssueQr(e)}>
-                <button type="submit" className="btn btn-sm btn-primary" disabled={busy}>
-                  {qrActive ? "Re-issue QR" : "Issue QR"}
-                </button>
-              </form>
-              {qrActive ? (
-                <button
-                  type="button"
-                  className="btn btn-sm btn-outline-danger"
-                  disabled={busy}
-                  onClick={() => void onRevokeQr()}
-                >
-                  Revoke QR
-                </button>
-              ) : null}
-            </div>
-            {qrUrl ? (
-              <div className="mt-3">
-                {qrImageHref ? (
-                  <div className="text-center mb-3">
-                    <img
-                      src={qrImageHref}
-                      alt="DVIR vehicle QR code"
-                      className="border rounded bg-white p-2"
-                      style={{ width: 320, height: "auto" }}
-                    />
-                    <div className="d-flex flex-wrap gap-2 justify-content-center mt-2">
-                      <a
-                        className="btn btn-sm btn-outline-primary"
-                        href={qrImageHref}
-                        download={`dvir-qr-${vehicleId}.png`}
-                      >
-                        Download sticker
-                      </a>
-                      <button
-                        type="button"
-                        className="btn btn-sm btn-outline-secondary"
-                        onClick={() => {
-                          void printDvirQrSticker(
-                            qrImageHref,
-                            qrStickerTitle ?? `DVIR QR ${vehicleId}`,
-                            qrStickerBlob,
-                          ).then((blocked) => {
-                            if (blocked) setError(blocked);
-                          });
-                        }}
-                      >
-                        <i className="bx bx-printer me-1" aria-hidden />
-                        Print sticker
-                      </button>
-                      <button
-                        type="button"
-                        className="btn btn-sm btn-outline-secondary"
-                        onClick={() => void navigator.clipboard.writeText(qrUrl)}
-                      >
-                        Copy link
-                      </button>
-                    </div>
-                    <p className="text-muted small mt-2 mb-0">
-                      Print this QR for the vehicle. Scan opens pre-trip, post-trip, or 91-day history.
-                      Save the image now — the raw token is only returned once after issue.
-                    </p>
-                  </div>
-                ) : null}
-                <label className="form-label small" htmlFor="fleet-dvir-qr-url">QR link</label>
-                <input
-                  id="fleet-dvir-qr-url"
-                  className="form-control form-control-sm"
-                  readOnly
-                  value={qrUrl}
-                />
+            {error ? (
+              <div className="alert alert-danger" role="alert">
+                {error}
               </div>
             ) : null}
-          </div>
-        ) : null}
+            {notice ? (
+              <div className="alert alert-success" role="status">
+                {notice}
+              </div>
+            ) : null}
+            {loadError ? (
+              <div className="alert alert-warning" role="alert">
+                {loadError}
+              </div>
+            ) : null}
 
-        {loading ? (
-          <p className="text-muted mb-0">Loading DVIR history…</p>
-        ) : (
-          <>
-            <DvirDayCalendar vehicleId={vehicleId} rows={dvirs} />
-            {dvirs.length === 0 ? (
-              <p className="text-muted mb-0">No DVIRs for this unit in the last 91 days.</p>
+            {canManageQr ? (
+              <div className="border rounded p-3 mb-4">
+                <p className="text-muted small mb-2">
+                  Vehicle QR opens a menu: pre-trip, post-trip, or 91-day submission history. No
+                  login required. Defect follow-up uses mechanic and DRIVER signatures in DOT
+                  Compliance.
+                </p>
+                <div className="d-flex flex-wrap gap-2 align-items-center">
+                  <span className="badge bg-label-secondary">
+                    QR {qrActive ? "active" : "not issued"}
+                  </span>
+                  <form className="d-inline" onSubmit={(e) => void onIssueQr(e)}>
+                    <button type="submit" className="btn btn-sm btn-primary" disabled={busy}>
+                      {qrActive ? "Re-issue QR" : "Issue QR"}
+                    </button>
+                  </form>
+                  {qrActive ? (
+                    <button
+                      type="button"
+                      className="btn btn-sm btn-outline-danger"
+                      disabled={busy}
+                      onClick={() => void onRevokeQr()}
+                    >
+                      Revoke QR
+                    </button>
+                  ) : null}
+                </div>
+                {qrUrl ? (
+                  <div className="mt-3">
+                    {qrImageHref ? (
+                      <div className="text-center mb-3">
+                        <img
+                          src={qrImageHref}
+                          alt="DVIR vehicle QR code"
+                          className="border rounded bg-white p-2"
+                          style={{ width: 320, height: "auto" }}
+                        />
+                        <div className="d-flex flex-wrap gap-2 justify-content-center mt-2">
+                          <a
+                            className="btn btn-sm btn-outline-primary"
+                            href={qrImageHref}
+                            download={`dvir-qr-${vehicleId}.png`}
+                          >
+                            Download sticker
+                          </a>
+                          <button
+                            type="button"
+                            className="btn btn-sm btn-outline-secondary"
+                            onClick={() => {
+                              void printDvirQrSticker(
+                                qrImageHref,
+                                qrStickerTitle ?? `DVIR QR ${vehicleId}`,
+                                qrStickerBlob,
+                              ).then((blocked) => {
+                                if (blocked) setError(blocked);
+                              });
+                            }}
+                          >
+                            <i className="bx bx-printer me-1" aria-hidden />
+                            Print sticker
+                          </button>
+                          <button
+                            type="button"
+                            className="btn btn-sm btn-outline-secondary"
+                            onClick={() => void navigator.clipboard.writeText(qrUrl)}
+                          >
+                            Copy link
+                          </button>
+                        </div>
+                        <p className="text-muted small mt-2 mb-0">
+                          Print this QR for the vehicle. Scan opens pre-trip, post-trip, or 91-day
+                          history. Save the image now — the raw token is only returned once after
+                          issue.
+                        </p>
+                      </div>
+                    ) : null}
+                    <label className="form-label small" htmlFor="fleet-dvir-qr-url">
+                      QR link
+                    </label>
+                    <input
+                      id="fleet-dvir-qr-url"
+                      className="form-control form-control-sm"
+                      readOnly
+                      value={qrUrl}
+                    />
+                  </div>
+                ) : null}
+              </div>
+            ) : null}
+
+            {loading ? (
+              <p className="text-muted mb-0">Loading DVIR history…</p>
             ) : (
-              <DvirReportSummaryTable
-                rows={dvirs}
-                showTrip
-                canDelete={canManageDvir}
-                busy={busy}
-                onDelete={(row) => void onDeleteDvir(row)}
-                compact
-              />
+              <>
+                <DvirDayCalendar vehicleId={vehicleId} rows={dvirs} />
+                {dvirs.length === 0 ? (
+                  <p className="text-muted mb-0">No DVIRs for this unit in the last 91 days.</p>
+                ) : (
+                  <DvirReportSummaryTable
+                    rows={dvirs}
+                    showTrip
+                    canDelete={canManageDvir}
+                    busy={busy}
+                    onDelete={(row) => void onDeleteDvir(row)}
+                    compact
+                  />
+                )}
+              </>
             )}
-          </>
-        )}
           </>
         )}
       </div>

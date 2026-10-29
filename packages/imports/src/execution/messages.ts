@@ -41,8 +41,7 @@ export function parseImportExecuteMessage(raw: unknown): ImportExecuteMessage {
 }
 
 export type MessageValidationResult =
-  | { ok: true; message: ImportExecuteMessage }
-  | { ok: false; reason: string; code: string };
+  { ok: true; message: ImportExecuteMessage } | { ok: false; reason: string; code: string };
 
 export function validateImportExecuteMessage(raw: unknown): MessageValidationResult {
   const parsed = importExecuteMessageSchema.safeParse(raw);

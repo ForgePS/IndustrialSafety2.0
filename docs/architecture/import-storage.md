@@ -4,11 +4,11 @@
 
 ## Components
 
-| Store | Role |
-| --- | --- |
+| Store             | Role                                                       |
+| ----------------- | ---------------------------------------------------------- |
 | Aurora PostgreSQL | Authoritative job/row/journal/security metadata; FORCE RLS |
-| S3 imports bucket | Binary uploads + generated artifacts |
-| SQS imports + DLQ | Transient work items (not durable archive) |
+| S3 imports bucket | Binary uploads + generated artifacts                       |
+| SQS imports + DLQ | Transient work items (not durable archive)                 |
 
 ## Aurora
 
@@ -19,12 +19,12 @@
 
 ## S3 imports bucket
 
-| Property | Value (development pattern) |
-| --- | --- |
-| Name pattern | `forge-{env}-imports-{account}-{region}` |
-| Encryption | SSE-KMS |
-| Versioning | **Enabled** |
-| Lifecycle | `importFilesDays` (dev profile **14 days**); abort incomplete MPU ~3d |
+| Property             | Value (development pattern)                                                 |
+| -------------------- | --------------------------------------------------------------------------- |
+| Name pattern         | `forge-{env}-imports-{account}-{region}`                                    |
+| Encryption           | SSE-KMS                                                                     |
+| Versioning           | **Enabled**                                                                 |
+| Lifecycle            | `importFilesDays` (dev profile **14 days**); abort incomplete MPU ~3d       |
 | AWS Backup selection | **Not** included in CDK `ForgeBackups` selection — versioning + DB metadata |
 
 ### Object lifecycle (logical)
@@ -42,11 +42,11 @@
 
 ## Queue durability
 
-| Queue | Visibility | Retention | DLQ |
-| --- | --- | --- | --- |
-| `forge-*-sqs-imports` | 300 s | 4 days | yes |
-| `forge-*-sqs-imports-dlq` | — | 14 days | — |
-| `maxReceiveCount` | 3 | | |
+| Queue                     | Visibility | Retention | DLQ |
+| ------------------------- | ---------- | --------- | --- |
+| `forge-*-sqs-imports`     | 300 s      | 4 days    | yes |
+| `forge-*-sqs-imports-dlq` | —          | 14 days   | —   |
+| `maxReceiveCount`         | 3          |           |     |
 
 KMS encryption on queue pairs. Ops: `scripts/import-dlq-ops.mjs`.
 

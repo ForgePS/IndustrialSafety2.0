@@ -260,12 +260,12 @@ describe("form-signatory", () => {
       { id: "employee-signature", label: "Employee Signature", type: "signature" },
       { id: "ehs-sig", label: "EHS Director Signature", type: "signature" },
     ];
-    expect(missingEhsDirectorSignatureFields(fields, { "employee-signature": "data:image/png;a" })).toEqual([
-      fields[1],
-    ]);
     expect(
-      ehsDirectorSignatureValueChanged("ehs-sig", {}, { "ehs-sig": "data:image/png;a" }),
-    ).toBe(true);
+      missingEhsDirectorSignatureFields(fields, { "employee-signature": "data:image/png;a" }),
+    ).toEqual([fields[1]]);
+    expect(ehsDirectorSignatureValueChanged("ehs-sig", {}, { "ehs-sig": "data:image/png;a" })).toBe(
+      true,
+    );
     expect(
       ehsDirectorSignatureValueChanged(
         "ehs-sig",
@@ -341,8 +341,8 @@ describe("form-signatory", () => {
       },
     };
     expect(missingDeferredSignatureFields(fields, answers)).toEqual([]);
-    expect(
-      resolveFormSubmissionStatus(fields, answers, FORM_STATUS_PENDING_SIGNATURE),
-    ).toBe("SUBMITTED");
+    expect(resolveFormSubmissionStatus(fields, answers, FORM_STATUS_PENDING_SIGNATURE)).toBe(
+      "SUBMITTED",
+    );
   });
 });

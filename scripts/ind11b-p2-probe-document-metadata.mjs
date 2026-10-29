@@ -10,9 +10,7 @@ const apiRequire = createRequire("/app/apps/platform-api/package.json");
 const { SecretsManagerClient, GetSecretValueCommand } = apiRequire(
   "@aws-sdk/client-secrets-manager",
 );
-const dbRequire = createRequire(
-  "/app/apps/platform-api/node_modules/@forge/database/package.json",
-);
+const dbRequire = createRequire("/app/apps/platform-api/node_modules/@forge/database/package.json");
 const postgresMod = await import(pathToFileURL(dbRequire.resolve("postgres")).href);
 const postgres = postgresMod.default ?? postgresMod;
 
@@ -65,8 +63,9 @@ async function main() {
       const out = { tenantId };
       try {
         out.platform_documents = Number(
-          (await sql`select count(*)::int as c from platform_documents where tenant_id = ${tenantId}::uuid`)[0]
-            ?.c ?? 0,
+          (
+            await sql`select count(*)::int as c from platform_documents where tenant_id = ${tenantId}::uuid`
+          )[0]?.c ?? 0,
         );
       } catch (e) {
         out.platform_documents = String(e.message || e);

@@ -12,7 +12,13 @@ export type EmailPdfResult = {
   filename: string;
   sent: number;
   failed: number;
-  results: Array<{ personnelId: string; name: string; email: string; accepted: boolean; detail?: string }>;
+  results: Array<{
+    personnelId: string;
+    name: string;
+    email: string;
+    accepted: boolean;
+    detail?: string;
+  }>;
   skipped: Array<{ personnelId: string; name: string | null; reason: string }>;
 };
 
@@ -66,7 +72,9 @@ export function emailPdfResultSummary(result: EmailPdfResult): {
   const failed = result.results.filter((r) => !r.accepted);
   const parts: string[] = [];
   if (result.sent > 0) {
-    parts.push(`Sent ${result.filename} to ${result.sent} ${result.sent === 1 ? "person" : "people"}.`);
+    parts.push(
+      `Sent ${result.filename} to ${result.sent} ${result.sent === 1 ? "person" : "people"}.`,
+    );
   }
   if (failed.length) {
     parts.push(`Could not send to ${failed.map((r) => r.name).join(", ")}.`);

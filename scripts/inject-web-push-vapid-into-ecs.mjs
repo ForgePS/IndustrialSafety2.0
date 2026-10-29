@@ -16,7 +16,9 @@ const forgeEnvironment = envIndex === -1 ? "development" : args[envIndex + 1];
 const ALLOW_PRODUCTION = args.includes("--allow-production");
 
 if (!["development", "production"].includes(forgeEnvironment)) {
-  console.error("Usage: node scripts/inject-web-push-vapid-into-ecs.mjs --env <development|production>");
+  console.error(
+    "Usage: node scripts/inject-web-push-vapid-into-ecs.mjs --env <development|production>",
+  );
   process.exit(1);
 }
 if (forgeEnvironment === "production" && !ALLOW_PRODUCTION) {
@@ -130,7 +132,8 @@ try {
     memory: td.memory,
   };
   if (td.volumes?.length) registerPayload.volumes = td.volumes;
-  if (td.placementConstraints?.length) registerPayload.placementConstraints = td.placementConstraints;
+  if (td.placementConstraints?.length)
+    registerPayload.placementConstraints = td.placementConstraints;
   if (td.runtimePlatform) registerPayload.runtimePlatform = td.runtimePlatform;
   if (td.proxyConfiguration) registerPayload.proxyConfiguration = td.proxyConfiguration;
   if (td.ipcMode) registerPayload.ipcMode = td.ipcMode;

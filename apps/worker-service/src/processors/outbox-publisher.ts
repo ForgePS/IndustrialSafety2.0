@@ -1,7 +1,4 @@
-import {
-  EventBridgeClient,
-  PutEventsCommand,
-} from "@aws-sdk/client-eventbridge";
+import { EventBridgeClient, PutEventsCommand } from "@aws-sdk/client-eventbridge";
 import { createDatabase, createId, type Database } from "@forge/database";
 import { createLogger } from "@forge/observability";
 import { sql } from "drizzle-orm";

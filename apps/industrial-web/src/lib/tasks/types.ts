@@ -12,12 +12,7 @@ export type WorkspaceTask = {
 };
 
 export type TasksWidgetView =
-  | "my-tasks"
-  | "today"
-  | "week"
-  | "overdue"
-  | "assigned-to-me"
-  | "assigned-by-me";
+  "my-tasks" | "today" | "week" | "overdue" | "assigned-to-me" | "assigned-by-me";
 
 export const TASKS_WIDGET_VIEWS: readonly TasksWidgetView[] = [
   "my-tasks",

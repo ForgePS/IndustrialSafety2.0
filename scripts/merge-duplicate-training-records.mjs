@@ -78,7 +78,9 @@ function readAttachments(payload) {
     out.push({
       documentId,
       fileName: String(entry.fileName ?? entry.file_name ?? "attachment").trim() || "attachment",
-      contentType: String(entry.contentType ?? entry.content_type ?? "application/octet-stream").trim(),
+      contentType: String(
+        entry.contentType ?? entry.content_type ?? "application/octet-stream",
+      ).trim(),
       uploadedAt: String(entry.uploadedAt ?? entry.uploaded_at ?? new Date().toISOString()),
     });
   }
@@ -87,7 +89,8 @@ function readAttachments(payload) {
 
 function pickText(...values) {
   for (const value of values) {
-    const text = typeof value === "string" ? value.trim() : value == null ? "" : String(value).trim();
+    const text =
+      typeof value === "string" ? value.trim() : value == null ? "" : String(value).trim();
     if (text) return text;
   }
   return null;
@@ -261,9 +264,7 @@ try {
     if (!APPLY) continue;
 
     const expiresAt =
-      survivor.expires_at ||
-      duplicates.map((row) => row.expires_at).find(Boolean) ||
-      null;
+      survivor.expires_at || duplicates.map((row) => row.expires_at).find(Boolean) || null;
 
     await sql.begin(async (tx) => {
       await tx`

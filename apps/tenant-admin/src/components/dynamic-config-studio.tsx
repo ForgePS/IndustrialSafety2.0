@@ -10,9 +10,6 @@ const ConfigStudioPage = dynamic(
   },
 );
 
-export function DynamicConfigStudioPage(props: {
-  namespace: string;
-  title: string;
-}) {
+export function DynamicConfigStudioPage(props: { namespace: string; title: string }) {
   return <ConfigStudioPage namespace={props.namespace} title={props.title} />;
 }

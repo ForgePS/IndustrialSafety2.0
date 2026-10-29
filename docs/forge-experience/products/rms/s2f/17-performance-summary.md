@@ -5,22 +5,22 @@
 
 ## Design expectations (not measured)
 
-| Concern | Expected impact | Evidence type |
-| --- | --- | --- |
-| Flag resolution | Negligible (in-memory resolvers) | Unit tests; sync `useMemo` |
-| Dual presentation trees | Only one branch renders per surface | Code inspection |
-| List fetches | Same full-list patterns as legacy | Parity matrices |
-| Bundle | FX UI imported behind flags/routes; legacy retained | Architecture |
+| Concern                 | Expected impact                                     | Evidence type              |
+| ----------------------- | --------------------------------------------------- | -------------------------- |
+| Flag resolution         | Negligible (in-memory resolvers)                    | Unit tests; sync `useMemo` |
+| Dual presentation trees | Only one branch renders per surface                 | Code inspection            |
+| List fetches            | Same full-list patterns as legacy                   | Parity matrices            |
+| Bundle                  | FX UI imported behind flags/routes; legacy retained | Architecture               |
 
 ## Measurements not collected in S2F-8
 
-| Metric | Status |
-| --- | --- |
-| Initial render (FX vs legacy) | Not measured |
-| Route transition timings | Not measured |
+| Metric                               | Status       |
+| ------------------------------------ | ------------ |
+| Initial render (FX vs legacy)        | Not measured |
+| Route transition timings             | Not measured |
 | Table / form / dialog render timings | Not measured |
-| Save operation timings | Not measured |
-| Memory / bundle delta | Not measured |
+| Save operation timings               | Not measured |
+| Memory / bundle delta                | Not measured |
 
 ## Certification statement
 

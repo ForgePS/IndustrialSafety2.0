@@ -23,8 +23,7 @@ export const WC_LIFTING_OPTIONS = [
   {
     id: "sedentary",
     label: "Sedentary – Sit Down Work Only",
-    detail:
-      "lifting no more than 10 lbs. maximum at any time, all work must be performed seated.",
+    detail: "lifting no more than 10 lbs. maximum at any time, all work must be performed seated.",
   },
   {
     id: "minimal-light",
@@ -98,8 +97,7 @@ export const WC_UPPER_EXTREMITY_OPTIONS = [
   },
   {
     id: "no-use-affected-arm-hand",
-    label:
-      "NO USE OF EFFECTED Arm/Hand and/or Keep in sling or brace at all times",
+    label: "NO USE OF EFFECTED Arm/Hand and/or Keep in sling or brace at all times",
   },
 ] as const;
 
@@ -128,9 +126,7 @@ export type WcInjurySide = (typeof WC_INJURY_SIDE_OPTIONS)[number]["id"];
 export type WcInjuryPart = (typeof WC_INJURY_PART_OPTIONS)[number]["id"];
 export type WcUpperExtremity = (typeof WC_UPPER_EXTREMITY_OPTIONS)[number]["id"];
 export type WcLowerExtremity = (typeof WC_LOWER_EXTREMITY_OPTIONS)[number]["id"];
-export type WcTransitionalHours =
-  | (typeof WC_TRANSITIONAL_HOUR_OPTIONS)[number]["id"]
-  | "";
+export type WcTransitionalHours = (typeof WC_TRANSITIONAL_HOUR_OPTIONS)[number]["id"] | "";
 
 export type WorkersCompAccommodations = {
   standWalk: WcStandWalk;
@@ -229,26 +225,24 @@ export function parseWorkersCompAccommodations(raw: unknown): WorkersCompAccommo
 export function accommodationsHasContent(value: WorkersCompAccommodations): boolean {
   return Boolean(
     value.standWalk ||
-      value.sit ||
-      value.liftingLevel ||
-      value.injurySides.length ||
-      value.injuryParts.length ||
-      value.injuryOther ||
-      value.upperExtremities.length ||
-      value.pushPullLimitLbs ||
-      value.lowerExtremities.length ||
-      value.transitionalNotApplicable ||
-      value.transitionalHours ||
-      value.transitionalWeeks ||
-      value.transitionalAbleRemaining ||
-      value.transitionalEffectiveDate ||
-      value.notes.trim(),
+    value.sit ||
+    value.liftingLevel ||
+    value.injurySides.length ||
+    value.injuryParts.length ||
+    value.injuryOther ||
+    value.upperExtremities.length ||
+    value.pushPullLimitLbs ||
+    value.lowerExtremities.length ||
+    value.transitionalNotApplicable ||
+    value.transitionalHours ||
+    value.transitionalWeeks ||
+    value.transitionalAbleRemaining ||
+    value.transitionalEffectiveDate ||
+    value.notes.trim(),
   );
 }
 
-export function summarizeWorkersCompAccommodations(
-  value: WorkersCompAccommodations,
-): string {
+export function summarizeWorkersCompAccommodations(value: WorkersCompAccommodations): string {
   const parts: string[] = [];
   const stand = WC_STAND_WALK_OPTIONS.find((o) => o.id === value.standWalk);
   if (stand) parts.push(`Stand/Walk: ${stand.label}`);
@@ -285,9 +279,7 @@ export function summarizeWorkersCompAccommodations(
   return parts.join(" · ") || "Work accommodations";
 }
 
-export function formatAccommodationsDetailLines(
-  value: WorkersCompAccommodations,
-): string[] {
+export function formatAccommodationsDetailLines(value: WorkersCompAccommodations): string[] {
   const lines: string[] = [];
   const stand = WC_STAND_WALK_OPTIONS.find((o) => o.id === value.standWalk);
   if (stand) lines.push(`Stand / Walk: ${stand.label}`);
@@ -330,9 +322,7 @@ export function formatAccommodationsDetailLines(
         (value.transitionalAbleRemaining
           ? `; able to work remaining schedule: ${value.transitionalAbleRemaining.toUpperCase()}`
           : "") +
-        (value.transitionalEffectiveDate
-          ? `; effective ${value.transitionalEffectiveDate}`
-          : ""),
+        (value.transitionalEffectiveDate ? `; effective ${value.transitionalEffectiveDate}` : ""),
     );
   }
   if (value.notes.trim()) lines.push(`Notes: ${value.notes.trim()}`);

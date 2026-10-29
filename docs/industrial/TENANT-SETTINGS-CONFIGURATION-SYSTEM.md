@@ -1,4 +1,5 @@
 # Forge Industrial Safety
+
 ## Complete Tenant Settings & Configuration System
 
 > **Provenance:** Vision specification ingested into the repo on 2026-09-04 from the authoring draft

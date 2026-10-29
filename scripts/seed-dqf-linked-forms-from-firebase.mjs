@@ -44,8 +44,7 @@ const DOCUMENTS_BUCKET =
   process.env.S3_DOCUMENT_BUCKET || "forge-production-documents-511343547817-us-east-1";
 const PAYLOAD_BUCKET = process.env.FORMS_FREEZE_BUCKET || IMPORTS_BUCKET;
 const PAYLOAD_KEY =
-  process.env.FORMS_FREEZE_KEY ||
-  "seed/forms-from-freeze/source/wave2-remaining-payload.json";
+  process.env.FORMS_FREEZE_KEY || "seed/forms-from-freeze/source/wave2-remaining-payload.json";
 const LINKED_FORMS_PREFIX =
   process.env.DQF_LINKED_FORMS_PREFIX ||
   "storage/source/module-attachments/business-1782553339499/dotCompliance/dqf-linked-forms/";
@@ -109,7 +108,9 @@ function normalizeEmployeeNumber(value) {
 }
 
 function normalizeCdl(value) {
-  return asText(value).replace(/[^0-9A-Za-z]/g, "").toUpperCase();
+  return asText(value)
+    .replace(/[^0-9A-Za-z]/g, "")
+    .toUpperCase();
 }
 
 function deterministicUuid(parts) {
@@ -166,9 +167,7 @@ function isDriverPayload(payload) {
 
 async function loadPayload(s3) {
   const { GetObjectCommand } = apiRequire("@aws-sdk/client-s3");
-  const res = await s3.send(
-    new GetObjectCommand({ Bucket: PAYLOAD_BUCKET, Key: PAYLOAD_KEY }),
-  );
+  const res = await s3.send(new GetObjectCommand({ Bucket: PAYLOAD_BUCKET, Key: PAYLOAD_KEY }));
   const text = await res.Body.transformToString("utf8");
   return JSON.parse(text);
 }

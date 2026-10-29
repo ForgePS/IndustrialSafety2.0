@@ -23,10 +23,7 @@ import {
 } from "@/lib/personnel-profile-analytics";
 import { FORM_SUBMISSIONS_API } from "@/lib/forms-module";
 import { openPrintableHtmlPopup } from "@/lib/dvir";
-import {
-  compressImageToUploadFile,
-  imageCompressErrorMessage,
-} from "@/lib/compress-image";
+import { compressImageToUploadFile, imageCompressErrorMessage } from "@/lib/compress-image";
 import { useImageCrop } from "@/hooks/use-image-crop";
 
 type FormListResponse = { items?: Array<Record<string, unknown>> };
@@ -151,8 +148,7 @@ export function CompanyDriverMvrPanel({
         );
         if (cancelled) return;
         const submissions =
-          analytics.forms?.submissions ??
-          emptyPersonnelProfileAnalytics("").forms.submissions;
+          analytics.forms?.submissions ?? emptyPersonnelProfileAnalytics("").forms.submissions;
         const preferred = submissions.filter((item) =>
           /mvr|motor vehicle|consent/i.test(item.label),
         );
@@ -254,8 +250,7 @@ export function CompanyDriverMvrPanel({
         kind === "consent"
           ? {
               ...(localSnapshot ?? {}),
-              mvrReleaseDate:
-                completed.mvrReleaseDate || new Date().toISOString().slice(0, 10),
+              mvrReleaseDate: completed.mvrReleaseDate || new Date().toISOString().slice(0, 10),
               mvrReleaseUploadCount:
                 completed.mvrReleaseUploadCount ??
                 Math.max(1, (localSnapshot?.mvrConsentFiles?.length ?? 0) + 1),
@@ -269,8 +264,7 @@ export function CompanyDriverMvrPanel({
                 completed.lastMvrDate ||
                 new Date().toISOString().slice(0, 10),
               mvrUploadCount:
-                completed.mvrUploadCount ??
-                Math.max(1, (localSnapshot?.mvrFiles?.length ?? 0) + 1),
+                completed.mvrUploadCount ?? Math.max(1, (localSnapshot?.mvrFiles?.length ?? 0) + 1),
               mvrFiles: [...(localSnapshot?.mvrFiles ?? []), nextFile],
             };
       setLocalSnapshot(next);
@@ -291,159 +285,162 @@ export function CompanyDriverMvrPanel({
   return (
     <>
       {cropModal}
-    <div className={`alert ${missing.length > 0 ? "alert-warning" : "alert-info"} mb-0`} role="status">
-      <div className="d-flex align-items-start gap-2">
-        <i
-          className={`bx ${missing.length > 0 ? "bx-error-circle" : "bx-info-circle"} fs-5 flex-shrink-0 mt-1`}
-          aria-hidden="true"
-        />
-        <div className="min-w-0 flex-grow-1">
-          <h6 className="alert-heading mb-2">Company driver MVR documents</h6>
-          <p className="mb-2 small">
-            Upload the MVR report and signed MVR Consent (digital or paper). Open any stored
-            document or completed consent form from this panel.
-          </p>
+      <div
+        className={`alert ${missing.length > 0 ? "alert-warning" : "alert-info"} mb-0`}
+        role="status"
+      >
+        <div className="d-flex align-items-start gap-2">
+          <i
+            className={`bx ${missing.length > 0 ? "bx-error-circle" : "bx-info-circle"} fs-5 flex-shrink-0 mt-1`}
+            aria-hidden="true"
+          />
+          <div className="min-w-0 flex-grow-1">
+            <h6 className="alert-heading mb-2">Company driver MVR documents</h6>
+            <p className="mb-2 small">
+              Upload the MVR report and signed MVR Consent (digital or paper). Open any stored
+              document or completed consent form from this panel.
+            </p>
 
-          <div className="row g-3 mb-3">
-            <div className="col-md-6">
-              <div className="border rounded p-2 bg-body">
-                <div className="d-flex align-items-center justify-content-between gap-2 mb-2">
-                  <div className="fw-semibold small">MVR report</div>
-                  <StatusBadge ok={mvrOnFile} />
-                </div>
-                {localSnapshot?.lastMvrDate ? (
-                  <p className="text-muted small mb-2">
-                    Last MVR: {localSnapshot.lastMvrDate.slice(0, 10)}
-                  </p>
-                ) : (
-                  <p className="text-muted small mb-2">No MVR report on file yet.</p>
-                )}
-                <FileList
-                  files={localSnapshot?.mvrFiles ?? []}
-                  openingId={openingId}
-                  onOpen={(id) => void openDocument(id)}
-                  empty="No uploaded MVR report files."
-                />
-                {canUploadPaper && personnelId ? (
-                  <button
-                    type="button"
-                    className="btn btn-sm btn-outline-primary mt-2"
-                    disabled={busyKind !== null}
-                    onClick={() => reportInputRef.current?.click()}
-                  >
-                    {busyKind === "report" ? "Uploading…" : "Upload MVR report"}
-                  </button>
-                ) : null}
-              </div>
-            </div>
-            <div className="col-md-6">
-              <div className="border rounded p-2 bg-body">
-                <div className="d-flex align-items-center justify-content-between gap-2 mb-2">
-                  <div className="fw-semibold small">
-                    MVR Consent <span className="text-danger">*</span>
+            <div className="row g-3 mb-3">
+              <div className="col-md-6">
+                <div className="border rounded p-2 bg-body">
+                  <div className="d-flex align-items-center justify-content-between gap-2 mb-2">
+                    <div className="fw-semibold small">MVR report</div>
+                    <StatusBadge ok={mvrOnFile} />
                   </div>
-                  <StatusBadge ok={consentOnFile} />
-                </div>
-                {localSnapshot?.mvrReleaseDate ? (
-                  <p className="text-muted small mb-2">
-                    Consent date: {localSnapshot.mvrReleaseDate.slice(0, 10)}
-                  </p>
-                ) : (
-                  <p className="text-muted small mb-2">No MVR Consent on file yet.</p>
-                )}
-                <FileList
-                  files={localSnapshot?.mvrConsentFiles ?? []}
-                  openingId={openingId}
-                  onOpen={(id) => void openDocument(id)}
-                  empty="No uploaded paper consent files."
-                />
-                {consentForms.length > 0 ? (
-                  <ul className="list-unstyled mb-2 mt-2 small">
-                    {consentForms.map((item) => (
-                      <li
-                        key={item.id}
-                        className="d-flex flex-wrap align-items-center justify-content-between gap-2 py-1 border-top"
-                      >
-                        <span className="text-truncate">{item.label}</span>
-                        <span className="d-flex gap-2">
-                          <button
-                            type="button"
-                            className="btn btn-link btn-sm px-0"
-                            onClick={() => void viewFormSubmission(item)}
-                          >
-                            View
-                          </button>
-                          <Link
-                            className="btn btn-link btn-sm px-0"
-                            href={formSubmissionHref(item)}
-                          >
-                            Open in Forms
-                          </Link>
-                        </span>
-                      </li>
-                    ))}
-                  </ul>
-                ) : (
-                  <p className="text-muted small mb-2 mt-2">
-                    No digital MVR Consent submissions yet.
-                  </p>
-                )}
-                <div className="d-flex flex-wrap gap-2 mt-2">
-                  {canFillForms && mvrFormId && personnelId ? (
-                    <Link
-                      className="btn btn-sm btn-primary"
-                      href={producersMvrConsentFormFillHref(mvrFormId, personnelId)}
-                    >
-                      Complete {mvrFormTitle}
-                    </Link>
-                  ) : null}
+                  {localSnapshot?.lastMvrDate ? (
+                    <p className="text-muted small mb-2">
+                      Last MVR: {localSnapshot.lastMvrDate.slice(0, 10)}
+                    </p>
+                  ) : (
+                    <p className="text-muted small mb-2">No MVR report on file yet.</p>
+                  )}
+                  <FileList
+                    files={localSnapshot?.mvrFiles ?? []}
+                    openingId={openingId}
+                    onOpen={(id) => void openDocument(id)}
+                    empty="No uploaded MVR report files."
+                  />
                   {canUploadPaper && personnelId ? (
                     <button
                       type="button"
-                      className="btn btn-sm btn-outline-primary"
+                      className="btn btn-sm btn-outline-primary mt-2"
                       disabled={busyKind !== null}
-                      onClick={() => consentInputRef.current?.click()}
+                      onClick={() => reportInputRef.current?.click()}
                     >
-                      {busyKind === "consent" ? "Uploading…" : "Upload paper consent"}
+                      {busyKind === "report" ? "Uploading…" : "Upload MVR report"}
                     </button>
                   ) : null}
                 </div>
               </div>
+              <div className="col-md-6">
+                <div className="border rounded p-2 bg-body">
+                  <div className="d-flex align-items-center justify-content-between gap-2 mb-2">
+                    <div className="fw-semibold small">
+                      MVR Consent <span className="text-danger">*</span>
+                    </div>
+                    <StatusBadge ok={consentOnFile} />
+                  </div>
+                  {localSnapshot?.mvrReleaseDate ? (
+                    <p className="text-muted small mb-2">
+                      Consent date: {localSnapshot.mvrReleaseDate.slice(0, 10)}
+                    </p>
+                  ) : (
+                    <p className="text-muted small mb-2">No MVR Consent on file yet.</p>
+                  )}
+                  <FileList
+                    files={localSnapshot?.mvrConsentFiles ?? []}
+                    openingId={openingId}
+                    onOpen={(id) => void openDocument(id)}
+                    empty="No uploaded paper consent files."
+                  />
+                  {consentForms.length > 0 ? (
+                    <ul className="list-unstyled mb-2 mt-2 small">
+                      {consentForms.map((item) => (
+                        <li
+                          key={item.id}
+                          className="d-flex flex-wrap align-items-center justify-content-between gap-2 py-1 border-top"
+                        >
+                          <span className="text-truncate">{item.label}</span>
+                          <span className="d-flex gap-2">
+                            <button
+                              type="button"
+                              className="btn btn-link btn-sm px-0"
+                              onClick={() => void viewFormSubmission(item)}
+                            >
+                              View
+                            </button>
+                            <Link
+                              className="btn btn-link btn-sm px-0"
+                              href={formSubmissionHref(item)}
+                            >
+                              Open in Forms
+                            </Link>
+                          </span>
+                        </li>
+                      ))}
+                    </ul>
+                  ) : (
+                    <p className="text-muted small mb-2 mt-2">
+                      No digital MVR Consent submissions yet.
+                    </p>
+                  )}
+                  <div className="d-flex flex-wrap gap-2 mt-2">
+                    {canFillForms && mvrFormId && personnelId ? (
+                      <Link
+                        className="btn btn-sm btn-primary"
+                        href={producersMvrConsentFormFillHref(mvrFormId, personnelId)}
+                      >
+                        Complete {mvrFormTitle}
+                      </Link>
+                    ) : null}
+                    {canUploadPaper && personnelId ? (
+                      <button
+                        type="button"
+                        className="btn btn-sm btn-outline-primary"
+                        disabled={busyKind !== null}
+                        onClick={() => consentInputRef.current?.click()}
+                      >
+                        {busyKind === "consent" ? "Uploading…" : "Upload paper consent"}
+                      </button>
+                    ) : null}
+                  </div>
+                </div>
+              </div>
             </div>
-          </div>
 
-          {missing.length > 0 ? (
-            <p className="mb-2 small text-warning-emphasis">
-              Still needed: {missing.join(" and ")}.
-              {!personnelId ? " Save this person first, then complete the requirements." : null}
-            </p>
-          ) : null}
-          {personnelId ? (
-            <Link
-              className="btn btn-sm btn-outline-secondary"
-              href="/modules/personnel/?view=company-drivers"
-            >
-              Company drivers roster
-            </Link>
-          ) : null}
-          <input
-            ref={reportInputRef}
-            type="file"
-            className="d-none"
-            accept="image/*,application/pdf"
-            onChange={(event) => void uploadFile("report", event.target.files?.[0] ?? null)}
-          />
-          <input
-            ref={consentInputRef}
-            type="file"
-            className="d-none"
-            accept="image/*,application/pdf"
-            onChange={(event) => void uploadFile("consent", event.target.files?.[0] ?? null)}
-          />
-          {error ? <div className="text-danger small mt-2 mb-0">{error}</div> : null}
+            {missing.length > 0 ? (
+              <p className="mb-2 small text-warning-emphasis">
+                Still needed: {missing.join(" and ")}.
+                {!personnelId ? " Save this person first, then complete the requirements." : null}
+              </p>
+            ) : null}
+            {personnelId ? (
+              <Link
+                className="btn btn-sm btn-outline-secondary"
+                href="/modules/personnel/?view=company-drivers"
+              >
+                Company drivers roster
+              </Link>
+            ) : null}
+            <input
+              ref={reportInputRef}
+              type="file"
+              className="d-none"
+              accept="image/*,application/pdf"
+              onChange={(event) => void uploadFile("report", event.target.files?.[0] ?? null)}
+            />
+            <input
+              ref={consentInputRef}
+              type="file"
+              className="d-none"
+              accept="image/*,application/pdf"
+              onChange={(event) => void uploadFile("consent", event.target.files?.[0] ?? null)}
+            />
+            {error ? <div className="text-danger small mt-2 mb-0">{error}</div> : null}
+          </div>
         </div>
       </div>
-    </div>
     </>
   );
 }

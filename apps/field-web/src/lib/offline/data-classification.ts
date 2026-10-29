@@ -3,11 +3,7 @@
  * Mirrors industrial IND-10: classification decides caching/queueing, not the UI.
  */
 
-export type OfflineClass =
-  | "OFFLINE_REQUIRED"
-  | "USEFUL"
-  | "ONLINE_REQUIRED"
-  | "NEVER_CACHE";
+export type OfflineClass = "OFFLINE_REQUIRED" | "USEFUL" | "ONLINE_REQUIRED" | "NEVER_CACHE";
 
 export type OfflineDomainPolicy = {
   domain: string;
@@ -136,9 +132,7 @@ export const OFFLINE_DOMAIN_POLICIES: readonly OfflineDomainPolicy[] = [
   },
 ];
 
-const POLICY_BY_DOMAIN = new Map(
-  OFFLINE_DOMAIN_POLICIES.map((policy) => [policy.domain, policy]),
-);
+const POLICY_BY_DOMAIN = new Map(OFFLINE_DOMAIN_POLICIES.map((policy) => [policy.domain, policy]));
 
 export function classifyDomain(domain: string): OfflineDomainPolicy {
   return (

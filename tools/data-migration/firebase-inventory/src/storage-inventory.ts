@@ -19,7 +19,11 @@ function purposeForBucket(name: string): string {
   if (name.includes("firebasestorage.app") || name.endsWith(".appspot.com")) {
     return "Firebase Storage customer/application files";
   }
-  if (name.includes("firestore-migration") || name.includes("data_migration") || name.includes("data_export")) {
+  if (
+    name.includes("firestore-migration") ||
+    name.includes("data_migration") ||
+    name.includes("data_export")
+  ) {
     return "Firestore export / migration staging";
   }
   if (name.includes("gcf-v2")) return "Cloud Functions source/uploads (non-customer app data)";
@@ -27,7 +31,12 @@ function purposeForBucket(name: string): string {
 }
 
 function inferTenantScoping(prefixes: string[]): string {
-  if (prefixes.some((p) => p.startsWith("tenants/") || p.startsWith("module-attachments/") || p.includes("business-"))) {
+  if (
+    prefixes.some(
+      (p) =>
+        p.startsWith("tenants/") || p.startsWith("module-attachments/") || p.includes("business-"),
+    )
+  ) {
     return "path-prefix businessId/tenant segments";
   }
   return "UNKNOWN / bucket-level";

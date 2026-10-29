@@ -20,42 +20,42 @@ Retain Outcome B scanner block and `RETAIN_SQS_ECS_WORKER_PATH`.
 
 ## 3. Development deployment baseline (current)
 
-| Item | Value |
-| --- | --- |
-| Tag | `import-s8-patch-20260730113557` |
-| API TD | `:42` (rollback target `:40`) |
-| Worker TD | `:26` (rollback target `:25`) |
-| API digest | `sha256:03c9833a54eb368795b296f3cac2ed0be66195c9c12e79b3830285ac541f61a3` |
-| Worker digest | `sha256:cc4fa0c35ccdff05aed487b6b31a5b54b7411ced558335b18cf537bc47f93d3f` |
-| Migration | `0027` (no S8 migration) |
-| Health | 200 |
-| Imports unauth | 401 |
-| App secret LastChangedDate | `2026-07-26T15:30:16.387000-05:00` unchanged |
-| Production deploy | none |
+| Item                       | Value                                                                     |
+| -------------------------- | ------------------------------------------------------------------------- |
+| Tag                        | `import-s8-patch-20260730113557`                                          |
+| API TD                     | `:42` (rollback target `:40`)                                             |
+| Worker TD                  | `:26` (rollback target `:25`)                                             |
+| API digest                 | `sha256:03c9833a54eb368795b296f3cac2ed0be66195c9c12e79b3830285ac541f61a3` |
+| Worker digest              | `sha256:cc4fa0c35ccdff05aed487b6b31a5b54b7411ced558335b18cf537bc47f93d3f` |
+| Migration                  | `0027` (no S8 migration)                                                  |
+| Health                     | 200                                                                       |
+| Imports unauth             | 401                                                                       |
+| App secret LastChangedDate | `2026-07-26T15:30:16.387000-05:00` unchanged                              |
+| Production deploy          | none                                                                      |
 
 Evidence: `docs/testing/evidence/import-platform/s8-patch-deploy.json`, `s8-def-023-024-closed.json`.
 
 ## 4. Code / infra changes this pass
 
-- Worker IAM `sqs:SendMessage` on imports queue (+ CDK `grantSendMessages`)  
-- API default adapter `reference:generic:record@1` deployed in `:42`  
-- `scripts/sync-static-site.mjs` resolves `NEXT_PUBLIC_API_URL` for Creator Console  
-- CF response headers policy `OriginOverride: false` (Nest CORS preflight)  
-- Playwright Import Center S8 suite  
-- Live workflow / permission / perf / DLQ / recovery scripts + evidence  
+- Worker IAM `sqs:SendMessage` on imports queue (+ CDK `grantSendMessages`)
+- API default adapter `reference:generic:record@1` deployed in `:42`
+- `scripts/sync-static-site.mjs` resolves `NEXT_PUBLIC_API_URL` for Creator Console
+- CF response headers policy `OriginOverride: false` (Nest CORS preflight)
+- Playwright Import Center S8 suite
+- Live workflow / permission / perf / DLQ / recovery scripts + evidence
 
 ## 5. Defects closed this pass
 
-| ID | Closure |
-| --- | --- |
+| ID         | Closure                                 |
+| ---------- | --------------------------------------- |
 | DEF-S8-023 | CLOSED — auto format-detect after CLEAN |
-| DEF-S8-024 | CLOSED — default adapter on API `:42` |
-| DEF-S8-001 | CLOSED — rollback rehearsal |
-| DEF-S8-010 | CLOSED — worker crash recovery |
-| DEF-S8-011 | CLOSED — duplicate delivery |
-| DEF-S8-013 | CLOSED — stale-lock recovery |
-| DEF-S8-019 | CLOSED — cancellation recovery |
-| DEF-S8-020 | CLOSED — batch 50/200 |
+| DEF-S8-024 | CLOSED — default adapter on API `:42`   |
+| DEF-S8-001 | CLOSED — rollback rehearsal             |
+| DEF-S8-010 | CLOSED — worker crash recovery          |
+| DEF-S8-011 | CLOSED — duplicate delivery             |
+| DEF-S8-013 | CLOSED — stale-lock recovery            |
+| DEF-S8-019 | CLOSED — cancellation recovery          |
+| DEF-S8-020 | CLOSED — batch 50/200                   |
 
 ## 6. Remaining open / partial P1
 
@@ -75,18 +75,18 @@ Evidence: `s8-playwright-import-center.json`.
 
 ## 9–17. Other gates (summary)
 
-| Area | Status |
-| --- | --- |
-| Permission matrix live HTTP | PARTIAL 14/15 (template.manage 404) |
-| Worker / lock / cancel / idempotency | VERIFIED |
-| Retriable DLQ | NOT_VERIFIED on `:26` |
-| Aurora 500/5k | PARTIAL (25k/100k open) |
-| Concurrency | PARTIAL (3 jobs OK) |
-| Batch size | VERIFIED |
-| Rollback rehearsal | VERIFIED |
-| Backup restore | NOT_VERIFIED |
-| Alarms | PARTIAL |
-| Secret rotation | None |
+| Area                                 | Status                              |
+| ------------------------------------ | ----------------------------------- |
+| Permission matrix live HTTP          | PARTIAL 14/15 (template.manage 404) |
+| Worker / lock / cancel / idempotency | VERIFIED                            |
+| Retriable DLQ                        | NOT_VERIFIED on `:26`               |
+| Aurora 500/5k                        | PARTIAL (25k/100k open)             |
+| Concurrency                          | PARTIAL (3 jobs OK)                 |
+| Batch size                           | VERIFIED                            |
+| Rollback rehearsal                   | VERIFIED                            |
+| Backup restore                       | NOT_VERIFIED                        |
+| Alarms                               | PARTIAL                             |
+| Secret rotation                      | None                                |
 
 ## 18. Stop
 

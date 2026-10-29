@@ -1,8 +1,5 @@
 import { describe, expect, it } from "vitest";
-import {
-  orgLookupScopesAreIsolated,
-  orgLookupTenantFilter,
-} from "./org-lookups-scope.js";
+import { orgLookupScopesAreIsolated, orgLookupTenantFilter } from "./org-lookups-scope.js";
 
 describe("org lookup tenant isolation", () => {
   const tenantA = "019f0000-aaaa-7000-8000-000000000001";

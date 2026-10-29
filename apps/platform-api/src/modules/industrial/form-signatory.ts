@@ -37,7 +37,9 @@ export function isSignatureFieldLabel(label: string): boolean {
 }
 
 function isSignatureTyped(field: SignatoryFieldRef): boolean {
-  const type = String(field.type ?? "").trim().toLowerCase();
+  const type = String(field.type ?? "")
+    .trim()
+    .toLowerCase();
   if (
     type === "signature" ||
     type === "signaturepad" ||
@@ -75,9 +77,7 @@ export function isSupervisorSignatureField(field: SignatoryFieldRef): boolean {
   return /\bsupervisor\b/.test(blob);
 }
 
-export function formSignatoryKindForField(
-  field: SignatoryFieldRef,
-): FormSignatoryKind | null {
+export function formSignatoryKindForField(field: SignatoryFieldRef): FormSignatoryKind | null {
   if (isEhsDirectorSignatureField(field)) return "ehs_director";
   if (isSupervisorSignatureField(field)) return "supervisor";
   return null;
@@ -214,15 +214,11 @@ export function taskCreatedByUserId(
   return null;
 }
 
-export function listEhsDirectorSignatureFields(
-  fields: SignatoryFieldRef[],
-): SignatoryFieldRef[] {
+export function listEhsDirectorSignatureFields(fields: SignatoryFieldRef[]): SignatoryFieldRef[] {
   return fields.filter((field) => isEhsDirectorSignatureField(field));
 }
 
-export function listSupervisorSignatureFields(
-  fields: SignatoryFieldRef[],
-): SignatoryFieldRef[] {
+export function listSupervisorSignatureFields(fields: SignatoryFieldRef[]): SignatoryFieldRef[] {
   return fields.filter((field) => isSupervisorSignatureField(field));
 }
 
@@ -263,7 +259,9 @@ export function missingSupervisorSignatureFields(
 /** Signature or signature-date fields that a supervisor or EHS Director may fill later. */
 export function isDeferredSignatoryField(field: SignatoryFieldRef): boolean {
   if (isEhsDirectorSignatureField(field) || isSupervisorSignatureField(field)) return true;
-  const type = String(field.type ?? "").trim().toLowerCase();
+  const type = String(field.type ?? "")
+    .trim()
+    .toLowerCase();
   if (type !== "date" && type !== "datetime") return false;
   const label = normalizeBlob(field.label);
   const id = normalizeBlob(field.id);

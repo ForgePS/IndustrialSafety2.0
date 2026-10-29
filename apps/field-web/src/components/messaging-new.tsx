@@ -6,10 +6,7 @@ import { ApiError } from "@forge/web-kit";
 import { EmptyState, ErrorState, LoadingState } from "@/components/field-states";
 import { useFieldPermissions } from "@/components/field-permissions-provider";
 import { fieldMessagingApi } from "@/lib/messaging-api";
-import {
-  messagingParticipantLine,
-  type MessagingParticipant,
-} from "@/lib/messaging";
+import { messagingParticipantLine, type MessagingParticipant } from "@/lib/messaging";
 
 export function MessagingNewChat() {
   const router = useRouter();
@@ -127,10 +124,7 @@ export function MessagingNewChat() {
                     type="button"
                     role="option"
                     aria-selected={selected}
-                    className={[
-                      "ff-msg-people-row",
-                      selected ? "ff-msg-people-row--selected" : "",
-                    ]
+                    className={["ff-msg-people-row", selected ? "ff-msg-people-row--selected" : ""]
                       .filter(Boolean)
                       .join(" ")}
                     onClick={() => setSelectedId(person.id)}
@@ -145,11 +139,7 @@ export function MessagingNewChat() {
 
           {error && participants.length > 0 ? <p className="ff-msg-send-error">{error}</p> : null}
 
-          <button
-            type="submit"
-            className="ff-btn ff-btn-primary"
-            disabled={!selectedId || saving}
-          >
+          <button type="submit" className="ff-btn ff-btn-primary" disabled={!selectedId || saving}>
             {saving ? "Starting…" : "Start chat"}
           </button>
         </form>

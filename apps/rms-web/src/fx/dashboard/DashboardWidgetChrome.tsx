@@ -1,12 +1,6 @@
 import type { ReactNode } from "react";
 
-export function DashboardWidgetHeader({
-  title,
-  actions,
-}: {
-  title: string;
-  actions?: ReactNode;
-}) {
+export function DashboardWidgetHeader({ title, actions }: { title: string; actions?: ReactNode }) {
   return (
     <header className="rms-fx-widget__header">
       <h3 className="rms-fx-widget__title">{title}</h3>

@@ -24,9 +24,7 @@ const ACCOUNT = "511343547817";
 const TMP = path.join(process.cwd(), `.forge-prod-industrial-cf-${Date.now()}.json`);
 
 function awsJson(args) {
-  return JSON.parse(
-    execFileSync("aws", [...args, "--output", "json"], { encoding: "utf8" }),
-  );
+  return JSON.parse(execFileSync("aws", [...args, "--output", "json"], { encoding: "utf8" }));
 }
 
 function awsText(args) {
@@ -60,12 +58,7 @@ const cfg = raw.DistributionConfig;
 const rhpId = cfg.DefaultCacheBehavior.ResponseHeadersPolicyId;
 if (!rhpId) throw new Error("Missing ResponseHeadersPolicyId on industrial default behavior");
 
-const rhpRaw = awsJson([
-  "cloudfront",
-  "get-response-headers-policy",
-  "--id",
-  rhpId,
-]);
+const rhpRaw = awsJson(["cloudfront", "get-response-headers-policy", "--id", rhpId]);
 const rhpEtag = rhpRaw.ETag;
 const rhpCfg = structuredClone(rhpRaw.ResponseHeadersPolicy.ResponseHeadersPolicyConfig);
 delete rhpCfg.ResponseHeadersPolicyId;
@@ -118,8 +111,7 @@ cfg.Origins = {
   Items: origins,
 };
 
-const apiOriginId =
-  origins.find((o) => o.DomainName === API_DOMAIN)?.Id ?? API_ORIGIN_ID;
+const apiOriginId = origins.find((o) => o.DomainName === API_DOMAIN)?.Id ?? API_ORIGIN_ID;
 
 const existingBehaviors = cfg.CacheBehaviors?.Items ?? [];
 const keep = existingBehaviors.filter(
@@ -193,8 +185,7 @@ if (!freshOrigins.some((o) => o.Id === API_ORIGIN_ID || o.DomainName === API_DOM
   });
 }
 freshCfg.Origins = { Quantity: freshOrigins.length, Items: freshOrigins };
-const freshApiOriginId =
-  freshOrigins.find((o) => o.DomainName === API_DOMAIN)?.Id ?? API_ORIGIN_ID;
+const freshApiOriginId = freshOrigins.find((o) => o.DomainName === API_DOMAIN)?.Id ?? API_ORIGIN_ID;
 const freshKeep = (freshCfg.CacheBehaviors?.Items ?? []).filter(
   (b) => b.PathPattern !== "/api/*" && b.PathPattern !== "/health",
 );

@@ -116,7 +116,10 @@ function SdsInner() {
       {error ? <ErrorState message={error} onRetry={() => void refresh()} /> : null}
 
       {!loading && !error && filtered.length === 0 ? (
-        <EmptyState title="No chemicals found" message="Scan a chemical QR or refine your search." />
+        <EmptyState
+          title="No chemicals found"
+          message="Scan a chemical QR or refine your search."
+        />
       ) : null}
 
       {!loading && !error && filtered.length > 0 ? (

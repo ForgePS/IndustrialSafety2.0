@@ -4,16 +4,10 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { ApiError, useAuth } from "@forge/web-kit";
 import { OperationsListShell } from "@/components/operations-list-shell";
-import {
-  FieldPrintDialog,
-  type FieldPrintDialogBatchItem,
-} from "@/components/field-print-label";
+import { FieldPrintDialog, type FieldPrintDialogBatchItem } from "@/components/field-print-label";
 import { useFieldOrgOptional } from "@/components/field-org-provider";
 import { useFieldPermissions } from "@/components/field-permissions-provider";
-import {
-  ensureEquipmentPrintQrPayload,
-  equipmentPrintFieldValues,
-} from "@/lib/equipment-print";
+import { ensureEquipmentPrintQrPayload, equipmentPrintFieldValues } from "@/lib/equipment-print";
 import { operationsApi } from "@/lib/operations-api";
 import {
   equipmentDisplayName,
@@ -31,12 +25,12 @@ export function EquipmentBrowser() {
   const canPrint = hasAnyPermission(["industrial.printer.print", "industrial.admin"]);
   const canQrView = Boolean(
     me?.permissions?.includes("industrial.qr.view") ||
-      me?.permissions?.includes("industrial.qr.generate") ||
-      me?.permissions?.includes("industrial.admin"),
+    me?.permissions?.includes("industrial.qr.generate") ||
+    me?.permissions?.includes("industrial.admin"),
   );
   const canQrGenerate = Boolean(
     me?.permissions?.includes("industrial.qr.generate") ||
-      me?.permissions?.includes("industrial.admin"),
+    me?.permissions?.includes("industrial.admin"),
   );
 
   const [rows, setRows] = useState<EquipmentListItem[]>([]);
@@ -301,9 +295,7 @@ export function EquipmentBrowser() {
           ? { recordId: batchItems[0].recordId }
           : {})}
         dialogTitle={
-          batchItems && batchItems.length > 1
-            ? `Print ${batchItems.length} labels`
-            : "Print label"
+          batchItems && batchItems.length > 1 ? `Print ${batchItems.length} labels` : "Print label"
         }
         fieldValues={batchItems?.[0]?.fieldValues ?? {}}
         {...(batchItems?.[0]?.title ? { title: batchItems[0].title } : {})}

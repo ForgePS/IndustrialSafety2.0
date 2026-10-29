@@ -44,7 +44,8 @@ function unwrap(raw) {
 
 const sql = postgres(await resolveDatabaseUrl(process.env.DATABASE_SECRET_ARN), { max: 1 });
 try {
-  const [tenant] = await sql`select id::text as id from tenants where tenant_key = ${TENANT_KEY} limit 1`;
+  const [tenant] =
+    await sql`select id::text as id from tenants where tenant_key = ${TENANT_KEY} limit 1`;
   const rows = await sql`
     select id::text as id, title, source_payload
     from industrial_loto_procedures
@@ -95,7 +96,16 @@ try {
   }
   console.log(
     JSON.stringify(
-      { tenantKey: TENANT_KEY, scanned: rows.length, withSteps, emptySteps, stringSteps, usable, keyFreq, samples },
+      {
+        tenantKey: TENANT_KEY,
+        scanned: rows.length,
+        withSteps,
+        emptySteps,
+        stringSteps,
+        usable,
+        keyFreq,
+        samples,
+      },
       null,
       2,
     ),

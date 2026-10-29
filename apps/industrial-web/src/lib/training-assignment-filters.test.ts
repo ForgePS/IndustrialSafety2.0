@@ -114,27 +114,37 @@ describe("training-assignment-filters", () => {
       sourceId: "course-1",
     };
     expect(filterAssignmentRecord(assignments[0]!, filters)).toBe(true);
-    expect(
-      filterAssignmentRecord(assignments[0]!, { ...filters, month: "7" }),
-    ).toBe(false);
+    expect(filterAssignmentRecord(assignments[0]!, { ...filters, month: "7" })).toBe(false);
   });
 
   it("filters roster rows by location, division, department, group, employee, and status", () => {
     const metaMap = buildPersonnelMetaMap(people);
     const base = defaultAssignmentFilters();
 
-    expect(filterAssignmentPersonnelRow(roster[0]!, { ...base, siteId: "site-a" }, metaMap)).toBe(true);
-    expect(filterAssignmentPersonnelRow(roster[0]!, { ...base, siteId: "site-b" }, metaMap)).toBe(false);
+    expect(filterAssignmentPersonnelRow(roster[0]!, { ...base, siteId: "site-a" }, metaMap)).toBe(
+      true,
+    );
+    expect(filterAssignmentPersonnelRow(roster[0]!, { ...base, siteId: "site-b" }, metaMap)).toBe(
+      false,
+    );
     expect(
       filterAssignmentPersonnelRow(roster[0]!, { ...base, divisionName: "Production" }, metaMap),
     ).toBe(true);
     expect(
       filterAssignmentPersonnelRow(roster[1]!, { ...base, departmentName: "Safety" }, metaMap),
     ).toBe(true);
-    expect(filterAssignmentPersonnelRow(roster[0]!, { ...base, groupId: "g1" }, metaMap)).toBe(true);
-    expect(filterAssignmentPersonnelRow(roster[0]!, { ...base, personnelId: "p1" }, metaMap)).toBe(true);
-    expect(filterAssignmentPersonnelRow(roster[0]!, { ...base, status: "PASSED" }, metaMap)).toBe(true);
-    expect(filterAssignmentPersonnelRow(roster[1]!, { ...base, query: "Jamie" }, metaMap)).toBe(true);
+    expect(filterAssignmentPersonnelRow(roster[0]!, { ...base, groupId: "g1" }, metaMap)).toBe(
+      true,
+    );
+    expect(filterAssignmentPersonnelRow(roster[0]!, { ...base, personnelId: "p1" }, metaMap)).toBe(
+      true,
+    );
+    expect(filterAssignmentPersonnelRow(roster[0]!, { ...base, status: "PASSED" }, metaMap)).toBe(
+      true,
+    );
+    expect(filterAssignmentPersonnelRow(roster[1]!, { ...base, query: "Jamie" }, metaMap)).toBe(
+      true,
+    );
   });
 
   it("builds filter options from assignments and roster", () => {

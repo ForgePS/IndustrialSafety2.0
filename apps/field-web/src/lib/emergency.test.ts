@@ -75,9 +75,7 @@ describe("emergency helpers", () => {
     expect(fields.find((f) => f.label === "Phone")?.value).toBe("555-9");
   });
   it("detects when acknowledgment is still required", () => {
-    expect(
-      alertNeedsAcknowledgment({ id: "a", requiresAcknowledgment: true }),
-    ).toBe(true);
+    expect(alertNeedsAcknowledgment({ id: "a", requiresAcknowledgment: true })).toBe(true);
     expect(
       alertNeedsAcknowledgment({
         id: "a",
@@ -103,9 +101,7 @@ describe("emergency scan routes", () => {
     expect(hubPathForTarget("EMERGENCY_PROCEDURE", "p1")).toBe(
       "/more/emergency/?id=p1&category=eap",
     );
-    expect(hubPathForTarget("EMERGENCY_ALERT", "a1")).toBe(
-      "/more/emergency/?id=a1&kind=alert",
-    );
+    expect(hubPathForTarget("EMERGENCY_ALERT", "a1")).toBe("/more/emergency/?id=a1&kind=alert");
     expect(
       fieldHrefFromIndustrialPath("/modules/emergency-alerts?alertId=a9", {
         targetType: "EMERGENCY",

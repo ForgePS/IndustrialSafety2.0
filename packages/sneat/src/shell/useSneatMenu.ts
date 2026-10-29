@@ -10,9 +10,7 @@ function readStoredOpenGroups(storageKey: string): Record<string, boolean> {
     const raw = window.localStorage.getItem(storageKey);
     if (!raw) return {};
     const parsed = JSON.parse(raw) as Record<string, unknown>;
-    return Object.fromEntries(
-      Object.entries(parsed).map(([key, value]) => [key, value === true]),
-    );
+    return Object.fromEntries(Object.entries(parsed).map(([key, value]) => [key, value === true]));
   } catch {
     return {};
   }
@@ -37,9 +35,7 @@ export function useSneatMenu(options?: {
     if (Object.keys(stored).length > 0) {
       setOpenGroups(stored);
     } else if (options?.defaultOpenGroupIds?.length) {
-      setOpenGroups(
-        Object.fromEntries(options.defaultOpenGroupIds.map((id) => [id, true])),
-      );
+      setOpenGroups(Object.fromEntries(options.defaultOpenGroupIds.map((id) => [id, true])));
     }
     setHydrated(true);
   }, [storageKey, options?.defaultOpenGroupIds]);

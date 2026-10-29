@@ -153,9 +153,7 @@ export class ProductsService {
       .from(tenantModuleEntitlements)
       .where(eq(tenantModuleEntitlements.status, "ACTIVE"))
       .groupBy(tenantModuleEntitlements.moduleId);
-    const countByModule = new Map(
-      assignmentCounts.map((r) => [r.moduleId, Number(r.customers)]),
-    );
+    const countByModule = new Map(assignmentCounts.map((r) => [r.moduleId, Number(r.customers)]));
 
     return rows
       .map((row) => {

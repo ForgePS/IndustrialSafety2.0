@@ -2,14 +2,14 @@
 
 ## Branding fields (`tenant_branding`)
 
-| Field | Purpose |
-| --- | --- |
-| `display_name` / `short_name` | Product / app names |
-| `logo_document_id` / `icon_document_id` | Tenant-owned `forge_documents` refs |
-| colors + `approved_colors_json` | Theme and approved palette |
-| `contact_name` / `contact_phone` / `support_email` / `email_sender_name` | Contact |
-| `report_identity` | Report header identity |
-| `document_footer` | Document footer text |
+| Field                                                                    | Purpose                             |
+| ------------------------------------------------------------------------ | ----------------------------------- |
+| `display_name` / `short_name`                                            | Product / app names                 |
+| `logo_document_id` / `icon_document_id`                                  | Tenant-owned `forge_documents` refs |
+| colors + `approved_colors_json`                                          | Theme and approved palette          |
+| `contact_name` / `contact_phone` / `support_email` / `email_sender_name` | Contact                             |
+| `report_identity`                                                        | Report header identity              |
+| `document_footer`                                                        | Document footer text                |
 
 ## Tenant-scoped storage
 

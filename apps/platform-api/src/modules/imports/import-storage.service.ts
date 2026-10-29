@@ -68,10 +68,7 @@ export class ImportStorageService {
     };
   }
 
-  async createMultipartUpload(input: {
-    objectKey: string;
-    contentType: string;
-  }): Promise<string> {
+  async createMultipartUpload(input: { objectKey: string; contentType: string }): Promise<string> {
     const response = await this.client.send(
       new CreateMultipartUploadCommand({
         Bucket: this.bucketName,

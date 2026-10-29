@@ -45,10 +45,7 @@ const REQUIRED_FLAT_ROUTES = [
 describe("Industrial Model A API contract", () => {
   it("flat controller implements required frontend routes", () => {
     const controller = readFileSync(
-      path.join(
-        ROOT,
-        "apps/platform-api/src/modules/industrial/industrial-flat.controller.ts",
-      ),
+      path.join(ROOT, "apps/platform-api/src/modules/industrial/industrial-flat.controller.ts"),
       "utf8",
     );
     expect(controller).toContain('@Controller("api/v1/industrial")');
@@ -83,10 +80,7 @@ describe("Industrial Model A API contract", () => {
 
   it("exposes WC medical GET and child archive routes", () => {
     const controller = readFileSync(
-      path.join(
-        ROOT,
-        "apps/platform-api/src/modules/industrial/industrial-flat.controller.ts",
-      ),
+      path.join(ROOT, "apps/platform-api/src/modules/industrial/industrial-flat.controller.ts"),
       "utf8",
     );
     expect(controller).toContain('@Get("workers-comp/:id/medical")');

@@ -27,7 +27,10 @@ export function rangeForFieldCalendarView(
   return { from: startOfMonth(day), to: endOfMonth(day) };
 }
 
-export function daysForFieldCalendarView(view: FieldCalendarView, anchor: Date = new Date()): Date[] {
+export function daysForFieldCalendarView(
+  view: FieldCalendarView,
+  anchor: Date = new Date(),
+): Date[] {
   const { from, to } = rangeForFieldCalendarView(view, anchor);
   const days: Date[] = [];
   let cursor = startOfDay(from);

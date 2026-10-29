@@ -26,34 +26,41 @@ async function main() {
   const outDir = join(REPO_ROOT, "docs", "compliance", "soc2", "evidence", "testing");
   const stackName = `Forge-${stackEnvLabel(args.environment)}-Compute`;
 
-  const stacks = awsJson(
-    ["cloudformation", "describe-stacks", "--stack-name", stackName],
-    args,
-  );
+  const stacks = awsJson(["cloudformation", "describe-stacks", "--stack-name", stackName], args);
   const outputs = stacks?.Stacks?.[0]?.Outputs || [];
   const cluster =
-    outputs.find((o) => String(o.OutputKey || "").includes("ClusterName"))?.OutputValue ||
-    null;
+    outputs.find((o) => String(o.OutputKey || "").includes("ClusterName"))?.OutputValue || null;
   if (!cluster) throw new Error(`ClusterName output not found on ${stackName}`);
 
   const service = `forge-${args.environment}-ecs-platform-api`;
-  const desc = awsJson(["ecs", "describe-services", "--cluster", cluster, "--services", service], args);
+  const desc = awsJson(
+    ["ecs", "describe-services", "--cluster", cluster, "--services", service],
+    args,
+  );
   const taskDefArn = desc?.services?.[0]?.taskDefinition;
   if (!taskDefArn) throw new Error("platform-api task definition not found");
 
   const td = awsJson(["ecs", "describe-task-definition", "--task-definition", taskDefArn], args);
-  const container = td?.taskDefinition?.containerDefinitions?.find((c) => c.name === "platform-api");
-  const secretEnv = (container?.secrets || []).find((s) => s.name === "DATABASE_SECRET_ARN" || s.name === "DATABASE_URL");
+  const container = td?.taskDefinition?.containerDefinitions?.find(
+    (c) => c.name === "platform-api",
+  );
+  const secretEnv = (container?.secrets || []).find(
+    (s) => s.name === "DATABASE_SECRET_ARN" || s.name === "DATABASE_URL",
+  );
   // DATABASE_SECRET_ARN is typically plain env, not secrets block — check both.
   const envVar = (container?.environment || []).find((e) => e.name === "DATABASE_SECRET_ARN");
   const secretArn = envVar?.value || secretEnv?.valueFrom || null;
 
   const expectedSuffix = `forge-${args.environment}-secrets-database-app`;
   const usesAppSecret = Boolean(secretArn && secretArn.includes(expectedSuffix));
-  const usesAdminSecret = Boolean(secretArn && secretArn.includes(`forge-${args.environment}-secrets-database`) && !usesAppSecret);
+  const usesAdminSecret = Boolean(
+    secretArn && secretArn.includes(`forge-${args.environment}-secrets-database`) && !usesAppSecret,
+  );
 
   if (!usesAppSecret) {
-    throw new Error(`Runtime DATABASE_SECRET_ARN does not reference app secret (${expectedSuffix}). Found: ${secretArn}`);
+    throw new Error(
+      `Runtime DATABASE_SECRET_ARN does not reference app secret (${expectedSuffix}). Found: ${secretArn}`,
+    );
   }
 
   const result = writeEvidenceArtifact({

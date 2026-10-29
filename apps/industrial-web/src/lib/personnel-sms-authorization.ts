@@ -49,8 +49,7 @@ export function parsePersonnelSmsAuthorization(
     typeof record?.smsAuthorizedByUserId === "string" && record.smsAuthorizedByUserId.trim()
       ? record.smsAuthorizedByUserId.trim()
       : null;
-  const smsAuthorized =
-    record?.smsAuthorized === true || (Boolean(authorizedAt) && !optedOutAt);
+  const smsAuthorized = record?.smsAuthorized === true || (Boolean(authorizedAt) && !optedOutAt);
   return {
     phone,
     smsNotificationNumber: notified || phone,
@@ -129,7 +128,10 @@ export function buildSmsConsentPrintableHtml(
     ],
     ["Recorded", formatPrintDate(record.createdAt)],
     ["Method", smsConsentMethodLabel(record.method)],
-    ["Recorded by", record.method === "ADMIN" ? record.actorEmail ?? "Admin" : "Employee (self-service)"],
+    [
+      "Recorded by",
+      record.method === "ADMIN" ? (record.actorEmail ?? "Admin") : "Employee (self-service)",
+    ],
     ["Consent version", record.consentVersion],
     ["IP address", record.ipAddress],
     ["Device", record.userAgent],

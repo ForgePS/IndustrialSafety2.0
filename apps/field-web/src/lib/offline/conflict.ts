@@ -3,10 +3,7 @@
  * Queued mutations are never silently applied against newer or locked server state.
  */
 
-export type ConflictStrategy =
-  | "SERVER_WINS"
-  | "CLIENT_REVIEW_REQUIRED"
-  | "REJECT_STALE_WRITE";
+export type ConflictStrategy = "SERVER_WINS" | "CLIENT_REVIEW_REQUIRED" | "REJECT_STALE_WRITE";
 
 export type ConflictDecision = {
   strategy: ConflictStrategy;

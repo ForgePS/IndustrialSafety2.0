@@ -1,7 +1,4 @@
-import {
-  READABLE_SUBSCRIPTION_STATUSES,
-  WRITABLE_SUBSCRIPTION_STATUSES,
-} from "@forge/contracts";
+import { READABLE_SUBSCRIPTION_STATUSES, WRITABLE_SUBSCRIPTION_STATUSES } from "@forge/contracts";
 import type { ForgePrincipal, TenantOperationalState } from "@forge/tenant-context";
 
 export type PermissionEffect = "ALLOW" | "DENY";
@@ -114,11 +111,7 @@ export function evaluateAuthorization(input: AuthorizationInput): AuthorizationD
         reasonCode: tenantOperationalState.reasonCode ?? "TENANT_OR_SUBSCRIPTION_INACTIVE",
       };
     }
-  } else if (
-    !subscriptionReadable &&
-    !input.allowWhenSuspended &&
-    !principal.isPlatformAdmin
-  ) {
+  } else if (!subscriptionReadable && !input.allowWhenSuspended && !principal.isPlatformAdmin) {
     return {
       allowed: false,
       reasonCode: tenantOperationalState.reasonCode ?? "SUBSCRIPTION_INACTIVE",
@@ -173,8 +166,7 @@ export function evaluateTenantOperationalState(input: {
   tenantStatus: string;
   subscriptionStatus: string | null;
 }): TenantOperationalState {
-  const tenantProductEligible =
-    input.tenantStatus === "ACTIVE" || input.tenantStatus === "TRIAL";
+  const tenantProductEligible = input.tenantStatus === "ACTIVE" || input.tenantStatus === "TRIAL";
   const subscriptionWritable = isWritableSubscription(input.subscriptionStatus);
 
   if (input.tenantStatus === "SUSPENDED") {
@@ -217,8 +209,7 @@ export function evaluateTenantOperationalState(input: {
   return {
     tenantStatus: input.tenantStatus,
     subscriptionStatus: input.subscriptionStatus,
-    canAuthenticate:
-      tenantProductEligible || input.tenantStatus === "PROVISIONING",
+    canAuthenticate: tenantProductEligible || input.tenantStatus === "PROVISIONING",
     canUseProducts: tenantProductEligible && subscriptionWritable,
     canManageBilling: true,
     reasonCode: null,
@@ -248,18 +239,12 @@ export function requireEntitlement(
   entitlement: { productCode?: string; moduleCode?: string },
 ): AuthorizationDecision {
   if (entitlement.productCode) {
-    if (
-      !principal.activeProducts.has(entitlement.productCode) &&
-      !principal.isPlatformAdmin
-    ) {
+    if (!principal.activeProducts.has(entitlement.productCode) && !principal.isPlatformAdmin) {
       return { allowed: false, reasonCode: "PRODUCT_ENTITLEMENT_REQUIRED" };
     }
   }
   if (entitlement.moduleCode) {
-    if (
-      !principal.activeModules.has(entitlement.moduleCode) &&
-      !principal.isPlatformAdmin
-    ) {
+    if (!principal.activeModules.has(entitlement.moduleCode) && !principal.isPlatformAdmin) {
       return { allowed: false, reasonCode: "MODULE_ENTITLEMENT_REQUIRED" };
     }
   }

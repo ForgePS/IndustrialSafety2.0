@@ -2,11 +2,7 @@ import { test, expect } from "../src/fixtures/index.js";
 import { apiRequest, readTenantId } from "../src/helpers/api.js";
 import { createManualIncident, ensureAuthenticated } from "../src/helpers/navigation.js";
 import { e2eRunId, syntheticDispatchDescription } from "../src/helpers/test-data.js";
-import {
-  getSecondaryCredentials,
-  hasSecondaryCredentials,
-  REQUIRE_SECONDARY,
-} from "../src/env.js";
+import { getSecondaryCredentials, hasSecondaryCredentials, REQUIRE_SECONDARY } from "../src/env.js";
 
 function unwrapData<T>(json: unknown): T {
   if (json && typeof json === "object" && "data" in json) {
@@ -95,11 +91,13 @@ test.describe("Phase 4 CAD acceptance @phase4 @cad", () => {
       `/api/v1/tenants/${tenantId}/cad/connections/${connection.id}/test`,
     );
     expectOkStatus(testRes.status, "test connection");
-    const tested = unwrapData<{ connection?: CadConnection; healthStatus?: string } & CadConnection>(
-      testRes.json,
-    );
+    const tested = unwrapData<
+      { connection?: CadConnection; healthStatus?: string } & CadConnection
+    >(testRes.json);
     const health =
-      tested.healthStatus ?? tested.connection?.healthStatus ?? (tested as CadConnection).healthStatus;
+      tested.healthStatus ??
+      tested.connection?.healthStatus ??
+      (tested as CadConnection).healthStatus;
     expect(["HEALTHY", "UNKNOWN", "DEGRADED"]).toContain(health);
 
     const enable = await apiRequest(
@@ -184,12 +182,7 @@ test.describe("Phase 4 CAD acceptance @phase4 @cad", () => {
   }) => {
     test.setTimeout(90_000);
     const tenantId = await readTenantId(page);
-    for (const path of [
-      "unmapped-values",
-      "unknown-units",
-      "unknown-personnel",
-      "conflicts",
-    ]) {
+    for (const path of ["unmapped-values", "unknown-units", "unknown-personnel", "conflicts"]) {
       const res = await apiRequest(page, "GET", `/api/v1/tenants/${tenantId}/cad/${path}`);
       expect(res.status, path).toBe(200);
       expect(Array.isArray(unwrapData<unknown[]>(res.json))).toBe(true);
@@ -229,10 +222,7 @@ test.describe("Phase 4 CAD acceptance @phase4 @cad", () => {
   test("20 — incident CAD status panel data endpoint", async ({ authenticatedPage: page }) => {
     test.setTimeout(120_000);
     const tenantId = await readTenantId(page);
-    const incidentId = await createManualIncident(
-      page,
-      syntheticDispatchDescription(e2eRunId()),
-    );
+    const incidentId = await createManualIncident(page, syntheticDispatchDescription(e2eRunId()));
     const res = await apiRequest(
       page,
       "GET",
@@ -244,7 +234,9 @@ test.describe("Phase 4 CAD acceptance @phase4 @cad", () => {
     expect(Array.isArray(status.openConflicts)).toBe(true);
   });
 
-  test("21/22 — RMS CAD Operations + Connections pages load", async ({ authenticatedPage: page }) => {
+  test("21/22 — RMS CAD Operations + Connections pages load", async ({
+    authenticatedPage: page,
+  }) => {
     test.setTimeout(120_000);
     await page.goto("/cad/operations/");
     await expect(page.getByRole("heading", { name: /cad operations/i })).toBeVisible({
@@ -349,9 +341,14 @@ test.describe("Phase 4 CAD acceptance @phase4 @cad", () => {
     });
     const connection = unwrapData<CadConnection>(create.json);
 
-    const outage = await apiRequest(page, "POST", `/api/v1/tenants/${tenantId}/cad/simulator/outage`, {
-      data: { connectionId: connection.id, reason: "phase4 simulated outage" },
-    });
+    const outage = await apiRequest(
+      page,
+      "POST",
+      `/api/v1/tenants/${tenantId}/cad/simulator/outage`,
+      {
+        data: { connectionId: connection.id, reason: "phase4 simulated outage" },
+      },
+    );
     expectOkStatus(outage.status, "outage");
     const degraded = unwrapData<{ connection?: CadConnection } & CadConnection>(outage.json);
     const degradedStatus =
@@ -376,7 +373,9 @@ test.describe("Phase 4 CAD acceptance @phase4 @cad", () => {
     });
   });
 
-  test("29 — accessibility smoke — CAD operations headings", async ({ authenticatedPage: page }) => {
+  test("29 — accessibility smoke — CAD operations headings", async ({
+    authenticatedPage: page,
+  }) => {
     test.setTimeout(90_000);
     await page.goto("/cad/operations/");
     await expect(page.getByRole("heading", { name: /cad operations/i })).toBeVisible({
@@ -395,13 +394,12 @@ test.describe("Phase 4 CAD acceptance @phase4 @cad", () => {
     test.setTimeout(120_000);
     const tenantId = await readTenantId(page);
     expect(tenantId).toBeTruthy();
-    const incidentId = await createManualIncident(
-      page,
-      syntheticDispatchDescription(e2eRunId()),
-    );
+    const incidentId = await createManualIncident(page, syntheticDispatchDescription(e2eRunId()));
     expect(incidentId).toBeTruthy();
     await page.goto(`/incidents/${incidentId}/`);
-    await expect(page.getByRole("heading", { name: /incident|overview|dispatch/i }).first()).toBeVisible({
+    await expect(
+      page.getByRole("heading", { name: /incident|overview|dispatch/i }).first(),
+    ).toBeVisible({
       timeout: 30_000,
     });
   });
@@ -514,32 +512,36 @@ test.describe("Phase 4 CAD security @phase4 @cad-security", () => {
       `/api/v1/tenants/${tenantId}/cad/connections/${connection.id}/enable`,
     );
 
-    const webhook = await page.context().request.fetch(
-      `${process.env.E2E_API_URL?.replace(/\/$/, "") ?? "http://localhost:4000"}/api/v1/cad/webhooks/${connection.publicId}`,
-      {
-        method: "POST",
-        headers: { "Content-Type": "application/json", Accept: "application/json" },
-        data: JSON.stringify({ eventType: "CONNECTION_TEST", sourceIncidentId: "unsigned" }),
-      },
-    );
+    const webhook = await page
+      .context()
+      .request.fetch(
+        `${process.env.E2E_API_URL?.replace(/\/$/, "") ?? "http://localhost:4000"}/api/v1/cad/webhooks/${connection.publicId}`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json", Accept: "application/json" },
+          data: JSON.stringify({ eventType: "CONNECTION_TEST", sourceIncidentId: "unsigned" }),
+        },
+      );
     expect([401, 403]).toContain(webhook.status());
 
-    const invalidSig = await page.context().request.fetch(
-      `${process.env.E2E_API_URL?.replace(/\/$/, "") ?? "http://localhost:4000"}/api/v1/cad/webhooks/${connection.publicId}`,
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Accept: "application/json",
-          "x-forge-cad-key-id": "wk_invalid",
-          "x-forge-cad-timestamp": String(Math.floor(Date.now() / 1000)),
-          "x-forge-cad-nonce": "nonce-invalid-replay-1",
-          "x-forge-cad-message-id": `msg-invalid-${e2eRunId()}`,
-          "x-forge-cad-signature": "deadbeef",
+    const invalidSig = await page
+      .context()
+      .request.fetch(
+        `${process.env.E2E_API_URL?.replace(/\/$/, "") ?? "http://localhost:4000"}/api/v1/cad/webhooks/${connection.publicId}`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Accept: "application/json",
+            "x-forge-cad-key-id": "wk_invalid",
+            "x-forge-cad-timestamp": String(Math.floor(Date.now() / 1000)),
+            "x-forge-cad-nonce": "nonce-invalid-replay-1",
+            "x-forge-cad-message-id": `msg-invalid-${e2eRunId()}`,
+            "x-forge-cad-signature": "deadbeef",
+          },
+          data: JSON.stringify({ eventType: "CONNECTION_TEST", sourceIncidentId: "bad-sig" }),
         },
-        data: JSON.stringify({ eventType: "CONNECTION_TEST", sourceIncidentId: "bad-sig" }),
-      },
-    );
+      );
     expect([401, 403]).toContain(invalidSig.status());
   });
 });

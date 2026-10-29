@@ -67,7 +67,9 @@ export function permissionCodesFromRolePermissions(
   for (const row of permissions ?? []) {
     const code = typeof row.code === "string" ? row.code.trim() : "";
     if (!code) continue;
-    const effect = String(row.effect ?? "ALLOW").trim().toUpperCase();
+    const effect = String(row.effect ?? "ALLOW")
+      .trim()
+      .toUpperCase();
     if (effect === "DENY") deny.add(code);
     else allow.add(code);
   }

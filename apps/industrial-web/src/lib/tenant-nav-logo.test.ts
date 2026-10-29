@@ -10,9 +10,7 @@ describe("navLogoForTenant", () => {
   });
 
   it("uses the Producers dark logo in dark theme", () => {
-    expect(
-      bundledNavLogoForTenant("producers-rice-mill", "Producers Rice Mill", "dark"),
-    ).toEqual({
+    expect(bundledNavLogoForTenant("producers-rice-mill", "Producers Rice Mill", "dark")).toEqual({
       src: "/branding/producers-rice-mill-dark.png",
       label: "Producers Rice Mill",
     });

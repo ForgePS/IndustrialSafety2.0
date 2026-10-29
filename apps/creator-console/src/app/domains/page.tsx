@@ -14,8 +14,8 @@ export default function DomainsPage() {
         />
         <div className={styles.panel}>
           <ComingLater>
-            Domain provisioning and SSL status will appear here. Meanwhile, set the customer slug during
-            Add Customer and manage branding from Configuration → Branding.
+            Domain provisioning and SSL status will appear here. Meanwhile, set the customer slug
+            during Add Customer and manage branding from Configuration → Branding.
           </ComingLater>
         </div>
       </section>

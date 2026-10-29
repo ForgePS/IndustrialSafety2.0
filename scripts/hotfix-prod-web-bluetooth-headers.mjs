@@ -27,7 +27,9 @@ function awsJson(cmd) {
 
 function resolveFieldPolicyId() {
   if (POLICIES.field) return POLICIES.field;
-  const listed = awsJson("aws cloudfront list-response-headers-policies --type custom --output json");
+  const listed = awsJson(
+    "aws cloudfront list-response-headers-policies --type custom --output json",
+  );
   const items = listed.ResponseHeadersPolicyList?.Items ?? [];
   const match = items.find((item) =>
     /cfrhp-field/i.test(item.ResponseHeadersPolicy?.ResponseHeadersPolicyConfig?.Name ?? ""),
@@ -62,9 +64,7 @@ function withBluetooth(value) {
 }
 
 function patchPolicy(policyId) {
-  const full = awsJson(
-    `aws cloudfront get-response-headers-policy --id ${policyId} --output json`,
-  );
+  const full = awsJson(`aws cloudfront get-response-headers-policy --id ${policyId} --output json`);
   const etag = full.ETag;
   const cfg = structuredClone(full.ResponseHeadersPolicy.ResponseHeadersPolicyConfig);
   delete cfg.ResponseHeadersPolicyId;

@@ -1,11 +1,11 @@
 {
-    "taskArn":  "arn:aws:ecs:us-east-1:511343547817:task/forge-development-ecs-platform/8aed438a360a481aba57097a3a451c1c",
-    "taskDefinitionArn":  "arn:aws:ecs:us-east-1:511343547817:task-definition/forge-development-ecs-platform-api:33",
-    "lastStatus":  "STOPPED",
-    "startedAt":  "2026-07-29T07:42:37.752000-05:00",
-    "stoppedAt":  "2026-07-29T07:43:12.218000-05:00",
-    "stopCode":  "EssentialContainerExited",
-    "stoppedReason":  "Essential container in task exited",
-    "exitCode":  0,
-    "logStream":  "platform-api/platform-api/8aed438a360a481aba57097a3a451c1c"
+  "taskArn": "arn:aws:ecs:us-east-1:511343547817:task/forge-development-ecs-platform/8aed438a360a481aba57097a3a451c1c",
+  "taskDefinitionArn": "arn:aws:ecs:us-east-1:511343547817:task-definition/forge-development-ecs-platform-api:33",
+  "lastStatus": "STOPPED",
+  "startedAt": "2026-07-29T07:42:37.752000-05:00",
+  "stoppedAt": "2026-07-29T07:43:12.218000-05:00",
+  "stopCode": "EssentialContainerExited",
+  "stoppedReason": "Essential container in task exited",
+  "exitCode": 0,
+  "logStream": "platform-api/platform-api/8aed438a360a481aba57097a3a451c1c"
 }

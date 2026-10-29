@@ -12,7 +12,9 @@ import { z } from "zod";
 const trimmed = (max: number) => z.string().trim().max(max);
 
 export const createTicketSchema = z.object({
-  productCode: z.enum(HELPDESK_PRODUCTS.map((p) => p.code) as [string, ...string[]]).default("FORGE_INDUSTRIAL"),
+  productCode: z
+    .enum(HELPDESK_PRODUCTS.map((p) => p.code) as [string, ...string[]])
+    .default("FORGE_INDUSTRIAL"),
   moduleCode: trimmed(80).optional().nullable(),
   requestType: trimmed(64).min(1, "Choose a request type"),
   productArea: trimmed(80).optional().nullable(),
@@ -95,12 +97,17 @@ export const SUPPORT_QUEUES = [
 export type SupportQueue = (typeof SUPPORT_QUEUES)[number];
 
 export function parseQueue(value: unknown): SupportQueue {
-  return (SUPPORT_QUEUES as readonly string[]).includes(String(value)) ? (value as SupportQueue) : "open";
+  return (SUPPORT_QUEUES as readonly string[]).includes(String(value))
+    ? (value as SupportQueue)
+    : "open";
 }
 
 export function parsePaging(query: Record<string, unknown>, maxPageSize = 100) {
   const page = Math.max(1, Math.floor(Number(query.page ?? 1)) || 1);
-  const pageSize = Math.min(maxPageSize, Math.max(1, Math.floor(Number(query.pageSize ?? 25)) || 25));
+  const pageSize = Math.min(
+    maxPageSize,
+    Math.max(1, Math.floor(Number(query.pageSize ?? 25)) || 25),
+  );
   return { page, pageSize, offset: (page - 1) * pageSize };
 }
 
@@ -129,7 +136,8 @@ const TECH_CONTEXT_KEYS = [
   "online",
 ] as const;
 
-const SECRETISH = /(token|secret|password|passwd|authorization|bearer|session|cookie|api[_-]?key|code=)/i;
+const SECRETISH =
+  /(token|secret|password|passwd|authorization|bearer|session|cookie|api[_-]?key|code=)/i;
 
 function stripUrlSecrets(value: string): string {
   try {
@@ -294,7 +302,9 @@ export function toSupportTicket(row: TicketRow, tenantName: string | null) {
   };
 }
 
-export function isCustomerVisibleMessage(row: Pick<MessageRow, "messageType" | "isInternal">): boolean {
+export function isCustomerVisibleMessage(
+  row: Pick<MessageRow, "messageType" | "isInternal">,
+): boolean {
   if (row.isInternal) return false;
   return HELPDESK_CUSTOMER_VISIBLE_MESSAGE_TYPES.includes(row.messageType as HelpdeskMessageType);
 }

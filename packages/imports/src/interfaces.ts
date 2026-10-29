@@ -1,4 +1,9 @@
-import type { DuplicateAction, ImportFormat, ProductModuleRef, ValidationRuleKind } from "./types.js";
+import type {
+  DuplicateAction,
+  ImportFormat,
+  ProductModuleRef,
+  ValidationRuleKind,
+} from "./types.js";
 
 export type DetectedFileMeta = {
   format: ImportFormat;
@@ -86,7 +91,11 @@ export type RollbackResult = {
 };
 
 export interface FileDetector {
-  detect(input: { bytes: Uint8Array; fileName: string; contentType?: string }): Promise<DetectedFileMeta>;
+  detect(input: {
+    bytes: Uint8Array;
+    fileName: string;
+    contentType?: string;
+  }): Promise<DetectedFileMeta>;
 }
 
 export interface SchemaLoader {
@@ -129,11 +138,7 @@ export interface ImportExecutor {
 }
 
 export interface RollbackHandler {
-  rollback(input: {
-    tenantId: string;
-    jobId: string;
-    reason?: string;
-  }): Promise<RollbackResult>;
+  rollback(input: { tenantId: string; jobId: string; reason?: string }): Promise<RollbackResult>;
 }
 
 export interface ProgressReporter {

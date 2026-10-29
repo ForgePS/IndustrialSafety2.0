@@ -36,11 +36,15 @@ for (const rel of ["apps/industrial-web/.next", "apps/industrial-web/out"]) {
 }
 
 delete process.env.AWS_PROFILE;
-run("node", ["scripts/sync-static-site.mjs", "--app", "industrial", "--environment", "production"], {
-  env: {
-    NODE_ENV: "production",
-    NEXT_PRIVATE_WORKER_THREADS: "false",
+run(
+  "node",
+  ["scripts/sync-static-site.mjs", "--app", "industrial", "--environment", "production"],
+  {
+    env: {
+      NODE_ENV: "production",
+      NEXT_PRIVATE_WORKER_THREADS: "false",
+    },
   },
-});
+);
 
 console.log(JSON.stringify({ ok: true, app: "industrial", environment: "production" }, null, 2));

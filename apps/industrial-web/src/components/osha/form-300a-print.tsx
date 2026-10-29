@@ -1,12 +1,7 @@
 "use client";
 
 import type { OshaForm300AMeta, OshaForm300ATotals } from "@/lib/osha-module";
-import {
-  DOL_HEADER,
-  FORM_300A,
-  OSHA_FORM_REVISION,
-  OSHA_OMB,
-} from "@/lib/osha-form-copy";
+import { DOL_HEADER, FORM_300A, OSHA_FORM_REVISION, OSHA_OMB } from "@/lib/osha-form-copy";
 
 type Props = {
   totals: OshaForm300ATotals;

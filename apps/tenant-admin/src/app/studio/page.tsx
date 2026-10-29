@@ -29,8 +29,7 @@ function Inner() {
   const tenantId = useTenantId();
   const { hasPermission } = useAuth();
   const canUpdate =
-    hasPermission("platform.configuration.update") ||
-    hasPermission("tenant.configuration.update");
+    hasPermission("platform.configuration.update") || hasPermission("tenant.configuration.update");
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
@@ -86,7 +85,12 @@ function Inner() {
       <div className={styles.panel}>
         <h2>Defaults</h2>
         <div className={styles.actions}>
-          <button type="button" className={styles.buttonSecondary} disabled={busy} onClick={() => void seed()}>
+          <button
+            type="button"
+            className={styles.buttonSecondary}
+            disabled={busy}
+            onClick={() => void seed()}
+          >
             Ensure defaults
           </button>
         </div>
@@ -111,7 +115,13 @@ function Inner() {
 
 export default function Page() {
   return (
-    <Suspense fallback={<main className={styles.page}><p className={styles.muted}>Loading…</p></main>}>
+    <Suspense
+      fallback={
+        <main className={styles.page}>
+          <p className={styles.muted}>Loading…</p>
+        </main>
+      }
+    >
       <Inner />
     </Suspense>
   );

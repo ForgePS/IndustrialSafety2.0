@@ -30,26 +30,26 @@ Worker service (ECS) — detect / malware / execute processors
 
 ## Packages
 
-| Package | Role |
-| --- | --- |
-| `@forge/imports` | Domain types, DTOs, queue contracts, scanners, gates, batch constants, production guards |
-| `@forge/import-center` | Shared Creator Console + Tenant Admin UI |
-| `@forge/database` | Schema + migrations `0022`–`0027` |
-| `apps/platform-api` | HTTP API |
-| `apps/worker-service` | SQS consumers / processors |
+| Package                | Role                                                                                     |
+| ---------------------- | ---------------------------------------------------------------------------------------- |
+| `@forge/imports`       | Domain types, DTOs, queue contracts, scanners, gates, batch constants, production guards |
+| `@forge/import-center` | Shared Creator Console + Tenant Admin UI                                                 |
+| `@forge/database`      | Schema + migrations `0022`–`0027`                                                        |
+| `apps/platform-api`    | HTTP API                                                                                 |
+| `apps/worker-service`  | SQS consumers / processors                                                               |
 
 ## Migrations
 
 Import platform schema lives in:
 
-| Migration | Focus |
-| --- | --- |
-| `0022` | Core tables + FORCE RLS |
-| `0023` | Control plane |
-| `0024` | Upload |
-| `0025` | Duplicates |
-| `0026` | Execution journal |
-| `0027` | Security (scan events, security artifacts) |
+| Migration | Focus                                      |
+| --------- | ------------------------------------------ |
+| `0022`    | Core tables + FORCE RLS                    |
+| `0023`    | Control plane                              |
+| `0024`    | Upload                                     |
+| `0025`    | Duplicates                                 |
+| `0026`    | Execution journal                          |
+| `0027`    | Security (scan events, security artifacts) |
 
 S7/S8: no additional migration required for UI / hardening-only work.
 
@@ -61,38 +61,38 @@ Canonical enum: `IMPORT_JOB_STATUSES` / Import Center `ImportJobStatus`.
 
 ## Security posture (S8)
 
-| Control | Status |
-| --- | --- |
-| FORCE RLS | Enforced on import tables (0022–0027) |
-| Malware provider | `reference-malware@1` — **Outcome B** production block |
-| `APP_ENV` guard | `assertScannerAllowedForEnvironment` |
-| Overrides | Reserved verdicts only; no HTTP override |
+| Control             | Status                                                                                    |
+| ------------------- | ----------------------------------------------------------------------------------------- |
+| FORCE RLS           | Enforced on import tables (0022–0027)                                                     |
+| Malware provider    | `reference-malware@1` — **Outcome B** production block                                    |
+| `APP_ENV` guard     | `assertScannerAllowedForEnvironment`                                                      |
+| Overrides           | Reserved verdicts only; no HTTP override                                                  |
 | Sensitive downloads | Masked by default; `import.sensitive` for privileged request (credentials never returned) |
 
 ## UI surfaces
 
-| App | Route |
-| --- | --- |
+| App             | Route       |
+| --------------- | ----------- |
 | Creator Console | `/imports/` |
-| Tenant Admin | `/imports/` |
+| Tenant Admin    | `/imports/` |
 
 Query-param workspace for static export compatibility. See `docs/architecture/import-ui.md`.
 
 ## Explicit non-goals (S8)
 
-- Product adapters / QR / destination commits beyond reference adapter  
-- Activating Step Functions  
-- Replacing Outcome B without separate authorization  
-- Claiming Aurora-scale performance without controlled-run evidence  
+- Product adapters / QR / destination commits beyond reference adapter
+- Activating Step Functions
+- Replacing Outcome B without separate authorization
+- Claiming Aurora-scale performance without controlled-run evidence
 
 ## Related docs
 
-| Topic | Path |
-| --- | --- |
-| Execution | `docs/architecture/import-execution.md` |
-| Security | `docs/architecture/import-security.md` |
-| UI | `docs/architecture/import-ui.md` |
-| Storage | `docs/architecture/import-storage.md` |
-| Observability | `docs/architecture/import-observability.md` |
-| Freeze | `docs/imports/import-platform-freeze.md` |
-| Detailed design folder | `docs/architecture/import-platform/` |
+| Topic                  | Path                                        |
+| ---------------------- | ------------------------------------------- |
+| Execution              | `docs/architecture/import-execution.md`     |
+| Security               | `docs/architecture/import-security.md`      |
+| UI                     | `docs/architecture/import-ui.md`            |
+| Storage                | `docs/architecture/import-storage.md`       |
+| Observability          | `docs/architecture/import-observability.md` |
+| Freeze                 | `docs/imports/import-platform-freeze.md`    |
+| Detailed design folder | `docs/architecture/import-platform/`        |

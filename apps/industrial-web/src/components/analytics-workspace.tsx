@@ -93,11 +93,7 @@ export function AnalyticsWorkspace({ moduleName }: { moduleName: string }) {
   }
 
   return (
-    <section
-      aria-labelledby="sic-title"
-      className="ind-analytics"
-      data-walkthrough="analytics-sic"
-    >
+    <section aria-labelledby="sic-title" className="ind-analytics" data-walkthrough="analytics-sic">
       <div className="d-flex flex-wrap justify-content-between align-items-start gap-3 mb-3">
         <div>
           <p className="text-uppercase text-primary fw-semibold small mb-1">Analytics</p>
@@ -111,13 +107,28 @@ export function AnalyticsWorkspace({ moduleName }: { moduleName: string }) {
           </p>
         </div>
         <div className="d-flex flex-wrap gap-2">
-          <button type="button" className="btn btn-outline-secondary" onClick={exportPdf} disabled={!report}>
+          <button
+            type="button"
+            className="btn btn-outline-secondary"
+            onClick={exportPdf}
+            disabled={!report}
+          >
             Export PDF
           </button>
-          <button type="button" className="btn btn-outline-secondary" onClick={exportExcel} disabled={!report}>
+          <button
+            type="button"
+            className="btn btn-outline-secondary"
+            onClick={exportExcel}
+            disabled={!report}
+          >
             Export Excel
           </button>
-          <button type="button" className="btn btn-outline-primary" onClick={() => void load()} disabled={loading}>
+          <button
+            type="button"
+            className="btn btn-outline-primary"
+            onClick={() => void load()}
+            disabled={loading}
+          >
             Refresh
           </button>
         </div>
@@ -145,7 +156,11 @@ export function AnalyticsWorkspace({ moduleName }: { moduleName: string }) {
         <div className="alert alert-danger" role="alert">
           {error}
           <div>
-            <button type="button" className="btn btn-sm btn-outline-danger mt-2" onClick={() => void load()}>
+            <button
+              type="button"
+              className="btn btn-sm btn-outline-danger mt-2"
+              onClick={() => void load()}
+            >
               Retry
             </button>
           </div>
@@ -333,7 +348,9 @@ function DepartmentScoresTable({
           </span>
         </div>
         {scores.length === 0 ? (
-          <p className="text-muted mb-0">No department scores yet. Add departments and activity to see a breakdown.</p>
+          <p className="text-muted mb-0">
+            No department scores yet. Add departments and activity to see a breakdown.
+          </p>
         ) : (
           <div className="table-responsive">
             <table className="table table-hover mb-0 align-middle">
@@ -382,12 +399,19 @@ function DepartmentScoresTable({
                     <td className="text-end">
                       {row.unsafeObservations}
                       {row.openUnsafeObservations > 0 ? (
-                        <span className="text-muted small"> ({row.openUnsafeObservations} open)</span>
+                        <span className="text-muted small">
+                          {" "}
+                          ({row.openUnsafeObservations} open)
+                        </span>
                       ) : null}
                     </td>
                     <td
                       className={`text-end ${
-                        row.observationPoints < 0 ? "text-danger" : row.observationPoints > 0 ? "text-success" : ""
+                        row.observationPoints < 0
+                          ? "text-danger"
+                          : row.observationPoints > 0
+                            ? "text-success"
+                            : ""
                       }`}
                     >
                       {row.observationPoints > 0 ? "+" : ""}
@@ -412,8 +436,8 @@ function ReportsTab({ report }: { report: SafetyIntelligenceReport }) {
         <div className="card-body">
           <h6 className="card-title">Custom report window</h6>
           <p className="text-muted small mb-2">
-            Showing {report.periodLabel} ({report.dateRange.start} → {report.dateRange.end}). Select a
-            rolling period card above to change the window, then open any KPI to view the records.
+            Showing {report.periodLabel} ({report.dateRange.start} → {report.dateRange.end}). Select
+            a rolling period card above to change the window, then open any KPI to view the records.
           </p>
           <div className="d-flex flex-wrap gap-2">
             {report.activityByModule.map((module) => (
@@ -474,15 +498,27 @@ function SafetyTab({ report }: { report: SafetyIntelligenceReport }) {
   return (
     <div className="d-flex flex-column gap-4">
       <div className="row g-3">
-        <ClickStat label="Incidents in range" value={total?.incidents ?? 0} href="/modules/incidents/" />
+        <ClickStat
+          label="Incidents in range"
+          value={total?.incidents ?? 0}
+          href="/modules/incidents/"
+        />
         <ClickStat
           label="Open incidents"
           value={open?.value ?? 0}
           href="/modules/incidents/"
           danger={Number(open?.value ?? 0) > 0}
         />
-        <ClickStat label="Inspections" value={total?.inspections ?? 0} href="/modules/inspections/" />
-        <ClickStat label="Observations" value={total?.observations ?? 0} href="/modules/observations/" />
+        <ClickStat
+          label="Inspections"
+          value={total?.inspections ?? 0}
+          href="/modules/inspections/"
+        />
+        <ClickStat
+          label="Observations"
+          value={total?.observations ?? 0}
+          href="/modules/observations/"
+        />
       </div>
       <DepartmentScoresTable
         scores={report.departmentScores}
@@ -517,9 +553,16 @@ function OperationsTab({ report }: { report: SafetyIntelligenceReport }) {
     <div className="d-flex flex-column gap-4">
       <KpiGrid
         kpis={report.kpis.filter((k) =>
-          ["inspections", "inspection-score", "observations", "forms", "training", "scan", "jsas", "enterprise"].includes(
-            k.id,
-          ),
+          [
+            "inspections",
+            "inspection-score",
+            "observations",
+            "forms",
+            "training",
+            "scan",
+            "jsas",
+            "enterprise",
+          ].includes(k.id),
         )}
       />
       <div className="row g-3">
@@ -569,21 +612,29 @@ function DotTab({ report }: { report: SafetyIntelligenceReport }) {
           value={`${report.dot.complianceScore}%`}
           href="/modules/dot-compliance/"
         />
-        <ClickStat label="DOT records" value={report.dot.totalRecords} href="/modules/dot-compliance/" />
+        <ClickStat
+          label="DOT records"
+          value={report.dot.totalRecords}
+          href="/modules/dot-compliance/"
+        />
         <ClickStat
           label="Open items"
           value={report.dot.openItems}
           href="/modules/dot-compliance/"
           danger={report.dot.openItems > 0}
         />
-        <ClickStat label="Company DRIVERS" value="View" href="/modules/personnel/?view=company-drivers" />
+        <ClickStat
+          label="Company DRIVERS"
+          value="View"
+          href="/modules/personnel/?view=company-drivers"
+        />
       </div>
       <div className="card">
         <div className="card-body">
           <h6 className="card-title">DOT Compliance</h6>
           <p className="text-muted mb-3">
-            Open the DOT Compliance module for driver and vehicle records, expirations, and corrective
-            follow-up.
+            Open the DOT Compliance module for driver and vehicle records, expirations, and
+            corrective follow-up.
           </p>
           <Link className="btn btn-primary" href="/modules/dot-compliance/">
             Open DOT Compliance
@@ -766,7 +817,14 @@ function ScoreRing({ score, grade }: { score: number; grade: string }) {
   return (
     <div className="position-relative d-inline-flex align-items-center justify-content-center">
       <svg width="140" height="140" viewBox="0 0 140 140" aria-hidden>
-        <circle cx="70" cy="70" r={radius} fill="none" stroke="var(--bs-gray-200)" strokeWidth="10" />
+        <circle
+          cx="70"
+          cy="70"
+          r={radius}
+          fill="none"
+          stroke="var(--bs-gray-200)"
+          strokeWidth="10"
+        />
         <circle
           cx="70"
           cy="70"

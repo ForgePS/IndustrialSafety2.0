@@ -4,7 +4,12 @@ import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } fro
 import type { ImportApi } from "../api.js";
 import { clearImportTenantCache, setCachedJobs, getCachedJobs } from "../cache.js";
 import { initiateProtectedDownload } from "../download.js";
-import { dashboardStatusBuckets, DASHBOARD_BUCKET_LABELS, serializeJobFilters, type ImportJobFilterState } from "../filters.js";
+import {
+  dashboardStatusBuckets,
+  DASHBOARD_BUCKET_LABELS,
+  serializeJobFilters,
+  type ImportJobFilterState,
+} from "../filters.js";
 import { actionAllowed, disabledReason } from "../permissions.js";
 import { formatImportError, sanitizeErrorMessage } from "../safe-error.js";
 import {
@@ -73,12 +78,13 @@ export function parseMissingOrgLookupHint(
 ): { kind: "department" | "position" | "employment_type"; name: string } | null {
   const haystack = `${fieldPath ?? ""} ${message}`;
   const match = haystack.match(
-    /(?:unknown|missing|invalid)\s+(department|position|employment[_\s-]?type)\s*(?:named\s+)?[:\-]?\s*["']?([^"'.,;\n]+)/i,
+    /(?:unknown|missing|invalid)\s+(department|position|employment[_\s-]?type)\s*(?:named\s+)?[:-]?\s*["']?([^"'.,;\n]+)/i,
   );
   if (match?.[1] && match[2]) {
     const raw = match[1].toLowerCase().replace(/[\s-]+/g, "_");
-    const kind =
-      raw.startsWith("employment") ? ("employment_type" as const) : (raw as "department" | "position");
+    const kind = raw.startsWith("employment")
+      ? ("employment_type" as const)
+      : (raw as "department" | "position");
     return { kind, name: match[2].trim() };
   }
   const quoted = message.match(/["']([^"']+)["']/);
@@ -284,10 +290,7 @@ export function ImportCenterApp(props: ImportCenterAppProps) {
     };
   }, [api, jobId, loadJob, view]);
 
-  const buckets = useMemo(
-    () => dashboardStatusBuckets(jobs.map((j) => String(j.status))),
-    [jobs],
-  );
+  const buckets = useMemo(() => dashboardStatusBuckets(jobs.map((j) => String(j.status))), [jobs]);
 
   if (!tenantId) {
     return <ImportEmptyState title="Select a tenant to open Import Center." />;
@@ -428,9 +431,12 @@ export function ImportCenterApp(props: ImportCenterAppProps) {
     if (!jobId) return;
     setLoading(true);
     try {
-      await api.putMappings(jobId, mappings.length ? mappings : [
-        { sourceColumn: "col1", targetField: "field1", isRequired: true, ordinal: 0 },
-      ]);
+      await api.putMappings(
+        jobId,
+        mappings.length
+          ? mappings
+          : [{ sourceColumn: "col1", targetField: "field1", isRequired: true, ordinal: 0 }],
+      );
       await loadJob(jobId);
       setView("validation");
     } catch (err) {
@@ -467,7 +473,9 @@ export function ImportCenterApp(props: ImportCenterAppProps) {
       return;
     }
     if (!jobId) return;
-    if (!window.confirm("Queue this import for execution? Row data is not sent from the browser.")) {
+    if (
+      !window.confirm("Queue this import for execution? Row data is not sent from the browser.")
+    ) {
       return;
     }
     setLoading(true);
@@ -585,7 +593,9 @@ export function ImportCenterApp(props: ImportCenterAppProps) {
     setError(null);
     try {
       const created = await createLookup({ kind, name });
-      setLookupNotice(`Created ${kind.replace(/_/g, " ")} “${created.name}”. Re-validate to continue.`);
+      setLookupNotice(
+        `Created ${kind.replace(/_/g, " ")} “${created.name}”. Re-validate to continue.`,
+      );
     } catch (err) {
       reportError(err);
     } finally {
@@ -640,10 +650,7 @@ export function ImportCenterApp(props: ImportCenterAppProps) {
         </header>
       ) : null}
 
-      <ProductionScannerRestrictionBanner
-        appEnv={appEnv}
-        malwareProviderKey={malwareProviderKey}
-      />
+      <ProductionScannerRestrictionBanner appEnv={appEnv} malwareProviderKey={malwareProviderKey} />
       {!embedded ? <PrivilegedAccessBanner visible={privilegedSession} /> : null}
       {lookupNotice ? (
         <div role="status" className="forge-ic-panel forge-ic-panel--success">
@@ -672,10 +679,7 @@ export function ImportCenterApp(props: ImportCenterAppProps) {
       </nav>
 
       {jobId && view !== "dashboard" && view !== "new" ? (
-        <ol
-          aria-label="Import workflow steps"
-          className="forge-ic-steps"
-        >
+        <ol aria-label="Import workflow steps" className="forge-ic-steps">
           {WORKFLOW_STEP_ORDER.filter((s) => s.view !== "new").map((step) => (
             <li key={step.view}>
               <button
@@ -781,13 +785,20 @@ export function ImportCenterApp(props: ImportCenterAppProps) {
               <table className="forge-ic-table">
                 <thead>
                   <tr>
-                    {["Name", "File", "Record", "Status", "Malware", "Progress", "Updated", "Actions"].map(
-                      (h) => (
-                        <th key={h} scope="col">
-                          {h}
-                        </th>
-                      ),
-                    )}
+                    {[
+                      "Name",
+                      "File",
+                      "Record",
+                      "Status",
+                      "Malware",
+                      "Progress",
+                      "Updated",
+                      "Actions",
+                    ].map((h) => (
+                      <th key={h} scope="col">
+                        {h}
+                      </th>
+                    ))}
                   </tr>
                 </thead>
                 <tbody>
@@ -810,9 +821,7 @@ export function ImportCenterApp(props: ImportCenterAppProps) {
                         <button
                           type="button"
                           className="forge-ic-btn forge-ic-btn--secondary"
-                          onClick={() =>
-                            navigate(resolveImportWorkflowView(row.status), row.id)
-                          }
+                          onClick={() => navigate(resolveImportWorkflowView(row.status), row.id)}
                         >
                           Open
                         </button>
@@ -827,7 +836,10 @@ export function ImportCenterApp(props: ImportCenterAppProps) {
       ) : null}
 
       {view === "new" ? (
-        <section aria-labelledby="new-import-heading" className="forge-ic-panel forge-ic-new-import">
+        <section
+          aria-labelledby="new-import-heading"
+          className="forge-ic-panel forge-ic-new-import"
+        >
           <h2 id="new-import-heading">New import</h2>
           <p className="forge-ic-help forge-ic-help--lead">
             Choose a name, Industrial record type, and file. Mapping and validation happen after
@@ -841,8 +853,8 @@ export function ImportCenterApp(props: ImportCenterAppProps) {
               <div className="forge-ic-banner-body">
                 <strong className="forge-ic-banner-title">Uploads unavailable in production</strong>
                 <p className="forge-ic-banner-text">
-                  File uploads stay blocked until a production malware scanner is configured. You can
-                  still browse templates and review existing jobs.
+                  File uploads stay blocked until a production malware scanner is configured. You
+                  can still browse templates and review existing jobs.
                 </p>
               </div>
             </div>
@@ -944,10 +956,14 @@ export function ImportCenterApp(props: ImportCenterAppProps) {
           <p>
             Verdict: <MalwareVerdictBadge verdict={malwareVerdict} />
           </p>
-          <p>Job status: <ImportStatusBadge status={String(job.status)} /></p>
+          <p>
+            Job status: <ImportStatusBadge status={String(job.status)} />
+          </p>
           <p>Hash: {hashFragment(job.file?.contentHash)}</p>
           <p>Scan attempts are managed by the server. No malware override control is available.</p>
-          {job.status === "SCAN_FAILED" || malwareVerdict === "SCAN_TIMEOUT" || malwareVerdict === "SCAN_FAILED" ? (
+          {job.status === "SCAN_FAILED" ||
+          malwareVerdict === "SCAN_TIMEOUT" ||
+          malwareVerdict === "SCAN_FAILED" ? (
             <div>
               <label htmlFor="rescan-reason">
                 Rescan justification
@@ -989,8 +1005,8 @@ export function ImportCenterApp(props: ImportCenterAppProps) {
             <li>Security hold: {job.securityHold || quarantined ? "yes" : "no"}</li>
           </ul>
           <p role="status">
-            Mapping, validation, approval, execution, and normal downloads are blocked. Malware payload
-            details are not shown. Quarantine release is unavailable in this sprint.
+            Mapping, validation, approval, execution, and normal downloads are blocked. Malware
+            payload details are not shown. Quarantine release is unavailable in this sprint.
           </p>
           <button
             type="button"
@@ -1057,11 +1073,7 @@ export function ImportCenterApp(props: ImportCenterAppProps) {
                       </td>
                       <td>{row.isRequired ? "Yes" : "No"}</td>
                       <td>
-                        {row.isSensitive ? (
-                          <SensitiveValue value="[MASKED]" sensitive />
-                        ) : (
-                          "No"
-                        )}
+                        {row.isSensitive ? <SensitiveValue value="[MASKED]" sensitive /> : "No"}
                       </td>
                     </tr>
                   ))}
@@ -1143,9 +1155,7 @@ export function ImportCenterApp(props: ImportCenterAppProps) {
             <thead>
               <tr>
                 {["Code", "Field", "Message", "Severity", "Fix"].map((h) => (
-                  <th key={h}>
-                    {h}
-                  </th>
+                  <th key={h}>{h}</th>
                 ))}
               </tr>
             </thead>
@@ -1253,17 +1263,17 @@ export function ImportCenterApp(props: ImportCenterAppProps) {
             Load candidates
           </button>
           <ul>
-            {(duplicates as Array<{ id: string; confidence?: number; confidenceBand?: string }>).map(
-              (d) => (
-                <li key={d.id}>
-                  {d.id.slice(0, 8)}…{" "}
-                  <DuplicateConfidenceBadge
-                    confidence={Number(d.confidence ?? 0)}
-                    {...(d.confidenceBand ? { band: d.confidenceBand } : {})}
-                  />
-                </li>
-              ),
-            )}
+            {(
+              duplicates as Array<{ id: string; confidence?: number; confidenceBand?: string }>
+            ).map((d) => (
+              <li key={d.id}>
+                {d.id.slice(0, 8)}…{" "}
+                <DuplicateConfidenceBadge
+                  confidence={Number(d.confidence ?? 0)}
+                  {...(d.confidenceBand ? { band: d.confidenceBand } : {})}
+                />
+              </li>
+            ))}
           </ul>
           <button type="button" onClick={() => navigate("approval", jobId)}>
             Continue to approval
@@ -1282,8 +1292,7 @@ export function ImportCenterApp(props: ImportCenterAppProps) {
             </li>
             <li>Status: {job.status}</li>
           </ul>
-          {quarantined ||
-          (malwareVerdict !== "CLEAN" && malwareVerdict !== "OVERRIDE_APPROVED") ? (
+          {quarantined || (malwareVerdict !== "CLEAN" && malwareVerdict !== "OVERRIDE_APPROVED") ? (
             <p role="alert">Approval is blocked until malware verdict is acceptable.</p>
           ) : (
             <button
@@ -1313,8 +1322,7 @@ export function ImportCenterApp(props: ImportCenterAppProps) {
           <button
             type="button"
             disabled={
-              Boolean(disabledReason(hasPermission, "import.execute")) ||
-              job.status !== "APPROVED"
+              Boolean(disabledReason(hasPermission, "import.execute")) || job.status !== "APPROVED"
             }
             onClick={() => void handleExecute()}
           >
@@ -1339,7 +1347,8 @@ export function ImportCenterApp(props: ImportCenterAppProps) {
             disabled={Boolean(disabledReason(hasPermission, "import.execute"))}
             onClick={() => {
               if (!jobId) return;
-              if (!window.confirm("Request cancellation? Completed rows may remain committed.")) return;
+              if (!window.confirm("Request cancellation? Completed rows may remain committed."))
+                return;
               void api.cancelExecution(jobId, {}).catch(reportError);
             }}
           >
@@ -1370,9 +1379,7 @@ export function ImportCenterApp(props: ImportCenterAppProps) {
           >
             Refresh results
           </button>
-          <pre className="forge-ic-pre">
-            {JSON.stringify(resultsPayload ?? {}, null, 2)}
-          </pre>
+          <pre className="forge-ic-pre">{JSON.stringify(resultsPayload ?? {}, null, 2)}</pre>
           <div className="forge-ic-actions">
             <button type="button" onClick={() => void handleDownload("results", false)}>
               Download masked results
@@ -1404,9 +1411,7 @@ export function ImportCenterApp(props: ImportCenterAppProps) {
             <thead>
               <tr>
                 {["Code", "Message", "Actions"].map((h) => (
-                  <th key={h}>
-                    {h}
-                  </th>
+                  <th key={h}>{h}</th>
                 ))}
               </tr>
             </thead>
@@ -1436,8 +1441,8 @@ export function ImportCenterApp(props: ImportCenterAppProps) {
         <section className="forge-ic-panel">
           <h2>Import profiles</h2>
           <p>
-            Profile management requires import.profile.manage. Selection uses published profiles from
-            the Import Platform API.
+            Profile management requires import.profile.manage. Selection uses published profiles
+            from the Import Platform API.
           </p>
           {!actionAllowed(hasPermission, "import.profile.manage") ? (
             <p role="status">Profile administration is hidden without import.profile.manage.</p>

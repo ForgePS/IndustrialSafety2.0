@@ -1,10 +1,7 @@
 import type { ImportJobStatus } from "./types.js";
 
 /** S2 control-plane transitions. Processing / scan / rollback execution deferred to later sprints. */
-export const S2_CONTROL_PLANE_TRANSITIONS: Record<
-  string,
-  ReadonlyArray<ImportJobStatus>
-> = {
+export const S2_CONTROL_PLANE_TRANSITIONS: Record<string, ReadonlyArray<ImportJobStatus>> = {
   cancel: [
     "UPLOADED",
     "SCANNING",
@@ -50,9 +47,7 @@ export function assertS2Transition(
 ): void {
   const allowed = S2_CONTROL_PLANE_TRANSITIONS[action] ?? [];
   if (!allowed.includes(current)) {
-    const error = new Error(
-      `Import job status '${current}' does not allow action '${action}'`,
-    );
+    const error = new Error(`Import job status '${current}' does not allow action '${action}'`);
     (error as Error & { code: string }).code = "IMPORT_INVALID_STATE_TRANSITION";
     throw error;
   }
@@ -64,9 +59,7 @@ export function assertS3Transition(
 ): void {
   const allowed = S3_UPLOAD_TRANSITIONS[action] ?? [];
   if (!allowed.includes(current)) {
-    const error = new Error(
-      `Import job status '${current}' does not allow action '${action}'`,
-    );
+    const error = new Error(`Import job status '${current}' does not allow action '${action}'`);
     (error as Error & { code: string }).code = "IMPORT_INVALID_STATE_TRANSITION";
     throw error;
   }

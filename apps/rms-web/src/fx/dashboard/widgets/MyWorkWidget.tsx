@@ -16,13 +16,18 @@ export function MyWorkWidget(_props: DashboardWidgetComponentProps) {
   ]);
 
   if (!me) {
-    return <DashboardEmptyState title="Sign in required" description="Sign in to see My Work links." />;
+    return (
+      <DashboardEmptyState title="Sign in required" description="Sign in to see My Work links." />
+    );
   }
 
   const links: Array<{ href: string; label: string }> = [];
-  if (flags[RMS_FEATURE_FLAGS.officerReview]) links.push({ href: "/review/", label: "Review queue" });
-  if (flags[RMS_FEATURE_FLAGS.incidentShell]) links.push({ href: "/incidents/", label: "Incidents" });
-  if (flags[RMS_FEATURE_FLAGS.cadEnabled]) links.push({ href: "/cad/conflicts/", label: "CAD conflicts" });
+  if (flags[RMS_FEATURE_FLAGS.officerReview])
+    links.push({ href: "/review/", label: "Review queue" });
+  if (flags[RMS_FEATURE_FLAGS.incidentShell])
+    links.push({ href: "/incidents/", label: "Incidents" });
+  if (flags[RMS_FEATURE_FLAGS.cadEnabled])
+    links.push({ href: "/cad/conflicts/", label: "CAD conflicts" });
 
   if (links.length === 0) {
     return (

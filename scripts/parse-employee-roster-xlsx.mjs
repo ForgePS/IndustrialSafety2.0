@@ -51,7 +51,11 @@ function normalizeEmpKey(value) {
 function parseRosterFile(filePath) {
   const wb = XLSX.readFile(filePath);
   const sheetName = wb.SheetNames[0];
-  const rows = XLSX.utils.sheet_to_json(wb.Sheets[sheetName], { header: 1, defval: "", raw: false });
+  const rows = XLSX.utils.sheet_to_json(wb.Sheets[sheetName], {
+    header: 1,
+    defval: "",
+    raw: false,
+  });
   const employees = [];
   for (const row of rows.slice(1)) {
     const empKey = normalizeEmpKey(row[0]);
@@ -103,7 +107,9 @@ const sources = argv
   .map((arg) => (path.isAbsolute(arg) ? arg : path.join(process.cwd(), arg)));
 
 if (sources.length === 0) {
-  console.error("Usage: node scripts/parse-employee-roster-xlsx.mjs <xlsx> [more.xlsx] --out <json>");
+  console.error(
+    "Usage: node scripts/parse-employee-roster-xlsx.mjs <xlsx> [more.xlsx] --out <json>",
+  );
   process.exit(1);
 }
 

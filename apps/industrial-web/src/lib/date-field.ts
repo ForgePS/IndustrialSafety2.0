@@ -22,7 +22,10 @@ export type DateFieldMode = "default" | "birth";
 
 export function isBirthDateField(input: { id?: string; label?: string; name?: string }): boolean {
   const hay = `${input.id ?? ""} ${input.label ?? ""} ${input.name ?? ""}`.toLowerCase();
-  return /\b(date\s*of\s*birth|birth\s*date|dob|birthday)\b/.test(hay) || /dateofbirth|date_of_birth/.test(hay);
+  return (
+    /\b(date\s*of\s*birth|birth\s*date|dob|birthday)\b/.test(hay) ||
+    /dateofbirth|date_of_birth/.test(hay)
+  );
 }
 
 export function daysInMonth(year: number, month: number): number {
@@ -90,7 +93,11 @@ export function yearOptionsForMode(mode: DateFieldMode, now = new Date()): numbe
   return years;
 }
 
-export function dateFieldModeFor(input: { id?: string; label?: string; name?: string }): DateFieldMode {
+export function dateFieldModeFor(input: {
+  id?: string;
+  label?: string;
+  name?: string;
+}): DateFieldMode {
   return isBirthDateField(input) ? "birth" : "default";
 }
 

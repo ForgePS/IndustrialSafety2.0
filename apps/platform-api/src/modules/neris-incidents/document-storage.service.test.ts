@@ -1,9 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { isSignedAccessExpired } from "@forge/contracts";
-import {
-  DocumentStorageService,
-  PRESIGN_EXPIRES_SECONDS,
-} from "./document-storage.service.js";
+import { DocumentStorageService, PRESIGN_EXPIRES_SECONDS } from "./document-storage.service.js";
 
 describe("DocumentStorageService object keys", () => {
   it("scopes object keys by tenant and incident", () => {

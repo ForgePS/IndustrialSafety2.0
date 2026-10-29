@@ -3,12 +3,7 @@
 import Link from "next/link";
 import { Suspense, useCallback, useEffect, useMemo, useState, type FormEvent } from "react";
 import { ConfirmDialog } from "@/components/confirm-dialog";
-import {
-  filterBySearch,
-  ListControls,
-  paginate,
-  sortByField,
-} from "@/components/list-controls";
+import { filterBySearch, ListControls, paginate, sortByField } from "@/components/list-controls";
 import { TenantRequired } from "@/components/tenant-required";
 import { useAuth } from "@/hooks/use-auth";
 import { tenantQuery, useTenantId } from "@/hooks/use-tenant-id";
@@ -158,8 +153,8 @@ function InvitationsInner() {
       <h1>Invitations</h1>
       <p className={styles.lead}>
         Invite people by email. Forge sends the Cognito invitation message so they can set a
-        password and sign in. Use Resend if the email was lost or the Cognito user already
-        existed. Tenant <span className={styles.mono}>{tenantId}</span> ·{" "}
+        password and sign in. Use Resend if the email was lost or the Cognito user already existed.
+        Tenant <span className={styles.mono}>{tenantId}</span> ·{" "}
         <Link href={`/users${q}`}>Users</Link> · <Link href={`/audit${q}`}>Audit history</Link>
       </p>
 

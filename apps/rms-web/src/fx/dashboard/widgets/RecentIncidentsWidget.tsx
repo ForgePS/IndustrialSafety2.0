@@ -4,7 +4,11 @@ import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 import { useAuth } from "@forge/web-kit";
 import { listIncidents, type IncidentSummary } from "@/lib/rms-api";
-import { DashboardEmptyState, DashboardErrorState, DashboardLoadingState } from "../DashboardStates";
+import {
+  DashboardEmptyState,
+  DashboardErrorState,
+  DashboardLoadingState,
+} from "../DashboardStates";
 import type { DashboardWidgetComponentProps } from "../types";
 
 export function RecentIncidentsWidget({ onRefreshRequest }: DashboardWidgetComponentProps) {
@@ -34,7 +38,12 @@ export function RecentIncidentsWidget({ onRefreshRequest }: DashboardWidgetCompo
   }, [load, tick]);
 
   if (!me) {
-    return <DashboardEmptyState title="Sign in required" description="Sign in to view recent incidents." />;
+    return (
+      <DashboardEmptyState
+        title="Sign in required"
+        description="Sign in to view recent incidents."
+      />
+    );
   }
   if (loading) return <DashboardLoadingState label="Loading incidents" />;
   if (error) {
@@ -42,7 +51,11 @@ export function RecentIncidentsWidget({ onRefreshRequest }: DashboardWidgetCompo
       <DashboardErrorState
         description={error}
         action={
-          <button type="button" className="fx-btn fx-btn--secondary" onClick={() => setTick((n) => n + 1)}>
+          <button
+            type="button"
+            className="fx-btn fx-btn--secondary"
+            onClick={() => setTick((n) => n + 1)}
+          >
             Retry
           </button>
         }
@@ -50,7 +63,12 @@ export function RecentIncidentsWidget({ onRefreshRequest }: DashboardWidgetCompo
     );
   }
   if (items.length === 0) {
-    return <DashboardEmptyState title="No incidents" description="No recent incidents were returned for this tenant." />;
+    return (
+      <DashboardEmptyState
+        title="No incidents"
+        description="No recent incidents were returned for this tenant."
+      />
+    );
   }
 
   return (

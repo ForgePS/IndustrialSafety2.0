@@ -38,10 +38,7 @@ export function PrintManagerSuppliesPanel() {
     "industrial.printer.print",
     "industrial.admin",
   ]);
-  const canManage = hasAnyPermission([
-    "industrial.printer.manage_media",
-    "industrial.admin",
-  ]);
+  const canManage = hasAnyPermission(["industrial.printer.manage_media", "industrial.admin"]);
 
   const [items, setItems] = useState<PrintSupply[]>([]);
   const [printers, setPrinters] = useState<ForgePrinter[]>([]);
@@ -89,9 +86,8 @@ export function PrintManagerSuppliesPanel() {
       ) : null}
 
       <p className="text-muted small mb-3">
-        Remaining quantities are <strong>estimates</strong> based on successful print jobs
-        (copies), not live printer telemetry. Configure alert recipients on each supply via API if
-        needed.
+        Remaining quantities are <strong>estimates</strong> based on successful print jobs (copies),
+        not live printer telemetry. Configure alert recipients on each supply via API if needed.
       </p>
 
       {canManage ? (
@@ -102,8 +98,11 @@ export function PrintManagerSuppliesPanel() {
           <div className="card-body">
             <div className="row g-2 align-items-end">
               <div className="col-md-3">
-                <label className="form-label small">Name</label>
+                <label className="form-label small" htmlFor="pm-supply-name">
+                  Name
+                </label>
                 <input
+                  id="pm-supply-name"
                   className="form-control form-control-sm"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
@@ -111,8 +110,11 @@ export function PrintManagerSuppliesPanel() {
                 />
               </div>
               <div className="col-md-2">
-                <label className="form-label small">Type</label>
+                <label className="form-label small" htmlFor="pm-supply-type">
+                  Type
+                </label>
                 <select
+                  id="pm-supply-type"
                   className="form-select form-select-sm"
                   value={supplyType}
                   onChange={(e) => setSupplyType(e.target.value)}
@@ -125,8 +127,11 @@ export function PrintManagerSuppliesPanel() {
                 </select>
               </div>
               <div className="col-md-2">
-                <label className="form-label small">Printer</label>
+                <label className="form-label small" htmlFor="pm-supply-printer">
+                  Printer
+                </label>
                 <select
+                  id="pm-supply-printer"
                   className="form-select form-select-sm"
                   value={printerId}
                   onChange={(e) => setPrinterId(e.target.value)}
@@ -140,8 +145,11 @@ export function PrintManagerSuppliesPanel() {
                 </select>
               </div>
               <div className="col-md-1">
-                <label className="form-label small">Start qty</label>
+                <label className="form-label small" htmlFor="pm-supply-start-qty">
+                  Start qty
+                </label>
                 <input
+                  id="pm-supply-start-qty"
                   type="number"
                   className="form-control form-control-sm"
                   min={0}
@@ -150,8 +158,11 @@ export function PrintManagerSuppliesPanel() {
                 />
               </div>
               <div className="col-md-1">
-                <label className="form-label small">Warn</label>
+                <label className="form-label small" htmlFor="pm-supply-warn">
+                  Warn
+                </label>
                 <input
+                  id="pm-supply-warn"
                   type="number"
                   className="form-control form-control-sm"
                   min={0}
@@ -160,8 +171,11 @@ export function PrintManagerSuppliesPanel() {
                 />
               </div>
               <div className="col-md-1">
-                <label className="form-label small">Critical</label>
+                <label className="form-label small" htmlFor="pm-supply-critical">
+                  Critical
+                </label>
                 <input
+                  id="pm-supply-critical"
                   type="number"
                   className="form-control form-control-sm"
                   min={0}
@@ -170,8 +184,11 @@ export function PrintManagerSuppliesPanel() {
                 />
               </div>
               <div className="col-md-1">
-                <label className="form-label small">Unit</label>
+                <label className="form-label small" htmlFor="pm-supply-unit">
+                  Unit
+                </label>
                 <input
+                  id="pm-supply-unit"
                   className="form-control form-control-sm"
                   value={unit}
                   onChange={(e) => setUnit(e.target.value)}

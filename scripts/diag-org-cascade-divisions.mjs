@@ -63,12 +63,7 @@ try {
   ];
   const stuttgart = sites.find((s) => String(s.name).toLowerCase().includes("stuttgart"));
   const forStuttgart = stuttgart
-    ? entries.filter(
-        (e) =>
-          e &&
-          typeof e === "object" &&
-          e.siteId === stuttgart.id,
-      )
+    ? entries.filter((e) => e && typeof e === "object" && e.siteId === stuttgart.id)
     : [];
   const depts = await sql`
     select count(*)::int as total,
@@ -90,7 +85,12 @@ try {
           sample,
         },
         stuttgart: stuttgart
-          ? { id: stuttgart.id, name: stuttgart.name, divisionCount: forStuttgart.length, divisions: forStuttgart.slice(0, 20) }
+          ? {
+              id: stuttgart.id,
+              name: stuttgart.name,
+              divisionCount: forStuttgart.length,
+              divisions: forStuttgart.slice(0, 20),
+            }
           : null,
         departments: depts[0],
       },

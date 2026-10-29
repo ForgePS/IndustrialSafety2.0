@@ -312,7 +312,9 @@ export const tenantNerisConfiguration = pgTable(
     allowManualCreationWhenCadEnabled: boolean("allow_manual_creation_when_cad_enabled")
       .notNull()
       .default(true),
-    manualOverrideRequiresReason: boolean("manual_override_requires_reason").notNull().default(true),
+    manualOverrideRequiresReason: boolean("manual_override_requires_reason")
+      .notNull()
+      .default(true),
     manualOverridePermission: varchar("manual_override_permission", { length: 120 })
       .notNull()
       .default("rms.cad.incident.manual_override"),

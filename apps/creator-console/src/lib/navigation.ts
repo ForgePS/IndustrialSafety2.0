@@ -28,7 +28,12 @@ export const CREATOR_NAV_GROUPS: ForgeNavigationGroup[] = [
     id: "customers",
     label: "Companies",
     items: [
-      { id: "customers-list", label: "Companies", route: "/customers", permission: "platform.tenant.read" },
+      {
+        id: "customers-list",
+        label: "Companies",
+        route: "/customers",
+        permission: "platform.tenant.read",
+      },
       {
         id: "onboarding",
         label: "Onboarding",
@@ -192,7 +197,11 @@ export const CREATOR_NAV_GROUPS: ForgeNavigationGroup[] = [
         id: "legal-compliance",
         label: "Legal & Compliance",
         route: "/legal",
-        anyOfPermissions: ["platform.audit.read", "platform.feature.manage", "platform.tenant.read"],
+        anyOfPermissions: [
+          "platform.audit.read",
+          "platform.feature.manage",
+          "platform.tenant.read",
+        ],
       },
     ],
   },

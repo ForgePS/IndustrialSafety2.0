@@ -5,8 +5,8 @@
 
 ## Immediate rollback
 
-1. Set `fx.rms.navigation.enabled` = false (or clear session/env override)  
-2. Set `fx.rms.shell.enabled` = false  
+1. Set `fx.rms.navigation.enabled` = false (or clear session/env override)
+2. Set `fx.rms.shell.enabled` = false
 3. Reload — `RmsShellBoundary` renders `RmsLegacyShellAdapter`
 
 ## Preserved on rollback

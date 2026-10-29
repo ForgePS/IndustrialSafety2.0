@@ -93,7 +93,11 @@ export function OfficerReviewPanel({
         <div className="rms-fx-form" data-testid="rms-fx-officer-review">
           <FxFormSection title="Officer review" description={`Current status: ${status}`}>
             {error ? <FxValidationSummary errors={[error]} /> : null}
-            {message ? <p className={styles.success} role="status">{message}</p> : null}
+            {message ? (
+              <p className={styles.success} role="status">
+                {message}
+              </p>
+            ) : null}
 
             <FxFormSection title="Validation results">
               {validationMessages.length === 0 ? (
@@ -334,7 +338,8 @@ export function OfficerReviewPanel({
           <ul>
             {comments.map((comment) => (
               <li key={comment.id}>
-                <span className={styles.mono}>{comment.authorUserId.slice(0, 8)}…</span>: {comment.body}
+                <span className={styles.mono}>{comment.authorUserId.slice(0, 8)}…</span>:{" "}
+                {comment.body}
               </li>
             ))}
           </ul>
@@ -375,7 +380,9 @@ export function OfficerReviewPanel({
             type="button"
             className={styles.button}
             disabled={busy}
-            onClick={() => void runAction(() => approveIncident(tenantId, incidentId), "Incident approved")}
+            onClick={() =>
+              void runAction(() => approveIncident(tenantId, incidentId), "Incident approved")
+            }
           >
             Approve
           </button>

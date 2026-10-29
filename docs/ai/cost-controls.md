@@ -4,12 +4,12 @@
 
 ## Quotas (tenant narrative policy)
 
-| Control | Default |
-| --- | --- |
-| Monthly request quota | 100 |
-| Daily user quota | 20 |
-| Per-record limit | 10 |
-| Cost ceiling (USD) | optional (`costCeilingUsd`) |
+| Control               | Default                     |
+| --------------------- | --------------------------- |
+| Monthly request quota | 100                         |
+| Daily user quota      | 20                          |
+| Per-record limit      | 10                          |
+| Cost ceiling (USD)    | optional (`costCeilingUsd`) |
 
 Exceeded quotas fail closed and emit `AiNarrativeQuotaExceeded`.
 

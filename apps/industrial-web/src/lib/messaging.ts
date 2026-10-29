@@ -64,7 +64,9 @@ export type MessagingMessageCluster = {
   isClusterEnd: boolean;
 };
 
-export function messageSenderKey(message: Pick<MessagingMessage, "senderUserId" | "isOwn">): string {
+export function messageSenderKey(
+  message: Pick<MessagingMessage, "senderUserId" | "isOwn">,
+): string {
   const id = String(message.senderUserId ?? "").trim();
   if (id) return id;
   return message.isOwn ? "__own__" : "__other__";
@@ -123,7 +125,8 @@ export function guessMessagingMime(file: File): string {
   if (fromType && fromType !== "application/octet-stream") return fromType;
   const name = (file.name || "").toLowerCase();
   if (name.endsWith(".png")) return "image/png";
-  if (name.endsWith(".jpg") || name.endsWith(".jpeg") || name.endsWith(".jfif")) return "image/jpeg";
+  if (name.endsWith(".jpg") || name.endsWith(".jpeg") || name.endsWith(".jfif"))
+    return "image/jpeg";
   if (name.endsWith(".gif")) return "image/gif";
   if (name.endsWith(".webp")) return "image/webp";
   if (name.endsWith(".bmp")) return "image/bmp";
@@ -278,7 +281,9 @@ export function detectLinks(text: string): { url: string; title: string }[] {
   }));
 }
 
-export function splitMessageBodyWithLinks(body: string): Array<{ type: "text" | "link"; value: string }> {
+export function splitMessageBodyWithLinks(
+  body: string,
+): Array<{ type: "text" | "link"; value: string }> {
   const segments: Array<{ type: "text" | "link"; value: string }> = [];
   let lastIndex = 0;
   const regex = new RegExp(URL_PATTERN.source, "gi");
@@ -335,8 +340,7 @@ export function messagingMessageViewedLabel(
   members: readonly MessagingMember[] | undefined,
   currentUserId?: string,
 ): string | null {
-  const isOwn =
-    message.isOwn || (currentUserId ? message.senderUserId === currentUserId : false);
+  const isOwn = message.isOwn || (currentUserId ? message.senderUserId === currentUserId : false);
   if (!isOwn) return null;
 
   const ownMessages = (messages ?? []).filter(
@@ -379,10 +383,7 @@ export function messagingThreadTitleDisplay(
   return personNameDisplay(thread.title, "Conversation");
 }
 
-export function messagingThreadMetaLine(
-  thread: MessagingThread,
-  currentUserId?: string,
-): string {
+export function messagingThreadMetaLine(thread: MessagingThread, currentUserId?: string): string {
   const isGroup = String(thread.threadType).toUpperCase() === "GROUP";
   if (isGroup) {
     const count = thread.memberCount ?? thread.members?.length ?? 0;

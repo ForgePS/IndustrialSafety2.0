@@ -45,7 +45,9 @@ describe("lastNameMatchesPersonnel", () => {
   });
 
   it("falls back to displayName when lastName is empty", () => {
-    expect(lastNameMatchesPersonnel("Smith", { lastName: null, displayName: "John Smith" })).toBe(true);
+    expect(lastNameMatchesPersonnel("Smith", { lastName: null, displayName: "John Smith" })).toBe(
+      true,
+    );
     expect(lastNameMatchesPersonnel("Smith", { displayName: "John Smith Jr." })).toBe(true);
     expect(lastNameMatchesPersonnel("Smith", { displayName: "Smith, John" })).toBe(true);
     expect(lastNameMatchesPersonnel("John", { displayName: "John Smith" })).toBe(false);

@@ -9,11 +9,11 @@ Forge Platform adopts the **Sneat Free Bootstrap 5 Admin Template** (ThemeSelect
 
 ## What we take / what we do not
 
-| Included | Not included |
-|---|---|
-| Color palette (primary `#696cff`, body `#f5f5f9`, semantics) | Bootstrap 5 CSS/JS |
-| Typography (Public Sans) | jQuery / template HTML pages |
-| Radius, elevation, menu/navbar dimensions | Icon packs wholesale |
+| Included                                                      | Not included                 |
+| ------------------------------------------------------------- | ---------------------------- |
+| Color palette (primary `#696cff`, body `#f5f5f9`, semantics)  | Bootstrap 5 CSS/JS           |
+| Typography (Public Sans)                                      | jQuery / template HTML pages |
+| Radius, elevation, menu/navbar dimensions                     | Icon packs wholesale         |
 | Conceptual sidebar + content shell patterns as CSS primitives | Vendor PHP/Blade/asset trees |
 
 Apps consume CSS variables and React components only. The download under `Downloads/sneat-1.0.0` is a **reference**; Industrial also vendors Free CSS under `apps/industrial-web/public/sneat`.
@@ -24,14 +24,14 @@ Apps consume CSS variables and React components only. The download under `Downlo
 
 Default palette (do not replace with Firebase `#8bc53f`):
 
-| Token | Value |
-| --- | --- |
-| Primary | `#696cff` |
-| Primary hover | `#5f61e6` |
-| Secondary | `#8592a3` |
+| Token                             | Value                                         |
+| --------------------------------- | --------------------------------------------- |
+| Primary                           | `#696cff`                                     |
+| Primary hover                     | `#5f61e6`                                     |
+| Secondary                         | `#8592a3`                                     |
 | Success / Info / Warning / Danger | `#71dd37` / `#03c3ec` / `#ffab00` / `#ff3e1d` |
-| Body bg / text | `#f5f5f9` / `#697a8d` |
-| Font | Public Sans |
+| Body bg / text                    | `#f5f5f9` / `#697a8d`                         |
+| Font                              | Public Sans                                   |
 
 Tenant branding may override approved tokens (e.g. logo URL, optional primary) without abandoning Sneat component semantics.
 
@@ -70,7 +70,6 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 ```
-
 
 ## Theme classes
 

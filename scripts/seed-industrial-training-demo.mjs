@@ -59,7 +59,8 @@ const DEMO = [
               "Facilities contractors only",
             ],
             correctIndex: 1,
-            explanation: "Personal locks are removed by the employee who applied them, except via defined emergency procedures.",
+            explanation:
+              "Personal locks are removed by the employee who applied them, except via defined emergency procedures.",
             pageRef: "LOTO-2",
           },
         ],
@@ -100,7 +101,8 @@ const DEMO = [
               "No atmospheric hazards by definition",
             ],
             correctIndex: 1,
-            explanation: "Confined spaces have limited entry/exit and are not meant for continuous occupancy.",
+            explanation:
+              "Confined spaces have limited entry/exit and are not meant for continuous occupancy.",
             pageRef: "CS-1",
           },
           {

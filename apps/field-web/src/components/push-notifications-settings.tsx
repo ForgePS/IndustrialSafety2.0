@@ -2,11 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { ApiError } from "@forge/web-kit";
-import {
-  fieldPushApi,
-  subscribeFieldPush,
-  unsubscribeFieldPush,
-} from "@/lib/push-api";
+import { fieldPushApi, subscribeFieldPush, unsubscribeFieldPush } from "@/lib/push-api";
 
 export function PushNotificationsSettings() {
   const [supported, setSupported] = useState(false);
@@ -108,7 +104,11 @@ export function PushNotificationsSettings() {
           disabled={busy}
           onClick={() => void (subscribed ? disable() : enable())}
         >
-          {busy ? "Working…" : subscribed ? "Disable push on this device" : "Enable push on this device"}
+          {busy
+            ? "Working…"
+            : subscribed
+              ? "Disable push on this device"
+              : "Enable push on this device"}
         </button>
       )}
       {message ? <p className="ff-meta">{message}</p> : null}

@@ -27,20 +27,36 @@ export class HelpdeskController {
 
   @Get("tickets")
   @RequireAnyPermission(VIEW_TICKETS)
-  async listTickets(@Principal() principal: ForgePrincipal, @Query() query: Query, @Req() req: RequestWithIds) {
+  async listTickets(
+    @Principal() principal: ForgePrincipal,
+    @Query() query: Query,
+    @Req() req: RequestWithIds,
+  ) {
     const data = await this.helpdesk.listMyTickets(principal, query ?? {});
-    return ok(data, getRequestIds(req), { page: data.page, pageSize: data.pageSize, total: data.total });
+    return ok(data, getRequestIds(req), {
+      page: data.page,
+      pageSize: data.pageSize,
+      total: data.total,
+    });
   }
 
   @Post("tickets")
   @RequireAnyPermission(["helpdesk.ticket.create"])
-  async createTicket(@Principal() principal: ForgePrincipal, @Body() body: unknown, @Req() req: RequestWithIds) {
+  async createTicket(
+    @Principal() principal: ForgePrincipal,
+    @Body() body: unknown,
+    @Req() req: RequestWithIds,
+  ) {
     return ok(await this.helpdesk.createTicket(principal, body), getRequestIds(req));
   }
 
   @Get("tickets/:id")
   @RequireAnyPermission(VIEW_TICKETS)
-  async getTicket(@Principal() principal: ForgePrincipal, @Param("id") id: string, @Req() req: RequestWithIds) {
+  async getTicket(
+    @Principal() principal: ForgePrincipal,
+    @Param("id") id: string,
+    @Req() req: RequestWithIds,
+  ) {
     return ok(await this.helpdesk.getMyTicket(principal, id), getRequestIds(req));
   }
 
@@ -63,7 +79,10 @@ export class HelpdeskController {
     @Body() body: unknown,
     @Req() req: RequestWithIds,
   ) {
-    return ok(await this.helpdesk.customerSetStatus(principal, id, "REOPENED", body), getRequestIds(req));
+    return ok(
+      await this.helpdesk.customerSetStatus(principal, id, "REOPENED", body),
+      getRequestIds(req),
+    );
   }
 
   @Post("tickets/:id/close")
@@ -74,7 +93,10 @@ export class HelpdeskController {
     @Body() body: unknown,
     @Req() req: RequestWithIds,
   ) {
-    return ok(await this.helpdesk.customerSetStatus(principal, id, "CLOSED", body), getRequestIds(req));
+    return ok(
+      await this.helpdesk.customerSetStatus(principal, id, "CLOSED", body),
+      getRequestIds(req),
+    );
   }
 
   @Post("tickets/:id/attachments/upload-url")
@@ -85,7 +107,10 @@ export class HelpdeskController {
     @Body() body: unknown,
     @Req() req: RequestWithIds,
   ) {
-    return ok(await this.helpdesk.createAttachmentUpload(principal, "customer", id, body), getRequestIds(req));
+    return ok(
+      await this.helpdesk.createAttachmentUpload(principal, "customer", id, body),
+      getRequestIds(req),
+    );
   }
 
   @Post("tickets/:id/attachments/:attachmentId/complete")
@@ -96,7 +121,10 @@ export class HelpdeskController {
     @Param("attachmentId") attachmentId: string,
     @Req() req: RequestWithIds,
   ) {
-    return ok(await this.helpdesk.completeAttachmentUpload(principal, "customer", id, attachmentId), getRequestIds(req));
+    return ok(
+      await this.helpdesk.completeAttachmentUpload(principal, "customer", id, attachmentId),
+      getRequestIds(req),
+    );
   }
 
   @Get("tickets/:id/attachments/:attachmentId/download")
@@ -107,7 +135,10 @@ export class HelpdeskController {
     @Param("attachmentId") attachmentId: string,
     @Req() req: RequestWithIds,
   ) {
-    return ok(await this.helpdesk.attachmentDownload(principal, "customer", id, attachmentId), getRequestIds(req));
+    return ok(
+      await this.helpdesk.attachmentDownload(principal, "customer", id, attachmentId),
+      getRequestIds(req),
+    );
   }
 
   @Delete("tickets/:id/attachments/:attachmentId")
@@ -118,7 +149,10 @@ export class HelpdeskController {
     @Param("attachmentId") attachmentId: string,
     @Req() req: RequestWithIds,
   ) {
-    return ok(await this.helpdesk.deleteAttachment(principal, "customer", id, attachmentId), getRequestIds(req));
+    return ok(
+      await this.helpdesk.deleteAttachment(principal, "customer", id, attachmentId),
+      getRequestIds(req),
+    );
   }
 
   // ---------------------------------------------------------------- Forge support console
@@ -131,9 +165,17 @@ export class HelpdeskController {
 
   @Get("support/tickets")
   @RequireAnyPermission(SUPPORT_VIEW)
-  async supportList(@Principal() principal: ForgePrincipal, @Query() query: Query, @Req() req: RequestWithIds) {
+  async supportList(
+    @Principal() principal: ForgePrincipal,
+    @Query() query: Query,
+    @Req() req: RequestWithIds,
+  ) {
     const data = await this.helpdesk.supportList(principal, query ?? {});
-    return ok(data, getRequestIds(req), { page: data.page, pageSize: data.pageSize, total: data.total });
+    return ok(data, getRequestIds(req), {
+      page: data.page,
+      pageSize: data.pageSize,
+      total: data.total,
+    });
   }
 
   @Get("support/agents")
@@ -150,7 +192,11 @@ export class HelpdeskController {
 
   @Get("support/tickets/:id")
   @RequireAnyPermission(SUPPORT_VIEW)
-  async supportTicket(@Principal() principal: ForgePrincipal, @Param("id") id: string, @Req() req: RequestWithIds) {
+  async supportTicket(
+    @Principal() principal: ForgePrincipal,
+    @Param("id") id: string,
+    @Req() req: RequestWithIds,
+  ) {
     return ok(await this.helpdesk.supportTicketDetail(principal, id), getRequestIds(req));
   }
 
@@ -239,7 +285,10 @@ export class HelpdeskController {
     @Body() body: unknown,
     @Req() req: RequestWithIds,
   ) {
-    return ok(await this.helpdesk.createAttachmentUpload(principal, "support", id, body), getRequestIds(req));
+    return ok(
+      await this.helpdesk.createAttachmentUpload(principal, "support", id, body),
+      getRequestIds(req),
+    );
   }
 
   @Post("support/tickets/:id/attachments/:attachmentId/complete")
@@ -250,7 +299,10 @@ export class HelpdeskController {
     @Param("attachmentId") attachmentId: string,
     @Req() req: RequestWithIds,
   ) {
-    return ok(await this.helpdesk.completeAttachmentUpload(principal, "support", id, attachmentId), getRequestIds(req));
+    return ok(
+      await this.helpdesk.completeAttachmentUpload(principal, "support", id, attachmentId),
+      getRequestIds(req),
+    );
   }
 
   @Get("support/tickets/:id/attachments/:attachmentId/download")
@@ -261,7 +313,10 @@ export class HelpdeskController {
     @Param("attachmentId") attachmentId: string,
     @Req() req: RequestWithIds,
   ) {
-    return ok(await this.helpdesk.attachmentDownload(principal, "support", id, attachmentId), getRequestIds(req));
+    return ok(
+      await this.helpdesk.attachmentDownload(principal, "support", id, attachmentId),
+      getRequestIds(req),
+    );
   }
 
   @Delete("support/tickets/:id/attachments/:attachmentId")
@@ -272,6 +327,9 @@ export class HelpdeskController {
     @Param("attachmentId") attachmentId: string,
     @Req() req: RequestWithIds,
   ) {
-    return ok(await this.helpdesk.deleteAttachment(principal, "support", id, attachmentId), getRequestIds(req));
+    return ok(
+      await this.helpdesk.deleteAttachment(principal, "support", id, attachmentId),
+      getRequestIds(req),
+    );
   }
 }

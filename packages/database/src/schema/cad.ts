@@ -248,7 +248,11 @@ export const cadComments = pgTable(
     createdAt: createdAtColumn,
   },
   (table) => [
-    index("cad_comments_incident_idx").on(table.tenantId, table.incidentId, table.normalizedTimestamp),
+    index("cad_comments_incident_idx").on(
+      table.tenantId,
+      table.incidentId,
+      table.normalizedTimestamp,
+    ),
   ],
 );
 
@@ -760,4 +764,3 @@ export const cadRetentionRuns = pgTable(
   },
   (table) => [index("cad_retention_runs_started_idx").on(table.startedAt)],
 );
-

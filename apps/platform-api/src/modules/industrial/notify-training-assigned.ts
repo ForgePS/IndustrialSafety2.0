@@ -1,8 +1,4 @@
-import {
-  industrialPersonnel,
-  type Database,
-  withTenantTransaction,
-} from "@forge/database";
+import { industrialPersonnel, type Database, withTenantTransaction } from "@forge/database";
 import type { ForgePrincipal } from "@forge/tenant-context";
 import { and, eq, isNull } from "drizzle-orm";
 import type { NotificationsService } from "../notifications/notifications.service.js";
@@ -66,9 +62,7 @@ export async function notifyTrainingAssigned(
           body,
           priority: "HIGH",
           destination: email ? "BOTH" : "IN_APP",
-          ...(email
-            ? { emailTo: email, emailTemplateKey: "system_notification" as const }
-            : {}),
+          ...(email ? { emailTo: email, emailTemplateKey: "system_notification" as const } : {}),
           href,
           metadataJson: {
             assignmentId: input.assignmentId,

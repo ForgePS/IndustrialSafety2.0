@@ -120,8 +120,6 @@ html[data-bs-theme="dark"] {
   max-width: 64rem;
 }
 
-
-
 /* ─── Components ─── */
 
 .forge-card,
@@ -154,7 +152,9 @@ button.forge-btn {
   cursor: pointer;
   background: var(--forge-color-primary);
   color: #fff;
-  transition: background 0.15s ease, box-shadow 0.15s ease;
+  transition:
+    background 0.15s ease,
+    box-shadow 0.15s ease;
 }
 
 .forge-btn:hover {
@@ -513,7 +513,9 @@ table.forge-table th {
   text-decoration: none;
   color: inherit;
   min-height: 6.5rem;
-  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+  transition:
+    border-color 0.15s ease,
+    box-shadow 0.15s ease;
 }
 
 .forge-module-card:hover {
@@ -1128,4 +1130,3 @@ table.forge-table th {
   font-weight: 800;
   font-size: var(--forge-text-sm);
 }
-

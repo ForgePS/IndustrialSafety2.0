@@ -26,10 +26,14 @@ const IMPORTS_BUCKET =
   process.env.FORGE_IMPORTS_BUCKET || "forge-production-imports-511343547817-us-east-1";
 const LOG_GROUP =
   process.env.FORGE_API_LOG_GROUP ||
-  (FORGE_ENV === "production" ? "/forge/production/platform-api" : "/forge/development/platform-api");
+  (FORGE_ENV === "production"
+    ? "/forge/production/platform-api"
+    : "/forge/development/platform-api");
 
 const localFile = path.resolve(
-  arg("file") || process.env.TRAINING_XLSX_PATH || "c:/Users/jerem/Downloads/Training Database.xlsx",
+  arg("file") ||
+    process.env.TRAINING_XLSX_PATH ||
+    "c:/Users/jerem/Downloads/Training Database.xlsx",
 );
 const prefix = `seed/training-database/${new Date().toISOString().replace(/[:.]/g, "-")}`;
 const scriptKey = `${prefix}/import-training-database.mjs`;

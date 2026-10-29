@@ -50,13 +50,7 @@ export const IMPORT_PERMISSIONS = [
 ] as const;
 export type ImportPermissionCode = (typeof IMPORT_PERMISSIONS)[number];
 
-export const DUPLICATE_ACTIONS = [
-  "CREATE",
-  "UPDATE",
-  "SKIP",
-  "REJECT",
-  "MERGE_REVIEW",
-] as const;
+export const DUPLICATE_ACTIONS = ["CREATE", "UPDATE", "SKIP", "REJECT", "MERGE_REVIEW"] as const;
 export type DuplicateAction = (typeof DUPLICATE_ACTIONS)[number];
 
 export const VALIDATION_RULE_KINDS = [

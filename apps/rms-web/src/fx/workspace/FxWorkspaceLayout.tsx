@@ -91,7 +91,9 @@ export function FxWorkspaceLayout(props: FxWorkspaceLayoutExtendedProps) {
             aria-labelledby={`fx-ws-tab-${activeTab}`}
             className="rms-fx-workspace__panel"
           >
-            <WorkspaceSectionBoundary title="Workspace content">{children}</WorkspaceSectionBoundary>
+            <WorkspaceSectionBoundary title="Workspace content">
+              {children}
+            </WorkspaceSectionBoundary>
           </div>
         </div>
 

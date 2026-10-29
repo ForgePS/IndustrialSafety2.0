@@ -106,7 +106,12 @@ function ReminderRow({
  * Live Reminders workspace widget.
  * Snooze → PATCH remindAt; Dismiss → cancel (existing reminder lifecycle).
  */
-export function RemindersWorkspaceWidget({ size, view: viewProp, onViewChange, moduleRoute }: Props) {
+export function RemindersWorkspaceWidget({
+  size,
+  view: viewProp,
+  onViewChange,
+  moduleRoute,
+}: Props) {
   const view: RemindersWidgetView = isRemindersWidgetView(viewProp) ? viewProp : "upcoming";
   const { status, error, reminders, summary, refresh, snooze, dismiss, busyId } =
     useRemindersWidgetData(view, true);
@@ -120,7 +125,11 @@ export function RemindersWorkspaceWidget({ size, view: viewProp, onViewChange, m
     <div className="forge-ws-reminders d-flex flex-column h-100">
       <div className="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-2">
         {showTabs ? (
-          <div className="btn-group btn-group-sm flex-wrap" role="group" aria-label="Reminders view">
+          <div
+            className="btn-group btn-group-sm flex-wrap"
+            role="group"
+            aria-label="Reminders view"
+          >
             {VIEW_TABS.map((tab) => (
               <button
                 key={tab}
@@ -159,7 +168,11 @@ export function RemindersWorkspaceWidget({ size, view: viewProp, onViewChange, m
           <div>
             <p className="text-danger small mb-2">{error ?? "Unable to load reminders."}</p>
             <div className="d-flex flex-wrap gap-2">
-              <button type="button" className="btn btn-sm btn-outline-secondary" onClick={() => void refresh()}>
+              <button
+                type="button"
+                className="btn btn-sm btn-outline-secondary"
+                onClick={() => void refresh()}
+              >
                 Try Again
               </button>
               <Link href={moduleRoute} className="btn btn-sm btn-outline-primary">

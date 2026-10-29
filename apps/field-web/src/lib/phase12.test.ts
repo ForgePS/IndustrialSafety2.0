@@ -120,26 +120,34 @@ describe("Field Alerts person grouping", () => {
 
 describe("notification deep links", () => {
   it("maps industrial module hrefs to Field routes", () => {
-    expect(fieldHrefFromIndustrialPath("/modules/calendar?eventId=e1", {
-      targetType: "",
-      targetId: "",
-      qrLinkId: "",
-    })).toBe("/calendar/?eventId=e1");
-    expect(fieldHrefFromIndustrialPath("/modules/reminders?reminderId=r1", {
-      targetType: "",
-      targetId: "",
-      qrLinkId: "",
-    })).toBe("/reminders/?reminderId=r1");
-    expect(fieldHrefFromIndustrialPath("/modules/tasks?taskId=t1", {
-      targetType: "",
-      targetId: "",
-      qrLinkId: "",
-    })).toBe("/tasks/item/t1/");
-    expect(fieldHrefFromIndustrialPath("/modules/sanitation", {
-      targetType: "",
-      targetId: "",
-      qrLinkId: "",
-    })).toBe("/sanitation/");
+    expect(
+      fieldHrefFromIndustrialPath("/modules/calendar?eventId=e1", {
+        targetType: "",
+        targetId: "",
+        qrLinkId: "",
+      }),
+    ).toBe("/calendar/?eventId=e1");
+    expect(
+      fieldHrefFromIndustrialPath("/modules/reminders?reminderId=r1", {
+        targetType: "",
+        targetId: "",
+        qrLinkId: "",
+      }),
+    ).toBe("/reminders/?reminderId=r1");
+    expect(
+      fieldHrefFromIndustrialPath("/modules/tasks?taskId=t1", {
+        targetType: "",
+        targetId: "",
+        qrLinkId: "",
+      }),
+    ).toBe("/tasks/item/t1/");
+    expect(
+      fieldHrefFromIndustrialPath("/modules/sanitation", {
+        targetType: "",
+        targetId: "",
+        qrLinkId: "",
+      }),
+    ).toBe("/sanitation/");
   });
 
   it("keeps Field hrefs and remaps modules via notification helper", () => {

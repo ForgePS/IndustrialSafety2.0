@@ -14,8 +14,7 @@ const args = process.argv.slice(2);
 const tdIndex = args.indexOf("--task-definition");
 const taskDefinition = tdIndex === -1 ? null : args[tdIndex + 1];
 const envIndex = args.indexOf("--env");
-const forgeEnvironment =
-  envIndex === -1 ? "development" : String(args[envIndex + 1] || "").trim();
+const forgeEnvironment = envIndex === -1 ? "development" : String(args[envIndex + 1] || "").trim();
 if (forgeEnvironment !== "development" && forgeEnvironment !== "production") {
   throw new Error(`Unsupported --env ${forgeEnvironment}`);
 }

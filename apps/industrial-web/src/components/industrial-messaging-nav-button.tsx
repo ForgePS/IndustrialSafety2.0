@@ -39,8 +39,8 @@ export function IndustrialMessagingNavButton() {
   const { open, minimized, openPopout, togglePopout } = useMessagingPopout();
   const canAccess = Boolean(
     me?.permissions?.includes("industrial.access") ||
-      me?.permissions?.includes("industrial.admin") ||
-      me?.isPlatformAdmin,
+    me?.permissions?.includes("industrial.admin") ||
+    me?.isPlatformAdmin,
   );
   const messagingEnabled = sessionModuleEnabled(me, "MESSAGING");
   const currentUserId = me?.userId ?? "";
@@ -60,20 +60,17 @@ export function IndustrialMessagingNavButton() {
     setToast(null);
   }, []);
 
-  const showToast = useCallback(
-    (next: Omit<IncomingToast, "key">) => {
-      if (toastTimerRef.current != null) {
-        window.clearTimeout(toastTimerRef.current);
-      }
-      toastKeyRef.current += 1;
-      setToast({ ...next, key: toastKeyRef.current });
-      toastTimerRef.current = window.setTimeout(() => {
-        setToast(null);
-        toastTimerRef.current = null;
-      }, TOAST_MS);
-    },
-    [],
-  );
+  const showToast = useCallback((next: Omit<IncomingToast, "key">) => {
+    if (toastTimerRef.current != null) {
+      window.clearTimeout(toastTimerRef.current);
+    }
+    toastKeyRef.current += 1;
+    setToast({ ...next, key: toastKeyRef.current });
+    toastTimerRef.current = window.setTimeout(() => {
+      setToast(null);
+      toastTimerRef.current = null;
+    }, TOAST_MS);
+  }, []);
 
   const refreshUnread = useCallback(async () => {
     if (!canAccess || !messagingEnabled) {

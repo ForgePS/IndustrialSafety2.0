@@ -28,10 +28,7 @@ import {
   type TenantUserOption,
 } from "@/lib/messaging";
 import { personNameDisplay } from "@/lib/person-name-display";
-import {
-  loadOrgFilterCatalogs,
-  type LookupOption,
-} from "@/lib/personnel-lookups";
+import { loadOrgFilterCatalogs, type LookupOption } from "@/lib/personnel-lookups";
 import type { DepartmentOption, DivisionOption } from "@/lib/personnel-assignment";
 import { OrgLocationCascade } from "@/components/org-location-cascade";
 import { playNotificationChime, unlockNotificationAudio } from "@/lib/notification-sound";
@@ -40,8 +37,7 @@ import { insertTextAtSelection, MESSAGING_EMOJI_GROUPS } from "@/lib/messaging-e
 const POLL_MS = 5_000;
 /** Quiet background refresh while Messages stays open; nav badge uses unread-summary. */
 const THREAD_LIST_POLL_MS = 30_000;
-const ATTACHMENT_ACCEPT =
-  "image/*,.pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.csv,.json,.zip";
+const ATTACHMENT_ACCEPT = "image/*,.pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.csv,.json,.zip";
 
 type UploadUrlResponse = {
   attachmentId: string;
@@ -94,9 +90,7 @@ function MessageBody({ body }: { body: string }) {
   const segments = splitMessageBodyWithLinks(body);
   const emojiOnly = /^\p{Extended_Pictographic}(\s*\p{Extended_Pictographic})*$/u.test(body.trim());
   return (
-    <p
-      className={`mb-0 text-break messaging-message-body${emojiOnly ? " fs-3 lh-1" : ""}`}
-    >
+    <p className={`mb-0 text-break messaging-message-body${emojiOnly ? " fs-3 lh-1" : ""}`}>
       {segments.map((segment, index) =>
         segment.type === "link" ? (
           <a key={index} href={segment.value} target="_blank" rel="noopener noreferrer">
@@ -298,9 +292,7 @@ function MessagingParticipantPicker({
       if (divisionFilter && (user.divisionName?.trim() || "") !== divisionFilter) return false;
       if (departmentFilter) {
         const deptLabel =
-          departmentNameFilter ||
-          departments.find((d) => d.id === departmentFilter)?.label ||
-          "";
+          departmentNameFilter || departments.find((d) => d.id === departmentFilter)?.label || "";
         const name = user.departmentName?.trim() || "";
         if (name !== deptLabel && name !== departmentFilter) return false;
       }
@@ -314,14 +306,7 @@ function MessagingParticipantPicker({
         messagingParticipantLine(user).toLowerCase().includes(q)
       );
     },
-    [
-      siteFilter,
-      divisionFilter,
-      departmentFilter,
-      departmentNameFilter,
-      departments,
-      nameFilter,
-    ],
+    [siteFilter, divisionFilter, departmentFilter, departmentNameFilter, departments, nameFilter],
   );
 
   const availableUsers = useMemo(
@@ -387,7 +372,8 @@ function MessagingParticipantPicker({
       <div className="d-flex flex-wrap justify-content-between align-items-baseline gap-2 mb-2">
         <div className="form-label mb-0">Group membership</div>
         <div className="text-muted small">
-          <strong>{selected.length}</strong> in group · <strong>{availableUsers.length}</strong> available
+          <strong>{selected.length}</strong> in group · <strong>{availableUsers.length}</strong>{" "}
+          available
         </div>
       </div>
       <div className="row g-2 mb-2">
@@ -652,7 +638,9 @@ function NewConversationModal({
               <button
                 type="button"
                 className="btn btn-primary btn-sm"
-                disabled={busy || selected.length === 0 || (threadType === "GROUP" && !title.trim())}
+                disabled={
+                  busy || selected.length === 0 || (threadType === "GROUP" && !title.trim())
+                }
                 onClick={() => {
                   const payload: {
                     threadType: "DIRECT" | "GROUP";
@@ -701,11 +689,7 @@ function EditGroupModal({
   divisionEntries: DivisionOption[];
   currentUserId: string;
   onClose: () => void;
-  onSave: (input: {
-    title: string;
-    description: string;
-    memberUserIds: string[];
-  }) => void;
+  onSave: (input: { title: string; description: string; memberUserIds: string[] }) => void;
   busy: boolean;
 }) {
   const [title, setTitle] = useState("");
@@ -1010,7 +994,7 @@ export function MessagingWorkspace({
       const rows = Array.isArray(payload)
         ? payload
         : Array.isArray((payload as { items?: unknown[] } | null)?.items)
-          ? ((payload as { items: unknown[] }).items)
+          ? (payload as { items: unknown[] }).items
           : [];
       setTenantUsers(
         tenantUserOptions(
@@ -1077,64 +1061,71 @@ export function MessagingWorkspace({
     }
   }, [tenantId]);
 
-  const openThread = useCallback(async (id: string, since?: string | null) => {
-    const query = new URLSearchParams();
-    if (since) query.set("since", since);
-    if (!since) query.set("limit", "100");
-    const qs = query.toString();
-    const thread = await apiGet<MessagingThread>(
-      `/api/v1/industrial/messaging/threads/${encodeURIComponent(id)}${qs ? `?${qs}` : ""}`,
-    );
+  const openThread = useCallback(
+    async (id: string, since?: string | null) => {
+      const query = new URLSearchParams();
+      if (since) query.set("since", since);
+      if (!since) query.set("limit", "100");
+      const qs = query.toString();
+      const thread = await apiGet<MessagingThread>(
+        `/api/v1/industrial/messaging/threads/${encodeURIComponent(id)}${qs ? `?${qs}` : ""}`,
+      );
 
-    const current = activeThreadRef.current;
-    if (since && current?.id === id) {
-      setActiveThread((prev) => {
-        if (!prev || prev.id !== id) return prev;
-        const existingIds = new Set((prev.messages ?? []).map((m) => m.id));
-        const newMessages = (thread.messages ?? []).filter((m) => !existingIds.has(m.id));
-        if (newMessages.length > 0) {
-          if (
-            newMessages.some(
-              (message) => !message.isOwn && message.senderUserId !== currentUserId,
-            )
-          ) {
-            playNotificationChime();
+      const current = activeThreadRef.current;
+      if (since && current?.id === id) {
+        setActiveThread((prev) => {
+          if (!prev || prev.id !== id) return prev;
+          const existingIds = new Set((prev.messages ?? []).map((m) => m.id));
+          const newMessages = (thread.messages ?? []).filter((m) => !existingIds.has(m.id));
+          if (newMessages.length > 0) {
+            if (
+              newMessages.some(
+                (message) => !message.isOwn && message.senderUserId !== currentUserId,
+              )
+            ) {
+              playNotificationChime();
+            }
+            pollSinceRef.current =
+              newMessages[newMessages.length - 1]?.createdAt ?? pollSinceRef.current;
           }
-          pollSinceRef.current =
-            newMessages[newMessages.length - 1]?.createdAt ?? pollSinceRef.current;
-        }
-        // Refresh members/metadata only — never replace the message history with a
-        // since-poll payload (which is empty or incremental).
-        const { messages: _ignored, ...threadMeta } = thread;
-        return {
-          ...prev,
-          ...threadMeta,
-          messages:
-            newMessages.length > 0
-              ? [...(prev.messages ?? []), ...newMessages]
-              : (prev.messages ?? []),
-        };
-      });
-      void loadThreads({ quiet: true });
-    } else if (!since) {
-      setActiveThread(thread);
-      setSelectedId(id);
-      pollSinceRef.current =
-        thread.messages && thread.messages.length > 0
-          ? thread.messages[thread.messages.length - 1]!.createdAt
-          : null;
-    }
+          // Refresh members/metadata only — never replace the message history with a
+          // since-poll payload (which is empty or incremental).
+          const { messages: _ignored, ...threadMeta } = thread;
+          return {
+            ...prev,
+            ...threadMeta,
+            messages:
+              newMessages.length > 0
+                ? [...(prev.messages ?? []), ...newMessages]
+                : (prev.messages ?? []),
+          };
+        });
+        void loadThreads({ quiet: true });
+      } else if (!since) {
+        setActiveThread(thread);
+        setSelectedId(id);
+        pollSinceRef.current =
+          thread.messages && thread.messages.length > 0
+            ? thread.messages[thread.messages.length - 1]!.createdAt
+            : null;
+      }
 
-    // Keep lastReadAt current while the conversation is open so senders see "Viewed".
-    // Backend also clears matching industrial.messaging.new_message notifications.
-    try {
-      await apiSend(`/api/v1/industrial/messaging/threads/${encodeURIComponent(id)}/read`, "POST", {});
-      notifyMessagingThreadRead(id);
-      if (!since) void loadThreads({ quiet: true });
-    } catch {
-      // Read receipts are best-effort.
-    }
-  }, [currentUserId, loadThreads]);
+      // Keep lastReadAt current while the conversation is open so senders see "Viewed".
+      // Backend also clears matching industrial.messaging.new_message notifications.
+      try {
+        await apiSend(
+          `/api/v1/industrial/messaging/threads/${encodeURIComponent(id)}/read`,
+          "POST",
+          {},
+        );
+        notifyMessagingThreadRead(id);
+        if (!since) void loadThreads({ quiet: true });
+      } catch {
+        // Read receipts are best-effort.
+      }
+    },
+    [currentUserId, loadThreads],
+  );
 
   useEffect(() => {
     void loadThreads();
@@ -1263,7 +1254,9 @@ export function MessagingWorkspace({
       if (previewUrl) pending.previewUrl = previewUrl;
       setPendingUploads((prev) => [...prev, pending]);
     } catch (e) {
-      setError(e instanceof ApiError ? e.message : e instanceof Error ? e.message : "Upload failed");
+      setError(
+        e instanceof ApiError ? e.message : e instanceof Error ? e.message : "Upload failed",
+      );
     } finally {
       setUploading(false);
     }
@@ -1316,9 +1309,7 @@ export function MessagingWorkspace({
       );
 
       setActiveThread((prev) =>
-        prev
-          ? { ...prev, messages: [...(prev.messages ?? []), message] }
-          : prev,
+        prev ? { ...prev, messages: [...(prev.messages ?? []), message] } : prev,
       );
       pollSinceRef.current = message.createdAt;
       setBody("");
@@ -1398,7 +1389,10 @@ export function MessagingWorkspace({
     if (!window.confirm(`Delete group “${name}”? This removes it for everyone.`)) return;
     setError("");
     try {
-      await apiSend(`/api/v1/industrial/messaging/threads/${encodeURIComponent(thread.id)}`, "DELETE");
+      await apiSend(
+        `/api/v1/industrial/messaging/threads/${encodeURIComponent(thread.id)}`,
+        "DELETE",
+      );
       if (selectedId === thread.id) {
         setSelectedId("");
         setActiveThread(null);
@@ -1425,9 +1419,7 @@ export function MessagingWorkspace({
     <section
       aria-labelledby="messaging-title"
       className={
-        isPopout
-          ? "messaging-workspace messaging-workspace--popout"
-          : "messaging-workspace"
+        isPopout ? "messaging-workspace messaging-workspace--popout" : "messaging-workspace"
       }
       data-walkthrough="messaging-overview"
     >
@@ -1639,9 +1631,7 @@ export function MessagingWorkspace({
                       {activeTitle}
                     </h6>
                     {activePresenceLine ? (
-                      <div className="small text-muted text-truncate">
-                        {activePresenceLine}
-                      </div>
+                      <div className="small text-muted text-truncate">{activePresenceLine}</div>
                     ) : activeMemberLine ? (
                       <div className="small text-muted text-truncate">{activeMemberLine}</div>
                     ) : null}
@@ -1708,10 +1698,7 @@ export function MessagingWorkspace({
                               </span>
                             </span>
                           ) : (
-                            <span
-                              className="messaging-message__avatar-spacer"
-                              aria-hidden="true"
-                            />
+                            <span className="messaging-message__avatar-spacer" aria-hidden="true" />
                           )
                         ) : null}
                         <div className="messaging-message__stack">
@@ -1724,10 +1711,7 @@ export function MessagingWorkspace({
                                 {formatMessageTime(m.createdAt)}
                               </span>
                               {viewedLabel ? (
-                                <span
-                                  className="messaging-read-receipt"
-                                  title={viewedLabel}
-                                >
+                                <span className="messaging-read-receipt" title={viewedLabel}>
                                   <i className="bx bx-check-double" aria-hidden="true" />
                                   <span className="messaging-read-receipt__text">
                                     {viewedLabel}
@@ -1771,9 +1755,7 @@ export function MessagingWorkspace({
                                 title="Jump to original message"
                                 onClick={() => focusRepliedMessage(m.replyTo!.messageId)}
                               >
-                                <span className="messaging-reply-quote__sender">
-                                  {replySender}
-                                </span>
+                                <span className="messaging-reply-quote__sender">{replySender}</span>
                                 <span className="messaging-reply-quote__body text-truncate">
                                   {m.replyTo.bodyPreview}
                                 </span>
@@ -1852,8 +1834,7 @@ export function MessagingWorkspace({
                   <div className="messaging-reply-bar">
                     <div className="messaging-reply-bar__copy min-w-0">
                       <span className="messaging-reply-bar__label">
-                        Replying to{" "}
-                        {personNameDisplay(replyTo.senderName, "USER")}
+                        Replying to {personNameDisplay(replyTo.senderName, "USER")}
                       </span>
                       <span className="messaging-reply-bar__preview text-truncate">
                         {replyTo.body.trim() ||
@@ -2023,9 +2004,7 @@ export function MessagingWorkspace({
                 </span>
               </span>
               <p className="mb-1 fw-medium">Select a chat to start messaging</p>
-              <p className="mb-0 small text-muted">
-                Choose a conversation or start a new one.
-              </p>
+              <p className="mb-0 small text-muted">Choose a conversation or start a new one.</p>
             </div>
           )}
         </div>

@@ -9,16 +9,10 @@
  */
 
 declare module "@bradycorporation/brady-web-sdk" {
-
   export type BradyPrinterUpdatesCallback = (mostRecentUpdates: string[] | null) => void;
 
-
-
   export default class BradySdk {
-
     constructor(callback: BradyPrinterUpdatesCallback, collectAnalytics?: boolean);
-
-
 
     /** SDK 3.3.0: no required args; returns boolean success. */
 
@@ -31,13 +25,11 @@ declare module "@bradycorporation/brady-web-sdk" {
     isSupportedBrowser(): Promise<boolean>;
 
     printBitmap(
-
       bitmap: HTMLImageElement,
 
       xOffset?: number,
 
       yOffset?: number,
-
     ): Promise<boolean>;
 
     setCopies(copies: number): void;
@@ -45,8 +37,6 @@ declare module "@bradycorporation/brady-web-sdk" {
     setCutOption?(cutOption: number): void;
 
     disconnect(): Promise<boolean>;
-
-
 
     printerName?: string | null;
 
@@ -82,9 +72,5 @@ declare module "@bradycorporation/brady-web-sdk" {
     ribbonRemainingPercent?: number | null;
 
     dotsPerInch?: number | null;
-
   }
-
 }
-
-

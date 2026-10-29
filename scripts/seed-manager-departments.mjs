@@ -173,16 +173,18 @@ async function main() {
     const departmentsIn = Array.isArray(payload.departments) ? payload.departments : [];
     const as400Mappings = Array.isArray(payload.as400Mappings) ? payload.as400Mappings : [];
     summary.as400.mappingsIn = as400Mappings.length;
-    const deptHasDivisionName = await tableHasColumn(sql, "industrial_departments", "division_name");
+    const deptHasDivisionName = await tableHasColumn(
+      sql,
+      "industrial_departments",
+      "division_name",
+    );
 
     const existingSites = await sql`
       select id::text as id, name, site_key, status, archived_at
       from industrial_sites
       where tenant_id = ${tenantId}::uuid
     `;
-    const sitesByName = new Map(
-      existingSites.map((s) => [str(s.name).toLowerCase(), s]),
-    );
+    const sitesByName = new Map(existingSites.map((s) => [str(s.name).toLowerCase(), s]));
     const sitesByKey = new Map(
       existingSites.filter((s) => s.site_key).map((s) => [str(s.site_key).toLowerCase(), s]),
     );
@@ -425,16 +427,13 @@ async function main() {
 
       const candidates = deptsByName.get(name.toLowerCase()) || [];
       const multiLocationSameName =
-        departmentsIn.filter(
-          (d) => str(d.department).toLowerCase() === name.toLowerCase(),
-        ).length > 1;
+        departmentsIn.filter((d) => str(d.department).toLowerCase() === name.toLowerCase()).length >
+        1;
       // Never steal a same-named department already linked to a different site
       // (e.g. Parboil Mill at Stuttgart vs Greenville).
       let existing =
         candidates.find((d) => !d.archived_at && d.site_id && siteId && d.site_id === siteId) ||
-        (!multiLocationSameName
-          ? candidates.find((d) => !d.archived_at && !d.site_id)
-          : null) ||
+        (!multiLocationSameName ? candidates.find((d) => !d.archived_at && !d.site_id) : null) ||
         null;
 
       const contactPayload = {
@@ -485,10 +484,7 @@ async function main() {
         const nextContactName = manager || existing.contact_name || null;
         const nextContactPersonnelId = matchedPerson?.id || existing.contact_personnel_id || null;
         const nextContactEmail =
-          matchedPerson?.email ||
-          matchedPerson?.company_email ||
-          existing.contact_email ||
-          null;
+          matchedPerson?.email || matchedPerson?.company_email || existing.contact_email || null;
         if (manager && existing.contact_name && existing.contact_name !== manager) {
           summary.departments.contactsRefreshed += 1;
         }
@@ -590,7 +586,12 @@ async function main() {
     }
     function forgeBaseName(value) {
       // "Parboil Mill - Stuttgart" → "Parboil Mill"
-      return str(value).replace(/\s*[-–]\s*(Stuttgart|Greenville|DeWitt|Dewitt|Boyle|Eudora|Fair Oaks|McGehee|Pine Bluff|Tyronza|Wilmot|Wilson|Wynne|AR|MS).*$/i, "").trim();
+      return str(value)
+        .replace(
+          /\s*[-–]\s*(Stuttgart|Greenville|DeWitt|Dewitt|Boyle|Eudora|Fair Oaks|McGehee|Pine Bluff|Tyronza|Wilmot|Wilson|Wynne|AR|MS).*$/i,
+          "",
+        )
+        .trim();
     }
     function findDeptMatches(forgeName) {
       const exact = deptsByName.get(forgeName.toLowerCase()) || [];
@@ -819,9 +820,7 @@ async function main() {
         proposals: undefined,
       },
       siteNames: locations.map((l) => l.name),
-      departmentSample: summary.proposals
-        .filter((p) => p.kind === "department")
-        .slice(0, 12),
+      departmentSample: summary.proposals.filter((p) => p.kind === "department").slice(0, 12),
       counts: {
         locations: locations.length,
         divisionsIn: divisionsIn.length,

@@ -74,154 +74,165 @@ export class NerisIncidentsService {
     await this.access.assertManualIntakeEnabled(principal);
     const data = createIncidentInputSchema.parse(input);
 
-    return withTenantTransaction(this.db, tenantId, async (tx) => {
-      const config = await tx.query.tenantNerisConfiguration.findFirst({
-        where: eq(tenantNerisConfiguration.tenantId, tenantId),
-      });
-      const operatingMode = config?.operatingMode ?? "MANUAL_ONLY";
-      const allowManualWhenCad =
-        config?.allowManualCreationWhenCadEnabled ?? true;
-
-      if (operatingMode === "CAD_ENABLED" && !allowManualWhenCad) {
-        const activeFallback = await tx.query.cadManualFallbackSessions.findFirst({
-          where: and(
-            eq(cadManualFallbackSessions.tenantId, tenantId),
-            eq(cadManualFallbackSessions.status, "ACTIVE"),
-          ),
+    return withTenantTransaction(
+      this.db,
+      tenantId,
+      async (tx) => {
+        const config = await tx.query.tenantNerisConfiguration.findFirst({
+          where: eq(tenantNerisConfiguration.tenantId, tenantId),
         });
-        const canOverride = hasPermission(principal, "rms.cad.incident.manual_override");
-        if (!activeFallback && !canOverride) {
-          throw new ForgeError(
-            "FORBIDDEN",
-            "Manual incident creation is restricted while CAD_ENABLED. Declare a CAD outage fallback or use manual override.",
-          );
-        }
-        if (!activeFallback && canOverride && config?.manualOverrideRequiresReason) {
-          const reason =
-            typeof input === "object" &&
-            input &&
-            "manualOverrideReason" in input &&
-            typeof (input as { manualOverrideReason?: unknown }).manualOverrideReason === "string"
-              ? (input as { manualOverrideReason: string }).manualOverrideReason
-              : "";
-          if (!reason.trim()) {
+        const operatingMode = config?.operatingMode ?? "MANUAL_ONLY";
+        const allowManualWhenCad = config?.allowManualCreationWhenCadEnabled ?? true;
+
+        if (operatingMode === "CAD_ENABLED" && !allowManualWhenCad) {
+          const activeFallback = await tx.query.cadManualFallbackSessions.findFirst({
+            where: and(
+              eq(cadManualFallbackSessions.tenantId, tenantId),
+              eq(cadManualFallbackSessions.status, "ACTIVE"),
+            ),
+          });
+          const canOverride = hasPermission(principal, "rms.cad.incident.manual_override");
+          if (!activeFallback && !canOverride) {
             throw new ForgeError(
-              "BAD_REQUEST",
-              "manualOverrideReason is required when creating incidents under CAD_ENABLED without an active fallback",
+              "FORBIDDEN",
+              "Manual incident creation is restricted while CAD_ENABLED. Declare a CAD outage fallback or use manual override.",
             );
           }
+          if (!activeFallback && canOverride && config?.manualOverrideRequiresReason) {
+            const reason =
+              typeof input === "object" &&
+              input &&
+              "manualOverrideReason" in input &&
+              typeof (input as { manualOverrideReason?: unknown }).manualOverrideReason === "string"
+                ? (input as { manualOverrideReason: string }).manualOverrideReason
+                : "";
+            if (!reason.trim()) {
+              throw new ForgeError(
+                "BAD_REQUEST",
+                "manualOverrideReason is required when creating incidents under CAD_ENABLED without an active fallback",
+              );
+            }
+          }
         }
-      }
 
-      const published = await this.schemaRegistry.getPublishedVersion();
-      if (!published) {
-        throw new ForgeError("NOT_FOUND", "No published NERIS schema version");
-      }
+        const published = await this.schemaRegistry.getPublishedVersion();
+        if (!published) {
+          throw new ForgeError("NOT_FOUND", "No published NERIS schema version");
+        }
 
-      const incidentDate = data.incidentDate
-        ? new Date(`${data.incidentDate}T00:00:00.000Z`)
-        : new Date();
+        const incidentDate = data.incidentDate
+          ? new Date(`${data.incidentDate}T00:00:00.000Z`)
+          : new Date();
 
-      const { number, ledgerId } = await this.numbering.claimNextNumber(
-        tx,
-        tenantId,
-        {
-          incidentDate,
-          stationId: data.stationId ?? null,
-          categoryKey: data.primaryIncidentTypeCode ?? null,
-        },
-        principal.userId,
-        data.manualNumber ? data.incidentNumber : undefined,
-      );
-
-      const id = createId();
-      const now = new Date();
-      const [incident] = await tx
-        .insert(nerisIncidents)
-        .values({
-          id,
+        const { number, ledgerId } = await this.numbering.claimNextNumber(
+          tx,
           tenantId,
-          incidentNumber: number,
-          status: "DRAFT",
-          schemaVersionId: published.id,
-          incidentDate: data.incidentDate ?? incidentDate.toISOString().slice(0, 10),
-          alarmAt: data.alarmAt ? new Date(data.alarmAt) : null,
-          stationId: data.stationId,
-          shiftId: data.shiftId,
-          responseDistrict: data.responseDistrict,
-          incidentSource: data.incidentSource ?? "MANUAL",
-          dispatchDescription: data.dispatchDescription,
-          mutualAidStatus: data.mutualAidStatus,
-          aidDirection: data.aidDirection,
-          incidentCommanderPersonnelId: data.incidentCommanderPersonnelId,
-          reportOwnerUserId: data.reportOwnerUserId ?? principal.userId,
-          primaryIncidentTypeCode: data.primaryIncidentTypeCode,
-          operatingMode,
-          createdByUserId: principal.userId,
-          updatedByUserId: principal.userId,
-          createdAt: now,
-          updatedAt: now,
-        })
-        .returning();
-      if (!incident) throw new ForgeError("INTERNAL_ERROR", "Failed to create incident");
+          {
+            incidentDate,
+            stationId: data.stationId ?? null,
+            categoryKey: data.primaryIncidentTypeCode ?? null,
+          },
+          principal.userId,
+          data.manualNumber ? data.incidentNumber : undefined,
+        );
 
-      await this.numbering.bindNumberToIncident(tx, tenantId, ledgerId, id);
+        const id = createId();
+        const now = new Date();
+        const [incident] = await tx
+          .insert(nerisIncidents)
+          .values({
+            id,
+            tenantId,
+            incidentNumber: number,
+            status: "DRAFT",
+            schemaVersionId: published.id,
+            incidentDate: data.incidentDate ?? incidentDate.toISOString().slice(0, 10),
+            alarmAt: data.alarmAt ? new Date(data.alarmAt) : null,
+            stationId: data.stationId,
+            shiftId: data.shiftId,
+            responseDistrict: data.responseDistrict,
+            incidentSource: data.incidentSource ?? "MANUAL",
+            dispatchDescription: data.dispatchDescription,
+            mutualAidStatus: data.mutualAidStatus,
+            aidDirection: data.aidDirection,
+            incidentCommanderPersonnelId: data.incidentCommanderPersonnelId,
+            reportOwnerUserId: data.reportOwnerUserId ?? principal.userId,
+            primaryIncidentTypeCode: data.primaryIncidentTypeCode,
+            operatingMode,
+            createdByUserId: principal.userId,
+            updatedByUserId: principal.userId,
+            createdAt: now,
+            updatedAt: now,
+          })
+          .returning();
+        if (!incident) throw new ForgeError("INTERNAL_ERROR", "Failed to create incident");
 
-      await tx.insert(nerisIncidentSections).values(
-        DEFAULT_INCIDENT_SECTIONS.map((sectionKey) => ({
+        await this.numbering.bindNumberToIncident(tx, tenantId, ledgerId, id);
+
+        await tx.insert(nerisIncidentSections).values(
+          DEFAULT_INCIDENT_SECTIONS.map((sectionKey) => ({
+            id: createId(),
+            tenantId,
+            incidentId: id,
+            sectionKey,
+            createdAt: now,
+            updatedAt: now,
+          })),
+        );
+
+        const snapshot = await this.formDescriptor.buildSchemaSnapshot(published.id);
+        const checksum = this.numbering.checksumSnapshot(snapshot);
+        await tx.insert(nerisIncidentSchemaSnapshots).values({
           id: createId(),
           tenantId,
           incidentId: id,
-          sectionKey,
+          schemaVersionId: published.id,
+          checksumSha256: checksum,
+          snapshotJson: snapshot,
           createdAt: now,
-          updatedAt: now,
-        })),
-      );
+        });
 
-      const snapshot = await this.formDescriptor.buildSchemaSnapshot(published.id);
-      const checksum = this.numbering.checksumSnapshot(snapshot);
-      await tx.insert(nerisIncidentSchemaSnapshots).values({
-        id: createId(),
-        tenantId,
-        incidentId: id,
-        schemaVersionId: published.id,
-        checksumSha256: checksum,
-        snapshotJson: snapshot,
-        createdAt: now,
-      });
+        await tx.insert(nerisIncidentStatusHistory).values({
+          id: createId(),
+          tenantId,
+          incidentId: id,
+          fromStatus: null,
+          toStatus: "DRAFT",
+          actorUserId: principal.userId,
+          createdAt: now,
+        });
 
-      await tx.insert(nerisIncidentStatusHistory).values({
-        id: createId(),
-        tenantId,
-        incidentId: id,
-        fromStatus: null,
-        toStatus: "DRAFT",
-        actorUserId: principal.userId,
-        createdAt: now,
-      });
+        await this.emitIncidentEvent(
+          tx,
+          tenantId,
+          id,
+          DOMAIN_EVENT_TYPES.NERIS_INCIDENT_CREATED,
+          principal,
+          {
+            incidentId: id,
+            incidentNumber: number,
+            status: "DRAFT",
+          },
+        );
+        await this.audit.writeInTransaction(tx, {
+          tenantId,
+          actorUserId: principal.userId,
+          actorPersonId: principal.personId,
+          actorType: "USER",
+          action: "neris.incident.create",
+          resourceType: "neris_incident",
+          resourceId: id,
+          result: "SUCCESS",
+          riskLevel: "MEDIUM",
+          correlationId: principal.correlationId,
+          requestId: principal.requestId,
+          after: incident,
+        });
 
-      await this.emitIncidentEvent(tx, tenantId, id, DOMAIN_EVENT_TYPES.NERIS_INCIDENT_CREATED, principal, {
-        incidentId: id,
-        incidentNumber: number,
-        status: "DRAFT",
-      });
-      await this.audit.writeInTransaction(tx, {
-        tenantId,
-        actorUserId: principal.userId,
-        actorPersonId: principal.personId,
-        actorType: "USER",
-        action: "neris.incident.create",
-        resourceType: "neris_incident",
-        resourceId: id,
-        result: "SUCCESS",
-        riskLevel: "MEDIUM",
-        correlationId: principal.correlationId,
-        requestId: principal.requestId,
-        after: incident,
-      });
-
-      return incident;
-    }, principal.userId);
+        return incident;
+      },
+      principal.userId,
+    );
   }
 
   async list(tenantId: string, query: unknown) {
@@ -271,28 +282,45 @@ export class NerisIncidentsService {
   ) {
     await this.access.assertIncidentShellEnabled(principal);
     const data = patchIncidentInputSchema.parse(input);
-    return withTenantTransaction(this.db, tenantId, async (tx) => {
-      const before = await this.requireIncident(tx, tenantId, incidentId);
-      this.stateMachine.assertEditable(before.status as NerisIncidentStatus);
-      const updated = await this.versionedUpdate(
-        tx,
-        tenantId,
-        incidentId,
-        before,
-        {
-          ...data,
-          alarmAt: data.alarmAt !== undefined ? (data.alarmAt ? new Date(data.alarmAt) : null) : undefined,
-          status: this.stateMachine.promoteDraftIfNeeded(before.status as NerisIncidentStatus),
-          updatedByUserId: principal.userId,
-        },
-        principal,
-        expected,
-      );
-      if (updated.status !== before.status) {
-        await this.recordStatusChange(tx, tenantId, incidentId, before.status, updated.status, principal);
-      }
-      return updated;
-    }, principal.userId);
+    return withTenantTransaction(
+      this.db,
+      tenantId,
+      async (tx) => {
+        const before = await this.requireIncident(tx, tenantId, incidentId);
+        this.stateMachine.assertEditable(before.status as NerisIncidentStatus);
+        const updated = await this.versionedUpdate(
+          tx,
+          tenantId,
+          incidentId,
+          before,
+          {
+            ...data,
+            alarmAt:
+              data.alarmAt !== undefined
+                ? data.alarmAt
+                  ? new Date(data.alarmAt)
+                  : null
+                : undefined,
+            status: this.stateMachine.promoteDraftIfNeeded(before.status as NerisIncidentStatus),
+            updatedByUserId: principal.userId,
+          },
+          principal,
+          expected,
+        );
+        if (updated.status !== before.status) {
+          await this.recordStatusChange(
+            tx,
+            tenantId,
+            incidentId,
+            before.status,
+            updated.status,
+            principal,
+          );
+        }
+        return updated;
+      },
+      principal.userId,
+    );
   }
 
   async batchUpsertFieldValues(
@@ -304,101 +332,118 @@ export class NerisIncidentsService {
   ) {
     await this.access.assertIncidentShellEnabled(principal);
     const data = batchUpsertFieldValuesInputSchema.parse(input);
-    return withTenantTransaction(this.db, tenantId, async (tx) => {
-      const incident = await this.requireIncident(tx, tenantId, incidentId);
-      this.stateMachine.assertEditable(incident.status as NerisIncidentStatus);
-      if (expected !== "*" && incident.recordVersion !== expected) {
-        throw concurrencyConflict({
-          tenantId,
-          resourceType: "neris_incident",
-          resourceId: incidentId,
-          expectedVersion: expected,
-          actualVersion: incident.recordVersion,
-        });
-      }
+    return withTenantTransaction(
+      this.db,
+      tenantId,
+      async (tx) => {
+        const incident = await this.requireIncident(tx, tenantId, incidentId);
+        this.stateMachine.assertEditable(incident.status as NerisIncidentStatus);
+        if (expected !== "*" && incident.recordVersion !== expected) {
+          throw concurrencyConflict({
+            tenantId,
+            resourceType: "neris_incident",
+            resourceId: incidentId,
+            expectedVersion: expected,
+            actualVersion: incident.recordVersion,
+          });
+        }
 
-      const results = [];
-      for (const value of data.values) {
-        const [existing] = await tx
-          .select()
-          .from(nerisIncidentFieldValues)
+        const results = [];
+        for (const value of data.values) {
+          const [existing] = await tx
+            .select()
+            .from(nerisIncidentFieldValues)
+            .where(
+              and(
+                eq(nerisIncidentFieldValues.incidentId, incidentId),
+                eq(nerisIncidentFieldValues.fieldId, value.fieldId),
+                eq(nerisIncidentFieldValues.sectionKey, value.sectionKey),
+                value.repeatableItemId
+                  ? eq(nerisIncidentFieldValues.repeatableItemId, value.repeatableItemId)
+                  : isNull(nerisIncidentFieldValues.repeatableItemId),
+              ),
+            )
+            .limit(1);
+
+          if (existing?.userConfirmed && value.userConfirmed !== true) {
+            results.push(existing);
+            continue;
+          }
+
+          const now = new Date();
+          const payload = {
+            valueText: value.valueText,
+            valueNumber: value.valueNumber !== undefined ? String(value.valueNumber) : undefined,
+            valueBoolean: value.valueBoolean,
+            valueTimestamp: value.valueTimestamp ? new Date(value.valueTimestamp) : undefined,
+            valueOptionId: value.valueOptionId,
+            valueJson: value.valueJson,
+            prefillSource: value.prefillSource,
+            userConfirmed: value.userConfirmed ?? existing?.userConfirmed ?? false,
+            updatedByUserId: principal.userId,
+            updatedAt: now,
+          };
+
+          if (existing) {
+            const [row] = await tx
+              .update(nerisIncidentFieldValues)
+              .set({ ...payload, recordVersion: existing.recordVersion + 1 })
+              .where(eq(nerisIncidentFieldValues.id, existing.id))
+              .returning();
+            results.push(row);
+          } else {
+            const [row] = await tx
+              .insert(nerisIncidentFieldValues)
+              .values({
+                id: createId(),
+                tenantId,
+                incidentId,
+                fieldId: value.fieldId,
+                sectionKey: value.sectionKey,
+                repeatableItemId: value.repeatableItemId,
+                ...payload,
+                createdByUserId: principal.userId,
+                createdAt: now,
+              })
+              .returning();
+            results.push(row);
+          }
+        }
+
+        const newStatus = this.stateMachine.promoteDraftIfNeeded(
+          incident.status as NerisIncidentStatus,
+        );
+        const [updatedIncident] = await tx
+          .update(nerisIncidents)
+          .set({
+            status: newStatus,
+            recordVersion: incident.recordVersion + 1,
+            updatedByUserId: principal.userId,
+            updatedAt: new Date(),
+          })
           .where(
             and(
-              eq(nerisIncidentFieldValues.incidentId, incidentId),
-              eq(nerisIncidentFieldValues.fieldId, value.fieldId),
-              eq(nerisIncidentFieldValues.sectionKey, value.sectionKey),
-              value.repeatableItemId
-                ? eq(nerisIncidentFieldValues.repeatableItemId, value.repeatableItemId)
-                : isNull(nerisIncidentFieldValues.repeatableItemId),
+              eq(nerisIncidents.id, incidentId),
+              eq(nerisIncidents.recordVersion, incident.recordVersion),
             ),
           )
-          .limit(1);
+          .returning();
 
-        if (existing?.userConfirmed && value.userConfirmed !== true) {
-          results.push(existing);
-          continue;
+        if (newStatus !== incident.status && updatedIncident) {
+          await this.recordStatusChange(
+            tx,
+            tenantId,
+            incidentId,
+            incident.status,
+            newStatus,
+            principal,
+          );
         }
 
-        const now = new Date();
-        const payload = {
-          valueText: value.valueText,
-          valueNumber: value.valueNumber !== undefined ? String(value.valueNumber) : undefined,
-          valueBoolean: value.valueBoolean,
-          valueTimestamp: value.valueTimestamp ? new Date(value.valueTimestamp) : undefined,
-          valueOptionId: value.valueOptionId,
-          valueJson: value.valueJson,
-          prefillSource: value.prefillSource,
-          userConfirmed: value.userConfirmed ?? existing?.userConfirmed ?? false,
-          updatedByUserId: principal.userId,
-          updatedAt: now,
-        };
-
-        if (existing) {
-          const [row] = await tx
-            .update(nerisIncidentFieldValues)
-            .set({ ...payload, recordVersion: existing.recordVersion + 1 })
-            .where(eq(nerisIncidentFieldValues.id, existing.id))
-            .returning();
-          results.push(row);
-        } else {
-          const [row] = await tx
-            .insert(nerisIncidentFieldValues)
-            .values({
-              id: createId(),
-              tenantId,
-              incidentId,
-              fieldId: value.fieldId,
-              sectionKey: value.sectionKey,
-              repeatableItemId: value.repeatableItemId,
-              ...payload,
-              createdByUserId: principal.userId,
-              createdAt: now,
-            })
-            .returning();
-          results.push(row);
-        }
-      }
-
-      const newStatus = this.stateMachine.promoteDraftIfNeeded(incident.status as NerisIncidentStatus);
-      const [updatedIncident] = await tx
-        .update(nerisIncidents)
-        .set({
-          status: newStatus,
-          recordVersion: incident.recordVersion + 1,
-          updatedByUserId: principal.userId,
-          updatedAt: new Date(),
-        })
-        .where(
-          and(eq(nerisIncidents.id, incidentId), eq(nerisIncidents.recordVersion, incident.recordVersion)),
-        )
-        .returning();
-
-      if (newStatus !== incident.status && updatedIncident) {
-        await this.recordStatusChange(tx, tenantId, incidentId, incident.status, newStatus, principal);
-      }
-
-      return { incident: updatedIncident ?? incident, values: results };
-    }, principal.userId);
+        return { incident: updatedIncident ?? incident, values: results };
+      },
+      principal.userId,
+    );
   }
 
   async validate(tenantId: string, incidentId: string, principal: ForgePrincipal) {
@@ -408,7 +453,12 @@ export class NerisIncidentsService {
     });
   }
 
-  async submitForReview(tenantId: string, incidentId: string, input: unknown, principal: ForgePrincipal) {
+  async submitForReview(
+    tenantId: string,
+    incidentId: string,
+    input: unknown,
+    principal: ForgePrincipal,
+  ) {
     await this.access.assertIncidentShellEnabled(principal);
     await this.access.assertOfficerReviewEnabled(principal);
     const data = submitReviewInputSchema.parse(input);
@@ -426,7 +476,13 @@ export class NerisIncidentsService {
           "SUBMIT_FOR_REVIEW",
           principal,
         );
-        await this.writeConfigurationSnapshot(tx, tenantId, incidentId, "SUBMIT_FOR_REVIEW", principal);
+        await this.writeConfigurationSnapshot(
+          tx,
+          tenantId,
+          incidentId,
+          "SUBMIT_FOR_REVIEW",
+          principal,
+        );
         await tx.insert(nerisIncidentReviewAssignments).values({
           id: createId(),
           tenantId,
@@ -450,7 +506,12 @@ export class NerisIncidentsService {
     );
   }
 
-  async returnIncident(tenantId: string, incidentId: string, input: unknown, principal: ForgePrincipal) {
+  async returnIncident(
+    tenantId: string,
+    incidentId: string,
+    input: unknown,
+    principal: ForgePrincipal,
+  ) {
     await this.access.assertIncidentShellEnabled(principal);
     await this.access.assertOfficerReviewEnabled(principal);
     const data = returnIncidentInputSchema.parse(input);
@@ -545,7 +606,12 @@ export class NerisIncidentsService {
     );
   }
 
-  async voidIncident(tenantId: string, incidentId: string, input: unknown, principal: ForgePrincipal) {
+  async voidIncident(
+    tenantId: string,
+    incidentId: string,
+    input: unknown,
+    principal: ForgePrincipal,
+  ) {
     await this.access.assertIncidentShellEnabled(principal);
     const data = voidIncidentInputSchema.parse(input);
     return this.transition(
@@ -634,10 +700,9 @@ export class NerisIncidentsService {
       return this.formDescriptor.compose(tenantId, {
         ...(incident.schemaVersionId ? { schemaVersionId: incident.schemaVersionId } : {}),
         fieldValuesByKey,
-        classificationSignals: [
-          incident.primaryIncidentTypeCode,
-          ...secondary,
-        ].filter((v): v is string => Boolean(v)),
+        classificationSignals: [incident.primaryIncidentTypeCode, ...secondary].filter(
+          (v): v is string => Boolean(v),
+        ),
         notApplicableSectionKeys,
         forcedActiveSectionKeys,
         specialtyWorkflowsEnabled: specialtyEnabled,
@@ -653,22 +718,25 @@ export class NerisIncidentsService {
     tenantId: string,
     incidentId: string,
     principal: ForgePrincipal,
-    input: { sectionKey: string; action: "ACTIVATE" | "MARK_NOT_APPLICABLE" | "CLEAR_NOT_APPLICABLE" },
+    input: {
+      sectionKey: string;
+      action: "ACTIVATE" | "MARK_NOT_APPLICABLE" | "CLEAR_NOT_APPLICABLE";
+    },
   ) {
     await this.access.assertSpecialtyWorkflowsEnabled(principal);
     const sectionKey = input.sectionKey.trim().toUpperCase();
     if ((DEFAULT_INCIDENT_SECTIONS as readonly string[]).includes(sectionKey)) {
-      throw new ForgeError("BAD_REQUEST", "Core sections cannot be activated or marked N/A this way");
+      throw new ForgeError(
+        "BAD_REQUEST",
+        "Core sections cannot be activated or marked N/A this way",
+      );
     }
     const definition = SPECIALTY_WORKFLOW_GROUPS.find((g) => g.sectionKey === sectionKey);
     if (!definition) {
       throw new ForgeError("BAD_REQUEST", `Unknown specialty section: ${sectionKey}`);
     }
     if (input.action === "MARK_NOT_APPLICABLE" && !definition.allowNotApplicable) {
-      throw new ForgeError(
-        "BAD_REQUEST",
-        `Section ${sectionKey} cannot be marked not applicable`,
-      );
+      throw new ForgeError("BAD_REQUEST", `Section ${sectionKey} cannot be marked not applicable`);
     }
 
     return withTenantTransaction(this.db, tenantId, async (tx) => {
@@ -752,88 +820,100 @@ export class NerisIncidentsService {
   ) {
     await this.access.assertIncidentShellEnabled(principal);
     const data = upsertNarrativeInputSchema.parse(input);
-    return withTenantTransaction(this.db, tenantId, async (tx) => {
-      const incident = await this.requireIncident(tx, tenantId, incidentId);
-      this.stateMachine.assertEditable(incident.status as NerisIncidentStatus);
-      if (expected !== "*" && incident.recordVersion !== expected) {
-        throw concurrencyConflict({
-          tenantId,
-          resourceType: "neris_incident",
-          resourceId: incidentId,
-          expectedVersion: expected,
-          actualVersion: incident.recordVersion,
+    return withTenantTransaction(
+      this.db,
+      tenantId,
+      async (tx) => {
+        const incident = await this.requireIncident(tx, tenantId, incidentId);
+        this.stateMachine.assertEditable(incident.status as NerisIncidentStatus);
+        if (expected !== "*" && incident.recordVersion !== expected) {
+          throw concurrencyConflict({
+            tenantId,
+            resourceType: "neris_incident",
+            resourceId: incidentId,
+            expectedVersion: expected,
+            actualVersion: incident.recordVersion,
+          });
+        }
+
+        const now = new Date();
+        const existing = await tx.query.nerisIncidentNarratives.findFirst({
+          where: eq(nerisIncidentNarratives.incidentId, incidentId),
         });
-      }
 
-      const now = new Date();
-      const existing = await tx.query.nerisIncidentNarratives.findFirst({
-        where: eq(nerisIncidentNarratives.incidentId, incidentId),
-      });
+        let narrative = existing;
+        if (existing) {
+          [narrative] = await tx
+            .update(nerisIncidentNarratives)
+            .set({
+              body: data.body,
+              characterCount: data.body.length,
+              templateKey: data.templateKey,
+              recordVersion: existing.recordVersion + 1,
+              updatedByUserId: principal.userId,
+              updatedAt: now,
+            })
+            .where(eq(nerisIncidentNarratives.id, existing.id))
+            .returning();
+        } else {
+          [narrative] = await tx
+            .insert(nerisIncidentNarratives)
+            .values({
+              id: createId(),
+              tenantId,
+              incidentId,
+              body: data.body,
+              characterCount: data.body.length,
+              templateKey: data.templateKey,
+              createdByUserId: principal.userId,
+              updatedByUserId: principal.userId,
+              createdAt: now,
+              updatedAt: now,
+            })
+            .returning();
+        }
 
-      let narrative = existing;
-      if (existing) {
-        [narrative] = await tx
-          .update(nerisIncidentNarratives)
-          .set({
-            body: data.body,
-            characterCount: data.body.length,
-            templateKey: data.templateKey,
-            recordVersion: existing.recordVersion + 1,
-            updatedByUserId: principal.userId,
-            updatedAt: now,
-          })
-          .where(eq(nerisIncidentNarratives.id, existing.id))
-          .returning();
-      } else {
-        [narrative] = await tx
-          .insert(nerisIncidentNarratives)
-          .values({
+        if (narrative) {
+          const versionRows = await tx
+            .select({ max: count() })
+            .from(nerisIncidentNarrativeVersions)
+            .where(eq(nerisIncidentNarrativeVersions.narrativeId, narrative.id));
+          const versionNumber = (versionRows[0]?.max ?? 0) + 1;
+          await tx.insert(nerisIncidentNarrativeVersions).values({
             id: createId(),
             tenantId,
+            narrativeId: narrative.id,
             incidentId,
             body: data.body,
             characterCount: data.body.length,
-            templateKey: data.templateKey,
+            versionNumber,
             createdByUserId: principal.userId,
-            updatedByUserId: principal.userId,
             createdAt: now,
+          });
+        }
+
+        const newStatus = this.stateMachine.promoteDraftIfNeeded(
+          incident.status as NerisIncidentStatus,
+        );
+        await tx
+          .update(nerisIncidents)
+          .set({
+            status: newStatus,
+            recordVersion: incident.recordVersion + 1,
+            updatedByUserId: principal.userId,
             updatedAt: now,
           })
-          .returning();
-      }
+          .where(
+            and(
+              eq(nerisIncidents.id, incidentId),
+              eq(nerisIncidents.recordVersion, incident.recordVersion),
+            ),
+          );
 
-      if (narrative) {
-        const versionRows = await tx
-          .select({ max: count() })
-          .from(nerisIncidentNarrativeVersions)
-          .where(eq(nerisIncidentNarrativeVersions.narrativeId, narrative.id));
-        const versionNumber = (versionRows[0]?.max ?? 0) + 1;
-        await tx.insert(nerisIncidentNarrativeVersions).values({
-          id: createId(),
-          tenantId,
-          narrativeId: narrative.id,
-          incidentId,
-          body: data.body,
-          characterCount: data.body.length,
-          versionNumber,
-          createdByUserId: principal.userId,
-          createdAt: now,
-        });
-      }
-
-      const newStatus = this.stateMachine.promoteDraftIfNeeded(incident.status as NerisIncidentStatus);
-      await tx
-        .update(nerisIncidents)
-        .set({
-          status: newStatus,
-          recordVersion: incident.recordVersion + 1,
-          updatedByUserId: principal.userId,
-          updatedAt: now,
-        })
-        .where(and(eq(nerisIncidents.id, incidentId), eq(nerisIncidents.recordVersion, incident.recordVersion)));
-
-      return narrative;
-    }, principal.userId);
+        return narrative;
+      },
+      principal.userId,
+    );
   }
 
   async listStatusHistory(tenantId: string, incidentId: string) {
@@ -873,51 +953,56 @@ export class NerisIncidentsService {
   ) {
     await this.assertReviewWorkflowAccess(principal);
     const data = reviewCommentInputSchema.parse(input);
-    return withTenantTransaction(this.db, tenantId, async (tx) => {
-      await this.requireIncident(tx, tenantId, incidentId);
-      const [row] = await tx
-        .insert(nerisIncidentReviewComments)
-        .values({
-          id: createId(),
+    return withTenantTransaction(
+      this.db,
+      tenantId,
+      async (tx) => {
+        await this.requireIncident(tx, tenantId, incidentId);
+        const [row] = await tx
+          .insert(nerisIncidentReviewComments)
+          .values({
+            id: createId(),
+            tenantId,
+            incidentId,
+            sectionKey: data.sectionKey ?? null,
+            fieldId: data.fieldId ?? null,
+            specialtyRecordType: data.specialtyRecordType ?? null,
+            specialtyRecordId: data.specialtyRecordId ?? null,
+            attachmentId: data.attachmentId ?? null,
+            validationResultId: data.validationResultId ?? null,
+            reviewerRole: data.reviewerRole ?? null,
+            assignedToUserId: data.assignedToUserId ?? null,
+            status: "OPEN",
+            body: data.body,
+            authorUserId: principal.userId,
+            createdAt: new Date(),
+            updatedAt: new Date(),
+          })
+          .returning();
+        await this.audit.writeInTransaction(tx, {
           tenantId,
-          incidentId,
-          sectionKey: data.sectionKey ?? null,
-          fieldId: data.fieldId ?? null,
-          specialtyRecordType: data.specialtyRecordType ?? null,
-          specialtyRecordId: data.specialtyRecordId ?? null,
-          attachmentId: data.attachmentId ?? null,
-          validationResultId: data.validationResultId ?? null,
-          reviewerRole: data.reviewerRole ?? null,
-          assignedToUserId: data.assignedToUserId ?? null,
-          status: "OPEN",
-          body: data.body,
-          authorUserId: principal.userId,
-          createdAt: new Date(),
-          updatedAt: new Date(),
-        })
-        .returning();
-      await this.audit.writeInTransaction(tx, {
-        tenantId,
-        actorUserId: principal.userId,
-        actorPersonId: principal.personId,
-        actorType: "USER",
-        action: "neris.review_comment.create",
-        resourceType: "neris_incident_review_comment",
-        resourceId: row!.id,
-        result: "SUCCESS",
-        riskLevel: "LOW",
-        correlationId: principal.correlationId,
-        requestId: principal.requestId,
-        after: {
-          incidentId,
-          sectionKey: data.sectionKey,
-          specialtyRecordType: data.specialtyRecordType,
-          attachmentId: data.attachmentId,
-          reviewerRole: data.reviewerRole,
-        },
-      });
-      return row;
-    }, principal.userId);
+          actorUserId: principal.userId,
+          actorPersonId: principal.personId,
+          actorType: "USER",
+          action: "neris.review_comment.create",
+          resourceType: "neris_incident_review_comment",
+          resourceId: row!.id,
+          result: "SUCCESS",
+          riskLevel: "LOW",
+          correlationId: principal.correlationId,
+          requestId: principal.requestId,
+          after: {
+            incidentId,
+            sectionKey: data.sectionKey,
+            specialtyRecordType: data.specialtyRecordType,
+            attachmentId: data.attachmentId,
+            reviewerRole: data.reviewerRole,
+          },
+        });
+        return row;
+      },
+      principal.userId,
+    );
   }
 
   async resolveReviewComment(
@@ -929,28 +1014,33 @@ export class NerisIncidentsService {
   ) {
     await this.assertReviewWorkflowAccess(principal);
     const data = resolveReviewCommentInputSchema.parse(input ?? {});
-    return withTenantTransaction(this.db, tenantId, async (tx) => {
-      await this.requireIncident(tx, tenantId, incidentId);
-      const existing = await tx.query.nerisIncidentReviewComments.findFirst({
-        where: and(
-          eq(nerisIncidentReviewComments.id, commentId),
-          eq(nerisIncidentReviewComments.incidentId, incidentId),
-        ),
-      });
-      if (!existing) throw new ForgeError("NOT_FOUND", "Review comment not found");
-      const [row] = await tx
-        .update(nerisIncidentReviewComments)
-        .set({
-          status: "RESOLVED",
-          resolutionNote: data.resolutionNote ?? null,
-          resolvedAt: new Date(),
-          resolvedByUserId: principal.userId,
-          updatedAt: new Date(),
-        })
-        .where(eq(nerisIncidentReviewComments.id, commentId))
-        .returning();
-      return row;
-    }, principal.userId);
+    return withTenantTransaction(
+      this.db,
+      tenantId,
+      async (tx) => {
+        await this.requireIncident(tx, tenantId, incidentId);
+        const existing = await tx.query.nerisIncidentReviewComments.findFirst({
+          where: and(
+            eq(nerisIncidentReviewComments.id, commentId),
+            eq(nerisIncidentReviewComments.incidentId, incidentId),
+          ),
+        });
+        if (!existing) throw new ForgeError("NOT_FOUND", "Review comment not found");
+        const [row] = await tx
+          .update(nerisIncidentReviewComments)
+          .set({
+            status: "RESOLVED",
+            resolutionNote: data.resolutionNote ?? null,
+            resolvedAt: new Date(),
+            resolvedByUserId: principal.userId,
+            updatedAt: new Date(),
+          })
+          .where(eq(nerisIncidentReviewComments.id, commentId))
+          .returning();
+        return row;
+      },
+      principal.userId,
+    );
   }
 
   async reopenReviewComment(
@@ -962,28 +1052,33 @@ export class NerisIncidentsService {
   ) {
     await this.assertReviewWorkflowAccess(principal);
     const data = reopenReviewCommentInputSchema.parse(input ?? {});
-    return withTenantTransaction(this.db, tenantId, async (tx) => {
-      await this.requireIncident(tx, tenantId, incidentId);
-      const existing = await tx.query.nerisIncidentReviewComments.findFirst({
-        where: and(
-          eq(nerisIncidentReviewComments.id, commentId),
-          eq(nerisIncidentReviewComments.incidentId, incidentId),
-        ),
-      });
-      if (!existing) throw new ForgeError("NOT_FOUND", "Review comment not found");
-      const [row] = await tx
-        .update(nerisIncidentReviewComments)
-        .set({
-          status: "OPEN",
-          resolutionNote: data.note ?? existing.resolutionNote,
-          resolvedAt: null,
-          resolvedByUserId: null,
-          updatedAt: new Date(),
-        })
-        .where(eq(nerisIncidentReviewComments.id, commentId))
-        .returning();
-      return row;
-    }, principal.userId);
+    return withTenantTransaction(
+      this.db,
+      tenantId,
+      async (tx) => {
+        await this.requireIncident(tx, tenantId, incidentId);
+        const existing = await tx.query.nerisIncidentReviewComments.findFirst({
+          where: and(
+            eq(nerisIncidentReviewComments.id, commentId),
+            eq(nerisIncidentReviewComments.incidentId, incidentId),
+          ),
+        });
+        if (!existing) throw new ForgeError("NOT_FOUND", "Review comment not found");
+        const [row] = await tx
+          .update(nerisIncidentReviewComments)
+          .set({
+            status: "OPEN",
+            resolutionNote: data.note ?? existing.resolutionNote,
+            resolvedAt: null,
+            resolvedByUserId: null,
+            updatedAt: new Date(),
+          })
+          .where(eq(nerisIncidentReviewComments.id, commentId))
+          .returning();
+        return row;
+      },
+      principal.userId,
+    );
   }
 
   async getSchemaSnapshot(tenantId: string, incidentId: string) {
@@ -1046,62 +1141,78 @@ export class NerisIncidentsService {
     ) => Promise<void>,
     reason?: string,
   ) {
-    return withTenantTransaction(this.db, tenantId, async (tx) => {
-      const before = await this.requireIncident(tx, tenantId, incidentId);
-      const from = before.status as NerisIncidentStatus;
-      const to = nextStatus(from);
+    return withTenantTransaction(
+      this.db,
+      tenantId,
+      async (tx) => {
+        const before = await this.requireIncident(tx, tenantId, incidentId);
+        const from = before.status as NerisIncidentStatus;
+        const to = nextStatus(from);
 
-      // Submit from IN_PROGRESS passes through READY_FOR_REVIEW (plan state
-      // machine: blocking errors gate READY_FOR_REVIEW; submit gate re-checks).
-      const path: NerisIncidentStatus[] =
-        from === "IN_PROGRESS" && to === "SUBMITTED_FOR_REVIEW"
-          ? ["READY_FOR_REVIEW", "SUBMITTED_FOR_REVIEW"]
-          : [to];
-      let hopFrom = from;
-      for (const hop of path) {
-        this.stateMachine.assertTransition(hopFrom, hop, principal);
-        hopFrom = hop;
-      }
+        // Submit from IN_PROGRESS passes through READY_FOR_REVIEW (plan state
+        // machine: blocking errors gate READY_FOR_REVIEW; submit gate re-checks).
+        const path: NerisIncidentStatus[] =
+          from === "IN_PROGRESS" && to === "SUBMITTED_FOR_REVIEW"
+            ? ["READY_FOR_REVIEW", "SUBMITTED_FOR_REVIEW"]
+            : [to];
+        let hopFrom = from;
+        for (const hop of path) {
+          this.stateMachine.assertTransition(hopFrom, hop, principal);
+          hopFrom = hop;
+        }
 
-      const [updated] = await tx
-        .update(nerisIncidents)
-        .set({
-          status: to,
-          recordVersion: before.recordVersion + 1,
-          updatedByUserId: principal.userId,
-          updatedAt: new Date(),
-          submittedAt: to === "SUBMITTED_FOR_REVIEW" ? new Date() : before.submittedAt,
-        })
-        .where(
-          and(eq(nerisIncidents.id, incidentId), eq(nerisIncidents.recordVersion, before.recordVersion)),
-        )
-        .returning();
-      if (!updated) {
-        throw concurrencyConflict({
+        const [updated] = await tx
+          .update(nerisIncidents)
+          .set({
+            status: to,
+            recordVersion: before.recordVersion + 1,
+            updatedByUserId: principal.userId,
+            updatedAt: new Date(),
+            submittedAt: to === "SUBMITTED_FOR_REVIEW" ? new Date() : before.submittedAt,
+          })
+          .where(
+            and(
+              eq(nerisIncidents.id, incidentId),
+              eq(nerisIncidents.recordVersion, before.recordVersion),
+            ),
+          )
+          .returning();
+        if (!updated) {
+          throw concurrencyConflict({
+            tenantId,
+            resourceType: "neris_incident",
+            resourceId: incidentId,
+            expectedVersion: before.recordVersion,
+            actualVersion: null,
+          });
+        }
+
+        let historyFrom = from;
+        for (const hop of path) {
+          await this.recordStatusChange(
+            tx,
+            tenantId,
+            incidentId,
+            historyFrom,
+            hop,
+            principal,
+            reason,
+          );
+          historyFrom = hop;
+        }
+        await sideEffect(tx, updated);
+        await this.emitIncidentEvent(
+          tx,
           tenantId,
-          resourceType: "neris_incident",
-          resourceId: incidentId,
-          expectedVersion: before.recordVersion,
-          actualVersion: null,
-        });
-      }
-
-      let historyFrom = from;
-      for (const hop of path) {
-        await this.recordStatusChange(tx, tenantId, incidentId, historyFrom, hop, principal, reason);
-        historyFrom = hop;
-      }
-      await sideEffect(tx, updated);
-      await this.emitIncidentEvent(
-        tx,
-        tenantId,
-        incidentId,
-        DOMAIN_EVENT_TYPES.NERIS_INCIDENT_STATUS_CHANGED,
-        principal,
-        { from, to },
-      );
-      return updated;
-    }, principal.userId);
+          incidentId,
+          DOMAIN_EVENT_TYPES.NERIS_INCIDENT_STATUS_CHANGED,
+          principal,
+          { from, to },
+        );
+        return updated;
+      },
+      principal.userId,
+    );
   }
 
   private async requireIncident(

@@ -46,7 +46,11 @@ export function normalizeFacilityOptions(payload: unknown): IndustrialFacilityOp
     const rec = asRecord(row);
     if (!rec) continue;
     if (rec.archivedAt) continue;
-    if (typeof rec.status === "string" && rec.status !== "" && rec.status.toUpperCase() !== "ACTIVE") {
+    if (
+      typeof rec.status === "string" &&
+      rec.status !== "" &&
+      rec.status.toUpperCase() !== "ACTIVE"
+    ) {
       continue;
     }
     const id = typeof rec.id === "string" ? rec.id.trim() : "";
@@ -92,7 +96,11 @@ export function normalizeDepartmentOptions(payload: unknown): IndustrialDepartme
     const rec = asRecord(row);
     if (!rec) continue;
     if (rec.archivedAt) continue;
-    if (typeof rec.status === "string" && rec.status !== "" && rec.status.toUpperCase() !== "ACTIVE") {
+    if (
+      typeof rec.status === "string" &&
+      rec.status !== "" &&
+      rec.status.toUpperCase() !== "ACTIVE"
+    ) {
       continue;
     }
     const id = typeof rec.id === "string" ? rec.id.trim() : "";
@@ -150,9 +158,14 @@ export function matchesFacilitySelection(
 ): boolean {
   if (!facilityId || facilityId === ALL_FACILITIES_ID) return true;
   if (row.siteId && row.siteId === facilityId) return true;
-  const name = options.find((option) => option.id === facilityId)?.name?.trim().toLowerCase();
+  const name = options
+    .find((option) => option.id === facilityId)
+    ?.name?.trim()
+    .toLowerCase();
   if (!name) return false;
-  const label = String(row.siteLabel ?? "").trim().toLowerCase();
+  const label = String(row.siteLabel ?? "")
+    .trim()
+    .toLowerCase();
   return label === name || (label !== "" && label.includes(name));
 }
 
@@ -161,7 +174,9 @@ export function matchSiteIdByLabel(
   options: readonly { id: string; name?: string; label?: string }[],
   label: string | undefined,
 ): string | undefined {
-  const needle = String(label ?? "").trim().toLowerCase();
+  const needle = String(label ?? "")
+    .trim()
+    .toLowerCase();
   if (!needle) return undefined;
 
   const names = options.map((option) => ({
@@ -213,7 +228,9 @@ export async function loadIndustrialSiteCatalog(
 
   try {
     const { apiGet } = await import("@forge/web-kit");
-    const rows = await apiGet<unknown>(`/api/v1/tenants/${encodeURIComponent(tenantId)}/facilities`);
+    const rows = await apiGet<unknown>(
+      `/api/v1/tenants/${encodeURIComponent(tenantId)}/facilities`,
+    );
     return normalizeFacilityOptions(rows);
   } catch {
     return [];

@@ -16,7 +16,9 @@ type PushKeys = { publicKey: string; privateKey: string; subject: string };
 function readVapidKeys(): PushKeys | null {
   const publicKey = String(process.env.WEB_PUSH_VAPID_PUBLIC_KEY ?? "").trim();
   const privateKey = String(process.env.WEB_PUSH_VAPID_PRIVATE_KEY ?? "").trim();
-  const subject = String(process.env.WEB_PUSH_VAPID_SUBJECT ?? "mailto:security@forgepublicsafety.com").trim();
+  const subject = String(
+    process.env.WEB_PUSH_VAPID_SUBJECT ?? "mailto:security@forgepublicsafety.com",
+  ).trim();
   if (!publicKey || !privateKey) return null;
   return { publicKey, privateKey, subject };
 }
@@ -46,7 +48,8 @@ export class WebPushService {
   async listForUser(principal: ForgePrincipal) {
     const tenantId = principal.tenantId?.trim();
     const userId = principal.userId?.trim();
-    if (!tenantId || !userId) throw new ForgeError("VALIDATION_FAILED", "Active tenant is required");
+    if (!tenantId || !userId)
+      throw new ForgeError("VALIDATION_FAILED", "Active tenant is required");
     return withTenantTransaction(this.db, tenantId, async (tx) => {
       return tx
         .select({
@@ -76,7 +79,8 @@ export class WebPushService {
   ) {
     const tenantId = principal.tenantId?.trim();
     const userId = principal.userId?.trim();
-    if (!tenantId || !userId) throw new ForgeError("VALIDATION_FAILED", "Active tenant is required");
+    if (!tenantId || !userId)
+      throw new ForgeError("VALIDATION_FAILED", "Active tenant is required");
     if (!this.configured) {
       throw new ForgeError("VALIDATION_FAILED", "Web Push is not configured on this environment");
     }
@@ -151,7 +155,8 @@ export class WebPushService {
   async disableSubscription(principal: ForgePrincipal, endpoint: string) {
     const tenantId = principal.tenantId?.trim();
     const userId = principal.userId?.trim();
-    if (!tenantId || !userId) throw new ForgeError("VALIDATION_FAILED", "Active tenant is required");
+    if (!tenantId || !userId)
+      throw new ForgeError("VALIDATION_FAILED", "Active tenant is required");
     const ep = String(endpoint ?? "").trim();
     if (!ep) throw new ForgeError("VALIDATION_FAILED", "endpoint is required");
     return withTenantTransaction(this.db, tenantId, async (tx) => {

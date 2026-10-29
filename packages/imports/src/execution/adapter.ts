@@ -154,7 +154,8 @@ export class ImportAdapterRegistry {
     const adapter = this.adapters.get(key);
     if (!adapter) {
       const error = new Error(`Import adapter not found: ${key}`);
-      (error as Error & { code: string; failureClass: FailureClass }).code = "IMPORT_ADAPTER_MISSING";
+      (error as Error & { code: string; failureClass: FailureClass }).code =
+        "IMPORT_ADAPTER_MISSING";
       (error as Error & { failureClass: FailureClass }).failureClass = "NON_RETRIABLE_JOB";
       throw error;
     }

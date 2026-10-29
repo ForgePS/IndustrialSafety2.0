@@ -31,15 +31,9 @@ describe("report-schedule-friendly", () => {
   });
 
   it("describes common crons in plain English", () => {
-    expect(describeCronExpression("0 13 1 * *")).toBe(
-      "Monthly on the 1st at 8:00 AM US Central",
-    );
-    expect(describeCronExpression("0 13 * * 1")).toBe(
-      "Every Monday at 8:00 AM US Central",
-    );
-    expect(describeCronExpression("0 13 * * *")).toBe(
-      "Every day at 8:00 AM US Central",
-    );
+    expect(describeCronExpression("0 13 1 * *")).toBe("Monthly on the 1st at 8:00 AM US Central");
+    expect(describeCronExpression("0 13 * * 1")).toBe("Every Monday at 8:00 AM US Central");
+    expect(describeCronExpression("0 13 * * *")).toBe("Every day at 8:00 AM US Central");
   });
 
   it("formats hours and next run for people", () => {
@@ -56,8 +50,14 @@ describe("report-schedule-friendly", () => {
       hourCentral: 7,
       weekday: 5,
     });
-    expect(cronToFriendlySchedule("0 13 1 * *")).toMatchObject({ frequency: "monthly", hourCentral: 8 });
-    expect(cronToFriendlySchedule("0 3 * * *")).toMatchObject({ frequency: "daily", hourCentral: 22 });
+    expect(cronToFriendlySchedule("0 13 1 * *")).toMatchObject({
+      frequency: "monthly",
+      hourCentral: 8,
+    });
+    expect(cronToFriendlySchedule("0 3 * * *")).toMatchObject({
+      frequency: "daily",
+      hourCentral: 22,
+    });
     expect(cronToFriendlySchedule("bad")).toEqual(DEFAULT_FRIENDLY_SCHEDULE);
     const draft = { frequency: "weekly" as const, hourCentral: 15, weekday: 2 };
     expect(cronToFriendlySchedule(friendlyScheduleToCron(draft))).toEqual(draft);

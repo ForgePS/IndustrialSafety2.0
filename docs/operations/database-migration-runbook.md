@@ -6,11 +6,11 @@
 
 ## Migration inventory (Sprint 1E)
 
-| Migration | ADRs | Contents |
-| --- | --- | --- |
-| `0003_sprint_1e_membership_and_invitations.sql` | ADR-020, ADR-021 | Invitations, memberships, history, session tracking, `record_version` on users |
-| `0004_sprint_1e_idempotency_concurrency_onboarding.sql` | ADR-022–027 | Idempotency, event processing, onboarding sessions/steps, concurrency columns |
-| `0005_sprint_1e_identity_resolution.sql` | ADR-029 | `forge_identity_lookup` role, SECURITY DEFINER functions, session guards |
+| Migration                                               | ADRs             | Contents                                                                       |
+| ------------------------------------------------------- | ---------------- | ------------------------------------------------------------------------------ |
+| `0003_sprint_1e_membership_and_invitations.sql`         | ADR-020, ADR-021 | Invitations, memberships, history, session tracking, `record_version` on users |
+| `0004_sprint_1e_idempotency_concurrency_onboarding.sql` | ADR-022–027      | Idempotency, event processing, onboarding sessions/steps, concurrency columns  |
+| `0005_sprint_1e_identity_resolution.sql`                | ADR-029          | `forge_identity_lookup` role, SECURITY DEFINER functions, session guards       |
 
 All tenant-owned tables: RLS enabled and forced. `forge_app` cannot bypass RLS.
 
@@ -51,13 +51,13 @@ pnpm smoke:development
 
 ## Pre-deploy checklist
 
-| Item | Command / action |
-| --- | --- |
-| Migrations committed | `packages/database/drizzle/*.sql` |
-| Schema matches | `pnpm db:generate` produces no unexpected diff |
-| Unit + integration | `pnpm test`, `pnpm test:integration` |
-| RLS | `pnpm test:rls` |
-| CDK synth | `pnpm infra:synth` |
+| Item                 | Command / action                               |
+| -------------------- | ---------------------------------------------- |
+| Migrations committed | `packages/database/drizzle/*.sql`              |
+| Schema matches       | `pnpm db:generate` produces no unexpected diff |
+| Unit + integration   | `pnpm test`, `pnpm test:integration`           |
+| RLS                  | `pnpm test:rls`                                |
+| CDK synth            | `pnpm infra:synth`                             |
 
 ## Rollback policy
 

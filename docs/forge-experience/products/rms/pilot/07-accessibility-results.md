@@ -2,20 +2,20 @@
 
 **Phase:** FX-P1  
 **Target:** WCAG 2.2 AA (pilot manual pass)  
-**Status:** **NOT STARTED**  
+**Status:** **NOT STARTED**
 
 ## Checklist (per enabled surface)
 
-| Check | Result | Tester | Date |
-| --- | --- | --- | --- |
-| Keyboard-only navigation | Pending | | |
-| Visible focus order | Pending | | |
-| Screen reader labels (forms/tables) | Pending | | |
-| Validation announcements | Pending | | |
-| Dialogs (if any) | Pending | | |
-| Contrast (light/dark if available) | Pending | | |
-| 200% zoom usable | Pending | | |
-| Touch targets (mobile) | Pending | | |
+| Check                               | Result  | Tester | Date |
+| ----------------------------------- | ------- | ------ | ---- |
+| Keyboard-only navigation            | Pending |        |      |
+| Visible focus order                 | Pending |        |      |
+| Screen reader labels (forms/tables) | Pending |        |      |
+| Validation announcements            | Pending |        |      |
+| Dialogs (if any)                    | Pending |        |      |
+| Contrast (light/dark if available)  | Pending |        |      |
+| 200% zoom usable                    | Pending |        |      |
+| Touch targets (mobile)              | Pending |        |      |
 
 ## Surfaces to cover
 

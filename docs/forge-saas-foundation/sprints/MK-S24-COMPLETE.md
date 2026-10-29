@@ -12,28 +12,28 @@ Documentation closeout for FORGE-SAAS-CORE: index README, architecture/authoriza
 
 ## Deliverables
 
-| Artifact | Path |
-| --- | --- |
-| Index | `docs/forge-saas-foundation/README.md` |
-| Architecture + diagrams | `ARCHITECTURE.md` |
-| Authorization + diagram | `AUTHORIZATION.md` |
-| Operations | `OPERATIONS.md` |
-| Deployment | `DEPLOYMENT.md` |
-| Capability matrix | `CAPABILITY_PARITY.md` |
-| Tenancy lifecycle diagram | `TENANCY.md` (extended) |
-| Billing lifecycle diagram | `BILLING.md` (extended) |
+| Artifact                  | Path                                   |
+| ------------------------- | -------------------------------------- |
+| Index                     | `docs/forge-saas-foundation/README.md` |
+| Architecture + diagrams   | `ARCHITECTURE.md`                      |
+| Authorization + diagram   | `AUTHORIZATION.md`                     |
+| Operations                | `OPERATIONS.md`                        |
+| Deployment                | `DEPLOYMENT.md`                        |
+| Capability matrix         | `CAPABILITY_PARITY.md`                 |
+| Tenancy lifecycle diagram | `TENANCY.md` (extended)                |
+| Billing lifecycle diagram | `BILLING.md` (extended)                |
 
 ## Out of scope honored
 
-- No deploy / migrate / AWS mutation  
-- No BACKLOG implementation  
-- Did not clear MK-S22 E2E or MK-S23 readiness (documented as outstanding)  
-- No MK-S25+  
+- No deploy / migrate / AWS mutation
+- No BACKLOG implementation
+- Did not clear MK-S22 E2E or MK-S23 readiness (documented as outstanding)
+- No MK-S25+
 
 ## Program conditions remaining
 
-- MK-S22 HTTP E2E OUTSTANDING  
-- Production readiness NOT READY  
+- MK-S22 HTTP E2E OUTSTANDING
+- Production readiness NOT READY
 
 ## Next sprint
 

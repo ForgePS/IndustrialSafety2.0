@@ -127,15 +127,7 @@ export const QR_ACCESS_MODES = [
 ] as const;
 
 export type QrTargetPicker =
-  | "equipment"
-  | "vehicle"
-  | "site"
-  | "loto"
-  | "jsa"
-  | "document"
-  | "training"
-  | "chemical"
-  | "none";
+  "equipment" | "vehicle" | "site" | "loto" | "jsa" | "document" | "training" | "chemical" | "none";
 
 export const QR_TARGET_TYPES = [
   { value: "EQUIPMENT", label: "Equipment / asset", picker: "equipment" as const },

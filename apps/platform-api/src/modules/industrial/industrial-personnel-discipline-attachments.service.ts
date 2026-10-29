@@ -86,7 +86,10 @@ export class IndustrialPersonnelDisciplineAttachmentsService {
       document.source !== DISCIPLINE_ATTACHMENT_SOURCE ||
       !document.objectKey.startsWith(disciplineAttachmentObjectKeyPrefix(tenantId, actionId))
     ) {
-      throw new ForgeError("VALIDATION_FAILED", "Document does not belong to this disciplinary action");
+      throw new ForgeError(
+        "VALIDATION_FAILED",
+        "Document does not belong to this disciplinary action",
+      );
     }
     return document;
   }
@@ -99,7 +102,9 @@ export class IndustrialPersonnelDisciplineAttachmentsService {
   ) {
     const tenantId = this.tenant(principal);
     const filename = String(body.filename ?? "").trim();
-    const mimeType = String(body.mimeType ?? "").trim().toLowerCase();
+    const mimeType = String(body.mimeType ?? "")
+      .trim()
+      .toLowerCase();
     const contentLength = Number(body.contentLength ?? 0);
     this.assertIds(personnelId, actionId);
     if (!filename) throw new ForgeError("VALIDATION_FAILED", "filename is required");
@@ -126,29 +131,38 @@ export class IndustrialPersonnelDisciplineAttachmentsService {
     const documentId = createId();
     const now = new Date();
 
-    await withTenantTransaction(this.db, tenantId, async (tx) => {
-      await this.loadAction(tx, tenantId, personnelId, actionId);
-      await tx.insert(forgeDocuments).values({
-        id: documentId,
-        tenantId,
-        originalFilename: filename,
-        storedFilename,
-        objectKey,
-        bucketName: this.storage.bucketName,
-        mimeType,
-        fileSizeBytes: contentLength,
-        securityClassification: "INTERNAL",
-        malwareScanStatus: "PENDING",
-        retentionRule: "PERSONNEL_DISCIPLINE_DEFAULT",
-        uploadStatus: "INITIALIZED",
-        source: DISCIPLINE_ATTACHMENT_SOURCE,
-        uploadedByUserId: principal.userId,
-        createdAt: now,
-        updatedAt: now,
-      });
-    }, principal.userId);
+    await withTenantTransaction(
+      this.db,
+      tenantId,
+      async (tx) => {
+        await this.loadAction(tx, tenantId, personnelId, actionId);
+        await tx.insert(forgeDocuments).values({
+          id: documentId,
+          tenantId,
+          originalFilename: filename,
+          storedFilename,
+          objectKey,
+          bucketName: this.storage.bucketName,
+          mimeType,
+          fileSizeBytes: contentLength,
+          securityClassification: "INTERNAL",
+          malwareScanStatus: "PENDING",
+          retentionRule: "PERSONNEL_DISCIPLINE_DEFAULT",
+          uploadStatus: "INITIALIZED",
+          source: DISCIPLINE_ATTACHMENT_SOURCE,
+          uploadedByUserId: principal.userId,
+          createdAt: now,
+          updatedAt: now,
+        });
+      },
+      principal.userId,
+    );
 
-    const presign = await this.storage.createPresignedUploadUrl({ objectKey, mimeType, contentLength });
+    const presign = await this.storage.createPresignedUploadUrl({
+      objectKey,
+      mimeType,
+      contentLength,
+    });
     return {
       documentId,
       uploadUrl: presign.uploadUrl,
@@ -172,33 +186,38 @@ export class IndustrialPersonnelDisciplineAttachmentsService {
       throw new ForgeError("VALIDATION_FAILED", "documentId must be a UUID");
     }
 
-    return withTenantTransaction(this.db, tenantId, async (tx) => {
-      const action = await this.loadAction(tx, tenantId, personnelId, actionId);
-      const document = await this.loadDocument(tx, tenantId, actionId, documentId);
-      await this.storage.assertObjectExists(document.objectKey);
+    return withTenantTransaction(
+      this.db,
+      tenantId,
+      async (tx) => {
+        const action = await this.loadAction(tx, tenantId, personnelId, actionId);
+        const document = await this.loadDocument(tx, tenantId, actionId, documentId);
+        await this.storage.assertObjectExists(document.objectKey);
 
-      const now = new Date();
-      await tx
-        .update(forgeDocuments)
-        .set({ uploadStatus: "COMPLETE", uploadedAt: now, updatedAt: now })
-        .where(and(eq(forgeDocuments.id, documentId), eq(forgeDocuments.tenantId, tenantId)));
+        const now = new Date();
+        await tx
+          .update(forgeDocuments)
+          .set({ uploadStatus: "COMPLETE", uploadedAt: now, updatedAt: now })
+          .where(and(eq(forgeDocuments.id, documentId), eq(forgeDocuments.tenantId, tenantId)));
 
-      const attachments = readDisciplineAttachments(action.attachments);
-      if (!attachments.some((row) => row.documentId === document.id)) {
-        attachments.push({
-          documentId: document.id,
-          fileName: document.originalFilename,
-          contentType: document.mimeType,
-          uploadedAt: now.toISOString(),
-        });
-      }
-      await tx
-        .update(industrialPersonnelDisciplinaryActions)
-        .set({ attachments, updatedAt: now })
-        .where(eq(industrialPersonnelDisciplinaryActions.id, action.id));
+        const attachments = readDisciplineAttachments(action.attachments);
+        if (!attachments.some((row) => row.documentId === document.id)) {
+          attachments.push({
+            documentId: document.id,
+            fileName: document.originalFilename,
+            contentType: document.mimeType,
+            uploadedAt: now.toISOString(),
+          });
+        }
+        await tx
+          .update(industrialPersonnelDisciplinaryActions)
+          .set({ attachments, updatedAt: now })
+          .where(eq(industrialPersonnelDisciplinaryActions.id, action.id));
 
-      return { actionId, documentId: document.id, attachments };
-    }, principal.userId);
+        return { actionId, documentId: document.id, attachments };
+      },
+      principal.userId,
+    );
   }
 
   async createDownloadUrl(
@@ -210,28 +229,38 @@ export class IndustrialPersonnelDisciplineAttachmentsService {
     const tenantId = this.tenant(principal);
     this.assertIds(personnelId, actionId, documentId);
 
-    return withTenantTransaction(this.db, tenantId, async (tx) => {
-      const action = await this.loadAction(tx, tenantId, personnelId, actionId);
-      if (!readDisciplineAttachments(action.attachments).some((row) => row.documentId === documentId)) {
-        throw new ForgeError("NOT_FOUND", "Attachment not found on this disciplinary action");
-      }
-      const document = await this.loadDocument(tx, tenantId, actionId, documentId);
-      const inline = document.mimeType.startsWith("image/") || document.mimeType === "application/pdf";
-      const download = await this.storage.createPresignedDownloadUrl({
-        objectKey: document.objectKey,
-        mimeType: document.mimeType,
-        filename: document.originalFilename,
-        inline,
-      });
-      return {
-        documentId: document.id,
-        fileName: document.originalFilename,
-        mimeType: document.mimeType,
-        downloadUrl: download.downloadUrl,
-        expiresInSeconds: download.expiresInSeconds,
-        expiresAt: download.expiresAt,
-      };
-    }, principal.userId);
+    return withTenantTransaction(
+      this.db,
+      tenantId,
+      async (tx) => {
+        const action = await this.loadAction(tx, tenantId, personnelId, actionId);
+        if (
+          !readDisciplineAttachments(action.attachments).some(
+            (row) => row.documentId === documentId,
+          )
+        ) {
+          throw new ForgeError("NOT_FOUND", "Attachment not found on this disciplinary action");
+        }
+        const document = await this.loadDocument(tx, tenantId, actionId, documentId);
+        const inline =
+          document.mimeType.startsWith("image/") || document.mimeType === "application/pdf";
+        const download = await this.storage.createPresignedDownloadUrl({
+          objectKey: document.objectKey,
+          mimeType: document.mimeType,
+          filename: document.originalFilename,
+          inline,
+        });
+        return {
+          documentId: document.id,
+          fileName: document.originalFilename,
+          mimeType: document.mimeType,
+          downloadUrl: download.downloadUrl,
+          expiresInSeconds: download.expiresInSeconds,
+          expiresAt: download.expiresAt,
+        };
+      },
+      principal.userId,
+    );
   }
 
   async deleteAttachment(
@@ -243,31 +272,36 @@ export class IndustrialPersonnelDisciplineAttachmentsService {
     const tenantId = this.tenant(principal);
     this.assertIds(personnelId, actionId, documentId);
 
-    return withTenantTransaction(this.db, tenantId, async (tx) => {
-      const action = await this.loadAction(tx, tenantId, personnelId, actionId);
-      const existing = readDisciplineAttachments(action.attachments);
-      if (!existing.some((row) => row.documentId === documentId)) {
-        throw new ForgeError("NOT_FOUND", "Attachment not found on this disciplinary action");
-      }
-      const document = await this.loadDocument(tx, tenantId, actionId, documentId);
-      const now = new Date();
-      await tx
-        .update(forgeDocuments)
-        .set({
-          archivedAt: now,
-          archivedByUserId: principal.userId,
-          recordVersion: document.recordVersion + 1,
-          updatedAt: now,
-        })
-        .where(and(eq(forgeDocuments.id, documentId), eq(forgeDocuments.tenantId, tenantId)));
+    return withTenantTransaction(
+      this.db,
+      tenantId,
+      async (tx) => {
+        const action = await this.loadAction(tx, tenantId, personnelId, actionId);
+        const existing = readDisciplineAttachments(action.attachments);
+        if (!existing.some((row) => row.documentId === documentId)) {
+          throw new ForgeError("NOT_FOUND", "Attachment not found on this disciplinary action");
+        }
+        const document = await this.loadDocument(tx, tenantId, actionId, documentId);
+        const now = new Date();
+        await tx
+          .update(forgeDocuments)
+          .set({
+            archivedAt: now,
+            archivedByUserId: principal.userId,
+            recordVersion: document.recordVersion + 1,
+            updatedAt: now,
+          })
+          .where(and(eq(forgeDocuments.id, documentId), eq(forgeDocuments.tenantId, tenantId)));
 
-      const attachments = existing.filter((row) => row.documentId !== documentId);
-      await tx
-        .update(industrialPersonnelDisciplinaryActions)
-        .set({ attachments, updatedAt: now })
-        .where(eq(industrialPersonnelDisciplinaryActions.id, action.id));
+        const attachments = existing.filter((row) => row.documentId !== documentId);
+        await tx
+          .update(industrialPersonnelDisciplinaryActions)
+          .set({ attachments, updatedAt: now })
+          .where(eq(industrialPersonnelDisciplinaryActions.id, action.id));
 
-      return { actionId, documentId, attachments };
-    }, principal.userId);
+        return { actionId, documentId, attachments };
+      },
+      principal.userId,
+    );
   }
 }

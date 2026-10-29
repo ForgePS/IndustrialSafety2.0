@@ -68,7 +68,9 @@ const BRANDING = {
 };
 
 function hashPayload(payload) {
-  return createHash("sha256").update(JSON.stringify(payload ?? {})).digest("hex");
+  return createHash("sha256")
+    .update(JSON.stringify(payload ?? {}))
+    .digest("hex");
 }
 
 async function resolveDatabaseUrl(secretArn) {

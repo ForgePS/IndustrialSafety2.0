@@ -16,7 +16,10 @@ const API_SERVICE = "forge-development-ecs-platform-api";
 const API_ECR = `${ACCOUNT}.dkr.ecr.${REGION}.amazonaws.com/forge-development-ecr-platformapi`;
 
 const registerOnly = process.argv.includes("--register-only");
-const stamp = new Date().toISOString().replace(/[-:TZ.]/g, "").slice(0, 14);
+const stamp = new Date()
+  .toISOString()
+  .replace(/[-:TZ.]/g, "")
+  .slice(0, 14);
 const tag = `legal-ack-s1-${stamp}`;
 
 function sh(cmd, opts = {}) {

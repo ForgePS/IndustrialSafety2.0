@@ -27,7 +27,11 @@ const APPLY = process.env.APPLY === "1" || process.env.APPLY === "true";
 const ALLOWED = new Set(["producers-rice-mill"]);
 const MODULE_CODE = "FIRST_AID";
 const FLAG_KEY = "industrial.module.first_aid.enabled";
-const PERM_CODES = ["industrial.first_aid.view", "industrial.first_aid.manage", "industrial.access"];
+const PERM_CODES = [
+  "industrial.first_aid.view",
+  "industrial.first_aid.manage",
+  "industrial.access",
+];
 
 if (!ALLOWED.has(TENANT_KEY)) {
   throw new Error(`Refusing tenant ${TENANT_KEY}; allowed: ${[...ALLOWED].join(", ")}`);

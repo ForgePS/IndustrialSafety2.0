@@ -15,12 +15,7 @@ import {
 } from "drizzle-orm/pg-core";
 import { createdAtColumn, recordVersionColumn, updatedAtColumn } from "./common.js";
 import { nerisFields, nerisSchemaVersions, nerisValueOptions } from "./neris.js";
-import {
-  rmsPersonnel,
-  rmsShifts,
-  rmsStations,
-  rmsUnits,
-} from "./rms-master.js";
+import { rmsPersonnel, rmsShifts, rmsStations, rmsUnits } from "./rms-master.js";
 import { tenants } from "./tenants.js";
 import { users } from "./users.js";
 
@@ -32,7 +27,9 @@ export const nerisIncidentNumberConfigs = pgTable(
       .notNull()
       .references(() => tenants.id),
     name: varchar("name", { length: 120 }).notNull().default("DEFAULT"),
-    formatTemplate: varchar("format_template", { length: 200 }).notNull().default("{YEAR4}-{SEQ:6}"),
+    formatTemplate: varchar("format_template", { length: 200 })
+      .notNull()
+      .default("{YEAR4}-{SEQ:6}"),
     resetMode: varchar("reset_mode", { length: 32 }).notNull().default("CALENDAR"),
     scope: varchar("scope", { length: 32 }).notNull().default("NONE"),
     prefix: varchar("prefix", { length: 64 }),
@@ -130,7 +127,9 @@ export const nerisIncidents = pgTable(
     ),
     reportOwnerUserId: uuid("report_owner_user_id").references(() => users.id),
     primaryIncidentTypeCode: varchar("primary_incident_type_code", { length: 120 }),
-    secondaryIncidentTypeCodes: jsonb("secondary_incident_type_codes").$type<string[]>().default([]),
+    secondaryIncidentTypeCodes: jsonb("secondary_incident_type_codes")
+      .$type<string[]>()
+      .default([]),
     operatingMode: varchar("operating_mode", { length: 32 }).notNull().default("MANUAL_ONLY"),
     voidReason: text("void_reason"),
     submittedAt: timestamp("submitted_at", { withTimezone: true }),
@@ -169,7 +168,9 @@ export const nerisIncidentStatusHistory = pgTable(
     actorUserId: uuid("actor_user_id"),
     createdAt: createdAtColumn,
   },
-  (table) => [index("neris_incident_status_history_incident_idx").on(table.incidentId, table.createdAt)],
+  (table) => [
+    index("neris_incident_status_history_incident_idx").on(table.incidentId, table.createdAt),
+  ],
 );
 
 export const nerisIncidentSections = pgTable(
@@ -447,7 +448,9 @@ export const nerisIncidentValidationRuns = pgTable(
     createdByUserId: uuid("created_by_user_id"),
     createdAt: createdAtColumn,
   },
-  (table) => [index("neris_incident_validation_runs_incident_idx").on(table.incidentId, table.createdAt)],
+  (table) => [
+    index("neris_incident_validation_runs_incident_idx").on(table.incidentId, table.createdAt),
+  ],
 );
 
 export const nerisIncidentValidationResults = pgTable(
@@ -571,7 +574,10 @@ export const nerisIncidentConfigurationSnapshots = pgTable(
     createdAt: createdAtColumn,
   },
   (table) => [
-    index("neris_incident_configuration_snapshots_incident_idx").on(table.incidentId, table.createdAt),
+    index("neris_incident_configuration_snapshots_incident_idx").on(
+      table.incidentId,
+      table.createdAt,
+    ),
   ],
 );
 
@@ -636,6 +642,9 @@ export const nerisIncidentNarrativeVersions = pgTable(
     createdAt: createdAtColumn,
   },
   (table) => [
-    uniqueIndex("neris_incident_narrative_versions_uidx").on(table.narrativeId, table.versionNumber),
+    uniqueIndex("neris_incident_narrative_versions_uidx").on(
+      table.narrativeId,
+      table.versionNumber,
+    ),
   ],
 );

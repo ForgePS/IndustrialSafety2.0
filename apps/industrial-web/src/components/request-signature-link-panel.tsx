@@ -149,10 +149,12 @@ export function RequestSignatureLinkPanel({
       ) : (
         <div className="border rounded p-3 bg-label-secondary">
           <div className="d-flex flex-wrap justify-content-between gap-2 mb-2">
-            <strong className="small mb-0">
-              Send remote sign link · {fieldLabel}
-            </strong>
-            <button type="button" className="btn btn-sm btn-link py-0" onClick={() => setOpen(false)}>
+            <strong className="small mb-0">Send remote sign link · {fieldLabel}</strong>
+            <button
+              type="button"
+              className="btn btn-sm btn-link py-0"
+              onClick={() => setOpen(false)}
+            >
               Close
             </button>
           </div>

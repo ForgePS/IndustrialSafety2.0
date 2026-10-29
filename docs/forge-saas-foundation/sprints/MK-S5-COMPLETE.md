@@ -38,14 +38,14 @@ Central entitlement helpers, UI session/nav filters, time-window aware module ac
 
 ## Verification
 
-| Check | Result |
-| --- | --- |
-| contracts unit | 18 passed |
-| authorization unit | 41 passed |
-| web-kit unit | 19 passed |
+| Check                                             | Result    |
+| ------------------------------------------------- | --------- |
+| contracts unit                                    | 18 passed |
+| authorization unit                                | 41 passed |
+| web-kit unit                                      | 19 passed |
 | platform-api facilities/entitlements/auth-context | 21 passed |
-| typecheck affected | PASS |
-| Production operations | NONE |
+| typecheck affected                                | PASS      |
+| Production operations                             | NONE      |
 
 ## Next sprint
 

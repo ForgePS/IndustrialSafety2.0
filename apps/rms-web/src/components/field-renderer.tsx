@@ -34,7 +34,11 @@ function inferRenderHint(field: FormDescriptorField): string {
   if (dataType.includes("number") || dataType.includes("integer") || dataType.includes("decimal")) {
     return "number";
   }
-  if (dataType.includes("timestamp") || dataType.includes("datetime") || dataType.includes("date")) {
+  if (
+    dataType.includes("timestamp") ||
+    dataType.includes("datetime") ||
+    dataType.includes("date")
+  ) {
     return "timestamp";
   }
   return "text";
@@ -160,7 +164,9 @@ export function FieldRenderer({ tenantId, field, value, onChange, disabled }: Fi
           value={value.valueTimestamp ? value.valueTimestamp.slice(0, 16) : ""}
           onChange={(event) =>
             onChange({
-              valueTimestamp: event.target.value ? new Date(event.target.value).toISOString() : null,
+              valueTimestamp: event.target.value
+                ? new Date(event.target.value).toISOString()
+                : null,
             })
           }
         />

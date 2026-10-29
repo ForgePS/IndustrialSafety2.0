@@ -41,8 +41,8 @@ function assignmentHasDriver(assignment: {
 }): boolean {
   return Boolean(
     String(assignment.personnelId ?? "").trim() ||
-      String(assignment.driverId ?? "").trim() ||
-      String(assignment.driverName ?? "").trim(),
+    String(assignment.driverId ?? "").trim() ||
+    String(assignment.driverName ?? "").trim(),
   );
 }
 
@@ -154,7 +154,9 @@ function insuranceFieldsFromPayload(raw: unknown): Record<string, string | null>
   return out;
 }
 
-function insuranceFieldsFromBody(body: Record<string, unknown>): Record<string, string | null> | null {
+function insuranceFieldsFromBody(
+  body: Record<string, unknown>,
+): Record<string, string | null> | null {
   let touched = false;
   const out: Record<string, string | null> = {};
   for (const key of VEHICLE_INSURANCE_PAYLOAD_KEYS) {
@@ -246,7 +248,8 @@ function mapDriver(row: typeof industrialFleetDrivers.$inferSelect) {
 function vehiclePatchFromBody(body: Record<string, unknown>) {
   const patch: Record<string, unknown> = {};
   const str = (k: string, col?: string) => {
-    if (body[k] !== undefined) patch[col ?? k] = body[k] == null ? null : String(body[k]).trim() || null;
+    if (body[k] !== undefined)
+      patch[col ?? k] = body[k] == null ? null : String(body[k]).trim() || null;
   };
   const num = (k: string, col?: string) => {
     if (body[k] !== undefined) patch[col ?? k] = asInt(body[k]);
@@ -349,10 +352,7 @@ export class IndustrialFleetService {
         conditions.push(eq(industrialFleetVehicles.insured, true));
       } else if (insured === "false" || insured === "0") {
         conditions.push(
-          or(
-            eq(industrialFleetVehicles.insured, false),
-            isNull(industrialFleetVehicles.insured),
-          )!,
+          or(eq(industrialFleetVehicles.insured, false), isNull(industrialFleetVehicles.insured))!,
         );
       }
       if (q) {
@@ -576,8 +576,7 @@ export class IndustrialFleetService {
     const recordId = assertId(id);
     const personnelId = body.personnelId ? String(body.personnelId) : null;
     const driverId = body.driverId ? String(body.driverId) : null;
-    let driverName =
-      body.driverName != null ? String(body.driverName).trim() || null : null;
+    let driverName = body.driverName != null ? String(body.driverName).trim() || null : null;
 
     return withTenantTransaction(this.db, principal.tenantId, async (tx) => {
       if (personnelId && !driverName) {
@@ -593,9 +592,7 @@ export class IndustrialFleetService {
           .limit(1);
         if (p) {
           driverName =
-            [p.firstName, p.lastName].filter(Boolean).join(" ").trim() ||
-            p.displayName ||
-            null;
+            [p.firstName, p.lastName].filter(Boolean).join(" ").trim() || p.displayName || null;
         }
       }
       if (driverId && !driverName) {
@@ -835,9 +832,7 @@ export class IndustrialFleetService {
     const bucketFilter = (query.bucket ?? "").trim().toUpperCase();
     const list = await this.listVehicles(principal, { ...query, page: "1", pageSize: "500" });
     const items = list.items.map((r) => ({ ...r, renewalBucket: fleetRenewalBucket(r) }));
-    const filtered = bucketFilter
-      ? items.filter((r) => r.renewalBucket === bucketFilter)
-      : items;
+    const filtered = bucketFilter ? items.filter((r) => r.renewalBucket === bucketFilter) : items;
     filtered.sort(compareFleetRenewalsByLocationThenSoonest);
     const buckets: Record<string, number> = {
       OVERDUE: 0,
@@ -848,7 +843,11 @@ export class IndustrialFleetService {
       UNKNOWN: 0,
     };
     for (const r of items) buckets[r.renewalBucket] = (buckets[r.renewalBucket] ?? 0) + 1;
-    return { buckets, items: filtered, notificationHint: "Configure recipients in Fleet Settings." };
+    return {
+      buckets,
+      items: filtered,
+      notificationHint: "Configure recipients in Fleet Settings.",
+    };
   }
 
   async setOutOfService(principal: ForgePrincipal, id: string, body: Record<string, unknown>) {
@@ -918,8 +917,7 @@ export class IndustrialFleetService {
           maintenanceType: String(body.maintenanceType ?? "REPAIR"),
           status,
           dueDate: asDate(body.dueDate),
-          completedAt:
-            completedAt && !Number.isNaN(completedAt.getTime()) ? completedAt : null,
+          completedAt: completedAt && !Number.isNaN(completedAt.getTime()) ? completedAt : null,
           costCents: asInt(body.costCents),
           notes: body.notes ? String(body.notes) : null,
           sourceSystem: "FORGE",
@@ -1032,7 +1030,9 @@ export class IndustrialFleetService {
           .update(industrialFleetVehicles)
           .set({
             outOfService: true,
-            outOfServiceReason: String(body.defect ?? body.outOfServiceReason ?? "Inspection defect"),
+            outOfServiceReason: String(
+              body.defect ?? body.outOfServiceReason ?? "Inspection defect",
+            ),
             status: "OUT_OF_SERVICE",
             updatedAt: now,
           })
@@ -1124,8 +1124,7 @@ export class IndustrialFleetService {
       const match = /^data:([^;,]+)[;,]/.exec(dataUrl);
       return match?.[1] ?? null;
     })();
-    const contentType =
-      String(body.contentType ?? "").trim() || contentTypeFromData || null;
+    const contentType = String(body.contentType ?? "").trim() || contentTypeFromData || null;
 
     return withTenantTransaction(this.db, principal.tenantId, async (tx) => {
       const [vehicle] = await tx
@@ -1361,8 +1360,7 @@ export class IndustrialFleetService {
     const recordId = assertId(id);
     const createPersonnel = body.createPersonnel === true;
     const forceMerge = body.forceMerge === true || body.force === true;
-    const personnelIdInput =
-      body.personnelId != null ? String(body.personnelId).trim() : "";
+    const personnelIdInput = body.personnelId != null ? String(body.personnelId).trim() : "";
 
     return withTenantTransaction(this.db, principal.tenantId, async (tx) => {
       const now = new Date();
@@ -1568,9 +1566,7 @@ export class IndustrialFleetService {
           : {};
       const settings = {
         ...prevSettings,
-        ...(typeof body.settings === "object" && body.settings
-          ? (body.settings as object)
-          : {}),
+        ...(typeof body.settings === "object" && body.settings ? (body.settings as object) : {}),
       };
       if (body.notificationRecipients !== undefined) {
         settings.notificationRecipients = body.notificationRecipients;
@@ -1626,7 +1622,9 @@ export class IndustrialFleetService {
                 : null
               : existing.annualSampleDate,
           lastSampleYear:
-            body.lastSampleYear !== undefined ? asInt(body.lastSampleYear) : existing.lastSampleYear,
+            body.lastSampleYear !== undefined
+              ? asInt(body.lastSampleYear)
+              : existing.lastSampleYear,
           emailOnRemoval:
             body.emailOnRemoval !== undefined
               ? (asBool(body.emailOnRemoval) ?? false)
@@ -1778,8 +1776,7 @@ export class IndustrialFleetService {
         );
       }
 
-      const appBase =
-        typeof body.appBaseUrl === "string" ? body.appBaseUrl : null;
+      const appBase = typeof body.appBaseUrl === "string" ? body.appBaseUrl : null;
       const reused = this.storedDvirPublicToken(existing);
       if (reused) {
         return {

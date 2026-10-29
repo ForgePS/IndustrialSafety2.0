@@ -3,7 +3,11 @@
 import { Suspense, type ReactNode } from "react";
 import { FxButton } from "@forge/fx-ui";
 import { DashboardLoadingState } from "./DashboardStates";
-import { DashboardWidgetBody, DashboardWidgetFooter, DashboardWidgetHeader } from "./DashboardWidgetChrome";
+import {
+  DashboardWidgetBody,
+  DashboardWidgetFooter,
+  DashboardWidgetHeader,
+} from "./DashboardWidgetChrome";
 import { WidgetErrorBoundary } from "./WidgetErrorBoundary";
 import { widgetColumnSpan, widgetMinHeight } from "./WidgetSizing";
 import type { WidgetSize } from "./types";
@@ -46,7 +50,9 @@ export function DashboardWidget({
             }
           />
           <DashboardWidgetBody>
-            <Suspense fallback={<DashboardLoadingState label={`Loading ${title}`} />}>{children}</Suspense>
+            <Suspense fallback={<DashboardLoadingState label={`Loading ${title}`} />}>
+              {children}
+            </Suspense>
           </DashboardWidgetBody>
           <DashboardWidgetFooter
             {...(timestamp !== undefined ? { timestamp } : {})}

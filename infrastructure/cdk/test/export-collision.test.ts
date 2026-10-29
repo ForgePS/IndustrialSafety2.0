@@ -105,6 +105,8 @@ describe("CloudFormation export names are environment-safe", () => {
       stackName: "Forge-Production-Helper",
     });
     exportValue(prod, "Helper-Id", "value", "desc");
-    expect(collectExportNames(Template.fromStack(prod))).toContain("Forge-Production-Helper:Helper-Id");
+    expect(collectExportNames(Template.fromStack(prod))).toContain(
+      "Forge-Production-Helper:Helper-Id",
+    );
   });
 });

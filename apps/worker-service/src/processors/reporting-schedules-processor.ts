@@ -24,9 +24,7 @@ export async function processReportingSchedulesRunDue(input: {
     headers: {
       "content-type": "application/json",
       "X-Forge-Reporting-Sweep-Token": token,
-      ...(input.job.correlationId
-        ? { "x-correlation-id": input.job.correlationId }
-        : {}),
+      ...(input.job.correlationId ? { "x-correlation-id": input.job.correlationId } : {}),
     },
     body: "{}",
   });

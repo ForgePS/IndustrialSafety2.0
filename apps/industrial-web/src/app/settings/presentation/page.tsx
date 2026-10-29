@@ -79,8 +79,8 @@ export default function SettingsPresentationPage() {
           <h4 className="mb-1">Forge Industrial Safety Walkthrough</h4>
           <p className="text-muted mb-0">
             Launch the Complete Platform Overview presentation and manage export defaults. Prefer{" "}
-            <a href="/admin/walkthrough-studio/">Walkthrough Studio</a> for narration, demo reset, and
-            share links. Target runtime is under ten minutes.
+            <a href="/admin/walkthrough-studio/">Walkthrough Studio</a> for narration, demo reset,
+            and share links. Target runtime is under ten minutes.
           </p>
         </div>
         <a className="btn btn-primary" href="/demo/industrial/">
@@ -109,8 +109,11 @@ export default function SettingsPresentationPage() {
               </label>
             </div>
             <div className="col-md-6">
-              <label className="form-label">Voice</label>
+              <label className="form-label" htmlFor="ew-voice">
+                Voice
+              </label>
               <select
+                id="ew-voice"
                 className="form-select"
                 value={settings.voiceId}
                 disabled={!canEdit}
@@ -130,8 +133,11 @@ export default function SettingsPresentationPage() {
               </div>
             </div>
             <div className="col-md-6">
-              <label className="form-label">Narration speed (%)</label>
+              <label className="form-label" htmlFor="ew-narration-speed">
+                Narration speed (%)
+              </label>
               <input
+                id="ew-narration-speed"
                 type="number"
                 min={80}
                 max={120}
@@ -144,8 +150,11 @@ export default function SettingsPresentationPage() {
               />
             </div>
             <div className="col-md-6">
-              <label className="form-label">Export resolution</label>
+              <label className="form-label" htmlFor="ew-export-resolution">
+                Export resolution
+              </label>
               <select
+                id="ew-export-resolution"
                 className="form-select"
                 value={settings.exportResolution}
                 disabled={!canEdit}
@@ -161,8 +170,11 @@ export default function SettingsPresentationPage() {
               </select>
             </div>
             <div className="col-md-6">
-              <label className="form-label">Retain exports (days)</label>
+              <label className="form-label" htmlFor="ew-retain-exports-days">
+                Retain exports (days)
+              </label>
               <input
+                id="ew-retain-exports-days"
                 type="number"
                 min={1}
                 className="form-control"
@@ -217,15 +229,16 @@ export default function SettingsPresentationPage() {
               </label>
             </div>
             <div className="col-12">
-              <label className="form-label">Optional custom closing text</label>
+              <label className="form-label" htmlFor="ew-optional-custom-closing-text">
+                Optional custom closing text
+              </label>
               <textarea
+                id="ew-optional-custom-closing-text"
                 className="form-control"
                 rows={3}
                 value={settings.closingText ?? ""}
                 disabled={!canEdit}
-                onChange={(e) =>
-                  setSettings({ ...settings, closingText: e.target.value || null })
-                }
+                onChange={(e) => setSettings({ ...settings, closingText: e.target.value || null })}
               />
             </div>
           </div>

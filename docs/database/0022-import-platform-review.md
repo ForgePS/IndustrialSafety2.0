@@ -6,17 +6,17 @@
 
 ## Checklist
 
-| Check | Result |
-| --- | --- |
-| Additive CREATE only | PASS — no DROP TABLE / TRUNCATE |
-| Foreign keys | PASS — tenants, users, self-refs, job children |
-| Unique constraints / indexes | PASS — idempotency, profile key, job source row, batch number |
-| CHECK / ENUM | PASS — `import_job_status`, `import_rollback_safety`, scan status, severity, mapped_json size |
-| FORCE RLS + WITH CHECK | PASS — all 9 tables |
-| forge_app grants under RLS | PASS |
-| Concurrent-safe | PASS — IF NOT EXISTS / exception handlers for types |
-| Destructive ops | NONE |
-| App secret rotation required | NO |
+| Check                        | Result                                                                                        |
+| ---------------------------- | --------------------------------------------------------------------------------------------- |
+| Additive CREATE only         | PASS — no DROP TABLE / TRUNCATE                                                               |
+| Foreign keys                 | PASS — tenants, users, self-refs, job children                                                |
+| Unique constraints / indexes | PASS — idempotency, profile key, job source row, batch number                                 |
+| CHECK / ENUM                 | PASS — `import_job_status`, `import_rollback_safety`, scan status, severity, mapped_json size |
+| FORCE RLS + WITH CHECK       | PASS — all 9 tables                                                                           |
+| forge_app grants under RLS   | PASS                                                                                          |
+| Concurrent-safe              | PASS — IF NOT EXISTS / exception handlers for types                                           |
+| Destructive ops              | NONE                                                                                          |
+| App secret rotation required | NO                                                                                            |
 
 ## Verdict
 

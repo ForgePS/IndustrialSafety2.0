@@ -128,9 +128,7 @@
     },
     "lifecycle.import.valid": {
       "ok": true,
-      "imported": [
-        "branding/imported@3"
-      ]
+      "imported": ["branding/imported@3"]
     },
     "lifecycle.unauth": {
       "ok": true,

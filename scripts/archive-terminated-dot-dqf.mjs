@@ -64,12 +64,17 @@ function unwrap(raw) {
 }
 
 function looksTerminatedText(...parts) {
-  const text = parts.map((p) => String(p ?? "")).join(" ").toLowerCase();
+  const text = parts
+    .map((p) => String(p ?? ""))
+    .join(" ")
+    .toLowerCase();
   return /\bterminated\b/.test(text) || /[-_\s]terminated\b/.test(text);
 }
 
 function isInactivePersonnelStatus(status) {
-  const s = String(status ?? "").trim().toLowerCase();
+  const s = String(status ?? "")
+    .trim()
+    .toLowerCase();
   return (
     s === "terminated" ||
     s === "inactive" ||
@@ -112,7 +117,9 @@ function isDotDqfDriverRecord(row, payload) {
   if (/\bdrv-\d{4}-\d+\b/.test(hay)) return true;
   if (/dqf\s*import/.test(hay)) return true;
   if (/dot-compliance\/[^/]+\/drivers\/drv-/.test(hay)) return true;
-  const cat = String(payload.category ?? "").trim().toLowerCase();
+  const cat = String(payload.category ?? "")
+    .trim()
+    .toLowerCase();
   if (cat.includes("dqf")) return true;
   if (payload.dqf === true) return true;
   return false;

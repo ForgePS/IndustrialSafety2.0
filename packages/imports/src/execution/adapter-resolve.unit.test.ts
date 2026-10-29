@@ -32,11 +32,13 @@ describe("resolveImportAdapterKey", () => {
         moduleKey: "FLEET",
         recordType: "fleet_vehicle",
       }),
-    ).toBe(adapterRegistryKey({
-      productKey: "FORGE_INDUSTRIAL",
-      moduleKey: "FLEET",
-      recordType: "fleet_vehicle",
-    }));
+    ).toBe(
+      adapterRegistryKey({
+        productKey: "FORGE_INDUSTRIAL",
+        moduleKey: "FLEET",
+        recordType: "fleet_vehicle",
+      }),
+    );
 
     expect(
       resolveImportAdapterKey({

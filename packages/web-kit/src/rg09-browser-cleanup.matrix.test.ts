@@ -27,10 +27,7 @@ const INDUSTRIAL_PREFIXES = [
   "forge-ind-dashboard-layout-v1:",
 ] as const;
 
-const FIELD_PREFIXES = [
-  "forge.field.offline.v1:",
-  "forge.field.report.draft.v1:",
-] as const;
+const FIELD_PREFIXES = ["forge.field.offline.v1:", "forge.field.report.draft.v1:"] as const;
 
 function seedCrossTenantResidue(): void {
   localStorage.setItem("forge.ind.offline.v1:tenant-a:user:domain:k", '{"v":1}');

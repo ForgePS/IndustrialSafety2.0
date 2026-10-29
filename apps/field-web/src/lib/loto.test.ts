@@ -283,8 +283,8 @@ describe("field loto helpers", () => {
 
   it("builds a profile display name", () => {
     expect(profileDisplayName({ displayName: "Alex Rivera" })).toBe("Alex Rivera");
-    expect(
-      profileDisplayName({ displayName: "", firstName: "Alex", lastName: "Rivera" }),
-    ).toBe("Alex Rivera");
+    expect(profileDisplayName({ displayName: "", firstName: "Alex", lastName: "Rivera" })).toBe(
+      "Alex Rivera",
+    );
   });
 });

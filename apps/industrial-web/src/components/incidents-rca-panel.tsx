@@ -105,7 +105,13 @@ export function IncidentsRcaPanel({ incidents, canManage, onSave }: Props) {
       const blocked = openPrintableHtmlPopup(data.html, true);
       if (blocked) setError(blocked);
     } catch (e) {
-      setError(e instanceof ApiError ? e.message : e instanceof Error ? e.message : "Could not build the report");
+      setError(
+        e instanceof ApiError
+          ? e.message
+          : e instanceof Error
+            ? e.message
+            : "Could not build the report",
+      );
     } finally {
       setPrinting(false);
     }
@@ -371,17 +377,19 @@ export function IncidentsRcaPanel({ incidents, canManage, onSave }: Props) {
                         onChange={(ev) => {
                           const nextAnswer = ev.target.value;
                           if (index < fiveWhys.length - 1) {
-                            const oldSeed = fiveWhySeedQuestion(index + 1, { previousAnswer: answer });
-                            const newSeed = fiveWhySeedQuestion(index + 1, { previousAnswer: nextAnswer });
+                            const oldSeed = fiveWhySeedQuestion(index + 1, {
+                              previousAnswer: answer,
+                            });
+                            const newSeed = fiveWhySeedQuestion(index + 1, {
+                              previousAnswer: nextAnswer,
+                            });
                             setFiveWhyQuestions((prev) =>
                               prev.map((q, i) =>
                                 i === index + 1 && (!q.trim() || q === oldSeed) ? newSeed : q,
                               ),
                             );
                           }
-                          setFiveWhys((prev) =>
-                            prev.map((w, i) => (i === index ? nextAnswer : w)),
-                          );
+                          setFiveWhys((prev) => prev.map((w, i) => (i === index ? nextAnswer : w)));
                           touch();
                         }}
                       />
@@ -465,7 +473,9 @@ export function IncidentsRcaPanel({ incidents, canManage, onSave }: Props) {
                       value={action.dueDate}
                       onChange={(ev) => {
                         setCorrectiveActions((prev) =>
-                          prev.map((a, i) => (i === index ? { ...a, dueDate: ev.target.value } : a)),
+                          prev.map((a, i) =>
+                            i === index ? { ...a, dueDate: ev.target.value } : a,
+                          ),
                         );
                         touch();
                       }}

@@ -76,7 +76,13 @@ async function main() {
       order by fd.key
     `;
 
-    console.log(JSON.stringify({ entitlements, products, mpa, allIndustrialFlags, now: new Date().toISOString() }, null, 2));
+    console.log(
+      JSON.stringify(
+        { entitlements, products, mpa, allIndustrialFlags, now: new Date().toISOString() },
+        null,
+        2,
+      ),
+    );
   } finally {
     await sql.end({ timeout: 5 });
   }

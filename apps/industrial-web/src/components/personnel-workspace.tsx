@@ -13,8 +13,7 @@ import { isSeasonalLifecycleEnabled } from "@/lib/personnel-seasonal";
 import dynamic from "next/dynamic";
 
 const FirstAidDirectory = dynamic(
-  () =>
-    import("@/components/first-aid-directory").then((mod) => mod.FirstAidDirectory),
+  () => import("@/components/first-aid-directory").then((mod) => mod.FirstAidDirectory),
   {
     ssr: false,
     loading: () => <p className="text-muted mb-0">Loading First Aid…</p>,
@@ -90,9 +89,7 @@ function PersonnelWorkspaceInner({ moduleName }: { moduleName: string }) {
                 aria-selected={mode === "seasonal"}
                 className={`nav-link${mode === "seasonal" ? " active" : ""}`}
                 onClick={() => setMode("seasonal")}
-                title={
-                  seasonalOn ? undefined : "Seasonal lifecycle flag is off for this tenant"
-                }
+                title={seasonalOn ? undefined : "Seasonal lifecycle flag is off for this tenant"}
               >
                 Seasonal Workforce
               </button>

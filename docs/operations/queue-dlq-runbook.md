@@ -27,25 +27,25 @@ EventBridge rule targets the integration-events queue. Messages exceeding max re
 
 ## Triage checklist
 
-| Step | Action |
-| --- | --- |
-| 1 | Check primary queue `ApproximateNumberOfMessages` |
-| 2 | Check DLQ message count (any > 0 warrants investigation) |
-| 3 | Sample one DLQ message body (redact before sharing) |
-| 4 | Correlate `correlationId` to API audit and outbox row |
-| 5 | Identify handler name and event `type` |
-| 6 | Check worker ECS task health and recent deploy |
+| Step | Action                                                   |
+| ---- | -------------------------------------------------------- |
+| 1    | Check primary queue `ApproximateNumberOfMessages`        |
+| 2    | Check DLQ message count (any > 0 warrants investigation) |
+| 3    | Sample one DLQ message body (redact before sharing)      |
+| 4    | Correlate `correlationId` to API audit and outbox row    |
+| 5    | Identify handler name and event `type`                   |
+| 6    | Check worker ECS task health and recent deploy           |
 
 ## Common DLQ causes
 
-| Cause | Fix |
-| --- | --- |
-| Unknown event type | Register handler or filter rule |
-| Missing or invalid `tenantId` | Fix publisher payload; reject at API |
-| Handler exception | Fix code; redeploy worker |
-| Database timeout in handler | Scale Aurora or optimize query |
-| Duplicate processing race | Expected — dedup via `event_processing_records` |
-| Poison message | Fix and replay; do not blindly purge |
+| Cause                         | Fix                                             |
+| ----------------------------- | ----------------------------------------------- |
+| Unknown event type            | Register handler or filter rule                 |
+| Missing or invalid `tenantId` | Fix publisher payload; reject at API            |
+| Handler exception             | Fix code; redeploy worker                       |
+| Database timeout in handler   | Scale Aurora or optimize query                  |
+| Duplicate processing race     | Expected — dedup via `event_processing_records` |
+| Poison message                | Fix and replay; do not blindly purge            |
 
 ## Idempotent replay procedure
 

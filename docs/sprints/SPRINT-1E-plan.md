@@ -28,28 +28,28 @@ This sprint closes the ten gaps carried out of Sprint 1D:
 
 ## Architecture decisions
 
-| ADR | Summary |
-| --- | --- |
-| [ADR-020](../decisions/ADR-020-invitation-lifecycle.md) | Invitation lifecycle and Cognito identity linkage; identity links only at acceptance. |
-| [ADR-021](../decisions/ADR-021-tenant-membership-model.md) | `user_tenant_memberships` as the authoritative access-granting aggregate; only ACTIVE grants access. |
-| [ADR-022](../decisions/ADR-022-durable-idempotency.md) | Durable `idempotency_records` claimed by a NestJS interceptor for unsafe mutations. |
-| [ADR-023](../decisions/ADR-023-optimistic-concurrency.md) | Optimistic concurrency via `record_version` with ETag and If-Match. |
-| [ADR-024](../decisions/ADR-024-event-processing-idempotency.md) | EventBridge to SQS routing with idempotent, per-handler worker processing. |
-| [ADR-025](../decisions/ADR-025-edge-tls-and-dns.md) | Edge TLS, DNS, ACM, ALB redirect, and WAF; HTTPS fully implemented in CDK but gated on a `domains` configuration block. |
-| [ADR-026](../decisions/ADR-026-creator-console-hosting.md) | Creator Console hosted on CloudFront and a private S3 bucket (static export). |
-| [ADR-027](../decisions/ADR-027-customer-onboarding-sessions.md) | Resumable, persisted customer onboarding sessions with a server-side activation gate. |
-| [ADR-028](../decisions/ADR-028-platform-api-versioning.md) | Platform API Contract v1 and the v1-to-v2 versioning policy. |
-| [ADR-029](../decisions/ADR-029-identity-resolution-without-rls-bypass.md) | SECURITY DEFINER lookup functions owned by `forge_identity_lookup`; no `forge_app` RLS bypass. |
+| ADR                                                                       | Summary                                                                                                                 |
+| ------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------- |
+| [ADR-020](../decisions/ADR-020-invitation-lifecycle.md)                   | Invitation lifecycle and Cognito identity linkage; identity links only at acceptance.                                   |
+| [ADR-021](../decisions/ADR-021-tenant-membership-model.md)                | `user_tenant_memberships` as the authoritative access-granting aggregate; only ACTIVE grants access.                    |
+| [ADR-022](../decisions/ADR-022-durable-idempotency.md)                    | Durable `idempotency_records` claimed by a NestJS interceptor for unsafe mutations.                                     |
+| [ADR-023](../decisions/ADR-023-optimistic-concurrency.md)                 | Optimistic concurrency via `record_version` with ETag and If-Match.                                                     |
+| [ADR-024](../decisions/ADR-024-event-processing-idempotency.md)           | EventBridge to SQS routing with idempotent, per-handler worker processing.                                              |
+| [ADR-025](../decisions/ADR-025-edge-tls-and-dns.md)                       | Edge TLS, DNS, ACM, ALB redirect, and WAF; HTTPS fully implemented in CDK but gated on a `domains` configuration block. |
+| [ADR-026](../decisions/ADR-026-creator-console-hosting.md)                | Creator Console hosted on CloudFront and a private S3 bucket (static export).                                           |
+| [ADR-027](../decisions/ADR-027-customer-onboarding-sessions.md)           | Resumable, persisted customer onboarding sessions with a server-side activation gate.                                   |
+| [ADR-028](../decisions/ADR-028-platform-api-versioning.md)                | Platform API Contract v1 and the v1-to-v2 versioning policy.                                                            |
+| [ADR-029](../decisions/ADR-029-identity-resolution-without-rls-bypass.md) | SECURITY DEFINER lookup functions owned by `forge_identity_lookup`; no `forge_app` RLS bypass.                          |
 
 ## Database migrations
 
 Sequential migrations under `packages/database/drizzle/`:
 
-| Migration | ADRs | Contents |
-| --- | --- | --- |
-| `0003_sprint_1e_membership_and_invitations.sql` | ADR-020, ADR-021 | `user_invitations`, `user_tenant_memberships`, `membership_role_assignments`, `membership_product_access`, `membership_module_access`, `membership_history`; user session and auth-failure tracking; `record_version` on users. |
-| `0004_sprint_1e_idempotency_concurrency_onboarding.sql` | ADR-022, ADR-023, ADR-024, ADR-027 | `idempotency_records`, `event_processing_records`, `customer_onboarding_sessions`, `customer_onboarding_steps`; `record_version` on concurrency-controlled tables. |
-| `0005_sprint_1e_identity_resolution.sql` | ADR-029 | `forge_identity_lookup` role, narrow SELECT policies, `forge_lookup_identity`, `forge_lookup_invitation`, `forge_lookup_user_tenants`; `users.sessions_revoked_at`. |
+| Migration                                               | ADRs                               | Contents                                                                                                                                                                                                                        |
+| ------------------------------------------------------- | ---------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `0003_sprint_1e_membership_and_invitations.sql`         | ADR-020, ADR-021                   | `user_invitations`, `user_tenant_memberships`, `membership_role_assignments`, `membership_product_access`, `membership_module_access`, `membership_history`; user session and auth-failure tracking; `record_version` on users. |
+| `0004_sprint_1e_idempotency_concurrency_onboarding.sql` | ADR-022, ADR-023, ADR-024, ADR-027 | `idempotency_records`, `event_processing_records`, `customer_onboarding_sessions`, `customer_onboarding_steps`; `record_version` on concurrency-controlled tables.                                                              |
+| `0005_sprint_1e_identity_resolution.sql`                | ADR-029                            | `forge_identity_lookup` role, narrow SELECT policies, `forge_lookup_identity`, `forge_lookup_invitation`, `forge_lookup_user_tenants`; `users.sessions_revoked_at`.                                                             |
 
 All new tenant-owned tables: audit columns, required indexes and uniqueness constraints, RLS enabled and forced. `forge_app` cannot bypass RLS on direct table access.
 

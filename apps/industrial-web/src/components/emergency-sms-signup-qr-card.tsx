@@ -110,18 +110,25 @@ export function EmergencySmsSignupQrCard({ canManage }: { canManage: boolean }) 
               consent. The number and signed form are saved to their personnel file.
             </p>
             {canManage ? (
-              <button type="button" className="btn btn-primary btn-sm" disabled={busy} onClick={() => void create()}>
+              <button
+                type="button"
+                className="btn btn-primary btn-sm"
+                disabled={busy}
+                onClick={() => void create()}
+              >
                 {busy ? "Creating…" : "Create signup QR code"}
               </button>
             ) : (
-              <p className="small mb-0">Ask an Emergency Alerts admin to create the signup QR code.</p>
+              <p className="small mb-0">
+                Ask an Emergency Alerts admin to create the signup QR code.
+              </p>
             )}
           </div>
         ) : qr.needsReissue || !qr.dataUrl || !qr.url ? (
           <p className="small mb-0">
             This signup code&apos;s token can&apos;t be recovered for reprinting. Open it in{" "}
-            <Link href="/modules/qr-links">QR Links</Link>, revoke the token, then come back here to issue a
-            new one.
+            <Link href="/modules/qr-links">QR Links</Link>, revoke the token, then come back here to
+            issue a new one.
           </p>
         ) : (
           <div className="row g-3 align-items-center">
@@ -133,7 +140,9 @@ export function EmergencySmsSignupQrCard({ canManage }: { canManage: boolean }) 
                 height={200}
                 className="border rounded"
               />
-              {qr.displayCode ? <div className="small text-muted mt-1">Code {qr.displayCode}</div> : null}
+              {qr.displayCode ? (
+                <div className="small text-muted mt-1">Code {qr.displayCode}</div>
+              ) : null}
             </div>
             <div className="col">
               <p className="small text-muted mb-2">
@@ -155,7 +164,11 @@ export function EmergencySmsSignupQrCard({ canManage }: { canManage: boolean }) 
               </div>
               <div className="input-group input-group-sm mb-3">
                 <input className="form-control" readOnly value={qr.url} aria-label="Signup link" />
-                <button type="button" className="btn btn-outline-secondary" onClick={() => void copyLink()}>
+                <button
+                  type="button"
+                  className="btn btn-outline-secondary"
+                  onClick={() => void copyLink()}
+                >
                   {copied ? "Copied" : "Copy"}
                 </button>
               </div>
@@ -172,7 +185,11 @@ export function EmergencySmsSignupQrCard({ canManage }: { canManage: boolean }) 
                   <i className="bx bx-download me-1" aria-hidden />
                   Download PNG
                 </a>
-                <button type="button" className="btn btn-outline-secondary btn-sm" onClick={() => void load()}>
+                <button
+                  type="button"
+                  className="btn btn-outline-secondary btn-sm"
+                  onClick={() => void load()}
+                >
                   Refresh counts
                 </button>
               </div>

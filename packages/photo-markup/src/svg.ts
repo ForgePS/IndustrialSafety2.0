@@ -97,7 +97,7 @@ export function annotationToSvg(annotation: PhotoAnnotation, selected = false): 
       const weight = annotation.fontWeight ?? "bold";
       const parts: string[] = [];
       if (bg && bg !== "transparent") {
-        const tw = Math.max(0.08, (text.length * size * 0.55));
+        const tw = Math.max(0.08, text.length * size * 0.55);
         const th = size * 1.4;
         parts.push(
           `<rect x="${annotation.x - 0.01}" y="${annotation.y - size}" width="${tw}" height="${th}" fill="${escapeXmlAttr(bg)}" opacity="${opacity}" rx="0.01" />`,

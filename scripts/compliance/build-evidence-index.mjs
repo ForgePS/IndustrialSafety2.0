@@ -2,12 +2,7 @@
 import { createHash } from "node:crypto";
 import { readdirSync, readFileSync, writeFileSync, statSync, mkdirSync } from "node:fs";
 import { join, relative } from "node:path";
-import {
-  parseArgs,
-  discoverCaller,
-  REPO_ROOT,
-  assertNoSecretsInFile,
-} from "./_lib.mjs";
+import { parseArgs, discoverCaller, REPO_ROOT, assertNoSecretsInFile } from "./_lib.mjs";
 
 function walk(dir, files = []) {
   if (!statSync(dir, { throwIfNoEntry: false })) return files;

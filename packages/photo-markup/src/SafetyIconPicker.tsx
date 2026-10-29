@@ -28,6 +28,7 @@ export function SafetyIconPicker({ open, color, onSelect, onClose }: Props) {
   if (!open) return null;
 
   return (
+    // eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-noninteractive-element-interactions -- backdrop click-to-dismiss is a pointer convenience; keyboard users close via the Done button
     <div
       role="dialog"
       aria-modal="true"
@@ -43,6 +44,7 @@ export function SafetyIconPicker({ open, color, onSelect, onClose }: Props) {
       }}
       onClick={onClose}
     >
+      {/* eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions -- only stops clicks inside the dialog reaching the click-to-dismiss backdrop; not a control */}
       <div
         style={{
           width: "100%",
@@ -69,7 +71,12 @@ export function SafetyIconPicker({ open, color, onSelect, onClose }: Props) {
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           aria-label="Search safety icons"
-          style={{ minHeight: 44, padding: "8px 12px", borderRadius: 8, border: "1px solid #d1d5db" }}
+          style={{
+            minHeight: 44,
+            padding: "8px 12px",
+            borderRadius: 8,
+            border: "1px solid #d1d5db",
+          }}
         />
         <div style={{ display: "flex", gap: 6, overflowX: "auto", paddingBottom: 4 }}>
           <Chip active={category === "all"} onClick={() => setCategory("all")} label="All" />
@@ -126,7 +133,9 @@ export function SafetyIconPicker({ open, color, onSelect, onClose }: Props) {
                   strokeLinejoin="round"
                 />
               </svg>
-              <span style={{ fontSize: 10, lineHeight: 1.2, textAlign: "center" }}>{icon.label}</span>
+              <span style={{ fontSize: 10, lineHeight: 1.2, textAlign: "center" }}>
+                {icon.label}
+              </span>
             </button>
           ))}
         </div>
@@ -135,15 +144,7 @@ export function SafetyIconPicker({ open, color, onSelect, onClose }: Props) {
   );
 }
 
-function Chip({
-  label,
-  active,
-  onClick,
-}: {
-  label: string;
-  active: boolean;
-  onClick: () => void;
-}) {
+function Chip({ label, active, onClick }: { label: string; active: boolean; onClick: () => void }) {
   return (
     <button
       type="button"

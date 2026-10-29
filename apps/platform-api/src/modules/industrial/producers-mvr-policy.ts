@@ -13,12 +13,14 @@ export const PRODUCERS_MVR_POLICY_TEXT = [
 export const PRODUCERS_MVR_FORM_SOURCE_ID = "z8DdbRny93Oi7TkWNQ3M";
 export const PRODUCERS_MVR_POLICY_FIELD_ID = "policy-text";
 
-export function isProducersMvrConsentForm(definition: {
-  title?: string | null;
-  name?: string | null;
-  formKey?: string | null;
-  sourceDocumentId?: string | null;
-} | null): boolean {
+export function isProducersMvrConsentForm(
+  definition: {
+    title?: string | null;
+    name?: string | null;
+    formKey?: string | null;
+    sourceDocumentId?: string | null;
+  } | null,
+): boolean {
   if (!definition) return false;
   const title = String(definition.title ?? definition.name ?? "").toLowerCase();
   const formKey = String(definition.formKey ?? "").toLowerCase();

@@ -44,16 +44,16 @@ Forge Safety - Field Version is a **Next.js 15 static-export PWA** that authenti
 
 ## Repository map
 
-| Path | Role |
-|------|------|
-| `apps/field-web` | Forge Safety - Field Version (this app) |
+| Path                  | Role                                          |
+| --------------------- | --------------------------------------------- |
+| `apps/field-web`      | Forge Safety - Field Version (this app)       |
 | `apps/industrial-web` | Industrial web UI (shared patterns / cascade) |
-| `apps/platform-api` | Backend APIs |
-| `packages/contracts` | Shared contracts / field permissions |
-| `packages/web-kit` | Cognito auth and shared web kit |
-| `packages/database` | Schema / data model |
-| `infrastructure/cdk` | AWS CDK |
-| `deploy:field-web` | Field web deploy pipeline / scripts |
+| `apps/platform-api`   | Backend APIs                                  |
+| `packages/contracts`  | Shared contracts / field permissions          |
+| `packages/web-kit`    | Cognito auth and shared web kit               |
+| `packages/database`   | Schema / data model                           |
+| `infrastructure/cdk`  | AWS CDK                                       |
+| `deploy:field-web`    | Field web deploy pipeline / scripts           |
 
 **Tooling:** pnpm **10.12.1** + **turbo**
 
@@ -61,26 +61,26 @@ Forge Safety - Field Version is a **Next.js 15 static-export PWA** that authenti
 
 ## Stack
 
-| Item | Value |
-|------|--------|
-| Framework | Next.js **15.3** |
-| UI | React **19** |
-| Dev port | **3005** |
-| Output | `output: 'export'` (static export) |
-| Styling | Custom **`ff-*` CSS** (NOT MUI) |
-| Data fetching | No TanStack Query |
-| Offline DB | No Dexie |
-| Auth | Cognito via `@forge/web-kit` |
-| Tests | Vitest |
-| App deps | Essentially **contracts** + **web-kit** only |
+| Item          | Value                                        |
+| ------------- | -------------------------------------------- |
+| Framework     | Next.js **15.3**                             |
+| UI            | React **19**                                 |
+| Dev port      | **3005**                                     |
+| Output        | `output: 'export'` (static export)           |
+| Styling       | Custom **`ff-*` CSS** (NOT MUI)              |
+| Data fetching | No TanStack Query                            |
+| Offline DB    | No Dexie                                     |
+| Auth          | Cognito via `@forge/web-kit`                 |
+| Tests         | Vitest                                       |
+| App deps      | Essentially **contracts** + **web-kit** only |
 
 ---
 
 ## Branding mismatch
 
-| Source | Name |
-|--------|------|
-| **Authoritative spec** | **Forge Safety - Field Version** |
+| Source                         | Name                              |
+| ------------------------------ | --------------------------------- |
+| **Authoritative spec**         | **Forge Safety - Field Version**  |
 | Current layout / brand strings | **FORGE FIELD** / **Forge Field** |
 
 Phase 1 should align UI branding **to** the authoritative name: **Forge Safety - Field Version**.
@@ -102,38 +102,38 @@ apps/field-web/
 
 ## Full route table
 
-| Route | Status / notes |
-|-------|----------------|
-| `/` | Home |
-| `/tasks/` | My Work / tasks list |
-| `/tasks/item/[id]/` | Task item detail |
-| `/scan/` | Scan entry |
-| `/scan/[token]/` | Token scan |
-| `/scan/equipment/[token]/` | Equipment scan |
-| Sanitation scan routes | Present under sanitation scan flows |
-| `/report/` | Report entry |
-| `/report/[type]/` | Stub |
-| `/more/*` | More hub — LOTO strong; permits / SDS / emergency stubs; records OK |
-| `/training/` | Training list |
-| `/training/[assignmentId]/` | Training runner |
-| `/inspection/[inspectionId]/` | Inspection runner |
-| `/loto/[machineId]/` | LOTO (strong) |
-| `/equipment/[id]/` | Partial |
-| `/location/[locationId]/` | Stub |
-| `/jsa` | Stub |
-| `/corrective` | Stub |
-| `/incident/new` | Redirect |
-| `/sanitation/` | Strong (incl. offline outbox) |
-| Auth routes | Cognito login / gate flows |
+| Route                         | Status / notes                                                      |
+| ----------------------------- | ------------------------------------------------------------------- |
+| `/`                           | Home                                                                |
+| `/tasks/`                     | My Work / tasks list                                                |
+| `/tasks/item/[id]/`           | Task item detail                                                    |
+| `/scan/`                      | Scan entry                                                          |
+| `/scan/[token]/`              | Token scan                                                          |
+| `/scan/equipment/[token]/`    | Equipment scan                                                      |
+| Sanitation scan routes        | Present under sanitation scan flows                                 |
+| `/report/`                    | Report entry                                                        |
+| `/report/[type]/`             | Stub                                                                |
+| `/more/*`                     | More hub — LOTO strong; permits / SDS / emergency stubs; records OK |
+| `/training/`                  | Training list                                                       |
+| `/training/[assignmentId]/`   | Training runner                                                     |
+| `/inspection/[inspectionId]/` | Inspection runner                                                   |
+| `/loto/[machineId]/`          | LOTO (strong)                                                       |
+| `/equipment/[id]/`            | Partial                                                             |
+| `/location/[locationId]/`     | Stub                                                                |
+| `/jsa`                        | Stub                                                                |
+| `/corrective`                 | Stub                                                                |
+| `/incident/new`               | Redirect                                                            |
+| `/sanitation/`                | Strong (incl. offline outbox)                                       |
+| Auth routes                   | Cognito login / gate flows                                          |
 
 ---
 
 ## Navigation
 
-| | Tabs |
-|--|------|
+|             | Tabs                                    |
+| ----------- | --------------------------------------- |
 | **Current** | Home \| Tasks \| Scan \| Report \| More |
-| **Target** | Home \| My Work \| Scan \| Alerts \| Me |
+| **Target**  | Home \| My Work \| Scan \| Alerts \| Me |
 
 **Tablet shell:** Not present (gap).
 
@@ -195,14 +195,14 @@ Industrial field capabilities are served under:
 
 Notable module areas (as used by Field):
 
-| Module | Notes |
-|--------|--------|
-| Scan | QR / token / equipment scan |
-| LOTO | Lockout / tagout |
-| Training | Assignments / runner |
-| Inspection | Inspection runner |
+| Module     | Notes                       |
+| ---------- | --------------------------- |
+| Scan       | QR / token / equipment scan |
+| LOTO       | Lockout / tagout            |
+| Training   | Assignments / runner        |
+| Inspection | Inspection runner           |
 | Sanitation | Sanitation + offline outbox |
-| My Work | Tasks / work queue |
+| My Work    | Tasks / work queue          |
 
 ---
 
@@ -215,32 +215,32 @@ Notable module areas (as used by Field):
 
 ## Feature matrix
 
-| Area | Status |
-|------|--------|
-| Auth / shell | Strong |
-| Bottom nav | Strong (wrong target labels) |
-| Home | Strong |
-| My Work / Tasks | Strong |
-| Scan / QR | Strong |
-| LOTO | Strong |
-| Training runner | Strong |
-| Inspections | Strong |
-| Sanitation + offline outbox | Strong |
-| Equipment detail | Partial |
-| Records (under More) | OK / Partial |
-| Report / Incident | Stub / redirect |
-| Corrective detail | Stub |
-| JSA | Stub |
-| Permits | Stub |
-| SDS | Stub |
-| Emergency | Stub |
-| Location context UI | Stub |
-| Alerts inbox | Missing |
-| Form engine | Missing |
-| Module registry gating | Missing |
-| Division / Location context | Missing / conflict |
-| Tablet shell | Missing |
-| Dexie offline | Missing |
+| Area                        | Status                       |
+| --------------------------- | ---------------------------- |
+| Auth / shell                | Strong                       |
+| Bottom nav                  | Strong (wrong target labels) |
+| Home                        | Strong                       |
+| My Work / Tasks             | Strong                       |
+| Scan / QR                   | Strong                       |
+| LOTO                        | Strong                       |
+| Training runner             | Strong                       |
+| Inspections                 | Strong                       |
+| Sanitation + offline outbox | Strong                       |
+| Equipment detail            | Partial                      |
+| Records (under More)        | OK / Partial                 |
+| Report / Incident           | Stub / redirect              |
+| Corrective detail           | Stub                         |
+| JSA                         | Stub                         |
+| Permits                     | Stub                         |
+| SDS                         | Stub                         |
+| Emergency                   | Stub                         |
+| Location context UI         | Stub                         |
+| Alerts inbox                | Missing                      |
+| Form engine                 | Missing                      |
+| Module registry gating      | Missing                      |
+| Division / Location context | Missing / conflict           |
+| Tablet shell                | Missing                      |
+| Dexie offline               | Missing                      |
 
 ---
 
@@ -265,12 +265,12 @@ Notable module areas (as used by Field):
 
 ## PWA / offline
 
-| Capability | Status |
-|------------|--------|
-| Manifest + service worker | Present |
-| `localStorage` | Used (tokens, light state) |
-| Sanitation outbox | Real offline path |
-| Dexie | Not used |
+| Capability                | Status                     |
+| ------------------------- | -------------------------- |
+| Manifest + service worker | Present                    |
+| `localStorage`            | Used (tokens, light state) |
+| Sanitation outbox         | Real offline path          |
+| Dexie                     | Not used                   |
 
 ---
 

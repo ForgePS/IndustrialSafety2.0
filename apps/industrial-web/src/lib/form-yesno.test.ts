@@ -13,9 +13,7 @@ describe("form-yesno", () => {
 
   it("requires a note when answered No", () => {
     const notesId = yesNoNotesFieldId(field.id);
-    expect(
-      validateYesNoFormFields([field], { [field.id]: "NO", [notesId]: "" }).ok,
-    ).toBe(false);
+    expect(validateYesNoFormFields([field], { [field.id]: "NO", [notesId]: "" }).ok).toBe(false);
     expect(
       validateYesNoFormFields([field], { [field.id]: "NO", [notesId]: "Blocked aisle" }).ok,
     ).toBe(true);

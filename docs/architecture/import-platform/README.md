@@ -4,19 +4,19 @@
 **Date:** 2026-07-28  
 **Review gate:** Architecture package ready for review before product-specific importers
 
-| Document | Description |
-| --- | --- |
+| Document                                                             | Description                                |
+| -------------------------------------------------------------------- | ------------------------------------------ |
 | [IMPORT_PLATFORM_ARCHITECTURE.md](./IMPORT_PLATFORM_ARCHITECTURE.md) | System context and shared-engine principle |
-| [IMPORT_WORKFLOW.md](./IMPORT_WORKFLOW.md) | Pipeline stages and job status machine |
-| [IMPORT_DATA_MODEL.md](./IMPORT_DATA_MODEL.md) | Entities and relationships |
-| [IMPORT_DATABASE_SCHEMA.md](./IMPORT_DATABASE_SCHEMA.md) | Schema + RLS notes |
-| [IMPORT_API_SPECIFICATION.md](./IMPORT_API_SPECIFICATION.md) | REST contracts |
-| [IMPORT_SECURITY_MODEL.md](./IMPORT_SECURITY_MODEL.md) | Security controls |
-| [IMPORT_QUEUE_ARCHITECTURE.md](./IMPORT_QUEUE_ARCHITECTURE.md) | S3 / SQS / Step Functions / worker |
-| [IMPORT_UI_SPECIFICATION.md](./IMPORT_UI_SPECIFICATION.md) | Import Center UX |
-| [IMPORT_TEST_STRATEGY.md](./IMPORT_TEST_STRATEGY.md) | Test matrix |
-| [IMPORT_DEFINITION_OF_DONE.md](./IMPORT_DEFINITION_OF_DONE.md) | DoD gates |
-| [IMPORT_IMPLEMENTATION_PLAN.md](./IMPORT_IMPLEMENTATION_PLAN.md) | Sprint breakdown |
+| [IMPORT_WORKFLOW.md](./IMPORT_WORKFLOW.md)                           | Pipeline stages and job status machine     |
+| [IMPORT_DATA_MODEL.md](./IMPORT_DATA_MODEL.md)                       | Entities and relationships                 |
+| [IMPORT_DATABASE_SCHEMA.md](./IMPORT_DATABASE_SCHEMA.md)             | Schema + RLS notes                         |
+| [IMPORT_API_SPECIFICATION.md](./IMPORT_API_SPECIFICATION.md)         | REST contracts                             |
+| [IMPORT_SECURITY_MODEL.md](./IMPORT_SECURITY_MODEL.md)               | Security controls                          |
+| [IMPORT_QUEUE_ARCHITECTURE.md](./IMPORT_QUEUE_ARCHITECTURE.md)       | S3 / SQS / Step Functions / worker         |
+| [IMPORT_UI_SPECIFICATION.md](./IMPORT_UI_SPECIFICATION.md)           | Import Center UX                           |
+| [IMPORT_TEST_STRATEGY.md](./IMPORT_TEST_STRATEGY.md)                 | Test matrix                                |
+| [IMPORT_DEFINITION_OF_DONE.md](./IMPORT_DEFINITION_OF_DONE.md)       | DoD gates                                  |
+| [IMPORT_IMPLEMENTATION_PLAN.md](./IMPORT_IMPLEMENTATION_PLAN.md)     | Sprint breakdown                           |
 
 **Package skeleton:** `@forge/imports` (`packages/imports`)  
 **Draft migration:** `packages/database/drizzle/0022_import_platform.sql`

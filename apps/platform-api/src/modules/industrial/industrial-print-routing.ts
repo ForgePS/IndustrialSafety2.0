@@ -55,7 +55,9 @@ export type PrintRouteDecision =
     };
 
 function norm(value: string | null | undefined): string {
-  return String(value ?? "").trim().toUpperCase();
+  return String(value ?? "")
+    .trim()
+    .toUpperCase();
 }
 
 function conditionMatches(

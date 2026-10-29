@@ -1,10 +1,5 @@
 import { Inject, Injectable } from "@nestjs/common";
-import {
-  createId,
-  tenantSettings,
-  type Database,
-  withTenantTransaction,
-} from "@forge/database";
+import { createId, tenantSettings, type Database, withTenantTransaction } from "@forge/database";
 import { ForgeError } from "@forge/errors";
 import type { ForgePrincipal } from "@forge/tenant-context";
 import { and, eq, sql } from "drizzle-orm";
@@ -56,16 +51,12 @@ const settingsSchema = z.object({
   defaultStroke: z.enum(["thin", "medium", "thick", "extra"]).optional(),
   keepRevisionHistory: z.boolean().optional(),
   createRenderedCopy: z.boolean().optional(),
-  defaultReportImage: z
-    .enum(["original", "marked_if_available", "both", "ask"])
-    .optional(),
+  defaultReportImage: z.enum(["original", "marked_if_available", "both", "ask"]).optional(),
 });
 
 function normalize(raw: unknown): PhotoMarkupSettings {
   const row =
-    raw && typeof raw === "object" && !Array.isArray(raw)
-      ? (raw as Record<string, unknown>)
-      : {};
+    raw && typeof raw === "object" && !Array.isArray(raw) ? (raw as Record<string, unknown>) : {};
   return {
     ...DEFAULT_PHOTO_MARKUP_SETTINGS,
     ...Object.fromEntries(

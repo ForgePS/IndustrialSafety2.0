@@ -60,7 +60,10 @@ export async function qrCodePngBuffer(text: string, sizePx = 280): Promise<Buffe
 }
 
 /** Printable sticker: asset label, optional VIN line, and scannable QR. */
-export async function qrCodeDvirStickerSvg(url: string, options: DvirQrStickerOptions): Promise<string> {
+export async function qrCodeDvirStickerSvg(
+  url: string,
+  options: DvirQrStickerOptions,
+): Promise<string> {
   const qrSize = options.qrSizePx ?? 280;
   const png = await qrCodePngBuffer(url, qrSize);
   const dataUri = `data:image/png;base64,${png.toString("base64")}`;

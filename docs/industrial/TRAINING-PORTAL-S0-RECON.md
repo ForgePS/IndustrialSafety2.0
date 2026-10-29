@@ -7,19 +7,19 @@
 
 ## Reuse map (Model A)
 
-| Logical entity | Existing table | Action |
-|----------------|----------------|--------|
-| Training Course | `industrial_training_sources` | Extend with versions |
-| Course Version | — | **Add** `industrial_training_course_versions` |
-| Section / Content | materials + folders only | **Add** sections + content items |
-| Question Bank | `industrial_training_questions` | Reuse (per source) |
-| Assignment | `industrial_training_assignments` | Extend `course_version_id` |
-| Assignee progress | `industrial_training_assignment_assignees` | Reuse + progress table |
-| Access Link | assignment `public_token_hash` only | **Add** `industrial_training_access_links` |
-| Portal Session | `industrial_training_portal_sessions` (0062) | Extend `access_link_id` |
-| Attempt | `industrial_training_attempts` | Reuse (`answers` jsonb) |
-| Completion | `industrial_training_records` + assignee status | **Add** canonical `industrial_training_completions` |
-| Groups | `industrial_training_groups` | Extend members with `personnel_id` |
+| Logical entity    | Existing table                                  | Action                                              |
+| ----------------- | ----------------------------------------------- | --------------------------------------------------- |
+| Training Course   | `industrial_training_sources`                   | Extend with versions                                |
+| Course Version    | —                                               | **Add** `industrial_training_course_versions`       |
+| Section / Content | materials + folders only                        | **Add** sections + content items                    |
+| Question Bank     | `industrial_training_questions`                 | Reuse (per source)                                  |
+| Assignment        | `industrial_training_assignments`               | Extend `course_version_id`                          |
+| Assignee progress | `industrial_training_assignment_assignees`      | Reuse + progress table                              |
+| Access Link       | assignment `public_token_hash` only             | **Add** `industrial_training_access_links`          |
+| Portal Session    | `industrial_training_portal_sessions` (0062)    | Extend `access_link_id`                             |
+| Attempt           | `industrial_training_attempts`                  | Reuse (`answers` jsonb)                             |
+| Completion        | `industrial_training_records` + assignee status | **Add** canonical `industrial_training_completions` |
+| Groups            | `industrial_training_groups`                    | Extend members with `personnel_id`                  |
 
 ## API patterns to follow
 

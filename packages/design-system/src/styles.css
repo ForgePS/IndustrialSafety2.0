@@ -10,10 +10,11 @@
 .forge-theme-light {
   color-scheme: light;
 
-  --forge-font-sans: "Public Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", Oxygen, Ubuntu,
-    Cantarell, "Fira Sans", "Droid Sans", "Helvetica Neue", sans-serif;
-  --forge-font-mono: "SFMono-Regular", Menlo, Monaco, Consolas, "Liberation Mono", "Courier New",
-    monospace;
+  --forge-font-sans:
+    "Public Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", Oxygen, Ubuntu, Cantarell,
+    "Fira Sans", "Droid Sans", "Helvetica Neue", sans-serif;
+  --forge-font-mono:
+    "SFMono-Regular", Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
 
   --forge-space-1: 0.25rem;
   --forge-space-2: 0.5rem;
@@ -319,7 +320,9 @@ button.forge-btn {
   cursor: pointer;
   background: var(--forge-color-primary);
   color: #fff;
-  transition: background 0.15s ease, box-shadow 0.15s ease;
+  transition:
+    background 0.15s ease,
+    box-shadow 0.15s ease;
 }
 
 .forge-btn:hover {
@@ -678,7 +681,9 @@ table.forge-table th {
   text-decoration: none;
   color: inherit;
   min-height: 6.5rem;
-  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+  transition:
+    border-color 0.15s ease,
+    box-shadow 0.15s ease;
 }
 
 .forge-module-card:hover {
@@ -1293,4 +1298,3 @@ table.forge-table th {
   font-weight: 800;
   font-size: var(--forge-text-sm);
 }
-

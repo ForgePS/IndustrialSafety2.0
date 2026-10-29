@@ -361,8 +361,7 @@ async function onboardTenant(
     "REPORTING",
   ];
   const rmsModules = ["CORE", "PERSONNEL", "TRAINING", "APPARATUS", "DOCUMENTS", "REPORTS"];
-  const modules =
-    input.customerType === "INDUSTRIAL" ? industrialModules : rmsModules;
+  const modules = input.customerType === "INDUSTRIAL" ? industrialModules : rmsModules;
   await complete("SELECT_MODULES", {
     moduleCodes: input.omitModule ? modules.filter((code) => code !== input.omitModule) : modules,
   });
@@ -498,6 +497,7 @@ async function main(): Promise<void> {
       roleId: ownerRoleB,
     });
 
+    // eslint-disable-next-line no-console -- CLI provisioning script reports its result on stdout
     console.info(
       JSON.stringify({
         status: "provisioned",

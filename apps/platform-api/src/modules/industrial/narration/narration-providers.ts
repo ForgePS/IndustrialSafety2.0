@@ -92,7 +92,9 @@ export class PollyNarrationProvider implements NarrationProvider {
   }
 
   async synthesize(input: NarrationSynthInput): Promise<NarrationSynthResult> {
-    const voiceId = (input.voiceId?.trim() || process.env.POLLY_VOICE_ID || DEFAULT_VOICE) as VoiceId;
+    const voiceId = (input.voiceId?.trim() ||
+      process.env.POLLY_VOICE_ID ||
+      DEFAULT_VOICE) as VoiceId;
     const speed = input.speed ?? 100;
     const format = input.format ?? "mp3";
     const text = input.text.trim();
@@ -206,7 +208,12 @@ function mapOpenAiVoice(voiceId: string): string {
   const allowed = new Set(["alloy", "echo", "fable", "onyx", "nova", "shimmer"]);
   if (allowed.has(raw)) return raw;
   // Map Polly-ish / Forge profile names onto OpenAI defaults.
-  if (raw.includes("matthew") || raw.includes("stephen") || raw.includes("gregory") || raw.includes("male")) {
+  if (
+    raw.includes("matthew") ||
+    raw.includes("stephen") ||
+    raw.includes("gregory") ||
+    raw.includes("male")
+  ) {
     return "onyx";
   }
   if (raw.includes("ruth") || raw.includes("executive")) return "nova";
@@ -276,9 +283,7 @@ export class ElevenLabsNarrationProvider implements NarrationProvider {
 
 export type NarrationProviderKind = "polly" | "openai" | "elevenlabs";
 
-export function resolveNarrationProviderKind(
-  explicit?: string | null,
-): NarrationProviderKind {
+export function resolveNarrationProviderKind(explicit?: string | null): NarrationProviderKind {
   const raw = (explicit || process.env.WALKTHROUGH_TTS_PROVIDER || "polly").trim().toLowerCase();
   if (raw === "openai" || raw === "elevenlabs" || raw === "polly") return raw;
   return "polly";

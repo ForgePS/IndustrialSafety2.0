@@ -11,11 +11,7 @@ vi.mock("@/lib/document-control", () => ({
 }));
 
 import { apiGet } from "@forge/web-kit";
-import {
-  listApprovalsQueue,
-  listMyPendingAcks,
-  listOverdueReviews,
-} from "@/lib/document-control";
+import { listApprovalsQueue, listMyPendingAcks, listOverdueReviews } from "@/lib/document-control";
 import {
   isSummaryWidgetModule,
   loadInspectionsSummary,

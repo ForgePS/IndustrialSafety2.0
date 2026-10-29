@@ -14,11 +14,7 @@ import {
   createTenantInputSchema,
 } from "@forge/contracts";
 
-export type LifecycleEvidence =
-  | "API"
-  | "AUTHZ_EVAL"
-  | "UI_N_A"
-  | "VIEWPORT_STATIC";
+export type LifecycleEvidence = "API" | "AUTHZ_EVAL" | "UI_N_A" | "VIEWPORT_STATIC";
 
 export type LifecycleStep = {
   step: number;

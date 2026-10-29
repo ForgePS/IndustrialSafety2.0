@@ -108,10 +108,7 @@ describe("tenant isolation (integration)", () => {
   it("blocks cross-tenant updates through forge_app RLS", async () => {
     await expect(
       withTenantTransaction(db, tenantA, async (tx) => {
-        await tx
-          .update(persons)
-          .set({ firstName: "Hacked" })
-          .where(eq(persons.id, personB));
+        await tx.update(persons).set({ firstName: "Hacked" }).where(eq(persons.id, personB));
       }),
     ).resolves.not.toThrow();
 

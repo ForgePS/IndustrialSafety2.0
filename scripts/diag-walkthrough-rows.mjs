@@ -73,7 +73,9 @@ try {
     ORDER BY indexname
   `;
 
-  console.log(JSON.stringify({ tenants, walkthroughs: rows, countsByTenant: counts, indexes: uidx }, null, 2));
+  console.log(
+    JSON.stringify({ tenants, walkthroughs: rows, countsByTenant: counts, indexes: uidx }, null, 2),
+  );
 } finally {
   await sql.end({ timeout: 5 });
 }

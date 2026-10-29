@@ -148,9 +148,7 @@ export const reportSchedules = pgTable(
     updatedAt: updatedAtColumn,
     deletedAt: timestamp("deleted_at", { withTimezone: true }),
   },
-  (table) => [
-    index("report_schedules_tenant_enabled_idx").on(table.tenantId, table.enabled),
-  ],
+  (table) => [index("report_schedules_tenant_enabled_idx").on(table.tenantId, table.enabled)],
 );
 
 export const reportRecipients = pgTable(
@@ -186,7 +184,5 @@ export const reportShares = pgTable(
     createdByUserId: uuid("created_by_user_id").references(() => users.id),
     createdAt: createdAtColumn,
   },
-  (table) => [
-    index("report_shares_tenant_def_idx").on(table.tenantId, table.reportDefinitionId),
-  ],
+  (table) => [index("report_shares_tenant_def_idx").on(table.tenantId, table.reportDefinitionId)],
 );

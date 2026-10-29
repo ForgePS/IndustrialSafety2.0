@@ -62,10 +62,7 @@ export function matchesSearchTokens(haystack: readonly string[], query: string):
  * Fallback for when a word-start search finds nobody: matches a token anywhere,
  * so "donald" can still reach MCDONALD once the strict pass comes up empty.
  */
-export function matchesSearchTokensAnywhere(
-  haystack: readonly string[],
-  query: string,
-): boolean {
+export function matchesSearchTokensAnywhere(haystack: readonly string[], query: string): boolean {
   const tokens = searchTokens(query);
   if (tokens.length === 0) return true;
   const hay = normalizeSearchText(haystack.filter(Boolean).join(" "));

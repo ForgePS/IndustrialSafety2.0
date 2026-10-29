@@ -22,8 +22,8 @@ export function NotificationsEntryPoint() {
         }
       >
         <p>
-          An in-app notification center is not connected for Forge RMS yet. Email or SMS delivery is not
-          claimed by this shell entry point.
+          An in-app notification center is not connected for Forge RMS yet. Email or SMS delivery is
+          not claimed by this shell entry point.
         </p>
       </FxDialog>
     </>

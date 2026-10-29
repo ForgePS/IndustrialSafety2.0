@@ -3,11 +3,7 @@ import { tenants, withTenantTransaction } from "@forge/database";
 import { eq } from "drizzle-orm";
 import { registerDomainEventHandler } from "./registry.js";
 
-function registerProofHandler(
-  eventType: string,
-  handlerName: string,
-  action: string,
-): void {
+function registerProofHandler(eventType: string, handlerName: string, action: string): void {
   registerDomainEventHandler(eventType, handlerName, async ({ db, event, logger }) => {
     if (!event.tenantId) {
       throw new Error(`Proof handler ${handlerName} requires tenantId`);

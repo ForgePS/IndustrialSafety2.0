@@ -52,8 +52,7 @@ function assertId(id: string): string {
 function mapQrLink(row: typeof qrLinks.$inferSelect, extras?: { publicToken?: string }) {
   const actionConfig = (row.actionConfig ?? {}) as Record<string, unknown>;
   const sealed = readSealedPortalToken(row.metadata);
-  const fromSeal =
-    sealed && row.tenantId ? openPortalToken(row.tenantId, sealed) : null;
+  const fromSeal = sealed && row.tenantId ? openPortalToken(row.tenantId, sealed) : null;
   // Prefer explicit token, then sealed plaintext that still matches the stored hash.
   let publicToken = extras?.publicToken ?? undefined;
   if (!publicToken && fromSeal && row.tokenHash && hashPublicToken(fromSeal) === row.tokenHash) {
@@ -150,9 +149,7 @@ export class IndustrialQrService {
     const [row] = await tx
       .select()
       .from(qrLinks)
-      .where(
-        and(eq(qrLinks.id, id), eq(qrLinks.tenantId, tenantId), isNull(qrLinks.archivedAt)),
-      )
+      .where(and(eq(qrLinks.id, id), eq(qrLinks.tenantId, tenantId), isNull(qrLinks.archivedAt)))
       .limit(1);
     if (!row) throw new ForgeError("NOT_FOUND", "QR link not found");
     return row;
@@ -219,8 +216,7 @@ export class IndustrialQrService {
       ...(typeof body.actionConfig === "object" && body.actionConfig
         ? (body.actionConfig as Record<string, unknown>)
         : {}),
-      resolutionMode:
-        typeof target.resolutionMode === "string" ? target.resolutionMode : undefined,
+      resolutionMode: typeof target.resolutionMode === "string" ? target.resolutionMode : undefined,
       isPublic: body.isPublic === true || isLoto || isVehicle,
     };
     if (isLoto) {
@@ -240,9 +236,7 @@ export class IndustrialQrService {
           id: createId(),
           tenantId,
           label,
-          displayCode:
-            String(body.displayCode ?? "").trim() ||
-            generateDisplayCode(),
+          displayCode: String(body.displayCode ?? "").trim() || generateDisplayCode(),
           description: String(body.description ?? "").trim() || null,
           status: "ACTIVE",
           accessMode,
@@ -270,8 +264,7 @@ export class IndustrialQrService {
       });
 
       let publicToken: string | undefined;
-      const shouldIssue =
-        body.isPublic === true || body.issueToken === true || isLoto || isVehicle;
+      const shouldIssue = body.isPublic === true || body.issueToken === true || isLoto || isVehicle;
       if (shouldIssue) {
         const issued = await this.issueTokenTx(
           tx,
@@ -288,11 +281,7 @@ export class IndustrialQrService {
     });
   }
 
-  async updateQrLink(
-    principal: ForgePrincipal,
-    id: string,
-    body: Record<string, unknown> = {},
-  ) {
+  async updateQrLink(principal: ForgePrincipal, id: string, body: Record<string, unknown> = {}) {
     const tenantId = this.tenant(principal);
     const recordId = assertId(id);
     return withTenantTransaction(this.db, tenantId, async (tx) => {
@@ -333,7 +322,10 @@ export class IndustrialQrService {
         accessModeChanged = patch.accessMode !== existing.accessMode;
       } else if (body.targetType !== undefined) {
         // Retargeting onto LOTO / fleet must promote to public even if accessMode wasn't sent.
-        const forced = resolveQrAccessModeForTarget(patch.targetType ?? existing.targetType, existing.accessMode);
+        const forced = resolveQrAccessModeForTarget(
+          patch.targetType ?? existing.targetType,
+          existing.accessMode,
+        );
         if (forced !== existing.accessMode) {
           patch.accessMode = forced;
           accessModeChanged = true;
@@ -485,11 +477,7 @@ export class IndustrialQrService {
     });
   }
 
-  async replaceQrLink(
-    principal: ForgePrincipal,
-    id: string,
-    body: Record<string, unknown> = {},
-  ) {
+  async replaceQrLink(principal: ForgePrincipal, id: string, body: Record<string, unknown> = {}) {
     const tenantId = this.tenant(principal);
     const recordId = assertId(id);
     return withTenantTransaction(this.db, tenantId, async (tx) => {
@@ -607,11 +595,7 @@ export class IndustrialQrService {
     });
   }
 
-  async recordScanEvent(
-    principal: ForgePrincipal,
-    id: string,
-    body: Record<string, unknown> = {},
-  ) {
+  async recordScanEvent(principal: ForgePrincipal, id: string, body: Record<string, unknown> = {}) {
     const tenantId = this.tenant(principal);
     const recordId = assertId(id);
     return withTenantTransaction(this.db, tenantId, async (tx) => {
@@ -627,14 +611,12 @@ export class IndustrialQrService {
           scannedAt: now,
           action: String(body.action ?? "SCAN").trim() || "SCAN",
           result: String(body.result ?? "OK").trim() || "OK",
-          responseStatus:
-            typeof body.responseStatus === "number" ? body.responseStatus : 200,
+          responseStatus: typeof body.responseStatus === "number" ? body.responseStatus : 200,
           anonymous: false,
           personnelId: parseOptionalUuid(body.personnelId),
           userId: principal.userId ?? parseOptionalUuid(body.userId),
           siteId: parseOptionalUuid(body.siteId ?? link.siteId),
-          correlationId:
-            typeof body.correlationId === "string" ? body.correlationId.trim() : null,
+          correlationId: typeof body.correlationId === "string" ? body.correlationId.trim() : null,
           metadata:
             typeof body.metadata === "object" && body.metadata
               ? (body.metadata as Record<string, unknown>)
@@ -859,7 +841,9 @@ export class IndustrialQrService {
           const now = new Date();
           const nextConfig = {
             ...defaultQrActionConfigFlags(),
-            ...(typeof row.actionConfig === "object" && row.actionConfig && !Array.isArray(row.actionConfig)
+            ...(typeof row.actionConfig === "object" &&
+            row.actionConfig &&
+            !Array.isArray(row.actionConfig)
               ? (row.actionConfig as Record<string, unknown>)
               : {}),
             viewLoto: true,
@@ -877,11 +861,18 @@ export class IndustrialQrService {
             .returning();
           if (updated) {
             row = updated;
-            await this.appendAudit(tx, tenantId, row.id, "ACCESS_MODE_CHANGED", principal.userId ?? null, {
-              before: mode,
-              after: "PUBLIC_ACTION",
-              via: "loto-public-upgrade",
-            });
+            await this.appendAudit(
+              tx,
+              tenantId,
+              row.id,
+              "ACCESS_MODE_CHANGED",
+              principal.userId ?? null,
+              {
+                before: mode,
+                after: "PUBLIC_ACTION",
+                via: "loto-public-upgrade",
+              },
+            );
           }
         }
       }
@@ -964,7 +955,13 @@ export class IndustrialQrService {
         publicToken = opened;
       }
       if (!publicToken && !row.tokenHash) {
-        const issued = await this.issueTokenTx(tx, tenantId, row, principal.userId ?? null, appBaseUrl);
+        const issued = await this.issueTokenTx(
+          tx,
+          tenantId,
+          row,
+          principal.userId ?? null,
+          appBaseUrl,
+        );
         row = issued.row;
         publicToken = issued.publicToken;
       }

@@ -8,7 +8,12 @@ export {
   type OfflineDomainPolicy,
 } from "./data-classification";
 
-export { resolveConflict, type ConflictDecision, type ConflictInput, type ConflictStrategy } from "./conflict";
+export {
+  resolveConflict,
+  type ConflictDecision,
+  type ConflictInput,
+  type ConflictStrategy,
+} from "./conflict";
 
 export {
   FieldMutationQueue,

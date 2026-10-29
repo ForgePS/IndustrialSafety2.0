@@ -33,10 +33,7 @@ export function normalizeAnnotations(raw: unknown): PhotoAnnotation[] {
     const x = Number(row.x);
     const y = Number(row.y);
     if (![x, y].every(Number.isFinite)) continue;
-    const id =
-      typeof row.id === "string" && row.id.trim()
-        ? row.id.trim()
-        : `ann-${index}`;
+    const id = typeof row.id === "string" && row.id.trim() ? row.id.trim() : `ann-${index}`;
     const annotation: PhotoAnnotation = {
       id,
       type: type as PhotoAnnotation["type"],
@@ -53,11 +50,7 @@ export function normalizeAnnotations(raw: unknown): PhotoAnnotation[] {
     if (Number.isFinite(Number(row.strokeWidth))) annotation.strokeWidth = Number(row.strokeWidth);
     if (typeof row.fill === "string") annotation.fill = row.fill;
     if (Number.isFinite(Number(row.opacity))) annotation.opacity = Number(row.opacity);
-    if (
-      row.lineStyle === "solid" ||
-      row.lineStyle === "dashed" ||
-      row.lineStyle === "dotted"
-    ) {
+    if (row.lineStyle === "solid" || row.lineStyle === "dashed" || row.lineStyle === "dotted") {
       annotation.lineStyle = row.lineStyle;
     }
     if (typeof row.text === "string") annotation.text = row.text;
@@ -97,10 +90,7 @@ export function normalizeMarkupDocument(raw: unknown): MarkupDocument | null {
   };
 }
 
-export function createEmptyDocument(
-  canvasWidth = 0,
-  canvasHeight = 0,
-): MarkupDocument {
+export function createEmptyDocument(canvasWidth = 0, canvasHeight = 0): MarkupDocument {
   return {
     version: 1,
     canvasWidth,

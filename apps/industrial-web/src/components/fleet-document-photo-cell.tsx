@@ -3,11 +3,7 @@
 import { useEffect, useState } from "react";
 import { apiGet } from "@forge/web-kit";
 import { fleetDocumentPreviewSrc } from "@/lib/fleet";
-import {
-  inlineDataUrlFromRow,
-  isFleetImageMime,
-  mimeFromDataUrl,
-} from "@/lib/fleet-document-view";
+import { inlineDataUrlFromRow, isFleetImageMime, mimeFromDataUrl } from "@/lib/fleet-document-view";
 
 function asText(value: unknown): string {
   return typeof value === "string" ? value.trim() : value == null ? "" : String(value).trim();

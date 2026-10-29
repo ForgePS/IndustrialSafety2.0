@@ -14,7 +14,8 @@
   font-weight: 600;
   line-height: 1.2;
   cursor: pointer;
-  transition: background-color var(--fx-motion-fast) var(--fx-motion-easing),
+  transition:
+    background-color var(--fx-motion-fast) var(--fx-motion-easing),
     border-color var(--fx-motion-fast) var(--fx-motion-easing),
     color var(--fx-motion-fast) var(--fx-motion-easing);
 }

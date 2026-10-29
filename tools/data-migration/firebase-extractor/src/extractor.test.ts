@@ -64,7 +64,9 @@ describe("FIRESTORE_TYPE_SERIALIZATION", () => {
 describe("TENANT_MAPPING", () => {
   it("classifies known tenants without auto-normalizing Producers Rice Mill", () => {
     expect(classifySourceTenantKey("business-1782553339499").classification).toBe("CUSTOMER");
-    expect(classifySourceTenantKey("business-forge-default").classification).toBe("PLATFORM_DEFAULT");
+    expect(classifySourceTenantKey("business-forge-default").classification).toBe(
+      "PLATFORM_DEFAULT",
+    );
     expect(classifySourceTenantKey("GLOBAL").classification).toBe("GLOBAL_TEMPLATE");
     expect(classifySourceTenantKey("GLOBAL").canonicalTenantKey).toBeNull();
     const alias = classifySourceTenantKey("Producers Rice Mill");
@@ -175,12 +177,7 @@ describe("PAGINATION / RESUME / COUNT_RECONCILIATION contracts", () => {
 describe("NO_WRITE_APIS", () => {
   it("extractor modules do not call Firestore/Auth/Storage write APIs", async () => {
     const { readFileSync: rf } = await import("node:fs");
-    const files = [
-      "extract-firestore.ts",
-      "extract-auth.ts",
-      "extract-storage.ts",
-      "orphans.ts",
-    ];
+    const files = ["extract-firestore.ts", "extract-auth.ts", "extract-storage.ts", "orphans.ts"];
     // Match mutation call sites, not field names like documentUpdateTime
     const banned = [
       /\.set\s*\(/,

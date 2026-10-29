@@ -36,9 +36,7 @@ export function EmergencyResponseWorkspace({ moduleName }: { moduleName: string 
       );
       setError("");
     } catch (e) {
-      setError(
-        e instanceof ApiError ? e.message : "Unable to load emergency response records",
-      );
+      setError(e instanceof ApiError ? e.message : "Unable to load emergency response records");
     } finally {
       setLoading(false);
     }
@@ -176,7 +174,9 @@ export function EmergencyResponseWorkspace({ moduleName }: { moduleName: string 
                       module="EMERGENCY_RESPONSE"
                       recordType="emergency_record"
                       recordId={item.id}
-                      fieldValues={emergencyRecordPrintFieldValues(item as unknown as Record<string, unknown>)}
+                      fieldValues={emergencyRecordPrintFieldValues(
+                        item as unknown as Record<string, unknown>,
+                      )}
                     />
                   </td>
                 </tr>

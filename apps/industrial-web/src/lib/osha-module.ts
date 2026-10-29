@@ -150,7 +150,9 @@ function asInt(value: unknown): number | null {
 }
 
 export function normalizeOshaRecordability(raw: unknown): OshaRecordability {
-  const text = asText(raw).toUpperCase().replace(/[\s-]+/g, "_");
+  const text = asText(raw)
+    .toUpperCase()
+    .replace(/[\s-]+/g, "_");
   if (text === "RECORDABLE" || text === "YES") return "RECORDABLE";
   if (text === "NOT_RECORDABLE" || text === "NON_RECORDABLE" || text === "NO") {
     return "NOT_RECORDABLE";
@@ -163,7 +165,9 @@ export function normalizeOshaRecordability(raw: unknown): OshaRecordability {
 }
 
 export function normalizeOshaCaseOutcome(raw: unknown): OshaCaseOutcome | null {
-  const text = asText(raw).toUpperCase().replace(/[\s-]+/g, "_");
+  const text = asText(raw)
+    .toUpperCase()
+    .replace(/[\s-]+/g, "_");
   if (!text) return null;
   if (text === "G" || text === "DEATH" || text === "FATALITY") return "DEATH";
   if (text === "H" || text === "DAYS_AWAY" || text === "DAYS_AWAY_FROM_WORK") return "DAYS_AWAY";
@@ -471,13 +475,10 @@ export function autofillForm301FromForm300(caseRow: OshaCase): OshaCase {
     employeeName: caseRow.employeeName,
     injuryOrIllness: caseRow.injuryOrIllness.trim() || description,
     whatHappened: caseRow.whatHappened.trim() || description,
-    activityBefore:
-      caseRow.activityBefore.trim() ||
-      (location ? `Working at ${location}` : ""),
+    activityBefore: caseRow.activityBefore.trim() || (location ? `Working at ${location}` : ""),
     objectOrSubstance: caseRow.objectOrSubstance.trim(),
     dateOfDeath:
-      caseRow.dateOfDeath ||
-      (caseRow.caseOutcome === "DEATH" ? caseRow.injuryDate : null),
+      caseRow.dateOfDeath || (caseRow.caseOutcome === "DEATH" ? caseRow.injuryDate : null),
   };
 }
 
@@ -543,10 +544,7 @@ export function form300ATotals(cases: OshaCase[], year: number): OshaForm300ATot
 }
 
 /** Sum Form 300 page totals (G–M) into Form 300A summary values. */
-export function form300ATotalsFromPageTotals(
-  cases: OshaCase[],
-  year: number,
-): OshaForm300ATotals {
+export function form300ATotalsFromPageTotals(cases: OshaCase[], year: number): OshaForm300ATotals {
   const pages = chunkForm300Pages(logCasesForForm300(cases, year));
   const totals: OshaForm300ATotals = {
     year,
@@ -590,7 +588,8 @@ export function form300ASummary(cases: OshaCase[], year: number) {
   return {
     year,
     totalCases: inYear.length,
-    recordableCases: totals.deaths + totals.daysAwayCases + totals.jobTransferCases + totals.otherRecordableCases,
+    recordableCases:
+      totals.deaths + totals.daysAwayCases + totals.jobTransferCases + totals.otherRecordableCases,
     privacyCases: inYear.filter((c) => c.recordabilityStatus === "PRIVACY_CASE").length,
     daysAway: totals.daysAway,
     restrictedDays: totals.restrictedDays,
@@ -618,10 +617,7 @@ export function form300PageTotals(cases: OshaCase[]) {
 export const OSHA_FORM_300_ROWS_PER_PAGE = 10;
 
 /** Split Form 300 log cases into official page-sized chunks (page totals are per chunk). */
-export function chunkForm300Pages<T>(
-  cases: T[],
-  pageSize = OSHA_FORM_300_ROWS_PER_PAGE,
-): T[][] {
+export function chunkForm300Pages<T>(cases: T[], pageSize = OSHA_FORM_300_ROWS_PER_PAGE): T[][] {
   if (cases.length === 0) return [[]];
   const pages: T[][] = [];
   for (let i = 0; i < cases.length; i += pageSize) {

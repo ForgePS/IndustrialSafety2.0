@@ -313,7 +313,8 @@ export const BUILTIN_REPORTS: readonly BuiltinReportMeta[] = [
   {
     key: "workers_comp.medical_encounters",
     name: "Medical Encounters",
-    description: "Medical encounter rows for workers' compensation cases (medical permission required).",
+    description:
+      "Medical encounter rows for workers' compensation cases (medical permission required).",
     module: "Workers' Comp",
     modulePermission: "industrial.workers_comp.view",
     category: "WorkersComp",
@@ -402,7 +403,8 @@ export const BUILTIN_REPORTS: readonly BuiltinReportMeta[] = [
   {
     key: "sanitation.inspections",
     name: "Sanitation Inspections",
-    description: "Completed and in-progress sanitation inspections with score and compliance status.",
+    description:
+      "Completed and in-progress sanitation inspections with score and compliance status.",
     module: "Sanitation",
     modulePermission: "industrial.sanitation.view",
     category: "Sanitation",

@@ -17,9 +17,8 @@ function parseDbUrl(secret) {
 async function main() {
   const secret = process.env.DATABASE_SECRET_ARN;
   if (!secret) throw new Error("DATABASE_SECRET_ARN required");
-  const { SecretsManagerClient, GetSecretValueCommand } = await import(
-    "@aws-sdk/client-secrets-manager"
-  );
+  const { SecretsManagerClient, GetSecretValueCommand } =
+    await import("@aws-sdk/client-secrets-manager");
   const client = new SecretsManagerClient({});
   const res = await client.send(new GetSecretValueCommand({ SecretId: secret }));
   const sql = postgres(parseDbUrl(res.SecretString), { max: 1 });

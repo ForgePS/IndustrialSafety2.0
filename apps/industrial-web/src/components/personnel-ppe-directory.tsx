@@ -57,7 +57,9 @@ function DateCell({
         <small className="text-muted">Expires</small> {expires || DASH}
       </div>
       {status !== "none" && status !== "ok" ? (
-        <span className={`badge ${ppeExpiryBadgeClass(status)} mt-1`}>{ppeExpiryLabel(status)}</span>
+        <span className={`badge ${ppeExpiryBadgeClass(status)} mt-1`}>
+          {ppeExpiryLabel(status)}
+        </span>
       ) : null}
     </div>
   );
@@ -173,7 +175,11 @@ export function PersonnelPpeDirectory() {
               autoComplete="off"
             />
             {query ? (
-              <button className="btn btn-outline-secondary" type="button" onClick={() => setQuery("")}>
+              <button
+                className="btn btn-outline-secondary"
+                type="button"
+                onClick={() => setQuery("")}
+              >
                 Clear
               </button>
             ) : null}
@@ -282,7 +288,10 @@ export function PersonnelPpeDirectory() {
                       )}
                     </td>
                     <td>
-                      <Link className="btn btn-sm btn-outline-primary" href={personEditHref(person.id)}>
+                      <Link
+                        className="btn btn-sm btn-outline-primary"
+                        href={personEditHref(person.id)}
+                      >
                         Edit
                       </Link>
                     </td>

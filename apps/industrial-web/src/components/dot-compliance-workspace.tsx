@@ -53,16 +53,10 @@ import {
   type DotAttentionIssue,
   type DotAttentionKind,
 } from "@/lib/dot-dqf-attention";
-import {
-  resolveDotAttentionHref,
-  type DotAttentionHrefContext,
-} from "@/lib/dot-attention-links";
+import { resolveDotAttentionHref, type DotAttentionHrefContext } from "@/lib/dot-attention-links";
 import { buildDqfFormIdMap } from "@/lib/dot-dqf-form-links";
 import { FORMS_API } from "@/lib/forms-module";
-import {
-  toCompanyVehicleDrivers,
-  type CompanyVehicleDriver,
-} from "@/lib/company-vehicle-drivers";
+import { toCompanyVehicleDrivers, type CompanyVehicleDriver } from "@/lib/company-vehicle-drivers";
 import { personNameDisplay } from "@/lib/person-name-display";
 import { PERSONNEL_QUICK_LINKS } from "@/lib/personnel-quick-nav";
 import { DvirWorkspace } from "@/components/dvir-workspace";
@@ -105,8 +99,7 @@ export function DotComplianceWorkspace({ moduleName }: { moduleName: string }) {
     permissions.has("industrial.dot.view") ||
     permissions.has("industrial.admin") ||
     permissions.has("industrial.access");
-  const canManage =
-    permissions.has("industrial.dot.manage") || permissions.has("industrial.admin");
+  const canManage = permissions.has("industrial.dot.manage") || permissions.has("industrial.admin");
   const canViewFleetDrivers =
     permissions.has("industrial.personnel.view") ||
     permissions.has("industrial.fleet.view") ||
@@ -177,9 +170,12 @@ export function DotComplianceWorkspace({ moduleName }: { moduleName: string }) {
                 let fleetPage = 1;
                 const fleetPageSize = 500;
                 while (fleetPage <= 10) {
-                  const fleet = await apiGetResult<ListResponse>("/api/v1/industrial/fleet/drivers", {
-                    query: { page: String(fleetPage), pageSize: String(fleetPageSize) },
-                  });
+                  const fleet = await apiGetResult<ListResponse>(
+                    "/api/v1/industrial/fleet/drivers",
+                    {
+                      query: { page: String(fleetPage), pageSize: String(fleetPageSize) },
+                    },
+                  );
                   const batch = fleet.data?.items ?? [];
                   fleetItems.push(...batch);
                   setFleetDrivers(toCompanyVehicleDrivers(fleetItems));
@@ -294,12 +290,7 @@ export function DotComplianceWorkspace({ moduleName }: { moduleName: string }) {
   const filteredAttentionIssues = useMemo(() => {
     const issues = [...dqfAttention.issues, ...companyDriverAttention.issues];
     return attentionIssuesForFilter(issues, attentionFilter, attentionSource ?? undefined);
-  }, [
-    dqfAttention.issues,
-    companyDriverAttention.issues,
-    attentionFilter,
-    attentionSource,
-  ]);
+  }, [dqfAttention.issues, companyDriverAttention.issues, attentionFilter, attentionSource]);
 
   const fileIdByRecordId = useMemo(() => {
     const map = new Map<string, string>();
@@ -328,7 +319,17 @@ export function DotComplianceWorkspace({ moduleName }: { moduleName: string }) {
       );
     }
     return base;
-  }, [records, tab, q, status, sort, attentionFilter, attentionSource, tenantSlug, dqfAttention.issues]);
+  }, [
+    records,
+    tab,
+    q,
+    status,
+    sort,
+    attentionFilter,
+    attentionSource,
+    tenantSlug,
+    dqfAttention.issues,
+  ]);
 
   const dashboardTiles = useMemo(
     () => [
@@ -337,7 +338,12 @@ export function DotComplianceWorkspace({ moduleName }: { moduleName: string }) {
         label: "Compliance score",
         value: `${summary.complianceScore}%`,
         icon: "bx-check-shield",
-        tone: summary.complianceScore >= 90 ? "success" : summary.complianceScore >= 70 ? "warning" : "danger",
+        tone:
+          summary.complianceScore >= 90
+            ? "success"
+            : summary.complianceScore >= 70
+              ? "warning"
+              : "danger",
         onActivate: () => setTab("dashboard"),
       },
       {
@@ -522,7 +528,11 @@ export function DotComplianceWorkspace({ moduleName }: { moduleName: string }) {
   }
 
   return (
-    <section aria-labelledby="dot-title" className="dot-compliance-workspace" data-walkthrough="dot-overview">
+    <section
+      aria-labelledby="dot-title"
+      className="dot-compliance-workspace"
+      data-walkthrough="dot-overview"
+    >
       <ModuleWorkspaceHeader
         id="dot-title"
         eyebrow="Compliance Programs"
@@ -533,9 +543,16 @@ export function DotComplianceWorkspace({ moduleName }: { moduleName: string }) {
       />
 
       {error ? (
-        <div className="alert alert-danger d-flex flex-wrap align-items-center gap-3 mb-4" role="alert">
+        <div
+          className="alert alert-danger d-flex flex-wrap align-items-center gap-3 mb-4"
+          role="alert"
+        >
           <span className="flex-grow-1">{error}</span>
-          <button type="button" className="btn btn-sm btn-outline-danger" onClick={() => void loadRecords()}>
+          <button
+            type="button"
+            className="btn btn-sm btn-outline-danger"
+            onClick={() => void loadRecords()}
+          >
             Retry
           </button>
         </div>
@@ -543,109 +560,66 @@ export function DotComplianceWorkspace({ moduleName }: { moduleName: string }) {
 
       {tab !== "reports" ? (
         !loading ? (
-        <section className="mb-4" aria-labelledby="dot-attention-title">
-          <div className="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-3">
-            <h5 className="mb-0" id="dot-attention-title">What Needs Your Attention</h5>
-            {attentionTotal > 0 ? (
-              <span className="badge bg-label-warning">{attentionTotal} follow-ups</span>
-            ) : null}
-          </div>
-          <div className="mb-4">
-            <div className="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-2">
-              <h6 className="mb-0 text-muted text-uppercase small">DOT DQF</h6>
-              {dotAttentionTotalCount(dqfAttention) > 0 ? (
-                <span className="badge bg-label-primary">
-                  {dotAttentionTotalCount(dqfAttention)} follow-ups
-                </span>
+          <section className="mb-4" aria-labelledby="dot-attention-title">
+            <div className="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-3">
+              <h5 className="mb-0" id="dot-attention-title">
+                What Needs Your Attention
+              </h5>
+              {attentionTotal > 0 ? (
+                <span className="badge bg-label-warning">{attentionTotal} follow-ups</span>
               ) : null}
             </div>
-            <div className="row row-cols-2 row-cols-sm-3 row-cols-md-4 row-cols-xl-4 row-cols-xxl-8 g-2">
-              <div className="col">
-                <button
-                  type="button"
-                  className={`card h-100 w-100 text-start border shadow-none${
-                    tab === "drivers" && !attentionFilter ? " border-primary" : ""
-                  }`}
-                  onClick={() => {
-                    clearAttentionFilter();
-                    navigateTab("drivers");
-                  }}
-                  aria-pressed={tab === "drivers" && !attentionFilter}
-                >
-                  <div className="card-body p-3">
-                    <div className="d-flex align-items-start justify-content-between gap-2 mb-2">
-                      <div className="avatar avatar-sm">
-                        <span className="avatar-initial rounded bg-label-primary">
-                          <i className="bx bx-user" aria-hidden="true" />
-                        </span>
-                      </div>
-                      <h5 className="mb-0">{dqfAttention.driverProfiles}</h5>
-                    </div>
-                    <span className="d-block text-muted small text-truncate" title="Total DOT Drivers">
-                      Total DOT Drivers
-                    </span>
-                  </div>
-                </button>
+            <div className="mb-4">
+              <div className="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-2">
+                <h6 className="mb-0 text-muted text-uppercase small">DOT DQF</h6>
+                {dotAttentionTotalCount(dqfAttention) > 0 ? (
+                  <span className="badge bg-label-primary">
+                    {dotAttentionTotalCount(dqfAttention)} follow-ups
+                  </span>
+                ) : null}
               </div>
-              {dqfAttentionCards.map((card) => (
-                <div className="col" key={`dqf-${card.key}`}>
+              <div className="row row-cols-2 row-cols-sm-3 row-cols-md-4 row-cols-xl-4 row-cols-xxl-8 g-2">
+                <div className="col">
                   <button
                     type="button"
                     className={`card h-100 w-100 text-start border shadow-none${
-                      attentionFilter === card.key && attentionSource === "dqf"
-                        ? " border-primary"
-                        : ""
+                      tab === "drivers" && !attentionFilter ? " border-primary" : ""
                     }`}
-                    onClick={() => activateAttentionFilter(card.key, "dqf")}
-                    aria-pressed={attentionFilter === card.key && attentionSource === "dqf"}
+                    onClick={() => {
+                      clearAttentionFilter();
+                      navigateTab("drivers");
+                    }}
+                    aria-pressed={tab === "drivers" && !attentionFilter}
                   >
                     <div className="card-body p-3">
                       <div className="d-flex align-items-start justify-content-between gap-2 mb-2">
                         <div className="avatar avatar-sm">
-                          <span className={`avatar-initial rounded bg-label-${card.tone}`}>
-                            <i className={`bx ${card.icon}`} aria-hidden="true" />
+                          <span className="avatar-initial rounded bg-label-primary">
+                            <i className="bx bx-user" aria-hidden="true" />
                           </span>
                         </div>
-                        <h5
-                          className={`mb-0${
-                            card.count > 0 && (card.tone === "danger" || card.tone === "warning")
-                              ? " text-" + card.tone
-                              : ""
-                          }`}
-                        >
-                          {card.count}
-                        </h5>
+                        <h5 className="mb-0">{dqfAttention.driverProfiles}</h5>
                       </div>
-                      <span className="d-block text-muted small text-truncate" title={card.label}>
-                        {card.label}
+                      <span
+                        className="d-block text-muted small text-truncate"
+                        title="Total DOT Drivers"
+                      >
+                        Total DOT Drivers
                       </span>
                     </div>
                   </button>
                 </div>
-              ))}
-            </div>
-          </div>
-
-          {canViewFleetDrivers ? (
-            <div className="mb-3">
-              <div className="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-2">
-                <h6 className="mb-0 text-muted text-uppercase small">Company drivers</h6>
-                <Link className="btn btn-sm btn-outline-primary" href={COMPANY_DRIVERS_HREF}>
-                  Open roster
-                </Link>
-              </div>
-              <div className="row row-cols-2 row-cols-sm-2 row-cols-md-4 g-2">
-                {companyAttentionCards.map((card) => (
-                  <div className="col" key={`fleet-${card.key}`}>
+                {dqfAttentionCards.map((card) => (
+                  <div className="col" key={`dqf-${card.key}`}>
                     <button
                       type="button"
                       className={`card h-100 w-100 text-start border shadow-none${
-                        attentionFilter === card.key && attentionSource === "fleet"
+                        attentionFilter === card.key && attentionSource === "dqf"
                           ? " border-primary"
                           : ""
                       }`}
-                      onClick={() => activateAttentionFilter(card.key, "fleet")}
-                      aria-pressed={attentionFilter === card.key && attentionSource === "fleet"}
+                      onClick={() => activateAttentionFilter(card.key, "dqf")}
+                      aria-pressed={attentionFilter === card.key && attentionSource === "dqf"}
                     >
                       <div className="card-body p-3">
                         <div className="d-flex align-items-start justify-content-between gap-2 mb-2">
@@ -673,62 +647,118 @@ export function DotComplianceWorkspace({ moduleName }: { moduleName: string }) {
                 ))}
               </div>
             </div>
-          ) : null}
-          {attentionTotal === 0 ? (
-            <p className="text-muted small mb-2">No open attention items right now.</p>
-          ) : null}
-          <button
-            type="button"
-            className="btn btn-link btn-sm p-0 text-decoration-none"
-            onClick={() => setAttentionPanelOpen((open) => !open)}
-            aria-expanded={attentionPanelOpen}
-          >
-            {attentionPanelOpen ? "Hide follow-up list" : "Show follow-up list"}
-          </button>
-          {attentionPanelOpen ? (
-            <div className="card border shadow-none mt-2">
-              <div className="card-body py-3">
-                {filteredAttentionIssues.length === 0 ? (
-                  <p className="text-muted small mb-0">No follow-ups in this filter.</p>
-                ) : (
-                  <ul className="list-group list-group-flush">
-                    {filteredAttentionIssues.slice(0, 25).map((issue) => (
-                      <li key={`${issue.source ?? "dqf"}-${issue.kind}-${issue.recordId}-${issue.fieldId ?? ""}`}>
-                        <Link
-                          href={attentionIssueHref(issue)}
-                          className="list-group-item list-group-item-action px-0 border-0 text-decoration-none text-body"
-                        >
-                          <div className="d-flex flex-wrap justify-content-between align-items-start gap-2">
-                            <div className="min-w-0">
-                              <span className="fw-semibold d-block">
-                                {personNameDisplay(issue.driverName)}
+
+            {canViewFleetDrivers ? (
+              <div className="mb-3">
+                <div className="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-2">
+                  <h6 className="mb-0 text-muted text-uppercase small">Company drivers</h6>
+                  <Link className="btn btn-sm btn-outline-primary" href={COMPANY_DRIVERS_HREF}>
+                    Open roster
+                  </Link>
+                </div>
+                <div className="row row-cols-2 row-cols-sm-2 row-cols-md-4 g-2">
+                  {companyAttentionCards.map((card) => (
+                    <div className="col" key={`fleet-${card.key}`}>
+                      <button
+                        type="button"
+                        className={`card h-100 w-100 text-start border shadow-none${
+                          attentionFilter === card.key && attentionSource === "fleet"
+                            ? " border-primary"
+                            : ""
+                        }`}
+                        onClick={() => activateAttentionFilter(card.key, "fleet")}
+                        aria-pressed={attentionFilter === card.key && attentionSource === "fleet"}
+                      >
+                        <div className="card-body p-3">
+                          <div className="d-flex align-items-start justify-content-between gap-2 mb-2">
+                            <div className="avatar avatar-sm">
+                              <span className={`avatar-initial rounded bg-label-${card.tone}`}>
+                                <i className={`bx ${card.icon}`} aria-hidden="true" />
                               </span>
-                              <span className="text-muted small d-block">{issue.reason}</span>
                             </div>
-                            <div className="d-flex flex-wrap gap-1 align-self-start">
-                              <span className="badge bg-label-secondary">
-                                {(issue.source ?? "dqf") === "fleet" ? "Company" : "DQF"}
-                              </span>
-                              <span className="badge bg-label-secondary">Open</span>
-                            </div>
+                            <h5
+                              className={`mb-0${
+                                card.count > 0 &&
+                                (card.tone === "danger" || card.tone === "warning")
+                                  ? " text-" + card.tone
+                                  : ""
+                              }`}
+                            >
+                              {card.count}
+                            </h5>
                           </div>
-                        </Link>
-                      </li>
-                    ))}
-                  </ul>
-                )}
-                {filteredAttentionIssues.length > 25 ? (
-                  <p className="text-muted small mt-2 mb-0">
-                    Showing 25 of {filteredAttentionIssues.length}. Use a category card to filter the
-                    list.
-                  </p>
-                ) : null}
+                          <span
+                            className="d-block text-muted small text-truncate"
+                            title={card.label}
+                          >
+                            {card.label}
+                          </span>
+                        </div>
+                      </button>
+                    </div>
+                  ))}
+                </div>
               </div>
-            </div>
-          ) : null}
-        </section>
+            ) : null}
+            {attentionTotal === 0 ? (
+              <p className="text-muted small mb-2">No open attention items right now.</p>
+            ) : null}
+            <button
+              type="button"
+              className="btn btn-link btn-sm p-0 text-decoration-none"
+              onClick={() => setAttentionPanelOpen((open) => !open)}
+              aria-expanded={attentionPanelOpen}
+            >
+              {attentionPanelOpen ? "Hide follow-up list" : "Show follow-up list"}
+            </button>
+            {attentionPanelOpen ? (
+              <div className="card border shadow-none mt-2">
+                <div className="card-body py-3">
+                  {filteredAttentionIssues.length === 0 ? (
+                    <p className="text-muted small mb-0">No follow-ups in this filter.</p>
+                  ) : (
+                    <ul className="list-group list-group-flush">
+                      {filteredAttentionIssues.slice(0, 25).map((issue) => (
+                        <li
+                          key={`${issue.source ?? "dqf"}-${issue.kind}-${issue.recordId}-${issue.fieldId ?? ""}`}
+                        >
+                          <Link
+                            href={attentionIssueHref(issue)}
+                            className="list-group-item list-group-item-action px-0 border-0 text-decoration-none text-body"
+                          >
+                            <div className="d-flex flex-wrap justify-content-between align-items-start gap-2">
+                              <div className="min-w-0">
+                                <span className="fw-semibold d-block">
+                                  {personNameDisplay(issue.driverName)}
+                                </span>
+                                <span className="text-muted small d-block">{issue.reason}</span>
+                              </div>
+                              <div className="d-flex flex-wrap gap-1 align-self-start">
+                                <span className="badge bg-label-secondary">
+                                  {(issue.source ?? "dqf") === "fleet" ? "Company" : "DQF"}
+                                </span>
+                                <span className="badge bg-label-secondary">Open</span>
+                              </div>
+                            </div>
+                          </Link>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                  {filteredAttentionIssues.length > 25 ? (
+                    <p className="text-muted small mt-2 mb-0">
+                      Showing 25 of {filteredAttentionIssues.length}. Use a category card to filter
+                      the list.
+                    </p>
+                  ) : null}
+                </div>
+              </div>
+            ) : null}
+          </section>
         ) : (
-        <p className="text-muted mb-4" role="status" aria-live="polite">Loading attention summary…</p>
+          <p className="text-muted mb-4" role="status" aria-live="polite">
+            Loading attention summary…
+          </p>
         )
       ) : null}
 
@@ -845,7 +875,9 @@ export function DotComplianceWorkspace({ moduleName }: { moduleName: string }) {
               }
               chips={[
                 ...(q ? [{ id: "q", label: `Search: ${q}`, onRemove: () => setQ("") }] : []),
-                ...(status ? [{ id: "status", label: `Status: ${status}`, onRemove: () => setStatus("") }] : []),
+                ...(status
+                  ? [{ id: "status", label: `Status: ${status}`, onRemove: () => setStatus("") }]
+                  : []),
                 ...(attentionFilter
                   ? [
                       {
@@ -989,7 +1021,11 @@ export function DotComplianceWorkspace({ moduleName }: { moduleName: string }) {
                         />
                       </div>
                       <div className="col-12">
-                        <button type="submit" className="btn btn-primary btn-sm" disabled={creating}>
+                        <button
+                          type="submit"
+                          className="btn btn-primary btn-sm"
+                          disabled={creating}
+                        >
                           {creating ? "Saving…" : "Create record"}
                         </button>
                       </div>
@@ -1013,8 +1049,7 @@ export function DotComplianceWorkspace({ moduleName }: { moduleName: string }) {
                     const recordId = String(row.id);
                     const nameFileId = fileIdByRecordId.get(recordId) ?? recordId;
                     const workerName = personNameDisplay(dotWorkerName(row));
-                    const driverLabel =
-                      workerName || personNameDisplay(dotRecordTitle(row)) || "—";
+                    const driverLabel = workerName || personNameDisplay(dotRecordTitle(row)) || "—";
                     const status = String(row.status ?? "");
                     const drvId = dotDriverReferenceId(row);
                     const location = dotLocationText(row);
@@ -1098,7 +1133,10 @@ export function DotComplianceWorkspace({ moduleName }: { moduleName: string }) {
                         const category = dotRecordCategory(row);
                         const categoryLabel = DOT_TAB_META[category]?.label ?? category;
                         return (
-                          <tr key={recordId} className={dotStatusRowClass(String(row.status ?? ""))}>
+                          <tr
+                            key={recordId}
+                            className={dotStatusRowClass(String(row.status ?? ""))}
+                          >
                             <td>
                               <Link href={dotFileHref(recordId)} className="fw-semibold">
                                 {dotRecordTitle(row)}
@@ -1120,7 +1158,9 @@ export function DotComplianceWorkspace({ moduleName }: { moduleName: string }) {
                             </td>
                             <td>{dotLocationText(row) || "—"}</td>
                             <td>
-                              <span className={`badge ${dotStatusBadgeClass(String(row.status ?? ""))}`}>
+                              <span
+                                className={`badge ${dotStatusBadgeClass(String(row.status ?? ""))}`}
+                              >
                                 {String(row.status ?? "—")}
                               </span>
                             </td>
@@ -1132,9 +1172,7 @@ export function DotComplianceWorkspace({ moduleName }: { moduleName: string }) {
                             <td className="text-end">
                               <ForgePrintButton
                                 module="DOT_COMPLIANCE"
-                                recordType={
-                                  category === "vehicles" ? "dot_vehicle" : "dot_record"
-                                }
+                                recordType={category === "vehicles" ? "dot_vehicle" : "dot_record"}
                                 recordId={recordId}
                                 fieldValues={dotVehiclePrintFieldValues({
                                   ...(row as Record<string, unknown>),

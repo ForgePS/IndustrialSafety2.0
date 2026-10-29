@@ -17,7 +17,9 @@ import { reminderOpenHref } from "@/lib/reminders/types";
 import { MY_FORGE_SECTIONS } from "@/lib/my-forge";
 import { isFieldFeatureModuleEnabled } from "@/lib/field-modules";
 
-function event(partial: Partial<FieldCalendarEvent> & { id: string; title: string }): FieldCalendarEvent {
+function event(
+  partial: Partial<FieldCalendarEvent> & { id: string; title: string },
+): FieldCalendarEvent {
   return {
     startsAt: null,
     endsAt: null,
@@ -80,9 +82,9 @@ describe("reminders filter", () => {
   });
 
   it("builds Field deep links and snooze offsets", () => {
-    expect(reminderOpenHref(reminder({ id: "1", status: "PENDING", remindAt: null, taskId: "t1" }))).toBe(
-      "/tasks/item/t1/",
-    );
+    expect(
+      reminderOpenHref(reminder({ id: "1", status: "PENDING", remindAt: null, taskId: "t1" })),
+    ).toBe("/tasks/item/t1/");
     expect(
       reminderOpenHref(reminder({ id: "2", status: "PENDING", remindAt: null, eventId: "e1" })),
     ).toBe("/calendar/?eventId=e1");

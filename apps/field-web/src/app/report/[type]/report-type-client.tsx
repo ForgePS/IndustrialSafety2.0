@@ -9,7 +9,9 @@ import { isFieldReportType, parseReportType } from "@/lib/field-reports";
 function ReportTypeInner() {
   const params = useParams<{ type: string }>();
   const router = useRouter();
-  const raw = String(params?.type ?? "").trim().toLowerCase();
+  const raw = String(params?.type ?? "")
+    .trim()
+    .toLowerCase();
   const type = parseReportType(raw);
 
   if (!raw || (!isFieldReportType(raw) && raw !== "near_miss" && raw !== "equipment-issue")) {

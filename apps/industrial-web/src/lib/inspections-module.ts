@@ -55,14 +55,30 @@ export const FALLBACK_INSPECTION_TEMPLATE: InspectionTemplate = {
   name: "General area inspection",
   source: "builtin",
   items: [
-    { id: "housekeeping", label: "Work area is clean and free of slip/trip hazards", section: "Housekeeping" },
+    {
+      id: "housekeeping",
+      label: "Work area is clean and free of slip/trip hazards",
+      section: "Housekeeping",
+    },
     { id: "exits", label: "Emergency exits and aisles are clear", section: "Emergency" },
-    { id: "extinguishers", label: "Fire extinguishers are accessible and inspected", section: "Emergency" },
+    {
+      id: "extinguishers",
+      label: "Fire extinguishers are accessible and inspected",
+      section: "Emergency",
+    },
     { id: "ppe", label: "Required PPE is available and in use", section: "PPE" },
     { id: "guards", label: "Machine guards are in place where required", section: "Equipment" },
     { id: "chemicals", label: "Chemicals are labeled and stored correctly", section: "Chemical" },
-    { id: "electrical", label: "Electrical panels and cords are in safe condition", section: "Electrical" },
-    { id: "first-aid", label: "First aid supplies are stocked and accessible", section: "Emergency" },
+    {
+      id: "electrical",
+      label: "Electrical panels and cords are in safe condition",
+      section: "Electrical",
+    },
+    {
+      id: "first-aid",
+      label: "First aid supplies are stocked and accessible",
+      section: "Emergency",
+    },
   ],
 };
 
@@ -135,8 +151,7 @@ export function inspectionTypeLabel(row: {
       ? (row.sourcePayload as Record<string, unknown>)
       : {};
   const template =
-    String(row.templateName ?? "").trim() ||
-    String(payload.templateName ?? "").trim();
+    String(row.templateName ?? "").trim() || String(payload.templateName ?? "").trim();
   if (template) return template;
   const type = String(row.inspectionType ?? payload.inspectionType ?? "").trim();
   if (!type) return "—";

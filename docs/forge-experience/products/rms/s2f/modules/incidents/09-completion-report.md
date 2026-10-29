@@ -14,18 +14,18 @@ Alternates: `APPROVE WITH CONDITIONS` · `RETURN FOR CORRECTION`
 
 ### Suggested conditions
 
-1. Capture pilot screenshots under `s2f/evidence/screenshots/` before tenant enablement.  
-2. Keep `fx.rms.module.incidents.enabled` default-off.  
+1. Capture pilot screenshots under `s2f/evidence/screenshots/` before tenant enablement.
+2. Keep `fx.rms.module.incidents.enabled` default-off.
 3. Do not start S2F-2 until this checkpoint is accepted (DEC-S2F-003).
 
 ## Scope completed
 
-- S2F documentation structure  
-- Central module-flag resolver + diagnostics  
-- Seeded all module flags (default false)  
-- Wired Incidents list / new / workspace behind `fx.rms.module.incidents.enabled` + foundations  
-- Legacy paths preserved  
-- Incident baseline, plans, parity, rollback docs  
+- S2F documentation structure
+- Central module-flag resolver + diagnostics
+- Seeded all module flags (default false)
+- Wired Incidents list / new / workspace behind `fx.rms.module.incidents.enabled` + foundations
+- Legacy paths preserved
+- Incident baseline, plans, parity, rollback docs
 
 ## Routes validated
 
@@ -33,12 +33,12 @@ Alternates: `APPROVE WITH CONDITIONS` · `RETURN FOR CORRECTION`
 
 ## Feature flags
 
-| Flag | Default | Role |
-| --- | --- | --- |
-| `fx.rms.module.incidents.enabled` | false | Module gate |
-| `fx.rms.tables.enabled` | false | List FX |
-| `fx.rms.forms.enabled` | false | New FX |
-| `fx.rms.workspace.enabled` | false | Detail FX |
+| Flag                              | Default | Role        |
+| --------------------------------- | ------- | ----------- |
+| `fx.rms.module.incidents.enabled` | false   | Module gate |
+| `fx.rms.tables.enabled`           | false   | List FX     |
+| `fx.rms.forms.enabled`            | false   | New FX      |
+| `fx.rms.workspace.enabled`        | false   | Detail FX   |
 
 ## Regression results
 
@@ -70,11 +70,11 @@ Module flag off → all incident surfaces legacy immediately.
 
 ## Defects
 
-| Sev | Count |
-| --- | --- |
-| P0 | 0 |
-| P1 | 0 |
-| P3 | Screenshot package pending; FieldRenderer still legacy |
+| Sev | Count                                                  |
+| --- | ------------------------------------------------------ |
+| P0  | 0                                                      |
+| P1  | 0                                                      |
+| P3  | Screenshot package pending; FieldRenderer still legacy |
 
 ## Risks
 

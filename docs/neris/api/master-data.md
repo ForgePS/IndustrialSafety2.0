@@ -6,34 +6,34 @@ All list responses use the standard Forge envelope with pagination meta. Mutatio
 
 ## Resources
 
-| Resource | Path segment | Notes |
-| --- | --- | --- |
-| Stations | `stations` | Paginated list, search |
-| Shifts | `shifts` | |
-| Apparatus | `apparatus` | |
-| Units | `units` | |
-| Personnel | `personnel` | FK to shared `persons` |
-| Rosters | `rosters` | Daily roster headers |
-| Occupancies | `occupancies` | Location prefill |
-| Preplans | `preplans` | Preplan references |
+| Resource    | Path segment  | Notes                  |
+| ----------- | ------------- | ---------------------- |
+| Stations    | `stations`    | Paginated list, search |
+| Shifts      | `shifts`      |                        |
+| Apparatus   | `apparatus`   |                        |
+| Units       | `units`       |                        |
+| Personnel   | `personnel`   | FK to shared `persons` |
+| Rosters     | `rosters`     | Daily roster headers   |
+| Occupancies | `occupancies` | Location prefill       |
+| Preplans    | `preplans`    | Preplan references     |
 
 ## Common operations
 
-| Method | Permission | Description |
-| --- | --- | --- |
-| `GET /` | `rms.masterdata.read` | List with `page`, `pageSize`, `search` |
-| `GET /{id}` | `rms.masterdata.read` | Get single record |
-| `POST /` | `rms.masterdata.manage` | Create (idempotent with `Idempotency-Key`) |
-| `PATCH /{id}` | `rms.masterdata.manage` | Update (requires `If-Match`) |
-| `DELETE /{id}` | `rms.masterdata.manage` | Soft delete where applicable |
+| Method         | Permission              | Description                                |
+| -------------- | ----------------------- | ------------------------------------------ |
+| `GET /`        | `rms.masterdata.read`   | List with `page`, `pageSize`, `search`     |
+| `GET /{id}`    | `rms.masterdata.read`   | Get single record                          |
+| `POST /`       | `rms.masterdata.manage` | Create (idempotent with `Idempotency-Key`) |
+| `PATCH /{id}`  | `rms.masterdata.manage` | Update (requires `If-Match`)               |
+| `DELETE /{id}` | `rms.masterdata.manage` | Soft delete where applicable               |
 
 ## Rosters
 
 Additional endpoints:
 
-| Method | Path | Description |
-| --- | --- | --- |
-| `POST` | `/rosters/{rosterId}/assignments` | Add assignment |
+| Method   | Path                                             | Description       |
+| -------- | ------------------------------------------------ | ----------------- |
+| `POST`   | `/rosters/{rosterId}/assignments`                | Add assignment    |
 | `DELETE` | `/rosters/{rosterId}/assignments/{assignmentId}` | Remove assignment |
 
 ## Implementation

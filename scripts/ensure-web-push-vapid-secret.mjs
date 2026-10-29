@@ -32,13 +32,11 @@ if (forgeEnvironment === "production" && !ALLOW_PRODUCTION) {
 }
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const apiRequire = createRequire(path.join(__dirname, "..", "apps", "platform-api", "package.json"));
-const {
-  SecretsManagerClient,
-  CreateSecretCommand,
-  PutSecretValueCommand,
-  DescribeSecretCommand,
-} = apiRequire("@aws-sdk/client-secrets-manager");
+const apiRequire = createRequire(
+  path.join(__dirname, "..", "apps", "platform-api", "package.json"),
+);
+const { SecretsManagerClient, CreateSecretCommand, PutSecretValueCommand, DescribeSecretCommand } =
+  apiRequire("@aws-sdk/client-secrets-manager");
 const webpush = apiRequire("web-push");
 
 const secretName = `forge-${forgeEnvironment}-secrets-web-push-vapid`;
@@ -97,7 +95,16 @@ if (exists && ROTATE) {
 // Keep CLI describe in sync for operators (ARN only).
 spawnSync(
   "aws",
-  ["secretsmanager", "describe-secret", "--secret-id", secretName, "--query", "Name", "--output", "text"],
+  [
+    "secretsmanager",
+    "describe-secret",
+    "--secret-id",
+    secretName,
+    "--query",
+    "Name",
+    "--output",
+    "text",
+  ],
   { encoding: "utf8", shell: true },
 );
 

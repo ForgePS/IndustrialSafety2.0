@@ -72,8 +72,7 @@ export function ConfigStudioWorkspace({
   const tenantId = useTenantId();
   const { hasPermission } = useAuth();
   const canUpdate =
-    hasPermission("platform.configuration.update") ||
-    hasPermission("tenant.configuration.update");
+    hasPermission("platform.configuration.update") || hasPermission("tenant.configuration.update");
   const canPublish =
     hasPermission("platform.configuration.publish") ||
     hasPermission("platform.configuration.update") ||
@@ -482,13 +481,7 @@ export function ConfigStudioWorkspace({
   );
 }
 
-export function ConfigStudioPage({
-  namespace,
-  title,
-}: {
-  namespace?: string;
-  title?: string;
-}) {
+export function ConfigStudioPage({ namespace, title }: { namespace?: string; title?: string }) {
   return (
     <Suspense
       fallback={

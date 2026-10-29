@@ -54,8 +54,7 @@ export function DocumentsWorkspace({ moduleName }: { moduleName: string }) {
     canManage ||
     permissions.has("industrial.access");
 
-  const deepLinkId =
-    searchParams.get("id")?.trim() || searchParams.get("recordId")?.trim() || "";
+  const deepLinkId = searchParams.get("id")?.trim() || searchParams.get("recordId")?.trim() || "";
 
   const [tab, setTab] = useState<DocumentControlTab>(deepLinkId ? "document" : "library");
   const visibleTabs = useMemo(
@@ -69,7 +68,11 @@ export function DocumentsWorkspace({ moduleName }: { moduleName: string }) {
   );
   useEffect(() => {
     setTab((current) =>
-      ensureActiveModuleTab(current, visibleTabs.map((t) => t.id), "library"),
+      ensureActiveModuleTab(
+        current,
+        visibleTabs.map((t) => t.id),
+        "library",
+      ),
     );
   }, [visibleTabs]);
   const [items, setItems] = useState<ControlledDocument[]>([]);
@@ -79,7 +82,11 @@ export function DocumentsWorkspace({ moduleName }: { moduleName: string }) {
     Array<ControlledDocumentVersion & { document: ControlledDocument }>
   >([]);
   const [pendingAcks, setPendingAcks] = useState<
-    Array<{ requirementId: string; document: ControlledDocument; version: ControlledDocumentVersion }>
+    Array<{
+      requirementId: string;
+      document: ControlledDocument;
+      version: ControlledDocumentVersion;
+    }>
   >([]);
   const [reviews, setReviews] = useState<ControlledDocument[]>([]);
   const [q, setQ] = useState("");
@@ -107,7 +114,9 @@ export function DocumentsWorkspace({ moduleName }: { moduleName: string }) {
       const result = await listControlledDocuments(query);
       setItems(result.items ?? []);
     } catch (e) {
-      setError(formatApiErrorMessage(e, e instanceof ApiError ? e.message : "Unable to load documents"));
+      setError(
+        formatApiErrorMessage(e, e instanceof ApiError ? e.message : "Unable to load documents"),
+      );
       setItems([]);
     } finally {
       setLoading(false);
@@ -559,9 +568,7 @@ export function DocumentsWorkspace({ moduleName }: { moduleName: string }) {
                       <dt className="col-4">Category</dt>
                       <dd className="col-8">{detail.category ?? "—"}</dd>
                       <dt className="col-4">Review due</dt>
-                      <dd className="col-8">
-                        {detail.reviewDueAt?.slice(0, 10) ?? "—"}
-                      </dd>
+                      <dd className="col-8">{detail.reviewDueAt?.slice(0, 10) ?? "—"}</dd>
                     </dl>
                   )}
                 </div>
@@ -637,7 +644,9 @@ export function DocumentsWorkspace({ moduleName }: { moduleName: string }) {
                                     Download
                                   </button>
                                 ) : null}
-                                {canManage && v.workflowStatus === "DRAFT" && v.status !== "PENDING_UPLOAD" ? (
+                                {canManage &&
+                                v.workflowStatus === "DRAFT" &&
+                                v.status !== "PENDING_UPLOAD" ? (
                                   <button
                                     type="button"
                                     className="btn btn-sm btn-outline-primary"

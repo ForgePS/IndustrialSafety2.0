@@ -186,8 +186,8 @@ export function UserActivityWorkspace() {
       <div className="alert alert-warning" role="alert">
         <h4 className="alert-heading">User activity</h4>
         <p className="mb-0">
-          This section is limited to Admin, Super Admin, and Creator. Ask a tenant admin if you
-          need access.
+          This section is limited to Admin, Super Admin, and Creator. Ask a tenant admin if you need
+          access.
         </p>
       </div>
     );
@@ -292,8 +292,8 @@ export function UserActivityWorkspace() {
               <p className="text-muted small mb-3">Loading actions…</p>
             ) : events.length === 0 ? (
               <p className="text-muted small mb-3">
-                No audited actions recorded for this user yet. Sign-ins and routine browsing are
-                not written to the audit log.
+                No audited actions recorded for this user yet. Sign-ins and routine browsing are not
+                written to the audit log.
               </p>
             ) : (
               <div className="table-responsive mb-3">
@@ -310,9 +310,7 @@ export function UserActivityWorkspace() {
                   <tbody>
                     {events.map((event) => (
                       <tr key={event.id}>
-                        <td className="text-nowrap small">
-                          {formatAdminDate(event.occurredAt)}
-                        </td>
+                        <td className="text-nowrap small">{formatAdminDate(event.occurredAt)}</td>
                         <td>
                           <div className="fw-medium">{formatAuditActionLabel(event.action)}</div>
                           <div className="small text-muted">{event.action}</div>
@@ -409,10 +407,7 @@ export function UserActivityWorkspace() {
                 const online = row.online || isFresh(row.lastActivityAt, nowMs);
                 const isSelected = selected?.userId === row.userId;
                 return (
-                  <tr
-                    key={row.membershipId}
-                    className={isSelected ? "table-active" : undefined}
-                  >
+                  <tr key={row.membershipId} className={isSelected ? "table-active" : undefined}>
                     <td>
                       <button
                         type="button"
@@ -470,8 +465,7 @@ export function UserActivityWorkspace() {
         </div>
         <div className="card-footer small text-muted">
           Click a user name to see audited actions and access changes. Routine browsing is not
-          written to the audit log.{" "}
-          <Link href="/settings/users/">Manage users</Link>
+          written to the audit log. <Link href="/settings/users/">Manage users</Link>
         </div>
       </div>
     </>

@@ -2,10 +2,10 @@
 
 ## Composition
 
-| Surface | Flag | FX when | Compatibility |
-| --- | --- | --- | --- |
-| Select tenant table | `module.administration` | ∧ `tables` | Legacy HTML table |
-| Platform health | `module.utilities` | module on (no foundation required) | Legacy panel |
+| Surface             | Flag                    | FX when                            | Compatibility     |
+| ------------------- | ----------------------- | ---------------------------------- | ----------------- |
+| Select tenant table | `module.administration` | ∧ `tables`                         | Legacy HTML table |
+| Platform health     | `module.utilities`      | module on (no foundation required) | Legacy panel      |
 
 ## Foundations
 

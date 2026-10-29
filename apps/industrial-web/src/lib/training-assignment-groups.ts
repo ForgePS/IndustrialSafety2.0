@@ -101,7 +101,9 @@ export function buildCourseAssignmentGroups(input: {
     rosterByAssignment.set(row.assignmentId, list);
   }
 
-  const filteredAssignments = assignments.filter((assignment) => filterAssignmentRecord(assignment, filters));
+  const filteredAssignments = assignments.filter((assignment) =>
+    filterAssignmentRecord(assignment, filters),
+  );
   const byCourse = new Map<string, TrainingAssignment[]>();
   for (const assignment of filteredAssignments) {
     const list = byCourse.get(assignment.sourceId) ?? [];
@@ -158,14 +160,10 @@ export function buildCourseAssignmentGroups(input: {
 
     if (!months.length) continue;
 
-    const assignmentCount = months.reduce(
-      (sum, month) => sum + month.batches.length,
-      0,
-    );
+    const assignmentCount = months.reduce((sum, month) => sum + month.batches.length, 0);
     const assigneeCount = months.reduce(
       (sum, month) =>
-        sum +
-        month.batches.reduce((batchSum, batch) => batchSum + batch.personnel.length, 0),
+        sum + month.batches.reduce((batchSum, batch) => batchSum + batch.personnel.length, 0),
       0,
     );
 
@@ -183,7 +181,8 @@ export function buildCourseAssignmentGroups(input: {
 
 export function countVisibleAssignments(groups: CourseAssignmentGroup[]): number {
   return groups.reduce(
-    (sum, course) => sum + course.months.reduce((monthSum, month) => monthSum + month.batches.length, 0),
+    (sum, course) =>
+      sum + course.months.reduce((monthSum, month) => monthSum + month.batches.length, 0),
     0,
   );
 }

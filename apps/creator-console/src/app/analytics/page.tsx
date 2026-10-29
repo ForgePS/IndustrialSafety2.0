@@ -55,7 +55,11 @@ function AnalyticsInner() {
           </p>
         </div>
         <div className="forge-page-actions">
-          <button type="button" className="forge-btn forge-btn--secondary" onClick={() => void load()}>
+          <button
+            type="button"
+            className="forge-btn forge-btn--secondary"
+            onClick={() => void load()}
+          >
             Refresh
           </button>
           <Link className="forge-btn forge-btn--outline" href="/">
@@ -115,8 +119,7 @@ function AnalyticsInner() {
                   {overview.modules.adoption.map((row) => (
                     <tr key={row.moduleCode}>
                       <td>
-                        {row.moduleName}{" "}
-                        <span className={styles.mono}>({row.moduleCode})</span>
+                        {row.moduleName} <span className={styles.mono}>({row.moduleCode})</span>
                       </td>
                       <td>{row.tenantCount}</td>
                     </tr>

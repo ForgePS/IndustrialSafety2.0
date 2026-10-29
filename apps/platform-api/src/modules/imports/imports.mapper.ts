@@ -1,4 +1,9 @@
-import type { importColumnMappings, importFiles, importJobs, importProfiles } from "@forge/database";
+import type {
+  importColumnMappings,
+  importFiles,
+  importJobs,
+  importProfiles,
+} from "@forge/database";
 
 type JobRow = typeof importJobs.$inferSelect;
 type ProfileRow = typeof importProfiles.$inferSelect;

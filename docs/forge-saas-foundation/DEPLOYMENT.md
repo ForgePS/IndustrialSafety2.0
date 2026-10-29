@@ -7,11 +7,11 @@
 
 ## Environments
 
-| Env | CDK config | CI |
-| --- | --- | --- |
+| Env         | CDK config                                     | CI                                                |
+| ----------- | ---------------------------------------------- | ------------------------------------------------- |
 | Development | `infrastructure/cdk/lib/config/development.ts` | `.github/workflows/deploy-development.yml` (OIDC) |
-| Staging | `staging.ts` | Manual / not fully wired |
-| Production | `production.ts` (**placeholders**) | **No** production workflow |
+| Staging     | `staging.ts`                                   | Manual / not fully wired                          |
+| Production  | `production.ts` (**placeholders**)             | **No** production workflow                        |
 
 ## Stack order
 
@@ -24,22 +24,22 @@ Entry: `infrastructure/cdk/bin/forge-platform.ts` (`FORGE_ENV=...`).
 
 ## Recommended production sequence (planning only)
 
-| # | Stage |
-| --- | --- |
-| A | Prerequisites (account, OIDC role, networking) |
-| B | Secrets (DB master/app) + KMS |
-| C | Database backup / PITR checkpoint |
-| D | Schema migrations (ECS migrate, **admin** secret) |
-| E | Platform API ECS |
-| F | Workers |
-| G | Cognito URL confirmation |
-| H | S3 confirmation |
-| I | Frontend sync (`scripts/sync-static-site.mjs`) |
-| J | CloudFront invalidation |
-| K | DNS / ACM aliases (separate authorization) |
-| L | External webhooks |
-| M | Smoke tests |
-| N | Production UAT (synthetic tenants) |
+| #   | Stage                                             |
+| --- | ------------------------------------------------- |
+| A   | Prerequisites (account, OIDC role, networking)    |
+| B   | Secrets (DB master/app) + KMS                     |
+| C   | Database backup / PITR checkpoint                 |
+| D   | Schema migrations (ECS migrate, **admin** secret) |
+| E   | Platform API ECS                                  |
+| F   | Workers                                           |
+| G   | Cognito URL confirmation                          |
+| H   | S3 confirmation                                   |
+| I   | Frontend sync (`scripts/sync-static-site.mjs`)    |
+| J   | CloudFront invalidation                           |
+| K   | DNS / ACM aliases (separate authorization)        |
+| L   | External webhooks                                 |
+| M   | Smoke tests                                       |
+| N   | Production UAT (synthetic tenants)                |
 
 See MK-S23 §16–19 for rollback, smoke, and UAT detail.
 

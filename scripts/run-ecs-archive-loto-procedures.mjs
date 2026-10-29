@@ -118,5 +118,11 @@ try {
 }
 
 console.log(logs);
-console.log(JSON.stringify({ ok: exitCode === 0, cluster, taskArn, exitCode, apply: APPLY === "1", tenantKey: TENANT_KEY }, null, 2));
+console.log(
+  JSON.stringify(
+    { ok: exitCode === 0, cluster, taskArn, exitCode, apply: APPLY === "1", tenantKey: TENANT_KEY },
+    null,
+    2,
+  ),
+);
 process.exit(exitCode === 0 ? 0 : 1);

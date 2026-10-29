@@ -61,9 +61,12 @@ export function playNotificationChime(): void {
   };
 
   if (ctx.state === "suspended") {
-    void ctx.resume().then(run).catch(() => {
-      // Autoplay still blocked until a user gesture unlocks audio.
-    });
+    void ctx
+      .resume()
+      .then(run)
+      .catch(() => {
+        // Autoplay still blocked until a user gesture unlocks audio.
+      });
     return;
   }
 

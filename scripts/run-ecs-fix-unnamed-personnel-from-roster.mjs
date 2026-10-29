@@ -29,7 +29,7 @@ if (TENANT_KEY !== "producers-rice-mill") {
 if (!existsSync(ROSTER_INDEX_LOCAL)) {
   console.error(`Missing roster index: ${ROSTER_INDEX_LOCAL}`);
   console.error(
-    "Run: node scripts/parse-employee-roster-xlsx.mjs \"<path-to-xlsx>\" --out .tmp-personnel-fix/employee-roster-index.json",
+    'Run: node scripts/parse-employee-roster-xlsx.mjs "<path-to-xlsx>" --out .tmp-personnel-fix/employee-roster-index.json',
   );
   process.exit(1);
 }

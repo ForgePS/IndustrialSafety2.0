@@ -96,11 +96,7 @@ export function WorkersCompCarrierCatalog({
     );
     if (!ok) return;
     await run(async () => {
-      await apiSend(
-        `${WC_API}/carriers/${encodeURIComponent(carrier.id)}/archive`,
-        "POST",
-        {},
-      );
+      await apiSend(`${WC_API}/carriers/${encodeURIComponent(carrier.id)}/archive`, "POST", {});
       if (editingId === carrier.id) {
         setEditingId(null);
         setEditForm(EMPTY_FORM);
@@ -178,9 +174,7 @@ export function WorkersCompCarrierCatalog({
                         className="form-control"
                         value={editForm.name}
                         disabled={disabled}
-                        onChange={(e) =>
-                          setEditForm((prev) => ({ ...prev, name: e.target.value }))
-                        }
+                        onChange={(e) => setEditForm((prev) => ({ ...prev, name: e.target.value }))}
                         required
                       />
                     </div>

@@ -88,7 +88,9 @@ function isDotDqfDriverRecord(row, payload) {
   if (/\bdrv-\d{4}-\d+\b/.test(text)) return true;
   if (/dqf\s*import/.test(text)) return true;
   if (/dot-compliance\/[^/]+\/drivers\/drv-/.test(text)) return true;
-  const cat = String(payload.category ?? row.category ?? "").trim().toLowerCase();
+  const cat = String(payload.category ?? row.category ?? "")
+    .trim()
+    .toLowerCase();
   if (cat.includes("dqf")) return true;
   if (payload.dqf === true) return true;
   return false;
@@ -101,7 +103,10 @@ function normalizeName(value) {
     .replace(/[.'"]/g, "")
     .replace(/\s+/g, " ");
   if (!cleaned.includes(",")) return cleaned;
-  const parts = cleaned.split(",").map((p) => p.trim()).filter(Boolean);
+  const parts = cleaned
+    .split(",")
+    .map((p) => p.trim())
+    .filter(Boolean);
   if (parts.length < 2) return cleaned.replace(/,/g, " ").replace(/\s+/g, " ").trim();
   return `${parts.slice(1).join(" ")} ${parts[0]}`.replace(/\s+/g, " ").trim();
 }
@@ -185,7 +190,9 @@ async function main() {
     for (const [key, members] of profiles) {
       const pid = key.startsWith("p:")
         ? key.slice(2)
-        : members.map((m) => String(m.row.personnel_id ?? "").trim()).find((id) => /^[0-9a-f-]{36}$/i.test(id));
+        : members
+            .map((m) => String(m.row.personnel_id ?? "").trim())
+            .find((id) => /^[0-9a-f-]{36}$/i.test(id));
       if (pid) {
         withPersonnel += 1;
         const person = flagById.get(pid);

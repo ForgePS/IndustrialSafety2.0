@@ -21,8 +21,7 @@ const IMPORTS_BUCKET =
 const LOG_GROUP = process.env.FORGE_API_LOG_GROUP || "/forge/production/platform-api";
 
 const JSON_LOCAL =
-  process.env.FLEET_VEHICLES_JSON_LOCAL ||
-  path.resolve(".tmp-xlsx/fleet-vehicles.json");
+  process.env.FLEET_VEHICLES_JSON_LOCAL || path.resolve(".tmp-xlsx/fleet-vehicles.json");
 const SCRIPT_LOCAL = path.resolve("scripts/seed-fleet-from-spreadsheet.mjs");
 
 if (TENANT_KEY !== "producers-rice-mill") {

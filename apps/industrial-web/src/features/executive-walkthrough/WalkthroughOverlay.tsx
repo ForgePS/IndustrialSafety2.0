@@ -20,7 +20,7 @@ function WalkthroughBrandMark({ logoUrl }: { logoUrl?: string }) {
     <>
       {show ? (
         <div className="exec-walkthrough-card-logo-wrap">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
+          {/* Plain <img> on purpose: static export, so next/image optimization is unavailable. */}
           <img
             className="exec-walkthrough-card-logo"
             src={logoUrl}
@@ -81,9 +81,7 @@ export function WalkthroughOverlayHost() {
           <div className="exec-walkthrough-card-inner">
             {session.card === "opening" ? (
               <>
-                <WalkthroughBrandMark
-                  {...(logoLightUrl.trim() ? { logoUrl: logoLightUrl } : {})}
-                />
+                <WalkthroughBrandMark {...(logoLightUrl.trim() ? { logoUrl: logoLightUrl } : {})} />
                 <p className="exec-walkthrough-tagline fw-semibold mb-3">
                   One Platform. Total Safety Visibility.
                 </p>
@@ -95,9 +93,7 @@ export function WalkthroughOverlayHost() {
               </>
             ) : (
               <>
-                <WalkthroughBrandMark
-                  {...(logoLightUrl.trim() ? { logoUrl: logoLightUrl } : {})}
-                />
+                <WalkthroughBrandMark {...(logoLightUrl.trim() ? { logoUrl: logoLightUrl } : {})} />
                 <p className="exec-walkthrough-tagline fw-semibold mb-3">
                   Connected Safety. One Platform.
                 </p>

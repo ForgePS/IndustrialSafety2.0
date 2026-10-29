@@ -3,10 +3,7 @@
 import { useRef, useState } from "react";
 import { ApiError, apiGet, apiSend } from "@forge/web-kit";
 import { ForgePhotoMarkupEditor } from "@forge/photo-markup";
-import {
-  compressImageToUploadFile,
-  imageCompressErrorMessage,
-} from "@/lib/compress-image";
+import { compressImageToUploadFile, imageCompressErrorMessage } from "@/lib/compress-image";
 import { useImageCrop } from "@/hooks/use-image-crop";
 import {
   guessIncidentAttachmentMime,
@@ -230,10 +227,7 @@ export function IncidentAttachmentsPanel({
             setBusy(true);
             setError(null);
             try {
-              const markedName = markupTarget.fileName.replace(
-                /(\.[^.]+)?$/,
-                "-marked.jpg",
-              );
+              const markedName = markupTarget.fileName.replace(/(\.[^.]+)?$/, "-marked.jpg");
               await uploadBlobAsAttachment(renderedBlob, markedName);
               setMarkupTarget(null);
             } catch (e) {

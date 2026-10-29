@@ -350,7 +350,10 @@ function ReportLibraryInner() {
                         title={report.isFavorite ? "Remove favorite" : "Add favorite"}
                         onClick={() => void onToggleFavorite(report)}
                       >
-                        <i className={`bx ${report.isFavorite ? "bxs-star" : "bx-star"}`} aria-hidden />
+                        <i
+                          className={`bx ${report.isFavorite ? "bxs-star" : "bx-star"}`}
+                          aria-hidden
+                        />
                       </button>
                       <button
                         type="button"
@@ -516,7 +519,10 @@ function ReportLibraryInner() {
                     <tbody>
                       {runResult.rows.length === 0 ? (
                         <tr>
-                          <td colSpan={Math.max(runResult.columns.length, 1)} className="text-muted">
+                          <td
+                            colSpan={Math.max(runResult.columns.length, 1)}
+                            className="text-muted"
+                          >
                             No rows returned for these parameters.
                           </td>
                         </tr>

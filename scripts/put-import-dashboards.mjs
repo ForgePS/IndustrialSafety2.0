@@ -51,13 +51,9 @@ function putDashboard(name, widgets) {
   console.log(`OK ${name}`);
 }
 
-const queueDims = [
-  ["QueueName", importsQ],
-];
+const queueDims = [["QueueName", importsQ]];
 const dlqDims = [["QueueName", importsDlq]];
-const envDim = [
-  ["Environment", envName],
-];
+const envDim = [["Environment", envName]];
 
 putDashboard("ForgePlatform-Development-Import-Operations", [
   {
@@ -147,9 +143,7 @@ putDashboard("ForgePlatform-Development-Import-Queue-Worker", [
     properties: {
       title: "Queue age",
       region,
-      metrics: [
-        ["AWS/SQS", "ApproximateAgeOfOldestMessage", "QueueName", importsQ],
-      ],
+      metrics: [["AWS/SQS", "ApproximateAgeOfOldestMessage", "QueueName", importsQ]],
       view: "timeSeries",
       period: 60,
       stat: "Maximum",
@@ -193,12 +187,7 @@ putDashboard("ForgePlatform-Development-Import-Performance", [
       title: "Aurora CPU / connections",
       region,
       metrics: [
-        [
-          "AWS/RDS",
-          "CPUUtilization",
-          "DBClusterIdentifier",
-          "forge-development-rds-aurora",
-        ],
+        ["AWS/RDS", "CPUUtilization", "DBClusterIdentifier", "forge-development-rds-aurora"],
         [".", "DatabaseConnections", ".", "."],
       ],
       view: "timeSeries",
@@ -244,4 +233,3 @@ putDashboard("ForgePlatform-Development-Import-Tenant-Access", [
 ]);
 
 console.log("Import dashboards published.");
-

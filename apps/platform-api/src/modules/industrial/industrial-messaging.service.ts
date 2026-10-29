@@ -50,7 +50,9 @@ function messagingObjectKeyPrefix(tenantId: string, threadId: string): string {
 }
 
 function truncateReplyPreview(body: string, hasAttachments = false): string {
-  const trimmed = String(body ?? "").trim().replace(/\s+/g, " ");
+  const trimmed = String(body ?? "")
+    .trim()
+    .replace(/\s+/g, " ");
   if (trimmed) {
     return trimmed.length > REPLY_PREVIEW_MAX
       ? `${trimmed.slice(0, REPLY_PREVIEW_MAX - 1)}…`
@@ -119,56 +121,61 @@ export class IndustrialMessagingService {
     const tenantId = this.tenant(principal);
     const userId = principal.userId;
 
-    return withTenantTransaction(this.db, tenantId, async (tx) => {
-      const memberships = await tx
-        .select({ threadId: industrialMessagingThreadMembers.threadId })
-        .from(industrialMessagingThreadMembers)
-        .where(
-          and(
-            eq(industrialMessagingThreadMembers.tenantId, tenantId),
-            eq(industrialMessagingThreadMembers.userId, userId),
-          ),
-        );
+    return withTenantTransaction(
+      this.db,
+      tenantId,
+      async (tx) => {
+        const memberships = await tx
+          .select({ threadId: industrialMessagingThreadMembers.threadId })
+          .from(industrialMessagingThreadMembers)
+          .where(
+            and(
+              eq(industrialMessagingThreadMembers.tenantId, tenantId),
+              eq(industrialMessagingThreadMembers.userId, userId),
+            ),
+          );
 
-      const threadIds = memberships.map((m) => m.threadId);
-      if (threadIds.length === 0) {
-        return { items: [], available: true };
-      }
+        const threadIds = memberships.map((m) => m.threadId);
+        if (threadIds.length === 0) {
+          return { items: [], available: true };
+        }
 
-      const threads = await tx
-        .select()
-        .from(industrialMessagingThreads)
-        .where(
-          and(
-            eq(industrialMessagingThreads.tenantId, tenantId),
-            inArray(industrialMessagingThreads.id, threadIds),
-            isNull(industrialMessagingThreads.archivedAt),
-          ),
-        )
-        .orderBy(desc(industrialMessagingThreads.lastMessageAt));
+        const threads = await tx
+          .select()
+          .from(industrialMessagingThreads)
+          .where(
+            and(
+              eq(industrialMessagingThreads.tenantId, tenantId),
+              inArray(industrialMessagingThreads.id, threadIds),
+              isNull(industrialMessagingThreads.archivedAt),
+            ),
+          )
+          .orderBy(desc(industrialMessagingThreads.lastMessageAt));
 
-      const activeIds = threads.map((t) => t.id);
-      const [unreadByThread, membersByThread] = await Promise.all([
-        this.unreadCountsForThreads(tx, tenantId, userId, activeIds),
-        this.loadThreadMemberSummariesForThreads(tx, tenantId, activeIds),
-      ]);
+        const activeIds = threads.map((t) => t.id);
+        const [unreadByThread, membersByThread] = await Promise.all([
+          this.unreadCountsForThreads(tx, tenantId, userId, activeIds),
+          this.loadThreadMemberSummariesForThreads(tx, tenantId, activeIds),
+        ]);
 
-      const items = threads.map((thread) => {
-        const members = membersByThread.get(thread.id) ?? [];
-        return {
-          id: thread.id,
-          threadType: thread.threadType,
-          title: thread.title ?? this.resolveThreadTitle(thread, members, userId),
-          lastMessageAt: thread.lastMessageAt?.toISOString() ?? null,
-          lastMessagePreview: thread.lastMessagePreview ?? "",
-          unreadCount: unreadByThread.get(thread.id) ?? 0,
-          memberCount: members.length,
-          members,
-        };
-      });
+        const items = threads.map((thread) => {
+          const members = membersByThread.get(thread.id) ?? [];
+          return {
+            id: thread.id,
+            threadType: thread.threadType,
+            title: thread.title ?? this.resolveThreadTitle(thread, members, userId),
+            lastMessageAt: thread.lastMessageAt?.toISOString() ?? null,
+            lastMessagePreview: thread.lastMessagePreview ?? "",
+            unreadCount: unreadByThread.get(thread.id) ?? 0,
+            memberCount: members.length,
+            members,
+          };
+        });
 
-      return { items, available: true };
-    }, userId);
+        return { items, available: true };
+      },
+      userId,
+    );
   }
 
   /**
@@ -179,236 +186,259 @@ export class IndustrialMessagingService {
     const tenantId = this.tenant(principal);
     const userId = principal.userId;
 
-    return withTenantTransaction(this.db, tenantId, async (tx) => {
-      const memberships = await tx
-        .select({ threadId: industrialMessagingThreadMembers.threadId })
-        .from(industrialMessagingThreadMembers)
-        .where(
-          and(
-            eq(industrialMessagingThreadMembers.tenantId, tenantId),
-            eq(industrialMessagingThreadMembers.userId, userId),
-          ),
-        );
-      const threadIds = memberships.map((m) => m.threadId);
-      if (threadIds.length === 0) {
-        return { totalUnread: 0, focus: null, available: true };
-      }
-
-      const threads = await tx
-        .select({
-          id: industrialMessagingThreads.id,
-          threadType: industrialMessagingThreads.threadType,
-          title: industrialMessagingThreads.title,
-          lastMessagePreview: industrialMessagingThreads.lastMessagePreview,
-          lastMessageAt: industrialMessagingThreads.lastMessageAt,
-        })
-        .from(industrialMessagingThreads)
-        .where(
-          and(
-            eq(industrialMessagingThreads.tenantId, tenantId),
-            inArray(industrialMessagingThreads.id, threadIds),
-            isNull(industrialMessagingThreads.archivedAt),
-          ),
-        )
-        .orderBy(desc(industrialMessagingThreads.lastMessageAt));
-
-      const activeIds = threads.map((t) => t.id);
-      const unreadByThread = await this.unreadCountsForThreads(tx, tenantId, userId, activeIds);
-      let totalUnread = 0;
-      let focus: {
-        threadId: string;
-        threadType: string;
-        title: string;
-        lastMessagePreview: string;
-        unreadCount: number;
-      } | null = null;
-
-      for (const thread of threads) {
-        const unreadCount = unreadByThread.get(thread.id) ?? 0;
-        totalUnread += unreadCount;
-        if (!focus && unreadCount > 0) {
-          focus = {
-            threadId: thread.id,
-            threadType: thread.threadType,
-            title: thread.title?.trim() || "Messages",
-            lastMessagePreview: thread.lastMessagePreview ?? "",
-            unreadCount,
-          };
+    return withTenantTransaction(
+      this.db,
+      tenantId,
+      async (tx) => {
+        const memberships = await tx
+          .select({ threadId: industrialMessagingThreadMembers.threadId })
+          .from(industrialMessagingThreadMembers)
+          .where(
+            and(
+              eq(industrialMessagingThreadMembers.tenantId, tenantId),
+              eq(industrialMessagingThreadMembers.userId, userId),
+            ),
+          );
+        const threadIds = memberships.map((m) => m.threadId);
+        if (threadIds.length === 0) {
+          return { totalUnread: 0, focus: null, available: true };
         }
-      }
 
-      return { totalUnread, focus, available: true };
-    }, userId);
+        const threads = await tx
+          .select({
+            id: industrialMessagingThreads.id,
+            threadType: industrialMessagingThreads.threadType,
+            title: industrialMessagingThreads.title,
+            lastMessagePreview: industrialMessagingThreads.lastMessagePreview,
+            lastMessageAt: industrialMessagingThreads.lastMessageAt,
+          })
+          .from(industrialMessagingThreads)
+          .where(
+            and(
+              eq(industrialMessagingThreads.tenantId, tenantId),
+              inArray(industrialMessagingThreads.id, threadIds),
+              isNull(industrialMessagingThreads.archivedAt),
+            ),
+          )
+          .orderBy(desc(industrialMessagingThreads.lastMessageAt));
+
+        const activeIds = threads.map((t) => t.id);
+        const unreadByThread = await this.unreadCountsForThreads(tx, tenantId, userId, activeIds);
+        let totalUnread = 0;
+        let focus: {
+          threadId: string;
+          threadType: string;
+          title: string;
+          lastMessagePreview: string;
+          unreadCount: number;
+        } | null = null;
+
+        for (const thread of threads) {
+          const unreadCount = unreadByThread.get(thread.id) ?? 0;
+          totalUnread += unreadCount;
+          if (!focus && unreadCount > 0) {
+            focus = {
+              threadId: thread.id,
+              threadType: thread.threadType,
+              title: thread.title?.trim() || "Messages",
+              lastMessagePreview: thread.lastMessagePreview ?? "",
+              unreadCount,
+            };
+          }
+        }
+
+        return { totalUnread, focus, available: true };
+      },
+      userId,
+    );
   }
 
-  async getThread(principal: ForgePrincipal, threadId: string, query: Record<string, string | undefined> = {}) {
+  async getThread(
+    principal: ForgePrincipal,
+    threadId: string,
+    query: Record<string, string | undefined> = {},
+  ) {
     const tenantId = this.tenant(principal);
     const userId = principal.userId;
     const limit = Math.min(Math.max(Number(query.limit ?? 100) || 100, 1), 200);
     const since = query.since ? new Date(query.since) : null;
     const hasSince = Boolean(since && !Number.isNaN(since.getTime()));
 
-    return withTenantTransaction(this.db, tenantId, async (tx) => {
-      const thread = await this.requireThreadMember(tx, tenantId, userId, threadId);
-      const members = await this.loadThreadMemberSummaries(tx, tenantId, threadId);
+    return withTenantTransaction(
+      this.db,
+      tenantId,
+      async (tx) => {
+        const thread = await this.requireThreadMember(tx, tenantId, userId, threadId);
+        const members = await this.loadThreadMemberSummaries(tx, tenantId, threadId);
 
-      const messageConds = [
-        eq(industrialMessagingMessages.threadId, threadId),
-        eq(industrialMessagingMessages.tenantId, tenantId),
-        isNull(industrialMessagingMessages.deletedAt),
-      ];
-      if (hasSince) {
-        messageConds.push(gt(industrialMessagingMessages.createdAt, since!));
-      }
+        const messageConds = [
+          eq(industrialMessagingMessages.threadId, threadId),
+          eq(industrialMessagingMessages.tenantId, tenantId),
+          isNull(industrialMessagingMessages.deletedAt),
+        ];
+        if (hasSince) {
+          messageConds.push(gt(industrialMessagingMessages.createdAt, since!));
+        }
 
-      // Incremental polls: oldest-first after the cursor so we never skip a page.
-      // Initial open: newest window first, then reverse to chronological for the UI.
-      const messageRowsRaw = await tx
-        .select()
-        .from(industrialMessagingMessages)
-        .where(and(...messageConds))
-        .orderBy(
-          hasSince
-            ? industrialMessagingMessages.createdAt
-            : desc(industrialMessagingMessages.createdAt),
-        )
-        .limit(limit);
-      const messageRows = hasSince ? messageRowsRaw : [...messageRowsRaw].reverse();
+        // Incremental polls: oldest-first after the cursor so we never skip a page.
+        // Initial open: newest window first, then reverse to chronological for the UI.
+        const messageRowsRaw = await tx
+          .select()
+          .from(industrialMessagingMessages)
+          .where(and(...messageConds))
+          .orderBy(
+            hasSince
+              ? industrialMessagingMessages.createdAt
+              : desc(industrialMessagingMessages.createdAt),
+          )
+          .limit(limit);
+        const messageRows = hasSince ? messageRowsRaw : [...messageRowsRaw].reverse();
 
-      const messageIds = messageRows.map((m) => m.id);
-      const attachmentsByMessage = await this.loadAttachmentsForMessages(tx, tenantId, messageIds);
-      const senderMap = await this.loadUserDisplayMap(
-        tx,
-        tenantId,
-        messageRows.map((m) => m.senderUserId),
-      );
+        const messageIds = messageRows.map((m) => m.id);
+        const attachmentsByMessage = await this.loadAttachmentsForMessages(
+          tx,
+          tenantId,
+          messageIds,
+        );
+        const senderMap = await this.loadUserDisplayMap(
+          tx,
+          tenantId,
+          messageRows.map((m) => m.senderUserId),
+        );
 
-      const messages = messageRows.map((m) => {
-        const replyTo = readReplyToFromMetadata(m.metadataJson);
+        const messages = messageRows.map((m) => {
+          const replyTo = readReplyToFromMetadata(m.metadataJson);
+          return {
+            id: m.id,
+            body: m.body,
+            messageType: m.messageType,
+            senderUserId: m.senderUserId,
+            senderName: senderMap.get(m.senderUserId) ?? PLATFORM_ADMIN_DISPLAY_NAME,
+            createdAt: m.createdAt.toISOString(),
+            editedAt: m.editedAt?.toISOString() ?? null,
+            attachments: attachmentsByMessage.get(m.id) ?? [],
+            isOwn: m.senderUserId === userId,
+            ...(replyTo ? { replyTo } : {}),
+          };
+        });
+
         return {
-          id: m.id,
-          body: m.body,
-          messageType: m.messageType,
-          senderUserId: m.senderUserId,
-          senderName: senderMap.get(m.senderUserId) ?? PLATFORM_ADMIN_DISPLAY_NAME,
-          createdAt: m.createdAt.toISOString(),
-          editedAt: m.editedAt?.toISOString() ?? null,
-          attachments: attachmentsByMessage.get(m.id) ?? [],
-          isOwn: m.senderUserId === userId,
-          ...(replyTo ? { replyTo } : {}),
+          id: thread.id,
+          threadType: thread.threadType,
+          title: thread.title ?? this.resolveThreadTitle(thread, members, userId),
+          description: thread.description,
+          lastMessageAt: thread.lastMessageAt?.toISOString() ?? null,
+          members,
+          messages,
+          hasMore: !hasSince && messageRowsRaw.length >= limit,
         };
-      });
-
-      return {
-        id: thread.id,
-        threadType: thread.threadType,
-        title: thread.title ?? this.resolveThreadTitle(thread, members, userId),
-        description: thread.description,
-        lastMessageAt: thread.lastMessageAt?.toISOString() ?? null,
-        members,
-        messages,
-        hasMore: !hasSince && messageRowsRaw.length >= limit,
-      };
-    }, userId);
+      },
+      userId,
+    );
   }
 
   async listParticipants(principal: ForgePrincipal) {
     const tenantId = this.tenant(principal);
     const userId = principal.userId;
 
-    return withTenantTransaction(this.db, tenantId, async (tx) => {
-      const rows = await tx
-        .select({
-          id: users.id,
-          primaryEmail: users.primaryEmail,
-          displayName: persons.displayName,
-          firstName: persons.firstName,
-          lastName: persons.lastName,
-          lastActivityAt: users.lastActivityAt,
-        })
-        .from(userTenantMemberships)
-        .innerJoin(users, eq(users.id, userTenantMemberships.userId))
-        .leftJoin(persons, eq(persons.id, users.personId))
-        .where(
-          and(
-            eq(userTenantMemberships.tenantId, tenantId),
-            eq(userTenantMemberships.status, "ACTIVE"),
-          ),
-        )
-        .orderBy(asc(users.primaryEmail));
+    return withTenantTransaction(
+      this.db,
+      tenantId,
+      async (tx) => {
+        const rows = await tx
+          .select({
+            id: users.id,
+            primaryEmail: users.primaryEmail,
+            displayName: persons.displayName,
+            firstName: persons.firstName,
+            lastName: persons.lastName,
+            lastActivityAt: users.lastActivityAt,
+          })
+          .from(userTenantMemberships)
+          .innerJoin(users, eq(users.id, userTenantMemberships.userId))
+          .leftJoin(persons, eq(persons.id, users.personId))
+          .where(
+            and(
+              eq(userTenantMemberships.tenantId, tenantId),
+              eq(userTenantMemberships.status, "ACTIVE"),
+            ),
+          )
+          .orderBy(asc(users.primaryEmail));
 
-      const personnelRows = await tx
-        .select({
-          email: industrialPersonnel.email,
-          companyEmail: industrialPersonnel.companyEmail,
-          employeeNumber: industrialPersonnel.employeeNumber,
-          displayName: industrialPersonnel.displayName,
-          firstName: industrialPersonnel.firstName,
-          lastName: industrialPersonnel.lastName,
-          divisionName: industrialPersonnel.divisionName,
-          departmentName: industrialPersonnel.departmentName,
-          siteId: industrialPersonnel.siteId,
-          siteName: industrialSites.name,
-        })
-        .from(industrialPersonnel)
-        .leftJoin(industrialSites, eq(industrialSites.id, industrialPersonnel.siteId))
-        .where(eq(industrialPersonnel.tenantId, tenantId));
+        const personnelRows = await tx
+          .select({
+            email: industrialPersonnel.email,
+            companyEmail: industrialPersonnel.companyEmail,
+            employeeNumber: industrialPersonnel.employeeNumber,
+            displayName: industrialPersonnel.displayName,
+            firstName: industrialPersonnel.firstName,
+            lastName: industrialPersonnel.lastName,
+            divisionName: industrialPersonnel.divisionName,
+            departmentName: industrialPersonnel.departmentName,
+            siteId: industrialPersonnel.siteId,
+            siteName: industrialSites.name,
+          })
+          .from(industrialPersonnel)
+          .leftJoin(industrialSites, eq(industrialSites.id, industrialPersonnel.siteId))
+          .where(eq(industrialPersonnel.tenantId, tenantId));
 
-      const personnelByEmail = new Map<
-        string,
-        {
-          employeeNumber: string;
-          displayName: string;
-          divisionName: string;
-          departmentName: string;
-          siteId: string;
-          siteLabel: string;
+        const personnelByEmail = new Map<
+          string,
+          {
+            employeeNumber: string;
+            displayName: string;
+            divisionName: string;
+            departmentName: string;
+            siteId: string;
+            siteLabel: string;
+          }
+        >();
+        for (const row of personnelRows) {
+          const enrichment = {
+            employeeNumber: String(row.employeeNumber ?? "").trim(),
+            displayName: String(row.displayName ?? "").trim(),
+            divisionName: String(row.divisionName ?? "").trim(),
+            departmentName: String(row.departmentName ?? "").trim(),
+            siteId: String(row.siteId ?? "").trim(),
+            siteLabel: String(row.siteName ?? "").trim(),
+          };
+          for (const raw of [row.email, row.companyEmail]) {
+            const key = String(raw ?? "")
+              .trim()
+              .toLowerCase();
+            if (!key || personnelByEmail.has(key)) continue;
+            personnelByEmail.set(key, enrichment);
+          }
         }
-      >();
-      for (const row of personnelRows) {
-        const enrichment = {
-          employeeNumber: String(row.employeeNumber ?? "").trim(),
-          displayName: String(row.displayName ?? "").trim(),
-          divisionName: String(row.divisionName ?? "").trim(),
-          departmentName: String(row.departmentName ?? "").trim(),
-          siteId: String(row.siteId ?? "").trim(),
-          siteLabel: String(row.siteName ?? "").trim(),
-        };
-        for (const raw of [row.email, row.companyEmail]) {
-          const key = String(raw ?? "")
-            .trim()
-            .toLowerCase();
-          if (!key || personnelByEmail.has(key)) continue;
-          personnelByEmail.set(key, enrichment);
-        }
-      }
 
-      return rows.map((row) => {
-        const name = [row.firstName, row.lastName].filter(Boolean).join(" ").trim();
-        const email = String(row.primaryEmail ?? "").trim();
-        const personnel = personnelByEmail.get(email.toLowerCase());
-        const displayName = (
-          personnel?.displayName ||
-          row.displayName ||
-          name ||
-          email ||
-          "User"
-        ).trim();
-        const lastSeenAt = row.lastActivityAt?.toISOString() ?? null;
-        return {
-          id: row.id,
-          primaryEmail: row.primaryEmail,
-          displayName,
-          employeeNumber: personnel?.employeeNumber ?? "",
-          divisionName: personnel?.divisionName ?? "",
-          departmentName: personnel?.departmentName ?? "",
-          siteId: personnel?.siteId ?? "",
-          siteLabel: personnel?.siteLabel ?? "",
-          lastSeenAt,
-          isOnline: isOnlineFromActivity(row.lastActivityAt),
-        };
-      });
-    }, userId);
+        return rows.map((row) => {
+          const name = [row.firstName, row.lastName].filter(Boolean).join(" ").trim();
+          const email = String(row.primaryEmail ?? "").trim();
+          const personnel = personnelByEmail.get(email.toLowerCase());
+          const displayName = (
+            personnel?.displayName ||
+            row.displayName ||
+            name ||
+            email ||
+            "User"
+          ).trim();
+          const lastSeenAt = row.lastActivityAt?.toISOString() ?? null;
+          return {
+            id: row.id,
+            primaryEmail: row.primaryEmail,
+            displayName,
+            employeeNumber: personnel?.employeeNumber ?? "",
+            divisionName: personnel?.divisionName ?? "",
+            departmentName: personnel?.departmentName ?? "",
+            siteId: personnel?.siteId ?? "",
+            siteLabel: personnel?.siteLabel ?? "",
+            lastSeenAt,
+            isOnline: isOnlineFromActivity(row.lastActivityAt),
+          };
+        });
+      },
+      userId,
+    );
   }
 
   async createThread(
@@ -435,7 +465,10 @@ export class IndustrialMessagingService {
 
     if (threadType === "DIRECT") {
       if (memberUserIds.length !== 1) {
-        throw new ForgeError("VALIDATION_FAILED", "Direct messages require exactly one other participant");
+        throw new ForgeError(
+          "VALIDATION_FAILED",
+          "Direct messages require exactly one other participant",
+        );
       }
       if (memberUserIds[0] === userId) {
         throw new ForgeError("VALIDATION_FAILED", "Cannot start a direct message with yourself");
@@ -446,68 +479,79 @@ export class IndustrialMessagingService {
 
     const allMemberIds = [...new Set([userId, ...memberUserIds])];
 
-    return withTenantTransaction(this.db, tenantId, async (tx) => {
-      await this.assertUsersInTenant(tx, tenantId, allMemberIds, { allowUserIds: [userId] });
+    return withTenantTransaction(
+      this.db,
+      tenantId,
+      async (tx) => {
+        await this.assertUsersInTenant(tx, tenantId, allMemberIds, { allowUserIds: [userId] });
 
-      if (threadType === "DIRECT") {
-        const existing = await this.findDirectThread(tx, tenantId, userId, memberUserIds[0]!);
-        if (existing) {
-          const thread = await tx.query.industrialMessagingThreads.findFirst({
-            where: eq(industrialMessagingThreads.id, existing.id),
-          });
-          const members = await this.loadThreadMemberSummaries(tx, tenantId, existing.id);
-          return {
-            id: existing.id,
-            threadType: "DIRECT",
-            title: thread?.title ?? this.resolveThreadTitle({ threadType: "DIRECT", title: thread?.title ?? null }, members, userId),
-            description: thread?.description ?? null,
-            lastMessageAt: thread?.lastMessageAt?.toISOString() ?? null,
-            members,
-            messages: [],
-          };
+        if (threadType === "DIRECT") {
+          const existing = await this.findDirectThread(tx, tenantId, userId, memberUserIds[0]!);
+          if (existing) {
+            const thread = await tx.query.industrialMessagingThreads.findFirst({
+              where: eq(industrialMessagingThreads.id, existing.id),
+            });
+            const members = await this.loadThreadMemberSummaries(tx, tenantId, existing.id);
+            return {
+              id: existing.id,
+              threadType: "DIRECT",
+              title:
+                thread?.title ??
+                this.resolveThreadTitle(
+                  { threadType: "DIRECT", title: thread?.title ?? null },
+                  members,
+                  userId,
+                ),
+              description: thread?.description ?? null,
+              lastMessageAt: thread?.lastMessageAt?.toISOString() ?? null,
+              members,
+              messages: [],
+            };
+          }
         }
-      }
 
-      const now = new Date();
-      const threadId = createId();
-      const title = String(body.title ?? "").trim() || null;
+        const now = new Date();
+        const threadId = createId();
+        const title = String(body.title ?? "").trim() || null;
 
-      await tx.insert(industrialMessagingThreads).values({
-        id: threadId,
-        tenantId,
-        threadType,
-        title,
-        description: String(body.description ?? "").trim() || null,
-        createdByUserId: userId,
-        createdAt: now,
-        updatedAt: now,
-      });
-
-      for (const memberId of allMemberIds) {
-        await tx.insert(industrialMessagingThreadMembers).values({
-          id: createId(),
+        await tx.insert(industrialMessagingThreads).values({
+          id: threadId,
           tenantId,
-          threadId,
-          userId: memberId,
-          role: memberId === userId ? "OWNER" : "MEMBER",
-          joinedAt: now,
-          lastReadAt: memberId === userId ? now : null,
+          threadType,
+          title,
+          description: String(body.description ?? "").trim() || null,
+          createdByUserId: userId,
           createdAt: now,
           updatedAt: now,
         });
-      }
 
-      const members = await this.loadThreadMemberSummaries(tx, tenantId, threadId);
-      return {
-        id: threadId,
-        threadType,
-        title: title ?? this.resolveThreadTitle({ threadType, title }, members, userId),
-        description: String(body.description ?? "").trim() || null,
-        lastMessageAt: null,
-        members,
-        messages: [],
-      };
-    }, userId);
+        for (const memberId of allMemberIds) {
+          await tx.insert(industrialMessagingThreadMembers).values({
+            id: createId(),
+            tenantId,
+            threadId,
+            userId: memberId,
+            role: memberId === userId ? "OWNER" : "MEMBER",
+            joinedAt: now,
+            lastReadAt: memberId === userId ? now : null,
+            createdAt: now,
+            updatedAt: now,
+          });
+        }
+
+        const members = await this.loadThreadMemberSummaries(tx, tenantId, threadId);
+        return {
+          id: threadId,
+          threadType,
+          title: title ?? this.resolveThreadTitle({ threadType, title }, members, userId),
+          description: String(body.description ?? "").trim() || null,
+          lastMessageAt: null,
+          members,
+          messages: [],
+        };
+      },
+      userId,
+    );
   }
 
   async updateThread(
@@ -523,151 +567,161 @@ export class IndustrialMessagingService {
     const tenantId = this.tenant(principal);
     const userId = principal.userId;
 
-    return withTenantTransaction(this.db, tenantId, async (tx) => {
-      const thread = await this.requireThreadMember(tx, tenantId, userId, threadId);
-      if (String(thread.threadType).toUpperCase() !== "GROUP") {
-        throw new ForgeError("VALIDATION_FAILED", "Only group conversations can be edited");
-      }
-
-      const now = new Date();
-      const patch: {
-        title?: string | null;
-        description?: string | null;
-        updatedAt: Date;
-      } = { updatedAt: now };
-
-      if (body.title !== undefined) {
-        const title = String(body.title ?? "").trim();
-        if (!title) {
-          throw new ForgeError("VALIDATION_FAILED", "Group name is required");
+    return withTenantTransaction(
+      this.db,
+      tenantId,
+      async (tx) => {
+        const thread = await this.requireThreadMember(tx, tenantId, userId, threadId);
+        if (String(thread.threadType).toUpperCase() !== "GROUP") {
+          throw new ForgeError("VALIDATION_FAILED", "Only group conversations can be edited");
         }
-        patch.title = title;
-      }
-      if (body.description !== undefined) {
-        patch.description = String(body.description ?? "").trim() || null;
-      }
 
-      await tx
-        .update(industrialMessagingThreads)
-        .set(patch)
-        .where(
-          and(
-            eq(industrialMessagingThreads.id, threadId),
-            eq(industrialMessagingThreads.tenantId, tenantId),
-          ),
-        );
+        const now = new Date();
+        const patch: {
+          title?: string | null;
+          description?: string | null;
+          updatedAt: Date;
+        } = { updatedAt: now };
 
-      const rawMemberIds = body.memberUserIds ?? body.participantUserIds;
-      if (rawMemberIds !== undefined) {
-        const requested = [
-          ...new Set(
-            (Array.isArray(rawMemberIds) ? rawMemberIds : [])
-              .map((id) => String(id).trim())
-              .filter(Boolean),
-          ),
-        ];
-        // Always keep the editor in the group.
-        const desired = [...new Set([userId, ...requested])];
-        await this.assertUsersInTenant(tx, tenantId, desired, { allowUserIds: [userId] });
+        if (body.title !== undefined) {
+          const title = String(body.title ?? "").trim();
+          if (!title) {
+            throw new ForgeError("VALIDATION_FAILED", "Group name is required");
+          }
+          patch.title = title;
+        }
+        if (body.description !== undefined) {
+          patch.description = String(body.description ?? "").trim() || null;
+        }
 
-        const existing = await tx
-          .select({
-            id: industrialMessagingThreadMembers.id,
-            userId: industrialMessagingThreadMembers.userId,
-            role: industrialMessagingThreadMembers.role,
-          })
-          .from(industrialMessagingThreadMembers)
+        await tx
+          .update(industrialMessagingThreads)
+          .set(patch)
           .where(
             and(
-              eq(industrialMessagingThreadMembers.threadId, threadId),
-              eq(industrialMessagingThreadMembers.tenantId, tenantId),
+              eq(industrialMessagingThreads.id, threadId),
+              eq(industrialMessagingThreads.tenantId, tenantId),
             ),
           );
 
-        const existingIds = new Set(existing.map((row) => row.userId));
-        const toRemove = existing
-          .filter((row) => !desired.includes(row.userId))
-          .map((row) => row.userId);
-        const toAdd = desired.filter((id) => !existingIds.has(id));
+        const rawMemberIds = body.memberUserIds ?? body.participantUserIds;
+        if (rawMemberIds !== undefined) {
+          const requested = [
+            ...new Set(
+              (Array.isArray(rawMemberIds) ? rawMemberIds : [])
+                .map((id) => String(id).trim())
+                .filter(Boolean),
+            ),
+          ];
+          // Always keep the editor in the group.
+          const desired = [...new Set([userId, ...requested])];
+          await this.assertUsersInTenant(tx, tenantId, desired, { allowUserIds: [userId] });
 
-        if (toRemove.length) {
-          await tx
-            .delete(industrialMessagingThreadMembers)
+          const existing = await tx
+            .select({
+              id: industrialMessagingThreadMembers.id,
+              userId: industrialMessagingThreadMembers.userId,
+              role: industrialMessagingThreadMembers.role,
+            })
+            .from(industrialMessagingThreadMembers)
             .where(
               and(
                 eq(industrialMessagingThreadMembers.threadId, threadId),
                 eq(industrialMessagingThreadMembers.tenantId, tenantId),
-                inArray(industrialMessagingThreadMembers.userId, toRemove),
               ),
             );
+
+          const existingIds = new Set(existing.map((row) => row.userId));
+          const toRemove = existing
+            .filter((row) => !desired.includes(row.userId))
+            .map((row) => row.userId);
+          const toAdd = desired.filter((id) => !existingIds.has(id));
+
+          if (toRemove.length) {
+            await tx
+              .delete(industrialMessagingThreadMembers)
+              .where(
+                and(
+                  eq(industrialMessagingThreadMembers.threadId, threadId),
+                  eq(industrialMessagingThreadMembers.tenantId, tenantId),
+                  inArray(industrialMessagingThreadMembers.userId, toRemove),
+                ),
+              );
+          }
+
+          for (const memberId of toAdd) {
+            await tx.insert(industrialMessagingThreadMembers).values({
+              id: createId(),
+              tenantId,
+              threadId,
+              userId: memberId,
+              role: "MEMBER",
+              joinedAt: now,
+              lastReadAt: null,
+              createdAt: now,
+              updatedAt: now,
+            });
+          }
         }
 
-        for (const memberId of toAdd) {
-          await tx.insert(industrialMessagingThreadMembers).values({
-            id: createId(),
-            tenantId,
-            threadId,
-            userId: memberId,
-            role: "MEMBER",
-            joinedAt: now,
-            lastReadAt: null,
-            createdAt: now,
-            updatedAt: now,
-          });
-        }
-      }
-
-      const updated = await tx.query.industrialMessagingThreads.findFirst({
-        where: and(
-          eq(industrialMessagingThreads.id, threadId),
-          eq(industrialMessagingThreads.tenantId, tenantId),
-        ),
-      });
-      const members = await this.loadThreadMemberSummaries(tx, tenantId, threadId);
-      return {
-        id: threadId,
-        threadType: "GROUP",
-        title:
-          updated?.title ??
-          this.resolveThreadTitle({ threadType: "GROUP", title: updated?.title ?? null }, members, userId),
-        description: updated?.description ?? null,
-        lastMessageAt: updated?.lastMessageAt?.toISOString() ?? null,
-        memberCount: members.length,
-        members,
-      };
-    }, userId);
+        const updated = await tx.query.industrialMessagingThreads.findFirst({
+          where: and(
+            eq(industrialMessagingThreads.id, threadId),
+            eq(industrialMessagingThreads.tenantId, tenantId),
+          ),
+        });
+        const members = await this.loadThreadMemberSummaries(tx, tenantId, threadId);
+        return {
+          id: threadId,
+          threadType: "GROUP",
+          title:
+            updated?.title ??
+            this.resolveThreadTitle(
+              { threadType: "GROUP", title: updated?.title ?? null },
+              members,
+              userId,
+            ),
+          description: updated?.description ?? null,
+          lastMessageAt: updated?.lastMessageAt?.toISOString() ?? null,
+          memberCount: members.length,
+          members,
+        };
+      },
+      userId,
+    );
   }
 
   async deleteThread(principal: ForgePrincipal, threadId: string) {
     const tenantId = this.tenant(principal);
     const userId = principal.userId;
 
-    return withTenantTransaction(this.db, tenantId, async (tx) => {
-      const thread = await this.requireThreadMember(tx, tenantId, userId, threadId);
-      if (String(thread.threadType).toUpperCase() !== "GROUP") {
-        throw new ForgeError("VALIDATION_FAILED", "Only group conversations can be deleted");
-      }
+    return withTenantTransaction(
+      this.db,
+      tenantId,
+      async (tx) => {
+        const thread = await this.requireThreadMember(tx, tenantId, userId, threadId);
+        if (String(thread.threadType).toUpperCase() !== "GROUP") {
+          throw new ForgeError("VALIDATION_FAILED", "Only group conversations can be deleted");
+        }
 
-      const now = new Date();
-      await tx
-        .update(industrialMessagingThreads)
-        .set({ archivedAt: now, updatedAt: now })
-        .where(
-          and(
-            eq(industrialMessagingThreads.id, threadId),
-            eq(industrialMessagingThreads.tenantId, tenantId),
-          ),
-        );
+        const now = new Date();
+        await tx
+          .update(industrialMessagingThreads)
+          .set({ archivedAt: now, updatedAt: now })
+          .where(
+            and(
+              eq(industrialMessagingThreads.id, threadId),
+              eq(industrialMessagingThreads.tenantId, tenantId),
+            ),
+          );
 
-      return { id: threadId, archived: true };
-    }, userId);
+        return { id: threadId, archived: true };
+      },
+      userId,
+    );
   }
 
-  async sendMessage(
-    principal: ForgePrincipal,
-    threadId: string,
-    body: Record<string, unknown>,
-  ) {
+  async sendMessage(principal: ForgePrincipal, threadId: string, body: Record<string, unknown>) {
     const tenantId = this.tenant(principal);
     const userId = principal.userId;
     const text = String(body.body ?? "").trim();
@@ -685,170 +739,188 @@ export class IndustrialMessagingService {
       throw new ForgeError("VALIDATION_FAILED", "Message body, attachment, or link is required");
     }
 
-    return withTenantTransaction(this.db, tenantId, async (tx) => {
-      await this.requireThreadMember(tx, tenantId, userId, threadId);
+    return withTenantTransaction(
+      this.db,
+      tenantId,
+      async (tx) => {
+        await this.requireThreadMember(tx, tenantId, userId, threadId);
 
-      let replyTo: MessagingReplyTo | null = null;
-      if (replyToMessageId) {
-        const [parent] = await tx
-          .select({
-            id: industrialMessagingMessages.id,
-            body: industrialMessagingMessages.body,
-            senderUserId: industrialMessagingMessages.senderUserId,
-            deletedAt: industrialMessagingMessages.deletedAt,
-          })
-          .from(industrialMessagingMessages)
-          .where(
-            and(
-              eq(industrialMessagingMessages.id, replyToMessageId),
-              eq(industrialMessagingMessages.threadId, threadId),
-              eq(industrialMessagingMessages.tenantId, tenantId),
-            ),
-          )
-          .limit(1);
-        if (!parent || parent.deletedAt) {
-          throw new ForgeError("VALIDATION_FAILED", "The message you are replying to was not found");
-        }
-        const parentNames = await this.loadUserDisplayMap(tx, tenantId, [parent.senderUserId]);
-        const parentAttachmentCount = await tx
-          .select({ id: industrialMessagingAttachments.id })
-          .from(industrialMessagingAttachments)
-          .where(
-            and(
-              eq(industrialMessagingAttachments.messageId, parent.id),
-              eq(industrialMessagingAttachments.tenantId, tenantId),
-            ),
-          )
-          .limit(1);
-        replyTo = {
-          messageId: parent.id,
-          senderUserId: parent.senderUserId,
-          senderName:
-            parentNames.get(parent.senderUserId) ??
-            (principal.isPlatformAdmin ? PLATFORM_ADMIN_DISPLAY_NAME : "User"),
-          bodyPreview: truncateReplyPreview(parent.body, parentAttachmentCount.length > 0),
-        };
-      }
-
-      const now = new Date();
-      const messageId = createId();
-
-      await tx.insert(industrialMessagingMessages).values({
-        id: messageId,
-        tenantId,
-        threadId,
-        senderUserId: userId,
-        body: text,
-        messageType: "TEXT",
-        metadataJson: replyTo ? { replyTo } : {},
-        createdAt: now,
-        updatedAt: now,
-      });
-
-      if (attachmentIds.length > 0) {
-        const attachments = await tx
-          .select()
-          .from(industrialMessagingAttachments)
-          .where(
-            and(
-              eq(industrialMessagingAttachments.tenantId, tenantId),
-              eq(industrialMessagingAttachments.threadId, threadId),
-              inArray(industrialMessagingAttachments.id, attachmentIds),
-              isNull(industrialMessagingAttachments.messageId),
-              eq(industrialMessagingAttachments.uploadStatus, "COMPLETE"),
-            ),
-          );
-
-        if (attachments.length !== attachmentIds.length) {
-          throw new ForgeError("VALIDATION_FAILED", "One or more attachments are invalid or not ready");
+        let replyTo: MessagingReplyTo | null = null;
+        if (replyToMessageId) {
+          const [parent] = await tx
+            .select({
+              id: industrialMessagingMessages.id,
+              body: industrialMessagingMessages.body,
+              senderUserId: industrialMessagingMessages.senderUserId,
+              deletedAt: industrialMessagingMessages.deletedAt,
+            })
+            .from(industrialMessagingMessages)
+            .where(
+              and(
+                eq(industrialMessagingMessages.id, replyToMessageId),
+                eq(industrialMessagingMessages.threadId, threadId),
+                eq(industrialMessagingMessages.tenantId, tenantId),
+              ),
+            )
+            .limit(1);
+          if (!parent || parent.deletedAt) {
+            throw new ForgeError(
+              "VALIDATION_FAILED",
+              "The message you are replying to was not found",
+            );
+          }
+          const parentNames = await this.loadUserDisplayMap(tx, tenantId, [parent.senderUserId]);
+          const parentAttachmentCount = await tx
+            .select({ id: industrialMessagingAttachments.id })
+            .from(industrialMessagingAttachments)
+            .where(
+              and(
+                eq(industrialMessagingAttachments.messageId, parent.id),
+                eq(industrialMessagingAttachments.tenantId, tenantId),
+              ),
+            )
+            .limit(1);
+          replyTo = {
+            messageId: parent.id,
+            senderUserId: parent.senderUserId,
+            senderName:
+              parentNames.get(parent.senderUserId) ??
+              (principal.isPlatformAdmin ? PLATFORM_ADMIN_DISPLAY_NAME : "User"),
+            bodyPreview: truncateReplyPreview(parent.body, parentAttachmentCount.length > 0),
+          };
         }
 
-        await tx
-          .update(industrialMessagingAttachments)
-          .set({ messageId, updatedAt: now })
-          .where(inArray(industrialMessagingAttachments.id, attachmentIds));
-      }
+        const now = new Date();
+        const messageId = createId();
 
-      for (const link of links) {
-        await tx.insert(industrialMessagingAttachments).values({
-          id: createId(),
+        await tx.insert(industrialMessagingMessages).values({
+          id: messageId,
           tenantId,
           threadId,
-          messageId,
-          attachmentType: "LINK",
-          linkUrl: String(link.url).trim(),
-          linkTitle: String(link.title ?? "").trim() || String(link.url).trim(),
-          linkDescription: String(link.description ?? "").trim() || null,
-          uploadStatus: "COMPLETE",
-          createdByUserId: userId,
+          senderUserId: userId,
+          body: text,
+          messageType: "TEXT",
+          metadataJson: replyTo ? { replyTo } : {},
           createdAt: now,
           updatedAt: now,
         });
-      }
 
-      const hasAttachments = attachmentIds.length > 0 || links.length > 0;
-      const preview = buildMessagePreview(text, hasAttachments);
+        if (attachmentIds.length > 0) {
+          const attachments = await tx
+            .select()
+            .from(industrialMessagingAttachments)
+            .where(
+              and(
+                eq(industrialMessagingAttachments.tenantId, tenantId),
+                eq(industrialMessagingAttachments.threadId, threadId),
+                inArray(industrialMessagingAttachments.id, attachmentIds),
+                isNull(industrialMessagingAttachments.messageId),
+                eq(industrialMessagingAttachments.uploadStatus, "COMPLETE"),
+              ),
+            );
 
-      await tx
-        .update(industrialMessagingThreads)
-        .set({
-          lastMessageAt: now,
-          lastMessagePreview: preview,
-          updatedAt: now,
-        })
-        .where(eq(industrialMessagingThreads.id, threadId));
+          if (attachments.length !== attachmentIds.length) {
+            throw new ForgeError(
+              "VALIDATION_FAILED",
+              "One or more attachments are invalid or not ready",
+            );
+          }
 
-      await tx
-        .update(industrialMessagingThreadMembers)
-        .set({ lastReadAt: now, updatedAt: now })
-        .where(
-          and(
-            eq(industrialMessagingThreadMembers.threadId, threadId),
-            eq(industrialMessagingThreadMembers.userId, userId),
-          ),
-        );
+          await tx
+            .update(industrialMessagingAttachments)
+            .set({ messageId, updatedAt: now })
+            .where(inArray(industrialMessagingAttachments.id, attachmentIds));
+        }
 
-      const attachmentsByMessage = await this.loadAttachmentsForMessages(tx, tenantId, [messageId]);
-      const senderMap = await this.loadUserDisplayMap(tx, tenantId, [userId]);
-      const senderName =
-        senderMap.get(userId) ??
-        (principal.isPlatformAdmin ? PLATFORM_ADMIN_DISPLAY_NAME : "User");
+        for (const link of links) {
+          await tx.insert(industrialMessagingAttachments).values({
+            id: createId(),
+            tenantId,
+            threadId,
+            messageId,
+            attachmentType: "LINK",
+            linkUrl: String(link.url).trim(),
+            linkTitle: String(link.title ?? "").trim() || String(link.url).trim(),
+            linkDescription: String(link.description ?? "").trim() || null,
+            uploadStatus: "COMPLETE",
+            createdByUserId: userId,
+            createdAt: now,
+            updatedAt: now,
+          });
+        }
 
-      await this.notifyThreadMembers(tx, tenantId, threadId, userId, senderName, preview);
+        const hasAttachments = attachmentIds.length > 0 || links.length > 0;
+        const preview = buildMessagePreview(text, hasAttachments);
 
-      return {
-        id: messageId,
-        body: text,
-        messageType: "TEXT",
-        senderUserId: userId,
-        senderName,
-        createdAt: now.toISOString(),
-        editedAt: null,
-        attachments: attachmentsByMessage.get(messageId) ?? [],
-        isOwn: true,
-        ...(replyTo ? { replyTo } : {}),
-      };
-    }, userId);
+        await tx
+          .update(industrialMessagingThreads)
+          .set({
+            lastMessageAt: now,
+            lastMessagePreview: preview,
+            updatedAt: now,
+          })
+          .where(eq(industrialMessagingThreads.id, threadId));
+
+        await tx
+          .update(industrialMessagingThreadMembers)
+          .set({ lastReadAt: now, updatedAt: now })
+          .where(
+            and(
+              eq(industrialMessagingThreadMembers.threadId, threadId),
+              eq(industrialMessagingThreadMembers.userId, userId),
+            ),
+          );
+
+        const attachmentsByMessage = await this.loadAttachmentsForMessages(tx, tenantId, [
+          messageId,
+        ]);
+        const senderMap = await this.loadUserDisplayMap(tx, tenantId, [userId]);
+        const senderName =
+          senderMap.get(userId) ??
+          (principal.isPlatformAdmin ? PLATFORM_ADMIN_DISPLAY_NAME : "User");
+
+        await this.notifyThreadMembers(tx, tenantId, threadId, userId, senderName, preview);
+
+        return {
+          id: messageId,
+          body: text,
+          messageType: "TEXT",
+          senderUserId: userId,
+          senderName,
+          createdAt: now.toISOString(),
+          editedAt: null,
+          attachments: attachmentsByMessage.get(messageId) ?? [],
+          isOwn: true,
+          ...(replyTo ? { replyTo } : {}),
+        };
+      },
+      userId,
+    );
   }
 
   async markRead(principal: ForgePrincipal, threadId: string) {
     const tenantId = this.tenant(principal);
     const userId = principal.userId;
 
-    const result = await withTenantTransaction(this.db, tenantId, async (tx) => {
-      await this.requireThreadMember(tx, tenantId, userId, threadId);
-      const now = new Date();
-      await tx
-        .update(industrialMessagingThreadMembers)
-        .set({ lastReadAt: now, updatedAt: now })
-        .where(
-          and(
-            eq(industrialMessagingThreadMembers.threadId, threadId),
-            eq(industrialMessagingThreadMembers.userId, userId),
-          ),
-        );
-      return { ok: true, readAt: now.toISOString() };
-    }, userId);
+    const result = await withTenantTransaction(
+      this.db,
+      tenantId,
+      async (tx) => {
+        await this.requireThreadMember(tx, tenantId, userId, threadId);
+        const now = new Date();
+        await tx
+          .update(industrialMessagingThreadMembers)
+          .set({ lastReadAt: now, updatedAt: now })
+          .where(
+            and(
+              eq(industrialMessagingThreadMembers.threadId, threadId),
+              eq(industrialMessagingThreadMembers.userId, userId),
+            ),
+          );
+        return { ok: true, readAt: now.toISOString() };
+      },
+      userId,
+    );
 
     try {
       await this.notifications.markUnreadByTypeAndThread(
@@ -876,7 +948,9 @@ export class IndustrialMessagingService {
     const userId = principal.userId;
     const threadId = String(body.threadId ?? "").trim();
     const filename = String(body.filename ?? "").trim();
-    const mimeType = String(body.mimeType ?? "").trim().toLowerCase();
+    const mimeType = String(body.mimeType ?? "")
+      .trim()
+      .toLowerCase();
     const contentLength = Number(body.contentLength ?? 0);
 
     if (!threadId) throw new ForgeError("VALIDATION_FAILED", "threadId is required");
@@ -907,40 +981,45 @@ export class IndustrialMessagingService {
     const now = new Date();
     const attachmentType = messagingAttachmentTypeForMime(mimeType);
 
-    await withTenantTransaction(this.db, tenantId, async (tx) => {
-      await this.requireThreadMember(tx, tenantId, userId, threadId);
+    await withTenantTransaction(
+      this.db,
+      tenantId,
+      async (tx) => {
+        await this.requireThreadMember(tx, tenantId, userId, threadId);
 
-      await tx.insert(forgeDocuments).values({
-        id: documentId,
-        tenantId,
-        originalFilename: filename,
-        storedFilename,
-        objectKey,
-        bucketName: this.storage.bucketName,
-        mimeType,
-        fileSizeBytes: contentLength,
-        uploadStatus: "INITIALIZED",
-        source: "INDUSTRIAL_WEB",
-        uploadedByUserId: userId,
-        createdAt: now,
-        updatedAt: now,
-      });
+        await tx.insert(forgeDocuments).values({
+          id: documentId,
+          tenantId,
+          originalFilename: filename,
+          storedFilename,
+          objectKey,
+          bucketName: this.storage.bucketName,
+          mimeType,
+          fileSizeBytes: contentLength,
+          uploadStatus: "INITIALIZED",
+          source: "INDUSTRIAL_WEB",
+          uploadedByUserId: userId,
+          createdAt: now,
+          updatedAt: now,
+        });
 
-      await tx.insert(industrialMessagingAttachments).values({
-        id: attachmentId,
-        tenantId,
-        threadId,
-        attachmentType,
-        documentId,
-        originalFilename: filename,
-        mimeType,
-        fileSizeBytes: contentLength,
-        uploadStatus: "PENDING",
-        createdByUserId: userId,
-        createdAt: now,
-        updatedAt: now,
-      });
-    }, userId);
+        await tx.insert(industrialMessagingAttachments).values({
+          id: attachmentId,
+          tenantId,
+          threadId,
+          attachmentType,
+          documentId,
+          originalFilename: filename,
+          mimeType,
+          fileSizeBytes: contentLength,
+          uploadStatus: "PENDING",
+          createdByUserId: userId,
+          createdAt: now,
+          updatedAt: now,
+        });
+      },
+      userId,
+    );
 
     const presign = await this.storage.createPresignedUploadUrl({
       objectKey,
@@ -965,55 +1044,60 @@ export class IndustrialMessagingService {
     const tenantId = this.tenant(principal);
     const userId = principal.userId;
 
-    return withTenantTransaction(this.db, tenantId, async (tx) => {
-      const attachment = await tx.query.industrialMessagingAttachments.findFirst({
-        where: and(
-          eq(industrialMessagingAttachments.id, attachmentId),
-          eq(industrialMessagingAttachments.tenantId, tenantId),
-        ),
-      });
-      if (!attachment || !attachment.documentId) {
-        throw new ForgeError("NOT_FOUND", "Attachment not found");
-      }
-      await this.requireThreadMember(tx, tenantId, userId, attachment.threadId);
+    return withTenantTransaction(
+      this.db,
+      tenantId,
+      async (tx) => {
+        const attachment = await tx.query.industrialMessagingAttachments.findFirst({
+          where: and(
+            eq(industrialMessagingAttachments.id, attachmentId),
+            eq(industrialMessagingAttachments.tenantId, tenantId),
+          ),
+        });
+        if (!attachment || !attachment.documentId) {
+          throw new ForgeError("NOT_FOUND", "Attachment not found");
+        }
+        await this.requireThreadMember(tx, tenantId, userId, attachment.threadId);
 
-      const document = await tx.query.forgeDocuments.findFirst({
-        where: and(
-          eq(forgeDocuments.id, attachment.documentId),
-          eq(forgeDocuments.tenantId, tenantId),
-        ),
-      });
-      if (!document) throw new ForgeError("NOT_FOUND", "Document not found");
-      if (!documentBelongsToTenant(document.tenantId, tenantId)) {
-        throw new ForgeError("FORBIDDEN", "Document does not belong to the requested tenant");
-      }
-      if (!objectKeyBelongsToTenant(document.objectKey, tenantId)) {
-        throw new ForgeError("FORBIDDEN", "Object key does not belong to the requested tenant");
-      }
+        const document = await tx.query.forgeDocuments.findFirst({
+          where: and(
+            eq(forgeDocuments.id, attachment.documentId),
+            eq(forgeDocuments.tenantId, tenantId),
+          ),
+        });
+        if (!document) throw new ForgeError("NOT_FOUND", "Document not found");
+        if (!documentBelongsToTenant(document.tenantId, tenantId)) {
+          throw new ForgeError("FORBIDDEN", "Document does not belong to the requested tenant");
+        }
+        if (!objectKeyBelongsToTenant(document.objectKey, tenantId)) {
+          throw new ForgeError("FORBIDDEN", "Object key does not belong to the requested tenant");
+        }
 
-      await this.storage.assertObjectExists(document.objectKey);
+        await this.storage.assertObjectExists(document.objectKey);
 
-      const now = new Date();
-      await tx
-        .update(forgeDocuments)
-        .set({ uploadStatus: "COMPLETE", uploadedAt: now, updatedAt: now })
-        .where(eq(forgeDocuments.id, document.id));
+        const now = new Date();
+        await tx
+          .update(forgeDocuments)
+          .set({ uploadStatus: "COMPLETE", uploadedAt: now, updatedAt: now })
+          .where(eq(forgeDocuments.id, document.id));
 
-      const [updated] = await tx
-        .update(industrialMessagingAttachments)
-        .set({ uploadStatus: "COMPLETE", updatedAt: now })
-        .where(eq(industrialMessagingAttachments.id, attachmentId))
-        .returning();
+        const [updated] = await tx
+          .update(industrialMessagingAttachments)
+          .set({ uploadStatus: "COMPLETE", updatedAt: now })
+          .where(eq(industrialMessagingAttachments.id, attachmentId))
+          .returning();
 
-      return {
-        id: updated!.id,
-        attachmentType: updated!.attachmentType,
-        originalFilename: updated!.originalFilename,
-        mimeType: updated!.mimeType,
-        fileSizeBytes: updated!.fileSizeBytes,
-        uploadStatus: updated!.uploadStatus,
-      };
-    }, userId);
+        return {
+          id: updated!.id,
+          attachmentType: updated!.attachmentType,
+          originalFilename: updated!.originalFilename,
+          mimeType: updated!.mimeType,
+          fileSizeBytes: updated!.fileSizeBytes,
+          uploadStatus: updated!.uploadStatus,
+        };
+      },
+      userId,
+    );
   }
 
   async createAttachmentDownloadUrl(principal: ForgePrincipal, attachmentId: string) {
@@ -1107,7 +1191,8 @@ export class IndustrialMessagingService {
     );
 
     const stream = await this.storage.getObjectStream(document.objectKey);
-    const mimeType = attachment.mimeType ?? document.mimeType ?? stream.contentType ?? "application/octet-stream";
+    const mimeType =
+      attachment.mimeType ?? document.mimeType ?? stream.contentType ?? "application/octet-stream";
     const inline = canStreamInline(mimeType);
     return {
       body: stream.body,
@@ -1162,9 +1247,9 @@ export class IndustrialMessagingService {
         AND t.archived_at IS NULL
       LIMIT 1
     `);
-    const row = (Array.isArray(rows)
-      ? rows[0]
-      : (rows as { rows?: Array<{ id: string }> }).rows?.[0]) as { id: string } | undefined;
+    const row = (
+      Array.isArray(rows) ? rows[0] : (rows as { rows?: Array<{ id: string }> }).rows?.[0]
+    ) as { id: string } | undefined;
     return row ?? null;
   }
 
@@ -1203,7 +1288,11 @@ export class IndustrialMessagingService {
     }
   }
 
-  private async loadThreadMemberSummaries(tx: DatabaseTransaction, tenantId: string, threadId: string) {
+  private async loadThreadMemberSummaries(
+    tx: DatabaseTransaction,
+    tenantId: string,
+    threadId: string,
+  ) {
     const byThread = await this.loadThreadMemberSummariesForThreads(tx, tenantId, [threadId]);
     return byThread.get(threadId) ?? [];
   }
@@ -1250,7 +1339,9 @@ export class IndustrialMessagingService {
         ),
       );
 
-    const missingIds = rows.filter((row) => !row.email && !row.displayName).map((row) => row.userId);
+    const missingIds = rows
+      .filter((row) => !row.email && !row.displayName)
+      .map((row) => row.userId);
     const bypassPresence = missingIds.length
       ? await this.loadUserPresenceMapBypass(missingIds)
       : new Map<string, { displayName: string; lastActivityAt: Date | null }>();

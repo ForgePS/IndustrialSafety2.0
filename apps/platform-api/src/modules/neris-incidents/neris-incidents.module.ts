@@ -8,10 +8,7 @@ import { IncidentNumberingService } from "./incident-numbering.service.js";
 import { IncidentPrefillService } from "./incident-prefill.service.js";
 import { IncidentStateMachineService } from "./incident-state-machine.service.js";
 import { IncidentValidationService } from "./incident-validation.service.js";
-import {
-  MALWARE_SCANNER,
-  QuarantineDefaultMalwareScanner,
-} from "./malware-scan.interface.js";
+import { MALWARE_SCANNER, QuarantineDefaultMalwareScanner } from "./malware-scan.interface.js";
 import { NerisIncidentsAccessService } from "./neris-incidents-access.service.js";
 import { NerisIncidentsController } from "./neris-incidents.controller.js";
 import { NerisIncidentsService } from "./neris-incidents.service.js";

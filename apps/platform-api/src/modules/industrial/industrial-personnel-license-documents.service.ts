@@ -76,7 +76,9 @@ export class IndustrialPersonnelLicenseDocumentsService {
     const tenantId = this.tenant(principal);
     const side = this.parseSide(body.side);
     const filename = String(body.filename ?? "").trim();
-    const mimeType = String(body.mimeType ?? "").trim().toLowerCase();
+    const mimeType = String(body.mimeType ?? "")
+      .trim()
+      .toLowerCase();
     const contentLength = Number(body.contentLength ?? 0);
     const personnelId = String(body.personnelId ?? "").trim();
 
@@ -108,40 +110,45 @@ export class IndustrialPersonnelLicenseDocumentsService {
     const documentId = createId();
     const now = new Date();
 
-    await withTenantTransaction(this.db, tenantId, async (tx) => {
-      if (personnelId) {
-        const [person] = await tx
-          .select({ id: industrialPersonnel.id })
-          .from(industrialPersonnel)
-          .where(
-            and(
-              eq(industrialPersonnel.id, personnelId),
-              eq(industrialPersonnel.tenantId, tenantId),
-            ),
-          )
-          .limit(1);
-        if (!person) throw new ForgeError("NOT_FOUND", "Personnel not found");
-      }
+    await withTenantTransaction(
+      this.db,
+      tenantId,
+      async (tx) => {
+        if (personnelId) {
+          const [person] = await tx
+            .select({ id: industrialPersonnel.id })
+            .from(industrialPersonnel)
+            .where(
+              and(
+                eq(industrialPersonnel.id, personnelId),
+                eq(industrialPersonnel.tenantId, tenantId),
+              ),
+            )
+            .limit(1);
+          if (!person) throw new ForgeError("NOT_FOUND", "Personnel not found");
+        }
 
-      await tx.insert(forgeDocuments).values({
-        id: documentId,
-        tenantId,
-        originalFilename: filename,
-        storedFilename,
-        objectKey,
-        bucketName: this.storage.bucketName,
-        mimeType,
-        fileSizeBytes: contentLength,
-        securityClassification: "INTERNAL",
-        malwareScanStatus: "PENDING",
-        retentionRule: "PERSONNEL_LICENSE_DEFAULT",
-        uploadStatus: "INITIALIZED",
-        source: "INDUSTRIAL_PERSONNEL_LICENSE",
-        uploadedByUserId: principal.userId,
-        createdAt: now,
-        updatedAt: now,
-      });
-    }, principal.userId);
+        await tx.insert(forgeDocuments).values({
+          id: documentId,
+          tenantId,
+          originalFilename: filename,
+          storedFilename,
+          objectKey,
+          bucketName: this.storage.bucketName,
+          mimeType,
+          fileSizeBytes: contentLength,
+          securityClassification: "INTERNAL",
+          malwareScanStatus: "PENDING",
+          retentionRule: "PERSONNEL_LICENSE_DEFAULT",
+          uploadStatus: "INITIALIZED",
+          source: "INDUSTRIAL_PERSONNEL_LICENSE",
+          uploadedByUserId: principal.userId,
+          createdAt: now,
+          updatedAt: now,
+        });
+      },
+      principal.userId,
+    );
 
     const presign = await this.storage.createPresignedUploadUrl({
       objectKey,
@@ -177,53 +184,58 @@ export class IndustrialPersonnelLicenseDocumentsService {
       throw new ForgeError("VALIDATION_FAILED", "personnelId must be a UUID");
     }
 
-    return withTenantTransaction(this.db, tenantId, async (tx) => {
-      const document = await tx.query.forgeDocuments.findFirst({
-        where: and(eq(forgeDocuments.id, documentId), eq(forgeDocuments.tenantId, tenantId)),
-      });
-      if (!document) throw new ForgeError("NOT_FOUND", "Document not found");
-      if (!documentBelongsToTenant(document.tenantId, tenantId)) {
-        throw new ForgeError("FORBIDDEN", "Document does not belong to the requested tenant");
-      }
-      if (!objectKeyBelongsToTenant(document.objectKey, tenantId)) {
-        throw new ForgeError("FORBIDDEN", "Object key does not belong to the requested tenant");
-      }
-      if (document.source !== "INDUSTRIAL_PERSONNEL_LICENSE") {
-        throw new ForgeError("VALIDATION_FAILED", "Document is not a personnel license upload");
-      }
+    return withTenantTransaction(
+      this.db,
+      tenantId,
+      async (tx) => {
+        const document = await tx.query.forgeDocuments.findFirst({
+          where: and(eq(forgeDocuments.id, documentId), eq(forgeDocuments.tenantId, tenantId)),
+        });
+        if (!document) throw new ForgeError("NOT_FOUND", "Document not found");
+        if (!documentBelongsToTenant(document.tenantId, tenantId)) {
+          throw new ForgeError("FORBIDDEN", "Document does not belong to the requested tenant");
+        }
+        if (!objectKeyBelongsToTenant(document.objectKey, tenantId)) {
+          throw new ForgeError("FORBIDDEN", "Object key does not belong to the requested tenant");
+        }
+        if (document.source !== "INDUSTRIAL_PERSONNEL_LICENSE") {
+          throw new ForgeError("VALIDATION_FAILED", "Document is not a personnel license upload");
+        }
 
-      await this.storage.assertObjectExists(document.objectKey);
+        await this.storage.assertObjectExists(document.objectKey);
 
-      const now = new Date();
-      await tx
-        .update(forgeDocuments)
-        .set({ uploadStatus: "COMPLETE", uploadedAt: now, updatedAt: now })
-        .where(eq(forgeDocuments.id, document.id));
+        const now = new Date();
+        await tx
+          .update(forgeDocuments)
+          .set({ uploadStatus: "COMPLETE", uploadedAt: now, updatedAt: now })
+          .where(eq(forgeDocuments.id, document.id));
 
-      const uploadMeta = {
-        name: document.originalFilename,
-        fileName: document.originalFilename,
-        documentId: document.id,
-        contentType: document.mimeType,
-        fileSizeBytes: document.fileSizeBytes,
-        uploadedAt: now.toISOString(),
-      };
+        const uploadMeta = {
+          name: document.originalFilename,
+          fileName: document.originalFilename,
+          documentId: document.id,
+          contentType: document.mimeType,
+          fileSizeBytes: document.fileSizeBytes,
+          uploadedAt: now.toISOString(),
+        };
 
-      if (personnelId) {
-        await this.attachLicenseToPersonnel(tx, tenantId, personnelId, side, uploadMeta, now);
-      }
+        if (personnelId) {
+          await this.attachLicenseToPersonnel(tx, tenantId, personnelId, side, uploadMeta, now);
+        }
 
-      return {
-        documentId: document.id,
-        side,
-        originalFilename: document.originalFilename,
-        mimeType: document.mimeType,
-        fileSizeBytes: document.fileSizeBytes,
-        uploadStatus: "COMPLETE",
-        file: uploadMeta,
-        ...(personnelId ? { personnelId } : {}),
-      };
-    }, principal.userId);
+        return {
+          documentId: document.id,
+          side,
+          originalFilename: document.originalFilename,
+          mimeType: document.mimeType,
+          fileSizeBytes: document.fileSizeBytes,
+          uploadStatus: "COMPLETE",
+          file: uploadMeta,
+          ...(personnelId ? { personnelId } : {}),
+        };
+      },
+      principal.userId,
+    );
   }
 
   private async attachLicenseToPersonnel(
@@ -302,7 +314,9 @@ export class IndustrialPersonnelLicenseDocumentsService {
     if (linkedDot) {
       const dotPayload = unwrapPayload(linkedDot.sourcePayload);
       const details =
-        dotPayload.details && typeof dotPayload.details === "object" && !Array.isArray(dotPayload.details)
+        dotPayload.details &&
+        typeof dotPayload.details === "object" &&
+        !Array.isArray(dotPayload.details)
           ? { ...(dotPayload.details as Record<string, unknown>) }
           : {};
       const copyList = [uploadMeta];
@@ -345,10 +359,7 @@ export class IndustrialPersonnelLicenseDocumentsService {
         if (!row || row.uploadStatus !== "COMPLETE") {
           throw new ForgeError("NOT_FOUND", "Document is not available");
         }
-        if (
-          row.source !== "INDUSTRIAL_PERSONNEL_LICENSE" &&
-          row.source !== "INDUSTRIAL_DOT_DQF"
-        ) {
+        if (row.source !== "INDUSTRIAL_PERSONNEL_LICENSE" && row.source !== "INDUSTRIAL_DOT_DQF") {
           throw new ForgeError("VALIDATION_FAILED", "Document is not a license file");
         }
         if (!documentBelongsToTenant(row.tenantId, tenantId)) {

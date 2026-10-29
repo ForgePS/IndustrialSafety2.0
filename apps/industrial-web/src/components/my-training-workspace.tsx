@@ -31,9 +31,7 @@ function statusLabel(status: string) {
   if (normalized === "NOT STARTED") return "Not started";
   if (normalized === "OVERDUE") return "Overdue";
   if (normalized === "ASSIGNED") return "Assigned";
-  return normalized
-    .toLowerCase()
-    .replace(/^\w/, (c) => c.toUpperCase());
+  return normalized.toLowerCase().replace(/^\w/, (c) => c.toUpperCase());
 }
 
 function isOverdue(dueAt: string | null | undefined, status: string) {
@@ -72,7 +70,7 @@ export function MyTrainingWorkspace() {
   }, [load]);
 
   const openRows = data?.openAssignments ?? [];
-  const records = data?.trainingRecords ?? [];
+  const records = useMemo(() => data?.trainingRecords ?? [], [data?.trainingRecords]);
   const completedRows = useMemo(
     () =>
       records.filter((row) => {
@@ -85,9 +83,7 @@ export function MyTrainingWorkspace() {
     const q = transcriptQuery.trim().toLowerCase();
     return records.filter((row) => {
       if (!q) return true;
-      return `${row.title} ${row.courseName ?? ""} ${row.result ?? ""}`
-        .toLowerCase()
-        .includes(q);
+      return `${row.title} ${row.courseName ?? ""} ${row.result ?? ""}`.toLowerCase().includes(q);
     });
   }, [records, transcriptQuery]);
 
@@ -116,7 +112,10 @@ export function MyTrainingWorkspace() {
   }
 
   return (
-    <div className="container-xxl flex-grow-1 container-p-y" data-walkthrough="employee-my-training">
+    <div
+      className="container-xxl flex-grow-1 container-p-y"
+      data-walkthrough="employee-my-training"
+    >
       <div className="d-flex flex-wrap justify-content-between align-items-start gap-3 mb-4">
         <div>
           <h4 className="mb-1">My Training</h4>

@@ -6,9 +6,7 @@ function get(url) {
       .get(url, (res) => {
         let body = "";
         res.on("data", (c) => (body += c));
-        res.on("end", () =>
-          resolve({ status: res.statusCode, body, headers: res.headers }),
-        );
+        res.on("end", () => resolve({ status: res.statusCode, body, headers: res.headers }));
       })
       .on("error", reject);
   });
@@ -29,8 +27,7 @@ for (const host of hosts) {
   console.log("\nHOST", host, "page", page.status, "chunks", chunks);
   for (const chunk of chunks.slice(0, 1)) {
     const js = await get(`${host}/${chunk}`);
-    const hasCode =
-      js.body.includes("forge-industrial-safety-complete-platform-overview");
+    const hasCode = js.body.includes("forge-industrial-safety-complete-platform-overview");
     const usesItems0Id = /items\[0\]\.id/.test(js.body);
     const usesPrimaryCode = /\.code/.test(js.body) && /get\(/.test(js.body);
     console.log("js", js.status, "len", js.body.length, {

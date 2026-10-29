@@ -6,10 +6,7 @@
  */
 
 import { catalogModulesForSeed } from "./module-catalog.js";
-import {
-  FIELD_EMPLOYEE_PERMISSIONS,
-  FIELD_SUPERVISOR_PERMISSIONS,
-} from "./field.js";
+import { FIELD_EMPLOYEE_PERMISSIONS, FIELD_SUPERVISOR_PERMISSIONS } from "./field.js";
 import {
   RMS_DEPARTMENT_ADMIN_PERMISSIONS,
   RMS_FIRE_INVESTIGATOR_PERMISSIONS,
@@ -127,7 +124,11 @@ export const FORGE_INDUSTRIAL_TEMPLATE: StarterTemplate = {
     {
       code: "INDUSTRIAL_SUPERVISOR",
       name: "Supervisor",
-      permissions: [...SUPERVISOR_PERMISSIONS, ...FIELD_SUPERVISOR_PERMISSIONS, "industrial.access"],
+      permissions: [
+        ...SUPERVISOR_PERMISSIONS,
+        ...FIELD_SUPERVISOR_PERMISSIONS,
+        "industrial.access",
+      ],
     },
     {
       code: "INDUSTRIAL_EMPLOYEE",

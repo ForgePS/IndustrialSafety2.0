@@ -32,6 +32,7 @@ export function LotoPhotoAnnotatorModal({
   if (!open) return null;
 
   return (
+    // eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-noninteractive-element-interactions -- backdrop click-to-close, same as the other Forge modals; keyboard users close with the Close/Cancel button
     <div
       className="modal fade show d-block"
       tabIndex={-1}
@@ -41,6 +42,7 @@ export function LotoPhotoAnnotatorModal({
       style={{ background: "rgba(0,0,0,0.5)", zIndex: 1060 }}
       onClick={onCancel}
     >
+      {/* eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-noninteractive-element-interactions -- stops backdrop click-to-close from firing inside the dialog; not a control */}
       <div
         className="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable"
         role="document"

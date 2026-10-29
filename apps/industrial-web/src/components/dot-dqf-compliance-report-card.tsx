@@ -20,11 +20,7 @@ export function DotDqfComplianceReportCard({
   tenantSlug?: string | null;
 }) {
   const report = useMemo(
-    () =>
-      buildDqfComplianceReport(
-        records,
-        tenantSlug === undefined ? undefined : { tenantSlug },
-      ),
+    () => buildDqfComplianceReport(records, tenantSlug === undefined ? undefined : { tenantSlug }),
     [records, tenantSlug],
   );
 

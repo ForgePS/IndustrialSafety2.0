@@ -37,9 +37,10 @@ export function ObservationFollowUpFields({
   const [photoBusy, setPhotoBusy] = useState(false);
   const set = <K extends keyof ObservationFollowUp>(key: K, v: ObservationFollowUp[K]) =>
     onChange({ ...value, [key]: v });
-  const rootCauses = value.rootCause && !OBSERVATION_ROOT_CAUSE_OPTIONS.includes(value.rootCause)
-    ? [...OBSERVATION_ROOT_CAUSE_OPTIONS, value.rootCause]
-    : OBSERVATION_ROOT_CAUSE_OPTIONS;
+  const rootCauses =
+    value.rootCause && !OBSERVATION_ROOT_CAUSE_OPTIONS.includes(value.rootCause)
+      ? [...OBSERVATION_ROOT_CAUSE_OPTIONS, value.rootCause]
+      : OBSERVATION_ROOT_CAUSE_OPTIONS;
 
   async function addPhotos(files: FileList | null) {
     if (!files || files.length === 0) return;
@@ -54,7 +55,8 @@ export function ObservationFollowUpFields({
       const added: ObservationPhoto[] = [];
       for (const file of Array.from(files).slice(0, room)) {
         const dataUrl = await compressImageToDataUrl(file, AFTER_PHOTO_MAX_LENGTH);
-        if (!dataUrl.startsWith("data:image/")) throw new Error("Only image files can be attached.");
+        if (!dataUrl.startsWith("data:image/"))
+          throw new Error("Only image files can be attached.");
         added.push({
           id: newPhotoId(),
           fileName: file.name || "photo.jpg",
@@ -188,7 +190,12 @@ export function ObservationFollowUpFields({
             className="position-relative border rounded overflow-hidden"
             style={{ width: 96, height: 96 }}
           >
-            <img src={photo.dataUrl} alt={photo.fileName} className="w-100 h-100" style={{ objectFit: "cover" }} />
+            <img
+              src={photo.dataUrl}
+              alt={photo.fileName}
+              className="w-100 h-100"
+              style={{ objectFit: "cover" }}
+            />
             {!disabled ? (
               <button
                 type="button"

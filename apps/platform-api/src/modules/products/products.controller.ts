@@ -79,14 +79,8 @@ export class ProductsController {
 
   @Get("plans")
   @RequirePermission("platform.entitlement.manage", { allowWhenSuspended: true })
-  async listPlans(
-    @Req() req: RequestWithIds,
-    @Query("includeArchived") includeArchived?: string,
-  ) {
-    return ok(
-      await this.products.listPlans(includeArchived === "true"),
-      getRequestIds(req),
-    );
+  async listPlans(@Req() req: RequestWithIds, @Query("includeArchived") includeArchived?: string) {
+    return ok(await this.products.listPlans(includeArchived === "true"), getRequestIds(req));
   }
 
   @Post("plans")

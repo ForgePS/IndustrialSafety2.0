@@ -17,7 +17,12 @@ import {
   formatDqfDisplayDate,
   type DotDqfFieldDef,
 } from "@/lib/dot-dqf-fields";
-import { dqfFormFillHref, dqfFormPrintHref, DQF_LINKED_FORM_TEMPLATES, findDqfFormDefinition } from "@/lib/dot-dqf-form-links";
+import {
+  dqfFormFillHref,
+  dqfFormPrintHref,
+  DQF_LINKED_FORM_TEMPLATES,
+  findDqfFormDefinition,
+} from "@/lib/dot-dqf-form-links";
 import {
   isDriverCdlRequired,
   isDriverDiabeticEyeExamRequired,
@@ -236,9 +241,7 @@ function FormLinkActions({
     : templateName
       ? `/modules/forms/?tab=library&q=${encodeURIComponent(templateName)}`
       : "/modules/forms/?tab=library";
-  const printHref = formId
-    ? dqfFormPrintHref(formId, personnelId)
-    : fillHref;
+  const printHref = formId ? dqfFormPrintHref(formId, personnelId) : fillHref;
   return (
     <div className="d-flex flex-wrap gap-2 mb-3">
       <Link href={fillHref} className="btn btn-sm btn-outline-primary">
@@ -372,7 +375,7 @@ export function DotDqfWorksheet({
               copyField={dotDqfField("driversApplicationCopy")}
               details={details}
               editing={editing}
-          canUpload={canUpload}
+              canUpload={canUpload}
               disabled={disabled}
               onChange={onChange}
               dateLabel="Date placed in DQF"
@@ -396,7 +399,7 @@ export function DotDqfWorksheet({
                   field={{ ...dotDqfField("mvrAnnual"), label: "MVR expiration date" }}
                   value={details.mvrAnnual ?? ""}
                   editing={editing}
-          canUpload={canUpload}
+                  canUpload={canUpload}
                   disabled={disabled}
                   onChange={onChange}
                 />
@@ -406,7 +409,7 @@ export function DotDqfWorksheet({
                   field={dotDqfField("mvrCompleted")}
                   value={details.mvrCompleted ?? ""}
                   editing={editing}
-          canUpload={canUpload}
+                  canUpload={canUpload}
                   disabled={disabled}
                   onChange={onChange}
                 />
@@ -416,7 +419,7 @@ export function DotDqfWorksheet({
                   field={dotDqfField(driverDocumentCopyFieldId("mvrAnnual"))}
                   value={details[driverDocumentCopyFieldId("mvrAnnual")] ?? ""}
                   editing={editing}
-          canUpload={canUpload}
+                  canUpload={canUpload}
                   disabled={disabled}
                   onChange={onChange}
                 />
@@ -444,7 +447,7 @@ export function DotDqfWorksheet({
                   field={{ ...dotDqfField("medicalCertExpiry"), required: mecRequired }}
                   value={details.medicalCertExpiry ?? ""}
                   editing={editing}
-          canUpload={canUpload}
+                  canUpload={canUpload}
                   disabled={disabled}
                   onChange={onChange}
                 />
@@ -454,7 +457,7 @@ export function DotDqfWorksheet({
                   field={dotDqfField("nationalRegistryNumber")}
                   value={details.nationalRegistryNumber ?? ""}
                   editing={editing}
-          canUpload={canUpload}
+                  canUpload={canUpload}
                   disabled={disabled}
                   onChange={onChange}
                 />
@@ -464,7 +467,7 @@ export function DotDqfWorksheet({
                   field={dotDqfField("medicalCertCopy")}
                   value={details.medicalCertCopy ?? ""}
                   editing={editing}
-          canUpload={canUpload}
+                  canUpload={canUpload}
                   disabled={disabled}
                   onChange={onChange}
                 />
@@ -565,8 +568,14 @@ export function DotDqfWorksheet({
               </div>
               <div className="col-12">
                 <WorksheetField
-                  field={dotDqfField(driverDocumentCopyFieldId("medicalExaminerNationalRegistryVerification"))}
-                  value={details[driverDocumentCopyFieldId("medicalExaminerNationalRegistryVerification")] ?? ""}
+                  field={dotDqfField(
+                    driverDocumentCopyFieldId("medicalExaminerNationalRegistryVerification"),
+                  )}
+                  value={
+                    details[
+                      driverDocumentCopyFieldId("medicalExaminerNationalRegistryVerification")
+                    ] ?? ""
+                  }
                   editing={formSectionEditing}
                   canUpload={canUpload}
                   disabled={disabled}
@@ -599,7 +608,7 @@ export function DotDqfWorksheet({
               copyField={dotDqfField(driverDocumentCopyFieldId("certificationOfRoadTest"))}
               details={details}
               editing={editing}
-          canUpload={canUpload}
+              canUpload={canUpload}
               disabled={disabled}
               onChange={onChange}
             />
@@ -609,7 +618,7 @@ export function DotDqfWorksheet({
                   field={dotDqfField("certificationOfRoadTestDriverSignature")}
                   value={details.certificationOfRoadTestDriverSignature ?? ""}
                   editing={editing}
-          canUpload={canUpload}
+                  canUpload={canUpload}
                   disabled={disabled}
                   onChange={onChange}
                 />
@@ -619,7 +628,7 @@ export function DotDqfWorksheet({
                   field={dotDqfField("certificationOfRoadTestPreceptorSignature")}
                   value={details.certificationOfRoadTestPreceptorSignature ?? ""}
                   editing={editing}
-          canUpload={canUpload}
+                  canUpload={canUpload}
                   disabled={disabled}
                   onChange={onChange}
                 />
@@ -651,7 +660,7 @@ export function DotDqfWorksheet({
                   field={dotDqfField("certificationComplianceDriverLicense")}
                   value={details.certificationComplianceDriverLicense ?? ""}
                   editing={editing}
-          canUpload={canUpload}
+                  canUpload={canUpload}
                   disabled={disabled}
                   onChange={onChange}
                 />
@@ -661,7 +670,7 @@ export function DotDqfWorksheet({
                   field={dotDqfField("certificationComplianceOnFile")}
                   value={details.certificationComplianceOnFile ?? ""}
                   editing={editing}
-          canUpload={canUpload}
+                  canUpload={canUpload}
                   disabled={disabled}
                   onChange={onChange}
                 />
@@ -671,7 +680,7 @@ export function DotDqfWorksheet({
                   field={dotDqfField("certificationComplianceEvaluatorName")}
                   value={details.certificationComplianceEvaluatorName ?? ""}
                   editing={editing}
-          canUpload={canUpload}
+                  canUpload={canUpload}
                   disabled={disabled}
                   onChange={onChange}
                 />
@@ -710,7 +719,7 @@ export function DotDqfWorksheet({
               copyField={copyField}
               details={details}
               editing={editing}
-          canUpload={canUpload}
+              canUpload={canUpload}
               disabled={disabled}
               onChange={onChange}
             />
@@ -722,162 +731,167 @@ export function DotDqfWorksheet({
 
   return (
     <DotDqfRecordIdContext.Provider value={linkedDotRecordId ?? undefined}>
-    <div className="vstack gap-4">
-      <div className="row g-3 border-bottom pb-3">
-        <div className="col-md-6">
-          <div className="text-muted small text-uppercase">DRIVER</div>
-          <div className="fs-5 fw-semibold">{driverName || "—"}</div>
+      <div className="vstack gap-4">
+        <div className="row g-3 border-bottom pb-3">
+          <div className="col-md-6">
+            <div className="text-muted small text-uppercase">DRIVER</div>
+            <div className="fs-5 fw-semibold">{driverName || "—"}</div>
+          </div>
+          <div className="col-md-6">
+            <div className="text-muted small text-uppercase">Next Due Date</div>
+            <div className="fs-5 fw-semibold">{formatDqfDisplayDate(nextDueDate)}</div>
+          </div>
         </div>
-        <div className="col-md-6">
-          <div className="text-muted small text-uppercase">Next Due Date</div>
-          <div className="fs-5 fw-semibold">{formatDqfDisplayDate(nextDueDate)}</div>
-        </div>
-      </div>
 
-      <section className="card">
-        <div className="card-header">
-          <h6 className="card-title mb-0">{driverDqfGroupLabels.profile}</h6>
-        </div>
-        <div className="card-body">
-          <div className="row g-3">
-            {driverDqfFieldGroups.profile.map((fieldId) => (
-              <div className="col-md-6" key={fieldId}>
+        <section className="card">
+          <div className="card-header">
+            <h6 className="card-title mb-0">{driverDqfGroupLabels.profile}</h6>
+          </div>
+          <div className="card-body">
+            <div className="row g-3">
+              {driverDqfFieldGroups.profile.map((fieldId) => (
+                <div className="col-md-6" key={fieldId}>
+                  <WorksheetField
+                    field={dotDqfField(fieldId)}
+                    value={details[fieldId] ?? ""}
+                    editing={editing}
+                    canUpload={canUpload}
+                    disabled={disabled}
+                    onChange={onChange}
+                  />
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        <section
+          className={`card${
+            licenseStatus.itemClassName === "dqf-worksheet-item-critical"
+              ? " dqf-worksheet-card-critical"
+              : licenseStatus.itemClassName === "dqf-worksheet-item-pending"
+                ? " dqf-worksheet-card-pending"
+                : ""
+          }`}
+          id="dqf-focus-cdl-section"
+        >
+          <div className="card-header d-flex flex-wrap justify-content-between align-items-start gap-2">
+            <div>
+              <h6 className="card-title mb-0">{driverDqfGroupLabels.cdl}</h6>
+              {driverDqfGroupDescriptions.cdl ? (
+                <p className="text-muted small mb-0 mt-1">{driverDqfGroupDescriptions.cdl}</p>
+              ) : null}
+            </div>
+            <span className={`badge ${licenseStatus.badgeClassName}`}>{licenseStatus.label}</span>
+          </div>
+          <div className="card-body vstack gap-3">
+            {!cdlRequired ? (
+              <div className="alert alert-info py-2 small mb-0">
+                Non-CDL DRIVER: CDL number is optional. Upload a photo of the DRIVER&apos;S license
+                and set the license expiration date so it can be tracked.
+              </div>
+            ) : null}
+            <div className="row g-3">
+              <div className="col-md-6">
                 <WorksheetField
-                  field={dotDqfField(fieldId)}
-                  value={details[fieldId] ?? ""}
+                  field={{
+                    ...dotDqfField("cdlNumber"),
+                    label: cdlRequired ? "CDL / License Number *" : "DRIVER'S License Number",
+                    required: cdlRequired,
+                  }}
+                  value={details.cdlNumber ?? ""}
                   editing={editing}
-          canUpload={canUpload}
+                  canUpload={canUpload}
                   disabled={disabled}
                   onChange={onChange}
                 />
               </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      <section
-        className={`card${
-          licenseStatus.itemClassName === "dqf-worksheet-item-critical"
-            ? " dqf-worksheet-card-critical"
-            : licenseStatus.itemClassName === "dqf-worksheet-item-pending"
-              ? " dqf-worksheet-card-pending"
-              : ""
-        }`}
-        id="dqf-focus-cdl-section"
-      >
-        <div className="card-header d-flex flex-wrap justify-content-between align-items-start gap-2">
-          <div>
-            <h6 className="card-title mb-0">{driverDqfGroupLabels.cdl}</h6>
-            {driverDqfGroupDescriptions.cdl ? (
-              <p className="text-muted small mb-0 mt-1">{driverDqfGroupDescriptions.cdl}</p>
-            ) : null}
-          </div>
-          <span className={`badge ${licenseStatus.badgeClassName}`}>{licenseStatus.label}</span>
-        </div>
-        <div className="card-body vstack gap-3">
-          {!cdlRequired ? (
-            <div className="alert alert-info py-2 small mb-0">
-              Non-CDL DRIVER: CDL number is optional. Upload a photo of the DRIVER&apos;S license and
-              set the license expiration date so it can be tracked.
+              <div className="col-md-6">
+                <WorksheetField
+                  field={{
+                    ...dotDqfField("cdlExpiry"),
+                    label: "License Expiration Date *",
+                    required: cdlRequired,
+                  }}
+                  value={details.cdlExpiry ?? ""}
+                  editing={editing}
+                  canUpload={canUpload}
+                  disabled={disabled}
+                  onChange={onChange}
+                  tone={licenseStatus.tone}
+                />
+              </div>
             </div>
-          ) : null}
-          <div className="row g-3">
-            <div className="col-md-6">
+            <div
+              className={`border rounded p-3${
+                licenseStatus.tone === "critical"
+                  ? " dqf-worksheet-card-critical"
+                  : licenseStatus.tone === "pending"
+                    ? " dqf-worksheet-card-pending"
+                    : ""
+              }`}
+            >
+              <div className="fw-medium mb-2">DRIVER&apos;S License Photo / Copy</div>
+              <p className="text-muted small mb-3">
+                Take a photo or upload a PDF of the DRIVER&apos;S license. Expiration is tracked
+                above.
+              </p>
               <WorksheetField
                 field={{
-                  ...dotDqfField("cdlNumber"),
-                  label: cdlRequired ? "CDL / License Number *" : "DRIVER'S License Number",
-                  required: cdlRequired,
+                  ...dotDqfField("driversLicenseCopy"),
+                  label: "License photo / PDF",
+                  description: "",
                 }}
-                value={details.cdlNumber ?? ""}
-                editing={editing}
-          canUpload={canUpload}
-                disabled={disabled}
-                onChange={onChange}
-              />
-            </div>
-            <div className="col-md-6">
-              <WorksheetField
-                field={{
-                  ...dotDqfField("cdlExpiry"),
-                  label: "License Expiration Date *",
-                  required: cdlRequired,
-                }}
-                value={details.cdlExpiry ?? ""}
-                editing={editing}
-          canUpload={canUpload}
-                disabled={disabled}
-                onChange={onChange}
-                tone={licenseStatus.tone}
-              />
-            </div>
-          </div>
-          <div
-            className={`border rounded p-3${
-              licenseStatus.tone === "critical"
-                ? " dqf-worksheet-card-critical"
-                : licenseStatus.tone === "pending"
-                  ? " dqf-worksheet-card-pending"
-                  : ""
-            }`}
-          >
-            <div className="fw-medium mb-2">DRIVER&apos;S License Photo / Copy</div>
-            <p className="text-muted small mb-3">
-              Take a photo or upload a PDF of the DRIVER&apos;S license. Expiration is tracked above.
-            </p>
-            <WorksheetField
-              field={{
-                ...dotDqfField("driversLicenseCopy"),
-                label: "License photo / PDF",
-                description: "",
-              }}
-              value={details.driversLicenseCopy ?? ""}
-              editing={editing}
-              canUpload={canUpload}
-              disabled={disabled}
-              tone={licenseStatus.tone}
-              onChange={(fieldId, value) => {
-                onChange?.(fieldId, value);
-                if (fieldId === "driversLicenseCopy" && value.trim() && !details.driversLicenseOnFile) {
-                  onChange?.("driversLicenseOnFile", "Yes");
-                }
-              }}
-            />
-            <div className="mt-3">
-              <WorksheetField
-                field={dotDqfField("driversLicenseOnFile")}
-                value={details.driversLicenseOnFile ?? ""}
+                value={details.driversLicenseCopy ?? ""}
                 editing={editing}
                 canUpload={canUpload}
                 disabled={disabled}
-                onChange={onChange}
+                tone={licenseStatus.tone}
+                onChange={(fieldId, value) => {
+                  onChange?.(fieldId, value);
+                  if (
+                    fieldId === "driversLicenseCopy" &&
+                    value.trim() &&
+                    !details.driversLicenseOnFile
+                  ) {
+                    onChange?.("driversLicenseOnFile", "Yes");
+                  }
+                }}
               />
+              <div className="mt-3">
+                <WorksheetField
+                  field={dotDqfField("driversLicenseOnFile")}
+                  value={details.driversLicenseOnFile ?? ""}
+                  editing={editing}
+                  canUpload={canUpload}
+                  disabled={disabled}
+                  onChange={onChange}
+                />
+              </div>
             </div>
           </div>
-        </div>
-      </section>
+        </section>
 
-      <section className="card">
-        <div className="card-header d-flex flex-wrap justify-content-between align-items-start gap-2">
-          <div>
-            <h6 className="card-title mb-0">{driverDqfGroupLabels.documents}</h6>
-            {driverDqfGroupDescriptions.documents ? (
-              <p className="text-muted small mb-0 mt-1">{driverDqfGroupDescriptions.documents}</p>
-            ) : null}
-            <p className="text-muted small mb-0 mt-1">
-              Expand a document to upload a copy, set dates, or open Fill &amp; sign.
-              {canUpload ? null : " Upload requires DOT manage permission."}
-            </p>
+        <section className="card">
+          <div className="card-header d-flex flex-wrap justify-content-between align-items-start gap-2">
+            <div>
+              <h6 className="card-title mb-0">{driverDqfGroupLabels.documents}</h6>
+              {driverDqfGroupDescriptions.documents ? (
+                <p className="text-muted small mb-0 mt-1">{driverDqfGroupDescriptions.documents}</p>
+              ) : null}
+              <p className="text-muted small mb-0 mt-1">
+                Expand a document to upload a copy, set dates, or open Fill &amp; sign.
+                {canUpload ? null : " Upload requires DOT manage permission."}
+              </p>
+            </div>
           </div>
-        </div>
-        <div className="card-body p-0">
-          <div className="accordion accordion-flush">
-            {DQF_WORKSHEET_DOCUMENT_ORDER.map((key) => renderDocument(key))}
+          <div className="card-body p-0">
+            <div className="accordion accordion-flush">
+              {DQF_WORKSHEET_DOCUMENT_ORDER.map((key) => renderDocument(key))}
+            </div>
           </div>
-        </div>
-      </section>
-    </div>
+        </section>
+      </div>
     </DotDqfRecordIdContext.Provider>
   );
 }

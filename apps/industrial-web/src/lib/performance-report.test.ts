@@ -76,16 +76,31 @@ const rawReport = {
     ],
     notes: [],
   },
-  omitted: [{ id: "discipline", title: "Disciplinary actions", reason: "Requires discipline view permission" }],
+  omitted: [
+    {
+      id: "discipline",
+      title: "Disciplinary actions",
+      reason: "Requires discipline view permission",
+    },
+  ],
 };
 
 describe("performance report request", () => {
   it("computes period presets", () => {
     const today = new Date(2026, 9, 14);
-    expect(performancePeriodRange("last_month", today)).toEqual({ from: "2026-09-01", to: "2026-09-30" });
-    expect(performancePeriodRange("last_quarter", today)).toEqual({ from: "2026-07-01", to: "2026-09-30" });
+    expect(performancePeriodRange("last_month", today)).toEqual({
+      from: "2026-09-01",
+      to: "2026-09-30",
+    });
+    expect(performancePeriodRange("last_quarter", today)).toEqual({
+      from: "2026-07-01",
+      to: "2026-09-30",
+    });
     expect(performancePeriodRange("ytd", today)).toEqual({ from: "2026-01-01", to: "2026-10-14" });
-    expect(performancePeriodRange("last_year", today)).toEqual({ from: "2025-01-01", to: "2025-12-31" });
+    expect(performancePeriodRange("last_year", today)).toEqual({
+      from: "2025-01-01",
+      to: "2025-12-31",
+    });
     expect(performancePeriodRange("custom", today)).toBeNull();
   });
 
@@ -94,12 +109,19 @@ describe("performance report request", () => {
     expect(performanceFormError({ ...baseForm, to: "2025-12-31" })).toMatch(/end date/);
     expect(performanceFormError({ ...baseForm, hoursWorked: "abc" })).toMatch(/Hours/);
     expect(buildPerformanceReportRequest(baseForm)).not.toHaveProperty("hoursWorked");
-    expect(buildPerformanceReportRequest({ ...baseForm, hoursWorked: "1,250,000" }).hoursWorked).toBe(1250000);
+    expect(
+      buildPerformanceReportRequest({ ...baseForm, hoursWorked: "1,250,000" }).hoursWorked,
+    ).toBe(1250000);
   });
 
   it("parses org filter options with divisions", () => {
     const org = parsePerformanceOrgOptions(
-      { items: [{ id: "s1", name: "Plant B" }, { id: "s2", name: "Plant A", status: "INACTIVE" }] },
+      {
+        items: [
+          { id: "s1", name: "Plant B" },
+          { id: "s2", name: "Plant A", status: "INACTIVE" },
+        ],
+      },
       [
         { id: "d1", name: "Shipping", siteId: "s1", divisionName: "Logistics" },
         { id: "d2", name: "Packaging", siteId: "s1", divisionName: "Operations" },
@@ -129,7 +151,9 @@ describe("performance report output", () => {
   });
 
   it("builds escaped printable HTML with highlights and rankings", () => {
-    const html = buildPerformanceReportHtml(parsePerformanceReport(rawReport)!, { companyName: "Acme & Co" });
+    const html = buildPerformanceReportHtml(parsePerformanceReport(rawReport)!, {
+      companyName: "Acme & Co",
+    });
     expect(html).toContain("Acme &amp; Co");
     expect(html).toContain("Plant &lt;A&gt;");
     expect(html).not.toContain("<script>alert(1)</script>");

@@ -28,9 +28,9 @@ export function IndustrialNotificationMenu() {
   const { openPopout } = useMessagingPopout();
   const canRead = Boolean(
     me?.permissions?.includes("industrial.access") ||
-      me?.permissions?.includes("industrial.admin") ||
-      me?.permissions?.includes("industrial.forms.view") ||
-      me?.permissions?.includes("field.access"),
+    me?.permissions?.includes("industrial.admin") ||
+    me?.permissions?.includes("industrial.forms.view") ||
+    me?.permissions?.includes("field.access"),
   );
   const [open, setOpen] = useState(false);
   const [count, setCount] = useState(0);
@@ -116,9 +116,7 @@ export function IndustrialNotificationMenu() {
     try {
       await apiSend(`/api/v1/industrial/my-notifications/${encodeURIComponent(id)}/read`, "POST");
       setItems((prev) =>
-        prev.map((item) =>
-          item.id === id ? { ...item, readAt: new Date().toISOString() } : item,
-        ),
+        prev.map((item) => (item.id === id ? { ...item, readAt: new Date().toISOString() } : item)),
       );
       setCount((prev) => Math.max(0, prev - 1));
       previousCountRef.current = Math.max(0, (previousCountRef.current ?? 1) - 1);
@@ -242,7 +240,11 @@ export function IndustrialNotificationMenu() {
             >
               Messaging
             </button>
-            <Link href="/modules/forms/?tab=submissions" className="small" onClick={() => setOpen(false)}>
+            <Link
+              href="/modules/forms/?tab=submissions"
+              className="small"
+              onClick={() => setOpen(false)}
+            >
               Forms
             </Link>
           </div>

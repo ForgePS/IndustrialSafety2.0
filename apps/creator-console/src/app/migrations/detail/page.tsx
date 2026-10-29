@@ -72,8 +72,7 @@ function MigrationDetailInner() {
     permissionAck: false,
   });
 
-  const canCutover =
-    Boolean(me?.isPlatformAdmin) || hasPermission("platform.tenant.read");
+  const canCutover = Boolean(me?.isPlatformAdmin) || hasPermission("platform.tenant.read");
 
   useEffect(() => {
     let cancelled = false;
@@ -261,11 +260,7 @@ function MigrationDetailInner() {
             ) : null}
 
             <div style={{ marginTop: "1.25rem" }}>
-              <Button
-                variant="danger"
-                disabled={!gateReady}
-                onClick={() => setCutoverStep(1)}
-              >
+              <Button variant="danger" disabled={!gateReady} onClick={() => setCutoverStep(1)}>
                 Launch Customer
               </Button>
             </div>

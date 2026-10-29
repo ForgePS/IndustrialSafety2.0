@@ -93,13 +93,13 @@ describe("form-builder", () => {
     expect(field.id).toBe("employeeNumber");
     expect(field.label).toBe("Employee #");
     expect(field.required).toBe(true);
-    expect(changeFormBuilderFieldType({ id: "q", label: "Emp", type: "text" }, "employeeNumber")).toEqual(
-      {
-        id: "q",
-        label: "Emp",
-        type: "employeeNumber",
-        required: true,
-      },
-    );
+    expect(
+      changeFormBuilderFieldType({ id: "q", label: "Emp", type: "text" }, "employeeNumber"),
+    ).toEqual({
+      id: "q",
+      label: "Emp",
+      type: "employeeNumber",
+      required: true,
+    });
   });
 });

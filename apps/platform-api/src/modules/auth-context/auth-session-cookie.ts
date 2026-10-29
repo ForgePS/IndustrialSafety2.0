@@ -50,14 +50,10 @@ export function buildSessionSetCookie(
   return parts.join("; ");
 }
 
-export function buildClearSessionCookie(options: Pick<SessionCookieOptions, "secure" | "cookieName">): string {
-  const parts = [
-    `${options.cookieName}=`,
-    "Path=/",
-    "HttpOnly",
-    "SameSite=Strict",
-    "Max-Age=0",
-  ];
+export function buildClearSessionCookie(
+  options: Pick<SessionCookieOptions, "secure" | "cookieName">,
+): string {
+  const parts = [`${options.cookieName}=`, "Path=/", "HttpOnly", "SameSite=Strict", "Max-Age=0"];
   if (options.secure) {
     parts.push("Secure");
   }

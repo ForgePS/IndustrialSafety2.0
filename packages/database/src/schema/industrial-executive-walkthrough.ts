@@ -40,9 +40,7 @@ export const industrialExecutiveWalkthroughSettings = pgTable(
     createdAt: createdAtColumn,
     updatedAt: updatedAtColumn,
   },
-  (t) => [
-    uniqueIndex("industrial_exec_walkthrough_settings_tenant_uidx").on(t.tenantId),
-  ],
+  (t) => [uniqueIndex("industrial_exec_walkthrough_settings_tenant_uidx").on(t.tenantId)],
 );
 
 export const industrialExecutiveWalkthroughNarration = pgTable(

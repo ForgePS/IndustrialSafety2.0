@@ -161,7 +161,11 @@ export default function MobilePrintManagerPage() {
         the Forge Print Manager.
       </p>
 
-      <div className="ff-tabs ff-tabs--secondary" role="tablist" aria-label="Print Manager sections">
+      <div
+        className="ff-tabs ff-tabs--secondary"
+        role="tablist"
+        aria-label="Print Manager sections"
+      >
         {(
           [
             ["home", "Home"],
@@ -265,7 +269,11 @@ export default function MobilePrintManagerPage() {
           <section className="ff-section" aria-label="Recent prints">
             <div className="ff-section-head">
               <h2 className="ff-section-title ff-section-title--inline">Recent Prints</h2>
-              <button type="button" className="ff-btn ff-btn-secondary" onClick={() => setTab("recent")}>
+              <button
+                type="button"
+                className="ff-btn ff-btn-secondary"
+                onClick={() => setTab("recent")}
+              >
                 View all
               </button>
             </div>
@@ -305,7 +313,9 @@ export default function MobilePrintManagerPage() {
               ) : null}
             </div>
             {directPrinters.length === 0 ? (
-              <p className="ff-page-body">No Direct Bluetooth printers registered on this account yet.</p>
+              <p className="ff-page-body">
+                No Direct Bluetooth printers registered on this account yet.
+              </p>
             ) : (
               <div className="ff-stack-list">
                 {directPrinters.map((printer) => (
@@ -360,7 +370,11 @@ export default function MobilePrintManagerPage() {
                 handles nearby Bluetooth delivery.
               </span>
             </div>
-            <button type="button" className="ff-btn ff-btn-secondary" onClick={() => void refresh()}>
+            <button
+              type="button"
+              className="ff-btn ff-btn-secondary"
+              onClick={() => void refresh()}
+            >
               Refresh status
             </button>
           </div>

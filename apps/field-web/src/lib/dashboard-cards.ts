@@ -55,7 +55,13 @@ export const FIELD_DASHBOARD_CATALOG: readonly DashboardCard[] = [
   { id: "more-reminders", label: "Reminders", href: "/reminders/", source: "more" },
   { id: "messaging", label: "Messages", href: "/messaging/", source: "more" },
   { id: "my-forge", label: "My Forge", href: "/my-forge/", source: "more" },
-  { id: "more-loto", label: "LOTO", href: "/more/loto/", permission: "field.loto.execute", source: "more" },
+  {
+    id: "more-loto",
+    label: "LOTO",
+    href: "/more/loto/",
+    permission: "field.loto.execute",
+    source: "more",
+  },
   {
     id: "more-jsa",
     label: "JSA / JHA",
@@ -64,7 +70,13 @@ export const FIELD_DASHBOARD_CATALOG: readonly DashboardCard[] = [
     source: "more",
   },
   { id: "more-permits", label: "Permits", href: "/more/permits/", source: "more" },
-  { id: "more-sds", label: "SDS", href: "/more/sds/", permission: "field.sds.view", source: "more" },
+  {
+    id: "more-sds",
+    label: "SDS",
+    href: "/more/sds/",
+    permission: "field.sds.view",
+    source: "more",
+  },
   {
     id: "food-safety",
     label: "Food Safety",
@@ -80,7 +92,13 @@ export const FIELD_DASHBOARD_CATALOG: readonly DashboardCard[] = [
     source: "more",
   },
   { id: "more-workflows", label: "Safety workflows", href: "/workflows/", source: "more" },
-  { id: "more-emergency", label: "Emergency", href: "/more/emergency/", permission: "field.emergency.view", source: "more" },
+  {
+    id: "more-emergency",
+    label: "Emergency",
+    href: "/more/emergency/",
+    permission: "field.emergency.view",
+    source: "more",
+  },
   { id: "more-records", label: "My Records", href: "/more/records/", source: "more" },
 ];
 

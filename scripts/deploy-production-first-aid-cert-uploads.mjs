@@ -21,7 +21,10 @@ const API_ECR = `${ACCOUNT}.dkr.ecr.${REGION}.amazonaws.com/forge-production-ecr
 const registerOnly = process.argv.includes("--register-only");
 const skipMigrate = process.argv.includes("--skip-migrate");
 const skipWeb = process.argv.includes("--skip-web");
-const stamp = new Date().toISOString().replace(/[-:TZ.]/g, "").slice(0, 14);
+const stamp = new Date()
+  .toISOString()
+  .replace(/[-:TZ.]/g, "")
+  .slice(0, 14);
 const tag = `first-aid-cert-uploads-${stamp}`;
 
 function sh(cmd, opts = {}) {
@@ -95,7 +98,9 @@ if (!registerOnly) {
 }
 
 if (!registerOnly && !skipMigrate) {
-  sh(`node scripts/run-ecs-migrate.mjs --env production --task-definition ${apiReg.taskDefinitionArn}`);
+  sh(
+    `node scripts/run-ecs-migrate.mjs --env production --task-definition ${apiReg.taskDefinitionArn}`,
+  );
 }
 
 if (!registerOnly && !skipWeb) {

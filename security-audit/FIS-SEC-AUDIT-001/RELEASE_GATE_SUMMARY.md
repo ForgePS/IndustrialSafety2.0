@@ -4,7 +4,7 @@
 **Date:** 2026-09-17  
 **Commit/Build:** `54a4742b3736f9bccdb052ba308811b5547301d8`  
 **Environment(s):** Source tree; production API/frontends (read-only); hosted development API (read-only)  
-**Auditor:** Cursor under operator supervision  
+**Auditor:** Cursor under operator supervision
 
 ## Decision
 
@@ -19,23 +19,23 @@ DO NOT USE LIVE PLATFORM
 ## Findings Count
 
 | Critical | High | Medium | Low | Informational |
-| ---: | ---: | ---: | ---: | ---: |
-| 2 | 3 | 5 | 1 | 2 |
+| -------: | ---: | -----: | --: | ------------: |
+|        2 |    3 |      5 |   1 |             2 |
 
 ## Release Gates
 
-| Gate | Status | Evidence | Notes |
-| --- | --- | --- | --- |
-| RG-01 Cross-tenant isolation | BLOCKED | Code + unit tests only | No approved Producers authenticated live test |
-| RG-02 Tenant-header validation | BLOCKED | Membership checks in source; live unproven | Same credential gap |
-| RG-03 Dev-principal rejection | PASS | Post-deploy api-dev + prod | Both return `Authorization Bearer token required`; `FORGE_ALLOW_DEV_PRINCIPAL` unset on td :392 / :128 |
-| RG-04 Anonymous API rejection | PASS | Prod `/api/v1/auth/me` → 401 | Bearer required |
-| RG-05 Role/permission enforcement | BLOCKED | Guards present; live matrix not run | |
-| RG-06 Object-level authorization | PASS WITH REVIEW | Public QR no longer trusts client `permissions` | Live IDOR matrix still incomplete; fake-token → 404 (prod) |
-| RG-07 Production secret exposure | PASS WITH REVIEW | No live AKIA/private key in targeted scans | Dependency/advisory triage open |
-| RG-08 Deployment security | PASS WITH CONDITIONS | Strong headers; CSP unsafe-inline | `X-Powered-By` stripped on prod/dev health |
-| RG-09 Logout/offline data | BLOCKED | `clearAuthStorage` reviewed; browser matrix not run | |
-| RG-10 Presentation containment | BLOCKED | Requires presentation profile walkthrough | |
+| Gate                              | Status               | Evidence                                            | Notes                                                                                                  |
+| --------------------------------- | -------------------- | --------------------------------------------------- | ------------------------------------------------------------------------------------------------------ |
+| RG-01 Cross-tenant isolation      | BLOCKED              | Code + unit tests only                              | No approved Producers authenticated live test                                                          |
+| RG-02 Tenant-header validation    | BLOCKED              | Membership checks in source; live unproven          | Same credential gap                                                                                    |
+| RG-03 Dev-principal rejection     | PASS                 | Post-deploy api-dev + prod                          | Both return `Authorization Bearer token required`; `FORGE_ALLOW_DEV_PRINCIPAL` unset on td :392 / :128 |
+| RG-04 Anonymous API rejection     | PASS                 | Prod `/api/v1/auth/me` → 401                        | Bearer required                                                                                        |
+| RG-05 Role/permission enforcement | BLOCKED              | Guards present; live matrix not run                 |                                                                                                        |
+| RG-06 Object-level authorization  | PASS WITH REVIEW     | Public QR no longer trusts client `permissions`     | Live IDOR matrix still incomplete; fake-token → 404 (prod)                                             |
+| RG-07 Production secret exposure  | PASS WITH REVIEW     | No live AKIA/private key in targeted scans          | Dependency/advisory triage open                                                                        |
+| RG-08 Deployment security         | PASS WITH CONDITIONS | Strong headers; CSP unsafe-inline                   | `X-Powered-By` stripped on prod/dev health                                                             |
+| RG-09 Logout/offline data         | BLOCKED              | `clearAuthStorage` reviewed; browser matrix not run |                                                                                                        |
+| RG-10 Presentation containment    | BLOCKED              | Requires presentation profile walkthrough           |                                                                                                        |
 
 ## Immediate Actions
 

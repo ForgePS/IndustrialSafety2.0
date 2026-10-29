@@ -3,7 +3,11 @@
  */
 
 import type { WorkspaceWidgetSize } from "@/lib/workspace/types";
-import { clampWorkspaceSize, isWorkspaceWidgetSize, workspaceColumnSpan } from "@/lib/workspace/sizing";
+import {
+  clampWorkspaceSize,
+  isWorkspaceWidgetSize,
+  workspaceColumnSpan,
+} from "@/lib/workspace/sizing";
 
 export const DASHBOARD_LAYOUT_STORAGE_KEY = "forge-ind-dashboard-layout-v1";
 
@@ -228,9 +232,7 @@ export function clearDashboardLayout(tenantId: string, userId: string): void {
 }
 
 export function visibleDashboardItems(state: DashboardLayoutState): DashboardLayoutItem[] {
-  return state.items
-    .filter((item) => item.isVisible)
-    .sort((a, b) => a.sortOrder - b.sortOrder);
+  return state.items.filter((item) => item.isVisible).sort((a, b) => a.sortOrder - b.sortOrder);
 }
 
 export function updateDashboardItem(

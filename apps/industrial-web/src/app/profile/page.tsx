@@ -137,17 +137,22 @@ export default function IndustrialProfilePage() {
     setSaved(false);
     setSignatureSaved(false);
     try {
-      const updated = await apiSend<AuthProfile>("/api/v1/auth/profile", "PATCH", {
-        firstName: form.firstName.trim(),
-        lastName: form.lastName.trim(),
-        middleName: form.middleName.trim() || null,
-        suffix: form.suffix.trim() || null,
-        preferredName: form.preferredName.trim() || null,
-        username: form.username.trim() || null,
-        email: form.email.trim() || null,
-        phone: form.phone.trim() || null,
-        dateOfBirth: form.dateOfBirth.trim() || null,
-      }, etag ? { ifMatch: etag } : {});
+      const updated = await apiSend<AuthProfile>(
+        "/api/v1/auth/profile",
+        "PATCH",
+        {
+          firstName: form.firstName.trim(),
+          lastName: form.lastName.trim(),
+          middleName: form.middleName.trim() || null,
+          suffix: form.suffix.trim() || null,
+          preferredName: form.preferredName.trim() || null,
+          username: form.username.trim() || null,
+          email: form.email.trim() || null,
+          phone: form.phone.trim() || null,
+          dateOfBirth: form.dateOfBirth.trim() || null,
+        },
+        etag ? { ifMatch: etag } : {},
+      );
       setProfile(updated);
       setForm(formFromProfile(updated));
       setSignature(updated.signatureUrl ?? "");
@@ -281,7 +286,13 @@ export default function IndustrialProfilePage() {
             </div>
             <div>
               <dt>Role</dt>
-              <dd>{profile ? roleLabel(profile) : me.isPlatformAdmin ? "Platform admin" : "Tenant MEMBER"}</dd>
+              <dd>
+                {profile
+                  ? roleLabel(profile)
+                  : me.isPlatformAdmin
+                    ? "Platform admin"
+                    : "Tenant MEMBER"}
+              </dd>
             </div>
             <div>
               <dt>Status</dt>
@@ -289,11 +300,7 @@ export default function IndustrialProfilePage() {
             </div>
             <div>
               <dt>Last sign-in</dt>
-              <dd>
-                {profile?.lastLoginAt
-                  ? new Date(profile.lastLoginAt).toLocaleString()
-                  : "—"}
-              </dd>
+              <dd>{profile?.lastLoginAt ? new Date(profile.lastLoginAt).toLocaleString() : "—"}</dd>
             </div>
             <div>
               <dt>Active tenant</dt>
@@ -315,15 +322,16 @@ export default function IndustrialProfilePage() {
               {profile?.personnelId ? (
                 <>
                   Linked to a personnel record.{" "}
-                  <Link href={personFileHref(profile.personnelId)}>
-                    Open personnel file
-                  </Link>
+                  <Link href={personFileHref(profile.personnelId)}>Open personnel file</Link>
                 </>
               ) : (
                 "Name and contact used across Industrial Safety."
               )}
             </p>
-            <form className="ind-ops-create border-0 shadow-none p-0" onSubmit={(e) => void onSave(e)}>
+            <form
+              className="ind-ops-create border-0 shadow-none p-0"
+              onSubmit={(e) => void onSave(e)}
+            >
               {(
                 [
                   ["firstName", "First name", true, "text"],
@@ -356,7 +364,13 @@ export default function IndustrialProfilePage() {
                       value={form[key]}
                       onChange={(e) => setForm((prev) => ({ ...prev, [key]: e.target.value }))}
                       autoComplete={
-                        key === "email" ? "email" : key === "phone" ? "tel" : key === "username" ? "username" : "off"
+                        key === "email"
+                          ? "email"
+                          : key === "phone"
+                            ? "tel"
+                            : key === "username"
+                              ? "username"
+                              : "off"
                       }
                     />
                   )}
@@ -383,7 +397,7 @@ export default function IndustrialProfilePage() {
             <h2 className="h6 mb-1">Signature on file</h2>
             <p className="text-muted small mb-3">
               {profile.personnelId
-                ? "Saved to your linked personnel record. When filling forms, choose \"Use my signature\" to apply it."
+                ? 'Saved to your linked personnel record. When filling forms, choose "Use my signature" to apply it.'
                 : "Your account is not linked to a personnel record yet, so a reusable signature cannot be stored."}
             </p>
             {profile.personnelId ? (

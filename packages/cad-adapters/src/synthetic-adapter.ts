@@ -157,7 +157,9 @@ export class ForgeSyntheticCadAdapter extends BaseCadAdapter {
     }
 
     const bodyBytes =
-      typeof request.body === "string" ? Buffer.from(request.body, "utf8") : Buffer.from(request.body);
+      typeof request.body === "string"
+        ? Buffer.from(request.body, "utf8")
+        : Buffer.from(request.body);
     const bodySha256Hex = createHash("sha256").update(bodyBytes).digest("hex");
     const valid = verifyCadWebhookSignature({
       secret,

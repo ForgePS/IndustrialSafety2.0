@@ -153,12 +153,12 @@ export function RemindersWorkspace({ moduleName }: { moduleName: string }) {
 
   const eventTitle = useMemo(() => {
     const map = new Map(events.map((e) => [e.id, e.title]));
-    return (id?: string | null) => (id ? map.get(id) ?? id.slice(0, 8) : null);
+    return (id?: string | null) => (id ? (map.get(id) ?? id.slice(0, 8)) : null);
   }, [events]);
 
   const taskTitle = useMemo(() => {
     const map = new Map(tasks.map((t) => [t.id, t.title || t.id]));
-    return (id?: string | null) => (id ? map.get(id) ?? id.slice(0, 8) : null);
+    return (id?: string | null) => (id ? (map.get(id) ?? id.slice(0, 8)) : null);
   }, [tasks]);
 
   async function createReminder() {
@@ -250,7 +250,12 @@ export function RemindersWorkspace({ moduleName }: { moduleName: string }) {
           <div className="card">
             <div className="card-header d-flex justify-content-between align-items-center">
               <h5 className="mb-0">Reminders</h5>
-              <button type="button" className="btn btn-sm btn-outline-primary" disabled={saving} onClick={() => void processDue()}>
+              <button
+                type="button"
+                className="btn btn-sm btn-outline-primary"
+                disabled={saving}
+                onClick={() => void processDue()}
+              >
                 Send due reminders
               </button>
             </div>

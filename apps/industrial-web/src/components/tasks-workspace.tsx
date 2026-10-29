@@ -7,10 +7,7 @@ import { FilterPanel } from "@/components/filter-panel";
 import { ModuleWorkspaceHeader } from "@/components/module-workspace-header";
 import { isProducersRiceMillTenant } from "@/lib/producers-mvr-policy";
 import { canDeleteTask } from "@/lib/form-signatory";
-import {
-  filterTaskAssigneePersonnel,
-  type TaskAssigneePerson,
-} from "@/lib/task-assignees";
+import { filterTaskAssigneePersonnel, type TaskAssigneePerson } from "@/lib/task-assignees";
 import { filterTasksForWidgetView } from "@/lib/tasks/widget-filter";
 
 type Progress = { done: number; total: number };
@@ -103,23 +100,20 @@ export function TasksWorkspace({ moduleName }: { moduleName: string }) {
   const [checklistTitle, setChecklistTitle] = useState("");
 
   const canDelete = useMemo(
-    () =>
-      (task: Task) =>
-        canDeleteTask({
-          isPlatformAdmin: me?.isPlatformAdmin,
-          activeProducts: me?.activeProducts,
-          permissions: me?.permissions,
-          actorUserId: me?.userId,
-          createdByUserId: task.createdByUserId,
-        }),
+    () => (task: Task) =>
+      canDeleteTask({
+        isPlatformAdmin: me?.isPlatformAdmin,
+        activeProducts: me?.activeProducts,
+        permissions: me?.permissions,
+        actorUserId: me?.userId,
+        createdByUserId: task.createdByUserId,
+      }),
     [me],
   );
 
   const activeTenant = useMemo(() => {
     if (!me) return null;
-    return (
-      me.tenants?.find((tenant) => tenant.tenantId === me.tenantId) ?? me.tenants?.[0] ?? null
-    );
+    return me.tenants?.find((tenant) => tenant.tenantId === me.tenantId) ?? me.tenants?.[0] ?? null;
   }, [me]);
 
   const restrictAssigneesToSafetyOrEhs = isProducersRiceMillTenant(
@@ -351,9 +345,13 @@ export function TasksWorkspace({ moduleName }: { moduleName: string }) {
   async function addChecklist() {
     if (!expandedId || !checklistTitle.trim()) return;
     try {
-      await apiSend(`/api/v1/industrial/tasks/${encodeURIComponent(expandedId)}/checklist`, "POST", {
-        title: checklistTitle.trim(),
-      });
+      await apiSend(
+        `/api/v1/industrial/tasks/${encodeURIComponent(expandedId)}/checklist`,
+        "POST",
+        {
+          title: checklistTitle.trim(),
+        },
+      );
       setChecklistTitle("");
       await loadDetail(expandedId);
       await load();
@@ -380,9 +378,13 @@ export function TasksWorkspace({ moduleName }: { moduleName: string }) {
   async function addReminders(minutes: number[]) {
     if (!expandedId) return;
     try {
-      await apiSend(`/api/v1/industrial/tasks/${encodeURIComponent(expandedId)}/reminders`, "POST", {
-        offsetsMinutes: minutes,
-      });
+      await apiSend(
+        `/api/v1/industrial/tasks/${encodeURIComponent(expandedId)}/reminders`,
+        "POST",
+        {
+          offsetsMinutes: minutes,
+        },
+      );
       await loadDetail(expandedId);
       await load();
     } catch (err) {
@@ -522,7 +524,9 @@ export function TasksWorkspace({ moduleName }: { moduleName: string }) {
         searchValue={filter}
         onSearchChange={setFilter}
         searchPlaceholder="Search tasks…"
-        chips={filter ? [{ id: "q", label: `Search: ${filter}`, onRemove: () => setFilter("") }] : []}
+        chips={
+          filter ? [{ id: "q", label: `Search: ${filter}`, onRemove: () => setFilter("") }] : []
+        }
         onClearAll={() => {
           setFilter("");
           void load();
@@ -553,28 +557,37 @@ export function TasksWorkspace({ moduleName }: { moduleName: string }) {
                 const chk = progressLabel(task.checklistProgress);
                 return (
                   <Fragment key={task.id}>
-                    <tr className={highlighted ? "table-active" : undefined} id={`task-row-${task.id}`}>
+                    <tr
+                      className={highlighted ? "table-active" : undefined}
+                      id={`task-row-${task.id}`}
+                    >
                       <td>
                         <button
                           type="button"
                           className="btn btn-link btn-sm p-0 text-start"
                           onClick={() => setExpandedId(open ? null : task.id)}
                         >
-                          <i className={`bx ${open ? "bx-chevron-down" : "bx-chevron-right"} me-1`} />
+                          <i
+                            className={`bx ${open ? "bx-chevron-down" : "bx-chevron-right"} me-1`}
+                          />
                           {task.title}
                         </button>
-                        {task.overdue ? <span className="badge bg-label-danger ms-2">Overdue</span> : null}
+                        {task.overdue ? (
+                          <span className="badge bg-label-danger ms-2">Overdue</span>
+                        ) : null}
                         <div className="small text-muted mt-1">
                           {sub ? <span className="me-2">Subtasks {sub}</span> : null}
                           {chk ? <span className="me-2">Checklist {chk}</span> : null}
                           {(task.reminderCount ?? 0) > 0 ? (
                             <Link className="me-2" href="/modules/reminders/">
-                              {task.reminderCount} reminder{(task.reminderCount ?? 0) === 1 ? "" : "s"}
+                              {task.reminderCount} reminder
+                              {(task.reminderCount ?? 0) === 1 ? "" : "s"}
                             </Link>
                           ) : null}
                           {(task.linkedEventCount ?? 0) > 0 ? (
                             <Link href="/modules/calendar/">
-                              {task.linkedEventCount} event{(task.linkedEventCount ?? 0) === 1 ? "" : "s"}
+                              {task.linkedEventCount} event
+                              {(task.linkedEventCount ?? 0) === 1 ? "" : "s"}
                             </Link>
                           ) : null}
                         </div>
@@ -601,7 +614,9 @@ export function TasksWorkspace({ moduleName }: { moduleName: string }) {
                       </td>
                       <td className="text-end">
                         <div className="d-inline-flex flex-wrap gap-1 justify-content-end">
-                          {!["completed", "cancelled", "COMPLETED", "CANCELLED"].includes(task.status) ? (
+                          {!["completed", "cancelled", "COMPLETED", "CANCELLED"].includes(
+                            task.status,
+                          ) ? (
                             <button
                               type="button"
                               className="btn btn-sm btn-outline-primary"
@@ -663,7 +678,11 @@ export function TasksWorkspace({ moduleName }: { moduleName: string }) {
                                     value={subtaskTitle}
                                     onChange={(e) => setSubtaskTitle(e.target.value)}
                                   />
-                                  <button type="button" className="btn btn-outline-primary" onClick={() => void addSubtask()}>
+                                  <button
+                                    type="button"
+                                    className="btn btn-outline-primary"
+                                    onClick={() => void addSubtask()}
+                                  >
                                     Add
                                   </button>
                                 </div>
@@ -727,7 +746,10 @@ export function TasksWorkspace({ moduleName }: { moduleName: string }) {
                                   </button>
                                 </div>
                                 <h6 className="mb-2">Activity</h6>
-                                <ul className="list-unstyled small mb-0" style={{ maxHeight: 160, overflow: "auto" }}>
+                                <ul
+                                  className="list-unstyled small mb-0"
+                                  style={{ maxHeight: 160, overflow: "auto" }}
+                                >
                                   {detail.activity.map((a) => (
                                     <li key={a.id} className="mb-1">
                                       <span className="fw-semibold">{a.action}</span>

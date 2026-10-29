@@ -46,7 +46,9 @@ export default function NerisValueSetsPage() {
   const loadOptions = useCallback(async (valueSetId: string) => {
     setSelectedId(valueSetId);
     setOptions(
-      await apiGet(`/api/v1/platform/neris/value-sets/${valueSetId}/options?pageSize=100&includeInactive=true`),
+      await apiGet(
+        `/api/v1/platform/neris/value-sets/${valueSetId}/options?pageSize=100&includeInactive=true`,
+      ),
     );
   }, []);
 

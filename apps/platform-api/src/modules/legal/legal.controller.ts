@@ -45,11 +45,7 @@ export class LegalController {
     @Param("versionId") versionId: string,
     @Req() req: RequestWithIds,
   ) {
-    const data = await this.acknowledgments.getVersion(
-      principal.tenantId,
-      documentId,
-      versionId,
-    );
+    const data = await this.acknowledgments.getVersion(principal.tenantId, documentId, versionId);
     return ok(data, getRequestIds(req));
   }
 
@@ -65,7 +61,8 @@ export class LegalController {
       documentVersionIds: parsed.documentVersionIds,
       ...(parsed.acceptedAction ? { acceptedAction: parsed.acceptedAction } : {}),
       ...(parsed.source ? { source: parsed.source } : {}),
-      authSessionId: typeof req.headers["x-request-id"] === "string" ? req.headers["x-request-id"] : null,
+      authSessionId:
+        typeof req.headers["x-request-id"] === "string" ? req.headers["x-request-id"] : null,
       ipAddress: clientIp(req),
       userAgent: typeof req.headers["user-agent"] === "string" ? req.headers["user-agent"] : null,
       correlationId: ids.correlationId,
@@ -90,7 +87,8 @@ export class LegalController {
     const ids = getRequestIds(req);
     const data = await this.attestations.sign(principal.tenantId, principal, {
       ...parsed,
-      authSessionId: typeof req.headers["x-request-id"] === "string" ? req.headers["x-request-id"] : null,
+      authSessionId:
+        typeof req.headers["x-request-id"] === "string" ? req.headers["x-request-id"] : null,
       ipAddress: clientIp(req),
       userAgent: typeof req.headers["user-agent"] === "string" ? req.headers["user-agent"] : null,
       correlationId: ids.correlationId,

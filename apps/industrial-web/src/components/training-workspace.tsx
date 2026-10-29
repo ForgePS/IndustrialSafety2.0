@@ -8,10 +8,7 @@ import { ModuleUnavailable } from "@/components/module-unavailable";
 import { TrainingAccessPanel } from "@/components/training-access-panel";
 import { TrainingComplianceMatrixPanel } from "@/components/training-compliance-matrix-panel";
 import { TrainingQcPanel } from "@/components/training-qc-panel";
-import {
-  TrainingAgencyPanel,
-  type AgencySection,
-} from "@/components/training-agency-panel";
+import { TrainingAgencyPanel, type AgencySection } from "@/components/training-agency-panel";
 import { TrainingMaterialsPanel } from "@/components/training-materials-panel";
 import { TrainingMaterialViewer } from "@/components/training-material-viewer";
 import { TrainingRecordsSearchPanel } from "@/components/training-records-search-panel";
@@ -266,7 +263,9 @@ export function TrainingWorkspace({ moduleName }: { moduleName: string }) {
       setMaterialFolderId("");
       await refresh();
     } catch (e) {
-      setError(e instanceof ApiError ? e.message : e instanceof Error ? e.message : "Upload failed");
+      setError(
+        e instanceof ApiError ? e.message : e instanceof Error ? e.message : "Upload failed",
+      );
     } finally {
       setMaterialUploading(false);
     }
@@ -291,7 +290,10 @@ export function TrainingWorkspace({ moduleName }: { moduleName: string }) {
     setPreviewMaterial(material);
   }
 
-  async function updateMaterialCategory(material: TrainingMaterial, category: TrainingMaterialTopic) {
+  async function updateMaterialCategory(
+    material: TrainingMaterial,
+    category: TrainingMaterialTopic,
+  ) {
     if (!canManage || material.category === category) return;
     setBusy(true);
     setError(null);
@@ -401,7 +403,9 @@ export function TrainingWorkspace({ moduleName }: { moduleName: string }) {
         <div className="row g-0">
           <aside className="col-lg-3 border-end">
             <div className="p-3 border-bottom">
-              <div className="text-uppercase text-muted small fw-semibold mb-1">Safety Training</div>
+              <div className="text-uppercase text-muted small fw-semibold mb-1">
+                Safety Training
+              </div>
               <div className="fw-bold">{tenantName}</div>
               <button
                 type="button"
@@ -433,7 +437,11 @@ export function TrainingWorkspace({ moduleName }: { moduleName: string }) {
             {error ? (
               <div className="alert alert-warning" role="alert">
                 {error}
-                <button type="button" className="btn-close float-end" onClick={() => setError(null)} />
+                <button
+                  type="button"
+                  className="btn-close float-end"
+                  onClick={() => setError(null)}
+                />
               </div>
             ) : null}
             {busy ? <p className="text-muted small">Refreshing…</p> : null}
@@ -456,7 +464,12 @@ export function TrainingWorkspace({ moduleName }: { moduleName: string }) {
                     <StatCard label="Seats used" value={seatsUsed} icon="bx-group" />
                   </div>
                   <div className="col-md-4">
-                    <StatCard label="Active" value={activeMembers} icon="bx-user-check" tone="success" />
+                    <StatCard
+                      label="Active"
+                      value={activeMembers}
+                      icon="bx-user-check"
+                      tone="success"
+                    />
                   </div>
                   <div className="col-md-4">
                     <StatCard
@@ -641,7 +654,8 @@ export function TrainingWorkspace({ moduleName }: { moduleName: string }) {
                           <div className="form-text">
                             PDF, PowerPoint, Word, Excel, MP4/WebM/MOV, or images — up to{" "}
                             {formatMaterialBytes(MAX_TRAINING_MATERIAL_BYTES)}. Videos are
-                            automatically optimized for tablet playback (Android and iPhone/iPad) after upload.
+                            automatically optimized for tablet playback (Android and iPhone/iPad)
+                            after upload.
                             {materialUploading ? " Uploading…" : ""}
                           </div>
                         </div>
@@ -766,8 +780,10 @@ export function TrainingWorkspace({ moduleName }: { moduleName: string }) {
                     ? {
                         onEdit: (material: TrainingMaterial) => openMaterialEditor(material),
                         onArchive: (material: TrainingMaterial) => void removeMaterial(material),
-                        onUpdateCategory: (material: TrainingMaterial, category: TrainingMaterialTopic) =>
-                          void updateMaterialCategory(material, category),
+                        onUpdateCategory: (
+                          material: TrainingMaterial,
+                          category: TrainingMaterialTopic,
+                        ) => void updateMaterialCategory(material, category),
                         onLinkSource: (material: TrainingMaterial, sourceId: string | null) =>
                           void linkMaterialSource(material, sourceId),
                         onReoptimizeVideo: (material: TrainingMaterial) =>

@@ -4,16 +4,16 @@ Collected artifacts demonstrating control operation. **No secrets, credentials, 
 
 ## Subfolders
 
-| Path | Contents |
-| --- | --- |
-| `access/` | Access review exports (redacted), provisioning samples |
-| `change/` | PR samples, CI gate results, deploy records |
-| `logging/` | CloudTrail / CloudWatch evidence (redacted) |
-| `testing/` | RLS, isolation, header, security scan outputs |
-| `vendors/` | AWS Artifact review checklists |
-| `incidents/` | Post-incident timelines (redacted) |
-| `backups/` | Backup job status, restore drill reports |
-| `training/` | Completion attestations |
+| Path         | Contents                                               |
+| ------------ | ------------------------------------------------------ |
+| `access/`    | Access review exports (redacted), provisioning samples |
+| `change/`    | PR samples, CI gate results, deploy records            |
+| `logging/`   | CloudTrail / CloudWatch evidence (redacted)            |
+| `testing/`   | RLS, isolation, header, security scan outputs          |
+| `vendors/`   | AWS Artifact review checklists                         |
+| `incidents/` | Post-incident timelines (redacted)                     |
+| `backups/`   | Backup job status, restore drill reports               |
+| `training/`  | Completion attestations                                |
 
 ## Naming convention
 

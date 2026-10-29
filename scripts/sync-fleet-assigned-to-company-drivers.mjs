@@ -184,7 +184,9 @@ async function main() {
         )
     `;
 
-    const assigned = vehicles.filter((v) => !SKIP_VEHICLE_STATUS.has(String(v.status ?? "").toUpperCase()));
+    const assigned = vehicles.filter(
+      (v) => !SKIP_VEHICLE_STATUS.has(String(v.status ?? "").toUpperCase()),
+    );
     const seenPeople = new Set();
     const seenDriverIds = new Set();
     const seenInsertKeys = new Set();
@@ -199,15 +201,28 @@ async function main() {
       const existingDriver = vehicle.assigned_driver_id
         ? driverById.get(vehicle.assigned_driver_id)
         : null;
-      const rawName = String(vehicle.assigned_driver_name || existingDriver?.personnel_name || "").trim();
-      if (rawName && !isPersonDriverName(rawName) && !vehicle.assigned_driver_personnel_id && !existingDriver) {
-        skippedNonPerson.push({ vehicleId: vehicle.id, asset: vehicle.asset_number, name: rawName });
+      const rawName = String(
+        vehicle.assigned_driver_name || existingDriver?.personnel_name || "",
+      ).trim();
+      if (
+        rawName &&
+        !isPersonDriverName(rawName) &&
+        !vehicle.assigned_driver_personnel_id &&
+        !existingDriver
+      ) {
+        skippedNonPerson.push({
+          vehicleId: vehicle.id,
+          asset: vehicle.asset_number,
+          name: rawName,
+        });
         continue;
       }
       const person =
         matchPerson(vehicle.assigned_driver_personnel_id, cleanDriverName(rawName)) ||
         (existingDriver?.personnel_id ? byId.get(existingDriver.personnel_id) : null);
-      const name = cleanDriverName(rawName) || String(person?.display_name || existingDriver?.personnel_name || "").trim();
+      const name =
+        cleanDriverName(rawName) ||
+        String(person?.display_name || existingDriver?.personnel_name || "").trim();
       const existing =
         existingDriver ||
         (person ? driverByPersonnel.get(person.id) : null) ||
@@ -241,7 +256,11 @@ async function main() {
           !seenDriverIds.has(`link:${vehicle.id}`)
         ) {
           seenDriverIds.add(`link:${vehicle.id}`);
-          wouldLinkVehicle.push({ vehicleId: vehicle.id, driverId: existing.id, asset: vehicle.asset_number });
+          wouldLinkVehicle.push({
+            vehicleId: vehicle.id,
+            driverId: existing.id,
+            asset: vehicle.asset_number,
+          });
         }
         if (APPLY && (!vehicle.assigned_driver_id || vehicle.assigned_driver_id !== existing.id)) {
           await sql`
@@ -255,7 +274,9 @@ async function main() {
 
       const insertKey = person?.id || normName(name);
       if (insertKey && seenInsertKeys.has(insertKey)) {
-        const prior = wouldInsert.find((row) => (row.personnelId || normName(row.name)) === insertKey);
+        const prior = wouldInsert.find(
+          (row) => (row.personnelId || normName(row.name)) === insertKey,
+        );
         if (APPLY && prior?.driverId) {
           await sql`
             update industrial_fleet_vehicles
@@ -314,7 +335,7 @@ async function main() {
         `;
         driverById.set(id, { id, personnel_id: person?.id ?? null, personnel_name: insert.name });
         if (person) driverByPersonnel.set(person.id, { id, personnel_id: person.id });
-        if (name)         driverByName.set(normName(name), { id, personnel_name: name });
+        if (name) driverByName.set(normName(name), { id, personnel_name: name });
         insert.driverId = id;
       }
     }

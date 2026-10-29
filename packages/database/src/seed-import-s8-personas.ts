@@ -311,7 +311,10 @@ async function ensureUser(
 async function seedTenantPersonas(
   db: ReturnType<typeof drizzle<typeof schema>>,
   tenantKey: string,
-): Promise<{ tenantId: string; personas: Record<string, { userId: string; email: string; roleCode: string }> }> {
+): Promise<{
+  tenantId: string;
+  personas: Record<string, { userId: string; email: string; roleCode: string }>;
+}> {
   const tenant = await db.query.tenants.findFirst({ where: eq(tenants.tenantKey, tenantKey) });
   if (!tenant) throw new Error(`Missing tenant ${tenantKey} — run acceptance tenant seed first`);
   const personas: Record<string, { userId: string; email: string; roleCode: string }> = {};

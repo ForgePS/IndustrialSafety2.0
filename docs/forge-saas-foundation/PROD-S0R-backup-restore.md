@@ -5,13 +5,13 @@
 
 ## Policy
 
-| Control | Value |
-| --- | --- |
-| Aurora automated backups | Production profile retention (35 days) |
-| PITR | Continuous within Aurora backup window |
-| AWS Backup plan | Daily rule (stack Backup); vault CMK-encrypted |
-| Deletion protection | Required on production cluster |
-| Encryption | Storage + backup CMKs from Security stack |
+| Control                  | Value                                          |
+| ------------------------ | ---------------------------------------------- |
+| Aurora automated backups | Production profile retention (35 days)         |
+| PITR                     | Continuous within Aurora backup window         |
+| AWS Backup plan          | Daily rule (stack Backup); vault CMK-encrypted |
+| Deletion protection      | Required on production cluster                 |
+| Encryption               | Storage + backup CMKs from Security stack      |
 
 ## Manual snapshot (pre-migrate / pre-PROD-S1)
 

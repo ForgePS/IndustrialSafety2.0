@@ -91,7 +91,11 @@ export const supportTickets = pgTable(
   (table) => [
     uniqueIndex("support_tickets_number_uidx").on(table.ticketNumber),
     index("support_tickets_tenant_status_idx").on(table.tenantId, table.status),
-    index("support_tickets_requester_idx").on(table.tenantId, table.requesterUserId, table.createdAt),
+    index("support_tickets_requester_idx").on(
+      table.tenantId,
+      table.requesterUserId,
+      table.createdAt,
+    ),
     index("support_tickets_status_priority_idx").on(table.status, table.priority),
     index("support_tickets_assignee_idx").on(table.assignedUserId, table.status),
   ],

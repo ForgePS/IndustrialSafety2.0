@@ -35,8 +35,7 @@ const XLSX_PATH = (process.env.TRAINING_XLSX_PATH || "/tmp/Training-Database.xls
 const ALLOWED = new Set(["producers-rice-mill"]);
 const SOURCE_COLLECTION = "training_database_xlsx";
 const IMPORT_RUN_ID =
-  process.env.IMPORT_RUN_ID ||
-  `training-db-${new Date().toISOString().replace(/[:.]/g, "-")}`;
+  process.env.IMPORT_RUN_ID || `training-db-${new Date().toISOString().replace(/[:.]/g, "-")}`;
 
 if (!ALLOWED.has(TENANT_KEY)) {
   throw new Error(`Refusing tenant ${TENANT_KEY}; allowed: ${[...ALLOWED].join(", ")}`);
@@ -140,7 +139,9 @@ function parseWorkbook(buffer) {
   const sheetName = wb.SheetNames.includes("Sheet2") ? "Sheet2" : wb.SheetNames[0];
   const rows = xlsx.utils.sheet_to_json(wb.Sheets[sheetName], { header: 1, defval: "" });
   const headerRowIndex = rows.findIndex(
-    (row) => asText(row[0]).toUpperCase() === "EMPLOYEE NUMBER" && asText(row[1]).toUpperCase().includes("NAME"),
+    (row) =>
+      asText(row[0]).toUpperCase() === "EMPLOYEE NUMBER" &&
+      asText(row[1]).toUpperCase().includes("NAME"),
   );
   if (headerRowIndex < 0) throw new Error("Could not locate header row (EMPLOYEE NUMBER)");
   const header = rows[headerRowIndex];
@@ -225,9 +226,7 @@ function pickPerson(candidates, employeeNumber) {
   if (!candidates?.length) return null;
   if (candidates.length === 1) return candidates[0];
   const preferred = canonicalEmployeeNumber(employeeNumber).toLowerCase();
-  const exact = candidates.find(
-    (p) => asText(p.employee_number).toLowerCase() === preferred,
-  );
+  const exact = candidates.find((p) => asText(p.employee_number).toLowerCase() === preferred);
   if (exact) return exact;
   const active = candidates.find((p) => !p.archived_at);
   return active ?? candidates[0];

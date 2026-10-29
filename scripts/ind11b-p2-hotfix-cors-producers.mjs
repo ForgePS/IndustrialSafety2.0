@@ -8,9 +8,7 @@ import path from "node:path";
 
 const FAMILY = "forge-development-ecs-platform-api";
 const NEW_ORIGIN = "https://producers-rice-mill.forgepublicsafety.com";
-const EVID = path.resolve(
-  "docs/program/industrial-migration/ind-11/evidence/p2/01-tenant-infra",
-);
+const EVID = path.resolve("docs/program/industrial-migration/ind-11/evidence/p2/01-tenant-infra");
 
 function awsJson(args) {
   const r = spawnSync("aws", args, { encoding: "utf8", shell: true, maxBuffer: 20_000_000 });
@@ -40,7 +38,10 @@ const container = td.containerDefinitions[0];
 const env = container.environment ?? [];
 const cors = env.find((e) => e.name === "CORS_ORIGINS");
 if (!cors) throw new Error("CORS_ORIGINS missing on task def");
-const origins = cors.value.split(",").map((s) => s.trim()).filter(Boolean);
+const origins = cors.value
+  .split(",")
+  .map((s) => s.trim())
+  .filter(Boolean);
 if (!origins.includes(NEW_ORIGIN)) origins.push(NEW_ORIGIN);
 cors.value = origins.join(",");
 

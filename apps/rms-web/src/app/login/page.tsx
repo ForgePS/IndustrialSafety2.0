@@ -3,12 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState, type FormEvent } from "react";
-import {
-  parseDevPrincipal,
-  setBearerToken,
-  setDevPrincipal,
-  useAuth,
-} from "@forge/web-kit";
+import { parseDevPrincipal, setBearerToken, setDevPrincipal, useAuth } from "@forge/web-kit";
 import styles from "../page.module.css";
 
 const allowDevPrincipal = process.env.NEXT_PUBLIC_ALLOW_DEV_PRINCIPAL === "true";
@@ -108,7 +103,12 @@ export default function LoginPage() {
           <form className={styles.form} onSubmit={onDevLogin}>
             <div className={styles.formRow}>
               <label htmlFor="userId">User ID</label>
-              <input id="userId" required value={userId} onChange={(e) => setUserId(e.target.value)} />
+              <input
+                id="userId"
+                required
+                value={userId}
+                onChange={(e) => setUserId(e.target.value)}
+              />
             </div>
             <div className={styles.formRow}>
               <label htmlFor="tenantId">Tenant ID</label>

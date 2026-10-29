@@ -2,12 +2,7 @@ import type { ReactNode } from "react";
 import { EmptyState, ErrorState, LoadingIndicator } from "../primitives.js";
 
 export type ForgeShellAreaState =
-  | "loading"
-  | "empty"
-  | "error"
-  | "unauthorized"
-  | "disabled_entitlement"
-  | "ready";
+  "loading" | "empty" | "error" | "unauthorized" | "disabled_entitlement" | "ready";
 
 /**
  * Standard shell-area presentation for MK-S8 required states.
@@ -65,9 +60,7 @@ export function ForgeShellState({
   return (
     <EmptyState
       title={title ?? "Not entitled"}
-      description={
-        description ?? "This product or module is not enabled for the active tenant."
-      }
+      description={description ?? "This product or module is not enabled for the active tenant."}
       {...(action ? { action } : {})}
     />
   );

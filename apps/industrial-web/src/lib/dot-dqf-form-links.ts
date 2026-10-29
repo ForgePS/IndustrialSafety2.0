@@ -1,7 +1,4 @@
-import {
-  findProducersMvrConsentForm,
-  isProducersMvrConsentForm,
-} from "./producers-mvr-policy";
+import { findProducersMvrConsentForm, isProducersMvrConsentForm } from "./producers-mvr-policy";
 
 /** Stable template names from the Producers / Firebase forms catalog. */
 export const DQF_FORM_TEMPLATE_NAMES = {
@@ -114,8 +111,6 @@ export function dqfFormFillHref(opts: {
 }
 
 export function dqfFormPrintHref(formId: string, personnelId?: string | null): string {
-  const fill = dqfFormFillHref(
-    personnelId !== undefined ? { formId, personnelId } : { formId },
-  );
+  const fill = dqfFormFillHref(personnelId !== undefined ? { formId, personnelId } : { formId });
   return `${fill}${fill.includes("?") ? "&" : "?"}print=1`;
 }

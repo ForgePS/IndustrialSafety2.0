@@ -10,12 +10,12 @@
 
 ## Migrated behind flag
 
-| Table | Route | Notes |
-| --- | --- | --- |
-| Incidents list | `/incidents/` | `ListControlsView` preserved; body → `FxTable` |
-| Review queue | `/review/` | Same client status filter |
-| CAD messages | `/cad/messages/` | Read-only metadata |
-| CAD connections | `/cad/connections/` | Existing Test/Enable/Disable actions only |
+| Table           | Route               | Notes                                          |
+| --------------- | ------------------- | ---------------------------------------------- |
+| Incidents list  | `/incidents/`       | `ListControlsView` preserved; body → `FxTable` |
+| Review queue    | `/review/`          | Same client status filter                      |
+| CAD messages    | `/cad/messages/`    | Read-only metadata                             |
+| CAD connections | `/cad/connections/` | Existing Test/Enable/Disable actions only      |
 
 ## Framework
 

@@ -21,7 +21,10 @@ const API_ECR = `${ACCOUNT}.dkr.ecr.${REGION}.amazonaws.com/forge-production-ecr
 
 const skipWeb = process.argv.includes("--skip-web");
 const skipMigrate = process.argv.includes("--skip-migrate");
-const stamp = new Date().toISOString().replace(/[-:TZ.]/g, "").slice(0, 14);
+const stamp = new Date()
+  .toISOString()
+  .replace(/[-:TZ.]/g, "")
+  .slice(0, 14);
 const tag = process.env.DEPLOY_TAG || `wc-note-authors-${stamp}`;
 
 function sh(cmd, opts = {}) {
@@ -99,7 +102,9 @@ sh(`aws ecs wait services-stable --cluster ${CLUSTER} --services ${API_SERVICE}`
 
 if (!skipMigrate) {
   console.log("=== Apply migrations (production) ===");
-  sh(`node scripts/run-ecs-migrate.mjs --env production --task-definition ${apiReg.taskDefinitionArn}`);
+  sh(
+    `node scripts/run-ecs-migrate.mjs --env production --task-definition ${apiReg.taskDefinitionArn}`,
+  );
 }
 
 if (!skipWeb) {

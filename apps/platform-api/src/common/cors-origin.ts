@@ -40,7 +40,8 @@ export function isLocalDevOrigin(origin: string): boolean {
   try {
     const url = new URL(candidate);
     if (url.protocol !== "http:") return false;
-    if (url.username || url.password || url.pathname !== "/" || url.search || url.hash) return false;
+    if (url.username || url.password || url.pathname !== "/" || url.search || url.hash)
+      return false;
     return url.hostname === "localhost" || url.hostname === "127.0.0.1";
   } catch {
     return false;

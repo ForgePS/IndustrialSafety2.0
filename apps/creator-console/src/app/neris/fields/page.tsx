@@ -40,7 +40,11 @@ export default function NerisFieldsPage() {
       });
       setItems(result);
       // apiGet may not expose meta; approximate when searching server-side
-      setTotal(result.length < pageSize && page === 1 ? result.length : Math.max(result.length, page * pageSize));
+      setTotal(
+        result.length < pageSize && page === 1
+          ? result.length
+          : Math.max(result.length, page * pageSize),
+      );
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to load fields");
     } finally {

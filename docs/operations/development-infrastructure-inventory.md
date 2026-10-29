@@ -10,45 +10,45 @@
 
 ## CloudFormation stacks
 
-| Stack | Status |
-| --- | --- |
-| CDKToolkit | CREATE_COMPLETE |
-| Forge-Development-Network | CREATE_COMPLETE |
-| Forge-Development-Security | UPDATE_COMPLETE |
-| Forge-Development-Identity | CREATE_COMPLETE |
-| Forge-Development-Messaging | CREATE_COMPLETE |
-| Forge-Development-Data | CREATE_COMPLETE |
+| Stack                           | Status          |
+| ------------------------------- | --------------- |
+| CDKToolkit                      | CREATE_COMPLETE |
+| Forge-Development-Network       | CREATE_COMPLETE |
+| Forge-Development-Security      | UPDATE_COMPLETE |
+| Forge-Development-Identity      | CREATE_COMPLETE |
+| Forge-Development-Messaging     | CREATE_COMPLETE |
+| Forge-Development-Data          | CREATE_COMPLETE |
 | Forge-Development-Observability | CREATE_COMPLETE |
-| Forge-Development-Compute | CREATE_COMPLETE |
-| Forge-Development-Monitoring | CREATE_COMPLETE |
-| Forge-Development-Backup | CREATE_COMPLETE |
+| Forge-Development-Compute       | CREATE_COMPLETE |
+| Forge-Development-Monitoring    | CREATE_COMPLETE |
+| Forge-Development-Backup        | CREATE_COMPLETE |
 
 ## Primary outputs
 
-| Resource | Value |
-| --- | --- |
-| VPC | `vpc-07219410902223b22` |
-| Private app subnets | `subnet-09971b07b33602377`, `subnet-06282af20db0a76c5` |
-| NAT Gateway | `nat-062081e623636e190` (1) |
-| ALB DNS | `forge-development-alb-api-1005626432.us-east-1.elb.amazonaws.com` |
-| ECS cluster | `forge-development-ecs-platform` |
-| Aurora endpoint | `forge-development-rds-aurora.cluster-c876w2qgijz1.us-east-1.rds.amazonaws.com` |
-| Documents bucket | `forge-development-documents-511343547817-us-east-1` |
-| Cognito User Pool | `us-east-1_VYjUFLXG4` |
-| Academy client ID | `7j8chsikjtbktnsh8dc4aj6has` |
-| CloudWatch dashboard | `ForgePlatform-Development-Overview` |
-| Backup vault | `forge-development-backup-primary` |
+| Resource             | Value                                                                           |
+| -------------------- | ------------------------------------------------------------------------------- |
+| VPC                  | `vpc-07219410902223b22`                                                         |
+| Private app subnets  | `subnet-09971b07b33602377`, `subnet-06282af20db0a76c5`                          |
+| NAT Gateway          | `nat-062081e623636e190` (1)                                                     |
+| ALB DNS              | `forge-development-alb-api-1005626432.us-east-1.elb.amazonaws.com`              |
+| ECS cluster          | `forge-development-ecs-platform`                                                |
+| Aurora endpoint      | `forge-development-rds-aurora.cluster-c876w2qgijz1.us-east-1.rds.amazonaws.com` |
+| Documents bucket     | `forge-development-documents-511343547817-us-east-1`                            |
+| Cognito User Pool    | `us-east-1_VYjUFLXG4`                                                           |
+| Academy client ID    | `7j8chsikjtbktnsh8dc4aj6has`                                                    |
+| CloudWatch dashboard | `ForgePlatform-Development-Overview`                                            |
+| Backup vault         | `forge-development-backup-primary`                                              |
 
 ## Capacity / cost knobs (live)
 
-| Setting | Value |
-| --- | --- |
-| Aurora engine | aurora-postgresql 15.10 |
-| Aurora min/max ACU | 0 / 2 (auto-pause 3600s) |
-| API desired / running | 1 / 1 |
-| Worker desired / running | 0 / 0 |
-| NAT gateways | 1 |
-| Flow logs | S3 |
+| Setting                  | Value                    |
+| ------------------------ | ------------------------ |
+| Aurora engine            | aurora-postgresql 15.10  |
+| Aurora min/max ACU       | 0 / 2 (auto-pause 3600s) |
+| API desired / running    | 1 / 1                    |
+| Worker desired / running | 0 / 0                    |
+| NAT gateways             | 1                        |
+| Flow logs                | S3                       |
 
 ## KMS aliases
 
@@ -81,12 +81,12 @@ pnpm smoke:development  (FORGE_ALB_DNS set)
 
 ## Identity Center (deploy access)
 
-| Item | Value |
-| --- | --- |
-| Portal | https://d-90667981af.awsapps.com/start |
-| User | `forge-admin` |
+| Item           | Value                                                |
+| -------------- | ---------------------------------------------------- |
+| Portal         | https://d-90667981af.awsapps.com/start               |
+| User           | `forge-admin`                                        |
 | Permission set | `ForgeDeployAdmin` (AdministratorAccess, 8h session) |
-| CLI profile | `forge-dev` (`aws sso login --profile forge-dev`) |
+| CLI profile    | `forge-dev` (`aws sso login --profile forge-dev`)    |
 
 ## Known gaps after deploy
 

@@ -50,14 +50,19 @@ export type ObservationScoreImpact = {
 };
 
 /** e.g. "−6 from 2 at-fault observations · 34 clean days (⅓ restored)". */
-export function describeObservationImpact(impact: ObservationScoreImpact | undefined): string | null {
+export function describeObservationImpact(
+  impact: ObservationScoreImpact | undefined,
+): string | null {
   if (!impact || (impact.unsafeCount === 0 && impact.credit === 0)) return null;
   const parts: string[] = [];
   if (impact.unsafeCount > 0) {
     const pts = impact.deduction > 0 ? `−${impact.deduction}` : "0";
-    parts.push(`${pts} from ${impact.unsafeCount} at-fault observation${impact.unsafeCount === 1 ? "" : "s"}`);
+    parts.push(
+      `${pts} from ${impact.unsafeCount} at-fault observation${impact.unsafeCount === 1 ? "" : "s"}`,
+    );
     if (impact.daysClean !== null && impact.recoveryStep > 0) {
-      const restored = impact.recoveryStep === 3 ? "fully restored" : `${impact.recoveryStep}/3 restored`;
+      const restored =
+        impact.recoveryStep === 3 ? "fully restored" : `${impact.recoveryStep}/3 restored`;
       parts.push(`${impact.daysClean} clean days (${restored})`);
     }
   }

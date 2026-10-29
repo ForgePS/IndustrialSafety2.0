@@ -28,9 +28,7 @@ describe("configuration kernel lifecycle (pure)", () => {
   it("hashes payloads stably", () => {
     const payload = { a: 1, nested: { b: "x" } };
     expect(hashConfigPayload(payload)).toBe(hashConfigPayload(payload));
-    expect(hashConfigPayload(payload)).toBe(
-      hashConfigPayload({ a: 1, nested: { b: "x" } }),
-    );
+    expect(hashConfigPayload(payload)).toBe(hashConfigPayload({ a: 1, nested: { b: "x" } }));
     expect(hashConfigPayload(payload)).toHaveLength(64);
   });
 
@@ -89,9 +87,7 @@ describe("configuration kernel lifecycle (pure)", () => {
   it("validates DEFAULT_PAYLOADS for all CONFIG_NAMESPACES", () => {
     expect(CONFIG_NAMESPACES.length).toBeGreaterThan(0);
     for (const namespace of CONFIG_NAMESPACES) {
-      expect(() =>
-        validateConfigPayload(namespace, DEFAULT_PAYLOADS[namespace]),
-      ).not.toThrow();
+      expect(() => validateConfigPayload(namespace, DEFAULT_PAYLOADS[namespace])).not.toThrow();
     }
   });
 });

@@ -18,7 +18,10 @@ const WORKER_SERVICE = "forge-production-ecs-worker-service";
 const API_ECR = `${ACCOUNT}.dkr.ecr.${REGION}.amazonaws.com/forge-production-ecr-platformapi`;
 const WORKER_ECR = `${ACCOUNT}.dkr.ecr.${REGION}.amazonaws.com/forge-production-ecr-workerservice`;
 
-const stamp = new Date().toISOString().replace(/[-:TZ.]/g, "").slice(0, 14);
+const stamp = new Date()
+  .toISOString()
+  .replace(/[-:TZ.]/g, "")
+  .slice(0, 14);
 const tag = process.env.DEPLOY_TAG || `import-center-${stamp}`;
 
 const required = [
@@ -129,7 +132,11 @@ function register(path) {
 console.log("=== Register + roll API ===");
 const apiTd = describe(API_SERVICE);
 apiTd.containerDefinitions[0].image = `${API_ECR}:${tag}`;
-setEnv(apiTd.containerDefinitions[0], "IMPORT_MALWARE_PROVIDER_KEY", "aws-guardduty-malware-protection");
+setEnv(
+  apiTd.containerDefinitions[0],
+  "IMPORT_MALWARE_PROVIDER_KEY",
+  "aws-guardduty-malware-protection",
+);
 const apiPath = ".forge-td-prod-api-import-center.json";
 fs.writeFileSync(apiPath, JSON.stringify(slim(apiTd), null, 2));
 const apiReg = register(apiPath);
@@ -153,7 +160,9 @@ sh(
 );
 
 console.log("=== Wait for services stable ===");
-sh(`aws ecs wait services-stable --cluster ${CLUSTER} --services ${API_SERVICE} ${WORKER_SERVICE} --region ${REGION}`);
+sh(
+  `aws ecs wait services-stable --cluster ${CLUSTER} --services ${API_SERVICE} ${WORKER_SERVICE} --region ${REGION}`,
+);
 
 console.log(
   JSON.stringify(

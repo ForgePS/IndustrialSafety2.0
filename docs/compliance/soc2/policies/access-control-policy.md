@@ -1,16 +1,14 @@
 # Access Control Policy
 
-
 | Field            | Value                                       |
 | ---------------- | ------------------------------------------- |
 | Document ID      | SOC2-POL-002                                |
 | Version          | 0.1                                         |
-| Status | APPROVED |
+| Status           | APPROVED                                    |
 | Owner            | Identity and Access Management Owner        |
 | Approver         | Jeremy Powell, Founder, Forge Public Safety |
-| Effective date | 2026-07-26 |
-| Next review date | 2027-07-26 |
-
+| Effective date   | 2026-07-26                                  |
+| Next review date | 2027-07-26                                  |
 
 ## Purpose
 
@@ -51,14 +49,12 @@ Applies to the Forge Public Safety system boundary documented in `docs/complianc
 
 ## Roles and responsibilities
 
-
 | Role                                 | Responsibility                                                                 |
 | ------------------------------------ | ------------------------------------------------------------------------------ |
 | Jeremy Powell (Founder)              | Policy approval; High/Critical risk acceptance; claims restriction enforcement |
 | Identity and Access Management Owner | Operational ownership of this policy                                           |
 | Engineering Lead                     | Ensure engineering practices implement requirements                            |
 | All personnel                        | Follow policy; report violations and incidents                                 |
-
 
 ## Exceptions
 
@@ -84,9 +80,6 @@ See `docs/compliance/soc2/procedures/` for operating procedures mapped to access
 
 ## Revision history
 
-
 | Version | Date       | Change                           |
 | ------- | ---------- | -------------------------------- |
 | 0.1     | 2026-07-26 | Phase 1 draft — PENDING_APPROVAL |
-
-

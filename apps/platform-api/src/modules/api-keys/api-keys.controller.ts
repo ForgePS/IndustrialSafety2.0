@@ -12,10 +12,7 @@ export class ApiKeysController {
 
   @Get()
   @RequirePermission("tenant.api_key.read")
-  async list(
-    @Param("tenantId") tenantId: string,
-    @Req() req: RequestWithIds,
-  ) {
+  async list(@Param("tenantId") tenantId: string, @Req() req: RequestWithIds) {
     const data = await this.apiKeys.list(tenantId);
     return ok(data, getRequestIds(req), {
       page: 1,

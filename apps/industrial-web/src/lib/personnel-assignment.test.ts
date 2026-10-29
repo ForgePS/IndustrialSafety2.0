@@ -212,15 +212,21 @@ describe("divisionsForLocationCascade", () => {
   });
 
   it("still returns department-derived divisions when the catalog has no site match", () => {
-    expect(
-      divisionsForLocationCascade([], departments, "s1").map((d) => d.name),
-    ).toEqual(["Producers Rice Ingredients", "Stuttgart Milling Operations"]);
+    expect(divisionsForLocationCascade([], departments, "s1").map((d) => d.name)).toEqual([
+      "Producers Rice Ingredients",
+      "Stuttgart Milling Operations",
+    ]);
   });
 });
 
 describe("filterDepartmentsForSiteDivision", () => {
   const departments = [
-    { id: "d1", label: "White Rice Mill", siteId: "s1", divisionName: "Stuttgart Milling Operations" },
+    {
+      id: "d1",
+      label: "White Rice Mill",
+      siteId: "s1",
+      divisionName: "Stuttgart Milling Operations",
+    },
     { id: "d2", label: "PRI QC", siteId: "s1", divisionName: "Producers Rice Ingredients" },
     { id: "d3", label: "Parboil Mill", siteId: "s2", divisionName: "Greenville MS" },
     { id: "d4", label: "Legacy", siteId: "s1", divisionName: null },
@@ -228,9 +234,9 @@ describe("filterDepartmentsForSiteDivision", () => {
 
   it("returns no departments until both location and division are selected", () => {
     expect(filterDepartmentsForSiteDivision(departments, "s1", undefined)).toEqual([]);
-    expect(filterDepartmentsForSiteDivision(departments, undefined, "Stuttgart Milling Operations")).toEqual(
-      [],
-    );
+    expect(
+      filterDepartmentsForSiteDivision(departments, undefined, "Stuttgart Milling Operations"),
+    ).toEqual([]);
   });
 
   it("keeps only departments for the selected location and division", () => {

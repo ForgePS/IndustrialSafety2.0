@@ -8,11 +8,7 @@ import { useFieldOrgOptional } from "@/components/field-org-provider";
 import { useFieldPermissions } from "@/components/field-permissions-provider";
 import { hasFieldPermission } from "@/lib/field-permissions";
 import { operationsApi } from "@/lib/operations-api";
-import {
-  filterFleetByLocation,
-  fleetDisplayName,
-  type FleetVehicleItem,
-} from "@/lib/operations";
+import { filterFleetByLocation, fleetDisplayName, type FleetVehicleItem } from "@/lib/operations";
 
 type FleetBrowserProps = {
   mode: "fleet" | "dot";

@@ -3,12 +3,7 @@
 import { useCallback, useEffect, useMemo, useState, type FormEvent } from "react";
 import { FORGE_PLATFORMS } from "@forge/contracts";
 import { ConfirmDialog } from "@/components/confirm-dialog";
-import {
-  filterBySearch,
-  ListControls,
-  paginate,
-  sortByField,
-} from "@/components/list-controls";
+import { filterBySearch, ListControls, paginate, sortByField } from "@/components/list-controls";
 import {
   archivePlatformModule,
   createPlatformModule,
@@ -336,7 +331,9 @@ export function CatalogModuleManager() {
 
       {editRow ? (
         <form className={styles.form} onSubmit={onSaveEdit}>
-          <h3>Edit · {editRow.productCode}/{editRow.code}</h3>
+          <h3>
+            Edit · {editRow.productCode}/{editRow.code}
+          </h3>
           <div className={styles.formRow}>
             <label htmlFor="edit-name">Name</label>
             <input
@@ -359,9 +356,7 @@ export function CatalogModuleManager() {
             <select
               id="edit-implementation"
               value={editRow.implementationStatus}
-              onChange={(e) =>
-                setEditRow({ ...editRow, implementationStatus: e.target.value })
-              }
+              onChange={(e) => setEditRow({ ...editRow, implementationStatus: e.target.value })}
             >
               {IMPLEMENTATION_STATUSES.map((value) => (
                 <option key={value} value={value}>
@@ -386,9 +381,7 @@ export function CatalogModuleManager() {
               <input
                 type="checkbox"
                 checked={editRow.customerAssignable}
-                onChange={(e) =>
-                  setEditRow({ ...editRow, customerAssignable: e.target.checked })
-                }
+                onChange={(e) => setEditRow({ ...editRow, customerAssignable: e.target.checked })}
               />{" "}
               Customer assignable
             </label>

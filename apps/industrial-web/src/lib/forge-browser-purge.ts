@@ -3,10 +3,7 @@
  * Clears offline queues/caches, drafts, tenant-scoped UI state, and walkthrough
  * session keys. Preserves device prefs (theme, nav open groups).
  */
-import {
-  removeStorageKeysByPrefix,
-  type ForgeBrowserCleanupReason,
-} from "@forge/web-kit";
+import { removeStorageKeysByPrefix, type ForgeBrowserCleanupReason } from "@forge/web-kit";
 
 /** localStorage prefixes that carry tenant/user operational data. */
 export const INDUSTRIAL_FORGE_LOCAL_PREFIXES = [
@@ -44,9 +41,10 @@ function storageOrNull(kind: "localStorage" | "sessionStorage"): Storage | null 
  * Purge Forge-owned industrial client state.
  * @returns counts removed from local + session storage
  */
-export function purgeIndustrialForgeBrowserState(
-  _reason: ForgeBrowserCleanupReason = "logout",
-): { localRemoved: number; sessionRemoved: number } {
+export function purgeIndustrialForgeBrowserState(_reason: ForgeBrowserCleanupReason = "logout"): {
+  localRemoved: number;
+  sessionRemoved: number;
+} {
   const localRemoved = removeStorageKeysByPrefix(
     storageOrNull("localStorage"),
     INDUSTRIAL_FORGE_LOCAL_PREFIXES,

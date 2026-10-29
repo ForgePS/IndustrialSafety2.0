@@ -94,7 +94,9 @@ describe("tenant workspace defaults", () => {
   it("infers role codes from permissions", () => {
     expect(inferWorkspaceRoleCodes(["industrial.access"])).toEqual(["INDUSTRIAL_EMPLOYEE"]);
     expect(inferWorkspaceRoleCodes(["industrial.admin"])).toContain("INDUSTRIAL_SAFETY_MANAGER");
-    expect(inferWorkspaceRoleCodes(["industrial.fleet.manage"])).toContain("INDUSTRIAL_FLEET_MANAGER");
+    expect(inferWorkspaceRoleCodes(["industrial.fleet.manage"])).toContain(
+      "INDUSTRIAL_FLEET_MANAGER",
+    );
   });
 
   it("selects highest priority role overlay", () => {

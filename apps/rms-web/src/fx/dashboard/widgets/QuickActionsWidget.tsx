@@ -10,7 +10,9 @@ export function QuickActionsWidget(_props: DashboardWidgetComponentProps) {
   const { me } = useAuth();
   const { flags } = useFeatureFlags(Object.values(RMS_FEATURE_FLAGS));
   if (!me) {
-    return <DashboardEmptyState title="Sign in required" description="Sign in to use quick actions." />;
+    return (
+      <DashboardEmptyState title="Sign in required" description="Sign in to use quick actions." />
+    );
   }
 
   const actions: Array<{ href: string; label: string }> = [];

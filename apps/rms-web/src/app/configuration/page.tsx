@@ -136,8 +136,8 @@ function ConfigurationInner() {
       >
         <h1>NERIS configuration</h1>
         <p className={styles.lead}>
-          Customize labels, help text, favorites, order, and visibility. Official NERIS codes and value-set
-          definitions remain read-only.
+          Customize labels, help text, favorites, order, and visibility. Official NERIS codes and
+          value-set definitions remain read-only.
         </p>
 
         {error && !useFx ? <p className={styles.error}>{error}</p> : null}
@@ -154,8 +154,8 @@ function ConfigurationInner() {
                   Current mode: <strong>{config?.operatingMode ?? "MANUAL_ONLY"}</strong>
                 </p>
                 <p className={styles.warning}>
-                  Local validation warnings and tenant defaults may be configured here. Do not edit official
-                  code lists.
+                  Local validation warnings and tenant defaults may be configured here. Do not edit
+                  official code lists.
                 </p>
               </FxFormSection>
               <FxActionBar>
@@ -170,8 +170,8 @@ function ConfigurationInner() {
                 Current mode: <strong>{config?.operatingMode ?? "MANUAL_ONLY"}</strong>
               </p>
               <p className={styles.warning}>
-                Local validation warnings and tenant defaults may be configured here. Do not edit official code
-                lists.
+                Local validation warnings and tenant defaults may be configured here. Do not edit
+                official code lists.
               </p>
               <button className={styles.buttonSecondary} type="submit" disabled={submitting}>
                 Save tenant configuration
@@ -183,7 +183,9 @@ function ConfigurationInner() {
         <div className={styles.panel}>
           <h2>Field overlays</h2>
           {overlays.length === 0 ? (
-            <p className={styles.muted}>No field overlays yet. Save an overlay to customize a field.</p>
+            <p className={styles.muted}>
+              No field overlays yet. Save an overlay to customize a field.
+            </p>
           ) : null}
           {useFx ? (
             <FxForm onSubmit={onSaveOverlay}>
@@ -253,7 +255,8 @@ function ConfigurationInner() {
                       {overlay.displayLabel ?? overlay.localAlias ?? overlay.fieldId}
                     </option>
                   ))}
-                  {!overlays.some((overlay) => overlay.fieldId === selectedFieldId) && selectedFieldId ? (
+                  {!overlays.some((overlay) => overlay.fieldId === selectedFieldId) &&
+                  selectedFieldId ? (
                     <option value={selectedFieldId}>{selectedFieldId}</option>
                   ) : null}
                 </select>
@@ -306,7 +309,11 @@ function ConfigurationInner() {
                   Favorite
                 </label>
               </div>
-              <button className={styles.button} type="submit" disabled={submitting || !selectedFieldId}>
+              <button
+                className={styles.button}
+                type="submit"
+                disabled={submitting || !selectedFieldId}
+              >
                 Save field overlay
               </button>
             </form>

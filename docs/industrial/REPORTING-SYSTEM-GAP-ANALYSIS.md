@@ -14,13 +14,13 @@ Primary UX is `/reporting` (legacy `/modules/reporting/` redirects). Platform AP
 
 **Still open vs vision:** Fleet/Supplies still ship module-local builders (should become adapters), email delivery for schedules is audited-but-stubbed, custom builder lacks full wizard depth (charts/aggs/relative dates), and deeper custom-field registry work remains.
 
-| Layer | Role today |
-| --- | --- |
-| Industrial `/reporting/*` | Reporting Center IA: overview, library, builder, templates, saved, scheduled, favorites, compliance, exports, history, analytics, settings |
-| Fleet / Supplies workspaces | Local CSV/print builders remain (migrate to central engine) |
-| Studio `reporting` / `export_config` | Config payloads only — not the execution engine |
-| `platform-api` | Central `/api/v1/reporting/*` + module-scoped fleet/supplies report endpoints |
-| DB | Vision report_* tables + S3/job link on exports |
+| Layer                                | Role today                                                                                                                                 |
+| ------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------ |
+| Industrial `/reporting/*`            | Reporting Center IA: overview, library, builder, templates, saved, scheduled, favorites, compliance, exports, history, analytics, settings |
+| Fleet / Supplies workspaces          | Local CSV/print builders remain (migrate to central engine)                                                                                |
+| Studio `reporting` / `export_config` | Config payloads only — not the execution engine                                                                                            |
+| `platform-api`                       | Central `/api/v1/reporting/*` + module-scoped fleet/supplies report endpoints                                                              |
+| DB                                   | Vision report_* tables + S3/job link on exports                                                                                            |
 
 ---
 
@@ -68,32 +68,32 @@ flowchart TB
 
 ## 3. Status rubric
 
-| Status | Meaning |
-| --- | --- |
-| **Shipped (Industrial)** | Usable under Industrial Reporting center today |
-| **Shipped elsewhere** | Exists inside another module workspace or print/export flow |
-| **Shipped (Studio)** | Studio namespace/config only; not an execution engine |
-| **Partial** | Related UI/API exists but missing depth, IA, or centralization |
-| **Stub** | Page or route exists with placeholder / non-functional core |
-| **Gap** | No meaningful implementation |
+| Status                   | Meaning                                                        |
+| ------------------------ | -------------------------------------------------------------- |
+| **Shipped (Industrial)** | Usable under Industrial Reporting center today                 |
+| **Shipped elsewhere**    | Exists inside another module workspace or print/export flow    |
+| **Shipped (Studio)**     | Studio namespace/config only; not an execution engine          |
+| **Partial**              | Related UI/API exists but missing depth, IA, or centralization |
+| **Stub**                 | Page or route exists with placeholder / non-functional core    |
+| **Gap**                  | No meaningful implementation                                   |
 
 ---
 
 ## 4. IA matrix (vision §1–§2)
 
-| Vision nav / route | Status | Evidence / notes |
-| --- | --- | --- |
-| `/reporting` Overview | Shipped (Industrial) | KPI overview + shortcuts |
-| Report Library | Shipped (Industrial) | Search/filter, run, export, favorite |
-| Custom Report Builder | Partial | Multi-step save/preview under `/reporting/builder`; not full vision wizard |
-| Saved Reports | Shipped (Industrial) | Tenant `report_definitions` origin=saved |
-| Scheduled Reports | Shipped (Industrial) | CRUD + `POST /schedules/run-due`; email delivery stubbed |
-| Compliance Reports | Shipped (Industrial) | Compliance filter / suite page |
-| Analytics Reports | Partial | Analytics page + monthly stats adapter |
-| Exports | Shipped (Industrial) | Export center; inline + S3 large artifacts via `export.reporting` jobs |
-| Report History | Shipped (Industrial) | Execution history |
-| Templates | Shipped (Industrial) | Save builtin as template; list tenant templates |
-| Settings | Shipped (Industrial) | Defaults, permissions, run-due control |
+| Vision nav / route    | Status               | Evidence / notes                                                           |
+| --------------------- | -------------------- | -------------------------------------------------------------------------- |
+| `/reporting` Overview | Shipped (Industrial) | KPI overview + shortcuts                                                   |
+| Report Library        | Shipped (Industrial) | Search/filter, run, export, favorite                                       |
+| Custom Report Builder | Partial              | Multi-step save/preview under `/reporting/builder`; not full vision wizard |
+| Saved Reports         | Shipped (Industrial) | Tenant `report_definitions` origin=saved                                   |
+| Scheduled Reports     | Shipped (Industrial) | CRUD + `POST /schedules/run-due`; email delivery stubbed                   |
+| Compliance Reports    | Shipped (Industrial) | Compliance filter / suite page                                             |
+| Analytics Reports     | Partial              | Analytics page + monthly stats adapter                                     |
+| Exports               | Shipped (Industrial) | Export center; inline + S3 large artifacts via `export.reporting` jobs     |
+| Report History        | Shipped (Industrial) | Execution history                                                          |
+| Templates             | Shipped (Industrial) | Save builtin as template; list tenant templates                            |
+| Settings              | Shipped (Industrial) | Defaults, permissions, run-due control                                     |
 
 ---
 
@@ -101,53 +101,53 @@ flowchart TB
 
 ### Overview & library (§3–§8)
 
-| Spec item | Status | Evidence / notes |
-| --- | --- | --- |
-| Reporting Center header / CTAs | Shipped (Industrial) | `/reporting` shell |
-| KPI cards (saved, scheduled, runs, compliance) | Shipped (Industrial) | `GET /overview` |
-| Favorites / Recently Run / Scheduled preview | Partial | Favorites + history pages; overview shortcuts |
-| Report Library + search/filters/categories | Shipped (Industrial) | Library + catalog adapters |
+| Spec item                                      | Status               | Evidence / notes                              |
+| ---------------------------------------------- | -------------------- | --------------------------------------------- |
+| Reporting Center header / CTAs                 | Shipped (Industrial) | `/reporting` shell                            |
+| KPI cards (saved, scheduled, runs, compliance) | Shipped (Industrial) | `GET /overview`                               |
+| Favorites / Recently Run / Scheduled preview   | Partial              | Favorites + history pages; overview shortcuts |
+| Report Library + search/filters/categories     | Shipped (Industrial) | Library + catalog adapters                    |
 
 ### Built-in standard reports (§9–§27)
 
-| Domain | Status | Evidence / notes |
-| --- | --- | --- |
-| Safety / Incidents / OSHA | Partial | Builtin adapters + compliance page; not every OSHA package |
-| DOT / Training / Personnel / CAPA / Fleet / Supplies | Partial | Catalog keys + adapters; Fleet/Supplies local builders still parallel |
-| Remaining specialty modules | Gap / module ops only | Register as adapters over time |
+| Domain                                               | Status                | Evidence / notes                                                      |
+| ---------------------------------------------------- | --------------------- | --------------------------------------------------------------------- |
+| Safety / Incidents / OSHA                            | Partial               | Builtin adapters + compliance page; not every OSHA package            |
+| DOT / Training / Personnel / CAPA / Fleet / Supplies | Partial               | Catalog keys + adapters; Fleet/Supplies local builders still parallel |
+| Remaining specialty modules                          | Gap / module ops only | Register as adapters over time                                        |
 
 ### Custom Report Builder (§28–§37)
 
-| Spec item | Status | Evidence / notes |
-| --- | --- | --- |
-| Wizard depth | Partial | Source → fields → filters → name → preview/save |
-| Charts / aggregations / relative dates | Gap | — |
-| Server-side preview/run | Shipped (Industrial) | Adapter run path; no client SQL |
+| Spec item                              | Status               | Evidence / notes                                |
+| -------------------------------------- | -------------------- | ----------------------------------------------- |
+| Wizard depth                           | Partial              | Source → fields → filters → name → preview/save |
+| Charts / aggregations / relative dates | Gap                  | —                                               |
+| Server-side preview/run                | Shipped (Industrial) | Adapter run path; no client SQL                 |
 
 ### Saved / schedule / delivery / share (§38–§48)
 
-| Spec item | Status | Evidence / notes |
-| --- | --- | --- |
-| Saved reports (tenant DB) | Shipped (Industrial) | — |
-| Schedules + recipients | Shipped (Industrial) | Schedules + recipients; `run-due` executes and emails via notifications mailer |
-| Sharing / favorites | Shipped (Industrial) | — |
+| Spec item                 | Status               | Evidence / notes                                                               |
+| ------------------------- | -------------------- | ------------------------------------------------------------------------------ |
+| Saved reports (tenant DB) | Shipped (Industrial) | —                                                                              |
+| Schedules + recipients    | Shipped (Industrial) | Schedules + recipients; `run-due` executes and emails via notifications mailer |
+| Sharing / favorites       | Shipped (Industrial) | —                                                                              |
 
 ### Export & history (§50–§53)
 
-| Spec item | Status | Evidence / notes |
-| --- | --- | --- |
-| Export Center (PDF / XLSX / CSV) | Shipped (Industrial) | — |
-| Large async / S3 exports | Shipped (Industrial) | Inline cap ~1.5MB; larger → S3 + `export.reporting` job + download API |
-| Report execution history | Shipped (Industrial) | — |
+| Spec item                        | Status               | Evidence / notes                                                       |
+| -------------------------------- | -------------------- | ---------------------------------------------------------------------- |
+| Export Center (PDF / XLSX / CSV) | Shipped (Industrial) | —                                                                      |
+| Large async / S3 exports         | Shipped (Industrial) | Inline cap ~1.5MB; larger → S3 + `export.reporting` job + download API |
+| Report execution history         | Shipped (Industrial) | —                                                                      |
 
 ### Permissions, isolation, registries (§55–§62)
 
-| Spec item | Status | Evidence / notes |
-| --- | --- | --- |
-| `industrial.reporting.*` permission set | Shipped (Industrial) | Seeded + enforced |
-| Dataset / field registry + module registration | Partial | Builtin catalog; formal registry still thin |
-| Tenant custom fields in reports | Gap | — |
-| Cross-module reports | Partial | Adapters per module; limited joins |
+| Spec item                                      | Status               | Evidence / notes                            |
+| ---------------------------------------------- | -------------------- | ------------------------------------------- |
+| `industrial.reporting.*` permission set        | Shipped (Industrial) | Seeded + enforced                           |
+| Dataset / field registry + module registration | Partial              | Builtin catalog; formal registry still thin |
+| Tenant custom fields in reports                | Gap                  | —                                           |
+| Cross-module reports                           | Partial              | Adapters per module; limited joins          |
 
 ---
 

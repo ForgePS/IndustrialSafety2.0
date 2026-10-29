@@ -3,12 +3,7 @@ import { ForgeError } from "@forge/errors";
 import type { AuthenticatedRequest } from "../auth-context/principal.decorator.js";
 import { AcknowledgmentService } from "./acknowledgment.service.js";
 
-const ALLOW_PREFIXES = [
-  "/api/v1/auth/",
-  "/api/v1/legal/",
-  "/api/v1/health",
-  "/health",
-];
+const ALLOW_PREFIXES = ["/api/v1/auth/", "/api/v1/legal/", "/api/v1/health", "/health"];
 
 @Injectable()
 export class LegalAcknowledgmentGuard implements CanActivate {
@@ -30,10 +25,7 @@ export class LegalAcknowledgmentGuard implements CanActivate {
     if (!principal.activeProducts?.has("FORGE_INDUSTRIAL")) {
       return true;
     }
-    const gateOn = await this.acknowledgments.isLoginGateEnabled(
-      principal.tenantId,
-      principal,
-    );
+    const gateOn = await this.acknowledgments.isLoginGateEnabled(principal.tenantId, principal);
     if (!gateOn) return true;
     try {
       const summary = await this.acknowledgments.summaryForMe(principal.tenantId, principal);

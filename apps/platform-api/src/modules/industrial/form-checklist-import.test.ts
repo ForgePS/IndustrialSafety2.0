@@ -19,7 +19,9 @@ describe("form-checklist-import", () => {
   });
 
   it("parses CSV with Question header", () => {
-    const parsed = parseChecklistCsv("Question,Section\nAre hoses secured?,Warehouse\nIs lighting adequate?,Office");
+    const parsed = parseChecklistCsv(
+      "Question,Section\nAre hoses secured?,Warehouse\nIs lighting adequate?,Office",
+    );
     expect(parsed.fields).toHaveLength(2);
     expect(parsed.fields[0]?.label).toBe("Are hoses secured?");
     expect(parsed.fields[0]?.section).toBe("Warehouse");
@@ -58,9 +60,9 @@ describe("form-checklist-import", () => {
     expect(parsed.fields[0]?.section).toBe("Aerial Work Platforms");
     expect(parsed.fields[3]?.label).toBe("Aisles kept clean and orderly?");
     expect(parsed.fields[3]?.section).toBe("Aisles/Walkways");
-    expect(parsed.fields.every((f) => !/Aerial Work Platforms|Aisles\/Walkways/.test(f.label))).toBe(
-      true,
-    );
+    expect(
+      parsed.fields.every((f) => !/Aerial Work Platforms|Aisles\/Walkways/.test(f.label)),
+    ).toBe(true);
   });
 
   it("builds importable template payload", () => {

@@ -93,10 +93,7 @@ export function parseMvrAuditHistory(raw: unknown): MvrAuditEntry[] {
   return out.sort((a, b) => b.auditedAt.localeCompare(a.auditedAt));
 }
 
-export function appendMvrAuditEntry(
-  existing: unknown,
-  entry: MvrAuditEntry,
-): MvrAuditEntry[] {
+export function appendMvrAuditEntry(existing: unknown, entry: MvrAuditEntry): MvrAuditEntry[] {
   return [entry, ...parseMvrAuditHistory(existing)];
 }
 

@@ -34,7 +34,15 @@ describe("parseQuestionImportXlsx", () => {
     const workbook = XLSX.utils.book_new();
     const sheet = XLSX.utils.aoa_to_sheet([
       ["Chapter", "Question", "A", "B", "C", "D", "Correct"],
-      ["Safety", "What is LOTO for?", "Speed up repairs", "Control energy", "Replace PPE", "Track metrics", "B"],
+      [
+        "Safety",
+        "What is LOTO for?",
+        "Speed up repairs",
+        "Control energy",
+        "Replace PPE",
+        "Track metrics",
+        "B",
+      ],
       ["Safety", "Who removes a lock?", "Anyone", "Only the installer", "", "", "B"],
     ]);
     XLSX.utils.book_append_sheet(workbook, sheet, "Quiz");
@@ -66,29 +74,20 @@ describe("parseQuestionImportXlsx", () => {
 describe("parseQuestionImportCsv", () => {
   it("accepts semicolon-delimited exports", () => {
     const payload = parseQuestionImportCsv(
-      [
-        "chapter;stem;correct;choice1;choice2",
-        "Basics;First question?;B;Yes;No",
-      ].join("\n"),
+      ["chapter;stem;correct;choice1;choice2", "Basics;First question?;B;Yes;No"].join("\n"),
     );
     expect(payload.chapters[0]?.questions[0]?.correctIndex).toBe(1);
   });
   it("accepts correct answers as letters", () => {
     const payload = parseQuestionImportCsv(
-      [
-        "chapter,stem,correct,choice1,choice2",
-        "Basics,First question?,B,Yes,No",
-      ].join("\n"),
+      ["chapter,stem,correct,choice1,choice2", "Basics,First question?,B,Yes,No"].join("\n"),
     );
     expect(payload.chapters[0]?.questions[0]?.correctIndex).toBe(1);
   });
 
   it("accepts pipe-separated choices column", () => {
     const payload = parseQuestionImportCsv(
-      [
-        "stem,correct,choices",
-        "Pick one,B,Red|Blue|Green",
-      ].join("\n"),
+      ["stem,correct,choices", "Pick one,B,Red|Blue|Green"].join("\n"),
     );
     expect(payload.chapters[0]?.questions[0]?.choices).toEqual(["Red", "Blue", "Green"]);
     expect(payload.chapters[0]?.questions[0]?.correctIndex).toBe(1);

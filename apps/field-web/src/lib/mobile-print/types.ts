@@ -4,16 +4,10 @@
  */
 
 export type MobileBluetoothState =
-  | "unsupported"
-  | "powered_off"
-  | "unauthorized"
-  | "ready"
-  | "unknown";
+  "unsupported" | "powered_off" | "unauthorized" | "ready" | "unknown";
 
 export type MobilePermissionResult =
-  | { status: "granted" }
-  | { status: "denied"; canOpenSettings: boolean }
-  | { status: "prompt" };
+  { status: "granted" } | { status: "denied"; canOpenSettings: boolean } | { status: "prompt" };
 
 export type MobilePrinterDiscoveryState =
   | "SCANNING"
@@ -32,7 +26,8 @@ export type MobilePrinterDevice = {
   name: string;
   vendor?: string;
   model?: string;
-  transport: "BLUETOOTH_BLE" | "BLUETOOTH_CLASSIC" | "NETWORK" | "CLOUD_QUEUE" | "FORGE_PRINT_BRIDGE";
+  transport:
+    "BLUETOOTH_BLE" | "BLUETOOTH_CLASSIC" | "NETWORK" | "CLOUD_QUEUE" | "FORGE_PRINT_BRIDGE";
   signalStrength?: "strong" | "good" | "weak" | "very_weak";
   discoveryState: MobilePrinterDiscoveryState;
   /** Linked Forge printer record when already registered. */

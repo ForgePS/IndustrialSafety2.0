@@ -47,7 +47,8 @@ type SectionSpec = {
 };
 
 const n = (raw: RawValues, key: string) => raw[key] ?? 0;
-const pct = (part: number, whole: number) => (whole > 0 ? Math.round((part / whole) * 1000) / 10 : null);
+const pct = (part: number, whole: number) =>
+  whole > 0 ? Math.round((part / whole) * 1000) / 10 : null;
 const OSHA_RATE_BASE = 200_000;
 const rate = (cases: number, hours: number) =>
   hours > 0 ? Math.round(((cases * OSHA_RATE_BASE) / hours) * 100) / 100 : null;
@@ -106,7 +107,12 @@ export const PERFORMANCE_SECTIONS: SectionSpec[] = [
     metrics: [
       { key: "recordable", label: "Recordable cases", format: "count", better: "lower" },
       { key: "daysAwayCases", label: "Days-away cases", format: "count", better: "lower" },
-      { key: "transferCases", label: "Restricted/transfer cases", format: "count", better: "lower" },
+      {
+        key: "transferCases",
+        label: "Restricted/transfer cases",
+        format: "count",
+        better: "lower",
+      },
       { key: "otherCases", label: "Other recordable", format: "count", better: "lower" },
       { key: "daysAway", label: "Lost workdays", format: "days", better: "lower" },
       { key: "restrictedDays", label: "Restricted days", format: "days", better: "lower" },
@@ -175,7 +181,12 @@ export const PERFORMANCE_SECTIONS: SectionSpec[] = [
       { key: "completions", label: "Completions", format: "count", better: "higher" },
       { key: "overdue", label: "Overdue assignments", format: "count", better: "lower" },
       { key: "openAssignments", label: "Open assignments", format: "count" },
-      { key: "assignmentPct", label: "Assignment completion %", format: "percent", better: "higher" },
+      {
+        key: "assignmentPct",
+        label: "Assignment completion %",
+        format: "percent",
+        better: "higher",
+      },
       { key: "expiredCerts", label: "Expired certifications", format: "count", better: "lower" },
       { key: "expiringCerts", label: "Expiring in 30 days", format: "count", better: "lower" },
     ],
@@ -201,7 +212,8 @@ export const PERFORMANCE_SECTIONS: SectionSpec[] = [
   {
     id: "discipline",
     title: "Disciplinary actions",
-    description: "Actions issued during the period. Active points are as of today (12-month window).",
+    description:
+      "Actions issued during the period. Active points are as of today (12-month window).",
     metrics: [
       { key: "actions", label: "Actions issued", format: "count", better: "lower" },
       { key: "coaching", label: "Coaching", format: "count" },
@@ -210,7 +222,12 @@ export const PERFORMANCE_SECTIONS: SectionSpec[] = [
       { key: "final", label: "Final", format: "count" },
       { key: "suspension", label: "Suspension", format: "count" },
       { key: "termination", label: "Termination", format: "count" },
-      { key: "employeesActive", label: "Employees with active points", format: "count", better: "lower" },
+      {
+        key: "employeesActive",
+        label: "Employees with active points",
+        format: "count",
+        better: "lower",
+      },
       { key: "activePoints", label: "Active points", format: "count", better: "lower" },
     ],
     headline: ["actions", "employeesActive"],
@@ -243,7 +260,8 @@ export const PERFORMANCE_SECTIONS: SectionSpec[] = [
   {
     id: "loto",
     title: "Lockout/Tagout",
-    description: "Lockouts started during the period; open/overdue lockouts and procedures as of today.",
+    description:
+      "Lockouts started during the period; open/overdue lockouts and procedures as of today.",
     metrics: [
       { key: "lockouts", label: "Lockouts", format: "count" },
       { key: "openNow", label: "Open today", format: "count" },
@@ -260,7 +278,12 @@ export const PERFORMANCE_SECTIONS: SectionSpec[] = [
       { key: "inspections", label: "Inspections completed", format: "count", better: "higher" },
       { key: "avgScore", label: "Avg inspection score", format: "percent", better: "higher" },
       { key: "findings", label: "Findings", format: "count", better: "lower" },
-      { key: "criticalFindings", label: "Critical/major findings", format: "count", better: "lower" },
+      {
+        key: "criticalFindings",
+        label: "Critical/major findings",
+        format: "count",
+        better: "lower",
+      },
       { key: "openFindings", label: "Open findings today", format: "count", better: "lower" },
       { key: "overdueCleaning", label: "Overdue cleaning tasks", format: "count", better: "lower" },
     ],
@@ -340,12 +363,19 @@ export function normalizePerformanceRequest(
   now = new Date(),
 ): PerformanceReportRequest {
   const today = now.toISOString().slice(0, 10);
-  const from = typeof body.from === "string" && ISO_DAY.test(body.from) ? body.from : `${today.slice(0, 4)}-01-01`;
+  const from =
+    typeof body.from === "string" && ISO_DAY.test(body.from)
+      ? body.from
+      : `${today.slice(0, 4)}-01-01`;
   const to = typeof body.to === "string" && ISO_DAY.test(body.to) ? body.to : today;
-  if (Number.isNaN(Date.parse(`${from}T00:00:00Z`)) || Number.isNaN(Date.parse(`${to}T00:00:00Z`))) {
+  if (
+    Number.isNaN(Date.parse(`${from}T00:00:00Z`)) ||
+    Number.isNaN(Date.parse(`${to}T00:00:00Z`))
+  ) {
     throw new PerformanceRequestError("Invalid report dates");
   }
-  if (to < from) throw new PerformanceRequestError("The end date must be on or after the start date");
+  if (to < from)
+    throw new PerformanceRequestError("The end date must be on or after the start date");
   if (periodDays(from, to) > MAX_PERIOD_DAYS) {
     throw new PerformanceRequestError("Reports can cover at most 3 years");
   }
@@ -358,11 +388,16 @@ export function normalizePerformanceRequest(
     : [...PERFORMANCE_SECTION_IDS];
   if (!sections.length) throw new PerformanceRequestError("Select at least one report section");
   const limitRaw = Number(body.employeeLimit);
-  const employeeLimit = Number.isFinite(limitRaw) ? Math.min(25, Math.max(1, Math.round(limitRaw))) : 5;
+  const employeeLimit = Number.isFinite(limitRaw)
+    ? Math.min(25, Math.max(1, Math.round(limitRaw)))
+    : 5;
   const hoursRaw = Number(body.hoursWorked);
   const hoursWorked =
-    body.hoursWorked !== undefined && body.hoursWorked !== null && body.hoursWorked !== "" &&
-    Number.isFinite(hoursRaw) && hoursRaw > 0
+    body.hoursWorked !== undefined &&
+    body.hoursWorked !== null &&
+    body.hoursWorked !== "" &&
+    Number.isFinite(hoursRaw) &&
+    hoursRaw > 0
       ? Math.round(hoursRaw)
       : null;
   return {
@@ -382,7 +417,8 @@ export function normalizePerformanceRequest(
 
 /** Calendar day (YYYY-MM-DD) from a Date, ISO string, or US-style date. */
 export function toIsoDay(value: unknown): string | null {
-  if (value instanceof Date) return Number.isNaN(value.getTime()) ? null : value.toISOString().slice(0, 10);
+  if (value instanceof Date)
+    return Number.isNaN(value.getTime()) ? null : value.toISOString().slice(0, 10);
   if (typeof value !== "string") return null;
   const s = value.trim();
   if (!s) return null;
@@ -443,15 +479,20 @@ export function siteHoursForPeriod(input: {
 // ---------------------------------------------------------------- status
 
 export function isClosedStatus(status: unknown): boolean {
-  const s = String(status ?? "").trim().toLowerCase();
+  const s = String(status ?? "")
+    .trim()
+    .toLowerCase();
   if (/incomplet|not[\s_-]?(complet|closed|started)|reopen/.test(s)) return false;
   return /clos|resolv|archiv|complet|cancel|denied|void|done|verified|rescind|passed/.test(s);
 }
 
 export function incidentCategoryKey(payload: Record<string, unknown>): string | null {
-  const category = String(payload.category ?? payload.incidentCategory ?? "").trim().toLowerCase();
+  const category = String(payload.category ?? payload.incidentCategory ?? "")
+    .trim()
+    .toLowerCase();
   if (category === "injuries" || category === "injury") return "injuries";
-  if (category === "near-misses" || category === "near_miss" || category === "nearmiss") return "nearMisses";
+  if (category === "near-misses" || category === "near_miss" || category === "nearmiss")
+    return "nearMisses";
   if (category === "medical-refusals" || category === "medical_refusals") return "medicalRefusals";
   if (category === "drug-alcohol" || category === "drug_alcohol") return "drugAlcohol";
   if (category === "property-damage" || category === "property_damage") return "propertyDamage";
@@ -473,7 +514,12 @@ export type OrgDirectory = {
 
 export function buildOrgDirectory(input: {
   sites: Array<{ id: string; name: string }>;
-  departments: Array<{ id: string; name: string; siteId: string | null; divisionName: string | null }>;
+  departments: Array<{
+    id: string;
+    name: string;
+    siteId: string | null;
+    divisionName: string | null;
+  }>;
   personnel: Array<{
     id: string;
     siteId: string | null;
@@ -532,7 +578,8 @@ const clean = (v: string | null | undefined) => (typeof v === "string" ? v.trim(
  */
 export function resolveOrgUnit(dir: OrgDirectory, hint: OrgHint): ResolvedOrgUnit {
   const person = hint.personnelId ? dir.personnel.get(hint.personnelId) : undefined;
-  const byName = (name: string) => (name ? dir.departmentIdByName.get(name.toLowerCase()) : undefined);
+  const byName = (name: string) =>
+    name ? dir.departmentIdByName.get(name.toLowerCase()) : undefined;
   const hintDeptId = clean(hint.departmentId);
   let departmentId =
     (hintDeptId && dir.departments.has(hintDeptId) ? hintDeptId : undefined) ??
@@ -540,8 +587,9 @@ export function resolveOrgUnit(dir: OrgDirectory, hint: OrgHint): ResolvedOrgUni
   let looseDepartmentName = departmentId ? "" : clean(hint.departmentName);
   if (!departmentId && !looseDepartmentName && person) {
     departmentId =
-      (person.departmentId && dir.departments.has(person.departmentId) ? person.departmentId : undefined) ??
-      byName(person.departmentName);
+      (person.departmentId && dir.departments.has(person.departmentId)
+        ? person.departmentId
+        : undefined) ?? byName(person.departmentName);
     if (!departmentId) looseDepartmentName = person.departmentName;
   }
   const dept = departmentId ? dir.departments.get(departmentId) : undefined;
@@ -560,7 +608,10 @@ export function resolveOrgUnit(dir: OrgDirectory, hint: OrgHint): ResolvedOrgUni
   };
 }
 
-export function orgGroupKey(unit: ResolvedOrgUnit, groupBy: PerformanceGroupBy): { key: string; label: string } {
+export function orgGroupKey(
+  unit: ResolvedOrgUnit,
+  groupBy: PerformanceGroupBy,
+): { key: string; label: string } {
   switch (groupBy) {
     case "site":
       return { key: unit.siteId ?? "none", label: unit.siteName };
@@ -580,10 +631,14 @@ export function orgGroupKey(unit: ResolvedOrgUnit, groupBy: PerformanceGroupBy):
   }
 }
 
-export type PerformanceFilters = Pick<PerformanceReportRequest, "siteIds" | "divisions" | "departmentIds">;
+export type PerformanceFilters = Pick<
+  PerformanceReportRequest,
+  "siteIds" | "divisions" | "departmentIds"
+>;
 
 export function unitMatchesFilters(unit: ResolvedOrgUnit, filters: PerformanceFilters): boolean {
-  if (filters.siteIds.length && (!unit.siteId || !filters.siteIds.includes(unit.siteId))) return false;
+  if (filters.siteIds.length && (!unit.siteId || !filters.siteIds.includes(unit.siteId)))
+    return false;
   if (
     filters.divisions.length &&
     !filters.divisions.some((d) => d.toLowerCase() === unit.division.toLowerCase())
@@ -632,7 +687,12 @@ export class PerformanceAccumulator {
   }
 
   /** Adds directly to one group (used for hours that are already allocated). */
-  addToGroup(section: string, group: { key: string; label: string }, metric: string, amount: number): void {
+  addToGroup(
+    section: string,
+    group: { key: string; label: string },
+    metric: string,
+    amount: number,
+  ): void {
     if (!amount) return;
     let bucket = this.groups.get(group.key);
     if (!bucket) {
@@ -653,7 +713,11 @@ export class PerformanceAccumulator {
     return [...this.groups.values()]
       .map(({ key, label }) => ({ key, label }))
       .sort((a, b) =>
-        a.key === "none" ? 1 : b.key === "none" ? -1 : a.label.localeCompare(b.label, undefined, { sensitivity: "base" }),
+        a.key === "none"
+          ? 1
+          : b.key === "none"
+            ? -1
+            : a.label.localeCompare(b.label, undefined, { sensitivity: "base" }),
       );
   }
 }
@@ -704,7 +768,11 @@ export function buildPerformanceSections(
     totals: finalize(spec, acc.raw(spec.id)),
     rows: groups
       .filter((g) => hasData(acc.raw(spec.id, g.key)))
-      .map((g) => ({ key: g.key, label: g.label, values: finalize(spec, acc.raw(spec.id, g.key)) })),
+      .map((g) => ({
+        key: g.key,
+        label: g.label,
+        values: finalize(spec, acc.raw(spec.id, g.key)),
+      })),
     notes: notes[spec.id] ?? [],
   }));
 }
@@ -715,7 +783,11 @@ export function buildPerformanceOverview(
   sections: PerformanceSectionResult[],
 ): Omit<PerformanceSectionResult, "id" | "description" | "notes"> {
   const metrics: PerformanceMetric[] = [{ key: "headcount", label: "Headcount", format: "count" }];
-  const columns: Array<{ section: PerformanceSectionResult; metric: PerformanceMetric; key: string }> = [];
+  const columns: Array<{
+    section: PerformanceSectionResult;
+    metric: PerformanceMetric;
+    key: string;
+  }> = [];
   for (const section of sections) {
     const spec = PERFORMANCE_SECTIONS.find((s) => s.id === section.id);
     for (const metricKey of spec?.headline ?? []) {
@@ -727,7 +799,9 @@ export function buildPerformanceOverview(
     }
   }
   const valuesFor = (groupKey: string | null): MetricValues => {
-    const out: MetricValues = { headcount: n(groupKey === null ? acc.raw("_org") : acc.raw("_org", groupKey), "headcount") };
+    const out: MetricValues = {
+      headcount: n(groupKey === null ? acc.raw("_org") : acc.raw("_org", groupKey), "headcount"),
+    };
     for (const col of columns) {
       out[col.key] =
         groupKey === null
@@ -805,10 +879,13 @@ export function rankEmployeesByGroup(
 ): { totals: Omit<EmployeeRankGroup, "key" | "label">; groups: EmployeeRankGroup[] } {
   const byScoreAsc = (a: EmployeeRankRow, b: EmployeeRankRow) =>
     a.score - b.score || a.name.localeCompare(b.name);
-  const strip = ({ group: _g, ...row }: EmployeeRankRow & { group: unknown }): EmployeeRankRow => row;
+  const strip = ({ group: _g, ...row }: EmployeeRankRow & { group: unknown }): EmployeeRankRow =>
+    row;
   const summarize = (list: EmployeeRankRow[]) => ({
     headcount: list.length,
-    averageScore: list.length ? Math.round(list.reduce((s, r) => s + r.score, 0) / list.length) : null,
+    averageScore: list.length
+      ? Math.round(list.reduce((s, r) => s + r.score, 0) / list.length)
+      : null,
     lowest: [...list].sort(byScoreAsc).slice(0, limit),
   });
   const grouped = new Map<string, { label: string; rows: EmployeeRankRow[] }>();
@@ -820,7 +897,11 @@ export function rankEmployeesByGroup(
   const groups = [...grouped.entries()]
     .map(([key, g]) => ({ key, label: g.label, ...summarize(g.rows) }))
     .sort((a, b) =>
-      a.key === "none" ? 1 : b.key === "none" ? -1 : a.label.localeCompare(b.label, undefined, { sensitivity: "base" }),
+      a.key === "none"
+        ? 1
+        : b.key === "none"
+          ? -1
+          : a.label.localeCompare(b.label, undefined, { sensitivity: "base" }),
     );
   return { totals: summarize(rows.map(strip)), groups };
 }

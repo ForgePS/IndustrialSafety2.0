@@ -83,12 +83,7 @@ export class WebhooksController {
     @Principal() principal: ForgePrincipal,
     @Req() req: RequestWithIds,
   ) {
-    const data = await this.webhooks.replayDelivery(
-      tenantId,
-      endpointId,
-      deliveryId,
-      principal,
-    );
+    const data = await this.webhooks.replayDelivery(tenantId, endpointId, deliveryId, principal);
     return ok(data, getRequestIds(req));
   }
 }

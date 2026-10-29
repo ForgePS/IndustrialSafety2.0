@@ -23,7 +23,11 @@ export const initImportUploadSchema = z
     requestedMode: z.enum(["CREATE", "UPDATE", "UPSERT"]).default("UPSERT"),
     fileName: z.string().trim().min(1).max(500),
     contentType: z.string().trim().min(3).max(200),
-    byteSize: z.number().int().positive().max(100 * 1024 * 1024),
+    byteSize: z
+      .number()
+      .int()
+      .positive()
+      .max(100 * 1024 * 1024),
     format: z.enum(["csv", "xlsx", "json"]).optional(),
     checksumSha256: sha256Schema.optional(),
     uploadMode: z.enum(["SINGLE", "MULTIPART"]).optional(),

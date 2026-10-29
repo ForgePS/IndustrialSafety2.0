@@ -30,8 +30,7 @@ function BrandingInner() {
   const tenantId = useTenantId();
   const { hasPermission } = useAuth();
   const canApi =
-    hasPermission("platform.configuration.update") ||
-    hasPermission("tenant.configuration.update");
+    hasPermission("platform.configuration.update") || hasPermission("tenant.configuration.update");
   const [branding, setBranding] = useState<Branding | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -140,11 +139,19 @@ function BrandingInner() {
           <form className={styles.form} onSubmit={onSave} style={{ marginTop: "1rem" }}>
             <div className={styles.formRow}>
               <label htmlFor="displayName">Name</label>
-              <input id="displayName" value={displayName} onChange={(e) => setDisplayName(e.target.value)} />
+              <input
+                id="displayName"
+                value={displayName}
+                onChange={(e) => setDisplayName(e.target.value)}
+              />
             </div>
             <div className={styles.formRow}>
               <label htmlFor="shortName">Short name</label>
-              <input id="shortName" value={shortName} onChange={(e) => setShortName(e.target.value)} />
+              <input
+                id="shortName"
+                value={shortName}
+                onChange={(e) => setShortName(e.target.value)}
+              />
             </div>
             <div className={styles.formRow}>
               <label htmlFor="primaryColor">Primary color</label>
@@ -165,7 +172,11 @@ function BrandingInner() {
             </div>
             <div className={styles.formRow}>
               <label htmlFor="contactName">Contact</label>
-              <input id="contactName" value={contactName} onChange={(e) => setContactName(e.target.value)} />
+              <input
+                id="contactName"
+                value={contactName}
+                onChange={(e) => setContactName(e.target.value)}
+              />
             </div>
             <div className={styles.formRow}>
               <label htmlFor="supportEmail">Support email</label>

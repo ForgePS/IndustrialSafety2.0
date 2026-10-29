@@ -2,7 +2,14 @@
 
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
-import { EmptyState, ErrorState, ForgePageActions, ForgePageHeader, LoadingState, StatusBadge } from "@forge/ui";
+import {
+  EmptyState,
+  ErrorState,
+  ForgePageActions,
+  ForgePageHeader,
+  LoadingState,
+  StatusBadge,
+} from "@forge/ui";
 import { PlatformPageGate } from "@/components/platform-page-gate";
 import { humanizeForgeError, onboardingListSessions, type OnboardingSessionView } from "@/lib/api";
 import { tenantDetailHref } from "@/hooks/use-tenant-id";
@@ -19,7 +26,9 @@ function OnboardingHomeInner() {
     try {
       setSessions(await onboardingListSessions());
     } catch (err) {
-      setError(humanizeForgeError(err instanceof Error ? err.message : "Could not load onboarding."));
+      setError(
+        humanizeForgeError(err instanceof Error ? err.message : "Could not load onboarding."),
+      );
     } finally {
       setLoading(false);
     }
@@ -76,11 +85,15 @@ function OnboardingHomeInner() {
           <h2>In progress</h2>
           <ul className={styles.list}>
             {inProgress.map((row) => {
-              const done = row.steps.filter((s) => s.status === "COMPLETED" || s.status === "SKIPPED").length;
+              const done = row.steps.filter(
+                (s) => s.status === "COMPLETED" || s.status === "SKIPPED",
+              ).length;
               const total = row.steps.length || 1;
               return (
                 <li key={row.session.id}>
-                  <Link href={`/onboarding/continue/?sessionId=${row.session.id}`}>Continue setup</Link>
+                  <Link href={`/onboarding/continue/?sessionId=${row.session.id}`}>
+                    Continue setup
+                  </Link>
                   {" · "}
                   <StatusBadge tone="warning">Step {row.session.currentStep}</StatusBadge>
                   {" · "}

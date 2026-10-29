@@ -16,13 +16,17 @@ import {
 describe("extractTokenFromQrText", () => {
   it("pulls token from industrial scan URL", () => {
     expect(
-      extractTokenFromQrText("https://industrial.forgepublicsafety.com/scan/AbCdEfGhIjKlMnOpQrStUvWx"),
+      extractTokenFromQrText(
+        "https://industrial.forgepublicsafety.com/scan/AbCdEfGhIjKlMnOpQrStUvWx",
+      ),
     ).toBe("AbCdEfGhIjKlMnOpQrStUvWx");
   });
 
   it("pulls token from Field equipment deep link", () => {
     expect(
-      extractTokenFromQrText("https://field.forgepublicsafety.com/scan/equipment/AbCdEfGhIjKlMnOpQrStUvWx"),
+      extractTokenFromQrText(
+        "https://field.forgepublicsafety.com/scan/equipment/AbCdEfGhIjKlMnOpQrStUvWx",
+      ),
     ).toBe("AbCdEfGhIjKlMnOpQrStUvWx");
   });
 
@@ -160,7 +164,12 @@ describe("field route mapping", () => {
 
   it("prefers DVIR pre-trip over generic inspection as primary action", () => {
     const primary = pickPrimaryScanAction([
-      { id: "daily_inspection", label: "Daily", href: "/modules/inspections", kind: "start_inspection" },
+      {
+        id: "daily_inspection",
+        label: "Daily",
+        href: "/modules/inspections",
+        kind: "start_inspection",
+      },
       {
         id: "dvir_pre_trip",
         label: "Pre-trip",

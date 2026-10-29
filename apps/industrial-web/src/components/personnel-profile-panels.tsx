@@ -18,11 +18,7 @@ import {
   type ProfileMetric,
   type ProfileSectionId,
 } from "@/lib/personnel-profile-analytics";
-import {
-  formatPpeDateValue,
-  ppeExpiryBadgeClass,
-  ppeExpiryLabel,
-} from "@/lib/personnel-ppe";
+import { formatPpeDateValue, ppeExpiryBadgeClass, ppeExpiryLabel } from "@/lib/personnel-ppe";
 import {
   rosterInitials,
   statusBadgeClass,
@@ -30,7 +26,11 @@ import {
   type RosterPerson,
 } from "@/lib/personnel-directory";
 import { personNameDisplay } from "@/lib/person-name-display";
-import { formatFileDate, resolvePersonnelLocationLabel, stripImportNotes } from "@/lib/personnel-file";
+import {
+  formatFileDate,
+  resolvePersonnelLocationLabel,
+  stripImportNotes,
+} from "@/lib/personnel-file";
 import { PersonnelTrainingHistory } from "@/components/personnel-training-history";
 import { PersonnelDisciplinaryActions } from "@/components/personnel-disciplinary-actions";
 
@@ -76,13 +76,7 @@ function MetricCard({
   );
 }
 
-function ActivityList({
-  items,
-  empty,
-}: {
-  items: ProfileActivityItem[];
-  empty: string;
-}) {
+function ActivityList({ items, empty }: { items: ProfileActivityItem[]; empty: string }) {
   if (items.length === 0) {
     return <p className="text-muted mb-0">{empty}</p>;
   }
@@ -111,9 +105,7 @@ function ActivityList({
               <Link className="btn btn-link btn-sm px-0 py-0" href={formSubmissionHref(item)}>
                 View
               </Link>
-              {item.module === "forms" ? (
-                <FormPrintLink submissionId={item.id} />
-              ) : null}
+              {item.module === "forms" ? <FormPrintLink submissionId={item.id} /> : null}
             </div>
           </div>
         </div>
@@ -208,7 +200,8 @@ export function PersonnelProfilePanels({ person, record, siteLabel, canManage }:
   const { me } = useAuth();
   const permissions = new Set(me?.permissions ?? []);
   const canManageDiscipline =
-    permissions.has("industrial.personnel.discipline.manage") || permissions.has("industrial.admin");
+    permissions.has("industrial.personnel.discipline.manage") ||
+    permissions.has("industrial.admin");
   const canViewDiscipline =
     canManageDiscipline || permissions.has("industrial.personnel.discipline.view");
 
@@ -243,7 +236,10 @@ export function PersonnelProfilePanels({ person, record, siteLabel, canManage }:
   }, [person.id, analyticsVersion]);
 
   const searchHint =
-    person.employeeNumber || person.displayName || (analytics as { searchHint?: string }).searchHint || "";
+    person.employeeNumber ||
+    person.displayName ||
+    (analytics as { searchHint?: string }).searchHint ||
+    "";
   const metrics = buildProfileMetrics(analytics, searchHint);
   const completedForms = completedPersonnelForms(analytics);
   const place =
@@ -315,9 +311,7 @@ export function PersonnelProfilePanels({ person, record, siteLabel, canManage }:
             <div className="col-6 col-md-4 col-lg">
               <small className="text-muted text-uppercase d-block">Status</small>
               {person.status ? (
-                <span className={`badge ${statusBadgeClass(person.status)}`}>
-                  {person.status}
-                </span>
+                <span className={`badge ${statusBadgeClass(person.status)}`}>{person.status}</span>
               ) : (
                 <span className="fw-medium">—</span>
               )}
@@ -418,10 +412,7 @@ export function PersonnelProfilePanels({ person, record, siteLabel, canManage }:
       ) : (
         <>
           <section className="mb-4" aria-labelledby="safety-analytics-title">
-            <h6
-              className="text-muted text-uppercase mb-3"
-              id="safety-analytics-title"
-            >
+            <h6 className="text-muted text-uppercase mb-3" id="safety-analytics-title">
               Safety analytics
             </h6>
             <div className="row g-3">
@@ -566,9 +557,7 @@ export function PersonnelProfilePanels({ person, record, siteLabel, canManage }:
                     </div>
                     <div className="d-flex justify-content-between gap-3 mb-2">
                       <dt className="text-muted fw-normal">Expiring soon</dt>
-                      <dd className="mb-0 fw-semibold">
-                        {analytics.qualifications.expiringSoon}
-                      </dd>
+                      <dd className="mb-0 fw-semibold">{analytics.qualifications.expiringSoon}</dd>
                     </div>
                     <div className="d-flex justify-content-between gap-3">
                       <dt className="text-muted fw-normal">Last training activity</dt>
@@ -602,9 +591,7 @@ export function PersonnelProfilePanels({ person, record, siteLabel, canManage }:
             >
               <span>
                 <h5 className="card-title mb-0">Personnel forms</h5>
-                <small className="text-muted">
-                  {completedForms.length} completed
-                </small>
+                <small className="text-muted">{completedForms.length} completed</small>
               </span>
               <i
                 className={`bx bx-chevron-${personnelFormsExpanded ? "up" : "down"}`}
@@ -637,9 +624,7 @@ export function PersonnelProfilePanels({ person, record, siteLabel, canManage }:
             >
               <span>
                 <h5 className="card-title mb-0">Attached forms</h5>
-                <small className="text-muted">
-                  {analytics.forms.submissions.length} attached
-                </small>
+                <small className="text-muted">{analytics.forms.submissions.length} attached</small>
               </span>
               <i
                 className={`bx bx-chevron-${attachedFormsExpanded ? "up" : "down"}`}

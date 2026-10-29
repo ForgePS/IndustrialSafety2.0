@@ -58,9 +58,7 @@ async function main(): Promise<void> {
     return sum + (typeof c.count === "number" ? c.count : 0);
   }, 0);
 
-  const customerStorage = storage.buckets.find((b) =>
-    b.bucketName.includes("firebasestorage.app"),
-  );
+  const customerStorage = storage.buckets.find((b) => b.bucketName.includes("firebasestorage.app"));
 
   const summary = {
     sprint: "DM-S0",
@@ -72,7 +70,9 @@ async function main(): Promise<void> {
       mode: "FIRESTORE_NATIVE",
       rootCollections: collections.length,
       documentsTotalKnown: firestoreDocsTotal,
-      unknownCountCollections: collections.filter((c) => c.count === "UNKNOWN").map((c) => c.collection),
+      unknownCountCollections: collections
+        .filter((c) => c.count === "UNKNOWN")
+        .map((c) => c.collection),
     },
     tenantsTotal: tenants.length,
     auth: {
@@ -87,8 +87,12 @@ async function main(): Promise<void> {
       customerBytes: customerStorage?.totalBytes ?? null,
     },
     deltaSafe: collections.filter((c) => c.deltaClass === "DELTA_SAFE").map((c) => c.collection),
-    deltaUnsafe: collections.filter((c) => c.deltaClass === "DELTA_UNSAFE").map((c) => c.collection),
-    unscopedCollections: collections.filter((c) => !c.tenantScoped && (typeof c.count === "number" ? c.count > 0 : true)).map((c) => c.collection),
+    deltaUnsafe: collections
+      .filter((c) => c.deltaClass === "DELTA_UNSAFE")
+      .map((c) => c.collection),
+    unscopedCollections: collections
+      .filter((c) => !c.tenantScoped && (typeof c.count === "number" ? c.count > 0 : true))
+      .map((c) => c.collection),
   };
 
   const outDir = path.resolve(args.outDir ?? ".tmp-data-migration/dm-s0");
@@ -100,15 +104,18 @@ async function main(): Promise<void> {
   write("inventory-summary.json", summary);
   write("collections.json", collections);
   write("subcollections.json", subcollections);
-  write("schema-profile.json", collections.map((c) => ({
-    collection: c.collection,
-    drift: c.drift,
-    fields: c.schema.map((f) => ({
-      fieldName: f.fieldName,
-      observedTypes: f.observedTypes,
-      presence: f.presence,
+  write(
+    "schema-profile.json",
+    collections.map((c) => ({
+      collection: c.collection,
+      drift: c.drift,
+      fields: c.schema.map((f) => ({
+        fieldName: f.fieldName,
+        observedTypes: f.observedTypes,
+        presence: f.presence,
+      })),
     })),
-  })));
+  );
   write("tenant-inventory.json", tenants);
   write("auth-summary.json", authSummary);
   write("storage-summary.json", storage);
@@ -117,11 +124,14 @@ async function main(): Promise<void> {
     deltaUnsafe: summary.deltaUnsafe,
     partial: collections.filter((c) => c.deltaClass === "PARTIAL").map((c) => c.collection),
   });
-  write("relationships.json", collections.map((c) => ({
-    sourceCollection: c.collection,
-    referenceFields: c.referenceFields,
-    fileFields: c.fileFields,
-  })));
+  write(
+    "relationships.json",
+    collections.map((c) => ({
+      sourceCollection: c.collection,
+      referenceFields: c.referenceFields,
+      fileFields: c.fileFields,
+    })),
+  );
 
   console.warn(JSON.stringify({ status: "ok", outDir, summary }, null, 2));
 }

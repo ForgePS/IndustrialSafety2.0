@@ -2,16 +2,16 @@
 
 ## In-app inbox
 
-| Field | Storage |
-| --- | --- |
-| tenant | `user_notifications.tenant_id` |
-| user | `user_notifications.user_id` |
-| type | `type` |
-| priority | `priority` |
-| destination | `IN_APP` \| `EMAIL` \| `BOTH` |
-| read state | `read_at` null = unread |
-| created | `created_at` |
-| expires | `expires_at` |
+| Field       | Storage                        |
+| ----------- | ------------------------------ |
+| tenant      | `user_notifications.tenant_id` |
+| user        | `user_notifications.user_id`   |
+| type        | `type`                         |
+| priority    | `priority`                     |
+| destination | `IN_APP` \| `EMAIL` \| `BOTH`  |
+| read state  | `read_at` null = unread        |
+| created     | `created_at`                   |
+| expires     | `expires_at`                   |
 
 API (tenant-scoped, own user):
 

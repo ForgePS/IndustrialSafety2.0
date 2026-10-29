@@ -10,10 +10,7 @@ import { builtinByKey, BUILTIN_REPORTS } from "./reporting-catalog.js";
 describe("resolveRelativeDateRange", () => {
   it("resolves last_7_days", () => {
     const now = new Date("2026-09-08T15:00:00.000Z");
-    const resolved = resolveRelativeDateRange(
-      { relativeDateRange: "last_7_days", limit: 10 },
-      now,
-    );
+    const resolved = resolveRelativeDateRange({ relativeDateRange: "last_7_days", limit: 10 }, now);
     expect(resolved.dateFrom).toBe("2026-09-02T00:00:00.000Z");
     expect(resolved.dateTo).toBe("2026-09-08T23:59:59.999Z");
     expect(resolved.relativeDateRange).toBeUndefined();
@@ -21,10 +18,7 @@ describe("resolveRelativeDateRange", () => {
 
   it("resolves prior_month", () => {
     const now = new Date("2026-09-08T15:00:00.000Z");
-    const resolved = resolveRelativeDateRange(
-      { relativeDateRange: "prior_month" },
-      now,
-    );
+    const resolved = resolveRelativeDateRange({ relativeDateRange: "prior_month" }, now);
     expect(resolved.dateFrom).toBe("2026-08-01T00:00:00.000Z");
     expect(resolved.dateTo?.startsWith("2026-08-31")).toBe(true);
   });

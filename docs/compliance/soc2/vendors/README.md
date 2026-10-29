@@ -4,10 +4,10 @@ Vendor risk management for organizations that affect the Forge system descriptio
 
 ## Primary vendors
 
-| Vendor | Role | Diligence |
-| --- | --- | --- |
-| Amazon Web Services | Primary subservice (IaaS/PaaS) | Annual AWS Artifact SOC report review |
-| GitHub | Source control + CI | Security/SOC materials + config review |
+| Vendor              | Role                           | Diligence                              |
+| ------------------- | ------------------------------ | -------------------------------------- |
+| Amazon Web Services | Primary subservice (IaaS/PaaS) | Annual AWS Artifact SOC report review  |
+| GitHub              | Source control + CI            | Security/SOC materials + config review |
 
 ## Folder contents
 

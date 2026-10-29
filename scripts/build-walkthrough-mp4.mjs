@@ -92,9 +92,7 @@ async function encodeScene(ffmpeg, workDir, step, index, total, width, height) {
     `drawtext=text='${route}':fontcolor=0x93c5fd:fontsize=24:x=80:y=280`,
   ];
   lines.forEach((line, i) => {
-    filters.push(
-      `drawtext=text='${line}':fontcolor=0xe2e8f0:fontsize=30:x=80:y=${360 + i * 42}`,
-    );
+    filters.push(`drawtext=text='${line}':fontcolor=0xe2e8f0:fontsize=30:x=80:y=${360 + i * 42}`);
   });
 
   await run(ffmpeg, [
@@ -131,18 +129,26 @@ async function main() {
   const ffmpeg = args.ffmpeg || process.env.FFMPEG_PATH || defaultFfmpeg;
   const outDir = join(root, "exports");
   const outPath =
-    args.out || join(outDir, EXECUTIVE_WALKTHROUGH_DEFAULT_FILENAME || "Forge-Industrial-Safety_Module-Walkthrough.mp4");
+    args.out ||
+    join(
+      outDir,
+      EXECUTIVE_WALKTHROUGH_DEFAULT_FILENAME || "Forge-Industrial-Safety_Module-Walkthrough.mp4",
+    );
 
   await mkdir(outDir, { recursive: true });
   const workDir = await mkdtemp(join(tmpdir(), "forge-walkthrough-mp4-"));
 
   try {
     const steps = EXECUTIVE_WALKTHROUGH_STEPS;
-    console.log(`Building ${steps.length} scenes (~${Math.round(estimateWalkthroughRuntimeMs() / 1000)}s)…`);
+    console.log(
+      `Building ${steps.length} scenes (~${Math.round(estimateWalkthroughRuntimeMs() / 1000)}s)…`,
+    );
     const parts = [];
     for (let i = 0; i < steps.length; i += 1) {
       process.stdout.write(`  encoding ${i + 1}/${steps.length}: ${steps[i].title}\n`);
-      parts.push(await encodeScene(ffmpeg, workDir, steps[i], i, steps.length, args.width, args.height));
+      parts.push(
+        await encodeScene(ffmpeg, workDir, steps[i], i, steps.length, args.width, args.height),
+      );
     }
 
     const listPath = join(workDir, "concat.txt");

@@ -1,6 +1,13 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState, type PointerEvent as ReactPointerEvent } from "react";
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type PointerEvent as ReactPointerEvent,
+} from "react";
 import {
   applyAspectToCrop,
   aspectRatioForPreset,
@@ -179,11 +186,7 @@ export function ImageCropModal({
         else x = fixedX;
         if (drag.handle.includes("n")) y = fixedY - nextH;
         else y = fixedY;
-        next = clampCropRect(
-          { x, y, width: nextW, height: nextH },
-          natural.width,
-          natural.height,
-        );
+        next = clampCropRect({ x, y, width: nextW, height: nextH }, natural.width, natural.height);
         next = applyAspectToCrop(next, natural.width, natural.height, aspectValue);
       }
       // Keep pointer inside the stage roughly — ignore if outside heavily.
@@ -268,7 +271,7 @@ export function ImageCropModal({
     }
   }
 
-  async function useFullImage() {
+  async function submitFullImage() {
     if (!natural || busy) return;
     setBusy(true);
     setError(null);
@@ -304,8 +307,8 @@ export function ImageCropModal({
                   {title}
                 </h5>
                 <p className="text-muted small mb-0">
-                  Drag the box to frame only what should be saved — desk, fingers, and
-                  background stay out of the upload.
+                  Drag the box to frame only what should be saved — desk, fingers, and background
+                  stay out of the upload.
                 </p>
               </div>
               <button
@@ -337,10 +340,10 @@ export function ImageCropModal({
                 style={{ maxWidth: "100%", maxHeight: "60vh", touchAction: "none" }}
               >
                 {objectUrl ? (
-                  // eslint-disable-next-line @next/next/no-img-element
+                  // Plain <img> on purpose: static export, so next/image optimization is unavailable.
                   <img
                     src={objectUrl}
-                    alt="Image to crop"
+                    alt="Crop preview"
                     className="d-block"
                     style={{
                       maxWidth: "100%",
@@ -411,8 +414,8 @@ export function ImageCropModal({
                 </p>
               ) : (
                 <p className="text-muted small mt-3 mb-0">
-                  Tip: use <strong>License card</strong> for driver&apos;s licenses so the
-                  crop matches the ID shape.
+                  Tip: use <strong>License card</strong> for driver&apos;s licenses so the crop
+                  matches the ID shape.
                 </p>
               )}
             </div>
@@ -429,7 +432,7 @@ export function ImageCropModal({
                 type="button"
                 className="btn btn-outline-primary"
                 disabled={busy || !natural}
-                onClick={() => void useFullImage()}
+                onClick={() => void submitFullImage()}
               >
                 Use full image
               </button>

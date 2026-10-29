@@ -9,12 +9,12 @@
 ## Sizes
 
 | Size | Columns | Row height factor |
-| --- | --- | --- |
-| 1x1 | 3 | 1 |
-| 2x1 | 6 | 1 |
-| 2x2 | 6 | 2 |
-| 3x2 | 9 | 2 |
-| 4x2 | 12 | 2 |
+| ---- | ------- | ----------------- |
+| 1x1  | 3       | 1                 |
+| 2x1  | 6       | 1                 |
+| 2x2  | 6       | 2                 |
+| 3x2  | 9       | 2                 |
+| 4x2  | 12      | 2                 |
 
 ≤1023px: spans collapse toward full width. ≤599px: single column.
 

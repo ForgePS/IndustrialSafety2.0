@@ -4,17 +4,17 @@
 
 **REUSE Amazon Cognito** — do not introduce a parallel IdP.
 
-| Concern | Implementation |
-| --- | --- |
-| Sign-in | Cognito Hosted UI + PKCE (`@forge/web-kit`) |
-| Sign-out | Frontend token clear + `POST /api/v1/auth/logout-all` |
-| Token validation | `@forge/auth` JWKS verify + claim audience/client checks |
-| Session context | `AuthContextService.resolvePrincipal` (server-side) |
-| Disabled account | Identity / user `DISABLED` → `FORBIDDEN` |
+| Concern              | Implementation                                                 |
+| -------------------- | -------------------------------------------------------------- |
+| Sign-in              | Cognito Hosted UI + PKCE (`@forge/web-kit`)                    |
+| Sign-out             | Frontend token clear + `POST /api/v1/auth/logout-all`          |
+| Token validation     | `@forge/auth` JWKS verify + claim audience/client checks       |
+| Session context      | `AuthContextService.resolvePrincipal` (server-side)            |
+| Disabled account     | Identity / user `DISABLED` → `FORBIDDEN`                       |
 | Session invalidation | `users.sessions_revoked_at` + `session_version` vs token `iat` |
-| Password recovery | Cognito `AccountRecovery.EMAIL_ONLY` |
-| Email verification | Cognito `autoVerify.email` |
-| MFA | Cognito `Mfa.OPTIONAL` (architecture present; policy is ops) |
+| Password recovery    | Cognito `AccountRecovery.EMAIL_ONLY`                           |
+| Email verification   | Cognito `autoVerify.email`                                     |
+| MFA                  | Cognito `Mfa.OPTIONAL` (architecture present; policy is ops)   |
 
 ## Authoritative rule
 

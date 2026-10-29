@@ -5,13 +5,13 @@
 
 Shared sections for all foundation components:
 
-- **Permissions:** Presentation only; hide/disable slots based on caller-provided auth flags  
-- **Accessibility:** Landmarks and headings as noted; focus order follows reading order  
-- **Keyboard:** Tab moves through interactive slots; Esc closes overlays owned by children  
-- **Screen reader:** Landmark labels; decorative separators hidden  
-- **Responsive:** Collapse side regions per shell breakpoints  
-- **Anti-patterns:** Product-specific chrome forks; hard-coded colors  
-- **Future extension points:** Slots for product tools without replacing structure  
+- **Permissions:** Presentation only; hide/disable slots based on caller-provided auth flags
+- **Accessibility:** Landmarks and headings as noted; focus order follows reading order
+- **Keyboard:** Tab moves through interactive slots; Esc closes overlays owned by children
+- **Screen reader:** Landmark labels; decorative separators hidden
+- **Responsive:** Collapse side regions per shell breakpoints
+- **Anti-patterns:** Product-specific chrome forks; hard-coded colors
+- **Future extension points:** Slots for product tools without replacing structure
 
 ---
 

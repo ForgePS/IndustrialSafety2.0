@@ -31,7 +31,10 @@ describe("public auth session payload (FIS-H01)", () => {
 
 describe("session cookie flags (FIS-H01)", () => {
   it("sets HttpOnly Secure SameSite=Strict Path=/ without Domain", () => {
-    const name = sessionCookieName({ protocol: "https", host: "producersrice.forgepublicsafety.com" });
+    const name = sessionCookieName({
+      protocol: "https",
+      host: "producersrice.forgepublicsafety.com",
+    });
     const header = buildSessionSetCookie("opaque-session", {
       cookieName: name,
       maxAgeSeconds: 3600,

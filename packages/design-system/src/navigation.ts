@@ -75,9 +75,7 @@ export function filterNavigationItems(
   const out: ForgeNavigationItem[] = [];
   for (const item of items) {
     if (!isVisible(item, ctx)) continue;
-    const children = item.children
-      ? filterNavigationItems(item.children, ctx)
-      : undefined;
+    const children = item.children ? filterNavigationItems(item.children, ctx) : undefined;
     if (item.children && (!children || children.length === 0) && !item.route) {
       continue;
     }

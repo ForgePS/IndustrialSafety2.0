@@ -18,45 +18,45 @@ Runtime database access was switched from Aurora master `forge_admin` (BYPASSRLS
 
 ## 2. Deployed RMS URL
 
-https://d3ud5uzwd9js2z.cloudfront.net  
+https://d3ud5uzwd9js2z.cloudfront.net
 
 CloudFront distribution: `E2LZJLH664YX70`  
 S3 bucket: `forge-development-rms-511343547817-us-east-1`
 
 ## 3. Secure API URL
 
-https://d108fstxdv69bo.cloudfront.net  
+https://d108fstxdv69bo.cloudfront.net
 
 (ADR-036 CloudFront HTTPS edge → ALB HTTP origin)  
 Health: `GET /health` → **200**
 
 ## 4. AWS account and region
 
-| Field | Value |
-| --- | --- |
-| Account | `511343547817` |
-| Region | `us-east-1` |
-| CLI profile | `forge-dev` (SSO) |
+| Field           | Value                                                        |
+| --------------- | ------------------------------------------------------------ |
+| Account         | `511343547817`                                               |
+| Region          | `us-east-1`                                                  |
+| CLI profile     | `forge-dev` (SSO)                                            |
 | API ECS service | `forge-development-ecs-platform-api` task definition **:14** |
 
 ## 5. Synthetic tenants used
 
-| Key | Tenant ID | Purpose |
-| --- | --- | --- |
-| `rms-synthetic-fd` | `019f9e06-a0b2-75f4-9e0b-5ae9befd8193` | Primary acceptance tenant (Synthetic Valley FD) |
-| `rms-synthetic-fd-b` | `019fa017-c632-74ae-b70b-672711c72f20` | Isolation tenant (Synthetic Ridge FD) |
+| Key                  | Tenant ID                              | Purpose                                         |
+| -------------------- | -------------------------------------- | ----------------------------------------------- |
+| `rms-synthetic-fd`   | `019f9e06-a0b2-75f4-9e0b-5ae9befd8193` | Primary acceptance tenant (Synthetic Valley FD) |
+| `rms-synthetic-fd-b` | `019fa017-c632-74ae-b70b-672711c72f20` | Isolation tenant (Synthetic Ridge FD)           |
 
 Seeded via `scripts/run-ecs-seed-rms.mjs` (A) and `packages/database/src/seed-rms-synthetic-b.ts` / `scripts/run-ecs-seed-rms-isolation-tenant.mjs` (B).
 
 ## 6. Cognito test identities and roles (no credentials)
 
-| Email | Cognito sub | App user | Tenant | Role |
-| --- | --- | --- | --- | --- |
-| `admin@rms-synthetic.test` | `b4383438-00b1-708a-b31d-f34daaa05c62` | `019f9e06-a0b2-75f4-9e0b-6334f1f14039` | `rms-synthetic-fd` | `RMS_SYNTHETIC_ADMIN` |
+| Email                        | Cognito sub                            | App user                               | Tenant               | Role                    |
+| ---------------------------- | -------------------------------------- | -------------------------------------- | -------------------- | ----------------------- |
+| `admin@rms-synthetic.test`   | `b4383438-00b1-708a-b31d-f34daaa05c62` | `019f9e06-a0b2-75f4-9e0b-6334f1f14039` | `rms-synthetic-fd`   | `RMS_SYNTHETIC_ADMIN`   |
 | `admin@rms-synthetic-b.test` | `544854e8-f0a1-7082-ca0f-e1a26122aa2c` | `019fa017-c632-74ae-b70b-6b5cf32fc839` | `rms-synthetic-fd-b` | `RMS_SYNTHETIC_ADMIN_B` |
 
 User pool: `us-east-1_VYjUFLXG4`  
-RMS client: `6ad44jqh9pbibkao8lqcqu4mnv`  
+RMS client: `6ad44jqh9pbibkao8lqcqu4mnv`
 
 Credentials stored only in local gitignored `apps/rms-web-e2e/.env.e2e.local` (not committed).
 
@@ -72,30 +72,30 @@ npx playwright test --project=chromium
 
 **Result (2026-07-26):** **13 passed, 0 failed, 0 skipped** (~1.3m)
 
-| Spec | Result |
-| --- | --- |
-| Autosave persist after refresh `@smoke` | PASS |
-| Dual-context save conflict `@smoke` | PASS |
-| Cognito Hosted UI login `@smoke` | PASS |
-| Cross-tenant isolation (7 tests) `@smoke` | PASS |
-| Manual incident + overview `@smoke` | PASS |
-| Mobile viewport `@smoke` | PASS |
-| Officer review → finalize → locked edits | PASS |
+| Spec                                      | Result |
+| ----------------------------------------- | ------ |
+| Autosave persist after refresh `@smoke`   | PASS   |
+| Dual-context save conflict `@smoke`       | PASS   |
+| Cognito Hosted UI login `@smoke`          | PASS   |
+| Cross-tenant isolation (7 tests) `@smoke` | PASS   |
+| Manual incident + overview `@smoke`       | PASS   |
+| Mobile viewport `@smoke`                  | PASS   |
+| Officer review → finalize → locked edits  | PASS   |
 
 ## 8. Exact cross-tenant results
 
 **Suite:** `apps/rms-web-e2e/tests/isolation.spec.ts`  
 **Auth:** Real Cognito Hosted UI for both users (no `x-forge-dev-principal`)
 
-| Check | Result |
-| --- | --- |
-| Tenant B cannot open Tenant A incident in UI | PASS (denied / failed-to-load) |
-| Tenant B list excludes Tenant A incident id | PASS |
-| Tenant B `GET` A incident under B tenant path | PASS (403/404) |
-| Tenant B `GET` with A `tenantId` in URL | PASS (**403** tenant mismatch) |
-| Tenant B PATCH / submit / approve / finalize / void / archive on A incident | PASS (403/404) |
-| Tenant B list A stations / units / personnel / configuration | PASS (403/404) |
-| Spoofed `x-tenant-id` header to A | PASS (still denied) |
+| Check                                                                       | Result                         |
+| --------------------------------------------------------------------------- | ------------------------------ |
+| Tenant B cannot open Tenant A incident in UI                                | PASS (denied / failed-to-load) |
+| Tenant B list excludes Tenant A incident id                                 | PASS                           |
+| Tenant B `GET` A incident under B tenant path                               | PASS (403/404)                 |
+| Tenant B `GET` with A `tenantId` in URL                                     | PASS (**403** tenant mismatch) |
+| Tenant B PATCH / submit / approve / finalize / void / archive on A incident | PASS (403/404)                 |
+| Tenant B list A stations / units / personnel / configuration                | PASS (403/404)                 |
+| Spoofed `x-tenant-id` header to A                                           | PASS (still denied)            |
 
 ## 9. RLS verification
 
@@ -124,25 +124,25 @@ Local CI suite: `pnpm --filter @forge/database test:rls` (`tenant-isolation.inte
 
 ## 10. Database runtime-role verification
 
-| Check | Result | Evidence |
-| --- | --- | --- |
-| Runtime uses `forge_app` | PASS | Task def `:14` `DATABASE_SECRET_ARN` → `forge-development-secrets-database-app-*`; RLS probe `currentUser=forge_app` |
-| Not table-owner / master | PASS | Master remains `forge_admin` for migrations only |
-| `forge_app` cannot bypass FORCE RLS | PASS | Cross-tenant counts = 0 under `withTenantTransaction` |
-| Secret provision | PASS | `scripts/phase2-provision-forge-app.mjs` |
-| CDK follow-through | DONE (code) | `ForgeDatabase.appSecret` + Compute `appDatabaseSecret` wiring |
+| Check                               | Result      | Evidence                                                                                                             |
+| ----------------------------------- | ----------- | -------------------------------------------------------------------------------------------------------------------- |
+| Runtime uses `forge_app`            | PASS        | Task def `:14` `DATABASE_SECRET_ARN` → `forge-development-secrets-database-app-*`; RLS probe `currentUser=forge_app` |
+| Not table-owner / master            | PASS        | Master remains `forge_admin` for migrations only                                                                     |
+| `forge_app` cannot bypass FORCE RLS | PASS        | Cross-tenant counts = 0 under `withTenantTransaction`                                                                |
+| Secret provision                    | PASS        | `scripts/phase2-provision-forge-app.mjs`                                                                             |
+| CDK follow-through                  | DONE (code) | `ForgeDatabase.appSecret` + Compute `appDatabaseSecret` wiring                                                       |
 
 ## 11. HTTPS verification
 
-| Check | Result |
-| --- | --- |
-| RMS HTTPS | PASS (`https://d3ud5uzwd9js2z.cloudfront.net/` → 200) |
-| API HTTPS | PASS (`https://d108fstxdv69bo.cloudfront.net/health` → 200) |
-| HTTP → HTTPS (RMS) | PASS (`http://…` → **301** Location HTTPS) |
-| HTTP API CF | **403** (viewer protocol policy rejects HTTP; not open cleartext API) |
-| TLS certificate | PASS (browser/CloudFront managed) |
-| No mixed content | PASS (RMS built with `NEXT_PUBLIC_API_URL=https://d108…`) |
-| No raw ALB URL in frontend out | PASS (`NO_ALB_IN_OUT`) |
+| Check                          | Result                                                                |
+| ------------------------------ | --------------------------------------------------------------------- |
+| RMS HTTPS                      | PASS (`https://d3ud5uzwd9js2z.cloudfront.net/` → 200)                 |
+| API HTTPS                      | PASS (`https://d108fstxdv69bo.cloudfront.net/health` → 200)           |
+| HTTP → HTTPS (RMS)             | PASS (`http://…` → **301** Location HTTPS)                            |
+| HTTP API CF                    | **403** (viewer protocol policy rejects HTTP; not open cleartext API) |
+| TLS certificate                | PASS (browser/CloudFront managed)                                     |
+| No mixed content               | PASS (RMS built with `NEXT_PUBLIC_API_URL=https://d108…`)             |
+| No raw ALB URL in frontend out | PASS (`NO_ALB_IN_OUT`)                                                |
 
 **Command:** `node scripts/phase2-verify-headers.mjs`
 
@@ -170,11 +170,11 @@ Exact headers from closeout run:
 
 ## 13. CORS results
 
-| Origin | Result |
-| --- | --- |
+| Origin                                  | Result                                                                                                          |
+| --------------------------------------- | --------------------------------------------------------------------------------------------------------------- |
 | `https://d3ud5uzwd9js2z.cloudfront.net` | `Access-Control-Allow-Origin: https://d3ud5uzwd9js2z.cloudfront.net` + `Access-Control-Allow-Credentials: true` |
-| `https://evil.example` | **No** `Access-Control-Allow-Origin` echo (allowlist enforced) |
-| Wildcard `*` with credentials | Not used |
+| `https://evil.example`                  | **No** `Access-Control-Allow-Origin` echo (allowlist enforced)                                                  |
+| Wildcard `*` with credentials           | Not used                                                                                                        |
 
 Configured via `CORS_ORIGINS` on API task (RMS + Creator CloudFront origins).
 
@@ -200,33 +200,33 @@ Configured via `CORS_ORIGINS` on API task (RMS + Creator CloudFront origins).
 
 ## 18. Mobile and accessibility results
 
-| Check | Result |
-| --- | --- |
-| Mobile viewport Playwright `@smoke` | PASS |
-| rms-web axe unit tests (prior Phase 2) | PASS (2 tests) |
+| Check                                  | Result                                        |
+| -------------------------------------- | --------------------------------------------- |
+| Mobile viewport Playwright `@smoke`    | PASS                                          |
+| rms-web axe unit tests (prior Phase 2) | PASS (2 tests)                                |
 | Dedicated full axe suite on CloudFront | Not re-run this closeout; mobile shell usable |
 
 ## 19. CloudWatch evidence
 
-| Item | Evidence |
-| --- | --- |
-| Dashboard | `ForgePlatform-Development-Overview` |
-| RMS CloudFront requests | Metric `AWS/CloudFront` `Requests` dist `E2LZJLH664YX70` — e.g. Sum **4731** in latest hour sampled |
-| Alarms (OK) | `forge-development-alarm-api-5xx`, `api-unhealthy`, `rms-cf-5xx`, `db-cpu` (thresholds 5 / 1 / 5 / 80) |
-| Log groups + retention | `/forge/development/platform-api` **14d**; worker **14d**; database **14d**; migration **14d**; waf **90d** |
-| ECS task health | Service stable on task def `:14`; `/health` 200 |
-| Controlled events | Playwright create/autosave/review + isolation denials generated API traffic and logs |
+| Item                    | Evidence                                                                                                    |
+| ----------------------- | ----------------------------------------------------------------------------------------------------------- |
+| Dashboard               | `ForgePlatform-Development-Overview`                                                                        |
+| RMS CloudFront requests | Metric `AWS/CloudFront` `Requests` dist `E2LZJLH664YX70` — e.g. Sum **4731** in latest hour sampled         |
+| Alarms (OK)             | `forge-development-alarm-api-5xx`, `api-unhealthy`, `rms-cf-5xx`, `db-cpu` (thresholds 5 / 1 / 5 / 80)      |
+| Log groups + retention  | `/forge/development/platform-api` **14d**; worker **14d**; database **14d**; migration **14d**; waf **90d** |
+| ECS task health         | Service stable on task def `:14`; `/health` 200                                                             |
+| Controlled events       | Playwright create/autosave/review + isolation denials generated API traffic and logs                        |
 
 Saved queries / widgets: Monitoring stack (`infrastructure/cdk/lib/constructs/forge-monitoring.ts`).
 
 ## 20. Audit-event evidence
 
-| Mechanism | Status |
-| --- | --- |
-| `audit_events` table + RLS | Present (Sprint 1D/1E) |
-| API | `GET /api/v1/tenants/:tenantId/audit-events` (`platform.audit.read`) |
-| Domain events | Review transitions emit NERIS incident domain events (`rms.neris.incident.*.v1`) |
-| Authorization denials | `authorization_decision_log` + API 403 paths exercised by isolation suite |
+| Mechanism                  | Status                                                                           |
+| -------------------------- | -------------------------------------------------------------------------------- |
+| `audit_events` table + RLS | Present (Sprint 1D/1E)                                                           |
+| API                        | `GET /api/v1/tenants/:tenantId/audit-events` (`platform.audit.read`)             |
+| Domain events              | Review transitions emit NERIS incident domain events (`rms.neris.incident.*.v1`) |
+| Authorization denials      | `authorization_decision_log` + API 403 paths exercised by isolation suite        |
 
 Closeout did not dump raw audit rows (PII/minimization); infrastructure and denial paths verified by tests.
 
@@ -263,11 +263,11 @@ On both synthetic tenants:
 
 ## 25. Security concerns
 
-| Severity | Item | Disposition |
-| --- | --- | --- |
-| Critical (resolved) | API connected as `forge_admin` bypassing RLS | **Fixed** — runtime `forge_app` + secret `forge-development-secrets-database-app` |
-| Medium | CDK Data stack must adopt existing app secret on next deploy without clobber | Documented; construct name aligned |
-| Low | Development Cognito test users | Acceptable for non-prod; rotate periodically |
+| Severity            | Item                                                                         | Disposition                                                                       |
+| ------------------- | ---------------------------------------------------------------------------- | --------------------------------------------------------------------------------- |
+| Critical (resolved) | API connected as `forge_admin` bypassing RLS                                 | **Fixed** — runtime `forge_app` + secret `forge-development-secrets-database-app` |
+| Medium              | CDK Data stack must adopt existing app secret on next deploy without clobber | Documented; construct name aligned                                                |
+| Low                 | Development Cognito test users                                               | Acceptable for non-prod; rotate periodically                                      |
 
 No open critical/high issues remain for this environment after cutover.
 
@@ -279,11 +279,11 @@ Criteria met: full Playwright pass including Cognito cross-tenant isolation; sec
 
 ## 27. Human sign-off section
 
-| Role | Name | Date | Signature |
-| --- | --- | --- | --- |
-| Engineering | Auto (agent) — closeout evidence recorded | 2026-07-26 | Automated verification complete |
-| Product | _pending_ | | |
-| Security / compliance (optional) | _pending_ | | |
+| Role                             | Name                                      | Date       | Signature                       |
+| -------------------------------- | ----------------------------------------- | ---------- | ------------------------------- |
+| Engineering                      | Auto (agent) — closeout evidence recorded | 2026-07-26 | Automated verification complete |
+| Product                          | _pending_                                 |            |                                 |
+| Security / compliance (optional) | _pending_                                 |            |                                 |
 
 ---
 

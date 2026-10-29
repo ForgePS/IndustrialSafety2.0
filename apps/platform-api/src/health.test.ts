@@ -36,6 +36,8 @@ describe("platform-api", () => {
       PUBLIC_CREATOR_URL: "https://creator.example.com",
       PUBLIC_API_URL: "https://api.example.com",
       DATABASE_SECRET_ARN: "arn:aws:secretsmanager:us-east-1:000000000000:secret:db-abcdef",
+      // Production fails closed without an auth-session key; supply a throwaway one.
+      FORGE_AUTH_SESSION_ENCRYPTION_KEY: Buffer.alloc(32, 7).toString("base64"),
     });
 
     const moduleRef = await Test.createTestingModule({

@@ -129,15 +129,18 @@ if (config.features.enableCloudTrail) {
   NagSuppressions.addStackSuppressions(audit, [
     {
       id: "AwsSolutions-IAM4",
-      reason: "CloudTrail CloudWatch Logs delivery role uses AWS managed CloudTrail policy pattern via CDK L2.",
+      reason:
+        "CloudTrail CloudWatch Logs delivery role uses AWS managed CloudTrail policy pattern via CDK L2.",
     },
     {
       id: "AwsSolutions-IAM5",
-      reason: "CloudTrail service roles require wildcard resource permissions scoped by source account/ARN conditions on the bucket/key policies.",
+      reason:
+        "CloudTrail service roles require wildcard resource permissions scoped by source account/ARN conditions on the bucket/key policies.",
     },
     {
       id: "AwsSolutions-S1",
-      reason: "CloudTrail log bucket is the audit destination; access logging on the trail bucket is deferred to avoid recursive logging cost in development.",
+      reason:
+        "CloudTrail log bucket is the audit destination; access logging on the trail bucket is deferred to avoid recursive logging cost in development.",
     },
   ]);
 }

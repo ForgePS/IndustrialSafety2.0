@@ -102,6 +102,7 @@ async function main(): Promise<void> {
     ...(tenantId ? { tenantId } : {}),
     ...(domains ? { domains } : {}),
   });
+  // eslint-disable-next-line no-console -- CLI output for ECS one-off
   console.info(JSON.stringify({ status: "ok", results: result }));
 }
 

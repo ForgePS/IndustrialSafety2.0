@@ -53,7 +53,10 @@ describe("incident-print", () => {
       }),
     ).toEqual(
       expect.arrayContaining([
-        { label: "Observed signs", value: "Odor of alcohol; unknown-sign; Other: Smell of solvent" },
+        {
+          label: "Observed signs",
+          value: "Odor of alcohol; unknown-sign; Other: Smell of solvent",
+        },
         { label: "DOT-covered driver", value: "Yes" },
         { label: "Observing supervisor", value: "Pat (Supervisor) - reasonable-suspicion trained" },
         { label: "Transportation", value: "Plant manager drove employee home" },

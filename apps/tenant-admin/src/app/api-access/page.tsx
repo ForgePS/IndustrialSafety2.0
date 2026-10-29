@@ -111,8 +111,7 @@ function ApiAccessInner() {
       <div className={styles.panel}>
         <h2>Create key</h2>
         <label>
-          Name{" "}
-          <input value={name} onChange={(e) => setName(e.target.value)} disabled={busy} />
+          Name <input value={name} onChange={(e) => setName(e.target.value)} disabled={busy} />
         </label>
         <label style={{ display: "block", marginTop: "0.5rem" }}>
           Scopes (comma-separated){" "}

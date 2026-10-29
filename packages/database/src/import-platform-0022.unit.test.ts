@@ -28,7 +28,9 @@ describe("0022 import platform migration artifact", () => {
       expect(sql).toContain(`CREATE TABLE IF NOT EXISTS "${table}"`);
       expect(sql).toContain(`ALTER TABLE ${table} ENABLE ROW LEVEL SECURITY`);
       expect(sql).toContain(`ALTER TABLE ${table} FORCE ROW LEVEL SECURITY`);
-      expect(sql).toContain(`WITH CHECK (tenant_id = nullif(current_setting('app.current_tenant_id', true), '')::uuid)`);
+      expect(sql).toContain(
+        `WITH CHECK (tenant_id = nullif(current_setting('app.current_tenant_id', true), '')::uuid)`,
+      );
     }
   });
 

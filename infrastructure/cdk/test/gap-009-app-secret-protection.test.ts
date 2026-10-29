@@ -41,10 +41,9 @@ describe("DataStack GAP-009 app secret protection", () => {
     const secrets = template.findResources("AWS::SecretsManager::Secret");
     for (const [logicalId, resource] of Object.entries(secrets)) {
       const name = (resource as { Properties?: { Name?: string } }).Properties?.Name;
-      expect(
-        name,
-        `${logicalId} must not create protected app secret ${appSecretName}`,
-      ).not.toBe(appSecretName);
+      expect(name, `${logicalId} must not create protected app secret ${appSecretName}`).not.toBe(
+        appSecretName,
+      );
       expect(JSON.stringify(resource)).not.toContain(appSecretName);
     }
   });

@@ -2,12 +2,12 @@
 
 ## Composition
 
-| Surface | FX when | Compatibility |
-| --- | --- | --- |
-| Queue `/review/` | `module.incidentReview` ∧ `tables` | Legacy HTML table |
-| Officer review forms | `module.incidentReview` ∧ `forms` | Legacy `OfficerReviewPanel` markup |
-| Specialty review | Always legacy (compat) | Unchanged panel |
-| Review “workspace” | Incident workspace REVIEW section | Lives inside incident record; no separate `/review/{id}` |
+| Surface              | FX when                            | Compatibility                                            |
+| -------------------- | ---------------------------------- | -------------------------------------------------------- |
+| Queue `/review/`     | `module.incidentReview` ∧ `tables` | Legacy HTML table                                        |
+| Officer review forms | `module.incidentReview` ∧ `forms`  | Legacy `OfficerReviewPanel` markup                       |
+| Specialty review     | Always legacy (compat)             | Unchanged panel                                          |
+| Review “workspace”   | Incident workspace REVIEW section  | Lives inside incident record; no separate `/review/{id}` |
 
 ## Rules
 

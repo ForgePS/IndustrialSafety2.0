@@ -24,19 +24,16 @@ describe("buildPersonnelTrainingReportHtml", () => {
           bestPercent: 82,
         },
       ],
-      completions: [
+      trainingRecords: [
         {
-          id: "c1",
-          assignmentTitle: "Forklift",
-          sourceTitle: "Equipment",
+          title: "Forklift",
+          courseName: "Equipment",
           result: "PASSED",
           scorePercent: 92,
-          passingPercent: 80,
           attemptNumber: 1,
           completedAt: "2026-08-01T12:00:00.000Z",
         },
       ],
-      legacyRecords: [],
     });
     expect(html).toContain("Employee training report");
     expect(html).toContain("Jane Doe");

@@ -75,7 +75,9 @@ export type MessagingParticipant = {
   isOnline?: boolean;
 };
 
-export function messageSenderKey(message: Pick<MessagingMessage, "senderUserId" | "isOwn">): string {
+export function messageSenderKey(
+  message: Pick<MessagingMessage, "senderUserId" | "isOwn">,
+): string {
   const id = String(message.senderUserId ?? "").trim();
   if (id) return id;
   return message.isOwn ? "__own__" : "__other__";

@@ -125,14 +125,20 @@ describe("loto workspace helpers", () => {
       lotoProcedureDescription({
         equipmentName: "Baghouse 4",
         scope: "Isolate baghouse fan and rotary valve",
-        notes: [{ id: "n1", text: "Wear PPE" }, { id: "n2", text: "Verify zero energy" }],
+        notes: [
+          { id: "n1", text: "Wear PPE" },
+          { id: "n2", text: "Verify zero energy" },
+        ],
       }),
     ).toBe("Isolate baghouse fan and rotary valve");
     expect(
       lotoProcedureDescription({
         equipmentName: "Baghouse 4",
         title: "Baghouse 4 LOTO",
-        notes: [{ id: "n1", text: "Wear PPE" }, { id: "n2", text: "Verify zero energy" }],
+        notes: [
+          { id: "n1", text: "Wear PPE" },
+          { id: "n2", text: "Verify zero energy" },
+        ],
       }),
     ).toBe("Baghouse 4 LOTO");
     expect(
@@ -434,7 +440,11 @@ describe("loto workspace helpers", () => {
     expect(payload.printPurpose).toBeTruthy();
     expect(payload.printScopeStatement).toBeTruthy();
     expect(payload.printEnforcement).toBeTruthy();
-    expect(Array.isArray(payload.shutdownSequence) && payload.shutdownSequence.length).toBeGreaterThan(0);
-    expect(Array.isArray(payload.restoreSequence) && payload.restoreSequence.length).toBeGreaterThan(0);
+    expect(
+      Array.isArray(payload.shutdownSequence) && payload.shutdownSequence.length,
+    ).toBeGreaterThan(0);
+    expect(
+      Array.isArray(payload.restoreSequence) && payload.restoreSequence.length,
+    ).toBeGreaterThan(0);
   });
 });

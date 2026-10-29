@@ -2,16 +2,16 @@
 
 ## Permission map
 
-| Capability | Permission |
-| --- | --- |
-| List/read jobs, mappings, profiles, templates | `import.view` |
-| Create/patch jobs | `import.upload` |
-| Replace/delete mappings | `import.map` |
-| Request validation | `import.validate` |
-| Request preview / submit for approval | `import.preview` |
-| Approve / reject | `import.approve` |
-| Cancel (pre-execution) | `import.upload` **or** `import.approve` |
-| Profile CRUD / archive / restore | `import.profile.manage` |
+| Capability                                    | Permission                              |
+| --------------------------------------------- | --------------------------------------- |
+| List/read jobs, mappings, profiles, templates | `import.view`                           |
+| Create/patch jobs                             | `import.upload`                         |
+| Replace/delete mappings                       | `import.map`                            |
+| Request validation                            | `import.validate`                       |
+| Request preview / submit for approval         | `import.preview`                        |
+| Approve / reject                              | `import.approve`                        |
+| Cancel (pre-execution)                        | `import.upload` **or** `import.approve` |
+| Profile CRUD / archive / restore              | `import.profile.manage`                 |
 
 `import.execute`, `import.rollback`, `import.template.manage`, `import.error.reprocess`, and `import.sensitive` are seeded but not exercised by S2 route handlers (deferred).
 

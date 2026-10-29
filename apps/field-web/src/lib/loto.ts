@@ -52,9 +52,7 @@ export function lotoIsNeedsCorrection(status: unknown): boolean {
 export function isDisplayableLotoImageUrl(url: unknown): boolean {
   const value = text(url);
   return (
-    value.startsWith("data:image/") ||
-    value.startsWith("https://") ||
-    value.startsWith("http://")
+    value.startsWith("data:image/") || value.startsWith("https://") || value.startsWith("http://")
   );
 }
 
@@ -63,7 +61,10 @@ export function lotoStatusLabel(status: unknown): string {
   if (key === "IN_REVIEW") return "In review";
   if (key === "PENDING_APPROVAL") return "Pending approval";
   if (!key) return "Unknown";
-  return key.replaceAll("_", " ").toLowerCase().replace(/^\w/, (c) => c.toUpperCase());
+  return key
+    .replaceAll("_", " ")
+    .toLowerCase()
+    .replace(/^\w/, (c) => c.toUpperCase());
 }
 
 export function lotoProcedureEquipmentName(row: Record<string, unknown>): string {
@@ -160,7 +161,12 @@ export function lotoProcedureNumber(row: Record<string, unknown>): string {
  */
 export function matchesLotoOrgScope(
   row: Record<string, unknown>,
-  scope: { locationId?: string; locationName?: string; divisionName?: string; departmentId?: string },
+  scope: {
+    locationId?: string;
+    locationName?: string;
+    divisionName?: string;
+    departmentId?: string;
+  },
 ): boolean {
   const locationId = text(scope.locationId);
   const locationName = text(scope.locationName);
@@ -215,7 +221,12 @@ export function compareLotoProceduresByOrg(
 
 export function filterAndSortLotoProcedures(
   rows: ReadonlyArray<Record<string, unknown>>,
-  scope: { locationId?: string; locationName?: string; divisionName?: string; departmentId?: string },
+  scope: {
+    locationId?: string;
+    locationName?: string;
+    divisionName?: string;
+    departmentId?: string;
+  },
 ): Array<Record<string, unknown>> {
   return [...rows]
     .filter((row) => matchesLotoOrgScope(row, scope))
@@ -239,12 +250,7 @@ export function lockoutAuthorizedEmployee(row: Record<string, unknown>): string 
 
 export function lockoutEquipmentName(row: Record<string, unknown>): string {
   const details = asRecord(row.details);
-  return (
-    text(row.equipmentName) ||
-    text(details.equipmentName) ||
-    text(row.title) ||
-    "—"
-  );
+  return text(row.equipmentName) || text(details.equipmentName) || text(row.title) || "—";
 }
 
 export type FieldLotoEnergyItem = {
@@ -332,7 +338,11 @@ export function normalizeNotes(raw: unknown): FieldLotoNoteItem[] {
     }
     const row = asRecord(item);
     const body =
-      text(row.text) || text(row.body) || text(row.note) || text(row.content) || text(row.shortName);
+      text(row.text) ||
+      text(row.body) ||
+      text(row.note) ||
+      text(row.content) ||
+      text(row.shortName);
     if (!body) continue;
     notes.push({
       id: text(row.id) || `note-${i}`,
@@ -353,7 +363,11 @@ export function normalizeRestorationChecks(raw: unknown): FieldLotoRestorationIt
     }
     const row = asRecord(item);
     const label =
-      text(row.label) || text(row.text) || text(row.instruction) || text(row.checkLabel) || text(row.name);
+      text(row.label) ||
+      text(row.text) ||
+      text(row.instruction) ||
+      text(row.checkLabel) ||
+      text(row.name);
     if (!label) continue;
     checks.push({
       id: text(row.id) || text(row.checkKey) || `restore-${i}`,
@@ -382,7 +396,9 @@ export function normalizeAttachments(raw: unknown): FieldLotoAttachmentItem[] {
   return attachments;
 }
 
-export function extractLockoutSnapshot(row: Record<string, unknown> | null | undefined): FieldLotoLockoutSnapshot | null {
+export function extractLockoutSnapshot(
+  row: Record<string, unknown> | null | undefined,
+): FieldLotoLockoutSnapshot | null {
   if (!row) return null;
   const details = asRecord(row.details);
   const payload = asRecord(row.sourcePayload ?? row.source_payload);
@@ -438,9 +454,7 @@ function mapIsolationRows(raw: unknown[]): FieldLotoIsolationItem[] {
         text(payload.isolationLocationText) ||
         text(payload.locationDescription),
       isolationMethod:
-        text(row.isolationMethod) ||
-        text(payload.isolationAction) ||
-        text(payload.isolationMethod),
+        text(row.isolationMethod) || text(payload.isolationAction) || text(payload.isolationMethod),
     };
   });
 }
@@ -461,13 +475,9 @@ function mapStepRows(raw: unknown[]): FieldLotoStepItem[] {
       instruction,
       isVerification: Boolean(row.isVerification) || upper(row.stepPhase) === "VERIFICATION",
       customDescription:
-        text(row.customDescription) ||
-        text(payload.customDescription) ||
-        text(payload.customText),
+        text(row.customDescription) || text(payload.customDescription) || text(payload.customText),
       stepImageUrl:
-        text(row.stepImageUrl) ||
-        text(payload.stepImageUrl) ||
-        text(payload.stepImageStorageKey),
+        text(row.stepImageUrl) || text(payload.stepImageUrl) || text(payload.stepImageStorageKey),
     };
   });
 }
@@ -483,13 +493,10 @@ function deriveFromPayloadSteps(raw: unknown[]): {
   let stepNo = 1;
   raw.forEach((item, i) => {
     const row = asRecord(item);
-    const energy =
-      text(row.energySourceName) || text(row.energyType) || text(row.energySource);
+    const energy = text(row.energySourceName) || text(row.energyType) || text(row.energySource);
     const device = text(row.lockoutDeviceName) || text(row.label) || text(row.deviceName);
     const location =
-      text(row.isolationLocationText) ||
-      text(row.locationDescription) ||
-      text(row.location);
+      text(row.isolationLocationText) || text(row.locationDescription) || text(row.location);
     const method = text(row.isolationAction) || text(row.isolationMethod);
     const verification = text(row.verificationMethodName) || text(row.verification);
     const instruction =
@@ -497,7 +504,11 @@ function deriveFromPayloadSteps(raw: unknown[]): {
       text(row.printedDescription) ||
       text(row.instruction) ||
       text(row.customDescription) ||
-      [location && `Location: ${location}`, method && `Method: ${method}`, device && `Device: ${device}`]
+      [
+        location && `Location: ${location}`,
+        method && `Method: ${method}`,
+        device && `Device: ${device}`,
+      ]
         .filter(Boolean)
         .join(" — ") ||
       `Isolation step ${i + 1}`;
@@ -572,8 +583,7 @@ export function extractProcedureDisplay(
     title: text(procedure.title) || text(source.title) || lotoProcedureEquipmentName(procedure),
     status: text(procedure.status) || text(source.status),
     equipmentName: lotoProcedureEquipmentName(procedure) || lotoProcedureEquipmentName(source),
-    equipmentTypeName:
-      lotoProcedureEquipmentType(procedure) || lotoProcedureEquipmentType(source),
+    equipmentTypeName: lotoProcedureEquipmentType(procedure) || lotoProcedureEquipmentType(source),
     equipmentExternalId:
       lotoProcedureEquipmentExternalId(procedure) || lotoProcedureEquipmentExternalId(source),
     siteName: lotoProcedureSiteName(procedure) || lotoProcedureSiteName(source),
@@ -630,12 +640,14 @@ export function checklistFromDisplay(display: FieldLotoProcedureDisplay): FieldL
   }));
 }
 
-export function profileDisplayName(profile: {
-  displayName?: string;
-  preferredName?: string | null;
-  firstName?: string;
-  lastName?: string;
-} | null): string {
+export function profileDisplayName(
+  profile: {
+    displayName?: string;
+    preferredName?: string | null;
+    firstName?: string;
+    lastName?: string;
+  } | null,
+): string {
   if (!profile) return "";
   return (
     text(profile.displayName) ||
@@ -796,7 +808,9 @@ export function fieldLotoDraftFromDetail(detail: Record<string, unknown>): {
 } {
   const display = extractProcedureDisplay(detail);
   const procedure = asRecord(detail.procedure ?? detail);
-  const payload = asRecord(procedure.source_payload ?? procedure.sourcePayload ?? detail.sourcePayload);
+  const payload = asRecord(
+    procedure.source_payload ?? procedure.sourcePayload ?? detail.sourcePayload,
+  );
   const rawSteps = Array.isArray(detail.steps)
     ? detail.steps
     : Array.isArray(procedure.steps)

@@ -4,10 +4,7 @@ import { useEffect, useState, type FormEvent } from "react";
 import { ApiError, apiGet, apiSend, useAuth } from "@forge/web-kit";
 import { ModuleUnavailable } from "@/components/module-unavailable";
 import { useIndustrialModuleGate } from "@/hooks/use-industrial-module-gate";
-import {
-  COMPLIANCE_MODULE_CONFIG,
-  type Ind6ComplianceModule,
-} from "@/lib/compliance-modules";
+import { COMPLIANCE_MODULE_CONFIG, type Ind6ComplianceModule } from "@/lib/compliance-modules";
 
 type ListResponse = {
   items: Array<Record<string, unknown>>;
@@ -28,9 +25,7 @@ export function ComplianceWorkspace({
   const canView = permissions.has(cfg.viewPerm) || permissions.has("industrial.admin");
   const canManage = permissions.has(cfg.managePerm) || permissions.has("industrial.admin");
   const canViewSensitive =
-    !cfg.sensitivePerm ||
-    permissions.has(cfg.sensitivePerm) ||
-    permissions.has("industrial.admin");
+    !cfg.sensitivePerm || permissions.has(cfg.sensitivePerm) || permissions.has("industrial.admin");
   const { modEntry, explicitlyDisabled, awsReady } = useIndustrialModuleGate({
     moduleCode: cfg.code,
     canView,
@@ -154,7 +149,13 @@ export function ComplianceWorkspace({
       setIncidentId("");
       await loadList();
     } catch (err) {
-      setError(err instanceof ApiError ? err.message : err instanceof Error ? err.message : "Create failed");
+      setError(
+        err instanceof ApiError
+          ? err.message
+          : err instanceof Error
+            ? err.message
+            : "Create failed",
+      );
     } finally {
       setCreating(false);
     }
@@ -265,9 +266,7 @@ export function ComplianceWorkspace({
                   <td>
                     <span data-status={String(row.status ?? "")}>{String(row.status ?? "—")}</span>
                   </td>
-                  <td>
-                    {row.updatedAt ? new Date(String(row.updatedAt)).toLocaleString() : "—"}
-                  </td>
+                  <td>{row.updatedAt ? new Date(String(row.updatedAt)).toLocaleString() : "—"}</td>
                   <td>
                     <button type="button" onClick={() => void loadDetail(String(row.id))}>
                       Open

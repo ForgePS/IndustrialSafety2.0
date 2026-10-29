@@ -193,10 +193,7 @@ export class AuthSessionService {
       expiresIn: input.expiresIn ?? 3600,
       csrfToken,
       rawSessionToken,
-      maxAgeSeconds: Math.max(
-        60,
-        Math.floor((absoluteExpiresAt.getTime() - now.getTime()) / 1000),
-      ),
+      maxAgeSeconds: Math.max(60, Math.floor((absoluteExpiresAt.getTime() - now.getTime()) / 1000)),
     };
   }
 
@@ -304,7 +301,10 @@ export class AuthSessionService {
       throw new ForgeError("UNAUTHORIZED", "Session is invalid or expired");
     }
 
-    if (prior.expiresAt.getTime() <= Date.now() || prior.absoluteExpiresAt.getTime() <= Date.now()) {
+    if (
+      prior.expiresAt.getTime() <= Date.now() ||
+      prior.absoluteExpiresAt.getTime() <= Date.now()
+    ) {
       await this.revokeSessionRow(homeTenantId, prior.id);
       throw new ForgeError("UNAUTHORIZED", "Session is invalid or expired");
     }
@@ -349,12 +349,7 @@ export class AuthSessionService {
           idleExpiresAt,
           lastSeenAt: now,
         })
-        .where(
-          and(
-            eq(authBrowserSessions.id, prior.id),
-            isNull(authBrowserSessions.revokedAt),
-          ),
-        )
+        .where(and(eq(authBrowserSessions.id, prior.id), isNull(authBrowserSessions.revokedAt)))
         .returning({ id: authBrowserSessions.id });
     });
     if (updated.length === 0) {
@@ -450,10 +445,7 @@ export class AuthSessionService {
           username,
         };
       }
-      if (
-        result.ChallengeName === "SMS_MFA" ||
-        result.ChallengeName === "SOFTWARE_TOKEN_MFA"
-      ) {
+      if (result.ChallengeName === "SMS_MFA" || result.ChallengeName === "SOFTWARE_TOKEN_MFA") {
         return {
           kind: "challenge",
           challengeName: result.ChallengeName,

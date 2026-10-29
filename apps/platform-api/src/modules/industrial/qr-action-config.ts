@@ -27,12 +27,18 @@ const BOOL_KEYS: Array<{ key: keyof QrActionConfig; aliases: string[] }> = [
   { key: "dailyInspection", aliases: ["dailyInspection", "daily_inspection"] },
   { key: "weeklyInspection", aliases: ["weeklyInspection", "weekly_inspection"] },
   { key: "monthlyInspection", aliases: ["monthlyInspection", "monthly_inspection"] },
-  { key: "equipmentHistory", aliases: ["equipmentHistory", "equipment_history", "allowHistoryAccess"] },
+  {
+    key: "equipmentHistory",
+    aliases: ["equipmentHistory", "equipment_history", "allowHistoryAccess"],
+  },
   { key: "markOutOfService", aliases: ["markOutOfService", "mark_out_of_service"] },
   { key: "returnToService", aliases: ["returnToService", "return_to_service"] },
   { key: "viewLoto", aliases: ["viewLoto", "view_loto", "loto", "allowLoto"] },
   { key: "viewJsa", aliases: ["viewJsa", "view_jsa", "jsa", "allowJsa"] },
-  { key: "viewDocuments", aliases: ["viewDocuments", "view_documents", "documents", "allowDocuments"] },
+  {
+    key: "viewDocuments",
+    aliases: ["viewDocuments", "view_documents", "documents", "allowDocuments"],
+  },
   { key: "viewTraining", aliases: ["viewTraining", "view_training", "training", "allowTraining"] },
   { key: "viewSds", aliases: ["viewSds", "view_sds", "sds", "allowSds", "chemicalSafety"] },
 ];

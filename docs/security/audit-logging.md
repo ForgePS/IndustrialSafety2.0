@@ -11,19 +11,19 @@ Platform mutations write **tenant-scoped audit events** in the same database tra
 
 Built via `@forge/audit` `buildAuditRecord` / `AuditService.writeInTransaction`:
 
-| Field | Content |
-| --- | --- |
-| `tenantId` | Owning tenant |
-| `actorUserId` / `actorPersonId` / `actorType` | Who acted |
-| `action` | Verb (create, update, suspend, …) |
-| `resourceType` / `resourceId` | Target |
-| `organizationId` | Optional org scope |
-| `result` / `riskLevel` | Outcome and sensitivity |
-| `beforeJson` / `afterJson` | Redacted snapshots |
-| `metadataJson` | Extra context (no plaintext secrets) |
-| `correlationId` / `requestId` | Request tracing |
-| `ipAddress` / `userAgent` | Client metadata when available |
-| `occurredAt` | Event time |
+| Field                                         | Content                              |
+| --------------------------------------------- | ------------------------------------ |
+| `tenantId`                                    | Owning tenant                        |
+| `actorUserId` / `actorPersonId` / `actorType` | Who acted                            |
+| `action`                                      | Verb (create, update, suspend, …)    |
+| `resourceType` / `resourceId`                 | Target                               |
+| `organizationId`                              | Optional org scope                   |
+| `result` / `riskLevel`                        | Outcome and sensitivity              |
+| `beforeJson` / `afterJson`                    | Redacted snapshots                   |
+| `metadataJson`                                | Extra context (no plaintext secrets) |
+| `correlationId` / `requestId`                 | Request tracing                      |
+| `ipAddress` / `userAgent`                     | Client metadata when available       |
+| `occurredAt`                                  | Event time                           |
 
 Sensitive keys in snapshots should be redacted (`@forge/audit` / `@forge/security` helpers).
 
@@ -31,11 +31,11 @@ Sensitive keys in snapshots should be redacted (`@forge/audit` / `@forge/securit
 
 `api/v1/tenants/:tenantId/audit-events` (requires `platform.audit.read`):
 
-| Method | Path | Purpose |
-| --- | --- | --- |
-| GET | `/` | Paginated list |
-| GET | `/:auditEventId` | Single event |
-| POST | `/export` | Export request (foundation) |
+| Method | Path             | Purpose                     |
+| ------ | ---------------- | --------------------------- |
+| GET    | `/`              | Paginated list              |
+| GET    | `/:auditEventId` | Single event                |
+| POST   | `/export`        | Export request (foundation) |
 
 Creator console page: `/audit` (tenant query param required).
 

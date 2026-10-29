@@ -17,13 +17,7 @@ import { formatTaskDueLabel } from "@/lib/tasks/widget-filter";
 import type { WorkspaceWidgetSize } from "@/lib/workspace/types";
 import { WORKSPACE_VIEW_LABELS } from "@/lib/workspace/types";
 
-const VIEW_TABS: TasksWidgetView[] = [
-  "my-tasks",
-  "today",
-  "week",
-  "overdue",
-  "assigned-to-me",
-];
+const VIEW_TABS: TasksWidgetView[] = ["my-tasks", "today", "week", "overdue", "assigned-to-me"];
 
 type Props = {
   size: WorkspaceWidgetSize;
@@ -95,7 +89,10 @@ function TaskRow({
  */
 export function TasksWorkspaceWidget({ size, view: viewProp, onViewChange, moduleRoute }: Props) {
   const view: TasksWidgetView = isTasksWidgetView(viewProp) ? viewProp : "today";
-  const { status, error, tasks, summary, refresh, runAction, busyId } = useTasksWidgetData(view, true);
+  const { status, error, tasks, summary, refresh, runAction, busyId } = useTasksWidgetData(
+    view,
+    true,
+  );
 
   const showTabs = size !== "compact";
   const showRowActions = size === "large" || size === "wide" || size === "full";
@@ -153,7 +150,11 @@ export function TasksWorkspaceWidget({ size, view: viewProp, onViewChange, modul
           <div>
             <p className="text-danger small mb-2">{error ?? "Unable to load tasks."}</p>
             <div className="d-flex flex-wrap gap-2">
-              <button type="button" className="btn btn-sm btn-outline-secondary" onClick={() => void refresh()}>
+              <button
+                type="button"
+                className="btn btn-sm btn-outline-secondary"
+                onClick={() => void refresh()}
+              >
                 Try Again
               </button>
               <Link href={moduleRoute} className="btn btn-sm btn-outline-primary">

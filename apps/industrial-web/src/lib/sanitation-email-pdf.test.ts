@@ -7,8 +7,20 @@ import {
 
 const people = parseReportRecipients({
   items: [
-    { id: "1", name: "Clay Kannada", email: "ckannada@producersrice.com", jobTitle: "Sanitation Lead", departmentName: "Parboil" },
-    { id: "2", name: "Ann Lee", email: "alee@producersrice.com", jobTitle: null, departmentName: "Milling" },
+    {
+      id: "1",
+      name: "Clay Kannada",
+      email: "ckannada@producersrice.com",
+      jobTitle: "Sanitation Lead",
+      departmentName: "Parboil",
+    },
+    {
+      id: "2",
+      name: "Ann Lee",
+      email: "alee@producersrice.com",
+      jobTitle: null,
+      departmentName: "Milling",
+    },
     { id: "3", name: "No Email", email: "" },
   ],
 });

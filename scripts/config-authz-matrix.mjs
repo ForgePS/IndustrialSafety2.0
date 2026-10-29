@@ -8,11 +8,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const evidenceDir = path.join(
-  __dirname,
-  "..",
-  "docs/testing/evidence/config-final-acceptance",
-);
+const evidenceDir = path.join(__dirname, "..", "docs/testing/evidence/config-final-acceptance");
 mkdirSync(evidenceDir, { recursive: true });
 
 const BASE = process.env.FORGE_API_BASE ?? "https://d108fstxdv69bo.cloudfront.net";
@@ -90,7 +86,13 @@ async function main() {
   // Forge Creator (platform admin) â€” home platform tenant, target synthetic
   {
     const cat = await call("GET", "/api/v1/config/catalog", PLATFORM_USER, PLATFORM_TENANT);
-    record("creator.catalog", "forge_creator", "platform.*", "allow", expectStatus(cat.status, 200));
+    record(
+      "creator.catalog",
+      "forge_creator",
+      "platform.*",
+      "allow",
+      expectStatus(cat.status, 200),
+    );
 
     const draft = await call(
       "POST",
@@ -129,7 +131,13 @@ async function main() {
   {
     const u = p.platform_support.userId;
     const cat = await call("GET", "/api/v1/config/catalog", u, tenantId);
-    record("support.catalog", "platform_support", "update|publish", "allow", expectStatus(cat.status, 200));
+    record(
+      "support.catalog",
+      "platform_support",
+      "update|publish",
+      "allow",
+      expectStatus(cat.status, 200),
+    );
     const draft = await call(
       "POST",
       `/api/v1/tenants/${tenantId}/config/terminology`,
@@ -143,7 +151,13 @@ async function main() {
         },
       },
     );
-    record("support.draft", "platform_support", "platform.configuration.update", "allow", expectStatus(draft.status, [200, 201]));
+    record(
+      "support.draft",
+      "platform_support",
+      "platform.configuration.update",
+      "allow",
+      expectStatus(draft.status, [200, 201]),
+    );
     const vid = draft.json?.data?.version?.id;
     const okey = draft.json?.data?.object?.objectKey ?? `support`;
     if (vid) {
@@ -153,43 +167,53 @@ async function main() {
         u,
         tenantId,
       );
-      record("support.publish", "platform_support", "platform.configuration.publish", "allow", expectStatus(pub.status, [200, 201]));
+      record(
+        "support.publish",
+        "platform_support",
+        "platform.configuration.publish",
+        "allow",
+        expectStatus(pub.status, [200, 201]),
+      );
     }
-    const sec = await call(
-      "POST",
-      `/api/v1/tenants/${tenantId}/config/security`,
-      u,
-      tenantId,
-      {
-        objectKey: `sec-${Date.now()}`,
-        payload: { sessionTimeoutMinutes: 480, mfaRequired: false, passwordMinLength: 12 },
-      },
+    const sec = await call("POST", `/api/v1/tenants/${tenantId}/config/security`, u, tenantId, {
+      objectKey: `sec-${Date.now()}`,
+      payload: { sessionTimeoutMinutes: 480, mfaRequired: false, passwordMinLength: 12 },
+    });
+    record(
+      "support.security",
+      "platform_support",
+      "platform.configuration.update",
+      "allow",
+      expectStatus(sec.status, [200, 201]),
+      "support may manage security NS",
     );
-    record("support.security", "platform_support", "platform.configuration.update", "allow", expectStatus(sec.status, [200, 201]), "support may manage security NS");
   }
 
   // Tenant Admin â€” allowlist yes, security deny
   {
     const u = p.tenant_admin.userId;
-    const draft = await call(
-      "POST",
-      `/api/v1/tenants/${tenantId}/config/branding`,
-      u,
-      tenantId,
-      { ...brandingPayload, objectKey: `ta-${Date.now()}` },
+    const draft = await call("POST", `/api/v1/tenants/${tenantId}/config/branding`, u, tenantId, {
+      ...brandingPayload,
+      objectKey: `ta-${Date.now()}`,
+    });
+    record(
+      "ta.branding",
+      "tenant_admin",
+      "tenant.configuration.update",
+      "allow",
+      expectStatus(draft.status, [200, 201]),
     );
-    record("ta.branding", "tenant_admin", "tenant.configuration.update", "allow", expectStatus(draft.status, [200, 201]));
-    const sec = await call(
-      "POST",
-      `/api/v1/tenants/${tenantId}/config/security`,
-      u,
-      tenantId,
-      {
-        objectKey: `ta-sec-${Date.now()}`,
-        payload: { sessionTimeoutMinutes: 480, mfaRequired: false, passwordMinLength: 12 },
-      },
+    const sec = await call("POST", `/api/v1/tenants/${tenantId}/config/security`, u, tenantId, {
+      objectKey: `ta-sec-${Date.now()}`,
+      payload: { sessionTimeoutMinutes: 480, mfaRequired: false, passwordMinLength: 12 },
+    });
+    record(
+      "ta.security_deny",
+      "tenant_admin",
+      "namespace allowlist",
+      "deny",
+      expectStatus(sec.status, 403),
     );
-    record("ta.security_deny", "tenant_admin", "namespace allowlist", "deny", expectStatus(sec.status, 403));
   }
 
   // Configuration Manager
@@ -207,35 +231,56 @@ async function main() {
         },
       },
     );
-    record("cm.draft", "configuration_manager", "tenant.configuration.update", "allow", expectStatus(draft.status, [200, 201]));
-    const sec = await call(
-      "POST",
-      `/api/v1/tenants/${tenantId}/config/security`,
-      u,
-      tenantId,
-      {
-        objectKey: `cm-sec-${Date.now()}`,
-        payload: { sessionTimeoutMinutes: 480, mfaRequired: false, passwordMinLength: 12 },
-      },
+    record(
+      "cm.draft",
+      "configuration_manager",
+      "tenant.configuration.update",
+      "allow",
+      expectStatus(draft.status, [200, 201]),
     );
-    record("cm.security_deny", "configuration_manager", "namespace allowlist", "deny", expectStatus(sec.status, 403));
+    const sec = await call("POST", `/api/v1/tenants/${tenantId}/config/security`, u, tenantId, {
+      objectKey: `cm-sec-${Date.now()}`,
+      payload: { sessionTimeoutMinutes: 480, mfaRequired: false, passwordMinLength: 12 },
+    });
+    record(
+      "cm.security_deny",
+      "configuration_manager",
+      "namespace allowlist",
+      "deny",
+      expectStatus(sec.status, 403),
+    );
   }
 
   // Read-only Auditor
   {
     const u = p.read_only_auditor.userId;
     const cat = await call("GET", "/api/v1/config/catalog", u, tenantId);
-    record("auditor.catalog", "read_only_auditor", "platform.audit.read", "allow", expectStatus(cat.status, 200));
-    const list = await call("GET", `/api/v1/tenants/${tenantId}/config/branding`, u, tenantId);
-    record("auditor.list", "read_only_auditor", "platform.audit.read", "allow", expectStatus(list.status, 200));
-    const draft = await call(
-      "POST",
-      `/api/v1/tenants/${tenantId}/config/branding`,
-      u,
-      tenantId,
-      { ...brandingPayload, objectKey: `aud-${Date.now()}` },
+    record(
+      "auditor.catalog",
+      "read_only_auditor",
+      "platform.audit.read",
+      "allow",
+      expectStatus(cat.status, 200),
     );
-    record("auditor.draft_deny", "read_only_auditor", "update", "deny", expectStatus(draft.status, 403));
+    const list = await call("GET", `/api/v1/tenants/${tenantId}/config/branding`, u, tenantId);
+    record(
+      "auditor.list",
+      "read_only_auditor",
+      "platform.audit.read",
+      "allow",
+      expectStatus(list.status, 200),
+    );
+    const draft = await call("POST", `/api/v1/tenants/${tenantId}/config/branding`, u, tenantId, {
+      ...brandingPayload,
+      objectKey: `aud-${Date.now()}`,
+    });
+    record(
+      "auditor.draft_deny",
+      "read_only_auditor",
+      "update",
+      "deny",
+      expectStatus(draft.status, 403),
+    );
   }
 
   // Standard User
@@ -243,27 +288,27 @@ async function main() {
     const u = p.standard_user.userId;
     const cat = await call("GET", "/api/v1/config/catalog", u, tenantId);
     record("standard.catalog_deny", "standard_user", "none", "deny", expectStatus(cat.status, 403));
-    const draft = await call(
-      "POST",
-      `/api/v1/tenants/${tenantId}/config/branding`,
-      u,
-      tenantId,
-      { ...brandingPayload, objectKey: `std-${Date.now()}` },
-    );
+    const draft = await call("POST", `/api/v1/tenants/${tenantId}/config/branding`, u, tenantId, {
+      ...brandingPayload,
+      objectKey: `std-${Date.now()}`,
+    });
     record("standard.draft_deny", "standard_user", "none", "deny", expectStatus(draft.status, 403));
   }
 
   // Independent: update-only cannot publish
   {
     const u = p.update_only.userId;
-    const draft = await call(
-      "POST",
-      `/api/v1/tenants/${tenantId}/config/branding`,
-      u,
-      tenantId,
-      { ...brandingPayload, objectKey: `upd-${Date.now()}` },
+    const draft = await call("POST", `/api/v1/tenants/${tenantId}/config/branding`, u, tenantId, {
+      ...brandingPayload,
+      objectKey: `upd-${Date.now()}`,
+    });
+    record(
+      "update_only.draft",
+      "update_only",
+      "platform.configuration.update",
+      "allow",
+      expectStatus(draft.status, [200, 201]),
     );
-    record("update_only.draft", "update_only", "platform.configuration.update", "allow", expectStatus(draft.status, [200, 201]));
     const vid = draft.json?.data?.version?.id;
     const okey = draft.json?.data?.object?.objectKey;
     if (vid && okey) {
@@ -273,23 +318,38 @@ async function main() {
         u,
         tenantId,
       );
-      record("update_only.publish_deny", "update_only", "platform.configuration.publish", "deny", expectStatus(pub.status, 403));
+      record(
+        "update_only.publish_deny",
+        "update_only",
+        "platform.configuration.publish",
+        "deny",
+        expectStatus(pub.status, 403),
+      );
     }
   }
 
   // Independent: publish-only cannot draft
   {
     const u = p.publish_only.userId;
-    const draft = await call(
-      "POST",
-      `/api/v1/tenants/${tenantId}/config/branding`,
-      u,
-      tenantId,
-      { ...brandingPayload, objectKey: `pub-${Date.now()}` },
+    const draft = await call("POST", `/api/v1/tenants/${tenantId}/config/branding`, u, tenantId, {
+      ...brandingPayload,
+      objectKey: `pub-${Date.now()}`,
+    });
+    record(
+      "publish_only.draft_deny",
+      "publish_only",
+      "platform.configuration.update",
+      "deny",
+      expectStatus(draft.status, 403),
     );
-    record("publish_only.draft_deny", "publish_only", "platform.configuration.update", "deny", expectStatus(draft.status, 403));
     const cat = await call("GET", "/api/v1/config/catalog", u, tenantId);
-    record("publish_only.catalog", "publish_only", "platform.configuration.publish", "allow", expectStatus(cat.status, 200));
+    record(
+      "publish_only.catalog",
+      "publish_only",
+      "platform.configuration.publish",
+      "allow",
+      expectStatus(cat.status, 200),
+    );
   }
 
   // Unauthorized
@@ -342,7 +402,9 @@ async function main() {
       "platform.configuration.update",
       "allow",
       { ok: dryOk, actual: dry.status, expected: [200, 201] },
-      dryOk ? "validation-only no persistence" : JSON.stringify(data?.summary ?? dry.text).slice(0, 300),
+      dryOk
+        ? "validation-only no persistence"
+        : JSON.stringify(data?.summary ?? dry.text).slice(0, 300),
     );
   }
 

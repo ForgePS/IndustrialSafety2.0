@@ -1,15 +1,12 @@
 // @vitest-environment jsdom
 import { beforeEach, describe, expect, it } from "vitest";
-import { assertAccessTokenShape, InvalidAccessTokenError, isAccessTokenExpiredOrNearExpiry } from "./access-token.js";
 import {
-  clearAuthStorage,
-  getBearerToken,
-  setBearerToken,
-} from "./auth-storage.js";
-import {
-  configureApiClient,
-  getApiBaseUrl,
-} from "./api-client.js";
+  assertAccessTokenShape,
+  InvalidAccessTokenError,
+  isAccessTokenExpiredOrNearExpiry,
+} from "./access-token.js";
+import { clearAuthStorage, getBearerToken, setBearerToken } from "./auth-storage.js";
+import { configureApiClient, getApiBaseUrl } from "./api-client.js";
 
 const SAMPLE_JWT =
   "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwidG9rZW5fdXNlIjoiYWNjZXNzIn0.signature";
@@ -38,7 +35,9 @@ describe("access token shape", () => {
   });
 
   it("rejects arbitrary JSON", () => {
-    expect(() => assertAccessTokenShape('{"access_token":"nope"}')).toThrow(InvalidAccessTokenError);
+    expect(() => assertAccessTokenShape('{"access_token":"nope"}')).toThrow(
+      InvalidAccessTokenError,
+    );
   });
 
   it("treats missing exp as expired", () => {
@@ -48,9 +47,9 @@ describe("access token shape", () => {
 
   it("respects exp with skew", () => {
     const header = Buffer.from(JSON.stringify({ alg: "none" })).toString("base64url");
-    const future = Buffer.from(JSON.stringify({ exp: Math.floor(Date.now() / 1000) + 3600 })).toString(
-      "base64url",
-    );
+    const future = Buffer.from(
+      JSON.stringify({ exp: Math.floor(Date.now() / 1000) + 3600 }),
+    ).toString("base64url");
     const past = Buffer.from(JSON.stringify({ exp: Math.floor(Date.now() / 1000) - 10 })).toString(
       "base64url",
     );
@@ -59,7 +58,8 @@ describe("access token shape", () => {
   });
 
   it("reads expiry and near-expiry delay helpers", async () => {
-    const { getAccessTokenExpiresAtMs, msUntilAccessTokenNearExpiry } = await import("./access-token.js");
+    const { getAccessTokenExpiresAtMs, msUntilAccessTokenNearExpiry } =
+      await import("./access-token.js");
     const header = Buffer.from(JSON.stringify({ alg: "none" })).toString("base64url");
     const exp = Math.floor(Date.now() / 1000) + 600;
     const token = `${header}.${Buffer.from(JSON.stringify({ exp })).toString("base64url")}.sig`;

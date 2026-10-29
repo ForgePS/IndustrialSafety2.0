@@ -46,7 +46,10 @@ export function redact(value) {
   if (value == null) return value;
   const json = JSON.stringify(value);
   const redacted = json
-    .replace(/"(password|secret|SecretString|accessKeyId|secretAccessKey|sessionToken|privateKey|authorization)"\s*:\s*"[^"]*"/gi, '"$1":"[REDACTED]"')
+    .replace(
+      /"(password|secret|SecretString|accessKeyId|secretAccessKey|sessionToken|privateKey|authorization)"\s*:\s*"[^"]*"/gi,
+      '"$1":"[REDACTED]"',
+    )
     .replace(/:"[A-Za-z0-9+/]{40,}={0,2}"/g, ':"[REDACTED_POSSIBLE_SECRET]"');
   return JSON.parse(redacted);
 }

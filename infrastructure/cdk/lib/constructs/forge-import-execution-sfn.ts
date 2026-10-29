@@ -25,9 +25,7 @@ export interface ForgeImportExecutionStateMachineProps {
 export class ForgeImportExecutionStateMachine extends Construct {
   readonly stateMachine: sfn.StateMachine;
   readonly deploymentStatus:
-    | "DEPLOYED_AND_ACTIVE"
-    | "DEPLOYED_NOT_ACTIVE"
-    | "DEFINITION_COMPLETE_DEPLOYMENT_PENDING";
+    "DEPLOYED_AND_ACTIVE" | "DEPLOYED_NOT_ACTIVE" | "DEFINITION_COMPLETE_DEPLOYMENT_PENDING";
 
   constructor(scope: Construct, id: string, props: ForgeImportExecutionStateMachineProps) {
     super(scope, id);

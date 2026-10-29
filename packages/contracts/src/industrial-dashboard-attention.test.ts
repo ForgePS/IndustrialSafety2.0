@@ -54,11 +54,7 @@ describe("industrial-dashboard-attention", () => {
       { key: "tasks", count: 3 },
     ];
     const filtered = filterIndustrialDashboardAttentionItems(items, {
-      permissions: [
-        "industrial.access",
-        "industrial.incidents.view",
-        "industrial.training.view",
-      ],
+      permissions: ["industrial.access", "industrial.incidents.view", "industrial.training.view"],
       activeModules: ["INCIDENTS", "TRAINING", "TASKS"],
       availableModuleCodes: ["INCIDENTS", "TASKS"],
     });

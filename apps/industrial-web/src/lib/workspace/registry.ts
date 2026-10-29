@@ -20,24 +20,13 @@ type WidgetOverride = Partial<
 
 const COMPACT_ONLY: WorkspaceWidgetSize[] = ["compact"];
 
-const PRIMARY_WIDGET_SIZES: WorkspaceWidgetSize[] = [
-  "compact",
-  "medium",
-  "wide",
-  "large",
-  "full",
-];
+const PRIMARY_WIDGET_SIZES: WorkspaceWidgetSize[] = ["compact", "medium", "wide", "large", "full"];
 
 /**
  * Per-module widget capabilities. Modules not listed stay compact launchers
  * until a later phase enables live content for them.
  */
-const SUMMARY_WIDGET_SIZES: WorkspaceWidgetSize[] = [
-  "compact",
-  "medium",
-  "wide",
-  "large",
-];
+const SUMMARY_WIDGET_SIZES: WorkspaceWidgetSize[] = ["compact", "medium", "wide", "large"];
 
 const SUMMARY_BASE: WidgetOverride = {
   widgetEnabled: true,
@@ -134,7 +123,9 @@ export function buildWorkspaceRegistry(
       widgetEnabled: override.widgetEnabled ?? false,
       supportedSizes,
       ...(override.supportedViews ? { supportedViews: override.supportedViews } : {}),
-      defaultSize: supportedSizes.includes(defaultSize) ? defaultSize : (supportedSizes[0] ?? "compact"),
+      defaultSize: supportedSizes.includes(defaultSize)
+        ? defaultSize
+        : (supportedSizes[0] ?? "compact"),
       ...(override.defaultView ? { defaultView: override.defaultView } : {}),
       ...(override.expandSize ? { expandSize: override.expandSize } : {}),
     };

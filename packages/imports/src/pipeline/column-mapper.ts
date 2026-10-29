@@ -40,15 +40,7 @@ export const COLUMN_ALIAS_GROUPS: Record<string, string[]> = {
     "personnel number",
   ],
   email: ["email", "e mail", "work email", "email address", "company email"],
-  phone: [
-    "cell",
-    "cell phone",
-    "mobile",
-    "mobile phone",
-    "phone",
-    "telephone",
-    "work phone",
-  ],
+  phone: ["cell", "cell phone", "mobile", "mobile phone", "phone", "telephone", "work phone"],
   department: ["dept", "department", "department name", "org unit"],
   position: ["job", "job title", "position", "title", "role", "job position"],
   employment_type: [
@@ -74,12 +66,7 @@ export const COLUMN_ALIAS_GROUPS: Record<string, string[]> = {
   insured: ["insured", "insurance", "is insured"],
   mileage: ["mileage", "odometer", "miles"],
   notes: ["notes", "comments", "remark", "remarks"],
-  vehicle_fringe: [
-    "not on vehicle fringe ss",
-    "vehicle fringe",
-    "fringe",
-    "vehicle fringe ss",
-  ],
+  vehicle_fringe: ["not on vehicle fringe ss", "vehicle fringe", "fringe", "vehicle fringe ss"],
   assigned_driver: ["assigned driver", "driver", "driver name"],
   name: [
     "name",
@@ -101,13 +88,7 @@ export const COLUMN_ALIAS_GROUPS: Record<string, string[]> = {
   contact_email: ["contact email", "dept email"],
   title: ["title", "course", "course title", "training", "training title"],
   course_name: ["course name", "class name"],
-  completed_at: [
-    "completed",
-    "completed at",
-    "completion date",
-    "date completed",
-    "training date",
-  ],
+  completed_at: ["completed", "completed at", "completion date", "date completed", "training date"],
   expires_at: ["expires", "expires at", "expiration", "expiration date", "expiry"],
   course_code: ["course code", "class code", "training code"],
   instructor_name: ["instructor", "instructor name", "trainer", "trainer name"],
@@ -173,9 +154,7 @@ export class AliasColumnMapper implements ColumnMapper {
   }
 }
 
-export function mappingStatus(
-  mapping: ColumnMapping,
-): "Mapped" | "Needs Review" | "Ignored" {
+export function mappingStatus(mapping: ColumnMapping): "Mapped" | "Needs Review" | "Ignored" {
   if (!mapping.targetField || mapping.targetField === "__ignore__") return "Ignored";
   if (mapping.targetField) return "Mapped";
   return "Needs Review";

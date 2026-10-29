@@ -80,10 +80,7 @@ export function useRemindersWidgetData(
     void refresh();
   }, [refresh]);
 
-  const reminders = useMemo(
-    () => filterRemindersForWidgetView(allItems, view),
-    [allItems, view],
-  );
+  const reminders = useMemo(() => filterRemindersForWidgetView(allItems, view), [allItems, view]);
   const summary = useMemo(() => summarizeReminders(allItems), [allItems]);
 
   const snooze = useCallback(
@@ -93,7 +90,9 @@ export function useRemindersWidgetData(
       setError(null);
       try {
         const next =
-          mode === "tomorrow" ? snoozeRemindAtTomorrowMorning(new Date()) : snoozeRemindAt(new Date(), 1);
+          mode === "tomorrow"
+            ? snoozeRemindAtTomorrowMorning(new Date())
+            : snoozeRemindAt(new Date(), 1);
         await apiSend(`/api/v1/industrial/reminders/${encodeURIComponent(reminder.id)}`, "PATCH", {
           remindAt: next.toISOString(),
         });
@@ -131,7 +130,12 @@ export function useRemindersWidgetData(
   );
 
   return {
-    status: status === "loading" || status === "error" ? status : reminders.length === 0 ? "empty" : "loaded",
+    status:
+      status === "loading" || status === "error"
+        ? status
+        : reminders.length === 0
+          ? "empty"
+          : "loaded",
     error,
     reminders,
     summary,

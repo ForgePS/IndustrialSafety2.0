@@ -40,8 +40,12 @@ export const industrialSanitationFacilityProfiles = pgTable(
       .references(() => industrialSites.id),
     facilityTypes: jsonb("facility_types").notNull().default([]),
     complianceFrameworks: jsonb("compliance_frameworks").notNull().default([]),
-    dustActionThresholdInches: doublePrecision("dust_action_threshold_inches").notNull().default(0.125),
-    dustMeasurementUnit: varchar("dust_measurement_unit", { length: 16 }).notNull().default("INCHES"),
+    dustActionThresholdInches: doublePrecision("dust_action_threshold_inches")
+      .notNull()
+      .default(0.125),
+    dustMeasurementUnit: varchar("dust_measurement_unit", { length: 16 })
+      .notNull()
+      .default("INCHES"),
     priorityHousekeepingEnabled: boolean("priority_housekeeping_enabled").notNull().default(false),
     independentVerificationRequired: boolean("independent_verification_required")
       .notNull()
@@ -93,7 +97,9 @@ export const industrialSanitationLocations = pgTable(
       .notNull()
       .references(() => tenants.id),
     siteId: uuid("site_id").references(() => industrialSites.id),
-    zoneId: uuid("zone_id").references(() => industrialSanitationZones.id, { onDelete: "set null" }),
+    zoneId: uuid("zone_id").references(() => industrialSanitationZones.id, {
+      onDelete: "set null",
+    }),
     departmentId: uuid("department_id").references(() => industrialDepartments.id),
     building: varchar("building", { length: 200 }),
     area: varchar("area", { length: 300 }),
@@ -187,8 +193,16 @@ export const industrialSanitationInspections = pgTable(
     archivedAt: timestamp("archived_at", { withTimezone: true }),
   },
   (t) => [
-    index("industrial_sanitation_inspections_tenant_status_idx").on(t.tenantId, t.status, t.completedAt),
-    index("industrial_sanitation_inspections_tenant_site_idx").on(t.tenantId, t.siteId, t.inspectionType),
+    index("industrial_sanitation_inspections_tenant_status_idx").on(
+      t.tenantId,
+      t.status,
+      t.completedAt,
+    ),
+    index("industrial_sanitation_inspections_tenant_site_idx").on(
+      t.tenantId,
+      t.siteId,
+      t.inspectionType,
+    ),
     index("industrial_sanitation_inspections_number_idx").on(t.tenantId, t.inspectionNumber),
     uniqueIndex("industrial_sanitation_inspections_offline_uidx")
       .on(t.tenantId, t.offlineClientId)
@@ -224,7 +238,9 @@ export const industrialSanitationFindings = pgTable(
     recurrenceCount: integer("recurrence_count").notNull().default(0),
     stopWork: boolean("stop_work").notNull().default(false),
     productHold: boolean("product_hold").notNull().default(false),
-    correctiveActionId: uuid("corrective_action_id").references(() => industrialCorrectiveActions.id),
+    correctiveActionId: uuid("corrective_action_id").references(
+      () => industrialCorrectiveActions.id,
+    ),
     reportedByUserId: uuid("reported_by_user_id").references(() => users.id),
     closedAt: timestamp("closed_at", { withTimezone: true }),
     createdAt: createdAtColumn,
@@ -385,9 +401,12 @@ export const industrialSanitationVerifications = pgTable(
       .notNull()
       .references(() => tenants.id),
     siteId: uuid("site_id").references(() => industrialSites.id),
-    cleaningTaskId: uuid("cleaning_task_id").references(() => industrialSanitationCleaningTasks.id, {
-      onDelete: "cascade",
-    }),
+    cleaningTaskId: uuid("cleaning_task_id").references(
+      () => industrialSanitationCleaningTasks.id,
+      {
+        onDelete: "cascade",
+      },
+    ),
     inspectionId: uuid("inspection_id").references(() => industrialSanitationInspections.id, {
       onDelete: "set null",
     }),
@@ -397,7 +416,9 @@ export const industrialSanitationVerifications = pgTable(
     method: varchar("method", { length: 64 }).notNull().default("VISUAL"),
     result: varchar("result", { length: 64 }).notNull().default("PASS"),
     verifiedByUserId: uuid("verified_by_user_id").references(() => users.id),
-    verifiedByPersonnelId: uuid("verified_by_personnel_id").references(() => industrialPersonnel.id),
+    verifiedByPersonnelId: uuid("verified_by_personnel_id").references(
+      () => industrialPersonnel.id,
+    ),
     verifiedAt: timestamp("verified_at", { withTimezone: true }).notNull().defaultNow(),
     notes: text("notes"),
     photosJson: jsonb("photos_json").notNull().default([]),
@@ -442,7 +463,9 @@ export const industrialSanitationSpills = pgTable(
     reportedAt: timestamp("reported_at", { withTimezone: true }).notNull().defaultNow(),
     cleanedAt: timestamp("cleaned_at", { withTimezone: true }),
     verifiedAt: timestamp("verified_at", { withTimezone: true }),
-    correctiveActionId: uuid("corrective_action_id").references(() => industrialCorrectiveActions.id),
+    correctiveActionId: uuid("corrective_action_id").references(
+      () => industrialCorrectiveActions.id,
+    ),
     notes: text("notes"),
     createdAt: createdAtColumn,
     updatedAt: updatedAtColumn,
@@ -517,7 +540,9 @@ export const industrialSanitationPestFindings = pgTable(
     status: varchar("status", { length: 64 }).notNull().default("OPEN"),
     observedAt: timestamp("observed_at", { withTimezone: true }).notNull().defaultNow(),
     reportedByUserId: uuid("reported_by_user_id").references(() => users.id),
-    correctiveActionId: uuid("corrective_action_id").references(() => industrialCorrectiveActions.id),
+    correctiveActionId: uuid("corrective_action_id").references(
+      () => industrialCorrectiveActions.id,
+    ),
     createdAt: createdAtColumn,
     updatedAt: updatedAtColumn,
     archivedAt: timestamp("archived_at", { withTimezone: true }),
@@ -581,7 +606,9 @@ export const industrialSanitationEnvironmentalSamples = pgTable(
     detectionLimit: varchar("detection_limit", { length: 64 }),
     passFail: varchar("pass_fail", { length: 32 }),
     attachmentsJson: jsonb("attachments_json").notNull().default([]),
-    correctiveActionId: uuid("corrective_action_id").references(() => industrialCorrectiveActions.id),
+    correctiveActionId: uuid("corrective_action_id").references(
+      () => industrialCorrectiveActions.id,
+    ),
     status: varchar("status", { length: 64 }).notNull().default("PENDING"),
     createdAt: createdAtColumn,
     updatedAt: updatedAtColumn,
@@ -622,9 +649,7 @@ export const industrialSanitationCompressedAirRequests = pgTable(
     updatedAt: updatedAtColumn,
     archivedAt: timestamp("archived_at", { withTimezone: true }),
   },
-  (t) => [
-    index("industrial_sanitation_compressed_air_tenant_idx").on(t.tenantId, t.status),
-  ],
+  (t) => [index("industrial_sanitation_compressed_air_tenant_idx").on(t.tenantId, t.status)],
 );
 
 export const industrialSanitationConcernReports = pgTable(
@@ -688,7 +713,5 @@ export const industrialSanitationUiSettings = pgTable(
     createdAt: createdAtColumn,
     updatedAt: updatedAtColumn,
   },
-  (t) => [
-    uniqueIndex("industrial_sanitation_ui_settings_tenant_uidx").on(t.tenantId),
-  ],
+  (t) => [uniqueIndex("industrial_sanitation_ui_settings_tenant_uidx").on(t.tenantId)],
 );

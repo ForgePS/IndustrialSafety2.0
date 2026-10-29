@@ -76,17 +76,16 @@ export function FxGridItem({
   return <div className={cn(`fx-grid__span-${span}`)}>{children}</div>;
 }
 
-export function FxBreadcrumb({
-  items,
-}: {
-  items: Array<{ label: string; href?: string }>;
-}) {
+export function FxBreadcrumb({ items }: { items: Array<{ label: string; href?: string }> }) {
   return (
     <nav className="fx-breadcrumb" aria-label="Breadcrumb">
       {items.map((item, i) => {
         const last = i === items.length - 1;
         return (
-          <span key={`${item.label}-${i}`} style={{ display: "inline-flex", gap: "var(--fx-space-4)" }}>
+          <span
+            key={`${item.label}-${i}`}
+            style={{ display: "inline-flex", gap: "var(--fx-space-4)" }}
+          >
             {i > 0 ? <span aria-hidden>/</span> : null}
             {last || !item.href ? (
               <span aria-current={last ? "page" : undefined}>{item.label}</span>

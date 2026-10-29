@@ -114,7 +114,11 @@ async function main() {
     if (!tenant) throw new Error(`Tenant not found: ${TENANT_KEY}`);
     const tenantId = tenant.id;
 
-    summary.hasDivisionColumn = await tableHasColumn(sql, "industrial_departments", "division_name");
+    summary.hasDivisionColumn = await tableHasColumn(
+      sql,
+      "industrial_departments",
+      "division_name",
+    );
     if (!summary.hasDivisionColumn) {
       throw new Error("industrial_departments.division_name missing — run migration 0071 first");
     }

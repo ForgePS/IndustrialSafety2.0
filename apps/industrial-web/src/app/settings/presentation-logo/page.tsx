@@ -170,7 +170,9 @@ export default function SettingsPresentationLogoPage() {
       );
       setRow(updated);
       await loadPreview(updated.logoDocumentId);
-      setMessage("Forge Industrial Safety logo updated. It appears on the walkthrough opening screen.");
+      setMessage(
+        "Forge Industrial Safety logo updated. It appears on the walkthrough opening screen.",
+      );
     } catch (err) {
       setError(err instanceof ApiError ? err.message : "Failed to upload logo");
     } finally {
@@ -221,8 +223,8 @@ export default function SettingsPresentationLogoPage() {
         <h1 className="h4 mb-1">Forge Industrial Safety Logo</h1>
         <p className="text-muted mb-0">
           Customize the logo shown on the walkthrough opening and closing screens. This uses the
-          same light-theme logo as{" "}
-          <Link href="/settings/branding/">Branding</Link> (nav, login, and documents).
+          same light-theme logo as <Link href="/settings/branding/">Branding</Link> (nav, login, and
+          documents).
         </p>
       </div>
 
@@ -245,8 +247,8 @@ export default function SettingsPresentationLogoPage() {
             </div>
             <div className="card-body">
               <p className="small text-muted">
-                PNG, JPEG, WebP, GIF, or SVG · max 5 MB. Prefer a transparent PNG (no black or
-                white plate). A ready transparent mark is available at{" "}
+                PNG, JPEG, WebP, GIF, or SVG · max 5 MB. Prefer a transparent PNG (no black or white
+                plate). A ready transparent mark is available at{" "}
                 <a href="/brand/forge-industrial-safety-logo.png" download>
                   forge-industrial-safety-logo.png
                 </a>
@@ -298,7 +300,7 @@ export default function SettingsPresentationLogoPage() {
                 <div className="exec-walkthrough-card-inner">
                   {showLogo ? (
                     <div className="exec-walkthrough-card-logo-wrap">
-                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      {/* Plain <img> on purpose: static export, so next/image optimization is unavailable. */}
                       <img
                         className="exec-walkthrough-card-logo"
                         src={previewUrl!}

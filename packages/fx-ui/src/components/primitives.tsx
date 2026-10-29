@@ -72,7 +72,9 @@ export function FxCard({
   return (
     <section className="fx-card">
       {(title || actions) && (
-        <div style={{ display: "flex", justifyContent: "space-between", gap: "var(--fx-space-12)" }}>
+        <div
+          style={{ display: "flex", justifyContent: "space-between", gap: "var(--fx-space-12)" }}
+        >
           {title ? <h3 className="fx-card__title">{title}</h3> : <span />}
           {actions}
         </div>
@@ -82,7 +84,15 @@ export function FxCard({
   );
 }
 
-export function FxMetricCard({ label, value, hint }: { label: string; value: string; hint?: string }) {
+export function FxMetricCard({
+  label,
+  value,
+  hint,
+}: {
+  label: string;
+  value: string;
+  hint?: string;
+}) {
   return (
     <FxCard>
       <div className="fx-metric">
@@ -178,7 +188,13 @@ export function FxEmptyState({
   );
 }
 
-export function FxSkeleton({ width = "100%", height = "1rem" }: { width?: string; height?: string }) {
+export function FxSkeleton({
+  width = "100%",
+  height = "1rem",
+}: {
+  width?: string;
+  height?: string;
+}) {
   return <span className="fx-skeleton" style={{ width, height }} aria-hidden />;
 }
 
@@ -202,7 +218,10 @@ export function FxTable({
 }) {
   return (
     <table className="fx-table">
-      <caption className="fx-field__hint" style={{ textAlign: "left", marginBottom: "var(--fx-space-8)" }}>
+      <caption
+        className="fx-field__hint"
+        style={{ textAlign: "left", marginBottom: "var(--fx-space-8)" }}
+      >
         {caption}
       </caption>
       <thead>
@@ -316,7 +335,10 @@ export function FxOfflineIndicator({
   pending?: number;
 }) {
   return (
-    <span className={cn("fx-offline", status === "offline" && "fx-offline--offline")} aria-live="polite">
+    <span
+      className={cn("fx-offline", status === "offline" && "fx-offline--offline")}
+      aria-live="polite"
+    >
       {status === "online" && "Online"}
       {status === "degraded" && "Degraded"}
       {status === "offline" && "Offline"}

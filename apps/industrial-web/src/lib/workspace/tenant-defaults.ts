@@ -31,7 +31,9 @@ export function workspaceTenantDefaultsStorageKey(tenantId: string): string {
 }
 
 export function isWorkspaceItemPolicy(value: unknown): value is WorkspaceItemPolicy {
-  return typeof value === "string" && (WORKSPACE_ITEM_POLICIES as readonly string[]).includes(value);
+  return (
+    typeof value === "string" && (WORKSPACE_ITEM_POLICIES as readonly string[]).includes(value)
+  );
 }
 
 function normalizeDefaultItem(
@@ -111,11 +113,12 @@ export function buildDefaultsFromKeys(
     items.push({
       moduleKey: key,
       sortOrder: items.length,
-      size: mod.widgetEnabled && key !== "CALENDAR" && key !== "TASKS" && key !== "REMINDERS"
-        ? mod.defaultSize
-        : mod.key === "CALENDAR" || mod.key === "TASKS" || mod.key === "REMINDERS"
-          ? "medium"
-          : mod.defaultSize,
+      size:
+        mod.widgetEnabled && key !== "CALENDAR" && key !== "TASKS" && key !== "REMINDERS"
+          ? mod.defaultSize
+          : mod.key === "CALENDAR" || mod.key === "TASKS" || mod.key === "REMINDERS"
+            ? "medium"
+            : mod.defaultSize,
       policy: required.has(key) ? "required" : "default",
       ...(mod.defaultView ? { defaultView: mod.defaultView } : {}),
     });
@@ -170,10 +173,7 @@ export function writeTenantWorkspaceDefaults(
 ): void {
   if (typeof window === "undefined") return;
   try {
-    window.localStorage.setItem(
-      workspaceTenantDefaultsStorageKey(tenantId),
-      JSON.stringify(state),
-    );
+    window.localStorage.setItem(workspaceTenantDefaultsStorageKey(tenantId), JSON.stringify(state));
   } catch {
     // ignore
   }

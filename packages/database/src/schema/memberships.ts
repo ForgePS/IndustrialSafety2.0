@@ -168,5 +168,7 @@ export const membershipHistory = pgTable(
     metadataJson: jsonb("metadata_json").notNull().default({}),
     createdAt: createdAtColumn,
   },
-  (table) => [index("membership_history_membership_created_idx").on(table.membershipId, table.createdAt)],
+  (table) => [
+    index("membership_history_membership_created_idx").on(table.membershipId, table.createdAt),
+  ],
 );

@@ -14,14 +14,7 @@
 import { createRequire } from "node:module";
 import { createServer } from "node:http";
 import { spawn } from "node:child_process";
-import {
-  mkdir,
-  mkdtemp,
-  readdir,
-  rm,
-  writeFile,
-  copyFile,
-} from "node:fs/promises";
+import { mkdir, mkdtemp, readdir, rm, writeFile, copyFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -74,7 +67,8 @@ function parseArgs(argv) {
     else if (a === "--skip-start") out.skipStart = true;
     else if (a === "--polly") out.polly = true;
     else if (a === "--pick-voice") out.pickVoice = true;
-    else if (a === "--settle-ms") out.settleMs = Math.max(500, Number(argv[++i]) || SCENE_SETTLE_MS);
+    else if (a === "--settle-ms")
+      out.settleMs = Math.max(500, Number(argv[++i]) || SCENE_SETTLE_MS);
     else if (a === "--list-voices") {
       for (const v of VOICE_OPTIONS) console.log(`${v.id}\t${v.hint}`);
       process.exit(0);
@@ -203,11 +197,9 @@ $synth.Dispose()
 `.trim();
   const scriptPath = `${wavPath}.ps1`;
   await writeFile(scriptPath, ps, "utf8");
-  await run(
-    "powershell",
-    ["-NoProfile", "-ExecutionPolicy", "Bypass", "-File", scriptPath],
-    { shell: false },
-  );
+  await run("powershell", ["-NoProfile", "-ExecutionPolicy", "Bypass", "-File", scriptPath], {
+    shell: false,
+  });
 }
 
 async function synthesizePolly(text, voice, outPath) {
@@ -375,7 +367,16 @@ async function main() {
       } else {
         const wavPath = join(audioDir, `${step.id}.wav`);
         await synthesizeSapi(step.narrationText, sapiVoiceHint(args.voice), wavPath);
-        await run(ffmpeg, ["-y", "-i", wavPath, "-codec:a", "libmp3lame", "-qscale:a", "2", filePath]);
+        await run(ffmpeg, [
+          "-y",
+          "-i",
+          wavPath,
+          "-codec:a",
+          "libmp3lame",
+          "-qscale:a",
+          "2",
+          filePath,
+        ]);
       }
       const probed = await probeDurationMs(ffprobe, filePath);
       const durationMs = probed ?? step.durationMs;
@@ -455,13 +456,14 @@ async function main() {
       );
 
       const renderUrl = `${args.base.replace(/\/$/, "")}/presentation/executive-walkthrough/render/?mode=render`;
-      await page.goto(`${args.base.replace(/\/$/, "")}/`, { waitUntil: "domcontentloaded", timeout: 120_000 });
+      await page.goto(`${args.base.replace(/\/$/, "")}/`, {
+        waitUntil: "domcontentloaded",
+        timeout: 120_000,
+      });
       // Wait for capture auth + walkthrough API to mount inside the shell.
-      await page.waitForFunction(
-        () => Boolean(window.__FORGE_WALKTHROUGH_API__),
-        undefined,
-        { timeout: 60_000 },
-      );
+      await page.waitForFunction(() => Boolean(window.__FORGE_WALKTHROUGH_API__), undefined, {
+        timeout: 60_000,
+      });
 
       await page.evaluate(
         ({ narration, voiceId }) => {
@@ -568,7 +570,18 @@ async function main() {
       "utf8",
     );
     const narrationPath = join(workDir, "narration.mp3");
-    await run(ffmpeg, ["-y", "-f", "concat", "-safe", "0", "-i", listPath, "-c", "copy", narrationPath]);
+    await run(ffmpeg, [
+      "-y",
+      "-f",
+      "concat",
+      "-safe",
+      "0",
+      "-i",
+      listPath,
+      "-c",
+      "copy",
+      narrationPath,
+    ]);
 
     await run(ffmpeg, [
       "-y",

@@ -11,7 +11,10 @@ import { fileURLToPath } from "node:url";
 const scriptsDir = dirname(fileURLToPath(import.meta.url));
 const repoRoot = join(scriptsDir, "..");
 const artifactPath = join(repoRoot, ".local-training-uat.json");
-const appBase = (process.env.FORGE_TRAINING_UAT_APP_BASE_URL ?? "http://localhost:3004").replace(/\/$/, "");
+const appBase = (process.env.FORGE_TRAINING_UAT_APP_BASE_URL ?? "http://localhost:3004").replace(
+  /\/$/,
+  "",
+);
 
 function loadArtifact() {
   if (!existsSync(artifactPath)) return null;

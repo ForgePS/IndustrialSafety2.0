@@ -79,7 +79,15 @@ try {
 
   console.log(
     JSON.stringify(
-      { ok: true, phase: "FIX-ADMIN-DEFAULT-TENANT", apply: APPLY, tenants, before, actions, after },
+      {
+        ok: true,
+        phase: "FIX-ADMIN-DEFAULT-TENANT",
+        apply: APPLY,
+        tenants,
+        before,
+        actions,
+        after,
+      },
       null,
       2,
     ),

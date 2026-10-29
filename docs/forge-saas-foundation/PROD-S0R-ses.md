@@ -10,10 +10,10 @@
 
 Platform API tasks are configured for Resend so scheduled reports (including monthly Safety Supplies department email) can leave the SES sandbox blocker.
 
-| Item | Value |
-| --- | --- |
-| Provider | `resend` |
-| From | `noreply@forgepublicsafety.com` |
+| Item           | Value                                                       |
+| -------------- | ----------------------------------------------------------- |
+| Provider       | `resend`                                                    |
+| From           | `noreply@forgepublicsafety.com`                             |
 | API key secret | `forge-<env>-secrets-resend-api-key` → env `RESEND_API_KEY` |
 
 **Ops steps (required before first real send):**
@@ -35,11 +35,11 @@ Local/dev still defaults to `noop` when `FORGE_EMAIL_PROVIDER` is unset.
 
 ## SES posture (retained for future)
 
-| Check | Result |
-| --- | --- |
-| Sending enabled | true |
+| Check                              | Result                        |
+| ---------------------------------- | ----------------------------- |
+| Sending enabled                    | true                          |
 | Production access (out of sandbox) | **false — still SES sandbox** |
-| Enforcement | HEALTHY |
+| Enforcement                        | HEALTHY                       |
 
 SES code path (`FORGE_EMAIL_PROVIDER=ses` + `ses:SendEmail` IAM) remains available. Switching back requires verified domain identity / DKIM for `mail.forgepublicsafety.com` and SES production access.
 

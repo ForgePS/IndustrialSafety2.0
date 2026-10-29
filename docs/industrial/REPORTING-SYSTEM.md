@@ -2054,12 +2054,7 @@ Accept structured definitions:
 ```json
 {
   "dataset": "incidents",
-  "fields": [
-    "incident_number",
-    "incident_date",
-    "department",
-    "severity"
-  ],
+  "fields": ["incident_number", "incident_date", "department", "severity"],
   "filters": [
     {
       "field": "incident_date",
@@ -2079,33 +2074,29 @@ Example:
 
 ```ts
 interface ReportDefinition {
-  id: string
-  tenantId: string
+  id: string;
+  tenantId: string;
 
-  name: string
-  description?: string
+  name: string;
+  description?: string;
 
-  category: string
-  dataset: string
+  category: string;
+  dataset: string;
 
-  columns: ReportColumn[]
-  filters: ReportFilter[]
-  groups: ReportGroup[]
-  sorts: ReportSort[]
-  calculations: ReportCalculation[]
+  columns: ReportColumn[];
+  filters: ReportFilter[];
+  groups: ReportGroup[];
+  sorts: ReportSort[];
+  calculations: ReportCalculation[];
 
-  visualization?: ReportVisualization
+  visualization?: ReportVisualization;
 
-  visibility:
-    | 'private'
-    | 'department'
-    | 'location'
-    | 'tenant'
+  visibility: "private" | "department" | "location" | "tenant";
 
-  ownerId: string
+  ownerId: string;
 
-  createdAt: string
-  updatedAt: string
+  createdAt: string;
+  updatedAt: string;
 }
 ```
 
@@ -2437,13 +2428,13 @@ Example:
 
 ```ts
 registerReportingDataset({
-  module: 'dot',
-  dataset: 'dot_drivers',
-  label: 'DOT Drivers',
-  permissions: ['dot.view'],
+  module: "dot",
+  dataset: "dot_drivers",
+  label: "DOT Drivers",
+  permissions: ["dot.view"],
   fields: [],
-  relationships: []
-})
+  relationships: [],
+});
 ```
 
 Each module should register:

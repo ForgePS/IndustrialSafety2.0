@@ -42,31 +42,35 @@ describe("document-control-workflow", () => {
 
   it("matches tenant / site / department / role distribution", () => {
     expect(
-      matchesDistributionScope(
-        [{ scopeType: "TENANT", scopeId: null, enabled: true }],
-        { siteId: null, departmentId: null, roleIds: [] },
-      ),
+      matchesDistributionScope([{ scopeType: "TENANT", scopeId: null, enabled: true }], {
+        siteId: null,
+        departmentId: null,
+        roleIds: [],
+      }),
     ).toBe(true);
 
     expect(
-      matchesDistributionScope(
-        [{ scopeType: "SITE", scopeId: "site-a", enabled: true }],
-        { siteId: "site-a", departmentId: null, roleIds: [] },
-      ),
+      matchesDistributionScope([{ scopeType: "SITE", scopeId: "site-a", enabled: true }], {
+        siteId: "site-a",
+        departmentId: null,
+        roleIds: [],
+      }),
     ).toBe(true);
 
     expect(
-      matchesDistributionScope(
-        [{ scopeType: "ROLE", scopeId: "role-x", enabled: true }],
-        { siteId: null, departmentId: null, roleIds: ["role-y"] },
-      ),
+      matchesDistributionScope([{ scopeType: "ROLE", scopeId: "role-x", enabled: true }], {
+        siteId: null,
+        departmentId: null,
+        roleIds: ["role-y"],
+      }),
     ).toBe(false);
 
     expect(
-      matchesDistributionScope(
-        [{ scopeType: "DEPARTMENT", scopeId: "dept-1", enabled: true }],
-        { siteId: null, departmentId: "dept-1", roleIds: [] },
-      ),
+      matchesDistributionScope([{ scopeType: "DEPARTMENT", scopeId: "dept-1", enabled: true }], {
+        siteId: null,
+        departmentId: "dept-1",
+        roleIds: [],
+      }),
     ).toBe(true);
 
     // empty enabled set → visible

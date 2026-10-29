@@ -93,7 +93,9 @@ export function AuditWorkspace() {
     return (
       <div className="alert alert-warning" role="alert">
         <h4 className="alert-heading">Audit log</h4>
-        <p className="mb-0">You need audit read permission to view platform activity for this tenant.</p>
+        <p className="mb-0">
+          You need audit read permission to view platform activity for this tenant.
+        </p>
       </div>
     );
   }
@@ -125,7 +127,12 @@ export function AuditWorkspace() {
       <div className="card">
         <div className="card-header d-flex flex-wrap align-items-center gap-2">
           <h6 className="mb-0 me-auto">Recent activity</h6>
-          <button type="button" className="btn btn-sm btn-outline-primary" disabled={busy} onClick={() => void exportEvents()}>
+          <button
+            type="button"
+            className="btn btn-sm btn-outline-primary"
+            disabled={busy}
+            onClick={() => void exportEvents()}
+          >
             <i className="bx bx-export me-1" />
             Export JSON
           </button>
@@ -175,7 +182,9 @@ export function AuditWorkspace() {
                     </td>
                     <td>{event.result}</td>
                     <td>
-                      <span className={`badge ${riskBadge(event.riskLevel)}`}>{event.riskLevel}</span>
+                      <span className={`badge ${riskBadge(event.riskLevel)}`}>
+                        {event.riskLevel}
+                      </span>
                     </td>
                   </tr>
                 ))

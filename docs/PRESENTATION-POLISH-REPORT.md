@@ -59,18 +59,18 @@ Polish pass focused on presentation-visible defects across Industrial web (Sneat
 
 ## Issues Deferred Until After Presentation
 
-| Item | Priority | Notes |
-|------|----------|-------|
-| Full people-picker for Reporting share | P3 | Still accepts user id; needs directory picker UX |
-| Reporting builder “Filters (JSON)” / customField placeholders | P3 | Power-user surface; avoid mid-demo rewrite |
-| Uniform create-button verb across every module | P2/P3 | Top walkthrough CTAs aligned; remaining modules vary |
-| OSHA display name shorten to “OSHA” only | P3 | “OSHA Recordkeeping” remains formal/correct |
-| Live browser walk of all 21 routes against Producers Rice Mill | P1 ops | Requires authenticated demo environment; code polish complete |
-| Demo data content audit in Aurora for PRM | P1 ops | Seed/import scripts exist; live data completeness not verified in this pass |
-| Coming-soon modules still visible when entitled | P2 | Clock icon pattern retained; hide per tenant if demo shows noise |
-| Sanitation / high-risk stub workspaces | P3 | Outside primary walkthrough |
-| Nested scrollbar / micro-spacing passes | P2 | No structural layout bugs found in code audit |
-| Field Version Facility→Location / Site→Division | OK | Field web conventions left intact |
+| Item                                                           | Priority | Notes                                                                       |
+| -------------------------------------------------------------- | -------- | --------------------------------------------------------------------------- |
+| Full people-picker for Reporting share                         | P3       | Still accepts user id; needs directory picker UX                            |
+| Reporting builder “Filters (JSON)” / customField placeholders  | P3       | Power-user surface; avoid mid-demo rewrite                                  |
+| Uniform create-button verb across every module                 | P2/P3    | Top walkthrough CTAs aligned; remaining modules vary                        |
+| OSHA display name shorten to “OSHA” only                       | P3       | “OSHA Recordkeeping” remains formal/correct                                 |
+| Live browser walk of all 21 routes against Producers Rice Mill | P1 ops   | Requires authenticated demo environment; code polish complete               |
+| Demo data content audit in Aurora for PRM                      | P1 ops   | Seed/import scripts exist; live data completeness not verified in this pass |
+| Coming-soon modules still visible when entitled                | P2       | Clock icon pattern retained; hide per tenant if demo shows noise            |
+| Sanitation / high-risk stub workspaces                         | P3       | Outside primary walkthrough                                                 |
+| Nested scrollbar / micro-spacing passes                        | P2       | No structural layout bugs found in code audit                               |
+| Field Version Facility→Location / Site→Division                | OK       | Field web conventions left intact                                           |
 
 ## Routes Tested
 
@@ -102,15 +102,15 @@ Code-path / static verification of presentation routes (loadability via App Rout
 
 ## Modules Tested
 
-| Module | Result |
-|--------|--------|
-| People & Training (Personnel, Training, My Training) | Code polish PASS |
-| Incident & Claims (Incidents, OSHA, Workers’ Comp) | Code polish PASS |
+| Module                                                                            | Result           |
+| --------------------------------------------------------------------------------- | ---------------- |
+| People & Training (Personnel, Training, My Training)                              | Code polish PASS |
+| Incident & Claims (Incidents, OSHA, Workers’ Comp)                                | Code polish PASS |
 | Inspections & Operations (Inspections, DOT, Assets, Fleet, Safety Supplies, LOTO) | Code polish PASS |
-| Communications (Emergency Alerts, Messaging) | Code polish PASS |
-| Productivity (Tasks, Calendar, Reminders) | Code polish PASS |
-| Administration (Reporting, QR Management) | Code polish PASS |
-| Dashboard | Code polish PASS |
+| Communications (Emergency Alerts, Messaging)                                      | Code polish PASS |
+| Productivity (Tasks, Calendar, Reminders)                                         | Code polish PASS |
+| Administration (Reporting, QR Management)                                         | Code polish PASS |
+| Dashboard                                                                         | Code polish PASS |
 
 ## Production Build
 

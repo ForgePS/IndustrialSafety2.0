@@ -28,15 +28,15 @@ Tenant API keys (`forge_live_`, hash-at-rest, show-once, revoke) and outbound HT
 
 ## Verification
 
-| Check | Result |
-| --- | --- |
-| contracts / security / database build | PASS |
-| platform-api typecheck | PASS |
-| tenant-admin typecheck | PASS |
-| contracts unit | 37 passed |
-| security unit | 6 passed |
-| api-keys + webhooks unit | 7 passed |
-| Production operations | NONE |
+| Check                                 | Result    |
+| ------------------------------------- | --------- |
+| contracts / security / database build | PASS      |
+| platform-api typecheck                | PASS      |
+| tenant-admin typecheck                | PASS      |
+| contracts unit                        | 37 passed |
+| security unit                         | 6 passed  |
+| api-keys + webhooks unit              | 7 passed  |
+| Production operations                 | NONE      |
 
 ## Next sprint
 

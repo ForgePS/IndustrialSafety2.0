@@ -32,14 +32,7 @@ export type ZipValidationResult =
       inventory?: ZipInventoryItem[];
     };
 
-const SUPPORTED_EXTENSIONS = new Set([
-  ".csv",
-  ".json",
-  ".xlsx",
-  ".xml",
-  ".txt",
-  ".md",
-]);
+const SUPPORTED_EXTENSIONS = new Set([".csv", ".json", ".xlsx", ".xml", ".txt", ".md"]);
 
 function listZipCentralDirectory(bytes: Uint8Array): ZipInventoryItem[] {
   const buf = Buffer.from(bytes);
@@ -66,7 +59,9 @@ function listZipCentralDirectory(bytes: Uint8Array): ZipInventoryItem[] {
 
 /** Reject absolute paths, drive letters, and `..` segments (ZIP Slip). */
 export function isUnsafeZipEntryPath(pathName: string): boolean {
-  const normalized = String(pathName ?? "").replace(/\\/g, "/").trim();
+  const normalized = String(pathName ?? "")
+    .replace(/\\/g, "/")
+    .trim();
   if (!normalized) return true;
   if (normalized.startsWith("/") || normalized.startsWith("~")) return true;
   if (/^[a-zA-Z]:/.test(normalized)) return true;
@@ -84,7 +79,10 @@ function extractStoredFile(bytes: Uint8Array, pathName: string): Buffer | null {
     const nameLen = buf.readUInt16LE(offset + 26);
     const extraLen = buf.readUInt16LE(offset + 28);
     const nameStart = offset + 30;
-    const name = buf.subarray(nameStart, nameStart + nameLen).toString("utf8").replace(/\\/g, "/");
+    const name = buf
+      .subarray(nameStart, nameStart + nameLen)
+      .toString("utf8")
+      .replace(/\\/g, "/");
     const dataStart = nameStart + nameLen + extraLen;
     const data = buf.subarray(dataStart, dataStart + compSize);
     if (name === pathName) {
@@ -130,7 +128,11 @@ export function validateZipMigrationBundle(input: {
   }
   const inventory = listZipCentralDirectory(input.bytes);
   if (inventory.length === 0) {
-    return { ok: false, code: "IMPORT_ZIP_INVALID", message: "ZIP archive inventory is empty or corrupt" };
+    return {
+      ok: false,
+      code: "IMPORT_ZIP_INVALID",
+      message: "ZIP archive inventory is empty or corrupt",
+    };
   }
 
   for (const item of inventory) {

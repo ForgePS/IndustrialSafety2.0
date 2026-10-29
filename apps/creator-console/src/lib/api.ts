@@ -346,12 +346,7 @@ export function createMembership(
   },
   options?: ApiRequestOptions,
 ): Promise<Membership> {
-  return apiSend<Membership>(
-    `/api/v1/tenants/${tenantId}/memberships`,
-    "POST",
-    payload,
-    options,
-  );
+  return apiSend<Membership>(`/api/v1/tenants/${tenantId}/memberships`, "POST", payload, options);
 }
 
 export function suspendMembership(
@@ -500,7 +495,11 @@ export async function onboardingCompleteStep(
 export async function onboardingActivate(
   sessionId: string,
   options: { ifMatch: string; tenantId?: string },
-): Promise<ApiResult<OnboardingSessionView & { tenant?: { id: string; displayName: string; status: string } }>> {
+): Promise<
+  ApiResult<
+    OnboardingSessionView & { tenant?: { id: string; displayName: string; status: string } }
+  >
+> {
   const request: ApiRequestOptions = { ifMatch: options.ifMatch };
   if (options.tenantId) request.query = { tenantId: options.tenantId };
   return apiSendResult(
@@ -729,9 +728,7 @@ export function listSubscriptions(tenantId: string): Promise<TenantSubscription[
   return apiGet<TenantSubscription[]>(`/api/v1/tenants/${tenantId}/subscriptions`);
 }
 
-export function getCurrentSubscription(
-  tenantId: string,
-): Promise<ApiResult<TenantSubscription>> {
+export function getCurrentSubscription(tenantId: string): Promise<ApiResult<TenantSubscription>> {
   return apiGetResult<TenantSubscription>(`/api/v1/tenants/${tenantId}/subscriptions/current`);
 }
 

@@ -35,8 +35,7 @@ process.env.FORGE_ENV = forgeEnvironment;
 
 const adminSecretName = `forge-${forgeEnvironment}-secrets-database`;
 const importsBucket =
-  process.env.FORGE_IMPORTS_BUCKET ||
-  `forge-${forgeEnvironment}-imports-511343547817-us-east-1`;
+  process.env.FORGE_IMPORTS_BUCKET || `forge-${forgeEnvironment}-imports-511343547817-us-east-1`;
 const logGroup = `/forge/${forgeEnvironment}/platform-api`;
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -87,7 +86,10 @@ const adminSecretArn = awsText([
   "ARN",
 ]);
 
-if (!adminSecretArn.includes(`forge-${forgeEnvironment}-`) || adminSecretArn.includes("database-app")) {
+if (
+  !adminSecretArn.includes(`forge-${forgeEnvironment}-`) ||
+  adminSecretArn.includes("database-app")
+) {
   throw new Error(`Refusing non-admin secret ARN: ${adminSecretArn}`);
 }
 

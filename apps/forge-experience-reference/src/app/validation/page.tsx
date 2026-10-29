@@ -12,14 +12,17 @@ export default function ValidationPage() {
   return (
     <>
       <FxBreadcrumb items={[{ label: "Validation" }]} />
-      <h1 style={{ fontFamily: "var(--fx-font-display)", fontSize: 28 }}>Accessibility, responsive & theme</h1>
+      <h1 style={{ fontFamily: "var(--fx-font-display)", fontSize: 28 }}>
+        Accessibility, responsive & theme
+      </h1>
       <FxCard title="Live viewport">
         <p>
-          Current width: <strong>{width}px</strong> · Phone: {String(isPhone)} · Tablet: {String(isTablet)} ·
-          Desktop: {String(isDesktop)} · Ops display: {String(isOpsDisplay)}
+          Current width: <strong>{width}px</strong> · Phone: {String(isPhone)} · Tablet:{" "}
+          {String(isTablet)} · Desktop: {String(isDesktop)} · Ops display: {String(isOpsDisplay)}
         </p>
         <p className="fx-card__body">
-          Use browser device mode to hit checklist widths. Theme control is in the shell header (tokens only).
+          Use browser device mode to hit checklist widths. Theme control is in the shell header
+          (tokens only).
         </p>
       </FxCard>
       <div style={{ height: "var(--fx-space-16)" }} />

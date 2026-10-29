@@ -30,14 +30,7 @@ import {
   type InspectionTemplate,
 } from "@/lib/inspections";
 
-type Step =
-  | "loading"
-  | "pickTemplate"
-  | "question"
-  | "evidence"
-  | "review"
-  | "success"
-  | "error";
+type Step = "loading" | "pickTemplate" | "question" | "evidence" | "review" | "success" | "error";
 
 type StartContext = {
   targetType?: string | null;
@@ -152,9 +145,7 @@ export function InspectionRunner({
     try {
       if (existingId && existingId !== "new" && existingId !== "placeholder") {
         const record = await fieldInspectionApi.get(existingId);
-        const serverItems = parseInspectionItems(
-          record.items ?? record.sourcePayload?.items,
-        );
+        const serverItems = parseInspectionItems(record.items ?? record.sourcePayload?.items);
         const draft = loadInspectionDraft(existingId);
         const merged = draft?.length ? draft : serverItems;
         if (draft?.length && answeredCount(serverItems) < answeredCount(draft)) {
@@ -187,9 +178,7 @@ export function InspectionRunner({
       const context = pendingStart.current;
       if (context?.templateId) {
         const match =
-          list.find((t) => t.id === context.templateId) ||
-          list[0] ||
-          FALLBACK_INSPECTION_TEMPLATE;
+          list.find((t) => t.id === context.templateId) || list[0] || FALLBACK_INSPECTION_TEMPLATE;
         await startWithTemplate(match, context);
         return;
       }
@@ -269,11 +258,7 @@ export function InspectionRunner({
       const attachmentIds = [...(current.photoAttachmentIds ?? [])];
       if (inspectionId) {
         try {
-          const uploaded = await fieldInspectionApi.attachPhoto(
-            inspectionId,
-            current.id,
-            photo,
-          );
+          const uploaded = await fieldInspectionApi.attachPhoto(inspectionId, current.id, photo);
           attachmentIds.push(uploaded.id);
         } catch {
           // Keep inline photo for draft/complete even if attachment API fails.
@@ -326,9 +311,7 @@ export function InspectionRunner({
         critical: criticalDeficiencyCount(completedItems),
         correctiveActions: completedItems.filter((i) => i.correctiveActionId).length,
         findings: findingsFromItems(completedItems),
-        outOfService: Boolean(
-          result.assetOutOfService ?? result.sourcePayload?.assetOutOfService,
-        ),
+        outOfService: Boolean(result.assetOutOfService ?? result.sourcePayload?.assetOutOfService),
         reason:
           result.outOfServiceReason ??
           (typeof result.sourcePayload?.outOfServiceReason === "string"
@@ -448,7 +431,11 @@ export function InspectionRunner({
         >
           Try again
         </button>
-        <button type="button" className="ff-btn ff-btn-secondary" onClick={() => router.push("/inspections/")}>
+        <button
+          type="button"
+          className="ff-btn ff-btn-secondary"
+          onClick={() => router.push("/inspections/")}
+        >
           Inspections
         </button>
       </>
@@ -477,9 +464,7 @@ export function InspectionRunner({
             <p>
               {completeResult.deficiencies} finding
               {completeResult.deficiencies === 1 ? "" : "s"}
-              {completeResult.critical
-                ? ` · ${completeResult.critical} critical`
-                : ""}
+              {completeResult.critical ? ` · ${completeResult.critical} critical` : ""}
               {completeResult.correctiveActions
                 ? ` · ${completeResult.correctiveActions} corrective action${completeResult.correctiveActions === 1 ? "" : "s"} created`
                 : ""}
@@ -511,7 +496,9 @@ export function InspectionRunner({
                       type="button"
                       className="ff-btn ff-btn-secondary"
                       onClick={() =>
-                        router.push(`/corrective/${encodeURIComponent(finding.correctiveActionId!)}/`)
+                        router.push(
+                          `/corrective/${encodeURIComponent(finding.correctiveActionId!)}/`,
+                        )
                       }
                     >
                       Open corrective action
@@ -525,7 +512,11 @@ export function InspectionRunner({
         <button type="button" className="ff-btn" onClick={() => router.push("/inspections/")}>
           Back to inspections
         </button>
-        <button type="button" className="ff-btn ff-btn-secondary" onClick={() => router.push("/scan/")}>
+        <button
+          type="button"
+          className="ff-btn ff-btn-secondary"
+          onClick={() => router.push("/scan/")}
+        >
           Scan another
         </button>
       </>
@@ -578,9 +569,7 @@ export function InspectionRunner({
             <ul className="ff-page-body" style={{ paddingLeft: 18 }}>
               {findings.map((finding) => (
                 <li key={finding.id}>
-                  {isCriticalInspectionItem(finding) ? (
-                    <strong>Critical: </strong>
-                  ) : null}
+                  {isCriticalInspectionItem(finding) ? <strong>Critical: </strong> : null}
                   {finding.label}
                 </li>
               ))}
@@ -649,7 +638,10 @@ export function InspectionRunner({
             onChange={(e) => updateItem(current.id, { notes: e.target.value })}
           />
         </div>
-        <label className="ff-btn ff-btn-secondary" style={{ display: "block", textAlign: "center" }}>
+        <label
+          className="ff-btn ff-btn-secondary"
+          style={{ display: "block", textAlign: "center" }}
+        >
           Add photo
           <input
             type="file"
@@ -720,7 +712,11 @@ export function InspectionRunner({
         >
           Next
         </button>
-        <button type="button" className="ff-btn ff-btn-secondary" onClick={() => setStep("question")}>
+        <button
+          type="button"
+          className="ff-btn ff-btn-secondary"
+          onClick={() => setStep("question")}
+        >
           Back
         </button>
         <FieldPhotoMarkupGate

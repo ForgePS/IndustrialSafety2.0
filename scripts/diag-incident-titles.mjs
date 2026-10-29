@@ -30,7 +30,8 @@ async function resolveDatabaseUrl(secretArn) {
 
 const sql = postgres(await resolveDatabaseUrl(secretArn), { max: 1 });
 try {
-  const [tenant] = await sql`select id::text as id from tenants where tenant_key = ${TENANT_KEY} limit 1`;
+  const [tenant] =
+    await sql`select id::text as id from tenants where tenant_key = ${TENANT_KEY} limit 1`;
   const rows = await sql`
     select title,
       title ~ '^\d{2}/\d{2}/\d{2}' as slash_date,
@@ -57,7 +58,13 @@ try {
     slashDate: rows.filter((r) => r.slash_date).length,
     formattedTripleSpace: rows.filter((r) => r.formatted).length,
   };
-  console.log(JSON.stringify({ counts, slashSample: slash.slice(0, 20), namedSample: sample.map((r) => r.title) }, null, 2));
+  console.log(
+    JSON.stringify(
+      { counts, slashSample: slash.slice(0, 20), namedSample: sample.map((r) => r.title) },
+      null,
+      2,
+    ),
+  );
 } finally {
   await sql.end({ timeout: 5 });
 }

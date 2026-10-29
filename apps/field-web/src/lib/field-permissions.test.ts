@@ -18,9 +18,9 @@ describe("field permissions", () => {
     expect(hasFieldAccess([], { isPlatformAdmin: true })).toBe(true);
     expect(hasFieldAccess([], { activeProducts: ["FORGE_CREATOR"] })).toBe(true);
     expect(hasFieldPermission([], "field.loto.execute", { isPlatformAdmin: true })).toBe(true);
-    expect(hasFieldPermission([], "field.loto.execute", { activeProducts: ["FORGE_CREATOR"] })).toBe(
-      true,
-    );
+    expect(
+      hasFieldPermission([], "field.loto.execute", { activeProducts: ["FORGE_CREATOR"] }),
+    ).toBe(true);
   });
 
   it("checks specific field permissions", () => {

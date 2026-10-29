@@ -6,11 +6,7 @@
 export const PERSONNEL_DASHBOARD_HREF = "/modules/personnel/";
 
 export type PersonnelQuickView =
-  | "dashboard"
-  | "company-drivers"
-  | "ppe-allowance"
-  | "first-aid"
-  | "archived";
+  "dashboard" | "company-drivers" | "ppe-allowance" | "first-aid" | "archived";
 
 export type PersonnelQuickLink = {
   id: PersonnelQuickView;
@@ -67,9 +63,7 @@ export function parsePersonnelQuickView(raw: string | null | undefined): Personn
 }
 
 /** Destinations that are not the page you are on. */
-export function personnelOffPageLinks(
-  current: PersonnelQuickView,
-): readonly PersonnelQuickLink[] {
+export function personnelOffPageLinks(current: PersonnelQuickView): readonly PersonnelQuickLink[] {
   return PERSONNEL_QUICK_LINKS.filter((link) => link.id !== current);
 }
 

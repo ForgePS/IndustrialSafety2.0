@@ -37,7 +37,9 @@ function LegalInner() {
     setError(null);
     try {
       // Requires an active tenant context header from Creator session.
-      const data = await apiGet<{ items: LegalDoc[] }>("/api/v1/legal/admin/documents?scope=global");
+      const data = await apiGet<{ items: LegalDoc[] }>(
+        "/api/v1/legal/admin/documents?scope=global",
+      );
       setItems(data.items ?? []);
     } catch (err) {
       setError(
@@ -61,8 +63,8 @@ function LegalInner() {
         subtitle="Forge-global legal documents and acknowledgment configuration. Tenant admins cannot modify Forge Terms or Privacy Notice."
       />
       <p className={styles.muted}>
-        Publishing a version that requires re-acknowledgment will gate affected users until they accept
-        the new version.
+        Publishing a version that requires re-acknowledgment will gate affected users until they
+        accept the new version.
       </p>
       {error ? <p className={styles.error}>{error}</p> : null}
       {loading ? (
@@ -91,7 +93,9 @@ function LegalInner() {
               ))}
               {items.length === 0 ? (
                 <tr>
-                  <td colSpan={4}>No global documents found. Seed Development legal documents first.</td>
+                  <td colSpan={4}>
+                    No global documents found. Seed Development legal documents first.
+                  </td>
                 </tr>
               ) : null}
             </tbody>

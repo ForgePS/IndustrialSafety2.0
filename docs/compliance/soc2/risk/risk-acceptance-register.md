@@ -6,9 +6,9 @@
 
 Document residual risks that management explicitly accepts. Empty acceptances are preferred for High/Critical until mitigated.
 
-| Acceptance ID | Risk ID | Residual rating | Justification | Conditions | Owner | Expiry | Status |
-| --- | --- | --- | --- | --- | --- | --- | --- |
-| RA-000 | — | — | Placeholder — no executive acceptances recorded yet | N/A | — | — | Template |
+| Acceptance ID | Risk ID | Residual rating | Justification                                       | Conditions | Owner | Expiry | Status   |
+| ------------- | ------- | --------------- | --------------------------------------------------- | ---------- | ----- | ------ | -------- |
+| RA-000        | —       | —               | Placeholder — no executive acceptances recorded yet | N/A        | —     | —      | Template |
 
 ### Rules
 

@@ -50,7 +50,9 @@ function asText(value: unknown): string {
 }
 
 function key(value: unknown): string {
-  return asText(value).toUpperCase().replace(/[\s/-]+/g, "_");
+  return asText(value)
+    .toUpperCase()
+    .replace(/[\s/-]+/g, "_");
 }
 
 const LEGACY_TYPE_MAP: Record<string, ObservationType> = {
@@ -130,7 +132,8 @@ export function normalizeObservationCategories(raw: unknown): string[] {
 
 /** Stored settings; tenants without a saved list get the standard categories. */
 export function parseObservationsSettings(raw: unknown): ObservationsSettings {
-  const obj = raw && typeof raw === "object" && !Array.isArray(raw) ? (raw as Record<string, unknown>) : {};
+  const obj =
+    raw && typeof raw === "object" && !Array.isArray(raw) ? (raw as Record<string, unknown>) : {};
   if (!Array.isArray(obj.categories)) {
     return { categories: [...DEFAULT_OBSERVATION_CATEGORIES] };
   }
@@ -263,7 +266,8 @@ export function computeObservationScoreImpact(input: {
   return {
     deduction: Math.round(raw * factor * 10) / 10,
     credit: Math.min(Math.max(input.positiveCount, 0), OBSERVATION_POSITIVE_CREDIT_CAP),
-    unsafeCount: input.unsafe.filter((o) => normalizeObservationStatus(o.status) !== "ARCHIVED").length,
+    unsafeCount: input.unsafe.filter((o) => normalizeObservationStatus(o.status) !== "ARCHIVED")
+      .length,
     unsafeOpen,
     positiveCount: input.positiveCount,
     daysClean,
@@ -344,17 +348,20 @@ export function observationFieldsFromBody(body: Record<string, unknown>): Record
   }
   if (body.siteId !== undefined) out.siteId = asText(body.siteId) || null;
   if (body.observationType !== undefined) {
-    out.observationType = normalizeObservationType(body.observationType) || asText(body.observationType);
+    out.observationType =
+      normalizeObservationType(body.observationType) || asText(body.observationType);
   }
   if (body.riskLevel !== undefined) {
     out.riskLevel = normalizeObservationRiskLevel(body.riskLevel) || asText(body.riskLevel);
   }
-  if (body.peopleObserved !== undefined) out.peopleObserved = normalizeObservedPeople(body.peopleObserved);
+  if (body.peopleObserved !== undefined)
+    out.peopleObserved = normalizeObservedPeople(body.peopleObserved);
   if (body.photos !== undefined) out.photos = normalizeObservationPhotos(body.photos);
   if (body.assignedToPersonnelId !== undefined) {
     out.assignedToPersonnelId = asText(body.assignedToPersonnelId) || null;
   }
-  if (body.assignedToName !== undefined) out.assignedToName = asText(body.assignedToName).slice(0, 300);
+  if (body.assignedToName !== undefined)
+    out.assignedToName = asText(body.assignedToName).slice(0, 300);
   if (body.assignedToEmail !== undefined) {
     out.assignedToEmail = normalizeObservationEmail(body.assignedToEmail) ?? "";
   }
@@ -406,7 +413,9 @@ const MAX_SIGNATURE_LENGTH = 400_000;
 /** Merges the follow-up keys present in `raw` onto `prev`, normalizing each one. */
 export function normalizeObservationFollowUp(raw: unknown, prev?: unknown): ObservationFollowUp {
   const base =
-    prev && typeof prev === "object" && !Array.isArray(prev) ? (prev as Record<string, unknown>) : {};
+    prev && typeof prev === "object" && !Array.isArray(prev)
+      ? (prev as Record<string, unknown>)
+      : {};
   const input =
     raw && typeof raw === "object" && !Array.isArray(raw) ? (raw as Record<string, unknown>) : {};
   const pick = (k: string) => (input[k] !== undefined ? input[k] : base[k]);
@@ -426,12 +435,16 @@ export function normalizeObservationFollowUp(raw: unknown, prev?: unknown): Obse
     (out as Record<string, unknown>)[k] = asText(pick(k)).slice(0, limit);
   }
   const coached = asText(pick("employeeCoached")).toLowerCase();
-  out.employeeCoached = (OBSERVATION_COACHING_VALUES as readonly string[]).includes(coached) ? coached : "";
+  out.employeeCoached = (OBSERVATION_COACHING_VALUES as readonly string[]).includes(coached)
+    ? coached
+    : "";
   const date = asText(pick("completedDate"));
   out.completedDate = /^\d{4}-\d{2}-\d{2}$/.test(date) ? date : "";
   const signature = asText(pick("signatureDataUrl"));
   out.signatureDataUrl =
-    signature.startsWith("data:image/") && signature.length <= MAX_SIGNATURE_LENGTH ? signature : "";
+    signature.startsWith("data:image/") && signature.length <= MAX_SIGNATURE_LENGTH
+      ? signature
+      : "";
   out.afterPhotos = normalizeObservationPhotos(pick("afterPhotos"));
   for (const k of ["savedAt", "completedAt", "completedVia"] as const) {
     const v = asText(base[k]);
@@ -468,7 +481,9 @@ export function createObservationFollowUpToken(tenantId: string): { token: strin
   return { token: `${tenantId}.${secret}`, hash: hashToken(secret) };
 }
 
-export function parseObservationFollowUpToken(token: unknown): { tenantId: string; hash: string } | null {
+export function parseObservationFollowUpToken(
+  token: unknown,
+): { tenantId: string; hash: string } | null {
   const raw = asText(token);
   const dot = raw.indexOf(".");
   if (dot <= 0) return null;
@@ -487,8 +502,13 @@ export function addObservationFollowUpToken(
   const prior = Array.isArray(payload.followUpTokens)
     ? (payload.followUpTokens as ObservationFollowUpToken[])
     : [];
-  const live = prior.filter((t) => t && typeof t.hash === "string" && Date.parse(t.expiresAt) > now.getTime());
-  const next = [...live, { hash, expiresAt: new Date(now.getTime() + FOLLOW_UP_TOKEN_TTL_MS).toISOString() }];
+  const live = prior.filter(
+    (t) => t && typeof t.hash === "string" && Date.parse(t.expiresAt) > now.getTime(),
+  );
+  const next = [
+    ...live,
+    { hash, expiresAt: new Date(now.getTime() + FOLLOW_UP_TOKEN_TTL_MS).toISOString() },
+  ];
   return next.slice(-MAX_FOLLOW_UP_TOKENS);
 }
 
@@ -546,7 +566,9 @@ export function appendObservationEmailLog(
   payload: Record<string, unknown>,
   entry: ObservationEmailLogEntry,
 ): ObservationEmailLogEntry[] {
-  const prior = Array.isArray(payload.emailLog) ? (payload.emailLog as ObservationEmailLogEntry[]) : [];
+  const prior = Array.isArray(payload.emailLog)
+    ? (payload.emailLog as ObservationEmailLogEntry[])
+    : [];
   return [...prior, entry].slice(-MAX_EMAIL_LOG);
 }
 
@@ -593,10 +615,16 @@ export function buildObservationEmail(input: {
   const category = asText(p.category);
   const risk = normalizeObservationRiskLevel(p.riskLevel);
   const riskLabel = risk ? risk.charAt(0).toUpperCase() + risk.slice(1) : "";
-  const location = [asText(p.siteName) || asText(p.location), asText(p.departmentName), asText(p.area)]
+  const location = [
+    asText(p.siteName) || asText(p.location),
+    asText(p.departmentName),
+    asText(p.area),
+  ]
     .filter(Boolean)
     .join(" · ");
-  const people = normalizeObservedPeople(p.peopleObserved).map((x) => x.name).join(", ");
+  const people = normalizeObservedPeople(p.peopleObserved)
+    .map((x) => x.name)
+    .join(", ");
   const photoCount = Array.isArray(p.photos) ? p.photos.length : 0;
   const assignee = asText(p.assignedToName);
 
@@ -652,7 +680,9 @@ ${
     message ? `\nMessage: ${message}` : "",
     `\nWhat was observed:\n${description || "(no description)"}\n`,
     ...filled.map(([k, v]) => `${k}: ${v}`),
-    input.followUpLink ? `\nComplete the follow-up form (no login needed): ${input.followUpLink}` : "",
+    input.followUpLink
+      ? `\nComplete the follow-up form (no login needed): ${input.followUpLink}`
+      : "",
     `\nOpen in Forge: ${input.link}`,
   ]
     .filter(Boolean)

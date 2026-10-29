@@ -21,7 +21,10 @@ const API_ECR = `${ACCOUNT}.dkr.ecr.${REGION}.amazonaws.com/forge-production-ecr
 
 const skipWeb = process.argv.includes("--skip-web");
 const skipApi = process.argv.includes("--skip-api");
-const stamp = new Date().toISOString().replace(/[-:TZ.]/g, "").slice(0, 14);
+const stamp = new Date()
+  .toISOString()
+  .replace(/[-:TZ.]/g, "")
+  .slice(0, 14);
 const tag = `emergency-alerts-${stamp}`;
 
 function sh(cmd, opts = {}) {
@@ -39,7 +42,9 @@ if (identity.Account !== ACCOUNT) {
 }
 
 console.log("=== Apply EA migrations on production ===");
-sh("node scripts/run-ecs-apply-emergency-alerts-migrations.mjs --env production --apply --allow-production");
+sh(
+  "node scripts/run-ecs-apply-emergency-alerts-migrations.mjs --env production --apply --allow-production",
+);
 
 console.log("=== Enable EMERGENCY_ALERTS for producers-rice-mill (production) ===");
 sh("node scripts/run-ecs-enable-emergency-alerts-module.mjs", {

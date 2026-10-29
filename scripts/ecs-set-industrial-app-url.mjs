@@ -5,10 +5,7 @@ import { spawnSync } from "node:child_process";
 import fs from "node:fs";
 
 const CLUSTER = "forge-production-ecs-platform";
-const SERVICES = [
-  "forge-production-ecs-platform-api",
-  "forge-production-ecs-worker-service",
-];
+const SERVICES = ["forge-production-ecs-platform-api", "forge-production-ecs-worker-service"];
 const APP_URL = "https://producersrice.forgeindustrialsafety.com";
 
 function awsJson(args) {

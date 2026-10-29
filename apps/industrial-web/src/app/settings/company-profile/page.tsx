@@ -2,10 +2,7 @@
 
 import { useCallback, useEffect, useState, type FormEvent } from "react";
 import { ApiError, useAuth } from "@forge/web-kit";
-import {
-  canManageConfiguration,
-  canPublishConfiguration,
-} from "@/lib/platform-admin";
+import { canManageConfiguration, canPublishConfiguration } from "@/lib/platform-admin";
 import {
   getEffectivePayload,
   loadConfigNamespace,
@@ -167,7 +164,9 @@ export default function SettingsCompanyProfilePage() {
         {draftState ? (
           <p className="small text-primary mt-2 mb-0">Working copy: {draftState}</p>
         ) : (
-          <p className="small text-muted mt-2 mb-0">Editing published values (save creates a draft).</p>
+          <p className="small text-muted mt-2 mb-0">
+            Editing published values (save creates a draft).
+          </p>
         )}
       </div>
 

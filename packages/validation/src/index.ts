@@ -53,9 +53,4 @@ export const validators = {
   ssnLastFour: ssnLastFourSchema,
 } as const;
 
-export {
-  isValidVin,
-  normalizeVin,
-  validateVin,
-  type VinValidationResult,
-} from "./vin.js";
+export { isValidVin, normalizeVin, validateVin, type VinValidationResult } from "./vin.js";

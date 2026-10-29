@@ -13,8 +13,7 @@ const FORGE_ENV = process.env.FORGE_ENV?.trim() || "development";
 const ADMIN_SECRET_NAME =
   process.env.FORGE_ADMIN_DB_SECRET_NAME || `forge-${FORGE_ENV}-secrets-database`;
 const IMPORTS_BUCKET =
-  process.env.FORGE_IMPORTS_BUCKET ||
-  `forge-${FORGE_ENV}-imports-511343547817-us-east-1`;
+  process.env.FORGE_IMPORTS_BUCKET || `forge-${FORGE_ENV}-imports-511343547817-us-east-1`;
 const LOG_GROUP = process.env.FORGE_API_LOG_GROUP || `/forge/${FORGE_ENV}/platform-api`;
 
 const script = "fix-admin-default-tenant.mjs";
@@ -94,7 +93,9 @@ try {
 } catch (e) {
   logs = String(e.message || e);
 }
-const resultLine = (typeof logs === "string" ? logs.split(/\r?\n/) : []).find((m) => m.includes("FIX-ADMIN-DEFAULT-TENANT"));
+const resultLine = (typeof logs === "string" ? logs.split(/\r?\n/) : []).find((m) =>
+  m.includes("FIX-ADMIN-DEFAULT-TENANT"),
+);
 if (resultLine) console.log(resultLine);
 else console.log(logs);
 console.log(JSON.stringify({ taskArn, exitCode, apply: APPLY === "1", s3Key: key }, null, 2));

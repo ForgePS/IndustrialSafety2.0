@@ -38,9 +38,11 @@ export function WorkersCompCarrierSelect({
     active.find((carrier) => carrier.name === carrierName) ||
     carriers.find((carrier) => carrier.id === carrierId) ||
     carriers.find((carrier) => carrier.name === carrierName);
-  const builtInSelfPay = !catalogHasSelfPay && !matched && isWorkersCompSelfPay({ carrierId, carrierName });
-  const selectValue = matched?.id
-    ?? (builtInSelfPay ? WC_SELF_PAY_CARRIER_ID : carrierName.trim() ? "__legacy__" : "");
+  const builtInSelfPay =
+    !catalogHasSelfPay && !matched && isWorkersCompSelfPay({ carrierId, carrierName });
+  const selectValue =
+    matched?.id ??
+    (builtInSelfPay ? WC_SELF_PAY_CARRIER_ID : carrierName.trim() ? "__legacy__" : "");
 
   return (
     <select

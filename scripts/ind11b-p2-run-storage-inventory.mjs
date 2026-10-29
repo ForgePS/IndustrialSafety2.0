@@ -17,9 +17,7 @@ import { createRequire } from "node:module";
 const BUSINESS_ID = "business-1782553339499";
 const PROJECT_ID = "forge-industrial-safety";
 const PAGE_SIZE = 1000;
-const EVID_DIR = path.resolve(
-  "docs/program/industrial-migration/ind-11/evidence/p2/03-storage",
-);
+const EVID_DIR = path.resolve("docs/program/industrial-migration/ind-11/evidence/p2/03-storage");
 const APPROVAL = path.join(EVID_DIR, "APPROVE-PRODUCERS-STORAGE-INVENTORY.md");
 
 function fail(msg, code = 2) {
@@ -47,9 +45,7 @@ const saPath = process.env.FORGE_FIREBASE_RO_SERVICE_ACCOUNT_PATH?.trim();
 if (!saPath) fail("FORGE_FIREBASE_RO_SERVICE_ACCOUNT_PATH required");
 if (!fs.existsSync(saPath)) fail(`Service account file missing: ${saPath}`);
 
-const requireFromMig = createRequire(
-  path.resolve("packages/migration-firebase/package.json"),
-);
+const requireFromMig = createRequire(path.resolve("packages/migration-firebase/package.json"));
 let admin;
 let getStorage;
 try {
@@ -68,9 +64,7 @@ const root = admin;
 const appName = `p2-storage-inv-${Date.now()}`;
 const certFn = root.credential?.cert ?? root.cert;
 if (typeof certFn !== "function" || typeof root.initializeApp !== "function") {
-  fail(
-    `firebase-admin API unexpected (cert=${typeof certFn}, init=${typeof root.initializeApp})`,
-  );
+  fail(`firebase-admin API unexpected (cert=${typeof certFn}, init=${typeof root.initializeApp})`);
 }
 if (typeof getStorage !== "function") {
   fail("firebase-admin/storage getStorage unavailable");
@@ -88,9 +82,7 @@ const app = root.initializeApp(
 function scrubMeta(meta) {
   if (!meta || typeof meta !== "object") return {};
   return Object.fromEntries(
-    Object.entries(meta).filter(
-      ([k]) => !/token|secret|password|key|credential/i.test(k),
-    ),
+    Object.entries(meta).filter(([k]) => !/token|secret|password|key|credential/i.test(k)),
   );
 }
 
@@ -98,10 +90,7 @@ function inferBusinessId(objectPath, customMeta) {
   if (typeof customMeta?.businessId === "string" && customMeta.businessId) {
     return customMeta.businessId;
   }
-  if (
-    typeof customMeta?.organizationId === "string" &&
-    customMeta.organizationId
-  ) {
+  if (typeof customMeta?.organizationId === "string" && customMeta.organizationId) {
     return customMeta.organizationId;
   }
   const mid = objectPath.match(/(?:^|\/)(business-[^/]+)(?:\/|$)/);
@@ -139,10 +128,7 @@ function filenameOf(objectPath) {
 }
 
 async function resolveBucket(storage) {
-  const candidates = [
-    `${PROJECT_ID}.appspot.com`,
-    `${PROJECT_ID}.firebasestorage.app`,
-  ];
+  const candidates = [`${PROJECT_ID}.appspot.com`, `${PROJECT_ID}.firebasestorage.app`];
   const errors = [];
   for (const bucketName of candidates) {
     try {
@@ -156,9 +142,7 @@ async function resolveBucket(storage) {
       await bucket.getFiles({ maxResults: 1, autoPaginate: false });
       return { bucket, bucketName, errors };
     } catch (err) {
-      errors.push(
-        `${bucketName}: ${err instanceof Error ? err.message : String(err)}`,
-      );
+      errors.push(`${bucketName}: ${err instanceof Error ? err.message : String(err)}`);
     }
   }
   fail(`No usable Storage bucket. Tried: ${errors.join(" | ")}`);
@@ -178,9 +162,7 @@ async function listAllFiles(bucket) {
     pages += 1;
     for (const f of pageFiles) files.push(f);
     const next =
-      apiResponse &&
-      typeof apiResponse === "object" &&
-      "nextPageToken" in apiResponse
+      apiResponse && typeof apiResponse === "object" && "nextPageToken" in apiResponse
         ? apiResponse.nextPageToken
         : undefined;
     pageToken = next || undefined;
@@ -202,8 +184,7 @@ async function main() {
   const freezeAt = new Date().toISOString();
   const stamp = freezeAt.replace(/[:.]/g, "-");
   const storage = getStorage(app);
-  const { bucket, bucketName, errors: bucketProbeErrors } =
-    await resolveBucket(storage);
+  const { bucket, bucketName, errors: bucketProbeErrors } = await resolveBucket(storage);
 
   const { files, pages, truncated } = await listAllFiles(bucket);
 
@@ -242,9 +223,7 @@ async function main() {
     byCategory[category].count += 1;
     byCategory[category].bytes += size;
 
-    const hasDownloadToken = Boolean(
-      meta.metadata?.firebaseStorageDownloadTokens,
-    );
+    const hasDownloadToken = Boolean(meta.metadata?.firebaseStorageDownloadTokens);
 
     objects.push({
       path: objectPath,
@@ -268,15 +247,9 @@ async function main() {
 
   const exceptions = {
     zeroByte: objects.filter((o) => o.size === 0).map((o) => o.path),
-    missingContentType: objects
-      .filter((o) => !o.contentType)
-      .map((o) => o.path),
-    missingChecksum: objects
-      .filter((o) => !o.md5Hash && !o.crc32c)
-      .map((o) => o.path),
-    orphanNoBusinessSegment: objects
-      .filter((o) => !o.inferredBusinessId)
-      .map((o) => o.path),
+    missingContentType: objects.filter((o) => !o.contentType).map((o) => o.path),
+    missingChecksum: objects.filter((o) => !o.md5Hash && !o.crc32c).map((o) => o.path),
+    orphanNoBusinessSegment: objects.filter((o) => !o.inferredBusinessId).map((o) => o.path),
   };
 
   const inventory = {
@@ -365,9 +338,7 @@ async function main() {
 
 main()
   .catch((e) => {
-    console.error(
-      JSON.stringify({ ok: false, error: String(e), stack: e?.stack }),
-    );
+    console.error(JSON.stringify({ ok: false, error: String(e), stack: e?.stack }));
     process.exit(1);
   })
   .finally(async () => {

@@ -10,18 +10,18 @@ Frontend-only static sync for Import Center UI (@forge/import-center). No API/wo
 
 ## Results
 
-| Item | Value |
-| --- | --- |
-| Creator Console deploy | pnpm deploy:console --skip-build |
-| Console bucket | s3://forge-development-console-511343547817-us-east-1/ |
-| Console CloudFront | EUY00O1FSF7BG invalidation IMLMHCLH1MMHB1G6F5Y5LB2JZ |
-| Tenant Admin deploy | pnpm deploy:tenant-admin --skip-build |
-| Tenant Admin bucket | s3://forge-development-tenantadmin-511343547817-us-east-1/ |
-| Tenant Admin CloudFront | E3O4NP8GCEEK23 invalidation I4EBJJB26ECNZTFXJJ67Z9FWCN |
-| Smoke out/imports/index.html | present (console + tenant-admin) |
-| Backend API TD | unchanged :39 |
-| Backend worker TD | unchanged :24 |
-| App secret LastChangedDate | unchanged 2026-07-26T15:30:16.387000-05:00 |
+| Item                         | Value                                                      |
+| ---------------------------- | ---------------------------------------------------------- |
+| Creator Console deploy       | pnpm deploy:console --skip-build                           |
+| Console bucket               | s3://forge-development-console-511343547817-us-east-1/     |
+| Console CloudFront           | EUY00O1FSF7BG invalidation IMLMHCLH1MMHB1G6F5Y5LB2JZ       |
+| Tenant Admin deploy          | pnpm deploy:tenant-admin --skip-build                      |
+| Tenant Admin bucket          | s3://forge-development-tenantadmin-511343547817-us-east-1/ |
+| Tenant Admin CloudFront      | E3O4NP8GCEEK23 invalidation I4EBJJB26ECNZTFXJJ67Z9FWCN     |
+| Smoke out/imports/index.html | present (console + tenant-admin)                           |
+| Backend API TD               | unchanged :39                                              |
+| Backend worker TD            | unchanged :24                                              |
+| App secret LastChangedDate   | unchanged 2026-07-26T15:30:16.387000-05:00                 |
 
 ## Verification
 

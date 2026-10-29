@@ -83,7 +83,12 @@ export default function ReportingAnalyticsPage() {
               />
             </div>
             <div className="col-md-3">
-              <button type="button" className="btn btn-primary" disabled={loading} onClick={() => void load()}>
+              <button
+                type="button"
+                className="btn btn-primary"
+                disabled={loading}
+                onClick={() => void load()}
+              >
                 {loading ? "Loading…" : "Refresh"}
               </button>
             </div>

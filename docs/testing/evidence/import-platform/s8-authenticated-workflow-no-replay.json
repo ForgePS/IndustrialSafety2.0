@@ -325,10 +325,7 @@
       "MANUAL_REVIEW_REQUIRED": 0
     }
   },
-  "correlationIds": [
-    "bcb6557b75b845e52c5bbd4c36968265",
-    "bcb6557b75b845e52c5bbd4c36968265"
-  ],
+  "correlationIds": ["bcb6557b75b845e52c5bbd4c36968265", "bcb6557b75b845e52c5bbd4c36968265"],
   "ok": true,
   "completedAt": "2026-07-30T17:44:53.996Z",
   "detectReplayUsed": false,

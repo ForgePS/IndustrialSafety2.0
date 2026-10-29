@@ -122,13 +122,13 @@ export function isDirectBluetoothPrinter(
   if (transport === "BRADY_WEB_BLUETOOTH" && !printer.bridgeId) return true;
   return (
     !printer.bridgeId &&
-    (connection === "BLUETOOTH_BLE" || connection === "BLUETOOTH" || transport === "BRADY_WEB_BLUETOOTH")
+    (connection === "BLUETOOTH_BLE" ||
+      connection === "BLUETOOTH" ||
+      transport === "BRADY_WEB_BLUETOOTH")
   );
 }
 
-export async function listPrinters(query?: {
-  enabled?: string;
-}): Promise<ForgePrinter[]> {
+export async function listPrinters(query?: { enabled?: string }): Promise<ForgePrinter[]> {
   const data = await apiGet<{ items?: ForgePrinter[] }>(
     `${BASE}/printers`,
     query ? { query } : undefined,

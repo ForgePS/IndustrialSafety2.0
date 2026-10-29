@@ -32,7 +32,10 @@ const TD_FILE = ".forge-td-dev-api-fis-session.json";
 
 const skipWait = process.argv.includes("--skip-wait");
 const skipMigrate = process.argv.includes("--skip-migrate");
-const stamp = new Date().toISOString().replace(/[-:TZ.]/g, "").slice(0, 14);
+const stamp = new Date()
+  .toISOString()
+  .replace(/[-:TZ.]/g, "")
+  .slice(0, 14);
 const tag = process.env.DEPLOY_TAG || `fis-session-${stamp}`;
 
 const root = path.join(path.dirname(fileURLToPath(import.meta.url)), "..");
@@ -139,7 +142,13 @@ if (!skipMigrate) {
   console.log("Running Aurora migrate (development)...");
   const migrate = spawnSync(
     "node",
-    ["scripts/run-ecs-migrate.mjs", "--env", "development", "--task-definition", apiReg.taskDefinitionArn],
+    [
+      "scripts/run-ecs-migrate.mjs",
+      "--env",
+      "development",
+      "--task-definition",
+      apiReg.taskDefinitionArn,
+    ],
     { cwd: root, encoding: "utf8", stdio: "inherit", shell: true },
   );
   if (migrate.status !== 0) {

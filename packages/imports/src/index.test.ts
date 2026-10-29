@@ -50,7 +50,9 @@ describe("@forge/imports S1 foundation", () => {
     const held = new Set(["import.view", "import.upload"]);
     expect(hasImportPermission(held, "import.view")).toBe(true);
     expect(hasImportPermission(held, "import.execute")).toBe(false);
-    expect(() => assertImportPermission(held, "import.execute")).toThrow(/Missing import permission/);
+    expect(() => assertImportPermission(held, "import.execute")).toThrow(
+      /Missing import permission/,
+    );
   });
 
   it("defines audit event types and rejects sensitive audit details", () => {
@@ -78,6 +80,8 @@ describe("@forge/imports S1 foundation", () => {
     ).rejects.toMatchObject({ code: "IMPORT_FORMAT_INVALID" });
     expect(() => notImplemented("test")).toThrow(/NOT_IMPLEMENTED/);
     const dup = new StubDuplicateDetector();
-    await expect(dup.detect([], { productCode: "x", moduleCode: "y", recordType: "z" }, "t")).resolves.toEqual([]);
+    await expect(
+      dup.detect([], { productCode: "x", moduleCode: "y", recordType: "z" }, "t"),
+    ).resolves.toEqual([]);
   });
 });

@@ -122,15 +122,9 @@ export async function assertDemoAllowsDotExternal(
   if (!(await isDemoTenant(db, tenantId))) return;
   if (body && !requestsExternalDotSync(body)) return;
   if (!body) {
-    throw new ForgeError(
-      "VALIDATION_FAILED",
-      "External DOT updates are blocked for demo tenants",
-    );
+    throw new ForgeError("VALIDATION_FAILED", "External DOT updates are blocked for demo tenants");
   }
-  throw new ForgeError(
-    "VALIDATION_FAILED",
-    "External DOT updates are blocked for demo tenants",
-  );
+  throw new ForgeError("VALIDATION_FAILED", "External DOT updates are blocked for demo tenants");
 }
 
 /** Test / admin helper to clear the short TTL cache. */

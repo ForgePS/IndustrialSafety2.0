@@ -16,12 +16,12 @@
 
 Seeded from `@forge/contracts` `PLATFORM_PERMISSIONS` and role templates in `packages/database/src/seed.ts`:
 
-| Template | Type | Intent |
-| --- | --- | --- |
-| `PLATFORM_SUPER_ADMIN` | PLATFORM | Full platform permission set |
-| `CREATOR_ADMIN` | PLATFORM | Creator console administration |
-| `TENANT_ADMIN` | TENANT | Tenant administration |
-| Additional templates | TENANT | Narrower operational roles |
+| Template               | Type     | Intent                         |
+| ---------------------- | -------- | ------------------------------ |
+| `PLATFORM_SUPER_ADMIN` | PLATFORM | Full platform permission set   |
+| `CREATOR_ADMIN`        | PLATFORM | Creator console administration |
+| `TENANT_ADMIN`         | TENANT   | Tenant administration          |
+| Additional templates   | TENANT   | Narrower operational roles     |
 
 Tenant roles are created/cloned under `api/v1/tenants/:tenantId/roles` and mapped to permissions. Role display names may change; codes must not.
 
@@ -47,10 +47,10 @@ Sensitive authorization decisions can be recorded in `authorization_decision_log
 
 ## API summary
 
-| Method | Path |
-| --- | --- |
-| GET | `/api/v1/tenants/:tenantId/permissions` |
-| POST/GET/PATCH | `/api/v1/tenants/:tenantId/roles`… |
-| PUT | `/api/v1/tenants/:tenantId/roles/:roleId/permissions` |
-| POST/DELETE | `/api/v1/tenants/:tenantId/users/:userId/role-assignments`… |
-| POST | `/api/v1/authorization/check` |
+| Method         | Path                                                        |
+| -------------- | ----------------------------------------------------------- |
+| GET            | `/api/v1/tenants/:tenantId/permissions`                     |
+| POST/GET/PATCH | `/api/v1/tenants/:tenantId/roles`…                          |
+| PUT            | `/api/v1/tenants/:tenantId/roles/:roleId/permissions`       |
+| POST/DELETE    | `/api/v1/tenants/:tenantId/users/:userId/role-assignments`… |
+| POST           | `/api/v1/authorization/check`                               |

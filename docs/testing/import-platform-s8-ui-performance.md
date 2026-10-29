@@ -10,17 +10,17 @@ Import Center must not load full datasets into the browser. Pagination / metadat
 
 ## Measurements required
 
-| Scenario | Status |
-| --- | --- |
-| Dashboard with many jobs | **NOT_VERIFIED** |
-| Results/errors views at 500 / 5k / 25k / 100k metadata rows | **NOT_VERIFIED** |
-| Mapping grid responsiveness | **NOT_VERIFIED** (narrow screen LIM-IMP-008) |
-| Polling monitor CPU/jank | **NOT_VERIFIED** |
+| Scenario                                                    | Status                                       |
+| ----------------------------------------------------------- | -------------------------------------------- |
+| Dashboard with many jobs                                    | **NOT_VERIFIED**                             |
+| Results/errors views at 500 / 5k / 25k / 100k metadata rows | **NOT_VERIFIED**                             |
+| Mapping grid responsiveness                                 | **NOT_VERIFIED** (narrow screen LIM-IMP-008) |
+| Polling monitor CPU/jank                                    | **NOT_VERIFIED**                             |
 
 ## Design mitigations (unmeasured)
 
-- Paginated API lists  
-- No product adapters shipping full catalogs  
+- Paginated API lists
+- No product adapters shipping full catalogs
 
 Do not claim UI scale passes without timings.
 

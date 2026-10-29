@@ -27,9 +27,7 @@ describe("isOriginAllowed", () => {
   });
 
   it("allows first-party tenant vanity hosts via suffix", () => {
-    expect(isOriginAllowed("https://producers-rice-mill.forgepublicsafety.com", rules)).toBe(
-      true,
-    );
+    expect(isOriginAllowed("https://producers-rice-mill.forgepublicsafety.com", rules)).toBe(true);
   });
 
   it("allows loopback dev servers on any port when APP_ENV is local", () => {
@@ -45,9 +43,7 @@ describe("isOriginAllowed", () => {
   });
 
   it("rejects http and non-origin forms for suffix matches", () => {
-    expect(isOriginAllowed("http://producers-rice-mill.forgepublicsafety.com", rules)).toBe(
-      false,
-    );
+    expect(isOriginAllowed("http://producers-rice-mill.forgepublicsafety.com", rules)).toBe(false);
     expect(isOriginAllowed("https://producers-rice-mill.forgepublicsafety.com:8443", rules)).toBe(
       false,
     );

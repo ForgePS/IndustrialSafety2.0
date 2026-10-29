@@ -100,8 +100,7 @@ export function ThemeModeToggle({ openCustomizer = false }: { openCustomizer?: b
 
   const preference = settings?.mode ?? "system";
   const resolved = settings ? resolveThemeMode(settings.mode) : "light";
-  const icon =
-    preference === "system" ? "bx-desktop" : resolved === "dark" ? "bx-sun" : "bx-moon";
+  const icon = preference === "system" ? "bx-desktop" : resolved === "dark" ? "bx-sun" : "bx-moon";
   const label = openCustomizer
     ? "Customize"
     : preference === "system"

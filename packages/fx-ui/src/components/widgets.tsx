@@ -54,8 +54,19 @@ export function FxLineChart({
   const summary = data.map((d) => `${d.label}: ${d.value}${unit}`).join("; ");
   return (
     <ChartFrame title={title} description="Line chart (synthetic reference series).">
-      <svg viewBox={`0 0 ${w} ${h}`} width="100%" height={140} role="img" aria-label={`${title}. ${summary}`}>
-        <polyline fill="none" stroke="var(--fx-color-action-primary)" strokeWidth="2" points={pts} />
+      <svg
+        viewBox={`0 0 ${w} ${h}`}
+        width="100%"
+        height={140}
+        role="img"
+        aria-label={`${title}. ${summary}`}
+      >
+        <polyline
+          fill="none"
+          stroke="var(--fx-color-action-primary)"
+          strokeWidth="2"
+          points={pts}
+        />
         {data.map((d, i) => {
           const x = (i / Math.max(data.length - 1, 1)) * (w - 24) + 12;
           const y = h - 16 - (d.value / max) * (h - 32);
@@ -86,12 +97,22 @@ export function FxLineChart({
   );
 }
 
-export function FxBarChart({ title = "Comparison", data }: { title?: string; data: FxChartPoint[] }) {
+export function FxBarChart({
+  title = "Comparison",
+  data,
+}: {
+  title?: string;
+  data: FxChartPoint[];
+}) {
   const max = Math.max(...data.map((d) => d.value), 1);
   const summary = data.map((d) => `${d.label}: ${d.value}`).join("; ");
   return (
     <ChartFrame title={title} description="Bar chart (synthetic reference series).">
-      <div role="img" aria-label={`${title}. ${summary}`} style={{ display: "grid", gap: "var(--fx-space-8)" }}>
+      <div
+        role="img"
+        aria-label={`${title}. ${summary}`}
+        style={{ display: "grid", gap: "var(--fx-space-8)" }}
+      >
         {data.map((d, i) => (
           <div
             key={d.label}
@@ -135,7 +156,13 @@ export function FxAreaChart({ title = "Volume", data }: { title?: string; data: 
   const summary = data.map((d) => `${d.label}: ${d.value}`).join("; ");
   return (
     <ChartFrame title={title} description="Area chart (synthetic reference series).">
-      <svg viewBox={`0 0 ${w} ${h}`} width="100%" height={140} role="img" aria-label={`${title}. ${summary}`}>
+      <svg
+        viewBox={`0 0 ${w} ${h}`}
+        width="100%"
+        height={140}
+        role="img"
+        aria-label={`${title}. ${summary}`}
+      >
         <polygon points={area} fill="var(--fx-color-status-info)" opacity="0.35" />
         <polyline fill="none" stroke="var(--fx-color-status-info)" strokeWidth="2" points={line} />
       </svg>
@@ -172,9 +199,18 @@ export function FxPieChart({
   });
   const summary = data.map((d) => `${d.label}: ${d.value}`).join("; ");
   return (
-    <ChartFrame title={title} description={donut ? "Donut chart (synthetic)." : "Pie chart (synthetic)."}>
+    <ChartFrame
+      title={title}
+      description={donut ? "Donut chart (synthetic)." : "Pie chart (synthetic)."}
+    >
       <div className="fx-chart-pie">
-        <svg viewBox="0 0 100 100" width={140} height={140} role="img" aria-label={`${title}. ${summary}`}>
+        <svg
+          viewBox="0 0 100 100"
+          width={140}
+          height={140}
+          role="img"
+          aria-label={`${title}. ${summary}`}
+        >
           {slices.map((s) => (
             <path key={s.label} d={s.dPath} fill={s.color} />
           ))}
@@ -183,7 +219,11 @@ export function FxPieChart({
         <ul className="fx-chart-legend">
           {data.map((d, i) => (
             <li key={d.label}>
-              <span className="fx-chart-swatch" style={{ background: SERIES[i % SERIES.length] }} aria-hidden />
+              <span
+                className="fx-chart-swatch"
+                style={{ background: SERIES[i % SERIES.length] }}
+                aria-hidden
+              />
               {d.label}: {d.value}
             </li>
           ))}
@@ -226,7 +266,12 @@ export function FxKpiTrendCard({
         <div className="fx-kpi-trend">
           <FxStatusBadge tone="success">{delta}</FxStatusBadge>
           <svg viewBox={`0 0 ${w} ${h}`} width={120} height={36} aria-hidden>
-            <polyline fill="none" stroke="var(--fx-color-status-success)" strokeWidth="2" points={pts} />
+            <polyline
+              fill="none"
+              stroke="var(--fx-color-status-success)"
+              strokeWidth="2"
+              points={pts}
+            />
           </svg>
         </div>
       </div>
@@ -310,7 +355,13 @@ export function FxMapPanel({
                 ? clusters.map((c, i) =>
                     c.members.length > 1 ? (
                       <g key={`c-${i}`}>
-                        <circle cx={c.x} cy={c.y} r="14" fill="var(--fx-color-action-primary)" opacity="0.9">
+                        <circle
+                          cx={c.x}
+                          cy={c.y}
+                          r="14"
+                          fill="var(--fx-color-action-primary)"
+                          opacity="0.9"
+                        >
                           <title>{`${c.members.length} markers clustered`}</title>
                         </circle>
                         <text
@@ -377,7 +428,11 @@ export function FxMapPanel({
             <strong className="fx-field__label">Legend</strong>
             <ul className="fx-chart-legend">
               <li>
-                <span className="fx-chart-swatch" style={{ background: "var(--fx-color-status-info)" }} aria-hidden />
+                <span
+                  className="fx-chart-swatch"
+                  style={{ background: "var(--fx-color-status-info)" }}
+                  aria-hidden
+                />
                 Info
               </li>
               <li>

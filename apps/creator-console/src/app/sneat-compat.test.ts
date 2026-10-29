@@ -11,7 +11,10 @@ describe("sneat-compat contract", () => {
     expect(css).toContain(".forge-page");
     expect(css).toContain(".forge-page__panel");
     expect(css).toContain(".forge-checkbox-row");
-    expect(css).toMatch(/label\s*>\s*input:not\(\[type="checkbox"\]\):not\(\[type="radio"\]\)/);
+    // Labels may carry a :not(...) exclusion (e.g. topbar controls); the checkbox/radio guard must stay.
+    expect(css).toMatch(
+      /label(?::not\([^)]*\))?\s*>\s*input:not\(\[type="checkbox"\]\):not\(\[type="radio"\]\)/,
+    );
   });
 
   it("does not use 100vw on content containers", () => {

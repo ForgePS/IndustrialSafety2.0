@@ -583,7 +583,8 @@ export class ImportExecutionService {
   ) {
     const tenantId = this.requireTenant(principal);
     const input = rollbackRequestSchema.parse(body ?? {});
-    const idempotencyKey = input.idempotencyKey ?? headerIdempotencyKey ?? `rb:${jobId}:${correlationId}`;
+    const idempotencyKey =
+      input.idempotencyKey ?? headerIdempotencyKey ?? `rb:${jobId}:${correlationId}`;
 
     try {
       return await withTenantTransaction(

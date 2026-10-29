@@ -17,7 +17,11 @@ const VIEW = [
   "industrial.access",
 ] as const;
 const MANAGE = ["industrial.documents.manage", "industrial.admin"] as const;
-const APPROVE = ["industrial.documents.approve", "industrial.documents.manage", "industrial.admin"] as const;
+const APPROVE = [
+  "industrial.documents.approve",
+  "industrial.documents.manage",
+  "industrial.admin",
+] as const;
 const ACK = [
   "industrial.documents.acknowledge",
   "industrial.documents.view",

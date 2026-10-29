@@ -221,7 +221,11 @@ async function main() {
           `;
           report.actions.push({ step: "legal_document", key: doc.documentKey, action: "insert" });
         } else {
-          report.actions.push({ step: "legal_document", key: doc.documentKey, action: "unchanged" });
+          report.actions.push({
+            step: "legal_document",
+            key: doc.documentKey,
+            action: "unchanged",
+          });
         }
 
         let [ver] = await sql`
@@ -250,7 +254,11 @@ async function main() {
             set current_version_id = ${versionId}::uuid, status = 'ACTIVE', updated_at = now()
             where id = ${documentId}::uuid
           `;
-          report.actions.push({ step: "legal_document_version", key: doc.documentKey, action: "insert" });
+          report.actions.push({
+            step: "legal_document_version",
+            key: doc.documentKey,
+            action: "insert",
+          });
         } else {
           report.actions.push({
             step: "legal_document_version",

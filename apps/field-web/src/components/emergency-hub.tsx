@@ -114,10 +114,7 @@ function EmergencyInner() {
     } catch (err) {
       const categoryDef =
         EMERGENCY_CATEGORIES.find((c) => c.id === tab) ?? EMERGENCY_CATEGORIES[0]!;
-      const cachedProcedures = readCachedEmergencyProcedures(
-        categoryDef.apiCategory,
-        locationId,
-      );
+      const cachedProcedures = readCachedEmergencyProcedures(categoryDef.apiCategory, locationId);
       const cachedAlerts = readCachedActiveEmergencyAlerts();
       const cachedNumber = readCachedPlantEmergencyNumber();
       if (cachedProcedures || cachedAlerts || cachedNumber) {
@@ -146,10 +143,7 @@ function EmergencyInner() {
     if (network === "offline") {
       const categoryDef =
         EMERGENCY_CATEGORIES.find((c) => c.id === tab) ?? EMERGENCY_CATEGORIES[0]!;
-      const cachedProcedures = readCachedEmergencyProcedures(
-        categoryDef.apiCategory,
-        locationId,
-      );
+      const cachedProcedures = readCachedEmergencyProcedures(categoryDef.apiCategory, locationId);
       const cachedAlerts = readCachedActiveEmergencyAlerts();
       const cachedNumber = readCachedPlantEmergencyNumber();
       if (cachedProcedures || cachedAlerts || cachedNumber) {
@@ -198,9 +192,7 @@ function EmergencyInner() {
   if (selectedAlert) {
     return (
       <>
-        <p className="ff-brand-mark">
-          {selectedAlert.isDrill ? "Drill alert" : "Active alert"}
-        </p>
+        <p className="ff-brand-mark">{selectedAlert.isDrill ? "Drill alert" : "Active alert"}</p>
         <h1 className="ff-page-title">{selectedAlert.headline || "Emergency alert"}</h1>
         <div className="ff-work-summary">
           {selectedAlert.severity ? (
@@ -228,7 +220,9 @@ function EmergencyInner() {
             </div>
           ) : null}
         </div>
-        {selectedAlert.shortMessage ? <p className="ff-page-body">{selectedAlert.shortMessage}</p> : null}
+        {selectedAlert.shortMessage ? (
+          <p className="ff-page-body">{selectedAlert.shortMessage}</p>
+        ) : null}
         {selectedAlert.detailedMessage ? (
           <p className="ff-page-body">{selectedAlert.detailedMessage}</p>
         ) : null}
@@ -274,9 +268,7 @@ function EmergencyInner() {
                         });
                       } catch (err) {
                         setAckError(
-                          err instanceof ApiError
-                            ? err.message
-                            : "Could not record acknowledgment",
+                          err instanceof ApiError ? err.message : "Could not record acknowledgment",
                         );
                       } finally {
                         setAckBusy(false);
@@ -414,9 +406,7 @@ function EmergencyInner() {
               </button>
             ))}
           </div>
-          <p className="ff-meta">
-            {EMERGENCY_CATEGORIES.find((c) => c.id === tab)?.detail}
-          </p>
+          <p className="ff-meta">{EMERGENCY_CATEGORIES.find((c) => c.id === tab)?.detail}</p>
           {visibleRecords.length === 0 ? (
             <EmptyState
               title="No procedures in this category"

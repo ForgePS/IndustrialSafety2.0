@@ -21,24 +21,24 @@ Types: `@forge/contracts` `ApiErrorBody`.
 
 ## Error codes and HTTP status
 
-| Code | HTTP | When |
-| --- | ---: | --- |
-| `BAD_REQUEST` | 400 | Malformed input, invalid headers (for example malformed `If-Match`), idempotency key too long |
-| `VALIDATION_FAILED` | 400 | Schema validation failure (Zod) |
-| `UNAUTHORIZED` | 401 | Missing or invalid token, unlinked identity, revoked session |
-| `FORBIDDEN` | 403 | Missing permission, disabled user, inactive membership, cross-tenant access |
-| `TENANT_SUSPENDED` | 403 | Tenant suspended; writes blocked |
-| `TENANT_INACTIVE` | 403 | Tenant not active (for example during select-tenant) |
-| `SUBSCRIPTION_INACTIVE` | 403 | Subscription state blocks the operation |
-| `ENTITLEMENT_REQUIRED` | 403 | Required product or module not entitled |
-| `NOT_FOUND` | 404 | Resource absent in tenant scope |
-| `CONFLICT` | 409 | Business rule conflict (duplicate, illegal state transition) |
-| `IDEMPOTENCY_CONFLICT` | 409 | Same `Idempotency-Key` reused with a different body |
-| `IDEMPOTENCY_IN_PROGRESS` | 409 | Identical idempotent request still processing |
-| `PRECONDITION_FAILED` | 412 | Stale `If-Match` / `record_version` ([ADR-023](../decisions/ADR-023-optimistic-concurrency.md)) |
-| `PRECONDITION_REQUIRED` | 428 | `If-Match` required but absent on unsafe update |
-| `RATE_LIMITED` | 429 | Throttling (reserved for future edge limits) |
-| `INTERNAL_ERROR` | 500 | Unexpected server failure |
+| Code                      | HTTP | When                                                                                            |
+| ------------------------- | ---: | ----------------------------------------------------------------------------------------------- |
+| `BAD_REQUEST`             |  400 | Malformed input, invalid headers (for example malformed `If-Match`), idempotency key too long   |
+| `VALIDATION_FAILED`       |  400 | Schema validation failure (Zod)                                                                 |
+| `UNAUTHORIZED`            |  401 | Missing or invalid token, unlinked identity, revoked session                                    |
+| `FORBIDDEN`               |  403 | Missing permission, disabled user, inactive membership, cross-tenant access                     |
+| `TENANT_SUSPENDED`        |  403 | Tenant suspended; writes blocked                                                                |
+| `TENANT_INACTIVE`         |  403 | Tenant not active (for example during select-tenant)                                            |
+| `SUBSCRIPTION_INACTIVE`   |  403 | Subscription state blocks the operation                                                         |
+| `ENTITLEMENT_REQUIRED`    |  403 | Required product or module not entitled                                                         |
+| `NOT_FOUND`               |  404 | Resource absent in tenant scope                                                                 |
+| `CONFLICT`                |  409 | Business rule conflict (duplicate, illegal state transition)                                    |
+| `IDEMPOTENCY_CONFLICT`    |  409 | Same `Idempotency-Key` reused with a different body                                             |
+| `IDEMPOTENCY_IN_PROGRESS` |  409 | Identical idempotent request still processing                                                   |
+| `PRECONDITION_FAILED`     |  412 | Stale `If-Match` / `record_version` ([ADR-023](../decisions/ADR-023-optimistic-concurrency.md)) |
+| `PRECONDITION_REQUIRED`   |  428 | `If-Match` required but absent on unsafe update                                                 |
+| `RATE_LIMITED`            |  429 | Throttling (reserved for future edge limits)                                                    |
+| `INTERNAL_ERROR`          |  500 | Unexpected server failure                                                                       |
 
 Default status mapping is implemented in `defaultStatus()` in `@forge/errors`. Handlers may override `statusCode` on `ForgeError` construction; clients should treat the response status as authoritative.
 
@@ -46,14 +46,14 @@ Default status mapping is implemented in `defaultStatus()` in `@forge/errors`. H
 
 ### Authentication
 
-| Situation | Code |
-| --- | --- |
-| No Bearer token in production | `UNAUTHORIZED` |
-| Expired or invalid Cognito token | `UNAUTHORIZED` |
-| Cognito subject not linked to Forge user | `UNAUTHORIZED` |
+| Situation                                 | Code           |
+| ----------------------------------------- | -------------- |
+| No Bearer token in production             | `UNAUTHORIZED` |
+| Expired or invalid Cognito token          | `UNAUTHORIZED` |
+| Cognito subject not linked to Forge user  | `UNAUTHORIZED` |
 | Token issued before `sessions_revoked_at` | `UNAUTHORIZED` |
-| Disabled user | `FORBIDDEN` |
-| No active membership for tenant | `FORBIDDEN` |
+| Disabled user                             | `FORBIDDEN`    |
+| No active membership for tenant           | `FORBIDDEN`    |
 
 Identity bootstrap uses SECURITY DEFINER functions ([ADR-029](../decisions/ADR-029-identity-resolution-without-rls-bypass.md)); failures surface as `UNAUTHORIZED` or `FORBIDDEN`, never as partial data from another tenant.
 
@@ -65,21 +65,21 @@ Cognito groups are **not** evaluated for API authorization.
 
 ### Idempotency (ADR-022)
 
-| Situation | Code | Header |
-| --- | --- | --- |
-| Required key missing | `BAD_REQUEST` | |
-| Key too long (>255) | `BAD_REQUEST` | |
-| Body hash mismatch on replay | `IDEMPOTENCY_CONFLICT` | |
-| Concurrent duplicate | `IDEMPOTENCY_IN_PROGRESS` | |
-| Successful replay | (success status) | `Idempotency-Replayed: true` |
+| Situation                    | Code                      | Header                       |
+| ---------------------------- | ------------------------- | ---------------------------- |
+| Required key missing         | `BAD_REQUEST`             |                              |
+| Key too long (>255)          | `BAD_REQUEST`             |                              |
+| Body hash mismatch on replay | `IDEMPOTENCY_CONFLICT`    |                              |
+| Concurrent duplicate         | `IDEMPOTENCY_IN_PROGRESS` |                              |
+| Successful replay            | (success status)          | `Idempotency-Replayed: true` |
 
 ### Optimistic concurrency (ADR-023)
 
-| Situation | Code | Details |
-| --- | --- | --- |
-| `If-Match` missing on PATCH/PUT/state transition | `PRECONDITION_REQUIRED` | |
-| Malformed ETag | `BAD_REQUEST` | |
-| Version mismatch | `PRECONDITION_FAILED` | `resourceType`, `resourceId`, `expectedVersion`, `actualVersion` |
+| Situation                                        | Code                    | Details                                                          |
+| ------------------------------------------------ | ----------------------- | ---------------------------------------------------------------- |
+| `If-Match` missing on PATCH/PUT/state transition | `PRECONDITION_REQUIRED` |                                                                  |
+| Malformed ETag                                   | `BAD_REQUEST`           |                                                                  |
+| Version mismatch                                 | `PRECONDITION_FAILED`   | `resourceType`, `resourceId`, `expectedVersion`, `actualVersion` |
 
 Conflict messages intentionally omit field values.
 

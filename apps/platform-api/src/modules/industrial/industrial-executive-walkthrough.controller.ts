@@ -61,7 +61,11 @@ export class IndustrialExecutiveWalkthroughController {
 
   @Post("narration/ensure")
   @RequireAnyPermission([...VIEW], { requiresEntitlement: ENTITLEMENT })
-  async ensureNarration(@Principal() principal: ForgePrincipal, @Body() body: Record<string, unknown>, @Req() req: RequestWithIds) {
+  async ensureNarration(
+    @Principal() principal: ForgePrincipal,
+    @Body() body: Record<string, unknown>,
+    @Req() req: RequestWithIds,
+  ) {
     return ok(await this.walkthrough.ensureNarration(principal, body ?? {}), getRequestIds(req));
   }
 

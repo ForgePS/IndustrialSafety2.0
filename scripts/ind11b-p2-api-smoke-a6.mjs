@@ -62,9 +62,10 @@ function expectStatus(r, allowed) {
 const results = [];
 
 results.push(
-  expectStatus(await call("auth_me_home", "/api/v1/auth/me", { activeTenantId: HOME_TENANT }), [
-    200,
-  ]),
+  expectStatus(
+    await call("auth_me_home", "/api/v1/auth/me", { activeTenantId: HOME_TENANT }),
+    [200],
+  ),
 );
 
 for (const [label, tenantId] of [
@@ -82,9 +83,10 @@ for (const [label, tenantId] of [
     ),
   );
   results.push(
-    expectStatus(await call(`auth_me_${label}`, "/api/v1/auth/me", { activeTenantId: tenantId }), [
-      200,
-    ]),
+    expectStatus(
+      await call(`auth_me_${label}`, "/api/v1/auth/me", { activeTenantId: tenantId }),
+      [200],
+    ),
   );
   results.push(
     expectStatus(

@@ -10,7 +10,10 @@ const REGION = "us-east-1";
 const CLUSTER = "forge-production-ecs-platform";
 const API_SERVICE = "forge-production-ecs-platform-api";
 const API_ECR = `${ACCOUNT}.dkr.ecr.${REGION}.amazonaws.com/forge-production-ecr-platformapi`;
-const stamp = new Date().toISOString().replace(/[-:TZ.]/g, "").slice(0, 14);
+const stamp = new Date()
+  .toISOString()
+  .replace(/[-:TZ.]/g, "")
+  .slice(0, 14);
 const tag = `training-office-ppt-${stamp}`;
 
 function sh(cmd, opts = {}) {
@@ -64,5 +67,14 @@ sh(
 );
 sh(`aws ecs wait services-stable --cluster ${CLUSTER} --services ${API_SERVICE}`);
 console.log(
-  JSON.stringify({ ok: true, tag, apiTaskDefinition: apiReg.taskDefinitionArn, web: "run _run-pptx-immersive-web-deploy.ps1" }, null, 2),
+  JSON.stringify(
+    {
+      ok: true,
+      tag,
+      apiTaskDefinition: apiReg.taskDefinitionArn,
+      web: "run _run-pptx-immersive-web-deploy.ps1",
+    },
+    null,
+    2,
+  ),
 );

@@ -414,7 +414,8 @@ const FEATURES = [
   {
     key: "platform.cad.adapter_management.enabled",
     name: "CAD adapter management",
-    description: "Enable Creator Console CAD adapter and mapping template management. Default false.",
+    description:
+      "Enable Creator Console CAD adapter and mapping template management. Default false.",
     valueType: "BOOLEAN",
     defaultValueJson: false as const,
   },
@@ -790,9 +791,7 @@ export async function seedPlatformData(db: SeedDatabase): Promise<void> {
       const existing = await db
         .select({ id: platformModules.id })
         .from(platformModules)
-        .where(
-          and(eq(platformModules.productId, productId), eq(platformModules.code, mod.code)),
-        )
+        .where(and(eq(platformModules.productId, productId), eq(platformModules.code, mod.code)))
         .limit(1);
       if (existing.length === 0) {
         await db.insert(platformModules).values({

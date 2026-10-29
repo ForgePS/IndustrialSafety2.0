@@ -1,103 +1,103 @@
 ﻿{
-    "defect":  "DEF-S8-010",
-    "environment":  "development",
-    "account":  "511343547817",
-    "region":  "us-east-1",
-    "cluster":  "forge-development-ecs-platform",
-    "service":  "forge-development-ecs-worker-service",
-    "syntheticOnly":  true,
-    "appDatabaseSecretChanged":  false,
-    "startedAt":  "2026-07-30T17:43:00.9151319Z",
-    "before":  {
-                   "taskArn":  "arn:aws:ecs:us-east-1:511343547817:task/forge-development-ecs-platform/b8220adadb394015bbfeb04715cdaf25",
-                   "taskDefinitionArn":  "arn:aws:ecs:us-east-1:511343547817:task-definition/forge-development-ecs-worker-service:26",
-                   "lastStatus":  "RUNNING",
-                   "startedAt":  "2026-07-30T11:48:14.614000-05:00"
-               },
-    "stopResult":  {
-                       "taskArn":  "arn:aws:ecs:us-east-1:511343547817:task/forge-development-ecs-platform/b8220adadb394015bbfeb04715cdaf25",
-                       "lastStatus":  "RUNNING",
-                       "stopCode":  "UserInitiated",
-                       "stoppedReason":  "DEF-S8-010 controlled development synthetic crash recovery drill"
-                   },
-    "replacement":  {
-                        "taskArn":  "arn:aws:ecs:us-east-1:511343547817:task/forge-development-ecs-platform/d2da1fe3508a476795b98d1296590b18",
-                        "taskDefinitionArn":  "arn:aws:ecs:us-east-1:511343547817:task-definition/forge-development-ecs-worker-service:26",
-                        "lastStatus":  "RUNNING",
-                        "healthStatus":  "UNKNOWN",
-                        "startedAt":  "2026-07-30T12:44:21.216000-05:00"
-                    },
-    "serviceSamples":  [
-                           {
-                               "at":  "2026-07-30T17:43:14.5991218Z",
-                               "desired":  1,
-                               "running":  0,
-                               "pending":  1,
-                               "taskDefinition":  "arn:aws:ecs:us-east-1:511343547817:task-definition/forge-development-ecs-worker-service:26",
-                               "replacementTaskArn":  "arn:aws:ecs:us-east-1:511343547817:task/forge-development-ecs-platform/d2da1fe3508a476795b98d1296590b18"
-                           },
-                           {
-                               "at":  "2026-07-30T17:43:26.9698461Z",
-                               "desired":  1,
-                               "running":  0,
-                               "pending":  1,
-                               "taskDefinition":  "arn:aws:ecs:us-east-1:511343547817:task-definition/forge-development-ecs-worker-service:26",
-                               "replacementTaskArn":  "arn:aws:ecs:us-east-1:511343547817:task/forge-development-ecs-platform/d2da1fe3508a476795b98d1296590b18"
-                           },
-                           {
-                               "at":  "2026-07-30T17:43:39.4648800Z",
-                               "desired":  1,
-                               "running":  0,
-                               "pending":  1,
-                               "taskDefinition":  "arn:aws:ecs:us-east-1:511343547817:task-definition/forge-development-ecs-worker-service:26",
-                               "replacementTaskArn":  "arn:aws:ecs:us-east-1:511343547817:task/forge-development-ecs-platform/d2da1fe3508a476795b98d1296590b18"
-                           },
-                           {
-                               "at":  "2026-07-30T17:43:51.9414061Z",
-                               "desired":  1,
-                               "running":  0,
-                               "pending":  1,
-                               "taskDefinition":  "arn:aws:ecs:us-east-1:511343547817:task-definition/forge-development-ecs-worker-service:26",
-                               "replacementTaskArn":  "arn:aws:ecs:us-east-1:511343547817:task/forge-development-ecs-platform/d2da1fe3508a476795b98d1296590b18"
-                           },
-                           {
-                               "at":  "2026-07-30T17:44:05.3538295Z",
-                               "desired":  1,
-                               "running":  0,
-                               "pending":  1,
-                               "taskDefinition":  "arn:aws:ecs:us-east-1:511343547817:task-definition/forge-development-ecs-worker-service:26",
-                               "replacementTaskArn":  "arn:aws:ecs:us-east-1:511343547817:task/forge-development-ecs-platform/d2da1fe3508a476795b98d1296590b18"
-                           },
-                           {
-                               "at":  "2026-07-30T17:44:17.6539743Z",
-                               "desired":  1,
-                               "running":  0,
-                               "pending":  1,
-                               "taskDefinition":  "arn:aws:ecs:us-east-1:511343547817:task-definition/forge-development-ecs-worker-service:26",
-                               "replacementTaskArn":  "arn:aws:ecs:us-east-1:511343547817:task/forge-development-ecs-platform/d2da1fe3508a476795b98d1296590b18"
-                           },
-                           {
-                               "at":  "2026-07-30T17:44:30.2577699Z",
-                               "desired":  1,
-                               "running":  1,
-                               "pending":  0,
-                               "taskDefinition":  "arn:aws:ecs:us-east-1:511343547817:task-definition/forge-development-ecs-worker-service:26",
-                               "replacementTaskArn":  "arn:aws:ecs:us-east-1:511343547817:task/forge-development-ecs-platform/d2da1fe3508a476795b98d1296590b18"
-                           }
-                       ],
-    "recoveryVerified":  true,
-    "workflow":  {
-                     "evidencePath":  "docs/testing/evidence/import-platform/s8-authenticated-workflow-no-replay.json",
-                     "startedAt":  "2026-07-30T17:44:44.488Z",
-                     "completedAt":  "2026-07-30T17:44:53.996Z",
-                     "jobId":  "019fb420-ef59-708d-b044-a6e6400be97e",
-                     "finalStatus":  "COMPLETED",
-                     "ok":  true,
-                     "detectReplayUsed":  false,
-                     "defaultAdapterOmitted":  true,
-                     "successfulRows":  2,
-                     "failedRows":  0
-                 },
-    "apiTaskDefinition":  42,
-    "completedAt":  "2026-07-30T17:44:53.996Z"
+  "defect": "DEF-S8-010",
+  "environment": "development",
+  "account": "511343547817",
+  "region": "us-east-1",
+  "cluster": "forge-development-ecs-platform",
+  "service": "forge-development-ecs-worker-service",
+  "syntheticOnly": true,
+  "appDatabaseSecretChanged": false,
+  "startedAt": "2026-07-30T17:43:00.9151319Z",
+  "before": {
+    "taskArn": "arn:aws:ecs:us-east-1:511343547817:task/forge-development-ecs-platform/b8220adadb394015bbfeb04715cdaf25",
+    "taskDefinitionArn": "arn:aws:ecs:us-east-1:511343547817:task-definition/forge-development-ecs-worker-service:26",
+    "lastStatus": "RUNNING",
+    "startedAt": "2026-07-30T11:48:14.614000-05:00"
+  },
+  "stopResult": {
+    "taskArn": "arn:aws:ecs:us-east-1:511343547817:task/forge-development-ecs-platform/b8220adadb394015bbfeb04715cdaf25",
+    "lastStatus": "RUNNING",
+    "stopCode": "UserInitiated",
+    "stoppedReason": "DEF-S8-010 controlled development synthetic crash recovery drill"
+  },
+  "replacement": {
+    "taskArn": "arn:aws:ecs:us-east-1:511343547817:task/forge-development-ecs-platform/d2da1fe3508a476795b98d1296590b18",
+    "taskDefinitionArn": "arn:aws:ecs:us-east-1:511343547817:task-definition/forge-development-ecs-worker-service:26",
+    "lastStatus": "RUNNING",
+    "healthStatus": "UNKNOWN",
+    "startedAt": "2026-07-30T12:44:21.216000-05:00"
+  },
+  "serviceSamples": [
+    {
+      "at": "2026-07-30T17:43:14.5991218Z",
+      "desired": 1,
+      "running": 0,
+      "pending": 1,
+      "taskDefinition": "arn:aws:ecs:us-east-1:511343547817:task-definition/forge-development-ecs-worker-service:26",
+      "replacementTaskArn": "arn:aws:ecs:us-east-1:511343547817:task/forge-development-ecs-platform/d2da1fe3508a476795b98d1296590b18"
+    },
+    {
+      "at": "2026-07-30T17:43:26.9698461Z",
+      "desired": 1,
+      "running": 0,
+      "pending": 1,
+      "taskDefinition": "arn:aws:ecs:us-east-1:511343547817:task-definition/forge-development-ecs-worker-service:26",
+      "replacementTaskArn": "arn:aws:ecs:us-east-1:511343547817:task/forge-development-ecs-platform/d2da1fe3508a476795b98d1296590b18"
+    },
+    {
+      "at": "2026-07-30T17:43:39.4648800Z",
+      "desired": 1,
+      "running": 0,
+      "pending": 1,
+      "taskDefinition": "arn:aws:ecs:us-east-1:511343547817:task-definition/forge-development-ecs-worker-service:26",
+      "replacementTaskArn": "arn:aws:ecs:us-east-1:511343547817:task/forge-development-ecs-platform/d2da1fe3508a476795b98d1296590b18"
+    },
+    {
+      "at": "2026-07-30T17:43:51.9414061Z",
+      "desired": 1,
+      "running": 0,
+      "pending": 1,
+      "taskDefinition": "arn:aws:ecs:us-east-1:511343547817:task-definition/forge-development-ecs-worker-service:26",
+      "replacementTaskArn": "arn:aws:ecs:us-east-1:511343547817:task/forge-development-ecs-platform/d2da1fe3508a476795b98d1296590b18"
+    },
+    {
+      "at": "2026-07-30T17:44:05.3538295Z",
+      "desired": 1,
+      "running": 0,
+      "pending": 1,
+      "taskDefinition": "arn:aws:ecs:us-east-1:511343547817:task-definition/forge-development-ecs-worker-service:26",
+      "replacementTaskArn": "arn:aws:ecs:us-east-1:511343547817:task/forge-development-ecs-platform/d2da1fe3508a476795b98d1296590b18"
+    },
+    {
+      "at": "2026-07-30T17:44:17.6539743Z",
+      "desired": 1,
+      "running": 0,
+      "pending": 1,
+      "taskDefinition": "arn:aws:ecs:us-east-1:511343547817:task-definition/forge-development-ecs-worker-service:26",
+      "replacementTaskArn": "arn:aws:ecs:us-east-1:511343547817:task/forge-development-ecs-platform/d2da1fe3508a476795b98d1296590b18"
+    },
+    {
+      "at": "2026-07-30T17:44:30.2577699Z",
+      "desired": 1,
+      "running": 1,
+      "pending": 0,
+      "taskDefinition": "arn:aws:ecs:us-east-1:511343547817:task-definition/forge-development-ecs-worker-service:26",
+      "replacementTaskArn": "arn:aws:ecs:us-east-1:511343547817:task/forge-development-ecs-platform/d2da1fe3508a476795b98d1296590b18"
+    }
+  ],
+  "recoveryVerified": true,
+  "workflow": {
+    "evidencePath": "docs/testing/evidence/import-platform/s8-authenticated-workflow-no-replay.json",
+    "startedAt": "2026-07-30T17:44:44.488Z",
+    "completedAt": "2026-07-30T17:44:53.996Z",
+    "jobId": "019fb420-ef59-708d-b044-a6e6400be97e",
+    "finalStatus": "COMPLETED",
+    "ok": true,
+    "detectReplayUsed": false,
+    "defaultAdapterOmitted": true,
+    "successfulRows": 2,
+    "failedRows": 0
+  },
+  "apiTaskDefinition": 42,
+  "completedAt": "2026-07-30T17:44:53.996Z"
 }

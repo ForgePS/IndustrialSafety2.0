@@ -63,12 +63,7 @@ const patchProfileSchema = z.object({
     .nullable(),
   phone: z.string().max(40).optional().nullable(),
   dateOfBirth: z
-    .union([
-      z
-        .string()
-        .regex(/^\d{4}-\d{2}-\d{2}$/),
-      z.literal(""),
-    ])
+    .union([z.string().regex(/^\d{4}-\d{2}-\d{2}$/), z.literal("")])
     .optional()
     .nullable(),
   username: z.string().min(1).max(100).optional().nullable(),
@@ -99,35 +94,41 @@ export class AuthProfileService {
     if (userId !== principal.userId && !canEditAuthProfile(principal, userId)) {
       throw new ForgeError("FORBIDDEN", "You do not have permission to view this profile");
     }
-    return withTenantTransaction(this.db, principal.tenantId, async (tx) => {
-      const user = await tx.query.users.findFirst({
-        where: and(eq(users.id, userId), eq(users.tenantId, principal.tenantId)),
-      });
-      if (!user && userId !== principal.userId) {
-        throw new ForgeError("NOT_FOUND", "User not found on this tenant");
-      }
-      const linkedPersonId = user?.personId ?? (userId === principal.userId ? principal.personId : null);
-      const person = linkedPersonId
-        ? await tx.query.persons.findFirst({
-            where: and(eq(persons.id, linkedPersonId), eq(persons.tenantId, principal.tenantId)),
-          })
-        : null;
-      const personnel = await this.findPersonnel(
-        tx,
-        principal.tenantId,
-        userId,
-        user?.primaryEmail ?? null,
-      );
-      const roleList = await this.loadRoles(tx, principal.tenantId, userId);
-      return this.toProfile(
-        principal,
-        user ?? null,
-        person ?? null,
-        personnel?.id ?? null,
-        personnel?.signatureUrl ?? null,
-        roleList,
-      );
-    }, principal.userId);
+    return withTenantTransaction(
+      this.db,
+      principal.tenantId,
+      async (tx) => {
+        const user = await tx.query.users.findFirst({
+          where: and(eq(users.id, userId), eq(users.tenantId, principal.tenantId)),
+        });
+        if (!user && userId !== principal.userId) {
+          throw new ForgeError("NOT_FOUND", "User not found on this tenant");
+        }
+        const linkedPersonId =
+          user?.personId ?? (userId === principal.userId ? principal.personId : null);
+        const person = linkedPersonId
+          ? await tx.query.persons.findFirst({
+              where: and(eq(persons.id, linkedPersonId), eq(persons.tenantId, principal.tenantId)),
+            })
+          : null;
+        const personnel = await this.findPersonnel(
+          tx,
+          principal.tenantId,
+          userId,
+          user?.primaryEmail ?? null,
+        );
+        const roleList = await this.loadRoles(tx, principal.tenantId, userId);
+        return this.toProfile(
+          principal,
+          user ?? null,
+          person ?? null,
+          personnel?.id ?? null,
+          personnel?.signatureUrl ?? null,
+          roleList,
+        );
+      },
+      principal.userId,
+    );
   }
 
   async patch(
@@ -141,183 +142,185 @@ export class AuthProfileService {
       throw new ForgeError("FORBIDDEN", "You do not have permission to edit this profile");
     }
     const data = patchProfileSchema.parse(input);
-    return withTenantTransaction(this.db, principal.tenantId, async (tx) => {
-      const user = await tx.query.users.findFirst({
-        where: and(eq(users.id, userId), eq(users.tenantId, principal.tenantId)),
-      });
-      if (!user) {
-        throw new ForgeError("NOT_FOUND", "User not found on this tenant");
-      }
-
-      const now = new Date();
-      const firstName = data.firstName.trim();
-      const lastName = data.lastName.trim();
-      const middleName = blankToNull(data.middleName);
-      const suffix = blankToNull(data.suffix);
-      const preferredName = blankToNull(data.preferredName);
-      const email = blankToNull(data.email);
-      const phone = blankToNull(data.phone);
-      const dateOfBirth = blankToNull(data.dateOfBirth);
-      const displayName = buildAuthProfileDisplayName({
-        firstName,
-        lastName,
-        middleName,
-        suffix,
-        preferredName,
-      });
-
-      let personId = user.personId;
-      let person = personId
-        ? await tx.query.persons.findFirst({
-            where: and(eq(persons.id, personId), eq(persons.tenantId, principal.tenantId)),
-          })
-        : null;
-
-      if (person) {
-        const version = person.recordVersion;
-        if (expectedVersion !== "*" && version !== expectedVersion) {
-          throw concurrencyConflict({
-            tenantId: principal.tenantId,
-            resourceType: "person",
-            resourceId: person.id,
-            expectedVersion,
-            actualVersion: version,
-          });
+    return withTenantTransaction(
+      this.db,
+      principal.tenantId,
+      async (tx) => {
+        const user = await tx.query.users.findFirst({
+          where: and(eq(users.id, userId), eq(users.tenantId, principal.tenantId)),
+        });
+        if (!user) {
+          throw new ForgeError("NOT_FOUND", "User not found on this tenant");
         }
-        const [updated] = await tx
-          .update(persons)
-          .set({
-            firstName,
-            lastName,
-            middleName,
-            suffix,
-            preferredName,
-            email,
-            phone,
-            dateOfBirth,
-            displayName,
-            recordVersion: version + 1,
-            updatedAt: now,
-          })
-          .where(and(eq(persons.id, person.id), eq(persons.recordVersion, version)))
-          .returning();
-        if (!updated) {
-          throw concurrencyConflict({
-            tenantId: principal.tenantId,
-            resourceType: "person",
-            resourceId: person.id,
-            expectedVersion,
-            actualVersion: null,
-          });
-        }
-        person = updated;
-      } else {
-        personId = createId();
-        const [created] = await tx
-          .insert(persons)
-          .values({
-            id: personId,
-            tenantId: principal.tenantId,
-            forgePersonNumber: generateForgePersonNumber(),
-            firstName,
-            lastName,
-            middleName,
-            suffix,
-            preferredName,
-            email: email ?? user.primaryEmail,
-            phone,
-            dateOfBirth,
-            displayName,
-            recordSource: "MANUAL",
-            status: "ACTIVE",
-            createdAt: now,
-            updatedAt: now,
-          })
-          .returning();
-        if (!created) {
-          throw new ForgeError("INTERNAL_ERROR", "Failed to create person profile");
-        }
-        person = created;
-        await tx
-          .update(users)
-          .set({ personId, updatedAt: now })
-          .where(eq(users.id, user.id));
-      }
 
-      if (data.username !== undefined) {
-        await tx
-          .update(users)
-          .set({ username: blankToNull(data.username), updatedAt: now })
-          .where(eq(users.id, user.id));
-      }
+        const now = new Date();
+        const firstName = data.firstName.trim();
+        const lastName = data.lastName.trim();
+        const middleName = blankToNull(data.middleName);
+        const suffix = blankToNull(data.suffix);
+        const preferredName = blankToNull(data.preferredName);
+        const email = blankToNull(data.email);
+        const phone = blankToNull(data.phone);
+        const dateOfBirth = blankToNull(data.dateOfBirth);
+        const displayName = buildAuthProfileDisplayName({
+          firstName,
+          lastName,
+          middleName,
+          suffix,
+          preferredName,
+        });
 
-      const personnel = await this.findPersonnel(
-        tx,
-        principal.tenantId,
-        userId,
-        user.primaryEmail,
-      );
-      const personnelId = personnel?.id ?? null;
-      const nextSignatureUrl =
-        data.signatureUrl !== undefined
-          ? blankToNull(typeof data.signatureUrl === "string" ? data.signatureUrl : null)
-          : (personnel?.signatureUrl ?? null);
-      if (data.signatureUrl !== undefined && !personnelId) {
-        throw new ForgeError(
-          "BAD_REQUEST",
-          "A linked personnel record is required before saving a profile signature",
+        let personId = user.personId;
+        let person = personId
+          ? await tx.query.persons.findFirst({
+              where: and(eq(persons.id, personId), eq(persons.tenantId, principal.tenantId)),
+            })
+          : null;
+
+        if (person) {
+          const version = person.recordVersion;
+          if (expectedVersion !== "*" && version !== expectedVersion) {
+            throw concurrencyConflict({
+              tenantId: principal.tenantId,
+              resourceType: "person",
+              resourceId: person.id,
+              expectedVersion,
+              actualVersion: version,
+            });
+          }
+          const [updated] = await tx
+            .update(persons)
+            .set({
+              firstName,
+              lastName,
+              middleName,
+              suffix,
+              preferredName,
+              email,
+              phone,
+              dateOfBirth,
+              displayName,
+              recordVersion: version + 1,
+              updatedAt: now,
+            })
+            .where(and(eq(persons.id, person.id), eq(persons.recordVersion, version)))
+            .returning();
+          if (!updated) {
+            throw concurrencyConflict({
+              tenantId: principal.tenantId,
+              resourceType: "person",
+              resourceId: person.id,
+              expectedVersion,
+              actualVersion: null,
+            });
+          }
+          person = updated;
+        } else {
+          personId = createId();
+          const [created] = await tx
+            .insert(persons)
+            .values({
+              id: personId,
+              tenantId: principal.tenantId,
+              forgePersonNumber: generateForgePersonNumber(),
+              firstName,
+              lastName,
+              middleName,
+              suffix,
+              preferredName,
+              email: email ?? user.primaryEmail,
+              phone,
+              dateOfBirth,
+              displayName,
+              recordSource: "MANUAL",
+              status: "ACTIVE",
+              createdAt: now,
+              updatedAt: now,
+            })
+            .returning();
+          if (!created) {
+            throw new ForgeError("INTERNAL_ERROR", "Failed to create person profile");
+          }
+          person = created;
+          await tx.update(users).set({ personId, updatedAt: now }).where(eq(users.id, user.id));
+        }
+
+        if (data.username !== undefined) {
+          await tx
+            .update(users)
+            .set({ username: blankToNull(data.username), updatedAt: now })
+            .where(eq(users.id, user.id));
+        }
+
+        const personnel = await this.findPersonnel(
+          tx,
+          principal.tenantId,
+          userId,
+          user.primaryEmail,
         );
-      }
-      if (personnelId) {
-        await tx
-          .update(industrialPersonnel)
-          .set({
-            firstName,
-            lastName,
-            middleName,
-            suffix,
-            preferredName,
-            email: email ?? user.primaryEmail,
-            phone,
-            displayName,
-            ...(data.signatureUrl !== undefined ? { signatureUrl: nextSignatureUrl } : {}),
-            updatedAt: now,
-          })
-          .where(
-            and(
-              eq(industrialPersonnel.id, personnelId),
-              eq(industrialPersonnel.tenantId, principal.tenantId),
-            ),
+        const personnelId = personnel?.id ?? null;
+        const nextSignatureUrl =
+          data.signatureUrl !== undefined
+            ? blankToNull(typeof data.signatureUrl === "string" ? data.signatureUrl : null)
+            : (personnel?.signatureUrl ?? null);
+        if (data.signatureUrl !== undefined && !personnelId) {
+          throw new ForgeError(
+            "BAD_REQUEST",
+            "A linked personnel record is required before saving a profile signature",
           );
-      }
+        }
+        if (personnelId) {
+          await tx
+            .update(industrialPersonnel)
+            .set({
+              firstName,
+              lastName,
+              middleName,
+              suffix,
+              preferredName,
+              email: email ?? user.primaryEmail,
+              phone,
+              displayName,
+              ...(data.signatureUrl !== undefined ? { signatureUrl: nextSignatureUrl } : {}),
+              updatedAt: now,
+            })
+            .where(
+              and(
+                eq(industrialPersonnel.id, personnelId),
+                eq(industrialPersonnel.tenantId, principal.tenantId),
+              ),
+            );
+        }
 
-      const refreshedUser = await tx.query.users.findFirst({
-        where: eq(users.id, userId),
-      });
-      await this.audit.writeInTransaction(tx, {
-        tenantId: principal.tenantId,
-        actorUserId: principal.userId,
-        actorPersonId: person.id,
-        actorType: "USER",
-        action: "auth.profile.update",
-        resourceType: "person",
-        resourceId: person.id,
-        result: "SUCCESS",
-        riskLevel: "LOW",
-        correlationId: principal.correlationId,
-        requestId: principal.requestId,
-        after: { personId: person.id, userId },
-      });
-      const roleList = await this.loadRoles(tx, principal.tenantId, userId);
-      return this.toProfile(
-        principal,
-        refreshedUser ?? user,
-        person,
-        personnelId,
-        nextSignatureUrl,
-        roleList,
-      );
-    }, principal.userId);
+        const refreshedUser = await tx.query.users.findFirst({
+          where: eq(users.id, userId),
+        });
+        await this.audit.writeInTransaction(tx, {
+          tenantId: principal.tenantId,
+          actorUserId: principal.userId,
+          actorPersonId: person.id,
+          actorType: "USER",
+          action: "auth.profile.update",
+          resourceType: "person",
+          resourceId: person.id,
+          result: "SUCCESS",
+          riskLevel: "LOW",
+          correlationId: principal.correlationId,
+          requestId: principal.requestId,
+          after: { personId: person.id, userId },
+        });
+        const roleList = await this.loadRoles(tx, principal.tenantId, userId);
+        return this.toProfile(
+          principal,
+          refreshedUser ?? user,
+          person,
+          personnelId,
+          nextSignatureUrl,
+          roleList,
+        );
+      },
+      principal.userId,
+    );
   }
 
   private async findPersonnel(
