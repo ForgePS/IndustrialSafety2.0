@@ -23,8 +23,8 @@
     "cdk": "cdk"
   },
   "dependencies": {
-    "aws-cdk-lib": "^2.201.0",
-    "constructs": "^10.4.2",
+    "aws-cdk-lib": "^2.275.0",
+    "constructs": "^10.8.1",
     "zod": "^3.25.67"
   },
   "devDependencies": {

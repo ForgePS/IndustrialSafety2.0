@@ -20,7 +20,7 @@
     "clean": "rimraf dist"
   },
   "dependencies": {
-    "jose": "^6.0.11"
+    "jose": "^6.2.13"
   },
   "devDependencies": {
     "rimraf": "^6.0.1",

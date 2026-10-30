@@ -37,10 +37,10 @@
     "@forge/design-system": "workspace:*"
   },
   "devDependencies": {
-    "@types/react": "^19.1.8",
-    "@types/react-dom": "^19.1.6",
-    "react": "^19.1.0",
-    "react-dom": "^19.1.0",
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
+    "react": "^19.3.1",
+    "react-dom": "^19.3.1",
     "rimraf": "^6.0.1",
     "typescript": "^5.8.3",
     "vitest": "^3.2.4"

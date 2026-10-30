@@ -14,9 +14,9 @@
     "clean": "rimraf dist"
   },
   "dependencies": {
-    "@aws-sdk/client-eventbridge": "^3.840.0",
-    "@aws-sdk/client-s3": "^3.840.0",
-    "@aws-sdk/client-sqs": "^3.840.0",
+    "@aws-sdk/client-eventbridge": "^3.1157.0",
+    "@aws-sdk/client-s3": "^3.1157.0",
+    "@aws-sdk/client-sqs": "^3.1157.0",
     "@forge/cad-adapters": "workspace:*",
     "@forge/cad-contracts": "workspace:*",
     "@forge/cad-core": "workspace:*",
@@ -27,7 +27,7 @@
     "@forge/imports": "workspace:*",
     "@forge/observability": "workspace:*",
     "@forge/security": "workspace:*",
-    "drizzle-orm": "^0.44.2"
+    "drizzle-orm": "^0.45.4"
   },
   "devDependencies": {
     "rimraf": "^6.0.1",
