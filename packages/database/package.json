@@ -47,7 +47,7 @@
     "@forge/contracts": "workspace:*",
     "@forge/environment": "workspace:*",
     "@forge/neris": "workspace:*",
-    "drizzle-orm": "^0.44.2",
+    "drizzle-orm": "^0.45.4",
     "postgres": "^3.4.7",
     "uuid": "^11.1.0"
   },
