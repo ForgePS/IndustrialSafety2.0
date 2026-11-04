@@ -31,7 +31,7 @@ import { and, eq, sql } from "drizzle-orm";
 import { APP_ENV, DATABASE } from "../../tokens.js";
 import { generatePublicToken, hashPublicToken, isValidPublicToken } from "./qr-token.js";
 import { IndustrialExecutiveWalkthroughNarrationService } from "./industrial-executive-walkthrough-narration.service.js";
-import { PRESIGN_EXPIRES_SECONDS } from "../neris-incidents/document-storage.service.js";
+import { PRESIGN_EXPIRES_SECONDS } from "../documents/document-storage.service.js";
 
 export type WalkthroughJobStatus =
   "queued" | "preparing" | "rendering" | "encoding" | "uploading" | "completed" | "failed";

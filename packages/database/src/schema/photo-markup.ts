@@ -12,7 +12,7 @@ import {
 } from "drizzle-orm/pg-core";
 import { tenants } from "./tenants.js";
 import { users } from "./users.js";
-import { forgeDocuments } from "./neris-specialty.js";
+import { forgeDocuments } from "./documents.js";
 import { createdAtColumn, recordVersionColumn, updatedAtColumn } from "./common.js";
 
 /**

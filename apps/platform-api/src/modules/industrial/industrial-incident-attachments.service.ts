@@ -11,7 +11,7 @@ import { ForgeError } from "@forge/errors";
 import type { ForgePrincipal } from "@forge/tenant-context";
 import { and, eq, isNull } from "drizzle-orm";
 import { DATABASE } from "../../tokens.js";
-import { DocumentStorageService } from "../neris-incidents/document-storage.service.js";
+import { DocumentStorageService } from "../documents/document-storage.service.js";
 import {
   INCIDENT_ATTACHMENT_SOURCE,
   isAllowedIncidentAttachmentMime,

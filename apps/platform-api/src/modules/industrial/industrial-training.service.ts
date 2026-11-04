@@ -23,7 +23,7 @@ import { ForgeError } from "@forge/errors";
 import type { ForgePrincipal } from "@forge/tenant-context";
 import { and, asc, desc, eq, inArray, isNotNull, isNull, sql } from "drizzle-orm";
 import { DATABASE } from "../../tokens.js";
-import { DocumentStorageService } from "../neris-incidents/document-storage.service.js";
+import { DocumentStorageService } from "../documents/document-storage.service.js";
 import { IndustrialTrainingAssignmentsService } from "./industrial-training-assignments.service.js";
 import { IndustrialTrainingVideoNormalizeService } from "./industrial-training-video-normalize.service.js";
 import {

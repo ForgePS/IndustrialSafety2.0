@@ -2,7 +2,7 @@
 
 Shared browser utilities for Forge web applications: API client (envelope parsing, ETag, idempotency, auth headers), auth storage/provider, feature-flag helpers, and list-control utilities.
 
-Extracted from `apps/creator-console` patterns for reuse in tenant-facing apps such as `apps/rms-web`.
+Extracted from `apps/creator-console` patterns for reuse in tenant-facing apps such as `apps/industrial-web`.
 
 ## Deferred migration
 

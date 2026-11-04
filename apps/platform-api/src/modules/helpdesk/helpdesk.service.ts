@@ -39,7 +39,7 @@ import type { ForgePrincipal } from "@forge/tenant-context";
 import { and, asc, desc, eq, gte, inArray, isNull, lte, or, sql, type SQL } from "drizzle-orm";
 import { DATABASE } from "../../tokens.js";
 import { AuditService } from "../audit/audit.service.js";
-import { DocumentStorageService } from "../neris-incidents/document-storage.service.js";
+import { DocumentStorageService } from "../documents/document-storage.service.js";
 import { NotificationsService } from "../notifications/notifications.service.js";
 import {
   HELPDESK_ATTACHMENT_SOURCE,

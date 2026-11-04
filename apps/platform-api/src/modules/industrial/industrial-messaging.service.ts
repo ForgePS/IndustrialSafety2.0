@@ -22,7 +22,7 @@ import type { ForgePrincipal } from "@forge/tenant-context";
 import { and, asc, desc, eq, gt, inArray, isNull, sql } from "drizzle-orm";
 import { DATABASE } from "../../tokens.js";
 import { isOnlineFromActivity } from "../auth-context/auth-context.service.js";
-import { DocumentStorageService } from "../neris-incidents/document-storage.service.js";
+import { DocumentStorageService } from "../documents/document-storage.service.js";
 import { NotificationsService } from "../notifications/notifications.service.js";
 import {
   buildMessagePreview,

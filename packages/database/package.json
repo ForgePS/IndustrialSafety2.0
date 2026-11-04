@@ -14,10 +14,6 @@
       "types": "./dist/seed.d.ts",
       "import": "./dist/seed.js"
     },
-    "./neris-import": {
-      "types": "./dist/neris/import-schema.d.ts",
-      "import": "./dist/neris/import-schema.js"
-    },
     "./bootstrap-admin-ecs": {
       "types": "./dist/bootstrap-admin-ecs.d.ts",
       "import": "./dist/bootstrap-admin-ecs.js"
@@ -29,24 +25,19 @@
     "lint": "eslint src --max-warnings=0",
     "test": "vitest run --passWithNoTests",
     "test:unit": "vitest run --passWithNoTests --exclude \"**/*.integration.test.ts\"",
-    "test:integration": "vitest run src/tenant-isolation.integration.test.ts src/neris/neris-integrity.integration.test.ts",
-    "test:rls": "vitest run src/tenant-isolation.integration.test.ts src/workers-comp-forms.integration.test.ts src/helpdesk-isolation.integration.test.ts src/neris/neris-integrity.integration.test.ts",
-    "test:neris": "vitest run src/neris/neris-integrity.integration.test.ts",
+    "test:integration": "vitest run src/tenant-isolation.integration.test.ts",
+    "test:rls": "vitest run src/tenant-isolation.integration.test.ts src/workers-comp-forms.integration.test.ts src/helpdesk-isolation.integration.test.ts",
     "clean": "rimraf dist",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "tsx src/migrate.ts",
     "db:migrate:status": "tsx src/migrate-status.ts",
     "db:migrate:test": "cross-env DATABASE_URL=postgresql://forge:forge_local_only@localhost:5432/forge_platform_test tsx src/migrate.ts",
     "db:test:reset": "cross-env DATABASE_URL=postgresql://forge:forge_local_only@localhost:5432/forge_platform_test tsx src/migrate.ts",
-    "db:seed": "tsx src/seed.ts",
-    "neris:import-schema": "tsx src/neris/import-schema.ts",
-    "neris:seed-rms": "tsx src/seed-rms-synthetic.ts",
-    "neris:link-rms-cognito": "tsx src/link-rms-e2e-cognito.ts"
+    "db:seed": "tsx src/seed.ts"
   },
   "dependencies": {
     "@forge/contracts": "workspace:*",
     "@forge/environment": "workspace:*",
-    "@forge/neris": "workspace:*",
     "drizzle-orm": "^0.45.4",
     "postgres": "^3.4.7",
     "uuid": "^11.1.0"

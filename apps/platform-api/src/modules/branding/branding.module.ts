@@ -1,6 +1,6 @@
 import { Module } from "@nestjs/common";
 import { ConfigurationModule } from "../configuration/configuration.module.js";
-import { DocumentStorageService } from "../neris-incidents/document-storage.service.js";
+import { DocumentStorageService } from "../documents/document-storage.service.js";
 import { BrandingController } from "./branding.controller.js";
 import { BrandingService } from "./branding.service.js";
 import { LoginBrandingService } from "./login-branding.service.js";

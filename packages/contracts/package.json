@@ -21,7 +21,6 @@
   },
   "dependencies": {
     "@forge/ai-contracts": "workspace:*",
-    "@forge/cad-contracts": "workspace:*",
     "zod": "^3.25.67"
   },
   "devDependencies": {

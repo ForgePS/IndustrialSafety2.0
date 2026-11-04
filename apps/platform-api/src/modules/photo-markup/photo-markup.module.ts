@@ -1,6 +1,6 @@
 import { Module } from "@nestjs/common";
 import { AuditModule } from "../audit/audit.module.js";
-import { DocumentStorageService } from "../neris-incidents/document-storage.service.js";
+import { DocumentStorageService } from "../documents/document-storage.service.js";
 import { PhotoMarkupController } from "./photo-markup.controller.js";
 import { PhotoMarkupService } from "./photo-markup.service.js";
 

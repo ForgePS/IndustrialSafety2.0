@@ -27,9 +27,6 @@ import { FeatureFlagsModule } from "./modules/feature-flags/feature-flags.module
 import { ImportsModule } from "./modules/imports/imports.module.js";
 import { InvitationsModule } from "./modules/invitations/invitations.module.js";
 import { MembershipsModule } from "./modules/memberships/memberships.module.js";
-import { NerisModule } from "./modules/neris/neris.module.js";
-import { NerisIncidentsModule } from "./modules/neris-incidents/neris-incidents.module.js";
-import { CadModule } from "./modules/cad/cad.module.js";
 import { AiNarrativeModule } from "./modules/ai-narrative/ai-narrative.module.js";
 import { BillingModule } from "./modules/billing/billing.module.js";
 import { NotificationsModule } from "./modules/notifications/notifications.module.js";
@@ -43,7 +40,6 @@ import { LegalAcknowledgmentGuard } from "./modules/legal/legal-acknowledgment.g
 import { AcknowledgmentService } from "./modules/legal/acknowledgment.service.js";
 import { OutboxModule } from "./modules/outbox/outbox.module.js";
 import { PersonsModule } from "./modules/persons/persons.module.js";
-import { RmsMasterDataModule } from "./modules/rms/rms-master-data.module.js";
 import { ProductsModule } from "./modules/products/products.module.js";
 import { SubscriptionsModule } from "./modules/subscriptions/subscriptions.module.js";
 import { SupportModule } from "./modules/support/support.module.js";
@@ -99,11 +95,7 @@ export class AppModule {
         ReportingModule,
         PlatformAnalyticsModule,
         OnboardingModule,
-        NerisModule,
-        NerisIncidentsModule,
-        CadModule,
         AiNarrativeModule,
-        RmsMasterDataModule,
       ],
       controllers: [HealthController],
       providers: [

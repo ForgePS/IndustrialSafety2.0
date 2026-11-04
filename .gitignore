@@ -11,8 +11,6 @@ cdk.out.*/
 .env
 .env.local
 .env.*.local
-apps/rms-web-e2e/.env.e2e.local
-apps/rms-web-e2e/.auth/
 *.pem
 *.key
 secrets/

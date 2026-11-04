@@ -9,7 +9,7 @@ import {
   varchar,
 } from "drizzle-orm/pg-core";
 import { createdAtColumn, updatedAtColumn } from "./common.js";
-import { forgeDocuments } from "./neris-specialty.js";
+import { forgeDocuments } from "./documents.js";
 import { tenants } from "./tenants.js";
 import { users } from "./users.js";
 
